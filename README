@@ -1,0 +1,74 @@
+          __   __  ____  ____  ____
+         /  \\/  \/  _ \/  _ )/  _ \
+         \       /   __/  _  \   __/
+          \__\__/\____/\_____/__/ _________   ____ ____
+               \    \ /  _ \/ _/ /    \    \ /  _ \  _ \
+               /   \ \   __/  \_/   / /   \ \   __/    /_
+               \_____/_____/____/____/\_____/_____/_/\__/v0.1
+             
+Description:
+============
+
+WEBP decoder: libwebpdecode.so is a simple library for
+decoding WEBP image files. 
+
+See http://code.google.com/speed/webp
+
+
+It is released under the same license as the WebM project.
+See http://www.webmproject.org/license/software/ or the
+file "COPYING" file for details. An additional intellectual
+property rights grant can be found in the file PATENTS.
+
+
+API:
+====
+
+This is mainly just one function to call, so just have a look at
+the file src/webp/decode.h for the details and variants:
+
+#include "webp/decode.h"
+uint8_t* WebPDecodeRGB(const uint8_t* data, uint32_t data_size,
+                       int *width, int *height);
+
+A lower-level API is available from the header file <webp/decode_vp8.h>
+
+
+Building:
+=========
+
+If everything goes right, then:
+
+./configure
+make
+make install
+
+should be all you need to have the following files
+
+/usr/local/include/webp/decode.h
+/usr/local/include/webp/decode_vp8.h
+/usr/local/lib/libwebpdecode.*
+
+installed.
+
+
+Decoding example:
+=================
+
+there's a decoding example in example/dwebp.c which will take a .webp file and
+decode it to a PPM image file. This is simply to demonstrate use of the API.
+You can verify the file test.webp decodes to exactly the same as test_ref.ppm:
+  `cd examples && ./dwebp test.webp -o test.ppm && diff test.ppm test_ref.ppm`
+
+Bugs:
+=====
+
+Please report all bugs to our issue tracker:
+    http://code.google.com/p/webp/issues
+Patches welcome! See this page to get started:
+    http://www.webmproject.org/code/contribute/submitting-patches/
+
+Discuss:
+========
+
+Email: webp-discuss@webmproject.org
