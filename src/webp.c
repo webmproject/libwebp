@@ -35,25 +35,28 @@ static inline uint32_t get_le32(const uint8_t* const data) {
 }
 
 // If a RIFF container is detected, validate it and skip over it.
-static int CheckRIFFHeader(const uint8_t** data_ptr, uint32_t *data_size_ptr) {
+static uint32_t CheckRIFFHeader(const uint8_t** data_ptr,
+                                uint32_t *data_size_ptr) {
   uint32_t chunk_size = 0xffffffffu;
   if (*data_size_ptr >= 10 + 20 && !memcmp(*data_ptr, "RIFF", 4)) {
     if (memcmp(*data_ptr + 8, "WEBP", 4)) {
       return 0;  // wrong image file signature
+    } else {
+      const uint32_t riff_size = get_le32(*data_ptr + 4);
+      if (memcmp(*data_ptr + 12, "VP8 ", 4)) {
+        return 0;   // invalid compression format
+      }
+      chunk_size = get_le32(*data_ptr + 16);
+      if ((chunk_size > riff_size + 8) || (chunk_size & 1)) {
+        return 0;  // inconsistent size information.
+      }
+      // We have a IFF container. Skip it.
+      *data_ptr += 20;
+      *data_size_ptr -= 20;
     }
-    const uint32_t riff_size = get_le32(*data_ptr + 4);
-    if (memcmp(*data_ptr + 12, "VP8 ", 4)) {
-      return 0;   // invalid compression format
-    }
-    chunk_size = get_le32(*data_ptr + 16);
-    if ((chunk_size > riff_size + 8) || (chunk_size & 1)) {
-      return 0;  // inconsistent size information.
-    }
-    // We have a IFF container. Skip it.
-    *data_ptr += 20;
-    *data_size_ptr -= 20;
+    return chunk_size;
   }
-  return chunk_size;
+  return *data_size_ptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -75,24 +78,32 @@ static void CustomPut(const VP8Io* io) {
   Params *p = (Params*)io->opaque;
   const int mb_w = io->mb_w;
   const int mb_h = io->mb_h;
+  int j;
+
   if (p->mode == MODE_YUV) {
     uint8_t* const y_dst = p->output + io->mb_x + io->mb_y * p->stride;
-    for (int j = 0; j < mb_h; ++j) {
+    uint8_t* u_dst;
+    uint8_t* v_dst;
+    int uv_w;
+
+    for (j = 0; j < mb_h; ++j) {
       memcpy(y_dst + j * p->stride, io->y + j * io->y_stride, mb_w);
     }
-    uint8_t* const u_dst = p->u + (io->mb_x / 2) + (io->mb_y / 2) * p->u_stride;
-    uint8_t* const v_dst = p->v + (io->mb_x / 2) + (io->mb_y / 2) * p->v_stride;
-    const int uv_w = (mb_w + 1) / 2;
-    for (int j = 0; j < (mb_h + 1) / 2; ++j) {
+    u_dst = p->u + (io->mb_x / 2) + (io->mb_y / 2) * p->u_stride;
+    v_dst = p->v + (io->mb_x / 2) + (io->mb_y / 2) * p->v_stride;
+    uv_w = (mb_w + 1) / 2;
+    for (j = 0; j < (mb_h + 1) / 2; ++j) {
       memcpy(u_dst + j * p->u_stride, io->u + j * io->uv_stride, uv_w);
       memcpy(v_dst + j * p->v_stride, io->v + j * io->uv_stride, uv_w);
     }
   } else {
     const int psize = (p->mode == MODE_RGB || p->mode == MODE_BGR) ? 3 : 4;
     uint8_t* dst = p->output + psize * io->mb_x + io->mb_y * p->stride;
-    for (int j = 0; j < mb_h; ++j) {
+    int i;
+
+    for (j = 0; j < mb_h; ++j) {
       const uint8_t* y_src = io->y + j * io->y_stride;
-      for (int i = 0; i < mb_w; ++i) {
+      for (i = 0; i < mb_w; ++i) {
         const int y = y_src[i];
         const int u = io->u[(j / 2) * io->uv_stride + (i / 2)];
         const int v = io->v[(j / 2) * io->uv_stride + (i / 2)];
@@ -120,11 +131,13 @@ static uint8_t* DecodeInto(CSP_MODE mode,
                            Params* params, int output_size,
                            int output_u_size, int output_v_size) {
   VP8Decoder* dec = VP8New();
+  VP8Io io;
+  int ok = 1;
+
   if (dec == NULL) {
     return NULL;
   }
 
-  VP8Io io;
   VP8InitIo(&io);
   io.data = data;
   io.data_size = data_size;
@@ -138,17 +151,17 @@ static uint8_t* DecodeInto(CSP_MODE mode,
     return NULL;
   }
   // check output buffers
-  int ok = 1;
+
   ok &= (params->stride * io.height <= output_size);
   if (mode == MODE_RGB || mode == MODE_BGR) {
     ok &= (params->stride >= io.width * 3);
   } else if (mode == MODE_RGBA || mode == MODE_BGRA) {
     ok &= (params->stride >= io.width * 4);
   } else {
-    ok &= (params->stride >= io.width);
     // some extra checks for U/V
     const int u_size = params->u_stride * ((io.height + 1) / 2);
     const int v_size = params->v_stride * ((io.height + 1) / 2);
+    ok &= (params->stride >= io.width);
     ok &= (params->u_stride >= (io.width + 1) / 2) &&
           (params->v_stride >= (io.width + 1) / 2);
     ok &= (u_size <= output_u_size && v_size <= output_v_size);
@@ -170,10 +183,12 @@ static uint8_t* DecodeInto(CSP_MODE mode,
 uint8_t* WebPDecodeRGBInto(const uint8_t* data, uint32_t data_size,
                            uint8_t* output, int output_size,
                            int output_stride) {
+  Params params;
+
   if (output == NULL) {
     return NULL;
   }
-  Params params;
+
   params.output = output;
   params.stride = output_stride;
   return DecodeInto(MODE_RGB, data, data_size, &params, output_size, 0, 0);
@@ -182,10 +197,12 @@ uint8_t* WebPDecodeRGBInto(const uint8_t* data, uint32_t data_size,
 uint8_t* WebPDecodeRGBAInto(const uint8_t* data, uint32_t data_size,
                             uint8_t* output, int output_size,
                             int output_stride) {
+  Params params;
+
   if (output == NULL) {
     return NULL;
   }
-  Params params;
+
   params.output = output;
   params.stride = output_stride;
   return DecodeInto(MODE_RGBA, data, data_size, &params, output_size, 0, 0);
@@ -194,10 +211,12 @@ uint8_t* WebPDecodeRGBAInto(const uint8_t* data, uint32_t data_size,
 uint8_t* WebPDecodeBGRInto(const uint8_t* data, uint32_t data_size,
                            uint8_t* output, int output_size,
                            int output_stride) {
+  Params params;
+
   if (output == NULL) {
     return NULL;
   }
-  Params params;
+
   params.output = output;
   params.stride = output_stride;
   return DecodeInto(MODE_BGR, data, data_size, &params, output_size, 0, 0);
@@ -206,10 +225,12 @@ uint8_t* WebPDecodeBGRInto(const uint8_t* data, uint32_t data_size,
 uint8_t* WebPDecodeBGRAInto(const uint8_t* data, uint32_t data_size,
                             uint8_t* output, int output_size,
                             int output_stride) {
+  Params params;
+
   if (output == NULL) {
     return NULL;
   }
-  Params params;
+
   params.output = output;
   params.stride = output_stride;
   return DecodeInto(MODE_BGRA, data, data_size, &params, output_size, 0, 0);
@@ -219,10 +240,12 @@ uint8_t* WebPDecodeYUVInto(const uint8_t* data, uint32_t data_size,
                            uint8_t* luma, int luma_size, int luma_stride,
                            uint8_t* u, int u_size, int u_stride,
                            uint8_t* v, int v_size, int v_stride) {
+  Params params;
+
   if (luma == NULL) {
     return NULL;
   }
-  Params params;
+
   params.output = luma;
   params.stride = luma_stride;
   params.u = u;
@@ -237,7 +260,13 @@ uint8_t* WebPDecodeYUVInto(const uint8_t* data, uint32_t data_size,
 
 static uint8_t* Decode(CSP_MODE mode, const uint8_t* data, uint32_t data_size,
                        int* width, int* height, Params* params_out) {
-  int w, h;
+  int w, h, stride;
+  int uv_size = 0;
+  int uv_stride = 0;
+  int size;
+  uint8_t* output;
+  Params params = { 0 };
+
   if (!WebPGetInfo(data, data_size, &w, &h)) {
     return NULL;
   }
@@ -245,21 +274,21 @@ static uint8_t* Decode(CSP_MODE mode, const uint8_t* data, uint32_t data_size,
   if (height) *height = h;
 
   // initialize output buffer, now that dimensions are known.
-  int stride = (mode == MODE_RGB || mode == MODE_BGR) ? 3 * w
+  stride = (mode == MODE_RGB || mode == MODE_BGR) ? 3 * w
              : (mode == MODE_RGBA || mode == MODE_BGRA) ? 4 * w
              : w;
-  const int size = stride * h;
-  int uv_size = 0;
-  int uv_stride = 0;
+  size = stride * h;
+
   if (mode == MODE_YUV) {
     uv_stride = (w + 1) / 2;
     uv_size = uv_stride * ((h + 1) / 2);
   }
-  uint8_t* const output = (uint8_t*)malloc(size + 2 * uv_size);
+
+  output = (uint8_t*)malloc(size + 2 * uv_size);
   if (!output) {
     return NULL;
   }
-  Params params = { 0 };
+
   params.output = output;
   params.stride = stride;
   if (mode == MODE_YUV) {
@@ -325,35 +354,35 @@ int WebPGetInfo(const uint8_t* data, uint32_t data_size,
   // check signature
   if (data[3] != 0x9d || data[4] != 0x01 || data[5] != 0x2a) {
     return 0;         // Wrong signature.
-  }
-  const uint32_t bits = data[0] | (data[1] << 8) | (data[2] << 16);
-  const int key_frame = !(bits & 1);
-  if (!key_frame) {   // Not a keyframe.
-    return 0;
-  }
-  const int profile = (bits >> 1) & 7;
-  const int show_frame  = (bits >> 4) & 1;
-  const uint32_t partition_length = (bits >> 5);
-  if (profile > 3) {
-    return 0;         // unknown profile
-  }
-  if (!show_frame) {
-    return 0;         // first frame is invisible!
-  }
-  if (partition_length >= chunk_size) {
-    return 0;         // inconsistent size information.
-  }
+  } else {
+    const uint32_t bits = data[0] | (data[1] << 8) | (data[2] << 16);
+    const int key_frame = !(bits & 1);
+    const int w = ((data[7] << 8) | data[6]) & 0x3fff;
+    const int h = ((data[9] << 8) | data[8]) & 0x3fff;
 
-  const int w = ((data[7] << 8) | data[6]) & 0x3fff;
-  const int h = ((data[9] << 8) | data[8]) & 0x3fff;
-  if (width) {
-    *width = w;
-  }
-  if (height) {
-    *height = h;
-  }
+    if (!key_frame) {   // Not a keyframe.
+      return 0;
+    }
 
-  return 1;
+    if (((bits >> 1) & 7) > 3) {
+      return 0;         // unknown profile
+    }
+    if (!((bits >> 4) & 1)) {
+      return 0;         // first frame is invisible!
+    }
+    if (((bits >> 5)) >= chunk_size) { // partition_length
+      return 0;         // inconsistent size information.
+    }
+
+    if (width) {
+      *width = w;
+    }
+    if (height) {
+      *height = h;
+    }
+
+    return 1;
+  }
 }
 
 #if defined(__cplusplus) || defined(c_plusplus)

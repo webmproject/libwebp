@@ -71,7 +71,9 @@ void VP8ParseQuant(VP8Decoder* const dec) {
   const int dquv_ac = VP8Get(br) ? VP8GetSignedValue(br, 4) : 0;
 
   const VP8SegmentHeader* const hdr = &dec->segment_hdr_;
-  for (int i = 0; i < NUM_MB_SEGMENTS; ++i) {
+  int i;
+
+  for (i = 0; i < NUM_MB_SEGMENTS; ++i) {
     int q;
     if (hdr->use_segment_) {
       q = hdr->quantizer_[i];
@@ -86,17 +88,19 @@ void VP8ParseQuant(VP8Decoder* const dec) {
         q = base_q0;
       }
     }
-    VP8QuantMatrix* const m = &dec->dqm_[i];
-    m->y1_mat_[0] = kDcTable[clip(q + dqy1_dc, 127)];
-    m->y1_mat_[1] = kAcTable[clip(q + 0,       127)];
+    {
+      VP8QuantMatrix* const m = &dec->dqm_[i];
+      m->y1_mat_[0] = kDcTable[clip(q + dqy1_dc, 127)];
+      m->y1_mat_[1] = kAcTable[clip(q + 0,       127)];
 
-    m->y2_mat_[0] = kDcTable[clip(q + dqy2_dc, 127)] * 2;
-    // TODO(skal): make it another table?
-    m->y2_mat_[1] = kAcTable[clip(q + dqy2_ac, 127)] * 155 / 100;
-    if (m->y2_mat_[1] < 8) m->y2_mat_[1] = 8;
+      m->y2_mat_[0] = kDcTable[clip(q + dqy2_dc, 127)] * 2;
+      // TODO(skal): make it another table?
+      m->y2_mat_[1] = kAcTable[clip(q + dqy2_ac, 127)] * 155 / 100;
+      if (m->y2_mat_[1] < 8) m->y2_mat_[1] = 8;
 
-    m->uv_mat_[0] = kDcTable[clip(q + dquv_ac, 117)];
-    m->uv_mat_[1] = kAcTable[clip(q + dquv_dc, 127)];
+      m->uv_mat_[0] = kDcTable[clip(q + dquv_ac, 117)];
+      m->uv_mat_[1] = kAcTable[clip(q + dquv_dc, 127)];
+    }
   }
 }
 

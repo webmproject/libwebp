@@ -24,18 +24,19 @@ uint8_t VP8kClip[YUV_RANGE_MAX - YUV_RANGE_MIN];
 static int done = 0;
 
 void VP8YUVInit() {
+  int i;
   if (done) {
     return;
   }
-  for (int i = 0; i < 256; ++i) {
+  for (i = 0; i < 256; ++i) {
     VP8kVToR[i] = (89858 * (i - 128) + YUV_HALF) >> YUV_FIX;
     VP8kUToG[i] = -22014 * (i - 128) + YUV_HALF;
     VP8kVToG[i] = -45773 * (i - 128);
     VP8kUToB[i] = (113618 * (i - 128) + YUV_HALF) >> YUV_FIX;
   }
-  for (int i = YUV_RANGE_MIN; i < YUV_RANGE_MAX; ++i) {
-    const int j = ((i - 16) * 76283 + YUV_HALF) >> YUV_FIX;
-    VP8kClip[i - YUV_RANGE_MIN] = (j < 0) ? 0 : (j > 255) ? 255 : j;
+  for (i = YUV_RANGE_MIN; i < YUV_RANGE_MAX; ++i) {
+    const int k = ((i - 16) * 76283 + YUV_HALF) >> YUV_FIX;
+    VP8kClip[i - YUV_RANGE_MIN] = (k < 0) ? 0 : (k > 255) ? 255 : k;
   }
   done = 1;
 }

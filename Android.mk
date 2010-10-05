@@ -13,7 +13,7 @@ LOCAL_SRC_FILES := \
 
 LOCAL_CFLAGS := -Wall -DANDROID -DHAVE_MALLOC_H -DHAVE_PTHREAD \
                 -finline-functions -frename-registers -ffast-math \
-                -s -fomit-frame-pointer -std=gnu99
+                -s -fomit-frame-pointer
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
 
