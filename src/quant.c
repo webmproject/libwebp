@@ -98,8 +98,8 @@ void VP8ParseQuant(VP8Decoder* const dec) {
       m->y2_mat_[1] = kAcTable[clip(q + dqy2_ac, 127)] * 155 / 100;
       if (m->y2_mat_[1] < 8) m->y2_mat_[1] = 8;
 
-      m->uv_mat_[0] = kDcTable[clip(q + dquv_ac, 117)];
-      m->uv_mat_[1] = kAcTable[clip(q + dquv_dc, 127)];
+      m->uv_mat_[0] = kDcTable[clip(q + dquv_dc, 117)];
+      m->uv_mat_[1] = kAcTable[clip(q + dquv_ac, 127)];
     }
   }
 }
