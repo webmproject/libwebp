@@ -222,8 +222,8 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
 
   // Paragraph 9.1
   {
-    frm_hdr = &dec->frm_hdr_;
     const uint32_t bits = buf[0] | (buf[1] << 8) | (buf[2] << 16);
+    frm_hdr = &dec->frm_hdr_;
     frm_hdr->key_frame_ = !(bits & 1);
     frm_hdr->profile_ = (bits >> 1) & 7;
     frm_hdr->show_ = (bits >> 4) & 1;
