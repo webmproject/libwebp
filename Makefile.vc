@@ -1,0 +1,150 @@
+#
+# Stem for static libs and DLLs
+#
+LIB_NAME       = libwebp_a
+LIB_NAME_DEBUG = libwebp_a_debug
+
+#
+# Stem for DLL import libs
+#
+IMPLIB_NAME       = libwebp
+IMPLIB_NAME_DEBUG = libwepb_debug
+
+!IFNDEF DEP_PATH
+DEPS_PATH   = ../../deps
+!ENDIF
+
+!IFNDEF ARCH
+ARCH  = x86
+!ENDIF
+
+#############################################################
+## Nothing more to do below this line!
+
+MT         = mt.exe
+CCNODBG    = cl.exe /nologo /O2 /DNDEBUG
+CCDEBUG    = cl.exe /nologo /Od /Gm /Zi /D_DEBUG /RTC1
+CFLAGS     = /I. /Iwebp /nologo /W3 /EHsc /DWIN32 /FD /c
+CFLAGSLIB  = /DLIBWEBP_STATICLIB
+LNKDLL     = link.exe /DLL
+LNKLIB     = link.exe /lib
+LFLAGS     = /nologo /machine:$(ARCH)
+CFLAGS     = $(CFLAGS)
+
+CFGSET     = FALSE
+!IF "$(OBJDIR)" == ""
+OUTDIR = ..\obj\
+!ELSE
+OUTDIR = $(OBJDIR)
+!ENDIF
+
+##############################################################
+# Runtime library configuration
+!IF "$(RTLIBCFG)" == "static"
+RTLIB  = /MT
+RTLIBD = /MTd
+!ELSE
+RTLIB   = /MD
+RTLIBD  = /MDd
+!ENDIF
+DIRBASE = $(OUTDIR)\$(CFG)\$(ARCH)
+DIROBJ = $(DIRBASE)\obj
+DIRLIB = $(DIRBASE)\lib
+DIRINC = $(DIRBASE)\include
+DIRBIN = $(DIRBASE)\bin
+
+# release-static
+!IF "$(CFG)" == "release-static"
+TARGET = $(LIB_NAME).lib
+LNK    = $(LNKLIB) /out:$(DIRLIB)\$(TARGET)
+CC     = $(CCNODBG) $(RTLIB) $(CFLAGSLIB)
+CFGSET = TRUE
+!ENDIF
+
+# debug-static
+!IF "$(CFG)" == "debug-static"
+TARGET = $(LIB_NAME_DEBUG).lib
+LNK    = $(LNKLIB) /out:$(DIRLIB)\$(TARGET)
+CC     = $(CCDEBUG) $(RTLIBD) $(CFLAGSLIB)
+CFGSET = TRUE
+!ENDIF
+
+#######################
+# Usage
+#
+!IF "$(CFGSET)" == "FALSE" && "$(CFG)" != ""
+!MESSAGE Usage: nmake /f makefile.vc9 CFG=<config> OBJDIR=<path> <target>
+!MESSAGE where <config> is one of:
+!MESSAGE   release-static                - release static library
+!MESSAGE   debug-static                  - debug static library
+!MESSAGE <target> can be left blank in which case all is assumed
+!MESSAGE where <path> is the path where you like to build (obj, bins, etc.)
+!MESSAGE   default to ..\obj\
+!ERROR please choose a valid configuration "$(CFG)"
+!ENDIF
+
+#######################
+# Only the clean target can be used if a config was not provided.
+#
+!IF "$(CFGSET)" == "FALSE"
+clean:
+	@-erase /s *.dll 2> NUL
+	@-erase /s *.exp 2> NUL
+	@-erase /s *.idb 2> NUL
+	@-erase /s *.lib 2> NUL
+	@-erase /s *.obj 2> NUL
+	@-erase /s *.pch 2> NUL
+	@-erase /s *.pdb 2> NUL
+	@-erase /s *.res 2> NUL
+!ELSE
+# A config was provided, so the library can be built.
+#
+
+X_OBJS= \
+	$(DIROBJ)\bits.obj \
+	$(DIROBJ)\dsp.obj \
+	$(DIROBJ)\frame.obj \
+	$(DIROBJ)\quant.obj \
+	$(DIROBJ)\tree.obj \
+	$(DIROBJ)\vp8.obj \
+	$(DIROBJ)\webp.obj \
+	$(DIROBJ)\yuv.obj \
+	$(RESOURCE)
+
+all : $(TARGET) dwebp.exe
+
+$(TARGET): $(X_OBJS)
+	$(LNK) $(LFLAGS) $(X_OBJS)
+	-xcopy $(DIROBJ)\$(LIB_NAME).dll       $(DIRBIN) /y
+	-xcopy $(DIROBJ)\$(LIB_NAME).lib       $(DIRLIB) /y
+	-xcopy $(DIROBJ)\$(LIB_NAME_DEBUG).dll $(DIRBIN) /y
+	-xcopy $(DIROBJ)\$(LIB_NAME_DEBUG).lib $(DIRLIB) /y
+	-xcopy $(DIROBJ)\$(IMPLIB_NAME).lib    $(DIRLIB) /y
+	-xcopy $(DIROBJ)\$(IMPLIB_NAME_DEBUG).lib $(DIRLIB) /y
+	-xcopy $(DIROBJ)\*.exp                 $(DIRLIB) /y
+	-xcopy $(DIROBJ)\*.pdb                 $(DIRLIB) /y
+
+$(X_OBJS): $(DIROBJ) $(DIRLIB) $(DIRINC) $(DIRBIN)
+
+$(DIROBJ):
+	@if not exist "$(DIROBJ)" mkdir $(DIROBJ)
+
+$(DIRLIB):
+	@if not exist "$(DIRLIB)" mkdir $(DIRLIB)
+
+$(DIRINC):
+	@if not exist "$(DIRINC)" mkdir $(DIRINC)
+
+$(DIRBIN):
+	@if not exist "$(DIRBIN)" mkdir $(DIRBIN)
+
+dwebp.exe:	examples\dwebp.c
+	$(CC) /I src\ /Fo$(DIROBJ)\ /Fd$(DIROBJ)\ /Fp$(DIROBJ)\ /FR$(DIROBJ) /Fe$(DIRBIN)\dwebp.exe examples\dwebp.c $(DIRLIB)\$(TARGET)
+	$(MT) -manifest $(DIRBIN)\dwebp.exe.manifest -outputresource:$(DIRBIN)\dwebp.exe;1
+	del $(DIRBIN)\dwebp.exe.manifest
+
+.SUFFIXES: .c .obj .res
+{src\}.c{$(DIROBJ)\}.obj:
+	$(CC) $(CFLAGS) /Fo"$@"  $<
+
+!ENDIF  # End of case where a config was provided.
