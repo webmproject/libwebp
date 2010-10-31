@@ -35,6 +35,9 @@ int main(int argc, char *argv[]) {
   const char *out_file = NULL;
   int yuv_out = 0;
 
+  int width, height, stride, uv_stride;
+  uint8_t* out = NULL, *u = NULL, *v = NULL;
+
   int c;
   for (c = 1; c < argc; ++c) {
     if (!strcmp(argv[c], "-h")) {
@@ -59,9 +62,9 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  uint32_t data_size = 0;
-  void* data = NULL;
   {
+    uint32_t data_size = 0;
+    void* data = NULL;
     FILE* const in = fopen(in_file, "rb");
     if (!in) {
       printf("cannot open input file '%s'\n", in_file);
@@ -77,17 +80,15 @@ int main(int argc, char *argv[]) {
       free(data);
       return -1;
     }
-  }
 
-  int width, height, stride, uv_stride;
-  uint8_t* out = NULL, *u = NULL, *v = NULL;
-  if (!yuv_out) {
-    out = WebPDecodeRGB(data, data_size, &width, &height);
-  } else {
-    out = WebPDecodeYUV(data, data_size, &width, &height,
-                        &u, &v, &stride, &uv_stride);
+    if (!yuv_out) {
+      out = WebPDecodeRGB(data, data_size, &width, &height);
+    } else {
+      out = WebPDecodeYUV(data, data_size, &width, &height,
+                          &u, &v, &stride, &uv_stride);
+    }
+    free(data);
   }
-  free(data);
 
   if (!out) {
     printf("Decoding of %s failed.\n", in_file);
