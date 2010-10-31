@@ -223,51 +223,48 @@ void VP8StoreBlock(VP8Decoder* const dec) {
 }
 
 void VP8FilterRow(VP8Decoder* const dec, VP8Io* io) {
+  const int extra_y_rows = kFilterExtraRows[dec->filter_type_];
+  const int ysize = extra_y_rows * dec->cache_y_stride_;
+  const int uvsize = (extra_y_rows / 2) * dec->cache_uv_stride_;
+  const int first_row = (dec->mb_y_ == 0);
+  const int last_row = (dec->mb_y_ >= dec->mb_h_ - 1);
+  uint8_t* const ydst = dec->cache_y_ - ysize;
+  uint8_t* const udst = dec->cache_u_ - uvsize;
+  uint8_t* const vdst = dec->cache_v_ - uvsize;
   int mb_x;
   for (mb_x = 0; mb_x < dec->mb_w_; ++mb_x) {
     DoFilter(dec, mb_x, dec->mb_y_);
   }
-  {
-    const int extra_y_rows = kFilterExtraRows[dec->filter_type_];
-    const int ysize = extra_y_rows * dec->cache_y_stride_;
-    const int uvsize = (extra_y_rows / 2) * dec->cache_uv_stride_;
-    uint8_t* const ydst = dec->cache_y_ - ysize;
-    uint8_t* const udst = dec->cache_u_ - uvsize;
-    uint8_t* const vdst = dec->cache_v_ - uvsize;
-    if (io->put) {
-      int y_end;
-      if (dec->mb_y_ > 0) {
-        io->mb_y = dec->mb_y_ * 16 - extra_y_rows;
-        io->y = ydst;
-        io->u = udst;
-        io->v = vdst;
-        if (dec->mb_y_ < dec->mb_h_ - 1) {
-          y_end = io->mb_y + 16;
-        } else {
-          y_end = io->height;   // last macroblock row.
-        }
-      } else {   // first macroblock row.
-        io->mb_y = 0;
-        y_end = 16 - extra_y_rows;
-        io->y = dec->cache_y_;
-        io->u = dec->cache_u_;
-        io->v = dec->cache_v_;
-      }
-      if (y_end > io->height) {
-        y_end = io->height;
-      }
-      io->mb_h = y_end - io->mb_y;
-      io->put(io);
+  if (io->put) {
+    int y_start = dec->mb_y_ * 16;
+    int y_end = y_start + 16;
+    if (!first_row) {
+      y_start -= extra_y_rows;
+      io->y = ydst;
+      io->u = udst;
+      io->v = vdst;
+    } else {
+      io->y = dec->cache_y_;
+      io->u = dec->cache_u_;
+      io->v = dec->cache_v_;
     }
+    if (!last_row) {
+      y_end -= extra_y_rows;
+    }
+    if (y_end > io->height) {
+      y_end = io->height;
+    }
+    io->mb_y = y_start;
+    io->mb_h = y_end - y_start;
+    io->put(io);
+  }
     // rotate top samples
-    if (dec->mb_y_ < dec->mb_h_ - 1) {
-      memcpy(ydst, ydst + 16 * dec->cache_y_stride_, ysize);
-      memcpy(udst, udst + 8 * dec->cache_uv_stride_, uvsize);
-      memcpy(vdst, vdst + 8 * dec->cache_uv_stride_, uvsize);
-    }
+  if (!last_row) {
+    memcpy(ydst, ydst + 16 * dec->cache_y_stride_, ysize);
+    memcpy(udst, udst + 8 * dec->cache_uv_stride_, uvsize);
+    memcpy(vdst, vdst + 8 * dec->cache_uv_stride_, uvsize);
   }
 }
-
 
 //-----------------------------------------------------------------------------
 // Main reconstruction function.
