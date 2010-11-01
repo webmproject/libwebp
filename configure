@@ -717,7 +717,8 @@ ac_default_prefix=/usr/local
 ac_clean_files=
 ac_config_libobj_dir=.
 LIBOBJS=
-cross_compiling=no
+# Just to prevent any binary from being executed (but they're still compiled):
+cross_compiling=yes
 subdirs=
 MFLAGS=
 MAKEFLAGS=
