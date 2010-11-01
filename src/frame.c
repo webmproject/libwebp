@@ -64,7 +64,7 @@ int VP8InitFrame(VP8Decoder* const dec, VP8Io* io) {
   dec->mb_info_ = ((VP8MB*)mem) + 1;
   mem += info_size;
 
-  mem = (uint8_t*)((uint64_t)(mem + ALIGN_MASK) & ~ALIGN_MASK);
+  mem = (uint8_t*)((uintptr_t)(mem + ALIGN_MASK) & ~ALIGN_MASK);
   assert((yuv_size & ALIGN_MASK) == 0);
   dec->yuv_b_ = (uint8_t*)mem;
   mem += yuv_size;
