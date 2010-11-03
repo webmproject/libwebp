@@ -492,18 +492,6 @@ static int ParseResiduals(VP8Decoder* const dec,
 //-----------------------------------------------------------------------------
 // Main loop
 
-static void SendBlock(VP8Decoder* const dec, VP8Io* io) {
-  if (io->put) {
-    io->mb_x = dec->mb_x_ * 16;
-    io->mb_y = dec->mb_y_ * 16;
-    io->mb_w = io->width - io->mb_x;
-    io->mb_h = io->height - io->mb_y;
-    if (io->mb_w > 16) io->mb_w = 16;
-    if (io->mb_h > 16) io->mb_h = 16;
-    io->put(io);
-  }
-}
-
 static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
   int ok = 1;
   VP8BitReader* const br = &dec->br_;
@@ -548,19 +536,13 @@ static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
       }
       VP8ReconstructBlock(dec);
 
-      // Store filter params
-      if (dec->filter_type_ > 0) {
-        VP8StoreBlock(dec);
-      } else {  // We're done. Send block to user at once.
-        SendBlock(dec, io);
-      }
+      // Store data and save block's filtering params
+      VP8StoreBlock(dec, io);
     }
     if (!ok) {
       break;
     }
-    if (dec->filter_type_ > 0) {   // filter a row
-      VP8FilterRow(dec, io);
-    }
+    VP8FinishRow(dec, io);
     if (dec->br_.eof_ || token_br->eof_) {
       ok = 0;
       break;
@@ -596,17 +578,23 @@ int VP8Decode(VP8Decoder* const dec, VP8Io* const io) {
     return VP8SetError(dec, 3, "Allocation failed");
   }
 
-  // set-up
-  if (io->setup) io->setup(io);
 
-  // Main decoding loop
-  if (!ParseFrame(dec, io)) {
+  if (io->setup && !io->setup(io)) {
     VP8Clear(dec);
-    return VP8SetError(dec, 3, "Frame decoding failed");
+    return VP8SetError(dec, 3, "Frame setup failed");
   }
 
-  // tear-down
-  if (io->teardown) io->teardown(io);
+  // Main decoding loop
+  {
+    const int ret = ParseFrame(dec, io);
+    if (io->teardown) {
+      io->teardown(io);
+    }
+    if (!ret) {
+      VP8Clear(dec);
+      return VP8SetError(dec, 3, "Frame decoding failed");
+    }
+  }
 
   dec->ready_ = 0;
   return 1;

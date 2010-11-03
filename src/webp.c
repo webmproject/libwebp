@@ -17,6 +17,8 @@
 extern "C" {
 #endif
 
+#define FANCY_UPSCALING   // undefined to remove fancy upscaling support
+
 //-----------------------------------------------------------------------------
 // RIFF layout is:
 //   0ffset  tag
@@ -60,14 +62,111 @@ static uint32_t CheckRIFFHeader(const uint8_t** data_ptr,
 }
 
 //-----------------------------------------------------------------------------
+// Fancy upscaling
 
 typedef enum { MODE_RGB = 0, MODE_RGBA = 1,
                MODE_BGR = 2, MODE_BGRA = 3,
                MODE_YUV = 4 } CSP_MODE;
 
+#ifdef FANCY_UPSCALING
+
+// Given samples laid out in a square as:
+//  [a b]
+//  [c d]
+// we interpolate u/v as:
+//  ([9*a + 3*b + 3*c +   d    3*a + 9*b + 3*c +   d] + [8 8]) / 16
+//  ([3*a +   b + 9*c + 3*d      a + 3*b + 3*c + 9*d]   [8 8]) / 16
+#define MIX_ODD(a, b, c, d)        \
+  ((9 * (a) + 3 * ((b) + (c)) + (d) + 0x00080008u) >> 4)
+#define MIX_EVEN(a, b, c, d)       \
+  ((9 * (c) + 3 * ((d) + (a)) + (b) + 0x00080008u) >> 4)
+
+// We process u and v together stashed into 32bit (16bit each).
+// Note that we could store the pair (3*t_uv + uv, t_uv + 3*uv)
+// instead of (t_uv, uv), into a 64bit variable. Doing so, we could
+// simplify the MIXing a bit and save two multiplies. TODO(skal).
+#define LOAD_UV(u,v) ((u) | ((v) << 16))
+
+// Macro festival, so we can define all of rgb/bgr/rgba/bgra cases
+// for odd and even lines
+#define UPSCALE_FUNC(FUNC_NAME, MIX, FUNC, XSTEP)                        \
+static void FUNC_NAME(const uint8_t* cur_y,                              \
+                      const uint8_t* cur_u, const uint8_t* cur_v,        \
+                      const uint8_t* top_u, const uint8_t* top_v,        \
+                      int len, uint8_t* dst) {                           \
+  int x;                                                                 \
+  uint32_t tl_uv = LOAD_UV(top_u[0], top_v[0]);   /* top-left sample */  \
+  uint32_t l_uv  = LOAD_UV(cur_u[0], cur_v[0]);   /* left-sample */      \
+  uint32_t uv0 = MIX(tl_uv, tl_uv, l_uv, l_uv);                          \
+  FUNC(cur_y[0], uv0 & 0xff, (uv0 >> 16), dst);                          \
+  len -= 1;   /* first pixel is done. */                                 \
+  for (x = 1; x <= (len >> 1); ++x) {                                    \
+    const uint32_t t_uv = LOAD_UV(top_u[x], top_v[x]);  /* top sample */ \
+    const uint32_t uv   = LOAD_UV(cur_u[x], cur_v[x]);  /* sample */     \
+    const uint32_t uv0  = MIX(tl_uv, t_uv, l_uv, uv);                    \
+    const uint32_t uv1  = MIX(t_uv, tl_uv, uv, l_uv);                    \
+    FUNC(cur_y[2*x-1], uv0 & 0xff, (uv0 >> 16), dst + (2*x-1) * XSTEP);  \
+    FUNC(cur_y[2*x  ], uv1 & 0xff, (uv1 >> 16), dst + (2*x  ) * XSTEP);  \
+    tl_uv = t_uv;                                                        \
+    l_uv = uv;                                                           \
+  }                                                                      \
+  if (len & 1) {                                                         \
+    uv0 = MIX(tl_uv, tl_uv, l_uv, l_uv);                                 \
+    FUNC(cur_y[len], uv0 & 0xff, (uv0 >> 16), dst + len * XSTEP);        \
+  }                                                                      \
+}                                                                        \
+
+// All variants implemented.
+UPSCALE_FUNC(UpscaleEvenRgb,  MIX_EVEN, VP8YuvToRgb,  3)
+UPSCALE_FUNC(UpscaleOddRgb,   MIX_ODD,  VP8YuvToRgb,  3)
+UPSCALE_FUNC(UpscaleEvenBgr,  MIX_EVEN, VP8YuvToBgr,  3)
+UPSCALE_FUNC(UpscaleOddBgr,   MIX_ODD,  VP8YuvToBgr,  3)
+UPSCALE_FUNC(UpscaleEvenRgba, MIX_EVEN, VP8YuvToRgba, 4)
+UPSCALE_FUNC(UpscaleOddRgba,  MIX_ODD,  VP8YuvToRgba, 4)
+UPSCALE_FUNC(UpscaleEvenBgra, MIX_EVEN, VP8YuvToBgra, 4)
+UPSCALE_FUNC(UpscaleOddBgra,  MIX_ODD,  VP8YuvToBgra, 4)
+
+// Main driver function.
+static inline void UpscaleLine(const uint8_t* cur_y,
+                               const uint8_t* cur_u, const uint8_t* cur_v,
+                               const uint8_t* top_u, const uint8_t* top_v,
+                               int len, uint8_t* dst, int odd, CSP_MODE mode) {
+  if (odd) {
+    if (mode == MODE_RGB) {
+      UpscaleOddRgb(cur_y, cur_u, cur_v, top_u, top_v, len, dst);
+    } else if (mode == MODE_BGR) {
+      UpscaleOddBgr(cur_y, cur_u, cur_v, top_u, top_v, len, dst);
+    } else if (mode == MODE_RGBA) {
+      UpscaleOddRgba(cur_y, cur_u, cur_v, top_u, top_v, len, dst);
+    } else {
+      UpscaleOddBgra(cur_y, cur_u, cur_v, top_u, top_v, len, dst);
+    }
+  } else {
+    if (mode == MODE_RGB) {
+      UpscaleEvenRgb(cur_y, cur_u, cur_v, top_u, top_v, len, dst);
+    } else if (mode == MODE_BGR) {
+      UpscaleEvenBgr(cur_y, cur_u, cur_v, top_u, top_v, len, dst);
+    } else if (mode == MODE_RGBA) {
+      UpscaleEvenRgba(cur_y, cur_u, cur_v, top_u, top_v, len, dst);
+    } else {
+      UpscaleEvenBgra(cur_y, cur_u, cur_v, top_u, top_v, len, dst);
+    }
+  }
+}
+#undef LOAD_UV
+#undef UPSCALE_FUNC
+#undef MIX_ODD
+#undef MIX_EVEN
+
+#endif  // FANCY_UPSCALING
+
+//-----------------------------------------------------------------------------
+// Main conversion driver.
+
 typedef struct {
   uint8_t* output;      // rgb(a) or luma
   uint8_t *u, *v;
+  uint8_t *top_y, *top_u, *top_v;
   int stride;           // rgb(a) stride or luma stride
   int u_stride;
   int v_stride;
@@ -76,52 +175,139 @@ typedef struct {
 
 static void CustomPut(const VP8Io* io) {
   Params *p = (Params*)io->opaque;
-  const int mb_w = io->mb_w;
+  const int w = io->width;
   const int mb_h = io->mb_h;
-  int j;
+  const int uv_w = (w + 1) / 2;
+  assert(!(io->mb_y & 1));
 
   if (p->mode == MODE_YUV) {
-    uint8_t* const y_dst = p->output + io->mb_x + io->mb_y * p->stride;
-    uint8_t* u_dst;
-    uint8_t* v_dst;
-    int uv_w;
-
+    uint8_t* const y_dst = p->output + io->mb_y * p->stride;
+    uint8_t* const u_dst = p->u + (io->mb_y >> 1) * p->u_stride;
+    uint8_t* const v_dst = p->v + (io->mb_y >> 1) * p->v_stride;
+    int j;
     for (j = 0; j < mb_h; ++j) {
-      memcpy(y_dst + j * p->stride, io->y + j * io->y_stride, mb_w);
+      memcpy(y_dst + j * p->stride, io->y + j * io->y_stride, w);
     }
-    u_dst = p->u + (io->mb_x / 2) + (io->mb_y / 2) * p->u_stride;
-    v_dst = p->v + (io->mb_x / 2) + (io->mb_y / 2) * p->v_stride;
-    uv_w = (mb_w + 1) / 2;
     for (j = 0; j < (mb_h + 1) / 2; ++j) {
       memcpy(u_dst + j * p->u_stride, io->u + j * io->uv_stride, uv_w);
       memcpy(v_dst + j * p->v_stride, io->v + j * io->uv_stride, uv_w);
     }
   } else {
-    const int psize = (p->mode == MODE_RGB || p->mode == MODE_BGR) ? 3 : 4;
-    uint8_t* dst = p->output + psize * io->mb_x + io->mb_y * p->stride;
-    int i;
+    uint8_t* dst = p->output + io->mb_y * p->stride;
+    if (io->fancy_upscaling) {
+#ifdef FANCY_UPSCALING
+      const uint8_t* cur_y;
+      const uint8_t* cur_u = io->u;
+      const uint8_t* cur_v = io->v;
+      const uint8_t* top_u = p->top_u;
+      const uint8_t* top_v = p->top_v;
+      int y = io->mb_y;
+      int y_end = io->mb_y + io->mb_h - 1;
+      if (y > 0) {
+        // If mid-fly, we need to finish the previous line.
+        cur_y = p->top_y;
+        dst -= p->stride;
+        y -= 1;
+      } else {
+        // else we "replicate" the u/v sample of the first line
+        top_u = cur_u;
+        top_v = cur_v;
+        // and start with the top line
+        cur_y = io->y;
+      }
+      if (y_end >= io->height - 1) {
+        // for the very last rows, we can process them right now
+        y_end = io->height;
+      } else {
+        // we won't process the very last line this time,
+        // waiting for the next call instead.
+      }
 
-    for (j = 0; j < mb_h; ++j) {
-      const uint8_t* y_src = io->y + j * io->y_stride;
-      for (i = 0; i < mb_w; ++i) {
-        const int y = y_src[i];
-        const int u = io->u[(j / 2) * io->uv_stride + (i / 2)];
-        const int v = io->v[(j / 2) * io->uv_stride + (i / 2)];
-        if (p->mode == MODE_RGB) {
-          VP8YuvToRgb(y, u, v, dst + i * 3);
-        } else if (p->mode == MODE_BGR) {
-          VP8YuvToBgr(y, u, v, dst + i * 3);
-        } else if (p->mode == MODE_RGBA) {
-          VP8YuvToRgba(y, u, v, dst + i * 4);
+      // Loop over each output row.
+      for (; y < y_end; ++y) {
+        if (y & 1) {   // odd lines
+          UpscaleLine(cur_y, cur_u, cur_v, top_u, top_v, w, dst, 1, p->mode);
+        } else {       // even lines
+          UpscaleLine(cur_y, cur_u, cur_v, top_u, top_v, w, dst, 0, p->mode);
+          top_u = cur_u;
+          top_v = cur_v;
+          if (y < io->height - 2) {
+            cur_u += io->uv_stride;
+            cur_v += io->uv_stride;
+          }
+        }
+        dst += p->stride;
+        if (cur_y == p->top_y) {
+          cur_y = io->y;
         } else {
-          VP8YuvToBgra(y, u, v, dst + i * 4);
+          cur_y += io->y_stride;
         }
       }
-      dst += p->stride;
+      // Save the unfinished samples for next call (if we're not done yet).
+      if (y < io->height - 1) {
+        memcpy(p->top_y, cur_y, w * sizeof(*p->top_y));
+        memcpy(p->top_u, top_u, uv_w * sizeof(*p->top_u));
+        memcpy(p->top_v, top_v, uv_w * sizeof(*p->top_v));
+      }
+#else
+      assert(0);  // shouldn't happen.
+#endif
+    } else {
+      // Point-sampling U/V upscaler.
+      // Could be implemented with special MIX functions, too.
+      int j;
+      for (j = 0; j < mb_h; ++j) {
+        const uint8_t* y_src = io->y + j * io->y_stride;
+        int i;
+        for (i = 0; i < w; ++i) {
+          const int y = y_src[i];
+          const int u = io->u[(j / 2) * io->uv_stride + (i / 2)];
+          const int v = io->v[(j / 2) * io->uv_stride + (i / 2)];
+          if (p->mode == MODE_RGB) {
+            VP8YuvToRgb(y, u, v, dst + i * 3);
+          } else if (p->mode == MODE_BGR) {
+            VP8YuvToBgr(y, u, v, dst + i * 3);
+          } else if (p->mode == MODE_RGBA) {
+            VP8YuvToRgba(y, u, v, dst + i * 4);
+          } else {
+            VP8YuvToBgra(y, u, v, dst + i * 4);
+          }
+        }
+        dst += p->stride;
+      }
     }
   }
 }
 
+//-----------------------------------------------------------------------------
+
+static int CustomSetup(VP8Io* io) {
+#ifdef FANCY_UPSCALING
+  Params *p = (Params*)io->opaque;
+  p->top_y = p->top_u = p->top_v = NULL;
+  if (p->mode != MODE_YUV) {
+    const int uv_width = (io->width + 1) >> 1;
+    p->top_y = (uint8_t*)malloc(io->width + 2 * uv_width);
+    if (p->top_y == NULL) {
+      return 0;   // memory error.
+    }
+    p->top_u = p->top_y + io->width;
+    p->top_v = p->top_u + uv_width;
+    io->fancy_upscaling = 1;  // activate fancy upscaling
+  }
+#endif
+  return 1;
+}
+
+static void CustomTeardown(const VP8Io* io) {
+#ifdef FANCY_UPSCALING
+  Params *p = (Params*)io->opaque;
+  if (p->top_y) {
+    free(p->top_y);
+    p->top_y = p->top_u = p->top_v = NULL;
+  }
+#endif
+}
 
 //-----------------------------------------------------------------------------
 // "Into" variants
@@ -145,6 +331,8 @@ static uint8_t* DecodeInto(CSP_MODE mode,
   params->mode = mode;
   io.opaque = params;
   io.put = CustomPut;
+  io.setup = CustomSetup;
+  io.teardown = CustomTeardown;
 
   if (!VP8GetHeaders(dec, &io)) {
     VP8Delete(dec);

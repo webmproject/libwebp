@@ -263,9 +263,10 @@ void VP8ParseQuant(VP8Decoder* const dec);
 int VP8InitFrame(VP8Decoder* const dec, VP8Io* io);
 // Predict a block and add residual
 void VP8ReconstructBlock(VP8Decoder* const dec);
-// Filtering
-void VP8StoreBlock(VP8Decoder* const dec);
-void VP8FilterRow(VP8Decoder* const dec, VP8Io* io);
+// Store a block, along with filtering params
+void VP8StoreBlock(VP8Decoder* const dec, VP8Io* io);
+// Finalize and transmit a complete row
+void VP8FinishRow(VP8Decoder* const dec, VP8Io* io);
 
 // in dsp.c
 typedef void (*VP8Idct)(const int16_t* coeffs, uint8_t* dst);

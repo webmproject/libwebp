@@ -31,8 +31,7 @@ int VP8InitFrame(VP8Decoder* const dec, VP8Io* io) {
   const int info_size = (mb_w + 1) * sizeof(VP8MB);
   const int yuv_size = YUV_SIZE * sizeof(*dec->yuv_b_);
   const int coeffs_size = 384 * sizeof(*dec->coeffs_);
-  const int cache_height = (dec->filter_type_ == 0) ? 0 :
-                           (16 + kFilterExtraRows[dec->filter_type_]) * 3 / 2;
+  const int cache_height = (16 + kFilterExtraRows[dec->filter_type_]) * 3 / 2;
   const int cache_size = top_size * cache_height;
   const int needed = intra_pred_mode_size
                    + top_size + info_size
@@ -74,14 +73,10 @@ int VP8InitFrame(VP8Decoder* const dec, VP8Io* io) {
 
   dec->cache_y_stride_ = 16 * mb_w;
   dec->cache_uv_stride_ = 8 * mb_w;
-  if (dec->filter_type_ == 0) {
-    dec->cache_y_ = NULL;
-    dec->cache_u_ = NULL;
-    dec->cache_v_ = NULL;
-  } else {
+  {
     const int extra_rows = kFilterExtraRows[dec->filter_type_];
     const int extra_y = extra_rows * dec->cache_y_stride_;
-    const int extra_uv =(extra_rows / 2) * dec->cache_uv_stride_;
+    const int extra_uv = (extra_rows / 2) * dec->cache_uv_stride_;
     dec->cache_y_ = ((uint8_t*)mem) + extra_y;
     dec->cache_u_ = dec->cache_y_ + 16 * dec->cache_y_stride_ + extra_uv;
     dec->cache_v_ = dec->cache_u_ + 8 * dec->cache_uv_stride_ + extra_uv;
@@ -97,22 +92,13 @@ int VP8InitFrame(VP8Decoder* const dec, VP8Io* io) {
   // prepare 'io'
   io->width = dec->pic_hdr_.width_;
   io->height = dec->pic_hdr_.height_;
-  io->mb_x = 0;
   io->mb_y = 0;
-  if (dec->filter_type_ == 0) {
-    io->y = dec->yuv_b_ + Y_OFF;
-    io->u = dec->yuv_b_ + U_OFF;
-    io->v = dec->yuv_b_ + V_OFF;
-    io->y_stride = BPS;
-    io->uv_stride = BPS;
-  } else {
-    io->y = dec->cache_y_;
-    io->u = dec->cache_u_;
-    io->v = dec->cache_v_;
-    io->y_stride = dec->cache_y_stride_;
-    io->uv_stride = dec->cache_uv_stride_;
-    io->mb_w = io->width;
-  }
+  io->y = dec->cache_y_;
+  io->u = dec->cache_u_;
+  io->v = dec->cache_v_;
+  io->y_stride = dec->cache_y_stride_;
+  io->uv_stride = dec->cache_uv_stride_;
+  io->fancy_upscaling = 0;    // default
 
   // Init critical function pointers and look-up tables.
   VP8DspInitTables();
@@ -177,32 +163,34 @@ static void DoFilter(VP8Decoder* const dec, int mb_x, int mb_y) {
   }
 }
 
-void VP8StoreBlock(VP8Decoder* const dec) {
-  VP8MB* const info = dec->mb_info_ + dec->mb_x_;
-  int level = dec->filter_levels_[dec->segment_];
-  if (dec->filter_hdr_.use_lf_delta_) {
-    // TODO(skal): only CURRENT is handled for now.
-    level += dec->filter_hdr_.ref_lf_delta_[0];
-    if (dec->is_i4x4_) {
-      level += dec->filter_hdr_.mode_lf_delta_[0];
+void VP8StoreBlock(VP8Decoder* const dec, VP8Io* const io) {
+  if (dec->filter_type_ > 0) {
+    VP8MB* const info = dec->mb_info_ + dec->mb_x_;
+    int level = dec->filter_levels_[dec->segment_];
+    if (dec->filter_hdr_.use_lf_delta_) {
+      // TODO(skal): only CURRENT is handled for now.
+      level += dec->filter_hdr_.ref_lf_delta_[0];
+      if (dec->is_i4x4_) {
+        level += dec->filter_hdr_.mode_lf_delta_[0];
+      }
     }
-  }
-  level = (level < 0) ? 0 : (level > 63) ? 63 : level;
-  info->f_level_ = level;
+    level = (level < 0) ? 0 : (level > 63) ? 63 : level;
+    info->f_level_ = level;
 
-  if (dec->filter_hdr_.sharpness_ > 0) {
-    if (dec->filter_hdr_.sharpness_ > 4) {
-      level >>= 2;
-    } else {
-      level >>= 1;
+    if (dec->filter_hdr_.sharpness_ > 0) {
+      if (dec->filter_hdr_.sharpness_ > 4) {
+        level >>= 2;
+      } else {
+        level >>= 1;
+      }
+      if (level > 9 - dec->filter_hdr_.sharpness_) {
+        level = 9 - dec->filter_hdr_.sharpness_;
+      }
     }
-    if (level > 9 - dec->filter_hdr_.sharpness_) {
-      level = 9 - dec->filter_hdr_.sharpness_;
-    }
-  }
 
-  info->f_ilevel_ = (level < 1) ? 1 : level;
-  info->f_inner_ = (!info->skip_ || dec->is_i4x4_);
+    info->f_ilevel_ = (level < 1) ? 1 : level;
+    info->f_inner_ = (!info->skip_ || dec->is_i4x4_);
+  }
   {
     // Transfer samples to row cache
     int y;
@@ -222,7 +210,7 @@ void VP8StoreBlock(VP8Decoder* const dec) {
   }
 }
 
-void VP8FilterRow(VP8Decoder* const dec, VP8Io* io) {
+void VP8FinishRow(VP8Decoder* const dec, VP8Io* io) {
   const int extra_y_rows = kFilterExtraRows[dec->filter_type_];
   const int ysize = extra_y_rows * dec->cache_y_stride_;
   const int uvsize = (extra_y_rows / 2) * dec->cache_uv_stride_;
@@ -231,9 +219,11 @@ void VP8FilterRow(VP8Decoder* const dec, VP8Io* io) {
   uint8_t* const ydst = dec->cache_y_ - ysize;
   uint8_t* const udst = dec->cache_u_ - uvsize;
   uint8_t* const vdst = dec->cache_v_ - uvsize;
-  int mb_x;
-  for (mb_x = 0; mb_x < dec->mb_w_; ++mb_x) {
-    DoFilter(dec, mb_x, dec->mb_y_);
+  if (dec->filter_type_ > 0) {
+    int mb_x;
+    for (mb_x = 0; mb_x < dec->mb_w_; ++mb_x) {
+      DoFilter(dec, mb_x, dec->mb_y_);
+    }
   }
   if (io->put) {
     int y_start = dec->mb_y_ * 16;
