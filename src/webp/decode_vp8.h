@@ -40,28 +40,36 @@ extern "C" {
 typedef struct VP8Io VP8Io;
 struct VP8Io {
   // set by VP8GetHeaders()
-  int width, height;       // picture dimensions, in pixels
+  int width, height;         // picture dimensions, in pixels
 
   // set before calling put()
-  int mb_x, mb_y;            // position of the current sample (in pixels)
-  int mb_w, mb_h;            // size of the current sample (usually 16x16)
-  const uint8_t *y, *u, *v;  // samples to copy
-  int y_stride;              // stride for luma
-  int uv_stride;             // stride for chroma
+  int mb_y;                  // position of the current rows (in pixels)
+  int mb_h;                  // number of rows in the sample
+  const uint8_t *y, *u, *v;  // rows to copy (in yuv420 format)
+  int y_stride;              // row stride for luma
+  int uv_stride;             // row stride for chroma
 
   void* opaque;              // user data
 
-  // called when fresh samples are available (1 block of 16x16 pixels)
+  // called when fresh samples are available. Currently, samples are in
+  // YUV420 format, and can be up to width x 24 in size (depending on the
+  // in-loop filtering level, e.g.).
   void (*put)(const VP8Io* io);
 
-  // called just before starting to decode the blocks
-  void (*setup)(const VP8Io* io);
+  // called just before starting to decode the blocks.
+  // Should returns 0 in case of error.
+  int (*setup)(VP8Io* io);
 
-  // called just after block decoding is finished
+  // called just after block decoding is finished (or when an error occurred).
   void (*teardown)(const VP8Io* io);
 
+  // this is a recommendation for the user-side yuv->rgb converter. This flag
+  // is set when calling setup() hook and can be overwritten by it. It then
+  // can be taken into consideration during the put() method.
+  int fancy_upscaling;
+
   // Input buffer.
-   uint32_t data_size;
+  uint32_t data_size;
   const uint8_t* data;
 };
 
