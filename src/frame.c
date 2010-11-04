@@ -163,7 +163,7 @@ static void DoFilter(VP8Decoder* const dec, int mb_x, int mb_y) {
   }
 }
 
-void VP8StoreBlock(VP8Decoder* const dec, VP8Io* const io) {
+void VP8StoreBlock(VP8Decoder* const dec) {
   if (dec->filter_type_ > 0) {
     VP8MB* const info = dec->mb_info_ + dec->mb_x_;
     int level = dec->filter_levels_[dec->segment_];

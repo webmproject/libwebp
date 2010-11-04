@@ -537,7 +537,7 @@ static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
       VP8ReconstructBlock(dec);
 
       // Store data and save block's filtering params
-      VP8StoreBlock(dec, io);
+      VP8StoreBlock(dec);
     }
     if (!ok) {
       break;

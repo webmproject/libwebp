@@ -264,7 +264,7 @@ int VP8InitFrame(VP8Decoder* const dec, VP8Io* io);
 // Predict a block and add residual
 void VP8ReconstructBlock(VP8Decoder* const dec);
 // Store a block, along with filtering params
-void VP8StoreBlock(VP8Decoder* const dec, VP8Io* io);
+void VP8StoreBlock(VP8Decoder* const dec);
 // Finalize and transmit a complete row
 void VP8FinishRow(VP8Decoder* const dec, VP8Io* io);
 
