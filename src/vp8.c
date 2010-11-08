@@ -403,8 +403,13 @@ static const uint8_t kUnpackTab[16][4] = {
   {0, 0, 1, 1},  {1, 0, 1, 1},  {0, 1, 1, 1},  {1, 1, 1, 1} };
 
 // Macro to pack four LSB of four bytes into four bits.
-#define PACK(X, S) \
-  ((((*(uint32_t*)(X)) * 0x01020408U) & 0xff000000) >> (S))
+#if defined(__PPC__) || defined(_M_PPC) || defined(_ARCH_PPC) || \
+    defined(__BIG_ENDIAN__)
+#define PACK_CST 0x08040201U
+#else
+#define PACK_CST 0x01020408U
+#endif
+#define PACK(X, S) ((((*(uint32_t*)(X)) * PACK_CST) & 0xff000000) >> (S))
 
 typedef const uint8_t (*Proba_t)[NUM_CTX][NUM_PROBAS];  // for const-casting
 static int ParseResiduals(VP8Decoder* const dec,
