@@ -67,7 +67,7 @@ uint32_t VP8GetValue(VP8BitReader* const br, int bits) {
 }
 
 int32_t VP8GetSignedValue(VP8BitReader* const br, int bits) {
-  const int value = (bits > 0) ? VP8GetValue(br, bits) : 0;
+  const int value = VP8GetValue(br, bits);
   return VP8Get(br) ? -value : value;
 }
 

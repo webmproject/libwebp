@@ -302,15 +302,16 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
   }
 
   // Paragraph 9.8
+#ifndef ONLY_KEYFRAME_CODE
   dec->update_proba_ = VP8Get(br);
   if (!dec->update_proba_) {    // save for later restore
     dec->proba_saved_ = dec->proba_;
   }
-
-#ifndef ONLY_KEYFRAME_CODE
   dec->buffer_flags_ &= 1 << 8;
   dec->buffer_flags_ |=
       (frm_hdr->key_frame_ || VP8Get(br)) << 8;    // refresh last frame
+#else
+  VP8Get(br);   // just ignore the value of update_proba_
 #endif
 
   VP8ParseProba(br, dec);
@@ -555,9 +556,12 @@ static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
   }
 
   // Finish
+#ifndef ONLY_KEYFRAME_CODE
   if (!dec->update_proba_) {
     dec->proba_ = dec->proba_saved_;
   }
+#endif
+
   return ok;
 }
 

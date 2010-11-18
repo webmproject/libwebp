@@ -170,32 +170,32 @@ void (*VP8TransformWHT)(const int16_t* in, int16_t* out) = TransformWHT;
 
 static inline void TrueMotion(uint8_t *dst, int size) {
   const uint8_t* top = dst - BPS;
-  const int tl = top[-1];
-  int x, y;
-
+  const uint8_t* const clip0 = clip1 + 255 - top[-1];
+  int y;
   for (y = 0; y < size; ++y) {
-    const uint8_t* const clip = clip1 + 255 + dst[-1] - tl;
+    const uint8_t* const clip = clip0 + dst[-1];
+    int x;
     for (x = 0; x < size; ++x) {
       dst[x] = clip[top[x]];
     }
     dst += BPS;
   }
 }
-static void TM4(uint8_t *dst) { TrueMotion(dst, 4); }
+static void TM4(uint8_t *dst)   { TrueMotion(dst, 4); }
 static void TM8uv(uint8_t *dst) { TrueMotion(dst, 8); }
-static void TM16(uint8_t *dst) { TrueMotion(dst, 16); }
+static void TM16(uint8_t *dst)  { TrueMotion(dst, 16); }
 
 //-----------------------------------------------------------------------------
 // 16x16
 
-static void V16(uint8_t *dst) {     // vertical
+static void VE16(uint8_t *dst) {     // vertical
   int j;
   for (j = 0; j < 16; ++j) {
     memcpy(dst + j * BPS, dst - BPS, 16);
   }
 }
 
-static void H16(uint8_t *dst) {     // horizontal
+static void HE16(uint8_t *dst) {     // horizontal
   int j;
   for (j = 16; j > 0; --j) {
     memset(dst, dst[-1], 16);
@@ -244,30 +244,24 @@ static void DC16NoTopLeft(uint8_t *dst) {  // DC with no top and left samples
 //-----------------------------------------------------------------------------
 // 4x4
 
-static inline void Put4(uint32_t v, uint8_t* dst) {
-  int i;
-  for (i = 4; i > 0; --i) {
-    *(uint32_t*)dst = v;
-    dst += BPS;
-  }
-}
-
 #define AVG3(a, b, c) (((a) + 2 * (b) + (c) + 2) >> 2)
 #define AVG2(a, b) (((a) + (b) + 1) >> 1)
 
-static void V4(uint8_t *dst) {    // vertical
+static void VE4(uint8_t *dst) {    // vertical
   const uint8_t* top = dst - BPS;
   const uint8_t vals[4] = {
     AVG3(top[-1], top[0], top[1]),
-    AVG3(top[0], top[1], top[2]),
-    AVG3(top[1], top[2], top[3]),
-    AVG3(top[2], top[3], top[4])
+    AVG3(top[ 0], top[1], top[2]),
+    AVG3(top[ 1], top[2], top[3]),
+    AVG3(top[ 2], top[3], top[4])
   };
-  const uint32_t v = *(uint32_t*)vals;
-  Put4(v, dst);
+  int i;
+  for (i = 0; i < 4; ++i) {
+    memcpy(dst + i * BPS, vals, sizeof(vals));
+  }
 }
 
-static void H4(uint8_t *dst) {    // horizontal
+static void HE4(uint8_t *dst) {    // horizontal
   const int A = dst[-1 - BPS];
   const int B = dst[-1];
   const int C = dst[-1 + BPS];
@@ -282,10 +276,9 @@ static void H4(uint8_t *dst) {    // horizontal
 static void DC4(uint8_t *dst) {   // DC
   uint32_t dc = 4;
   int i;
-  for (i = 0; i < 4; ++i) {
-    dc += dst[i - BPS] + dst[-1 + i * BPS];
-  }
-  Put4((dc >> 3) * 0x01010101U, dst);
+  for (i = 0; i < 4; ++i) dc += dst[i - BPS] + dst[-1 + i * BPS];
+  dc >>= 3;
+  for (i = 0; i < 4; ++i) memset(dst + i * BPS, dc, 4);
 }
 
 static void RD4(uint8_t *dst) {   // Down-right
@@ -413,14 +406,14 @@ static void HD4(uint8_t *dst) {  // Horizontal-Down
 //-----------------------------------------------------------------------------
 // Chroma
 
-static void V8uv(uint8_t *dst) {    // vertical
+static void VE8uv(uint8_t *dst) {    // vertical
   int j;
   for (j = 0; j < 8; ++j) {
     memcpy(dst + j * BPS, dst - BPS, 8);
   }
 }
 
-static void H8uv(uint8_t *dst) {    // horizontal
+static void HE8uv(uint8_t *dst) {    // horizontal
   int j;
   for (j = 0; j < 8; ++j) {
     memset(dst, dst[-1], 8);
@@ -471,16 +464,16 @@ static void DC8uvNoTopLeft(uint8_t *dst) {    // DC with nothing
 // default C implementations
 
 VP8PredFunc VP8PredLuma4[11] = {
-  DC4, TM4, V4, H4, LD4, RD4, VR4, VL4, HD4, HU4
+  DC4, TM4, VE4, HE4, RD4, VR4, LD4, VL4, HD4, HU4
 };
 
 VP8PredFunc VP8PredLuma16[7] = {
-  DC16, TM16, V16, H16,
+  DC16, TM16, VE16, HE16,
   DC16NoTop, DC16NoLeft, DC16NoTopLeft
 };
 
 VP8PredFunc VP8PredChroma8[7] = {
-  DC8uv, TM8uv, V8uv, H8uv,
+  DC8uv, TM8uv, VE8uv, HE8uv,
   DC8uvNoTop, DC8uvNoLeft, DC8uvNoTopLeft
 };
 
