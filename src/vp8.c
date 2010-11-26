@@ -329,24 +329,24 @@ static const uint8_t kBands[16 + 1] = {
   0  // extra entry as sentinel
 };
 
-static const uint8_t kCat3[] = {173, 148, 140, 0};
-static const uint8_t kCat4[] = {176, 155, 140, 135, 0};
-static const uint8_t kCat5[] = {180, 157, 141, 134, 130, 0};
+static const uint8_t kCat3[] = { 173, 148, 140, 0 };
+static const uint8_t kCat4[] = { 176, 155, 140, 135, 0 };
+static const uint8_t kCat5[] = { 180, 157, 141, 134, 130, 0 };
 static const uint8_t kCat6[] =
-  {254, 254, 243, 230, 196, 177, 153, 140, 133, 130, 129, 0};
+  { 254, 254, 243, 230, 196, 177, 153, 140, 133, 130, 129, 0 };
 static const uint8_t * const kCat3456[] = { kCat3, kCat4, kCat5, kCat6 };
 static const uint8_t kZigzag[16] = {
   0, 1, 4, 8,  5, 2, 3, 6,  9, 12, 13, 10,  7, 11, 14, 15
 };
 
-typedef const uint8_t PROBA_ARRAY[NUM_CTX][NUM_PROBAS];
+typedef const uint8_t (*ProbaArray)[NUM_CTX][NUM_PROBAS];  // for const-casting
 
-static int GetCoeffs(VP8BitReader* const br,
-                     const uint8_t (*prob)[NUM_CTX][NUM_PROBAS],
+// Returns 1 if there's non-zero coeffs, 0 otherwise
+static int GetCoeffs(VP8BitReader* const br, ProbaArray prob,
                      int ctx, const uint16_t dq[2], int n, int16_t* out) {
   const uint8_t* p = prob[kBands[n]][ctx];
   if (!VP8GetBit(br, p[0])) {   // first EOB is more a 'CBP' bit.
-    return -1;
+    return 0;
   }
   while (1) {
     ++n;
@@ -372,12 +372,12 @@ static int GetCoeffs(VP8BitReader* const br,
               v = 7 + 2 * VP8GetBit(br, 165) + VP8GetBit(br, 145);
             }
           } else {
-            uint8_t* tab;
+            const uint8_t* tab;
             const int bit1 = VP8GetBit(br, p[8]);
             const int bit0 = VP8GetBit(br, p[9 + bit1]);
             const int cat = 2 * bit1 + bit0;
             v = 0;
-            for (tab = (uint8_t*)kCat3456[cat]; *tab; ++tab) {
+            for (tab = kCat3456[cat]; *tab; ++tab) {
               v += v + VP8GetBit(br, *tab);
             }
             v += 3 + (8 << cat);
@@ -387,13 +387,12 @@ static int GetCoeffs(VP8BitReader* const br,
       }
       j = kZigzag[n - 1];
       out[j] = VP8GetSigned(br, v) * dq[j > 0];
-      if (n == 16) break;
-      if (!VP8GetBit(br, p[0])) {   // EOB
-        return n;
+      if (n == 16 || !VP8GetBit(br, p[0])) {   // EOB
+        return 1;
       }
     }
   }
-  return 15;
+  return 0;
 }
 
 // Table to unpack four bits into four bytes
@@ -412,11 +411,10 @@ static const uint8_t kUnpackTab[16][4] = {
 #endif
 #define PACK(X, S) ((((*(uint32_t*)(X)) * PACK_CST) & 0xff000000) >> (S))
 
-typedef const uint8_t (*Proba_t)[NUM_CTX][NUM_PROBAS];  // for const-casting
 static int ParseResiduals(VP8Decoder* const dec,
                           VP8MB* const mb, VP8BitReader* const token_br) {
   int out_t_nz, out_l_nz, first;
-  Proba_t ac_prob;
+  ProbaArray ac_prob;
   const VP8QuantMatrix* q = &dec->dqm_[dec->segment_];
   int16_t* dst = dec->coeffs_;
   VP8MB* const left_mb = dec->mb_info_ - 1;
@@ -430,15 +428,15 @@ static int ParseResiduals(VP8Decoder* const dec,
   if (!dec->is_i4x4_) {    // parse DC
     int16_t dc[16] = { 0 };
     const int ctx = mb->dc_nz_ + left_mb->dc_nz_;
-    const int last = GetCoeffs(token_br, (Proba_t)dec->proba_.coeffs_[1],
-                               ctx, q->y2_mat_, 0, dc);
-    mb->dc_nz_ = left_mb->dc_nz_ = (last >= 0);
+    mb->dc_nz_ = left_mb->dc_nz_ =
+        GetCoeffs(token_br, (ProbaArray)dec->proba_.coeffs_[1],
+                  ctx, q->y2_mat_, 0, dc);
     first = 1;
-    ac_prob = (Proba_t)dec->proba_.coeffs_[0];
+    ac_prob = (ProbaArray)dec->proba_.coeffs_[0];
     VP8TransformWHT(dc, dst);
   } else {
     first = 0;
-    ac_prob = (Proba_t)dec->proba_.coeffs_[3];
+    ac_prob = (ProbaArray)dec->proba_.coeffs_[3];
   }
 
   memcpy(tnz, kUnpackTab[mb->nz_ & 0xf], sizeof(tnz));
@@ -448,11 +446,10 @@ static int ParseResiduals(VP8Decoder* const dec,
 
     for (x = 0; x < 4; ++x) {
       const int ctx = l + tnz[x];
-      const int last = GetCoeffs(token_br, ac_prob, ctx,
-                                 q->y1_mat_, first, dst);
+      l = GetCoeffs(token_br, ac_prob, ctx,
+                    q->y1_mat_, first, dst);
       nz_dc[x] = (dst[0] != 0);
-      nz_ac[x] = (last > 0);
-      tnz[x] = l = (last >= 0);
+      nz_ac[x] = tnz[x] = l;
       dst += 16;
     }
     lnz[y] = l;
@@ -469,12 +466,10 @@ static int ParseResiduals(VP8Decoder* const dec,
       int l = lnz[ch + y];
       for (x = 0; x < 2; ++x) {
         const int ctx = l + tnz[ch + x];
-        const int last =
-            GetCoeffs(token_br, (Proba_t)dec->proba_.coeffs_[2],
+        l = GetCoeffs(token_br, (ProbaArray)dec->proba_.coeffs_[2],
                       ctx, q->uv_mat_, 0, dst);
         nz_dc[y * 2 + x] = (dst[0] != 0);
-        nz_ac[y * 2 + x] = (last > 0);
-        tnz[ch + x] = l = (last >= 0);
+        nz_ac[y * 2 + x] = tnz[ch + x] = l;
         dst += 16;
       }
       lnz[ch + y] = l;
