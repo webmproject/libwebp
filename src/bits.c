@@ -27,6 +27,7 @@ int VP8Init(VP8BitReader* const br, const uint8_t* buf, uint32_t size) {
   br->left_ = -8;
   br->value_ = (buf[0] << 8) | buf[1];
   br->range_ = 255 - 1;
+  br->eof_ = 0;
   return 1;
 }
 
