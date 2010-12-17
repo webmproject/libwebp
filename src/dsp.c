@@ -51,8 +51,7 @@ void VP8DspInitTables() {
 }
 
 static inline uint8_t clip_8b(int v) {
-  assert(v >= -255 && v <= 255 + 255);
-  return clip1[255 + v];
+  return (!(v & ~0xff)) ? v : (v < 0) ? 0 : 255;
 }
 
 //-----------------------------------------------------------------------------
@@ -70,18 +69,24 @@ static void Transform(const int16_t* in, uint8_t* dst) {
   int i;
   tmp = C;
   for (i = 0; i < 4; ++i) {    // vertical pass
-    const int a = in[0] + in[8];
-    const int b = in[0] - in[8];
-    const int c = MUL(in[4], kC2) - MUL(in[12], kC1);
-    const int d = MUL(in[4], kC1) + MUL(in[12], kC2);
-    tmp[0] = a + d;
-    tmp[1] = b + c;
-    tmp[2] = b - c;
-    tmp[3] = a - d;
+    const int a = in[0] + in[8];    // [-4096, 4094]
+    const int b = in[0] - in[8];    // [-4095, 4095]
+    const int c = MUL(in[4], kC2) - MUL(in[12], kC1);   // [-3783, 3783]
+    const int d = MUL(in[4], kC1) + MUL(in[12], kC2);   // [-3785, 3781]
+    tmp[0] = a + d;   // [-7881, 7875]
+    tmp[1] = b + c;   // [-7878, 7878]
+    tmp[2] = b - c;   // [-7878, 7878]
+    tmp[3] = a - d;   // [-7877, 7879]
     tmp += 4;
     in++;
   }
-
+  // Each pass is expanding the dynamic range by ~3.85 (upper bound).
+  // The exact value is (2. + (kC1 + kC2) / 65536).
+  // After the second pass, maximum interval is [-3794, 3794], assuming
+  // an input in [-2048, 2047] interval. We then need to add a dst value
+  // in the [0, 255] range.
+  // In the worst case scenario, the input to clip_8b() can be as large as
+  // [-60713, 60968].
   tmp = C;
   for (i = 0; i < 4; ++i) {    // horizontal pass
     const int dc = tmp[0] + 4;
