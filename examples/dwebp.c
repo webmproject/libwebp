@@ -27,13 +27,16 @@ extern "C" {
 
 static void help(const char *s) {
   printf("Usage: dwebp "
-         "[options] [in_file] [-h] [-yuv] [-o ppm_file]\n");
+         "[options] [in_file] [-h] [-raw] [-o ppm_file]\n\n"
+         " -raw:  save the raw YUV samples as a grayscale PGM\n"
+         "        file with IMC2 layout.\n"
+        );
 }
 
 int main(int argc, char *argv[]) {
   const char *in_file = NULL;
   const char *out_file = NULL;
-  int yuv_out = 0;
+  int raw_output = 0;
 
   int width, height, stride, uv_stride;
   uint8_t* out = NULL, *u = NULL, *v = NULL;
@@ -45,8 +48,8 @@ int main(int argc, char *argv[]) {
       return 0;
     } else if (!strcmp(argv[c], "-o") && c < argc - 1) {
       out_file = argv[++c];
-    } else if (!strcmp(argv[c], "-yuv")) {
-      yuv_out = 1;
+    } else if (!strcmp(argv[c], "-raw")) {
+      raw_output = 1;
     } else if (argv[c][0] == '-') {
       printf("Unknown option '%s'\n", argv[c]);
       help(argv[0]);
@@ -81,7 +84,7 @@ int main(int argc, char *argv[]) {
       return -1;
     }
 
-    if (!yuv_out) {
+    if (!raw_output) {
       out = WebPDecodeRGB(data, data_size, &width, &height);
     } else {
       out = WebPDecodeYUV(data, data_size, &width, &height,
@@ -98,24 +101,35 @@ int main(int argc, char *argv[]) {
   if (out_file) {
     FILE* const fout = fopen(out_file, "wb");
     if (fout) {
-      if (!yuv_out) {
+      int ok = 1;
+      if (!raw_output) {
         fprintf(fout, "P6\n%d %d\n255\n", width, height);
-        fwrite(out, width * height, 3, fout);
+        ok &= (fwrite(out, width * height, 3, fout) == 3);
       } else {
+        // Save a grayscale PGM file using the IMC2 layout
+        // (http://www.fourcc.org/yuv.php#IMC2). This is a very
+        // convenient format for viewing the samples, esp. for
+        // odd dimensions.
         int y;
-        fprintf(fout, "P5\n%d %d\n255\n", width, height * 3 / 2);
-        for (y = 0; y < height; ++y) {
-          fwrite(out + y * stride, width, 1, fout);
+        const int uv_width = (width + 1) / 2;
+        const int uv_height = (height + 1) / 2;
+        const int out_stride = (width + 1) & ~1;
+        fprintf(fout, "P5\n%d %d\n255\n", out_stride, height + uv_height);
+        for (y = 0; ok && y < height; ++y) {
+          ok &= (fwrite(out + y * stride, width, 1, fout) == 1);
+          if (width & 1) fputc(0, fout);    // padding byte
         }
-        for (y = 0; y < (height + 1) / 2; ++y) {
-          fwrite(u + y * uv_stride, (width + 1) / 2, 1, fout);
-        }
-        for (y = 0; y < (height + 1) / 2; ++y) {
-          fwrite(v + y * uv_stride, (width + 1) / 2, 1, fout);
+        for (y = 0; ok && y < uv_height; ++y) {
+          ok &= (fwrite(u + y * uv_stride, uv_width, 1, fout) == 1);
+          ok &= (fwrite(v + y * uv_stride, uv_width, 1, fout) == 1);
         }
       }
       fclose(fout);
-      printf("Saved file %s\n", out_file);
+      if (ok) {
+        printf("Saved file %s\n", out_file);
+      } else {
+        printf("Error writing file %s !!\n", out_file);
+      }
     } else {
       printf("Error opening output file %s\n", out_file);
     }
