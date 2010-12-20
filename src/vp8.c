@@ -259,7 +259,12 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
   }
 
   br = &dec->br_;
-  VP8Init(br, buf, buf_size);
+  if (!VP8Init(br, buf, buf_size)) {
+    return VP8SetError(dec, 2, "not enough data for bit reader");
+  }
+  if (frm_hdr->partition_length_ > buf_size) {
+    return VP8SetError(dec, 2, "bad partition length");
+  }
   buf += frm_hdr->partition_length_;
   buf_size -= frm_hdr->partition_length_;
   if (frm_hdr->key_frame_) {
@@ -390,6 +395,9 @@ static int GetCoeffs(VP8BitReader* const br, ProbaArray prob,
       if (n == 16 || !VP8GetBit(br, p[0])) {   // EOB
         return 1;
       }
+    }
+    if (n == 16) {
+      return 1;
     }
   }
   return 0;
