@@ -191,6 +191,8 @@ static void CustomPut(const VP8Io* io) {
   const int uv_w = (w + 1) / 2;
   assert(!(io->mb_y & 1));
 
+  if (w <= 0 || mb_h <= 0) return;
+
   if (p->mode == MODE_YUV) {
     uint8_t* const y_dst = p->output + io->mb_y * p->stride;
     uint8_t* const u_dst = p->u + (io->mb_y >> 1) * p->u_stride;
