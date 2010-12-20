@@ -18,17 +18,16 @@ extern "C" {
 //-----------------------------------------------------------------------------
 // VP8BitReader
 
-int VP8Init(VP8BitReader* const br, const uint8_t* buf, uint32_t size) {
-  if (!br || !buf || size < 2) {
-    return 0;
-  }
-  br->buf_ = buf + 2;
-  br->buf_end_ = buf + size;
-  br->left_ = -8;
-  br->value_ = (buf[0] << 8) | buf[1];
+void VP8Init(VP8BitReader* const br, const uint8_t* buf, uint32_t size) {
+  assert(br);
+  assert(buf);
   br->range_ = 255 - 1;
   br->eof_ = 0;
-  return 1;
+  br->buf_ = buf;
+  br->buf_end_ = buf + size;
+  // Need two initial bytes.
+  br->value_ = (VP8GetByte(br) << 8) | VP8GetByte(br);
+  br->left_ = -8;
 }
 
 const uint8_t kVP8Log2Range[128] = {

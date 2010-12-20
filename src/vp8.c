@@ -188,13 +188,13 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
     return 0;
   }
   SetOk(dec);
-  if (io == NULL || io->data == NULL || io->data_size <= 4) {
+  if (io == NULL) {
     return VP8SetError(dec, 2, "null VP8Io passed to VP8GetHeaders()");
   }
 
   buf = (uint8_t *)io->data;
   buf_size = io->data_size;
-  if (buf_size < 4) {
+  if (buf == NULL || buf_size <= 4) {
     return VP8SetError(dec, 2, "Not enough data to parse frame header");
   }
 
@@ -259,9 +259,7 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
   }
 
   br = &dec->br_;
-  if (!VP8Init(br, buf, buf_size)) {
-    return VP8SetError(dec, 2, "not enough data for bit reader");
-  }
+  VP8Init(br, buf, buf_size);
   if (frm_hdr->partition_length_ > buf_size) {
     return VP8SetError(dec, 2, "bad partition length");
   }
