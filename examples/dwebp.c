@@ -29,7 +29,7 @@ static void help(const char *s) {
   printf("Usage: dwebp "
          "[options] [in_file] [-h] [-raw] [-o ppm_file]\n\n"
          " -raw:  save the raw YUV samples as a grayscale PGM\n"
-         "        file with IMC2 layout.\n"
+         "        file with IMC4 layout.\n"
         );
 }
 
@@ -106,8 +106,8 @@ int main(int argc, char *argv[]) {
         fprintf(fout, "P6\n%d %d\n255\n", width, height);
         ok &= (fwrite(out, width * height, 3, fout) == 3);
       } else {
-        // Save a grayscale PGM file using the IMC2 layout
-        // (http://www.fourcc.org/yuv.php#IMC2). This is a very
+        // Save a grayscale PGM file using the IMC4 layout
+        // (http://www.fourcc.org/yuv.php#IMC4). This is a very
         // convenient format for viewing the samples, esp. for
         // odd dimensions.
         int y;
