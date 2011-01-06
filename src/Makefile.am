@@ -1,8 +1,11 @@
 AM_CPPFLAGS = -I$(top_buildir)/src
 lib_LTLIBRARIES = libwebpdecode.la
 
-libwebpdecode_la_SOURCES = webp/decode.h webp/vp8.h bits.h vp8i.h yuv.h bits.c dsp.c frame.c quant.c tree.c vp8.c webp.c yuv.c
+libwebpdecode_la_SOURCES = webp/decode.h webp/vp8.h \
+  dec/bits.h dec/vp8i.h dec/yuv.h dec/bits.c dec/dsp.c dec/frame.c \
+  dec/quant.c dec/tree.c dec/vp8.c dec/webp.c dec/yuv.c
 libwebpdecode_la_LDFLAGS = -version-info 0:0:0
 libwebpdecodeinclude_HEADERS = webp/decode.h webp/decode_vp8.h
 libwebpdecodeincludedir = $(includedir)/webp
-noinst_HEADERS = bits.h vp8i.h yuv.h
+
+noinst_HEADERS = dec/bits.h dec/vp8i.h dec/yuv.h
