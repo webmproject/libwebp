@@ -212,7 +212,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = src examples
+SUBDIRS = src/dec examples
 EXTRA_DIST = COPYING autogen.sh
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
