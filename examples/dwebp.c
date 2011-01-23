@@ -33,7 +33,7 @@ static void help(const char *s) {
         );
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, const char *argv[]) {
   const char *in_file = NULL;
   const char *out_file = NULL;
   int raw_output = 0;
@@ -85,9 +85,9 @@ int main(int argc, char *argv[]) {
     }
 
     if (!raw_output) {
-      out = WebPDecodeRGB(data, data_size, &width, &height);
+      out = WebPDecodeRGB((const uint8_t*)data, data_size, &width, &height);
     } else {
-      out = WebPDecodeYUV(data, data_size, &width, &height,
+      out = WebPDecodeYUV((const uint8_t*)data, data_size, &width, &height,
                           &u, &v, &stride, &uv_stride);
     }
     free(data);
