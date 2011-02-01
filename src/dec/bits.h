@@ -9,8 +9,8 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#ifndef WEBP_DECODE_BITS_H_
-#define WEBP_DECODE_BITS_H_
+#ifndef WEBP_DEC_BITS_H_
+#define WEBP_DEC_BITS_H_
 
 #include <assert.h>
 #include "webp/decode_vp8.h"
@@ -103,4 +103,4 @@ static inline int VP8GetSigned(VP8BitReader* const br, int v) {
 }    // extern "C"
 #endif
 
-#endif  // WEBP_DECODE_BITS_H_
+#endif  // WEBP_DEC_BITS_H_

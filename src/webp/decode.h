@@ -9,8 +9,8 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#ifndef WEBP_DECODE_WEBP_DECODE_H_
-#define WEBP_DECODE_WEBP_DECODE_H_
+#ifndef WEBP_WEBP_DECODE_H_
+#define WEBP_WEBP_DECODE_H_
 
 #include "webp/types.h"
 
@@ -96,4 +96,4 @@ uint8_t* WebPDecodeYUVInto(const uint8_t* data, uint32_t data_size,
 }    // extern "C"
 #endif
 
-#endif  // WEBP_DECODE_WEBP_DECODE_H_
+#endif  // WEBP_WEBP_DECODE_H_

@@ -9,8 +9,8 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#ifndef WEBP_DECODE_WEBP_TYPES_H_
-#define WEBP_DECODE_WEBP_TYPES_H_
+#ifndef WEBP_WEBP_TYPES_H_
+#define WEBP_WEBP_TYPES_H_
 
 #ifndef _MSC_VER
 #include <inttypes.h>
@@ -25,4 +25,4 @@ typedef unsigned long long int uint64_t;
 #define inline __forceinline
 #endif  /* _MSC_VER */
 
-#endif  /* WEBP_DECODE_WEBP_TYPES_H_ */
+#endif  /* WEBP_WEBP_TYPES_H_ */

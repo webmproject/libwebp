@@ -56,9 +56,10 @@ Decoding example:
 =================
 
 there's a decoding example in example/dwebp.c which will take a .webp file and
-decode it to a PPM image file. This is simply to demonstrate use of the API.
+decode it to a PNG image file. This is simply to demonstrate use of the API.
+It also decodes to PPM (or even PGM) format.
 You can verify the file test.webp decodes to exactly the same as test_ref.ppm:
-  `cd examples && ./dwebp test.webp -o test.ppm && diff test.ppm test_ref.ppm`
+  `cd examples && ./dwebp test.webp -ppm -o test.ppm && diff test.ppm test_ref.ppm`
 
 Bugs:
 =====

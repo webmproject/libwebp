@@ -9,8 +9,8 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#ifndef WEBP_DECODE_WEBP_DECODE_VP8_H_
-#define WEBP_DECODE_WEBP_DECODE_VP8_H_
+#ifndef WEBP_WEBP_DECODE_VP8_H_
+#define WEBP_WEBP_DECODE_VP8_H_
 
 #include "decode.h"
 
@@ -112,4 +112,4 @@ void VP8Delete(VP8Decoder* const dec);
 }    // extern "C"
 #endif
 
-#endif  // WEBP_DECODE_WEBP_DECODE_VP8_H_
+#endif  // WEBP_WEBP_DECODE_VP8_H_

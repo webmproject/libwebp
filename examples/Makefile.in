@@ -47,9 +47,10 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_dwebp_OBJECTS = dwebp.$(OBJEXT)
+am_dwebp_OBJECTS = dwebp-dwebp.$(OBJEXT)
 dwebp_OBJECTS = $(am_dwebp_OBJECTS)
-dwebp_DEPENDENCIES = ../src/dec/libwebpdecode.la
+am__DEPENDENCIES_1 =
+dwebp_DEPENDENCIES = ../src/dec/libwebpdecode.la $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -100,6 +101,7 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
+LIBPNG_CONFIG = @LIBPNG_CONFIG@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
@@ -121,6 +123,8 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PNG_INCLUDES = @PNG_INCLUDES@
+PNG_LIBS = @PNG_LIBS@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -181,7 +185,8 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CPPFLAGS = -I$(top_srcdir)/src
 dwebp_SOURCES = dwebp.c
-dwebp_LDADD = ../src/dec/libwebpdecode.la
+dwebp_CPPFLAGS = $(AM_CPPFLAGS) $(PNG_INCLUDES)
+dwebp_LDADD = ../src/dec/libwebpdecode.la $(PNG_LIBS)
 all: all-am
 
 .SUFFIXES:
@@ -269,7 +274,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dwebp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dwebp-dwebp.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -291,6 +296,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+dwebp-dwebp.o: dwebp.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dwebp_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dwebp-dwebp.o -MD -MP -MF $(DEPDIR)/dwebp-dwebp.Tpo -c -o dwebp-dwebp.o `test -f 'dwebp.c' || echo '$(srcdir)/'`dwebp.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/dwebp-dwebp.Tpo $(DEPDIR)/dwebp-dwebp.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dwebp.c' object='dwebp-dwebp.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dwebp_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dwebp-dwebp.o `test -f 'dwebp.c' || echo '$(srcdir)/'`dwebp.c
+
+dwebp-dwebp.obj: dwebp.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dwebp_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dwebp-dwebp.obj -MD -MP -MF $(DEPDIR)/dwebp-dwebp.Tpo -c -o dwebp-dwebp.obj `if test -f 'dwebp.c'; then $(CYGPATH_W) 'dwebp.c'; else $(CYGPATH_W) '$(srcdir)/dwebp.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/dwebp-dwebp.Tpo $(DEPDIR)/dwebp-dwebp.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dwebp.c' object='dwebp-dwebp.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dwebp_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dwebp-dwebp.obj `if test -f 'dwebp.c'; then $(CYGPATH_W) 'dwebp.c'; else $(CYGPATH_W) '$(srcdir)/dwebp.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

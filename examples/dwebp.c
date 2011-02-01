@@ -17,6 +17,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef WEBP_HAVE_PNG
+#include <png.h>
+#endif
+
 #include "webp/decode.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -25,10 +29,69 @@ extern "C" {
 
 //-----------------------------------------------------------------------------
 
+#ifdef WEBP_HAVE_PNG
+static void PNGAPI error_function(png_structp png, png_const_charp dummy) {
+  longjmp(png_jmpbuf(png), 1);
+}
+
+static int WritePNG(FILE* out_file, unsigned char* rgb, int stride,
+                    png_uint_32 width, png_uint_32 height) {
+  png_structp png;
+  png_infop info;
+  int y;
+
+  png = png_create_write_struct(PNG_LIBPNG_VER_STRING,
+                                NULL, error_function, NULL);
+  if (png == NULL) {
+    return 0;
+  }
+  info = png_create_info_struct(png);
+  if (info == NULL) {
+    png_destroy_write_struct(&png, NULL);
+    return 0;
+  }
+  if (setjmp(png_jmpbuf(png))) {
+    png_destroy_write_struct(&png, &info);
+    return 0;
+  }
+  png_init_io(png, out_file);
+  png_set_IHDR(png, info, width, height, 8, PNG_COLOR_TYPE_RGB,
+               PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
+               PNG_FILTER_TYPE_DEFAULT);
+  png_write_info(png, info);
+  for (y = 0; y < height; ++y) {
+    png_bytep row = rgb + y * stride;
+    png_write_rows(png, &row, 1);
+  }
+  png_write_end(png, info);
+  png_destroy_write_struct(&png, &info);
+  return 1;
+}
+#else
+
+typedef uint32_t png_uint_32;
+
+static int WritePNG(FILE* out_file, unsigned char* rgb, int stride,
+                    png_uint_32 width, png_uint_32 height) {
+  printf("PNG support not compiled. Please use ./configure --enable-png\n");
+  printf("You can run with -ppm flag to decode in PPM format.\n");
+  return 0;
+}
+#endif
+
+typedef enum {
+  PNG = 0,
+  PPM,
+  PGM,
+} OutputFileFormat;
+
 static void help(const char *s) {
   printf("Usage: dwebp "
-         "[options] [in_file] [-h] [-raw] [-o ppm_file]\n\n"
-         " -raw:  save the raw YUV samples as a grayscale PGM\n"
+         "[in_file] [-h] [-ppm] [-pgm] [-o out_file]\n\n"
+         "Decodes the WebP image file to PNG format [Default]\n"
+         "Use following options to convert into alternate image formats:\n"
+         " -ppm:  save the raw RGB samples as color PPM\n"
+         " -pgm:  save the raw YUV samples as a grayscale PGM\n"
          "        file with IMC4 layout.\n"
         );
 }
@@ -36,20 +99,21 @@ static void help(const char *s) {
 int main(int argc, const char *argv[]) {
   const char *in_file = NULL;
   const char *out_file = NULL;
-  int raw_output = 0;
 
   int width, height, stride, uv_stride;
   uint8_t* out = NULL, *u = NULL, *v = NULL;
-
+  OutputFileFormat format = PNG;
   int c;
   for (c = 1; c < argc; ++c) {
-    if (!strcmp(argv[c], "-h")) {
+    if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
       help(argv[0]);
       return 0;
     } else if (!strcmp(argv[c], "-o") && c < argc - 1) {
       out_file = argv[++c];
-    } else if (!strcmp(argv[c], "-raw")) {
-      raw_output = 1;
+    } else if (!strcmp(argv[c], "-ppm")) {
+      format = PPM;
+    } else if (!strcmp(argv[c], "-pgm")) {
+      format = PGM;
     } else if (argv[c][0] == '-') {
       printf("Unknown option '%s'\n", argv[c]);
       help(argv[0]);
@@ -84,12 +148,20 @@ int main(int argc, const char *argv[]) {
       return -1;
     }
 
-    if (!raw_output) {
-      out = WebPDecodeRGB((const uint8_t*)data, data_size, &width, &height);
-    } else {
-      out = WebPDecodeYUV((const uint8_t*)data, data_size, &width, &height,
-                          &u, &v, &stride, &uv_stride);
+    switch (format) {
+      case PNG:
+      case PPM:
+        out = WebPDecodeRGB((const uint8_t*)data, data_size, &width, &height);
+        break;
+      case PGM:
+        out = WebPDecodeYUV((const uint8_t*)data, data_size, &width, &height,
+                            &u, &v, &stride, &uv_stride);
+        break;
+      default:
+        free(data);
+        return -1;
     }
+
     free(data);
   }
 
@@ -102,10 +174,12 @@ int main(int argc, const char *argv[]) {
     FILE* const fout = fopen(out_file, "wb");
     if (fout) {
       int ok = 1;
-      if (!raw_output) {
+      if (format == PNG) {
+        ok &= WritePNG(fout, out, 3 * width, width, height);
+      } else if (format == PPM) {
         fprintf(fout, "P6\n%d %d\n255\n", width, height);
         ok &= (fwrite(out, width * height, 3, fout) == 3);
-      } else {
+      } else if (format == PGM) {
         // Save a grayscale PGM file using the IMC4 layout
         // (http://www.fourcc.org/yuv.php#IMC4). This is a very
         // convenient format for viewing the samples, esp. for

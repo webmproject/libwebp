@@ -9,8 +9,8 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#ifndef WEBP_DECODE_VP8I_H_
-#define WEBP_DECODE_VP8I_H_
+#ifndef WEBP_DEC_VP8I_H_
+#define WEBP_DEC_VP8I_H_
 
 #include <string.h>     // for memcpy()
 #include "bits.h"
@@ -313,4 +313,4 @@ extern VP8ChromaFilterFunc VP8HFilter8i;
 }    // extern "C"
 #endif
 
-#endif  // WEBP_DECODE_VP8I_H_
+#endif  // WEBP_DEC_VP8I_H_
