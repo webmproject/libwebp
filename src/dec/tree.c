@@ -331,7 +331,7 @@ void VP8ResetProba(VP8Proba* const proba) {
 #ifndef ONLY_KEYFRAME_CODE
   memcpy(proba->mv_, kMVProba0, sizeof(kMVProba0));
   memcpy(proba->ymode_, kYModeProbaInter0, sizeof(kYModeProbaInter0));
-  memcpy(proba->uvmode_, kUVModeProbaInter0, sizeof(kYModeProbaInter0));
+  memcpy(proba->uvmode_, kUVModeProbaInter0, sizeof(kUVModeProbaInter0));
 #endif
 }
 
