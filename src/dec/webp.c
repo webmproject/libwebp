@@ -188,14 +188,16 @@ typedef struct {
   CSP_MODE mode;
 } Params;
 
-static void CustomPut(const VP8Io* io) {
+static int CustomPut(const VP8Io* io) {
   Params *p = (Params*)io->opaque;
   const int w = io->width;
   const int mb_h = io->mb_h;
   const int uv_w = (w + 1) / 2;
   assert(!(io->mb_y & 1));
 
-  if (w <= 0 || mb_h <= 0) return;
+  if (w <= 0 || mb_h <= 0) {
+    return 0;
+  }
 
   if (p->mode == MODE_YUV) {
     uint8_t* const y_dst = p->output + io->mb_y * p->stride;
@@ -282,6 +284,7 @@ static void CustomPut(const VP8Io* io) {
       }
     }
   }
+  return 1;
 }
 
 //-----------------------------------------------------------------------------

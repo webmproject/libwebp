@@ -44,7 +44,8 @@ int VP8InitFrame(VP8Decoder* const dec, VP8Io* io) {
     dec->mem_size_ = 0;
     dec->mem_ = (uint8_t*)malloc(needed);
     if (dec->mem_ == NULL) {
-      return VP8SetError(dec, 1, "no memory during frame initialization.");
+      return VP8SetError(dec, VP8_STATUS_OUT_OF_MEMORY,
+                         "no memory during frame initialization.");
     }
     dec->mem_size_ = needed;
   }
@@ -210,7 +211,7 @@ void VP8StoreBlock(VP8Decoder* const dec) {
   }
 }
 
-void VP8FinishRow(VP8Decoder* const dec, VP8Io* io) {
+int VP8FinishRow(VP8Decoder* const dec, VP8Io* io) {
   const int extra_y_rows = kFilterExtraRows[dec->filter_type_];
   const int ysize = extra_y_rows * dec->cache_y_stride_;
   const int uvsize = (extra_y_rows / 2) * dec->cache_uv_stride_;
@@ -246,7 +247,9 @@ void VP8FinishRow(VP8Decoder* const dec, VP8Io* io) {
     }
     io->mb_y = y_start;
     io->mb_h = y_end - y_start;
-    io->put(io);
+    if (!io->put(io)) {
+      return 0;
+    }
   }
     // rotate top samples
   if (!last_row) {
@@ -254,6 +257,7 @@ void VP8FinishRow(VP8Decoder* const dec, VP8Io* io) {
     memcpy(udst, udst + 8 * dec->cache_uv_stride_, uvsize);
     memcpy(vdst, vdst + 8 * dec->cache_uv_stride_, uvsize);
   }
+  return 1;
 }
 
 //-----------------------------------------------------------------------------

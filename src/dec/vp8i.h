@@ -162,7 +162,7 @@ typedef struct {
 // VP8Decoder: the main opaque structure handed over to user
 
 struct VP8Decoder {
-  int status_;    // 0 = OK
+  VP8StatusCode status_;
   int ready_;     // true if ready to decode a picture with VP8Decode()
   const char* error_msg_;  // set when status_ is not OK.
 
@@ -246,7 +246,8 @@ struct VP8Decoder {
 // internal functions. Not public.
 
 // in vp8.c
-int VP8SetError(VP8Decoder* const dec, int error, const char *msg);
+int VP8SetError(VP8Decoder* const dec,
+                VP8StatusCode error, const char * const msg);
 
 // in tree.c
 void VP8ResetProba(VP8Proba* const proba);
@@ -262,8 +263,8 @@ int VP8InitFrame(VP8Decoder* const dec, VP8Io* io);
 void VP8ReconstructBlock(VP8Decoder* const dec);
 // Store a block, along with filtering params
 void VP8StoreBlock(VP8Decoder* const dec);
-// Finalize and transmit a complete row
-void VP8FinishRow(VP8Decoder* const dec, VP8Io* io);
+// Finalize and transmit a complete row. Return false in case of user-abort.
+int VP8FinishRow(VP8Decoder* const dec, VP8Io* io);
 
 // in dsp.c
 typedef void (*VP8Idct)(const int16_t* coeffs, uint8_t* dst);
