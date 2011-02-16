@@ -45,16 +45,20 @@ static uint32_t CheckRIFFHeader(const uint8_t** data_ptr,
       return 0;  // wrong image file signature
     } else {
       const uint32_t riff_size = get_le32(*data_ptr + 4);
+      if (riff_size < 12) {
+        return 0;   // we should have at least one chunk
+      }
       if (memcmp(*data_ptr + 12, "VP8 ", 4)) {
         return 0;   // invalid compression format
       }
       chunk_size = get_le32(*data_ptr + 16);
-      if ((chunk_size > riff_size + 8) || (chunk_size & 1)) {
+      if (chunk_size > riff_size - 12) {
         return 0;  // inconsistent size information.
       }
       // We have a IFF container. Skip it.
       *data_ptr += 20;
       *data_size_ptr -= 20;
+      // Note: we don't report error for odd-sized chunks.
     }
     return chunk_size;
   }
@@ -559,7 +563,7 @@ int WebPGetInfo(const uint8_t* data, uint32_t data_size,
     if (!((bits >> 4) & 1)) {
       return 0;         // first frame is invisible!
     }
-    if (((bits >> 5)) >= chunk_size) { // partition_length
+    if (((bits >> 5)) >= chunk_size) {  // partition_length
       return 0;         // inconsistent size information.
     }
 
