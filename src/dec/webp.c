@@ -55,7 +55,7 @@ static uint32_t CheckRIFFHeader(const uint8_t** data_ptr,
       if (chunk_size > riff_size - 12) {
         return 0;  // inconsistent size information.
       }
-      // We have a IFF container. Skip it.
+      // We have a RIFF container. Skip it.
       *data_ptr += 20;
       *data_size_ptr -= 20;
       // Note: we don't report error for odd-sized chunks.
