@@ -90,6 +90,8 @@ static HRESULT WriteUsingWIC(const char* out_file_name, REFGUID container_guid,
   IFS(CreateOutputStream(out_file_name, &pStream));
   IFS(IWICImagingFactory_CreateEncoder(pFactory, container_guid, NULL,
           &pEncoder));
+  IFS(IWICBitmapEncoder_Initialize(pEncoder, pStream,
+                                   WICBitmapEncoderNoCache));
   IFS(IWICBitmapEncoder_CreateNewFrame(pEncoder, &pFrame, NULL));
   IFS(IWICBitmapFrameEncode_Initialize(pFrame, NULL));
   IFS(IWICBitmapFrameEncode_SetSize(pFrame, width, height));
@@ -307,6 +309,8 @@ int main(int argc, const char *argv[]) {
   if (out_file) {
     FILE* fout = NULL;
     int needs_open_file = 0;
+
+    printf("Decoded %s. Dimensions: %d x %d. Now saving...\n", in_file, width, height);
     StopwatchReadAndReset(&stop_watch);
 #ifdef _WIN32
     if (format != PNG) {
@@ -343,7 +347,6 @@ int main(int argc, const char *argv[]) {
     } else {
       fprintf(stderr, "Error opening output file %s\n", out_file);
     }
-    printf("Decoded %s. Dimensions: %d x %d.\n", in_file, width, height);
   } else {
     printf("File %s can be decoded (dimensions: %d x %d).\n",
            in_file, width, height);
