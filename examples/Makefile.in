@@ -34,7 +34,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS = dwebp$(EXEEXT)
+bin_PROGRAMS = dwebp$(EXEEXT) cwebp$(EXEEXT)
 subdir = examples
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -47,10 +47,15 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
+am_cwebp_OBJECTS = cwebp-cwebp.$(OBJEXT)
+cwebp_OBJECTS = $(am_cwebp_OBJECTS)
+am__DEPENDENCIES_1 =
+cwebp_DEPENDENCIES = ../src/libwebp.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 am_dwebp_OBJECTS = dwebp-dwebp.$(OBJEXT)
 dwebp_OBJECTS = $(am_dwebp_OBJECTS)
-am__DEPENDENCIES_1 =
-dwebp_DEPENDENCIES = ../src/dec/libwebpdecode.la $(am__DEPENDENCIES_1)
+dwebp_DEPENDENCIES = ../src/libwebp.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -64,8 +69,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(dwebp_SOURCES)
-DIST_SOURCES = $(dwebp_SOURCES)
+SOURCES = $(cwebp_SOURCES) $(dwebp_SOURCES)
+DIST_SOURCES = $(cwebp_SOURCES) $(dwebp_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -98,6 +103,8 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+JPEG_INCLUDES = @JPEG_INCLUDES@
+JPEG_LIBS = @JPEG_LIBS@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
@@ -185,8 +192,11 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CPPFLAGS = -I$(top_srcdir)/src
 dwebp_SOURCES = dwebp.c stopwatch.h
-dwebp_CPPFLAGS = $(AM_CPPFLAGS) $(PNG_INCLUDES)
-dwebp_LDADD = ../src/dec/libwebpdecode.la $(PNG_LIBS)
+dwebp_CPPFLAGS = $(AM_CPPFLAGS) $(PNG_INCLUDES) $(JPEG_INCLUDES)
+dwebp_LDADD = ../src/libwebp.la $(PNG_LIBS) $(JPEG_LIBS)
+cwebp_SOURCES = cwebp.c stopwatch.h
+cwebp_CPPFLAGS = $(AM_CPPFLAGS) $(PNG_INCLUDES) $(JPEG_INCLUDES)
+cwebp_LDADD = ../src/libwebp.la $(PNG_LIBS) $(JPEG_LIBS)
 all: all-am
 
 .SUFFIXES:
@@ -264,6 +274,9 @@ clean-binPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+cwebp$(EXEEXT): $(cwebp_OBJECTS) $(cwebp_DEPENDENCIES) 
+	@rm -f cwebp$(EXEEXT)
+	$(LINK) $(cwebp_OBJECTS) $(cwebp_LDADD) $(LIBS)
 dwebp$(EXEEXT): $(dwebp_OBJECTS) $(dwebp_DEPENDENCIES) 
 	@rm -f dwebp$(EXEEXT)
 	$(LINK) $(dwebp_OBJECTS) $(dwebp_LDADD) $(LIBS)
@@ -274,6 +287,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cwebp-cwebp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dwebp-dwebp.Po@am__quote@
 
 .c.o:
@@ -296,6 +310,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+cwebp-cwebp.o: cwebp.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cwebp_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cwebp-cwebp.o -MD -MP -MF $(DEPDIR)/cwebp-cwebp.Tpo -c -o cwebp-cwebp.o `test -f 'cwebp.c' || echo '$(srcdir)/'`cwebp.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/cwebp-cwebp.Tpo $(DEPDIR)/cwebp-cwebp.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cwebp.c' object='cwebp-cwebp.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cwebp_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cwebp-cwebp.o `test -f 'cwebp.c' || echo '$(srcdir)/'`cwebp.c
+
+cwebp-cwebp.obj: cwebp.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cwebp_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cwebp-cwebp.obj -MD -MP -MF $(DEPDIR)/cwebp-cwebp.Tpo -c -o cwebp-cwebp.obj `if test -f 'cwebp.c'; then $(CYGPATH_W) 'cwebp.c'; else $(CYGPATH_W) '$(srcdir)/cwebp.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/cwebp-cwebp.Tpo $(DEPDIR)/cwebp-cwebp.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cwebp.c' object='cwebp-cwebp.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cwebp_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cwebp-cwebp.obj `if test -f 'cwebp.c'; then $(CYGPATH_W) 'cwebp.c'; else $(CYGPATH_W) '$(srcdir)/cwebp.c'; fi`
 
 dwebp-dwebp.o: dwebp.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dwebp_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dwebp-dwebp.o -MD -MP -MF $(DEPDIR)/dwebp-dwebp.Tpo -c -o dwebp-dwebp.o `test -f 'dwebp.c' || echo '$(srcdir)/'`dwebp.c

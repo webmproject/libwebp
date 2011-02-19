@@ -64,5 +64,8 @@
 /* Version number of package */
 #undef VERSION
 
+/* Set to 1 if JPEG library is installed */
+#undef WEBP_HAVE_JPEG
+
 /* Set to 1 if PNG library is installed */
 #undef WEBP_HAVE_PNG

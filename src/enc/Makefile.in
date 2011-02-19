@@ -35,8 +35,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = src/dec
-DIST_COMMON = $(libwebpdecodeinclude_HEADERS) $(noinst_HEADERS) \
+subdir = src/enc
+DIST_COMMON = $(libwebpencodeinclude_HEADERS) $(noinst_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -47,13 +47,14 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
-libwebpdecode_la_LIBADD =
-am_libwebpdecode_la_OBJECTS = bits.lo dsp.lo frame.lo quant.lo tree.lo \
-	vp8.lo webp.lo yuv.lo
-libwebpdecode_la_OBJECTS = $(am_libwebpdecode_la_OBJECTS)
-libwebpdecode_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+libwebpencode_la_LIBADD =
+am_libwebpencode_la_OBJECTS = analysis.lo bit_writer.lo config.lo \
+	cost.lo dsp.lo filter.lo frame.lo iterator.lo picture.lo \
+	quant.lo syntax.lo tree.lo webpenc.lo
+libwebpencode_la_OBJECTS = $(am_libwebpencode_la_OBJECTS)
+libwebpencode_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(libwebpdecode_la_LDFLAGS) $(LDFLAGS) -o $@
+	$(libwebpencode_la_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -67,8 +68,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(libwebpdecode_la_SOURCES)
-DIST_SOURCES = $(libwebpdecode_la_SOURCES)
+SOURCES = $(libwebpencode_la_SOURCES)
+DIST_SOURCES = $(libwebpencode_la_SOURCES)
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -90,8 +91,8 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__installdirs = "$(DESTDIR)$(libwebpdecodeincludedir)"
-HEADERS = $(libwebpdecodeinclude_HEADERS) $(noinst_HEADERS)
+am__installdirs = "$(DESTDIR)$(libwebpencodeincludedir)"
+HEADERS = $(libwebpencodeinclude_HEADERS) $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -212,14 +213,16 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CPPFLAGS = -I$(top_builddir)/src
-libwebpdecode_la_SOURCES = bits.h vp8i.h yuv.h bits.c dsp.c frame.c \
-                          quant.c tree.c vp8.c webp.c yuv.c
+libwebpencode_la_SOURCES = analysis.c bit_writer.c bit_writer.h \
+                          config.c cost.c cost.h dsp.c filter.c \
+                          frame.c iterator.c picture.c quant.c  \
+                          syntax.c tree.c vp8enci.h webpenc.c
 
-libwebpdecode_la_LDFLAGS = -version-info 0:0:0
-libwebpdecodeinclude_HEADERS = ../webp/decode.h ../webp/decode_vp8.h ../webp/types.h
-libwebpdecodeincludedir = $(includedir)/webp
-noinst_HEADERS = bits.h vp8i.h yuv.h
-noinst_LTLIBRARIES = libwebpdecode.la
+libwebpencode_la_LDFLAGS = -version-info 0:0:0 -lm
+libwebpencodeinclude_HEADERS = ../webp/encode.h ../webp/types.h
+libwebpencodeincludedir = $(includedir)/webp
+noinst_HEADERS = cost.h bit_writer.h vp8enci.h
+noinst_LTLIBRARIES = libwebpencode.la
 all: all-am
 
 .SUFFIXES:
@@ -233,9 +236,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu src/dec/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu src/enc/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu src/dec/Makefile
+	  $(AUTOMAKE) --gnu src/enc/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -263,8 +266,8 @@ clean-noinstLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-libwebpdecode.la: $(libwebpdecode_la_OBJECTS) $(libwebpdecode_la_DEPENDENCIES) 
-	$(libwebpdecode_la_LINK)  $(libwebpdecode_la_OBJECTS) $(libwebpdecode_la_LIBADD) $(LIBS)
+libwebpencode.la: $(libwebpencode_la_OBJECTS) $(libwebpencode_la_DEPENDENCIES) 
+	$(libwebpencode_la_LINK)  $(libwebpencode_la_OBJECTS) $(libwebpencode_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -272,14 +275,19 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bits.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/analysis.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bit_writer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/config.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cost.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/filter.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/frame.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/iterator.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/picture.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/quant.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/syntax.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tree.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vp8.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/webp.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/yuv.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/webpenc.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -307,26 +315,26 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-libwebpdecodeincludeHEADERS: $(libwebpdecodeinclude_HEADERS)
+install-libwebpencodeincludeHEADERS: $(libwebpencodeinclude_HEADERS)
 	@$(NORMAL_INSTALL)
-	test -z "$(libwebpdecodeincludedir)" || $(MKDIR_P) "$(DESTDIR)$(libwebpdecodeincludedir)"
-	@list='$(libwebpdecodeinclude_HEADERS)'; test -n "$(libwebpdecodeincludedir)" || list=; \
+	test -z "$(libwebpencodeincludedir)" || $(MKDIR_P) "$(DESTDIR)$(libwebpencodeincludedir)"
+	@list='$(libwebpencodeinclude_HEADERS)'; test -n "$(libwebpencodeincludedir)" || list=; \
 	for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  echo "$$d$$p"; \
 	done | $(am__base_list) | \
 	while read files; do \
-	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(libwebpdecodeincludedir)'"; \
-	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(libwebpdecodeincludedir)" || exit $$?; \
+	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(libwebpencodeincludedir)'"; \
+	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(libwebpencodeincludedir)" || exit $$?; \
 	done
 
-uninstall-libwebpdecodeincludeHEADERS:
+uninstall-libwebpencodeincludeHEADERS:
 	@$(NORMAL_UNINSTALL)
-	@list='$(libwebpdecodeinclude_HEADERS)'; test -n "$(libwebpdecodeincludedir)" || list=; \
+	@list='$(libwebpencodeinclude_HEADERS)'; test -n "$(libwebpencodeincludedir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	test -n "$$files" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(libwebpdecodeincludedir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(libwebpdecodeincludedir)" && rm -f $$files
+	echo " ( cd '$(DESTDIR)$(libwebpencodeincludedir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(libwebpencodeincludedir)" && rm -f $$files
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -414,7 +422,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(libwebpdecodeincludedir)"; do \
+	for dir in "$(DESTDIR)$(libwebpencodeincludedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -465,7 +473,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-libwebpdecodeincludeHEADERS
+install-data-am: install-libwebpencodeincludeHEADERS
 
 install-dvi: install-dvi-am
 
@@ -511,7 +519,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-libwebpdecodeincludeHEADERS
+uninstall-am: uninstall-libwebpencodeincludeHEADERS
 
 .MAKE: install-am install-strip
 
@@ -522,17 +530,17 @@ uninstall-am: uninstall-libwebpdecodeincludeHEADERS
 	install install-am install-data install-data-am install-dvi \
 	install-dvi-am install-exec install-exec-am install-html \
 	install-html-am install-info install-info-am \
-	install-libwebpdecodeincludeHEADERS install-man install-pdf \
+	install-libwebpencodeincludeHEADERS install-man install-pdf \
 	install-pdf-am install-ps install-ps-am install-strip \
 	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am \
-	uninstall-libwebpdecodeincludeHEADERS
+	uninstall-libwebpencodeincludeHEADERS
 
 # uncomment the following line (and comment the above) if you want
-# to install libwebpdecode library.
-#lib_LTLIBRARIES = libwebpdecode.la
+# to install libwebpencode library.
+#lib_LTLIBRARIES = libwebpencode.la
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

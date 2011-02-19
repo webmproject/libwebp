@@ -36,7 +36,33 @@ AC_CHECK_HEADER(png.h,
 AC_SUBST(PNG_LIBS)
 AC_SUBST(PNG_INCLUDES)
 
+dnl === check for JPEG support ===
+
+JPEG_INCLUDES=""
+JPEG_LIBS=""
+AC_ARG_WITH(jpegincludedir,
+            [--with-jpegincludedir=DIR use JPEG includes from DIR],
+            JPEG_INCLUDES="-I$withval")
+AC_ARG_WITH(jpeglibdir,
+            [--with-jpeglibdir=DIR    use JPEG libraries from DIR],
+            [JPEG_LIBS="-L$withval"])
+
+AC_CHECK_HEADER(jpeglib.h,
+  AC_CHECK_LIB(jpeg, jpeg_set_defaults,
+               [JPEG_LIBS="$JPEG_LIBS -ljpeg"
+                JPEG_INCLUDES="$JPEG_INCLUDES -DWEBP_HAVE_JPEG"
+                AC_DEFINE(WEBP_HAVE_JPEG, [1], [Set to 1 if JPEG library is installed])
+               ],
+               AC_MSG_WARN(Optional jpeg library not found),
+               [$MATH_LIBS]),
+  AC_MSG_WARN(jpeg library not available - no jpeglib.h)
+)
+AC_SUBST(JPEG_LIBS)
+AC_SUBST(JPEG_INCLUDES)
+
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_FILES([Makefile examples/Makefile src/dec/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile examples/Makefile src/dec/Makefile src/enc/Makefile])
+
+
 AC_OUTPUT

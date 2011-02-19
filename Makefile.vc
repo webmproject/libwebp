@@ -24,10 +24,12 @@ ARCH  = x86
 MT         = mt.exe
 CCNODBG    = cl.exe /nologo /O2 /DNDEBUG
 CCDEBUG    = cl.exe /nologo /Od /Gm /Zi /D_DEBUG /RTC1
-CFLAGS     = /I. /Iwebp /nologo /W3 /EHsc /DWIN32 /FD /c
+CFLAGS     = /Isrc /nologo /W3 /EHsc /DWIN32 /FD /c /GS /D_CRT_SECURE_NO_WARNINGS
+LDFLAGS    = /LARGEADDRESSAWARE /MANIFEST /NXCOMPAT /SAFESEH /DYNAMICBASE
 CFLAGSLIB  = /DLIBWEBP_STATICLIB
 LNKDLL     = link.exe /DLL
 LNKLIB     = link.exe /lib
+LNKEXE     = link.exe
 LFLAGS     = /nologo /machine:$(ARCH)
 CFLAGS     = $(CFLAGS)
 
@@ -72,21 +74,30 @@ CFGSET = TRUE
 #######################
 # Usage
 #
-!IF "$(CFGSET)" == "FALSE" && "$(CFG)" != ""
-!MESSAGE Usage: nmake /f makefile.vc9 CFG=<config> OBJDIR=<path> <target>
+!IF "$(CFGSET)" == "FALSE"
+!MESSAGE Usage: nmake /f makefile.vc9 [CFG=<config>] [OBJDIR=<path>] [RTLIBCFG=<rtlib>] [<target>]
 !MESSAGE where <config> is one of:
-!MESSAGE   release-static                - release static library
-!MESSAGE   debug-static                  - debug static library
+!MESSAGE -  release-static                - release static library
+!MESSAGE -  debug-static                  - debug static library
+!MESSAGE -  (empty)                       - perform a clean
+!MESSAGE
+!MESSAGE <rtlibcfg> controls the runtime library likage - can be 'static' or 'dynamic'.
 !MESSAGE <target> can be left blank in which case all is assumed
-!MESSAGE where <path> is the path where you like to build (obj, bins, etc.)
+!MESSAGE <path> is the path where you like to build (obj, bins, etc.)
 !MESSAGE   default to ..\obj\
-!ERROR please choose a valid configuration "$(CFG)"
+
+!IF "$(CFG)" != ""
+!MESSAGE
+!ERROR please choose a valid configuration instead of "$(CFG)"
+!ENDIF
 !ENDIF
 
 #######################
 # Only the clean target can be used if a config was not provided.
 #
 !IF "$(CFGSET)" == "FALSE"
+!MESSAGE
+!MESSAGE No configuration provided - performing a clean.
 clean:
 	@-erase /s *.dll 2> NUL
 	@-erase /s *.exp 2> NUL
@@ -101,19 +112,36 @@ clean:
 #
 
 X_OBJS= \
-	$(DIROBJ)\bits.obj \
-	$(DIROBJ)\dsp.obj \
-	$(DIROBJ)\frame.obj \
-	$(DIROBJ)\quant.obj \
-	$(DIROBJ)\tree.obj \
-	$(DIROBJ)\vp8.obj \
-	$(DIROBJ)\webp.obj \
-	$(DIROBJ)\yuv.obj \
+	$(DIROBJ)\dec\bits.obj \
+	$(DIROBJ)\dec\dsp.obj \
+	$(DIROBJ)\dec\frame.obj \
+	$(DIROBJ)\dec\quant.obj \
+	$(DIROBJ)\dec\tree.obj \
+	$(DIROBJ)\dec\vp8.obj \
+	$(DIROBJ)\dec\webp.obj \
+	$(DIROBJ)\dec\yuv.obj \
+	$(DIROBJ)\enc\analysis.obj \
+	$(DIROBJ)\enc\bit_writer.obj \
+	$(DIROBJ)\enc\config.obj \
+	$(DIROBJ)\enc\cost.obj \
+	$(DIROBJ)\enc\dsp.obj \
+	$(DIROBJ)\enc\frame.obj \
+	$(DIROBJ)\enc\filter.obj \
+	$(DIROBJ)\enc\iterator.obj \
+	$(DIROBJ)\enc\picture.obj \
+	$(DIROBJ)\enc\quant.obj \
+	$(DIROBJ)\enc\syntax.obj \
+	$(DIROBJ)\enc\tree.obj \
+	$(DIROBJ)\enc\webpenc.obj \
 	$(RESOURCE)
 
-all : $(TARGET) dwebp.exe
+EXAMPLES_OBJS = \
+	$(DIROBJ)\examples\cwebp.obj \
+	$(DIROBJ)\examples\dwebp.obj
 
-$(TARGET): $(X_OBJS)
+all: $(DIRLIB)\$(TARGET) $(DIRBIN)\dwebp.exe $(DIRBIN)\cwebp.exe
+
+$(DIRLIB)\$(TARGET): $(X_OBJS)
 	$(LNK) $(LFLAGS) $(X_OBJS)
 	-xcopy $(DIROBJ)\$(LIB_NAME).dll       $(DIRBIN) /y
 	-xcopy $(DIROBJ)\$(LIB_NAME).lib       $(DIRLIB) /y
@@ -124,10 +152,18 @@ $(TARGET): $(X_OBJS)
 	-xcopy $(DIROBJ)\*.exp                 $(DIRLIB) /y
 	-xcopy $(DIROBJ)\*.pdb                 $(DIRLIB) /y
 
-$(X_OBJS): $(DIROBJ) $(DIRLIB) $(DIRINC) $(DIRBIN)
+$(X_OBJS): $(DIROBJ)\enc $(DIROBJ)\dec $(DIRLIB) $(DIRINC) $(DIRBIN)
 
-$(DIROBJ):
-	@if not exist "$(DIROBJ)" mkdir $(DIROBJ)
+$(EXAMPLES_OBJS): $(DIROBJ)\examples $(DIRLIB)\$(TARGET)
+
+$(DIROBJ)\enc:
+	@if not exist "$(DIROBJ)\enc" mkdir $(DIROBJ)\enc
+
+$(DIROBJ)\examples:
+	@if not exist "$(DIROBJ)\examples" mkdir $(DIROBJ)\examples
+
+$(DIROBJ)\dec:
+	@if not exist "$(DIROBJ)\dec" mkdir $(DIROBJ)\dec
 
 $(DIRLIB):
 	@if not exist "$(DIRLIB)" mkdir $(DIRLIB)
@@ -138,13 +174,17 @@ $(DIRINC):
 $(DIRBIN):
 	@if not exist "$(DIRBIN)" mkdir $(DIRBIN)
 
-dwebp.exe:	examples\dwebp.c
-	$(CC) /I src\ /Fo$(DIROBJ)\ /Fd$(DIROBJ)\ /Fp$(DIROBJ)\ /FR$(DIROBJ) /Fe$(DIRBIN)\dwebp.exe examples\dwebp.c $(DIRLIB)\$(TARGET)
-	$(MT) -manifest $(DIRBIN)\dwebp.exe.manifest -outputresource:$(DIRBIN)\dwebp.exe;1
-	del $(DIRBIN)\dwebp.exe.manifest
-
-.SUFFIXES: .c .obj .res
-{src\}.c{$(DIROBJ)\}.obj:
+.SUFFIXES: .c .obj .res .exe
+{examples}.c{$(DIROBJ)\examples}.obj:
 	$(CC) $(CFLAGS) /Fo"$@"  $<
+{src\dec}.c{$(DIROBJ)\dec}.obj:
+	$(CC) $(CFLAGS) /Fo"$@"  $<
+{src\enc}.c{$(DIROBJ)\enc}.obj:
+	$(CC) $(CFLAGS) /Fo"$@"  $<
+
+{$(DIROBJ)\examples}.obj{$(DIRBIN)}.exe:
+	$(LNKEXE) $(LDFLAGS) /OUT:"$@" $<  ole32.lib windowscodecs.lib shlwapi.lib $(DIRLIB)\$(TARGET)
+	$(MT) -manifest $@.manifest -outputresource:$@;1
+	del $@.manifest
 
 !ENDIF  # End of case where a config was provided.

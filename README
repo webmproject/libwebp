@@ -1,65 +1,257 @@
           __   __  ____  ____  ____
          /  \\/  \/  _ \/  _ )/  _ \
          \       /   __/  _  \   __/
-          \__\__/\____/\_____/__/ _________   ____ ____
-               \    \ /  _ \/ _/ /    \    \ /  _ \  _ \
-               /   \ \   __/  \_/   / /   \ \   __/    /_
-               \_____/_____/____/____/\_____/_____/_/\__/v0.1
-             
+          \__\__/\____/\_____/__/ ____  ___
+                / _/ /    \    \ /  _ \/ _/
+               /  \_/   / /   \ \   __/  \__
+               \____/____/\_____/_____/____/v0.1
+
 Description:
 ============
 
-WEBP decoder: libwebpdecode.so is a simple library for
-decoding WEBP image files. 
+WEBP codec: library to encode and decode images in WebP format. This package
+contains the library that can be used in other programs to add WebP support,
+as well as the command line tools 'cwebp' and 'dwebp'.
 
 See http://code.google.com/speed/webp
 
+Latest sources are available from http://www.webmproject.org/code/
 
 It is released under the same license as the WebM project.
 See http://www.webmproject.org/license/software/ or the
 file "COPYING" file for details. An additional intellectual
 property rights grant can be found in the file PATENTS.
 
-
-API:
-====
-
-This is mainly just one function to call, so just have a look at
-the file src/webp/decode.h for the details and variants:
-
-#include "webp/decode.h"
-uint8_t* WebPDecodeRGB(const uint8_t* data, uint32_t data_size,
-                       int *width, int *height);
-
-A lower-level API is available from the header file <webp/decode_vp8.h>
-
-
 Building:
 =========
 
-If everything goes right, then:
+Windows build:
+--------------
 
+By running:
+
+  nmake /f Makefile.vc CFG=release-static RTLIBCFG=static OBJDIR=output
+
+the directory output\release-static\x86\bin will contain the tools
+cweb.exe and dweb.exe. The directory output\release-static\x86\lib will
+contains the libwebp static library.
+
+Using autoconf tools:
+---------------------
 ./configure
 make
 make install
+
+Note: In case './configure' step fails, try generating configure & appropriate
+Makefile(s) via command 'aclocal && autoconf && automake -a -c;'.
 
 should be all you need to have the following files
 
 /usr/local/include/webp/decode.h
 /usr/local/include/webp/decode_vp8.h
-/usr/local/lib/libwebpdecode.*
+/usr/local/include/webp/encode.h
+/usr/local/include/webp/types.h
+/usr/local/lib/libwebp.*
+/usr/local/bin/cwebp
+/usr/local/bin/dwebp
 
 installed.
 
+Note: The encoding and decoding libraries are compiled separately
+(as src/dec/libwebpdecode.* and src/dec/libwebpencode.*). They
+can be installed independently using a minor modifications in the
+corresponding Makefile.am configure files (see comments there).
 
-Decoding example:
-=================
+Encoding tool:
+==============
 
-there's a decoding example in example/dwebp.c which will take a .webp file and
-decode it to a PNG image file. This is simply to demonstrate use of the API.
-It also decodes to PPM (or even PGM) format.
-You can verify the file test.webp decodes to exactly the same as test_ref.ppm:
-  `cd examples && ./dwebp test.webp -ppm -o test.ppm && diff test.ppm test_ref.ppm`
+The examples/ directory contains tools for encoding (cwebp) and
+decoding (dwebp) images.
+
+The easiest use should look like:
+  cwebp input.png -q 80 -o output.webp
+which will convert the input PNG or JPEG file to a WebP one using a
+quality factor of 80 on a 0->100 scale (0 being the lowest quality,
+100 being the best. Default value is 75).
+
+A longer list of options is available using the -longhelp command line flag:
+
+> cwebp -longhelp
+Usage:
+ cwebp [-preset <...>] [options] in_file [-o out_file]
+
+If input size (-s) for an image is not specified, it is assumed to be a either
+  PNG or JPEG format file.
+options:
+  -h / -help  ............ short help
+  -H / -longhelp  ........ long help
+  -q <float> ............. quality factor (0:small..100:big)
+  -preset <string> ....... Preset setting, one of:
+                            default, photo, picture,
+                            drawing, icon, text
+     -preset must come first, as it overwrites other parameters.
+  -m <int> ............... compression method (0=fast, 6=slowest)
+  -segments <int> ........ number of segments to use (1..4)
+
+  -s <int> <int> ......... Input size (width x height) for YUV
+  -sns <int> ............. Spatial Noise Shaping (0:off, 100:max)
+  -f <int> ............... filter strength (0=off..100)
+  -sharpness <int> ....... filter sharpness (0:most .. 7:least sharp)
+  -strong ................ use strong filter instead of simple.
+  -pass <int> ............ analysis pass number (1..10)
+  -partitions <int> ...... number of partitions to use (0..3)
+  -crop <x> <y> <w> <h> .. crop picture with the given rectangle
+  -map <int> ............. print map of extra info.
+  -d <file.pgm> .......... dump the compressed output (PGM file).
+
+  -short ................. condense printed message
+  -quiet ................. don't print anything.
+  -v ..................... verbose, e.g. print encoding/decoding times
+
+Experimental Options:
+  -size <int> ............ Target size (in bytes)
+  -psnr <float> .......... Target PSNR (in dB. typically: 42)
+  -af <int> .............. adjust filter strength (0=off, 1=on)
+  -pre <int> ............. pre-processing filter
+
+
+The main options you might want to try in order to further tune the
+visual quality are:
+ -preset
+ -sns
+ -f
+ -m
+
+Namely:
+  * 'preset' will set up a default encoding configuration targetting a
+     particular type of input. It should appear first in the list of options,
+     so that subsequent options can take effect on top of this preset.
+     Default value is 'default'.
+  * 'sns' will progressively turn on (when going from 0 to 100) some additional
+     visual optimizations (like: segmentation map re-enforcement). This option
+     will balance the bit allocation differently. It tries to take bits from the
+     "easy" parts of the picture and use them in the "difficult" ones instead.
+     Usually, raising the sns value (at fixed -q value) leads to larger files,
+     but with better quality.
+     Typical value is around '75'.
+  * 'f' option directly links to the filtering strength used by the codec's
+     in-loop processing. The higher, the smoother will highly-compressed area
+     look. This is particularly useful when aiming at very small files.
+     Typical values are around 20-30. Note that you must be using profile 0 or 1
+     to have the in-loop filtering activated.
+  * 'm' controls the trade-off between encoding speed and quality. Default is 4.
+     You can try -m 5 or -m 6 to explore more (time-consuming) encoding
+     possibilities. A lower value will result in faster encoding at the expense
+     of quality.
+
+Decoding tool:
+==============
+
+There is a decoding sample code as examples/dwebp.c which will take
+a .webp file and decode it to a PNG image file (amongst other formats).
+This is simply to demonstrate the use of the API. You can verify the
+file test.webp decodes to exactly the same as test_ref.ppm by using:
+
+ cd examples
+ ./dwebp test.webp -ppm -o test.ppm
+ diff test.ppm test_ref.ppm
+
+
+Encoding API:
+===========
+
+The main encoding functions are available in the header src/webp/encode.h
+The ready-to-use ones are:
+size_t WebPEncodeRGB(const uint8_t* rgb, int width, int height, int stride,
+                     float quality_factor, uint8_t** output);
+size_t WebPEncodeBGR(const uint8_t* bgr, int width, int height, int stride,
+                     float quality_factor, uint8_t** output);
+size_t WebPEncodeRGBA(const uint8_t* rgba, int width, int height, int stride,
+                      float quality_factor, uint8_t** output);
+size_t WebPEncodeBGRA(const uint8_t* bgra, int width, int height, int stride,
+                      float quality_factor, uint8_t** output);
+
+They will convert raw RGB samples to a WebP data. The only control supplied
+is the quality factor.
+
+
+A more advanced API is based on the WebPConfig and WebPPicture structures.
+
+WebPConfig contains the encoding settings and is not tied a to a particular
+picture.
+WebPPicture contains input data, on which some WebPConfig will be used for
+compression.
+The encoding flow looks like:
+
+-------------------------------------- BEGIN PSEUDO EXAMPLE
+
+#include <webp/encode.h>
+
+  // Setup a config, starting form a preset and tuning some additional
+  // parameters
+  WebPConfig config;
+  if (!WebPConfigPreset(&config, WEBP_PRESET_PHOTO, quality_factor))
+    return 0;   // version error
+  }
+  // ... additional tuning
+  config.sns_strength = 90;
+  config.filter_sharpness = 6;
+  config_error = WebPValidateConfig(&config);  // not mandartory, but useful
+
+  // Setup the input data
+  WebPPicture pic;
+  if (!WebPPictureInit(&pic)) {
+    return 0;  // version error
+  }
+  pic.width = width;
+  pic.height = height;
+  // allocated picture of dimension width x height
+  if (!WebPPictureAllocate(&pic)) {
+    return 0;   // memory error
+  }
+  // add that point, 'pic' has been initialized as a container,
+  // and can receive the Y/U/V samples.
+  // Alternatively, one could use ready-made import functions like
+  // WebPPictureImportRGB(), which will take care of memory allocation.
+  // In any case, past this point, one will have to call
+  // WebPPictureFree(&pic) to reclaim memory.
+
+
+  // Set up a byte-output write method. WebPMemoryWriter, for instance.
+  WebPMemoryWriter wrt;
+  pic.writer = MyFileWriter;
+  pic.custom_ptr = my_opaque_structure_to_make_MyFileWriter_work;
+  // initialize 'wrt' here...
+
+  // Compress!
+  int ok = WebPEncode(&config, &pic);   // ok = 0 => error occured!
+  WebPPictureFree(&pic);  // must be called independently of the 'ok' result.
+
+  // output data should have been handled by the writer at that point.
+
+-------------------------------------- END PSEUDO EXAMPLE
+
+
+Decoding API:
+=============
+
+This is mainly just one function to call:
+
+#include "webp/decode.h"
+uint8_t* WebPDecodeRGB(const uint8_t* data, uint32_t data_size,
+                       int *width, int *height);
+
+Please have a look at the file src/webp/decode.h for the details.
+There are variants for decoding in BGR/RGBA/BGRA order, along with decoding to
+raw Y'CbCr samples. One can also decode the image directly into a pre-allocated
+buffer.
+
+To detect a WebP file and gather picture's dimensions, the function:
+  int WebPGetInfo(const uint8_t* data, uint32_t data_size,
+                  int *width, int *height);
+is supplied. No decoding is involved when using it.
+
+A lower-level API is available from the header file <webp/decode_vp8.h>
 
 Bugs:
 =====
