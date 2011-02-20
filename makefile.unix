@@ -24,7 +24,7 @@ EXTRA_LIBS= -lpng -ljpeg
 
 CC = gcc -Isrc/ -Iexamples/ -Wall
 CFLAGS = -O3 -DNDEBUG $(EXTRA_FLAGS)
-LDFLAGS = src/libwebp.a $(EXTRA_LIBS) -lpng -ljpeg -lm
+LDFLAGS = src/libwebp.a $(EXTRA_LIBS) -lm
 
 OBJS = src/enc/webpenc.o src/enc/bit_writer.o src/enc/syntax.o \
        src/enc/dsp.o src/enc/tree.o src/enc/config.o src/enc/frame.o \
