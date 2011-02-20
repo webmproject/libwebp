@@ -1,0 +1,55 @@
+# This makefile is a simpler alternative to the autoconf-based build
+# system, for simple local building of the libraries and tools.
+# It will not install the libraries system-wide, but just create the 'cwebp'
+# and 'dwebp' tools in the examples/ directory, along with the static
+# library 'src/libwebp.a'.
+#
+# To build the library and examples, use:
+#    make -f makefile.unix
+# from this top directory.
+
+#### Customizable part ####
+
+# These flag assume you have libpng and libjpeg installed. If not,
+# just comment out both lines.
+EXTRA_FLAGS= -DWEBP_HAVE_PNG -DWEBP_HAVE_JPEG
+EXTRA_LIBS= -lpng -ljpeg
+
+# Uncomment for build for 32bit platform
+# Alternatively, you can just use the command
+# 'make -f makefile.unix EXTRA_FLAGS=-m32' to that effect.
+# EXTRA_FLAGS= -m32
+
+#### Nothing should normally be changed below this line ####
+
+CC = gcc -Isrc/ -Iexamples/ -Wall
+CFLAGS = -O3 -DNDEBUG $(EXTRA_FLAGS)
+LDFLAGS = src/libwebp.a $(EXTRA_LIBS) -lpng -ljpeg -lm
+
+OBJS = src/enc/webpenc.o src/enc/bit_writer.o src/enc/syntax.o \
+       src/enc/dsp.o src/enc/tree.o src/enc/config.o src/enc/frame.o \
+       src/enc/quant.o src/enc/iterator.o src/enc/analysis.o \
+       src/enc/cost.o src/enc/picture.o src/enc/filter.o \
+       src/dec/bits.o src/dec/dsp.o src/dec/frame.o src/dec/webp.o \
+       src/dec/quant.o src/dec/tree.o src/dec/vp8.o src/dec/yuv.o
+HDRS = src/webp/encode.h src/enc/vp8enci.h src/enc/bit_writer.h \
+       src/enc/cost.h src/dec/bits.h  src/dec/vp8i.h src/dec/yuv.h
+OUTPUT = examples/cwebp examples/dwebp src/libwebp.a
+
+all:ex
+
+.c.o:  $(HDRS)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+libwebp.a:  $(OBJS) $(HDRS)
+	ar r src/libwebp.a $(OBJS)
+
+ex: examples/cwebp.o examples/dwebp.o libwebp.a
+	$(CC) -o examples/cwebp examples/cwebp.o $(LDFLAGS)
+	$(CC) -o examples/dwebp examples/dwebp.o $(LDFLAGS)
+
+clean:
+	rm -f ${OUTPUT} *~ \
+              src/enc/*.o src/enc/*~ \
+              src/dec/*.o src/dec/*~ \
+              examples/*.o examples/*~

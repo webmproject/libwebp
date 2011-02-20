@@ -36,6 +36,19 @@ the directory output\release-static\x86\bin will contain the tools
 cweb.exe and dweb.exe. The directory output\release-static\x86\lib will
 contains the libwebp static library.
 
+Unix build using makefile.unix:
+-------------------------------
+
+On platforms with GNU tools installed (gcc and make), running
+
+  make -f makefile.unix
+
+will build the binaries examples/cwebp and examples/dwebp, along
+with the static library src/libwebp.a. No system-wide installation
+is supplied, as this is a simple alternative to the full installation
+system based on the autoconf tools (see below).
+Please refer the makefile.unix for additional details and customizations.
+
 Using autoconf tools:
 ---------------------
 ./configure
