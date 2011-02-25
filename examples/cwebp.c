@@ -719,6 +719,16 @@ int main(int argc, const char *argv[]) {
     goto Error;
   }
 
+  // Read the input
+  if (verbose)
+    StopwatchReadAndReset(&stop_watch);
+  if (!ReadPicture(in_file, &picture)) goto Error;
+  if (verbose) {
+    const double time = StopwatchReadAndReset(&stop_watch);
+    fprintf(stderr, "Time to read input: %.3fs\n", time);
+  }
+
+  // Open the output
   if (out_file) {
     out = fopen(out_file, "wb");
     if (!out) {
@@ -740,14 +750,9 @@ int main(int argc, const char *argv[]) {
   }
   picture.stats = &stats;
 
+  // Compress
   if (verbose)
     StopwatchReadAndReset(&stop_watch);
-  if (!ReadPicture(in_file, &picture)) goto Error;
-  if (verbose) {
-    const double time = StopwatchReadAndReset(&stop_watch);
-    fprintf(stderr, "Time to read input: %.3fs\n", time);
-    StopwatchReadAndReset(&stop_watch);
-  }
   if (crop != 0 && !WebPPictureCrop(&picture, crop_x, crop_y, crop_w, crop_h))
     goto Error;
   if (picture.extra_info_type > 0) AllocExtraInfo(&picture);
@@ -756,6 +761,8 @@ int main(int argc, const char *argv[]) {
     const double time = StopwatchReadAndReset(&stop_watch);
     fprintf(stderr, "Time to encode picture: %.3fs\n", time);
   }
+
+  // Write info
   if (dump_file) DumpPicture(&picture, dump_file);
   if (!quiet) PrintExtraInfo(&picture, short_output);
 
