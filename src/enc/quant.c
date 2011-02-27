@@ -409,13 +409,9 @@ static int QuantizeBlock(int16_t in[16], int16_t out[16],
       const int iQ = mtx->iq_[j];
       const int B = mtx->bias_[j];
       out[n] = DIV(coeff, iQ, B);
-      if (out[n]) {
-        if (sign) out[n] = -out[n];
-        in[j] = out[n] * Q;
-        last = n;
-      } else {
-        in[j] = 0;
-      }
+      if (sign) out[n] = -out[n];
+      in[j] = out[n] * Q;
+      if (out[n]) last = n;
     } else {
       out[n] = 0;
       in[j] = 0;
