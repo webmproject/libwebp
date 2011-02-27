@@ -18,6 +18,8 @@
 extern "C" {
 #endif
 
+#define WEBP_DECODER_ABI_VERSION 0x0001
+
 //-----------------------------------------------------------------------------
 // Lower-level API
 //
@@ -72,7 +74,16 @@ struct VP8Io {
   // Input buffer.
   uint32_t data_size;
   const uint8_t* data;
+
+  // If true, in-loop filtering will not be performed even if present in the
+  // bitstream. Switching off filtering may speed up decoding at the expense
+  // of more visible blocking. Note that output will also be non-compliant
+  // with the VP8 specifications.
+  int bypass_filtering;
 };
+
+// Internal, version-checked, entry point
+extern int VP8InitIoInternal(VP8Io* const, int);
 
 // Main decoding object. This is an opaque structure.
 typedef struct VP8Decoder VP8Decoder;
@@ -80,8 +91,12 @@ typedef struct VP8Decoder VP8Decoder;
 // Create a new decoder object.
 VP8Decoder* VP8New();
 
-// Can be called to make sure 'io' is initialized properly.
-void VP8InitIo(VP8Io* const io);
+// Must be called to make sure 'io' is initialized properly.
+// Returns false in case of version mismatch. Upon such failure, no other
+// decoding function should be called (VP8Decode, VP8GetHeaders, ...)
+static inline int VP8InitIo(VP8Io* const io) {
+  return VP8InitIoInternal(io, WEBP_DECODER_ABI_VERSION);
+}
 
 // Start decoding a new picture. Returns true if ok.
 int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io);

@@ -20,10 +20,13 @@ static void SetOk(VP8Decoder* const dec) {
   dec->error_msg_ = "OK";
 }
 
-void VP8InitIo(VP8Io* const io) {
+int VP8InitIoInternal(VP8Io* const io, int version) {
+  if (version != WEBP_DECODER_ABI_VERSION)
+    return 0;  // mismatch error
   if (io) {
     memset(io, 0, sizeof(*io));
   }
+  return 1;
 }
 
 VP8Decoder* VP8New() {
@@ -100,7 +103,7 @@ static int ParseSegmentHeader(VP8BitReader* br,
   } else {
     hdr->update_map_ = 0;
   }
-  return 1;
+  return !br->eof_;
 }
 
 // Paragraph 9.5
@@ -170,7 +173,7 @@ static int ParseFilterHeader(VP8BitReader* br, VP8Decoder* const dec) {
       dec->filter_levels_[0] = hdr->level_;
     }
   }
-  return 1;
+  return !br->eof_;
 }
 
 static inline uint32_t get_le32(const uint8_t* const data) {
@@ -214,12 +217,16 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
                          "RIFF: WEBP signature not found.");
     }
     riff_size = get_le32(buf + 4);
+    if (riff_size < 12) {
+      return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
+                         "RIFF: Truncated header.");
+    }
     if (memcmp(buf + 12, "VP8 ", 4)) {
       return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
                          "RIFF: Invalid compression format.");
     }
     chunk_size = get_le32(buf + 16);
-    if ((chunk_size > riff_size + 8) || (chunk_size & 1)) {
+    if (chunk_size > riff_size - 12) {
       return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
                          "RIFF: Inconsistent size information.");
     }
@@ -235,6 +242,12 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
     frm_hdr->profile_ = (bits >> 1) & 7;
     frm_hdr->show_ = (bits >> 4) & 1;
     frm_hdr->partition_length_ = (bits >> 5);
+    if (frm_hdr->profile_ > 3)
+      return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
+                         "Incorrect keyframe parameters.");
+    if (!frm_hdr->show_)
+      return VP8SetError(dec, VP8_STATUS_UNSUPPORTED_FEATURE,
+                         "Frame not displayable.");
     buf += 3;
     buf_size -= 3;
   }
@@ -603,12 +616,14 @@ int VP8Decode(VP8Decoder* const dec, VP8Io* const io) {
                        "Allocation failed");
   }
 
-
   if (io->setup && !io->setup(io)) {
     VP8Clear(dec);
     return VP8SetError(dec, VP8_STATUS_USER_ABORT,
                        "Frame setup failed");
   }
+
+  // Disable filtering per user request (_after_ setup() is called)
+  if (io->bypass_filtering) dec->filter_type_ = 0;
 
   // Main decoding loop
   {
