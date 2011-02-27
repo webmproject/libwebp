@@ -55,7 +55,6 @@ static void ResetSegmentHeader(VP8Encoder* const enc) {
   VP8SegmentHeader* const hdr = &enc->segment_hdr_;
   hdr->num_segments_ = enc->config_->segments;
   hdr->update_map_  = (hdr->num_segments_ > 1);
-  hdr->absolute_delta_ = 1;
   hdr->size_ = 0;
 }
 
@@ -285,7 +284,9 @@ int WebPEncode(const WebPConfig* const config, WebPPicture* const pic) {
     return 0;   // bad params
   if (!WebPValidateConfig(config))
     return 0;   // invalid config.
-  if (pic->width <= 0 || pic->height <= 0 || pic->y == NULL)
+  if (pic->width <= 0 || pic->height <= 0)
+    return 0;   // invalid parameters
+  if (pic->y == NULL || pic->u == NULL || pic->v == NULL)
     return 0;   // invalid parameters
   if (pic->width >= MAX_DIMENSION || pic->height >= MAX_DIMENSION)
     return 0;   // image is too big

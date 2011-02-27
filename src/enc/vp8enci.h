@@ -159,9 +159,6 @@ typedef struct {
   int num_segments_;      // Actual number of segments. 1 segment only = unused.
   int update_map_;        // whether to update the segment map or not.
                           // must be 0 if there's only 1 segment.
-  int absolute_delta_;    // if true, segments' filter strength and quantizers
-                          // are not transmitted relatively to
-                          // VP8FilterHeader::level_ and base_quant_
   int size_;              // bit-cost for transmitting the segment map
 } VP8SegmentHeader;
 

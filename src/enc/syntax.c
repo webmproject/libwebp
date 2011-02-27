@@ -86,24 +86,13 @@ static void PutSegmentHeader(VP8BitWriter* const bw,
     int s;
     VP8PutBitUniform(bw, hdr->update_map_);
     if (VP8PutBitUniform(bw, update_data)) {
-      const int base_quant = enc->base_quant_;
-      const int base_strength = enc->filter_hdr_.level_;
-      VP8PutBitUniform(bw, hdr->absolute_delta_);
+      // we always use absolute values, not relative ones
+      VP8PutBitUniform(bw, 1);   // (segment_feature_mode = 1. Paragraph 9.3.)
       for (s = 0; s < NUM_MB_SEGMENTS; ++s) {
-        if (hdr->absolute_delta_) {
-          VP8PutSignedValue(bw, enc->dqm_[s].quant_, 7);
-        } else {
-          const int delta = enc->dqm_[s].quant_ - base_quant;
-          VP8PutSignedValue(bw, delta, 7);
-        }
+        VP8PutSignedValue(bw, enc->dqm_[s].quant_, 7);
       }
       for (s = 0; s < NUM_MB_SEGMENTS; ++s) {
-        if (hdr->absolute_delta_) {
-          VP8PutSignedValue(bw, enc->dqm_[s].fstrength_, 6);
-        } else {
-          const int delta = enc->dqm_[s].fstrength_ - base_strength;
-          VP8PutSignedValue(bw, delta, 6);
-        }
+        VP8PutSignedValue(bw, enc->dqm_[s].fstrength_, 6);
       }
     }
     if (hdr->update_map_) {
