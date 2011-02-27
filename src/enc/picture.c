@@ -26,13 +26,19 @@ int WebPPictureAlloc(WebPPicture* const picture) {
     const int height = picture->height;
     const int uv_width = (width + 1) / 2;
     const int uv_height = (height + 1) / 2;
-    const int y_size = width * height;
-    const int uv_size = uv_width * uv_height;
-    if (width <= 0 || height <= 0) return 0;      // error
+    const uint64_t y_size = (uint64_t)width * height;
+    const uint64_t uv_size = (uint64_t)uv_width * uv_height;
+    const uint64_t total_size = y_size + 2 * uv_size;
+    // Security and validation checks
+    if (uv_width <= 0 || uv_height <= 0 ||   // check param error
+        y_size >= (1ULL << 40) ||            // check for reasonable global size
+        (size_t)total_size != total_size) {  // check for overflow on 32bit
+      return 0;
+    }
     picture->y_stride = width;
     picture->uv_stride = uv_width;
     WebPPictureFree(picture);   // erase previous buffer
-    picture->y = (uint8_t*)malloc(y_size + 2 * uv_size);
+    picture->y = (uint8_t*)malloc(total_size);
     if (picture->y == NULL) return 0;
     picture->u = picture->y + y_size;
     picture->v = picture->u + uv_size;
