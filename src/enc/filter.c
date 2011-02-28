@@ -1,8 +1,8 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 Google Inc.
 //
 // This code is licensed under the same terms as WebM:
-// Software License Agreement:  http://www.webmproject.org/license/software/
-// Additional IP Rights Grant:  http://www.webmproject.org/license/additional/
+//  Software License Agreement:  http://www.webmproject.org/license/software/
+//  Additional IP Rights Grant:  http://www.webmproject.org/license/additional/
 // -----------------------------------------------------------------------------
 //
 // Selecting filter level
