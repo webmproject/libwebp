@@ -1,0 +1,140 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.TH CWEBP 1 "March  1, 2011"
+.SH NAME
+cwebp \- compress an image file to a WebP file
+.SH SYNOPSIS
+.B cwebp
+.RI [ options ] " input_file -o output_file.webp
+.br
+.SH DESCRIPTION
+This manual page documents the
+.B cwebp
+command.
+.PP
+\fBcwebp\fP compresses image using the WebP format.
+Input format can be either PNG, JPEG, or raw Y'CbCr samples.
+When using PNG, the transparency information (alpha channel) is currently
+discarded.
+.SH OPTIONS
+The basic options are:
+.TP
+.B \-o string
+Specify the name of the output WebP file. If omitted, \fBcwebp\fP will
+perform compression but only report statistics.
+.TP
+.B \-h, \-help
+A short usage summary.
+.TP
+.B \-H, \-longhelp
+A summary of all the possible options.
+.TP
+.B \-q float
+Specify the compression factor between 0 and 100. Small factor
+produce smaller file with lower quality. Best quality is achieved
+using a value of 100. The default is 75.
+.TP
+.B \-f int
+Specify the strength of the deblocking filter, between 0 (no filtering)
+and 100 (maximum filtering). A value of 0 will turn off any filtering.
+Higher value will increase the strength of the filtering process applied
+after decoding the picture. The higher the smoother the picture will
+appear. Typical values are usually in the range of 20 to 50.
+.TP
+.B \-preset string
+Specify a set of pre-defined parameters to suit a particular type of
+source material. Possible values are:  \fBdefault\fP, \fBphoto\fP,
+\fBpicture\fP, \fBdrawing\fP, \fBicon\fP, \fBtext\fP.
+.TP
+.B \-sns int
+Specify the amplitude of the spatial noise shaping. Spatial noise shaping
+(or \fBsns\fP for short) refers to a general collection of built-in algorithms
+used to decide which area of the picture should use relatively less bits,
+and where else to better transfer these bits. The possible range goes from
+0 (algorithm is off) to 100 (the maximal effect). The default value is 80.
+.TP
+.B \-m int
+Specify the compression method to use. This parameter controls the
+tradeoff between encoding speed and the compressed file size and quality.
+Possible values range from 0 to 6. Default value is 4.
+When higher values are used, the encoder will spend more time inspecting
+additional encoding possibilities and decide on the quality gain.
+Lower value can result is faster processing time at the expense of
+larger filesize and lower compression quality.
+.TP
+.B \-af
+Turns auto-filter on. This algorithm will spend additional time optimizing
+the filtering strength to reach a well-balanced quality.
+
+.SH ADDITIONAL OPTIONS
+More advanced options are:
+.TP
+.B \-sharpness int
+Specify the sharpness of the filtering (if used).
+Range is 0 (sharpest) to 7 (least sharp). Default is 0.
+.TP
+.B \-strong
+Use a stronger filtering than the default one (if filtering is being
+used thanks to the \fB\-f\fP option). Strong filtering is off by default.
+.TP
+.B \-segments int
+Change the number of partitions to use during the segmentation of the
+sns algorithm. Segments should be in range 1 to 4. Default value is 4.
+.TP
+.B \-size int
+Specify a target size (in bytes) to try and reach for the compressed output.
+Compressor will make several pass of partial encoding in order to get as
+close as possible to this target.
+.TP
+.B \-psnr float
+Specify a target PSNR (in dB) to try and reach for the compressed output.
+Compressor will make several pass of partial encoding in order to get as
+close as possible to this target.
+.TP
+.B \-pass int
+Set a maximum number of pass to use during the dichotomy used by
+options \fB\-size\fP or \fB\-psnr\fP. Maximum value is 10.
+.TP
+.B \-crop x_position y_position width height
+Crop the source to a rectangle with top-left corner at coordinates
+(x_position, y_position) and size width x height. This cropping area must
+be fully contained within the source rectangle.
+.B \-s width height
+Specify that the input file actually consists of raw Y'CbCr samples following
+the ITU-R Bt.601 recommendation, in 4:2:0 linear format.
+The luma plane has size \fBwidth\fP x \fBheight\fP.
+.TP
+.B \-map int
+Output additional ASCII-map of encoding information. Possible map values
+range from 1 to 6. This is only meant to help debugging.
+.TP
+.B \-pre int
+Specify a pre-processing filter. This option is a placeholder
+and has currently no effect.
+.TP
+.B \-v
+Print extra information (encoding time in particular).
+.TP
+.B \-quiet
+Do not print anything.
+.TP
+.B \-short
+Only print brief information (output file size and PSNR) for testing purpose.
+
+.SH Examples:
+cwebp -q 70 picture.png -o picture.webp
+.br
+cwebp -sns 70 -f 50 -strong -af -size 60000 picture.png -o picture.webp
+
+.SH
+.SH SEE ALSO
+.BR dwebp (1).
+.br
+Please refer to http://code.google.com/speed/webp/ for additional
+information.
+.SH AUTHOR
+\fBcwebp\fP was written by the WebP team.
+.br
+The latest source tree is available at http://www.webmproject.org/code
+.PP
+This manual page was written by Pascal Massimino <pascal.massimino@gmail.com>,
+for the Debian project (and may be used by others).
