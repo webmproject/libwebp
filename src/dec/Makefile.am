@@ -6,7 +6,7 @@ libwebpdecode_la_LDFLAGS = -version-info 0:0:0
 libwebpdecodeinclude_HEADERS = ../webp/decode.h ../webp/decode_vp8.h ../webp/types.h
 libwebpdecodeincludedir = $(includedir)/webp
 
-noinst_HEADERS = bits.h vp8i.h yuv.h
+noinst_HEADERS = bits.h vp8i.h webpi.h yuv.h
 
 noinst_LTLIBRARIES = libwebpdecode.la
 # uncomment the following line (and comment the above) if you want
