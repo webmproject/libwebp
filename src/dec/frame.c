@@ -126,6 +126,9 @@ static void DoFilter(VP8Decoder* const dec, int mb_x, int mb_y) {
   const int level = mb->f_level_;
   const int ilevel = mb->f_ilevel_;
   const int limit = 2 * level + ilevel;
+  if (level == 0) {
+    return;
+  }
   if (dec->filter_type_ == 1) {   // simple
     if (mb_x > 0) {
       VP8SimpleHFilter16(y_dst, y_bps, limit + 4);
