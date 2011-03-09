@@ -428,12 +428,18 @@ static int GetCoeffs(VP8BitReader* const br, ProbaArray prob,
   return 0;
 }
 
+// alias-safe way of converting 4bytes to 32bits
+typedef union {
+  uint8_t  i8[4];
+  uint32_t i32;
+} PackedNz;
+
 // Table to unpack four bits into four bytes
-static const uint8_t kUnpackTab[16][4] = {
-  {0, 0, 0, 0},  {1, 0, 0, 0},  {0, 1, 0, 0},  {1, 1, 0, 0},
-  {0, 0, 1, 0},  {1, 0, 1, 0},  {0, 1, 1, 0},  {1, 1, 1, 0},
-  {0, 0, 0, 1},  {1, 0, 0, 1},  {0, 1, 0, 1},  {1, 1, 0, 1},
-  {0, 0, 1, 1},  {1, 0, 1, 1},  {0, 1, 1, 1},  {1, 1, 1, 1} };
+static const PackedNz kUnpackTab[16] = {
+  {{0, 0, 0, 0}},  {{1, 0, 0, 0}},  {{0, 1, 0, 0}},  {{1, 1, 0, 0}},
+  {{0, 0, 1, 0}},  {{1, 0, 1, 0}},  {{0, 1, 1, 0}},  {{1, 1, 1, 0}},
+  {{0, 0, 0, 1}},  {{1, 0, 0, 1}},  {{0, 1, 0, 1}},  {{1, 1, 0, 1}},
+  {{0, 0, 1, 1}},  {{1, 0, 1, 1}},  {{0, 1, 1, 1}},  {{1, 1, 1, 1}} };
 
 // Macro to pack four LSB of four bytes into four bits.
 #if defined(__PPC__) || defined(_M_PPC) || defined(_ARCH_PPC) || \
@@ -442,7 +448,7 @@ static const uint8_t kUnpackTab[16][4] = {
 #else
 #define PACK_CST 0x01020408U
 #endif
-#define PACK(X, S) ((((*(uint32_t*)(X)) * PACK_CST) & 0xff000000) >> (S))
+#define PACK(X, S) ((((X).i32 * PACK_CST) & 0xff000000) >> (S))
 
 static int ParseResiduals(VP8Decoder* const dec,
                           VP8MB* const mb, VP8BitReader* const token_br) {
@@ -451,10 +457,10 @@ static int ParseResiduals(VP8Decoder* const dec,
   const VP8QuantMatrix* q = &dec->dqm_[dec->segment_];
   int16_t* dst = dec->coeffs_;
   VP8MB* const left_mb = dec->mb_info_ - 1;
-  uint8_t nz_ac[4], nz_dc[4];
+  PackedNz nz_ac, nz_dc;
+  PackedNz tnz, lnz;
   uint32_t non_zero_ac = 0;
   uint32_t non_zero_dc = 0;
-  uint8_t tnz[4], lnz[4];
   int x, y, ch;
 
   memset(dst, 0, 384 * sizeof(*dst));
@@ -472,40 +478,39 @@ static int ParseResiduals(VP8Decoder* const dec,
     ac_prob = (ProbaArray)dec->proba_.coeffs_[3];
   }
 
-  memcpy(tnz, kUnpackTab[mb->nz_ & 0xf], sizeof(tnz));
-  memcpy(lnz, kUnpackTab[left_mb->nz_ & 0xf], sizeof(lnz));
+  tnz = kUnpackTab[mb->nz_ & 0xf];
+  lnz = kUnpackTab[left_mb->nz_ & 0xf];
   for (y = 0; y < 4; ++y) {
-    int l = lnz[y];
-
+    int l = lnz.i8[y];
     for (x = 0; x < 4; ++x) {
-      const int ctx = l + tnz[x];
+      const int ctx = l + tnz.i8[x];
       l = GetCoeffs(token_br, ac_prob, ctx,
                     q->y1_mat_, first, dst);
-      nz_dc[x] = (dst[0] != 0);
-      nz_ac[x] = tnz[x] = l;
+      nz_dc.i8[x] = (dst[0] != 0);
+      nz_ac.i8[x] = tnz.i8[x] = l;
       dst += 16;
     }
-    lnz[y] = l;
+    lnz.i8[y] = l;
     non_zero_dc |= PACK(nz_dc, 24 - y * 4);
     non_zero_ac |= PACK(nz_ac, 24 - y * 4);
   }
   out_t_nz = PACK(tnz, 24);
   out_l_nz = PACK(lnz, 24);
 
-  memcpy(tnz, kUnpackTab[mb->nz_ >> 4], sizeof(tnz));
-  memcpy(lnz, kUnpackTab[left_mb->nz_ >> 4], sizeof(lnz));
+  tnz = kUnpackTab[mb->nz_ >> 4];
+  lnz = kUnpackTab[left_mb->nz_ >> 4];
   for (ch = 0; ch < 4; ch += 2) {
     for (y = 0; y < 2; ++y) {
-      int l = lnz[ch + y];
+      int l = lnz.i8[ch + y];
       for (x = 0; x < 2; ++x) {
-        const int ctx = l + tnz[ch + x];
+        const int ctx = l + tnz.i8[ch + x];
         l = GetCoeffs(token_br, (ProbaArray)dec->proba_.coeffs_[2],
                       ctx, q->uv_mat_, 0, dst);
-        nz_dc[y * 2 + x] = (dst[0] != 0);
-        nz_ac[y * 2 + x] = tnz[ch + x] = l;
+        nz_dc.i8[y * 2 + x] = (dst[0] != 0);
+        nz_ac.i8[y * 2 + x] = tnz.i8[ch + x] = l;
         dst += 16;
       }
-      lnz[ch + y] = l;
+      lnz.i8[ch + y] = l;
     }
     non_zero_dc |= PACK(nz_dc, 8 - ch * 2);
     non_zero_ac |= PACK(nz_ac, 8 - ch * 2);
