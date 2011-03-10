@@ -265,6 +265,8 @@ void VP8ReconstructBlock(VP8Decoder* const dec);
 void VP8StoreBlock(VP8Decoder* const dec);
 // Finalize and transmit a complete row. Return false in case of user-abort.
 int VP8FinishRow(VP8Decoder* const dec, VP8Io* io);
+// Decode one macroblock. Returns false if there is not enough data.
+int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br);
 
 // in dsp.c
 typedef void (*VP8Idct)(const int16_t* coeffs, uint8_t* dst);

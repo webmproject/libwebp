@@ -432,7 +432,7 @@ static int GetCoeffs(VP8BitReader* const br, ProbaArray prob,
   return 0;
 }
 
-// alias-safe way of converting 4bytes to 32bits
+// Alias-safe way of converting 4bytes to 32bits.
 typedef union {
   uint8_t  i8[4];
   uint32_t i32;
@@ -454,8 +454,8 @@ static const PackedNz kUnpackTab[16] = {
 #endif
 #define PACK(X, S) ((((X).i32 * PACK_CST) & 0xff000000) >> (S))
 
-static int ParseResiduals(VP8Decoder* const dec,
-                          VP8MB* const mb, VP8BitReader* const token_br) {
+static void ParseResiduals(VP8Decoder* const dec,
+                           VP8MB* const mb, VP8BitReader* const token_br) {
   int out_t_nz, out_l_nz, first;
   ProbaArray ac_prob;
   const VP8QuantMatrix* q = &dec->dqm_[dec->segment_];
@@ -527,54 +527,60 @@ static int ParseResiduals(VP8Decoder* const dec,
   dec->non_zero_ac_ = non_zero_ac;
   dec->non_zero_ = non_zero_ac | non_zero_dc;
   mb->skip_ = !dec->non_zero_;
-
-  return 1;
 }
 #undef PACK
 
 //-----------------------------------------------------------------------------
 // Main loop
 
-static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
+int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br) {
   VP8BitReader* const br = &dec->br_;
-  VP8BitReader* token_br;
+  VP8MB* const left = dec->mb_info_ - 1;
+  VP8MB* const info = dec->mb_info_ + dec->mb_x_;
 
+  // Note: we don't save segment map (yet), as we don't expect
+  // to decode more than 1 keyframe.
+  if (dec->segment_hdr_.update_map_) {
+    // Hardcoded tree parsing
+    dec->segment_ = !VP8GetBit(br, dec->proba_.segments_[0]) ?
+        VP8GetBit(br, dec->proba_.segments_[1]) :
+        2 + VP8GetBit(br, dec->proba_.segments_[2]);
+  }
+  info->skip_ = dec->use_skip_proba_ ? VP8GetBit(br, dec->skip_p_) : 0;
+
+  VP8ParseIntraMode(br, dec);
+  if (br->eof_) {
+    return 0;
+  }
+
+  if (!info->skip_) {
+    ParseResiduals(dec, info, token_br);
+  } else {
+    left->nz_ = info->nz_ = 0;
+    if (!dec->is_i4x4_) {
+      left->dc_nz_ = info->dc_nz_ = 0;
+    }
+    dec->non_zero_ = 0;
+    dec->non_zero_ac_ = 0;
+  }
+
+  return (!token_br->eof_);
+}
+
+static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
   for (dec->mb_y_ = 0; dec->mb_y_ < dec->mb_h_; ++dec->mb_y_) {
     VP8MB* const left = dec->mb_info_ - 1;
-
-    memset(dec->intra_l_, B_DC_PRED, sizeof(dec->intra_l_));
+    VP8BitReader* const token_br =
+        &dec->parts_[dec->mb_y_ & (dec->num_parts_ - 1)];
 
     left->nz_ = 0;
     left->dc_nz_ = 0;
-    token_br = &dec->parts_[dec->mb_y_ & (dec->num_parts_ - 1)];
+    memset(dec->intra_l_, B_DC_PRED, sizeof(dec->intra_l_));
 
     for (dec->mb_x_ = 0; dec->mb_x_ < dec->mb_w_;  dec->mb_x_++) {
-      VP8MB* const info = dec->mb_info_ + dec->mb_x_;
-
-      // Note: we don't save segment map (yet), as we don't expect
-      // to decode more than 1 keyframe.
-      if (dec->segment_hdr_.update_map_) {
-        // Hardcoded tree parsing
-        dec->segment_ = !VP8GetBit(br, dec->proba_.segments_[0]) ?
-              VP8GetBit(br, dec->proba_.segments_[1]) :
-          2 + VP8GetBit(br, dec->proba_.segments_[2]);
-      }
-      info->skip_ = dec->use_skip_proba_ ? VP8GetBit(br, dec->skip_p_) : 0;
-
-      VP8ParseIntraMode(br, dec);
-
-      if (!info->skip_) {
-        if (!ParseResiduals(dec, info, token_br)) {
-          return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
-                             "Residual parsing failed.");
-        }
-      } else {
-        left->nz_ = info->nz_ = 0;
-        if (!dec->is_i4x4_) {
-          left->dc_nz_ = info->dc_nz_ = 0;
-        }
-        dec->non_zero_ = 0;
-        dec->non_zero_ac_ = 0;
+      if (!VP8DecodeMB(dec, token_br)) {
+        return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
+                           "Premature end-of-file encountered.");
       }
       VP8ReconstructBlock(dec);
 
@@ -584,10 +590,6 @@ static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
     if (!VP8FinishRow(dec, io)) {
       return VP8SetError(dec, VP8_STATUS_USER_ABORT,
                          "Output aborted.");
-    }
-    if (dec->br_.eof_ || token_br->eof_) {
-      return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
-                         "Premature end-of-file encountered.");
     }
   }
 
