@@ -297,7 +297,7 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
   if (frm_hdr->partition_length_ > buf_size) {
     return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
                        "bad partition length");
-  }  
+  }
   br = &dec->br_;
   VP8InitBitReader(br, buf, buf + frm_hdr->partition_length_);
   buf += frm_hdr->partition_length_;
