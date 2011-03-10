@@ -162,7 +162,7 @@ int VP8BitWriterInit(VP8BitWriter* const bw, size_t expected_size) {
 }
 
 uint8_t* VP8BitWriterFinish(VP8BitWriter* const bw) {
-  VP8PutValue(bw, 0, 8 - bw->nb_bits_);
+  VP8PutValue(bw, 0, 9 - bw->nb_bits_);
   bw->nb_bits_ = 0;   // pad with zeroes
   kFlush(bw);
   return bw->buf_;
