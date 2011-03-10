@@ -12,6 +12,10 @@
 #include <math.h>
 #include "vp8enci.h"
 
+#if defined(__cplusplus) || defined(c_plusplus)
+extern "C" {
+#endif
+
 // NOTE: clip1, tables and InitTables are repeated entries of dsp.c
 static uint8_t abs0[255 + 255 + 1];     // abs(i)
 static uint8_t abs1[255 + 255 + 1];     // abs(i)>>1
@@ -368,3 +372,7 @@ void VP8AdjustFilterStrength(VP8EncIterator* const it) {
     enc->dqm_[s].fstrength_ = best_level;
   }
 }
+
+#if defined(__cplusplus) || defined(c_plusplus)
+}    // extern "C"
+#endif

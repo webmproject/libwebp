@@ -12,6 +12,10 @@
 #include <stdlib.h>
 #include "vp8i.h"
 
+#if defined(__cplusplus) || defined(c_plusplus)
+extern "C" {
+#endif
+
 //-----------------------------------------------------------------------------
 // VP8Decoder
 
@@ -658,3 +662,9 @@ void VP8Clear(VP8Decoder* const dec) {
   memset(&dec->br_, 0, sizeof(dec->br_));
   dec->ready_ = 0;
 }
+
+//-----------------------------------------------------------------------------
+
+#if defined(__cplusplus) || defined(c_plusplus)
+}    // extern "C"
+#endif

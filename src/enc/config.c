@@ -12,6 +12,10 @@
 #include <assert.h>
 #include "webp/encode.h"
 
+#if defined(__cplusplus) || defined(c_plusplus)
+extern "C" {
+#endif
+
 //-----------------------------------------------------------------------------
 // WebPConfig
 //-----------------------------------------------------------------------------
@@ -105,3 +109,7 @@ int WebPValidateConfig(const WebPConfig* const config) {
 }
 
 //-----------------------------------------------------------------------------
+
+#if defined(__cplusplus) || defined(c_plusplus)
+}    // extern "C"
+#endif
