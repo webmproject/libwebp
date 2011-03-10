@@ -111,33 +111,41 @@ static int ParseSegmentHeader(VP8BitReader* br,
 }
 
 // Paragraph 9.5
-static int ParsePartitions(VP8Decoder* const dec,
-                           const uint8_t* buf, uint32_t size) {
+// This function returns VP8_STATUS_SUSPENDED if we don't have all the
+// necessary data in 'buf'.
+// This case is not necessarily an error (for incremental decoding).
+// Still, no bitreader is ever initialized to make it possible to read
+// unavailable memory.
+// If we don't even have the partitions' sizes, than VP8_STATUS_NOT_ENOUGH_DATA
+// is returned, and this is an unrecoverable error.
+// If the partitions were positioned ok, VP8_STATUS_OK is returned.
+static VP8StatusCode ParsePartitions(VP8Decoder* const dec,
+                                     const uint8_t* buf, uint32_t size) {
   VP8BitReader* const br = &dec->br_;
   const uint8_t* sz = buf;
+  const uint8_t* buf_end = buf + size;
+  const uint8_t* part_start;
   int last_part;
-  uint32_t offset;
   int p;
 
   dec->num_parts_ = 1 << VP8GetValue(br, 2);
   last_part = dec->num_parts_ - 1;
-  offset = last_part * 3;
-
-  if (size <= offset) {
-    return 0;
+  part_start = buf + last_part * 3;
+  if (buf_end < part_start) {
+    // we can't even read the sizes with sz[]! That's a failure.
+    return VP8_STATUS_NOT_ENOUGH_DATA;
   }
   for (p = 0; p < last_part; ++p) {
     const uint32_t psize = sz[0] | (sz[1] << 8) | (sz[2] << 16);
-    if (offset + psize > size) {
-      return 0;
-    }
-    VP8Init(dec->parts_ + p, buf + offset, psize);
-    offset += psize;
+    const uint8_t* part_end = part_start + psize;
+    if (part_end > buf_end) part_end = buf_end;
+    VP8InitBitReader(dec->parts_ + p, part_start, part_end);
+    part_start = part_end;
     sz += 3;
   }
-  size -= offset;
-  VP8Init(dec->parts_ + last_part, buf + offset, size);
-  return 1;
+  VP8InitBitReader(dec->parts_ + last_part, part_start, buf_end);
+  return (part_start < buf_end) ? VP8_STATUS_OK :
+           VP8_STATUS_SUSPENDED;   // Init is ok, but there's not enough data
 }
 
 // Paragraph 9.4
@@ -284,14 +292,17 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
     dec->segment_ = 0;    // default for intra
   }
 
-  br = &dec->br_;
-  VP8Init(br, buf, buf_size);
+  // Check if we have all the partition #0 available, and initialize dec->br_
+  // to read this partition (and this partition only).
   if (frm_hdr->partition_length_ > buf_size) {
     return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
                        "bad partition length");
-  }
+  }  
+  br = &dec->br_;
+  VP8InitBitReader(br, buf, buf + frm_hdr->partition_length_);
   buf += frm_hdr->partition_length_;
   buf_size -= frm_hdr->partition_length_;
+
   if (frm_hdr->key_frame_) {
     pic_hdr->colorspace_ = VP8Get(br);
     pic_hdr->clamp_type_ = VP8Get(br);
@@ -305,7 +316,7 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
     return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
                        "cannot parse filter header");
   }
-  if (!ParsePartitions(dec, buf, buf_size)) {
+  if (ParsePartitions(dec, buf, buf_size) != VP8_STATUS_OK) {
     return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
                        "cannot parse partitions");
   }

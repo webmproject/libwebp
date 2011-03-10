@@ -30,11 +30,12 @@ typedef struct {
   // boolean decoder
   uint32_t range_;            // current range minus 1. In [127, 254] interval.
   uint32_t value_;            // current value
-  int left_;                  // how many unused bits (negated)
+  int missing_;               // number of missing bits in value_ (8bit)
 } VP8BitReader;
 
 // Initialize the bit reader and the boolean decoder.
-void VP8Init(VP8BitReader* const br, const uint8_t* buf, uint32_t size);
+void VP8InitBitReader(VP8BitReader* const br,
+                      const uint8_t* const start, const uint8_t* const end);
 
 // return the next value made of 'num_bits' bits
 uint32_t VP8GetValue(VP8BitReader* const br, int num_bits);
@@ -55,7 +56,24 @@ static inline uint32_t VP8GetByte(VP8BitReader* const br) {
     return *br->buf_++;
   }
   br->eof_ = 1;
-  return 0x80;
+  return 0xff;
+}
+
+static inline uint32_t VP8BitUpdate(VP8BitReader* const br, uint32_t split) {
+  uint32_t bit;
+  // Make sure we have a least 8 bits in 'value_'
+  if (br->missing_ > 0) {
+    br->value_ |= VP8GetByte(br) << br->missing_;
+    br->missing_ -= 8;
+  }
+  bit = ((br->value_ >> 8) > split);
+  if (bit) {
+    br->range_ -= split + 1;
+    br->value_ -= (split + 1) << 8;
+  } else {
+    br->range_ = split;
+  }
+  return bit;
 }
 
 static inline void VP8Shift(VP8BitReader* const br) {
@@ -63,22 +81,12 @@ static inline void VP8Shift(VP8BitReader* const br) {
   const int shift = kVP8Log2Range[br->range_];
   br->range_ = kVP8NewRange[br->range_];
   br->value_ <<= shift;
-  br->left_ += shift;
-  if (br->left_ > 0) {
-    br->value_ |= VP8GetByte(br) << br->left_;
-    br->left_ -= 8;
-  }
+  br->missing_ += shift;
 }
 
 static inline uint32_t VP8GetBit(VP8BitReader* const br, int prob) {
   const uint32_t split = (br->range_ * prob) >> 8;
-  const uint32_t bit = ((br->value_ >> 8) > split);
-  if (bit) {
-    br->range_ -= split + 1;
-    br->value_ -= (split + 1) << 8;
-  } else {
-    br->range_ = split;
-  }
+  const uint32_t bit = VP8BitUpdate(br, split);
   if (br->range_ < 0x7f) {
     VP8Shift(br);
   }
@@ -87,16 +95,9 @@ static inline uint32_t VP8GetBit(VP8BitReader* const br, int prob) {
 
 static inline int VP8GetSigned(VP8BitReader* const br, int v) {
   const uint32_t split = br->range_ >> 1;
-  const uint32_t bit = ((br->value_ >> 8) > split);
-  if (bit) {
-    br->range_ -= split + 1;
-    br->value_ -= (split + 1) << 8;
-    v = -v;
-  } else {
-    br->range_ = split;
-  }
+  const uint32_t bit = VP8BitUpdate(br, split);
   VP8Shift(br);
-  return v;
+  return bit ? -v : v;
 }
 
 #if defined(__cplusplus) || defined(c_plusplus)
