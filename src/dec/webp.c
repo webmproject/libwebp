@@ -311,7 +311,7 @@ void WebPInitCustomIo(VP8Io* const io) {
 }
 
 //-----------------------------------------------------------------------------
-// Init/Check decoding parameters
+// Init/Check/Free decoding parameters and buffer
 
 int WebPInitDecParams(const uint8_t* data, uint32_t data_size, int* width,
                       int* height, WebPDecParams* const params) {
@@ -374,6 +374,11 @@ int WebPCheckDecParams(const VP8Io* io, const WebPDecParams* params,
     ok &= (u_size <= output_u_size && v_size <= output_v_size);
   }
   return ok;
+}
+
+void WebPClearDecParams(WebPDecParams* params) {
+  free(params->output);
+  memset(params, 0, sizeof(*params));
 }
 
 //-----------------------------------------------------------------------------
@@ -510,11 +515,14 @@ static uint8_t* Decode(WEBP_CSP_MODE mode, const uint8_t* data,
   if (!WebPInitDecParams(data, data_size, width, height, &params)) {
     return NULL;
   }
-  if (params_out) *params_out = params;
 
   size = params.stride * (*height);
   uv_size = params.u_stride * ((*height + 1) / 2);
-  return DecodeInto(mode, data, data_size, &params, size, uv_size, uv_size);
+  if (!DecodeInto(mode, data, data_size, &params, size, uv_size, uv_size)) {
+    WebPClearDecParams(&params);
+  }
+  if (params_out) *params_out = params;
+  return params.output;
 }
 
 uint8_t* WebPDecodeRGB(const uint8_t* data, uint32_t data_size,

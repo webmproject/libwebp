@@ -52,6 +52,10 @@ int WebPInitDecParams(const uint8_t* data, uint32_t data_size, int* width,
 int WebPCheckDecParams(const VP8Io* io, const WebPDecParams* params,
                        int output_size, int output_u_size, int output_v_size);
 
+// Deallocate memory allocated by WebPInitDecParams() and reset the
+// WebPDecParams object.
+void WebPClearDecParams(WebPDecParams* params);
+
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
 #endif
