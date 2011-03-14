@@ -509,6 +509,7 @@ static uint8_t* Decode(WEBP_CSP_MODE mode, const uint8_t* data,
                        WebPDecParams* params_out) {
   int size = 0;
   int uv_size = 0;
+  uint8_t* output;
   WebPDecParams params = { 0 };
 
   params.mode = mode;
@@ -518,11 +519,14 @@ static uint8_t* Decode(WEBP_CSP_MODE mode, const uint8_t* data,
 
   size = params.stride * (*height);
   uv_size = params.u_stride * ((*height + 1) / 2);
-  if (!DecodeInto(mode, data, data_size, &params, size, uv_size, uv_size)) {
+  output = DecodeInto(mode, data, data_size, &params, size, uv_size, uv_size);
+  if (!output) {
     WebPClearDecParams(&params);
   }
-  if (params_out) *params_out = params;
-  return params.output;
+  if (params_out) {
+    *params_out = params;
+  }
+  return output;
 }
 
 uint8_t* WebPDecodeRGB(const uint8_t* data, uint32_t data_size,
