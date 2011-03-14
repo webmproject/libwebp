@@ -386,7 +386,8 @@ static const uint8_t kZigzag[16] = {
 
 typedef const uint8_t (*ProbaArray)[NUM_CTX][NUM_PROBAS];  // for const-casting
 
-// Returns 1 if there's non-zero coeffs, 0 otherwise
+// Returns the position of the last non-zero coeff plus one
+// (and 0 if there's no coeff at all)
 static int GetCoeffs(VP8BitReader* const br, ProbaArray prob,
                      int ctx, const uint16_t dq[2], int n, int16_t* out) {
   const uint8_t* p = prob[kBands[n]][ctx];
@@ -433,14 +434,13 @@ static int GetCoeffs(VP8BitReader* const br, ProbaArray prob,
       j = kZigzag[n - 1];
       out[j] = VP8GetSigned(br, v) * dq[j > 0];
       if (n == 16 || !VP8GetBit(br, p[0])) {   // EOB
-        return 1;
+        return n;
       }
     }
     if (n == 16) {
-      return 1;
+      return 16;
     }
   }
-  return 0;
 }
 
 // Alias-safe way of converting 4bytes to 32bits.
@@ -483,8 +483,8 @@ static void ParseResiduals(VP8Decoder* const dec,
     int16_t dc[16] = { 0 };
     const int ctx = mb->dc_nz_ + left_mb->dc_nz_;
     mb->dc_nz_ = left_mb->dc_nz_ =
-        GetCoeffs(token_br, (ProbaArray)dec->proba_.coeffs_[1],
-                  ctx, q->y2_mat_, 0, dc);
+        (GetCoeffs(token_br, (ProbaArray)dec->proba_.coeffs_[1],
+                   ctx, q->y2_mat_, 0, dc) > 0);
     first = 1;
     ac_prob = (ProbaArray)dec->proba_.coeffs_[0];
     VP8TransformWHT(dc, dst);
@@ -499,10 +499,11 @@ static void ParseResiduals(VP8Decoder* const dec,
     int l = lnz.i8[y];
     for (x = 0; x < 4; ++x) {
       const int ctx = l + tnz.i8[x];
-      l = GetCoeffs(token_br, ac_prob, ctx,
-                    q->y1_mat_, first, dst);
+      const int nz = GetCoeffs(token_br, ac_prob, ctx,
+                               q->y1_mat_, first, dst);
+      tnz.i8[x] = l = (nz > 0);
       nz_dc.i8[x] = (dst[0] != 0);
-      nz_ac.i8[x] = tnz.i8[x] = l;
+      nz_ac.i8[x] = (nz > 1);
       dst += 16;
     }
     lnz.i8[y] = l;
@@ -519,10 +520,12 @@ static void ParseResiduals(VP8Decoder* const dec,
       int l = lnz.i8[ch + y];
       for (x = 0; x < 2; ++x) {
         const int ctx = l + tnz.i8[ch + x];
-        l = GetCoeffs(token_br, (ProbaArray)dec->proba_.coeffs_[2],
+        const int nz =
+            GetCoeffs(token_br, (ProbaArray)dec->proba_.coeffs_[2],
                       ctx, q->uv_mat_, 0, dst);
+        tnz.i8[ch + x] = l = (nz > 0);
         nz_dc.i8[y * 2 + x] = (dst[0] != 0);
-        nz_ac.i8[y * 2 + x] = tnz.i8[ch + x] = l;
+        nz_ac.i8[y * 2 + x] = (nz > 1);
         dst += 16;
       }
       lnz.i8[ch + y] = l;
