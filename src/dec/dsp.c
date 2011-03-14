@@ -468,16 +468,16 @@ static void DC8uvNoTopLeft(uint8_t *dst) {    // DC with nothing
 //-----------------------------------------------------------------------------
 // default C implementations
 
-VP8PredFunc VP8PredLuma4[11] = {
+VP8PredFunc VP8PredLuma4[NUM_BMODES] = {
   DC4, TM4, VE4, HE4, RD4, VR4, LD4, VL4, HD4, HU4
 };
 
-VP8PredFunc VP8PredLuma16[7] = {
+VP8PredFunc VP8PredLuma16[NUM_B_DC_MODES] = {
   DC16, TM16, VE16, HE16,
   DC16NoTop, DC16NoLeft, DC16NoTopLeft
 };
 
-VP8PredFunc VP8PredChroma8[7] = {
+VP8PredFunc VP8PredChroma8[NUM_B_DC_MODES] = {
   DC8uv, TM8uv, VE8uv, HE8uv,
   DC8uvNoTop, DC8uvNoLeft, DC8uvNoTopLeft
 };

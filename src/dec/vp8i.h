@@ -45,7 +45,8 @@ enum { B_DC_PRED = 0,   // 4x4 modes
        // special modes
        B_DC_PRED_NOTOP = 4,
        B_DC_PRED_NOLEFT = 5,
-       B_DC_PRED_NOTOPLEFT = 6 };
+       B_DC_PRED_NOTOPLEFT = 6,
+       NUM_B_DC_MODES = 7 };
 
 enum { MB_FEATURE_TREE_PROBS = 3,
        NUM_MB_SEGMENTS = 4,
@@ -279,9 +280,9 @@ extern void (*VP8TransformWHT)(const int16_t* in, int16_t* out);
 // *dst is the destination block, with stride BPS. Boundary samples are
 // assumed accessible when needed.
 typedef void (*VP8PredFunc)(uint8_t *dst);
-extern VP8PredFunc VP8PredLuma16[7];
-extern VP8PredFunc VP8PredChroma8[7];
-extern VP8PredFunc VP8PredLuma4[11];
+extern VP8PredFunc VP8PredLuma16[NUM_B_DC_MODES];
+extern VP8PredFunc VP8PredChroma8[NUM_B_DC_MODES];
+extern VP8PredFunc VP8PredLuma4[NUM_BMODES];
 
 void VP8DspInit();        // must be called before anything using the above
 void VP8DspInitTables();  // needs to be called no matter what.
