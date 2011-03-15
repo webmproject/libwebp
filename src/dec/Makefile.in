@@ -211,7 +211,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CPPFLAGS = -I$(top_builddir)/src
+AM_CPPFLAGS = -I$(top_srcdir)/src
 libwebpdecode_la_SOURCES = bits.h vp8i.h yuv.h bits.c dsp.c frame.c \
                           quant.c tree.c vp8.c webp.c yuv.c
 
@@ -263,7 +263,7 @@ clean-noinstLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-libwebpdecode.la: $(libwebpdecode_la_OBJECTS) $(libwebpdecode_la_DEPENDENCIES)
+libwebpdecode.la: $(libwebpdecode_la_OBJECTS) $(libwebpdecode_la_DEPENDENCIES) 
 	$(libwebpdecode_la_LINK)  $(libwebpdecode_la_OBJECTS) $(libwebpdecode_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:

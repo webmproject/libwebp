@@ -212,7 +212,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CPPFLAGS = -I$(top_builddir)/src
+AM_CPPFLAGS = -I$(top_srcdir)/src
 libwebpencode_la_SOURCES = analysis.c bit_writer.c bit_writer.h \
                           config.c cost.c cost.h dsp.c filter.c \
                           frame.c iterator.c picture.c quant.c  \

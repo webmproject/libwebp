@@ -1,4 +1,4 @@
-AM_CPPFLAGS = -I$(top_builddir)/src
+AM_CPPFLAGS = -I$(top_srcdir)/src
 
 libwebpencode_la_SOURCES = analysis.c bit_writer.c bit_writer.h \
                           config.c cost.c cost.h dsp.c filter.c \

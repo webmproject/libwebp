@@ -1,4 +1,4 @@
-AM_CPPFLAGS = -I$(top_builddir)/src
+AM_CPPFLAGS = -I$(top_srcdir)/src
 
 libwebpdecode_la_SOURCES = bits.h vp8i.h yuv.h bits.c dsp.c frame.c \
                           quant.c tree.c vp8.c webp.c yuv.c
