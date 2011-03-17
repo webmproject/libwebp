@@ -10,10 +10,23 @@
 
 #### Customizable part ####
 
-# These flag assume you have libpng and libjpeg installed. If not,
-# just comment out both lines.
+# These flag assume you have libpng and libjpeg installed. If not, either
+# follow below install instructions or just comment out the next lines.
 EXTRA_FLAGS= -DWEBP_HAVE_PNG -DWEBP_HAVE_JPEG
 EXTRA_LIBS= -lpng -ljpeg
+ifeq ("$(HOSTTYPE)", "intel-mac")
+  EXTRA_FLAGS += -I/opt/local/include
+  EXTRA_LIBS  += -L/opt/local/lib
+endif
+
+# To install libraries on Mac OS X:
+# 1. Install MacPorts (http://www.macports.org/install.php)
+# 2. Run "sudo port install jpeg"
+# 3. Run "sudo port install libpng"
+
+# To install libraries on Linux:
+# 1. Run "sudo apt-get install libjpeg62-dev"
+# 2. Run "sudo apt-get install libpng12-dev"
 
 # Uncomment for build for 32bit platform
 # Alternatively, you can just use the command
