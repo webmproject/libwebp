@@ -700,7 +700,7 @@ int main(int argc, const char *argv[]) {
         goto Error;
       }
       if (!WebPConfigPreset(&config, preset, config.quality)) {
-        fprintf(stderr, "Error! Could initialize configuration with preset.");
+        fprintf(stderr, "Error! Could initialize configuration with preset.\n");
         goto Error;
       }
     } else if (!strcmp(argv[c], "-v")) {
@@ -722,7 +722,10 @@ int main(int argc, const char *argv[]) {
   // Read the input
   if (verbose)
     StopwatchReadAndReset(&stop_watch);
-  if (!ReadPicture(in_file, &picture)) goto Error;
+  if (!ReadPicture(in_file, &picture)) {
+    fprintf(stderr, "Error! Cannot read input picture\n");
+    goto Error;
+  }
   if (verbose) {
     const double time = StopwatchReadAndReset(&stop_watch);
     fprintf(stderr, "Time to read input: %.3fs\n", time);
@@ -753,10 +756,15 @@ int main(int argc, const char *argv[]) {
   // Compress
   if (verbose)
     StopwatchReadAndReset(&stop_watch);
-  if (crop != 0 && !WebPPictureCrop(&picture, crop_x, crop_y, crop_w, crop_h))
+  if (crop != 0 && !WebPPictureCrop(&picture, crop_x, crop_y, crop_w, crop_h)) {
+    fprintf(stderr, "Error! Cannot crop picture\n");
     goto Error;
+  }
   if (picture.extra_info_type > 0) AllocExtraInfo(&picture);
-  if (!WebPEncode(&config, &picture)) goto Error;
+  if (!WebPEncode(&config, &picture)) {
+    fprintf(stderr, "Error! Cannot encode picture as WebP\n");
+    goto Error;
+  }
   if (verbose) {
     const double time = StopwatchReadAndReset(&stop_watch);
     fprintf(stderr, "Time to encode picture: %.3fs\n", time);
