@@ -278,12 +278,12 @@ For instance:
   WebPIDecoder* idec = WebPINew(MODE_BGR);
 
 As data is made progressively available, this incremental-decoder object
-can be use to decode the picture further. There are two (mutually exclusive)
+can be used to decode the picture further. There are two (mutually exclusive)
 ways to pass freshly arrived data:
 
 either by appending the fresh bytes:
 
-  WebPIAppend(idec, new_bytes, size_of_fresh_data);
+  WebPIAppend(idec, fresh_data, size_of_fresh_data);
 
 or by just mentioning the new size of the transmitted data:
 
@@ -296,7 +296,8 @@ These functions will return the decoding status: either VP8_STATUS_SUSPENDED if
 decoding is not finished yet, or VP8_STATUS_OK when decoding is done.
 Any other status is an error condition.
 
-The idec object must always be released calling: WebPDelete(idec)
+The idec object must always be released (even upon an error condition)
+by calling: WebPDelete(idec)
 
 To retrieve partially decoded picture samples, one must use the corresponding
 method: WebPIDecGetRGB or WebPIDecGetYUV.
