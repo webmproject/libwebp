@@ -199,6 +199,7 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
   VP8FrameHeader* frm_hdr;
   VP8PictureHeader* pic_hdr;
   VP8BitReader* br;
+  VP8StatusCode status;
 
   if (dec == NULL) {
     return 0;
@@ -316,9 +317,9 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
     return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
                        "cannot parse filter header");
   }
-  if (ParsePartitions(dec, buf, buf_size) != VP8_STATUS_OK) {
-    return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
-                       "cannot parse partitions");
+  status = ParsePartitions(dec, buf, buf_size);
+  if (status != VP8_STATUS_OK) {
+    return VP8SetError(dec, status, "cannot parse partitions");
   }
 
   // quantizer change
