@@ -594,6 +594,7 @@ static void HelpLong() {
   printf("\n");
   printf("  -short ................. condense printed message\n");
   printf("  -quiet ................. don't print anything.\n");
+  printf("  -version ............... print version number and exit.\n");
   printf("  -v ..................... verbose, e.g. print encoding/decoding "
          "times\n");
   printf("\n");
@@ -678,6 +679,11 @@ int main(int argc, const char *argv[]) {
       crop_y = atoi(argv[++c]);
       crop_w = atoi(argv[++c]);
       crop_h = atoi(argv[++c]);
+    } else if (!strcmp(argv[c], "-version")) {
+      const int version = WebPGetEncoderVersion();
+      printf("%d.%d.%d\n",
+        (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
+      return 0;
     } else if (!strcmp(argv[c], "-quiet")) {
       quiet = 1;
     } else if (!strcmp(argv[c], "-preset") && c < argc - 1) {

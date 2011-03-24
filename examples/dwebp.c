@@ -205,12 +205,13 @@ typedef enum {
 
 static void help(const char *s) {
   printf("Usage: dwebp "
-         "[in_file] [-h] [-v] [-ppm] [-pgm] [-o out_file]\n\n"
+         "[in_file] [-h] [-v] [-ppm] [-pgm] [-version] [-o out_file]\n\n"
          "Decodes the WebP image file to PNG format [Default]\n"
          "Use following options to convert into alternate image formats:\n"
          " -ppm:  save the raw RGB samples as color PPM\n"
          " -pgm:  save the raw YUV samples as a grayscale PGM\n"
          "        file with IMC4 layout.\n"
+         " -version: print version number and exit.\n"
          "Use -v for verbose (e.g. print encoding/decoding times)\n"
         );
 }
@@ -232,6 +233,11 @@ int main(int argc, const char *argv[]) {
       out_file = argv[++c];
     } else if (!strcmp(argv[c], "-ppm")) {
       format = PPM;
+    } else if (!strcmp(argv[c], "-version")) {
+      const int version = WebPGetDecoderVersion();
+      printf("%d.%d.%d\n",
+        (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
+      return 0;
     } else if (!strcmp(argv[c], "-pgm")) {
       format = PGM;
     } else if (!strcmp(argv[c], "-v")) {

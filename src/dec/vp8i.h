@@ -22,6 +22,11 @@ extern "C" {
 //-----------------------------------------------------------------------------
 // Various defines and enums
 
+// version numbers
+#define DEC_MAJ_VERSION 0
+#define DEC_MIN_VERSION 1
+#define DEC_REV_VERSION 2
+
 #define ONLY_KEYFRAME_CODE      // to remove any code related to P-Frames
 
 // intra prediction modes

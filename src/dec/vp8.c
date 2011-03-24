@@ -17,6 +17,12 @@ extern "C" {
 #endif
 
 //-----------------------------------------------------------------------------
+
+int WebPGetDecoderVersion() {
+  return (DEC_MAJ_VERSION << 16) | (DEC_MIN_VERSION << 8) | DEC_REV_VERSION;
+}
+
+//-----------------------------------------------------------------------------
 // VP8Decoder
 
 static void SetOk(VP8Decoder* const dec) {

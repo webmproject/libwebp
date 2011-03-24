@@ -23,6 +23,11 @@ extern "C" {
 //-----------------------------------------------------------------------------
 // Various defines and enums
 
+// version numbers
+#define ENC_MAJ_VERSION 0
+#define ENC_MIN_VERSION 1
+#define ENC_REV_VERSION 2
+
 // intra prediction modes
 enum { B_DC_PRED = 0,   // 4x4 modes
        B_TM_PRED = 1,

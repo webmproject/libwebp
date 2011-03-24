@@ -22,6 +22,10 @@ extern "C" {
 
 #define WEBP_ENCODER_ABI_VERSION 0x0001
 
+// Return the encoder's version number, packed in hexadecimal using 8bits for
+// each of major/minor/revision. E.g: v2.5.7 is 0x020507.
+int WebPGetEncoderVersion();
+
 //-----------------------------------------------------------------------------
 // One-stop-shop call! No questions asked:
 

@@ -18,6 +18,10 @@
 extern "C" {
 #endif
 
+// Return the decoder's version number, packed in hexadecimal using 8bits for
+// each of major/minor/revision. E.g: v2.5.7 is 0x020507.
+int WebPGetDecoderVersion();
+
 // Retrieve basic header information: width, height.
 // This function will also validate the header and return 0 in
 // case of formatting error.

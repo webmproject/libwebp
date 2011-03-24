@@ -28,6 +28,12 @@ extern "C" {
 #define MAX_DIMENSION 16384   // maximum width/height allowed by the spec
 
 //-----------------------------------------------------------------------------
+
+int WebPGetEncoderVersion() {
+  return (ENC_MAJ_VERSION << 16) | (ENC_MIN_VERSION << 8) | ENC_REV_VERSION;
+}
+
+//-----------------------------------------------------------------------------
 // WebPPicture
 //-----------------------------------------------------------------------------
 
