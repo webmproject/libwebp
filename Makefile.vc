@@ -120,6 +120,7 @@ X_OBJS= \
 	$(DIROBJ)\dec\vp8.obj \
 	$(DIROBJ)\dec\webp.obj \
 	$(DIROBJ)\dec\yuv.obj \
+	$(DIROBJ)\dec\idec.obj \
 	$(DIROBJ)\enc\analysis.obj \
 	$(DIROBJ)\enc\bit_writer.obj \
 	$(DIROBJ)\enc\config.obj \
