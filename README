@@ -9,7 +9,7 @@
 Description:
 ============
 
-WEBP codec: library to encode and decode images in WebP format. This package
+WEBP codec: Library to encode and decode images in WebP format. This package
 contains the library that can be used in other programs to add WebP support,
 as well as the command line tools 'cwebp' and 'dwebp'.
 

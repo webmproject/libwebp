@@ -43,7 +43,10 @@ appear. Typical values are usually in the range of 20 to 50.
 .B \-preset string
 Specify a set of pre-defined parameters to suit a particular type of
 source material. Possible values are:  \fBdefault\fP, \fBphoto\fP,
-\fBpicture\fP, \fBdrawing\fP, \fBicon\fP, \fBtext\fP.
+\fBpicture\fP, \fBdrawing\fP, \fBicon\fP, \fBtext\fP. Since
+\fB\-preset\fP overwrites the other parameter's values (except the
+\fB\-q\fP one), this option should preferably appear first in the
+order of the arguments.
 .TP
 .B \-sns int
 Specify the amplitude of the spatial noise shaping. Spatial noise shaping
@@ -100,7 +103,7 @@ Crop the source to a rectangle with top-left corner at coordinates
 be fully contained within the source rectangle.
 .B \-s width height
 Specify that the input file actually consists of raw Y'CbCr samples following
-the ITU-R Bt.601 recommendation, in 4:2:0 linear format.
+the ITU-R BT.601 recommendation, in 4:2:0 linear format.
 The luma plane has size \fBwidth\fP x \fBheight\fP.
 .TP
 .B \-map int
