@@ -186,6 +186,7 @@ static int CustomPut(const VP8Io* io) {
     return 0;
   }
 
+  p->last_y = io->mb_y + io->mb_h;  // a priori guess
   if (p->mode == MODE_YUV) {
     uint8_t* const y_dst = p->output + io->mb_y * p->stride;
     uint8_t* const u_dst = p->u + (io->mb_y >> 1) * p->u_stride;
@@ -237,6 +238,9 @@ static int CustomPut(const VP8Io* io) {
         memcpy(p->top_y, cur_y, w * sizeof(*p->top_y));
         memcpy(p->top_u, cur_u, uv_w * sizeof(*p->top_u));
         memcpy(p->top_v, cur_v, uv_w * sizeof(*p->top_v));
+        // The fancy upscaler leaves a row unfinished behind
+        // (except for the very last row)
+        p->last_y -= 1;
       } else {
         // Process the very last row of even-sized picture
         if (!(y_end & 1)) {

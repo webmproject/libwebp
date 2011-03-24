@@ -31,6 +31,7 @@ typedef struct {
   int u_stride;
   int v_stride;
   WEBP_CSP_MODE mode;
+  int last_y;           // coordinate of the line that was last output
 } WebPDecParams;
 
 // If a RIFF container is detected, validate it and skip over it. Returns
