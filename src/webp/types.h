@@ -14,6 +14,9 @@
 
 #ifndef _MSC_VER
 #include <inttypes.h>
+#ifdef ANSI
+#define inline
+#endif  /* ANSI */
 #else
 typedef signed   char int8_t;
 typedef unsigned char uint8_t;
