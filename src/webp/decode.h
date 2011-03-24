@@ -92,6 +92,100 @@ uint8_t* WebPDecodeYUVInto(const uint8_t* data, uint32_t data_size,
 
 //-----------------------------------------------------------------------------
 
+// Output colorspaces
+typedef enum { MODE_RGB = 0, MODE_RGBA = 1,
+               MODE_BGR = 2, MODE_BGRA = 3,
+               MODE_YUV = 4 } WEBP_CSP_MODE;
+
+// Enumeration of the status codes
+typedef enum {
+  VP8_STATUS_OK = 0,
+  VP8_STATUS_OUT_OF_MEMORY,
+  VP8_STATUS_INVALID_PARAM,
+  VP8_STATUS_BITSTREAM_ERROR,
+  VP8_STATUS_UNSUPPORTED_FEATURE,
+  VP8_STATUS_SUSPENDED,
+  VP8_STATUS_USER_ABORT,
+  VP8_STATUS_NOT_ENOUGH_DATA
+} VP8StatusCode;
+
+//-----------------------------------------------------------------------------
+// Incremental decoding
+//
+//  This API allows streamlined decoding of partial data.
+//  Picture can be incrementally decoded as data become available thanks to the
+// WebPIDecoder object. This object can be left in a SUSPENDED state if the
+// picture is only partially decoded, pending additional input.
+// Code example:
+//
+//   WebPIDecoder* const idec = WebPINew(mode);
+//   while (has_more_data) {
+//     // ... (get additional data)
+//     status = WebPIAppend(idec, new_data, new_data_size);
+//     if (status != VP8_STATUS_SUSPENDED ||
+//       break;
+//     }
+//
+//     // The above call decodes the current available buffer.
+//     // Part of the image can now be refreshed by calling to
+//     // WebPIDecGetRGB()/WebPIDecGetYUV() etc.
+//   }
+//   WebPIDelete(idec);
+
+typedef struct WebPIDecoder WebPIDecoder;
+
+// Creates a WebPIDecoder object. Returns NULL in case of failure.
+WebPIDecoder* WebPINew(WEBP_CSP_MODE mode);
+
+// This function allocates and initializes an incremental-decoder object, which
+// will output the r/g/b(/a) samples specified by 'mode' into a preallocated
+// buffer 'output_buffer'. The size of this buffer is at least
+// 'output_buffer_size' and the stride (distance in bytes between two scanlines)
+// is specified by 'output_stride'. Returns NULL if the allocation failed.
+WebPIDecoder* WebPINewRGB(WEBP_CSP_MODE mode, uint8_t* output_buffer,
+                          int output_buffer_size, int output_stride);
+
+// This function allocates and initializes an incremental-decoder object, which
+// will output the raw luma/chroma samples into a preallocated planes. The luma
+// plane is specified by its pointer 'luma', its size 'luma_size' and its stride
+// 'luma_stride'. Similarly, the chroma-u plane is specified by the 'u',
+// 'u_size' and 'u_stride' parameters, and the chroma-v plane by 'v', 'v_size'
+// and 'v_size'.
+// Returns NULL if the allocation failed.
+WebPIDecoder* WebPINewYUV(uint8_t* luma, int luma_size, int luma_stride,
+                          uint8_t* u, int u_size, int u_stride,
+                          uint8_t* v, int v_size, int v_stride);
+
+// Deletes the WebpBuffer object and associated memory. Must always be called
+// if WebPINew, WebPINewRGB or WebPINewYUV succeeded.
+void WebPIDelete(WebPIDecoder* const idec);
+
+// Copies and decodes the next available data. Returns VP8_STATUS_OK when
+// the image is successfully decoded. Returns VP8_STATUS_SUSPENDED when more
+// data is expected. Returns error in other cases.
+VP8StatusCode WebPIAppend(WebPIDecoder* const idec, const uint8_t* data,
+                          uint32_t data_size);
+
+// A variant of the above function to be used when data buffer contains
+// partial data from the beginning. In this case data buffer is not copied
+// to the internal memory.
+VP8StatusCode WebPIUpdate(WebPIDecoder* const idec, const uint8_t* data,
+                          uint32_t data_size);
+
+// Returns the RGB image decoded so far. Returns NULL if output params are not
+// initialized yet. *last_y is the index of last decoded row in raster scan
+// order. Some pointers (*last_y, *width etc.) can be NULL if corresponding
+// information is not needed.
+uint8_t* WebPIDecGetRGB(const WebPIDecoder* const idec, int *last_y,
+                        int* width, int* height, int* stride);
+
+// Same as above function to get YUV image. Returns pointer to the luma plane
+// or NULL in case of error.
+uint8_t* WebPIDecGetYUV(const WebPIDecoder* const idec, int* last_y,
+                        uint8_t** u, uint8_t** v,
+                        int* width, int* height, int* stride, int* uv_stride);
+
+
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
 #endif

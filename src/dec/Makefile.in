@@ -49,7 +49,7 @@ CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libwebpdecode_la_LIBADD =
 am_libwebpdecode_la_OBJECTS = bits.lo dsp.lo frame.lo quant.lo tree.lo \
-	vp8.lo webp.lo yuv.lo
+	vp8.lo webp.lo yuv.lo idec.lo
 libwebpdecode_la_OBJECTS = $(am_libwebpdecode_la_OBJECTS)
 libwebpdecode_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -213,7 +213,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CPPFLAGS = -I$(top_srcdir)/src
 libwebpdecode_la_SOURCES = bits.h vp8i.h yuv.h bits.c dsp.c frame.c \
-                          quant.c tree.c vp8.c webp.c yuv.c
+                          quant.c tree.c vp8.c webp.c yuv.c idec.c
 
 libwebpdecode_la_LDFLAGS = -version-info 0:0:0
 libwebpdecodeinclude_HEADERS = ../webp/decode.h ../webp/decode_vp8.h ../webp/types.h
@@ -263,7 +263,7 @@ clean-noinstLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-libwebpdecode.la: $(libwebpdecode_la_OBJECTS) $(libwebpdecode_la_DEPENDENCIES) 
+libwebpdecode.la: $(libwebpdecode_la_OBJECTS) $(libwebpdecode_la_DEPENDENCIES)
 	$(libwebpdecode_la_LINK)  $(libwebpdecode_la_OBJECTS) $(libwebpdecode_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
@@ -275,6 +275,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bits.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/frame.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/idec.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/quant.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tree.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vp8.Plo@am__quote@

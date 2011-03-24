@@ -9,7 +9,6 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include <stdio.h>
 #include "vp8i.h"
 
 #define USE_GENERIC_TREE

@@ -18,20 +18,20 @@ extern "C" {
 
 #include "webp/decode_vp8.h"
 
-typedef enum { MODE_RGB = 0, MODE_RGBA = 1,
-               MODE_BGR = 2, MODE_BGRA = 3,
-               MODE_YUV = 4 } WEBP_CSP_MODE;
-
-  // Decoding output parameters.
+// Decoding output parameters.
 typedef struct {
   uint8_t* output;      // rgb(a) or luma
-  uint8_t *u, *v;
-  uint8_t *top_y, *top_u, *top_v;
+  uint8_t *u, *v;       // chroma u/v
+  uint8_t *top_y, *top_u, *top_v;   // cache for the fancy upscaler
   int stride;           // rgb(a) stride or luma stride
-  int u_stride;
-  int v_stride;
-  WEBP_CSP_MODE mode;
+  int u_stride;         // chroma-u stride
+  int v_stride;         // chroma-v stride
+  WEBP_CSP_MODE mode;   // rgb(a) or yuv
   int last_y;           // coordinate of the line that was last output
+  int output_size;      // size of 'output' buffer
+  int output_u_size;    // size of 'u' buffer
+  int output_v_size;    // size of 'v' buffer
+  int external_buffer;  // If true, the output buffers are externally owned
 } WebPDecParams;
 
 // If a RIFF container is detected, validate it and skip over it. Returns
@@ -50,8 +50,7 @@ int WebPInitDecParams(const uint8_t* data, uint32_t data_size, int* width,
 
 // Verifies various size configurations (e.g stride >= width, specified
 // output size <= stride * height etc.). Returns 0 if checks fail.
-int WebPCheckDecParams(const VP8Io* io, const WebPDecParams* params,
-                       int output_size, int output_u_size, int output_v_size);
+int WebPCheckDecParams(const VP8Io* io, const WebPDecParams* params);
 
 // Deallocate memory allocated by WebPInitDecParams() and reset the
 // WebPDecParams object.

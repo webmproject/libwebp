@@ -319,12 +319,7 @@ void WebPInitCustomIo(VP8Io* const io) {
 
 int WebPInitDecParams(const uint8_t* data, uint32_t data_size, int* width,
                       int* height, WebPDecParams* const params) {
-  int w, h, stride;
-  int uv_size = 0;
-  int uv_stride = 0;
-  int size;
-  uint8_t* output;
-  WEBP_CSP_MODE mode = params->mode;
+  int w, h;
 
   if (!WebPGetInfo(data, data_size, &w, &h)) {
     return 0;
@@ -332,38 +327,49 @@ int WebPInitDecParams(const uint8_t* data, uint32_t data_size, int* width,
   if (width) *width = w;
   if (height) *height = h;
 
-  // initialize output buffer, now that dimensions are known.
-  stride = (mode == MODE_RGB || mode == MODE_BGR) ? 3 * w
-      : (mode == MODE_RGBA || mode == MODE_BGRA) ? 4 * w
-      : w;
-  size = stride * h;
+  if (!params->external_buffer) {
+    int stride;
+    int uv_stride = 0;
+    int size;
+    int uv_size = 0;
+    uint8_t* output;
+    WEBP_CSP_MODE mode = params->mode;
 
-  if (mode == MODE_YUV) {
-    uv_stride = (w + 1) / 2;
-    uv_size = uv_stride * ((h + 1) / 2);
-  }
+    // initialize output buffer, now that dimensions are known.
+    stride = (mode == MODE_RGB || mode == MODE_BGR) ? 3 * w
+        : (mode == MODE_RGBA || mode == MODE_BGRA) ? 4 * w
+        : w;
+    size = stride * h;
 
-  output = (uint8_t*)malloc(size + 2 * uv_size);
-  if (!output) {
-    return 0;
-  }
+    if (mode == MODE_YUV) {
+      uv_stride = (w + 1) / 2;
+      uv_size = uv_stride * ((h + 1) / 2);
+    }
 
-  params->output = output;
-  params->stride = stride;
-  if (mode == MODE_YUV) {
-    params->u = output + size;
-    params->u_stride = uv_stride;
-    params->v = output + size + uv_size;
-    params->v_stride = uv_stride;
+    output = (uint8_t*)malloc(size + 2 * uv_size);
+    if (!output) {
+      return 0;
+    }
+
+    params->output = output;
+    params->stride = stride;
+    params->output_size = size;
+    if (mode == MODE_YUV) {
+      params->u = output + size;
+      params->u_stride = uv_stride;
+      params->output_u_size = uv_size;
+      params->v = output + size + uv_size;
+      params->v_stride = uv_stride;
+      params->output_v_size = uv_size;
+    }
   }
   return 1;
 }
 
-int WebPCheckDecParams(const VP8Io* io, const WebPDecParams* params,
-                       int output_size, int output_u_size, int output_v_size) {
+int WebPCheckDecParams(const VP8Io* io, const WebPDecParams* params) {
   int ok = 1;
   WEBP_CSP_MODE mode = params->mode;
-  ok &= (params->stride * io->height <= output_size);
+  ok &= (params->stride * io->height <= params->output_size);
   if (mode == MODE_RGB || mode == MODE_BGR) {
     ok &= (params->stride >= io->width * 3);
   } else if (mode == MODE_RGBA || mode == MODE_BGRA) {
@@ -375,13 +381,16 @@ int WebPCheckDecParams(const VP8Io* io, const WebPDecParams* params,
     ok &= (params->stride >= io->width);
     ok &= (params->u_stride >= (io->width + 1) / 2) &&
           (params->v_stride >= (io->width + 1) / 2);
-    ok &= (u_size <= output_u_size && v_size <= output_v_size);
+    ok &= (u_size <= params->output_u_size &&
+           v_size <= params->output_v_size);
   }
   return ok;
 }
 
 void WebPClearDecParams(WebPDecParams* params) {
-  free(params->output);
+  if (!params->external_buffer) {
+    free(params->output);
+  }
   memset(params, 0, sizeof(*params));
 }
 
@@ -390,8 +399,7 @@ void WebPClearDecParams(WebPDecParams* params) {
 
 static uint8_t* DecodeInto(WEBP_CSP_MODE mode,
                            const uint8_t* data, uint32_t data_size,
-                           WebPDecParams* params, int output_size,
-                           int output_u_size, int output_v_size) {
+                           WebPDecParams* params) {
   VP8Decoder* dec = VP8New();
   VP8Io io;
   int ok = 1;
@@ -414,8 +422,7 @@ static uint8_t* DecodeInto(WEBP_CSP_MODE mode,
   }
 
   // check output buffers
-  ok = WebPCheckDecParams(&io, params, output_size,
-                          output_u_size, output_v_size);
+  ok = WebPCheckDecParams(&io, params);
   if (!ok) {
     VP8Delete(dec);
     return NULL;
@@ -441,7 +448,10 @@ uint8_t* WebPDecodeRGBInto(const uint8_t* data, uint32_t data_size,
 
   params.output = output;
   params.stride = output_stride;
-  return DecodeInto(MODE_RGB, data, data_size, &params, output_size, 0, 0);
+  params.output_size = output_size;
+  params.output_u_size = 0;
+  params.output_v_size = 0;
+  return DecodeInto(MODE_RGB, data, data_size, &params);
 }
 
 uint8_t* WebPDecodeRGBAInto(const uint8_t* data, uint32_t data_size,
@@ -455,7 +465,10 @@ uint8_t* WebPDecodeRGBAInto(const uint8_t* data, uint32_t data_size,
 
   params.output = output;
   params.stride = output_stride;
-  return DecodeInto(MODE_RGBA, data, data_size, &params, output_size, 0, 0);
+  params.output_size = output_size;
+  params.output_u_size = 0;
+  params.output_v_size = 0;
+  return DecodeInto(MODE_RGBA, data, data_size, &params);
 }
 
 uint8_t* WebPDecodeBGRInto(const uint8_t* data, uint32_t data_size,
@@ -469,7 +482,10 @@ uint8_t* WebPDecodeBGRInto(const uint8_t* data, uint32_t data_size,
 
   params.output = output;
   params.stride = output_stride;
-  return DecodeInto(MODE_BGR, data, data_size, &params, output_size, 0, 0);
+  params.output_size = output_size;
+  params.output_u_size = 0;
+  params.output_v_size = 0;
+  return DecodeInto(MODE_BGR, data, data_size, &params);
 }
 
 uint8_t* WebPDecodeBGRAInto(const uint8_t* data, uint32_t data_size,
@@ -483,7 +499,10 @@ uint8_t* WebPDecodeBGRAInto(const uint8_t* data, uint32_t data_size,
 
   params.output = output;
   params.stride = output_stride;
-  return DecodeInto(MODE_BGRA, data, data_size, &params, output_size, 0, 0);
+  params.output_size = output_size;
+  params.output_u_size = 0;
+  params.output_v_size = 0;
+  return DecodeInto(MODE_BGRA, data, data_size, &params);
 }
 
 uint8_t* WebPDecodeYUVInto(const uint8_t* data, uint32_t data_size,
@@ -498,12 +517,14 @@ uint8_t* WebPDecodeYUVInto(const uint8_t* data, uint32_t data_size,
 
   params.output = luma;
   params.stride = luma_stride;
+  params.output_size = luma_size;
   params.u = u;
   params.u_stride = u_stride;
+  params.output_u_size = u_size;
   params.v = v;
   params.v_stride = v_stride;
-  return DecodeInto(MODE_YUV, data, data_size, &params,
-                    luma_size, u_size, v_size);
+  params.output_v_size = v_size;
+  return DecodeInto(MODE_YUV, data, data_size, &params);
 }
 
 //-----------------------------------------------------------------------------
@@ -511,8 +532,6 @@ uint8_t* WebPDecodeYUVInto(const uint8_t* data, uint32_t data_size,
 static uint8_t* Decode(WEBP_CSP_MODE mode, const uint8_t* data,
                        uint32_t data_size, int* width, int* height,
                        WebPDecParams* params_out) {
-  int size = 0;
-  int uv_size = 0;
   uint8_t* output;
   WebPDecParams params = { 0 };
 
@@ -521,9 +540,10 @@ static uint8_t* Decode(WEBP_CSP_MODE mode, const uint8_t* data,
     return NULL;
   }
 
-  size = params.stride * (*height);
-  uv_size = params.u_stride * ((*height + 1) / 2);
-  output = DecodeInto(mode, data, data_size, &params, size, uv_size, uv_size);
+  params.output_size = params.stride * (*height);
+  params.output_u_size = params.output_v_size =
+    params.u_stride * ((*height + 1) / 2);
+  output = DecodeInto(mode, data, data_size, &params);
   if (!output) {
     WebPClearDecParams(&params);
   }

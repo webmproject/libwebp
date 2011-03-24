@@ -1,7 +1,7 @@
 AM_CPPFLAGS = -I$(top_srcdir)/src
 
 libwebpdecode_la_SOURCES = bits.h vp8i.h yuv.h bits.c dsp.c frame.c \
-                          quant.c tree.c vp8.c webp.c yuv.c
+                          quant.c tree.c vp8.c webp.c yuv.c idec.c
 libwebpdecode_la_LDFLAGS = -version-info 0:0:0
 libwebpdecodeinclude_HEADERS = ../webp/decode.h ../webp/decode_vp8.h ../webp/types.h
 libwebpdecodeincludedir = $(includedir)/webp

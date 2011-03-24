@@ -12,7 +12,7 @@
 #ifndef WEBP_WEBP_DECODE_VP8_H_
 #define WEBP_WEBP_DECODE_VP8_H_
 
-#include "decode.h"
+#include "webp/decode.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -104,18 +104,6 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io);
 // Decode a picture. Will call VP8GetHeaders() if it wasn't done already.
 // Returns false in case of error.
 int VP8Decode(VP8Decoder* const dec, VP8Io* const io);
-
-// Enumeration of the codes returned by VP8Status()
-typedef enum {
-  VP8_STATUS_OK = 0,
-  VP8_STATUS_OUT_OF_MEMORY,
-  VP8_STATUS_INVALID_PARAM,
-  VP8_STATUS_BITSTREAM_ERROR,
-  VP8_STATUS_UNSUPPORTED_FEATURE,
-  VP8_STATUS_SUSPENDED,
-  VP8_STATUS_USER_ABORT,
-  VP8_STATUS_NOT_ENOUGH_DATA,
-} VP8StatusCode;
 
 // Return current status of the decoder:
 VP8StatusCode VP8Status(VP8Decoder* const dec);

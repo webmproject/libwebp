@@ -249,7 +249,7 @@ top_srcdir = @top_srcdir@
 SUBDIRS = dec enc
 AM_CPPFLAGS = -I$(top_srcdir)/src
 lib_LTLIBRARIES = libwebp.la
-libwebp_la_SOURCES = 
+libwebp_la_SOURCES =
 libwebp_la_LIBADD = dec/libwebpdecode.la \
                     enc/libwebpencode.la
 
@@ -322,7 +322,7 @@ clean-libLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-libwebp.la: $(libwebp_la_OBJECTS) $(libwebp_la_DEPENDENCIES) 
+libwebp.la: $(libwebp_la_OBJECTS) $(libwebp_la_DEPENDENCIES)
 	$(libwebp_la_LINK) -rpath $(libdir) $(libwebp_la_OBJECTS) $(libwebp_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
