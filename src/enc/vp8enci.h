@@ -144,6 +144,15 @@ extern const int VP8I4ModeOffsets[NUM_BMODES];
 typedef int64_t score_t;     // type used for scores, rate, distortion
 #define MAX_COST ((score_t)0x7fffffffffffffLL)
 
+#define QFIX 17
+#define BIAS(b)  ((b) << (QFIX - 8))
+// Fun fact: this is the _only_ line where we're actually being lossy and
+// discarding bits.
+static inline int QUANTDIV(int n, int iQ, int B) {
+  return (n * iQ + B) >> QFIX;
+}
+extern const uint8_t VP8Zigzag[16];
+
 //-----------------------------------------------------------------------------
 // Headers
 
@@ -428,6 +437,18 @@ typedef void (*VP8BlockCopy)(const uint8_t* src, uint8_t* dst);
 extern VP8BlockCopy VP8Copy4x4;
 extern VP8BlockCopy VP8Copy8x8;
 extern VP8BlockCopy VP8Copy16x16;
+// Quantization
+typedef int (*VP8QuantizeBlock)(int16_t in[16], int16_t out[16],
+                                int n, const VP8Matrix* const mtx);
+extern VP8QuantizeBlock VP8EncQuantizeBlock;
+
+typedef enum {
+  kSSE2,
+  kSSE3
+} CPUFeature;
+// returns true if the CPU supports the feature.
+typedef int (*VP8CPUInfo)(CPUFeature feature);
+extern VP8CPUInfo CPUInfo;
 
 void VP8EncDspInit();   // must be called before using anything from the above.
 

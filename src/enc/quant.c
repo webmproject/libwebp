@@ -39,7 +39,7 @@ static inline int clip(int v, int m, int M) {
   return v < m ? m : v > M ? M : v;
 }
 
-static const uint8_t kZigzag[16] = {
+const uint8_t VP8Zigzag[16] = {
   0, 1, 4, 8, 5, 2, 3, 6, 9, 12, 13, 10, 7, 11, 14, 15
 };
 
@@ -100,8 +100,6 @@ static const uint16_t kAcTable2[128] = {
   385, 393, 401, 409, 416, 424, 432, 440
 };
 
-#define QFIX 17
-#define BIAS(b)  ((b) << (QFIX - 8))
 static const uint16_t kCoeffThresh[16] = {
   0,  10, 20, 30,
   10, 20, 30, 30,
@@ -145,7 +143,7 @@ static int ExpandMatrix(VP8Matrix* const m, int type) {
     m->q_[i] = m->q_[1];
   }
   for (i = 0; i < 16; ++i) {
-    const int j = kZigzag[i];
+    const int j = VP8Zigzag[i];
     const int bias = kBiasMatrices[type][j];
     m->iq_[j] = (1 << QFIX) / m->q_[j];
     m->bias_[j] = BIAS(bias);
@@ -387,38 +385,7 @@ static void AddScore(VP8ModeScore* const dst, const VP8ModeScore* const src) {
 }
 
 //-----------------------------------------------------------------------------
-// Performs simple and trellis-optimized quantization.
-
-// Fun fact: this is the _only_ line where we're actually being lossy and
-// discarding bits.
-static int DIV(int n, int iQ, int B) {
-  return (n * iQ + B) >> QFIX;
-}
-
-// Simple quantization
-static int QuantizeBlock(int16_t in[16], int16_t out[16],
-                         int n, const VP8Matrix* const mtx) {
-  int last = -1;
-  for (; n < 16; ++n) {
-    const int j = kZigzag[n];
-    const int sign = (in[j] < 0);
-    int coeff = (sign ? -in[j] : in[j]) + mtx->sharpen_[j];
-    if (coeff > 2047) coeff = 2047;
-    if (coeff > mtx->zthresh_[j]) {
-      const int Q = mtx->q_[j];
-      const int iQ = mtx->iq_[j];
-      const int B = mtx->bias_[j];
-      out[n] = DIV(coeff, iQ, B);
-      if (sign) out[n] = -out[n];
-      in[j] = out[n] * Q;
-      if (out[n]) last = n;
-    } else {
-      out[n] = 0;
-      in[j] = 0;
-    }
-  }
-  return (last >= 0);
-}
+// Performs trellis-optimized quantization.
 
 // Trellis
 
@@ -473,7 +440,7 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
     // compute maximal distortion.
     max_error = 0;
     for (n = first; n < 16; ++n) {
-      const int j  = kZigzag[n];
+      const int j  = VP8Zigzag[n];
       const int err = in[j] * in[j];
       max_error += kWeightTrellis[j] * err;
       if (err > thresh) last = n;
@@ -497,7 +464,7 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
 
   // traverse trellis.
   for (n = first; n <= last; ++n) {
-    const int j  = kZigzag[n];
+    const int j  = VP8Zigzag[n];
     const int Q  = mtx->q_[j];
     const int iQ = mtx->iq_[j];
     const int B = BIAS(0x00);     // neutral bias
@@ -508,7 +475,7 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
     int level0;
     if (coeff0 > 2047) coeff0 = 2047;
 
-    level0 = DIV(coeff0, iQ, B);
+    level0 = QUANTDIV(coeff0, iQ, B);
     // test all alternate level values around level0.
     for (m = -MIN_DELTA; m <= MAX_DELTA; ++m) {
       Node* const cur = &NODE(n, m);
@@ -593,7 +560,7 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
 
   for (; n >= first; --n) {
     const Node* const node = &NODE(n, best_node);
-    const int j = kZigzag[n];
+    const int j = VP8Zigzag[n];
     out[n] = node->sign ? -node->level : node->level;
     nz |= (node->level != 0);
     in[j] = out[n] * mtx->q_[j];
@@ -625,7 +592,7 @@ static int ReconstructIntra16(VP8EncIterator* const it,
     VP8FTransform(src + VP8Scan[n], ref + VP8Scan[n], tmp[n]);
   }
   VP8FTransformWHT(tmp[0], dc_tmp);
-  nz |= QuantizeBlock(dc_tmp, rd->y_dc_levels, 0, &dqm->y2_) << 24;
+  nz |= VP8EncQuantizeBlock(dc_tmp, rd->y_dc_levels, 0, &dqm->y2_) << 24;
 
   if (DO_TRELLIS_I16 && it->do_trellis_) {
     int x, y;
@@ -642,7 +609,7 @@ static int ReconstructIntra16(VP8EncIterator* const it,
     }
   } else {
     for (n = 0; n < 16; ++n) {
-      nz |= QuantizeBlock(tmp[n], rd->y_ac_levels[n], 1, &dqm->y1_) << n;
+      nz |= VP8EncQuantizeBlock(tmp[n], rd->y_ac_levels[n], 1, &dqm->y1_) << n;
     }
   }
 
@@ -673,7 +640,7 @@ static int ReconstructIntra4(VP8EncIterator* const it,
     nz = TrellisQuantizeBlock(it, tmp, levels, ctx, 3, &dqm->y1_,
                               dqm->lambda_trellis_i4_);
   } else {
-    nz = QuantizeBlock(tmp, levels, 0, &dqm->y1_);
+    nz = VP8EncQuantizeBlock(tmp, levels, 0, &dqm->y1_);
   }
   VP8ITransform(ref, tmp, yuv_out);
   return nz;
@@ -708,7 +675,7 @@ static int ReconstructUV(VP8EncIterator* const it, VP8ModeScore* const rd,
     }
   } else {
     for (n = 0; n < 8; ++n) {
-      nz |= QuantizeBlock(tmp[n], rd->uv_levels[n], 0, &dqm->uv_) << n;
+      nz |= VP8EncQuantizeBlock(tmp[n], rd->uv_levels[n], 0, &dqm->uv_) << n;
     }
   }
 
