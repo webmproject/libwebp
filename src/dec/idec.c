@@ -17,6 +17,10 @@
 #include "vp8i.h"
 #include "yuv.h"
 
+#if defined(__cplusplus) || defined(c_plusplus)
+extern "C" {
+#endif
+
 #define RIFF_HEADER_SIZE 20
 #define VP8_HEADER_SIZE 10
 #define WEBP_HEADER_SIZE (RIFF_HEADER_SIZE + VP8_HEADER_SIZE)
@@ -565,3 +569,7 @@ uint8_t* WebPIDecGetYUV(const WebPIDecoder* idec, int *last_y, uint8_t** u,
 
   return idec->params_.output;
 }
+
+#if defined(__cplusplus) || defined(c_plusplus)
+}    // extern "C"
+#endif
