@@ -266,6 +266,48 @@ is supplied. No decoding is involved when using it.
 
 A lower-level API is available from the header file <webp/decode_vp8.h>
 
+Incremental decoding API:
+=========================
+
+In the case when data is being progressively transmitted, pictures can still
+be incrementally decoded using a slightly more complicated API. Decoder state
+is stored into an instance of the WebPIDecoder object. This object can be
+created with the purpose of decoding either RGB or Y'CbCr samples.
+For instance:
+
+  WebPIDecoder* idec = WebPINew(MODE_BGR);
+
+As data is made progressively available, this incremental-decoder object
+can be use to decode the picture further. There are two (mutually exclusive)
+ways to pass freshly arrived data:
+
+either by appending the fresh bytes:
+
+  WebPIAppend(idec, new_bytes, size_of_fresh_data);
+
+or by just mentioning the new size of the transmitted data:
+
+  WebPIUpdate(idec, buffer, size_of_transmitted_buffer);
+
+Note that 'buffer' can be modified between each calls to WebPIUpdate, in
+particular when the buffer is resized to accomodate larger data.
+
+These functions will return the decoding status: either VP8_STATUS_SUSPENDED if
+decoding is not finished yet, or VP8_STATUS_OK when decoding is done.
+Any other status is an error condition.
+
+The idec object must always be released calling: WebPDelete(idec)
+
+To retrieve partially decoded picture samples, one must use the corresponding
+method: WebPIDecGetRGB or WebPIDecGetYUV.
+It will return the last displayable pixel row.
+
+Lastly, note that decoding can also be performed into a pre-allocated pixel
+buffer. This buffer must be passed when creating a WebPIDecoder, calling
+WebPINewRGB() or WebPINewYUV().
+
+Please have a look at the src/webp/decode.h header for further details.
+
 Bugs:
 =====
 
