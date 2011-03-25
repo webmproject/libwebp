@@ -533,8 +533,9 @@ static uint8_t* Decode(WEBP_CSP_MODE mode, const uint8_t* data,
                        uint32_t data_size, int* width, int* height,
                        WebPDecParams* params_out) {
   uint8_t* output;
-  WebPDecParams params = { 0 };
+  WebPDecParams params;
 
+  memset(&params, 0, sizeof(params));
   params.mode = mode;
   if (!WebPInitDecParams(data, data_size, width, height, &params)) {
     return NULL;

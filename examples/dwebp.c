@@ -117,6 +117,7 @@ static int WritePNG(const char* out_file_name, unsigned char* rgb, int stride,
 
 #elif defined(WEBP_HAVE_PNG)    // !WIN32
 static void PNGAPI error_function(png_structp png, png_const_charp dummy) {
+  (void)dummy;  // remove variable-unused warning
   longjmp(png_jmpbuf(png), 1);
 }
 
@@ -124,7 +125,7 @@ static int WritePNG(FILE* out_file, unsigned char* rgb, int stride,
                     png_uint_32 width, png_uint_32 height) {
   png_structp png;
   png_infop info;
-  int y;
+  png_uint_32 y;
 
   png = png_create_write_struct(PNG_LIBPNG_VER_STRING,
                                 NULL, error_function, NULL);
@@ -203,7 +204,7 @@ typedef enum {
   PGM,
 } OutputFileFormat;
 
-static void help(const char *s) {
+static void Help(void) {
   printf("Usage: dwebp "
          "[in_file] [-h] [-v] [-ppm] [-pgm] [-version] [-o out_file]\n\n"
          "Decodes the WebP image file to PNG format [Default]\n"
@@ -227,7 +228,7 @@ int main(int argc, const char *argv[]) {
   int c;
   for (c = 1; c < argc; ++c) {
     if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
-      help(argv[0]);
+      Help();
       return 0;
     } else if (!strcmp(argv[c], "-o") && c < argc - 1) {
       out_file = argv[++c];
@@ -244,7 +245,7 @@ int main(int argc, const char *argv[]) {
       verbose = 1;
     } else if (argv[c][0] == '-') {
       printf("Unknown option '%s'\n", argv[c]);
-      help(argv[0]);
+      Help();
       return -1;
     } else {
       in_file = argv[c];
@@ -253,7 +254,7 @@ int main(int argc, const char *argv[]) {
 
   if (in_file == NULL) {
     printf("missing input file!!\n");
-    help(argv[0]);
+    Help();
     return -1;
   }
 

@@ -23,7 +23,7 @@ uint8_t VP8kClip[YUV_RANGE_MAX - YUV_RANGE_MIN];
 
 static int done = 0;
 
-void VP8YUVInit() {
+void VP8YUVInit(void) {
   int i;
   if (done) {
     return;

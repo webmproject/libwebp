@@ -266,7 +266,7 @@ clean-noinstLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-libwebpencode.la: $(libwebpencode_la_OBJECTS) $(libwebpencode_la_DEPENDENCIES) 
+libwebpencode.la: $(libwebpencode_la_OBJECTS) $(libwebpencode_la_DEPENDENCIES)
 	$(libwebpencode_la_LINK)  $(libwebpencode_la_OBJECTS) $(libwebpencode_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:

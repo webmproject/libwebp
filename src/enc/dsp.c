@@ -21,9 +21,11 @@ extern "C" {
 
 static uint8_t clip1[255 + 510 + 1];    // clips [-255,510] to [0,255]
 
-static int tables_ok = 0;
+// We declare this variable 'volatile' to prevent instruction reordering
+// and make sure it's set to true _last_ (so as to be thread-safe)
+static volatile int tables_ok = 0;
 
-static void InitTables() {
+static void InitTables(void) {
   if (!tables_ok) {
     int i;
     for (i = -255; i <= 255 + 255; ++i) {
@@ -79,7 +81,7 @@ static void ITransform(const uint8_t* ref, const int16_t* in, uint8_t* dst) {
   }
 }
 
-void FTransform(const uint8_t* src, const uint8_t* ref, int16_t* out) {
+static void FTransform(const uint8_t* src, const uint8_t* ref, int16_t* out) {
   int i;
   int tmp[16];
   for (i = 0; i < 4; ++i, src += BPS, ref += BPS) {
@@ -636,7 +638,7 @@ VP8BlockCopy VP8Copy16x16 = Copy16x16;
 
 //-----------------------------------------------------------------------------
 
-void VP8EncDspInit() {
+void VP8EncDspInit(void) {
   InitTables();
 }
 

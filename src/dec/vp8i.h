@@ -289,8 +289,8 @@ extern VP8PredFunc VP8PredLuma16[NUM_B_DC_MODES];
 extern VP8PredFunc VP8PredChroma8[NUM_B_DC_MODES];
 extern VP8PredFunc VP8PredLuma4[NUM_BMODES];
 
-void VP8DspInit();        // must be called before anything using the above
-void VP8DspInitTables();  // needs to be called no matter what.
+void VP8DspInit(void);        // must be called before anything using the above
+void VP8DspInitTables(void);  // needs to be called no matter what.
 
 // simple filter (only for luma)
 typedef void (*VP8SimpleFilterFunc)(uint8_t* p, int stride, int thresh);

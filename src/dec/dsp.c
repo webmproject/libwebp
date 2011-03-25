@@ -28,9 +28,11 @@ static int8_t sclip1[1020 + 1020 + 1];  // clips [-1020, 1020] to [-128, 127]
 static int8_t sclip2[112 + 112 + 1];    // clips [-112, 112] to [-16, 15]
 static uint8_t clip1[255 + 510 + 1];    // clips [-255,510] to [0,255]
 
-static int tables_ok = 0;
+// We declare this variable 'volatile' to prevent instruction reordering
+// and make sure it's set to true _last_ (so as to be thread-safe)
+static volatile int tables_ok = 0;
 
-void VP8DspInitTables() {
+void VP8DspInitTables(void) {
   if (!tables_ok) {
     int i;
     for (i = -255; i <= 255; ++i) {
@@ -685,7 +687,7 @@ void (*VP8SimpleHFilter16i)(uint8_t*, int, int) = SimpleHFilter16i;
 
 //-----------------------------------------------------------------------------
 
-void VP8DspInit() {
+void VP8DspInit(void) {
   // later we'll plug some SSE2 variant here
 }
 

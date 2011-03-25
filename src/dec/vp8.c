@@ -18,7 +18,7 @@ extern "C" {
 
 //-----------------------------------------------------------------------------
 
-int WebPGetDecoderVersion() {
+int WebPGetDecoderVersion(void) {
   return (DEC_MAJ_VERSION << 16) | (DEC_MIN_VERSION << 8) | DEC_REV_VERSION;
 }
 
@@ -39,7 +39,7 @@ int VP8InitIoInternal(VP8Io* const io, int version) {
   return 1;
 }
 
-VP8Decoder* VP8New() {
+VP8Decoder* VP8New(void) {
   VP8Decoder* dec = (VP8Decoder*)calloc(1, sizeof(VP8Decoder));
   if (dec) {
     SetOk(dec);

@@ -29,7 +29,7 @@ extern "C" {
 
 //-----------------------------------------------------------------------------
 
-int WebPGetEncoderVersion() {
+int WebPGetEncoderVersion(void) {
   return (ENC_MAJ_VERSION << 16) | (ENC_MIN_VERSION << 8) | ENC_REV_VERSION;
 }
 
@@ -39,6 +39,10 @@ int WebPGetEncoderVersion() {
 
 static int DummyWriter(const uint8_t* data, size_t data_size,
                        const WebPPicture* const picture) {
+  // The following are to prevent 'unused variable' error message.
+  (void)data;
+  (void)data_size;
+  (void)picture;
   return 1;
 }
 

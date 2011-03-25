@@ -20,7 +20,7 @@ extern "C" {
 
 // Return the decoder's version number, packed in hexadecimal using 8bits for
 // each of major/minor/revision. E.g: v2.5.7 is 0x020507.
-int WebPGetDecoderVersion();
+int WebPGetDecoderVersion(void);
 
 // Retrieve basic header information: width, height.
 // This function will also validate the header and return 0 in
@@ -173,6 +173,8 @@ VP8StatusCode WebPIAppend(WebPIDecoder* const idec, const uint8_t* data,
 // A variant of the above function to be used when data buffer contains
 // partial data from the beginning. In this case data buffer is not copied
 // to the internal memory.
+// Note that the value of the 'data' pointer can change between calls to
+// WebPIUpdate, for instance when the data buffer is resized to fit larger data.
 VP8StatusCode WebPIUpdate(WebPIDecoder* const idec, const uint8_t* data,
                           uint32_t data_size);
 

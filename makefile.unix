@@ -31,7 +31,13 @@ endif
 # Uncomment for build for 32bit platform
 # Alternatively, you can just use the command
 # 'make -f makefile.unix EXTRA_FLAGS=-m32' to that effect.
-# EXTRA_FLAGS= -m32
+# EXTRA_FLAGS += -m32
+
+# Extra flags to emulate C89 strictness with the full ANSI
+EXTRA_FLAGS += -Wextra -Wold-style-definition
+EXTRA_FLAGS += -Wmissing-prototypes
+EXTRA_FLAGS += -Wmissing-declarations
+EXTRA_FLAGS += -Wdeclaration-after-statement
 
 #### Nothing should normally be changed below this line ####
 

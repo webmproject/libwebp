@@ -496,10 +496,11 @@ static VP8StatusCode IDecCheckStatus(const WebPIDecoder* const idec) {
 
 VP8StatusCode WebPIAppend(WebPIDecoder* const idec, const uint8_t* data,
                           uint32_t data_size) {
+  VP8StatusCode status;
   if (idec == NULL || data == NULL) {
     return VP8_STATUS_INVALID_PARAM;
   }
-  const VP8StatusCode status = IDecCheckStatus(idec);
+  status = IDecCheckStatus(idec);
   if (status != VP8_STATUS_SUSPENDED) {
     return status;
   }
@@ -516,10 +517,11 @@ VP8StatusCode WebPIAppend(WebPIDecoder* const idec, const uint8_t* data,
 
 VP8StatusCode WebPIUpdate(WebPIDecoder* const idec, const uint8_t* data,
                           uint32_t data_size) {
+  VP8StatusCode status;
   if (idec == NULL || data == NULL) {
     return VP8_STATUS_INVALID_PARAM;
   }
-  const VP8StatusCode status = IDecCheckStatus(idec);
+  status = IDecCheckStatus(idec);
   if (status != VP8_STATUS_SUSPENDED) {
     return status;
   }
@@ -536,7 +538,7 @@ VP8StatusCode WebPIUpdate(WebPIDecoder* const idec, const uint8_t* data,
 
 //------------------------------------------------------------------------------
 
-uint8_t* WebPIDecGetRGB(const WebPIDecoder* idec, int *last_y,
+uint8_t* WebPIDecGetRGB(const WebPIDecoder* const idec, int *last_y,
                         int* width, int* height, int* stride) {
   if (!idec || !idec->dec_ || idec->params_.mode != MODE_RGB ||
       idec->state_ <= STATE_PARTS0) {
@@ -551,9 +553,9 @@ uint8_t* WebPIDecGetRGB(const WebPIDecoder* idec, int *last_y,
   return idec->params_.output;
 }
 
-uint8_t* WebPIDecGetYUV(const WebPIDecoder* idec, int *last_y, uint8_t** u,
-                        uint8_t** v, int* width, int* height, int *stride,
-                        int* uv_stride) {
+uint8_t* WebPIDecGetYUV(const WebPIDecoder* const idec, int *last_y,
+                        uint8_t** u, uint8_t** v, int* width, int* height,
+                        int *stride, int* uv_stride) {
   if (!idec || !idec->dec_ || idec->params_.mode != MODE_YUV ||
       idec->state_ <= STATE_PARTS0) {
     return NULL;

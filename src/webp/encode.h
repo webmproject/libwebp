@@ -24,7 +24,7 @@ extern "C" {
 
 // Return the encoder's version number, packed in hexadecimal using 8bits for
 // each of major/minor/revision. E.g: v2.5.7 is 0x020507.
-int WebPGetEncoderVersion();
+int WebPGetEncoderVersion(void);
 
 //-----------------------------------------------------------------------------
 // One-stop-shop call! No questions asked:

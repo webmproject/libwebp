@@ -38,7 +38,7 @@ int WebPPictureAlloc(WebPPicture* const picture) {
     picture->y_stride = width;
     picture->uv_stride = uv_width;
     WebPPictureFree(picture);   // erase previous buffer
-    picture->y = (uint8_t*)malloc(total_size);
+    picture->y = (uint8_t*)malloc((size_t)total_size);
     if (picture->y == NULL) return 0;
     picture->u = picture->y + y_size;
     picture->v = picture->u + uv_size;
@@ -163,7 +163,7 @@ enum { YUV_FRAC = 16 };
 
 static inline int clip_uv(int v) {
    v = (v + (257 << (YUV_FRAC + 2 - 1))) >> (YUV_FRAC + 2);
-   return ((v & ~0xff) == 0) ? v : (v < 0) ? 0u : 255u;
+   return ((v & ~0xff) == 0) ? v : (v < 0) ? 0 : 255;
 }
 
 static inline int rgb_to_y(int r, int g, int b) {

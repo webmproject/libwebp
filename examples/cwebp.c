@@ -276,6 +276,7 @@ static int ReadJPEG(FILE* in_file, WebPPicture* const pic) {
 
 #ifdef WEBP_HAVE_PNG
 static void PNGAPI error_function(png_structp png, png_const_charp dummy) {
+  (void)dummy;  // remove variable-unused warning
   longjmp(png_jmpbuf(png), 1);
 }
 
@@ -284,9 +285,9 @@ static int ReadPNG(FILE* in_file, WebPPicture* const pic) {
   png_infop info;
   int color_type, bit_depth, interlaced;
   int num_passes;
-  int p, y;
+  int p;
   int ok = 0;
-  png_uint_32 width, height;
+  png_uint_32 width, height, y;
   int stride;
   uint8_t* rgb = NULL;
 
@@ -446,7 +447,7 @@ static void PrintValues(const int values[4]) {
   fprintf(stderr,"|\n");
 }
 
-void PrintExtraInfo(const WebPPicture* const pic, int short_output) {
+static void PrintExtraInfo(const WebPPicture* const pic, int short_output) {
   const WebPAuxStats* const stats = pic->stats;
   if (short_output) {
     fprintf(stderr, "%7d %2.2f\n", stats->coded_size, stats->PSNR[3]);
@@ -553,7 +554,7 @@ static int DumpPicture(const WebPPicture* const picture, const char* PGM_name) {
 
 //-----------------------------------------------------------------------------
 
-static void HelpShort() {
+static void HelpShort(void) {
   printf("Usage:\n\n");
   printf("   cwebp [options] -q quality input.png -o output.webp\n\n");
   printf("where quality is between 0 (poor) to 100 (very good).\n");
@@ -561,7 +562,7 @@ static void HelpShort() {
   printf("Try -longhelp for an exhaustive list of advanced options.\n");
 }
 
-static void HelpLong() {
+static void HelpLong(void) {
   printf("Usage:\n");
   printf(" cwebp [-preset <...>] [options] in_file [-o out_file]\n\n");
   printf("If input size (-s) for an image is not specified, "

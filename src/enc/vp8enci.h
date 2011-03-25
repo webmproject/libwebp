@@ -455,7 +455,7 @@ typedef enum {
 typedef int (*VP8CPUInfo)(CPUFeature feature);
 extern VP8CPUInfo CPUInfo;
 
-void VP8EncDspInit();   // must be called before using anything from the above.
+void VP8EncDspInit(void);   // must be called before using any of the above
 
   // in filter.c
 extern void VP8InitFilter(VP8EncIterator* const it);

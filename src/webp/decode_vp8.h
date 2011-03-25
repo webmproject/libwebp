@@ -83,13 +83,13 @@ struct VP8Io {
 };
 
 // Internal, version-checked, entry point
-extern int VP8InitIoInternal(VP8Io* const, int);
+int VP8InitIoInternal(VP8Io* const, int);
 
 // Main decoding object. This is an opaque structure.
 typedef struct VP8Decoder VP8Decoder;
 
 // Create a new decoder object.
-VP8Decoder* VP8New();
+VP8Decoder* VP8New(void);
 
 // Must be called to make sure 'io' is initialized properly.
 // Returns false in case of version mismatch. Upon such failure, no other

@@ -270,7 +270,7 @@ int VP8IteratorNext(VP8EncIterator* const it,
 //-----------------------------------------------------------------------------
 // Helper function to set mode properties
 
-void VP8SetIntra16Mode(const VP8EncIterator* it, int mode) {
+void VP8SetIntra16Mode(const VP8EncIterator* const it, int mode) {
   int y;
   uint8_t* preds = it->preds_;
   for (y = 0; y < 4; ++y) {
