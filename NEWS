@@ -2,5 +2,5 @@
   * Incremental decoding: picture can be decoded byte-by-byte if needs be.
   * lot of bug-fixes, consolidation and stabilization
 
-- 2/23/10: initial release of version 0.1, with the new encoder
--  9/10: initial release version with only the lightweight decoder
+- 2/23/11: initial release of version 0.1, with the new encoder
+- 9/30/10: initial release version with only the lightweight decoder

@@ -1,6 +1,82 @@
-- 3/25/11: version 0.1.2
-  * Incremental decoding: picture can be decoded byte-by-byte if needs be.
-  * lot of bug-fixes, consolidation and stabilization
-
-- 2/23/10: initial release of version 0.1, with the new encoder
--  9/10: initial release version with only the lightweight decoder
+fa70d2b update version number in the DOC
+f8db5d5 more C89-fixes
+0de013b fix typos
+650ffa3 add version getters for decoder and encoder
+be4867d doc for incremental decoding
+56732a1 add idec.obj in MSVC makefile
+208afb5 add c++ guards
+8bf76fe add incremental decoding
+1f28832 'inline' isn't defined in strict ansi c89
+8b77c63 move the quantization function to dsp.c
+b2c3575 add a 'last_y' field to WebPDecParams
+2654c3d correctly pass along the exact same status returned from ParsePartitions
+4704146 add missing precision in the man
+6d978a6 add error messages
+6463e6a add some install instructions, and fix intel-mac flags
+05fb7bf Merge ".gitignore: initial version"
+c33f019 .gitignore: initial version
+e532b9a Makefile: allow out of tree builds
+4c0da7a enable sparse dc/ac transforms
+07dbb8d clarify the return logic
+5c69e1b fix bigger-by-1 array
+7c5267e fix a (harmless) typo: non_zero_ -> non_zero_ac_
+bc75213 fix missing free()
+af3e2aa remove trailing spaces
+13e50da make the bitreader preload at least 8bits, instead of post-load them (this makes initialization easier and will be helpful for incremental decoding). Modify ParsePartitions() to accommodate for truncated input.
+f4888f7 emit 9 - nb_bits trailing zeros instead of 8
+3db6525 separate block-parsing into a visible VP8DecodeMB()
+a871de0 add missing extern "C"
+b3ce8c5 remove a gcc warning about type pun by using a proper union'd type
+e186371 update after addition of webpi.h
+3e856e2 Extract some useful functions around decoding buffer WebPDecParams.
+d5bc05a make the filtering process match libvpx and ffvp8
+dd60138 add man pages for cwebp(1) and dwebp(1)
+c4fa364 fix header
+5b70b37 * add an option to bypass_filtering in VP8Io.
+b97a400 simplify QuantizeBlock code a bit
+84b58eb add more checks around picture allocation
+b65a3e1     remove absolute_delta_ field and syntax code
+0744e84 Dont' open output file until we're sure the input file is valid
+d5bd54c fix typo and buggy line
+f7a9549 Add a simple top-level makefile.unix for quick & easy build.
+5f36b94 update the doc for the -f option
+f61d14a a WebP encoder converts PNG & JPEG to WebP
+81c9662 oops: forgotten call to Initialize() + move the error message to a more useful place
+87ffa00 typo: fix a missing 'R', was confusing.
+b04b857 * add decoding measurement using stopwatch.h (use -v option) * support PNG output through WIC on Win32
+746a482 * make (*put)() hook return a bool for abort request. * add an enum for VP8Status() to make things clearer
+73c973e * strengthen riff/chunk size checks * don't consider odd-sized chunks being an error
+1dc4611 add support for PNG output (default) regularize include guards
+860641d fix a typo: sizeof(kYModeProbaInter0) => sizeof(kUVModeProbaInter0)
+3254fc5 fix some petty constness fix the ./configure file too
+504d339 fix eof_ mis-initialization
+2bc0778 leftover Makefile.* from previous commit
+d2cf04e move Makefile.am one level below, to src/dec fix typos here and there dwebp is now an installed program
+ade92de typo: vp8.h -> decode_vp8.h
+d724124 forgot to declare types.h to be installed
+6421a7a move the decoder sourcetree to a sub-location src/dec to make room for future libs sources
+a9b3eab correct layout name is IMC4.
+2330522 handle corner case of zero-dimensions
+280c365 make VP8Init() handle short buffers (< 2 bytes) correctly
+b1c9e8b handle error cases more robustly
+0e94935 Merge "table-less version of clip_8b()"
+1e0a2d2 table-less version of clip_8b()
+e12109e dwebp: change -yuv option to -raw change the layout to IMC2
+d72180a speed-up fancy upscaler
+9145f3b reset eof_ at construction time
+a7ee055 simplify the logic of GetCoeffs()
+f67b593 lot of cosmetics
+ea27d7c fix endian problem on PowerPC
+beb0a1b fix signature of VP8StoreBlock
+b128c5e Merge "fancy chroma upscaling"
+6a37a2a fancy chroma upscaling
+ff565ed fix two numeric typos
+5a936a0 use uintptr_t for casting pointers to ints
+e14a030 for cross_compiling=yes to prevent executing any binary
+83b545e add vc9+ makefile
+296f691 fix output loop for small height
+cbfbb5c convert to plain-C
+f09f96e Fix declaration after statement warning
+5981ee5 Fix UV plane ac/dc quantizer transposition
+c8d15ef convert to ANSI-C
+c3f41cb Initial commit
