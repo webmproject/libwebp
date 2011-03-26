@@ -1,5 +1,2 @@
 #! /bin/sh -e
-aclocal
-automake
-autoconf
-./configure "$@"
+exec autoreconf -fi
