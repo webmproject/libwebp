@@ -3,6 +3,11 @@ AM_INIT_AUTOMAKE
 AC_PROG_LIBTOOL
 AM_PROG_CC_C_O
 
+AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=PATH],
+	[Path to the pkgconfig directory [[LIBDIR/pkgconfig]]]),
+	[pkgconfigdir="$withval"], [pkgconfigdir='${libdir}/pkgconfig'])
+AC_SUBST([pkgconfigdir])
+
 dnl === check for PNG support ===
 
 PNG_INCLUDES=""

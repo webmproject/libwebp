@@ -10,3 +10,7 @@ libwebp_la_LDFLAGS = -version-info 0:0:0
 libwebpinclude_HEADERS = webp/types.h webp/decode.h webp/decode_vp8.h \
                          webp/encode.h
 libwebpincludedir = $(includedir)/webp
+
+pkgconfig_DATA = libwebp.pc
+
+${pkgconfig_DATA}: ${top_builddir}/config.status
