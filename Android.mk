@@ -5,6 +5,7 @@ LOCAL_SRC_FILES := \
 	src/dec/bits.c \
 	src/dec/dsp.c \
 	src/dec/frame.c \
+	src/dec/idec.c \
 	src/dec/quant.c \
 	src/dec/tree.c \
 	src/dec/vp8.c \
