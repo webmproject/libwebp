@@ -11,7 +11,7 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include <stdio.h>
-#include <stdlib.h>  // for atoi
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef WEBP_HAVE_PNG
@@ -646,40 +646,40 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-short")) {
       short_output++;
     } else if (!strcmp(argv[c], "-s") && c < argc - 2) {
-      picture.width = atoi(argv[++c]);
-      picture.height = atoi(argv[++c]);
+      picture.width = strtol(argv[++c], NULL, 0);
+      picture.height = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-m") && c < argc - 1) {
-      config.method = atoi(argv[++c]);
+      config.method = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-q") && c < argc - 1) {
-      config.quality = (float)atof(argv[++c]);
+      config.quality = strtod(argv[++c], NULL);
     } else if (!strcmp(argv[c], "-size") && c < argc - 1) {
-      config.target_size = atoi(argv[++c]);
+      config.target_size = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-psnr") && c < argc - 1) {
-      config.target_PSNR = (float)atof(argv[++c]);
+      config.target_PSNR = strtod(argv[++c], NULL);
     } else if (!strcmp(argv[c], "-sns") && c < argc - 1) {
-      config.sns_strength = atoi(argv[++c]);
+      config.sns_strength = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-f") && c < argc - 1) {
-      config.filter_strength = atoi(argv[++c]);
+      config.filter_strength = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-af")) {
       config.autofilter = 1;
     } else if (!strcmp(argv[c], "-strong") && c < argc - 1) {
       config.filter_type = 1;
     } else if (!strcmp(argv[c], "-sharpness") && c < argc - 1) {
-      config.filter_sharpness = atoi(argv[++c]);
+      config.filter_sharpness = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-pass") && c < argc - 1) {
-      config.pass = atoi(argv[++c]);
+      config.pass = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-pre") && c < argc - 1) {
-      config.preprocessing = atoi(argv[++c]);
+      config.preprocessing = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-segments") && c < argc - 1) {
-      config.segments = atoi(argv[++c]);
+      config.segments = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-map") && c < argc - 1) {
-      picture.extra_info_type = atoi(argv[++c]);
+      picture.extra_info_type = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-crop") && c < argc - 4) {
       crop = 1;
-      crop_x = atoi(argv[++c]);
-      crop_y = atoi(argv[++c]);
-      crop_w = atoi(argv[++c]);
-      crop_h = atoi(argv[++c]);
+      crop_x = strtol(argv[++c], NULL, 0);
+      crop_y = strtol(argv[++c], NULL, 0);
+      crop_w = strtol(argv[++c], NULL, 0);
+      crop_h = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-version")) {
       const int version = WebPGetEncoderVersion();
       printf("%d.%d.%d\n",
