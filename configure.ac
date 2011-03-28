@@ -67,7 +67,7 @@ AC_SUBST(JPEG_INCLUDES)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_FILES([Makefile src/Makefile man/Makefile examples/Makefile src/dec/Makefile src/enc/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile man/Makefile examples/Makefile src/dec/Makefile src/enc/Makefile src/libwebp.pc])
 
 
 AC_OUTPUT
