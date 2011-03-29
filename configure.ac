@@ -1,5 +1,5 @@
 AC_INIT([webpdecode], [0.1])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 AC_PROG_LIBTOOL
 AM_PROG_CC_C_O
 

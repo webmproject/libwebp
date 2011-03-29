@@ -51,6 +51,7 @@ Please refer the makefile.unix for additional details and customizations.
 
 Using autoconf tools:
 ---------------------
+./autogen.sh
 ./configure
 make
 make install
