@@ -73,3 +73,16 @@ clean:
               src/enc/*.o src/enc/*~ \
               src/dec/*.o src/dec/*~ \
               examples/*.o examples/*~
+
+superclean: clean
+	rm -rf .git *.log *.cache *~
+	rm -rf .deps */.deps */*/.deps
+	rm -rf .libs */.libs */*/.libs
+	rm -f */*.lo */*/*.lo
+	rm -f */*.la */*/*.la
+	rm -f Makefile */Makefile */*/Makefile
+	rm -f Makefile.in */Makefile.in */*/Makefile.in
+	rm -f config.log autom4te.cache libtool config.h stamp-h1
+	rm -f aclocal.m4 compile config.guess config.h.in config.sub config.status
+	rm -f configure depcomp install-sh ltmain.sh missing src/libwebp.pc
+	rm -f m4/*
