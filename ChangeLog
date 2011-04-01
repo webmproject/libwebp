@@ -1,3 +1,16 @@
+d3dc2d4 update ChangeLog
+d7e9a69 update contributor list
+261abb8 add a 'superclean' section
+276ae82 Remove files not mean to be in git, and update .gitignore
+2486845 build: prepare libwebp.pc
+14ceb6e add "-version" description to man pages
+b247a3b Create the m4 directory, and also place .gitignore in there for libtool.
+cdd734c Resolve automake warnings
+c5fa726 build: add pkgconfig files
+b20aaca build: just use autoreconf, avoid calling tools manually
+4b0b0d6 cwebp: use modern functions
+efbc6c4 update Android.mk
+7777570 better version of ChangeLog
 fa70d2b update version number in the DOC
 f8db5d5 more C89-fixes
 0de013b fix typos
