@@ -11,7 +11,7 @@ This manual page documents the
 .B cwebp
 command.
 .PP
-\fBcwebp\fP compresses image using the WebP format.
+\fBcwebp\fP compresses an image using the WebP format.
 Input format can be either PNG, JPEG, or raw Y'CbCr samples.
 When using PNG, the transparency information (alpha channel) is currently
 discarded.
@@ -32,8 +32,8 @@ A summary of all the possible options.
 Print the version number (as major.minor.revision) and exit.
 .TP
 .B \-q float
-Specify the compression factor between 0 and 100. Small factor
-produce smaller file with lower quality. Best quality is achieved
+Specify the compression factor between 0 and 100. A small factor
+produces a smaller file with lower quality. Best quality is achieved
 using a value of 100. The default is 75.
 .TP
 .B \-f int
@@ -47,7 +47,7 @@ appear. Typical values are usually in the range of 20 to 50.
 Specify a set of pre-defined parameters to suit a particular type of
 source material. Possible values are:  \fBdefault\fP, \fBphoto\fP,
 \fBpicture\fP, \fBdrawing\fP, \fBicon\fP, \fBtext\fP. Since
-\fB\-preset\fP overwrites the other parameter's values (except the
+\fB\-preset\fP overwrites the other parameters' values (except the
 \fB\-q\fP one), this option should preferably appear first in the
 order of the arguments.
 .TP
@@ -104,6 +104,7 @@ options \fB\-size\fP or \fB\-psnr\fP. Maximum value is 10.
 Crop the source to a rectangle with top-left corner at coordinates
 (x_position, y_position) and size width x height. This cropping area must
 be fully contained within the source rectangle.
+.TP
 .B \-s width height
 Specify that the input file actually consists of raw Y'CbCr samples following
 the ITU-R BT.601 recommendation, in 4:2:0 linear format.
