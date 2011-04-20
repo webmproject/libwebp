@@ -538,9 +538,9 @@ VP8StatusCode WebPIUpdate(WebPIDecoder* const idec, const uint8_t* data,
 
 //------------------------------------------------------------------------------
 
-uint8_t* WebPIDecGetRGB(const WebPIDecoder* const idec, int *last_y,
-                        int* width, int* height, int* stride) {
-  if (!idec || !idec->dec_ || idec->params_.mode != MODE_RGB ||
+uint8_t* WebPIDecGetRGB(const WebPIDecoder* const idec, int *last_y, int* width,
+                        int* height, int* stride) {
+  if (!idec || !idec->dec_ || idec->params_.mode == MODE_YUV ||
       idec->state_ <= STATE_PARTS0) {
     return NULL;
   }
