@@ -49,7 +49,8 @@ static const int kC1 = 20091 + (1 << 16);
 static const int kC2 = 35468;
 #define MUL(a, b) (((a) * (b)) >> 16)
 
-static void ITransform(const uint8_t* ref, const int16_t* in, uint8_t* dst) {
+static inline void ITransformOne(const uint8_t* ref, const int16_t* in,
+                                 uint8_t* dst) {
   int C[4 * 4], *tmp;
   int i;
   tmp = C;
@@ -78,6 +79,13 @@ static void ITransform(const uint8_t* ref, const int16_t* in, uint8_t* dst) {
     STORE(2, i, b - c);
     STORE(3, i, a - d);
     tmp++;
+  }
+}
+static void ITransform(const uint8_t* ref, const int16_t* in, uint8_t* dst,
+                       int do_two) {
+  ITransformOne(ref, in, dst);
+  if (do_two) {
+    ITransformOne(ref + 4, in + 16, dst + 4);
   }
 }
 
@@ -526,9 +534,12 @@ VP8Metric VP8SSE4x4 = SSE4x4;
 // reconstructed samples.
 
 // Hadamard transform
-static void TTransform(const uint8_t* in, int16_t* out) {
+// Returns the weighted sum of the absolute value of transformed coefficients.
+static int TTransform(const uint8_t* in, const uint16_t* w) {
+  int sum = 0;
   int tmp[16];
   int i;
+  // horizontal pass
   for (i = 0; i < 4; ++i, in += BPS) {
     const int a0 = (in[0] + in[2]) << 2;
     const int a1 = (in[1] + in[3]) << 2;
@@ -539,7 +550,8 @@ static void TTransform(const uint8_t* in, int16_t* out) {
     tmp[2 + i * 4] = a3 - a2;
     tmp[3 + i * 4] = a0 - a1;
   }
-  for (i = 0; i < 4; ++i) {
+  // vertical pass
+  for (i = 0; i < 4; ++i, ++w) {
     const int a0 = (tmp[0 + i] + tmp[8 + i]);
     const int a1 = (tmp[4 + i] + tmp[12+ i]);
     const int a2 = (tmp[4 + i] - tmp[12+ i]);
@@ -548,24 +560,20 @@ static void TTransform(const uint8_t* in, int16_t* out) {
     const int b1 = a3 + a2;
     const int b2 = a3 - a2;
     const int b3 = a0 - a1;
-    out[ 0 + i] = (b0 + (b0 < 0) + 3) >> 3;
-    out[ 4 + i] = (b1 + (b1 < 0) + 3) >> 3;
-    out[ 8 + i] = (b2 + (b2 < 0) + 3) >> 3;
-    out[12 + i] = (b3 + (b3 < 0) + 3) >> 3;
+    // abs((b + (b<0) + 3) >> 3) = (abs(b) + 3) >> 3
+    sum += w[ 0] * ((abs(b0) + 3) >> 3);
+    sum += w[ 4] * ((abs(b1) + 3) >> 3);
+    sum += w[ 8] * ((abs(b2) + 3) >> 3);
+    sum += w[12] * ((abs(b3) + 3) >> 3);
   }
+  return sum;
 }
 
 static int Disto4x4(const uint8_t* const a, const uint8_t* const b,
                     const uint16_t* const w) {
-  int16_t tmp1[16], tmp2[16];
-  int k;
-  int D;
-  TTransform(a, tmp1);
-  TTransform(b, tmp2);
-  D = 0;
-  for (k = 0; k < 16; ++k)
-    D += w[k] * (abs(tmp2[k]) - abs(tmp1[k]));
-  return (abs(D) + 8) >> 4;
+  const int sum1 = TTransform(a, w);
+  const int sum2 = TTransform(b, w);
+  return (abs(sum2 - sum1) + 8) >> 4;
 }
 
 static int Disto16x16(const uint8_t* const a, const uint8_t* const b,

@@ -416,7 +416,10 @@ int VP8Decimate(VP8EncIterator* const it, VP8ModeScore* const rd, int rd_opt);
 
   // in dsp.c
 // Transforms
-typedef void (*VP8Idct)(const uint8_t* ref, const int16_t* in, uint8_t* dst);
+// VP8Idct: Does one of two inverse transforms. If do_two is set, the transforms
+//          will be done for (ref, in, dst) and (ref + 4, in + 16, dst + 4).
+typedef void (*VP8Idct)(const uint8_t* ref, const int16_t* in, uint8_t* dst,
+                        int do_two);
 typedef void (*VP8Fdct)(const uint8_t* src, const uint8_t* ref, int16_t* out);
 typedef void (*VP8WHT)(const int16_t* in, int16_t* out);
 extern VP8Idct VP8ITransform;
