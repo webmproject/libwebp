@@ -37,6 +37,8 @@
 #include "webp/encode.h"
 #include "stopwatch.h"
 
+extern void* VP8GetCPUInfo;
+
 //-----------------------------------------------------------------------------
 
 static int verbose = 0;
@@ -596,6 +598,7 @@ static void HelpLong(void) {
   printf("  -short ................. condense printed message\n");
   printf("  -quiet ................. don't print anything.\n");
   printf("  -version ............... print version number and exit.\n");
+  printf("  -noasm ................. disable all assembly optimizations.\n");
   printf("  -v ..................... verbose, e.g. print encoding/decoding "
          "times\n");
   printf("\n");
@@ -680,6 +683,8 @@ int main(int argc, const char *argv[]) {
       crop_y = strtol(argv[++c], NULL, 0);
       crop_w = strtol(argv[++c], NULL, 0);
       crop_h = strtol(argv[++c], NULL, 0);
+    } else if (!strcmp(argv[c], "-noasm")) {
+      VP8GetCPUInfo = NULL;
     } else if (!strcmp(argv[c], "-version")) {
       const int version = WebPGetEncoderVersion();
       printf("%d.%d.%d\n",

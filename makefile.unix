@@ -46,7 +46,8 @@ CFLAGS = -O3 -DNDEBUG $(EXTRA_FLAGS)
 LDFLAGS = src/libwebp.a $(EXTRA_LIBS) -lm
 
 OBJS = src/enc/webpenc.o src/enc/bit_writer.o src/enc/syntax.o \
-       src/enc/dsp.o src/enc/tree.o src/enc/config.o src/enc/frame.o \
+       src/enc/dsp.o src/enc/dsp_sse2.o \
+       src/enc/tree.o src/enc/config.o src/enc/frame.o \
        src/enc/quant.o src/enc/iterator.o src/enc/analysis.o \
        src/enc/cost.o src/enc/picture.o src/enc/filter.o \
        src/dec/bits.o src/dec/dsp.o src/dec/frame.o src/dec/webp.o \

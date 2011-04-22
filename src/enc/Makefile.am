@@ -1,7 +1,7 @@
 AM_CPPFLAGS = -I$(top_srcdir)/src
 
 libwebpencode_la_SOURCES = analysis.c bit_writer.c bit_writer.h \
-                          config.c cost.c cost.h dsp.c filter.c \
+                          config.c cost.c cost.h dsp.c dsp_sse2.c filter.c \
                           frame.c iterator.c picture.c quant.c  \
                           syntax.c tree.c vp8enci.h webpenc.c
 libwebpencode_la_LDFLAGS = -version-info 0:0:0 -lm

@@ -174,12 +174,6 @@ static void FTransformWHT(const int16_t* in, int16_t* out) {
   }
 }
 
-// default C implementations:
-VP8Idct VP8ITransform = ITransform;
-VP8Fdct VP8FTransform = FTransform;
-VP8WHT VP8ITransformWHT = ITransformWHT;
-VP8WHT VP8FTransformWHT = FTransformWHT;
-
 #undef MUL
 #undef STORE
 
@@ -486,11 +480,6 @@ static void Intra4Preds(uint8_t* dst, const uint8_t* top) {
   HU4(I4HU4 + dst, top);
 }
 
-// default C implementations
-VP8Intra4Preds VP8EncPredLuma4 = Intra4Preds;
-VP8IntraPreds VP8EncPredLuma16 = Intra16Preds;
-VP8IntraPreds VP8EncPredChroma8 = IntraChromaPreds;
-
 //-----------------------------------------------------------------------------
 // Metric
 
@@ -520,12 +509,6 @@ static int SSE8x8(const uint8_t* a, const uint8_t* b) {
 static int SSE4x4(const uint8_t* a, const uint8_t* b) {
   return GetSSE(a, b, 4, 4);
 }
-
-// default C implementations
-VP8Metric VP8SSE16x16 = SSE16x16;
-VP8Metric VP8SSE8x8 = SSE8x8;
-VP8Metric VP8SSE16x8 = SSE16x8;
-VP8Metric VP8SSE4x4 = SSE4x4;
 
 //-----------------------------------------------------------------------------
 // Texture distortion
@@ -588,9 +571,6 @@ static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
   return D;
 }
 
-VP8WMetric VP8TDisto4x4 = Disto4x4;
-VP8WMetric VP8TDisto16x16 = Disto16x16;
-
 //-----------------------------------------------------------------------------
 // Quantization
 //
@@ -620,9 +600,6 @@ static int QuantizeBlock(int16_t in[16], int16_t out[16],
   return (last >= 0);
 }
 
-// default C implementation
-VP8QuantizeBlock VP8EncQuantizeBlock = QuantizeBlock;
-
 //-----------------------------------------------------------------------------
 // Block copy
 
@@ -639,15 +616,100 @@ static void Copy4x4(const uint8_t* src, uint8_t* dst) { Copy(src, dst, 4); }
 static void Copy8x8(const uint8_t* src, uint8_t* dst) { Copy(src, dst, 8); }
 static void Copy16x16(const uint8_t* src, uint8_t* dst) { Copy(src, dst, 16); }
 
-// default C implementations
-VP8BlockCopy VP8Copy4x4 = Copy4x4;
-VP8BlockCopy VP8Copy8x8 = Copy8x8;
-VP8BlockCopy VP8Copy16x16 = Copy16x16;
-
 //-----------------------------------------------------------------------------
+// SSE2 detection.
+//
+
+#if defined(__pic__) && defined(__i386__)
+static inline void GetCPUInfo(int cpu_info[4], int info_type) {
+  __asm__ volatile (
+    "mov %%ebx, %%edi\n"
+    "cpuid\n"
+    "xchg %%edi, %%ebx\n"
+    : "=a"(cpu_info[0]), "=D"(cpu_info[1]), "=c"(cpu_info[2]), "=d"(cpu_info[3])
+    : "a"(info_type));
+}
+#elif defined(__i386__) || defined(__x86_64__)
+static inline void GetCPUInfo(int cpu_info[4], int info_type) {
+  __asm__ volatile (
+    "cpuid\n"
+    : "=a"(cpu_info[0]), "=b"(cpu_info[1]), "=c"(cpu_info[2]), "=d"(cpu_info[3])
+    : "a"(info_type));
+}
+#endif
+
+#if defined(__i386__) || defined(__x86_64__)
+static int x86CPUInfo(CPUFeature feature) {
+  int cpu_info[4];
+  GetCPUInfo(cpu_info, 1);
+  if (feature == kSSE2) {
+    return 0 != (cpu_info[3] & 0x04000000);
+  }
+  if (feature == kSSE3) {
+    return 0 != (cpu_info[2] & 0x00000001);
+  }
+  return 0;
+}
+VP8CPUInfo VP8GetCPUInfo = x86CPUInfo;
+#else
+VP8CPUInfo VP8GetCPUInfo = NULL;
+#endif
+
+// Speed-critical function pointers. We have to initialize them to the default
+// implementations within VP8EncDspInit().
+VP8Idct VP8ITransform;
+VP8Fdct VP8FTransform;
+VP8WHT VP8ITransformWHT;
+VP8WHT VP8FTransformWHT;
+VP8Intra4Preds VP8EncPredLuma4;
+VP8IntraPreds VP8EncPredLuma16;
+VP8IntraPreds VP8EncPredChroma8;
+VP8Metric VP8SSE16x16;
+VP8Metric VP8SSE8x8;
+VP8Metric VP8SSE16x8;
+VP8Metric VP8SSE4x4;
+VP8WMetric VP8TDisto4x4;
+VP8WMetric VP8TDisto16x16;
+VP8QuantizeBlock VP8EncQuantizeBlock;
+VP8BlockCopy VP8Copy4x4;
+VP8BlockCopy VP8Copy8x8;
+VP8BlockCopy VP8Copy16x16;
+
+extern void VP8EncDspInitSSE2(void);
 
 void VP8EncDspInit(void) {
   InitTables();
+
+  // default C implementations
+  VP8ITransform = ITransform;
+  VP8FTransform = FTransform;
+  VP8ITransformWHT = ITransformWHT;
+  VP8FTransformWHT = FTransformWHT;
+  VP8EncPredLuma4 = Intra4Preds;
+  VP8EncPredLuma16 = Intra16Preds;
+  VP8EncPredChroma8 = IntraChromaPreds;
+  VP8SSE16x16 = SSE16x16;
+  VP8SSE8x8 = SSE8x8;
+  VP8SSE16x8 = SSE16x8;
+  VP8SSE4x4 = SSE4x4;
+  VP8TDisto4x4 = Disto4x4;
+  VP8TDisto16x16 = Disto16x16;
+  VP8EncQuantizeBlock = QuantizeBlock;
+  VP8Copy4x4 = Copy4x4;
+  VP8Copy8x8 = Copy8x8;
+  VP8Copy16x16 = Copy16x16;
+
+  // If defined, use CPUInfo() to overwrite some pointers with faster versions.
+  if (VP8GetCPUInfo) {
+    if (VP8GetCPUInfo(kSSE2)) {
+#if defined(__SSE2__)
+      VP8EncDspInitSSE2();
+#endif
+    }
+    if (VP8GetCPUInfo(kSSE3)) {
+      // later we'll plug some SSE3 variant here
+    }
+  }
 }
 
 #if defined(__cplusplus) || defined(c_plusplus)
