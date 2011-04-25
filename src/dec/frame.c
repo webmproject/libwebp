@@ -33,10 +33,12 @@ int VP8InitFrame(VP8Decoder* const dec, VP8Io* io) {
   const int coeffs_size = 384 * sizeof(*dec->coeffs_);
   const int cache_height = (16 + kFilterExtraRows[dec->filter_type_]) * 3 / 2;
   const int cache_size = top_size * cache_height;
+  const int alpha_size =
+    dec->alpha_data_ ? (dec->pic_hdr_.width_ * dec->pic_hdr_.height_) : 0;
   const int needed = intra_pred_mode_size
                    + top_size + info_size
                    + yuv_size + coeffs_size
-                   + cache_size + ALIGN_MASK;
+                   + cache_size + alpha_size + ALIGN_MASK;
   uint8_t* mem;
 
   if (needed > dec->mem_size_) {
@@ -84,6 +86,10 @@ int VP8InitFrame(VP8Decoder* const dec, VP8Io* io) {
   }
   mem += cache_size;
 
+  // alpha plane
+  dec->alpha_plane_ = alpha_size ? (uint8_t*)mem : NULL;
+  mem += alpha_size;
+
   // note: left-info is initialized once for all.
   memset(dec->mb_info_ - 1, 0, (mb_w + 1) * sizeof(*dec->mb_info_));
 
@@ -100,6 +106,7 @@ int VP8InitFrame(VP8Decoder* const dec, VP8Io* io) {
   io->y_stride = dec->cache_y_stride_;
   io->uv_stride = dec->cache_uv_stride_;
   io->fancy_upscaling = 0;    // default
+  io->a = NULL;
 
   // Init critical function pointers and look-up tables.
   VP8DspInitTables();
@@ -250,6 +257,16 @@ int VP8FinishRow(VP8Decoder* const dec, VP8Io* io) {
     }
     io->mb_y = y_start;
     io->mb_h = y_end - y_start;
+    io->a = NULL;
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+    if (dec->alpha_data_) {
+      io->a = VP8DecompressAlphaRows(dec, y_start, y_end - y_start);
+      if (io->a == NULL) {
+        return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
+                         "Could not decode alpha data.");
+      }
+    }
+#endif
     if (!io->put(io)) {
       return 0;
     }

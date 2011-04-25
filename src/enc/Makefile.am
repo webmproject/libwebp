@@ -3,7 +3,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/src
 libwebpencode_la_SOURCES = analysis.c bit_writer.c bit_writer.h \
                           config.c cost.c cost.h dsp.c dsp_sse2.c filter.c \
                           frame.c iterator.c picture.c quant.c  \
-                          syntax.c tree.c vp8enci.h webpenc.c
+                          syntax.c tree.c vp8enci.h webpenc.c alpha.c
 libwebpencode_la_LDFLAGS = -version-info 0:0:0 -lm
 libwebpencodeinclude_HEADERS = ../webp/encode.h ../webp/types.h
 libwebpencodeincludedir = $(includedir)/webp

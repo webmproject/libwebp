@@ -326,6 +326,10 @@ struct VP8Encoder {
   VP8BitWriter bw_;                         // part0
   VP8BitWriter parts_[MAX_NUM_PARTITIONS];  // token partitions
 
+  // transparency blob
+  uint8_t* alpha_data_;
+  size_t alpha_data_size_;
+
   // quantization info (one set of DC/AC dequant factor per segment)
   VP8SegmentInfo dqm_[NUM_MB_SEGMENTS];
   int base_quant_;                 // nominal quantizer value. Only used
@@ -413,6 +417,11 @@ int VP8EncAnalyze(VP8Encoder* const enc);
 void VP8SetSegmentParams(VP8Encoder* const enc, float quality);
 // Pick best modes and fills the levels. Returns true if skipped.
 int VP8Decimate(VP8EncIterator* const it, VP8ModeScore* const rd, int rd_opt);
+
+  // in alpha.c
+// Compress transparency information into enc->alpha_data_. Return true if ok.
+int VP8EncProcessAlpha(VP8Encoder* enc);
+void VP8EncDeleteAlpha(VP8Encoder* enc);   // delete compressed data
 
   // in dsp.c
 // Transforms

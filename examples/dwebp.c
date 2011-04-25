@@ -109,7 +109,8 @@ static HRESULT WriteUsingWIC(const char* out_file_name, REFGUID container_guid,
 }
 
 static int WritePNG(const char* out_file_name, unsigned char* rgb, int stride,
-                    uint32_t width, uint32_t height) {
+                    uint32_t width, uint32_t height, int has_alpha) {
+  assert(!has_alpha);   // TODO(mikolaj)
   return SUCCEEDED(WriteUsingWIC(out_file_name,
              MAKE_REFGUID(GUID_ContainerFormatPng), rgb, stride, width,
              height));
@@ -122,7 +123,7 @@ static void PNGAPI error_function(png_structp png, png_const_charp dummy) {
 }
 
 static int WritePNG(FILE* out_file, unsigned char* rgb, int stride,
-                    png_uint_32 width, png_uint_32 height) {
+                    png_uint_32 width, png_uint_32 height, int has_alpha) {
   png_structp png;
   png_infop info;
   png_uint_32 y;
@@ -142,7 +143,8 @@ static int WritePNG(FILE* out_file, unsigned char* rgb, int stride,
     return 0;
   }
   png_init_io(png, out_file);
-  png_set_IHDR(png, info, width, height, 8, PNG_COLOR_TYPE_RGB,
+  png_set_IHDR(png, info, width, height, 8,
+               has_alpha ? PNG_COLOR_TYPE_RGBA : PNG_COLOR_TYPE_RGB,
                PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
                PNG_FILTER_TYPE_DEFAULT);
   png_write_info(png, info);
@@ -159,7 +161,7 @@ static int WritePNG(FILE* out_file, unsigned char* rgb, int stride,
 typedef uint32_t png_uint_32;
 
 static int WritePNG(FILE* out_file, unsigned char* rgb, int stride,
-                    png_uint_32 width, png_uint_32 height) {
+                    png_uint_32 width, png_uint_32 height, int has_alpha) {
   printf("PNG support not compiled. Please install the libpng development "
          "package before building.\n");
   printf("You can run with -ppm flag to decode in PPM format.\n");
@@ -167,10 +169,26 @@ static int WritePNG(FILE* out_file, unsigned char* rgb, int stride,
 }
 #endif
 
-static int WritePPM(FILE* fout, unsigned char* rgb,
+static int WritePPM(FILE* fout, const unsigned char* rgb,
                     uint32_t width, uint32_t height) {
   fprintf(fout, "P6\n%d %d\n255\n", width, height);
   return (fwrite(rgb, width * height, 3, fout) == 3);
+}
+
+static int WriteAlphaPlane(FILE* fout, const unsigned char* rgba,
+                           uint32_t width, uint32_t height) {
+  uint32_t y;
+  fprintf(fout, "P5\n%d %d\n255\n", width, height);
+  for (y = 0; y < height; ++y) {
+    const unsigned char* line = rgba + y * (width * 4);
+    uint32_t x;
+    for (x = 0; x < width; ++x) {
+      if (fputc(line[4 * x + 3], fout) == EOF) {
+        return 0;
+      }
+    }
+  }
+  return 1;
 }
 
 static int WritePGM(FILE* fout,
@@ -202,6 +220,7 @@ typedef enum {
   PNG = 0,
   PPM,
   PGM,
+  ALPHA_PLANE_ONLY  // this is for experimenting only
 } OutputFileFormat;
 
 static void Help(void) {
@@ -222,6 +241,7 @@ int main(int argc, const char *argv[]) {
   const char *out_file = NULL;
 
   int width, height, stride, uv_stride;
+  int has_alpha = 0;
   uint8_t* out = NULL, *u = NULL, *v = NULL;
   OutputFileFormat format = PNG;
   Stopwatch stop_watch;
@@ -232,6 +252,8 @@ int main(int argc, const char *argv[]) {
       return 0;
     } else if (!strcmp(argv[c], "-o") && c < argc - 1) {
       out_file = argv[++c];
+    } else if (!strcmp(argv[c], "-alpha")) {
+      format = ALPHA_PLANE_ONLY;
     } else if (!strcmp(argv[c], "-ppm")) {
       format = PPM;
     } else if (!strcmp(argv[c], "-version")) {
@@ -284,8 +306,12 @@ int main(int argc, const char *argv[]) {
       case PNG:
 #ifdef _WIN32
         out = WebPDecodeBGR((const uint8_t*)data, data_size, &width, &height);
+        stride = 3 * width;
+        has_alpha = 0;
 #else
-        out = WebPDecodeRGB((const uint8_t*)data, data_size, &width, &height);
+        out = WebPDecodeRGBA((const uint8_t*)data, data_size, &width, &height);
+        stride = 4 * width;
+        has_alpha = 1;
 #endif
         break;
       case PPM:
@@ -294,6 +320,9 @@ int main(int argc, const char *argv[]) {
       case PGM:
         out = WebPDecodeYUV((const uint8_t*)data, data_size, &width, &height,
                             &u, &v, &stride, &uv_stride);
+        break;
+      case ALPHA_PLANE_ONLY:
+        out = WebPDecodeRGBA((const uint8_t*)data, data_size, &width, &height);
         break;
       default:
         free(data);
@@ -331,14 +360,16 @@ int main(int argc, const char *argv[]) {
       int ok = 1;
       if (format == PNG) {
 #ifdef _WIN32
-        ok &= WritePNG(out_file, out, 3 * width, width, height);
+        ok &= WritePNG(out_file, out, stride, width, height, has_alpha);
 #else
-        ok &= WritePNG(fout, out, 3 * width, width, height);
+        ok &= WritePNG(fout, out, stride, width, height, has_alpha);
 #endif
       } else if (format == PPM) {
         ok &= WritePPM(fout, out, width, height);
       } else if (format == PGM) {
         ok &= WritePGM(fout, out, u, v, stride, uv_stride, width, height);
+      } else if (format == ALPHA_PLANE_ONLY) {
+        ok &= WriteAlphaPlane(fout, out, width, height);
       }
       if (fout)
         fclose(fout);

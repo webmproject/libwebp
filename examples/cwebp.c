@@ -162,7 +162,8 @@ static HRESULT ReadPictureWithWIC(const char* filename,
   return hr;
 }
 
-static int ReadPicture(const char* const filename, WebPPicture* const pic) {
+static int ReadPicture(const char* const filename, WebPPicture* const pic,
+                       int keep_alpha) {
   int ok;
   if (pic->width != 0 && pic->height != 0) {
     // If image size is specified, infer it as YUV format.
@@ -282,10 +283,11 @@ static void PNGAPI error_function(png_structp png, png_const_charp dummy) {
   longjmp(png_jmpbuf(png), 1);
 }
 
-static int ReadPNG(FILE* in_file, WebPPicture* const pic) {
+static int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha) {
   png_structp png;
   png_infop info;
   int color_type, bit_depth, interlaced;
+  int has_alpha;
   int num_passes;
   int p;
   int ok = 0;
@@ -327,12 +329,16 @@ static int ReadPNG(FILE* in_file, WebPPicture* const pic) {
   if (png_get_valid(png, info, PNG_INFO_tRNS)) {
     png_set_tRNS_to_alpha(png);
   }
+  has_alpha = !!(color_type & PNG_COLOR_MASK_ALPHA);
 
-  // TODO(skal): Strip Alpha for now (till Alpha is supported).
-  png_set_strip_alpha(png);
+  if (!keep_alpha) {
+    png_set_strip_alpha(png);
+    has_alpha = 0;
+  }
+
   num_passes = png_set_interlace_handling(png);
   png_read_update_info(png, info);
-  stride = 3 * width * sizeof(*rgb);
+  stride = (has_alpha ? 4 : 3) * width * sizeof(*rgb);
   rgb = (uint8_t*)malloc(stride * height);
   if (rgb == NULL) goto Error;
   for (p = 0; p < num_passes; ++p) {
@@ -346,14 +352,15 @@ static int ReadPNG(FILE* in_file, WebPPicture* const pic) {
 
   pic->width = width;
   pic->height = height;
-  ok = WebPPictureImportRGB(pic, rgb, stride);
+  ok = has_alpha ? WebPPictureImportRGBA(pic, rgb, stride)
+                 : WebPPictureImportRGB(pic, rgb, stride);
   free(rgb);
 
  End:
   return ok;
 }
 #else
-static int ReadPNG(FILE* in_file, WebPPicture* const pic) {
+static int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha) {
   printf("PNG support not compiled. Please install the libpng development "
          "package before building.\n");
   return 0;
@@ -385,7 +392,8 @@ static InputFileFormat GetImageType(FILE* in_file) {
   return format;
 }
 
-static int ReadPicture(const char* const filename, WebPPicture* const pic) {
+static int ReadPicture(const char* const filename, WebPPicture* const pic,
+                       int keep_alpha) {
   int ok = 0;
   FILE* in_file = fopen(filename, "rb");
   if (in_file == NULL) {
@@ -397,7 +405,7 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic) {
     // If no size specified, try to decode it as PNG/JPEG (as appropriate).
     const InputFileFormat format = GetImageType(in_file);
     if (format == PNG) {
-      ok = ReadPNG(in_file, pic);
+      ok = ReadPNG(in_file, pic, keep_alpha);
     } else if (format == JPEG) {
       ok = ReadJPEG(in_file, pic);
     }
@@ -475,6 +483,10 @@ static void PrintExtraInfo(const WebPPicture* const pic, int short_output) {
               100.f * stats->header_bytes[0] / stats->coded_size,
               stats->header_bytes[1],
               100.f * stats->header_bytes[1] / stats->coded_size);
+      if (stats->alpha_data_size) {
+        fprintf(stderr, "             transparency:   %6d\n",
+                stats->alpha_data_size);
+      }
       fprintf(stderr, " Residuals bytes  "
                       "|segment 1|segment 2|segment 3"
                       "|segment 4|  total\n");
@@ -590,6 +602,8 @@ static void HelpLong(void) {
   printf("  -sharpness <int> ....... "
          "filter sharpness (0:most .. 7:least sharp)\n");
   printf("  -strong ................ use strong filter instead of simple.\n");
+  printf("  -alpha_comp <int> ...... set the transparency-compression\n");
+  printf("  -noalpha ............... discard any transparency information.\n");
   printf("  -pass <int> ............ analysis pass number (1..10)\n");
   printf("  -crop <x> <y> <w> <h> .. crop picture with the given rectangle\n");
   printf("  -map <int> ............. print map of extra info.\n");
@@ -618,12 +632,15 @@ int main(int argc, const char *argv[]) {
   int c;
   int short_output = 0;
   int quiet = 0;
+  int keep_alpha = 0;
   int crop = 0, crop_x = 0, crop_y = 0, crop_w = 0, crop_h = 0;
   WebPPicture picture;
   WebPConfig config;
   WebPAuxStats stats;
   Stopwatch stop_watch;
-
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+  keep_alpha = 1;
+#endif
   if (!WebPPictureInit(&picture) || !WebPConfigInit(&config)) {
     fprintf(stderr, "Error! Version mismatch!\n");
     goto Error;
@@ -675,6 +692,10 @@ int main(int argc, const char *argv[]) {
       config.preprocessing = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-segments") && c < argc - 1) {
       config.segments = strtol(argv[++c], NULL, 0);
+    } else if (!strcmp(argv[c], "-alpha_comp") && c < argc - 1) {
+      config.alpha_compression = strtol(argv[++c], NULL, 0);
+    } else if (!strcmp(argv[c], "-noalpha")) {
+      keep_alpha = 0;
     } else if (!strcmp(argv[c], "-map") && c < argc - 1) {
       picture.extra_info_type = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-crop") && c < argc - 4) {
@@ -734,7 +755,7 @@ int main(int argc, const char *argv[]) {
   // Read the input
   if (verbose)
     StopwatchReadAndReset(&stop_watch);
-  if (!ReadPicture(in_file, &picture)) {
+  if (!ReadPicture(in_file, &picture, keep_alpha)) {
     fprintf(stderr, "Error! Cannot read input picture\n");
     goto Error;
   }

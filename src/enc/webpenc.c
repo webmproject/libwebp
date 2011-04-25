@@ -246,7 +246,12 @@ static VP8Encoder* InitEncoder(const WebPConfig* const config,
 }
 
 static void DeleteEncoder(VP8Encoder* enc) {
-  free(enc);
+  if (enc) {
+    if (enc->alpha_data_) {
+      VP8EncDeleteAlpha(enc);
+    }
+    free(enc);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -306,6 +311,7 @@ int WebPEncode(const WebPConfig* const config, WebPPicture* const pic) {
   ok = VP8EncAnalyze(enc)
     && VP8StatLoop(enc)
     && VP8EncLoop(enc)
+    && VP8EncProcessAlpha(enc)
     && VP8EncWrite(enc);
   StoreStats(enc);
   DeleteEncoder(enc);

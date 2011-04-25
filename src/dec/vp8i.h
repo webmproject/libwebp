@@ -246,6 +246,11 @@ struct VP8Decoder {
   // Filtering side-info
   int filter_type_;                       // 0=off, 1=simple, 2=complex
   uint8_t filter_levels_[NUM_MB_SEGMENTS];  // precalculated per-segment
+
+  // extensions
+  const uint8_t* alpha_data_;   // compressed alpha data (if present)
+  size_t alpha_data_size_;
+  uint8_t* alpha_plane_;        // output
 };
 
 //-----------------------------------------------------------------------------
@@ -273,6 +278,10 @@ void VP8StoreBlock(VP8Decoder* const dec);
 int VP8FinishRow(VP8Decoder* const dec, VP8Io* io);
 // Decode one macroblock. Returns false if there is not enough data.
 int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br);
+
+// in alpha.c
+const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
+                                      int row, int num_rows);
 
 // in dsp.c
 typedef void (*VP8Idct)(const int16_t* coeffs, uint8_t* dst);

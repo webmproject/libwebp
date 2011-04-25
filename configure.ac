@@ -8,6 +8,10 @@ AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=PATH],
 	[pkgconfigdir="$withval"], [pkgconfigdir='${libdir}/pkgconfig'])
 AC_SUBST([pkgconfigdir])
 
+dnl === Check libz is present
+
+AC_CHECK_LIB(z, gzsetparams, [AC_CHECK_HEADER(zlib.h,,)], [AC_MSG_ERROR(zlib library not found)])
+
 dnl === check for PNG support ===
 
 PNG_INCLUDES=""

@@ -36,11 +36,6 @@ inline static void VP8YuvToRgb(uint8_t y, uint8_t u, uint8_t v,
   rgb[2] = VP8kClip[y + b_off - YUV_RANGE_MIN];
 }
 
-inline static void VP8YuvToRgba(int y, int u, int v, uint8_t* const rgba) {
-  VP8YuvToRgb(y, u, v, rgba);
-  rgba[3] = 0xff;
-}
-
 inline static void VP8YuvToBgr(uint8_t y, uint8_t u, uint8_t v,
                                uint8_t* const bgr) {
   const int r_off = VP8kVToR[v];

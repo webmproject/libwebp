@@ -155,14 +155,46 @@ static int EmitPartitionsSize(const VP8Encoder* const enc,
 
 //-----------------------------------------------------------------------------
 
+static int WriteExtensions(VP8Encoder* const enc) {
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+  const int EXT_SIZE = 4;
+  VP8BitWriter* const bw = &enc->bw_;
+  uint8_t trailer[EXT_SIZE];
+  uint32_t ext_size = 0;
+  uint8_t ext_bits = 0x01;
+  if (enc->alpha_data_size_) {
+    if (!VP8BitWriterAppend(bw, enc->alpha_data_, enc->alpha_data_size_)) {
+      return 0;
+    }
+    ext_size += enc->alpha_data_size_;
+    ext_bits |= 0x02;
+  }
+  trailer[0] = (ext_size >> 16) & 0xff;
+  trailer[1] = (ext_size >>  8) & 0xff;
+  trailer[2] = (ext_size >>  0) & 0xff;
+  trailer[EXT_SIZE - 1] = ext_bits;
+  if (!VP8BitWriterAppend(bw, trailer, EXT_SIZE)) {
+    return 0;
+  }
+#endif
+  return 1;
+}
+
+//-----------------------------------------------------------------------------
+
 static size_t GeneratePartition0(VP8Encoder* const enc) {
   VP8BitWriter* const bw = &enc->bw_;
   const int mb_size = enc->mb_w_ * enc->mb_h_;
   uint64_t pos1, pos2, pos3;
+  const int need_extensions = (enc->alpha_data_size_ > 0);
 
   pos1 = VP8BitWriterPos(bw);
   VP8BitWriterInit(bw, mb_size * 7 / 8);        // ~7 bits per macroblock
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+  VP8PutBitUniform(bw, need_extensions);   // extensions
+#else
   VP8PutBitUniform(bw, 0);   // colorspace
+#endif
   VP8PutBitUniform(bw, 0);   // clamp type
 
   PutSegmentHeader(bw, enc);
@@ -174,11 +206,17 @@ static size_t GeneratePartition0(VP8Encoder* const enc) {
   pos2 = VP8BitWriterPos(bw);
   VP8CodeIntraModes(enc);
   VP8BitWriterFinish(bw);
+
+  if (need_extensions && !WriteExtensions(enc)) {
+    return 0;
+  }
+
   pos3 = VP8BitWriterPos(bw);
 
   if (enc->pic_->stats) {
     enc->pic_->stats->header_bytes[0] = (int)((pos2 - pos1 + 7) >> 3);
     enc->pic_->stats->header_bytes[1] = (int)((pos3 - pos2 + 7) >> 3);
+    enc->pic_->stats->alpha_data_size = enc->alpha_data_size_;
   }
   return !bw->error_;
 }

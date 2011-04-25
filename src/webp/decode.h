@@ -178,11 +178,10 @@ VP8StatusCode WebPIAppend(WebPIDecoder* const idec, const uint8_t* data,
 VP8StatusCode WebPIUpdate(WebPIDecoder* const idec, const uint8_t* data,
                           uint32_t data_size);
 
-// Returns the r/g/b/(a) image decoded so far. Returns NULL if output params
-// are not initialized yet. The r/g/b/(a) output type corresponds to the mode
-// specified in WebPINew()/WebPINewRGB(). *last_y is the index of last decoded
-// row in raster scan order. Some pointers (*last_y, *width etc.) can be NULL if
-// corresponding information is not needed.
+// Returns the RGB image decoded so far. Returns NULL if output params are not
+// initialized yet. *last_y is the index of last decoded row in raster scan
+// order. Some pointers (*last_y, *width etc.) can be NULL if corresponding
+// information is not needed.
 uint8_t* WebPIDecGetRGB(const WebPIDecoder* const idec, int *last_y,
                         int* width, int* height, int* stride);
 

@@ -13,7 +13,7 @@
 # These flag assume you have libpng and libjpeg installed. If not, either
 # follow below install instructions or just comment out the next lines.
 EXTRA_FLAGS= -DWEBP_HAVE_PNG -DWEBP_HAVE_JPEG
-EXTRA_LIBS= -lpng -ljpeg
+EXTRA_LIBS= -lpng -ljpeg -lz
 ifeq ("$(HOSTTYPE)", "intel-mac")
   EXTRA_FLAGS += -I/opt/local/include
   EXTRA_LIBS  += -L/opt/local/lib
@@ -46,13 +46,13 @@ CFLAGS = -O3 -DNDEBUG $(EXTRA_FLAGS)
 LDFLAGS = src/libwebp.a $(EXTRA_LIBS) -lm
 
 OBJS = src/enc/webpenc.o src/enc/bit_writer.o src/enc/syntax.o \
-       src/enc/dsp.o src/enc/dsp_sse2.o \
+       src/enc/dsp.o src/enc/dsp_sse2.o src/enc/alpha.o \
        src/enc/tree.o src/enc/config.o src/enc/frame.o \
        src/enc/quant.o src/enc/iterator.o src/enc/analysis.o \
        src/enc/cost.o src/enc/picture.o src/enc/filter.o \
        src/dec/bits.o src/dec/dsp.o src/dec/frame.o src/dec/webp.o \
        src/dec/quant.o src/dec/tree.o src/dec/vp8.o src/dec/yuv.o \
-       src/dec/idec.o
+       src/dec/idec.o src/dec/alpha.o 
 HDRS = src/webp/encode.h src/enc/vp8enci.h src/enc/bit_writer.h \
        src/enc/cost.h src/dec/bits.h  src/dec/vp8i.h src/dec/yuv.h
 OUTPUT = examples/cwebp examples/dwebp src/libwebp.a

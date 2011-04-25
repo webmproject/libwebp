@@ -46,10 +46,30 @@ int WebPPictureAlloc(WebPPicture* const picture) {
   return 1;
 }
 
+int WebPPictureAddAlphaPlane(WebPPicture* const picture) {
+  if (picture) {
+    const int width = picture->width;
+    const int height = picture->height;
+    const uint64_t a_size = (uint64_t)width * height;
+    // Security and validation checks
+    if (width <= 0 || height <= 0 ||   // check param error
+        a_size >= (1ULL << 40) ||      // check for reasonable global size
+        (size_t)a_size != a_size) {    // check for overflow on 32bit
+      return 0;
+    }
+    free(picture->a);   // erase previous buffer
+    picture->a = (uint8_t*)malloc((size_t)a_size);
+    return (picture->a != NULL);
+  }
+  return 1;
+}
+
 void WebPPictureFree(WebPPicture* const picture) {
   if (picture) {
     free(picture->y);
     picture->y = picture->u = picture->v = NULL;
+    free(picture->a);
+    picture->a = NULL;
   }
 }
 
@@ -198,7 +218,7 @@ static inline int rgb_to_v(int r, int g, int b) {
 
 static int Import(WebPPicture* const picture,
                   const uint8_t* const rgb, int rgb_stride,
-                  int step, int swap) {
+                  int step, int swap, int alpha_offset) {
   int x, y;
   const uint8_t* const r_ptr = rgb + (swap ? 2 : 0);
   const uint8_t* const g_ptr = rgb + 1;
@@ -227,6 +247,17 @@ static int Import(WebPPicture* const picture,
       RGB_TO_UV(x, y, SUM1);
     }
   }
+  if (alpha_offset >= 0) {
+    if (!WebPPictureAddAlphaPlane(picture)) {
+      return 0;
+    }
+    for (y = 0; y < picture->height; ++y) {
+      for (x = 0; x < picture->width; ++x) {
+        picture->a[x + y * picture->width] =
+          rgb[step * x + y * rgb_stride + alpha_offset];
+      }
+    }
+  }
   return 1;
 }
 #undef SUM4
@@ -238,25 +269,25 @@ static int Import(WebPPicture* const picture,
 int WebPPictureImportRGB(WebPPicture* const picture,
                          const uint8_t* const rgb, int rgb_stride) {
   if (!WebPPictureAlloc(picture)) return 0;
-  return Import(picture, rgb, rgb_stride, 3, 0);
+  return Import(picture, rgb, rgb_stride, 3, 0, -1);
 }
 
 int WebPPictureImportBGR(WebPPicture* const picture,
                          const uint8_t* const rgb, int rgb_stride) {
   if (!WebPPictureAlloc(picture)) return 0;
-  return Import(picture, rgb, rgb_stride, 3, 1);
+  return Import(picture, rgb, rgb_stride, 3, 1, -1);
 }
 
 int WebPPictureImportRGBA(WebPPicture* const picture,
                           const uint8_t* const rgba, int rgba_stride) {
   if (!WebPPictureAlloc(picture)) return 0;
-  return Import(picture, rgba, rgba_stride, 4, 0);
+  return Import(picture, rgba, rgba_stride, 4, 0, 3);
 }
 
 int WebPPictureImportBGRA(WebPPicture* const picture,
                           const uint8_t* const rgba, int rgba_stride) {
   if (!WebPPictureAlloc(picture)) return 0;
-  return Import(picture, rgba, rgba_stride, 4, 1);
+  return Import(picture, rgba, rgba_stride, 4, 1, 3);
 }
 
 //-----------------------------------------------------------------------------
@@ -264,7 +295,7 @@ int WebPPictureImportBGRA(WebPPicture* const picture,
 
 typedef int (*Importer)(WebPPicture* const, const uint8_t* const, int);
 
-static size_t Encode(const uint8_t* rgb, int width, int height, int stride,
+static size_t Encode(const uint8_t* rgba, int width, int height, int stride,
                      Importer import, float quality_factor, uint8_t** output) {
   size_t output_size = 0;
   WebPPicture pic;
@@ -286,7 +317,7 @@ static size_t Encode(const uint8_t* rgb, int width, int height, int stride,
   wrt.size = &output_size;
   InitMemoryWriter(&wrt);
 
-  ok = import(&pic, rgb, stride) && WebPEncode(&config, &pic);
+  ok = import(&pic, rgba, stride) && WebPEncode(&config, &pic);
   WebPPictureFree(&pic);
   if (!ok) {
     free(*output);

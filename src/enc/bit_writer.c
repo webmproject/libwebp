@@ -168,6 +168,16 @@ uint8_t* VP8BitWriterFinish(VP8BitWriter* const bw) {
   return bw->buf_;
 }
 
+int VP8BitWriterAppend(VP8BitWriter* const bw,
+                       const uint8_t* data, size_t size) {
+  assert(data);
+  if (bw->nb_bits_ != -8) return 0;   // kFlush() must have been called
+  if (!BitWriterResize(bw, size)) return 0;
+  memcpy(bw->buf_ + bw->pos_, data, size);
+  bw->pos_ += size;
+  return 1;
+}
+
 //-----------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)

@@ -6,7 +6,7 @@ lib_LTLIBRARIES = libwebp.la
 libwebp_la_SOURCES =
 libwebp_la_LIBADD = dec/libwebpdecode.la \
                     enc/libwebpencode.la
-libwebp_la_LDFLAGS = -version-info 0:0:0
+libwebp_la_LDFLAGS = -version-info 0:0:0 -lz
 libwebpinclude_HEADERS = webp/types.h webp/decode.h webp/decode_vp8.h \
                          webp/encode.h
 libwebpincludedir = $(includedir)/webp

@@ -305,6 +305,10 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
     return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
                        "bad partition length");
   }
+
+  dec->alpha_data_ = NULL;
+  dec->alpha_data_size_ = 0;
+
   br = &dec->br_;
   VP8InitBitReader(br, buf, buf + frm_hdr->partition_length_);
   buf += frm_hdr->partition_length_;
@@ -323,6 +327,7 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
     return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
                        "cannot parse filter header");
   }
+
   status = ParsePartitions(dec, buf, buf_size);
   if (status != VP8_STATUS_OK) {
     return VP8SetError(dec, status, "cannot parse partitions");
@@ -367,6 +372,32 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
 #endif
 
   VP8ParseProba(br, dec);
+
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+  // Extensions
+  if (dec->pic_hdr_.colorspace_) {
+    const uint32_t EXT_SIZE = 4;
+    uint32_t ext_size;
+    uint8_t ext_bits;
+    const uint8_t* ext_bytes_end = buf - EXT_SIZE;
+    if (frm_hdr->partition_length_ <= EXT_SIZE) {
+      return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
+                         "RIFF: Inconsistent extra information.");
+    }
+    ext_size = (ext_bytes_end[0] << 16) | (ext_bytes_end[1] << 8)
+             | (ext_bytes_end[2]);
+    ext_bits = ext_bytes_end[3];
+    ext_bytes_end -= ext_size;
+    if (!(ext_bits & 0x01) || (ext_size + EXT_SIZE > frm_hdr->partition_length_)) {
+      return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
+                         "RIFF: Inconsistent extra information.");
+    }
+    if (!!(ext_bits & 0x02)) {    // has alpha data
+      dec->alpha_data_size_ = ext_size;
+      dec->alpha_data_ = ext_bytes_end;
+    }
+  }
+#endif
 
   // sanitized state
   dec->ready_ = 1;

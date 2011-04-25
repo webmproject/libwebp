@@ -39,6 +39,8 @@ int VP8PutBit(VP8BitWriter* const bw, int bit, int prob);
 int VP8PutBitUniform(VP8BitWriter* const bw, int bit);
 void VP8PutValue(VP8BitWriter* const bw, int value, int nb_bits);
 void VP8PutSignedValue(VP8BitWriter* const bw, int value, int nb_bits);
+int VP8BitWriterAppend(VP8BitWriter* const bw,
+                       const uint8_t* data, size_t size);
 
 // return approximate write position (in bits)
 static inline uint64_t VP8BitWriterPos(const VP8BitWriter* const bw) {

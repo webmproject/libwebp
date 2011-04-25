@@ -4,8 +4,8 @@ bin_PROGRAMS = dwebp cwebp
 
 dwebp_SOURCES = dwebp.c stopwatch.h
 dwebp_CPPFLAGS = $(AM_CPPFLAGS) $(PNG_INCLUDES) $(JPEG_INCLUDES)
-dwebp_LDADD = ../src/libwebp.la $(PNG_LIBS) $(JPEG_LIBS)
+dwebp_LDADD = ../src/libwebp.la $(PNG_LIBS) $(JPEG_LIBS) -lz
 
 cwebp_SOURCES = cwebp.c stopwatch.h
 cwebp_CPPFLAGS = $(AM_CPPFLAGS) $(PNG_INCLUDES) $(JPEG_INCLUDES)
-cwebp_LDADD = ../src/libwebp.la $(PNG_LIBS) $(JPEG_LIBS)
+cwebp_LDADD = ../src/libwebp.la $(PNG_LIBS) $(JPEG_LIBS) -lz

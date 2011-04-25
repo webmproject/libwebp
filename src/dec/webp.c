@@ -139,10 +139,10 @@ static inline void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,    \
 }
 
 // All variants implemented.
-UPSCALE_FUNC(UpscaleRgbLinePair,  VP8YuvToRgb,  3)
-UPSCALE_FUNC(UpscaleBgrLinePair,  VP8YuvToBgr,  3)
-UPSCALE_FUNC(UpscaleRgbaLinePair, VP8YuvToRgba, 4)
-UPSCALE_FUNC(UpscaleBgraLinePair, VP8YuvToBgra, 4)
+UPSCALE_FUNC(UpscaleRgbLinePair,  VP8YuvToRgb, 3)
+UPSCALE_FUNC(UpscaleBgrLinePair,  VP8YuvToBgr, 3)
+UPSCALE_FUNC(UpscaleRgbaLinePair, VP8YuvToRgb, 4)
+UPSCALE_FUNC(UpscaleBgraLinePair, VP8YuvToBgr, 4)
 
 // Main driver function.
 static inline
@@ -266,10 +266,37 @@ static int CustomPut(const VP8Io* io) {
           } else if (p->mode == MODE_BGR) {
             VP8YuvToBgr(y, u, v, dst + i * 3);
           } else if (p->mode == MODE_RGBA) {
-            VP8YuvToRgba(y, u, v, dst + i * 4);
+            VP8YuvToRgb(y, u, v, dst + i * 4);
           } else {
-            VP8YuvToBgra(y, u, v, dst + i * 4);
+            VP8YuvToBgr(y, u, v, dst + i * 4);
           }
+        }
+        dst += p->stride;
+      }
+    }
+  }
+
+  // Alpha handling
+  if (p->mode == MODE_RGBA || p->mode == MODE_BGRA) {
+    int i, j;
+    uint8_t* dst = p->output + io->mb_y * p->stride + 3;
+    const uint8_t* alpha = io->a;
+    const int has_alpha = (alpha != NULL);
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+    if (has_alpha) {
+      for (j = 0; j < mb_h; ++j) {
+        for (i = 0; i < w; ++i) {
+          dst[4 * i] = alpha[i];
+        }
+        alpha += io->width;
+        dst += p->stride;
+      }
+    }
+#endif
+    if (!has_alpha) {    // fill-in with 0xFFs
+      for (j = 0; j < mb_h; ++j) {
+        for (i = 0; i < w; ++i) {
+          dst[4 * i] = 0xff;
         }
         dst += p->stride;
       }

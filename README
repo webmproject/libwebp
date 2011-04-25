@@ -112,6 +112,8 @@ options:
   -f <int> ............... filter strength (0=off..100)
   -sharpness <int> ....... filter sharpness (0:most .. 7:least sharp)
   -strong ................ use strong filter instead of simple.
+  -alpha_comp <int> ...... set the transparency-compression
+  -noalpha ............... discard any transparency information.
   -pass <int> ............ analysis pass number (1..10)
   -partitions <int> ...... number of partitions to use (0..3)
   -crop <x> <y> <w> <h> .. crop picture with the given rectangle
@@ -120,6 +122,8 @@ options:
 
   -short ................. condense printed message
   -quiet ................. don't print anything.
+  -version ............... print version number and exit.
+  -noasm ................. disable all assembly optimizations.
   -v ..................... verbose, e.g. print encoding/decoding times
 
 Experimental Options:

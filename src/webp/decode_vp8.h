@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-#define WEBP_DECODER_ABI_VERSION 0x0001
+#define WEBP_DECODER_ABI_VERSION 0x0002
 
 //-----------------------------------------------------------------------------
 // Lower-level API
@@ -80,6 +80,9 @@ struct VP8Io {
   // of more visible blocking. Note that output will also be non-compliant
   // with the VP8 specifications.
   int bypass_filtering;
+
+  // pointer to the alpha data (if present) corresponding to the rows
+  const uint8_t* a;
 };
 
 // Internal, version-checked, entry point

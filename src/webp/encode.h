@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#define WEBP_ENCODER_ABI_VERSION 0x0001
+#define WEBP_ENCODER_ABI_VERSION 0x0002
 
 // Return the encoder's version number, packed in hexadecimal using 8bits for
 // each of major/minor/revision. E.g: v2.5.7 is 0x020507.
@@ -32,7 +32,6 @@ int WebPGetEncoderVersion(void);
 // Returns the size of the compressed data (pointed to by *output), or 0 if
 // an error occurred. The compressed data must be released by the caller
 // using the call 'free(*output)'.
-// Currently, alpha values are discarded.
 size_t WebPEncodeRGB(const uint8_t* rgb, int width, int height, int stride,
                      float quality_factor, uint8_t** output);
 size_t WebPEncodeBGR(const uint8_t* bgr, int width, int height, int stride,
@@ -66,6 +65,7 @@ typedef struct {
   int preprocessing;     // preprocessing filter (0=none, 1=segment-smooth)
   int partitions;        // log2(number of token partitions) in [0..3]
                          // Default is set to 0 for easier progressive decoding.
+  int alpha_compression;  // Algorithm for optimizing the alpha plane (0 = none)
 } WebPConfig;
 
 // Enumerate some predefined settings for WebPConfig, depending on the type
@@ -120,6 +120,8 @@ typedef struct {
   int segment_size[4];    // number of macroblocks in each segments
   int segment_quant[4];   // quantizer values for each segments
   int segment_level[4];   // filtering strength for each segments [0..63]
+
+  int alpha_data_size;    // size of the transparency data
 } WebPAuxStats;
 
 // Signature for output function. Should return 1 if writing was successful.
@@ -134,7 +136,7 @@ struct WebPPicture {
   int width, height;         // dimensions.
   uint8_t *y, *u, *v;        // pointers to luma/chroma planes.
   int y_stride, uv_stride;   // luma/chroma strides.
-  uint8_t *a;                // pointer to the alpha plane (unused for now).
+  uint8_t *a;                // pointer to the width x height alpha plane
 
   // output
   WebPWriterFunction writer;  // can be NULL
@@ -173,6 +175,10 @@ static inline int WebPPictureInit(WebPPicture* const picture) {
 // Returns 0 in case of memory error.
 int WebPPictureAlloc(WebPPicture* const picture);
 
+// This function will add storage for a transparency plane to a picture, using
+// its width and depth.
+int WebPPictureAddAlphaPlane(WebPPicture* const picture);
+
 // Release memory allocated by WebPPictureAlloc() or WebPPictureImport*()
 // Note that this function does _not_ free the memory pointed to by 'picture'.
 void WebPPictureFree(WebPPicture* const picture);
@@ -187,16 +193,17 @@ int WebPPictureCopy(const WebPPicture* const src, WebPPicture* const dst);
 int WebPPictureCrop(WebPPicture* const picture,
                      int left, int top, int width, int height);
 
-// Colorspace conversion function. Previous buffer will be free'd, if any.
+// Colorspace conversion function to import RGB samples.
+// Previous buffer will be free'd, if any.
 // *rgb buffer should have a size of at least height * rgb_stride.
 // Returns 0 in case of memory error.
 int WebPPictureImportRGB(WebPPicture* const picture,
                          const uint8_t* const rgb, int rgb_stride);
-// Same, but for RGBA buffer. Alpha information is ignored.
+// Same, but for RGBA buffer
 int WebPPictureImportRGBA(WebPPicture* const picture,
                           const uint8_t* const rgba, int rgba_stride);
 
-// Variant of the above, but taking BGR input:
+// Variant of the above, but taking BGR(A) input:
 int WebPPictureImportBGR(WebPPicture* const picture,
                          const uint8_t* const bgr, int bgr_stride);
 int WebPPictureImportBGRA(WebPPicture* const picture,
