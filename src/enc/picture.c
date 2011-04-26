@@ -81,9 +81,14 @@ int WebPPictureCopy(const WebPPicture* const src, WebPPicture* const dst) {
   if (src == dst) return 1;
   *dst = *src;
   dst->y = NULL;
+  dst->a = NULL;
   if (!WebPPictureAlloc(dst)) return 0;
+  if (src->a != NULL && !WebPPictureAddAlphaPlane(dst)) return 0;
   for (y = 0; y < dst->height; ++y) {
     memcpy(dst->y + y * dst->y_stride, src->y + y * src->y_stride, src->width);
+    if (dst->a != NULL)  {
+      memcpy(dst->a + y * dst->width, src->a + y * src->width, src->width);
+    }
   }
   for (y = 0; y < (dst->height + 1) / 2; ++y) {
     memcpy(dst->u + y * dst->uv_stride,
@@ -106,13 +111,19 @@ int WebPPictureCrop(WebPPicture* const pic,
 
   tmp = *pic;
   tmp.y = NULL;
+  tmp.a = NULL;
   tmp.width = width;
   tmp.height = height;
   if (!WebPPictureAlloc(&tmp)) return 0;
+  if (pic->a != NULL && !WebPPictureAddAlphaPlane(&tmp)) return 0;
 
   for (y = 0; y < height; ++y) {
     memcpy(tmp.y + y * tmp.y_stride,
            pic->y + (top + y) * pic->y_stride + left, width);
+    if (tmp.a) {
+      memcpy(tmp.a + y * tmp.width,
+           pic->a + (top + y) * pic->width + left, width);
+    }
   }
   for (y = 0; y < (height + 1) / 2; ++y) {
     const int offset = (y + top / 2) * pic->uv_stride + left / 2;
