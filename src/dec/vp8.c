@@ -327,7 +327,6 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
     return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
                        "cannot parse filter header");
   }
-
   status = ParsePartitions(dec, buf, buf_size);
   if (status != VP8_STATUS_OK) {
     return VP8SetError(dec, status, "cannot parse partitions");

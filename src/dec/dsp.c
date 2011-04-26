@@ -11,10 +11,6 @@
 
 #include "vp8i.h"
 
-#if defined(__SSE2__)
-#include <emmintrin.h>
-#endif
-
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
 #endif

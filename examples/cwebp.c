@@ -36,8 +36,7 @@
 
 #include "webp/encode.h"
 #include "stopwatch.h"
-
-extern void* VP8GetCPUInfo;
+extern void* VP8GetCPUInfo;   // opaque forward declaration.
 
 //-----------------------------------------------------------------------------
 
