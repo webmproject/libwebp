@@ -176,6 +176,8 @@ static int WriteExtensions(VP8Encoder* const enc) {
   if (!VP8BitWriterAppend(bw, trailer, EXT_SIZE)) {
     return 0;
   }
+#else
+  (void)enc;    // remove 'unused variable' warning
 #endif
   return 1;
 }

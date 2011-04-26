@@ -71,17 +71,16 @@ static int CompressAlpha(const uint8_t* data, size_t data_size,
 #endif    /* WEBP_EXPERIMENTAL_FEATURES */
 
 int VP8EncProcessAlpha(VP8Encoder* enc) {
-  const WebPPicture* pic_ = enc->pic_;
   enc->alpha_data_ = NULL;
   enc->alpha_data_size_ = 0;
 #ifdef WEBP_EXPERIMENTAL_FEATURES
-  if (pic_->a == NULL) {
-    return 1;
-  }
-  if (!CompressAlpha(pic_->a, pic_->width * pic_->height,
-                     &enc->alpha_data_, &enc->alpha_data_size_,
-                     enc->config_->alpha_compression)) {
-    return 0;
+  if (enc->pic_->a) {
+    const WebPPicture* pic = enc->pic_;
+    if (!CompressAlpha(pic->a, pic->width * pic->height,
+                       &enc->alpha_data_, &enc->alpha_data_size_,
+                       enc->config_->alpha_compression)) {
+      return 0;
+    }
   }
 #endif    /* WEBP_EXPERIMENTAL_FEATURES */
   return 1;
