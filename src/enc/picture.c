@@ -9,6 +9,7 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#include <assert.h>
 #include <stdlib.h>
 #include "vp8enci.h"
 
@@ -50,7 +51,8 @@ int WebPPictureAddAlphaPlane(WebPPicture* const picture) {
   if (picture) {
     const int width = picture->width;
     const int height = picture->height;
-    const uint64_t a_size = (uint64_t)width * height;
+    const int a_stride = width;
+    const uint64_t a_size = (uint64_t)a_stride * height;
     // Security and validation checks
     if (width <= 0 || height <= 0 ||   // check param error
         a_size >= (1ULL << 40) ||      // check for reasonable global size
@@ -59,6 +61,7 @@ int WebPPictureAddAlphaPlane(WebPPicture* const picture) {
     }
     free(picture->a);   // erase previous buffer
     picture->a = (uint8_t*)malloc((size_t)a_size);
+    picture->a_stride = a_stride;
     return (picture->a != NULL);
   }
   return 1;
@@ -85,9 +88,11 @@ int WebPPictureCopy(const WebPPicture* const src, WebPPicture* const dst) {
   if (!WebPPictureAlloc(dst)) return 0;
   if (src->a != NULL && !WebPPictureAddAlphaPlane(dst)) return 0;
   for (y = 0; y < dst->height; ++y) {
-    memcpy(dst->y + y * dst->y_stride, src->y + y * src->y_stride, src->width);
+    memcpy(dst->y + y * dst->y_stride,
+           src->y + y * src->y_stride, src->width);
     if (dst->a != NULL)  {
-      memcpy(dst->a + y * dst->width, src->a + y * src->width, src->width);
+      memcpy(dst->a + y * dst->a_stride,
+             src->a + y * src->a_stride, src->width);
     }
   }
   for (y = 0; y < (dst->height + 1) / 2; ++y) {
@@ -121,8 +126,8 @@ int WebPPictureCrop(WebPPicture* const pic,
     memcpy(tmp.y + y * tmp.y_stride,
            pic->y + (top + y) * pic->y_stride + left, width);
     if (tmp.a) {
-      memcpy(tmp.a + y * tmp.width,
-           pic->a + (top + y) * pic->width + left, width);
+      memcpy(tmp.a + y * tmp.a_stride,
+           pic->a + (top + y) * pic->a_stride + left, width);
     }
   }
   for (y = 0; y < (height + 1) / 2; ++y) {
@@ -229,11 +234,12 @@ static inline int rgb_to_v(int r, int g, int b) {
 
 static int Import(WebPPicture* const picture,
                   const uint8_t* const rgb, int rgb_stride,
-                  int step, int swap, int alpha_offset) {
+                  int step, int swap, int import_alpha) {
   int x, y;
   const uint8_t* const r_ptr = rgb + (swap ? 2 : 0);
   const uint8_t* const g_ptr = rgb + 1;
   const uint8_t* const b_ptr = rgb + (swap ? 0 : 2);
+  const uint8_t* const a_ptr = rgb + 3;
 
   for (y = 0; y < picture->height; ++y) {
     for (x = 0; x < picture->width; ++x) {
@@ -258,14 +264,15 @@ static int Import(WebPPicture* const picture,
       RGB_TO_UV(x, y, SUM1);
     }
   }
-  if (alpha_offset >= 0) {
+  if (import_alpha) {
+    assert(step >= 4);
     if (!WebPPictureAddAlphaPlane(picture)) {
       return 0;
     }
     for (y = 0; y < picture->height; ++y) {
       for (x = 0; x < picture->width; ++x) {
-        picture->a[x + y * picture->width] =
-          rgb[step * x + y * rgb_stride + alpha_offset];
+        picture->a[x + y * picture->a_stride] =
+          a_ptr[step * x + y * rgb_stride];
       }
     }
   }
@@ -280,25 +287,25 @@ static int Import(WebPPicture* const picture,
 int WebPPictureImportRGB(WebPPicture* const picture,
                          const uint8_t* const rgb, int rgb_stride) {
   if (!WebPPictureAlloc(picture)) return 0;
-  return Import(picture, rgb, rgb_stride, 3, 0, -1);
+  return Import(picture, rgb, rgb_stride, 3, 0, 0);
 }
 
 int WebPPictureImportBGR(WebPPicture* const picture,
                          const uint8_t* const rgb, int rgb_stride) {
   if (!WebPPictureAlloc(picture)) return 0;
-  return Import(picture, rgb, rgb_stride, 3, 1, -1);
+  return Import(picture, rgb, rgb_stride, 3, 1, 0);
 }
 
 int WebPPictureImportRGBA(WebPPicture* const picture,
                           const uint8_t* const rgba, int rgba_stride) {
   if (!WebPPictureAlloc(picture)) return 0;
-  return Import(picture, rgba, rgba_stride, 4, 0, 3);
+  return Import(picture, rgba, rgba_stride, 4, 0, 1);
 }
 
 int WebPPictureImportBGRA(WebPPicture* const picture,
                           const uint8_t* const rgba, int rgba_stride) {
   if (!WebPPictureAlloc(picture)) return 0;
-  return Import(picture, rgba, rgba_stride, 4, 1, 3);
+  return Import(picture, rgba, rgba_stride, 4, 1, 1);
 }
 
 //-----------------------------------------------------------------------------

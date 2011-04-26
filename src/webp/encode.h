@@ -136,7 +136,8 @@ struct WebPPicture {
   int width, height;         // dimensions.
   uint8_t *y, *u, *v;        // pointers to luma/chroma planes.
   int y_stride, uv_stride;   // luma/chroma strides.
-  uint8_t *a;                // pointer to the width x height alpha plane
+  uint8_t *a;                // pointer to the alpha plane
+  int a_stride;              // stride of the alpha plane
 
   // output
   WebPWriterFunction writer;  // can be NULL
