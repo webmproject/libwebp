@@ -186,7 +186,9 @@ static size_t GeneratePartition0(VP8Encoder* const enc) {
   VP8BitWriter* const bw = &enc->bw_;
   const int mb_size = enc->mb_w_ * enc->mb_h_;
   uint64_t pos1, pos2, pos3;
+#ifdef WEBP_EXPERIMENTAL_FEATURES
   const int need_extensions = (enc->alpha_data_size_ > 0);
+#endif
 
   pos1 = VP8BitWriterPos(bw);
   VP8BitWriterInit(bw, mb_size * 7 / 8);        // ~7 bits per macroblock
