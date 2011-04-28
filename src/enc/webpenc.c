@@ -247,9 +247,7 @@ static VP8Encoder* InitEncoder(const WebPConfig* const config,
 
 static void DeleteEncoder(VP8Encoder* enc) {
   if (enc) {
-    if (enc->alpha_data_) {
-      VP8EncDeleteAlpha(enc);
-    }
+    VP8EncDeleteAlpha(enc);
     free(enc);
   }
 }
