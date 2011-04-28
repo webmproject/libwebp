@@ -155,8 +155,8 @@ static int EmitPartitionsSize(const VP8Encoder* const enc,
 
 //-----------------------------------------------------------------------------
 
-static int WriteExtensions(VP8Encoder* const enc) {
 #ifdef WEBP_EXPERIMENTAL_FEATURES
+static int WriteExtensions(VP8Encoder* const enc) {
   const int EXT_SIZE = 4;
   VP8BitWriter* const bw = &enc->bw_;
   uint8_t trailer[EXT_SIZE];
@@ -176,11 +176,9 @@ static int WriteExtensions(VP8Encoder* const enc) {
   if (!VP8BitWriterAppend(bw, trailer, EXT_SIZE)) {
     return 0;
   }
-#else
-  (void)enc;    // remove 'unused variable' warning
-#endif
   return 1;
 }
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -209,9 +207,11 @@ static size_t GeneratePartition0(VP8Encoder* const enc) {
   VP8CodeIntraModes(enc);
   VP8BitWriterFinish(bw);
 
+#ifdef WEBP_EXPERIMENTAL_FEATURES
   if (need_extensions && !WriteExtensions(enc)) {
     return 0;
   }
+#endif
 
   pos3 = VP8BitWriterPos(bw);
 
