@@ -263,7 +263,7 @@ int VP8FinishRow(VP8Decoder* const dec, VP8Io* io) {
       io->a = VP8DecompressAlphaRows(dec, y_start, y_end - y_start);
       if (io->a == NULL) {
         return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
-                         "Could not decode alpha data.");
+                           "Could not decode alpha data.");
       }
     }
 #endif
