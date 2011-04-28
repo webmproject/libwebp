@@ -28,6 +28,8 @@ static int CompressAlpha(const uint8_t* data, size_t data_size,
   int ret = Z_OK;
   z_stream strm;
   const int CHUNK_SIZE = 8192;
+  unsigned char chunk[CHUNK_SIZE];
+
   *output = NULL;
   *output_size = 0;
   memset(&strm, 0, sizeof(strm));
@@ -38,7 +40,7 @@ static int CompressAlpha(const uint8_t* data, size_t data_size,
   strm.avail_in = data_size;
   do {
     size_t size_out;
-    unsigned char chunk[CHUNK_SIZE];
+
     strm.next_out = chunk;
     strm.avail_out = CHUNK_SIZE;
     ret = deflate(&strm, Z_FINISH);
