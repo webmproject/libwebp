@@ -234,11 +234,11 @@ static inline int rgb_to_v(int r, int g, int b) {
 
 static int Import(WebPPicture* const picture,
                   const uint8_t* const rgb, int rgb_stride,
-                  int step, int swap, int import_alpha) {
+                  int step, int swap_rb, int import_alpha) {
   int x, y;
-  const uint8_t* const r_ptr = rgb + (swap ? 2 : 0);
+  const uint8_t* const r_ptr = rgb + (swap_rb ? 2 : 0);
   const uint8_t* const g_ptr = rgb + 1;
-  const uint8_t* const b_ptr = rgb + (swap ? 0 : 2);
+  const uint8_t* const b_ptr = rgb + (swap_rb ? 0 : 2);
   const uint8_t* const a_ptr = rgb + 3;
 
   for (y = 0; y < picture->height; ++y) {
