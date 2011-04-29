@@ -20,49 +20,10 @@
 extern "C" {
 #endif
 
-#define MAX_COEFF_THRESH   64
 #define MAX_ITERS_K_MEANS  6
-
-//-----------------------------------------------------------------------------
-// Compute susceptibility based on DCT-coeff histograms:
-// the higher, the "easier" the macroblock is to compress.
 
 static int ClipAlpha(int alpha) {
   return alpha < 0 ? 0 : alpha > 255 ? 255 : alpha;
-}
-
-static int GetAlpha(const int histo[MAX_COEFF_THRESH]) {
-  int num = 0, den = 0, val = 0;
-  int k;
-  int alpha;
-  for (k = 0; k < MAX_COEFF_THRESH; ++k) {
-    if (histo[k]) {
-      val += histo[k];
-      num += val * (k + 1);
-      den += (k + 1) * (k + 1);
-    }
-  }
-  // we scale the value to a usable [0..255] range
-  alpha = den ? 10 * num / den - 5 : 0;
-  return ClipAlpha(alpha);
-}
-
-static int CollectHistogram(const uint8_t* ref, const uint8_t* pred,
-                            int start_block, int end_block) {
-  int histo[MAX_COEFF_THRESH] = { 0 };
-  int16_t out[16];
-  int j, k;
-  for (j = start_block; j < end_block; ++j) {
-    VP8FTransform(ref + VP8Scan[j], pred + VP8Scan[j], out);
-    for (k = 0; k < 16; ++k) {
-      const int v = abs(out[k]) >> 2;
-      if (v) {
-        const int bin = (v > MAX_COEFF_THRESH) ? MAX_COEFF_THRESH : v;
-        histo[bin - 1]++;
-      }
-    }
-  }
-  return GetAlpha(histo);
 }
 
 //-----------------------------------------------------------------------------
@@ -86,11 +47,11 @@ static void SmoothSegmentMap(VP8Encoder* const enc) {
       cnt[mb[-w - 1].segment_]++;  // top-left
       cnt[mb[-w + 0].segment_]++;  // top
       cnt[mb[-w + 1].segment_]++;  // top-right
-      cnt[mb[   - 1].segment_]++;    // left
-      cnt[mb[   + 1].segment_]++;    // right
-      cnt[mb[ w - 1].segment_]++;   // bottom-left
-      cnt[mb[ w + 0].segment_]++;   // bottom
-      cnt[mb[ w + 1].segment_]++;   // bottom-right
+      cnt[mb[   - 1].segment_]++;  // left
+      cnt[mb[   + 1].segment_]++;  // right
+      cnt[mb[ w - 1].segment_]++;  // bottom-left
+      cnt[mb[ w + 0].segment_]++;  // bottom
+      cnt[mb[ w + 1].segment_]++;  // bottom-right
       for (n = 0; n < NUM_MB_SEGMENTS; ++n) {
         if (cnt[n] >= majority_cnt_3_x_3_grid) {
           majority_seg = n;
@@ -278,9 +239,9 @@ static int MBAnalyzeBestIntra16Mode(VP8EncIterator* const it) {
 
   VP8MakeLuma16Preds(it);
   for (mode = 0; mode < max_mode; ++mode) {
-    const int alpha = CollectHistogram(it->yuv_in_ + Y_OFF,
-                                       it->yuv_p_ + VP8I16ModeOffsets[mode],
-                                       0, 16);
+    const int alpha = VP8CollectHistogram(it->yuv_in_ + Y_OFF,
+                                          it->yuv_p_ + VP8I16ModeOffsets[mode],
+                                          0, 16);
     if (alpha > best_alpha) {
       best_alpha = alpha;
       best_mode = mode;
@@ -303,9 +264,9 @@ static int MBAnalyzeBestIntra4Mode(VP8EncIterator* const it,
 
     VP8MakeIntra4Preds(it);
     for (mode = 0; mode < max_mode; ++mode) {
-      const int alpha = CollectHistogram(src,
-                                         it->yuv_p_ + VP8I4ModeOffsets[mode],
-                                         0, 1);
+      const int alpha = VP8CollectHistogram(src,
+                                            it->yuv_p_ + VP8I4ModeOffsets[mode],
+                                            0, 1);
       if (alpha > best_mode_alpha) {
         best_mode_alpha = alpha;
         modes[it->i4_] = mode;
@@ -329,9 +290,9 @@ static int MBAnalyzeBestUVMode(VP8EncIterator* const it) {
   int mode;
   VP8MakeChroma8Preds(it);
   for (mode = 0; mode < max_mode; ++mode) {
-    const int alpha = CollectHistogram(it->yuv_in_ + U_OFF,
-                                       it->yuv_p_ + VP8UVModeOffsets[mode],
-                                       16, 16 + 4 + 4);
+    const int alpha = VP8CollectHistogram(it->yuv_in_ + U_OFF,
+                                          it->yuv_p_ + VP8UVModeOffsets[mode],
+                                          16, 16 + 4 + 4);
     if (alpha > best_alpha) {
       best_alpha = alpha;
       best_mode = mode;

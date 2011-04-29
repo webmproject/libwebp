@@ -19,6 +19,66 @@ extern "C" {
 #endif
 
 //-----------------------------------------------------------------------------
+// Compute susceptibility based on DCT-coeff histograms:
+// the higher, the "easier" the macroblock is to compress.
+
+static int CollectHistogramSSE2(const uint8_t* ref, const uint8_t* pred,
+                                int start_block, int end_block) {
+  int histo[MAX_COEFF_THRESH + 1] = { 0 };
+  int16_t out[16];
+  int j, k;
+  const __m128i max_coeff_thresh = _mm_set1_epi16(MAX_COEFF_THRESH);
+  for (j = start_block; j < end_block; ++j) {
+    VP8FTransform(ref + VP8Scan[j], pred + VP8Scan[j], out);
+
+    // Convert coefficients to bin (within out[]).
+    {
+      // Load.
+      const __m128i out0 = _mm_loadu_si128((__m128i *)&out[0]);
+      const __m128i out1 = _mm_loadu_si128((__m128i *)&out[8]);
+      // sign(out) = out >> 15  (0x0000 if positive, 0xffff if negative)
+      const __m128i sign0 = _mm_srai_epi16(out0, 15);
+      const __m128i sign1 = _mm_srai_epi16(out1, 15);
+      // abs(out) = (out ^ sign) - sign
+      const __m128i xor0 = _mm_xor_si128(out0, sign0);
+      const __m128i xor1 = _mm_xor_si128(out1, sign1);
+      const __m128i abs0 = _mm_sub_epi16(xor0, sign0);
+      const __m128i abs1 = _mm_sub_epi16(xor1, sign1);
+      // v = abs(out) >> 2
+      const __m128i v0 = _mm_srai_epi16(abs0, 2);
+      const __m128i v1 = _mm_srai_epi16(abs1, 2);
+      // bin = min(v, MAX_COEFF_THRESH)
+      const __m128i bin0 = _mm_min_epi16(v0, max_coeff_thresh);
+      const __m128i bin1 = _mm_min_epi16(v1, max_coeff_thresh);
+      // Store.
+      _mm_storeu_si128((__m128i *)&out[0], bin0);
+      _mm_storeu_si128((__m128i *)&out[8], bin1);
+    }
+
+    // Use bin to update histogram.
+    for (k = 0; k < 16; ++k) {
+      histo[out[k]]++;
+    }
+  }
+
+  {
+    int num = 0, den = 0, val = 0;
+    int alpha;
+    for (k = 0; k < MAX_COEFF_THRESH; ++k) {
+      if (histo[k + 1]) {
+        val += histo[k + 1];
+        num += val * (k + 1);
+        den += (k + 1) * (k + 1);
+      }
+    }
+    // we scale the value to a usable [0..255] range
+    alpha = den ? 10 * num / den - 5 : 0;
+    alpha = alpha < 0 ? 0 : alpha > 255 ? 255 : alpha;
+    return alpha;
+  }
+}
+
+//-----------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
 
 // Does one of two inverse transforms.
@@ -762,6 +822,7 @@ static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
 
 extern void VP8EncDspInitSSE2(void);
 void VP8EncDspInitSSE2(void) {
+  VP8CollectHistogram = CollectHistogramSSE2;
   VP8EncQuantizeBlock = QuantizeBlockSSE2;
   VP8ITransform = ITransformSSE2;
   VP8FTransform = FTransformSSE2;

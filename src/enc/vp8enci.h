@@ -28,6 +28,9 @@ extern "C" {
 #define ENC_MIN_VERSION 1
 #define ENC_REV_VERSION 2
 
+// size of histogram used by CollectHistogram.
+#define MAX_COEFF_THRESH   64
+
 // intra prediction modes
 enum { B_DC_PRED = 0,   // 4x4 modes
        B_TM_PRED = 1,
@@ -408,6 +411,11 @@ int VP8EncLoop(VP8Encoder* const enc);
 int VP8StatLoop(VP8Encoder* const enc);
 
   // in analysis.c
+// Compute susceptibility based on DCT-coeff histograms:
+// the higher, the "easier" the macroblock is to compress.
+typedef int (*VP8CHisto)(const uint8_t* ref, const uint8_t* pred,
+                         int start_block, int end_block);
+extern VP8CHisto VP8CollectHistogram;
 // Main analysis loop. Decides the segmentations and complexity.
 // Assigns a first guess for Intra16 and uvmode_ prediction modes.
 int VP8EncAnalyze(VP8Encoder* const enc);

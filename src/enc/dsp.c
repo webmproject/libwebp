@@ -17,6 +17,48 @@ extern "C" {
 #endif
 
 //-----------------------------------------------------------------------------
+// Compute susceptibility based on DCT-coeff histograms:
+// the higher, the "easier" the macroblock is to compress.
+
+static int ClipAlpha(int alpha) {
+  return alpha < 0 ? 0 : alpha > 255 ? 255 : alpha;
+}
+
+static int GetAlpha(const int histo[MAX_COEFF_THRESH]) {
+  int num = 0, den = 0, val = 0;
+  int k;
+  int alpha;
+  for (k = 0; k < MAX_COEFF_THRESH; ++k) {
+    if (histo[k]) {
+      val += histo[k];
+      num += val * (k + 1);
+      den += (k + 1) * (k + 1);
+    }
+  }
+  // we scale the value to a usable [0..255] range
+  alpha = den ? 10 * num / den - 5 : 0;
+  return ClipAlpha(alpha);
+}
+
+static int CollectHistogram(const uint8_t* ref, const uint8_t* pred,
+                            int start_block, int end_block) {
+  int histo[MAX_COEFF_THRESH] = { 0 };
+  int16_t out[16];
+  int j, k;
+  for (j = start_block; j < end_block; ++j) {
+    VP8FTransform(ref + VP8Scan[j], pred + VP8Scan[j], out);
+    for (k = 0; k < 16; ++k) {
+      const int v = abs(out[k]) >> 2;
+      if (v) {
+        const int bin = (v > MAX_COEFF_THRESH) ? MAX_COEFF_THRESH : v;
+        histo[bin - 1]++;
+      }
+    }
+  }
+  return GetAlpha(histo);
+}
+
+//-----------------------------------------------------------------------------
 // run-time tables (~4k)
 
 static uint8_t clip1[255 + 510 + 1];    // clips [-255,510] to [0,255]
@@ -657,6 +699,7 @@ VP8CPUInfo VP8GetCPUInfo = NULL;
 
 // Speed-critical function pointers. We have to initialize them to the default
 // implementations within VP8EncDspInit().
+VP8CHisto VP8CollectHistogram;
 VP8Idct VP8ITransform;
 VP8Fdct VP8FTransform;
 VP8WHT VP8ITransformWHT;
@@ -681,6 +724,7 @@ void VP8EncDspInit(void) {
   InitTables();
 
   // default C implementations
+  VP8CollectHistogram = CollectHistogram;
   VP8ITransform = ITransform;
   VP8FTransform = FTransform;
   VP8ITransformWHT = ITransformWHT;
