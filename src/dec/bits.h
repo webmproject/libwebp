@@ -13,7 +13,7 @@
 #define WEBP_DEC_BITS_H_
 
 #include <assert.h>
-#include "webp/decode_vp8.h"
+#include "../webp/decode_vp8.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

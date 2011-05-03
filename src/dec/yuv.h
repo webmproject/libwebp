@@ -12,7 +12,7 @@
 #ifndef WEBP_DEC_YUV_H_
 #define WEBP_DEC_YUV_H_
 
-#include "webp/decode_vp8.h"
+#include "../webp/decode_vp8.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

@@ -13,7 +13,7 @@
 #define WEBP_ENC_VP8ENCI_H_
 
 #include "string.h"     // for memcpy()
-#include "webp/encode.h"
+#include "../webp/encode.h"
 #include "bit_writer.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -330,8 +330,15 @@ struct VP8Encoder {
   VP8BitWriter parts_[MAX_NUM_PARTITIONS];  // token partitions
 
   // transparency blob
-  uint8_t* alpha_data_;
+  int has_alpha_;
+  uint8_t* alpha_data_;       // non-NULL if transparency is present
   size_t alpha_data_size_;
+
+  // enhancement layer
+  int use_layer_;
+  VP8BitWriter layer_bw_;
+  uint8_t* layer_data_;
+  size_t layer_data_size_;
 
   // quantization info (one set of DC/AC dequant factor per segment)
   VP8SegmentInfo dqm_[NUM_MB_SEGMENTS];
@@ -427,9 +434,16 @@ void VP8SetSegmentParams(VP8Encoder* const enc, float quality);
 int VP8Decimate(VP8EncIterator* const it, VP8ModeScore* const rd, int rd_opt);
 
   // in alpha.c
-// Compress transparency information into enc->alpha_data_. Return true if ok.
-int VP8EncProcessAlpha(VP8Encoder* enc);
-void VP8EncDeleteAlpha(VP8Encoder* enc);   // delete compressed data
+void VP8EncInitAlpha(VP8Encoder* enc);           // initialize alpha compression
+void VP8EncCodeAlphaBlock(VP8EncIterator* it);   // analyze or code a macroblock
+int VP8EncFinishAlpha(VP8Encoder* enc);          // finalize compressed data
+void VP8EncDeleteAlpha(VP8Encoder* enc);         // delete compressed data
+
+  // in layer.c
+void VP8EncInitLayer(VP8Encoder* const enc);     // init everything
+void VP8EncCodeLayerBlock(VP8EncIterator* it);   // code one more macroblock
+int VP8EncFinishLayer(VP8Encoder* const enc);    // finalize coding
+void VP8EncDeleteLayer(VP8Encoder* enc);         // reclaim memory
 
   // in dsp.c
 // Transforms

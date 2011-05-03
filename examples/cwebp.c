@@ -334,6 +334,11 @@ static int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha) {
     png_set_strip_alpha(png);
     has_alpha = 0;
   }
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+  if (has_alpha) {
+    pic->colorspace |= WEBP_CSP_ALPHA_BIT;
+  }
+#endif
 
   num_passes = png_set_interlace_handling(png);
   png_read_update_info(png, info);
@@ -486,6 +491,10 @@ static void PrintExtraInfo(const WebPPicture* const pic, int short_output) {
         fprintf(stderr, "             transparency:   %6d\n",
                 stats->alpha_data_size);
       }
+      if (stats->layer_data_size) {
+        fprintf(stderr, "             enhancement:    %6d\n",
+                stats->layer_data_size);
+      }
       fprintf(stderr, " Residuals bytes  "
                       "|segment 1|segment 2|segment 3"
                       "|segment 4|  total\n");
@@ -605,8 +614,13 @@ static void HelpLong(void) {
   printf("  -noalpha ............... discard any transparency information.\n");
   printf("  -pass <int> ............ analysis pass number (1..10)\n");
   printf("  -crop <x> <y> <w> <h> .. crop picture with the given rectangle\n");
+  printf("  -resize <w> <h> ........ resize picture (after any cropping)\n");
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+  printf("  -444 / -422 / -gray ..... Change colorspace\n");
+#endif
   printf("  -map <int> ............. print map of extra info.\n");
   printf("  -d <file.pgm> .......... dump the compressed output (PGM file).\n");
+
   printf("\n");
   printf("  -short ................. condense printed message\n");
   printf("  -quiet ................. don't print anything.\n");
@@ -633,13 +647,16 @@ int main(int argc, const char *argv[]) {
   int quiet = 0;
   int keep_alpha = 0;
   int crop = 0, crop_x = 0, crop_y = 0, crop_w = 0, crop_h = 0;
+  int resize_w = 0, resize_h = 0;
   WebPPicture picture;
   WebPConfig config;
   WebPAuxStats stats;
   Stopwatch stop_watch;
+
 #ifdef WEBP_EXPERIMENTAL_FEATURES
   keep_alpha = 1;
 #endif
+
   if (!WebPPictureInit(&picture) || !WebPConfigInit(&config)) {
     fprintf(stderr, "Error! Version mismatch!\n");
     goto Error;
@@ -697,12 +714,23 @@ int main(int argc, const char *argv[]) {
       keep_alpha = 0;
     } else if (!strcmp(argv[c], "-map") && c < argc - 1) {
       picture.extra_info_type = strtol(argv[++c], NULL, 0);
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+    } else if (!strcmp(argv[c], "-444")) {
+      picture.colorspace = WEBP_YUV444;
+    } else if (!strcmp(argv[c], "-422")) {
+      picture.colorspace = WEBP_YUV422;
+    } else if (!strcmp(argv[c], "-gray")) {
+      picture.colorspace = WEBP_YUV400;
+#endif
     } else if (!strcmp(argv[c], "-crop") && c < argc - 4) {
       crop = 1;
       crop_x = strtol(argv[++c], NULL, 0);
       crop_y = strtol(argv[++c], NULL, 0);
       crop_w = strtol(argv[++c], NULL, 0);
       crop_h = strtol(argv[++c], NULL, 0);
+    } else if (!strcmp(argv[c], "-resize") && c < argc - 2) {
+      resize_w = strtol(argv[++c], NULL, 0);
+      resize_h = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-noasm")) {
       VP8GetCPUInfo = NULL;
     } else if (!strcmp(argv[c], "-version")) {
@@ -792,7 +820,15 @@ int main(int argc, const char *argv[]) {
     fprintf(stderr, "Error! Cannot crop picture\n");
     goto Error;
   }
-  if (picture.extra_info_type > 0) AllocExtraInfo(&picture);
+  if ((resize_w | resize_h) > 0) {
+    if (!WebPPictureRescale(&picture, resize_w, resize_h)) {
+      fprintf(stderr, "Error! Cannot resize picture\n");
+      goto Error;
+    }
+  }
+  if (picture.extra_info_type > 0) {
+    AllocExtraInfo(&picture);
+  }
   if (!WebPEncode(&config, &picture)) {
     fprintf(stderr, "Error! Cannot encode picture as WebP\n");
     goto Error;

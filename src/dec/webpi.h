@@ -16,7 +16,7 @@
 extern "C" {
 #endif
 
-#include "webp/decode_vp8.h"
+#include "../webp/decode_vp8.h"
 
 // Decoding output parameters.
 typedef struct {

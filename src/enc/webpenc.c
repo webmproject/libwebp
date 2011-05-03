@@ -242,12 +242,20 @@ static VP8Encoder* InitEncoder(const WebPConfig* const config,
   ResetFilterHeader(enc);
   ResetBoundaryPredictions(enc);
 
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+  VP8EncInitAlpha(enc);
+  VP8EncInitLayer(enc);
+#endif
+
   return enc;
 }
 
 static void DeleteEncoder(VP8Encoder* enc) {
   if (enc) {
+#ifdef WEBP_EXPERIMENTAL_FEATURES
     VP8EncDeleteAlpha(enc);
+    VP8EncDeleteLayer(enc);
+#endif
     free(enc);
   }
 }
@@ -309,7 +317,10 @@ int WebPEncode(const WebPConfig* const config, WebPPicture* const pic) {
   ok = VP8EncAnalyze(enc)
     && VP8StatLoop(enc)
     && VP8EncLoop(enc)
-    && VP8EncProcessAlpha(enc)
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+    && VP8EncFinishAlpha(enc)
+    && VP8EncFinishLayer(enc)
+#endif
     && VP8EncWrite(enc);
   StoreStats(enc);
   DeleteEncoder(enc);

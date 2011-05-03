@@ -10,7 +10,7 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include <assert.h>
-#include "webp/encode.h"
+#include "../webp/encode.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

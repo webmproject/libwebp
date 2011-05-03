@@ -33,6 +33,9 @@ endif
 # 'make -f makefile.unix EXTRA_FLAGS=-m32' to that effect.
 # EXTRA_FLAGS += -m32
 
+# Extra flags to enable experimental features and code
+# EXTRA_FLAGS += -DUSE_EXPERIMENTAL_FEATURES
+
 # Extra flags to emulate C89 strictness with the full ANSI
 EXTRA_FLAGS += -Wextra -Wold-style-definition
 EXTRA_FLAGS += -Wmissing-prototypes
@@ -50,9 +53,10 @@ OBJS = src/enc/webpenc.o src/enc/bit_writer.o src/enc/syntax.o \
        src/enc/tree.o src/enc/config.o src/enc/frame.o \
        src/enc/quant.o src/enc/iterator.o src/enc/analysis.o \
        src/enc/cost.o src/enc/picture.o src/enc/filter.o \
+       src/enc/layer.o \
        src/dec/bits.o src/dec/dsp.o src/dec/frame.o src/dec/webp.o \
        src/dec/quant.o src/dec/tree.o src/dec/vp8.o src/dec/yuv.o \
-       src/dec/idec.o src/dec/alpha.o 
+       src/dec/idec.o src/dec/alpha.o src/dec/layer.o
 HDRS = src/webp/encode.h src/enc/vp8enci.h src/enc/bit_writer.h \
        src/enc/cost.h src/dec/bits.h  src/dec/vp8i.h src/dec/yuv.h
 OUTPUT = examples/cwebp examples/dwebp src/libwebp.a

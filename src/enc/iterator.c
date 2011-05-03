@@ -148,11 +148,13 @@ void VP8IteratorExport(const VP8EncIterator* const it) {
       memcpy(ydst + i * pic->y_stride, ysrc + i * BPS, w);
     }
     // U/V plane
-    w = (w + 1) / 2;
-    h = (h + 1) / 2;
-    for (i = 0; i < h; ++i) {
-      memcpy(udst + i * pic->uv_stride, usrc + i * BPS, w);
-      memcpy(vdst + i * pic->uv_stride, vsrc + i * BPS, w);
+    {
+      const int uv_w = (w + 1) / 2;
+      const int uv_h = (h + 1) / 2;
+      for (i = 0; i < uv_h; ++i) {
+        memcpy(udst + i * pic->uv_stride, usrc + i * BPS, uv_w);
+        memcpy(vdst + i * pic->uv_stride, vsrc + i * BPS, uv_w);
+      }
     }
   }
 }

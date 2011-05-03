@@ -375,26 +375,30 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
 #ifdef WEBP_EXPERIMENTAL_FEATURES
   // Extensions
   if (dec->pic_hdr_.colorspace_) {
-    const uint32_t EXT_SIZE = 4;
-    uint32_t ext_size;
-    uint8_t ext_bits;
-    const uint8_t* ext_bytes_end = buf - EXT_SIZE;
-    if (frm_hdr->partition_length_ <= EXT_SIZE) {
+    const size_t kTrailerSize = 8;
+    const uint8_t kTrailerMarker = 0x01;
+    uint8_t* const ext_buf = buf - kTrailerSize;
+    size_t size;
+
+    if (frm_hdr->partition_length_ < kTrailerSize ||
+        ext_buf[kTrailerSize - 1] != kTrailerMarker) {
+ Error:
       return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
                          "RIFF: Inconsistent extra information.");
     }
-    ext_size = (ext_bytes_end[0] << 16) | (ext_bytes_end[1] << 8)
-             | (ext_bytes_end[2]);
-    ext_bits = ext_bytes_end[3];
-    ext_bytes_end -= ext_size;
-    if (!(ext_bits & 0x01) || (ext_size + EXT_SIZE > frm_hdr->partition_length_)) {
-      return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
-                         "RIFF: Inconsistent extra information.");
+    // Alpha
+    size = (ext_buf[4] << 0) | (ext_buf[5] << 8) | (ext_buf[6] << 16);
+    if (frm_hdr->partition_length_ < size + kTrailerSize) {
+      goto Error;
     }
-    if (!!(ext_bits & 0x02)) {    // has alpha data
-      dec->alpha_data_size_ = ext_size;
-      dec->alpha_data_ = ext_bytes_end;
-    }
+    dec->alpha_data_ = (size > 0) ? ext_buf - size : NULL;
+    dec->alpha_data_size_ = size;
+
+    // Layer
+    size = (ext_buf[0] << 0) | (ext_buf[1] << 8) | (ext_buf[2] << 16);
+    dec->layer_data_size_ = size;
+    dec->layer_data_ = NULL;  // will be set later
+    dec->layer_colorspace_ = ext_buf[3];
   }
 #endif
 
@@ -648,6 +652,14 @@ static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
 #ifndef ONLY_KEYFRAME_CODE
   if (!dec->update_proba_) {
     dec->proba_ = dec->proba_saved_;
+  }
+#endif
+
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+  if (dec->layer_data_size_ > 0) {
+    if (!VP8DecodeLayer(dec)) {
+      return 0;
+    }
   }
 #endif
 

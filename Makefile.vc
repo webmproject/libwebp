@@ -121,6 +121,8 @@ X_OBJS= \
 	$(DIROBJ)\dec\webp.obj \
 	$(DIROBJ)\dec\yuv.obj \
 	$(DIROBJ)\dec\idec.obj \
+	$(DIROBJ)\dec\alpha.obj \
+	$(DIROBJ)\dec\layer.obj \
 	$(DIROBJ)\enc\analysis.obj \
 	$(DIROBJ)\enc\bit_writer.obj \
 	$(DIROBJ)\enc\config.obj \
@@ -134,6 +136,8 @@ X_OBJS= \
 	$(DIROBJ)\enc\syntax.obj \
 	$(DIROBJ)\enc\tree.obj \
 	$(DIROBJ)\enc\webpenc.obj \
+	$(DIROBJ)\enc\alpha.obj \
+	$(DIROBJ)\enc\layer.obj \
 	$(RESOURCE)
 
 EXAMPLES_OBJS = \

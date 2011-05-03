@@ -244,13 +244,17 @@ struct VP8Decoder {
   uint32_t non_zero_ac_;
 
   // Filtering side-info
-  int filter_type_;                       // 0=off, 1=simple, 2=complex
+  int filter_type_;                         // 0=off, 1=simple, 2=complex
   uint8_t filter_levels_[NUM_MB_SEGMENTS];  // precalculated per-segment
 
   // extensions
   const uint8_t* alpha_data_;   // compressed alpha data (if present)
   size_t alpha_data_size_;
   uint8_t* alpha_plane_;        // output
+
+  int layer_colorspace_;
+  const uint8_t* layer_data_;   // compressed layer data (if present)
+  size_t layer_data_size_;
 };
 
 //-----------------------------------------------------------------------------
@@ -282,6 +286,9 @@ int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br);
 // in alpha.c
 const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
                                       int row, int num_rows);
+
+// in layer.c
+int VP8DecodeLayer(VP8Decoder* const dec);
 
 // in dsp.c
 typedef void (*VP8Idct)(const int16_t* coeffs, uint8_t* dst);

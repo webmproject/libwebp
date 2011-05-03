@@ -14,7 +14,7 @@
 
 #include <stdlib.h>
 
-#include "webp/types.h"
+#include "./types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -122,6 +122,7 @@ typedef struct {
   int segment_level[4];   // filtering strength for each segments [0..63]
 
   int alpha_data_size;    // size of the transparency data
+  int layer_data_size;    // size of the enhancement layer data
 } WebPAuxStats;
 
 // Signature for output function. Should return 1 if writing was successful.
@@ -130,9 +131,24 @@ typedef struct {
 typedef int (*WebPWriterFunction)(const uint8_t* data, size_t data_size,
                                   const WebPPicture* const picture);
 
+typedef enum {
+  // chroma sampling
+  WEBP_YUV420 = 0,   // 4:2:0
+  WEBP_YUV422 = 1,   // 4:2:2
+  WEBP_YUV444 = 2,   // 4:4:4
+  WEBP_YUV400 = 3,   // grayscale
+  WEBP_CSP_UV_MASK = 3,   // bit-mask to get the UV sampling factors
+  // alpha channel variants
+  WEBP_YUV420A = 4,
+  WEBP_YUV422A = 5,
+  WEBP_YUV444A = 6,
+  WEBP_YUV400A = 7,   // grayscale + alpha
+  WEBP_CSP_ALPHA_BIT = 4   // bit that is set if alpha is present
+} WebPEncCSP;
+
 struct WebPPicture {
   // input
-  int colorspace;            // colorspace: should be 0 for now (=Y'CbCr).
+  WebPEncCSP colorspace;     // colorspace: should be YUV420 for now (=Y'CbCr).
   int width, height;         // dimensions.
   uint8_t *y, *u, *v;        // pointers to luma/chroma planes.
   int y_stride, uv_stride;   // luma/chroma strides.
@@ -155,6 +171,10 @@ struct WebPPicture {
 
   // where to store statistics, if not NULL:
   WebPAuxStats* stats;
+
+  // original samples (for non-YUV420 modes)
+  uint8_t *u0, *v0;
+  int uv0_stride;
 };
 
 // Internal, version-checked, entry point
@@ -171,14 +191,10 @@ static inline int WebPPictureInit(WebPPicture* const picture) {
 // WebPPicture utils
 
 // Convenience allocation / deallocation based on picture->width/height:
-// Allocate y/u/v buffers as per width/height specification.
+// Allocate y/u/v buffers as per colorspace/width/height specification.
 // Note! This function will free the previous buffer if needed.
 // Returns 0 in case of memory error.
 int WebPPictureAlloc(WebPPicture* const picture);
-
-// This function will add storage for a transparency plane to a picture, using
-// its width and depth.
-int WebPPictureAddAlphaPlane(WebPPicture* const picture);
 
 // Release memory allocated by WebPPictureAlloc() or WebPPictureImport*()
 // Note that this function does _not_ free the memory pointed to by 'picture'.
@@ -193,6 +209,11 @@ int WebPPictureCopy(const WebPPicture* const src, WebPPicture* const dst);
 // outside of the source picture.
 int WebPPictureCrop(WebPPicture* const picture,
                      int left, int top, int width, int height);
+
+// Rescale a picture to new dimension width x height.
+// Now gamma correction is applied.
+// Returns false in case of error (invalid parameter or insufficient memory).
+int WebPPictureRescale(WebPPicture* const pic, int width, int height);
 
 // Colorspace conversion function to import RGB samples.
 // Previous buffer will be free'd, if any.
