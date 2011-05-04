@@ -61,21 +61,7 @@ static int CollectHistogramSSE2(const uint8_t* ref, const uint8_t* pred,
     }
   }
 
-  {
-    int num = 0, den = 0, val = 0;
-    int alpha;
-    for (k = 0; k < MAX_COEFF_THRESH; ++k) {
-      if (histo[k + 1]) {
-        val += histo[k + 1];
-        num += val * (k + 1);
-        den += (k + 1) * (k + 1);
-      }
-    }
-    // we scale the value to a usable [0..255] range
-    alpha = den ? 10 * num / den - 5 : 0;
-    alpha = alpha < 0 ? 0 : alpha > 255 ? 255 : alpha;
-    return alpha;
-  }
+  return VP8GetAlpha(histo);
 }
 
 //-----------------------------------------------------------------------------

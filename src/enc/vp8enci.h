@@ -446,6 +446,8 @@ int VP8EncFinishLayer(VP8Encoder* const enc);    // finalize coding
 void VP8EncDeleteLayer(VP8Encoder* enc);         // reclaim memory
 
   // in dsp.c
+int VP8GetAlpha(const int histo[MAX_COEFF_THRESH + 1]);
+
 // Transforms
 // VP8Idct: Does one of two inverse transforms. If do_two is set, the transforms
 //          will be done for (ref, in, dst) and (ref + 4, in + 16, dst + 4).

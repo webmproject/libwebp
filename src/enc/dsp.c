@@ -24,13 +24,14 @@ static int ClipAlpha(int alpha) {
   return alpha < 0 ? 0 : alpha > 255 ? 255 : alpha;
 }
 
-static int GetAlpha(const int histo[MAX_COEFF_THRESH]) {
+int VP8GetAlpha(const int histo[MAX_COEFF_THRESH + 1]) {
   int num = 0, den = 0, val = 0;
   int k;
   int alpha;
+  // note: changing this loop to avoid the numerous "k + 1" slows things down.
   for (k = 0; k < MAX_COEFF_THRESH; ++k) {
-    if (histo[k]) {
-      val += histo[k];
+    if (histo[k + 1]) {
+      val += histo[k + 1];
       num += val * (k + 1);
       den += (k + 1) * (k + 1);
     }
@@ -42,20 +43,25 @@ static int GetAlpha(const int histo[MAX_COEFF_THRESH]) {
 
 static int CollectHistogram(const uint8_t* ref, const uint8_t* pred,
                             int start_block, int end_block) {
-  int histo[MAX_COEFF_THRESH] = { 0 };
+  int histo[MAX_COEFF_THRESH + 1] = { 0 };
   int16_t out[16];
   int j, k;
   for (j = start_block; j < end_block; ++j) {
     VP8FTransform(ref + VP8Scan[j], pred + VP8Scan[j], out);
+
+    // Convert coefficients to bin (within out[]).
     for (k = 0; k < 16; ++k) {
       const int v = abs(out[k]) >> 2;
-      if (v) {
-        const int bin = (v > MAX_COEFF_THRESH) ? MAX_COEFF_THRESH : v;
-        histo[bin - 1]++;
-      }
+      out[k] = (v > MAX_COEFF_THRESH) ? MAX_COEFF_THRESH : v;
+    }
+
+    // Use bin to update histogram.
+    for (k = 0; k < 16; ++k) {
+      histo[out[k]]++;
     }
   }
-  return GetAlpha(histo);
+
+  return VP8GetAlpha(histo);
 }
 
 //-----------------------------------------------------------------------------
