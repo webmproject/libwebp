@@ -12,10 +12,6 @@
 #ifndef WEBP_WEBP_TYPES_H_
 #define WEBP_WEBP_TYPES_H_
 
-// This is for experimentation only! Bitstreams generated will surely
-// be invalid, non-decodable ones! USE WITH CARE!
-// #define WEBP_EXPERIMENTAL_FEATURES   // activate alpha support, yuv444, etc.
-
 #ifndef _MSC_VER
 #include <inttypes.h>
 #ifdef ANSI

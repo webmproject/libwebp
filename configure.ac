@@ -69,6 +69,20 @@ AC_CHECK_HEADER(jpeglib.h,
 AC_SUBST(JPEG_LIBS)
 AC_SUBST(JPEG_INCLUDES)
 
+dnl === If --enable-experimental is defined, add the flag WEBP_EXPERIMENTAL_FEATURES
+
+USE_EXPERIMENTAL_CODE=""
+AC_MSG_CHECKING(if --enable-experimental option is specified)
+AC_ARG_ENABLE(experimental, [  --enable-experimental         Activate experimental features])
+if test "$enable_experimental" = "yes"; then
+        AC_DEFINE(EXPERIMENTAL,,[Enable experimental code])
+        USE_EXPERIMENTAL_CODE="-DWEBP_EXPERIMENTAL_FEATURES"
+fi
+AC_MSG_RESULT(${enable_experimental-no})
+AC_SUBST(USE_EXPERIMENTAL_CODE)
+
+dnl =========================
+
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile src/Makefile man/Makefile examples/Makefile src/dec/Makefile src/enc/Makefile src/libwebp.pc])

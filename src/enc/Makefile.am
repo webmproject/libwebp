@@ -5,6 +5,7 @@ libwebpencode_la_SOURCES = analysis.c bit_writer.c bit_writer.h \
                           frame.c iterator.c picture.c quant.c  \
                           syntax.c tree.c vp8enci.h webpenc.c alpha.c
 libwebpencode_la_LDFLAGS = -version-info 0:0:0 -lm
+libwebpencode_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE)
 libwebpencodeinclude_HEADERS = ../webp/encode.h ../webp/types.h
 libwebpencodeincludedir = $(includedir)/webp
 
