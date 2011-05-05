@@ -603,6 +603,8 @@ static void HelpLong(void) {
   printf("\n");
   printf("  -m <int> ............... compression method (0=fast, 6=slowest)\n");
   printf("  -segments <int> ........ number of segments to use (1..4)\n");
+  printf("  -size <int> ............ Target size (in bytes)\n");
+  printf("  -psnr <float> .......... Target PSNR (in dB. typically: 42)\n");
   printf("\n");
   printf("  -s <int> <int> ......... Input size (width x height) for YUV\n");
   printf("  -sns <int> ............. Spatial Noise Shaping (0:off, 100:max)\n");
@@ -630,8 +632,6 @@ static void HelpLong(void) {
          "times\n");
   printf("\n");
   printf("Experimental Options:\n");
-  printf("  -size <int> ............ Target size (in bytes)\n");
-  printf("  -psnr <float> .......... Target PSNR (in dB. typically: 42)\n");
   printf("  -af .................... auto-adjust filter strength.\n");
   printf("  -pre <int> ............. pre-processing filter\n");
   printf("\n");
@@ -780,8 +780,9 @@ int main(int argc, const char *argv[]) {
   }
 
   // Read the input
-  if (verbose)
+  if (verbose) {
     StopwatchReadAndReset(&stop_watch);
+  }
   if (!ReadPicture(in_file, &picture, keep_alpha)) {
     fprintf(stderr, "Error! Cannot read input picture\n");
     goto Error;
@@ -814,8 +815,9 @@ int main(int argc, const char *argv[]) {
   picture.stats = &stats;
 
   // Compress
-  if (verbose)
+  if (verbose) {
     StopwatchReadAndReset(&stop_watch);
+  }
   if (crop != 0 && !WebPPictureCrop(&picture, crop_x, crop_y, crop_w, crop_h)) {
     fprintf(stderr, "Error! Cannot crop picture\n");
     goto Error;
@@ -839,8 +841,12 @@ int main(int argc, const char *argv[]) {
   }
 
   // Write info
-  if (dump_file) DumpPicture(&picture, dump_file);
-  if (!quiet) PrintExtraInfo(&picture, short_output);
+  if (dump_file) {
+    DumpPicture(&picture, dump_file);
+  }
+  if (!quiet) {
+    PrintExtraInfo(&picture, short_output);
+  }
 
  Error:
   free(picture.extra_info);

@@ -28,7 +28,8 @@ int WebPPictureAlloc(WebPPicture* const picture) {
     const int width = picture->width;
     const int height = picture->height;
     const int y_stride = width;
-    const int uv_width = (width + 1) / 2, uv_height = (height + 1) / 2;
+    const int uv_width = (width + 1) / 2;
+    const int uv_height = (height + 1) / 2;
     const int uv_stride = uv_width;
     int uv0_stride = 0;
     int a_width, a_stride;
