@@ -672,7 +672,7 @@ int VP8StatLoop(VP8Encoder* const enc) {
   }
 
   // binary search for a size close to target
-  for (pass = 0; pass < enc->config_->pass || (dqs[pass] > 0); ++pass) {
+  for (pass = 0; pass < enc->config_->pass && (dqs[pass] > 0); ++pass) {
     const int rd_opt = 1;
     float PSNR;
     int criterion;
