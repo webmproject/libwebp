@@ -698,7 +698,7 @@ int main(int argc, const char *argv[]) {
       config.filter_strength = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-af")) {
       config.autofilter = 1;
-    } else if (!strcmp(argv[c], "-strong") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-strong")) {
       config.filter_type = 1;
     } else if (!strcmp(argv[c], "-sharpness") && c < argc - 1) {
       config.filter_sharpness = strtol(argv[++c], NULL, 0);
