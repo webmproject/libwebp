@@ -155,7 +155,8 @@ static VP8Encoder* InitEncoder(const WebPConfig* const config,
                                16 + 16 + 16 + 8 + 1 +   // left y/u/v
                                2 * ALIGN_CST)           // align all
                                * sizeof(uint8_t);
-  const size_t lf_stats_size = config->autofilter ? sizeof(LFStats) : 0;
+  const size_t lf_stats_size =
+      config->autofilter ? sizeof(LFStats) + ALIGN_CST : 0;
   VP8Encoder* enc;
   uint8_t* mem;
   size_t size = sizeof(VP8Encoder) + ALIGN_CST  // main struct
@@ -215,7 +216,7 @@ static VP8Encoder* InitEncoder(const WebPConfig* const config,
   mem += preds_w * preds_h * sizeof(uint8_t);
   enc->nz_ = 1 + (uint32_t*)mem;
   mem += nz_size;
-  enc->lf_stats_ = lf_stats_size ? (LFStats*)mem : NULL;
+  enc->lf_stats_ = lf_stats_size ? (LFStats*)DO_ALIGN(mem) : NULL;
   mem += lf_stats_size;
 
   // top samples (all 16-aligned)
