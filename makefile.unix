@@ -34,7 +34,7 @@ endif
 # EXTRA_FLAGS += -m32
 
 # Extra flags to enable experimental features and code
-# EXTRA_FLAGS += -DUSE_EXPERIMENTAL_FEATURES
+EXTRA_FLAGS += -DWEBP_EXPERIMENTAL_FEATURES
 
 # Extra flags to emulate C89 strictness with the full ANSI
 EXTRA_FLAGS += -Wextra -Wold-style-definition
