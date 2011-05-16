@@ -208,7 +208,7 @@ int WebPPictureCopy(const WebPPicture* const src, WebPPicture* const dst);
 // Returns 0 in case of memory allocation error, or if the rectangle is
 // outside of the source picture.
 int WebPPictureCrop(WebPPicture* const picture,
-                     int left, int top, int width, int height);
+                    int left, int top, int width, int height);
 
 // Rescale a picture to new dimension width x height.
 // Now gamma correction is applied.
