@@ -222,7 +222,7 @@ int WebPPictureCrop(WebPPicture* const pic,
 //-----------------------------------------------------------------------------
 // Simple picture rescaler
 
-#define RFIX 20
+#define RFIX 30
 #define MULT(x,y) (((int64_t)(x) * (y) + (1 << (RFIX - 1))) >> RFIX)
 static inline void ImportRow(const uint8_t* src, int src_width,
                              int32_t* frow, int32_t* irow, int dst_width) {
@@ -264,7 +264,7 @@ static inline void ImportRow(const uint8_t* src, int src_width,
 }
 
 static void ExportRow(int32_t* frow, int32_t* irow, uint8_t* dst, int dst_width,
-                      const int yscale, const int fxy_scale) {
+                      const int yscale, const int64_t fxy_scale) {
   int x_out;
   for (x_out = 0; x_out < dst_width; ++x_out) {
     const int frac = MULT(frow[x_out], yscale);
@@ -281,7 +281,7 @@ static void RescalePlane(const uint8_t* src,
                          int32_t* const work) {
   const int x_expand = (src_width < dst_width);
   const int fy_scale = (1 << RFIX) / dst_height;
-  const int fxy_scale = x_expand ?
+  const int64_t fxy_scale = x_expand ?
       ((int64_t)dst_height << RFIX) / (dst_width * src_height) :
       ((int64_t)dst_height << RFIX) / (src_width * src_height);
   int y_accum = src_height;
