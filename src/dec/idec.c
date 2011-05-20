@@ -429,6 +429,8 @@ WebPIDecoder* WebPINew(WEBP_CSP_MODE mode) {
   }
 
   idec->state_ = STATE_HEADER;
+
+  WebPResetDecParams(&idec->params_);
   idec->params_.mode = mode;
 
   InitMemBuffer(&idec->mem_);

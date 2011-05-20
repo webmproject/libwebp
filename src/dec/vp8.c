@@ -75,6 +75,44 @@ int VP8SetError(VP8Decoder* const dec,
 }
 
 //-----------------------------------------------------------------------------
+
+int VP8GetInfo(const uint8_t* data, uint32_t chunk_size,
+               int *width, int *height) {
+  // check signature
+  if (data[3] != 0x9d || data[4] != 0x01 || data[5] != 0x2a) {
+    return 0;         // Wrong signature.
+  } else {
+    const uint32_t bits = data[0] | (data[1] << 8) | (data[2] << 16);
+    const int key_frame = !(bits & 1);
+    const int w = ((data[7] << 8) | data[6]) & 0x3fff;
+    const int h = ((data[9] << 8) | data[8]) & 0x3fff;
+
+    if (!key_frame) {   // Not a keyframe.
+      return 0;
+    }
+
+    if (((bits >> 1) & 7) > 3) {
+      return 0;         // unknown profile
+    }
+    if (!((bits >> 4) & 1)) {
+      return 0;         // first frame is invisible!
+    }
+    if (((bits >> 5)) >= chunk_size) {  // partition_length
+      return 0;         // inconsistent size information.
+    }
+
+    if (width) {
+      *width = w;
+    }
+    if (height) {
+      *height = h;
+    }
+
+    return 1;
+  }
+}
+
+//-----------------------------------------------------------------------------
 // Header parsing
 
 static void ResetSegmentHeader(VP8SegmentHeader* const hdr) {

@@ -34,6 +34,9 @@ typedef struct {
   int external_buffer;  // If true, the output buffers are externally owned
 } WebPDecParams;
 
+// Should be called first, before any use of the WebPDecParams object.
+void WebPResetDecParams(WebPDecParams* const params);
+
 // If a RIFF container is detected, validate it and skip over it. Returns
 // VP8 bit-stream size if RIFF header is valid else returns 0
 uint32_t WebPCheckRIFFHeader(const uint8_t** data_ptr,

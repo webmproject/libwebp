@@ -414,18 +414,23 @@ int WebPCheckDecParams(const VP8Io* io, const WebPDecParams* params) {
   return ok;
 }
 
+void WebPResetDecParams(WebPDecParams* const params) {
+  assert(params);
+  memset(params, 0, sizeof(*params));
+}
+
 void WebPClearDecParams(WebPDecParams* params) {
+  assert(params);
   if (!params->external_buffer) {
     free(params->output);
   }
-  memset(params, 0, sizeof(*params));
+  WebPResetDecParams(params);
 }
 
 //-----------------------------------------------------------------------------
 // "Into" variants
 
-static uint8_t* DecodeInto(WEBP_CSP_MODE mode,
-                           const uint8_t* data, uint32_t data_size,
+static uint8_t* DecodeInto(const uint8_t* data, uint32_t data_size,
                            WebPDecParams* params) {
   VP8Decoder* dec = VP8New();
   VP8Io io;
@@ -439,7 +444,6 @@ static uint8_t* DecodeInto(WEBP_CSP_MODE mode,
   io.data = data;
   io.data_size = data_size;
 
-  params->mode = mode;
   io.opaque = params;
   WebPInitCustomIo(&io);
 
@@ -455,7 +459,7 @@ static uint8_t* DecodeInto(WEBP_CSP_MODE mode,
     return NULL;
   }
 
-  if (mode != MODE_YUV) {
+  if (params->mode != MODE_YUV) {
     VP8YUVInit();
   }
 
@@ -473,12 +477,12 @@ uint8_t* WebPDecodeRGBInto(const uint8_t* data, uint32_t data_size,
     return NULL;
   }
 
+  WebPResetDecParams(&params);
+  params.mode = MODE_RGB;
   params.output = output;
   params.stride = output_stride;
   params.output_size = output_size;
-  params.output_u_size = 0;
-  params.output_v_size = 0;
-  return DecodeInto(MODE_RGB, data, data_size, &params);
+  return DecodeInto(data, data_size, &params);
 }
 
 uint8_t* WebPDecodeRGBAInto(const uint8_t* data, uint32_t data_size,
@@ -490,12 +494,12 @@ uint8_t* WebPDecodeRGBAInto(const uint8_t* data, uint32_t data_size,
     return NULL;
   }
 
+  WebPResetDecParams(&params);
+  params.mode = MODE_RGBA;
   params.output = output;
   params.stride = output_stride;
   params.output_size = output_size;
-  params.output_u_size = 0;
-  params.output_v_size = 0;
-  return DecodeInto(MODE_RGBA, data, data_size, &params);
+  return DecodeInto(data, data_size, &params);
 }
 
 uint8_t* WebPDecodeBGRInto(const uint8_t* data, uint32_t data_size,
@@ -507,12 +511,12 @@ uint8_t* WebPDecodeBGRInto(const uint8_t* data, uint32_t data_size,
     return NULL;
   }
 
+  WebPResetDecParams(&params);
+  params.mode = MODE_BGR;
   params.output = output;
   params.stride = output_stride;
   params.output_size = output_size;
-  params.output_u_size = 0;
-  params.output_v_size = 0;
-  return DecodeInto(MODE_BGR, data, data_size, &params);
+  return DecodeInto(data, data_size, &params);
 }
 
 uint8_t* WebPDecodeBGRAInto(const uint8_t* data, uint32_t data_size,
@@ -524,12 +528,12 @@ uint8_t* WebPDecodeBGRAInto(const uint8_t* data, uint32_t data_size,
     return NULL;
   }
 
+  WebPResetDecParams(&params);
+  params.mode = MODE_BGRA;
   params.output = output;
   params.stride = output_stride;
   params.output_size = output_size;
-  params.output_u_size = 0;
-  params.output_v_size = 0;
-  return DecodeInto(MODE_BGRA, data, data_size, &params);
+  return DecodeInto(data, data_size, &params);
 }
 
 uint8_t* WebPDecodeYUVInto(const uint8_t* data, uint32_t data_size,
@@ -542,6 +546,8 @@ uint8_t* WebPDecodeYUVInto(const uint8_t* data, uint32_t data_size,
     return NULL;
   }
 
+  WebPResetDecParams(&params);
+  params.mode = MODE_YUV;
   params.output = luma;
   params.stride = luma_stride;
   params.output_size = luma_size;
@@ -551,7 +557,7 @@ uint8_t* WebPDecodeYUVInto(const uint8_t* data, uint32_t data_size,
   params.v = v;
   params.v_stride = v_stride;
   params.output_v_size = v_size;
-  return DecodeInto(MODE_YUV, data, data_size, &params);
+  return DecodeInto(data, data_size, &params);
 }
 
 //-----------------------------------------------------------------------------
@@ -562,7 +568,7 @@ static uint8_t* Decode(WEBP_CSP_MODE mode, const uint8_t* data,
   uint8_t* output;
   WebPDecParams params;
 
-  memset(&params, 0, sizeof(params));
+  WebPResetDecParams(&params);
   params.mode = mode;
   if (!WebPInitDecParams(data, data_size, width, height, &params)) {
     return NULL;
@@ -571,7 +577,7 @@ static uint8_t* Decode(WEBP_CSP_MODE mode, const uint8_t* data,
   params.output_size = params.stride * (*height);
   params.output_u_size = params.output_v_size =
     params.u_stride * ((*height + 1) / 2);
-  output = DecodeInto(mode, data, data_size, &params);
+  output = DecodeInto(data, data_size, &params);
   if (!output) {
     WebPClearDecParams(&params);
   }
@@ -631,38 +637,7 @@ int WebPGetInfo(const uint8_t* data, uint32_t data_size,
   if (data_size < 10) {
     return 0;         // not enough data
   }
-  // check signature
-  if (data[3] != 0x9d || data[4] != 0x01 || data[5] != 0x2a) {
-    return 0;         // Wrong signature.
-  } else {
-    const uint32_t bits = data[0] | (data[1] << 8) | (data[2] << 16);
-    const int key_frame = !(bits & 1);
-    const int w = ((data[7] << 8) | data[6]) & 0x3fff;
-    const int h = ((data[9] << 8) | data[8]) & 0x3fff;
-
-    if (!key_frame) {   // Not a keyframe.
-      return 0;
-    }
-
-    if (((bits >> 1) & 7) > 3) {
-      return 0;         // unknown profile
-    }
-    if (!((bits >> 4) & 1)) {
-      return 0;         // first frame is invisible!
-    }
-    if (((bits >> 5)) >= chunk_size) {  // partition_length
-      return 0;         // inconsistent size information.
-    }
-
-    if (width) {
-      *width = w;
-    }
-    if (height) {
-      *height = h;
-    }
-
-    return 1;
-  }
+  return VP8GetInfo(data, chunk_size, width, height);
 }
 
 #if defined(__cplusplus) || defined(c_plusplus)
