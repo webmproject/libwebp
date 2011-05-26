@@ -15,7 +15,16 @@ DEPS_PATH   = ../../deps
 !ENDIF
 
 !IFNDEF ARCH
+!IFDEF TARGET_CPU
+ARCH = $(TARGET_CPU)
+!ELSE
 ARCH  = x86
+!ENDIF
+!ENDIF
+
+!IF "$(TARGET_CPU)" == "x86"
+PLATFORM_LDFLAGS = /SAFESEH
+PLATFORM_SSE2 = /arch:SSE2
 !ENDIF
 
 #############################################################
@@ -25,7 +34,7 @@ MT         = mt.exe
 CCNODBG    = cl.exe /nologo /O2 /DNDEBUG
 CCDEBUG    = cl.exe /nologo /Od /Gm /Zi /D_DEBUG /RTC1
 CFLAGS     = /Isrc /nologo /W3 /EHsc /DWIN32 /FD /c /GS /D_CRT_SECURE_NO_WARNINGS
-LDFLAGS    = /LARGEADDRESSAWARE /MANIFEST /NXCOMPAT /SAFESEH /DYNAMICBASE
+LDFLAGS    = /LARGEADDRESSAWARE /MANIFEST /NXCOMPAT /DYNAMICBASE $(PLATFORM_LDFLAGS)
 CFLAGSLIB  = /DLIBWEBP_STATICLIB
 LNKDLL     = link.exe /DLL
 LNKLIB     = link.exe /lib
@@ -128,6 +137,7 @@ X_OBJS= \
 	$(DIROBJ)\enc\config.obj \
 	$(DIROBJ)\enc\cost.obj \
 	$(DIROBJ)\enc\dsp.obj \
+	$(DIROBJ)\enc\dsp_sse2.obj \
 	$(DIROBJ)\enc\frame.obj \
 	$(DIROBJ)\enc\filter.obj \
 	$(DIROBJ)\enc\iterator.obj \
@@ -179,6 +189,9 @@ $(DIRINC):
 $(DIRBIN):
 	@if not exist "$(DIRBIN)" mkdir $(DIRBIN)
 
+# Special case - compile with SSE2.
+$(DIROBJ)\enc\dsp_sse2.obj: src\enc\dsp_sse2.c
+	$(CC) $(CFLAGS) $(PLATFORM_SSE2) /Fo"$@" src\enc\dsp_sse2.c
 .SUFFIXES: .c .obj .res .exe
 {examples}.c{$(DIROBJ)\examples}.obj:
 	$(CC) $(CFLAGS) /Fo"$@"  $<

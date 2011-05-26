@@ -13,7 +13,9 @@
 #include <stdlib.h>
 #include "vp8enci.h"
 
+#ifdef WEBP_EXPERIMENTAL_FEATURES
 #include "zlib.h"
+#endif
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
