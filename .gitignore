@@ -16,3 +16,6 @@
 Makefile
 Makefile.in
 examples/[cd]webp
+/output
+*.idb
+*.pdb
