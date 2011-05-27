@@ -129,6 +129,7 @@ static inline void ITransformOne(const uint8_t* ref, const int16_t* in,
     tmp++;
   }
 }
+
 static void ITransform(const uint8_t* ref, const int16_t* in, uint8_t* dst,
                        int do_two) {
   ITransformOne(ref, in, dst);
