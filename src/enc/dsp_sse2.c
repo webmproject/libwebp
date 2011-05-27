@@ -67,7 +67,7 @@ static int CollectHistogramSSE2(const uint8_t* ref, const uint8_t* pred,
 //-----------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
 
-// Does one of two inverse transforms.
+// Does one or two inverse transforms.
 static void ITransformSSE2(const uint8_t* ref, const int16_t* in, uint8_t* dst,
                            int do_two) {
   // This implementation makes use of 16-bit fixed point versions of two
