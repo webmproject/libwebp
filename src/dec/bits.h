@@ -61,15 +61,16 @@ static inline uint32_t VP8GetByte(VP8BitReader* const br) {
 
 static inline uint32_t VP8BitUpdate(VP8BitReader* const br, uint32_t split) {
   uint32_t bit;
+  const uint32_t value_split = (split + 1) << 8;
   // Make sure we have a least 8 bits in 'value_'
   if (br->missing_ > 0) {
     br->value_ |= VP8GetByte(br) << br->missing_;
     br->missing_ -= 8;
   }
-  bit = ((br->value_ >> 8) > split);
+  bit = (br->value_ >= value_split);
   if (bit) {
     br->range_ -= split + 1;
-    br->value_ -= (split + 1) << 8;
+    br->value_ -= value_split;
   } else {
     br->range_ = split;
   }
