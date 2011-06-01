@@ -15,14 +15,17 @@ DEPS_PATH   = ../../deps
 !ENDIF
 
 !IFNDEF ARCH
-!IFDEF TARGET_CPU
-ARCH = $(TARGET_CPU)
+!IF ! [ cl 2>&1 | find "x86" > NUL ]
+ARCH = x86
+!ELSE IF ! [ cl 2>&1 | find "x64" > NUL ]
+ARCH = x64
 !ELSE
-ARCH  = x86
+!ERROR Unable to auto-detect toolchain architecture! \
+If cl.exe is in your PATH rerun nmake with ARCH=<arch>.
 !ENDIF
 !ENDIF
 
-!IF "$(TARGET_CPU)" == "x86"
+!IF "$(ARCH)" == "x86"
 PLATFORM_LDFLAGS = /SAFESEH
 PLATFORM_SSE2 = /arch:SSE2
 !ENDIF
@@ -40,7 +43,7 @@ LNKDLL     = link.exe /DLL
 LNKLIB     = link.exe /lib
 LNKEXE     = link.exe
 LFLAGS     = /nologo /machine:$(ARCH)
-CFLAGS     = $(CFLAGS)
+CFLAGS     = $(CFLAGS) $(PLATFORM_SSE2)
 
 CFGSET     = FALSE
 !IF "$(OBJDIR)" == ""
@@ -189,9 +192,6 @@ $(DIRINC):
 $(DIRBIN):
 	@if not exist "$(DIRBIN)" mkdir $(DIRBIN)
 
-# Special case - compile with SSE2.
-$(DIROBJ)\enc\dsp_sse2.obj: src\enc\dsp_sse2.c
-	$(CC) $(CFLAGS) $(PLATFORM_SSE2) /Fo"$@" src\enc\dsp_sse2.c
 .SUFFIXES: .c .obj .res .exe
 {examples}.c{$(DIROBJ)\examples}.obj:
 	$(CC) $(CFLAGS) /Fo"$@"  $<

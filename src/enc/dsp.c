@@ -685,9 +685,12 @@ static inline void GetCPUInfo(int cpu_info[4], int info_type) {
     : "=a"(cpu_info[0]), "=b"(cpu_info[1]), "=c"(cpu_info[2]), "=d"(cpu_info[3])
     : "a"(info_type));
 }
+#elif defined(_M_IX86) || defined(_M_X64) // Visual C++
+#define GetCPUInfo __cpuid
 #endif
 
-#if defined(__i386__) || defined(__x86_64__)
+#if defined(__i386__) || defined(__x86_64__) || \
+    defined(_M_IX86) || defined(_M_X64)
 static int x86CPUInfo(CPUFeature feature) {
   int cpu_info[4];
   GetCPUInfo(cpu_info, 1);
@@ -753,7 +756,8 @@ void VP8EncDspInit(void) {
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo) {
     if (VP8GetCPUInfo(kSSE2)) {
-#if defined(__SSE2__)
+#if defined(__SSE2__) || \
+    (defined(_M_IX86_FP) && _M_IX86_FP >= 2) || defined(_M_X64)
       VP8EncDspInitSSE2();
 #endif
     }
