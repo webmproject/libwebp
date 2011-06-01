@@ -84,13 +84,14 @@ CFGSET = TRUE
 # Usage
 #
 !IF "$(CFGSET)" == "FALSE"
-!MESSAGE Usage: nmake /f makefile.vc9 [CFG=<config>] [OBJDIR=<path>] [RTLIBCFG=<rtlib>] [<target>]
+!MESSAGE Usage: nmake /f Makefile.vc [CFG=<config>] [OBJDIR=<path>] [RTLIBCFG=<rtlib>] [<target>]
 !MESSAGE where <config> is one of:
 !MESSAGE -  release-static                - release static library
 !MESSAGE -  debug-static                  - debug static library
-!MESSAGE -  (empty)                       - perform a clean
+!MESSAGE <target> may be:
+!MESSAGE -  clean                         - perform a clean for CFG
 !MESSAGE
-!MESSAGE <rtlibcfg> controls the runtime library likage - can be 'static' or 'dynamic'.
+!MESSAGE <rtlibcfg> controls the runtime library linkage - can be 'static' or 'dynamic'.
 !MESSAGE <target> can be left blank in which case all is assumed
 !MESSAGE <path> is the path where you like to build (obj, bins, etc.)
 !MESSAGE   default to ..\obj\
@@ -102,21 +103,9 @@ CFGSET = TRUE
 !ENDIF
 
 #######################
-# Only the clean target can be used if a config was not provided.
+# Rules
 #
-!IF "$(CFGSET)" == "FALSE"
-!MESSAGE
-!MESSAGE No configuration provided - performing a clean.
-clean:
-	@-erase /s *.dll 2> NUL
-	@-erase /s *.exp 2> NUL
-	@-erase /s *.idb 2> NUL
-	@-erase /s *.lib 2> NUL
-	@-erase /s *.obj 2> NUL
-	@-erase /s *.pch 2> NUL
-	@-erase /s *.pdb 2> NUL
-	@-erase /s *.res 2> NUL
-!ELSE
+!IF "$(CFGSET)" == "TRUE"
 # A config was provided, so the library can be built.
 #
 
@@ -204,5 +193,15 @@ $(DIROBJ)\enc\dsp_sse2.obj: src\enc\dsp_sse2.c
 	$(LNKEXE) $(LDFLAGS) /OUT:"$@" $<  ole32.lib windowscodecs.lib shlwapi.lib $(DIRLIB)\$(TARGET)
 	$(MT) -manifest $@.manifest -outputresource:$@;1
 	del $@.manifest
+
+clean:
+	@-erase /s $(DIROBJ)\*.dll 2> NUL
+	@-erase /s $(DIROBJ)\*.exp 2> NUL
+	@-erase /s $(DIROBJ)\*.idb 2> NUL
+	@-erase /s $(DIROBJ)\*.lib 2> NUL
+	@-erase /s $(DIROBJ)\*.obj 2> NUL
+	@-erase /s $(DIROBJ)\*.pch 2> NUL
+	@-erase /s $(DIROBJ)\*.pdb 2> NUL
+	@-erase /s $(DIROBJ)\*.res 2> NUL
 
 !ENDIF  # End of case where a config was provided.
