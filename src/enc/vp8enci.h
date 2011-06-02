@@ -417,6 +417,9 @@ int VP8GetCostUV(VP8EncIterator* const it, const VP8ModeScore* const rd);
 int VP8EncLoop(VP8Encoder* const enc);
 int VP8StatLoop(VP8Encoder* const enc);
 
+  // in webpenc.c
+// Assign an error code to a picture. Return false for convenience.
+int WebPEncodingSetError(WebPPicture* const pic, WebPEncodingError error);
   // in analysis.c
 // Compute susceptibility based on DCT-coeff histograms:
 // the higher, the "easier" the macroblock is to compress.

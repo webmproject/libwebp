@@ -39,21 +39,22 @@ static void PutLE32(uint8_t* const data, uint32_t val) {
 }
 
 static int PutHeader(int profile, size_t size0, size_t total_size,
-                     const WebPPicture* const pic) {
+                     WebPPicture* const pic) {
   uint8_t buf[KHEADER_SIZE];
   uint8_t RIFF[KRIFF_SIZE] = {
     'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 'B', 'P', 'V', 'P', '8', ' '
   };
   uint32_t bits;
 
-  if (size0 >= MAX_PARTITION0_SIZE) {
-    return 0;   // partition #0 is too big to fit
+  if (size0 >= MAX_PARTITION0_SIZE) {  // partition #0 is too big to fit
+    return WebPEncodingSetError(pic, VP8_ENC_ERROR_PARTITION0_OVERFLOW);
   }
 
   PutLE32(RIFF + 4, total_size + KSIZE_OFFSET);
   PutLE32(RIFF + 16, total_size);
-  if (!pic->writer(RIFF, sizeof(RIFF), pic))
-    return 0;
+  if (!pic->writer(RIFF, sizeof(RIFF), pic)) {
+    return WebPEncodingSetError(pic, VP8_ENC_ERROR_BAD_WRITE);
+  }
 
   bits = 0               // keyframe (1b)
        | (profile << 1)  // profile (3b)
@@ -138,13 +139,13 @@ static void PutQuant(VP8BitWriter* const bw,
 
 // Partition sizes
 static int EmitPartitionsSize(const VP8Encoder* const enc,
-                              const WebPPicture* const pic) {
+                              WebPPicture* const pic) {
   uint8_t buf[3 * (MAX_NUM_PARTITIONS - 1)];
   int p;
   for (p = 0; p < enc->num_parts_ - 1; ++p) {
     const size_t part_size = VP8BitWriterSize(enc->parts_ + p);
     if (part_size >= MAX_PARTITION_SIZE) {
-      return 0;     // partition is too big to fit
+      return WebPEncodingSetError(pic, VP8_ENC_ERROR_PARTITION_OVERFLOW);
     }
     buf[3 * p + 0] = (part_size >>  0) & 0xff;
     buf[3 * p + 1] = (part_size >>  8) & 0xff;
@@ -167,6 +168,7 @@ static int WriteExtensions(VP8Encoder* const enc) {
   const int kTrailerSize = 8;
   uint8_t buffer[kTrailerSize];
   VP8BitWriter* const bw = &enc->bw_;
+  WebPPicture* const pic = enc->pic_;
 
   // Layer (bytes 0..3)
   PutLE24(buffer + 0, enc->layer_data_size_);
@@ -176,7 +178,7 @@ static int WriteExtensions(VP8Encoder* const enc) {
     // append layer data to last partition
     if (!VP8BitWriterAppend(&enc->parts_[enc->num_parts_ - 1],
                             enc->layer_data_, enc->layer_data_size_)) {
-      return 0;
+      return WebPEncodingSetError(pic, VP8_ENC_ERROR_BITSTREAM_OUT_OF_MEMORY);
     }
   }
   // Alpha (bytes 4..6)
@@ -184,17 +186,18 @@ static int WriteExtensions(VP8Encoder* const enc) {
   if (enc->alpha_data_size_ > 0) {
     assert(enc->has_alpha_);
     if (!VP8BitWriterAppend(bw, enc->alpha_data_, enc->alpha_data_size_)) {
-      return 0;
+      return WebPEncodingSetError(pic, VP8_ENC_ERROR_BITSTREAM_OUT_OF_MEMORY);
     }
   }
 
   buffer[kTrailerSize - 1] = 0x01;  // marker
   if (!VP8BitWriterAppend(bw, buffer, kTrailerSize)) {
-    return 0;
+    return WebPEncodingSetError(pic, VP8_ENC_ERROR_BITSTREAM_OUT_OF_MEMORY);
   }
   return 1;
 }
-#endif
+
+#endif    /* WEBP_EXPERIMENTAL_FEATURES */
 
 //-----------------------------------------------------------------------------
 

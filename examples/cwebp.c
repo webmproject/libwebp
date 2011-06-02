@@ -638,6 +638,21 @@ static void HelpLong(void) {
 }
 
 //-----------------------------------------------------------------------------
+// Error messages
+
+static const char* const kErrorMessages[] = {
+  "OK",
+  "OUT_OF_MEMORY: Out of memory allocating objects",
+  "BITSTREAM_OUT_OF_MEMORY: Out of memory re-allocating byte buffer",
+  "NULL_PARAMETER: NULL parameter passed to function",
+  "INVALID_CONFIGURATION: configuration is invalid",
+  "BAD_DIMENSION: Bad picture dimension",
+  "PARTITION0_OVERFLOW: Partition #0 is too big to fit 512k",
+  "PARTITION_OVERFLOW: Partition is too big to fir 16M",
+  "BAD_WRITE: Picture writer returned an error"
+};
+
+//-----------------------------------------------------------------------------
 
 int main(int argc, const char *argv[]) {
   const char *in_file = NULL, *out_file = NULL, *dump_file = NULL;
@@ -833,6 +848,8 @@ int main(int argc, const char *argv[]) {
   }
   if (!WebPEncode(&config, &picture)) {
     fprintf(stderr, "Error! Cannot encode picture as WebP\n");
+    fprintf(stderr, "Error code: %d (%s)\n",
+            picture.error_code, kErrorMessages[picture.error_code]);
     goto Error;
   }
   if (verbose) {

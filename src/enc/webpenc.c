@@ -9,6 +9,7 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -53,6 +54,7 @@ int WebPPictureInitInternal(WebPPicture* const picture, int version) {
   if (picture) {
     memset(picture, 0, sizeof(*picture));
     picture->writer = DummyWriter;
+    WebPEncodingSetError(picture, VP8_ENC_OK);
   }
   return 1;
 }
@@ -194,7 +196,10 @@ static VP8Encoder* InitEncoder(const WebPConfig* const config,
   printf("===================================\n");
 #endif
   mem = (uint8_t*)malloc(size);
-  if (mem == NULL) return NULL;
+  if (mem == NULL) {
+    WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
+    return NULL;
+  }
   enc = (VP8Encoder*)mem;
   mem = (uint8_t*)DO_ALIGN(mem + sizeof(*enc));
   memset(enc, 0, sizeof(*enc));
@@ -296,25 +301,35 @@ static void StoreStats(VP8Encoder* const enc) {
   }
 }
 
+int WebPEncodingSetError(WebPPicture* const pic, WebPEncodingError error) {
+  assert((int)error <= VP8_ENC_ERROR_BAD_WRITE);
+  assert((int)error >= VP8_ENC_OK);
+  pic->error_code = error;
+  return 0;
+}
+
 //-----------------------------------------------------------------------------
 
 int WebPEncode(const WebPConfig* const config, WebPPicture* const pic) {
   VP8Encoder* enc;
   int ok;
 
-  if (config == NULL || pic == NULL)
-    return 0;   // bad params
+  if (pic == NULL)
+    return 0;
+  WebPEncodingSetError(pic, VP8_ENC_OK);  // all ok so far
+  if (config == NULL)  // bad params
+    return WebPEncodingSetError(pic, VP8_ENC_ERROR_NULL_PARAMETER);
   if (!WebPValidateConfig(config))
-    return 0;   // invalid config.
+    return WebPEncodingSetError(pic, VP8_ENC_ERROR_INVALID_CONFIGURATION);
   if (pic->width <= 0 || pic->height <= 0)
-    return 0;   // invalid parameters
+    return WebPEncodingSetError(pic, VP8_ENC_ERROR_BAD_DIMENSION);
   if (pic->y == NULL || pic->u == NULL || pic->v == NULL)
-    return 0;   // invalid parameters
+    return WebPEncodingSetError(pic, VP8_ENC_ERROR_NULL_PARAMETER);
   if (pic->width >= MAX_DIMENSION || pic->height >= MAX_DIMENSION)
-    return 0;   // image is too big
+    return WebPEncodingSetError(pic, VP8_ENC_ERROR_BAD_DIMENSION);
 
   enc = InitEncoder(config, pic);
-  if (enc == NULL) return 0;
+  if (enc == NULL) return 0;  // pic->error is already set.
   ok = VP8EncAnalyze(enc)
     && VP8StatLoop(enc)
     && VP8EncLoop(enc)
@@ -325,6 +340,7 @@ int WebPEncode(const WebPConfig* const config, WebPPicture* const pic) {
     && VP8EncWrite(enc);
   StoreStats(enc);
   DeleteEncoder(enc);
+
   return ok;
 }
 

@@ -146,6 +146,19 @@ typedef enum {
   WEBP_CSP_ALPHA_BIT = 4   // bit that is set if alpha is present
 } WebPEncCSP;
 
+// Encoding error conditions.
+typedef enum {
+  VP8_ENC_OK = 0,
+  VP8_ENC_ERROR_OUT_OF_MEMORY,            // memory error allocating objects
+  VP8_ENC_ERROR_BITSTREAM_OUT_OF_MEMORY,  // memory error while flushing bits
+  VP8_ENC_ERROR_NULL_PARAMETER,           // a pointer parameter is NULL
+  VP8_ENC_ERROR_INVALID_CONFIGURATION,    // configuration is invalid
+  VP8_ENC_ERROR_BAD_DIMENSION,            // picture has invalid width/height
+  VP8_ENC_ERROR_PARTITION0_OVERFLOW,      // partition is too bigger than 16M
+  VP8_ENC_ERROR_PARTITION_OVERFLOW,       // partition is too bigger than 512k
+  VP8_ENC_ERROR_BAD_WRITE,                // error while flushing bytes
+} WebPEncodingError;
+
 struct WebPPicture {
   // input
   WebPEncCSP colorspace;     // colorspace: should be YUV420 for now (=Y'CbCr).
@@ -175,6 +188,8 @@ struct WebPPicture {
   // original samples (for non-YUV420 modes)
   uint8_t *u0, *v0;
   int uv0_stride;
+
+  WebPEncodingError error_code;   // error code in case of problem.
 };
 
 // Internal, version-checked, entry point
@@ -238,6 +253,7 @@ int WebPPictureImportBGRA(WebPPicture* const picture,
 // 'picture' must be less than 16384x16384 in dimension, and the 'config' object
 // must be a valid one.
 // Returns false in case of error, true otherwise.
+// In case of error, picture->error_code is updated accordingly.
 int WebPEncode(const WebPConfig* const config, WebPPicture* const picture);
 
 //-----------------------------------------------------------------------------
