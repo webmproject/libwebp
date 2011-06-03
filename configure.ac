@@ -10,7 +10,12 @@ AC_SUBST([pkgconfigdir])
 
 dnl === Check libz is present
 
-AC_CHECK_LIB(z, gzsetparams, [AC_CHECK_HEADER(zlib.h,,)], [AC_MSG_ERROR(zlib library not found)])
+if test "$enable_experimental" = "yes"; then
+  AC_CHECK_HEADER(zlib.h,
+    AC_CHECK_LIB(z, gzsetparams,,AC_MSG_ERROR(zlib library not found)),
+    AC_MSG_ERROR(zlib not available - no zlib.h)
+  )
+fi
 
 dnl === check for PNG support ===
 
