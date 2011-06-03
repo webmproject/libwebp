@@ -27,7 +27,6 @@ If cl.exe is in your PATH rerun nmake with ARCH=<arch>.
 
 !IF "$(ARCH)" == "x86"
 PLATFORM_LDFLAGS = /SAFESEH
-PLATFORM_SSE2 = /arch:SSE2
 !ENDIF
 
 #############################################################
@@ -43,7 +42,6 @@ LNKDLL     = link.exe /DLL
 LNKLIB     = link.exe /lib
 LNKEXE     = link.exe
 LFLAGS     = /nologo /machine:$(ARCH)
-CFLAGS     = $(CFLAGS) $(PLATFORM_SSE2)
 
 CFGSET     = FALSE
 !IF "$(OBJDIR)" == ""

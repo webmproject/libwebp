@@ -9,8 +9,7 @@
 //
 // Author: Christian Duvivier (cduvivier@google.com)
 
-#if defined(__SSE2__) || \
-    (defined(_M_IX86_FP) && _M_IX86_FP >= 2) || defined(_M_X64)
+#if defined(__SSE2__) || defined(_MSC_VER)
 #include <emmintrin.h>
 
 #include "vp8enci.h"
