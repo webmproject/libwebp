@@ -14,6 +14,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifdef WEBP_HAVE_PNG
 #include <png.h>
 #endif
@@ -23,7 +27,10 @@
 #include <jpeglib.h>
 #endif
 
-#ifdef _WIN32
+#ifdef HAVE_WINCODEC_H
+#ifdef __MINGW32__
+#define INITGUID  // Without this GUIDs are declared extern and fail to link
+#endif
 #define CINTERFACE
 #define COBJMACROS
 #define _WIN32_IE 0x500  // Workaround bug in shlwapi.h when compiling C++
@@ -31,7 +38,13 @@
 #include <shlwapi.h>
 #include <windows.h>
 #include <wincodec.h>
+
+#ifndef GUID_WICPixelFormat24bppRGB
+// From Microsoft SDK 7.0a
+DEFINE_GUID(GUID_WICPixelFormat24bppRGB,
+    0x6fddc324, 0x4e03, 0x4bfe, 0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0d);
 #endif
+#endif  /* HAVE_WINCODEC_H */
 
 
 #include "webp/encode.h"
@@ -69,7 +82,7 @@ static int ReadYUV(FILE* in_file, WebPPicture* const pic) {
   return ok;
 }
 
-#ifdef _WIN32
+#ifdef HAVE_WINCODEC_H
 
 #define IFS(fn)                \
   do {                         \
@@ -183,7 +196,7 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
   return ok;
 }
 
-#else  // !_WIN32
+#else  // !HAVE_WINCODEC_H
 
 #ifdef WEBP_HAVE_JPEG
 struct my_error_mgr {
@@ -425,7 +438,7 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
   return ok;
 }
 
-#endif  // !_WIN32
+#endif  // !HAVE_WINCODEC_H
 
 static void AllocExtraInfo(WebPPicture* const pic) {
   const int mb_w = (pic->width + 15) / 16;
@@ -589,7 +602,7 @@ static void HelpLong(void) {
   printf(" cwebp [-preset <...>] [options] in_file [-o out_file]\n\n");
   printf("If input size (-s) for an image is not specified, "
          "it is assumed to be a PNG or JPEG file.\n");
-#ifdef _WIN32
+#ifdef HAVE_WINCODEC_H
   printf("Windows builds can take as input any of the files handled by WIC\n");
 #endif
   printf("options:\n");

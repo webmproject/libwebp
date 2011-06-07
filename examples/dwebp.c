@@ -17,11 +17,18 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifdef WEBP_HAVE_PNG
 #include <png.h>
 #endif
 
-#ifdef _WIN32
+#ifdef HAVE_WINCODEC_H
+#ifdef __MINGW32__
+#define INITGUID  // Without this GUIDs are declared extern and fail to link
+#endif
 #define CINTERFACE
 #define COBJMACROS
 #define _WIN32_IE 0x500  // Workaround bug in shlwapi.h when compiling C++
@@ -42,7 +49,7 @@ extern "C" {
 
 static int verbose = 0;
 
-#ifdef _WIN32
+#ifdef HAVE_WINCODEC_H
 
 #define IFS(fn)                \
   do {                         \
@@ -116,7 +123,7 @@ static int WritePNG(const char* out_file_name, unsigned char* rgb, int stride,
              height));
 }
 
-#elif defined(WEBP_HAVE_PNG)    // !WIN32
+#elif defined(WEBP_HAVE_PNG)    // !HAVE_WINCODEC_H
 static void PNGAPI error_function(png_structp png, png_const_charp dummy) {
   (void)dummy;  // remove variable-unused warning
   longjmp(png_jmpbuf(png), 1);
@@ -156,7 +163,7 @@ static int WritePNG(FILE* out_file, unsigned char* rgb, int stride,
   png_destroy_write_struct(&png, &info);
   return 1;
 }
-#else    // !WIN32 && !WEBP_HAVE_PNG
+#else    // !HAVE_WINCODEC_H && !WEBP_HAVE_PNG
 
 typedef uint32_t png_uint_32;
 
@@ -359,7 +366,7 @@ int main(int argc, const char *argv[]) {
     if (!needs_open_file || fout) {
       int ok = 1;
       if (format == PNG) {
-#ifdef _WIN32
+#ifdef HAVE_WINCODEC_H
         ok &= WritePNG(out_file, out, stride, width, height, has_alpha);
 #else
         ok &= WritePNG(fout, out, stride, width, height, has_alpha);
