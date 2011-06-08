@@ -494,7 +494,8 @@ static int GetCoeffs(VP8BitReader* const br, ProbaArray prob,
             if (!VP8GetBit(br, p[7])) {
               v = 5 + VP8GetBit(br, 159);
             } else {
-              v = 7 + 2 * VP8GetBit(br, 165) + VP8GetBit(br, 145);
+              v = 7 + 2 * VP8GetBit(br, 165);
+              v += VP8GetBit(br, 145);
             }
           } else {
             const uint8_t* tab;
