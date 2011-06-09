@@ -21,8 +21,12 @@ extern "C" {
 //-----------------------------------------------------------------------------
 // Memory setup
 
-// how many extra luma lines are needed for caching, given a filtering level
-static const uint8_t kFilterExtraRows[3] = { 0, 4, 8 };
+// kFilterExtraRows[] = How many extra lines are needed on the MB boundary
+// for caching, given a filtering level.
+// Simple filter:  up to 2 luma samples are read and 1 is written.
+// Complex filter: up to 4 luma samples are read and 3 are written. Same for
+//                 U/V, so it's 8 samples total (because of the 2x upsampling).
+static const uint8_t kFilterExtraRows[3] = { 0, 2, 8 };
 
 int VP8InitFrame(VP8Decoder* const dec, VP8Io* io) {
   const int mb_w = dec->mb_w_;
