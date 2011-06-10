@@ -492,7 +492,7 @@ typedef enum {
 } CPUFeature;
 // returns true if the CPU supports the feature.
 typedef int (*VP8CPUInfo)(CPUFeature feature);
-extern VP8CPUInfo VP8GetCPUInfo;
+extern VP8CPUInfo VP8EncGetCPUInfo;
 
 void VP8EncDspInit(void);   // must be called before using any of the above
 

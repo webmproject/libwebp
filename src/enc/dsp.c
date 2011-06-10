@@ -701,9 +701,9 @@ static int x86CPUInfo(CPUFeature feature) {
   }
   return 0;
 }
-VP8CPUInfo VP8GetCPUInfo = x86CPUInfo;
+VP8CPUInfo VP8EncGetCPUInfo = x86CPUInfo;
 #else
-VP8CPUInfo VP8GetCPUInfo = NULL;
+VP8CPUInfo VP8EncGetCPUInfo = NULL;
 #endif
 
 // Speed-critical function pointers. We have to initialize them to the default
@@ -753,13 +753,13 @@ void VP8EncDspInit(void) {
   VP8Copy16x16 = Copy16x16;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
-  if (VP8GetCPUInfo) {
-    if (VP8GetCPUInfo(kSSE2)) {
+  if (VP8EncGetCPUInfo) {
+    if (VP8EncGetCPUInfo(kSSE2)) {
 #if defined(__SSE2__) || defined(_MSC_VER)
       VP8EncDspInitSSE2();
 #endif
     }
-    if (VP8GetCPUInfo(kSSE3)) {
+    if (VP8EncGetCPUInfo(kSSE3)) {
       // later we'll plug some SSE3 variant here
     }
   }

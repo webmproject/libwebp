@@ -337,6 +337,14 @@ extern VP8LumaFilterFunc VP8HFilter16i;
 extern VP8ChromaFilterFunc VP8VFilter8i;  // filtering u and v altogether
 extern VP8ChromaFilterFunc VP8HFilter8i;
 
+typedef enum {
+  kSSE2,
+  kSSE3
+} CPUFeature;
+// returns true if the CPU supports the feature.
+typedef int (*VP8CPUInfo)(CPUFeature feature);
+extern VP8CPUInfo VP8DecGetCPUInfo;
+
 //-----------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)

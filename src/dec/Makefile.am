@@ -1,6 +1,6 @@
 AM_CPPFLAGS = -I$(top_srcdir)/src
 
-libwebpdecode_la_SOURCES = bits.h vp8i.h yuv.h bits.c dsp.c frame.c \
+libwebpdecode_la_SOURCES = bits.h vp8i.h yuv.h bits.c dsp.c dsp_sse2.c frame.c \
                           quant.c tree.c vp8.c webp.c yuv.c idec.c alpha.c \
                           layer.c
 libwebpdecode_la_LDFLAGS = -version-info 0:0:0

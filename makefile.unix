@@ -54,9 +54,9 @@ OBJS = src/enc/webpenc.o src/enc/bit_writer.o src/enc/syntax.o \
        src/enc/quant.o src/enc/iterator.o src/enc/analysis.o \
        src/enc/cost.o src/enc/picture.o src/enc/filter.o \
        src/enc/layer.o \
-       src/dec/bits.o src/dec/dsp.o src/dec/frame.o src/dec/webp.o \
-       src/dec/quant.o src/dec/tree.o src/dec/vp8.o src/dec/yuv.o \
-       src/dec/idec.o src/dec/alpha.o src/dec/layer.o
+       src/dec/bits.o src/dec/dsp.o src/dec/dsp_sse2.o src/dec/frame.o \
+       src/dec/webp.o src/dec/quant.o src/dec/tree.o src/dec/vp8.o \
+       src/dec/yuv.o  src/dec/idec.o src/dec/alpha.o src/dec/layer.o
 HDRS = src/webp/encode.h src/enc/vp8enci.h src/enc/bit_writer.h \
        src/enc/cost.h src/dec/bits.h  src/dec/vp8i.h src/dec/yuv.h
 OUTPUT = examples/cwebp examples/dwebp src/libwebp.a

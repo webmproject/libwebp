@@ -40,6 +40,8 @@ extern "C" {
 
 //-----------------------------------------------------------------------------
 
+extern void* VP8DecGetCPUInfo;   // opaque forward declaration.
+
 static int verbose = 0;
 
 #ifdef _WIN32
@@ -233,6 +235,7 @@ static void Help(void) {
          "        file with IMC4 layout.\n"
          " -version: print version number and exit.\n"
          "Use -v for verbose (e.g. print encoding/decoding times)\n"
+         "Use -noasm to disable all assembly optimizations.\n"
         );
 }
 
@@ -265,6 +268,8 @@ int main(int argc, const char *argv[]) {
       format = PGM;
     } else if (!strcmp(argv[c], "-v")) {
       verbose = 1;
+    } else if (!strcmp(argv[c], "-noasm")) {
+      VP8DecGetCPUInfo = NULL;
     } else if (argv[c][0] == '-') {
       printf("Unknown option '%s'\n", argv[c]);
       Help();

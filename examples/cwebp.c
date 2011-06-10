@@ -36,7 +36,7 @@
 
 #include "webp/encode.h"
 #include "stopwatch.h"
-extern void* VP8GetCPUInfo;   // opaque forward declaration.
+extern void* VP8EncGetCPUInfo;   // opaque forward declaration.
 
 //-----------------------------------------------------------------------------
 
@@ -747,7 +747,7 @@ int main(int argc, const char *argv[]) {
       resize_w = strtol(argv[++c], NULL, 0);
       resize_h = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-noasm")) {
-      VP8GetCPUInfo = NULL;
+      VP8EncGetCPUInfo = NULL;
     } else if (!strcmp(argv[c], "-version")) {
       const int version = WebPGetEncoderVersion();
       printf("%d.%d.%d\n",
