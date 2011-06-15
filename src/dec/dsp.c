@@ -103,10 +103,10 @@ static void Transform(const int16_t* in, uint8_t* dst) {
 #undef MUL
 
 static void TransformUV(const int16_t* in, uint8_t* dst) {
-  Transform(in + 0 * 16, dst);
-  Transform(in + 1 * 16, dst + 4);
-  Transform(in + 2 * 16, dst + 4 * BPS);
-  Transform(in + 3 * 16, dst + 4 * BPS + 4);
+  VP8Transform(in + 0 * 16, dst);
+  VP8Transform(in + 1 * 16, dst + 4);
+  VP8Transform(in + 2 * 16, dst + 4 * BPS);
+  VP8Transform(in + 3 * 16, dst + 4 * BPS + 4);
 }
 
 static void TransformDC(const int16_t *in, uint8_t* dst) {
