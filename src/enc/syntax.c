@@ -158,6 +158,8 @@ static int EmitPartitionsSize(const VP8Encoder* const enc,
 
 #ifdef WEBP_EXPERIMENTAL_FEATURES
 
+#define KTRAILER_SIZE 8
+
 static void PutLE24(uint8_t* buf, size_t value) {
   buf[0] = (value >>  0) & 0xff;
   buf[1] = (value >>  8) & 0xff;
@@ -165,8 +167,7 @@ static void PutLE24(uint8_t* buf, size_t value) {
 }
 
 static int WriteExtensions(VP8Encoder* const enc) {
-  const int kTrailerSize = 8;
-  uint8_t buffer[kTrailerSize];
+  uint8_t buffer[KTRAILER_SIZE];
   VP8BitWriter* const bw = &enc->bw_;
   WebPPicture* const pic = enc->pic_;
 
@@ -190,8 +191,8 @@ static int WriteExtensions(VP8Encoder* const enc) {
     }
   }
 
-  buffer[kTrailerSize - 1] = 0x01;  // marker
-  if (!VP8BitWriterAppend(bw, buffer, kTrailerSize)) {
+  buffer[KTRAILER_SIZE - 1] = 0x01;  // marker
+  if (!VP8BitWriterAppend(bw, buffer, KTRAILER_SIZE)) {
     return WebPEncodingSetError(pic, VP8_ENC_ERROR_BITSTREAM_OUT_OF_MEMORY);
   }
   return 1;

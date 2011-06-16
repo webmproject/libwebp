@@ -23,6 +23,8 @@ extern "C" {
 
 #ifdef WEBP_EXPERIMENTAL_FEATURES
 
+#define CHUNK_SIZE 8192
+
 //-----------------------------------------------------------------------------
 
 static int CompressAlpha(const uint8_t* data, size_t data_size,
@@ -30,7 +32,6 @@ static int CompressAlpha(const uint8_t* data, size_t data_size,
                          int algo) {
   int ret = Z_OK;
   z_stream strm;
-  const int CHUNK_SIZE = 8192;
   unsigned char chunk[CHUNK_SIZE];
 
   *output = NULL;
