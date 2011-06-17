@@ -21,33 +21,18 @@
 %include "constraints.i"
 %include "typemaps.i"
 
+#ifdef SWIGJAVA
+%include "arrays_java.i";
+%include "enums.swg" /*NB: requires JDK-1.5+
+                       See: http://www.swig.org/Doc1.3/Java.html#enumerations */
+
+// map uint8_t* such that a byte[] is used
+// this will generate a few spurious warnings in the wrapper code
+%apply signed char[] { uint8_t * }
+#endif  /* SWIGJAVA */
+
 //------------------------------------------------------------------------------
 // Decoder specific
-
-%ignore WEBP_WEBP_DECODE_H_;
-// FIXME for these to be available returned_buffer_size() would need to be
-// made more intelligent.
-%ignore WebPDecodeRGBInto;
-%ignore WebPDecodeYUV;
-%ignore WebPDecodeRGBAInto;
-%ignore WebPDecodeBGRInto;
-%ignore WebPDecodeBGRAInto;
-%ignore WebPDecodeYUVInto;
-
-// incremental decoding
-%ignore WEBP_CSP_MODE;
-%ignore VP8StatusCode;
-%ignore WebPIDecGetYUV;
-%ignore WebPINew;
-%ignore WebPIDecoder;
-%ignore WebPIAppend;
-%ignore WebPIDecGetRGB;
-%ignore WebPIDelete;
-%ignore WebPINewRGB;
-%ignore WebPINewYUV;
-%ignore WebPIUpdate;
-%ignore WebPInitCustomIo;
-%ignore WebPInitDecParams;
 
 %apply int *OUTPUT { int *width, int *height }
 %apply int { uint32_t data_size }
@@ -61,34 +46,27 @@
 %newobject WebPDecodeBGRA;
 %typemap(newfree) uint8_t* "free($1);"
 
+int WebPGetDecoderVersion(void);
+int WebPGetInfo(const uint8_t* data, uint32_t data_size,
+                int *width, int *height);
+
+uint8_t* WebPDecodeRGB(const uint8_t* data, uint32_t data_size,
+                       int *width, int *height);
+uint8_t* WebPDecodeRGBA(const uint8_t* data, uint32_t data_size,
+                        int *width, int *height);
+uint8_t* WebPDecodeBGR(const uint8_t* data, uint32_t data_size,
+                       int *width, int *height);
+uint8_t* WebPDecodeBGRA(const uint8_t* data, uint32_t data_size,
+                        int *width, int *height);
+
 //------------------------------------------------------------------------------
 // Encoder specific
 
 int WebPGetEncoderVersion(void);
 
-#ifdef SWIGJAVA
-%include "arrays_java.i";
-%include "enums.swg" /*NB: requires JDK-1.5+
-                       See: http://www.swig.org/Doc1.3/Java.html#enumerations */
+//------------------------------------------------------------------------------
+// Wrapper code additions
 
-// map uint8_t* such that a byte[] is used
-// this will generate a few spurious warnings in the wrapper code
-%apply signed char[] { uint8_t * }
-
-%{
-/* Work around broken gcj jni.h */
-#ifdef __GCJ_JNI_H__
-# undef JNIEXPORT
-# define JNIEXPORT
-# undef JNICALL
-# define JNICALL
-#endif
-%}
-#endif
-
-/*
- * Wrapper code additions
- */
 %{
 #include "webp/decode.h"
 #include "webp/encode.h"
@@ -158,6 +136,14 @@ static uint8_t* encode(const uint8_t* rgb,
 %newobject wrap_WebPEncodeRGBA;
 %newobject wrap_WebPEncodeBGRA;
 
+#ifdef SWIGJAVA
+// There's no reason to call these directly
+%javamethodmodifiers wrap_WebPEncodeRGB "private";
+%javamethodmodifiers wrap_WebPEncodeBGR "private";
+%javamethodmodifiers wrap_WebPEncodeRGBA "private";
+%javamethodmodifiers wrap_WebPEncodeBGRA "private";
+#endif  /* SWIGJAVA */
+
 %inline %{
 // Changes the return type of WebPEncode* to more closely match Decode*.
 // This also makes it easier to wrap the output buffer in a native type rather
@@ -193,12 +179,19 @@ static uint8_t* wrap_WebPEncodeBGRA(
 }
 %}
 
+//------------------------------------------------------------------------------
+// Language specific
+
 #ifdef SWIGJAVA
-// There's no reason to call these directly
-%javamethodmodifiers wrap_WebPEncodeRGB "private";
-%javamethodmodifiers wrap_WebPEncodeBGR "private";
-%javamethodmodifiers wrap_WebPEncodeRGBA "private";
-%javamethodmodifiers wrap_WebPEncodeBGRA "private";
+%{
+/* Work around broken gcj jni.h */
+#ifdef __GCJ_JNI_H__
+# undef JNIEXPORT
+# define JNIEXPORT
+# undef JNICALL
+# define JNICALL
+#endif
+%}
 
 %pragma(java) modulecode=%{
   private static final int UNUSED = 1;
@@ -233,6 +226,3 @@ static uint8_t* wrap_WebPEncodeBGRA(
   }
 %}
 #endif  /* SWIGJAVA */
-
-// All functions, constants, etc. not named above in %ignore will be wrapped
-%include "webp/decode.h"
