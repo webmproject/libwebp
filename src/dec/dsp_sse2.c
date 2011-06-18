@@ -207,75 +207,86 @@ static void TransformSSE2(const int16_t* in, uint8_t* dst) {
 }
 
 //-----------------------------------------------------------------------------
-// Simple In-loop filtering (Paragraph 15.2)
+// Loop Filter (Paragraph 15)
 
-static inline void SignedShift3(__m128i* a) {
-  __m128i t1 = *a;
-  // Shift the lower byte of 16 bit by 3 while preserving the sign bit
-  t1 = _mm_slli_epi16(t1, 8);
-  t1 = _mm_srai_epi16(t1, 3);
-  t1 = _mm_srli_epi16(t1, 8);
+// Compute abs(p - q) = subs(p - q) OR subs(q - p)
+#define MM_ABS(p, q)  _mm_or_si128(                                     \
+  _mm_subs_epu8(*(q), *(p)),                                            \
+  _mm_subs_epu8(*(p), *(q)))
 
-  // Shift the upper byte of 16 bit by 3 while preserving the sign bit
-  *a = _mm_srai_epi16(*a, 11);
-  *a = _mm_slli_epi16(*a, 8);
-
-  *a = _mm_or_si128(t1, *a);       // put the two together
+// Shift each byte of "a" by N bits while preserving by the sign bit.
+//
+// It first shifts the lower bytes of the words and then the upper bytes and
+// then merges the results together.
+#define SIGNED_SHIFT_N(a, N) {                                          \
+  __m128i t = a;                                                        \
+  t = _mm_slli_epi16(t, 8);                                             \
+  t = _mm_srai_epi16(t, N);                                             \
+  t = _mm_srli_epi16(t, 8);                                             \
+                                                                        \
+  a = _mm_srai_epi16(a, N + 8);                                         \
+  a = _mm_slli_epi16(a, 8);                                             \
+                                                                        \
+  a = _mm_or_si128(t, a);                                               \
 }
 
-// 4 columns in, 2 columns out
-static void DoFilter2SSE2(__m128i p1, __m128i p0, __m128i q0, __m128i q1,
-                          int thresh, __m128i* op, __m128i* oq) {
-  __m128i t1, t2, t3;
-  __m128i mask = _mm_setzero_si128();
 
-  const __m128i one = _mm_set1_epi8(1);
-  const __m128i four = _mm_set1_epi8(4);
-  const __m128i lsb_mask = _mm_set1_epi8(0xFE);
-  const __m128i sign_bit = _mm_set1_epi8(0x80);
+static void NeedsFilter(const __m128i* p1, const __m128i* p0, const __m128i* q0,
+                        const __m128i* q1, int thresh, __m128i *mask) {
+  __m128i t1, t2;
 
-  // Calculate mask
-  t3 = _mm_subs_epu8(q1, p1);        // (q1 - p1)
-  t1 = _mm_subs_epu8(p1, q1);        // (p1 - q1)
-  t1 = _mm_or_si128(t1, t3);         // abs(p1 - q1)
-  t1 = _mm_and_si128(t1, lsb_mask);  // set lsb of each byte to zero
+  t1 = MM_ABS(p1, q1);               // abs(p1 - q1)
+  t2 = _mm_set1_epi8(0xFE);
+  t1 = _mm_and_si128(t1, t2);        // set lsb of each byte to zero
   t1 = _mm_srli_epi16(t1, 1);        // abs(p1 - q1) / 2
 
-  t3 = _mm_subs_epu8(p0, q0);        // (p0 - q0)
-  t2 = _mm_subs_epu8(q0, p0);        // (q0 - p0)
-  t2 = _mm_or_si128(t2, t3);         // abs(p0 - q0)
+  t2 = MM_ABS(p0, q0);
   t2 = _mm_adds_epu8(t2, t2);        // abs(p0 - q0) * 2
   t2 = _mm_adds_epu8(t2, t1);        // abs(p0 - q0) * 2 + abs(p1 - q1) / 2
 
-  t3 = _mm_set1_epi8(thresh);
-  t2 = _mm_subs_epu8(t2, t3);  // abs(p0 - q0) * 2 + abs(p1 - q1) / 2 > thresh
-  mask = _mm_cmpeq_epi8(t2, mask);
+  t1 = _mm_set1_epi8(thresh);
+  t2 = _mm_subs_epu8(t2, t1);  // abs(p0 - q0) * 2 + abs(p1 - q1) / 2 > thresh
+  *mask = _mm_cmpeq_epi8(t2, _mm_setzero_si128());
+}
 
-  // Start work on filters
-  p1 = _mm_xor_si128(p1, sign_bit);  // convert to signed values
-  q1 = _mm_xor_si128(q1, sign_bit);
-  p0 = _mm_xor_si128(p0, sign_bit);
-  q0 = _mm_xor_si128(q0, sign_bit);
+//-----------------------------------------------------------------------------
+// Edge filtering functions
 
-  p1 = _mm_subs_epi8(p1, q1);        // p1 - q1
-  t1 = _mm_subs_epi8(q0, p0);        // q0 - p0
-  p1 = _mm_adds_epi8(p1, t1);        // p1 - q1 + 1 * (q0 - p0)
-  p1 = _mm_adds_epi8(p1, t1);        // p1 - q1 + 2 * (q0 - p0)
-  p1 = _mm_adds_epi8(p1, t1);        // p1 - q1 + 3 * (q0 - p0)
-  p1 = _mm_and_si128(mask, p1);      // mask filter values we don't care about
+// Applies filter on p0 and q0
+static void DoFilter2(const __m128i* p1, __m128i* p0, __m128i* q0,
+                      const __m128i* q1, int thresh) {
+  __m128i t1, t2, mask;
+  const __m128i sign_bit = _mm_set1_epi8(0x80);
+  NeedsFilter(p1, p0, q0, q1, thresh, &mask);
+
+  // convert to signed values
+  *p0 = _mm_xor_si128(*p0, sign_bit);
+  *q0 = _mm_xor_si128(*q0, sign_bit);
+  t1 = _mm_xor_si128(*p1, sign_bit);
+  t2 = _mm_xor_si128(*q1, sign_bit);
+
+  t1 = _mm_subs_epi8(t1, t2);        // p1 - q1
+  t2 = _mm_subs_epi8(*q0, *p0);      // q0 - p0
+  t1 = _mm_adds_epi8(t1, t2);        // p1 - q1 + 1 * (q0 - p0)
+  t1 = _mm_adds_epi8(t1, t2);        // p1 - q1 + 2 * (q0 - p0)
+  t1 = _mm_adds_epi8(t1, t2);        // p1 - q1 + 3 * (q0 - p0)
+  t1 = _mm_and_si128(t1, mask);      // mask filter values we don't care about
 
   // Do +4 side
-  p1 = _mm_adds_epi8(p1, four);      // 3 * (q0 - p0) + (p1 - q1) + 4
-  t1 = p1;
-  SignedShift3(&t1);                 // t1 >> 3
-  q0 = _mm_subs_epi8(q0, t1);        // q0 -= a
-  *oq = _mm_xor_si128(q0, sign_bit); // unoffset
+  t2 = _mm_set1_epi8(4);
+  t2 = _mm_adds_epi8(t2, t1);        // 3 * (q0 - p0) + (p1 - q1) + 4
+  SIGNED_SHIFT_N(t2, 3);             // t2 >> 3
+  *q0 = _mm_subs_epi8(*q0, t2);      // q0 -= a
 
   // Now do +3 side
-  p1 = _mm_subs_epi8(p1, one);       // +3 instead of +4
-  SignedShift3(&p1);                 // p1 >> 3
-  p0 = _mm_adds_epi8(p0, p1);        // p0 += b
-  *op = _mm_xor_si128(p0, sign_bit); // unoffset
+  t2 = _mm_set1_epi8(3);
+  t2 = _mm_adds_epi8(t2, t1);        // +3 instead of +4
+  SIGNED_SHIFT_N(t2, 3);             // t2 >> 3
+  *p0 = _mm_adds_epi8(*p0, t2);      // p0 += b
+
+  // unoffset
+  *p0 = _mm_xor_si128(*p0, sign_bit);
+  *q0 = _mm_xor_si128(*q0, sign_bit);
 }
 
 // Reads 8 rows across a vertical edge.
@@ -330,21 +341,20 @@ static inline void Store4x4(__m128i* x, uint8_t* dst, int stride) {
 }
 
 //-----------------------------------------------------------------------------
+// Simple In-loop filtering (Paragraph 15.2)
 
 static void SimpleVFilter16SSE2(uint8_t* p, int stride, int thresh) {
-  __m128i op, oq;
-
   // Load
-  const __m128i p1 = _mm_loadu_si128((__m128i*)&p[-2 * stride]);
-  const __m128i p0 = _mm_loadu_si128((__m128i*)&p[-stride]);
-  const __m128i q0 = _mm_loadu_si128((__m128i*)&p[0]);
-  const __m128i q1 = _mm_loadu_si128((__m128i*)&p[stride]);
+  __m128i p1 = _mm_loadu_si128((__m128i*)&p[-2 * stride]);
+  __m128i p0 = _mm_loadu_si128((__m128i*)&p[-stride]);
+  __m128i q0 = _mm_loadu_si128((__m128i*)&p[0]);
+  __m128i q1 = _mm_loadu_si128((__m128i*)&p[stride]);
 
-  DoFilter2SSE2(p1, p0, q0, q1, thresh, &op, &oq);
+  DoFilter2(&p1, &p0, &q0, &q1, thresh);
 
   // Store
-  _mm_store_si128((__m128i*)&p[-stride], op);
-  _mm_store_si128((__m128i*)p, oq);
+  _mm_store_si128((__m128i*)&p[-stride], p0);
+  _mm_store_si128((__m128i*)p, q0);
 }
 
 static void SimpleHFilter16SSE2(uint8_t* p, int stride, int thresh) {
@@ -378,7 +388,9 @@ static void SimpleHFilter16SSE2(uint8_t* p, int stride, int thresh) {
   q1 = _mm_unpackhi_epi64(t2, q1);
 
   // Filter
-  DoFilter2SSE2(p1, p0, q0, q1, thresh, &t1, &t2);
+  DoFilter2(&p1, &p0, &q0, &q1, thresh);
+  t1 = p0;
+  t2 = q0;
 
   // Transpose back to write out
   // p0 = 71 70 61 60 51 50 41 40 31 30 21 20 11 10 01 00
@@ -431,6 +443,7 @@ extern void VP8DspInitSSE2(void);
 
 void VP8DspInitSSE2(void) {
   VP8Transform = TransformSSE2;
+
   VP8SimpleVFilter16 = SimpleVFilter16SSE2;
   VP8SimpleHFilter16 = SimpleHFilter16SSE2;
   VP8SimpleVFilter16i = SimpleVFilter16iSSE2;
