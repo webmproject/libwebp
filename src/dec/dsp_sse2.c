@@ -353,8 +353,8 @@ static void SimpleVFilter16SSE2(uint8_t* p, int stride, int thresh) {
   DoFilter2(&p1, &p0, &q0, &q1, thresh);
 
   // Store
-  _mm_store_si128((__m128i*)&p[-stride], p0);
-  _mm_store_si128((__m128i*)p, q0);
+  _mm_storeu_si128((__m128i*)&p[-stride], p0);
+  _mm_storeu_si128((__m128i*)p, q0);
 }
 
 static void SimpleHFilter16SSE2(uint8_t* p, int stride, int thresh) {
