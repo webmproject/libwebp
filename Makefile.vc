@@ -92,6 +92,8 @@ CFGSET = TRUE
 !MESSAGE -  debug-static                  - debug static library
 !MESSAGE <target> may be:
 !MESSAGE -  clean                         - perform a clean for CFG
+!MESSAGE -  experimental                  - build CFG with experimental
+!MESSAGE .                                  features enabled. Requires zlib.
 !MESSAGE
 !MESSAGE <rtlibcfg> controls the runtime library linkage - can be 'static' or 'dynamic'.
 !MESSAGE <target> can be left blank in which case all is assumed
@@ -147,6 +149,15 @@ EXAMPLES_OBJS = \
 	$(DIROBJ)\examples\dwebp.obj
 
 all: $(DIRLIB)\$(TARGET) $(DIRBIN)\dwebp.exe $(DIRBIN)\cwebp.exe
+
+# Additional include and library paths (for zlib) can be passed via the CL and
+# LINK environment variables respectively:
+# > set CL=/I\zlib\include
+# > set LINK=\zlib\zlib.lib
+# > nmake /f Makefile.vc CFG=release-static experimental
+experimental:
+	$(MAKE) /f Makefile.vc \
+	    CFG=$(CFG) CFLAGS="$(CFLAGS) /DWEBP_EXPERIMENTAL_FEATURES" /$(MAKEFLAGS)
 
 $(DIRLIB)\$(TARGET): $(X_OBJS)
 	$(LNK) $(LFLAGS) $(X_OBJS)
