@@ -114,6 +114,7 @@ CFGSET = TRUE
 X_OBJS= \
 	$(DIROBJ)\dec\bits.obj \
 	$(DIROBJ)\dec\dsp.obj \
+	$(DIROBJ)\dec\dsp_sse2.obj \
 	$(DIROBJ)\dec\frame.obj \
 	$(DIROBJ)\dec\quant.obj \
 	$(DIROBJ)\dec\tree.obj \
