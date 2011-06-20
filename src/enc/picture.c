@@ -242,7 +242,7 @@ static inline void ImportRow(const uint8_t* src, int src_width,
         const int32_t base = src[x_in++];
         const int32_t frac = base * (-x_accum);
         frow[x_out] = (sum + base) * dst_width - frac;
-        sum = MULT(frac, fx_scale);      // fresh fractional start for next pixel
+        sum = MULT(frac, fx_scale);    // fresh fractional start for next pixel
       }
     }
   } else {        // simple bilinear interpolation

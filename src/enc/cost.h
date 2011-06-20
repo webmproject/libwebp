@@ -27,7 +27,8 @@ static inline int VP8BitCost(int bit, uint8_t proba) {
 }
 
 // Cost of coding 'nb' 1's and 'total-nb' 0's using 'proba' probability.
-static inline uint64_t VP8BranchCost(uint64_t nb, uint64_t total, uint8_t proba) {
+static inline uint64_t VP8BranchCost(uint64_t nb, uint64_t total,
+                                     uint8_t proba) {
   return nb * VP8BitCost(1, proba) + (total - nb) * VP8BitCost(0, proba);
 }
 

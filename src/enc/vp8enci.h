@@ -261,7 +261,7 @@ typedef struct {
   uint8_t*      preds_;            // intra mode predictors (4x4 blocks)
   uint32_t*     nz_;               // non-zero pattern
   uint8_t       i4_boundary_[37];  // 32+5 boundary samples needed by intra4x4
-  uint8_t*      i4_top_;           // pointer to the current *top boundary sample
+  uint8_t*      i4_top_;           // pointer to the current top boundary sample
   int           i4_;               // current intra4x4 mode being tested
   int           top_nz_[9];        // top-non-zero context.
   int           left_nz_[9];       // left-non-zero. left_nz[8] is independent.
