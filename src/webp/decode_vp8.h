@@ -18,8 +18,6 @@
 extern "C" {
 #endif
 
-#define WEBP_DECODER_ABI_VERSION 0x0002
-
 //-----------------------------------------------------------------------------
 // Lower-level API
 //
@@ -42,12 +40,16 @@ extern "C" {
 typedef struct VP8Io VP8Io;
 struct VP8Io {
   // set by VP8GetHeaders()
-  int width, height;         // picture dimensions, in pixels
+  int width, height;         // picture dimensions, in pixels (invariable).
+                             // These are the original, uncropped dimensions.
+                             // The actual area passed to put() is stored
+                             // in mb_w / mb_h fields.
 
   // set before calling put()
   int mb_y;                  // position of the current rows (in pixels)
+  int mb_w;                  // number of columns in the sample
   int mb_h;                  // number of rows in the sample
-  const uint8_t *y, *u, *v;  // rows to copy (in yuv420 format)
+  const uint8_t* y, *u, *v;  // rows to copy (in yuv420 format)
   int y_stride;              // row stride for luma
   int uv_stride;             // row stride for chroma
 
@@ -56,7 +58,8 @@ struct VP8Io {
   // called when fresh samples are available. Currently, samples are in
   // YUV420 format, and can be up to width x 24 in size (depending on the
   // in-loop filtering level, e.g.). Should return false in case of error
-  // or abort request.
+  // or abort request. The actual size of the area to update is mb_w x mb_h
+  // in size, taking cropping into account.
   int (*put)(const VP8Io* io);
 
   // called just before starting to decode the blocks.
@@ -69,7 +72,7 @@ struct VP8Io {
   // this is a recommendation for the user-side yuv->rgb converter. This flag
   // is set when calling setup() hook and can be overwritten by it. It then
   // can be taken into consideration during the put() method.
-  int fancy_upscaling;
+  int fancy_upsampling;
 
   // Input buffer.
   uint32_t data_size;
@@ -80,6 +83,14 @@ struct VP8Io {
   // of more visible blocking. Note that output will also be non-compliant
   // with the VP8 specifications.
   int bypass_filtering;
+
+  // Cropping parameters.
+  int use_cropping;
+  int crop_left, crop_right, crop_top, crop_bottom;
+
+  // Scaling parameters.
+  int use_scaling;
+  int scaled_width, scaled_height;
 
   // pointer to the alpha data (if present) corresponding to the rows
   const uint8_t* a;

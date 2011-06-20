@@ -12,6 +12,8 @@ LOCAL_SRC_FILES := \
 	src/dec/tree.c \
 	src/dec/vp8.c \
 	src/dec/webp.c \
+	src/dec/io.c \
+	src/dec/buffer.c \
 	src/dec/yuv.c \
 	src/enc/alpha.c \
 	src/enc/analysis.c \

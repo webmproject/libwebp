@@ -122,6 +122,8 @@ X_OBJS= \
 	$(DIROBJ)\dec\tree.obj \
 	$(DIROBJ)\dec\vp8.obj \
 	$(DIROBJ)\dec\webp.obj \
+	$(DIROBJ)\dec\io.obj \
+	$(DIROBJ)\dec\buffer.obj \
 	$(DIROBJ)\dec\yuv.obj \
 	$(DIROBJ)\dec\idec.obj \
 	$(DIROBJ)\dec\alpha.obj \
