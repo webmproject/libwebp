@@ -62,7 +62,7 @@ static const int kC1 = 20091 + (1 << 16);
 static const int kC2 = 35468;
 #define MUL(a, b) (((a) * (b)) >> 16)
 
-static void Transform(const int16_t* in, uint8_t* dst) {
+static void TransformOne(const int16_t* in, uint8_t* dst) {
   int C[4 * 4], *tmp;
   int i;
   tmp = C;
@@ -102,11 +102,16 @@ static void Transform(const int16_t* in, uint8_t* dst) {
 }
 #undef MUL
 
+static void TransformTwo(const int16_t* in, uint8_t* dst, int do_two) {
+  TransformOne(in, dst);
+  if (do_two) {
+    TransformOne(in + 16, dst + 4);
+  }
+}
+
 static void TransformUV(const int16_t* in, uint8_t* dst) {
-  VP8Transform(in + 0 * 16, dst);
-  VP8Transform(in + 1 * 16, dst + 4);
-  VP8Transform(in + 2 * 16, dst + 4 * BPS);
-  VP8Transform(in + 3 * 16, dst + 4 * BPS + 4);
+  VP8Transform(in + 0 * 16, dst, 1);
+  VP8Transform(in + 2 * 16, dst + 4 * BPS, 1);
 }
 
 static void TransformDC(const int16_t *in, uint8_t* dst) {
@@ -129,7 +134,7 @@ static void TransformDCUV(const int16_t* in, uint8_t* dst) {
 #undef STORE
 
 // default C implementations:
-VP8Idct VP8Transform = Transform;
+VP8Idct2 VP8Transform = TransformTwo;
 VP8Idct VP8TransformUV = TransformUV;
 VP8Idct VP8TransformDC = TransformDC;
 VP8Idct VP8TransformDCUV = TransformDCUV;

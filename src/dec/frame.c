@@ -379,7 +379,7 @@ void VP8ReconstructBlock(VP8Decoder* const dec) {
         uint8_t* const dst = y_dst + kScan[n];
         VP8PredLuma4[dec->imodes_[n]](dst);
         if (dec->non_zero_ac_ & (1 << n)) {
-          VP8Transform(coeffs + n * 16, dst);
+          VP8Transform(coeffs + n * 16, dst, 0);
         } else if (dec->non_zero_ & (1 << n)) {  // only DC is present
           VP8TransformDC(coeffs + n * 16, dst);
         }
@@ -391,7 +391,7 @@ void VP8ReconstructBlock(VP8Decoder* const dec) {
         for (n = 0; n < 16; n++) {
           uint8_t* const dst = y_dst + kScan[n];
           if (dec->non_zero_ac_ & (1 << n)) {
-            VP8Transform(coeffs + n * 16, dst);
+            VP8Transform(coeffs + n * 16, dst, 0);
           } else if (dec->non_zero_ & (1 << n)) {  // only DC is present
             VP8TransformDC(coeffs + n * 16, dst);
           }

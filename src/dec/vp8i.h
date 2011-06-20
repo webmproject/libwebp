@@ -297,7 +297,9 @@ int VP8DecodeLayer(VP8Decoder* const dec);
 
 // in dsp.c
 typedef void (*VP8Idct)(const int16_t* coeffs, uint8_t* dst);
-extern VP8Idct VP8Transform;
+// when doing two transforms, coeffs is actually int16_t[2][16].
+typedef void (*VP8Idct2)(const int16_t* coeffs, uint8_t* dst, int do_two);
+extern VP8Idct2 VP8Transform;
 extern VP8Idct VP8TransformUV;
 extern VP8Idct VP8TransformDC;
 extern VP8Idct VP8TransformDCUV;

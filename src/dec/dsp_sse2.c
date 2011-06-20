@@ -22,7 +22,7 @@ extern "C" {
 //-----------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
 
-static void TransformSSE2(const int16_t* in, uint8_t* dst) {
+static void TransformSSE2(const int16_t* in, uint8_t* dst, int do_two) {
   // This implementation makes use of 16-bit fixed point versions of two
   // multiply constants:
   //    K1 = sqrt(2) * cos (pi/8) ~= 85627 / 2^16
@@ -43,8 +43,9 @@ static void TransformSSE2(const int16_t* in, uint8_t* dst) {
   const __m128i k2 = _mm_set1_epi16(-30068);
   __m128i T0, T1, T2, T3;
 
-  // Load the transform coefficients. The second half of the vectors will just
-  // contain random value we'll never use nor store.
+  // Load and concatenate the transform coefficients (we'll do two transforms
+  // in parallel). In the case of only one transform, the second half of the
+  // vectors will just contain random value we'll never use nor store.
   __m128i in0, in1, in2, in3;
   {
     in0 = _mm_loadl_epi64((__m128i*)&in[0]);
@@ -55,6 +56,20 @@ static void TransformSSE2(const int16_t* in, uint8_t* dst) {
     // a01 a11 a21 a31   x x x x
     // a02 a12 a22 a32   x x x x
     // a03 a13 a23 a33   x x x x
+    if (do_two) {
+      const __m128i inB0 = _mm_loadl_epi64((__m128i*)&in[16]);
+      const __m128i inB1 = _mm_loadl_epi64((__m128i*)&in[20]);
+      const __m128i inB2 = _mm_loadl_epi64((__m128i*)&in[24]);
+      const __m128i inB3 = _mm_loadl_epi64((__m128i*)&in[28]);
+      in0 = _mm_unpacklo_epi64(in0, inB0);
+      in1 = _mm_unpacklo_epi64(in1, inB1);
+      in2 = _mm_unpacklo_epi64(in2, inB2);
+      in3 = _mm_unpacklo_epi64(in3, inB3);
+      // a00 a10 a20 a30   b00 b10 b20 b30
+      // a01 a11 a21 a31   b01 b11 b21 b31
+      // a02 a12 a22 a32   b02 b12 b22 b32
+      // a03 a13 a23 a33   b03 b13 b23 b33
+    }
   }
 
   // Vertical pass and subsequent transpose.
@@ -179,10 +194,20 @@ static void TransformSSE2(const int16_t* in, uint8_t* dst) {
   {
     const __m128i zero = _mm_set1_epi16(0);
     // Load the reference(s).
-    __m128i dst0 = _mm_cvtsi32_si128(*(int*)&dst[0 * BPS]);
-    __m128i dst1 = _mm_cvtsi32_si128(*(int*)&dst[1 * BPS]);
-    __m128i dst2 = _mm_cvtsi32_si128(*(int*)&dst[2 * BPS]);
-    __m128i dst3 = _mm_cvtsi32_si128(*(int*)&dst[3 * BPS]);
+    __m128i dst0, dst1, dst2, dst3;
+    if (do_two) {
+      // Load eight bytes/pixels per line.
+      dst0 = _mm_loadl_epi64((__m128i*)&dst[0 * BPS]);
+      dst1 = _mm_loadl_epi64((__m128i*)&dst[1 * BPS]);
+      dst2 = _mm_loadl_epi64((__m128i*)&dst[2 * BPS]);
+      dst3 = _mm_loadl_epi64((__m128i*)&dst[3 * BPS]);
+    } else {
+      // Load four bytes/pixels per line.
+      dst0 = _mm_cvtsi32_si128(*(int*)&dst[0 * BPS]);
+      dst1 = _mm_cvtsi32_si128(*(int*)&dst[1 * BPS]);
+      dst2 = _mm_cvtsi32_si128(*(int*)&dst[2 * BPS]);
+      dst3 = _mm_cvtsi32_si128(*(int*)&dst[3 * BPS]);
+    }
     // Convert to 16b.
     dst0 = _mm_unpacklo_epi8(dst0, zero);
     dst1 = _mm_unpacklo_epi8(dst1, zero);
@@ -198,11 +223,20 @@ static void TransformSSE2(const int16_t* in, uint8_t* dst) {
     dst1 = _mm_packus_epi16(dst1, dst1);
     dst2 = _mm_packus_epi16(dst2, dst2);
     dst3 = _mm_packus_epi16(dst3, dst3);
-    // Store the results, four bytes/pixels per line.
-    *((int32_t *)&dst[0 * BPS]) = _mm_cvtsi128_si32(dst0);
-    *((int32_t *)&dst[1 * BPS]) = _mm_cvtsi128_si32(dst1);
-    *((int32_t *)&dst[2 * BPS]) = _mm_cvtsi128_si32(dst2);
-    *((int32_t *)&dst[3 * BPS]) = _mm_cvtsi128_si32(dst3);
+    // Store the results.
+    if (do_two) {
+      // Store eight bytes/pixels per line.
+      _mm_storel_epi64((__m128i*)&dst[0 * BPS], dst0);
+      _mm_storel_epi64((__m128i*)&dst[1 * BPS], dst1);
+      _mm_storel_epi64((__m128i*)&dst[2 * BPS], dst2);
+      _mm_storel_epi64((__m128i*)&dst[3 * BPS], dst3);
+    } else {
+      // Store four bytes/pixels per line.
+      *((int32_t *)&dst[0 * BPS]) = _mm_cvtsi128_si32(dst0);
+      *((int32_t *)&dst[1 * BPS]) = _mm_cvtsi128_si32(dst1);
+      *((int32_t *)&dst[2 * BPS]) = _mm_cvtsi128_si32(dst2);
+      *((int32_t *)&dst[3 * BPS]) = _mm_cvtsi128_si32(dst3);
+    }
   }
 }
 
