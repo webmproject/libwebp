@@ -5,8 +5,7 @@
 //  Additional IP Rights Grant:  http://www.webmproject.org/license/additional/
 // -----------------------------------------------------------------------------
 //
-//  simple command-line example calling libwebpdecode to
-//  decode a WebP image into a PPM image.
+//  Command-line tool for decoding a WebP image
 //
 //  Compile with:     gcc -o dwebp dwebp.c -lwebpdecode
 //
@@ -45,11 +44,18 @@
 extern "C" {
 #endif
 
-//-----------------------------------------------------------------------------
-
+static int verbose = 0;
 extern void* VP8DecGetCPUInfo;   // opaque forward declaration.
 
-static int verbose = 0;
+//-----------------------------------------------------------------------------
+
+// Output types
+typedef enum {
+  PNG = 0,
+  PPM,
+  PGM,
+  ALPHA_PLANE_ONLY  // this is for experimenting only
+} OutputFileFormat;
 
 #ifdef HAVE_WINCODEC_H
 
@@ -69,7 +75,8 @@ static int verbose = 0;
 #define MAKE_REFGUID(x) &(x)
 #endif
 
-static HRESULT CreateOutputStream(const char* out_file_name, IStream** ppStream) {
+static HRESULT CreateOutputStream(const char* out_file_name,
+                                  IStream** ppStream) {
   HRESULT hr = S_OK;
   IFS(SHCreateStreamOnFileA(out_file_name, STGM_WRITE | STGM_CREATE, ppStream));
   if (FAILED(hr))
@@ -117,8 +124,13 @@ static HRESULT WriteUsingWIC(const char* out_file_name, REFGUID container_guid,
   return hr;
 }
 
-static int WritePNG(const char* out_file_name, unsigned char* rgb, int stride,
-                    uint32_t width, uint32_t height, int has_alpha) {
+static int WritePNG(const char* out_file_name,
+                    const WebPDecBuffer* const buffer) {
+  const uint32_t width = buffer->width;
+  const uint32_t height = buffer->height;
+  unsigned char* const rgb = buffer->u.RGBA.rgba;
+  const int stride = buffer->u.RGBA.stride;
+  const int has_alpha = (buffer->colorspace == MODE_RGBA);
   assert(!has_alpha);   // TODO(mikolaj)
   return SUCCEEDED(WriteUsingWIC(out_file_name,
              MAKE_REFGUID(GUID_ContainerFormatPng), rgb, stride, width,
@@ -131,8 +143,12 @@ static void PNGAPI error_function(png_structp png, png_const_charp dummy) {
   longjmp(png_jmpbuf(png), 1);
 }
 
-static int WritePNG(FILE* out_file, unsigned char* rgb, int stride,
-                    png_uint_32 width, png_uint_32 height, int has_alpha) {
+static int WritePNG(FILE* out_file, const WebPDecBuffer* const buffer) {
+  const uint32_t width = buffer->width;
+  const uint32_t height = buffer->height;
+  unsigned char* const rgb = buffer->u.RGBA.rgba;
+  const int stride = buffer->u.RGBA.stride;
+  const int has_alpha = (buffer->colorspace == MODE_RGBA);
   png_structp png;
   png_infop info;
   png_uint_32 y;
@@ -169,8 +185,7 @@ static int WritePNG(FILE* out_file, unsigned char* rgb, int stride,
 
 typedef uint32_t png_uint_32;
 
-static int WritePNG(FILE* out_file, unsigned char* rgb, int stride,
-                    png_uint_32 width, png_uint_32 height, int has_alpha) {
+static int WritePNG(FILE* out_file, const WebPDecBuffer* const buffer) {
   printf("PNG support not compiled. Please install the libpng development "
          "package before building.\n");
   printf("You can run with -ppm flag to decode in PPM format.\n");
@@ -178,84 +193,157 @@ static int WritePNG(FILE* out_file, unsigned char* rgb, int stride,
 }
 #endif
 
-static int WritePPM(FILE* fout, const unsigned char* rgb,
-                    uint32_t width, uint32_t height) {
-  fprintf(fout, "P6\n%d %d\n255\n", width, height);
-  return (fwrite(rgb, width * height, 3, fout) == 3);
-}
-
-static int WriteAlphaPlane(FILE* fout, const unsigned char* rgba,
-                           uint32_t width, uint32_t height) {
+static int WritePPM(FILE* fout, const WebPDecBuffer* const buffer) {
+  const uint32_t width = buffer->width;
+  const uint32_t height = buffer->height;
+  const unsigned char* const rgb = buffer->u.RGBA.rgba;
+  const int stride = buffer->u.RGBA.stride;
   uint32_t y;
-  fprintf(fout, "P5\n%d %d\n255\n", width, height);
+  fprintf(fout, "P6\n%d %d\n255\n", width, height);
   for (y = 0; y < height; ++y) {
-    const unsigned char* line = rgba + y * (width * 4);
-    uint32_t x;
-    for (x = 0; x < width; ++x) {
-      if (fputc(line[4 * x + 3], fout) == EOF) {
-        return 0;
-      }
+    if (fwrite(rgb + y * stride, width, 3, fout) != 3) {
+      return 0;
     }
   }
   return 1;
 }
 
-static int WritePGM(FILE* fout,
-                    unsigned char* y_plane, unsigned char *u, unsigned char* v,
-                    int y_stride, int uv_stride,
-                    uint32_t width, uint32_t height) {
+static int WriteAlphaPlane(FILE* fout, const WebPDecBuffer* const buffer) {
+  const uint32_t width = buffer->width;
+  const uint32_t height = buffer->height;
+  const unsigned char* const a = buffer->u.YUVA.a;
+  const int a_stride = buffer->u.YUVA.a_stride;
+  uint32_t y;
+  assert(a != NULL);
+  fprintf(fout, "P5\n%d %d\n255\n", width, height);
+  for (y = 0; y < height; ++y) {
+    if (fwrite(a + y * a_stride, width, 1, fout) != 1) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+static int WritePGM(FILE* fout, const WebPDecBuffer* const buffer) {
+  const int width = buffer->width;
+  const int height = buffer->height;
+  const WebPYUVABuffer* const yuv = &buffer->u.YUVA;
   // Save a grayscale PGM file using the IMC4 layout
   // (http://www.fourcc.org/yuv.php#IMC4). This is a very
   // convenient format for viewing the samples, esp. for
   // odd dimensions.
   int ok = 1;
-  unsigned int y;
-  const unsigned int uv_width = (width + 1) / 2;
-  const unsigned int uv_height = (height + 1) / 2;
-  const unsigned int out_stride = (width + 1) & ~1;
-  fprintf(fout, "P5\n%d %d\n255\n", out_stride, height + uv_height);
+  int y;
+  const int uv_width = (width + 1) / 2;
+  const int uv_height = (height + 1) / 2;
+  const int out_stride = (width + 1) & ~1;
+  const int a_height = yuv->a ? height : 0;
+  fprintf(fout, "P5\n%d %d\n255\n", out_stride, height + uv_height + a_height);
   for (y = 0; ok && y < height; ++y) {
-    ok &= (fwrite(y_plane + y * y_stride, width, 1, fout) == 1);
+    ok &= (fwrite(yuv->y + y * yuv->y_stride, width, 1, fout) == 1);
     if (width & 1) fputc(0, fout);    // padding byte
   }
   for (y = 0; ok && y < uv_height; ++y) {
-    ok &= (fwrite(u + y * uv_stride, uv_width, 1, fout) == 1);
-    ok &= (fwrite(v + y * uv_stride, uv_width, 1, fout) == 1);
+    ok &= (fwrite(yuv->u + y * yuv->u_stride, uv_width, 1, fout) == 1);
+    ok &= (fwrite(yuv->v + y * yuv->v_stride, uv_width, 1, fout) == 1);
+  }
+  for (y = 0; ok && y < a_height; ++y) {
+    ok &= (fwrite(yuv->a + y * yuv->a_stride, width, 1, fout) == 1);
+    if (width & 1) fputc(0, fout);    // padding byte
   }
   return ok;
 }
 
-typedef enum {
-  PNG = 0,
-  PPM,
-  PGM,
-  ALPHA_PLANE_ONLY  // this is for experimenting only
-} OutputFileFormat;
+static void SaveOutput(const WebPDecBuffer* const buffer,
+                       OutputFileFormat format, const char* const out_file) {
+  FILE* fout = NULL;
+  int needs_open_file = 1;
+  int ok = 1;
+  Stopwatch stop_watch;
+
+  if (verbose)
+    StopwatchReadAndReset(&stop_watch);
+
+#ifdef _WIN32
+  needs_open_file = (format != PNG);
+#endif
+  if (needs_open_file) {
+    fout = fopen(out_file, "wb");
+    if (!fout) {
+      fprintf(stderr, "Error opening output file %s\n", out_file);
+      return;
+    }
+  }
+
+  if (format == PNG) {
+#ifdef HAVE_WINCODEC_H
+    ok &= WritePNG(out_file, buffer);
+#else
+    ok &= WritePNG(fout, buffer);
+#endif
+  } else if (format == PPM) {
+    ok &= WritePPM(fout, buffer);
+  } else if (format == PGM) {
+    ok &= WritePGM(fout, buffer);
+  } else if (format == ALPHA_PLANE_ONLY) {
+    ok &= WriteAlphaPlane(fout, buffer);
+  }
+  if (fout) {
+    fclose(fout);
+  }
+  if (ok) {
+    printf("Saved file %s\n", out_file);
+    if (verbose) {
+      const double time = StopwatchReadAndReset(&stop_watch);
+      printf("Time to write output: %.3fs\n", time);
+    }
+  } else {
+    fprintf(stderr, "Error writing file %s !!\n", out_file);
+  }
+}
 
 static void Help(void) {
-  printf("Usage: dwebp "
-         "[in_file] [-h] [-v] [-ppm] [-pgm] [-version] [-o out_file]\n\n"
+  printf("Usage: dwebp in_file [options] [-o out_file]\n\n"
          "Decodes the WebP image file to PNG format [Default]\n"
          "Use following options to convert into alternate image formats:\n"
-         " -ppm:  save the raw RGB samples as color PPM\n"
-         " -pgm:  save the raw YUV samples as a grayscale PGM\n"
-         "        file with IMC4 layout.\n"
-         " -version: print version number and exit.\n"
-         "Use -v for verbose (e.g. print encoding/decoding times)\n"
-         "Use -noasm to disable all assembly optimizations.\n"
+         "  -ppm ......... save the raw RGB samples as color PPM\n"
+         "  -pgm ......... save the raw YUV samples as a grayscale PGM\n"
+         "                 file with IMC4 layout.\n"
+         " Other options are:\n"
+         "  -version  .... print version number and exit.\n"
+         "  -nofancy ..... don't use the fancy YUV420 upscaler.\n"
+         "  -nofilter .... disable in-loop filtering.\n"
+         "  -crop <x> <y> <w> <h> ... crop output with the given rectangle\n"
+         "  -scale <w> <h> .......... scale the output (*after* any cropping)\n"
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+         "  -alpha ....... only save the alpha plane.\n"
+#endif
+         "  -h     ....... this help message.\n"
+         "  -v     ....... verbose (e.g. print encoding/decoding times)\n"
+         "  -noasm ....... disable all assembly optimizations.\n"
         );
 }
+
+static const char* const kStatusMessages[] = {
+  "OK", "OUT_OF_MEMORY", "INVALID_PARAM", "BITSTREAM_ERROR",
+  "UNSUPPORTED_FEATURE", "SUSPENDED", "USER_ABORT", "NOT_ENOUGH_DATA"
+};
 
 int main(int argc, const char *argv[]) {
   const char *in_file = NULL;
   const char *out_file = NULL;
 
-  int width, height, stride, uv_stride;
-  int has_alpha = 0;
-  uint8_t* out = NULL, *u = NULL, *v = NULL;
+  WebPDecoderConfig config;
+  WebPDecBuffer* const output_buffer = &config.output;
+  WebPBitstreamFeatures* const bitstream = &config.input;
   OutputFileFormat format = PNG;
-  Stopwatch stop_watch;
   int c;
+
+  if (!WebPInitDecoderConfig(&config)) {
+    fprintf(stderr, "Library version mismatch!\n");
+    return -1;
+  }
+
   for (c = 1; c < argc; ++c) {
     if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
       Help();
@@ -264,6 +352,10 @@ int main(int argc, const char *argv[]) {
       out_file = argv[++c];
     } else if (!strcmp(argv[c], "-alpha")) {
       format = ALPHA_PLANE_ONLY;
+    } else if (!strcmp(argv[c], "-nofancy")) {
+      config.options.no_fancy_upsampling = 1;
+    } else if (!strcmp(argv[c], "-nofilter")) {
+      config.options.bypass_filtering = 1;
     } else if (!strcmp(argv[c], "-ppm")) {
       format = PPM;
     } else if (!strcmp(argv[c], "-version")) {
@@ -273,6 +365,16 @@ int main(int argc, const char *argv[]) {
       return 0;
     } else if (!strcmp(argv[c], "-pgm")) {
       format = PGM;
+    } else if (!strcmp(argv[c], "-crop") && c < argc - 4) {
+      config.options.use_cropping = 1;
+      config.options.crop_left   = strtol(argv[++c], NULL, 0);
+      config.options.crop_top    = strtol(argv[++c], NULL, 0);
+      config.options.crop_width  = strtol(argv[++c], NULL, 0);
+      config.options.crop_height = strtol(argv[++c], NULL, 0);
+    } else if (!strcmp(argv[c], "-scale") && c < argc - 2) {
+      config.options.use_scaling = 1;
+      config.options.scaled_width  = strtol(argv[++c], NULL, 0);
+      config.options.scaled_height = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-v")) {
       verbose = 1;
     } else if (!strcmp(argv[c], "-noasm")) {
@@ -293,10 +395,13 @@ int main(int argc, const char *argv[]) {
   }
 
   {
+    Stopwatch stop_watch;
+    VP8StatusCode status = VP8_STATUS_OK;
+    int ok;
     uint32_t data_size = 0;
     void* data = NULL;
-    int ok;
     FILE* const in = fopen(in_file, "rb");
+
     if (!in) {
       fprintf(stderr, "cannot open input file '%s'\n", in_file);
       return 1;
@@ -308,101 +413,70 @@ int main(int argc, const char *argv[]) {
     ok = (fread(data, data_size, 1, in) == 1);
     fclose(in);
     if (!ok) {
+      fprintf(stderr, "Could not read %d bytes of data from file %s\n",
+              data_size, in_file);
       free(data);
       return -1;
     }
 
     if (verbose)
       StopwatchReadAndReset(&stop_watch);
+
+    status = WebPGetFeatures((const uint8_t*)data, data_size, bitstream);
+    if (status != VP8_STATUS_OK) {
+      goto end;
+    }
+
     switch (format) {
       case PNG:
 #ifdef _WIN32
-        out = WebPDecodeBGR((const uint8_t*)data, data_size, &width, &height);
-        stride = 3 * width;
-        has_alpha = 0;
+        // TODO(mikolaj): no alpha for now
+        output_buffer->colorspace = MODE_BGR;
 #else
-        out = WebPDecodeRGBA((const uint8_t*)data, data_size, &width, &height);
-        stride = 4 * width;
-        has_alpha = 1;
+        output_buffer->colorspace = bitstream->has_alpha ? MODE_RGBA : MODE_RGB;
 #endif
         break;
       case PPM:
-        out = WebPDecodeRGB((const uint8_t*)data, data_size, &width, &height);
+        output_buffer->colorspace = MODE_RGB;  // drops alpha for PPM
         break;
       case PGM:
-        out = WebPDecodeYUV((const uint8_t*)data, data_size, &width, &height,
-                            &u, &v, &stride, &uv_stride);
+        output_buffer->colorspace = bitstream->has_alpha ? MODE_YUVA : MODE_YUV;
         break;
       case ALPHA_PLANE_ONLY:
-        out = WebPDecodeRGBA((const uint8_t*)data, data_size, &width, &height);
+        output_buffer->colorspace = MODE_YUVA;
         break;
       default:
         free(data);
         return -1;
     }
+    status = WebPDecode((const uint8_t*)data, data_size, &config);
 
     if (verbose) {
       const double time = StopwatchReadAndReset(&stop_watch);
       printf("Time to decode picture: %.3fs\n", time);
     }
-
+ end:
     free(data);
-  }
-
-  if (!out) {
-    fprintf(stderr, "Decoding of %s failed.\n", in_file);
-    return -1;
+    ok = (status == VP8_STATUS_OK);
+    if (!ok) {
+      fprintf(stderr, "Decoding of %s failed.\n", in_file);
+      fprintf(stderr, "Status: %d (%s)\n", status, kStatusMessages[status]);
+      return -1;
+    }
   }
 
   if (out_file) {
-    FILE* fout = NULL;
-    int needs_open_file = 0;
-
-    printf("Decoded %s. Dimensions: %d x %d. Now saving...\n", in_file, width, height);
-    StopwatchReadAndReset(&stop_watch);
-#ifdef _WIN32
-    if (format != PNG) {
-      needs_open_file = 1;
-    }
-#else
-    needs_open_file = 1;
-#endif
-    if (needs_open_file) fout = fopen(out_file, "wb");
-    if (!needs_open_file || fout) {
-      int ok = 1;
-      if (format == PNG) {
-#ifdef HAVE_WINCODEC_H
-        ok &= WritePNG(out_file, out, stride, width, height, has_alpha);
-#else
-        ok &= WritePNG(fout, out, stride, width, height, has_alpha);
-#endif
-      } else if (format == PPM) {
-        ok &= WritePPM(fout, out, width, height);
-      } else if (format == PGM) {
-        ok &= WritePGM(fout, out, u, v, stride, uv_stride, width, height);
-      } else if (format == ALPHA_PLANE_ONLY) {
-        ok &= WriteAlphaPlane(fout, out, width, height);
-      }
-      if (fout)
-        fclose(fout);
-      if (ok) {
-        printf("Saved file %s\n", out_file);
-        if (verbose) {
-          const double time = StopwatchReadAndReset(&stop_watch);
-          printf("Time to write output: %.3fs\n", time);
-        }
-      } else {
-        fprintf(stderr, "Error writing file %s !!\n", out_file);
-      }
-    } else {
-      fprintf(stderr, "Error opening output file %s\n", out_file);
-    }
+    printf("Decoded %s. Dimensions: %d x %d%s. Now saving...\n", in_file,
+           output_buffer->width, output_buffer->height,
+           bitstream->has_alpha ? " (with alpha)" : "");
+    SaveOutput(output_buffer, format, out_file);
   } else {
-    printf("File %s can be decoded (dimensions: %d x %d).\n",
-           in_file, width, height);
+    printf("File %s can be decoded (dimensions: %d x %d)%s.\n",
+           in_file, output_buffer->width, output_buffer->height,
+           bitstream->has_alpha ? " (with alpha)" : "");
     printf("Nothing written; use -o flag to save the result as e.g. PNG.\n");
   }
-  free(out);
+  WebPFreeDecBuffer(output_buffer);
 
   return 0;
 }

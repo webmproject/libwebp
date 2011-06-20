@@ -76,8 +76,12 @@ int VP8SetError(VP8Decoder* const dec,
 
 //-----------------------------------------------------------------------------
 
-int VP8GetInfo(const uint8_t* data, uint32_t chunk_size,
-               int *width, int *height) {
+int VP8GetInfo(const uint8_t* data,
+               uint32_t data_size, uint32_t chunk_size,
+               int* width, int* height, int* has_alpha) {
+  if (data_size < 10) {
+    return 0;         // not enough data
+  }
   // check signature
   if (data[3] != 0x9d || data[4] != 0x01 || data[5] != 0x2a) {
     return 0;         // Wrong signature.
@@ -87,6 +91,14 @@ int VP8GetInfo(const uint8_t* data, uint32_t chunk_size,
     const int w = ((data[7] << 8) | data[6]) & 0x3fff;
     const int h = ((data[9] << 8) | data[8]) & 0x3fff;
 
+    if (has_alpha) {
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+      if (data_size < 11) return 0;
+      *has_alpha = !!(data[10] & 0x80);    // the colorspace_ bit
+#else
+      *has_alpha = 0;
+#endif
+    }
     if (!key_frame) {   // Not a keyframe.
       return 0;
     }
@@ -254,7 +266,7 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
                        "null VP8Io passed to VP8GetHeaders()");
   }
 
-  buf = (uint8_t *)io->data;
+  buf = (uint8_t*)io->data;
   buf_size = io->data_size;
   if (buf == NULL || buf_size <= 4) {
     return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
@@ -329,8 +341,17 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
 
     dec->mb_w_ = (pic_hdr->width_ + 15) >> 4;
     dec->mb_h_ = (pic_hdr->height_ + 15) >> 4;
+    // Setup default output area (can be later modified during io->setup())
     io->width = pic_hdr->width_;
     io->height = pic_hdr->height_;
+    io->use_scaling  = 0;
+    io->use_cropping = 0;
+    io->crop_top  = 0;
+    io->crop_left = 0;
+    io->crop_right  = io->width;
+    io->crop_bottom = io->height;
+    io->mb_w = io->width;   // sanity check
+    io->mb_h = io->height;  // ditto
 
     VP8ResetProba(&dec->proba_);
     ResetSegmentHeader(&dec->segment_hdr_);
@@ -458,7 +479,7 @@ static const uint8_t kCat4[] = { 176, 155, 140, 135, 0 };
 static const uint8_t kCat5[] = { 180, 157, 141, 134, 130, 0 };
 static const uint8_t kCat6[] =
   { 254, 254, 243, 230, 196, 177, 153, 140, 133, 130, 129, 0 };
-static const uint8_t * const kCat3456[] = { kCat3, kCat4, kCat5, kCat6 };
+static const uint8_t* const kCat3456[] = { kCat3, kCat4, kCat5, kCat6 };
 static const uint8_t kZigzag[16] = {
   0, 1, 4, 8,  5, 2, 3, 6,  9, 12, 13, 10,  7, 11, 14, 15
 };
@@ -662,11 +683,10 @@ int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br) {
 }
 
 static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
-  for (dec->mb_y_ = 0; dec->mb_y_ < dec->mb_h_; ++dec->mb_y_) {
+  for (dec->mb_y_ = 0; dec->mb_y_ < dec->br_mb_y_; ++dec->mb_y_) {
     VP8MB* const left = dec->mb_info_ - 1;
     VP8BitReader* const token_br =
         &dec->parts_[dec->mb_y_ & (dec->num_parts_ - 1)];
-
     left->nz_ = 0;
     left->dc_nz_ = 0;
     memset(dec->intra_l_, B_DC_PRED, sizeof(dec->intra_l_));
@@ -681,9 +701,11 @@ static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
       // Store data and save block's filtering params
       VP8StoreBlock(dec);
     }
+    if (dec->filter_type_ > 0) {
+      VP8FilterRow(dec);
+    }
     if (!VP8FinishRow(dec, io)) {
-      return VP8SetError(dec, VP8_STATUS_USER_ABORT,
-                         "Output aborted.");
+      return VP8SetError(dec, VP8_STATUS_USER_ABORT, "Output aborted.");
     }
   }
 
@@ -722,21 +744,17 @@ int VP8Decode(VP8Decoder* const dec, VP8Io* const io) {
   }
   assert(dec->ready_);
 
-  // will allocate memory and prepare everything.
+  // Will allocate memory and prepare everything.
   if (!VP8InitFrame(dec, io)) {
     VP8Clear(dec);
-    return VP8SetError(dec, VP8_STATUS_OUT_OF_MEMORY,
-                       "Allocation failed");
+    return 0;
   }
 
-  if (io->setup && !io->setup(io)) {
+  // Finish setting up the decoding parameter
+  if (VP8FinishFrameSetup(dec, io) != VP8_STATUS_OK) {
     VP8Clear(dec);
-    return VP8SetError(dec, VP8_STATUS_USER_ABORT,
-                       "Frame setup failed");
+    return 0;
   }
-
-  // Disable filtering per user request (_after_ setup() is called)
-  if (io->bypass_filtering) dec->filter_type_ = 0;
 
   // Main decoding loop
   {

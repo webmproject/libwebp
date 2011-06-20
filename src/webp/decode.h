@@ -18,6 +18,8 @@
 extern "C" {
 #endif
 
+#define WEBP_DECODER_ABI_VERSION 0x0002
+
 // Return the decoder's version number, packed in hexadecimal using 8bits for
 // each of major/minor/revision. E.g: v2.5.7 is 0x020507.
 int WebPGetDecoderVersion(void);
@@ -27,25 +29,25 @@ int WebPGetDecoderVersion(void);
 // case of formatting error.
 // Pointers *width/*height can be passed NULL if deemed irrelevant.
 int WebPGetInfo(const uint8_t* data, uint32_t data_size,
-                int *width, int *height);
+                int* width, int* height);
 
 // Decodes WEBP images pointed to by *data and returns RGB samples, along
 // with the dimensions in *width and *height.
 // The returned pointer should be deleted calling free().
 // Returns NULL in case of error.
 uint8_t* WebPDecodeRGB(const uint8_t* data, uint32_t data_size,
-                       int *width, int *height);
+                       int* width, int* height);
 
 // Same as WebPDecodeRGB, but returning RGBA data.
 uint8_t* WebPDecodeRGBA(const uint8_t* data, uint32_t data_size,
-                        int *width, int *height);
+                        int* width, int* height);
 
 // This variant decode to BGR instead of RGB.
 uint8_t* WebPDecodeBGR(const uint8_t* data, uint32_t data_size,
-                       int *width, int *height);
+                       int* width, int* height);
 // This variant decodes to BGRA instead of RGBA.
 uint8_t* WebPDecodeBGRA(const uint8_t* data, uint32_t data_size,
-                        int *width, int *height);
+                        int* width, int* height);
 
 // Decode WEBP images stored in *data in Y'UV format(*). The pointer returned is
 // the Y samples buffer. Upon return, *u and *v will point to the U and V
@@ -57,8 +59,8 @@ uint8_t* WebPDecodeBGRA(const uint8_t* data, uint32_t data_size,
 // Return NULL in case of error.
 // (*) Also named Y'CbCr. See: http://en.wikipedia.org/wiki/YCbCr
 uint8_t* WebPDecodeYUV(const uint8_t* data, uint32_t data_size,
-                       int *width, int *height, uint8_t** u, uint8_t** v,
-                       int *stride, int* uv_stride);
+                       int* width, int* height, uint8_t** u, uint8_t** v,
+                       int* stride, int* uv_stride);
 
 // These three functions are variants of the above ones, that decode the image
 // directly into a pre-allocated buffer 'output_buffer'. The maximum storage
@@ -95,13 +97,59 @@ uint8_t* WebPDecodeYUVInto(const uint8_t* data, uint32_t data_size,
                            uint8_t* v, int v_size, int v_stride);
 
 //-----------------------------------------------------------------------------
+// Output colorspaces and buffer
 
-// Output colorspaces
+// Colorspaces
 typedef enum { MODE_RGB = 0, MODE_RGBA = 1,
                MODE_BGR = 2, MODE_BGRA = 3,
-               MODE_YUV = 4 } WEBP_CSP_MODE;
+               MODE_YUV = 4, MODE_YUVA = 5  // yuv 4:2:0
+             } WEBP_CSP_MODE;
 
+// Generic structure for describing the sample buffer.
+typedef struct {    // view as RGBA
+  uint8_t* rgba;    // pointer to RGBA samples
+  int stride;       // stride in bytes from one scanline to the next.
+  int size;         // total size of the *rgba buffer.
+} WebPRGBABuffer;
+
+typedef struct {              // view as YUVA
+  uint8_t* y, *u, *v, *a;     // pointer to luma, chroma U/V, alpha samples
+  int y_stride;               // luma stride
+  int u_stride, v_stride;     // chroma strides
+  int a_stride;               // alpha stride
+  int y_size;                 // luma plane size
+  int u_size, v_size;         // chroma planes size
+  int a_size;                 // alpha-plane size
+} WebPYUVABuffer;
+
+// Output buffer
+typedef struct {
+  WEBP_CSP_MODE colorspace;  // Colorspace.
+  int width, height;         // Dimensions.
+  int is_external_memory;    // If true, the *memory pointer is not owned.
+  union {
+    WebPRGBABuffer RGBA;
+    WebPYUVABuffer YUVA;
+  } u;                       // nameless union of buffer parameters.
+  uint8_t* memory;           // main pointer (when is_external_memory is false)
+} WebPDecBuffer;
+
+// Internal, version-checked, entry point
+int WebPInitDecBufferInternal(WebPDecBuffer* const, int);
+
+// Initialize the structure as empty. Must be called before any other use.
+// Returns false in case of version mismatch
+static inline int WebPInitDecBuffer(WebPDecBuffer* const buffer) {
+  return WebPInitDecBufferInternal(buffer, WEBP_DECODER_ABI_VERSION);
+}
+
+// Free any memory associated with the buffer. Must always be called last.
+// Note: doesn't free the 'buffer' structure itself.
+void WebPFreeDecBuffer(WebPDecBuffer* const buffer);
+
+//-----------------------------------------------------------------------------
 // Enumeration of the status codes
+
 typedef enum {
   VP8_STATUS_OK = 0,
   VP8_STATUS_OUT_OF_MEMORY,
@@ -116,8 +164,8 @@ typedef enum {
 //-----------------------------------------------------------------------------
 // Incremental decoding
 //
-//  This API allows streamlined decoding of partial data.
-//  Picture can be incrementally decoded as data become available thanks to the
+// This API allows streamlined decoding of partial data.
+// Picture can be incrementally decoded as data become available thanks to the
 // WebPIDecoder object. This object can be left in a SUSPENDED state if the
 // picture is only partially decoded, pending additional input.
 // Code example:
@@ -138,7 +186,16 @@ typedef enum {
 
 typedef struct WebPIDecoder WebPIDecoder;
 
+// Creates a new incremental decoder with the supplied buffer parameter.
+// This output_buffer can be passed NULL, in which case a default output buffer
+// is used (with MODE_RGB). Otherwise, an internal reference to 'output_buffer'
+// is kept, which means that the lifespan of 'output_buffer' must be larger than
+// that of the returned WebPIDecoder object.
+// Returns NULL if the allocation failed.
+WebPIDecoder* WebPINewDecoder(WebPDecBuffer* const output_buffer);
+
 // Creates a WebPIDecoder object. Returns NULL in case of failure.
+// TODO(skal): DEPRECATED. Prefer using WebPINewDecoder().
 WebPIDecoder* WebPINew(WEBP_CSP_MODE mode);
 
 // This function allocates and initializes an incremental-decoder object, which
@@ -183,7 +240,7 @@ VP8StatusCode WebPIUpdate(WebPIDecoder* const idec, const uint8_t* data,
 // specified in WebPINew()/WebPINewRGB(). *last_y is the index of last decoded
 // row in raster scan order. Some pointers (*last_y, *width etc.) can be NULL if
 // corresponding information is not needed.
-uint8_t* WebPIDecGetRGB(const WebPIDecoder* const idec, int *last_y,
+uint8_t* WebPIDecGetRGB(const WebPIDecoder* const idec, int* last_y,
                         int* width, int* height, int* stride);
 
 // Same as above function to get YUV image. Returns pointer to the luma plane
@@ -192,6 +249,122 @@ uint8_t* WebPIDecGetYUV(const WebPIDecoder* const idec, int* last_y,
                         uint8_t** u, uint8_t** v,
                         int* width, int* height, int* stride, int* uv_stride);
 
+// Generic call to retrieve output buffer information.
+// Returns NULL in case of error, otherwise returns the pointer to the internal
+// representation. This structure is read-only and shouldn't be modified.
+// TODO(skal): instead of 'last_y' only, we should pass *left/top/right/bottom,
+// to get the visible area. Esp. useful for rotation.
+const WebPDecBuffer* WebPIDecGetSamples(const WebPIDecoder* const idec,
+                                        int* last_y);
+
+//-----------------------------------------------------------------------------
+// Advanced decoding parametrization
+//
+//  Code sample for using the advanced decoding API
+/*
+     // A) Init a configuration object
+     WebPDecoderConfig config;
+     CHECK(WebPInitDecoderConfig(&config));
+
+     // B) optional: retrieve the bitstream's features.
+     CHECK(WebPGetFeatures(data, data_size, &config.input) == VP8_STATUS_OK);
+
+     // C) Adjust 'config', if needed
+     config.no_fancy = 1;
+     config.output.colorspace = MODE_BGRA;
+     // etc.
+
+     // Note that you can also make config.output point to an externally
+     // supplied memory buffer, provided it's big enough to store the decoded
+     // picture. Otherwise, config.output will just be used to allocate memory
+     // and store the decoded picture.
+
+     // D) Decode!
+     CHECK(WebPDecode(data, data_size, &config) == VP8_STATUS_OK);
+
+     // E) Decoded image is now in config.output (and config.output.u.RGBA)
+
+     // F) Reclaim memory allocated in config's object. It's safe to call
+     // this function even if the memory is external and wasn't allocated
+     // by WebPDecode().
+     WebPFreeDecBuffer(&config.output);
+*/
+
+// Features gathered from the bitstream
+typedef struct {
+  int width;        // the original width, as read from the bitstream
+  int height;       // the original height, as read from the bitstream
+  int has_alpha;    // true if bitstream contains an alpha channel
+  int no_incremental_decoding;  // if true, using incremental decoding is not
+                                // recommended.
+  int rotate;                   // TODO(later)
+  int uv_sampling;              // should be 0 for now. TODO(later)
+  int bitstream_version;        // should be 0 for now. TODO(later)
+} WebPBitstreamFeatures;
+
+// Internal, version-checked, entry point
+extern VP8StatusCode WebPGetFeaturesInternal(const uint8_t*, uint32_t,
+                                             WebPBitstreamFeatures* const, int);
+
+// Retrieve features from the bitstream. The *features structure is filled
+// with informations gathered from the bitstream.
+// Returns false in case of error or version mismatch.
+// In case of error, features->bitstream_status will reflect the error code.
+static inline
+  VP8StatusCode WebPGetFeatures(const uint8_t* data, uint32_t data_size,
+                                WebPBitstreamFeatures* const features) {
+  return WebPGetFeaturesInternal(data, data_size, features,
+                                 WEBP_DECODER_ABI_VERSION);
+}
+
+// Decoding options
+typedef struct {
+  int bypass_filtering;               // if true, skip the in-loop filtering
+  int no_fancy_upsampling;            // if true, use faster pointwise upsampler
+  int use_cropping;                   // if true, cropping is applied _first_
+  int crop_left, crop_top;            // top-left position for cropping.
+                                      // Will be snapped to even values.
+  int crop_width, crop_height;        // dimension of the cropping area
+  int use_scaling;                    // if true, scaling is applied _afterward_
+  int scaled_width, scaled_height;    // final resolution
+  int force_rotation;                 // forced rotation (to be applied _last_)
+  int no_enhancement;                 // if true, discard enhancement layer
+} WebPDecoderOptions;
+
+// Main object storing the configuration for advanced decoding.
+typedef struct {
+  WebPBitstreamFeatures input;  // Immutable bitstream features (optional)
+  WebPDecBuffer output;         // Output buffer (can point to external mem)
+  WebPDecoderOptions options;   // Decoding options
+} WebPDecoderConfig;
+
+// Internal, version-checked, entry point
+extern int WebPInitDecoderConfigInternal(WebPDecoderConfig* const, int);
+
+// Initialize the configuration as empty. This function must always be
+// called first, unless WebPGetFeatures() is to be called.
+// Returns false in case of mismatched version.
+static inline int WebPInitDecoderConfig(WebPDecoderConfig* const config) {
+  return WebPInitDecoderConfigInternal(config, WEBP_DECODER_ABI_VERSION);
+}
+
+// Instantiate a new incremental decoder object with requested configuration.
+// The bitstream can be passed using *data and data_size parameter,
+// in which case the features will be parsed and stored into config->input.
+// Otherwise, 'data' can be NULL and now parsing will occur.
+// Note that 'config' can be NULL too, in which case a default configuration is
+// used.
+// The return WebPIDecoder object must always be deleted calling WebPIDelete().
+// Returns NULL in case of error (and config->status will then reflect
+// the error condition).
+WebPIDecoder* WebPIDecode(const uint8_t* data, uint32_t data_size,
+                          WebPDecoderConfig* const config);
+
+// Non-incremental version. This version decodes the full data at once, taking
+// 'config' into account. Return decoding status (VP8_STATUS_OK if decoding
+// was successful).
+VP8StatusCode WebPDecode(const uint8_t* data, uint32_t data_size,
+                         WebPDecoderConfig* const config);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
