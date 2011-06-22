@@ -44,6 +44,10 @@
 DEFINE_GUID(GUID_WICPixelFormat24bppRGB,
     0x6fddc324, 0x4e03, 0x4bfe, 0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0d);
 #endif
+#ifndef GUID_WICPixelFormat32bppRGBA
+DEFINE_GUID(GUID_WICPixelFormat32bppRGBA,
+    0xf5c7ad2d, 0x6a8d, 0x43dd, 0xa7, 0xa8, 0xa2, 0x99, 0x35, 0x26, 0x1a, 0xe9);
+#endif
 #endif  /* HAVE_WINCODEC_H */
 
 
@@ -109,7 +113,7 @@ static HRESULT OpenInputStream(const char* filename, IStream** ppStream) {
 }
 
 static HRESULT ReadPictureWithWIC(const char* filename,
-                                  WebPPicture* const pic) {
+                                  WebPPicture* const pic, int keep_alpha) {
   HRESULT hr = S_OK;
   IWICBitmapFrameDecode* pFrame = NULL;
   IWICFormatConverter* pConverter = NULL;
@@ -119,6 +123,15 @@ static HRESULT ReadPictureWithWIC(const char* filename,
   UINT frameCount = 0;
   UINT width, height = 0;
   BYTE* rgb = NULL;
+  WICPixelFormatGUID srcPixelFormat = { 0 };
+  GUID srcContainerFormat = { 0 };
+  const GUID* alphaContainers[] = {
+    &GUID_ContainerFormatBmp,
+    &GUID_ContainerFormatPng,
+    &GUID_ContainerFormatTiff
+  };
+  int has_alpha = 0;
+  int i, stride;
 
   IFS(CoInitialize(NULL));
   IFS(CoCreateInstance(MAKE_REFGUID(CLSID_WICImagingFactory), NULL,
@@ -139,28 +152,53 @@ static HRESULT ReadPictureWithWIC(const char* filename,
     hr = E_FAIL;
   }
   IFS(IWICBitmapDecoder_GetFrame(pDecoder, 0, &pFrame));
+  IFS(IWICBitmapFrameDecode_GetPixelFormat(pFrame, &srcPixelFormat));
+  IFS(IWICBitmapDecoder_GetContainerFormat(pDecoder, &srcContainerFormat));
+
+  has_alpha = keep_alpha;
+  for (i = 0;
+       has_alpha && i < sizeof(alphaContainers)/sizeof(alphaContainers[0]);
+       ++i) {
+    if (IsEqualGUID(&srcContainerFormat, alphaContainers[i])) {
+      has_alpha =
+          IsEqualGUID(&srcPixelFormat, &GUID_WICPixelFormat32bppRGBA) ||
+          IsEqualGUID(&srcPixelFormat, &GUID_WICPixelFormat32bppBGRA);
+      break;
+    }
+  }
 
   // Prepare for pixel format conversion (if necessary).
   IFS(IWICImagingFactory_CreateFormatConverter(pFactory, &pConverter));
   IFS(IWICFormatConverter_Initialize(pConverter, (IWICBitmapSource*)pFrame,
-          MAKE_REFGUID(GUID_WICPixelFormat24bppRGB), WICBitmapDitherTypeNone,
+          has_alpha ? MAKE_REFGUID(GUID_WICPixelFormat32bppRGBA)
+                    : MAKE_REFGUID(GUID_WICPixelFormat24bppRGB),
+          WICBitmapDitherTypeNone,
           NULL, 0.0, WICBitmapPaletteTypeCustom));
 
   // Decode.
   IFS(IWICFormatConverter_GetSize(pConverter, &width, &height));
+  stride = (has_alpha ? 4 : 3) * width * sizeof(*rgb);
   if (SUCCEEDED(hr)) {
-    rgb = (BYTE*)malloc(3 * width * height);
+    rgb = (BYTE*)malloc(stride * height);
     if (rgb == NULL)
       hr = E_OUTOFMEMORY;
   }
-  IFS(IWICFormatConverter_CopyPixels(pConverter, NULL, 3 * width,
-          3 * width * height, rgb));
+  IFS(IWICFormatConverter_CopyPixels(pConverter, NULL, stride,
+          stride * height, rgb));
 
   // WebP conversion.
   if (SUCCEEDED(hr)) {
+    int ok;
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+    if (has_alpha) {
+      pic->colorspace |= WEBP_CSP_ALPHA_BIT;
+    }
+#endif
     pic->width = width;
     pic->height = height;
-    if (!WebPPictureImportRGB(pic, rgb, 3 * width))
+    ok = has_alpha ? WebPPictureImportRGBA(pic, rgb, stride)
+                   : WebPPictureImportRGB(pic, rgb, stride);
+    if (!ok)
       hr = E_FAIL;
   }
 
@@ -188,7 +226,7 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
     fclose(in_file);
   } else {
     // If no size specified, try to decode it using WIC.
-    ok = SUCCEEDED(ReadPictureWithWIC(filename, pic));
+    ok = SUCCEEDED(ReadPictureWithWIC(filename, pic, keep_alpha));
   }
   if (!ok) {
     fprintf(stderr, "Error! Could not process file %s\n", filename);

@@ -86,13 +86,14 @@ static HRESULT CreateOutputStream(const char* out_file_name,
 
 static HRESULT WriteUsingWIC(const char* out_file_name, REFGUID container_guid,
                              unsigned char* rgb, int stride,
-                             uint32_t width, uint32_t height) {
+                             uint32_t width, uint32_t height, int has_alpha) {
   HRESULT hr = S_OK;
   IWICImagingFactory* pFactory = NULL;
   IWICBitmapFrameEncode* pFrame = NULL;
   IWICBitmapEncoder* pEncoder = NULL;
   IStream* pStream = NULL;
-  GUID pixel_format = GUID_WICPixelFormat24bppBGR;
+  WICPixelFormatGUID pixel_format = has_alpha ? GUID_WICPixelFormat32bppBGRA
+                                              : GUID_WICPixelFormat24bppBGR;
 
   IFS(CoInitialize(NULL));
   IFS(CoCreateInstance(MAKE_REFGUID(CLSID_WICImagingFactory), NULL,
@@ -130,11 +131,11 @@ static int WritePNG(const char* out_file_name,
   const uint32_t height = buffer->height;
   unsigned char* const rgb = buffer->u.RGBA.rgba;
   const int stride = buffer->u.RGBA.stride;
-  const int has_alpha = (buffer->colorspace == MODE_RGBA);
-  assert(!has_alpha);   // TODO(mikolaj)
+  const int has_alpha = (buffer->colorspace == MODE_BGRA);
+
   return SUCCEEDED(WriteUsingWIC(out_file_name,
              MAKE_REFGUID(GUID_ContainerFormatPng), rgb, stride, width,
-             height));
+             height, has_alpha));
 }
 
 #elif defined(WEBP_HAVE_PNG)    // !HAVE_WINCODEC_H
@@ -264,7 +265,7 @@ static void SaveOutput(const WebPDecBuffer* const buffer,
   if (verbose)
     StopwatchReadAndReset(&stop_watch);
 
-#ifdef _WIN32
+#ifdef HAVE_WINCODEC_H
   needs_open_file = (format != PNG);
 #endif
   if (needs_open_file) {
@@ -429,9 +430,8 @@ int main(int argc, const char *argv[]) {
 
     switch (format) {
       case PNG:
-#ifdef _WIN32
-        // TODO(mikolaj): no alpha for now
-        output_buffer->colorspace = MODE_BGR;
+#ifdef HAVE_WINCODEC_H
+        output_buffer->colorspace = bitstream->has_alpha ? MODE_BGRA : MODE_BGR;
 #else
         output_buffer->colorspace = bitstream->has_alpha ? MODE_RGBA : MODE_RGB;
 #endif
