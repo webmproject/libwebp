@@ -41,7 +41,7 @@ EXTRA_FLAGS += -Wextra -Wold-style-definition
 EXTRA_FLAGS += -Wmissing-prototypes
 EXTRA_FLAGS += -Wmissing-declarations
 EXTRA_FLAGS += -Wdeclaration-after-statement
-EXTRA_FLAGS += -Wvla
+# EXTRA_FLAGS += -Wvla
 
 #### Nothing should normally be changed below this line ####
 
