@@ -186,6 +186,8 @@ static int WritePNG(FILE* out_file, const WebPDecBuffer* const buffer) {
 typedef uint32_t png_uint_32;
 
 static int WritePNG(FILE* out_file, const WebPDecBuffer* const buffer) {
+  (void)out_file;
+  (void)buffer;
   printf("PNG support not compiled. Please install the libpng development "
          "package before building.\n");
   printf("You can run with -ppm flag to decode in PPM format.\n");

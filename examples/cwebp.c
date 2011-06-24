@@ -283,6 +283,8 @@ static int ReadJPEG(FILE* in_file, WebPPicture* const pic) {
 
 #else
 static int ReadJPEG(FILE* in_file, WebPPicture* const pic) {
+  (void)in_file;
+  (void)pic;
   printf("JPEG support not compiled. Please install the libjpeg development "
          "package before building.\n");
   return 0;
@@ -378,6 +380,9 @@ static int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha) {
 }
 #else
 static int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha) {
+  (void)in_file;
+  (void)pic;
+  (void)keep_alpha;
   printf("PNG support not compiled. Please install the libpng development "
          "package before building.\n");
   return 0;
