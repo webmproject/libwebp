@@ -50,16 +50,20 @@ static int PutHeader(int profile, size_t size0, size_t total_size,
     return WebPEncodingSetError(pic, VP8_ENC_ERROR_PARTITION0_OVERFLOW);
   }
 
-  PutLE32(RIFF + 4, total_size + KSIZE_OFFSET);
-  PutLE32(RIFF + 16, total_size);
+  if (total_size > 0xfffffffeU - KRIFF_SIZE) {
+    return WebPEncodingSetError(pic, VP8_ENC_ERROR_FILE_TOO_BIG);
+  }
+
+  PutLE32(RIFF + 4, (uint32_t)(total_size + KSIZE_OFFSET));
+  PutLE32(RIFF + 16, (uint32_t)total_size);
   if (!pic->writer(RIFF, sizeof(RIFF), pic)) {
     return WebPEncodingSetError(pic, VP8_ENC_ERROR_BAD_WRITE);
   }
 
-  bits = 0               // keyframe (1b)
-       | (profile << 1)  // profile (3b)
-       | (1 << 4)        // visible (1b)
-       | (size0 << 5);   // partition length (19b)
+  bits = 0                         // keyframe (1b)
+       | (profile << 1)            // profile (3b)
+       | (1 << 4)                  // visible (1b)
+       | ((uint32_t)size0 << 5);   // partition length (19b)
   buf[0] = bits & 0xff;
   buf[1] = (bits >> 8) & 0xff;
   buf[2] = (bits >> 16) & 0xff;
@@ -240,8 +244,8 @@ static size_t GeneratePartition0(VP8Encoder* const enc) {
   if (enc->pic_->stats) {
     enc->pic_->stats->header_bytes[0] = (int)((pos2 - pos1 + 7) >> 3);
     enc->pic_->stats->header_bytes[1] = (int)((pos3 - pos2 + 7) >> 3);
-    enc->pic_->stats->alpha_data_size = enc->alpha_data_size_;
-    enc->pic_->stats->layer_data_size = enc->layer_data_size_;
+    enc->pic_->stats->alpha_data_size = (int)enc->alpha_data_size_;
+    enc->pic_->stats->layer_data_size = (int)enc->layer_data_size_;
   }
   return !bw->error_;
 }
@@ -254,7 +258,7 @@ int VP8EncWrite(VP8Encoder* const enc) {
   int p;
 
   // Partition #0 with header and partition sizes
-  ok = GeneratePartition0(enc);
+  ok = !!GeneratePartition0(enc);
 
   // Compute total size (for the RIFF header)
   coded_size = KHEADER_SIZE + VP8BitWriterSize(bw) + 3 * (enc->num_parts_ - 1);
@@ -289,7 +293,7 @@ int VP8EncWrite(VP8Encoder* const enc) {
     ok = pic->writer(pad_byte, 1, pic);
   }
 
-  enc->coded_size_ = coded_size + KRIFF_SIZE;
+  enc->coded_size_ = (int)coded_size + KRIFF_SIZE;
   return ok;
 }
 

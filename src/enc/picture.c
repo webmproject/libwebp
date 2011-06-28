@@ -268,7 +268,7 @@ static void ExportRow(int32_t* frow, int32_t* irow, uint8_t* dst, int dst_width,
   int x_out;
   for (x_out = 0; x_out < dst_width; ++x_out) {
     const int frac = MULT(frow[x_out], yscale);
-    const int v = MULT(irow[x_out] - frac, fxy_scale);
+    const int v = (int)(MULT(irow[x_out] - frac, fxy_scale));
     dst[x_out] = (!(v & ~0xff)) ? v : (v < 0) ? 0 : 255;
     irow[x_out] = frac;   // new fractional start
   }

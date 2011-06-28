@@ -161,9 +161,10 @@ typedef enum {
   VP8_ENC_ERROR_NULL_PARAMETER,           // a pointer parameter is NULL
   VP8_ENC_ERROR_INVALID_CONFIGURATION,    // configuration is invalid
   VP8_ENC_ERROR_BAD_DIMENSION,            // picture has invalid width/height
-  VP8_ENC_ERROR_PARTITION0_OVERFLOW,      // partition is too bigger than 16M
-  VP8_ENC_ERROR_PARTITION_OVERFLOW,       // partition is too bigger than 512k
+  VP8_ENC_ERROR_PARTITION0_OVERFLOW,      // partition is bigger than 512k
+  VP8_ENC_ERROR_PARTITION_OVERFLOW,       // partition is bigger than 16M
   VP8_ENC_ERROR_BAD_WRITE,                // error while flushing bytes
+  VP8_ENC_ERROR_FILE_TOO_BIG,             // file is bigger than 4G
 } WebPEncodingError;
 
 struct WebPPicture {

@@ -724,6 +724,7 @@ static const char* const kErrorMessages[] = {
   "in the manual (`man cwebp`)",
   "PARTITION_OVERFLOW: Partition is too big to fit 16M",
   "BAD_WRITE: Picture writer returned an I/O error"
+  "FILE_TOO_BIG: File would be too big to fit in 4G"
 };
 
 //------------------------------------------------------------------------------
@@ -776,11 +777,11 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-m") && c < argc - 1) {
       config.method = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-q") && c < argc - 1) {
-      config.quality = strtod(argv[++c], NULL);
+      config.quality = (float)strtod(argv[++c], NULL);
     } else if (!strcmp(argv[c], "-size") && c < argc - 1) {
       config.target_size = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-psnr") && c < argc - 1) {
-      config.target_PSNR = strtod(argv[++c], NULL);
+      config.target_PSNR = (float)strtod(argv[++c], NULL);
     } else if (!strcmp(argv[c], "-sns") && c < argc - 1) {
       config.sns_strength = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-f") && c < argc - 1) {
