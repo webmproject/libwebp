@@ -573,7 +573,8 @@ static int DumpPicture(const WebPPicture* const picture, const char* PGM_name) {
   const int uv_width = (picture->width + 1) / 2;
   const int uv_height = (picture->height + 1) / 2;
   const int stride = (picture->width + 1) & ~1;
-  const int height = picture->height + uv_height;
+  const int alpha_height = picture->a ? picture->height : 0;
+  const int height = picture->height + uv_height + alpha_height;
   FILE* const f = fopen(PGM_name, "wb");
   if (!f) return 0;
   fprintf(f, "P5\n%d %d\n255\n", stride, height);
@@ -587,6 +588,11 @@ static int DumpPicture(const WebPPicture* const picture, const char* PGM_name) {
       return 0;
     if (fwrite(picture->v + y * picture->uv_stride, uv_width, 1, f) != 1)
       return 0;
+  }
+  for (y = 0; y < alpha_height; ++y) {
+    if (fwrite(picture->a + y * picture->a_stride, picture->width, 1, f) != 1)
+      return 0;
+    if (picture->width & 1) fputc(0, f);  // pad
   }
   fclose(f);
   return 1;
