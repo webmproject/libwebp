@@ -34,8 +34,8 @@ static int CollectHistogramSSE2(const uint8_t* ref, const uint8_t* pred,
     // Convert coefficients to bin (within out[]).
     {
       // Load.
-      const __m128i out0 = _mm_loadu_si128((__m128i *)&out[0]);
-      const __m128i out1 = _mm_loadu_si128((__m128i *)&out[8]);
+      const __m128i out0 = _mm_loadu_si128((__m128i*)&out[0]);
+      const __m128i out1 = _mm_loadu_si128((__m128i*)&out[8]);
       // sign(out) = out >> 15  (0x0000 if positive, 0xffff if negative)
       const __m128i sign0 = _mm_srai_epi16(out0, 15);
       const __m128i sign1 = _mm_srai_epi16(out1, 15);
@@ -51,8 +51,8 @@ static int CollectHistogramSSE2(const uint8_t* ref, const uint8_t* pred,
       const __m128i bin0 = _mm_min_epi16(v0, max_coeff_thresh);
       const __m128i bin1 = _mm_min_epi16(v1, max_coeff_thresh);
       // Store.
-      _mm_storeu_si128((__m128i *)&out[0], bin0);
-      _mm_storeu_si128((__m128i *)&out[8], bin1);
+      _mm_storeu_si128((__m128i*)&out[0], bin0);
+      _mm_storeu_si128((__m128i*)&out[8], bin1);
     }
 
     // Use bin to update histogram.
@@ -96,19 +96,19 @@ static void ITransformSSE2(const uint8_t* ref, const int16_t* in, uint8_t* dst,
   // use nor store.
   __m128i in0, in1, in2, in3;
   {
-    in0 = _mm_loadl_epi64((__m128i *)&in[0]);
-    in1 = _mm_loadl_epi64((__m128i *)&in[4]);
-    in2 = _mm_loadl_epi64((__m128i *)&in[8]);
-    in3 = _mm_loadl_epi64((__m128i *)&in[12]);
+    in0 = _mm_loadl_epi64((__m128i*)&in[0]);
+    in1 = _mm_loadl_epi64((__m128i*)&in[4]);
+    in2 = _mm_loadl_epi64((__m128i*)&in[8]);
+    in3 = _mm_loadl_epi64((__m128i*)&in[12]);
     // a00 a10 a20 a30   x x x x
     // a01 a11 a21 a31   x x x x
     // a02 a12 a22 a32   x x x x
     // a03 a13 a23 a33   x x x x
     if (do_two) {
-      const __m128i inB0 = _mm_loadl_epi64((__m128i *)&in[16]);
-      const __m128i inB1 = _mm_loadl_epi64((__m128i *)&in[20]);
-      const __m128i inB2 = _mm_loadl_epi64((__m128i *)&in[24]);
-      const __m128i inB3 = _mm_loadl_epi64((__m128i *)&in[28]);
+      const __m128i inB0 = _mm_loadl_epi64((__m128i*)&in[16]);
+      const __m128i inB1 = _mm_loadl_epi64((__m128i*)&in[20]);
+      const __m128i inB2 = _mm_loadl_epi64((__m128i*)&in[24]);
+      const __m128i inB3 = _mm_loadl_epi64((__m128i*)&in[28]);
       in0 = _mm_unpacklo_epi64(in0, inB0);
       in1 = _mm_unpacklo_epi64(in1, inB1);
       in2 = _mm_unpacklo_epi64(in2, inB2);
@@ -242,10 +242,20 @@ static void ITransformSSE2(const uint8_t* ref, const int16_t* in, uint8_t* dst,
   {
     const __m128i zero = _mm_set1_epi16(0);
     // Load the reference(s).
-    __m128i ref0 = _mm_loadl_epi64((__m128i *)&ref[0 * BPS]);
-    __m128i ref1 = _mm_loadl_epi64((__m128i *)&ref[1 * BPS]);
-    __m128i ref2 = _mm_loadl_epi64((__m128i *)&ref[2 * BPS]);
-    __m128i ref3 = _mm_loadl_epi64((__m128i *)&ref[3 * BPS]);
+    __m128i ref0, ref1, ref2, ref3;
+    if (do_two) {
+      // Load eight bytes/pixels per line.
+      ref0 = _mm_loadl_epi64((__m128i*)&ref[0 * BPS]);
+      ref1 = _mm_loadl_epi64((__m128i*)&ref[1 * BPS]);
+      ref2 = _mm_loadl_epi64((__m128i*)&ref[2 * BPS]);
+      ref3 = _mm_loadl_epi64((__m128i*)&ref[3 * BPS]);
+    } else {
+      // Load four bytes/pixels per line.
+      ref0 = _mm_cvtsi32_si128(*(int*)&ref[0 * BPS]);
+      ref1 = _mm_cvtsi32_si128(*(int*)&ref[1 * BPS]);
+      ref2 = _mm_cvtsi32_si128(*(int*)&ref[2 * BPS]);
+      ref3 = _mm_cvtsi32_si128(*(int*)&ref[3 * BPS]);
+    }
     // Convert to 16b.
     ref0 = _mm_unpacklo_epi8(ref0, zero);
     ref1 = _mm_unpacklo_epi8(ref1, zero);
@@ -264,10 +274,10 @@ static void ITransformSSE2(const uint8_t* ref, const int16_t* in, uint8_t* dst,
     // Store the results.
     if (do_two) {
       // Store eight bytes/pixels per line.
-      _mm_storel_epi64((__m128i *)&dst[0 * BPS], ref0);
-      _mm_storel_epi64((__m128i *)&dst[1 * BPS], ref1);
-      _mm_storel_epi64((__m128i *)&dst[2 * BPS], ref2);
-      _mm_storel_epi64((__m128i *)&dst[3 * BPS], ref3);
+      _mm_storel_epi64((__m128i*)&dst[0 * BPS], ref0);
+      _mm_storel_epi64((__m128i*)&dst[1 * BPS], ref1);
+      _mm_storel_epi64((__m128i*)&dst[2 * BPS], ref2);
+      _mm_storel_epi64((__m128i*)&dst[3 * BPS], ref3);
     } else {
       // Store four bytes/pixels per line.
       *((int32_t *)&dst[0 * BPS]) = _mm_cvtsi128_si32(ref0);
@@ -296,19 +306,19 @@ static void FTransformSSE2(const uint8_t* src, const uint8_t* ref,
   // Difference between src and ref and initial transpose.
   {
     // Load src and convert to 16b.
-    const __m128i src0 = _mm_loadl_epi64((__m128i *)&src[0 * BPS]);
-    const __m128i src1 = _mm_loadl_epi64((__m128i *)&src[1 * BPS]);
-    const __m128i src2 = _mm_loadl_epi64((__m128i *)&src[2 * BPS]);
-    const __m128i src3 = _mm_loadl_epi64((__m128i *)&src[3 * BPS]);
+    const __m128i src0 = _mm_loadl_epi64((__m128i*)&src[0 * BPS]);
+    const __m128i src1 = _mm_loadl_epi64((__m128i*)&src[1 * BPS]);
+    const __m128i src2 = _mm_loadl_epi64((__m128i*)&src[2 * BPS]);
+    const __m128i src3 = _mm_loadl_epi64((__m128i*)&src[3 * BPS]);
     const __m128i src_0 = _mm_unpacklo_epi8(src0, zero);
     const __m128i src_1 = _mm_unpacklo_epi8(src1, zero);
     const __m128i src_2 = _mm_unpacklo_epi8(src2, zero);
     const __m128i src_3 = _mm_unpacklo_epi8(src3, zero);
     // Load ref and convert to 16b.
-    const __m128i ref0 = _mm_loadl_epi64((__m128i *)&ref[0 * BPS]);
-    const __m128i ref1 = _mm_loadl_epi64((__m128i *)&ref[1 * BPS]);
-    const __m128i ref2 = _mm_loadl_epi64((__m128i *)&ref[2 * BPS]);
-    const __m128i ref3 = _mm_loadl_epi64((__m128i *)&ref[3 * BPS]);
+    const __m128i ref0 = _mm_loadl_epi64((__m128i*)&ref[0 * BPS]);
+    const __m128i ref1 = _mm_loadl_epi64((__m128i*)&ref[1 * BPS]);
+    const __m128i ref2 = _mm_loadl_epi64((__m128i*)&ref[2 * BPS]);
+    const __m128i ref3 = _mm_loadl_epi64((__m128i*)&ref[3 * BPS]);
     const __m128i ref_0 = _mm_unpacklo_epi8(ref0, zero);
     const __m128i ref_1 = _mm_unpacklo_epi8(ref1, zero);
     const __m128i ref_2 = _mm_unpacklo_epi8(ref2, zero);
@@ -419,10 +429,10 @@ static void FTransformSSE2(const uint8_t* src, const uint8_t* ref,
     // desired (0, 1), we add one earlier through k12000_plus_one.
     const __m128i g1 = _mm_add_epi16(f1, _mm_cmpeq_epi16(a32, zero));
 
-    _mm_storel_epi64((__m128i *)&out[ 0], d0);
-    _mm_storel_epi64((__m128i *)&out[ 4], g1);
-    _mm_storel_epi64((__m128i *)&out[ 8], d2);
-    _mm_storel_epi64((__m128i *)&out[12], f3);
+    _mm_storel_epi64((__m128i*)&out[ 0], d0);
+    _mm_storel_epi64((__m128i*)&out[ 4], g1);
+    _mm_storel_epi64((__m128i*)&out[ 8], d2);
+    _mm_storel_epi64((__m128i*)&out[12], f3);
   }
 }
 
@@ -433,14 +443,14 @@ static int SSE4x4SSE2(const uint8_t* a, const uint8_t* b) {
   const __m128i zero = _mm_set1_epi16(0);
 
   // Load values.
-  const __m128i a0 = _mm_loadl_epi64((__m128i *)&a[BPS * 0]);
-  const __m128i a1 = _mm_loadl_epi64((__m128i *)&a[BPS * 1]);
-  const __m128i a2 = _mm_loadl_epi64((__m128i *)&a[BPS * 2]);
-  const __m128i a3 = _mm_loadl_epi64((__m128i *)&a[BPS * 3]);
-  const __m128i b0 = _mm_loadl_epi64((__m128i *)&b[BPS * 0]);
-  const __m128i b1 = _mm_loadl_epi64((__m128i *)&b[BPS * 1]);
-  const __m128i b2 = _mm_loadl_epi64((__m128i *)&b[BPS * 2]);
-  const __m128i b3 = _mm_loadl_epi64((__m128i *)&b[BPS * 3]);
+  const __m128i a0 = _mm_loadl_epi64((__m128i*)&a[BPS * 0]);
+  const __m128i a1 = _mm_loadl_epi64((__m128i*)&a[BPS * 1]);
+  const __m128i a2 = _mm_loadl_epi64((__m128i*)&a[BPS * 2]);
+  const __m128i a3 = _mm_loadl_epi64((__m128i*)&a[BPS * 3]);
+  const __m128i b0 = _mm_loadl_epi64((__m128i*)&b[BPS * 0]);
+  const __m128i b1 = _mm_loadl_epi64((__m128i*)&b[BPS * 1]);
+  const __m128i b2 = _mm_loadl_epi64((__m128i*)&b[BPS * 2]);
+  const __m128i b3 = _mm_loadl_epi64((__m128i*)&b[BPS * 3]);
 
   // Combine pair of lines and convert to 16b.
   const __m128i a01 = _mm_unpacklo_epi32(a0, a1);
@@ -471,7 +481,7 @@ static int SSE4x4SSE2(const uint8_t* a, const uint8_t* b) {
   const __m128i sum1 = _mm_add_epi32(madd2, madd3);
   const __m128i sum2 = _mm_add_epi32(sum0, sum1);
   int32_t tmp[4];
-  _mm_storeu_si128((__m128i *)tmp, sum2);
+  _mm_storeu_si128((__m128i*)tmp, sum2);
   return (tmp[3] + tmp[2] + tmp[1] + tmp[0]);
 }
 
@@ -494,14 +504,14 @@ static int TTransformSSE2(const uint8_t* inA, const uint8_t* inB,
 
   // Load, combine and tranpose inputs.
   {
-    const __m128i inA_0 = _mm_loadl_epi64((__m128i *)&inA[BPS * 0]);
-    const __m128i inA_1 = _mm_loadl_epi64((__m128i *)&inA[BPS * 1]);
-    const __m128i inA_2 = _mm_loadl_epi64((__m128i *)&inA[BPS * 2]);
-    const __m128i inA_3 = _mm_loadl_epi64((__m128i *)&inA[BPS * 3]);
-    const __m128i inB_0 = _mm_loadl_epi64((__m128i *)&inB[BPS * 0]);
-    const __m128i inB_1 = _mm_loadl_epi64((__m128i *)&inB[BPS * 1]);
-    const __m128i inB_2 = _mm_loadl_epi64((__m128i *)&inB[BPS * 2]);
-    const __m128i inB_3 = _mm_loadl_epi64((__m128i *)&inB[BPS * 3]);
+    const __m128i inA_0 = _mm_loadl_epi64((__m128i*)&inA[BPS * 0]);
+    const __m128i inA_1 = _mm_loadl_epi64((__m128i*)&inA[BPS * 1]);
+    const __m128i inA_2 = _mm_loadl_epi64((__m128i*)&inA[BPS * 2]);
+    const __m128i inA_3 = _mm_loadl_epi64((__m128i*)&inA[BPS * 3]);
+    const __m128i inB_0 = _mm_loadl_epi64((__m128i*)&inB[BPS * 0]);
+    const __m128i inB_1 = _mm_loadl_epi64((__m128i*)&inB[BPS * 1]);
+    const __m128i inB_2 = _mm_loadl_epi64((__m128i*)&inB[BPS * 2]);
+    const __m128i inB_3 = _mm_loadl_epi64((__m128i*)&inB[BPS * 3]);
 
     // Combine inA and inB (we'll do two transforms in parallel).
     const __m128i inAB_0 = _mm_unpacklo_epi8(inA_0, inB_0);
@@ -585,8 +595,8 @@ static int TTransformSSE2(const uint8_t* inA, const uint8_t* inB,
     // Load all inputs.
     // TODO(cduvivier): Make variable declarations and allocations aligned so
     //                  we can use _mm_load_si128 instead of _mm_loadu_si128.
-    const __m128i w_0 = _mm_loadu_si128((__m128i *)&w[0]);
-    const __m128i w_8 = _mm_loadu_si128((__m128i *)&w[8]);
+    const __m128i w_0 = _mm_loadu_si128((__m128i*)&w[0]);
+    const __m128i w_8 = _mm_loadu_si128((__m128i*)&w[8]);
 
     // Calculate a and b (two 4x4 at once).
     const __m128i a0 = _mm_add_epi16(tmp_0, tmp_2);
@@ -645,7 +655,7 @@ static int TTransformSSE2(const uint8_t* inA, const uint8_t* inB,
 
     // difference of weighted sums
     A_b0 = _mm_sub_epi32(A_b0, B_b0);
-    _mm_storeu_si128((__m128i *)&sum[0], A_b0);
+    _mm_storeu_si128((__m128i*)&sum[0], A_b0);
   }
   return sum[0] + sum[1] + sum[2] + sum[3];
 }
@@ -686,18 +696,18 @@ static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
   // Load all inputs.
   // TODO(cduvivier): Make variable declarations and allocations aligned so that
   //                  we can use _mm_load_si128 instead of _mm_loadu_si128.
-  __m128i in0 = _mm_loadu_si128((__m128i *)&in[0]);
-  __m128i in8 = _mm_loadu_si128((__m128i *)&in[8]);
-  const __m128i sharpen0 = _mm_loadu_si128((__m128i *)&mtx->sharpen_[0]);
-  const __m128i sharpen8 = _mm_loadu_si128((__m128i *)&mtx->sharpen_[8]);
-  const __m128i iq0 = _mm_loadu_si128((__m128i *)&mtx->iq_[0]);
-  const __m128i iq8 = _mm_loadu_si128((__m128i *)&mtx->iq_[8]);
-  const __m128i bias0 = _mm_loadu_si128((__m128i *)&mtx->bias_[0]);
-  const __m128i bias8 = _mm_loadu_si128((__m128i *)&mtx->bias_[8]);
-  const __m128i q0 = _mm_loadu_si128((__m128i *)&mtx->q_[0]);
-  const __m128i q8 = _mm_loadu_si128((__m128i *)&mtx->q_[8]);
-  const __m128i zthresh0 = _mm_loadu_si128((__m128i *)&mtx->zthresh_[0]);
-  const __m128i zthresh8 = _mm_loadu_si128((__m128i *)&mtx->zthresh_[8]);
+  __m128i in0 = _mm_loadu_si128((__m128i*)&in[0]);
+  __m128i in8 = _mm_loadu_si128((__m128i*)&in[8]);
+  const __m128i sharpen0 = _mm_loadu_si128((__m128i*)&mtx->sharpen_[0]);
+  const __m128i sharpen8 = _mm_loadu_si128((__m128i*)&mtx->sharpen_[8]);
+  const __m128i iq0 = _mm_loadu_si128((__m128i*)&mtx->iq_[0]);
+  const __m128i iq8 = _mm_loadu_si128((__m128i*)&mtx->iq_[8]);
+  const __m128i bias0 = _mm_loadu_si128((__m128i*)&mtx->bias_[0]);
+  const __m128i bias8 = _mm_loadu_si128((__m128i*)&mtx->bias_[8]);
+  const __m128i q0 = _mm_loadu_si128((__m128i*)&mtx->q_[0]);
+  const __m128i q8 = _mm_loadu_si128((__m128i*)&mtx->q_[8]);
+  const __m128i zthresh0 = _mm_loadu_si128((__m128i*)&mtx->zthresh_[0]);
+  const __m128i zthresh8 = _mm_loadu_si128((__m128i*)&mtx->zthresh_[8]);
 
   // sign(in) = in >> 15  (0x0000 if positive, 0xffff if negative)
   sign0 = _mm_srai_epi16(in0, 15);
@@ -765,8 +775,8 @@ static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
     __m128i cmp8 = _mm_cmpgt_epi16(coeff8, zthresh8);
     in0 = _mm_and_si128(in0, cmp0);
     in8 = _mm_and_si128(in8, cmp8);
-    _mm_storeu_si128((__m128i *)&in[0], in0);
-    _mm_storeu_si128((__m128i *)&in[8], in8);
+    _mm_storeu_si128((__m128i*)&in[0], in0);
+    _mm_storeu_si128((__m128i*)&in[8], in8);
     out0 = _mm_and_si128(out0, cmp0);
     out8 = _mm_and_si128(out8, cmp8);
   }
@@ -784,8 +794,8 @@ static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
     outZ8 = _mm_shufflelo_epi16(out8,  _MM_SHUFFLE(3, 0, 2, 1));
     outZ8 = _mm_shuffle_epi32  (outZ8, _MM_SHUFFLE(3, 1, 2, 0));
     outZ8 = _mm_shufflelo_epi16(outZ8, _MM_SHUFFLE(1, 3, 2, 0));
-    _mm_storeu_si128((__m128i *)&out[0], outZ0);
-    _mm_storeu_si128((__m128i *)&out[8], outZ8);
+    _mm_storeu_si128((__m128i*)&out[0], outZ0);
+    _mm_storeu_si128((__m128i*)&out[8], outZ8);
     packed_out = _mm_packs_epi16(outZ0, outZ8);
   }
   {
@@ -798,7 +808,7 @@ static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
   // detect if all 'out' values are zeroes or not
   {
     int32_t tmp[4];
-    _mm_storeu_si128((__m128i *)tmp, packed_out);
+    _mm_storeu_si128((__m128i*)tmp, packed_out);
     if (n) {
       tmp[0] &= ~0xff;
     }

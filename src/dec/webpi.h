@@ -58,6 +58,22 @@ struct WebPDecParams {
 void WebPResetDecParams(WebPDecParams* const params);
 
 //------------------------------------------------------------------------------
+// Upsampler function to overwrite fancy upsampler.
+
+typedef void (*WebPUpsampleLinePairFunc)(
+  const uint8_t* top_y, const uint8_t* bottom_y,
+  const uint8_t* top_u, const uint8_t* top_v,
+  const uint8_t* cur_u, const uint8_t* cur_v,
+  uint8_t* top_dst, uint8_t* bottom_dst, int len);
+
+// Upsampler functions to be used to convert YUV to RGB(A) modes
+extern WebPUpsampleLinePairFunc WebPUpsamplers[MODE_BGRA + 1];
+extern WebPUpsampleLinePairFunc WebPUpsamplersKeepAlpha[MODE_BGRA + 1];
+
+// Initializes SSE2 version of the fancy upsamplers.
+void WebPInitUpsamplersSSE2(void);
+
+//------------------------------------------------------------------------------
 // Misc utils
 
 // If a RIFF container is detected, validate it and skip over it. Returns

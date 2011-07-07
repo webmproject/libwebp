@@ -105,28 +105,33 @@ UPSAMPLE_FUNC(UpsampleBgraLinePair, VP8YuvToBgra, 4)
 UPSAMPLE_FUNC(UpsampleRgbKeepAlphaLinePair, VP8YuvToRgb, 4)
 UPSAMPLE_FUNC(UpsampleBgrKeepAlphaLinePair, VP8YuvToBgr, 4)
 
-typedef void (*UpsampleLinePairFunc)(
-  const uint8_t* top_y, const uint8_t* bottom_y,
-  const uint8_t* top_u, const uint8_t* top_v,
-  const uint8_t* cur_u, const uint8_t* cur_v,
-  uint8_t* top_dst, uint8_t* bottom_dst, int len);
-
-static const UpsampleLinePairFunc
-  kUpsamplers[MODE_BGRA + 1] = {
-    UpsampleRgbLinePair,    // MODE_RGB
-    UpsampleRgbaLinePair,   // MODE_RGBA
-    UpsampleBgrLinePair,    // MODE_BGR
-    UpsampleBgraLinePair    // MODE_BGRA
-  },
-  kUpsamplersKeepAlpha[MODE_BGRA + 1] = {
-    UpsampleRgbLinePair,            // MODE_RGB
-    UpsampleRgbKeepAlphaLinePair,   // MODE_RGBA
-    UpsampleBgrLinePair,            // MODE_BGR
-    UpsampleBgrKeepAlphaLinePair    // MODE_BGRA
-  };
-
 #undef LOAD_UV
 #undef UPSAMPLE_FUNC
+
+// Fancy upsampling functions to convert YUV to RGB
+WebPUpsampleLinePairFunc WebPUpsamplers[MODE_BGRA + 1];
+WebPUpsampleLinePairFunc WebPUpsamplersKeepAlpha[MODE_BGRA + 1];
+
+static void InitUpsamplers(void) {
+  WebPUpsamplers[MODE_RGB] = UpsampleRgbLinePair;
+  WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePair;
+  WebPUpsamplers[MODE_BGR] = UpsampleBgrLinePair;
+  WebPUpsamplers[MODE_BGRA] =  UpsampleBgraLinePair;
+
+  WebPUpsamplersKeepAlpha[MODE_RGB] = UpsampleRgbLinePair;
+  WebPUpsamplersKeepAlpha[MODE_RGBA] = UpsampleRgbKeepAlphaLinePair;
+  WebPUpsamplersKeepAlpha[MODE_BGR] =  UpsampleBgrLinePair;
+  WebPUpsamplersKeepAlpha[MODE_BGRA] =  UpsampleBgrKeepAlphaLinePair;
+
+  // If defined, use CPUInfo() to overwrite some pointers with faster versions.
+  if (VP8DecGetCPUInfo) {
+    if (VP8DecGetCPUInfo(kSSE2)) {
+#if defined(__SSE2__) || defined(_MSC_VER)
+      WebPInitUpsamplersSSE2();
+#endif
+    }
+  }
+}
 
 #endif  // FANCY_UPSAMPLING
 
@@ -287,9 +292,9 @@ static int EmitFancyRGB(const VP8Io* const io, WebPDecParams* const p) {
   int num_lines_out = io->mb_h;   // a priori guess
   const WebPRGBABuffer* const buf = &p->output->u.RGBA;
   uint8_t* dst = buf->rgba + io->mb_y * buf->stride;
-  const UpsampleLinePairFunc upsample =
-      io->a ? kUpsamplersKeepAlpha[p->output->colorspace]
-            : kUpsamplers[p->output->colorspace];
+  const WebPUpsampleLinePairFunc upsample =
+      io->a ? WebPUpsamplersKeepAlpha[p->output->colorspace]
+            : WebPUpsamplers[p->output->colorspace];
   const uint8_t* cur_y = io->y;
   const uint8_t* cur_u = io->u;
   const uint8_t* cur_v = io->v;
@@ -781,6 +786,7 @@ static int CustomSetup(VP8Io* io) {
         p->tmp_u = p->tmp_y + io->mb_w;
         p->tmp_v = p->tmp_u + uv_width;
         p->emit = EmitFancyRGB;
+        InitUpsamplers();
       }
 #endif
     } else {
