@@ -621,6 +621,23 @@ uint8_t* WebPIDecGetYUV(const WebPIDecoder* const idec, int* last_y,
   return src->u.YUVA.y;
 }
 
+int WebPISetIOHooks(WebPIDecoder* const idec,
+                    VP8IoPutHook put,
+                    VP8IoSetupHook setup,
+                    VP8IoTeardownHook teardown,
+                    void* user_data) {
+  if (!idec || !idec->dec_ || idec->state_ > STATE_HEADER) {
+    return 0;
+  }
+
+  idec->io_.put = put;
+  idec->io_.setup = setup;
+  idec->io_.teardown = teardown;
+  idec->io_.opaque = user_data;
+
+  return 1;
+}
+
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
 #endif
