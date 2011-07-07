@@ -14,7 +14,7 @@
 # follow below install instructions or just comment out the next lines.
 EXTRA_FLAGS= -DWEBP_HAVE_PNG -DWEBP_HAVE_JPEG
 EXTRA_LIBS= -lpng -ljpeg -lz
-ifeq ("$(HOSTTYPE)", "intel-mac")
+ifeq ($(strip $(shell uname)), Darwin)
   EXTRA_FLAGS += -I/opt/local/include
   EXTRA_LIBS  += -L/opt/local/lib
 endif
