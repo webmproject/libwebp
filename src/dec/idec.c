@@ -578,10 +578,20 @@ static const WebPDecBuffer* GetOutputBuffer(const WebPIDecoder* const idec) {
   return idec->params_.output;
 }
 
-const WebPDecBuffer* WebPIDecGetSamples(const WebPIDecoder* const idec,
-                                        int* last_y) {
+const WebPDecBuffer* WebPIDecodedArea(const WebPIDecoder* const idec,
+                                      int* const left, int* const top,
+                                      int* const width, int* const height) {
   const WebPDecBuffer* const src = GetOutputBuffer(idec);
-  if (last_y) *last_y = idec->params_.last_y;
+  if (left) *left = 0;
+  if (top) *top = 0;
+  // TODO(skal): later include handling of rotations.
+  if (src) {
+    if (width) *width = src->width;
+    if (height) *height = idec->params_.last_y;
+  } else {
+    if (width) *width = 0;
+    if (height) *height = 0;
+  }
   return src;
 }
 

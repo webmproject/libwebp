@@ -249,13 +249,15 @@ uint8_t* WebPIDecGetYUV(const WebPIDecoder* const idec, int* last_y,
                         uint8_t** u, uint8_t** v,
                         int* width, int* height, int* stride, int* uv_stride);
 
-// Generic call to retrieve output buffer information.
-// Returns NULL in case of error, otherwise returns the pointer to the internal
-// representation. This structure is read-only and shouldn't be modified.
-// TODO(skal): instead of 'last_y' only, we should pass *left/top/right/bottom,
-// to get the visible area. Esp. useful for rotation.
-const WebPDecBuffer* WebPIDecGetSamples(const WebPIDecoder* const idec,
-                                        int* last_y);
+// Generic call to retrieve information about the displayable area.
+// If non NULL, the left/right/width/height pointers are filled with the visible
+// rectangular area so far.
+// Returns NULL in case the incremental decoder object is in an invalid state.
+// Otherwise returns the pointer to the internal representation. This structure
+// is read-only, tied to WebPIDecoder's lifespan and should not be modified.
+const WebPDecBuffer* WebPIDecodedArea(const WebPIDecoder* const idec,
+                                      int* const left, int* const top,
+                                      int* const width, int* const height);
 
 //-----------------------------------------------------------------------------
 // Advanced decoding parametrization
