@@ -101,6 +101,9 @@ static int Record(int bit, uint64_t* const stats) {
   return bit;
 }
 
+// We keep the table free variant around for reference, in case.
+#define USE_LEVEL_CODE_TABLE
+
 // Simulate block coding, but only record statistics.
 // Note: no need to record the fixed probas.
 static int RecordCoeffs(int ctx, VP8Residual* res) {
@@ -111,14 +114,16 @@ static int RecordCoeffs(int ctx, VP8Residual* res) {
   }
 
   while (1) {
-    const int v = abs(res->coeffs[n++]);
+    int v = res->coeffs[n++];
     if (!Record(v != 0, s[1])) {
       s = res->stats[VP8EncBands[n]][0];
       continue;
     }
-    if (!Record(v > 1, s[2])) {
+    if (!Record(2u < (unsigned int)(v + 1), s[2])) {  // v = -1 or 1
       s = res->stats[VP8EncBands[n]][1];
     } else {
+      v = abs(v);
+#if !defined(USE_LEVEL_CODE_TABLE)
       if (!Record(v > 4, s[3])) {
         if (Record(v != 2, s[4]))
           Record(v == 4, s[5]);
@@ -129,6 +134,20 @@ static int RecordCoeffs(int ctx, VP8Residual* res) {
       } else {
         Record((v >= 3 + (8 << 3)), s[10]);
       }
+#else
+      if (v > MAX_VARIABLE_LEVEL)
+        v = MAX_VARIABLE_LEVEL;
+
+      {
+        const int bits = VP8LevelCodes[v - 1][1];
+        int pattern = VP8LevelCodes[v - 1][0];
+        int i;
+        for (i = 0; (pattern >>= 1) != 0; ++i) {
+          const int mask = 2 << i;
+          if (pattern & 1) Record(!!(bits & mask), s[3 + i]);
+        }
+      }
+#endif
       s = res->stats[VP8EncBands[n]][2];
     }
     if (n == 16 || !Record(n <= res->last, s[0])) {
@@ -213,16 +232,18 @@ static int GetResidualCost(int ctx, const VP8Residual* const res) {
     return cost;
   }
   while (n <= res->last) {
-    const int v = abs(res->coeffs[n++]);
-    cost += VP8LevelCost(t, v);
+    const int v = res->coeffs[n++];
     if (v == 0) {
+      cost += VP8LevelCost(t, 0);
       p = res->prob[VP8EncBands[n]][0];
       t = res->cost[VP8EncBands[n]][0];
       continue;
-    } else if (v == 1) {
+    } else if (2u >= (unsigned int)(v + 1)) {   // v = -1 or 1
+      cost += VP8LevelCost(t, 1);
       p = res->prob[VP8EncBands[n]][1];
       t = res->cost[VP8EncBands[n]][1];
     } else {
+      cost += VP8LevelCost(t, abs(v));
       p = res->prob[VP8EncBands[n]][2];
       t = res->cost[VP8EncBands[n]][2];
     }

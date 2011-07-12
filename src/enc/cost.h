@@ -33,6 +33,7 @@ static inline uint64_t VP8BranchCost(uint64_t nb, uint64_t total,
 }
 
 // Level cost calculations
+extern const uint16_t VP8LevelCodes[MAX_VARIABLE_LEVEL][2];
 void VP8CalculateLevelCosts(VP8Proba* const proba);
 static inline int VP8LevelCost(const uint16_t* const table, int level) {
   return VP8LevelFixedCosts[level]
