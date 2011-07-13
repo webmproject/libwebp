@@ -24,7 +24,7 @@ extern "C" {
 
 // Return the encoder's version number, packed in hexadecimal using 8bits for
 // each of major/minor/revision. E.g: v2.5.7 is 0x020507.
-int WebPGetEncoderVersion(void);
+WEBP_EXTERN(int) WebPGetEncoderVersion(void);
 
 //-----------------------------------------------------------------------------
 // One-stop-shop call! No questions asked:
@@ -32,14 +32,18 @@ int WebPGetEncoderVersion(void);
 // Returns the size of the compressed data (pointed to by *output), or 0 if
 // an error occurred. The compressed data must be released by the caller
 // using the call 'free(*output)'.
-size_t WebPEncodeRGB(const uint8_t* rgb, int width, int height, int stride,
-                     float quality_factor, uint8_t** output);
-size_t WebPEncodeBGR(const uint8_t* bgr, int width, int height, int stride,
-                     float quality_factor, uint8_t** output);
-size_t WebPEncodeRGBA(const uint8_t* rgba, int width, int height, int stride,
-                      float quality_factor, uint8_t** output);
-size_t WebPEncodeBGRA(const uint8_t* bgra, int width, int height, int stride,
-                      float quality_factor, uint8_t** output);
+WEBP_EXTERN(size_t) WebPEncodeRGB(const uint8_t* rgb,
+                                  int width, int height, int stride,
+                                  float quality_factor, uint8_t** output);
+WEBP_EXTERN(size_t) WebPEncodeBGR(const uint8_t* bgr,
+                                  int width, int height, int stride,
+                                  float quality_factor, uint8_t** output);
+WEBP_EXTERN(size_t) WebPEncodeRGBA(const uint8_t* rgba,
+                                   int width, int height, int stride,
+                                   float quality_factor, uint8_t** output);
+WEBP_EXTERN(size_t) WebPEncodeBGRA(const uint8_t* bgra,
+                                   int width, int height, int stride,
+                                   float quality_factor, uint8_t** output);
 
 //-----------------------------------------------------------------------------
 // Coding parameters
@@ -80,7 +84,8 @@ typedef enum {
 } WebPPreset;
 
 // Internal, version-checked, entry point
-int WebPConfigInitInternal(WebPConfig* const, WebPPreset, float, int);
+WEBP_EXTERN(int) WebPConfigInitInternal(
+    WebPConfig* const, WebPPreset, float, int);
 
 // Should always be called, to initialize a fresh WebPConfig structure before
 // modification. Returns 0 in case of version mismatch. WebPConfigInit() must
@@ -101,7 +106,7 @@ static inline int WebPConfigPreset(WebPConfig* const config,
 }
 
 // Returns 1 if all parameters are in valid range and the configuration is OK.
-int WebPValidateConfig(const WebPConfig* const config);
+WEBP_EXTERN(int) WebPValidateConfig(const WebPConfig* const config);
 
 //-----------------------------------------------------------------------------
 // Input / Output
@@ -193,7 +198,7 @@ struct WebPPicture {
 };
 
 // Internal, version-checked, entry point
-int WebPPictureInitInternal(WebPPicture* const, int);
+WEBP_EXTERN(int) WebPPictureInitInternal(WebPPicture* const, int);
 
 // Should always be called, to initialize the structure. Returns 0 in case of
 // version mismatch. WebPPictureInit() must have succeeded before using the
@@ -209,42 +214,44 @@ static inline int WebPPictureInit(WebPPicture* const picture) {
 // Allocate y/u/v buffers as per colorspace/width/height specification.
 // Note! This function will free the previous buffer if needed.
 // Returns 0 in case of memory error.
-int WebPPictureAlloc(WebPPicture* const picture);
+WEBP_EXTERN(int) WebPPictureAlloc(WebPPicture* const picture);
 
 // Release memory allocated by WebPPictureAlloc() or WebPPictureImport*()
 // Note that this function does _not_ free the memory pointed to by 'picture'.
-void WebPPictureFree(WebPPicture* const picture);
+WEBP_EXTERN(void) WebPPictureFree(WebPPicture* const picture);
 
 // Copy the pixels of *src into *dst, using WebPPictureAlloc.
 // Returns 0 in case of memory allocation error.
-int WebPPictureCopy(const WebPPicture* const src, WebPPicture* const dst);
+WEBP_EXTERN(int) WebPPictureCopy(const WebPPicture* const src,
+                                 WebPPicture* const dst);
 
 // self-crops a picture to the rectangle defined by top/left/width/height.
 // Returns 0 in case of memory allocation error, or if the rectangle is
 // outside of the source picture.
-int WebPPictureCrop(WebPPicture* const picture,
-                    int left, int top, int width, int height);
+WEBP_EXTERN(int) WebPPictureCrop(WebPPicture* const picture,
+                                 int left, int top, int width, int height);
 
 // Rescale a picture to new dimension width x height.
 // Now gamma correction is applied.
 // Returns false in case of error (invalid parameter or insufficient memory).
-int WebPPictureRescale(WebPPicture* const pic, int width, int height);
+WEBP_EXTERN(int) WebPPictureRescale(WebPPicture* const pic,
+                                    int width, int height);
 
 // Colorspace conversion function to import RGB samples.
 // Previous buffer will be free'd, if any.
 // *rgb buffer should have a size of at least height * rgb_stride.
 // Returns 0 in case of memory error.
-int WebPPictureImportRGB(WebPPicture* const picture,
-                         const uint8_t* const rgb, int rgb_stride);
+WEBP_EXTERN(int) WebPPictureImportRGB(
+    WebPPicture* const picture, const uint8_t* const rgb, int rgb_stride);
 // Same, but for RGBA buffer
-int WebPPictureImportRGBA(WebPPicture* const picture,
-                          const uint8_t* const rgba, int rgba_stride);
+WEBP_EXTERN(int) WebPPictureImportRGBA(
+    WebPPicture* const picture, const uint8_t* const rgba, int rgba_stride);
 
 // Variant of the above, but taking BGR(A) input:
-int WebPPictureImportBGR(WebPPicture* const picture,
-                         const uint8_t* const bgr, int bgr_stride);
-int WebPPictureImportBGRA(WebPPicture* const picture,
-                          const uint8_t* const bgra, int bgra_stride);
+WEBP_EXTERN(int) WebPPictureImportBGR(
+    WebPPicture* const picture, const uint8_t* const bgr, int bgr_stride);
+WEBP_EXTERN(int) WebPPictureImportBGRA(
+    WebPPicture* const picture, const uint8_t* const bgra, int bgra_stride);
 
 //-----------------------------------------------------------------------------
 // Main call
@@ -254,7 +261,8 @@ int WebPPictureImportBGRA(WebPPicture* const picture,
 // must be a valid one.
 // Returns false in case of error, true otherwise.
 // In case of error, picture->error_code is updated accordingly.
-int WebPEncode(const WebPConfig* const config, WebPPicture* const picture);
+WEBP_EXTERN(int) WebPEncode(
+    const WebPConfig* const config, WebPPicture* const picture);
 
 //-----------------------------------------------------------------------------
 

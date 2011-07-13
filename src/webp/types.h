@@ -29,4 +29,10 @@ typedef long long int int64_t;
 #define inline __forceinline
 #endif  /* _MSC_VER */
 
+#ifndef WEBP_EXTERN
+// This explicitly marks library functions and allows for changing the
+// signature for e.g., Windows DLL builds.
+#define WEBP_EXTERN(type) extern type
+#endif  /* WEBP_EXTERN */
+
 #endif  /* WEBP_WEBP_TYPES_H_ */

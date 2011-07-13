@@ -101,22 +101,22 @@ struct VP8Io {
 };
 
 // Internal, version-checked, entry point
-int VP8InitIoInternal(VP8Io* const, int);
+WEBP_EXTERN(int) VP8InitIoInternal(VP8Io* const, int);
 
 // Set the custom IO function pointers and user-data. The setter for IO hooks
 // should be called before initiating incremental decoding. Returns true if
 // WebPIdecoder object is successfully modified, false otherwise.
-int WebPISetIOHooks(WebPIDecoder* const idec,
-                    VP8IoPutHook put,
-                    VP8IoSetupHook setup,
-                    VP8IoTeardownHook teardown,
-                    void* user_data);
+WEBP_EXTERN(int) WebPISetIOHooks(WebPIDecoder* const idec,
+                                 VP8IoPutHook put,
+                                 VP8IoSetupHook setup,
+                                 VP8IoTeardownHook teardown,
+                                 void* user_data);
 
 // Main decoding object. This is an opaque structure.
 typedef struct VP8Decoder VP8Decoder;
 
 // Create a new decoder object.
-VP8Decoder* VP8New(void);
+WEBP_EXTERN(VP8Decoder*) VP8New(void);
 
 // Must be called to make sure 'io' is initialized properly.
 // Returns false in case of version mismatch. Upon such failure, no other
@@ -126,24 +126,24 @@ static inline int VP8InitIo(VP8Io* const io) {
 }
 
 // Start decoding a new picture. Returns true if ok.
-int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io);
+WEBP_EXTERN(int) VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io);
 
 // Decode a picture. Will call VP8GetHeaders() if it wasn't done already.
 // Returns false in case of error.
-int VP8Decode(VP8Decoder* const dec, VP8Io* const io);
+WEBP_EXTERN(int) VP8Decode(VP8Decoder* const dec, VP8Io* const io);
 
 // Return current status of the decoder:
-VP8StatusCode VP8Status(VP8Decoder* const dec);
+WEBP_EXTERN(VP8StatusCode) VP8Status(VP8Decoder* const dec);
 
 // return readable string corresponding to the last status.
-const char* VP8StatusMessage(VP8Decoder* const dec);
+WEBP_EXTERN(const char*) VP8StatusMessage(VP8Decoder* const dec);
 
 // Resets the decoder in its initial state, reclaiming memory.
 // Not a mandatory call between calls to VP8Decode().
-void VP8Clear(VP8Decoder* const dec);
+WEBP_EXTERN(void) VP8Clear(VP8Decoder* const dec);
 
 // Destroy the decoder object.
-void VP8Delete(VP8Decoder* const dec);
+WEBP_EXTERN(void) VP8Delete(VP8Decoder* const dec);
 
 //-----------------------------------------------------------------------------
 
