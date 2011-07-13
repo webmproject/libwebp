@@ -42,6 +42,10 @@ uint8_t* WebPDecodeRGB(const uint8_t* data, uint32_t data_size,
 uint8_t* WebPDecodeRGBA(const uint8_t* data, uint32_t data_size,
                         int* width, int* height);
 
+// Same as WebPDecodeRGBA, but returning ARGB data.
+uint8_t* WebPDecodeARGB(const uint8_t* data, uint32_t data_size,
+                        int* width, int* height);
+
 // This variant decode to BGR instead of RGB.
 uint8_t* WebPDecodeBGR(const uint8_t* data, uint32_t data_size,
                        int* width, int* height);
@@ -102,7 +106,11 @@ uint8_t* WebPDecodeYUVInto(const uint8_t* data, uint32_t data_size,
 // Colorspaces
 typedef enum { MODE_RGB = 0, MODE_RGBA = 1,
                MODE_BGR = 2, MODE_BGRA = 3,
-               MODE_YUV = 4, MODE_YUVA = 5  // yuv 4:2:0
+               MODE_ARGB = 4, MODE_ARGB_4444 = 5,
+               MODE_RGB_565 = 6,
+               // YUV modes must come after RGB ones.
+               MODE_YUV = 7, MODE_YUVA = 8,  // yuv 4:2:0
+               MODE_LAST = 9
              } WEBP_CSP_MODE;
 
 // Generic structure for describing the sample buffer.

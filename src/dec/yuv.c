@@ -20,6 +20,7 @@ enum { YUV_HALF = 1 << (YUV_FIX - 1) };
 int16_t VP8kVToR[256], VP8kUToB[256];
 int32_t VP8kVToG[256], VP8kUToG[256];
 uint8_t VP8kClip[YUV_RANGE_MAX - YUV_RANGE_MIN];
+uint8_t VP8kClip4Bits[YUV_RANGE_MAX - YUV_RANGE_MIN];
 
 static int done = 0;
 
@@ -37,6 +38,7 @@ void VP8YUVInit(void) {
   for (i = YUV_RANGE_MIN; i < YUV_RANGE_MAX; ++i) {
     const int k = ((i - 16) * 76283 + YUV_HALF) >> YUV_FIX;
     VP8kClip[i - YUV_RANGE_MIN] = (k < 0) ? 0 : (k > 255) ? 255 : k;
+    VP8kClip4Bits[i - YUV_RANGE_MIN] = (VP8kClip[i - YUV_RANGE_MIN] + 8) >> 4;
   }
   done = 1;
 }

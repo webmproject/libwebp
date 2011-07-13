@@ -67,8 +67,8 @@ typedef void (*WebPUpsampleLinePairFunc)(
   uint8_t* top_dst, uint8_t* bottom_dst, int len);
 
 // Upsampler functions to be used to convert YUV to RGB(A) modes
-extern WebPUpsampleLinePairFunc WebPUpsamplers[MODE_BGRA + 1];
-extern WebPUpsampleLinePairFunc WebPUpsamplersKeepAlpha[MODE_BGRA + 1];
+extern WebPUpsampleLinePairFunc WebPUpsamplers[MODE_LAST];
+extern WebPUpsampleLinePairFunc WebPUpsamplersKeepAlpha[MODE_LAST];
 
 // Initializes SSE2 version of the fancy upsamplers.
 void WebPInitUpsamplersSSE2(void);

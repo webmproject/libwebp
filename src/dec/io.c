@@ -21,9 +21,6 @@ extern "C" {
 
 #define FANCY_UPSAMPLING   // undefined to remove fancy upsampling support
 
-// mask to apply to WEBP_CSP_MODE, to know if there's alpha channel or not.
-#define MODE_ALPHA_MASK 1
-
 //------------------------------------------------------------------------------
 // Fancy upsampler
 
@@ -101,27 +98,38 @@ UPSAMPLE_FUNC(UpsampleRgbLinePair,  VP8YuvToRgb,  3)
 UPSAMPLE_FUNC(UpsampleBgrLinePair,  VP8YuvToBgr,  3)
 UPSAMPLE_FUNC(UpsampleRgbaLinePair, VP8YuvToRgba, 4)
 UPSAMPLE_FUNC(UpsampleBgraLinePair, VP8YuvToBgra, 4)
+UPSAMPLE_FUNC(UpsampleArgbLinePair, VP8YuvToArgb, 4)
+UPSAMPLE_FUNC(UpsampleArgb4444LinePair, VP8YuvToArgb4444, 2)
+UPSAMPLE_FUNC(UpsampleRgb565LinePair,  VP8YuvToRgb565,  2)
 // These two don't erase the alpha value
 UPSAMPLE_FUNC(UpsampleRgbKeepAlphaLinePair, VP8YuvToRgb, 4)
 UPSAMPLE_FUNC(UpsampleBgrKeepAlphaLinePair, VP8YuvToBgr, 4)
+UPSAMPLE_FUNC(UpsampleArgbKeepAlphaLinePair, VP8YuvToArgbKeepA, 4)
+UPSAMPLE_FUNC(UpsampleArgb4444KeepAlphaLinePair, VP8YuvToArgb4444KeepA, 2)
 
 #undef LOAD_UV
 #undef UPSAMPLE_FUNC
 
 // Fancy upsampling functions to convert YUV to RGB
-WebPUpsampleLinePairFunc WebPUpsamplers[MODE_BGRA + 1];
-WebPUpsampleLinePairFunc WebPUpsamplersKeepAlpha[MODE_BGRA + 1];
+WebPUpsampleLinePairFunc WebPUpsamplers[MODE_LAST];
+WebPUpsampleLinePairFunc WebPUpsamplersKeepAlpha[MODE_LAST];
 
 static void InitUpsamplers(void) {
-  WebPUpsamplers[MODE_RGB] = UpsampleRgbLinePair;
-  WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePair;
-  WebPUpsamplers[MODE_BGR] = UpsampleBgrLinePair;
-  WebPUpsamplers[MODE_BGRA] =  UpsampleBgraLinePair;
+  WebPUpsamplers[MODE_RGB]       = UpsampleRgbLinePair;
+  WebPUpsamplers[MODE_RGBA]      = UpsampleRgbaLinePair;
+  WebPUpsamplers[MODE_BGR]       = UpsampleBgrLinePair;
+  WebPUpsamplers[MODE_BGRA]      = UpsampleBgraLinePair;
+  WebPUpsamplers[MODE_ARGB]      = UpsampleArgbLinePair;
+  WebPUpsamplers[MODE_ARGB_4444] = UpsampleArgb4444LinePair;
+  WebPUpsamplers[MODE_RGB_565]   = UpsampleRgb565LinePair;
 
-  WebPUpsamplersKeepAlpha[MODE_RGB] = UpsampleRgbLinePair;
-  WebPUpsamplersKeepAlpha[MODE_RGBA] = UpsampleRgbKeepAlphaLinePair;
-  WebPUpsamplersKeepAlpha[MODE_BGR] =  UpsampleBgrLinePair;
-  WebPUpsamplersKeepAlpha[MODE_BGRA] =  UpsampleBgrKeepAlphaLinePair;
+  WebPUpsamplersKeepAlpha[MODE_RGB]       = UpsampleRgbLinePair;
+  WebPUpsamplersKeepAlpha[MODE_RGBA]      = UpsampleRgbKeepAlphaLinePair;
+  WebPUpsamplersKeepAlpha[MODE_BGR]       = UpsampleBgrLinePair;
+  WebPUpsamplersKeepAlpha[MODE_BGRA]      = UpsampleBgrKeepAlphaLinePair;
+  WebPUpsamplersKeepAlpha[MODE_ARGB]      = UpsampleArgbKeepAlphaLinePair;
+  WebPUpsamplersKeepAlpha[MODE_ARGB_4444] = UpsampleArgb4444KeepAlphaLinePair;
+  WebPUpsamplersKeepAlpha[MODE_RGB_565]   = UpsampleRgb565LinePair;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8DecGetCPUInfo) {
@@ -162,10 +170,13 @@ static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \
 }
 
 // All variants implemented.
-SAMPLE_FUNC(SampleRgbLinePair,  VP8YuvToRgb,  3)
-SAMPLE_FUNC(SampleBgrLinePair,  VP8YuvToBgr,  3)
-SAMPLE_FUNC(SampleRgbaLinePair, VP8YuvToRgba, 4)
-SAMPLE_FUNC(SampleBgraLinePair, VP8YuvToBgra, 4)
+SAMPLE_FUNC(SampleRgbLinePair,      VP8YuvToRgb,  3)
+SAMPLE_FUNC(SampleBgrLinePair,      VP8YuvToBgr,  3)
+SAMPLE_FUNC(SampleRgbaLinePair,     VP8YuvToRgba, 4)
+SAMPLE_FUNC(SampleBgraLinePair,     VP8YuvToBgra, 4)
+SAMPLE_FUNC(SampleArgbLinePair,     VP8YuvToArgb, 4)
+SAMPLE_FUNC(SampleArgb4444LinePair, VP8YuvToArgb4444, 2)
+SAMPLE_FUNC(SampleRgb565LinePair,   VP8YuvToRgb565, 2)
 
 #undef SAMPLE_FUNC
 
@@ -175,11 +186,14 @@ typedef void (*SampleLinePairFunc)(
   const uint8_t* u, const uint8_t* v,
   uint8_t* top_dst, uint8_t* bottom_dst, int len);
 
-static const SampleLinePairFunc kSamplers[MODE_BGRA + 1] = {
-  SampleRgbLinePair,    // MODE_RGB
-  SampleRgbaLinePair,   // MODE_RGBA
-  SampleBgrLinePair,    // MODE_BGR
-  SampleBgraLinePair    // MODE_BGRA
+static const SampleLinePairFunc kSamplers[MODE_LAST] = {
+  SampleRgbLinePair,       // MODE_RGB
+  SampleRgbaLinePair,      // MODE_RGBA
+  SampleBgrLinePair,       // MODE_BGR
+  SampleBgraLinePair,      // MODE_BGRA
+  SampleArgbLinePair,      // MODE_ARGB
+  SampleArgb4444LinePair,  // MODE_ARGB_4444
+  SampleRgb565LinePair     // MODE_RGB_565
 };
 
 //------------------------------------------------------------------------------
@@ -192,21 +206,27 @@ static void FUNC_NAME(const uint8_t* y, const uint8_t* u, const uint8_t* v,    \
   for (i = 0; i < len; ++i) FUNC(y[i], u[i], v[i], &dst[i * XSTEP]);           \
 }
 
-YUV444_FUNC(Yuv444ToRgb,  VP8YuvToRgb,  3)
-YUV444_FUNC(Yuv444ToBgr,  VP8YuvToBgr,  3)
-YUV444_FUNC(Yuv444ToRgba, VP8YuvToRgba, 4)
-YUV444_FUNC(Yuv444ToBgra, VP8YuvToBgra, 4)
+YUV444_FUNC(Yuv444ToRgb,      VP8YuvToRgb,  3)
+YUV444_FUNC(Yuv444ToBgr,      VP8YuvToBgr,  3)
+YUV444_FUNC(Yuv444ToRgba,     VP8YuvToRgba, 4)
+YUV444_FUNC(Yuv444ToBgra,     VP8YuvToBgra, 4)
+YUV444_FUNC(Yuv444ToArgb,     VP8YuvToArgb, 4)
+YUV444_FUNC(Yuv444ToArgb4444, VP8YuvToArgb4444, 2)
+YUV444_FUNC(Yuv444ToRgb565,   VP8YuvToRgb565, 2)
 
 #undef YUV444_FUNC
 
 typedef void (*YUV444Func)(const uint8_t* y, const uint8_t* u, const uint8_t* v,
                            uint8_t* dst, int len);
 
-static const YUV444Func kYUV444Converters[MODE_BGRA + 1] = {
-  Yuv444ToRgb,    // MODE_RGB
-  Yuv444ToRgba,   // MODE_RGBA
-  Yuv444ToBgr,    // MODE_BGR
-  Yuv444ToBgra    // MODE_BGRA
+static const YUV444Func kYUV444Converters[MODE_LAST] = {
+  Yuv444ToRgb,       // MODE_RGB
+  Yuv444ToRgba,      // MODE_RGBA
+  Yuv444ToBgr,       // MODE_BGR
+  Yuv444ToBgra,      // MODE_BGRA
+  Yuv444ToArgb,      // MODE_ARGB
+  Yuv444ToArgb4444,  // MODE_ARGB_4444
+  Yuv444ToRgb565     // MODE_RGB_565
 };
 
 //------------------------------------------------------------------------------
@@ -517,8 +537,13 @@ static int EmitRescaledAlphaYUV(const VP8Io* const io, WebPDecParams* const p) {
   return 0;
 }
 
+static int IsAlphaMode(WEBP_CSP_MODE mode) {
+  return (mode == MODE_RGBA || mode == MODE_BGRA || mode == MODE_ARGB ||
+          mode == MODE_ARGB_4444 || mode == MODE_YUVA);
+}
+
 static int InitYUVRescaler(const VP8Io* const io, WebPDecParams* const p) {
-  const int has_alpha = (p->output->colorspace & MODE_ALPHA_MASK);
+  const int has_alpha = IsAlphaMode(p->output->colorspace);
   const WebPYUVABuffer* const buf = &p->output->u.YUVA;
   const int out_width  = io->scaled_width;
   const int out_height = io->scaled_height;
@@ -653,7 +678,7 @@ static int EmitRescaledAlphaRGB(const VP8Io* const io, WebPDecParams* const p) {
 }
 
 static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
-  const int has_alpha = (p->output->colorspace & MODE_ALPHA_MASK);
+  const int has_alpha = IsAlphaMode(p->output->colorspace);
   const int out_width  = io->scaled_width;
   const int out_height = io->scaled_height;
   const int uv_in_width  = (io->mb_w + 1) >> 1;
@@ -793,7 +818,7 @@ static int CustomSetup(VP8Io* io) {
       p->emit = EmitYUV;
     }
 #ifdef WEBP_EXPERIMENTAL_FEATURES
-    if (p->output->colorspace & MODE_ALPHA_MASK) {
+    if (IsAlphaMode(p->output->colorspace)) {
       // We need transparency output
       p->emit_alpha = is_rgb ? EmitAlphaRGB : EmitAlphaYUV;
     }

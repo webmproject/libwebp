@@ -20,6 +20,9 @@ extern "C" {
 //-----------------------------------------------------------------------------
 // WebPDecBuffer
 
+// Number of bytes per pixel for the different color-spaces.
+static const int kModeBpp[MODE_LAST] = { 3, 4, 3, 4, 4, 2, 2, 1, 1 };
+
 static VP8StatusCode CheckDecBuffer(const WebPDecBuffer* const buffer) {
   int ok = 1;
   WEBP_CSP_MODE mode = buffer->colorspace;
@@ -44,11 +47,7 @@ static VP8StatusCode CheckDecBuffer(const WebPDecBuffer* const buffer) {
   } else {    // RGB checks
     const WebPRGBABuffer* const buf = &buffer->u.RGBA;
     ok &= (buf->stride * height <= buf->size);
-    if (mode == MODE_RGB || mode == MODE_BGR) {
-      ok &= (buf->stride >= width * 3);
-    } else if (mode == MODE_RGBA || mode == MODE_BGRA) {
-      ok &= (buf->stride >= width * 4);
-    }
+    ok &= (buf->stride >= width * kModeBpp[mode]);
   }
   return ok ? VP8_STATUS_OK : VP8_STATUS_INVALID_PARAM;
 }
@@ -70,9 +69,7 @@ static VP8StatusCode AllocateBuffer(WebPDecBuffer* const buffer) {
     uint64_t size, a_size = 0, total_size;
     // We need memory and it hasn't been allocated yet.
     // => initialize output buffer, now that dimensions are known.
-    stride = (mode == MODE_RGB || mode == MODE_BGR) ? 3 * w
-        : (mode == MODE_RGBA || mode == MODE_BGRA) ? 4 * w
-        : w;
+    stride = w * kModeBpp[mode];
     size = (uint64_t)stride * h;
 
     if (mode >= MODE_YUV) {
