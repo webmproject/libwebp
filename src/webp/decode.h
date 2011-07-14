@@ -67,7 +67,7 @@ WEBP_EXTERN(uint8_t*) WebPDecodeYUV(const uint8_t* data, uint32_t data_size,
                                     uint8_t** u, uint8_t** v,
                                     int* stride, int* uv_stride);
 
-// These three functions are variants of the above ones, that decode the image
+// These five functions are variants of the above ones, that decode the image
 // directly into a pre-allocated buffer 'output_buffer'. The maximum storage
 // available in this buffer is indicated by 'output_buffer_size'. If this
 // storage is not sufficient (or an error occurred), NULL is returned.
@@ -79,6 +79,9 @@ WEBP_EXTERN(uint8_t*) WebPDecodeRGBInto(
     const uint8_t* data, uint32_t data_size,
     uint8_t* output_buffer, int output_buffer_size, int output_stride);
 WEBP_EXTERN(uint8_t*) WebPDecodeRGBAInto(
+    const uint8_t* data, uint32_t data_size,
+    uint8_t* output_buffer, int output_buffer_size, int output_stride);
+WEBP_EXTERN(uint8_t*) WebPDecodeARGBInto(
     const uint8_t* data, uint32_t data_size,
     uint8_t* output_buffer, int output_buffer_size, int output_stride);
 // BGR variants
@@ -108,7 +111,7 @@ WEBP_EXTERN(uint8_t*) WebPDecodeYUVInto(
 // Colorspaces
 typedef enum { MODE_RGB = 0, MODE_RGBA = 1,
                MODE_BGR = 2, MODE_BGRA = 3,
-               MODE_ARGB = 4, MODE_ARGB_4444 = 5,
+               MODE_ARGB = 4, MODE_RGBA_4444 = 5,
                MODE_RGB_565 = 6,
                // YUV modes must come after RGB ones.
                MODE_YUV = 7, MODE_YUVA = 8,  // yuv 4:2:0

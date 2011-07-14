@@ -60,21 +60,21 @@ static inline void VP8YuvToArgb(uint8_t y, uint8_t u, uint8_t v,
   VP8YuvToArgbKeepA(y, u, v, argb);
 }
 
-static inline void VP8YuvToArgb4444KeepA(uint8_t y, uint8_t u, uint8_t v,
+static inline void VP8YuvToRgba4444KeepA(uint8_t y, uint8_t u, uint8_t v,
                                          uint8_t* const argb) {
   const int r_off = VP8kVToR[v];
   const int g_off = (VP8kVToG[v] + VP8kUToG[u]) >> YUV_FIX;
   const int b_off = VP8kUToB[u];
-  // Don't update Aplha (first 4 bits of argb[0])
-  argb[0] = VP8kClip4Bits[y + r_off - YUV_RANGE_MIN];
-  argb[1] = ((VP8kClip[y + g_off - YUV_RANGE_MIN] & 0xf0) |
-             VP8kClip4Bits[y + b_off - YUV_RANGE_MIN]);
+  // Don't update Aplha (last 4 bits of argb[1])
+  argb[0] = ((VP8kClip4Bits[y + r_off - YUV_RANGE_MIN] << 4) |
+             VP8kClip4Bits[y + g_off - YUV_RANGE_MIN]);
+  argb[1] = (argb[1] & 0x0f) | (VP8kClip4Bits[y + b_off - YUV_RANGE_MIN] << 4);
 }
 
-static inline void VP8YuvToArgb4444(uint8_t y, uint8_t u, uint8_t v,
+static inline void VP8YuvToRgba4444(uint8_t y, uint8_t u, uint8_t v,
                                     uint8_t* const argb) {
-  argb[0] = 0xf0;
-  VP8YuvToArgb4444KeepA(y, u, v, argb);
+  argb[1] = 0x0f;
+  VP8YuvToRgba4444KeepA(y, u, v, argb);
 }
 
 static inline void VP8YuvToBgr(uint8_t y, uint8_t u, uint8_t v,
