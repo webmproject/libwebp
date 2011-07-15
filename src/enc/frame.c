@@ -58,8 +58,6 @@ static void ResetStats(VP8Encoder* const enc, int precalc_cost) {
   VP8Proba* const proba = &enc->proba_;
   if (precalc_cost) VP8CalculateLevelCosts(proba);
   proba->nb_skip_ = 0;
-  proba->nb_i4_ = 0;
-  proba->nb_i16_ = 0;
 }
 
 //-----------------------------------------------------------------------------

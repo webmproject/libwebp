@@ -187,7 +187,7 @@ typedef struct {
   StatsArray stats_[NUM_TYPES][NUM_BANDS];       // 7.4k
   CostArray level_cost_[NUM_TYPES][NUM_BANDS];   // 11.4k
   int use_skip_proba_;      // Note: we always use skip_proba for now.
-  int nb_skip_, nb_i4_, nb_i16_;   // block type counters
+  int nb_skip_;             // number of skipped blocks
 } VP8Proba;
 
 // Filter parameters. Not actually used in the code (we don't perform
