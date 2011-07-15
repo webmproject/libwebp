@@ -53,7 +53,9 @@ DEFINE_GUID(GUID_WICPixelFormat32bppRGBA,
 
 #include "webp/encode.h"
 #include "stopwatch.h"
+#ifndef WEBP_DLL
 extern void* VP8EncGetCPUInfo;   // opaque forward declaration.
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -689,7 +691,9 @@ static void HelpLong(void) {
   printf("  -short ................. condense printed message\n");
   printf("  -quiet ................. don't print anything.\n");
   printf("  -version ............... print version number and exit.\n");
+#ifndef WEBP_DLL
   printf("  -noasm ................. disable all assembly optimizations.\n");
+#endif
   printf("  -v ..................... verbose, e.g. print encoding/decoding "
          "times\n");
   printf("\n");
@@ -808,8 +812,10 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-resize") && c < argc - 2) {
       resize_w = strtol(argv[++c], NULL, 0);
       resize_h = strtol(argv[++c], NULL, 0);
+#ifndef WEBP_DLL
     } else if (!strcmp(argv[c], "-noasm")) {
       VP8EncGetCPUInfo = NULL;
+#endif
     } else if (!strcmp(argv[c], "-version")) {
       const int version = WebPGetEncoderVersion();
       printf("%d.%d.%d\n",

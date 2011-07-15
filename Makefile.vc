@@ -7,8 +7,8 @@ LIB_NAME_DEBUG = libwebp_a_debug
 #
 # Stem for DLL import libs
 #
-IMPLIB_NAME       = libwebp
-IMPLIB_NAME_DEBUG = libwepb_debug
+IMPLIB_NAME       = libwebp_dll
+IMPLIB_NAME_DEBUG = libwebp_dll_debug
 
 !IFNDEF DEP_PATH
 DEPS_PATH   = ../../deps
@@ -38,7 +38,6 @@ CCDEBUG    = cl.exe /nologo /Od /Gm /Zi /D_DEBUG /RTC1
 CFLAGS     = /Isrc /nologo /W3 /EHsc /FD /c /GS
 CFLAGS     = $(CFLAGS) /DWIN32 /D_CRT_SECURE_NO_WARNINGS /DHAVE_WINCODEC_H
 LDFLAGS    = /LARGEADDRESSAWARE /MANIFEST /NXCOMPAT /DYNAMICBASE $(PLATFORM_LDFLAGS)
-CFLAGSLIB  = /DLIBWEBP_STATICLIB
 LNKDLL     = link.exe /DLL
 LNKLIB     = link.exe /lib
 LNKEXE     = link.exe
@@ -66,19 +65,35 @@ DIRLIB = $(DIRBASE)\lib
 DIRINC = $(DIRBASE)\include
 DIRBIN = $(DIRBASE)\bin
 
-# release-static
+# Target configuration
 !IF "$(CFG)" == "release-static"
-TARGET = $(LIB_NAME).lib
-LNK    = $(LNKLIB) /out:$(DIRLIB)\$(TARGET)
-CC     = $(CCNODBG) $(RTLIB) $(CFLAGSLIB)
-CFGSET = TRUE
+TARGET         = $(LIB_NAME).lib
+CC             = $(CCNODBG)
+STATICLIBBUILD = TRUE
+!ELSE IF "$(CFG)" == "debug-static"
+TARGET         = $(LIB_NAME_DEBUG).lib
+CC             = $(CCDEBUG)
+STATICLIBBUILD = TRUE
+!ELSE IF "$(CFG)" == "release-dynamic"
+TARGETDLL = $(LIB_NAME).dll
+TARGET    = $(IMPLIB_NAME).lib
+CC        = $(CCNODBG)
+DLLBUILD  = TRUE
+!ELSE IF "$(CFG)" == "debug-dynamic"
+TARGETDLL = $(LIB_NAME_DEBUG).dll
+TARGET    = $(IMPLIB_NAME_DEBUG).lib
+CC        = $(CCDEBUG)
+DLLBUILD  = TRUE
 !ENDIF
 
-# debug-static
-!IF "$(CFG)" == "debug-static"
-TARGET = $(LIB_NAME_DEBUG).lib
+!IF "$(STATICLIBBUILD)" == "TRUE"
+CC     = $(CC) $(RTLIB)
 LNK    = $(LNKLIB) /out:$(DIRLIB)\$(TARGET)
-CC     = $(CCDEBUG) $(RTLIBD) $(CFLAGSLIB)
+CFGSET = TRUE
+!ELSE IF "$(DLLBUILD)" == "TRUE"
+DLLINC = webp_dll.h
+CC     = $(CC) /I$(DIROBJ) /FI$(DLLINC) $(RTLIB) /DWEBP_DLL
+LNK    = $(LNKDLL) /out:$(DIRBIN)\$(TARGETDLL) /implib:$(DIRLIB)\$(TARGET)
 CFGSET = TRUE
 !ENDIF
 
@@ -90,6 +105,8 @@ CFGSET = TRUE
 !MESSAGE where <config> is one of:
 !MESSAGE -  release-static                - release static library
 !MESSAGE -  debug-static                  - debug static library
+!MESSAGE -  release-dynamic               - release dynamic link library (DLL)
+!MESSAGE -  debug-dynamic                 - debug dynamic link library (DLL)
 !MESSAGE <target> may be:
 !MESSAGE -  clean                         - perform a clean for CFG
 !MESSAGE -  experimental                  - build CFG with experimental
@@ -174,6 +191,9 @@ $(DIRLIB)\$(TARGET): $(X_OBJS)
 	-xcopy $(DIROBJ)\*.pdb                 $(DIRLIB) /y
 
 $(X_OBJS): $(DIROBJ)\enc $(DIROBJ)\dec $(DIRLIB) $(DIRINC) $(DIRBIN)
+!IF "$(DLLBUILD)" == "TRUE"
+$(X_OBJS): $(DIROBJ)\$(DLLINC)
+!ENDIF
 
 $(EXAMPLES_OBJS): $(DIROBJ)\examples $(DIRLIB)\$(TARGET)
 
@@ -194,6 +214,13 @@ $(DIRINC):
 
 $(DIRBIN):
 	@if not exist "$(DIRBIN)" mkdir $(DIRBIN)
+
+# generate a helper include to define WEBP_EXTERN suitable for the DLL build
+$(DIROBJ)\$(DLLINC):
+	@echo #ifndef WEBP_DLL_H_ > $@
+	@echo #define WEBP_DLL_H_ >> $@
+	@echo #define WEBP_EXTERN(type) __declspec(dllexport) type >> $@
+	@echo #endif  /* WEBP_DLL_H_ */ >> $@
 
 .SUFFIXES: .c .obj .res .exe
 {examples}.c{$(DIROBJ)\examples}.obj:
@@ -217,5 +244,6 @@ clean:
 	@-erase /s $(DIROBJ)\*.pch 2> NUL
 	@-erase /s $(DIROBJ)\*.pdb 2> NUL
 	@-erase /s $(DIROBJ)\*.res 2> NUL
+	@-erase /s $(DIROBJ)\$(DLLINC) 2> NUL
 
 !ENDIF  # End of case where a config was provided.

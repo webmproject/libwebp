@@ -45,7 +45,9 @@ extern "C" {
 #endif
 
 static int verbose = 0;
+#ifndef WEBP_DLL
 extern void* VP8DecGetCPUInfo;   // opaque forward declaration.
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -323,7 +325,9 @@ static void Help(void) {
 #endif
          "  -h     ....... this help message.\n"
          "  -v     ....... verbose (e.g. print encoding/decoding times)\n"
+#ifndef WEBP_DLL
          "  -noasm ....... disable all assembly optimizations.\n"
+#endif
         );
 }
 
@@ -380,8 +384,10 @@ int main(int argc, const char *argv[]) {
       config.options.scaled_height = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-v")) {
       verbose = 1;
+#ifndef WEBP_DLL
     } else if (!strcmp(argv[c], "-noasm")) {
       VP8DecGetCPUInfo = NULL;
+#endif
     } else if (argv[c][0] == '-') {
       printf("Unknown option '%s'\n", argv[c]);
       Help();
