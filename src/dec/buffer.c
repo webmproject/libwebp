@@ -60,7 +60,7 @@ static VP8StatusCode AllocateBuffer(WebPDecBuffer* const buffer) {
     return VP8_STATUS_INVALID_PARAM;
   }
 
-  if (!buffer->is_external_memory && buffer->memory == NULL) {
+  if (!buffer->is_external_memory && buffer->private_memory == NULL) {
     uint8_t* output;
     WEBP_CSP_MODE mode = buffer->colorspace;
     int stride;
@@ -87,7 +87,7 @@ static VP8StatusCode AllocateBuffer(WebPDecBuffer* const buffer) {
       return VP8_STATUS_INVALID_PARAM;
     }
 
-    buffer->memory = output = (uint8_t*)malloc((size_t)total_size);
+    buffer->private_memory = output = (uint8_t*)malloc((size_t)total_size);
     if (output == NULL) {
       return VP8_STATUS_OUT_OF_MEMORY;
     }
@@ -164,8 +164,8 @@ int WebPInitDecBufferInternal(WebPDecBuffer* const buffer, int version) {
 void WebPFreeDecBuffer(WebPDecBuffer* const buffer) {
   if (buffer) {
     if (!buffer->is_external_memory)
-      free(buffer->memory);
-    buffer->memory = NULL;
+      free(buffer->private_memory);
+    buffer->private_memory = NULL;
   }
 }
 
@@ -173,9 +173,9 @@ void WebPCopyDecBuffer(const WebPDecBuffer* const src,
                        WebPDecBuffer* const dst) {
   if (src && dst) {
     *dst = *src;
-    if (src->memory) {
+    if (src->private_memory) {
       dst->is_external_memory = 1;   // dst buffer doesn't own the memory.
-      dst->memory = NULL;
+      dst->private_memory = NULL;
     }
   }
 }
@@ -184,9 +184,9 @@ void WebPCopyDecBuffer(const WebPDecBuffer* const src,
 void WebPGrabDecBuffer(WebPDecBuffer* const src, WebPDecBuffer* const dst) {
   if (src && dst) {
     *dst = *src;
-    if (src->memory) {
+    if (src->private_memory) {
       src->is_external_memory = 1;   // src relinquishes ownership
-      src->memory = NULL;
+      src->private_memory = NULL;
     }
   }
 }
