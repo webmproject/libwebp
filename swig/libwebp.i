@@ -42,6 +42,7 @@
 // the native type
 %newobject WebPDecodeRGB;
 %newobject WebPDecodeRGBA;
+%newobject WebPDecodeARGB;
 %newobject WebPDecodeBGR;
 %newobject WebPDecodeBGRA;
 %typemap(newfree) uint8_t* "free($1);"
@@ -54,6 +55,8 @@ uint8_t* WebPDecodeRGB(const uint8_t* data, uint32_t data_size,
                        int *width, int *height);
 uint8_t* WebPDecodeRGBA(const uint8_t* data, uint32_t data_size,
                         int *width, int *height);
+uint8_t* WebPDecodeARGB(const uint8_t* data, uint32_t data_size,
+                        int* width, int* height);
 uint8_t* WebPDecodeBGR(const uint8_t* data, uint32_t data_size,
                        int *width, int *height);
 uint8_t* WebPDecodeBGRA(const uint8_t* data, uint32_t data_size,
@@ -82,6 +85,7 @@ static jint returned_buffer_size(
   } size_map[] = {
     { "Java_com_google_webp_libwebpJNI_WebPDecodeRGB",  3 },
     { "Java_com_google_webp_libwebpJNI_WebPDecodeRGBA", 4 },
+    { "Java_com_google_webp_libwebpJNI_WebPDecodeARGB", 4 },
     { "Java_com_google_webp_libwebpJNI_WebPDecodeBGR",  3 },
     { "Java_com_google_webp_libwebpJNI_WebPDecodeBGRA", 4 },
     { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeRGB",  1 },

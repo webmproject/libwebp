@@ -822,6 +822,7 @@ static jint returned_buffer_size(
   } size_map[] = {
     { "Java_com_google_webp_libwebpJNI_WebPDecodeRGB",  3 },
     { "Java_com_google_webp_libwebpJNI_WebPDecodeRGBA", 4 },
+    { "Java_com_google_webp_libwebpJNI_WebPDecodeARGB", 4 },
     { "Java_com_google_webp_libwebpJNI_WebPDecodeBGR",  3 },
     { "Java_com_google_webp_libwebpJNI_WebPDecodeBGRA", 4 },
     { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeRGB",  1 },
@@ -1092,6 +1093,69 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeRGBA(JNI
     }
   }
   result = (uint8_t *)WebPDecodeRGBA((uint8_t const *)arg1,arg2,arg3,arg4);
+  jresult = SWIG_JavaArrayOutSchar(jenv, result, FillMeInAsSizeCannotBeDeterminedAutomatically);
+  SWIG_JavaArrayArgoutSchar(jenv, jarr1, arg1, jarg1);
+  {
+    jint jvalue = (jint)temp3;
+    (*jenv)->SetIntArrayRegion(jenv, jarg3, 0, 1, &jvalue);
+  }
+  {
+    jint jvalue = (jint)temp4;
+    (*jenv)->SetIntArrayRegion(jenv, jarg4, 0, 1, &jvalue);
+  }
+  free(arg1);
+
+
+  free(result);
+  return jresult;
+}
+
+
+SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeARGB(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jintArray jarg3, jintArray jarg4) {
+  jbyteArray jresult = 0 ;
+  uint8_t *arg1 = (uint8_t *) 0 ;
+  uint32_t arg2 ;
+  int *arg3 = (int *) 0 ;
+  int *arg4 = (int *) 0 ;
+  jbyte *jarr1 ;
+  int temp3 ;
+  int temp4 ;
+  uint8_t *result = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  if (!SWIG_JavaArrayInSchar(jenv, &jarr1, &arg1, jarg1)) return 0;
+  arg2 = (uint32_t)jarg2;
+  {
+    if (!jarg3) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg3) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    arg3 = &temp3;
+  }
+  {
+    if (!jarg4) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg4) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    arg4 = &temp4;
+  }
+  {
+    if (arg2 < 0) {
+      {
+        SWIG_JavaException(jenv, SWIG_ValueError, "Expected a non-negative value."); return 0;
+      };
+    }
+  }
+  result = (uint8_t *)WebPDecodeARGB((uint8_t const *)arg1,arg2,arg3,arg4);
   jresult = SWIG_JavaArrayOutSchar(jenv, result, FillMeInAsSizeCannotBeDeterminedAutomatically);
   SWIG_JavaArrayArgoutSchar(jenv, jarr1, arg1, jarg1);
   {

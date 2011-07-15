@@ -82,12 +82,13 @@ SWIG bindings:
 To generate language bindings from swig/libwebp.i swig-1.3
 (http://www.swig.org) is required. 2.0 may work, but has not been tested.
 
-Currently from the following functions are mapped:
+Currently the following functions are mapped:
 Decode:
   WebPGetDecoderVersion
   WebPGetInfo
   WebPDecodeRGB
   WebPDecodeRGBA
+  WebPDecodeARGB
   WebPDecodeBGR
   WebPDecodeBGRA
 Encode:
