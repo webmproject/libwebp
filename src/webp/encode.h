@@ -113,14 +113,14 @@ WEBP_EXTERN(int) WebPValidateConfig(const WebPConfig* const config);
 
 typedef struct WebPPicture WebPPicture;   // main structure for I/O
 
-// non-essential structure for storing auxilliary statistics
+// non-essential structure for storing auxiliary statistics
 typedef struct {
   float PSNR[4];          // peak-signal-to-noise ratio for Y/U/V/All
   int coded_size;         // final size
   int block_count[3];     // number of intra4/intra16/skipped macroblocks
-  int header_bytes[2];    // approximative number of bytes spent for header
+  int header_bytes[2];    // approximate number of bytes spent for header
                           // and mode-partition #0
-  int residual_bytes[3][4];  // approximative number of bytes spent for
+  int residual_bytes[3][4];  // approximate number of bytes spent for
                              // DC/AC/uv coefficients for each (0..3) segments.
   int segment_size[4];    // number of macroblocks in each segments
   int segment_quant[4];   // quantizer values for each segments
@@ -256,7 +256,7 @@ WEBP_EXTERN(int) WebPPictureImportBGRA(
 //-----------------------------------------------------------------------------
 // Main call
 
-// Main encoding call, after config and picture have been initialiazed.
+// Main encoding call, after config and picture have been initialized.
 // 'picture' must be less than 16384x16384 in dimension, and the 'config' object
 // must be a valid one.
 // Returns false in case of error, true otherwise.

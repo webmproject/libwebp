@@ -32,9 +32,9 @@ By running:
 
   nmake /f Makefile.vc CFG=release-static RTLIBCFG=static OBJDIR=output
 
-the directory output\release-static\x86\bin will contain the tools
-cweb.exe and dweb.exe. The directory output\release-static\x86\lib will
-contains the libwebp static library.
+the directory output\release-static\(x64|x86)\bin will contain the tools
+cwebp.exe and dwebp.exe. The directory output\release-static\(x64|x86)\lib will
+contain the libwebp static library.
 
 Unix build using makefile.unix:
 -------------------------------
@@ -170,7 +170,7 @@ visual quality are:
  -m
 
 Namely:
-  * 'preset' will set up a default encoding configuration targetting a
+  * 'preset' will set up a default encoding configuration targeting a
      particular type of input. It should appear first in the list of options,
      so that subsequent options can take effect on top of this preset.
      Default value is 'default'.
@@ -262,7 +262,7 @@ The encoding flow looks like:
   // ... additional tuning
   config.sns_strength = 90;
   config.filter_sharpness = 6;
-  config_error = WebPValidateConfig(&config);  // not mandartory, but useful
+  config_error = WebPValidateConfig(&config);  // not mandatory, but useful
 
   // Setup the input data
   WebPPicture pic;
@@ -290,7 +290,7 @@ The encoding flow looks like:
   // initialize 'wrt' here...
 
   // Compress!
-  int ok = WebPEncode(&config, &pic);   // ok = 0 => error occured!
+  int ok = WebPEncode(&config, &pic);   // ok = 0 => error occurred!
   WebPPictureFree(&pic);  // must be called independently of the 'ok' result.
 
   // output data should have been handled by the writer at that point.
@@ -308,9 +308,9 @@ uint8_t* WebPDecodeRGB(const uint8_t* data, uint32_t data_size,
                        int *width, int *height);
 
 Please have a look at the file src/webp/decode.h for the details.
-There are variants for decoding in BGR/RGBA/BGRA order, along with decoding to
-raw Y'CbCr samples. One can also decode the image directly into a pre-allocated
-buffer.
+There are variants for decoding in BGR/RGBA/ARGB/BGRA order, along with
+decoding to raw Y'CbCr samples. One can also decode the image directly into a
+pre-allocated buffer.
 
 To detect a WebP file and gather picture's dimensions, the function:
   int WebPGetInfo(const uint8_t* data, uint32_t data_size,
@@ -343,7 +343,7 @@ or by just mentioning the new size of the transmitted data:
   WebPIUpdate(idec, buffer, size_of_transmitted_buffer);
 
 Note that 'buffer' can be modified between each calls to WebPIUpdate, in
-particular when the buffer is resized to accomodate larger data.
+particular when the buffer is resized to accommodate larger data.
 
 These functions will return the decoding status: either VP8_STATUS_SUSPENDED if
 decoding is not finished yet, or VP8_STATUS_OK when decoding is done.
@@ -374,3 +374,4 @@ Discuss:
 ========
 
 Email: webp-discuss@webmproject.org
+Web: http://groups.google.com/a/webmproject.org/group/webp-discuss

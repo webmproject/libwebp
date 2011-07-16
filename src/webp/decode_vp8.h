@@ -21,7 +21,7 @@ extern "C" {
 //-----------------------------------------------------------------------------
 // Lower-level API
 //
-// Thes functions provide fine-grained control of the decoding process.
+// These functions provide fine-grained control of the decoding process.
 // The call flow should resemble:
 //
 //   VP8Io io;
@@ -105,7 +105,7 @@ WEBP_EXTERN(int) VP8InitIoInternal(VP8Io* const, int);
 
 // Set the custom IO function pointers and user-data. The setter for IO hooks
 // should be called before initiating incremental decoding. Returns true if
-// WebPIdecoder object is successfully modified, false otherwise.
+// WebPIDecoder object is successfully modified, false otherwise.
 WEBP_EXTERN(int) WebPISetIOHooks(WebPIDecoder* const idec,
                                  VP8IoPutHook put,
                                  VP8IoSetupHook setup,

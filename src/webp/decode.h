@@ -234,7 +234,7 @@ WEBP_EXTERN(WebPIDecoder*) WebPINewYUV(
     uint8_t* u, int u_size, int u_stride,
     uint8_t* v, int v_size, int v_stride);
 
-// Deletes the WebpBuffer object and associated memory. Must always be called
+// Deletes the WebPIDecoder object and associated memory. Must always be called
 // if WebPINew, WebPINewRGB or WebPINewYUV succeeded.
 WEBP_EXTERN(void) WebPIDelete(WebPIDecoder* const idec);
 
@@ -329,7 +329,7 @@ WEBP_EXTERN(VP8StatusCode) WebPGetFeaturesInternal(
     const uint8_t*, uint32_t, WebPBitstreamFeatures* const, int);
 
 // Retrieve features from the bitstream. The *features structure is filled
-// with informations gathered from the bitstream.
+// with information gathered from the bitstream.
 // Returns false in case of error or version mismatch.
 // In case of error, features->bitstream_status will reflect the error code.
 static inline
