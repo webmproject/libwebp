@@ -229,6 +229,12 @@ static void RestoreContext(const MBContext* context, VP8Decoder* const dec,
 //------------------------------------------------------------------------------
 
 static VP8StatusCode IDecError(WebPIDecoder* idec, VP8StatusCode error) {
+  if (idec->state_ == STATE_DATA) {
+    VP8Io* const io = &idec->io_;
+    if (io->teardown) {
+      io->teardown(io);
+    }
+  }
   idec->state_ = STATE_ERROR;
   return error;
 }
@@ -323,14 +329,16 @@ static VP8StatusCode DecodePartition0(WebPIDecoder* const idec) {
     return IDecError(idec, dec->status_);
   }
 
-  // Finish setting up the decoding parameter
-  if (VP8FinishFrameSetup(dec, io) != VP8_STATUS_OK) {
-    return IDecError(idec, dec->status_);
-  }
-
   if (!CopyParts0Data(idec)) {
     return IDecError(idec, VP8_STATUS_OUT_OF_MEMORY);
   }
+
+  // Finish setting up the decoding parameters.
+  if (VP8FinishFrameSetup(dec, io) != VP8_STATUS_OK) {
+    return IDecError(idec, dec->status_);
+  }
+  // Note: past this point, teardown() must always be called
+  // in case of error.
   idec->state_ = STATE_DATA;
   return VP8_STATUS_OK;
 }
