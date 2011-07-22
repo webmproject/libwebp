@@ -43,6 +43,7 @@ VP8Decoder* VP8New(void) {
   VP8Decoder* dec = (VP8Decoder*)calloc(1, sizeof(VP8Decoder));
   if (dec) {
     SetOk(dec);
+    WebPWorkerInit(&dec->worker_);
     dec->ready_ = 0;
   }
   return dec;
@@ -682,15 +683,21 @@ int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br) {
   return (!token_br->eof_);
 }
 
+void VP8InitScanline(VP8Decoder* const dec) {
+  VP8MB* const left = dec->mb_info_ - 1;
+  left->nz_ = 0;
+  left->dc_nz_ = 0;
+  memset(dec->intra_l_, B_DC_PRED, sizeof(dec->intra_l_));
+  dec->filter_row_ =
+    (dec->filter_type_ > 0) &&
+    (dec->mb_y_ >= dec->tl_mb_y_) && (dec->mb_y_ <= dec->br_mb_y_);
+}
+
 static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
   for (dec->mb_y_ = 0; dec->mb_y_ < dec->br_mb_y_; ++dec->mb_y_) {
-    VP8MB* const left = dec->mb_info_ - 1;
     VP8BitReader* const token_br =
         &dec->parts_[dec->mb_y_ & (dec->num_parts_ - 1)];
-    left->nz_ = 0;
-    left->dc_nz_ = 0;
-    memset(dec->intra_l_, B_DC_PRED, sizeof(dec->intra_l_));
-
+    VP8InitScanline(dec);
     for (dec->mb_x_ = 0; dec->mb_x_ < dec->mb_w_;  dec->mb_x_++) {
       if (!VP8DecodeMB(dec, token_br)) {
         return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
@@ -701,12 +708,12 @@ static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
       // Store data and save block's filtering params
       VP8StoreBlock(dec);
     }
-    if (dec->filter_type_ > 0) {
-      VP8FilterRow(dec);
-    }
-    if (!VP8FinishRow(dec, io)) {
+    if (!VP8ProcessRow(dec, io)) {
       return VP8SetError(dec, VP8_STATUS_USER_ABORT, "Output aborted.");
     }
+  }
+  if (dec->use_threads_ && !WebPWorkerSync(&dec->worker_)) {
+    return 0;
   }
 
   // Finish
@@ -729,6 +736,7 @@ static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
 
 // Main entry point
 int VP8Decode(VP8Decoder* const dec, VP8Io* const io) {
+  int ok = 0;
   if (dec == NULL) {
     return 0;
   }
@@ -744,28 +752,22 @@ int VP8Decode(VP8Decoder* const dec, VP8Io* const io) {
   }
   assert(dec->ready_);
 
-  // Will allocate memory and prepare everything.
-  if (!VP8InitFrame(dec, io)) {
-    VP8Clear(dec);
-    return 0;
+  // Finish setting up the decoding parameter. Will call io->setup().
+  ok = (VP8EnterCritical(dec, io) == VP8_STATUS_OK);
+  if (ok) {   // good to go.
+    // Will allocate memory and prepare everything.
+    if (ok) ok = VP8InitFrame(dec, io);
+
+    // Main decoding loop
+    if (ok) ok = ParseFrame(dec, io);
+
+    // Exit.
+    ok &= VP8ExitCritical(dec, io);
   }
 
-  // Finish setting up the decoding parameter
-  if (VP8FinishFrameSetup(dec, io) != VP8_STATUS_OK) {
+  if (!ok) {
     VP8Clear(dec);
     return 0;
-  }
-
-  // Main decoding loop
-  {
-    const int ret = ParseFrame(dec, io);
-    if (io->teardown) {
-      io->teardown(io);
-    }
-    if (!ret) {
-      VP8Clear(dec);
-      return 0;
-    }
   }
 
   dec->ready_ = 0;
@@ -775,6 +777,9 @@ int VP8Decode(VP8Decoder* const dec, VP8Io* const io) {
 void VP8Clear(VP8Decoder* const dec) {
   if (dec == NULL) {
     return;
+  }
+  if (dec->use_threads_) {
+    WebPWorkerEnd(&dec->worker_);
   }
   if (dec->mem_) {
     free(dec->mem_);

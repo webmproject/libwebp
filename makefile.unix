@@ -36,12 +36,16 @@ endif
 # Extra flags to enable experimental features and code
 # EXTRA_FLAGS += -DWEBP_EXPERIMENTAL_FEATURES
 
+# Extra flags to enable multi-threading
+EXTRA_FLAGS += -DWEBP_USE_THREAD
+EXTRA_LIBS += -lpthread
+
 # Extra flags to emulate C89 strictness with the full ANSI
 EXTRA_FLAGS += -Wextra -Wold-style-definition
 EXTRA_FLAGS += -Wmissing-prototypes
 EXTRA_FLAGS += -Wmissing-declarations
 EXTRA_FLAGS += -Wdeclaration-after-statement
-# EXTRA_FLAGS += -Wvla
+EXTRA_FLAGS += -Wvla
 
 #### Nothing should normally be changed below this line ####
 
@@ -58,7 +62,7 @@ OBJS = src/enc/webpenc.o src/enc/bit_writer.o src/enc/syntax.o \
        src/dec/bits.o src/dec/dsp.o src/dec/dsp_sse2.o src/dec/frame.o \
        src/dec/webp.o src/dec/quant.o src/dec/tree.o src/dec/vp8.o \
        src/dec/yuv.o src/dec/idec.o src/dec/alpha.o src/dec/layer.o \
-       src/dec/io.o src/dec/io_sse2.o src/dec/buffer.o
+       src/dec/io.o src/dec/io_sse2.o src/dec/buffer.o src/dec/thread.o
 HDRS = src/webp/encode.h src/enc/vp8enci.h src/enc/bit_writer.h \
        src/enc/cost.h src/dec/bits.h  src/dec/vp8i.h src/dec/yuv.h
 OUTPUT = examples/cwebp examples/dwebp src/libwebp.a

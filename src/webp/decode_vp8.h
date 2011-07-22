@@ -67,10 +67,13 @@ struct VP8Io {
   VP8IoPutHook put;
 
   // called just before starting to decode the blocks.
-  // Should returns 0 in case of error.
+  // Must return false in case of setup error, true otherwise. If false is
+  // returned, teardown() will NOT be called. But if the setup succeeded
+  // and true is returned, then teardown() will always be called afterward.
   VP8IoSetupHook setup;
 
-  // called just after block decoding is finished (or when an error occurred).
+  // Called just after block decoding is finished (or when an error occurred
+  // during put()). Is NOT called if setup() failed.
   VP8IoTeardownHook teardown;
 
   // this is a recommendation for the user-side yuv->rgb converter. This flag

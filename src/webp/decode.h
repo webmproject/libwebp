@@ -351,6 +351,7 @@ typedef struct {
   int scaled_width, scaled_height;    // final resolution
   int force_rotation;                 // forced rotation (to be applied _last_)
   int no_enhancement;                 // if true, discard enhancement layer
+  int use_threads;                    // if true, use multi-threaded decoding
 } WebPDecoderOptions;
 
 // Main object storing the configuration for advanced decoding.

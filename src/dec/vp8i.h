@@ -13,7 +13,8 @@
 #define WEBP_DEC_VP8I_H_
 
 #include <string.h>     // for memcpy()
-#include "bits.h"
+#include "./bits.h"
+#include "./thread.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -147,22 +148,31 @@ typedef struct {
 //-----------------------------------------------------------------------------
 // Informations about the macroblocks.
 
-typedef struct {
-  // block type
-  uint8_t skip_:1;
-  // filter specs
-  uint8_t f_level_:6;      // filter strength: 0..63
-  uint8_t f_ilevel_:6;     // inner limit: 1..63
-  uint8_t f_inner_:1;      // do inner filtering?
-  // cbp
-  uint8_t nz_;        // non-zero AC/DC coeffs
-  uint8_t dc_nz_;     // non-zero DC coeffs
+typedef struct {  // filter specs
+  unsigned int f_level_:6;      // filter strength: 0..63
+  unsigned int f_ilevel_:6;     // inner limit: 1..63
+  unsigned int f_inner_:1;      // do inner filtering?
+} VP8FInfo;
+
+typedef struct {  // used for syntax-parsing
+  unsigned int nz_;          // non-zero AC/DC coeffs
+  unsigned int dc_nz_:1;     // non-zero DC coeffs
+  unsigned int skip_:1;      // block type
 } VP8MB;
 
 // Dequantization matrices
 typedef struct {
   uint16_t y1_mat_[2], y2_mat_[2], uv_mat_[2];    // [DC / AC]
 } VP8QuantMatrix;
+
+// Persistent information needed by the parallel processing
+typedef struct {
+  int id_;            // cache row to process (in [0..2])
+  int mb_y_;          // macroblock position of the row
+  int filter_row_;    // true if row-filtering is needed
+  VP8FInfo* f_info_;  // filter strengths
+  VP8Io io_;          // copy of the VP8Io to pass to put()
+} VP8ThreadContext;
 
 //-----------------------------------------------------------------------------
 // VP8Decoder: the main opaque structure handed over to user
@@ -180,6 +190,13 @@ struct VP8Decoder {
   VP8PictureHeader pic_hdr_;
   VP8FilterHeader  filter_hdr_;
   VP8SegmentHeader segment_hdr_;
+
+  // Worker
+  WebPWorker worker_;
+  int use_threads_;    // use multi-thread
+  int cache_id_;       // current cache row
+  int num_caches_;     // number of cached rows of 16 pixels (1, 2 or 3)
+  VP8ThreadContext thread_ctx_;  // Thread context
 
   // dimension, in macroblock units.
   int mb_w_, mb_h_;
@@ -219,7 +236,8 @@ struct VP8Decoder {
   uint8_t* y_t_;         // top luma samples: 16 * mb_w_
   uint8_t* u_t_, *v_t_;  // top u/v samples: 8 * mb_w_ each
 
-  VP8MB* mb_info_;       // contextual macroblock infos (mb_w_ + 1)
+  VP8MB* mb_info_;       // contextual macroblock info (mb_w_ + 1)
+  VP8FInfo* f_info_;     // filter strength info
   uint8_t* yuv_b_;       // main block for Y/U/V (size = YUV_SIZE)
   int16_t* coeffs_;      // 384 coeffs = (16+8+8) * 4*4
 
@@ -249,6 +267,7 @@ struct VP8Decoder {
 
   // Filtering side-info
   int filter_type_;                         // 0=off, 1=simple, 2=complex
+  int filter_row_;                          // per-row flag
   uint8_t filter_levels_[NUM_MB_SEGMENTS];  // precalculated per-segment
 
   // extensions
@@ -288,13 +307,23 @@ int VP8InitFrame(VP8Decoder* const dec, VP8Io* io);
 // Predict a block and add residual
 void VP8ReconstructBlock(VP8Decoder* const dec);
 // Call io->setup() and finish setting up scan parameters.
-VP8StatusCode VP8FinishFrameSetup(VP8Decoder* const dec, VP8Io* const io);
+// After this call returns, one must always call VP8ExitCritical() with the
+// same parameters. Both functions should be used in pair. Returns VP8_STATUS_OK
+// if ok, otherwise sets and returns the error status on *dec.
+VP8StatusCode VP8EnterCritical(VP8Decoder* const dec, VP8Io* const io);
+// Must always be called in pair with VP8EnterCritical().
+// Returns false in case of error.
+int VP8ExitCritical(VP8Decoder* const dec, VP8Io* const io);
 // Filter the decoded macroblock row (if needed)
-void VP8FilterRow(const VP8Decoder* const dec);
+int VP8FinishRow(VP8Decoder* const dec, VP8Io* io);   // multi threaded call
+// Process the last decoded row (filtering + output)
+int VP8ProcessRow(VP8Decoder* const dec, VP8Io* const io);
 // Store a block, along with filtering params
 void VP8StoreBlock(VP8Decoder* const dec);
 // Finalize and transmit a complete row. Return false in case of user-abort.
 int VP8FinishRow(VP8Decoder* const dec, VP8Io* const io);
+// To be called at the start of a new scanline, to initialize predictors.
+void VP8InitScanline(VP8Decoder* const dec);
 // Decode one macroblock. Returns false if there is not enough data.
 int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br);
 

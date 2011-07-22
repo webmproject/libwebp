@@ -41,6 +41,9 @@ Don't use the in-loop filtering process even if it is required by
 the bitstream. This may produce visible blocks on the non-compliant output,
 but will make the decoding faster.
 .TP
+.B \-mt
+Use multi-threading for decoding, if possible.
+.TP
 .B \-crop x_position y_position width height
 Crop the decoded picture to a rectangle with top-left corner at coordinates
 (\fBx_position\fP, \fBy_position\fP) and size \fBwidth\fP x \fBheight\fP.

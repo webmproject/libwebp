@@ -324,28 +324,28 @@ static VP8StatusCode DecodePartition0(WebPIDecoder* const idec) {
     return IDecError(idec, dec->status_);
   }
 
-  // Allocate memory and prepare everything.
-  if (!VP8InitFrame(dec, io)) {
-    return IDecError(idec, dec->status_);
-  }
-
   if (!CopyParts0Data(idec)) {
     return IDecError(idec, VP8_STATUS_OUT_OF_MEMORY);
   }
 
-  // Finish setting up the decoding parameters.
-  if (VP8FinishFrameSetup(dec, io) != VP8_STATUS_OK) {
+  // Finish setting up the decoding parameters. Will call io->setup().
+  if (VP8EnterCritical(dec, io) != VP8_STATUS_OK) {
     return IDecError(idec, dec->status_);
   }
+
   // Note: past this point, teardown() must always be called
   // in case of error.
   idec->state_ = STATE_DATA;
+  // Allocate memory and prepare everything.
+  if (!VP8InitFrame(dec, io)) {
+    return IDecError(idec, dec->status_);
+  }
   return VP8_STATUS_OK;
 }
 
 // Remaining partitions
 static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
-  VP8BitReader*  br;
+  VP8BitReader* br;
   VP8Decoder* const dec = idec->dec_;
   VP8Io* const io = &idec->io_;
 
@@ -355,12 +355,8 @@ static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
   for (; dec->mb_y_ < dec->mb_h_; ++dec->mb_y_) {
     VP8BitReader* token_br = &dec->parts_[dec->mb_y_ & (dec->num_parts_ - 1)];
     if (dec->mb_x_ == 0) {
-      VP8MB* const left = dec->mb_info_ - 1;
-      left->nz_ = 0;
-      left->dc_nz_ = 0;
-      memset(dec->intra_l_, B_DC_PRED, sizeof(dec->intra_l_));
+      VP8InitScanline(dec);
     }
-
     for (; dec->mb_x_ < dec->mb_w_;  dec->mb_x_++) {
       MBContext context;
       SaveContext(dec, token_br, &context);
@@ -383,17 +379,14 @@ static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
         assert(idec->mem_.start_ <= idec->mem_.end_);
       }
     }
-    if (dec->filter_type_ > 0) {
-      VP8FilterRow(dec);
-    }
-    if (!VP8FinishRow(dec, io)) {
+    if (!VP8ProcessRow(dec, io)) {
       return IDecError(idec, VP8_STATUS_USER_ABORT);
     }
     dec->mb_x_ = 0;
   }
-
-  if (io->teardown) {
-    io->teardown(io);
+  // Synchronize the thread and check for errors.
+  if (!VP8ExitCritical(dec, io)) {
+    return IDecError(idec, VP8_STATUS_USER_ABORT);
   }
   dec->ready_ = 0;
   idec->state_ = STATE_DONE;
@@ -442,6 +435,13 @@ WebPIDecoder* WebPINewDecoder(WebPDecBuffer* const output_buffer) {
   WebPResetDecParams(&idec->params_);
   idec->params_.output = output_buffer ? output_buffer : &idec->output_;
   WebPInitCustomIo(&idec->params_, &idec->io_);  // Plug the I/O functions.
+
+#ifdef WEBP_USE_THREAD
+  idec->dec_->use_threads_ = idec->params_.options &&
+                             (idec->params_.options->use_threads > 0);
+#else
+  idec->dec_->use_threads_ = 0;
+#endif
 
   return idec;
 }

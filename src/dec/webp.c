@@ -92,6 +92,12 @@ static VP8StatusCode DecodeInto(const uint8_t* data, uint32_t data_size,
   io.data_size = data_size;
   WebPInitCustomIo(params, &io);  // Plug the I/O functions.
 
+#ifdef WEBP_USE_THREAD
+  dec->use_threads_ = params->options && (params->options->use_threads > 0);
+#else
+  dec->use_threads_ = 0;
+#endif
+
   // Decode bitstream header, update io->width/io->height.
   if (!VP8GetHeaders(dec, &io)) {
     status = VP8_STATUS_BITSTREAM_ERROR;

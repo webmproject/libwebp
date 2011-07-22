@@ -318,6 +318,7 @@ static void Help(void) {
          "  -version  .... print version number and exit.\n"
          "  -nofancy ..... don't use the fancy YUV420 upscaler.\n"
          "  -nofilter .... disable in-loop filtering.\n"
+         "  -mt .......... use multi-threading\n"
          "  -crop <x> <y> <w> <h> ... crop output with the given rectangle\n"
          "  -scale <w> <h> .......... scale the output (*after* any cropping)\n"
 #ifdef WEBP_EXPERIMENTAL_FEATURES
@@ -372,6 +373,8 @@ int main(int argc, const char *argv[]) {
       return 0;
     } else if (!strcmp(argv[c], "-pgm")) {
       format = PGM;
+    } else if (!strcmp(argv[c], "-mt")) {
+      config.options.use_threads = 1;
     } else if (!strcmp(argv[c], "-crop") && c < argc - 4) {
       config.options.use_cropping = 1;
       config.options.crop_left   = strtol(argv[++c], NULL, 0);

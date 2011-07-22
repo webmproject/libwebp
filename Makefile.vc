@@ -146,6 +146,7 @@ X_OBJS= \
 	$(DIROBJ)\dec\idec.obj \
 	$(DIROBJ)\dec\alpha.obj \
 	$(DIROBJ)\dec\layer.obj \
+	$(DIROBJ)\dec\thread.obj \
 	$(DIROBJ)\enc\analysis.obj \
 	$(DIROBJ)\enc\bit_writer.obj \
 	$(DIROBJ)\enc\config.obj \

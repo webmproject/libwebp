@@ -15,6 +15,7 @@ LOCAL_SRC_FILES := \
 	src/dec/io.c \
 	src/dec/buffer.c \
 	src/dec/yuv.c \
+	src/dec/thread.c \
 	src/enc/alpha.c \
 	src/enc/analysis.c \
 	src/enc/bit_writer.c \
@@ -30,7 +31,7 @@ LOCAL_SRC_FILES := \
 	src/enc/tree.c \
 	src/enc/webpenc.c
 
-LOCAL_CFLAGS := -Wall -DANDROID -DHAVE_MALLOC_H -DHAVE_PTHREAD \
+LOCAL_CFLAGS := -Wall -DANDROID -DHAVE_MALLOC_H -DHAVE_PTHREAD -DWEBP_USE_THREAD \
                 -finline-functions -frename-registers -ffast-math \
                 -s -fomit-frame-pointer -Isrc/webp
 
