@@ -182,18 +182,13 @@ experimental:
 
 $(DIRLIB)\$(TARGET): $(X_OBJS)
 	$(LNK) $(LFLAGS) $(X_OBJS)
-	-xcopy $(DIROBJ)\$(LIB_NAME).dll       $(DIRBIN) /y
-	-xcopy $(DIROBJ)\$(LIB_NAME).lib       $(DIRLIB) /y
-	-xcopy $(DIROBJ)\$(LIB_NAME_DEBUG).dll $(DIRBIN) /y
-	-xcopy $(DIROBJ)\$(LIB_NAME_DEBUG).lib $(DIRLIB) /y
-	-xcopy $(DIROBJ)\$(IMPLIB_NAME).lib    $(DIRLIB) /y
-	-xcopy $(DIROBJ)\$(IMPLIB_NAME_DEBUG).lib $(DIRLIB) /y
-	-xcopy $(DIROBJ)\*.exp                 $(DIRLIB) /y
-	-xcopy $(DIROBJ)\*.pdb                 $(DIRLIB) /y
+	-xcopy $(DIROBJ)\*.pdb $(DIRLIB) /y
 
 $(X_OBJS): $(DIROBJ)\enc $(DIROBJ)\dec $(DIRLIB) $(DIRINC) $(DIRBIN)
 !IF "$(DLLBUILD)" == "TRUE"
 $(X_OBJS): $(DIROBJ)\$(DLLINC)
+clean::
+	@-erase /s $(DIROBJ)\$(DLLINC) 2> NUL
 !ENDIF
 
 $(EXAMPLES_OBJS): $(DIROBJ)\examples $(DIRLIB)\$(TARGET)
@@ -236,7 +231,7 @@ $(DIROBJ)\$(DLLINC):
 	$(MT) -manifest $@.manifest -outputresource:$@;1
 	del $@.manifest
 
-clean:
+clean::
 	@-erase /s $(DIROBJ)\*.dll 2> NUL
 	@-erase /s $(DIROBJ)\*.exp 2> NUL
 	@-erase /s $(DIROBJ)\*.idb 2> NUL
@@ -245,6 +240,5 @@ clean:
 	@-erase /s $(DIROBJ)\*.pch 2> NUL
 	@-erase /s $(DIROBJ)\*.pdb 2> NUL
 	@-erase /s $(DIROBJ)\*.res 2> NUL
-	@-erase /s $(DIROBJ)\$(DLLINC) 2> NUL
 
 !ENDIF  # End of case where a config was provided.
