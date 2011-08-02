@@ -38,6 +38,11 @@ AC_ARG_WITH(pnglibdir,
             [--with-pnglibdir=DIR    use PNG libraries from DIR],
             [PNG_LIBS="-L$withval"])
 
+SAVED_CPPFLAGS=$CPPFLAGS
+SAVED_LIBS=$LIBS
+CPPFLAGS="$PNG_INCLUDES $CPPFLAGS"
+LIBS="$PNG_LIBS $LIBS"
+
 AC_CHECK_HEADER(png.h,
   AC_CHECK_LIB(png, main,
                [PNG_LIBS="$PNG_LIBS -lpng"
@@ -51,6 +56,9 @@ AC_CHECK_HEADER(png.h,
 AC_SUBST(PNG_LIBS)
 AC_SUBST(PNG_INCLUDES)
 
+CPPFLAGS=$SAVED_CPPFLAGS
+LIBS=$SAVED_LIBS
+
 dnl === check for JPEG support ===
 
 JPEG_INCLUDES=""
@@ -61,6 +69,11 @@ AC_ARG_WITH(jpegincludedir,
 AC_ARG_WITH(jpeglibdir,
             [--with-jpeglibdir=DIR    use JPEG libraries from DIR],
             [JPEG_LIBS="-L$withval"])
+
+SAVED_CPPFLAGS=$CPPFLAGS
+SAVED_LIBS=$LIBS
+CPPFLAGS="$JPEG_INCLUDES $CPPFLAGS"
+LIBS="$JPEG_LIBS $LIBS"
 
 AC_CHECK_HEADER(jpeglib.h,
   AC_CHECK_LIB(jpeg, jpeg_set_defaults,
@@ -75,13 +88,16 @@ AC_CHECK_HEADER(jpeglib.h,
 AC_SUBST(JPEG_LIBS)
 AC_SUBST(JPEG_INCLUDES)
 
+CPPFLAGS=$SAVED_CPPFLAGS
+LIBS=$SAVED_LIBS
+
 dnl === check for WIC support ===
 
 if test "$target_os" = "mingw32"; then
   AC_CHECK_HEADERS([wincodec.h shlwapi.h windows.h])
   if test "$ac_cv_header_wincodec_h" = "yes"; then
     AC_MSG_CHECKING(for Windows Imaging Component support)
-    saved_LIBS=$LIBS
+    SAVED_LIBS=$LIBS
     LIBS="-lshlwapi -lole32 $LIBS"
     # match include structure from [cd]webp.c
     wic_headers="
@@ -113,7 +129,7 @@ if test "$target_os" = "mingw32"; then
     )
     AC_LANG_POP
 
-    test "$wic_support" = "yes" || LIBS=$saved_LIBS
+    test "$wic_support" = "yes" || LIBS=$SAVED_LIBS
     AC_MSG_RESULT(${wic_support-no})
   fi
 fi
