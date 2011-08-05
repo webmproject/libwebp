@@ -44,8 +44,10 @@ static void *WebPWorkerThreadLoop(void *ptr) {    // thread loop
 // main thread state control
 static void WebPWorkerChangeState(WebPWorker* const worker,
                                   WebPWorkerStatus new_status) {
+  // no-op when attempting to change state on a thread that didn't come up
+  if (worker->status_ < OK) return;
+
   pthread_mutex_lock(&worker->mutex_);
-  assert(worker->status_ >= OK);
   // wait for the worker to finish
   while (worker->status_ != OK) {
     pthread_cond_wait(&worker->condition_, &worker->mutex_);
@@ -71,7 +73,7 @@ int WebPWorkerSync(WebPWorker* const worker) {
 #ifdef WEBP_USE_THREAD
   WebPWorkerChangeState(worker, OK);
 #endif
-  assert(worker->status_ == OK);
+  assert(worker->status_ <= OK);
   return !worker->had_error;
 }
 
