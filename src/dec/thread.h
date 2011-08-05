@@ -20,7 +20,14 @@ extern "C" {
 
 #if defined(_WIN32)
 
-#undef WEBP_USE_THREAD
+#include <windows.h>
+typedef HANDLE pthread_t;
+typedef CRITICAL_SECTION pthread_mutex_t;
+typedef struct {
+  HANDLE waiting_sem_;
+  HANDLE received_sem_;
+  HANDLE signal_event_;
+} pthread_cond_t;
 
 #else
 
