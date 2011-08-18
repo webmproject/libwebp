@@ -133,12 +133,6 @@ static void TransformDCUV(const int16_t* in, uint8_t* dst) {
 
 #undef STORE
 
-// default C implementations:
-VP8Idct2 VP8Transform = TransformTwo;
-VP8Idct VP8TransformUV = TransformUV;
-VP8Idct VP8TransformDC = TransformDC;
-VP8Idct VP8TransformDCUV = TransformDCUV;
-
 //-----------------------------------------------------------------------------
 // Paragraph 14.3
 
@@ -671,22 +665,6 @@ static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
 }
 
 //-----------------------------------------------------------------------------
-
-void (*VP8VFilter16)(uint8_t*, int, int, int, int) = VFilter16;
-void (*VP8HFilter16)(uint8_t*, int, int, int, int) = HFilter16;
-void (*VP8VFilter8)(uint8_t*, uint8_t*, int, int, int, int) = VFilter8;
-void (*VP8HFilter8)(uint8_t*, uint8_t*, int, int, int, int) = HFilter8;
-void (*VP8VFilter16i)(uint8_t*, int, int, int, int) = VFilter16i;
-void (*VP8HFilter16i)(uint8_t*, int, int, int, int) = HFilter16i;
-void (*VP8VFilter8i)(uint8_t*, uint8_t*, int, int, int, int) = VFilter8i;
-void (*VP8HFilter8i)(uint8_t*, uint8_t*, int, int, int, int) = HFilter8i;
-
-void (*VP8SimpleVFilter16)(uint8_t*, int, int) = SimpleVFilter16;
-void (*VP8SimpleHFilter16)(uint8_t*, int, int) = SimpleHFilter16;
-void (*VP8SimpleVFilter16i)(uint8_t*, int, int) = SimpleVFilter16i;
-void (*VP8SimpleHFilter16i)(uint8_t*, int, int) = SimpleHFilter16i;
-
-//-----------------------------------------------------------------------------
 // SSE2 detection.
 //
 
@@ -729,19 +707,52 @@ VP8CPUInfo VP8DecGetCPUInfo = NULL;
 
 //-----------------------------------------------------------------------------
 
+VP8Idct2 VP8Transform;
+VP8Idct VP8TransformUV;
+VP8Idct VP8TransformDC;
+VP8Idct VP8TransformDCUV;
+
+VP8LumaFilterFunc VP8VFilter16;
+VP8LumaFilterFunc VP8HFilter16;
+VP8ChromaFilterFunc VP8VFilter8;
+VP8ChromaFilterFunc VP8HFilter8;
+VP8LumaFilterFunc VP8VFilter16i;
+VP8LumaFilterFunc VP8HFilter16i;
+VP8ChromaFilterFunc VP8VFilter8i;
+VP8ChromaFilterFunc VP8HFilter8i;
+VP8SimpleFilterFunc VP8SimpleVFilter16;
+VP8SimpleFilterFunc VP8SimpleHFilter16;
+VP8SimpleFilterFunc VP8SimpleVFilter16i;
+VP8SimpleFilterFunc VP8SimpleHFilter16i;
+
 extern void VP8DspInitSSE2(void);
 
 void VP8DspInit(void) {
+  VP8Transform = TransformTwo;
+  VP8TransformUV = TransformUV;
+  VP8TransformDC = TransformDC;
+  VP8TransformDCUV = TransformDCUV;
+
+  VP8VFilter16 = VFilter16;
+  VP8HFilter16 = HFilter16;
+  VP8VFilter8 = VFilter8;
+  VP8HFilter8 = HFilter8;
+  VP8VFilter16i = VFilter16i;
+  VP8HFilter16i = HFilter16i;
+  VP8VFilter8i = VFilter8i;
+  VP8HFilter8i = HFilter8i;
+  VP8SimpleVFilter16 = SimpleVFilter16;
+  VP8SimpleHFilter16 = SimpleHFilter16;
+  VP8SimpleVFilter16i = SimpleVFilter16i;
+  VP8SimpleHFilter16i = SimpleHFilter16i;
+
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8DecGetCPUInfo) {
-    if (VP8DecGetCPUInfo(kSSE2)) {
 #if defined(__SSE2__) || defined(_MSC_VER)
+    if (VP8DecGetCPUInfo(kSSE2)) {
       VP8DspInitSSE2();
+    }
 #endif
-    }
-    if (VP8DecGetCPUInfo(kSSE3)) {
-      // later we'll plug some SSE3 variant here
-    }
   }
 }
 
