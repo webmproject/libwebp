@@ -11,10 +11,14 @@
 
 #include <stdlib.h>
 #include "vp8i.h"
+#include "webpi.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
 #endif
+
+#define RIFF_HEADER_SIZE 12
+#define VP8X_HEADER_SIZE 20
 
 //-----------------------------------------------------------------------------
 
@@ -77,8 +81,40 @@ int VP8SetError(VP8Decoder* const dec,
 
 //-----------------------------------------------------------------------------
 
-int VP8GetInfo(const uint8_t* data,
-               uint32_t data_size, uint32_t chunk_size,
+static inline uint32_t get_le32(const uint8_t* const data) {
+  return data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
+}
+
+int VP8CheckAndSkipHeader(const uint8_t** data_ptr, uint32_t* data_size_ptr,
+                          int* is_vp8_chunk, uint32_t* chunk_size,
+                          uint32_t riff_size) {
+  if (!data_ptr || !data_size_ptr || !is_vp8_chunk || !chunk_size) {
+    return 0;  // Invalid Args.
+  }
+
+  if (*data_size_ptr >= 8) {
+    if (!memcmp(*data_ptr, "VP8 ", 4)) {
+      *is_vp8_chunk = 1;
+      *chunk_size = get_le32(*data_ptr + 4);
+      if ((riff_size >= RIFF_HEADER_SIZE) &&
+          (*chunk_size > riff_size - RIFF_HEADER_SIZE)) {
+        return 0;  // Inconsistent size information.
+      }
+      // We have consumed 8 bytes from VP8 Header. Skip it.
+      *data_ptr += 8;
+      *data_size_ptr -= 8;
+    } else {
+      *is_vp8_chunk = 0;
+      *chunk_size = 0;
+    }
+  } else {
+    *is_vp8_chunk = -1;  // Insufficient data.
+    *chunk_size = 0;
+  }
+  return 1;
+}
+
+int VP8GetInfo(const uint8_t* data, uint32_t data_size, uint32_t chunk_size,
                int* width, int* height, int* has_alpha) {
   if (data_size < 10) {
     return 0;         // not enough data
@@ -123,6 +159,40 @@ int VP8GetInfo(const uint8_t* data,
 
     return 1;
   }
+}
+
+int VP8XGetInfo(const uint8_t** data_ptr, uint32_t* data_size_ptr,
+                int* is_vp8x_chunk, int* width, int* height, uint32_t* flags) {
+  if (!data_ptr || !data_size_ptr || !is_vp8x_chunk) {
+    return 0;  // Invalid Args.
+  }
+
+  if (*data_size_ptr >= VP8X_HEADER_SIZE) {
+    if (!memcmp(*data_ptr, "VP8X", 4)) {
+      const uint32_t chunk_size = get_le32(*data_ptr + 4);
+      *is_vp8x_chunk = 1;
+      if (chunk_size != (VP8X_HEADER_SIZE - 8)) {
+        return 0;  // Wrong chunk size.
+      }
+      if (flags) {
+        *flags = get_le32(*data_ptr + 8);
+      }
+      if (width) {
+        *width = get_le32(*data_ptr + 12);
+      }
+      if (height) {
+        *height = get_le32(*data_ptr + 16);
+      }
+      // We have consumed 20 bytes from VP8X Header. Skip it.
+      *data_ptr += VP8X_HEADER_SIZE;
+      *data_size_ptr -= VP8X_HEADER_SIZE;
+    } else {
+      *is_vp8x_chunk = 0;
+    }
+  } else {
+    *is_vp8x_chunk = -1;  // Insufficient data.
+  }
+  return 1;
 }
 
 //-----------------------------------------------------------------------------
@@ -245,14 +315,14 @@ static int ParseFilterHeader(VP8BitReader* br, VP8Decoder* const dec) {
   return !br->eof_;
 }
 
-static inline uint32_t get_le32(const uint8_t* const data) {
-  return data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
-}
-
 // Topmost call
 int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
-  uint8_t* buf;
+  const uint8_t* buf;
   uint32_t buf_size;
+  uint32_t riff_size;
+  uint32_t chunk_size;
+  int is_vp8x_chunk = 0;
+  int is_vp8_chunk = 0;
   VP8FrameHeader* frm_hdr;
   VP8PictureHeader* pic_hdr;
   VP8BitReader* br;
@@ -274,34 +344,31 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
                        "Not enough data to parse frame header");
   }
 
-  // Skip over valid RIFF headers
-  if (!memcmp(buf, "RIFF", 4)) {
-    uint32_t riff_size;
-    uint32_t chunk_size;
-    if (buf_size < 20 + 4) {
-      return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
-                         "RIFF: Truncated header.");
-    }
-    if (memcmp(buf + 8, "WEBP", 4)) {   // wrong image file signature
+  // Skip over valid RIFF headers.
+  if (!WebPCheckAndSkipRIFFHeader(&buf, &buf_size, &riff_size)) {
+    return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
+                       "RIFF: Invalid RIFF container");
+  }
+
+  if (!VP8XGetInfo(&buf, &buf_size, &is_vp8x_chunk, NULL, NULL, NULL)) {
+    return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
+                       "RIFF: Invalid VP8X container");
+  }
+
+  if (!VP8CheckAndSkipHeader(&buf, &buf_size, &is_vp8_chunk, &chunk_size,
+                             riff_size)) {
+    return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
+                       "RIFF: Inconsistent size information.");
+  }
+
+  if (is_vp8_chunk == -1) {
       return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
-                         "RIFF: WEBP signature not found.");
-    }
-    riff_size = get_le32(buf + 4);
-    if (riff_size < 12) {
-      return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
-                         "RIFF: Truncated header.");
-    }
-    if (memcmp(buf + 12, "VP8 ", 4)) {
-      return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
-                         "RIFF: Invalid compression format.");
-    }
-    chunk_size = get_le32(buf + 16);
-    if (chunk_size > riff_size - 12) {
-      return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
-                         "RIFF: Inconsistent size information.");
-    }
-    buf += 20;
-    buf_size -= 20;
+                         "Not enough data to parse frame header.");
+  }
+
+  if (buf_size < 4) {
+    return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
+                       "RIFF: Truncated header.");
   }
 
   // Paragraph 9.1
@@ -437,7 +504,7 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
   if (dec->pic_hdr_.colorspace_) {
     const size_t kTrailerSize = 8;
     const uint8_t kTrailerMarker = 0x01;
-    uint8_t* const ext_buf = buf - kTrailerSize;
+    const uint8_t* ext_buf = buf - kTrailerSize;
     size_t size;
 
     if (frm_hdr->partition_length_ < kTrailerSize ||

@@ -17,16 +17,26 @@
 extern "C" {
 #endif
 
+#define RIFF_HEADER_SIZE 12
+
 //-----------------------------------------------------------------------------
 // RIFF layout is:
 //   0ffset  tag
 //   0...3   "RIFF" 4-byte tag
 //   4...7   size of image data (including metadata) starting at offset 8
 //   8...11  "WEBP"   our form-type signature
+// The RIFF container (12 bytes) is followed by appropriate chunks:
 //   12..15  "VP8 ": 4-bytes tags, describing the raw video format used
 //   16..19  size of the raw VP8 image data, starting at offset 20
 //   20....  the VP8 bytes
-// There can be extra chunks after the "VP8 " chunk (ICMT, ICOP, ...)
+// Or,
+//   12..15  "VP8X": 4-bytes tags, describing the extended-VP8 chunk.
+//   16..19  size of the VP8X chunk starting at offset 8.
+//   20..23  VP8X flags bit-map corresponding to the chunk-types present.
+//   24..27  Width of the Canvas Image.
+//   28..31  Height of the Canvas Image.
+// There can be extra chunks after the "VP8X" chunk (ICCP, TILE, FRM, VP8,
+// META  ...)
 // All 32-bits sizes are in little-endian order.
 // Note: chunk data must be padded to multiple of 2 in size
 
@@ -34,33 +44,25 @@ static inline uint32_t get_le32(const uint8_t* const data) {
   return data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
 }
 
-// If a RIFF container is detected, validate it and skip over it.
-uint32_t WebPCheckRIFFHeader(const uint8_t** data_ptr,
-                             uint32_t* data_size_ptr) {
-  uint32_t chunk_size = 0xffffffffu;
-  if (*data_size_ptr >= 10 + 20 && !memcmp(*data_ptr, "RIFF", 4)) {
+uint32_t WebPCheckAndSkipRIFFHeader(const uint8_t** data_ptr,
+                                    uint32_t* data_size_ptr,
+                                    uint32_t* riff_size) {
+  if (*data_size_ptr >= RIFF_HEADER_SIZE && !memcmp(*data_ptr, "RIFF", 4)) {
     if (memcmp(*data_ptr + 8, "WEBP", 4)) {
-      return 0;  // wrong image file signature
+      return 0;  // Wrong image file signature.
     } else {
-      const uint32_t riff_size = get_le32(*data_ptr + 4);
-      if (riff_size < 12) {
-        return 0;   // we should have at least one chunk
-      }
-      if (memcmp(*data_ptr + 12, "VP8 ", 4)) {
-        return 0;   // invalid compression format
-      }
-      chunk_size = get_le32(*data_ptr + 16);
-      if (chunk_size > riff_size - 12) {
-        return 0;  // inconsistent size information.
+      *riff_size = get_le32(*data_ptr + 4);
+      if (*riff_size < RIFF_HEADER_SIZE) {
+        return 0;   // We should have at least one chunk.
       }
       // We have a RIFF container. Skip it.
-      *data_ptr += 20;
-      *data_size_ptr -= 20;
-      // Note: we don't report error for odd-sized chunks.
+      *data_ptr += RIFF_HEADER_SIZE;
+      *data_size_ptr -= RIFF_HEADER_SIZE;
     }
-    return chunk_size;
+  } else {
+    *riff_size = 0;  // Did not get full RIFF Header.
   }
-  return *data_size_ptr;
+  return 1;
 }
 
 //-----------------------------------------------------------------------------
@@ -268,19 +270,6 @@ uint8_t* WebPDecodeYUV(const uint8_t* data, uint32_t data_size,
   return out;
 }
 
-//-----------------------------------------------------------------------------
-// WebPGetInfo()
-
-int WebPGetInfo(const uint8_t* data, uint32_t data_size,
-                int* width, int* height) {
-  const uint32_t chunk_size = WebPCheckRIFFHeader(&data, &data_size);
-  if (!chunk_size) {
-    return 0;         // unsupported RIFF header
-  }
-  // Validate raw video data
-  return VP8GetInfo(data, data_size, chunk_size, width, height, NULL);
-}
-
 static void DefaultFeatures(WebPBitstreamFeatures* const features) {
   assert(features);
   memset(features, 0, sizeof(*features));
@@ -289,23 +278,75 @@ static void DefaultFeatures(WebPBitstreamFeatures* const features) {
 
 static VP8StatusCode GetFeatures(const uint8_t** data, uint32_t* data_size,
                                  WebPBitstreamFeatures* const features) {
-  uint32_t chunk_size;
+  uint32_t chunk_size = 0;
+  uint32_t riff_size = 0;
+  uint32_t flags = 0;
+  int is_vp8x_chunk = 0;
+  int is_vp8_chunk = 0;
+
   if (features == NULL) {
     return VP8_STATUS_INVALID_PARAM;
   }
   DefaultFeatures(features);
+
   if (data == NULL || *data == NULL || data_size == 0) {
     return VP8_STATUS_INVALID_PARAM;
   }
-  chunk_size = WebPCheckRIFFHeader(data, data_size);
-  if (chunk_size == 0) {
-    return VP8_STATUS_BITSTREAM_ERROR;   // unsupported RIFF header
+
+  if (!WebPCheckAndSkipRIFFHeader(data, data_size, &riff_size)) {
+    return VP8_STATUS_BITSTREAM_ERROR;   // Wrong RIFF Header.
   }
+
+  if (!VP8XGetInfo(data, data_size, &is_vp8x_chunk,
+                   &features->width, &features->height, &flags)) {
+    return VP8_STATUS_BITSTREAM_ERROR;  // Wrong VP8X Chunk-header.
+  }
+
+  if (is_vp8x_chunk > 0) {
+    return VP8_STATUS_OK;
+  }
+
+  if (!VP8CheckAndSkipHeader(data, data_size, &is_vp8_chunk, &chunk_size,
+                             riff_size)) {
+    return VP8_STATUS_BITSTREAM_ERROR;  // Invalid VP8 header.
+  }
+
+  if (is_vp8_chunk == -1) {
+    return VP8_STATUS_BITSTREAM_ERROR;   // Insufficient data-bytes.
+  }
+
+  if (!is_vp8_chunk) {
+    chunk_size = *data_size;  // No VP8 chunk wrapper over raw VP8 data.
+  }
+
+  // Validates raw VP8 data.
   if (!VP8GetInfo(*data, *data_size, chunk_size,
                   &features->width, &features->height, &features->has_alpha)) {
     return VP8_STATUS_BITSTREAM_ERROR;
   }
+
   return VP8_STATUS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// WebPGetInfo()
+
+int WebPGetInfo(const uint8_t* data, uint32_t data_size,
+                int* width, int* height) {
+  WebPBitstreamFeatures features;
+
+  if (GetFeatures(&data, &data_size, &features) != VP8_STATUS_OK) {
+    return 0;
+  }
+
+  if (width) {
+    *width  = features.width;
+  }
+  if (height) {
+    *height = features.height;
+  }
+
+  return 1;
 }
 
 //-----------------------------------------------------------------------------
