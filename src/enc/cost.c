@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Boolean-cost cost table
 
 const uint16_t VP8EntropyCost[256] = {
@@ -49,7 +49,7 @@ const uint16_t VP8EntropyCost[256] = {
     10,    9,    7,    6,    4,    3
 };
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Level cost tables
 
 // For each given level, the following table given the pattern of contexts
@@ -351,7 +351,7 @@ static int VariableLevelCost(int level, const uint8_t probas[NUM_PROBAS]) {
   return cost;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Pre-calc level costs once for all
 
 void VP8CalculateLevelCosts(VP8Proba* const proba) {
@@ -374,12 +374,13 @@ void VP8CalculateLevelCosts(VP8Proba* const proba) {
   }
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Mode cost tables.
 
 // These are the fixed probabilities (in the coding trees) turned into bit-cost
 // by calling VP8BitCost().
 const uint16_t VP8FixedCostsUV[4] = { 302, 984, 439, 642 };
+// note: these values include the fixed VP8BitCost(1, 145) mode selection cost.
 const uint16_t VP8FixedCostsI16[4] = { 663, 919, 872, 919 };
 const uint16_t VP8FixedCostsI4[NUM_BMODES][NUM_BMODES][NUM_BMODES] = {
   { {  251, 1362, 1934, 2085, 2314, 2230, 1839, 1988, 2437, 2348 },
@@ -484,7 +485,7 @@ const uint16_t VP8FixedCostsI4[NUM_BMODES][NUM_BMODES][NUM_BMODES] = {
     {  516, 1378, 1569, 1110, 1798, 1798, 1198, 2199, 1543,  712 } },
 };
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
