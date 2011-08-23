@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "June  20, 2011"
+.TH CWEBP 1 "August 23, 2011"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -85,6 +85,25 @@ used thanks to the \fB\-f\fP option). Strong filtering is off by default.
 .B \-segments int
 Change the number of partitions to use during the segmentation of the
 sns algorithm. Segments should be in range 1 to 4. Default value is 4.
+.TP
+.B \-partition_limit int
+Degrade quality by limiting the number of bits used by some macroblocks.
+Range is 0 (no degradation, the default) to 100 (full degradation).
+Useful values are usually around 30-70 for moderately large images.
+In the VP8 format, the so-called control partition has a limit of 512k and
+is used to store the following information: whether the macroblock is skipped,
+which segment it belongs to, whether it is coded as intra 4x4 or intra 16x16
+mode, and finally the prediction modes to use for each of the sub-blocks.
+For a very large image, 512k only leaves room to few bits per 16x16 macroblock.
+The absolute minimum is 4 bits per macroblock. Skip, segment, and mode
+information can use up almost all these 4 bits (although the case is unlikely),
+which is problematic for very large images. The partition_limit factor controls
+how frequently the most bit-costly mode (intra 4x4) will be used. This is
+useful in case the 512k limit is reached and the following message is displayed:
+\fIError code: 6 (PARTITION0_OVERFLOW: Partition #0 is too big to fit 512k)\fP.
+If using \fB-partition_limit\fP is not enough to meet the 512k constraint, one
+should use less segments in order to save more header bits per macroblock.
+See the \fB-segments\fP option.
 .TP
 .B \-size int
 Specify a target size (in bytes) to try and reach for the compressed output.

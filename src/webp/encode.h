@@ -69,6 +69,8 @@ typedef struct {
   int preprocessing;     // preprocessing filter (0=none, 1=segment-smooth)
   int partitions;        // log2(number of token partitions) in [0..3]
                          // Default is set to 0 for easier progressive decoding.
+  int partition_limit;   // quality degradation allowed to fit the 512k limit on
+                         // prediction modes coding (0=no degradation, 100=full)
   int alpha_compression;  // Algorithm for optimizing the alpha plane (0 = none)
 } WebPConfig;
 

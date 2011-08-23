@@ -140,6 +140,8 @@ options:
   -f <int> ............... filter strength (0=off..100)
   -sharpness <int> ....... filter sharpness (0:most .. 7:least sharp)
   -strong ................ use strong filter instead of simple.
+  -partition_limit <int> . limit quality to fit the 512k limit on
+                           the first partition (0=no degradation ... 100=full)
   -alpha_comp <int> ...... set the transparency-compression
   -noalpha ............... discard any transparency information.
   -pass <int> ............ analysis pass number (1..10)

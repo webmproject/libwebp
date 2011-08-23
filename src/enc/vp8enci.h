@@ -359,8 +359,9 @@ struct VP8Encoder {
   int      block_count_[3];
 
   // quality/speed settings
-  int method_;             // 0=fastest, 6=best/slowest.
-  int rd_opt_level_;       // Deduced from method_.
+  int method_;              // 0=fastest, 6=best/slowest.
+  int rd_opt_level_;        // Deduced from method_.
+  int max_i4_header_bits_;  // partition #0 safeness factor
 
   // Memory
   VP8MBInfo* mb_info_;   // contextual macroblock infos (mb_w_ + 1)
