@@ -112,11 +112,15 @@ static void ResetBoundaryPredictions(VP8Encoder* const enc) {
 
 static void MapConfigToTools(VP8Encoder* const enc) {
   const int method = enc->config_->method;
+  const int limit = 100 - enc->config_->partition_limit;
   enc->method_ = method;
   enc->rd_opt_level_ = (method >= 6) ? 3
                      : (method >= 5) ? 2
                      : (method >= 3) ? 1
                      : 0;
+  enc->max_i4_header_bits_ =
+      256 * 16 * 16 *                 // upper bound: up to 16bit per 4x4 block
+      (limit * limit) / (100 * 100);  // ... modulated with a quadratic curve.
 }
 
 // Memory scaling with dimensions:

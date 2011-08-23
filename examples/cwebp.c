@@ -676,6 +676,9 @@ static void HelpLong(void) {
   printf("  -sharpness <int> ....... "
          "filter sharpness (0:most .. 7:least sharp)\n");
   printf("  -strong ................ use strong filter instead of simple.\n");
+  printf("  -partition_limit <int> . limit quality to fit the 512k limit on\n");
+  printf("                           "
+         "the first partition (0=no degradation ... 100=full)\n");
   printf("  -alpha_comp <int> ...... set the transparency-compression\n");
   printf("  -noalpha ............... discard any transparency information.\n");
   printf("  -pass <int> ............ analysis pass number (1..10)\n");
@@ -712,10 +715,15 @@ static const char* const kErrorMessages[] = {
   "BITSTREAM_OUT_OF_MEMORY: Out of memory re-allocating byte buffer",
   "NULL_PARAMETER: NULL parameter passed to function",
   "INVALID_CONFIGURATION: configuration is invalid",
-  "BAD_DIMENSION: Bad picture dimension",
-  "PARTITION0_OVERFLOW: Partition #0 is too big to fit 512k",
-  "PARTITION_OVERFLOW: Partition is too big to fir 16M",
-  "BAD_WRITE: Picture writer returned an error"
+  "BAD_DIMENSION: Bad picture dimension. Maximum width and height "
+  "allowed is 16383 pixels.",
+  "PARTITION0_OVERFLOW: Partition #0 is too big to fit 512k.\n"
+  "To reduce the size of this partition, try using less segments "
+  "with the -segments option, and eventually reduce the number of "
+  "header bits using -partition_limit. More details are available "
+  "in the manual (`man cwebp`)",
+  "PARTITION_OVERFLOW: Partition is too big to fit 16M",
+  "BAD_WRITE: Picture writer returned an I/O error"
 };
 
 //-----------------------------------------------------------------------------
@@ -789,6 +797,8 @@ int main(int argc, const char *argv[]) {
       config.preprocessing = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-segments") && c < argc - 1) {
       config.segments = strtol(argv[++c], NULL, 0);
+    } else if (!strcmp(argv[c], "-partition_limit") && c < argc - 1) {
+      config.partition_limit = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-alpha_comp") && c < argc - 1) {
       config.alpha_compression = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-noalpha")) {

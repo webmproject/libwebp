@@ -757,7 +757,12 @@ static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
   const int tlambda = dqm->tlambda_;
   const uint8_t* const src0 = it->yuv_in_ + Y_OFF;
   uint8_t* const best_blocks = it->yuv_out2_ + Y_OFF;
+  int total_header_bits = 0;
   VP8ModeScore rd_best;
+
+  if (enc->max_i4_header_bits_ == 0) {
+    return 0;
+  }
 
   InitScore(&rd_best);
   rd_best.score = 211;  // '211' is the value of VP8BitCost(0, 145)
@@ -799,7 +804,9 @@ static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
     }
     SetRDScore(dqm->lambda_mode_, &rd_i4);
     AddScore(&rd_best, &rd_i4);
-    if (rd_best.score >= rd->score) {
+    total_header_bits += mode_costs[best_mode];
+    if (rd_best.score >= rd->score ||
+        total_header_bits > enc->max_i4_header_bits_) {
       return 0;
     }
     // Copy selected samples if not in the right place already.
