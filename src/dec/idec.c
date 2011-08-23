@@ -20,9 +20,8 @@
 extern "C" {
 #endif
 
-#define RIFF_HEADER_SIZE 20
+#define RIFF_HEADER_SIZE 12
 #define VP8_HEADER_SIZE 10
-#define WEBP_HEADER_SIZE (RIFF_HEADER_SIZE + VP8_HEADER_SIZE)
 #define CHUNK_SIZE 4096
 #define MAX_MB_SIZE 4096
 
@@ -245,16 +244,40 @@ static VP8StatusCode DecodeHeader(WebPIDecoder* const idec) {
   const uint8_t* data = idec->mem_.buf_ + idec->mem_.start_;
   uint32_t curr_size = MemDataSize(&idec->mem_);
   uint32_t chunk_size;
+  uint32_t riff_size;
+  int is_vp8x_chunk = 0;
+  int is_vp8_chunk = 0;
 
-  if (curr_size < WEBP_HEADER_SIZE) {
+  if (curr_size < RIFF_HEADER_SIZE) {
     return VP8_STATUS_SUSPENDED;
   }
 
-  // Validate and Skip over RIFF header
-  chunk_size = WebPCheckRIFFHeader(&data, &curr_size);
-  if (chunk_size == 0 ||
-      curr_size < VP8_HEADER_SIZE ||
-      !VP8GetInfo(data, curr_size, chunk_size, NULL, NULL, NULL)) {
+  if (!WebPCheckAndSkipRIFFHeader(&data, &curr_size, &riff_size)) {
+    return IDecError(idec, VP8_STATUS_BITSTREAM_ERROR);  // Wrong RIFF Header.
+  }
+
+  if (!VP8XGetInfo(&data, &curr_size, &is_vp8x_chunk, NULL, NULL, NULL)) {
+    return IDecError(idec, VP8_STATUS_BITSTREAM_ERROR);  // Wrong VP8X Chunk.
+  }
+
+  if (is_vp8x_chunk == -1) {
+    return VP8_STATUS_SUSPENDED;  // Not enough data bytes to process chunk.
+  }
+
+  if (!VP8CheckAndSkipHeader(&data, &curr_size, &is_vp8_chunk, &chunk_size,
+                             riff_size)) {
+    return IDecError(idec, VP8_STATUS_BITSTREAM_ERROR);  // Invalid VP8 header.
+  }
+
+  if ((is_vp8_chunk == -1) && (chunk_size == 0)){
+    return VP8_STATUS_SUSPENDED;  // Not enough data bytes to extract chunk_size
+  }
+
+  if (curr_size < VP8_HEADER_SIZE) {
+    return VP8_STATUS_SUSPENDED;  // Not enough data bytes to extract VP8 Header
+  }
+
+  if (!VP8GetInfo(data, curr_size, chunk_size, NULL, NULL, NULL)) {
     return IDecError(idec, VP8_STATUS_BITSTREAM_ERROR);
   }
 

@@ -76,10 +76,13 @@ void WebPInitUpsamplersSSE2(void);
 //------------------------------------------------------------------------------
 // Misc utils
 
-// If a RIFF container is detected, validate it and skip over it. Returns
-// VP8 bit-stream size if RIFF header is valid else returns 0
-uint32_t WebPCheckRIFFHeader(const uint8_t** data_ptr,
-                             uint32_t* data_size_ptr);
+// Validates the RIFF container (if detected) and skip over it.
+// If a RIFF container is detected, returns 0 for invalid header. Else return 1.
+// In case there are not enough bytes (partial RIFF container), return 0 for
+// riff_size. Else return the riff_size extracted from the header.
+uint32_t WebPCheckAndSkipRIFFHeader(const uint8_t** data_ptr,
+                                    uint32_t* data_size_ptr,
+                                    uint32_t* riff_size_ptr);
 
 // Initializes VP8Io with custom setup, io and teardown functions. The default
 // hooks will use the supplied 'params' as io->opaque handle.
