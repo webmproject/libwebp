@@ -26,7 +26,7 @@ static int ClipAlpha(int alpha) {
   return alpha < 0 ? 0 : alpha > 255 ? 255 : alpha;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Smooth the segment map by replacing isolated block by the majority of its
 // neighbours.
 
@@ -69,7 +69,7 @@ static void SmoothSegmentMap(VP8Encoder* const enc) {
   free(tmp);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Finalize Segment probability based on the coding tree
 
 static int GetProba(int a, int b) {
@@ -139,7 +139,7 @@ static void SetSegmentAlphas(VP8Encoder* const enc,
   }
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Simplified k-Means, to assign Nb segments based on alpha-histogram
 
 static void AssignSegments(VP8Encoder* const enc, const int alphas[256]) {
@@ -220,7 +220,7 @@ static void AssignSegments(VP8Encoder* const enc, const int alphas[256]) {
   SetSegmentAlphas(enc, centers, weighted_average);  // pick some alphas.
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Macroblock analysis: collect histogram for each mode, deduce the maximal
 // susceptibility and set best modes for this macroblock.
 // Segment assignment is done later.
@@ -328,7 +328,7 @@ static void MBAnalyze(VP8EncIterator* const it,
   it->mb_->alpha_ = best_alpha;   // Informative only.
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Main analysis loop:
 // Collect all susceptibilities for each macroblock and record their
 // distribution in alphas[]. Segments is assigned a-posteriori, based on

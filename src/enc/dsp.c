@@ -16,7 +16,7 @@
 extern "C" {
 #endif
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Compute susceptibility based on DCT-coeff histograms:
 // the higher, the "easier" the macroblock is to compress.
 
@@ -64,7 +64,7 @@ static int CollectHistogram(const uint8_t* ref, const uint8_t* pred,
   return VP8GetAlpha(histo);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // run-time tables (~4k)
 
 static uint8_t clip1[255 + 510 + 1];    // clips [-255,510] to [0,255]
@@ -87,7 +87,7 @@ static inline uint8_t clip_8b(int v) {
   return (!(v & ~0xff)) ? v : v < 0 ? 0 : 255;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
 
 #define STORE(x, y, v) \
@@ -226,7 +226,7 @@ static void FTransformWHT(const int16_t* in, int16_t* out) {
 #undef MUL
 #undef STORE
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Intra predictions
 
 #define OUT(x, y) dst[(x) + (y) * BPS]
@@ -311,7 +311,7 @@ static inline void DCMode(uint8_t* dst, const uint8_t* left,
   Fill(dst, DC, size);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Chroma 8x8 prediction (paragraph 12.2)
 
 static void IntraChromaPreds(uint8_t* dst, const uint8_t* left,
@@ -331,7 +331,7 @@ static void IntraChromaPreds(uint8_t* dst, const uint8_t* left,
   TrueMotion(C8TM8 + dst, left, top, 8);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // luma 16x16 prediction (paragraph 12.3)
 
 static void Intra16Preds(uint8_t* dst,
@@ -342,7 +342,7 @@ static void Intra16Preds(uint8_t* dst,
   TrueMotion(I16TM16 + dst, left, top, 16);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // luma 4x4 prediction
 
 #define AVG3(a, b, c) (((a) + 2 * (b) + (c) + 2) >> 2)
@@ -529,7 +529,7 @@ static void Intra4Preds(uint8_t* dst, const uint8_t* top) {
   HU4(I4HU4 + dst, top);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Metric
 
 static inline int GetSSE(const uint8_t* a, const uint8_t* b, int w, int h) {
@@ -559,7 +559,7 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
   return GetSSE(a, b, 4, 4);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Texture distortion
 //
 // We try to match the spectral content (weighted) between source and
@@ -620,7 +620,7 @@ static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
   return D;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Quantization
 //
 
@@ -649,7 +649,7 @@ static int QuantizeBlock(int16_t in[16], int16_t out[16],
   return (last >= 0);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Block copy
 
 static inline void Copy(const uint8_t* src, uint8_t* dst, int size) {
@@ -665,7 +665,7 @@ static void Copy4x4(const uint8_t* src, uint8_t* dst) { Copy(src, dst, 4); }
 static void Copy8x8(const uint8_t* src, uint8_t* dst) { Copy(src, dst, 8); }
 static void Copy16x16(const uint8_t* src, uint8_t* dst) { Copy(src, dst, 16); }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // SSE2 detection.
 //
 

@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Compute susceptibility based on DCT-coeff histograms:
 // the higher, the "easier" the macroblock is to compress.
 
@@ -64,7 +64,7 @@ static int CollectHistogramSSE2(const uint8_t* ref, const uint8_t* pred,
   return VP8GetAlpha(histo);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
 
 // Does one or two inverse transforms.
@@ -436,7 +436,7 @@ static void FTransformSSE2(const uint8_t* src, const uint8_t* ref,
   }
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Metric
 
 static int SSE4x4SSE2(const uint8_t* a, const uint8_t* b) {
@@ -485,7 +485,7 @@ static int SSE4x4SSE2(const uint8_t* a, const uint8_t* b) {
   return (tmp[3] + tmp[2] + tmp[1] + tmp[0]);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Texture distortion
 //
 // We try to match the spectral content (weighted) between source and
@@ -679,7 +679,7 @@ static int Disto16x16SSE2(const uint8_t* const a, const uint8_t* const b,
 }
 
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Quantization
 //
 

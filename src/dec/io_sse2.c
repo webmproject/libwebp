@@ -184,7 +184,7 @@ SSE2_UPSAMPLE_FUNC(UpsampleBgrKeepAlphaLinePairSSE2, VP8YuvToBgr, 4)
 #undef CONVERT2RGB
 #undef SSE2_UPSAMPLE_FUNC
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 void WebPInitUpsamplersSSE2(void) {
   WebPUpsamplers[MODE_RGB] = UpsampleRgbLinePairSSE2;

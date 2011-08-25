@@ -57,7 +57,7 @@ DEFINE_GUID(GUID_WICPixelFormat32bppRGBA,
 extern void* VP8EncGetCPUInfo;   // opaque forward declaration.
 #endif
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 static int verbose = 0;
 
@@ -599,7 +599,7 @@ static void PrintExtraInfo(const WebPPicture* const pic, int short_output) {
   }
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 static int MyWriter(const uint8_t* data, size_t data_size,
                     const WebPPicture* const pic) {
@@ -638,7 +638,7 @@ static int DumpPicture(const WebPPicture* const picture, const char* PGM_name) {
   return 1;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 static void HelpShort(void) {
   printf("Usage:\n\n");
@@ -706,7 +706,7 @@ static void HelpLong(void) {
   printf("\n");
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Error messages
 
 static const char* const kErrorMessages[] = {
@@ -726,7 +726,7 @@ static const char* const kErrorMessages[] = {
   "BAD_WRITE: Picture writer returned an I/O error"
 };
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 int main(int argc, const char *argv[]) {
   const char *in_file = NULL, *out_file = NULL, *dump_file = NULL;
@@ -953,4 +953,4 @@ int main(int argc, const char *argv[]) {
   return 0;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------

@@ -105,7 +105,7 @@ WEBP_EXTERN(uint8_t*) WebPDecodeYUVInto(
     uint8_t* u, int u_size, int u_stride,
     uint8_t* v, int v_size, int v_stride);
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Output colorspaces and buffer
 
 // Colorspaces
@@ -162,7 +162,7 @@ static inline int WebPInitDecBuffer(WebPDecBuffer* const buffer) {
 // Note: doesn't free the 'buffer' structure itself.
 WEBP_EXTERN(void) WebPFreeDecBuffer(WebPDecBuffer* const buffer);
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Enumeration of the status codes
 
 typedef enum {
@@ -176,7 +176,7 @@ typedef enum {
   VP8_STATUS_NOT_ENOUGH_DATA
 } VP8StatusCode;
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Incremental decoding
 //
 // This API allows streamlined decoding of partial data.
@@ -279,7 +279,7 @@ WEBP_EXTERN(const WebPDecBuffer*) WebPIDecodedArea(
     int* const left, int* const top,
     int* const width, int* const height);
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Advanced decoding parametrization
 //
 //  Code sample for using the advanced decoding API

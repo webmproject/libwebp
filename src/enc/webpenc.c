@@ -28,15 +28,15 @@ extern "C" {
 
 #define MAX_DIMENSION 16384   // maximum width/height allowed by the spec
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 int WebPGetEncoderVersion(void) {
   return (ENC_MAJ_VERSION << 16) | (ENC_MIN_VERSION << 8) | ENC_REV_VERSION;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // WebPPicture
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 static int DummyWriter(const uint8_t* data, size_t data_size,
                        const WebPPicture* const picture) {
@@ -59,9 +59,9 @@ int WebPPictureInitInternal(WebPPicture* const picture, int version) {
   return 1;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // VP8Encoder
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 static void ResetSegmentHeader(VP8Encoder* const enc) {
   VP8SegmentHeader* const hdr = &enc->segment_hdr_;
@@ -270,7 +270,7 @@ static void DeleteEncoder(VP8Encoder* enc) {
   }
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 static double GetPSNR(uint64_t err, uint64_t size) {
   return err ? 10. * log10(255. * 255. * size / err) : 99.;
@@ -312,7 +312,7 @@ int WebPEncodingSetError(WebPPicture* const pic, WebPEncodingError error) {
   return 0;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 int WebPEncode(const WebPConfig* const config, WebPPicture* const pic) {
   VP8Encoder* enc;

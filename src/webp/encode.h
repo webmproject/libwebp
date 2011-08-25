@@ -26,7 +26,7 @@ extern "C" {
 // each of major/minor/revision. E.g: v2.5.7 is 0x020507.
 WEBP_EXTERN(int) WebPGetEncoderVersion(void);
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // One-stop-shop call! No questions asked:
 
 // Returns the size of the compressed data (pointed to by *output), or 0 if
@@ -45,7 +45,7 @@ WEBP_EXTERN(size_t) WebPEncodeBGRA(const uint8_t* bgra,
                                    int width, int height, int stride,
                                    float quality_factor, uint8_t** output);
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Coding parameters
 
 typedef struct {
@@ -110,7 +110,7 @@ static inline int WebPConfigPreset(WebPConfig* const config,
 // Returns 1 if all parameters are in valid range and the configuration is OK.
 WEBP_EXTERN(int) WebPValidateConfig(const WebPConfig* const config);
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Input / Output
 
 typedef struct WebPPicture WebPPicture;   // main structure for I/O
@@ -209,7 +209,7 @@ static inline int WebPPictureInit(WebPPicture* const picture) {
   return WebPPictureInitInternal(picture, WEBP_ENCODER_ABI_VERSION);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // WebPPicture utils
 
 // Convenience allocation / deallocation based on picture->width/height:
@@ -255,7 +255,7 @@ WEBP_EXTERN(int) WebPPictureImportBGR(
 WEBP_EXTERN(int) WebPPictureImportBGRA(
     WebPPicture* const picture, const uint8_t* const bgra, int bgra_stride);
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Main call
 
 // Main encoding call, after config and picture have been initialized.
@@ -266,7 +266,7 @@ WEBP_EXTERN(int) WebPPictureImportBGRA(
 WEBP_EXTERN(int) WebPEncode(
     const WebPConfig* const config, WebPPicture* const picture);
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

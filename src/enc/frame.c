@@ -37,7 +37,7 @@ typedef struct {
   CostArray*  cost;
 } VP8Residual;
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Tables for level coding
 
 const uint8_t VP8EncBands[16 + 1] = {
@@ -51,7 +51,7 @@ static const uint8_t kCat5[] = { 180, 157, 141, 134, 130 };
 static const uint8_t kCat6[] =
     { 254, 254, 243, 230, 196, 177, 153, 140, 133, 130, 129 };
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Reset the statistics about: number of skips, token proba, level cost,...
 
 static void ResetStats(VP8Encoder* const enc, int precalc_cost) {
@@ -60,7 +60,7 @@ static void ResetStats(VP8Encoder* const enc, int precalc_cost) {
   proba->nb_skip_ = 0;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Skip decision probability
 
 static int CalcSkipProba(uint64_t nb, uint64_t total) {
@@ -84,7 +84,7 @@ static int FinalizeSkipProba(VP8Encoder* const enc) {
   return size;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Recording of token probabilities.
 
 static void ResetTokenStats(VP8Encoder* const enc) {
@@ -191,7 +191,7 @@ static int FinalizeTokenProbas(VP8Encoder* const enc) {
   return size;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // helper functions for residuals struct VP8Residual.
 
 static void InitResidual(int first, int coeff_type,
@@ -216,7 +216,7 @@ static void SetResidualCoeffs(const int16_t* const coeffs,
   res->coeffs = coeffs;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Mode costs
 
 static int GetResidualCost(int ctx, const VP8Residual* const res) {
@@ -311,7 +311,7 @@ int VP8GetCostUV(VP8EncIterator* const it, const VP8ModeScore* const rd) {
   return R;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Coefficient coding
 
 static int PutCoeffs(VP8BitWriter* const bw, int ctx, const VP8Residual* res) {
@@ -481,7 +481,7 @@ static void RecordResiduals(VP8EncIterator* const it,
   VP8IteratorBytesToNz(it);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // ExtraInfo map / Debug function
 
 #if SEGMENT_VISU
@@ -544,7 +544,7 @@ static void StoreSideInfo(const VP8EncIterator* const it) {
 #endif
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Main loops
 //
 //  VP8EncLoop(): does the final bitstream coding.
@@ -616,7 +616,7 @@ int VP8EncLoop(VP8Encoder* const enc) {
   return 1;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //  VP8StatLoop(): only collect statistics (number of skips, token usage, ...)
 //                 This is used for deciding optimal probabilities. It also
 //                 modifies the quantizer value if some target (size, PNSR)
@@ -715,7 +715,7 @@ int VP8StatLoop(VP8Encoder* const enc) {
   return 1;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

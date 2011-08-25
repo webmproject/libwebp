@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Various defines and enums
 
 // version numbers
@@ -96,7 +96,7 @@ enum { MB_FEATURE_TREE_PROBS = 3,
 #define U_OFF    (Y_OFF + BPS * 16 + BPS)
 #define V_OFF    (U_OFF + 16)
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Headers
 
 typedef struct {
@@ -145,7 +145,7 @@ typedef struct {
   int mode_lf_delta_[NUM_MODE_LF_DELTAS];
 } VP8FilterHeader;
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Informations about the macroblocks.
 
 typedef struct {  // filter specs
@@ -174,7 +174,7 @@ typedef struct {
   VP8Io io_;          // copy of the VP8Io to pass to put()
 } VP8ThreadContext;
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // VP8Decoder: the main opaque structure handed over to user
 
 struct VP8Decoder {
@@ -280,7 +280,7 @@ struct VP8Decoder {
   size_t layer_data_size_;
 };
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // internal functions. Not public.
 
 // in vp8.c
@@ -411,7 +411,7 @@ typedef enum {
 typedef int (*VP8CPUInfo)(CPUFeature feature);
 extern VP8CPUInfo VP8DecGetCPUInfo;
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

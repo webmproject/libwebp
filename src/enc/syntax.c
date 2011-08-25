@@ -26,7 +26,7 @@ extern "C" {
 #define MAX_PARTITION0_SIZE (1 << 19)   // max size of mode partition
 #define MAX_PARTITION_SIZE  (1 << 24)   // max size for token partition
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Writers for header's various pieces (in order of appearance)
 
 // Main keyframe header
@@ -154,7 +154,7 @@ static int EmitPartitionsSize(const VP8Encoder* const enc,
   return p ? pic->writer(buf, 3 * p, pic) : 1;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 #ifdef WEBP_EXPERIMENTAL_FEATURES
 
@@ -200,7 +200,7 @@ static int WriteExtensions(VP8Encoder* const enc) {
 
 #endif    /* WEBP_EXPERIMENTAL_FEATURES */
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 static size_t GeneratePartition0(VP8Encoder* const enc) {
   VP8BitWriter* const bw = &enc->bw_;
@@ -293,7 +293,7 @@ int VP8EncWrite(VP8Encoder* const enc) {
   return ok;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

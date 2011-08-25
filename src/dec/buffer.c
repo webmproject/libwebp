@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // WebPDecBuffer
 
 // Number of bytes per pixel for the different color-spaces.
@@ -151,7 +151,7 @@ VP8StatusCode WebPAllocateDecBuffer(int w, int h,
   return AllocateBuffer(out);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // constructors / destructors
 
 int WebPInitDecBufferInternal(WebPDecBuffer* const buffer, int version) {
@@ -191,7 +191,7 @@ void WebPGrabDecBuffer(WebPDecBuffer* const src, WebPDecBuffer* const dst) {
   }
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

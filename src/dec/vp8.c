@@ -20,13 +20,13 @@ extern "C" {
 #define RIFF_HEADER_SIZE 12
 #define VP8X_HEADER_SIZE 20
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 int WebPGetDecoderVersion(void) {
   return (DEC_MAJ_VERSION << 16) | (DEC_MIN_VERSION << 8) | DEC_REV_VERSION;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // VP8Decoder
 
 static void SetOk(VP8Decoder* const dec) {
@@ -79,7 +79,7 @@ int VP8SetError(VP8Decoder* const dec,
   return 0;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 static inline uint32_t get_le32(const uint8_t* const data) {
   return data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
@@ -195,7 +195,7 @@ int VP8XGetInfo(const uint8_t** data_ptr, uint32_t* data_size_ptr,
   return 1;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Header parsing
 
 static void ResetSegmentHeader(VP8SegmentHeader* const hdr) {
@@ -534,7 +534,7 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
   return 1;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Residual decoding (Paragraph 13.2 / 13.3)
 
 static const uint8_t kBands[16 + 1] = {
@@ -713,7 +713,7 @@ static void ParseResiduals(VP8Decoder* const dec,
 }
 #undef PACK
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Main loop
 
 int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br) {
@@ -857,7 +857,7 @@ void VP8Clear(VP8Decoder* const dec) {
   dec->ready_ = 0;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

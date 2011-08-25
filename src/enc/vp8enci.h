@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Various defines and enums
 
 // version numbers
@@ -161,7 +161,7 @@ static inline int QUANTDIV(int n, int iQ, int B) {
 }
 extern const uint8_t VP8Zigzag[16];
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Headers
 
 typedef uint8_t ProbaArray[NUM_CTX][NUM_PROBAS];
@@ -199,7 +199,7 @@ typedef struct {
   int i4x4_lf_delta_;      // delta filter level for i4x4 relative to i16x16
 } VP8FilterHeader;
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Informations about the macroblocks.
 
 typedef struct {
@@ -305,7 +305,7 @@ void VP8SetSkip(const VP8EncIterator* const it, int skip);
 void VP8SetSegment(const VP8EncIterator* const it, int segment);
 void VP8IteratorResetCosts(VP8EncIterator* const it);
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // VP8Encoder
 
 struct VP8Encoder {
@@ -381,7 +381,7 @@ struct VP8Encoder {
   LFStats   *lf_stats_;  // autofilter stats (if NULL, autofilter is off)
 };
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // internal functions. Not public.
 
   // in tree.c
@@ -502,7 +502,7 @@ extern void VP8InitFilter(VP8EncIterator* const it);
 extern void VP8StoreFilterStats(VP8EncIterator* const it);
 extern void VP8AdjustFilterStrength(VP8EncIterator* const it);
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

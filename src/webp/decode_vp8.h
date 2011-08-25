@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Lower-level API
 //
 // These functions provide fine-grained control of the decoding process.
@@ -148,7 +148,7 @@ WEBP_EXTERN(void) VP8Clear(VP8Decoder* const dec);
 // Destroy the decoder object.
 WEBP_EXTERN(void) VP8Delete(VP8Decoder* const dec);
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

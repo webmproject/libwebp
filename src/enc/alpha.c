@@ -25,7 +25,7 @@ extern "C" {
 
 #define CHUNK_SIZE 8192
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 static int CompressAlpha(const uint8_t* data, size_t data_size,
                          uint8_t** output, size_t* output_size,

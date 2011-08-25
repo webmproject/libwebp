@@ -19,7 +19,7 @@ extern "C" {
 
 #define RIFF_HEADER_SIZE 12
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // RIFF layout is:
 //   0ffset  tag
 //   0...3   "RIFF" 4-byte tag
@@ -65,7 +65,7 @@ uint32_t WebPCheckAndSkipRIFFHeader(const uint8_t** data_ptr,
   return 1;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // WebPDecParams
 
 void WebPResetDecParams(WebPDecParams* const params) {
@@ -74,7 +74,7 @@ void WebPResetDecParams(WebPDecParams* const params) {
   }
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // "Into" decoding variants
 
 // Main flow
@@ -196,7 +196,7 @@ uint8_t* WebPDecodeYUVInto(const uint8_t* data, uint32_t data_size,
   return luma;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 static uint8_t* Decode(WEBP_CSP_MODE mode, const uint8_t* data,
                        uint32_t data_size, int* width, int* height,
@@ -328,7 +328,7 @@ static VP8StatusCode GetFeatures(const uint8_t** data, uint32_t* data_size,
   return VP8_STATUS_OK;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // WebPGetInfo()
 
 int WebPGetInfo(const uint8_t* data, uint32_t data_size,
@@ -349,7 +349,7 @@ int WebPGetInfo(const uint8_t* data, uint32_t data_size,
   return 1;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Advance decoding API
 
 int WebPInitDecoderConfigInternal(WebPDecoderConfig* const config,

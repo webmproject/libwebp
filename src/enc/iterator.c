@@ -17,9 +17,9 @@
 extern "C" {
 #endif
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // VP8Iterator
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 static void InitLeft(VP8EncIterator* const it) {
   const VP8Encoder* const enc = it->enc_;
@@ -68,7 +68,7 @@ void VP8IteratorInit(VP8Encoder* const enc, VP8EncIterator* const it) {
   VP8IteratorReset(it);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Import the source samples into the cache. Takes care of replicating
 // boundary pixels if necessary.
 
@@ -122,7 +122,7 @@ void VP8IteratorImport(const VP8EncIterator* const it) {
   }
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Copy back the compressed samples into user space if requested.
 
 void VP8IteratorExport(const VP8EncIterator* const it) {
@@ -159,7 +159,7 @@ void VP8IteratorExport(const VP8EncIterator* const it) {
   }
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Non-zero contexts setup/teardown
 
 // Nz bits:
@@ -225,7 +225,7 @@ void VP8IteratorBytesToNz(VP8EncIterator* const it) {
 
 #undef BIT
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Advance to the next position, doing the bookeeping.
 
 int VP8IteratorNext(VP8EncIterator* const it,
@@ -270,7 +270,7 @@ int VP8IteratorNext(VP8EncIterator* const it,
   return (0 < --it->done_);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Helper function to set mode properties
 
 void VP8SetIntra16Mode(const VP8EncIterator* const it, int mode) {
@@ -307,7 +307,7 @@ void VP8SetSegment(const VP8EncIterator* const it, int segment) {
   it->mb_->segment_ = segment;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Intra4x4 sub-blocks iteration
 //
 //  We store and update the boundary samples into an array of 37 pixels. They
@@ -402,7 +402,7 @@ int VP8IteratorRotateI4(VP8EncIterator* const it,
   return 1;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

@@ -45,7 +45,7 @@ static void InitTables(void) {
   }
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Edge filtering functions
 
 // 4 pixels in, 2 pixels out
@@ -92,7 +92,7 @@ static inline int needs_filter2(const uint8_t* p, int step, int t, int it) {
          abs0[255 + q2 - q1] <= it && abs0[255 + q1 - q0] <= it;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Simple In-loop filtering (Paragraph 15.2)
 
 static void SimpleVFilter16(uint8_t* p, int stride, int thresh) {
@@ -129,7 +129,7 @@ static void SimpleHFilter16i(uint8_t* p, int stride, int thresh) {
   }
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Complex In-loop filtering (Paragraph 15.3)
 
 static inline void FilterLoop24(uint8_t* p, int hstride, int vstride, int size,
@@ -177,7 +177,7 @@ static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
   FilterLoop24(v + 4, 1, stride, 8, thresh, ithresh, hev_thresh);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 void (*VP8EncVFilter16i)(uint8_t*, int, int, int, int) = VFilter16i;
 void (*VP8EncHFilter16i)(uint8_t*, int, int, int, int) = HFilter16i;
@@ -187,7 +187,7 @@ void (*VP8EncHFilter8i)(uint8_t*, uint8_t*, int, int, int, int) = HFilter8i;
 void (*VP8EncSimpleVFilter16i)(uint8_t*, int, int) = SimpleVFilter16i;
 void (*VP8EncSimpleHFilter16i)(uint8_t*, int, int) = SimpleHFilter16i;
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Paragraph 15.4: compute the inner-edge filtering strength
 
 static int GetILevel(int sharpness, int level) {
@@ -229,7 +229,7 @@ static void DoFilter(const VP8EncIterator* const it, int level) {
   }
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // SSIM metric
 
 enum { KERNEL = 3 };
@@ -302,7 +302,7 @@ static double GetMBSSIM(const uint8_t* yuv1, const uint8_t* yuv2) {
   return GetSSIM(&s);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Exposed APIs: Encoder should call the following 3 functions to adjust
 // loop filter strength
 

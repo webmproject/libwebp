@@ -19,7 +19,7 @@
 extern "C" {
 #endif
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
 
 static void TransformSSE2(const int16_t* in, uint8_t* dst, int do_two) {
@@ -240,7 +240,7 @@ static void TransformSSE2(const int16_t* in, uint8_t* dst, int do_two) {
   }
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Loop Filter (Paragraph 15)
 
 // Compute abs(p - q) = subs(p - q) OR subs(q - p)
@@ -337,7 +337,7 @@ static void NeedsFilter(const __m128i* p1, const __m128i* p0, const __m128i* q0,
   *mask = _mm_cmpeq_epi8(*mask, _mm_setzero_si128());
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Edge filtering functions
 
 // Applies filter on 2 pixels (p0 and q0)
@@ -586,7 +586,7 @@ static inline void Store16x4(uint8_t* r0, uint8_t* r8, int stride, __m128i* p1,
   Store4x4(q1, r8, stride);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Simple In-loop filtering (Paragraph 15.2)
 
 static void SimpleVFilter16SSE2(uint8_t* p, int stride, int thresh) {
@@ -629,7 +629,7 @@ static void SimpleHFilter16iSSE2(uint8_t* p, int stride, int thresh) {
   }
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Complex In-loop filtering (Paragraph 15.3)
 
 #define MAX_DIFF1(p3, p2, p1, p0, m) {                                         \

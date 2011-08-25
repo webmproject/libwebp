@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // VP8BitWriter
 
 static int BitWriterResize(VP8BitWriter* const bw, size_t extra_size) {
@@ -68,7 +68,7 @@ static void kFlush(VP8BitWriter* const bw) {
   }
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // renormalization
 
 static const uint8_t kNorm[128] = {  // renorm_sizes[i] = 8 - log2(i)
@@ -147,7 +147,7 @@ void VP8PutSignedValue(VP8BitWriter* const bw, int value, int nb_bits) {
   }
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 int VP8BitWriterInit(VP8BitWriter* const bw, size_t expected_size) {
   bw->range_   = 255 - 1;
@@ -178,7 +178,7 @@ int VP8BitWriterAppend(VP8BitWriter* const bw,
   return 1;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

@@ -17,9 +17,9 @@
 extern "C" {
 #endif
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // WebPPicture
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 int WebPPictureAlloc(WebPPicture* const picture) {
   if (picture) {
@@ -119,7 +119,7 @@ void WebPPictureFree(WebPPicture* const picture) {
   }
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Picture copying
 
 int WebPPictureCopy(const WebPPicture* const src, WebPPicture* const dst) {
@@ -163,7 +163,7 @@ int WebPPictureCopy(const WebPPicture* const src, WebPPicture* const dst) {
   return 1;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Picture cropping
 
 int WebPPictureCrop(WebPPicture* const pic,
@@ -219,7 +219,7 @@ int WebPPictureCrop(WebPPicture* const pic,
   return 1;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Simple picture rescaler
 
 #define RFIX 30
@@ -372,7 +372,7 @@ int WebPPictureRescale(WebPPicture* const pic, int width, int height) {
   return 1;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Write-to-memory
 
 typedef struct {
@@ -418,7 +418,7 @@ static int WebPMemoryWrite(const uint8_t* data, size_t data_size,
   return 1;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // RGB -> YUV conversion
 // The exact naming is Y'CbCr, following the ITU-R BT.601 standard.
 // More information at: http://en.wikipedia.org/wiki/YCbCr
@@ -593,7 +593,7 @@ int WebPPictureImportBGRA(WebPPicture* const picture,
   return Import(picture, rgba, rgba_stride, 4, 1, 1);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Simplest call:
 
 typedef int (*Importer)(WebPPicture* const, const uint8_t* const, int);
@@ -643,7 +643,7 @@ ENCODE_FUNC(WebPEncodeBGRA, WebPPictureImportBGRA);
 
 #undef ENCODE_FUNC
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

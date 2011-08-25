@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // run-time tables (~4k)
 
 static uint8_t abs0[255 + 255 + 1];     // abs(i)
@@ -52,7 +52,7 @@ static inline uint8_t clip_8b(int v) {
   return (!(v & ~0xff)) ? v : (v < 0) ? 0 : 255;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
 
 #define STORE(x, y, v) \
@@ -133,7 +133,7 @@ static void TransformDCUV(const int16_t* in, uint8_t* dst) {
 
 #undef STORE
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Paragraph 14.3
 
 static void TransformWHT(const int16_t* in, int16_t* out) {
@@ -165,7 +165,7 @@ static void TransformWHT(const int16_t* in, int16_t* out) {
 
 void (*VP8TransformWHT)(const int16_t* in, int16_t* out) = TransformWHT;
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Intra predictions
 
 #define OUT(x, y) dst[(x) + (y) * BPS]
@@ -187,7 +187,7 @@ static void TM4(uint8_t *dst)   { TrueMotion(dst, 4); }
 static void TM8uv(uint8_t *dst) { TrueMotion(dst, 8); }
 static void TM16(uint8_t *dst)  { TrueMotion(dst, 16); }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // 16x16
 
 static void VE16(uint8_t *dst) {     // vertical
@@ -243,7 +243,7 @@ static void DC16NoTopLeft(uint8_t *dst) {  // DC with no top and left samples
   Put16(0x80, dst);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // 4x4
 
 #define AVG3(a, b, c) (((a) + 2 * (b) + (c) + 2) >> 2)
@@ -405,7 +405,7 @@ static void HD4(uint8_t *dst) {  // Horizontal-Down
 #undef AVG3
 #undef AVG2
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Chroma
 
 static void VE8uv(uint8_t *dst) {    // vertical
@@ -462,7 +462,7 @@ static void DC8uvNoTopLeft(uint8_t *dst) {    // DC with nothing
   Put8x8uv(0x8080808080808080ULL, dst);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // default C implementations
 
 VP8PredFunc VP8PredLuma4[NUM_BMODES] = {
@@ -479,7 +479,7 @@ VP8PredFunc VP8PredChroma8[NUM_B_DC_MODES] = {
   DC8uvNoTop, DC8uvNoLeft, DC8uvNoTopLeft
 };
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Edge filtering functions
 
 // 4 pixels in, 2 pixels out
@@ -541,7 +541,7 @@ static inline int needs_filter2(const uint8_t* p, int step, int t, int it) {
          abs0[255 + q2 - q1] <= it && abs0[255 + q1 - q0] <= it;
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Simple In-loop filtering (Paragraph 15.2)
 
 static void SimpleVFilter16(uint8_t* p, int stride, int thresh) {
@@ -578,7 +578,7 @@ static void SimpleHFilter16i(uint8_t* p, int stride, int thresh) {
   }
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Complex In-loop filtering (Paragraph 15.3)
 
 static inline void FilterLoop26(uint8_t* p, int hstride, int vstride, int size,
@@ -664,7 +664,7 @@ static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
   FilterLoop24(v + 4, 1, stride, 8, thresh, ithresh, hev_thresh);
 }
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // SSE2 detection.
 //
 
@@ -705,7 +705,7 @@ VP8CPUInfo VP8DecGetCPUInfo = x86CPUInfo;
 VP8CPUInfo VP8DecGetCPUInfo = NULL;
 #endif
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 VP8Idct2 VP8Transform;
 VP8Idct VP8TransformUV;

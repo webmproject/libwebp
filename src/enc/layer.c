@@ -21,7 +21,7 @@ extern "C" {
 
 #endif    /* WEBP_EXPERIMENTAL_FEATURES */
 
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 void VP8EncInitLayer(VP8Encoder* const enc) {
   enc->use_layer_ = (enc->pic_->u0 != NULL);
