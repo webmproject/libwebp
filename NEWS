@@ -1,10 +1,11 @@
 - 8/25/11: version 0.1.3
   * Advanced decoding APIs.
   * On-the-fly cropping and rescaling of images.
-  * SSE2 instructions for decoding performance optimizations on x86-64 platform.
+  * SSE2 instructions for decoding performance optimizations on x86 based platforms.
   * Support Multi-threaded decoding.
   * 40% improvement in Decoding performance.
   * Add support for RGB565, RGBA4444 & ARGB image colorspace.
+  * Better handling of large picture encoding.
 
 - 3/25/11: version 0.1.2
   * Incremental decoding: picture can be decoded byte-by-byte if needs be.
