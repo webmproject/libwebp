@@ -1,4 +1,110 @@
-d3dc2d4 update ChangeLog
+6215595 Merge "add a -partition_limit option to limit the number of bits used by intra4x4"
+3814b76 Merge "reorganize chunk-parsing code"
+900286e add a -partition_limit option to limit the number of bits used by intra4x4
+cd12b4b add the missing cost for I4/I16 mode selection
+dfcc213 reorganize chunk-parsing code
+3cf2030 initialize pointers to function within VP8DspInit()
+d21b479 Merge "windows: add decode threading support"
+473ae95 fix hang on thread creation failure
+fccca42 windows: add decode threading support
+a31f843 Use the exact PNG_INCLUDES/PNG_LIBS when testing for -lpng
+ad9b45f Merge "Makefile.vc: rule maintenance"
+565a2ca Makefile.vc: rule maintenance
+2d0da68 makefile.unix: disable Wvla by default
+fc7815d multi-thread decoding: ~25-30% faster
+acd8ba4 io->teardown() was not always called upon error
+c85527b Merge "Makefile.vc: add DLL configs"
+e1e9be3 cosmetics: spelling/grammar in README and lib headers
+b4d0ef8 Makefile.vc: add DLL configs
+998754a remove unused nb_i4_ and nb_i16_ fields.
+9f01ce3 rename WebPDecBuffer::memory -> private_memory
+fb5d659 fix an overflow bug in LUT calculation
+d646d5c swig: add WebPDecodeARGB
+78aeed4 add missing WebPDecodeARGBInto() and switch ARGB4444 to RGBA4444 as was intended
+cd7c529 explicitly mark library functions as extern
+19db59f add support for RGB565, ARGB4444 and ARGB colorspace (decoder)
+c915fb2 encoder speed-up: hardcode special level values
+c558bda Rename and improve the API to retrieve decoded area
+bf599d7 Merge "makefile.unix: disable -Wvla by default"
+c9ea03d SSE2 version of strong filtering
+993af3e makefile.unix: disable -Wvla by default
+3827e1b Merge "examples: (windows/WIC) add alpha support"
+e291fae SSE2 functions for the fancy upsampler.
+a06bbe2 add WebPISetIOHooks() to set some custom hooks on the incremental decoder object.
+7643a6f Merge "makefile.unix: use uname to detect OSX environment"
+5142a0b export alpha channel (if present) when dumping to PGM format
+14d5731 makefile.unix: use uname to detect OSX environment
+0805706 examples: quiet warnings
+3cfe088 examples: (windows/WIC) add alpha support
+13ed94b add compile warning for variable-length-array
+5a18eb1 Merge "add Advanced Decoding Interface"
+5c4f27f add missing \n
+f4c4e41 80 cols fix
+d260310 add Advanced Decoding Interface
+bd2f65f sse2 version of the complex filter
+96ed9ce perform two idct transforms at a time when possible
+01af7b6 use aligned stored
+0e1d1fd Merge "Makefile.vc: add experimental target"
+2a1292a Makefile.vc: add experimental target
+23bf351 Enable decode SSE2 for Visual Studio
+131a4b7 dec/dsp_sse2: fix visual studio compile
+00d9d68 swig: file reorganization
+7fc7e0d Merge "swig/java: basic encode support"
+3be57b1 fix MSVC compile for WEBP_EXPERIMENTAL_FEATURES
+40a7e34 dec/dsp: disable sse2 for Visual Studio builds
+e4d540c add SSE2 code for transform
+54f2170 swig/java: basic encode support
+c5d4584 call function pointers instead of C-version
+ea43f04 Merge "configure: mingw32 targets: test for WIC support"
+a11009d SSE2 version of simple in-loop filtering
+42548da shave one unneeded filter-cache line
+31f9dc6 configure: mingw32 targets: test for WIC support
+1955969 Merge "split expression in two."
+415dbe4 split expression in two.
+e29072a configure: test for zlib only w/--enable-experimental
+b2b0090 Simplify Visual Studio ifdefs
+ca7a2fd Add error reporting from encoding failures.
+6c9405d Merge "Makefile.vc: require CFG with clean target"
+0424ecd Makefile.vc: require CFG with clean target
+003417c Enable SSE2 for Visual Studio builds
+af10db4 little speed up for VP8BitUpdate()
+e71418f more MSVC files to ignore
+46d9036 cosmetics
+edf59ab typo fix
+72229f5 Add support for x64 and SSE2 builds under Windows.
+92e5c6e VP8GetInfo() + WebPResetDecParams()
+416b7a6 raise the fixed-point precision for the rescaler
+aa87e4e fix alignment
+eb66670 disable WEBP_EXPERIMENTAL_FEATURES
+c5ae7f6 typo fix: USE_ => WEBP_
+d041efa swig: add libwebp.jar/libwebp_java_wrap.c
+f6fb387 add swig interface
+e927390 align buffer for double too
+842c009 fix -strong option
+d0a7038 Merge "cosmetics"
+fc0a02e fix the dichotomy loop
+38369c0 cosmetics
+8dfc4c6 factorize and unify GetAlpha() between the C and SSE2 version
+6d0e66c prepare experimentation with yuv444 / 422
+79cc49f add a --enable-experimental option to './configure'
+d757523 sse2 version of CollectHistogram()
+c1c728d add an extra #ifdef WEBP_EXPERIMENTAL_FEATURES to avoid 'unused variable' warning
+60c61d2 always call VP*EncDeleteAlpha() unconditionnally, for simplicity
+0f8c638 simply don't call WriteExtensions() if WEBP_EXPERIMENTAL_FEATURES is not defined
+47c661d rename swap -> swap_rb
+10d55bb move chunk[] declaration out of the for() loop
+517cec2 fix indentation
+f7d9e26 fix merge problems
+8fd42b3 add a stride 'a_stride' for the alpha plane
+b8dcbf2 fix alpha-plane copy and crop methods
+cdef89d fix some 'unused variable' warning
+fb29c26 SSE2 version of the fwd transform and the squared sum metric
+2ab4b72 EXPERIMENTAL: add support for alpha channel
+cfbf88a add SSE2 functions. ~2x faster encoding on average.
+e7ff3f9 merge two ITransforms together when applicable and change the TTransform to return the sum directly.
+ca55413 fix WebPIDecGetRGB() to accept any RGB(A) mode, not just MODE_RGB
+8aa50ef fix some 'man' typos
+d3f3bdd update ChangeLog
 d7e9a69 update contributor list
 261abb8 add a 'superclean' section
 276ae82 Remove files not mean to be in git, and update .gitignore
