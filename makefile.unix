@@ -53,6 +53,7 @@ AR = ar
 ARFLAGS = r
 CC = gcc -Isrc/ -Iexamples/ -Wall
 CFLAGS = -O3 -DNDEBUG $(EXTRA_FLAGS)
+INSTALL = install
 LDFLAGS = $(EXTRA_LIBS) -lm
 
 OBJS = src/enc/webpenc.o src/enc/bit_writer.o src/enc/syntax.o \
@@ -84,6 +85,13 @@ examples/dwebp: examples/dwebp.o src/libwebp.a
 examples/cwebp examples/dwebp:
 	$(CC) -o $@ $^ $(LDFLAGS)
 
+dist: DESTDIR := dist
+dist: all
+	$(INSTALL) -m755 -d $(DESTDIR)/include/webp $(DESTDIR)/lib
+	$(INSTALL) -m755 -s examples/cwebp examples/dwebp $(DESTDIR)
+	$(INSTALL) -m644 src/webp/*.h $(DESTDIR)/include/webp
+	$(INSTALL) -m644 src/libwebp.a $(DESTDIR)/lib
+
 clean:
 	$(RM) ${OUTPUT} *~ \
               src/enc/*.o src/enc/*~ \
@@ -103,5 +111,5 @@ superclean: clean
 	$(RM) configure depcomp install-sh ltmain.sh missing src/libwebp.pc
 	$(RM) m4/*
 
-.PHONY: all clean ex superclean
+.PHONY: all clean dist ex superclean
 .SUFFIXES:
