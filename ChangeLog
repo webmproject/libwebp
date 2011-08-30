@@ -1,3 +1,27 @@
+dfc9c1e Harmonize the dates
+28ad70c Fix PNG decoding bug
+846e93c Update AUTHORS & add .mailmap
+563e52d cosmetics after '76036f5 Refactor decoder library'
+76036f5 Refactor decoder library
+377ef43 configure.ac: update AC_INIT params
+7a8d876 use a user-visible MACRO for max width/height.
+d4e9f55 NEON decode support in WebP
+0ee683b update libtool version-info
+fdbe02c windows: match _cond_destroy logic w/return variable name
+206b686 README: correct advanced decode api pseudo-code
+6a32a0f make VP8BitReader a typedef, for better re-use
+b112e83 create a libwebputils under src/utils
+ee697d9 harmonize the include guards and #endif comments
+a1ec07a Fixing compiler error in non x86 arch.
+dcfa509 Fixed recursive inclusion of bit_writer.h and vp8enci.h.
+e06ac08 create a separate libwebpdsp under src/dsp
+ebeb412 use unsigned int for bitfields
+341cc56 make kNewRange a static array
+227a91e README: minor wording update
+05bd8e6 add man pages to dist
+812dfa1 bump up versions in preparations for 0.1.3
+a5b78c8 wrap alpha-related options under WEBP_EXPERIMENTAL_FEATURES flag
+34dc790 regen ChangeLog for 0.1.3-rc2
 7c43663 Silence some (more) Visual Studio warnings.
 60306e8 add top-level gitattributes
 2aa6b80 Slience some Visual Studio warnings.
