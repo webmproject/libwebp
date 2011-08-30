@@ -679,8 +679,10 @@ static void HelpLong(void) {
   printf("  -partition_limit <int> . limit quality to fit the 512k limit on\n");
   printf("                           "
          "the first partition (0=no degradation ... 100=full)\n");
+#ifdef WEBP_EXPERIMENTAL_FEATURES
   printf("  -alpha_comp <int> ...... set the transparency-compression\n");
   printf("  -noalpha ............... discard any transparency information.\n");
+#endif
   printf("  -pass <int> ............ analysis pass number (1..10)\n");
   printf("  -crop <x> <y> <w> <h> .. crop picture with the given rectangle\n");
   printf("  -resize <w> <h> ........ resize picture (after any cropping)\n");
@@ -800,10 +802,12 @@ int main(int argc, const char *argv[]) {
       config.segments = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-partition_limit") && c < argc - 1) {
       config.partition_limit = strtol(argv[++c], NULL, 0);
+#ifdef WEBP_EXPERIMENTAL_FEATURES
     } else if (!strcmp(argv[c], "-alpha_comp") && c < argc - 1) {
       config.alpha_compression = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-noalpha")) {
       keep_alpha = 0;
+#endif
     } else if (!strcmp(argv[c], "-map") && c < argc - 1) {
       picture.extra_info_type = strtol(argv[++c], NULL, 0);
 #ifdef WEBP_EXPERIMENTAL_FEATURES
