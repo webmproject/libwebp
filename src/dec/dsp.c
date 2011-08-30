@@ -168,6 +168,7 @@ void (*VP8TransformWHT)(const int16_t* in, int16_t* out) = TransformWHT;
 //------------------------------------------------------------------------------
 // Intra predictions
 
+#undef OUT
 #define OUT(x, y) dst[(x) + (y) * BPS]
 
 static inline void TrueMotion(uint8_t *dst, int size) {
