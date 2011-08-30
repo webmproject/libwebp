@@ -1,3 +1,13 @@
+7c43663 Silence some (more) Visual Studio warnings.
+60306e8 add top-level gitattributes
+2aa6b80 Slience some Visual Studio warnings.
+4cbbb29 Merge "bump up version for next freeze"
+a329167 bump up version for next freeze
+c7e86ab cosmetics: fix comment line lengths
+c9e037a makefile.unix: add simple dist target
+87d58ce makefile.unix: rule maintenance
+d477de7 mend
+fac15ec Update NEWS & README for next release V0.1.3
 6215595 Merge "add a -partition_limit option to limit the number of bits used by intra4x4"
 3814b76 Merge "reorganize chunk-parsing code"
 900286e add a -partition_limit option to limit the number of bits used by intra4x4
@@ -104,7 +114,7 @@ cfbf88a add SSE2 functions. ~2x faster encoding on average.
 e7ff3f9 merge two ITransforms together when applicable and change the TTransform to return the sum directly.
 ca55413 fix WebPIDecGetRGB() to accept any RGB(A) mode, not just MODE_RGB
 8aa50ef fix some 'man' typos
-d3f3bdd update ChangeLog
+d3f3bdd update ChangeLog (v0.1.2)
 d7e9a69 update contributor list
 261abb8 add a 'superclean' section
 276ae82 Remove files not mean to be in git, and update .gitignore
