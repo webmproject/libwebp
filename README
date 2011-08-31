@@ -9,7 +9,7 @@
 Description:
 ============
 
-WEBP codec: Library to encode and decode images in WebP format. This package
+WebP codec: library to encode and decode images in WebP format. This package
 contains the library that can be used in other programs to add WebP support,
 as well as the command line tools 'cwebp' and 'dwebp'.
 
@@ -35,6 +35,8 @@ By running:
 the directory output\release-static\(x64|x86)\bin will contain the tools
 cwebp.exe and dwebp.exe. The directory output\release-static\(x64|x86)\lib will
 contain the libwebp static library.
+The target architecture (x86/x64) is detected by Makefile.vc from the Visual
+Studio compiler (cl.exe) available in the system path.
 
 Unix build using makefile.unix:
 -------------------------------
@@ -56,9 +58,6 @@ Using autoconf tools:
 make
 make install
 
-Note: In case './configure' step fails, try generating configure & appropriate
-Makefile(s) via command 'aclocal && autoconf && automake -a -c;'.
-
 should be all you need to have the following files
 
 /usr/local/include/webp/decode.h
@@ -73,7 +72,7 @@ installed.
 
 Note: The encoding and decoding libraries are compiled separately
 (as src/dec/libwebpdecode.* and src/dec/libwebpencode.*). They
-can be installed independently using a minor modifications in the
+can be installed independently using a minor modification in the
 corresponding Makefile.am configure files (see comments there).
 
 SWIG bindings:
@@ -112,7 +111,7 @@ decoding (dwebp) images.
 
 The easiest use should look like:
   cwebp input.png -q 80 -o output.webp
-which will convert the input PNG or JPEG file to a WebP one using a
+which will convert the input PNG or JPEG file to a WebP file using a
 quality factor of 80 on a 0->100 scale (0 being the lowest quality,
 100 being the best. Default value is 75).
 
@@ -196,7 +195,7 @@ Namely:
 Decoding tool:
 ==============
 
-There is a decoding sample code as examples/dwebp.c which will take
+There is a decoding sample in examples/dwebp.c which will take
 a .webp file and decode it to a PNG image file (amongst other formats).
 This is simply to demonstrate the use of the API. You can verify the
 file test.webp decodes to exactly the same as test_ref.ppm by using:
@@ -227,7 +226,7 @@ Use following options to convert into alternate image formats:
   -noasm ....... disable all assembly optimizations.
 
 Encoding API:
-===========
+=============
 
 The main encoding functions are available in the header src/webp/encode.h
 The ready-to-use ones are:
@@ -243,10 +242,12 @@ size_t WebPEncodeBGRA(const uint8_t* bgra, int width, int height, int stride,
 They will convert raw RGB samples to a WebP data. The only control supplied
 is the quality factor.
 
+Advanced encoding API:
+----------------------
 
 A more advanced API is based on the WebPConfig and WebPPicture structures.
 
-WebPConfig contains the encoding settings and is not tied a to a particular
+WebPConfig contains the encoding settings and is not tied to a particular
 picture.
 WebPPicture contains input data, on which some WebPConfig will be used for
 compression.
@@ -278,13 +279,12 @@ The encoding flow looks like:
   if (!WebPPictureAllocate(&pic)) {
     return 0;   // memory error
   }
-  // add that point, 'pic' has been initialized as a container,
+  // at this point, 'pic' has been initialized as a container,
   // and can receive the Y/U/V samples.
   // Alternatively, one could use ready-made import functions like
   // WebPPictureImportRGB(), which will take care of memory allocation.
   // In any case, past this point, one will have to call
   // WebPPictureFree(&pic) to reclaim memory.
-
 
   // Set up a byte-output write method. WebPMemoryWriter, for instance.
   WebPMemoryWriter wrt;
@@ -299,7 +299,6 @@ The encoding flow looks like:
   // output data should have been handled by the writer at that point.
 
 -------------------------------------- END PSEUDO EXAMPLE
-
 
 Decoding API:
 =============
@@ -321,7 +320,6 @@ To detect a WebP file and gather picture's dimensions, the function:
 is supplied. No decoding is involved when using it.
 
 A lower-level API is available from the header file <webp/decode_vp8.h>
-
 
 Incremental decoding API:
 =========================
@@ -354,7 +352,7 @@ decoding is not finished yet, or VP8_STATUS_OK when decoding is done.
 Any other status is an error condition.
 
 The idec object must always be released (even upon an error condition)
-by calling: WebPDelete(idec)
+by calling: WebPDelete(idec).
 
 To retrieve partially decoded picture samples, one must use the corresponding
 method: WebPIDecGetRGB or WebPIDecGetYUV.
@@ -366,16 +364,14 @@ WebPINewRGB() or WebPINewYUV().
 
 Please have a look at the src/webp/decode.h header for further details.
 
-
 Advanced Decoding API:
-=========================
+======================
 
-WebP decoding supports Advanced API to provide ability to have on-the-fly
-cropping and rescaling, something of great usefulness on memory-constraint
-environments like mobile phones. Basically, the memory usage will scale with
-the output's size, not the input's when one only need a quick preview or a
-zoomed in portion of an otherwise too-large picture. Some CPU can be saved
-too, incidentally.
+WebP decoding supports an advanced API which provides on-the-fly cropping and
+rescaling, something of great usefulness on memory-constrained environments like
+mobile phones. Basically, the memory usage will scale with the output's size,
+not the input's, when one only needs a quick preview or a zoomed in portion of
+an otherwise too-large picture. Some CPU can be saved too, incidentally.
 
 -------------------------------------- BEGIN PSEUDO EXAMPLE
      // A) Init a configuration object
@@ -433,7 +429,6 @@ too, incidentally.
      WebPFreeDecBuffer(&config.output);
 
 -------------------------------------- END PSEUDO EXAMPLE
-
 
 Bugs:
 =====
