@@ -204,10 +204,10 @@ typedef struct {
 
 typedef struct {
   // block type
-  uint8_t type_:2;     // 0=i4x4, 1=i16x16
-  uint8_t uv_mode_:2;
-  uint8_t skip_:1;
-  uint8_t segment_:2;
+  unsigned int type_:2;     // 0=i4x4, 1=i16x16
+  unsigned int uv_mode_:2;
+  unsigned int skip_:1;
+  unsigned int segment_:2;
   uint8_t alpha_;      // quantization-susceptibility
 } VP8MBInfo;
 
