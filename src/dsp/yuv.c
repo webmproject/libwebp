@@ -9,7 +9,7 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include "yuv.h"
+#include "./yuv.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

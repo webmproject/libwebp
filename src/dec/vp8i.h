@@ -15,6 +15,7 @@
 #include <string.h>     // for memcpy()
 #include "./bits.h"
 #include "./thread.h"
+#include "../dsp/dsp.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -358,58 +359,6 @@ const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
 
 // in layer.c
 int VP8DecodeLayer(VP8Decoder* const dec);
-
-// in dsp.c
-typedef void (*VP8Idct)(const int16_t* coeffs, uint8_t* dst);
-// when doing two transforms, coeffs is actually int16_t[2][16].
-typedef void (*VP8Idct2)(const int16_t* coeffs, uint8_t* dst, int do_two);
-extern VP8Idct2 VP8Transform;
-extern VP8Idct VP8TransformUV;
-extern VP8Idct VP8TransformDC;
-extern VP8Idct VP8TransformDCUV;
-extern void (*VP8TransformWHT)(const int16_t* in, int16_t* out);
-
-// *dst is the destination block, with stride BPS. Boundary samples are
-// assumed accessible when needed.
-typedef void (*VP8PredFunc)(uint8_t* dst);
-extern VP8PredFunc VP8PredLuma16[NUM_B_DC_MODES];
-extern VP8PredFunc VP8PredChroma8[NUM_B_DC_MODES];
-extern VP8PredFunc VP8PredLuma4[NUM_BMODES];
-
-void VP8DspInit(void);        // must be called before anything using the above
-void VP8DspInitTables(void);  // needs to be called no matter what.
-
-// simple filter (only for luma)
-typedef void (*VP8SimpleFilterFunc)(uint8_t* p, int stride, int thresh);
-extern VP8SimpleFilterFunc VP8SimpleVFilter16;
-extern VP8SimpleFilterFunc VP8SimpleHFilter16;
-extern VP8SimpleFilterFunc VP8SimpleVFilter16i;  // filter 3 inner edges
-extern VP8SimpleFilterFunc VP8SimpleHFilter16i;
-
-// regular filter (on both macroblock edges and inner edges)
-typedef void (*VP8LumaFilterFunc)(uint8_t* luma, int stride,
-                                  int thresh, int ithresh, int hev_t);
-typedef void (*VP8ChromaFilterFunc)(uint8_t* u, uint8_t* v, int stride,
-                                    int thresh, int ithresh, int hev_t);
-// on outter edge
-extern VP8LumaFilterFunc VP8VFilter16;
-extern VP8LumaFilterFunc VP8HFilter16;
-extern VP8ChromaFilterFunc VP8VFilter8;
-extern VP8ChromaFilterFunc VP8HFilter8;
-
-// on inner edge
-extern VP8LumaFilterFunc VP8VFilter16i;   // filtering 3 inner edges altogether
-extern VP8LumaFilterFunc VP8HFilter16i;
-extern VP8ChromaFilterFunc VP8VFilter8i;  // filtering u and v altogether
-extern VP8ChromaFilterFunc VP8HFilter8i;
-
-typedef enum {
-  kSSE2,
-  kSSE3
-} CPUFeature;
-// returns true if the CPU supports the feature.
-typedef int (*VP8CPUInfo)(CPUFeature feature);
-extern VP8CPUInfo VP8DecGetCPUInfo;
 
 //------------------------------------------------------------------------------
 

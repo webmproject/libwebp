@@ -9,8 +9,8 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#ifndef WEBP_DEC_YUV_H_
-#define WEBP_DEC_YUV_H_
+#ifndef WEBP_DSP_YUV_H_
+#define WEBP_DSP_YUV_H_
 
 #include "../webp/decode_vp8.h"
 
@@ -106,4 +106,4 @@ void VP8YUVInit(void);
 }    // extern "C"
 #endif
 
-#endif  // WEBP_DEC_YUV_H_
+#endif  // WEBP_DSP_YUV_H_

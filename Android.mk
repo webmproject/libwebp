@@ -14,8 +14,12 @@ LOCAL_SRC_FILES := \
 	src/dec/webp.c \
 	src/dec/io.c \
 	src/dec/buffer.c \
-	src/dec/yuv.c \
 	src/dec/thread.c \
+	src/dsp/yuv.c \
+	src/dsp/upsampling.c \
+	src/dsp/cpu.c \
+	src/dsp/dec.c \
+	src/dsp/enc.c \
 	src/enc/alpha.c \
 	src/enc/analysis.c \
 	src/enc/bit_writer.c \

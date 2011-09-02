@@ -39,7 +39,7 @@ static inline int clip(int v, int m, int M) {
   return v < m ? m : v > M ? M : v;
 }
 
-const uint8_t VP8Zigzag[16] = {
+static const uint8_t kZigzag[16] = {
   0, 1, 4, 8, 5, 2, 3, 6, 9, 12, 13, 10, 7, 11, 14, 15
 };
 
@@ -143,7 +143,7 @@ static int ExpandMatrix(VP8Matrix* const m, int type) {
     m->q_[i] = m->q_[1];
   }
   for (i = 0; i < 16; ++i) {
-    const int j = VP8Zigzag[i];
+    const int j = kZigzag[i];
     const int bias = kBiasMatrices[type][j];
     m->iq_[j] = (1 << QFIX) / m->q_[j];
     m->bias_[j] = BIAS(bias);
@@ -440,7 +440,7 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
     // compute maximal distortion.
     max_error = 0;
     for (n = first; n < 16; ++n) {
-      const int j  = VP8Zigzag[n];
+      const int j  = kZigzag[n];
       const int err = in[j] * in[j];
       max_error += kWeightTrellis[j] * err;
       if (err > thresh) last = n;
@@ -464,7 +464,7 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
 
   // traverse trellis.
   for (n = first; n <= last; ++n) {
-    const int j  = VP8Zigzag[n];
+    const int j  = kZigzag[n];
     const int Q  = mtx->q_[j];
     const int iQ = mtx->iq_[j];
     const int B = BIAS(0x00);     // neutral bias
@@ -560,7 +560,7 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
 
   for (; n >= first; --n) {
     const Node* const node = &NODE(n, best_node);
-    const int j = VP8Zigzag[n];
+    const int j = kZigzag[n];
     out[n] = node->sign ? -node->level : node->level;
     nz |= (node->level != 0);
     in[j] = out[n] * mtx->q_[j];

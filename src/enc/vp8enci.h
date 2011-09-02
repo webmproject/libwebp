@@ -14,6 +14,7 @@
 
 #include "string.h"     // for memcpy()
 #include "../webp/encode.h"
+#include "../dsp/dsp.h"
 #include "bit_writer.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -211,7 +212,7 @@ typedef struct {
   uint8_t alpha_;      // quantization-susceptibility
 } VP8MBInfo;
 
-typedef struct {
+typedef struct VP8Matrix {
   uint16_t q_[16];        // quantizer steps
   uint16_t iq_[16];       // reciprocals, fixed point.
   uint16_t bias_[16];     // rounding bias
@@ -421,12 +422,8 @@ int VP8StatLoop(VP8Encoder* const enc);
   // in webpenc.c
 // Assign an error code to a picture. Return false for convenience.
 int WebPEncodingSetError(WebPPicture* const pic, WebPEncodingError error);
+
   // in analysis.c
-// Compute susceptibility based on DCT-coeff histograms:
-// the higher, the "easier" the macroblock is to compress.
-typedef int (*VP8CHisto)(const uint8_t* ref, const uint8_t* pred,
-                         int start_block, int end_block);
-extern VP8CHisto VP8CollectHistogram;
 // Main analysis loop. Decides the segmentations and complexity.
 // Assigns a first guess for Intra16 and uvmode_ prediction modes.
 int VP8EncAnalyze(VP8Encoder* const enc);
@@ -448,54 +445,6 @@ void VP8EncInitLayer(VP8Encoder* const enc);     // init everything
 void VP8EncCodeLayerBlock(VP8EncIterator* it);   // code one more macroblock
 int VP8EncFinishLayer(VP8Encoder* const enc);    // finalize coding
 void VP8EncDeleteLayer(VP8Encoder* enc);         // reclaim memory
-
-  // in dsp.c
-int VP8GetAlpha(const int histo[MAX_COEFF_THRESH + 1]);
-
-// Transforms
-// VP8Idct: Does one of two inverse transforms. If do_two is set, the transforms
-//          will be done for (ref, in, dst) and (ref + 4, in + 16, dst + 4).
-typedef void (*VP8Idct)(const uint8_t* ref, const int16_t* in, uint8_t* dst,
-                        int do_two);
-typedef void (*VP8Fdct)(const uint8_t* src, const uint8_t* ref, int16_t* out);
-typedef void (*VP8WHT)(const int16_t* in, int16_t* out);
-extern VP8Idct VP8ITransform;
-extern VP8Fdct VP8FTransform;
-extern VP8WHT VP8ITransformWHT;
-extern VP8WHT VP8FTransformWHT;
-// Predictions
-// *dst is the destination block. *top, *top_right and *left can be NULL.
-typedef void (*VP8IntraPreds)(uint8_t *dst, const uint8_t* left,
-                              const uint8_t* top);
-typedef void (*VP8Intra4Preds)(uint8_t *dst, const uint8_t* top);
-extern VP8Intra4Preds VP8EncPredLuma4;
-extern VP8IntraPreds VP8EncPredLuma16;
-extern VP8IntraPreds VP8EncPredChroma8;
-
-typedef int (*VP8Metric)(const uint8_t* pix, const uint8_t* ref);
-extern VP8Metric VP8SSE16x16, VP8SSE16x8, VP8SSE8x8, VP8SSE4x4;
-typedef int (*VP8WMetric)(const uint8_t* pix, const uint8_t* ref,
-                          const uint16_t* const weights);
-extern VP8WMetric VP8TDisto4x4, VP8TDisto16x16;
-
-typedef void (*VP8BlockCopy)(const uint8_t* src, uint8_t* dst);
-extern VP8BlockCopy VP8Copy4x4;
-extern VP8BlockCopy VP8Copy8x8;
-extern VP8BlockCopy VP8Copy16x16;
-// Quantization
-typedef int (*VP8QuantizeBlock)(int16_t in[16], int16_t out[16],
-                                int n, const VP8Matrix* const mtx);
-extern VP8QuantizeBlock VP8EncQuantizeBlock;
-
-typedef enum {
-  kSSE2,
-  kSSE3
-} CPUFeature;
-// returns true if the CPU supports the feature.
-typedef int (*VP8CPUInfo)(CPUFeature feature);
-extern VP8CPUInfo VP8EncGetCPUInfo;
-
-void VP8EncDspInit(void);   // must be called before using any of the above
 
   // in filter.c
 extern void VP8InitFilter(VP8EncIterator* const it);

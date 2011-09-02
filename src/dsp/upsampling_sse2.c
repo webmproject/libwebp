@@ -14,12 +14,15 @@
 #include <assert.h>
 #include <emmintrin.h>
 #include <string.h>
-#include "webpi.h"
-#include "yuv.h"
+#include "./dsp.h"
+#include "./yuv.h"
+#include "../dec/webpi.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
 #endif
+
+#ifdef FANCY_UPSAMPLING
 
 // We compute (9*a + 3*b + 3*c + d + 8) / 16 as follows
 // u = (9*a + 3*b + 3*c + d + 8) / 16
@@ -186,16 +189,23 @@ SSE2_UPSAMPLE_FUNC(UpsampleBgrKeepAlphaLinePairSSE2, VP8YuvToBgr, 4)
 
 //------------------------------------------------------------------------------
 
-void WebPInitUpsamplersSSE2(void) {
-  WebPUpsamplers[MODE_RGB] = UpsampleRgbLinePairSSE2;
-  WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePairSSE2;
-  WebPUpsamplers[MODE_BGR] = UpsampleBgrLinePairSSE2;
-  WebPUpsamplers[MODE_BGRA] =  UpsampleBgraLinePairSSE2;
+extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
+extern WebPUpsampleLinePairFunc WebPUpsamplersKeepAlpha[/* MODE_LAST */];
 
-  WebPUpsamplersKeepAlpha[MODE_RGB] = UpsampleRgbLinePairSSE2;
+#endif  // FANCY_UPSAMPLING
+
+void WebPInitUpsamplersSSE2(void) {
+#ifdef FANCY_UPSAMPLING
+  WebPUpsamplers[MODE_RGB]  = UpsampleRgbLinePairSSE2;
+  WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePairSSE2;
+  WebPUpsamplers[MODE_BGR]  = UpsampleBgrLinePairSSE2;
+  WebPUpsamplers[MODE_BGRA] = UpsampleBgraLinePairSSE2;
+
+  WebPUpsamplersKeepAlpha[MODE_RGB]  = UpsampleRgbLinePairSSE2;
   WebPUpsamplersKeepAlpha[MODE_RGBA] = UpsampleRgbKeepAlphaLinePairSSE2;
-  WebPUpsamplersKeepAlpha[MODE_BGR] =  UpsampleBgrLinePairSSE2;
-  WebPUpsamplersKeepAlpha[MODE_BGRA] =  UpsampleBgrKeepAlphaLinePairSSE2;
+  WebPUpsamplersKeepAlpha[MODE_BGR]  = UpsampleBgrLinePairSSE2;
+  WebPUpsamplersKeepAlpha[MODE_BGRA] = UpsampleBgrKeepAlphaLinePairSSE2;
+#endif  // FANCY_UPSAMPLING
 }
 
 #if defined(__cplusplus) || defined(c_plusplus)

@@ -5,11 +5,12 @@
 //  Additional IP Rights Grant:  http://www.webmproject.org/license/additional/
 // -----------------------------------------------------------------------------
 //
-// speed-critical functions.
+// Speed-critical decoding functions.
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include "vp8i.h"
+#include "./dsp.h"
+#include "../dec/vp8i.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -28,7 +29,7 @@ static uint8_t clip1[255 + 510 + 1];    // clips [-255,510] to [0,255]
 // and make sure it's set to true _last_ (so as to be thread-safe)
 static volatile int tables_ok = 0;
 
-void VP8DspInitTables(void) {
+static void DspInitTables(void) {
   if (!tables_ok) {
     int i;
     for (i = -255; i <= 255; ++i) {
@@ -168,8 +169,7 @@ void (*VP8TransformWHT)(const int16_t* in, int16_t* out) = TransformWHT;
 //------------------------------------------------------------------------------
 // Intra predictions
 
-#undef OUT
-#define OUT(x, y) dst[(x) + (y) * BPS]
+#define DST(x, y) dst[(x) + (y) * BPS]
 
 static inline void TrueMotion(uint8_t *dst, int size) {
   const uint8_t* top = dst - BPS;
@@ -294,13 +294,13 @@ static void RD4(uint8_t *dst) {   // Down-right
   const int B = dst[1 - BPS];
   const int C = dst[2 - BPS];
   const int D = dst[3 - BPS];
-  OUT(0, 3)                                     = AVG3(J, K, L);
-  OUT(0, 2) = OUT(1, 3)                         = AVG3(I, J, K);
-  OUT(0, 1) = OUT(1, 2) = OUT(2, 3)             = AVG3(X, I, J);
-  OUT(0, 0) = OUT(1, 1) = OUT(2, 2) = OUT(3, 3) = AVG3(A, X, I);
-  OUT(1, 0) = OUT(2, 1) = OUT(3, 2)             = AVG3(B, A, X);
-  OUT(2, 0) = OUT(3, 1)                         = AVG3(C, B, A);
-  OUT(3, 0)                                     = AVG3(D, C, B);
+  DST(0, 3)                                     = AVG3(J, K, L);
+  DST(0, 2) = DST(1, 3)                         = AVG3(I, J, K);
+  DST(0, 1) = DST(1, 2) = DST(2, 3)             = AVG3(X, I, J);
+  DST(0, 0) = DST(1, 1) = DST(2, 2) = DST(3, 3) = AVG3(A, X, I);
+  DST(1, 0) = DST(2, 1) = DST(3, 2)             = AVG3(B, A, X);
+  DST(2, 0) = DST(3, 1)                         = AVG3(C, B, A);
+  DST(3, 0)                                     = AVG3(D, C, B);
 }
 
 static void LD4(uint8_t *dst) {   // Down-Left
@@ -312,13 +312,13 @@ static void LD4(uint8_t *dst) {   // Down-Left
   const int F = dst[5 - BPS];
   const int G = dst[6 - BPS];
   const int H = dst[7 - BPS];
-  OUT(0, 0)                                     = AVG3(A, B, C);
-  OUT(1, 0) = OUT(0, 1)                         = AVG3(B, C, D);
-  OUT(2, 0) = OUT(1, 1) = OUT(0, 2)             = AVG3(C, D, E);
-  OUT(3, 0) = OUT(2, 1) = OUT(1, 2) = OUT(0, 3) = AVG3(D, E, F);
-  OUT(3, 1) = OUT(2, 2) = OUT(1, 3)             = AVG3(E, F, G);
-  OUT(3, 2) = OUT(2, 3)                         = AVG3(F, G, H);
-  OUT(3, 3)                                     = AVG3(G, H, H);
+  DST(0, 0)                                     = AVG3(A, B, C);
+  DST(1, 0) = DST(0, 1)                         = AVG3(B, C, D);
+  DST(2, 0) = DST(1, 1) = DST(0, 2)             = AVG3(C, D, E);
+  DST(3, 0) = DST(2, 1) = DST(1, 2) = DST(0, 3) = AVG3(D, E, F);
+  DST(3, 1) = DST(2, 2) = DST(1, 3)             = AVG3(E, F, G);
+  DST(3, 2) = DST(2, 3)                         = AVG3(F, G, H);
+  DST(3, 3)                                     = AVG3(G, H, H);
 }
 
 static void VR4(uint8_t *dst) {   // Vertical-Right
@@ -330,17 +330,17 @@ static void VR4(uint8_t *dst) {   // Vertical-Right
   const int B = dst[1 - BPS];
   const int C = dst[2 - BPS];
   const int D = dst[3 - BPS];
-  OUT(0, 0) = OUT(1, 2) = AVG2(X, A);
-  OUT(1, 0) = OUT(2, 2) = AVG2(A, B);
-  OUT(2, 0) = OUT(3, 2) = AVG2(B, C);
-  OUT(3, 0)             = AVG2(C, D);
+  DST(0, 0) = DST(1, 2) = AVG2(X, A);
+  DST(1, 0) = DST(2, 2) = AVG2(A, B);
+  DST(2, 0) = DST(3, 2) = AVG2(B, C);
+  DST(3, 0)             = AVG2(C, D);
 
-  OUT(0, 3) =             AVG3(K, J, I);
-  OUT(0, 2) =             AVG3(J, I, X);
-  OUT(0, 1) = OUT(1, 3) = AVG3(I, X, A);
-  OUT(1, 1) = OUT(2, 3) = AVG3(X, A, B);
-  OUT(2, 1) = OUT(3, 3) = AVG3(A, B, C);
-  OUT(3, 1) =             AVG3(B, C, D);
+  DST(0, 3) =             AVG3(K, J, I);
+  DST(0, 2) =             AVG3(J, I, X);
+  DST(0, 1) = DST(1, 3) = AVG3(I, X, A);
+  DST(1, 1) = DST(2, 3) = AVG3(X, A, B);
+  DST(2, 1) = DST(3, 3) = AVG3(A, B, C);
+  DST(3, 1) =             AVG3(B, C, D);
 }
 
 static void VL4(uint8_t *dst) {   // Vertical-Left
@@ -352,17 +352,17 @@ static void VL4(uint8_t *dst) {   // Vertical-Left
   const int F = dst[5 - BPS];
   const int G = dst[6 - BPS];
   const int H = dst[7 - BPS];
-  OUT(0, 0) =             AVG2(A, B);
-  OUT(1, 0) = OUT(0, 2) = AVG2(B, C);
-  OUT(2, 0) = OUT(1, 2) = AVG2(C, D);
-  OUT(3, 0) = OUT(2, 2) = AVG2(D, E);
+  DST(0, 0) =             AVG2(A, B);
+  DST(1, 0) = DST(0, 2) = AVG2(B, C);
+  DST(2, 0) = DST(1, 2) = AVG2(C, D);
+  DST(3, 0) = DST(2, 2) = AVG2(D, E);
 
-  OUT(0, 1) =             AVG3(A, B, C);
-  OUT(1, 1) = OUT(0, 3) = AVG3(B, C, D);
-  OUT(2, 1) = OUT(1, 3) = AVG3(C, D, E);
-  OUT(3, 1) = OUT(2, 3) = AVG3(D, E, F);
-              OUT(3, 2) = AVG3(E, F, G);
-              OUT(3, 3) = AVG3(F, G, H);
+  DST(0, 1) =             AVG3(A, B, C);
+  DST(1, 1) = DST(0, 3) = AVG3(B, C, D);
+  DST(2, 1) = DST(1, 3) = AVG3(C, D, E);
+  DST(3, 1) = DST(2, 3) = AVG3(D, E, F);
+              DST(3, 2) = AVG3(E, F, G);
+              DST(3, 3) = AVG3(F, G, H);
 }
 
 static void HU4(uint8_t *dst) {   // Horizontal-Up
@@ -370,14 +370,14 @@ static void HU4(uint8_t *dst) {   // Horizontal-Up
   const int J = dst[-1 + 1 * BPS];
   const int K = dst[-1 + 2 * BPS];
   const int L = dst[-1 + 3 * BPS];
-  OUT(0, 0) =             AVG2(I, J);
-  OUT(2, 0) = OUT(0, 1) = AVG2(J, K);
-  OUT(2, 1) = OUT(0, 2) = AVG2(K, L);
-  OUT(1, 0) =             AVG3(I, J, K);
-  OUT(3, 0) = OUT(1, 1) = AVG3(J, K, L);
-  OUT(3, 1) = OUT(1, 2) = AVG3(K, L, L);
-  OUT(3, 2) = OUT(2, 2) =
-    OUT(0, 3) = OUT(1, 3) = OUT(2, 3) = OUT(3, 3) = L;
+  DST(0, 0) =             AVG2(I, J);
+  DST(2, 0) = DST(0, 1) = AVG2(J, K);
+  DST(2, 1) = DST(0, 2) = AVG2(K, L);
+  DST(1, 0) =             AVG3(I, J, K);
+  DST(3, 0) = DST(1, 1) = AVG3(J, K, L);
+  DST(3, 1) = DST(1, 2) = AVG3(K, L, L);
+  DST(3, 2) = DST(2, 2) =
+    DST(0, 3) = DST(1, 3) = DST(2, 3) = DST(3, 3) = L;
 }
 
 static void HD4(uint8_t *dst) {  // Horizontal-Down
@@ -390,19 +390,20 @@ static void HD4(uint8_t *dst) {  // Horizontal-Down
   const int B = dst[1 - BPS];
   const int C = dst[2 - BPS];
 
-  OUT(0, 0) = OUT(2, 1) = AVG2(I, X);
-  OUT(0, 1) = OUT(2, 2) = AVG2(J, I);
-  OUT(0, 2) = OUT(2, 3) = AVG2(K, J);
-  OUT(0, 3)             = AVG2(L, K);
+  DST(0, 0) = DST(2, 1) = AVG2(I, X);
+  DST(0, 1) = DST(2, 2) = AVG2(J, I);
+  DST(0, 2) = DST(2, 3) = AVG2(K, J);
+  DST(0, 3)             = AVG2(L, K);
 
-  OUT(3, 0)             = AVG3(A, B, C);
-  OUT(2, 0)             = AVG3(X, A, B);
-  OUT(1, 0) = OUT(3, 1) = AVG3(I, X, A);
-  OUT(1, 1) = OUT(3, 2) = AVG3(J, I, X);
-  OUT(1, 2) = OUT(3, 3) = AVG3(K, J, I);
-  OUT(1, 3)             = AVG3(L, K, J);
+  DST(3, 0)             = AVG3(A, B, C);
+  DST(2, 0)             = AVG3(X, A, B);
+  DST(1, 0) = DST(3, 1) = AVG3(I, X, A);
+  DST(1, 1) = DST(3, 2) = AVG3(J, I, X);
+  DST(1, 2) = DST(3, 3) = AVG3(K, J, I);
+  DST(1, 3)             = AVG3(L, K, J);
 }
 
+#undef DST
 #undef AVG3
 #undef AVG2
 
@@ -466,16 +467,16 @@ static void DC8uvNoTopLeft(uint8_t *dst) {    // DC with nothing
 //------------------------------------------------------------------------------
 // default C implementations
 
-VP8PredFunc VP8PredLuma4[NUM_BMODES] = {
+VP8PredFunc VP8PredLuma4[/* NUM_BMODES */] = {
   DC4, TM4, VE4, HE4, RD4, VR4, LD4, VL4, HD4, HU4
 };
 
-VP8PredFunc VP8PredLuma16[NUM_B_DC_MODES] = {
+VP8PredFunc VP8PredLuma16[/*NUM_B_DC_MODES */] = {
   DC16, TM16, VE16, HE16,
   DC16NoTop, DC16NoLeft, DC16NoTopLeft
 };
 
-VP8PredFunc VP8PredChroma8[NUM_B_DC_MODES] = {
+VP8PredFunc VP8PredChroma8[/*NUM_B_DC_MODES */] = {
   DC8uv, TM8uv, VE8uv, HE8uv,
   DC8uvNoTop, DC8uvNoLeft, DC8uvNoTopLeft
 };
@@ -666,52 +667,11 @@ static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
 }
 
 //------------------------------------------------------------------------------
-// SSE2 detection.
-//
 
-#if defined(__pic__) && defined(__i386__)
-static inline void GetCPUInfo(int cpu_info[4], int info_type) {
-  __asm__ volatile (
-    "mov %%ebx, %%edi\n"
-    "cpuid\n"
-    "xchg %%edi, %%ebx\n"
-    : "=a"(cpu_info[0]), "=D"(cpu_info[1]), "=c"(cpu_info[2]), "=d"(cpu_info[3])
-    : "a"(info_type));
-}
-#elif defined(__i386__) || defined(__x86_64__)
-static inline void GetCPUInfo(int cpu_info[4], int info_type) {
-  __asm__ volatile (
-    "cpuid\n"
-    : "=a"(cpu_info[0]), "=b"(cpu_info[1]), "=c"(cpu_info[2]), "=d"(cpu_info[3])
-    : "a"(info_type));
-}
-#elif defined(_MSC_VER)  // Visual C++
-#define GetCPUInfo __cpuid
-#endif
-
-#if defined(__i386__) || defined(__x86_64__) || defined(_MSC_VER)
-static int x86CPUInfo(CPUFeature feature) {
-  int cpu_info[4];
-  GetCPUInfo(cpu_info, 1);
-  if (feature == kSSE2) {
-    return 0 != (cpu_info[3] & 0x04000000);
-  }
-  if (feature == kSSE3) {
-    return 0 != (cpu_info[2] & 0x00000001);
-  }
-  return 0;
-}
-VP8CPUInfo VP8DecGetCPUInfo = x86CPUInfo;
-#else
-VP8CPUInfo VP8DecGetCPUInfo = NULL;
-#endif
-
-//------------------------------------------------------------------------------
-
-VP8Idct2 VP8Transform;
-VP8Idct VP8TransformUV;
-VP8Idct VP8TransformDC;
-VP8Idct VP8TransformDCUV;
+VP8DecIdct2 VP8Transform;
+VP8DecIdct VP8TransformUV;
+VP8DecIdct VP8TransformDC;
+VP8DecIdct VP8TransformDCUV;
 
 VP8LumaFilterFunc VP8VFilter16;
 VP8LumaFilterFunc VP8HFilter16;
@@ -729,6 +689,8 @@ VP8SimpleFilterFunc VP8SimpleHFilter16i;
 extern void VP8DspInitSSE2(void);
 
 void VP8DspInit(void) {
+  DspInitTables();
+
   VP8Transform = TransformTwo;
   VP8TransformUV = TransformUV;
   VP8TransformDC = TransformDC;
@@ -748,9 +710,9 @@ void VP8DspInit(void) {
   VP8SimpleHFilter16i = SimpleHFilter16i;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
-  if (VP8DecGetCPUInfo) {
+  if (VP8GetCPUInfo) {
 #if defined(__SSE2__) || defined(_MSC_VER)
-    if (VP8DecGetCPUInfo(kSSE2)) {
+    if (VP8GetCPUInfo(kSSE2)) {
       VP8DspInitSSE2();
     }
 #endif

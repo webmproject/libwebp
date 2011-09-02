@@ -5,7 +5,7 @@
 //  Additional IP Rights Grant:  http://www.webmproject.org/license/additional/
 // -----------------------------------------------------------------------------
 //
-// SSE2 version of dsp functions and loop filtering.
+// SSE2 version of some decoding functions (idct, loop filtering).
 //
 // Author: somnath@google.com (Somnath Banerjee)
 //         cduvivier@google.com (Christian Duvivier)
@@ -13,7 +13,7 @@
 #if defined(__SSE2__) || defined(_MSC_VER)
 
 #include <emmintrin.h>
-#include "vp8i.h"
+#include "../dec/vp8i.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

@@ -46,7 +46,7 @@ extern "C" {
 
 static int verbose = 0;
 #ifndef WEBP_DLL
-extern void* VP8DecGetCPUInfo;   // opaque forward declaration.
+extern void* VP8GetCPUInfo;   // opaque forward declaration.
 #endif
 
 //------------------------------------------------------------------------------
@@ -389,7 +389,7 @@ int main(int argc, const char *argv[]) {
       verbose = 1;
 #ifndef WEBP_DLL
     } else if (!strcmp(argv[c], "-noasm")) {
-      VP8DecGetCPUInfo = NULL;
+      VP8GetCPUInfo = NULL;
 #endif
     } else if (argv[c][0] == '-') {
       printf("Unknown option '%s'\n", argv[c]);

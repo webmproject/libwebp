@@ -54,7 +54,7 @@ DEFINE_GUID(GUID_WICPixelFormat32bppRGBA,
 #include "webp/encode.h"
 #include "stopwatch.h"
 #ifndef WEBP_DLL
-extern void* VP8EncGetCPUInfo;   // opaque forward declaration.
+extern void* VP8GetCPUInfo;   // opaque forward declaration.
 #endif
 
 //------------------------------------------------------------------------------
@@ -829,7 +829,7 @@ int main(int argc, const char *argv[]) {
       resize_h = strtol(argv[++c], NULL, 0);
 #ifndef WEBP_DLL
     } else if (!strcmp(argv[c], "-noasm")) {
-      VP8EncGetCPUInfo = NULL;
+      VP8GetCPUInfo = NULL;
 #endif
     } else if (!strcmp(argv[c], "-version")) {
       const int version = WebPGetEncoderVersion();

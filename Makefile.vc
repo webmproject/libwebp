@@ -133,17 +133,13 @@ CFGSET = TRUE
 
 X_OBJS= \
 	$(DIROBJ)\dec\bits.obj \
-	$(DIROBJ)\dec\dsp.obj \
-	$(DIROBJ)\dec\dsp_sse2.obj \
 	$(DIROBJ)\dec\frame.obj \
 	$(DIROBJ)\dec\quant.obj \
 	$(DIROBJ)\dec\tree.obj \
 	$(DIROBJ)\dec\vp8.obj \
 	$(DIROBJ)\dec\webp.obj \
 	$(DIROBJ)\dec\io.obj \
-	$(DIROBJ)\dec\io_sse2.obj \
 	$(DIROBJ)\dec\buffer.obj \
-	$(DIROBJ)\dec\yuv.obj \
 	$(DIROBJ)\dec\idec.obj \
 	$(DIROBJ)\dec\alpha.obj \
 	$(DIROBJ)\dec\layer.obj \
@@ -152,8 +148,6 @@ X_OBJS= \
 	$(DIROBJ)\enc\bit_writer.obj \
 	$(DIROBJ)\enc\config.obj \
 	$(DIROBJ)\enc\cost.obj \
-	$(DIROBJ)\enc\dsp.obj \
-	$(DIROBJ)\enc\dsp_sse2.obj \
 	$(DIROBJ)\enc\frame.obj \
 	$(DIROBJ)\enc\filter.obj \
 	$(DIROBJ)\enc\iterator.obj \
@@ -164,6 +158,14 @@ X_OBJS= \
 	$(DIROBJ)\enc\webpenc.obj \
 	$(DIROBJ)\enc\alpha.obj \
 	$(DIROBJ)\enc\layer.obj \
+	$(DIROBJ)\dsp\enc.obj \
+	$(DIROBJ)\dsp\enc_sse2.obj \
+	$(DIROBJ)\dsp\upsampling.obj \
+	$(DIROBJ)\dsp\upsampling_sse2.obj \
+	$(DIROBJ)\dsp\dec.obj \
+	$(DIROBJ)\dsp\dec_sse2.obj \
+	$(DIROBJ)\dsp\cpu.obj \
+	$(DIROBJ)\dsp\yuv.obj \
 	$(RESOURCE)
 
 EXAMPLES_OBJS = \
@@ -185,7 +187,7 @@ $(DIRLIB)\$(TARGET): $(X_OBJS)
 	$(LNK) $(LFLAGS) $(X_OBJS)
 	-xcopy $(DIROBJ)\*.pdb $(DIRLIB) /y
 
-$(X_OBJS): $(DIROBJ)\enc $(DIROBJ)\dec $(DIRLIB) $(DIRINC) $(DIRBIN)
+$(X_OBJS): $(DIROBJ)\enc $(DIROBJ)\dec $(DIROBJ)\dsp $(DIRLIB) $(DIRINC) $(DIRBIN)
 !IF "$(DLLBUILD)" == "TRUE"
 $(X_OBJS): $(DIROBJ)\$(DLLINC)
 clean::
@@ -202,6 +204,9 @@ $(DIROBJ)\examples:
 
 $(DIROBJ)\dec:
 	@if not exist "$(DIROBJ)\dec" mkdir $(DIROBJ)\dec
+
+$(DIROBJ)\dsp:
+	@if not exist "$(DIROBJ)\dsp" mkdir $(DIROBJ)\dsp
 
 $(DIRLIB):
 	@if not exist "$(DIRLIB)" mkdir $(DIRLIB)
@@ -225,6 +230,8 @@ $(DIROBJ)\$(DLLINC):
 {src\dec}.c{$(DIROBJ)\dec}.obj:
 	$(CC) $(CFLAGS) /Fo"$@"  $<
 {src\enc}.c{$(DIROBJ)\enc}.obj:
+	$(CC) $(CFLAGS) /Fo"$@"  $<
+{src\dsp}.c{$(DIROBJ)\dsp}.obj:
 	$(CC) $(CFLAGS) /Fo"$@"  $<
 
 {$(DIROBJ)\examples}.obj{$(DIRBIN)}.exe:

@@ -186,8 +186,7 @@ int VP8InitFrame(VP8Decoder* const dec, VP8Io* io) {
   if (!InitThreadContext(dec)) return 0;  // call first. Sets dec->num_caches_.
   if (!AllocateMemory(dec)) return 0;
   InitIo(dec, io);
-  VP8DspInitTables(); // Init critical function pointers and look-up tables.
-  VP8DspInit();
+  VP8DspInit();  // Init critical function pointers and look-up tables.
   return 1;
 }
 

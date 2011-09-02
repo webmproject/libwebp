@@ -57,17 +57,22 @@ INSTALL = install
 LDFLAGS = $(EXTRA_LIBS) -lm
 
 OBJS = src/enc/webpenc.o src/enc/bit_writer.o src/enc/syntax.o \
-       src/enc/dsp.o src/enc/dsp_sse2.o src/enc/alpha.o \
+       src/enc/alpha.o src/enc/layer.o \
        src/enc/tree.o src/enc/config.o src/enc/frame.o \
        src/enc/quant.o src/enc/iterator.o src/enc/analysis.o \
        src/enc/cost.o src/enc/picture.o src/enc/filter.o \
-       src/enc/layer.o \
-       src/dec/bits.o src/dec/dsp.o src/dec/dsp_sse2.o src/dec/frame.o \
+       src/dec/bits.o src/dec/frame.o \
        src/dec/webp.o src/dec/quant.o src/dec/tree.o src/dec/vp8.o \
-       src/dec/yuv.o src/dec/idec.o src/dec/alpha.o src/dec/layer.o \
-       src/dec/io.o src/dec/io_sse2.o src/dec/buffer.o src/dec/thread.o
+       src/dec/idec.o src/dec/alpha.o src/dec/layer.o \
+       src/dec/io.o src/dec/buffer.o src/dec/thread.o \
+       src/dsp/cpu.o src/dsp/enc.o src/dsp/enc_sse2.o \
+       src/dsp/dec.o src/dsp/dec_sse2.o \
+       src/dsp/upsampling.o src/dsp/upsampling_sse2.o \
+       src/dsp/yuv.o
+
 HDRS = src/webp/encode.h src/enc/vp8enci.h src/enc/bit_writer.h \
-       src/enc/cost.h src/dec/bits.h  src/dec/vp8i.h src/dec/yuv.h
+       src/enc/cost.h src/dec/bits.h src/dec/vp8i.h src/dsp/yuv.h \
+       src/dsp/dsp.h
 OUTPUT = examples/cwebp examples/dwebp src/libwebp.a
 
 all:ex
@@ -105,6 +110,7 @@ clean:
 	$(RM) ${OUTPUT} *~ \
               src/enc/*.o src/enc/*~ \
               src/dec/*.o src/dec/*~ \
+              src/dsp/*.o src/dsp/*~ \
               examples/*.o examples/*~
 
 superclean: clean
