@@ -12,7 +12,7 @@
 #ifndef WEBP_ENC_BIT_WRITER_H_
 #define WEBP_ENC_BIT_WRITER_H_
 
-#include "vp8enci.h"
+#include "../webp/types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
