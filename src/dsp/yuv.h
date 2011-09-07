@@ -106,4 +106,4 @@ void VP8YUVInit(void);
 }    // extern "C"
 #endif
 
-#endif  // WEBP_DSP_YUV_H_
+#endif  /* WEBP_DSP_YUV_H_ */

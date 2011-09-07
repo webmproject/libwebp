@@ -9,8 +9,8 @@
 //
 // Author: somnath@google.com (Somnath Banerjee)
 
-#ifndef WEBP_DEC_WEBPI_H
-#define WEBP_DEC_WEBPI_H
+#ifndef WEBP_DEC_WEBPI_H_
+#define WEBP_DEC_WEBPI_H_
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -101,4 +101,4 @@ void WebPGrabDecBuffer(WebPDecBuffer* const src, WebPDecBuffer* const dst);
 }    // extern "C"
 #endif
 
-#endif  // WEBP_DEC_WEBPI_H
+#endif  /* WEBP_DEC_WEBPI_H_ */

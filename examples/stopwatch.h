@@ -30,7 +30,7 @@ static inline double StopwatchReadAndReset(Stopwatch* watch) {
 }
 
 
-#else    // !_WIN32
+#else    /* !_WIN32 */
 #include <sys/time.h>
 
 typedef struct timeval Stopwatch;
@@ -42,6 +42,6 @@ static inline double StopwatchReadAndReset(Stopwatch* watch) {
       (watch->tv_usec - old_value.tv_usec) / 1000000.0;
 }
 
-#endif   // !_WIN32
+#endif   /* _WIN32 */
 
-#endif  // WEBP_EXAMPLES_STOPWATCH_H_
+#endif  /* WEBP_EXAMPLES_STOPWATCH_H_ */
