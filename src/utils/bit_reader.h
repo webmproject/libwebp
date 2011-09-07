@@ -22,7 +22,8 @@ extern "C" {
 //------------------------------------------------------------------------------
 // Bitreader and code-tree reader
 
-typedef struct {
+typedef struct VP8BitReader VP8BitReader;
+struct VP8BitReader {
   const uint8_t* buf_;        // next byte to be read
   const uint8_t* buf_end_;    // end of read buffer
   int eof_;                   // true if input is exhausted
@@ -31,7 +32,7 @@ typedef struct {
   uint32_t range_;            // current range minus 1. In [127, 254] interval.
   uint32_t value_;            // current value
   int missing_;               // number of missing bits in value_ (8bit)
-} VP8BitReader;
+};
 
 // Initialize the bit reader and the boolean decoder.
 void VP8InitBitReader(VP8BitReader* const br,
