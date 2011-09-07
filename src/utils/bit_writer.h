@@ -9,8 +9,8 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#ifndef WEBP_ENC_BIT_WRITER_H_
-#define WEBP_ENC_BIT_WRITER_H_
+#ifndef WEBP_UTILS_BIT_WRITER_H_
+#define WEBP_UTILS_BIT_WRITER_H_
 
 #include "../webp/types.h"
 
@@ -60,4 +60,4 @@ static inline size_t VP8BitWriterSize(const VP8BitWriter* const bw) {
 }    // extern "C"
 #endif
 
-#endif  // WEBP_ENC_BIT_WRITER_H_
+#endif  /* WEBP_UTILS_BIT_WRITER_H_ */

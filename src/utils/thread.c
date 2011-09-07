@@ -9,7 +9,8 @@
 //
 // Author: skal@google.com (Pascal Massimino)
 
-#include "./vp8i.h"
+#include <assert.h>
+#include <string.h>   // for memset()
 #include "./thread.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)

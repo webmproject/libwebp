@@ -13,8 +13,8 @@
 #define WEBP_DEC_VP8I_H_
 
 #include <string.h>     // for memcpy()
-#include "./bits.h"
-#include "./thread.h"
+#include "../utils/bit_reader.h"
+#include "../utils/thread.h"
 #include "../dsp/dsp.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -366,4 +366,4 @@ int VP8DecodeLayer(VP8Decoder* const dec);
 }    // extern "C"
 #endif
 
-#endif  // WEBP_DEC_VP8I_H_
+#endif  /* WEBP_DEC_VP8I_H_ */

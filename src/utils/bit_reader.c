@@ -9,7 +9,7 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include "bits.h"
+#include "./bit_reader.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

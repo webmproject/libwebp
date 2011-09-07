@@ -15,7 +15,7 @@
 #include "string.h"     // for memcpy()
 #include "../webp/encode.h"
 #include "../dsp/dsp.h"
-#include "bit_writer.h"
+#include "../utils/bit_writer.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -457,4 +457,4 @@ extern void VP8AdjustFilterStrength(VP8EncIterator* const it);
 }    // extern "C"
 #endif
 
-#endif  // WEBP_ENC_VP8ENCI_H_
+#endif  /* WEBP_ENC_VP8ENCI_H_ */

@@ -132,7 +132,6 @@ CFGSET = TRUE
 #
 
 X_OBJS= \
-	$(DIROBJ)\dec\bits.obj \
 	$(DIROBJ)\dec\frame.obj \
 	$(DIROBJ)\dec\quant.obj \
 	$(DIROBJ)\dec\tree.obj \
@@ -143,9 +142,7 @@ X_OBJS= \
 	$(DIROBJ)\dec\idec.obj \
 	$(DIROBJ)\dec\alpha.obj \
 	$(DIROBJ)\dec\layer.obj \
-	$(DIROBJ)\dec\thread.obj \
 	$(DIROBJ)\enc\analysis.obj \
-	$(DIROBJ)\enc\bit_writer.obj \
 	$(DIROBJ)\enc\config.obj \
 	$(DIROBJ)\enc\cost.obj \
 	$(DIROBJ)\enc\frame.obj \
@@ -166,6 +163,9 @@ X_OBJS= \
 	$(DIROBJ)\dsp\dec_sse2.obj \
 	$(DIROBJ)\dsp\cpu.obj \
 	$(DIROBJ)\dsp\yuv.obj \
+	$(DIROBJ)\utils\bit_reader.obj \
+	$(DIROBJ)\utils\bit_writer.obj \
+	$(DIROBJ)\utils\thread.obj \
 	$(RESOURCE)
 
 EXAMPLES_OBJS = \
@@ -187,7 +187,7 @@ $(DIRLIB)\$(TARGET): $(X_OBJS)
 	$(LNK) $(LFLAGS) $(X_OBJS)
 	-xcopy $(DIROBJ)\*.pdb $(DIRLIB) /y
 
-$(X_OBJS): $(DIROBJ)\enc $(DIROBJ)\dec $(DIROBJ)\dsp $(DIRLIB) $(DIRINC) $(DIRBIN)
+$(X_OBJS): $(DIROBJ)\enc $(DIROBJ)\dec $(DIROBJ)\dsp $(DIROBJ)\utils $(DIRLIB) $(DIRINC) $(DIRBIN)
 !IF "$(DLLBUILD)" == "TRUE"
 $(X_OBJS): $(DIROBJ)\$(DLLINC)
 clean::
@@ -207,6 +207,9 @@ $(DIROBJ)\dec:
 
 $(DIROBJ)\dsp:
 	@if not exist "$(DIROBJ)\dsp" mkdir $(DIROBJ)\dsp
+
+$(DIROBJ)\utils:
+	@if not exist "$(DIROBJ)\utils" mkdir $(DIROBJ)\utils
 
 $(DIRLIB):
 	@if not exist "$(DIRLIB)" mkdir $(DIRLIB)
@@ -232,6 +235,8 @@ $(DIROBJ)\$(DLLINC):
 {src\enc}.c{$(DIROBJ)\enc}.obj:
 	$(CC) $(CFLAGS) /Fo"$@"  $<
 {src\dsp}.c{$(DIROBJ)\dsp}.obj:
+	$(CC) $(CFLAGS) /Fo"$@"  $<
+{src\utils}.c{$(DIROBJ)\utils}.obj:
 	$(CC) $(CFLAGS) /Fo"$@"  $<
 
 {$(DIROBJ)\examples}.obj{$(DIRBIN)}.exe:

@@ -10,8 +10,9 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include <assert.h>
+#include <string.h>   // for memcpy()
 #include <stdlib.h>
-#include "vp8enci.h"
+#include "./bit_writer.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

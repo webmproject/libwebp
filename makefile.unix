@@ -56,23 +56,27 @@ CFLAGS = -O3 -DNDEBUG $(EXTRA_FLAGS)
 INSTALL = install
 LDFLAGS = $(EXTRA_LIBS) -lm
 
-OBJS = src/enc/webpenc.o src/enc/bit_writer.o src/enc/syntax.o \
-       src/enc/alpha.o src/enc/layer.o \
-       src/enc/tree.o src/enc/config.o src/enc/frame.o \
-       src/enc/quant.o src/enc/iterator.o src/enc/analysis.o \
-       src/enc/cost.o src/enc/picture.o src/enc/filter.o \
-       src/dec/bits.o src/dec/frame.o \
-       src/dec/webp.o src/dec/quant.o src/dec/tree.o src/dec/vp8.o \
-       src/dec/idec.o src/dec/alpha.o src/dec/layer.o \
-       src/dec/io.o src/dec/buffer.o src/dec/thread.o \
-       src/dsp/cpu.o src/dsp/enc.o src/dsp/enc_sse2.o \
-       src/dsp/dec.o src/dsp/dec_sse2.o \
-       src/dsp/upsampling.o src/dsp/upsampling_sse2.o \
-       src/dsp/yuv.o
+DEC_OBJS = src/dec/frame.o src/dec/webp.o src/dec/quant.o src/dec/tree.o \
+           src/dec/vp8.o src/dec/idec.o src/dec/alpha.o src/dec/layer.o \
+           src/dec/io.o src/dec/buffer.o
+ENC_OBJS = src/enc/webpenc.o src/enc/syntax.o \
+           src/enc/alpha.o src/enc/layer.o \
+           src/enc/tree.o src/enc/config.o src/enc/frame.o \
+           src/enc/quant.o src/enc/iterator.o src/enc/analysis.o \
+           src/enc/cost.o src/enc/picture.o src/enc/filter.o
+DSP_OBJS = src/dsp/cpu.o src/dsp/enc.o \
+           src/dsp/enc_sse2.o src/dsp/dec.o src/dsp/dec_sse2.o \
+           src/dsp/upsampling.o src/dsp/upsampling_sse2.o \
+           src/dsp/yuv.o
+UTILS_OBJS = src/utils/bit_reader.o src/utils/bit_writer.o src/utils/thread.o
 
-HDRS = src/webp/encode.h src/enc/vp8enci.h src/enc/bit_writer.h \
-       src/enc/cost.h src/dec/bits.h src/dec/vp8i.h src/dsp/yuv.h \
-       src/dsp/dsp.h
+OBJS = $(DEC_OBJS) $(ENC_OBJS) $(DSP_OBJS) $(UTILS_OBJS)
+
+HDRS = src/webp/encode.h src/enc/vp8enci.h src/enc/cost.h \
+       src/dec/vp8i.h  \
+       src/dsp/yuv.h src/dsp/dsp.h \
+       src/utils/bit_writer.h src/utils/bit_reader.h src/utils/thread.h
+
 OUTPUT = examples/cwebp examples/dwebp src/libwebp.a
 
 all:ex
@@ -111,6 +115,7 @@ clean:
               src/enc/*.o src/enc/*~ \
               src/dec/*.o src/dec/*~ \
               src/dsp/*.o src/dsp/*~ \
+              src/utils/*.o src/utils/*~ \
               examples/*.o examples/*~
 
 superclean: clean

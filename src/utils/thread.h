@@ -9,8 +9,8 @@
 //
 // Author: skal@google.com (Pascal Massimino)
 
-#ifndef WEBP_DEC_THREAD_H
-#define WEBP_DEC_THREAD_H
+#ifndef WEBP_UTILS_THREAD_H_
+#define WEBP_UTILS_THREAD_H_
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -33,8 +33,8 @@ typedef struct {
 
 #include <pthread.h>
 
-#endif    // _WIN32
-#endif    // WEBP_USE_THREAD
+#endif    /* _WIN32 */
+#endif    /* WEBP_USE_THREAD */
 
 // State of the worker thread object
 typedef enum {
@@ -83,4 +83,4 @@ void WebPWorkerEnd(WebPWorker* const worker);
 }    // extern "C"
 #endif
 
-#endif  // WEBP_DEC_THREAD_H
+#endif  /* WEBP_UTILS_THREAD_H_ */
