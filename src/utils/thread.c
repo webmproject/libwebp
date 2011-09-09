@@ -75,10 +75,10 @@ static int pthread_mutex_destroy(pthread_mutex_t* const mutex) {
 // Condition
 static int pthread_cond_destroy(pthread_cond_t* const condition) {
   int ok = 1;
-  ok &= (CloseHandle(condition->waiting_sem_) == 0);
-  ok &= (CloseHandle(condition->received_sem_) == 0);
-  ok &= (CloseHandle(condition->signal_event_) == 0);
-  return ok;
+  ok &= (CloseHandle(condition->waiting_sem_) != 0);
+  ok &= (CloseHandle(condition->received_sem_) != 0);
+  ok &= (CloseHandle(condition->signal_event_) != 0);
+  return !ok;
 }
 
 static int pthread_cond_init(pthread_cond_t* const condition, void* cond_attr) {
