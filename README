@@ -382,7 +382,7 @@ an otherwise too-large picture. Some CPU can be saved too, incidentally.
      CHECK(WebPGetFeatures(data, data_size, &config.input) == VP8_STATUS_OK);
 
      // C) Adjust 'config' options, if needed
-     config.no_fancy = 1;
+     config.options.no_fancy_upsampling = 1;
      config.options.use_scaling = 1;
      config.options.scaled_width = scaledWidth();
      config.options.scaled_height = scaledHeight();
@@ -394,7 +394,7 @@ an otherwise too-large picture. Some CPU can be saved too, incidentally.
      // Optionally, the config.output can be pointed to an external buffer as
      // well for decoding the image. This externally supplied memory buffer
      // should be big enough to store the decoded picture.
-     config.output.u.BGRA.rgba = (uint8_t*) memory_buffer;
+     config.output.u.RGBA.rgba = (uint8_t*) memory_buffer;
      config.output.u.RGBA.stride = scanline_stride;
      config.output.u.RGBA.size = total_size_of_the_memory_buffer;
      config.output.is_external_memory = 1;
