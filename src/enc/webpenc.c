@@ -26,8 +26,6 @@ extern "C" {
 #include <stdio.h>
 #endif
 
-#define MAX_DIMENSION 16384   // maximum width/height allowed by the spec
-
 //------------------------------------------------------------------------------
 
 int WebPGetEncoderVersion(void) {
@@ -329,7 +327,7 @@ int WebPEncode(const WebPConfig* const config, WebPPicture* const pic) {
     return WebPEncodingSetError(pic, VP8_ENC_ERROR_BAD_DIMENSION);
   if (pic->y == NULL || pic->u == NULL || pic->v == NULL)
     return WebPEncodingSetError(pic, VP8_ENC_ERROR_NULL_PARAMETER);
-  if (pic->width >= MAX_DIMENSION || pic->height >= MAX_DIMENSION)
+  if (pic->width > WEBP_MAX_DIMENSION || pic->height > WEBP_MAX_DIMENSION)
     return WebPEncodingSetError(pic, VP8_ENC_ERROR_BAD_DIMENSION);
 
   enc = InitEncoder(config, pic);

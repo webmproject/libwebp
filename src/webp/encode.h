@@ -167,10 +167,13 @@ typedef enum {
   VP8_ENC_ERROR_FILE_TOO_BIG,             // file is bigger than 4G
 } WebPEncodingError;
 
+// maximum width/height allowed (inclusive), in pixels
+#define WEBP_MAX_DIMENSION 16383
+
 struct WebPPicture {
   // input
   WebPEncCSP colorspace;     // colorspace: should be YUV420 for now (=Y'CbCr).
-  int width, height;         // dimensions.
+  int width, height;         // dimensions (less or equal to WEBP_MAX_DIMENSION)
   uint8_t *y, *u, *v;        // pointers to luma/chroma planes.
   int y_stride, uv_stride;   // luma/chroma strides.
   uint8_t *a;                // pointer to the alpha plane
@@ -260,8 +263,8 @@ WEBP_EXTERN(int) WebPPictureImportBGRA(
 // Main call
 
 // Main encoding call, after config and picture have been initialized.
-// 'picture' must be less than 16384x16384 in dimension, and the 'config' object
-// must be a valid one.
+// 'picture' must be less than 16384x16384 in dimension (cf WEBP_MAX_DIMENSION),
+// and the 'config' object must be a valid one.
 // Returns false in case of error, true otherwise.
 // In case of error, picture->error_code is updated accordingly.
 WEBP_EXTERN(int) WebPEncode(
