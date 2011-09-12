@@ -66,7 +66,7 @@ ENC_OBJS = src/enc/webpenc.o src/enc/syntax.o \
            src/enc/cost.o src/enc/picture.o src/enc/filter.o
 DSP_OBJS = src/dsp/cpu.o src/dsp/enc.o \
            src/dsp/enc_sse2.o src/dsp/dec.o src/dsp/dec_sse2.o \
-           src/dsp/upsampling.o src/dsp/upsampling_sse2.o \
+           src/dsp/dec_neon.o src/dsp/upsampling.o src/dsp/upsampling_sse2.o \
            src/dsp/yuv.o
 UTILS_OBJS = src/utils/bit_reader.o src/utils/bit_writer.o src/utils/thread.o
 

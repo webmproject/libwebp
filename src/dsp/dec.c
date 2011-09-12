@@ -687,6 +687,7 @@ VP8SimpleFilterFunc VP8SimpleVFilter16i;
 VP8SimpleFilterFunc VP8SimpleHFilter16i;
 
 extern void VP8DspInitSSE2(void);
+extern void VP8DspInitNEON(void);
 
 void VP8DspInit(void) {
   DspInitTables();
@@ -714,6 +715,10 @@ void VP8DspInit(void) {
 #if defined(__SSE2__) || defined(_MSC_VER)
     if (VP8GetCPUInfo(kSSE2)) {
       VP8DspInitSSE2();
+    }
+#elif defined(__GNUC__) && defined(__ARM_NEON__)
+    if (VP8GetCPUInfo(kNEON)) {
+      VP8DspInitNEON();
     }
 #endif
   }

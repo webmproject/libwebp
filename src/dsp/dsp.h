@@ -23,7 +23,8 @@ extern "C" {
 
 typedef enum {
   kSSE2,
-  kSSE3
+  kSSE3,
+  kNEON
 } CPUFeature;
 // returns true if the CPU supports the feature.
 typedef int (*VP8CPUInfo)(CPUFeature feature);
