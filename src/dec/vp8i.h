@@ -288,19 +288,6 @@ struct VP8Decoder {
 int VP8SetError(VP8Decoder* const dec,
                 VP8StatusCode error, const char * const msg);
 
-// Validates the VP8 Header and skip over it.
-// Returns 0 for invalid (chunk_size greater than riff_size) VP8 header.
-// Else return 1.
-// is_vp8_chunk is set to:
-//   0, in case data bytes don't correspond to VP8 chunk.
-//   1, in case data bytes correspond to VP8 chunk.
-//   -1, in case not enough bytes (partial VP8 chunk) are passed.
-// chunk_size is set to the chunk size extracted from the VP8 chunk header. For
-// partial VP8 chunk, chunk_size is set to 0.
-int VP8CheckAndSkipHeader(const uint8_t** data_ptr, uint32_t* data_size_ptr,
-                          int* is_vp8_chunk, uint32_t* chunk_size,
-                          uint32_t riff_size);
-
 // Validates the VP8 data-header and retrieve basic header information viz width
 // and height. Returns 0 in case of formatting error. *width/*height/*has_alpha
 // can be passed NULL.
@@ -308,17 +295,6 @@ int VP8GetInfo(const uint8_t* data,
                uint32_t data_size,    // data available so far
                uint32_t chunk_size,   // total data size expect in the chunk
                int *width, int *height, int *has_alpha);
-
-// Validates the VP8X Header and skip over it.
-// Returns 0 for invalid VP8X header. Else return 1.
-// is_vp8x_chunk is set to:
-//   0, in case data bytes doesn't correspond to VP8X chunk.
-//   1, in case data bytes correspond to VP8X chunk.
-//   -1, in case not enough bytes (partial VP8X chunk) are passed.
-// Width, Height & Flags are set to the corresponding fields extracted from the
-// VP8X chunk.
-int VP8XGetInfo(const uint8_t** data_ptr, uint32_t* data_size_ptr,
-                int* is_vp8x_chunk, int* width, int* height, uint32_t* flags);
 
 // in tree.c
 void VP8ResetProba(VP8Proba* const proba);
