@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAFX//8wo\u003d",
+        "filename": "src/dec/webp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2011-09-16T20:14:07Z",
+      "side": 1,
+      "message": "haha! that\u0027s a good catch!",
+      "revId": "563e52d62e90eeb7f1ff1cf114a33639fb46b476",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
