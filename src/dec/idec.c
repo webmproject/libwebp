@@ -232,7 +232,7 @@ static void RestoreContext(const MBContext* context, VP8Decoder* const dec,
 
 //------------------------------------------------------------------------------
 
-static VP8StatusCode IDecError(WebPIDecoder* idec, VP8StatusCode error) {
+static VP8StatusCode IDecError(WebPIDecoder* const idec, VP8StatusCode error) {
   if (idec->state_ == STATE_VP8_DATA) {
     VP8Io* const io = &idec->io_;
     if (io->teardown) {
@@ -243,7 +243,7 @@ static VP8StatusCode IDecError(WebPIDecoder* idec, VP8StatusCode error) {
   return error;
 }
 
-static void ChangeState(WebPIDecoder* idec, DecState new_state,
+static void ChangeState(WebPIDecoder* const idec, DecState new_state,
                         uint32_t consumed_bytes) {
   idec->state_ = new_state;
   idec->mem_.start_ += consumed_bytes;
@@ -272,7 +272,7 @@ static VP8StatusCode DecodeWebPHeaders(WebPIDecoder* const idec) {
 
 static VP8StatusCode DecodeVP8FrameHeader(WebPIDecoder* const idec) {
   const uint8_t* data = idec->mem_.buf_ + idec->mem_.start_;
-  uint32_t curr_size = MemDataSize(&idec->mem_);
+  const uint32_t curr_size = MemDataSize(&idec->mem_);
   uint32_t bits;
 
   if (curr_size < VP8_FRAME_HEADER_SIZE) {

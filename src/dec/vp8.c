@@ -265,7 +265,7 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
                        "null VP8Io passed to VP8GetHeaders()");
   }
 
-  buf = (uint8_t*)io->data;
+  buf = io->data;
   buf_size = io->data_size;
 
   // Process Pre-VP8 chunks.

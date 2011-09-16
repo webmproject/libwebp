@@ -19,7 +19,7 @@ extern "C" {
 
 //------------------------------------------------------------------------------
 // RIFF layout is:
-//   0ffset  tag
+//   Offset  tag
 //   0...3   "RIFF" 4-byte tag
 //   4...7   size of image data (including metadata) starting at offset 8
 //   8...11  "WEBP"   our form-type signature
@@ -215,7 +215,7 @@ VP8StatusCode WebPParseHeaders(const uint8_t** data, uint32_t* data_size,
     return VP8_STATUS_BITSTREAM_ERROR;  // Wrong RIFF Header.
   }
 
-  // Skip over VP8x header.
+  // Skip over VP8X header.
   status = WebPParseVP8X(&buf, &buf_size, &vp8x_skip_size, NULL, NULL, NULL);
   if (status != VP8_STATUS_OK) {
     return status;  // Wrong VP8X Chunk / Insufficient data.
@@ -481,7 +481,7 @@ static VP8StatusCode GetFeatures(const uint8_t* data, uint32_t data_size,
     return status;   // Wrong RIFF Header / Insufficient data.
   }
 
-  // Skip over VP8x.
+  // Skip over VP8X.
   status = WebPParseVP8X(&data, &data_size, &vp8x_skip_size, &features->width,
                          &features->height, &flags);
   if (status != VP8_STATUS_OK) {
@@ -489,7 +489,7 @@ static VP8StatusCode GetFeatures(const uint8_t* data, uint32_t data_size,
 
   }
   if (vp8x_skip_size > 0) {
-    return VP8_STATUS_OK;  // Return features from VP8x header.
+    return VP8_STATUS_OK;  // Return features from VP8X header.
   }
 
   // Skip over VP8 header.
