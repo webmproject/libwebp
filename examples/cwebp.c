@@ -382,8 +382,10 @@ static int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha) {
   }
   if (png_get_valid(png, info, PNG_INFO_tRNS)) {
     png_set_tRNS_to_alpha(png);
+    has_alpha = 1;
+  } else {
+    has_alpha = !!(color_type & PNG_COLOR_MASK_ALPHA);
   }
-  has_alpha = !!(color_type & PNG_COLOR_MASK_ALPHA);
 
   if (!keep_alpha) {
     png_set_strip_alpha(png);
