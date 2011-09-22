@@ -156,6 +156,7 @@ AC_CONFIG_FILES([Makefile src/Makefile man/Makefile \
                  examples/Makefile src/dec/Makefile \
                  src/enc/Makefile src/dsp/Makefile \
                  src/utils/Makefile \
+                 src/mux/Makefile \
                  src/libwebp.pc])
 
 
