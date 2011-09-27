@@ -2,7 +2,7 @@
 # system, for simple local building of the libraries and tools.
 # It will not install the libraries system-wide, but just create the 'cwebp'
 # and 'dwebp' tools in the examples/ directory, along with the static
-# library 'src/libwebp.a'.
+# libraries 'src/libwebp.a' and 'src/mux/libwebpmux.a'.
 #
 # To build the library and examples, use:
 #    make -f makefile.unix
@@ -77,14 +77,19 @@ HDRS = src/webp/encode.h src/enc/vp8enci.h src/enc/cost.h \
        src/dsp/yuv.h src/dsp/dsp.h \
        src/utils/bit_writer.h src/utils/bit_reader.h src/utils/thread.h
 
-OUTPUT = examples/cwebp examples/dwebp src/libwebp.a
+OUTPUT = examples/cwebp examples/dwebp src/libwebp.a src/mux/libwebpmux.a
 
-all:ex
+all:ex src/mux/libwebpmux.a
 
 %.o: %.c $(HDRS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 src/libwebp.a:  $(OBJS)
+	$(AR) $(ARFLAGS) $@ $^
+
+MUX_OBJS = src/mux/mux.o
+
+src/mux/libwebpmux.a:  $(MUX_OBJS)
 	$(AR) $(ARFLAGS) $@ $^
 
 ex: examples/cwebp examples/dwebp
@@ -116,6 +121,7 @@ clean:
               src/dec/*.o src/dec/*~ \
               src/dsp/*.o src/dsp/*~ \
               src/utils/*.o src/utils/*~ \
+              src/mux/*.o src/mux/*~ \
               examples/*.o examples/*~
 
 superclean: clean
