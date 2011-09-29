@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAFn//6jY\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2011-09-29T05:17:48Z",
+      "side": 1,
+      "message": "Leave the syncing notes out and just say what the commit does.",
+      "revId": "1c95dc1cf60ce966cb5a91cab699d76807dc083e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
