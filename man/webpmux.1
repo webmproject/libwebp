@@ -1,0 +1,130 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.TH WEBPMUX 1 "September 30, 2011"
+.SH NAME
+webpmux \- command line tool to create WebP Mux/container file.
+.SH SYNOPSIS
+.B webpmux -get
+.I GET_OPTIONS
+.I INPUT
+.B -o
+.I OUTPUT
+.br
+.B webpmux -set
+.I SET_OPTIONS
+.I INPUT
+.B -o
+.I OUTPUT
+.br
+.B webpmux -strip
+.I STRIP_OPTIONS
+.I INPUT
+.B -o
+.I OUTPUT
+.br
+.B webpmux [-tile
+.I TILE_OPTIONS
+.B ]... -o
+.I OUTPUT
+.br
+.B webpmux [-frame
+.I FRAME_OPTIONS
+.B ]... -loop
+.I LOOP_COUNT
+.B -o
+.I OUTPUT
+.br
+.B webpmux -info
+.I INPUT
+.br
+.B webpmux -help
+.SH DESCRIPTION
+This manual page documents the
+.B webpmux
+command.
+.PP
+\fBwebpmux\fP command line tool can be used to create a WebP container file
+and extract/strip relevant data from the container file.
+.SH OPTIONS
+The basic options are:
+.TP
+.SH GET_OPTIONS:
+.TP
+.B icc
+Get ICC Color profile.
+.TP
+.B xmp
+Get XMP metadata.
+.TP
+.B tile n
+Get nth tile.
+.TP
+.B frame n
+Get nth frame.
+.TP
+
+.SH SET_OPTIONS:
+.TP
+.B icc
+Set ICC Color profile.
+.TP
+.B xmp
+Set XMP metadata.
+.TP
+
+.SH STRIP_OPTIONS:
+.TP
+.B icc
+Strip ICC Color profile.
+.TP
+.B xmp
+Strip XMP metadata.
+.TP
+
+.SH TILE_OPTIONS:
+.TP
+.B file_i +xi+yi
+Where: 'file_i' is the i'th tile (webp format) and 'xi','yi' specify the image offset for this tile.
+.TP
+
+.SH FRAME_OPTIONS:
+.TP
+.B file_i +xi+yi+di
+Where: 'file_i' is the i'th frame (webp format), 'xi','yi' specify the image offset for this frame and 'di' is the pause duration before next frame.
+.TP
+
+.SH INPUT
+.TP
+Input file in WebP format.
+.TP
+
+.SH OUTPUT
+.TP
+Output file in WebP format.
+.TP
+
+.SH Examples:
+webpmux -set icc image_profile.icc in.webp -o icc_container.webp
+.br
+webpmux -get icc icc_container.webp -o image_profile.icc
+.br
+webpmux -set xmp image_metadata.xmp in.webp -o xmp_container.webp
+.br
+webpmux -get xmp xmp_container.webp -o image_metadata.xmp
+.br
+webpmux -frame anim_1.webp +0+0+0 -frame anim_2.webp +50+50+0 -loop 10 -o anim_container.webp
+.br
+webpmux -get frame 2 anim_container.webp -o frame_2.webp
+
+.SH
+.SH SEE ALSO
+.BR dwebp (1), cwebp (1).
+.br
+Please refer to http://code.google.com/speed/webp/ for additional
+information.
+.SH AUTHOR
+\fBwebpmux\fP is written by the WebP team.
+.br
+The latest source tree is available at http://www.webmproject.org/code
+.PP
+This manual page was written by Vikas Arora <vikaas.arora@gmail.com>,
+for the Debian project (and may be used by others).
