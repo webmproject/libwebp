@@ -1,0 +1,116 @@
+﻿          __   __  ____  ____  ____  __ __  _     __ __
+         /  \\/  \/  _ \/  _ \/  _ \/  \  \/ \___/_ / _\
+         \       /   __/  _  \   __/      /  /  (_/  /__
+          \__\__/\_____/_____/__/  \__//_/\_____/__/___/
+
+
+Description:
+============
+
+WebP Mux: library to create the MUX container object for features like
+Color profile, XMP metadata, Animation & Tiling. A reference command line
+tool 'webpmux' and Mux container specification 'MuxContainerSpec.pdf' are also
+provided in this package.
+
+
+WebP Mux tool:
+==============
+
+The examples/ directory contains tool (webpmux) for manipulating the WebP Mux
+file. webpmux tool can be used to create a WebP container file and to extract or
+strip relevant data from the container file.
+
+A list of options is available using the -help command line flag:
+
+> webpmux -help
+Usage: webpmux -get GET_OPTIONS INPUT -o OUTPUT
+   or: webpmux -set SET_OPTIONS INPUT -o OUTPUT
+   or: webpmux -strip STRIP_OPTIONS INPUT -o OUTPUT
+   or: webpmux [-tile TILE_OPTIONS]... -o OUTPUT
+   or: webpmux [-frame FRAME_OPTIONS]... -loop LOOP_COUNT -o OUTPUT
+   or: webpmux -info INPUT
+   or: webpmux -help OR -h
+
+GET_OPTIONS:
+   icc       Get ICCP Color profile.
+   xmp       Get XMP metadata.
+   tile n    Get nth tile.
+   frame n   Get nth frame.
+
+SET_OPTIONS:
+   icc       Set ICC Color profile.
+   xmp       Set XMP metadata.
+
+STRIP_OPTIONS:
+   icc       Strip ICCP color profile.
+   xmp       Strip XMP metadata.
+
+TILE_OPTIONS(i):
+   file_i +xi+yi
+   where:    'file_i' is the i'th tile (webp format),
+             'xi','yi' specify the image offset for this tile.
+
+FRAME_OPTIONS(i):
+   file_i +xi+yi+di
+   where:    'file_i' is the i'th animation frame (webp format),
+             'xi','yi' specify the image offset for this frame.
+             'di' is the pause duration before next frame.
+
+INPUT & OUTPUT are in webp format.
+
+
+
+WebP Mux API:
+==============
+WebP Mux API contains methods for adding data to WebPMux (a MUX container object
+for a WebP file) and reading data from WebPMux. This API currently supports
+XMP metadata, Color profile, Animation & Tiling. Other features will be added
+in subsequent releases.
+
+Example#1 (pseudo code): Creating a MUX with image data, color profile & XMP
+metadata.
+
+  int copy_data = 0;
+  WebPMux* mux = WebPMuxNew();
+  // ... (Prepare image data).
+  WebPMuxAddNamedData(mux, 1, "image", image_data, image_data_size, copy_data);
+  // ... (Prepare ICCP color profile data).
+  WebPMuxSetColorProfile(mux, icc_data, icc_data_size, copy_data);
+  // ... (Prepare XMP metadata).
+  WebPMuxSetMetadata(mux, xmp_data, xmp_data_size, copy_data);
+  // Get data from mux in WebP RIFF format.
+  WebPMuxAssemble(mux, &output_data, &output_data_size);
+  WebPMuxDelete(mux);
+  // ... (Consume output_data; e.g. write output_data to file).
+  free(output_data);
+
+
+Example#2 (pseudo code): Get image & color profile data from a WebP file.
+
+  int copy_data = 0;
+  // ... (Read data from file).
+  WebPMux* mux = WebPMuxCreate(data, data_size, copy_data);
+  WebPMuxGetNamedData(mux, "image", 1, &image_data, &image_data_size);
+  // ... (Consume image_data; e.g. call WebPDecode() to decode the data).
+  WebPMuxGetColorProfile(mux, &icc_data, &icc_data_size);
+  // ... (Consume icc_data).
+  WebPMuxDelete(mux);
+  free(data);
+
+
+For detailed MUX-API reference, please refer to the header file (src/webp/mux.h)
+
+
+Bugs:
+=====
+
+Please report all bugs to our issue tracker:
+    http://code.google.com/p/webp/issues
+Patches welcome! See this page to get started:
+    http://www.webmproject.org/code/contribute/submitting-patches/
+
+Discuss:
+========
+
+Email: webp-discuss@webmproject.org
+Web: http://groups.google.com/a/webmproject.org/group/webp-discuss
