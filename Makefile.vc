@@ -166,13 +166,16 @@ X_OBJS= \
 	$(DIROBJ)\utils\bit_reader.obj \
 	$(DIROBJ)\utils\bit_writer.obj \
 	$(DIROBJ)\utils\thread.obj \
+	$(DIROBJ)\mux\mux.obj \
 	$(RESOURCE)
 
 EXAMPLES_OBJS = \
 	$(DIROBJ)\examples\cwebp.obj \
-	$(DIROBJ)\examples\dwebp.obj
+	$(DIROBJ)\examples\dwebp.obj \
+	$(DIROBJ)\examples\webpmux.obj
 
-all: $(DIRLIB)\$(TARGET) $(DIRBIN)\dwebp.exe $(DIRBIN)\cwebp.exe
+all: $(DIRLIB)\$(TARGET) $(DIRBIN)\dwebp.exe $(DIRBIN)\cwebp.exe \
+     $(DIRBIN)\webpmux.exe
 
 # Additional include and library paths (for zlib) can be passed via the CL and
 # LINK environment variables respectively:
@@ -211,6 +214,9 @@ $(DIROBJ)\dsp:
 $(DIROBJ)\utils:
 	@if not exist "$(DIROBJ)\utils" mkdir $(DIROBJ)\utils
 
+$(DIROBJ)\mux:
+	@if not exist "$(DIROBJ)\mux" mkdir $(DIROBJ)\mux
+
 $(DIRLIB):
 	@if not exist "$(DIRLIB)" mkdir $(DIRLIB)
 
@@ -237,6 +243,8 @@ $(DIROBJ)\$(DLLINC):
 {src\dsp}.c{$(DIROBJ)\dsp}.obj:
 	$(CC) $(CFLAGS) /Fo"$@"  $<
 {src\utils}.c{$(DIROBJ)\utils}.obj:
+	$(CC) $(CFLAGS) /Fo"$@"  $<
+{src\mux}.c{$(DIROBJ)\mux}.obj:
 	$(CC) $(CFLAGS) /Fo"$@"  $<
 
 {$(DIROBJ)\examples}.obj{$(DIRBIN)}.exe:
