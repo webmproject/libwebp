@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAFn//6I0\u003d",
+        "filename": "makefile.unix",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2011-09-30T06:53:58Z",
+      "side": 1,
+      "message": "please revert this line",
+      "revId": "a031264ef2bee7ca6f88f4eddd751786079783e1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//6Iw\u003d",
+        "filename": "makefile.unix",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2011-09-30T06:53:58Z",
+      "side": 1,
+      "message": "and this one too",
+      "revId": "a031264ef2bee7ca6f88f4eddd751786079783e1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
