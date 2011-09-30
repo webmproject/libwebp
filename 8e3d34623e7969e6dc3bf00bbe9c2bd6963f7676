@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAFn//6Fw\u003d",
+        "filename": "Makefile.vc",
+        "patchSetId": 1
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2011-09-30T10:21:22Z",
+      "side": 1,
+      "message": "indent -\u003d 3",
+      "revId": "8e3d34623e7969e6dc3bf00bbe9c2bd6963f7676",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
