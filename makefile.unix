@@ -72,14 +72,17 @@ UTILS_OBJS = src/utils/bit_reader.o src/utils/bit_writer.o src/utils/thread.o
 
 OBJS = $(DEC_OBJS) $(ENC_OBJS) $(DSP_OBJS) $(UTILS_OBJS)
 
-HDRS = src/webp/encode.h src/enc/vp8enci.h src/enc/cost.h \
+MUX_OBJS = src/mux/mux.o
+
+HDRS = src/webp/encode.h src/enc/vp8enci.h src/enc/cost.h src/webp/mux.h \
        src/dec/vp8i.h  \
        src/dsp/yuv.h src/dsp/dsp.h \
        src/utils/bit_writer.h src/utils/bit_reader.h src/utils/thread.h
 
-OUTPUT = examples/cwebp examples/dwebp src/libwebp.a src/mux/libwebpmux.a
+OUTPUT = examples/cwebp examples/dwebp examples/webpmux \
+	 src/libwebp.a src/mux/libwebpmux.a
 
-all:ex src/mux/libwebpmux.a
+all:ex
 
 %.o: %.c $(HDRS)
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -87,23 +90,23 @@ all:ex src/mux/libwebpmux.a
 src/libwebp.a:  $(OBJS)
 	$(AR) $(ARFLAGS) $@ $^
 
-MUX_OBJS = src/mux/mux.o
-
 src/mux/libwebpmux.a:  $(MUX_OBJS)
 	$(AR) $(ARFLAGS) $@ $^
 
-ex: examples/cwebp examples/dwebp
+ex: examples/cwebp examples/dwebp examples/webpmux
 
 examples/cwebp: examples/cwebp.o src/libwebp.a
 examples/dwebp: examples/dwebp.o src/libwebp.a
-examples/cwebp examples/dwebp:
+examples/webpmux: examples/webpmux.o src/mux/libwebpmux.a src/libwebp.a
+examples/cwebp examples/dwebp examples/webpmux:
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 dist: DESTDIR := dist
 dist: all
 	$(INSTALL) -m755 -d $(DESTDIR)/include/webp \
 	    $(DESTDIR)/doc $(DESTDIR)/lib
-	$(INSTALL) -m755 -s examples/cwebp examples/dwebp $(DESTDIR)
+	$(INSTALL) -m755 -s examples/cwebp examples/dwebp examples/webpmux \
+	    $(DESTDIR)
 	$(INSTALL) -m644 src/webp/*.h $(DESTDIR)/include/webp
 	$(INSTALL) -m644 src/libwebp.a $(DESTDIR)/lib
 	umask 022; \
