@@ -190,7 +190,9 @@ $(DIRLIB)\$(TARGET): $(X_OBJS)
 	$(LNK) $(LFLAGS) $(X_OBJS)
 	-xcopy $(DIROBJ)\*.pdb $(DIRLIB) /y
 
-$(X_OBJS): $(DIROBJ)\enc $(DIROBJ)\dec $(DIROBJ)\dsp $(DIROBJ)\utils $(DIRLIB) $(DIRINC) $(DIRBIN)
+$(X_OBJS): $(DIROBJ)\enc $(DIROBJ)\dec $(DIROBJ)\dsp $(DIROBJ)\mux \
+    $(DIROBJ)\utils $(DIRLIB) $(DIRINC) $(DIRBIN)
+
 !IF "$(DLLBUILD)" == "TRUE"
 $(X_OBJS): $(DIROBJ)\$(DLLINC)
 clean::
@@ -211,11 +213,11 @@ $(DIROBJ)\dec:
 $(DIROBJ)\dsp:
 	@if not exist "$(DIROBJ)\dsp" mkdir $(DIROBJ)\dsp
 
-$(DIROBJ)\utils:
-	@if not exist "$(DIROBJ)\utils" mkdir $(DIROBJ)\utils
-
 $(DIROBJ)\mux:
 	@if not exist "$(DIROBJ)\mux" mkdir $(DIROBJ)\mux
+
+$(DIROBJ)\utils:
+	@if not exist "$(DIROBJ)\utils" mkdir $(DIROBJ)\utils
 
 $(DIRLIB):
 	@if not exist "$(DIRLIB)" mkdir $(DIRLIB)
