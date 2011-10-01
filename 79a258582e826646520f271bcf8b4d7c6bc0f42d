@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAFn//5gc\u003d",
+        "filename": "Makefile.vc",
+        "patchSetId": 1
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1000962
+      },
+      "writtenOn": "2011-10-01T21:51:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAFn//5gs\u003d",
+      "revId": "79a258582e826646520f271bcf8b4d7c6bc0f42d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAFn//5go\u003d",
         "filename": "Makefile.vc",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2011-10-01T21:38:14Z",
       "side": 1,
       "message": "there\u0027s already a \u0027mux\u0027 line here. I don\u0027t think we need line 214..",
+      "revId": "79a258582e826646520f271bcf8b4d7c6bc0f42d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//5gY\u003d",
+        "filename": "Makefile.vc",
+        "patchSetId": 1
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1000962
+      },
+      "writtenOn": "2011-10-01T21:51:31Z",
+      "side": 1,
+      "message": "I haven\u0027t noticed this (removed the old one as this makes them sorted)",
+      "parentUuid": "AAAAFn//5go\u003d",
       "revId": "79a258582e826646520f271bcf8b4d7c6bc0f42d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
