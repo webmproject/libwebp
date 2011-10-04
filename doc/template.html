@@ -29,25 +29,29 @@
   }
   hr {
   }
+  code {
+    color: #000;
+    background-color: #f7f7f7;
+    padding: 0 3px;
+    font-family: "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", Consolata, monospace;
+  }
   pre {
-    background-color: #eee;
+    background-color: #f7f7f7;
     padding: 1em;
     border: 1px solid #ccc;
     width: 42em;
     overflow: auto;
     font-family: "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", Consolata, monospace;
   }
+  pre code {
+    background-color: #f7f7f7;
+    padding: 0; /* Only want padding on inline code, not blocks */
+  }
   pre.terminal {
     color: #fff;
     background-color: #000;
     border: 1px solid #ccc;
     max-height: 30em;
-  }
-  code {
-    color: #060;
-    background-color: #eee;
-    padding: 0 3px;
-    font-family: "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", Consolata, monospace;
   }
   pre.terminal code {
     color: #fff;
