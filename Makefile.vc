@@ -38,7 +38,8 @@ CCDEBUG    = cl.exe /nologo /Od /Gm /Zi /D_DEBUG /RTC1
 CFLAGS     = /Isrc /nologo /W3 /EHsc /FD /c /GS
 CFLAGS     = $(CFLAGS) /DWIN32 /D_CRT_SECURE_NO_WARNINGS /DWIN32_LEAN_AND_MEAN
 CFLAGS     = $(CFLAGS) /DHAVE_WINCODEC_H /DWEBP_USE_THREAD
-LDFLAGS    = /LARGEADDRESSAWARE /MANIFEST /NXCOMPAT /DYNAMICBASE $(PLATFORM_LDFLAGS)
+LDFLAGS    = /LARGEADDRESSAWARE /MANIFEST /NXCOMPAT /DYNAMICBASE
+LDFLAGS    = $(LDFLAGS) $(PLATFORM_LDFLAGS)
 LNKDLL     = link.exe /DLL
 LNKLIB     = link.exe /lib
 LNKEXE     = link.exe
@@ -109,21 +110,24 @@ CFGSET = TRUE
 # Usage
 #
 !IF "$(CFGSET)" == "FALSE"
-!MESSAGE Usage: nmake /f Makefile.vc [CFG=<config>] [OBJDIR=<path>] [RTLIBCFG=<rtlib>] [<target>]
+!MESSAGE Usage: nmake /f Makefile.vc [CFG=<config>]
+!MESSAGE .          [OBJDIR=<path>] [RTLIBCFG=<rtlib>] [<target>]
+!MESSAGE
 !MESSAGE where <config> is one of:
 !MESSAGE -  release-static                - release static library
 !MESSAGE -  debug-static                  - debug static library
 !MESSAGE -  release-dynamic               - release dynamic link library (DLL)
 !MESSAGE -  debug-dynamic                 - debug dynamic link library (DLL)
+!MESSAGE
 !MESSAGE <target> may be:
 !MESSAGE -  clean                         - perform a clean for CFG
 !MESSAGE -  experimental                  - build CFG with experimental
 !MESSAGE .                                  features enabled. Requires zlib.
+!MESSAGE - (empty) or all                 - build all targets for CFG
 !MESSAGE
-!MESSAGE <rtlibcfg> controls the runtime library linkage - can be 'static' or 'dynamic'.
-!MESSAGE <target> can be left blank in which case all is assumed
-!MESSAGE <path> is the path where you like to build (obj, bins, etc.)
-!MESSAGE   default to ..\obj\
+!MESSAGE RTLIBCFG controls the runtime library linkage - 'static' or 'dynamic'.
+!MESSAGE OBJDIR is the path where you like to build (obj, bins, etc.),
+!MESSAGE   defaults to ..\obj
 
 !IF "$(CFG)" != ""
 !MESSAGE
@@ -139,47 +143,47 @@ CFGSET = TRUE
 #
 
 X_OBJS= \
-	$(DIROBJ)\dec\frame.obj \
-	$(DIROBJ)\dec\quant.obj \
-	$(DIROBJ)\dec\tree.obj \
-	$(DIROBJ)\dec\vp8.obj \
-	$(DIROBJ)\dec\webp.obj \
-	$(DIROBJ)\dec\io.obj \
-	$(DIROBJ)\dec\buffer.obj \
-	$(DIROBJ)\dec\idec.obj \
-	$(DIROBJ)\dec\alpha.obj \
-	$(DIROBJ)\dec\layer.obj \
-	$(DIROBJ)\enc\analysis.obj \
-	$(DIROBJ)\enc\config.obj \
-	$(DIROBJ)\enc\cost.obj \
-	$(DIROBJ)\enc\frame.obj \
-	$(DIROBJ)\enc\filter.obj \
-	$(DIROBJ)\enc\iterator.obj \
-	$(DIROBJ)\enc\picture.obj \
-	$(DIROBJ)\enc\quant.obj \
-	$(DIROBJ)\enc\syntax.obj \
-	$(DIROBJ)\enc\tree.obj \
-	$(DIROBJ)\enc\webpenc.obj \
-	$(DIROBJ)\enc\alpha.obj \
-	$(DIROBJ)\enc\layer.obj \
-	$(DIROBJ)\dsp\enc.obj \
-	$(DIROBJ)\dsp\enc_sse2.obj \
-	$(DIROBJ)\dsp\upsampling.obj \
-	$(DIROBJ)\dsp\upsampling_sse2.obj \
-	$(DIROBJ)\dsp\dec.obj \
-	$(DIROBJ)\dsp\dec_sse2.obj \
-	$(DIROBJ)\dsp\cpu.obj \
-	$(DIROBJ)\dsp\yuv.obj \
-	$(DIROBJ)\utils\bit_reader.obj \
-	$(DIROBJ)\utils\bit_writer.obj \
-	$(DIROBJ)\utils\thread.obj \
-	$(DIROBJ)\mux\mux.obj \
-	$(RESOURCE)
+    $(DIROBJ)\dec\alpha.obj \
+    $(DIROBJ)\dec\buffer.obj \
+    $(DIROBJ)\dec\frame.obj \
+    $(DIROBJ)\dec\idec.obj \
+    $(DIROBJ)\dec\io.obj \
+    $(DIROBJ)\dec\layer.obj \
+    $(DIROBJ)\dec\quant.obj \
+    $(DIROBJ)\dec\tree.obj \
+    $(DIROBJ)\dec\vp8.obj \
+    $(DIROBJ)\dec\webp.obj \
+    $(DIROBJ)\dsp\cpu.obj \
+    $(DIROBJ)\dsp\dec.obj \
+    $(DIROBJ)\dsp\dec_sse2.obj \
+    $(DIROBJ)\dsp\enc.obj \
+    $(DIROBJ)\dsp\enc_sse2.obj \
+    $(DIROBJ)\dsp\upsampling.obj \
+    $(DIROBJ)\dsp\upsampling_sse2.obj \
+    $(DIROBJ)\dsp\yuv.obj \
+    $(DIROBJ)\enc\alpha.obj \
+    $(DIROBJ)\enc\analysis.obj \
+    $(DIROBJ)\enc\config.obj \
+    $(DIROBJ)\enc\cost.obj \
+    $(DIROBJ)\enc\filter.obj \
+    $(DIROBJ)\enc\frame.obj \
+    $(DIROBJ)\enc\iterator.obj \
+    $(DIROBJ)\enc\layer.obj \
+    $(DIROBJ)\enc\picture.obj \
+    $(DIROBJ)\enc\quant.obj \
+    $(DIROBJ)\enc\syntax.obj \
+    $(DIROBJ)\enc\tree.obj \
+    $(DIROBJ)\enc\webpenc.obj \
+    $(DIROBJ)\mux\mux.obj \
+    $(DIROBJ)\utils\bit_reader.obj \
+    $(DIROBJ)\utils\bit_writer.obj \
+    $(DIROBJ)\utils\thread.obj \
+    $(RESOURCE) \
 
 EXAMPLES_OBJS = \
-	$(DIROBJ)\examples\cwebp.obj \
-	$(DIROBJ)\examples\dwebp.obj \
-	$(DIROBJ)\examples\webpmux.obj
+    $(DIROBJ)\examples\cwebp.obj \
+    $(DIROBJ)\examples\dwebp.obj \
+    $(DIROBJ)\examples\webpmux.obj
 
 all: $(DIRLIB)\$(TARGET) $(DIRBIN)\dwebp.exe $(DIRBIN)\cwebp.exe \
      $(DIRBIN)\webpmux.exe
@@ -191,7 +195,8 @@ all: $(DIRLIB)\$(TARGET) $(DIRBIN)\dwebp.exe $(DIRBIN)\cwebp.exe \
 # > nmake /f Makefile.vc CFG=release-static experimental
 experimental:
 	$(MAKE) /f Makefile.vc \
-	    CFG=$(CFG) CFLAGS="$(CFLAGS) /DWEBP_EXPERIMENTAL_FEATURES" /$(MAKEFLAGS)
+	    CFG=$(CFG) \
+	    CFLAGS="$(CFLAGS) /DWEBP_EXPERIMENTAL_FEATURES" /$(MAKEFLAGS)
 
 $(DIRLIB)\$(TARGET): $(X_OBJS)
 	$(LNK) $(LFLAGS) $(X_OBJS)
@@ -222,17 +227,18 @@ $(DIROBJ)\$(DLLINC):
 	$(CC) $(CFLAGS) /Fo"$@"  $<
 {src\dec}.c{$(DIROBJ)\dec}.obj:
 	$(CC) $(CFLAGS) /Fo"$@"  $<
-{src\enc}.c{$(DIROBJ)\enc}.obj:
-	$(CC) $(CFLAGS) /Fo"$@"  $<
 {src\dsp}.c{$(DIROBJ)\dsp}.obj:
 	$(CC) $(CFLAGS) /Fo"$@"  $<
-{src\utils}.c{$(DIROBJ)\utils}.obj:
+{src\enc}.c{$(DIROBJ)\enc}.obj:
 	$(CC) $(CFLAGS) /Fo"$@"  $<
 {src\mux}.c{$(DIROBJ)\mux}.obj:
 	$(CC) $(CFLAGS) /Fo"$@"  $<
+{src\utils}.c{$(DIROBJ)\utils}.obj:
+	$(CC) $(CFLAGS) /Fo"$@"  $<
 
 {$(DIROBJ)\examples}.obj{$(DIRBIN)}.exe:
-	$(LNKEXE) $(LDFLAGS) /OUT:"$@" $<  ole32.lib windowscodecs.lib shlwapi.lib $(DIRLIB)\$(TARGET)
+	$(LNKEXE) $(LDFLAGS) /OUT:"$@" $< \
+	    ole32.lib windowscodecs.lib shlwapi.lib $(DIRLIB)\$(TARGET)
 	$(MT) -manifest $@.manifest -outputresource:$@;1
 	del $@.manifest
 
