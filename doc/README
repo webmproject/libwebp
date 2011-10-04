@@ -9,6 +9,7 @@ automatically.
 [1]: http://kramdown.rubyforge.org/
 [2]: http://rubygems.org/
 
-HTML generation can then be done from the project root, like so:
+HTML generation can then be done from the project root:
 
-$ kramdown doc/webp-container-spec.txt --template doc/template.html > doc/output/webp-container-spec.html
+$ kramdown doc/webp-container-spec.txt --template doc/template.html > \
+  doc/output/webp-container-spec.html
