@@ -65,6 +65,13 @@ DIROBJ = $(DIRBASE)\obj
 DIRLIB = $(DIRBASE)\lib
 DIRINC = $(DIRBASE)\include
 DIRBIN = $(DIRBASE)\bin
+OUTPUT_DIRS = $(DIRBIN) $(DIRINC) $(DIRLIB) \
+              $(DIROBJ)\dec \
+              $(DIROBJ)\dsp \
+              $(DIROBJ)\enc \
+              $(DIROBJ)\examples \
+              $(DIROBJ)\mux \
+              $(DIROBJ)\utils \
 
 # Target configuration
 !IF "$(CFG)" == "release-static"
@@ -190,8 +197,7 @@ $(DIRLIB)\$(TARGET): $(X_OBJS)
 	$(LNK) $(LFLAGS) $(X_OBJS)
 	-xcopy $(DIROBJ)\*.pdb $(DIRLIB) /y
 
-$(X_OBJS): $(DIROBJ)\enc $(DIROBJ)\dec $(DIROBJ)\dsp $(DIROBJ)\mux \
-    $(DIROBJ)\utils $(DIRLIB) $(DIRINC) $(DIRBIN)
+$(X_OBJS): $(OUTPUT_DIRS)
 
 !IF "$(DLLBUILD)" == "TRUE"
 $(X_OBJS): $(DIROBJ)\$(DLLINC)
@@ -199,34 +205,10 @@ clean::
 	@-erase /s $(DIROBJ)\$(DLLINC) 2> NUL
 !ENDIF
 
-$(EXAMPLES_OBJS): $(DIROBJ)\examples $(DIRLIB)\$(TARGET)
+$(EXAMPLES_OBJS): $(DIRLIB)\$(TARGET)
 
-$(DIROBJ)\enc:
-	@if not exist "$(DIROBJ)\enc" mkdir $(DIROBJ)\enc
-
-$(DIROBJ)\examples:
-	@if not exist "$(DIROBJ)\examples" mkdir $(DIROBJ)\examples
-
-$(DIROBJ)\dec:
-	@if not exist "$(DIROBJ)\dec" mkdir $(DIROBJ)\dec
-
-$(DIROBJ)\dsp:
-	@if not exist "$(DIROBJ)\dsp" mkdir $(DIROBJ)\dsp
-
-$(DIROBJ)\mux:
-	@if not exist "$(DIROBJ)\mux" mkdir $(DIROBJ)\mux
-
-$(DIROBJ)\utils:
-	@if not exist "$(DIROBJ)\utils" mkdir $(DIROBJ)\utils
-
-$(DIRLIB):
-	@if not exist "$(DIRLIB)" mkdir $(DIRLIB)
-
-$(DIRINC):
-	@if not exist "$(DIRINC)" mkdir $(DIRINC)
-
-$(DIRBIN):
-	@if not exist "$(DIRBIN)" mkdir $(DIRBIN)
+$(OUTPUT_DIRS):
+	@if not exist "$(@)" mkdir "$(@)"
 
 # generate a helper include to define WEBP_EXTERN suitable for the DLL build
 $(DIROBJ)\$(DLLINC):
