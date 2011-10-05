@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "AAAAFn//388\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000962
+      },
+      "writtenOn": "2011-10-05T10:57:24Z",
+      "side": 1,
+      "message": "Nit: this sounds as if the document covers only the new features, while it covers both the old and the new ones.",
+      "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAFn//3+E\u003d",
         "filename": "doc/webp-container-spec.txt",
         "patchSetId": 1
@@ -30,6 +47,41 @@
       "writtenOn": "2011-10-05T04:34:16Z",
       "side": 1,
       "message": "I think we should just remove this heading \u0026 promote the heading \"Chunks layout\" here.\n\nThis will make sure that we use the terminology \"images without special layout\" \u0026 \"images with special layout\" throughout to distinguish the two types. [Another term \"Single-image webp file\" is confusing].",
+      "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//384\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000962
+      },
+      "writtenOn": "2011-10-05T10:57:24Z",
+      "side": 1,
+      "message": "\"Single-image WebP file\" is something that is not a \"Multi-image WebP file\", that is a like a *.tar of multiple WebP files. However, as multi-image files are not implemented yet and the description has been removed, IMHO this section should be removed as well (as well the other use of term \u0027single-image file\u0027)",
+      "parentUuid": "AAAAFn//3+E\u003d",
+      "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//380\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1000962
+      },
+      "writtenOn": "2011-10-05T10:57:24Z",
+      "side": 1,
+      "message": "As we currently define only single-image WebP files, I think we should s/single-image WebP file/WebP file/.",
       "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -64,6 +116,40 @@
       "writtenOn": "2011-10-05T04:34:16Z",
       "side": 1,
       "message": "haveTile -\u003e hasTile (for others too).",
+      "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//38s\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1000962
+      },
+      "writtenOn": "2011-10-05T10:57:24Z",
+      "side": 1,
+      "message": "IMHO, this tells little to an implementator or a reader or writer how to proceed. Maybe write something like: writers shouldn\u0027t create such inconsistent files, while readers should ignore the ICCP chunk if the flag it not set?",
+      "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//38w\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1000962
+      },
+      "writtenOn": "2011-10-05T10:57:24Z",
+      "side": 1,
+      "message": "The current specification doesn\u0027t cover the rotation or symmetry - IMHO we should either add it (maybe noting that it\u0027s not supported yet) or remove it from here and everywhere else. Which should we do? As in both cases this is something bigger, if we don\u0027t want to do it in this review, I can do it later.",
       "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
