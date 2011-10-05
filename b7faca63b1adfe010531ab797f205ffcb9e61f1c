@@ -16,6 +16,57 @@
       "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//3+E\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2011-10-05T04:34:16Z",
+      "side": 1,
+      "message": "I think we should just remove this heading \u0026 promote the heading \"Chunks layout\" here.\n\nThis will make sure that we use the terminology \"images without special layout\" \u0026 \"images with special layout\" throughout to distinguish the two types. [Another term \"Single-image webp file\" is confusing].",
+      "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//3+A\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2011-10-05T04:34:16Z",
+      "side": 1,
+      "message": "Perhaps we could have all types of chunks under one heading, say \"Chunk Types\"?",
+      "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//3+I\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2011-10-05T04:34:16Z",
+      "side": 1,
+      "message": "haveTile -\u003e hasTile (for others too).",
+      "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
