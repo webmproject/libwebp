@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAFn//1ao\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2011-10-07T23:17:41Z",
+      "side": 1,
+      "message": "the character after canvas doesn\u0027t render well in html (â†)",
+      "revId": "43e9073a9343b3e57ccc899446aacef6c755b24e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//1ak\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2011-10-07T23:17:41Z",
+      "side": 1,
+      "message": "infinity needs to be html\u0027ized",
+      "revId": "43e9073a9343b3e57ccc899446aacef6c755b24e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
