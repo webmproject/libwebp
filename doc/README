@@ -1,0 +1,5 @@
+Generate HTML Container Spec from Text Source
+=============================================
+
+$ kramdown doc/webp-container-spec.txt --template doc/template.html > doc/output/webp-container-spec.html
+
