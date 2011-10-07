@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAFn//1dA\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000909
+      },
+      "writtenOn": "2011-10-07T23:32:52Z",
+      "side": 1,
+      "message": "Made a more specific reference to this problem, in next push of TODO.",
+      "parentUuid": "AAAAFn//388\u003d",
+      "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAFn//3+E\u003d",
         "filename": "doc/webp-container-spec.txt",
         "patchSetId": 1
@@ -71,6 +89,42 @@
     },
     {
       "key": {
+        "uuid": "AAAAFn//1bQ\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000909
+      },
+      "writtenOn": "2011-10-07T23:32:52Z",
+      "side": 1,
+      "message": "Problems with document hierarchy noted in TODO.",
+      "parentUuid": "AAAAFn//3+E\u003d",
+      "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//1bE\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000909
+      },
+      "writtenOn": "2011-10-07T23:32:52Z",
+      "side": 1,
+      "message": "Agree. Made a more specific reference to this problem, in next push of TODO.",
+      "parentUuid": "AAAAFn//384\u003d",
+      "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAFn//380\u003d",
         "filename": "doc/webp-container-spec.txt",
         "patchSetId": 1
@@ -82,6 +136,24 @@
       "writtenOn": "2011-10-05T10:57:24Z",
       "side": 1,
       "message": "As we currently define only single-image WebP files, I think we should s/single-image WebP file/WebP file/.",
+      "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//1bA\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1000909
+      },
+      "writtenOn": "2011-10-07T23:32:52Z",
+      "side": 1,
+      "message": "Agree, as mentioned above.",
+      "parentUuid": "AAAAFn//380\u003d",
       "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -105,6 +177,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAFn//1aw\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1000909
+      },
+      "writtenOn": "2011-10-07T23:32:52Z",
+      "side": 1,
+      "message": "Agree.  Fixing the document hierarchy is noted in TODO.",
+      "parentUuid": "AAAAFn//3+A\u003d",
+      "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAFn//3+I\u003d",
         "filename": "doc/webp-container-spec.txt",
         "patchSetId": 1
@@ -122,6 +212,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAFn//1aY\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1000909
+      },
+      "writtenOn": "2011-10-07T23:32:52Z",
+      "side": 1,
+      "message": "Noted.  s/_have([A-Z])/_has$1/g coming soon.",
+      "parentUuid": "AAAAFn//3+I\u003d",
+      "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAFn//38s\u003d",
         "filename": "doc/webp-container-spec.txt",
         "patchSetId": 1
@@ -133,6 +241,24 @@
       "writtenOn": "2011-10-05T10:57:24Z",
       "side": 1,
       "message": "IMHO, this tells little to an implementator or a reader or writer how to proceed. Maybe write something like: writers shouldn\u0027t create such inconsistent files, while readers should ignore the ICCP chunk if the flag it not set?",
+      "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//1aQ\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1000909
+      },
+      "writtenOn": "2011-10-07T23:32:52Z",
+      "side": 1,
+      "message": "Improving this depends on WebP\u0027s stance on robustness.  Suspect that writers SHOULD set the bit, and readers MAY trust it.",
+      "parentUuid": "AAAAFn//38s\u003d",
       "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
