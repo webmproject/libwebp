@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAFn//1ac\u003d",
+        "filename": "doc/README",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2011-10-07T23:24:07Z",
+      "side": 1,
+      "message": "this line can be broken as well, just add a \\ (backslash) after template.html and indent the remainder on the next line",
+      "revId": "03bec9e0c0c551143aee86c386252e874814d243",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
