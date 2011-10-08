@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAFn//1XU\u003d",
+        "filename": "doc/TODO",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2011-10-08T00:46:46Z",
+      "side": 1,
+      "message": "trailing whitespace",
+      "revId": "65acca73dc2cdac9a2d68a3b417e95539258ecb2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//1XQ\u003d",
+        "filename": "doc/TODO",
+        "patchSetId": 3
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2011-10-08T00:46:46Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "65acca73dc2cdac9a2d68a3b417e95539258ecb2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//1XM\u003d",
+        "filename": "doc/TODO",
+        "patchSetId": 3
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2011-10-08T00:46:46Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "65acca73dc2cdac9a2d68a3b417e95539258ecb2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//1XI\u003d",
+        "filename": "doc/TODO",
+        "patchSetId": 3
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2011-10-08T00:46:46Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "65acca73dc2cdac9a2d68a3b417e95539258ecb2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
