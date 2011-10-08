@@ -46,7 +46,7 @@ CPPFLAGS="$PNG_INCLUDES $CPPFLAGS"
 LIBS="$PNG_LIBS $LIBS"
 
 AC_CHECK_HEADER(png.h,
-  AC_CHECK_LIB(png, main,
+  AC_CHECK_LIB(png, png_get_libpng_ver,
                [PNG_LIBS="$PNG_LIBS -lpng"
                 PNG_INCLUDES="$PNG_INCLUDES -DWEBP_HAVE_PNG"
                 AC_DEFINE(WEBP_HAVE_PNG, [1], [Set to 1 if PNG library is installed])
