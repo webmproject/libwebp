@@ -265,6 +265,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAFn//1To\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1000962
+      },
+      "writtenOn": "2011-10-08T14:58:21Z",
+      "side": 1,
+      "message": "IMHO, if we write it this way, the flags will become useless: some writes will forget to set them, so readers will start ignoring them to display \"correctly\" more images. That\u0027s why I would prefer if readers had to ignore extra sections if the corresponding flag is not set - that would make the flags reliable. But that\u0027s probably not a discussion for this patch?",
+      "parentUuid": "AAAAFn//1aQ\u003d",
+      "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAFn//38w\u003d",
         "filename": "doc/webp-container-spec.txt",
         "patchSetId": 1
