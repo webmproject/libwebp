@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAFn//1aI\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1000909
+      },
+      "writtenOn": "2011-10-08T00:04:07Z",
+      "side": 1,
+      "message": "(Also applies to \"infinity\", below)\nWhich browser, because that shouldn\u0027t happen.  Those are legitimate UTF-8 glyphs.  Encoding them won\u0027t work visually because they appear in an HTML \u003ccode\u003e block -- so $larr; and \u0026infin; (or numeric representations) would render literally. It could be that your client won\u0027t honor the charset declared in \u003cmeta charset\u003d\"utf-8\"\u003e but would honor a response header.",
+      "parentUuid": "AAAAFn//1ao\u003d",
+      "revId": "43e9073a9343b3e57ccc899446aacef6c755b24e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAFn//1ak\u003d",
         "filename": "doc/webp-container-spec.txt",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2011-10-07T23:17:41Z",
       "side": 1,
       "message": "infinity needs to be html\u0027ized",
+      "revId": "43e9073a9343b3e57ccc899446aacef6c755b24e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//1Z4\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1000909
+      },
+      "writtenOn": "2011-10-08T00:04:07Z",
+      "side": 1,
+      "message": "See above.",
+      "parentUuid": "AAAAFn//1ak\u003d",
       "revId": "43e9073a9343b3e57ccc899446aacef6c755b24e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
