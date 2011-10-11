@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAFn//0qA\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 5
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1000909
+      },
+      "writtenOn": "2011-10-11T00:25:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAFn//0rY\u003d",
+      "revId": "d1bb027eab7592b833ee913e88e22e08b90297c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAFn//0rM\u003d",
         "filename": "doc/webp-container-spec.txt",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2011-10-11T00:13:32Z",
       "side": 1,
       "message": "s/specification/specifications/\n\nShould \u0027flags\u0027 be italicized here?",
+      "revId": "d1bb027eab7592b833ee913e88e22e08b90297c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//0qM\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 5
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1000909
+      },
+      "writtenOn": "2011-10-11T00:25:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAFn//0rM\u003d",
       "revId": "d1bb027eab7592b833ee913e88e22e08b90297c2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAFn//0qI\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 5
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1000909
+      },
+      "writtenOn": "2011-10-11T00:25:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAFn//0rE\u003d",
+      "revId": "d1bb027eab7592b833ee913e88e22e08b90297c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAFn//0rA\u003d",
         "filename": "doc/webp-container-spec.txt",
         "patchSetId": 5
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAFn//0qE\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 5
+      },
+      "lineNbr": 438,
+      "author": {
+        "id": 1000909
+      },
+      "writtenOn": "2011-10-11T00:25:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAFn//0rA\u003d",
+      "revId": "d1bb027eab7592b833ee913e88e22e08b90297c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAFn//0qk\u003d",
         "filename": "doc/webp-container-spec.txt",
         "patchSetId": 5
@@ -81,6 +153,24 @@
       "writtenOn": "2011-10-11T00:16:00Z",
       "side": 1,
       "message": "I\u0027m not sure about the wording of these constraints, but the or appears to have been dropped from this line, but not tileCanvasX",
+      "revId": "d1bb027eab7592b833ee913e88e22e08b90297c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//0p0\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 5
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1000909
+      },
+      "writtenOn": "2011-10-11T00:25:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAFn//0qk\u003d",
       "revId": "d1bb027eab7592b833ee913e88e22e08b90297c2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
