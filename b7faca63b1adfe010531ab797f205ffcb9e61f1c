@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAFn//0bE\u003d",
+        "filename": "doc/README",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1000909
+      },
+      "writtenOn": "2011-10-11T16:51:05Z",
+      "side": 1,
+      "message": "Done. Removed.",
+      "parentUuid": "AAAAFn//3+0\u003d",
+      "revId": "b7faca63b1adfe010531ab797f205ffcb9e61f1c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAFn//388\u003d",
         "filename": "doc/webp-container-spec.txt",
         "patchSetId": 1
