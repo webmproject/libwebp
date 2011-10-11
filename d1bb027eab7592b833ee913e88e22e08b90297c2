@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAFn//0rY\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 5
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2011-10-11T00:13:32Z",
+      "side": 1,
+      "message": "\u0027tile_params.tileCanvasX \u003d tile_params.tileCanvasY \u003d 0\u0027 should be on its own line.",
+      "revId": "d1bb027eab7592b833ee913e88e22e08b90297c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//0rM\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 5
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2011-10-11T00:13:32Z",
+      "side": 1,
+      "message": "s/specification/specifications/\n\nShould \u0027flags\u0027 be italicized here?",
+      "revId": "d1bb027eab7592b833ee913e88e22e08b90297c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//0rE\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 5
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2011-10-11T00:13:32Z",
+      "side": 1,
+      "message": "\u0027;\u0027 and \u0027--\u0027 is used inconsistently between the canvas(Width|Height) lines, choose one.",
+      "revId": "d1bb027eab7592b833ee913e88e22e08b90297c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//0rA\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 5
+      },
+      "lineNbr": 438,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2011-10-11T00:13:32Z",
+      "side": 1,
+      "message": "s/what may/which may/",
+      "revId": "d1bb027eab7592b833ee913e88e22e08b90297c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
