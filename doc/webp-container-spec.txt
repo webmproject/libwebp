@@ -1,8 +1,8 @@
 <!--
 
-This document is encoded in Markdown, a light-duty markup scheme, and is
-optimized for the [kramdown](http://kramdown.rubyforge.org/)
-transformer.
+Although you may be viewing an alternate representation, this document
+is sourced in Markdown, a light-duty markup scheme, and is optimized for
+the [kramdown](http://kramdown.rubyforge.org/) transformer.
 
 See the accompanying README. External link targets are referenced at the
 end of this file.
@@ -13,7 +13,7 @@ end of this file.
 WebP Container Specification
 ============================
 
-_Working Draft, v0.1, 20110926_
+_Working Draft, v0.1, 20111004_
 
 
 * TOC placeholder
@@ -23,59 +23,56 @@ _Working Draft, v0.1, 20110926_
 Introduction
 ------------
 
-WebP is a still image format that uses the VP8 key frame encoding (and,
-possibly, other codecs in the future) to compress image data in a lossy
-way. The VP8 encoding should make it more efficient than currently used
-formats. It is optimized for fast image transfer over the network
+WebP is a still image format that uses the VP8 key frame encoding, and
+possibly other encodings in the future, to compress image data in a
+lossy way. The VP8 encoding should make it more efficient than currently
+used formats. It is optimized for fast image transfer over the network
 (e.g., for websites). However, it also aims for feature parity (like
 Color Profile, XMP Metadata, Animation, etc.) with other formats. This
-document describes the structure of such a file.
+document describes the structure of a WebP file.
 
-The first version of WebP handled only the basic use-case -- a file
-having a single image (being one VP8 key frame) with no metadata.
-However, the use of a RIFF container allowed to extend it. This
-document extends it by additionally introducing support for:
+The first version of WebP handled only the basic use case:  a file
+containing a single image (being one VP8 key frame), with no metadata.
+The use of a RIFF container permits additional feature support.  This
+document describes additional support for:
 
   * **Metadata and color profiles.** We specify chunks that can contain
-    this information, like can other popular formats.
+    this information, as other popular formats do.
 
   * **Tiling.** A single VP8 frame has an inherent limitation for width
-    or height of 2^14 pixels and a 512kB limit on the size of first
+    or height of 2^14 pixels, and a 512kB limit on the size of the first
     compressed partition. To support larger images, we support images
     that are composed of multiple tiles, each encoded as a separate VP8
-    frame. All tiles form logically a single image -- they have common
-    metadata, color profile etc. Tiling may also improve efficiency for
-    larger images -- grass can be encoded differently than sky.
+    frame. All tiles form logically a single image:  they have common
+    metadata, color profile, etc. Tiling may also improve efficiency for
+    larger images, e.g., grass can be encoded differently than sky.
 
   * **Animation.** An image may have pauses between frames, making it
-    an animation. Files not using these new features are backward
-    compatible with the original format. Using these features will
-    produce files that are not compatible with older programs.
+    an animation.
+
+Files not using these new features are backward compatible with the
+original format. Use of these features will produce files that are not
+compatible with older programs.
 
 
-Terminology
------------
+Terminology &amp; Basics
+------------------------
 
-A WebP file contains either a still image (i.e. an encoded matrix of
-pixels) or an animation (see below) with, possibly, a color profile,
-metadata etc. In case we need to refer only to the matrix of pixels, we
-will call is the **_canvas_** of the image.
+A WebP file contains either a still image (i.e., an encoded matrix of
+pixels) or an animation (see below), with possibly a color profile,
+metadata, etc. In case we need to refer only to the matrix of pixels,
+we will call it the **_canvas_** of the image.
 
 The canvas of an image is built from one or multiple tiles. Each tile
-is a separately encoded VP8 key frame (other codec are possible in the
-future). Building an image from several tiles allows to overcome the
-size limitations of a single VP8 frame. Tiling is supposed to be an
-internal detail of the file -- they are not supposed to be exposed to
-the user.
+is a separately encoded VP8 key frame (other encodings are possible in
+the future). Building an image from several tiles allows us to overcome
+the size limitations of a single VP8 frame. Tiles are an internal detail
+of the file:  they are not supposed to be exposed to the user.
 
+Below are additional terms used throughout this document:
 
-Basics
-------
-
-This section introduces basic terms used throughout the document.
-
-Code reading WebP files will be referred to as **_readers_**, while
-code writing them will be referred as **_writers_**.
+Code that reads WebP files is referred to as a **_reader_**, while
+code that writes them is referred to as a **_writer_**.
 
 A 16-bit, little-endian, unsigned integer will be denoted as
 **_uint16_**.
@@ -96,66 +93,66 @@ The basic element of a RIFF file is a **_chunk_**. It consists of:
 
 A chunk with a tag "ABCD" will be also called a **_chunk of type_**
 "ABCD". Note that, in this specification, all chunk tag characters are
-in file order, not in byte order of an uint32 of any particular
+in file order, not in byte order of a uint32 of any particular
 architecture.
 
-Note that the padding **MUST** be also added to the last chunk of the
-file.
+Note that the padding **MUST** be added to the last chunk of the file.
 
 A **_list of chunks_** is a concatenation of multiple chunks. We will
-call the first chunk as having _position_ 0, the second as position 1
-etc. By _chunk with index 0 among "ABCD"_ we mean the first chunk among
-the chunks of type "ABCD" in the list, the _chunk with index 1 among
-"ABCD"_ is the second such chunk, etc.
+refer to the first chunk as having _position_ 0, the second as position
+1, etc. By _chunk with index 0 among "ABCD"_ we mean the first chunk
+among the chunks of type "ABCD" in the list, the _chunk with index 1
+among "ABCD"_ is the second such chunk, etc.
 
 A WebP file **MUST** begin with a single chunk with a tag "RIFF". All
-other defined chunks are within this chunk. It **SHOULD NOT** contain
-anything after it.
+other defined chunks are contained within this chunk. The file **SHOULD
+NOT** contain anything after it.
 
-The maximum size of RIFF's _ckSize_ is 2^32 -- 10 bytes (i.e. the size
-of the whole file is at most 4GiB -- 2 bytes).
+The maximum size of RIFF's _ckSize_ is 2^32 minus 10 bytes.  The size
+of the whole file is at most 4GiB minus 2 bytes.
 
 **Note:** some RIFF libraries are said to have bugs when handling files
 larger than 1GiB or 2GiB. If you are using an existing library, check
 that it handles large files correctly.
 
-The first four bytes of the RIFF chunk contents (i.e. bytes 8-11 of the
+The first four bytes of the RIFF chunk contents (i.e., bytes 8-11 of the
 file) **MUST** be the ASCII string "WEBP". They are followed by a list
 of chunks. Note that as the size of any chunk is even, the size of the
 RIFF chunk is also even.
 
-The content of the chunks in that list will be described in the
+The contents of the chunks in that list will be described in the
 following sections.
 
 **Note:** RIFF has a convention that all-uppercase chunks are standard
-chunks that apply to any RIFF file format, while chunks specific for a
+chunks that apply to any RIFF file format, while chunks specific to a
 file format are all-lowercase. WebP doesn't follow this convention.
 
 
 Single-image WebP Files
 -----------------------
 
-First, we will describe a subset of WebP files -- files containing only
-one image (later, we will use it to define multi-image files -- file
-having several different images).
+First, we will describe a subset of WebP files:  files containing only
+one image. Later, we will define multi-image files, which contain
+several images.
 
 
 ### Chunks Layout
 
-This section describes what chunks and in what order may appear in a
-single-image WebP file. The content of these chunks will be described
+This section describes which chunks may appear in a single-image WebP
+file, and their order. The contents of these chunks will be described
 in subsequent sections.
 
-The first chunk inside the RIFF chunk **MUST** be with a tag of "VP8 "
-(note the space as the last character) or "VP8X". Other tags for the
-first chunk **MAY** be introduced by future specifications if we add
-new codecs. This tag of the first chunk determines which of the two
-possible layouts is used.
+The first chunk inside the RIFF chunk **MUST** have a tag of "VP8 "
+(note that the fourth character is a space, and is significant) or
+"VP8X". Other tags for the first chunk **MAY** be introduced by future
+specifications if new encodings are added. This tag of the first chunk
+determines which of the two possible layouts is used.
 
-**Rationale:** we fix the possible tags of the first chunk so that it
+**Rationale:**  We fix the possible tags of the first chunk so that it
 is possible to introduce other codecs, to keep the "WEBP" signature at
-the beginning of RIFF chunk, while still being able to check the codec
-used by the image by inspecting the byte stream at a fixed position.
+the beginning of the RIFF chunk while still being able to check the
+codec used by the image by inspecting the byte stream at a fixed
+position.
 
 The two possible layouts will be called _images without special layout_
 and _images with special layout_.
@@ -174,7 +171,7 @@ Such images consist of:
 
   * A "VP8 " chunk with the bitstream of the single tile.
 
-**Example:** An example layout of such a file looks as follows:
+**Example:** An example layout of such a file is as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 RIFF/WEBP
@@ -184,16 +181,14 @@ RIFF/WEBP
 
 #### Images With Special Layout
 
-If the first subchunk of RIFF has the tag "VP8X" (other tags may be
-introduced by future specifications, if new codecs are added), the file
-contains an _image with special layout_.
+If the first subchunk of RIFF has the tag "VP8X", the file contains an
+_image with special layout_.
 
-**Note:** older readers are not supporting images with special layout
-and will fail for images having them.
+**Note:**  Older readers may not support images with special layout.
 
 Such an image consists of:
 
-  * A "VP8X" chunk with information about features used in this file.
+  * A "VP8X" chunk with information about features used in the file.
 
   * An optional "ICCP" chunk with color profile.
 
@@ -203,34 +198,35 @@ Such an image consists of:
 
   * An optional "META" chunk with XMP metadata.
 
-  * Some other chunks may be defined by future specifications and placed
-    anywhere in the file.
+  * Some other chunk types may be defined by future specifications and
+    placed anywhere in the file.
 
 As will be described in the "VP8X" chunk description, by checking a
 flag one can distinguish animated and non-animated images. A
 non-animated image has exactly one frame. An animated one may have
 multiple frames. Data for each frame consists of:
 
-  * An optional "FRM " (note the space as the last character) chunk with
-    animation frame metadata. It **MUST** be present in animated images
-    at the beginning of data for that frame. It **MUST NOT** be present
-    in non-animated images.
+  * An optional "FRM " (fourth character is a significant space) chunk
+    with animation frame metadata. It **MUST** be present in animated
+    images at the beginning of data for that frame. It **MUST NOT** be
+    present in non-animated images.
 
   * An optional "TILE" chunk with tile position metadata. It **MUST** be
-    present at the beginning of data of image that's represented as
+    present at the beginning of data for an image that's represented as
     multiple tile images.
 
   * A "VP8 " chunk with the bitstream of the tile.
 
 All chunks **MUST** be placed in the same order as listed above (except
-for unknown chunks, that **MAY** appear anywhere). If a chunk appears
-in a wrong place, the file is invalid, but readers **MAY** parse the
-file ignoring the chunks that come too late.
+for unknown chunks, which **MAY** appear anywhere). If a chunk appears
+in the wrong place, the file is invalid, but readers **MAY** parse the
+file, ignoring the chunks that come too late.
 
-**Rationale:** setting the order of chunks should allow to quickly stop
-the search for e.g., the ICCP if it is not present in the file. The
-rule of ignoring late chunks should make programs that needs to do a
-full search give the same results as the ones stopping early.
+**Rationale:**  Setting the order of chunks should allow quicker file
+parsing. For example, if an ICCP chunk does not appear in its required
+position, a decoder can choose to stop searching for it.  The rule of
+ignoring late chunks should make programs that need to do a full search
+give the same results as the ones stopping early.
 
 **Example:** An example layout of a non-animated, tiled image may look
 as follows:
@@ -266,9 +262,9 @@ RIFF/WEBP
 
 ### Assembling the Canvas from Tiles and Animation
 
-Contents of the chunks will be described in details in subsequent
-section. Here, we provide an overview how they are used to assemble the
-canvas. The notation _VP8X.canvasWidth_ means the field in the "VP8X"
+Contents of the chunks will be described in subsequent sections. Here we
+provide an overview of how they are used to assemble the canvas. The
+notation _VP8X.canvasWidth_ means the field in the "VP8X"
 described as _canvasWidth_.
 
 Decoding a non-animated canvas **MUST** be equivalent to the following
@@ -310,7 +306,8 @@ for LOOP.loop = 0, ..., LOOP.loopCount-1
             assert tile_params.tileCanvasY >= current_FRM.frameY
             assert tile_params.tileCanvasX + chunk.tileWidth >= current_FRM.frameX + current_FRM.frameWidth
             assert tile_params.tileCanvasY + chunk.tileHeight >= current_FRM.frameX + current_FRM.frameHeight
-            render image in chunk in canvas with top-left corner in (tile_params.tileCanvasX, tile_params.tileCanvasY) using the isometry in VP8X.flags.rotationAndSymmetry.            tile_params.tileCanvasX = tile_params.tileCanvasY = 0
+            render image in chunk in canvas with top-left corner in (tile_params.tileCanvasX, tile_params.tileCanvasY) using the isometry in VP8X.flags.rotationAndSymmetry.
+            tile_params.tileCanvasX = tile_params.tileCanvasY = 0
         Ignore unknown chunks
 canvas contains the decoded canvas.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -323,27 +320,28 @@ decode the file.
 ### Bitstream Chunks (VP8)
 
 These chunks contain compressed image data. Currently, the only allowed
-bitstream is VP8 and uses "VP8 " (note the space as the last character)
-as its tag. We will refer to all chunks with this tag as **_bitstream
-chunks_**. As described earlier, images without special layout have a
-single bitstream chunk as the first subchunk of RIFF, while images with
-special layout may contain several of them -- one for each tile.
+bitstream is VP8, using "VP8 " (note the significant fourth-character
+space) as its tag. We will refer to all chunks with this tag as
+**_bitstream chunks_**. As described earlier, images without special
+layout have a single bitstream chunk as the first subchunk of RIFF,
+while images with special layout may contain several of them, one for
+each tile.
 
 The content of a "VP8 " chunk **MUST** be one VP8 key frame (with
-optional padding -- see below).
+optional padding.  See below).
 
-The current draft of a VP8 specification can be found at
-[IETF.org][vp8spec]. Note that the VP8 frame header contains the VP8
-frame width and height. It is assumed to be the width and height of the
-tile.
+The current [VP8 Data Format and Decoding Guide][vp8spec] can be found
+at the IETF website, <http://www.ietf.org/>. Note that the VP8 frame
+header contains the VP8 frame width and height. That is assumed to be
+the width and height of the tile.
 
-The VP8 specification specifies how to decode the image into Y'CbCr
+The VP8 specification describes how to decode the image into Y'CbCr
 format. To convert to RGB, Rec. 601 **SHOULD** be used.
 
 For compatibility with older readers, if the size of the frame is odd,
 writers **SHOULD** append a padding byte (preferably `0`) inside the
 chunk contents, making the chunk's _ckSize_ even. Newer readers
-**MUST** support odd-sized tile chunks.
+**MUST** support odd-sized bitstream chunks.
 
 
 ### VP8X Chunk (Special Layout)
@@ -354,33 +352,33 @@ WebP.
 
 The content of the chunk is as follows:
 
-  * **uint32** _flags_. The following bits are currently used (with `0`
+  * **uint32** flags. The following bits are currently used (with `0`
     being the least significant bit):
 
-    * bit 0: _haveTile_: set if the image is represented by Tiles.
+    * bit 0: _hasTile_:  Set if the image is represented by Tiles.
 
-    * bit 1: _haveAnimation_: set if the file is an animation. Data in
+    * bit 1: _hasAnimation_:  Set if the file is an animation. Data in
       "LOOP" and "FRM " chunks should be used to control the animation.
 
-    * bit 2: _haveIccp_: set if the file contains a "ICCP" chunk with a
+    * bit 2: _hasIccp_:  Set if the file contains an "ICCP" chunk with a
       color profile. If a file contains an "ICCP" chunk but this bit is
       not set, the error is flagged while constructing the
       Mux-Container.
 
-    * bit 3: _haveMetadata_: set if the file contains a "META" chunk
+    * bit 3: _hasMetadata_:  Set if the file contains a "META" chunk
       with a XMP metadata. If a file contains an "META" chunk but this
       bit is not set, the error is flagged while constructing the
-      Mux-Container. FIXME
+      Mux-Container.
 
-Future specification **MAY** define other bits in flags. Bits not
+Future specifications **MAY** define other bits in flags. Bits not
 defined by this specification **MUST** be preserved when modifying the
 file.
 
-  * **uint32** _canvasWidth_: width of the canvas in pixels (after the
-    optional rotation or symmetry -- see below).
+  * **uint32** _canvasWidth_:  Width of the canvas in pixels (after the
+    optional rotation or symmetry; see below).
 
-  * **uint32** _canvasHeight_: height of the canvas in pixels (after the
-    optional rotation or symmetry see below).
+  * **uint32** _canvasHeight_:  Height of the canvas in pixels (after
+    the optional rotation or symmetry; see below).
 
 Future specifications **MAY** add more fields. If a chunk of larger size
 is found, programs **MUST** ignore the extra bytes but **MUST** preserve
@@ -392,14 +390,14 @@ them when modifying the file.
 For images that are animations, this chunk contains the global
 parameters of the animation.
 
-This chunk **MUST** appear if the _haveAnimation_ flag in chunk VP8X is
-set. If the _haveAnimation_ flag is not set and this chunk is present,
+This chunk **MUST** appear if the _hasAnimation_ flag in chunk VP8X is
+set. If the _hasAnimation_ flag is not set and this chunk is present,
 it **MUST** be ignored.
 
 The content of the chunk is as follows:
 
-  * **uint16** _loopCount_: For animations, the number of times to loop
-    this animation. `0` means infinite.
+  * **uint16** _loopCount_:  For animations, the number of times to loop
+    the animation. `0` means infinitely.
 
 Future specifications **MAY** add more fields. If a chunk of larger
 size is found, programs **MUST** ignore the extra bytes but **MUST**
@@ -413,39 +411,39 @@ parameters of the animation.
 
 The content of the chunk is as follows:
 
-  * **uint32** _frameX_: x coordinate of the upper left corner of the
-    frame. For images using the VP8 codec, it **MUST** be divisible by
-    `32`. Other codecs **MAY** specify other constraints. Described in
-    more details later.
+  * **uint32** _frameX_:  X coordinate of the upper left corner of the
+    frame. For images using the VP8 codec, this value **MUST** be
+    divisible by `32`. Other codecs **MAY** specify other constraints.
+    Described in more detail later.
 
-  * **uint32** _frameY_: y coordinate of the upper left corner of the
-    frame. For images using the VP8 codec, it **MUST** be divisible by
-    `32`. Other codecs **MAY** specify other constraints. Described in
-    more details later.
+  * **uint32** _frameY_:  Y coordinate of the upper left corner of the
+    frame. For images using the VP8 codec, this value **MUST** be
+    divisible by `32`. Other codecs **MAY** specify other constraints.
+    Described in more detail later.
 
-  * **uint32** _frameWidth_: width of the frame. For images using the
-    VP8 codec, it **MUST** be divisible by `16` or such that
+  * **uint32** _frameWidth_:  Width of the frame. For images using the
+    VP8 codec, this value **MUST** be divisible by `16`, or be such that
     _frameX + frameWidth == canvasWidth_. Other codecs **MAY** specify
-    other constraints. Desribed in more details later.
+    other constraints. Described in more detail later.
 
-  * **uint32** _frameHeight_: height. For images using the VP8 codec, it
-    **MUST** be divisible by `16` or such that _frameY + frameHeight ==
-    canvasHeight_. Other codecs **MAY** specify other constraints.
-    Desribed in more details later.
+  * **uint32** _frameHeight_:  Height. For images using the VP8 codec,
+    this value **MUST** be divisible by `16`, or be such that _frameY +
+    frameHeight == canvasHeight_. Other codecs **MAY** specify other
+    constraints. Described in more detail later.
 
-  * **uint16** _frameDuration_: Time to wait before displaying the next
+  * **uint16** _frameDuration_:  Time to wait before displaying the next
     tile, in 1ms units.
 
 **Rationale:**  The requirement for corner coordinates to be divisible
-by `32` means that pixels on U and V planes are aligned to 16-byte
-boundary (even after a rotation), what may help with vector
-instructions on some architectures. Also, this makes the tiles also
-aligned to 16-pixel macroblock boundaries.
+by `32` means that pixels on U and V planes are aligned to a 16-byte
+boundary (even after a rotation), which may help with vector
+instructions on some architectures. This makes the tiles also align to
+16-pixel macroblock boundaries.
 
 **Rationale:**  The requirement for the width and height to be
 divisible by `16` or touching the edge of the canvas simplifies the
-handling of macroblocks that are on the edge of a tile -- VP8 decoders
-can overwrite pixels outside the boundary in such a macroblock and this
+handling of macroblocks that are on the edge of a tile.  VP8 decoders
+can overwrite pixels outside the boundary in such a macroblock, and this
 guarantees they won't overwrite any data.
 
 Future specifications **MAY** add more fields. If a chunk of larger
@@ -456,41 +454,41 @@ preserve them when modifying the file.
 ### TILE Chunks (Tile Parameters)
 
 This chunk contains information about a single tile and describes the
-bitstream chunk that proceeds it.
+bitstream chunk that follows it.
 
-The content of such a chunk is as follows:
+The contents of such a chunk are as follows:
 
-  * **uint32** _tileCanvasX_: x coordinate of the upper left corner of
-    the tile. For VP8 tiles, it **MUST** be divisible by `32`. Other
-    codecs **MAY** specify other constraints.
+  * **uint32** _tileCanvasX_:  X coordinate of the upper left corner of
+    the tile. For VP8 tiles, this value **MUST** be divisible by `32`.
+    Other codecs **MAY** specify other constraints.
 
-  * **uint32** _tileCanvasY_: y coordinate of the upper left corner of
-    the tile. For VP8 tiles, it **MUST** be divisible by `32`. Other
-    codecs **MAY** specify other constraints.
+  * **uint32** _tileCanvasY_:  Y coordinate of the upper left corner of
+    the tile. For VP8 tiles, this value **MUST** be divisible by `32`.
+    Other codecs **MAY** specify other constraints.
 
 Future specifications **MAY** add more fields. If a chunk of larger size
 is found, programs **MUST** ignore the extra bytes but **MUST** preserve
 them when modifying the file.
 
-As described earlier, the TILE chunk is followed by a VP8 data. From
-that chun, we can read the height and width of the tile, that we will
-denote by _tileWidth_ and _tileHeight_. In the case of VP8, we have the
-following constraints:
+As described earlier, the TILE chunk is followed by VP8 data. From that
+chunk we can read the height and width of the tile.  These we denote as
+_tileWidth_ and _tileHeight_. In the case of VP8, we have the following
+constraints:
 
-  * The width of a tile **MUST** be divisible by `16` or there **MUST**
-    be _tileCanvasX + tileWidth == canvasWidth_.
+  * The width of a tile **MUST** be divisible by `16`, or _tileCanvasX +
+    tileWidth == canvasWidth_ **MUST** be true.
 
-  * The height of a tile **MUST** be divisible by `16` or there **MUST**
-    be _tileCanvasY + tileHeight == canvasHeight_.
+  * The height of a tile **MUST** be divisible by `16`, or
+    _tileCanvasY + tileHeight == canvasHeight_ **MUST** be true.
 
 
 ### ICCP Chunk (Color Profile)
 
 An optional "ICCP" chunk contains an ICC profile. There **SHOULD** be
 at most one such chunk. The first byte of the chunk is the compression
-type. Two values are currently defined: a value of `0` means no
+type. Two values are currently defined:  a value of `0` means no
 compression, while a value of `1` means deflate/inflate compression. It
-is followed by a compressed or non-compressed ICC profile -- see
+is followed by a compressed or non-compressed ICC profile.  See
 <http://www.color.org> for specifications.
 
 The color profile can be a v2 or v4 profile. If this chunk is missing,
@@ -499,31 +497,30 @@ sRGB **SHOULD** be assumed.
 
 ### META Chunk (Compressed XMP Metadata)
 
-Such a chunk (if present) contains XMP metadata. There SHOULD be at
+Such a chunk (if present) contains XMP metadata. There **SHOULD** be at
 most one such chunk. If there are more such chunks, readers **SHOULD**
 ignore all except the first one. The first byte specifies compression
-type. Two values are currently defined: a value of `0` means no
+type. Two values are currently defined:  a value of `0` means no
 compression, while a value of `1` means deflate/inflate compression. It
 is followed by a compressed or non-compressed XMP metadata packet.
 
-XMP packets are XML text specified in the [XMP Specification Part
+XMP packets are XML text as specified in the [XMP Specification Part
 1][xmpspec]. The chunk tag is different from the one specified by Adobe
-for WAV and AVI (also RIFF formats) because we have the options of
+for WAV and AVI (also RIFF formats), because we have the option of
 compression.
 
 Additional guidance about handling metadata can be found in the
 Metadata Working Group's [Guidelines for Handling Metadata][metadata].
 Note that the sections of the document about reconciliation of EXIF,
-XMP and IPTC-IIM don't apply to WebP, as WebP supports only XMP, thus
-no reconciliation is necessary.
+XMP and IPTC-IIM don't apply to WebP.  As WebP supports only XMP, no
+reconciliation is necessary.
 
 
 ### Other Chunks
 
 A file **MAY** contain other chunks, defined in some future
 specification. Such chunks **MUST** be ignored, but preserved. Writers
-**SHOULD** try to preserve them in the original order.
-
+**SHOULD** try to preserve them in their original order.
 
 
 [vp8spec]:  http://tools.ietf.org/html/draft-bankoski-vp8-bitstream
