@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAFn//zSM\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 7
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2011-10-12T22:51:43Z",
+      "side": 1,
+      "message": "leading with the + here caused kramdown to create a list item.",
+      "revId": "d3fca845fdc418c8bd194694dc3854c1f004f577",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAFn//zSE\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 7
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2011-10-12T22:51:43Z",
+      "side": 1,
+      "message": "s/options/option/",
+      "revId": "d3fca845fdc418c8bd194694dc3854c1f004f577",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
