@@ -59,8 +59,8 @@ static const int8_t kMVRef[8] = {
 };
 
 static const int8_t kMVRef4[6] = {
-  -LEFT4, 1
-    -ABOVE4, 2
+  -LEFT4, 1,
+    -ABOVE4, 2,
       -ZERO4, -NEW4
 };
 #endif
