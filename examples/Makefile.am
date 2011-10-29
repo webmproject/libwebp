@@ -12,4 +12,4 @@ cwebp_LDADD = ../src/libwebp.la $(PNG_LIBS) $(JPEG_LIBS)
 
 webpmux_SOURCES = webpmux.c
 webpmux_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
-webpmux_LDADD = ../src/libwebp.la ../src/mux/libwebpmux.la
+webpmux_LDADD = ../src/mux/libwebpmux.la ../src/libwebp.la
