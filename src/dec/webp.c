@@ -131,7 +131,8 @@ VP8StatusCode WebPParseOptionalChunks(const uint8_t** data, uint32_t* data_size,
     }
 
     chunk_size = get_le32(buf + TAG_SIZE);
-    cur_skip_size = CHUNK_HEADER_SIZE + chunk_size;
+    // For odd-sized chunk-payload, there's one Byte padding at the end.
+    cur_skip_size = (CHUNK_HEADER_SIZE + chunk_size + 1) & ~1;
 
     // Check that total bytes skipped along with current chunk size
     // does not exceed riff_size.
