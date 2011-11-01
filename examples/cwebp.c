@@ -358,7 +358,7 @@ static int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha) {
   if (setjmp(png_jmpbuf(png))) {
  Error:
     png_destroy_read_struct(&png, NULL, NULL);
-    if (rgb) free(rgb);
+    free(rgb);
     goto End;
   }
 
