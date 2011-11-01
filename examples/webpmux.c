@@ -244,7 +244,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
   return WEBP_MUX_OK;
 }
 
-static void PrintHelp() {
+static void PrintHelp(void) {
   fprintf(stderr, "Usage: webpmux -get GET_OPTIONS INPUT -o OUTPUT          "
           "             Extract relevant data.\n");
   fprintf(stderr, "   or: webpmux -set SET_OPTIONS INPUT -o OUTPUT          "
