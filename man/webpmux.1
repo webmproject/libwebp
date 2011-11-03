@@ -78,12 +78,14 @@ Strip XMP metadata.
 .SS TILE_OPTIONS (\-tile)
 .TP
 .B file_i +xi+yi
-Where: 'file_i' is the i'th tile (webp format) and 'xi','yi' specify the image offset for this tile.
+Where: 'file_i' is the i'th tile (webp format) and 'xi','yi' specify the image
+offset for this tile.
 
 .SS FRAME_OPTIONS (\-frame)
 .TP
 .B file_i +xi+yi+di
-Where: 'file_i' is the i'th frame (webp format), 'xi','yi' specify the image offset for this frame and 'di' is the pause duration before next frame.
+Where: 'file_i' is the i'th frame (webp format), 'xi','yi' specify the image
+offset for this frame and 'di' is the pause duration before next frame.
 .TP
 .B \-loop n
 Loop the frames n number of times. 0 indicates the frames should loop forever.
@@ -105,7 +107,8 @@ webpmux \-set xmp image_metadata.xmp in.webp \-o xmp_container.webp
 .br
 webpmux \-get xmp xmp_container.webp \-o image_metadata.xmp
 .br
-webpmux \-frame anim_1.webp +0+0+0 \-frame anim_2.webp +50+50+0 \-loop 10 \-o anim_container.webp
+webpmux \-frame anim_1.webp +0+0+0 \-frame anim_2.webp +50+50+0 \-loop 10
+\-o anim_container.webp
 .br
 webpmux \-get frame 2 anim_container.webp \-o frame_2.webp
 
