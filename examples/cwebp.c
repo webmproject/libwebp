@@ -54,8 +54,16 @@ DEFINE_GUID(GUID_WICPixelFormat32bppRGBA,
 #include "webp/encode.h"
 #include "stopwatch.h"
 #ifndef WEBP_DLL
-extern void* VP8GetCPUInfo;   // opaque forward declaration.
+#if defined(__cplusplus) || defined(c_plusplus)
+extern "C" {
 #endif
+
+extern void* VP8GetCPUInfo;   // opaque forward declaration.
+
+#if defined(__cplusplus) || defined(c_plusplus)
+}    // extern "C"
+#endif
+#endif  // WEBP_DLL
 
 //------------------------------------------------------------------------------
 
@@ -262,7 +270,7 @@ static int ReadJPEG(FILE* in_file, WebPPicture* const pic) {
   dinfo.err = jpeg_std_error(&jerr.pub);
   jerr.pub.error_exit = my_error_exit;
 
-  if (setjmp (jerr.setjmp_buffer)) {
+  if (setjmp(jerr.setjmp_buffer)) {
  Error:
     jpeg_destroy_decompress(&dinfo);
     goto End;
@@ -306,8 +314,8 @@ static int ReadJPEG(FILE* in_file, WebPPicture* const pic) {
     row_ptr += stride;
   }
 
-  jpeg_finish_decompress (&dinfo);
-  jpeg_destroy_decompress (&dinfo);
+  jpeg_finish_decompress(&dinfo);
+  jpeg_destroy_decompress(&dinfo);
 
   // WebP conversion.
   pic->width = width;
@@ -502,7 +510,7 @@ static void PrintByteCount(const int bytes[4], int total_size,
     total += bytes[s];
     if (totals) totals[s] += bytes[s];
   }
-  fprintf(stderr,"| %7d  (%.1f%%)\n", total, 100.f * total / total_size);
+  fprintf(stderr, "| %7d  (%.1f%%)\n", total, 100.f * total / total_size);
 }
 
 static void PrintPercents(const int counts[4], int total) {
@@ -510,7 +518,7 @@ static void PrintPercents(const int counts[4], int total) {
   for (s = 0; s < 4; ++s) {
     fprintf(stderr, "|      %2d%%", 100 * counts[s] / total);
   }
-  fprintf(stderr,"| %7d\n", total);
+  fprintf(stderr, "| %7d\n", total);
 }
 
 static void PrintValues(const int values[4]) {
@@ -518,14 +526,14 @@ static void PrintValues(const int values[4]) {
   for (s = 0; s < 4; ++s) {
     fprintf(stderr, "| %7d ", values[s]);
   }
-  fprintf(stderr,"|\n");
+  fprintf(stderr, "|\n");
 }
 
 static void PrintExtraInfo(const WebPPicture* const pic, int short_output) {
   const WebPAuxStats* const stats = pic->stats;
   if (short_output) {
     fprintf(stderr, "%7d %2.2f\n", stats->coded_size, stats->PSNR[3]);
-  } else{
+  } else {
     const int num_i4 = stats->block_count[0];
     const int num_i16 = stats->block_count[1];
     const int num_skip = stats->block_count[2];

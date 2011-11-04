@@ -40,14 +40,18 @@
 #include "webp/decode.h"
 #include "stopwatch.h"
 
+static int verbose = 0;
+#ifndef WEBP_DLL
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
 #endif
 
-static int verbose = 0;
-#ifndef WEBP_DLL
 extern void* VP8GetCPUInfo;   // opaque forward declaration.
+
+#if defined(__cplusplus) || defined(c_plusplus)
+}    // extern "C"
 #endif
+#endif  // WEBP_DLL
 
 //------------------------------------------------------------------------------
 
@@ -493,7 +497,3 @@ int main(int argc, const char *argv[]) {
 }
 
 //------------------------------------------------------------------------------
-
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

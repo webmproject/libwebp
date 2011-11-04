@@ -8,7 +8,7 @@
 //  Simple command-line to create a WebP container file and to extract or strip
 //  relevant data from the container file.
 //
-//  Compile with:     gcc -o webpmux webpmux.c -lwebpmux
+//  Compile with:     gcc -o webpmux webpmux.c -lwebpmux -lwebp
 //
 //
 // Authors: Vikas (vikaas.arora@gmail.com),
@@ -17,7 +17,6 @@
 /*  Usage examples:
 
   Create container WebP file:
-
     webpmux -tile tile_1.webp +0+0 \
             -tile tile_2.webp +960+0 \
             -tile tile_3.webp +0+576 \
@@ -32,35 +31,21 @@
             -o out_animation_container.webp
 
     webpmux -set icc image_profile.icc in.webp -o out_icc_container.webp
-
     webpmux -set xmp image_metadata.xmp in.webp -o out_xmp_container.webp
 
-
   Extract relevant data from WebP container file:
-
     webpmux -get tile n in.webp -o out_tile.webp
-
     webpmux -get frame n in.webp -o out_frame.webp
-
     webpmux -get icc in.webp -o image_profile.icc
-
     webpmux -get xmp in.webp -o image_metadata.xmp
 
-
   Strip data from WebP Container file:
-
-    webmux -strip icc in.webp -o out.webp
-
-    webmux -strip xmp in.webp -o out.webp
-
+    webpmux -strip icc in.webp -o out.webp
+    webpmux -strip xmp in.webp -o out.webp
 
   Misc:
-
     webpmux -info in.webp
-
-    webpmux -help
-
-    webpmux -h
+    webpmux [ -h | -help ]
 */
 
 #include <assert.h>
@@ -68,10 +53,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "webp/mux.h"
-
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
 
 //------------------------------------------------------------------------------
 // Config object to parse command-line arguments.
@@ -121,8 +102,8 @@ typedef struct {
 //------------------------------------------------------------------------------
 // Helper functions.
 
-static int CountOccurences(const char* arglist[], int list_length,
-                           const char* arg) {
+static int CountOccurrences(const char* arglist[], int list_length,
+                            const char* arg) {
   int i;
   int num_occurences = 0;
 
@@ -135,7 +116,7 @@ static int CountOccurences(const char* arglist[], int list_length,
 }
 
 static int IsNotCompatible(int count1, int count2) {
-    return (count1 > 0) != (count2 > 0);
+  return (count1 > 0) != (count2 > 0);
 }
 
 #define RETURN_IF_ERROR(ERR_MSG)                                      \
@@ -151,19 +132,25 @@ static int IsNotCompatible(int count1, int count2) {
     }
 
 #define ERROR_GOTO1(ERR_MSG, LABEL)                                   \
-    fprintf(stderr, ERR_MSG);                                         \
-    ok = 0;                                                           \
-    goto LABEL;
+    do {                                                              \
+      fprintf(stderr, ERR_MSG);                                       \
+      ok = 0;                                                         \
+      goto LABEL;                                                     \
+    } while (0)
 
 #define ERROR_GOTO2(ERR_MSG, FORMAT_STR, LABEL)                       \
-    fprintf(stderr, ERR_MSG, FORMAT_STR);                             \
-    ok = 0;                                                           \
-    goto LABEL;
+    do {                                                              \
+      fprintf(stderr, ERR_MSG, FORMAT_STR);                           \
+      ok = 0;                                                         \
+      goto LABEL;                                                     \
+    } while (0)
 
 #define ERROR_GOTO3(ERR_MSG, FORMAT_STR1, FORMAT_STR2, LABEL)         \
-    fprintf(stderr, ERR_MSG, FORMAT_STR1, FORMAT_STR2);               \
-    ok = 0;                                                           \
-    goto LABEL;
+    do {                                                              \
+      fprintf(stderr, ERR_MSG, FORMAT_STR1, FORMAT_STR2);             \
+      ok = 0;                                                         \
+      goto LABEL;                                                     \
+    } while (0)
 
 static WebPMuxError DisplayInfo(const WebPMux* mux) {
   int nFrames;
@@ -202,7 +189,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
       int i;
       uint32_t x_offset, y_offset, duration;
 
-      fprintf(stderr, "No : x_offset y_offset duration\n");
+      fprintf(stderr, "No.: x_offset y_offset duration\n");
       for (i = 1; i <= nFrames; i++) {
         err = WebPMuxGetFrame(mux, i, &data, &size, &x_offset, &y_offset,
                               &duration);
@@ -220,7 +207,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
     if (nTiles > 0) {
       int i;
       uint32_t x_offset, y_offset;
-      fprintf(stderr, "No : x_offset y_offset\n");
+      fprintf(stderr, "No.: x_offset y_offset\n");
       for (i = 1; i <= nTiles; i++) {
         err = WebPMuxGetTile(mux, i, &data, &size, &x_offset, &y_offset);
         assert(err == WEBP_MUX_OK);
@@ -395,7 +382,7 @@ static int ReadImageData(const char* filename, int image_index,
     }
   } else {
     fprintf(stderr, "Failed to extract image data from file %s. Error: %d\n",
-                  filename, err);
+            filename, err);
     ok = 0;
   }
   WebPMuxDelete(mux);
@@ -404,7 +391,7 @@ static int ReadImageData(const char* filename, int image_index,
 
 static int WriteData(const char* filename, void* data, uint32_t size) {
   int ok = 0;
-  FILE* fout = strcmp(filename, "--") ? fopen(filename, "wb") : stdout;
+  FILE* fout = strcmp(filename, "-") ? fopen(filename, "wb") : stdout;
   if (!fout) {
     fprintf(stderr, "Error opening output WebP file %s!\n", filename);
     return 0;
@@ -472,29 +459,26 @@ static int ValidateCommandLine(int argc, const char* argv[],
   *num_feature_args = 0;
 
   // Simple checks.
-  if (CountOccurences(argv, argc, "-get") > 1) {
+  if (CountOccurrences(argv, argc, "-get") > 1) {
     ERROR_GOTO1("ERROR: Multiple '-get' arguments specified.\n", ErrValidate);
   }
-  if (CountOccurences(argv, argc, "-set") > 1) {
+  if (CountOccurrences(argv, argc, "-set") > 1) {
     ERROR_GOTO1("ERROR: Multiple '-set' arguments specified.\n", ErrValidate);
   }
-  if (CountOccurences(argv, argc, "-strip") > 1) {
+  if (CountOccurrences(argv, argc, "-strip") > 1) {
     ERROR_GOTO1("ERROR: Multiple '-strip' arguments specified.\n", ErrValidate);
   }
-  if (CountOccurences(argv, argc, "-info") > 1) {
+  if (CountOccurrences(argv, argc, "-info") > 1) {
     ERROR_GOTO1("ERROR: Multiple '-info' arguments specified.\n", ErrValidate);
   }
-  if (CountOccurences(argv, argc, "-help") > 1) {
-    ERROR_GOTO1("ERROR: Multiple '-help' arguments specified.\n", ErrValidate);
-  }
-  if (CountOccurences(argv, argc, "-o") > 1) {
+  if (CountOccurrences(argv, argc, "-o") > 1) {
     ERROR_GOTO1("ERROR: Multiple output files specified.\n", ErrValidate);
   }
 
   // Compound checks.
-  num_frame_args = CountOccurences(argv, argc, "-frame");
-  num_tile_args = CountOccurences(argv, argc, "-tile");
-  num_loop_args = CountOccurences(argv, argc, "-loop");
+  num_frame_args = CountOccurrences(argv, argc, "-frame");
+  num_tile_args = CountOccurrences(argv, argc, "-tile");
+  num_loop_args = CountOccurrences(argv, argc, "-loop");
 
   if (num_loop_args > 1) {
     ERROR_GOTO1("ERROR: Multiple loop counts specified.\n", ErrValidate);
@@ -552,7 +536,7 @@ static int ParseCommandLine(int argc, const char* argv[],
 
   while (i < argc) {
     Feature* const feature = &config->feature_;
-    FeatureArg* arg = &feature->args_[feature_arg_index];
+    FeatureArg* const arg = &feature->args_[feature_arg_index];
     if (argv[i][0] == '-') {  // One of the action types or output.
       if (!strcmp(argv[i], "-set")) {
         if (ACTION_IS_NIL) {
@@ -675,7 +659,7 @@ static int ParseCommandLine(int argc, const char* argv[],
         arg->params_ = argv[i + 1];
         ++feature_arg_index;
         i += 2;
-      } else { // Assume input file.
+      } else {  // Assume input file.
         if (config->input_ == NULL) {
           config->input_ = argv[i];
         } else {
@@ -690,7 +674,7 @@ static int ParseCommandLine(int argc, const char* argv[],
   return ok;
 }
 
-// Additional Checks after config is filled.
+// Additional checks after config is filled.
 static int ValidateConfig(WebPMuxConfig* config) {
   int ok = 1;
   Feature* const feature = &config->feature_;
@@ -751,12 +735,8 @@ static int InitializeConfig(int argc, const char* argv[],
   }
 
   // Parse command-line.
-  if (!ParseCommandLine(argc, argv, *config)) {
-    ERROR_GOTO1("Exiting due to command-line parsing error.\n", Err1);
-  }
-
-  // Additional Checks.
-  if (!ValidateConfig(*config)) {
+  if (!ParseCommandLine(argc, argv, *config) ||
+      !ValidateConfig(*config)) {
     ERROR_GOTO1("Exiting due to command-line parsing error.\n", Err1);
   }
 
@@ -772,7 +752,8 @@ static int InitializeConfig(int argc, const char* argv[],
 //------------------------------------------------------------------------------
 // Processing.
 
-static int GetFrameTile(WebPMux* mux, WebPMuxConfig* config, int isFrame) {
+static int GetFrameTile(const WebPMux* mux,
+                        const WebPMuxConfig* config, int isFrame) {
   const uint8_t* data = NULL;
   uint32_t size = 0;
   uint32_t x_offset = 0;
@@ -819,7 +800,7 @@ static int GetFrameTile(WebPMux* mux, WebPMuxConfig* config, int isFrame) {
 }
 
 // Read and process config.
-static int Process(WebPMuxConfig* config) {
+static int Process(const WebPMuxConfig* config) {
   WebPMux* mux = NULL;
   const uint8_t* data = NULL;
   uint32_t size = 0;
@@ -831,13 +812,13 @@ static int Process(WebPMuxConfig* config) {
   long num;
   int index = 0;
   int ok = 1;
-  Feature* const feature = &config->feature_;
+  const Feature* const feature = &config->feature_;
 
-  switch(config->action_type_) {
+  switch (config->action_type_) {
     case ACTION_GET:
       ok = ReadFile(config->input_, &mux);
       if (!ok) goto Err2;
-      switch(feature->type_) {
+      switch (feature->type_) {
         case FEATURE_FRM:
           ok = GetFrameTile(mux, config, 1);
           break;
@@ -869,7 +850,7 @@ static int Process(WebPMuxConfig* config) {
       break;
 
     case ACTION_SET:
-      switch(feature->type_) {
+      switch (feature->type_) {
         case FEATURE_FRM:
           mux = WebPMuxNew();
           if (mux == NULL) {
@@ -939,8 +920,7 @@ static int Process(WebPMuxConfig* config) {
         case FEATURE_ICCP:
           ok = ReadFile(config->input_, &mux);
           if (!ok) goto Err2;
-          ok = ReadData(feature->args_[0].filename_, (void**)&data,
-                        &size);
+          ok = ReadData(feature->args_[0].filename_, (void**)&data, &size);
           if (!ok) goto Err2;
           err = WebPMuxSetColorProfile(mux, data, size, 1);
           free((void*)data);
@@ -952,8 +932,7 @@ static int Process(WebPMuxConfig* config) {
         case FEATURE_XMP:
           ok = ReadFile(config->input_, &mux);
           if (!ok) goto Err2;
-          ok = ReadData(feature->args_[0].filename_, (void**)&data,
-                        &size);
+          ok = ReadData(feature->args_[0].filename_, (void**)&data, &size);
           if (!ok) goto Err2;
           err = WebPMuxSetMetadata(mux, data, size, 1);
           free((void*)data);
@@ -972,7 +951,7 @@ static int Process(WebPMuxConfig* config) {
     case ACTION_STRIP:
       ok = ReadFile(config->input_, &mux);
       if (!ok) goto Err2;
-      switch(feature->type_) {
+      switch (feature->type_) {
         case FEATURE_ICCP:
           err = WebPMuxDeleteColorProfile(mux);
           if (err != WEBP_MUX_OK) {
@@ -1027,7 +1006,3 @@ int main(int argc, const char* argv[]) {
 }
 
 //------------------------------------------------------------------------------
-
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif
