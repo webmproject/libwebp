@@ -38,7 +38,7 @@ extern "C" {
 // All 32-bits sizes are in little-endian order.
 // Note: chunk data must be padded to multiple of 2 in size
 
-static inline uint32_t get_le32(const uint8_t* const data) {
+static WEBP_INLINE uint32_t get_le32(const uint8_t* const data) {
   return data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
 }
 

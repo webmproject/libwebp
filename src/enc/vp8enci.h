@@ -157,7 +157,7 @@ typedef int64_t score_t;     // type used for scores, rate, distortion
 #define BIAS(b)  ((b) << (QFIX - 8))
 // Fun fact: this is the _only_ line where we're actually being lossy and
 // discarding bits.
-static inline int QUANTDIV(int n, int iQ, int B) {
+static WEBP_INLINE int QUANTDIV(int n, int iQ, int B) {
   return (n * iQ + B) >> QFIX;
 }
 extern const uint8_t VP8Zigzag[16];

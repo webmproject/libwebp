@@ -17,7 +17,7 @@
 
 typedef LARGE_INTEGER Stopwatch;
 
-static inline double StopwatchReadAndReset(Stopwatch* watch) {
+static WEBP_INLINE double StopwatchReadAndReset(Stopwatch* watch) {
   const LARGE_INTEGER old_value = *watch;
   LARGE_INTEGER freq;
   if (!QueryPerformanceCounter(watch))
@@ -35,7 +35,7 @@ static inline double StopwatchReadAndReset(Stopwatch* watch) {
 
 typedef struct timeval Stopwatch;
 
-static inline double StopwatchReadAndReset(Stopwatch* watch) {
+static WEBP_INLINE double StopwatchReadAndReset(Stopwatch* watch) {
   const struct timeval old_value = *watch;
   gettimeofday(watch, NULL);
   return watch->tv_sec - old_value.tv_sec +

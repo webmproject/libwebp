@@ -22,7 +22,7 @@ extern "C" {
 //
 
 #if defined(__pic__) && defined(__i386__)
-static inline void GetCPUInfo(int cpu_info[4], int info_type) {
+static WEBP_INLINE void GetCPUInfo(int cpu_info[4], int info_type) {
   __asm__ volatile (
     "mov %%ebx, %%edi\n"
     "cpuid\n"
@@ -31,7 +31,7 @@ static inline void GetCPUInfo(int cpu_info[4], int info_type) {
     : "a"(info_type));
 }
 #elif defined(__i386__) || defined(__x86_64__)
-static inline void GetCPUInfo(int cpu_info[4], int info_type) {
+static WEBP_INLINE void GetCPUInfo(int cpu_info[4], int info_type) {
   __asm__ volatile (
     "cpuid\n"
     : "=a"(cpu_info[0]), "=b"(cpu_info[1]), "=c"(cpu_info[2]), "=d"(cpu_info[3])

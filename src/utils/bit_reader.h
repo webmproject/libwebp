@@ -40,7 +40,7 @@ void VP8InitBitReader(VP8BitReader* const br,
 
 // return the next value made of 'num_bits' bits
 uint32_t VP8GetValue(VP8BitReader* const br, int num_bits);
-static inline uint32_t VP8Get(VP8BitReader* const br) {
+static WEBP_INLINE uint32_t VP8Get(VP8BitReader* const br) {
   return VP8GetValue(br, 1);
 }
 
@@ -50,7 +50,7 @@ int32_t VP8GetSignedValue(VP8BitReader* const br, int num_bits);
 // Read a bit with proba 'prob'. Speed-critical function!
 extern const uint8_t kVP8Log2Range[128];
 extern const uint8_t kVP8NewRange[128];
-static inline uint32_t VP8GetByte(VP8BitReader* const br) {
+static WEBP_INLINE uint32_t VP8GetByte(VP8BitReader* const br) {
   assert(br);
   if (br->buf_ < br->buf_end_) {
     assert(br->buf_);
@@ -60,7 +60,8 @@ static inline uint32_t VP8GetByte(VP8BitReader* const br) {
   return 0xff;
 }
 
-static inline uint32_t VP8BitUpdate(VP8BitReader* const br, uint32_t split) {
+static WEBP_INLINE uint32_t VP8BitUpdate(
+    VP8BitReader* const br, uint32_t split) {
   uint32_t bit;
   const uint32_t value_split = (split + 1) << 8;
   // Make sure we have a least 8 bits in 'value_'
@@ -78,7 +79,7 @@ static inline uint32_t VP8BitUpdate(VP8BitReader* const br, uint32_t split) {
   return bit;
 }
 
-static inline void VP8Shift(VP8BitReader* const br) {
+static WEBP_INLINE void VP8Shift(VP8BitReader* const br) {
   // range_ is in [0..127] interval here.
   const int shift = kVP8Log2Range[br->range_];
   br->range_ = kVP8NewRange[br->range_];
@@ -86,7 +87,7 @@ static inline void VP8Shift(VP8BitReader* const br) {
   br->missing_ += shift;
 }
 
-static inline uint32_t VP8GetBit(VP8BitReader* const br, int prob) {
+static WEBP_INLINE uint32_t VP8GetBit(VP8BitReader* const br, int prob) {
   const uint32_t split = (br->range_ * prob) >> 8;
   const uint32_t bit = VP8BitUpdate(br, split);
   if (br->range_ < 0x7f) {
@@ -95,7 +96,7 @@ static inline uint32_t VP8GetBit(VP8BitReader* const br, int prob) {
   return bit;
 }
 
-static inline int VP8GetSigned(VP8BitReader* const br, int v) {
+static WEBP_INLINE int VP8GetSigned(VP8BitReader* const br, int v) {
   const uint32_t split = br->range_ >> 1;
   const uint32_t bit = VP8BitUpdate(br, split);
   VP8Shift(br);

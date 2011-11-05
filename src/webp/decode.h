@@ -154,7 +154,7 @@ WEBP_EXTERN(int) WebPInitDecBufferInternal(WebPDecBuffer* const, int);
 
 // Initialize the structure as empty. Must be called before any other use.
 // Returns false in case of version mismatch
-static inline int WebPInitDecBuffer(WebPDecBuffer* const buffer) {
+static WEBP_INLINE int WebPInitDecBuffer(WebPDecBuffer* const buffer) {
   return WebPInitDecBufferInternal(buffer, WEBP_DECODER_ABI_VERSION);
 }
 
@@ -332,9 +332,9 @@ WEBP_EXTERN(VP8StatusCode) WebPGetFeaturesInternal(
 // with information gathered from the bitstream.
 // Returns false in case of error or version mismatch.
 // In case of error, features->bitstream_status will reflect the error code.
-static inline
-  VP8StatusCode WebPGetFeatures(const uint8_t* data, uint32_t data_size,
-                                WebPBitstreamFeatures* const features) {
+static WEBP_INLINE VP8StatusCode WebPGetFeatures(
+    const uint8_t* data, uint32_t data_size,
+    WebPBitstreamFeatures* const features) {
   return WebPGetFeaturesInternal(data, data_size, features,
                                  WEBP_DECODER_ABI_VERSION);
 }
@@ -367,7 +367,7 @@ WEBP_EXTERN(int) WebPInitDecoderConfigInternal(WebPDecoderConfig* const, int);
 // Initialize the configuration as empty. This function must always be
 // called first, unless WebPGetFeatures() is to be called.
 // Returns false in case of mismatched version.
-static inline int WebPInitDecoderConfig(WebPDecoderConfig* const config) {
+static WEBP_INLINE int WebPInitDecoderConfig(WebPDecoderConfig* const config) {
   return WebPInitDecoderConfigInternal(config, WEBP_DECODER_ABI_VERSION);
 }
 

@@ -124,7 +124,7 @@ WEBP_EXTERN(VP8Decoder*) VP8New(void);
 // Must be called to make sure 'io' is initialized properly.
 // Returns false in case of version mismatch. Upon such failure, no other
 // decoding function should be called (VP8Decode, VP8GetHeaders, ...)
-static inline int VP8InitIo(VP8Io* const io) {
+static WEBP_INLINE int VP8InitIo(VP8Io* const io) {
   return VP8InitIoInternal(io, WEBP_DECODER_ABI_VERSION);
 }
 

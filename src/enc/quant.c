@@ -35,7 +35,7 @@ extern "C" {
 
 //------------------------------------------------------------------------------
 
-static inline int clip(int v, int m, int M) {
+static WEBP_INLINE int clip(int v, int m, int M) {
   return v < m ? m : v > M ? M : v;
 }
 
@@ -406,13 +406,13 @@ typedef struct {
 #define NUM_NODES (MIN_DELTA + 1 + MAX_DELTA)
 #define NODE(n, l) (nodes[(n) + 1][(l) + MIN_DELTA])
 
-static inline void SetRDScore(int lambda, VP8ModeScore* const rd) {
+static WEBP_INLINE void SetRDScore(int lambda, VP8ModeScore* const rd) {
   // TODO: incorporate the "* 256" in the tables?
   rd->score = rd->R * lambda + 256 * (rd->D + rd->SD);
 }
 
-static inline score_t RDScoreTrellis(int lambda, score_t rate,
-                                     score_t distortion) {
+static WEBP_INLINE score_t RDScoreTrellis(int lambda, score_t rate,
+                                          score_t distortion) {
   return rate * lambda + 256 * distortion;
 }
 

@@ -83,7 +83,7 @@ static void InitTables(void) {
   }
 }
 
-static inline uint8_t clip_8b(int v) {
+static WEBP_INLINE uint8_t clip_8b(int v) {
   return (!(v & ~0xff)) ? v : v < 0 ? 0 : 255;
 }
 
@@ -97,8 +97,8 @@ static const int kC1 = 20091 + (1 << 16);
 static const int kC2 = 35468;
 #define MUL(a, b) (((a) * (b)) >> 16)
 
-static inline void ITransformOne(const uint8_t* ref, const int16_t* in,
-                                 uint8_t* dst) {
+static WEBP_INLINE void ITransformOne(const uint8_t* ref, const int16_t* in,
+                                      uint8_t* dst) {
   int C[4 * 4], *tmp;
   int i;
   tmp = C;
@@ -231,14 +231,15 @@ static void FTransformWHT(const int16_t* in, int16_t* out) {
 
 #define OUT(x, y) dst[(x) + (y) * BPS]
 
-static inline void Fill(uint8_t* dst, int value, int size) {
+static WEBP_INLINE void Fill(uint8_t* dst, int value, int size) {
   int j;
   for (j = 0; j < size; ++j) {
     memset(dst + j * BPS, value, size);
   }
 }
 
-static inline void VerticalPred(uint8_t* dst, const uint8_t* top, int size) {
+static WEBP_INLINE void VerticalPred(uint8_t* dst,
+                                     const uint8_t* top, int size) {
   int j;
   if (top) {
     for (j = 0; j < size; ++j) memcpy(dst + j * BPS, top, size);
@@ -247,7 +248,8 @@ static inline void VerticalPred(uint8_t* dst, const uint8_t* top, int size) {
   }
 }
 
-static inline void HorizontalPred(uint8_t* dst, const uint8_t* left, int size) {
+static WEBP_INLINE void HorizontalPred(uint8_t* dst,
+                                       const uint8_t* left, int size) {
   if (left) {
     int j;
     for (j = 0; j < size; ++j) {
@@ -258,8 +260,8 @@ static inline void HorizontalPred(uint8_t* dst, const uint8_t* left, int size) {
   }
 }
 
-static inline void TrueMotion(uint8_t* dst, const uint8_t* left,
-                              const uint8_t* top, int size) {
+static WEBP_INLINE void TrueMotion(uint8_t* dst, const uint8_t* left,
+                                   const uint8_t* top, int size) {
   int y;
   if (left) {
     if (top) {
@@ -288,9 +290,9 @@ static inline void TrueMotion(uint8_t* dst, const uint8_t* left,
   }
 }
 
-static inline void DCMode(uint8_t* dst, const uint8_t* left,
-                          const uint8_t* top,
-                          int size, int round, int shift) {
+static WEBP_INLINE void DCMode(uint8_t* dst, const uint8_t* left,
+                               const uint8_t* top,
+                               int size, int round, int shift) {
   int DC = 0;
   int j;
   if (top) {
@@ -532,7 +534,8 @@ static void Intra4Preds(uint8_t* dst, const uint8_t* top) {
 //------------------------------------------------------------------------------
 // Metric
 
-static inline int GetSSE(const uint8_t* a, const uint8_t* b, int w, int h) {
+static WEBP_INLINE int GetSSE(const uint8_t* a, const uint8_t* b,
+                              int w, int h) {
   int count = 0;
   int y, x;
   for (y = 0; y < h; ++y) {
@@ -652,7 +655,7 @@ static int QuantizeBlock(int16_t in[16], int16_t out[16],
 //------------------------------------------------------------------------------
 // Block copy
 
-static inline void Copy(const uint8_t* src, uint8_t* dst, int size) {
+static WEBP_INLINE void Copy(const uint8_t* src, uint8_t* dst, int size) {
   int y;
   for (y = 0; y < size; ++y) {
     memcpy(dst, src, size);
@@ -670,7 +673,7 @@ static void Copy16x16(const uint8_t* src, uint8_t* dst) { Copy(src, dst, 16); }
 //
 
 #if defined(__pic__) && defined(__i386__)
-static inline void GetCPUInfo(int cpu_info[4], int info_type) {
+static WEBP_INLINE void GetCPUInfo(int cpu_info[4], int info_type) {
   __asm__ volatile (
     "mov %%ebx, %%edi\n"
     "cpuid\n"
@@ -679,7 +682,7 @@ static inline void GetCPUInfo(int cpu_info[4], int info_type) {
     : "a"(info_type));
 }
 #elif defined(__i386__) || defined(__x86_64__)
-static inline void GetCPUInfo(int cpu_info[4], int info_type) {
+static WEBP_INLINE void GetCPUInfo(int cpu_info[4], int info_type) {
   __asm__ volatile (
     "cpuid\n"
     : "=a"(cpu_info[0]), "=b"(cpu_info[1]), "=c"(cpu_info[2]), "=d"(cpu_info[3])

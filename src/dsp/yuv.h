@@ -27,8 +27,8 @@ extern int32_t VP8kVToG[256], VP8kUToG[256];
 extern uint8_t VP8kClip[YUV_RANGE_MAX - YUV_RANGE_MIN];
 extern uint8_t VP8kClip4Bits[YUV_RANGE_MAX - YUV_RANGE_MIN];
 
-static inline void VP8YuvToRgb(uint8_t y, uint8_t u, uint8_t v,
-                               uint8_t* const rgb) {
+static WEBP_INLINE void VP8YuvToRgb(uint8_t y, uint8_t u, uint8_t v,
+                                    uint8_t* const rgb) {
   const int r_off = VP8kVToR[v];
   const int g_off = (VP8kVToG[v] + VP8kUToG[u]) >> YUV_FIX;
   const int b_off = VP8kUToB[u];
@@ -37,8 +37,8 @@ static inline void VP8YuvToRgb(uint8_t y, uint8_t u, uint8_t v,
   rgb[2] = VP8kClip[y + b_off - YUV_RANGE_MIN];
 }
 
-static inline void VP8YuvToRgb565(uint8_t y, uint8_t u, uint8_t v,
-                                  uint8_t* const rgb) {
+static WEBP_INLINE void VP8YuvToRgb565(uint8_t y, uint8_t u, uint8_t v,
+                                       uint8_t* const rgb) {
   const int r_off = VP8kVToR[v];
   const int g_off = (VP8kVToG[v] + VP8kUToG[u]) >> YUV_FIX;
   const int b_off = VP8kUToB[u];
@@ -48,20 +48,20 @@ static inline void VP8YuvToRgb565(uint8_t y, uint8_t u, uint8_t v,
             (VP8kClip[y + b_off - YUV_RANGE_MIN] >> 3));
 }
 
-static inline void VP8YuvToArgbKeepA(uint8_t y, uint8_t u, uint8_t v,
-                                     uint8_t* const argb) {
+static WEBP_INLINE void VP8YuvToArgbKeepA(uint8_t y, uint8_t u, uint8_t v,
+                                          uint8_t* const argb) {
   // Don't update Aplha (argb[0])
   VP8YuvToRgb(y, u, v, argb + 1);
 }
 
-static inline void VP8YuvToArgb(uint8_t y, uint8_t u, uint8_t v,
-                                uint8_t* const argb) {
+static WEBP_INLINE void VP8YuvToArgb(uint8_t y, uint8_t u, uint8_t v,
+                                     uint8_t* const argb) {
   argb[0] = 0xff;
   VP8YuvToArgbKeepA(y, u, v, argb);
 }
 
-static inline void VP8YuvToRgba4444KeepA(uint8_t y, uint8_t u, uint8_t v,
-                                         uint8_t* const argb) {
+static WEBP_INLINE void VP8YuvToRgba4444KeepA(uint8_t y, uint8_t u, uint8_t v,
+                                              uint8_t* const argb) {
   const int r_off = VP8kVToR[v];
   const int g_off = (VP8kVToG[v] + VP8kUToG[u]) >> YUV_FIX;
   const int b_off = VP8kUToB[u];
@@ -71,14 +71,14 @@ static inline void VP8YuvToRgba4444KeepA(uint8_t y, uint8_t u, uint8_t v,
   argb[1] = (argb[1] & 0x0f) | (VP8kClip4Bits[y + b_off - YUV_RANGE_MIN] << 4);
 }
 
-static inline void VP8YuvToRgba4444(uint8_t y, uint8_t u, uint8_t v,
-                                    uint8_t* const argb) {
+static WEBP_INLINE void VP8YuvToRgba4444(uint8_t y, uint8_t u, uint8_t v,
+                                         uint8_t* const argb) {
   argb[1] = 0x0f;
   VP8YuvToRgba4444KeepA(y, u, v, argb);
 }
 
-static inline void VP8YuvToBgr(uint8_t y, uint8_t u, uint8_t v,
-                               uint8_t* const bgr) {
+static WEBP_INLINE void VP8YuvToBgr(uint8_t y, uint8_t u, uint8_t v,
+                                    uint8_t* const bgr) {
   const int r_off = VP8kVToR[v];
   const int g_off = (VP8kVToG[v] + VP8kUToG[u]) >> YUV_FIX;
   const int b_off = VP8kUToB[u];
@@ -87,14 +87,14 @@ static inline void VP8YuvToBgr(uint8_t y, uint8_t u, uint8_t v,
   bgr[2] = VP8kClip[y + r_off - YUV_RANGE_MIN];
 }
 
-static inline void VP8YuvToBgra(uint8_t y, uint8_t u, uint8_t v,
-                                uint8_t* const bgra) {
+static WEBP_INLINE void VP8YuvToBgra(uint8_t y, uint8_t u, uint8_t v,
+                                     uint8_t* const bgra) {
   VP8YuvToBgr(y, u, v, bgra);
   bgra[3] = 0xff;
 }
 
-static inline void VP8YuvToRgba(uint8_t y, uint8_t u, uint8_t v,
-                                uint8_t* const rgba) {
+static WEBP_INLINE void VP8YuvToRgba(uint8_t y, uint8_t u, uint8_t v,
+                                     uint8_t* const rgba) {
   VP8YuvToRgb(y, u, v, rgba);
   rgba[3] = 0xff;
 }

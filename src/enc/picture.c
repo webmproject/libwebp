@@ -224,8 +224,8 @@ int WebPPictureCrop(WebPPicture* const pic,
 
 #define RFIX 30
 #define MULT(x,y) (((int64_t)(x) * (y) + (1 << (RFIX - 1))) >> RFIX)
-static inline void ImportRow(const uint8_t* src, int src_width,
-                             int32_t* frow, int32_t* irow, int dst_width) {
+static WEBP_INLINE void ImportRow(const uint8_t* src, int src_width,
+                                  int32_t* frow, int32_t* irow, int dst_width) {
   const int x_expand = (src_width < dst_width);
   const int fx_scale = (1 << RFIX) / dst_width;
   int x_in = 0;
@@ -429,22 +429,22 @@ static int WebPMemoryWrite(const uint8_t* data, size_t data_size,
 
 enum { YUV_FRAC = 16 };
 
-static inline int clip_uv(int v) {
+static WEBP_INLINE int clip_uv(int v) {
    v = (v + (257 << (YUV_FRAC + 2 - 1))) >> (YUV_FRAC + 2);
    return ((v & ~0xff) == 0) ? v : (v < 0) ? 0 : 255;
 }
 
-static inline int rgb_to_y(int r, int g, int b) {
+static WEBP_INLINE int rgb_to_y(int r, int g, int b) {
   const int kRound = (1 << (YUV_FRAC - 1)) + (16 << YUV_FRAC);
   const int luma = 16839 * r + 33059 * g + 6420 * b;
   return (luma + kRound) >> YUV_FRAC;  // no need to clip
 }
 
-static inline int rgb_to_u(int r, int g, int b) {
+static WEBP_INLINE int rgb_to_u(int r, int g, int b) {
   return clip_uv(-9719 * r - 19081 * g + 28800 * b);
 }
 
-static inline int rgb_to_v(int r, int g, int b) {
+static WEBP_INLINE int rgb_to_v(int r, int g, int b) {
   return clip_uv(+28800 * r - 24116 * g - 4684 * b);
 }
 

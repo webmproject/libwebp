@@ -43,14 +43,14 @@ int VP8BitWriterAppend(VP8BitWriter* const bw,
                        const uint8_t* data, size_t size);
 
 // return approximate write position (in bits)
-static inline uint64_t VP8BitWriterPos(const VP8BitWriter* const bw) {
+static WEBP_INLINE uint64_t VP8BitWriterPos(const VP8BitWriter* const bw) {
   return (uint64_t)(bw->pos_ + bw->run_) * 8 + 8 + bw->nb_bits_;
 }
 
-static inline uint8_t* VP8BitWriterBuf(const VP8BitWriter* const bw) {
+static WEBP_INLINE uint8_t* VP8BitWriterBuf(const VP8BitWriter* const bw) {
   return bw->buf_;
 }
-static inline size_t VP8BitWriterSize(const VP8BitWriter* const bw) {
+static WEBP_INLINE size_t VP8BitWriterSize(const VP8BitWriter* const bw) {
   return bw->pos_;
 }
 

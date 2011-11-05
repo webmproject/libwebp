@@ -239,8 +239,8 @@ static void InitRescaler(WebPRescaler* const wrk,
   wrk->frow = work + dst_width;
 }
 
-static inline void ImportRow(const uint8_t* const src,
-                             WebPRescaler* const wrk) {
+static WEBP_INLINE void ImportRow(const uint8_t* const src,
+                                  WebPRescaler* const wrk) {
   int x_in = 0;
   int x_out;
   int accum = 0;

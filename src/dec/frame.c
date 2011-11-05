@@ -193,7 +193,7 @@ int VP8InitFrame(VP8Decoder* const dec, VP8Io* io) {
 //------------------------------------------------------------------------------
 // Filtering
 
-static inline int hev_thresh_from_level(int level, int keyframe) {
+static WEBP_INLINE int hev_thresh_from_level(int level, int keyframe) {
   if (keyframe) {
     return (level >= 40) ? 2 : (level >= 15) ? 1 : 0;
   } else {
@@ -520,7 +520,7 @@ static const int kScan[16] = {
   0 + 12 * BPS,  4 + 12 * BPS, 8 + 12 * BPS, 12 + 12 * BPS
 };
 
-static inline int CheckMode(VP8Decoder* const dec, int mode) {
+static WEBP_INLINE int CheckMode(VP8Decoder* const dec, int mode) {
   if (mode == B_DC_PRED) {
     if (dec->mb_x_ == 0) {
       return (dec->mb_y_ == 0) ? B_DC_PRED_NOTOPLEFT : B_DC_PRED_NOLEFT;
@@ -531,7 +531,7 @@ static inline int CheckMode(VP8Decoder* const dec, int mode) {
   return mode;
 }
 
-static inline void Copy32b(uint8_t* dst, uint8_t* src) {
+static WEBP_INLINE void Copy32b(uint8_t* dst, uint8_t* src) {
   *(uint32_t*)dst = *(uint32_t*)src;
 }
 

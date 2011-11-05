@@ -82,7 +82,7 @@ typedef struct {
 
 #define REMAP(PTR, OLD_BASE, NEW_BASE) (PTR) = (NEW_BASE) + ((PTR) - OLD_BASE)
 
-static inline size_t MemDataSize(const MemBuffer* mem) {
+static WEBP_INLINE size_t MemDataSize(const MemBuffer* mem) {
   return (mem->end_ - mem->start_);
 }
 

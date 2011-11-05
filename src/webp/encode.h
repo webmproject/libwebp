@@ -92,7 +92,7 @@ WEBP_EXTERN(int) WebPConfigInitInternal(
 // Should always be called, to initialize a fresh WebPConfig structure before
 // modification. Returns 0 in case of version mismatch. WebPConfigInit() must
 // have succeeded before using the 'config' object.
-static inline int WebPConfigInit(WebPConfig* const config) {
+static WEBP_INLINE int WebPConfigInit(WebPConfig* const config) {
   return WebPConfigInitInternal(config, WEBP_PRESET_DEFAULT, 75.f,
                                 WEBP_ENCODER_ABI_VERSION);
 }
@@ -101,8 +101,8 @@ static inline int WebPConfigInit(WebPConfig* const config) {
 // set of parameters (referred to by 'preset') and a given quality factor.
 // This function can be called as a replacement to WebPConfigInit(). Will
 // return 0 in case of error.
-static inline int WebPConfigPreset(WebPConfig* const config,
-                                   WebPPreset preset, float quality) {
+static WEBP_INLINE int WebPConfigPreset(WebPConfig* const config,
+                                        WebPPreset preset, float quality) {
   return WebPConfigInitInternal(config, preset, quality,
                                 WEBP_ENCODER_ABI_VERSION);
 }
@@ -209,7 +209,7 @@ WEBP_EXTERN(int) WebPPictureInitInternal(WebPPicture* const, int);
 // Should always be called, to initialize the structure. Returns 0 in case of
 // version mismatch. WebPPictureInit() must have succeeded before using the
 // 'picture' object.
-static inline int WebPPictureInit(WebPPicture* const picture) {
+static WEBP_INLINE int WebPPictureInit(WebPPicture* const picture) {
   return WebPPictureInitInternal(picture, WEBP_ENCODER_ABI_VERSION);
 }
 

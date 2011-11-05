@@ -14,9 +14,11 @@
 
 #ifndef _MSC_VER
 #include <inttypes.h>
-#ifdef ANSI
-#define inline
-#endif  /* ANSI */
+#ifdef __STRICT_ANSI__
+#define WEBP_INLINE
+#else  /* __STRICT_ANSI__ */
+#define WEBP_INLINE inline
+#endif
 #else
 typedef signed   char int8_t;
 typedef unsigned char uint8_t;
@@ -26,7 +28,7 @@ typedef signed   int int32_t;
 typedef unsigned int uint32_t;
 typedef unsigned long long int uint64_t;
 typedef long long int int64_t;
-#define inline __forceinline
+#define WEBP_INLINE __forceinline
 #endif  /* _MSC_VER */
 
 #ifndef WEBP_EXTERN

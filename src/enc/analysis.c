@@ -112,7 +112,7 @@ static void SetSegmentProbas(VP8Encoder* const enc) {
   }
 }
 
-static inline int clip(int v, int m, int M) {
+static WEBP_INLINE int clip(int v, int m, int M) {
   return v < m ? m : v > M ? M : v;
 }
 
