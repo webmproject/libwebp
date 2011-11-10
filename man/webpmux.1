@@ -1,53 +1,51 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH WEBPMUX 1 "September 30, 2011"
+.TH WEBPMUX 1 "November 3, 2011"
 .SH NAME
 webpmux \- command line tool to create WebP Mux/container file.
 .SH SYNOPSIS
-.B webpmux -get
+.B webpmux \-get
 .I GET_OPTIONS
 .I INPUT
-.B -o
+.B \-o
 .I OUTPUT
 .br
-.B webpmux -set
+.B webpmux \-set
 .I SET_OPTIONS
 .I INPUT
-.B -o
+.B \-o
 .I OUTPUT
 .br
-.B webpmux -strip
+.B webpmux \-strip
 .I STRIP_OPTIONS
 .I INPUT
-.B -o
+.B \-o
 .I OUTPUT
 .br
-.B webpmux [-tile
+.B webpmux [ \-tile
 .I TILE_OPTIONS
-.B ]... -o
+.B ]... \-o
 .I OUTPUT
 .br
-.B webpmux [-frame
+.B webpmux [ \-frame
 .I FRAME_OPTIONS
-.B ]... -loop
+.B ]... \-loop
 .I LOOP_COUNT
-.B -o
+.B \-o
 .I OUTPUT
 .br
-.B webpmux -info
+.B webpmux \-info
 .I INPUT
 .br
-.B webpmux -help
+.B webpmux \-help
 .SH DESCRIPTION
 This manual page documents the
 .B webpmux
 command.
 .PP
-\fBwebpmux\fP command line tool can be used to create a WebP container file
+\fBwebpmux\fP can be used to create a WebP container file
 and extract/strip relevant data from the container file.
 .SH OPTIONS
-The basic options are:
-.TP
-.SH GET_OPTIONS:
+.SS GET_OPTIONS (\-get):
 .TP
 .B icc
 Get ICC Color profile.
@@ -60,68 +58,64 @@ Get nth tile.
 .TP
 .B frame n
 Get nth frame.
-.TP
 
-.SH SET_OPTIONS:
+.SS SET_OPTIONS (\-set)
 .TP
 .B icc
 Set ICC Color profile.
 .TP
 .B xmp
 Set XMP metadata.
-.TP
 
-.SH STRIP_OPTIONS:
+.SS STRIP_OPTIONS (\-strip)
 .TP
 .B icc
 Strip ICC Color profile.
 .TP
 .B xmp
 Strip XMP metadata.
-.TP
 
-.SH TILE_OPTIONS:
+.SS TILE_OPTIONS (\-tile)
 .TP
 .B file_i +xi+yi
 Where: 'file_i' is the i'th tile (webp format) and 'xi','yi' specify the image offset for this tile.
-.TP
 
-.SH FRAME_OPTIONS:
+.SS FRAME_OPTIONS (\-frame)
 .TP
 .B file_i +xi+yi+di
 Where: 'file_i' is the i'th frame (webp format), 'xi','yi' specify the image offset for this frame and 'di' is the pause duration before next frame.
 .TP
+.B \-loop n
+Loop the frames n number of times. 0 indicates the frames should loop forever.
 
-.SH INPUT
+.SS INPUT
 .TP
 Input file in WebP format.
-.TP
 
-.SH OUTPUT
+.SS OUTPUT (\-o)
 .TP
 Output file in WebP format.
-.TP
 
-.SH Examples:
-webpmux -set icc image_profile.icc in.webp -o icc_container.webp
+.SH EXAMPLES
+webpmux \-set icc image_profile.icc in.webp \-o icc_container.webp
 .br
-webpmux -get icc icc_container.webp -o image_profile.icc
+webpmux \-get icc icc_container.webp \-o image_profile.icc
 .br
-webpmux -set xmp image_metadata.xmp in.webp -o xmp_container.webp
+webpmux \-set xmp image_metadata.xmp in.webp \-o xmp_container.webp
 .br
-webpmux -get xmp xmp_container.webp -o image_metadata.xmp
+webpmux \-get xmp xmp_container.webp \-o image_metadata.xmp
 .br
-webpmux -frame anim_1.webp +0+0+0 -frame anim_2.webp +50+50+0 -loop 10 -o anim_container.webp
+webpmux \-frame anim_1.webp +0+0+0 \-frame anim_2.webp +50+50+0 \-loop 10 \-o anim_container.webp
 .br
-webpmux -get frame 2 anim_container.webp -o frame_2.webp
+webpmux \-get frame 2 anim_container.webp \-o frame_2.webp
 
-.SH
 .SH SEE ALSO
-.BR dwebp (1), cwebp (1).
+.BR dwebp (1),
+.BR cwebp (1).
 .br
 Please refer to http://code.google.com/speed/webp/ for additional
 information.
-.SH AUTHOR
+.SH AUTHORS
 \fBwebpmux\fP is written by the WebP team.
 .br
 The latest source tree is available at http://www.webmproject.org/code

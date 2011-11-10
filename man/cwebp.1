@@ -1,10 +1,10 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "September 19, 2011"
+.TH CWEBP 1 "November 3, 2011"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
 .B cwebp
-.RI [ options ] " input_file -o output_file.webp
+.RI [ options ] " input_file \-o output_file.webp
 .br
 .SH DESCRIPTION
 This manual page documents the
@@ -149,18 +149,17 @@ Do not print anything.
 .B \-short
 Only print brief information (output file size and PSNR) for testing purpose.
 
-.SH Examples:
-cwebp -q 70 picture.png -o picture.webp
+.SH EXAMPLES
+cwebp \-q 70 picture.png \-o picture.webp
 .br
-cwebp -sns 70 -f 50 -strong -af -size 60000 picture.png -o picture.webp
+cwebp \-sns 70 \-f 50 \-strong \-af \-size 60000 picture.png \-o picture.webp
 
-.SH
 .SH SEE ALSO
 .BR dwebp (1).
 .br
 Please refer to http://code.google.com/speed/webp/ for additional
 information.
-.SH AUTHOR
+.SH AUTHORS
 \fBcwebp\fP was written by the WebP team.
 .br
 The latest source tree is available at http://www.webmproject.org/code
