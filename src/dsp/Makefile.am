@@ -10,5 +10,4 @@ libwebpdsp_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE)
 libwebpdspinclude_HEADERS = ../webp/types.h
 libwebpdspincludedir = $(includedir)/webp
 
-noinst_HEADERS = dsp.h yuv.h
 noinst_LTLIBRARIES = libwebpdsp.la

@@ -8,6 +8,4 @@ libwebputils_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE)
 libwebputilsinclude_HEADERS = ../webp/types.h
 libwebputilsincludedir = $(includedir)/webp
 
-noinst_HEADERS = bit_reader.h bit_writer.h thread.h
-
 noinst_LTLIBRARIES = libwebputils.la
