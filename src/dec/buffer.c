@@ -23,12 +23,21 @@ extern "C" {
 // Number of bytes per pixel for the different color-spaces.
 static const int kModeBpp[MODE_LAST] = { 3, 4, 3, 4, 4, 2, 2, 1, 1 };
 
+// Check that webp_csp_mode is within the bounds of WEBP_CSP_MODE.
+// Convert to an integer to handle both the unsigned/signed enum cases
+// without the need for casting to remove type limit warnings.
+static int IsValidColorspace(int webp_csp_mode) {
+  return (webp_csp_mode >= MODE_RGB && webp_csp_mode < MODE_LAST);
+}
+
 static VP8StatusCode CheckDecBuffer(const WebPDecBuffer* const buffer) {
   int ok = 1;
   WEBP_CSP_MODE mode = buffer->colorspace;
   const int width = buffer->width;
   const int height = buffer->height;
-  if (mode >= MODE_YUV) {   // YUV checks
+  if (!IsValidColorspace(mode)) {
+    ok = 0;
+  } else if (mode >= MODE_YUV) {   // YUV checks
     const WebPYUVABuffer* const buf = &buffer->u.YUVA;
     const int size = buf->y_stride * height;
     const int u_size = buf->u_stride * ((height + 1) / 2);
@@ -56,7 +65,7 @@ static VP8StatusCode AllocateBuffer(WebPDecBuffer* const buffer) {
   const int w = buffer->width;
   const int h = buffer->height;
 
-  if (w <= 0 || h <= 0) {
+  if (w <= 0 || h <= 0 || !IsValidColorspace(buffer->colorspace)) {
     return VP8_STATUS_INVALID_PARAM;
   }
 
