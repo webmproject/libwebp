@@ -22,7 +22,6 @@ LOCAL_SRC_FILES := \
 	src/enc/analysis.c \
 	src/enc/config.c \
 	src/enc/cost.c \
-	src/enc/enc.c \
 	src/enc/filter.c \
 	src/enc/frame.c \
 	src/enc/iterator.c \
