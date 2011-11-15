@@ -72,6 +72,23 @@ void VP8IteratorInit(VP8Encoder* const enc, VP8EncIterator* const it) {
 // Import the source samples into the cache. Takes care of replicating
 // boundary pixels if necessary.
 
+static void ImportBlock(const uint8_t* src, int src_stride,
+                        uint8_t* dst, int w, int h, int size) {
+  int i;
+  for (i = 0; i < h; ++i) {
+    memcpy(dst, src, w);
+    if (w < size) {
+      memset(dst + w, dst[w - 1], size - w);
+    }
+    dst += BPS;
+    src += src_stride;
+  }
+  for (i = h; i < size; ++i) {
+    memcpy(dst, dst - BPS, size);
+    dst += BPS;
+  }
+}
+
 void VP8IteratorImport(const VP8EncIterator* const it) {
   const VP8Encoder* const enc = it->enc_;
   const int x = it->x_, y = it->y_;
@@ -84,46 +101,32 @@ void VP8IteratorImport(const VP8EncIterator* const it) {
   uint8_t* vdst = it->yuv_in_ + V_OFF;
   int w = (pic->width - x * 16);
   int h = (pic->height - y * 16);
-  int i;
 
   if (w > 16) w = 16;
   if (h > 16) h = 16;
+
   // Luma plane
-  for (i = 0; i < h; ++i) {
-    memcpy(ydst, ysrc, w);
-    if (w < 16) memset(ydst + w, ydst[w - 1], 16 - w);
-    ydst += BPS;
-    ysrc += pic->y_stride;
-  }
-  for (i = h; i < 16; ++i) {
-    memcpy(ydst, ydst - BPS, 16);
-    ydst += BPS;
-  }
-  // U/V plane
-  w = (w + 1) / 2;
-  h = (h + 1) / 2;
-  for (i = 0; i < h; ++i) {
-    memcpy(udst, usrc, w);
-    memcpy(vdst, vsrc, w);
-    if (w < 8) {
-      memset(udst + w, udst[w - 1], 8 - w);
-      memset(vdst + w, vdst[w - 1], 8 - w);
-    }
-    udst += BPS;
-    vdst += BPS;
-    usrc += pic->uv_stride;
-    vsrc += pic->uv_stride;
-  }
-  for (i = h; i < 8; ++i) {
-    memcpy(udst, udst - BPS, 8);
-    memcpy(vdst, vdst - BPS, 8);
-    udst += BPS;
-    vdst += BPS;
+  ImportBlock(ysrc, pic->y_stride, ydst, w, h, 16);
+
+  {   // U/V planes
+    const int uv_w = (w + 1) / 2;
+    const int uv_h = (h + 1) / 2;
+    ImportBlock(usrc, pic->uv_stride, udst, uv_w, uv_h, 8);
+    ImportBlock(vsrc, pic->uv_stride, vdst, uv_w, uv_h, 8);
   }
 }
 
 //------------------------------------------------------------------------------
 // Copy back the compressed samples into user space if requested.
+
+static void ExportBlock(const uint8_t* src, uint8_t* dst, int dst_stride,
+                        int w, int h) {
+  while (h-- > 0) {
+    memcpy(dst, src, w);
+    dst += dst_stride;
+    src += BPS;
+  }
+}
 
 void VP8IteratorExport(const VP8EncIterator* const it) {
   const VP8Encoder* const enc = it->enc_;
@@ -133,28 +136,23 @@ void VP8IteratorExport(const VP8EncIterator* const it) {
     const uint8_t* const usrc = it->yuv_out_ + U_OFF;
     const uint8_t* const vsrc = it->yuv_out_ + V_OFF;
     const WebPPicture* const pic = enc->pic_;
-    uint8_t* ydst = pic->y + (y * pic->y_stride + x) * 16;
-    uint8_t* udst = pic->u + (y * pic->uv_stride + x) * 8;
-    uint8_t* vdst = pic->v + (y * pic->uv_stride + x) * 8;
+    uint8_t* const ydst = pic->y + (y * pic->y_stride + x) * 16;
+    uint8_t* const udst = pic->u + (y * pic->uv_stride + x) * 8;
+    uint8_t* const vdst = pic->v + (y * pic->uv_stride + x) * 8;
     int w = (pic->width - x * 16);
     int h = (pic->height - y * 16);
-    int i;
 
     if (w > 16) w = 16;
     if (h > 16) h = 16;
 
     // Luma plane
-    for (i = 0; i < h; ++i) {
-      memcpy(ydst + i * pic->y_stride, ysrc + i * BPS, w);
-    }
-    // U/V plane
-    {
+    ExportBlock(ysrc, ydst, pic->y_stride, w, h);
+
+    {   // U/V planes
       const int uv_w = (w + 1) / 2;
       const int uv_h = (h + 1) / 2;
-      for (i = 0; i < uv_h; ++i) {
-        memcpy(udst + i * pic->uv_stride, usrc + i * BPS, uv_w);
-        memcpy(vdst + i * pic->uv_stride, vsrc + i * BPS, uv_w);
-      }
+      ExportBlock(usrc, udst, pic->uv_stride, uv_w, uv_h);
+      ExportBlock(vsrc, vdst, pic->uv_stride, uv_w, uv_h);
     }
   }
 }
