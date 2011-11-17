@@ -9,5 +9,4 @@ libwebpencode_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE)
 libwebpencodeinclude_HEADERS = ../webp/encode.h ../webp/types.h
 libwebpencodeincludedir = $(includedir)/webp
 
-noinst_HEADERS = cost.h vp8enci.h
 noinst_LTLIBRARIES = libwebpencode.la
