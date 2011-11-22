@@ -50,6 +50,9 @@ document describes additional support for:
   * **Animation.** An image may have pauses between frames, making it
     an animation.
 
+  * **Transparency.** An image may have transparency, i.e., an alpha channel for
+    each frame/tile.
+
 Files not using these new features are backward compatible with the
 original format. Use of these features will produce files that are not
 compatible with older programs.
@@ -215,6 +218,10 @@ multiple frames. Data for each frame consists of:
     present at the beginning of data for an image that's represented as
     multiple tile images.
 
+  * An optional "ALPH" chunk with alpha bitstream of the tile. It **MUST** be
+    present for an image containing transparency. It **MUST NOT** be present
+    in non-transparent images.
+
   * A "VP8 " chunk with the bitstream of the tile.
 
 All chunks **MUST** be placed in the same order as listed above (except
@@ -228,8 +235,8 @@ position, a decoder can choose to stop searching for it.  The rule of
 ignoring late chunks should make programs that need to do a full search
 give the same results as the ones stopping early.
 
-**Example:** An example layout of a non-animated, tiled image may look
-as follows:
+**Example:** An example layout of a non-animated, tiled image without
+transparency may look as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 RIFF/WEBP
@@ -246,17 +253,20 @@ RIFF/WEBP
 +- META (XMP metadata)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Example:** An example layout of an animated image may look as follows:
+**Example:** An example layout of an animated image with transparency may look
+as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 RIFF/WEBP
 +- VP8X (descriptions of features used)
 +- LOOP (animation control parameters)
 +- FRM (first animation frame parameters)
++- ALPH (alpha bitstream - first image frame)
 +- VP8 (bitstream - first image frame)
 +- FRM (second animation frame parameters)
++- ALPH (alpha bitstream - second image frame)
 +- VP8 (bitstream - second image frame)
-+- META(XMP metadata)
++- META (XMP metadata)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -272,14 +282,20 @@ pseudocode:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 assert not VP8X.flags.haveAnimation
-canvas ← new black image of size VP8X.canvasWidth x VP8X.canvasHeight.
+canvas ← new black image of size
+         VP8X.canvasWidth x VP8X.canvasHeight.
 tile_params.tileCanvasX = tile_params.tileCanvasY = 0
 for chunk in data_for_all_frames:
     if chunk.tag == "TILE":
         assert No other TILE chunk after the last "VP8 " chunk
+        assert No ALPH chunk after the last "VP8 " chunk
         tile_params = chunk
+    if chunk.tag == "ALPH":
+        assert No other ALPH chunk after the last "VP8 " chunk
+        tile_params.alpha = alpha_data
     if chunk.tag == "VP8 ":
-        render image in chunk in canvas with top-left corner in (tile_params.tileCanvasX, tile_params.tileCanvasY) using the isometry in VP8X.flags.rotationAndSymmetry.
+        render image in chunk in canvas with top-left corner in
+            (tile_params.tileCanvasX, tile_params.tileCanvasY).
         tile_params.tileCanvasX = tile_params.tileCanvasY = 0
     Ignore unknown chunks
 canvas contains the decoded canvas.
@@ -290,7 +306,8 @@ pseudocode:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 assert VP8X.flags.haveAnimation
-canvas ← new black image of size VP8X.canvasWidth x VP8X.canvasHeight.
+canvas ← new black image of size
+         VP8X.canvasWidth x VP8X.canvasHeight.
 if LOOP.loopCount==0:
     LOOP.loopCount=∞
 current_FRM ← nil
@@ -298,15 +315,24 @@ for LOOP.loop = 0, ..., LOOP.loopCount-1
     assert First chunk in data_for_all_frames is a FRM
     for chunk in data_for_all_frames:
         if chunk.tag == "FRM ":
+            assert No other FRM chunk after the last "VP8 " chunk
+            assert No ALPH chunk after the last "VP8 " chunk
             if current_FRM != nil:
-                Show the contents of canvas for current_FRM.frameDuration*10ms.
+                Show the contents of canvas for
+                    current_FRM.frameDuration * 1ms.
             current_FRM = chunk
+        if chunk.tag == "ALPH":
+            assert No other ALPH chunk after the last "VP8 " chunk
+            tile_params.alpha = alpha_data
         if chunk.tag == "VP8 ":
             assert tile_params.tileCanvasX >= current_FRM.frameX
             assert tile_params.tileCanvasY >= current_FRM.frameY
-            assert tile_params.tileCanvasX + chunk.tileWidth >= current_FRM.frameX + current_FRM.frameWidth
-            assert tile_params.tileCanvasY + chunk.tileHeight >= current_FRM.frameX + current_FRM.frameHeight
-            render image in chunk in canvas with top-left corner in (tile_params.tileCanvasX, tile_params.tileCanvasY) using the isometry in VP8X.flags.rotationAndSymmetry.
+            assert tile_params.tileCanvasX + chunk.tileWidth >=
+                current_FRM.frameX + current_FRM.frameWidth
+            assert tile_params.tileCanvasY + chunk.tileHeight >=
+                current_FRM.frameX + current_FRM.frameHeight
+            render image in chunk in canvas with top-left corner in
+                (tile_params.tileCanvasX, tile_params.tileCanvasY).
             tile_params.tileCanvasX = tile_params.tileCanvasY = 0
         Ignore unknown chunks
 canvas contains the decoded canvas.
@@ -480,6 +506,31 @@ constraints:
 
   * The height of a tile **MUST** be divisible by `16`, or
     _tileCanvasY + tileHeight == canvasHeight_ **MUST** be true.
+
+
+### ALPH Chunks (Alpha Bitstreams)
+
+This optional chunk contains encoded alpha data for a single tile. Either
+**ALL or NONE** of the tiles must contain this chunk.
+
+The alpha channel can be encoded either losslessly or with lossy preprocessing
+(quantization). After the optional preprocessing, the alpha values are encoded
+with a lossless compression method like zlib. Work is in progress to improve the
+compression gain further by exploring alternate compression methods and hence,
+the bit-stream for the Alpha-chunk is still experimental and expected to change.
+
+The contents of such a chunk are as follows:
+
+  * Byte 0:  The _compression method_ used. Currently two methods are
+    supported:
+
+    * 0 --> No compression
+
+    * 1 --> Zlib compression.
+
+  * Byte 1:  _Reserved_. **Should** be 0.
+
+  * Byte 2 onwards:  _Encoded alpha bitstream_.
 
 
 ### ICCP Chunk (Color Profile)
