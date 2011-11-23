@@ -17,6 +17,8 @@
 extern "C" {
 #endif
 
+#define HALVE(x) (((x) + 1) >> 1)
+
 //------------------------------------------------------------------------------
 // WebPPicture
 //------------------------------------------------------------------------------
@@ -28,8 +30,8 @@ int WebPPictureAlloc(WebPPicture* const picture) {
     const int width = picture->width;
     const int height = picture->height;
     const int y_stride = width;
-    const int uv_width = (width + 1) / 2;
-    const int uv_height = (height + 1) / 2;
+    const int uv_width = HALVE(width);
+    const int uv_height = HALVE(height);
     const int uv_stride = uv_width;
     int uv0_stride = 0;
     int a_width, a_stride;
@@ -122,42 +124,43 @@ void WebPPictureFree(WebPPicture* const picture) {
 //------------------------------------------------------------------------------
 // Picture copying
 
+// TODO(skal): move to dsp/ ?
+static void CopyPlane(const uint8_t* src, int src_stride,
+                      uint8_t* dst, int dst_stride, int width, int height) {
+  while (height-- > 0) {
+    memcpy(dst, src, width);
+    src += src_stride;
+    dst += dst_stride;
+  }
+}
+
 int WebPPictureCopy(const WebPPicture* const src, WebPPicture* const dst) {
-  int y;
   if (src == NULL || dst == NULL) return 0;
   if (src == dst) return 1;
 
   WebPPictureGrabSpecs(src, dst);
   if (!WebPPictureAlloc(dst)) return 0;
 
-  for (y = 0; y < dst->height; ++y) {
-    memcpy(dst->y + y * dst->y_stride,
-           src->y + y * src->y_stride, src->width);
-  }
-  for (y = 0; y < (dst->height + 1) / 2; ++y) {
-    memcpy(dst->u + y * dst->uv_stride,
-           src->u + y * src->uv_stride, (src->width + 1) / 2);
-    memcpy(dst->v + y * dst->uv_stride,
-           src->v + y * src->uv_stride, (src->width + 1) / 2);
-  }
+  CopyPlane(src->y, src->y_stride,
+            dst->y, dst->y_stride, dst->width, dst->height);
+  CopyPlane(src->u, src->uv_stride,
+            dst->u, dst->uv_stride, HALVE(dst->width), HALVE(dst->height));
+  CopyPlane(src->v, src->uv_stride,
+            dst->v, dst->uv_stride, HALVE(dst->width), HALVE(dst->height));
 #ifdef WEBP_EXPERIMENTAL_FEATURES
   if (dst->a != NULL)  {
-    for (y = 0; y < dst->height; ++y) {
-      memcpy(dst->a + y * dst->a_stride,
-             src->a + y * src->a_stride, src->width);
-    }
+    CopyPlane(src->a, src->a_stride,
+              dst->a, dst->a_stride, dst->width, dst->height);
   }
   if (dst->u0 != NULL)  {
     int uv0_width = src->width;
     if ((dst->colorspace & WEBP_CSP_UV_MASK) == WEBP_YUV422) {
-      uv0_width = (uv0_width + 1) / 2;
+      uv0_width = HALVE(uv0_width);
     }
-    for (y = 0; y < dst->height; ++y) {
-      memcpy(dst->u0 + y * dst->uv0_stride,
-             src->u0 + y * src->uv0_stride, uv0_width);
-      memcpy(dst->v0 + y * dst->uv0_stride,
-             src->v0 + y * src->uv0_stride, uv0_width);
-    }
+    CopyPlane(src->u0, src->uv0_stride,
+              dst->u0, dst->uv0_stride, uv0_width, dst->height);
+    CopyPlane(src->v0, src->uv0_stride,
+              dst->v0, dst->uv0_stride, uv0_width, dst->height);
   }
 #endif
   return 1;
@@ -169,7 +172,6 @@ int WebPPictureCopy(const WebPPicture* const src, WebPPicture* const dst) {
 int WebPPictureCrop(WebPPicture* const pic,
                     int left, int top, int width, int height) {
   WebPPicture tmp;
-  int y;
 
   if (pic == NULL) return 0;
   if (width <= 0 || height <= 0) return 0;
@@ -181,36 +183,34 @@ int WebPPictureCrop(WebPPicture* const pic,
   tmp.height = height;
   if (!WebPPictureAlloc(&tmp)) return 0;
 
-  for (y = 0; y < height; ++y) {
-    memcpy(tmp.y + y * tmp.y_stride,
-           pic->y + (top + y) * pic->y_stride + left, width);
-  }
-  for (y = 0; y < (height + 1) / 2; ++y) {
-    const int offset = (y + top / 2) * pic->uv_stride + left / 2;
-    memcpy(tmp.u + y * tmp.uv_stride, pic->u + offset, (width + 1) / 2);
-    memcpy(tmp.v + y * tmp.uv_stride, pic->v + offset, (width + 1) / 2);
+  {
+    const int y_offset = top * pic->y_stride + left;
+    const int uv_offset = (top / 2) * pic->uv_stride + left / 2;
+    CopyPlane(pic->y + y_offset, pic->y_stride,
+              tmp.y, tmp.y_stride, width, height);
+    CopyPlane(pic->u + uv_offset, pic->uv_stride,
+              tmp.u, tmp.uv_stride, HALVE(width), HALVE(height));
+    CopyPlane(pic->v + uv_offset, pic->uv_stride,
+              tmp.v, tmp.uv_stride, HALVE(width), HALVE(height));
   }
 
 #ifdef WEBP_EXPERIMENTAL_FEATURES
   if (tmp.a) {
-    for (y = 0; y < height; ++y) {
-      memcpy(tmp.a + y * tmp.a_stride,
-           pic->a + (top + y) * pic->a_stride + left, width);
-    }
+    const int a_offset = top * pic->a_stride + left;
+    CopyPlane(pic->a + a_offset, pic->a_stride,
+              tmp.a, tmp.a_stride, width, height);
   }
   if (tmp.u0) {
     int w = width;
     int l = left;
     if (tmp.colorspace == WEBP_YUV422) {
-      w = (w + 1) / 2;
-      l = (l + 1) / 2;
+      w = HALVE(w);
+      l = HALVE(l);
     }
-    for (y = 0; y < height; ++y) {
-      memcpy(tmp.u0 + y * tmp.uv0_stride,
-             pic->u0 + (top + y) * pic->uv0_stride + l, w);
-      memcpy(tmp.v0 + y * tmp.uv0_stride,
-             pic->v0 + (top + y) * pic->uv0_stride + l, w);
-    }
+    CopyPlane(pic->u0 + top * pic->uv0_stride + l, pic->uv0_stride,
+              tmp.u0, tmp.uv0_stride, w, l);
+    CopyPlane(pic->v0 + top * pic->uv0_stride + l, pic->uv0_stride,
+              tmp.v0, tmp.uv0_stride, w, l);
   }
 #endif
 
@@ -339,13 +339,13 @@ int WebPPictureRescale(WebPPicture* const pic, int width, int height) {
   RescalePlane(pic->y, prev_width, prev_height, pic->y_stride,
                tmp.y, width, height, tmp.y_stride, work);
   RescalePlane(pic->u,
-               (prev_width + 1) / 2, (prev_height + 1) / 2, pic->uv_stride,
+               HALVE(prev_width), HALVE(prev_height), pic->uv_stride,
                tmp.u,
-               (width + 1) / 2, (height + 1) / 2, tmp.uv_stride, work);
+               HALVE(width), HALVE(height), tmp.uv_stride, work);
   RescalePlane(pic->v,
-               (prev_width + 1) / 2, (prev_height + 1) / 2, pic->uv_stride,
+               HALVE(prev_width), HALVE(prev_height), pic->uv_stride,
                tmp.v,
-               (width + 1) / 2, (height + 1) / 2, tmp.uv_stride, work);
+               HALVE(width), HALVE(height), tmp.uv_stride, work);
 
 #ifdef WEBP_EXPERIMENTAL_FEATURES
   if (tmp.a) {
@@ -476,8 +476,9 @@ static WEBP_INLINE int rgb_to_v(int r, int g, int b) {
 
 static void MakeGray(WebPPicture* const picture) {
   int y;
-  const int uv_width =  (picture->width + 1) >> 1;
-  for (y = 0; y < ((picture->height + 1) >> 1); ++y) {
+  const int uv_width = HALVE(picture->width);
+  const int uv_height = HALVE(picture->height);
+  for (y = 0; y < uv_height; ++y) {
     memset(picture->u + y * picture->uv_stride, 128, uv_width);
     memset(picture->v + y * picture->uv_stride, 128, uv_width);
   }
