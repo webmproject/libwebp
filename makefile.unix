@@ -54,6 +54,8 @@ ARFLAGS = r
 CC = gcc -Isrc/ -Iexamples/ -Wall
 CFLAGS = -O3 -DNDEBUG $(EXTRA_FLAGS)
 INSTALL = install
+GROFF = /usr/bin/groff
+COL = /usr/bin/col
 LDFLAGS = $(EXTRA_LIBS) -lm
 
 DEC_OBJS = src/dec/frame.o src/dec/webp.o src/dec/quant.o src/dec/tree.o \
@@ -68,7 +70,8 @@ DSP_OBJS = src/dsp/cpu.o src/dsp/enc.o \
            src/dsp/enc_sse2.o src/dsp/dec.o src/dsp/dec_sse2.o \
            src/dsp/dec_neon.o src/dsp/upsampling.o src/dsp/upsampling_sse2.o \
            src/dsp/yuv.o
-UTILS_OBJS = src/utils/bit_reader.o src/utils/bit_writer.o src/utils/thread.o
+UTILS_OBJS = src/utils/alpha.o src/utils/bit_reader.o src/utils/bit_writer.o \
+             src/utils/quant_levels.o src/utils/thread.o src/utils/tcoder.o
 
 OBJS = $(DEC_OBJS) $(ENC_OBJS) $(DSP_OBJS) $(UTILS_OBJS)
 
@@ -77,10 +80,13 @@ MUX_OBJS = src/mux/mux.o
 HDRS = src/webp/encode.h src/enc/vp8enci.h src/enc/cost.h src/webp/mux.h \
        src/dec/vp8i.h  \
        src/dsp/yuv.h src/dsp/dsp.h \
-       src/utils/bit_writer.h src/utils/bit_reader.h src/utils/thread.h
+       src/utils/alpha.h src/utils/bit_writer.h src/utils/bit_reader.h \
+       src/utils/thread.h src/utils/tcoder.h
 
-OUTPUT = examples/cwebp examples/dwebp examples/webpmux \
-	 src/libwebp.a src/mux/libwebpmux.a
+OUT_LIBS = src/libwebp.a src/mux/libwebpmux.a
+OUT_EXAMPLES = examples/cwebp examples/dwebp examples/webpmux
+
+OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES)
 
 all:ex
 
@@ -93,29 +99,29 @@ src/libwebp.a:  $(OBJS)
 src/mux/libwebpmux.a:  $(MUX_OBJS)
 	$(AR) $(ARFLAGS) $@ $^
 
-ex: examples/cwebp examples/dwebp examples/webpmux
+ex: $(OUT_EXAMPLES)
 
 examples/cwebp: examples/cwebp.o src/libwebp.a
 examples/dwebp: examples/dwebp.o src/libwebp.a
 examples/webpmux: examples/webpmux.o src/mux/libwebpmux.a src/libwebp.a
-examples/cwebp examples/dwebp examples/webpmux:
+
+$(OUT_EXAMPLES):
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 dist: DESTDIR := dist
 dist: all
 	$(INSTALL) -m755 -d $(DESTDIR)/include/webp \
-	    $(DESTDIR)/doc $(DESTDIR)/lib
-	$(INSTALL) -m755 -s examples/cwebp examples/dwebp examples/webpmux \
-	    $(DESTDIR)
+             $(DESTDIR)/doc $(DESTDIR)/lib
+	$(INSTALL) -m755 -s $(OUT_EXAMPLES) $(DESTDIR)
 	$(INSTALL) -m644 src/webp/*.h $(DESTDIR)/include/webp
 	$(INSTALL) -m644 src/libwebp.a $(DESTDIR)/lib
 	umask 022; \
 	for m in man/[cd]webp.1; do \
 	  basenam=$$(basename $$m .1); \
-	  /usr/bin/groff -t -e -man -T utf8 $$m \
-	    | col -bx >$(DESTDIR)/doc/$${basenam}.txt; \
-	  /usr/bin/groff -t -e -man -T html $$m \
-	    | col -bx >$(DESTDIR)/doc/$${basenam}.html; \
+	  $(GROFF) -t -e -man -T utf8 $$m \
+	    | $(COL) -bx >$(DESTDIR)/doc/$${basenam}.txt; \
+	  $(GROFF) -t -e -man -T html $$m \
+	    | $(COL) -bx >$(DESTDIR)/doc/$${basenam}.html; \
 	done
 
 clean:

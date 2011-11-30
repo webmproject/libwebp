@@ -1,10 +1,12 @@
 AM_CPPFLAGS = -I$(top_srcdir)/src
 
-libwebputils_la_SOURCES = bit_reader.h bit_reader.c \
+libwebputils_la_SOURCES = alpha.h alpha.c \
+                          bit_reader.h bit_reader.c \
                           bit_writer.h bit_writer.c \
+                          quant_levels.c \
+                          tcoder.h tcoderi.h tcoder.c \
                           thread.h thread.c
 libwebputils_la_LDFLAGS = -version-info 0:0:0
-libwebputils_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE)
 libwebputilsinclude_HEADERS = ../webp/types.h
 libwebputilsincludedir = $(includedir)/webp
 

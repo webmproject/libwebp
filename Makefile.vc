@@ -175,8 +175,11 @@ X_OBJS= \
     $(DIROBJ)\enc\tree.obj \
     $(DIROBJ)\enc\webpenc.obj \
     $(DIROBJ)\mux\mux.obj \
+    $(DIROBJ)\utils\alpha.obj \
     $(DIROBJ)\utils\bit_reader.obj \
     $(DIROBJ)\utils\bit_writer.obj \
+    $(DIROBJ)\utils\quant_levels.obj \
+    $(DIROBJ)\utils\tcoder.obj \
     $(DIROBJ)\utils\thread.obj \
     $(RESOURCE) \
 
