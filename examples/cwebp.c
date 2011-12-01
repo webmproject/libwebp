@@ -726,7 +726,7 @@ static const char* const kErrorMessages[] = {
   "header bits using -partition_limit. More details are available "
   "in the manual (`man cwebp`)",
   "PARTITION_OVERFLOW: Partition is too big to fit 16M",
-  "BAD_WRITE: Picture writer returned an I/O error"
+  "BAD_WRITE: Picture writer returned an I/O error",
   "FILE_TOO_BIG: File would be too big to fit in 4G"
 };
 
