@@ -163,7 +163,6 @@ static int EmitFancyRGB(const VP8Io* const io, WebPDecParams* const p) {
 
 //------------------------------------------------------------------------------
 
-#ifdef WEBP_EXPERIMENTAL_FEATURES
 static int EmitAlphaYUV(const VP8Io* const io, WebPDecParams* const p) {
   const int mb_w = io->mb_w;
   const int mb_h = io->mb_h;
@@ -199,8 +198,6 @@ static int EmitAlphaRGB(const VP8Io* const io, WebPDecParams* const p) {
   }
   return 0;
 }
-
-#endif    /* WEBP_EXPERIMENTAL_FEATURES */
 
 //------------------------------------------------------------------------------
 // Simple picture rescaler
@@ -609,12 +606,10 @@ static int CustomSetup(VP8Io* io) {
     } else {
       p->emit = EmitYUV;
     }
-#ifdef WEBP_EXPERIMENTAL_FEATURES
     if (IsAlphaMode(p->output->colorspace)) {
       // We need transparency output
       p->emit_alpha = is_rgb ? EmitAlphaRGB : EmitAlphaYUV;
     }
-#endif
   }
 
   if (is_rgb) {
