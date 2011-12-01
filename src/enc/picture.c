@@ -147,11 +147,11 @@ int WebPPictureCopy(const WebPPicture* const src, WebPPicture* const dst) {
             dst->u, dst->uv_stride, HALVE(dst->width), HALVE(dst->height));
   CopyPlane(src->v, src->uv_stride,
             dst->v, dst->uv_stride, HALVE(dst->width), HALVE(dst->height));
-#ifdef WEBP_EXPERIMENTAL_FEATURES
   if (dst->a != NULL)  {
     CopyPlane(src->a, src->a_stride,
               dst->a, dst->a_stride, dst->width, dst->height);
   }
+#ifdef WEBP_EXPERIMENTAL_FEATURES
   if (dst->u0 != NULL)  {
     int uv0_width = src->width;
     if ((dst->colorspace & WEBP_CSP_UV_MASK) == WEBP_YUV422) {
@@ -194,12 +194,12 @@ int WebPPictureCrop(WebPPicture* const pic,
               tmp.v, tmp.uv_stride, HALVE(width), HALVE(height));
   }
 
-#ifdef WEBP_EXPERIMENTAL_FEATURES
   if (tmp.a) {
     const int a_offset = top * pic->a_stride + left;
     CopyPlane(pic->a + a_offset, pic->a_stride,
               tmp.a, tmp.a_stride, width, height);
   }
+#ifdef WEBP_EXPERIMENTAL_FEATURES
   if (tmp.u0) {
     int w = width;
     int l = left;
@@ -347,11 +347,11 @@ int WebPPictureRescale(WebPPicture* const pic, int width, int height) {
                tmp.v,
                HALVE(width), HALVE(height), tmp.uv_stride, work);
 
-#ifdef WEBP_EXPERIMENTAL_FEATURES
   if (tmp.a) {
     RescalePlane(pic->a, prev_width, prev_height, pic->a_stride,
                  tmp.a, width, height, tmp.a_stride, work);
   }
+#ifdef WEBP_EXPERIMENTAL_FEATURES
   if (tmp.u0) {
     int s = 1;
     if ((tmp.colorspace & WEBP_CSP_UV_MASK) == WEBP_YUV422) {
@@ -547,7 +547,6 @@ static int Import(WebPPicture* const picture,
   }
 
   if (import_alpha) {
-#ifdef WEBP_EXPERIMENTAL_FEATURES
     const uint8_t* const a_ptr = rgb + 3;
     assert(step >= 4);
     for (y = 0; y < height; ++y) {
@@ -556,7 +555,6 @@ static int Import(WebPPicture* const picture,
           a_ptr[step * x + y * rgb_stride];
       }
     }
-#endif
   }
   return 1;
 }

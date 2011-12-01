@@ -333,7 +333,7 @@ struct VP8Encoder {
   // transparency blob
   int has_alpha_;
   uint8_t* alpha_data_;       // non-NULL if transparency is present
-  size_t alpha_data_size_;
+  uint32_t alpha_data_size_;
 
   // enhancement layer
   int use_layer_;
@@ -436,7 +436,6 @@ int VP8Decimate(VP8EncIterator* const it, VP8ModeScore* const rd, int rd_opt);
 
   // in alpha.c
 void VP8EncInitAlpha(VP8Encoder* enc);           // initialize alpha compression
-void VP8EncCodeAlphaBlock(VP8EncIterator* it);   // analyze or code a macroblock
 int VP8EncFinishAlpha(VP8Encoder* enc);          // finalize compressed data
 void VP8EncDeleteAlpha(VP8Encoder* enc);         // delete compressed data
 

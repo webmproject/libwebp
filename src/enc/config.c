@@ -41,8 +41,9 @@ int WebPConfigInitInternal(WebPConfig* const config,
   config->show_compressed = 0;
   config->preprocessing = 0;
   config->autofilter = 0;
-  config->alpha_compression = 0;
   config->partition_limit = 0;
+  config->alpha_compression = 1;
+  config->alpha_quality = 100;
 
   // TODO(skal): tune.
   switch (preset) {
@@ -111,6 +112,8 @@ int WebPValidateConfig(const WebPConfig* const config) {
     return 0;
   if (config->alpha_compression < 0)
     return 0;
+  if (config->alpha_quality < 0 || config->alpha_quality > 100)
+      return 0;
   return 1;
 }
 

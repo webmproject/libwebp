@@ -71,7 +71,11 @@ typedef struct {
                          // Default is set to 0 for easier progressive decoding.
   int partition_limit;   // quality degradation allowed to fit the 512k limit on
                          // prediction modes coding (0=no degradation, 100=full)
-  int alpha_compression;  // Algorithm for optimizing the alpha plane (0 = none)
+  int alpha_compression;  // Algorithm for encoding the alpha plane (0 = none,
+                          // 1 = Backward reference counts encoded with
+                          // Arithmetic encoder). Default is 1.
+  int alpha_quality;      // Between 0 (smallest size) and 100 (lossless).
+                          // Default is 100.
 } WebPConfig;
 
 // Enumerate some predefined settings for WebPConfig, depending on the type

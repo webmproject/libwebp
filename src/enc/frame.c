@@ -588,9 +588,6 @@ int VP8EncLoop(VP8Encoder* const enc) {
       ResetAfterSkip(&it);
     }
 #ifdef WEBP_EXPERIMENTAL_FEATURES
-    if (enc->has_alpha_) {
-      VP8EncCodeAlphaBlock(&it);
-    }
     if (enc->use_layer_) {
       VP8EncCodeLayerBlock(&it);
     }
