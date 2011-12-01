@@ -65,7 +65,7 @@ TCoder* TCoderNew(int max_symbol);
 // Re-initialize an existing object, make it ready for a new encoding or
 // decoding cycle.
 void TCoderInit(TCoder* const c);
-// destroys the tree-ocder object and frees memory.
+// destroys the tree-coder object and frees memory.
 void TCoderDelete(TCoder* const c);
 
 // Code next symbol 's'. If the bit-writer 'bw' is NULL, the function will

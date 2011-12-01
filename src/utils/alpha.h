@@ -20,37 +20,37 @@
 extern "C" {
 #endif
 
-// Encodes the given Alpha data 'data' of size 'stride'x'height' via specified
+// Encodes the given alpha data 'data' of size 'stride'x'height' via specified
 // compression method 'method'. The pre-processing (Quantization) is
 // performed if 'quality' is less than 100. For such cases, the encoding is
-// lossy. Valid ranges for 'quality' is [0, 100] and 'method' is [0, 2]:
+// lossy. Valid ranges for 'quality' is [0, 100] and 'method' is [0, 1]:
 //   'method = 0' - No compression;
-//   'method = 1' - zlib;
-// 'output' corresponds to the buffer containing compressed Alpha data.
+//   'method = 1' - Backward reference counts encoded with arithmetic encoder;
+// 'output' corresponds to the buffer containing compressed alpha data.
 //          This buffer is allocated by this method and caller should call
 //          free(*output) when done.
-// 'output_size' corresponds to size of this compressed Alpha buffer.
+// 'output_size' corresponds to size of this compressed alpha buffer.
 //
-// Returns 1 on successfully encoding the Alpha and
+// Returns 1 on successfully encoding the alpha and
 //         0 if either:
 //           data, output or output_size is NULL, or
 //           inappropriate width, height or stride, or
 //           invalid quality or method, or
-//           Memory allocation for the compressed data fails.
+//           memory allocation for the compressed data fails.
 
 int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
                 int quality, int method,
                 uint8_t** output, size_t* output_size);
 
 // Decodes the compressed data 'data' of size 'data_size' into the 'output'.
-// The 'output' buffer should be pre-alloacated and must be of the same
+// The 'output' buffer should be pre-allocated and must be of the same
 // dimension 'height'x'stride', as that of the image.
 //
-// Returns 1 on successfully decoding the compressed Alpha and
+// Returns 1 on successfully decoding the compressed alpha and
 //         0 if either:
 //           data or output is NULL, or
-//           Error in bit-stream header (invalid compression mode or qbits), or
-//           Error returned by approppriate compression method.
+//           error in bit-stream header (invalid compression mode or qbits), or
+//           error returned by appropriate compression method.
 int DecodeAlpha(const uint8_t* data, size_t data_size,
                 int width, int height, int stride, uint8_t* output);
 

@@ -75,7 +75,7 @@
 // Here, if the symbol 'A' becomes more frequent afterward, we'll just swap it
 // with 'C' (cf ExchangeSymbol()) without reorganizing the tree.
 //
-// Using this simple maintainance, we obverved a typical 10-20% reduction
+// Using this simple maintenance, we observed a typical 10-20% reduction
 // in the number of calls to VP8PutBit(), leading to 3-5% speed gain.
 //
 
@@ -369,7 +369,8 @@ void TCoderEncode(TCoder* const c, int s, VP8BitWriter* const bw) {
           break;
         } else if (!HasOnlyRightChild(c, parent)) {
           const int left_proba = node->probaL_;
-          const int is_right = (pos >> (length - 1 - i)) & 1;  // extract bits #i
+          const int is_right =
+              (pos >> (length - 1 - i)) & 1;  // extract bits #i
           VP8PutBit(bw, is_right, left_proba);
           parent = (parent << 1) | is_right;
         } else {

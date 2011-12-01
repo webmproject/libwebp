@@ -69,13 +69,13 @@ typedef struct {
 }
 
 static size_t GetLongestMatch(const uint8_t* const data,
-                           const uint8_t* const ref, size_t max_len) {
+                              const uint8_t* const ref, size_t max_len) {
   size_t n;
   for (n = 0; n < max_len && (data[n] == ref[n]); ++n) { /* do nothing */ }
   return n;
 }
 
-static int EncodeZlibTCoder(uint8_t* data, int width, int height,
+static int EncodeZlibTCoder(const uint8_t* data, int width, int height,
                             uint8_t** output, size_t* output_size) {
   int ok = 0;
   const size_t data_size = width * height;
@@ -129,9 +129,9 @@ static int EncodeZlibTCoder(uint8_t* data, int width, int height,
                             + TCoderSymbolCost(coderd, dist);
           // We're gaining an extra len-best.len coded message over the last
           // known best. Compute how this would have cost if coded all literal.
-          // (TODO: we shoud fully re-evaluate at position best.len and not
+          // (TODO: we should fully re-evaluate at position best.len and not
           // assume all is going be coded as literals. But it's at least an
-          // upper-bound (worst-case coding). Deferred evaluation usd below
+          // upper-bound (worst-case coding). Deferred evaluation used below
           // partially addresses this.
           double lit_cost = 0;
           size_t i;
@@ -238,7 +238,7 @@ int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
   uint8_t* quant_alpha = NULL;
   uint8_t* out = NULL;
   size_t compressed_size = 0;
-  size_t data_size = height * width;
+  const size_t data_size = height * width;
   float mse = 0.0;
   int ok = 0;
   int h;
@@ -267,7 +267,7 @@ int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
 
   // Extract the alpha data (WidthXHeight) from raw_data (StrideXHeight).
   for (h = 0; h < height; ++h) {
-    memcpy(quant_alpha + h * width, data + h * stride, width * sizeof(*data));
+    memcpy(quant_alpha + h * width, data + h * stride, width);
   }
 
   if (quality < 100) {  // No Quantization required for 'quality = 100'.
@@ -422,8 +422,7 @@ int DecodeAlpha(const uint8_t* data, size_t data_size,
     // Construct raw_data (HeightXStride) from the alpha data (HeightXWidth).
     int h;
     for (h = 0; h < height; ++h) {
-      memcpy(output + h * stride, decoded_data + h * width,
-             width * sizeof(*data));
+      memcpy(output + h * stride, decoded_data + h * width, width);
     }
   }
   free(decoded_data);
