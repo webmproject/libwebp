@@ -273,7 +273,7 @@ struct VP8Decoder {
 
   // extensions
   const uint8_t* alpha_data_;   // compressed alpha data (if present)
-  size_t alpha_data_size_;
+  uint32_t alpha_data_size_;
   uint8_t* alpha_plane_;        // output
 
   int layer_colorspace_;

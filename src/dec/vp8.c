@@ -80,6 +80,13 @@ int VP8SetError(VP8Decoder* const dec,
 
 int VP8GetInfo(const uint8_t* data, uint32_t data_size, uint32_t chunk_size,
                int* width, int* height, int* has_alpha) {
+  // Alpha-data is stored outside VP8 data and is inferred from VP8X chunk.
+  // So, this function always returns *has_alpha = 0. This value should NOT
+  // be used.
+  if (has_alpha != NULL) {
+    *has_alpha = 0;
+  }
+
   if (data_size < 10) {
     return 0;         // not enough data
   }
@@ -92,14 +99,6 @@ int VP8GetInfo(const uint8_t* data, uint32_t data_size, uint32_t chunk_size,
     const int w = ((data[7] << 8) | data[6]) & 0x3fff;
     const int h = ((data[9] << 8) | data[8]) & 0x3fff;
 
-    if (has_alpha) {
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-      if (data_size < 11) return 0;
-      *has_alpha = !!(data[10] & 0x80);    // the colorspace_ bit
-#else
-      *has_alpha = 0;
-#endif
-    }
     if (!key_frame) {   // Not a keyframe.
       return 0;
     }
@@ -269,7 +268,8 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
   buf_size = io->data_size;
 
   // Process Pre-VP8 chunks.
-  status = WebPParseHeaders(&buf, &buf_size, &vp8_chunk_size, &bytes_skipped);
+  status = WebPParseHeaders(&buf, &buf_size, &vp8_chunk_size, &bytes_skipped,
+                            &dec->alpha_data_, &dec->alpha_data_size_);
   if (status != VP8_STATUS_OK) {
     return VP8SetError(dec, status, "Incorrect/incomplete header.");
   }
@@ -341,9 +341,6 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
     return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
                        "bad partition length");
   }
-
-  dec->alpha_data_ = NULL;
-  dec->alpha_data_size_ = 0;
 
   br = &dec->br_;
   VP8InitBitReader(br, buf, buf + frm_hdr->partition_length_);
@@ -418,17 +415,9 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
 
     if (frm_hdr->partition_length_ < kTrailerSize ||
         ext_buf[kTrailerSize - 1] != kTrailerMarker) {
- Error:
       return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
                          "RIFF: Inconsistent extra information.");
     }
-    // Alpha
-    size = (ext_buf[4] << 0) | (ext_buf[5] << 8) | (ext_buf[6] << 16);
-    if (frm_hdr->partition_length_ < size + kTrailerSize) {
-      goto Error;
-    }
-    dec->alpha_data_ = (size > 0) ? ext_buf - size : NULL;
-    dec->alpha_data_size_ = size;
 
     // Layer
     size = (ext_buf[0] << 0) | (ext_buf[1] << 8) | (ext_buf[2] << 16);

@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include "vp8i.h"
 #include "webpi.h"
+#include "../webp/mux.h"  // For 'ALPHA_FLAG'.
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -105,17 +106,23 @@ VP8StatusCode WebPParseVP8X(const uint8_t** data, uint32_t* data_size,
 
 VP8StatusCode WebPParseOptionalChunks(const uint8_t** data, uint32_t* data_size,
                                       uint32_t riff_size,
-                                      uint32_t* bytes_skipped) {
+                                      uint32_t* bytes_skipped,
+                                      const uint8_t** alpha_data,
+                                      uint32_t* alpha_size) {
   const uint8_t* buf;
   uint32_t buf_size;
 
   assert(data);
   assert(data_size);
   assert(bytes_skipped);
+  assert(alpha_data);
+  assert(alpha_size);
 
   buf = *data;
   buf_size = *data_size;
   *bytes_skipped = 0;
+  *alpha_data = NULL;
+  *alpha_size = 0;
 
   while (1) {
     uint32_t chunk_size;
@@ -145,7 +152,10 @@ VP8StatusCode WebPParseOptionalChunks(const uint8_t** data, uint32_t* data_size,
       return VP8_STATUS_NOT_ENOUGH_DATA;
     }
 
-    if (!memcmp(buf, "VP8 ", TAG_SIZE)) {  // A valid VP8 header.
+    if (!memcmp(buf, "ALPH", TAG_SIZE)) {  // A valid ALPH header.
+      *alpha_data = buf + CHUNK_HEADER_SIZE;
+      *alpha_size = chunk_size;
+    } else if (!memcmp(buf, "VP8 ", TAG_SIZE)) {  // A valid VP8 header.
       return VP8_STATUS_OK;  // Found.
     }
 
@@ -186,7 +196,9 @@ VP8StatusCode WebPParseVP8Header(const uint8_t** data, uint32_t* data_size,
 }
 
 VP8StatusCode WebPParseHeaders(const uint8_t** data, uint32_t* data_size,
-                               uint32_t* vp8_size, uint32_t* bytes_skipped) {
+                               uint32_t* vp8_size, uint32_t* bytes_skipped,
+                               const uint8_t** alpha_data,
+                               uint32_t* alpha_size) {
   const uint8_t* buf;
   uint32_t buf_size;
   uint32_t riff_size;
@@ -200,12 +212,16 @@ VP8StatusCode WebPParseHeaders(const uint8_t** data, uint32_t* data_size,
   assert(data_size);
   assert(vp8_size);
   assert(bytes_skipped);
+  assert(alpha_data);
+  assert(alpha_size);
 
   buf = *data;
   buf_size = *data_size;
 
   *vp8_size = 0;
   *bytes_skipped = 0;
+  *alpha_data = NULL;
+  *alpha_size = 0;
 
   if (buf == NULL || buf_size < RIFF_HEADER_SIZE) {
     return VP8_STATUS_NOT_ENOUGH_DATA;
@@ -224,7 +240,8 @@ VP8StatusCode WebPParseHeaders(const uint8_t** data, uint32_t* data_size,
   if (vp8x_skip_size > 0) {
     // Skip over optional chunks.
     status = WebPParseOptionalChunks(&buf, &buf_size, riff_size,
-                                     &optional_data_size);
+                                     &optional_data_size,
+                                     alpha_data, alpha_size);
     if (status != VP8_STATUS_OK) {
       return status;  // Found an invalid chunk size / Insufficient data.
     }
@@ -487,11 +504,11 @@ static VP8StatusCode GetFeatures(const uint8_t* data, uint32_t data_size,
                          &features->height, &flags);
   if (status != VP8_STATUS_OK) {
     return status;  // Wrong VP8X / insufficient data.
-
   }
   if (vp8x_skip_size > 0) {
     return VP8_STATUS_OK;  // Return features from VP8X header.
   }
+  features->has_alpha = !!(flags & ALPHA_FLAG);
 
   // Skip over VP8 header.
   status = WebPParseVP8Header(&data, &data_size, riff_size, &vp8_skip_size,
@@ -505,7 +522,7 @@ static VP8StatusCode GetFeatures(const uint8_t* data, uint32_t data_size,
 
   // Validates raw VP8 data.
   if (!VP8GetInfo(data, data_size, vp8_chunk_size,
-                  &features->width, &features->height, &features->has_alpha)) {
+                  &features->width, &features->height, NULL)) {
     return VP8_STATUS_BITSTREAM_ERROR;
   }
 

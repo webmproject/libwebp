@@ -95,10 +95,13 @@ VP8StatusCode WebPParseVP8X(const uint8_t** data, uint32_t* data_size,
 //         VP8_STATUS_NOT_ENOUGH_DATA in case of insufficient data, and
 //         VP8_STATUS_OK otherwise.
 // If a VP8 chunk is found, bytes_skipped is set to the total number of bytes
-// that are skipped.
+// that are skipped. Also, if an alpha chunk is found, alpha_data and alpha_size
+// are set appropriately.
 VP8StatusCode WebPParseOptionalChunks(const uint8_t** data, uint32_t* data_size,
                                       uint32_t riff_size,
-                                      uint32_t* bytes_skipped);
+                                      uint32_t* bytes_skipped,
+                                      const uint8_t** alpha_data,
+                                      uint32_t* alpha_size);
 
 // Validates the VP8 Header ("VP8 nnnn") and skips over it.
 // Returns VP8_STATUS_BITSTREAM_ERROR for invalid (vp8_chunk_size greater than
@@ -117,12 +120,14 @@ VP8StatusCode WebPParseVP8Header(const uint8_t** data, uint32_t* data_size,
 // Returns VP8_STATUS_OK on success,
 //         VP8_STATUS_BITSTREAM_ERROR if an invalid header/chunk is found, and
 //         VP8_STATUS_NOT_ENOUGH_DATA if case of insufficient data.
-// Also, data, data_size, vp8_size & bytes_skipped are updated appropriately
-// on success, where
+// Also, data, data_size, vp8_size, bytes_skipped, alpha_data & alpha_size are
+// updated appropriately on success, where
 // vp8_size is the size of VP8 chunk data (extracted from VP8 chunk header) and
 // bytes_skipped is set to the total number of bytes that are skipped.
 VP8StatusCode WebPParseHeaders(const uint8_t** data, uint32_t* data_size,
-                               uint32_t* vp8_size, uint32_t* bytes_skipped);
+                               uint32_t* vp8_size, uint32_t* bytes_skipped,
+                               const uint8_t** alpha_data,
+                               uint32_t* alpha_size);
 
 //------------------------------------------------------------------------------
 // Misc utils

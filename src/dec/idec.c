@@ -258,7 +258,9 @@ static VP8StatusCode DecodeWebPHeaders(WebPIDecoder* const idec) {
   uint32_t bytes_skipped;
   VP8StatusCode status;
 
-  status = WebPParseHeaders(&data, &curr_size, &vp8_size, &bytes_skipped);
+  status = WebPParseHeaders(&data, &curr_size, &vp8_size, &bytes_skipped,
+                            &idec->dec_->alpha_data_,
+                            &idec->dec_->alpha_data_size_);
   if (status == VP8_STATUS_NOT_ENOUGH_DATA) {
     return VP8_STATUS_SUSPENDED;  // We haven't found a VP8 chunk yet.
   } else if (status == VP8_STATUS_OK) {
