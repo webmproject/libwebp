@@ -365,7 +365,6 @@ int VP8FinishRow(VP8Decoder* const dec, VP8Io* io) {
       y_end = io->crop_bottom;    // make sure we don't overflow on last row.
     }
     io->a = NULL;
-#ifdef WEBP_EXPERIMENTAL_FEATURES
     if (dec->alpha_data_) {
       io->a = VP8DecompressAlphaRows(dec, y_start, y_end - y_start);
       if (io->a == NULL) {
@@ -373,7 +372,6 @@ int VP8FinishRow(VP8Decoder* const dec, VP8Io* io) {
                            "Could not decode alpha data.");
       }
     }
-#endif
     if (y_start < io->crop_top) {
       const int delta_y = io->crop_top - y_start;
       y_start = io->crop_top;
