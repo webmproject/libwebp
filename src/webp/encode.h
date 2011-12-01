@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#define WEBP_ENCODER_ABI_VERSION 0x0002
+#define WEBP_ENCODER_ABI_VERSION 0x0003
 
 // Return the encoder's version number, packed in hexadecimal using 8bits for
 // each of major/minor/revision. E.g: v2.5.7 is 0x020507.
@@ -72,7 +72,7 @@ typedef struct {
   int partition_limit;   // quality degradation allowed to fit the 512k limit on
                          // prediction modes coding (0=no degradation, 100=full)
   int alpha_compression;  // Algorithm for encoding the alpha plane (0 = none,
-                          // 1 = Backward reference counts encoded with
+                          // 1 = backward reference counts encoded with
                           // arithmetic encoder). Default is 1.
   int alpha_quality;      // Between 0 (smallest size) and 100 (lossless).
                           // Default is 100.
@@ -134,6 +134,9 @@ typedef struct {
 
   int alpha_data_size;    // size of the transparency data
   int layer_data_size;    // size of the enhancement layer data
+
+  void* user_data;        // this field is free to be set to any value and
+                          // used during callbacks (like progress-report e.g.).
 } WebPAuxStats;
 
 // Signature for output function. Should return 1 if writing was successful.
@@ -141,6 +144,10 @@ typedef struct {
 // reference (and so one can make use of picture->custom_ptr).
 typedef int (*WebPWriterFunction)(const uint8_t* data, size_t data_size,
                                   const WebPPicture* const picture);
+
+// Progress hook, called from time to time to report progress. It can return 0
+// to request an abort of the encoding process, or 1 otherwise if all is OK.
+typedef int (*WebPProgressHook)(int percent, const WebPPicture* const picture);
 
 typedef enum {
   // chroma sampling
@@ -169,6 +176,8 @@ typedef enum {
   VP8_ENC_ERROR_PARTITION_OVERFLOW,       // partition is bigger than 16M
   VP8_ENC_ERROR_BAD_WRITE,                // error while flushing bytes
   VP8_ENC_ERROR_FILE_TOO_BIG,             // file is bigger than 4G
+  VP8_ENC_ERROR_USER_ABORT,               // abort request by user
+  VP8_ENC_ERROR_LAST                      // list terminator. always last.
 } WebPEncodingError;
 
 // maximum width/height allowed (inclusive), in pixels
@@ -205,6 +214,8 @@ struct WebPPicture {
   int uv0_stride;
 
   WebPEncodingError error_code;   // error code in case of problem.
+
+  WebPProgressHook progress_hook;  // if not NULL, called while encoding.
 };
 
 // Internal, version-checked, entry point

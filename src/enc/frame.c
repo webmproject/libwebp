@@ -560,6 +560,7 @@ static void ResetAfterSkip(VP8EncIterator* const it) {
 
 int VP8EncLoop(VP8Encoder* const enc) {
   int i, s, p;
+  int ok = 1;
   VP8EncIterator it;
   VP8ModeScore info;
   const int dont_use_skip = !enc->proba_.use_skip_proba_;
@@ -595,12 +596,17 @@ int VP8EncLoop(VP8Encoder* const enc) {
     StoreSideInfo(&it);
     VP8StoreFilterStats(&it);
     VP8IteratorExport(&it);
-  } while (VP8IteratorNext(&it, it.yuv_out_));
-  VP8AdjustFilterStrength(&it);
+    ok = VP8IteratorProgress(&it, 20);
+  } while (ok && VP8IteratorNext(&it, it.yuv_out_));
+
+  if (ok) {
+    VP8AdjustFilterStrength(&it);
+  }
 
   // Finalize the partitions
   for (p = 0; p < enc->num_parts_; ++p) {
     VP8BitWriterFinish(enc->parts_ + p);
+    ok &= !enc->parts_[p].error_;
   }
   // and byte counters
   if (enc->pic_->stats) {
@@ -610,7 +616,10 @@ int VP8EncLoop(VP8Encoder* const enc) {
       }
     }
   }
-  return 1;
+  if (!ok) {    // need to do some memory cleanup
+    VP8EncFreeBitWriters(enc);
+  }
+  return ok;
 }
 
 //------------------------------------------------------------------------------
@@ -622,7 +631,7 @@ int VP8EncLoop(VP8Encoder* const enc) {
 #define kHeaderSizeEstimate (15 + 20 + 10)      // TODO: fix better
 
 static int OneStatPass(VP8Encoder* const enc, float q, int rd_opt, int nb_mbs,
-                       float* const PSNR) {
+                       float* const PSNR, int percent_delta) {
   VP8EncIterator it;
   uint64_t size = 0;
   uint64_t distortion = 0;
@@ -651,6 +660,8 @@ static int OneStatPass(VP8Encoder* const enc, float q, int rd_opt, int nb_mbs,
     RecordResiduals(&it, &info);
     size += info.R;
     distortion += info.D;
+    if (percent_delta && !VP8IteratorProgress(&it, percent_delta))
+      return 0;
   } while (VP8IteratorNext(&it, it.yuv_out_) && --nb_mbs > 0);
   size += FinalizeSkipProba(enc);
   size += FinalizeTokenProbas(enc);
@@ -671,6 +682,10 @@ int VP8StatLoop(VP8Encoder* const enc) {
     (enc->config_->target_size > 0 || enc->config_->target_PSNR > 0);
   const int fast_probe = (enc->method_ < 2 && !do_search);
   float q = enc->config_->quality;
+  const int max_passes = enc->config_->pass;
+  const int task_percent = 20;
+  const int percent_per_pass = (task_percent + max_passes / 2) / max_passes;
+  const int final_percent = enc->percent_ + task_percent;
   int pass;
   int nb_mbs;
 
@@ -680,36 +695,38 @@ int VP8StatLoop(VP8Encoder* const enc) {
 
   // No target size: just do several pass without changing 'q'
   if (!do_search) {
-    for (pass = 0; pass < enc->config_->pass; ++pass) {
+    for (pass = 0; pass < max_passes; ++pass) {
       const int rd_opt = (enc->method_ > 2);
-      OneStatPass(enc, q, rd_opt, nb_mbs, NULL);
+      if (!OneStatPass(enc, q, rd_opt, nb_mbs, NULL, percent_per_pass)) {
+        return 0;
+      }
     }
-    return 1;
-  }
-
-  // binary search for a size close to target
-  for (pass = 0; pass < enc->config_->pass && (dqs[pass] > 0); ++pass) {
-    const int rd_opt = 1;
-    float PSNR;
-    int criterion;
-    const int size = OneStatPass(enc, q, rd_opt, nb_mbs, &PSNR);
+  } else {
+    // binary search for a size close to target
+    for (pass = 0; pass < max_passes && (dqs[pass] > 0); ++pass) {
+      const int rd_opt = 1;
+      float PSNR;
+      int criterion;
+      const int size = OneStatPass(enc, q, rd_opt, nb_mbs, &PSNR,
+                                   percent_per_pass);
 #if DEBUG_SEARCH
-    printf("#%d size=%d PSNR=%.2f q=%.2f\n", pass, size, PSNR, q);
+      printf("#%d size=%d PSNR=%.2f q=%.2f\n", pass, size, PSNR, q);
 #endif
-
-    if (enc->config_->target_PSNR > 0) {
-      criterion = (PSNR < enc->config_->target_PSNR);
-    } else {
-      criterion = (size < enc->config_->target_size);
-    }
-    // dichotomize
-    if (criterion) {
-      q += dqs[pass];
-    } else {
-      q -= dqs[pass];
+      if (!size) return 0;
+      if (enc->config_->target_PSNR > 0) {
+        criterion = (PSNR < enc->config_->target_PSNR);
+      } else {
+        criterion = (size < enc->config_->target_size);
+      }
+      // dichotomize
+      if (criterion) {
+        q += dqs[pass];
+      } else {
+        q -= dqs[pass];
+      }
     }
   }
-  return 1;
+  return WebPReportProgress(enc, final_percent);
 }
 
 //------------------------------------------------------------------------------

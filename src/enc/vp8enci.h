@@ -272,6 +272,7 @@ typedef struct {
   LFStats*      lf_stats_;         // filter stats (borrowed from enc_)
   int           do_trellis_;       // if true, perform extra level optimisation
   int           done_;             // true when scan is finished
+  int           percent0_;         // saved initial progress percent
 } VP8EncIterator;
 
   // in iterator.c
@@ -288,6 +289,9 @@ void VP8IteratorExport(const VP8EncIterator* const it);
 // it->yuv_out_ or it->yuv_in_.
 int VP8IteratorNext(VP8EncIterator* const it,
                     const uint8_t* const block_to_save);
+// Report progression based on macroblock rows. Return 0 for user-abort request.
+int VP8IteratorProgress(const VP8EncIterator* const it,
+                        int final_delta_percent);
 // Intra4x4 iterations
 void VP8IteratorStartI4(VP8EncIterator* const it);
 // returns true if not done.
@@ -329,6 +333,8 @@ struct VP8Encoder {
   // per-partition boolean decoders.
   VP8BitWriter bw_;                         // part0
   VP8BitWriter parts_[MAX_NUM_PARTITIONS];  // token partitions
+
+  int percent_;                             // for progress
 
   // transparency blob
   int has_alpha_;
@@ -401,6 +407,8 @@ void VP8CodeIntraModes(VP8Encoder* const enc);
 // and appending an assembly of all the pre-coded token partitions.
 // Return true if everything is ok.
 int VP8EncWrite(VP8Encoder* const enc);
+// Release memory allocated for bit-writing in VP8EncLoop & seq.
+void VP8EncFreeBitWriters(VP8Encoder* const enc);
 
   // in frame.c
 extern const uint8_t VP8EncBands[16 + 1];
@@ -422,6 +430,7 @@ int VP8StatLoop(VP8Encoder* const enc);
   // in webpenc.c
 // Assign an error code to a picture. Return false for convenience.
 int WebPEncodingSetError(WebPPicture* const pic, WebPEncodingError error);
+int WebPReportProgress(VP8Encoder* const enc, int percent);
 
   // in analysis.c
 // Main analysis loop. Decides the segmentations and complexity.

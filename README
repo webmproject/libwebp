@@ -127,6 +127,7 @@ options:
   -h / -help  ............ short help
   -H / -longhelp  ........ long help
   -q <float> ............. quality factor (0:small..100:big)
+  -alpha_q <int> ......... Transparency-compression quality (0..100)
   -preset <string> ....... Preset setting, one of:
                             default, photo, picture,
                             drawing, icon, text
@@ -141,20 +142,22 @@ options:
   -strong ................ use strong filter instead of simple.
   -partition_limit <int> . limit quality to fit the 512k limit on
                            the first partition (0=no degradation ... 100=full)
-  -alpha_comp <int> ...... set the transparency-compression
-  -noalpha ............... discard any transparency information.
   -pass <int> ............ analysis pass number (1..10)
   -partitions <int> ...... number of partitions to use (0..3)
   -crop <x> <y> <w> <h> .. crop picture with the given rectangle
   -resize <w> <h> ........ resize picture (after any cropping)
   -map <int> ............. print map of extra info.
   -d <file.pgm> .......... dump the compressed output (PGM file).
+  -alpha_method <int> .... Transparency-compression method (0..1)
+  -noalpha ............... discard any transparency information.
 
   -short ................. condense printed message
   -quiet ................. don't print anything.
   -version ............... print version number and exit.
   -noasm ................. disable all assembly optimizations.
   -v ..................... verbose, e.g. print encoding/decoding times
+  -progress .............. report encoding progress
+
 
 Experimental Options:
   -size <int> ............ Target size (in bytes)

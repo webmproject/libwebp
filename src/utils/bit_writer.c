@@ -179,6 +179,13 @@ int VP8BitWriterAppend(VP8BitWriter* const bw,
   return 1;
 }
 
+void VP8BitWriterWipeOut(VP8BitWriter* const bw) {
+  if (bw) {
+    free(bw->buf_);
+    memset(bw, 0, sizeof(*bw));
+  }
+}
+
 //------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)

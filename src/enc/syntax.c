@@ -356,9 +356,20 @@ static size_t GeneratePartition0(VP8Encoder* const enc) {
   return !bw->error_;
 }
 
+void VP8EncFreeBitWriters(VP8Encoder* const enc) {
+  int p;
+  VP8BitWriterWipeOut(&enc->bw_);
+  for (p = 0; p < enc->num_parts_; ++p) {
+    VP8BitWriterWipeOut(enc->parts_ + p);
+  }
+}
+
 int VP8EncWrite(VP8Encoder* const enc) {
   WebPPicture* const pic = enc->pic_;
   VP8BitWriter* const bw = &enc->bw_;
+  const int task_percent = 19;
+  const int percent_per_part = task_percent / enc->num_parts_;
+  const int final_percent = enc->percent_ + task_percent;
   int ok = 0;
   size_t vp8_size, pad, riff_size;
   int p;
@@ -399,7 +410,7 @@ int VP8EncWrite(VP8Encoder* const enc) {
     ok = ok && PutWebPHeaders(enc, size0, vp8_size, riff_size)
             && pic->writer(part0, size0, pic)
             && EmitPartitionsSize(enc, pic);
-    free((void*)part0);
+    VP8BitWriterWipeOut(bw);    // will free the internal buffer.
   }
 
   // Token partitions
@@ -408,7 +419,8 @@ int VP8EncWrite(VP8Encoder* const enc) {
     const size_t size = VP8BitWriterSize(enc->parts_ + p);
     if (size)
       ok = ok && pic->writer(buf, size, pic);
-    free((void*)buf);
+    VP8BitWriterWipeOut(enc->parts_ + p);    // will free the internal buffer.
+    ok = ok && WebPReportProgress(enc, enc->percent_ + percent_per_part);
   }
 
   // Padding byte
@@ -417,6 +429,7 @@ int VP8EncWrite(VP8Encoder* const enc) {
   }
 
   enc->coded_size_ = (int)(CHUNK_HEADER_SIZE + riff_size);
+  ok = ok && WebPReportProgress(enc, final_percent);
   return ok;
 }
 

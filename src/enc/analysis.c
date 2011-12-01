@@ -339,6 +339,7 @@ static void MBAnalyze(VP8EncIterator* const it,
 // this stage.
 
 int VP8EncAnalyze(VP8Encoder* const enc) {
+  int ok = 1;
   int alphas[256] = { 0 };
   VP8EncIterator it;
 
@@ -347,12 +348,13 @@ int VP8EncAnalyze(VP8Encoder* const enc) {
   do {
     VP8IteratorImport(&it);
     MBAnalyze(&it, alphas, &enc->uv_alpha_);
+    ok = VP8IteratorProgress(&it, 20);
     // Let's pretend we have perfect lossless reconstruction.
-  } while (VP8IteratorNext(&it, it.yuv_in_));
+  } while (ok && VP8IteratorNext(&it, it.yuv_in_));
   enc->uv_alpha_ /= enc->mb_w_ * enc->mb_h_;
-  AssignSegments(enc, alphas);
+  if (ok) AssignSegments(enc, alphas);
 
-  return 1;
+  return ok;
 }
 
 #if defined(__cplusplus) || defined(c_plusplus)
