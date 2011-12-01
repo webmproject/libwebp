@@ -32,9 +32,14 @@ A summary of all the possible options.
 Print the version number (as major.minor.revision) and exit.
 .TP
 .B \-q float
-Specify the compression factor between 0 and 100. A small factor
-produces a smaller file with lower quality. Best quality is achieved
+Specify the compression factor for RGB channels between 0 and 100. A small
+factor produces a smaller file with lower quality. Best quality is achieved
 using a value of 100. The default is 75.
+.TP
+.B \-alpha_q int
+Specify the compression factor for alpha compression between 0 and 100.
+Lossless compression of alpha is achieved using a value of 100, while the lower
+values result in a lossy compression. The default is 100.
 .TP
 .B \-f int
 Specify the strength of the deblocking filter, between 0 (no filtering)
@@ -136,6 +141,14 @@ range from 1 to 6. This is only meant to help debugging.
 .B \-pre int
 Specify a pre-processing filter. This option is a placeholder
 and has currently no effect.
+.TP
+.B \-alpha_method int
+Specify the algorithm used for alpha compression: 0 or 1. Algorithm 0 denotes
+no compression, 1 uses uses backward reference counts encoded with arithmetic
+encoder. The default is 1.
+.TP
+.B \-noalpha
+Using this option will discard the alpha channel.
 .TP
 .B \-noasm
 Disable all assembly optimizations.

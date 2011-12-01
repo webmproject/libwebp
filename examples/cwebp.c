@@ -199,11 +199,6 @@ static HRESULT ReadPictureWithWIC(const char* filename,
   // WebP conversion.
   if (SUCCEEDED(hr)) {
     int ok;
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-    if (has_alpha) {
-      pic->colorspace |= WEBP_CSP_ALPHA_BIT;
-    }
-#endif
     pic->width = width;
     pic->height = height;
     ok = has_alpha ? WebPPictureImportRGBA(pic, rgb, stride)
@@ -400,11 +395,6 @@ static int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha) {
     png_set_strip_alpha(png);
     has_alpha = 0;
   }
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  if (has_alpha) {
-    pic->colorspace |= WEBP_CSP_ALPHA_BIT;
-  }
-#endif
 
   num_passes = png_set_interlace_handling(png);
   png_read_update_info(png, info);
@@ -671,6 +661,8 @@ static void HelpLong(void) {
   printf("  -h / -help  ............ short help\n");
   printf("  -H / -longhelp  ........ long help\n");
   printf("  -q <float> ............. quality factor (0:small..100:big)\n");
+  printf("  -alpha_q <int> ......... Transparency-compression quality "
+         "(0..100).\n");
   printf("  -preset <string> ....... Preset setting, one of:\n");
   printf("                            default, photo, picture,\n");
   printf("                            drawing, icon, text\n");
@@ -690,10 +682,6 @@ static void HelpLong(void) {
   printf("  -partition_limit <int> . limit quality to fit the 512k limit on\n");
   printf("                           "
          "the first partition (0=no degradation ... 100=full)\n");
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  printf("  -alpha_comp <int> ...... set the transparency-compression\n");
-  printf("  -noalpha ............... discard any transparency information.\n");
-#endif
   printf("  -pass <int> ............ analysis pass number (1..10)\n");
   printf("  -crop <x> <y> <w> <h> .. crop picture with the given rectangle\n");
   printf("  -resize <w> <h> ........ resize picture (after any cropping)\n");
@@ -702,6 +690,8 @@ static void HelpLong(void) {
 #endif
   printf("  -map <int> ............. print map of extra info.\n");
   printf("  -d <file.pgm> .......... dump the compressed output (PGM file).\n");
+  printf("  -alpha_method <int> .... Transparency-compression method (0..1)\n");
+  printf("  -noalpha ............... discard any transparency information.\n");
 
   printf("\n");
   printf("  -short ................. condense printed message\n");
@@ -748,17 +738,13 @@ int main(int argc, const char *argv[]) {
   int c;
   int short_output = 0;
   int quiet = 0;
-  int keep_alpha = 0;
+  int keep_alpha = 1;
   int crop = 0, crop_x = 0, crop_y = 0, crop_w = 0, crop_h = 0;
   int resize_w = 0, resize_h = 0;
   WebPPicture picture;
   WebPConfig config;
   WebPAuxStats stats;
   Stopwatch stop_watch;
-
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  keep_alpha = 1;
-#endif
 
   if (!WebPPictureInit(&picture) || !WebPConfigInit(&config)) {
     fprintf(stderr, "Error! Version mismatch!\n");
@@ -791,6 +777,12 @@ int main(int argc, const char *argv[]) {
       config.method = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-q") && c < argc - 1) {
       config.quality = (float)strtod(argv[++c], NULL);
+    } else if (!strcmp(argv[c], "-alpha_q") && c < argc - 1) {
+      config.alpha_quality = strtol(argv[++c], NULL, 0);
+    } else if (!strcmp(argv[c], "-alpha_method") && c < argc - 1) {
+      config.alpha_compression = strtol(argv[++c], NULL, 0);
+    } else if (!strcmp(argv[c], "-noalpha")) {
+      keep_alpha = 0;
     } else if (!strcmp(argv[c], "-size") && c < argc - 1) {
       config.target_size = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-psnr") && c < argc - 1) {
@@ -813,12 +805,6 @@ int main(int argc, const char *argv[]) {
       config.segments = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-partition_limit") && c < argc - 1) {
       config.partition_limit = strtol(argv[++c], NULL, 0);
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-    } else if (!strcmp(argv[c], "-alpha_comp") && c < argc - 1) {
-      config.alpha_compression = strtol(argv[++c], NULL, 0);
-    } else if (!strcmp(argv[c], "-noalpha")) {
-      keep_alpha = 0;
-#endif
     } else if (!strcmp(argv[c], "-map") && c < argc - 1) {
       picture.extra_info_type = strtol(argv[++c], NULL, 0);
 #ifdef WEBP_EXPERIMENTAL_FEATURES
