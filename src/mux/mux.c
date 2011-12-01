@@ -12,9 +12,9 @@
 
 #include <assert.h>
 #include <stdlib.h>
-#include "webp/mux.h"
-#include "dec/vp8i.h"
-#include "dec/webpi.h"    // for chunk-size constants
+#include "../webp/mux.h"
+#include "../dec/vp8i.h"
+#include "../dec/webpi.h"    // for chunk-size constants
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

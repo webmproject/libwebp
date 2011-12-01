@@ -11,7 +11,7 @@
 
 #include <assert.h>
 
-#include "cost.h"
+#include "./cost.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

@@ -12,7 +12,7 @@
 #ifndef WEBP_ENC_COST_H_
 #define WEBP_ENC_COST_H_
 
-#include "vp8enci.h"
+#include "./vp8enci.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
