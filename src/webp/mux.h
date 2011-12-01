@@ -46,7 +46,7 @@
 #ifndef WEBP_WEBP_MUX_H_
 #define WEBP_WEBP_MUX_H_
 
-#include "webp/types.h"
+#include "./types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
