@@ -11,7 +11,8 @@
 
 #include <assert.h>
 #include <stdlib.h>
-#include "vp8enci.h"
+
+#include "./vp8enci.h"
 #include "../utils/alpha.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)

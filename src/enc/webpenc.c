@@ -14,7 +14,7 @@
 #include <string.h>
 #include <math.h>
 
-#include "vp8enci.h"
+#include "./vp8enci.h"
 
 // #define PRINT_MEMORY_INFO
 

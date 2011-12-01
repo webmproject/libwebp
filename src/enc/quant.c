@@ -12,8 +12,8 @@
 #include <assert.h>
 #include <math.h>
 
-#include "vp8enci.h"
-#include "cost.h"
+#include "./vp8enci.h"
+#include "./cost.h"
 
 #define DO_TRELLIS_I4  1
 #define DO_TRELLIS_I16 1   // not a huge gain, but ok at low bitrate.

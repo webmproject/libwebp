@@ -10,7 +10,8 @@
 // Author: somnath@google.com (Somnath Banerjee)
 
 #include <math.h>
-#include "vp8enci.h"
+
+#include "./vp8enci.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

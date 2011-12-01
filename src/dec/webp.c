@@ -10,8 +10,9 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include <stdlib.h>
-#include "vp8i.h"
-#include "webpi.h"
+
+#include "./vp8i.h"
+#include "./webpi.h"
 #include "../webp/mux.h"  // For 'ALPHA_FLAG'.
 
 #if defined(__cplusplus) || defined(c_plusplus)

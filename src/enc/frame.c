@@ -14,8 +14,8 @@
 #include <assert.h>
 #include <math.h>
 
-#include "vp8enci.h"
-#include "cost.h"
+#include "./vp8enci.h"
+#include "./cost.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
