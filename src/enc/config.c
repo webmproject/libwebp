@@ -113,7 +113,7 @@ int WebPValidateConfig(const WebPConfig* const config) {
   if (config->alpha_compression < 0)
     return 0;
   if (config->alpha_quality < 0 || config->alpha_quality > 100)
-      return 0;
+    return 0;
   return 1;
 }
 

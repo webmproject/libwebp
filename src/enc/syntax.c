@@ -65,7 +65,7 @@ static WebPEncodingError PutRIFFHeader(const VP8Encoder* const enc,
 static WebPEncodingError PutVP8XHeader(const VP8Encoder* const enc) {
   const WebPPicture* const pic = enc->pic_;
   uint8_t vp8x[CHUNK_HEADER_SIZE + VP8X_CHUNK_SIZE] = {
-      'V', 'P', '8', 'X'
+    'V', 'P', '8', 'X'
   };
   uint32_t flags = 0;
 
@@ -75,10 +75,10 @@ static WebPEncodingError PutVP8XHeader(const VP8Encoder* const enc) {
     flags |= ALPHA_FLAG;
   }
 
-  PutLE32(vp8x + TAG_SIZE,               VP8X_CHUNK_SIZE);
-  PutLE32(vp8x + CHUNK_HEADER_SIZE,      flags);
-  PutLE32(vp8x + CHUNK_HEADER_SIZE + 4 , pic->width);
-  PutLE32(vp8x + CHUNK_HEADER_SIZE + 8 , pic->height);
+  PutLE32(vp8x + TAG_SIZE,              VP8X_CHUNK_SIZE);
+  PutLE32(vp8x + CHUNK_HEADER_SIZE,     flags);
+  PutLE32(vp8x + CHUNK_HEADER_SIZE + 4, pic->width);
+  PutLE32(vp8x + CHUNK_HEADER_SIZE + 8, pic->height);
   if(!pic->writer(vp8x, sizeof(vp8x), pic)) {
     return VP8_ENC_ERROR_BAD_WRITE;
   }
@@ -88,7 +88,7 @@ static WebPEncodingError PutVP8XHeader(const VP8Encoder* const enc) {
 static WebPEncodingError PutAlphaChunk(const VP8Encoder* const enc) {
   const WebPPicture* const pic = enc->pic_;
   uint8_t alpha_chunk_hdr[CHUNK_HEADER_SIZE] = {
-      'A', 'L', 'P', 'H'
+    'A', 'L', 'P', 'H'
   };
 
   assert(enc->has_alpha_);
@@ -114,7 +114,7 @@ static WebPEncodingError PutAlphaChunk(const VP8Encoder* const enc) {
 static WebPEncodingError PutVP8Header(const WebPPicture* const pic,
                                       size_t vp8_size) {
   uint8_t vp8_chunk_hdr[CHUNK_HEADER_SIZE] = {
-      'V', 'P', '8', ' '
+    'V', 'P', '8', ' '
   };
   PutLE32(vp8_chunk_hdr + TAG_SIZE, vp8_size);
   if (!pic->writer(vp8_chunk_hdr, sizeof(vp8_chunk_hdr), pic)) {
@@ -132,10 +132,11 @@ static WebPEncodingError PutVP8FrameHeader(const WebPPicture* const pic,
     return VP8_ENC_ERROR_PARTITION0_OVERFLOW;
   }
 
+  // Paragraph 9.1.
   bits = 0                         // keyframe (1b)
        | (profile << 1)            // profile (3b)
        | (1 << 4)                  // visible (1b)
-       | ((uint32_t)size0 << 5);             // partition length (19b)
+       | ((uint32_t)size0 << 5);   // partition length (19b)
   vp8_frm_hdr[0] = bits & 0xff;
   vp8_frm_hdr[1] = (bits >> 8) & 0xff;
   vp8_frm_hdr[2] = (bits >> 16) & 0xff;
@@ -375,7 +376,7 @@ int VP8EncWrite(VP8Encoder* const enc) {
   pad = vp8_size & 1;
   vp8_size += pad;
 
-  // Computer RIFF size
+  // Compute RIFF size
   // At the minimum it is: "WEBPVP8 nnnn" + VP8 data size.
   riff_size = TAG_SIZE + CHUNK_HEADER_SIZE + vp8_size;
   if (IsVP8XNeeded(enc)) {  // Add size for: VP8X header + data.
