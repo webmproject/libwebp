@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAGX//0cA\u003d",
+        "filename": "src/dec/webp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2011-12-02T04:05:30Z",
+      "side": 1,
+      "message": "What happens if status \u003d\u003d  VP8_STATUS_OK, but VP8X chunk was NOT found? Actually, it would work fine here, but for safety, this line should be moved inside if (after line 510).",
+      "revId": "2c5834d4cdb66faee961bba0be60e179739fc12a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
