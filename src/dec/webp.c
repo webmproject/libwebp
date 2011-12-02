@@ -506,10 +506,10 @@ static VP8StatusCode GetFeatures(const uint8_t* data, uint32_t data_size,
   if (status != VP8_STATUS_OK) {
     return status;  // Wrong VP8X / insufficient data.
   }
+  features->has_alpha = !!(flags & ALPHA_FLAG);
   if (vp8x_skip_size > 0) {
     return VP8_STATUS_OK;  // Return features from VP8X header.
   }
-  features->has_alpha = !!(flags & ALPHA_FLAG);
 
   // Skip over VP8 header.
   status = WebPParseVP8Header(&data, &data_size, riff_size, &vp8_skip_size,
