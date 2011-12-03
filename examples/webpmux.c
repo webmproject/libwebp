@@ -390,17 +390,19 @@ static int ReadImage(const char* filename,
   err = WebPMuxGetImage(mux, (const uint8_t**)&data, &size,
                         &alpha_data, &alpha_size);
   if (err == WEBP_MUX_OK) {
-    *size_ptr = size;
-    *alpha_size_ptr = alpha_size;
-    *data_ptr = (uint8_t*)malloc(*size_ptr);
-    *alpha_data_ptr = (uint8_t*)malloc(*alpha_size_ptr);
-    if ((*data_ptr != NULL) && (*alpha_data_ptr != NULL)) {
-      memcpy((void*)*data_ptr, data, (size_t)size);
-      memcpy((void*)*alpha_data_ptr, alpha_data, (size_t)alpha_size);
+    uint8_t* const data_mem = (uint8_t*)malloc(size);
+    uint8_t* const alpha_mem = (uint8_t*)malloc(alpha_size);
+    if ((data_mem != NULL) && (alpha_mem != NULL)) {
+      memcpy(data_mem, data, size);
+      memcpy(alpha_mem, alpha_data, alpha_size);
+      *data_ptr = data_mem;
+      *size_ptr = size;
+      *alpha_data_ptr = alpha_mem;
+      *alpha_size_ptr = alpha_size;
       ok = 1;
     } else {
-      free(data_ptr);
-      free(alpha_data_ptr);
+      free(data_mem);
+      free(alpha_mem);
       err = WEBP_MUX_MEMORY_ERROR;
       fprintf(stderr, "Failed to allocate %d bytes to extract image data from"
               " file %s. Error: %d\n", size + alpha_size, filename, err);
