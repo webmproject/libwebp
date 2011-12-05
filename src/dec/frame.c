@@ -480,8 +480,13 @@ VP8StatusCode VP8EnterCritical(VP8Decoder* const dec, VP8Io* const io) {
       dec->tl_mb_y_ = 0;
     } else {
       // For simple filter, we can filter only the cropped region.
-      dec->tl_mb_y_ = io->crop_top >> 4;
-      dec->tl_mb_x_ = io->crop_left >> 4;
+      // We include 'extra_pixels' on the other side of the boundary, since
+      // vertical or horizontal filtering of the previous macroblock can
+      // modify some abutting pixels.
+      dec->tl_mb_x_ = (io->crop_left - extra_pixels) >> 4;
+      dec->tl_mb_y_ = (io->crop_top - extra_pixels) >> 4;
+      if (dec->tl_mb_x_ < 0) dec->tl_mb_x_ = 0;
+      if (dec->tl_mb_y_ < 0) dec->tl_mb_y_ = 0;
     }
     // We need some 'extra' pixels on the right/bottom.
     dec->br_mb_y_ = (io->crop_bottom + 15 + extra_pixels) >> 4;
