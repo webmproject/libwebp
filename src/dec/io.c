@@ -51,7 +51,9 @@ static int EmitSampledRGB(const VP8Io* const io, WebPDecParams* const p) {
   const uint8_t* y_src = io->y;
   const uint8_t* u_src = io->u;
   const uint8_t* v_src = io->v;
-  const WebPSampleLinePairFunc sample = WebPSamplers[output->colorspace];
+  const WebPSampleLinePairFunc sample =
+      io->a ? WebPSamplersKeepAlpha[output->colorspace]
+            : WebPSamplers[output->colorspace];
   const int mb_w = io->mb_w;
   const int last = io->mb_h - 1;
   int j;
@@ -185,12 +187,34 @@ static int EmitAlphaRGB(const VP8Io* const io, WebPDecParams* const p) {
   const int mb_h = io->mb_h;
   int i, j;
   const WebPRGBABuffer* const buf = &p->output->u.RGBA;
-  uint8_t* dst = buf->rgba + io->mb_y * buf->stride;
+  uint8_t* dst = buf->rgba + io->mb_y * buf->stride +
+                 (p->output->colorspace == MODE_ARGB ? 0 : 3);
   const uint8_t* alpha = io->a;
   if (alpha) {
     for (j = 0; j < mb_h; ++j) {
       for (i = 0; i < mb_w; ++i) {
-        dst[4 * i + 3] = alpha[i];
+        dst[4 * i] = alpha[i];
+      }
+      alpha += io->width;
+      dst += buf->stride;
+    }
+  }
+  return 0;
+}
+
+static int EmitAlphaRGBA4444(const VP8Io* const io, WebPDecParams* const p) {
+  const int mb_w = io->mb_w;
+  const int mb_h = io->mb_h;
+  int i, j;
+  const WebPRGBABuffer* const buf = &p->output->u.RGBA;
+  uint8_t* dst = buf->rgba + io->mb_y * buf->stride + 1;
+  const uint8_t* alpha = io->a;
+  if (alpha) {
+    for (j = 0; j < mb_h; ++j) {
+      for (i = 0; i < mb_w; ++i) {
+        // Fill in the alpha value (converted to 4 bits).
+        const uint8_t alpha_val = (alpha[i] + 8) >> 4;
+        dst[2 * i] = (dst[2 * i] & 0xf0) | alpha_val;
       }
       alpha += io->width;
       dst += buf->stride;
@@ -440,14 +464,34 @@ static int EmitRescaledRGB(const VP8Io* const io, WebPDecParams* const p) {
 
 static int ExportAlpha(WebPDecParams* const p, int y_pos) {
   const WebPRGBABuffer* const buf = &p->output->u.RGBA;
-  uint8_t* dst = buf->rgba + (p->last_y + y_pos) * buf->stride;
+  uint8_t* dst = buf->rgba + (p->last_y + y_pos) * buf->stride +
+                 (p->output->colorspace == MODE_ARGB ? 0 : 3);
   int num_lines_out = 0;
   while (p->scaler_a.y_accum <= 0) {
     int i;
     assert(p->last_y + y_pos + num_lines_out < p->output->height);
     ExportRow(&p->scaler_a);
     for (i = 0; i < p->scaler_a.dst_width; ++i) {
-      dst[4 * i + 3] = p->scaler_a.dst[i];
+      dst[4 * i] = p->scaler_a.dst[i];
+    }
+    dst += buf->stride;
+    num_lines_out++;
+  }
+  return num_lines_out;
+}
+
+static int ExportAlphaRGBA4444(WebPDecParams* const p, int y_pos) {
+  const WebPRGBABuffer* const buf = &p->output->u.RGBA;
+  uint8_t* dst = buf->rgba + (p->last_y + y_pos) * buf->stride + 1;
+  int num_lines_out = 0;
+  while (p->scaler_a.y_accum <= 0) {
+    int i;
+    assert(p->last_y + y_pos + num_lines_out < p->output->height);
+    ExportRow(&p->scaler_a);
+    for (i = 0; i < p->scaler_a.dst_width; ++i) {
+      // Fill in the alpha value (converted to 4 bits).
+      const uint8_t alpha_val = (p->scaler_a.dst[i] + 8) >> 4;
+      dst[2 * i] = (dst[2 * i] & 0xf0) | alpha_val;
     }
     dst += buf->stride;
     num_lines_out++;
@@ -460,7 +504,8 @@ static int EmitRescaledAlphaRGB(const VP8Io* const io, WebPDecParams* const p) {
     int j = 0, pos = 0;
     while (j < io->mb_h) {
       j += Import(io->a + j * io->width, io->width, io->mb_h - j, &p->scaler_a);
-      pos += ExportAlpha(p, pos);
+      pos += (p->output->colorspace == MODE_RGBA_4444) ?
+              ExportAlphaRGBA4444(p, pos) : ExportAlpha(p, pos);
     }
   }
   return 0;
@@ -608,7 +653,9 @@ static int CustomSetup(VP8Io* io) {
     }
     if (IsAlphaMode(p->output->colorspace)) {
       // We need transparency output
-      p->emit_alpha = is_rgb ? EmitAlphaRGB : EmitAlphaYUV;
+      p->emit_alpha =
+          is_rgb ? (p->output->colorspace == MODE_RGBA_4444 ?
+              EmitAlphaRGBA4444 : EmitAlphaRGB) : EmitAlphaYUV;
     }
   }
 

@@ -155,6 +155,7 @@ typedef void (*WebPSampleLinePairFunc)(
     uint8_t* top_dst, uint8_t* bottom_dst, int len);
 
 extern const WebPSampleLinePairFunc WebPSamplers[/* MODE_LAST */];
+extern const WebPSampleLinePairFunc WebPSamplersKeepAlpha[/* MODE_LAST */];
 
 // YUV444->RGB converters
 typedef void (*WebPYUV444Converter)(const uint8_t* y,

@@ -365,7 +365,7 @@ int VP8FinishRow(VP8Decoder* const dec, VP8Io* io) {
       y_end = io->crop_bottom;    // make sure we don't overflow on last row.
     }
     io->a = NULL;
-    if (dec->alpha_data_) {
+    if (dec->alpha_data_ && y_start < y_end) {
       io->a = VP8DecompressAlphaRows(dec, y_start, y_end - y_start);
       if (io->a == NULL) {
         return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,

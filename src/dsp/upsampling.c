@@ -101,7 +101,7 @@ UPSAMPLE_FUNC(UpsampleBgraLinePair, VP8YuvToBgra, 4)
 UPSAMPLE_FUNC(UpsampleArgbLinePair, VP8YuvToArgb, 4)
 UPSAMPLE_FUNC(UpsampleRgba4444LinePair, VP8YuvToRgba4444, 2)
 UPSAMPLE_FUNC(UpsampleRgb565LinePair,  VP8YuvToRgb565,  2)
-// These two don't erase the alpha value
+// These variants don't erase the alpha value
 UPSAMPLE_FUNC(UpsampleRgbKeepAlphaLinePair, VP8YuvToRgb, 4)
 UPSAMPLE_FUNC(UpsampleBgrKeepAlphaLinePair, VP8YuvToBgr, 4)
 UPSAMPLE_FUNC(UpsampleArgbKeepAlphaLinePair, VP8YuvToArgbKeepA, 4)
@@ -146,6 +146,11 @@ SAMPLE_FUNC(SampleBgraLinePair,     VP8YuvToBgra, 4)
 SAMPLE_FUNC(SampleArgbLinePair,     VP8YuvToArgb, 4)
 SAMPLE_FUNC(SampleRgba4444LinePair, VP8YuvToRgba4444, 2)
 SAMPLE_FUNC(SampleRgb565LinePair,   VP8YuvToRgb565, 2)
+// These variants don't erase the alpha value
+SAMPLE_FUNC(SampleRgbKeepAlphaLinePair, VP8YuvToRgb, 4)
+SAMPLE_FUNC(SampleBgrKeepAlphaLinePair, VP8YuvToBgr, 4)
+SAMPLE_FUNC(SampleArgbKeepAlphaLinePair, VP8YuvToArgbKeepA, 4)
+SAMPLE_FUNC(SampleRgba4444KeepAlphaLinePair, VP8YuvToRgba4444KeepA, 2)
 
 #undef SAMPLE_FUNC
 
@@ -157,6 +162,16 @@ const WebPSampleLinePairFunc WebPSamplers[MODE_LAST] = {
   SampleArgbLinePair,      // MODE_ARGB
   SampleRgba4444LinePair,  // MODE_RGBA_4444
   SampleRgb565LinePair     // MODE_RGB_565
+};
+
+const WebPSampleLinePairFunc WebPSamplersKeepAlpha[MODE_LAST] = {
+  SampleRgbLinePair,                // MODE_RGB
+  SampleRgbKeepAlphaLinePair,       // MODE_RGBA
+  SampleBgrLinePair,                // MODE_BGR
+  SampleBgrKeepAlphaLinePair,       // MODE_BGRA
+  SampleArgbKeepAlphaLinePair,      // MODE_ARGB
+  SampleRgba4444KeepAlphaLinePair,  // MODE_RGBA_4444
+  SampleRgb565LinePair              // MODE_RGB_565
 };
 
 //------------------------------------------------------------------------------
