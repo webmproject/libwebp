@@ -281,7 +281,7 @@ static VP8StatusCode DecodeVP8FrameHeader(WebPIDecoder* const idec) {
     // Not enough data bytes to extract VP8 Frame Header.
     return VP8_STATUS_SUSPENDED;
   }
-  if (!VP8GetInfo(data, curr_size, idec->vp8_size_, NULL, NULL, NULL)) {
+  if (!VP8GetInfo(data, curr_size, idec->vp8_size_, NULL, NULL)) {
     return IDecError(idec, VP8_STATUS_BITSTREAM_ERROR);
   }
 

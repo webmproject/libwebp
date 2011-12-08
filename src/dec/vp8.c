@@ -80,14 +80,7 @@ int VP8SetError(VP8Decoder* const dec,
 //------------------------------------------------------------------------------
 
 int VP8GetInfo(const uint8_t* data, uint32_t data_size, uint32_t chunk_size,
-               int* width, int* height, int* has_alpha) {
-  // Alpha-data is stored outside VP8 data and is inferred from VP8X chunk.
-  // So, this function always returns *has_alpha = 0. This value should NOT
-  // be used.
-  if (has_alpha != NULL) {
-    *has_alpha = 0;
-  }
-
+               int* width, int* height) {
   if (data_size < 10) {
     return 0;         // not enough data
   }

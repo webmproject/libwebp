@@ -166,7 +166,7 @@ static WebPImageInfo* CreateImageInfo(uint32_t x_offset, uint32_t y_offset,
   int height;
   WebPImageInfo* image_info = NULL;
 
-  if (!VP8GetInfo(data, size, size, &width, &height, NULL)) {
+  if (!VP8GetInfo(data, size, size, &width, &height)) {
     return NULL;
   }
 
@@ -1298,7 +1298,7 @@ static WebPMuxError GetImageCanvasHeightWidth(const WebPMux* const mux,
     const WebPChunk* const image_chunk = wpi->vp8_;
     assert(image_chunk != NULL);
     if (VP8GetInfo(image_chunk->data_, image_chunk->payload_size_,
-                   image_chunk->payload_size_, &w, &h, NULL)) {
+                   image_chunk->payload_size_, &w, &h)) {
       *width = w;
       *height = h;
     }

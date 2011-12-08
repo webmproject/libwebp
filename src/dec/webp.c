@@ -523,7 +523,7 @@ static VP8StatusCode GetFeatures(const uint8_t* data, uint32_t data_size,
 
   // Validates raw VP8 data.
   if (!VP8GetInfo(data, data_size, vp8_chunk_size,
-                  &features->width, &features->height, NULL)) {
+                  &features->width, &features->height)) {
     return VP8_STATUS_BITSTREAM_ERROR;
   }
 
