@@ -102,8 +102,8 @@ UPSAMPLE_FUNC(UpsampleArgbLinePair, VP8YuvToArgb, 4)
 UPSAMPLE_FUNC(UpsampleRgba4444LinePair, VP8YuvToRgba4444, 2)
 UPSAMPLE_FUNC(UpsampleRgb565LinePair,  VP8YuvToRgb565,  2)
 // These variants don't erase the alpha value
-UPSAMPLE_FUNC(UpsampleRgbKeepAlphaLinePair, VP8YuvToRgb, 4)
-UPSAMPLE_FUNC(UpsampleBgrKeepAlphaLinePair, VP8YuvToBgr, 4)
+UPSAMPLE_FUNC(UpsampleRgbaKeepAlphaLinePair, VP8YuvToRgb, 4)
+UPSAMPLE_FUNC(UpsampleBgraKeepAlphaLinePair, VP8YuvToBgr, 4)
 UPSAMPLE_FUNC(UpsampleArgbKeepAlphaLinePair, VP8YuvToArgbKeepA, 4)
 UPSAMPLE_FUNC(UpsampleRgba4444KeepAlphaLinePair, VP8YuvToRgba4444KeepA, 2)
 
@@ -147,8 +147,8 @@ SAMPLE_FUNC(SampleArgbLinePair,     VP8YuvToArgb, 4)
 SAMPLE_FUNC(SampleRgba4444LinePair, VP8YuvToRgba4444, 2)
 SAMPLE_FUNC(SampleRgb565LinePair,   VP8YuvToRgb565, 2)
 // These variants don't erase the alpha value
-SAMPLE_FUNC(SampleRgbKeepAlphaLinePair, VP8YuvToRgb, 4)
-SAMPLE_FUNC(SampleBgrKeepAlphaLinePair, VP8YuvToBgr, 4)
+SAMPLE_FUNC(SampleRgbaKeepAlphaLinePair, VP8YuvToRgb, 4)
+SAMPLE_FUNC(SampleBgraKeepAlphaLinePair, VP8YuvToBgr, 4)
 SAMPLE_FUNC(SampleArgbKeepAlphaLinePair, VP8YuvToArgbKeepA, 4)
 SAMPLE_FUNC(SampleRgba4444KeepAlphaLinePair, VP8YuvToRgba4444KeepA, 2)
 
@@ -166,9 +166,9 @@ const WebPSampleLinePairFunc WebPSamplers[MODE_LAST] = {
 
 const WebPSampleLinePairFunc WebPSamplersKeepAlpha[MODE_LAST] = {
   SampleRgbLinePair,                // MODE_RGB
-  SampleRgbKeepAlphaLinePair,       // MODE_RGBA
+  SampleRgbaKeepAlphaLinePair,      // MODE_RGBA
   SampleBgrLinePair,                // MODE_BGR
-  SampleBgrKeepAlphaLinePair,       // MODE_BGRA
+  SampleBgraKeepAlphaLinePair,      // MODE_BGRA
   SampleArgbKeepAlphaLinePair,      // MODE_ARGB
   SampleRgba4444KeepAlphaLinePair,  // MODE_RGBA_4444
   SampleRgb565LinePair              // MODE_RGB_565
@@ -218,9 +218,9 @@ void WebPInitUpsamplers(void) {
   WebPUpsamplers[MODE_RGB_565]   = UpsampleRgb565LinePair;
 
   WebPUpsamplersKeepAlpha[MODE_RGB]       = UpsampleRgbLinePair;
-  WebPUpsamplersKeepAlpha[MODE_RGBA]      = UpsampleRgbKeepAlphaLinePair;
+  WebPUpsamplersKeepAlpha[MODE_RGBA]      = UpsampleRgbaKeepAlphaLinePair;
   WebPUpsamplersKeepAlpha[MODE_BGR]       = UpsampleBgrLinePair;
-  WebPUpsamplersKeepAlpha[MODE_BGRA]      = UpsampleBgrKeepAlphaLinePair;
+  WebPUpsamplersKeepAlpha[MODE_BGRA]      = UpsampleBgraKeepAlphaLinePair;
   WebPUpsamplersKeepAlpha[MODE_ARGB]      = UpsampleArgbKeepAlphaLinePair;
   WebPUpsamplersKeepAlpha[MODE_RGBA_4444] = UpsampleRgba4444KeepAlphaLinePair;
   WebPUpsamplersKeepAlpha[MODE_RGB_565]   = UpsampleRgb565LinePair;
