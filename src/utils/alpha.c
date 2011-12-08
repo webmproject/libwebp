@@ -350,7 +350,7 @@ static int DecompressZlibTCoder(const uint8_t* data, size_t data_size,
     size_t pos = 0;
     VP8BitReader br;
     VP8InitBitReader(&br, data, data + data_size);
-    while (pos < output_size) {
+    while (pos < output_size && !br.eof_) {
       const int dist = TCoderDecode(coderd, &br);
       if (dist == 0) {
         const int literal = TCoderDecode(coder, &br);
@@ -366,8 +366,8 @@ static int DecompressZlibTCoder(const uint8_t* data, size_t data_size,
         pos += len;
       }
     }
+    ok = !br.eof_;
   }
-  ok = 1;
 
  End:
   if (coder) TCoderDelete(coder);
