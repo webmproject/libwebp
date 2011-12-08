@@ -368,13 +368,11 @@ static VP8StatusCode DecodePartition0(WebPIDecoder* const idec) {
 
 // Remaining partitions
 static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
-  VP8BitReader* br;
   VP8Decoder* const dec = idec->dec_;
   VP8Io* const io = &idec->io_;
 
   assert(dec->ready_);
 
-  br = &dec->br_;
   for (; dec->mb_y_ < dec->mb_h_; ++dec->mb_y_) {
     VP8BitReader* token_br = &dec->parts_[dec->mb_y_ & (dec->num_parts_ - 1)];
     if (dec->mb_x_ == 0) {
