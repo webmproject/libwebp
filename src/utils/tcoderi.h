@@ -37,6 +37,11 @@ typedef uint32_t Count_t;  // TODO(skal): check overflow during coding.
 #define MAX_PROBA 255
 #define HALF_PROBA 128
 
+// Limit the number of tree updates above which we freeze the probabilities.
+// Mainly for speed reason.
+// TODO(skal): could be a bitstream parameter?
+#define COUNTER_CUT_OFF  16383
+
 typedef struct {        // ternary node.
   Symbol_t symbol_;
   // Note: theoretically, one of this three field is redundant and could be
@@ -54,7 +59,6 @@ struct TCoder {
   Count_t total_coded_;   // total number of coded symbols
   int frozen_;            // if true, frequencies are not updated
   int fixed_symbols_;     // if true, symbols are not updated
-  int probaN_;            // cached new-symbol probability
 
   // constants:
   int num_nodes_;            // max number of symbols or nodes. Constant, > 0.

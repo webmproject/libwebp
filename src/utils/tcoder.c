@@ -107,10 +107,12 @@ TCoder* TCoderNew(int max_symbol) {
   const int num_nodes = max_symbol + 1;
   TCoder* c;
   uint8_t* memory;
-  const int size = sizeof(*c)
-                 + num_nodes * sizeof(*c->nodes_)
-                 + num_nodes * sizeof(*c->symbols_);
-  if (max_symbol < 0) return NULL;
+  int size;
+  if (max_symbol < 0 || max_symbol >= TCODER_MAX_SYMBOL) {
+    return NULL;
+  }
+  size = sizeof(*c) + num_nodes * sizeof(*c->nodes_)
+                    + num_nodes * sizeof(*c->symbols_);
   memory = (uint8_t*)malloc(size);
   if (memory == NULL) return NULL;
 
@@ -142,7 +144,6 @@ static void ResetTree(TCoder* const c) {
   assert(c);
   c->num_symbols_ = 0;
   c->total_coded_ = 0;
-  c->probaN_ = HALF_PROBA;
   for (pos = 1; pos <= c->num_nodes_; ++pos) {
     ResetNode(&c->nodes_[pos], INVALID_SYMBOL);
   }
@@ -154,7 +155,6 @@ static void ResetSymbolMap(TCoder* const c) {
   Symbol_t s;
   assert(c);
   c->num_symbols_ = 0;
-  c->probaN_ = HALF_PROBA;
   for (s = 0; s < c->num_nodes_; ++s) {
     c->symbols_[s] = INVALID_POS;
   }
@@ -253,12 +253,15 @@ static WEBP_INLINE int CalcProba(Count_t num, Count_t total,
 static WEBP_INLINE void UpdateNodeProbas(TCoder* const c, int pos) {
   Node* const node = &c->nodes_[pos];
   const Count_t total = TotalCount(node);
-  node->probaS_ = CalcProba(node->countS_, total, MAX_PROBA, 0);
+  if (total < COUNTER_CUT_OFF)
+    node->probaS_ = CalcProba(node->countS_, total, MAX_PROBA, 0);
   if (!IsLeaf(c, pos)) {
     const Count_t total_count = node->count_;
-    const Count_t left_count = TotalCount(&c->nodes_[2 * pos]);
-    node->probaL_ =
-        MAX_PROBA - CalcProba(left_count, total_count, MAX_PROBA, 0);
+    if (total_count < COUNTER_CUT_OFF) {
+      const Count_t left_count = TotalCount(&c->nodes_[2 * pos]);
+      node->probaL_ =
+          MAX_PROBA - CalcProba(left_count, total_count, MAX_PROBA, 0);
+    }
   }
 }
 
@@ -266,31 +269,31 @@ static void UpdateProbas(TCoder* const c, int pos) {
   for ( ; pos >= 1; pos >>= 1) {
     UpdateNodeProbas(c, pos);
   }
-  c->probaN_ = CalcProba(c->num_symbols_, c->total_coded_, HALF_PROBA - 1, 0);
 }
 
 // -----------------------------------------------------------------------------
 
-static void UpdateTree(TCoder* const c, int pos, Count_t incr) {
+static void UpdateTree(TCoder* const c, int pos) {
   Node* node = &c->nodes_[pos];
   const int is_fresh_new_symbol = (node->countS_ == 0);
   assert(c);
   assert(pos >= 1 && pos <= c->num_nodes_);
   assert(node->symbol_ != INVALID_SYMBOL);
-  if (!c->frozen_ || is_fresh_new_symbol) {
+  if (!(c->frozen_ || node->countS_ >= COUNTER_CUT_OFF) ||
+      is_fresh_new_symbol) {
     const int starting_pos = pos;   // save for later
     // Update the counters up the tree, possibly exchanging some nodes
-    node->countS_ += incr;
+    ++node->countS_;
     while (pos > 1) {
       Node* const parent = &c->nodes_[pos >> 1];
-      parent->count_ += incr;
+      ++parent->count_;
       if (parent->countS_ < node->countS_) {
         ExchangeSymbol(c, pos);
       }
       pos >>= 1;
       node = parent;
     }
-    c->total_coded_ += incr;
+    ++c->total_coded_;
     UpdateProbas(c, starting_pos);  // Update the probas along the modified path
   }
 }
@@ -339,10 +342,13 @@ void TCoderEncode(TCoder* const c, int s, VP8BitWriter* const bw) {
   int pos;
   const int is_new_symbol = (c->symbols_[s] == INVALID_POS);
   assert(c);
+  assert(s >= 0 && s < c->num_nodes_);
   if (!c->fixed_symbols_ && c->num_symbols_ < c->num_nodes_) {
     if (c->num_symbols_ > 0) {
       if (bw != NULL) {
-        VP8PutBit(bw, is_new_symbol, c->probaN_);
+        const int new_symbol_proba =
+            CalcProba(c->num_symbols_, c->total_coded_, HALF_PROBA - 1, 0);
+        VP8PutBit(bw, is_new_symbol, new_symbol_proba);
       }
     } else {
       assert(is_new_symbol);
@@ -381,7 +387,7 @@ void TCoderEncode(TCoder* const c, int s, VP8BitWriter* const bw) {
       assert(parent == pos);
     }
   }
-  UpdateTree(c, pos, 1);
+  UpdateTree(c, pos);
 }
 
 // -----------------------------------------------------------------------------
@@ -396,7 +402,9 @@ int TCoderDecode(TCoder* const c, VP8BitReader* const br) {
   // Check if we need to transmit the new symbol's value
   if (!c->fixed_symbols_ && c->num_symbols_ < c->num_nodes_) {
     if (c->num_symbols_ > 0) {
-      is_new_symbol = VP8GetBit(br, c->probaN_);
+      const int new_symbol_proba =
+          CalcProba(c->num_symbols_, c->total_coded_, HALF_PROBA - 1, 0);
+      is_new_symbol = VP8GetBit(br, new_symbol_proba);
     } else {
       is_new_symbol = 1;
     }
@@ -404,6 +412,10 @@ int TCoderDecode(TCoder* const c, VP8BitReader* const br) {
   // Code either the raw value, or the path downward to its node.
   if (is_new_symbol) {
     s = DecodeSymbol(br, c->num_nodes_);
+    if (s >= c->num_nodes_) {
+      br->eof_ = 1;   // will make decoding abort.
+      return 0;
+    }
     pos = NewNode(c, s);
   } else {
     pos = 1;
@@ -431,7 +443,7 @@ int TCoderDecode(TCoder* const c, VP8BitReader* const br) {
     assert(pos == SymbolToNode(c, s));
   }
   assert(pos <= c->num_nodes_);
-  UpdateTree(c, pos, 1);
+  UpdateTree(c, pos);
   return s;
 }
 

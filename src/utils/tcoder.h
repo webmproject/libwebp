@@ -61,6 +61,8 @@ typedef struct TCoder TCoder;
 
 // Creates a tree-coder capable of coding symbols in
 // the [0, max_symbol] range. Returns NULL in case of memory error.
+// 'max_symbol' must be in the range [0, TCODER_MAX_SYMBOL)
+#define TCODER_MAX_SYMBOL (1 << 24)
 TCoder* TCoderNew(int max_symbol);
 // Re-initialize an existing object, make it ready for a new encoding or
 // decoding cycle.
