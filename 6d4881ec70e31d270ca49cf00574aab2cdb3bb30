@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAGX//x0w\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2011-12-08T04:06:24Z",
+      "side": 1,
+      "message": "on x86 passing vectors by value is not a good idea as it requires the compiler to align the stack (something the msvc compiler doesn\u0027t support). So it may not be the best idea to implement this way even though we\u0027re dealing with gcc atm.",
+      "revId": "6d4881ec70e31d270ca49cf00574aab2cdb3bb30",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
