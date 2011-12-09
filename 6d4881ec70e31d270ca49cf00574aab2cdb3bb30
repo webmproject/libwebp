@@ -16,6 +16,24 @@
       "revId": "6d4881ec70e31d270ca49cf00574aab2cdb3bb30",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAGX//xQg\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2011-12-09T00:13:50Z",
+      "side": 1,
+      "message": "It looks like the spec only allows for passing in q0-q3, so more than 4 neon registers could get into trouble during parameter passing.\n\nHowever, if this isn\u0027t being inlined there are bigger problems. In that case, we would be better switching to macros or duplicating code. And once it\u0027s inlined, none of this applies.\n\nIn this case, the generated code is good.",
+      "parentUuid": "AAAAGX//x0w\u003d",
+      "revId": "6d4881ec70e31d270ca49cf00574aab2cdb3bb30",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
