@@ -16,6 +16,10 @@
 #include "./bit_writer.h"
 #include "./tcoder.h"
 
+#if defined(__cplusplus) || defined(c_plusplus)
+extern "C" {
+#endif
+
 #define MAX_SYMBOLS      255
 #define ALPHA_HEADER_LEN 2
 
@@ -351,15 +355,15 @@ static int DecompressZlibTCoder(const uint8_t* data, size_t data_size,
     VP8BitReader br;
     VP8InitBitReader(&br, data, data + data_size);
     while (pos < output_size && !br.eof_) {
-      const int dist = TCoderDecode(coderd, &br);
+      const size_t dist = TCoderDecode(coderd, &br);
       if (dist == 0) {
         const int literal = TCoderDecode(coder, &br);
         output[pos] = literal;
         ++pos;
       } else {
-        const int len = MIN_LEN + TCoderDecode(coderl, &br);
-        int k;
-        if (pos + len > output_size) goto End;
+        const size_t len = MIN_LEN + TCoderDecode(coderl, &br);
+        size_t k;
+        if (pos + len > output_size || pos < dist) goto End;
         for (k = 0; k < len; ++k) {
           output[pos + k] = output[pos + k - dist];
         }
@@ -429,3 +433,7 @@ int DecodeAlpha(const uint8_t* data, size_t data_size,
 
   return ok;
 }
+
+#if defined(__cplusplus) || defined(c_plusplus)
+}    // extern "C"
+#endif
