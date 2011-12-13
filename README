@@ -228,6 +228,18 @@ Use following options to convert into alternate image formats:
   -v     ....... verbose (e.g. print encoding/decoding times)
   -noasm ....... disable all assembly optimizations.
 
+Visualization tool:
+===================
+
+There's a little self-serve visualization tool called 'vwebp' under the
+examples/ directory. It uses OpenGL to open a simple drawing window and show
+a decoded WebP file. It's not yet integrated in the automake or makefile.unix
+build system, but you can try to manually compile it using the recommendations
+at the top of the source file.
+
+Usage: 'vwebp my_picture.webp'
+
+
 Encoding API:
 =============
 
