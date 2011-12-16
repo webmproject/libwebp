@@ -9,12 +9,13 @@
 //
 // Author: somnath@google.com (Somnath Banerjee)
 
-#if defined(__SSE2__) || defined(_MSC_VER)
+#include "./dsp.h"
+
+#if defined(WEBP_USE_SSE2)
 
 #include <assert.h>
 #include <emmintrin.h>
 #include <string.h>
-#include "./dsp.h"
 #include "./yuv.h"
 #include "../dec/webpi.h"
 
@@ -212,4 +213,4 @@ void WebPInitUpsamplersSSE2(void) {
 }    // extern "C"
 #endif
 
-#endif   //__SSE2__ || _MSC_VER
+#endif   // WEBP_USE_SSE2

@@ -21,6 +21,14 @@ extern "C" {
 //------------------------------------------------------------------------------
 // CPU detection
 
+#if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
+#define WEBP_MSC_SSE2  // Visual C++ SSE2 targets
+#endif
+
+#if defined(__SSE2__) || defined(WEBP_MSC_SSE2)
+#define WEBP_USE_SSE2
+#endif
+
 typedef enum {
   kSSE2,
   kSSE3,
