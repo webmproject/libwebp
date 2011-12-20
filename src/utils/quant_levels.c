@@ -140,7 +140,7 @@ int QuantizeLevels(uint8_t* data, int width, int height,
 
   // Compute final mean squared error if needed.
   if (mse) {
-    *mse = sqrt(err);
+    *mse = (float)sqrt(err);
   }
 
   return 1;
