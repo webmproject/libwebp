@@ -10,7 +10,9 @@
 // Author: somnath@google.com (Somnath Banerjee)
 //         cduvivier@google.com (Christian Duvivier)
 
-#if defined(__SSE2__) || defined(_MSC_VER)
+#include "./dsp.h"
+
+#if defined(WEBP_USE_SSE2)
 
 #include <emmintrin.h>
 #include "../dec/vp8i.h"
@@ -898,4 +900,4 @@ void VP8DspInitSSE2(void) {
 }    // extern "C"
 #endif
 
-#endif   //__SSE2__ || _MSC_VER
+#endif   // WEBP_USE_SSE2
