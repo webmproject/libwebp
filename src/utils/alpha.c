@@ -116,7 +116,7 @@ static int EncodeZlibTCoder(const uint8_t* data, int width, int height,
       best.literal = data[n];
       best.len = 1;
       for (dist = 1; dist <= MAX_DIST && dist <= n; ++dist) {
-        const int pos = n - dist;
+        const size_t pos = n - dist;
         const size_t min_len = best.len - 1;
         size_t len;
 
