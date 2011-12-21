@@ -106,7 +106,7 @@ static VP8StatusCode AllocateBuffer(WebPDecBuffer* const buffer) {
       WebPYUVABuffer* const buf = &buffer->u.YUVA;
       buf->y = output;
       buf->y_stride = stride;
-      buf->y_size = size;
+      buf->y_size = (int)size;
       buf->u = output + size;
       buf->u_stride = uv_stride;
       buf->u_size = uv_size;
@@ -116,13 +116,13 @@ static VP8StatusCode AllocateBuffer(WebPDecBuffer* const buffer) {
       if (mode == MODE_YUVA) {
         buf->a = output + size + 2 * uv_size;
       }
-      buf->a_size = a_size;
+      buf->a_size = (int)a_size;
       buf->a_stride = a_stride;
     } else {  // RGBA initialization
       WebPRGBABuffer* const buf = &buffer->u.RGBA;
       buf->rgba = output;
       buf->stride = stride;
-      buf->size = size;
+      buf->size = (int)size;
     }
   }
   return CheckDecBuffer(buffer);
