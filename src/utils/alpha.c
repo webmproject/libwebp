@@ -24,29 +24,6 @@ extern "C" {
 #define ALPHA_HEADER_LEN 2
 
 // -----------------------------------------------------------------------------
-// Alpha Encode.
-
-static int EncodeIdent(const uint8_t* data, int width, int height,
-                       uint8_t** output, size_t* output_size) {
-  const size_t data_size = height * width;
-  uint8_t* alpha = NULL;
-  assert((output != NULL) && (output_size != NULL));
-
-  if (data == NULL) {
-    return 0;
-  }
-
-  alpha = (uint8_t*)malloc(data_size);
-  if (alpha == NULL) {
-    return 0;
-  }
-  memcpy(alpha, data, data_size);
-  *output_size = data_size;
-  *output = alpha;
-  return 1;
-}
-
-// -----------------------------------------------------------------------------
 // Zlib-like encoding using TCoder
 
 typedef struct {
@@ -80,7 +57,7 @@ static size_t GetLongestMatch(const uint8_t* const data,
 }
 
 static int EncodeZlibTCoder(const uint8_t* data, int width, int height,
-                            uint8_t** output, size_t* output_size) {
+                            VP8BitWriter* const bw) {
   int ok = 0;
   const size_t data_size = width * height;
   const size_t MAX_DIST = 3 * width;
@@ -201,26 +178,19 @@ static int EncodeZlibTCoder(const uint8_t* data, int width, int height,
   // Final bitstream assembly.
   {
     int n;
-    VP8BitWriter bw;
-    VP8BitWriterInit(&bw, 0);
     TCoderInit(coder);
     TCoderInit(coderd);
     TCoderInit(coderl);
     for (n = 0; n < num_tokens; ++n) {
       const Token* const t = &msg[n];
       const int is_literal = (t->dist == 0);
-      TCoderEncode(coderd, t->dist, &bw);
+      TCoderEncode(coderd, t->dist, bw);
       if (is_literal) {  // literal
-        TCoderEncode(coder, t->literal, &bw);
+        TCoderEncode(coder, t->literal, bw);
       } else {
-        TCoderEncode(coderl, t->len - MIN_LEN, &bw);
+        TCoderEncode(coderl, t->len - MIN_LEN, bw);
       }
     }
-
-    // clean up
-    VP8BitWriterFinish(&bw);
-    *output = VP8BitWriterBuf(&bw);
-    *output_size = VP8BitWriterSize(&bw);
     ok = 1;
   }
 
@@ -229,32 +199,45 @@ static int EncodeZlibTCoder(const uint8_t* data, int width, int height,
   if (coderl) TCoderDelete(coderl);
   if (coderd) TCoderDelete(coderd);
   free(msg);
+  return ok && !bw->error_;
+}
+
+static int EncodeAlphaInternal(const uint8_t* data, int width, int height,
+                               int method, VP8BitWriter* const bw) {
+  int ok = 0;
+  if (method == 0) {
+    ok = VP8BitWriterAppend(bw, data, width * height);
+    ok = ok && !bw->error_;
+  } else if (method == 1) {
+    ok = EncodeZlibTCoder(data, width, height, bw);
+    VP8BitWriterFinish(bw);
+  }
   return ok;
 }
 
 // -----------------------------------------------------------------------------
 
+// TODO(skal): move to dsp/ ?
+static void CopyPlane(const uint8_t* src, int src_stride,
+                      uint8_t* dst, int dst_stride, int width, int height) {
+  while (height-- > 0) {
+    memcpy(dst, src, width);
+    src += src_stride;
+    dst += dst_stride;
+  }
+}
+
 int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
                 int quality, int method,
                 uint8_t** output, size_t* output_size) {
-  const int kMaxImageDim = (1 << 14) - 1;
-  uint8_t* compressed_alpha = NULL;
   uint8_t* quant_alpha = NULL;
-  uint8_t* out = NULL;
-  size_t compressed_size = 0;
   const size_t data_size = height * width;
-  float mse = 0.0;
-  int ok = 0;
-  int h;
+  int ok = 1;
 
-  if ((data == NULL) || (output == NULL) || (output_size == NULL)) {
-    return 0;
-  }
-
-  if (width <= 0 || width > kMaxImageDim ||
-      height <= 0 || height > kMaxImageDim || stride < width) {
-    return 0;
-  }
+  // quick sanity checks
+  assert(data != NULL && output != NULL && output_size != NULL);
+  assert(width > 0 && height > 0);
+  assert(stride >= width);
 
   if (quality < 0 || quality > 100) {
     return 0;
@@ -269,74 +252,45 @@ int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
     return 0;
   }
 
-  // Extract the alpha data (WidthXHeight) from raw_data (StrideXHeight).
-  for (h = 0; h < height; ++h) {
-    memcpy(quant_alpha + h * width, data + h * stride, width);
-  }
+  // Extract alpha data (width x height) from raw_data (stride x height).
+  CopyPlane(data, stride, quant_alpha, width, width, height);
 
   if (quality < 100) {  // No Quantization required for 'quality = 100'.
-    // 16 Alpha levels gives quite a low MSE w.r.t Original Alpha plane hence
+    // 16 alpha levels gives quite a low MSE w.r.t original alpha plane hence
     // mapped to moderate quality 70. Hence Quality:[0, 70] -> Levels:[2, 16]
     // and Quality:]70, 100] -> Levels:]16, 256].
-    const int alpha_levels = (quality <= 70) ?
-                             2 + quality / 5 :
-                             16 + (quality - 70) * 8;
+    const int alpha_levels = (quality <= 70) ? (2 + quality / 5)
+                                             : (16 + (quality - 70) * 8);
+    ok = QuantizeLevels(quant_alpha, width, height, alpha_levels, NULL);
+  }
 
-    ok = QuantizeLevels(quant_alpha, width, height, alpha_levels, &mse);
+  if (ok) {
+    uint8_t header[ALPHA_HEADER_LEN];
+    VP8BitWriter bw;
+    VP8BitWriterInit(&bw,
+        (method == 0) ? (2 + data_size)
+                      : (data_size >> 5)  /* rough estimate of final size */);
+    header[0] = method & 0xff;    // Compression Method.
+    header[1] = 0;                // reserved byte for later use
+    VP8BitWriterAppend(&bw, header, sizeof(header));
+
+    ok = EncodeAlphaInternal(quant_alpha, width, height, method, &bw);
     if (!ok) {
-      free(quant_alpha);
-      return 0;
+      VP8BitWriterWipeOut(&bw);
+    } else {
+      *output = VP8BitWriterBuf(&bw);
+      *output_size = VP8BitWriterSize(&bw);
     }
   }
 
-  if (method == 0) {
-    ok = EncodeIdent(quant_alpha, width, height,
-                     &compressed_alpha, &compressed_size);
-  } else if (method == 1) {
-    ok = EncodeZlibTCoder(quant_alpha, width, height,
-                          &compressed_alpha, &compressed_size);
-  }
-
   free(quant_alpha);
-  if (!ok) {
-    return 0;
-  }
-
-  out = (uint8_t*)malloc(compressed_size + ALPHA_HEADER_LEN);
-  if (out == NULL) {
-    free(compressed_alpha);
-    return 0;
-  } else {
-    *output = out;
-  }
-
-  // Alpha bit-stream Header:
-  // Byte0: Compression Method.
-  // Byte1: Reserved for later extension.
-  out[0] = method & 0xff;
-  out[1] = 0;  // Reserved Byte.
-  out += ALPHA_HEADER_LEN;
-  memcpy(out, compressed_alpha, compressed_size);
-  free(compressed_alpha);
-  out += compressed_size;
-
-  *output_size = out - *output;
-
-  return 1;
+  return ok;
 }
 
 // -----------------------------------------------------------------------------
 // Alpha Decode.
 
-static int DecodeIdent(const uint8_t* data, size_t data_size,
-                       uint8_t* output) {
-  assert((data != NULL) && (output != NULL));
-  memcpy(output, data, data_size);
-  return 1;
-}
-
-static int DecompressZlibTCoder(const uint8_t* data, size_t data_size,
-                                int width, int height,
+static int DecompressZlibTCoder(VP8BitReader* const br, int width,
                                 uint8_t* output, size_t output_size) {
   int ok = 1;
   const size_t MAX_DIST = 3 * width;
@@ -348,20 +302,17 @@ static int DecompressZlibTCoder(const uint8_t* data, size_t data_size,
   if (coder == NULL || coderd == NULL || coderl == NULL) {
     goto End;
   }
-  (void)height;     // unused parameter
 
   {
     size_t pos = 0;
-    VP8BitReader br;
-    VP8InitBitReader(&br, data, data + data_size);
-    while (pos < output_size && !br.eof_) {
-      const size_t dist = TCoderDecode(coderd, &br);
+    assert(br != NULL);
+    while (pos < output_size && !br->eof_) {
+      const size_t dist = TCoderDecode(coderd, br);
       if (dist == 0) {
-        const int literal = TCoderDecode(coder, &br);
-        output[pos] = literal;
+        output[pos] = TCoderDecode(coder, br);
         ++pos;
       } else {
-        const size_t len = MIN_LEN + TCoderDecode(coderl, &br);
+        const size_t len = MIN_LEN + TCoderDecode(coderl, br);
         size_t k;
         if (pos + len > output_size || pos < dist) goto End;
         for (k = 0; k < len; ++k) {
@@ -370,7 +321,7 @@ static int DecompressZlibTCoder(const uint8_t* data, size_t data_size,
         pos += len;
       }
     }
-    ok = !br.eof_;
+    ok = !br->eof_;
   }
 
  End:
@@ -386,51 +337,42 @@ int DecodeAlpha(const uint8_t* data, size_t data_size,
                 int width, int height, int stride,
                 uint8_t* output) {
   uint8_t* decoded_data = NULL;
+  const size_t decoded_size = height * width;
   int ok = 0;
   int method;
-  size_t decoded_size = height * width;
 
-  if (data == NULL || output == NULL) {
-    return 0;
-  }
+  assert(width > 0 && height > 0 && stride >= width);
+  assert(data != NULL && output != NULL);
 
   if (data_size <= ALPHA_HEADER_LEN) {
     return 0;
   }
 
-  if (width <= 0 || height <= 0 || stride < width) {
-    return 0;
-  }
-
   method = data[0];
-  if (method < 0 || method > 1) {
+  ok = (data[1] == 0);
+  if (method < 0 || method > 1 || !ok) {
     return 0;
   }
-
-  decoded_data = (uint8_t*)malloc(decoded_size);
-  if (decoded_data == NULL) {
-    return 0;
-  }
-
-  data_size -= ALPHA_HEADER_LEN;
-  data += ALPHA_HEADER_LEN;
 
   if (method == 0) {
-    ok = DecodeIdent(data, data_size, decoded_data);
+    ok = (data_size >= decoded_size);
+    decoded_data = (uint8_t*)data + ALPHA_HEADER_LEN;
   } else if (method == 1) {
-    ok = DecompressZlibTCoder(data, data_size, width, height,
-                              decoded_data, decoded_size);
-  }
-
-  if (ok) {
-    // Construct raw_data (HeightXStride) from the alpha data (HeightXWidth).
-    int h;
-    for (h = 0; h < height; ++h) {
-      memcpy(output + h * stride, decoded_data + h * width, width);
+    VP8BitReader br;
+    decoded_data = (uint8_t*)malloc(decoded_size);
+    if (decoded_data == NULL) {
+      return 0;
     }
+    VP8InitBitReader(&br, data + ALPHA_HEADER_LEN, data + data_size);
+    ok = DecompressZlibTCoder(&br, width, decoded_data, decoded_size);
   }
-  free(decoded_data);
-
+  // Construct raw_data (height x stride) from alpha data (height x width).
+  if (ok) {
+    CopyPlane(decoded_data, width, output, stride, width, height);
+  }
+  if (method == 1) {
+    free(decoded_data);
+  }
   return ok;
 }
 
