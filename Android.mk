@@ -31,8 +31,11 @@ LOCAL_SRC_FILES := \
 	src/enc/syntax.c \
 	src/enc/tree.c \
 	src/enc/webpenc.c \
+	src/utils/alpha.c \
 	src/utils/bit_reader.c \
 	src/utils/bit_writer.c \
+	src/utils/quant_levels.c \
+	src/utils/tcoder.c \
 	src/utils/thread.c \
 
 LOCAL_CFLAGS := -Wall -DANDROID -DHAVE_MALLOC_H -DHAVE_PTHREAD -DWEBP_USE_THREAD \
