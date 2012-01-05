@@ -17,19 +17,21 @@
 extern "C" {
 #endif
 
+#define UNDEFINED_CHUNK_SIZE (-1)
+
 const ChunkInfo kChunks[] = {
   {"vp8x",    mktag('V', 'P', '8', 'X'),  VP8X_ID,    VP8X_CHUNK_SIZE},
-  {"iccp",    mktag('I', 'C', 'C', 'P'),  ICCP_ID,    -1},
+  {"iccp",    mktag('I', 'C', 'C', 'P'),  ICCP_ID,    UNDEFINED_CHUNK_SIZE},
   {"loop",    mktag('L', 'O', 'O', 'P'),  LOOP_ID,    LOOP_CHUNK_SIZE},
   {"frame",   mktag('F', 'R', 'M', ' '),  FRAME_ID,   FRAME_CHUNK_SIZE},
   {"tile",    mktag('T', 'I', 'L', 'E'),  TILE_ID,    TILE_CHUNK_SIZE},
-  {"alpha",   mktag('A', 'L', 'P', 'H'),  ALPHA_ID,   -1},
-  {"image",   mktag('V', 'P', '8', ' '),  IMAGE_ID,   -1},
-  {"meta",    mktag('M', 'E', 'T', 'A'),  META_ID,    -1},
-  {"unknown", mktag('U', 'N', 'K', 'N'),  UNKNOWN_ID, -1},
+  {"alpha",   mktag('A', 'L', 'P', 'H'),  ALPHA_ID,   UNDEFINED_CHUNK_SIZE},
+  {"image",   mktag('V', 'P', '8', ' '),  IMAGE_ID,   UNDEFINED_CHUNK_SIZE},
+  {"meta",    mktag('M', 'E', 'T', 'A'),  META_ID,    UNDEFINED_CHUNK_SIZE},
+  {"unknown", mktag('U', 'N', 'K', 'N'),  UNKNOWN_ID, UNDEFINED_CHUNK_SIZE},
 
-  {NULL,      NIL_TAG,                    NIL_ID,     -1},
-  {"list",    mktag('L', 'I', 'S', 'T'),  LIST_ID,    -1}
+  {NULL,      NIL_TAG,                    NIL_ID,     UNDEFINED_CHUNK_SIZE},
+  {"list",    mktag('L', 'I', 'S', 'T'),  LIST_ID,    UNDEFINED_CHUNK_SIZE}
 };
 
 //------------------------------------------------------------------------------

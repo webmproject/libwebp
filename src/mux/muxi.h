@@ -99,7 +99,7 @@ typedef struct {
   const char*   chunkName;
   uint32_t      chunkTag;
   TAG_ID        chunkId;
-  uint32_t      chunkSize;  // Negative value denotes that size is NOT fixed.
+  uint32_t      chunkSize;
 } ChunkInfo;
 
 const ChunkInfo kChunks[LIST_ID + 1];
