@@ -75,7 +75,7 @@ UTILS_OBJS = src/utils/alpha.o src/utils/bit_reader.o src/utils/bit_writer.o \
 
 OBJS = $(DEC_OBJS) $(ENC_OBJS) $(DSP_OBJS) $(UTILS_OBJS)
 
-MUX_OBJS = src/mux/mux.o
+MUX_OBJS = src/mux/muxedit.o src/mux/muxinternal.o src/mux/muxread.o
 
 HDRS = src/webp/encode.h src/enc/vp8enci.h src/enc/cost.h src/webp/mux.h \
        src/dec/vp8i.h  \

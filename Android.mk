@@ -31,6 +31,9 @@ LOCAL_SRC_FILES := \
 	src/enc/syntax.c \
 	src/enc/tree.c \
 	src/enc/webpenc.c \
+	src/mux/muxedit.c \
+	src/mux/muxinternal.c \
+	src/mux/muxread.c \
 	src/utils/alpha.c \
 	src/utils/bit_reader.c \
 	src/utils/bit_writer.c \
