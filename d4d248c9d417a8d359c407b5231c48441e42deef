@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAG3//+Ic\u003d",
+        "filename": "man/cwebp.1",
+        "patchSetId": 2
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-01-05T08:13:50Z",
+      "side": 1,
+      "message": "corresponds -\u003e correspond",
+      "revId": "d4d248c9d417a8d359c407b5231c48441e42deef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAG3//+IU\u003d",
+        "filename": "man/cwebp.1",
+        "patchSetId": 2
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-01-05T08:13:50Z",
+      "side": 1,
+      "message": "filter -\u003e filters",
+      "revId": "d4d248c9d417a8d359c407b5231c48441e42deef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAG3//+IE\u003d",
+        "filename": "src/utils/alpha.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-01-05T08:13:50Z",
+      "side": 1,
+      "message": "corresponds --\u003e correspond",
+      "revId": "d4d248c9d417a8d359c407b5231c48441e42deef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAG3//+IA\u003d",
+        "filename": "src/utils/alpha.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-01-05T08:13:50Z",
+      "side": 1,
+      "message": "filter --\u003e filters",
+      "revId": "d4d248c9d417a8d359c407b5231c48441e42deef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
