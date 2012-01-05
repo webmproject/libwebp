@@ -41,6 +41,12 @@ Specify the compression factor for alpha compression between 0 and 100.
 Lossless compression of alpha is achieved using a value of 100, while the lower
 values result in a lossy compression. The default is 100.
 .TP
+.B \-alpha_filter int
+Specify the predictive filtering method (between 0 and 5) for alpha plane.
+These correspond to prediction modes none, horizontal, vertical, gradient and
+paeth filters. The prediction mode 5 will try all the prediction modes (0 to 4)
+and pick the best prediction mode. The default value is 0 (no prediction).
+.TP
 .B \-f int
 Specify the strength of the deblocking filter, between 0 (no filtering)
 and 100 (maximum filtering). A value of 0 will turn off any filtering.

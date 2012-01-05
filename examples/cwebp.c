@@ -700,6 +700,7 @@ static void HelpLong(void) {
   printf("  -map <int> ............. print map of extra info.\n");
   printf("  -d <file.pgm> .......... dump the compressed output (PGM file).\n");
   printf("  -alpha_method <int> .... Transparency-compression method (0..1)\n");
+  printf("  -alpha_filter <int> .... predictive filtering for Alpha (0..5)\n");
   printf("  -noalpha ............... discard any transparency information.\n");
 
   printf("\n");
@@ -793,6 +794,8 @@ int main(int argc, const char *argv[]) {
       config.alpha_quality = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-alpha_method") && c < argc - 1) {
       config.alpha_compression = strtol(argv[++c], NULL, 0);
+    } else if (!strcmp(argv[c], "-alpha_filter") && c < argc - 1) {
+      config.alpha_filtering = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-noalpha")) {
       keep_alpha = 0;
     } else if (!strcmp(argv[c], "-size") && c < argc - 1) {

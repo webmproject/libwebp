@@ -36,7 +36,7 @@ int VP8EncFinishAlpha(VP8Encoder* enc) {
     assert(pic->a);
     if (!EncodeAlpha(pic->a, pic->width, pic->height, pic->a_stride,
                      config->alpha_quality, config->alpha_compression,
-                     &tmp_data, &tmp_size)) {
+                     config->alpha_filtering, &tmp_data, &tmp_size)) {
       return 0;
     }
     if (tmp_size != (uint32_t)tmp_size) {  // Sanity check.
