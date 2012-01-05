@@ -78,6 +78,9 @@
 // Using this simple maintenance, we observed a typical 10-20% reduction
 // in the number of calls to VP8PutBit(), leading to 3-5% speed gain.
 //
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "./tcoderi.h"
 
@@ -85,7 +88,7 @@
 extern "C" {
 #endif
 
-#ifdef _MSC_VER
+#ifdef NOT_HAVE_LOG2
 static double log2(double d) {
   const double kLog2Reciprocal = 1.442695040888963;
   return log(d) * kLog2Reciprocal;

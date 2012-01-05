@@ -11,6 +11,11 @@ AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=PATH],
 	[pkgconfigdir="$withval"], [pkgconfigdir='${libdir}/pkgconfig'])
 AC_SUBST([pkgconfigdir])
 
+dnl === Check for native log2
+AC_SEARCH_LIBS([log2], [m],,
+               [AC_DEFINE([NOT_HAVE_LOG2], [1],
+                          [Undefine this if you have log2().])])
+
 dnl === Check libz is present
 
 if test "$enable_experimental" = "yes"; then

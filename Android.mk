@@ -38,7 +38,8 @@ LOCAL_SRC_FILES := \
 	src/utils/tcoder.c \
 	src/utils/thread.c \
 
-LOCAL_CFLAGS := -Wall -DANDROID -DHAVE_MALLOC_H -DHAVE_PTHREAD -DWEBP_USE_THREAD \
+LOCAL_CFLAGS := -Wall -DANDROID -DHAVE_MALLOC_H -DHAVE_PTHREAD \
+                -DNOT_HAVE_LOG2 -DWEBP_USE_THREAD \
                 -finline-functions -frename-registers -ffast-math \
                 -s -fomit-frame-pointer -Isrc/webp
 
