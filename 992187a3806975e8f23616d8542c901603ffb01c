@@ -16,6 +16,24 @@
       "revId": "992187a3806975e8f23616d8542c901603ffb01c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAG3//+KQ\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-01-05T06:56:56Z",
+      "side": 1,
+      "message": "\u003e Build for Android doesn\u0027t go through this path (autogen.sh;configure;make). We need to update relevant Android.mk file as well to define this flag.\n\nIndeed. Have a look at the rest of the patchset and you\u0027ll see it\u0027s already done.\n\n\u003e One Q: What\u0027s the performance impact if we define \u0026 use this custom log2() for all build ports. If we use this for the platforms (Linux/Mac) where log2 is available, what\u0027s the performance impact ?\n\nNo idea. Compared to the rest of the encode process, though, I\u0027d think it would be minimal.",
+      "parentUuid": "AAAAG3//+P0\u003d",
+      "revId": "992187a3806975e8f23616d8542c901603ffb01c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
