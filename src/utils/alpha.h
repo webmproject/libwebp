@@ -26,6 +26,10 @@ extern "C" {
 // lossy. Valid ranges for 'quality' is [0, 100] and 'method' is [0, 1]:
 //   'method = 0' - No compression;
 //   'method = 1' - Backward reference counts encoded with arithmetic encoder;
+// 'filter' values [0, 5] correspond to prediction modes none, horizontal,
+// vertical, gradient & paeth filters. The prediction value 5 will try all the
+// prediction modes (0 to 4) and pick the best prediction mode.
+
 // 'output' corresponds to the buffer containing compressed alpha data.
 //          This buffer is allocated by this method and caller should call
 //          free(*output) when done.
@@ -33,13 +37,11 @@ extern "C" {
 //
 // Returns 1 on successfully encoding the alpha and
 //         0 if either:
-//           data, output or output_size is NULL, or
-//           inappropriate width, height or stride, or
 //           invalid quality or method, or
 //           memory allocation for the compressed data fails.
 
 int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
-                int quality, int method,
+                int quality, int method, int filter,
                 uint8_t** output, size_t* output_size);
 
 // Decodes the compressed data 'data' of size 'data_size' into the 'output'.
@@ -48,8 +50,7 @@ int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
 //
 // Returns 1 on successfully decoding the compressed alpha and
 //         0 if either:
-//           data or output is NULL, or
-//           error in bit-stream header (invalid compression mode or qbits), or
+//           error in bit-stream header (invalid compression mode or filter), or
 //           error returned by appropriate compression method.
 int DecodeAlpha(const uint8_t* data, size_t data_size,
                 int width, int height, int stride, uint8_t* output);

@@ -74,6 +74,9 @@ typedef struct {
   int alpha_compression;  // Algorithm for encoding the alpha plane (0 = none,
                           // 1 = backward reference counts encoded with
                           // arithmetic encoder). Default is 1.
+  int alpha_filtering;    // Predictive filtering method for alpha plane.
+                          // (0 = none, 1 = horizontal, 2 = vertical, 3 = grad,
+                          // 4 = Paeth and 5 = Best of (0 .. 4).
   int alpha_quality;      // Between 0 (smallest size) and 100 (lossless).
                           // Default is 100.
 } WebPConfig;

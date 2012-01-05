@@ -34,6 +34,7 @@ LOCAL_SRC_FILES := \
 	src/utils/alpha.c \
 	src/utils/bit_reader.c \
 	src/utils/bit_writer.c \
+	src/utils/filters.c \
 	src/utils/quant_levels.c \
 	src/utils/tcoder.c \
 	src/utils/thread.c \
