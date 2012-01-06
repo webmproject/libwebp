@@ -9,8 +9,6 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include <assert.h>
-
 #include "./cost.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)

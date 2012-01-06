@@ -9,7 +9,6 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include <assert.h>
 #include <stdlib.h>
 
 #include "./vp8enci.h"

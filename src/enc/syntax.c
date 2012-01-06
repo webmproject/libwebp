@@ -10,7 +10,6 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include <assert.h>
-#include <math.h>
 
 #include "./vp8enci.h"
 #include "../dec/webpi.h"  // For chunk-size constants.
