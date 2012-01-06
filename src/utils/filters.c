@@ -164,11 +164,11 @@ static void GradientUnfilter(const uint8_t* data, int width, int height,
 //------------------------------------------------------------------------------
 // Paeth filter.
 
-static inline int AbsDiff(int a, int b) {
+static WEBP_INLINE int AbsDiff(int a, int b) {
   return (a > b) ? a - b : b - a;
 }
 
-static inline uint8_t PaethPredictor(uint8_t a, uint8_t b, uint8_t c) {
+static WEBP_INLINE uint8_t PaethPredictor(uint8_t a, uint8_t b, uint8_t c) {
   const int p = a + b - c;  // Base.
   const int pa = AbsDiff(p, a);
   const int pb = AbsDiff(p, b);
