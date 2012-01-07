@@ -91,11 +91,10 @@ Example#2 (pseudo code): Get image & color profile data from a WebP file.
   int copy_data = 0;
   // ... (Read data from file).
   WebPMux* mux = WebPMuxCreate(data, data_size, copy_data);
-  WebPMuxGetImage(mux, &image_data, &image_data_size,
-                  &alpha_data, &alpha_size);
-  // ... (Consume image_data; e.g. call WebPDecode() to decode the data).
-  WebPMuxGetColorProfile(mux, &icc_data, &icc_data_size);
-  // ... (Consume icc_data).
+  WebPMuxGetImage(mux, &image, &alpha);
+  // ... (Consume image; e.g. call WebPDecode() to decode the data).
+  WebPMuxGetColorProfile(mux, &icc_chunkdata);
+  // ... (Consume icc_chunkdata).
   WebPMuxDelete(mux);
   free(data);
 
