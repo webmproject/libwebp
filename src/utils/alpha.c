@@ -203,14 +203,35 @@ static int EncodeZlibTCoder(const uint8_t* data, int width, int height,
   return ok && !bw->error_;
 }
 
+// -----------------------------------------------------------------------------
+
 static int EncodeAlphaInternal(const uint8_t* data, int width, int height,
-                               int method, VP8BitWriter* const bw) {
+                               int method, int filter, size_t data_size,
+                               uint8_t* tmp_alpha, VP8BitWriter* const bw) {
   int ok = 0;
+  const uint8_t* alpha_src;
+  WebPFilterFunc filter_func;
+  uint8_t header[ALPHA_HEADER_LEN];
+  const size_t expected_size = (method == 0) ?
+          (ALPHA_HEADER_LEN + data_size) : (data_size >> 5);
+  header[0] = (filter << 4) | method;
+  header[1] = 0;                // reserved byte for later use
+  VP8BitWriterInit(bw, expected_size);
+  VP8BitWriterAppend(bw, header, sizeof(header));
+
+  filter_func = WebPFilters[filter];
+  if (filter_func) {
+    filter_func(data, width, height, 1, width, tmp_alpha);
+    alpha_src = tmp_alpha;
+  }  else {
+    alpha_src = data;
+  }
+
   if (method == 0) {
-    ok = VP8BitWriterAppend(bw, data, width * height);
+    ok = VP8BitWriterAppend(bw, alpha_src, width * height);
     ok = ok && !bw->error_;
-  } else if (method == 1) {
-    ok = EncodeZlibTCoder(data, width, height, bw);
+  } else {
+    ok = EncodeZlibTCoder(alpha_src, width, height, bw);
     VP8BitWriterFinish(bw);
   }
   return ok;
@@ -239,7 +260,7 @@ int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
   assert(data != NULL && output != NULL && output_size != NULL);
   assert(width > 0 && height > 0);
   assert(stride >= width);
-  assert(filter < WEBP_FILTER_LAST);
+  assert(filter >= WEBP_FILTER_NONE && filter <= WEBP_FILTER_FAST);
 
   if (quality < 0 || quality > 100) {
     return 0;
@@ -267,62 +288,67 @@ int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
   }
 
   if (ok) {
-    WEBP_FILTER_TYPE this_filter;
-    size_t best_size = 1 << 30;
-    uint8_t* tmp_out = NULL;
-    uint8_t* const filtered_alpha = (uint8_t*)malloc(data_size);
-    if (filtered_alpha == NULL) {
-      free(quant_alpha);
-      return 0;
+    VP8BitWriter bw;
+    size_t best_score;
+    int test_filter;
+    uint8_t* filtered_alpha = NULL;
+
+    // We always test WEBP_FILTER_NONE first.
+    ok = EncodeAlphaInternal(quant_alpha, width, height, method,
+                             WEBP_FILTER_NONE, data_size, NULL, &bw);
+    if (!ok) {
+      VP8BitWriterWipeOut(&bw);
+      goto End;
     }
-    // Filtering.
-    for (this_filter = WEBP_FILTER_NONE; this_filter < WEBP_FILTER_LAST;
-         ++this_filter) {
-      uint8_t header[ALPHA_HEADER_LEN];
-      VP8BitWriter bw;
-      WebPFilterFunc filter_func = NULL;
-      const size_t expected_size = (method == 0) ?
-          (ALPHA_HEADER_LEN + data_size) : (data_size >> 5);
-      if (this_filter == WEBP_FILTER_BEST) {
-        continue;
-      } else if (this_filter != filter && filter != WEBP_FILTER_BEST) {
+    best_score = VP8BitWriterSize(&bw);
+
+    if (filter == WEBP_FILTER_FAST) {  // Quick estimate of a second candidate?
+      filter = EstimateBestFilter(quant_alpha, width, height, width);
+    }
+    // Stop?
+    if (filter == WEBP_FILTER_NONE) {
+      goto Ok;
+    }
+
+    filtered_alpha = (uint8_t*)malloc(data_size);
+    ok = (filtered_alpha != NULL);
+    if (!ok) {
+      goto End;
+    }
+
+    // Try the other mode(s).
+    for (test_filter = WEBP_FILTER_HORIZONTAL;
+         ok && (test_filter <= WEBP_FILTER_GRADIENT);
+         ++test_filter) {
+      VP8BitWriter tmp_bw;
+      if (filter != WEBP_FILTER_BEST && test_filter != filter) {
         continue;
       }
 
-      header[0] = ((this_filter & 0x0f) << 4) | (method & 0x0f);
-      header[1] = 0;                // reserved byte for later use
-      VP8BitWriterInit(&bw, expected_size);
-      VP8BitWriterAppend(&bw, header, sizeof(header));
-
-      filter_func = WebPFilters[this_filter];
-      if (filter_func) {
-        filter_func(quant_alpha, width, height, 1, width, filtered_alpha);
-        ok = EncodeAlphaInternal(filtered_alpha, width, height, method, &bw);
-      } else {
-        ok = EncodeAlphaInternal(quant_alpha, width, height, method, &bw);
-      }
+      ok = EncodeAlphaInternal(quant_alpha, width, height, method, test_filter,
+                               data_size, filtered_alpha, &tmp_bw);
       if (ok) {
-        const size_t this_size = VP8BitWriterSize(&bw);
-        if (this_size < best_size) {
-          free(tmp_out);
-          tmp_out = VP8BitWriterBuf(&bw);
-          best_size = this_size;
-        } else {
-          VP8BitWriterWipeOut(&bw);
+        const size_t score = VP8BitWriterSize(&tmp_bw);
+        if (score < best_score) {
+          // swap bitwriter objects.
+          VP8BitWriter tmp = tmp_bw;
+          tmp_bw = bw;
+          bw = tmp;
+          best_score = score;
         }
       } else {
-        free(tmp_out);
         VP8BitWriterWipeOut(&bw);
-        break;
       }
+      VP8BitWriterWipeOut(&tmp_bw);
     }
+ Ok:
     if (ok) {
-      *output_size = best_size;
-      *output = tmp_out;
+      *output_size = VP8BitWriterSize(&bw);
+      *output = VP8BitWriterBuf(&bw);
     }
     free(filtered_alpha);
   }
-
+ End:
   free(quant_alpha);
   return ok;
 }
@@ -379,7 +405,7 @@ int DecodeAlpha(const uint8_t* data, size_t data_size,
   uint8_t* decoded_data = NULL;
   const size_t decoded_size = height * width;
   uint8_t* unfiltered_data = NULL;
-  int filter;
+  WEBP_FILTER_TYPE filter;
   int ok = 0;
   int method;
 
@@ -394,7 +420,7 @@ int DecodeAlpha(const uint8_t* data, size_t data_size,
   filter = data[0] >> 4;
   ok = (data[1] == 0);
   if (method < 0 || method > 1 ||
-      filter < WEBP_FILTER_NONE || filter > WEBP_FILTER_PAETH || !ok) {
+      filter > WEBP_FILTER_GRADIENT || !ok) {
     return 0;
   }
 

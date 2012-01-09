@@ -700,7 +700,8 @@ static void HelpLong(void) {
   printf("  -map <int> ............. print map of extra info.\n");
   printf("  -d <file.pgm> .......... dump the compressed output (PGM file).\n");
   printf("  -alpha_method <int> .... Transparency-compression method (0..1)\n");
-  printf("  -alpha_filter <int> .... predictive filtering for Alpha (0..5)\n");
+  printf("  -alpha_filter <string> . predictive filtering for alpha plane.\n");
+  printf("                           One of: none, fast (default) or best.\n");
   printf("  -noalpha ............... discard any transparency information.\n");
 
   printf("\n");
@@ -795,7 +796,17 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-alpha_method") && c < argc - 1) {
       config.alpha_compression = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-alpha_filter") && c < argc - 1) {
-      config.alpha_filtering = strtol(argv[++c], NULL, 0);
+      ++c;
+      if (!strcmp(argv[c], "none")) {
+        config.alpha_filtering = 0;
+      } else if (!strcmp(argv[c], "fast")) {
+        config.alpha_filtering = 1;
+      } else if (!strcmp(argv[c], "best")) {
+        config.alpha_filtering = 2;
+      } else {
+        fprintf(stderr, "Error! Unrecognized alpha filter: %s\n", argv[c]);
+        goto Error;
+      }
     } else if (!strcmp(argv[c], "-noalpha")) {
       keep_alpha = 0;
     } else if (!strcmp(argv[c], "-size") && c < argc - 1) {

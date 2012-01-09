@@ -149,6 +149,8 @@ options:
   -map <int> ............. print map of extra info.
   -d <file.pgm> .......... dump the compressed output (PGM file).
   -alpha_method <int> .... Transparency-compression method (0..1)
+  -alpha_filter <string> . predictive filtering for alpha plane.
+                           One of: none, fast (default) or best.
   -noalpha ............... discard any transparency information.
 
   -short ................. condense printed message

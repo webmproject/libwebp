@@ -42,7 +42,7 @@ int WebPConfigInitInternal(WebPConfig* const config,
   config->autofilter = 0;
   config->partition_limit = 0;
   config->alpha_compression = 1;
-  config->alpha_filtering = 0;
+  config->alpha_filtering = 1;
   config->alpha_quality = 100;
 
   // TODO(skal): tune.

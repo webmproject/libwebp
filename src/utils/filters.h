@@ -24,9 +24,9 @@ typedef enum {
   WEBP_FILTER_HORIZONTAL,
   WEBP_FILTER_VERTICAL,
   WEBP_FILTER_GRADIENT,
-  WEBP_FILTER_PAETH,
+  WEBP_FILTER_LAST = WEBP_FILTER_GRADIENT + 1,  // end marker
   WEBP_FILTER_BEST,
-  WEBP_FILTER_LAST,
+  WEBP_FILTER_FAST
 } WEBP_FILTER_TYPE;
 
 typedef void (*WebPFilterFunc)(const uint8_t* in, int width, int height,
@@ -38,10 +38,14 @@ typedef void (*WebPFilterFunc)(const uint8_t* in, int width, int height,
 // 'bpp' is number of bytes per pixel, and
 // 'stride' is number of bytes per scan line (with possible padding).
 // 'out' should be pre-allocated.
-extern const WebPFilterFunc WebPFilters[/*WEBP_FILTER_LAST*/];
+extern const WebPFilterFunc WebPFilters[WEBP_FILTER_LAST];
 
 // Reconstruct the original data from the given filtered data.
-extern const WebPFilterFunc WebPUnfilters[/*WEBP_FILTER_LAST*/];
+extern const WebPFilterFunc WebPUnfilters[WEBP_FILTER_LAST];
+
+// Fast estimate of a potentially good filter.
+extern WEBP_FILTER_TYPE EstimateBestFilter(const uint8_t* data,
+                                           int width, int height, int stride);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
