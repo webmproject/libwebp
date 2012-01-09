@@ -202,6 +202,10 @@ static int EmitAlphaRGB(const VP8Io* const io, WebPDecParams* const p) {
   return 0;
 }
 
+static WEBP_INLINE uint32_t clip(uint32_t v, uint32_t max_value) {
+  return (v > max_value) ? max_value : v;
+}
+
 static int EmitAlphaRGBA4444(const VP8Io* const io, WebPDecParams* const p) {
   const int mb_w = io->mb_w;
   const int mb_h = io->mb_h;
@@ -213,7 +217,7 @@ static int EmitAlphaRGBA4444(const VP8Io* const io, WebPDecParams* const p) {
     for (j = 0; j < mb_h; ++j) {
       for (i = 0; i < mb_w; ++i) {
         // Fill in the alpha value (converted to 4 bits).
-        const uint8_t alpha_val = (alpha[i] + 8) >> 4;
+        const uint32_t alpha_val = clip((alpha[i] + 8) >> 4, 15);
         dst[2 * i] = (dst[2 * i] & 0xf0) | alpha_val;
       }
       alpha += io->width;
@@ -490,7 +494,7 @@ static int ExportAlphaRGBA4444(WebPDecParams* const p, int y_pos) {
     ExportRow(&p->scaler_a);
     for (i = 0; i < p->scaler_a.dst_width; ++i) {
       // Fill in the alpha value (converted to 4 bits).
-      const uint8_t alpha_val = (p->scaler_a.dst[i] + 8) >> 4;
+      const uint32_t alpha_val = clip((p->scaler_a.dst[i] + 8) >> 4, 15);
       dst[2 * i] = (dst[2 * i] & 0xf0) | alpha_val;
     }
     dst += buf->stride;
