@@ -30,140 +30,127 @@ extern "C" {
   assert(bpp > 0);                                          \
   assert(stride >= width * bpp);
 
+static WEBP_INLINE void PredictLine(const uint8_t* src, const uint8_t* pred,
+                                    uint8_t* dst, int length, int inverse) {
+  int i;
+  if (inverse) {
+    for (i = 0; i < length; ++i) dst[i] = src[i] + pred[i];
+  } else {
+    for (i = 0; i < length; ++i) dst[i] = src[i] - pred[i];
+  }
+}
+
 //------------------------------------------------------------------------------
 // Horizontal filter.
 
-static void HorizontalFilter(const uint8_t* data, int width, int height,
-                             int bpp, int stride, uint8_t* filtered_data) {
+static WEBP_INLINE void DoHorizontalFilter(const uint8_t* in,
+    int width, int height, int bpp, int stride, int inverse, uint8_t* out) {
   int h;
-  SANITY_CHECK(data, filtered_data);
+  const uint8_t* preds = (inverse ? out : in);
+  SANITY_CHECK(in, out);
 
   // Filter line-by-line.
   for (h = 0; h < height; ++h) {
-    int w;
-    const uint8_t* const scan_line = data + h * stride;
-    uint8_t* const out = filtered_data + h * stride;
-
-    memcpy((void*)out, (const void*)scan_line, bpp);
-    for (w = bpp; w < width * bpp; ++w) {
-      out[w] = scan_line[w] - scan_line[w - bpp];
+    // Leftmost pixel is predicted from above (except for topmost scanline).
+    if (h == 0) {
+      memcpy((void*)out, (const void*)in, bpp);
+    } else {
+      PredictLine(in, preds - stride, out, bpp, inverse);
     }
+    PredictLine(in + bpp, preds, out + bpp, bpp * (width - 1), inverse);
+    preds += stride;
+    in += stride;
+    out += stride;
   }
+}
+
+static void HorizontalFilter(const uint8_t* data, int width, int height,
+                             int bpp, int stride, uint8_t* filtered_data) {
+  DoHorizontalFilter(data, width, height, bpp, stride, 0, filtered_data);
 }
 
 static void HorizontalUnfilter(const uint8_t* data, int width, int height,
                                int bpp, int stride, uint8_t* recon_data) {
-  int h;
-  SANITY_CHECK(data, recon_data);
-
-  // Unfilter line-by-line.
-  for (h = 0; h < height; ++h) {
-    int w;
-    const uint8_t* const scan_line = data + h * stride;
-    uint8_t* const out = recon_data + h * stride;
-
-    memcpy((void*)out, (const void*)scan_line, bpp);
-    for (w = bpp; w < width * bpp; ++w) {
-      out[w] = scan_line[w] + out[w - bpp];
-    }
-  }
+  DoHorizontalFilter(data, width, height, bpp, stride, 1, recon_data);
 }
 
 //------------------------------------------------------------------------------
 // Vertical filter.
 
-static void VerticalFilter(const uint8_t* data, int width, int height,
-                           int bpp, int stride, uint8_t* filtered_data) {
+static WEBP_INLINE void DoVerticalFilter(const uint8_t* in,
+    int width, int height, int bpp, int stride, int inverse, uint8_t* out) {
   int h;
-  SANITY_CHECK(data, filtered_data);
+  const uint8_t* preds = (inverse ? out : in);
+  SANITY_CHECK(in, out);
 
-  // Copy top scan-line as it is.
-  memcpy((void*)filtered_data, (const void*)data, width * bpp);
+  // Very first top-left pixel is copied.
+  memcpy((void*)out, (const void*)in, bpp);
+  // Rest of top scan-line is left-predicted.
+  PredictLine(in + bpp, preds, out + bpp, bpp * (width - 1), inverse);
 
   // Filter line-by-line.
   for (h = 1; h < height; ++h) {
-    int w;
-    const uint8_t* const scan_line = data + h * stride;
-    uint8_t* const out = filtered_data + h * stride;
-    const uint8_t* const prev_line = scan_line - stride;
-    for (w = 0; w < width * bpp; ++w) {
-      out[w] = scan_line[w] - prev_line[w];
-    }
+    in += stride;
+    out += stride;
+    PredictLine(in, preds, out, bpp * width, inverse);
+    preds += stride;
   }
+}
+
+static void VerticalFilter(const uint8_t* data, int width, int height,
+                           int bpp, int stride, uint8_t* filtered_data) {
+  DoVerticalFilter(data, width, height, bpp, stride, 0, filtered_data);
 }
 
 static void VerticalUnfilter(const uint8_t* data, int width, int height,
                              int bpp, int stride, uint8_t* recon_data) {
-  int h;
-  SANITY_CHECK(data, recon_data);
-
-  // Copy top scan-line as it is.
-  memcpy((void*)recon_data, (const void*)data, width * bpp);
-
-  // Unfilter line-by-line.
-  for (h = 1; h < height; ++h) {
-    int w;
-    const uint8_t* const scan_line = data + h * stride;
-    uint8_t* const out = recon_data + h * stride;
-    const uint8_t* const out_prev_line = out - stride;
-    for (w = 0; w < width * bpp; ++w) {
-      out[w] = scan_line[w] + out_prev_line[w];
-    }
-  }
+  DoVerticalFilter(data, width, height, bpp, stride, 1, recon_data);
 }
 
 //------------------------------------------------------------------------------
 // Gradient filter.
 
-static WEBP_INLINE uint8_t GradientPredictor(uint8_t a, uint8_t b, uint8_t c) {
+static WEBP_INLINE int GradientPredictor(uint8_t a, uint8_t b, uint8_t c) {
   const int g = a + b - c;
-  return (g < 0) ? 0 : (g > 255) ? 255 : (uint8_t)g;
+  return (g < 0) ? 0 : (g > 255) ? 255 : g;
 }
 
-static void GradientFilter(const uint8_t* data, int width, int height,
-                           int bpp, int stride, uint8_t* filtered_data) {
+static WEBP_INLINE
+void DoGradientFilter(const uint8_t* in, int width, int height,
+                      int bpp, int stride, int inverse, uint8_t* out) {
+  const uint8_t* preds = (inverse ? out : in);
   int h;
-  SANITY_CHECK(data, filtered_data);
+  SANITY_CHECK(in, out);
 
-  // Copy top scan-line as it is.
-  memcpy((void*)filtered_data, (const void*)data, width * bpp);
+  // left prediction for top scan-line
+  memcpy((void*)out, (const void*)in, bpp);
+  PredictLine(in + bpp, preds, out + bpp, bpp * (width - 1), inverse);
 
   // Filter line-by-line.
   for (h = 1; h < height; ++h) {
     int w;
-    const uint8_t* const scan_line = data + h * stride;
-    uint8_t* const out = filtered_data + h * stride;
-    const uint8_t* const prev_line = scan_line - stride;
-    memcpy((void*)out, (const void*)scan_line, bpp);
+    preds += stride;
+    in += stride;
+    out += stride;
+    // leftmost pixel: predict from above.
+    PredictLine(in, preds - stride, out, bpp, inverse);
     for (w = bpp; w < width * bpp; ++w) {
-      out[w] = scan_line[w] - GradientPredictor(scan_line[w - bpp],
-                                                prev_line[w],
-                                                prev_line[w - bpp]);
+      const int pred = GradientPredictor(preds[w - bpp],
+                                         preds[w - stride],
+                                         preds[w - stride - bpp]);
+      out[w] = in[w] + (inverse ? pred : -pred);
     }
   }
 }
 
+static void GradientFilter(const uint8_t* data, int width, int height,
+                           int bpp, int stride, uint8_t* filtered_data) {
+  DoGradientFilter(data, width, height, bpp, stride, 0, filtered_data);
+}
+
 static void GradientUnfilter(const uint8_t* data, int width, int height,
                              int bpp, int stride, uint8_t* recon_data) {
-  int h;
-  SANITY_CHECK(data, recon_data);
-
-  // Copy top scan-line as it is.
-  memcpy((void*)recon_data, (const void*)data, width * bpp);
-
-  // Unfilter line-by-line.
-  for (h = 1; h < height; ++h) {
-    int w;
-    const uint8_t* const scan_line = data + h * stride;
-    uint8_t* const out = recon_data + h * stride;
-    const uint8_t* const out_prev_line = out - stride;
-    memcpy((void*)out, (const void*)scan_line, bpp);
-    for (w = bpp; w < width * bpp; ++w) {
-      out[w] = scan_line[w] + GradientPredictor(out[w - bpp],
-                                                out_prev_line[w],
-                                                out_prev_line[w - bpp]);
-    }
-  }
+  DoGradientFilter(data, width, height, bpp, stride, 1, recon_data);
 }
 
 #undef SANITY_CHECK
