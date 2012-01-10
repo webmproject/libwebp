@@ -53,7 +53,7 @@ typedef struct {
 static size_t GetLongestMatch(const uint8_t* const data,
                               const uint8_t* const ref, size_t max_len) {
   size_t n;
-  for (n = 0; n < max_len && (data[n] == ref[n]); ++n) { /* do nothing */ }
+  for (n = 0; (n < max_len) && (data[n] == ref[n]); ++n) { /* do nothing */ }
   return n;
 }
 
@@ -127,7 +127,7 @@ static int EncodeZlibTCoder(const uint8_t* data, int width, int height,
             best.dist = dist;
           }
         }
-        if (len >= MAX_LEN) {
+        if (len >= max_len) {
           break;  // No need to search further. We already got a max-long match
         }
       }
