@@ -12,7 +12,7 @@
 #ifndef WEBP_EXAMPLES_STOPWATCH_H_
 #define WEBP_EXAMPLES_STOPWATCH_H_
 
-#ifdef _WIN32
+#if defined _WIN32 && !defined __GNUC__
 #include <windows.h>
 
 typedef LARGE_INTEGER Stopwatch;
