@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAG3//6HQ\u003d",
+        "filename": "examples/stopwatch.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-01-12T20:16:51Z",
+      "side": 1,
+      "message": "this should do as msvc won\u0027t be the only user of this block, ic[cl] will need it too. It also won\u0027t conflict with cygwin builds.",
+      "revId": "2e74ec8b5fae9799610266b6f0ee77b7a4dcbf20",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
