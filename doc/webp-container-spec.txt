@@ -521,12 +521,23 @@ the bit-stream for the Alpha-chunk is still experimental and expected to change.
 
 The contents of such a chunk are as follows:
 
-  * Byte 0:  The _compression method_ used. Currently two methods are
-    supported:
+  * Byte 0 lower nibble: The _compression method_ used. Currently two methods
+    are supported:
 
     * 0 --> No compression
 
     * 1 --> Backward reference counts encoded with arithmetic encoder.
+
+  * Byte 0 upper nibble: The _filtering method_ used. Currently the following
+    methods are supported:
+
+    * 0 --> No filter
+
+    * 1 --> Horizontal filter
+
+    * 2 --> Vertical filter
+
+    * 3 --> Gradient filter
 
   * Byte 1:  _Reserved_. **Should** be 0.
 
