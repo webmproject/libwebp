@@ -26,9 +26,9 @@ extern "C" {
 // lossy. Valid ranges for 'quality' is [0, 100] and 'method' is [0, 1]:
 //   'method = 0' - No compression;
 //   'method = 1' - Backward reference counts encoded with arithmetic encoder;
-// 'filter' values [0, 5] correspond to prediction modes none, horizontal,
-// vertical, gradient & paeth filters. The prediction value 5 will try all the
-// prediction modes (0 to 4) and pick the best prediction mode.
+// 'filter' values [0, 4] correspond to prediction modes none, horizontal,
+// vertical & gradient filters. The prediction mode 4 will try all the
+// prediction modes (0 to 3) and pick the best prediction mode.
 
 // 'output' corresponds to the buffer containing compressed alpha data.
 //          This buffer is allocated by this method and caller should call
