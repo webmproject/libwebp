@@ -23,6 +23,7 @@ extern "C" {
 static int MuxInit(WebPMux* const mux) {
   if (mux == NULL) return 0;
   memset(mux, 0, sizeof(*mux));
+  mux->state_ = WEBP_MUX_STATE_PARTIAL;
   return 1;
 }
 
@@ -179,8 +180,11 @@ static WebPMuxError GetImageData(const uint8_t* data, uint32_t size,
     // It is webp file data. Extract image data from it.
     WebPMux* mux;
     WebPMuxError err;
-    mux = WebPMuxCreate(data, size, 0);
-    if (mux == NULL) return WEBP_MUX_BAD_DATA;
+    WebPMuxState mux_state;
+    mux = WebPMuxCreate(data, size, 0, &mux_state);
+    if (mux == NULL || mux_state != WEBP_MUX_STATE_COMPLETE) {
+      return WEBP_MUX_BAD_DATA;
+    }
 
     err = WebPMuxGetImage(mux, image_data, image_size, alpha_data, alpha_size);
     WebPMuxDelete(mux);
@@ -633,6 +637,9 @@ WebPMuxError WebPMuxAssemble(WebPMux* const mux, uint8_t** output_data,
   // Create VP8X chunk.
   err = CreateVP8XChunk(mux);
   if (err != WEBP_MUX_OK) return err;
+
+  // Mark mux as complete.
+  mux->state_ = WEBP_MUX_STATE_COMPLETE;
 
   // Allocate data.
   size = ChunksListDiskSize(mux->vp8x_) + ChunksListDiskSize(mux->iccp_)

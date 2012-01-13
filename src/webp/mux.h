@@ -34,7 +34,7 @@
 //
 //   int copy_data = 0;
 //   // ... (Read data from file).
-//   WebPMux* mux = WebPMuxCreate(data, data_size, copy_data);
+//   WebPMux* mux = WebPMuxCreate(data, data_size, copy_data, NULL);
 //   WebPMuxGetImage(mux, &image_data, &image_data_size,
 //                   &alpha_data, &alpha_size);
 //   // ... (Consume image_data; e.g. call WebPDecode() to decode the data).
@@ -60,8 +60,15 @@ typedef enum {
   WEBP_MUX_INVALID_ARGUMENT   = -2,
   WEBP_MUX_INVALID_PARAMETER  = -3,
   WEBP_MUX_BAD_DATA           = -4,
-  WEBP_MUX_MEMORY_ERROR       = -5
+  WEBP_MUX_MEMORY_ERROR       = -5,
+  WEBP_MUX_NOT_ENOUGH_DATA    = -6
 } WebPMuxError;
+
+typedef enum {
+  WEBP_MUX_STATE_PARTIAL  =  0,
+  WEBP_MUX_STATE_COMPLETE =  1,
+  WEBP_MUX_STATE_ERROR    = -1
+} WebPMuxState;
 
 // Flag values for different features used in VP8X chunk.
 typedef enum {
@@ -96,11 +103,13 @@ WEBP_EXTERN(void) WebPMuxDelete(WebPMux* const mux);
 //   size - (in) size of raw data
 //   copy_data - (in) value 1 indicates given data WILL copied to the mux, and
 //               value 0 indicates data will NOT be copied.
+//   mux_state - (out) indicates the state of the mux returned. Can be passed
+//               NULL if not required.
 // Returns:
 //   A pointer to the mux object created from given data - on success.
 //   NULL - In case of invalid data or memory error.
 WEBP_EXTERN(WebPMux*) WebPMuxCreate(const uint8_t* data, uint32_t size,
-                                    int copy_data);
+                                    int copy_data, WebPMuxState* mux_state);
 
 //------------------------------------------------------------------------------
 // Single Image.

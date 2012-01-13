@@ -59,6 +59,7 @@ struct WebPMuxImage {
 
 // Main mux object. Stores data chunks.
 struct WebPMux {
+  WebPMuxState    state_;
   WebPMuxImage*   images_;
   WebPChunk*      iccp_;
   WebPChunk*      meta_;
@@ -121,6 +122,10 @@ static WEBP_INLINE void PutLE32(uint8_t* const data, uint32_t val) {
   PutLE16(data + 2, val >> 16);
 }
 
+static WEBP_INLINE uint32_t SizeWithPadding(uint32_t chunk_size) {
+  return CHUNK_HEADER_SIZE + ((chunk_size + 1) & ~1U);
+}
+
 //------------------------------------------------------------------------------
 // Chunk object management.
 
@@ -154,7 +159,7 @@ WebPChunk* ChunkDelete(WebPChunk* const chunk);
 // Size of a chunk including header and padding.
 static WEBP_INLINE uint32_t ChunkDiskSize(const WebPChunk* chunk) {
   assert(chunk->payload_size_ < MAX_CHUNK_PAYLOAD);
-  return CHUNK_HEADER_SIZE + ((chunk->payload_size_ + 1) & ~1U);
+  return SizeWithPadding(chunk->payload_size_);
 }
 
 // Total size of a list of chunks.
@@ -168,6 +173,9 @@ uint8_t* ChunkListEmit(const WebPChunk* chunk_list, uint8_t* dst);
 
 // Initialize.
 void MuxImageInit(WebPMuxImage* const wpi);
+
+// Delete image 'wpi'.
+WebPMuxImage* MuxImageDelete(WebPMuxImage* const wpi);
 
 // Delete all images in 'wpi_list'.
 void MuxImageDeleteAll(WebPMuxImage** const wpi_list);

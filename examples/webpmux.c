@@ -355,15 +355,16 @@ static int ReadData(const char* filename, void** data_ptr, uint32_t* size_ptr) {
 static int ReadFile(const char* const filename, WebPMux** mux) {
   uint32_t size = 0;
   void* data = NULL;
+  WebPMuxState mux_state;
 
   assert(mux != NULL);
 
   if (!ReadData(filename, &data, &size)) return 0;
-  *mux = WebPMuxCreate((const uint8_t*)data, size, 1);
+  *mux = WebPMuxCreate((const uint8_t*)data, size, 1, &mux_state);
   free(data);
-  if (*mux != NULL) return 1;
-  fprintf(stderr, "Failed to create mux object from file %s.\n",
-          filename);
+  if (*mux != NULL && mux_state == WEBP_MUX_STATE_COMPLETE) return 1;
+  fprintf(stderr, "Failed to create mux object from file %s. mux_state = %d.\n",
+          filename, mux_state);
   return 0;
 }
 
@@ -377,14 +378,16 @@ static int ReadImage(const char* filename,
   WebPMux* mux;
   WebPMuxError err;
   int ok = 0;
+  WebPMuxState mux_state;
 
   if (!ReadData(filename, &data, &size)) return 0;
 
-  mux = WebPMuxCreate((const uint8_t*)data, size, 1);
+  mux = WebPMuxCreate((const uint8_t*)data, size, 1, &mux_state);
   free(data);
-  if (mux == NULL) {
-    fprintf(stderr, "Failed to create mux object from file %s.\n",
-            filename);
+  if (mux == NULL || mux_state != WEBP_MUX_STATE_COMPLETE) {
+    fprintf(stderr,
+            "Failed to create mux object from file %s. mux_state = %d.\n",
+            filename, mux_state);
     return 0;
   }
   err = WebPMuxGetImage(mux, (const uint8_t**)&data, &size,
