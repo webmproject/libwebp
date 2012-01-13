@@ -112,7 +112,7 @@ $(OUT_EXAMPLES):
 dist: DESTDIR := dist
 dist: all
 	$(INSTALL) -m755 -d $(DESTDIR)/include/webp \
-             $(DESTDIR)/doc $(DESTDIR)/lib
+	           $(DESTDIR)/doc $(DESTDIR)/lib
 	$(INSTALL) -m755 -s $(OUT_EXAMPLES) $(DESTDIR)
 	$(INSTALL) -m644 src/webp/*.h $(DESTDIR)/include/webp
 	$(INSTALL) -m644 src/libwebp.a $(DESTDIR)/lib
@@ -132,6 +132,7 @@ clean:
               src/dsp/*.o src/dsp/*~ \
               src/utils/*.o src/utils/*~ \
               src/mux/*.o src/mux/*~ \
+              src/webp/*~ man/*~ doc/*~ swig/*~ \
               examples/*.o examples/*~
 
 superclean: clean
