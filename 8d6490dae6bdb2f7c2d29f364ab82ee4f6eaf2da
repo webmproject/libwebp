@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAG3//5jw\u003d",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-01-13T09:36:08Z",
+      "side": 1,
+      "message": "Unfortunately not, long by a couple of chars.",
+      "parentUuid": "AAAAG3//5kA\u003d",
+      "revId": "8d6490dae6bdb2f7c2d29f364ab82ee4f6eaf2da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAG3//5j8\u003d",
         "filename": "src/mux/muxedit.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2012-01-13T09:32:28Z",
       "side": 1,
       "message": "WEBP_MUX_STATE_PARTIAL is already defined as 0. So memset (0) should take care of this initialization. \nI am OK if you want to explicitly set this (in case the enum changes in future).",
+      "revId": "8d6490dae6bdb2f7c2d29f364ab82ee4f6eaf2da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAG3//5js\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-01-13T09:36:08Z",
+      "side": 1,
+      "message": "Yes, we want to explicitly set it to WEBP_MUX_STATE_PARTIAL.",
+      "parentUuid": "AAAAG3//5j8\u003d",
       "revId": "8d6490dae6bdb2f7c2d29f364ab82ee4f6eaf2da",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
