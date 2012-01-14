@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAHH////U\u003d",
+        "filename": "src/mux/muxread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-01-14T20:58:44Z",
+      "side": 1,
+      "message": "this won\u0027t work, because MuxImageDelete, at 189, is not robust to being passed a NULL wpi pointer. Need to return immediately (or change MuxImageDelete(), not sure)",
+      "revId": "a143d79569e384fedbad04cef125c8365a311f43",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
