@@ -52,6 +52,24 @@
       "revId": "a143d79569e384fedbad04cef125c8365a311f43",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHH///+0\u003d",
+        "filename": "src/mux/muxread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-01-14T22:05:42Z",
+      "side": 1,
+      "message": "ok, sounds good then.\n\nMuxImageDelete() could use a comment about this case, i think",
+      "parentUuid": "AAAAHH///+8\u003d",
+      "revId": "a143d79569e384fedbad04cef125c8365a311f43",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
