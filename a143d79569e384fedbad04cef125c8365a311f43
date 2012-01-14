@@ -16,6 +16,24 @@
       "revId": "a143d79569e384fedbad04cef125c8365a311f43",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHH////E\u003d",
+        "filename": "src/mux/muxread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-01-14T21:20:45Z",
+      "side": 1,
+      "message": "I admit I assumed too much when I made the change. Looking at the call now though looks like:\n\nMuxImageDelete(NULL) -\u003e MuxImageRelease(NULL)\nwhich checks and returns NULL; a free(NULL) is performed and NULL is returned...so seems ok.\n\nI\u0027ll test to be sure.",
+      "parentUuid": "AAAAHH////U\u003d",
+      "revId": "a143d79569e384fedbad04cef125c8365a311f43",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
