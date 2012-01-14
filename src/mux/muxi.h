@@ -174,7 +174,8 @@ uint8_t* ChunkListEmit(const WebPChunk* chunk_list, uint8_t* dst);
 // Initialize.
 void MuxImageInit(WebPMuxImage* const wpi);
 
-// Delete image 'wpi'.
+// Delete image 'wpi' and return the next image in the list or NULL.
+// 'wpi' can be NULL.
 WebPMuxImage* MuxImageDelete(WebPMuxImage* const wpi);
 
 // Delete all images in 'wpi_list'.

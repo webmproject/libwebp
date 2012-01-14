@@ -125,6 +125,7 @@ WebPMux* WebPMuxCreate(const uint8_t* data, uint32_t size, int copy_data,
   size -= RIFF_HEADER_SIZE;
 
   wpi = (WebPMuxImage*)malloc(sizeof(*wpi));
+  if (wpi == NULL) goto Err;
   MuxImageInit(wpi);
 
   // Loop over chunks.

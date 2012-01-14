@@ -345,6 +345,7 @@ WebPMuxError MuxImageSetNth(const WebPMuxImage* wpi, WebPMuxImage** wpi_list,
 // MuxImage deletion methods.
 
 WebPMuxImage* MuxImageDelete(WebPMuxImage* const wpi) {
+  // Delete the components of wpi. If wpi is NULL this is a noop.
   WebPMuxImage* const next = MuxImageRelease(wpi);
   free(wpi);
   return next;
