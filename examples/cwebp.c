@@ -206,6 +206,11 @@ static HRESULT ReadPictureWithWIC(const char* filename,
     if (!ok)
       hr = E_FAIL;
   }
+  if (SUCCEEDED(hr)) {
+    if (has_alpha && keep_alpha == 2) {
+      WebPCleanupTransparentArea(pic);
+    }
+  }
 
   // Cleanup.
   if (pConverter != NULL) IUnknown_Release(pConverter);
@@ -415,6 +420,10 @@ static int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha) {
   ok = has_alpha ? WebPPictureImportRGBA(pic, rgb, stride)
                  : WebPPictureImportRGB(pic, rgb, stride);
   free(rgb);
+
+  if (ok && has_alpha && keep_alpha == 2) {
+    WebPCleanupTransparentArea(pic);
+  }
 
  End:
   return ok;
@@ -702,6 +711,7 @@ static void HelpLong(void) {
   printf("  -alpha_method <int> .... Transparency-compression method (0..1)\n");
   printf("  -alpha_filter <string> . predictive filtering for alpha plane.\n");
   printf("                           One of: none, fast (default) or best.\n");
+  printf("  -alpha_cleanup ......... Clean RGB values in transparent area.\n");
   printf("  -noalpha ............... discard any transparency information.\n");
 
   printf("\n");
@@ -795,6 +805,8 @@ int main(int argc, const char *argv[]) {
       config.alpha_quality = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-alpha_method") && c < argc - 1) {
       config.alpha_compression = strtol(argv[++c], NULL, 0);
+    } else if (!strcmp(argv[c], "-alpha_cleanup")) {
+      keep_alpha = keep_alpha ? 2 : 0;
     } else if (!strcmp(argv[c], "-alpha_filter") && c < argc - 1) {
       ++c;
       if (!strcmp(argv[c], "none")) {

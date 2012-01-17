@@ -121,19 +121,21 @@ A longer list of options is available using the -longhelp command line flag:
 Usage:
  cwebp [-preset <...>] [options] in_file [-o out_file]
 
-If input size (-s) for an image is not specified, it is assumed to be a either
-  PNG or JPEG format file.
+If input size (-s) for an image is not specified, it is assumed to be a
+  PNG or JPEG file.
 options:
   -h / -help  ............ short help
   -H / -longhelp  ........ long help
   -q <float> ............. quality factor (0:small..100:big)
-  -alpha_q <int> ......... Transparency-compression quality (0..100)
+  -alpha_q <int> ......... Transparency-compression quality (0..100).
   -preset <string> ....... Preset setting, one of:
                             default, photo, picture,
                             drawing, icon, text
      -preset must come first, as it overwrites other parameters.
   -m <int> ............... compression method (0=fast, 6=slowest)
   -segments <int> ........ number of segments to use (1..4)
+  -size <int> ............ Target size (in bytes)
+  -psnr <float> .......... Target PSNR (in dB. typically: 42)
 
   -s <int> <int> ......... Input size (width x height) for YUV
   -sns <int> ............. Spatial Noise Shaping (0:off, 100:max)
@@ -143,7 +145,6 @@ options:
   -partition_limit <int> . limit quality to fit the 512k limit on
                            the first partition (0=no degradation ... 100=full)
   -pass <int> ............ analysis pass number (1..10)
-  -partitions <int> ...... number of partitions to use (0..3)
   -crop <x> <y> <w> <h> .. crop picture with the given rectangle
   -resize <w> <h> ........ resize picture (after any cropping)
   -map <int> ............. print map of extra info.
@@ -151,6 +152,7 @@ options:
   -alpha_method <int> .... Transparency-compression method (0..1)
   -alpha_filter <string> . predictive filtering for alpha plane.
                            One of: none, fast (default) or best.
+  -alpha_cleanup ......... Clean RGB values in transparent area.
   -noalpha ............... discard any transparency information.
 
   -short ................. condense printed message
@@ -160,11 +162,8 @@ options:
   -v ..................... verbose, e.g. print encoding/decoding times
   -progress .............. report encoding progress
 
-
 Experimental Options:
-  -size <int> ............ Target size (in bytes)
-  -psnr <float> .......... Target PSNR (in dB. typically: 42)
-  -af <int> .............. adjust filter strength (0=off, 1=on)
+  -af .................... auto-adjust filter strength.
   -pre <int> ............. pre-processing filter
 
 

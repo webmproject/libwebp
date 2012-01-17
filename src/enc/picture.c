@@ -594,6 +594,71 @@ int WebPPictureImportBGRA(WebPPicture* const picture,
 }
 
 //------------------------------------------------------------------------------
+// Helper: clean up fully transparent area to help compressibility.
+
+#define SIZE 8
+#define SIZE2 (SIZE / 2)
+static int is_transparent_area(const uint8_t* ptr, int stride, int size) {
+  int y, x;
+  for (y = 0; y < size; ++y) {
+    for (x = 0; x < size; ++x) {
+      if (ptr[x]) {
+        return 0;
+      }
+    }
+    ptr += stride;
+  }
+  return 1;
+}
+
+static WEBP_INLINE void flatten(uint8_t* ptr, int v, int stride, int size) {
+  int y;
+  for (y = 0; y < size; ++y) {
+    memset(ptr, v, size);
+    ptr += stride;
+  }
+}
+
+void WebPCleanupTransparentArea(WebPPicture* const pic) {
+  int x, y, w, h;
+  const uint8_t* a_ptr;
+  int values[3] = { 0 };
+
+  if (pic == NULL) return;
+
+  a_ptr = pic->a;
+  if (a_ptr == NULL) return;    // nothing to do
+
+  w = pic->width / SIZE;
+  h = pic->height / SIZE;
+  for (y = 0; y < h; ++y) {
+    int need_reset = 1;
+    for (x = 0; x < w; ++x) {
+      const int off_a = (y * pic->a_stride + x) * SIZE;
+      const int off_y = (y * pic->y_stride + x) * SIZE;
+      const int off_uv = (y * pic->uv_stride + x) * SIZE2;
+      if (is_transparent_area(a_ptr + off_a, pic->a_stride, SIZE)) {
+        if (need_reset) {
+          values[0] = pic->y[off_y];
+          values[1] = pic->u[off_uv];
+          values[2] = pic->v[off_uv];
+          need_reset = 0;
+        }
+        flatten(pic->y + off_y, values[0], pic->y_stride, SIZE);
+        flatten(pic->u + off_uv, values[1], pic->uv_stride, SIZE2);
+        flatten(pic->v + off_uv, values[2], pic->uv_stride, SIZE2);
+      } else {
+        need_reset = 1;
+      }
+    }
+    // ignore the left-overs on right/bottom
+  }
+}
+
+#undef SIZE
+#undef SIZE2
+
+//------------------------------------------------------------------------------
 // Simplest call:
 
 typedef int (*Importer)(WebPPicture* const, const uint8_t* const, int);

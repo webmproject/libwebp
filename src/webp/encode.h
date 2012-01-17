@@ -276,6 +276,11 @@ WEBP_EXTERN(int) WebPPictureImportBGR(
 WEBP_EXTERN(int) WebPPictureImportBGRA(
     WebPPicture* const picture, const uint8_t* const bgra, int bgra_stride);
 
+// Helper function: given a width x height plane of YUV(A) samples
+// (with stride 'stride'), clean-up the YUV samples under fully transparent
+// area, to help compressibility (no guarantee, though).
+WEBP_EXTERN(void) WebPCleanupTransparentArea(WebPPicture* const picture);
+
 //------------------------------------------------------------------------------
 // Main call
 

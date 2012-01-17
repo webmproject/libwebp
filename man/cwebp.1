@@ -155,6 +155,10 @@ Specify the algorithm used for alpha compression: 0 or 1. Algorithm 0 denotes
 no compression, 1 uses uses backward reference counts encoded with arithmetic
 encoder. The default is 1.
 .TP
+.B \-alpha_cleanup
+Modify unseen RGB values under fully transparent area, to help compressibility.
+The default is off.
+.TP
 .B \-noalpha
 Using this option will discard the alpha channel.
 .TP
