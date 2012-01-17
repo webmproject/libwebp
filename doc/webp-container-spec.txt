@@ -585,6 +585,6 @@ specification. Such chunks **MUST** be ignored, but preserved. Writers
 **SHOULD** try to preserve them in their original order.
 
 
-[vp8spec]:  http://tools.ietf.org/html/draft-bankoski-vp8-bitstream
+[vp8spec]:  http://tools.ietf.org/html/rfc6386
 [xmpspec]:  http://www.adobe.com/content/dam/Adobe/en/devnet/xmp/pdfs/XMPSpecificationPart1.pdf
 [metadata]: http://www.metadataworkinggroup.org/pdf/mwg_guidance.pdf
