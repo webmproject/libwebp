@@ -26,7 +26,7 @@ extern "C" {
 //   4...7   size of image data (including metadata) starting at offset 8
 //   8...11  "WEBP"   our form-type signature
 // The RIFF container (12 bytes) is followed by appropriate chunks:
-//   12..15  "VP8 ": 4-bytes tags, describing the raw video format used
+//   12..15  "VP8 ": 4-bytes tags, signaling the use of VP8 video format
 //   16..19  size of the raw VP8 image data, starting at offset 20
 //   20....  the VP8 bytes
 // Or,
@@ -50,8 +50,7 @@ VP8StatusCode WebPParseRIFF(const uint8_t** data, uint32_t* data_size,
   assert(data_size);
   assert(riff_size);
 
-  if (*data_size >= RIFF_HEADER_SIZE &&
-      !memcmp(*data, "RIFF", TAG_SIZE)) {
+  if (*data_size >= RIFF_HEADER_SIZE && !memcmp(*data, "RIFF", TAG_SIZE)) {
     if (memcmp(*data + 8, "WEBP", TAG_SIZE)) {
       return VP8_STATUS_BITSTREAM_ERROR;  // Wrong image file signature.
     } else {
@@ -483,16 +482,14 @@ static VP8StatusCode GetFeatures(const uint8_t* data, uint32_t data_size,
   uint32_t flags = 0;
   uint32_t vp8x_skip_size = 0;
   uint32_t vp8_skip_size = 0;
+  int* const width = &features->width;
+  int* const height = &features->height;
   VP8StatusCode status;
 
-  if (features == NULL) {
+  if (features == NULL || data == NULL) {
     return VP8_STATUS_INVALID_PARAM;
   }
   DefaultFeatures(features);
-
-  if (data == NULL) {
-    return VP8_STATUS_INVALID_PARAM;
-  }
 
   // Skip over RIFF header.
   status = WebPParseRIFF(&data, &data_size, &riff_size);
@@ -501,8 +498,8 @@ static VP8StatusCode GetFeatures(const uint8_t* data, uint32_t data_size,
   }
 
   // Skip over VP8X.
-  status = WebPParseVP8X(&data, &data_size, &vp8x_skip_size, &features->width,
-                         &features->height, &flags);
+  status = WebPParseVP8X(&data, &data_size, &vp8x_skip_size,
+                         width, height, &flags);
   if (status != VP8_STATUS_OK) {
     return status;  // Wrong VP8X / insufficient data.
   }
@@ -522,8 +519,7 @@ static VP8StatusCode GetFeatures(const uint8_t* data, uint32_t data_size,
   }
 
   // Validates raw VP8 data.
-  if (!VP8GetInfo(data, data_size, vp8_chunk_size,
-                  &features->width, &features->height)) {
+  if (!VP8GetInfo(data, data_size, vp8_chunk_size, width, height)) {
     return VP8_STATUS_BITSTREAM_ERROR;
   }
 
