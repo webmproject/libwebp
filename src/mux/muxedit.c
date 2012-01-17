@@ -355,52 +355,63 @@ static WebPMuxError MuxAddFrameTileInternal(WebPMux* const mux, uint32_t nth,
   err = GetImageData(data, size, &vp8_data, &vp8_size, NULL, NULL);
   if (err != WEBP_MUX_OK) return err;
 
+  ChunkInit(&chunk);
   MuxImageInit(&wpi);
 
   if (has_alpha) {
     // Add alpha chunk.
-    ChunkInit(&chunk);
     err = ChunkAssignDataImageInfo(&chunk, alpha_data, alpha_size, NULL,
                                    copy_data, kChunks[ALPHA_ID].chunkTag);
     if (err != WEBP_MUX_OK) return err;
     err = ChunkSetNth(&chunk, &wpi.alpha_, 1);
     if (err != WEBP_MUX_OK) return err;
+    ChunkInit(&chunk);  // chunk owned by wpi.alpha_ now.
   }
 
   // Create image_info object.
   image_info = CreateImageInfo(x_offset, y_offset, duration, vp8_data,
                                vp8_size);
-  if (image_info == NULL) return WEBP_MUX_MEMORY_ERROR;
+  if (image_info == NULL) {
+    MuxImageRelease(&wpi);
+    return WEBP_MUX_MEMORY_ERROR;
+  }
 
   // Add image chunk.
-  ChunkInit(&chunk);
   err = ChunkAssignDataImageInfo(&chunk, vp8_data, vp8_size, image_info,
                                  copy_data, kChunks[IMAGE_ID].chunkTag);
   if (err != WEBP_MUX_OK) goto Err;
+  image_info = NULL;  // Owned by 'chunk' now.
   err = ChunkSetNth(&chunk, &wpi.vp8_, 1);
   if (err != WEBP_MUX_OK) goto Err;
+  ChunkInit(&chunk);  // chunk owned by wpi.vp8_ now.
 
   // Create frame/tile data from image_info.
-  err = CreateDataFromImageInfo(image_info, is_frame, &frame_tile_data,
-                                &frame_tile_data_size);
+  err = CreateDataFromImageInfo(wpi.vp8_->image_info_, is_frame,
+                                &frame_tile_data, &frame_tile_data_size);
   if (err != WEBP_MUX_OK) goto Err;
 
   // Add frame/tile chunk (with copy_data = 1).
-  ChunkInit(&chunk);
   err = ChunkAssignDataImageInfo(&chunk, frame_tile_data, frame_tile_data_size,
                                  NULL, 1, tag);
   if (err != WEBP_MUX_OK) goto Err;
+  free(frame_tile_data);
+  frame_tile_data = NULL;
   err = ChunkSetNth(&chunk, &wpi.header_, 1);
   if (err != WEBP_MUX_OK) goto Err;
-
-  free(frame_tile_data);
+  ChunkInit(&chunk);  // chunk owned by wpi.header_ now.
 
   // Add this WebPMuxImage to mux.
-  return MuxImageSetNth(&wpi, &mux->images_, nth);
+  err = MuxImageSetNth(&wpi, &mux->images_, nth);
+  if (err != WEBP_MUX_OK) goto Err;
+
+  // All is well.
+  return WEBP_MUX_OK;
 
  Err:  // Something bad happened.
   free(image_info);
   free(frame_tile_data);
+  ChunkRelease(&chunk);
+  MuxImageRelease(&wpi);
   return err;
 }
 
