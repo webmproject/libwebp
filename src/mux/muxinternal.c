@@ -47,8 +47,7 @@ void ChunkInit(WebPChunk* const chunk) {
   chunk->next_ = NULL;
 }
 
-// Releases chunk and returns chunk->next_.
-static WebPChunk* ChunkRelease(WebPChunk* const chunk) {
+WebPChunk* ChunkRelease(WebPChunk* const chunk) {
   WebPChunk* next;
   if (chunk == NULL) return NULL;
   free(chunk->image_info_);
@@ -239,7 +238,7 @@ void MuxImageInit(WebPMuxImage* const wpi) {
   wpi->next_ = NULL;
 }
 
-static WebPMuxImage* MuxImageRelease(WebPMuxImage* const wpi) {
+WebPMuxImage* MuxImageRelease(WebPMuxImage* const wpi) {
   WebPMuxImage* next;
   if (wpi == NULL) return NULL;
   ChunkDelete(wpi->header_);

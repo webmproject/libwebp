@@ -153,6 +153,9 @@ WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk, const uint8_t* data,
 WebPMuxError ChunkSetNth(const WebPChunk* chunk, WebPChunk** chunk_list,
                          uint32_t nth);
 
+// Releases chunk and returns chunk->next_.
+WebPChunk* ChunkRelease(WebPChunk* const chunk);
+
 // Deletes given chunk & returns chunk->next_.
 WebPChunk* ChunkDelete(WebPChunk* const chunk);
 
@@ -173,6 +176,9 @@ uint8_t* ChunkListEmit(const WebPChunk* chunk_list, uint8_t* dst);
 
 // Initialize.
 void MuxImageInit(WebPMuxImage* const wpi);
+
+// Releases image 'wpi' and returns wpi->next.
+WebPMuxImage* MuxImageRelease(WebPMuxImage* const wpi);
 
 // Delete image 'wpi' and return the next image in the list or NULL.
 // 'wpi' can be NULL.
