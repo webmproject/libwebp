@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAHn//+3c\u003d",
+        "filename": "src/webp/encode.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-01-18T03:32:29Z",
+      "side": 1,
+      "message": "pic contains yuv samples...",
+      "revId": "b526ca1a72e6bb6acc20448656716dc8dd1e952e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//+3Y\u003d",
+        "filename": "src/webp/encode.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-01-18T03:32:29Z",
+      "side": 1,
+      "message": "guarantee",
+      "revId": "b526ca1a72e6bb6acc20448656716dc8dd1e952e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
