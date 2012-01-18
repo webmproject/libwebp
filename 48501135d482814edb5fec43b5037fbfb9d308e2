@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAHn///Ac\u003d",
+        "filename": "src/dsp/cpu.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-01-18T00:00:21Z",
+      "side": 1,
+      "message": "I\u0027m suspicious that this could be used as the general 32/64-bit cases, but for the time being this change is less invasive.",
+      "revId": "48501135d482814edb5fec43b5037fbfb9d308e2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
