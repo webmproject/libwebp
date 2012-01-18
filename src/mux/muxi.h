@@ -103,7 +103,7 @@ typedef struct {
   uint32_t      chunkSize;
 } ChunkInfo;
 
-const ChunkInfo kChunks[LIST_ID + 1];
+extern const ChunkInfo kChunks[LIST_ID + 1];
 
 //------------------------------------------------------------------------------
 // Helper functions.
