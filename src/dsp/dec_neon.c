@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2012 Google Inc. All Rights Reserved.
 //
 // This code is licensed under the same terms as WebM:
 //  Software License Agreement:  http://www.webmproject.org/license/software/
@@ -7,7 +7,8 @@
 //
 // ARM NEON version of dsp functions and loop filtering.
 //
-// Author: somnath@google.com (Somnath Banerjee)
+// Authors: Somnath Banerjee (somnath@google.com)
+//          Johann Koenig (johannkoenig@google.com)
 
 #if defined(__GNUC__) && defined(__ARM_NEON__)
 
@@ -152,9 +153,167 @@ static void SimpleHFilter16iNEON(uint8_t* p, int stride, int thresh) {
   }
 }
 
+static void TransformOneNEON(const int16_t *in, uint8_t *dst) {
+  const int kBPS = BPS;
+  const int16_t constants[] = {20091, 17734, 0, 0};
+  /* kC1, kC2. Padded because vld1.16 loads 8 bytes
+   * Technically these are unsigned but vqdmulh is only available in signed.
+   * vqdmulh returns high half (effectively >> 16) but also doubles the value,
+   * changing the >> 16 to >> 15 and requiring an additional >> 1.
+   * We use this to our advantage with kC2. The canonical value is 35468.
+   * However, the high bit is set so treating it as signed will give incorrect
+   * results. We avoid this by down shifting by 1 here to clear the highest bit.
+   * Combined with the doubling effect of vqdmulh we get >> 16.
+   * This can not be applied to kC1 because the lowest bit is set. Down shifting
+   * the constant would reduce precision.
+   */
+
+  /* libwebp uses a trick to avoid some extra addition that libvpx does.
+   * Instead of:
+   * temp2 = ip[12] + ((ip[12] * cospi8sqrt2minus1) >> 16);
+   * libwebp adds 1 << 16 to cospi8sqrt2minus1 (kC1). However, this causes the
+   * same issue with kC1 and vqdmulh that we work around by down shifting kC2
+   */
+
+  /* Adapted from libvpx: vp8/common/arm/neon/shortidct4x4llm_neon.asm */
+  __asm__ volatile (
+    "vld1.16         {q1, q2}, [%[in]]           \n"
+    "vld1.16         {d0}, [%[constants]]        \n"
+
+    /* d2: in[0]
+     * d3: in[8]
+     * d4: in[4]
+     * d5: in[12]
+     */
+    "vswp            d3, d4                      \n"
+
+    /* q8 = {in[4], in[12]} * kC1 * 2 >> 16
+     * q9 = {in[4], in[12]} * kC2 >> 16
+     */
+    "vqdmulh.s16     q8, q2, d0[0]               \n"
+    "vqdmulh.s16     q9, q2, d0[1]               \n"
+
+    /* d22 = a = in[0] + in[8]
+     * d23 = b = in[0] - in[8]
+     */
+    "vqadd.s16       d22, d2, d3                 \n"
+    "vqsub.s16       d23, d2, d3                 \n"
+
+    /* The multiplication should be x * kC1 >> 16
+     * However, with vqdmulh we get x * kC1 * 2 >> 16
+     * (multiply, double, return high half)
+     * We avoided this in kC2 by pre-shifting the constant.
+     * q8 = in[4]/[12] * kC1 >> 16
+     */
+    "vshr.s16        q8, q8, #1                  \n"
+
+    /* Add {in[4], in[12]} back after the multiplication. This is handled by
+     * adding 1 << 16 to kC1 in the libwebp C code.
+     */
+    "vqadd.s16       q8, q2, q8                  \n"
+
+    /* d20 = c = in[4]*kC2 - in[12]*kC1
+     * d21 = d = in[4]*kC1 + in[12]*kC2
+     */
+    "vqsub.s16       d20, d18, d17               \n"
+    "vqadd.s16       d21, d19, d16               \n"
+
+    /* d2 = tmp[0] = a + d
+     * d3 = tmp[1] = b + c
+     * d4 = tmp[2] = b - c
+     * d5 = tmp[3] = a - d
+     */
+    "vqadd.s16       d2, d22, d21                \n"
+    "vqadd.s16       d3, d23, d20                \n"
+    "vqsub.s16       d4, d23, d20                \n"
+    "vqsub.s16       d5, d22, d21                \n"
+
+    "vzip.16         q1, q2                      \n"
+    "vzip.16         q1, q2                      \n"
+
+    "vswp            d3, d4                      \n"
+
+    /* q8 = {tmp[4], tmp[12]} * kC1 * 2 >> 16
+     * q9 = {tmp[4], tmp[12]} * kC2 >> 16
+     */
+    "vqdmulh.s16     q8, q2, d0[0]               \n"
+    "vqdmulh.s16     q9, q2, d0[1]               \n"
+
+    /* d22 = a = tmp[0] + tmp[8]
+     * d23 = b = tmp[0] - tmp[8]
+     */
+    "vqadd.s16       d22, d2, d3                 \n"
+    "vqsub.s16       d23, d2, d3                 \n"
+
+    /* See long winded explanations prior */
+    "vshr.s16        q8, q8, #1                  \n"
+    "vqadd.s16       q8, q2, q8                  \n"
+
+    /* d20 = c = in[4]*kC2 - in[12]*kC1
+     * d21 = d = in[4]*kC1 + in[12]*kC2
+     */
+    "vqsub.s16       d20, d18, d17               \n"
+    "vqadd.s16       d21, d19, d16               \n"
+
+    /* d2 = tmp[0] = a + d
+     * d3 = tmp[1] = b + c
+     * d4 = tmp[2] = b - c
+     * d5 = tmp[3] = a - d
+     */
+    "vqadd.s16       d2, d22, d21                \n"
+    "vqadd.s16       d3, d23, d20                \n"
+    "vqsub.s16       d4, d23, d20                \n"
+    "vqsub.s16       d5, d22, d21                \n"
+
+    "vld1.32         d6[0], [%[dst]], %[kBPS]    \n"
+    "vld1.32         d6[1], [%[dst]], %[kBPS]    \n"
+    "vld1.32         d7[0], [%[dst]], %[kBPS]    \n"
+    "vld1.32         d7[1], [%[dst]], %[kBPS]    \n"
+
+    "sub         %[dst], %[dst], %[kBPS], lsl #2 \n"
+
+    /* (val) + 4 >> 3 */
+    "vrshr.s16       d2, d2, #3                  \n"
+    "vrshr.s16       d3, d3, #3                  \n"
+    "vrshr.s16       d4, d4, #3                  \n"
+    "vrshr.s16       d5, d5, #3                  \n"
+
+    "vzip.16         q1, q2                      \n"
+    "vzip.16         q1, q2                      \n"
+
+    /* Must accumulate before saturating */
+    "vmovl.u8        q8, d6                      \n"
+    "vmovl.u8        q9, d7                      \n"
+
+    "vqadd.s16       q1, q1, q8                  \n"
+    "vqadd.s16       q2, q2, q9                  \n"
+
+    "vqmovun.s16     d0, q1                      \n"
+    "vqmovun.s16     d1, q2                      \n"
+
+    "vst1.32         d0[0], [%[dst]], %[kBPS]    \n"
+    "vst1.32         d0[1], [%[dst]], %[kBPS]    \n"
+    "vst1.32         d1[0], [%[dst]], %[kBPS]    \n"
+    "vst1.32         d1[1], [%[dst]]             \n"
+
+    : [in] "+r"(in), [dst] "+r"(dst)  /* modified registers */
+    : [kBPS] "r"(kBPS), [constants] "r"(constants)  /* constants */
+    : "memory", "q0", "q1", "q2", "q8", "q9", "q10", "q11"  /* clobbered */
+  );
+}
+
+static void TransformTwoNEON(const int16_t* in, uint8_t* dst, int do_two) {
+  TransformOneNEON(in, dst);
+  if (do_two) {
+    TransformOneNEON(in + 16, dst + 4);
+  }
+}
+
 extern void VP8DspInitNEON(void);
 
 void VP8DspInitNEON(void) {
+  VP8Transform = TransformTwoNEON;
+
   VP8SimpleVFilter16 = SimpleVFilter16NEON;
   VP8SimpleHFilter16 = SimpleHFilter16NEON;
   VP8SimpleVFilter16i = SimpleVFilter16iNEON;
