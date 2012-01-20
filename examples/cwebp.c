@@ -529,7 +529,8 @@ static void PrintValues(const int values[4]) {
   fprintf(stderr, "|\n");
 }
 
-static void PrintExtraInfo(const WebPPicture* const pic, int short_output) {
+static void PrintExtraInfo(const WebPPicture* const pic, int short_output,
+                           const char* const file_name) {
   const WebPAuxStats* const stats = pic->stats;
   if (short_output) {
     fprintf(stderr, "%7d %2.2f\n", stats->coded_size, stats->PSNR[3]);
@@ -538,8 +539,11 @@ static void PrintExtraInfo(const WebPPicture* const pic, int short_output) {
     const int num_i16 = stats->block_count[1];
     const int num_skip = stats->block_count[2];
     const int total = num_i4 + num_i16;
-    fprintf(stderr,
-            "%7d bytes Y-U-V-All-PSNR %2.2f %2.2f %2.2f   %2.2f dB\n",
+    fprintf(stderr, "File:      %s\n", file_name);
+    fprintf(stderr, "Dimension: %d x %d%s\n",
+            pic->width, pic->height, (pic->a != NULL) ? " (with alpha)" : "");
+    fprintf(stderr, "Output:    "
+            "%d bytes Y-U-V-All-PSNR %2.2f %2.2f %2.2f   %2.2f dB\n",
             stats->coded_size,
             stats->PSNR[0], stats->PSNR[1], stats->PSNR[2], stats->PSNR[3]);
     if (total > 0) {
@@ -626,7 +630,7 @@ static int DumpPicture(const WebPPicture* const picture, const char* PGM_name) {
   const int alpha_height = picture->a ? picture->height : 0;
   const int height = picture->height + uv_height + alpha_height;
   FILE* const f = fopen(PGM_name, "wb");
-  if (!f) return 0;
+  if (f == NULL) return 0;
   fprintf(f, "P5\n%d %d\n255\n", stride, height);
   for (y = 0; y < picture->height; ++y) {
     if (fwrite(picture->y + y * picture->y_stride, picture->width, 1, f) != 1)
@@ -707,6 +711,8 @@ static void HelpLong(void) {
   printf("  -444 / -422 / -gray ..... Change colorspace\n");
 #endif
   printf("  -map <int> ............. print map of extra info.\n");
+  printf("  -print_ssim ............ prints averaged SSIM distortion.\n");
+  printf("  -print_psnr ............ prints averaged PSNR distortion.\n");
   printf("  -d <file.pgm> .......... dump the compressed output (PGM file).\n");
   printf("  -alpha_method <int> .... Transparency-compression method (0..1)\n");
   printf("  -alpha_filter <string> . predictive filtering for alpha plane.\n");
@@ -766,11 +772,15 @@ int main(int argc, const char *argv[]) {
   int resize_w = 0, resize_h = 0;
   int show_progress = 0;
   WebPPicture picture;
+  int print_distortion = 0;        // 1=PSNR, 2=SSIM
+  WebPPicture original_picture;    // when PSNR or SSIM is requested
   WebPConfig config;
   WebPAuxStats stats;
   Stopwatch stop_watch;
 
-  if (!WebPPictureInit(&picture) || !WebPConfigInit(&config)) {
+  if (!WebPPictureInit(&picture) ||
+      !WebPPictureInit(&original_picture) ||
+      !WebPConfigInit(&config)) {
     fprintf(stderr, "Error! Version mismatch!\n");
     goto Error;
   }
@@ -792,6 +802,12 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-d") && c < argc - 1) {
       dump_file = argv[++c];
       config.show_compressed = 1;
+    } else if (!strcmp(argv[c], "-print_ssim")) {
+      config.show_compressed = 1;
+      print_distortion = 2;
+    } else if (!strcmp(argv[c], "-print_psnr")) {
+      config.show_compressed = 1;
+      print_distortion = 1;
     } else if (!strcmp(argv[c], "-short")) {
       short_output++;
     } else if (!strcmp(argv[c], "-s") && c < argc - 2) {
@@ -919,7 +935,7 @@ int main(int argc, const char *argv[]) {
     StopwatchReadAndReset(&stop_watch);
   }
   if (!ReadPicture(in_file, &picture, keep_alpha)) {
-    fprintf(stderr, "Error! Cannot read input picture\n");
+    fprintf(stderr, "Error! Cannot read input picture file '%s'\n", in_file);
     goto Error;
   }
   picture.progress_hook = (show_progress && !quiet) ? ProgressReport : NULL;
@@ -932,7 +948,7 @@ int main(int argc, const char *argv[]) {
   // Open the output
   if (out_file) {
     out = fopen(out_file, "wb");
-    if (!out) {
+    if (out == NULL) {
       fprintf(stderr, "Error! Cannot open output file '%s'\n", out_file);
       goto Error;
     } else {
@@ -969,6 +985,9 @@ int main(int argc, const char *argv[]) {
   if (picture.extra_info_type > 0) {
     AllocExtraInfo(&picture);
   }
+  if (print_distortion > 0) {  // Save original picture for later comparison
+    WebPPictureCopy(&picture, &original_picture);
+  }
   if (!WebPEncode(&config, &picture)) {
     fprintf(stderr, "Error! Cannot encode picture as WebP\n");
     fprintf(stderr, "Error code: %d (%s)\n",
@@ -984,13 +1003,23 @@ int main(int argc, const char *argv[]) {
   if (dump_file) {
     DumpPicture(&picture, dump_file);
   }
+
   if (!quiet) {
-    PrintExtraInfo(&picture, short_output);
+    PrintExtraInfo(&picture, short_output, in_file);
+  }
+  if (!quiet && !short_output && print_distortion > 0) {  // print distortion
+    float values[5];
+    WebPPictureDistortion(&picture, &original_picture,
+                          (print_distortion == 1) ? 0 : 1, values);
+    fprintf(stderr, "%s: Y:%.2f U:%.2f V:%.2f A:%.2f  Total:%.2f\n",
+            (print_distortion == 1) ? "PSNR" : "SSIM",
+            values[0], values[1], values[2], values[3], values[4]);
   }
 
  Error:
   free(picture.extra_info);
   WebPPictureFree(&picture);
+  WebPPictureFree(&original_picture);
   if (out != NULL) {
     fclose(out);
   }

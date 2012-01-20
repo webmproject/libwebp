@@ -11,6 +11,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "./vp8enci.h"
 
@@ -659,7 +660,58 @@ void WebPCleanupTransparentArea(WebPPicture* const pic) {
 #undef SIZE2
 
 //------------------------------------------------------------------------------
-// Simplest call:
+// Distortion
+
+// Max value returned in case of exact similarity.
+static const double kMinDistortion_dB = 99.;
+
+int WebPPictureDistortion(const WebPPicture* const pic1,
+                          const WebPPicture* const pic2,
+                          int type, float result[5]) {
+  int c;
+  DistoStats stats[5];
+
+  if (pic1->width != pic2->width ||
+      pic1->height != pic2->height ||
+      (pic1->a == NULL) != (pic2->a == NULL)) {
+    return 0;
+  }
+
+  memset(stats, 0, sizeof(stats));
+  VP8SSIMAccumulatePlane(pic1->y, pic1->y_stride,
+                         pic2->y, pic2->y_stride,
+                         pic1->width, pic1->height, &stats[0]);
+  VP8SSIMAccumulatePlane(pic1->u, pic1->uv_stride,
+                         pic2->u, pic2->uv_stride,
+                         (pic1->width + 1) >> 1, (pic1->height + 1) >> 1,
+                         &stats[1]);
+  VP8SSIMAccumulatePlane(pic1->v, pic1->uv_stride,
+                         pic2->v, pic2->uv_stride,
+                         (pic1->width + 1) >> 1, (pic1->height + 1) >> 1,
+                         &stats[2]);
+  if (pic1->a != NULL) {
+    VP8SSIMAccumulatePlane(pic1->a, pic1->a_stride,
+                           pic2->a, pic2->a_stride,
+                           pic1->width, pic1->height, &stats[3]);
+  }
+  for (c = 0; c <= 4; ++c) {
+    if (type == 1) {
+      const double v = VP8SSIMGet(&stats[c]);
+      result[c] = (v < 1.) ? -10.0 * log10(1. - v)
+                           : kMinDistortion_dB;
+    } else {
+      const double v = VP8SSIMGetSquaredError(&stats[c]);
+      result[c] = (v > 0.) ? -4.3429448 * log(v / (255 * 255.))
+                           : kMinDistortion_dB;
+    }
+    // Accumulate forward
+    if (c < 4) VP8SSIMAddStats(&stats[c], &stats[4]);
+  }
+  return 1;
+}
+
+//------------------------------------------------------------------------------
+// Simplest high-level calls:
 
 typedef int (*Importer)(WebPPicture* const, const uint8_t* const, int);
 

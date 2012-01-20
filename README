@@ -148,6 +148,8 @@ options:
   -crop <x> <y> <w> <h> .. crop picture with the given rectangle
   -resize <w> <h> ........ resize picture (after any cropping)
   -map <int> ............. print map of extra info.
+  -print_ssim ............ prints averaged SSIM distortion.
+  -print_psnr ............ prints averaged PSNR distortion.
   -d <file.pgm> .......... dump the compressed output (PGM file).
   -alpha_method <int> .... Transparency-compression method (0..1)
   -alpha_filter <string> . predictive filtering for alpha plane.

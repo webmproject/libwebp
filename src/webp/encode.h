@@ -248,6 +248,15 @@ WEBP_EXTERN(void) WebPPictureFree(WebPPicture* const picture);
 WEBP_EXTERN(int) WebPPictureCopy(const WebPPicture* const src,
                                  WebPPicture* const dst);
 
+// Compute PSNR or SSIM distortion between two pictures.
+// Result is in dB, stores in result[] in the Y/U/V/Alpha/All order.
+// Returns 0 in case of error (pic1 and pic2 don't have same dimension, ...)
+// Warning: this function is rather CPU-intensive.
+WEBP_EXTERN(int) WebPPictureDistortion(
+    const WebPPicture* const pic1, const WebPPicture* const pic2,
+    int metric_type,           // 0 = PSNR, 1 = SSIM
+    float result[5]);
+
 // self-crops a picture to the rectangle defined by top/left/width/height.
 // Returns 0 in case of memory allocation error, or if the rectangle is
 // outside of the source picture.

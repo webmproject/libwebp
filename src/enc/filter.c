@@ -234,14 +234,21 @@ static void DoFilter(const VP8EncIterator* const it, int level) {
 // SSIM metric
 
 enum { KERNEL = 3 };
-typedef struct {
-  double w, xm, ym, xxm, xym, yym;
-} SSIMStats;
+static const double kMinValue = 1.e-10;  // minimal threshold
 
-static void Accumulate(const uint8_t* src1, int stride1,
-                       const uint8_t* src2, int stride2,
-                       int xo, int yo, int W, int H,
-                       SSIMStats* const stats) {
+void VP8SSIMAddStats(const DistoStats* const src, DistoStats* const dst) {
+  dst->w   += src->w;
+  dst->xm  += src->xm;
+  dst->ym  += src->ym;
+  dst->xxm += src->xxm;
+  dst->xym += src->xym;
+  dst->yym += src->yym;
+}
+
+static void VP8SSIMAccumulate(const uint8_t* src1, int stride1,
+                              const uint8_t* src2, int stride2,
+                              int xo, int yo, int W, int H,
+                              DistoStats* const stats) {
   const int ymin = (yo - KERNEL < 0) ? 0 : yo - KERNEL;
   const int ymax = (yo + KERNEL > H - 1) ? H - 1 : yo + KERNEL;
   const int xmin = (xo - KERNEL < 0) ? 0 : xo - KERNEL;
@@ -263,7 +270,7 @@ static void Accumulate(const uint8_t* src1, int stride1,
   }
 }
 
-static double GetSSIM(const SSIMStats* const stats) {
+double VP8SSIMGet(const DistoStats* const stats) {
   const double xmxm = stats->xm * stats->xm;
   const double ymym = stats->ym * stats->ym;
   const double xmym = stats->xm * stats->ym;
@@ -281,26 +288,49 @@ static double GetSSIM(const SSIMStats* const stats) {
   C2 = 58.5225 * w2;
   fnum = (2 * xmym + C1) * (2 * sxy + C2);
   fden = (xmxm + ymym + C1) * (sxx + syy + C2);
-  return (fden != 0) ? fnum / fden : 0.;
+  return (fden != 0.) ? fnum / fden : kMinValue;
+}
+
+double VP8SSIMGetSquaredError(const DistoStats* const s) {
+  if (s->w > 0.) {
+    const double iw2 = 1. / (s->w * s->w);
+    const double sxx = s->xxm * s->w - s->xm * s->xm;
+    const double syy = s->yym * s->w - s->ym * s->ym;
+    const double sxy = s->xym * s->w - s->xm * s->ym;
+    const double SSE = iw2 * (sxx + syy - 2. * sxy);
+    if (SSE > kMinValue) return SSE;
+  }
+  return kMinValue;
+}
+
+void VP8SSIMAccumulatePlane(const uint8_t* src1, int stride1,
+                            const uint8_t* src2, int stride2,
+                            int W, int H, DistoStats* const stats) {
+  int x, y;
+  for (y = 0; y < H; ++y) {
+    for (x = 0; x < W; ++x) {
+      VP8SSIMAccumulate(src1, stride1, src2, stride2, x, y, W, H, stats);
+    }
+  }
 }
 
 static double GetMBSSIM(const uint8_t* yuv1, const uint8_t* yuv2) {
   int x, y;
-  SSIMStats s = { .0, .0, .0, .0, .0, .0 };
+  DistoStats s = { .0, .0, .0, .0, .0, .0 };
 
   // compute SSIM in a 10 x 10 window
   for (x = 3; x < 13; x++) {
     for (y = 3; y < 13; y++) {
-      Accumulate(yuv1 + Y_OFF, BPS, yuv2 + Y_OFF, BPS, x, y, 16, 16, &s);
+      VP8SSIMAccumulate(yuv1 + Y_OFF, BPS, yuv2 + Y_OFF, BPS, x, y, 16, 16, &s);
     }
   }
   for (x = 1; x < 7; x++) {
     for (y = 1; y < 7; y++) {
-      Accumulate(yuv1 + U_OFF, BPS, yuv2 + U_OFF, BPS, x, y, 8, 8, &s);
-      Accumulate(yuv1 + V_OFF, BPS, yuv2 + V_OFF, BPS, x, y, 8, 8, &s);
+      VP8SSIMAccumulate(yuv1 + U_OFF, BPS, yuv2 + U_OFF, BPS, x, y, 8, 8, &s);
+      VP8SSIMAccumulate(yuv1 + V_OFF, BPS, yuv2 + V_OFF, BPS, x, y, 8, 8, &s);
     }
   }
-  return GetSSIM(&s);
+  return VP8SSIMGet(&s);
 }
 
 //------------------------------------------------------------------------------

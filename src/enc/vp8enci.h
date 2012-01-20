@@ -455,9 +455,20 @@ int VP8EncFinishLayer(VP8Encoder* const enc);    // finalize coding
 void VP8EncDeleteLayer(VP8Encoder* enc);         // reclaim memory
 
   // in filter.c
-extern void VP8InitFilter(VP8EncIterator* const it);
-extern void VP8StoreFilterStats(VP8EncIterator* const it);
-extern void VP8AdjustFilterStrength(VP8EncIterator* const it);
+
+// SSIM utils
+typedef struct { double w, xm, ym, xxm, xym, yym; } DistoStats;
+void VP8SSIMAddStats(const DistoStats* const src, DistoStats* const dst);
+void VP8SSIMAccumulatePlane(const uint8_t* src1, int stride1,
+                            const uint8_t* src2, int stride2,
+                            int W, int H, DistoStats* const stats);
+double VP8SSIMGet(const DistoStats* const stats);
+double VP8SSIMGetSquaredError(const DistoStats* const stats);
+
+// autofilter
+void VP8InitFilter(VP8EncIterator* const it);
+void VP8StoreFilterStats(VP8EncIterator* const it);
+void VP8AdjustFilterStrength(VP8EncIterator* const it);
 
 //------------------------------------------------------------------------------
 
