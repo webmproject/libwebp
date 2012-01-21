@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAHn//8ZI\u003d",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-01-21T08:58:19Z",
+      "side": 1,
+      "message": "size -\u003e chunkdata.size_",
+      "revId": "cd124f95f33e4748237f1c97c7445d4ca7784fba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//8ZE\u003d",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-01-21T08:58:19Z",
+      "side": 1,
+      "message": "WebPMuxGetImage() is another candidate for taking a \u0027chunkdata\u0027 argument",
+      "revId": "cd124f95f33e4748237f1c97c7445d4ca7784fba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//8ZA\u003d",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 871,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-01-21T08:58:19Z",
+      "side": 1,
+      "message": "WriteData() should too take a \u0027chunkdata\u0027 argument",
+      "revId": "cd124f95f33e4748237f1c97c7445d4ca7784fba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//8Y8\u003d",
+        "filename": "src/webp/mux.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-01-21T08:58:19Z",
+      "side": 1,
+      "message": "thinking of it, we could probably use this structure more generally (in the decoder for instance).\nIs \u0027ChunkData\u0027 the best naming then? Could be something like \u0027RawData\u0027 too... Or even, \u0027WebPData\u0027 just. Thoughts?",
+      "revId": "cd124f95f33e4748237f1c97c7445d4ca7784fba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
