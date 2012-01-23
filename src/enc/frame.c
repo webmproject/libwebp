@@ -86,6 +86,44 @@ static int FinalizeSkipProba(VP8Encoder* const enc) {
 }
 
 //------------------------------------------------------------------------------
+// Token buffer
+
+#ifdef USE_TOKEN_BUFFER
+
+void VP8InitTBuffer(VP8TBuffer* const p) {
+  p->left_ = MAX_NUM_TOKEN;
+  p->error_ = 0;
+  p->next_ = NULL;
+}
+
+int VP8AllocTBuffer(VP8TBuffer** const p) {
+  VP8TBuffer* const page = malloc(sizeof(*page));
+  if (page == NULL) {
+    (*p)->error_ |= 1;
+    return 0;
+  }
+  VP8InitTBuffer(page);
+  (*p)->next_ = page;
+  *p = page;
+  return 1;
+}
+
+int VP8EmitTokens(const VP8TBuffer* const p, VP8BitWriter* const bw,
+                  const uint8_t* const probas) {
+  while (p != NULL) {
+    int n = MAX_NUM_TOKEN;
+    if (p->error_) return 0;
+    while (n-- > p->left) {
+      VP8PutBit(bw, (p->tokens_[n] >> 15) & 1, probas[p->tokens_[n] & 0x7fff]);
+    }
+    p = p->next_;
+  }
+  return 1;
+}
+
+#endif
+
+//------------------------------------------------------------------------------
 // Recording of token probabilities.
 
 static void ResetTokenStats(VP8Encoder* const enc) {
