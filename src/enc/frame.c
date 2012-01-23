@@ -146,16 +146,18 @@ static int Record(int bit, uint64_t* const stats) {
 static int RecordCoeffs(int ctx, VP8Residual* res) {
   int n = res->first;
   uint64_t (*s)[2] = res->stats[VP8EncBands[n]][ctx];
-  if (!Record(res->last >= 0, s[0])) {
+  if (res->last  < 0) {
+    Record(0, s[0]);
     return 0;
   }
-
-  while (1) {
-    int v = res->coeffs[n++];
-    if (!Record(v != 0, s[1])) {
-      s = res->stats[VP8EncBands[n]][0];
-      continue;
+  while (n <= res->last) {
+    int v;
+    Record(1, s[0]);
+    while ((v = res->coeffs[n++]) == 0) {
+      Record(0, s[1]);
+      s = res->stats[VP8EncBands[n]][0];      
     }
+    Record(1, s[1]);
     if (!Record(2u < (unsigned int)(v + 1), s[2])) {  // v = -1 or 1
       s = res->stats[VP8EncBands[n]][1];
     } else {
@@ -187,10 +189,9 @@ static int RecordCoeffs(int ctx, VP8Residual* res) {
 #endif
       s = res->stats[VP8EncBands[n]][2];
     }
-    if (n == 16 || !Record(n <= res->last, s[0])) {
-      return 1;
-    }
   }
+  if (n < 16) Record(0, s[0]);
+  return 1;
 }
 
 // Collect statistics and deduce probabilities for next coding pass.
@@ -260,13 +261,12 @@ static void SetResidualCoeffs(const int16_t* const coeffs,
 
 static int GetResidualCost(int ctx, const VP8Residual* const res) {
   int n = res->first;
-  const uint8_t* p = res->prob[VP8EncBands[n]][ctx];
+  int p0 = res->prob[VP8EncBands[n]][ctx][0];
   const uint16_t *t = res->cost[VP8EncBands[n]][ctx];
-  int last_p0 = p[0];
   int cost;
 
   if (res->last < 0) {
-    return VP8BitCost(0, last_p0);
+    return VP8BitCost(0, p0);
   }
   cost = 0;
   while (n <= res->last) {
@@ -275,23 +275,20 @@ static int GetResidualCost(int ctx, const VP8Residual* const res) {
     ++n;
     if (v == 0) {
       cost += VP8LevelCost(t, 0);
-      p = res->prob[b][0];
       t = res->cost[b][0];
       continue;
     }
-    cost += VP8BitCost(1, last_p0);
     if (2u >= (unsigned int)(v + 1)) {   // v = -1 or 1
       cost += VP8LevelCost(t, 1);
-      p = res->prob[b][1];
+      p0 = res->prob[b][1][0];
       t = res->cost[b][1];
     } else {
       cost += VP8LevelCost(t, abs(v));
-      p = res->prob[b][2];
+      p0 = res->prob[b][2][0];
       t = res->cost[b][2];
     }
-    last_p0 = p[0];
   }
-  if (n < 16) cost += VP8BitCost(0, last_p0);
+  if (n < 16) cost += VP8BitCost(0, p0);
   return cost;
 }
 
