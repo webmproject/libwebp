@@ -274,12 +274,15 @@ static int GetResidualCost(int ctx, const VP8Residual* const res) {
     const int b = VP8EncBands[n + 1];
     ++n;
     if (v == 0) {
-      cost += VP8LevelCost(t, 0);
+      // short-case for VP8LevelCost(t, 0) (note: VP8LevelFixedCosts[0] == 0):
+      cost += t[0];
       t = res->cost[b][0];
       continue;
     }
+    cost += VP8BitCost(1, p0);
     if (2u >= (unsigned int)(v + 1)) {   // v = -1 or 1
-      cost += VP8LevelCost(t, 1);
+      // short-case for "VP8LevelCost(t, 1)" (256 is VP8LevelFixedCosts[1]):
+      cost += 256 + t[1];
       p0 = res->prob[b][1][0];
       t = res->cost[b][1];
     } else {

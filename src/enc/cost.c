@@ -359,7 +359,7 @@ void VP8CalculateLevelCosts(VP8Proba* const proba) {
       for(ctx = 0; ctx < NUM_CTX; ++ctx) {
         const uint8_t* const p = proba->coeffs_[ctype][band][ctx];
         uint16_t* const table = proba->level_cost_[ctype][band][ctx];
-        const int cost_base = VP8BitCost(0, p[0]) + VP8BitCost(1, p[1]);
+        const int cost_base = VP8BitCost(1, p[1]);
         int v;
         table[0] = VP8BitCost(0, p[1]);
         for (v = 1; v <= MAX_VARIABLE_LEVEL; ++v) {
