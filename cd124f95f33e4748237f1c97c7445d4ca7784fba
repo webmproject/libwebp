@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAHn//8Bg\u003d",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-01-23T21:36:58Z",
+      "side": 1,
+      "message": "Oops. fixed the format string too.",
+      "parentUuid": "AAAAHn//8ZI\u003d",
+      "revId": "cd124f95f33e4748237f1c97c7445d4ca7784fba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAHn//8ZE\u003d",
         "filename": "examples/webpmux.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2012-01-21T08:58:19Z",
       "side": 1,
       "message": "WebPMuxGetImage() is another candidate for taking a \u0027chunkdata\u0027 argument",
+      "revId": "cd124f95f33e4748237f1c97c7445d4ca7784fba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//8Bc\u003d",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-01-23T21:36:58Z",
+      "side": 1,
+      "message": "I had a follow-up that introduced a frame type, but treating both data and alpha individually might allow for better re-use of this struct (with a name change). I\u0027ll see what it looks like.",
+      "parentUuid": "AAAAHn//8ZE\u003d",
       "revId": "cd124f95f33e4748237f1c97c7445d4ca7784fba",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAHn//8BY\u003d",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 871,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-01-23T21:36:58Z",
+      "side": 1,
+      "message": "was trying to keep this change to the public api, then do a follow-up with deeper use as you suggest.",
+      "parentUuid": "AAAAHn//8ZA\u003d",
+      "revId": "cd124f95f33e4748237f1c97c7445d4ca7784fba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAHn//8Y8\u003d",
         "filename": "src/webp/mux.h",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2012-01-21T08:58:19Z",
       "side": 1,
       "message": "thinking of it, we could probably use this structure more generally (in the decoder for instance).\nIs \u0027ChunkData\u0027 the best naming then? Could be something like \u0027RawData\u0027 too... Or even, \u0027WebPData\u0027 just. Thoughts?",
+      "revId": "cd124f95f33e4748237f1c97c7445d4ca7784fba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//8BM\u003d",
+        "filename": "src/webp/mux.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-01-23T21:36:58Z",
+      "side": 1,
+      "message": "WebPData may work; Looking at it this way it will give better use of the struct instead of having a frame { data,size,alpha,asize} type too. The step after this is to describe tiles and animation frames using some of these base types.",
+      "parentUuid": "AAAAHn//8Y8\u003d",
       "revId": "cd124f95f33e4748237f1c97c7445d4ca7784fba",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
