@@ -62,6 +62,8 @@ static void ResetStats(VP8Encoder* const enc, int precalc_cost) {
 //------------------------------------------------------------------------------
 // Skip decision probability
 
+#define SKIP_PROBA_THRESHOLD 250  // value below which using skip_proba is OK.
+
 static int CalcSkipProba(uint64_t nb, uint64_t total) {
   return (int)(total ? (total - nb) * 255 / total : 255);
 }
@@ -73,7 +75,7 @@ static int FinalizeSkipProba(VP8Encoder* const enc) {
   const int nb_events = proba->nb_skip_;
   int size;
   proba->skip_proba_ = CalcSkipProba(nb_events, nb_mbs);
-  proba->use_skip_proba_ = (proba->skip_proba_ < 250);
+  proba->use_skip_proba_ = (proba->skip_proba_ < SKIP_PROBA_THRESHOLD);
   size = 256;   // 'use_skip_proba' bit
   if (proba->use_skip_proba_) {
     size +=  nb_events * VP8BitCost(1, proba->skip_proba_)
@@ -222,42 +224,47 @@ static int GetResidualCost(int ctx, const VP8Residual* const res) {
   int n = res->first;
   const uint8_t* p = res->prob[VP8EncBands[n]][ctx];
   const uint16_t *t = res->cost[VP8EncBands[n]][ctx];
+  int last_p0 = p[0];
   int cost;
 
-  cost = VP8BitCost(res->last >= 0, p[0]);
   if (res->last < 0) {
-    return cost;
+    return VP8BitCost(0, last_p0);
   }
+  cost = 0;
   while (n <= res->last) {
-    const int v = res->coeffs[n++];
+    const int v = res->coeffs[n];
+    const int b = VP8EncBands[n + 1];
+    ++n;
     if (v == 0) {
       cost += VP8LevelCost(t, 0);
-      p = res->prob[VP8EncBands[n]][0];
-      t = res->cost[VP8EncBands[n]][0];
+      p = res->prob[b][0];
+      t = res->cost[b][0];
       continue;
-    } else if (2u >= (unsigned int)(v + 1)) {   // v = -1 or 1
+    }
+    cost += VP8BitCost(1, last_p0);
+    if (2u >= (unsigned int)(v + 1)) {   // v = -1 or 1
       cost += VP8LevelCost(t, 1);
-      p = res->prob[VP8EncBands[n]][1];
-      t = res->cost[VP8EncBands[n]][1];
+      p = res->prob[b][1];
+      t = res->cost[b][1];
     } else {
       cost += VP8LevelCost(t, abs(v));
-      p = res->prob[VP8EncBands[n]][2];
-      t = res->cost[VP8EncBands[n]][2];
+      p = res->prob[b][2];
+      t = res->cost[b][2];
     }
-    if (n < 16) {
-      cost += VP8BitCost(n <= res->last, p[0]);
-    }
+    last_p0 = p[0];
   }
+  if (n < 16) cost += VP8BitCost(0, last_p0);
   return cost;
 }
 
 int VP8GetCostLuma4(VP8EncIterator* const it, const int16_t levels[16]) {
   const int x = (it->i4_ & 3), y = (it->i4_ >> 2);
   VP8Residual res;
+  VP8Encoder* const enc = it->enc_;
   int R = 0;
   int ctx;
 
-  InitResidual(0, 3, it->enc_, &res);
+  InitResidual(0, 3, enc, &res);
   ctx = it->top_nz_[x] + it->left_nz_[y];
   SetResidualCoeffs(levels, &res);
   R += GetResidualCost(ctx, &res);
@@ -266,18 +273,19 @@ int VP8GetCostLuma4(VP8EncIterator* const it, const int16_t levels[16]) {
 
 int VP8GetCostLuma16(VP8EncIterator* const it, const VP8ModeScore* const rd) {
   VP8Residual res;
+  VP8Encoder* const enc = it->enc_;
   int x, y;
   int R = 0;
 
   VP8IteratorNzToBytes(it);   // re-import the non-zero context
 
   // DC
-  InitResidual(0, 1, it->enc_, &res);
+  InitResidual(0, 1, enc, &res);
   SetResidualCoeffs(rd->y_dc_levels, &res);
   R += GetResidualCost(it->top_nz_[8] + it->left_nz_[8], &res);
 
   // AC
-  InitResidual(1, 0, it->enc_, &res);
+  InitResidual(1, 0, enc, &res);
   for (y = 0; y < 4; ++y) {
     for (x = 0; x < 4; ++x) {
       const int ctx = it->top_nz_[x] + it->left_nz_[y];
@@ -291,12 +299,13 @@ int VP8GetCostLuma16(VP8EncIterator* const it, const VP8ModeScore* const rd) {
 
 int VP8GetCostUV(VP8EncIterator* const it, const VP8ModeScore* const rd) {
   VP8Residual res;
+  VP8Encoder* const enc = it->enc_;
   int ch, x, y;
   int R = 0;
 
   VP8IteratorNzToBytes(it);  // re-import the non-zero context
 
-  InitResidual(0, 2, it->enc_, &res);
+  InitResidual(0, 2, enc, &res);
   for (ch = 0; ch <= 2; ch += 2) {
     for (y = 0; y < 2; ++y) {
       for (x = 0; x < 2; ++x) {
@@ -392,18 +401,19 @@ static void CodeResiduals(VP8BitWriter* const bw,
   uint64_t pos1, pos2, pos3;
   const int i16 = (it->mb_->type_ == 1);
   const int segment = it->mb_->segment_;
+  VP8Encoder* const enc = it->enc_;
 
   VP8IteratorNzToBytes(it);
 
   pos1 = VP8BitWriterPos(bw);
   if (i16) {
-    InitResidual(0, 1, it->enc_, &res);
+    InitResidual(0, 1, enc, &res);
     SetResidualCoeffs(rd->y_dc_levels, &res);
     it->top_nz_[8] = it->left_nz_[8] =
       PutCoeffs(bw, it->top_nz_[8] + it->left_nz_[8], &res);
-    InitResidual(1, 0, it->enc_, &res);
+    InitResidual(1, 0, enc, &res);
   } else {
-    InitResidual(0, 3, it->enc_, &res);
+    InitResidual(0, 3, enc, &res);
   }
 
   // luma-AC
@@ -417,7 +427,7 @@ static void CodeResiduals(VP8BitWriter* const bw,
   pos2 = VP8BitWriterPos(bw);
 
   // U/V
-  InitResidual(0, 2, it->enc_, &res);
+  InitResidual(0, 2, enc, &res);
   for (ch = 0; ch <= 2; ch += 2) {
     for (y = 0; y < 2; ++y) {
       for (x = 0; x < 2; ++x) {
@@ -442,17 +452,18 @@ static void RecordResiduals(VP8EncIterator* const it,
                             const VP8ModeScore* const rd) {
   int x, y, ch;
   VP8Residual res;
+  VP8Encoder* const enc = it->enc_;
 
   VP8IteratorNzToBytes(it);
 
   if (it->mb_->type_ == 1) {   // i16x16
-    InitResidual(0, 1, it->enc_, &res);
+    InitResidual(0, 1, enc, &res);
     SetResidualCoeffs(rd->y_dc_levels, &res);
     it->top_nz_[8] = it->left_nz_[8] =
       RecordCoeffs(it->top_nz_[8] + it->left_nz_[8], &res);
-    InitResidual(1, 0, it->enc_, &res);
+    InitResidual(1, 0, enc, &res);
   } else {
-    InitResidual(0, 3, it->enc_, &res);
+    InitResidual(0, 3, enc, &res);
   }
 
   // luma-AC
@@ -465,7 +476,7 @@ static void RecordResiduals(VP8EncIterator* const it,
   }
 
   // U/V
-  InitResidual(0, 2, it->enc_, &res);
+  InitResidual(0, 2, enc, &res);
   for (ch = 0; ch <= 2; ch += 2) {
     for (y = 0; y < 2; ++y) {
       for (x = 0; x < 2; ++x) {

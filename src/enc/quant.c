@@ -299,16 +299,16 @@ const int VP8I4ModeOffsets[NUM_BMODES] = {
 };
 
 void VP8MakeLuma16Preds(const VP8EncIterator* const it) {
-  VP8Encoder* const enc = it->enc_;
-  const uint8_t* left = it->x_ ? enc->y_left_ : NULL;
-  const uint8_t* top = it->y_ ? enc->y_top_ + it->x_ * 16 : NULL;
+  const VP8Encoder* const enc = it->enc_;
+  const uint8_t* const left = it->x_ ? enc->y_left_ : NULL;
+  const uint8_t* const top = it->y_ ? enc->y_top_ + it->x_ * 16 : NULL;
   VP8EncPredLuma16(it->yuv_p_, left, top);
 }
 
 void VP8MakeChroma8Preds(const VP8EncIterator* const it) {
-  VP8Encoder* const enc = it->enc_;
-  const uint8_t* left = it->x_ ? enc->u_left_ : NULL;
-  const uint8_t* top = it->y_ ? enc->uv_top_ + it->x_ * 16 : NULL;
+  const VP8Encoder* const enc = it->enc_;
+  const uint8_t* const left = it->x_ ? enc->u_left_ : NULL;
+  const uint8_t* const top = it->y_ ? enc->uv_top_ + it->x_ * 16 : NULL;
   VP8EncPredChroma8(it->yuv_p_, left, top);
 }
 
@@ -700,7 +700,7 @@ static void SwapOut(VP8EncIterator* const it) {
 }
 
 static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* const rd) {
-  VP8Encoder* const enc = it->enc_;
+  const VP8Encoder* const enc = it->enc_;
   const VP8SegmentInfo* const dqm = &enc->dqm_[it->mb_->segment_];
   const int lambda = dqm->lambda_i16_;
   const int tlambda = dqm->tlambda_;
@@ -751,7 +751,7 @@ static const uint16_t* GetCostModeI4(VP8EncIterator* const it,
 }
 
 static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
-  VP8Encoder* const enc = it->enc_;
+  const VP8Encoder* const enc = it->enc_;
   const VP8SegmentInfo* const dqm = &enc->dqm_[it->mb_->segment_];
   const int lambda = dqm->lambda_i4_;
   const int tlambda = dqm->tlambda_;
@@ -827,7 +827,7 @@ static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
 //------------------------------------------------------------------------------
 
 static void PickBestUV(VP8EncIterator* const it, VP8ModeScore* const rd) {
-  VP8Encoder* const enc = it->enc_;
+  const VP8Encoder* const enc = it->enc_;
   const VP8SegmentInfo* const dqm = &enc->dqm_[it->mb_->segment_];
   const int lambda = dqm->lambda_uv_;
   const uint8_t* const src = it->yuv_in_ + U_OFF;

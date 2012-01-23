@@ -32,11 +32,12 @@ static int EmitYUV(const VP8Io* const io, WebPDecParams* const p) {
   const int mb_w = io->mb_w;
   const int mb_h = io->mb_h;
   const int uv_w = (mb_w + 1) / 2;
+  const int uv_h = (mb_h + 1) / 2;
   int j;
   for (j = 0; j < mb_h; ++j) {
     memcpy(y_dst + j * buf->y_stride, io->y + j * io->y_stride, mb_w);
   }
-  for (j = 0; j < (mb_h + 1) / 2; ++j) {
+  for (j = 0; j < uv_h; ++j) {
     memcpy(u_dst + j * buf->u_stride, io->u + j * io->uv_stride, uv_w);
     memcpy(v_dst + j * buf->v_stride, io->v + j * io->uv_stride, uv_w);
   }
@@ -127,7 +128,7 @@ static int EmitFancyRGB(const VP8Io* const io, WebPDecParams* const p) {
     // are not lagging one line behind but are already written.
     upsample(p->tmp_y, cur_y, top_u, top_v, cur_u, cur_v,
              dst - buf->stride, dst, mb_w);
-    num_lines_out++;
+    ++num_lines_out;
   }
   // Loop over each output pairs of row.
   for (; y + 2 < y_end; y += 2) {
@@ -166,13 +167,13 @@ static int EmitFancyRGB(const VP8Io* const io, WebPDecParams* const p) {
 //------------------------------------------------------------------------------
 
 static int EmitAlphaYUV(const VP8Io* const io, WebPDecParams* const p) {
-  const int mb_w = io->mb_w;
-  const int mb_h = io->mb_h;
-  int j;
-  const WebPYUVABuffer* const buf = &p->output->u.YUVA;
-  uint8_t* dst = buf->a + io->mb_y * buf->a_stride;
   const uint8_t* alpha = io->a;
-  if (alpha) {
+  if (alpha != NULL) {
+    int j;
+    const int mb_w = io->mb_w;
+    const int mb_h = io->mb_h;
+    const WebPYUVABuffer* const buf = &p->output->u.YUVA;
+    uint8_t* dst = buf->a + io->mb_y * buf->a_stride;
     for (j = 0; j < mb_h; ++j) {
       memcpy(dst, alpha, mb_w * sizeof(*dst));
       alpha += io->width;
@@ -331,7 +332,7 @@ static int Rescale(const uint8_t* src, int src_stride,
     wrk->y_accum -= wrk->y_sub;
     while (wrk->y_accum <= 0) {      // emit output row(s)
       ExportRow(wrk);
-      num_lines_out++;
+      ++num_lines_out;
     }
   }
   return num_lines_out;
@@ -347,7 +348,7 @@ static int EmitRescaledYUV(const VP8Io* const io, WebPDecParams* const p) {
 }
 
 static int EmitRescaledAlphaYUV(const VP8Io* const io, WebPDecParams* const p) {
-  if (io->a) {
+  if (io->a != NULL) {
     Rescale(io->a, io->width, io->mb_h, &p->scaler_a);
   }
   return 0;
@@ -440,7 +441,7 @@ static int ExportRGB(WebPDecParams* const p, int y_pos) {
     convert(p->scaler_y.dst, p->scaler_u.dst, p->scaler_v.dst,
             dst, p->scaler_y.dst_width);
     dst += buf->stride;
-    num_lines_out++;
+    ++num_lines_out;
   }
   return num_lines_out;
 }
@@ -479,7 +480,7 @@ static int ExportAlpha(WebPDecParams* const p, int y_pos) {
       dst[4 * i] = p->scaler_a.dst[i];
     }
     dst += buf->stride;
-    num_lines_out++;
+    ++num_lines_out;
   }
   return num_lines_out;
 }
@@ -498,18 +499,21 @@ static int ExportAlphaRGBA4444(WebPDecParams* const p, int y_pos) {
       dst[2 * i] = (dst[2 * i] & 0xf0) | alpha_val;
     }
     dst += buf->stride;
-    num_lines_out++;
+    ++num_lines_out;
   }
   return num_lines_out;
 }
 
 static int EmitRescaledAlphaRGB(const VP8Io* const io, WebPDecParams* const p) {
-  if (io->a) {
+  if (io->a != NULL) {
+    int (* const output_func)(WebPDecParams* const, int) =
+        (p->output->colorspace == MODE_RGBA_4444) ? ExportAlphaRGBA4444
+                                                  : ExportAlpha;
+    WebPRescaler* const scaler = &p->scaler_a;
     int j = 0, pos = 0;
     while (j < io->mb_h) {
-      j += Import(io->a + j * io->width, io->width, io->mb_h - j, &p->scaler_a);
-      pos += (p->output->colorspace == MODE_RGBA_4444) ?
-              ExportAlphaRGBA4444(p, pos) : ExportAlpha(p, pos);
+      j += Import(io->a + j * io->width, io->width, io->mb_h - j, scaler);
+      pos += output_func(p, pos);
     }
   }
   return 0;

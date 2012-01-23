@@ -250,7 +250,7 @@ struct VP8Decoder {
 
   // main memory chunk for the above data. Persistent.
   void* mem_;
-  int mem_size_;
+  size_t mem_size_;
 
   // Per macroblock non-persistent infos.
   int mb_x_, mb_y_;       // current position, in macroblock units

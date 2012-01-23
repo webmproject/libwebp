@@ -136,13 +136,13 @@ static WebPEncodingError PutVP8FrameHeader(const WebPPicture* const pic,
        | (profile << 1)            // profile (3b)
        | (1 << 4)                  // visible (1b)
        | ((uint32_t)size0 << 5);   // partition length (19b)
-  vp8_frm_hdr[0] = bits & 0xff;
-  vp8_frm_hdr[1] = (bits >> 8) & 0xff;
+  vp8_frm_hdr[0] = (bits >>  0) & 0xff;
+  vp8_frm_hdr[1] = (bits >>  8) & 0xff;
   vp8_frm_hdr[2] = (bits >> 16) & 0xff;
   // signature
   vp8_frm_hdr[3] = (KSIGNATURE >> 16) & 0xff;
-  vp8_frm_hdr[4] = (KSIGNATURE >> 8) & 0xff;
-  vp8_frm_hdr[5] = (KSIGNATURE >> 0) & 0xff;
+  vp8_frm_hdr[4] = (KSIGNATURE >>  8) & 0xff;
+  vp8_frm_hdr[5] = (KSIGNATURE >>  0) & 0xff;
   // dimensions
   vp8_frm_hdr[6] = pic->width & 0xff;
   vp8_frm_hdr[7] = pic->width >> 8;

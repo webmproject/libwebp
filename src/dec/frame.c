@@ -78,24 +78,24 @@ static const uint8_t kFilterExtraRows[3] = { 0, 2, 8 };
 static int AllocateMemory(VP8Decoder* const dec) {
   const int num_caches = dec->num_caches_;
   const int mb_w = dec->mb_w_;
-  const int intra_pred_mode_size = 4 * mb_w * sizeof(uint8_t);
-  const int top_size = (16 + 8 + 8) * mb_w;
-  const int mb_info_size = (mb_w + 1) * sizeof(VP8MB);
-  const int f_info_size =
-    (dec->filter_type_ > 0) ?
-        mb_w * (dec->use_threads_ ? 2 : 1) * sizeof(VP8FInfo)
-      : 0;
-  const int yuv_size = YUV_SIZE * sizeof(*dec->yuv_b_);
-  const int coeffs_size = 384 * sizeof(*dec->coeffs_);
-  const int cache_height = (16 * num_caches
-                         + kFilterExtraRows[dec->filter_type_]) * 3 / 2;
-  const int cache_size = top_size * cache_height;
-  const int alpha_size =
-    dec->alpha_data_ ? (dec->pic_hdr_.width_ * dec->pic_hdr_.height_) : 0;
-  const int needed = intra_pred_mode_size
-                   + top_size + mb_info_size + f_info_size
-                   + yuv_size + coeffs_size
-                   + cache_size + alpha_size + ALIGN_MASK;
+  const size_t intra_pred_mode_size = 4 * mb_w * sizeof(uint8_t);
+  const size_t top_size = (16 + 8 + 8) * mb_w;
+  const size_t mb_info_size = (mb_w + 1) * sizeof(VP8MB);
+  const size_t f_info_size =
+      (dec->filter_type_ > 0) ?
+          mb_w * (dec->use_threads_ ? 2 : 1) * sizeof(VP8FInfo)
+        : 0;
+  const size_t yuv_size = YUV_SIZE * sizeof(*dec->yuv_b_);
+  const size_t coeffs_size = 384 * sizeof(*dec->coeffs_);
+  const size_t cache_height = (16 * num_caches
+                            + kFilterExtraRows[dec->filter_type_]) * 3 / 2;
+  const size_t cache_size = top_size * cache_height;
+  const size_t alpha_size =
+      dec->alpha_data_ ? (dec->pic_hdr_.width_ * dec->pic_hdr_.height_) : 0;
+  const size_t needed = intra_pred_mode_size
+                      + top_size + mb_info_size + f_info_size
+                      + yuv_size + coeffs_size
+                      + cache_size + alpha_size + ALIGN_MASK;
   uint8_t* mem;
 
   if (needed > dec->mem_size_) {
