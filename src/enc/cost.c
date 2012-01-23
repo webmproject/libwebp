@@ -50,9 +50,9 @@ const uint16_t VP8EntropyCost[256] = {
 //------------------------------------------------------------------------------
 // Level cost tables
 
-// For each given level, the following table given the pattern of contexts
-// to use for coding it (in [][0]) as well as the bit value to use for
-// each context (in [][1]).
+// For each given level, the following table gives the pattern of contexts to
+// use for coding it (in [][0]) as well as the bit value to use for each
+// context (in [][1]).
 const uint16_t VP8LevelCodes[MAX_VARIABLE_LEVEL][2] = {
                   {0x001, 0x000}, {0x007, 0x001}, {0x00f, 0x005},
   {0x00f, 0x00d}, {0x033, 0x003}, {0x033, 0x003}, {0x033, 0x023},
