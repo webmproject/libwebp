@@ -167,14 +167,11 @@ static WebPMuxError CreateDataFromImageInfo(WebPImageInfo* image_info,
 
 // Outputs image data given data from a webp file (including RIFF header).
 static WebPMuxError GetImageData(const uint8_t* data, uint32_t size,
-                                 const uint8_t** image_data,
-                                 uint32_t* image_size,
-                                 const uint8_t** alpha_data,
-                                 uint32_t* alpha_size) {
+                                 WebPData* const image, WebPData* const alpha) {
   if ((size < TAG_SIZE) || (memcmp(data, "RIFF", TAG_SIZE))) {
     // It is NOT webp file data. Return input data as is.
-    *image_data = data;
-    *image_size = size;
+    image->bytes_ = data;
+    image->size_ = size;
     return WEBP_MUX_OK;
   } else {
     // It is webp file data. Extract image data from it.
@@ -186,7 +183,7 @@ static WebPMuxError GetImageData(const uint8_t* data, uint32_t size,
       return WEBP_MUX_BAD_DATA;
     }
 
-    err = WebPMuxGetImage(mux, image_data, image_size, alpha_data, alpha_size);
+    err = WebPMuxGetImage(mux, image, alpha);
     WebPMuxDelete(mux);
     return err;
   }
@@ -237,8 +234,7 @@ WebPMuxError WebPMuxSetImage(WebPMux* const mux,
   WebPMuxError err;
   WebPChunk chunk;
   WebPMuxImage wpi;
-  const uint8_t* vp8_data;
-  uint32_t vp8_size;
+  WebPData image;
   const int has_alpha = (alpha_data != NULL && alpha_size != 0);
 
   if ((mux == NULL) || (data == NULL) || (size > MAX_CHUNK_PAYLOAD)) {
@@ -246,7 +242,7 @@ WebPMuxError WebPMuxSetImage(WebPMux* const mux,
   }
 
   // If given data is for a whole webp file, extract only the VP8 data from it.
-  err = GetImageData(data, size, &vp8_data, &vp8_size, NULL, NULL);
+  err = GetImageData(data, size, &image, NULL);
   if (err != WEBP_MUX_OK) return err;
 
   // Delete the existing images.
@@ -265,8 +261,8 @@ WebPMuxError WebPMuxSetImage(WebPMux* const mux,
 
   // Add image chunk.
   ChunkInit(&chunk);
-  err = ChunkAssignDataImageInfo(&chunk, vp8_data, vp8_size, NULL, copy_data,
-                   kChunks[IMAGE_ID].chunkTag);
+  err = ChunkAssignDataImageInfo(&chunk, image.bytes_, image.size_, NULL,
+                                 copy_data, kChunks[IMAGE_ID].chunkTag);
   if (err != WEBP_MUX_OK) return err;
   err = ChunkSetNth(&chunk, &wpi.vp8_, 1);
   if (err != WEBP_MUX_OK) return err;
@@ -337,13 +333,12 @@ static WebPMuxError MuxAddFrameTileInternal(WebPMux* const mux, uint32_t nth,
                                             uint32_t duration,
                                             int copy_data, uint32_t tag) {
   WebPChunk chunk;
+  WebPData image;
   WebPMuxImage wpi;
   WebPMuxError err;
   WebPImageInfo* image_info = NULL;
   uint8_t* frame_tile_data = NULL;
   uint32_t frame_tile_data_size = 0;
-  const uint8_t* vp8_data = NULL;
-  uint32_t vp8_size = 0;
   const int is_frame = (tag == kChunks[FRAME_ID].chunkTag) ? 1 : 0;
   const int has_alpha = (alpha_data != NULL && alpha_size != 0);
 
@@ -352,7 +347,7 @@ static WebPMuxError MuxAddFrameTileInternal(WebPMux* const mux, uint32_t nth,
   }
 
   // If given data is for a whole webp file, extract only the VP8 data from it.
-  err = GetImageData(data, size, &vp8_data, &vp8_size, NULL, NULL);
+  err = GetImageData(data, size, &image, NULL);
   if (err != WEBP_MUX_OK) return err;
 
   ChunkInit(&chunk);
@@ -369,15 +364,15 @@ static WebPMuxError MuxAddFrameTileInternal(WebPMux* const mux, uint32_t nth,
   }
 
   // Create image_info object.
-  image_info = CreateImageInfo(x_offset, y_offset, duration, vp8_data,
-                               vp8_size);
+  image_info = CreateImageInfo(x_offset, y_offset, duration, image.bytes_,
+                               image.size_);
   if (image_info == NULL) {
     MuxImageRelease(&wpi);
     return WEBP_MUX_MEMORY_ERROR;
   }
 
   // Add image chunk.
-  err = ChunkAssignDataImageInfo(&chunk, vp8_data, vp8_size, image_info,
+  err = ChunkAssignDataImageInfo(&chunk, image.bytes_, image.size_, image_info,
                                  copy_data, kChunks[IMAGE_ID].chunkTag);
   if (err != WEBP_MUX_OK) goto Err;
   image_info = NULL;  // Owned by 'chunk' now.

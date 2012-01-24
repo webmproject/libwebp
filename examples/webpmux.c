@@ -153,12 +153,6 @@ static int IsNotCompatible(int count1, int count2) {
     } while (0)
 
 static WebPMuxError DisplayInfo(const WebPMux* mux) {
-  int nFrames;
-  int nTiles;
-  const uint8_t* data = NULL;
-  uint32_t size = 0;
-  const uint8_t* alpha_data;
-  uint32_t alpha_size;
   uint32_t flag;
 
   WebPMuxError err = WebPMuxGetFeatures(mux, &flag);
@@ -179,6 +173,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
   fprintf(stderr, "\n");
 
   if (flag & ANIMATION_FLAG) {
+    int nFrames;
     uint32_t loop_count;
     err = WebPMuxGetLoopCount(mux, &loop_count);
     RETURN_IF_ERROR("Failed to retrieve loop count\n");
@@ -195,17 +190,19 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
       if (flag & ALPHA_FLAG) fprintf(stderr, " alpha_size");
       fprintf(stderr, "\n");
       for (i = 1; i <= nFrames; i++) {
-        err = WebPMuxGetFrame(mux, i, &data, &size, &alpha_data, &alpha_size,
+        WebPData image, alpha;
+        err = WebPMuxGetFrame(mux, i, &image, &alpha,
                               &x_offset, &y_offset, &duration);
         RETURN_IF_ERROR2("Failed to retrieve frame#%d\n", i);
         fprintf(stderr, "%3d: %8d %8d %8d", i, x_offset, y_offset, duration);
-        if (flag & ALPHA_FLAG) fprintf(stderr, " %10d", alpha_size);
+        if (flag & ALPHA_FLAG) fprintf(stderr, " %10u", alpha.size_);
         fprintf(stderr, "\n");
       }
     }
   }
 
   if (flag & TILE_FLAG) {
+    int nTiles;
     err = WebPMuxNumNamedElements(mux, "tile", &nTiles);
     RETURN_IF_ERROR("Failed to retrieve number of tiles\n");
 
@@ -217,32 +214,35 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
       if (flag & ALPHA_FLAG) fprintf(stderr, " alpha_size");
       fprintf(stderr, "\n");
       for (i = 1; i <= nTiles; i++) {
-        err = WebPMuxGetTile(mux, i, &data, &size, &alpha_data, &alpha_size,
-                             &x_offset, &y_offset);
+        WebPData image, alpha;
+        err = WebPMuxGetTile(mux, i, &image, &alpha, &x_offset, &y_offset);
         RETURN_IF_ERROR2("Failed to retrieve tile#%d\n", i);
         fprintf(stderr, "%3d: %8d %8d", i, x_offset, y_offset);
-        if (flag & ALPHA_FLAG) fprintf(stderr, " %10d", alpha_size);
+        if (flag & ALPHA_FLAG) fprintf(stderr, " %10u", alpha.size_);
         fprintf(stderr, "\n");
       }
     }
   }
 
   if (flag & ICCP_FLAG) {
-    err = WebPMuxGetColorProfile(mux, &data, &size);
+    WebPData icc_profile;
+    err = WebPMuxGetColorProfile(mux, &icc_profile);
     RETURN_IF_ERROR("Failed to retrieve the color profile\n");
-    fprintf(stderr, "Size of the color profile data: %d\n", size);
+    fprintf(stderr, "Size of the color profile data: %u\n", icc_profile.size_);
   }
 
   if (flag & META_FLAG) {
-    err = WebPMuxGetMetadata(mux, &data, &size);
+    WebPData metadata;
+    err = WebPMuxGetMetadata(mux, &metadata);
     RETURN_IF_ERROR("Failed to retrieve the XMP metadata\n");
-    fprintf(stderr, "Size of the XMP metadata: %d\n", size);
+    fprintf(stderr, "Size of the XMP metadata: %u\n", metadata.size_);
   }
 
   if ((flag & ALPHA_FLAG) && !(flag & (ANIMATION_FLAG | TILE_FLAG))) {
-    err = WebPMuxGetImage(mux, &data, &size, &alpha_data, &alpha_size);
+    WebPData image, alpha;
+    err = WebPMuxGetImage(mux, &image, &alpha);
     RETURN_IF_ERROR("Failed to retrieve the image\n");
-    fprintf(stderr, "Size of the alpha data: %d\n", alpha_size);
+    fprintf(stderr, "Size of the alpha data: %u\n", alpha.size_);
   }
 
   return WEBP_MUX_OK;
@@ -373,8 +373,7 @@ static int ReadImage(const char* filename,
                      const uint8_t** alpha_data_ptr, uint32_t* alpha_size_ptr) {
   void* data = NULL;
   uint32_t size = 0;
-  const uint8_t* alpha_data = NULL;
-  uint32_t alpha_size = 0;
+  WebPData image, alpha;
   WebPMux* mux;
   WebPMuxError err;
   int ok = 0;
@@ -390,25 +389,25 @@ static int ReadImage(const char* filename,
             filename, mux_state);
     return 0;
   }
-  err = WebPMuxGetImage(mux, (const uint8_t**)&data, &size,
-                        &alpha_data, &alpha_size);
+  err = WebPMuxGetImage(mux, &image, &alpha);
   if (err == WEBP_MUX_OK) {
-    uint8_t* const data_mem = (uint8_t*)malloc(size);
-    uint8_t* const alpha_mem = (uint8_t*)malloc(alpha_size);
+    uint8_t* const data_mem = (uint8_t*)malloc(image.size_);
+    uint8_t* const alpha_mem = (uint8_t*)malloc(alpha.size_);
     if ((data_mem != NULL) && (alpha_mem != NULL)) {
-      memcpy(data_mem, data, size);
-      memcpy(alpha_mem, alpha_data, alpha_size);
+      memcpy(data_mem, image.bytes_, image.size_);
+      memcpy(alpha_mem, alpha.bytes_, alpha.size_);
       *data_ptr = data_mem;
-      *size_ptr = size;
+      *size_ptr = image.size_;
       *alpha_data_ptr = alpha_mem;
-      *alpha_size_ptr = alpha_size;
+      *alpha_size_ptr = alpha.size_;
       ok = 1;
     } else {
       free(data_mem);
       free(alpha_mem);
       err = WEBP_MUX_MEMORY_ERROR;
-      fprintf(stderr, "Failed to allocate %d bytes to extract image data from"
-              " file %s. Error: %d\n", size + alpha_size, filename, err);
+      fprintf(stderr, "Failed to allocate %u bytes to extract image data from"
+              " file %s. Error: %d\n",
+              image.size_ + alpha.size_, filename, err);
     }
   } else {
     fprintf(stderr, "Failed to extract image data from file %s. Error: %d\n",
@@ -418,7 +417,7 @@ static int ReadImage(const char* filename,
   return ok;
 }
 
-static int WriteData(const char* filename, void* data, uint32_t size) {
+static int WriteData(const char* filename, const void* data, uint32_t size) {
   int ok = 0;
   FILE* fout = strcmp(filename, "-") ? fopen(filename, "wb") : stdout;
   if (!fout) {
@@ -783,10 +782,7 @@ static int InitializeConfig(int argc, const char* argv[],
 
 static int GetFrameTile(const WebPMux* mux,
                         const WebPMuxConfig* config, int isFrame) {
-  const uint8_t* data = NULL;
-  uint32_t size = 0;
-  const uint8_t* alpha_data = NULL;
-  uint32_t alpha_size = 0;
+  WebPData image, alpha;
   uint32_t x_offset = 0;
   uint32_t y_offset = 0;
   uint32_t duration = 0;
@@ -801,14 +797,13 @@ static int GetFrameTile(const WebPMux* mux,
   }
 
   if (isFrame) {
-    err = WebPMuxGetFrame(mux, num, &data, &size, &alpha_data, &alpha_size,
+    err = WebPMuxGetFrame(mux, num, &image, &alpha,
                           &x_offset, &y_offset, &duration);
     if (err != WEBP_MUX_OK) {
       ERROR_GOTO3("ERROR#%d: Could not get frame %ld.\n", err, num, ErrGet);
     }
   } else {
-    err = WebPMuxGetTile(mux, num, &data, &size, &alpha_data, &alpha_size,
-                         &x_offset, &y_offset);
+    err = WebPMuxGetTile(mux, num, &image, &alpha, &x_offset, &y_offset);
     if (err != WEBP_MUX_OK) {
       ERROR_GOTO3("ERROR#%d: Could not get frame %ld.\n", err, num, ErrGet);
     }
@@ -819,7 +814,8 @@ static int GetFrameTile(const WebPMux* mux,
     err = WEBP_MUX_MEMORY_ERROR;
     ERROR_GOTO2("ERROR#%d: Could not allocate a mux object.\n", err, ErrGet);
   }
-  err = WebPMuxSetImage(mux_single, data, size, alpha_data, alpha_size, 1);
+  err = WebPMuxSetImage(mux_single, image.bytes_, image.size_,
+                        alpha.bytes_, alpha.size_, 1);
   if (err != WEBP_MUX_OK) {
     ERROR_GOTO2("ERROR#%d: Could not create single image mux object.\n", err,
                 ErrGet);
@@ -834,6 +830,7 @@ static int GetFrameTile(const WebPMux* mux,
 // Read and process config.
 static int Process(const WebPMuxConfig* config) {
   WebPMux* mux = NULL;
+  WebPData webpdata;
   const uint8_t* data = NULL;
   uint32_t size = 0;
   const uint8_t* alpha_data = NULL;
@@ -862,19 +859,18 @@ static int Process(const WebPMuxConfig* config) {
           break;
 
         case FEATURE_ICCP:
-          err = WebPMuxGetColorProfile(mux, &data, &size);
+          err = WebPMuxGetColorProfile(mux, &webpdata);
           if (err != WEBP_MUX_OK) {
             ERROR_GOTO2("ERROR#%d: Could not get color profile.\n", err, Err2);
           }
-          ok = WriteData(config->output_, (void*)data, size);
+          ok = WriteData(config->output_, webpdata.bytes_, webpdata.size_);
           break;
-
         case FEATURE_XMP:
-          err = WebPMuxGetMetadata(mux, &data, &size);
+          err = WebPMuxGetMetadata(mux, &webpdata);
           if (err != WEBP_MUX_OK) {
             ERROR_GOTO2("ERROR#%d: Could not get XMP metadata.\n", err, Err2);
           }
-          ok = WriteData(config->output_, (void*)data, size);
+          ok = WriteData(config->output_, webpdata.bytes_, webpdata.size_);
           break;
 
         default:

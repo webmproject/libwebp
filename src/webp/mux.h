@@ -35,10 +35,9 @@
 //   int copy_data = 0;
 //   // ... (Read data from file).
 //   WebPMux* mux = WebPMuxCreate(data, data_size, copy_data, NULL);
-//   WebPMuxGetImage(mux, &image_data, &image_data_size,
-//                   &alpha_data, &alpha_size);
-//   // ... (Consume image_data; e.g. call WebPDecode() to decode the data).
-//   WebPMuxGetColorProfile(mux, &icc_data, &icc_data_size);
+//   WebPMuxGetImage(mux, &image, &alpha);
+//   // ... (Consume image; e.g. call WebPDecode() to decode the data).
+//   WebPMuxGetColorProfile(mux, &icc_profile);
 //   // ... (Consume icc_data).
 //   WebPMuxDelete(mux);
 //   free(data);
@@ -80,6 +79,13 @@ typedef enum {
 } FeatureFlags;
 
 typedef struct WebPMux WebPMux;   // main opaque object.
+
+// Data type used to describe 'raw' data, e.g., chunk data
+// (ICC profile, metadata) and WebP compressed image data.
+typedef struct {
+  const uint8_t* bytes_;
+  uint32_t size_;
+} WebPData;
 
 //------------------------------------------------------------------------------
 // Life of a Mux object
@@ -138,19 +144,16 @@ WEBP_EXTERN(WebPMuxError) WebPMuxSetImage(WebPMux* const mux,
 // The caller should NOT free the returned data.
 // Parameters:
 //   mux - (in) object from which the image is to be fetched
-//   data - (out) the returned image data
-//   size - (out) size of the returned image data
-//   alpha_data - (in) the returned alpha data of the image (if present)
-//   alpha_size - (in) size of alpha chunk data
+//   image - (out) the image data
+//   alpha - (out) the alpha data of the image (if present)
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if either of mux, data or size is NULL
+//   WEBP_MUX_INVALID_ARGUMENT - if either mux or image is NULL
 //                               OR if mux contains animation/tiling.
 //   WEBP_MUX_NOT_FOUND - if image is not present in mux object.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxGetImage(const WebPMux* const mux,
-                                          const uint8_t** data, uint32_t* size,
-                                          const uint8_t** alpha_data,
-                                          uint32_t* alpha_size);
+                                          WebPData* const image,
+                                          WebPData* const alpha);
 
 // Deletes the image in the mux object.
 // Parameters:
@@ -185,15 +188,13 @@ WEBP_EXTERN(WebPMuxError) WebPMuxSetMetadata(WebPMux* const mux,
 // The caller should NOT free the returned data.
 // Parameters:
 //   mux - (in) object from which the XMP metadata is to be fetched
-//   data - (out) the returned XMP metadata
-//   size - (out) size of the returned XMP metadata
+//   metadata - (out) XMP metadata
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if either of mux, data or size is NULL
+//   WEBP_MUX_INVALID_ARGUMENT - if either mux or metadata is NULL.
 //   WEBP_MUX_NOT_FOUND - if metadata is not present in mux object.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxGetMetadata(const WebPMux* const mux,
-                                             const uint8_t** data,
-                                             uint32_t* size);
+WEBP_EXTERN(WebPMuxError) WebPMuxGetMetadata(
+    const WebPMux* const mux, WebPData* const metadata);
 
 // Deletes the XMP metadata in the mux object.
 // Parameters:
@@ -227,15 +228,13 @@ WEBP_EXTERN(WebPMuxError) WebPMuxSetColorProfile(WebPMux* const mux,
 // The caller should NOT free the returned data.
 // Parameters:
 //   mux - (in) object from which the color profile data is to be fetched
-//   data - (out) the returned color profile data
-//   size - (out) size of the returned color profile data
+//   color_profile - (out) color profile data
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if either of mux, data or size is NULL
+//   WEBP_MUX_INVALID_ARGUMENT - if either mux or color_profile is NULL.
 //   WEBP_MUX_NOT_FOUND - if color profile is not present in mux object.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxGetColorProfile(const WebPMux* const mux,
-                                                 const uint8_t** data,
-                                                 uint32_t* size);
+WEBP_EXTERN(WebPMuxError) WebPMuxGetColorProfile(
+    const WebPMux* const mux, WebPData* const color_profile);
 
 // Deletes the color profile in the mux object.
 // Parameters:
@@ -294,24 +293,21 @@ WEBP_EXTERN(WebPMuxError) WebPMuxAddFrame(WebPMux* const mux, uint32_t nth,
 // Parameters:
 //   mux - (in) object from which the info is to be fetched
 //   nth - (in) index of the frame in the mux object
-//   data - (out) the returned image data
-//   size - (out) size of the returned image data
-//   alpha_data - (in) the alpha data corresponding to frame image (if present)
-//   alpha_size - (in) size of alpha chunk data
+//   image - (out) the image data
+//   alpha - (out) the alpha data corresponding to frame image (if present)
 //   x_offset - (out) x-offset of the returned frame
 //   y_offset - (out) y-offset of the returned frame
 //   duration - (out) duration of the returned frame (in milliseconds)
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if either mux, data, size, x_offset,
+//   WEBP_MUX_INVALID_ARGUMENT - if either mux, image, x_offset,
 //                               y_offset, or duration is NULL
 //   WEBP_MUX_NOT_FOUND - if there are less than nth frames in the mux object.
 //   WEBP_MUX_BAD_DATA - if nth frame chunk in mux is invalid.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxGetFrame(const WebPMux* const mux,
                                           uint32_t nth,
-                                          const uint8_t** data, uint32_t* size,
-                                          const uint8_t** alpha_data,
-                                          uint32_t* alpha_size,
+                                          WebPData* const image,
+                                          WebPData* const alpha,
                                           uint32_t* x_offset,
                                           uint32_t* y_offset,
                                           uint32_t* duration);
@@ -388,22 +384,19 @@ WEBP_EXTERN(WebPMuxError) WebPMuxAddTile(WebPMux* const mux, uint32_t nth,
 // Parameters:
 //   mux - (in) object from which the info is to be fetched
 //   nth - (in) index of the tile in the mux object
-//   data - (out) the returned image data
-//   size - (out) size of the returned image data
-//   alpha_data - (in) the alpha data corresponding to tile image (if present)
-//   alpha_size - (in) size of alpha chunk data
+//   image - (out) the image data
+//   alpha - (out) the alpha data corresponding to tile image (if present)
 //   x_offset - (out) x-offset of the returned tile
 //   y_offset - (out) y-offset of the returned tile
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if either mux, data, size, x_offset or
+//   WEBP_MUX_INVALID_ARGUMENT - if either mux, image, x_offset or
 //                               y_offset is NULL
 //   WEBP_MUX_NOT_FOUND - if there are less than nth tiles in the mux object.
 //   WEBP_MUX_BAD_DATA - if nth tile chunk in mux is invalid.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxGetTile(const WebPMux* const mux, uint32_t nth,
-                                         const uint8_t** data, uint32_t* size,
-                                         const uint8_t** alpha_data,
-                                         uint32_t* alpha_size,
+                                         WebPData* const image,
+                                         WebPData* const alpha,
                                          uint32_t* x_offset,
                                          uint32_t* y_offset);
 
