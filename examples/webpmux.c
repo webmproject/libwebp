@@ -119,6 +119,27 @@ static int IsNotCompatible(int count1, int count2) {
   return (count1 > 0) != (count2 > 0);
 }
 
+// Allocate necessary storage for dst then copy the contents of src.
+// Returns 1 on success.
+static int WebPDataCopy(const WebPData* const src, WebPData* const dst) {
+  if (src == NULL || dst == NULL) return 0;
+
+  memset(dst, 0, sizeof(*dst));
+  if (src->bytes_ != NULL && src->size_ != 0) {
+    dst->bytes_ = (uint8_t*)malloc(src->size_);
+    if (dst->bytes_ == NULL) return 0;
+    memcpy((void*)dst->bytes_, src->bytes_, src->size_);
+    dst->size_ = src->size_;
+  }
+  return 1;
+}
+
+// Frees data allocated by WebPDataCopy.
+static void WebPDataFree(WebPData* const webpdata) {
+  free((void*)webpdata->bytes_);
+  memset(webpdata, 0, sizeof(*webpdata));
+}
+
 #define RETURN_IF_ERROR(ERR_MSG)                                      \
     if (err != WEBP_MUX_OK) {                                         \
       fprintf(stderr, ERR_MSG);                                       \
@@ -210,11 +231,11 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
     printf("Number of tiles: %d\n", nTiles);
     if (nTiles > 0) {
       int i;
-      uint32_t x_offset, y_offset;
       printf("No.: x_offset y_offset image_size");
       if (flag & ALPHA_FLAG) printf(" alpha_size");
       printf("\n");
       for (i = 1; i <= nTiles; i++) {
+        uint32_t x_offset, y_offset;
         WebPData image, alpha;
         err = WebPMuxGetTile(mux, i, &image, &alpha, &x_offset, &y_offset);
         RETURN_IF_ERROR2("Failed to retrieve tile#%d\n", i);
@@ -298,7 +319,8 @@ static void PrintHelp(void) {
   printf("\nINPUT & OUTPUT are in webp format.\n");
 }
 
-static int ReadData(const char* filename, void** data_ptr, uint32_t* size_ptr) {
+static int ReadData(const char* filename,
+                    uint8_t** data_ptr, uint32_t* size_ptr) {
   void* data = NULL;
   long size = 0;
   int ok = 0;
@@ -343,19 +365,19 @@ static int ReadData(const char* filename, void** data_ptr, uint32_t* size_ptr) {
  Err:
   if (in != stdin) fclose(in);
   *size_ptr = (uint32_t)size;
-  *data_ptr = data;
+  *data_ptr = (uint8_t*)data;
   return ok;
 }
 
 static int ReadFile(const char* const filename, WebPMux** mux) {
   uint32_t size = 0;
-  void* data = NULL;
+  uint8_t* data = NULL;
   WebPMuxState mux_state;
 
   assert(mux != NULL);
 
   if (!ReadData(filename, &data, &size)) return 0;
-  *mux = WebPMuxCreate((const uint8_t*)data, size, 1, &mux_state);
+  *mux = WebPMuxCreate(data, size, 1, &mux_state);
   free(data);
   if (*mux != NULL && mux_state == WEBP_MUX_STATE_COMPLETE) return 1;
   fprintf(stderr, "Failed to create mux object from file %s. mux_state = %d.\n",
@@ -364,9 +386,8 @@ static int ReadFile(const char* const filename, WebPMux** mux) {
 }
 
 static int ReadImage(const char* filename,
-                     const uint8_t** data_ptr, uint32_t* size_ptr,
-                     const uint8_t** alpha_data_ptr, uint32_t* alpha_size_ptr) {
-  void* data = NULL;
+                     WebPData* const image_ptr, WebPData* const alpha_ptr) {
+  uint8_t* data = NULL;
   uint32_t size = 0;
   WebPData image, alpha;
   WebPMux* mux;
@@ -376,7 +397,7 @@ static int ReadImage(const char* filename,
 
   if (!ReadData(filename, &data, &size)) return 0;
 
-  mux = WebPMuxCreate((const uint8_t*)data, size, 1, &mux_state);
+  mux = WebPMuxCreate(data, size, 1, &mux_state);
   free(data);
   if (mux == NULL || mux_state != WEBP_MUX_STATE_COMPLETE) {
     fprintf(stderr,
@@ -386,23 +407,14 @@ static int ReadImage(const char* filename,
   }
   err = WebPMuxGetImage(mux, &image, &alpha);
   if (err == WEBP_MUX_OK) {
-    uint8_t* const data_mem = (uint8_t*)malloc(image.size_);
-    uint8_t* const alpha_mem = (uint8_t*)malloc(alpha.size_);
-    if ((data_mem != NULL) && (alpha_mem != NULL)) {
-      memcpy(data_mem, image.bytes_, image.size_);
-      memcpy(alpha_mem, alpha.bytes_, alpha.size_);
-      *data_ptr = data_mem;
-      *size_ptr = image.size_;
-      *alpha_data_ptr = alpha_mem;
-      *alpha_size_ptr = alpha.size_;
-      ok = 1;
-    } else {
-      free(data_mem);
-      free(alpha_mem);
-      err = WEBP_MUX_MEMORY_ERROR;
-      fprintf(stderr, "Failed to allocate %u bytes to extract image data from"
-              " file %s. Error: %d\n",
-              image.size_ + alpha.size_, filename, err);
+    ok = 1;
+    ok &= WebPDataCopy(&image, image_ptr);
+    ok &= WebPDataCopy(&alpha, alpha_ptr);
+    if (!ok) {
+      fprintf(stderr, "Error allocating storage for image (%u bytes) "
+              "and alpha (%u bytes) data\n", image.size_, alpha.size_);
+      WebPDataFree(image_ptr);
+      WebPDataFree(alpha_ptr);
     }
   } else {
     fprintf(stderr, "Failed to extract image data from file %s. Error: %d\n",
@@ -412,17 +424,17 @@ static int ReadImage(const char* filename,
   return ok;
 }
 
-static int WriteData(const char* filename, const void* data, uint32_t size) {
+static int WriteData(const char* filename, const WebPData* const webpdata) {
   int ok = 0;
   FILE* fout = strcmp(filename, "-") ? fopen(filename, "wb") : stdout;
   if (!fout) {
     fprintf(stderr, "Error opening output WebP file %s!\n", filename);
     return 0;
   }
-  if (fwrite(data, size, 1, fout) != 1) {
+  if (fwrite(webpdata->bytes_, webpdata->size_, 1, fout) != 1) {
     fprintf(stderr, "Error writing file %s!\n", filename);
   } else {
-    fprintf(stderr, "Saved file %s (%d bytes)\n", filename, size);
+    fprintf(stderr, "Saved file %s (%d bytes)\n", filename, webpdata->size_);
     ok = 1;
   }
   if (fout != stdout) fclose(fout);
@@ -430,17 +442,17 @@ static int WriteData(const char* filename, const void* data, uint32_t size) {
 }
 
 static int WriteWebP(WebPMux* const mux, const char* filename) {
-  uint8_t* data = NULL;
-  uint32_t size = 0;
+  WebPData webpdata;
   int ok;
 
-  WebPMuxError err = WebPMuxAssemble(mux, &data, &size);
+  const WebPMuxError err = WebPMuxAssemble(
+      mux, (uint8_t**)&webpdata.bytes_, &webpdata.size_);
   if (err != WEBP_MUX_OK) {
     fprintf(stderr, "Error (%d) assembling the WebP file.\n", err);
     return 0;
   }
-  ok = WriteData(filename, data, size);
-  free(data);
+  ok = WriteData(filename, &webpdata);
+  WebPDataFree(&webpdata);
   return ok;
 }
 
@@ -826,16 +838,11 @@ static int GetFrameTile(const WebPMux* mux,
 static int Process(const WebPMuxConfig* config) {
   WebPMux* mux = NULL;
   WebPData webpdata;
-  const uint8_t* data = NULL;
+  uint8_t* data = NULL;
   uint32_t size = 0;
-  const uint8_t* alpha_data = NULL;
-  uint32_t alpha_size = 0;
   uint32_t x_offset = 0;
   uint32_t y_offset = 0;
-  uint32_t duration = 0;
-  uint32_t loop_count = 0;
   WebPMuxError err = WEBP_MUX_OK;
-  long num;
   int index = 0;
   int ok = 1;
   const Feature* const feature = &config->feature_;
@@ -858,14 +865,14 @@ static int Process(const WebPMuxConfig* config) {
           if (err != WEBP_MUX_OK) {
             ERROR_GOTO2("ERROR#%d: Could not get color profile.\n", err, Err2);
           }
-          ok = WriteData(config->output_, webpdata.bytes_, webpdata.size_);
+          ok = WriteData(config->output_, &webpdata);
           break;
         case FEATURE_XMP:
           err = WebPMuxGetMetadata(mux, &webpdata);
           if (err != WEBP_MUX_OK) {
             ERROR_GOTO2("ERROR#%d: Could not get XMP metadata.\n", err, Err2);
           }
-          ok = WriteData(config->output_, webpdata.bytes_, webpdata.size_);
+          ok = WriteData(config->output_, &webpdata);
           break;
 
         default:
@@ -884,31 +891,31 @@ static int Process(const WebPMuxConfig* config) {
           }
           for (index = 0; index < feature->arg_count_; ++index) {
             if (feature->args_[index].subtype_ == SUBTYPE_LOOP) {
-              num = strtol(feature->args_[index].params_, NULL, 10);
+              const long num = strtol(feature->args_[index].params_, NULL, 10);
               if (num < 0) {
                 ERROR_GOTO1("ERROR: Loop count must be non-negative.\n", Err2);
-              } else {
-                loop_count = num;
               }
-              err  = WebPMuxSetLoopCount(mux, loop_count);
+              err = WebPMuxSetLoopCount(mux, num);
               if (err != WEBP_MUX_OK) {
                 ERROR_GOTO2("ERROR#%d: Could not set loop count.\n", err, Err2);
               }
             } else if (feature->args_[index].subtype_ == SUBTYPE_FRM) {
-              ok = ReadImage(feature->args_[index].filename_,
-                             &data, &size, &alpha_data, &alpha_size);
+              WebPData image, alpha;
+              uint32_t duration;
+              ok = ReadImage(feature->args_[index].filename_, &image, &alpha);
               if (!ok) goto Err2;
               ok = ParseFrameArgs(feature->args_[index].params_,
                                   &x_offset, &y_offset, &duration);
               if (!ok) {
-                free((void*)data);
-                free((void*)alpha_data);
+                WebPDataFree(&image);
+                WebPDataFree(&alpha);
                 ERROR_GOTO1("ERROR: Could not parse frame properties.\n", Err2);
               }
-              err = WebPMuxAddFrame(mux, 0, data, size, alpha_data, alpha_size,
+              err = WebPMuxAddFrame(mux, 0, image.bytes_, image.size_,
+                                    alpha.bytes_, alpha.size_,
                                     x_offset, y_offset, duration, 1);
-              free((void*)data);
-              free((void*)alpha_data);
+              WebPDataFree(&image);
+              WebPDataFree(&alpha);
               if (err != WEBP_MUX_OK) {
                 ERROR_GOTO3("ERROR#%d: Could not add a frame at index %d.\n",
                             err, index, Err2);
@@ -926,20 +933,21 @@ static int Process(const WebPMuxConfig* config) {
                         WEBP_MUX_MEMORY_ERROR, Err2);
           }
           for (index = 0; index < feature->arg_count_; ++index) {
-            ok = ReadImage(feature->args_[index].filename_,
-                           &data, &size, &alpha_data, &alpha_size);
+            WebPData image, alpha;
+            ok = ReadImage(feature->args_[index].filename_, &image, &alpha);
             if (!ok) goto Err2;
             ok = ParseTileArgs(feature->args_[index].params_, &x_offset,
                                &y_offset);
             if (!ok) {
-              free((void*)data);
-              free((void*)alpha_data);
+              WebPDataFree(&image);
+              WebPDataFree(&alpha);
               ERROR_GOTO1("ERROR: Could not parse tile properties.\n", Err2);
             }
-            err = WebPMuxAddTile(mux, 0, data, size, alpha_data, alpha_size,
+            err = WebPMuxAddTile(mux, 0, image.bytes_, image.size_,
+                                 alpha.bytes_, alpha.size_,
                                  x_offset, y_offset, 1);
-            free((void*)data);
-            free((void*)alpha_data);
+            WebPDataFree(&image);
+            WebPDataFree(&alpha);
             if (err != WEBP_MUX_OK) {
               ERROR_GOTO3("ERROR#%d: Could not add a tile at index %d.\n",
                           err, index, Err2);
@@ -950,7 +958,7 @@ static int Process(const WebPMuxConfig* config) {
         case FEATURE_ICCP:
           ok = ReadFile(config->input_, &mux);
           if (!ok) goto Err2;
-          ok = ReadData(feature->args_[0].filename_, (void**)&data, &size);
+          ok = ReadData(feature->args_[0].filename_, &data, &size);
           if (!ok) goto Err2;
           err = WebPMuxSetColorProfile(mux, data, size, 1);
           free((void*)data);
@@ -962,10 +970,10 @@ static int Process(const WebPMuxConfig* config) {
         case FEATURE_XMP:
           ok = ReadFile(config->input_, &mux);
           if (!ok) goto Err2;
-          ok = ReadData(feature->args_[0].filename_, (void**)&data, &size);
+          ok = ReadData(feature->args_[0].filename_, &data, &size);
           if (!ok) goto Err2;
           err = WebPMuxSetMetadata(mux, data, size, 1);
-          free((void*)data);
+          free(data);
           if (err != WEBP_MUX_OK) {
             ERROR_GOTO2("ERROR#%d: Could not set XMP metadata.\n", err, Err2);
           }
