@@ -8,57 +8,59 @@ Description:
 ============
 
 WebP Mux: library to create the MUX container object for features like
-Color profile, XMP metadata, Animation & Tiling. A reference command line
-tool 'webpmux' and Mux container specification 'MuxContainerSpec.pdf' are also
-provided in this package.
-
+color profile, XMP metadata, animation & tiling. A reference command line
+tool 'webpmux' and Mux container specification 'doc/webp-container-spec.txt'
+are also provided in this package.
 
 WebP Mux tool:
 ==============
 
-The examples/ directory contains tool (webpmux) for manipulating the WebP Mux
-file. webpmux tool can be used to create a WebP container file and to extract or
-strip relevant data from the container file.
+The examples/ directory contains a tool (webpmux) for manipulating the WebP Mux
+file. The webpmux tool can be used to create a WebP container file and to
+extract or strip relevant data from the container file.
 
 A list of options is available using the -help command line flag:
 
 > webpmux -help
 Usage: webpmux -get GET_OPTIONS INPUT -o OUTPUT
-   or: webpmux -set SET_OPTIONS INPUT -o OUTPUT
-   or: webpmux -strip STRIP_OPTIONS INPUT -o OUTPUT
-   or: webpmux [-tile TILE_OPTIONS]... -o OUTPUT
-   or: webpmux [-frame FRAME_OPTIONS]... -loop LOOP_COUNT -o OUTPUT
-   or: webpmux -info INPUT
-   or: webpmux -help OR -h
+       webpmux -set SET_OPTIONS INPUT -o OUTPUT
+       webpmux -strip STRIP_OPTIONS INPUT -o OUTPUT
+       webpmux -tile TILE_OPTIONS [-tile...] -o OUTPUT
+       webpmux -frame FRAME_OPTIONS [-frame...] -loop LOOP_COUNT -o OUTPUT
+       webpmux -info INPUT
+       webpmux [-h|-help]
 
 GET_OPTIONS:
+ Extract relevant data.
    icc       Get ICCP Color profile.
    xmp       Get XMP metadata.
    tile n    Get nth tile.
    frame n   Get nth frame.
 
 SET_OPTIONS:
+ Set color profile/metadata.
    icc       Set ICC Color profile.
    xmp       Set XMP metadata.
 
 STRIP_OPTIONS:
+ Strip color profile/metadata.
    icc       Strip ICCP color profile.
    xmp       Strip XMP metadata.
 
 TILE_OPTIONS(i):
+ Create tiled image.
    file_i +xi+yi
    where:    'file_i' is the i'th tile (webp format),
              'xi','yi' specify the image offset for this tile.
 
 FRAME_OPTIONS(i):
+ Create animation.
    file_i +xi+yi+di
    where:    'file_i' is the i'th animation frame (webp format),
              'xi','yi' specify the image offset for this frame.
              'di' is the pause duration before next frame.
 
 INPUT & OUTPUT are in webp format.
-
-
 
 WebP Mux API:
 ==============
@@ -100,7 +102,6 @@ Example#2 (pseudo code): Get image & color profile data from a WebP file.
 
 
 For detailed MUX-API reference, please refer to the header file (src/webp/mux.h)
-
 
 Bugs:
 =====

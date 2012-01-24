@@ -71,7 +71,7 @@ typedef enum {
      {                         \
         hr = (fn);             \
         if (FAILED(hr) && verbose)           \
-          printf(#fn " failed %08x\n", hr);  \
+          fprintf(stderr, #fn " failed %08x\n", hr);  \
      }                         \
   } while (0)
 
@@ -86,7 +86,7 @@ static HRESULT CreateOutputStream(const char* out_file_name,
   HRESULT hr = S_OK;
   IFS(SHCreateStreamOnFileA(out_file_name, STGM_WRITE | STGM_CREATE, ppStream));
   if (FAILED(hr))
-    printf("Error opening output file %s (%08x)\n", out_file_name, hr);
+    fprintf(stderr, "Error opening output file %s (%08x)\n", out_file_name, hr);
   return hr;
 }
 
@@ -106,9 +106,10 @@ static HRESULT WriteUsingWIC(const char* out_file_name, REFGUID container_guid,
           CLSCTX_INPROC_SERVER, MAKE_REFGUID(IID_IWICImagingFactory),
           (LPVOID*)&pFactory));
   if (hr == REGDB_E_CLASSNOTREG) {
-    printf("Couldn't access Windows Imaging Component (are you running \n");
-    printf("Windows XP SP3 or newer?). PNG support not available.\n");
-    printf("Use -ppm or -pgm for available PPM and PGM formats.\n");
+    fprintf(stderr,
+            "Couldn't access Windows Imaging Component (are you running "
+            "Windows XP SP3 or newer?). PNG support not available. "
+            "Use -ppm or -pgm for available PPM and PGM formats.\n");
   }
   IFS(CreateOutputStream(out_file_name, &pStream));
   IFS(IWICImagingFactory_CreateEncoder(pFactory, container_guid, NULL,
@@ -189,15 +190,12 @@ static int WritePNG(FILE* out_file, const WebPDecBuffer* const buffer) {
   return 1;
 }
 #else    // !HAVE_WINCODEC_H && !WEBP_HAVE_PNG
-
-typedef uint32_t png_uint_32;
-
 static int WritePNG(FILE* out_file, const WebPDecBuffer* const buffer) {
   (void)out_file;
   (void)buffer;
-  printf("PNG support not compiled. Please install the libpng development "
-         "package before building.\n");
-  printf("You can run with -ppm flag to decode in PPM format.\n");
+  fprintf(stderr, "PNG support not compiled. Please install the libpng "
+          "development package before building.\n");
+  fprintf(stderr, "You can run with -ppm flag to decode in PPM format.\n");
   return 0;
 }
 #endif
@@ -373,7 +371,7 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-version")) {
       const int version = WebPGetDecoderVersion();
       printf("%d.%d.%d\n",
-        (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
+             (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
       return 0;
     } else if (!strcmp(argv[c], "-pgm")) {
       format = PGM;
@@ -396,7 +394,7 @@ int main(int argc, const char *argv[]) {
       VP8GetCPUInfo = NULL;
 #endif
     } else if (argv[c][0] == '-') {
-      printf("Unknown option '%s'\n", argv[c]);
+      fprintf(stderr, "Unknown option '%s'\n", argv[c]);
       Help();
       return -1;
     } else {
@@ -405,7 +403,7 @@ int main(int argc, const char *argv[]) {
   }
 
   if (in_file == NULL) {
-    printf("missing input file!!\n");
+    fprintf(stderr, "missing input file!!\n");
     Help();
     return -1;
   }

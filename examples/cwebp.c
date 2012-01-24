@@ -104,7 +104,7 @@ static int ReadYUV(FILE* in_file, WebPPicture* const pic) {
      {                         \
         hr = (fn);             \
         if (FAILED(hr) && verbose)           \
-          printf(#fn " failed %08x\n", hr);  \
+          fprintf(stderr, #fn " failed %08x\n", hr);  \
      }                         \
   } while (0)
 
@@ -118,7 +118,7 @@ static HRESULT OpenInputStream(const char* filename, IStream** ppStream) {
   HRESULT hr = S_OK;
   IFS(SHCreateStreamOnFileA(filename, STGM_READ, ppStream));
   if (FAILED(hr))
-    printf("Error opening input file %s (%08x)\n", filename, hr);
+    fprintf(stderr, "Error opening input file %s (%08x)\n", filename, hr);
   return hr;
 }
 
@@ -148,9 +148,10 @@ static HRESULT ReadPictureWithWIC(const char* filename,
           CLSCTX_INPROC_SERVER, MAKE_REFGUID(IID_IWICImagingFactory),
           (LPVOID*)&pFactory));
   if (hr == REGDB_E_CLASSNOTREG) {
-    printf("Couldn't access Windows Imaging Component (are you running \n");
-    printf("Windows XP SP3 or newer?). Most formats not available.\n");
-    printf("Use -s for the available YUV input.\n");
+    fprintf(stderr,
+            "Couldn't access Windows Imaging Component (are you running "
+            "Windows XP SP3 or newer?). Most formats not available. "
+            "Use -s for the available YUV input.\n");
   }
   // Prepare for image decoding.
   IFS(OpenInputStream(filename, &pStream));
@@ -158,7 +159,7 @@ static HRESULT ReadPictureWithWIC(const char* filename,
           WICDecodeMetadataCacheOnDemand, &pDecoder));
   IFS(IWICBitmapDecoder_GetFrameCount(pDecoder, &frameCount));
   if (SUCCEEDED(hr) && frameCount == 0) {
-    printf("No frame found in input file.\n");
+    fprintf(stderr, "No frame found in input file.\n");
     hr = E_FAIL;
   }
   IFS(IWICBitmapDecoder_GetFrame(pDecoder, 0, &pFrame));
@@ -333,8 +334,8 @@ static int ReadJPEG(FILE* in_file, WebPPicture* const pic) {
 static int ReadJPEG(FILE* in_file, WebPPicture* const pic) {
   (void)in_file;
   (void)pic;
-  printf("JPEG support not compiled. Please install the libjpeg development "
-         "package before building.\n");
+  fprintf(stderr, "JPEG support not compiled. Please install the libjpeg "
+          "development package before building.\n");
   return 0;
 }
 #endif
@@ -433,8 +434,8 @@ static int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha) {
   (void)in_file;
   (void)pic;
   (void)keep_alpha;
-  printf("PNG support not compiled. Please install the libpng development "
-         "package before building.\n");
+  fprintf(stderr, "PNG support not compiled. Please install the libpng "
+          "development package before building.\n");
   return 0;
 }
 #endif

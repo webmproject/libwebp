@@ -164,39 +164,40 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
   }
 
   // Print the features present.
-  fprintf(stderr, "Features present:");
-  if (flag & ANIMATION_FLAG) fprintf(stderr, " animation");
-  if (flag & TILE_FLAG)      fprintf(stderr, " tiling");
-  if (flag & ICCP_FLAG)      fprintf(stderr, " icc profile");
-  if (flag & META_FLAG)      fprintf(stderr, " metadata");
-  if (flag & ALPHA_FLAG)     fprintf(stderr, " transparency");
-  fprintf(stderr, "\n");
+  printf("Features present:");
+  if (flag & ANIMATION_FLAG) printf(" animation");
+  if (flag & TILE_FLAG)      printf(" tiling");
+  if (flag & ICCP_FLAG)      printf(" icc profile");
+  if (flag & META_FLAG)      printf(" metadata");
+  if (flag & ALPHA_FLAG)     printf(" transparency");
+  printf("\n");
 
   if (flag & ANIMATION_FLAG) {
     int nFrames;
     uint32_t loop_count;
     err = WebPMuxGetLoopCount(mux, &loop_count);
     RETURN_IF_ERROR("Failed to retrieve loop count\n");
-    fprintf(stderr, "Loop Count : %d\n", loop_count);
+    printf("Loop Count : %d\n", loop_count);
 
     err = WebPMuxNumNamedElements(mux, "frame", &nFrames);
     RETURN_IF_ERROR("Failed to retrieve number of frames\n");
 
-    fprintf(stderr, "Number of frames: %d\n", nFrames);
+    printf("Number of frames: %d\n", nFrames);
     if (nFrames > 0) {
       int i;
-      uint32_t x_offset, y_offset, duration;
-      fprintf(stderr, "No.: x_offset y_offset duration");
-      if (flag & ALPHA_FLAG) fprintf(stderr, " alpha_size");
-      fprintf(stderr, "\n");
+      printf("No.: x_offset y_offset duration image_size");
+      if (flag & ALPHA_FLAG) printf(" alpha_size");
+      printf("\n");
       for (i = 1; i <= nFrames; i++) {
+        uint32_t x_offset, y_offset, duration;
         WebPData image, alpha;
         err = WebPMuxGetFrame(mux, i, &image, &alpha,
                               &x_offset, &y_offset, &duration);
         RETURN_IF_ERROR2("Failed to retrieve frame#%d\n", i);
-        fprintf(stderr, "%3d: %8d %8d %8d", i, x_offset, y_offset, duration);
-        if (flag & ALPHA_FLAG) fprintf(stderr, " %10u", alpha.size_);
-        fprintf(stderr, "\n");
+        printf("%3d: %8d %8d %8d %10u",
+               i, x_offset, y_offset, duration, image.size_);
+        if (flag & ALPHA_FLAG) printf(" %10u", alpha.size_);
+        printf("\n");
       }
     }
   }
@@ -206,20 +207,21 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
     err = WebPMuxNumNamedElements(mux, "tile", &nTiles);
     RETURN_IF_ERROR("Failed to retrieve number of tiles\n");
 
-    fprintf(stderr, "Number of tiles: %d\n", nTiles);
+    printf("Number of tiles: %d\n", nTiles);
     if (nTiles > 0) {
       int i;
       uint32_t x_offset, y_offset;
-      fprintf(stderr, "No.: x_offset y_offset");
-      if (flag & ALPHA_FLAG) fprintf(stderr, " alpha_size");
-      fprintf(stderr, "\n");
+      printf("No.: x_offset y_offset image_size");
+      if (flag & ALPHA_FLAG) printf(" alpha_size");
+      printf("\n");
       for (i = 1; i <= nTiles; i++) {
         WebPData image, alpha;
         err = WebPMuxGetTile(mux, i, &image, &alpha, &x_offset, &y_offset);
         RETURN_IF_ERROR2("Failed to retrieve tile#%d\n", i);
-        fprintf(stderr, "%3d: %8d %8d", i, x_offset, y_offset);
-        if (flag & ALPHA_FLAG) fprintf(stderr, " %10u", alpha.size_);
-        fprintf(stderr, "\n");
+        printf("%3d: %8d %8d %10u",
+               i, x_offset, y_offset, image.size_);
+        if (flag & ALPHA_FLAG) printf(" %10u", alpha.size_);
+        printf("\n");
       }
     }
   }
@@ -228,79 +230,72 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
     WebPData icc_profile;
     err = WebPMuxGetColorProfile(mux, &icc_profile);
     RETURN_IF_ERROR("Failed to retrieve the color profile\n");
-    fprintf(stderr, "Size of the color profile data: %u\n", icc_profile.size_);
+    printf("Size of the color profile data: %u\n", icc_profile.size_);
   }
 
   if (flag & META_FLAG) {
     WebPData metadata;
     err = WebPMuxGetMetadata(mux, &metadata);
     RETURN_IF_ERROR("Failed to retrieve the XMP metadata\n");
-    fprintf(stderr, "Size of the XMP metadata: %u\n", metadata.size_);
+    printf("Size of the XMP metadata: %u\n", metadata.size_);
   }
 
   if ((flag & ALPHA_FLAG) && !(flag & (ANIMATION_FLAG | TILE_FLAG))) {
     WebPData image, alpha;
     err = WebPMuxGetImage(mux, &image, &alpha);
     RETURN_IF_ERROR("Failed to retrieve the image\n");
-    fprintf(stderr, "Size of the alpha data: %u\n", alpha.size_);
+    printf("Size of the alpha data: %u\n", alpha.size_);
   }
 
   return WEBP_MUX_OK;
 }
 
 static void PrintHelp(void) {
-  fprintf(stderr, "Usage: webpmux -get GET_OPTIONS INPUT -o OUTPUT          "
-          "             Extract relevant data.\n");
-  fprintf(stderr, "   or: webpmux -set SET_OPTIONS INPUT -o OUTPUT          "
-          "             Set color profile/metadata.\n");
-  fprintf(stderr, "   or: webpmux -strip STRIP_OPTIONS INPUT -o OUTPUT      "
-          "             Strip color profile/metadata.\n");
-  fprintf(stderr, "   or: webpmux [-tile TILE_OPTIONS]... -o OUTPUT         "
-          "             Create tiled image.\n");
-  fprintf(stderr, "   or: webpmux [-frame FRAME_OPTIONS]... -loop LOOP_COUNT"
-          " -o OUTPUT   Create animation.\n");
-  fprintf(stderr, "   or: webpmux -info INPUT                               "
-          "             Print info about given webp file.\n");
-  fprintf(stderr, "   or: webpmux -help OR -h                               "
-          "             Print this help.\n");
+  printf("Usage: webpmux -get GET_OPTIONS INPUT -o OUTPUT\n");
+  printf("       webpmux -set SET_OPTIONS INPUT -o OUTPUT\n");
+  printf("       webpmux -strip STRIP_OPTIONS INPUT -o OUTPUT\n");
+  printf("       webpmux -tile TILE_OPTIONS [-tile...] -o OUTPUT\n");
+  printf("       webpmux -frame FRAME_OPTIONS [-frame...]");
+  printf(" -loop LOOP_COUNT -o OUTPUT\n");
+  printf("       webpmux -info INPUT\n");
+  printf("       webpmux [-h|-help]\n");
 
-  fprintf(stderr, "\n");
-  fprintf(stderr, "GET_OPTIONS:\n");
-  fprintf(stderr, "   icc       Get ICCP Color profile.\n");
-  fprintf(stderr, "   xmp       Get XMP metadata.\n");
-  fprintf(stderr, "   tile n    Get nth tile.\n");
-  fprintf(stderr, "   frame n   Get nth frame.\n");
+  printf("\n");
+  printf("GET_OPTIONS:\n");
+  printf(" Extract relevant data.\n");
+  printf("   icc       Get ICCP Color profile.\n");
+  printf("   xmp       Get XMP metadata.\n");
+  printf("   tile n    Get nth tile.\n");
+  printf("   frame n   Get nth frame.\n");
 
-  fprintf(stderr, "\n");
-  fprintf(stderr, "SET_OPTIONS:\n");
-  fprintf(stderr, "   icc       Set ICC Color profile.\n");
-  fprintf(stderr, "   xmp       Set XMP metadata.\n");
+  printf("\n");
+  printf("SET_OPTIONS:\n");
+  printf(" Set color profile/metadata.\n");
+  printf("   icc       Set ICC Color profile.\n");
+  printf("   xmp       Set XMP metadata.\n");
 
-  fprintf(stderr, "\n");
-  fprintf(stderr, "STRIP_OPTIONS:\n");
-  fprintf(stderr, "   icc       Strip ICCP color profile.\n");
-  fprintf(stderr, "   xmp       Strip XMP metadata.\n");
+  printf("\n");
+  printf("STRIP_OPTIONS:\n");
+  printf(" Strip color profile/metadata.\n");
+  printf("   icc       Strip ICCP color profile.\n");
+  printf("   xmp       Strip XMP metadata.\n");
 
-  fprintf(stderr, "\n");
-  fprintf(stderr, "TILE_OPTIONS(i):\n");
-  fprintf(stderr, "   file_i +xi+yi\n");
-  fprintf(stderr, "   where:    'file_i' is the i'th tile (webp format),\n");
-  fprintf(stderr, "             'xi','yi' specify the image offset for this "
-          "tile.\n");
+  printf("\n");
+  printf("TILE_OPTIONS(i):\n");
+  printf(" Create tiled image.\n");
+  printf("   file_i +xi+yi\n");
+  printf("   where:    'file_i' is the i'th tile (webp format),\n");
+  printf("             'xi','yi' specify the image offset for this tile.\n");
 
-  fprintf(stderr, "\n");
-  fprintf(stderr, "FRAME_OPTIONS(i):\n");
-  fprintf(stderr, "   file_i +xi+yi+di\n");
-  fprintf(stderr, "   where:    'file_i' is the i'th animation frame (webp "
-          "format),\n");
-  fprintf(stderr, "             'xi','yi' specify the image offset for this "
-          "frame.\n");
-  fprintf(stderr, "             'di' is the pause duration before next frame."
-          "\n");
+  printf("\n");
+  printf("FRAME_OPTIONS(i):\n");
+  printf(" Create animation.\n");
+  printf("   file_i +xi+yi+di\n");
+  printf("   where:    'file_i' is the i'th animation frame (webp format),\n");
+  printf("             'xi','yi' specify the image offset for this frame.\n");
+  printf("             'di' is the pause duration before next frame.\n");
 
-  fprintf(stderr, "\n");
-  fprintf(stderr, "INPUT & OUTPUT are in webp format.");
-  fprintf(stderr, "\n");
+  printf("\nINPUT & OUTPUT are in webp format.\n");
 }
 
 static int ReadData(const char* filename, void** data_ptr, uint32_t* size_ptr) {
@@ -654,7 +649,7 @@ static int ParseCommandLine(int argc, const char* argv[],
       } else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "-help")) {
         PrintHelp();
         DeleteConfig(config);
-        exit(1);
+        exit(0);
       } else {
         ERROR_GOTO2("ERROR: Unknown option: '%s'.\n", argv[i], ErrParse);
       }
@@ -1028,16 +1023,15 @@ static int Process(const WebPMuxConfig* config) {
 // Main.
 
 int main(int argc, const char* argv[]) {
-  int ok = 1;
   WebPMuxConfig* config;
-  ok = InitializeConfig(argc-1, argv+1, &config);
+  int ok = InitializeConfig(argc - 1, argv + 1, &config);
   if (ok) {
-    Process(config);
+    ok = Process(config);
   } else {
     PrintHelp();
   }
   DeleteConfig(config);
-  return ok;
+  return !ok;
 }
 
 //------------------------------------------------------------------------------
