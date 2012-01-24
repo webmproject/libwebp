@@ -86,44 +86,6 @@ static int FinalizeSkipProba(VP8Encoder* const enc) {
 }
 
 //------------------------------------------------------------------------------
-// Token buffer
-
-#ifdef USE_TOKEN_BUFFER
-
-void VP8InitTBuffer(VP8TBuffer* const p) {
-  p->left_ = MAX_NUM_TOKEN;
-  p->error_ = 0;
-  p->next_ = NULL;
-}
-
-int VP8AllocTBuffer(VP8TBuffer** const p) {
-  VP8TBuffer* const page = malloc(sizeof(*page));
-  if (page == NULL) {
-    (*p)->error_ |= 1;
-    return 0;
-  }
-  VP8InitTBuffer(page);
-  (*p)->next_ = page;
-  *p = page;
-  return 1;
-}
-
-int VP8EmitTokens(const VP8TBuffer* const p, VP8BitWriter* const bw,
-                  const uint8_t* const probas) {
-  while (p != NULL) {
-    int n = MAX_NUM_TOKEN;
-    if (p->error_) return 0;
-    while (n-- > p->left) {
-      VP8PutBit(bw, (p->tokens_[n] >> 15) & 1, probas[p->tokens_[n] & 0x7fff]);
-    }
-    p = p->next_;
-  }
-  return 1;
-}
-
-#endif
-
-//------------------------------------------------------------------------------
 // Recording of token probabilities.
 
 static void ResetTokenStats(VP8Encoder* const enc) {
@@ -143,7 +105,7 @@ static int Record(int bit, uint64_t* const stats) {
 
 // Simulate block coding, but only record statistics.
 // Note: no need to record the fixed probas.
-static int RecordCoeffs(int ctx, VP8Residual* res) {
+static int RecordCoeffs(int ctx, const VP8Residual* const res) {
   int n = res->first;
   uint64_t (*s)[2] = res->stats[VP8EncBands[n]][ctx];
   if (res->last  < 0) {
@@ -528,6 +490,180 @@ static void RecordResiduals(VP8EncIterator* const it,
 
   VP8IteratorBytesToNz(it);
 }
+
+//------------------------------------------------------------------------------
+// Token buffer
+
+#ifdef USE_TOKEN_BUFFER
+
+void VP8TBufferInit(VP8TBuffer* const b) {
+  b->rows_ = NULL;
+  b->tokens_ = NULL;
+  b->last_ = &b->rows_;
+  b->left_ = 0;
+  b->error_ = 0;
+}
+
+int VP8TBufferNewPage(VP8TBuffer* const b) {
+  VP8Tokens* const page = b->error_ ? NULL : (VP8Tokens*)malloc(sizeof(*page));
+  if (page == NULL) {
+    b->error_ = 1;
+    return 0;
+  }
+  *b->last_ = page;
+  b->last_ = &page->next_;
+  b->left_ = MAX_NUM_TOKEN;
+  b->tokens_ = page->tokens_;
+  return 1;
+}
+
+void VP8TBufferClear(VP8TBuffer* const b) {
+  if (b != NULL) {
+    const VP8Tokens* p = b->rows_;
+    while (p != NULL) {
+      const VP8Tokens* const next = p->next_;
+      free((void*)p);
+      p = next;
+    }
+    VP8TBufferInit(b);
+  }
+}
+
+int VP8EmitTokens(const VP8TBuffer* const b, VP8BitWriter* const bw,
+                  const uint8_t* const probas) {
+  VP8Tokens* p = b->rows_;
+  if (b->error_) return 0;
+  while (p != NULL) {
+    const int N = (p->next_ == NULL) ? b->left_ : 0;
+    int n = MAX_NUM_TOKEN;
+    while (n-- > N) {
+      VP8PutBit(bw, (p->tokens_[n] >> 15) & 1, probas[p->tokens_[n] & 0x7fff]);
+    }
+    p = p->next_;
+  }
+  return 1;
+}
+
+#define TOKEN_ID(b, ctx, p) ((p) + NUM_PROBAS * ((ctx) + (b) * NUM_CTX))
+
+static int RecordCoeffTokens(int ctx, const VP8Residual* const res,
+                             VP8TBuffer* tokens) {
+  int n = res->first;
+  int b = VP8EncBands[n];
+  if (!VP8AddToken(tokens, res->last >= 0, TOKEN_ID(b, ctx, 0))) {
+    return 0;
+  }
+
+  while (n < 16) {
+    const int c = res->coeffs[n++];
+    const int sign = c < 0;
+    int v = sign ? -c : c;
+    const int base_id = TOKEN_ID(b, ctx, 0);
+    if (!VP8AddToken(tokens, v != 0, base_id + 1)) {
+      b = VP8EncBands[n];
+      ctx = 0;
+      continue;
+    }
+    if (!VP8AddToken(tokens, v > 1, base_id + 2)) {
+      b = VP8EncBands[n];
+      ctx = 1;
+    } else {
+      if (!VP8AddToken(tokens, v > 4, base_id + 3)) {
+        if (VP8AddToken(tokens, v != 2, base_id + 4))
+          VP8AddToken(tokens, v == 4, base_id + 5);
+      } else if (!VP8AddToken(tokens, v > 10, base_id + 6)) {
+        if (!VP8AddToken(tokens, v > 6, base_id + 7)) {
+//          VP8AddToken(tokens, v == 6, 159);
+        } else {
+//          VP8AddToken(tokens, v >= 9, 165);
+//          VP8AddToken(tokens, !(v & 1), 145);
+        }
+      } else {
+        int mask;
+        const uint8_t* tab;
+        if (v < 3 + (8 << 1)) {          // kCat3  (3b)
+          VP8AddToken(tokens, 0, base_id + 8);
+          VP8AddToken(tokens, 0, base_id + 9);
+          v -= 3 + (8 << 0);
+          mask = 1 << 2;
+          tab = kCat3;
+        } else if (v < 3 + (8 << 2)) {   // kCat4  (4b)
+          VP8AddToken(tokens, 0, base_id + 8);
+          VP8AddToken(tokens, 1, base_id + 9);
+          v -= 3 + (8 << 1);
+          mask = 1 << 3;
+          tab = kCat4;
+        } else if (v < 3 + (8 << 3)) {   // kCat5  (5b)
+          VP8AddToken(tokens, 1, base_id + 8);
+          VP8AddToken(tokens, 0, base_id + 10);
+          v -= 3 + (8 << 2);
+          mask = 1 << 4;
+          tab = kCat5;
+        } else {                         // kCat6 (11b)
+          VP8AddToken(tokens, 1, base_id + 8);
+          VP8AddToken(tokens, 1, base_id + 10);
+          v -= 3 + (8 << 3);
+          mask = 1 << 10;
+          tab = kCat6;
+        }
+        while (mask) {
+          // VP8AddToken(tokens, !!(v & mask), *tab++);
+          mask >>= 1;
+        }
+      }
+      ctx = 2;
+    }
+    b = VP8EncBands[n];
+    // VP8PutBitUniform(bw, sign);
+    if (n == 16 || !VP8AddToken(tokens, n <= res->last, TOKEN_ID(b, ctx, 0))) {
+      return 1;   // EOB
+    }
+  }
+  return 1;
+}
+
+static void RecordTokens(VP8EncIterator* const it,
+                         const VP8ModeScore* const rd, VP8TBuffer tokens[2]) {
+  int x, y, ch;
+  VP8Residual res;
+  VP8Encoder* const enc = it->enc_;
+
+  VP8IteratorNzToBytes(it);
+  if (it->mb_->type_ == 1) {   // i16x16
+    InitResidual(0, 1, enc, &res);
+    SetResidualCoeffs(rd->y_dc_levels, &res);
+// TODO(skal): FIX ->    it->top_nz_[8] = it->left_nz_[8] =
+      RecordCoeffTokens(it->top_nz_[8] + it->left_nz_[8], &res, &tokens[0]);
+    InitResidual(1, 0, enc, &res);
+  } else {
+    InitResidual(0, 3, enc, &res);
+  }
+
+  // luma-AC
+  for (y = 0; y < 4; ++y) {
+    for (x = 0; x < 4; ++x) {
+      const int ctx = it->top_nz_[x] + it->left_nz_[y];
+      SetResidualCoeffs(rd->y_ac_levels[x + y * 4], &res);
+      it->top_nz_[x] = it->left_nz_[y] =
+          RecordCoeffTokens(ctx, &res, &tokens[0]);
+    }
+  }
+
+  // U/V
+  InitResidual(0, 2, enc, &res);
+  for (ch = 0; ch <= 2; ch += 2) {
+    for (y = 0; y < 2; ++y) {
+      for (x = 0; x < 2; ++x) {
+        const int ctx = it->top_nz_[4 + ch + x] + it->left_nz_[4 + ch + y];
+        SetResidualCoeffs(rd->uv_levels[ch * 2 + x + y * 2], &res);
+        it->top_nz_[4 + ch + x] = it->left_nz_[4 + ch + y] =
+            RecordCoeffTokens(ctx, &res, &tokens[1]);
+      }
+    }
+  }
+}
+
+#endif    // USE_TOKEN_BUFFER
 
 //------------------------------------------------------------------------------
 // ExtraInfo map / Debug function
