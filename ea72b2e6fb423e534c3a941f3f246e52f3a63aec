@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAHn//7u4\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-01-24T02:18:40Z",
+      "side": 1,
+      "message": "We\u0027d prefer intrinsics in this project, but currently some of the code with gcc \u003c 4.7 is far from optimal. Given the target of the NEON code this is acceptable for the time being.",
+      "parentUuid": "AAAAHn//7yw\u003d",
+      "revId": "ea72b2e6fb423e534c3a941f3f246e52f3a63aec",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAHn//7y8\u003d",
         "filename": "src/dsp/dec_neon.c",
         "patchSetId": 1
