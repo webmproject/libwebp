@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAHn//7vY\u003d",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-01-24T02:09:37Z",
+      "side": 1,
+      "message": "btw: strange we don\u0027t print the frames\u0027 sizes (just a remark)",
+      "revId": "eec4b87718595e5c633d9452c7ffc6a31d5b2c0f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//7vQ\u003d",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-01-24T02:09:37Z",
+      "side": 1,
+      "message": "could we pass NULL instead of \u0026image if we\u0027re not interested ?\n(and same for NULL instead of \u0026alpha, if not interested)",
+      "revId": "eec4b87718595e5c633d9452c7ffc6a31d5b2c0f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//7vM\u003d",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-01-24T02:09:37Z",
+      "side": 1,
+      "message": "this is a cry for a \"WebPDataCopy(const WebPData* const src, WebPData* const dst)\" method :)",
+      "revId": "eec4b87718595e5c633d9452c7ffc6a31d5b2c0f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//7vI\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-01-24T02:09:37Z",
+      "side": 1,
+      "message": "you should put image.bytes_ and image.size_ on the same line 368, since they\u0027re related arguments",
+      "revId": "eec4b87718595e5c633d9452c7ffc6a31d5b2c0f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//7vE\u003d",
+        "filename": "src/mux/muxread.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-01-24T02:09:37Z",
+      "side": 1,
+      "message": "missing:\n\n  ..|| image-\u003edata_ \u003d\u003d NULL || image-\u003esize_ \u003d\u003d NULL ...",
+      "revId": "eec4b87718595e5c633d9452c7ffc6a31d5b2c0f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
