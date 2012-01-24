@@ -16,6 +16,125 @@
       "revId": "ea72b2e6fb423e534c3a941f3f246e52f3a63aec",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//7yw\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1001261
+      },
+      "writtenOn": "2012-01-24T01:24:15Z",
+      "side": 1,
+      "message": "Your assembly coding guideline specifically discourage using inline assembly and claimed it didn\u0027t exist in webm. Why are you using it here now?",
+      "revId": "ea72b2e6fb423e534c3a941f3f246e52f3a63aec",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//7y8\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1001261
+      },
+      "writtenOn": "2012-01-24T01:24:15Z",
+      "side": 1,
+      "message": "Initially I thought \"/\" means divide. Consider changing it to {in[4], in[12]}",
+      "revId": "ea72b2e6fb423e534c3a941f3f246e52f3a63aec",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//7zE\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1001261
+      },
+      "writtenOn": "2012-01-24T01:24:15Z",
+      "side": 1,
+      "message": "d20 \u003d c \u003d - in[12]*kC1 + in[4]*kC2",
+      "revId": "ea72b2e6fb423e534c3a941f3f246e52f3a63aec",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//7yI\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1001261
+      },
+      "writtenOn": "2012-01-24T01:24:15Z",
+      "side": 1,
+      "message": "The above 4 lines can be replaced with the following 2 lines:\n\"vzip.16 q1, q2\"\n\"vzip.16 q1, q2\"",
+      "revId": "ea72b2e6fb423e534c3a941f3f246e52f3a63aec",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//7zA\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1001261
+      },
+      "writtenOn": "2012-01-24T01:24:15Z",
+      "side": 1,
+      "message": "d20 \u003d c \u003d - tmp[12]*kC1 + tmp[4]*kC2",
+      "revId": "ea72b2e6fb423e534c3a941f3f246e52f3a63aec",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//7yk\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1001261
+      },
+      "writtenOn": "2012-01-24T01:24:15Z",
+      "side": 1,
+      "message": "+4 shouldn\u0027t be here, right?",
+      "revId": "ea72b2e6fb423e534c3a941f3f246e52f3a63aec",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//7xU\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1001261
+      },
+      "writtenOn": "2012-01-24T01:24:15Z",
+      "side": 1,
+      "message": "The above 4 lines can be replaced with the following 2 lines:\n\"vzip.16 q1, q2\"\n\"vzip.16 q1, q2\"",
+      "revId": "ea72b2e6fb423e534c3a941f3f246e52f3a63aec",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
