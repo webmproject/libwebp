@@ -314,26 +314,39 @@ void VP8IteratorResetCosts(VP8EncIterator* const it);
 //------------------------------------------------------------------------------
 // Paginated token buffer
 
+// WIP: #define USE_TOKEN_BUFFER
+
 #ifdef USE_TOKEN_BUFFER
 
-#define MAX_NUM_TOKEN 2030
+#define MAX_NUM_TOKEN 2048
 
-typedef struct VP8TBuffer VP8TBuffer;
-struct VP8TBuffer {
-  uint16_t tokens_[MAX_NUM_TOKEN];   // bit#15: bit, bits 0..14: slot idx
+typedef struct VP8Tokens VP8Tokens;
+struct VP8Tokens {
+  uint16_t tokens_[MAX_NUM_TOKEN]; // bit#15: bit, bits 0..14: slot
+  int left_;
+  VP8Tokens* next_;
+};
+
+typedef struct {
+  VP8Tokens* rows_;
+  uint16_t* tokens_;    // set to (*last_)->tokens_
+  VP8Tokens** last_;
   int left_;
   int error_;  // true in case of malloc error
-  VP8TBuffer* next_;
-};
-int VP8AllocTBuffer(VP8TBuffer** const p);    // allocate a new page
-void VP8InitTBuffer(VP8TBuffer* const p);
-void VP8EmitTokens(const VP8TBuffer* const p, VP8BitWriter* const bw,
-                   const uint8_t* const probas);
+} VP8TBuffer;
 
-static WEBP_INLINE int VP8AddToken(VP8TBuffer** p, int bit, int proba_idx) {
-  if ((*p)->left_ > 0 || VP8AllocTBuffer(p)) {
-    const int slot = --(*p)->left_;
-    (*p)->tokens_[slot] = (bit << 15) | proba_idx;
+void VP8TBufferInit(VP8TBuffer* const b);    // initialize an empty buffer
+int VP8TBufferNewPage(VP8TBuffer* const b);  // allocate a new page
+void VP8TBufferClear(VP8TBuffer* const b);   // de-allocate memory
+
+int VP8EmitTokens(const VP8TBuffer* const b, VP8BitWriter* const bw,
+                  const uint8_t* const probas);
+
+static WEBP_INLINE int VP8AddToken(VP8TBuffer* const b,
+                                   int bit, int proba_idx) {
+  if (b->left_ > 0 || VP8TBufferNewPage(b)) {
+    const int slot = --b->left_;  
+    b->tokens_[slot] = (bit << 15) | proba_idx;
   }
   return bit;
 }
