@@ -9,6 +9,7 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -132,9 +133,14 @@ static void ResetTokenStats(VP8Encoder* const enc) {
 }
 
 // Record proba context used
-static int Record(int bit, uint64_t* const stats) {
-  stats[0] += bit;
-  stats[1] += 1;
+static int Record(int bit, proba_t* const stats) {
+  proba_t p = *stats;
+  if (p >= 0xffff0000u) {               // an overflow is inbound.
+    p = ((p + 1u) >> 1) & 0x7fff7fffu;  // -> divide the stats by 2.
+  }
+  // record bit count (lower 16 bits) and increment total count (upper 16 bits).
+  p += 0x00010000u + bit;
+  *stats = p;
   return bit;
 }
 
@@ -145,33 +151,33 @@ static int Record(int bit, uint64_t* const stats) {
 // Note: no need to record the fixed probas.
 static int RecordCoeffs(int ctx, VP8Residual* res) {
   int n = res->first;
-  uint64_t (*s)[2] = res->stats[VP8EncBands[n]][ctx];
+  proba_t *s = res->stats[VP8EncBands[n]][ctx];
   if (res->last  < 0) {
-    Record(0, s[0]);
+    Record(0, s + 0);
     return 0;
   }
   while (n <= res->last) {
     int v;
-    Record(1, s[0]);
+    Record(1, s + 0);
     while ((v = res->coeffs[n++]) == 0) {
-      Record(0, s[1]);
+      Record(0, s + 1);
       s = res->stats[VP8EncBands[n]][0];      
     }
-    Record(1, s[1]);
-    if (!Record(2u < (unsigned int)(v + 1), s[2])) {  // v = -1 or 1
+    Record(1, s + 1);
+    if (!Record(2u < (unsigned int)(v + 1), s + 2)) {  // v = -1 or 1
       s = res->stats[VP8EncBands[n]][1];
     } else {
       v = abs(v);
 #if !defined(USE_LEVEL_CODE_TABLE)
-      if (!Record(v > 4, s[3])) {
-        if (Record(v != 2, s[4]))
-          Record(v == 4, s[5]);
-      } else if (!Record(v > 10, s[6])) {
-        Record(v > 6, s[7]);
-      } else if (!Record((v >= 3 + (8 << 2)), s[8])) {
-        Record((v >= 3 + (8 << 1)), s[9]);
+      if (!Record(v > 4, s + 3)) {
+        if (Record(v != 2, s + 4))
+          Record(v == 4, s + 5);
+      } else if (!Record(v > 10, s + 6)) {
+        Record(v > 6, s + 7);
+      } else if (!Record((v >= 3 + (8 << 2)), s + 8)) {
+        Record((v >= 3 + (8 << 1)), s + 9);
       } else {
-        Record((v >= 3 + (8 << 3)), s[10]);
+        Record((v >= 3 + (8 << 3)), s + 10);
       }
 #else
       if (v > MAX_VARIABLE_LEVEL)
@@ -183,21 +189,27 @@ static int RecordCoeffs(int ctx, VP8Residual* res) {
         int i;
         for (i = 0; (pattern >>= 1) != 0; ++i) {
           const int mask = 2 << i;
-          if (pattern & 1) Record(!!(bits & mask), s[3 + i]);
+          if (pattern & 1) Record(!!(bits & mask), s + 3 + i);
         }
       }
 #endif
       s = res->stats[VP8EncBands[n]][2];
     }
   }
-  if (n < 16) Record(0, s[0]);
+  if (n < 16) Record(0, s + 0);
   return 1;
 }
 
 // Collect statistics and deduce probabilities for next coding pass.
 // Return the total bit-cost for coding the probability updates.
-static int CalcTokenProba(uint64_t nb, uint64_t total) {
-  return (int)(nb ? ((total - nb) * 255 + total / 2) / total : 255);
+static int CalcTokenProba(int nb, int total) {
+  assert(nb <= total);
+  return nb ? (255 - nb * 255 / total) : 255;
+}
+
+// Cost of coding 'nb' 1's and 'total-nb' 0's using 'proba' probability.
+static int BranchCost(int nb, int total, int proba) {
+  return nb * VP8BitCost(1, proba) + (total - nb) * VP8BitCost(0, proba);
 }
 
 static int FinalizeTokenProbas(VP8Encoder* const enc) {
@@ -208,14 +220,17 @@ static int FinalizeTokenProbas(VP8Encoder* const enc) {
     for (b = 0; b < NUM_BANDS; ++b) {
       for (c = 0; c < NUM_CTX; ++c) {
         for (p = 0; p < NUM_PROBAS; ++p) {
-          const uint64_t* const cnt = proba->stats_[t][b][c][p];
+          const proba_t stats = proba->stats_[t][b][c][p];
+          const int nb = (stats >> 0) & 0xffff;
+          const int total = (stats >> 16) & 0xffff;
           const int update_proba = VP8CoeffsUpdateProba[t][b][c][p];
           const int old_p = VP8CoeffsProba0[t][b][c][p];
-          const int new_p = CalcTokenProba(cnt[0], cnt[1]);
-          const uint64_t old_cost = VP8BranchCost(cnt[0], cnt[1], old_p)
-                                  + VP8BitCost(0, update_proba);
-          const uint64_t new_cost = VP8BranchCost(cnt[0], cnt[1], new_p)
-                                  + VP8BitCost(1, update_proba) + 8 * 256;
+          const int new_p = CalcTokenProba(nb, total);
+          const int old_cost = BranchCost(nb, total, old_p)
+                             + VP8BitCost(0, update_proba);
+          const int new_cost = BranchCost(nb, total, new_p)
+                             + VP8BitCost(1, update_proba)
+                             + 8 * 256;
           const int use_new_p = (old_cost > new_cost);
           size += VP8BitCost(use_new_p, update_proba);
           if (use_new_p) {  // only use proba that seem meaningful enough.

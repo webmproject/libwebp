@@ -26,18 +26,12 @@ static WEBP_INLINE int VP8BitCost(int bit, uint8_t proba) {
   return !bit ? VP8EntropyCost[proba] : VP8EntropyCost[255 - proba];
 }
 
-// Cost of coding 'nb' 1's and 'total-nb' 0's using 'proba' probability.
-static WEBP_INLINE uint64_t VP8BranchCost(uint64_t nb, uint64_t total,
-                                          uint8_t proba) {
-  return nb * VP8BitCost(1, proba) + (total - nb) * VP8BitCost(0, proba);
-}
-
 // Level cost calculations
 extern const uint16_t VP8LevelCodes[MAX_VARIABLE_LEVEL][2];
 void VP8CalculateLevelCosts(VP8Proba* const proba);
 static WEBP_INLINE int VP8LevelCost(const uint16_t* const table, int level) {
   return VP8LevelFixedCosts[level]
-       + table[level > MAX_VARIABLE_LEVEL ? MAX_VARIABLE_LEVEL : level];
+       + table[(level > MAX_VARIABLE_LEVEL) ? MAX_VARIABLE_LEVEL : level];
 }
 
 // Mode costs

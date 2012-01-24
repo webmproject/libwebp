@@ -165,8 +165,9 @@ extern const uint8_t VP8Zigzag[16];
 //------------------------------------------------------------------------------
 // Headers
 
+typedef uint32_t proba_t;   // 16b + 16b
 typedef uint8_t ProbaArray[NUM_CTX][NUM_PROBAS];
-typedef uint64_t StatsArray[NUM_CTX][NUM_PROBAS][2];
+typedef proba_t StatsArray[NUM_CTX][NUM_PROBAS];
 typedef uint16_t CostArray[NUM_CTX][MAX_VARIABLE_LEVEL + 1];
 typedef double LFStats[NUM_MB_SEGMENTS][MAX_LF_LEVELS];  // filter stats
 
@@ -185,7 +186,7 @@ typedef struct {
   uint8_t segments_[3];     // probabilities for segment tree
   uint8_t skip_proba_;      // final probability of being skipped.
   ProbaArray coeffs_[NUM_TYPES][NUM_BANDS];      // 924 bytes
-  StatsArray stats_[NUM_TYPES][NUM_BANDS];       // 7.4k
+  StatsArray stats_[NUM_TYPES][NUM_BANDS];       // 4224 bytes
   CostArray level_cost_[NUM_TYPES][NUM_BANDS];   // 11.4k
   int use_skip_proba_;      // Note: we always use skip_proba for now.
   int nb_skip_;             // number of skipped blocks
