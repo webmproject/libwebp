@@ -421,8 +421,8 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
                                 int ctx0, int coeff_type,
                                 const VP8Matrix* const mtx,
                                 int lambda) {
-  const ProbaArray* const last_costs = it->enc_->proba_.coeffs_[coeff_type];
-  const CostArray* const costs = it->enc_->proba_.level_cost_[coeff_type];
+  ProbaArray* const last_costs = it->enc_->proba_.coeffs_[coeff_type];
+  CostArray* const costs = it->enc_->proba_.level_cost_[coeff_type];
   const int first = (coeff_type == 0) ? 1 : 0;
   Node nodes[17][NUM_NODES];
   int best_path[3] = {-1, -1, -1};   // store best-last/best-level/best-previous
