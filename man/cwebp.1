@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "November 3, 2011"
+.TH CWEBP 1 "January 24, 2012"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -183,16 +183,18 @@ Do not print anything.
 .B \-short
 Only print brief information (output file size and PSNR) for testing purpose.
 
+.SH BUGS
+Please report all bugs to our issue tracker:
+http://code.google.com/p/webp/issues
+.br
+Patches welcome! See this page to get started:
+http://www.webmproject.org/code/contribute/submitting-patches/
+
 .SH EXAMPLES
 cwebp \-q 70 picture.png \-o picture.webp
 .br
 cwebp \-sns 70 \-f 50 \-strong \-af \-size 60000 picture.png \-o picture.webp
 
-.SH SEE ALSO
-.BR dwebp (1).
-.br
-Please refer to http://code.google.com/speed/webp/ for additional
-information.
 .SH AUTHORS
 \fBcwebp\fP was written by the WebP team.
 .br
@@ -200,3 +202,8 @@ The latest source tree is available at http://www.webmproject.org/code
 .PP
 This manual page was written by Pascal Massimino <pascal.massimino@gmail.com>,
 for the Debian project (and may be used by others).
+
+.SH SEE ALSO
+.BR dwebp (1).
+.br
+Please refer to http://code.google.com/speed/webp/ for additional information.

@@ -98,6 +98,13 @@ Input file in WebP format.
 .TP
 Output file in WebP format.
 
+.SH BUGS
+Please report all bugs to our issue tracker:
+http://code.google.com/p/webp/issues
+.br
+Patches welcome! See this page to get started:
+http://www.webmproject.org/code/contribute/submitting-patches/
+
 .SH EXAMPLES
 webpmux \-set icc image_profile.icc in.webp \-o icc_container.webp
 .br
@@ -112,12 +119,6 @@ webpmux \-frame anim_1.webp +0+0+0 \-frame anim_2.webp +50+50+0 \-loop 10
 .br
 webpmux \-get frame 2 anim_container.webp \-o frame_2.webp
 
-.SH SEE ALSO
-.BR dwebp (1),
-.BR cwebp (1).
-.br
-Please refer to http://code.google.com/speed/webp/ for additional
-information.
 .SH AUTHORS
 \fBwebpmux\fP is written by the WebP team.
 .br
@@ -125,3 +126,9 @@ The latest source tree is available at http://www.webmproject.org/code
 .PP
 This manual page was written by Vikas Arora <vikaas.arora@gmail.com>,
 for the Debian project (and may be used by others).
+
+.SH SEE ALSO
+.BR dwebp (1),
+.BR cwebp (1).
+.br
+Please refer to http://code.google.com/speed/webp/ for additional information.

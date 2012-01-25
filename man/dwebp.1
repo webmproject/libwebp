@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DWEBP 1 "November 3, 2011"
+.TH DWEBP 1 "January 24, 2012"
 .SH NAME
 dwebp \- decompress a WebP file to an image file
 .SH SYNOPSIS
@@ -64,16 +64,18 @@ Print extra information (decoding time in particular).
 .B \-noasm
 Disable all assembly optimizations.
 
+.SH BUGS
+Please report all bugs to our issue tracker:
+http://code.google.com/p/webp/issues
+.br
+Patches welcome! See this page to get started:
+http://www.webmproject.org/code/contribute/submitting-patches/
+
 .SH EXAMPLES
 dwebp picture.webp \-o output.png
 .br
 dwebp picture.webp \-ppm \-o output.ppm
 
-.SH SEE ALSO
-.BR cwebp (1).
-.br
-Please refer to http://code.google.com/speed/webp/ for additional
-information.
 .SH AUTHORS
 \fBdwebp\fP was written by the WebP team.
 .br
@@ -81,3 +83,8 @@ The latest source tree is available at http://www.webmproject.org/code
 .PP
 This manual page was written by Pascal Massimino <pascal.massimino@gmail.com>,
 for the Debian project (and may be used by others).
+
+.SH SEE ALSO
+.BR cwebp (1).
+.br
+Please refer to http://code.google.com/speed/webp/ for additional information.
