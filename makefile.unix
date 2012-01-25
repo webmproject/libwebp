@@ -51,7 +51,8 @@ EXTRA_FLAGS += -Wdeclaration-after-statement
 
 AR = ar
 ARFLAGS = r
-CC = gcc -Isrc/ -Iexamples/ -Wall
+CC = gcc
+CPPFLAGS = -Isrc/ -Iexamples/ -Wall
 CFLAGS = -O3 -DNDEBUG $(EXTRA_FLAGS)
 INSTALL = install
 GROFF = /usr/bin/groff
@@ -89,15 +90,15 @@ OUT_EXAMPLES = examples/cwebp examples/dwebp examples/webpmux
 
 OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES)
 
-all:ex
+all: ex
 
 %.o: %.c $(HDRS)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
-src/libwebp.a:  $(OBJS)
+src/libwebp.a: $(OBJS)
 	$(AR) $(ARFLAGS) $@ $^
 
-src/mux/libwebpmux.a:  $(MUX_OBJS)
+src/mux/libwebpmux.a: $(MUX_OBJS)
 	$(AR) $(ARFLAGS) $@ $^
 
 ex: $(OUT_EXAMPLES)
@@ -126,14 +127,14 @@ dist: all
 	done
 
 clean:
-	$(RM) ${OUTPUT} *~ \
-              src/enc/*.o src/enc/*~ \
+	$(RM) $(OUTPUT) *~ \
+              examples/*.o examples/*~ \
               src/dec/*.o src/dec/*~ \
               src/dsp/*.o src/dsp/*~ \
-              src/utils/*.o src/utils/*~ \
+              src/enc/*.o src/enc/*~ \
               src/mux/*.o src/mux/*~ \
+              src/utils/*.o src/utils/*~ \
               src/webp/*~ man/*~ doc/*~ swig/*~ \
-              examples/*.o examples/*~
 
 superclean: clean
 	$(RM) -r .git *.log *.cache *~
