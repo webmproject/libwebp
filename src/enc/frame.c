@@ -801,26 +801,27 @@ int VP8EncLoop(VP8Encoder* const enc) {
     ok = VP8IteratorProgress(&it, 20);
   } while (ok && VP8IteratorNext(&it, it.yuv_out_));
 
-  if (ok) {
-    VP8AdjustFilterStrength(&it);
-  }
-
-  // Finalize the partitions
-  for (p = 0; p < enc->num_parts_; ++p) {
-    VP8BitWriterFinish(enc->parts_ + p);
-    ok &= !enc->parts_[p].error_;
-  }
-  // and byte counters
-  if (enc->pic_->stats) {
-    for (i = 0; i <= 2; ++i) {
-      for (s = 0; s < NUM_MB_SEGMENTS; ++s) {
-        enc->residual_bytes_[i][s] = (int)((it.bit_count_[s][i] + 7) >> 3);
-      }
+  if (ok) {      // Finalize the partitions, check for extra errors.
+    for (p = 0; p < enc->num_parts_; ++p) {
+      VP8BitWriterFinish(enc->parts_ + p);
+      ok &= !enc->parts_[p].error_;
     }
   }
-  if (!ok) {    // need to do some memory cleanup
+
+  if (ok) {      // All good. Finish up.
+    if (enc->pic_->stats) {           // finalize byte counters...
+      for (i = 0; i <= 2; ++i) {
+        for (s = 0; s < NUM_MB_SEGMENTS; ++s) {
+          enc->residual_bytes_[i][s] = (int)((it.bit_count_[s][i] + 7) >> 3);
+        }
+      }
+    }
+    VP8AdjustFilterStrength(&it);     // ...and store filter stats.
+  } else {
+    // Something bad happened -> need to do some memory cleanup.
     VP8EncFreeBitWriters(enc);
   }
+
   return ok;
 }
 
