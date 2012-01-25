@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAHn//6fc\u003d",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-01-25T18:40:54Z",
+      "side": 1,
+      "message": "that\u0027s dangerous: you\u0027re leaving duplicated pointers in dst-\u003ebytes_ and src-\u003ebytes_. Before returning in case of error, I\u0027d zero *dst here.",
+      "revId": "0f7820e65c06f9955f318fb89678fb7bd243e87f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
