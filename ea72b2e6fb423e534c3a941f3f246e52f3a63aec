@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAHn//63k\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2012-01-25T02:06:49Z",
+      "side": 1,
+      "message": "Changed to matched the dominant style",
+      "parentUuid": "AAAAHn//8bg\u003d",
+      "revId": "ea72b2e6fb423e534c3a941f3f246e52f3a63aec",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAHn//7yw\u003d",
         "filename": "src/dsp/dec_neon.c",
         "patchSetId": 1
@@ -54,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAHn//65I\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2012-01-25T02:06:49Z",
+      "side": 1,
+      "message": "It\u0027s an unfortunate situation and libwebp is an exception.",
+      "parentUuid": "AAAAHn//7yw\u003d",
+      "revId": "ea72b2e6fb423e534c3a941f3f246e52f3a63aec",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAHn//7y8\u003d",
         "filename": "src/dsp/dec_neon.c",
         "patchSetId": 1
@@ -82,6 +118,24 @@
       "writtenOn": "2012-01-24T01:24:15Z",
       "side": 1,
       "message": "d20 \u003d c \u003d - in[12]*kC1 + in[4]*kC2",
+      "revId": "ea72b2e6fb423e534c3a941f3f246e52f3a63aec",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//64o\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2012-01-25T02:06:49Z",
+      "side": 1,
+      "message": "Urgh got the comments mixed up a little bit.",
+      "parentUuid": "AAAAHn//7zE\u003d",
       "revId": "ea72b2e6fb423e534c3a941f3f246e52f3a63aec",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -133,6 +187,24 @@
       "writtenOn": "2012-01-24T01:24:15Z",
       "side": 1,
       "message": "+4 shouldn\u0027t be here, right?",
+      "revId": "ea72b2e6fb423e534c3a941f3f246e52f3a63aec",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//64k\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2012-01-25T02:06:49Z",
+      "side": 1,
+      "message": "vector rounding shift and narrow. adds 1 \u003c\u003c (shift - 1)",
+      "parentUuid": "AAAAHn//7yk\u003d",
       "revId": "ea72b2e6fb423e534c3a941f3f246e52f3a63aec",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
