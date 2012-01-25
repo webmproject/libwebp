@@ -188,6 +188,7 @@ typedef struct {
   ProbaArray coeffs_[NUM_TYPES][NUM_BANDS];      // 924 bytes
   StatsArray stats_[NUM_TYPES][NUM_BANDS];       // 4224 bytes
   CostArray level_cost_[NUM_TYPES][NUM_BANDS];   // 11.4k
+  int dirty_;               // if true, need to call VP8CalculateLevelCosts()
   int use_skip_proba_;      // Note: we always use skip_proba for now.
   int nb_skip_;             // number of skipped blocks
 } VP8Proba;

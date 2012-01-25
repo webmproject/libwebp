@@ -354,6 +354,9 @@ static int VariableLevelCost(int level, const uint8_t probas[NUM_PROBAS]) {
 
 void VP8CalculateLevelCosts(VP8Proba* const proba) {
   int ctype, band, ctx;
+
+  if (!proba->dirty_) return;  // nothing to do.
+
   for (ctype = 0; ctype < NUM_TYPES; ++ctype) {
     for (band = 0; band < NUM_BANDS; ++band) {
       for(ctx = 0; ctx < NUM_CTX; ++ctx) {
@@ -370,6 +373,7 @@ void VP8CalculateLevelCosts(VP8Proba* const proba) {
       }
     }
   }
+  proba->dirty_ = 0;
 }
 
 //------------------------------------------------------------------------------

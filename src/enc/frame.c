@@ -54,9 +54,9 @@ static const uint8_t kCat6[] =
 //------------------------------------------------------------------------------
 // Reset the statistics about: number of skips, token proba, level cost,...
 
-static void ResetStats(VP8Encoder* const enc, int precalc_cost) {
+static void ResetStats(VP8Encoder* const enc) {
   VP8Proba* const proba = &enc->proba_;
-  if (precalc_cost) VP8CalculateLevelCosts(proba);
+  VP8CalculateLevelCosts(proba);
   proba->nb_skip_ = 0;
 }
 
@@ -123,7 +123,7 @@ static int RecordCoeffs(int ctx, const VP8Residual* const res) {
     Record(1, s + 0);
     while ((v = res->coeffs[n++]) == 0) {
       Record(0, s + 1);
-      s = res->stats[VP8EncBands[n]][0];      
+      s = res->stats[VP8EncBands[n]][0];
     }
     Record(1, s + 1);
     if (!Record(2u < (unsigned int)(v + 1), s + 2)) {  // v = -1 or 1
@@ -176,6 +176,7 @@ static int BranchCost(int nb, int total, int proba) {
 
 static int FinalizeTokenProbas(VP8Encoder* const enc) {
   VP8Proba* const proba = &enc->proba_;
+  int has_changed = 0;
   int size = 0;
   int t, b, c, p;
   for (t = 0; t < NUM_TYPES; ++t) {
@@ -197,6 +198,7 @@ static int FinalizeTokenProbas(VP8Encoder* const enc) {
           size += VP8BitCost(use_new_p, update_proba);
           if (use_new_p) {  // only use proba that seem meaningful enough.
             proba->coeffs_[t][b][c][p] = new_p;
+            has_changed |= (new_p != old_p);
             size += 8 * 256;
           } else {
             proba->coeffs_[t][b][c][p] = old_p;
@@ -205,6 +207,7 @@ static int FinalizeTokenProbas(VP8Encoder* const enc) {
       }
     }
   }
+  proba->dirty_ = has_changed;
   return size;
 }
 
@@ -773,7 +776,7 @@ int VP8EncLoop(VP8Encoder* const enc) {
     VP8BitWriterInit(enc->parts_ + p, bytes_per_parts);
   }
 
-  ResetStats(enc, rd_opt != 0);
+  ResetStats(enc);
   ResetSSE(enc);
 
   VP8IteratorInit(enc, &it);
@@ -845,7 +848,7 @@ static int OneStatPass(VP8Encoder* const enc, float q, int rd_opt, int nb_mbs,
 
   VP8SetSegmentParams(enc, q);      // setup segment quantizations and filters
 
-  ResetStats(enc, rd_opt != 0);
+  ResetStats(enc);
   ResetTokenStats(enc);
 
   VP8IteratorInit(enc, &it);
