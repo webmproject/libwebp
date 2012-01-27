@@ -243,7 +243,7 @@ typedef struct {
   int16_t y_ac_levels[16][16];
   int16_t uv_levels[4 + 4][16];
   int mode_i16;               // mode number for intra16 prediction
-  int modes_i4[16];           // mode numbers for intra4 predictions
+  uint8_t modes_i4[16];       // mode numbers for intra4 predictions
   int mode_uv;                // mode number of chroma prediction
   uint32_t nz;                // non-zero blocks
 } VP8ModeScore;
@@ -306,7 +306,7 @@ void VP8IteratorBytesToNz(VP8EncIterator* const it);
 
 // Helper functions to set mode properties
 void VP8SetIntra16Mode(const VP8EncIterator* const it, int mode);
-void VP8SetIntra4Mode(const VP8EncIterator* const it, int modes[16]);
+void VP8SetIntra4Mode(const VP8EncIterator* const it, const uint8_t* modes);
 void VP8SetIntraUVMode(const VP8EncIterator* const it, int mode);
 void VP8SetSkip(const VP8EncIterator* const it, int skip);
 void VP8SetSegment(const VP8EncIterator* const it, int segment);

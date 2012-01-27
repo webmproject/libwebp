@@ -294,15 +294,13 @@ void VP8SetIntra16Mode(const VP8EncIterator* const it, int mode) {
   it->mb_->type_ = 1;
 }
 
-void VP8SetIntra4Mode(const VP8EncIterator* const it, int modes[16]) {
+void VP8SetIntra4Mode(const VP8EncIterator* const it, const uint8_t* modes) {
   uint8_t* preds = it->preds_;
   int y;
-  for (y = 0; y < 4; ++y) {
-    int x;
-    for (x = 0; x < 4; ++x) {
-      preds[x] = modes[x + y * 4];
-    }
+  for (y = 4; y > 0; --y) {
+    memcpy(preds, modes, 4 * sizeof(*modes));
     preds += it->enc_->preds_w_;
+    modes += 4;
   }
   it->mb_->type_ = 0;
 }

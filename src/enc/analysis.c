@@ -253,7 +253,7 @@ static int MBAnalyzeBestIntra16Mode(VP8EncIterator* const it) {
 
 static int MBAnalyzeBestIntra4Mode(VP8EncIterator* const it,
                                    int best_alpha) {
-  int modes[16];
+  uint8_t modes[16];
   const int max_mode = (it->enc_->method_ >= 3) ? MAX_INTRA4_MODE : NUM_BMODES;
   int i4_alpha = 0;
   VP8IteratorStartI4(it);
