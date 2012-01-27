@@ -742,7 +742,7 @@ static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* const rd) {
 
 // return the cost array corresponding to the surrounding prediction modes.
 static const uint16_t* GetCostModeI4(VP8EncIterator* const it,
-                                     const int modes[16]) {
+                                     const uint8_t modes[16]) {
   const int preds_w = it->enc_->preds_w_;
   const int x = (it->i4_ & 3), y = it->i4_ >> 2;
   const int left = (x == 0) ? it->preds_[y * preds_w - 1] : modes[it->i4_ - 1];
