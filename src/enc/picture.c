@@ -332,7 +332,7 @@ int WebPPictureRescale(WebPPicture* const pic, int width, int height) {
   tmp.height = height;
   if (!WebPPictureAlloc(&tmp)) return 0;
 
-  work = malloc(2 * width * sizeof(int32_t));
+  work = (int32_t*)malloc(2 * width * sizeof(int32_t));
   if (work == NULL) {
     WebPPictureFree(&tmp);
     return 0;
@@ -697,12 +697,12 @@ int WebPPictureDistortion(const WebPPicture* const pic1,
   for (c = 0; c <= 4; ++c) {
     if (type == 1) {
       const double v = VP8SSIMGet(&stats[c]);
-      result[c] = (v < 1.) ? -10.0 * log10(1. - v)
-                           : kMinDistortion_dB;
+      result[c] = (float)((v < 1.) ? -10.0 * log10(1. - v)
+                                   : kMinDistortion_dB);
     } else {
       const double v = VP8SSIMGetSquaredError(&stats[c]);
-      result[c] = (v > 0.) ? -4.3429448 * log(v / (255 * 255.))
-                           : kMinDistortion_dB;
+      result[c] = (float)((v > 0.) ? -4.3429448 * log(v / (255 * 255.))
+                                   : kMinDistortion_dB);
     }
     // Accumulate forward
     if (c < 4) VP8SSIMAddStats(&stats[c], &stats[4]);

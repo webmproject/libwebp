@@ -140,38 +140,38 @@ static void WebPDataFree(WebPData* const webpdata) {
   memset(webpdata, 0, sizeof(*webpdata));
 }
 
-#define RETURN_IF_ERROR(ERR_MSG)                                      \
-    if (err != WEBP_MUX_OK) {                                         \
-      fprintf(stderr, ERR_MSG);                                       \
-      return err;                                                     \
-    }
+#define RETURN_IF_ERROR(ERR_MSG)                                     \
+  if (err != WEBP_MUX_OK) {                                          \
+    fprintf(stderr, ERR_MSG);                                        \
+    return err;                                                      \
+  }
 
-#define RETURN_IF_ERROR2(ERR_MSG, FORMAT_STR)                         \
-    if (err != WEBP_MUX_OK) {                                         \
-      fprintf(stderr, ERR_MSG, FORMAT_STR);                           \
-      return err;                                                     \
-    }
+#define RETURN_IF_ERROR2(ERR_MSG, FORMAT_STR)                        \
+  if (err != WEBP_MUX_OK) {                                          \
+    fprintf(stderr, ERR_MSG, FORMAT_STR);                            \
+    return err;                                                      \
+  }
 
-#define ERROR_GOTO1(ERR_MSG, LABEL)                                   \
-    do {                                                              \
-      fprintf(stderr, ERR_MSG);                                       \
-      ok = 0;                                                         \
-      goto LABEL;                                                     \
-    } while (0)
+#define ERROR_GOTO1(ERR_MSG, LABEL)                                  \
+  do {                                                               \
+    fprintf(stderr, ERR_MSG);                                        \
+    ok = 0;                                                          \
+    goto LABEL;                                                      \
+  } while (0)
 
-#define ERROR_GOTO2(ERR_MSG, FORMAT_STR, LABEL)                       \
-    do {                                                              \
-      fprintf(stderr, ERR_MSG, FORMAT_STR);                           \
-      ok = 0;                                                         \
-      goto LABEL;                                                     \
-    } while (0)
+#define ERROR_GOTO2(ERR_MSG, FORMAT_STR, LABEL)                      \
+  do {                                                               \
+    fprintf(stderr, ERR_MSG, FORMAT_STR);                            \
+    ok = 0;                                                          \
+    goto LABEL;                                                      \
+  } while (0)
 
-#define ERROR_GOTO3(ERR_MSG, FORMAT_STR1, FORMAT_STR2, LABEL)         \
-    do {                                                              \
-      fprintf(stderr, ERR_MSG, FORMAT_STR1, FORMAT_STR2);             \
-      ok = 0;                                                         \
-      goto LABEL;                                                     \
-    } while (0)
+#define ERROR_GOTO3(ERR_MSG, FORMAT_STR1, FORMAT_STR2, LABEL)        \
+   do {                                                              \
+     fprintf(stderr, ERR_MSG, FORMAT_STR1, FORMAT_STR2);             \
+     ok = 0;                                                         \
+     goto LABEL;                                                     \
+   } while (0)
 
 static WebPMuxError DisplayInfo(const WebPMux* mux) {
   uint32_t flag;

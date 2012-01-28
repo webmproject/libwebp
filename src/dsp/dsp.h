@@ -71,8 +71,6 @@ extern VP8WMetric VP8TDisto4x4, VP8TDisto16x16;
 
 typedef void (*VP8BlockCopy)(const uint8_t* src, uint8_t* dst);
 extern VP8BlockCopy VP8Copy4x4;
-extern VP8BlockCopy VP8Copy8x8;
-extern VP8BlockCopy VP8Copy16x16;
 // Quantization
 struct VP8Matrix;   // forward declaration
 typedef int (*VP8QuantizeBlock)(int16_t in[16], int16_t out[16],
@@ -103,9 +101,9 @@ extern void (*VP8TransformWHT)(const int16_t* in, int16_t* out);
 // *dst is the destination block, with stride BPS. Boundary samples are
 // assumed accessible when needed.
 typedef void (*VP8PredFunc)(uint8_t* dst);
-extern VP8PredFunc VP8PredLuma16[/* NUM_B_DC_MODES */];
-extern VP8PredFunc VP8PredChroma8[/* NUM_B_DC_MODES */];
-extern VP8PredFunc VP8PredLuma4[/* NUM_BMODES */];
+extern const VP8PredFunc VP8PredLuma16[/* NUM_B_DC_MODES */];
+extern const VP8PredFunc VP8PredChroma8[/* NUM_B_DC_MODES */];
+extern const VP8PredFunc VP8PredLuma4[/* NUM_BMODES */];
 
 // simple filter (only for luma)
 typedef void (*VP8SimpleFilterFunc)(uint8_t* p, int stride, int thresh);
@@ -132,7 +130,7 @@ extern VP8ChromaFilterFunc VP8VFilter8i;  // filtering u and v altogether
 extern VP8ChromaFilterFunc VP8HFilter8i;
 
 // must be called before anything using the above
-extern void VP8DspInit(void);
+void VP8DspInit(void);
 
 //------------------------------------------------------------------------------
 // WebP I/O

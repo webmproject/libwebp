@@ -35,7 +35,7 @@ static void SmoothSegmentMap(VP8Encoder* const enc) {
   const int w = enc->mb_w_;
   const int h = enc->mb_h_;
   const int majority_cnt_3_x_3_grid = 5;
-  uint8_t* tmp = (uint8_t*)malloc(w * h * sizeof(uint8_t));
+  uint8_t* const tmp = (uint8_t*)malloc(w * h * sizeof(uint8_t));
 
   if (tmp == NULL) return;
   for (y = 1; y < h - 1; ++y) {

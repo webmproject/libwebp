@@ -59,6 +59,7 @@ VP8CPUInfo VP8GetCPUInfo = x86CPUInfo;
 // define a dummy function to enable turning off NEON at runtime by setting
 // VP8DecGetCPUInfo = NULL
 static int armCPUInfo(CPUFeature feature) {
+  (void)feature;
   return 1;
 }
 VP8CPUInfo VP8GetCPUInfo = armCPUInfo;
