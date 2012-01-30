@@ -460,7 +460,7 @@ typedef const uint8_t (*ProbaArray)[NUM_CTX][NUM_PROBAS];  // for const-casting
 // Returns the position of the last non-zero coeff plus one
 // (and 0 if there's no coeff at all)
 static int GetCoeffs(VP8BitReader* const br, ProbaArray prob,
-                     int ctx, const uint16_t dq[2], int n, int16_t* out) {
+                     int ctx, const quant_t dq, int n, int16_t* out) {
   const uint8_t* p = prob[kBands[n]][ctx];
   if (!VP8GetBit(br, p[0])) {   // first EOB is more a 'CBP' bit.
     return 0;

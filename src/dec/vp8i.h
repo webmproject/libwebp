@@ -162,8 +162,9 @@ typedef struct {  // used for syntax-parsing
 } VP8MB;
 
 // Dequantization matrices
+typedef int quant_t[2];      // [DC / AC].  Can be 'uint16_t[2]' too (~slower).
 typedef struct {
-  uint16_t y1_mat_[2], y2_mat_[2], uv_mat_[2];    // [DC / AC]
+  quant_t y1_mat_, y2_mat_, uv_mat_;
 } VP8QuantMatrix;
 
 // Persistent information needed by the parallel processing
