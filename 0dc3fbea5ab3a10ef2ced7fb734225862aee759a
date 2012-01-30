@@ -16,6 +16,24 @@
       "revId": "0dc3fbea5ab3a10ef2ced7fb734225862aee759a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//3Ek\u003d",
+        "filename": "src/dec/frame.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-01-30T22:43:44Z",
+      "side": 1,
+      "message": "No I removed a duplicate from there (there was a version without *const).\n\nDoes only look to be used here though, will make the change.",
+      "parentUuid": "AAAAHn//3Ng\u003d",
+      "revId": "0dc3fbea5ab3a10ef2ced7fb734225862aee759a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
