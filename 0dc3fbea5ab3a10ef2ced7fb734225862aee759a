@@ -34,6 +34,24 @@
       "revId": "0dc3fbea5ab3a10ef2ced7fb734225862aee759a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//22U\u003d",
+        "filename": "src/dec/frame.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-01-31T01:24:51Z",
+      "side": 1,
+      "message": "Pulled the function and renamed. Shifted some functions around to avoid a prototype at the top.",
+      "parentUuid": "AAAAHn//3Ng\u003d",
+      "revId": "0dc3fbea5ab3a10ef2ced7fb734225862aee759a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
