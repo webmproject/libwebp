@@ -310,12 +310,12 @@ static int CopyParts0Data(WebPIDecoder* idec) {
     }
     memcpy(part0_buf, br->buf_, psize);
     mem->part0_buf_ = part0_buf;
-    mem->start_ += psize;
     br->buf_ = part0_buf;
     br->buf_end_ = part0_buf + psize;
   } else {
     // Else: just keep pointers to the partition #0's data in dec_->br_.
   }
+  mem->start_ += psize;
   return 1;
 }
 
