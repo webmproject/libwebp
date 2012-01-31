@@ -443,7 +443,7 @@ static int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha) {
 typedef enum {
   PNG = 0,
   JPEG,
-  UNSUPPORTED,
+  UNSUPPORTED
 } InputFileFormat;
 
 static InputFileFormat GetImageType(FILE* in_file) {

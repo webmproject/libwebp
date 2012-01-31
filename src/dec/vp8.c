@@ -42,7 +42,7 @@ int VP8InitIoInternal(VP8Io* const io, int version) {
 }
 
 VP8Decoder* VP8New(void) {
-  VP8Decoder* dec = (VP8Decoder*)calloc(1, sizeof(VP8Decoder));
+  VP8Decoder* const dec = (VP8Decoder*)calloc(1, sizeof(VP8Decoder));
   if (dec) {
     SetOk(dec);
     WebPWorkerInit(&dec->worker_);

@@ -681,8 +681,6 @@ static WEBP_INLINE void Copy(const uint8_t* src, uint8_t* dst, int size) {
 }
 
 static void Copy4x4(const uint8_t* src, uint8_t* dst) { Copy(src, dst, 4); }
-static void Copy8x8(const uint8_t* src, uint8_t* dst) { Copy(src, dst, 8); }
-static void Copy16x16(const uint8_t* src, uint8_t* dst) { Copy(src, dst, 16); }
 
 //------------------------------------------------------------------------------
 // Initialization
@@ -705,8 +703,6 @@ VP8WMetric VP8TDisto4x4;
 VP8WMetric VP8TDisto16x16;
 VP8QuantizeBlock VP8EncQuantizeBlock;
 VP8BlockCopy VP8Copy4x4;
-VP8BlockCopy VP8Copy8x8;
-VP8BlockCopy VP8Copy16x16;
 
 extern void VP8EncDspInitSSE2(void);
 
@@ -730,8 +726,6 @@ void VP8EncDspInit(void) {
   VP8TDisto16x16 = Disto16x16;
   VP8EncQuantizeBlock = QuantizeBlock;
   VP8Copy4x4 = Copy4x4;
-  VP8Copy8x8 = Copy8x8;
-  VP8Copy16x16 = Copy16x16;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo) {

@@ -127,8 +127,8 @@ static int ChunkSearchListToSet(WebPChunk** chunk_list, uint32_t nth,
 //------------------------------------------------------------------------------
 // Chunk writer methods.
 
-WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk, const uint8_t* data,
-                                      uint32_t data_size,
+WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk,
+                                      const uint8_t* data, uint32_t data_size,
                                       WebPImageInfo* image_info,
                                       int copy_data, uint32_t tag) {
   // For internally allocated chunks, always copy data & make it owner of data.
@@ -231,11 +231,7 @@ uint8_t* ChunkListEmit(const WebPChunk* chunk_list, uint8_t* dst) {
 
 void MuxImageInit(WebPMuxImage* const wpi) {
   assert(wpi);
-  wpi->header_ = NULL;
-  wpi->alpha_ = NULL;
-  wpi->vp8_ = NULL;
-  wpi->is_partial_ = 0;
-  wpi->next_ = NULL;
+  memset(wpi, 0, sizeof(*wpi));
 }
 
 WebPMuxImage* MuxImageRelease(WebPMuxImage* const wpi) {
@@ -260,8 +256,8 @@ int MuxImageCount(WebPMuxImage* const wpi_list, TAG_ID id) {
     WebPChunk** const wpi_chunk_ptr = MuxImageGetListFromId(current, id);
     assert(wpi_chunk_ptr != NULL);
 
-    if ((*wpi_chunk_ptr != NULL) &&
-        ((*wpi_chunk_ptr)->tag_ == kChunks[id].chunkTag)) {
+    if (*wpi_chunk_ptr != NULL &&
+        (*wpi_chunk_ptr)->tag_ == kChunks[id].chunkTag) {
       ++count;
     }
   }
@@ -374,7 +370,7 @@ WebPMuxError MuxImageGetNth(const WebPMuxImage** wpi_list, uint32_t nth,
   assert(wpi_list);
   assert(wpi);
   if (!SearchImageToGetOrDelete((WebPMuxImage**)wpi_list, nth, id,
-                                (WebPMuxImage*** const)&wpi_list)) {
+                                (WebPMuxImage***)&wpi_list)) {
     return WEBP_MUX_NOT_FOUND;
   }
   *wpi = (WebPMuxImage*)*wpi_list;
@@ -438,12 +434,9 @@ WebPChunk** GetChunkListFromId(const WebPMux* mux, TAG_ID id) {
 }
 
 WebPMuxError ValidateForImage(const WebPMux* const mux) {
-  int num_vp8;
-  int num_frames;
-  int num_tiles;
-  num_vp8 = MuxImageCount(mux->images_, IMAGE_ID);
-  num_frames = MuxImageCount(mux->images_, FRAME_ID);
-  num_tiles = MuxImageCount(mux->images_, TILE_ID);
+  const int num_vp8 = MuxImageCount(mux->images_, IMAGE_ID);
+  const int num_frames = MuxImageCount(mux->images_, FRAME_ID);
+  const int num_tiles = MuxImageCount(mux->images_, TILE_ID);
 
   if (num_vp8 == 0) {
     // No images in mux.

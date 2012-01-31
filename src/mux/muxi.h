@@ -143,8 +143,8 @@ TAG_ID ChunkGetIdFromTag(uint32_t tag);
 WebPChunk* ChunkSearchList(WebPChunk* first, uint32_t nth, uint32_t tag);
 
 // Fill the chunk with the given data & image_info.
-WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk, const uint8_t* data,
-                                      uint32_t data_size,
+WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk,
+                                      const uint8_t* data, uint32_t data_size,
                                       WebPImageInfo* image_info,
                                       int copy_data, uint32_t tag);
 

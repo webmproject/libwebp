@@ -115,7 +115,8 @@ WEBP_EXTERN(void) WebPMuxDelete(WebPMux* const mux);
 //   A pointer to the mux object created from given data - on success.
 //   NULL - In case of invalid data or memory error.
 WEBP_EXTERN(WebPMux*) WebPMuxCreate(const uint8_t* data, uint32_t size,
-                                    int copy_data, WebPMuxState* mux_state);
+                                    int copy_data,
+                                    WebPMuxState* const mux_state);
 
 //------------------------------------------------------------------------------
 // Single Image.

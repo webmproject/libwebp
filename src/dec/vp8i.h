@@ -317,14 +317,10 @@ VP8StatusCode VP8EnterCritical(VP8Decoder* const dec, VP8Io* const io);
 // Must always be called in pair with VP8EnterCritical().
 // Returns false in case of error.
 int VP8ExitCritical(VP8Decoder* const dec, VP8Io* const io);
-// Filter the decoded macroblock row (if needed)
-int VP8FinishRow(VP8Decoder* const dec, VP8Io* io);   // multi threaded call
 // Process the last decoded row (filtering + output)
 int VP8ProcessRow(VP8Decoder* const dec, VP8Io* const io);
 // Store a block, along with filtering params
 void VP8StoreBlock(VP8Decoder* const dec);
-// Finalize and transmit a complete row. Return false in case of user-abort.
-int VP8FinishRow(VP8Decoder* const dec, VP8Io* const io);
 // To be called at the start of a new scanline, to initialize predictors.
 void VP8InitScanline(VP8Decoder* const dec);
 // Decode one macroblock. Returns false if there is not enough data.

@@ -323,7 +323,7 @@ void VP8IteratorResetCosts(VP8EncIterator* const it);
 
 typedef struct VP8Tokens VP8Tokens;
 struct VP8Tokens {
-  uint16_t tokens_[MAX_NUM_TOKEN]; // bit#15: bit, bits 0..14: slot
+  uint16_t tokens_[MAX_NUM_TOKEN];  // bit#15: bit, bits 0..14: slot
   int left_;
   VP8Tokens* next_;
 };
@@ -346,13 +346,13 @@ int VP8EmitTokens(const VP8TBuffer* const b, VP8BitWriter* const bw,
 static WEBP_INLINE int VP8AddToken(VP8TBuffer* const b,
                                    int bit, int proba_idx) {
   if (b->left_ > 0 || VP8TBufferNewPage(b)) {
-    const int slot = --b->left_;  
+    const int slot = --b->left_;
     b->tokens_[slot] = (bit << 15) | proba_idx;
   }
   return bit;
 }
 
-#endif
+#endif  // USE_TOKEN_BUFFER
 
 //------------------------------------------------------------------------------
 // VP8Encoder
@@ -501,7 +501,9 @@ void VP8EncDeleteLayer(VP8Encoder* enc);         // reclaim memory
   // in filter.c
 
 // SSIM utils
-typedef struct { double w, xm, ym, xxm, xym, yym; } DistoStats;
+typedef struct {
+  double w, xm, ym, xxm, xym, yym;
+} DistoStats;
 void VP8SSIMAddStats(const DistoStats* const src, DistoStats* const dst);
 void VP8SSIMAccumulatePlane(const uint8_t* src1, int stride1,
                             const uint8_t* src2, int stride2,

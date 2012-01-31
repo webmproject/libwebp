@@ -62,15 +62,15 @@ void WebPMuxDelete(WebPMux* const mux) {
 
 // Handy MACRO, makes MuxSet() very symmetric to MuxGet().
 #define SWITCH_ID_LIST(ID, LIST)                                               \
-    if (id == (ID)) {                                                          \
-      err = ChunkAssignDataImageInfo(&chunk, data, size,                       \
-                                     image_info,                               \
-                                     copy_data, kChunks[(ID)].chunkTag);       \
-      if (err == WEBP_MUX_OK) {                                                \
-        err = ChunkSetNth(&chunk, (LIST), nth);                                \
-      }                                                                        \
-      return err;                                                              \
-    }
+  if (id == (ID)) {                                                            \
+    err = ChunkAssignDataImageInfo(&chunk, data, size,                         \
+                                   image_info,                                 \
+                                   copy_data, kChunks[(ID)].chunkTag);         \
+    if (err == WEBP_MUX_OK) {                                                  \
+      err = ChunkSetNth(&chunk, (LIST), nth);                                  \
+    }                                                                          \
+    return err;                                                                \
+  }
 
 static WebPMuxError MuxSet(WebPMux* const mux, TAG_ID id, uint32_t nth,
                            const uint8_t* data, uint32_t size,
@@ -142,7 +142,7 @@ static WebPImageInfo* CreateImageInfo(uint32_t x_offset, uint32_t y_offset,
 }
 
 // Create data for frame/tile given image_info.
-static WebPMuxError CreateDataFromImageInfo(WebPImageInfo* image_info,
+static WebPMuxError CreateDataFromImageInfo(const WebPImageInfo* image_info,
                                             int is_frame,
                                             uint8_t** data, uint32_t* size) {
   assert(data);
@@ -154,7 +154,7 @@ static WebPMuxError CreateDataFromImageInfo(WebPImageInfo* image_info,
   if (*data == NULL) return WEBP_MUX_MEMORY_ERROR;
 
   // Fill in data according to frame/tile chunk format.
-  PutLE32(*data, image_info->x_offset_);
+  PutLE32(*data + 0, image_info->x_offset_);
   PutLE32(*data + 4, image_info->y_offset_);
 
   if (is_frame) {
@@ -168,17 +168,16 @@ static WebPMuxError CreateDataFromImageInfo(WebPImageInfo* image_info,
 // Outputs image data given data from a webp file (including RIFF header).
 static WebPMuxError GetImageData(const uint8_t* data, uint32_t size,
                                  WebPData* const image, WebPData* const alpha) {
-  if ((size < TAG_SIZE) || (memcmp(data, "RIFF", TAG_SIZE))) {
+  if (size < TAG_SIZE || memcmp(data, "RIFF", TAG_SIZE)) {
     // It is NOT webp file data. Return input data as is.
     image->bytes_ = data;
     image->size_ = size;
     return WEBP_MUX_OK;
   } else {
     // It is webp file data. Extract image data from it.
-    WebPMux* mux;
     WebPMuxError err;
     WebPMuxState mux_state;
-    mux = WebPMuxCreate(data, size, 0, &mux_state);
+    WebPMux* const mux = WebPMuxCreate(data, size, 0, &mux_state);
     if (mux == NULL || mux_state != WEBP_MUX_STATE_COMPLETE) {
       return WEBP_MUX_BAD_DATA;
     }
@@ -209,7 +208,7 @@ static WebPMuxError MuxDeleteAllNamedData(WebPMux* const mux,
   TAG_ID id;
   WebPChunk** chunk_list;
 
-  if ((mux == NULL) || (tag == NULL)) return WEBP_MUX_INVALID_ARGUMENT;
+  if (mux == NULL || tag == NULL) return WEBP_MUX_INVALID_ARGUMENT;
 
   id = ChunkGetIdFromName(tag);
   if (IsWPI(id)) return WEBP_MUX_INVALID_ARGUMENT;
@@ -237,7 +236,7 @@ WebPMuxError WebPMuxSetImage(WebPMux* const mux,
   WebPData image;
   const int has_alpha = (alpha_data != NULL && alpha_size != 0);
 
-  if ((mux == NULL) || (data == NULL) || (size > MAX_CHUNK_PAYLOAD)) {
+  if (mux == NULL || data == NULL || size > MAX_CHUNK_PAYLOAD) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
@@ -275,7 +274,7 @@ WebPMuxError WebPMuxSetMetadata(WebPMux* const mux, const uint8_t* data,
                                 uint32_t size, int copy_data) {
   WebPMuxError err;
 
-  if ((mux == NULL) || (data == NULL) || (size > MAX_CHUNK_PAYLOAD)) {
+  if (mux == NULL || data == NULL || size > MAX_CHUNK_PAYLOAD) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
@@ -291,7 +290,7 @@ WebPMuxError WebPMuxSetColorProfile(WebPMux* const mux, const uint8_t* data,
                                     uint32_t size, int copy_data) {
   WebPMuxError err;
 
-  if ((mux == NULL) || (data == NULL) || (size > MAX_CHUNK_PAYLOAD)) {
+  if (mux == NULL || data == NULL || size > MAX_CHUNK_PAYLOAD) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
@@ -314,7 +313,7 @@ WebPMuxError WebPMuxSetLoopCount(WebPMux* const mux, uint32_t loop_count) {
   if (err != WEBP_MUX_OK && err != WEBP_MUX_NOT_FOUND) return err;
 
   // Add the given loop count.
-  data = (uint8_t *)malloc(kChunks[LOOP_ID].chunkSize);
+  data = (uint8_t*)malloc(kChunks[LOOP_ID].chunkSize);
   if (data == NULL) return WEBP_MUX_MEMORY_ERROR;
 
   PutLE32(data, loop_count);
@@ -364,8 +363,8 @@ static WebPMuxError MuxAddFrameTileInternal(WebPMux* const mux, uint32_t nth,
   }
 
   // Create image_info object.
-  image_info = CreateImageInfo(x_offset, y_offset, duration, image.bytes_,
-                               image.size_);
+  image_info = CreateImageInfo(x_offset, y_offset, duration,
+                               image.bytes_, image.size_);
   if (image_info == NULL) {
     MuxImageRelease(&wpi);
     return WEBP_MUX_MEMORY_ERROR;
@@ -492,13 +491,12 @@ static WebPMuxError GetImageCanvasHeightWidth(const WebPMux* const mux,
 
   wpi = mux->images_;
   assert(wpi != NULL);
+  assert(wpi->vp8_ != NULL);
 
   if (wpi->next_) {
-    // Aggregate the bounding box for Animation frames & Tiled images.
+    // Aggregate the bounding box for animation frames & tiled images.
     for (; wpi != NULL; wpi = wpi->next_) {
-      const WebPImageInfo* image_info;
-      assert(wpi->vp8_ != NULL);
-      image_info = wpi->vp8_->image_info_;
+      const WebPImageInfo* image_info = wpi->vp8_->image_info_;
 
       if (image_info != NULL) {
         const uint32_t max_x_pos = image_info->x_offset_ + image_info->width_;
@@ -509,22 +507,18 @@ static WebPMuxError GetImageCanvasHeightWidth(const WebPMux* const mux,
         if (max_y_pos < image_info->y_offset_) {  // Overflow occurred.
           return WEBP_MUX_INVALID_ARGUMENT;
         }
-        if (max_x_pos > max_x) {
-          max_x = max_x_pos;
-        }
-        if (max_y_pos > max_y) {
-          max_y = max_y_pos;
-        }
+        if (max_x_pos > max_x) max_x = max_x_pos;
+        if (max_y_pos > max_y) max_y = max_y_pos;
         image_area += (image_info->width_ * image_info->height_);
       }
     }
     *width = max_x;
     *height = max_y;
-    // Crude check to validate that there are no image overlaps/holes for Tile
+    // Crude check to validate that there are no image overlaps/holes for tile
     // images. Check that the aggregated image area for individual tiles exactly
-    // matches the image area of the constructed Canvas. However, the area-match
+    // matches the image area of the constructed canvas. However, the area-match
     // is necessary but not sufficient condition.
-    if (!!(flags & TILE_FLAG) && (image_area != (max_x * max_y))) {
+    if ((flags & TILE_FLAG) && (image_area != (max_x * max_y))) {
       *width = 0;
       *height = 0;
       return WEBP_MUX_INVALID_ARGUMENT;
@@ -543,9 +537,9 @@ static WebPMuxError GetImageCanvasHeightWidth(const WebPMux* const mux,
   return WEBP_MUX_OK;
 }
 
-// Following VP8X format followed:
+// VP8X format:
 // Total Size : 12,
-// Flags : 4 bytes,
+// Flags  : 4 bytes,
 // Width  : 4 bytes,
 // Height : 4 bytes.
 static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
@@ -610,8 +604,8 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   return err;
 }
 
-WebPMuxError WebPMuxAssemble(WebPMux* const mux, uint8_t** output_data,
-                             uint32_t* output_size) {
+WebPMuxError WebPMuxAssemble(WebPMux* const mux,
+                             uint8_t** output_data, uint32_t* output_size) {
   uint32_t size = 0;
   uint8_t* data = NULL;
   uint8_t* dst = NULL;
@@ -649,9 +643,9 @@ WebPMuxError WebPMuxAssemble(WebPMux* const mux, uint8_t** output_data,
 
   // Allocate data.
   size = ChunksListDiskSize(mux->vp8x_) + ChunksListDiskSize(mux->iccp_)
-      + ChunksListDiskSize(mux->loop_) + MuxImageListDiskSize(mux->images_)
-      + ChunksListDiskSize(mux->meta_) + ChunksListDiskSize(mux->unknown_)
-      + RIFF_HEADER_SIZE;
+       + ChunksListDiskSize(mux->loop_) + MuxImageListDiskSize(mux->images_)
+       + ChunksListDiskSize(mux->meta_) + ChunksListDiskSize(mux->unknown_)
+       + RIFF_HEADER_SIZE;
 
   data = (uint8_t*)malloc(size);
   if (data == NULL) return WEBP_MUX_MEMORY_ERROR;

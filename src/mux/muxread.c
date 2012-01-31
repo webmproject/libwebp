@@ -226,8 +226,7 @@ WebPMuxError WebPMuxGetFeatures(const WebPMux* const mux, uint32_t* flags) {
 }
 
 WebPMuxError WebPMuxGetImage(const WebPMux* const mux,
-                             WebPData* const image,
-                             WebPData* const alpha) {
+                             WebPData* const image, WebPData* const alpha) {
   WebPMuxError err;
   WebPMuxImage* wpi = NULL;
 
@@ -324,7 +323,7 @@ static WebPMuxError MuxGetFrameTileInternal(const WebPMux* const mux,
   frame_tile_size = wpi->header_->payload_size_;
 
   if (frame_tile_size < kChunks[id].chunkSize) return WEBP_MUX_BAD_DATA;
-  *x_offset = GetLE32(frame_tile_data);
+  *x_offset = GetLE32(frame_tile_data + 0);
   *y_offset = GetLE32(frame_tile_data + 4);
   if (is_frame) *duration = GetLE32(frame_tile_data + 16);
 
@@ -370,7 +369,7 @@ static int CountChunks(WebPChunk* const chunk_list, uint32_t tag) {
   int count = 0;
   WebPChunk* current;
   for (current = chunk_list; current != NULL; current = current->next_) {
-    if ((tag == NIL_TAG) || (current->tag_ == tag)) {
+    if (tag == NIL_TAG || current->tag_ == tag) {
       count++;  // Count chunks whose tags match.
     }
   }
