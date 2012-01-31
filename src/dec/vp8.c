@@ -47,6 +47,7 @@ VP8Decoder* VP8New(void) {
     SetOk(dec);
     WebPWorkerInit(&dec->worker_);
     dec->ready_ = 0;
+    dec->num_parts_ = 1;
   }
   return dec;
 }
