@@ -16,6 +16,24 @@
       "revId": "7d31bc1a0044985b9235b676188a2a6d5aed44f5",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//2Go\u003d",
+        "filename": "src/dec/idec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-02-01T00:22:35Z",
+      "side": 1,
+      "message": "sgtm.\n\nor we could change dec-\u003enum_parts_ into dec-\u003elast_parts_\n(with 0-index).\n\nEither way is fine...",
+      "parentUuid": "AAAAHn//2LU\u003d",
+      "revId": "7d31bc1a0044985b9235b676188a2a6d5aed44f5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
