@@ -16,6 +16,24 @@
       "revId": "772767dbf158e5c5e316b42308cf93c46b017dc3",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//2Fk\u003d",
+        "filename": "src/dec/idec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-02-01T00:49:30Z",
+      "side": 1,
+      "message": "hmm, yes. Seems ok logically as all that remains within the if() is dealing with part0_buf.",
+      "parentUuid": "AAAAHn//2GE\u003d",
+      "revId": "772767dbf158e5c5e316b42308cf93c46b017dc3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
