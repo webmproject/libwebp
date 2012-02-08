@@ -7,7 +7,6 @@ libwebputils_la_SOURCES = alpha.h alpha.c \
                           quant_levels.c \
                           tcoder.h tcoderi.h tcoder.c \
                           thread.h thread.c
-libwebputils_la_LDFLAGS = -version-info 0:0:0
 libwebputilsinclude_HEADERS = ../webp/types.h
 libwebputilsincludedir = $(includedir)/webp
 
