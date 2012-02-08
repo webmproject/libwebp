@@ -2,7 +2,7 @@ AC_INIT([libwebp], [0.1.3],
         [http://code.google.com/p/webp/issues],,
         [http://code.google.com/speed/webp])
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
+AM_INIT_AUTOMAKE([-Wall foreign silent-rules subdir-objects])
 AC_PROG_LIBTOOL
 AM_PROG_CC_C_O
 
