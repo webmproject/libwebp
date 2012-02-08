@@ -16,6 +16,24 @@
       "revId": "ab6e106e7549da89e8bb1ceccc0d954d70a996ab",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//xp8\u003d",
+        "filename": "src/dec/idec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-02-08T22:30:20Z",
+      "side": 1,
+      "message": "Done. There was another lurking too.",
+      "parentUuid": "AAAAHn//xsk\u003d",
+      "revId": "ab6e106e7549da89e8bb1ceccc0d954d70a996ab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
