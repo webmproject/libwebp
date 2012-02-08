@@ -548,7 +548,7 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   uint32_t width = 0;
   uint32_t height = 0;
   uint8_t data[VP8X_CHUNK_SIZE];
-  const size_t data_size = VP8X_CHUNK_SIZE;
+  const uint32_t data_size = VP8X_CHUNK_SIZE;
   const WebPMuxImage* images = NULL;
 
   images = mux->images_;  // First image.

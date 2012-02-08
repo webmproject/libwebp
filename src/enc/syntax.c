@@ -54,7 +54,8 @@ static WebPEncodingError PutRIFFHeader(const VP8Encoder* const enc,
   uint8_t riff[RIFF_HEADER_SIZE] = {
     'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 'B', 'P'
   };
-  PutLE32(riff + TAG_SIZE, riff_size);
+  assert(riff_size == (uint32_t)riff_size);
+  PutLE32(riff + TAG_SIZE, (uint32_t)riff_size);
   if (!pic->writer(riff, sizeof(riff), pic)) {
     return VP8_ENC_ERROR_BAD_WRITE;
   }
@@ -115,7 +116,8 @@ static WebPEncodingError PutVP8Header(const WebPPicture* const pic,
   uint8_t vp8_chunk_hdr[CHUNK_HEADER_SIZE] = {
     'V', 'P', '8', ' '
   };
-  PutLE32(vp8_chunk_hdr + TAG_SIZE, vp8_size);
+  assert(vp8_size == (uint32_t)vp8_size);
+  PutLE32(vp8_chunk_hdr + TAG_SIZE, (uint32_t)vp8_size);
   if (!pic->writer(vp8_chunk_hdr, sizeof(vp8_chunk_hdr), pic)) {
     return VP8_ENC_ERROR_BAD_WRITE;
   }
