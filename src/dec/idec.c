@@ -20,6 +20,8 @@
 extern "C" {
 #endif
 
+// In append mode, buffer allocations increase as multiples of this value.
+// Needs to be a power of 2.
 #define CHUNK_SIZE 4096
 #define MAX_MB_SIZE 4096
 
@@ -97,14 +99,12 @@ static int AppendToMemBuffer(WebPIDecoder* const idec,
 
   if (mem->end_ + data_size > mem->buf_size_) {  // Need some free memory
     int p;
-    uint8_t* new_buf = NULL;
-    const size_t num_chunks =
-        (MemDataSize(mem) + data_size + CHUNK_SIZE - 1) / CHUNK_SIZE;
-    const size_t new_size = num_chunks * CHUNK_SIZE;
     const uint8_t* const base = mem->buf_ + mem->start_;
+    const size_t new_size =
+        (MemDataSize(mem) + data_size + CHUNK_SIZE - 1) & ~(CHUNK_SIZE - 1);
+    uint8_t* const new_buf = (uint8_t*)malloc(new_size);
 
-    new_buf = (uint8_t*)malloc(new_size);
-    if (!new_buf) return 0;
+    if (new_buf == NULL) return 0;
     memcpy(new_buf, base, MemDataSize(mem));
 
     // adjust VP8BitReader pointers
@@ -307,7 +307,7 @@ static int CopyParts0Data(WebPIDecoder* idec) {
   if (mem->mode_ == MEM_MODE_APPEND) {
     // We copy and grab ownership of the partition #0 data.
     uint8_t* const part0_buf = (uint8_t*)malloc(psize);
-    if (!part0_buf) {
+    if (part0_buf == NULL) {
       return 0;
     }
     memcpy(part0_buf, br->buf_, psize);
