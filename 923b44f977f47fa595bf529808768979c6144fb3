@@ -16,6 +16,24 @@
       "revId": "923b44f977f47fa595bf529808768979c6144fb3",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//wqc\u003d",
+        "filename": "src/dec/webp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-02-09T21:11:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAHn//xDs\u003d",
+      "revId": "923b44f977f47fa595bf529808768979c6144fb3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
