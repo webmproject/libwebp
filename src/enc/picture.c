@@ -670,10 +670,20 @@ int WebPPictureDistortion(const WebPPicture* const pic1,
                           int type, float result[5]) {
   int c;
   DistoStats stats[5];
+  int has_alpha;
 
-  if (pic1->width != pic2->width ||
-      pic1->height != pic2->height ||
-      (pic1->a == NULL) != (pic2->a == NULL)) {
+  if (pic1 == NULL || pic2 == NULL ||
+      pic1->width != pic2->width || pic1->height != pic2->height ||
+      pic1->y == NULL || pic2->y == NULL ||
+      pic1->u == NULL || pic2->u == NULL ||
+      pic1->v == NULL || pic2->v == NULL ||
+      result == NULL) {
+    return 0;
+  }
+
+  has_alpha = !!(pic1->colorspace & WEBP_CSP_ALPHA_BIT);
+  if (has_alpha != !!(pic2->colorspace & WEBP_CSP_ALPHA_BIT) ||
+      (has_alpha && (pic1->a == NULL || pic2->a == NULL))) {
     return 0;
   }
 
@@ -689,7 +699,7 @@ int WebPPictureDistortion(const WebPPicture* const pic1,
                          pic2->v, pic2->uv_stride,
                          (pic1->width + 1) >> 1, (pic1->height + 1) >> 1,
                          &stats[2]);
-  if (pic1->a != NULL) {
+  if (has_alpha) {
     VP8SSIMAccumulatePlane(pic1->a, pic1->a_stride,
                            pic2->a, pic2->a_stride,
                            pic1->width, pic1->height, &stats[3]);
