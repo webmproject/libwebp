@@ -132,8 +132,7 @@ WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk,
                                       WebPImageInfo* image_info,
                                       int copy_data, uint32_t tag) {
   // For internally allocated chunks, always copy data & make it owner of data.
-  if ((tag == kChunks[VP8X_ID].chunkTag) ||
-      (tag == kChunks[LOOP_ID].chunkTag)) {
+  if (tag == kChunks[VP8X_ID].chunkTag || tag == kChunks[LOOP_ID].chunkTag) {
     copy_data = 1;
   }
 
@@ -510,10 +509,10 @@ WebPMuxError WebPMuxValidate(const WebPMux* const mux) {
   err = WebPMuxNumNamedElements(mux, kChunks[FRAME_ID].chunkName, &num_frames);
   if (err != WEBP_MUX_OK) return err;
   if ((flags & ANIMATION_FLAG) &&
-      ((num_loop_chunks == 0) || (num_frames == 0))) {
+      (num_loop_chunks == 0 || num_frames == 0)) {
     return WEBP_MUX_INVALID_ARGUMENT;
-  } else if (((num_loop_chunks == 1) || (num_frames > 0)) &&
-             !(flags & ANIMATION_FLAG)) {
+  } else if (!(flags & ANIMATION_FLAG) &&
+             (num_loop_chunks == 1 || num_frames > 0)) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
@@ -533,7 +532,7 @@ WebPMuxError WebPMuxValidate(const WebPMux* const mux) {
 
   if (num_vp8x > 1) {
     return WEBP_MUX_INVALID_ARGUMENT;
-  } else if ((num_vp8x == 0) && (num_images != 1)) {
+  } else if (num_vp8x == 0 && num_images != 1) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
@@ -545,7 +544,7 @@ WebPMuxError WebPMuxValidate(const WebPMux* const mux) {
   }
 
   // num_images & num_alpha_chunks are consistent.
-  if ((num_alpha > 0) && (num_alpha != num_images)) {
+  if (num_alpha > 0 && num_alpha != num_images) {
     // Note that "num_alpha > 0" is the correct check but "flags && ALPHA_FLAG"
     // is NOT, because ALPHA_FLAG is based on first image only.
     return WEBP_MUX_INVALID_ARGUMENT;

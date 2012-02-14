@@ -20,11 +20,10 @@ extern "C" {
 //------------------------------------------------------------------------------
 // Life of a mux object.
 
-static int MuxInit(WebPMux* const mux) {
-  if (mux == NULL) return 0;
+static void MuxInit(WebPMux* const mux) {
+  if (mux == NULL) return;
   memset(mux, 0, sizeof(*mux));
   mux->state_ = WEBP_MUX_STATE_PARTIAL;
-  return 1;
 }
 
 WebPMux* WebPMuxNew(void) {
@@ -39,22 +38,20 @@ static void DeleteAllChunks(WebPChunk** const chunk_list) {
   }
 }
 
-static int MuxRelease(WebPMux* const mux) {
-  if (mux == NULL) return 0;
+static void MuxRelease(WebPMux* const mux) {
+  if (mux == NULL) return;
   MuxImageDeleteAll(&mux->images_);
   DeleteAllChunks(&mux->vp8x_);
   DeleteAllChunks(&mux->iccp_);
   DeleteAllChunks(&mux->loop_);
   DeleteAllChunks(&mux->meta_);
   DeleteAllChunks(&mux->unknown_);
-  return 1;
 }
 
 void WebPMuxDelete(WebPMux* const mux) {
-  if (mux) {
-    MuxRelease(mux);
-    free(mux);
-  }
+  // If mux is NULL MuxRelease is a noop.
+  MuxRelease(mux);
+  free(mux);
 }
 
 //------------------------------------------------------------------------------
@@ -100,13 +97,11 @@ static WebPMuxError MuxSet(WebPMux* const mux, TAG_ID id, uint32_t nth,
 static WebPMuxError MuxAddChunk(WebPMux* const mux, uint32_t nth, uint32_t tag,
                                 const uint8_t* data, uint32_t size,
                                 WebPImageInfo* image_info, int copy_data) {
-  TAG_ID id;
+  const TAG_ID id = ChunkGetIdFromTag(tag);
   assert(mux != NULL);
   assert(size <= MAX_CHUNK_PAYLOAD);
 
-  id = ChunkGetIdFromTag(tag);
   if (id == NIL_ID) return WEBP_MUX_INVALID_PARAMETER;
-
   return MuxSet(mux, id, nth, data, size, image_info, copy_data);
 }
 
@@ -205,12 +200,10 @@ static WebPMuxError DeleteChunks(WebPChunk** chunk_list, uint32_t tag) {
 
 static WebPMuxError MuxDeleteAllNamedData(WebPMux* const mux,
                                           const char* const tag) {
-  TAG_ID id;
+  const TAG_ID id = ChunkGetIdFromName(tag);
   WebPChunk** chunk_list;
 
   if (mux == NULL || tag == NULL) return WEBP_MUX_INVALID_ARGUMENT;
-
-  id = ChunkGetIdFromName(tag);
   if (IsWPI(id)) return WEBP_MUX_INVALID_ARGUMENT;
 
   chunk_list = GetChunkListFromId(mux, id);
@@ -458,10 +451,9 @@ WebPMuxError WebPMuxDeleteColorProfile(WebPMux* const mux) {
 static WebPMuxError DeleteFrameTileInternal(WebPMux* const mux,
                                             uint32_t nth,
                                             const char* const tag) {
-  TAG_ID id;
+  const TAG_ID id = ChunkGetIdFromName(tag);
   if (mux == NULL) return WEBP_MUX_INVALID_ARGUMENT;
 
-  id = ChunkGetIdFromName(tag);
   assert(id == FRAME_ID || id == TILE_ID);
   return MuxImageDeleteNth(&mux->images_, nth, id);
 }
@@ -481,11 +473,7 @@ static WebPMuxError GetImageCanvasHeightWidth(const WebPMux* const mux,
                                               uint32_t flags,
                                               uint32_t* width,
                                               uint32_t* height) {
-  uint32_t max_x = 0;
-  uint32_t max_y = 0;
-  uint64_t image_area = 0;
   WebPMuxImage* wpi = NULL;
-
   assert(mux != NULL);
   assert(width && height);
 
@@ -494,6 +482,9 @@ static WebPMuxError GetImageCanvasHeightWidth(const WebPMux* const mux,
   assert(wpi->vp8_ != NULL);
 
   if (wpi->next_) {
+    uint32_t max_x = 0;
+    uint32_t max_y = 0;
+    uint64_t image_area = 0;
     // Aggregate the bounding box for animation frames & tiled images.
     for (; wpi != NULL; wpi = wpi->next_) {
       const WebPImageInfo* image_info = wpi->vp8_->image_info_;
@@ -551,9 +542,8 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   const uint32_t data_size = VP8X_CHUNK_SIZE;
   const WebPMuxImage* images = NULL;
 
-  images = mux->images_;  // First image.
-
   assert(mux != NULL);
+  images = mux->images_;  // First image.
   if (images == NULL || images->vp8_ == NULL || images->vp8_->data_ == NULL) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }

@@ -254,4 +254,4 @@ WebPMuxError WebPMuxValidate(const WebPMux* const mux);
 }    // extern "C"
 #endif
 
-#endif /* WEBP_MUX_MUXI_H_ */
+#endif  /* WEBP_MUX_MUXI_H_ */
