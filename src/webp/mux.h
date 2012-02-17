@@ -136,10 +136,11 @@ WEBP_EXTERN(WebPMux*) WebPMuxCreate(const uint8_t* data, uint32_t size,
 //   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL or data is NULL.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxSetImage(WebPMux* const mux,
-                                          const uint8_t* data, uint32_t size,
-                                          const uint8_t* alpha_data,
-                                          uint32_t alpha_size, int copy_data);
+WEBP_EXTERN(WebPMuxError) WebPMuxSetImage(
+    WebPMux* const mux,
+    const uint8_t* data, uint32_t size,
+    const uint8_t* alpha_data, uint32_t alpha_size,
+    int copy_data);
 
 // Gets a reference to the image in the mux object.
 // The caller should NOT free the returned data.
@@ -181,9 +182,8 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteImage(WebPMux* const mux);
 //   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL or data is NULL.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxSetMetadata(WebPMux* const mux,
-                                             const uint8_t* data,
-                                             uint32_t size, int copy_data);
+WEBP_EXTERN(WebPMuxError) WebPMuxSetMetadata(
+    WebPMux* const mux, const uint8_t* data, uint32_t size, int copy_data);
 
 // Gets a reference to the XMP metadata in the mux object.
 // The caller should NOT free the returned data.
@@ -221,9 +221,8 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteMetadata(WebPMux* const mux);
 //   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL or data is NULL
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error
 //   WEBP_MUX_OK - on success
-WEBP_EXTERN(WebPMuxError) WebPMuxSetColorProfile(WebPMux* const mux,
-                                                 const uint8_t* data,
-                                                 uint32_t size, int copy_data);
+WEBP_EXTERN(WebPMuxError) WebPMuxSetColorProfile(
+    WebPMux* const mux, const uint8_t* data, uint32_t size, int copy_data);
 
 // Gets a reference to the color profile in the mux object.
 // The caller should NOT free the returned data.
@@ -270,12 +269,12 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteColorProfile(WebPMux* const mux);
 //   WEBP_MUX_NOT_FOUND - If we have less than (nth-1) frames before adding.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxAddFrame(WebPMux* const mux, uint32_t nth,
-                                          const uint8_t* data, uint32_t size,
-                                          const uint8_t* alpha_data,
-                                          uint32_t alpha_size,
-                                          uint32_t x_offset, uint32_t y_offset,
-                                          uint32_t duration, int copy_data);
+WEBP_EXTERN(WebPMuxError) WebPMuxAddFrame(
+    WebPMux* const mux, uint32_t nth,
+    const uint8_t* data, uint32_t size,
+    const uint8_t* alpha_data, uint32_t alpha_size,
+    uint32_t x_offset, uint32_t y_offset, uint32_t duration,
+    int copy_data);
 
 // TODO(urvang): Create a struct as follows to reduce argument list size:
 // typedef struct {
@@ -305,13 +304,10 @@ WEBP_EXTERN(WebPMuxError) WebPMuxAddFrame(WebPMux* const mux, uint32_t nth,
 //   WEBP_MUX_NOT_FOUND - if there are less than nth frames in the mux object.
 //   WEBP_MUX_BAD_DATA - if nth frame chunk in mux is invalid.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxGetFrame(const WebPMux* const mux,
-                                          uint32_t nth,
-                                          WebPData* const image,
-                                          WebPData* const alpha,
-                                          uint32_t* x_offset,
-                                          uint32_t* y_offset,
-                                          uint32_t* duration);
+WEBP_EXTERN(WebPMuxError) WebPMuxGetFrame(
+    const WebPMux* const mux, uint32_t nth,
+    WebPData* const image, WebPData* const alpha,
+    uint32_t* x_offset, uint32_t* y_offset, uint32_t* duration);
 
 // Deletes an animation frame from the mux object.
 // nth=0 has a special meaning - last position.
@@ -372,12 +368,12 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetLoopCount(const WebPMux* const mux,
 //   WEBP_MUX_NOT_FOUND - If we have less than (nth-1) tiles before adding.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxAddTile(WebPMux* const mux, uint32_t nth,
-                                         const uint8_t* data, uint32_t size,
-                                         const uint8_t* alpha_data,
-                                         uint32_t alpha_size,
-                                         uint32_t x_offset, uint32_t y_offset,
-                                         int copy_data);
+WEBP_EXTERN(WebPMuxError) WebPMuxAddTile(
+    WebPMux* const mux, uint32_t nth,
+    const uint8_t* data, uint32_t size,
+    const uint8_t* alpha_data, uint32_t alpha_size,
+    uint32_t x_offset, uint32_t y_offset,
+    int copy_data);
 
 // Gets a reference to the nth tile from the mux object.
 // The caller should NOT free the returned data.
@@ -395,11 +391,10 @@ WEBP_EXTERN(WebPMuxError) WebPMuxAddTile(WebPMux* const mux, uint32_t nth,
 //   WEBP_MUX_NOT_FOUND - if there are less than nth tiles in the mux object.
 //   WEBP_MUX_BAD_DATA - if nth tile chunk in mux is invalid.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxGetTile(const WebPMux* const mux, uint32_t nth,
-                                         WebPData* const image,
-                                         WebPData* const alpha,
-                                         uint32_t* x_offset,
-                                         uint32_t* y_offset);
+WEBP_EXTERN(WebPMuxError) WebPMuxGetTile(
+    const WebPMux* const mux, uint32_t nth,
+    WebPData* const image, WebPData* const alpha,
+    uint32_t* x_offset, uint32_t* y_offset);
 
 // Deletes a tile from the mux object.
 // nth=0 has a special meaning - last position

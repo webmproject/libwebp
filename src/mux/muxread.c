@@ -284,13 +284,10 @@ WebPMuxError WebPMuxGetLoopCount(const WebPMux* const mux,
   return WEBP_MUX_OK;
 }
 
-static WebPMuxError MuxGetFrameTileInternal(const WebPMux* const mux,
-                                            uint32_t nth,
-                                            WebPData* const image,
-                                            WebPData* const alpha,
-                                            uint32_t* x_offset,
-                                            uint32_t* y_offset,
-                                            uint32_t* duration, uint32_t tag) {
+static WebPMuxError MuxGetFrameTileInternal(
+    const WebPMux* const mux, uint32_t nth,
+    WebPData* const image, WebPData* const alpha,
+    uint32_t* x_offset, uint32_t* y_offset, uint32_t* duration, uint32_t tag) {
   const uint8_t* frame_tile_data;
   uint32_t frame_tile_size;
   WebPMuxError err;
@@ -370,7 +367,6 @@ static int CountChunks(WebPChunk* const chunk_list, uint32_t tag) {
 WebPMuxError WebPMuxNumNamedElements(const WebPMux* const mux, const char* tag,
                                      int* num_elements) {
   const TAG_ID id = ChunkGetIdFromName(tag);
-  WebPChunk** chunk_list;
 
   if (mux == NULL || tag == NULL || num_elements == NULL) {
     return WEBP_MUX_INVALID_ARGUMENT;
@@ -379,7 +375,7 @@ WebPMuxError WebPMuxNumNamedElements(const WebPMux* const mux, const char* tag,
   if (IsWPI(id)) {
     *num_elements = MuxImageCount(mux->images_, id);
   } else {
-    chunk_list = GetChunkListFromId(mux, id);
+    WebPChunk** chunk_list = GetChunkListFromId(mux, id);
     if (chunk_list == NULL) {
       *num_elements = 0;
     } else {

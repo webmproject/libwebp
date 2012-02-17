@@ -39,12 +39,8 @@ const ChunkInfo kChunks[] = {
 
 void ChunkInit(WebPChunk* const chunk) {
   assert(chunk);
+  memset(chunk, 0, sizeof(*chunk));
   chunk->tag_ = NIL_TAG;
-  chunk->data_ = NULL;
-  chunk->payload_size_ = 0;
-  chunk->owner_ = 0;
-  chunk->image_info_ = NULL;
-  chunk->next_ = NULL;
 }
 
 WebPChunk* ChunkRelease(WebPChunk* const chunk) {
