@@ -148,8 +148,8 @@ WEBP_EXTERN(WebPMuxError) WebPMuxSetImage(WebPMux* const mux,
 //   image - (out) the image data
 //   alpha - (out) the alpha data of the image (if present)
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if either mux or image is NULL
-//                               OR if mux contains animation/tiling.
+//   WEBP_MUX_INVALID_ARGUMENT - if either mux or both image & alpha are NULL
+//                               OR mux contains animation/tiling.
 //   WEBP_MUX_NOT_FOUND - if image is not present in mux object.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxGetImage(const WebPMux* const mux,
