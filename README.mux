@@ -7,16 +7,16 @@
 Description:
 ============
 
-WebP Mux: library to create the MUX container object for features like
+WebP Mux: library to create a WebP container object for features like
 color profile, XMP metadata, animation & tiling. A reference command line
-tool 'webpmux' and Mux container specification 'doc/webp-container-spec.txt'
+tool 'webpmux' and WebP container specification 'doc/webp-container-spec.txt'
 are also provided in this package.
 
 WebP Mux tool:
 ==============
 
-The examples/ directory contains a tool (webpmux) for manipulating the WebP Mux
-file. The webpmux tool can be used to create a WebP container file and to
+The examples/ directory contains a tool (webpmux) for manipulating WebP
+files. The webpmux tool can be used to create a WebP container file and to
 extract or strip relevant data from the container file.
 
 A list of options is available using the -help command line flag:
@@ -64,13 +64,13 @@ INPUT & OUTPUT are in webp format.
 
 WebP Mux API:
 ==============
-WebP Mux API contains methods for adding data to WebPMux (a MUX container object
-for a WebP file) and reading data from WebPMux. This API currently supports
-XMP metadata, Color profile, Animation & Tiling. Other features will be added
-in subsequent releases.
+The WebP Mux API contains methods for adding data to and reading data from
+WebPMux (a WebP container object). This API currently supports XMP metadata,
+color profile, animation & tiling. Other features will be added in subsequent
+releases.
 
-Example#1 (pseudo code): Creating a MUX with image data, color profile & XMP
-metadata.
+Example#1 (pseudo code): Creating a WebPMux object with image data, color
+profile & XMP metadata.
 
   int copy_data = 0;
   WebPMux* mux = WebPMuxNew();
@@ -101,7 +101,7 @@ Example#2 (pseudo code): Get image & color profile data from a WebP file.
   free(data);
 
 
-For detailed MUX-API reference, please refer to the header file (src/webp/mux.h)
+For detailed Mux API reference, please refer to the header file (src/webp/mux.h)
 
 Bugs:
 =====
