@@ -82,6 +82,7 @@ STATICLIBBUILD = TRUE
 !ELSE IF "$(CFG)" == "debug-static"
 TARGET         = $(LIB_NAME_DEBUG).lib
 CC             = $(CCDEBUG)
+RTLIB          = $(RTLIBD)
 STATICLIBBUILD = TRUE
 !ELSE IF "$(CFG)" == "release-dynamic"
 TARGETDLL = $(LIB_NAME).dll
@@ -92,6 +93,7 @@ DLLBUILD  = TRUE
 TARGETDLL = $(LIB_NAME_DEBUG).dll
 TARGET    = $(IMPLIB_NAME_DEBUG).lib
 CC        = $(CCDEBUG)
+RTLIB     = $(RTLIBD)
 DLLBUILD  = TRUE
 !ENDIF
 
@@ -100,9 +102,11 @@ CC     = $(CC) $(RTLIB)
 LNK    = $(LNKLIB) /out:$(DIRLIB)\$(TARGET)
 CFGSET = TRUE
 !ELSE IF "$(DLLBUILD)" == "TRUE"
+DLLC   = webp_dll.c
 DLLINC = webp_dll.h
 CC     = $(CC) /I$(DIROBJ) /FI$(DLLINC) $(RTLIB) /DWEBP_DLL
 LNK    = $(LNKDLL) /out:$(DIRBIN)\$(TARGETDLL) /implib:$(DIRLIB)\$(TARGET)
+X_OBJS = $(DIROBJ)\$(DLLC:.c=.obj)
 CFGSET = TRUE
 !ENDIF
 
@@ -184,7 +188,7 @@ X_OBJS= \
     $(DIROBJ)\utils\quant_levels.obj \
     $(DIROBJ)\utils\tcoder.obj \
     $(DIROBJ)\utils\thread.obj \
-    $(RESOURCE) \
+    $(X_OBJS) \
 
 EXAMPLES_OBJS = \
     $(DIROBJ)\examples\cwebp.obj \
@@ -211,9 +215,12 @@ $(DIRLIB)\$(TARGET): $(X_OBJS)
 $(X_OBJS): $(OUTPUT_DIRS)
 
 !IF "$(DLLBUILD)" == "TRUE"
-$(X_OBJS): $(DIROBJ)\$(DLLINC)
+$(X_OBJS): $(DIROBJ)\$(DLLINC) $(DIROBJ)\$(DLLC)
+
+{$(DIROBJ)}.c{$(DIROBJ)}.obj:
+	$(CC) $(CFLAGS) /Fo"$@"  $<
 clean::
-	@-erase /s $(DIROBJ)\$(DLLINC) 2> NUL
+	@-erase /s $(DIROBJ)\$(DLLC) $(DIROBJ)\$(DLLINC) 2> NUL
 !ENDIF
 
 $(EXAMPLES_OBJS): $(DIRLIB)\$(TARGET)
@@ -227,6 +234,16 @@ $(DIROBJ)\$(DLLINC):
 	@echo #define WEBP_DLL_H_ >> $@
 	@echo #define WEBP_EXTERN(type) __declspec(dllexport) type >> $@
 	@echo #endif  /* WEBP_DLL_H_ */ >> $@
+
+# expose a WebPFree() function for use in managed code
+$(DIROBJ)\$(DLLC): $(DIROBJ)\$(DLLINC)
+	@echo #include ^<stdlib.h^> > $@
+	@echo #include "webp_dll.h" >> $@
+	@echo // This function should be used in place of free() for memory >> $@
+	@echo // returned by the WebP API. >> $@
+	@echo WEBP_EXTERN(void) WebPFree(void* ptr) { >> $@
+	@echo   free(ptr); >> $@
+	@echo } >> $@
 
 .SUFFIXES: .c .obj .res .exe
 {examples}.c{$(DIROBJ)\examples}.obj:
