@@ -13,6 +13,9 @@
 #define WEBP_UTILS_BIT_READER_H_
 
 #include <assert.h>
+#ifdef _MSC_VER
+#include <stdlib.h>  // _byteswap_ulong
+#endif
 #include "../webp/decode_vp8.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
