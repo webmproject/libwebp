@@ -66,6 +66,7 @@ DIROBJ = $(DIRBASE)\obj
 DIRLIB = $(DIRBASE)\lib
 DIRINC = $(DIRBASE)\include
 DIRBIN = $(DIRBASE)\bin
+LIBPDBNAME = $(DIROBJ)\$(TARGET).pdb
 OUTPUT_DIRS = $(DIRBIN) $(DIRINC) $(DIRLIB) \
               $(DIROBJ)\dec \
               $(DIROBJ)\dsp \
@@ -107,6 +108,7 @@ DLLINC = webp_dll.h
 CC     = $(CC) /I$(DIROBJ) /FI$(DLLINC) $(RTLIB) /DWEBP_DLL
 LNK    = $(LNKDLL) /out:$(DIRBIN)\$(TARGETDLL) /implib:$(DIRLIB)\$(TARGET)
 X_OBJS = $(DIROBJ)\$(DLLC:.c=.obj)
+LIBPDBNAME = $(DIROBJ)\$(TARGETDLL).pdb
 CFGSET = TRUE
 !ENDIF
 
@@ -218,7 +220,7 @@ $(X_OBJS): $(OUTPUT_DIRS)
 $(X_OBJS): $(DIROBJ)\$(DLLINC) $(DIROBJ)\$(DLLC)
 
 {$(DIROBJ)}.c{$(DIROBJ)}.obj:
-	$(CC) $(CFLAGS) /Fo"$@"  $<
+	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo"$@"  $<
 clean::
 	@-erase /s $(DIROBJ)\$(DLLC) $(DIROBJ)\$(DLLINC) 2> NUL
 !ENDIF
@@ -247,17 +249,17 @@ $(DIROBJ)\$(DLLC): $(DIROBJ)\$(DLLINC)
 
 .SUFFIXES: .c .obj .res .exe
 {examples}.c{$(DIROBJ)\examples}.obj:
-	$(CC) $(CFLAGS) /Fo"$@"  $<
+	$(CC) $(CFLAGS) /Fd$@.pdb /Fo"$@"  $<
 {src\dec}.c{$(DIROBJ)\dec}.obj:
-	$(CC) $(CFLAGS) /Fo"$@"  $<
+	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo"$@"  $<
 {src\dsp}.c{$(DIROBJ)\dsp}.obj:
-	$(CC) $(CFLAGS) /Fo"$@"  $<
+	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo"$@"  $<
 {src\enc}.c{$(DIROBJ)\enc}.obj:
-	$(CC) $(CFLAGS) /Fo"$@"  $<
+	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo"$@"  $<
 {src\mux}.c{$(DIROBJ)\mux}.obj:
-	$(CC) $(CFLAGS) /Fo"$@"  $<
+	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo"$@"  $<
 {src\utils}.c{$(DIROBJ)\utils}.obj:
-	$(CC) $(CFLAGS) /Fo"$@"  $<
+	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo"$@"  $<
 
 {$(DIROBJ)\examples}.obj{$(DIRBIN)}.exe:
 	$(LNKEXE) $(LDFLAGS) /OUT:"$@" $< \
