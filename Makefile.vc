@@ -248,18 +248,18 @@ $(DIROBJ)\$(DLLC): $(DIROBJ)\$(DLLINC)
 	@echo } >> $@
 
 .SUFFIXES: .c .obj .res .exe
-{examples}.c{$(DIROBJ)\examples}.obj:
-	$(CC) $(CFLAGS) /Fd$@.pdb /Fo"$@"  $<
-{src\dec}.c{$(DIROBJ)\dec}.obj:
-	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo"$@"  $<
-{src\dsp}.c{$(DIROBJ)\dsp}.obj:
-	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo"$@"  $<
-{src\enc}.c{$(DIROBJ)\enc}.obj:
-	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo"$@"  $<
-{src\mux}.c{$(DIROBJ)\mux}.obj:
-	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo"$@"  $<
-{src\utils}.c{$(DIROBJ)\utils}.obj:
-	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo"$@"  $<
+{examples}.c{$(DIROBJ)\examples}.obj::
+	$(CC) $(CFLAGS) /Fd$(DIROBJ)\examples\ /Fo$(DIROBJ)\examples\  $<
+{src\dec}.c{$(DIROBJ)\dec}.obj::
+	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo$(DIROBJ)\dec\ $<
+{src\dsp}.c{$(DIROBJ)\dsp}.obj::
+	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo$(DIROBJ)\dsp\ $<
+{src\enc}.c{$(DIROBJ)\enc}.obj::
+	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo$(DIROBJ)\enc\ $<
+{src\mux}.c{$(DIROBJ)\mux}.obj::
+	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo$(DIROBJ)\mux\ $<
+{src\utils}.c{$(DIROBJ)\utils}.obj::
+	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo$(DIROBJ)\utils\ $<
 
 {$(DIROBJ)\examples}.obj{$(DIRBIN)}.exe:
 	$(LNKEXE) $(LDFLAGS) /OUT:"$@" $< \
