@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAHn//njk\u003d",
+        "filename": "src/mux/muxread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-02-23T21:30:17Z",
+      "side": 1,
+      "message": "oh indeed missed these.\nhttps://gerrit.chromium.org/gerrit/16521",
+      "parentUuid": "AAAAHn//oQ0\u003d",
+      "revId": "506a4af2fa85e8c794970c7e8831ff0ce6a75cc3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAHn//oQw\u003d",
         "filename": "src/mux/muxread.c",
         "patchSetId": 3
@@ -47,6 +65,24 @@
       "writtenOn": "2012-02-23T05:57:43Z",
       "side": 1,
       "message": "and \u0027const WebPChunk* const* chunk_list\u0027 here",
+      "revId": "506a4af2fa85e8c794970c7e8831ff0ce6a75cc3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//njc\u003d",
+        "filename": "src/mux/muxread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-02-23T21:30:17Z",
+      "side": 1,
+      "message": "actually becomes WebPChunk* const* chunk_list\n\nremember the data itself is not const.\n\nCould be WebPChunk* const* const chunk_list\nbut then I think we\u0027re beginning to stretch on readability.",
+      "parentUuid": "AAAAHn//oQs\u003d",
       "revId": "506a4af2fa85e8c794970c7e8831ff0ce6a75cc3",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
