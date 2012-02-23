@@ -230,8 +230,8 @@ WebPMuxError WebPMuxGetImage(const WebPMux* const mux,
   WebPMuxError err;
   WebPMuxImage* wpi = NULL;
 
-  if (mux == NULL || image == NULL) return WEBP_MUX_INVALID_ARGUMENT;
-  memset(image, 0, sizeof(*image));
+  if (mux == NULL || (image == NULL && alpha == NULL))
+    return WEBP_MUX_INVALID_ARGUMENT;
 
   err = ValidateForImage(mux);
   if (err != WEBP_MUX_OK) return err;
@@ -250,9 +250,12 @@ WebPMuxError WebPMuxGetImage(const WebPMux* const mux,
   }
 
   // Get image chunk.
-  if (wpi->vp8_ != NULL) {
-    image->bytes_ = wpi->vp8_->data_;
-    image->size_ = wpi->vp8_->payload_size_;
+  if (image != NULL) {
+    memset(image, 0, sizeof(*image));
+    if (wpi->vp8_ != NULL) {
+      image->bytes_ = wpi->vp8_->data_;
+      image->size_ = wpi->vp8_->payload_size_;
+    }
   }
   return WEBP_MUX_OK;
 }
