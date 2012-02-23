@@ -16,6 +16,24 @@
       "revId": "dc17abdcb64ae0bca9be4b9d4347bcd6b77c9941",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAHn//nZw\u003d",
+        "filename": "src/mux/muxread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-02-23T23:11:29Z",
+      "side": 1,
+      "message": "(from the original CL):\n\"\"\"\nactually becomes WebPChunk* const* chunk_list\nremember the data itself is not const.\nCould be WebPChunk* const* const chunk_list but then I think we\u0027re beginning to stretch on readability.\n\"\"\"\n\nconst WebPChunk** chunk_list will cause a warning as the return is a WebPChunk**; this is similar to your array const problem from earlier.",
+      "parentUuid": "AAAAHn//nb4\u003d",
+      "revId": "dc17abdcb64ae0bca9be4b9d4347bcd6b77c9941",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
