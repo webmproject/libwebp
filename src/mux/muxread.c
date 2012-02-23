@@ -165,7 +165,7 @@ WebPMux* WebPMuxCreate(const uint8_t* data, uint32_t size, int copy_data,
       if (wpi->is_partial_) goto Err;  // Encountered a non-image chunk before
                                        // getting all chunks of an image.
       chunk_list = GetChunkListFromId(mux, id);  // List for adding this chunk.
-      if (chunk_list == NULL) chunk_list = (WebPChunk**)&mux->unknown_;
+      if (chunk_list == NULL) chunk_list = &mux->unknown_;
       if (ChunkSetNth(&chunk, chunk_list, 0) != WEBP_MUX_OK) goto Err;
     }
 
@@ -356,9 +356,9 @@ WebPMuxError WebPMuxGetTile(const WebPMux* const mux, uint32_t nth,
 
 // Count number of chunks matching 'tag' in the 'chunk_list'.
 // If tag == NIL_TAG, any tag will be matched.
-static int CountChunks(WebPChunk* const chunk_list, uint32_t tag) {
+static int CountChunks(const WebPChunk* const chunk_list, uint32_t tag) {
   int count = 0;
-  WebPChunk* current;
+  const WebPChunk* current;
   for (current = chunk_list; current != NULL; current = current->next_) {
     if (tag == NIL_TAG || current->tag_ == tag) {
       count++;  // Count chunks whose tags match.
@@ -378,7 +378,7 @@ WebPMuxError WebPMuxNumNamedElements(const WebPMux* const mux, const char* tag,
   if (IsWPI(id)) {
     *num_elements = MuxImageCount(mux->images_, id);
   } else {
-    WebPChunk** chunk_list = GetChunkListFromId(mux, id);
+    WebPChunk* const* chunk_list = GetChunkListFromId(mux, id);
     if (chunk_list == NULL) {
       *num_elements = 0;
     } else {
