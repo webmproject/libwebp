@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAHn//nb4\u003d",
+        "filename": "src/mux/muxread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-02-23T22:55:58Z",
+      "side": 1,
+      "message": "it\u0027s my understanding that the final WebPChunk data will stay constant in this function.\nHence, the leading const is the most important (more than the subsequent const-ness of the various pointer level). So, what about:\n\nconst WebPChunk* const* chunk_list\n\n?\n\n(or just \u0027const WebPChunk** chunk_list\u0027 if readability looks better)",
+      "revId": "dc17abdcb64ae0bca9be4b9d4347bcd6b77c9941",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
