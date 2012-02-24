@@ -188,8 +188,8 @@ static WEBP_INLINE int IsLeaf(const TCoder* const c, int pos) {
   return (2 * pos > c->num_symbols_);
 }
 
-// Returns true if node has no child.
-static WEBP_INLINE int HasOnlyRightChild(const TCoder* const c, int pos) {
+// Returns true if node has no right child.
+static WEBP_INLINE int HasOnlyLeftChild(const TCoder* const c, int pos) {
   return (2 * pos == c->num_symbols_);
 }
 
@@ -202,6 +202,8 @@ static int NewNode(TCoder* const c, int s) {
   const int pos = 1 + c->num_symbols_;
   assert(c);
   assert(c->num_symbols_ < c->num_nodes_);
+  assert(c->symbols_[s] == INVALID_POS);
+  assert(c->nodes_[pos].symbol_ == INVALID_SYMBOL);
   c->symbols_[s] = pos;
   ResetNode(&c->nodes_[pos], s);
   ++c->num_symbols_;
@@ -319,6 +321,7 @@ static WEBP_INLINE void CodeSymbol(VP8BitWriter* const bw, int s,
                                    int max_value) {
   int i, up = 1;
   assert(bw);
+  assert(s < max_value);
   for (i = 0; up < max_value; up <<= 1, ++i) {
     int den = (max_value >> 1) & ~(up - 1);
     if (max_value & up) den |= max_value & (up - 1);
@@ -361,7 +364,11 @@ void TCoderEncode(TCoder* const c, int s, VP8BitWriter* const bw) {
   }
   if (is_new_symbol) {
     if (bw != NULL) {
-      CodeSymbol(bw, s, c->num_nodes_);
+      int k, count = 0;
+      for (k = 0; k < s; ++k) {
+        count += (c->symbols_[k] == INVALID_POS);
+      }
+      CodeSymbol(bw, count, c->num_nodes_ - c->num_symbols_);
     }
     pos = NewNode(c, s);
   } else {
@@ -376,7 +383,7 @@ void TCoderEncode(TCoder* const c, int s, VP8BitWriter* const bw) {
         const int is_stop = (i == length);
         if (VP8PutBit(bw, is_stop, symbol_proba)) {
           break;
-        } else if (!HasOnlyRightChild(c, parent)) {
+        } else if (!HasOnlyLeftChild(c, parent)) {
           const int left_proba = node->probaL_;
           const int is_right =
               (pos >> (length - 1 - i)) & 1;  // extract bits #i
@@ -414,10 +421,16 @@ int TCoderDecode(TCoder* const c, VP8BitReader* const br) {
   }
   // Code either the raw value, or the path downward to its node.
   if (is_new_symbol) {
-    s = DecodeSymbol(br, c->num_nodes_);
-    if (s >= c->num_nodes_) {
-      br->eof_ = 1;   // will make decoding abort.
-      return 0;
+    int count = DecodeSymbol(br, c->num_nodes_ - c->num_symbols_);
+    // The 'count' value specifies the number of empty slots to jump
+    // over. We skip the already-used ones.
+    for (s = 0; s < c->num_nodes_; ++s) {
+      if (c->symbols_[s] == INVALID_POS) {
+        if (count-- == 0) break;
+      }
+    }
+    if (s == c->num_nodes_) {
+      goto Error;
     }
     pos = NewNode(c, s);
   } else {
@@ -431,7 +444,7 @@ int TCoderDecode(TCoder* const c, VP8BitReader* const br) {
         break;  // reached the stopping node for the coded symbol.
       } else {
         // Not yet done, keep traversing and branching.
-        if (!HasOnlyRightChild(c, pos)) {
+        if (!HasOnlyLeftChild(c, pos)) {
           const int left_proba = node->probaL_;
           const int is_right = VP8GetBit(br, left_proba);
           pos = (pos << 1) | is_right;
@@ -442,12 +455,17 @@ int TCoderDecode(TCoder* const c, VP8BitReader* const br) {
         assert(pos <= c->num_nodes_);
       }
     }
+    assert(pos <= c->num_symbols_);
     s = c->nodes_[pos].symbol_;
     assert(pos == SymbolToNode(c, s));
   }
-  assert(pos <= c->num_nodes_);
+  assert(pos <= c->num_symbols_);
   UpdateTree(c, pos);
   return s;
+
+ Error:
+  br->eof_ = 1;   // will make decoding abort.
+  return 0;
 }
 
 // -----------------------------------------------------------------------------
