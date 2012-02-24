@@ -358,7 +358,7 @@ int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
 
 static int DecompressZlibTCoder(VP8BitReader* const br, int width,
                                 uint8_t* output, size_t output_size) {
-  int ok = 1;
+  int ok = 0;
   const size_t MAX_DIST = 3 * width;
   const size_t MAX_LEN = 2 * width;
   TCoder* const coder = TCoderNew(MAX_SYMBOLS);
