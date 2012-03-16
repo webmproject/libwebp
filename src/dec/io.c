@@ -282,7 +282,7 @@ static WEBP_INLINE void ImportRow(const uint8_t* const src,
         const int32_t frac = base * (-accum);
         wrk->frow[x_out] = (sum + base) * wrk->x_sub - frac;
         // fresh fractional start for next pixel
-        sum = MULT(frac, wrk->fx_scale);
+        sum = (int)MULT(frac, wrk->fx_scale);
       }
     }
   } else {        // simple bilinear interpolation
@@ -308,7 +308,7 @@ static void ExportRow(WebPRescaler* const wrk) {
   const int yscale = wrk->fy_scale * (-wrk->y_accum);
   assert(wrk->y_accum <= 0);
   for (x_out = 0; x_out < wrk->dst_width; ++x_out) {
-    const int frac = MULT(wrk->frow[x_out], yscale);
+    const int frac = (int)MULT(wrk->frow[x_out], yscale);
     const int v = (int)MULT(wrk->irow[x_out] - frac, wrk->fxy_scale);
     wrk->dst[x_out] = (!(v & ~0xff)) ? v : (v < 0) ? 0 : 255;
     wrk->irow[x_out] = frac;   // new fractional start

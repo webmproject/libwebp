@@ -74,8 +74,7 @@ static VP8StatusCode AllocateBuffer(WebPDecBuffer* const buffer) {
   if (!buffer->is_external_memory && buffer->private_memory == NULL) {
     uint8_t* output;
     int uv_stride = 0, a_stride = 0;
-    int uv_size = 0;
-    uint64_t a_size = 0, total_size;
+    uint64_t uv_size = 0, a_size = 0, total_size;
     // We need memory and it hasn't been allocated yet.
     // => initialize output buffer, now that dimensions are known.
     const int stride = w * kModeBpp[mode];
@@ -108,10 +107,10 @@ static VP8StatusCode AllocateBuffer(WebPDecBuffer* const buffer) {
       buf->y_size = (int)size;
       buf->u = output + size;
       buf->u_stride = uv_stride;
-      buf->u_size = uv_size;
+      buf->u_size = (int)uv_size;
       buf->v = output + size + uv_size;
       buf->v_stride = uv_stride;
-      buf->v_size = uv_size;
+      buf->v_size = (int)uv_size;
       if (mode == MODE_YUVA) {
         buf->a = output + size + 2 * uv_size;
       }
