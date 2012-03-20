@@ -160,6 +160,25 @@ void WebPCopyDecBuffer(const WebPDecBuffer* const src,
 void WebPGrabDecBuffer(WebPDecBuffer* const src, WebPDecBuffer* const dst);
 
 //------------------------------------------------------------------------------
+// Cropping and rescaling.
+
+// Setup crop_xxx fields, mb_w and mb_h
+int WebPIoInitFromOptions(const WebPDecoderOptions* const options,
+                          VP8Io* const io);
+
+// Initialize a rescaler given scratch area 'work' and dimensions of src & dst.
+void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
+                      uint8_t* dst, int dst_width, int dst_height,
+                      int dst_stride, int x_add, int x_sub, int y_add,
+                      int y_sub, int32_t* work);
+
+// Import a row of data and save its contribution in the rescaler.
+void WebPRescalerImportRow(const uint8_t* const src, WebPRescaler* const wrk);
+
+// Export a row from rescaler.
+void WebPRescalerExportRow(WebPRescaler* const wrk);
+
+//------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

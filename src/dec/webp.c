@@ -609,6 +609,146 @@ VP8StatusCode WebPDecode(const uint8_t* data, uint32_t data_size,
   return status;
 }
 
+//------------------------------------------------------------------------------
+// Simple picture rescaler
+
+int WebPIoInitFromOptions(const WebPDecoderOptions* const options,
+                          VP8Io* const io) {
+  const int W = io->width;
+  const int H = io->height;
+  int x = 0, y = 0, w = W, h = H;
+
+  // Cropping
+  io->use_cropping = (options != NULL) && (options->use_cropping > 0);
+  if (io->use_cropping) {
+    w = options->crop_width;
+    h = options->crop_height;
+    // TODO(skal): take colorspace into account. Don't assume YUV420.
+    x = options->crop_left & ~1;
+    y = options->crop_top & ~1;
+    if (x < 0 || y < 0 || w <= 0 || h <= 0 || x + w > W || y + h > H) {
+      return 0;  // out of frame boundary error
+    }
+  }
+  io->crop_left   = x;
+  io->crop_top    = y;
+  io->crop_right  = x + w;
+  io->crop_bottom = y + h;
+  io->mb_w = w;
+  io->mb_h = h;
+
+  // Scaling
+  io->use_scaling = (options != NULL) && (options->use_scaling > 0);
+  if (io->use_scaling) {
+    if (options->scaled_width <= 0 || options->scaled_height <= 0) {
+      return 0;
+    }
+    io->scaled_width = options->scaled_width;
+    io->scaled_height = options->scaled_height;
+  }
+
+  // Filter
+  io->bypass_filtering = options && options->bypass_filtering;
+
+  // Fancy upsampler
+#ifdef FANCY_UPSAMPLING
+  io->fancy_upsampling = (options == NULL) || (!options->no_fancy_upsampling);
+#endif
+
+  if (io->use_scaling) {
+    // disable filter (only for large downscaling ratio).
+    io->bypass_filtering = (io->scaled_width < W * 3 / 4) &&
+                           (io->scaled_height < H * 3 / 4);
+    io->fancy_upsampling = 0;
+  }
+  return 1;
+}
+
+#define RFIX 30
+#define MULT(x,y) (((int64_t)(x) * (y) + (1 << (RFIX - 1))) >> RFIX)
+
+void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
+                      uint8_t* dst, int dst_width, int dst_height,
+                      int dst_stride, int x_add, int x_sub, int y_add,
+                      int y_sub, int32_t* work) {
+  wrk->x_expand = (src_width < dst_width);
+  wrk->src_width = src_width;
+  wrk->src_height = src_height;
+  wrk->dst_width = dst_width;
+  wrk->dst_height = dst_height;
+  wrk->dst = dst;
+  wrk->dst_stride = dst_stride;
+  // for 'x_expand', we use bilinear interpolation
+  wrk->x_add = wrk->x_expand ? (x_sub - 1) : x_add - x_sub;
+  wrk->x_sub = wrk->x_expand ? (x_add - 1) : x_sub;
+  wrk->y_accum = y_add;
+  wrk->y_add = y_add;
+  wrk->y_sub = y_sub;
+  wrk->fx_scale = (1 << RFIX) / x_sub;
+  wrk->fy_scale = (1 << RFIX) / y_sub;
+  wrk->fxy_scale = wrk->x_expand ?
+      ((int64_t)dst_height << RFIX) / (x_sub * src_height) :
+      ((int64_t)dst_height << RFIX) / (x_add * src_height);
+  wrk->irow = work;
+  wrk->frow = work + dst_width;
+}
+
+void WebPRescalerImportRow(const uint8_t* const src, WebPRescaler* const wrk) {
+  int x_in = 0;
+  int x_out;
+  int accum = 0;
+  if (!wrk->x_expand) {
+    int sum = 0;
+    for (x_out = 0; x_out < wrk->dst_width; ++x_out) {
+      accum += wrk->x_add;
+      for (; accum > 0; accum -= wrk->x_sub) {
+        sum += src[x_in++];
+      }
+      {        // Emit next horizontal pixel.
+        const int32_t base = src[x_in++];
+        const int32_t frac = base * (-accum);
+        wrk->frow[x_out] = (sum + base) * wrk->x_sub - frac;
+        // fresh fractional start for next pixel
+        sum = (int)MULT(frac, wrk->fx_scale);
+      }
+    }
+  } else {        // simple bilinear interpolation
+    int left = src[0], right = src[0];
+    for (x_out = 0; x_out < wrk->dst_width; ++x_out) {
+      if (accum < 0) {
+        left = right;
+        right = src[++x_in];
+        accum += wrk->x_add;
+      }
+      wrk->frow[x_out] = right * wrk->x_add + (left - right) * accum;
+      accum -= wrk->x_sub;
+    }
+  }
+  // Accumulate the new row's contribution
+  for (x_out = 0; x_out < wrk->dst_width; ++x_out) {
+    wrk->irow[x_out] += wrk->frow[x_out];
+  }
+}
+
+void WebPRescalerExportRow(WebPRescaler* const wrk) {
+  int x_out;
+  const int yscale = wrk->fy_scale * (-wrk->y_accum);
+  assert(wrk->y_accum <= 0);
+  for (x_out = 0; x_out < wrk->dst_width; ++x_out) {
+    const int frac = (int)MULT(wrk->frow[x_out], yscale);
+    const int v = (int)MULT(wrk->irow[x_out] - frac, wrk->fxy_scale);
+    wrk->dst[x_out] = (!(v & ~0xff)) ? v : (v < 0) ? 0 : 255;
+    wrk->irow[x_out] = frac;   // new fractional start
+  }
+  wrk->y_accum += wrk->y_add;
+  wrk->dst += wrk->dst_stride;
+}
+
+#undef MULT
+#undef RFIX
+
+//------------------------------------------------------------------------------
+
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
 #endif

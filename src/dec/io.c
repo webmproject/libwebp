@@ -229,109 +229,17 @@ static int EmitAlphaRGBA4444(const VP8Io* const io, WebPDecParams* const p) {
 }
 
 //------------------------------------------------------------------------------
-// Simple picture rescaler
-
-// TODO(skal): start a common library for encoder and decoder, and factorize
-// this code in.
-
-#define RFIX 30
-#define MULT(x,y) (((int64_t)(x) * (y) + (1 << (RFIX - 1))) >> RFIX)
-
-static void InitRescaler(WebPRescaler* const wrk,
-                         int src_width, int src_height,
-                         uint8_t* dst,
-                         int dst_width, int dst_height, int dst_stride,
-                         int x_add, int x_sub, int y_add, int y_sub,
-                         int32_t* work) {
-  wrk->x_expand = (src_width < dst_width);
-  wrk->src_width = src_width;
-  wrk->src_height = src_height;
-  wrk->dst_width = dst_width;
-  wrk->dst_height = dst_height;
-  wrk->dst = dst;
-  wrk->dst_stride = dst_stride;
-  // for 'x_expand', we use bilinear interpolation
-  wrk->x_add = wrk->x_expand ? (x_sub - 1) : x_add - x_sub;
-  wrk->x_sub = wrk->x_expand ? (x_add - 1) : x_sub;
-  wrk->y_accum = y_add;
-  wrk->y_add = y_add;
-  wrk->y_sub = y_sub;
-  wrk->fx_scale = (1 << RFIX) / x_sub;
-  wrk->fy_scale = (1 << RFIX) / y_sub;
-  wrk->fxy_scale = wrk->x_expand ?
-      ((int64_t)dst_height << RFIX) / (x_sub * src_height) :
-      ((int64_t)dst_height << RFIX) / (x_add * src_height);
-  wrk->irow = work;
-  wrk->frow = work + dst_width;
-}
-
-static WEBP_INLINE void ImportRow(const uint8_t* const src,
-                                  WebPRescaler* const wrk) {
-  int x_in = 0;
-  int x_out;
-  int accum = 0;
-  if (!wrk->x_expand) {
-    int sum = 0;
-    for (x_out = 0; x_out < wrk->dst_width; ++x_out) {
-      accum += wrk->x_add;
-      for (; accum > 0; accum -= wrk->x_sub) {
-        sum += src[x_in++];
-      }
-      {        // Emit next horizontal pixel.
-        const int32_t base = src[x_in++];
-        const int32_t frac = base * (-accum);
-        wrk->frow[x_out] = (sum + base) * wrk->x_sub - frac;
-        // fresh fractional start for next pixel
-        sum = (int)MULT(frac, wrk->fx_scale);
-      }
-    }
-  } else {        // simple bilinear interpolation
-    int left = src[0], right = src[0];
-    for (x_out = 0; x_out < wrk->dst_width; ++x_out) {
-      if (accum < 0) {
-        left = right;
-        right = src[++x_in];
-        accum += wrk->x_add;
-      }
-      wrk->frow[x_out] = right * wrk->x_add + (left - right) * accum;
-      accum -= wrk->x_sub;
-    }
-  }
-  // Accumulate the new row's contribution
-  for (x_out = 0; x_out < wrk->dst_width; ++x_out) {
-    wrk->irow[x_out] += wrk->frow[x_out];
-  }
-}
-
-static void ExportRow(WebPRescaler* const wrk) {
-  int x_out;
-  const int yscale = wrk->fy_scale * (-wrk->y_accum);
-  assert(wrk->y_accum <= 0);
-  for (x_out = 0; x_out < wrk->dst_width; ++x_out) {
-    const int frac = (int)MULT(wrk->frow[x_out], yscale);
-    const int v = (int)MULT(wrk->irow[x_out] - frac, wrk->fxy_scale);
-    wrk->dst[x_out] = (!(v & ~0xff)) ? v : (v < 0) ? 0 : 255;
-    wrk->irow[x_out] = frac;   // new fractional start
-  }
-  wrk->y_accum += wrk->y_add;
-  wrk->dst += wrk->dst_stride;
-}
-
-#undef MULT
-#undef RFIX
-
-//------------------------------------------------------------------------------
 // YUV rescaling (no final RGB conversion needed)
 
 static int Rescale(const uint8_t* src, int src_stride,
                    int new_lines, WebPRescaler* const wrk) {
   int num_lines_out = 0;
   while (new_lines-- > 0) {    // import new contribution of one source row.
-    ImportRow(src, wrk);
+    WebPRescalerImportRow(src, wrk);
     src += src_stride;
     wrk->y_accum -= wrk->y_sub;
     while (wrk->y_accum <= 0) {      // emit output row(s)
-      ExportRow(wrk);
+      WebPRescalerExportRow(wrk);
       ++num_lines_out;
     }
   }
@@ -382,26 +290,26 @@ static int InitYUVRescaler(const VP8Io* const io, WebPDecParams* const p) {
     return 0;   // memory error
   }
   work = (int32_t*)p->memory;
-  InitRescaler(&p->scaler_y, io->mb_w, io->mb_h,
-               buf->y, out_width, out_height, buf->y_stride,
-               io->mb_w, out_width, io->mb_h, out_height,
-               work);
-  InitRescaler(&p->scaler_u, uv_in_width, uv_in_height,
-               buf->u, uv_out_width, uv_out_height, buf->u_stride,
-               uv_in_width, uv_out_width,
-               uv_in_height, uv_out_height,
-               work + work_size);
-  InitRescaler(&p->scaler_v, uv_in_width, uv_in_height,
-               buf->v, uv_out_width, uv_out_height, buf->v_stride,
-               uv_in_width, uv_out_width,
-               uv_in_height, uv_out_height,
-               work + work_size + uv_work_size);
+  WebPRescalerInit(&p->scaler_y, io->mb_w, io->mb_h,
+                   buf->y, out_width, out_height, buf->y_stride,
+                   io->mb_w, out_width, io->mb_h, out_height,
+                   work);
+  WebPRescalerInit(&p->scaler_u, uv_in_width, uv_in_height,
+                   buf->u, uv_out_width, uv_out_height, buf->u_stride,
+                   uv_in_width, uv_out_width,
+                   uv_in_height, uv_out_height,
+                   work + work_size);
+  WebPRescalerInit(&p->scaler_v, uv_in_width, uv_in_height,
+                   buf->v, uv_out_width, uv_out_height, buf->v_stride,
+                   uv_in_width, uv_out_width,
+                   uv_in_height, uv_out_height,
+                   work + work_size + uv_work_size);
   p->emit = EmitRescaledYUV;
   if (has_alpha) {
-    InitRescaler(&p->scaler_a, io->mb_w, io->mb_h,
-                 buf->a, out_width, out_height, buf->a_stride,
-                 io->mb_w, out_width, io->mb_h, out_height,
-                 work + work_size + 2 * uv_work_size);
+    WebPRescalerInit(&p->scaler_a, io->mb_w, io->mb_h,
+                     buf->a, out_width, out_height, buf->a_stride,
+                     io->mb_w, out_width, io->mb_h, out_height,
+                     work + work_size + 2 * uv_work_size);
     p->emit_alpha = EmitRescaledAlphaYUV;
   }
   return 1;
@@ -416,7 +324,7 @@ static int Import(const uint8_t* src, int src_stride,
                   int new_lines, WebPRescaler* const wrk) {
   int num_lines_in = 0;
   while (num_lines_in < new_lines && wrk->y_accum > 0) {
-    ImportRow(src, wrk);
+    WebPRescalerImportRow(src, wrk);
     src += src_stride;
     ++num_lines_in;
     wrk->y_accum -= wrk->y_sub;
@@ -435,9 +343,9 @@ static int ExportRGB(WebPDecParams* const p, int y_pos) {
   while (p->scaler_y.y_accum <= 0 && p->scaler_u.y_accum <= 0) {
     assert(p->last_y + y_pos + num_lines_out < p->output->height);
     assert(p->scaler_u.y_accum == p->scaler_v.y_accum);
-    ExportRow(&p->scaler_y);
-    ExportRow(&p->scaler_u);
-    ExportRow(&p->scaler_v);
+    WebPRescalerExportRow(&p->scaler_y);
+    WebPRescalerExportRow(&p->scaler_u);
+    WebPRescalerExportRow(&p->scaler_v);
     convert(p->scaler_y.dst, p->scaler_u.dst, p->scaler_v.dst,
             dst, p->scaler_y.dst_width);
     dst += buf->stride;
@@ -475,7 +383,7 @@ static int ExportAlpha(WebPDecParams* const p, int y_pos) {
   while (p->scaler_a.y_accum <= 0) {
     int i;
     assert(p->last_y + y_pos + num_lines_out < p->output->height);
-    ExportRow(&p->scaler_a);
+    WebPRescalerExportRow(&p->scaler_a);
     for (i = 0; i < p->scaler_a.dst_width; ++i) {
       dst[4 * i] = p->scaler_a.dst[i];
     }
@@ -492,7 +400,7 @@ static int ExportAlphaRGBA4444(WebPDecParams* const p, int y_pos) {
   while (p->scaler_a.y_accum <= 0) {
     int i;
     assert(p->last_y + y_pos + num_lines_out < p->output->height);
-    ExportRow(&p->scaler_a);
+    WebPRescalerExportRow(&p->scaler_a);
     for (i = 0; i < p->scaler_a.dst_width; ++i) {
       // Fill in the alpha value (converted to 4 bits).
       const uint32_t alpha_val = clip((p->scaler_a.dst[i] + 8) >> 4, 15);
@@ -543,25 +451,25 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
   }
   work = (int32_t*)p->memory;
   tmp = (uint8_t*)(work + tmp_size1);
-  InitRescaler(&p->scaler_y, io->mb_w, io->mb_h,
-               tmp + 0 * out_width, out_width, out_height, 0,
-               io->mb_w, out_width, io->mb_h, out_height,
-               work + 0 * work_size);
-  InitRescaler(&p->scaler_u, uv_in_width, uv_in_height,
-               tmp + 1 * out_width, out_width, out_height, 0,
-               io->mb_w, 2 * out_width, io->mb_h, 2 * out_height,
-               work + 1 * work_size);
-  InitRescaler(&p->scaler_v, uv_in_width, uv_in_height,
-               tmp + 2 * out_width, out_width, out_height, 0,
-               io->mb_w, 2 * out_width, io->mb_h, 2 * out_height,
-               work + 2 * work_size);
+  WebPRescalerInit(&p->scaler_y, io->mb_w, io->mb_h,
+                   tmp + 0 * out_width, out_width, out_height, 0,
+                   io->mb_w, out_width, io->mb_h, out_height,
+                   work + 0 * work_size);
+  WebPRescalerInit(&p->scaler_u, uv_in_width, uv_in_height,
+                   tmp + 1 * out_width, out_width, out_height, 0,
+                   io->mb_w, 2 * out_width, io->mb_h, 2 * out_height,
+                   work + 1 * work_size);
+  WebPRescalerInit(&p->scaler_v, uv_in_width, uv_in_height,
+                   tmp + 2 * out_width, out_width, out_height, 0,
+                   io->mb_w, 2 * out_width, io->mb_h, 2 * out_height,
+                   work + 2 * work_size);
   p->emit = EmitRescaledRGB;
 
   if (has_alpha) {
-    InitRescaler(&p->scaler_a, io->mb_w, io->mb_h,
-                 tmp + 3 * out_width, out_width, out_height, 0,
-                 io->mb_w, out_width, io->mb_h, out_height,
-                 work + 3 * work_size);
+    WebPRescalerInit(&p->scaler_a, io->mb_w, io->mb_h,
+                     tmp + 3 * out_width, out_width, out_height, 0,
+                     io->mb_w, out_width, io->mb_h, out_height,
+                     work + 3 * work_size);
     p->emit_alpha = EmitRescaledAlphaRGB;
   }
   return 1;
@@ -570,59 +478,6 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
 //------------------------------------------------------------------------------
 // Default custom functions
 
-// Setup crop_xxx fields, mb_w and mb_h
-static int InitFromOptions(const WebPDecoderOptions* const options,
-                           VP8Io* const io) {
-  const int W = io->width;
-  const int H = io->height;
-  int x = 0, y = 0, w = W, h = H;
-
-  // Cropping
-  io->use_cropping = (options != NULL) && (options->use_cropping > 0);
-  if (io->use_cropping) {
-    w = options->crop_width;
-    h = options->crop_height;
-    // TODO(skal): take colorspace into account. Don't assume YUV420.
-    x = options->crop_left & ~1;
-    y = options->crop_top & ~1;
-    if (x < 0 || y < 0 || w <= 0 || h <= 0 || x + w > W || y + h > H) {
-      return 0;  // out of frame boundary error
-    }
-  }
-  io->crop_left   = x;
-  io->crop_top    = y;
-  io->crop_right  = x + w;
-  io->crop_bottom = y + h;
-  io->mb_w = w;
-  io->mb_h = h;
-
-  // Scaling
-  io->use_scaling = (options != NULL) && (options->use_scaling > 0);
-  if (io->use_scaling) {
-    if (options->scaled_width <= 0 || options->scaled_height <= 0) {
-      return 0;
-    }
-    io->scaled_width = options->scaled_width;
-    io->scaled_height = options->scaled_height;
-  }
-
-  // Filter
-  io->bypass_filtering = options && options->bypass_filtering;
-
-  // Fancy upsampler
-#ifdef FANCY_UPSAMPLING
-  io->fancy_upsampling = (options == NULL) || (!options->no_fancy_upsampling);
-#endif
-
-  if (io->use_scaling) {
-    // disable filter (only for large downscaling ratio).
-    io->bypass_filtering = (io->scaled_width < W * 3 / 4) &&
-                           (io->scaled_height < H * 3 / 4);
-    io->fancy_upsampling = 0;
-  }
-  return 1;
-}
-
 static int CustomSetup(VP8Io* io) {
   WebPDecParams* const p = (WebPDecParams*)io->opaque;
   const int is_rgb = (p->output->colorspace < MODE_YUV);
@@ -630,7 +485,7 @@ static int CustomSetup(VP8Io* io) {
   p->memory = NULL;
   p->emit = NULL;
   p->emit_alpha = NULL;
-  if (!InitFromOptions(p->options, io)) {
+  if (!WebPIoInitFromOptions(p->options, io)) {
     return 0;
   }
 
