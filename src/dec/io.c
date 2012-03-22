@@ -234,14 +234,11 @@ static int EmitAlphaRGBA4444(const VP8Io* const io, WebPDecParams* const p) {
 static int Rescale(const uint8_t* src, int src_stride,
                    int new_lines, WebPRescaler* const wrk) {
   int num_lines_out = 0;
-  while (new_lines-- > 0) {    // import new contribution of one source row.
-    WebPRescalerImportRow(src, 0, wrk);
-    src += src_stride;
-    wrk->y_accum -= wrk->y_sub;
-    while (wrk->y_accum <= 0) {      // emit output row(s)
-      WebPRescalerExportRow(wrk);
-      ++num_lines_out;
-    }
+  while (new_lines > 0) {    // import new contributions of source rows.
+    const int lines_in = WebPRescalerImport(wrk, new_lines, src, src_stride);
+    src += lines_in * src_stride;
+    new_lines -= lines_in;
+    num_lines_out += WebPRescalerExport(wrk);    // emit output row(s)
   }
   return num_lines_out;
 }
@@ -318,20 +315,6 @@ static int InitYUVRescaler(const VP8Io* const io, WebPDecParams* const p) {
 //------------------------------------------------------------------------------
 // RGBA rescaling
 
-// import new contributions until one row is ready to be output, or all input
-// is consumed.
-static int Import(const uint8_t* src, int src_stride,
-                  int new_lines, WebPRescaler* const wrk) {
-  int num_lines_in = 0;
-  while (num_lines_in < new_lines && wrk->y_accum > 0) {
-    WebPRescalerImportRow(src, 0, wrk);
-    src += src_stride;
-    ++num_lines_in;
-    wrk->y_accum -= wrk->y_sub;
-  }
-  return num_lines_in;
-}
-
 static int ExportRGB(WebPDecParams* const p, int y_pos) {
   const WebPYUV444Converter convert =
       WebPYUV444Converters[p->output->colorspace];
@@ -340,7 +323,8 @@ static int ExportRGB(WebPDecParams* const p, int y_pos) {
   int num_lines_out = 0;
   // For RGB rescaling, because of the YUV420, current scan position
   // U/V can be +1/-1 line from the Y one.  Hence the double test.
-  while (p->scaler_y.y_accum <= 0 && p->scaler_u.y_accum <= 0) {
+  while (WebPRescalerHasPendingOutput(&p->scaler_y) &&
+         WebPRescalerHasPendingOutput(&p->scaler_u)) {
     assert(p->last_y + y_pos + num_lines_out < p->output->height);
     assert(p->scaler_u.y_accum == p->scaler_v.y_accum);
     WebPRescalerExportRow(&p->scaler_y);
@@ -360,12 +344,15 @@ static int EmitRescaledRGB(const VP8Io* const io, WebPDecParams* const p) {
   int j = 0, uv_j = 0;
   int num_lines_out = 0;
   while (j < mb_h) {
-    const int y_lines_in = Import(io->y + j * io->y_stride, io->y_stride,
-                                  mb_h - j, &p->scaler_y);
-    const int u_lines_in = Import(io->u + uv_j * io->uv_stride, io->uv_stride,
-                                  uv_mb_h - uv_j, &p->scaler_u);
-    const int v_lines_in = Import(io->v + uv_j * io->uv_stride, io->uv_stride,
-                                  uv_mb_h - uv_j, &p->scaler_v);
+    const int y_lines_in =
+        WebPRescalerImport(&p->scaler_y, mb_h - j,
+                           io->y + j * io->y_stride, io->y_stride);
+    const int u_lines_in =
+        WebPRescalerImport(&p->scaler_u, uv_mb_h - uv_j,
+                           io->u + uv_j * io->uv_stride, io->uv_stride);
+    const int v_lines_in =
+        WebPRescalerImport(&p->scaler_v, uv_mb_h - uv_j,
+                           io->v + uv_j * io->uv_stride, io->uv_stride);
     (void)v_lines_in;   // remove a gcc warning
     assert(u_lines_in == v_lines_in);
     j += y_lines_in;
@@ -380,7 +367,7 @@ static int ExportAlpha(WebPDecParams* const p, int y_pos) {
   uint8_t* dst = buf->rgba + (p->last_y + y_pos) * buf->stride +
                  (p->output->colorspace == MODE_ARGB ? 0 : 3);
   int num_lines_out = 0;
-  while (p->scaler_a.y_accum <= 0) {
+  while (WebPRescalerHasPendingOutput(&p->scaler_a)) {
     int i;
     assert(p->last_y + y_pos + num_lines_out < p->output->height);
     WebPRescalerExportRow(&p->scaler_a);
@@ -397,7 +384,7 @@ static int ExportAlphaRGBA4444(WebPDecParams* const p, int y_pos) {
   const WebPRGBABuffer* const buf = &p->output->u.RGBA;
   uint8_t* dst = buf->rgba + (p->last_y + y_pos) * buf->stride + 1;
   int num_lines_out = 0;
-  while (p->scaler_a.y_accum <= 0) {
+  while (WebPRescalerHasPendingOutput(&p->scaler_a)) {
     int i;
     assert(p->last_y + y_pos + num_lines_out < p->output->height);
     WebPRescalerExportRow(&p->scaler_a);
@@ -420,7 +407,8 @@ static int EmitRescaledAlphaRGB(const VP8Io* const io, WebPDecParams* const p) {
     WebPRescaler* const scaler = &p->scaler_a;
     int j = 0, pos = 0;
     while (j < io->mb_h) {
-      j += Import(io->a + j * io->width, io->width, io->mb_h - j, scaler);
+      j += WebPRescalerImport(scaler, io->mb_h - j,
+                              io->a + j * io->width, io->width);
       pos += output_func(p, pos);
     }
   }

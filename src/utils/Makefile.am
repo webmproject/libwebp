@@ -4,7 +4,7 @@ libwebputils_la_SOURCES = alpha.h alpha.c \
                           bit_reader.h bit_reader.c \
                           bit_writer.h bit_writer.c \
                           filters.h filters.c \
-                          quant_levels.c \
+                          quant_levels.c rescaler.c \
                           tcoder.h tcoderi.h tcoder.c \
                           thread.h thread.c
 libwebputilsinclude_HEADERS = ../webp/types.h

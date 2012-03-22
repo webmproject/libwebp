@@ -14,6 +14,7 @@
 #include <math.h>
 
 #include "./vp8enci.h"
+#include "../utils/rescaler.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -224,89 +225,29 @@ int WebPPictureCrop(WebPPicture* const pic,
 //------------------------------------------------------------------------------
 // Simple picture rescaler
 
-#define RFIX 30
-#define MULT(x,y) (((int64_t)(x) * (y) + (1 << (RFIX - 1))) >> RFIX)
-static WEBP_INLINE void ImportRow(const uint8_t* src, int src_width,
-                                  int32_t* frow, int32_t* irow, int dst_width) {
-  const int x_expand = (src_width < dst_width);
-  const int fx_scale = (1 << RFIX) / dst_width;
-  int x_in = 0;
-  int x_out;
-  int x_accum = 0;
-  if (!x_expand) {
-    int sum = 0;
-    for (x_out = 0; x_out < dst_width; ++x_out) {
-      x_accum += src_width - dst_width;
-      for (; x_accum > 0; x_accum -= dst_width) {
-        sum += src[x_in++];
-      }
-      {        // Emit next horizontal pixel.
-        const int32_t base = src[x_in++];
-        const int32_t frac = base * (-x_accum);
-        frow[x_out] = (sum + base) * dst_width - frac;
-        sum = MULT(frac, fx_scale);    // fresh fractional start for next pixel
-      }
-    }
-  } else {        // simple bilinear interpolation
-    int left = src[0], right = src[0];
-    for (x_out = 0; x_out < dst_width; ++x_out) {
-      if (x_accum < 0) {
-        left = right;
-        right = src[++x_in];
-        x_accum += dst_width - 1;
-      }
-      frow[x_out] = right * (dst_width - 1) + (left - right) * x_accum;
-      x_accum -= src_width - 1;
-    }
-  }
-  // Accumulate the new row's contribution
-  for (x_out = 0; x_out < dst_width; ++x_out) {
-    irow[x_out] += frow[x_out];
-  }
-}
-
-static void ExportRow(int32_t* frow, int32_t* irow, uint8_t* dst, int dst_width,
-                      const int yscale, const int64_t fxy_scale) {
-  int x_out;
-  for (x_out = 0; x_out < dst_width; ++x_out) {
-    const int frac = MULT(frow[x_out], yscale);
-    const int v = (int)(MULT(irow[x_out] - frac, fxy_scale));
-    dst[x_out] = (!(v & ~0xff)) ? v : (v < 0) ? 0 : 255;
-    irow[x_out] = frac;   // new fractional start
-  }
-}
-
 static void RescalePlane(const uint8_t* src,
                          int src_width, int src_height, int src_stride,
                          uint8_t* dst,
                          int dst_width, int dst_height, int dst_stride,
                          int32_t* const work) {
-  const int x_expand = (src_width < dst_width);
-  const int fy_scale = (1 << RFIX) / dst_height;
-  const int64_t fxy_scale = x_expand ?
-      ((int64_t)dst_height << RFIX) / (dst_width * src_height) :
-      ((int64_t)dst_height << RFIX) / (src_width * src_height);
-  int y_accum = src_height;
-  int y;
-  int32_t* irow = work;              // integral contribution
-  int32_t* frow = work + dst_width;  // fractional contribution
+  WebPRescaler rescaler;
+  int y = 0;
 
+  WebPRescalerInit(&rescaler, src_width, src_height,
+                   dst, dst_width, dst_height, dst_stride,
+                   1,
+                   src_width, dst_width,
+                   src_height, dst_height,
+                   work);
   memset(work, 0, 2 * dst_width * sizeof(*work));
-  for (y = 0; y < src_height; ++y) {
-    // import new contribution of one source row.
-    ImportRow(src, src_width, frow, irow, dst_width);
-    src += src_stride;
-    // emit output row(s)
-    y_accum -= dst_height;
-    for (; y_accum <= 0; y_accum += src_height) {
-      const int yscale = fy_scale * (-y_accum);
-      ExportRow(frow, irow, dst, dst_width, yscale, fxy_scale);
-      dst += dst_stride;
-    }
+  while (y < src_height) {
+    const int num_lines_in =
+        WebPRescalerImport(&rescaler, src_height - y, src, src_stride);
+    y += num_lines_in;
+    src += num_lines_in * src_stride;
+    WebPRescalerExport(&rescaler);
   }
 }
-#undef MULT
-#undef RFIX
 
 int WebPPictureRescale(WebPPicture* const pic, int width, int height) {
   WebPPicture tmp;
@@ -332,7 +273,7 @@ int WebPPictureRescale(WebPPicture* const pic, int width, int height) {
   tmp.height = height;
   if (!WebPPictureAlloc(&tmp)) return 0;
 
-  work = (int32_t*)malloc(2 * width * sizeof(int32_t));
+  work = (int32_t*)malloc(2 * width * sizeof(*work));
   if (work == NULL) {
     WebPPictureFree(&tmp);
     return 0;

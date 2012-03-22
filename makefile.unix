@@ -72,8 +72,8 @@ DSP_OBJS = src/dsp/cpu.o src/dsp/enc.o \
            src/dsp/dec_neon.o src/dsp/upsampling.o src/dsp/upsampling_sse2.o \
            src/dsp/yuv.o
 UTILS_OBJS = src/utils/alpha.o src/utils/bit_reader.o src/utils/bit_writer.o \
-             src/utils/filters.o src/utils/quant_levels.o src/utils/thread.o \
-             src/utils/tcoder.o
+             src/utils/filters.o src/utils/quant_levels.o src/utils/rescaler.o \
+             src/utils/thread.o src/utils/tcoder.o
 
 OBJS = $(DEC_OBJS) $(ENC_OBJS) $(DSP_OBJS) $(UTILS_OBJS)
 

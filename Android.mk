@@ -39,6 +39,7 @@ LOCAL_SRC_FILES := \
 	src/utils/bit_writer.c \
 	src/utils/filters.c \
 	src/utils/quant_levels.c \
+	src/utils/rescaler.c \
 	src/utils/tcoder.c \
 	src/utils/thread.c \
 

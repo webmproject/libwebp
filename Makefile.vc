@@ -188,6 +188,7 @@ X_OBJS= \
     $(DIROBJ)\utils\bit_writer.obj \
     $(DIROBJ)\utils\filters.obj \
     $(DIROBJ)\utils\quant_levels.obj \
+    $(DIROBJ)\utils\rescaler.obj \
     $(DIROBJ)\utils\tcoder.obj \
     $(DIROBJ)\utils\thread.obj \
     $(X_OBJS) \

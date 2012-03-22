@@ -17,29 +17,13 @@ extern "C" {
 #endif
 
 #include "../webp/decode_vp8.h"
+#include "../utils/rescaler.h"
 
 //------------------------------------------------------------------------------
 // WebPDecParams: Decoding output parameters. Transient internal object.
 
 typedef struct WebPDecParams WebPDecParams;
 typedef int (*OutputFunc)(const VP8Io* const io, WebPDecParams* const p);
-
-// Structure use for on-the-fly rescaling
-typedef struct {
-  int x_expand;               // true if we're expanding in the x direction
-  int num_channels;           // bytes to jump between pixels
-  int fy_scale, fx_scale;     // fixed-point scaling factor
-  int64_t fxy_scale;          // ''
-  // we need hpel-precise add/sub increments, for the downsampled U/V planes.
-  int y_accum;                // vertical accumulator
-  int y_add, y_sub;           // vertical increments (add ~= src, sub ~= dst)
-  int x_add, x_sub;           // horizontal increments (add ~= src, sub ~= dst)
-  int src_width, src_height;  // source dimensions
-  int dst_width, dst_height;  // destination dimensions
-  uint8_t* dst;
-  int dst_stride;
-  int32_t* irow, *frow;       // work buffer
-} WebPRescaler;
 
 struct WebPDecParams {
   WebPDecBuffer* output;             // output buffer.
@@ -166,20 +150,6 @@ void WebPGrabDecBuffer(WebPDecBuffer* const src, WebPDecBuffer* const dst);
 // Setup crop_xxx fields, mb_w and mb_h
 int WebPIoInitFromOptions(const WebPDecoderOptions* const options,
                           VP8Io* const io);
-
-// Initialize a rescaler given scratch area 'work' and dimensions of src & dst.
-void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
-                      uint8_t* const dst, int dst_width, int dst_height,
-                      int dst_stride, int num_channels, int x_add, int x_sub,
-                      int y_add, int y_sub, int32_t* const work);
-
-// Import a row of data and save its contribution in the rescaler.
-// 'channel' denotes the channel number to be imported.
-void WebPRescalerImportRow(const uint8_t* const src, int channel,
-                           WebPRescaler* const wrk);
-
-// Export a row from rescaler.
-void WebPRescalerExportRow(WebPRescaler* const wrk);
 
 //------------------------------------------------------------------------------
 
