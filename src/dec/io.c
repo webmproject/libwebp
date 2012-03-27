@@ -468,12 +468,14 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
 
 static int CustomSetup(VP8Io* io) {
   WebPDecParams* const p = (WebPDecParams*)io->opaque;
-  const int is_rgb = (p->output->colorspace < MODE_YUV);
+  const WEBP_CSP_MODE colorspace = p->output->colorspace;
+  const int is_rgb = (colorspace < MODE_YUV);
+  const int is_alpha = IsAlphaMode(colorspace);
 
   p->memory = NULL;
   p->emit = NULL;
   p->emit_alpha = NULL;
-  if (!WebPIoInitFromOptions(p->options, io)) {
+  if (!WebPIoInitFromOptions(p->options, io, is_alpha ? MODE_YUV : MODE_YUVA)) {
     return 0;
   }
 
@@ -502,11 +504,11 @@ static int CustomSetup(VP8Io* io) {
     } else {
       p->emit = EmitYUV;
     }
-    if (IsAlphaMode(p->output->colorspace)) {
-      // We need transparency output
+    if (is_alpha) {  // need transparency output
       p->emit_alpha =
-          is_rgb ? (p->output->colorspace == MODE_RGBA_4444 ?
-              EmitAlphaRGBA4444 : EmitAlphaRGB) : EmitAlphaYUV;
+          is_rgb ? (colorspace == MODE_RGBA_4444 ? EmitAlphaRGBA4444
+                                                 : EmitAlphaRGB)
+                 : EmitAlphaYUV;
     }
   }
 

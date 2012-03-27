@@ -121,6 +121,11 @@ VP8StatusCode WebPParseHeaders(const uint8_t** data, uint32_t* data_size,
 // hooks will use the supplied 'params' as io->opaque handle.
 void WebPInitCustomIo(WebPDecParams* const params, VP8Io* const io);
 
+// Setup crop_xxx fields, mb_w and mb_h in io. 'src_colorspace' refers
+// to the *compressed* format, not the output one.
+int WebPIoInitFromOptions(const WebPDecoderOptions* const options,
+                          VP8Io* const io, WEBP_CSP_MODE src_colorspace);
+
 //------------------------------------------------------------------------------
 // Internal functions regarding WebPDecBuffer memory (in buffer.c).
 // Don't really need to be externally visible for now.
@@ -144,12 +149,7 @@ void WebPCopyDecBuffer(const WebPDecBuffer* const src,
 // Copy and transfer ownership from src to dst (beware of parameter order!)
 void WebPGrabDecBuffer(WebPDecBuffer* const src, WebPDecBuffer* const dst);
 
-//------------------------------------------------------------------------------
-// Cropping and rescaling.
 
-// Setup crop_xxx fields, mb_w and mb_h
-int WebPIoInitFromOptions(const WebPDecoderOptions* const options,
-                          VP8Io* const io);
 
 //------------------------------------------------------------------------------
 

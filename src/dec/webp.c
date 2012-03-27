@@ -613,7 +613,7 @@ VP8StatusCode WebPDecode(const uint8_t* data, uint32_t data_size,
 // Cropping and rescaling.
 
 int WebPIoInitFromOptions(const WebPDecoderOptions* const options,
-                          VP8Io* const io) {
+                          VP8Io* const io, WEBP_CSP_MODE src_colorspace) {
   const int W = io->width;
   const int H = io->height;
   int x = 0, y = 0, w = W, h = H;
@@ -623,9 +623,12 @@ int WebPIoInitFromOptions(const WebPDecoderOptions* const options,
   if (io->use_cropping) {
     w = options->crop_width;
     h = options->crop_height;
-    // TODO(skal): take colorspace into account. Don't assume YUV420.
-    x = options->crop_left & ~1;
-    y = options->crop_top & ~1;
+    x = options->crop_left;
+    y = options->crop_top;
+    if (src_colorspace >= MODE_YUV) {   // only snap for YUV420 or YUV422
+      x &= ~1;
+      y &= ~1;    // TODO(later): only for YUV420, not YUV422.
+    }
     if (x < 0 || y < 0 || w <= 0 || h <= 0 || x + w > W || y + h > H) {
       return 0;  // out of frame boundary error
     }
