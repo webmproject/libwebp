@@ -92,7 +92,9 @@ static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
     // gcc will recognize a 'rorw $8, ...' here:
     bits = (bit_t)(in_bits >> 8) | ((in_bits & 0xff) << 8);
 #endif
-#endif    // LITTLE_ENDIAN
+#else    // LITTLE_ENDIAN
+    bits = (bit_t)in_bits;
+#endif
     br->value_ |= bits << br->missing_;
     br->missing_ -= (BITS);
   } else {
