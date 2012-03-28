@@ -76,6 +76,7 @@ typedef struct {
                           //  0: none, 1: fast, 2: best. Default if 1.
   int alpha_quality;      // Between 0 (smallest size) and 100 (lossless).
                           // Default is 100.
+  int lossless;           // Lossless encoding (0=lossy(default), 1=lossless).
 } WebPConfig;
 
 // Enumerate some predefined settings for WebPConfig, depending on the type
@@ -189,7 +190,7 @@ struct WebPPicture {
   int width, height;         // dimensions (less or equal to WEBP_MAX_DIMENSION)
   uint8_t *y, *u, *v;        // pointers to luma/chroma planes.
   int y_stride, uv_stride;   // luma/chroma strides.
-  uint8_t *a;                // pointer to the alpha plane
+  uint8_t* a;                // pointer to the alpha plane
   int a_stride;              // stride of the alpha plane
 
   // output
@@ -216,6 +217,10 @@ struct WebPPicture {
   WebPEncodingError error_code;   // error code in case of problem.
 
   WebPProgressHook progress_hook;  // if not NULL, called while encoding.
+
+  int use_argb_input;     // Flag for encoder to read argb pixels as input.
+  uint32_t* argb;         // Pointer to argb (32 bit) plane.
+  int argb_stride;        // This is stride in pixels units, not bytes.
 };
 
 // Internal, version-checked, entry point

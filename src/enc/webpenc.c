@@ -15,6 +15,7 @@
 #include <math.h>
 
 #include "./vp8enci.h"
+#include "./vp8li.h"
 
 // #define PRINT_MEMORY_INFO
 
@@ -142,8 +143,8 @@ static void MapConfigToTools(VP8Encoder* const enc) {
 //              LFStats: 2048
 // Picture size (yuv): 589824
 
-static VP8Encoder* InitEncoder(const WebPConfig* const config,
-                               WebPPicture* const picture) {
+static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
+                                  WebPPicture* const picture) {
   const int use_filter =
       (config->filter_strength > 0) || (config->autofilter > 0);
   const int mb_w = (picture->width + 15) >> 4;
@@ -259,7 +260,7 @@ static VP8Encoder* InitEncoder(const WebPConfig* const config,
   return enc;
 }
 
-static void DeleteEncoder(VP8Encoder* enc) {
+static void DeleteVP8Encoder(VP8Encoder* enc) {
   if (enc) {
     VP8EncDeleteAlpha(enc);
 #ifdef WEBP_EXPERIMENTAL_FEATURES
@@ -327,7 +328,6 @@ int WebPReportProgress(VP8Encoder* const enc, int percent) {
 //------------------------------------------------------------------------------
 
 int WebPEncode(const WebPConfig* const config, WebPPicture* const pic) {
-  VP8Encoder* enc;
   int ok;
 
   if (pic == NULL)
@@ -339,27 +339,36 @@ int WebPEncode(const WebPConfig* const config, WebPPicture* const pic) {
     return WebPEncodingSetError(pic, VP8_ENC_ERROR_INVALID_CONFIGURATION);
   if (pic->width <= 0 || pic->height <= 0)
     return WebPEncodingSetError(pic, VP8_ENC_ERROR_BAD_DIMENSION);
-  if (pic->y == NULL || pic->u == NULL || pic->v == NULL)
-    return WebPEncodingSetError(pic, VP8_ENC_ERROR_NULL_PARAMETER);
   if (pic->width > WEBP_MAX_DIMENSION || pic->height > WEBP_MAX_DIMENSION)
     return WebPEncodingSetError(pic, VP8_ENC_ERROR_BAD_DIMENSION);
 
-  enc = InitEncoder(config, pic);
-  if (enc == NULL) return 0;  // pic->error is already set.
-  // Note: each of the tasks below account for 20% in the progress report.
-  ok = VP8EncAnalyze(enc)
-    && VP8StatLoop(enc)
-    && VP8EncLoop(enc)
-    && VP8EncFinishAlpha(enc)
+  if (!config->lossless) {
+    VP8Encoder* enc = NULL;
+    if (pic->y == NULL || pic->u == NULL || pic->v == NULL)
+      return WebPEncodingSetError(pic, VP8_ENC_ERROR_NULL_PARAMETER);
+
+    enc = InitVP8Encoder(config, pic);
+    if (enc == NULL) return 0;  // pic->error is already set.
+    // Note: each of the tasks below account for 20% in the progress report.
+    ok = VP8EncAnalyze(enc)
+      && VP8StatLoop(enc)
+      && VP8EncLoop(enc)
+      && VP8EncFinishAlpha(enc)
 #ifdef WEBP_EXPERIMENTAL_FEATURES
-    && VP8EncFinishLayer(enc)
+      && VP8EncFinishLayer(enc)
 #endif
-    && VP8EncWrite(enc);
-  StoreStats(enc);
-  if (!ok) {
-    VP8EncFreeBitWriters(enc);
+      && VP8EncWrite(enc);
+    StoreStats(enc);
+    if (!ok) {
+      VP8EncFreeBitWriters(enc);
+    }
+    DeleteVP8Encoder(enc);
+  } else {
+    if (pic->argb == NULL)
+      return WebPEncodingSetError(pic, VP8_ENC_ERROR_NULL_PARAMETER);
+
+    ok = VP8LEncodeImage(config, pic);
   }
-  DeleteEncoder(enc);
 
   return ok;
 }

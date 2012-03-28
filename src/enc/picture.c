@@ -32,75 +32,88 @@ int WebPPictureAlloc(WebPPicture* const picture) {
     const int has_alpha = picture->colorspace & WEBP_CSP_ALPHA_BIT;
     const int width = picture->width;
     const int height = picture->height;
-    const int y_stride = width;
-    const int uv_width = HALVE(width);
-    const int uv_height = HALVE(height);
-    const int uv_stride = uv_width;
-    int uv0_stride = 0;
-    int a_width, a_stride;
-    uint64_t y_size, uv_size, uv0_size, a_size, total_size;
-    uint8_t* mem;
 
-    // U/V
-    switch (uv_csp) {
-      case WEBP_YUV420:
-        break;
+    if (!picture->use_argb_input) {
+      const int y_stride = width;
+      const int uv_width = HALVE(width);
+      const int uv_height = HALVE(height);
+      const int uv_stride = uv_width;
+      int uv0_stride = 0;
+      int a_width, a_stride;
+      uint64_t y_size, uv_size, uv0_size, a_size, total_size;
+      uint8_t* mem;
+
+      // U/V
+      switch (uv_csp) {
+        case WEBP_YUV420:
+          break;
 #ifdef WEBP_EXPERIMENTAL_FEATURES
-      case WEBP_YUV400:    // for now, we'll just reset the U/V samples
-        break;
-      case WEBP_YUV422:
-        uv0_stride = uv_width;
-        break;
-      case WEBP_YUV444:
-        uv0_stride = width;
-        break;
+        case WEBP_YUV400:    // for now, we'll just reset the U/V samples
+          break;
+        case WEBP_YUV422:
+          uv0_stride = uv_width;
+          break;
+        case WEBP_YUV444:
+          uv0_stride = width;
+          break;
 #endif
-      default:
+        default:
+          return 0;
+      }
+      uv0_size = height * uv0_stride;
+
+      // alpha
+      a_width = has_alpha ? width : 0;
+      a_stride = a_width;
+      y_size = (uint64_t)y_stride * height;
+      uv_size = (uint64_t)uv_stride * uv_height;
+      a_size =  (uint64_t)a_stride * height;
+
+      total_size = y_size + a_size + 2 * uv_size + 2 * uv0_size;
+
+      // Security and validation checks
+      if (width <= 0 || height <= 0 ||       // check for luma/alpha param error
+          uv_width < 0 || uv_height < 0 ||   // check for u/v param error
+          y_size >= (1ULL << 40) ||            // check for reasonable global size
+          (size_t)total_size != total_size) {  // check for overflow on 32bit
         return 0;
-    }
-    uv0_size = height * uv0_stride;
+      }
+      picture->y_stride  = y_stride;
+      picture->uv_stride = uv_stride;
+      picture->a_stride  = a_stride;
+      picture->uv0_stride  = uv0_stride;
+      WebPPictureFree(picture);   // erase previous buffer
+      mem = (uint8_t*)malloc((size_t)total_size);
+      if (mem == NULL) return 0;
 
-    // alpha
-    a_width = has_alpha ? width : 0;
-    a_stride = a_width;
-    y_size = (uint64_t)y_stride * height;
-    uv_size = (uint64_t)uv_stride * uv_height;
-    a_size =  (uint64_t)a_stride * height;
+      picture->y = mem;
+      mem += y_size;
 
-    total_size = y_size + a_size + 2 * uv_size + 2 * uv0_size;
+      picture->u = mem;
+      mem += uv_size;
+      picture->v = mem;
+      mem += uv_size;
 
-    // Security and validation checks
-    if (width <= 0 || height <= 0 ||       // check for luma/alpha param error
-        uv_width < 0 || uv_height < 0 ||   // check for u/v param error
-        y_size >= (1ULL << 40) ||            // check for reasonable global size
-        (size_t)total_size != total_size) {  // check for overflow on 32bit
-      return 0;
-    }
-    picture->y_stride  = y_stride;
-    picture->uv_stride = uv_stride;
-    picture->a_stride  = a_stride;
-    picture->uv0_stride  = uv0_stride;
-    WebPPictureFree(picture);   // erase previous buffer
-    mem = (uint8_t*)malloc((size_t)total_size);
-    if (mem == NULL) return 0;
-
-    picture->y = mem;
-    mem += y_size;
-
-    picture->u = mem;
-    mem += uv_size;
-    picture->v = mem;
-    mem += uv_size;
-
-    if (a_size) {
-      picture->a = mem;
-      mem += a_size;
-    }
-    if (uv0_size) {
-      picture->u0 = mem;
-      mem += uv0_size;
-      picture->v0 = mem;
-      mem += uv0_size;
+      if (a_size) {
+        picture->a = mem;
+        mem += a_size;
+      }
+      if (uv0_size) {
+        picture->u0 = mem;
+        mem += uv0_size;
+        picture->v0 = mem;
+        mem += uv0_size;
+      }
+    } else {
+      if (width <= 0 || height <= 0 ||
+          width >= 0x4000 || height >= 0x4000) {
+        return 0;
+      }
+      WebPPictureFree(picture);   // erase previous buffer
+      picture->argb = (uint32_t*)malloc(width * height *
+                                        sizeof(*picture->argb));
+      if (picture->argb == NULL) return 0;
+      picture->argb_stride = width;
     }
   }
   return 1;
@@ -114,12 +127,14 @@ static void WebPPictureGrabSpecs(const WebPPicture* const src,
   dst->y = dst->u = dst->v = NULL;
   dst->u0 = dst->v0 = NULL;
   dst->a = NULL;
+  dst->argb = NULL;
 }
 
 // Release memory owned by 'picture'.
 void WebPPictureFree(WebPPicture* const picture) {
   if (picture != NULL) {
     free(picture->y);
+    free(picture->argb);
     WebPPictureGrabSpecs(NULL, picture);
   }
 }
@@ -144,28 +159,34 @@ int WebPPictureCopy(const WebPPicture* const src, WebPPicture* const dst) {
   WebPPictureGrabSpecs(src, dst);
   if (!WebPPictureAlloc(dst)) return 0;
 
-  CopyPlane(src->y, src->y_stride,
-            dst->y, dst->y_stride, dst->width, dst->height);
-  CopyPlane(src->u, src->uv_stride,
-            dst->u, dst->uv_stride, HALVE(dst->width), HALVE(dst->height));
-  CopyPlane(src->v, src->uv_stride,
-            dst->v, dst->uv_stride, HALVE(dst->width), HALVE(dst->height));
-  if (dst->a != NULL)  {
-    CopyPlane(src->a, src->a_stride,
-              dst->a, dst->a_stride, dst->width, dst->height);
-  }
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  if (dst->u0 != NULL)  {
-    int uv0_width = src->width;
-    if ((dst->colorspace & WEBP_CSP_UV_MASK) == WEBP_YUV422) {
-      uv0_width = HALVE(uv0_width);
+  if (!src->use_argb_input) {
+    CopyPlane(src->y, src->y_stride,
+              dst->y, dst->y_stride, dst->width, dst->height);
+    CopyPlane(src->u, src->uv_stride,
+              dst->u, dst->uv_stride, HALVE(dst->width), HALVE(dst->height));
+    CopyPlane(src->v, src->uv_stride,
+              dst->v, dst->uv_stride, HALVE(dst->width), HALVE(dst->height));
+    if (dst->a != NULL)  {
+      CopyPlane(src->a, src->a_stride,
+                dst->a, dst->a_stride, dst->width, dst->height);
     }
-    CopyPlane(src->u0, src->uv0_stride,
-              dst->u0, dst->uv0_stride, uv0_width, dst->height);
-    CopyPlane(src->v0, src->uv0_stride,
-              dst->v0, dst->uv0_stride, uv0_width, dst->height);
-  }
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+    if (dst->u0 != NULL)  {
+      int uv0_width = src->width;
+      if ((dst->colorspace & WEBP_CSP_UV_MASK) == WEBP_YUV422) {
+        uv0_width = HALVE(uv0_width);
+      }
+      CopyPlane(src->u0, src->uv0_stride,
+                dst->u0, dst->uv0_stride, uv0_width, dst->height);
+      CopyPlane(src->v0, src->uv0_stride,
+                dst->v0, dst->uv0_stride, uv0_width, dst->height);
+    }
 #endif
+  } else {
+    CopyPlane((uint8_t*)src->argb, 4 * src->argb_stride,
+              (uint8_t*)dst->argb, 4 * dst->argb_stride,
+              4 * dst->width, dst->height);
+  }
   return 1;
 }
 
@@ -438,64 +459,88 @@ static int Import(WebPPicture* const picture,
   const int width = picture->width;
   const int height = picture->height;
 
-  // Import luma plane
-  for (y = 0; y < height; ++y) {
-    for (x = 0; x < width; ++x) {
-      const int offset = step * x + y * rgb_stride;
-      picture->y[x + y * picture->y_stride] =
-        rgb_to_y(r_ptr[offset], g_ptr[offset], b_ptr[offset]);
-    }
-  }
-
-  // Downsample U/V plane
-  if (uv_csp != WEBP_YUV400) {
-    for (y = 0; y < (height >> 1); ++y) {
-      for (x = 0; x < (width >> 1); ++x) {
-        RGB_TO_UV(x, y, SUM4);
-      }
-      if (picture->width & 1) {
-        RGB_TO_UV(x, y, SUM2V);
-      }
-    }
-    if (height & 1) {
-      for (x = 0; x < (width >> 1); ++x) {
-        RGB_TO_UV(x, y, SUM2H);
-      }
-      if (width & 1) {
-        RGB_TO_UV(x, y, SUM1);
-      }
-    }
-
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-    // Store original U/V samples too
-    if (uv_csp == WEBP_YUV422) {
-      for (y = 0; y < height; ++y) {
-        for (x = 0; x < (width >> 1); ++x) {
-          RGB_TO_UV0(2 * x, x, y, SUM2H);
-        }
-        if (width & 1) {
-          RGB_TO_UV0(2 * x, x, y, SUM1);
-        }
-      }
-    } else if (uv_csp == WEBP_YUV444) {
-      for (y = 0; y < height; ++y) {
-        for (x = 0; x < width; ++x) {
-          RGB_TO_UV0(x, x, y, SUM1);
-        }
-      }
-    }
-#endif
-  } else {
-    MakeGray(picture);
-  }
-
-  if (import_alpha) {
-    const uint8_t* const a_ptr = rgb + 3;
-    assert(step >= 4);
+  if (!picture->use_argb_input) {
+    // Import luma plane
     for (y = 0; y < height; ++y) {
       for (x = 0; x < width; ++x) {
-        picture->a[x + y * picture->a_stride] =
-          a_ptr[step * x + y * rgb_stride];
+        const int offset = step * x + y * rgb_stride;
+        picture->y[x + y * picture->y_stride] =
+          rgb_to_y(r_ptr[offset], g_ptr[offset], b_ptr[offset]);
+      }
+    }
+
+    // Downsample U/V plane
+    if (uv_csp != WEBP_YUV400) {
+      for (y = 0; y < (height >> 1); ++y) {
+        for (x = 0; x < (width >> 1); ++x) {
+          RGB_TO_UV(x, y, SUM4);
+        }
+        if (picture->width & 1) {
+          RGB_TO_UV(x, y, SUM2V);
+        }
+      }
+      if (height & 1) {
+        for (x = 0; x < (width >> 1); ++x) {
+          RGB_TO_UV(x, y, SUM2H);
+        }
+        if (width & 1) {
+          RGB_TO_UV(x, y, SUM1);
+        }
+      }
+
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+      // Store original U/V samples too
+      if (uv_csp == WEBP_YUV422) {
+        for (y = 0; y < height; ++y) {
+          for (x = 0; x < (width >> 1); ++x) {
+            RGB_TO_UV0(2 * x, x, y, SUM2H);
+          }
+          if (width & 1) {
+            RGB_TO_UV0(2 * x, x, y, SUM1);
+          }
+        }
+      } else if (uv_csp == WEBP_YUV444) {
+        for (y = 0; y < height; ++y) {
+          for (x = 0; x < width; ++x) {
+            RGB_TO_UV0(x, x, y, SUM1);
+          }
+        }
+      }
+#endif
+    } else {
+      MakeGray(picture);
+    }
+
+    if (import_alpha) {
+      const uint8_t* const a_ptr = rgb + 3;
+      assert(step >= 4);
+      for (y = 0; y < height; ++y) {
+        for (x = 0; x < width; ++x) {
+          picture->a[x + y * picture->a_stride] =
+            a_ptr[step * x + y * rgb_stride];
+        }
+      }
+    }
+  } else {
+    if (!import_alpha) {
+      for (y = 0; y < height; ++y) {
+        for (x = 0; x < width; ++x) {
+          const int offset = step * x + y * rgb_stride;
+          const uint32_t argb = 0xff000000 | (r_ptr[offset] << 16) |
+              (g_ptr[offset] << 8) | (b_ptr[offset]);
+          picture->argb[x + y * picture->argb_stride] = argb;
+        }
+      }
+    } else {
+      const uint8_t* const a_ptr = rgb + 3;
+      assert(step >= 4);
+      for (y = 0; y < height; ++y) {
+        for (x = 0; x < width; ++x) {
+          const int offset = step * x + y * rgb_stride;
+          const uint32_t argb = (a_ptr[offset] << 24) | (r_ptr[offset] << 16) |
+              (g_ptr[offset] << 8) | (b_ptr[offset]);
+          picture->argb[x + y * picture->argb_stride] = argb;
+        }
       }
     }
   }

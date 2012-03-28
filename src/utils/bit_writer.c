@@ -8,6 +8,7 @@
 // Bit writing and boolean coder
 //
 // Author: Skal (pascal.massimino@gmail.com)
+//         Vikas Arora (vikaas.arora@gmail.com)
 
 #include <assert.h>
 #include <string.h>   // for memcpy()
@@ -185,6 +186,84 @@ void VP8BitWriterWipeOut(VP8BitWriter* const bw) {
     memset(bw, 0, sizeof(*bw));
   }
 }
+
+//------------------------------------------------------------------------------
+// VP8LBitWriter
+
+// Returns 1 on success.
+static int VP8LBitWriterResize(VP8LBitWriter* const bw, size_t extra_size) {
+  uint8_t* allocated_buf;
+  size_t allocated_size;
+  const size_t size_required = VP8LBitWriterNumBytes(bw) + extra_size;
+  if ((bw->max_bytes_ > 0) && (size_required <= bw->max_bytes_)) return 1;
+  allocated_size = (3 * bw->max_bytes_) >> 1;
+  if (allocated_size < size_required) {
+    allocated_size = size_required;
+  }
+  // Make Allocated size multiple of KBs
+  allocated_size = (((allocated_size >> 10) + 1) << 10);
+  allocated_buf = (uint8_t*)malloc(allocated_size);
+  if (allocated_buf == NULL) return 0;
+  memset(allocated_buf, 0, allocated_size);
+  if (bw->bit_pos_ > 0) {
+    memcpy(allocated_buf, bw->buf_, VP8LBitWriterNumBytes(bw));
+  }
+  free(bw->buf_);
+  bw->buf_ = allocated_buf;
+  bw->max_bytes_ = allocated_size;
+  return 1;
+}
+
+int VP8LBitWriterInit(VP8LBitWriter* const bw, size_t expected_size) {
+  memset(bw, 0, sizeof(*bw));
+  return VP8LBitWriterResize(bw, expected_size);
+}
+
+void VP8LBitWriterDestroy(VP8LBitWriter* const bw) {
+  if (bw != NULL) {
+    free(bw->buf_);
+    memset(bw, 0, sizeof(*bw));
+  }
+}
+
+void VP8LWriteBits(VP8LBitWriter* const bw, int n_bits, uint32_t bits) {
+  if (n_bits < 1) return;
+#if !defined(__BIG_ENDIAN__)
+  // Technically, this branch of the code can write up to 25 bits at a time,
+  // but in deflate, the maximum number of bits written is 16 at a time.
+  {
+    uint8_t* p = &bw->buf_[bw->bit_pos_ >> 3];
+    uint32_t v = *(const uint32_t*)(p);
+    v |= bits << (bw->bit_pos_ & 7);
+    *(uint32_t*)(p) = v;
+    bw->bit_pos_ += n_bits;
+  }
+#else  // LITTLE_ENDIAN
+  // implicit & 0xff is assumed for uint8_t arithmetics
+  {
+    uint8_t* p = &bw->buf_[bw->bit_pos_ >> 3];
+    const int bits_reserved_in_first_byte = (bw->bit_pos_ & 7);
+    *p++ |= (bits << bits_reserved_in_first_byte);
+    const int bits_left_to_write = n_bits - 8 + bits_reserved_in_first_byte;
+    if (bits_left_to_write >= 1) {
+      *p++ = bits >> (8 - bits_reserved_in_first_byte);
+      if (bits_left_to_write >= 9) {
+        *p++ = bits >> (16 - bits_reserved_in_first_byte);
+      }
+    }
+    *p = 0;
+    bw->bit_pos_ += n_bits;
+  }
+#endif  // BIG_ENDIAN
+  if ((bw->bit_pos_ >> 3) > (bw->max_bytes_ - 8)) {
+    const size_t kAdditionalBuffer = 32768 + bw->max_bytes_;
+    if (!VP8LBitWriterResize(bw, kAdditionalBuffer)) {
+      bw->bit_pos_ = 0;
+      bw->error_ = 1;
+    }
+  }
+}
+
 
 //------------------------------------------------------------------------------
 
