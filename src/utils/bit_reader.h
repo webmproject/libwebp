@@ -80,7 +80,7 @@ static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
     bit_t bits;
     lbit_t in_bits = *(lbit_t*)br->buf_;
     br->buf_ += (BITS) >> 3;
-#if !defined(__BIG_ENDIAN__)    // TODO(skal): what about PPC?
+#if !defined(__BIG_ENDIAN__)
 #if (BITS == 32)
 #if defined(__i386__) || defined(__x86_64__)
     __asm__ volatile("bswap %k0" : "=r"(in_bits) : "0"(in_bits));
