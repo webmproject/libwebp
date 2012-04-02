@@ -367,7 +367,7 @@ int WebPEncode(const WebPConfig* const config, WebPPicture* const pic) {
     if (pic->argb == NULL)
       return WebPEncodingSetError(pic, VP8_ENC_ERROR_NULL_PARAMETER);
 
-    ok = VP8LEncodeImage(config, pic);
+    ok = VP8LEncodeImage(config, pic);  // Sets pic->error in case of problem.
   }
 
   return ok;

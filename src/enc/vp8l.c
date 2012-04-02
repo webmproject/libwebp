@@ -5,7 +5,7 @@
 //  Additional IP Rights Grant:  http://www.webmproject.org/license/additional/
 // -----------------------------------------------------------------------------
 //
-// main entry for the decoder
+// main entry for the lossless encoder.
 //
 // Author: Vikas Arora (vikaas.arora@gmail.com)
 //
@@ -52,7 +52,7 @@ static int ApplyCrossColorFilter(VP8LEncoder* const enc) {
   return 1;
 }
 
-static void EvalEmergingPalette(VP8LEncoder* const enc) {
+static void EvalColorCache(VP8LEncoder* const enc) {
   (void)enc;
 }
 
@@ -81,13 +81,14 @@ static WebPEncodingError WriteRiffHeader(VP8LEncoder* const enc,
   return VP8_ENC_OK;
 }
 
-static WebPEncodingError WriteImage(VP8LEncoder* const enc) {
+static WebPEncodingError WriteImage(VP8LEncoder* const enc,
+                                    VP8LBitWriter* const bw) {
   size_t riff_size, vp8l_size, webpll_size, pad;
-  WebPPicture* const pic = enc->pic_;
+  const WebPPicture* const pic = enc->pic_;
   WebPEncodingError err = VP8_ENC_OK;
-  const uint8_t* const webpll_data = VP8LBitWriterFinish(&enc->bw_);
+  const uint8_t* const webpll_data = VP8LBitWriterFinish(bw);
 
-  webpll_size = VP8LBitWriterNumBytes(&enc->bw_);
+  webpll_size = VP8LBitWriterNumBytes(bw);
   vp8l_size = SIGNATURE_SIZE + webpll_size;
   pad = vp8l_size & 1;
   vp8l_size += pad;
@@ -111,14 +112,12 @@ static WebPEncodingError WriteImage(VP8LEncoder* const enc) {
   return VP8_ENC_OK;
 
  Error:
-  WebPEncodingSetError(pic, err);
   return err;
 }
 
 static VP8LEncoder* InitVP8LEncoder(const WebPConfig* const config,
                                     WebPPicture* const picture) {
   VP8LEncoder* enc;
-  const int kEstmatedEncodeSize = (picture->width * picture->height) >> 1;
   (void)config;
 
   enc = (VP8LEncoder*)malloc(sizeof(*enc));
@@ -133,23 +132,18 @@ static VP8LEncoder* InitVP8LEncoder(const WebPConfig* const config,
   // TODO: Use config.quality to initialize histo_bits_ and transform_bits_.
   enc->histo_bits_ = 4;
   enc->transform_bits_ = 4;
-  VP8LBitWriterInit(&enc->bw_, kEstmatedEncodeSize);
 
   return enc;
 }
 
-static WebPEncodingError WriteImageSize(VP8LEncoder* const enc) {
-  WebPEncodingError status = VP8_ENC_OK;
+static void WriteImageSize(VP8LEncoder* const enc, VP8LBitWriter* const bw) {
   WebPPicture* const pic = enc->pic_;
   const int width = pic->width - 1;
-  const int height = pic->height - 1;
-  if (width < 0x4000 && height < 0x4000) {
-    VP8LWriteBits(&enc->bw_, kImageSizeBits, width);
-    VP8LWriteBits(&enc->bw_, kImageSizeBits, height);
-  } else {
-    status = VP8_ENC_ERROR_BAD_DIMENSION;
-  }
-  return status;
+  const int height = pic->height -1;
+  assert(width < WEBP_MAX_DIMENSION && height < WEBP_MAX_DIMENSION);
+
+  VP8LWriteBits(bw, kImageSizeBits, width);
+  VP8LWriteBits(bw, kImageSizeBits, height);
 }
 
 static void DeleteVP8LEncoder(VP8LEncoder* enc) {
@@ -161,11 +155,22 @@ int VP8LEncodeImage(const WebPConfig* const config,
   int ok = 0;
   VP8LEncoder* enc = NULL;
   WebPEncodingError err = VP8_ENC_OK;
+  VP8LBitWriter bw;
 
   if (config == NULL || picture == NULL) return 0;
-  if (picture->argb == NULL) return 0;
+
+  if (picture->argb == NULL) {
+    err = VP8_ENC_ERROR_NULL_PARAMETER;
+    goto Error;
+  }
+
   enc = InitVP8LEncoder(config, picture);
-  if (enc == NULL) goto Error;
+  if (enc == NULL) {
+    err = VP8_ENC_ERROR_NULL_PARAMETER;
+    goto Error;
+  }
+
+  VP8LBitWriterInit(&bw, (picture->width * picture->height) >> 1);
 
   // ---------------------------------------------------------------------------
   // Analyze image (entropy, num_palettes etc)
@@ -177,11 +182,7 @@ int VP8LEncodeImage(const WebPConfig* const config,
   }
 
   // Write image size.
-  err = WriteImageSize(enc);
-  if (err != VP8_ENC_OK) {
-    ok = 0;
-    goto Error;
-  }
+  WriteImageSize(enc, &bw);
 
   // ---------------------------------------------------------------------------
   // Apply transforms and write transform data.
@@ -196,8 +197,8 @@ int VP8LEncodeImage(const WebPConfig* const config,
     if (!ApplyCrossColorFilter(enc)) goto Error;
   }
 
-  if (enc->use_emerging_palette_) {
-    EvalEmergingPalette(enc);
+  if (enc->use_color_cache) {
+    EvalColorCache(enc);
   }
 
   // ---------------------------------------------------------------------------
@@ -206,14 +207,14 @@ int VP8LEncodeImage(const WebPConfig* const config,
   ok = EncodeImageInternal(enc);
   if (!ok) goto Error;
 
-  err = WriteImage(enc);
+  err = WriteImage(enc, &bw);
   if (err != VP8_ENC_OK) {
     ok = 0;
     goto Error;
   }
 
  Error:
-  VP8LBitWriterDestroy(&enc->bw_);
+  VP8LBitWriterDestroy(&bw);
   DeleteVP8LEncoder(enc);
   if (!ok) {
     // TODO(vikasa): err is not set for all error paths. Set default err.

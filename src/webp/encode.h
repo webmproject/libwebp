@@ -218,7 +218,7 @@ struct WebPPicture {
 
   WebPProgressHook progress_hook;  // if not NULL, called while encoding.
 
-  int use_argb_input;     // Flag for encoder to read argb pixels as input.
+  int use_argb_input;     // Flag for encoder to use argb pixels as input.
   uint32_t* argb;         // Pointer to argb (32 bit) plane.
   int argb_stride;        // This is stride in pixels units, not bytes.
 };

@@ -105,13 +105,15 @@ int WebPPictureAlloc(WebPPicture* const picture) {
         mem += uv0_size;
       }
     } else {
+      const uint64_t argb_size = (uint64_t)width * height;
+      const uint64_t total_size = argb_size * sizeof(*picture->argb);
       if (width <= 0 || height <= 0 ||
-          width >= 0x4000 || height >= 0x4000) {
+          argb_size >= (1ULL << 40) ||
+          (size_t)total_size != total_size) {
         return 0;
       }
       WebPPictureFree(picture);   // erase previous buffer
-      picture->argb = (uint32_t*)malloc(width * height *
-                                        sizeof(*picture->argb));
+      picture->argb = (uint32_t*)malloc(total_size);
       if (picture->argb == NULL) return 0;
       picture->argb_stride = width;
     }
@@ -526,8 +528,11 @@ static int Import(WebPPicture* const picture,
       for (y = 0; y < height; ++y) {
         for (x = 0; x < width; ++x) {
           const int offset = step * x + y * rgb_stride;
-          const uint32_t argb = 0xff000000 | (r_ptr[offset] << 16) |
-              (g_ptr[offset] << 8) | (b_ptr[offset]);
+          const uint32_t argb =
+              0xff000000 |
+              (r_ptr[offset] << 16) |
+              (g_ptr[offset] <<  8) |
+              (b_ptr[offset]);
           picture->argb[x + y * picture->argb_stride] = argb;
         }
       }
@@ -537,8 +542,11 @@ static int Import(WebPPicture* const picture,
       for (y = 0; y < height; ++y) {
         for (x = 0; x < width; ++x) {
           const int offset = step * x + y * rgb_stride;
-          const uint32_t argb = (a_ptr[offset] << 24) | (r_ptr[offset] << 16) |
-              (g_ptr[offset] << 8) | (b_ptr[offset]);
+          const uint32_t argb =
+              (a_ptr[offset] << 24) |
+              (r_ptr[offset] << 16) |
+              (g_ptr[offset] <<  8) |
+              (b_ptr[offset]);
           picture->argb[x + y * picture->argb_stride] = argb;
         }
       }

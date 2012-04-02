@@ -90,7 +90,7 @@ static WEBP_INLINE uint8_t* VP8LBitWriterFinish(VP8LBitWriter* const bw) {
   return bw->buf_;
 }
 
-// Returns 1 on success.
+// Returns 0 in case of memory allocation error.
 int VP8LBitWriterInit(VP8LBitWriter* const bw, size_t expected_size);
 
 void VP8LBitWriterDestroy(VP8LBitWriter* const bw);
@@ -111,7 +111,7 @@ void VP8LBitWriterDestroy(VP8LBitWriter* const bw);
 // For n bits, we take the last 5 bytes, OR that with high bits in BYTE-0,
 // and locate the rest in BYTE+1 and BYTE+2.
 //
-// returns 1 on success.
+// VP8LBitWriter's error_ flag is set in case of  memory allocation error.
 void VP8LWriteBits(VP8LBitWriter* const bw, int n_bits, uint32_t bits);
 
 //------------------------------------------------------------------------------

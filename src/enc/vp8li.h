@@ -44,9 +44,7 @@ typedef struct {
   int num_palette_colors;
   int use_predict_;
   int use_cross_color_;
-  int use_emerging_palette_;
-
-  VP8LBitWriter bw_;
+  int use_color_cache;
 } VP8LEncoder;
 
 //------------------------------------------------------------------------------
