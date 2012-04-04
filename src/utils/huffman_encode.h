@@ -9,8 +9,8 @@
 //
 // Flate like entropy encoding (Huffman) for webp lossless
 
-#ifndef WEBP_UTILS_ENTROPY_ENCODE_H_
-#define WEBP_UTILS_ENTROPY_ENCODE_H_
+#ifndef WEBP_UTILS_HUFFMAN_ENCODE_H_
+#define WEBP_UTILS_HUFFMAN_ENCODE_H_
 
 #include <stdint.h>
 
@@ -49,4 +49,4 @@ void ConvertBitDepthsToSymbols(const uint8_t* depth, int len, uint16_t* bits);
 }
 #endif
 
-#endif  // WEBP_UTILS_ENTROPY_ENCODE_H_
+#endif  // WEBP_UTILS_HUFFMAN_ENCODE_H_
