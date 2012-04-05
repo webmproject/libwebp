@@ -248,6 +248,10 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
       int i;
       for (i = 0; i < num_symbols; ++i) {
         symbols[i] = VP8LReadBits(br, num_bits);
+        if (symbols[i] >= alphabet_size) {
+          dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
+          return 0;
+        }
         codes[i] = i;
         code_lengths[i] = num_symbols - 1;
       }
