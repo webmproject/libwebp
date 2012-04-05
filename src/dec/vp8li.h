@@ -78,7 +78,6 @@ typedef struct {
   uint32_t        *argb_cache_;    // Scratch buffer for temporary BGRA storage.
 
   BitReader        br_;
-  uint32_t         br_offset_;
 
   int              width_;
   int              height_;
@@ -109,9 +108,6 @@ int VP8LGetInfo(const uint8_t* data,
 // Allocates and initialize a new lossless decoder instance.
 VP8LDecoder* VP8LNew(void);
 
-// Initializes the decoder object.
-void VP8LInitDecoder(VP8LDecoder* const dec);
-
 // Decodes the image header. Returns false in case of error.
 int VP8LDecodeHeader(VP8LDecoder* const dec, VP8Io* const io);
 
@@ -120,6 +116,7 @@ int VP8LDecodeHeader(VP8LDecoder* const dec, VP8Io* const io);
 int VP8LDecodeImage(VP8LDecoder* const dec);
 
 // Resets the decoder in its initial state, reclaiming memory.
+// Preserves the dec->status_ value.
 void VP8LClear(VP8LDecoder* const dec);
 
 // Clears and deallocate a lossless decoder instance.

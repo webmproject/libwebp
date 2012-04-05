@@ -368,7 +368,7 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
       alphabet_size += color_cache_size;
     }
     ok = ReadHuffmanCode(alphabet_size, dec, &htrees[i]);
-    ok = ok & !br->error_;
+    ok = ok && !br->error_;
   }
 
   if (ok) {   // finalize pointers and return
@@ -382,7 +382,7 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
  Error:
   free(huffman_image);
   free(meta_codes);
-  if (htrees) {
+  if (htrees != NULL) {
     for (i = 0; i < num_htrees; ++i) {
       HuffmanTreeRelease(&htrees[i]);
     }
@@ -814,19 +814,36 @@ static void ClearMetadata(VP8LMetadata* const hdr) {
 // -----------------------------------------------------------------------------
 // VP8LDecoder
 
-void VP8LInitDecoder(VP8LDecoder* const dec) {
-  assert(dec);
-  memset(dec, 0, sizeof(*dec));
-}
-
 VP8LDecoder* VP8LNew(void) {
-  VP8LDecoder* const dec = (VP8LDecoder*)malloc(sizeof(*dec));
-  if (dec != NULL) VP8LInitDecoder(dec);
+  VP8LDecoder* const dec = (VP8LDecoder*)calloc(1, sizeof(*dec));
+  if (dec == NULL) return NULL;
+  dec->status_ = VP8_STATUS_OK;
+  dec->action_ = READ_DIM;
+  dec->state_ = READ_DIM;
   return dec;
 }
 
+void VP8LClear(VP8LDecoder* const dec) {
+  int i;
+  if (dec == NULL) return;
+  ClearMetadata(&dec->hdr_);
+
+  free(dec->argb_);
+  dec->argb_ = NULL;
+  for (i = 0; i < dec->next_transform_; ++i) {
+    ClearTransform(&dec->transforms_[i]);
+  }
+  dec->next_transform_ = 0;
+
+  free(dec->rescaler_memory);
+  dec->rescaler_memory = NULL;
+}
+
 void VP8LDelete(VP8LDecoder* const dec) {
-  free(dec);
+  if (dec != NULL) {
+    VP8LClear(dec);
+    free(dec);
+  }
 }
 
 static void UpdateDecoder(VP8LDecoder* const dec, int width, int height) {
@@ -925,18 +942,17 @@ int VP8LDecodeHeader(VP8LDecoder* const dec, VP8Io* const io) {
   uint32_t* decoded_data = NULL;
 
   if (dec == NULL) return 0;
-  if (io == NULL || dec->br_offset_ > io->data_size) {
+  if (io == NULL) {
     dec->status_ = VP8_STATUS_INVALID_PARAM;
     return 0;
   }
 
   dec->io_ = io;
   dec->status_ = VP8_STATUS_OK;
-  VP8LInitBitReader(&dec->br_, io->data + dec->br_offset_,
-                    io->data_size - dec->br_offset_);
+  VP8LInitBitReader(&dec->br_, io->data, io->data_size);
   if (!ReadImageSize(&dec->br_, &width, &height)) {
     dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
-    return 0;
+    goto Error;
   }
   dec->state_ = READ_DIM;
   io->width = width;
@@ -945,11 +961,14 @@ int VP8LDecodeHeader(VP8LDecoder* const dec, VP8Io* const io) {
   dec->action_ = READ_HDR;
   if (!DecodeImageStream(width, height, 1, dec, &decoded_data)) {
     free(decoded_data);
-    VP8LClear(dec);
-    assert(dec->status_ != VP8_STATUS_OK);
-    return 0;
+    goto Error;
   }
   return 1;
+
+ Error:
+   VP8LClear(dec);
+   assert(dec->status_ != VP8_STATUS_OK);
+   return 0;
 }
 
 int VP8LDecodeImage(VP8LDecoder* const dec) {
@@ -1013,22 +1032,6 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
   VP8LClear(dec);
   assert(dec->status_ != VP8_STATUS_OK);
   return 0;
-}
-
-void VP8LClear(VP8LDecoder* const dec) {
-  int i;
-  if (dec == NULL) return;
-  ClearMetadata(&dec->hdr_);
-
-  free(dec->argb_);
-  dec->argb_ = NULL;
-  for (i = 0; i < dec->next_transform_; ++i) {
-    ClearTransform(&dec->transforms_[i]);
-  }
-  dec->next_transform_ = 0;
-
-  free(dec->rescaler_memory);
-  dec->rescaler_memory = NULL;
 }
 
 //------------------------------------------------------------------------------

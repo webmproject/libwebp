@@ -298,50 +298,70 @@ void WebPResetDecParams(WebPDecParams* const params) {
 // Main flow
 static VP8StatusCode DecodeInto(const uint8_t* data, uint32_t data_size,
                                 WebPDecParams* const params) {
-  VP8Decoder* dec = VP8New();
-  VP8StatusCode status = VP8_STATUS_OK;
+  VP8StatusCode status;
   VP8Io io;
+  WebPHeaderStructure headers;
 
-  assert(params);
-  if (dec == NULL) {
-    return VP8_STATUS_INVALID_PARAM;
+  headers.data = data;
+  headers.data_size = data_size;
+  status = WebPParseHeaders(&headers);   // Process Pre-VP8 chunks.
+  if (status != VP8_STATUS_OK) {
+    return status;
   }
 
+  assert(params);
   VP8InitIo(&io);
-  io.data = data;
-  io.data_size = data_size;
+  io.data = headers.data + headers.offset;
+  io.data_size = headers.data_size - headers.offset;
   WebPInitCustomIo(params, &io);  // Plug the I/O functions.
 
+  if (!headers.is_lossless) {
+    VP8Decoder* const dec = VP8New();
+    if (dec == NULL) {
+      return VP8_STATUS_OUT_OF_MEMORY;
+    }
 #ifdef WEBP_USE_THREAD
-  dec->use_threads_ = params->options && (params->options->use_threads > 0);
+    dec->use_threads_ = params->options && (params->options->use_threads > 0);
 #else
-  dec->use_threads_ = 0;
+    dec->use_threads_ = 0;
 #endif
+    dec->alpha_data_ = headers.alpha_data;
+    dec->alpha_data_size_ = headers.alpha_data_size;
 
-  // Decode bitstream header, update io->width/io->height.
-  if (!VP8GetHeaders(dec, &io)) {
-    status = VP8_STATUS_BITSTREAM_ERROR;
-  } else {
-    // Allocate/check output buffers.
-    status = WebPAllocateDecBuffer(io.width, io.height, params->options,
-                                   params->output);
-    if (status == VP8_STATUS_OK) {
-      // Decode
-      if (!dec->is_lossless_) {
+    // Decode bitstream header, update io->width/io->height.
+    if (!VP8GetHeaders(dec, &io)) {
+      status = dec->status_;   // An error occurred. Grab error status.
+    } else {
+      // Allocate/check output buffers.
+      status = WebPAllocateDecBuffer(io.width, io.height, params->options,
+                                     params->output);
+      if (status == VP8_STATUS_OK) {  // Decode
         if (!VP8Decode(dec, &io)) {
           status = dec->status_;
         }
-      } else {
-        VP8LDecoder* const vp8l_decoder = &dec->vp8l_decoder_;
-        if (!VP8LDecodeImage(vp8l_decoder)) {
-          status = VP8_STATUS_BITSTREAM_ERROR;
+      }
+    }
+    VP8Delete(dec);
+  } else {
+    VP8LDecoder* const dec = VP8LNew();
+    if (dec == NULL) {
+      return VP8_STATUS_OUT_OF_MEMORY;
+    }
+    if (!VP8LDecodeHeader(dec, &io)) {
+      status = dec->status_;   // An error occurred. Grab error status.
+    } else {
+      // Allocate/check output buffers.
+      status = WebPAllocateDecBuffer(io.width, io.height, params->options,
+                                     params->output);
+      if (status == VP8_STATUS_OK) {  // Decode
+        if (!VP8LDecodeImage(dec)) {
+          status = dec->status_;
         }
       }
-    } else if (dec->is_lossless_) {  // Clear lossless decoder on error.
-      VP8LClear(&dec->vp8l_decoder_);
     }
+    VP8LDelete(dec);
   }
-  VP8Delete(dec);
+
   if (status != VP8_STATUS_OK) {
     WebPFreeDecBuffer(params->output);
   }
