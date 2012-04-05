@@ -51,8 +51,8 @@ typedef enum {
 // storage for partition #0 and partial data (in a rolling fashion)
 typedef struct {
   MemBufferMode mode_;  // Operation mode
-  uint32_t start_;      // start location of the data to be decoded
-  uint32_t end_;        // end location
+  size_t start_;        // start location of the data to be decoded
+  size_t end_;          // end location
   size_t buf_size_;     // size of the allocated buffer
   uint8_t* buf_;        // We don't own this buffer in case WebPIUpdate()
 
@@ -69,7 +69,7 @@ struct WebPIDecoder {
 
   MemBuffer mem_;          // input memory buffer.
   WebPDecBuffer output_;   // output buffer (when no external one is supplied)
-  uint32_t chunk_size_;    // Compressed VP8/VP8L size extracted from Header.
+  size_t chunk_size_;      // Compressed VP8/VP8L size extracted from Header.
 };
 
 // MB context to restore in case VP8DecodeMB() fails
@@ -244,7 +244,7 @@ static VP8StatusCode IDecError(WebPIDecoder* const idec, VP8StatusCode error) {
 }
 
 static void ChangeState(WebPIDecoder* const idec, DecState new_state,
-                        uint32_t consumed_bytes) {
+                        size_t consumed_bytes) {
   MemBuffer* const mem = &idec->mem_;
   idec->state_ = new_state;
   mem->start_ += consumed_bytes;
@@ -257,7 +257,7 @@ static void ChangeState(WebPIDecoder* const idec, DecState new_state,
 static VP8StatusCode DecodeWebPHeaders(WebPIDecoder* const idec) {
   MemBuffer* const mem = &idec->mem_;
   const uint8_t* data = mem->buf_ + mem->start_;
-  uint32_t curr_size = MemDataSize(mem);
+  size_t curr_size = MemDataSize(mem);
   VP8StatusCode status;
   WebPHeaderStructure headers;
 
@@ -270,7 +270,7 @@ static VP8StatusCode DecodeWebPHeaders(WebPIDecoder* const idec) {
     return IDecError(idec, status);
   }
 
-  idec->chunk_size_ = headers.vp8_size;
+  idec->chunk_size_ = headers.compressed_size;
   idec->is_lossless_ = headers.is_lossless;
   if (!idec->is_lossless_) {
     VP8Decoder* const dec = VP8New();
@@ -300,7 +300,7 @@ static VP8StatusCode DecodeWebPHeaders(WebPIDecoder* const idec) {
 
 static VP8StatusCode DecodeVP8FrameHeader(WebPIDecoder* const idec) {
   const uint8_t* data = idec->mem_.buf_ + idec->mem_.start_;
-  const uint32_t curr_size = MemDataSize(&idec->mem_);
+  const size_t curr_size = MemDataSize(&idec->mem_);
   uint32_t bits;
 
   if (curr_size < VP8_FRAME_HEADER_SIZE) {
@@ -455,7 +455,7 @@ static VP8StatusCode DecodeVP8LHeader(WebPIDecoder* const idec) {
   VP8LDecoder* const dec = (VP8LDecoder*)idec->dec_;
   const WebPDecParams* const params = &idec->params_;
   WebPDecBuffer* const output = params->output;
-  uint32_t curr_size = MemDataSize(&idec->mem_);
+  size_t curr_size = MemDataSize(&idec->mem_);
   assert(idec->is_lossless_);
 
   // Wait until there's enough data for decoding header.
@@ -478,7 +478,7 @@ static VP8StatusCode DecodeVP8LHeader(WebPIDecoder* const idec) {
 
 static VP8StatusCode DecodeVP8LData(WebPIDecoder* const idec) {
   VP8LDecoder* const dec = (VP8LDecoder*)idec->dec_;
-  const uint32_t curr_size = MemDataSize(&idec->mem_);
+  const size_t curr_size = MemDataSize(&idec->mem_);
   assert(idec->is_lossless_);
 
   // At present Lossless decoder can't decode image incrementally. So wait till

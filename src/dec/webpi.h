@@ -16,6 +16,8 @@
 extern "C" {
 #endif
 
+#include <stddef.h>   // for size_t
+
 #include "../webp/decode_vp8.h"
 #include "../utils/rescaler.h"
 
@@ -58,11 +60,11 @@ void WebPResetDecParams(WebPDecParams* const params);
 typedef struct {
   const uint8_t* data;         // input buffer
   uint32_t data_size;          // input buffer size
-  uint32_t offset;             // offset to main data chunk (VP8 or VP8L)
+  size_t offset;               // offset to main data chunk (VP8 or VP8L)
   const uint8_t* alpha_data;   // points to alpha chunk (if present)
   uint32_t alpha_data_size;    // alpha chunk size
-  uint32_t vp8_size;           // vp8 compressed data size
-  uint32_t riff_size;          // size of the riff payload (or 0 if absent)
+  size_t compressed_size;      // VP8/VP8L compressed data size
+  size_t riff_size;            // size of the riff payload (or 0 if absent)
   int is_lossless;             // true if a VP8L chunk is present
 } WebPHeaderStructure;
 
@@ -70,8 +72,8 @@ typedef struct {
 // Returns VP8_STATUS_OK on success,
 //         VP8_STATUS_BITSTREAM_ERROR if an invalid header/chunk is found, and
 //         VP8_STATUS_NOT_ENOUGH_DATA if case of insufficient data.
-// In 'headers', vp8_size, offset, alpha_data, alpha_size and lossless fields
-// are updated appropriately upon success.
+// In 'headers', compressed_size, offset, alpha_data, alpha_size and lossless
+// fields are updated appropriately upon success.
 VP8StatusCode WebPParseHeaders(WebPHeaderStructure* const headers);
 
 //------------------------------------------------------------------------------

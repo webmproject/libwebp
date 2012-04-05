@@ -57,7 +57,7 @@ static WEBP_INLINE uint32_t get_le32(const uint8_t* const data) {
 // In case there are not enough bytes (partial RIFF container), return 0 for
 // riff_size. Else return the riff_size extracted from the header.
 static VP8StatusCode ParseRIFF(const uint8_t** data, uint32_t* data_size,
-                               uint32_t* riff_size) {
+                               size_t* riff_size) {
   assert(data);
   assert(data_size);
   assert(riff_size);
@@ -196,8 +196,8 @@ static VP8StatusCode ParseOptionalChunks(const uint8_t** data,
 // extracted from the VP8/VP8L chunk header.
 // The flag 'is_lossless' is set to 1 in case of VP8L chunk.
 static VP8StatusCode ParseVP8Header(const uint8_t** data, uint32_t* data_size,
-                                    uint32_t riff_size,
-                                    uint32_t* chunk_size, int* is_lossless) {
+                                    size_t riff_size,
+                                    size_t* chunk_size, int* is_lossless) {
   const int is_vp8 = !memcmp(*data, "VP8 ", TAG_SIZE);
   const int is_vp8l = !memcmp(*data, "VP8L", TAG_SIZE);
   const uint32_t minimal_size =
@@ -241,7 +241,7 @@ VP8StatusCode WebPParseHeaders(WebPHeaderStructure* const headers) {
   buf_size = headers->data_size;
   headers->alpha_data = NULL;
   headers->alpha_data_size = 0;
-  headers->vp8_size = 0;
+  headers->compressed_size = 0;
   headers->is_lossless = 0;
   headers->offset = 0;
   headers->riff_size = 0;
@@ -272,7 +272,7 @@ VP8StatusCode WebPParseHeaders(WebPHeaderStructure* const headers) {
 
   // Skip over VP8 chunk header.
   status = ParseVP8Header(&buf, &buf_size, headers->riff_size,
-                          &headers->vp8_size, &headers->is_lossless);
+                          &headers->compressed_size, &headers->is_lossless);
   if (status != VP8_STATUS_OK) {
     return status;  // Invalid VP8 header / insufficient data.
   }
@@ -525,8 +525,8 @@ static void DefaultFeatures(WebPBitstreamFeatures* const features) {
 
 static VP8StatusCode GetFeatures(const uint8_t* data, uint32_t data_size,
                                  WebPBitstreamFeatures* const features) {
-  uint32_t chunk_size = 0;
-  uint32_t riff_size = 0;
+  size_t chunk_size = 0;
+  size_t riff_size = 0;
   int* const width = &features->width;
   int* const height = &features->height;
   int found_vp8x;
@@ -566,7 +566,8 @@ static VP8StatusCode GetFeatures(const uint8_t* data, uint32_t data_size,
 
   if (!is_lossless) {
     // Validates raw VP8 data.
-    if (!VP8GetInfo(data, data_size, chunk_size, width, height)) {
+    if (chunk_size != (uint32_t)chunk_size ||
+        !VP8GetInfo(data, data_size, (uint32_t)chunk_size, width, height)) {
       return VP8_STATUS_BITSTREAM_ERROR;
     }
   } else {
