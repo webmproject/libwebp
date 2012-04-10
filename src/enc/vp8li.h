@@ -12,6 +12,7 @@
 #ifndef WEBP_ENC_VP8LI_H_
 #define WEBP_ENC_VP8LI_H_
 
+#include "./histogram.h"
 #include "../webp/encode.h"
 #include "../utils/bit_writer.h"
 
@@ -27,9 +28,16 @@ extern "C" {
 #define SIGNATURE_SIZE       1
 #define LOSSLESS_MAGIC_BYTE  0x64
 
+#define MAX_PALETTE_SIZE         256
+#define PALETTE_KEY_RIGHT_SHIFT   22  // Key for 1K buffer.
+
 typedef struct {
   const WebPConfig* config_;    // user configuration and parameters
-  WebPPicture* pic_;            // input / output picture
+  WebPPicture* pic_;            // input picture.
+
+  uint32_t* argb_;              // Transformed argb image data.
+  uint32_t* transform_data_;    // Scratch memory for transform data.
+  int       width_;             // Packed image width.
 
   // Encoding parameters derived from quality parameter.
   int use_lz77_;
@@ -38,13 +46,11 @@ typedef struct {
   int transform_bits_;
 
   // Encoding parameters derived from image characteristics.
-  int predicted_bits_;
-  int non_predicted_bits_;
-  int use_palette_;
-  int num_palette_colors;
-  int use_predict_;
   int use_cross_color_;
-  int use_color_cache;
+  int use_predict_;
+  int use_palette_;
+  int palette_size_;
+  uint32_t palette_[MAX_PALETTE_SIZE];
 } VP8LEncoder;
 
 //------------------------------------------------------------------------------

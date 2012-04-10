@@ -47,7 +47,7 @@ static WEBP_INLINE void VP8LHistogramClear(VP8LHistogram* const p) {
 }
 
 static WEBP_INLINE void VP8LHistogramInit(VP8LHistogram* const p,
-                                      int palette_code_bits) {
+                                          int palette_code_bits) {
   p->palette_code_bits_ = palette_code_bits;
   VP8LHistogramClear(p);
 }
@@ -117,8 +117,6 @@ static WEBP_INLINE int VP8LHistogramNumCodes(const VP8LHistogram* const p) {
 
 void VP8LConvertPopulationCountTableToBitEstimates(
     int n, const int* const population_counts, double* const output);
-
-double VP8LShannonEntropy(const int* const array, int n);
 
 // Build a 2d image of histograms, subresolutioned by (1 << histobits) to
 // the original image.
