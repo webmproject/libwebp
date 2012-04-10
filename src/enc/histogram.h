@@ -36,9 +36,9 @@ typedef struct {
   // Backward reference prefix-code histogram.
   int distance_[DISTANCE_CODES_MAX];
   int palette_code_bits_;
-} Histogram;
+} VP8LHistogram;
 
-static WEBP_INLINE void HistogramClear(Histogram* const p) {
+static WEBP_INLINE void VP8LHistogramClear(VP8LHistogram* const p) {
   memset(&p->literal_[0], 0, sizeof(p->literal_));
   memset(&p->red_[0], 0, sizeof(p->red_));
   memset(&p->blue_[0], 0, sizeof(p->blue_));
@@ -46,36 +46,36 @@ static WEBP_INLINE void HistogramClear(Histogram* const p) {
   memset(&p->distance_[0], 0, sizeof(p->distance_));
 }
 
-static WEBP_INLINE void HistogramInit(Histogram* const p,
+static WEBP_INLINE void VP8LHistogramInit(VP8LHistogram* const p,
                                       int palette_code_bits) {
   p->palette_code_bits_ = palette_code_bits;
-  HistogramClear(p);
+  VP8LHistogramClear(p);
 }
 
 // Create the histogram.
 //
 // The input data is the PixOrCopy data, which models the
 // literals, stop codes and backward references (both distances and lengths)
-void HistogramBuild(Histogram* const p,
-                    const PixOrCopy* const literal_and_length,
-                    int n_literal_and_length);
+void VP8LHistogramCreate(VP8LHistogram* const p,
+                         const PixOrCopy* const literal_and_length,
+                         int n_literal_and_length);
 
-void HistogramAddSinglePixOrCopy(Histogram* const p, const PixOrCopy v);
+void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const p, const PixOrCopy v);
 
 // Estimate how many bits the combined entropy of literals and distance
 // approximately maps to.
-double HistogramEstimateBits(const Histogram* const p);
+double VP8LHistogramEstimateBits(const VP8LHistogram* const p);
 
 // This function estimates the Huffman dictionary + other block overhead
 // size for creating a new deflate block.
-double HistogramEstimateBitsHeader(const Histogram* const p);
+double VP8LHistogramEstimateBitsHeader(const VP8LHistogram* const p);
 
 // This function estimates the cost in bits excluding the bits needed to
 // represent the entropy code itself.
-double HistogramEstimateBitsBulk(const Histogram* const p);
+double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p);
 
-static WEBP_INLINE void HistogramAdd(Histogram* const p,
-                                     const Histogram* const a) {
+static WEBP_INLINE void VP8LHistogramAdd(VP8LHistogram* const p,
+                                         const VP8LHistogram* const a) {
   int i;
   for (i = 0; i < PIX_OR_COPY_CODES_MAX; ++i) {
     p->literal_[i] += a->literal_[i];
@@ -90,8 +90,8 @@ static WEBP_INLINE void HistogramAdd(Histogram* const p,
   }
 }
 
-static WEBP_INLINE void HistogramRemove(Histogram* const p,
-                                   const Histogram* const a) {
+static WEBP_INLINE void VP8LHistogramRemove(VP8LHistogram* const p,
+                                            const VP8LHistogram* const a) {
   int i;
   for (i = 0; i < PIX_OR_COPY_CODES_MAX; ++i) {
     p->literal_[i] -= a->literal_[i];
@@ -111,39 +111,38 @@ static WEBP_INLINE void HistogramRemove(Histogram* const p,
   }
 }
 
-static WEBP_INLINE int HistogramNumPixOrCopyCodes(const Histogram* const p) {
+static WEBP_INLINE int VP8LHistogramNumCodes(const VP8LHistogram* const p) {
   return 256 + kLengthCodes + (1 << p->palette_code_bits_);
 }
 
-void ConvertPopulationCountTableToBitEstimates(
+void VP8LConvertPopulationCountTableToBitEstimates(
     int n, const int* const population_counts, double* const output);
 
-double ShannonEntropy(const int* const array, int n);
+double VP8LShannonEntropy(const int* const array, int n);
 
 // Build a 2d image of histograms, subresolutioned by (1 << histobits) to
 // the original image.
-int BuildHistogramImage(int xsize, int ysize,
-                        int histobits,
-                        int palette_bits,
-                        const PixOrCopy* backward_refs,
-                        int backward_refs_size,
-                        Histogram*** image,
-                        int* histogram_size);
+int VP8LHistogramBuildImage(int xsize, int ysize,
+                            int histobits, int palette_bits,
+                            const PixOrCopy* backward_refs,
+                            int backward_refs_size,
+                            VP8LHistogram*** image,
+                            int* histogram_size);
 
 // Combines several histograms into fewer histograms.
-int CombineHistogramImage(Histogram** in,
-                          int in_size,
-                          int quality,
-                          Histogram*** out,
-                          int* out_size);
+int VP8LHistogramCombine(VP8LHistogram** in,
+                         int in_size,
+                         int quality,
+                         VP8LHistogram*** out,
+                         int* out_size);
 
 // Moves histograms from one cluster to another if smaller entropy can
 // be achieved by doing that.
-void RefineHistogramImage(Histogram** raw,
-                          int raw_size,
-                          uint32_t* symbols,
-                          int out_size,
-                          Histogram** out);
+void VP8LHistogramRefine(VP8LHistogram** raw,
+                         int raw_size,
+                         uint32_t* symbols,
+                         int out_size,
+                         VP8LHistogram** out);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }

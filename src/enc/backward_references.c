@@ -32,7 +32,7 @@ static const uint8_t plane_to_code_lut[128] = {
 
 static const int kMinLength = 2;
 
-int DistanceToPlaneCode(int xsize, int dist) {
+int VP8LDistanceToPlaneCode(int xsize, int dist) {
   int yoffset = dist / xsize;
   int xoffset = dist - yoffset * xsize;
   if (xoffset <= 8 && yoffset < 8) {
@@ -193,8 +193,8 @@ static WEBP_INLINE void PushBackCopy(int length,
   }
 }
 
-void BackwardReferencesRle(int xsize, int ysize, const uint32_t* argb,
-                           PixOrCopy* stream, int* stream_size) {
+void VP8LBackwardReferencesRle(int xsize, int ysize, const uint32_t* argb,
+                               PixOrCopy* stream, int* stream_size) {
   const int pix_count = xsize * ysize;
   int streak = 0;
   int i;
@@ -213,10 +213,10 @@ void BackwardReferencesRle(int xsize, int ysize, const uint32_t* argb,
 }
 
 // Returns 1 when successful.
-int BackwardReferencesHashChain(int xsize, int ysize, int use_palette,
-                                const uint32_t* argb, int palette_bits,
-                                int quality,
-                                PixOrCopy* stream, int* stream_size) {
+int VP8LBackwardReferencesHashChain(int xsize, int ysize, int use_palette,
+                                    const uint32_t* argb, int palette_bits,
+                                    int quality, PixOrCopy* stream,
+                                    int* stream_size) {
   const int pix_count = xsize * ysize;
   int i;
   int ok = 0;
@@ -320,7 +320,7 @@ static int CostModel_Build(CostModel* p, int xsize, int ysize,
                            const uint32_t* argb, int palette_bits) {
   int ok = 0;
   int stream_size;
-  Histogram histo;
+  VP8LHistogram histo;
   int i;
   PixOrCopy* stream = (PixOrCopy*)malloc(xsize * ysize * sizeof(*stream));
   if (stream == NULL) {
@@ -328,34 +328,33 @@ static int CostModel_Build(CostModel* p, int xsize, int ysize,
   }
   p->palette_bits_ = palette_bits;
   if (recursion_level > 0) {
-    if (!BackwardReferencesTraceBackwards(xsize, ysize, recursion_level - 1,
-                                          use_palette, argb,
-                                          palette_bits,
-                                          &stream[0], &stream_size)) {
+    if (!VP8LBackwardReferencesTraceBackwards(xsize, ysize, recursion_level - 1,
+                                              use_palette, argb, palette_bits,
+                                              &stream[0], &stream_size)) {
       goto Error;
     }
   } else {
     const int quality = 100;
-    if (!BackwardReferencesHashChain(xsize, ysize, use_palette, argb,
-                                     palette_bits, quality,
-                                     &stream[0], &stream_size)) {
+    if (!VP8LBackwardReferencesHashChain(xsize, ysize, use_palette, argb,
+                                         palette_bits, quality,
+                                         &stream[0], &stream_size)) {
       goto Error;
     }
   }
-  HistogramInit(&histo, palette_bits);
+  VP8LHistogramInit(&histo, palette_bits);
   for (i = 0; i < stream_size; ++i) {
-    HistogramAddSinglePixOrCopy(&histo, stream[i]);
+    VP8LHistogramAddSinglePixOrCopy(&histo, stream[i]);
   }
-  ConvertPopulationCountTableToBitEstimates(
-      HistogramNumPixOrCopyCodes(&histo),
+  VP8LConvertPopulationCountTableToBitEstimates(
+      VP8LHistogramNumCodes(&histo),
       &histo.literal_[0], &p->literal_[0]);
-  ConvertPopulationCountTableToBitEstimates(
+  VP8LConvertPopulationCountTableToBitEstimates(
       VALUES_IN_BYTE, &histo.red_[0], &p->red_[0]);
-  ConvertPopulationCountTableToBitEstimates(
+  VP8LConvertPopulationCountTableToBitEstimates(
       VALUES_IN_BYTE, &histo.blue_[0], &p->blue_[0]);
-  ConvertPopulationCountTableToBitEstimates(
+  VP8LConvertPopulationCountTableToBitEstimates(
       VALUES_IN_BYTE, &histo.alpha_[0], &p->alpha_[0]);
-  ConvertPopulationCountTableToBitEstimates(
+  VP8LConvertPopulationCountTableToBitEstimates(
       DISTANCE_CODES_MAX, &histo.distance_[0], &p->distance_[0]);
   ok = 1;
 Error:
@@ -440,7 +439,7 @@ static int BackwardReferencesHashChainDistanceOnly(
                                &offset, &len);
       }
       if (len >= kMinLength) {
-        const int code = DistanceToPlaneCode(xsize, offset);
+        const int code = VP8LDistanceToPlaneCode(xsize, offset);
         const double distance_cost =
             prev_cost + CostModel_DistanceCost(cost_model, code);
         int k;
@@ -601,13 +600,13 @@ Error:
 }
 
 // Returns 1 on success.
-int BackwardReferencesTraceBackwards(int xsize, int ysize,
-                                     int recursive_cost_model,
-                                     int use_palette,
-                                     const uint32_t* argb,
-                                     int palette_bits,
-                                     PixOrCopy* stream,
-                                     int* stream_size) {
+int VP8LBackwardReferencesTraceBackwards(int xsize, int ysize,
+                                         int recursive_cost_model,
+                                         int use_palette,
+                                         const uint32_t* argb,
+                                         int palette_bits,
+                                         PixOrCopy* stream,
+                                         int* stream_size) {
   int ok = 0;
   const int dist_array_size = xsize * ysize;
   uint32_t* chosen_path = NULL;
@@ -638,21 +637,22 @@ Error:
   return ok;
 }
 
-void BackwardReferences2DLocality(int xsize, int data_size, PixOrCopy* data) {
+void VP8LBackwardReferences2DLocality(int xsize, int data_size,
+                                      PixOrCopy* data) {
   int i;
   for (i = 0; i < data_size; ++i) {
     if (PixOrCopyIsCopy(&data[i])) {
       int dist = data[i].argb_or_offset;
-      int transformed_dist = DistanceToPlaneCode(xsize, dist);
+      int transformed_dist = VP8LDistanceToPlaneCode(xsize, dist);
       data[i].argb_or_offset = transformed_dist;
     }
   }
 }
 
-int VerifyBackwardReferences(const uint32_t* argb, int xsize, int ysize,
-                             int palette_bits,
-                             const PixOrCopy* lit,
-                             int lit_size) {
+int VP8LVerifyBackwardReferences(const uint32_t* argb, int xsize, int ysize,
+                                 int palette_bits,
+                                 const PixOrCopy* lit,
+                                 int lit_size) {
   int num_pixels = 0;
   int i;
   VP8LColorCache hashers;
@@ -717,7 +717,7 @@ int VerifyBackwardReferences(const uint32_t* argb, int xsize, int ysize,
 // Returns 1 on success.
 static int ComputePaletteHistogram(const uint32_t* argb, int xsize, int ysize,
                                    PixOrCopy* stream, int stream_size,
-                                   int palette_bits, Histogram* histo) {
+                                   int palette_bits, VP8LHistogram* histo) {
   int pixel_index = 0;
   int i;
   uint32_t k;
@@ -732,12 +732,12 @@ static int ComputePaletteHistogram(const uint32_t* argb, int xsize, int ysize,
           VP8LColorCacheContains(&hashers, argb[pixel_index])) {
         // push pixel as a palette pixel
         const int ix = VP8LColorCacheGetIndex(&hashers, argb[pixel_index]);
-        HistogramAddSinglePixOrCopy(histo, PixOrCopyCreatePaletteIx(ix));
+        VP8LHistogramAddSinglePixOrCopy(histo, PixOrCopyCreatePaletteIx(ix));
       } else {
-        HistogramAddSinglePixOrCopy(histo, v);
+        VP8LHistogramAddSinglePixOrCopy(histo, v);
       }
     } else {
-      HistogramAddSinglePixOrCopy(histo, v);
+      VP8LHistogramAddSinglePixOrCopy(histo, v);
     }
     for (k = 0; k < PixOrCopyLength(&v); ++k) {
       VP8LColorCacheInsert(&hashers, argb[pixel_index]);
@@ -752,9 +752,9 @@ static int ComputePaletteHistogram(const uint32_t* argb, int xsize, int ysize,
 }
 
 // Returns how many bits are to be used for a palette.
-int CalculateEstimateForPaletteSize(const uint32_t* argb,
-                                    int xsize, int ysize,
-                                    int* best_palette_bits) {
+int VP8LCalculateEstimateForPaletteSize(const uint32_t* argb,
+                                        int xsize, int ysize,
+                                        int* best_palette_bits) {
   int ok = 0;
   int palette_bits;
   double lowest_entropy = 1e99;
@@ -763,17 +763,17 @@ int CalculateEstimateForPaletteSize(const uint32_t* argb,
   static const double kSmallPenaltyForLargePalette = 4.0;
   static const int quality = 30;
   if (stream == NULL ||
-      !BackwardReferencesHashChain(xsize, ysize,
-                                   0, argb, 0, quality, stream, &stream_size)) {
+      !VP8LBackwardReferencesHashChain(xsize, ysize, 0, argb, 0, quality,
+                                       stream, &stream_size)) {
     goto Error;
   }
   for (palette_bits = 0; palette_bits < 12; ++palette_bits) {
     double cur_entropy;
-    Histogram histo;
-    HistogramInit(&histo, palette_bits);
+    VP8LHistogram histo;
+    VP8LHistogramInit(&histo, palette_bits);
     ComputePaletteHistogram(argb, xsize, ysize, &stream[0], stream_size,
                             palette_bits, &histo);
-    cur_entropy = HistogramEstimateBits(&histo) +
+    cur_entropy = VP8LHistogramEstimateBits(&histo) +
         kSmallPenaltyForLargePalette * palette_bits;
     if (palette_bits == 0 || cur_entropy < lowest_entropy) {
       *best_palette_bits = palette_bits;

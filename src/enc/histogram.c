@@ -116,7 +116,7 @@ static WEBP_INLINE double FastLog(int v) {
   return log(v);
 }
 
-void ConvertPopulationCountTableToBitEstimates(
+void VP8LConvertPopulationCountTableToBitEstimates(
     int num_symbols,
     const int* const population_counts,
     double* const output) {
@@ -145,7 +145,8 @@ void ConvertPopulationCountTableToBitEstimates(
   }
 }
 
-void HistogramAddSinglePixOrCopy(Histogram* const p, const PixOrCopy v) {
+void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const p,
+                                     const PixOrCopy v) {
   if (PixOrCopyIsLiteral(&v)) {
     ++p->alpha_[PixOrCopyLiteral(&v, 3)];
     ++p->red_[PixOrCopyLiteral(&v, 2)];
@@ -165,17 +166,17 @@ void HistogramAddSinglePixOrCopy(Histogram* const p, const PixOrCopy v) {
   }
 }
 
-void HistogramBuild(Histogram* const p,
-                    const PixOrCopy* const literal_and_length,
-                    int n_literal_and_length) {
+void VP8LHistogramCreate(VP8LHistogram* const p,
+                         const PixOrCopy* const literal_and_length,
+                         int n_literal_and_length) {
   int i;
-  HistogramClear(p);
+  VP8LHistogramClear(p);
   for (i = 0; i < n_literal_and_length; ++i) {
-    HistogramAddSinglePixOrCopy(p, literal_and_length[i]);
+    VP8LHistogramAddSinglePixOrCopy(p, literal_and_length[i]);
   }
 }
 
-double ShannonEntropy(const int* const array, int n) {
+double VP8LShannonEntropy(const int* const array, int n) {
   int i;
   double retval = 0;
   int sum = 0;
@@ -208,7 +209,7 @@ static double BitsEntropy(const int* const array, int n) {
     }
   }
   retval -= sum * FastLog(sum);
-  retval *= -1.4426950408889634;  // 1.0 / -FastLog(2);
+  retval *= -1.4426950408889634;  // 1.0 / -Log(2);
   mix = 0.627;
   if (nonzeros < 5) {
     if (nonzeros <= 1) {
@@ -240,8 +241,8 @@ static double BitsEntropy(const int* const array, int n) {
   return retval;
 }
 
-double HistogramEstimateBitsBulk(const Histogram* const p) {
-  double retval = BitsEntropy(&p->literal_[0], HistogramNumPixOrCopyCodes(p)) +
+double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p) {
+  double retval = BitsEntropy(&p->literal_[0], VP8LHistogramNumCodes(p)) +
       BitsEntropy(&p->red_[0], 256) +
       BitsEntropy(&p->blue_[0], 256) +
       BitsEntropy(&p->alpha_[0], 256) +
@@ -258,8 +259,8 @@ double HistogramEstimateBitsBulk(const Histogram* const p) {
   return retval;
 }
 
-double HistogramEstimateBits(const Histogram* const p) {
-  return HistogramEstimateBitsHeader(p) + HistogramEstimateBitsBulk(p);
+double VP8LHistogramEstimateBits(const VP8LHistogram* const p) {
+  return VP8LHistogramEstimateBitsHeader(p) + VP8LHistogramEstimateBitsBulk(p);
 }
 
 // Returns the cost encode the rle-encoded entropy code.
@@ -301,35 +302,33 @@ static double HuffmanCost(const int* const population, int length) {
   return retval;
 }
 
-double HistogramEstimateBitsHeader(const Histogram* const p) {
+double VP8LHistogramEstimateBitsHeader(const VP8LHistogram* const p) {
   return HuffmanCost(&p->alpha_[0], 256) +
       HuffmanCost(&p->red_[0], 256) +
-      HuffmanCost(&p->literal_[0], HistogramNumPixOrCopyCodes(p)) +
+      HuffmanCost(&p->literal_[0], VP8LHistogramNumCodes(p)) +
       HuffmanCost(&p->blue_[0], 256) +
       HuffmanCost(&p->distance_[0], DISTANCE_CODES_MAX);
 }
 
-int BuildHistogramImage(int xsize, int ysize,
-                        int histobits,
-                        int palettebits,
-                        const PixOrCopy* backward_refs,
-                        int backward_refs_size,
-                        Histogram*** image_arg,
-                        int* image_size) {
+int VP8LHistogramBuildImage(int xsize, int ysize,
+                            int histobits, int palettebits,
+                            const PixOrCopy* backward_refs,
+                            int backward_refs_size,
+                            VP8LHistogram*** image_arg, int* image_size) {
   int histo_xsize = histobits ? (xsize + (1 << histobits) - 1) >> histobits : 1;
   int histo_ysize = histobits ? (ysize + (1 << histobits) - 1) >> histobits : 1;
   int i;
   int x = 0;
   int y = 0;
-  Histogram** image;
+  VP8LHistogram** image;
   *image_arg = NULL;
   *image_size = histo_xsize * histo_ysize;
-  image = (Histogram**)calloc(*image_size, sizeof(*image));
+  image = (VP8LHistogram**)calloc(*image_size, sizeof(*image));
   if (image == NULL) {
     return 0;
   }
   for (i = 0; i < *image_size; ++i) {
-    image[i] = (Histogram*)malloc(sizeof(*image[i]));
+    image[i] = (VP8LHistogram*)malloc(sizeof(*image[i]));
     if (!image[i]) {
       int k;
       for (k = 0; k < *image_size; ++k) {
@@ -338,14 +337,14 @@ int BuildHistogramImage(int xsize, int ysize,
       free(image);
       return 0;
     }
-    HistogramInit(image[i], palettebits);
+    VP8LHistogramInit(image[i], palettebits);
   }
   // x and y trace the position in the image.
   for (i = 0; i < backward_refs_size; ++i) {
     const PixOrCopy v = backward_refs[i];
     const int ix =
         histobits ? (y >> histobits) * histo_xsize + (x >> histobits) : 0;
-    HistogramAddSinglePixOrCopy(image[ix], v);
+    VP8LHistogramAddSinglePixOrCopy(image[ix], v);
     x += PixOrCopyLength(&v);
     while (x >= xsize) {
       x -= xsize;
@@ -356,11 +355,8 @@ int BuildHistogramImage(int xsize, int ysize,
   return 1;
 }
 
-int CombineHistogramImage(Histogram** in,
-                          int in_size,
-                          int quality,
-                          Histogram*** out_arg,
-                          int* out_size) {
+int VP8LHistogramCombine(VP8LHistogram** in, int in_size, int quality,
+                         VP8LHistogram*** out_arg, int* out_size) {
   int ok = 0;
   int i;
   unsigned int seed = 0;
@@ -368,7 +364,7 @@ int CombineHistogramImage(Histogram** in,
   int inner_iters = 10 + quality / 2;
   int iter;
   double* bit_costs = (double*)malloc(in_size * sizeof(*bit_costs));
-  Histogram** out = (Histogram**)calloc(in_size, sizeof(*out));
+  VP8LHistogram** out = (VP8LHistogram**)calloc(in_size, sizeof(*out));
   *out_arg = out;
   *out_size = in_size;
   if (bit_costs == NULL || out == NULL) {
@@ -376,13 +372,13 @@ int CombineHistogramImage(Histogram** in,
   }
   // Copy
   for (i = 0; i < in_size; ++i) {
-    Histogram* new_histo = (Histogram*)malloc(sizeof(*new_histo));
+    VP8LHistogram* new_histo = (VP8LHistogram*)malloc(sizeof(*new_histo));
     if (new_histo == NULL) {
       goto Error;
     }
     *new_histo = *(in[i]);
     out[i] = new_histo;
-    bit_costs[i] = HistogramEstimateBits(out[i]);
+    bit_costs[i] = VP8LHistogramEstimateBits(out[i]);
   }
   // Collapse similar histograms.
   for (iter = 0; iter < in_size * 3 && *out_size >= 2; ++iter) {
@@ -394,7 +390,7 @@ int CombineHistogramImage(Histogram** in,
     for (k = 0; k < inner_iters; ++k) {
       // Choose two, build a combo out of them.
       double cost_val;
-      Histogram* combo;
+      VP8LHistogram* combo;
       int ix0 = rand_r(&seed) % *out_size;
       int ix1;
       int diff = ((k & 7) + 1) % (*out_size - 1);
@@ -405,13 +401,14 @@ int CombineHistogramImage(Histogram** in,
       if (ix0 == ix1) {
         continue;
       }
-      combo = (Histogram*)malloc(sizeof(*combo));
+      combo = (VP8LHistogram*)malloc(sizeof(*combo));
       if (combo == NULL) {
         goto Error;
       }
       *combo = *out[ix0];
-      HistogramAdd(combo, out[ix1]);
-      cost_val = HistogramEstimateBits(combo) - bit_costs[ix0] - bit_costs[ix1];
+      VP8LHistogramAdd(combo, out[ix1]);
+      cost_val =
+          VP8LHistogramEstimateBits(combo) - bit_costs[ix0] - bit_costs[ix1];
       if (best_val > cost_val) {
         best_val = cost_val;
         best_ix0 = ix0;
@@ -420,7 +417,7 @@ int CombineHistogramImage(Histogram** in,
       free(combo);
     }
     if (best_val < 0.0) {
-      HistogramAdd(out[best_ix0], out[best_ix1]);
+      VP8LHistogramAdd(out[best_ix0], out[best_ix1]);
       bit_costs[best_ix0] =
           best_val + bit_costs[best_ix0] + bit_costs[best_ix1];
       // Erase (*out)[best_ix1]
@@ -453,42 +450,39 @@ Error:
 
 // What is the bit cost of moving square_histogram from
 // cur_symbol to candidate_symbol.
-static double HistogramDistance(const Histogram* const square_histogram,
+static double HistogramDistance(const VP8LHistogram* const square_histogram,
                                 int cur_symbol,
                                 int candidate_symbol,
-                                Histogram** candidate_histograms) {
+                                VP8LHistogram** candidate_histograms) {
   double new_bit_cost;
   double previous_bit_cost;
-  Histogram modified;
+  VP8LHistogram modified;
   if (cur_symbol == candidate_symbol) {
     return 0;  // Going nowhere. No savings.
   }
   previous_bit_cost =
-      HistogramEstimateBits(candidate_histograms[candidate_symbol]);
+      VP8LHistogramEstimateBits(candidate_histograms[candidate_symbol]);
   if (cur_symbol != -1) {
     previous_bit_cost +=
-        HistogramEstimateBits(candidate_histograms[cur_symbol]);
+        VP8LHistogramEstimateBits(candidate_histograms[cur_symbol]);
   }
 
   // Compute the bit cost of the histogram where the data moves to.
   modified = *candidate_histograms[candidate_symbol];
-  HistogramAdd(&modified, square_histogram);
-  new_bit_cost = HistogramEstimateBits(&modified);
+  VP8LHistogramAdd(&modified, square_histogram);
+  new_bit_cost = VP8LHistogramEstimateBits(&modified);
 
   // Compute the bit cost of the histogram where the data moves away.
   if (cur_symbol != -1) {
     modified = *candidate_histograms[cur_symbol];
-    HistogramRemove(&modified, square_histogram);
-    new_bit_cost += HistogramEstimateBits(&modified);
+    VP8LHistogramRemove(&modified, square_histogram);
+    new_bit_cost += VP8LHistogramEstimateBits(&modified);
   }
   return new_bit_cost - previous_bit_cost;
 }
 
-void RefineHistogramImage(Histogram** raw,
-                          int raw_size,
-                          uint32_t* symbols,
-                          int out_size,
-                          Histogram** out) {
+void VP8LHistogramRefine(VP8LHistogram** raw, int raw_size,
+                         uint32_t* symbols, int out_size, VP8LHistogram** out) {
   int i;
   // Find the best 'out' histogram for each of the raw histograms
   for (i = 0; i < raw_size; ++i) {
@@ -507,9 +501,9 @@ void RefineHistogramImage(Histogram** raw,
 
   // Recompute each out based on raw and symbols.
   for (i = 0; i < out_size; ++i) {
-    HistogramClear(out[i]);
+    VP8LHistogramClear(out[i]);
   }
   for (i = 0; i < raw_size; ++i) {
-    HistogramAdd(out[symbols[i]], raw[i]);
+    VP8LHistogramAdd(out[symbols[i]], raw[i]);
   }
 }
