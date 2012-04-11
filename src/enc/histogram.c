@@ -8,6 +8,7 @@
 // Author: Jyrki Alakuijala (jyrki@google.com)
 //
 
+#ifdef USE_LOSSLESS_ENCODER
 
 #include <math.h>
 #include <stdio.h>
@@ -392,3 +393,5 @@ void VP8LHistogramRefine(VP8LHistogram** raw, int raw_size,
     VP8LHistogramAdd(out[symbols[i]], raw[i]);
   }
 }
+
+#endif

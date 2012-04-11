@@ -12,6 +12,8 @@
 #ifndef WEBP_ENC_HISTOGRAM_H_
 #define WEBP_ENC_HISTOGRAM_H_
 
+#ifdef USE_LOSSLESS_ENCODER
+
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -144,6 +146,8 @@ void VP8LHistogramRefine(VP8LHistogram** raw,
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }
+#endif
+
 #endif
 
 #endif  // WEBP_ENC_HISTOGRAM_H_

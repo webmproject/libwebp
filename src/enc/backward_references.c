@@ -8,6 +8,8 @@
 // Author: Jyrki Alakuijala (jyrki@google.com)
 //
 
+#ifdef USE_LOSSLESS_ENCODER
+
 #include <assert.h>
 #include <math.h>
 #include <stdint.h>
@@ -785,3 +787,5 @@ Error:
   free(stream);
   return ok;
 }
+
+#endif

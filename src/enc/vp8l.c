@@ -10,6 +10,8 @@
 // Author: Vikas Arora (vikaas.arora@gmail.com)
 //
 
+#ifdef USE_LOSSLESS_ENCODER
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -534,4 +536,6 @@ int VP8LEncodeImage(const WebPConfig* const config,
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
+#endif
+
 #endif

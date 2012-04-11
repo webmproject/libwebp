@@ -64,6 +64,7 @@ static WEBP_INLINE size_t VP8BitWriterSize(const VP8BitWriter* const bw) {
   return bw->pos_;
 }
 
+#ifdef USE_LOSSLESS_ENCODER
 //------------------------------------------------------------------------------
 // VP8LBitWriter
 // TODO(vikasa): VP8LBitWriter is copied as-is from lossless code. There's scope
@@ -115,6 +116,7 @@ void VP8LBitWriterDestroy(VP8LBitWriter* const bw);
 void VP8LWriteBits(VP8LBitWriter* const bw, int n_bits, uint32_t bits);
 
 //------------------------------------------------------------------------------
+#endif
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

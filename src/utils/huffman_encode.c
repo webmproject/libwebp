@@ -9,6 +9,8 @@
 //
 // Flate like entropy encoding (Huffman) for webp lossless.
 
+#ifdef USE_LOSSLESS_ENCODER
+
 #include "./huffman_encode.h"
 
 #include <stdint.h>
@@ -311,3 +313,5 @@ void ConvertBitDepthsToSymbols(const uint8_t* depth, int len,
     }
   }
 }
+
+#endif

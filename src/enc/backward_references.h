@@ -11,6 +11,8 @@
 #ifndef WEBP_ENC_BACKWARD_REFERENCES_H_
 #define WEBP_ENC_BACKWARD_REFERENCES_H_
 
+#ifdef USE_LOSSLESS_ENCODER
+
 #include <assert.h>
 #include <stdint.h>
 
@@ -229,6 +231,8 @@ int VP8LCalculateEstimateForPaletteSize(const uint32_t *argb,
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }
+#endif
+
 #endif
 
 #endif  // WEBP_ENC_BACKWARD_REFERENCES_H_

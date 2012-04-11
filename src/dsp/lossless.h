@@ -33,6 +33,7 @@ void VP8LInverseTransform(const struct VP8LTransform* const transform,
                           int row_start, int row_end,
                           uint32_t* const data_in, uint32_t* const data_out);
 
+#ifdef USE_LOSSLESS_ENCODER
 // Subtracts green from blue and red channels.
 void VP8LSubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixs);
 
@@ -41,6 +42,8 @@ void VP8LResidualImage(int width, int height, int bits,
 
 void VP8LColorSpaceTransform(int width, int height, int bits, int step,
                              uint32_t* const argb, uint32_t* image);
+#endif
+
 //------------------------------------------------------------------------------
 // Color space conversion.
 
@@ -52,14 +55,15 @@ void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
 //------------------------------------------------------------------------------
 // Misc methods.
 
-// Faster logarithm for small integers, with the property of log(0) == 0.
-double VP8LFastLog(int v);
-
 // Computes sampled size of 'size' when sampling using 'sampling bits'.
 static WEBP_INLINE uint32_t VP8LSubSampleSize(uint32_t size,
                                               uint32_t sampling_bits) {
   return (size + (1 << sampling_bits) - 1) >> sampling_bits;
 }
+
+#ifdef USE_LOSSLESS_ENCODER
+// Faster logarithm for small integers, with the property of log(0) == 0.
+double VP8LFastLog(int v);
 
 // In-place difference of each component with mod 256.
 static WEBP_INLINE uint32_t VP8LSubPixels(uint32_t a, uint32_t b) {
@@ -67,6 +71,7 @@ static WEBP_INLINE uint32_t VP8LSubPixels(uint32_t a, uint32_t b) {
   const uint32_t red_and_blue = (a & 0x00ff00ffu) - (b & 0x00ff00ffu);
   return (alpha_and_green & 0xff00ff00u) | (red_and_blue & 0x00ff00ffu);
 }
+#endif
 
 //------------------------------------------------------------------------------
 

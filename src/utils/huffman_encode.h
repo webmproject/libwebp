@@ -12,6 +12,8 @@
 #ifndef WEBP_UTILS_HUFFMAN_ENCODE_H_
 #define WEBP_UTILS_HUFFMAN_ENCODE_H_
 
+#ifdef USE_LOSSLESS_ENCODER
+
 #include <stdint.h>
 
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -47,6 +49,8 @@ void ConvertBitDepthsToSymbols(const uint8_t* depth, int len, uint16_t* bits);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }
+#endif
+
 #endif
 
 #endif  // WEBP_UTILS_HUFFMAN_ENCODE_H_
