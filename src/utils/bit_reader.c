@@ -95,6 +95,129 @@ int32_t VP8GetSignedValue(VP8BitReader* const br, int bits) {
 }
 
 //------------------------------------------------------------------------------
+// BitReader
+
+static const uint32_t kBitMask[MAX_NUM_BIT_READ] = {
+  0, 1, 3, 7, 15, 31, 63, 127, 255, 511, 1023, 2047, 4095, 8191, 16383, 32767,
+  65535, 131071, 262143, 524287, 1048575, 2097151, 4194303, 8388607, 16777215
+};
+
+void VP8LInitBitReader(BitReader* const br,
+                       const uint8_t* const start,
+                       size_t length) {
+  size_t i;
+  assert(br);
+  assert(start);
+
+  br->buf_ = start;
+  br->len_ = length;
+  br->val_ = 0;
+  br->pos_ = 0;
+  br->bit_pos_ = 0;
+  br->eos_ = 0;
+  br->error_ = 0;
+  for (i = 0; i < sizeof(br->val_) && i < br->len_; ++i) {
+    br->val_ |= ((uint64_t)br->buf_[br->pos_]) << (8 * i);
+    ++br->pos_;
+  }
+}
+
+void VP8LBitReaderResize(BitReader* const br,
+                         const uint8_t* const new_start,
+                         size_t new_length) {
+  if (new_length > br->len_) br->eos_ = 0;
+  br->buf_ = new_start;
+  br->len_ = new_length;
+}
+
+static void ShiftBytes(BitReader* const br) {
+  while (br->bit_pos_ >= 8 && br->pos_ < br->len_) {
+    br->val_ >>= 8;
+    br->val_ |= ((uint64_t)br->buf_[br->pos_]) << 56;
+    ++br->pos_;
+    br->bit_pos_ -= 8;
+  }
+}
+
+void VP8LFillBitWindow(BitReader* const br) {
+  if (br->bit_pos_ >= 32) {
+#if defined(__x86_64__)
+    if (br->pos_ < br->len_ - 8) {
+      br->val_ >>= 32;
+      // The expression below needs a little-endian arch to work correctly.
+      // This gives a large speedup for decoding speed.
+      br->val_ |= *(const uint64_t *)(br->buf_ + br->pos_) << 32;
+      br->pos_ += 4;
+      br->bit_pos_ -= 32;
+    } else {
+      // Slow path.
+      ShiftBytes(br);
+    }
+#else
+    // Always the slow path.
+    ShiftBytes(br);
+#endif
+  }
+  if (br->pos_ == br->len_ && br->bit_pos_ == 64) {
+    br->eos_ = 1;
+  }
+}
+
+uint32_t VP8LReadOneBit(BitReader* const br) {
+  const uint32_t val = (br->val_ >> br->bit_pos_) & 1;
+  // Flag an error at end_of_stream.
+  if (!br->eos_) {
+    ++br->bit_pos_;
+    if (br->bit_pos_ >= 32) {
+      ShiftBytes(br);
+    }
+    // After this last bit is read, check if eos needs to be flagged.
+    if (br->pos_ == br->len_ && br->bit_pos_ == 64) {
+      br->eos_ = 1;
+    }
+  } else {
+    br->error_ = 1;
+  }
+  return val;
+}
+
+uint32_t VP8LReadBits(BitReader* const br, int n_bits) {
+  uint32_t val = 0;
+  assert(n_bits >= 0);
+  // Flag an error if end_of_stream or n_bits is more than allowed limit.
+  if (!br->eos_ && n_bits < MAX_NUM_BIT_READ) {
+    // If this read is going to cross the read buffer, set the eos flag.
+    if (br->pos_ == br->len_) {
+      if ((br->bit_pos_ + n_bits) >= 64) {
+        br->eos_ = 1;
+        if ((br->bit_pos_ + n_bits) > 64) return val;
+      }
+    }
+    val = (br->val_ >> br->bit_pos_) & kBitMask[n_bits];
+    br->bit_pos_ += n_bits;
+    if (br->bit_pos_ >= 40) {
+      if (br->pos_ < br->len_ - 5) {
+        br->val_ >>= 40;
+        br->val_ |=
+            (((uint64_t)br->buf_[br->pos_ + 0]) << 24) |
+            (((uint64_t)br->buf_[br->pos_ + 1]) << 32) |
+            (((uint64_t)br->buf_[br->pos_ + 2]) << 40) |
+            (((uint64_t)br->buf_[br->pos_ + 3]) << 48) |
+            (((uint64_t)br->buf_[br->pos_ + 4]) << 56);
+        br->pos_ += 5;
+        br->bit_pos_ -= 40;
+      }
+      if (br->bit_pos_ >= 8) {
+        ShiftBytes(br);
+      }
+    }
+  } else {
+    br->error_ = 1;
+  }
+  return val;
+}
+
+//------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
