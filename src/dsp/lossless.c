@@ -478,10 +478,10 @@ static void PredictorInverseTransform(const VP8LTransform* const transform,
   const int width = transform->xsize_;
   if (y_start == 0) {  // First Row follows the L (mode=1) mode.
     int x;
-    uint32_t pred = Predictor0(data, NULL);
+    const uint32_t pred = Predictor0(data, NULL);
     AddPixelsEq(data, pred);
     for (x = 1; x < width; ++x) {
-      pred = Predictor1(data + x, NULL);
+      const uint32_t pred = Predictor1(data + x, NULL);
       AddPixelsEq(data + x, pred);
     }
     data += width;
@@ -558,8 +558,7 @@ typedef struct {
   int red_to_blue_;
 } Multipliers;
 
-static WEBP_INLINE void MultipliersClear(
-    Multipliers* m) {
+static WEBP_INLINE void MultipliersClear(Multipliers* m) {
   m->green_to_red_ = 0;
   m->green_to_blue_ = 0;
   m->red_to_blue_ = 0;
@@ -578,11 +577,10 @@ static WEBP_INLINE void ColorCodeToMultipliers(uint32_t color_code,
 }
 
 static WEBP_INLINE uint32_t MultipliersToColorCode(Multipliers* const m) {
-  return
-      0xff000000u |
-      ((uint32_t)(m->red_to_blue_) << 16) |
-      ((uint32_t)(m->green_to_blue_) << 8) |
-      m->green_to_red_;
+  return 0xff000000u |
+         ((uint32_t)(m->red_to_blue_) << 16) |
+         ((uint32_t)(m->green_to_blue_) << 8) |
+         m->green_to_red_;
 }
 
 static WEBP_INLINE uint32_t TransformColor(const Multipliers* const m,
@@ -633,10 +631,9 @@ static double PredictionCostCrossColor(const int accumulated[256],
   for (i = 0; i < 256; ++i) {
     combo[i] = accumulated[i] + counts[i];
   }
-  return
-      ShannonEntropy(combo, 256) +
-      ShannonEntropy(counts, 256) +
-      PredictionCostSpatial(counts, 3, 2.4);  // Favor small absolute values.
+  return ShannonEntropy(combo, 256) +
+         ShannonEntropy(counts, 256) +
+         PredictionCostSpatial(counts, 3, 2.4);  // Favor small absolute values.
 }
 
 static Multipliers GetBestColorTransformForTile(
@@ -776,10 +773,9 @@ static void CopyTileWithColorTransform(int xsize, int ysize,
   }
 }
 
-void VP8LColorSpaceTransform(int width, int height, int bits, int quality,
+void VP8LColorSpaceTransform(int width, int height, int bits, int step,
                              uint32_t* const argb, uint32_t* image) {
   const int max_tile_size = 1 << bits;
-  const int step = (quality == 0) ? 32 : 8;
   int tile_xsize = VP8LSubSampleSize(width, bits);
   int tile_ysize = VP8LSubSampleSize(height, bits);
   int accumulated_red_histo[256] = { 0 };

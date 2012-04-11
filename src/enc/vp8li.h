@@ -37,7 +37,7 @@ typedef struct {
 
   uint32_t* argb_;              // Transformed argb image data.
   uint32_t* transform_data_;    // Scratch memory for transform data.
-  int       width_;             // Packed image width.
+  int       current_width_;     // Corresponds to packed image width.
 
   // Encoding parameters derived from quality parameter.
   int use_lz77_;

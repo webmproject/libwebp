@@ -39,7 +39,7 @@ void VP8LSubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixs);
 void VP8LResidualImage(int width, int height, int bits,
                        uint32_t* const argb, uint32_t* const image);
 
-void VP8LColorSpaceTransform(int width, int height, int bits, int quality,
+void VP8LColorSpaceTransform(int width, int height, int bits, int step,
                              uint32_t* const argb, uint32_t* image);
 //------------------------------------------------------------------------------
 // Color space conversion.
