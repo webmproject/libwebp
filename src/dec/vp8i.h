@@ -13,6 +13,7 @@
 #define WEBP_DEC_VP8I_H_
 
 #include <string.h>     // for memcpy()
+#include "./vp8li.h"
 #include "../utils/bit_reader.h"
 #include "../utils/thread.h"
 #include "../dsp/dsp.h"
@@ -280,6 +281,9 @@ struct VP8Decoder {
   int layer_colorspace_;
   const uint8_t* layer_data_;   // compressed layer data (if present)
   size_t layer_data_size_;
+
+  int is_lossless_;
+  VP8LDecoder vp8l_decoder_;
 };
 
 //------------------------------------------------------------------------------
@@ -289,8 +293,8 @@ struct VP8Decoder {
 int VP8SetError(VP8Decoder* const dec,
                 VP8StatusCode error, const char * const msg);
 
-// Validates the VP8 data-header and retrieve basic header information viz width
-// and height. Returns 0 in case of formatting error. *width/*height
+// Validates the VP8 data-header and retrieves basic header information viz
+// width and height. Returns 0 in case of formatting error. *width/*height
 // can be passed NULL.
 int VP8GetInfo(const uint8_t* data,
                uint32_t data_size,    // data available so far
