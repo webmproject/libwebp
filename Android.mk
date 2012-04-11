@@ -11,11 +11,13 @@ LOCAL_SRC_FILES := \
 	src/dec/quant.c \
 	src/dec/tree.c \
 	src/dec/vp8.c \
+	src/dec/vp8l.c \
 	src/dec/webp.c \
 	src/dsp/cpu.c \
 	src/dsp/dec.c \
 	src/dsp/dec_neon.c \
 	src/dsp/enc.c \
+	src/dsp/lossless.c \
 	src/dsp/upsampling.c \
 	src/dsp/yuv.c \
 	src/enc/alpha.c \
@@ -37,7 +39,9 @@ LOCAL_SRC_FILES := \
 	src/utils/alpha.c \
 	src/utils/bit_reader.c \
 	src/utils/bit_writer.c \
+	src/utils/color_cache.c \
 	src/utils/filters.c \
+	src/utils/huffman.c \
 	src/utils/quant_levels.c \
 	src/utils/rescaler.c \
 	src/utils/tcoder.c \
