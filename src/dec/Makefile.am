@@ -1,7 +1,7 @@
 AM_CPPFLAGS = -I$(top_srcdir)/src
 
 libwebpdecode_la_SOURCES = vp8i.h webpi.h \
-                           frame.c quant.c tree.c vp8.c webp.c \
+                           frame.c quant.c tree.c vp8.c vp8l.c webp.c \
                            idec.c alpha.c layer.c io.c buffer.c
 libwebpdecode_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE)
 libwebpdecodeinclude_HEADERS = ../webp/decode.h ../webp/decode_vp8.h \

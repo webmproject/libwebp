@@ -54,65 +54,25 @@ void WebPResetDecParams(WebPDecParams* const params);
 #define VP8X_CHUNK_SIZE 12
 #define VP8_FRAME_HEADER_SIZE 10  // Size of the frame header within VP8 data.
 
-// Validates the RIFF container (if detected) and skips over it.
-// If a RIFF container is detected,
-// Returns VP8_STATUS_BITSTREAM_ERROR for invalid header, and
-//         VP8_STATUS_OK otherwise.
-// In case there are not enough bytes (partial RIFF container), return 0 for
-// riff_size. Else return the riff_size extracted from the header.
-VP8StatusCode WebPParseRIFF(const uint8_t** data, uint32_t* data_size,
-                            uint32_t* riff_size);
+// Structure storing a description of the RIFF headers.
+typedef struct {
+  const uint8_t* data;         // input buffer
+  uint32_t data_size;          // input buffer size
+  uint32_t offset;             // offset to main data chunk (VP8 or VP8L)
+  const uint8_t* alpha_data;   // points to alpha chunk (if present)
+  uint32_t alpha_data_size;    // alpha chunk size
+  uint32_t vp8_size;           // vp8 compressed data size
+  uint32_t riff_size;          // size of the riff payload (or 0 if absent)
+  int is_lossless;             // true if a VP8L chunk is present
+} WebPHeaderStructure;
 
-// Validates the VP8X Header and skips over it.
-// Returns VP8_STATUS_BITSTREAM_ERROR for invalid VP8X header,
-//         VP8_STATUS_NOT_ENOUGH_DATA in case of insufficient data, and
-//         VP8_STATUS_OK otherwise.
-// If a VP8 chunk is found, bytes_skipped is set to the total number of bytes
-// that are skipped; also Width, Height & Flags are set to the corresponding
-// fields extracted from the VP8X chunk.
-VP8StatusCode WebPParseVP8X(const uint8_t** data, uint32_t* data_size,
-                            uint32_t* bytes_skipped,
-                            int* width, int* height, uint32_t* flags);
-
-// Skips to the next VP8 chunk header in the data given the size of the RIFF
-// chunk 'riff_size'.
-// Returns VP8_STATUS_BITSTREAM_ERROR if any invalid chunk size is encountered,
-//         VP8_STATUS_NOT_ENOUGH_DATA in case of insufficient data, and
-//         VP8_STATUS_OK otherwise.
-// If a VP8 chunk is found, bytes_skipped is set to the total number of bytes
-// that are skipped. Also, if an alpha chunk is found, alpha_data and alpha_size
-// are set appropriately.
-VP8StatusCode WebPParseOptionalChunks(const uint8_t** data, uint32_t* data_size,
-                                      uint32_t riff_size,
-                                      uint32_t* bytes_skipped,
-                                      const uint8_t** alpha_data,
-                                      uint32_t* alpha_size);
-
-// Validates the VP8 Header ("VP8 nnnn") and skips over it.
-// Returns VP8_STATUS_BITSTREAM_ERROR for invalid (vp8_chunk_size greater than
-//         riff_size) VP8 header,
-//         VP8_STATUS_NOT_ENOUGH_DATA in case of insufficient data, and
-//         VP8_STATUS_OK otherwise.
-// If a VP8 chunk is found, bytes_skipped is set to the total number of bytes
-// that are skipped and vp8_chunk_size is set to the corresponding size
-// extracted from the VP8 chunk header.
-// For a partial VP8 chunk, vp8_chunk_size is set to 0.
-VP8StatusCode WebPParseVP8Header(const uint8_t** data, uint32_t* data_size,
-                                 uint32_t riff_size, uint32_t* bytes_skipped,
-                                 uint32_t* vp8_chunk_size);
-
-// Skips over all valid chunks prior to the first VP8 frame header.
+// Skips over all valid chunks prior to the first VP8/VP8L frame header.
 // Returns VP8_STATUS_OK on success,
 //         VP8_STATUS_BITSTREAM_ERROR if an invalid header/chunk is found, and
 //         VP8_STATUS_NOT_ENOUGH_DATA if case of insufficient data.
-// Also, data, data_size, vp8_size, bytes_skipped, alpha_data & alpha_size are
-// updated appropriately on success, where
-// vp8_size is the size of VP8 chunk data (extracted from VP8 chunk header) and
-// bytes_skipped is set to the total number of bytes that are skipped.
-VP8StatusCode WebPParseHeaders(const uint8_t** data, uint32_t* data_size,
-                               uint32_t* vp8_size, uint32_t* bytes_skipped,
-                               const uint8_t** alpha_data,
-                               uint32_t* alpha_size);
+// In 'headers', vp8_size, offset, alpha_data, alpha_size and lossless fields
+// are updated appropriately upon success.
+VP8StatusCode WebPParseHeaders(WebPHeaderStructure* const headers);
 
 //------------------------------------------------------------------------------
 // Misc utils

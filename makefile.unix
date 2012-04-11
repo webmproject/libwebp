@@ -60,8 +60,8 @@ COL = /usr/bin/col
 LDFLAGS = $(EXTRA_LIBS) -lm
 
 DEC_OBJS = src/dec/frame.o src/dec/webp.o src/dec/quant.o src/dec/tree.o \
-           src/dec/vp8.o src/dec/idec.o src/dec/alpha.o src/dec/layer.o \
-           src/dec/io.o src/dec/buffer.o
+           src/dec/vp8.o src/dec/vp8l.o src/dec/idec.o src/dec/alpha.o  \
+           src/dec/layer.o src/dec/io.o src/dec/buffer.o
 ENC_OBJS = src/enc/webpenc.o src/enc/syntax.o \
            src/enc/alpha.o src/enc/layer.o \
            src/enc/tree.o src/enc/config.o src/enc/frame.o \
@@ -69,21 +69,23 @@ ENC_OBJS = src/enc/webpenc.o src/enc/syntax.o \
            src/enc/cost.o src/enc/picture.o src/enc/filter.o
 DSP_OBJS = src/dsp/cpu.o src/dsp/enc.o \
            src/dsp/enc_sse2.o src/dsp/dec.o src/dsp/dec_sse2.o \
-           src/dsp/dec_neon.o src/dsp/upsampling.o src/dsp/upsampling_sse2.o \
-           src/dsp/yuv.o
+           src/dsp/dec_neon.o src/dsp/lossless.o src/dsp/upsampling.o \
+           src/dsp/upsampling_sse2.o src/dsp/yuv.o
 UTILS_OBJS = src/utils/alpha.o src/utils/bit_reader.o src/utils/bit_writer.o \
-             src/utils/filters.o src/utils/quant_levels.o src/utils/rescaler.o \
-             src/utils/thread.o src/utils/tcoder.o
+             src/utils/color_cache.o src/utils/filters.o src/utils/huffman.o \
+             src/utils/quant_levels.o src/utils/rescaler.o src/utils/thread.o \
+             src/utils/tcoder.o
 
 OBJS = $(DEC_OBJS) $(ENC_OBJS) $(DSP_OBJS) $(UTILS_OBJS)
 
 MUX_OBJS = src/mux/muxedit.o src/mux/muxinternal.o src/mux/muxread.o
 
 HDRS = src/webp/encode.h src/enc/vp8enci.h src/enc/cost.h src/webp/mux.h \
-       src/dec/vp8i.h  \
-       src/dsp/yuv.h src/dsp/dsp.h \
-       src/utils/alpha.h src/utils/bit_writer.h src/utils/bit_reader.h \
-       src/utils/filters.h src/utils/thread.h src/utils/tcoder.h
+       src/dec/vp8i.h src/dec/vp8li.h src/dsp/yuv.h src/dsp/dsp.h \
+       src/dsp/lossless.h src/utils/alpha.h src/utils/bit_writer.h \
+       src/utils/bit_reader.h src/utils/color_cache.h src/utils/filters.h \
+       src/utils/huffman.h src/utils/thread.h \
+       src/utils/tcoder.h
 
 OUT_LIBS = src/libwebp.a src/mux/libwebpmux.a
 OUT_EXAMPLES = examples/cwebp examples/dwebp examples/webpmux
