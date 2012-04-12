@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAIH//8XQ\u003d",
+        "filename": "src/webp/decode_vp8.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-04-12T22:26:23Z",
+      "side": 1,
+      "message": "could be made central via types.h given we use it elsewhere...",
+      "revId": "1c92bd37f3287d857cb39a4b04d2d88773c4c391",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
