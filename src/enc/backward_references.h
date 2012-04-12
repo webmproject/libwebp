@@ -59,7 +59,7 @@ static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
 }
 #endif
 
-static WEBP_INLINE int BitsLog2Ceiling(uint32_t n) {
+static WEBP_INLINE int VP8LBitsLog2Ceiling(uint32_t n) {
   int floor = BitsLog2Floor(n);
   if (n == (n & ~(n - 1)))  // zero or a power of two.
     return floor;

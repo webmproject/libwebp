@@ -70,9 +70,9 @@ static void SetDepth(const HuffmanTree* p,
 // we are not planning to use this with extremely long blocks.
 //
 // See http://en.wikipedia.org/wiki/Huffman_coding
-int CreateHuffmanTree(const int* const histogram, int histogram_size,
-                      int tree_depth_limit,
-                      uint8_t* const bit_depths) {
+int VP8LCreateHuffmanTree(const int* const histogram, int histogram_size,
+                          int tree_depth_limit,
+                          uint8_t* const bit_depths) {
   HuffmanTree* tree;
   HuffmanTree* tree_pool;
   int tree_pool_size;
@@ -241,11 +241,11 @@ static void WriteHuffmanTreeRepetitionsZeros(
   }
 }
 
-void CreateCompressedHuffmanTree(const uint8_t* depth,
-                                 int depth_size,
-                                 int* num_symbols,
-                                 uint8_t* tree,
-                                 uint8_t* extra_bits_data) {
+void VP8LCreateCompressedHuffmanTree(const uint8_t* depth,
+                                     int depth_size,
+                                     int* num_symbols,
+                                     uint8_t* tree,
+                                     uint8_t* extra_bits_data) {
   int prev_value = 8;  // 8 is the initial value for rle.
   int i;
   for (i = 0; i < depth_size;) {
@@ -280,8 +280,8 @@ static uint32_t ReverseBits(int num_bits, uint32_t bits) {
   return retval;
 }
 
-void ConvertBitDepthsToSymbols(const uint8_t* depth, int len,
-                               uint16_t* bits) {
+void VP8LConvertBitDepthsToSymbols(const uint8_t* depth, int len,
+                                   uint16_t* bits) {
   // This function is based on RFC 1951.
   //
   // In deflate, all bit depths are [1..15]
@@ -313,5 +313,6 @@ void ConvertBitDepthsToSymbols(const uint8_t* depth, int len,
     }
   }
 }
+#undef MAX_BITS
 
 #endif

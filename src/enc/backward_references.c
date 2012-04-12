@@ -304,7 +304,7 @@ int VP8LBackwardReferencesHashChain(int xsize, int ysize, int use_palette,
 Error:
   VP8LHashChain_Delete(hash_chain);
   free(hash_chain);
-  VP8LColorCacheDelete(&hashers);
+  VP8LColorCacheClear(&hashers);
   return ok;
 }
 
@@ -506,7 +506,7 @@ Error:
   free(hash_chain);
   free(cost_model);
   free(cost);
-  VP8LColorCacheDelete(&hashers);
+  VP8LColorCacheClear(&hashers);
   return ok;
 }
 
@@ -597,7 +597,7 @@ Error:
   if (hash_chain) {
     free(hash_chain);
   }
-  VP8LColorCacheDelete(&hashers);
+  VP8LColorCacheClear(&hashers);
   return ok;
 }
 
@@ -664,7 +664,7 @@ int VP8LVerifyBackwardReferences(const uint32_t* argb, int xsize, int ysize,
       if (argb[num_pixels] != PixOrCopyArgb(&lit[i])) {
         printf("i %d, pixel %d, original: 0x%08x, literal: 0x%08x\n",
                i, num_pixels, argb[num_pixels], PixOrCopyArgb(&lit[i]));
-        VP8LColorCacheDelete(&hashers);
+        VP8LColorCacheClear(&hashers);
         return 0;
       }
       VP8LColorCacheInsert(&hashers, argb[num_pixels]);
@@ -677,7 +677,7 @@ int VP8LVerifyBackwardReferences(const uint32_t* argb, int xsize, int ysize,
                "palette_entry: 0x%08x\n",
                i, num_pixels, argb[num_pixels], PixOrCopyPaletteIx(&lit[i]),
                palette_entry);
-        VP8LColorCacheDelete(&hashers);
+        VP8LColorCacheClear(&hashers);
         return 0;
       }
       VP8LColorCacheInsert(&hashers, argb[num_pixels]);
@@ -686,7 +686,7 @@ int VP8LVerifyBackwardReferences(const uint32_t* argb, int xsize, int ysize,
       int k;
       if (PixOrCopyDistance(&lit[i]) == 0) {
         printf("Bw reference with zero distance.\n");
-        VP8LColorCacheDelete(&hashers);
+        VP8LColorCacheClear(&hashers);
         return 0;
       }
       for (k = 0; k < lit[i].len; ++k) {
@@ -696,7 +696,7 @@ int VP8LVerifyBackwardReferences(const uint32_t* argb, int xsize, int ysize,
                  i, num_pixels, argb[num_pixels],
                  argb[num_pixels - PixOrCopyDistance(&lit[i])],
                  PixOrCopyDistance(&lit[i]));
-          VP8LColorCacheDelete(&hashers);
+          VP8LColorCacheClear(&hashers);
           return 0;
         }
         VP8LColorCacheInsert(&hashers, argb[num_pixels]);
@@ -708,11 +708,11 @@ int VP8LVerifyBackwardReferences(const uint32_t* argb, int xsize, int ysize,
     const int pix_count = xsize * ysize;
     if (num_pixels != pix_count) {
       printf("verify failure: %d != %d\n", num_pixels, pix_count);
-      VP8LColorCacheDelete(&hashers);
+      VP8LColorCacheClear(&hashers);
       return 0;
     }
   }
-  VP8LColorCacheDelete(&hashers);
+  VP8LColorCacheClear(&hashers);
   return 1;
 }
 
@@ -749,7 +749,7 @@ static int ComputePaletteHistogram(const uint32_t* argb, int xsize, int ysize,
   assert(pixel_index == xsize * ysize);
   (void)xsize;  // xsize is not used in non-debug compilations otherwise.
   (void)ysize;  // ysize is not used in non-debug compilations otherwise.
-  VP8LColorCacheDelete(&hashers);
+  VP8LColorCacheClear(&hashers);
   return 1;
 }
 
