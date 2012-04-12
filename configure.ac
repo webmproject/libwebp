@@ -12,8 +12,8 @@ m4_define_default([AM_SILENT_RULES], [])
 AM_SILENT_RULES
 
 AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=PATH],
-	[Path to the pkgconfig directory [[LIBDIR/pkgconfig]]]),
-	[pkgconfigdir="$withval"], [pkgconfigdir='${libdir}/pkgconfig'])
+            [Path to the pkgconfig directory [[LIBDIR/pkgconfig]]]),
+            [pkgconfigdir="$withval"], [pkgconfigdir='${libdir}/pkgconfig'])
 AC_SUBST([pkgconfigdir])
 
 dnl === Check for native log2
