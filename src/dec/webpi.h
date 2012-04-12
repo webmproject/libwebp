@@ -59,7 +59,7 @@ void WebPResetDecParams(WebPDecParams* const params);
 // Structure storing a description of the RIFF headers.
 typedef struct {
   const uint8_t* data;         // input buffer
-  uint32_t data_size;          // input buffer size
+  size_t data_size;            // input buffer size
   size_t offset;               // offset to main data chunk (VP8 or VP8L)
   const uint8_t* alpha_data;   // points to alpha chunk (if present)
   uint32_t alpha_data_size;    // alpha chunk size

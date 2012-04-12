@@ -82,7 +82,7 @@ int VP8SetError(VP8Decoder* const dec,
 
 //------------------------------------------------------------------------------
 
-int VP8GetInfo(const uint8_t* data, uint32_t data_size, uint32_t chunk_size,
+int VP8GetInfo(const uint8_t* data, size_t data_size, size_t chunk_size,
                int* width, int* height) {
   if (data_size < 10) {
     return 0;         // not enough data
@@ -173,7 +173,7 @@ static int ParseSegmentHeader(VP8BitReader* br,
 // is returned, and this is an unrecoverable error.
 // If the partitions were positioned ok, VP8_STATUS_OK is returned.
 static VP8StatusCode ParsePartitions(VP8Decoder* const dec,
-                                     const uint8_t* buf, uint32_t size) {
+                                     const uint8_t* buf, size_t size) {
   VP8BitReader* const br = &dec->br_;
   const uint8_t* sz = buf;
   const uint8_t* buf_end = buf + size;
@@ -244,7 +244,7 @@ static int ParseFilterHeader(VP8BitReader* br, VP8Decoder* const dec) {
 // Topmost call
 int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
   const uint8_t* buf;
-  uint32_t buf_size;
+  size_t buf_size;
   VP8FrameHeader* frm_hdr;
   VP8PictureHeader* pic_hdr;
   VP8BitReader* br;

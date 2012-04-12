@@ -294,8 +294,8 @@ int VP8SetError(VP8Decoder* const dec,
 // width and height. Returns 0 in case of formatting error. *width/*height
 // can be passed NULL.
 int VP8GetInfo(const uint8_t* data,
-               uint32_t data_size,    // data available so far
-               uint32_t chunk_size,   // total data size expect in the chunk
+               size_t data_size,    // data available so far
+               size_t chunk_size,   // total data size expect in the chunk
                int *width, int *height);
 
 // in tree.c
