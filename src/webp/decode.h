@@ -242,7 +242,7 @@ WEBP_EXTERN(void) WebPIDelete(WebPIDecoder* const idec);
 // the image is successfully decoded. Returns VP8_STATUS_SUSPENDED when more
 // data is expected. Returns error in other cases.
 WEBP_EXTERN(VP8StatusCode) WebPIAppend(
-    WebPIDecoder* const idec, const uint8_t* data, uint32_t data_size);
+    WebPIDecoder* const idec, const uint8_t* const data, uint32_t data_size);
 
 // A variant of the above function to be used when data buffer contains
 // partial data from the beginning. In this case data buffer is not copied
@@ -250,7 +250,7 @@ WEBP_EXTERN(VP8StatusCode) WebPIAppend(
 // Note that the value of the 'data' pointer can change between calls to
 // WebPIUpdate, for instance when the data buffer is resized to fit larger data.
 WEBP_EXTERN(VP8StatusCode) WebPIUpdate(
-    WebPIDecoder* const idec, const uint8_t* data, uint32_t data_size);
+    WebPIDecoder* const idec, const uint8_t* const data, uint32_t data_size);
 
 // Returns the r/g/b/(a) image decoded so far. Returns NULL if output params
 // are not initialized yet. The r/g/b/(a) output type corresponds to the mode
