@@ -12,6 +12,8 @@
 #ifndef WEBP_WEBP_DECODE_VP8_H_
 #define WEBP_WEBP_DECODE_VP8_H_
 
+#include <stddef.h>  // for size_t
+
 #include "./decode.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -82,7 +84,7 @@ struct VP8Io {
   int fancy_upsampling;
 
   // Input buffer.
-  uint32_t data_size;
+  size_t data_size;
   const uint8_t* data;
 
   // If true, in-loop filtering will not be performed even if present in the
