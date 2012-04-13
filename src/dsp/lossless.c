@@ -208,82 +208,67 @@ static WEBP_INLINE uint32_t Select(uint32_t a, uint32_t b, uint32_t c) {
 //------------------------------------------------------------------------------
 // Predictors
 
-static uint32_t Predictor0(const uint32_t* const src,
-                           const uint32_t* const top) {
+static uint32_t Predictor0(uint32_t left, const uint32_t* const top) {
   (void)top;
-  (void)src;
+  (void)left;
   return ARGB_BLACK;
 }
-static uint32_t Predictor1(const uint32_t* const src,
-                           const uint32_t* const top) {
+static uint32_t Predictor1(uint32_t left, const uint32_t* const top) {
   (void)top;
-  return src[-1];
+  return left;
 }
-static uint32_t Predictor2(const uint32_t* const src,
-                           const uint32_t* const top) {
-  (void)src;
+static uint32_t Predictor2(uint32_t left, const uint32_t* const top) {
+  (void)left;
   return top[0];
 }
-static uint32_t Predictor3(const uint32_t* const src,
-                           const uint32_t* const top) {
-  (void)src;
+static uint32_t Predictor3(uint32_t left, const uint32_t* const top) {
+  (void)left;
   return top[1];
 }
-static uint32_t Predictor4(const uint32_t* const src,
-                           const uint32_t* const top) {
-  (void)src;
+static uint32_t Predictor4(uint32_t left, const uint32_t* const top) {
+  (void)left;
   return top[-1];
 }
-static uint32_t Predictor5(const uint32_t* const src,
-                           const uint32_t* const top) {
-  const uint32_t pred = Average3(src[-1], top[0], top[1]);
+static uint32_t Predictor5(uint32_t left, const uint32_t* const top) {
+  const uint32_t pred = Average3(left, top[0], top[1]);
   return pred;
 }
-static uint32_t Predictor6(const uint32_t* const src,
-                           const uint32_t* const top) {
-  const uint32_t pred = Average2(src[-1], top[-1]);
+static uint32_t Predictor6(uint32_t left, const uint32_t* const top) {
+  const uint32_t pred = Average2(left, top[-1]);
   return pred;
 }
-static uint32_t Predictor7(const uint32_t* const src,
-                           const uint32_t* const top) {
-  const uint32_t pred = Average2(src[-1], top[0]);
+static uint32_t Predictor7(uint32_t left, const uint32_t* const top) {
+  const uint32_t pred = Average2(left, top[0]);
   return pred;
 }
-static uint32_t Predictor8(const uint32_t* const src,
-                           const uint32_t* const top) {
+static uint32_t Predictor8(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Average2(top[-1], top[0]);
-  (void)src;
+  (void)left;
   return pred;
 }
-static uint32_t Predictor9(const uint32_t* const src,
-                           const uint32_t* const top) {
+static uint32_t Predictor9(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Average2(top[0], top[1]);
-  (void)src;
+  (void)left;
   return pred;
 }
-static uint32_t Predictor10(const uint32_t* const src,
-                            const uint32_t* const top) {
-  const uint32_t pred = Average4(src[-1], top[-1], top[0], top[1]);
+static uint32_t Predictor10(uint32_t left, const uint32_t* const top) {
+  const uint32_t pred = Average4(left, top[-1], top[0], top[1]);
   return pred;
 }
-static uint32_t Predictor11(const uint32_t* const src,
-                            const uint32_t* const top) {
-  const uint32_t pred = Select(top[0], src[-1], top[-1]);
+static uint32_t Predictor11(uint32_t left, const uint32_t* const top) {
+  const uint32_t pred = Select(top[0], left, top[-1]);
   return pred;
 }
-static uint32_t Predictor12(const uint32_t* const src,
-                            const uint32_t* const top) {
-  const uint32_t pred = ClampedAddSubtractFull(src[-1], top[0], top[-1]);
+static uint32_t Predictor12(uint32_t left, const uint32_t* const top) {
+  const uint32_t pred = ClampedAddSubtractFull(left, top[0], top[-1]);
   return pred;
 }
-static uint32_t Predictor13(const uint32_t* const src,
-                            const uint32_t* const top) {
-  const uint32_t pred = ClampedAddSubtractHalf(src[-1], top[0], top[-1]);
+static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
+  const uint32_t pred = ClampedAddSubtractHalf(left, top[0], top[-1]);
   return pred;
 }
 
-typedef uint32_t (*PredictorFunc)(const uint32_t* const src,
-                                  const uint32_t* const top);
+typedef uint32_t (*PredictorFunc)(uint32_t left, const uint32_t* const top);
 static const PredictorFunc kPredictors[16] = {
   Predictor0, Predictor1, Predictor2, Predictor3,
   Predictor4, Predictor5, Predictor6, Predictor7,
@@ -380,7 +365,7 @@ static int GetBestPredictorForTile(int tile_x, int tile_y, int max_tile_size,
           predict = argb[(all_y - 1) * xsize];  // First Col: Pick Top Element.
         } else {
           const uint32_t* src = argb + all_y * xsize + all_x;
-          predict = pred_func(src, src - xsize);
+          predict = pred_func(src[-1], src - xsize);
         }
         predict_diff = VP8LSubPixels(argb[all_y * xsize + all_x], predict);
         ++histo[0][predict_diff >> 24];
@@ -437,7 +422,7 @@ static void CopyTileWithPrediction(int width, int height,
         const uint32_t top = top_row[col];
         predict = top;
       } else {
-        predict = pred_func(argb + pix, top_row + col);
+        predict = pred_func(argb[pix - 1], top_row + col);
       }
       argb[pix] = VP8LSubPixels(argb[pix], predict);
     }
@@ -497,10 +482,10 @@ static void PredictorInverseTransform(const VP8LTransform* const transform,
   const int width = transform->xsize_;
   if (y_start == 0) {  // First Row follows the L (mode=1) mode.
     int x;
-    const uint32_t pred = Predictor0(data, NULL);
+    const uint32_t pred = Predictor0(data[-1], NULL);
     AddPixelsEq(data, pred);
     for (x = 1; x < width; ++x) {
-      const uint32_t pred = Predictor1(data + x, NULL);
+      const uint32_t pred = Predictor1(data[x - 1], NULL);
       AddPixelsEq(data + x, pred);
     }
     data += width;
@@ -521,7 +506,7 @@ static void PredictorInverseTransform(const VP8LTransform* const transform,
       PredictorFunc pred_func;
 
       // First pixel follows the T (mode=2) mode.
-      pred = Predictor2(data, data - width);
+      pred = Predictor2(data[-1], data - width);
       AddPixelsEq(data, pred);
 
       // .. the rest:
@@ -531,7 +516,7 @@ static void PredictorInverseTransform(const VP8LTransform* const transform,
         if ((x & mask) == 0) {    // start of tile. Read predictor function.
           pred_func = kPredictors[((*pred_mode_src++) >> 8) & 0xf];
         }
-        pred = pred_func(data + x, data + x - width);
+        pred = pred_func(data[x - 1], data + x - width);
         AddPixelsEq(data + x, pred);
       }
       data += width;
