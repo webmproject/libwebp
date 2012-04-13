@@ -34,10 +34,9 @@ extern "C" {
 int VP8LCreateHuffmanTree(const int* data, const int length,
                           const int tree_limit, uint8_t* depth);
 
-// Write a huffman tree from bit depths into the deflate representation
-// of a Huffman tree. In deflate, the generated Huffman tree is to be
+// Write a huffman tree from bit depths. The generated Huffman tree is
 // compressed once more using a Huffman tree.
-void VP8LCreateCompressedHuffmanTree(const uint8_t* depth, int len,
+void VP8LCreateCompressedHuffmanTree(const uint8_t* const depth, int len,
                                      int* num_symbols,
                                      uint8_t* tree,
                                      uint8_t* extra_bits_data);

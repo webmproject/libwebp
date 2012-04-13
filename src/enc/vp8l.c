@@ -507,31 +507,6 @@ static void ShiftHistogramImage(uint32_t* image , int image_size) {
   }
 }
 
-static int PackLiteralBitLengths(const uint8_t* bit_lengths,
-                                 int cache_bits, int use_color_cache,
-                                 int* new_length_size,
-                                 uint8_t** new_lengths) {
-  int i;
-  int num_codes = 256;
-  const int cache_size = 1 << cache_bits;
-  *new_length_size = 256 + kLengthCodes;
-  if (use_color_cache) {
-    *new_length_size += cache_size;
-  }
-  *new_lengths = (uint8_t*)malloc(*new_length_size);
-  if (*new_lengths == NULL) {
-    return 0;
-  }
-  num_codes += kLengthCodes;
-  if (use_color_cache) {
-    num_codes += cache_size;
-  }
-  for (i = 0; i < num_codes; ++i) {
-    (*new_lengths)[i] = bit_lengths[i];
-  }
-  return 1;
-}
-
 static void ClearHuffmanTreeIfOnlyOneSymbol(const int num_symbols,
                                             uint8_t* lengths,
                                             uint16_t* symbols) {
@@ -597,7 +572,8 @@ static void StoreHuffmanTreeToBitMask(
 }
 
 static int StoreHuffmanCode(VP8LBitWriter* const bw,
-                            uint8_t* bit_lengths, int bit_lengths_size) {
+                            const uint8_t* const bit_lengths,
+                            int bit_lengths_size) {
   int i;
   int ok = 0;
   int count = 0;
@@ -844,24 +820,17 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   // Store Huffman codes.
   for (i = 0; i < histogram_image_size; ++i) {
     int k;
-    int literal_lengths_size;
-    uint8_t* literal_lengths;
-    // TODO(vikasa): Evaluate and remove the call to PackLiteralBitLengths.
-    if (!PackLiteralBitLengths(bit_lengths[5 * i], cache_bits, use_color_cache,
-                               &literal_lengths_size, &literal_lengths)) {
-      goto Error;
-    }
-    if (!StoreHuffmanCode(bw, literal_lengths, literal_lengths_size)) {
-      goto Error;
-    }
-    free(literal_lengths);
-    for (k = 1; k < 5; ++k) {
-      if (!StoreHuffmanCode(bw, bit_lengths[5 * i + k],
-                            bit_lengths_sizes[5 * i + k])) {
+    for (k = 0; k < 5; ++k) {
+      const uint8_t* const cur_bit_lengths =  bit_lengths[5 * i + k];
+      const int cur_bit_lengths_size = (k == 0) ?
+                   256 + kLengthCodes + (1 << cache_bits) :
+                   bit_lengths_sizes[5 * i + k];
+      if (!StoreHuffmanCode(bw, cur_bit_lengths, cur_bit_lengths_size)) {
         goto Error;
       }
     }
   }
+
   // Free combined histograms.
   DeleteHistograms(histogram_image_size, histogram_image);
 

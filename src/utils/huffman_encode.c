@@ -241,7 +241,7 @@ static void WriteHuffmanTreeRepetitionsZeros(
   }
 }
 
-void VP8LCreateCompressedHuffmanTree(const uint8_t* depth,
+void VP8LCreateCompressedHuffmanTree(const uint8_t* const depth,
                                      int depth_size,
                                      int* num_symbols,
                                      uint8_t* tree,
