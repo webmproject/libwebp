@@ -928,7 +928,8 @@ static int ApplyPredictFilter(VP8LBitWriter* const bw,
   const int transform_width = VP8LSubSampleSize(width, pred_bits);
   const int transform_height = VP8LSubSampleSize(height, pred_bits);
 
-  VP8LResidualImage(width, height, pred_bits, enc->argb_, enc->transform_data_);
+  VP8LResidualImage(width, height, pred_bits, enc->argb_, enc->argb_scratch_,
+                    enc->transform_data_);
   VP8LWriteBits(bw, 1, 1);
   VP8LWriteBits(bw, 2, 0);
   VP8LWriteBits(bw, 4, pred_bits);
@@ -1020,9 +1021,7 @@ static WebPEncodingError WriteImage(VP8LEncoder* const enc,
 
 static VP8LEncoder* InitVP8LEncoder(const WebPConfig* const config,
                                     WebPPicture* const picture) {
-  VP8LEncoder* enc;
-
-  enc = (VP8LEncoder*)malloc(sizeof(*enc));
+  VP8LEncoder* enc = (VP8LEncoder*)malloc(sizeof(*enc));
   if (enc == NULL) {
     WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
     return NULL;
@@ -1033,8 +1032,6 @@ static VP8LEncoder* InitVP8LEncoder(const WebPConfig* const config,
   enc->pic_ = picture;
   enc->use_lz77_ = 1;
   enc->palette_bits_ = 7;
-
-  enc->argb_ = NULL;
 
   // TODO: Use config.quality to initialize histo_bits_ and transform_bits_.
   enc->histo_bits_ = 4;
@@ -1058,25 +1055,28 @@ static void DeleteVP8LEncoder(VP8LEncoder* enc) {
   free(enc);
 }
 
-// Allocates the memory for argb (W x H) buffer and transform data.
-// Former buffer (argb_) will hold the argb data from successive image
-// transformtions and later corresponds to prediction data (uint32) used
-// for every image tile corresponding to the transformed argb_.
-// The dimension of this square tile is 2^transform_bits_.
+// Allocates the memory for argb (W x H) buffer, 2 rows of context for
+// prediction and transform data.
 static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
                                                  int height, int width) {
   WebPEncodingError err = VP8_ENC_OK;
   const size_t image_size = height * width;
+  const size_t argb_scratch_size = 2 * width;
   const size_t transform_data_size =
       VP8LSubSampleSize(height, enc->transform_bits_) *
       VP8LSubSampleSize(width, enc->transform_bits_);
-  const size_t total_size = image_size + transform_data_size;
-  enc->argb_ = (uint32_t*)malloc(total_size * sizeof(*enc->argb_));
-  if (enc->argb_ == NULL) {
+  const size_t total_size =
+      image_size + argb_scratch_size + transform_data_size;
+  uint32_t* mem = (uint32_t*)malloc(total_size * sizeof(*mem));
+  if (mem == NULL) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
-  enc->transform_data_ = enc->argb_ + image_size;
+  enc->argb_ = mem;
+  mem += image_size;
+  enc->argb_scratch_ = mem;
+  mem += argb_scratch_size;
+  enc->transform_data_ = mem;
   enc->current_width_ = width;
 
  Error:
