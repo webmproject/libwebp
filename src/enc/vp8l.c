@@ -215,11 +215,12 @@ static int GetBackwardReferences(int width, int height,
   // Choose appropriate backward reference.
   if (quality >= 50 && lz77_is_useful) {
     const int recursion_level = (num_pix < 320 * 200) ? 1 : 0;
-    PixOrCopy* const backward_refs_trace =
-        (PixOrCopy*)malloc(num_pix * sizeof(*backward_refs_trace));
     int backward_refs_trace_size;
+    PixOrCopy* backward_refs_trace;
     free(backward_refs_rle);
     free(backward_refs_lz77);
+    backward_refs_trace =
+        (PixOrCopy*)malloc(num_pix * sizeof(*backward_refs_trace));
     if (backward_refs_trace == NULL ||
         !VP8LBackwardReferencesTraceBackwards(width, height,
                                               recursion_level, use_color_cache,
@@ -259,7 +260,7 @@ End:
   return ok;
 }
 
-static void DeleteHistograms(int size, VP8LHistogram** histograms) {
+static void DeleteHistograms(VP8LHistogram** histograms, int size) {
   if (histograms != NULL) {
     int i;
     for (i = 0; i < size; ++i) {
@@ -283,7 +284,7 @@ static int GetHistImageSymbols(int xsize, int ysize,
   int histogram_image_raw_size;
   VP8LHistogram** histogram_image_raw = NULL;
 
-  *histogram_image = 0;
+  *histogram_image = NULL;
   if (!VP8LHistogramBuildImage(xsize, ysize, histogram_bits, cache_bits,
                                backward_refs, backward_refs_size,
                                &histogram_image_raw,
@@ -306,9 +307,9 @@ static int GetHistImageSymbols(int xsize, int ysize,
 
 Error:
   if (!ok) {
-    DeleteHistograms(*histogram_image_size, *histogram_image);
+    DeleteHistograms(*histogram_image, *histogram_image_size);
   }
-  DeleteHistograms(histogram_image_raw_size, histogram_image_raw);
+  DeleteHistograms(histogram_image_raw, histogram_image_raw_size);
   return ok;
 }
 
@@ -419,6 +420,7 @@ static int OptimizeHuffmanForRle(int length, int* counts) {
   return 1;
 }
 
+// TODO(vikasa): Wrap bit_codes and bit_lengths in a Struct.
 static int GetHuffBitLengthsAndCodes(
     int histogram_image_size, VP8LHistogram** histogram_image,
     int use_color_cache, int** bit_length_sizes,
@@ -428,6 +430,7 @@ static int GetHuffBitLengthsAndCodes(
   for (i = 0; i < histogram_image_size; ++i) {
     const int num_literals = VP8LHistogramNumCodes(histogram_image[i]);
     k = 0;
+    // TODO(vikasa): Alloc one big buffer instead of allocating in the loop.
     (*bit_length_sizes)[5 * i] = num_literals;
     (*bit_lengths)[5 * i] = (uint8_t*)calloc(num_literals, 1);
     (*bit_codes)[5 * i] = (uint16_t*)
@@ -832,7 +835,8 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   }
 
   // Free combined histograms.
-  DeleteHistograms(histogram_image_size, histogram_image);
+  DeleteHistograms(histogram_image, histogram_image_size);
+  histogram_image = NULL;
 
   // Emit no bits if there is only one symbol in the histogram.
   // This gives better compression for some images.
@@ -847,6 +851,9 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   ok = 1;
 
  Error:
+  if (!ok) {
+    DeleteHistograms(histogram_image, histogram_image_size);
+  }
   for (i = 0; i < 5 * histogram_image_size; ++i) {
     free(bit_lengths[i]);
     free(bit_codes[i]);
