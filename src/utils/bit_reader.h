@@ -152,8 +152,6 @@ static WEBP_INLINE int VP8GetSigned(VP8BitReader* const br, int v) {
 // -----------------------------------------------------------------------------
 // Bitreader
 
-#define MAX_NUM_BIT_READ 25
-
 typedef struct {
   uint64_t       val_;
   const uint8_t* buf_;
@@ -162,36 +160,36 @@ typedef struct {
   int            bit_pos_;
   int            eos_;
   int            error_;
-} BitReader;
+} VP8LBitReader;
 
-void VP8LInitBitReader(BitReader* const br,
+void VP8LInitBitReader(VP8LBitReader* const br,
                        const uint8_t* const start,
                        size_t length);
 
 //  Sets a new data buffer.
-void VP8LBitReaderSetBuffer(BitReader* const br,
+void VP8LBitReaderSetBuffer(VP8LBitReader* const br,
                             const uint8_t* const buffer, size_t length);
 
 // Reads the specified number of bits from Read Buffer.
 // Flags an error in case end_of_stream or n_bits is more than allowed limit.
 // Flags eos if this read attempt is going to cross the read buffer.
-uint32_t VP8LReadBits(BitReader* const br, int n_bits);
+uint32_t VP8LReadBits(VP8LBitReader* const br, int n_bits);
 
 // Reads one bit from Read Buffer. Flags an error in case end_of_stream.
 // Flags eos after reading last bit from the buffer.
-uint32_t VP8LReadOneBit(BitReader* const br);
+uint32_t VP8LReadOneBit(VP8LBitReader* const br);
 
 // VP8LReadOneBitUnsafe is faster than VP8LReadOneBit, but it can be called only
 // 32 times after the last VP8LFillBitWindow. Any subsequent calls
 // (without VP8LFillBitWindow) will return invalid data.
-static WEBP_INLINE uint32_t VP8LReadOneBitUnsafe(BitReader* const br) {
+static WEBP_INLINE uint32_t VP8LReadOneBitUnsafe(VP8LBitReader* const br) {
   const uint32_t val = (br->val_ >> br->bit_pos_) & 1;
   ++br->bit_pos_;
   return val;
 }
 
 // Advances the Read buffer by 4 bytes to make room for reading next 32 bits.
-void VP8LFillBitWindow(BitReader* const br);
+void VP8LFillBitWindow(VP8LBitReader* const br);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

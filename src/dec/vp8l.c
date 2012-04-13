@@ -82,7 +82,7 @@ static int DecodeImageStream(int xsize, int ysize,
 
 //------------------------------------------------------------------------------
 
-static int ReadImageSize(BitReader* const br,
+static int ReadImageSize(VP8LBitReader* const br,
                          int* const width, int* const height) {
   const int signature = VP8LReadBits(br, 8);
   if (signature != LOSSLESS_MAGIC_BYTE &&
@@ -100,7 +100,7 @@ int VP8LGetInfo(const uint8_t* data, int data_size,
     return 0;         // not enough data
   } else {
     int w, h;
-    BitReader br;
+    VP8LBitReader br;
     VP8LInitBitReader(&br, data, data_size);
     if (!ReadImageSize(&br, &w, &h)) {
       return 0;
@@ -114,7 +114,7 @@ int VP8LGetInfo(const uint8_t* data, int data_size,
 //------------------------------------------------------------------------------
 
 static WEBP_INLINE int GetCopyDistance(int distance_symbol,
-                                       BitReader* const br) {
+                                       VP8LBitReader* const br) {
   int extra_bits, offset;
   if (distance_symbol < 4) {
     return distance_symbol + 1;
@@ -125,7 +125,7 @@ static WEBP_INLINE int GetCopyDistance(int distance_symbol,
 }
 
 static WEBP_INLINE int GetCopyLength(int length_symbol,
-                                     BitReader* const br) {
+                                     VP8LBitReader* const br) {
   // Length and distance prefixes are encoded the same way.
   return GetCopyDistance(length_symbol, br);
 }
@@ -145,7 +145,7 @@ static WEBP_INLINE int PlaneCodeToDistance(int xsize, int plane_code) {
 // Decodes the next Huffman code from bit-stream.
 // FillBitWindow(br) needs to be called at minimum every second call
 // to ReadSymbolUnsafe.
-static int ReadSymbolUnsafe(const HuffmanTree* tree, BitReader* const br) {
+static int ReadSymbolUnsafe(const HuffmanTree* tree, VP8LBitReader* const br) {
   const HuffmanTreeNode* node = tree->root_;
   assert(node != NULL);
   while (!HuffmanTreeNodeIsLeaf(node)) {
@@ -155,7 +155,7 @@ static int ReadSymbolUnsafe(const HuffmanTree* tree, BitReader* const br) {
 }
 
 static WEBP_INLINE int ReadSymbol(const HuffmanTree* tree,
-                                      BitReader* const br) {
+                                  VP8LBitReader* const br) {
   const int read_safe = (br->pos_ > br->len_ - 8);
   if (!read_safe) {
     return ReadSymbolUnsafe(tree, br);
@@ -173,7 +173,7 @@ static int ReadHuffmanCodeLengths(
     VP8LDecoder* const dec, const int* const code_length_code_lengths,
     int num_codes, int num_symbols, int* const code_lengths) {
   int ok = 0;
-  BitReader* const br = &dec->br_;
+  VP8LBitReader* const br = &dec->br_;
   int symbol;
   int max_symbol;
   int prev_code_len = DEFAULT_CODE_LENGTH;
@@ -229,7 +229,7 @@ static int ReadHuffmanCodeLengths(
 static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
                            HuffmanTree* const tree) {
   int ok = 0;
-  BitReader* const br = &dec->br_;
+  VP8LBitReader* const br = &dec->br_;
   const int simple_code = VP8LReadBits(br, 1);
 
   if (simple_code) {  // Read symbols, codes & code lengths directly.
@@ -297,7 +297,7 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
                             int* const color_cache_bits_ptr) {
   int ok = 0;
   int i;
-  BitReader* const br = &dec->br_;
+  VP8LBitReader* const br = &dec->br_;
   VP8LMetadata* const hdr = &dec->hdr_;
   uint32_t* huffman_image = NULL;
   HuffmanTree* htrees = NULL;
@@ -586,7 +586,7 @@ static int DecodeImageData(VP8LDecoder* const dec,
                            int process_row) {
   int ok = 1;
   int col = 0, row = 0;
-  BitReader* const br = &dec->br_;
+  VP8LBitReader* const br = &dec->br_;
   VP8LMetadata* const hdr = &dec->hdr_;
   VP8LColorCache* const color_cache = hdr->color_cache_;
   uint32_t* src = data;
@@ -744,7 +744,7 @@ static int ExpandColorMap(int num_colors, VP8LTransform* const transform) {
 static int ReadTransform(int* const xsize, int const* ysize,
                          VP8LDecoder* const dec) {
   int ok = 1;
-  BitReader* const br = &dec->br_;
+  VP8LBitReader* const br = &dec->br_;
   VP8LTransform* transform = &dec->transforms_[dec->next_transform_];
   const VP8LImageTransformType type =
       (VP8LImageTransformType)VP8LReadBits(br, 2);
@@ -871,7 +871,7 @@ static int DecodeImageStream(int xsize, int ysize,
   uint32_t* data = NULL;
   int color_cache_bits = 0;
 
-  BitReader* const br = &dec->br_;
+  VP8LBitReader* const br = &dec->br_;
   int transform_start_idx = dec->next_transform_;
 
   // Step#1: Read the transforms (may recurse).

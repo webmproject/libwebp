@@ -95,14 +95,16 @@ int32_t VP8GetSignedValue(VP8BitReader* const br, int bits) {
 }
 
 //------------------------------------------------------------------------------
-// BitReader
+// VP8LBitReader
+
+#define MAX_NUM_BIT_READ 25
 
 static const uint32_t kBitMask[MAX_NUM_BIT_READ] = {
   0, 1, 3, 7, 15, 31, 63, 127, 255, 511, 1023, 2047, 4095, 8191, 16383, 32767,
   65535, 131071, 262143, 524287, 1048575, 2097151, 4194303, 8388607, 16777215
 };
 
-void VP8LInitBitReader(BitReader* const br,
+void VP8LInitBitReader(VP8LBitReader* const br,
                        const uint8_t* const start,
                        size_t length) {
   size_t i;
@@ -122,14 +124,14 @@ void VP8LInitBitReader(BitReader* const br,
   }
 }
 
-void VP8LBitReaderSetBuffer(BitReader* const br,
+void VP8LBitReaderSetBuffer(VP8LBitReader* const br,
                             const uint8_t* const buf, size_t len) {
   br->eos_ = (br->pos_ >= len);
   br->buf_ = buf;
   br->len_ = len;
 }
 
-static void ShiftBytes(BitReader* const br) {
+static void ShiftBytes(VP8LBitReader* const br) {
   while (br->bit_pos_ >= 8 && br->pos_ < br->len_) {
     br->val_ >>= 8;
     br->val_ |= ((uint64_t)br->buf_[br->pos_]) << 56;
@@ -138,7 +140,7 @@ static void ShiftBytes(BitReader* const br) {
   }
 }
 
-void VP8LFillBitWindow(BitReader* const br) {
+void VP8LFillBitWindow(VP8LBitReader* const br) {
   if (br->bit_pos_ >= 32) {
 #if defined(__x86_64__)
     if (br->pos_ < br->len_ - 8) {
@@ -162,7 +164,7 @@ void VP8LFillBitWindow(BitReader* const br) {
   }
 }
 
-uint32_t VP8LReadOneBit(BitReader* const br) {
+uint32_t VP8LReadOneBit(VP8LBitReader* const br) {
   const uint32_t val = (br->val_ >> br->bit_pos_) & 1;
   // Flag an error at end_of_stream.
   if (!br->eos_) {
@@ -180,7 +182,7 @@ uint32_t VP8LReadOneBit(BitReader* const br) {
   return val;
 }
 
-uint32_t VP8LReadBits(BitReader* const br, int n_bits) {
+uint32_t VP8LReadBits(VP8LBitReader* const br, int n_bits) {
   uint32_t val = 0;
   assert(n_bits >= 0);
   // Flag an error if end_of_stream or n_bits is more than allowed limit.

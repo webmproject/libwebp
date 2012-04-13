@@ -77,7 +77,7 @@ typedef struct {
   uint32_t        *argb_;          // Internal data: always in BGRA color mode.
   uint32_t        *argb_cache_;    // Scratch buffer for temporary BGRA storage.
 
-  BitReader        br_;
+  VP8LBitReader    br_;
 
   int              width_;
   int              height_;
