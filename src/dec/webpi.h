@@ -16,8 +16,6 @@
 extern "C" {
 #endif
 
-#include <stddef.h>   // for size_t
-
 #include "../webp/decode_vp8.h"
 #include "../utils/rescaler.h"
 

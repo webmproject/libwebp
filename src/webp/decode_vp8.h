@@ -12,8 +12,6 @@
 #ifndef WEBP_WEBP_DECODE_VP8_H_
 #define WEBP_WEBP_DECODE_VP8_H_
 
-#include <stddef.h>  // for size_t
-
 #include "./decode.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)

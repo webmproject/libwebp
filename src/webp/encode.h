@@ -12,8 +12,6 @@
 #ifndef WEBP_WEBP_ENCODE_H_
 #define WEBP_WEBP_ENCODE_H_
 
-#include <stdlib.h>
-
 #include "./types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)

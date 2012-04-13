@@ -9,6 +9,7 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#include <stdlib.h>  // for abs()
 #include "./dsp.h"
 #include "../enc/vp8enci.h"
 
