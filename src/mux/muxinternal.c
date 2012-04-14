@@ -540,6 +540,11 @@ WebPMuxError WebPMuxValidate(const WebPMux* const mux) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
+  // num_tiles & num_images are consistent.
+  if (num_tiles > 0 && num_images != num_tiles) {
+    return WEBP_MUX_INVALID_ARGUMENT;
+  }
+
   return WEBP_MUX_OK;
 }
 
