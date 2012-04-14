@@ -14,7 +14,6 @@
 #define WEBP_UTILS_BIT_READER_H_
 
 #include <assert.h>
-#include <stddef.h>  // For size_t
 #ifdef _MSC_VER
 #include <stdlib.h>  // _byteswap_ulong
 #endif

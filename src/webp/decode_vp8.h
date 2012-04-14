@@ -82,7 +82,7 @@ struct VP8Io {
   int fancy_upsampling;
 
   // Input buffer.
-  uint32_t data_size;
+  size_t data_size;
   const uint8_t* data;
 
   // If true, in-loop filtering will not be performed even if present in the

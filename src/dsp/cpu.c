@@ -9,8 +9,6 @@
 //
 // Author: Christian Duvivier (cduvivier@google.com)
 
-#include <stddef.h>  // for NULL
-
 #include "./dsp.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)

@@ -13,7 +13,6 @@
 #define WEBP_UTILS_HUFFMAN_H_
 
 #include <assert.h>
-#include <stddef.h>
 #include "../webp/types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
