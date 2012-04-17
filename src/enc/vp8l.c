@@ -743,7 +743,8 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   uint16_t** bit_codes = NULL;
   const int use_2d_locality = 1;
   int backward_refs_size;
-  const int use_color_cache = cache_bits ? 1 : 0;
+  const int use_color_cache = (cache_bits > 0) ? 1 : 0;
+  const int color_cache_size = use_color_cache ? (1 << cache_bits) : 0;
   const int histogram_image_xysize = VP8LSubSampleSize(width, histogram_bits) *
       VP8LSubSampleSize(height, histogram_bits);
   VP8LHistogram** histogram_image;
@@ -826,7 +827,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
     for (k = 0; k < 5; ++k) {
       const uint8_t* const cur_bit_lengths =  bit_lengths[5 * i + k];
       const int cur_bit_lengths_size = (k == 0) ?
-                   256 + kLengthCodes + (1 << cache_bits) :
+                   256 + kLengthCodes + color_cache_size :
                    bit_lengths_sizes[5 * i + k];
       if (!StoreHuffmanCode(bw, cur_bit_lengths, cur_bit_lengths_size)) {
         goto Error;
