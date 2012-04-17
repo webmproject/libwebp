@@ -40,10 +40,10 @@ static VP8StatusCode CheckDecBuffer(const WebPDecBuffer* const buffer) {
     ok = 0;
   } else if (mode >= MODE_YUV) {   // YUV checks
     const WebPYUVABuffer* const buf = &buffer->u.YUVA;
-    const int size = buf->y_stride * height;
-    const int u_size = buf->u_stride * ((height + 1) / 2);
-    const int v_size = buf->v_stride * ((height + 1) / 2);
-    const int a_size = buf->a_stride * height;
+    const size_t size = buf->y_stride * height;
+    const size_t u_size = buf->u_stride * ((height + 1) / 2);
+    const size_t v_size = buf->v_stride * ((height + 1) / 2);
+    const size_t a_size = buf->a_stride * height;
     ok &= (size <= buf->y_size);
     ok &= (u_size <= buf->u_size);
     ok &= (v_size <= buf->v_size);
@@ -56,7 +56,8 @@ static VP8StatusCode CheckDecBuffer(const WebPDecBuffer* const buffer) {
     }
   } else {    // RGB checks
     const WebPRGBABuffer* const buf = &buffer->u.RGBA;
-    ok &= (buf->stride * height <= buf->size);
+    const size_t size = buf->stride * height;
+    ok &= (size <= buf->size);
     ok &= (buf->stride >= width * kModeBpp[mode]);
   }
   return ok ? VP8_STATUS_OK : VP8_STATUS_INVALID_PARAM;

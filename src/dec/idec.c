@@ -548,7 +548,7 @@ WebPIDecoder* WebPINewDecoder(WebPDecBuffer* const output_buffer) {
   return idec;
 }
 
-WebPIDecoder* WebPIDecode(const uint8_t* data, uint32_t data_size,
+WebPIDecoder* WebPIDecode(const uint8_t* data, size_t data_size,
                           WebPDecoderConfig* const config) {
   WebPIDecoder* idec;
 
@@ -595,7 +595,7 @@ WebPIDecoder* WebPINew(WEBP_CSP_MODE mode) {
 }
 
 WebPIDecoder* WebPINewRGB(WEBP_CSP_MODE mode, uint8_t* output_buffer,
-                          int output_buffer_size, int output_stride) {
+                          size_t output_buffer_size, int output_stride) {
   WebPIDecoder* idec;
   if (mode >= MODE_YUV) return NULL;
   idec = WebPINewDecoder(NULL);
@@ -608,9 +608,9 @@ WebPIDecoder* WebPINewRGB(WEBP_CSP_MODE mode, uint8_t* output_buffer,
   return idec;
 }
 
-WebPIDecoder* WebPINewYUV(uint8_t* luma, int luma_size, int luma_stride,
-                          uint8_t* u, int u_size, int u_stride,
-                          uint8_t* v, int v_size, int v_stride) {
+WebPIDecoder* WebPINewYUV(uint8_t* luma, size_t luma_size, int luma_stride,
+                          uint8_t* u, size_t u_size, int u_stride,
+                          uint8_t* v, size_t v_size, int v_stride) {
   WebPIDecoder* const idec = WebPINewDecoder(NULL);
   if (!idec) return NULL;
   idec->output_.colorspace = MODE_YUV;
@@ -641,7 +641,7 @@ static VP8StatusCode IDecCheckStatus(const WebPIDecoder* const idec) {
 }
 
 VP8StatusCode WebPIAppend(WebPIDecoder* const idec,
-                          const uint8_t* const data, uint32_t data_size) {
+                          const uint8_t* const data, size_t data_size) {
   VP8StatusCode status;
   if (idec == NULL || data == NULL) {
     return VP8_STATUS_INVALID_PARAM;
@@ -662,7 +662,7 @@ VP8StatusCode WebPIAppend(WebPIDecoder* const idec,
 }
 
 VP8StatusCode WebPIUpdate(WebPIDecoder* const idec,
-                          const uint8_t* const data, uint32_t data_size) {
+                          const uint8_t* const data, size_t data_size) {
   VP8StatusCode status;
   if (idec == NULL || data == NULL) {
     return VP8_STATUS_INVALID_PARAM;

@@ -60,7 +60,7 @@ typedef struct {
   size_t data_size;            // input buffer size
   size_t offset;               // offset to main data chunk (VP8 or VP8L)
   const uint8_t* alpha_data;   // points to alpha chunk (if present)
-  uint32_t alpha_data_size;    // alpha chunk size
+  size_t alpha_data_size;      // alpha chunk size
   size_t compressed_size;      // VP8/VP8L compressed data size
   size_t riff_size;            // size of the riff payload (or 0 if absent)
   int is_lossless;             // true if a VP8L chunk is present

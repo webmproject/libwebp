@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-static const int kHeaderBytes = 5;
+static const size_t kHeaderBytes = 5;
 static const uint32_t kImageSizeBits = 14;
 
 static const int kCodeLengthLiterals = 16;
@@ -94,7 +94,7 @@ static int ReadImageSize(VP8LBitReader* const br,
   return 1;
 }
 
-int VP8LGetInfo(const uint8_t* data, int data_size,
+int VP8LGetInfo(const uint8_t* data, size_t data_size,
                 int* width, int* height) {
   if (data_size < kHeaderBytes) {
     return 0;         // not enough data

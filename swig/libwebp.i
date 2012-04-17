@@ -35,8 +35,6 @@
 // Decoder specific
 
 %apply int *OUTPUT { int *width, int *height }
-%apply int { uint32_t data_size }
-%apply Number NONNEGATIVE { uint32_t data_size }
 
 // free the buffer returned by these functions after copying into
 // the native type
@@ -48,18 +46,18 @@
 %typemap(newfree) uint8_t* "free($1);"
 
 int WebPGetDecoderVersion(void);
-int WebPGetInfo(const uint8_t* data, uint32_t data_size,
+int WebPGetInfo(const uint8_t* data, size_t data_size,
                 int *width, int *height);
 
-uint8_t* WebPDecodeRGB(const uint8_t* data, uint32_t data_size,
+uint8_t* WebPDecodeRGB(const uint8_t* data, size_t data_size,
                        int *width, int *height);
-uint8_t* WebPDecodeRGBA(const uint8_t* data, uint32_t data_size,
+uint8_t* WebPDecodeRGBA(const uint8_t* data, size_t data_size,
                         int *width, int *height);
-uint8_t* WebPDecodeARGB(const uint8_t* data, uint32_t data_size,
+uint8_t* WebPDecodeARGB(const uint8_t* data, size_t data_size,
                         int* width, int* height);
-uint8_t* WebPDecodeBGR(const uint8_t* data, uint32_t data_size,
+uint8_t* WebPDecodeBGR(const uint8_t* data, size_t data_size,
                        int *width, int *height);
-uint8_t* WebPDecodeBGRA(const uint8_t* data, uint32_t data_size,
+uint8_t* WebPDecodeBGRA(const uint8_t* data, size_t data_size,
                         int *width, int *height);
 
 //------------------------------------------------------------------------------
