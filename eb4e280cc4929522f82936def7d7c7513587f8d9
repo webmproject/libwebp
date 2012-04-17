@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAKn//+h0\u003d",
+        "filename": "src/mux/muxinternal.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-04-17T20:39:37Z",
+      "side": 1,
+      "message": "This shouldn\u0027t be necessary with the Validate update, but it mirrors the one other use of this function.\nLooking at it though it seems it does make the assumption that non-unknown ids would make it here.",
+      "parentUuid": "AAAAJ3///ys\u003d",
+      "revId": "eb4e280cc4929522f82936def7d7c7513587f8d9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAJ3///yo\u003d",
         "filename": "src/mux/muxinternal.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2012-04-14T08:14:29Z",
       "side": 1,
       "message": "should it be num_tiles \u003c num_images?\nThere can be more tiles than images...",
+      "revId": "eb4e280cc4929522f82936def7d7c7513587f8d9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//+ig\u003d",
+        "filename": "src/mux/muxinternal.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-04-17T20:39:37Z",
+      "side": 1,
+      "message": "Really? to what effect?\n\nI thought a tile was only composed of an image or an image+alpha.",
+      "parentUuid": "AAAAJ3///yo\u003d",
       "revId": "eb4e280cc4929522f82936def7d7c7513587f8d9",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
