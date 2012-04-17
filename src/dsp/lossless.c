@@ -326,48 +326,44 @@ static double PredictionCostSpatialHistogram(int accumulated[4][256],
   return retval;
 }
 
-static int GetBestPredictorForTile(int tile_x, int tile_y, int max_tile_size,
-                                   int xsize, int ysize,
+static int GetBestPredictorForTile(int width, int height,
+                                   int tile_x, int tile_y, int bits,
                                    int accumulated[4][256],
                                    const uint32_t* const argb) {
-  const int num_pred_modes = 14;
-  const int tile_y_offset = tile_y * max_tile_size;
-  const int tile_x_offset = tile_x * max_tile_size;
-  double cur_diff;
+  const int kNumPredModes = 14;
+  const int col_start = tile_x << bits;
+  const int row_start = tile_y << bits;
+  const int tile_size = 1 << bits;
+  const int ymax = (tile_size <= height - row_start) ?
+      tile_size : height - row_start;
+  const int xmax = (tile_size <= width - col_start) ?
+      tile_size : width - col_start;
+  int histo[4][256];
   double best_diff = 1e99;
   int best_mode = 0;
+
   int mode;
-  int all_x_max = tile_x_offset + max_tile_size;
-  int all_y_max = tile_y_offset + max_tile_size;
-  int histo[4][256];
-  if (all_x_max > xsize) {
-    all_x_max = xsize;
-  }
-  if (all_y_max > ysize) {
-    all_y_max = ysize;
-  }
-  for (mode = 0; mode < num_pred_modes; ++mode) {
-    int all_y;
+  for (mode = 0; mode < kNumPredModes; ++mode) {
     const PredictorFunc pred_func = kPredictors[mode];
+    double cur_diff;
+    int y;
     memset(&histo[0][0], 0, sizeof(histo));
-    for (all_y = tile_y_offset; all_y < all_y_max; ++all_y) {
-      int all_x;
-      for (all_x = tile_x_offset; all_x < all_x_max; ++all_x) {
+    for (y = 0; y < ymax; ++y) {
+      int x;
+      const int row = row_start + y;
+      for (x = 0; x < xmax; ++x) {
+        const int col = col_start + x;
+        const int pix = row * width + col;
         uint32_t predict;
         uint32_t predict_diff;
-        if (all_y == 0) {
-          if (all_x == 0) {
-            predict = 0xff000000;
-          } else {
-            predict = argb[all_x - 1];  // Top Row: Pick Left Element.
-          }
-        } else if (all_x == 0) {
-          predict = argb[(all_y - 1) * xsize];  // First Col: Pick Top Element.
+        if (row == 0) {
+          predict = (col == 0) ? ARGB_BLACK : argb[pix - 1];  // Left.
+        } else if (col == 0) {
+          predict = argb[pix - width];  // Top.
         } else {
-          const uint32_t* src = argb + all_y * xsize + all_x;
-          predict = pred_func(src[-1], src - xsize);
+          predict = pred_func(argb[pix - 1], argb + pix - width);
         }
-        predict_diff = VP8LSubPixels(argb[all_y * xsize + all_x], predict);
+        predict_diff = VP8LSubPixels(argb[pix], predict);
         ++histo[0][predict_diff >> 24];
         ++histo[1][((predict_diff >> 16) & 0xff)];
         ++histo[2][((predict_diff >> 8) & 0xff)];
@@ -380,6 +376,7 @@ static int GetBestPredictorForTile(int tile_x, int tile_y, int max_tile_size,
       best_mode = mode;
     }
   }
+
   return best_mode;
 }
 
@@ -389,43 +386,43 @@ static void CopyTileWithPrediction(int width, int height,
                                    uint32_t* const argb) {
   const int col_start = tile_x << bits;
   const int row_start = tile_y << bits;
-  const int transform_size = 1 << bits;
-  const int ymax = (transform_size <= height - row_start) ?
-      transform_size : height - row_start;
-  const int xmax = (transform_size <= width - col_start) ?
-      transform_size : width - col_start;
+  const int tile_size = 1 << bits;
+  const int ymax = (tile_size <= height - row_start) ?
+      tile_size : height - row_start;
+  const int xmax = (tile_size <= width - col_start) ?
+      tile_size : width - col_start;
   const PredictorFunc pred_func = kPredictors[mode];
-  uint32_t* const top_row = argb_scratch;
-  uint32_t* const current_row = argb_scratch + width;
-
   int y;
+
+  // Apply prediction filter to tile and save it in argb_scratch.
   for (y = 0; y < ymax; ++y) {
-    int x;
     const int row = row_start + y;
-    // Update current_row & top_row.
-    if (row > 0) {
-      memcpy(top_row, current_row, width * sizeof(*top_row));
-    }
-    memcpy(current_row, &argb[row * width], width * sizeof(*current_row));
+    int x;
     for (x = 0; x < xmax; ++x) {
       const int col = col_start + x;
       const int pix = row * width + col;
+      const int idx = y * tile_size + x;
       uint32_t predict;
       if (row == 0) {
-        if (col == 0) {
-          predict = ARGB_BLACK;
-        } else {
-          const uint32_t left = current_row[col - 1];
-          predict = left;
-        }
+        predict = (col == 0) ? ARGB_BLACK : argb[pix - 1];  // Left.
       } else if (col == 0) {
-        const uint32_t top = top_row[col];
-        predict = top;
+        predict = argb[pix - width];  // Top.
       } else {
-        predict = pred_func(argb[pix - 1], top_row + col);
+        predict = pred_func(argb[pix - 1], argb + pix - width);
       }
-      argb[pix] = VP8LSubPixels(argb[pix], predict);
+      argb_scratch[idx] = VP8LSubPixels(argb[pix], predict);
     }
+  }
+
+  // Copy back predicted tile to argb.
+  // Note: There may be a possibility of reducing argb_scratch size by
+  // integrating this loop with the previous one, but that would make the code
+  // much more complicated.
+  for (y = 0; y < ymax; ++y) {
+    const int row = row_start + y;
+    const uint32_t* const src = argb_scratch + y * tile_size;
+    uint32_t* const dst = argb + row * width + col_start;
+    memcpy(dst, src, xmax * sizeof(*dst));
   }
 }
 
@@ -433,15 +430,16 @@ void VP8LResidualImage(int width, int height, int bits,
                        uint32_t* const argb, uint32_t* const argb_scratch,
                        uint32_t* const image) {
   const int max_tile_size = 1 << bits;
-  const int tile_xsize = VP8LSubSampleSize(width, bits);
-  const int tile_ysize = VP8LSubSampleSize(height, bits);
+  const int tiles_per_row = VP8LSubSampleSize(width, bits);
+  const int tiles_per_col = VP8LSubSampleSize(height, bits);
   int tile_y;
   int histo[4][256];
   memset(histo, 0, sizeof(histo));
-  for (tile_y = 0; tile_y < tile_ysize; ++tile_y) {
+  // We perform prediction in reverse scan-line order.
+  for (tile_y = tiles_per_col - 1; tile_y >= 0; --tile_y) {
     const int tile_y_offset = tile_y * max_tile_size;
     int tile_x;
-    for (tile_x = 0; tile_x < tile_xsize; ++tile_x) {
+    for (tile_x = tiles_per_row - 1; tile_x >= 0; --tile_x) {
       int pred;
       int y;
       const int tile_x_offset = tile_x * max_tile_size;
@@ -449,9 +447,9 @@ void VP8LResidualImage(int width, int height, int bits,
       if (all_x_max > width) {
         all_x_max = width;
       }
-      pred = GetBestPredictorForTile(tile_x, tile_y, max_tile_size,
-                                     width, height, histo, argb);
-      image[tile_y * tile_xsize + tile_x] = 0xff000000u | (pred << 8);
+      pred = GetBestPredictorForTile(width, height, tile_x, tile_y, bits, histo,
+                                     argb);
+      image[tile_y * tiles_per_row + tile_x] = 0xff000000u | (pred << 8);
       CopyTileWithPrediction(width, height, tile_x, tile_y, bits, pred,
                              argb_scratch, argb);
       for (y = 0; y < max_tile_size; ++y) {
