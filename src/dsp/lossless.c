@@ -557,9 +557,11 @@ static void AddGreenToBlueAndRed(const VP8LTransform* const transform,
 }
 
 typedef struct {
-  int green_to_red_;
-  int green_to_blue_;
-  int red_to_blue_;
+  // Note: the members are uint8_t, so that any negative values are
+  // automatically converted to "mod 256" values.
+  uint8_t green_to_red_;
+  uint8_t green_to_blue_;
+  uint8_t red_to_blue_;
 } Multipliers;
 
 static WEBP_INLINE void MultipliersClear(Multipliers* m) {
