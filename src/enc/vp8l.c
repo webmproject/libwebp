@@ -743,7 +743,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   uint16_t** bit_codes = NULL;
   const int use_2d_locality = 1;
   int backward_refs_size;
-  const int use_color_cache = (cache_bits > 0) ? 1 : 0;
+  const int use_color_cache = (cache_bits > 0);
   const int color_cache_size = use_color_cache ? (1 << cache_bits) : 0;
   const int histogram_image_xysize = VP8LSubSampleSize(width, histogram_bits) *
       VP8LSubSampleSize(height, histogram_bits);
@@ -1197,6 +1197,8 @@ int VP8LEncodeImage(const WebPConfig* const config,
     }
   }
 
+  VP8LWriteBits(&bw, 1, 0);  // No more transforms.
+
   // ---------------------------------------------------------------------------
   // Encode and write the transformed image.
 
@@ -1214,8 +1216,7 @@ int VP8LEncodeImage(const WebPConfig* const config,
   VP8LBitWriterDestroy(&bw);
   DeleteVP8LEncoder(enc);
   if (!ok) {
-    // TODO(vikasa): err is not set for all error paths. Set default err.
-    if (err == VP8_ENC_OK) err = VP8_ENC_ERROR_BAD_WRITE;
+    assert(err != VP8_ENC_OK);
     WebPEncodingSetError(picture, err);
   }
   return ok;
