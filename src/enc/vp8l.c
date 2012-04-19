@@ -855,6 +855,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   if (!ok) {
     DeleteHistograms(histogram_image, histogram_image_size);
   }
+  free(backward_refs);
   for (i = 0; i < 5 * histogram_image_size; ++i) {
     free(bit_lengths[i]);
     free(bit_codes[i]);
