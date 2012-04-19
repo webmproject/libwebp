@@ -12,6 +12,7 @@
 #include "./dsp.h"
 
 #if defined(WEBP_USE_SSE2)
+#include <stdlib.h>  // for abs()
 #include <emmintrin.h>
 
 #include "../enc/vp8enci.h"
