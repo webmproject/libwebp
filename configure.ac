@@ -21,15 +21,6 @@ AC_SEARCH_LIBS([log2], [m],,
                [AC_DEFINE([NOT_HAVE_LOG2], [1],
                           [Undefine this if you have log2().])])
 
-dnl === Check libz is present
-
-if test "$enable_experimental" = "yes"; then
-  AC_CHECK_HEADER(zlib.h,
-    AC_CHECK_LIB(z, gzsetparams,,AC_MSG_ERROR(zlib library not found)),
-    AC_MSG_ERROR(zlib not available - no zlib.h)
-  )
-fi
-
 dnl === check for PNG support ===
 
 PNG_INCLUDES=""
