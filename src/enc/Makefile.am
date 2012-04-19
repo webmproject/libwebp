@@ -1,12 +1,28 @@
 AM_CPPFLAGS = -I$(top_srcdir)/src
+noinst_LTLIBRARIES = libwebpencode.la
 
-libwebpencode_la_SOURCES = analysis.c config.c cost.c cost.h filter.c \
-                           frame.c iterator.c picture.c quant.c  \
-                           syntax.c tree.c vp8enci.h webpenc.c alpha.c \
-                           layer.c
+libwebpencode_la_SOURCES =
+libwebpencode_la_SOURCES += alpha.c
+libwebpencode_la_SOURCES += analysis.c
+libwebpencode_la_SOURCES += config.c
+libwebpencode_la_SOURCES += cost.c
+libwebpencode_la_SOURCES += cost.h
+libwebpencode_la_SOURCES += filter.c
+libwebpencode_la_SOURCES += frame.c
+libwebpencode_la_SOURCES += iterator.c
+libwebpencode_la_SOURCES += layer.c
+libwebpencode_la_SOURCES += picture.c
+libwebpencode_la_SOURCES += quant.c
+libwebpencode_la_SOURCES += syntax.c
+libwebpencode_la_SOURCES += tree.c
+libwebpencode_la_SOURCES += vp8enci.h
+libwebpencode_la_SOURCES += webpenc.c
+
+libwebpencodeinclude_HEADERS =
+libwebpencodeinclude_HEADERS += ../webp/encode.h
+libwebpencodeinclude_HEADERS += ../webp/mux.h
+libwebpencodeinclude_HEADERS += ../webp/types.h
+
 libwebpencode_la_LDFLAGS = -lm
 libwebpencode_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE)
-libwebpencodeinclude_HEADERS = ../webp/encode.h ../webp/types.h ../webp/mux.h
 libwebpencodeincludedir = $(includedir)/webp
-
-noinst_LTLIBRARIES = libwebpencode.la

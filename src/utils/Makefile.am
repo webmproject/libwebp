@@ -1,15 +1,26 @@
 AM_CPPFLAGS = -I$(top_srcdir)/src
+noinst_LTLIBRARIES = libwebputils.la
 
-libwebputils_la_SOURCES = alpha.h alpha.c \
-                          bit_reader.h bit_reader.c \
-                          bit_writer.h bit_writer.c \
-                          color_cache.h color_cache.c \
-                          filters.h filters.c \
-                          huffman.h huffman.c         \
-                          quant_levels.c rescaler.c \
-                          tcoder.h tcoderi.h tcoder.c \
-                          thread.h thread.c
+libwebputils_la_SOURCES =
+libwebputils_la_SOURCES += alpha.c
+libwebputils_la_SOURCES += alpha.h
+libwebputils_la_SOURCES += bit_reader.c
+libwebputils_la_SOURCES += bit_reader.h
+libwebputils_la_SOURCES += bit_writer.c
+libwebputils_la_SOURCES += bit_writer.h
+libwebputils_la_SOURCES += color_cache.c
+libwebputils_la_SOURCES += color_cache.h
+libwebputils_la_SOURCES += filters.c
+libwebputils_la_SOURCES += filters.h
+libwebputils_la_SOURCES += huffman.c
+libwebputils_la_SOURCES += huffman.h
+libwebputils_la_SOURCES += quant_levels.c
+libwebputils_la_SOURCES += rescaler.c
+libwebputils_la_SOURCES += tcoder.c
+libwebputils_la_SOURCES += tcoder.h
+libwebputils_la_SOURCES += tcoderi.h
+libwebputils_la_SOURCES += thread.c
+libwebputils_la_SOURCES += thread.h
+
 libwebputilsinclude_HEADERS = ../webp/types.h
 libwebputilsincludedir = $(includedir)/webp
-
-noinst_LTLIBRARIES = libwebputils.la

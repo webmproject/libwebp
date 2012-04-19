@@ -1,11 +1,26 @@
 AM_CPPFLAGS = -I$(top_srcdir)/src
-
-libwebpdecode_la_SOURCES = vp8i.h webpi.h \
-                           frame.c quant.c tree.c vp8.c vp8l.c webp.c \
-                           idec.c alpha.c layer.c io.c buffer.c
-libwebpdecode_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE)
-libwebpdecodeinclude_HEADERS = ../webp/decode.h ../webp/decode_vp8.h \
-                               ../webp/types.h ../webp/mux.h
-libwebpdecodeincludedir = $(includedir)/webp
-
 noinst_LTLIBRARIES = libwebpdecode.la
+
+libwebpdecode_la_SOURCES =
+libwebpdecode_la_SOURCES += alpha.c
+libwebpdecode_la_SOURCES += buffer.c
+libwebpdecode_la_SOURCES += frame.c
+libwebpdecode_la_SOURCES += idec.c
+libwebpdecode_la_SOURCES += io.c
+libwebpdecode_la_SOURCES += layer.c
+libwebpdecode_la_SOURCES += quant.c
+libwebpdecode_la_SOURCES += tree.c
+libwebpdecode_la_SOURCES += vp8.c
+libwebpdecode_la_SOURCES += vp8i.h
+libwebpdecode_la_SOURCES += vp8l.c
+libwebpdecode_la_SOURCES += webp.c
+libwebpdecode_la_SOURCES += webpi.h
+
+libwebpdecodeinclude_HEADERS =
+libwebpdecodeinclude_HEADERS += ../webp/decode.h
+libwebpdecodeinclude_HEADERS += ../webp/decode_vp8.h
+libwebpdecodeinclude_HEADERS += ../webp/mux.h
+libwebpdecodeinclude_HEADERS += ../webp/types.h
+
+libwebpdecode_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE)
+libwebpdecodeincludedir = $(includedir)/webp
