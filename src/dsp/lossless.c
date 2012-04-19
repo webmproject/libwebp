@@ -329,7 +329,7 @@ static double PredictionCostSpatialHistogram(int accumulated[4][256],
 static int GetBestPredictorForTile(int width, int height,
                                    int tile_x, int tile_y, int bits,
                                    int accumulated[4][256],
-                                   const uint32_t* const argb) {
+                                   const uint32_t* const argb_scratch) {
   const int kNumPredModes = 14;
   const int col_start = tile_x << bits;
   const int row_start = tile_y << bits;
@@ -344,6 +344,7 @@ static int GetBestPredictorForTile(int width, int height,
 
   int mode;
   for (mode = 0; mode < kNumPredModes; ++mode) {
+    const uint32_t* current_row = argb_scratch;
     const PredictorFunc pred_func = kPredictors[mode];
     double cur_diff;
     int y;
@@ -351,19 +352,20 @@ static int GetBestPredictorForTile(int width, int height,
     for (y = 0; y < ymax; ++y) {
       int x;
       const int row = row_start + y;
+      const uint32_t* const upper_row = current_row;
+      current_row = upper_row + width;
       for (x = 0; x < xmax; ++x) {
         const int col = col_start + x;
-        const int pix = row * width + col;
         uint32_t predict;
         uint32_t predict_diff;
         if (row == 0) {
-          predict = (col == 0) ? ARGB_BLACK : argb[pix - 1];  // Left.
+          predict = (col == 0) ? ARGB_BLACK : current_row[col - 1];  // Left.
         } else if (col == 0) {
-          predict = argb[pix - width];  // Top.
+          predict = upper_row[col];  // Top.
         } else {
-          predict = pred_func(argb[pix - 1], argb + pix - width);
+          predict = pred_func(current_row[col - 1], upper_row + col);
         }
-        predict_diff = VP8LSubPixels(argb[pix], predict);
+        predict_diff = VP8LSubPixels(current_row[col], predict);
         ++histo[0][predict_diff >> 24];
         ++histo[1][((predict_diff >> 16) & 0xff)];
         ++histo[2][((predict_diff >> 8) & 0xff)];
@@ -382,7 +384,7 @@ static int GetBestPredictorForTile(int width, int height,
 
 static void CopyTileWithPrediction(int width, int height,
                                    int tile_x, int tile_y, int bits, int mode,
-                                   uint32_t* const argb_scratch,
+                                   const uint32_t* const argb_scratch,
                                    uint32_t* const argb) {
   const int col_start = tile_x << bits;
   const int row_start = tile_y << bits;
@@ -392,37 +394,27 @@ static void CopyTileWithPrediction(int width, int height,
   const int xmax = (tile_size <= width - col_start) ?
       tile_size : width - col_start;
   const PredictorFunc pred_func = kPredictors[mode];
-  int y;
+  const uint32_t* current_row = argb_scratch;
 
-  // Apply prediction filter to tile and save it in argb_scratch.
+  int y;
   for (y = 0; y < ymax; ++y) {
-    const int row = row_start + y;
     int x;
+    const int row = row_start + y;
+    const uint32_t* const upper_row = current_row;
+    current_row = upper_row + width;
     for (x = 0; x < xmax; ++x) {
       const int col = col_start + x;
       const int pix = row * width + col;
-      const int idx = y * tile_size + x;
       uint32_t predict;
       if (row == 0) {
-        predict = (col == 0) ? ARGB_BLACK : argb[pix - 1];  // Left.
+        predict = (col == 0) ? ARGB_BLACK : current_row[col - 1];  // Left.
       } else if (col == 0) {
-        predict = argb[pix - width];  // Top.
+        predict = upper_row[col];  // Top.
       } else {
-        predict = pred_func(argb[pix - 1], argb + pix - width);
+        predict = pred_func(current_row[col - 1], upper_row + col);
       }
-      argb_scratch[idx] = VP8LSubPixels(argb[pix], predict);
+      argb[pix] = VP8LSubPixels(current_row[col], predict);
     }
-  }
-
-  // Copy back predicted tile to argb.
-  // Note: There may be a possibility of reducing argb_scratch size by
-  // integrating this loop with the previous one, but that would make the code
-  // much more complicated.
-  for (y = 0; y < ymax; ++y) {
-    const int row = row_start + y;
-    const uint32_t* const src = argb_scratch + y * tile_size;
-    uint32_t* const dst = argb + row * width + col_start;
-    memcpy(dst, src, xmax * sizeof(*dst));
   }
 }
 
@@ -432,14 +424,23 @@ void VP8LResidualImage(int width, int height, int bits,
   const int max_tile_size = 1 << bits;
   const int tiles_per_row = VP8LSubSampleSize(width, bits);
   const int tiles_per_col = VP8LSubSampleSize(height, bits);
+  uint32_t* const upper_row = argb_scratch;
+  uint32_t* const current_tile_rows = argb_scratch + width;
   int tile_y;
   int histo[4][256];
   memset(histo, 0, sizeof(histo));
-  // We perform prediction in reverse scan-line order.
-  for (tile_y = tiles_per_col - 1; tile_y >= 0; --tile_y) {
+  for (tile_y = 0; tile_y < tiles_per_col; ++tile_y) {
     const int tile_y_offset = tile_y * max_tile_size;
+    const int this_tile_height =
+        (tile_y < tiles_per_col - 1) ? max_tile_size : height - tile_y_offset;
     int tile_x;
-    for (tile_x = tiles_per_row - 1; tile_x >= 0; --tile_x) {
+    if (tile_y > 0) {
+      memcpy(upper_row, current_tile_rows + (max_tile_size - 1) * width,
+             width * sizeof(*upper_row));
+    }
+    memcpy(current_tile_rows, &argb[tile_y_offset * width],
+           this_tile_height * width * sizeof(*current_tile_rows));
+    for (tile_x = 0; tile_x < tiles_per_row; ++tile_x) {
       int pred;
       int y;
       const int tile_x_offset = tile_x * max_tile_size;
@@ -448,7 +449,7 @@ void VP8LResidualImage(int width, int height, int bits,
         all_x_max = width;
       }
       pred = GetBestPredictorForTile(width, height, tile_x, tile_y, bits, histo,
-                                     argb);
+                                     argb_scratch);
       image[tile_y * tiles_per_row + tile_x] = 0xff000000u | (pred << 8);
       CopyTileWithPrediction(width, height, tile_x, tile_y, bits, pred,
                              argb_scratch, argb);
@@ -571,7 +572,7 @@ static WEBP_INLINE void MultipliersClear(Multipliers* m) {
 }
 
 static WEBP_INLINE uint32_t ColorTransformDelta(int8_t color_pred,
-                                              int8_t color) {
+                                                int8_t color) {
   return (uint32_t)((int)(color_pred) * color) >> 5;
 }
 

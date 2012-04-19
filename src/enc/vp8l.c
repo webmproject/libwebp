@@ -1039,7 +1039,7 @@ static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
   WebPEncodingError err = VP8_ENC_OK;
   const size_t tile_size = 1 << enc->transform_bits_;
   const size_t image_size = height * width;
-  const size_t argb_scratch_size = tile_size * tile_size;
+  const size_t argb_scratch_size = (tile_size + 1) * width;
   const size_t transform_data_size =
       VP8LSubSampleSize(height, enc->transform_bits_) *
       VP8LSubSampleSize(width, enc->transform_bits_);
