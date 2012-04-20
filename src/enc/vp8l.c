@@ -1068,10 +1068,10 @@ static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
   WebPEncodingError err = VP8_ENC_OK;
   int i;
   uint32_t* argb = enc->pic_->argb;
-  const uint32_t* const palette = enc->palette_;
+  uint32_t* const palette = enc->palette_;
   const int palette_size = enc->palette_size_;
-  uint32_t argb_palette[MAX_PALETTE_SIZE];
 
+  // Replace each input pixel by corresponding palette index.
   for (i = 0; i < width * height; ++i) {
     int k;
     for (k = 0; k < palette_size; ++k) {
@@ -1082,26 +1082,27 @@ static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
       }
     }
   }
+
+  // Save palette to bitstream.
   VP8LWriteBits(bw, 1, 1);
   VP8LWriteBits(bw, 2, 3);
   VP8LWriteBits(bw, 8, palette_size - 1);
   for (i = palette_size - 1; i >= 1; --i) {
-    argb_palette[i] = VP8LSubPixels(palette[i], palette[i - 1]);
+    palette[i] = VP8LSubPixels(palette[i], palette[i - 1]);
   }
-  if (!EncodeImageInternal(bw, argb_palette, palette_size, 1, quality,
-                           0, 0)) {
+  if (!EncodeImageInternal(bw, palette, palette_size, 1, quality, 0, 0)) {
     err = VP8_ENC_ERROR_INVALID_CONFIGURATION;
     goto Error;
   }
+
   if (palette_size <= 16) {
+    // Image can be packed (multiple pixels per uint32_t).
     int xbits = 1;
     if (palette_size <= 2) {
       xbits = 3;
     } else if (palette_size <= 4) {
       xbits = 2;
     }
-
-    // Image can be packed (multiple pixels per uint32).
     err = AllocateTransformBuffer(enc, height, VP8LSubSampleSize(width, xbits));
     if (err != VP8_ENC_OK) goto Error;
     BundleColorMap(argb, width, height, xbits, enc->argb_, enc->current_width_);
