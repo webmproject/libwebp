@@ -923,10 +923,10 @@ SWIGEXPORT jint JNICALL Java_com_google_webp_libwebpJNI_WebPGetDecoderVersion(JN
 }
 
 
-SWIGEXPORT jint JNICALL Java_com_google_webp_libwebpJNI_WebPGetInfo(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jintArray jarg3, jintArray jarg4) {
+SWIGEXPORT jint JNICALL Java_com_google_webp_libwebpJNI_WebPGetInfo(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jlong jarg2, jintArray jarg3, jintArray jarg4) {
   jint jresult = 0 ;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  uint32_t arg2 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   jbyte *jarr1 ;
@@ -937,7 +937,7 @@ SWIGEXPORT jint JNICALL Java_com_google_webp_libwebpJNI_WebPGetInfo(JNIEnv *jenv
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInSchar(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (uint32_t)jarg2;
+  arg2 = (size_t)jarg2;
   {
     if (!jarg3) {
       SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
@@ -959,13 +959,6 @@ SWIGEXPORT jint JNICALL Java_com_google_webp_libwebpJNI_WebPGetInfo(JNIEnv *jenv
       return 0;
     }
     arg4 = &temp4;
-  }
-  {
-    if (arg2 < 0) {
-      {
-        SWIG_JavaException(jenv, SWIG_ValueError, "Expected a non-negative value."); return 0;
-      };
-    }
   }
   result = (int)WebPGetInfo((uint8_t const *)arg1,arg2,arg3,arg4);
   jresult = (jint)result;
@@ -985,10 +978,10 @@ SWIGEXPORT jint JNICALL Java_com_google_webp_libwebpJNI_WebPGetInfo(JNIEnv *jenv
 }
 
 
-SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeRGB(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jintArray jarg3, jintArray jarg4) {
+SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeRGB(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jlong jarg2, jintArray jarg3, jintArray jarg4) {
   jbyteArray jresult = 0 ;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  uint32_t arg2 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   jbyte *jarr1 ;
@@ -999,7 +992,7 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeRGB(JNIE
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInSchar(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (uint32_t)jarg2;
+  arg2 = (size_t)jarg2;
   {
     if (!jarg3) {
       SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
@@ -1021,13 +1014,6 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeRGB(JNIE
       return 0;
     }
     arg4 = &temp4;
-  }
-  {
-    if (arg2 < 0) {
-      {
-        SWIG_JavaException(jenv, SWIG_ValueError, "Expected a non-negative value."); return 0;
-      };
-    }
   }
   result = (uint8_t *)WebPDecodeRGB((uint8_t const *)arg1,arg2,arg3,arg4);
   jresult = SWIG_JavaArrayOutSchar(jenv, result, FillMeInAsSizeCannotBeDeterminedAutomatically);
@@ -1048,10 +1034,10 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeRGB(JNIE
 }
 
 
-SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeRGBA(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jintArray jarg3, jintArray jarg4) {
+SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeRGBA(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jlong jarg2, jintArray jarg3, jintArray jarg4) {
   jbyteArray jresult = 0 ;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  uint32_t arg2 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   jbyte *jarr1 ;
@@ -1062,7 +1048,7 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeRGBA(JNI
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInSchar(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (uint32_t)jarg2;
+  arg2 = (size_t)jarg2;
   {
     if (!jarg3) {
       SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
@@ -1084,13 +1070,6 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeRGBA(JNI
       return 0;
     }
     arg4 = &temp4;
-  }
-  {
-    if (arg2 < 0) {
-      {
-        SWIG_JavaException(jenv, SWIG_ValueError, "Expected a non-negative value."); return 0;
-      };
-    }
   }
   result = (uint8_t *)WebPDecodeRGBA((uint8_t const *)arg1,arg2,arg3,arg4);
   jresult = SWIG_JavaArrayOutSchar(jenv, result, FillMeInAsSizeCannotBeDeterminedAutomatically);
@@ -1111,10 +1090,10 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeRGBA(JNI
 }
 
 
-SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeARGB(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jintArray jarg3, jintArray jarg4) {
+SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeARGB(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jlong jarg2, jintArray jarg3, jintArray jarg4) {
   jbyteArray jresult = 0 ;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  uint32_t arg2 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   jbyte *jarr1 ;
@@ -1125,7 +1104,7 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeARGB(JNI
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInSchar(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (uint32_t)jarg2;
+  arg2 = (size_t)jarg2;
   {
     if (!jarg3) {
       SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
@@ -1147,13 +1126,6 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeARGB(JNI
       return 0;
     }
     arg4 = &temp4;
-  }
-  {
-    if (arg2 < 0) {
-      {
-        SWIG_JavaException(jenv, SWIG_ValueError, "Expected a non-negative value."); return 0;
-      };
-    }
   }
   result = (uint8_t *)WebPDecodeARGB((uint8_t const *)arg1,arg2,arg3,arg4);
   jresult = SWIG_JavaArrayOutSchar(jenv, result, FillMeInAsSizeCannotBeDeterminedAutomatically);
@@ -1174,10 +1146,10 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeARGB(JNI
 }
 
 
-SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeBGR(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jintArray jarg3, jintArray jarg4) {
+SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeBGR(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jlong jarg2, jintArray jarg3, jintArray jarg4) {
   jbyteArray jresult = 0 ;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  uint32_t arg2 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   jbyte *jarr1 ;
@@ -1188,7 +1160,7 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeBGR(JNIE
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInSchar(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (uint32_t)jarg2;
+  arg2 = (size_t)jarg2;
   {
     if (!jarg3) {
       SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
@@ -1210,13 +1182,6 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeBGR(JNIE
       return 0;
     }
     arg4 = &temp4;
-  }
-  {
-    if (arg2 < 0) {
-      {
-        SWIG_JavaException(jenv, SWIG_ValueError, "Expected a non-negative value."); return 0;
-      };
-    }
   }
   result = (uint8_t *)WebPDecodeBGR((uint8_t const *)arg1,arg2,arg3,arg4);
   jresult = SWIG_JavaArrayOutSchar(jenv, result, FillMeInAsSizeCannotBeDeterminedAutomatically);
@@ -1237,10 +1202,10 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeBGR(JNIE
 }
 
 
-SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeBGRA(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jintArray jarg3, jintArray jarg4) {
+SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeBGRA(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jlong jarg2, jintArray jarg3, jintArray jarg4) {
   jbyteArray jresult = 0 ;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  uint32_t arg2 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   jbyte *jarr1 ;
@@ -1251,7 +1216,7 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeBGRA(JNI
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInSchar(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (uint32_t)jarg2;
+  arg2 = (size_t)jarg2;
   {
     if (!jarg3) {
       SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
@@ -1273,13 +1238,6 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeBGRA(JNI
       return 0;
     }
     arg4 = &temp4;
-  }
-  {
-    if (arg2 < 0) {
-      {
-        SWIG_JavaException(jenv, SWIG_ValueError, "Expected a non-negative value."); return 0;
-      };
-    }
   }
   result = (uint8_t *)WebPDecodeBGRA((uint8_t const *)arg1,arg2,arg3,arg4);
   jresult = SWIG_JavaArrayOutSchar(jenv, result, FillMeInAsSizeCannotBeDeterminedAutomatically);

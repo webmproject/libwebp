@@ -102,7 +102,7 @@ typedef struct {
 // width and height. Returns 0 in case of formatting error. width/height
 // can be passed NULL.
 int VP8LGetInfo(const uint8_t* data,
-                int data_size,    // data available so far
+                size_t data_size,    // data available so far
                 int *width, int *height);
 
 // Allocates and initialize a new lossless decoder instance.

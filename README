@@ -324,7 +324,7 @@ Decoding API:
 This is mainly just one function to call:
 
 #include "webp/decode.h"
-uint8_t* WebPDecodeRGB(const uint8_t* data, uint32_t data_size,
+uint8_t* WebPDecodeRGB(const uint8_t* data, size_t data_size,
                        int *width, int *height);
 
 Please have a look at the file src/webp/decode.h for the details.
@@ -333,7 +333,7 @@ decoding to raw Y'CbCr samples. One can also decode the image directly into a
 pre-allocated buffer.
 
 To detect a WebP file and gather picture's dimensions, the function:
-  int WebPGetInfo(const uint8_t* data, uint32_t data_size,
+  int WebPGetInfo(const uint8_t* data, size_t data_size,
                   int *width, int *height);
 is supplied. No decoding is involved when using it.
 
