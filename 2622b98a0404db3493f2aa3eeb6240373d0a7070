@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAKn//7kk\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-04-20T07:38:36Z",
+      "side": 1,
+      "message": "iirc, WebPGetFeatures() is more generic, and is parsing the VP8X chunk. I\u0027m not sure we would get the width/height returned then (as opposed to the raw width/height we get from VP8GetInfo()).",
+      "revId": "2622b98a0404db3493f2aa3eeb6240373d0a7070",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
