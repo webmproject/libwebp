@@ -34,6 +34,24 @@
       "revId": "2622b98a0404db3493f2aa3eeb6240373d0a7070",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//7J0\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-04-20T18:35:40Z",
+      "side": 1,
+      "message": "It passes over the (all optional) riff/vp8x chunks and then arrives at:\n\n  if (!is_lossless) {\n\n    // Validates raw VP8 data.\n\n    if (chunk_size !\u003d (uint32_t)chunk_size ||\n        !VP8GetInfo(data, data_size, (uint32_t)chunk_size, width, height)) {\n...\n\nFrom this call site the data is raw VP8, but re-(ab?)-using this function for that may be wrong and/or fragile. Thoughts? Simpler to just expose VP8GetInfo then?",
+      "parentUuid": "AAAAKn//7kk\u003d",
+      "revId": "2622b98a0404db3493f2aa3eeb6240373d0a7070",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
