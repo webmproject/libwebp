@@ -16,9 +16,12 @@ LOCAL_SRC_FILES := \
     src/dsp/cpu.c \
     src/dsp/dec.c \
     src/dsp/dec_neon.c \
+    src/dsp/dec_sse2.c \
     src/dsp/enc.c \
+    src/dsp/enc_sse2.c \
     src/dsp/lossless.c \
     src/dsp/upsampling.c \
+    src/dsp/upsampling_sse2.c \
     src/dsp/yuv.c \
     src/enc/alpha.c \
     src/enc/analysis.c \
@@ -53,6 +56,10 @@ LOCAL_CFLAGS := -Wall -DANDROID -DHAVE_MALLOC_H -DHAVE_PTHREAD \
                 -s -fomit-frame-pointer -Isrc/webp
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
+
+ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+  LOCAL_ARM_NEON  := true
+endif
 
 LOCAL_MODULE:= webp
 
