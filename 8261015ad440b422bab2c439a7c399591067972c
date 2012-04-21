@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAKn//6kg\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-04-21T22:47:14Z",
+      "side": 1,
+      "message": "there should be an assert at line 638 to check \u0027size\u0027 doesn\u0027t overflow, just for safety.\n\nassert(size \u003d\u003d (uint32_t)size);",
+      "revId": "8261015ad440b422bab2c439a7c399591067972c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//6kY\u003d",
+        "filename": "src/mux/muxinternal.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-04-21T22:47:14Z",
+      "side": 1,
+      "message": "here too, there should be an assert() (or a check? Is payload_size_ validated before getting here?)",
+      "revId": "8261015ad440b422bab2c439a7c399591067972c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//6kM\u003d",
+        "filename": "src/mux/muxread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-04-21T22:47:14Z",
+      "side": 1,
+      "message": "i\u0027d say we should check:\n\nif (frame_tile_size !\u003d kChunks[id].chunkSize) return WEBP_MUX_BAD_DATA;\n\nA too-long chunk seems equally suspicious than a too-short one to me.\n\nBut maybe not in this patch, it\u0027s not the scope",
+      "revId": "8261015ad440b422bab2c439a7c399591067972c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
