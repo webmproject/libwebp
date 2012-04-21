@@ -272,7 +272,7 @@ static void ColorSpaceInverseTransform(const VP8LTransform* const transform,
 
   while (y < y_end) {
     const uint32_t* pred = pred_row;
-    Multipliers m;
+    Multipliers m = { 0, 0, 0 };
     int x;
 
     for (x = 0; x < width; ++x) {
@@ -301,7 +301,7 @@ static void ColorIndexInverseTransform(
     const int count_mask = pixels_per_byte - 1;
     const uint32_t bit_mask = (1 << bits_per_pixel) - 1;
     for (y = y_start; y < y_end; ++y) {
-      uint32_t packed_pixels;
+      uint32_t packed_pixels = 0;
       int x;
       for (x = 0; x < width; ++x) {
         // We need to load fresh 'packed_pixels' once every 'bytes_per_pixels'
