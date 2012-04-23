@@ -1113,8 +1113,7 @@ static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
 int VP8LEncodeImage(const WebPConfig* const config,
                     WebPPicture* const picture) {
   int ok = 0;
-  int use_color_cache = 1;
-  int cache_bits = 7;
+  int cache_bits = 7;  // If equal to 0, don't use color cache.
   int width, height, quality;
   VP8LEncoder* enc = NULL;
   WebPEncodingError err = VP8_ENC_OK;
@@ -1152,7 +1151,7 @@ int VP8LEncodeImage(const WebPConfig* const config,
   if (enc->use_palette_) {
     err = ApplyPalette(&bw, enc, width, height, quality);
     if (err != VP8_ENC_OK) goto Error;
-    use_color_cache = 0;
+    cache_bits = 0;  // Don't use color cache.
   }
 
   // In case image is not packed.
@@ -1187,17 +1186,22 @@ int VP8LEncodeImage(const WebPConfig* const config,
     }
   }
 
-  if (use_color_cache) {
+  VP8LWriteBits(&bw, 1, 0);  // No more transforms.
+
+  // ---------------------------------------------------------------------------
+  // Estimate the color cache size.
+
+  if (cache_bits > 0) {
     if (quality > 25) {
       if (!VP8LCalculateEstimateForPaletteSize(enc->argb_, enc->current_width_,
                                                height, &cache_bits)) {
         err = VP8_ENC_ERROR_INVALID_CONFIGURATION;
         goto Error;
       }
+    } else {
+      cache_bits = 0;  // Don't use color cache.
     }
   }
-
-  VP8LWriteBits(&bw, 1, 0);  // No more transforms.
 
   // ---------------------------------------------------------------------------
   // Encode and write the transformed image.
