@@ -17,6 +17,7 @@
 #include "./webpi.h"
 #include "../utils/bit_reader.h"
 #include "../utils/color_cache.h"
+#include "../utils/huffman.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -29,8 +30,6 @@ extern "C" {
 #define NUM_ARGB_CACHE_ROWS          16
 #define LOSSLESS_MAGIC_BYTE          0x64
 #define LOSSLESS_MAGIC_BYTE_RSVD     0x65
-
-struct HuffmanTree;
 
 typedef enum {
   READ_DATA = 0,
@@ -55,17 +54,19 @@ struct VP8LTransform {
 };
 
 typedef struct {
+  HuffmanTree htrees_[HUFFMAN_CODES_PER_META_CODE];
+} HTreeGroup;
+
+typedef struct {
   int             color_cache_size_;
   VP8LColorCache *color_cache_;
 
-  int             num_huffman_trees_;
   int             huffman_mask_;
   int             huffman_subsample_bits_;
   int             huffman_xsize_;
-  uint32_t       *meta_codes_;
   uint32_t       *huffman_image_;
-  struct HuffmanTree *htrees_;
-  struct HuffmanTree *meta_htrees_[HUFFMAN_CODES_PER_META_CODE];
+  int             num_htree_groups_;
+  HTreeGroup     *htree_groups_;
 } VP8LMetadata;
 
 typedef struct {

@@ -296,18 +296,16 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
 static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
                             int* const color_cache_bits_ptr) {
   int ok = 0;
-  int i;
+  int i, j;
+  int color_cache_size;
   VP8LBitReader* const br = &dec->br_;
   VP8LMetadata* const hdr = &dec->hdr_;
   uint32_t* huffman_image = NULL;
-  HuffmanTree* htrees = NULL;
-  int num_htrees = HUFFMAN_CODES_PER_META_CODE;
-  uint32_t* meta_codes = NULL;
-  int meta_codes_size;
-  int color_cache_size;
+  HTreeGroup* htree_groups = NULL;
+  int num_htree_groups = 1;
 
   if (VP8LReadBits(br, 1)) {      // use meta Huffman codes
-    int meta_codes_nbits, num_meta_codes, nbits;
+    int meta_codes_nbits;
     const int huffman_precision = VP8LReadBits(br, 4);
     const int huffman_xsize = VP8LSubSampleSize(xsize, huffman_precision);
     const int huffman_ysize = VP8LSubSampleSize(ysize, huffman_precision);
@@ -324,30 +322,7 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
     }
 
     meta_codes_nbits = VP8LReadBits(br, 4);
-    num_meta_codes = 2 + VP8LReadBits(br, meta_codes_nbits);
-    nbits = VP8LReadBits(br, 4);
-    meta_codes_size = num_meta_codes * HUFFMAN_CODES_PER_META_CODE;
-    meta_codes = (uint32_t*)calloc(meta_codes_size, sizeof(*meta_codes));
-    if (meta_codes == NULL) {
-      dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
-      goto Error;
-    }
-
-    for (i = 0; i < meta_codes_size; ++i) {
-      const int tree_index = VP8LReadBits(br, nbits);
-      meta_codes[i] = tree_index;
-      if (num_htrees <= tree_index) {
-        num_htrees = tree_index + 1;
-      }
-    }
-  } else {
-    meta_codes_size = HUFFMAN_CODES_PER_META_CODE;
-    meta_codes = (uint32_t*)malloc(meta_codes_size * sizeof(*meta_codes));
-    if (meta_codes == NULL) {
-      dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
-      goto Error;
-    }
-    for (i = 0; i < meta_codes_size; ++i) meta_codes[i] = i;
+    num_htree_groups = 2 + VP8LReadBits(br, meta_codes_nbits);
   }
 
   if (VP8LReadBits(br, 1)) {    // use color cache
@@ -358,39 +333,40 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
     color_cache_size = 0;
   }
 
-  htrees = (HuffmanTree*)calloc(num_htrees, sizeof(*htrees));
-  if (htrees == NULL) {
+  htree_groups = (HTreeGroup*)calloc(num_htree_groups, sizeof(*htree_groups));
+  if (htree_groups == NULL) {
     dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
     goto Error;
   }
 
   ok = !br->error_;
-  for (i = 0; ok && i < num_htrees; ++i) {
-    const int tree_type = i % HUFFMAN_CODES_PER_META_CODE;
-    int alphabet_size = kAlphabetSize[tree_type];
-    if (tree_type == 0) {
-      alphabet_size += color_cache_size;
+  for (i = 0; ok && i < num_htree_groups; ++i) {
+    for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
+      int alphabet_size = kAlphabetSize[j];
+      if (j == 0) {
+        alphabet_size += color_cache_size;
+      }
+      ok = ReadHuffmanCode(alphabet_size, dec, &htree_groups[i].htrees_[j]);
+      ok = ok && !br->error_;
     }
-    ok = ReadHuffmanCode(alphabet_size, dec, &htrees[i]);
-    ok = ok && !br->error_;
   }
 
   if (ok) {   // finalize pointers and return
     hdr->huffman_image_ = huffman_image;
-    hdr->meta_codes_ = meta_codes;
-    hdr->num_huffman_trees_ = num_htrees;
-    hdr->htrees_ = htrees;
+    hdr->num_htree_groups_ = num_htree_groups;
+    hdr->htree_groups_ = htree_groups;
     return ok;
   }
 
  Error:
   free(huffman_image);
-  free(meta_codes);
-  if (htrees != NULL) {
-    for (i = 0; i < num_htrees; ++i) {
-      HuffmanTreeRelease(&htrees[i]);
+  if (htree_groups != NULL) {
+    for (i = 0; i < num_htree_groups; ++i) {
+      for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
+        HuffmanTreeRelease(&htree_groups[i].htrees_[j]);
+      }
     }
-    free(htrees);
+    free(htree_groups);
   }
   return 0;
 }
@@ -518,19 +494,11 @@ static WEBP_INLINE int GetMetaIndex(
   return image[xsize * (y >> bits) + (x >> bits)];
 }
 
-static WEBP_INLINE void UpdateHtreeForPos(VP8LMetadata* const hdr,
-                                          int x, int y) {
-  HuffmanTree* const htrees = hdr->htrees_;
-  const uint32_t* const meta_codes = hdr->meta_codes_;
-  const int meta_index = HUFFMAN_CODES_PER_META_CODE *
-      GetMetaIndex(hdr->huffman_image_, hdr->huffman_xsize_,
-                   hdr->huffman_subsample_bits_, x, y);
-
-  hdr->meta_htrees_[GREEN] = &htrees[meta_codes[meta_index + GREEN]];
-  hdr->meta_htrees_[RED] = &htrees[meta_codes[meta_index + RED]];
-  hdr->meta_htrees_[BLUE] = &htrees[meta_codes[meta_index + BLUE]];
-  hdr->meta_htrees_[ALPHA] = &htrees[meta_codes[meta_index + ALPHA]];
-  hdr->meta_htrees_[DIST] = &htrees[meta_codes[meta_index + DIST]];
+static WEBP_INLINE HTreeGroup* GetHtreeGroupForPos(VP8LMetadata* const hdr,
+                                                   int x, int y) {
+  const int meta_index = GetMetaIndex(hdr->huffman_image_, hdr->huffman_xsize_,
+                                      hdr->huffman_subsample_bits_, x, y);
+  return hdr->htree_groups_ + meta_index;
 }
 
 // Processes (transforms, scales & color-converts) the rows decoded after the
@@ -589,6 +557,7 @@ static int DecodeImageData(VP8LDecoder* const dec,
   VP8LBitReader* const br = &dec->br_;
   VP8LMetadata* const hdr = &dec->hdr_;
   VP8LColorCache* const color_cache = hdr->color_cache_;
+  HTreeGroup* htree_group = hdr->htree_groups_;
   uint32_t* src = data;
   uint32_t* last_cached = data;
   uint32_t* const src_end = data + width * height;
@@ -596,8 +565,7 @@ static int DecodeImageData(VP8LDecoder* const dec,
   const int color_cache_limit = len_code_limit + hdr->color_cache_size_;
   const int mask = hdr->huffman_mask_;
 
-  assert(hdr->htrees_ != NULL);
-  assert(hdr->meta_codes_ != NULL);
+  assert(hdr->htree_groups_ != NULL);
 
   while (!br->eos_ && src < src_end) {
     int code;
@@ -605,17 +573,17 @@ static int DecodeImageData(VP8LDecoder* const dec,
     //   if "((((prev_col ^ col) | prev_row ^ row)) > mask)" -> tile changed
     // but that's actually slower and requires storing the previous col/row
     if ((col & mask) == 0) {
-      UpdateHtreeForPos(hdr, col, row);
+      htree_group = GetHtreeGroupForPos(hdr, col, row);
     }
     VP8LFillBitWindow(br);
-    code = ReadSymbol(hdr->meta_htrees_[GREEN], br);
+    code = ReadSymbol(&htree_group->htrees_[GREEN], br);
     if (code < NUM_LITERAL_CODES) {   // Literal.
       int red, green, blue, alpha;
-      red = ReadSymbol(hdr->meta_htrees_[RED], br);
+      red = ReadSymbol(&htree_group->htrees_[RED], br);
       green = code;
       VP8LFillBitWindow(br);
-      blue = ReadSymbol(hdr->meta_htrees_[BLUE], br);
-      alpha = ReadSymbol(hdr->meta_htrees_[ALPHA], br);
+      blue = ReadSymbol(&htree_group->htrees_[BLUE], br);
+      alpha = ReadSymbol(&htree_group->htrees_[ALPHA], br);
       *src = (alpha << 24) + (red << 16) + (green << 8) + blue;
  AdvanceByOne:
       ++src;
@@ -636,7 +604,7 @@ static int DecodeImageData(VP8LDecoder* const dec,
       int dist_code, dist;
       const int length_sym = code - NUM_LITERAL_CODES;
       const int length = GetCopyLength(length_sym, br);
-      const int dist_symbol = ReadSymbol(hdr->meta_htrees_[DIST], br);
+      const int dist_symbol = ReadSymbol(&htree_group->htrees_[DIST], br);
       VP8LFillBitWindow(br);
       dist_code = GetCopyDistance(dist_symbol, br);
       dist = PlaneCodeToDistance(width, dist_code);
@@ -658,7 +626,7 @@ static int DecodeImageData(VP8LDecoder* const dec,
         }
       }
       if (src < src_end) {
-        UpdateHtreeForPos(hdr, col, row);
+        htree_group = GetHtreeGroupForPos(hdr, col, row);
         if (color_cache != NULL) {
           while (last_cached < src) {
             VP8LColorCacheInsert(color_cache, *last_cached++);
@@ -802,13 +770,14 @@ static void ClearMetadata(VP8LMetadata* const hdr) {
   assert(hdr);
 
   free(hdr->huffman_image_);
-  free(hdr->meta_codes_);
-  if (hdr->htrees_ != NULL) {
-    int i;
-    for (i = 0; i < hdr->num_huffman_trees_; ++i) {
-      HuffmanTreeRelease(&(hdr->htrees_[i]));
+  if (hdr->htree_groups_ != NULL) {
+    int i, j;
+    for (i = 0; i < hdr->num_htree_groups_; ++i) {
+      for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
+        HuffmanTreeRelease(&hdr->htree_groups_[i].htrees_[j]);
+      }
     }
-    free(hdr->htrees_);
+    free(hdr->htree_groups_);
   }
 
   VP8LColorCacheDelete(hdr->color_cache_);
