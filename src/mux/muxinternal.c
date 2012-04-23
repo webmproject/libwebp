@@ -248,11 +248,8 @@ int MuxImageCount(WebPMuxImage* const wpi_list, TAG_ID id) {
   int count = 0;
   WebPMuxImage* current;
   for (current = wpi_list; current != NULL; current = current->next_) {
-    WebPChunk** const wpi_chunk_ptr = MuxImageGetListFromId(current, id);
-    assert(wpi_chunk_ptr != NULL);
-
-    if (*wpi_chunk_ptr != NULL &&
-        (*wpi_chunk_ptr)->tag_ == kChunks[id].chunkTag) {
+    const WebPChunk* const wpi_chunk = *MuxImageGetListFromId(current, id);
+    if (wpi_chunk != NULL && wpi_chunk->tag_ == kChunks[id].chunkTag) {
       ++count;
     }
   }
@@ -300,9 +297,8 @@ static int SearchImageToGetOrDelete(WebPMuxImage** wpi_list, uint32_t nth,
 
   while (*wpi_list) {
     WebPMuxImage* const cur_wpi = *wpi_list;
-    WebPChunk** const wpi_chunk_ptr = MuxImageGetListFromId(cur_wpi, id);
-    assert(wpi_chunk_ptr != NULL);
-    if ((*wpi_chunk_ptr)->tag_ == kChunks[id].chunkTag) {
+    const WebPChunk* const wpi_chunk = *MuxImageGetListFromId(cur_wpi, id);
+    if (wpi_chunk != NULL && wpi_chunk->tag_ == kChunks[id].chunkTag) {
       ++count;
       if (count == nth) return 1;  // Found.
     }
