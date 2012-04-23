@@ -788,9 +788,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   write_histogram_image = (histogram_image_size > 1);
   VP8LWriteBits(bw, 1, write_histogram_image);
   if (write_histogram_image) {
-    int nbits;
     int image_size_bits;
-    int num_histograms;
     uint32_t* histogram_argb = (uint32_t*)
         malloc(histogram_image_xysize * sizeof(*histogram_argb));
     if (histogram_argb == NULL) goto Error;
@@ -809,12 +807,6 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
     image_size_bits = VP8LBitsLog2Ceiling(histogram_image_size - 1);
     VP8LWriteBits(bw, 4, image_size_bits);
     VP8LWriteBits(bw, image_size_bits, histogram_image_size - 2);
-    num_histograms = 5 * histogram_image_size;
-    nbits = VP8LBitsLog2Ceiling(num_histograms);
-    VP8LWriteBits(bw, 4, nbits);
-    for (i = 0; i < num_histograms; ++i) {
-      VP8LWriteBits(bw, nbits, i);
-    }
     free(histogram_argb);
   }
 
