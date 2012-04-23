@@ -5,7 +5,7 @@
 //  Additional IP Rights Grant:  http://www.webmproject.org/license/additional/
 // -----------------------------------------------------------------------------
 //
-// A utility for reading Canonical Huffman Codes.
+// Utilities for building and looking up Huffman trees.
 //
 // Author: urvang@google.com (Urvang Joshi)
 
