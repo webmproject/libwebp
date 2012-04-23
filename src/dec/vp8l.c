@@ -293,6 +293,19 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
   return 1;
 }
 
+static void DeleteHtreeGroups(HTreeGroup* htree_groups, int num_htree_groups) {
+  if (htree_groups != NULL) {
+    int i, j;
+    for (i = 0; i < num_htree_groups; ++i) {
+      HuffmanTree* const htrees = htree_groups[i].htrees_;
+      for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
+        HuffmanTreeRelease(&htrees[j]);
+      }
+    }
+    free(htree_groups);
+  }
+}
+
 static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
                             int* const color_cache_bits_ptr) {
   int ok = 0;
@@ -341,12 +354,13 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
 
   ok = !br->error_;
   for (i = 0; ok && i < num_htree_groups; ++i) {
+    HuffmanTree* const htrees = htree_groups[i].htrees_;
     for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
       int alphabet_size = kAlphabetSize[j];
       if (j == 0) {
         alphabet_size += color_cache_size;
       }
-      ok = ReadHuffmanCode(alphabet_size, dec, &htree_groups[i].htrees_[j]);
+      ok = ReadHuffmanCode(alphabet_size, dec, &htrees[j]);
       ok = ok && !br->error_;
     }
   }
@@ -360,14 +374,7 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
 
  Error:
   free(huffman_image);
-  if (htree_groups != NULL) {
-    for (i = 0; i < num_htree_groups; ++i) {
-      for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
-        HuffmanTreeRelease(&htree_groups[i].htrees_[j]);
-      }
-    }
-    free(htree_groups);
-  }
+  DeleteHtreeGroups(htree_groups, num_htree_groups);
   return 0;
 }
 
@@ -498,6 +505,7 @@ static WEBP_INLINE HTreeGroup* GetHtreeGroupForPos(VP8LMetadata* const hdr,
                                                    int x, int y) {
   const int meta_index = GetMetaIndex(hdr->huffman_image_, hdr->huffman_xsize_,
                                       hdr->huffman_subsample_bits_, x, y);
+  assert(meta_index < hdr->num_htree_groups_);
   return hdr->htree_groups_ + meta_index;
 }
 
@@ -770,16 +778,7 @@ static void ClearMetadata(VP8LMetadata* const hdr) {
   assert(hdr);
 
   free(hdr->huffman_image_);
-  if (hdr->htree_groups_ != NULL) {
-    int i, j;
-    for (i = 0; i < hdr->num_htree_groups_; ++i) {
-      for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
-        HuffmanTreeRelease(&hdr->htree_groups_[i].htrees_[j]);
-      }
-    }
-    free(hdr->htree_groups_);
-  }
-
+  DeleteHtreeGroups(hdr->htree_groups_, hdr->num_htree_groups_);
   VP8LColorCacheDelete(hdr->color_cache_);
   InitMetadata(hdr);
 }
