@@ -41,9 +41,11 @@ static int CompareColors(const void* p1, const void* p2) {
   return 1;
 }
 
-static int CreatePalette256(const uint32_t* const argb, int num_pix,
-                            uint32_t palette[MAX_PALETTE_SIZE],
-                            int* const palette_size) {
+// If number of colors in the image is less than or equal to MAX_PALETTE_SIZE,
+// creates a palette and returns true, else returns false.
+static int AnalyzeAndCreatePalette(const uint32_t* const argb, int num_pix,
+                                   uint32_t palette[MAX_PALETTE_SIZE],
+                                   int* const palette_size) {
   int i, key;
   int num_colors = 0;
   uint8_t in_use[MAX_PALETTE_SIZE * 4] = { 0 };
@@ -137,8 +139,9 @@ static int VP8LEncAnalyze(VP8LEncoder* const enc) {
     enc->use_cross_color_ = 1;
   }
 
-  enc->use_palette_ = CreatePalette256(pic->argb, pic->width * pic->height,
-                                       enc->palette_, &enc->palette_size_);
+  enc->use_palette_ =
+      AnalyzeAndCreatePalette(pic->argb, pic->width * pic->height,
+                              enc->palette_, &enc->palette_size_);
   return 1;
 }
 
@@ -1062,6 +1065,9 @@ static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
   return err;
 }
 
+// Note: Expects "enc->palette_" to be set properly.
+// Also, "enc->palette_" will be modified after this call and should not be used
+// later.
 static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
                                       VP8LEncoder* const enc,
                                       int width, int height, int quality) {
