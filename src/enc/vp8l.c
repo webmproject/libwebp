@@ -126,22 +126,23 @@ static int AnalyzeEntropy(const uint32_t const *argb, int xsize, int ysize,
 
 static int VP8LEncAnalyze(VP8LEncoder* const enc) {
   const WebPPicture* const pic = enc->pic_;
-  int non_pred_entropy, pred_entropy;
   assert(pic && pic->argb);
 
-  if (!AnalyzeEntropy(pic->argb, pic->width, pic->height,
-                      &non_pred_entropy, &pred_entropy)) {
-    return 0;
-  }
-
-  if (8 * pred_entropy < 7 * non_pred_entropy) {
-    enc->use_predict_ = 1;
-    enc->use_cross_color_ = 1;
-  }
-
   enc->use_palette_ =
-      AnalyzeAndCreatePalette(pic->argb, pic->width * pic->height,
-                              enc->palette_, &enc->palette_size_);
+        AnalyzeAndCreatePalette(pic->argb, pic->width * pic->height,
+                                enc->palette_, &enc->palette_size_);
+  if (!enc->use_palette_) {
+    int non_pred_entropy, pred_entropy;
+    if (!AnalyzeEntropy(pic->argb, pic->width, pic->height,
+                        &non_pred_entropy, &pred_entropy)) {
+      return 0;
+    }
+
+    if (8 * pred_entropy < 7 * non_pred_entropy) {
+      enc->use_predict_ = 1;
+      enc->use_cross_color_ = 1;
+    }
+  }
   return 1;
 }
 
@@ -865,32 +866,34 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
 static int EvalAndApplySubtractGreen(VP8LBitWriter* const bw,
                                      VP8LEncoder* const enc,
                                      int width, int height) {
-  int i;
-  VP8LHistogram* before = NULL;
-  // Check if it would be a good idea to subtract green from red and blue.
-  VP8LHistogram* after = (VP8LHistogram*)malloc(2 * sizeof(*after));
-  if (after == NULL) return 0;
-  before = after + 1;
+  if (!enc->use_palette_) {
+    int i;
+    VP8LHistogram* before = NULL;
+    // Check if it would be a good idea to subtract green from red and blue.
+    VP8LHistogram* after = (VP8LHistogram*)malloc(2 * sizeof(*after));
+    if (after == NULL) return 0;
+    before = after + 1;
 
-  VP8LHistogramInit(before, 1);
-  VP8LHistogramInit(after, 1);
-  for (i = 0; i < width * height; ++i) {
-    // We only impact entropy in red and blue components, don't bother
-    // to look at others.
-    const uint32_t c = enc->argb_[i];
-    const int green = (c >> 8) & 0xff;
-    ++(before->red_[(c >> 16) & 0xff]);
-    ++(before->blue_[c & 0xff]);
-    ++(after->red_[((c >> 16) - green) & 0xff]);
-    ++(after->blue_[(c - green) & 0xff]);
+    VP8LHistogramInit(before, 1);
+    VP8LHistogramInit(after, 1);
+    for (i = 0; i < width * height; ++i) {
+      // We only impact entropy in red and blue components, don't bother
+      // to look at others.
+      const uint32_t c = enc->argb_[i];
+      const int green = (c >> 8) & 0xff;
+      ++(before->red_[(c >> 16) & 0xff]);
+      ++(before->blue_[c & 0xff]);
+      ++(after->red_[((c >> 16) - green) & 0xff]);
+      ++(after->blue_[(c - green) & 0xff]);
+    }
+    // Check if subtracting green yields low entropy.
+    if (VP8LHistogramEstimateBits(after) < VP8LHistogramEstimateBits(before)) {
+      VP8LWriteBits(bw, 1, 1);
+      VP8LWriteBits(bw, 2, 2);
+      VP8LSubtractGreenFromBlueAndRed(enc->argb_, width * height);
+    }
+    free(after);
   }
-  // Check if subtracting green yields low entropy.
-  if (VP8LHistogramEstimateBits(after) < VP8LHistogramEstimateBits(before)) {
-    VP8LWriteBits(bw, 1, 1);
-    VP8LWriteBits(bw, 2, 2);
-    VP8LSubtractGreenFromBlueAndRed(enc->argb_, width * height);
-  }
-  free(after);
   return 1;
 }
 
