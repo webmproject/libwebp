@@ -183,6 +183,14 @@ fi
 AC_MSG_RESULT(${enable_experimental-no})
 AC_SUBST(USE_EXPERIMENTAL_CODE)
 
+dnl === Check whether libwebpmux should be built
+AC_MSG_CHECKING(whether libwebpmux is to be built)
+AC_ARG_ENABLE([experimental-libwebpmux],
+              AS_HELP_STRING([--enable-experimental-libwebpmux],
+                             [Build libwebpmux @<:@default=no@:>@]))
+AC_MSG_RESULT(${enable_experimental_libwebpmux-no})
+AM_CONDITIONAL([WANT_MUX], [test "$enable_experimental_libwebpmux" = "yes"])
+
 dnl =========================
 
 AC_CONFIG_MACRO_DIR([m4])

@@ -159,10 +159,13 @@ HDRS = \
     src/webp/mux.h \
     src/webp/types.h \
 
-OUT_LIBS = examples/libexample_util.a src/libwebp.a src/mux/libwebpmux.a
-OUT_EXAMPLES = examples/cwebp examples/dwebp examples/webpmux
+OUT_LIBS = examples/libexample_util.a src/libwebp.a
+OUT_EXAMPLES = examples/cwebp examples/dwebp
 
-OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES) examples/vwebp
+OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES)
+ifeq ($(MAKECMDGOALS),clean)
+  OUTPUT += examples/vwebp examples/webpmux src/mux/libwebpmux.a
+endif
 
 all: ex
 
