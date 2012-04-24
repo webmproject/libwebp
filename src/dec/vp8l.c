@@ -21,7 +21,7 @@ extern "C" {
 #endif
 
 static const size_t kHeaderBytes = 5;
-static const uint32_t kImageSizeBits = 14;
+static const int kImageSizeBits = 14;
 
 static const int kCodeLengthLiterals = 16;
 static const int kCodeLengthRepeatCode = 16;
@@ -411,7 +411,7 @@ static int AllocateAndInitRescaler(VP8LDecoder* const dec, VP8Io* const io) {
 static int Export(VP8LDecoder* const dec, WEBP_CSP_MODE colorspace,
                   int rgba_stride, uint8_t* const rgba) {
   WebPRescaler* const rescaler = dec->rescaler;
-  const uint32_t* const src = (const uint32_t* const)rescaler->dst;
+  const uint32_t* const src = (const uint32_t*)rescaler->dst;
   const int dst_width = rescaler->dst_width;
   int num_lines_out = 0;
   while (WebPRescalerHasPendingOutput(rescaler)) {
@@ -565,7 +565,7 @@ static int DecodeImageData(VP8LDecoder* const dec,
   const int color_cache_limit = len_code_limit + hdr->color_cache_size_;
   const int mask = hdr->huffman_mask_;
 
-  assert(hdr->htree_groups_ != NULL);
+  assert(htree_group != NULL);
 
   while (!br->eos_ && src < src_end) {
     int code;
