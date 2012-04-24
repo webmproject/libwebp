@@ -215,9 +215,9 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
         err = WebPMuxGetFrame(mux, i, &image, &alpha,
                               &x_offset, &y_offset, &duration);
         RETURN_IF_ERROR2("Failed to retrieve frame#%d\n", i);
-        printf("%3d: %8d %8d %8d %10u",
+        printf("%3d: %8d %8d %8d %10zu",
                i, x_offset, y_offset, duration, image.size_);
-        if (flag & ALPHA_FLAG) printf(" %10u", alpha.size_);
+        if (flag & ALPHA_FLAG) printf(" %10zu", alpha.size_);
         printf("\n");
       }
     }
@@ -239,9 +239,9 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
         WebPData image, alpha;
         err = WebPMuxGetTile(mux, i, &image, &alpha, &x_offset, &y_offset);
         RETURN_IF_ERROR2("Failed to retrieve tile#%d\n", i);
-        printf("%3d: %8d %8d %10u",
+        printf("%3d: %8d %8d %10zu",
                i, x_offset, y_offset, image.size_);
-        if (flag & ALPHA_FLAG) printf(" %10u", alpha.size_);
+        if (flag & ALPHA_FLAG) printf(" %10zu", alpha.size_);
         printf("\n");
       }
     }
@@ -251,21 +251,21 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
     WebPData icc_profile;
     err = WebPMuxGetColorProfile(mux, &icc_profile);
     RETURN_IF_ERROR("Failed to retrieve the color profile\n");
-    printf("Size of the color profile data: %u\n", icc_profile.size_);
+    printf("Size of the color profile data: %zu\n", icc_profile.size_);
   }
 
   if (flag & META_FLAG) {
     WebPData metadata;
     err = WebPMuxGetMetadata(mux, &metadata);
     RETURN_IF_ERROR("Failed to retrieve the XMP metadata\n");
-    printf("Size of the XMP metadata: %u\n", metadata.size_);
+    printf("Size of the XMP metadata: %zu\n", metadata.size_);
   }
 
   if ((flag & ALPHA_FLAG) && !(flag & (ANIMATION_FLAG | TILE_FLAG))) {
     WebPData image, alpha;
     err = WebPMuxGetImage(mux, &image, &alpha);
     RETURN_IF_ERROR("Failed to retrieve the image\n");
-    printf("Size of the alpha data: %u\n", alpha.size_);
+    printf("Size of the alpha data: %zu\n", alpha.size_);
   }
 
   return WEBP_MUX_OK;
@@ -411,8 +411,8 @@ static int ReadImage(const char* filename,
     ok &= WebPDataCopy(&image, image_ptr);
     ok &= WebPDataCopy(&alpha, alpha_ptr);
     if (!ok) {
-      fprintf(stderr, "Error allocating storage for image (%u bytes) "
-              "and alpha (%u bytes) data\n", image.size_, alpha.size_);
+      fprintf(stderr, "Error allocating storage for image (%zu bytes) "
+              "and alpha (%zu bytes) data\n", image.size_, alpha.size_);
       WebPDataFree(image_ptr);
       WebPDataFree(alpha_ptr);
     }
@@ -434,7 +434,7 @@ static int WriteData(const char* filename, const WebPData* const webpdata) {
   if (fwrite(webpdata->bytes_, webpdata->size_, 1, fout) != 1) {
     fprintf(stderr, "Error writing file %s!\n", filename);
   } else {
-    fprintf(stderr, "Saved file %s (%d bytes)\n", filename, webpdata->size_);
+    fprintf(stderr, "Saved file %s (%zu bytes)\n", filename, webpdata->size_);
     ok = 1;
   }
   if (fout != stdout) fclose(fout);

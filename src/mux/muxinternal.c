@@ -124,7 +124,7 @@ static int ChunkSearchListToSet(WebPChunk** chunk_list, uint32_t nth,
 // Chunk writer methods.
 
 WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk,
-                                      const uint8_t* data, uint32_t data_size,
+                                      const uint8_t* data, size_t data_size,
                                       WebPImageInfo* image_info,
                                       int copy_data, uint32_t tag) {
   // For internally allocated chunks, always copy data & make it owner of data.
@@ -193,8 +193,8 @@ WebPChunk* ChunkDelete(WebPChunk* const chunk) {
 //------------------------------------------------------------------------------
 // Chunk serialization methods.
 
-uint32_t ChunksListDiskSize(const WebPChunk* chunk_list) {
-  uint32_t size = 0;
+size_t ChunksListDiskSize(const WebPChunk* chunk_list) {
+  size_t size = 0;
   while (chunk_list) {
     size += ChunkDiskSize(chunk_list);
     chunk_list = chunk_list->next_;
@@ -206,7 +206,8 @@ static uint8_t* ChunkEmit(const WebPChunk* const chunk, uint8_t* dst) {
   assert(chunk);
   assert(chunk->tag_ != NIL_TAG);
   PutLE32(dst + 0, chunk->tag_);
-  PutLE32(dst + TAG_SIZE, chunk->payload_size_);
+  PutLE32(dst + TAG_SIZE, (uint32_t)chunk->payload_size_);
+  assert(chunk->payload_size_ == (uint32_t)chunk->payload_size_);
   memcpy(dst + CHUNK_HEADER_SIZE, chunk->data_, chunk->payload_size_);
   if (chunk->payload_size_ & 1)
     dst[CHUNK_HEADER_SIZE + chunk->payload_size_] = 0;  // Add padding.
@@ -372,16 +373,16 @@ WebPMuxError MuxImageGetNth(const WebPMuxImage** wpi_list, uint32_t nth,
 // MuxImage serialization methods.
 
 // Size of an image.
-static uint32_t MuxImageDiskSize(const WebPMuxImage* wpi) {
-  uint32_t size = 0;
+static size_t MuxImageDiskSize(const WebPMuxImage* wpi) {
+  size_t size = 0;
   if (wpi->header_ != NULL) size += ChunkDiskSize(wpi->header_);
   if (wpi->alpha_ != NULL) size += ChunkDiskSize(wpi->alpha_);
   if (wpi->vp8_ != NULL) size += ChunkDiskSize(wpi->vp8_);
   return size;
 }
 
-uint32_t MuxImageListDiskSize(const WebPMuxImage* wpi_list) {
-  uint32_t size = 0;
+size_t MuxImageListDiskSize(const WebPMuxImage* wpi_list) {
+  size_t size = 0;
   while (wpi_list) {
     size += MuxImageDiskSize(wpi_list);
     wpi_list = wpi_list->next_;

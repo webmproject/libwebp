@@ -84,7 +84,7 @@ typedef struct WebPMux WebPMux;   // main opaque object.
 // (ICC profile, metadata) and WebP compressed image data.
 typedef struct {
   const uint8_t* bytes_;
-  uint32_t size_;
+  size_t size_;
 } WebPData;
 
 //------------------------------------------------------------------------------
@@ -114,7 +114,7 @@ WEBP_EXTERN(void) WebPMuxDelete(WebPMux* const mux);
 // Returns:
 //   A pointer to the mux object created from given data - on success.
 //   NULL - In case of invalid data or memory error.
-WEBP_EXTERN(WebPMux*) WebPMuxCreate(const uint8_t* data, uint32_t size,
+WEBP_EXTERN(WebPMux*) WebPMuxCreate(const uint8_t* data, size_t size,
                                     int copy_data,
                                     WebPMuxState* const mux_state);
 
@@ -138,8 +138,8 @@ WEBP_EXTERN(WebPMux*) WebPMuxCreate(const uint8_t* data, uint32_t size,
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxSetImage(
     WebPMux* const mux,
-    const uint8_t* data, uint32_t size,
-    const uint8_t* alpha_data, uint32_t alpha_size,
+    const uint8_t* data, size_t size,
+    const uint8_t* alpha_data, size_t alpha_size,
     int copy_data);
 
 // Gets a reference to the image in the mux object.
@@ -183,7 +183,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteImage(WebPMux* const mux);
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxSetMetadata(
-    WebPMux* const mux, const uint8_t* data, uint32_t size, int copy_data);
+    WebPMux* const mux, const uint8_t* data, size_t size, int copy_data);
 
 // Gets a reference to the XMP metadata in the mux object.
 // The caller should NOT free the returned data.
@@ -222,7 +222,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteMetadata(WebPMux* const mux);
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error
 //   WEBP_MUX_OK - on success
 WEBP_EXTERN(WebPMuxError) WebPMuxSetColorProfile(
-    WebPMux* const mux, const uint8_t* data, uint32_t size, int copy_data);
+    WebPMux* const mux, const uint8_t* data, size_t size, int copy_data);
 
 // Gets a reference to the color profile in the mux object.
 // The caller should NOT free the returned data.
@@ -271,8 +271,8 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteColorProfile(WebPMux* const mux);
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxAddFrame(
     WebPMux* const mux, uint32_t nth,
-    const uint8_t* data, uint32_t size,
-    const uint8_t* alpha_data, uint32_t alpha_size,
+    const uint8_t* data, size_t size,
+    const uint8_t* alpha_data, size_t alpha_size,
     uint32_t x_offset, uint32_t y_offset, uint32_t duration,
     int copy_data);
 
@@ -370,8 +370,8 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetLoopCount(const WebPMux* const mux,
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxAddTile(
     WebPMux* const mux, uint32_t nth,
-    const uint8_t* data, uint32_t size,
-    const uint8_t* alpha_data, uint32_t alpha_size,
+    const uint8_t* data, size_t size,
+    const uint8_t* alpha_data, size_t alpha_size,
     uint32_t x_offset, uint32_t y_offset,
     int copy_data);
 
@@ -454,7 +454,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxNumNamedElements(const WebPMux* const mux,
 //   WEBP_MUX_OK - on success
 WEBP_EXTERN(WebPMuxError) WebPMuxAssemble(WebPMux* const mux,
                                           uint8_t** output_data,
-                                          uint32_t* output_size);
+                                          size_t* output_size);
 
 //------------------------------------------------------------------------------
 

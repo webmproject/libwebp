@@ -70,7 +70,7 @@ void WebPMuxDelete(WebPMux* const mux) {
   }
 
 static WebPMuxError MuxSet(WebPMux* const mux, TAG_ID id, uint32_t nth,
-                           const uint8_t* data, uint32_t size,
+                           const uint8_t* data, size_t size,
                            WebPImageInfo* image_info, int copy_data) {
   WebPChunk chunk;
   WebPMuxError err = WEBP_MUX_NOT_FOUND;
@@ -114,7 +114,7 @@ static void InitImageInfo(WebPImageInfo* const image_info) {
 // Dimensions calculated from passed VP8 image data.
 static WebPImageInfo* CreateImageInfo(uint32_t x_offset, uint32_t y_offset,
                                       uint32_t duration,
-                                      const uint8_t* data, uint32_t size) {
+                                      const uint8_t* data, size_t size) {
   int width;
   int height;
   WebPImageInfo* image_info = NULL;
@@ -161,7 +161,7 @@ static WebPMuxError CreateDataFromImageInfo(const WebPImageInfo* image_info,
 }
 
 // Outputs image data given data from a webp file (including RIFF header).
-static WebPMuxError GetImageData(const uint8_t* data, uint32_t size,
+static WebPMuxError GetImageData(const uint8_t* data, size_t size,
                                  WebPData* const image, WebPData* const alpha) {
   if (size < TAG_SIZE || memcmp(data, "RIFF", TAG_SIZE)) {
     // It is NOT webp file data. Return input data as is.
@@ -220,8 +220,8 @@ static WebPMuxError DeleteLoopCount(WebPMux* const mux) {
 // Set API(s).
 
 WebPMuxError WebPMuxSetImage(WebPMux* const mux,
-                             const uint8_t* data, uint32_t size,
-                             const uint8_t* alpha_data, uint32_t alpha_size,
+                             const uint8_t* data, size_t size,
+                             const uint8_t* alpha_data, size_t alpha_size,
                              int copy_data) {
   WebPMuxError err;
   WebPChunk chunk;
@@ -264,7 +264,7 @@ WebPMuxError WebPMuxSetImage(WebPMux* const mux,
 }
 
 WebPMuxError WebPMuxSetMetadata(WebPMux* const mux,
-                                const uint8_t* data, uint32_t size,
+                                const uint8_t* data, size_t size,
                                 int copy_data) {
   WebPMuxError err;
 
@@ -281,7 +281,7 @@ WebPMuxError WebPMuxSetMetadata(WebPMux* const mux,
 }
 
 WebPMuxError WebPMuxSetColorProfile(WebPMux* const mux,
-                                    const uint8_t* data, uint32_t size,
+                                    const uint8_t* data, size_t size,
                                     int copy_data) {
   WebPMuxError err;
 
@@ -320,8 +320,8 @@ WebPMuxError WebPMuxSetLoopCount(WebPMux* const mux, uint32_t loop_count) {
 
 static WebPMuxError MuxAddFrameTileInternal(
     WebPMux* const mux, uint32_t nth,
-    const uint8_t* data, uint32_t size,
-    const uint8_t* alpha_data, uint32_t alpha_size,
+    const uint8_t* data, size_t size,
+    const uint8_t* alpha_data, size_t alpha_size,
     uint32_t x_offset, uint32_t y_offset, uint32_t duration,
     int copy_data, uint32_t tag) {
   WebPChunk chunk;
@@ -405,8 +405,8 @@ static WebPMuxError MuxAddFrameTileInternal(
 // TODO(urvang): Think about whether we need 'nth' while adding a frame or tile.
 
 WebPMuxError WebPMuxAddFrame(WebPMux* const mux, uint32_t nth,
-                             const uint8_t* data, uint32_t size,
-                             const uint8_t* alpha_data, uint32_t alpha_size,
+                             const uint8_t* data, size_t size,
+                             const uint8_t* alpha_data, size_t alpha_size,
                              uint32_t x_offset, uint32_t y_offset,
                              uint32_t duration, int copy_data) {
   return MuxAddFrameTileInternal(mux, nth, data, size, alpha_data, alpha_size,
@@ -415,8 +415,8 @@ WebPMuxError WebPMuxAddFrame(WebPMux* const mux, uint32_t nth,
 }
 
 WebPMuxError WebPMuxAddTile(WebPMux* const mux, uint32_t nth,
-                            const uint8_t* data, uint32_t size,
-                            const uint8_t* alpha_data, uint32_t alpha_size,
+                            const uint8_t* data, size_t size,
+                            const uint8_t* alpha_data, size_t alpha_size,
                             uint32_t x_offset, uint32_t y_offset,
                             int copy_data) {
   return MuxAddFrameTileInternal(mux, nth, data, size, alpha_data, alpha_size,
@@ -594,8 +594,8 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
 }
 
 WebPMuxError WebPMuxAssemble(WebPMux* const mux,
-                             uint8_t** output_data, uint32_t* output_size) {
-  uint32_t size = 0;
+                             uint8_t** output_data, size_t* output_size) {
+  size_t size = 0;
   uint8_t* data = NULL;
   uint8_t* dst = NULL;
   int num_frames;
@@ -641,7 +641,8 @@ WebPMuxError WebPMuxAssemble(WebPMux* const mux,
 
   // Main RIFF header.
   PutLE32(data + 0, mktag('R', 'I', 'F', 'F'));
-  PutLE32(data + 4, size - CHUNK_HEADER_SIZE);
+  PutLE32(data + 4, (uint32_t)size - CHUNK_HEADER_SIZE);
+  assert(size == (uint32_t)size);
   PutLE32(data + 8, mktag('W', 'E', 'B', 'P'));
 
   // Chunks.

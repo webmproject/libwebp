@@ -52,7 +52,7 @@ static WebPMuxError MuxGet(const WebPMux* const mux, TAG_ID id, uint32_t nth,
 // Fill the chunk with the given data, after verifying that the data size
 // doesn't exceed 'max_size'.
 static WebPMuxError ChunkAssignData(WebPChunk* chunk, const uint8_t* data,
-                                    uint32_t data_size, uint32_t riff_size,
+                                    size_t data_size, size_t riff_size,
                                     int copy_data) {
   uint32_t chunk_size;
 
@@ -61,7 +61,7 @@ static WebPMuxError ChunkAssignData(WebPChunk* chunk, const uint8_t* data,
   chunk_size = GetLE32(data + TAG_SIZE);
 
   {
-    const uint32_t chunk_disk_size = SizeWithPadding(chunk_size);
+    const size_t chunk_disk_size = SizeWithPadding(chunk_size);
     if (chunk_disk_size > riff_size) return WEBP_MUX_BAD_DATA;
     if (chunk_disk_size > data_size) return WEBP_MUX_NOT_ENOUGH_DATA;
   }
@@ -74,9 +74,9 @@ static WebPMuxError ChunkAssignData(WebPChunk* chunk, const uint8_t* data,
 //------------------------------------------------------------------------------
 // Create a mux object from WebP-RIFF data.
 
-WebPMux* WebPMuxCreate(const uint8_t* data, uint32_t size, int copy_data,
+WebPMux* WebPMuxCreate(const uint8_t* data, size_t size, int copy_data,
                        WebPMuxState* const mux_state) {
-  uint32_t riff_size;
+  size_t riff_size;
   uint32_t tag;
   const uint8_t* end;
   WebPMux* mux = NULL;
@@ -170,7 +170,7 @@ WebPMux* WebPMuxCreate(const uint8_t* data, uint32_t size, int copy_data,
     }
 
     {
-      const uint32_t data_size = ChunkDiskSize(&chunk);
+      const size_t data_size = ChunkDiskSize(&chunk);
       data += data_size;
       size -= data_size;
     }
@@ -292,7 +292,7 @@ static WebPMuxError MuxGetFrameTileInternal(
     WebPData* const image, WebPData* const alpha,
     uint32_t* x_offset, uint32_t* y_offset, uint32_t* duration, uint32_t tag) {
   const uint8_t* frame_tile_data;
-  uint32_t frame_tile_size;
+  size_t frame_tile_size;
   WebPMuxError err;
   WebPMuxImage* wpi;
 

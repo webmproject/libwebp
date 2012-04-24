@@ -37,7 +37,7 @@ typedef struct {
 typedef struct WebPChunk WebPChunk;
 struct WebPChunk {
   uint32_t        tag_;
-  uint32_t        payload_size_;
+  size_t          payload_size_;
   WebPImageInfo*  image_info_;
   int             owner_;  // True if *data_ memory is owned internally.
                            // VP8X, Loop, and other internally created chunks
@@ -122,7 +122,7 @@ static WEBP_INLINE void PutLE32(uint8_t* const data, uint32_t val) {
   PutLE16(data + 2, val >> 16);
 }
 
-static WEBP_INLINE uint32_t SizeWithPadding(uint32_t chunk_size) {
+static WEBP_INLINE size_t SizeWithPadding(size_t chunk_size) {
   return CHUNK_HEADER_SIZE + ((chunk_size + 1) & ~1U);
 }
 
@@ -144,7 +144,7 @@ WebPChunk* ChunkSearchList(WebPChunk* first, uint32_t nth, uint32_t tag);
 
 // Fill the chunk with the given data & image_info.
 WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk,
-                                      const uint8_t* data, uint32_t data_size,
+                                      const uint8_t* data, size_t data_size,
                                       WebPImageInfo* image_info,
                                       int copy_data, uint32_t tag);
 
@@ -160,13 +160,13 @@ WebPChunk* ChunkRelease(WebPChunk* const chunk);
 WebPChunk* ChunkDelete(WebPChunk* const chunk);
 
 // Size of a chunk including header and padding.
-static WEBP_INLINE uint32_t ChunkDiskSize(const WebPChunk* chunk) {
+static WEBP_INLINE size_t ChunkDiskSize(const WebPChunk* chunk) {
   assert(chunk->payload_size_ < MAX_CHUNK_PAYLOAD);
   return SizeWithPadding(chunk->payload_size_);
 }
 
 // Total size of a list of chunks.
-uint32_t ChunksListDiskSize(const WebPChunk* chunk_list);
+size_t ChunksListDiskSize(const WebPChunk* chunk_list);
 
 // Write out the given list of chunks into 'dst'.
 uint8_t* ChunkListEmit(const WebPChunk* chunk_list, uint8_t* dst);
@@ -229,7 +229,7 @@ WebPMuxError MuxImageGetNth(const WebPMuxImage** wpi_list, uint32_t nth,
                             TAG_ID id, WebPMuxImage** wpi);
 
 // Total size of a list of images.
-uint32_t MuxImageListDiskSize(const WebPMuxImage* wpi_list);
+size_t MuxImageListDiskSize(const WebPMuxImage* wpi_list);
 
 // Write out the given list of images into 'dst'.
 uint8_t* MuxImageListEmit(const WebPMuxImage* wpi_list, uint8_t* dst);
