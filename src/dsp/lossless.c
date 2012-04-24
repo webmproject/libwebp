@@ -43,7 +43,7 @@ static WEBP_INLINE uint32_t Average4(uint32_t a0, uint32_t a1,
 }
 
 static WEBP_INLINE uint32_t Clip255(uint32_t a) {
-  if (a < NUM_LITERAL_CODES) {
+  if (a < 256) {
     return a;
   }
   // return 0, when a is a negative integer.
