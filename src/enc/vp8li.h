@@ -45,7 +45,6 @@ typedef struct {
 
   // Encoding parameters derived from quality parameter.
   int use_lz77_;
-  int palette_bits_;
   int histo_bits_;
   int transform_bits_;
 
