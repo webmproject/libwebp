@@ -246,11 +246,10 @@ static void ExchangeSymbol(const TCoder* const c, const int pos) {
 // -----------------------------------------------------------------------------
 // probability computation
 
-static WEBP_INLINE int CalcProba(Count_t num, Count_t total,
-                                 int max_proba, int round) {
+static WEBP_INLINE int CalcProba(Count_t num, Count_t total, int max_proba) {
   int p;
   assert(total > 0);
-  p = (num * max_proba + round) / total;
+  p = num * max_proba / total;
   assert(p >= 0 && p <= MAX_PROBA);
   return MAX_PROBA - p;
 }
@@ -259,13 +258,13 @@ static WEBP_INLINE void UpdateNodeProbas(TCoder* const c, int pos) {
   Node* const node = &c->nodes_[pos];
   const Count_t total = TotalCount(node);
   if (total < COUNTER_CUT_OFF)
-    node->probaS_ = CalcProba(node->countS_, total, MAX_PROBA, 0);
+    node->probaS_ = CalcProba(node->countS_, total, MAX_PROBA);
   if (!IsLeaf(c, pos)) {
     const Count_t total_count = node->count_;
     if (total_count < COUNTER_CUT_OFF) {
       const Count_t left_count = TotalCount(&c->nodes_[2 * pos]);
       node->probaL_ =
-          MAX_PROBA - CalcProba(left_count, total_count, MAX_PROBA, 0);
+          MAX_PROBA - CalcProba(left_count, total_count, MAX_PROBA);
     }
   }
 }
@@ -353,7 +352,7 @@ void TCoderEncode(TCoder* const c, int s, VP8BitWriter* const bw) {
     if (c->num_symbols_ > 0) {
       if (bw != NULL) {
         const int new_symbol_proba =
-            CalcProba(c->num_symbols_, c->total_coded_, HALF_PROBA - 1, 0);
+            CalcProba(c->num_symbols_, c->total_coded_, HALF_PROBA - 1);
         VP8PutBit(bw, is_new_symbol, new_symbol_proba);
       }
     } else {
@@ -413,7 +412,7 @@ int TCoderDecode(TCoder* const c, VP8BitReader* const br) {
   if (!c->fixed_symbols_ && c->num_symbols_ < c->num_nodes_) {
     if (c->num_symbols_ > 0) {
       const int new_symbol_proba =
-          CalcProba(c->num_symbols_, c->total_coded_, HALF_PROBA - 1, 0);
+          CalcProba(c->num_symbols_, c->total_coded_, HALF_PROBA - 1);
       is_new_symbol = VP8GetBit(br, new_symbol_proba);
     } else {
       is_new_symbol = 1;
