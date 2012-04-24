@@ -323,7 +323,7 @@ static void ColorIndexInverseTransform(
 }
 
 void VP8LInverseTransform(const VP8LTransform* const transform,
-                          size_t row_start, size_t row_end,
+                          int row_start, int row_end,
                           uint32_t* const data_in, uint32_t* const data_out) {
   assert(row_start < row_end);
   assert(row_end <= transform->ysize_);
