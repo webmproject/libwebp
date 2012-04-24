@@ -18,7 +18,7 @@
 #include <stdlib.h>  // _byteswap_ulong
 #endif
 #include <string.h>  // For memcpy
-#include "../webp/decode_vp8.h"
+#include "../webp/types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
