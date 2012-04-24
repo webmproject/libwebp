@@ -30,7 +30,7 @@ extern "C" {
 typedef struct {
   int dist;        // backward distance (=0 means: literal)
   int literal;     // literal value (if dist = 0)
-  size_t len;      // length of matched string for non-literal
+  int len;         // length of matched string for non-literal
 } Token;
 
 #define MIN_LEN 2
@@ -50,9 +50,9 @@ typedef struct {
   }                                                           \
 }
 
-static size_t GetLongestMatch(const uint8_t* const data,
-                              const uint8_t* const ref, size_t max_len) {
-  size_t n;
+static int GetLongestMatch(const uint8_t* const data,
+                           const uint8_t* const ref, int max_len) {
+  int n;
   for (n = 0; (n < max_len) && (data[n] == ref[n]); ++n) { /* do nothing */ }
   return n;
 }
@@ -60,10 +60,10 @@ static size_t GetLongestMatch(const uint8_t* const data,
 static int EncodeZlibTCoder(const uint8_t* data, int width, int height,
                             VP8BitWriter* const bw) {
   int ok = 0;
-  const size_t data_size = width * height;
-  const size_t MAX_DIST = 3 * width;
-  const size_t MAX_LEN = 2 * width;
-  Token* const msg = (Token*)malloc(data_size * sizeof(*msg));
+  const int data_len = width * height;
+  const int MAX_DIST = 3 * width;
+  const int MAX_LEN = 2 * width;
+  Token* const msg = (Token*)malloc(data_len * sizeof(*msg));
   int num_tokens;
   TCoder* const coder = TCoderNew(MAX_SYMBOLS);
   TCoder* const coderd = TCoderNew(MAX_DIST);
@@ -78,25 +78,23 @@ static int EncodeZlibTCoder(const uint8_t* data, int width, int height,
 
   {
     int deferred_eval = 0;
-    size_t n = 0;
+    int n = 0;
     num_tokens = 0;
-    while (n < data_size) {
+    while (n < data_len) {
       const double lit_mode_cost = TCoderSymbolCost(coderd, 0);
       double cost_cache[MAX_SYMBOLS + 1] = { 0. };
       Token best;
-      size_t dist = 0;
+      int dist = 0;
       double best_cost = CACHED_COST(coder, data[n]);
-      size_t max_len = MAX_LEN;
-      if (max_len > data_size - n) {
-        max_len = data_size - n;
-      }
+      const int max_len = (MAX_LEN > data_len - n) ? data_len - n : MAX_LEN;
+
       best.dist = 0;
       best.literal = data[n];
       best.len = 1;
       for (dist = 1; dist <= MAX_DIST && dist <= n; ++dist) {
-        const size_t pos = n - dist;
-        const size_t min_len = best.len - 1;
-        size_t len;
+        const int pos = n - dist;
+        const int min_len = best.len - 1;
+        int len;
 
         // Early out: we probe at two locations for a quick match check
         if (data[pos] != data[n] ||
@@ -116,7 +114,7 @@ static int EncodeZlibTCoder(const uint8_t* data, int width, int height,
           // upper-bound (worst-case coding). Deferred evaluation used below
           // partially addresses this.
           double lit_cost = 0;
-          size_t i;
+          int i;
           for (i = best.len; i < len; ++i) {
             lit_cost += CACHED_COST(coder, data[n + i]);
           }
@@ -359,8 +357,8 @@ int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
 static int DecompressZlibTCoder(VP8BitReader* const br, int width,
                                 uint8_t* output, size_t output_size) {
   int ok = 0;
-  const size_t MAX_DIST = 3 * width;
-  const size_t MAX_LEN = 2 * width;
+  const int MAX_DIST = 3 * width;
+  const int MAX_LEN = 2 * width;
   TCoder* const coder = TCoderNew(MAX_SYMBOLS);
   TCoder* const coderd = TCoderNew(MAX_DIST);
   TCoder* const coderl = TCoderNew(MAX_LEN - MIN_LEN);
