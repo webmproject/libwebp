@@ -13,14 +13,15 @@ libwebpdecode_la_SOURCES += tree.c
 libwebpdecode_la_SOURCES += vp8.c
 libwebpdecode_la_SOURCES += vp8i.h
 libwebpdecode_la_SOURCES += vp8l.c
+libwebpdecode_la_SOURCES += vp8li.h
 libwebpdecode_la_SOURCES += webp.c
 libwebpdecode_la_SOURCES += webpi.h
 
 libwebpdecodeinclude_HEADERS =
 libwebpdecodeinclude_HEADERS += ../webp/decode.h
 libwebpdecodeinclude_HEADERS += ../webp/decode_vp8.h
-libwebpdecodeinclude_HEADERS += ../webp/mux.h
 libwebpdecodeinclude_HEADERS += ../webp/types.h
+noinst_HEADERS = ../webp/mux.h
 
 libwebpdecode_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE)
 libwebpdecodeincludedir = $(includedir)/webp

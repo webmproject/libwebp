@@ -20,8 +20,8 @@ libwebpencode_la_SOURCES += webpenc.c
 
 libwebpencodeinclude_HEADERS =
 libwebpencodeinclude_HEADERS += ../webp/encode.h
-libwebpencodeinclude_HEADERS += ../webp/mux.h
 libwebpencodeinclude_HEADERS += ../webp/types.h
+noinst_HEADERS = ../webp/mux.h
 
 libwebpencode_la_LDFLAGS = -lm
 libwebpencode_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE)
