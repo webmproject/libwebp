@@ -121,7 +121,7 @@ static int VP8LHashChain_FindCopy(VP8LHashChain* p,
   const uint64_t hash_code = GetHash64(next_two_pixels);
   int prev_length = 0;
   int64_t best_val = 0;
-  int give_up = quality * 3 / 4 + 25;
+  int give_up = 10 + (quality >> 1);
   const int min_pos = (index > kWindowSize) ? index - kWindowSize : 0;
   int32_t pos;
   int64_t length;
@@ -134,8 +134,7 @@ static int VP8LHashChain_FindCopy(VP8LHashChain* p,
        pos >= min_pos;
        pos = p->chain_[pos]) {
     if (give_up < 0) {
-      if (give_up < -quality * 8 ||
-          best_val >= 0xff0000) {
+      if (give_up < -quality * 2 || best_val >= 0xff0000) {
         break;
       }
     }
@@ -219,9 +218,9 @@ int VP8LBackwardReferencesHashChain(int xsize, int ysize, int use_palette,
                                     const uint32_t* argb, int palette_bits,
                                     int quality, PixOrCopy* stream,
                                     int* stream_size) {
-  const int pix_count = xsize * ysize;
   int i;
   int ok = 0;
+  const int pix_count = xsize * ysize;
   VP8LHashChain* hash_chain = (VP8LHashChain*)malloc(sizeof(*hash_chain));
   VP8LColorCache hashers;
   if (!hash_chain ||

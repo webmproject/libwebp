@@ -217,35 +217,40 @@ static int GetBackwardReferences(int width, int height,
                     VP8LHistogramEstimateBits(histo_lz77));
 
   // Choose appropriate backward reference.
-  if (quality >= 50 && lz77_is_useful) {
-    const int recursion_level = (num_pix < 320 * 200) ? 1 : 0;
-    int backward_refs_trace_size;
-    PixOrCopy* backward_refs_trace;
+  if (lz77_is_useful) {
+    // TraceBackwards is costly. Run it for higher qualities.
+    const int try_lz77_trace_backwards = (quality >= 75);
     free(backward_refs_rle);
-    free(backward_refs_lz77);
-    backward_refs_trace =
-        (PixOrCopy*)malloc(num_pix * sizeof(*backward_refs_trace));
-    if (backward_refs_trace == NULL ||
-        !VP8LBackwardReferencesTraceBackwards(width, height,
-                                              recursion_level, use_color_cache,
-                                              argb, cache_bits,
-                                              backward_refs_trace,
-                                              &backward_refs_trace_size)) {
-      free(backward_refs_trace);
-      goto End;
-    }
-    *backward_refs = backward_refs_trace;
-    *backward_refs_size = backward_refs_trace_size;
-  } else {
-    if (lz77_is_useful) {
+    if (try_lz77_trace_backwards) {
+      const int recursion_level = (num_pix < 320 * 200) ? 1 : 0;
+      int backward_refs_trace_size;
+      PixOrCopy* backward_refs_trace;
+      backward_refs_trace =
+          (PixOrCopy*)malloc(num_pix * sizeof(*backward_refs_trace));
+      if (backward_refs_trace == NULL) {
+        free(backward_refs_lz77);
+        goto End;
+      }
+      if (VP8LBackwardReferencesTraceBackwards(width, height, recursion_level,
+                                               use_color_cache, argb,
+                                               cache_bits, backward_refs_trace,
+                                               &backward_refs_trace_size)) {
+        free(backward_refs_lz77);
+        *backward_refs = backward_refs_trace;
+        *backward_refs_size = backward_refs_trace_size;
+      } else {
+        free(backward_refs_trace);
+        *backward_refs = backward_refs_lz77;
+        *backward_refs_size = backward_refs_lz77_size;
+      }
+    } else {
       *backward_refs = backward_refs_lz77;
       *backward_refs_size = backward_refs_lz77_size;
-      free(backward_refs_rle);
-    } else {
-      *backward_refs = backward_refs_rle;
-      *backward_refs_size = backward_refs_rle_size;
-      free(backward_refs_lz77);
     }
+  } else {
+    free(backward_refs_lz77);
+    *backward_refs = backward_refs_rle;
+    *backward_refs_size = backward_refs_rle_size;
   }
 
   if (use_2d_locality) {
