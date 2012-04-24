@@ -35,7 +35,8 @@ static int IsFull(const HuffmanTree* const tree) {
 static void AssignChildren(HuffmanTree* const tree,
                            HuffmanTreeNode* const node) {
   HuffmanTreeNode* const children = tree->root_ + tree->num_nodes_;
-  node->children_ = children - node;
+  node->children_ = (int)(children - node);
+  assert(children - node == (int)(children - node));
   tree->num_nodes_ += 2;
   TreeNodeInit(children + 0);
   TreeNodeInit(children + 1);
