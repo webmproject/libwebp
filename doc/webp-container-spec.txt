@@ -121,10 +121,6 @@ _ChunkHeader('ABCD')_
   chunks, where 'ABCD' is the fourcc for the chunk. This element's
   size is 8 bytes.
 
-_chunk of type_
-
-: A chunk with a tag "ABCD".
-
 : Note that, in this specification, all chunk tag characters are in
   file order, not in byte order of a uint32 of any particular
   architecture.
@@ -413,8 +409,6 @@ Notes for frames containing VP8 data:
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                         Tile Canvas Y                         |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                           Tile Data                           |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Tile Canvas X: 32 bits (_uint32_)
 
@@ -424,12 +418,8 @@ Tile Canvas Y: 32 bits (_uint32_)
 
 : Y coordinate of the upper left corner of the tile.
 
-Tile Data: _Chunk Size_ - `8` bytes
-
-: VP8 data.
-
 This chunk contains information about a single tile and describes the
-bitstream chunk that follows it.
+(optional) alpha chunk and bitstream chunk that follows it.
 
 Notes for tiles containing VP8 data:
 
@@ -486,9 +476,7 @@ Either **ALL or NONE** of the tiles must contain this chunk.
 The alpha channel can be encoded either losslessly or with lossy
 preprocessing (quantization). After the optional preprocessing, the
 alpha values are encoded with a lossless compression method like
-zlib. Work is in progress to improve the compression gain further by
-exploring alternate compression methods and hence, the bitstream for
-the Alpha-chunk is still experimental and expected to change.
+zlib.
 
 #### Color profile
 
