@@ -27,6 +27,8 @@
 extern "C" {
 #endif
 
+#define MAX_HUFF_IMAGE_SIZE       (32 * 1024 * 1024)
+
 static const int kImageSizeBits = 14;
 
 static int CompareColors(const void* p1, const void* p2) {
@@ -985,10 +987,25 @@ static WebPEncodingError WriteImage(VP8LEncoder* const enc,
   return err;
 }
 
+static int GetHistoBits(const WebPConfig* const config,
+                        const WebPPicture* const pic) {
+  const int width = pic->width;
+  const int height = pic->height;
+  const int hist_size = sizeof(VP8LHistogram);
+  int histo_bits = 9 - (int)(config->quality / 16.f + .5f);
+  while (1) {
+    const size_t huff_image_size = VP8LSubSampleSize(width, histo_bits) *
+                                   VP8LSubSampleSize(height, histo_bits) *
+                                   hist_size;
+    if (huff_image_size <= MAX_HUFF_IMAGE_SIZE) break;
+    ++histo_bits;
+  }
+  return (histo_bits < 3) ? 3 : (histo_bits > 10) ? 10 : histo_bits;
+}
+
 static VP8LEncoder* InitVP8LEncoder(const WebPConfig* const config,
                                     WebPPicture* const picture) {
   const int method = config->method;
-  const int histo_bits = 9 - (int)(config->quality / 16.f + .5f);
   VP8LEncoder* enc = (VP8LEncoder*)malloc(sizeof(*enc));
   if (enc == NULL) {
     WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
@@ -999,10 +1016,8 @@ static VP8LEncoder* InitVP8LEncoder(const WebPConfig* const config,
   enc->config_ = config;
   enc->pic_ = picture;
   enc->use_lz77_ = 1;
-
-  enc->histo_bits_ =
-      (histo_bits < 3) ? 3 : (histo_bits > 8) ? 8 : histo_bits;
   enc->transform_bits_ = (method < 4) ? 5 : (method > 4) ? 3 : 4;
+  enc->histo_bits_ = GetHistoBits(config, picture);
 
   return enc;
 }
