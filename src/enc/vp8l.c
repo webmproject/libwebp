@@ -1002,7 +1002,8 @@ static WebPEncodingError WriteImage(VP8LEncoder* const enc,
 
 static VP8LEncoder* InitVP8LEncoder(const WebPConfig* const config,
                                     WebPPicture* const picture) {
-  int sampling_bits = 9 - (((int)config->quality + 8) >> 4);
+  const int method = config->method;
+  const int histo_bits = 9 - (int)(config->quality / 16.f + .5f);
   VP8LEncoder* enc = (VP8LEncoder*)malloc(sizeof(*enc));
   if (enc == NULL) {
     WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
@@ -1014,11 +1015,9 @@ static VP8LEncoder* InitVP8LEncoder(const WebPConfig* const config,
   enc->pic_ = picture;
   enc->use_lz77_ = 1;
 
-  if (sampling_bits > 8) sampling_bits = 8;
-  if (sampling_bits < 3) sampling_bits = 3;
-
-  enc->histo_bits_ = sampling_bits;
-  enc->transform_bits_ = sampling_bits;
+  enc->histo_bits_ =
+      (histo_bits < 3) ? 3 : (histo_bits > 8) ? 8 : histo_bits;
+  enc->transform_bits_ = (method < 4) ? 5 : (method > 4) ? 3 : 4;
 
   return enc;
 }
