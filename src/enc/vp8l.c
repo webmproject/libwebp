@@ -27,18 +27,12 @@
 extern "C" {
 #endif
 
-static const uint32_t kImageSizeBits = 14;
+static const int kImageSizeBits = 14;
 
 static int CompareColors(const void* p1, const void* p2) {
   const uint32_t a = *(const uint32_t*)p1;
   const uint32_t b = *(const uint32_t*)p2;
-  if (a < b) {
-    return -1;
-  }
-  if (a == b) {
-    return 0;
-  }
-  return 1;
+  return (a < b) ? -1 : (a > b) ? 1 : 0;
 }
 
 // If number of colors in the image is less than or equal to MAX_PALETTE_SIZE,
@@ -511,14 +505,6 @@ static int GetHuffBitLengthsAndCodes(
   return 0;
 }
 
-static void ShiftHistogramImage(uint32_t* image , int image_size) {
-  int i;
-  for (i = 0; i < image_size; ++i) {
-    image[i] <<= 8;
-    image[i] |= 0xff000000;
-  }
-}
-
 static void ClearHuffmanTreeIfOnlyOneSymbol(const int num_symbols,
                                             uint8_t* lengths,
                                             uint16_t* symbols) {
@@ -758,8 +744,8 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
       VP8LSubSampleSize(height, histogram_bits);
   VP8LHistogram** histogram_image;
   PixOrCopy* backward_refs;
-  uint32_t* histogram_symbols = (uint32_t*)
-      calloc(histogram_image_xysize, sizeof(*histogram_symbols));
+  const size_t histo_size = histogram_image_xysize * sizeof(uint32_t);
+  uint32_t* const histogram_symbols = (uint32_t*)calloc(1, histo_size);
 
   if (histogram_symbols == NULL) goto Error;
 
@@ -790,36 +776,35 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
     goto Error;
   }
 
-  // Huffman image + meta huffman.
-  write_histogram_image = (histogram_image_size > 1);
-  VP8LWriteBits(bw, 1, write_histogram_image);
-  if (write_histogram_image) {
-    int image_size_bits;
-    uint32_t* histogram_argb = (uint32_t*)
-        malloc(histogram_image_xysize * sizeof(*histogram_argb));
-    if (histogram_argb == NULL) goto Error;
-    memcpy(histogram_argb, histogram_symbols,
-           histogram_image_xysize * sizeof(*histogram_argb));
-
-    ShiftHistogramImage(histogram_argb, histogram_image_xysize);
-    VP8LWriteBits(bw, 4, histogram_bits);
-    if (!EncodeImageInternal(bw, histogram_argb,
-                             VP8LSubSampleSize(width, histogram_bits),
-                             VP8LSubSampleSize(height, histogram_bits),
-                             quality, 0, 0)) {
-      free(histogram_argb);
-      goto Error;
-    }
-    image_size_bits = VP8LBitsLog2Ceiling(histogram_image_size - 1);
-    VP8LWriteBits(bw, 4, image_size_bits);
-    VP8LWriteBits(bw, image_size_bits, histogram_image_size - 2);
-    free(histogram_argb);
-  }
-
   // Color Cache parameters.
   VP8LWriteBits(bw, 1, use_color_cache);
   if (use_color_cache) {
     VP8LWriteBits(bw, 4, cache_bits);
+  }
+
+  // Huffman image + meta huffman.
+  write_histogram_image = (histogram_image_size > 1);
+  VP8LWriteBits(bw, 1, write_histogram_image);
+  if (write_histogram_image) {
+    uint32_t* const histogram_argb = (uint32_t*)malloc(histo_size);
+    int max_index = 0;
+    if (histogram_argb == NULL) goto Error;
+    for (i = 0; i < histogram_image_xysize; ++i) {
+      const int index = histogram_symbols[i] & 0xffff;
+      histogram_argb[i] = 0xff000000 | (index << 8);
+      if (index >= max_index) {
+        max_index = index + 1;
+      }
+    }
+    histogram_image_size = max_index;
+
+    VP8LWriteBits(bw, 4, histogram_bits);
+    ok = EncodeImageInternal(bw, histogram_argb,
+                             VP8LSubSampleSize(width, histogram_bits),
+                             VP8LSubSampleSize(height, histogram_bits),
+                             quality, 0, 0);
+    free(histogram_argb);
+    if (!ok) goto Error;
   }
 
   // Store Huffman codes.
