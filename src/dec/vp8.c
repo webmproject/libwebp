@@ -94,7 +94,7 @@ int VP8CheckSignature(const uint8_t* const data, size_t data_size) {
 }
 
 int VP8GetInfo(const uint8_t* data, size_t data_size, size_t chunk_size,
-               int* width, int* height) {
+               int* const width, int* const height) {
   if (data == NULL || data_size < VP8_FRAME_HEADER_SIZE) {
     return 0;         // not enough data
   }

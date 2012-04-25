@@ -87,15 +87,6 @@ typedef struct {
 
 // in vp8l.c
 
-// Returns true if the next byte(s) in data is a VP8L signature.
-int VP8LCheckSignature(const uint8_t* const data, size_t size);
-
-// Validates the VP8L data-header and retrieves basic header information viz
-// width, height and alpha. Returns 0 in case of formatting error.
-// width/height/has_alpha can be passed NULL.
-int VP8LGetInfo(const uint8_t* data, size_t data_size,  // data available so far
-                int* const width, int* const height, int* const has_alpha);
-
 // Decodes a raw image stream (without header) and store the alpha data
 // into *output, which must be of size width x height. Returns false in case
 // of error.
