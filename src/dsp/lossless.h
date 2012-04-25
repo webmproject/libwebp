@@ -30,7 +30,7 @@ struct VP8LTransform;  // Defined in dec/vp8li.h.
 // The data_in & data_out are source and destination data pointers respectively
 // corresponding to the intermediate row (row_start).
 void VP8LInverseTransform(const struct VP8LTransform* const transform,
-                          size_t row_start, size_t row_end,
+                          int row_start, int row_end,
                           uint32_t* const data_in, uint32_t* const data_out);
 
 //------------------------------------------------------------------------------
