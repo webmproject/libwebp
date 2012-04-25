@@ -53,8 +53,8 @@ void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const p,
     ++p->red_[PixOrCopyLiteral(&v, 2)];
     ++p->literal_[PixOrCopyLiteral(&v, 1)];
     ++p->blue_[PixOrCopyLiteral(&v, 0)];
-  } else if (PixOrCopyIsPaletteIx(&v)) {
-    int literal_ix = 256 + kLengthCodes + PixOrCopyPaletteIx(&v);
+  } else if (PixOrCopyIsCacheIdx(&v)) {
+    int literal_ix = 256 + kLengthCodes + PixOrCopyCacheIdx(&v);
     ++p->literal_[literal_ix];
   } else {
     int code, extra_bits_count, extra_bits_value;

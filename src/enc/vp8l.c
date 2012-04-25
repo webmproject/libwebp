@@ -702,8 +702,8 @@ static void StoreImageToBitMask(
     const int histogram_ix = histogram_symbols[histo_bits ?
                                                (y >> histo_bits) * histo_xsize +
                                                (x >> histo_bits) : 0];
-    if (PixOrCopyIsPaletteIx(&v)) {
-      const int code = PixOrCopyPaletteIx(&v);
+    if (PixOrCopyIsCacheIdx(&v)) {
+      const int code = PixOrCopyCacheIdx(&v);
       int literal_ix = 256 + kLengthCodes + code;
       VP8LWriteBits(bw, bitdepths[5 * histogram_ix][literal_ix],
                     bit_symbols[5 * histogram_ix][literal_ix]);
@@ -719,7 +719,7 @@ static void StoreImageToBitMask(
       int bits, n_bits;
       int code, distance;
       int len_ix;
-      PixOrCopyLengthCodeAndBits(&v, &code, &n_bits, &bits);
+      PrefixEncode(v.len, &code, &n_bits, &bits);
       len_ix = 256 + code;
       VP8LWriteBits(bw, bitdepths[5 * histogram_ix][len_ix],
                     bit_symbols[5 * histogram_ix][len_ix]);
@@ -1202,8 +1202,8 @@ int VP8LEncodeImage(const WebPConfig* const config,
 
   if (cache_bits > 0) {
     if (quality > 25) {
-      if (!VP8LCalculateEstimateForPaletteSize(enc->argb_, enc->current_width_,
-                                               height, &cache_bits)) {
+      if (!VP8LCalculateEstimateForCacheSize(enc->argb_, enc->current_width_,
+                                             height, &cache_bits)) {
         err = VP8_ENC_ERROR_INVALID_CONFIGURATION;
         goto Error;
       }
