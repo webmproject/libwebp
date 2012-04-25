@@ -165,102 +165,107 @@ static void BundleColorMap(const uint32_t* const argb,
   }
 }
 
+// TODO(urvang): should be moved to backward_reference.h and used more
+// as function parameters.
+typedef struct {
+  PixOrCopy* refs;
+  int size;
+} VP8LBackwardRefs;
+
+static void VP8LInitBackwardRefs(VP8LBackwardRefs* const refs) {
+  if (refs != NULL) {
+    refs->refs = NULL;
+    refs->size = 0;
+  }
+}
+
+static void VP8LClearBackwardRefs(VP8LBackwardRefs* const refs) {
+  if (refs != NULL) {
+    free(refs->refs);
+    VP8LInitBackwardRefs(refs);
+  }
+}
+
 static int GetBackwardReferences(int width, int height,
                                  const uint32_t* argb,
                                  int quality, int use_color_cache,
                                  int cache_bits, int use_2d_locality,
-                                 PixOrCopy** backward_refs,
-                                 int* backward_refs_size) {
+                                 VP8LBackwardRefs* const best) {
   int ok = 0;
-  // Backward Reference using LZ77.
   int lz77_is_useful;
-  int backward_refs_rle_size;
-  int backward_refs_lz77_size;
+  VP8LBackwardRefs refs_rle, refs_lz77;
   const int num_pix = width * height;
-  VP8LHistogram* histo_rle;
-  PixOrCopy* backward_refs_lz77 = (PixOrCopy*)
-      malloc(num_pix * sizeof(*backward_refs_lz77));
-  PixOrCopy* backward_refs_rle = (PixOrCopy*)
-      malloc(num_pix * sizeof(*backward_refs_lz77));
-  VP8LHistogram* histo_lz77 = (VP8LHistogram*)malloc(2 * sizeof(*histo_lz77));
-  if (backward_refs_lz77 == NULL || backward_refs_rle == NULL ||
-      histo_lz77 == NULL) {
-    free(backward_refs_lz77);
-    free(backward_refs_rle);
+  refs_rle.refs = (PixOrCopy*)malloc(num_pix * sizeof(*refs_rle.refs));
+  refs_lz77.refs = (PixOrCopy*)malloc(num_pix * sizeof(*refs_lz77.refs));
+
+  VP8LInitBackwardRefs(best);
+  if (refs_rle.refs == NULL || refs_lz77.refs == NULL) {
+ Error1:
+    VP8LClearBackwardRefs(&refs_rle);
+    VP8LClearBackwardRefs(&refs_lz77);
     goto End;
   }
-  *backward_refs = NULL;
-  histo_rle = histo_lz77 + 1;
 
   if (!VP8LBackwardReferencesHashChain(width, height, use_color_cache,
                                        argb, cache_bits, quality,
-                                       backward_refs_lz77,
-                                       &backward_refs_lz77_size)) {
+                                       refs_lz77.refs, &refs_lz77.size)) {
     goto End;
   }
-  VP8LHistogramInit(histo_lz77, cache_bits);
-  VP8LHistogramCreate(histo_lz77, backward_refs_lz77, backward_refs_lz77_size);
-
   // Backward Reference using RLE only.
-  VP8LBackwardReferencesRle(width, height, argb, backward_refs_rle,
-                            &backward_refs_rle_size);
+  VP8LBackwardReferencesRle(width, height, argb, refs_rle.refs, &refs_rle.size);
 
-  VP8LHistogramInit(histo_rle, cache_bits);
-  VP8LHistogramCreate(histo_rle, backward_refs_rle, backward_refs_rle_size);
-
-  // Check if LZ77 is useful.
-  lz77_is_useful = (VP8LHistogramEstimateBits(histo_rle) >
-                    VP8LHistogramEstimateBits(histo_lz77));
+  {
+    int bit_cost_lz77, bit_cost_rle;
+    VP8LHistogram* const histo = (VP8LHistogram*)malloc(sizeof(*histo));
+    if (histo == NULL) goto Error1;
+    // Evaluate lz77 coding
+    VP8LHistogramInit(histo, cache_bits);
+    VP8LHistogramCreate(histo, refs_lz77.refs, refs_lz77.size);
+    bit_cost_lz77 = (int)VP8LHistogramEstimateBits(histo);
+    // Evaluate RLE coding
+    VP8LHistogramInit(histo, cache_bits);
+    VP8LHistogramCreate(histo, refs_rle.refs, refs_rle.size);
+    bit_cost_rle = (int)VP8LHistogramEstimateBits(histo);
+    // Decide if LZ77 is useful.
+    lz77_is_useful = (bit_cost_lz77 < bit_cost_rle);
+    free(histo);
+  }
 
   // Choose appropriate backward reference.
   if (lz77_is_useful) {
     // TraceBackwards is costly. Run it for higher qualities.
     const int try_lz77_trace_backwards = (quality >= 75);
-    free(backward_refs_rle);
+    *best = refs_lz77;   // default guess: lz77 is better
+    VP8LClearBackwardRefs(&refs_rle);
     if (try_lz77_trace_backwards) {
       const int recursion_level = (num_pix < 320 * 200) ? 1 : 0;
-      int backward_refs_trace_size;
-      PixOrCopy* backward_refs_trace;
-      backward_refs_trace =
-          (PixOrCopy*)malloc(num_pix * sizeof(*backward_refs_trace));
-      if (backward_refs_trace == NULL) {
-        free(backward_refs_lz77);
+      VP8LBackwardRefs refs_trace;
+      refs_trace.refs = (PixOrCopy*)malloc(num_pix * sizeof(*refs_trace.refs));
+      if (refs_trace.refs == NULL) {
         goto End;
       }
       if (VP8LBackwardReferencesTraceBackwards(width, height, recursion_level,
-                                               use_color_cache, argb,
-                                               cache_bits, backward_refs_trace,
-                                               &backward_refs_trace_size)) {
-        free(backward_refs_lz77);
-        *backward_refs = backward_refs_trace;
-        *backward_refs_size = backward_refs_trace_size;
-      } else {
-        free(backward_refs_trace);
-        *backward_refs = backward_refs_lz77;
-        *backward_refs_size = backward_refs_lz77_size;
+                                               use_color_cache,
+                                               argb, cache_bits,
+                                               refs_trace.refs,
+                                               &refs_trace.size)) {
+        VP8LClearBackwardRefs(&refs_lz77);
+        *best = refs_trace;
       }
-    } else {
-      *backward_refs = backward_refs_lz77;
-      *backward_refs_size = backward_refs_lz77_size;
     }
   } else {
-    free(backward_refs_lz77);
-    *backward_refs = backward_refs_rle;
-    *backward_refs_size = backward_refs_rle_size;
+    VP8LClearBackwardRefs(&refs_lz77);
+    *best = refs_rle;
   }
 
-  if (use_2d_locality) {
-    // Use backward reference with 2D locality.
-    VP8LBackwardReferences2DLocality(width, *backward_refs_size,
-                                     *backward_refs);
+  if (use_2d_locality) {  // Use backward reference with 2D locality.
+    VP8LBackwardReferences2DLocality(width, best->size, best->refs);
   }
   ok = 1;
 
 End:
-  free(histo_lz77);
   if (!ok) {
-    free(*backward_refs);
-    *backward_refs = NULL;
+    VP8LClearBackwardRefs(best);
   }
   return ok;
 }
@@ -739,13 +744,12 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   uint8_t** bit_lengths = NULL;
   uint16_t** bit_codes = NULL;
   const int use_2d_locality = 1;
-  int backward_refs_size;
   const int use_color_cache = (cache_bits > 0);
   const int color_cache_size = use_color_cache ? (1 << cache_bits) : 0;
   const int histogram_image_xysize = VP8LSubSampleSize(width, histogram_bits) *
       VP8LSubSampleSize(height, histogram_bits);
   VP8LHistogram** histogram_image;
-  PixOrCopy* backward_refs;
+  VP8LBackwardRefs refs;
   const size_t histo_size = histogram_image_xysize * sizeof(uint32_t);
   uint32_t* const histogram_symbols = (uint32_t*)calloc(1, histo_size);
 
@@ -754,11 +758,11 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   // Calculate backward references from ARGB image.
   if (!GetBackwardReferences(width, height, argb, quality,
                              use_color_cache, cache_bits, use_2d_locality,
-                             &backward_refs, &backward_refs_size)) {
+                             &refs)) {
     goto Error;
   }
   // Build histogram image & symbols from backward references.
-  if (!GetHistImageSymbols(width, height, backward_refs, backward_refs_size,
+  if (!GetHistImageSymbols(width, height, refs.refs, refs.size,
                            quality, histogram_bits, cache_bits,
                            &histogram_image, &histogram_image_size,
                            histogram_symbols)) {
@@ -834,16 +838,15 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
                                     bit_codes[i]);
   }
   // Store actual literals.
-  StoreImageToBitMask(bw, width, histogram_bits, backward_refs,
-                      backward_refs_size, histogram_symbols,
-                      bit_lengths, bit_codes);
+  StoreImageToBitMask(bw, width, histogram_bits, refs.refs, refs.size,
+                      histogram_symbols, bit_lengths, bit_codes);
   ok = 1;
 
  Error:
   if (!ok) {
     DeleteHistograms(histogram_image, histogram_image_size);
   }
-  free(backward_refs);
+  VP8LClearBackwardRefs(&refs);
   for (i = 0; i < 5 * histogram_image_size; ++i) {
     free(bit_lengths[i]);
     free(bit_codes[i]);
