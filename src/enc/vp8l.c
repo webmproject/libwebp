@@ -29,7 +29,17 @@ extern "C" {
 
 #define MAX_HUFF_IMAGE_SIZE       (32 * 1024 * 1024)
 
-static const int kImageSizeBits = 14;
+// TODO(vikas): find a common place between enc and dec for these:
+#define PREDICTOR_TRANSFORM      0
+#define CROSS_COLOR_TRANSFORM    1
+#define SUBTRACT_GREEN           2
+#define COLOR_INDEXING_TRANSFORM 3
+#define TRANSFORM_PRESENT 1
+
+#define IMAGE_SIZE_BITS 14
+
+// -----------------------------------------------------------------------------
+// Palette
 
 static int CompareColors(const void* p1, const void* p2) {
   const uint32_t a = *(const uint32_t*)p1;
@@ -103,14 +113,14 @@ static int AnalyzeEntropy(const uint32_t const *argb, int xsize, int ysize,
   VP8LHistogramInit(predicted, 0);
   VP8LHistogramInit(nonpredicted, 0);
   for (i = 1; i < xsize * ysize; ++i) {
-    uint32_t pix_diff;
-    if ((argb[i] == argb[i - 1]) ||
-        (i >= xsize && argb[i] == argb[i - xsize])) {
+    const uint32_t pix = argb[i];
+    const uint32_t pix_diff = VP8LSubPixels(pix, argb[i - 1]);
+    if (pix_diff == 0) continue;
+    if (i >= xsize && pix == argb[i - xsize]) {
       continue;
     }
     VP8LHistogramAddSinglePixOrCopy(nonpredicted,
-                                    PixOrCopyCreateLiteral(argb[i]));
-    pix_diff = VP8LSubPixels(argb[i], argb[i - 1]);
+                                    PixOrCopyCreateLiteral(pix));
     VP8LHistogramAddSinglePixOrCopy(predicted,
                                     PixOrCopyCreateLiteral(pix_diff));
   }
@@ -122,7 +132,7 @@ static int AnalyzeEntropy(const uint32_t const *argb, int xsize, int ysize,
 
 static int VP8LEncAnalyze(VP8LEncoder* const enc) {
   const WebPPicture* const pic = enc->pic_;
-  assert(pic && pic->argb);
+  assert(pic != NULL && pic->argb != NULL);
 
   enc->use_palette_ =
         AnalyzeAndCreatePalette(pic->argb, pic->width * pic->height,
@@ -142,28 +152,7 @@ static int VP8LEncAnalyze(VP8LEncoder* const enc) {
   return 1;
 }
 
-// Bundles multiple (2, 4 or 8) pixels into a single pixel.
-// Returns the new xsize.
-static void BundleColorMap(const uint32_t* const argb,
-                           int width, int height, int xbits,
-                           uint32_t* bundled_argb, int xs) {
-  int x, y;
-  const int bit_depth = 1 << (3 - xbits);
-  uint32_t code = 0;
-
-  for (y = 0; y < height; ++y) {
-    for (x = 0; x < width; ++x) {
-      const int mask = (1 << xbits) - 1;
-      const int xsub = x & mask;
-      if (xsub == 0) {
-        code = 0;
-      }
-      // TODO(vikasa): simplify the bundling logic.
-      code |= (argb[y * width + x] & 0xff00) << (bit_depth * xsub);
-      bundled_argb[y * xs + (x >> xbits)] = 0xff000000 | code;
-    }
-  }
-}
+// -----------------------------------------------------------------------------
 
 // TODO(urvang): should be moved to backward_reference.h and used more
 // as function parameters.
@@ -281,8 +270,7 @@ static void DeleteHistograms(VP8LHistogram** histograms, int size) {
 }
 
 static int GetHistImageSymbols(int xsize, int ysize,
-                               PixOrCopy* backward_refs,
-                               int backward_refs_size,
+                               const VP8LBackwardRefs* const refs,
                                int quality, int histogram_bits,
                                int cache_bits,
                                VP8LHistogram*** histogram_image,
@@ -296,7 +284,7 @@ static int GetHistImageSymbols(int xsize, int ysize,
 
   *histogram_image = NULL;
   if (!VP8LHistogramBuildImage(xsize, ysize, histogram_bits, cache_bits,
-                               backward_refs, backward_refs_size,
+                               refs->refs, refs->size,
                                &histogram_image_raw,
                                &histogram_image_raw_size)) {
     goto Error;
@@ -682,7 +670,7 @@ static int StoreHuffmanCode(VP8LBitWriter* const bw,
 
 static void StoreImageToBitMask(
     VP8LBitWriter* const bw, int width, int histo_bits,
-    const PixOrCopy* literals, int literals_size,
+    const VP8LBackwardRefs* const refs,
     const uint32_t* histogram_symbols,
     uint8_t** const bitdepths, uint16_t** const bit_symbols) {
   // x and y trace the position in the image.
@@ -690,21 +678,21 @@ static void StoreImageToBitMask(
   int y = 0;
   const int histo_xsize = histo_bits ? VP8LSubSampleSize(width, histo_bits) : 1;
   int i;
-  for (i = 0; i < literals_size; ++i) {
-    const PixOrCopy v = literals[i];
+  for (i = 0; i < refs->size; ++i) {
+    const PixOrCopy* const v = &refs->refs[i];
     const int histogram_ix = histogram_symbols[histo_bits ?
                                                (y >> histo_bits) * histo_xsize +
                                                (x >> histo_bits) : 0];
-    if (PixOrCopyIsCacheIdx(&v)) {
-      const int code = PixOrCopyCacheIdx(&v);
-      int literal_ix = 256 + kLengthCodes + code;
+    if (PixOrCopyIsCacheIdx(v)) {
+      const int code = PixOrCopyCacheIdx(v);
+      const int literal_ix = 256 + kLengthCodes + code;
       VP8LWriteBits(bw, bitdepths[5 * histogram_ix][literal_ix],
                     bit_symbols[5 * histogram_ix][literal_ix]);
-    } else if (PixOrCopyIsLiteral(&v)) {
+    } else if (PixOrCopyIsLiteral(v)) {
       static const int order[] = {1, 2, 0, 3};
       int k;
       for (k = 0; k < 4; ++k) {
-        const int code = PixOrCopyLiteral(&v, order[k]);
+        const int code = PixOrCopyLiteral(v, order[k]);
         VP8LWriteBits(bw, bitdepths[5 * histogram_ix + k][code],
                       bit_symbols[5 * histogram_ix + k][code]);
       }
@@ -712,19 +700,19 @@ static void StoreImageToBitMask(
       int bits, n_bits;
       int code, distance;
       int len_ix;
-      PrefixEncode(v.len, &code, &n_bits, &bits);
+      PrefixEncode(v->len, &code, &n_bits, &bits);
       len_ix = 256 + code;
       VP8LWriteBits(bw, bitdepths[5 * histogram_ix][len_ix],
                     bit_symbols[5 * histogram_ix][len_ix]);
       VP8LWriteBits(bw, n_bits, bits);
 
-      distance = PixOrCopyDistance(&v);
+      distance = PixOrCopyDistance(v);
       PrefixEncode(distance, &code, &n_bits, &bits);
       VP8LWriteBits(bw, bitdepths[5 * histogram_ix + 4][code],
                     bit_symbols[5 * histogram_ix + 4][code]);
       VP8LWriteBits(bw, n_bits, bits);
     }
-    x += PixOrCopyLength(&v);
+    x += PixOrCopyLength(v);
     while (x >= width) {
       x -= width;
       ++y;
@@ -762,7 +750,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
     goto Error;
   }
   // Build histogram image & symbols from backward references.
-  if (!GetHistImageSymbols(width, height, refs.refs, refs.size,
+  if (!GetHistImageSymbols(width, height, &refs,
                            quality, histogram_bits, cache_bits,
                            &histogram_image, &histogram_image_size,
                            histogram_symbols)) {
@@ -838,7 +826,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
                                     bit_codes[i]);
   }
   // Store actual literals.
-  StoreImageToBitMask(bw, width, histogram_bits, refs.refs, refs.size,
+  StoreImageToBitMask(bw, width, histogram_bits, &refs,
                       histogram_symbols, bit_lengths, bit_codes);
   ok = 1;
 
@@ -858,51 +846,60 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   return ok;
 }
 
-static int EvalAndApplySubtractGreen(VP8LBitWriter* const bw,
-                                     VP8LEncoder* const enc,
-                                     int width, int height) {
+// -----------------------------------------------------------------------------
+// Transforms
+
+// Check if it would be a good idea to subtract green from red and blue. We
+// only impact entropy in red/blue components, don't bother to look at others.
+static int EvalAndApplySubtractGreen(const VP8LEncoder* const enc,
+                                     int width, int height,
+                                     VP8LBitWriter* const bw) {
   if (!enc->use_palette_) {
     int i;
-    VP8LHistogram* before = NULL;
-    // Check if it would be a good idea to subtract green from red and blue.
-    VP8LHistogram* after = (VP8LHistogram*)malloc(2 * sizeof(*after));
-    if (after == NULL) return 0;
-    before = after + 1;
+    const uint32_t* const argb = enc->argb_;
+    int bit_cost_before, bit_cost_after;
+    VP8LHistogram* const histo = (VP8LHistogram*)malloc(sizeof(*histo));
+    if (histo == NULL) return 0;
 
-    VP8LHistogramInit(before, 1);
-    VP8LHistogramInit(after, 1);
+    VP8LHistogramInit(histo, 1);
     for (i = 0; i < width * height; ++i) {
-      // We only impact entropy in red and blue components, don't bother
-      // to look at others.
-      const uint32_t c = enc->argb_[i];
-      const int green = (c >> 8) & 0xff;
-      ++(before->red_[(c >> 16) & 0xff]);
-      ++(before->blue_[c & 0xff]);
-      ++(after->red_[((c >> 16) - green) & 0xff]);
-      ++(after->blue_[(c - green) & 0xff]);
+      const uint32_t c = argb[i];
+      ++histo->red_[(c >> 16) & 0xff];
+      ++histo->blue_[(c >> 0) & 0xff];
     }
+    bit_cost_before = VP8LHistogramEstimateBits(histo);
+
+    VP8LHistogramInit(histo, 1);
+    for (i = 0; i < width * height; ++i) {
+      const uint32_t c = argb[i];
+      const int green = (c >> 8) & 0xff;
+      ++histo->red_[((c >> 16) - green) & 0xff];
+      ++histo->blue_[((c >> 0) - green) & 0xff];
+    }
+    bit_cost_after = VP8LHistogramEstimateBits(histo);
+    free(histo);
+
     // Check if subtracting green yields low entropy.
-    if (VP8LHistogramEstimateBits(after) < VP8LHistogramEstimateBits(before)) {
-      VP8LWriteBits(bw, 1, 1);
-      VP8LWriteBits(bw, 2, 2);
+    if (bit_cost_after < bit_cost_before) {
+      VP8LWriteBits(bw, 1, TRANSFORM_PRESENT);
+      VP8LWriteBits(bw, 2, SUBTRACT_GREEN);
       VP8LSubtractGreenFromBlueAndRed(enc->argb_, width * height);
     }
-    free(after);
   }
   return 1;
 }
 
-static int ApplyPredictFilter(VP8LBitWriter* const bw,
-                              VP8LEncoder* const enc,
-                              int width, int height, int quality) {
+static int ApplyPredictFilter(const VP8LEncoder* const enc,
+                              int width, int height, int quality,
+                              VP8LBitWriter* const bw) {
   const int pred_bits = enc->transform_bits_;
   const int transform_width = VP8LSubSampleSize(width, pred_bits);
   const int transform_height = VP8LSubSampleSize(height, pred_bits);
 
   VP8LResidualImage(width, height, pred_bits, enc->argb_, enc->argb_scratch_,
                     enc->transform_data_);
-  VP8LWriteBits(bw, 1, 1);
-  VP8LWriteBits(bw, 2, 0);
+  VP8LWriteBits(bw, 1, TRANSFORM_PRESENT);
+  VP8LWriteBits(bw, 2, PREDICTOR_TRANSFORM);
   VP8LWriteBits(bw, 4, pred_bits);
   if (!EncodeImageInternal(bw, enc->transform_data_,
                            transform_width, transform_height, quality, 0, 0)) {
@@ -911,9 +908,9 @@ static int ApplyPredictFilter(VP8LBitWriter* const bw,
   return 1;
 }
 
-static int ApplyCrossColorFilter(VP8LBitWriter* const bw,
-                                 VP8LEncoder* const enc,
-                                 int width, int height, int quality) {
+static int ApplyCrossColorFilter(const VP8LEncoder* const enc,
+                                 int width, int height, int quality,
+                                 VP8LBitWriter* const bw) {
   const int ccolor_transform_bits = enc->transform_bits_;
   const int transform_width = VP8LSubSampleSize(width, ccolor_transform_bits);
   const int transform_height = VP8LSubSampleSize(height, ccolor_transform_bits);
@@ -921,8 +918,8 @@ static int ApplyCrossColorFilter(VP8LBitWriter* const bw,
 
   VP8LColorSpaceTransform(width, height, ccolor_transform_bits, step,
                           enc->argb_, enc->transform_data_);
-  VP8LWriteBits(bw, 1, 1);
-  VP8LWriteBits(bw, 2, 1);
+  VP8LWriteBits(bw, 1, TRANSFORM_PRESENT);
+  VP8LWriteBits(bw, 2, CROSS_COLOR_TRANSFORM);
   VP8LWriteBits(bw, 4, ccolor_transform_bits);
   if (!EncodeImageInternal(bw, enc->transform_data_,
                            transform_width, transform_height, quality, 0, 0)) {
@@ -931,6 +928,8 @@ static int ApplyCrossColorFilter(VP8LBitWriter* const bw,
   return 1;
 }
 
+// -----------------------------------------------------------------------------
+
 static void PutLE32(uint8_t* const data, uint32_t val) {
   data[0] = (val >>  0) & 0xff;
   data[1] = (val >>  8) & 0xff;
@@ -938,7 +937,7 @@ static void PutLE32(uint8_t* const data, uint32_t val) {
   data[3] = (val >> 24) & 0xff;
 }
 
-static WebPEncodingError WriteRiffHeader(VP8LEncoder* const enc,
+static WebPEncodingError WriteRiffHeader(const VP8LEncoder* const enc,
                                          size_t riff_size, size_t vp8l_size) {
   const WebPPicture* const pic = enc->pic_;
   uint8_t riff[HEADER_SIZE + SIGNATURE_SIZE] = {
@@ -956,7 +955,17 @@ static WebPEncodingError WriteRiffHeader(VP8LEncoder* const enc,
   return VP8_ENC_OK;
 }
 
-static WebPEncodingError WriteImage(VP8LEncoder* const enc,
+static void WriteImageSize(VP8LEncoder* const enc, VP8LBitWriter* const bw) {
+  WebPPicture* const pic = enc->pic_;
+  const int width = pic->width - 1;
+  const int height = pic->height -1;
+  assert(width < WEBP_MAX_DIMENSION && height < WEBP_MAX_DIMENSION);
+
+  VP8LWriteBits(bw, IMAGE_SIZE_BITS, width);
+  VP8LWriteBits(bw, IMAGE_SIZE_BITS, height);
+}
+
+static WebPEncodingError WriteImage(const VP8LEncoder* const enc,
                                     VP8LBitWriter* const bw) {
   size_t riff_size, vp8l_size, webpll_size, pad;
   const WebPPicture* const pic = enc->pic_;
@@ -990,60 +999,12 @@ static WebPEncodingError WriteImage(VP8LEncoder* const enc,
   return err;
 }
 
-static int GetHistoBits(const WebPConfig* const config,
-                        const WebPPicture* const pic) {
-  const int width = pic->width;
-  const int height = pic->height;
-  const int hist_size = sizeof(VP8LHistogram);
-  int histo_bits = 9 - (int)(config->quality / 16.f + .5f);
-  while (1) {
-    const size_t huff_image_size = VP8LSubSampleSize(width, histo_bits) *
-                                   VP8LSubSampleSize(height, histo_bits) *
-                                   hist_size;
-    if (huff_image_size <= MAX_HUFF_IMAGE_SIZE) break;
-    ++histo_bits;
-  }
-  return (histo_bits < 3) ? 3 : (histo_bits > 10) ? 10 : histo_bits;
-}
-
-static VP8LEncoder* InitVP8LEncoder(const WebPConfig* const config,
-                                    WebPPicture* const picture) {
-  const int method = config->method;
-  VP8LEncoder* enc = (VP8LEncoder*)malloc(sizeof(*enc));
-  if (enc == NULL) {
-    WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
-    return NULL;
-  }
-  memset(enc, 0, sizeof(*enc));
-
-  enc->config_ = config;
-  enc->pic_ = picture;
-  enc->use_lz77_ = 1;
-  enc->transform_bits_ = (method < 4) ? 5 : (method > 4) ? 3 : 4;
-  enc->histo_bits_ = GetHistoBits(config, picture);
-
-  return enc;
-}
-
-static void WriteImageSize(VP8LEncoder* const enc, VP8LBitWriter* const bw) {
-  WebPPicture* const pic = enc->pic_;
-  const int width = pic->width - 1;
-  const int height = pic->height -1;
-  assert(width < WEBP_MAX_DIMENSION && height < WEBP_MAX_DIMENSION);
-
-  VP8LWriteBits(bw, kImageSizeBits, width);
-  VP8LWriteBits(bw, kImageSizeBits, height);
-}
-
-static void DeleteVP8LEncoder(VP8LEncoder* enc) {
-  free(enc->argb_);
-  free(enc);
-}
+// -----------------------------------------------------------------------------
 
 // Allocates the memory for argb (W x H) buffer, 2 rows of context for
 // prediction and transform data.
 static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
-                                                 int height, int width) {
+                                                 int width, int height) {
   WebPEncodingError err = VP8_ENC_OK;
   const size_t tile_size = 1 << enc->transform_bits_;
   const size_t image_size = height * width;
@@ -1069,6 +1030,29 @@ static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
   return err;
 }
 
+// Bundles multiple (2, 4 or 8) pixels into a single pixel.
+// Returns the new xsize.
+static void BundleColorMap(const uint32_t* const argb,
+                           int width, int height, int xbits,
+                           uint32_t* bundled_argb, int xs) {
+  int x, y;
+  const int bit_depth = 1 << (3 - xbits);
+  uint32_t code = 0;
+
+  for (y = 0; y < height; ++y) {
+    for (x = 0; x < width; ++x) {
+      const int mask = (1 << xbits) - 1;
+      const int xsub = x & mask;
+      if (xsub == 0) {
+        code = 0;
+      }
+      // TODO(vikasa): simplify the bundling logic.
+      code |= (argb[y * width + x] & 0xff00) << (bit_depth * xsub);
+      bundled_argb[y * xs + (x >> xbits)] = 0xff000000 | code;
+    }
+  }
+}
+
 // Note: Expects "enc->palette_" to be set properly.
 // Also, "enc->palette_" will be modified after this call and should not be used
 // later.
@@ -1077,7 +1061,7 @@ static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
                                       int width, int height, int quality) {
   WebPEncodingError err = VP8_ENC_OK;
   int i;
-  uint32_t* argb = enc->pic_->argb;
+  uint32_t* const argb = enc->pic_->argb;
   uint32_t* const palette = enc->palette_;
   const int palette_size = enc->palette_size_;
 
@@ -1094,8 +1078,8 @@ static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
   }
 
   // Save palette to bitstream.
-  VP8LWriteBits(bw, 1, 1);
-  VP8LWriteBits(bw, 2, 3);
+  VP8LWriteBits(bw, 1, TRANSFORM_PRESENT);
+  VP8LWriteBits(bw, 2, COLOR_INDEXING_TRANSFORM);
   VP8LWriteBits(bw, 8, palette_size - 1);
   for (i = palette_size - 1; i >= 1; --i) {
     palette[i] = VP8LSubPixels(palette[i], palette[i - 1]);
@@ -1113,7 +1097,7 @@ static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
     } else if (palette_size <= 4) {
       xbits = 2;
     }
-    err = AllocateTransformBuffer(enc, height, VP8LSubSampleSize(width, xbits));
+    err = AllocateTransformBuffer(enc, VP8LSubSampleSize(width, xbits), height);
     if (err != VP8_ENC_OK) goto Error;
     BundleColorMap(argb, width, height, xbits, enc->argb_, enc->current_width_);
   }
@@ -1122,10 +1106,60 @@ static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
   return err;
 }
 
+// -----------------------------------------------------------------------------
+
+static int GetHistoBits(const WebPConfig* const config,
+                        const WebPPicture* const pic) {
+  const int width = pic->width;
+  const int height = pic->height;
+  const size_t hist_size = sizeof(VP8LHistogram);
+  int histo_bits = 9 - (int)(config->quality / 16.f + .5f);
+  while (1) {
+    const size_t huff_image_size = VP8LSubSampleSize(width, histo_bits) *
+                                   VP8LSubSampleSize(height, histo_bits) *
+                                   hist_size;
+    if (huff_image_size <= MAX_HUFF_IMAGE_SIZE) break;
+    ++histo_bits;
+  }
+  return (histo_bits < 3) ? 3 : (histo_bits > 10) ? 10 : histo_bits;
+}
+
+static void InitEncParams(VP8LEncoder* const enc) {
+  const WebPConfig* const config = enc->config_;
+  const WebPPicture* const picture = enc->pic_;
+  const int method = config->method;
+  const float quality = config->quality;
+  enc->transform_bits_ = (method < 4) ? 5 : (method > 4) ? 3 : 4;
+  enc->histo_bits_ = GetHistoBits(config, picture);
+  enc->cache_bits_ = (quality <= 25.f) ? 0 : 7;
+}
+
+// -----------------------------------------------------------------------------
+// VP8LEncoder
+
+static VP8LEncoder* NewVP8LEncoder(const WebPConfig* const config,
+                                   WebPPicture* const picture) {
+  VP8LEncoder* const enc = (VP8LEncoder*)calloc(1, sizeof(*enc));
+  if (enc == NULL) {
+    WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
+    return NULL;
+  }
+  enc->config_ = config;
+  enc->pic_ = picture;
+  return enc;
+}
+
+static void DeleteVP8LEncoder(VP8LEncoder* enc) {
+  free(enc->argb_);
+  free(enc);
+}
+
+// -----------------------------------------------------------------------------
+// Main call
+
 int VP8LEncodeImage(const WebPConfig* const config,
                     WebPPicture* const picture) {
   int ok = 0;
-  int cache_bits = 7;  // If equal to 0, don't use color cache.
   int width, height, quality;
   VP8LEncoder* enc = NULL;
   WebPEncodingError err = VP8_ENC_OK;
@@ -1138,16 +1172,16 @@ int VP8LEncodeImage(const WebPConfig* const config,
     goto Error;
   }
 
-  enc = InitVP8LEncoder(config, picture);
+  enc = NewVP8LEncoder(config, picture);
   if (enc == NULL) {
-    err = VP8_ENC_ERROR_NULL_PARAMETER;
+    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
   width = picture->width;
   height = picture->height;
   quality = config->quality;
 
-  VP8LBitWriterInit(&bw, (width * height) >> 1);
+  InitEncParams(enc);
 
   // ---------------------------------------------------------------------------
   // Analyze image (entropy, num_palettes etc)
@@ -1158,18 +1192,19 @@ int VP8LEncodeImage(const WebPConfig* const config,
   }
 
   // Write image size.
+  VP8LBitWriterInit(&bw, (width * height) >> 1);
   WriteImageSize(enc, &bw);
 
   if (enc->use_palette_) {
     err = ApplyPalette(&bw, enc, width, height, quality);
     if (err != VP8_ENC_OK) goto Error;
-    cache_bits = 0;  // Don't use color cache.
+    enc->cache_bits_ = 0;
   }
 
   // In case image is not packed.
   if (enc->argb_ == NULL) {
     const size_t image_size = height * width;
-    err = AllocateTransformBuffer(enc, height, width);
+    err = AllocateTransformBuffer(enc, width, height);
     if (err != VP8_ENC_OK) goto Error;
     memcpy(enc->argb_, picture->argb, image_size * sizeof(*enc->argb_));
     enc->current_width_ = width;
@@ -1178,40 +1213,36 @@ int VP8LEncodeImage(const WebPConfig* const config,
   // ---------------------------------------------------------------------------
   // Apply transforms and write transform data.
 
-  if (!EvalAndApplySubtractGreen(&bw, enc, enc->current_width_, height)) {
+  if (!EvalAndApplySubtractGreen(enc, enc->current_width_, height, &bw)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
 
   if (enc->use_predict_) {
-    if (!ApplyPredictFilter(&bw, enc, enc->current_width_, height, quality)) {
+    if (!ApplyPredictFilter(enc, enc->current_width_, height, quality, &bw)) {
       err = VP8_ENC_ERROR_INVALID_CONFIGURATION;
       goto Error;
     }
   }
 
   if (enc->use_cross_color_) {
-    if (!ApplyCrossColorFilter(&bw, enc, enc->current_width_, height,
-                               quality)) {
+    if (!ApplyCrossColorFilter(enc, enc->current_width_, height, quality,
+                               &bw)) {
       err = VP8_ENC_ERROR_INVALID_CONFIGURATION;
       goto Error;
     }
   }
 
-  VP8LWriteBits(&bw, 1, 0);  // No more transforms.
+  VP8LWriteBits(&bw, 1, !TRANSFORM_PRESENT);  // No more transforms.
 
   // ---------------------------------------------------------------------------
   // Estimate the color cache size.
 
-  if (cache_bits > 0) {
-    if (quality > 25) {
-      if (!VP8LCalculateEstimateForCacheSize(enc->argb_, enc->current_width_,
-                                             height, &cache_bits)) {
-        err = VP8_ENC_ERROR_INVALID_CONFIGURATION;
-        goto Error;
-      }
-    } else {
-      cache_bits = 0;  // Don't use color cache.
+  if (enc->cache_bits_ > 0) {
+    if (!VP8LCalculateEstimateForCacheSize(enc->argb_, enc->current_width_,
+                                           height, &enc->cache_bits_)) {
+      err = VP8_ENC_ERROR_INVALID_CONFIGURATION;
+      goto Error;
     }
   }
 
@@ -1219,7 +1250,7 @@ int VP8LEncodeImage(const WebPConfig* const config,
   // Encode and write the transformed image.
 
   ok = EncodeImageInternal(&bw, enc->argb_, enc->current_width_, height,
-                           quality, cache_bits, enc->histo_bits_);
+                           quality, enc->cache_bits_, enc->histo_bits_);
   if (!ok) goto Error;
 
   err = WriteImage(enc, &bw);

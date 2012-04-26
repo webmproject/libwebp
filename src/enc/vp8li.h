@@ -7,7 +7,7 @@
 //
 // Lossless encoder: internal header.
 //
-// Author: Vikas Arora(vikaas.arora@gmail.com)
+// Author: Vikas Arora (vikaas.arora@gmail.com)
 
 #ifndef WEBP_ENC_VP8LI_H_
 #define WEBP_ENC_VP8LI_H_
@@ -44,9 +44,9 @@ typedef struct {
   int       current_width_;     // Corresponds to packed image width.
 
   // Encoding parameters derived from quality parameter.
-  int use_lz77_;
   int histo_bits_;
   int transform_bits_;
+  int cache_bits_;        // If equal to 0, don't use color cache.
 
   // Encoding parameters derived from image characteristics.
   int use_cross_color_;
