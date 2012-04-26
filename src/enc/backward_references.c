@@ -751,7 +751,7 @@ int VP8LCalculateEstimateForCacheSize(
                                        stream, &stream_size)) {
     goto Error;
   }
-  for (cache_bits = 0; cache_bits < 12; ++cache_bits) {
+  for (cache_bits = 0; cache_bits <= kColorCacheBitsMax; ++cache_bits) {
     double cur_entropy;
     VP8LHistogram histo;
     VP8LHistogramInit(&histo, cache_bits);

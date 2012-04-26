@@ -27,8 +27,10 @@ extern "C" {
 // Compression constants
 #define CODE_LENGTH_CODES 19
 static const int kLengthCodes = 24;
-static const int kColorCacheBitsMax = 11;
-#define PIX_OR_COPY_CODES_MAX (256 + 24 + (1 << 11))
+// The spec allows 11, we use 9 bits to reduce memory consumption in encoding.
+// Having 9 instead of 11 removes about 0.25 % of compression density.
+static const int kColorCacheBitsMax = 9;
+#define PIX_OR_COPY_CODES_MAX (256 + 24 + (1 << 9))
 static const int kMaxLength = 4096;
 
 // use GNU builtins where available.
