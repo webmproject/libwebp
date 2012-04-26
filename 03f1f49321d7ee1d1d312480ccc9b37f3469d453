@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "AAAAKn//21Q\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-04-26T07:26:35Z",
+      "side": 1,
+      "message": "btw: this \"if (mux)\" is unneeded.",
+      "revId": "03f1f49321d7ee1d1d312480ccc9b37f3469d453",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAKn//23s\u003d",
         "filename": "src/webp/mux.h",
         "patchSetId": 1
@@ -13,6 +30,24 @@
       "writtenOn": "2012-04-26T05:51:35Z",
       "side": 1,
       "message": "What was the reasoning behind picking only these two methods to be version checked? (Just for my understanding).",
+      "revId": "03f1f49321d7ee1d1d312480ccc9b37f3469d453",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//21M\u003d",
+        "filename": "src/webp/mux.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-04-26T07:26:35Z",
+      "side": 1,
+      "message": "these are the mandatory gateways (constructors) from which all the rest of the API depends on. You just can\u0027t use the rest of the API if you can\u0027t create the mux object (because of version mismatch)!",
+      "parentUuid": "AAAAKn//23s\u003d",
       "revId": "03f1f49321d7ee1d1d312480ccc9b37f3469d453",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
