@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAKn//200\u003d",
+        "filename": "src/utils/alpha.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-04-26T07:29:09Z",
+      "side": 1,
+      "message": "this patch is quite noisy with a lot of disgraceful casts. Is there a nicer way to go? For instance, this \u0027len\u0027 field in Token could be an \u0027int\u0027 too, no?",
+      "revId": "c4e20b14c8968676304037d28abf1268fc13dad8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
