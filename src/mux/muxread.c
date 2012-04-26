@@ -74,8 +74,8 @@ static WebPMuxError ChunkAssignData(WebPChunk* chunk, const uint8_t* data,
 //------------------------------------------------------------------------------
 // Create a mux object from WebP-RIFF data.
 
-WebPMux* WebPMuxCreate(const uint8_t* data, size_t size, int copy_data,
-                       WebPMuxState* const mux_state) {
+WebPMux* WebPMuxCreateInternal(const uint8_t* data, size_t size, int copy_data,
+                               WebPMuxState* const mux_state, int version) {
   size_t riff_size;
   uint32_t tag;
   const uint8_t* end;
@@ -85,6 +85,7 @@ WebPMux* WebPMuxCreate(const uint8_t* data, size_t size, int copy_data,
   if (mux_state) *mux_state = WEBP_MUX_STATE_PARTIAL;
 
   // Sanity checks.
+  if (version != WEBP_MUX_ABI_VERSION) goto Err;  // version mismatch
   if (data == NULL) goto Err;
   if (size < RIFF_HEADER_SIZE) return NULL;
   if (GetLE32(data + 0) != mktag('R', 'I', 'F', 'F') ||

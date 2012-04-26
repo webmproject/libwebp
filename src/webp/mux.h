@@ -51,6 +51,8 @@
 extern "C" {
 #endif
 
+#define WEBP_MUX_ABI_VERSION 0x0000
+
 // Error codes
 typedef enum {
   WEBP_MUX_OK                 =  1,
@@ -90,10 +92,15 @@ typedef struct {
 //------------------------------------------------------------------------------
 // Life of a Mux object
 
+// Internal, version-checked, entry point
+WEBP_EXTERN(WebPMux*) WebPNewInternal(int);
+
 // Creates an empty mux object.
 // Returns:
 //   A pointer to the newly created empty mux object.
-WEBP_EXTERN(WebPMux*) WebPMuxNew(void);
+static WEBP_INLINE WebPMux* WebPMuxNew(void) {
+  return WebPNewInternal(WEBP_MUX_ABI_VERSION);
+}
 
 // Deletes the mux object.
 // Parameters:
@@ -102,6 +109,10 @@ WEBP_EXTERN(void) WebPMuxDelete(WebPMux* const mux);
 
 //------------------------------------------------------------------------------
 // Mux creation.
+
+// Internal, version-checked, entry point
+WEBP_EXTERN(WebPMux*) WebPMuxCreateInternal(const uint8_t*, size_t,
+                                            int, WebPMuxState* const, int);
 
 // Creates a mux object from raw data given in WebP RIFF format.
 // Parameters:
@@ -114,9 +125,12 @@ WEBP_EXTERN(void) WebPMuxDelete(WebPMux* const mux);
 // Returns:
 //   A pointer to the mux object created from given data - on success.
 //   NULL - In case of invalid data or memory error.
-WEBP_EXTERN(WebPMux*) WebPMuxCreate(const uint8_t* data, size_t size,
-                                    int copy_data,
-                                    WebPMuxState* const mux_state);
+static WEBP_INLINE WebPMux* WebPMuxCreate(const uint8_t* data, size_t size,
+                                          int copy_data,
+                                          WebPMuxState* const mux_state) {
+  return WebPMuxCreateInternal(
+      data, size, copy_data, mux_state, WEBP_MUX_ABI_VERSION);
+}
 
 //------------------------------------------------------------------------------
 // Single Image.

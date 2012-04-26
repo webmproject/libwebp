@@ -26,8 +26,9 @@ static void MuxInit(WebPMux* const mux) {
   mux->state_ = WEBP_MUX_STATE_PARTIAL;
 }
 
-WebPMux* WebPMuxNew(void) {
-  WebPMux* const mux = (WebPMux*)malloc(sizeof(WebPMux));
+WebPMux* WebPNewInternal(int version) {
+  WebPMux* const mux = (version == WEBP_MUX_ABI_VERSION) ?
+                       (WebPMux*)malloc(sizeof(WebPMux)) : NULL;
   if (mux) MuxInit(mux);
   return mux;
 }
