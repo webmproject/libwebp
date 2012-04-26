@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAKn//2E4\u003d",
+        "filename": "src/webp/types.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-04-26T22:31:54Z",
+      "side": 1,
+      "message": "Valgrind provides this service...\n\n\u003d\u003d9980\u003d\u003d Source and destination overlap in memcpy(0x51b0040, 0x51b0041, 10)\n\n\u003d\u003d9980\u003d\u003d    at 0x4C28E2A: memcpy (mc_replace_strmem.c:497)\n\n\u003d\u003d9980\u003d\u003d    by 0x40060B: main (in /tmp/a.out)",
+      "revId": "e79a8b223d9619639c482b7b02a48f23e0fc9b43",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
