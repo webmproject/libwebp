@@ -68,12 +68,11 @@ void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const p,
 }
 
 void VP8LHistogramCreate(VP8LHistogram* const p,
-                         const PixOrCopy* const literal_and_length,
-                         int n_literal_and_length) {
+                         const VP8LBackwardRefs* const refs) {
   int i;
   VP8LHistogramClear(p);
-  for (i = 0; i < n_literal_and_length; ++i) {
-    VP8LHistogramAddSinglePixOrCopy(p, literal_and_length[i]);
+  for (i = 0; i < refs->size; ++i) {
+    VP8LHistogramAddSinglePixOrCopy(p, refs->refs[i]);
   }
 }
 
@@ -196,11 +195,12 @@ double VP8LHistogramEstimateBitsHeader(const VP8LHistogram* const p) {
       HuffmanCost(&p->distance_[0], DISTANCE_CODES_MAX);
 }
 
-int VP8LHistogramBuildImage(int xsize, int ysize,
-                            int histobits, int palettebits,
-                            const PixOrCopy* backward_refs,
-                            int backward_refs_size,
-                            VP8LHistogram*** image_arg, int* image_size) {
+static int HistogramBuildImage(int xsize, int ysize,
+                               int histobits, int palettebits,
+                               const PixOrCopy* const backward_refs,
+                               int backward_refs_size,
+                               VP8LHistogram*** const image_arg,
+                               int* const image_size) {
   int histo_xsize = histobits ? (xsize + (1 << histobits) - 1) >> histobits : 1;
   int histo_ysize = histobits ? (ysize + (1 << histobits) - 1) >> histobits : 1;
   int i;
@@ -241,8 +241,9 @@ int VP8LHistogramBuildImage(int xsize, int ysize,
   return 1;
 }
 
-int VP8LHistogramCombine(VP8LHistogram** in, int in_size, int quality,
-                         VP8LHistogram*** out_arg, int* out_size) {
+static int HistogramCombine(VP8LHistogram** const in, int in_size, int quality,
+                            VP8LHistogram*** const out_arg,
+                            int* const out_size) {
   int ok = 0;
   int i;
   unsigned int seed = 0;
@@ -339,7 +340,7 @@ Error:
 static double HistogramDistance(const VP8LHistogram* const square_histogram,
                                 int cur_symbol,
                                 int candidate_symbol,
-                                VP8LHistogram** candidate_histograms) {
+                                VP8LHistogram** const candidate_histograms) {
   double new_bit_cost;
   double previous_bit_cost;
   VP8LHistogram modified;
@@ -367,8 +368,9 @@ static double HistogramDistance(const VP8LHistogram* const square_histogram,
   return new_bit_cost - previous_bit_cost;
 }
 
-void VP8LHistogramRefine(VP8LHistogram** raw, int raw_size,
-                         uint32_t* symbols, int out_size, VP8LHistogram** out) {
+static void HistogramRefine(VP8LHistogram** const raw, int raw_size,
+                            uint32_t* const symbols, int out_size,
+                            VP8LHistogram** const out) {
   int i;
   // Find the best 'out' histogram for each of the raw histograms
   for (i = 0; i < raw_size; ++i) {
@@ -392,6 +394,47 @@ void VP8LHistogramRefine(VP8LHistogram** raw, int raw_size,
   for (i = 0; i < raw_size; ++i) {
     VP8LHistogramAdd(out[symbols[i]], raw[i]);
   }
+}
+
+int VP8LGetHistImageSymbols(int xsize, int ysize,
+                            const VP8LBackwardRefs* const refs,
+                            int quality, int histogram_bits,
+                            int cache_bits,
+                            VP8LHistogram*** const histogram_image,
+                            int* const histogram_image_size,
+                            uint32_t* const histogram_symbols) {
+  // Build histogram image.
+  int ok = 0;
+  int i;
+  int histogram_image_raw_size;
+  VP8LHistogram** histogram_image_raw = NULL;
+
+  *histogram_image = NULL;
+  if (!HistogramBuildImage(xsize, ysize, histogram_bits, cache_bits,
+                           refs->refs, refs->size,
+                           &histogram_image_raw,
+                           &histogram_image_raw_size)) {
+    goto Error;
+  }
+  // Collapse similar histograms.
+  if (!HistogramCombine(histogram_image_raw, histogram_image_raw_size,
+                        quality, histogram_image, histogram_image_size)) {
+    goto Error;
+  }
+  // Refine histogram image.
+  for (i = 0; i < histogram_image_raw_size; ++i) {
+    histogram_symbols[i] = -1;
+  }
+  HistogramRefine(histogram_image_raw, histogram_image_raw_size,
+                  histogram_symbols, *histogram_image_size, *histogram_image);
+  ok = 1;
+
+Error:
+  if (!ok) {
+    VP8LDeleteHistograms(*histogram_image, *histogram_image_size);
+  }
+  VP8LDeleteHistograms(histogram_image_raw, histogram_image_raw_size);
+  return ok;
 }
 
 #endif

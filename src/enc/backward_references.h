@@ -100,6 +100,11 @@ typedef struct {
   uint32_t argb_or_distance;
 } PixOrCopy;
 
+typedef struct {
+  PixOrCopy* refs;
+  int size;
+} VP8LBackwardRefs;
+
 static WEBP_INLINE PixOrCopy PixOrCopyCreateCopy(uint32_t distance,
                                                  uint16_t len) {
   PixOrCopy retval;

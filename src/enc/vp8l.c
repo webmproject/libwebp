@@ -154,13 +154,6 @@ static int VP8LEncAnalyze(VP8LEncoder* const enc) {
 
 // -----------------------------------------------------------------------------
 
-// TODO(urvang): should be moved to backward_reference.h and used more
-// as function parameters.
-typedef struct {
-  PixOrCopy* refs;
-  int size;
-} VP8LBackwardRefs;
-
 static void VP8LInitBackwardRefs(VP8LBackwardRefs* const refs) {
   if (refs != NULL) {
     refs->refs = NULL;
@@ -209,11 +202,11 @@ static int GetBackwardReferences(int width, int height,
     if (histo == NULL) goto Error1;
     // Evaluate lz77 coding
     VP8LHistogramInit(histo, cache_bits);
-    VP8LHistogramCreate(histo, refs_lz77.refs, refs_lz77.size);
+    VP8LHistogramCreate(histo, &refs_lz77);
     bit_cost_lz77 = (int)VP8LHistogramEstimateBits(histo);
     // Evaluate RLE coding
     VP8LHistogramInit(histo, cache_bits);
-    VP8LHistogramCreate(histo, refs_rle.refs, refs_rle.size);
+    VP8LHistogramCreate(histo, &refs_rle);
     bit_cost_rle = (int)VP8LHistogramEstimateBits(histo);
     // Decide if LZ77 is useful.
     lz77_is_useful = (bit_cost_lz77 < bit_cost_rle);
@@ -256,58 +249,6 @@ End:
   if (!ok) {
     VP8LClearBackwardRefs(best);
   }
-  return ok;
-}
-
-static void DeleteHistograms(VP8LHistogram** histograms, int size) {
-  if (histograms != NULL) {
-    int i;
-    for (i = 0; i < size; ++i) {
-      free(histograms[i]);
-    }
-    free(histograms);
-  }
-}
-
-static int GetHistImageSymbols(int xsize, int ysize,
-                               const VP8LBackwardRefs* const refs,
-                               int quality, int histogram_bits,
-                               int cache_bits,
-                               VP8LHistogram*** histogram_image,
-                               int* histogram_image_size,
-                               uint32_t* histogram_symbols) {
-  // Build histogram image.
-  int ok = 0;
-  int i;
-  int histogram_image_raw_size;
-  VP8LHistogram** histogram_image_raw = NULL;
-
-  *histogram_image = NULL;
-  if (!VP8LHistogramBuildImage(xsize, ysize, histogram_bits, cache_bits,
-                               refs->refs, refs->size,
-                               &histogram_image_raw,
-                               &histogram_image_raw_size)) {
-    goto Error;
-  }
-  // Collapse similar histograms.
-  if (!VP8LHistogramCombine(histogram_image_raw, histogram_image_raw_size,
-                            quality, histogram_image, histogram_image_size)) {
-    goto Error;
-  }
-  // Refine histogram image.
-  for (i = 0; i < histogram_image_raw_size; ++i) {
-    histogram_symbols[i] = -1;
-  }
-  VP8LHistogramRefine(histogram_image_raw, histogram_image_raw_size,
-                      histogram_symbols, *histogram_image_size,
-                      *histogram_image);
-  ok = 1;
-
-Error:
-  if (!ok) {
-    DeleteHistograms(*histogram_image, *histogram_image_size);
-  }
-  DeleteHistograms(histogram_image_raw, histogram_image_raw_size);
   return ok;
 }
 
@@ -750,10 +691,10 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
     goto Error;
   }
   // Build histogram image & symbols from backward references.
-  if (!GetHistImageSymbols(width, height, &refs,
-                           quality, histogram_bits, cache_bits,
-                           &histogram_image, &histogram_image_size,
-                           histogram_symbols)) {
+  if (!VP8LGetHistImageSymbols(width, height, &refs,
+                               quality, histogram_bits, cache_bits,
+                               &histogram_image, &histogram_image_size,
+                               histogram_symbols)) {
     goto Error;
   }
   // Create Huffman bit lengths & codes for each histogram image.
@@ -816,7 +757,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   }
 
   // Free combined histograms.
-  DeleteHistograms(histogram_image, histogram_image_size);
+  VP8LDeleteHistograms(histogram_image, histogram_image_size);
   histogram_image = NULL;
 
   // Emit no bits if there is only one symbol in the histogram.
@@ -832,7 +773,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
 
  Error:
   if (!ok) {
-    DeleteHistograms(histogram_image, histogram_image_size);
+    VP8LDeleteHistograms(histogram_image, histogram_image_size);
   }
   VP8LClearBackwardRefs(&refs);
   for (i = 0; i < 5 * histogram_image_size; ++i) {

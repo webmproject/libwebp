@@ -59,8 +59,7 @@ static WEBP_INLINE void VP8LHistogramInit(VP8LHistogram* const p,
 // The input data is the PixOrCopy data, which models the
 // literals, stop codes and backward references (both distances and lengths)
 void VP8LHistogramCreate(VP8LHistogram* const p,
-                         const PixOrCopy* const literal_and_length,
-                         int n_literal_and_length);
+                         const VP8LBackwardRefs* const refs);
 
 void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const p, const PixOrCopy v);
 
@@ -117,32 +116,28 @@ static WEBP_INLINE int VP8LHistogramNumCodes(const VP8LHistogram* const p) {
   return 256 + kLengthCodes + (1 << p->palette_code_bits_);
 }
 
+static WEBP_INLINE void VP8LDeleteHistograms(VP8LHistogram** histograms,
+                                             int size) {
+  if (histograms != NULL) {
+    int i;
+    for (i = 0; i < size; ++i) {
+      free(histograms[i]);
+    }
+    free(histograms);
+  }
+}
+
 void VP8LConvertPopulationCountTableToBitEstimates(
     int n, const int* const population_counts, double* const output);
 
-// Build a 2d image of histograms, subresolutioned by (1 << histobits) to
-// the original image.
-int VP8LHistogramBuildImage(int xsize, int ysize,
-                            int histobits, int palette_bits,
-                            const PixOrCopy* backward_refs,
-                            int backward_refs_size,
-                            VP8LHistogram*** image,
-                            int* histogram_size);
-
-// Combines several histograms into fewer histograms.
-int VP8LHistogramCombine(VP8LHistogram** in,
-                         int in_size,
-                         int quality,
-                         VP8LHistogram*** out,
-                         int* out_size);
-
-// Moves histograms from one cluster to another if smaller entropy can
-// be achieved by doing that.
-void VP8LHistogramRefine(VP8LHistogram** raw,
-                         int raw_size,
-                         uint32_t* symbols,
-                         int out_size,
-                         VP8LHistogram** out);
+// Builds the histogram image.
+int VP8LGetHistImageSymbols(int xsize, int ysize,
+                            const VP8LBackwardRefs* const refs,
+                            int quality, int histogram_bits,
+                            int cache_bits,
+                            VP8LHistogram*** histogram_image,
+                            int* const histogram_image_size,
+                            uint32_t* const histogram_symbols);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }
