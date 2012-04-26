@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAKn//23s\u003d",
+        "filename": "src/webp/mux.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-04-26T05:51:35Z",
+      "side": 1,
+      "message": "What was the reasoning behind picking only these two methods to be version checked? (Just for my understanding).",
+      "revId": "03f1f49321d7ee1d1d312480ccc9b37f3469d453",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
