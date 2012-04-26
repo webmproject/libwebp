@@ -16,6 +16,24 @@
       "revId": "c4e20b14c8968676304037d28abf1268fc13dad8",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//2Fc\u003d",
+        "filename": "src/utils/alpha.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-04-26T22:27:51Z",
+      "side": 1,
+      "message": "Fair point. I just wanted to post one option to get a discussion going. It seems this is fairly int focused so normalizing on that makes sense.",
+      "parentUuid": "AAAAKn//200\u003d",
+      "revId": "c4e20b14c8968676304037d28abf1268fc13dad8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
