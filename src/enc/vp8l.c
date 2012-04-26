@@ -144,7 +144,7 @@ static int VP8LEncAnalyze(VP8LEncoder* const enc) {
       return 0;
     }
 
-    if (8 * pred_entropy < 7 * non_pred_entropy) {
+    if (20 * pred_entropy < 19 * non_pred_entropy) {
       enc->use_predict_ = 1;
       enc->use_cross_color_ = 1;
     }
