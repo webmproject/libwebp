@@ -172,7 +172,7 @@ static WEBP_INLINE int ReadSymbol(const HuffmanTree* tree,
 
 static int ReadHuffmanCodeLengths(
     VP8LDecoder* const dec, const int* const code_length_code_lengths,
-    int num_codes, int num_symbols, int* const code_lengths) {
+    int num_symbols, int* const code_lengths) {
   int ok = 0;
   VP8LBitReader* const br = &dec->br_;
   int symbol;
@@ -180,7 +180,8 @@ static int ReadHuffmanCodeLengths(
   int prev_code_len = DEFAULT_CODE_LENGTH;
   HuffmanTree tree;
 
-  if (!HuffmanTreeBuildImplicit(&tree, code_length_code_lengths, num_codes)) {
+  if (!HuffmanTreeBuildImplicit(&tree, code_length_code_lengths,
+                                NUM_CODE_LENGTH_CODES)) {
     dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
     return 0;
   }
@@ -278,9 +279,8 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
     for (i = 0; i < num_codes; ++i) {
       code_length_code_lengths[kCodeLengthCodeOrder[i]] = VP8LReadBits(br, 3);
     }
-    ok = ReadHuffmanCodeLengths(dec, code_length_code_lengths,
-                                NUM_CODE_LENGTH_CODES,
-                                alphabet_size, code_lengths);
+    ok = ReadHuffmanCodeLengths(dec, code_length_code_lengths, alphabet_size,
+                                code_lengths);
     if (ok) {
       ok = HuffmanTreeBuildImplicit(tree, code_lengths, alphabet_size);
     }
