@@ -238,25 +238,17 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
     int symbols[2];
     int codes[2];
     int code_lengths[2];
-    const int nbits = VP8LReadBits(br, 3);
-    const int num_symbols = 1 + ((nbits == 0) ? 0 : VP8LReadBits(br, 1));
-
-    if (nbits == 0) {
-      symbols[0] = 0;
-      codes[0] = 0;
-      code_lengths[0] = 0;
-    } else {
-      const int num_bits = (nbits - 1) * 2 + 4;
-      int i;
-      for (i = 0; i < num_symbols; ++i) {
-        symbols[i] = VP8LReadBits(br, num_bits);
-        if (symbols[i] >= alphabet_size) {
-          dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
-          return 0;
-        }
-        codes[i] = i;
-        code_lengths[i] = num_symbols - 1;
-      }
+    const int num_symbols = VP8LReadBits(br, 1) + 1;
+    const int first_symbol_len_code = VP8LReadBits(br, 1);
+    // The first code is either 1 bit or 8 bit code.
+    symbols[0] = VP8LReadBits(br, (first_symbol_len_code == 0) ? 1 : 8);
+    codes[0] = 0;
+    code_lengths[0] = num_symbols - 1;
+    // The second code (if present), is always 8 bit long.
+    if (num_symbols == 2) {
+      symbols[1] = VP8LReadBits(br, 8);
+      codes[1] = 1;
+      code_lengths[1] = num_symbols - 1;
     }
     ok = HuffmanTreeBuildExplicit(tree, code_lengths, codes,
                                   symbols, num_symbols);

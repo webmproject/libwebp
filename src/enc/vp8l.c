@@ -531,20 +531,19 @@ static int StoreHuffmanCode(VP8LBitWriter* const bw,
       ++count;
     }
   }
-  if (count <= 2) {
-    int num_bits = 4;
-    // 0, 1 or 2 symbols to encode.
-    VP8LWriteBits(bw, 1, 1);
-    if (count == 0) {
-      VP8LWriteBits(bw, 3, 0);
-      ok = 1;
-      goto End;
-    }
-    while (symbols[count - 1] >= (1 << num_bits)) num_bits += 2;
-    VP8LWriteBits(bw, 3, (num_bits - 4) / 2 + 1);
+  if (count == 0) count = 1;
+  if (count <= 2 && symbols[0] < 256 && symbols[1] < 256) {
+    VP8LWriteBits(bw, 1, 1);  // Small tree marker to encode 1 or 2 symbols.
     VP8LWriteBits(bw, 1, count - 1);
-    for (i = 0; i < count; ++i) {
-      VP8LWriteBits(bw, num_bits, symbols[i]);
+    if (symbols[0] <= 1) {
+      VP8LWriteBits(bw, 1, 0);  // Code bit for small (1 bit) symbol value.
+      VP8LWriteBits(bw, 1, symbols[0]);
+    } else {
+      VP8LWriteBits(bw, 1, 1);
+      VP8LWriteBits(bw, 8, symbols[0]);
+    }
+    if (count == 2) {
+      VP8LWriteBits(bw, 8, symbols[1]);
     }
     ok = 1;
     goto End;
