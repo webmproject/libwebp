@@ -195,40 +195,29 @@ double VP8LHistogramEstimateBitsHeader(const VP8LHistogram* const p) {
       HuffmanCost(&p->distance_[0], DISTANCE_CODES_MAX);
 }
 
-static int HistogramBuildImage(int xsize, int ysize,
-                               int histobits, int palettebits,
+static int HistogramBuildImage(int xsize, int histo_bits, int cache_bits,
                                const VP8LBackwardRefs* const backward_refs,
-                               VP8LHistogram*** const image_arg,
-                               int* const image_size) {
-  int histo_xsize = histobits ? (xsize + (1 << histobits) - 1) >> histobits : 1;
-  int histo_ysize = histobits ? (ysize + (1 << histobits) - 1) >> histobits : 1;
+                               VP8LHistogram** const image,
+                               int image_size) {
   int i;
+  const int histo_xsize =
+      histo_bits ? (xsize + (1 << histo_bits) - 1) >> histo_bits : 1;
   int x = 0;
   int y = 0;
-  VP8LHistogram** image;
-  *image_arg = NULL;
-  *image_size = histo_xsize * histo_ysize;
-  image = (VP8LHistogram**)calloc(*image_size, sizeof(*image));
-  if (image == NULL) {
-    return 0;
-  }
-  for (i = 0; i < *image_size; ++i) {
+  for (i = 0; i < image_size; ++i) {
     image[i] = (VP8LHistogram*)malloc(sizeof(*image[i]));
-    if (!image[i]) {
+    if (image[i] == NULL) {
       int k;
-      for (k = 0; k < *image_size; ++k) {
-        free(image[k]);
-      }
-      free(image);
+      for (k = 0; k < i; ++k) free(image[k]);
       return 0;
     }
-    VP8LHistogramInit(image[i], palettebits);
+    VP8LHistogramInit(image[i], cache_bits);
   }
   // x and y trace the position in the image.
   for (i = 0; i < backward_refs->size; ++i) {
     const PixOrCopy v = backward_refs->refs[i];
     const int ix =
-        histobits ? (y >> histobits) * histo_xsize + (x >> histobits) : 0;
+        histo_bits ? (y >> histo_bits) * histo_xsize + (x >> histo_bits) : 0;
     VP8LHistogramAddSinglePixOrCopy(image[ix], v);
     x += PixOrCopyLength(&v);
     while (x >= xsize) {
@@ -236,83 +225,72 @@ static int HistogramBuildImage(int xsize, int ysize,
       ++y;
     }
   }
-  *image_arg = image;
   return 1;
 }
 
-static int HistogramCombine(VP8LHistogram** const in, int in_size, int quality,
-                            VP8LHistogram*** const out_arg,
-                            int* const out_size) {
+static int HistogramCombine(VP8LHistogram** const in, int in_size,
+                            int num_pairs, VP8LHistogram** const out,
+                            int* const out_size_arg) {
   int ok = 0;
   int i;
   unsigned int seed = 0;
   int tries_with_no_success = 0;
-  int inner_iters = 10 + quality / 2;
-  int iter;
-  double* bit_costs = (double*)malloc(in_size * sizeof(*bit_costs));
-  VP8LHistogram** out = (VP8LHistogram**)calloc(in_size, sizeof(*out));
-  *out_arg = out;
-  *out_size = in_size;
-  if (bit_costs == NULL || out == NULL) {
-    goto Error;
-  }
-  // Copy
+  const int outer_iters = in_size * 3;
+  double* const bit_costs = (double*)malloc(in_size * sizeof(*bit_costs));
+  // TODO(urvang): 'bit_cost' should be part of VP8LHistogram.
+  VP8LHistogram* const combo = (VP8LHistogram*)malloc(sizeof(*combo));
+  int out_size = in_size;
+  if (bit_costs == NULL || out == NULL || combo == NULL) goto End;
+
+  // Copy histogram 'in' to 'out'.
   for (i = 0; i < in_size; ++i) {
-    VP8LHistogram* new_histo = (VP8LHistogram*)malloc(sizeof(*new_histo));
-    if (new_histo == NULL) {
-      goto Error;
-    }
-    *new_histo = *(in[i]);
-    out[i] = new_histo;
+    VP8LHistogram* const temp = (VP8LHistogram*)malloc(sizeof(*temp));
+    if (temp == NULL) goto End;
+    *temp = *(in[i]);
+    out[i] = temp;
     bit_costs[i] = VP8LHistogramEstimateBits(out[i]);
   }
-  // Collapse similar histograms.
-  for (iter = 0; iter < in_size * 3 && *out_size >= 2; ++iter) {
-    double best_val = 0;
-    int best_ix0 = 0;
-    int best_ix1 = 0;
-    // Try a few times.
-    int k;
-    for (k = 0; k < inner_iters; ++k) {
-      // Choose two, build a combo out of them.
-      double cost_val;
-      VP8LHistogram* combo;
-      int ix0 = rand_r(&seed) % *out_size;
-      int ix1;
-      int diff = ((k & 7) + 1) % (*out_size - 1);
-      if (diff >= 3) {
-        diff = rand_r(&seed) % (*out_size - 1);
-      }
-      ix1 = (ix0 + diff + 1) % *out_size;
-      if (ix0 == ix1) {
+
+  // Collapse similar histograms in 'out'.
+  for (i = 0; i < outer_iters && out_size >= 2; ++i) {
+    // We pick the best pair to be combined out of 'inner_iters' pairs.
+    double best_cost_diff = 0;
+    int best_idx1 = 0;
+    int best_idx2 = 0;
+    int j;
+    for (j = 0; j < num_pairs; ++j) {
+      double curr_cost_diff;
+      // Choose two histograms at random and try to combine them.
+      const int idx1 = rand_r(&seed) % out_size;
+      const int tmp = ((j & 7) + 1) % (out_size - 1);
+      const int diff = (tmp < 3) ? tmp : rand_r(&seed) % (out_size - 1);
+      const int idx2 = (idx1 + diff + 1) % out_size;
+      if (idx1 == idx2) {
         continue;
       }
-      combo = (VP8LHistogram*)malloc(sizeof(*combo));
-      if (combo == NULL) {
-        goto Error;
+      *combo = *out[idx1];
+      VP8LHistogramAdd(combo, out[idx2]);
+      // Calculate cost reduction on combining.
+      curr_cost_diff =
+          VP8LHistogramEstimateBits(combo) - bit_costs[idx1] - bit_costs[idx2];
+      if (best_cost_diff > curr_cost_diff) {
+        best_cost_diff = curr_cost_diff;
+        best_idx1 = idx1;
+        best_idx2 = idx2;
       }
-      *combo = *out[ix0];
-      VP8LHistogramAdd(combo, out[ix1]);
-      cost_val =
-          VP8LHistogramEstimateBits(combo) - bit_costs[ix0] - bit_costs[ix1];
-      if (best_val > cost_val) {
-        best_val = cost_val;
-        best_ix0 = ix0;
-        best_ix1 = ix1;
-      }
-      free(combo);
     }
-    if (best_val < 0.0) {
-      VP8LHistogramAdd(out[best_ix0], out[best_ix1]);
-      bit_costs[best_ix0] =
-          best_val + bit_costs[best_ix0] + bit_costs[best_ix1];
-      // Erase (*out)[best_ix1]
-      free(out[best_ix1]);
-      memmove(&out[best_ix1], &out[best_ix1 + 1],
-              (*out_size - best_ix1 - 1) * sizeof(out[0]));
-      memmove(&bit_costs[best_ix1], &bit_costs[best_ix1 + 1],
-              (*out_size - best_ix1 - 1) * sizeof(bit_costs[0]));
-      --(*out_size);
+
+    if (best_cost_diff < 0.0) {
+      // Combine this pair and store the combined histogram at 'best_idx1'.
+      VP8LHistogramAdd(out[best_idx1], out[best_idx2]);
+      bit_costs[best_idx1] =
+          best_cost_diff + bit_costs[best_idx1] + bit_costs[best_idx2];
+      free(out[best_idx2]);
+      memmove(&out[best_idx2], &out[best_idx2 + 1],
+              (out_size - best_idx2 - 1) * sizeof(*out));
+      memmove(&bit_costs[best_idx2], &bit_costs[best_idx2 + 1],
+              (out_size - best_idx2 - 1) * sizeof(*bit_costs));
+      --out_size;
       tries_with_no_success = 0;
     }
     if (++tries_with_no_success >= 50) {
@@ -320,16 +298,17 @@ static int HistogramCombine(VP8LHistogram** const in, int in_size, int quality,
     }
   }
   ok = 1;
-Error:
+ End:
   free(bit_costs);
+  free(combo);
   if (!ok) {
-    if (out) {
-      int i;
-      for (i = 0; i < *out_size; ++i) {
-        free(out[i]);
-      }
+    if (out != NULL) {
+      for (i = 0; i < out_size; ++i) free(out[i]);
       free(out);
     }
+    *out_size_arg = 0;
+  } else {
+    *out_size_arg = out_size;
   }
   return ok;
 }
@@ -407,44 +386,46 @@ static int HistogramRefine(VP8LHistogram** const raw, int raw_size,
 
 int VP8LGetHistImageSymbols(int xsize, int ysize,
                             const VP8LBackwardRefs* const refs,
-                            int quality, int histogram_bits,
+                            int quality, int histo_bits,
                             int cache_bits,
-                            VP8LHistogram*** const histogram_image,
+                            VP8LHistogram** const histogram_image,
                             int* const histogram_image_size,
                             uint32_t* const histogram_symbols) {
-  // Build histogram image.
   int ok = 0;
   int i;
-  int histogram_image_raw_size;
-  VP8LHistogram** histogram_image_raw = NULL;
+  const int histo_xsize = histo_bits ? VP8LSubSampleSize(xsize, histo_bits) : 1;
+  const int histo_ysize = histo_bits ? VP8LSubSampleSize(ysize, histo_bits) : 1;
+  const int num_histo_pairs = 10 + quality / 2;  // For HistogramCombine().
+  const int histo_image_raw_size = histo_xsize * histo_ysize;
+  VP8LHistogram** const histo_image_raw  =
+      (VP8LHistogram**)calloc(histo_image_raw_size, sizeof(*histo_image_raw));
+  if (histo_image_raw == NULL) return 0;
 
-  *histogram_image = NULL;
-  if (!HistogramBuildImage(xsize, ysize, histogram_bits, cache_bits, refs,
-                           &histogram_image_raw,
-                           &histogram_image_raw_size)) {
+  // Build histogram image.
+  if (!HistogramBuildImage(xsize, histo_bits, cache_bits, refs,
+                           histo_image_raw, histo_image_raw_size)) {
     goto Error;
   }
   // Collapse similar histograms.
-  if (!HistogramCombine(histogram_image_raw, histogram_image_raw_size,
-                        quality, histogram_image, histogram_image_size)) {
+  if (!HistogramCombine(histo_image_raw, histo_image_raw_size, num_histo_pairs,
+                        histogram_image, histogram_image_size)) {
     goto Error;
   }
   // Refine histogram image.
-  for (i = 0; i < histogram_image_raw_size; ++i) {
+  for (i = 0; i < histo_image_raw_size; ++i) {
     histogram_symbols[i] = -1;
   }
-  if (!HistogramRefine(histogram_image_raw, histogram_image_raw_size,
-                       histogram_symbols,
-                       *histogram_image, *histogram_image_size)) {
+  if (!HistogramRefine(histo_image_raw, histo_image_raw_size, histogram_symbols,
+                       histogram_image, *histogram_image_size)) {
     goto Error;
   }
   ok = 1;
 
 Error:
   if (!ok) {
-    VP8LDeleteHistograms(*histogram_image, *histogram_image_size);
+    VP8LDeleteHistograms(histogram_image, *histogram_image_size);
   }
-  VP8LDeleteHistograms(histogram_image_raw, histogram_image_raw_size);
+  VP8LDeleteHistograms(histo_image_raw, histo_image_raw_size);
   return ok;
 }
 

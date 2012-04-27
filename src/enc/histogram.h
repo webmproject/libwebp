@@ -135,7 +135,7 @@ int VP8LGetHistImageSymbols(int xsize, int ysize,
                             const VP8LBackwardRefs* const refs,
                             int quality, int histogram_bits,
                             int cache_bits,
-                            VP8LHistogram*** histogram_image,
+                            VP8LHistogram** const histogram_image,
                             int* const histogram_image_size,
                             uint32_t* const histogram_symbols);
 

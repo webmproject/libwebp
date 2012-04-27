@@ -652,7 +652,6 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
                                int cache_bits, int histogram_bits) {
   int i;
   int ok = 0;
-  int histogram_image_size;
   int write_histogram_image;
   int* bit_lengths_sizes = NULL;
   uint8_t** bit_lengths = NULL;
@@ -662,12 +661,14 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   const int color_cache_size = use_color_cache ? (1 << cache_bits) : 0;
   const int histogram_image_xysize = VP8LSubSampleSize(width, histogram_bits) *
       VP8LSubSampleSize(height, histogram_bits);
-  VP8LHistogram** histogram_image;
+  VP8LHistogram** histogram_image =
+      (VP8LHistogram**)calloc(histogram_image_xysize, sizeof(*histogram_image));
+  int histogram_image_size;
   VP8LBackwardRefs refs;
   const size_t histo_size = histogram_image_xysize * sizeof(uint32_t);
   uint32_t* const histogram_symbols = (uint32_t*)calloc(1, histo_size);
 
-  if (histogram_symbols == NULL) goto Error;
+  if (histogram_image == NULL || histogram_symbols == NULL) goto Error;
 
   // Calculate backward references from ARGB image.
   if (!GetBackwardReferences(width, height, argb, quality,
@@ -678,7 +679,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   // Build histogram image & symbols from backward references.
   if (!VP8LGetHistImageSymbols(width, height, &refs,
                                quality, histogram_bits, cache_bits,
-                               &histogram_image, &histogram_image_size,
+                               histogram_image, &histogram_image_size,
                                histogram_symbols)) {
     goto Error;
   }
