@@ -64,7 +64,7 @@ static WEBP_INLINE uint32_t VP8LSubSampleSize(uint32_t size,
 
 #ifdef USE_LOSSLESS_ENCODER
 // Faster logarithm for small integers, with the property of log(0) == 0.
-double VP8LFastLog(int v);
+float VP8LFastLog(int v);
 
 // In-place difference of each component with mod 256.
 static WEBP_INLINE uint32_t VP8LSubPixels(uint32_t a, uint32_t b) {

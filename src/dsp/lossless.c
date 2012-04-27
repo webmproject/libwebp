@@ -28,7 +28,8 @@ extern "C" {
 // computation.
 //
 // ", ".join(["%.16ff" % x for x in [0.0]+[log(x) for x in range(1, 256)]])
-static const float kLogTable[] = {
+#define LOG_LOOKUP_IDX_MAX 256
+static const float kLogTable[LOG_LOOKUP_IDX_MAX] = {
   0.0000000000000000f, 0.0000000000000000f, 0.6931471805599453f,
   1.0986122886681098f, 1.3862943611198906f, 1.6094379124341003f,
   1.7917594692280550f, 1.9459101490553132f, 2.0794415416798357f,
@@ -117,9 +118,17 @@ static const float kLogTable[] = {
   5.5412635451584258f
 };
 
-double VP8LFastLog(int v) {
-  if (v < (int)(sizeof(kLogTable) / sizeof(kLogTable[0]))) {
-    return kLogTable[v];
+#define APPROX_LOG_MAX  4096
+#define LOG_2_BASE_E    0.6931471805599453f
+
+float VP8LFastLog(int v) {
+  if (v < APPROX_LOG_MAX) {
+    int log_cnt = 0;
+    while (v >= LOG_LOOKUP_IDX_MAX) {
+      ++log_cnt;
+      v = v >> 1;
+    }
+    return kLogTable[v] + (log_cnt * LOG_2_BASE_E);
   }
   return log(v);
 }
