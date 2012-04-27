@@ -392,7 +392,7 @@ static int HistogramRefine(VP8LHistogram** const raw, int raw_size,
     }
     symbols[i] = best_out;
   }
-  free(out_bit_costs);
+  free(symbol_bit_costs);
 
   // Recompute each out based on raw and symbols.
   for (i = 0; i < out_size; ++i) {
