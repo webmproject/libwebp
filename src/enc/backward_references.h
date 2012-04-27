@@ -15,6 +15,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include "../webp/types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -170,6 +171,20 @@ static WEBP_INLINE uint32_t PixOrCopyCacheIdx(const PixOrCopy* const p) {
 static WEBP_INLINE uint32_t PixOrCopyDistance(const PixOrCopy* const p) {
   assert(p->mode == kCopy);
   return p->argb_or_distance;
+}
+
+static WEBP_INLINE void VP8LInitBackwardRefs(VP8LBackwardRefs* const refs) {
+  if (refs != NULL) {
+    refs->refs = NULL;
+    refs->size = 0;
+  }
+}
+
+static WEBP_INLINE void VP8LClearBackwardRefs(VP8LBackwardRefs* const refs) {
+  if (refs != NULL) {
+    free(refs->refs);
+    VP8LInitBackwardRefs(refs);
+  }
 }
 
 // Ridiculously simple backward references for images where it is unlikely

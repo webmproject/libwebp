@@ -197,8 +197,7 @@ double VP8LHistogramEstimateBitsHeader(const VP8LHistogram* const p) {
 
 static int HistogramBuildImage(int xsize, int ysize,
                                int histobits, int palettebits,
-                               const PixOrCopy* const backward_refs,
-                               int backward_refs_size,
+                               const VP8LBackwardRefs* const backward_refs,
                                VP8LHistogram*** const image_arg,
                                int* const image_size) {
   int histo_xsize = histobits ? (xsize + (1 << histobits) - 1) >> histobits : 1;
@@ -226,8 +225,8 @@ static int HistogramBuildImage(int xsize, int ysize,
     VP8LHistogramInit(image[i], palettebits);
   }
   // x and y trace the position in the image.
-  for (i = 0; i < backward_refs_size; ++i) {
-    const PixOrCopy v = backward_refs[i];
+  for (i = 0; i < backward_refs->size; ++i) {
+    const PixOrCopy v = backward_refs->refs[i];
     const int ix =
         histobits ? (y >> histobits) * histo_xsize + (x >> histobits) : 0;
     VP8LHistogramAddSinglePixOrCopy(image[ix], v);
@@ -338,47 +337,54 @@ Error:
 // What is the bit cost of moving square_histogram from
 // cur_symbol to candidate_symbol.
 static double HistogramDistance(const VP8LHistogram* const square_histogram,
-                                int cur_symbol,
-                                int candidate_symbol,
+                                int cur_symbol, int candidate_symbol,
+                                const double* const symbol_bit_costs,
                                 VP8LHistogram** const candidate_histograms) {
   double new_bit_cost;
   double previous_bit_cost;
-  VP8LHistogram modified;
+  VP8LHistogram modified_histo;
   if (cur_symbol == candidate_symbol) {
     return 0;  // Going nowhere. No savings.
   }
-  previous_bit_cost =
-      VP8LHistogramEstimateBits(candidate_histograms[candidate_symbol]);
+  previous_bit_cost = symbol_bit_costs[candidate_symbol];
   if (cur_symbol != -1) {
-    previous_bit_cost +=
-        VP8LHistogramEstimateBits(candidate_histograms[cur_symbol]);
+    previous_bit_cost += symbol_bit_costs[cur_symbol];
   }
 
   // Compute the bit cost of the histogram where the data moves to.
-  modified = *candidate_histograms[candidate_symbol];
-  VP8LHistogramAdd(&modified, square_histogram);
-  new_bit_cost = VP8LHistogramEstimateBits(&modified);
+  modified_histo = *candidate_histograms[candidate_symbol];
+  VP8LHistogramAdd(&modified_histo, square_histogram);
+  new_bit_cost = VP8LHistogramEstimateBits(&modified_histo);
 
   // Compute the bit cost of the histogram where the data moves away.
   if (cur_symbol != -1) {
-    modified = *candidate_histograms[cur_symbol];
-    VP8LHistogramRemove(&modified, square_histogram);
-    new_bit_cost += VP8LHistogramEstimateBits(&modified);
+    modified_histo = *candidate_histograms[cur_symbol];
+    VP8LHistogramRemove(&modified_histo, square_histogram);
+    new_bit_cost += VP8LHistogramEstimateBits(&modified_histo);
   }
   return new_bit_cost - previous_bit_cost;
 }
 
-static void HistogramRefine(VP8LHistogram** const raw, int raw_size,
-                            uint32_t* const symbols, int out_size,
-                            VP8LHistogram** const out) {
+static int HistogramRefine(VP8LHistogram** const raw, int raw_size,
+                           uint32_t* const symbols,
+                           VP8LHistogram** const out, int out_size) {
   int i;
+  double* const symbol_bit_costs =
+      (double*)malloc(out_size * sizeof(*symbol_bit_costs));
+  if (symbol_bit_costs == NULL) return 0;
+  for (i = 0; i < out_size; ++i) {
+    symbol_bit_costs[i] = VP8LHistogramEstimateBits(out[i]);
+  }
+
   // Find the best 'out' histogram for each of the raw histograms
   for (i = 0; i < raw_size; ++i) {
     int best_out = 0;
-    double best_bits = HistogramDistance(raw[i], symbols[i], 0, out);
+    double best_bits = HistogramDistance(raw[i], symbols[i], 0,
+                                         symbol_bit_costs, out);
     int k;
     for (k = 1; k < out_size; ++k) {
-      double cur_bits = HistogramDistance(raw[i], symbols[i], k, out);
+      double cur_bits = HistogramDistance(raw[i], symbols[i], k,
+                                          symbol_bit_costs, out);
       if (cur_bits < best_bits) {
         best_bits = cur_bits;
         best_out = k;
@@ -386,6 +392,7 @@ static void HistogramRefine(VP8LHistogram** const raw, int raw_size,
     }
     symbols[i] = best_out;
   }
+  free(out_bit_costs);
 
   // Recompute each out based on raw and symbols.
   for (i = 0; i < out_size; ++i) {
@@ -394,6 +401,8 @@ static void HistogramRefine(VP8LHistogram** const raw, int raw_size,
   for (i = 0; i < raw_size; ++i) {
     VP8LHistogramAdd(out[symbols[i]], raw[i]);
   }
+
+  return 1;
 }
 
 int VP8LGetHistImageSymbols(int xsize, int ysize,
@@ -410,8 +419,7 @@ int VP8LGetHistImageSymbols(int xsize, int ysize,
   VP8LHistogram** histogram_image_raw = NULL;
 
   *histogram_image = NULL;
-  if (!HistogramBuildImage(xsize, ysize, histogram_bits, cache_bits,
-                           refs->refs, refs->size,
+  if (!HistogramBuildImage(xsize, ysize, histogram_bits, cache_bits, refs,
                            &histogram_image_raw,
                            &histogram_image_raw_size)) {
     goto Error;
@@ -425,8 +433,11 @@ int VP8LGetHistImageSymbols(int xsize, int ysize,
   for (i = 0; i < histogram_image_raw_size; ++i) {
     histogram_symbols[i] = -1;
   }
-  HistogramRefine(histogram_image_raw, histogram_image_raw_size,
-                  histogram_symbols, *histogram_image_size, *histogram_image);
+  if (!HistogramRefine(histogram_image_raw, histogram_image_raw_size,
+                       histogram_symbols,
+                       *histogram_image, *histogram_image_size)) {
+    goto Error;
+  }
   ok = 1;
 
 Error:

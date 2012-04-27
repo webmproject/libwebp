@@ -154,20 +154,6 @@ static int VP8LEncAnalyze(VP8LEncoder* const enc) {
 
 // -----------------------------------------------------------------------------
 
-static void VP8LInitBackwardRefs(VP8LBackwardRefs* const refs) {
-  if (refs != NULL) {
-    refs->refs = NULL;
-    refs->size = 0;
-  }
-}
-
-static void VP8LClearBackwardRefs(VP8LBackwardRefs* const refs) {
-  if (refs != NULL) {
-    free(refs->refs);
-    VP8LInitBackwardRefs(refs);
-  }
-}
-
 static int GetBackwardReferences(int width, int height,
                                  const uint32_t* argb,
                                  int quality, int use_color_cache,
