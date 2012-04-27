@@ -84,7 +84,7 @@ typedef enum {
   UNKNOWN_ID,
 
   NIL_ID,
-  LIST_ID
+  LAST_TAG_ID
 } TAG_ID;
 
 // Maximum chunk payload (data) size such that adding the header and padding
@@ -103,7 +103,7 @@ typedef struct {
   uint32_t      chunkSize;
 } ChunkInfo;
 
-extern const ChunkInfo kChunks[LIST_ID + 1];
+extern const ChunkInfo kChunks[LAST_TAG_ID];
 
 //------------------------------------------------------------------------------
 // Helper functions.

@@ -31,7 +31,6 @@ const ChunkInfo kChunks[] = {
   {"unknown", mktag('U', 'N', 'K', 'N'),  UNKNOWN_ID, UNDEFINED_CHUNK_SIZE},
 
   {NULL,      NIL_TAG,                    NIL_ID,     UNDEFINED_CHUNK_SIZE},
-  {"list",    mktag('L', 'I', 'S', 'T'),  LIST_ID,    UNDEFINED_CHUNK_SIZE}
 };
 
 //------------------------------------------------------------------------------
