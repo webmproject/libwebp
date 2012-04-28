@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAKn//0Kc\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-04-28T09:50:27Z",
+      "side": 1,
+      "message": "comment could be on the same line (34)",
+      "revId": "ccddb3fc6feaf72f13f0698b20f710ee442d681a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
