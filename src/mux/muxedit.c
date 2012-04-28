@@ -97,7 +97,7 @@ static WebPMuxError MuxSet(WebPMux* const mux, TAG_ID id, uint32_t nth,
 #undef SWITCH_ID_LIST
 
 static WebPMuxError MuxAddChunk(WebPMux* const mux, uint32_t nth, uint32_t tag,
-                                const uint8_t* data, uint32_t size,
+                                const uint8_t* data, size_t size,
                                 WebPImageInfo* image_info, int copy_data) {
   const TAG_ID id = ChunkGetIdFromTag(tag);
   assert(mux != NULL);
@@ -141,7 +141,7 @@ static WebPImageInfo* CreateImageInfo(uint32_t x_offset, uint32_t y_offset,
 // Create data for frame/tile given image_info.
 static WebPMuxError CreateDataFromImageInfo(const WebPImageInfo* image_info,
                                             int is_frame,
-                                            uint8_t** data, uint32_t* size) {
+                                            uint8_t** data, size_t* size) {
   assert(data);
   assert(size);
   assert(image_info);
@@ -332,7 +332,7 @@ static WebPMuxError MuxAddFrameTileInternal(
   WebPMuxError err;
   WebPImageInfo* image_info = NULL;
   uint8_t* frame_tile_data = NULL;
-  uint32_t frame_tile_data_size = 0;
+  size_t frame_tile_data_size = 0;
   const int is_frame = (tag == kChunks[FRAME_ID].chunkTag) ? 1 : 0;
   const int has_alpha = (alpha_data != NULL && alpha_size != 0);
 
@@ -540,7 +540,7 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   uint32_t width = 0;
   uint32_t height = 0;
   uint8_t data[VP8X_CHUNK_SIZE];
-  const uint32_t data_size = VP8X_CHUNK_SIZE;
+  const size_t data_size = VP8X_CHUNK_SIZE;
   const WebPMuxImage* images = NULL;
 
   assert(mux != NULL);
