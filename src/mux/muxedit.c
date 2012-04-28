@@ -29,7 +29,8 @@ static void MuxInit(WebPMux* const mux) {
 WebPMux* WebPNewInternal(int version) {
   WebPMux* const mux = (version == WEBP_MUX_ABI_VERSION) ?
                        (WebPMux*)malloc(sizeof(WebPMux)) : NULL;
-  if (mux) MuxInit(mux);
+  // If mux is NULL MuxInit is a noop.
+  MuxInit(mux);
   return mux;
 }
 
@@ -75,7 +76,7 @@ static WebPMuxError MuxSet(WebPMux* const mux, TAG_ID id, uint32_t nth,
                            WebPImageInfo* image_info, int copy_data) {
   WebPChunk chunk;
   WebPMuxError err = WEBP_MUX_NOT_FOUND;
-  if (mux == NULL) return WEBP_MUX_INVALID_ARGUMENT;
+  assert(mux != NULL);
   assert(!IsWPI(id));
 
   ChunkInit(&chunk);
