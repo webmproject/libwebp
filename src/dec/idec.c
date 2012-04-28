@@ -587,13 +587,6 @@ void WebPIDelete(WebPIDecoder* const idec) {
 //------------------------------------------------------------------------------
 // Wrapper toward WebPINewDecoder
 
-WebPIDecoder* WebPINew(WEBP_CSP_MODE mode) {
-  WebPIDecoder* const idec = WebPINewDecoder(NULL);
-  if (!idec) return NULL;
-  idec->output_.colorspace = mode;
-  return idec;
-}
-
 WebPIDecoder* WebPINewRGB(WEBP_CSP_MODE mode, uint8_t* output_buffer,
                           size_t output_buffer_size, int output_stride) {
   WebPIDecoder* idec;

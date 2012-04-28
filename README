@@ -348,7 +348,11 @@ is stored into an instance of the WebPIDecoder object. This object can be
 created with the purpose of decoding either RGB or Y'CbCr samples.
 For instance:
 
-  WebPIDecoder* idec = WebPINew(MODE_BGR);
+  WebPDecBuffer buffer;
+  WebPInitDecBuffer(&buffer);
+  buffer.colorspace = MODE_BGR;
+  ...
+  WebPIDecoder* idec = WebPINewDecoder(&buffer);
 
 As data is made progressively available, this incremental-decoder object
 can be used to decode the picture further. There are two (mutually exclusive)
