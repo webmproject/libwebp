@@ -49,7 +49,7 @@ int WebPPictureInitInternal(WebPPicture* const picture, int version) {
   if (version != WEBP_ENCODER_ABI_VERSION) {
     return 0;   // caller/system version mismatch!
   }
-  if (picture) {
+  if (picture != NULL) {
     memset(picture, 0, sizeof(*picture));
     picture->writer = DummyWriter;
     WebPEncodingSetError(picture, VP8_ENC_OK);
@@ -260,7 +260,7 @@ static VP8Encoder* InitEncoder(const WebPConfig* const config,
 }
 
 static void DeleteEncoder(VP8Encoder* enc) {
-  if (enc) {
+  if (enc != NULL) {
     VP8EncDeleteAlpha(enc);
 #ifdef WEBP_EXPERIMENTAL_FEATURES
     VP8EncDeleteLayer(enc);
@@ -287,7 +287,7 @@ static void FinalizePSNR(const VP8Encoder* const enc) {
 
 static void StoreStats(VP8Encoder* const enc) {
   WebPAuxStats* const stats = enc->pic_->stats;
-  if (stats) {
+  if (stats != NULL) {
     int i, s;
     for (i = 0; i < NUM_MB_SEGMENTS; ++i) {
       stats->segment_level[i] = enc->dqm_[i].fstrength_;

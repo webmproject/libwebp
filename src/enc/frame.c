@@ -113,7 +113,7 @@ static int Record(int bit, proba_t* const stats) {
 // Note: no need to record the fixed probas.
 static int RecordCoeffs(int ctx, const VP8Residual* const res) {
   int n = res->first;
-  proba_t *s = res->stats[VP8EncBands[n]][ctx];
+  proba_t* s = res->stats[VP8EncBands[n]][ctx];
   if (res->last  < 0) {
     Record(0, s + 0);
     return 0;
@@ -242,7 +242,7 @@ static void SetResidualCoeffs(const int16_t* const coeffs,
 static int GetResidualCost(int ctx, const VP8Residual* const res) {
   int n = res->first;
   int p0 = res->prob[VP8EncBands[n]][ctx][0];
-  const uint16_t *t = res->cost[VP8EncBands[n]][ctx];
+  const uint16_t* t = res->cost[VP8EncBands[n]][ctx];
   int cost;
 
   if (res->last < 0) {
@@ -717,16 +717,16 @@ static void StoreSideInfo(const VP8EncIterator* const it) {
   const VP8MBInfo* const mb = it->mb_;
   WebPPicture* const pic = enc->pic_;
 
-  if (pic->stats) {
+  if (pic->stats != NULL) {
     StoreSSE(it);
     enc->block_count_[0] += (mb->type_ == 0);
     enc->block_count_[1] += (mb->type_ == 1);
     enc->block_count_[2] += (mb->skip_ != 0);
   }
 
-  if (pic->extra_info) {
+  if (pic->extra_info != NULL) {
     uint8_t* const info = &pic->extra_info[it->x_ + it->y_ * enc->mb_w_];
-    switch(pic->extra_info_type) {
+    switch (pic->extra_info_type) {
       case 1: *info = mb->type_; break;
       case 2: *info = mb->segment_; break;
       case 3: *info = enc->dqm_[mb->segment_].quant_; break;
