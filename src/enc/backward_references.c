@@ -83,7 +83,7 @@ typedef struct {
 static int VP8LHashChainInit(VP8LHashChain* const p, int size) {
   int i;
   p->chain_ = (int*)malloc(size * sizeof(*p->chain_));
-  if (!p->chain_) {
+  if (p->chain_ == NULL) {
     return 0;
   }
   for (i = 0; i < size; ++i) {
@@ -177,55 +177,50 @@ static int VP8LHashChainFindCopy(
   return best_length >= kMinLength;
 }
 
-static WEBP_INLINE void PushBackCopy(int length, PixOrCopy* const stream,
-                                     int* const stream_size) {
+static WEBP_INLINE void PushBackCopy(VP8LBackwardRefs* const refs, int length) {
   while (length >= kMaxLength) {
-    stream[*stream_size] = PixOrCopyCreateCopy(1, kMaxLength);
-    ++(*stream_size);
+    refs->refs[refs->size++] = PixOrCopyCreateCopy(1, kMaxLength);
     length -= kMaxLength;
   }
   if (length > 0) {
-    stream[*stream_size] = PixOrCopyCreateCopy(1, length);
-    ++(*stream_size);
+    refs->refs[refs->size++] = PixOrCopyCreateCopy(1, length);
   }
 }
 
 void VP8LBackwardReferencesRle(
-    int xsize, int ysize, const uint32_t* const argb, PixOrCopy* const stream,
-    int* const stream_size) {
+    int xsize, int ysize, const uint32_t* const argb,
+    VP8LBackwardRefs* const refs) {
   const int pix_count = xsize * ysize;
   int match_len = 0;
   int i;
-  *stream_size = 0;
+  refs->size = 0;
   for (i = 0; i < pix_count; ++i) {
     if (i >= 1 && argb[i] == argb[i - 1]) {
       ++match_len;
     } else {
-      PushBackCopy(match_len, stream, stream_size);
+      PushBackCopy(refs, match_len);
       match_len = 0;
-      stream[*stream_size] = PixOrCopyCreateLiteral(argb[i]);
-      ++(*stream_size);
+      refs->refs[refs->size++] = PixOrCopyCreateLiteral(argb[i]);
     }
   }
-  PushBackCopy(match_len, stream, stream_size);
+  PushBackCopy(refs, match_len);
 }
 
 // Returns 1 when successful.
 int VP8LBackwardReferencesHashChain(
     int xsize, int ysize, int use_color_cache, const uint32_t* const argb,
-    int cache_bits, int quality, PixOrCopy* const stream,
-    int* const stream_size) {
+    int cache_bits, int quality, VP8LBackwardRefs* const refs) {
   int i;
   int ok = 0;
   const int pix_count = xsize * ysize;
   VP8LHashChain* hash_chain = (VP8LHashChain*)malloc(sizeof(*hash_chain));
   VP8LColorCache hashers;
-  if (!hash_chain ||
+  if (hash_chain == NULL ||
       !VP8LColorCacheInit(&hashers, cache_bits) ||
       !VP8LHashChainInit(hash_chain, pix_count)) {
     goto Error;
   }
-  *stream_size = 0;
+  refs->size = 0;
   for (i = 0; i < pix_count; ) {
     // Alternative#1: Code the pixels starting at 'i' using backward reference.
     int offset = 0;
@@ -256,11 +251,11 @@ int VP8LBackwardReferencesHashChain(
           // Alternative#2 is a better match. So push pixel at 'i' as literal.
           if (use_color_cache && VP8LColorCacheContains(&hashers, argb[i])) {
             const int ix = VP8LColorCacheGetIndex(&hashers, argb[i]);
-            stream[*stream_size] = PixOrCopyCreateCacheIdx(ix);
+            refs->refs[refs->size] = PixOrCopyCreateCacheIdx(ix);
           } else {
-            stream[*stream_size] = PixOrCopyCreateLiteral(argb[i]);
+            refs->refs[refs->size] = PixOrCopyCreateLiteral(argb[i]);
           }
-          ++(*stream_size);
+          ++refs->size;
           VP8LColorCacheInsert(&hashers, argb[i]);
           i++;  // Backward reference to be done for next pixel.
           len = len2;
@@ -270,8 +265,7 @@ int VP8LBackwardReferencesHashChain(
       if (len >= kMaxLength) {
         len = kMaxLength - 1;
       }
-      stream[*stream_size] = PixOrCopyCreateCopy(offset, len);
-      ++(*stream_size);
+      refs->refs[refs->size++] = PixOrCopyCreateCopy(offset, len);
       for (k = 0; k < len; ++k) {
         VP8LColorCacheInsert(&hashers, argb[i + k]);
         if (k != 0 && i + k + 1 < pix_count) {
@@ -284,11 +278,11 @@ int VP8LBackwardReferencesHashChain(
       if (use_color_cache && VP8LColorCacheContains(&hashers, argb[i])) {
         // push pixel as a PixOrCopyCreateCacheIdx pixel
         int ix = VP8LColorCacheGetIndex(&hashers, argb[i]);
-        stream[*stream_size] = PixOrCopyCreateCacheIdx(ix);
+        refs->refs[refs->size] = PixOrCopyCreateCacheIdx(ix);
       } else {
-        stream[*stream_size] = PixOrCopyCreateLiteral(argb[i]);
+        refs->refs[refs->size] = PixOrCopyCreateLiteral(argb[i]);
       }
-      ++(*stream_size);
+      ++refs->size;
       VP8LColorCacheInsert(&hashers, argb[i]);
       if (i + 1 < pix_count) {
         VP8LHashChainInsert(hash_chain, &argb[i], i);
@@ -304,6 +298,8 @@ Error:
   return ok;
 }
 
+// -----------------------------------------------------------------------------
+
 typedef struct {
   double alpha_[VALUES_IN_BYTE];
   double red_[VALUES_IN_BYTE];
@@ -317,32 +313,26 @@ static int CostModelBuild(CostModel* const p, int xsize, int ysize,
                           int recursion_level, int use_color_cache,
                           const uint32_t* const argb, int cache_bits) {
   int ok = 0;
-  int stream_size;
   VP8LHistogram histo;
-  int i;
-  PixOrCopy* stream = (PixOrCopy*)malloc(xsize * ysize * sizeof(*stream));
-  if (stream == NULL) {
-    goto Error;
-  }
+  VP8LBackwardRefs refs;
+
+  if (!VP8LBackwardRefsAlloc(&refs, xsize * ysize)) goto Error;
+
   p->cache_bits_ = cache_bits;
   if (recursion_level > 0) {
     if (!VP8LBackwardReferencesTraceBackwards(xsize, ysize, recursion_level - 1,
                                               use_color_cache, argb, cache_bits,
-                                              &stream[0], &stream_size)) {
+                                              &refs)) {
       goto Error;
     }
   } else {
     const int quality = 100;
     if (!VP8LBackwardReferencesHashChain(xsize, ysize, use_color_cache, argb,
-                                         cache_bits, quality,
-                                         &stream[0], &stream_size)) {
+                                         cache_bits, quality, &refs)) {
       goto Error;
     }
   }
-  VP8LHistogramInit(&histo, cache_bits);
-  for (i = 0; i < stream_size; ++i) {
-    VP8LHistogramAddSinglePixOrCopy(&histo, stream[i]);
-  }
+  VP8LHistogramCreate(&histo, &refs, cache_bits);
   VP8LConvertPopulationCountTableToBitEstimates(
       VP8LHistogramNumCodes(&histo),
       &histo.literal_[0], &p->literal_[0]);
@@ -355,8 +345,9 @@ static int CostModelBuild(CostModel* const p, int xsize, int ysize,
   VP8LConvertPopulationCountTableToBitEstimates(
       DISTANCE_CODES_MAX, &histo.distance_[0], &p->distance_[0]);
   ok = 1;
-Error:
-  free(stream);
+
+ Error:
+  VP8LClearBackwardRefs(&refs);
   return ok;
 }
 
@@ -527,9 +518,10 @@ static void TraceBackwards(
 static int BackwardReferencesHashChainFollowChosenPath(
     int xsize, int ysize, int use_color_cache, const uint32_t* const argb,
     int cache_bits, const uint32_t* const chosen_path, int chosen_path_size,
-    PixOrCopy* const stream, int* const stream_size) {
+    VP8LBackwardRefs* const refs) {
   const int quality = 100;
   const int pix_count = xsize * ysize;
+  int size = 0;
   int i = 0;
   int k;
   int ix;
@@ -541,8 +533,8 @@ static int BackwardReferencesHashChainFollowChosenPath(
       !VP8LColorCacheInit(&hashers, cache_bits)) {
     goto Error;
   }
-  *stream_size = 0;
-  for (ix = 0; ix < chosen_path_size; ++ix) {
+  refs->size = 0;
+  for (ix = 0; ix < chosen_path_size; ++ix, ++size) {
     int offset = 0;
     int len = 0;
     int maxlen = chosen_path[ix];
@@ -550,8 +542,7 @@ static int BackwardReferencesHashChainFollowChosenPath(
       VP8LHashChainFindCopy(hash_chain, quality,
                              i, xsize, argb, maxlen, &offset, &len);
       assert(len == maxlen);
-      stream[*stream_size] = PixOrCopyCreateCopy(offset, len);
-      ++(*stream_size);
+      refs->refs[size] = PixOrCopyCreateCopy(offset, len);
       for (k = 0; k < len; ++k) {
         VP8LColorCacheInsert(&hashers, argb[i + k]);
         if (i + k + 1 < pix_count) {
@@ -564,11 +555,10 @@ static int BackwardReferencesHashChainFollowChosenPath(
       if (use_color_cache && VP8LColorCacheContains(&hashers, argb[i])) {
         // push pixel as a color cache index
         int ix = VP8LColorCacheGetIndex(&hashers, argb[i]);
-        stream[*stream_size] = PixOrCopyCreateCacheIdx(ix);
+        refs->refs[size] = PixOrCopyCreateCacheIdx(ix);
       } else {
-        stream[*stream_size] = PixOrCopyCreateLiteral(argb[i]);
+        refs->refs[size] = PixOrCopyCreateLiteral(argb[i]);
       }
-      ++(*stream_size);
       VP8LColorCacheInsert(&hashers, argb[i]);
       if (i + 1 < pix_count) {
         VP8LHashChainInsert(hash_chain, &argb[i], i);
@@ -576,6 +566,8 @@ static int BackwardReferencesHashChainFollowChosenPath(
       ++i;
     }
   }
+  assert(size < refs->max_size);
+  refs->size = size;
   ok = 1;
 Error:
   VP8LHashChainClear(hash_chain);
@@ -589,8 +581,7 @@ Error:
 // Returns 1 on success.
 int VP8LBackwardReferencesTraceBackwards(
     int xsize, int ysize, int recursive_cost_model, int use_color_cache,
-    const uint32_t* const argb, int cache_bits, PixOrCopy* const stream,
-    int* const stream_size) {
+    const uint32_t* const argb, int cache_bits, VP8LBackwardRefs* const refs) {
   int ok = 0;
   const int dist_array_size = xsize * ysize;
   uint32_t* chosen_path = NULL;
@@ -600,7 +591,6 @@ int VP8LBackwardReferencesTraceBackwards(
   if (dist_array == NULL) {
     goto Error;
   }
-  *stream_size = 0;
   if (!BackwardReferencesHashChainDistanceOnly(
           xsize, ysize, recursive_cost_model, use_color_cache, argb, cache_bits,
           dist_array)) {
@@ -611,72 +601,59 @@ int VP8LBackwardReferencesTraceBackwards(
   free(dist_array);
   if (!BackwardReferencesHashChainFollowChosenPath(
           xsize, ysize, use_color_cache, argb, cache_bits,
-          chosen_path, chosen_path_size,
-          stream, stream_size)) {
+          chosen_path, chosen_path_size, refs)) {
     goto Error;
   }
   ok = 1;
-Error:
+ Error:
   free(chosen_path);
   return ok;
 }
 
-void VP8LBackwardReferences2DLocality(int xsize, int data_size,
-                                      PixOrCopy* const data) {
+void VP8LBackwardReferences2DLocality(int xsize, VP8LBackwardRefs* const refs) {
   int i;
-  for (i = 0; i < data_size; ++i) {
-    if (PixOrCopyIsCopy(&data[i])) {
-      int dist = data[i].argb_or_distance;
-      int transformed_dist = VP8LDistanceToPlaneCode(xsize, dist);
-      data[i].argb_or_distance = transformed_dist;
+  for (i = 0; i < refs->size; ++i) {
+    if (PixOrCopyIsCopy(&refs->refs[i])) {
+      const int dist = refs->refs[i].argb_or_distance;
+      const int transformed_dist = VP8LDistanceToPlaneCode(xsize, dist);
+      refs->refs[i].argb_or_distance = transformed_dist;
     }
   }
 }
 
 int VP8LVerifyBackwardReferences(
     const uint32_t* const argb, int xsize, int ysize, int cache_bits,
-    const PixOrCopy* const lit, int lit_size) {
+    const VP8LBackwardRefs* const refs) {
   int num_pixels = 0;
   int i;
   VP8LColorCache hashers;
   VP8LColorCacheInit(&hashers, cache_bits);
-  for (i = 0; i < lit_size; ++i) {
-    if (PixOrCopyIsLiteral(&lit[i])) {
-      if (argb[num_pixels] != PixOrCopyArgb(&lit[i])) {
-        printf("i %d, pixel %d, original: 0x%08x, literal: 0x%08x\n",
-               i, num_pixels, argb[num_pixels], PixOrCopyArgb(&lit[i]));
+  for (i = 0; i < refs->size; ++i) {
+    const PixOrCopy token = refs->refs[i];
+    if (PixOrCopyIsLiteral(&token)) {
+      if (argb[num_pixels] != PixOrCopyArgb(&token)) {
         VP8LColorCacheClear(&hashers);
         return 0;
       }
       VP8LColorCacheInsert(&hashers, argb[num_pixels]);
       ++num_pixels;
-    } else if (PixOrCopyIsCacheIdx(&lit[i])) {
-      uint32_t cache_entry =
-          VP8LColorCacheLookup(&hashers, PixOrCopyCacheIdx(&lit[i]));
+    } else if (PixOrCopyIsCacheIdx(&token)) {
+      const uint32_t cache_entry =
+          VP8LColorCacheLookup(&hashers, PixOrCopyCacheIdx(&token));
       if (argb[num_pixels] != cache_entry) {
-        printf("i %d, pixel %d, original: 0x%08x, cache_idx: %d, "
-               "cache_entry: 0x%08x\n",
-               i, num_pixels, argb[num_pixels], PixOrCopyCacheIdx(&lit[i]),
-               cache_entry);
         VP8LColorCacheClear(&hashers);
         return 0;
       }
       VP8LColorCacheInsert(&hashers, argb[num_pixels]);
       ++num_pixels;
-    } else if (PixOrCopyIsCopy(&lit[i])) {
+    } else if (PixOrCopyIsCopy(&token)) {
       int k;
-      if (PixOrCopyDistance(&lit[i]) == 0) {
-        printf("Bw reference with zero distance.\n");
+      if (PixOrCopyDistance(&token) == 0) {
         VP8LColorCacheClear(&hashers);
         return 0;
       }
-      for (k = 0; k < lit[i].len; ++k) {
-        if (argb[num_pixels] !=
-            argb[num_pixels - PixOrCopyDistance(&lit[i])]) {
-          printf("i %d, pixel %d, original: 0x%08x, copied: 0x%08x, dist: %d\n",
-                 i, num_pixels, argb[num_pixels],
-                 argb[num_pixels - PixOrCopyDistance(&lit[i])],
-                 PixOrCopyDistance(&lit[i]));
+      for (k = 0; k < token.len; ++k) {
+        if (argb[num_pixels] != argb[num_pixels - PixOrCopyDistance(&token)]) {
           VP8LColorCacheClear(&hashers);
           return 0;
         }
@@ -688,7 +665,6 @@ int VP8LVerifyBackwardReferences(
   {
     const int pix_count = xsize * ysize;
     if (num_pixels != pix_count) {
-      printf("verify failure: %d != %d\n", num_pixels, pix_count);
       VP8LColorCacheClear(&hashers);
       return 0;
     }
@@ -700,7 +676,7 @@ int VP8LVerifyBackwardReferences(
 // Returns 1 on success.
 static int ComputeCacheHistogram(
     const uint32_t* const argb, int xsize, int ysize,
-    const PixOrCopy* const stream, int stream_size, int cache_bits,
+    const VP8LBackwardRefs* const refs, int cache_bits,
     VP8LHistogram* const histo) {
   int pixel_index = 0;
   int i;
@@ -709,21 +685,22 @@ static int ComputeCacheHistogram(
   if (!VP8LColorCacheInit(&hashers, cache_bits)) {
     return 0;
   }
-  for (i = 0; i < stream_size; ++i) {
-    const PixOrCopy v = stream[i];
-    if (PixOrCopyIsLiteral(&v)) {
+  for (i = 0; i < refs->size; ++i) {
+    const PixOrCopy* const v = &refs->refs[i];
+    if (PixOrCopyIsLiteral(v)) {
       if (cache_bits != 0 &&
           VP8LColorCacheContains(&hashers, argb[pixel_index])) {
         // push pixel as a cache index
         const int ix = VP8LColorCacheGetIndex(&hashers, argb[pixel_index]);
-        VP8LHistogramAddSinglePixOrCopy(histo, PixOrCopyCreateCacheIdx(ix));
+        const PixOrCopy token = PixOrCopyCreateCacheIdx(ix);
+        VP8LHistogramAddSinglePixOrCopy(histo, &token);
       } else {
         VP8LHistogramAddSinglePixOrCopy(histo, v);
       }
     } else {
       VP8LHistogramAddSinglePixOrCopy(histo, v);
     }
-    for (k = 0; k < PixOrCopyLength(&v); ++k) {
+    for (k = 0; k < PixOrCopyLength(v); ++k) {
       VP8LColorCacheInsert(&hashers, argb[pixel_index]);
       ++pixel_index;
     }
@@ -742,21 +719,19 @@ int VP8LCalculateEstimateForCacheSize(
   int ok = 0;
   int cache_bits;
   double lowest_entropy = 1e99;
-  PixOrCopy* stream = (PixOrCopy*)malloc(xsize * ysize * sizeof(*stream));
-  int stream_size;
+  VP8LBackwardRefs refs;
   static const double kSmallPenaltyForLargeCache = 4.0;
   static const int quality = 30;
-  if (stream == NULL ||
+  if (!VP8LBackwardRefsAlloc(&refs, xsize * ysize) ||
       !VP8LBackwardReferencesHashChain(xsize, ysize, 0, argb, 0, quality,
-                                       stream, &stream_size)) {
+                                       &refs)) {
     goto Error;
   }
   for (cache_bits = 0; cache_bits <= kColorCacheBitsMax; ++cache_bits) {
     double cur_entropy;
     VP8LHistogram histo;
     VP8LHistogramInit(&histo, cache_bits);
-    ComputeCacheHistogram(argb, xsize, ysize, &stream[0], stream_size,
-                          cache_bits, &histo);
+    ComputeCacheHistogram(argb, xsize, ysize, &refs, cache_bits, &histo);
     cur_entropy = VP8LHistogramEstimateBits(&histo) +
         kSmallPenaltyForLargeCache * cache_bits;
     if (cache_bits == 0 || cur_entropy < lowest_entropy) {
@@ -765,8 +740,8 @@ int VP8LCalculateEstimateForCacheSize(
     }
   }
   ok = 1;
-Error:
-  free(stream);
+ Error:
+  VP8LClearBackwardRefs(&refs);
   return ok;
 }
 

@@ -38,30 +38,33 @@ typedef struct {
   // Backward reference prefix-code histogram.
   int distance_[DISTANCE_CODES_MAX];
   int palette_code_bits_;
+  double bit_cost_;   // cached value of VP8LHistogramEstimateBits(this)
 } VP8LHistogram;
-
-static WEBP_INLINE void VP8LHistogramClear(VP8LHistogram* const p) {
-  memset(&p->literal_[0], 0, sizeof(p->literal_));
-  memset(&p->red_[0], 0, sizeof(p->red_));
-  memset(&p->blue_[0], 0, sizeof(p->blue_));
-  memset(&p->alpha_[0], 0, sizeof(p->alpha_));
-  memset(&p->distance_[0], 0, sizeof(p->distance_));
-}
-
-static WEBP_INLINE void VP8LHistogramInit(VP8LHistogram* const p,
-                                          int palette_code_bits) {
-  p->palette_code_bits_ = palette_code_bits;
-  VP8LHistogramClear(p);
-}
 
 // Create the histogram.
 //
-// The input data is the PixOrCopy data, which models the
-// literals, stop codes and backward references (both distances and lengths)
+// The input data is the PixOrCopy data, which models the literals, stop
+// codes and backward references (both distances and lengths).  Also: if
+// palette_code_bits is >= 0, initialize the histogram with this value.
 void VP8LHistogramCreate(VP8LHistogram* const p,
-                         const VP8LBackwardRefs* const refs);
+                         const VP8LBackwardRefs* const refs,
+                         int palette_code_bits);
 
-void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const p, const PixOrCopy v);
+// Reset the histogram's stats.
+void VP8LHistogramClear(VP8LHistogram* const p);
+
+// Set the palette_code_bits and reset the stats.
+void VP8LHistogramInit(VP8LHistogram* const p, int palette_code_bits);
+
+// Allocate an array of pointer to histograms, allocated and initialized
+// using 'cache_bits'. Return NULL in case of memory error.
+VP8LHistogram** VP8LAllocateHistograms(int size, int cache_bits);
+
+// Destroy an array of histograms (and the array itself).
+void VP8LDeleteHistograms(VP8LHistogram** const histograms, int size);
+
+void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const p,
+                                     const PixOrCopy* const v);
 
 // Estimate how many bits the combined entropy of literals and distance
 // approximately maps to.
@@ -116,28 +119,17 @@ static WEBP_INLINE int VP8LHistogramNumCodes(const VP8LHistogram* const p) {
   return 256 + kLengthCodes + (1 << p->palette_code_bits_);
 }
 
-static WEBP_INLINE void VP8LDeleteHistograms(VP8LHistogram** histograms,
-                                             int size) {
-  if (histograms != NULL) {
-    int i;
-    for (i = 0; i < size; ++i) {
-      free(histograms[i]);
-    }
-    free(histograms);
-  }
-}
-
 void VP8LConvertPopulationCountTableToBitEstimates(
     int n, const int* const population_counts, double* const output);
 
 // Builds the histogram image.
-int VP8LGetHistImageSymbols(int xsize, int ysize,
-                            const VP8LBackwardRefs* const refs,
-                            int quality, int histogram_bits,
-                            int cache_bits,
-                            VP8LHistogram** const histogram_image,
-                            int* const histogram_image_size,
-                            uint32_t* const histogram_symbols);
+int VP8LGetHistoImageSymbols(int xsize, int ysize,
+                             const VP8LBackwardRefs* const refs,
+                             int quality, int histogram_bits,
+                             int cache_bits,
+                             VP8LHistogram** const histogram_image,
+                             int* const histogram_image_size,
+                             uint16_t* const histogram_symbols);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }

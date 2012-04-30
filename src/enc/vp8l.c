@@ -119,10 +119,12 @@ static int AnalyzeEntropy(const uint32_t const *argb, int xsize, int ysize,
     if (i >= xsize && pix == argb[i - xsize]) {
       continue;
     }
-    VP8LHistogramAddSinglePixOrCopy(nonpredicted,
-                                    PixOrCopyCreateLiteral(pix));
-    VP8LHistogramAddSinglePixOrCopy(predicted,
-                                    PixOrCopyCreateLiteral(pix_diff));
+    {
+      const PixOrCopy pix_token = PixOrCopyCreateLiteral(pix);
+      const PixOrCopy pix_diff_token = PixOrCopyCreateLiteral(pix_diff);
+      VP8LHistogramAddSinglePixOrCopy(nonpredicted, &pix_token);
+      VP8LHistogramAddSinglePixOrCopy(predicted, &pix_diff_token);
+    }
   }
   *nonpredicted_bits = (int)VP8LHistogramEstimateBitsBulk(nonpredicted);
   *predicted_bits = (int)VP8LHistogramEstimateBitsBulk(predicted);
@@ -163,9 +165,9 @@ static int GetBackwardReferences(int width, int height,
   int lz77_is_useful;
   VP8LBackwardRefs refs_rle, refs_lz77;
   const int num_pix = width * height;
-  refs_rle.refs = (PixOrCopy*)malloc(num_pix * sizeof(*refs_rle.refs));
-  refs_lz77.refs = (PixOrCopy*)malloc(num_pix * sizeof(*refs_lz77.refs));
 
+  VP8LBackwardRefsAlloc(&refs_rle, num_pix);
+  VP8LBackwardRefsAlloc(&refs_lz77, num_pix);
   VP8LInitBackwardRefs(best);
   if (refs_rle.refs == NULL || refs_lz77.refs == NULL) {
  Error1:
@@ -176,24 +178,22 @@ static int GetBackwardReferences(int width, int height,
 
   if (!VP8LBackwardReferencesHashChain(width, height, use_color_cache,
                                        argb, cache_bits, quality,
-                                       refs_lz77.refs, &refs_lz77.size)) {
+                                       &refs_lz77)) {
     goto End;
   }
   // Backward Reference using RLE only.
-  VP8LBackwardReferencesRle(width, height, argb, refs_rle.refs, &refs_rle.size);
+  VP8LBackwardReferencesRle(width, height, argb, &refs_rle);
 
   {
-    int bit_cost_lz77, bit_cost_rle;
+    double bit_cost_lz77, bit_cost_rle;
     VP8LHistogram* const histo = (VP8LHistogram*)malloc(sizeof(*histo));
     if (histo == NULL) goto Error1;
     // Evaluate lz77 coding
-    VP8LHistogramInit(histo, cache_bits);
-    VP8LHistogramCreate(histo, &refs_lz77);
-    bit_cost_lz77 = (int)VP8LHistogramEstimateBits(histo);
+    VP8LHistogramCreate(histo, &refs_lz77, cache_bits);
+    bit_cost_lz77 = VP8LHistogramEstimateBits(histo);
     // Evaluate RLE coding
-    VP8LHistogramInit(histo, cache_bits);
-    VP8LHistogramCreate(histo, &refs_rle);
-    bit_cost_rle = (int)VP8LHistogramEstimateBits(histo);
+    VP8LHistogramCreate(histo, &refs_rle, cache_bits);
+    bit_cost_rle = VP8LHistogramEstimateBits(histo);
     // Decide if LZ77 is useful.
     lz77_is_useful = (bit_cost_lz77 < bit_cost_rle);
     free(histo);
@@ -208,15 +208,13 @@ static int GetBackwardReferences(int width, int height,
     if (try_lz77_trace_backwards) {
       const int recursion_level = (num_pix < 320 * 200) ? 1 : 0;
       VP8LBackwardRefs refs_trace;
-      refs_trace.refs = (PixOrCopy*)malloc(num_pix * sizeof(*refs_trace.refs));
-      if (refs_trace.refs == NULL) {
+      if (!VP8LBackwardRefsAlloc(&refs_trace, num_pix)) {
         goto End;
       }
       if (VP8LBackwardReferencesTraceBackwards(width, height, recursion_level,
                                                use_color_cache,
                                                argb, cache_bits,
-                                               refs_trace.refs,
-                                               &refs_trace.size)) {
+                                               &refs_trace)) {
         VP8LClearBackwardRefs(&refs_lz77);
         *best = refs_trace;
       }
@@ -227,7 +225,7 @@ static int GetBackwardReferences(int width, int height,
   }
 
   if (use_2d_locality) {  // Use backward reference with 2D locality.
-    VP8LBackwardReferences2DLocality(width, best->size, best->refs);
+    VP8LBackwardReferences2DLocality(width, best);
   }
   ok = 1;
 
@@ -597,7 +595,7 @@ static int StoreHuffmanCode(VP8LBitWriter* const bw,
 static void StoreImageToBitMask(
     VP8LBitWriter* const bw, int width, int histo_bits,
     const VP8LBackwardRefs* const refs,
-    const uint32_t* histogram_symbols,
+    const uint16_t* histogram_symbols,
     uint8_t** const bitdepths, uint16_t** const bit_symbols) {
   // x and y trace the position in the image.
   int x = 0;
@@ -665,8 +663,8 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
       (VP8LHistogram**)calloc(histogram_image_xysize, sizeof(*histogram_image));
   int histogram_image_size;
   VP8LBackwardRefs refs;
-  const size_t histo_size = histogram_image_xysize * sizeof(uint32_t);
-  uint32_t* const histogram_symbols = (uint32_t*)calloc(1, histo_size);
+  uint16_t* const histogram_symbols =
+      (uint16_t*)malloc(histogram_image_xysize * sizeof(*histogram_symbols));
 
   if (histogram_image == NULL || histogram_symbols == NULL) goto Error;
 
@@ -677,10 +675,10 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
     goto Error;
   }
   // Build histogram image & symbols from backward references.
-  if (!VP8LGetHistImageSymbols(width, height, &refs,
-                               quality, histogram_bits, cache_bits,
-                               histogram_image, &histogram_image_size,
-                               histogram_symbols)) {
+  if (!VP8LGetHistoImageSymbols(width, height, &refs,
+                                quality, histogram_bits, cache_bits,
+                                histogram_image, &histogram_image_size,
+                                histogram_symbols)) {
     goto Error;
   }
   // Create Huffman bit lengths & codes for each histogram image.
@@ -707,7 +705,8 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   write_histogram_image = (histogram_image_size > 1);
   VP8LWriteBits(bw, 1, write_histogram_image);
   if (write_histogram_image) {
-    uint32_t* const histogram_argb = (uint32_t*)malloc(histo_size);
+    uint32_t* const histogram_argb =
+        (uint32_t*)malloc(histogram_image_xysize * sizeof(*histogram_argb));
     int max_index = 0;
     if (histogram_argb == NULL) goto Error;
     for (i = 0; i < histogram_image_xysize; ++i) {
@@ -784,7 +783,7 @@ static int EvalAndApplySubtractGreen(const VP8LEncoder* const enc,
   if (!enc->use_palette_) {
     int i;
     const uint32_t* const argb = enc->argb_;
-    int bit_cost_before, bit_cost_after;
+    double bit_cost_before, bit_cost_after;
     VP8LHistogram* const histo = (VP8LHistogram*)malloc(sizeof(*histo));
     if (histo == NULL) return 0;
 
@@ -1184,6 +1183,23 @@ int VP8LEncodeImage(const WebPConfig* const config,
   if (err != VP8_ENC_OK) {
     ok = 0;
     goto Error;
+  }
+
+  if (picture->stats != NULL) {
+    WebPAuxStats* const stats = picture->stats;
+    memset(stats, 0, sizeof(*stats));
+    stats->PSNR[0] = 99.;
+    stats->PSNR[1] = 99.;
+    stats->PSNR[2] = 99.;
+    stats->PSNR[3] = 99.;
+    // note: padding byte may be missing. Not a big deal.
+    stats->coded_size = VP8LBitWriterNumBytes(&bw) + HEADER_SIZE;
+  }
+
+  if (picture->extra_info != NULL) {
+    const int mb_w = (width + 15) >> 4;
+    const int mb_h = (height + 15) >> 4;
+    memset(picture->extra_info, 0, mb_w * mb_h * sizeof(*picture->extra_info));
   }
 
  Error:
