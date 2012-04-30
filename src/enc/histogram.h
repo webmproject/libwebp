@@ -41,6 +41,14 @@ typedef struct {
   double bit_cost_;   // cached value of VP8LHistogramEstimateBits(this)
 } VP8LHistogram;
 
+// Collection of histograms with fixed capacity, allocated as one
+// big memory chunk. Can be destroyed by simply calling 'free()'.
+typedef struct {
+  int size;         // number of slots currently in use
+  int max_size;     // maximum capacity
+  VP8LHistogram** histograms;
+} VP8LHistogramSet;
+
 // Create the histogram.
 //
 // The input data is the PixOrCopy data, which models the literals, stop
@@ -50,18 +58,12 @@ void VP8LHistogramCreate(VP8LHistogram* const p,
                          const VP8LBackwardRefs* const refs,
                          int palette_code_bits);
 
-// Reset the histogram's stats.
-void VP8LHistogramClear(VP8LHistogram* const p);
-
 // Set the palette_code_bits and reset the stats.
 void VP8LHistogramInit(VP8LHistogram* const p, int palette_code_bits);
 
 // Allocate an array of pointer to histograms, allocated and initialized
 // using 'cache_bits'. Return NULL in case of memory error.
-VP8LHistogram** VP8LAllocateHistograms(int size, int cache_bits);
-
-// Destroy an array of histograms (and the array itself).
-void VP8LDeleteHistograms(VP8LHistogram** const histograms, int size);
+VP8LHistogramSet* VP8LAllocateHistogramSet(int size, int cache_bits);
 
 void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const p,
                                      const PixOrCopy* const v);
@@ -125,10 +127,8 @@ void VP8LConvertPopulationCountTableToBitEstimates(
 // Builds the histogram image.
 int VP8LGetHistoImageSymbols(int xsize, int ysize,
                              const VP8LBackwardRefs* const refs,
-                             int quality, int histogram_bits,
-                             int cache_bits,
-                             VP8LHistogram** const histogram_image,
-                             int* const histogram_image_size,
+                             int quality, int histogram_bits, int cache_bits,
+                             VP8LHistogramSet* const image_in,
                              uint16_t* const histogram_symbols);
 
 #if defined(__cplusplus) || defined(c_plusplus)

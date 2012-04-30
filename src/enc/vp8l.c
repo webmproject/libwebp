@@ -103,7 +103,8 @@ static int AnalyzeAndCreatePalette(const uint32_t* const argb, int num_pix,
 }
 
 static int AnalyzeEntropy(const uint32_t const *argb, int xsize, int ysize,
-                          int* nonpredicted_bits, int* predicted_bits) {
+                          double* const nonpredicted_bits,
+                          double* const predicted_bits) {
   int i;
   VP8LHistogram* nonpredicted = NULL;
   VP8LHistogram* predicted = (VP8LHistogram*)malloc(2 * sizeof(*predicted));
@@ -126,8 +127,8 @@ static int AnalyzeEntropy(const uint32_t const *argb, int xsize, int ysize,
       VP8LHistogramAddSinglePixOrCopy(predicted, &pix_diff_token);
     }
   }
-  *nonpredicted_bits = (int)VP8LHistogramEstimateBitsBulk(nonpredicted);
-  *predicted_bits = (int)VP8LHistogramEstimateBitsBulk(predicted);
+  *nonpredicted_bits = VP8LHistogramEstimateBitsBulk(nonpredicted);
+  *predicted_bits = VP8LHistogramEstimateBitsBulk(predicted);
   free(predicted);
   return 1;
 }
@@ -140,13 +141,13 @@ static int VP8LEncAnalyze(VP8LEncoder* const enc) {
         AnalyzeAndCreatePalette(pic->argb, pic->width * pic->height,
                                 enc->palette_, &enc->palette_size_);
   if (!enc->use_palette_) {
-    int non_pred_entropy, pred_entropy;
+    double non_pred_entropy, pred_entropy;
     if (!AnalyzeEntropy(pic->argb, pic->width, pic->height,
                         &non_pred_entropy, &pred_entropy)) {
       return 0;
     }
 
-    if (20 * pred_entropy < 19 * non_pred_entropy) {
+    if (pred_entropy < 0.95 * non_pred_entropy) {
       enc->use_predict_ = 1;
       enc->use_cross_color_ = 1;
     }
@@ -157,7 +158,7 @@ static int VP8LEncAnalyze(VP8LEncoder* const enc) {
 // -----------------------------------------------------------------------------
 
 static int GetBackwardReferences(int width, int height,
-                                 const uint32_t* argb,
+                                 const uint32_t* const argb,
                                  int quality, int use_color_cache,
                                  int cache_bits, int use_2d_locality,
                                  VP8LBackwardRefs* const best) {
@@ -345,13 +346,15 @@ static int OptimizeHuffmanForRle(int length, int* counts) {
 
 // TODO(vikasa): Wrap bit_codes and bit_lengths in a Struct.
 static int GetHuffBitLengthsAndCodes(
-    int histogram_image_size, VP8LHistogram** histogram_image,
+    const VP8LHistogramSet* const histogram_image,
     int use_color_cache, int** bit_length_sizes,
     uint16_t*** bit_codes, uint8_t*** bit_lengths) {
   int i, k;
   int ok = 1;
+  const int histogram_image_size = histogram_image->size;
   for (i = 0; i < histogram_image_size; ++i) {
-    const int num_literals = VP8LHistogramNumCodes(histogram_image[i]);
+    VP8LHistogram* const histo = histogram_image->histograms[i];
+    const int num_literals = VP8LHistogramNumCodes(histo);
     k = 0;
     // TODO(vikasa): Alloc one big buffer instead of allocating in the loop.
     (*bit_length_sizes)[5 * i] = num_literals;
@@ -364,23 +367,21 @@ static int GetHuffBitLengthsAndCodes(
     }
 
     // For each component, optimize histogram for Huffman with RLE compression.
-    ok = ok && OptimizeHuffmanForRle(num_literals,
-                                     histogram_image[i]->literal_);
+    ok = ok && OptimizeHuffmanForRle(num_literals, histo->literal_);
     if (!use_color_cache) {
       // Implies that palette_bits == 0,
       // and so number of palette entries = (1 << 0) = 1.
       // Optimization might have smeared population count in this single
       // palette entry, so zero it out.
-      histogram_image[i]->literal_[256 + kLengthCodes] = 0;
+      histo->literal_[256 + kLengthCodes] = 0;
     }
-    ok = ok && OptimizeHuffmanForRle(256, histogram_image[i]->red_);
-    ok = ok && OptimizeHuffmanForRle(256, histogram_image[i]->blue_);
-    ok = ok && OptimizeHuffmanForRle(256, histogram_image[i]->alpha_);
-    ok = ok && OptimizeHuffmanForRle(DISTANCE_CODES_MAX,
-                                     histogram_image[i]->distance_);
+    ok = ok && OptimizeHuffmanForRle(256, histo->red_);
+    ok = ok && OptimizeHuffmanForRle(256, histo->blue_);
+    ok = ok && OptimizeHuffmanForRle(256, histo->alpha_);
+    ok = ok && OptimizeHuffmanForRle(DISTANCE_CODES_MAX, histo->distance_);
 
     // Create a Huffman tree (in the form of bit lengths) for each component.
-    ok = ok && VP8LCreateHuffmanTree(histogram_image[i]->literal_, num_literals,
+    ok = ok && VP8LCreateHuffmanTree(histo->literal_, num_literals,
                                      15, (*bit_lengths)[5 * i]);
     for (k = 1; k < 5; ++k) {
       int val = 256;
@@ -396,14 +397,14 @@ static int GetHuffBitLengthsAndCodes(
         goto Error;
       }
     }
-    ok = ok && VP8LCreateHuffmanTree(histogram_image[i]->red_, 256, 15,
+    ok = ok &&
+        VP8LCreateHuffmanTree(histo->red_, 256, 15,
                                      (*bit_lengths)[5 * i + 1]) &&
-        VP8LCreateHuffmanTree(histogram_image[i]->blue_, 256, 15,
+        VP8LCreateHuffmanTree(histo->blue_, 256, 15,
                               (*bit_lengths)[5 * i + 2]) &&
-        VP8LCreateHuffmanTree(histogram_image[i]->alpha_, 256, 15,
+        VP8LCreateHuffmanTree(histo->alpha_, 256, 15,
                               (*bit_lengths)[5 * i + 3]) &&
-        VP8LCreateHuffmanTree(histogram_image[i]->distance_,
-                              DISTANCE_CODES_MAX, 15,
+        VP8LCreateHuffmanTree(histo->distance_, DISTANCE_CODES_MAX, 15,
                               (*bit_lengths)[5 * i + 4]);
     // Create the actual bit codes for the bit lengths.
     for (k = 0; k < 5; ++k) {
@@ -657,10 +658,11 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   const int use_2d_locality = 1;
   const int use_color_cache = (cache_bits > 0);
   const int color_cache_size = use_color_cache ? (1 << cache_bits) : 0;
-  const int histogram_image_xysize = VP8LSubSampleSize(width, histogram_bits) *
+  const int histogram_image_xysize =
+      VP8LSubSampleSize(width, histogram_bits) *
       VP8LSubSampleSize(height, histogram_bits);
-  VP8LHistogram** histogram_image =
-      (VP8LHistogram**)calloc(histogram_image_xysize, sizeof(*histogram_image));
+  VP8LHistogramSet* histogram_image =
+      VP8LAllocateHistogramSet(histogram_image_xysize, 0);
   int histogram_image_size;
   VP8LBackwardRefs refs;
   uint16_t* const histogram_symbols =
@@ -677,11 +679,12 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   // Build histogram image & symbols from backward references.
   if (!VP8LGetHistoImageSymbols(width, height, &refs,
                                 quality, histogram_bits, cache_bits,
-                                histogram_image, &histogram_image_size,
+                                histogram_image,
                                 histogram_symbols)) {
     goto Error;
   }
   // Create Huffman bit lengths & codes for each histogram image.
+  histogram_image_size = histogram_image->size;
   bit_lengths_sizes = (int*)calloc(5 * histogram_image_size,
                                    sizeof(*bit_lengths_sizes));
   bit_lengths = (uint8_t**)calloc(5 * histogram_image_size,
@@ -689,8 +692,8 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   bit_codes = (uint16_t**)calloc(5 * histogram_image_size,
                                  sizeof(*bit_codes));
   if (bit_lengths_sizes == NULL || bit_lengths == NULL || bit_codes == NULL ||
-      !GetHuffBitLengthsAndCodes(histogram_image_size, histogram_image,
-                                 use_color_cache, &bit_lengths_sizes,
+      !GetHuffBitLengthsAndCodes(histogram_image, use_color_cache,
+                                 &bit_lengths_sizes,
                                  &bit_codes, &bit_lengths)) {
     goto Error;
   }
@@ -742,7 +745,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   }
 
   // Free combined histograms.
-  VP8LDeleteHistograms(histogram_image, histogram_image_size);
+  free(histogram_image);
   histogram_image = NULL;
 
   // Emit no bits if there is only one symbol in the histogram.
@@ -757,9 +760,8 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   ok = 1;
 
  Error:
-  if (!ok) {
-    VP8LDeleteHistograms(histogram_image, histogram_image_size);
-  }
+  if (!ok) free(histogram_image);
+
   VP8LClearBackwardRefs(&refs);
   for (i = 0; i < 5 * histogram_image_size; ++i) {
     free(bit_lengths[i]);
