@@ -185,7 +185,10 @@ typedef enum {
 // picture is only partially decoded, pending additional input.
 // Code example:
 //
-//   WebPIDecoder* const idec = WebPINew(mode);
+//   WebPInitDecBuffer(&buffer);
+//   buffer.colorspace = mode;
+//   ...
+//   WebPIDecoder* const idec = WebPINew(&buffer);
 //   while (has_more_data) {
 //     // ... (get additional data)
 //     status = WebPIAppend(idec, new_data, new_data_size);
@@ -209,10 +212,6 @@ typedef struct WebPIDecoder WebPIDecoder;
 // Returns NULL if the allocation failed.
 WEBP_EXTERN(WebPIDecoder*) WebPINewDecoder(WebPDecBuffer* const output_buffer);
 
-// Creates a WebPIDecoder object. Returns NULL in case of failure.
-// TODO(skal): DEPRECATED. Prefer using WebPINewDecoder().
-WEBP_EXTERN(WebPIDecoder*) WebPINew(WEBP_CSP_MODE mode);
-
 // This function allocates and initializes an incremental-decoder object, which
 // will output the r/g/b(/a) samples specified by 'mode' into a preallocated
 // buffer 'output_buffer'. The size of this buffer is at least
@@ -235,7 +234,7 @@ WEBP_EXTERN(WebPIDecoder*) WebPINewYUV(
     uint8_t* v, size_t v_size, int v_stride);
 
 // Deletes the WebPIDecoder object and associated memory. Must always be called
-// if WebPINew, WebPINewRGB or WebPINewYUV succeeded.
+// if WebPINewDecoder, WebPINewRGB or WebPINewYUV succeeded.
 WEBP_EXTERN(void) WebPIDelete(WebPIDecoder* const idec);
 
 // Copies and decodes the next available data. Returns VP8_STATUS_OK when
@@ -254,9 +253,10 @@ WEBP_EXTERN(VP8StatusCode) WebPIUpdate(
 
 // Returns the r/g/b/(a) image decoded so far. Returns NULL if output params
 // are not initialized yet. The r/g/b/(a) output type corresponds to the mode
-// specified in WebPINew()/WebPINewRGB(). *last_y is the index of last decoded
-// row in raster scan order. Some pointers (*last_y, *width etc.) can be NULL if
-// corresponding information is not needed.
+// specified in WebPINewDecoder()/WebPINewRGB().
+// *last_y is the index of last decoded row in raster scan order. Some pointers
+// (*last_y, *width etc.) can be NULL if corresponding information is not
+// needed.
 WEBP_EXTERN(uint8_t*) WebPIDecGetRGB(
     const WebPIDecoder* const idec, int* last_y,
     int* width, int* height, int* stride);
