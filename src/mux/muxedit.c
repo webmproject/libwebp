@@ -64,7 +64,7 @@ void WebPMuxDelete(WebPMux* const mux) {
   if (id == (ID)) {                                                            \
     err = ChunkAssignDataImageInfo(&chunk, data, size,                         \
                                    image_info,                                 \
-                                   copy_data, kChunks[(ID)].chunkTag);         \
+                                   copy_data, kChunks[(ID)].tag);              \
     if (err == WEBP_MUX_OK) {                                                  \
       err = ChunkSetNth(&chunk, (LIST), nth);                                  \
     }                                                                          \
@@ -146,7 +146,7 @@ static WebPMuxError CreateDataFromImageInfo(const WebPImageInfo* image_info,
   assert(size);
   assert(image_info);
 
-  *size = kChunks[is_frame ? FRAME_ID : TILE_ID].chunkSize;
+  *size = kChunks[is_frame ? FRAME_ID : TILE_ID].size;
   *data = (uint8_t*)malloc(*size);
   if (*data == NULL) return WEBP_MUX_MEMORY_ERROR;
 
@@ -211,11 +211,11 @@ static WebPMuxError MuxDeleteAllNamedData(WebPMux* const mux,
   chunk_list = GetChunkListFromId(mux, id);
   if (chunk_list == NULL) return WEBP_MUX_INVALID_ARGUMENT;
 
-  return DeleteChunks(chunk_list, kChunks[id].chunkTag);
+  return DeleteChunks(chunk_list, kChunks[id].tag);
 }
 
 static WebPMuxError DeleteLoopCount(WebPMux* const mux) {
-  return MuxDeleteAllNamedData(mux, kChunks[LOOP_ID].chunkName);
+  return MuxDeleteAllNamedData(mux, kChunks[LOOP_ID].name);
 }
 
 //------------------------------------------------------------------------------
@@ -247,7 +247,7 @@ WebPMuxError WebPMuxSetImage(WebPMux* const mux,
   if (has_alpha) {  // Add alpha chunk.
     ChunkInit(&chunk);
     err = ChunkAssignDataImageInfo(&chunk, alpha_data, alpha_size, NULL,
-                                   copy_data, kChunks[ALPHA_ID].chunkTag);
+                                   copy_data, kChunks[ALPHA_ID].tag);
     if (err != WEBP_MUX_OK) return err;
     err = ChunkSetNth(&chunk, &wpi.alpha_, 1);
     if (err != WEBP_MUX_OK) return err;
@@ -256,7 +256,7 @@ WebPMuxError WebPMuxSetImage(WebPMux* const mux,
   // Add image chunk.
   ChunkInit(&chunk);
   err = ChunkAssignDataImageInfo(&chunk, image.bytes_, image.size_, NULL,
-                                 copy_data, kChunks[IMAGE_ID].chunkTag);
+                                 copy_data, kChunks[IMAGE_ID].tag);
   if (err != WEBP_MUX_OK) return err;
   err = ChunkSetNth(&chunk, &wpi.vp8_, 1);
   if (err != WEBP_MUX_OK) return err;
@@ -310,12 +310,12 @@ WebPMuxError WebPMuxSetLoopCount(WebPMux* const mux, uint32_t loop_count) {
   if (err != WEBP_MUX_OK && err != WEBP_MUX_NOT_FOUND) return err;
 
   // Add the given loop count.
-  data = (uint8_t*)malloc(kChunks[LOOP_ID].chunkSize);
+  data = (uint8_t*)malloc(kChunks[LOOP_ID].size);
   if (data == NULL) return WEBP_MUX_MEMORY_ERROR;
 
   PutLE32(data, loop_count);
-  err = MuxAddChunk(mux, 1, kChunks[LOOP_ID].chunkTag, data,
-                    kChunks[LOOP_ID].chunkSize, NULL, 1);
+  err = MuxAddChunk(mux, 1, kChunks[LOOP_ID].tag, data,
+                    kChunks[LOOP_ID].size, NULL, 1);
   free(data);
   return err;
 }
@@ -333,7 +333,7 @@ static WebPMuxError MuxAddFrameTileInternal(
   WebPImageInfo* image_info = NULL;
   uint8_t* frame_tile_data = NULL;
   size_t frame_tile_data_size = 0;
-  const int is_frame = (tag == kChunks[FRAME_ID].chunkTag) ? 1 : 0;
+  const int is_frame = (tag == kChunks[FRAME_ID].tag) ? 1 : 0;
   const int has_alpha = (alpha_data != NULL && alpha_size != 0);
 
   if (mux == NULL || data == NULL || size > MAX_CHUNK_PAYLOAD) {
@@ -350,7 +350,7 @@ static WebPMuxError MuxAddFrameTileInternal(
   if (has_alpha) {
     // Add alpha chunk.
     err = ChunkAssignDataImageInfo(&chunk, alpha_data, alpha_size, NULL,
-                                   copy_data, kChunks[ALPHA_ID].chunkTag);
+                                   copy_data, kChunks[ALPHA_ID].tag);
     if (err != WEBP_MUX_OK) return err;
     err = ChunkSetNth(&chunk, &wpi.alpha_, 1);
     if (err != WEBP_MUX_OK) return err;
@@ -367,7 +367,7 @@ static WebPMuxError MuxAddFrameTileInternal(
 
   // Add image chunk.
   err = ChunkAssignDataImageInfo(&chunk, image.bytes_, image.size_, image_info,
-                                 copy_data, kChunks[IMAGE_ID].chunkTag);
+                                 copy_data, kChunks[IMAGE_ID].tag);
   if (err != WEBP_MUX_OK) goto Err;
   image_info = NULL;  // Owned by 'chunk' now.
   err = ChunkSetNth(&chunk, &wpi.vp8_, 1);
@@ -413,7 +413,7 @@ WebPMuxError WebPMuxAddFrame(WebPMux* const mux, uint32_t nth,
                              uint32_t duration, int copy_data) {
   return MuxAddFrameTileInternal(mux, nth, data, size, alpha_data, alpha_size,
                                  x_offset, y_offset, duration,
-                                 copy_data, kChunks[FRAME_ID].chunkTag);
+                                 copy_data, kChunks[FRAME_ID].tag);
 }
 
 WebPMuxError WebPMuxAddTile(WebPMux* const mux, uint32_t nth,
@@ -423,7 +423,7 @@ WebPMuxError WebPMuxAddTile(WebPMux* const mux, uint32_t nth,
                             int copy_data) {
   return MuxAddFrameTileInternal(mux, nth, data, size, alpha_data, alpha_size,
                                  x_offset, y_offset, 1,
-                                 copy_data, kChunks[TILE_ID].chunkTag);
+                                 copy_data, kChunks[TILE_ID].tag);
 }
 
 //------------------------------------------------------------------------------
@@ -443,11 +443,11 @@ WebPMuxError WebPMuxDeleteImage(WebPMux* const mux) {
 }
 
 WebPMuxError WebPMuxDeleteMetadata(WebPMux* const mux) {
-  return MuxDeleteAllNamedData(mux, kChunks[META_ID].chunkName);
+  return MuxDeleteAllNamedData(mux, kChunks[META_ID].name);
 }
 
 WebPMuxError WebPMuxDeleteColorProfile(WebPMux* const mux) {
-  return MuxDeleteAllNamedData(mux, kChunks[ICCP_ID].chunkName);
+  return MuxDeleteAllNamedData(mux, kChunks[ICCP_ID].name);
 }
 
 static WebPMuxError DeleteFrameTileInternal(WebPMux* const mux,
@@ -461,11 +461,11 @@ static WebPMuxError DeleteFrameTileInternal(WebPMux* const mux,
 }
 
 WebPMuxError WebPMuxDeleteFrame(WebPMux* const mux, uint32_t nth) {
-  return DeleteFrameTileInternal(mux, nth, kChunks[FRAME_ID].chunkName);
+  return DeleteFrameTileInternal(mux, nth, kChunks[FRAME_ID].name);
 }
 
 WebPMuxError WebPMuxDeleteTile(WebPMux* const mux, uint32_t nth) {
-  return DeleteFrameTileInternal(mux, nth, kChunks[TILE_ID].chunkName);
+  return DeleteFrameTileInternal(mux, nth, kChunks[TILE_ID].name);
 }
 
 //------------------------------------------------------------------------------
@@ -551,7 +551,7 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
 
   // If VP8X chunk(s) is(are) already present, remove them (and later add new
   // VP8X chunk with updated flags).
-  err = MuxDeleteAllNamedData(mux, kChunks[VP8X_ID].chunkName);
+  err = MuxDeleteAllNamedData(mux, kChunks[VP8X_ID].name);
   if (err != WEBP_MUX_OK && err != WEBP_MUX_NOT_FOUND) return err;
 
   // Set flags.
@@ -564,10 +564,10 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   }
 
   if (images->header_ != NULL) {
-    if (images->header_->tag_ == kChunks[TILE_ID].chunkTag) {
+    if (images->header_->tag_ == kChunks[TILE_ID].tag) {
       // This is a tiled image.
       flags |= TILE_FLAG;
-    } else if (images->header_->tag_ == kChunks[FRAME_ID].chunkTag) {
+    } else if (images->header_->tag_ == kChunks[FRAME_ID].tag) {
       // This is an image with animation.
       flags |= ANIMATION_FLAG;
     }
@@ -590,7 +590,7 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   PutLE32(data + 4, width);   // canvas width.
   PutLE32(data + 8, height);  // canvas height.
 
-  err = MuxAddChunk(mux, 1, kChunks[VP8X_ID].chunkTag, data, data_size,
+  err = MuxAddChunk(mux, 1, kChunks[VP8X_ID].tag, data, data_size,
                     NULL, 1);
   return err;
 }
@@ -612,11 +612,11 @@ WebPMuxError WebPMuxAssemble(WebPMux* const mux,
   *output_size = 0;
 
   // Remove LOOP chunk if unnecessary.
-  err = WebPMuxNumNamedElements(mux, kChunks[LOOP_ID].chunkName,
+  err = WebPMuxNumNamedElements(mux, kChunks[LOOP_ID].name,
                                 &num_loop_chunks);
   if (err != WEBP_MUX_OK) return err;
   if (num_loop_chunks >= 1) {
-    err = WebPMuxNumNamedElements(mux, kChunks[FRAME_ID].chunkName,
+    err = WebPMuxNumNamedElements(mux, kChunks[FRAME_ID].name,
                                   &num_frames);
     if (err != WEBP_MUX_OK) return err;
     if (num_frames == 0) {
