@@ -94,10 +94,10 @@ typedef enum {
   ((uint32_t)c1 | (c2 << 8) | (c3 << 16) | (c4 << 24))
 
 typedef struct {
-  const char*   chunkName;
-  uint32_t      chunkTag;
-  TAG_ID        chunkId;
-  uint32_t      chunkSize;
+  const char*   name;
+  uint32_t      tag;
+  TAG_ID        id;
+  uint32_t      size;
 } ChunkInfo;
 
 extern const ChunkInfo kChunks[LAST_TAG_ID];

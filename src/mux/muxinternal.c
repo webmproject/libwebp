@@ -60,16 +60,16 @@ WebPChunk* ChunkRelease(WebPChunk* const chunk) {
 TAG_ID ChunkGetIdFromName(const char* const what) {
   int i;
   if (what == NULL) return -1;
-  for (i = 0; kChunks[i].chunkName != NULL; ++i) {
-    if (!strcmp(what, kChunks[i].chunkName)) return i;
+  for (i = 0; kChunks[i].name != NULL; ++i) {
+    if (!strcmp(what, kChunks[i].name)) return i;
   }
   return NIL_ID;
 }
 
 TAG_ID ChunkGetIdFromTag(uint32_t tag) {
   int i;
-  for (i = 0; kChunks[i].chunkTag != NIL_TAG; ++i) {
-    if (tag == kChunks[i].chunkTag) return i;
+  for (i = 0; kChunks[i].tag != NIL_TAG; ++i) {
+    if (tag == kChunks[i].tag) return i;
   }
   return NIL_ID;
 }
@@ -127,7 +127,7 @@ WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk,
                                       WebPImageInfo* image_info,
                                       int copy_data, uint32_t tag) {
   // For internally allocated chunks, always copy data & make it owner of data.
-  if (tag == kChunks[VP8X_ID].chunkTag || tag == kChunks[LOOP_ID].chunkTag) {
+  if (tag == kChunks[VP8X_ID].tag || tag == kChunks[LOOP_ID].tag) {
     copy_data = 1;
   }
 
@@ -155,7 +155,7 @@ WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk,
     }
   }
 
-  if (tag == kChunks[IMAGE_ID].chunkTag) {
+  if (tag == kChunks[IMAGE_ID].tag) {
     chunk->image_info_ = image_info;
   }
 
@@ -249,7 +249,7 @@ int MuxImageCount(WebPMuxImage* const wpi_list, TAG_ID id) {
   WebPMuxImage* current;
   for (current = wpi_list; current != NULL; current = current->next_) {
     const WebPChunk* const wpi_chunk = *MuxImageGetListFromId(current, id);
-    if (wpi_chunk != NULL && wpi_chunk->tag_ == kChunks[id].chunkTag) {
+    if (wpi_chunk != NULL && wpi_chunk->tag_ == kChunks[id].tag) {
       ++count;
     }
   }
@@ -298,7 +298,7 @@ static int SearchImageToGetOrDelete(WebPMuxImage** wpi_list, uint32_t nth,
   while (*wpi_list) {
     WebPMuxImage* const cur_wpi = *wpi_list;
     const WebPChunk* const wpi_chunk = *MuxImageGetListFromId(cur_wpi, id);
-    if (wpi_chunk != NULL && wpi_chunk->tag_ == kChunks[id].chunkTag) {
+    if (wpi_chunk != NULL && wpi_chunk->tag_ == kChunks[id].tag) {
       ++count;
       if (count == nth) return 1;  // Found.
     }
@@ -455,8 +455,8 @@ static WebPMuxError ValidateChunk(const WebPMux* const mux, TAG_ID id,
                                   FeatureFlags feature, FeatureFlags vp8x_flags,
                                   int max, int* num) {
   const WebPMuxError err =
-      WebPMuxNumNamedElements(mux, kChunks[id].chunkName, num);
-  assert(id == kChunks[id].chunkId);
+      WebPMuxNumNamedElements(mux, kChunks[id].name, num);
+  assert(id == kChunks[id].id);
 
   if (err != WEBP_MUX_OK) return err;
   if (max > -1 && *num > max) return WEBP_MUX_INVALID_ARGUMENT;
