@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAKn//wzM\u003d",
+        "filename": "src/dec/webp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-05-02T23:11:12Z",
+      "side": 1,
+      "message": "i\u0027m not sure it\u0027s the role of this function to validate raw VP8 data. It should have been done somewhere at other level.\nThis function is more about skipping over header, i think...",
+      "revId": "df4ef3e37f5f0a9c1ae99ec5f6428766ea0b6d3c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
