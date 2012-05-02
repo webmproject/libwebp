@@ -84,7 +84,7 @@ int VP8SetError(VP8Decoder* const dec,
 
 int VP8GetInfo(const uint8_t* data, size_t data_size, size_t chunk_size,
                int* width, int* height) {
-  if (data_size < 10) {
+  if (data == NULL || data_size < VP8_FRAME_HEADER_SIZE) {
     return 0;         // not enough data
   }
   // check signature

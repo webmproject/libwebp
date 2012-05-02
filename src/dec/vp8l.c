@@ -96,7 +96,7 @@ static int ReadImageSize(VP8LBitReader* const br,
 
 int VP8LGetInfo(const uint8_t* data, size_t data_size,
                 int* width, int* height) {
-  if (data_size < kHeaderBytes) {
+  if (data == NULL || data_size < kHeaderBytes) {
     return 0;         // not enough data
   } else {
     int w, h;
@@ -105,8 +105,8 @@ int VP8LGetInfo(const uint8_t* data, size_t data_size,
     if (!ReadImageSize(&br, &w, &h)) {
       return 0;
     }
-    *width = w;
-    *height = h;
+    if (width != NULL) *width = w;
+    if (height != NULL) *height = h;
     return 1;
   }
 }
