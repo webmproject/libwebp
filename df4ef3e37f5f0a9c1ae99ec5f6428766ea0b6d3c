@@ -16,6 +16,24 @@
       "revId": "df4ef3e37f5f0a9c1ae99ec5f6428766ea0b6d3c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//wyo\u003d",
+        "filename": "src/dec/webp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-02T23:15:40Z",
+      "side": 1,
+      "message": "GetFeatures() will follow the wrong path without this in the lossless case: is_lossless will \u003d 0, then (only) VP8GetInfo will be called.",
+      "parentUuid": "AAAAKn//wzM\u003d",
+      "revId": "df4ef3e37f5f0a9c1ae99ec5f6428766ea0b6d3c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
