@@ -16,6 +16,24 @@
       "revId": "9553ae186f31f23270d2c12c1b9f42aaf3faced4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//x80\u003d",
+        "filename": "NEWS",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-02T00:35:51Z",
+      "side": 1,
+      "message": "Worth noting it on the encode side. Could add a mention for decode_vp8, but that doesn\u0027t see common use if I had to guess.",
+      "parentUuid": "AAAAKn//yOU\u003d",
+      "revId": "9553ae186f31f23270d2c12c1b9f42aaf3faced4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
