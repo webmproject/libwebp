@@ -69,9 +69,6 @@ struct WebPMux {
   WebPChunk*  unknown_;
 };
 
-#define CHUNKS_PER_FRAME  2
-#define CHUNKS_PER_TILE   2
-
 typedef enum {
   VP8X_ID = 0,
   ICCP_ID,
