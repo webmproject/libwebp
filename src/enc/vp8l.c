@@ -432,8 +432,10 @@ static void ClearHuffmanTreeIfOnlyOneSymbol(const int num_symbols,
   int k;
   int count = 0;
   for (k = 0; k < num_symbols; ++k) {
-    if (lengths[k] != 0) ++count;
-    if (count > 1) return;
+    if (lengths[k] != 0) {
+      ++count;
+      if (count > 1) return;
+    }
   }
   for (k = 0; k < num_symbols; ++k) {
     lengths[k] = 0;
@@ -490,34 +492,105 @@ static void StoreHuffmanTreeToBitMask(
   }
 }
 
+static int StoreFullHuffmanCode(VP8LBitWriter* const bw,
+                                const uint8_t* const bit_lengths,
+                                int bit_lengths_size) {
+  int ok = 0;
+  int huffman_tree_size = 0;
+  uint8_t code_length_bitdepth[CODE_LENGTH_CODES] = { 0 };
+  uint16_t code_length_bitdepth_symbols[CODE_LENGTH_CODES] = { 0 };
+  uint8_t* huffman_tree_extra_bits;
+  uint8_t* const huffman_tree =
+      (uint8_t*)malloc(bit_lengths_size * sizeof(*huffman_tree) +
+                       bit_lengths_size * sizeof(*huffman_tree_extra_bits));
+
+  if (huffman_tree == NULL) return 0;
+  huffman_tree_extra_bits =
+      huffman_tree + bit_lengths_size * sizeof(*huffman_tree);
+
+  VP8LWriteBits(bw, 1, 0);
+  VP8LCreateCompressedHuffmanTree(bit_lengths, bit_lengths_size,
+                                  &huffman_tree_size, huffman_tree,
+                                  huffman_tree_extra_bits);
+  {
+    int histogram[CODE_LENGTH_CODES] = { 0 };
+    int i;
+    for (i = 0; i < huffman_tree_size; ++i) {
+      ++histogram[huffman_tree[i]];
+    }
+
+    if (!VP8LCreateHuffmanTree(histogram, CODE_LENGTH_CODES,
+                               7, code_length_bitdepth)) {
+      goto End;
+    }
+  }
+  VP8LConvertBitDepthsToSymbols(code_length_bitdepth, CODE_LENGTH_CODES,
+                                code_length_bitdepth_symbols);
+  StoreHuffmanTreeOfHuffmanTreeToBitMask(bw, code_length_bitdepth);
+  ClearHuffmanTreeIfOnlyOneSymbol(CODE_LENGTH_CODES,
+                                  code_length_bitdepth,
+                                  code_length_bitdepth_symbols);
+  {
+    int trailing_zero_bits = 0;
+    int trimmed_length = huffman_tree_size;
+    int write_trimmed_length;
+    int length;
+    int i = huffman_tree_size;
+    while (i-- > 0) {
+      const int ix = huffman_tree[i];
+      if (ix == 0 || ix == 17 || ix == 18) {
+        --trimmed_length;   // discount trailing zeros
+        trailing_zero_bits += code_length_bitdepth[ix];
+        if (ix == 17) {
+          trailing_zero_bits += 3;
+        } else if (ix == 18) {
+          trailing_zero_bits += 7;
+        }
+      } else {
+        break;
+      }
+    }
+    write_trimmed_length = (trimmed_length > 1 && trailing_zero_bits > 12);
+    length = write_trimmed_length ? trimmed_length : huffman_tree_size;
+    VP8LWriteBits(bw, 1, write_trimmed_length);
+    if (write_trimmed_length) {
+      const int nbits = VP8LBitsLog2Ceiling(trimmed_length - 1);
+      const int nbitpairs = (nbits == 0) ? 1 : (nbits + 1) / 2;
+      VP8LWriteBits(bw, 3, nbitpairs - 1);
+      VP8LWriteBits(bw, nbitpairs * 2, trimmed_length - 2);
+    }
+    StoreHuffmanTreeToBitMask(bw, huffman_tree, huffman_tree_extra_bits,
+                              length, code_length_bitdepth,
+                              code_length_bitdepth_symbols);
+  }
+  ok = 1;
+ End:
+  free(huffman_tree);
+  return ok;
+}
+
 static int StoreHuffmanCode(VP8LBitWriter* const bw,
                             const uint8_t* const bit_lengths,
                             int bit_lengths_size) {
   int i;
-  int ok = 0;
   int count = 0;
   int symbols[2] = { 0, 0 };
-  int huffman_tree_size = 0;
-  uint8_t code_length_bitdepth[CODE_LENGTH_CODES];
-  uint16_t code_length_bitdepth_symbols[CODE_LENGTH_CODES];
-  int huffman_tree_histogram[CODE_LENGTH_CODES];
-  uint8_t* huffman_tree_extra_bits;
-  uint8_t* huffman_tree = (uint8_t*)malloc(bit_lengths_size *
-                                           (sizeof(*huffman_tree) +
-                                            sizeof(*huffman_tree_extra_bits)));
+  const int kMaxBits = 8;
+  const int kMaxSymbol = 1 << kMaxBits;
 
-  if (huffman_tree == NULL) goto End;
-  huffman_tree_extra_bits =
-      huffman_tree + (bit_lengths_size * sizeof(*huffman_tree));
-
-  for (i = 0; i < bit_lengths_size; ++i) {
+  // Check whether it's a small tree.
+  for (i = 0; i < bit_lengths_size && count < 3; ++i) {
     if (bit_lengths[i] != 0) {
       if (count < 2) symbols[count] = i;
       ++count;
     }
   }
-  if (count == 0) count = 1;
-  if (count <= 2 && symbols[0] < 256 && symbols[1] < 256) {
+
+  if (count == 0) {   // emit minimal tree for empty cases
+    // bits: small tree marker: 1, count-1: 0, large 8-bit code: 0, code: 0
+    VP8LWriteBits(bw, 4, 0x01);
+    return 1;
+  } else if (count <= 2 && symbols[0] < kMaxSymbol && symbols[1] < kMaxSymbol) {
     VP8LWriteBits(bw, 1, 1);  // Small tree marker to encode 1 or 2 symbols.
     VP8LWriteBits(bw, 1, count - 1);
     if (symbols[0] <= 1) {
@@ -530,67 +603,10 @@ static int StoreHuffmanCode(VP8LBitWriter* const bw,
     if (count == 2) {
       VP8LWriteBits(bw, 8, symbols[1]);
     }
-    ok = 1;
-    goto End;
+    return 1;
+  } else {
+    return StoreFullHuffmanCode(bw, bit_lengths, bit_lengths_size);
   }
-
-  VP8LWriteBits(bw, 1, 0);
-  VP8LCreateCompressedHuffmanTree(bit_lengths, bit_lengths_size,
-                                  &huffman_tree_size, huffman_tree,
-                                  huffman_tree_extra_bits);
-  memset(huffman_tree_histogram, 0, sizeof(huffman_tree_histogram));
-  for (i = 0; i < huffman_tree_size; ++i) {
-    ++huffman_tree_histogram[huffman_tree[i]];
-  }
-  memset(code_length_bitdepth, 0, sizeof(code_length_bitdepth));
-  memset(code_length_bitdepth_symbols, 0, sizeof(code_length_bitdepth_symbols));
-
-  if (!VP8LCreateHuffmanTree(huffman_tree_histogram, CODE_LENGTH_CODES,
-                             7, code_length_bitdepth)) {
-    goto End;
-  }
-  VP8LConvertBitDepthsToSymbols(code_length_bitdepth, CODE_LENGTH_CODES,
-                                code_length_bitdepth_symbols);
-  StoreHuffmanTreeOfHuffmanTreeToBitMask(bw, code_length_bitdepth);
-  ClearHuffmanTreeIfOnlyOneSymbol(CODE_LENGTH_CODES,
-                                  code_length_bitdepth,
-                                  code_length_bitdepth_symbols);
-  {
-    int num_trailing_zeros = 0;
-    int trailing_zero_bits = 0;
-    int trimmed_length;
-    int write_length;
-    int length;
-    for (i = huffman_tree_size; i > 0; --i) {
-      int ix = huffman_tree[i - 1];
-      if (ix == 0 || ix == 17 || ix == 18) {
-        ++num_trailing_zeros;
-        trailing_zero_bits += code_length_bitdepth[ix];
-        if (ix == 17) trailing_zero_bits += 3;
-        if (ix == 18) trailing_zero_bits += 7;
-      } else {
-        break;
-      }
-    }
-    trimmed_length = huffman_tree_size - num_trailing_zeros;
-    write_length = (trimmed_length > 1 && trailing_zero_bits > 12);
-    length = write_length ? trimmed_length : huffman_tree_size;
-    VP8LWriteBits(bw, 1, write_length);
-    if (write_length) {
-      const int nbits = VP8LBitsLog2Ceiling(trimmed_length - 1);
-      const int nbitpairs = nbits == 0 ? 1 : (nbits + 1) / 2;
-      VP8LWriteBits(bw, 3, nbitpairs - 1);
-      VP8LWriteBits(bw, nbitpairs * 2, trimmed_length - 2);
-    }
-    StoreHuffmanTreeToBitMask(bw, huffman_tree, huffman_tree_extra_bits,
-                              length, code_length_bitdepth,
-                              code_length_bitdepth_symbols);
-  }
-  ok = 1;
-
- End:
-  free(huffman_tree);
-  return ok;
 }
 
 static void StoreImageToBitMask(
