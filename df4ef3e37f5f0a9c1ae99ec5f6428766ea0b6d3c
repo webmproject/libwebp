@@ -34,6 +34,24 @@
       "revId": "df4ef3e37f5f0a9c1ae99ec5f6428766ea0b6d3c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//wb0\u003d",
+        "filename": "src/dec/webp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-03T06:28:54Z",
+      "side": 1,
+      "message": "Of course that logic could be fixed, that\u0027s what I started with, but I thought maybe it would be better to start at the source. Either way, I was hoping to reuse GetFeatures via the public API in some mux/lossless changes.",
+      "parentUuid": "AAAAKn//wyo\u003d",
+      "revId": "df4ef3e37f5f0a9c1ae99ec5f6428766ea0b6d3c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
