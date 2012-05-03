@@ -88,6 +88,10 @@
 extern "C" {
 #endif
 
+#if defined(_MSC_VER) && !defined(NOT_HAVE_LOG2)
+# define NOT_HAVE_LOG2 1
+#endif
+
 #ifdef NOT_HAVE_LOG2
 static double log2(double d) {
   const double kLog2Reciprocal = 1.442695040888963;
