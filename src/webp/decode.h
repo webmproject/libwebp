@@ -188,7 +188,7 @@ typedef enum {
 //   WebPInitDecBuffer(&buffer);
 //   buffer.colorspace = mode;
 //   ...
-//   WebPIDecoder* const idec = WebPINew(&buffer);
+//   WebPIDecoder* const idec = WebPINewDecoder(&buffer);
 //   while (has_more_data) {
 //     // ... (get additional data)
 //     status = WebPIAppend(idec, new_data, new_data_size);
