@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAKn//uKM\u003d",
+        "filename": "src/dsp/cpu.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-04T20:04:26Z",
+      "side": 1,
+      "message": "given this is under __ARM_NEON__ I\u0027m not sure this is needed or will be built in with the Android.mk change.",
+      "revId": "5c44171e7cf129942670d44e4fbdae4ee1b10794",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
