@@ -31,6 +31,7 @@ static const int kCodeLengthRepeatOffsets[3] = { 3, 3, 11 };
 #define NUM_LENGTH_CODES    24
 #define NUM_DISTANCE_CODES  40
 #define DEFAULT_CODE_LENGTH 8
+#define MAX_CACHE_BITS      11
 
 // -----------------------------------------------------------------------------
 //  Five Huffman codes are used at each meta code:
@@ -171,7 +172,7 @@ static WEBP_INLINE int ReadSymbol(const HuffmanTree* tree,
 
 static int ReadHuffmanCodeLengths(
     VP8LDecoder* const dec, const int* const code_length_code_lengths,
-    int num_codes, int num_symbols, int* const code_lengths) {
+    int num_symbols, int* const code_lengths) {
   int ok = 0;
   VP8LBitReader* const br = &dec->br_;
   int symbol;
@@ -179,7 +180,8 @@ static int ReadHuffmanCodeLengths(
   int prev_code_len = DEFAULT_CODE_LENGTH;
   HuffmanTree tree;
 
-  if (!HuffmanTreeBuildImplicit(&tree, code_length_code_lengths, num_codes)) {
+  if (!HuffmanTreeBuildImplicit(&tree, code_length_code_lengths,
+                                NUM_CODE_LENGTH_CODES)) {
     dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
     return 0;
   }
@@ -236,25 +238,17 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
     int symbols[2];
     int codes[2];
     int code_lengths[2];
-    const int nbits = VP8LReadBits(br, 3);
-    const int num_symbols = 1 + ((nbits == 0) ? 0 : VP8LReadBits(br, 1));
-
-    if (nbits == 0) {
-      symbols[0] = 0;
-      codes[0] = 0;
-      code_lengths[0] = 0;
-    } else {
-      const int num_bits = (nbits - 1) * 2 + 4;
-      int i;
-      for (i = 0; i < num_symbols; ++i) {
-        symbols[i] = VP8LReadBits(br, num_bits);
-        if (symbols[i] >= alphabet_size) {
-          dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
-          return 0;
-        }
-        codes[i] = i;
-        code_lengths[i] = num_symbols - 1;
-      }
+    const int num_symbols = VP8LReadBits(br, 1) + 1;
+    const int first_symbol_len_code = VP8LReadBits(br, 1);
+    // The first code is either 1 bit or 8 bit code.
+    symbols[0] = VP8LReadBits(br, (first_symbol_len_code == 0) ? 1 : 8);
+    codes[0] = 0;
+    code_lengths[0] = num_symbols - 1;
+    // The second code (if present), is always 8 bit long.
+    if (num_symbols == 2) {
+      symbols[1] = VP8LReadBits(br, 8);
+      codes[1] = 1;
+      code_lengths[1] = num_symbols - 1;
     }
     ok = HuffmanTreeBuildExplicit(tree, code_lengths, codes,
                                   symbols, num_symbols);
@@ -277,9 +271,8 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
     for (i = 0; i < num_codes; ++i) {
       code_length_code_lengths[kCodeLengthCodeOrder[i]] = VP8LReadBits(br, 3);
     }
-    ok = ReadHuffmanCodeLengths(dec, code_length_code_lengths,
-                                NUM_CODE_LENGTH_CODES,
-                                alphabet_size, code_lengths);
+    ok = ReadHuffmanCodeLengths(dec, code_length_code_lengths, alphabet_size,
+                                code_lengths);
     if (ok) {
       ok = HuffmanTreeBuildImplicit(tree, code_lengths, alphabet_size);
     }
@@ -293,11 +286,23 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
   return 1;
 }
 
+static void DeleteHtreeGroups(HTreeGroup* htree_groups, int num_htree_groups) {
+  if (htree_groups != NULL) {
+    int i, j;
+    for (i = 0; i < num_htree_groups; ++i) {
+      HuffmanTree* const htrees = htree_groups[i].htrees_;
+      for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
+        HuffmanTreeRelease(&htrees[j]);
+      }
+    }
+    free(htree_groups);
+  }
+}
+
 static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
-                            int* const color_cache_bits_ptr) {
+                            int color_cache_bits) {
   int ok = 0;
   int i, j;
-  int color_cache_size;
   VP8LBitReader* const br = &dec->br_;
   VP8LMetadata* const hdr = &dec->hdr_;
   uint32_t* huffman_image = NULL;
@@ -305,11 +310,11 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
   int num_htree_groups = 1;
 
   if (VP8LReadBits(br, 1)) {      // use meta Huffman codes
-    int meta_codes_nbits;
     const int huffman_precision = VP8LReadBits(br, 4);
     const int huffman_xsize = VP8LSubSampleSize(xsize, huffman_precision);
     const int huffman_ysize = VP8LSubSampleSize(ysize, huffman_precision);
     const int huffman_pixs = huffman_xsize * huffman_ysize;
+
     if (!DecodeImageStream(huffman_xsize, huffman_ysize, 0, dec,
                            &huffman_image)) {
       dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
@@ -318,19 +323,12 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
     hdr->huffman_subsample_bits_ = huffman_precision;
     for (i = 0; i < huffman_pixs; ++i) {
       // The huffman data is stored in red and green bytes.
-      huffman_image[i] = (huffman_image[i] >> 8) & 0xffff;
+      const int index = (huffman_image[i] >> 8) & 0xffff;
+      huffman_image[i] = index;
+      if (index >= num_htree_groups) {
+        num_htree_groups = index + 1;
+      }
     }
-
-    meta_codes_nbits = VP8LReadBits(br, 4);
-    num_htree_groups = 2 + VP8LReadBits(br, meta_codes_nbits);
-  }
-
-  if (VP8LReadBits(br, 1)) {    // use color cache
-    *color_cache_bits_ptr = VP8LReadBits(br, 4);
-    color_cache_size = 1 << *color_cache_bits_ptr;
-  } else {
-    *color_cache_bits_ptr = 0;
-    color_cache_size = 0;
   }
 
   htree_groups = (HTreeGroup*)calloc(num_htree_groups, sizeof(*htree_groups));
@@ -341,12 +339,13 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
 
   ok = !br->error_;
   for (i = 0; ok && i < num_htree_groups; ++i) {
+    HuffmanTree* const htrees = htree_groups[i].htrees_;
     for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
       int alphabet_size = kAlphabetSize[j];
-      if (j == 0) {
-        alphabet_size += color_cache_size;
+      if (j == 0 && color_cache_bits > 0) {
+        alphabet_size += 1 << color_cache_bits;
       }
-      ok = ReadHuffmanCode(alphabet_size, dec, &htree_groups[i].htrees_[j]);
+      ok = ReadHuffmanCode(alphabet_size, dec, htrees + j);
       ok = ok && !br->error_;
     }
   }
@@ -360,14 +359,7 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
 
  Error:
   free(huffman_image);
-  if (htree_groups != NULL) {
-    for (i = 0; i < num_htree_groups; ++i) {
-      for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
-        HuffmanTreeRelease(&htree_groups[i].htrees_[j]);
-      }
-    }
-    free(htree_groups);
-  }
+  DeleteHtreeGroups(htree_groups, num_htree_groups);
   return 0;
 }
 
@@ -498,6 +490,7 @@ static WEBP_INLINE HTreeGroup* GetHtreeGroupForPos(VP8LMetadata* const hdr,
                                                    int x, int y) {
   const int meta_index = GetMetaIndex(hdr->huffman_image_, hdr->huffman_xsize_,
                                       hdr->huffman_subsample_bits_, x, y);
+  assert(meta_index < hdr->num_htree_groups_);
   return hdr->htree_groups_ + meta_index;
 }
 
@@ -770,16 +763,7 @@ static void ClearMetadata(VP8LMetadata* const hdr) {
   assert(hdr);
 
   free(hdr->huffman_image_);
-  if (hdr->htree_groups_ != NULL) {
-    int i, j;
-    for (i = 0; i < hdr->num_htree_groups_; ++i) {
-      for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
-        HuffmanTreeRelease(&hdr->htree_groups_[i].htrees_[j]);
-      }
-    }
-    free(hdr->htree_groups_);
-  }
-
+  DeleteHtreeGroups(hdr->htree_groups_, hdr->num_htree_groups_);
   VP8LColorCacheDelete(hdr->color_cache_);
   InitMetadata(hdr);
 }
@@ -836,29 +820,38 @@ static int DecodeImageStream(int xsize, int ysize,
   int ok = 1;
   int transform_xsize = xsize;
   int transform_ysize = ysize;
+  VP8LBitReader* const br = &dec->br_;
   VP8LMetadata* const hdr = &dec->hdr_;
   uint32_t* data = NULL;
+  const int transform_start_idx = dec->next_transform_;
   int color_cache_bits = 0;
 
-  VP8LBitReader* const br = &dec->br_;
-  int transform_start_idx = dec->next_transform_;
-
-  // Step#1: Read the transforms (may recurse).
+  // Read the transforms (may recurse).
   if (is_level0) {
     while (ok && VP8LReadBits(br, 1)) {
       ok = ReadTransform(&transform_xsize, &transform_ysize, dec);
     }
   }
 
-  // Step#2: Read the Huffman codes (may recurse).
-  ok = ok && ReadHuffmanCodes(dec, transform_xsize, transform_ysize,
-                              &color_cache_bits);
+  // Color cache
+  if (ok && VP8LReadBits(br, 1)) {
+    color_cache_bits = VP8LReadBits(br, 4);
+    ok = (color_cache_bits >= 1 && color_cache_bits <= MAX_CACHE_BITS);
+    if (!ok) {
+      dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
+      goto End;
+    }
+  }
 
+  // Read the Huffman codes (may recurse).
+  ok = ok && ReadHuffmanCodes(dec, transform_xsize, transform_ysize,
+                              color_cache_bits);
   if (!ok) {
     dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
     goto End;
   }
 
+  // Finish setting up the color-cache
   if (color_cache_bits > 0) {
     hdr->color_cache_size_ = 1 << color_cache_bits;
     hdr->color_cache_ = (VP8LColorCache*)malloc(sizeof(*hdr->color_cache_));
@@ -869,7 +862,6 @@ static int DecodeImageStream(int xsize, int ysize,
       goto End;
     }
   }
-
   UpdateDecoder(dec, transform_xsize, transform_ysize);
 
   if (is_level0) {   // level 0 complete
@@ -884,11 +876,11 @@ static int DecodeImageStream(int xsize, int ysize,
     goto End;
   }
 
-  // Step#3: Use the Huffman trees to decode the LZ77 encoded data.
+  // Use the Huffman trees to decode the LZ77 encoded data.
   ok = DecodeImageData(dec, data, transform_xsize, transform_ysize, 0);
   ok = ok && !br->error_;
 
-  // Step#4: Apply transforms on the decoded data.
+  // Apply transforms on the decoded data.
   if (ok) ApplyInverseTransforms(dec, transform_start_idx, data);
 
  End:

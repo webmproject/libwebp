@@ -39,6 +39,7 @@ static WEBP_INLINE void VP8LColorCacheInsert(const VP8LColorCache* const cc,
   cc->colors_[key] = argb;
 }
 
+#ifdef USE_LOSSLESS_ENCODER
 static WEBP_INLINE int VP8LColorCacheGetIndex(const VP8LColorCache* const cc,
                                               uint32_t argb) {
   return (kHashMul * argb) >> cc->hash_shift_;
@@ -49,6 +50,7 @@ static WEBP_INLINE int VP8LColorCacheContains(const VP8LColorCache* const cc,
   const uint32_t key = (kHashMul * argb) >> cc->hash_shift_;
   return cc->colors_[key] == argb;
 }
+#endif
 
 //------------------------------------------------------------------------------
 
@@ -57,6 +59,9 @@ static WEBP_INLINE int VP8LColorCacheContains(const VP8LColorCache* const cc,
 int VP8LColorCacheInit(VP8LColorCache* const color_cache, int hash_bits);
 
 // Delete the color cache.
+void VP8LColorCacheClear(VP8LColorCache* const color_cache);
+
+// Delete the color_cache object.
 void VP8LColorCacheDelete(VP8LColorCache* const color_cache);
 
 //------------------------------------------------------------------------------
