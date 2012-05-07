@@ -32,14 +32,17 @@ int VP8LColorCacheInit(VP8LColorCache* const cc, int hash_bits) {
   return 1;
 }
 
-void VP8LColorCacheDelete(VP8LColorCache* const cc) {
+void VP8LColorCacheClear(VP8LColorCache* const cc) {
   if (cc != NULL) {
     free(cc->colors_);
-    free(cc);
   }
+}
+
+void VP8LColorCacheDelete(VP8LColorCache* const cc) {
+  VP8LColorCacheClear(cc);
+  free(cc);
 }
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }
 #endif
-
