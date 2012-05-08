@@ -16,6 +16,24 @@
       "revId": "fc2072593e68b463359aad0631c233ff45bb7d3d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//rVw\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-08T20:32:27Z",
+      "side": 1,
+      "message": "Not currently; I debated replacing the wrapper for AndroidCpuInfo, but held back. NEONis the current use case, though the latest ndk has mips support.",
+      "parentUuid": "AAAAKn//rWQ\u003d",
+      "revId": "fc2072593e68b463359aad0631c233ff45bb7d3d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
