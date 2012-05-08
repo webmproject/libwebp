@@ -45,7 +45,7 @@ typedef enum {
   RED   = 1,
   BLUE  = 2,
   ALPHA = 3,
-  DIST  = 4,
+  DIST  = 4
 } HuffIndex;
 
 static const uint16_t kAlphabetSize[HUFFMAN_CODES_PER_META_CODE] = {

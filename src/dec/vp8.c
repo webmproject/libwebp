@@ -73,7 +73,7 @@ void VP8Delete(VP8Decoder* const dec) {
 }
 
 int VP8SetError(VP8Decoder* const dec,
-                VP8StatusCode error, const char * const msg) {
+                VP8StatusCode error, const char* const msg) {
   dec->status_ = error;
   dec->error_msg_ = msg;
   dec->ready_ = 0;
