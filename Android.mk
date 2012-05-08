@@ -60,7 +60,10 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
   LOCAL_ARM_NEON  := true
 endif
+LOCAL_STATIC_LIBRARIES := cpufeatures
 
 LOCAL_MODULE:= webp
 
 include $(BUILD_STATIC_LIBRARY)
+
+$(call import-module,android/cpufeatures)
