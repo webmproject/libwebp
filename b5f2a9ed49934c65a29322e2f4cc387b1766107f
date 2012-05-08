@@ -16,6 +16,24 @@
       "revId": "b5f2a9ed49934c65a29322e2f4cc387b1766107f",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//rWI\u003d",
+        "filename": "src/enc/vp8l.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-08T20:30:40Z",
+      "side": 0,
+      "message": "Yes, was part of the change; see the diff, reduces sizeof down from 4/8 to 2.",
+      "parentUuid": "AAAAKn//rbU\u003d",
+      "revId": "b5f2a9ed49934c65a29322e2f4cc387b1766107f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
