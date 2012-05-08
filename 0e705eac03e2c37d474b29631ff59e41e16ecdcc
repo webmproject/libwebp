@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAKn//sEA\u003d",
+        "filename": "src/enc/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 782,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-05-08T06:24:16Z",
+      "side": 1,
+      "message": "good catch! this bit_lengths/bit_codes/bit_lengths_sizes part still needs additional cleanup",
+      "revId": "0e705eac03e2c37d474b29631ff59e41e16ecdcc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
