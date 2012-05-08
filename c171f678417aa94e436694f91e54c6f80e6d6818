@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAKn//sG4\u003d",
+        "filename": "src/enc/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 351,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2012-05-08T05:12:59Z",
+      "side": 1,
+      "message": "Thanks for doing this. There\u0027s TODO for me to wrap these in a Struct. Planning to do that after this one.",
+      "revId": "c171f678417aa94e436694f91e54c6f80e6d6818",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//sHA\u003d",
+        "filename": "src/enc/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2012-05-08T05:12:59Z",
+      "side": 1,
+      "message": "These two args can be adjusted in the prev line",
+      "revId": "c171f678417aa94e436694f91e54c6f80e6d6818",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
