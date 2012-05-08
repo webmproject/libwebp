@@ -15,7 +15,6 @@ LOCAL_SRC_FILES := \
     src/dec/webp.c \
     src/dsp/cpu.c \
     src/dsp/dec.c \
-    src/dsp/dec_neon.c \
     src/dsp/dec_sse2.c \
     src/dsp/enc.c \
     src/dsp/enc_sse2.c \
@@ -58,7 +57,10 @@ LOCAL_CFLAGS := -Wall -DANDROID -DHAVE_MALLOC_H -DHAVE_PTHREAD \
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
 
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
-  LOCAL_ARM_NEON  := true
+  # Setting LOCAL_ARM_NEON will enable -mfpu=neon which may cause illegal
+  # instructions to be generated for armv7a code. Instead target the neon code
+  # specifically.
+  LOCAL_SRC_FILES += src/dsp/dec_neon.c.neon
 endif
 LOCAL_STATIC_LIBRARIES := cpufeatures
 

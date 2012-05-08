@@ -10,7 +10,9 @@
 // Authors: Somnath Banerjee (somnath@google.com)
 //          Johann Koenig (johannkoenig@google.com)
 
-#if defined(__GNUC__) && defined(__ARM_NEON__)
+#include "./dsp.h"
+
+#if defined(WEBP_USE_NEON)
 
 #include "../dec/vp8i.h"
 
@@ -324,4 +326,4 @@ void VP8DspInitNEON(void) {
 }    // extern "C"
 #endif
 
-#endif   // __GNUC__ && __ARM_NEON__
+#endif   // WEBP_USE_NEON

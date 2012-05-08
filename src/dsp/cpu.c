@@ -57,7 +57,7 @@ static int x86CPUInfo(CPUFeature feature) {
   return 0;
 }
 VP8CPUInfo VP8GetCPUInfo = x86CPUInfo;
-#elif defined(__ANDROID__)
+#elif defined(WEBP_ANDROID_NEON)
 static int AndroidCPUInfo(CPUFeature feature) {
   const AndroidCpuFamily cpu_family = android_getCpuFamily();
   const uint64_t cpu_features = android_getCpuFeatures();
