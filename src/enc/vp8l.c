@@ -679,7 +679,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
       VP8LSubSampleSize(height, histogram_bits);
   VP8LHistogramSet* histogram_image =
       VP8LAllocateHistogramSet(histogram_image_xysize, 0);
-  int histogram_image_size;
+  int histogram_image_size = 0;
   VP8LBackwardRefs refs;
   uint16_t* const histogram_symbols =
       (uint16_t*)malloc(histogram_image_xysize * sizeof(*histogram_symbols));
