@@ -35,6 +35,7 @@ endif
 
 # Extra flags to enable experimental features and code
 # EXTRA_FLAGS += -DWEBP_EXPERIMENTAL_FEATURES
+EXTRA_FLAGS += -DUSE_LOSSLESS_ENCODER
 
 # Extra flags to enable multi-threading
 EXTRA_FLAGS += -DWEBP_USE_THREAD
@@ -87,16 +88,19 @@ DSP_OBJS = \
 ENC_OBJS = \
     src/enc/alpha.o \
     src/enc/analysis.o \
+    src/enc/backward_references.o \
     src/enc/config.o \
     src/enc/cost.o \
     src/enc/filter.o \
     src/enc/frame.o \
+    src/enc/histogram.o \
     src/enc/iterator.o \
     src/enc/layer.o \
     src/enc/picture.o \
     src/enc/quant.o \
     src/enc/syntax.o \
     src/enc/tree.o \
+    src/enc/vp8l.o \
     src/enc/webpenc.o \
 
 MUX_OBJS = \
@@ -111,6 +115,7 @@ UTILS_OBJS = \
     src/utils/color_cache.o \
     src/utils/filters.o \
     src/utils/huffman.o \
+    src/utils/huffman_encode.o \
     src/utils/quant_levels.o \
     src/utils/rescaler.o \
     src/utils/tcoder.o \
