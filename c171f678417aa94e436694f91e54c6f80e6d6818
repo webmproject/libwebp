@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAKn//rio\u003d",
+        "filename": "src/enc/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 351,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-08T18:52:02Z",
+      "side": 1,
+      "message": "I saw that, I just thought the conversion, if needed, would be simpler after this change.\n\nNext step might be to check the error cases, looks like there might be double free between here and the call site.",
+      "parentUuid": "AAAAKn//sG4\u003d",
+      "revId": "c171f678417aa94e436694f91e54c6f80e6d6818",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAKn//sHA\u003d",
         "filename": "src/enc/vp8l.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2012-05-08T05:12:59Z",
       "side": 1,
       "message": "These two args can be adjusted in the prev line",
+      "revId": "c171f678417aa94e436694f91e54c6f80e6d6818",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//ric\u003d",
+        "filename": "src/enc/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-08T18:52:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAKn//sHA\u003d",
       "revId": "c171f678417aa94e436694f91e54c6f80e6d6818",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
