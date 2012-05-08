@@ -338,6 +338,8 @@ static int GetHuffBitLengthsAndCodes(
     for (idx = 0; idx <= 5 * i + k; ++idx) {
       free(bit_lengths[idx]);
       free(bit_codes[idx]);
+      bit_lengths[idx] = NULL;
+      bit_codes[idx] = NULL;
     }
   }
   return 0;
