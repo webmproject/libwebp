@@ -347,8 +347,8 @@ static int OptimizeHuffmanForRle(int length, int* counts) {
 // TODO(vikasa): Wrap bit_codes and bit_lengths in a Struct.
 static int GetHuffBitLengthsAndCodes(
     const VP8LHistogramSet* const histogram_image,
-    int use_color_cache, int** bit_length_sizes,
-    uint16_t*** bit_codes, uint8_t*** bit_lengths) {
+    int use_color_cache, int* const bit_length_sizes,
+    uint16_t** const bit_codes, uint8_t** const bit_lengths) {
   int i, k;
   int ok = 1;
   const int histogram_image_size = histogram_image->size;
@@ -357,11 +357,11 @@ static int GetHuffBitLengthsAndCodes(
     const int num_literals = VP8LHistogramNumCodes(histo);
     k = 0;
     // TODO(vikasa): Alloc one big buffer instead of allocating in the loop.
-    (*bit_length_sizes)[5 * i] = num_literals;
-    (*bit_lengths)[5 * i] = (uint8_t*)calloc(num_literals, 1);
-    (*bit_codes)[5 * i] = (uint16_t*)
-        malloc(num_literals * sizeof(*(*bit_codes)[5 * i]));
-    if ((*bit_lengths)[5 * i] == NULL || (*bit_codes)[5 * i] == NULL) {
+    bit_length_sizes[5 * i] = num_literals;
+    bit_lengths[5 * i] = (uint8_t*)calloc(num_literals, 1);
+    bit_codes[5 * i] = (uint16_t*)
+        malloc(num_literals * sizeof(*bit_codes[5 * i]));
+    if (bit_lengths[5 * i] == NULL || bit_codes[5 * i] == NULL) {
       ok = 0;
       goto Error;
     }
@@ -382,35 +382,32 @@ static int GetHuffBitLengthsAndCodes(
 
     // Create a Huffman tree (in the form of bit lengths) for each component.
     ok = ok && VP8LCreateHuffmanTree(histo->literal_, num_literals,
-                                     15, (*bit_lengths)[5 * i]);
+                                     15, bit_lengths[5 * i]);
     for (k = 1; k < 5; ++k) {
-      int val = 256;
-      if (k == 4) {
-        val = DISTANCE_CODES_MAX;
-      }
-      (*bit_length_sizes)[5 * i + k] = val;
-      (*bit_lengths)[5 * i + k] = (uint8_t*)calloc(val, 1);
-      (*bit_codes)[5 * i + k] = (uint16_t*)calloc(val, sizeof(bit_codes[0]));
-      if ((*bit_lengths)[5 * i + k] == NULL ||
-          (*bit_codes)[5 * i + k] == NULL) {
+      const int val = (k == 4) ? DISTANCE_CODES_MAX : 256;
+      bit_length_sizes[5 * i + k] = val;
+      bit_lengths[5 * i + k] = (uint8_t*)calloc(val, 1);
+      bit_codes[5 * i + k] = (uint16_t*)calloc(val, sizeof(*bit_codes[0]));
+      if (bit_lengths[5 * i + k] == NULL ||
+          bit_codes[5 * i + k] == NULL) {
         ok = 0;
         goto Error;
       }
     }
     ok = ok &&
         VP8LCreateHuffmanTree(histo->red_, 256, 15,
-                                     (*bit_lengths)[5 * i + 1]) &&
+                              bit_lengths[5 * i + 1]) &&
         VP8LCreateHuffmanTree(histo->blue_, 256, 15,
-                              (*bit_lengths)[5 * i + 2]) &&
+                              bit_lengths[5 * i + 2]) &&
         VP8LCreateHuffmanTree(histo->alpha_, 256, 15,
-                              (*bit_lengths)[5 * i + 3]) &&
+                              bit_lengths[5 * i + 3]) &&
         VP8LCreateHuffmanTree(histo->distance_, DISTANCE_CODES_MAX, 15,
-                              (*bit_lengths)[5 * i + 4]);
+                              bit_lengths[5 * i + 4]);
     // Create the actual bit codes for the bit lengths.
     for (k = 0; k < 5; ++k) {
       int ix = 5 * i + k;
-      VP8LConvertBitDepthsToSymbols((*bit_lengths)[ix], (*bit_length_sizes)[ix],
-                                    (*bit_codes)[ix]);
+      VP8LConvertBitDepthsToSymbols(bit_lengths[ix], bit_length_sizes[ix],
+                                    bit_codes[ix]);
     }
   }
   return ok;
@@ -419,8 +416,8 @@ static int GetHuffBitLengthsAndCodes(
   {
     int idx;
     for (idx = 0; idx <= 5 * i + k; ++idx) {
-      free((*bit_lengths)[idx]);
-      free((*bit_codes)[idx]);
+      free(bit_lengths[idx]);
+      free(bit_codes[idx]);
     }
   }
   return 0;
@@ -709,8 +706,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
                                  sizeof(*bit_codes));
   if (bit_lengths_sizes == NULL || bit_lengths == NULL || bit_codes == NULL ||
       !GetHuffBitLengthsAndCodes(histogram_image, use_color_cache,
-                                 &bit_lengths_sizes,
-                                 &bit_codes, &bit_lengths)) {
+                                 bit_lengths_sizes, bit_codes, bit_lengths)) {
     goto Error;
   }
 
