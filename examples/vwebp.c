@@ -209,7 +209,7 @@ static int Decode(const int frame_number, uint32_t* const duration) {
     }
     if (x_off != 0 || y_off != 0) {
       fprintf(stderr,
-              "Tiling and offsets not yet supported! Forcing offset to 0,0\n");
+              "Frame offsets not yet supported! Forcing offset to 0,0\n");
       x_off = y_off = 0;
     }
     data = &image_data;
@@ -339,7 +339,7 @@ int main(int argc, char *argv[]) {
     }
     mux_err = WebPMuxNumNamedElements(kParams.mux, "image",
                                       &kParams.frame_max);
-    if (mux_err != WEBP_MUX_OK && mux_err != WEBP_MUX_NOT_FOUND) {
+    if (mux_err != WEBP_MUX_OK) {
       goto Error;
     }
     printf("VP8X: Found %d images in file (loop count = %d)\n",
