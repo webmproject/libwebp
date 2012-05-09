@@ -17,6 +17,9 @@ EXTRA_LIBS= -lpng -ljpeg -lz
 ifeq ($(strip $(shell uname)), Darwin)
   EXTRA_FLAGS += -I/opt/local/include
   EXTRA_LIBS  += -L/opt/local/lib
+  GL_LIBS = -framework GLUT -framework OpenGL
+else
+  GL_LIBS = -lglut -lGL
 endif
 
 # To install libraries on Mac OS X:
@@ -152,7 +155,7 @@ HDRS = \
 OUT_LIBS = src/libwebp.a src/mux/libwebpmux.a
 OUT_EXAMPLES = examples/cwebp examples/dwebp examples/webpmux
 
-OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES)
+OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES) examples/vwebp
 
 all: ex
 
@@ -169,9 +172,11 @@ ex: $(OUT_EXAMPLES)
 
 examples/cwebp: examples/cwebp.o src/libwebp.a
 examples/dwebp: examples/dwebp.o src/libwebp.a
+examples/vwebp: examples/vwebp.o src/mux/libwebpmux.a src/libwebp.a
+examples/vwebp: EXTRA_LIBS += $(GL_LIBS)
 examples/webpmux: examples/webpmux.o src/mux/libwebpmux.a src/libwebp.a
 
-$(OUT_EXAMPLES):
+$(OUT_EXAMPLES) examples/vwebp:
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 dist: DESTDIR := dist
