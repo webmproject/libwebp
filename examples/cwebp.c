@@ -176,10 +176,13 @@ static HRESULT ReadPictureWithWIC(const char* filename,
   for (i = 0;
        has_alpha && i < sizeof(alphaContainers)/sizeof(alphaContainers[0]);
        ++i) {
-    if (IsEqualGUID(&srcContainerFormat, alphaContainers[i])) {
+    if (IsEqualGUID(MAKE_REFGUID(srcContainerFormat),
+                    MAKE_REFGUID(*alphaContainers[i]))) {
       has_alpha =
-          IsEqualGUID(&srcPixelFormat, &GUID_WICPixelFormat32bppRGBA_) ||
-          IsEqualGUID(&srcPixelFormat, &GUID_WICPixelFormat32bppBGRA_);
+          IsEqualGUID(MAKE_REFGUID(srcPixelFormat),
+                      MAKE_REFGUID(GUID_WICPixelFormat32bppRGBA_)) ||
+          IsEqualGUID(MAKE_REFGUID(srcPixelFormat),
+                      MAKE_REFGUID(GUID_WICPixelFormat32bppBGRA_));
       break;
     }
   }
