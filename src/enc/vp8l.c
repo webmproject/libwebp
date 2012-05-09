@@ -825,7 +825,8 @@ static void WriteImageSize(VP8LEncoder* const enc, VP8LBitWriter* const bw) {
 }
 
 static WebPEncodingError WriteImage(const VP8LEncoder* const enc,
-                                    VP8LBitWriter* const bw) {
+                                    VP8LBitWriter* const bw,
+                                    size_t* const coded_size) {
   size_t riff_size, vp8l_size, webpll_size, pad;
   const WebPPicture* const pic = enc->pic_;
   WebPEncodingError err = VP8_ENC_OK;
@@ -852,6 +853,7 @@ static WebPEncodingError WriteImage(const VP8LEncoder* const enc,
       goto Error;
     }
   }
+  *coded_size = vp8l_size;
   return VP8_ENC_OK;
 
  Error:
@@ -1020,6 +1022,7 @@ int VP8LEncodeImage(const WebPConfig* const config,
                     WebPPicture* const picture) {
   int ok = 0;
   int width, height, quality;
+  size_t coded_size;
   VP8LEncoder* enc = NULL;
   WebPEncodingError err = VP8_ENC_OK;
   VP8LBitWriter bw;
@@ -1112,7 +1115,7 @@ int VP8LEncodeImage(const WebPConfig* const config,
                            quality, enc->cache_bits_, enc->histo_bits_);
   if (!ok) goto Error;
 
-  err = WriteImage(enc, &bw);
+  err = WriteImage(enc, &bw, &coded_size);
   if (err != VP8_ENC_OK) {
     ok = 0;
     goto Error;
@@ -1125,8 +1128,7 @@ int VP8LEncodeImage(const WebPConfig* const config,
     stats->PSNR[1] = 99.;
     stats->PSNR[2] = 99.;
     stats->PSNR[3] = 99.;
-    // note: padding byte may be missing. Not a big deal.
-    stats->coded_size = VP8LBitWriterNumBytes(&bw) + HEADER_SIZE;
+    stats->coded_size = coded_size;
   }
 
   if (picture->extra_info != NULL) {
