@@ -599,6 +599,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   VP8LHistogramSet* histogram_image =
       VP8LAllocateHistogramSet(histogram_image_xysize, 0);
   int histogram_image_size = 0;
+  int bit_array_size = 0;
   VP8LBackwardRefs refs;
   uint16_t* const histogram_symbols =
       (uint16_t*)malloc(histogram_image_xysize * sizeof(*histogram_symbols));
@@ -619,12 +620,10 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   }
   // Create Huffman bit lengths & codes for each histogram image.
   histogram_image_size = histogram_image->size;
-  bit_lengths_sizes = (int*)calloc(5 * histogram_image_size,
-                                   sizeof(*bit_lengths_sizes));
-  bit_lengths = (uint8_t**)calloc(5 * histogram_image_size,
-                                  sizeof(*bit_lengths));
-  bit_codes = (uint16_t**)calloc(5 * histogram_image_size,
-                                 sizeof(*bit_codes));
+  bit_array_size = 5 * histogram_image_size;
+  bit_lengths_sizes = (int*)calloc(bit_array_size, sizeof(*bit_lengths_sizes));
+  bit_lengths = (uint8_t**)calloc(bit_array_size, sizeof(*bit_lengths));
+  bit_codes = (uint16_t**)calloc(bit_array_size, sizeof(*bit_codes));
   if (bit_lengths_sizes == NULL || bit_lengths == NULL || bit_codes == NULL ||
       !GetHuffBitLengthsAndCodes(histogram_image, use_color_cache,
                                  bit_lengths_sizes, bit_codes, bit_lengths)) {
@@ -696,7 +695,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   if (!ok) free(histogram_image);
 
   VP8LClearBackwardRefs(&refs);
-  for (i = 0; i < 5 * histogram_image_size; ++i) {
+  for (i = 0; i < bit_array_size; ++i) {
     free(bit_lengths[i]);
     free(bit_codes[i]);
   }
