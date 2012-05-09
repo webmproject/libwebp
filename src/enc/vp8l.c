@@ -157,86 +157,6 @@ static int VP8LEncAnalyze(VP8LEncoder* const enc) {
 
 // -----------------------------------------------------------------------------
 
-static int GetBackwardReferences(int width, int height,
-                                 const uint32_t* const argb,
-                                 int quality, int use_color_cache,
-                                 int cache_bits, int use_2d_locality,
-                                 VP8LBackwardRefs* const best) {
-  int ok = 0;
-  int lz77_is_useful;
-  VP8LBackwardRefs refs_rle, refs_lz77;
-  const int num_pix = width * height;
-
-  VP8LBackwardRefsAlloc(&refs_rle, num_pix);
-  VP8LBackwardRefsAlloc(&refs_lz77, num_pix);
-  VP8LInitBackwardRefs(best);
-  if (refs_rle.refs == NULL || refs_lz77.refs == NULL) {
- Error1:
-    VP8LClearBackwardRefs(&refs_rle);
-    VP8LClearBackwardRefs(&refs_lz77);
-    goto End;
-  }
-
-  if (!VP8LBackwardReferencesHashChain(width, height, use_color_cache,
-                                       argb, cache_bits, quality,
-                                       &refs_lz77)) {
-    goto End;
-  }
-  // Backward Reference using RLE only.
-  VP8LBackwardReferencesRle(width, height, argb, &refs_rle);
-
-  {
-    double bit_cost_lz77, bit_cost_rle;
-    VP8LHistogram* const histo = (VP8LHistogram*)malloc(sizeof(*histo));
-    if (histo == NULL) goto Error1;
-    // Evaluate lz77 coding
-    VP8LHistogramCreate(histo, &refs_lz77, cache_bits);
-    bit_cost_lz77 = VP8LHistogramEstimateBits(histo);
-    // Evaluate RLE coding
-    VP8LHistogramCreate(histo, &refs_rle, cache_bits);
-    bit_cost_rle = VP8LHistogramEstimateBits(histo);
-    // Decide if LZ77 is useful.
-    lz77_is_useful = (bit_cost_lz77 < bit_cost_rle);
-    free(histo);
-  }
-
-  // Choose appropriate backward reference.
-  if (lz77_is_useful) {
-    // TraceBackwards is costly. Run it for higher qualities.
-    const int try_lz77_trace_backwards = (quality >= 75);
-    *best = refs_lz77;   // default guess: lz77 is better
-    VP8LClearBackwardRefs(&refs_rle);
-    if (try_lz77_trace_backwards) {
-      const int recursion_level = (num_pix < 320 * 200) ? 1 : 0;
-      VP8LBackwardRefs refs_trace;
-      if (!VP8LBackwardRefsAlloc(&refs_trace, num_pix)) {
-        goto End;
-      }
-      if (VP8LBackwardReferencesTraceBackwards(width, height, recursion_level,
-                                               use_color_cache,
-                                               argb, cache_bits,
-                                               &refs_trace)) {
-        VP8LClearBackwardRefs(&refs_lz77);
-        *best = refs_trace;
-      }
-    }
-  } else {
-    VP8LClearBackwardRefs(&refs_lz77);
-    *best = refs_rle;
-  }
-
-  if (use_2d_locality) {  // Use backward reference with 2D locality.
-    VP8LBackwardReferences2DLocality(width, best);
-  }
-  ok = 1;
-
-End:
-  if (!ok) {
-    VP8LClearBackwardRefs(best);
-  }
-  return ok;
-}
-
 // Heuristics for selecting the stride ranges to collapse.
 static int ValuesShouldBeCollapsedToStrideAverage(int a, int b) {
   return abs(a - b) < 4;
@@ -684,9 +604,8 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   if (histogram_image == NULL || histogram_symbols == NULL) goto Error;
 
   // Calculate backward references from ARGB image.
-  if (!GetBackwardReferences(width, height, argb, quality,
-                             use_color_cache, cache_bits, use_2d_locality,
-                             &refs)) {
+  if (!VP8LGetBackwardReferences(width, height, argb, quality, cache_bits,
+                                 use_2d_locality, &refs)) {
     goto Error;
   }
   // Build histogram image & symbols from backward references.
