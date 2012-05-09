@@ -38,16 +38,6 @@
 #include <shlwapi.h>
 #include <windows.h>
 #include <wincodec.h>
-
-#ifndef GUID_WICPixelFormat24bppRGB
-// From Microsoft SDK 7.0a
-DEFINE_GUID(GUID_WICPixelFormat24bppRGB,
-    0x6fddc324, 0x4e03, 0x4bfe, 0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0d);
-#endif
-#ifndef GUID_WICPixelFormat32bppRGBA
-DEFINE_GUID(GUID_WICPixelFormat32bppRGBA,
-    0xf5c7ad2d, 0x6a8d, 0x43dd, 0xa7, 0xa8, 0xa2, 0x99, 0x35, 0x26, 0x1a, 0xe9);
-#endif
 #endif  /* HAVE_WINCODEC_H */
 
 
@@ -108,6 +98,10 @@ static int ReadYUV(FILE* in_file, WebPPicture* const pic) {
      }                         \
   } while (0)
 
+// modified version of DEFINE_GUID from guiddef.h.
+#define WEBP_DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+  const GUID name = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
+
 #ifdef __cplusplus
 #define MAKE_REFGUID(x) (x)
 #else
@@ -142,6 +136,18 @@ static HRESULT ReadPictureWithWIC(const char* filename,
   };
   int has_alpha = 0;
   int i, stride;
+  // From Microsoft SDK 7.0a
+  // Create local copies for compatibility when building against earlier
+  // versions of the SDK.
+  WEBP_DEFINE_GUID(GUID_WICPixelFormat24bppRGB_,
+                   0x6fddc324, 0x4e03, 0x4bfe,
+                   0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0d);
+  WEBP_DEFINE_GUID(GUID_WICPixelFormat32bppRGBA_,
+                   0xf5c7ad2d, 0x6a8d, 0x43dd,
+                   0xa7, 0xa8, 0xa2, 0x99, 0x35, 0x26, 0x1a, 0xe9);
+  WEBP_DEFINE_GUID(GUID_WICPixelFormat32bppBGRA_,
+                   0x6fddc324, 0x4e03, 0x4bfe,
+                   0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0f);
 
   IFS(CoInitialize(NULL));
   IFS(CoCreateInstance(MAKE_REFGUID(CLSID_WICImagingFactory), NULL,
@@ -172,8 +178,8 @@ static HRESULT ReadPictureWithWIC(const char* filename,
        ++i) {
     if (IsEqualGUID(&srcContainerFormat, alphaContainers[i])) {
       has_alpha =
-          IsEqualGUID(&srcPixelFormat, &GUID_WICPixelFormat32bppRGBA) ||
-          IsEqualGUID(&srcPixelFormat, &GUID_WICPixelFormat32bppBGRA);
+          IsEqualGUID(&srcPixelFormat, &GUID_WICPixelFormat32bppRGBA_) ||
+          IsEqualGUID(&srcPixelFormat, &GUID_WICPixelFormat32bppBGRA_);
       break;
     }
   }
@@ -181,8 +187,8 @@ static HRESULT ReadPictureWithWIC(const char* filename,
   // Prepare for pixel format conversion (if necessary).
   IFS(IWICImagingFactory_CreateFormatConverter(pFactory, &pConverter));
   IFS(IWICFormatConverter_Initialize(pConverter, (IWICBitmapSource*)pFrame,
-          has_alpha ? MAKE_REFGUID(GUID_WICPixelFormat32bppRGBA)
-                    : MAKE_REFGUID(GUID_WICPixelFormat24bppRGB),
+          has_alpha ? MAKE_REFGUID(GUID_WICPixelFormat32bppRGBA_)
+                    : MAKE_REFGUID(GUID_WICPixelFormat24bppRGB_),
           WICBitmapDitherTypeNone,
           NULL, 0.0, WICBitmapPaletteTypeCustom));
 
