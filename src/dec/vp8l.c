@@ -596,10 +596,12 @@ static int DecodeImageData(VP8LDecoder* const dec,
       const int length_sym = code - NUM_LITERAL_CODES;
       const int length = GetCopyLength(length_sym, br);
       const int dist_symbol = ReadSymbol(&htree_group->htrees_[DIST], br);
+      // TODO(urvang): Evaluate if we should check 'dist_symbol', 'dist_code'
+      // and/or 'dist' to be valid.
       VP8LFillBitWindow(br);
       dist_code = GetCopyDistance(dist_symbol, br);
       dist = PlaneCodeToDistance(width, dist_code);
-      if (src - dist < data || src + length > src_end) {
+      if (src - data < dist || src_end - src < length) {
         ok = 0;
         goto Error;
       }
