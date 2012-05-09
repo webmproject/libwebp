@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "AAAAKn//qV0\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-09T17:37:31Z",
+      "side": 1,
+      "message": "Not sure I like this kind of code flow.",
+      "revId": "e7167a2b952d16c29482f0a1ed7da1fdbce4d5ba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAKn//qpM\u003d",
         "filename": "src/enc/backward_references.h",
         "patchSetId": 1
