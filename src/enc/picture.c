@@ -72,10 +72,10 @@ int WebPPictureAlloc(WebPPicture* const picture) {
       total_size = y_size + a_size + 2 * uv_size + 2 * uv0_size;
 
       // Security and validation checks
-      if (width <= 0 || height <= 0 ||       // check for luma/alpha param error
-          uv_width < 0 || uv_height < 0 ||   // check for u/v param error
-          y_size >= (1ULL << 40) ||            // check for reasonable global size
-          (size_t)total_size != total_size) {  // check for overflow on 32bit
+      if (width <= 0 || height <= 0 ||         // luma/alpha param error
+          uv_width < 0 || uv_height < 0 ||     // u/v param error
+          y_size >= (1ULL << 40) ||            // reasonable global size
+          (size_t)total_size != total_size) {  // overflow on 32bit
         return 0;
       }
       picture->y_stride  = y_stride;
