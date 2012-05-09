@@ -16,6 +16,40 @@
       "revId": "2c140e113c7fbc00e797c1b6c906471b2206d926",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//qSU\u003d",
+        "filename": "src/utils/huffman_encode.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-09T17:53:36Z",
+      "side": 1,
+      "message": "don\u0027t think this is level of indent is necessary",
+      "revId": "2c140e113c7fbc00e797c1b6c906471b2206d926",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//qSQ\u003d",
+        "filename": "src/utils/huffman_encode.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-09T17:53:36Z",
+      "side": 1,
+      "message": "unless you\u0027re const casting, don\u0027t cast to void...",
+      "revId": "2c140e113c7fbc00e797c1b6c906471b2206d926",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
