@@ -9,9 +9,9 @@
 //
 // Compiling on linux:
 //   sudo apt-get install libglut3-dev mesa-common-dev
-//   gcc -o vwebp vwebp.c -O3 -lwebp -lglut -lGL
+//   gcc -o vwebp vwebp.c -O3 -lwebp -lwebpmux -lglut -lGL -lpthread -lm
 // Compiling on Mac + XCode:
-//   gcc -o vwebp vwebp.c -lwebp -framework GLUT -framework OpenGL
+//   gcc -o vwebp vwebp.c -lwebp -lwebpmux -framework GLUT -framework OpenGL
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "webp/decode.h"
+#include "webp/mux.h"
 
 #ifdef __APPLE__
 #include <GLUT/glut.h>
@@ -34,10 +35,51 @@
 #define snprintf _snprintf
 #endif
 
-// Unfortunate global variables
-static const WebPDecBuffer* kPic = NULL;
-static const char* file_name = NULL;
-static int print_info = 0;
+static void Help(void);
+
+// Unfortunate global variables. Gathered into a struct for comfort.
+static struct {
+  int has_animation;
+  int done;
+  int decoding_error;
+  int print_info;
+
+  uint32_t flags;
+  uint32_t loop_count;
+  int frame_num;
+  int frame_max;
+
+  const char* file_name;
+  WebPData data;
+  WebPMux* mux;
+  WebPDecoderConfig* config;
+  const WebPDecBuffer* pic;
+} kParams = {
+  0, 0, 0, 0,         // has_animation, ...
+  0, 1, 1, 0,         // flags, ...
+  NULL, { NULL, 0 },  // file_name, ...
+  NULL, NULL, NULL    // mux, ...
+};
+
+static void ClearPreviousPic(void) {
+  WebPFreeDecBuffer((WebPDecBuffer*)kParams.pic);
+  kParams.pic = NULL;
+}
+
+static void ClearData(WebPData* data) {
+  if (data != NULL) {
+    free((void*)data->bytes_);
+    data->bytes_ = NULL;
+    data->size_ = 0;
+  }
+}
+
+static void ClearParams(void) {
+  ClearPreviousPic();
+  ClearData(&kParams.data);
+  WebPMuxDelete(kParams.mux);
+  kParams.mux = NULL;
+}
 
 //------------------------------------------------------------------------------
 // Callbacks
@@ -49,12 +91,11 @@ static void HandleKey(unsigned char key, int pos_x, int pos_y) {
 #ifdef FREEGLUT
     glutLeaveMainLoop();
 #else
-    WebPFreeDecBuffer((WebPDecBuffer*)kPic);
-    kPic = NULL;
+    ClearParams();
     exit(0);
 #endif
   } else if (key == 'i') {
-    print_info = 1 - print_info;
+    kParams.print_info = 1 - kParams.print_info;
     glutPostRedisplay();
   }
 }
@@ -78,23 +119,25 @@ static void PrintString(const char* const text) {
 }
 
 static void HandleDisplay(void) {
-  if (kPic == NULL) return;
+  const WebPDecBuffer* pic = kParams.pic;
+  if (pic == NULL) return;
   glClear(GL_COLOR_BUFFER_BIT);
   glPushMatrix();
   glPixelZoom(1, -1);
   glRasterPos2f(-1, 1);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  glPixelStorei(GL_UNPACK_ROW_LENGTH, kPic->u.RGBA.stride / 4);
-  glDrawPixels(kPic->width, kPic->height, GL_RGBA, GL_UNSIGNED_BYTE,
-               (GLvoid*)kPic->u.RGBA.rgba);
-  if (print_info) {
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, pic->u.RGBA.stride / 4);
+  glDrawPixels(pic->width, pic->height,
+               GL_RGBA, GL_UNSIGNED_BYTE,
+               (GLvoid*)pic->u.RGBA.rgba);
+  if (kParams.print_info) {
     char tmp[32];
 
     glColor4f(0.0, 0.0, 0.0, 0.0);
     glRasterPos2f(-0.95f, 0.90f);
-    PrintString(file_name);
+    PrintString(kParams.file_name);
 
-    snprintf(tmp, sizeof(tmp), "Dimension:%d x %d", kPic->width, kPic->height);
+    snprintf(tmp, sizeof(tmp), "Dimension:%d x %d", pic->width, pic->height);
     glColor4f(0.0, 0.0, 0.0, 0.0);
     glRasterPos2f(-0.95f, 0.80f);
     PrintString(tmp);
@@ -102,38 +145,35 @@ static void HandleDisplay(void) {
   glFlush();
 }
 
-static void Show(const WebPDecBuffer* const pic) {
+static void StartDisplay(const WebPDecBuffer* const pic) {
   glutInitDisplayMode(GLUT_RGBA);
   glutInitWindowSize(pic->width, pic->height);
   glutCreateWindow("WebP viewer");
-  glutReshapeFunc(HandleReshape);
   glutDisplayFunc(HandleDisplay);
   glutIdleFunc(NULL);
   glutKeyboardFunc(HandleKey);
   glClearColor(0.0, 0.0, 0.0, 0.0);
   HandleReshape(pic->width, pic->height);
-  glutMainLoop();
 }
 
 //------------------------------------------------------------------------------
 // File decoding
 
-static const char* const kStatusMessages[] = {
-  "OK", "OUT_OF_MEMORY", "INVALID_PARAM", "BITSTREAM_ERROR",
-  "UNSUPPORTED_FEATURE", "SUSPENDED", "USER_ABORT", "NOT_ENOUGH_DATA"
-};
-
-static int Decode(const char* const in_file, WebPDecoderConfig* const config) {
-  WebPDecBuffer* const output_buffer = &config->output;
-  WebPBitstreamFeatures* const bitstream = &config->input;
-  VP8StatusCode status = VP8_STATUS_OK;
+static int ReadFile(void) {
   int ok;
-  size_t data_size = 0;
   void* data = NULL;
-  FILE* const in = fopen(in_file, "rb");
+  size_t data_size = 0;
+  const char* const file_name = kParams.file_name;
+  FILE* in = NULL;
 
-  if (!in) {
-    fprintf(stderr, "cannot open input file '%s'\n", in_file);
+  if (file_name == NULL) {
+    printf("missing input file!!\n");
+    Help();
+    return 0;
+  }
+  in = fopen(file_name, "rb");
+  if (in == NULL) {
+    fprintf(stderr, "cannot open input file '%s'\n", file_name);
     return 0;
   }
   fseek(in, 0, SEEK_END);
@@ -143,29 +183,71 @@ static int Decode(const char* const in_file, WebPDecoderConfig* const config) {
   if (data == NULL) return 0;
   ok = (fread(data, data_size, 1, in) == 1);
   fclose(in);
+  kParams.data.bytes_ = data;
+  kParams.data.size_ = data_size;
+
   if (!ok) {
     fprintf(stderr, "Could not read %zu bytes of data from file %s\n",
-            data_size, in_file);
-    free(data);
+            data_size, file_name);
     return 0;
   }
+  return 1;
+}
 
-  status = WebPGetFeatures((const uint8_t*)data, data_size, bitstream);
-  if (status != VP8_STATUS_OK) {
-    goto end;
+static int Decode(const int frame_number, uint32_t* const duration) {
+  WebPDecoderConfig* const config = kParams.config;
+  WebPData *data, image_data;
+  uint32_t x_off = 0, y_off = 0;
+  WebPDecBuffer* const output_buffer = &config->output;
+  int ok = 0;
+
+  ClearPreviousPic();
+  if (kParams.has_animation) {
+    if (WebPMuxGetFrame(kParams.mux, frame_number, &image_data, NULL,
+                        &x_off, &y_off, duration) != WEBP_MUX_OK) {
+      goto end;
+    }
+    if (x_off != 0 || y_off != 0) {
+      fprintf(stderr,
+              "Tiling and offsets not yet supported! Forcing offset to 0,0\n");
+      x_off = y_off = 0;
+    }
+    data = &image_data;
+  } else {
+    data = &kParams.data;
   }
 
   output_buffer->colorspace = MODE_RGBA;
-  status = WebPDecode((const uint8_t*)data, data_size, config);
+  ok = (WebPDecode(data->bytes_, data->size_, config) == VP8_STATUS_OK);
 
  end:
-  free(data);
-  ok = (status == VP8_STATUS_OK);
   if (!ok) {
-    fprintf(stderr, "Decoding of %s failed.\n", in_file);
-    fprintf(stderr, "Status: %d (%s)\n", status, kStatusMessages[status]);
+    fprintf(stderr, "Decoding of frame #%d failed!\n", frame_number);
+  } else {
+    kParams.pic = output_buffer;
   }
   return ok;
+}
+
+static void decode_callback(int what) {
+  if (what == 0 && !kParams.done) {
+    uint32_t duration = 0;
+    if (kParams.mux != NULL) {
+      if (!Decode(kParams.frame_num, &duration)) {
+        kParams.decoding_error = 1;
+        kParams.done = 1;
+      } else {
+        ++kParams.frame_num;
+        if (kParams.frame_num > kParams.frame_max) {
+          kParams.frame_num = 1;
+          --kParams.loop_count;
+          kParams.done = (kParams.loop_count == 0);
+        }
+      }
+    }
+    glutPostRedisplay();
+    glutTimerFunc(duration, decode_callback, what);
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -187,12 +269,14 @@ static void Help(void) {
 
 int main(int argc, char *argv[]) {
   WebPDecoderConfig config;
+  WebPMuxError mux_err;
   int c;
 
   if (!WebPInitDecoderConfig(&config)) {
     fprintf(stderr, "Library version mismatch!\n");
     return -1;
   }
+  kParams.config = &config;
 
   for (c = 1; c < argc; ++c) {
     if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
@@ -224,29 +308,63 @@ int main(int argc, char *argv[]) {
       Help();
       return -1;
     } else {
-      file_name = argv[c];
+      kParams.file_name = argv[c];
     }
   }
 
-  if (file_name == NULL) {
-    printf("missing input file!!\n");
-    Help();
-    return -1;
-  }
-  if (!Decode(file_name, &config)) {
-    return -1;
+  if (!ReadFile()) goto Error;
+
+  kParams.mux =
+      WebPMuxCreate(kParams.data.bytes_, kParams.data.size_, 0, NULL);
+  if (kParams.mux == NULL) {
+    fprintf(stderr, "Could not create demuxing object!\n");
+    goto Error;
   }
 
-  kPic = &config.output;
-  printf("Displaying [%s]: %d x %d. Press Esc to exit, 'i' for info.\n",
-         file_name, kPic->width, kPic->height);
+  mux_err = WebPMuxGetFeatures(kParams.mux, &kParams.flags);
+  if (mux_err != WEBP_MUX_OK) {
+    goto Error;
+  }
+  if (kParams.flags & TILE_FLAG) {
+    fprintf(stderr, "Tiling is not supported for now!\n");
+    goto Error;
+  }
 
+  kParams.has_animation = !!(kParams.flags & ANIMATION_FLAG);
+
+  if (kParams.has_animation) {
+    mux_err = WebPMuxGetLoopCount(kParams.mux, &kParams.loop_count);
+    if (mux_err != WEBP_MUX_OK && mux_err != WEBP_MUX_NOT_FOUND) {
+      goto Error;
+    }
+    mux_err = WebPMuxNumNamedElements(kParams.mux, "image",
+                                      &kParams.frame_max);
+    if (mux_err != WEBP_MUX_OK && mux_err != WEBP_MUX_NOT_FOUND) {
+      goto Error;
+    }
+    printf("VP8X: Found %d images in file (loop count = %d)\n",
+           kParams.frame_max, kParams.loop_count);
+  }
+
+  // Decode first frame
+  {
+    uint32_t duration;
+    if (!Decode(1, &duration)) goto Error;
+  }
+
+  // Start display (and timer)
   glutInit(&argc, argv);
-  Show(kPic);
+  StartDisplay(kParams.pic);
+  if (kParams.has_animation) glutTimerFunc(0, decode_callback, 0);
+  glutMainLoop();
 
   // Should only be reached when using FREEGLUT:
-  WebPFreeDecBuffer(&config.output);
+  ClearParams();
   return 0;
+
+ Error:
+  ClearParams();
+  return -1;
 }
 
 //------------------------------------------------------------------------------
