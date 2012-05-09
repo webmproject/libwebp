@@ -530,8 +530,21 @@ static void PrintValues(const int values[4]) {
   fprintf(stderr, "|\n");
 }
 
-static void PrintExtraInfo(const WebPPicture* const pic, int short_output,
-                           const char* const file_name) {
+static void PrintExtraInfoLossless(const WebPPicture* const pic,
+                                   int short_output,
+                                   const char* const file_name) {
+  const WebPAuxStats* const stats = pic->stats;
+  if (short_output) {
+    fprintf(stderr, "%7d %2.2f\n", stats->coded_size, stats->PSNR[3]);
+  } else {
+    fprintf(stderr, "File:      %s\n", file_name);
+    fprintf(stderr, "Dimension: %d x %d\n", pic->width, pic->height);
+    fprintf(stderr, "Output:    %d bytes\n", stats->coded_size);
+  }
+}
+
+static void PrintExtraInfoLossy(const WebPPicture* const pic, int short_output,
+                                const char* const file_name) {
   const WebPAuxStats* const stats = pic->stats;
   if (short_output) {
     fprintf(stderr, "%7d %2.2f\n", stats->coded_size, stats->PSNR[3]);
@@ -1011,7 +1024,11 @@ int main(int argc, const char *argv[]) {
   }
 
   if (!quiet) {
-    PrintExtraInfo(&picture, short_output, in_file);
+    if (config.lossless) {
+      PrintExtraInfoLossless(&picture, short_output, in_file);
+    } else {
+      PrintExtraInfoLossy(&picture, short_output, in_file);
+    }
   }
   if (!quiet && !short_output && print_distortion > 0) {  // print distortion
     float values[5];
