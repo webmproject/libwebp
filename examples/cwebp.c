@@ -776,6 +776,7 @@ static const char* const kErrorMessages[] = {
 //------------------------------------------------------------------------------
 
 int main(int argc, const char *argv[]) {
+  int return_value = -1;
   const char *in_file = NULL, *out_file = NULL, *dump_file = NULL;
   FILE *out = NULL;
   int c;
@@ -943,6 +944,11 @@ int main(int argc, const char *argv[]) {
       in_file = argv[c];
     }
   }
+  if (in_file == NULL) {
+    fprintf(stderr, "No input file specified!\n");
+    HelpShort();
+    goto Error;
+  }
 
   if (!WebPValidateConfig(&config)) {
     fprintf(stderr, "Error! Invalid configuration.\n");
@@ -1038,6 +1044,7 @@ int main(int argc, const char *argv[]) {
             (print_distortion == 1) ? "PSNR" : "SSIM",
             values[0], values[1], values[2], values[3], values[4]);
   }
+  return_value = 0;
 
  Error:
   free(picture.extra_info);
@@ -1047,7 +1054,7 @@ int main(int argc, const char *argv[]) {
     fclose(out);
   }
 
-  return 0;
+  return return_value;
 }
 
 //------------------------------------------------------------------------------
