@@ -22,17 +22,14 @@ extern "C" {
 
 // This function will create a Huffman tree.
 //
-// The (data,length) contains the population counts.
-// The tree_limit is the maximum bit depth of the Huffman codes.
-//
-// The depth contains the tree, i.e., how many bits are used for
-// the symbol.
-//
+// 'histogram' contains the population counts.
+// 'tree_depth_limit' is the maximum bit depth of the Huffman codes.
+// The created tree is returned as 'bit_depths', which stores how many bits are
+// used for each symbol.
 // See http://en.wikipedia.org/wiki/Huffman_coding
-//
-// Returns 0 when an error has occured.
-int VP8LCreateHuffmanTree(const int* data, const int length,
-                          const int tree_limit, uint8_t* depth);
+// Returns 0 on memory error.
+int VP8LCreateHuffmanTree(const int* const histogram, int histogram_size,
+                          int tree_depth_limit, uint8_t* const bit_depths);
 
 // Write a huffman tree from bit depths. The generated Huffman tree is
 // compressed once more using a Huffman tree.

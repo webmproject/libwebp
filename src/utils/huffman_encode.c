@@ -12,7 +12,7 @@
 #ifdef USE_LOSSLESS_ENCODER
 
 #include "./huffman_encode.h"
-
+#include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,34 +24,34 @@ typedef struct {
   int pool_index_right_;
 } HuffmanTree;
 
-// Sort the root nodes, most popular first.
-static int CompHuffmanTree(const void* vp0, const void* vp1) {
-  const HuffmanTree* v0 = (const HuffmanTree*)vp0;
-  const HuffmanTree* v1 = (const HuffmanTree*)vp1;
-  if (v0->total_count_ > v1->total_count_) {
+// A comparer function for two Huffman trees: sorts first by 'total count'
+// (more comes first), and then by 'value' (more comes first).
+static int CompareHuffmanTrees(const void* ptr1, const void* ptr2) {
+  const HuffmanTree* const t1 = (const HuffmanTree*)ptr1;
+  const HuffmanTree* const t2 = (const HuffmanTree*)ptr2;
+  if (t1->total_count_ > t2->total_count_) {
     return -1;
-  } else if (v0->total_count_ < v1->total_count_) {
+  } else if (t1->total_count_ < t2->total_count_) {
     return 1;
   } else {
-    if (v0->value_ < v1->value_) {
+    if (t1->value_ < t2->value_) {
       return -1;
     }
-    if (v0->value_ > v1->value_) {
+    if (t1->value_ > t2->value_) {
       return 1;
     }
     return 0;
   }
 }
 
-static void SetDepth(const HuffmanTree* p,
-                     HuffmanTree* pool,
-                     uint8_t* depth,
-                     const int level) {
-  if (p->pool_index_left_ >= 0) {
-    SetDepth(&pool[p->pool_index_left_], pool, depth, level + 1);
-    SetDepth(&pool[p->pool_index_right_], pool, depth, level + 1);
+static void SetBitDepths(const HuffmanTree* const tree,
+                         const HuffmanTree* const pool,
+                         uint8_t* const bit_depths, int level) {
+  if (tree->pool_index_left_ >= 0) {
+    SetBitDepths(&pool[tree->pool_index_left_], pool, bit_depths, level + 1);
+    SetBitDepths(&pool[tree->pool_index_right_], pool, bit_depths, level + 1);
   } else {
-    depth[p->value_] = level;
+    bit_depths[tree->value_] = level;
   }
 }
 
@@ -71,64 +71,66 @@ static void SetDepth(const HuffmanTree* p,
 //
 // See http://en.wikipedia.org/wiki/Huffman_coding
 int VP8LCreateHuffmanTree(const int* const histogram, int histogram_size,
-                          int tree_depth_limit,
-                          uint8_t* const bit_depths) {
-  HuffmanTree* tree;
+                          int tree_depth_limit, uint8_t* const bit_depths) {
+  int count_min;
   HuffmanTree* tree_pool;
-  int tree_pool_size;
-  // For block sizes with less than 64k symbols we never need to do a
-  // second iteration of this loop.
-  // If we actually start running inside this loop a lot, we would perhaps
-  // be better off with the Katajainen algorithm.
-  int count_limit;
-  for (count_limit = 1; ; count_limit *= 2) {
-    int tree_size = 0;
+  HuffmanTree* tree;
+  int tree_size_orig = 0;
     int i;
     for (i = 0; i < histogram_size; ++i) {
-      if (histogram[i]) {
-        ++tree_size;
+    if (histogram[i] != 0) {
+      ++tree_size_orig;
       }
     }
     // 3 * tree_size is enough to cover all the nodes representing a
     // population and all the inserted nodes combining two existing nodes.
-    // The tree pool needs 2 * (tree_size - 1) entities, and the
-    // tree needs exactly tree_size entities.
-    tree = (HuffmanTree*)malloc(3 * tree_size * sizeof(*tree));
-    if (tree == NULL) {
-      return 0;
-    }
+  // The tree pool needs 2 * (tree_size_orig - 1) entities, and the
+  // tree needs exactly tree_size_orig entities.
+  tree = (HuffmanTree*)malloc(3 * tree_size_orig * sizeof(*tree));
+  if (tree == NULL) return 0;
+  tree_pool = tree + tree_size_orig;
+
+
+  // For block sizes with less than 64k symbols we never need to do a
+  // second iteration of this loop.
+  // If we actually start running inside this loop a lot, we would perhaps
+  // be better off with the Katajainen algorithm.
+  assert(tree_size_orig <= (1 << (tree_depth_limit - 1)));
+  for (count_min = 1; ; count_min *= 2) {
+    int tree_size = tree_size_orig;
     {
-      int j = 0;
-      int i;
-      for (i = 0; i < histogram_size; ++i) {
-        if (histogram[i]) {
+      // We need to pack the Huffman tree in tree_depth_limit bits.
+      // So, we try by faking histogram entries to be at least 'count_min'.
+      int idx = 0;
+      int j;
+      for (j = 0; j < histogram_size; ++j) {
+        if (histogram[j] != 0) {
           const int count =
-              (histogram[i] < count_limit) ? count_limit : histogram[i];
-          tree[j].total_count_ = count;
-          tree[j].value_ = i;
-          tree[j].pool_index_left_ = -1;
-          tree[j].pool_index_right_ = -1;
-          ++j;
+              (histogram[j] < count_min) ? count_min : histogram[j];
+          tree[idx].total_count_ = count;
+          tree[idx].value_ = j;
+          tree[idx].pool_index_left_ = -1;
+          tree[idx].pool_index_right_ = -1;
+          ++idx;
         }
       }
     }
-    qsort((void*)tree, tree_size, sizeof(*tree), CompHuffmanTree);
-    tree_pool = tree + tree_size;
-    tree_pool_size = 0;
-    if (tree_size >= 2) {
-      while (tree_size >= 2) {  // Finish when we have only one root.
+
+    // Build the Huffman tree.
+    qsort((void*)tree, tree_size, sizeof(*tree), CompareHuffmanTrees);
+
+    if (tree_size > 1) {  // Normal case.
+      int tree_pool_size = 0;
+      while (tree_size > 1) {  // Finish when we have only one root.
         int count;
-        tree_pool[tree_pool_size] = tree[tree_size - 1];
-        ++tree_pool_size;
-        tree_pool[tree_pool_size] = tree[tree_size - 2];
-        ++tree_pool_size;
-        count =
-            tree_pool[tree_pool_size - 1].total_count_ +
+        tree_pool[tree_pool_size++] = tree[tree_size - 1];
+        tree_pool[tree_pool_size++] = tree[tree_size - 2];
+        count = tree_pool[tree_pool_size - 1].total_count_ +
             tree_pool[tree_pool_size - 2].total_count_;
         tree_size -= 2;
         {
-          int k = 0;
           // Search for the insertion point.
+          int k;
           for (k = 0; k < tree_size; ++k) {
             if (tree[k].total_count_ <= count) {
               break;
@@ -143,18 +145,13 @@ int VP8LCreateHuffmanTree(const int* const histogram, int histogram_size,
           tree_size = tree_size + 1;
         }
       }
-      SetDepth(&tree[0], tree_pool, bit_depths, 0);
-    } else {
-      if (tree_size == 1) {
-        // Only one element.
+      SetBitDepths(&tree[0], tree_pool, bit_depths, 0);
+    } else if (tree_size == 1) {  // Trivial case: only one element.
         bit_depths[tree[0].value_] = 1;
       }
-    }
-    free(tree);
-    // We need to pack the Huffman tree in tree_depth_limit bits.
-    // If this was not successful, add fake entities to the lowest values
-    // and retry.
+
     {
+      // Test if this Huffman tree satisfies our 'tree_depth_limit' criteria.
       int max_depth = bit_depths[0];
       int j;
       for (j = 1; j < histogram_size; ++j) {
@@ -167,6 +164,7 @@ int VP8LCreateHuffmanTree(const int* const histogram, int histogram_size,
       }
     }
   }
+  free(tree);
   return 1;
 }
 
