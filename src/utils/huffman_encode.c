@@ -76,20 +76,19 @@ int VP8LCreateHuffmanTree(const int* const histogram, int histogram_size,
   HuffmanTree* tree_pool;
   HuffmanTree* tree;
   int tree_size_orig = 0;
-    int i;
-    for (i = 0; i < histogram_size; ++i) {
+  int i;
+  for (i = 0; i < histogram_size; ++i) {
     if (histogram[i] != 0) {
       ++tree_size_orig;
-      }
     }
-    // 3 * tree_size is enough to cover all the nodes representing a
-    // population and all the inserted nodes combining two existing nodes.
+  }
+  // 3 * tree_size is enough to cover all the nodes representing a
+  // population and all the inserted nodes combining two existing nodes.
   // The tree pool needs 2 * (tree_size_orig - 1) entities, and the
   // tree needs exactly tree_size_orig entities.
   tree = (HuffmanTree*)malloc(3 * tree_size_orig * sizeof(*tree));
   if (tree == NULL) return 0;
   tree_pool = tree + tree_size_orig;
-
 
   // For block sizes with less than 64k symbols we never need to do a
   // second iteration of this loop.
@@ -98,26 +97,24 @@ int VP8LCreateHuffmanTree(const int* const histogram, int histogram_size,
   assert(tree_size_orig <= (1 << (tree_depth_limit - 1)));
   for (count_min = 1; ; count_min *= 2) {
     int tree_size = tree_size_orig;
-    {
-      // We need to pack the Huffman tree in tree_depth_limit bits.
-      // So, we try by faking histogram entries to be at least 'count_min'.
-      int idx = 0;
-      int j;
-      for (j = 0; j < histogram_size; ++j) {
-        if (histogram[j] != 0) {
-          const int count =
-              (histogram[j] < count_min) ? count_min : histogram[j];
-          tree[idx].total_count_ = count;
-          tree[idx].value_ = j;
-          tree[idx].pool_index_left_ = -1;
-          tree[idx].pool_index_right_ = -1;
-          ++idx;
-        }
+    // We need to pack the Huffman tree in tree_depth_limit bits.
+    // So, we try by faking histogram entries to be at least 'count_min'.
+    int idx = 0;
+    int j;
+    for (j = 0; j < histogram_size; ++j) {
+      if (histogram[j] != 0) {
+        const int count =
+            (histogram[j] < count_min) ? count_min : histogram[j];
+        tree[idx].total_count_ = count;
+        tree[idx].value_ = j;
+        tree[idx].pool_index_left_ = -1;
+        tree[idx].pool_index_right_ = -1;
+        ++idx;
       }
     }
 
     // Build the Huffman tree.
-    qsort((void*)tree, tree_size, sizeof(*tree), CompareHuffmanTrees);
+    qsort(tree, tree_size, sizeof(*tree), CompareHuffmanTrees);
 
     if (tree_size > 1) {  // Normal case.
       int tree_pool_size = 0;
@@ -147,8 +144,8 @@ int VP8LCreateHuffmanTree(const int* const histogram, int histogram_size,
       }
       SetBitDepths(&tree[0], tree_pool, bit_depths, 0);
     } else if (tree_size == 1) {  // Trivial case: only one element.
-        bit_depths[tree[0].value_] = 1;
-      }
+      bit_depths[tree[0].value_] = 1;
+    }
 
     {
       // Test if this Huffman tree satisfies our 'tree_depth_limit' criteria.
