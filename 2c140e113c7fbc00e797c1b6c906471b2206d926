@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAKn//qFc\u003d",
+        "filename": "src/utils/huffman_encode.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-09T19:14:10Z",
+      "side": 1,
+      "message": "https://gerrit.chromium.org/gerrit/#change,22270",
+      "parentUuid": "AAAAKn//qSU\u003d",
+      "revId": "2c140e113c7fbc00e797c1b6c906471b2206d926",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAKn//qSQ\u003d",
         "filename": "src/utils/huffman_encode.c",
         "patchSetId": 1
