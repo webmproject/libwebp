@@ -301,7 +301,6 @@ static void DeleteHtreeGroups(HTreeGroup* htree_groups, int num_htree_groups) {
 
 static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
                             int color_cache_bits) {
-  int ok = 0;
   int i, j;
   VP8LBitReader* const br = &dec->br_;
   VP8LMetadata* const hdr = &dec->hdr_;
@@ -331,31 +330,30 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
     }
   }
 
+  if (br->error_) goto Error;
+
   htree_groups = (HTreeGroup*)calloc(num_htree_groups, sizeof(*htree_groups));
   if (htree_groups == NULL) {
     dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
     goto Error;
   }
 
-  ok = !br->error_;
-  for (i = 0; ok && i < num_htree_groups; ++i) {
+  for (i = 0; i < num_htree_groups; ++i) {
     HuffmanTree* const htrees = htree_groups[i].htrees_;
     for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
       int alphabet_size = kAlphabetSize[j];
       if (j == 0 && color_cache_bits > 0) {
         alphabet_size += 1 << color_cache_bits;
       }
-      ok = ReadHuffmanCode(alphabet_size, dec, htrees + j);
-      ok = ok && !br->error_;
+      if (!ReadHuffmanCode(alphabet_size, dec, htrees + j)) goto Error;
     }
   }
 
-  if (ok) {   // finalize pointers and return
-    hdr->huffman_image_ = huffman_image;
-    hdr->num_htree_groups_ = num_htree_groups;
-    hdr->htree_groups_ = htree_groups;
-    return ok;
-  }
+  // All OK. Finalize pointers and return.
+  hdr->huffman_image_ = huffman_image;
+  hdr->num_htree_groups_ = num_htree_groups;
+  hdr->htree_groups_ = htree_groups;
+  return 1;
 
  Error:
   free(huffman_image);
