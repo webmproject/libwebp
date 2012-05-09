@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAKn//p+g\u003d",
+        "filename": "src/enc/backward_references.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-05-09T20:22:24Z",
+      "side": 1,
+      "message": "\"1UL \u003c\u003c kColorCacheBitsMax\" instead ?",
+      "revId": "30670768225a015aeba6961bb7193ce5da1b2e2e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
