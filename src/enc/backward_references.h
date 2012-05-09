@@ -160,7 +160,7 @@ static WEBP_INLINE uint32_t PixOrCopyArgb(const PixOrCopy* const p) {
 
 static WEBP_INLINE uint32_t PixOrCopyCacheIdx(const PixOrCopy* const p) {
   assert(p->mode == kCacheIdx);
-  assert(p->argb_or_distance < (1 << kColorCacheBitsMax));
+  assert(p->argb_or_distance < (1U << kColorCacheBitsMax));
   return p->argb_or_distance;
 }
 
