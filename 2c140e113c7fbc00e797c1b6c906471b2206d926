@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAKn//paY\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-05-10T04:46:59Z",
+      "side": 1,
+      "message": "Yup, realized this later. Will make sure from now on.",
+      "parentUuid": "AAAAKn//qWM\u003d",
+      "revId": "2c140e113c7fbc00e797c1b6c906471b2206d926",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAKn//qSU\u003d",
         "filename": "src/utils/huffman_encode.c",
         "patchSetId": 1
@@ -54,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAKn//paU\u003d",
+        "filename": "src/utils/huffman_encode.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-05-10T04:46:59Z",
+      "side": 1,
+      "message": "Thanks!",
+      "parentUuid": "AAAAKn//qFc\u003d",
+      "revId": "2c140e113c7fbc00e797c1b6c906471b2206d926",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAKn//qSQ\u003d",
         "filename": "src/utils/huffman_encode.c",
         "patchSetId": 1
@@ -65,6 +101,24 @@
       "writtenOn": "2012-05-09T17:53:36Z",
       "side": 1,
       "message": "unless you\u0027re const casting, don\u0027t cast to void...",
+      "revId": "2c140e113c7fbc00e797c1b6c906471b2206d926",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//paM\u003d",
+        "filename": "src/utils/huffman_encode.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-05-10T04:46:59Z",
+      "side": 1,
+      "message": "OK. [Looks like you\u0027ve already taken care of this in another CL. Thanks!]",
+      "parentUuid": "AAAAKn//qSQ\u003d",
       "revId": "2c140e113c7fbc00e797c1b6c906471b2206d926",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
