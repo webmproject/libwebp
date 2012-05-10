@@ -7,7 +7,7 @@
 //
 // Author: jyrki@google.com (Jyrki Alakuijala)
 //
-// Flate like entropy encoding (Huffman) for webp lossless
+// Flate-like entropy encoding (Huffman) for webp lossless
 
 #ifndef WEBP_UTILS_HUFFMAN_ENCODE_H_
 #define WEBP_UTILS_HUFFMAN_ENCODE_H_
@@ -20,27 +20,29 @@
 extern "C" {
 #endif
 
-// This function will create a Huffman tree.
+// Create a Huffman tree.
 //
-// 'histogram' contains the population counts.
-// 'tree_depth_limit' is the maximum bit depth of the Huffman codes.
-// The created tree is returned as 'bit_depths', which stores how many bits are
-// used for each symbol.
-// See http://en.wikipedia.org/wiki/Huffman_coding
-// Returns 0 on memory error.
-int VP8LCreateHuffmanTree(const int* const histogram, int histogram_size,
-                          int tree_depth_limit, uint8_t* const bit_depths);
+// (data,length): population counts.
+// tree_limit: maximum bit depth (inclusive) of the codes.
+// bit_depths[]: how many bits are used for the symbol.
+//
+// Returns 0 when an error has occured.
+int VP8LCreateHuffmanTree(const int* data, const int length,
+                          const int tree_limit, uint8_t* bit_depths);
 
-// Write a huffman tree from bit depths. The generated Huffman tree is
-// compressed once more using a Huffman tree.
-void VP8LCreateCompressedHuffmanTree(const uint8_t* const depth, int len,
-                                     int* num_symbols,
-                                     uint8_t* tree,
-                                     uint8_t* extra_bits_data);
+// Turn the Huffman tree into a token sequence.
+// Returns the number of tokens used.
+typedef struct {
+  uint8_t code;         // value (0..15) or escape code (16,17,18)
+  uint8_t extra_bits;   // extra bits for escape codes
+} HuffmanTreeToken;
+
+int VP8LCreateCompressedHuffmanTree(const uint8_t* const depth, int len,
+                                    HuffmanTreeToken* tokens, int max_tokens);
 
 // Get the actual bit values for a tree of bit depths.
-void VP8LConvertBitDepthsToSymbols(const uint8_t* depth, int len,
-                                   uint16_t* bits);
+void VP8LConvertBitDepthsToSymbols(const uint8_t* const depth, int len,
+                                   uint16_t* const bits);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }

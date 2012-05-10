@@ -7,11 +7,14 @@
 //
 // Author: jyrki@google.com (Jyrki Alakuijala)
 //
-// Flate like entropy encoding (Huffman) for webp lossless.
+// Flate-like entropy encoding (Huffman) for webp lossless.
 
 #ifdef USE_LOSSLESS_ENCODER
 
 #include "./huffman_encode.h"
+
+#define MAX_BITS 16   // maximum allowed length for the codes
+
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -57,9 +60,7 @@ static void SetBitDepths(const HuffmanTree* const tree,
 
 // This function will create a Huffman tree.
 //
-// The catch here is that the tree cannot be arbitrarily deep.
-// Deflate specifies a maximum depth of 15 bits for "code trees"
-// and 7 bits for "code length code trees."
+// The catch here is that the tree cannot be arbitrarily deep
 //
 // count_limit is the value that is to be faked as the minimum value
 // and this minimum value is raised until the tree matches the
@@ -165,149 +166,144 @@ int VP8LCreateHuffmanTree(const int* const histogram, int histogram_size,
   return 1;
 }
 
-static void WriteHuffmanTreeRepetitions(
-    const int value,
-    const int prev_value,
-    int repetitions,
-    int* num_symbols,
-    uint8_t* tree,
-    uint8_t* extra_bits_data) {
+// -----------------------------------------------------------------------------
+// Coding of the Huffman tree values
+
+static HuffmanTreeToken* CodeRepeatedValues(int repetitions,
+                                            HuffmanTreeToken* tokens,
+                                            int value, int prev_value) {
+  assert(value < MAX_BITS);
   if (value != prev_value) {
-    tree[*num_symbols] = value;
-    extra_bits_data[*num_symbols] = 0;
-    ++(*num_symbols);
+    tokens->code = value;
+    tokens->extra_bits = 0;
+    ++tokens;
     --repetitions;
   }
   while (repetitions >= 1) {
     if (repetitions < 3) {
       int i;
       for (i = 0; i < repetitions; ++i) {
-        tree[*num_symbols] = value;
-        extra_bits_data[*num_symbols] = 0;
-        ++(*num_symbols);
+        tokens->code = value;
+        tokens->extra_bits = 0;
+        ++tokens;
       }
-      return;
+      break;
     } else if (repetitions < 7) {
-      // 3 to 6 left
-      tree[*num_symbols] = 16;
-      extra_bits_data[*num_symbols] = repetitions - 3;
-      ++(*num_symbols);
-      return;
+      tokens->code = 16;
+      tokens->extra_bits = repetitions - 3;
+      ++tokens;
+      break;
     } else {
-      tree[*num_symbols] = 16;
-      extra_bits_data[*num_symbols] = 3;
-      ++(*num_symbols);
+      tokens->code = 16;
+      tokens->extra_bits = 3;
+      ++tokens;
       repetitions -= 6;
     }
   }
+  return tokens;
 }
 
-static void WriteHuffmanTreeRepetitionsZeros(
-    const int value,
-    int repetitions,
-    int* num_symbols,
-    uint8_t* tree,
-    uint8_t* extra_bits_data) {
+static HuffmanTreeToken* CodeRepeatedZeros(int repetitions,
+                                           HuffmanTreeToken* tokens) {
   while (repetitions >= 1) {
     if (repetitions < 3) {
       int i;
       for (i = 0; i < repetitions; ++i) {
-        tree[*num_symbols] = value;
-        extra_bits_data[*num_symbols] = 0;
-        ++(*num_symbols);
+        tokens->code = 0;   // 0-value
+        tokens->extra_bits = 0;
+        ++tokens;
       }
-      return;
+      break;
     } else if (repetitions < 11) {
-      tree[*num_symbols] = 17;
-      extra_bits_data[*num_symbols] = repetitions - 3;
-      ++(*num_symbols);
-      return;
+      tokens->code = 17;
+      tokens->extra_bits = repetitions - 3;
+      ++tokens;
+      break;
     } else if (repetitions < 139) {
-      tree[*num_symbols] = 18;
-      extra_bits_data[*num_symbols] = repetitions - 11;
-      ++(*num_symbols);
-      return;
+      tokens->code = 18;
+      tokens->extra_bits = repetitions - 11;
+      ++tokens;
+      break;
     } else {
-      tree[*num_symbols] = 18;
-      extra_bits_data[*num_symbols] = 0x7f;  // 138 repeated 0s
-      ++(*num_symbols);
+      tokens->code = 18;
+      tokens->extra_bits = 0x7f;  // 138 repeated 0s
+      ++tokens;
       repetitions -= 138;
     }
   }
+  return tokens;
 }
 
-void VP8LCreateCompressedHuffmanTree(const uint8_t* const depth,
-                                     int depth_size,
-                                     int* num_symbols,
-                                     uint8_t* tree,
-                                     uint8_t* extra_bits_data) {
+int VP8LCreateCompressedHuffmanTree(const uint8_t* const depth,
+                                    int depth_size,
+                                    HuffmanTreeToken* tokens,
+                                    int max_tokens) {
+  HuffmanTreeToken* const starting_token = tokens;
+  HuffmanTreeToken* const ending_token = tokens + max_tokens;
   int prev_value = 8;  // 8 is the initial value for rle.
-  int i;
-  for (i = 0; i < depth_size;) {
+  int i = 0;
+  while (i < depth_size) {
     const int value = depth[i];
-    int reps = 1;
-    int k;
-    for (k = i + 1; k < depth_size && depth[k] == value; ++k) {
-      ++reps;
-    }
+    int k = i + 1;
+    int runs;
+    while (k < depth_size && depth[k] == value) ++k;
+    runs = k - i;
     if (value == 0) {
-      WriteHuffmanTreeRepetitionsZeros(value, reps,
-                                       num_symbols,
-                                       tree, extra_bits_data);
+      tokens = CodeRepeatedZeros(runs, tokens);
     } else {
-      WriteHuffmanTreeRepetitions(value, prev_value, reps,
-                                  num_symbols,
-                                  tree, extra_bits_data);
+      tokens = CodeRepeatedValues(runs, tokens, value, prev_value);
       prev_value = value;
     }
-    i += reps;
+    i += runs;
+    assert(tokens <= ending_token);
   }
+  (void)ending_token;    // suppress 'unused variable' warning
+  return tokens - starting_token;
 }
+
+// -----------------------------------------------------------------------------
+
+// Pre-reversed 4-bit values.
+static const uint8_t kReversedBits[16] = {
+  0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,
+  0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf
+};
 
 static uint32_t ReverseBits(int num_bits, uint32_t bits) {
   uint32_t retval = 0;
-  int i;
-  for (i = 0; i < num_bits; ++i) {
-    retval <<= 1;
-    retval |= bits & 1;
-    bits >>= 1;
+  int i = 0;
+  while (i < num_bits) {
+    i += 4;
+    retval |= kReversedBits[bits & 0xf] << (MAX_BITS - i);
+    bits >>= 4;
   }
+  retval >>= (MAX_BITS - num_bits);
   return retval;
 }
 
-void VP8LConvertBitDepthsToSymbols(const uint8_t* depth, int len,
-                                   uint16_t* bits) {
-  // This function is based on RFC 1951.
-  //
-  // In deflate, all bit depths are [1..15]
-  // 0 bit depth means that the symbol does not exist.
-
-  // 0..15 are values for bits
-#define MAX_BITS 16
-  uint32_t next_code[MAX_BITS];
-  uint32_t bl_count[MAX_BITS] = { 0 };
+void VP8LConvertBitDepthsToSymbols(const uint8_t* const depth,
+                                   int len,
+                                   uint16_t* const bits) {
+  // 0 bit-depth means that the symbol does not exist.
   int i;
-  {
-    for (i = 0; i < len; ++i) {
-      ++bl_count[depth[i]];
-    }
-    bl_count[0] = 0;
+  uint32_t next_code[MAX_BITS];
+  int depth_count[MAX_BITS] = { 0 };
+  for (i = 0; i < len; ++i) {
+    assert(depth[i] < MAX_BITS);
+    ++depth_count[depth[i]];
   }
+  depth_count[0] = 0;  // ignore unused symbol
   next_code[0] = 0;
   {
-    int code = 0;
-    int bits;
-    for (bits = 1; bits < MAX_BITS; ++bits) {
-      code = (code + bl_count[bits - 1]) << 1;
-      next_code[bits] = code;
+    uint32_t code = 0;
+    for (i = 1; i < MAX_BITS; ++i) {
+      code = (code + depth_count[i - 1]) << 1;
+      next_code[i] = code;
     }
   }
   for (i = 0; i < len; ++i) {
-    if (depth[i]) {
-      bits[i] = ReverseBits(depth[i], next_code[depth[i]]++);
-    }
+    bits[i] = ReverseBits(depth[i], next_code[depth[i]]++);
   }
 }
-#undef MAX_BITS
 
 #endif
