@@ -217,9 +217,7 @@ WebPMuxError WebPMuxGetFeatures(const WebPMux* const mux, uint32_t* flags) {
     return err;
   }
 
-  // TODO(urvang): Add a '#define CHUNK_SIZE_BYTES 4' and use it instead of
-  // hard-coded value of 4 everywhere.
-  if (data.size_ < 4) return WEBP_MUX_BAD_DATA;
+  if (data.size_ < CHUNK_SIZE_BYTES) return WEBP_MUX_BAD_DATA;
 
   // All OK. Fill up flags.
   *flags = GetLE32(data.bytes_);
@@ -231,8 +229,9 @@ WebPMuxError WebPMuxGetImage(const WebPMux* const mux,
   WebPMuxError err;
   WebPMuxImage* wpi = NULL;
 
-  if (mux == NULL || (image == NULL && alpha == NULL))
+  if (mux == NULL || (image == NULL && alpha == NULL)) {
     return WEBP_MUX_INVALID_ARGUMENT;
+  }
 
   err = ValidateForImage(mux);
   if (err != WEBP_MUX_OK) return err;

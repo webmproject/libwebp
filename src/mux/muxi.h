@@ -87,6 +87,7 @@ typedef enum {
 // Maximum chunk payload (data) size such that adding the header and padding
 // won't overflow an uint32.
 #define MAX_CHUNK_PAYLOAD (~0U - CHUNK_HEADER_SIZE - 1)
+#define CHUNK_SIZE_BYTES 4
 
 #define NIL_TAG 0x00000000u  // To signal void chunk.
 

@@ -643,9 +643,9 @@ WebPMuxError WebPMuxAssemble(WebPMux* const mux,
 
   // Main RIFF header.
   PutLE32(data + 0, mktag('R', 'I', 'F', 'F'));
-  PutLE32(data + 4, (uint32_t)size - CHUNK_HEADER_SIZE);
+  PutLE32(data + TAG_SIZE, (uint32_t)size - CHUNK_HEADER_SIZE);
   assert(size == (uint32_t)size);
-  PutLE32(data + 8, mktag('W', 'E', 'B', 'P'));
+  PutLE32(data + TAG_SIZE + CHUNK_SIZE_BYTES, mktag('W', 'E', 'B', 'P'));
 
   // Chunks.
   dst = data + RIFF_HEADER_SIZE;
