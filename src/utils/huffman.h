@@ -56,12 +56,12 @@ int HuffmanTreeBuildImplicit(HuffmanTree* const tree,
                              int code_lengths_size);
 
 // Build a Huffman tree with explicitly given lists of code lengths, codes
-// and symbols.
-// Returns false in case of error (invalid tree or memory error).
+// and symbols. Verifies that all symbols added are smaller than max_symbol.
+// Returns false in case of an invalid symbol, invalid tree or memory error.
 int HuffmanTreeBuildExplicit(HuffmanTree* const tree,
                              const int* const code_lengths,
                              const int* const codes,
-                             const int* const symbols,
+                             const int* const symbols, int max_symbol,
                              int num_symbols);
 
 // Utility: converts Huffman code lengths to corresponding Huffman codes.

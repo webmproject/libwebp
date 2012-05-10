@@ -250,8 +250,8 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
       codes[1] = 1;
       code_lengths[1] = num_symbols - 1;
     }
-    ok = HuffmanTreeBuildExplicit(tree, code_lengths, codes,
-                                  symbols, num_symbols);
+    ok = HuffmanTreeBuildExplicit(tree, code_lengths, codes, symbols,
+                                  alphabet_size, num_symbols);
   } else {  // Decode Huffman-coded code lengths.
     int* code_lengths = NULL;
     int i;
