@@ -596,14 +596,12 @@ static int DecodeImageData(VP8LDecoder* const dec,
       const int length_sym = code - NUM_LITERAL_CODES;
       const int length = GetCopyLength(length_sym, br);
       const int dist_symbol = ReadSymbol(&htree_group->htrees_[DIST], br);
-      // TODO(urvang): Evaluate if we should check 'dist_symbol', 'dist_code'
-      // and/or 'dist' to be valid.
       VP8LFillBitWindow(br);
       dist_code = GetCopyDistance(dist_symbol, br);
       dist = PlaneCodeToDistance(width, dist_code);
       if (src - data < dist || src_end - src < length) {
         ok = 0;
-        goto Error;
+        goto End;
       }
       {
         int i;
@@ -636,16 +634,16 @@ static int DecodeImageData(VP8LDecoder* const dec,
       goto AdvanceByOne;
     } else {    // Not reached.
       ok = 0;
-      goto Error;
+      goto End;
     }
     ok = !br->error_;
-    if (!ok) goto Error;
+    if (!ok) goto End;
   }
   // Process the remaining rows corresponding to last row-block.
   if (process_row) ProcessRows(dec, row);
 
- Error:
-  if (br->error_ || !ok) {
+ End:
+  if (br->error_ || !ok || (br->eos_ && src < src_end)) {
     ok = 0;
     dec->status_ = (!br->eos_) ?
         VP8_STATUS_BITSTREAM_ERROR : VP8_STATUS_SUSPENDED;
