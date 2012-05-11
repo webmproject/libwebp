@@ -242,6 +242,7 @@ int VP8LCreateCompressedHuffmanTree(const uint8_t* const depth,
   HuffmanTreeToken* const ending_token = tokens + max_tokens;
   int prev_value = 8;  // 8 is the initial value for rle.
   int i = 0;
+  assert(tokens != NULL);
   while (i < depth_size) {
     const int value = depth[i];
     int k = i + 1;
