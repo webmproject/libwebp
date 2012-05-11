@@ -367,18 +367,17 @@ static void StoreHuffmanTreeOfHuffmanTreeToBitMask(
   // RFC 1951 will calm you down if you are worried about this funny sequence.
   // This sequence is tuned from that, but more weighted for lower symbol count,
   // and more spiking histograms.
-  int i;
   static const uint8_t kStorageOrder[CODE_LENGTH_CODES] = {
     17, 18, 0, 1, 2, 3, 4, 5, 16, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
   };
+  int i;
   // Throw away trailing zeros:
-  int codes_to_store = sizeof(kStorageOrder);
+  int codes_to_store = CODE_LENGTH_CODES;
   for (; codes_to_store > 4; --codes_to_store) {
     if (code_length_bitdepth[kStorageOrder[codes_to_store - 1]] != 0) {
       break;
     }
   }
-  // How many code length codes we write above the first four (see RFC 1951).
   VP8LWriteBits(bw, 4, codes_to_store - 4);
   for (i = 0; i < codes_to_store; ++i) {
     VP8LWriteBits(bw, 3, code_length_bitdepth[kStorageOrder[i]]);
@@ -543,7 +542,7 @@ static void StoreImageToBitMask(
       VP8LWriteBits(bw, bitdepths[5 * histogram_ix][literal_ix],
                     bit_symbols[5 * histogram_ix][literal_ix]);
     } else if (PixOrCopyIsLiteral(v)) {
-      static const int order[] = {1, 2, 0, 3};
+      static const int order[] = { 1, 2, 0, 3 };
       int k;
       for (k = 0; k < 4; ++k) {
         const int code = PixOrCopyLiteral(v, order[k]);

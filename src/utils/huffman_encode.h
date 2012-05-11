@@ -26,7 +26,7 @@ extern "C" {
 // tree_limit: maximum bit depth (inclusive) of the codes.
 // bit_depths[]: how many bits are used for the symbol.
 //
-// Returns 0 when an error has occured.
+// Returns 0 when an error has occurred.
 int VP8LCreateHuffmanTree(const int* data, const int length,
                           const int tree_limit, uint8_t* bit_depths);
 
