@@ -53,6 +53,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "webp/mux.h"
+#include "./example_util.h"
 
 //------------------------------------------------------------------------------
 // Config object to parse command-line arguments.
@@ -319,66 +320,16 @@ static void PrintHelp(void) {
   printf("\nINPUT & OUTPUT are in webp format.\n");
 }
 
-static int ReadData(const char* filename,
-                    uint8_t** data_ptr, uint32_t* size_ptr) {
-  void* data = NULL;
-  long size = 0;
-  int ok = 0;
-  FILE* in;
-
-  *size_ptr = 0;
-  in = fopen(filename, "rb");
-  if (!in) {
-    fprintf(stderr, "Failed to open file %s\n", filename);
-    return 0;
-  }
-  fseek(in, 0, SEEK_END);
-  size = ftell(in);
-  fseek(in, 0, SEEK_SET);
-  if (size > 0xffffffffu) {
-    fprintf(stderr, "Size (%ld bytes) is out of range for file %s\n",
-            size, filename);
-    size = 0;
-    goto Err;
-  }
-  if (size < 0) {
-    size = 0;
-    goto Err;
-  }
-  data = malloc(size);
-  if (data) {
-    if (fread(data, size, 1, in) != 1) {
-      free(data);
-      data = NULL;
-      size = 0;
-      fprintf(stderr, "Failed to read %ld bytes from file %s\n",
-              size, filename);
-      goto Err;
-    }
-    ok = 1;
-  } else {
-    fprintf(stderr, "Failed to allocate %ld bytes for reading file %s\n",
-            size, filename);
-    size = 0;
-  }
-
- Err:
-  if (in != stdin) fclose(in);
-  *size_ptr = (uint32_t)size;
-  *data_ptr = (uint8_t*)data;
-  return ok;
-}
-
-static int ReadFile(const char* const filename, WebPMux** mux) {
-  uint32_t size = 0;
-  uint8_t* data = NULL;
+static int CreateMux(const char* const filename, WebPMux** mux) {
+  size_t size = 0;
+  const uint8_t* data = NULL;
   WebPMuxState mux_state;
 
   assert(mux != NULL);
 
-  if (!ReadData(filename, &data, &size)) return 0;
+  if (!ExUtilReadFile(filename, &data, &size)) return 0;
   *mux = WebPMuxCreate(data, size, 1, &mux_state);
-  free(data);
+  free((void*)data);
   if (*mux != NULL && mux_state == WEBP_MUX_STATE_COMPLETE) return 1;
   fprintf(stderr, "Failed to create mux object from file %s. mux_state = %d.\n",
           filename, mux_state);
@@ -387,18 +338,18 @@ static int ReadFile(const char* const filename, WebPMux** mux) {
 
 static int ReadImage(const char* filename,
                      WebPData* const image_ptr, WebPData* const alpha_ptr) {
-  uint8_t* data = NULL;
-  uint32_t size = 0;
+  const uint8_t* data = NULL;
+  size_t size = 0;
   WebPData image, alpha;
   WebPMux* mux;
   WebPMuxError err;
   int ok = 0;
   WebPMuxState mux_state;
 
-  if (!ReadData(filename, &data, &size)) return 0;
+  if (!ExUtilReadFile(filename, &data, &size)) return 0;
 
   mux = WebPMuxCreate(data, size, 1, &mux_state);
-  free(data);
+  free((void*)data);
   if (mux == NULL || mux_state != WEBP_MUX_STATE_COMPLETE) {
     fprintf(stderr,
             "Failed to create mux object from file %s. mux_state = %d.\n",
@@ -838,8 +789,8 @@ static int GetFrameTile(const WebPMux* mux,
 static int Process(const WebPMuxConfig* config) {
   WebPMux* mux = NULL;
   WebPData webpdata;
-  uint8_t* data = NULL;
-  uint32_t size = 0;
+  const uint8_t* data = NULL;
+  size_t size = 0;
   uint32_t x_offset = 0;
   uint32_t y_offset = 0;
   WebPMuxError err = WEBP_MUX_OK;
@@ -849,7 +800,7 @@ static int Process(const WebPMuxConfig* config) {
 
   switch (config->action_type_) {
     case ACTION_GET:
-      ok = ReadFile(config->input_, &mux);
+      ok = CreateMux(config->input_, &mux);
       if (!ok) goto Err2;
       switch (feature->type_) {
         case FEATURE_FRM:
@@ -956,9 +907,9 @@ static int Process(const WebPMuxConfig* config) {
           break;
 
         case FEATURE_ICCP:
-          ok = ReadFile(config->input_, &mux);
+          ok = CreateMux(config->input_, &mux);
           if (!ok) goto Err2;
-          ok = ReadData(feature->args_[0].filename_, &data, &size);
+          ok = ExUtilReadFile(feature->args_[0].filename_, &data, &size);
           if (!ok) goto Err2;
           err = WebPMuxSetColorProfile(mux, data, size, 1);
           free((void*)data);
@@ -968,12 +919,12 @@ static int Process(const WebPMuxConfig* config) {
           break;
 
         case FEATURE_XMP:
-          ok = ReadFile(config->input_, &mux);
+          ok = CreateMux(config->input_, &mux);
           if (!ok) goto Err2;
-          ok = ReadData(feature->args_[0].filename_, &data, &size);
+          ok = ExUtilReadFile(feature->args_[0].filename_, &data, &size);
           if (!ok) goto Err2;
           err = WebPMuxSetMetadata(mux, data, size, 1);
-          free(data);
+          free((void*)data);
           if (err != WEBP_MUX_OK) {
             ERROR_GOTO2("ERROR#%d: Could not set XMP metadata.\n", err, Err2);
           }
@@ -987,7 +938,7 @@ static int Process(const WebPMuxConfig* config) {
       break;
 
     case ACTION_STRIP:
-      ok = ReadFile(config->input_, &mux);
+      ok = CreateMux(config->input_, &mux);
       if (!ok) goto Err2;
       switch (feature->type_) {
         case FEATURE_ICCP:
@@ -1012,7 +963,7 @@ static int Process(const WebPMuxConfig* config) {
       break;
 
     case ACTION_INFO:
-      ok = ReadFile(config->input_, &mux);
+      ok = CreateMux(config->input_, &mux);
       if (!ok) goto Err2;
       ok = (DisplayInfo(mux) == WEBP_MUX_OK);
       break;

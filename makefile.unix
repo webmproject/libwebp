@@ -106,6 +106,9 @@ ENC_OBJS = \
     src/enc/vp8l.o \
     src/enc/webpenc.o \
 
+EX_UTIL_OBJS = \
+    examples/example_util.o \
+
 MUX_OBJS = \
     src/mux/muxedit.o \
     src/mux/muxinternal.o \
@@ -152,7 +155,7 @@ HDRS = \
     src/webp/mux.h \
     src/webp/types.h \
 
-OUT_LIBS = src/libwebp.a src/mux/libwebpmux.a
+OUT_LIBS = examples/libexample_util.a src/libwebp.a src/mux/libwebpmux.a
 OUT_EXAMPLES = examples/cwebp examples/dwebp examples/webpmux
 
 OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES) examples/vwebp
@@ -162,19 +165,25 @@ all: ex
 %.o: %.c $(HDRS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
+examples/libexample_util.a: $(EX_UTIL_OBJS)
 src/libwebp.a: $(LIBWEBP_OBJS)
-	$(AR) $(ARFLAGS) $@ $^
-
 src/mux/libwebpmux.a: $(LIBWEBPMUX_OBJS)
+
+%.a:
 	$(AR) $(ARFLAGS) $@ $^
 
 ex: $(OUT_EXAMPLES)
 
-examples/cwebp: examples/cwebp.o src/libwebp.a
-examples/dwebp: examples/dwebp.o src/libwebp.a
-examples/vwebp: examples/vwebp.o src/mux/libwebpmux.a src/libwebp.a
+examples/cwebp: examples/cwebp.o
+examples/dwebp: examples/dwebp.o
+examples/vwebp: examples/vwebp.o
+examples/webpmux: examples/webpmux.o
+
+examples/cwebp: src/libwebp.a
+examples/dwebp: examples/libexample_util.a src/libwebp.a
+examples/vwebp: examples/libexample_util.a src/mux/libwebpmux.a src/libwebp.a
 examples/vwebp: EXTRA_LIBS += $(GL_LIBS)
-examples/webpmux: examples/webpmux.o src/mux/libwebpmux.a src/libwebp.a
+examples/webpmux: examples/libexample_util.a src/mux/libwebpmux.a src/libwebp.a
 
 $(OUT_EXAMPLES) examples/vwebp:
 	$(CC) -o $@ $^ $(LDFLAGS)

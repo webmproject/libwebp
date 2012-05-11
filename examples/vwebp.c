@@ -31,6 +31,8 @@
 #endif
 #endif
 
+#include "./example_util.h"
+
 #ifdef _MSC_VER
 #define snprintf _snprintf
 #endif
@@ -159,41 +161,6 @@ static void StartDisplay(const WebPDecBuffer* const pic) {
 //------------------------------------------------------------------------------
 // File decoding
 
-static int ReadFile(void) {
-  int ok;
-  void* data = NULL;
-  size_t data_size = 0;
-  const char* const file_name = kParams.file_name;
-  FILE* in = NULL;
-
-  if (file_name == NULL) {
-    printf("missing input file!!\n");
-    Help();
-    return 0;
-  }
-  in = fopen(file_name, "rb");
-  if (in == NULL) {
-    fprintf(stderr, "cannot open input file '%s'\n", file_name);
-    return 0;
-  }
-  fseek(in, 0, SEEK_END);
-  data_size = ftell(in);
-  fseek(in, 0, SEEK_SET);
-  data = malloc(data_size);
-  if (data == NULL) return 0;
-  ok = (fread(data, data_size, 1, in) == 1);
-  fclose(in);
-  kParams.data.bytes_ = data;
-  kParams.data.size_ = data_size;
-
-  if (!ok) {
-    fprintf(stderr, "Could not read %zu bytes of data from file %s\n",
-            data_size, file_name);
-    return 0;
-  }
-  return 1;
-}
-
 static int Decode(const int frame_number, uint32_t* const duration) {
   WebPDecoderConfig* const config = kParams.config;
   WebPData *data, image_data;
@@ -312,7 +279,16 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if (!ReadFile()) goto Error;
+  if (kParams.file_name == NULL) {
+    printf("missing input file!!\n");
+    Help();
+    return 0;
+  }
+
+  if (!ExUtilReadFile(kParams.file_name,
+                      &kParams.data.bytes_, &kParams.data.size_)) {
+    goto Error;
+  }
 
   kParams.mux =
       WebPMuxCreate(kParams.data.bytes_, kParams.data.size_, 0, NULL);
