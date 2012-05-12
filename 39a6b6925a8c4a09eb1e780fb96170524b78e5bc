@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAKn//mzk\u003d",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-12T18:16:12Z",
+      "side": 1,
+      "message": "Right, I wanted to establish the framework in this change, other functions can then be moved over.",
+      "parentUuid": "AAAAKn//m2s\u003d",
+      "revId": "39a6b6925a8c4a09eb1e780fb96170524b78e5bc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAKn//m2w\u003d",
         "filename": "examples/dwebp.c",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAKn//mzc\u003d",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-12T18:16:12Z",
+      "side": 1,
+      "message": "Didn\u0027t really consider it actually, maybe as a follow-up. This change acts mostly as a drop-in replacement without disturbing the code much.",
+      "parentUuid": "AAAAKn//m2w\u003d",
+      "revId": "39a6b6925a8c4a09eb1e780fb96170524b78e5bc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAKn//m2o\u003d",
         "filename": "examples/example_util.h",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2012-05-12T07:37:18Z",
       "side": 1,
       "message": "you shuold mention that it\u0027s caller\u0027s responsability to call \"free(*data)\" afterward",
+      "revId": "39a6b6925a8c4a09eb1e780fb96170524b78e5bc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//mzg\u003d",
+        "filename": "examples/example_util.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-12T18:16:12Z",
+      "side": 1,
+      "message": "Ah right, forgot to add that (includes guards too.)",
+      "parentUuid": "AAAAKn//m2o\u003d",
       "revId": "39a6b6925a8c4a09eb1e780fb96170524b78e5bc",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
