@@ -797,9 +797,6 @@ static WebPEncodingError WriteRiffHeader(const VP8LEncoder* const enc,
     'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 'B', 'P',
     'V', 'P', '8', 'L', 0, 0, 0, 0, LOSSLESS_MAGIC_BYTE,
   };
-  if (riff_size < (vp8l_size + TAG_SIZE + CHUNK_HEADER_SIZE)) {
-    return VP8_ENC_ERROR_INVALID_CONFIGURATION;
-  }
   PutLE32(riff + TAG_SIZE, (uint32_t)riff_size);
   PutLE32(riff + RIFF_HEADER_SIZE + TAG_SIZE, (uint32_t)vp8l_size);
   if (!pic->writer(riff, sizeof(riff), pic)) {
@@ -821,17 +818,14 @@ static void WriteImageSize(VP8LEncoder* const enc, VP8LBitWriter* const bw) {
 static WebPEncodingError WriteImage(const VP8LEncoder* const enc,
                                     VP8LBitWriter* const bw,
                                     size_t* const coded_size) {
-  size_t riff_size, vp8l_size, webpll_size, pad;
   const WebPPicture* const pic = enc->pic_;
   WebPEncodingError err = VP8_ENC_OK;
   const uint8_t* const webpll_data = VP8LBitWriterFinish(bw);
+  const size_t webpll_size = VP8LBitWriterNumBytes(bw);
+  const size_t vp8l_size = SIGNATURE_SIZE + webpll_size;
+  const size_t pad = vp8l_size & 1;
+  const size_t riff_size = TAG_SIZE + CHUNK_HEADER_SIZE + vp8l_size + pad;
 
-  webpll_size = VP8LBitWriterNumBytes(bw);
-  vp8l_size = SIGNATURE_SIZE + webpll_size;
-  pad = vp8l_size & 1;
-  vp8l_size += pad;
-
-  riff_size = TAG_SIZE + CHUNK_HEADER_SIZE + vp8l_size;
   err = WriteRiffHeader(enc, riff_size, vp8l_size);
   if (err != VP8_ENC_OK) goto Error;
 
