@@ -266,7 +266,7 @@ static int OptimizeHuffmanForRle(int length, int* counts) {
 
 static int GetHuffBitLengthsAndCodes(
     const VP8LHistogramSet* const histogram_image,
-    int use_color_cache, HuffmanTreeCode* const huffman_codes) {
+    HuffmanTreeCode* const huffman_codes) {
   int i, k;
   int ok = 1;
   int total_length_size = 0;
@@ -275,16 +275,14 @@ static int GetHuffBitLengthsAndCodes(
 
   // Iterate over all histograms and get the aggregate number of codes used.
   for (i = 0; i < histogram_image_size; ++i) {
-    VP8LHistogram* const histo = histogram_image->histograms[i];
-    const int num_literals = VP8LHistogramNumCodes(histo);
-    const int ix = 5 * i;
-    k = 0;
-    huffman_codes[ix].num_symbols = num_literals;
-    total_length_size += num_literals;
-    for (k = 1; k < 5; ++k) {
-      const int val = (k == 4) ? DISTANCE_CODES_MAX : 256;
-      huffman_codes[ix + k].num_symbols = val;
-      total_length_size += val;
+    const VP8LHistogram* const histo = histogram_image->histograms[i];
+    HuffmanTreeCode* const codes = &huffman_codes[5 * i];
+    for (k = 0; k < 5; ++k) {
+      const int num_symbols = (k == 0) ? VP8LHistogramNumCodes(histo)
+                            : (k == 4) ? DISTANCE_CODES_MAX
+                            : 256;
+      codes[k].num_symbols = num_symbols;
+      total_length_size += num_symbols;
     }
   }
 
@@ -312,63 +310,41 @@ static int GetHuffBitLengthsAndCodes(
 
   // Create Huffman trees.
   for (i = 0; i < histogram_image_size; ++i) {
-    const int ix = 5 * i;
+    HuffmanTreeCode* const codes = &huffman_codes[5 * i];
     VP8LHistogram* const histo = histogram_image->histograms[i];
-    const int num_literals = huffman_codes[ix].num_symbols;
-    // For each component, optimize histogram for Huffman with RLE compression.
+    const int num_literals = codes[0].num_symbols;
+    // For each component, optimize histogram for Huffman with RLE compression,
+    // and create a Huffman tree (in the form of bit lengths) for each.
     ok = ok && OptimizeHuffmanForRle(num_literals, histo->literal_);
-    if (!use_color_cache) {
-      // Implies that palette_bits == 0,
-      // and so number of palette entries = (1 << 0) = 1.
-      // Optimization might have smeared population count in this single
-      // palette entry, so zero it out.
-      histo->literal_[256 + kLengthCodes] = 0;
-    }
-    // Create a Huffman tree (in the form of bit lengths) for each component.
     ok = ok && VP8LCreateHuffmanTree(histo->literal_, num_literals, 15,
-                                     huffman_codes[ix].code_lengths);
+                                     codes[0].code_lengths);
 
     ok = ok && OptimizeHuffmanForRle(256, histo->red_);
     ok = ok && VP8LCreateHuffmanTree(histo->red_, 256, 15,
-                                     huffman_codes[ix + 1].code_lengths);
+                                     codes[1].code_lengths);
 
     ok = ok && OptimizeHuffmanForRle(256, histo->blue_);
     ok = ok && VP8LCreateHuffmanTree(histo->blue_, 256, 15,
-                                     huffman_codes[ix + 2].code_lengths);
+                                     codes[2].code_lengths);
 
     ok = ok && OptimizeHuffmanForRle(256, histo->alpha_);
     ok = ok && VP8LCreateHuffmanTree(histo->alpha_, 256, 15,
-                                     huffman_codes[ix + 3].code_lengths);
+                                     codes[3].code_lengths);
 
     ok = ok && OptimizeHuffmanForRle(DISTANCE_CODES_MAX, histo->distance_);
     ok = ok && VP8LCreateHuffmanTree(histo->distance_, DISTANCE_CODES_MAX, 15,
-                                     huffman_codes[ix + 4].code_lengths);
+                                     codes[4].code_lengths);
 
     // Create the actual bit codes for the bit lengths.
+    // TODO(vikasa): merge with each VP8LCreateHuffmanTree() ?
     for (k = 0; k < 5; ++k) {
-      VP8LConvertBitDepthsToSymbols(&huffman_codes[ix + k]);
+      VP8LConvertBitDepthsToSymbols(codes + k);
     }
   }
 
  End:
   if (!ok) free(mem_buf);
   return ok;
-}
-
-static void ClearHuffmanTreeIfOnlyOneSymbol(
-    HuffmanTreeCode* const huffman_code) {
-  int k;
-  int count = 0;
-  for (k = 0; k < huffman_code->num_symbols; ++k) {
-    if (huffman_code->code_lengths[k] != 0) {
-      ++count;
-      if (count > 1) return;
-    }
-  }
-  for (k = 0; k < huffman_code->num_symbols; ++k) {
-    huffman_code->code_lengths[k] = 0;
-    huffman_code->codes[k] = 0;
-  }
 }
 
 static void StoreHuffmanTreeOfHuffmanTreeToBitMask(
@@ -390,6 +366,22 @@ static void StoreHuffmanTreeOfHuffmanTreeToBitMask(
   VP8LWriteBits(bw, 4, codes_to_store - 4);
   for (i = 0; i < codes_to_store; ++i) {
     VP8LWriteBits(bw, 3, code_length_bitdepth[kStorageOrder[i]]);
+  }
+}
+
+static void ClearHuffmanTreeIfOnlyOneSymbol(
+    HuffmanTreeCode* const huffman_code) {
+  int k;
+  int count = 0;
+  for (k = 0; k < huffman_code->num_symbols; ++k) {
+    if (huffman_code->code_lengths[k] != 0) {
+      ++count;
+      if (count > 1) return;
+    }
+  }
+  for (k = 0; k < huffman_code->num_symbols; ++k) {
+    huffman_code->code_lengths[k] = 0;
+    huffman_code->codes[k] = 0;
   }
 }
 
@@ -555,31 +547,29 @@ static void StoreImageToBitMask(
     const int histogram_ix = histogram_symbols[histo_bits ?
                                                (y >> histo_bits) * histo_xsize +
                                                (x >> histo_bits) : 0];
-    const int ix = 5 * histogram_ix;
-
+    const HuffmanTreeCode* const codes = huffman_codes + 5 * histogram_ix;
     if (PixOrCopyIsCacheIdx(v)) {
       const int code = PixOrCopyCacheIdx(v);
       const int literal_ix = 256 + kLengthCodes + code;
-      WriteHuffmanCode(bw, &huffman_codes[ix], literal_ix);
+      WriteHuffmanCode(bw, codes, literal_ix);
     } else if (PixOrCopyIsLiteral(v)) {
       static const int order[] = { 1, 2, 0, 3 };
       int k;
       for (k = 0; k < 4; ++k) {
         const int code = PixOrCopyLiteral(v, order[k]);
-        WriteHuffmanCode(bw, &huffman_codes[ix + k], code);
+        WriteHuffmanCode(bw, codes + k, code);
       }
     } else {
       int bits, n_bits;
       int code, distance;
-      int len_ix;
+
       PrefixEncode(v->len, &code, &n_bits, &bits);
-      len_ix = 256 + code;
-      WriteHuffmanCode(bw, &huffman_codes[ix], len_ix);
+      WriteHuffmanCode(bw, codes, 256 + code);
       VP8LWriteBits(bw, n_bits, bits);
 
       distance = PixOrCopyDistance(v);
       PrefixEncode(distance, &code, &n_bits, &bits);
-      WriteHuffmanCode(bw, &huffman_codes[ix + 4], code);
+      WriteHuffmanCode(bw, codes + 4, code);
       VP8LWriteBits(bw, n_bits, bits);
     }
     x += PixOrCopyLength(v);
@@ -599,7 +589,6 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   int write_histogram_image;
   const int use_2d_locality = 1;
   const int use_color_cache = (cache_bits > 0);
-  const int color_cache_size = use_color_cache ? (1 << cache_bits) : 0;
   const int histogram_image_xysize =
       VP8LSubSampleSize(width, histogram_bits) *
       VP8LSubSampleSize(height, histogram_bits);
@@ -632,8 +621,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   huffman_codes = (HuffmanTreeCode*)calloc(bit_array_size,
                                            sizeof(*huffman_codes));
   if (huffman_codes == NULL ||
-      !GetHuffBitLengthsAndCodes(histogram_image, use_color_cache,
-                                 huffman_codes)) {
+      !GetHuffBitLengthsAndCodes(histogram_image, huffman_codes)) {
     goto Error;
   }
 
@@ -670,31 +658,18 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   }
 
   // Store Huffman codes.
-  for (i = 0; i < histogram_image_size; ++i) {
-    int k;
-    for (k = 0; k < 5; ++k) {
-      const int ix = 5 * i + k;
-      const HuffmanTreeCode* const tree = &huffman_codes[ix];
-      const uint8_t* const cur_bit_lengths =  tree->code_lengths;
-      const int bit_lengths_size = tree->num_symbols;
-      // TODO(vikasa): Check why we need this special check for k == 0.
-      const int cur_bit_lengths_size = (k == 0) ?
-                   256 + kLengthCodes + color_cache_size : bit_lengths_size;
-      if (!StoreHuffmanCode(bw, cur_bit_lengths, cur_bit_lengths_size)) {
-        goto Error;
-      }
+  for (i = 0; i < 5 * histogram_image_size; ++i) {
+    const HuffmanTreeCode* const codes = &huffman_codes[i];
+    if (!StoreHuffmanCode(bw, codes->code_lengths, codes->num_symbols)) {
+      goto Error;
     }
+    ClearHuffmanTreeIfOnlyOneSymbol(&huffman_codes[i]);
   }
 
   // Free combined histograms.
   free(histogram_image);
   histogram_image = NULL;
 
-  // Emit no bits if there is only one symbol in the histogram.
-  // This gives better compression for some images.
-  for (i = 0; i < 5 * histogram_image_size; ++i) {
-    ClearHuffmanTreeIfOnlyOneSymbol(&huffman_codes[i]);
-  }
   // Store actual literals.
   StoreImageToBitMask(bw, width, histogram_bits, &refs,
                       histogram_symbols, huffman_codes);

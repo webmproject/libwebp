@@ -118,7 +118,8 @@ static WEBP_INLINE void VP8LHistogramRemove(VP8LHistogram* const p,
 }
 
 static WEBP_INLINE int VP8LHistogramNumCodes(const VP8LHistogram* const p) {
-  return 256 + kLengthCodes + (1 << p->palette_code_bits_);
+  return 256 + kLengthCodes +
+      ((p->palette_code_bits_ > 0) ? (1 << p->palette_code_bits_) : 0);
 }
 
 void VP8LConvertPopulationCountTableToBitEstimates(
