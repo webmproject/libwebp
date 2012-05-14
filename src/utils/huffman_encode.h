@@ -20,24 +20,15 @@
 extern "C" {
 #endif
 
-// Create a Huffman tree.
-//
-// (data,length): population counts.
-// tree_limit: maximum bit depth (inclusive) of the codes.
-// bit_depths[]: how many bits are used for the symbol.
-//
-// Returns 0 when an error has occurred.
-int VP8LCreateHuffmanTree(const int* data, const int length,
-                          const int tree_limit, uint8_t* bit_depths);
-
-// Turn the Huffman tree into a token sequence.
-// Returns the number of tokens used.
+// Struct for holding the tree header in coded form.
 typedef struct {
   uint8_t code;         // value (0..15) or escape code (16,17,18)
   uint8_t extra_bits;   // extra bits for escape codes
 } HuffmanTreeToken;
 
-int VP8LCreateCompressedHuffmanTree(const uint8_t* const depth, int len,
+// Turn the Huffman tree into a token sequence.
+// Returns the number of tokens used.
+int VP8LCreateCompressedHuffmanTree(const uint8_t* const depth, int depth_size,
                                     HuffmanTreeToken* tokens, int max_tokens);
 
 // Struct to represent the tree codes (depth and bits array).
@@ -47,8 +38,9 @@ typedef struct {
   uint16_t* codes;         // Symbol Codes.
 } HuffmanTreeCode;
 
-// Get the actual bit values for a tree of bit depths.
-void VP8LConvertBitDepthsToSymbols(HuffmanTreeCode* const tree);
+// Create an optimized tree, and tokenize it.
+int VP8LCreateHuffmanTree(int* const histogram, int tree_depth_limit,
+                          HuffmanTreeCode* const tree);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }

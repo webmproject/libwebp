@@ -20,6 +20,112 @@
 #include <stdlib.h>
 #include <string.h>
 
+// -----------------------------------------------------------------------------
+// Util function to optimize the symbol map for RLE coding
+
+// Heuristics for selecting the stride ranges to collapse.
+static int ValuesShouldBeCollapsedToStrideAverage(int a, int b) {
+  return abs(a - b) < 4;
+}
+
+// Change the population counts in a way that the consequent
+// Hufmann tree compression, especially its RLE-part, give smaller output.
+static int OptimizeHuffmanForRle(int length, int* const counts) {
+  int stride;
+  int limit;
+  int sum;
+  uint8_t* good_for_rle;
+  // 1) Let's make the Huffman code more compatible with rle encoding.
+  int i;
+  for (; length >= 0; --length) {
+    if (length == 0) {
+      return 1;  // All zeros.
+    }
+    if (counts[length - 1] != 0) {
+      // Now counts[0..length - 1] does not have trailing zeros.
+      break;
+    }
+  }
+  // 2) Let's mark all population counts that already can be encoded
+  // with an rle code.
+  good_for_rle = (uint8_t*)calloc(length, 1);
+  if (good_for_rle == NULL) {
+    return 0;
+  }
+  {
+    // Let's not spoil any of the existing good rle codes.
+    // Mark any seq of 0's that is longer as 5 as a good_for_rle.
+    // Mark any seq of non-0's that is longer as 7 as a good_for_rle.
+    int symbol = counts[0];
+    int stride = 0;
+    for (i = 0; i < length + 1; ++i) {
+      if (i == length || counts[i] != symbol) {
+        if ((symbol == 0 && stride >= 5) ||
+            (symbol != 0 && stride >= 7)) {
+          int k;
+          for (k = 0; k < stride; ++k) {
+            good_for_rle[i - k - 1] = 1;
+          }
+        }
+        stride = 1;
+        if (i != length) {
+          symbol = counts[i];
+        }
+      } else {
+        ++stride;
+      }
+    }
+  }
+  // 3) Let's replace those population counts that lead to more rle codes.
+  stride = 0;
+  limit = counts[0];
+  sum = 0;
+  for (i = 0; i < length + 1; ++i) {
+    if (i == length || good_for_rle[i] ||
+        (i != 0 && good_for_rle[i - 1]) ||
+        !ValuesShouldBeCollapsedToStrideAverage(counts[i], limit)) {
+      if (stride >= 4 || (stride >= 3 && sum == 0)) {
+        int k;
+        // The stride must end, collapse what we have, if we have enough (4).
+        int count = (sum + stride / 2) / stride;
+        if (count < 1) {
+          count = 1;
+        }
+        if (sum == 0) {
+          // Don't make an all zeros stride to be upgraded to ones.
+          count = 0;
+        }
+        for (k = 0; k < stride; ++k) {
+          // We don't want to change value at counts[i],
+          // that is already belonging to the next stride. Thus - 1.
+          counts[i - k - 1] = count;
+        }
+      }
+      stride = 0;
+      sum = 0;
+      if (i < length - 3) {
+        // All interesting strides have a count of at least 4,
+        // at least when non-zeros.
+        limit = (counts[i] + counts[i + 1] +
+                 counts[i + 2] + counts[i + 3] + 2) / 4;
+      } else if (i < length) {
+        limit = counts[i];
+      } else {
+        limit = 0;
+      }
+    }
+    ++stride;
+    if (i != length) {
+      sum += counts[i];
+      if (stride >= 4) {
+        limit = (sum + stride / 2) / stride;
+      }
+    }
+  }
+  free(good_for_rle);
+  return 1;
+}
+
 typedef struct {
   int total_count_;
   int value_;
@@ -58,7 +164,13 @@ static void SetBitDepths(const HuffmanTree* const tree,
   }
 }
 
-// This function will create a Huffman tree.
+// Create an optimal Huffman tree.
+//
+// (data,length): population counts.
+// tree_limit: maximum bit depth (inclusive) of the codes.
+// bit_depths[]: how many bits are used for the symbol.
+//
+// Returns 0 when an error has occurred.
 //
 // The catch here is that the tree cannot be arbitrarily deep
 //
@@ -71,18 +183,21 @@ static void SetBitDepths(const HuffmanTree* const tree,
 // we are not planning to use this with extremely long blocks.
 //
 // See http://en.wikipedia.org/wiki/Huffman_coding
-int VP8LCreateHuffmanTree(const int* const histogram, int histogram_size,
-                          int tree_depth_limit, uint8_t* const bit_depths) {
+static int GenerateOptimalTree(const int* const histogram, int histogram_size,
+                               int tree_depth_limit,
+                               uint8_t* const bit_depths) {
   int count_min;
   HuffmanTree* tree_pool;
   HuffmanTree* tree;
   int tree_size_orig = 0;
   int i;
+
   for (i = 0; i < histogram_size; ++i) {
     if (histogram[i] != 0) {
       ++tree_size_orig;
     }
   }
+
   // 3 * tree_size is enough to cover all the nodes representing a
   // population and all the inserted nodes combining two existing nodes.
   // The tree pool needs 2 * (tree_size_orig - 1) entities, and the
@@ -282,7 +397,8 @@ static uint32_t ReverseBits(int num_bits, uint32_t bits) {
   return retval;
 }
 
-void VP8LConvertBitDepthsToSymbols(HuffmanTreeCode* const tree) {
+// Get the actual bit values for a tree of bit depths.
+static void ConvertBitDepthsToSymbols(HuffmanTreeCode* const tree) {
   // 0 bit-depth means that the symbol does not exist.
   int i;
   int len;
@@ -309,6 +425,24 @@ void VP8LConvertBitDepthsToSymbols(HuffmanTreeCode* const tree) {
     const int code_length = tree->code_lengths[i];
     tree->codes[i] = ReverseBits(code_length, next_code[code_length]++);
   }
+}
+
+// -----------------------------------------------------------------------------
+// Main entry point
+
+int VP8LCreateHuffmanTree(int* const histogram, int tree_depth_limit,
+                          HuffmanTreeCode* const tree) {
+  const int num_symbols = tree->num_symbols;
+  if (!OptimizeHuffmanForRle(num_symbols, histogram)) {
+    return 0;
+  }
+  if (!GenerateOptimalTree(histogram, num_symbols,
+                           tree_depth_limit, tree->code_lengths)) {
+    return 0;
+  }
+  // Create the actual bit codes for the bit lengths.
+  ConvertBitDepthsToSymbols(tree);
+  return 1;
 }
 
 #endif

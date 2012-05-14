@@ -155,114 +155,6 @@ static int VP8LEncAnalyze(VP8LEncoder* const enc) {
   return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-// Heuristics for selecting the stride ranges to collapse.
-static int ValuesShouldBeCollapsedToStrideAverage(int a, int b) {
-  return abs(a - b) < 4;
-}
-
-// Change the population counts in a way that the consequent
-// Hufmann tree compression, especially its rle-part will be more
-// likely to compress this data more efficiently.
-//
-// length contains the size of the histogram.
-// data contains the population counts.
-static int OptimizeHuffmanForRle(int length, int* counts) {
-  int stride;
-  int limit;
-  int sum;
-  uint8_t* good_for_rle;
-  // 1) Let's make the Huffman code more compatible with rle encoding.
-  int i;
-  for (; length >= 0; --length) {
-    if (length == 0) {
-      return 1;  // All zeros.
-    }
-    if (counts[length - 1] != 0) {
-      // Now counts[0..length - 1] does not have trailing zeros.
-      break;
-    }
-  }
-  // 2) Let's mark all population counts that already can be encoded
-  // with an rle code.
-  good_for_rle = (uint8_t*)calloc(length, 1);
-  if (good_for_rle == NULL) {
-    return 0;
-  }
-  {
-    // Let's not spoil any of the existing good rle codes.
-    // Mark any seq of 0's that is longer as 5 as a good_for_rle.
-    // Mark any seq of non-0's that is longer as 7 as a good_for_rle.
-    int symbol = counts[0];
-    int stride = 0;
-    for (i = 0; i < length + 1; ++i) {
-      if (i == length || counts[i] != symbol) {
-        if ((symbol == 0 && stride >= 5) ||
-            (symbol != 0 && stride >= 7)) {
-          int k;
-          for (k = 0; k < stride; ++k) {
-            good_for_rle[i - k - 1] = 1;
-          }
-        }
-        stride = 1;
-        if (i != length) {
-          symbol = counts[i];
-        }
-      } else {
-        ++stride;
-      }
-    }
-  }
-  // 3) Let's replace those population counts that lead to more rle codes.
-  stride = 0;
-  limit = counts[0];
-  sum = 0;
-  for (i = 0; i < length + 1; ++i) {
-    if (i == length || good_for_rle[i] ||
-        (i != 0 && good_for_rle[i - 1]) ||
-        !ValuesShouldBeCollapsedToStrideAverage(counts[i], limit)) {
-      if (stride >= 4 || (stride >= 3 && sum == 0)) {
-        int k;
-        // The stride must end, collapse what we have, if we have enough (4).
-        int count = (sum + stride / 2) / stride;
-        if (count < 1) {
-          count = 1;
-        }
-        if (sum == 0) {
-          // Don't make an all zeros stride to be upgraded to ones.
-          count = 0;
-        }
-        for (k = 0; k < stride; ++k) {
-          // We don't want to change value at counts[i],
-          // that is already belonging to the next stride. Thus - 1.
-          counts[i - k - 1] = count;
-        }
-      }
-      stride = 0;
-      sum = 0;
-      if (i < length - 3) {
-        // All interesting strides have a count of at least 4,
-        // at least when non-zeros.
-        limit = (counts[i] + counts[i + 1] +
-                 counts[i + 2] + counts[i + 3] + 2) / 4;
-      } else if (i < length) {
-        limit = counts[i];
-      } else {
-        limit = 0;
-      }
-    }
-    ++stride;
-    if (i != length) {
-      sum += counts[i];
-      if (stride >= 4) {
-        limit = (sum + stride / 2) / stride;
-      }
-    }
-  }
-  free(good_for_rle);
-  return 1;
-}
 
 static int GetHuffBitLengthsAndCodes(
     const VP8LHistogramSet* const histogram_image,
@@ -312,34 +204,11 @@ static int GetHuffBitLengthsAndCodes(
   for (i = 0; i < histogram_image_size; ++i) {
     HuffmanTreeCode* const codes = &huffman_codes[5 * i];
     VP8LHistogram* const histo = histogram_image->histograms[i];
-    const int num_literals = codes[0].num_symbols;
-    // For each component, optimize histogram for Huffman with RLE compression,
-    // and create a Huffman tree (in the form of bit lengths) for each.
-    ok = ok && OptimizeHuffmanForRle(num_literals, histo->literal_);
-    ok = ok && VP8LCreateHuffmanTree(histo->literal_, num_literals, 15,
-                                     codes[0].code_lengths);
-
-    ok = ok && OptimizeHuffmanForRle(256, histo->red_);
-    ok = ok && VP8LCreateHuffmanTree(histo->red_, 256, 15,
-                                     codes[1].code_lengths);
-
-    ok = ok && OptimizeHuffmanForRle(256, histo->blue_);
-    ok = ok && VP8LCreateHuffmanTree(histo->blue_, 256, 15,
-                                     codes[2].code_lengths);
-
-    ok = ok && OptimizeHuffmanForRle(256, histo->alpha_);
-    ok = ok && VP8LCreateHuffmanTree(histo->alpha_, 256, 15,
-                                     codes[3].code_lengths);
-
-    ok = ok && OptimizeHuffmanForRle(DISTANCE_CODES_MAX, histo->distance_);
-    ok = ok && VP8LCreateHuffmanTree(histo->distance_, DISTANCE_CODES_MAX, 15,
-                                     codes[4].code_lengths);
-
-    // Create the actual bit codes for the bit lengths.
-    // TODO(vikasa): merge with each VP8LCreateHuffmanTree() ?
-    for (k = 0; k < 5; ++k) {
-      VP8LConvertBitDepthsToSymbols(codes + k);
-    }
+    ok = ok && VP8LCreateHuffmanTree(histo->literal_, 15, codes + 0);
+    ok = ok && VP8LCreateHuffmanTree(histo->red_, 15, codes + 1);
+    ok = ok && VP8LCreateHuffmanTree(histo->blue_, 15, codes + 2);
+    ok = ok && VP8LCreateHuffmanTree(histo->alpha_, 15, codes + 3);
+    ok = ok && VP8LCreateHuffmanTree(histo->distance_, 15, codes + 4);
   }
 
  End:
@@ -423,6 +292,10 @@ static int StoreFullHuffmanCode(VP8LBitWriter* const bw,
       (HuffmanTreeToken*)malloc(bit_lengths_size * sizeof(*tokens));
   if (tokens == NULL) return 0;
 
+  huffman_code.num_symbols = CODE_LENGTH_CODES;
+  huffman_code.code_lengths = code_length_bitdepth;
+  huffman_code.codes = code_length_bitdepth_symbols;
+
   VP8LWriteBits(bw, 1, 0);
   num_tokens = VP8LCreateCompressedHuffmanTree(bit_lengths, bit_lengths_size,
                                                tokens, bit_lengths_size);
@@ -433,17 +306,11 @@ static int StoreFullHuffmanCode(VP8LBitWriter* const bw,
       ++histogram[tokens[i].code];
     }
 
-    if (!VP8LCreateHuffmanTree(histogram, CODE_LENGTH_CODES,
-                               7, code_length_bitdepth)) {
+    if (!VP8LCreateHuffmanTree(histogram, 7, &huffman_code)) {
       goto End;
     }
   }
 
-  huffman_code.num_symbols = CODE_LENGTH_CODES;
-  huffman_code.code_lengths = code_length_bitdepth;
-  huffman_code.codes = code_length_bitdepth_symbols;
-
-  VP8LConvertBitDepthsToSymbols(&huffman_code);
   StoreHuffmanTreeOfHuffmanTreeToBitMask(bw, code_length_bitdepth);
   ClearHuffmanTreeIfOnlyOneSymbol(&huffman_code);
   {
