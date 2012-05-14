@@ -40,9 +40,15 @@ typedef struct {
 int VP8LCreateCompressedHuffmanTree(const uint8_t* const depth, int len,
                                     HuffmanTreeToken* tokens, int max_tokens);
 
+// Struct to represent the tree codes (depth and bits array).
+typedef struct {
+  int       num_symbols;   // Number of symbols.
+  uint8_t*  code_lengths;  // Code lengths of the symbols.
+  uint16_t* codes;         // Symbol Codes.
+} HuffmanTreeCode;
+
 // Get the actual bit values for a tree of bit depths.
-void VP8LConvertBitDepthsToSymbols(const uint8_t* const depth, int len,
-                                   uint16_t* const bits);
+void VP8LConvertBitDepthsToSymbols(HuffmanTreeCode* const tree);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }
