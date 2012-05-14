@@ -282,16 +282,19 @@ static uint32_t ReverseBits(int num_bits, uint32_t bits) {
   return retval;
 }
 
-void VP8LConvertBitDepthsToSymbols(const uint8_t* const depth,
-                                   int len,
-                                   uint16_t* const bits) {
+void VP8LConvertBitDepthsToSymbols(HuffmanTreeCode* const tree) {
   // 0 bit-depth means that the symbol does not exist.
   int i;
+  int len;
   uint32_t next_code[MAX_BITS];
   int depth_count[MAX_BITS] = { 0 };
+
+  assert(tree != NULL);
+  len = tree->num_symbols;
   for (i = 0; i < len; ++i) {
-    assert(depth[i] < MAX_BITS);
-    ++depth_count[depth[i]];
+    const int code_length = tree->code_lengths[i];
+    assert(code_length < MAX_BITS);
+    ++depth_count[code_length];
   }
   depth_count[0] = 0;  // ignore unused symbol
   next_code[0] = 0;
@@ -303,7 +306,8 @@ void VP8LConvertBitDepthsToSymbols(const uint8_t* const depth,
     }
   }
   for (i = 0; i < len; ++i) {
-    bits[i] = ReverseBits(depth[i], next_code[depth[i]]++);
+    const int code_length = tree->code_lengths[i];
+    tree->codes[i] = ReverseBits(code_length, next_code[code_length]++);
   }
 }
 
