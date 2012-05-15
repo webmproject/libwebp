@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAKn//k9k\u003d",
+        "filename": "src/utils/quant_levels.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-05-15T20:39:43Z",
+      "side": 0,
+      "message": "here too, i think the intent was ok: have as many local variables as possible. We should have a variable \u0027n\u0027 declared here too... (for line 136)",
+      "revId": "c6882c49e3922177a9d66e7d0d9b9ce03f970834",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAKn//k9o\u003d",
+        "filename": "src/utils/huffman_encode.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-05-15T20:39:43Z",
+      "side": 1,
+      "message": "i think it was ok to use local variable here.\n\nI\u0027d say that it\u0027s the variables 34-36 that should be moved to a block spanning 80-124 (could even be a separate function)",
+      "revId": "5393a6ce0c43d9dadb2a4cf27155c0b010ac924a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
