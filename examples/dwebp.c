@@ -39,7 +39,7 @@
 
 #include "webp/decode.h"
 #include "./example_util.h"
-#include "stopwatch.h"
+#include "./stopwatch.h"
 
 static int verbose = 0;
 #ifndef WEBP_DLL

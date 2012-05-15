@@ -42,7 +42,7 @@
 
 
 #include "webp/encode.h"
-#include "stopwatch.h"
+#include "./stopwatch.h"
 #ifndef WEBP_DLL
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
