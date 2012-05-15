@@ -34,8 +34,7 @@ int QuantizeLevels(uint8_t* data, int width, int height,
   double inv_q_level[NUM_SYMBOLS] = { 0 };
   int min_s = 255, max_s = 0;
   const size_t data_size = height * width;
-  size_t n = 0;
-  int s, num_levels_in, iter;
+  int i, num_levels_in, iter;
   double last_err = 1.e38, err = 0.;
 
   if (data == NULL) {
@@ -50,12 +49,15 @@ int QuantizeLevels(uint8_t* data, int width, int height,
     return 0;
   }
 
-  num_levels_in = 0;
-  for (n = 0; n < data_size; ++n) {
-    num_levels_in += (freq[data[n]] == 0);
-    if (min_s > data[n]) min_s = data[n];
-    if (max_s < data[n]) max_s = data[n];
-    ++freq[data[n]];
+  {
+    size_t n;
+    num_levels_in = 0;
+    for (n = 0; n < data_size; ++n) {
+      num_levels_in += (freq[data[n]] == 0);
+      if (min_s > data[n]) min_s = data[n];
+      if (max_s < data[n]) max_s = data[n];
+      ++freq[data[n]];
+    }
   }
 
   if (num_levels_in <= num_levels) {
@@ -64,8 +66,8 @@ int QuantizeLevels(uint8_t* data, int width, int height,
   }
 
   // Start with uniformly spread centroids.
-  for (s = 0; s < num_levels; ++s) {
-    inv_q_level[s] = min_s + (double)(max_s - min_s) * s / (num_levels - 1);
+  for (i = 0; i < num_levels; ++i) {
+    inv_q_level[i] = min_s + (double)(max_s - min_s) * i / (num_levels - 1);
   }
 
   // Fixed values. Won't be changed.
@@ -79,7 +81,7 @@ int QuantizeLevels(uint8_t* data, int width, int height,
     double err_count;
     double q_sum[NUM_SYMBOLS] = { 0 };
     double q_count[NUM_SYMBOLS] = { 0 };
-    int slot = 0;
+    int s, slot = 0;
 
     // Assign classes to representatives.
     for (s = min_s; s <= max_s; ++s) {
@@ -128,6 +130,7 @@ int QuantizeLevels(uint8_t* data, int width, int height,
     // mapping, while at it (avoid one indirection in the final loop).
     uint8_t map[NUM_SYMBOLS];
     int s;
+    size_t n;
     for (s = min_s; s <= max_s; ++s) {
       const int slot = q_level[s];
       map[s] = (uint8_t)(inv_q_level[slot] + .5);

@@ -307,9 +307,9 @@ static int HistogramCombine(const VP8LHistogramSet* const in,
                      - out->histograms[idx2]->bit_cost_;
       if (best_cost_diff > curr_cost_diff) {    // found a better pair?
         {     // swap cur/best combo histograms
-          VP8LHistogram* const tmp = cur_combo;
+          VP8LHistogram* const tmp_histo = cur_combo;
           cur_combo = best_combo;
-          best_combo = tmp;
+          best_combo = tmp_histo;
         }
         best_cost_diff = curr_cost_diff;
         best_idx1 = idx1;

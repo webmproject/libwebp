@@ -31,9 +31,6 @@ static int ValuesShouldBeCollapsedToStrideAverage(int a, int b) {
 // Change the population counts in a way that the consequent
 // Hufmann tree compression, especially its RLE-part, give smaller output.
 static int OptimizeHuffmanForRle(int length, int* const counts) {
-  int stride;
-  int limit;
-  int sum;
   uint8_t* good_for_rle;
   // 1) Let's make the Huffman code more compatible with rle encoding.
   int i;
@@ -77,48 +74,50 @@ static int OptimizeHuffmanForRle(int length, int* const counts) {
     }
   }
   // 3) Let's replace those population counts that lead to more rle codes.
-  stride = 0;
-  limit = counts[0];
-  sum = 0;
-  for (i = 0; i < length + 1; ++i) {
-    if (i == length || good_for_rle[i] ||
-        (i != 0 && good_for_rle[i - 1]) ||
-        !ValuesShouldBeCollapsedToStrideAverage(counts[i], limit)) {
-      if (stride >= 4 || (stride >= 3 && sum == 0)) {
-        int k;
-        // The stride must end, collapse what we have, if we have enough (4).
-        int count = (sum + stride / 2) / stride;
-        if (count < 1) {
-          count = 1;
+  {
+    int stride = 0;
+    int limit = counts[0];
+    int sum = 0;
+    for (i = 0; i < length + 1; ++i) {
+      if (i == length || good_for_rle[i] ||
+          (i != 0 && good_for_rle[i - 1]) ||
+          !ValuesShouldBeCollapsedToStrideAverage(counts[i], limit)) {
+        if (stride >= 4 || (stride >= 3 && sum == 0)) {
+          int k;
+          // The stride must end, collapse what we have, if we have enough (4).
+          int count = (sum + stride / 2) / stride;
+          if (count < 1) {
+            count = 1;
+          }
+          if (sum == 0) {
+            // Don't make an all zeros stride to be upgraded to ones.
+            count = 0;
+          }
+          for (k = 0; k < stride; ++k) {
+            // We don't want to change value at counts[i],
+            // that is already belonging to the next stride. Thus - 1.
+            counts[i - k - 1] = count;
+          }
         }
-        if (sum == 0) {
-          // Don't make an all zeros stride to be upgraded to ones.
-          count = 0;
-        }
-        for (k = 0; k < stride; ++k) {
-          // We don't want to change value at counts[i],
-          // that is already belonging to the next stride. Thus - 1.
-          counts[i - k - 1] = count;
+        stride = 0;
+        sum = 0;
+        if (i < length - 3) {
+          // All interesting strides have a count of at least 4,
+          // at least when non-zeros.
+          limit = (counts[i] + counts[i + 1] +
+                   counts[i + 2] + counts[i + 3] + 2) / 4;
+        } else if (i < length) {
+          limit = counts[i];
+        } else {
+          limit = 0;
         }
       }
-      stride = 0;
-      sum = 0;
-      if (i < length - 3) {
-        // All interesting strides have a count of at least 4,
-        // at least when non-zeros.
-        limit = (counts[i] + counts[i + 1] +
-                 counts[i + 2] + counts[i + 3] + 2) / 4;
-      } else if (i < length) {
-        limit = counts[i];
-      } else {
-        limit = 0;
-      }
-    }
-    ++stride;
-    if (i != length) {
-      sum += counts[i];
-      if (stride >= 4) {
-        limit = (sum + stride / 2) / stride;
+      ++stride;
+      if (i != length) {
+        sum += counts[i];
+        if (stride >= 4) {
+          limit = (sum + stride / 2) / stride;
+        }
       }
     }
   }
@@ -266,7 +265,6 @@ static int GenerateOptimalTree(const int* const histogram, int histogram_size,
     {
       // Test if this Huffman tree satisfies our 'tree_depth_limit' criteria.
       int max_depth = bit_depths[0];
-      int j;
       for (j = 1; j < histogram_size; ++j) {
         if (max_depth < bit_depths[j]) {
           max_depth = bit_depths[j];
