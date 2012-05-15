@@ -16,6 +16,24 @@
       "revId": "5393a6ce0c43d9dadb2a4cf27155c0b010ac924a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//k8c\u003d",
+        "filename": "src/utils/huffman_encode.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-15T20:52:00Z",
+      "side": 1,
+      "message": "at least a new block would probably be better. I didn\u0027t trace the other variables when this caught my eye...",
+      "parentUuid": "AAAAKn//k9o\u003d",
+      "revId": "5393a6ce0c43d9dadb2a4cf27155c0b010ac924a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
