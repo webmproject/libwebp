@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAKn//lDM\u003d",
+        "filename": "examples/example_util.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-15T18:59:35Z",
+      "side": 1,
+      "message": "I know this is done everywhere else, but honestly I\u0027ve never met a compiler where doing the prototypes wasn\u0027t sufficient.",
+      "parentUuid": "AAAAKn//mzA\u003d",
+      "revId": "276e2ef0c1fcc0ee56ed2df41979847b1ed1c1eb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAKn//my8\u003d",
         "filename": "examples/example_util.h",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2012-05-12T20:51:27Z",
       "side": 1,
       "message": "missing \"#if defined(__cplusplus) || defined(c_plusplus)...\" here too",
+      "revId": "276e2ef0c1fcc0ee56ed2df41979847b1ed1c1eb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//lDU\u003d",
+        "filename": "examples/example_util.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-15T18:59:35Z",
+      "side": 1,
+      "message": "bah, wasn\u0027t paying attention with this change at all it would seem...sorry for the noise.",
+      "parentUuid": "AAAAKn//my8\u003d",
       "revId": "276e2ef0c1fcc0ee56ed2df41979847b1ed1c1eb",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
