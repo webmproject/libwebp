@@ -16,6 +16,24 @@
       "revId": "92c14e5c96a725bf1344a91a7b87cf6398008ae0",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//k+w\u003d",
+        "filename": "examples/vwebp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-15T20:22:45Z",
+      "side": 1,
+      "message": "Could, stopwatch.h could do with similar then and the removal of -Iexamples from various places (may already be unnecessary)",
+      "parentUuid": "AAAAKn//k/0\u003d",
+      "revId": "92c14e5c96a725bf1344a91a7b87cf6398008ae0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
