@@ -16,6 +16,24 @@
       "revId": "c6882c49e3922177a9d66e7d0d9b9ce03f970834",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//k7k\u003d",
+        "filename": "src/utils/quant_levels.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-15T21:07:46Z",
+      "side": 0,
+      "message": "Done (mostly, there could be a bit more localization here)",
+      "parentUuid": "AAAAKn//k9k\u003d",
+      "revId": "c6882c49e3922177a9d66e7d0d9b9ce03f970834",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
