@@ -172,6 +172,9 @@ DSP_OBJS = \
     $(DIROBJ)\dsp\upsampling_sse2.obj \
     $(DIROBJ)\dsp\yuv.obj \
 
+EX_UTIL_OBJS = \
+    $(DIROBJ)\examples\example_util.obj \
+
 ENC_OBJS = \
     $(DIROBJ)\enc\alpha.obj \
     $(DIROBJ)\enc\analysis.obj \
@@ -239,7 +242,7 @@ clean::
 	@-erase /s $(DIROBJ)\$(DLLC) $(DIROBJ)\$(DLLINC) 2> NUL
 !ENDIF
 
-$(EXAMPLES_OBJS): $(DIRLIB)\$(TARGET)
+$(EXAMPLES_OBJS): $(EX_UTIL_OBJS) $(DIRLIB)\$(TARGET)
 
 $(OUTPUT_DIRS):
 	@if not exist "$(@)" mkdir "$(@)"
@@ -276,7 +279,7 @@ $(DIROBJ)\$(DLLC): $(DIROBJ)\$(DLLINC)
 	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo$(DIROBJ)\utils\ $<
 
 {$(DIROBJ)\examples}.obj{$(DIRBIN)}.exe:
-	$(LNKEXE) $(LDFLAGS) /OUT:"$@" $< \
+	$(LNKEXE) $(LDFLAGS) /OUT:"$@" $< $(EX_UTIL_OBJS) \
 	    ole32.lib windowscodecs.lib shlwapi.lib $(DIRLIB)\$(TARGET)
 	$(MT) -manifest $@.manifest -outputresource:$@;1
 	del $@.manifest

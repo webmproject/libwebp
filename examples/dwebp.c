@@ -38,6 +38,7 @@
 #endif
 
 #include "webp/decode.h"
+#include "./example_util.h"
 #include "stopwatch.h"
 
 static int verbose = 0;
@@ -412,31 +413,15 @@ int main(int argc, const char *argv[]) {
     Stopwatch stop_watch;
     VP8StatusCode status = VP8_STATUS_OK;
     int ok;
-    uint32_t data_size = 0;
-    void* data = NULL;
-    FILE* const in = fopen(in_file, "rb");
+    size_t data_size = 0;
+    const uint8_t* data = NULL;
 
-    if (!in) {
-      fprintf(stderr, "cannot open input file '%s'\n", in_file);
-      return 1;
-    }
-    fseek(in, 0, SEEK_END);
-    data_size = ftell(in);
-    fseek(in, 0, SEEK_SET);
-    data = malloc(data_size);
-    ok = (fread(data, data_size, 1, in) == 1);
-    fclose(in);
-    if (!ok) {
-      fprintf(stderr, "Could not read %d bytes of data from file %s\n",
-              data_size, in_file);
-      free(data);
-      return -1;
-    }
+    if (!ExUtilReadFile(in_file, &data, &data_size)) return -1;
 
     if (verbose)
       StopwatchReadAndReset(&stop_watch);
 
-    status = WebPGetFeatures((const uint8_t*)data, data_size, bitstream);
+    status = WebPGetFeatures(data, data_size, bitstream);
     if (status != VP8_STATUS_OK) {
       goto end;
     }
@@ -459,17 +444,17 @@ int main(int argc, const char *argv[]) {
         output_buffer->colorspace = MODE_YUVA;
         break;
       default:
-        free(data);
+        free((void*)data);
         return -1;
     }
-    status = WebPDecode((const uint8_t*)data, data_size, &config);
+    status = WebPDecode(data, data_size, &config);
 
     if (verbose) {
       const double time = StopwatchReadAndReset(&stop_watch);
       printf("Time to decode picture: %.3fs\n", time);
     }
  end:
-    free(data);
+    free((void*)data);
     ok = (status == VP8_STATUS_OK);
     if (!ok) {
       fprintf(stderr, "Decoding of %s failed.\n", in_file);
