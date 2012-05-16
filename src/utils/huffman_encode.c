@@ -349,20 +349,19 @@ static HuffmanTreeToken* CodeRepeatedZeros(int repetitions,
   return tokens;
 }
 
-int VP8LCreateCompressedHuffmanTree(const uint8_t* const depth,
-                                    int depth_size,
-                                    HuffmanTreeToken* tokens,
-                                    int max_tokens) {
+int VP8LCreateCompressedHuffmanTree(const HuffmanTreeCode* const tree,
+                                    HuffmanTreeToken* tokens, int max_tokens) {
   HuffmanTreeToken* const starting_token = tokens;
   HuffmanTreeToken* const ending_token = tokens + max_tokens;
+  const int depth_size = tree->num_symbols;
   int prev_value = 8;  // 8 is the initial value for rle.
   int i = 0;
   assert(tokens != NULL);
   while (i < depth_size) {
-    const int value = depth[i];
+    const int value = tree->code_lengths[i];
     int k = i + 1;
     int runs;
-    while (k < depth_size && depth[k] == value) ++k;
+    while (k < depth_size && tree->code_lengths[k] == value) ++k;
     runs = k - i;
     if (value == 0) {
       tokens = CodeRepeatedZeros(runs, tokens);

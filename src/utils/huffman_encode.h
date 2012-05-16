@@ -26,17 +26,17 @@ typedef struct {
   uint8_t extra_bits;   // extra bits for escape codes
 } HuffmanTreeToken;
 
-// Turn the Huffman tree into a token sequence.
-// Returns the number of tokens used.
-int VP8LCreateCompressedHuffmanTree(const uint8_t* const depth, int depth_size,
-                                    HuffmanTreeToken* tokens, int max_tokens);
-
 // Struct to represent the tree codes (depth and bits array).
 typedef struct {
   int       num_symbols;   // Number of symbols.
   uint8_t*  code_lengths;  // Code lengths of the symbols.
   uint16_t* codes;         // Symbol Codes.
 } HuffmanTreeCode;
+
+// Turn the Huffman tree into a token sequence.
+// Returns the number of tokens used.
+int VP8LCreateCompressedHuffmanTree(const HuffmanTreeCode* const tree,
+                                    HuffmanTreeToken* tokens, int max_tokens);
 
 // Create an optimized tree, and tokenize it.
 int VP8LCreateHuffmanTree(int* const histogram, int tree_depth_limit,

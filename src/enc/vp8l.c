@@ -256,16 +256,13 @@ static void ClearHuffmanTreeIfOnlyOneSymbol(
 
 static void StoreHuffmanTreeToBitMask(
     VP8LBitWriter* const bw,
-    const HuffmanTreeToken* const tokens,
-    const int num_tokens,
-    const uint8_t* code_length_bitdepth,
-    const uint16_t* code_length_bitdepth_symbols) {
+    const HuffmanTreeToken* const tokens, const int num_tokens,
+    const HuffmanTreeCode* const huffman_code) {
   int i;
   for (i = 0; i < num_tokens; ++i) {
     const int ix = tokens[i].code;
     const int extra_bits = tokens[i].extra_bits;
-    VP8LWriteBits(bw, code_length_bitdepth[ix],
-                  code_length_bitdepth_symbols[ix]);
+    VP8LWriteBits(bw, huffman_code->code_lengths[ix], huffman_code->codes[ix]);
     switch (ix) {
       case 16:
         VP8LWriteBits(bw, 2, extra_bits);
@@ -281,15 +278,15 @@ static void StoreHuffmanTreeToBitMask(
 }
 
 static int StoreFullHuffmanCode(VP8LBitWriter* const bw,
-                                const uint8_t* const bit_lengths,
-                                int bit_lengths_size) {
+                                const HuffmanTreeCode* const tree) {
   int ok = 0;
   uint8_t code_length_bitdepth[CODE_LENGTH_CODES] = { 0 };
   uint16_t code_length_bitdepth_symbols[CODE_LENGTH_CODES] = { 0 };
+  const int max_tokens = tree->num_symbols;
   int num_tokens;
   HuffmanTreeCode huffman_code;
   HuffmanTreeToken* const tokens =
-      (HuffmanTreeToken*)malloc(bit_lengths_size * sizeof(*tokens));
+      (HuffmanTreeToken*)malloc(max_tokens * sizeof(*tokens));
   if (tokens == NULL) return 0;
 
   huffman_code.num_symbols = CODE_LENGTH_CODES;
@@ -297,8 +294,7 @@ static int StoreFullHuffmanCode(VP8LBitWriter* const bw,
   huffman_code.codes = code_length_bitdepth_symbols;
 
   VP8LWriteBits(bw, 1, 0);
-  num_tokens = VP8LCreateCompressedHuffmanTree(bit_lengths, bit_lengths_size,
-                                               tokens, bit_lengths_size);
+  num_tokens = VP8LCreateCompressedHuffmanTree(tree, tokens, max_tokens);
   {
     int histogram[CODE_LENGTH_CODES] = { 0 };
     int i;
@@ -342,9 +338,7 @@ static int StoreFullHuffmanCode(VP8LBitWriter* const bw,
       VP8LWriteBits(bw, 3, nbitpairs - 1);
       VP8LWriteBits(bw, nbitpairs * 2, trimmed_length - 2);
     }
-    StoreHuffmanTreeToBitMask(bw, tokens,
-                              length, code_length_bitdepth,
-                              code_length_bitdepth_symbols);
+    StoreHuffmanTreeToBitMask(bw, tokens, length, &huffman_code);
   }
   ok = 1;
  End:
@@ -353,8 +347,7 @@ static int StoreFullHuffmanCode(VP8LBitWriter* const bw,
 }
 
 static int StoreHuffmanCode(VP8LBitWriter* const bw,
-                            const uint8_t* const bit_lengths,
-                            int bit_lengths_size) {
+                            const HuffmanTreeCode* const huffman_code) {
   int i;
   int count = 0;
   int symbols[2] = { 0, 0 };
@@ -362,8 +355,8 @@ static int StoreHuffmanCode(VP8LBitWriter* const bw,
   const int kMaxSymbol = 1 << kMaxBits;
 
   // Check whether it's a small tree.
-  for (i = 0; i < bit_lengths_size && count < 3; ++i) {
-    if (bit_lengths[i] != 0) {
+  for (i = 0; i < huffman_code->num_symbols && count < 3; ++i) {
+    if (huffman_code->code_lengths[i] != 0) {
       if (count < 2) symbols[count] = i;
       ++count;
     }
@@ -388,7 +381,7 @@ static int StoreHuffmanCode(VP8LBitWriter* const bw,
     }
     return 1;
   } else {
-    return StoreFullHuffmanCode(bw, bit_lengths, bit_lengths_size);
+    return StoreFullHuffmanCode(bw, huffman_code);
   }
 }
 
@@ -403,7 +396,7 @@ static void StoreImageToBitMask(
     VP8LBitWriter* const bw, int width, int histo_bits,
     const VP8LBackwardRefs* const refs,
     const uint16_t* histogram_symbols,
-    HuffmanTreeCode* const huffman_codes) {
+    const HuffmanTreeCode* const huffman_codes) {
   // x and y trace the position in the image.
   int x = 0;
   int y = 0;
@@ -526,11 +519,11 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
 
   // Store Huffman codes.
   for (i = 0; i < 5 * histogram_image_size; ++i) {
-    const HuffmanTreeCode* const codes = &huffman_codes[i];
-    if (!StoreHuffmanCode(bw, codes->code_lengths, codes->num_symbols)) {
+    HuffmanTreeCode* const codes = &huffman_codes[i];
+    if (!StoreHuffmanCode(bw, codes)) {
       goto Error;
     }
-    ClearHuffmanTreeIfOnlyOneSymbol(&huffman_codes[i]);
+    ClearHuffmanTreeIfOnlyOneSymbol(codes);
   }
 
   // Free combined histograms.
