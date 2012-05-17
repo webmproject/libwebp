@@ -490,11 +490,11 @@ static void PredictorInverseTransform(const VP8LTransform* const transform,
   const int width = transform->xsize_;
   if (y_start == 0) {  // First Row follows the L (mode=1) mode.
     int x;
-    const uint32_t pred = Predictor0(data[-1], NULL);
-    AddPixelsEq(data, pred);
+    const uint32_t pred0 = Predictor0(data[-1], NULL);
+    AddPixelsEq(data, pred0);
     for (x = 1; x < width; ++x) {
-      const uint32_t pred = Predictor1(data[x - 1], NULL);
-      AddPixelsEq(data + x, pred);
+      const uint32_t pred1 = Predictor1(data[x - 1], NULL);
+      AddPixelsEq(data + x, pred1);
     }
     data += width;
     ++y_start;
@@ -509,13 +509,12 @@ static void PredictorInverseTransform(const VP8LTransform* const transform,
 
     while (y < y_end) {
       int x;
-      uint32_t pred;
+      const uint32_t pred2 = Predictor2(data[-1], data - width);
       const uint32_t* pred_mode_src = pred_mode_base;
       PredictorFunc pred_func;
 
       // First pixel follows the T (mode=2) mode.
-      pred = Predictor2(data[-1], data - width);
-      AddPixelsEq(data, pred);
+      AddPixelsEq(data, pred2);
 
       // .. the rest:
       pred_func = kPredictors[((*pred_mode_src++) >> 8) & 0xf];

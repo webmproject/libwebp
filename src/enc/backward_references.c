@@ -564,8 +564,8 @@ static int BackwardReferencesHashChainFollowChosenPath(
     } else {
       if (use_color_cache && VP8LColorCacheContains(&hashers, argb[i])) {
         // push pixel as a color cache index
-        int ix = VP8LColorCacheGetIndex(&hashers, argb[i]);
-        refs->refs[size] = PixOrCopyCreateCacheIdx(ix);
+        const int idx = VP8LColorCacheGetIndex(&hashers, argb[i]);
+        refs->refs[size] = PixOrCopyCreateCacheIdx(idx);
       } else {
         refs->refs[size] = PixOrCopyCreateLiteral(argb[i]);
       }

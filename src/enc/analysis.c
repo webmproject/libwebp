@@ -206,9 +206,9 @@ static void AssignSegments(VP8Encoder* const enc, const int alphas[256]) {
   // Map each original value to the closest centroid
   for (n = 0; n < enc->mb_w_ * enc->mb_h_; ++n) {
     VP8MBInfo* const mb = &enc->mb_info_[n];
-    const int a = mb->alpha_;
-    mb->segment_ = map[a];
-    mb->alpha_ = centers[map[a]];     // just for the record.
+    const int alpha = mb->alpha_;
+    mb->segment_ = map[alpha];
+    mb->alpha_ = centers[map[alpha]];     // just for the record.
   }
 
   if (nb > 1) {
