@@ -810,7 +810,8 @@ static int GetHistoBits(const WebPConfig* const config,
   const int width = pic->width;
   const int height = pic->height;
   const size_t hist_size = sizeof(VP8LHistogram);
-  int histo_bits = 9 - (int)(config->quality / 16.f + .5f);
+  // Make tile size a function of encoding method (Range: 0 to 6).
+  int histo_bits = 8 - config->method;
   while (1) {
     const size_t huff_image_size = VP8LSubSampleSize(width, histo_bits) *
                                    VP8LSubSampleSize(height, histo_bits) *
