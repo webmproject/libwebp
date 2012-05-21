@@ -2,8 +2,6 @@ AM_CPPFLAGS = -I$(top_srcdir)/src
 noinst_LTLIBRARIES = libwebputils.la
 
 libwebputils_la_SOURCES =
-libwebputils_la_SOURCES += alpha.c
-libwebputils_la_SOURCES += alpha.h
 libwebputils_la_SOURCES += bit_reader.c
 libwebputils_la_SOURCES += bit_reader.h
 libwebputils_la_SOURCES += bit_writer.c
@@ -15,10 +13,8 @@ libwebputils_la_SOURCES += filters.h
 libwebputils_la_SOURCES += huffman.c
 libwebputils_la_SOURCES += huffman.h
 libwebputils_la_SOURCES += quant_levels.c
+libwebputils_la_SOURCES += quant_levels.h
 libwebputils_la_SOURCES += rescaler.c
-libwebputils_la_SOURCES += tcoder.c
-libwebputils_la_SOURCES += tcoder.h
-libwebputils_la_SOURCES += tcoderi.h
 libwebputils_la_SOURCES += thread.c
 libwebputils_la_SOURCES += thread.h
 
