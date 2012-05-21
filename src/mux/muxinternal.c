@@ -27,6 +27,7 @@ const ChunkInfo kChunks[] = {
   {"tile",    mktag('T', 'I', 'L', 'E'),  TILE_ID,    TILE_CHUNK_SIZE},
   {"alpha",   mktag('A', 'L', 'P', 'H'),  ALPHA_ID,   UNDEFINED_CHUNK_SIZE},
   {"image",   mktag('V', 'P', '8', ' '),  IMAGE_ID,   UNDEFINED_CHUNK_SIZE},
+  {"image",   mktag('V', 'P', '8', 'L'),  IMAGE_ID,   UNDEFINED_CHUNK_SIZE},
   {"meta",    mktag('M', 'E', 'T', 'A'),  META_ID,    UNDEFINED_CHUNK_SIZE},
   {"unknown", mktag('U', 'N', 'K', 'N'),  UNKNOWN_ID, UNDEFINED_CHUNK_SIZE},
 
@@ -57,19 +58,27 @@ WebPChunk* ChunkRelease(WebPChunk* const chunk) {
 //------------------------------------------------------------------------------
 // Chunk misc methods.
 
-TAG_ID ChunkGetIdFromName(const char* const what) {
+CHUNK_INDEX ChunkGetIndexFromName(const char* const name) {
   int i;
-  if (what == NULL) return -1;
+  if (name == NULL) return IDX_NIL;
   for (i = 0; kChunks[i].name != NULL; ++i) {
-    if (!strcmp(what, kChunks[i].name)) return i;
+    if (!strcmp(name, kChunks[i].name)) return i;
   }
-  return NIL_ID;
+  return IDX_NIL;
+}
+
+CHUNK_INDEX ChunkGetIndexFromTag(uint32_t tag) {
+  int i;
+  for (i = 0; kChunks[i].tag != NIL_TAG; ++i) {
+    if (tag == kChunks[i].tag) return i;
+  }
+  return IDX_NIL;
 }
 
 TAG_ID ChunkGetIdFromTag(uint32_t tag) {
   int i;
   for (i = 0; kChunks[i].tag != NIL_TAG; ++i) {
-    if (tag == kChunks[i].tag) return i;
+    if (tag == kChunks[i].tag) return kChunks[i].id;
   }
   return NIL_ID;
 }
@@ -127,7 +136,7 @@ WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk,
                                       WebPImageInfo* image_info,
                                       int copy_data, uint32_t tag) {
   // For internally allocated chunks, always copy data & make it owner of data.
-  if (tag == kChunks[VP8X_ID].tag || tag == kChunks[LOOP_ID].tag) {
+  if (tag == kChunks[IDX_VP8X].tag || tag == kChunks[IDX_LOOP].tag) {
     copy_data = 1;
   }
 
@@ -155,7 +164,7 @@ WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk,
     }
   }
 
-  if (tag == kChunks[IMAGE_ID].tag) {
+  if (tag == kChunks[IDX_VP8].tag || tag == kChunks[IDX_VP8L].tag) {
     chunk->image_info_ = image_info;
   }
 
@@ -234,7 +243,7 @@ WebPMuxImage* MuxImageRelease(WebPMuxImage* const wpi) {
   if (wpi == NULL) return NULL;
   ChunkDelete(wpi->header_);
   ChunkDelete(wpi->alpha_);
-  ChunkDelete(wpi->vp8_);
+  ChunkDelete(wpi->img_);
 
   next = wpi->next_;
   MuxImageInit(wpi);
@@ -249,8 +258,9 @@ int MuxImageCount(WebPMuxImage* const wpi_list, TAG_ID id) {
   WebPMuxImage* current;
   for (current = wpi_list; current != NULL; current = current->next_) {
     const WebPChunk* const wpi_chunk = *MuxImageGetListFromId(current, id);
-    if (wpi_chunk != NULL && wpi_chunk->tag_ == kChunks[id].tag) {
-      ++count;
+    if (wpi_chunk != NULL) {
+      const TAG_ID wpi_chunk_id = ChunkGetIdFromTag(wpi_chunk->tag_);
+      if (wpi_chunk_id == id) ++count;
     }
   }
   return count;
@@ -298,9 +308,12 @@ static int SearchImageToGetOrDelete(WebPMuxImage** wpi_list, uint32_t nth,
   while (*wpi_list) {
     WebPMuxImage* const cur_wpi = *wpi_list;
     const WebPChunk* const wpi_chunk = *MuxImageGetListFromId(cur_wpi, id);
-    if (wpi_chunk != NULL && wpi_chunk->tag_ == kChunks[id].tag) {
-      ++count;
-      if (count == nth) return 1;  // Found.
+    if (wpi_chunk != NULL) {
+      const TAG_ID wpi_chunk_id = ChunkGetIdFromTag(wpi_chunk->tag_);
+      if (wpi_chunk_id == id) {
+        ++count;
+        if (count == nth) return 1;  // Found.
+      }
     }
     wpi_list = &cur_wpi->next_;
     *location = wpi_list;
@@ -376,7 +389,7 @@ static size_t MuxImageDiskSize(const WebPMuxImage* wpi) {
   size_t size = 0;
   if (wpi->header_ != NULL) size += ChunkDiskSize(wpi->header_);
   if (wpi->alpha_ != NULL) size += ChunkDiskSize(wpi->alpha_);
-  if (wpi->vp8_ != NULL) size += ChunkDiskSize(wpi->vp8_);
+  if (wpi->img_ != NULL) size += ChunkDiskSize(wpi->img_);
   return size;
 }
 
@@ -393,11 +406,11 @@ static uint8_t* MuxImageEmit(const WebPMuxImage* const wpi, uint8_t* dst) {
   // Ordering of chunks to be emitted is strictly as follows:
   // 1. Frame/Tile chunk (if present).
   // 2. Alpha chunk (if present).
-  // 3. VP8 chunk.
+  // 3. VP8/VP8L chunk.
   assert(wpi);
   if (wpi->header_ != NULL) dst = ChunkEmit(wpi->header_, dst);
   if (wpi->alpha_ != NULL) dst = ChunkEmit(wpi->alpha_, dst);
-  if (wpi->vp8_ != NULL) dst = ChunkEmit(wpi->vp8_, dst);
+  if (wpi->img_ != NULL) dst = ChunkEmit(wpi->img_, dst);
   return dst;
 }
 
@@ -415,24 +428,24 @@ uint8_t* MuxImageListEmit(const WebPMuxImage* wpi_list, uint8_t* dst) {
 WebPChunk** GetChunkListFromId(const WebPMux* mux, TAG_ID id) {
   assert(mux != NULL);
   switch(id) {
-    case VP8X_ID: return (WebPChunk**)&mux->vp8x_;
-    case ICCP_ID: return (WebPChunk**)&mux->iccp_;
-    case LOOP_ID: return (WebPChunk**)&mux->loop_;
-    case META_ID: return (WebPChunk**)&mux->meta_;
+    case VP8X_ID:    return (WebPChunk**)&mux->vp8x_;
+    case ICCP_ID:    return (WebPChunk**)&mux->iccp_;
+    case LOOP_ID:    return (WebPChunk**)&mux->loop_;
+    case META_ID:    return (WebPChunk**)&mux->meta_;
     case UNKNOWN_ID: return (WebPChunk**)&mux->unknown_;
     default: return NULL;
   }
 }
 
 WebPMuxError ValidateForImage(const WebPMux* const mux) {
-  const int num_vp8 = MuxImageCount(mux->images_, IMAGE_ID);
+  const int num_images = MuxImageCount(mux->images_, IMAGE_ID);
   const int num_frames = MuxImageCount(mux->images_, FRAME_ID);
-  const int num_tiles = MuxImageCount(mux->images_, TILE_ID);
+  const int num_tiles  = MuxImageCount(mux->images_, TILE_ID);
 
-  if (num_vp8 == 0) {
+  if (num_images == 0) {
     // No images in mux.
     return WEBP_MUX_NOT_FOUND;
-  } else if (num_vp8 == 1 && num_frames == 0 && num_tiles == 0) {
+  } else if (num_images == 1 && num_frames == 0 && num_tiles == 0) {
     // Valid case (single image).
     return WEBP_MUX_OK;
   } else {
@@ -448,16 +461,14 @@ static int IsNotCompatible(int feature, int num_items) {
 #define NO_FLAG 0
 
 // Test basic constraints:
-// retrieval, maximum number of chunks by id (use -1 to skip)
+// retrieval, maximum number of chunks by index (use -1 to skip)
 // and feature incompatibility (use NO_FLAG to skip).
 // On success returns WEBP_MUX_OK and stores the chunk count in *num.
-static WebPMuxError ValidateChunk(const WebPMux* const mux, TAG_ID id,
+static WebPMuxError ValidateChunk(const WebPMux* const mux, CHUNK_INDEX idx,
                                   FeatureFlags feature, FeatureFlags vp8x_flags,
                                   int max, int* num) {
   const WebPMuxError err =
-      WebPMuxNumNamedElements(mux, kChunks[id].name, num);
-  assert(id == kChunks[id].id);
-
+      WebPMuxNumNamedElements(mux, kChunks[idx].name, num);
   if (err != WEBP_MUX_OK) return err;
   if (max > -1 && *num > max) return WEBP_MUX_INVALID_ARGUMENT;
   if (feature != NO_FLAG && IsNotCompatible(vp8x_flags & feature, *num)) {
@@ -493,18 +504,18 @@ WebPMuxError WebPMuxValidate(const WebPMux* const mux) {
   if (err != WEBP_MUX_OK) return err;
 
   // At most one color profile chunk.
-  err = ValidateChunk(mux, ICCP_ID, ICCP_FLAG, flags, 1, &num_iccp);
+  err = ValidateChunk(mux, IDX_ICCP, ICCP_FLAG, flags, 1, &num_iccp);
   if (err != WEBP_MUX_OK) return err;
 
   // At most one XMP metadata.
-  err = ValidateChunk(mux, META_ID, META_FLAG, flags, 1, &num_meta);
+  err = ValidateChunk(mux, IDX_META, META_FLAG, flags, 1, &num_meta);
   if (err != WEBP_MUX_OK) return err;
 
   // Animation: ANIMATION_FLAG, loop chunk and frame chunk(s) are consistent.
   // At most one loop chunk.
-  err = ValidateChunk(mux, LOOP_ID, NO_FLAG, flags, 1, &num_loop_chunks);
+  err = ValidateChunk(mux, IDX_LOOP, NO_FLAG, flags, 1, &num_loop_chunks);
   if (err != WEBP_MUX_OK) return err;
-  err = ValidateChunk(mux, FRAME_ID, NO_FLAG, flags, -1, &num_frames);
+  err = ValidateChunk(mux, IDX_FRAME, NO_FLAG, flags, -1, &num_frames);
   if (err != WEBP_MUX_OK) return err;
 
   {
@@ -518,19 +529,19 @@ WebPMuxError WebPMuxValidate(const WebPMux* const mux) {
   }
 
   // Tiling: TILE_FLAG and tile chunk(s) are consistent.
-  err = ValidateChunk(mux, TILE_ID, TILE_FLAG, flags, -1, &num_tiles);
+  err = ValidateChunk(mux, IDX_TILE, TILE_FLAG, flags, -1, &num_tiles);
   if (err != WEBP_MUX_OK) return err;
 
   // Verify either VP8X chunk is present OR there is only one elem in
   // mux->images_.
-  err = ValidateChunk(mux, VP8X_ID, NO_FLAG, flags, 1, &num_vp8x);
+  err = ValidateChunk(mux, IDX_VP8X, NO_FLAG, flags, 1, &num_vp8x);
   if (err != WEBP_MUX_OK) return err;
-  err = ValidateChunk(mux, IMAGE_ID, NO_FLAG, flags, -1, &num_images);
+  err = ValidateChunk(mux, IDX_VP8, NO_FLAG, flags, -1, &num_images);
   if (err != WEBP_MUX_OK) return err;
   if (num_vp8x == 0 && num_images != 1) return WEBP_MUX_INVALID_ARGUMENT;
 
   // ALPHA_FLAG & alpha chunk(s) are consistent.
-  err = ValidateChunk(mux, ALPHA_ID, ALPHA_FLAG, flags, -1, &num_alpha);
+  err = ValidateChunk(mux, IDX_ALPHA, ALPHA_FLAG, flags, -1, &num_alpha);
   if (err != WEBP_MUX_OK) return err;
 
   // num_images & num_alpha_chunks are consistent.

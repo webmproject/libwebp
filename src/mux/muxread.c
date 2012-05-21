@@ -21,10 +21,10 @@ extern "C" {
 // Helper method(s).
 
 // Handy MACRO.
-#define SWITCH_ID_LIST(ID, LIST)                                              \
-  if (id == (ID)) {                                                           \
+#define SWITCH_ID_LIST(INDEX, LIST)                                           \
+  if (idx == (INDEX)) {                                                       \
     const WebPChunk* const chunk = ChunkSearchList((LIST), nth,               \
-                                                   kChunks[(ID)].tag);        \
+                                                   kChunks[(INDEX)].tag);     \
     if (chunk) {                                                              \
       data->bytes_ = chunk->data_;                                            \
       data->size_ = chunk->payload_size_;                                     \
@@ -34,17 +34,17 @@ extern "C" {
     }                                                                         \
   }
 
-static WebPMuxError MuxGet(const WebPMux* const mux, TAG_ID id, uint32_t nth,
-                           WebPData* const data) {
+static WebPMuxError MuxGet(const WebPMux* const mux, CHUNK_INDEX idx,
+                           uint32_t nth, WebPData* const data) {
   assert(mux != NULL);
-  assert(!IsWPI(id));
+  assert(!IsWPI(kChunks[idx].id));
   memset(data, 0, sizeof(*data));
 
-  SWITCH_ID_LIST(VP8X_ID, mux->vp8x_);
-  SWITCH_ID_LIST(ICCP_ID, mux->iccp_);
-  SWITCH_ID_LIST(LOOP_ID, mux->loop_);
-  SWITCH_ID_LIST(META_ID, mux->meta_);
-  SWITCH_ID_LIST(UNKNOWN_ID, mux->unknown_);
+  SWITCH_ID_LIST(IDX_VP8X, mux->vp8x_);
+  SWITCH_ID_LIST(IDX_ICCP, mux->iccp_);
+  SWITCH_ID_LIST(IDX_LOOP, mux->loop_);
+  SWITCH_ID_LIST(IDX_META, mux->meta_);
+  SWITCH_ID_LIST(IDX_UNKNOWN, mux->unknown_);
   return WEBP_MUX_NOT_FOUND;
 }
 #undef SWITCH_ID_LIST
@@ -102,9 +102,10 @@ WebPMux* WebPMuxCreateInternal(const uint8_t* data, size_t size, int copy_data,
   }
 
   tag = GetLE32(data + RIFF_HEADER_SIZE);
-  if (tag != kChunks[IMAGE_ID].tag && tag != kChunks[VP8X_ID].tag) {
-    // First chunk should be either VP8X or VP8.
-    goto Err;
+  if (tag != kChunks[IDX_VP8].tag &&
+      tag != kChunks[IDX_VP8L].tag &&
+      tag != kChunks[IDX_VP8X].tag) {
+    goto Err;  // First chunk should be VP8, VP8L or VP8X.
   }
 
   riff_size = SizeWithPadding(GetLE32(data + TAG_SIZE));
@@ -203,9 +204,9 @@ WebPMuxError WebPMuxGetFeatures(const WebPMux* const mux, uint32_t* flags) {
   *flags = 0;
 
   // Check if VP8X chunk is present.
-  err = MuxGet(mux, VP8X_ID, 1, &data);
+  err = MuxGet(mux, IDX_VP8X, 1, &data);
   if (err == WEBP_MUX_NOT_FOUND) {
-    // Check if VP8 chunk is present.
+    // Check if VP8/VP8L chunk is present.
     err = WebPMuxGetImage(mux, &data, NULL);
     if (err == WEBP_MUX_NOT_FOUND &&              // Data not available (yet).
         mux->state_ == WEBP_MUX_STATE_PARTIAL) {  // Incremental case.
@@ -252,9 +253,9 @@ WebPMuxError WebPMuxGetImage(const WebPMux* const mux,
   // Get image chunk.
   if (image != NULL) {
     memset(image, 0, sizeof(*image));
-    if (wpi->vp8_ != NULL) {
-      image->bytes_ = wpi->vp8_->data_;
-      image->size_ = wpi->vp8_->payload_size_;
+    if (wpi->img_ != NULL) {
+      image->bytes_ = wpi->img_->data_;
+      image->size_ = wpi->img_->payload_size_;
     }
   }
   return WEBP_MUX_OK;
@@ -263,13 +264,13 @@ WebPMuxError WebPMuxGetImage(const WebPMux* const mux,
 WebPMuxError WebPMuxGetMetadata(const WebPMux* const mux,
                                 WebPData* const metadata) {
   if (mux == NULL || metadata == NULL) return WEBP_MUX_INVALID_ARGUMENT;
-  return MuxGet(mux, META_ID, 1, metadata);
+  return MuxGet(mux, IDX_META, 1, metadata);
 }
 
 WebPMuxError WebPMuxGetColorProfile(const WebPMux* const mux,
                                     WebPData* const color_profile) {
   if (mux == NULL || color_profile == NULL) return WEBP_MUX_INVALID_ARGUMENT;
-  return MuxGet(mux, ICCP_ID, 1, color_profile);
+  return MuxGet(mux, IDX_ICCP, 1, color_profile);
 }
 
 WebPMuxError WebPMuxGetLoopCount(const WebPMux* const mux,
@@ -279,7 +280,7 @@ WebPMuxError WebPMuxGetLoopCount(const WebPMux* const mux,
 
   if (mux == NULL || loop_count == NULL) return WEBP_MUX_INVALID_ARGUMENT;
 
-  err = MuxGet(mux, LOOP_ID, 1, &image);
+  err = MuxGet(mux, IDX_LOOP, 1, &image);
   if (err != WEBP_MUX_OK) return err;
   if (image.size_ < kChunks[LOOP_ID].size) return WEBP_MUX_BAD_DATA;
   *loop_count = GetLE32(image.bytes_);
@@ -297,7 +298,8 @@ static WebPMuxError MuxGetFrameTileInternal(
   WebPMuxImage* wpi;
 
   const int is_frame = (tag == kChunks[FRAME_ID].tag) ? 1 : 0;
-  const TAG_ID id = is_frame ? FRAME_ID : TILE_ID;
+  const CHUNK_INDEX idx = is_frame ? IDX_FRAME : IDX_TILE;
+  const TAG_ID id = kChunks[idx].id;
 
   if (mux == NULL || image == NULL ||
       x_offset == NULL || y_offset == NULL || (is_frame && duration == NULL)) {
@@ -313,7 +315,7 @@ static WebPMuxError MuxGetFrameTileInternal(
   frame_tile_data = wpi->header_->data_;
   frame_tile_size = wpi->header_->payload_size_;
 
-  if (frame_tile_size < kChunks[id].size) return WEBP_MUX_BAD_DATA;
+  if (frame_tile_size < kChunks[idx].size) return WEBP_MUX_BAD_DATA;
   *x_offset = GetLE32(frame_tile_data + 0);
   *y_offset = GetLE32(frame_tile_data + 4);
   if (is_frame) *duration = GetLE32(frame_tile_data + 16);
@@ -329,9 +331,9 @@ static WebPMuxError MuxGetFrameTileInternal(
 
   // Get image chunk.
   memset(image, 0, sizeof(*image));
-  if (wpi->vp8_ != NULL) {
-    image->bytes_ = wpi->vp8_->data_;
-    image->size_ = wpi->vp8_->payload_size_;
+  if (wpi->img_ != NULL) {
+    image->bytes_ = wpi->img_->data_;
+    image->size_ = wpi->img_->payload_size_;
   }
 
   return WEBP_MUX_OK;
@@ -343,7 +345,7 @@ WebPMuxError WebPMuxGetFrame(const WebPMux* const mux, uint32_t nth,
                              uint32_t* duration) {
   return MuxGetFrameTileInternal(mux, nth, image, alpha,
                                  x_offset, y_offset, duration,
-                                 kChunks[FRAME_ID].tag);
+                                 kChunks[IDX_FRAME].tag);
 }
 
 WebPMuxError WebPMuxGetTile(const WebPMux* const mux, uint32_t nth,
@@ -351,7 +353,7 @@ WebPMuxError WebPMuxGetTile(const WebPMux* const mux, uint32_t nth,
                             uint32_t* x_offset, uint32_t* y_offset) {
   return MuxGetFrameTileInternal(mux, nth, image, alpha,
                                  x_offset, y_offset, NULL,
-                                 kChunks[TILE_ID].tag);
+                                 kChunks[IDX_TILE].tag);
 }
 
 // Count number of chunks matching 'tag' in the 'chunk_list'.
@@ -367,11 +369,12 @@ static int CountChunks(const WebPChunk* const chunk_list, uint32_t tag) {
   return count;
 }
 
-WebPMuxError WebPMuxNumNamedElements(const WebPMux* const mux, const char* tag,
+WebPMuxError WebPMuxNumNamedElements(const WebPMux* const mux, const char* name,
                                      int* num_elements) {
-  const TAG_ID id = ChunkGetIdFromName(tag);
+  const CHUNK_INDEX idx = ChunkGetIndexFromName(name);
+  const TAG_ID id = kChunks[idx].id;
 
-  if (mux == NULL || tag == NULL || num_elements == NULL) {
+  if (mux == NULL || name == NULL || num_elements == NULL) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
@@ -382,7 +385,7 @@ WebPMuxError WebPMuxNumNamedElements(const WebPMux* const mux, const char* tag,
     if (chunk_list == NULL) {
       *num_elements = 0;
     } else {
-      *num_elements = CountChunks(*chunk_list, kChunks[id].tag);
+      *num_elements = CountChunks(*chunk_list, kChunks[idx].tag);
     }
   }
 

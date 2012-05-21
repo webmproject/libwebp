@@ -139,7 +139,7 @@ static WEBP_INLINE WebPMux* WebPMuxCreate(const uint8_t* data, size_t size,
 // will be removed.
 // Parameters:
 //   mux - (in/out) object in which the image is to be set
-//   data - (in) the image data to be set. The data can be either a VP8
+//   data - (in) the image data to be set. The data can be either a VP8/VP8L
 //          bitstream or a single-image WebP file (non-animated & non-tiled)
 //   size - (in) size of the image data
 //   alpha_data - (in) the alpha data corresponding to the image (if present)
@@ -267,8 +267,8 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteColorProfile(WebPMux* const mux);
 // Parameters:
 //   mux - (in/out) object to which an animation frame is to be added
 //   nth - (in) The position at which the frame is to be added.
-//   data - (in) the raw VP8 image data corresponding to frame image. The data
-//          can be either a VP8 bitstream or a single-image WebP file
+//   data - (in) the raw VP8/VP8L image data corresponding to frame image. The
+//          data can be either a VP8/VP8L bitstream or a single-image WebP file
 //          (non-animated & non-tiled)
 //   size - (in) size of frame chunk data
 //   alpha_data - (in) the alpha data corresponding to frame image (if present)
@@ -367,8 +367,8 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetLoopCount(const WebPMux* const mux,
 // Parameters:
 //   mux - (in/out) object to which a tile is to be added
 //   nth - (in) The position at which the tile is to be added.
-//   data - (in) the raw VP8 image data corresponding to tile image.  The data
-//          can be either a VP8 bitstream or a single-image WebP file
+//   data - (in) the raw VP8/VP8L image data corresponding to tile image.  The
+//          data can be either a VP8/VP8L bitstream or a single-image WebP file
 //          (non-animated & non-tiled)
 //   size - (in) size of tile chunk data
 //   alpha_data - (in) the alpha data corresponding to tile image (if present)
@@ -442,13 +442,15 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetFeatures(const WebPMux* const mux,
 // Gets number of chunks having tag value tag in the mux object.
 // Parameters:
 //   mux - (in) object from which the info is to be fetched
-//   tag - (in) tag name specifying the type of chunk
+//   name - (in) chunk name specifying the type of chunk
+//          Can be any of: "vp8x", "iccp", "loop", "frame", "tile", "alpha",
+//          "image", "meta" or "unknown"
 //   num_elements - (out) number of chunks corresponding to the specified tag
 // Returns:
 //   WEBP_MUX_INVALID_ARGUMENT - if either mux, tag or num_elements is NULL
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxNumNamedElements(const WebPMux* const mux,
-                                                  const char* tag,
+                                                  const char* name,
                                                   int* num_elements);
 
 // Assembles all chunks in WebP RIFF format and returns in output_data.
