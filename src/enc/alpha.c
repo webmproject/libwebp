@@ -161,7 +161,7 @@ static void CopyPlane(const uint8_t* src, int src_stride,
 
 static int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
                        int quality, int method, int filter,
-                uint8_t** output, size_t* output_size) {
+                       uint8_t** output, size_t* output_size) {
   uint8_t* quant_alpha = NULL;
   const size_t data_size = height * width;
   int ok = 1;
