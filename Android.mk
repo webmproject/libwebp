@@ -39,7 +39,6 @@ LOCAL_SRC_FILES := \
     src/mux/muxedit.c \
     src/mux/muxinternal.c \
     src/mux/muxread.c \
-    src/utils/alpha.c \
     src/utils/bit_reader.c \
     src/utils/bit_writer.c \
     src/utils/color_cache.c \
@@ -47,7 +46,6 @@ LOCAL_SRC_FILES := \
     src/utils/huffman.c \
     src/utils/quant_levels.c \
     src/utils/rescaler.c \
-    src/utils/tcoder.c \
     src/utils/thread.c \
 
 LOCAL_CFLAGS := -Wall -DANDROID -DHAVE_MALLOC_H -DHAVE_PTHREAD \

@@ -11,11 +11,112 @@
 
 #include <stdlib.h>
 #include "./vp8i.h"
-#include "../utils/alpha.h"
+#include "../webp/decode.h"
+#include "../utils/filters.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
 #endif
+
+// TODO(skal): find a common place between enc/ and dec/ for these:
+#define ALPHA_HEADER_LEN 2
+#define ALPHA_NO_COMPRESSION 0
+#define ALPHA_LOSSLESS_COMPRESSION 1
+
+// TODO(skal): move to dsp/ ?
+static void CopyPlane(const uint8_t* src, int src_stride,
+                      uint8_t* dst, int dst_stride, int width, int height) {
+  while (height-- > 0) {
+    memcpy(dst, src, width);
+    src += src_stride;
+    dst += dst_stride;
+  }
+}
+
+//------------------------------------------------------------------------------
+// Decodes the compressed data 'data' of size 'data_size' into the 'output'.
+// The 'output' buffer should be pre-allocated and must be of the same
+// dimension 'height'x'stride', as that of the image.
+//
+// Returns 1 on successfully decoding the compressed alpha and
+//         0 if either:
+//           error in bit-stream header (invalid compression mode or filter), or
+//           error returned by appropriate compression method.
+
+static int DecodeAlpha(const uint8_t* data, size_t data_size,
+                       int width, int height, int stride, uint8_t* output) {
+  uint8_t* decoded_data = NULL;
+  const size_t decoded_size = height * width;
+  uint8_t* unfiltered_data = NULL;
+  WEBP_FILTER_TYPE filter;
+  int ok = 0;
+  int method;
+
+  assert(width > 0 && height > 0 && stride >= width);
+  assert(data != NULL && output != NULL);
+
+  if (data_size <= ALPHA_HEADER_LEN) {
+    return 0;
+  }
+
+  method = data[0] & 0x0f;
+  filter = data[0] >> 4;
+  ok = (data[1] == 0);
+  if (method < ALPHA_NO_COMPRESSION ||
+      method > ALPHA_LOSSLESS_COMPRESSION ||
+      filter >= WEBP_FILTER_LAST || !ok) {
+    return 0;
+  }
+
+  if (method == ALPHA_NO_COMPRESSION) {
+    ok = (data_size >= decoded_size);
+    decoded_data = (uint8_t*)data + ALPHA_HEADER_LEN;
+  } else {
+    size_t i;
+    int w, h;
+    uint32_t* const output =
+        (uint32_t*)WebPDecodeRGBA(data + ALPHA_HEADER_LEN,
+                                  data_size - ALPHA_HEADER_LEN,
+                                  &w, &h);
+    if (w != width || h != height || output == NULL) {
+      free(output);
+      return 0;
+    }
+    decoded_data = (uint8_t*)malloc(decoded_size);
+    if (decoded_data == NULL) {
+      free(output);
+      return 0;
+    }
+    for (i = 0; i < decoded_size; ++i) {
+      decoded_data[i] = (output[i] >> 8) & 0xff;
+    }
+    free(output);
+  }
+
+  if (ok) {
+    WebPFilterFunc unfilter_func = WebPUnfilters[filter];
+    if (unfilter_func) {
+      unfiltered_data = (uint8_t*)malloc(decoded_size);
+      if (unfiltered_data == NULL) {
+        if (method != ALPHA_NO_COMPRESSION) free(decoded_data);
+        return 0;
+      }
+      // TODO(vikas): Implement on-the-fly decoding & filter mechanism to decode
+      // and apply filter per image-row.
+      unfilter_func(decoded_data, width, height, 1, width, unfiltered_data);
+      // Construct raw_data (height x stride) from alpha data (height x width).
+      CopyPlane(unfiltered_data, width, output, stride, width, height);
+      free(unfiltered_data);
+    } else {
+      // Construct raw_data (height x stride) from alpha data (height x width).
+      CopyPlane(decoded_data, width, output, stride, width, height);
+    }
+  }
+  if (method != ALPHA_NO_COMPRESSION) {
+    free(decoded_data);
+  }
+  return ok;
+}
 
 //------------------------------------------------------------------------------
 

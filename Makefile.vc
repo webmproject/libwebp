@@ -178,16 +178,19 @@ EX_UTIL_OBJS = \
 ENC_OBJS = \
     $(DIROBJ)\enc\alpha.obj \
     $(DIROBJ)\enc\analysis.obj \
+    $(DIROBJ)\enc\backward_references.obj \
     $(DIROBJ)\enc\config.obj \
     $(DIROBJ)\enc\cost.obj \
     $(DIROBJ)\enc\filter.obj \
     $(DIROBJ)\enc\frame.obj \
+    $(DIROBJ)\enc\histogram.obj \
     $(DIROBJ)\enc\iterator.obj \
     $(DIROBJ)\enc\layer.obj \
     $(DIROBJ)\enc\picture.obj \
     $(DIROBJ)\enc\quant.obj \
     $(DIROBJ)\enc\syntax.obj \
     $(DIROBJ)\enc\tree.obj \
+    $(DIROBJ)\enc\vp8l.obj \
     $(DIROBJ)\enc\webpenc.obj \
 
 MUX_OBJS = \
@@ -196,15 +199,14 @@ MUX_OBJS = \
     $(DIROBJ)\mux\muxread.obj \
 
 UTILS_OBJS = \
-    $(DIROBJ)\utils\alpha.obj \
     $(DIROBJ)\utils\bit_reader.obj \
     $(DIROBJ)\utils\bit_writer.obj \
     $(DIROBJ)\utils\color_cache.obj \
     $(DIROBJ)\utils\filters.obj \
     $(DIROBJ)\utils\huffman.obj \
+    $(DIROBJ)\utils\huffman_encode.obj \
     $(DIROBJ)\utils\quant_levels.obj \
     $(DIROBJ)\utils\rescaler.obj \
-    $(DIROBJ)\utils\tcoder.obj \
     $(DIROBJ)\utils\thread.obj \
 
 X_OBJS = $(DEC_OBJS) $(DSP_OBJS) $(ENC_OBJS) $(MUX_OBJS) $(UTILS_OBJS) $(X_OBJS)

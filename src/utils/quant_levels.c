@@ -13,7 +13,7 @@
 #include <assert.h>
 #include <math.h>    // for sqrt()
 
-#include "./alpha.h"
+#include "./quant_levels.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

@@ -115,7 +115,6 @@ MUX_OBJS = \
     src/mux/muxread.o \
 
 UTILS_OBJS = \
-    src/utils/alpha.o \
     src/utils/bit_reader.o \
     src/utils/bit_writer.o \
     src/utils/color_cache.o \
@@ -124,7 +123,6 @@ UTILS_OBJS = \
     src/utils/huffman_encode.o \
     src/utils/quant_levels.o \
     src/utils/rescaler.o \
-    src/utils/tcoder.o \
     src/utils/thread.o \
 
 LIBWEBP_OBJS = $(DEC_OBJS) $(DSP_OBJS) $(ENC_OBJS) $(UTILS_OBJS)
@@ -139,15 +137,13 @@ HDRS = \
     src/dsp/yuv.h \
     src/enc/cost.h \
     src/enc/vp8enci.h \
-    src/utils/alpha.h \
     src/utils/bit_reader.h \
     src/utils/bit_writer.h \
     src/utils/color_cache.h \
     src/utils/filters.h \
     src/utils/huffman.h \
+    src/utils/quant_levels.h \
     src/utils/rescaler.h \
-    src/utils/tcoder.h \
-    src/utils/tcoderi.h \
     src/utils/thread.h \
     src/webp/decode.h \
     src/webp/decode_vp8.h \
