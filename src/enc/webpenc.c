@@ -306,10 +306,11 @@ static void StoreStats(VP8Encoder* const enc) {
   WebPReportProgress(enc, 100);  // done!
 }
 
-int WebPEncodingSetError(WebPPicture* const pic, WebPEncodingError error) {
+int WebPEncodingSetError(const WebPPicture* const pic,
+                         WebPEncodingError error) {
   assert((int)error < VP8_ENC_ERROR_LAST);
   assert((int)error >= VP8_ENC_OK);
-  pic->error_code = error;
+  ((WebPPicture*)pic)->error_code = error;
   return 0;
 }
 

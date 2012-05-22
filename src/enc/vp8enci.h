@@ -473,7 +473,7 @@ int VP8StatLoop(VP8Encoder* const enc);
 
   // in webpenc.c
 // Assign an error code to a picture. Return false for convenience.
-int WebPEncodingSetError(WebPPicture* const pic, WebPEncodingError error);
+int WebPEncodingSetError(const WebPPicture* const pic, WebPEncodingError error);
 int WebPReportProgress(VP8Encoder* const enc, int percent);
 
   // in analysis.c
