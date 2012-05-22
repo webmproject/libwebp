@@ -28,7 +28,7 @@ int QuantizeLevels(uint8_t* data, int width, int height, int num_levels,
                    float* mse);
 
 // Apply post-processing to input 'data' of size 'width'x'height' assuming
-// source what quantized to a reduced number of levels.
+// that the source was quantized to a reduced number of levels.
 // Returns false in case of error (data is NULL, invalid parameters, ...).
 int DequantizeLevels(uint8_t* data, int width, int height);
 
