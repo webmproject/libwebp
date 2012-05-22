@@ -261,11 +261,19 @@ static void HistogramBuildImage(int xsize, int histo_bits,
   }
 }
 
+static uint32_t MyRand(uint32_t *seed) {
+  *seed *= 16807U;
+  if (*seed == 0) {
+    *seed = 1;
+  }
+  return *seed;
+}
+
 static int HistogramCombine(const VP8LHistogramSet* const in,
                             VP8LHistogramSet* const out, int num_pairs) {
   int ok = 0;
   int i, iter;
-  unsigned int seed = 0;
+  uint32_t seed = 0;
   int tries_with_no_success = 0;
   const int min_cluster_size = 2;
   int out_size = in->size;
@@ -288,13 +296,14 @@ static int HistogramCombine(const VP8LHistogramSet* const in,
     double best_cost_diff = 0.;
     int best_idx1 = 0, best_idx2 = 1;
     int j;
+    seed += iter;
     for (j = 0; j < num_pairs; ++j) {
       double curr_cost_diff;
       // Choose two histograms at random and try to combine them.
-      const int idx1 = rand_r(&seed) % out_size;
-      const int tmp = ((j & 7) + 1) % (out_size - 1);
-      const int diff = (tmp < 3) ? tmp : rand_r(&seed) % (out_size - 1);
-      const int idx2 = (idx1 + diff + 1) % out_size;
+      const uint32_t idx1 = MyRand(&seed) % out_size;
+      const uint32_t tmp = ((j & 7) + 1) % (out_size - 1);
+      const uint32_t diff = (tmp < 3) ? tmp : MyRand(&seed) % (out_size - 1);
+      const uint32_t idx2 = (idx1 + diff + 1) % out_size;
       if (idx1 == idx2) {
         continue;
       }
