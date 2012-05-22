@@ -13,15 +13,17 @@
 #include "./vp8i.h"
 #include "../webp/decode.h"
 #include "../utils/filters.h"
+#include "../utils/quant_levels.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
 #endif
 
 // TODO(skal): find a common place between enc/ and dec/ for these:
-#define ALPHA_HEADER_LEN 2
+#define ALPHA_HEADER_LEN 1
 #define ALPHA_NO_COMPRESSION 0
 #define ALPHA_LOSSLESS_COMPRESSION 1
+#define ALPHA_PREPROCESSED_LEVELS 1
 
 // TODO(skal): move to dsp/ ?
 static void CopyPlane(const uint8_t* src, int src_stride,
@@ -49,6 +51,8 @@ static int DecodeAlpha(const uint8_t* data, size_t data_size,
   const size_t decoded_size = height * width;
   uint8_t* unfiltered_data = NULL;
   WEBP_FILTER_TYPE filter;
+  int pre_processing;
+  int rsrv;
   int ok = 0;
   int method;
 
@@ -59,12 +63,15 @@ static int DecodeAlpha(const uint8_t* data, size_t data_size,
     return 0;
   }
 
-  method = data[0] & 0x0f;
-  filter = data[0] >> 4;
-  ok = (data[1] == 0);
+  method = (data[0] >> 0) & 0x03;
+  filter = (data[0] >> 2) & 0x03;
+  pre_processing = (data[0] >> 4) & 0x03;
+  rsrv = (data[0] >> 6) & 0x03;
   if (method < ALPHA_NO_COMPRESSION ||
       method > ALPHA_LOSSLESS_COMPRESSION ||
-      filter >= WEBP_FILTER_LAST || !ok) {
+      filter >= WEBP_FILTER_LAST ||
+      pre_processing > ALPHA_PREPROCESSED_LEVELS ||
+      rsrv != 0) {
     return 0;
   }
 
@@ -91,15 +98,16 @@ static int DecodeAlpha(const uint8_t* data, size_t data_size,
       decoded_data[i] = (output[i] >> 8) & 0xff;
     }
     free(output);
+    ok = 1;
   }
 
   if (ok) {
     WebPFilterFunc unfilter_func = WebPUnfilters[filter];
-    if (unfilter_func) {
+    if (unfilter_func != NULL) {
       unfiltered_data = (uint8_t*)malloc(decoded_size);
       if (unfiltered_data == NULL) {
-        if (method != ALPHA_NO_COMPRESSION) free(decoded_data);
-        return 0;
+        ok = 0;
+        goto Error;
       }
       // TODO(vikas): Implement on-the-fly decoding & filter mechanism to decode
       // and apply filter per image-row.
@@ -112,6 +120,11 @@ static int DecodeAlpha(const uint8_t* data, size_t data_size,
       CopyPlane(decoded_data, width, output, stride, width, height);
     }
   }
+  if (pre_processing == ALPHA_PREPROCESSED_LEVELS) {
+    ok = DequantizeLevels(decoded_data, width, height);
+  }
+
+ Error:
   if (method != ALPHA_NO_COMPRESSION) {
     free(decoded_data);
   }

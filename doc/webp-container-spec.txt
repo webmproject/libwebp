@@ -443,10 +443,17 @@ Notes for tiles containing VP8 data:
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('ALPH')                      |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |   F   |   C   |    Reserved   |        Alpha Bitstream        |
+    |Rsv| P | F | C |     Alpha Bitstream...                        |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-Filtering method (F): 4 bits
+Compression method (C): 2 bits
+
+: The compression method used:
+
+  * `0`: No compression.
+  * `1`: Backward reference counts encoded with arithmetic encoder.
+
+Filtering method (F): 2 bits
 
 : The filtering method used:
 
@@ -455,28 +462,31 @@ Filtering method (F): 4 bits
   * `2`: Vertical filter.
   * `3`: Gradient filter.
 
-Compression method (C): 4 bits
+Pre-processing (P): 2 bits
 
-: The compression method used:
+: These INFORMATIVE bits are used to signal the pre-processing that has
+been performed during compression. The decoder can use this information to
+e.g. dither the values or smooth the gradients prior to display.
 
-  * `0`: No compression.
-  * `1`: Backward reference counts encoded with arithmetic encoder.
+  * `0`: no pre-processing
+  * `1`: level reduction
 
-Reserved: 8 bits
+Decoders are not required to use this information in any specified way.
+
+Reserved (Rsv): 2 bits
 
 : SHOULD be `0`.
 
-Alpha bitstream: _Chunk Size_ - `2` bytes
+Alpha bitstream: _Chunk Size_ - `1` bytes
 
 : Encoded alpha bitstream.
 
 This optional chunk contains encoded alpha data for a single tile.
 Either **ALL or NONE** of the tiles must contain this chunk.
 
-The alpha channel can be encoded either losslessly or with lossy
-preprocessing (quantization). After the optional preprocessing, the
-alpha values are encoded with a lossless compression method like
-zlib.
+The alpha channel data is losslessly stored as raw data (when
+compression method is '0') or compressed using the lossless format
+(when the compression method is '1').
 
 #### Color profile
 

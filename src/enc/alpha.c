@@ -20,9 +20,11 @@
 extern "C" {
 #endif
 
-#define ALPHA_HEADER_LEN 2
+// TODO(skal): find a common place between enc/ and dec/ for these:
+#define ALPHA_HEADER_LEN 1
 #define ALPHA_NO_COMPRESSION 0
 #define ALPHA_LOSSLESS_COMPRESSION 1
+#define ALPHA_PREPROCESSED_LEVELS 1
 
 // -----------------------------------------------------------------------------
 // int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
@@ -105,25 +107,33 @@ static int EncodeLossless(const uint8_t* data, int width, int height,
 
 // -----------------------------------------------------------------------------
 
-static int EncodeAlphaInternal(const uint8_t* data, int width, int height,
-                               int method, int filter, size_t data_size,
+static int EncodeAlphaInternal(const uint8_t* data,  int width, int height,
+                               int method, int filter, int reduce_levels,
                                uint8_t* tmp_alpha, VP8BitWriter* const bw) {
   int ok = 0;
   const uint8_t* alpha_src;
   WebPFilterFunc filter_func;
-  uint8_t header[ALPHA_HEADER_LEN];
+  uint8_t header;
   size_t expected_size;
+  const size_t data_size = width * height;
 
 #ifndef USE_LOSSLESS_ENCODER
   method = ALPHA_NO_COMPRESSION;
 #endif
+  assert(filter >= 0 && filter < WEBP_FILTER_LAST);
+  assert(method >= ALPHA_NO_COMPRESSION);
+  assert(method <= ALPHA_LOSSLESS_COMPRESSION);
+  assert(sizeof(header) == ALPHA_HEADER_LEN);
+  // TODO(skal): have a common function and #define's to validate alpha params.
+
   expected_size =
       (method == ALPHA_NO_COMPRESSION) ? (ALPHA_HEADER_LEN + data_size)
                                        : (data_size >> 5);
-  header[0] = (filter << 4) | method;
-  header[1] = 0;                // reserved byte for later use
+  header = method | (filter << 2);
+  if (reduce_levels) header |= ALPHA_PREPROCESSED_LEVELS << 4;
+
   VP8BitWriterInit(bw, expected_size);
-  VP8BitWriterAppend(bw, header, sizeof(header));
+  VP8BitWriterAppend(bw, &header, ALPHA_HEADER_LEN);
 
   filter_func = WebPFilters[filter];
   if (filter_func) {
@@ -163,8 +173,9 @@ static int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
                        int quality, int method, int filter,
                        uint8_t** output, size_t* output_size) {
   uint8_t* quant_alpha = NULL;
-  const size_t data_size = height * width;
+  const size_t data_size = width * height;
   int ok = 1;
+  const int reduce_levels = (quality < 100);
 
   // quick sanity checks
   assert(data != NULL && output != NULL && output_size != NULL);
@@ -188,7 +199,7 @@ static int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
   // Extract alpha data (width x height) from raw_data (stride x height).
   CopyPlane(data, stride, quant_alpha, width, width, height);
 
-  if (quality < 100) {  // No Quantization required for 'quality = 100'.
+  if (reduce_levels) {  // No Quantization required for 'quality = 100'.
     // 16 alpha levels gives quite a low MSE w.r.t original alpha plane hence
     // mapped to moderate quality 70. Hence Quality:[0, 70] -> Levels:[2, 16]
     // and Quality:]70, 100] -> Levels:]16, 256].
@@ -204,8 +215,9 @@ static int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
     uint8_t* filtered_alpha = NULL;
 
     // We always test WEBP_FILTER_NONE first.
-    ok = EncodeAlphaInternal(quant_alpha, width, height, method,
-                             WEBP_FILTER_NONE, data_size, NULL, &bw);
+    ok = EncodeAlphaInternal(quant_alpha, width, height,
+                             method, WEBP_FILTER_NONE, reduce_levels,
+                             NULL, &bw);
     if (!ok) {
       VP8BitWriterWipeOut(&bw);
       goto End;
@@ -235,8 +247,9 @@ static int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
         continue;
       }
 
-      ok = EncodeAlphaInternal(quant_alpha, width, height, method, test_filter,
-                               data_size, filtered_alpha, &tmp_bw);
+      ok = EncodeAlphaInternal(quant_alpha, width, height,
+                               method, test_filter, reduce_levels,
+                               filtered_alpha, &tmp_bw);
       if (ok) {
         const size_t score = VP8BitWriterSize(&tmp_bw);
         if (score < best_score) {
