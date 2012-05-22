@@ -142,10 +142,19 @@ int QuantizeLevels(uint8_t* data, int width, int height,
   }
 
   // Compute final mean squared error if needed.
-  if (mse) {
+  if (mse != NULL) {
     *mse = (float)sqrt(err);
   }
 
+  return 1;
+}
+
+int DequantizeLevels(uint8_t* data, int width, int height) {
+  if (data == NULL || width <= 0 || height <= 0) return 0;
+  // TODO(skal): implement gradient smoothing.
+  (void)data;
+  (void)width;
+  (void)height;
   return 1;
 }
 
