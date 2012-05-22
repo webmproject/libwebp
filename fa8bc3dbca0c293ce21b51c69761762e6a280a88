@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAKn//fNo\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-22T18:33:16Z",
+      "side": 1,
+      "message": "sounds ok, error_code is effectively \u0027mutable\u0027.",
+      "revId": "fa8bc3dbca0c293ce21b51c69761762e6a280a88",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
