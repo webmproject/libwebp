@@ -35,7 +35,7 @@ extern "C" {
 
 typedef struct {
   const WebPConfig* config_;    // user configuration and parameters
-  WebPPicture* pic_;            // input picture.
+  const WebPPicture* pic_;      // input picture.
 
   uint32_t* argb_;              // Transformed argb image data.
   uint32_t* argb_scratch_;      // Scratch memory for argb rows
@@ -59,13 +59,16 @@ typedef struct {
 //------------------------------------------------------------------------------
 // internal functions. Not public.
 
-// in vp8l.c
-
 // Encodes the picture.
 // Returns 0 if config or picture is NULL or picture doesn't have valid argb
 // input.
 int VP8LEncodeImage(const WebPConfig* const config,
-                    WebPPicture* const picture);
+                    const WebPPicture* const picture);
+
+// Encodes the main image stream using the supplied bit writer.
+WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
+                                   const WebPPicture* const picture,
+                                   VP8LBitWriter* const bw);
 
 //------------------------------------------------------------------------------
 

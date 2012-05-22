@@ -638,9 +638,8 @@ static void PutLE32(uint8_t* const data, uint32_t val) {
   data[3] = (val >> 24) & 0xff;
 }
 
-static WebPEncodingError WriteRiffHeader(const VP8LEncoder* const enc,
+static WebPEncodingError WriteRiffHeader(const WebPPicture* const pic,
                                          size_t riff_size, size_t vp8l_size) {
-  const WebPPicture* const pic = enc->pic_;
   uint8_t riff[HEADER_SIZE + SIGNATURE_SIZE] = {
     'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 'B', 'P',
     'V', 'P', '8', 'L', 0, 0, 0, 0, LOSSLESS_MAGIC_BYTE,
@@ -653,20 +652,20 @@ static WebPEncodingError WriteRiffHeader(const VP8LEncoder* const enc,
   return VP8_ENC_OK;
 }
 
-static void WriteImageSize(VP8LEncoder* const enc, VP8LBitWriter* const bw) {
-  WebPPicture* const pic = enc->pic_;
+static int WriteImageSize(const WebPPicture* const pic,
+                          VP8LBitWriter* const bw) {
   const int width = pic->width - 1;
   const int height = pic->height -1;
   assert(width < WEBP_MAX_DIMENSION && height < WEBP_MAX_DIMENSION);
 
   VP8LWriteBits(bw, IMAGE_SIZE_BITS, width);
   VP8LWriteBits(bw, IMAGE_SIZE_BITS, height);
+  return !bw->error_;
 }
 
-static WebPEncodingError WriteImage(const VP8LEncoder* const enc,
+static WebPEncodingError WriteImage(const WebPPicture* const pic,
                                     VP8LBitWriter* const bw,
                                     size_t* const coded_size) {
-  const WebPPicture* const pic = enc->pic_;
   WebPEncodingError err = VP8_ENC_OK;
   const uint8_t* const webpll_data = VP8LBitWriterFinish(bw);
   const size_t webpll_size = VP8LBitWriterNumBytes(bw);
@@ -674,7 +673,7 @@ static WebPEncodingError WriteImage(const VP8LEncoder* const enc,
   const size_t pad = vp8l_size & 1;
   const size_t riff_size = TAG_SIZE + CHUNK_HEADER_SIZE + vp8l_size + pad;
 
-  err = WriteRiffHeader(enc, riff_size, vp8l_size);
+  err = WriteRiffHeader(pic, riff_size, vp8l_size);
   if (err != VP8_ENC_OK) goto Error;
 
   if (!pic->writer(webpll_data, webpll_size, pic)) {
@@ -835,8 +834,8 @@ static void InitEncParams(VP8LEncoder* const enc) {
 // -----------------------------------------------------------------------------
 // VP8LEncoder
 
-static VP8LEncoder* NewVP8LEncoder(const WebPConfig* const config,
-                                   WebPPicture* const picture) {
+static VP8LEncoder* VP8LEncoderNew(const WebPConfig* const config,
+                                   const WebPPicture* const picture) {
   VP8LEncoder* const enc = (VP8LEncoder*)calloc(1, sizeof(*enc));
   if (enc == NULL) {
     WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
@@ -847,7 +846,7 @@ static VP8LEncoder* NewVP8LEncoder(const WebPConfig* const config,
   return enc;
 }
 
-static void DeleteVP8LEncoder(VP8LEncoder* enc) {
+static void VP8LEncoderDelete(VP8LEncoder* enc) {
   free(enc->argb_);
   free(enc);
 }
@@ -855,30 +854,19 @@ static void DeleteVP8LEncoder(VP8LEncoder* enc) {
 // -----------------------------------------------------------------------------
 // Main call
 
-int VP8LEncodeImage(const WebPConfig* const config,
-                    WebPPicture* const picture) {
-  int ok = 0;
-  int width, height, quality;
-  size_t coded_size;
-  VP8LEncoder* enc = NULL;
+WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
+                                   const WebPPicture* const picture,
+                                   VP8LBitWriter* const bw) {
   WebPEncodingError err = VP8_ENC_OK;
-  VP8LBitWriter bw;
+  const int quality = config->quality;
+  const int width = picture->width;
+  const int height = picture->height;
+  VP8LEncoder* const enc = VP8LEncoderNew(config, picture);
 
-  if (config == NULL || picture == NULL) return 0;
-
-  if (picture->argb == NULL) {
-    err = VP8_ENC_ERROR_NULL_PARAMETER;
-    goto Error;
-  }
-
-  enc = NewVP8LEncoder(config, picture);
   if (enc == NULL) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
-  width = picture->width;
-  height = picture->height;
-  quality = config->quality;
 
   InitEncParams(enc);
 
@@ -890,12 +878,8 @@ int VP8LEncodeImage(const WebPConfig* const config,
     goto Error;
   }
 
-  // Write image size.
-  VP8LBitWriterInit(&bw, (width * height) >> 1);
-  WriteImageSize(enc, &bw);
-
   if (enc->use_palette_) {
-    err = ApplyPalette(&bw, enc, width, height, quality);
+    err = ApplyPalette(bw, enc, width, height, quality);
     if (err != VP8_ENC_OK) goto Error;
     enc->cache_bits_ = 0;
   }
@@ -912,27 +896,26 @@ int VP8LEncodeImage(const WebPConfig* const config,
   // ---------------------------------------------------------------------------
   // Apply transforms and write transform data.
 
-  if (!EvalAndApplySubtractGreen(enc, enc->current_width_, height, &bw)) {
+  if (!EvalAndApplySubtractGreen(enc, enc->current_width_, height, bw)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
 
   if (enc->use_predict_) {
-    if (!ApplyPredictFilter(enc, enc->current_width_, height, quality, &bw)) {
+    if (!ApplyPredictFilter(enc, enc->current_width_, height, quality, bw)) {
       err = VP8_ENC_ERROR_INVALID_CONFIGURATION;
       goto Error;
     }
   }
 
   if (enc->use_cross_color_) {
-    if (!ApplyCrossColorFilter(enc, enc->current_width_, height, quality,
-                               &bw)) {
+    if (!ApplyCrossColorFilter(enc, enc->current_width_, height, quality, bw)) {
       err = VP8_ENC_ERROR_INVALID_CONFIGURATION;
       goto Error;
     }
   }
 
-  VP8LWriteBits(&bw, 1, !TRANSFORM_PRESENT);  // No more transforms.
+  VP8LWriteBits(bw, 1, !TRANSFORM_PRESENT);  // No more transforms.
 
   // ---------------------------------------------------------------------------
   // Estimate the color cache size.
@@ -948,16 +931,47 @@ int VP8LEncodeImage(const WebPConfig* const config,
   // ---------------------------------------------------------------------------
   // Encode and write the transformed image.
 
-  ok = EncodeImageInternal(&bw, enc->argb_, enc->current_width_, height,
-                           quality, enc->cache_bits_, enc->histo_bits_);
-  if (!ok) goto Error;
-
-  err = WriteImage(enc, &bw, &coded_size);
-  if (err != VP8_ENC_OK) {
-    ok = 0;
+  if (!EncodeImageInternal(bw, enc->argb_, enc->current_width_, height,
+                           quality, enc->cache_bits_, enc->histo_bits_)) {
+    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
 
+ Error:
+  VP8LEncoderDelete(enc);
+  return err;
+}
+
+int VP8LEncodeImage(const WebPConfig* const config,
+                    const WebPPicture* const picture) {
+  int width, height;
+  size_t coded_size;
+  WebPEncodingError err = VP8_ENC_OK;
+  VP8LBitWriter bw;
+
+  if (picture == NULL) return 0;
+
+  if (config == NULL || picture->argb == NULL) {
+    err = VP8_ENC_ERROR_NULL_PARAMETER;
+    goto Error;
+  }
+
+  width = picture->width;
+  height = picture->height;
+
+  // Write image size.
+  VP8LBitWriterInit(&bw, (width * height) >> 1);
+  if (!WriteImageSize(picture, &bw)) goto Error;
+
+  // Encode main image stream.
+  err = VP8LEncodeStream(config, picture, &bw);
+  if (err != VP8_ENC_OK) goto Error;
+
+  // Finish the RIFF chunk.
+  err = WriteImage(picture, &bw, &coded_size);
+  if (err != VP8_ENC_OK) goto Error;
+
+  // Collect some stats if needed.
   if (picture->stats != NULL) {
     WebPAuxStats* const stats = picture->stats;
     memset(stats, 0, sizeof(*stats));
@@ -975,13 +989,13 @@ int VP8LEncodeImage(const WebPConfig* const config,
   }
 
  Error:
+  if (bw.error_) err = VP8_ENC_ERROR_OUT_OF_MEMORY;
   VP8LBitWriterDestroy(&bw);
-  DeleteVP8LEncoder(enc);
-  if (!ok) {
-    assert(err != VP8_ENC_OK);
+  if (err != VP8_ENC_OK) {
     WebPEncodingSetError(picture, err);
+    return 0;
   }
-  return ok;
+  return 1;
 }
 
 //------------------------------------------------------------------------------
