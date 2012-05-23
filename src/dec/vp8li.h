@@ -102,16 +102,15 @@ typedef struct {
 // Validates the VP8L data-header and retrieves basic header information viz
 // width and height. Returns 0 in case of formatting error. width/height
 // can be passed NULL.
-int VP8LGetInfo(const uint8_t* data,
-                size_t data_size,    // data available so far
-                int *width, int *height);
+int VP8LGetInfo(const uint8_t* data, size_t data_size,  // data available so far
+                int* const width, int* const height);
 
 
 // Decodes a raw image stream (without header) and store the alpha data
 // into *output, which must be of size width x height. Returns false in case
 // of error.
 int VP8LDecodeAlphaImageStream(int width, int height, const uint8_t* const data,
-                               const size_t data_size, uint8_t* const output);
+                               size_t data_size, uint8_t* const output);
 
 // Allocates and initialize a new lossless decoder instance.
 VP8LDecoder* VP8LNew(void);

@@ -96,7 +96,7 @@ static int ReadImageSize(VP8LBitReader* const br,
 }
 
 int VP8LGetInfo(const uint8_t* data, size_t data_size,
-                int* width, int* height) {
+                int* const width, int* const height) {
   if (data == NULL || data_size < kHeaderBytes) {
     return 0;         // not enough data
   } else {
@@ -971,7 +971,7 @@ static void ExtractAlphaRows(VP8LDecoder* const dec, int row) {
 }
 
 int VP8LDecodeAlphaImageStream(int width, int height, const uint8_t* const data,
-                               const size_t data_size, uint8_t* const output) {
+                               size_t data_size, uint8_t* const output) {
   VP8Io io;
   int ok = 0;
   VP8LDecoder* const dec = VP8LNew();
