@@ -50,8 +50,7 @@ void VP8LColorSpaceTransform(int width, int height, int bits, int step,
 
 // Converts from BGRA to other color spaces.
 void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
-                         WEBP_CSP_MODE out_colorspace,
-                         uint8_t* const rgba);
+                         WEBP_CSP_MODE out_colorspace, uint8_t* const rgba);
 
 //------------------------------------------------------------------------------
 // Misc methods.
