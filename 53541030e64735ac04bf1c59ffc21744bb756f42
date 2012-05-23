@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAKn//eX8\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 718,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2012-05-23T11:07:15Z",
+      "side": 1,
+      "message": "Added this TODO.",
+      "parentUuid": "AAAAKn//eYc\u003d",
+      "revId": "53541030e64735ac04bf1c59ffc21744bb756f42",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAKn//eYY\u003d",
         "filename": "src/dec/vp8li.h",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2012-05-23T10:54:23Z",
       "side": 1,
       "message": "should the spec be updated?",
+      "revId": "53541030e64735ac04bf1c59ffc21744bb756f42",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//eX4\u003d",
+        "filename": "src/dec/vp8li.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2012-05-23T11:07:15Z",
+      "side": 1,
+      "message": "I think Jyrki modified it. Will re-check.",
+      "parentUuid": "AAAAKn//eYY\u003d",
       "revId": "53541030e64735ac04bf1c59ffc21744bb756f42",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
