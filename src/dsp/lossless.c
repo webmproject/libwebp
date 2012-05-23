@@ -966,7 +966,7 @@ static int is_big_endian(void) {
 
 static void ConvertBGRAToRGB(const uint32_t* src,
                              int num_pixels, uint8_t* dst) {
-  const uint32_t* src_end = src + num_pixels;
+  const uint32_t* const src_end = src + num_pixels;
   while (src < src_end) {
     const uint32_t argb = *src++;
     *dst++ = (argb >> 16) & 0xff;
@@ -977,7 +977,7 @@ static void ConvertBGRAToRGB(const uint32_t* src,
 
 static void ConvertBGRAToRGBA(const uint32_t* src,
                               int num_pixels, uint8_t* dst) {
-  const uint32_t* src_end = src + num_pixels;
+  const uint32_t* const src_end = src + num_pixels;
   while (src < src_end) {
     const uint32_t argb = *src++;
     *dst++ = (argb >> 16) & 0xff;
@@ -987,9 +987,29 @@ static void ConvertBGRAToRGBA(const uint32_t* src,
   }
 }
 
+static void ConvertBGRAToRGBA4444(const uint32_t* src,
+                                  int num_pixels, uint8_t* dst) {
+  const uint32_t* const src_end = src + num_pixels;
+  while (src < src_end) {
+    const uint32_t argb = *src++;
+    *dst++ = ((argb >> 16) & 0xf0) | ((argb >> 12) & 0xf);
+    *dst++ = ((argb >>  0) & 0xf0) | ((argb >> 28) & 0xf);
+  }
+}
+
+static void ConvertBGRAToRGB565(const uint32_t* src,
+                                int num_pixels, uint8_t* dst) {
+  const uint32_t* const src_end = src + num_pixels;
+  while (src < src_end) {
+    const uint32_t argb = *src++;
+    *dst++ = ((argb >> 16) & 0xf8) | ((argb >> 13) & 0x7);
+    *dst++ = ((argb >>  5) & 0xe0) | ((argb >>  3) & 0x1f);
+  }
+}
+
 static void ConvertBGRAToBGR(const uint32_t* src,
                              int num_pixels, uint8_t* dst) {
-  const uint32_t* src_end = src + num_pixels;
+  const uint32_t* const src_end = src + num_pixels;
   while (src < src_end) {
     const uint32_t argb = *src++;
     *dst++ = (argb >>  0) & 0xff;
@@ -1001,7 +1021,7 @@ static void ConvertBGRAToBGR(const uint32_t* src,
 static void CopyOrSwap(const uint32_t* src, int num_pixels, uint8_t* dst,
                        int swap_on_big_endian) {
   if (is_big_endian() == swap_on_big_endian) {
-    const uint32_t* src_end = src + num_pixels;
+    const uint32_t* const src_end = src + num_pixels;
     while (src < src_end) {
       uint32_t argb = *src++;
 #if !defined(__BIG_ENDIAN__) && (defined(__i386__) || defined(__x86_64__))
@@ -1042,6 +1062,12 @@ void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
       break;
     case MODE_ARGB:
       CopyOrSwap(in_data, num_pixels, rgba, 0);
+      break;
+    case MODE_RGBA_4444:
+      ConvertBGRAToRGBA4444(in_data, num_pixels, rgba);
+      break;
+    case MODE_RGB_565:
+      ConvertBGRAToRGB565(in_data, num_pixels, rgba);
       break;
     default:
       assert(0);          // Code flow should not reach here.

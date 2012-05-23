@@ -946,8 +946,8 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
   params = (WebPDecParams*)io->opaque;
   assert(params != NULL);
   output = params->output;
-  // RGBA_4444 & RGB_565 are unsupported for now & YUV modes are invalid.
-  if (output->colorspace >= MODE_RGBA_4444) {
+  // YUV modes are invalid.
+  if (output->colorspace >= MODE_YUV) {
     dec->status_ = VP8_STATUS_INVALID_PARAM;
     goto Err;
   }
