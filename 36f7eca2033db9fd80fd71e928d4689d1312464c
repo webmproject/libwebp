@@ -16,6 +16,24 @@
       "revId": "36f7eca2033db9fd80fd71e928d4689d1312464c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//eZY\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-05-23T10:02:39Z",
+      "side": 1,
+      "message": "Here\u0027s why this is here:\n\nConsider a case when a file has a single VP8L chunk and no other advanced features.\n\nIn such a case, we should NOT be adding a VP8X chunk, and should simply return as per line#620.\n\nSo, we need to do the \"HasLosslessImages()\" check only when a VP8X chunk needs to be added.",
+      "parentUuid": "AAAAKn//eZg\u003d",
+      "revId": "36f7eca2033db9fd80fd71e928d4689d1312464c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
