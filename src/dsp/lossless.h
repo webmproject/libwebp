@@ -27,11 +27,11 @@ struct VP8LTransform;  // Defined in dec/vp8li.h.
 
 // Performs inverse transform of data given transform information, start and end
 // rows. Transform will be applied to rows [row_start, row_end[.
-// The data_in & data_out are source and destination data pointers respectively
+// The *in and *out pointers refer to source and destination data respectively
 // corresponding to the intermediate row (row_start).
 void VP8LInverseTransform(const struct VP8LTransform* const transform,
                           int row_start, int row_end,
-                          uint32_t* const data_in, uint32_t* const data_out);
+                          const uint32_t* const in, uint32_t* const out);
 
 #ifdef USE_LOSSLESS_ENCODER
 // Subtracts green from blue and red channels.

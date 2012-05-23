@@ -890,14 +890,11 @@ static void ColorSpaceInverseTransform(const VP8LTransform* const transform,
 // Separate out pixels packed together using pixel-bundling.
 static void ColorIndexInverseTransform(
     const VP8LTransform* const transform,
-    int y_start, int y_end,
-    uint32_t* const data_in, uint32_t* const data_out) {
+    int y_start, int y_end, const uint32_t* src, uint32_t* dst) {
   int y;
   const int bits_per_pixel = 8 >> transform->bits_;
   const int width = transform->xsize_;
   const uint32_t* const color_map = transform->data_;
-  uint32_t* dst = data_out;
-  const uint32_t* src = data_in;
   if (bits_per_pixel < 8) {
     const int pixels_per_byte = 1 << transform->bits_;
     const int count_mask = pixels_per_byte - 1;
@@ -926,29 +923,28 @@ static void ColorIndexInverseTransform(
 
 void VP8LInverseTransform(const VP8LTransform* const transform,
                           int row_start, int row_end,
-                          uint32_t* const data_in, uint32_t* const data_out) {
+                          const uint32_t* const in, uint32_t* const out) {
   assert(row_start < row_end);
   assert(row_end <= transform->ysize_);
   switch (transform->type_) {
     case SUBTRACT_GREEN:
-      AddGreenToBlueAndRed(transform, row_start, row_end, data_out);
+      AddGreenToBlueAndRed(transform, row_start, row_end, out);
       break;
     case PREDICTOR_TRANSFORM:
-      PredictorInverseTransform(transform, row_start, row_end, data_out);
+      PredictorInverseTransform(transform, row_start, row_end, out);
       if (row_end != transform->ysize_) {
         // The last predicted row in this iteration will be the top-pred row
         // for the first row in next iteration.
         const int width = transform->xsize_;
-        memcpy(data_out - width, data_out + (row_end - row_start - 1) * width,
-               width * sizeof(*data_out));
+        memcpy(out - width, out + (row_end - row_start - 1) * width,
+               width * sizeof(*out));
       }
       break;
     case CROSS_COLOR_TRANSFORM:
-      ColorSpaceInverseTransform(transform, row_start, row_end, data_out);
+      ColorSpaceInverseTransform(transform, row_start, row_end, out);
       break;
     case COLOR_INDEXING_TRANSFORM:
-      ColorIndexInverseTransform(transform, row_start, row_end,
-                                 data_in, data_out);
+      ColorIndexInverseTransform(transform, row_start, row_end, in, out);
       break;
   }
 }
