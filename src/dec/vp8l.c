@@ -492,9 +492,14 @@ static WEBP_INLINE HTreeGroup* GetHtreeGroupForPos(VP8LMetadata* const hdr,
   return hdr->htree_groups_ + meta_index;
 }
 
+//------------------------------------------------------------------------------
+// Main loop, with custom row-processing function
+
+typedef void (*ProcessRowsFunc)(VP8LDecoder* const dec, int row);
+
 // Processes (transforms, scales & color-converts) the rows decoded after the
 // last call.
-static WEBP_INLINE void ProcessRows(VP8LDecoder* const dec, int row) {
+static void ProcessRows(VP8LDecoder* const dec, int row) {
   int n = dec->next_transform_;
   VP8Io* const io = dec->io_;
   WebPDecParams* const params = (WebPDecParams*)io->opaque;
@@ -542,7 +547,7 @@ static WEBP_INLINE void ProcessRows(VP8LDecoder* const dec, int row) {
 
 static int DecodeImageData(VP8LDecoder* const dec,
                            uint32_t* const data, int width, int height,
-                           int process_row) {
+                           ProcessRowsFunc process_func) {
   int ok = 1;
   int col = 0, row = 0;
   VP8LBitReader* const br = &dec->br_;
@@ -582,8 +587,8 @@ static int DecodeImageData(VP8LDecoder* const dec,
       if (col >= width) {
         col = 0;
         ++row;
-        if (process_row && (row % NUM_ARGB_CACHE_ROWS == 0)) {
-          ProcessRows(dec, row);
+        if ((process_func != NULL) && (row % NUM_ARGB_CACHE_ROWS == 0)) {
+          process_func(dec, row);
         }
         if (color_cache != NULL) {
           while (last_cached < src) {
@@ -612,8 +617,8 @@ static int DecodeImageData(VP8LDecoder* const dec,
       while (col >= width) {
         col -= width;
         ++row;
-        if (process_row && (row % NUM_ARGB_CACHE_ROWS == 0)) {
-          ProcessRows(dec, row);
+        if ((process_func != NULL) && (row % NUM_ARGB_CACHE_ROWS == 0)) {
+          process_func(dec, row);
         }
       }
       if (src < src_end) {
@@ -640,7 +645,7 @@ static int DecodeImageData(VP8LDecoder* const dec,
     if (!ok) goto End;
   }
   // Process the remaining rows corresponding to last row-block.
-  if (process_row) ProcessRows(dec, row);
+  if (process_func != NULL) process_func(dec, row);
 
  End:
   if (br->error_ || !ok || (br->eos_ && src < src_end)) {
@@ -875,7 +880,7 @@ static int DecodeImageStream(int xsize, int ysize,
   }
 
   // Use the Huffman trees to decode the LZ77 encoded data.
-  ok = DecodeImageData(dec, data, transform_xsize, transform_ysize, 0);
+  ok = DecodeImageData(dec, data, transform_xsize, transform_ysize, NULL);
   ok = ok && !br->error_;
 
   // Apply transforms on the decoded data.
@@ -990,7 +995,8 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
 
   // Decode.
   dec->action_ = READ_DATA;
-  if (!DecodeImageData(dec, dec->argb_, dec->width_, dec->height_, 1)) {
+  if (!DecodeImageData(dec, dec->argb_, dec->width_, dec->height_,
+                       ProcessRows)) {
     goto Err;
   }
 
