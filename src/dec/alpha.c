@@ -11,7 +11,7 @@
 
 #include <stdlib.h>
 #include "./vp8i.h"
-#include "../webp/decode.h"
+#include "./vp8li.h"
 #include "../utils/filters.h"
 #include "../utils/quant_levels.h"
 
@@ -79,26 +79,12 @@ static int DecodeAlpha(const uint8_t* data, size_t data_size,
     ok = (data_size >= decoded_size);
     decoded_data = (uint8_t*)data + ALPHA_HEADER_LEN;
   } else {
-    size_t i;
-    int w, h;
-    uint32_t* const output =
-        (uint32_t*)WebPDecodeRGBA(data + ALPHA_HEADER_LEN,
-                                  data_size - ALPHA_HEADER_LEN,
-                                  &w, &h);
-    if (w != width || h != height || output == NULL) {
-      free(output);
-      return 0;
-    }
     decoded_data = (uint8_t*)malloc(decoded_size);
-    if (decoded_data == NULL) {
-      free(output);
-      return 0;
-    }
-    for (i = 0; i < decoded_size; ++i) {
-      decoded_data[i] = (output[i] >> 8) & 0xff;
-    }
-    free(output);
-    ok = 1;
+    if (decoded_data == NULL) return 0;
+    ok = VP8LDecodeAlphaImageStream(width, height,
+                                    data + ALPHA_HEADER_LEN,
+                                    data_size - ALPHA_HEADER_LEN,
+                                    decoded_data);
   }
 
   if (ok) {
@@ -119,9 +105,9 @@ static int DecodeAlpha(const uint8_t* data, size_t data_size,
       // Construct raw_data (height x stride) from alpha data (height x width).
       CopyPlane(decoded_data, width, output, stride, width, height);
     }
-  }
-  if (pre_processing == ALPHA_PREPROCESSED_LEVELS) {
-    ok = DequantizeLevels(decoded_data, width, height);
+    if (pre_processing == ALPHA_PREPROCESSED_LEVELS) {
+      ok = DequantizeLevels(decoded_data, width, height);
+    }
   }
 
  Error:

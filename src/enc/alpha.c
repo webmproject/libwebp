@@ -28,8 +28,8 @@ extern "C" {
 
 // -----------------------------------------------------------------------------
 // int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
-//                int quality, int method, int filter,
-//                uint8_t** output, size_t* output_size)
+//                 int quality, int method, int filter,
+//                 uint8_t** output, size_t* output_size)
 //
 // Encodes the given alpha data 'data' of size 'stride'x'height' via specified
 // compression method 'method'. The pre-processing (Quantization) is
@@ -54,16 +54,6 @@ extern "C" {
 #ifdef USE_LOSSLESS_ENCODER
 
 #include "../enc/vp8li.h"
-#include "../webp/encode.h"
-
-static int MyWriter(const uint8_t* data, size_t data_size,
-                    const WebPPicture* const picture) {
-  VP8BitWriter* const bw = (VP8BitWriter*)picture->custom_ptr;
-  if (data_size > 0) {
-    VP8BitWriterAppend(bw, data, data_size);
-  }
-  return !bw->error_;
-}
 
 static int EncodeLossless(const uint8_t* data, int width, int height,
                           VP8BitWriter* const bw) {
@@ -71,6 +61,7 @@ static int EncodeLossless(const uint8_t* data, int width, int height,
   int ok = 0;
   WebPConfig config;
   WebPPicture picture;
+  VP8LBitWriter tmp_bw;
 
   WebPPictureInit(&picture);
   picture.width = width;
@@ -78,6 +69,7 @@ static int EncodeLossless(const uint8_t* data, int width, int height,
   picture.use_argb_input = 1;
   if (!WebPPictureAlloc(&picture)) return 0;
 
+  // Transfer the alpha values to the green channel.
   {
     int i, j;
     uint32_t* dst = picture.argb;
@@ -90,16 +82,21 @@ static int EncodeLossless(const uint8_t* data, int width, int height,
       dst += picture.argb_stride;
     }
   }
-  picture.writer = MyWriter;
-  picture.custom_ptr = (void*)bw;
 
   WebPConfigInit(&config);
   config.lossless = 1;
   config.method = 2;
-  config.quality = 100;
+  config.quality = 100;   // TODO(skal): make it adjustable.
 
-  ok = WebPEncode(&config, &picture);
+  VP8LBitWriterInit(&tmp_bw, (width * height) >> 3);
+  ok = (VP8LEncodeStream(&config, &picture, &tmp_bw) == VP8_ENC_OK);
   WebPPictureFree(&picture);
+  if (ok) {
+    const uint8_t* const data = VP8LBitWriterFinish(&tmp_bw);
+    const size_t data_size = VP8LBitWriterNumBytes(&tmp_bw);
+    VP8BitWriterAppend(bw, data, data_size);
+  }
+  VP8LBitWriterDestroy(&tmp_bw);
   return ok && !bw->error_;
 }
 
@@ -107,7 +104,7 @@ static int EncodeLossless(const uint8_t* data, int width, int height,
 
 // -----------------------------------------------------------------------------
 
-static int EncodeAlphaInternal(const uint8_t* data,  int width, int height,
+static int EncodeAlphaInternal(const uint8_t* data, int width, int height,
                                int method, int filter, int reduce_levels,
                                uint8_t* tmp_alpha, VP8BitWriter* const bw) {
   int ok = 0;

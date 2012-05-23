@@ -455,7 +455,7 @@ static int EmitRows(WEBP_CSP_MODE colorspace,
 // Note that 'pixel_stride' is in units of 'uint32_t' (and not 'bytes).
 // Returns true if the crop window is not empty.
 static int SetCropWindow(VP8Io* const io, int y_start, int y_end,
-                         uint32_t** const in_data, int pixel_stride) {
+                         const uint32_t** const in_data, int pixel_stride) {
   assert(y_start < y_end);
   assert(io->crop_left < io->crop_right);
   if (y_end > io->crop_bottom) {
@@ -497,52 +497,59 @@ static WEBP_INLINE HTreeGroup* GetHtreeGroupForPos(VP8LMetadata* const hdr,
 
 typedef void (*ProcessRowsFunc)(VP8LDecoder* const dec, int row);
 
-// Processes (transforms, scales & color-converts) the rows decoded after the
-// last call.
-static void ProcessRows(VP8LDecoder* const dec, int row) {
+static void ApplyTransforms(VP8LDecoder* const dec, int num_rows,
+                            const uint32_t* const rows) {
   int n = dec->next_transform_;
-  VP8Io* const io = dec->io_;
-  WebPDecParams* const params = (WebPDecParams*)io->opaque;
-  const WebPDecBuffer* const output = params->output;
-  const int argb_offset = dec->width_ * dec->last_row_;
-  const int num_rows = row - dec->last_row_;
   const int cache_pixs = dec->width_ * num_rows;
   uint32_t* rows_data = dec->argb_cache_;
-  int num_rows_out = num_rows;  // Default.
-
-  if (num_rows <= 0) return;  // Nothing to be done.
+  const int start_row = dec->last_row_;
+  const int end_row = start_row + num_rows;
 
   // Inverse transforms.
   // TODO: most transforms only need to operate on the cropped region only.
-  memcpy(rows_data, dec->argb_ + argb_offset, cache_pixs * sizeof(*rows_data));
+  memcpy(rows_data, rows, cache_pixs * sizeof(*rows_data));
   while (n-- > 0) {
     VP8LTransform* const transform = &dec->transforms_[n];
-    VP8LInverseTransform(transform, dec->last_row_, row,
-                         dec->argb_ + argb_offset, rows_data);
+    VP8LInverseTransform(transform, start_row, end_row, rows, rows_data);
   }
+}
+
+// Processes (transforms, scales & color-converts) the rows decoded after the
+// last call.
+static void ProcessRows(VP8LDecoder* const dec, int row) {
+  const uint32_t* const rows = dec->argb_ + dec->width_ * dec->last_row_;
+  const int num_rows = row - dec->last_row_;
+
+  if (num_rows <= 0) return;  // Nothing to be done.
+  ApplyTransforms(dec, num_rows, rows);
 
   // Emit output.
   {
-    const WebPRGBABuffer* const buf = &output->u.RGBA;
-    uint8_t* const rgba = buf->rgba + dec->last_out_row_ * buf->stride;
-    const WEBP_CSP_MODE colorspace = output->colorspace;
+    VP8Io* const io = dec->io_;
+    const uint32_t* rows_data = dec->argb_cache_;
     if (!SetCropWindow(io, dec->last_row_, row, &rows_data, io->width)) {
-      num_rows_out = 0;  // Nothing to output.
+      // Nothing to output (this time).
     } else {
+      WebPDecParams* const params = (WebPDecParams*)io->opaque;
+      const WebPDecBuffer* const output = params->output;
+      const WebPRGBABuffer* const buf = &output->u.RGBA;
+      uint8_t* const rgba = buf->rgba + dec->last_out_row_ * buf->stride;
       const int in_stride = io->width * sizeof(*rows_data);
-      num_rows_out = io->use_scaling ?
+      const WEBP_CSP_MODE colorspace = output->colorspace;
+      const int num_rows_out = io->use_scaling ?
           EmitRescaledRows(dec, colorspace, rows_data, in_stride, io->mb_h,
                            rgba, buf->stride) :
           EmitRows(colorspace, rows_data, in_stride, io->mb_w, io->mb_h,
                    rgba, buf->stride);
+      // Update 'last_out_row_'.
+      dec->last_out_row_ += num_rows_out;
+      assert(dec->last_out_row_ <= output->height);
     }
   }
 
-  // Update 'last_row' and 'last_out_row'.
+  // Update 'last_row_'.
   dec->last_row_ = row;
-  assert(dec->last_row_ <= io->height);
-  dec->last_out_row_ += num_rows_out;
-  assert(dec->last_out_row_ <= output->height);
+  assert(dec->last_row_ <= dec->height_);
 }
 
 static int DecodeImageData(VP8LDecoder* const dec,
@@ -938,6 +945,63 @@ static int AllocateARGBBuffers(VP8LDecoder* const dec, int final_width) {
   }
   dec->argb_cache_ = dec->argb_ + num_pixels + cache_top_pixels;
   return 1;
+}
+
+//------------------------------------------------------------------------------
+// Special row-processing that only stores the alpha data.
+
+static void ExtractAlphaRows(VP8LDecoder* const dec, int row) {
+  const int num_rows = row - dec->last_row_;
+  const int cache_pixs = dec->width_ * num_rows;
+  const int argb_offset = dec->width_ * dec->last_row_;
+  const uint32_t* const in = dec->argb_ + argb_offset;
+
+  if (num_rows <= 0) return;  // Nothing to be done.
+  ApplyTransforms(dec, num_rows, in);
+
+  // Extract alpha (which is stored in the green plane).
+  {
+    uint8_t* const dst = (uint8_t*)dec->io_->opaque + argb_offset;
+    const uint32_t* const src = dec->argb_cache_;
+    int i;
+    for (i = 0; i < cache_pixs; ++i) dst[i] = (src[i] >> 8) & 0xff;
+  }
+
+  dec->last_row_ = dec->last_out_row_ = row;
+}
+
+int VP8LDecodeAlphaImageStream(int width, int height, const uint8_t* const data,
+                               const size_t data_size, uint8_t* const output) {
+  VP8Io io;
+  int ok = 0;
+  VP8LDecoder* const dec = VP8LNew();
+  if (dec == NULL) return 0;
+
+  dec->width_ = width;
+  dec->height_ = height;
+  dec->io_ = &io;
+
+  VP8InitIo(&io);
+  WebPInitCustomIo(NULL, &io);    // Just a sanity Init. io won't be used.
+  io.opaque = output;
+
+  dec->status_ = VP8_STATUS_OK;
+  VP8LInitBitReader(&dec->br_, data, data_size);
+
+  dec->action_ = READ_HDR;
+  if (!DecodeImageStream(width, height, 1, dec, NULL)) goto Err;
+
+  // Allocate output (note that dec->width_ may have changed here).
+  if (!AllocateARGBBuffers(dec, width)) goto Err;
+
+  // Decode (with special row processing).
+  dec->action_ = READ_DATA;
+  ok = DecodeImageData(dec, dec->argb_, dec->width_, dec->height_,
+                       ExtractAlphaRows);
+
+ Err:
+  VP8LDelete(dec);
+  return ok;
 }
 
 //------------------------------------------------------------------------------
