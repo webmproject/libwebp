@@ -16,6 +16,24 @@
       "revId": "b8f30421ce9d77989f3a8faaf35de0884cd12827",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//eXk\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 724,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2012-05-23T11:36:40Z",
+      "side": 1,
+      "message": "Changed this to assert.",
+      "parentUuid": "AAAAKn//eXw\u003d",
+      "revId": "b8f30421ce9d77989f3a8faaf35de0884cd12827",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
