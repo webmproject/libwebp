@@ -34,6 +34,24 @@
       "revId": "36f7eca2033db9fd80fd71e928d4689d1312464c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//eZQ\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-05-23T10:06:42Z",
+      "side": 1,
+      "message": "well, that\u0027s certainly worth a comment.\n\nAnd: maybe the test at 618 is not the correct one.\n\nalso (btw): if you don\u0027t add the VP8X chunk, will GetFeatures() work as expected when decoding the bitstream (and return the presence of ALPHA info even if no VP8X is here, but just a VP8L chunk)?",
+      "parentUuid": "AAAAKn//eZY\u003d",
+      "revId": "36f7eca2033db9fd80fd71e928d4689d1312464c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
