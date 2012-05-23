@@ -123,8 +123,8 @@ static VP8StatusCode ParseVP8X(const uint8_t** data, size_t* data_size,
   return VP8_STATUS_OK;
 }
 
-// Skips to the next VP8 chunk header in the data given the size of the RIFF
-// chunk 'riff_size'.
+// Skips to the next VP8/VP8L chunk header in the data given the size of the
+// RIFF chunk 'riff_size'.
 // Returns VP8_STATUS_BITSTREAM_ERROR if any invalid chunk size is encountered,
 //         VP8_STATUS_NOT_ENOUGH_DATA in case of insufficient data, and
 //         VP8_STATUS_OK otherwise.
@@ -177,7 +177,8 @@ static VP8StatusCode ParseOptionalChunks(const uint8_t** data,
     if (!memcmp(buf, "ALPH", TAG_SIZE)) {         // A valid ALPH header.
       *alpha_data = buf + CHUNK_HEADER_SIZE;
       *alpha_size = chunk_size;
-    } else if (!memcmp(buf, "VP8 ", TAG_SIZE)) {  // A valid VP8 header.
+    } else if (!memcmp(buf, "VP8 ", TAG_SIZE) ||
+               !memcmp(buf, "VP8L", TAG_SIZE)) {  // A valid VP8/VP8L header.
       return VP8_STATUS_OK;  // Found.
     }
 
@@ -218,7 +219,7 @@ static VP8StatusCode ParseVP8Header(const uint8_t** data, size_t* data_size,
     if ((riff_size >= minimal_size) && (size > riff_size - minimal_size)) {
       return VP8_STATUS_BITSTREAM_ERROR;  // Inconsistent size information.
     }
-    // Skip over CHUNK_HEADER_SIZE bytes from VP8 Header.
+    // Skip over CHUNK_HEADER_SIZE bytes from VP8/VP8L Header.
     *chunk_size = size;
     *data += CHUNK_HEADER_SIZE;
     *data_size -= CHUNK_HEADER_SIZE;
@@ -270,11 +271,11 @@ VP8StatusCode WebPParseHeaders(WebPHeaderStructure* const headers) {
     }
   }
 
-  // Skip over VP8 chunk header.
+  // Skip over VP8/VP8L chunk header.
   status = ParseVP8Header(&buf, &buf_size, headers->riff_size,
                           &headers->compressed_size, &headers->is_lossless);
   if (status != VP8_STATUS_OK) {
-    return status;  // Invalid VP8 header / insufficient data.
+    return status;  // Invalid VP8/VP8L header / insufficient data.
   }
 
   headers->offset = (uint32_t)(buf - headers->data);
@@ -557,11 +558,11 @@ static VP8StatusCode GetFeatures(const uint8_t* data, size_t data_size,
     }
   }
 
-  // Skip over VP8 header.
+  // Skip over VP8/VP8L header.
   status = ParseVP8Header(&data, &data_size, riff_size,
                           &chunk_size, &is_lossless);
   if (status != VP8_STATUS_OK) {
-    return status;  // Wrong VP8 chunk-header / insufficient data.
+    return status;  // Wrong VP8/VP8L chunk-header / insufficient data.
   }
 
   if (!is_lossless) {
