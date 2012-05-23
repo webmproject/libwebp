@@ -166,7 +166,7 @@ WebPMux* WebPMuxCreateInternal(const uint8_t* data, size_t size, int copy_data,
       WebPChunk** chunk_list;
       if (wpi->is_partial_) goto Err;  // Encountered a non-image chunk before
                                        // getting all chunks of an image.
-      chunk_list = GetChunkListFromId(mux, id);  // List for adding this chunk.
+      chunk_list = MuxGetChunkListFromId(mux, id);  // List to add this chunk.
       if (chunk_list == NULL) chunk_list = &mux->unknown_;
       if (ChunkSetNth(&chunk, chunk_list, 0) != WEBP_MUX_OK) goto Err;
     }
@@ -179,7 +179,7 @@ WebPMux* WebPMuxCreateInternal(const uint8_t* data, size_t size, int copy_data,
   }
 
   // Validate mux if complete.
-  if (WebPMuxValidate(mux) != WEBP_MUX_OK) goto Err;
+  if (MuxValidate(mux) != WEBP_MUX_OK) goto Err;
 
  Ok:
   MuxImageDelete(wpi);
@@ -234,7 +234,7 @@ WebPMuxError WebPMuxGetImage(const WebPMux* const mux,
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
-  err = ValidateForImage(mux);
+  err = MuxValidateForImage(mux);
   if (err != WEBP_MUX_OK) return err;
 
   // All well. Get the image.
@@ -381,7 +381,7 @@ WebPMuxError WebPMuxNumNamedElements(const WebPMux* const mux, const char* name,
   if (IsWPI(id)) {
     *num_elements = MuxImageCount(mux->images_, id);
   } else {
-    WebPChunk* const* chunk_list = GetChunkListFromId(mux, id);
+    WebPChunk* const* chunk_list = MuxGetChunkListFromId(mux, id);
     if (chunk_list == NULL) {
       *num_elements = 0;
     } else {

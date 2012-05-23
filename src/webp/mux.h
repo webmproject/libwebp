@@ -78,7 +78,7 @@ typedef enum {
   ICCP_FLAG       = 0x00000004,
   META_FLAG       = 0x00000008,
   ALPHA_FLAG      = 0x00000010
-} FeatureFlags;
+} WebPFeatureFlags;
 
 typedef struct WebPMux WebPMux;   // main opaque object.
 
@@ -430,7 +430,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteTile(WebPMux* const mux, uint32_t nth);
 //   mux - (in) object from which the features are to be fetched
 //   flags - (out) the flags specifying which features are present in the
 //           mux object. This will be an OR of various flag values.
-//           Enum 'FeatureFlags' can be used to test for individual flag values.
+//           Enum 'WebPFeatureFlags' can be used to test individual flag values.
 // Returns:
 //   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL or flags is NULL
 //   WEBP_MUX_NOT_FOUND - if VP8X chunk is not present in mux object.

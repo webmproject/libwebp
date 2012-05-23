@@ -257,19 +257,22 @@ size_t MuxImageListDiskSize(const WebPMuxImage* wpi_list);
 // Write out the given list of images into 'dst'.
 uint8_t* MuxImageListEmit(const WebPMuxImage* wpi_list, uint8_t* dst);
 
+// Checks if the given image list contains at least one lossless image.
+int MuxHasLosslessImages(const WebPMuxImage* images);
+
 //------------------------------------------------------------------------------
 // Helper methods for mux.
 
 // Returns the list where chunk with given ID is to be inserted in mux.
 // Return value is NULL if this chunk should be inserted in mux->images_ list
 // or if 'id' is not known.
-WebPChunk** GetChunkListFromId(const WebPMux* mux, TAG_ID id);
+WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, TAG_ID id);
 
 // Validates that the given mux has a single image.
-WebPMuxError ValidateForImage(const WebPMux* const mux);
+WebPMuxError MuxValidateForImage(const WebPMux* const mux);
 
 // Validates the given mux object.
-WebPMuxError WebPMuxValidate(const WebPMux* const mux);
+WebPMuxError MuxValidate(const WebPMux* const mux);
 
 //------------------------------------------------------------------------------
 
