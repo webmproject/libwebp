@@ -892,17 +892,46 @@ static int DecodeImageStream(int xsize, int ysize,
       dec->status_ = VP8_STATUS_SUSPENDED;
     }
   } else {
-    *decoded_data = data;
+    if (decoded_data != NULL) {
+      *decoded_data = data;
+    } else {
+      // We allocate image data in this function only for transforms. At level 0
+      // (that is: not the transforms), we shouldn't have allocated anything.
+      assert(data == NULL);
+      assert(is_level0);
+    }
     if (!is_level0) ClearMetadata(hdr);  // Clean up temporary data behind.
   }
   return ok;
 }
 
 //------------------------------------------------------------------------------
+// Allocate dec->argb_ and dec->argb_cache_ using dec->width_ and dec->height_
+
+static int AllocateARGBBuffers(VP8LDecoder* const dec, int final_width) {
+  const int num_pixels = dec->width_ * dec->height_;
+  // Scratch buffer corresponding to top-prediction row for transforming the
+  // first row in the row-blocks.
+  const int cache_top_pixels = final_width;
+  // Scratch buffer for temporary BGRA storage.
+  const int cache_pixels = final_width * NUM_ARGB_CACHE_ROWS;
+  const int total_num_pixels = num_pixels + cache_top_pixels + cache_pixels;
+
+  assert(dec->width_ <= final_width);
+  dec->argb_ = (uint32_t*)malloc(total_num_pixels * sizeof(*dec->argb_));
+  if (dec->argb_ == NULL) {
+    dec->argb_cache_ = NULL;
+    dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
+    return 0;
+  }
+  dec->argb_cache_ = dec->argb_ + num_pixels + cache_top_pixels;
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 
 int VP8LDecodeHeader(VP8LDecoder* const dec, VP8Io* const io) {
   int width, height;
-  uint32_t* decoded_data = NULL;
 
   if (dec == NULL) return 0;
   if (io == NULL) {
@@ -922,10 +951,7 @@ int VP8LDecodeHeader(VP8LDecoder* const dec, VP8Io* const io) {
   io->height = height;
 
   dec->action_ = READ_HDR;
-  if (!DecodeImageStream(width, height, 1, dec, &decoded_data)) {
-    free(decoded_data);
-    goto Error;
-  }
+  if (!DecodeImageStream(width, height, 1, dec, NULL)) goto Error;
   return 1;
 
  Error:
@@ -958,27 +984,9 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
     goto Err;
   }
 
-  {
-    const int num_pixels = dec->width_ * dec->height_;
-    // Scratch buffer corresponding to top-prediction row for transforming the
-    // first row in the row-blocks.
-    const int cache_top_pixels = io->width;
-    // Scratch buffer for temporary BGRA storage.
-    const int cache_pixels = io->width * NUM_ARGB_CACHE_ROWS;
-    const int total_num_pixels =
-        num_pixels + cache_top_pixels + cache_pixels;
-    dec->argb_ = (uint32_t*)malloc(total_num_pixels * sizeof(*dec->argb_));
-    if (dec->argb_ == NULL) {
-      dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
-      goto Err;
-    }
-    dec->argb_cache_ = dec->argb_ + num_pixels + cache_top_pixels;
-  }
+  if (!AllocateARGBBuffers(dec, io->width)) goto Err;
 
-  if (io->use_scaling && !AllocateAndInitRescaler(dec, io)) {
-    dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
-    goto Err;
-  }
+  if (io->use_scaling && !AllocateAndInitRescaler(dec, io)) goto Err;
 
   // Decode.
   dec->action_ = READ_DATA;
