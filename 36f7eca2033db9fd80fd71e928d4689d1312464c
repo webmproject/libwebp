@@ -52,6 +52,24 @@
       "revId": "36f7eca2033db9fd80fd71e928d4689d1312464c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAKn//eXc\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-05-23T12:10:07Z",
+      "side": 1,
+      "message": "Currently, GetFeatures() would return 0 for the case you mentioned.\n[However, our decoder works correctly by later setting \u0027has_alpha\u0027 to true in case of lossless].\n\nI\u0027m investigating the option of updating GetFeatures() to return ALPHA_FLAG in such a case.",
+      "parentUuid": "AAAAKn//eZQ\u003d",
+      "revId": "36f7eca2033db9fd80fd71e928d4689d1312464c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
