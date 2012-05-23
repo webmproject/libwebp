@@ -23,7 +23,7 @@
 extern "C" {
 #endif
 
-#define NUM_TRANSFORMS               8
+#define NUM_TRANSFORMS               4
 #define HUFFMAN_CODES_PER_META_CODE  5
 #define ARGB_BLACK                   0xff000000
 #define NUM_LITERAL_CODES            256

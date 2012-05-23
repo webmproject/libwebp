@@ -707,15 +707,22 @@ static int ExpandColorMap(int num_colors, VP8LTransform* const transform) {
 
 static int ReadTransform(int* const xsize, int const* ysize,
                          VP8LDecoder* const dec) {
+  int i;
   int ok = 1;
   VP8LBitReader* const br = &dec->br_;
   VP8LTransform* transform = &dec->transforms_[dec->next_transform_];
   const VP8LImageTransformType type =
       (VP8LImageTransformType)VP8LReadBits(br, 2);
 
-  if (dec->next_transform_ == NUM_TRANSFORMS) {
-    return 0;
+  // Each transform type can only be present once in the stream.
+  // TODO(later): use a bit set to mark already-used transforms.
+  for (i = 0; i < dec->next_transform_; ++i) {
+    if (dec->transforms_[i].type_ == type) {
+      return 0;  // Already there, let's not accept the second same transform.
+    }
   }
+  assert(dec->next_transform_ < NUM_TRANSFORMS);
+
   transform->type_ = type;
   transform->xsize_ = *xsize;
   transform->ysize_ = *ysize;
