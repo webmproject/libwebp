@@ -719,7 +719,7 @@ void VP8DspInit(void) {
     if (VP8GetCPUInfo(kSSE2)) {
       VP8DspInitSSE2();
     }
-#elif defined(__GNUC__) && defined(__ARM_NEON__)
+#elif defined(WEBP_USE_NEON)
     if (VP8GetCPUInfo(kNEON)) {
       VP8DspInitNEON();
     }
