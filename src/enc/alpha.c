@@ -28,7 +28,7 @@ extern "C" {
 
 // -----------------------------------------------------------------------------
 // int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
-//                 int quality, int method, int filter,
+//                 int quality, int method, int filter, int effort_level,
 //                 uint8_t** output, size_t* output_size)
 //
 // Encodes the given alpha data 'data' of size 'stride'x'height' via specified
@@ -40,7 +40,9 @@ extern "C" {
 // 'filter' values [0, 4] correspond to prediction modes none, horizontal,
 // vertical & gradient filters. The prediction mode 4 will try all the
 // prediction modes (0 to 3) and pick the best prediction mode.
-
+// 'effort_level': specifies how much effort must be spent to try and reduce
+//  the compressed output size. In range 0 (quick) to 6 (slow).
+//
 // 'output' corresponds to the buffer containing compressed alpha data.
 //          This buffer is allocated by this method and caller should call
 //          free(*output) when done.
@@ -56,6 +58,7 @@ extern "C" {
 #include "../enc/vp8li.h"
 
 static int EncodeLossless(const uint8_t* data, int width, int height,
+                          int effort_level,  // in [0..6] range
                           VP8BitWriter* const bw) {
 
   int ok = 0;
@@ -85,8 +88,10 @@ static int EncodeLossless(const uint8_t* data, int width, int height,
 
   WebPConfigInit(&config);
   config.lossless = 1;
-  config.method = 2;
-  config.quality = 100;   // TODO(skal): make it adjustable.
+  config.method = effort_level;  // impact is very small
+  // quality below 50 doesn't change things much (in speed and size).
+  // quality above 80 can be very very slow.
+  config.quality = 40 + 10 * effort_level;
 
   VP8LBitWriterInit(&tmp_bw, (width * height) >> 3);
   ok = (VP8LEncodeStream(&config, &picture, &tmp_bw) == VP8_ENC_OK);
@@ -106,6 +111,7 @@ static int EncodeLossless(const uint8_t* data, int width, int height,
 
 static int EncodeAlphaInternal(const uint8_t* data, int width, int height,
                                int method, int filter, int reduce_levels,
+                               int effort_level,  // in [0..6] range
                                uint8_t* tmp_alpha, VP8BitWriter* const bw) {
   int ok = 0;
   const uint8_t* alpha_src;
@@ -145,9 +151,10 @@ static int EncodeAlphaInternal(const uint8_t* data, int width, int height,
     ok = ok && !bw->error_;
   } else {
 #ifdef USE_LOSSLESS_ENCODER
-    ok = EncodeLossless(alpha_src, width, height, bw);
+    ok = EncodeLossless(alpha_src, width, height, effort_level, bw);
     VP8BitWriterFinish(bw);
 #else
+    (void)effort_level;
     assert(0);  // not reached.
 #endif
   }
@@ -168,6 +175,7 @@ static void CopyPlane(const uint8_t* src, int src_stride,
 
 static int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
                        int quality, int method, int filter,
+                       int effort_level,
                        uint8_t** output, size_t* output_size) {
   uint8_t* quant_alpha = NULL;
   const size_t data_size = width * height;
@@ -214,7 +222,7 @@ static int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
     // We always test WEBP_FILTER_NONE first.
     ok = EncodeAlphaInternal(quant_alpha, width, height,
                              method, WEBP_FILTER_NONE, reduce_levels,
-                             NULL, &bw);
+                             effort_level, NULL, &bw);
     if (!ok) {
       VP8BitWriterWipeOut(&bw);
       goto End;
@@ -246,7 +254,7 @@ static int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
 
       ok = EncodeAlphaInternal(quant_alpha, width, height,
                                method, test_filter, reduce_levels,
-                               filtered_alpha, &tmp_bw);
+                               effort_level, filtered_alpha, &tmp_bw);
       if (ok) {
         const size_t score = VP8BitWriterSize(&tmp_bw);
         if (score < best_score) {
@@ -289,6 +297,7 @@ int VP8EncFinishAlpha(VP8Encoder* enc) {
     const WebPPicture* pic = enc->pic_;
     uint8_t* tmp_data = NULL;
     size_t tmp_size = 0;
+    const int effort_level = config->method;  // maps to [0..6]
     const WEBP_FILTER_TYPE filter =
         (config->alpha_filtering == 0) ? WEBP_FILTER_NONE :
         (config->alpha_filtering == 1) ? WEBP_FILTER_FAST :
@@ -297,7 +306,7 @@ int VP8EncFinishAlpha(VP8Encoder* enc) {
     assert(pic->a);
     if (!EncodeAlpha(pic->a, pic->width, pic->height, pic->a_stride,
                      config->alpha_quality, config->alpha_compression,
-                     filter, &tmp_data, &tmp_size)) {
+                     filter, effort_level, &tmp_data, &tmp_size)) {
       return 0;
     }
     if (tmp_size != (uint32_t)tmp_size) {  // Sanity check.
