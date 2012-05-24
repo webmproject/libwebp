@@ -492,6 +492,26 @@ The alpha channel data is losslessly stored as raw data (when
 compression method is '0') or compressed using the lossless format
 (when the compression method is '1').
 
+  * raw data: consists of a byte sequence of length width * height,
+    containing all the 8bit transparency values in scan order.
+
+  * lossless format compression: the byte sequence is a compressed
+    image-stream (as described in the specification for lossless format)
+    of implicit dimension width x height. Note that this image-stream byte
+    sequence does NOT contain any headers describing the image dimension.
+
+    **Rationale**: the dimension is already known from other sources,
+    so storing it again would be redundant and error-prone.
+
+    Once the image-stream is decoded into ARGB color values, following
+    the process described in the lossless format specification, the
+    transparency information must be extracted from the *green* channel
+    of the ARGB quadruplet.
+
+    **Rationale**: the green channel is allowed extra transformation
+    steps in the specification -unlike the other channels- that can
+    improve compression.
+
 #### Color profile
 
      0                   1                   2                   3
