@@ -945,16 +945,16 @@ static int AllocateARGBBuffers(VP8LDecoder* const dec, int final_width) {
 
 static void ExtractAlphaRows(VP8LDecoder* const dec, int row) {
   const int num_rows = row - dec->last_row_;
-  const int cache_pixs = dec->width_ * num_rows;
-  const int argb_offset = dec->width_ * dec->last_row_;
-  const uint32_t* const in = dec->argb_ + argb_offset;
+  const uint32_t* const in = dec->argb_ + dec->width_ * dec->last_row_;
 
   if (num_rows <= 0) return;  // Nothing to be done.
   ApplyTransforms(dec, num_rows, in);
 
   // Extract alpha (which is stored in the green plane).
   {
-    uint8_t* const dst = (uint8_t*)dec->io_->opaque + argb_offset;
+    const int width = dec->io_->width;      // the final width (!= dec->width_)
+    const int cache_pixs = width * num_rows;
+    uint8_t* const dst = (uint8_t*)dec->io_->opaque + width * dec->last_row_;
     const uint32_t* const src = dec->argb_cache_;
     int i;
     for (i = 0; i < cache_pixs; ++i) dst[i] = (src[i] >> 8) & 0xff;
@@ -977,6 +977,8 @@ int VP8LDecodeAlphaImageStream(int width, int height, const uint8_t* const data,
   VP8InitIo(&io);
   WebPInitCustomIo(NULL, &io);    // Just a sanity Init. io won't be used.
   io.opaque = output;
+  io.width = width;
+  io.height = height;
 
   dec->status_ = VP8_STATUS_OK;
   VP8LInitBitReader(&dec->br_, data, data_size);
