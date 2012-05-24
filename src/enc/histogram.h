@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include "./backward_references.h"
+#include "../webp/format_constants.h"
 #include "../webp/types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -36,7 +37,7 @@ typedef struct {
   int blue_[256];
   int alpha_[256];
   // Backward reference prefix-code histogram.
-  int distance_[DISTANCE_CODES_MAX];
+  int distance_[NUM_DISTANCE_CODES];
   int palette_code_bits_;
   double bit_cost_;   // cached value of VP8LHistogramEstimateBits(this)
 } VP8LHistogram;
@@ -86,7 +87,7 @@ static WEBP_INLINE void VP8LHistogramAdd(VP8LHistogram* const p,
   for (i = 0; i < PIX_OR_COPY_CODES_MAX; ++i) {
     p->literal_[i] += a->literal_[i];
   }
-  for (i = 0; i < DISTANCE_CODES_MAX; ++i) {
+  for (i = 0; i < NUM_DISTANCE_CODES; ++i) {
     p->distance_[i] += a->distance_[i];
   }
   for (i = 0; i < 256; ++i) {
@@ -103,7 +104,7 @@ static WEBP_INLINE void VP8LHistogramRemove(VP8LHistogram* const p,
     p->literal_[i] -= a->literal_[i];
     assert(p->literal_[i] >= 0);
   }
-  for (i = 0; i < DISTANCE_CODES_MAX; ++i) {
+  for (i = 0; i < NUM_DISTANCE_CODES; ++i) {
     p->distance_[i] -= a->distance_[i];
     assert(p->distance_[i] >= 0);
   }
@@ -118,7 +119,7 @@ static WEBP_INLINE void VP8LHistogramRemove(VP8LHistogram* const p,
 }
 
 static WEBP_INLINE int VP8LHistogramNumCodes(const VP8LHistogram* const p) {
-  return 256 + kLengthCodes +
+  return 256 + NUM_LENGTH_CODES +
       ((p->palette_code_bits_ > 0) ? (1 << p->palette_code_bits_) : 0);
 }
 

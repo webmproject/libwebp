@@ -22,12 +22,6 @@
 extern "C" {
 #endif
 
-// Backward reference distance prefix codes
-#define DISTANCE_CODES_MAX 40
-
-// Compression constants
-#define CODE_LENGTH_CODES 19
-static const int kLengthCodes = 24;
 // The spec allows 11, we use 9 bits to reduce memory consumption in encoding.
 // Having 9 instead of 11 removes about 0.25 % of compression density.
 static const int kColorCacheBitsMax = 9;

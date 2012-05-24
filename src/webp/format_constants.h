@@ -29,11 +29,14 @@
 #define MAX_CACHE_BITS               11
 #define HUFFMAN_CODES_PER_META_CODE  5
 #define ARGB_BLACK                   0xff000000
+
 #define DEFAULT_CODE_LENGTH          8
+#define MAX_ALLOWED_CODE_LENGTH      15
 
 #define NUM_LITERAL_CODES            256
 #define NUM_LENGTH_CODES             24
 #define NUM_DISTANCE_CODES           40
+#define CODE_LENGTH_CODES            19
 
 #define TRANSFORM_PRESENT            1  // The bit to be written when next data
                                         // to be read is a transform.

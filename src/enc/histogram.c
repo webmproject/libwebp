@@ -106,7 +106,7 @@ void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const p,
     ++p->literal_[PixOrCopyLiteral(v, 1)];
     ++p->blue_[PixOrCopyLiteral(v, 0)];
   } else if (PixOrCopyIsCacheIdx(v)) {
-    int literal_ix = 256 + kLengthCodes + PixOrCopyCacheIdx(v);
+    int literal_ix = 256 + NUM_LENGTH_CODES + PixOrCopyCacheIdx(v);
     ++p->literal_[literal_ix];
   } else {
     int code, extra_bits_count, extra_bits_value;
@@ -176,14 +176,14 @@ double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p) {
       BitsEntropy(&p->red_[0], 256) +
       BitsEntropy(&p->blue_[0], 256) +
       BitsEntropy(&p->alpha_[0], 256) +
-      BitsEntropy(&p->distance_[0], DISTANCE_CODES_MAX);
+      BitsEntropy(&p->distance_[0], NUM_DISTANCE_CODES);
   // Compute the extra bits cost.
   int i;
-  for (i = 2; i < kLengthCodes - 2; ++i) {
+  for (i = 2; i < NUM_LENGTH_CODES - 2; ++i) {
     retval +=
         (i >> 1) * p->literal_[256 + i + 2];
   }
-  for (i = 2; i < DISTANCE_CODES_MAX - 2; ++i) {
+  for (i = 2; i < NUM_DISTANCE_CODES - 2; ++i) {
     retval += (i >> 1) * p->distance_[i + 2];
   }
   return retval;
@@ -237,7 +237,7 @@ double VP8LHistogramEstimateBitsHeader(const VP8LHistogram* const p) {
          HuffmanCost(&p->red_[0], 256) +
          HuffmanCost(&p->literal_[0], VP8LHistogramNumCodes(p)) +
          HuffmanCost(&p->blue_[0], 256) +
-         HuffmanCost(&p->distance_[0], DISTANCE_CODES_MAX);
+         HuffmanCost(&p->distance_[0], NUM_DISTANCE_CODES);
 }
 
 static void HistogramBuildImage(int xsize, int histo_bits,

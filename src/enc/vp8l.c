@@ -22,6 +22,7 @@
 #include "../dsp/lossless.h"
 #include "../utils/bit_writer.h"
 #include "../utils/huffman_encode.h"
+#include "../webp/format_constants.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -163,7 +164,7 @@ static int GetHuffBitLengthsAndCodes(
     HuffmanTreeCode* const codes = &huffman_codes[5 * i];
     for (k = 0; k < 5; ++k) {
       const int num_symbols = (k == 0) ? VP8LHistogramNumCodes(histo)
-                            : (k == 4) ? DISTANCE_CODES_MAX
+                            : (k == 4) ? NUM_DISTANCE_CODES
                             : 256;
       codes[k].num_symbols = num_symbols;
       total_length_size += num_symbols;
@@ -402,7 +403,7 @@ static void StoreImageToBitMask(
     const HuffmanTreeCode* const codes = huffman_codes + 5 * histogram_ix;
     if (PixOrCopyIsCacheIdx(v)) {
       const int code = PixOrCopyCacheIdx(v);
-      const int literal_ix = 256 + kLengthCodes + code;
+      const int literal_ix = 256 + NUM_LENGTH_CODES + code;
       WriteHuffmanCode(bw, codes, literal_ix);
     } else if (PixOrCopyIsLiteral(v)) {
       static const int order[] = { 1, 2, 0, 3 };

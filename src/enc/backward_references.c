@@ -17,6 +17,7 @@
 #include "./backward_references.h"
 #include "./histogram.h"
 #include "../utils/color_cache.h"
+#include "../webp/format_constants.h"
 
 #define VALUES_IN_BYTE 256
 
@@ -306,7 +307,7 @@ typedef struct {
   double red_[VALUES_IN_BYTE];
   double literal_[PIX_OR_COPY_CODES_MAX];
   double blue_[VALUES_IN_BYTE];
-  double distance_[DISTANCE_CODES_MAX];
+  double distance_[NUM_DISTANCE_CODES];
   int cache_bits_;
 } CostModel;
 
@@ -347,7 +348,7 @@ static int CostModelBuild(CostModel* const p, int xsize, int ysize,
   VP8LConvertPopulationCountTableToBitEstimates(
       VALUES_IN_BYTE, &histo.alpha_[0], &p->alpha_[0]);
   VP8LConvertPopulationCountTableToBitEstimates(
-      DISTANCE_CODES_MAX, &histo.distance_[0], &p->distance_[0]);
+      NUM_DISTANCE_CODES, &histo.distance_[0], &p->distance_[0]);
   ok = 1;
 
  Error:
@@ -363,7 +364,7 @@ static WEBP_INLINE double GetLiteralCost(const CostModel* const p, uint32_t v) {
 }
 
 static WEBP_INLINE double GetCacheCost(const CostModel* const p, uint32_t idx) {
-  const int literal_idx = VALUES_IN_BYTE + kLengthCodes + idx;
+  const int literal_idx = VALUES_IN_BYTE + NUM_LENGTH_CODES + idx;
   return p->literal_[literal_idx];
 }
 

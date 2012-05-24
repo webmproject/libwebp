@@ -11,14 +11,12 @@
 
 #ifdef USE_LOSSLESS_ENCODER
 
-#include "./huffman_encode.h"
-
-#define MAX_BITS 16   // maximum allowed length for the codes
-
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include "./huffman_encode.h"
+#include "../webp/format_constants.h"
 
 // -----------------------------------------------------------------------------
 // Util function to optimize the symbol map for RLE coding
@@ -285,7 +283,7 @@ static int GenerateOptimalTree(const int* const histogram, int histogram_size,
 static HuffmanTreeToken* CodeRepeatedValues(int repetitions,
                                             HuffmanTreeToken* tokens,
                                             int value, int prev_value) {
-  assert(value < MAX_BITS);
+  assert(value <= MAX_ALLOWED_CODE_LENGTH);
   if (value != prev_value) {
     tokens->code = value;
     tokens->extra_bits = 0;
@@ -387,10 +385,10 @@ static uint32_t ReverseBits(int num_bits, uint32_t bits) {
   int i = 0;
   while (i < num_bits) {
     i += 4;
-    retval |= kReversedBits[bits & 0xf] << (MAX_BITS - i);
+    retval |= kReversedBits[bits & 0xf] << (MAX_ALLOWED_CODE_LENGTH + 1 - i);
     bits >>= 4;
   }
-  retval >>= (MAX_BITS - num_bits);
+  retval >>= (MAX_ALLOWED_CODE_LENGTH + 1 - num_bits);
   return retval;
 }
 
@@ -399,21 +397,21 @@ static void ConvertBitDepthsToSymbols(HuffmanTreeCode* const tree) {
   // 0 bit-depth means that the symbol does not exist.
   int i;
   int len;
-  uint32_t next_code[MAX_BITS];
-  int depth_count[MAX_BITS] = { 0 };
+  uint32_t next_code[MAX_ALLOWED_CODE_LENGTH + 1];
+  int depth_count[MAX_ALLOWED_CODE_LENGTH + 1] = { 0 };
 
   assert(tree != NULL);
   len = tree->num_symbols;
   for (i = 0; i < len; ++i) {
     const int code_length = tree->code_lengths[i];
-    assert(code_length < MAX_BITS);
+    assert(code_length <= MAX_ALLOWED_CODE_LENGTH);
     ++depth_count[code_length];
   }
   depth_count[0] = 0;  // ignore unused symbol
   next_code[0] = 0;
   {
     uint32_t code = 0;
-    for (i = 1; i < MAX_BITS; ++i) {
+    for (i = 1; i <= MAX_ALLOWED_CODE_LENGTH; ++i) {
       code = (code + depth_count[i - 1]) << 1;
       next_code[i] = code;
     }
