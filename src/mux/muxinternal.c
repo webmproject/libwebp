@@ -422,10 +422,21 @@ uint8_t* MuxImageListEmit(const WebPMuxImage* wpi_list, uint8_t* dst) {
   return dst;
 }
 
+int MuxHasLosslessImages(const WebPMuxImage* images) {
+  while (images != NULL) {
+    assert(images->img_ != NULL);
+    if (images->img_->tag_ == kChunks[IDX_VP8L].tag) {
+      return 1;
+    }
+    images = images->next_;
+  }
+  return 0;
+}
+
 //------------------------------------------------------------------------------
 // Helper methods for mux.
 
-WebPChunk** GetChunkListFromId(const WebPMux* mux, TAG_ID id) {
+WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, TAG_ID id) {
   assert(mux != NULL);
   switch(id) {
     case VP8X_ID:    return (WebPChunk**)&mux->vp8x_;
@@ -437,7 +448,7 @@ WebPChunk** GetChunkListFromId(const WebPMux* mux, TAG_ID id) {
   }
 }
 
-WebPMuxError ValidateForImage(const WebPMux* const mux) {
+WebPMuxError MuxValidateForImage(const WebPMux* const mux) {
   const int num_images = MuxImageCount(mux->images_, IMAGE_ID);
   const int num_frames = MuxImageCount(mux->images_, FRAME_ID);
   const int num_tiles  = MuxImageCount(mux->images_, TILE_ID);
@@ -465,7 +476,8 @@ static int IsNotCompatible(int feature, int num_items) {
 // and feature incompatibility (use NO_FLAG to skip).
 // On success returns WEBP_MUX_OK and stores the chunk count in *num.
 static WebPMuxError ValidateChunk(const WebPMux* const mux, CHUNK_INDEX idx,
-                                  FeatureFlags feature, FeatureFlags vp8x_flags,
+                                  WebPFeatureFlags feature,
+                                  WebPFeatureFlags vp8x_flags,
                                   int max, int* num) {
   const WebPMuxError err =
       WebPMuxNumNamedElements(mux, kChunks[idx].name, num);
@@ -477,7 +489,7 @@ static WebPMuxError ValidateChunk(const WebPMux* const mux, CHUNK_INDEX idx,
   return WEBP_MUX_OK;
 }
 
-WebPMuxError WebPMuxValidate(const WebPMux* const mux) {
+WebPMuxError MuxValidate(const WebPMux* const mux) {
   int num_iccp;
   int num_meta;
   int num_loop_chunks;
@@ -541,14 +553,19 @@ WebPMuxError WebPMuxValidate(const WebPMux* const mux) {
   if (num_vp8x == 0 && num_images != 1) return WEBP_MUX_INVALID_ARGUMENT;
 
   // ALPHA_FLAG & alpha chunk(s) are consistent.
-  err = ValidateChunk(mux, IDX_ALPHA, ALPHA_FLAG, flags, -1, &num_alpha);
-  if (err != WEBP_MUX_OK) return err;
+  if (num_vp8x > 0 && MuxHasLosslessImages(mux->images_)) {
+    // Special case: we have a VP8X chunk as well as some lossless images.
+    if (!(flags & ALPHA_FLAG)) return WEBP_MUX_INVALID_ARGUMENT;
+  } else {
+    err = ValidateChunk(mux, IDX_ALPHA, ALPHA_FLAG, flags, -1, &num_alpha);
+    if (err != WEBP_MUX_OK) return err;
 
-  // num_images & num_alpha_chunks are consistent.
-  if (num_alpha > 0 && num_alpha != num_images) {
-    // Note that "num_alpha > 0" is the correct check but "flags && ALPHA_FLAG"
-    // is NOT, because ALPHA_FLAG is based on first image only.
-    return WEBP_MUX_INVALID_ARGUMENT;
+    // num_images & num_alpha_chunks are consistent.
+    if (num_alpha > 0 && num_alpha != num_images) {
+      // Note that "num_alpha > 0" is the correct test but "flags && ALPHA_FLAG"
+      // is NOT, because ALPHA_FLAG is based on first image only.
+      return WEBP_MUX_INVALID_ARGUMENT;
+    }
   }
 
   // num_tiles & num_images are consistent.

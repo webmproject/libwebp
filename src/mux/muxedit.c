@@ -218,7 +218,7 @@ static WebPMuxError MuxDeleteAllNamedData(WebPMux* const mux,
   if (mux == NULL || name == NULL) return WEBP_MUX_INVALID_ARGUMENT;
   if (IsWPI(id)) return WEBP_MUX_INVALID_ARGUMENT;
 
-  chunk_list = GetChunkListFromId(mux, id);
+  chunk_list = MuxGetChunkListFromId(mux, id);
   if (chunk_list == NULL) return WEBP_MUX_INVALID_ARGUMENT;
 
   return DeleteChunks(chunk_list, kChunks[idx].tag);
@@ -390,7 +390,7 @@ static WebPMuxError MuxAddFrameTileInternal(
   image_info = NULL;  // Owned by 'chunk' now.
   err = ChunkSetNth(&chunk, &wpi.img_, 1);
   if (err != WEBP_MUX_OK) goto Err;
-  ChunkInit(&chunk);  // chunk owned by wpi.vp8_ now.
+  ChunkInit(&chunk);  // chunk owned by wpi.img_ now.
 
   // Create frame/tile data from image_info.
   err = CreateDataFromImageInfo(wpi.img_->image_info_, is_frame,
@@ -452,7 +452,7 @@ WebPMuxError WebPMuxDeleteImage(WebPMux* const mux) {
 
   if (mux == NULL) return WEBP_MUX_INVALID_ARGUMENT;
 
-  err = ValidateForImage(mux);
+  err = MuxValidateForImage(mux);
   if (err != WEBP_MUX_OK) return err;
 
   // All well, delete image.
@@ -623,6 +623,14 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   err = GetImageCanvasWidthHeight(mux, flags, &width, &height);
   if (err != WEBP_MUX_OK) return err;
 
+  if (MuxHasLosslessImages(images)) {
+    // We have a file with a VP8X chunk having some lossless images.
+    // As lossless images implicitly contain alpha, force ALPHA_FLAG to be true.
+    // Note: This 'flags' update must NOT be done for a lossless image
+    // without a VP8X chunk!
+    flags |= ALPHA_FLAG;
+  }
+
   PutLE32(data + 0, flags);   // VP8X chunk flags.
   PutLE32(data + 4, width);   // canvas width.
   PutLE32(data + 8, height);  // canvas height.
@@ -695,7 +703,7 @@ WebPMuxError WebPMuxAssemble(WebPMux* const mux,
   assert(dst == data + size);
 
   // Validate mux.
-  err = WebPMuxValidate(mux);
+  err = MuxValidate(mux);
   if (err != WEBP_MUX_OK) {
     free(data);
     data = NULL;

@@ -13,7 +13,7 @@ end of this file.
 WebP Container Specification
 ============================
 
-_Working Draft, v0.2, 20120207_
+_Working Draft, v0.3, 20120523_
 
 
 * TOC placeholder
@@ -271,7 +271,7 @@ Extended WebP file header:
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('VP8X')                      |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |  Rsrv |M|I|A|T|                   Reserved                    |
+    |  Rsrv |AL|M|I|A|T|                   Reserved                 |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                          Canvas Width                         |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -295,11 +295,15 @@ Metadata (M): 1 bit
 
 : Set if the file contains a 'META' chunk.
 
-Reserved (Rsrv): 4 bits
+Alpha (AL): 1 bit
+
+: Set if the file contains images with transparency information ("alpha").
+
+Reserved (Rsrv): 3 bits
 
 : SHOULD be `0`.
 
-Reserved: 16 bits
+Reserved: 24 bits
 
 : SHOULD be `0`.
 
