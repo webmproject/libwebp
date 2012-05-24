@@ -271,7 +271,7 @@ Extended WebP file header:
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('VP8X')                      |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |  Rsrv |AL|M|I|A|T|                   Reserved                 |
+    | Rsv |L|M|I|A|T|                   Reserved                    |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                          Canvas Width                         |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -295,11 +295,11 @@ Metadata (M): 1 bit
 
 : Set if the file contains a 'META' chunk.
 
-Alpha (AL): 1 bit
+Alpha (L): 1 bit
 
 : Set if the file contains images with transparency information ("alpha").
 
-Reserved (Rsrv): 3 bits
+Reserved (Rsv): 3 bits
 
 : SHOULD be `0`.
 
