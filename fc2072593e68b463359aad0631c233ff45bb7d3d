@@ -34,6 +34,24 @@
       "revId": "fc2072593e68b463359aad0631c233ff45bb7d3d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAK3///KE\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-24T05:25:21Z",
+      "side": 1,
+      "message": "Made use of the symbol after all. No sense in having the function around in the other cases.",
+      "parentUuid": "AAAAKn//rVw\u003d",
+      "revId": "fc2072593e68b463359aad0631c233ff45bb7d3d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
