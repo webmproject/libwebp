@@ -89,6 +89,8 @@ typedef struct {
 
   int              next_transform_;
   VP8LTransform    transforms_[NUM_TRANSFORMS];
+  // or'd bitset storing the transforms types.
+  uint32_t         transforms_seen_;
 
   uint8_t         *rescaler_memory;  // Working memory for rescaling work.
   WebPRescaler    *rescaler;         // Common rescaler for all channels.

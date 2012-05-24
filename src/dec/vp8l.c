@@ -714,7 +714,6 @@ static int ExpandColorMap(int num_colors, VP8LTransform* const transform) {
 
 static int ReadTransform(int* const xsize, int const* ysize,
                          VP8LDecoder* const dec) {
-  int i;
   int ok = 1;
   VP8LBitReader* const br = &dec->br_;
   VP8LTransform* transform = &dec->transforms_[dec->next_transform_];
@@ -722,19 +721,17 @@ static int ReadTransform(int* const xsize, int const* ysize,
       (VP8LImageTransformType)VP8LReadBits(br, 2);
 
   // Each transform type can only be present once in the stream.
-  // TODO(later): use a bit set to mark already-used transforms.
-  for (i = 0; i < dec->next_transform_; ++i) {
-    if (dec->transforms_[i].type_ == type) {
-      return 0;  // Already there, let's not accept the second same transform.
-    }
+  if (dec->transforms_seen_ & (1U << type)) {
+    return 0;  // Already there, let's not accept the second same transform.
   }
-  assert(dec->next_transform_ < NUM_TRANSFORMS);
+  dec->transforms_seen_ |= (1U << type);
 
   transform->type_ = type;
   transform->xsize_ = *xsize;
   transform->ysize_ = *ysize;
   transform->data_ = NULL;
   ++dec->next_transform_;
+  assert(dec->next_transform_ <= NUM_TRANSFORMS);
 
   switch (type) {
     case PREDICTOR_TRANSFORM:
@@ -808,6 +805,7 @@ void VP8LClear(VP8LDecoder* const dec) {
     ClearTransform(&dec->transforms_[i]);
   }
   dec->next_transform_ = 0;
+  dec->transforms_seen_ = 0;
 
   free(dec->rescaler_memory);
   dec->rescaler_memory = NULL;
