@@ -11,22 +11,17 @@
 
 #include <assert.h>
 
+#include "../webp/format_constants.h"
 #include "./vp8enci.h"
-#include "../dec/webpi.h"  // For chunk-size constants.
-#include "../webp/mux.h"   // For 'ALPHA_FLAG' constant.
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
 #endif
 
-#define KSIGNATURE 0x9d012a
-#define MAX_PARTITION0_SIZE (1 << 19)   // max size of mode partition
-#define MAX_PARTITION_SIZE  (1 << 24)   // max size for token partition
-
-
 //------------------------------------------------------------------------------
 // Helper functions
 
+// TODO(later): Move to webp/format_constants.h?
 static void PutLE32(uint8_t* const data, uint32_t val) {
   data[0] = (val >>  0) & 0xff;
   data[1] = (val >>  8) & 0xff;
@@ -72,7 +67,7 @@ static WebPEncodingError PutVP8XHeader(const VP8Encoder* const enc) {
   assert(IsVP8XNeeded(enc));
 
   if (enc->has_alpha_) {
-    flags |= ALPHA_FLAG;
+    flags |= ALPHA_FLAG_BIT;
   }
 
   PutLE32(vp8x + TAG_SIZE,              VP8X_CHUNK_SIZE);
@@ -129,7 +124,7 @@ static WebPEncodingError PutVP8FrameHeader(const WebPPicture* const pic,
   uint8_t vp8_frm_hdr[VP8_FRAME_HEADER_SIZE];
   uint32_t bits;
 
-  if (size0 >= MAX_PARTITION0_SIZE) {  // partition #0 is too big to fit
+  if (size0 >= VP8_MAX_PARTITION0_SIZE) {  // partition #0 is too big to fit
     return VP8_ENC_ERROR_PARTITION0_OVERFLOW;
   }
 
@@ -142,9 +137,9 @@ static WebPEncodingError PutVP8FrameHeader(const WebPPicture* const pic,
   vp8_frm_hdr[1] = (bits >>  8) & 0xff;
   vp8_frm_hdr[2] = (bits >> 16) & 0xff;
   // signature
-  vp8_frm_hdr[3] = (KSIGNATURE >> 16) & 0xff;
-  vp8_frm_hdr[4] = (KSIGNATURE >>  8) & 0xff;
-  vp8_frm_hdr[5] = (KSIGNATURE >>  0) & 0xff;
+  vp8_frm_hdr[3] = (VP8_SIGNATURE >> 16) & 0xff;
+  vp8_frm_hdr[4] = (VP8_SIGNATURE >>  8) & 0xff;
+  vp8_frm_hdr[5] = (VP8_SIGNATURE >>  0) & 0xff;
   // dimensions
   vp8_frm_hdr[6] = pic->width & 0xff;
   vp8_frm_hdr[7] = pic->width >> 8;
@@ -263,7 +258,7 @@ static int EmitPartitionsSize(const VP8Encoder* const enc,
   int p;
   for (p = 0; p < enc->num_parts_ - 1; ++p) {
     const size_t part_size = VP8BitWriterSize(enc->parts_ + p);
-    if (part_size >= MAX_PARTITION_SIZE) {
+    if (part_size >= VP8_MAX_PARTITION_SIZE) {
       return WebPEncodingSetError(pic, VP8_ENC_ERROR_PARTITION_OVERFLOW);
     }
     buf[3 * p + 0] = (part_size >>  0) & 0xff;

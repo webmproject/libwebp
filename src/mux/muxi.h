@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include "../dec/vp8i.h"
 #include "../dec/vp8li.h"
-#include "../dec/webpi.h"    // For chunk-size constants.
+#include "../webp/format_constants.h"
 #include "../webp/mux.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -103,11 +103,6 @@ typedef enum {
   IDX_NIL,
   IDX_LAST_CHUNK
 } CHUNK_INDEX;
-
-// Maximum chunk payload (data) size such that adding the header and padding
-// won't overflow an uint32.
-#define MAX_CHUNK_PAYLOAD (~0U - CHUNK_HEADER_SIZE - 1)
-#define CHUNK_SIZE_BYTES 4
 
 #define NIL_TAG 0x00000000u  // To signal void chunk.
 

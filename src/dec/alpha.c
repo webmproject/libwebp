@@ -14,16 +14,11 @@
 #include "./vp8li.h"
 #include "../utils/filters.h"
 #include "../utils/quant_levels.h"
+#include "../webp/format_constants.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
 #endif
-
-// TODO(skal): find a common place between enc/ and dec/ for these:
-#define ALPHA_HEADER_LEN 1
-#define ALPHA_NO_COMPRESSION 0
-#define ALPHA_LOSSLESS_COMPRESSION 1
-#define ALPHA_PREPROCESSED_LEVELS 1
 
 // TODO(skal): move to dsp/ ?
 static void CopyPlane(const uint8_t* src, int src_stride,

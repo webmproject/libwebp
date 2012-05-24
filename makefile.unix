@@ -148,6 +148,7 @@ HDRS = \
     src/webp/decode.h \
     src/webp/decode_vp8.h \
     src/webp/encode.h \
+    src/webp/format_constants.h \
     src/webp/mux.h \
     src/webp/types.h \
 

@@ -14,8 +14,7 @@
 #include "./vp8i.h"
 #include "./vp8li.h"
 #include "./webpi.h"
-#include "../mux/muxi.h"  // For MAX_CHUNK_PAYLOAD.
-#include "../webp/mux.h"  // For 'ALPHA_FLAG'.
+#include "../webp/format_constants.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -552,7 +551,7 @@ static VP8StatusCode GetFeatures(const uint8_t* data, size_t data_size,
     if (status != VP8_STATUS_OK) {
       return status;  // Wrong VP8X / insufficient data.
     }
-    features->has_alpha = !!(flags & ALPHA_FLAG);
+    features->has_alpha = !!(flags & ALPHA_FLAG_BIT);
     if (found_vp8x) {
       return VP8_STATUS_OK;  // Return features from VP8X header.
     }

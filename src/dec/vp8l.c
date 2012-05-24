@@ -20,18 +20,13 @@
 extern "C" {
 #endif
 
-static const size_t kHeaderBytes = 5;
-static const int kImageSizeBits = 14;
+#define NUM_ARGB_CACHE_ROWS          16
 
+static const size_t kHeaderBytes = 5;
 static const int kCodeLengthLiterals = 16;
 static const int kCodeLengthRepeatCode = 16;
 static const int kCodeLengthExtraBits[3] = { 2, 3, 7 };
 static const int kCodeLengthRepeatOffsets[3] = { 3, 3, 11 };
-
-#define NUM_LENGTH_CODES    24
-#define NUM_DISTANCE_CODES  40
-#define DEFAULT_CODE_LENGTH 8
-#define MAX_CACHE_BITS      11
 
 // -----------------------------------------------------------------------------
 //  Five Huffman codes are used at each meta code:
@@ -86,12 +81,12 @@ static int DecodeImageStream(int xsize, int ysize,
 static int ReadImageSize(VP8LBitReader* const br,
                          int* const width, int* const height) {
   const int signature = VP8LReadBits(br, 8);
-  if (signature != LOSSLESS_MAGIC_BYTE &&
-      signature != LOSSLESS_MAGIC_BYTE_RSVD) {
+  if (signature != VP8L_MAGIC_BYTE &&
+      signature != VP8L_MAGIC_BYTE_RSVD) {
     return 0;
   }
-  *width = VP8LReadBits(br, kImageSizeBits) + 1;
-  *height = VP8LReadBits(br, kImageSizeBits) + 1;
+  *width = VP8LReadBits(br, VP8L_IMAGE_SIZE_BITS) + 1;
+  *height = VP8LReadBits(br, VP8L_IMAGE_SIZE_BITS) + 1;
   return 1;
 }
 

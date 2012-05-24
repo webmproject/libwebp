@@ -16,8 +16,8 @@
 extern "C" {
 #endif
 
-#include "../webp/decode_vp8.h"
 #include "../utils/rescaler.h"
+#include "../webp/decode_vp8.h"
 
 //------------------------------------------------------------------------------
 // WebPDecParams: Decoding output parameters. Transient internal object.
@@ -44,15 +44,6 @@ void WebPResetDecParams(WebPDecParams* const params);
 
 //------------------------------------------------------------------------------
 // Header parsing helpers
-
-#define TAG_SIZE 4
-#define CHUNK_HEADER_SIZE 8
-#define RIFF_HEADER_SIZE 12
-#define FRAME_CHUNK_SIZE 20
-#define LOOP_CHUNK_SIZE 4
-#define TILE_CHUNK_SIZE 8
-#define VP8X_CHUNK_SIZE 12
-#define VP8_FRAME_HEADER_SIZE 10  // Size of the frame header within VP8 data.
 
 // Structure storing a description of the RIFF headers.
 typedef struct {

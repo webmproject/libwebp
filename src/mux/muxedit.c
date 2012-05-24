@@ -165,7 +165,7 @@ static WebPMuxError CreateDataFromImageInfo(const WebPImageInfo* image_info,
 }
 
 static int IsLosslessData(const WebPData* const image) {
-  return (image->size_ >= 1 && image->bytes_[0] == LOSSLESS_MAGIC_BYTE);
+  return (image->size_ >= 1 && image->bytes_[0] == VP8L_MAGIC_BYTE);
 }
 
 // Outputs image data given data from a webp file (including RIFF header).

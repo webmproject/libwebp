@@ -18,31 +18,17 @@
 #include "../utils/bit_reader.h"
 #include "../utils/color_cache.h"
 #include "../utils/huffman.h"
+#include "../webp/format_constants.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
 #endif
-
-#define NUM_TRANSFORMS               4
-#define HUFFMAN_CODES_PER_META_CODE  5
-#define ARGB_BLACK                   0xff000000
-#define NUM_LITERAL_CODES            256
-#define NUM_ARGB_CACHE_ROWS          16
-#define LOSSLESS_MAGIC_BYTE          0x64
-#define LOSSLESS_MAGIC_BYTE_RSVD     0x65
 
 typedef enum {
   READ_DATA = 0,
   READ_HDR = 1,
   READ_DIM = 2
 } VP8LDecodeState;
-
-typedef enum {
-  PREDICTOR_TRANSFORM      = 0,
-  CROSS_COLOR_TRANSFORM    = 1,
-  SUBTRACT_GREEN           = 2,
-  COLOR_INDEXING_TRANSFORM = 3
-} VP8LImageTransformType;
 
 typedef struct VP8LTransform VP8LTransform;
 struct VP8LTransform {

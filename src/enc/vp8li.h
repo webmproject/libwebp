@@ -15,23 +15,13 @@
 #ifdef USE_LOSSLESS_ENCODER
 
 #include "./histogram.h"
-#include "../webp/encode.h"
 #include "../utils/bit_writer.h"
+#include "../webp/encode.h"
+#include "../webp/format_constants.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
 #endif
-
-// TODO(vikasa): factorize these with ones used in lossless decoder.
-#define TAG_SIZE             4
-#define CHUNK_HEADER_SIZE    8
-#define RIFF_HEADER_SIZE     12
-#define HEADER_SIZE          (RIFF_HEADER_SIZE + CHUNK_HEADER_SIZE)
-#define SIGNATURE_SIZE       1
-#define LOSSLESS_MAGIC_BYTE  0x64
-
-#define MAX_PALETTE_SIZE         256
-#define PALETTE_KEY_RIGHT_SHIFT   22  // Key for 1K buffer.
 
 typedef struct {
   const WebPConfig* config_;    // user configuration and parameters
