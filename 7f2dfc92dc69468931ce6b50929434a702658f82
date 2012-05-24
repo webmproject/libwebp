@@ -16,6 +16,24 @@
       "revId": "7f2dfc92dc69468931ce6b50929434a702658f82",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAK3//+Nk\u003d",
+        "filename": "src/enc/syntax.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-05-24T21:39:24Z",
+      "side": 0,
+      "message": "i think it\u0027s good to try and gather as much format constants as possible in the .h, going forward",
+      "parentUuid": "AAAAK3//+Xo\u003d",
+      "revId": "7f2dfc92dc69468931ce6b50929434a702658f82",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
