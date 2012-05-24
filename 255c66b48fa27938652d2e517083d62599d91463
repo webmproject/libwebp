@@ -16,6 +16,24 @@
       "revId": "255c66b48fa27938652d2e517083d62599d91463",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAK3//+e8\u003d",
+        "filename": "Android.mk",
+        "patchSetId": 3
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-24T18:03:09Z",
+      "side": 1,
+      "message": "It\u0027s correct, see: docs/CPU-ARM-NEON.html in the NDK.",
+      "parentUuid": "AAAAK3//+5w\u003d",
+      "revId": "255c66b48fa27938652d2e517083d62599d91463",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
