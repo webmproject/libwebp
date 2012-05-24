@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAK3//+Xo\u003d",
+        "filename": "src/enc/syntax.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-24T19:19:23Z",
+      "side": 0,
+      "message": "this were local to this source file, I don\u0027t really see the benefit in relocating them.",
+      "revId": "7f2dfc92dc69468931ce6b50929434a702658f82",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
