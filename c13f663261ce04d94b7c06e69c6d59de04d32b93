@@ -16,6 +16,24 @@
       "revId": "c13f663261ce04d94b7c06e69c6d59de04d32b93",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAK3//9xk\u003d",
+        "filename": "src/enc/Makefile.am",
+        "patchSetId": 2
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-05-25T04:16:50Z",
+      "side": 1,
+      "message": "Kept it because it was there already.\nI\u0027m not sure about it either.",
+      "parentUuid": "AAAAK3//+Xw\u003d",
+      "revId": "c13f663261ce04d94b7c06e69c6d59de04d32b93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }

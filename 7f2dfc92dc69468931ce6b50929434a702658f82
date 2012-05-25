@@ -34,6 +34,24 @@
       "revId": "7f2dfc92dc69468931ce6b50929434a702658f82",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAK3//9xc\u003d",
+        "filename": "src/enc/syntax.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-05-25T04:16:50Z",
+      "side": 0,
+      "message": "Exactly.\nAnd there are, in fact, constants related to the format.",
+      "parentUuid": "AAAAK3//+Nk\u003d",
+      "revId": "7f2dfc92dc69468931ce6b50929434a702658f82",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
