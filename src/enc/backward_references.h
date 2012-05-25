@@ -17,16 +17,22 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "../webp/types.h"
+#include "../webp/format_constants.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
 #endif
 
 // The spec allows 11, we use 9 bits to reduce memory consumption in encoding.
-// Having 9 instead of 11 removes about 0.25 % of compression density.
-static const int kColorCacheBitsMax = 9;
-#define PIX_OR_COPY_CODES_MAX (256 + 24 + (1 << 9))
-static const int kMaxLength = 4096;
+// Having 9 instead of 11 only removes about 0.25 % of compression density.
+#define MAX_COLOR_CACHE_BITS 9
+
+// Max ever number of codes we'll use:
+#define PIX_OR_COPY_CODES_MAX \
+    (NUM_LITERAL_CODES + NUM_LENGTH_CODES + (1 << MAX_COLOR_CACHE_BITS))
+
+// -----------------------------------------------------------------------------
+// PrefixEncode()
 
 // use GNU builtins where available.
 #if defined(__GNUC__) && \
@@ -36,16 +42,14 @@ static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
 }
 #else
 static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
-  int log;
-  uint32_t value;
+  int log = 0;
+  uint32_t value = n;
   int i;
-  if (n == 0)
-    return -1;
-  log = 0;
-  value = n;
+
+  if (value == 0) return -1;
   for (i = 4; i >= 0; --i) {
-    int shift = (1 << i);
-    uint32_t x = value >> shift;
+    const int shift = (1 << i);
+    const uint32_t x = value >> shift;
     if (x != 0) {
       value = x;
       log += shift;
@@ -56,7 +60,7 @@ static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
 #endif
 
 static WEBP_INLINE int VP8LBitsLog2Ceiling(uint32_t n) {
-  int floor = BitsLog2Floor(n);
+  const int floor = BitsLog2Floor(n);
   if (n == (n & ~(n - 1)))  // zero or a power of two.
     return floor;
   else
@@ -66,28 +70,29 @@ static WEBP_INLINE int VP8LBitsLog2Ceiling(uint32_t n) {
 // Splitting of distance and length codes into prefixes and
 // extra bits. The prefixes are encoded with an entropy code
 // while the extra bits are stored just as normal bits.
-static WEBP_INLINE void PrefixEncode(
-    int distance,
-    int *code,
-    int *extra_bits_count,
-    int *extra_bits_value) {
+static WEBP_INLINE void PrefixEncode(int distance, int* const code,
+                                     int* const extra_bits_count,
+                                     int* const extra_bits_value) {
   // Collect the two most significant bits where the highest bit is 1.
   const int highest_bit = BitsLog2Floor(--distance);
   // & 0x3f is to make behavior well defined when highest_bit
   // does not exist or is the least significant bit.
   const int second_highest_bit =
       (distance >> ((highest_bit - 1) & 0x3f)) & 1;
-  *extra_bits_count = (highest_bit > 0) ? highest_bit - 1 : 0;
+  *extra_bits_count = (highest_bit > 0) ? (highest_bit - 1) : 0;
   *extra_bits_value = distance & ((1 << *extra_bits_count) - 1);
-  *code = (highest_bit > 0) ? 2 * highest_bit + second_highest_bit :
-      (highest_bit == 0) ? 1 : 0;
+  *code = (highest_bit > 0) ? (2 * highest_bit + second_highest_bit)
+                            : (highest_bit == 0) ? 1 : 0;
 }
+
+// -----------------------------------------------------------------------------
+// PixOrCopy
 
 enum Mode {
   kLiteral,
   kCacheIdx,
   kCopy,
-  kNone,
+  kNone
 };
 
 typedef struct {
@@ -96,7 +101,6 @@ typedef struct {
   uint16_t len;
   uint32_t argb_or_distance;
 } PixOrCopy;
-
 
 static WEBP_INLINE PixOrCopy PixOrCopyCreateCopy(uint32_t distance,
                                                  uint16_t len) {
@@ -110,7 +114,7 @@ static WEBP_INLINE PixOrCopy PixOrCopyCreateCopy(uint32_t distance,
 static WEBP_INLINE PixOrCopy PixOrCopyCreateCacheIdx(int idx) {
   PixOrCopy retval;
   assert(idx >= 0);
-  assert(idx < (1 << kColorCacheBitsMax));
+  assert(idx < (1 << MAX_COLOR_CACHE_BITS));
   retval.mode = kCacheIdx;
   retval.argb_or_distance = idx;
   retval.len = 1;
@@ -154,7 +158,7 @@ static WEBP_INLINE uint32_t PixOrCopyArgb(const PixOrCopy* const p) {
 
 static WEBP_INLINE uint32_t PixOrCopyCacheIdx(const PixOrCopy* const p) {
   assert(p->mode == kCacheIdx);
-  assert(p->argb_or_distance < (1U << kColorCacheBitsMax));
+  assert(p->argb_or_distance < (1U << MAX_COLOR_CACHE_BITS));
   return p->argb_or_distance;
 }
 
@@ -172,33 +176,17 @@ typedef struct {
   int max_size;  // maximum capacity
 } VP8LBackwardRefs;
 
+// Initialize the object. Must be called first. 'refs' can be NULL.
+void VP8LInitBackwardRefs(VP8LBackwardRefs* const refs);
 
-static WEBP_INLINE void VP8LInitBackwardRefs(VP8LBackwardRefs* const refs) {
-  if (refs != NULL) {
-    refs->refs = NULL;
-    refs->size = 0;
-    refs->max_size = 0;
-  }
-}
-
-static WEBP_INLINE void VP8LClearBackwardRefs(VP8LBackwardRefs* const refs) {
-  if (refs != NULL) {
-    free(refs->refs);
-    VP8LInitBackwardRefs(refs);
-  }
-}
+// Release memory and re-initialize the object. 'refs' can be NULL.
+void VP8LClearBackwardRefs(VP8LBackwardRefs* const refs);
 
 // Allocate 'max_size' references. Returns false in case of memory error.
-static WEBP_INLINE int VP8LBackwardRefsAlloc(VP8LBackwardRefs* const refs,
-                                             int max_size) {
-  assert(refs != NULL);
-  refs->size = 0;
-  refs->max_size = 0;
-  refs->refs = (PixOrCopy*)malloc(max_size * sizeof(*refs->refs));
-  if (refs->refs == NULL) return 0;
-  refs->max_size = max_size;
-  return 1;
-}
+int VP8LBackwardRefsAlloc(VP8LBackwardRefs* const refs, int max_size);
+
+// -----------------------------------------------------------------------------
+// Main entry points
 
 // Evaluates best possible backward references for specified quality.
 // Further optimize for 2D locality if use_2d_locality flag is set.
@@ -208,9 +196,9 @@ int VP8LGetBackwardReferences(int width, int height,
                               VP8LBackwardRefs* const best);
 
 // Produce an estimate for a good color cache size for the image.
-int VP8LCalculateEstimateForCacheSize(
-    const uint32_t* const argb, int xsize, int ysize,
-    int* const best_cache_bits);
+int VP8LCalculateEstimateForCacheSize(const uint32_t* const argb,
+                                      int xsize, int ysize,
+                                      int* const best_cache_bits);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }
