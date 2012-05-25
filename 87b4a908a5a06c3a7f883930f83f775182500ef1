@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAK3//9Ow\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-05-25T19:01:01Z",
+      "side": 0,
+      "message": "note the trailing \u0027,\u0027 in arrays is ok, just not enums for compatibility; this first was a part of the original grammar.",
+      "revId": "87b4a908a5a06c3a7f883930f83f775182500ef1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
