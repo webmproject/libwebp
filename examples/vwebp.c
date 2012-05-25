@@ -330,6 +330,9 @@ int main(int argc, char *argv[]) {
 
   // Start display (and timer)
   glutInit(&argc, argv);
+#ifdef FREEGLUT
+  glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
+#endif
   StartDisplay(kParams.pic);
   if (kParams.has_animation) glutTimerFunc(0, decode_callback, 0);
   glutMainLoop();
