@@ -34,6 +34,24 @@
       "revId": "c13f663261ce04d94b7c06e69c6d59de04d32b93",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAK3//9wA\u003d",
+        "filename": "src/enc/Makefile.am",
+        "patchSetId": 2
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-05-25T04:57:57Z",
+      "side": 1,
+      "message": "removed in https://gerrit.chromium.org/gerrit/#change,23560",
+      "parentUuid": "AAAAK3//9xk\u003d",
+      "revId": "c13f663261ce04d94b7c06e69c6d59de04d32b93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
