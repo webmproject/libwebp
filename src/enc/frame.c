@@ -929,7 +929,7 @@ int VP8StatLoop(VP8Encoder* const enc) {
       }
     }
   }
-  return WebPReportProgress(enc, final_percent);
+  return WebPReportProgress(enc->pic_, final_percent, &enc->percent_);
 }
 
 //------------------------------------------------------------------------------

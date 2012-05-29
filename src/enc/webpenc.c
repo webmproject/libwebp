@@ -303,7 +303,7 @@ static void StoreStats(VP8Encoder* const enc) {
       stats->block_count[i] = enc->block_count_[i];
     }
   }
-  WebPReportProgress(enc, 100);  // done!
+  WebPReportProgress(enc->pic_, 100, &enc->percent_);  // done!
 }
 
 int WebPEncodingSetError(const WebPPicture* const pic,
@@ -314,10 +314,10 @@ int WebPEncodingSetError(const WebPPicture* const pic,
   return 0;
 }
 
-int WebPReportProgress(VP8Encoder* const enc, int percent) {
-  if (percent != enc->percent_) {
-    WebPPicture* const pic = enc->pic_;
-    enc->percent_ = percent;
+int WebPReportProgress(const WebPPicture* const pic,
+                       int percent, int* const percent_store) {
+  if (percent_store != NULL && percent != *percent_store) {
+    *percent_store = percent;
     if (pic->progress_hook && !pic->progress_hook(percent, pic)) {
       // user abort requested
       WebPEncodingSetError(pic, VP8_ENC_ERROR_USER_ABORT);

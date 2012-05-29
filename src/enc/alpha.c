@@ -311,7 +311,7 @@ int VP8EncFinishAlpha(VP8Encoder* enc) {
     enc->alpha_data_size_ = (uint32_t)tmp_size;
     enc->alpha_data_ = tmp_data;
   }
-  return WebPReportProgress(enc, enc->percent_ + 20);
+  return WebPReportProgress(enc->pic_, enc->percent_ + 20, &enc->percent_);
 }
 
 void VP8EncDeleteAlpha(VP8Encoder* enc) {
