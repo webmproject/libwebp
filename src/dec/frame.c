@@ -504,7 +504,6 @@ static void InitIo(VP8Decoder* const dec, VP8Io* io) {
   io->v = dec->cache_v_;
   io->y_stride = dec->cache_y_stride_;
   io->uv_stride = dec->cache_uv_stride_;
-  io->fancy_upsampling = 0;    // default
   io->a = NULL;
 }
 
