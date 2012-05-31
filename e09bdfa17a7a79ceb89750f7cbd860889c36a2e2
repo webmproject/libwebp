@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAK3//41o\u003d",
+        "filename": "src/enc/iterator.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-05-31T07:58:34Z",
+      "side": 1,
+      "message": "at this point, you can now use a local variable for \u0027enc\u0027:\n\nVP8Encoder* const enc \u003d it-\u003eenc_;",
+      "revId": "e09bdfa17a7a79ceb89750f7cbd860889c36a2e2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAK3//41g\u003d",
+        "filename": "src/enc/vp8enci.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-05-31T07:58:34Z",
+      "side": 1,
+      "message": "int* const percent_store",
+      "revId": "e09bdfa17a7a79ceb89750f7cbd860889c36a2e2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAK3//41c\u003d",
+        "filename": "src/enc/webpenc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-05-31T07:58:34Z",
+      "side": 1,
+      "message": "int* const percent_store",
+      "revId": "e09bdfa17a7a79ceb89750f7cbd860889c36a2e2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
