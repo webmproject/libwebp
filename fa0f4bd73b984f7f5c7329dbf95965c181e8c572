@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAK3//4zQ\u003d",
+        "filename": "src/dec/vp8.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-05-31T08:31:30Z",
+      "side": 1,
+      "message": "yes, this code started inlined in the function, where you could easily cross-check the pre-requisites. But now, it\u0027s in a header, drifting away at tectonic speed. And who knows where this code can end up now that it\u0027s free of its original context. So better safe than sorry, esp. for this mundane function.",
+      "parentUuid": "AAAAK3//40o\u003d",
+      "revId": "fa0f4bd73b984f7f5c7329dbf95965c181e8c572",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAK3//468\u003d",
         "filename": "src/dec/vp8.c",
         "patchSetId": 1
