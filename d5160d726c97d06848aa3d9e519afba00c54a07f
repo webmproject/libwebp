@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAK3//40M\u003d",
+        "filename": "src/dec/vp8.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-05-31T08:12:17Z",
+      "side": 1,
+      "message": "ping?",
+      "revId": "d5160d726c97d06848aa3d9e519afba00c54a07f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAK3//4z8\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-05-31T08:12:17Z",
+      "side": 1,
+      "message": "i\u0027d keep the same signature than for VP8, even if it looks overkill:\n\nint VP8LCheckSignature(const uint8_t* const data, size_t size) {\n  return (size \u003e\u003d 1 \u0026\u0026 (data[0] \u003d\u003d .. ));\n;\n\n...\n\nconst uint8_t signature \u003d VP8LReadBits(...);\nif (!VP8LCheckSignature(\u0026signature, 1)) {...}\n\n\nit\u0027s more future-proof, and compiler will know what to do (hopefully) to optimize out what can.",
+      "revId": "d5160d726c97d06848aa3d9e519afba00c54a07f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
