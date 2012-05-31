@@ -187,43 +187,49 @@ static VP8StatusCode ParseOptionalChunks(const uint8_t** data,
   }
 }
 
-// Validates the VP8 Header ("VP8 nnnn" or "VP8L nnnn") and skips over it.
+// Validates the VP8/VP8L Header ("VP8 nnnn" or "VP8L nnnn") and skips over it.
 // Returns VP8_STATUS_BITSTREAM_ERROR for invalid (chunk larger than
-//         riff_size) VP8 header,
+//         riff_size) VP8/VP8L header,
 //         VP8_STATUS_NOT_ENOUGH_DATA in case of insufficient data, and
 //         VP8_STATUS_OK otherwise.
 // If a VP8/VP8L chunk is found, chunk_size is set to the total number of bytes
 // extracted from the VP8/VP8L chunk header.
-// The flag 'is_lossless' is set to 1 in case of VP8L chunk.
-static VP8StatusCode ParseVP8Header(const uint8_t** data, size_t* data_size,
+// The flag 'is_lossless' is set to 1 in case of VP8L chunk / raw VP8L data.
+static VP8StatusCode ParseVP8Header(const uint8_t** data_ptr, size_t* data_size,
                                     size_t riff_size,
                                     size_t* chunk_size, int* is_lossless) {
-  const int is_vp8 = !memcmp(*data, "VP8 ", TAG_SIZE);
-  const int is_vp8l = !memcmp(*data, "VP8L", TAG_SIZE);
+  const uint8_t* const data = *data_ptr;
+  const int is_vp8 = !memcmp(data, "VP8 ", TAG_SIZE);
+  const int is_vp8l = !memcmp(data, "VP8L", TAG_SIZE);
   const uint32_t minimal_size =
-      TAG_SIZE + CHUNK_HEADER_SIZE;  // "WEBP" + "VP8 nnnn"
+      TAG_SIZE + CHUNK_HEADER_SIZE;  // "WEBP" + "VP8 nnnn" OR
+                                     // "WEBP" + "VP8Lnnnn"
   assert(data);
   assert(data_size);
   assert(chunk_size);
   assert(is_lossless);
-
-  *chunk_size = *data_size;   // default: raw data
 
   if (*data_size < CHUNK_HEADER_SIZE) {
     return VP8_STATUS_NOT_ENOUGH_DATA;  // Insufficient data.
   }
 
   if (is_vp8 || is_vp8l) {
-    const uint32_t size = get_le32(*data + TAG_SIZE);
+    // Bitstream contains VP8/VP8L header.
+    const uint32_t size = get_le32(data + TAG_SIZE);
     if ((riff_size >= minimal_size) && (size > riff_size - minimal_size)) {
       return VP8_STATUS_BITSTREAM_ERROR;  // Inconsistent size information.
     }
     // Skip over CHUNK_HEADER_SIZE bytes from VP8/VP8L Header.
     *chunk_size = size;
-    *data += CHUNK_HEADER_SIZE;
+    *data_ptr += CHUNK_HEADER_SIZE;
     *data_size -= CHUNK_HEADER_SIZE;
     *is_lossless = is_vp8l;
+  } else {
+    // Raw VP8/VP8L bitstream (no header).
+    *is_lossless = VP8LCheckSignature(data, *data_size);
+    *chunk_size = *data_size;
   }
+
   return VP8_STATUS_OK;
 }
 

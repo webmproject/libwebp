@@ -290,6 +290,9 @@ struct VP8Decoder {
 int VP8SetError(VP8Decoder* const dec,
                 VP8StatusCode error, const char* const msg);
 
+// Returns true if the next 3 bytes in data contain the VP8 signature.
+int VP8CheckSignature(const uint8_t* const data, size_t data_size);
+
 // Validates the VP8 data-header and retrieves basic header information viz
 // width and height. Returns 0 in case of formatting error. *width/*height
 // can be passed NULL.

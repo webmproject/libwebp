@@ -78,11 +78,15 @@ static int DecodeImageStream(int xsize, int ysize,
 
 //------------------------------------------------------------------------------
 
+int VP8LCheckSignature(const uint8_t* const data, size_t size) {
+  return (size >= 1) &&
+         (data[0] == VP8L_MAGIC_BYTE || data[0] == VP8L_MAGIC_BYTE_RSVD);
+}
+
 static int ReadImageSize(VP8LBitReader* const br,
                          int* const width, int* const height) {
-  const int signature = VP8LReadBits(br, 8);
-  if (signature != VP8L_MAGIC_BYTE &&
-      signature != VP8L_MAGIC_BYTE_RSVD) {
+  const uint8_t signature = VP8LReadBits(br, 8);
+  if (!VP8LCheckSignature(&signature, 1)) {
     return 0;
   }
   *width = VP8LReadBits(br, VP8L_IMAGE_SIZE_BITS) + 1;

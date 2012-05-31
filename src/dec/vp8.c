@@ -82,13 +82,18 @@ int VP8SetError(VP8Decoder* const dec,
 
 //------------------------------------------------------------------------------
 
+int VP8CheckSignature(const uint8_t* const data, size_t data_size) {
+  return (data_size >= 3 &&
+          data[0] == 0x9d && data[1] == 0x01 && data[2] == 0x2a);
+}
+
 int VP8GetInfo(const uint8_t* data, size_t data_size, size_t chunk_size,
                int* width, int* height) {
   if (data == NULL || data_size < VP8_FRAME_HEADER_SIZE) {
     return 0;         // not enough data
   }
   // check signature
-  if (data[3] != 0x9d || data[4] != 0x01 || data[5] != 0x2a) {
+  if (!VP8CheckSignature(data + 3, data_size - 3)) {
     return 0;         // Wrong signature.
   } else {
     const uint32_t bits = data[0] | (data[1] << 8) | (data[2] << 16);
@@ -316,7 +321,7 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
       return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
                          "cannot parse picture header");
     }
-    if (buf[0] != 0x9d || buf[1] != 0x01 || buf[2] != 0x2a) {
+    if (!VP8CheckSignature(buf, buf_size)) {
       return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
                          "Bad code word");
     }

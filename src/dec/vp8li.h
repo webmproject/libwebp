@@ -87,6 +87,9 @@ typedef struct {
 
 // in vp8l.c
 
+// Returns true if the next byte(s) in data is a VP8L signature.
+int VP8LCheckSignature(const uint8_t* const data, size_t size);
+
 // Validates the VP8L data-header and retrieves basic header information viz
 // width and height. Returns 0 in case of formatting error. width/height
 // can be passed NULL.
