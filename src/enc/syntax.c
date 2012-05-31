@@ -416,7 +416,8 @@ int VP8EncWrite(VP8Encoder* const enc) {
     if (size)
       ok = ok && pic->writer(buf, size, pic);
     VP8BitWriterWipeOut(enc->parts_ + p);    // will free the internal buffer.
-    ok = ok && WebPReportProgress(enc, enc->percent_ + percent_per_part);
+    ok = ok && WebPReportProgress(pic, enc->percent_ + percent_per_part,
+                                  &enc->percent_);
   }
 
   // Padding byte
@@ -425,7 +426,7 @@ int VP8EncWrite(VP8Encoder* const enc) {
   }
 
   enc->coded_size_ = (int)(CHUNK_HEADER_SIZE + riff_size);
-  ok = ok && WebPReportProgress(enc, final_percent);
+  ok = ok && WebPReportProgress(pic, final_percent, &enc->percent_);
   return ok;
 }
 
