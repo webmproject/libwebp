@@ -27,7 +27,7 @@ used entropy codes, spatial predictors, color  space  conversion,  and
 color table. LZ77, Huffman coding, and a  color  cache  are  used  for
 compression of the bulk data. Decoding speeds  faster  than  PNG  have
 been demonstrated, as well as 25 % denser compression than what can be
-achieved using today’s PNG format.
+achieved using today's PNG format.
 
 
 * TOC placeholder
@@ -141,13 +141,13 @@ RIFF Header
 The beginning of the header has the RIFF container. This consist of the
 following 21 bytes:
 
-   1. String “RIFF”
+   1. String "RIFF"
    2. A little-endian 32 bit value of the block length, the whole size of
       the block controlled by the RIFF header. Normally this equals the
       payload size (file size subtracted by 8 bytes, i.e., 4 bytes for
-      ‘RIFF’ identifier and 4 bytes for storing this value itself).
-   3. String “WEBP” (RIFF container name).
-   4. String “VP8L” (chunk tag for lossless encoded image data).
+      'RIFF' identifier and 4 bytes for storing this value itself).
+   3. String "WEBP" (RIFF container name).
+   4. String "VP8L" (chunk tag for lossless encoded image data).
    5. A little-endian 32-bit value of the number of bytes in the lossless
       stream.
    6. One byte signature 0x64. Decoders need to accept also 0x65 as a valid
@@ -175,7 +175,7 @@ correlations. Transformations can make the final compression more dense.
 
 An image can go through four types of transformations. A 1 bit indicates
 the presence of a transform. Every transform is allowed to be used only
-once. The transformations are used only for the main level ARGB image — the
+once. The transformations are used only for the main level ARGB image -- the
 subresolution images have no transforms, not even the 0 bit indicating the
 end-of-transforms.
 
@@ -611,7 +611,7 @@ code, and in order to minimize this cost, statistically similar blocks can
 share an entropy code. The blocks sharing an entropy code can be found by
 clustering their statistical properties, or by repeatedly joining two
 randomly selected clusters when it reduces the overall amount of bits
-needed to encode the image. [See section “Decoding of meta Huffman codes”
+needed to encode the image. [See section "Decoding of meta Huffman codes"
 in Chapter 5 for an explanation of how this entropy image is stored.]
 
 Each pixel is encoded using one of three possible methods:
@@ -685,7 +685,7 @@ length to 4096. For distances, all 40 prefix codes are used.
 within the current pixel. The rest are pure distance codes in scan-line
 order, just offset by 120. The smallest codes are coded into x and y
 offsets by the following table. Each tuple shows the x and the y
-coordinates in 2d offsets — for example the first tuple (0, 1) means 0 for
+coordinates in 2d offsets -- for example the first tuple (0, 1) means 0 for
 no difference in x, and 1 pixel difference in y (indicating previous row).
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -768,7 +768,7 @@ result of this coding is further Huffman coded.
 ### Spatially-variant Huffman coding
 
 For every pixel (x, y) in the image, there is a definition of which entropy
-code to use. First, there is an integer called ‘meta Huffman code’ that can
+code to use. First, there is an integer called 'meta Huffman code' that can
 be obtained from a subresolution 2d image. This meta Huffman code
 identifies a set of five Huffman codes, one for green (along with length
 codes and color cache codes), one for each of red, blue and alpha, and one
@@ -964,9 +964,9 @@ the number of pixels (xsize * ysize).
                        (1-bit value 1; 4-bit value for color cache size)
 <huffman codes> ::= <huffman code> | <huffman code><huffman codes> 
 <huffman code> ::= <simple huffman code> | <normal huffman code>
-<simple huffman code> ::= see “Simple code length code” for details
+<simple huffman code> ::= see "Simple code length code" for details
 <normal huffman code> ::= <code length code>; encoded code lengths
-<code length code> ::= see section “Normal code length code”
+<code length code> ::= see section "Normal code length code"
 <lz77-coded image> ::= (<argb-pixel> | <color-cache-code> | <lz77-copy>) |
                        (<lz77-coded image> | "")
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
