@@ -112,6 +112,7 @@ significant bits of the original data. Thus the statement
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 b = ReadBits(2);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 is equivalent with the two statements below:
 
@@ -119,6 +120,7 @@ is equivalent with the two statements below:
 b = ReadBits(1);         
 b |= ReadBits(1) << 1;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 We assume that each color component (e.g. alpha, red, blue and green) is
 represented using an 8-bit byte. We define the corresponding type as uint8.
@@ -161,6 +163,7 @@ Width and height are decoded as 14-bit integers as follows:
 int image_width = ReadBits(14) + 1;
 int image_height = ReadBits(14) + 1;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 The 14-bit dynamics for image size limit the maximum size of a WebP
 lossless image to 16384✕16384 pixels.
@@ -193,6 +196,7 @@ while (ReadBits(1)) {  // Transform present.
 
 // Decode actual image data (section 4).
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 If a transform is present then the next two bits specify the transform
 type. There are four types of transforms.
@@ -205,6 +209,7 @@ enum TransformType {
   COLOR_INDEXING_TRANSFORM        = 3,
 };
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 The transform type is followed by the transform data. Transform data
 contains the required information to apply the inverse transform and
@@ -233,6 +238,7 @@ int block_height = (1 << size_bits);
 #define DIV_ROUND_UP(num, den) ((num) + (den) - 1) / (den))
 int block_xsize = DIV_ROUND_UP(image_width, 1 << size_bits);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 The transform data contains the prediction mode for each block of the
 image. All the block_width * block_height pixels of a block use same
@@ -245,6 +251,7 @@ For a pixel x, y, one can compute the respective filter block address by:
 int block_index = (y >> size_bits) * block_xsize +
                   (x >> size_bits);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 There are 14 different prediction modes. In each prediction mode, the
 current pixel value is predicted from one or more neighboring pixels whose
@@ -295,6 +302,7 @@ uint8 Average2(uint8 a, uint8 b) {
   return (a + b) / 2;
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 The Select predictor is defined as follows:
 
@@ -322,6 +330,7 @@ uint32 Select(uint32 L, uint32 T, uint32 TL) {
   }
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 The function ClampedAddSubstractFull and ClampedAddSubstractHalf are
 performed for each ARGB component as follows:
@@ -332,18 +341,21 @@ int Clamp(int a) {
   return (a < 0) ? 0 : (a > 255) ?  255 : a;
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int ClampAddSubtractFull(int a, int b, int c) {
   return Clamp(a + b - c);
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int ClampAddSubtractHalf(int a, int b) {
   return Clamp(a + (a - b) / 2);
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 There are special handling rules for some border pixels. If there is a
 prediction transform, regardless of the mode [0..13] for these pixels, the
@@ -376,6 +388,7 @@ typedef struct {
   uint8 red_to_blue;
 } ColorTransformElement;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 The actual color transformation is done by defining a color transform
 delta. The color transform delta depends on the ColorTransformElement which
@@ -412,6 +425,7 @@ void ColorTransform(uint8 red, uint8 blue, uint8 green,
   *new_blue = tmp_blue & 0xff;
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 ColorTransformDelta is computed using a signed 8-bit integer representing a
 3.5-fixed-point number, and a signed 8-bit RGB color channel (c) [-
@@ -422,6 +436,7 @@ int8 ColorTransformDelta(int8 t, int8 c) {
   return (t * c) >> 5;
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 The multiplication is to be done using more precision (with at least 16 bit
 dynamics). The sign extension property of the shift operation does not
@@ -440,6 +455,7 @@ int size_bits = ReadStream(4);
 int block_width = 1 << size_bits;
 int block_height = 1 << size_bits;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 The remaining part of the color transform data contains
 ColorTransformElement instances corresponding to each block of the image.
@@ -474,6 +490,7 @@ void InverseTransform(uint8 red, uint8 green, uint8 blue,
   *new_blue = blue & 0xff;
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 
 ### Subtract Green Transform
@@ -489,6 +506,7 @@ void AddGreenToBlueAndRed(uint8 green, uint8 *red, uint8 *blue) {
   *blue = (*blue + green) & 0xff;
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 This transform is redundant as it can be modeled using the color transform.
 This transform is still often useful, and since it can extend the dynamics
@@ -519,6 +537,7 @@ table. The decoder reads the color indexing transform data as follow:
 // 8 bit value for color table size
 int color_table_size = ReadStream(8) + 1;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 The color table is stored using the image storage format itself. The color
 table can be obtained by reading an image, without the RIFF header, image
@@ -539,6 +558,7 @@ The indexing is done based on the green component of the ARGB color.
 // Inverse transform
 argb = color_table[GREEN(argb)];
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 When the color table is of a small size (equal to or less than 16 colors),
 several pixels are bundled into a single pixel. The pixel bundling packs
@@ -560,6 +580,7 @@ if (color_table_size <= 2) {
   width_bits = 1;
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 The width_bits has a value of 0, 1, 2 or 3. A value of 0 indicates no pixel
 bundling to be done for the image. A value of 1 indicates that two pixels
@@ -668,6 +689,7 @@ uint32 extra_bits = (prefix_code - 2) >> 1;
 uint32 offset = (2 + (prefix_code & 1)) << extra_bits;
 return offset + ReadBits(extra_bits) + 1;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 
 ### LZ77 backward reference entropy coding
@@ -728,6 +750,7 @@ is 1, the color cache size is read:
 int color_cache_code_bits = ReadBits(br, 4);
 int color_cache_size = 1 << color_cache_code_bits;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 color_cache_code_bits defines the size of the color_cache by (1 <<
 color_cache_code_bits). The range of allowed values for
@@ -810,6 +833,7 @@ The first bit indicates the number of codes:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int num_symbols = ReadBits(1) + 1;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 The first symbol is stored either using a 1-bit code for values of 0 and 1,
 or using a 8-bit code for values in range [0, 255]. The second symbol, when
@@ -822,6 +846,7 @@ if (num_symbols == 2) {
   symbols[1] = ReadBits(8);
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 Empty trees can be coded as trees that contain one 0 symbol, and can be
 codified using four bits. For example, a distance tree can be empty if
@@ -846,6 +871,7 @@ for (i = 0; i < num_codes; ++i) {
   code_lengths[kCodeLengthCodeOrder[i]] = ReadBits(3);
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
   * Code length code [0..15] indicate literal code lengths. 
     * Value 0 means no symbols have been coded, 
@@ -886,6 +912,7 @@ int huffman_bits = ReadBits(4);
 int huffman_xsize = DIV_ROUND_UP(xsize, 1 << huffman_bits);
 int huffman_ysize = DIV_ROUND_UP(ysize, 1 << huffman_bits);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 huffman_bits gives the amount of subsampling in the entropy image.
 
@@ -898,6 +925,7 @@ code, is coded only by the number of codes:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int num_meta_codes = max(entropy_image) + 1;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 Now, we can obtain the five Huffman codes for green, alpha, red, blue and
 distance for a given (x, y) by the following expression:
@@ -906,6 +934,7 @@ distance for a given (x, y) by the following expression:
 meta_codes[(entropy_image[(y >> huffman_bits) * huffman_xsize +
                           (x >> huffman_bits)] >> 8) & 0xffff]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{:lang='c'}
 
 The huffman_code[5 * meta_code + k], codes with k == 0 are for the green &
 length code, k == 4 for the distance code, and the codes at k == 1, 2, and
@@ -979,5 +1008,3 @@ A possible example sequence
 <meta huffman code><color cache info><huffman codes>
 <lz77-coded image>
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
