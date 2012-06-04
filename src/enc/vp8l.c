@@ -42,15 +42,6 @@ static int CompareColors(const void* p1, const void* p2) {
   return (a < b) ? -1 : (a > b) ? 1 : 0;
 }
 
-static int HasRealAlpha(const uint32_t* const argb, int num_pix) {
-  int i;
-  for (i = 0; i < num_pix; ++i) {
-    // Checking for the presence of non-opaque alpha.
-    if (argb[i] < ARGB_BLACK) return 1;
-  }
-  return 0;
-}
-
 // If number of colors in the image is less than or equal to MAX_PALETTE_SIZE,
 // creates a palette and returns true, else returns false.
 static int AnalyzeAndCreatePalette(const uint32_t* const argb, int num_pix,
@@ -983,7 +974,7 @@ int VP8LEncodeImage(const WebPConfig* const config,
     goto Error;
   }
 
-  has_alpha = HasRealAlpha(picture->argb, width * height);
+  has_alpha = WebPPictureHasTransparency(picture);
   // Write the non-trivial Alpha flag and lossless version.
   if (!WriteRealAlphaAndVersion(&bw, has_alpha)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;

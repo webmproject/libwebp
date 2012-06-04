@@ -669,6 +669,33 @@ void WebPCleanupTransparentArea(WebPPicture* const pic) {
 #undef SIZE
 #undef SIZE2
 
+// Checking for the presence of non-opaque alpha.
+int WebPPictureHasTransparency(const WebPPicture* const pic) {
+  if (pic == NULL) return 0;
+  if (!pic->use_argb_input) {
+    int x, y;
+    const uint8_t* alpha = pic->a;
+    if (alpha == NULL) return 0;
+    for (y = 0; y < pic->height; ++y) {
+      for (x = 0; x < pic->width; ++x) {
+        if (alpha[x] != 0xff) return 1;
+      }
+      alpha += pic->a_stride;
+    }
+  } else {
+    int x, y;
+    const uint32_t* argb = pic->argb;
+    if (argb == NULL) return 1;
+    for (y = 0; y < pic->height; ++y) {
+      for (x = 0; x < pic->width; ++x) {
+        if (argb[x] < 0xff000000) return 1;   // test any alpha values != 0xff
+      }
+      argb += pic->argb_stride;
+    }
+  }
+  return 0;
+}
+
 //------------------------------------------------------------------------------
 // Distortion
 

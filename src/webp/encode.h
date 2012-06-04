@@ -293,6 +293,11 @@ WEBP_EXTERN(int) WebPPictureImportBGRA(
 // area, to help compressibility (no guarantee, though).
 WEBP_EXTERN(void) WebPCleanupTransparentArea(WebPPicture* const picture);
 
+// Scan the picture 'pic' for the presence of non fully opaque alpha values.
+// Returns true in such case. Otherwise returns false (indicating that the
+// alpha plane can be ignored altogether e.g.).
+WEBP_EXTERN(int) WebPPictureHasTransparency(const WebPPicture* const pic);
+
 //------------------------------------------------------------------------------
 // Main call
 

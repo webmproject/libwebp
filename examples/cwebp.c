@@ -650,7 +650,8 @@ static int DumpPicture(const WebPPicture* const picture, const char* PGM_name) {
   const int uv_width = (picture->width + 1) / 2;
   const int uv_height = (picture->height + 1) / 2;
   const int stride = (picture->width + 1) & ~1;
-  const int alpha_height = picture->a ? picture->height : 0;
+  const int alpha_height =
+      WebPPictureHasTransparency(picture) ? picture->height : 0;
   const int height = picture->height + uv_height + alpha_height;
   FILE* const f = fopen(PGM_name, "wb");
   if (f == NULL) return 0;
@@ -1035,7 +1036,11 @@ int main(int argc, const char *argv[]) {
 
   // Write info
   if (dump_file) {
-    DumpPicture(&picture, dump_file);
+    if (picture.use_argb_input) {
+      fprintf(stderr, "Warning: can't dump file (-d option) in lossless mode.");
+    } else if (!DumpPicture(&picture, dump_file)) {
+      fprintf(stderr, "Warning, couldn't dump picture %s\n", dump_file);
+    }
   }
 
   if (!quiet) {

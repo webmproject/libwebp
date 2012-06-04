@@ -281,7 +281,7 @@ static int EncodeAlpha(const uint8_t* data, int width, int height, int stride,
 // Main calls
 
 void VP8EncInitAlpha(VP8Encoder* enc) {
-  enc->has_alpha_ = (enc->pic_->a != NULL);
+  enc->has_alpha_ = WebPPictureHasTransparency(enc->pic_);
   enc->alpha_data_ = NULL;
   enc->alpha_data_size_ = 0;
 }
