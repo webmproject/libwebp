@@ -206,11 +206,11 @@ const WebPYUV444Converter WebPYUV444Converters[MODE_LAST] = {
 #define PREMULTIPLY(x, m) (((x) * (m) + (1UL << 23)) >> 24)
 #endif
 
-static void ApplyAlphaMultiply(uint8_t* rgba, int alpha_1rst,
+static void ApplyAlphaMultiply(uint8_t* rgba, int alpha_first,
                                int w, int h, int stride) {
   while (h-- > 0) {
-    uint8_t* const rgb = rgba + (alpha_1rst ? 1 : 0);
-    const uint8_t* const alpha = rgba + (alpha_1rst ? 0 : 3);
+    uint8_t* const rgb = rgba + (alpha_first ? 1 : 0);
+    const uint8_t* const alpha = rgba + (alpha_first ? 0 : 3);
     int i;
     for (i = 0; i < w; ++i) {
       const uint32_t a = alpha[4 * i];
@@ -232,8 +232,13 @@ static void ApplyAlphaMultiply(uint8_t* rgba, int alpha_1rst,
 #define MULTIPLIER(a)  ((a) * 0x11)
 #define PREMULTIPLY(x, m) (((x) * (m)) >> 12)
 
-static WEBP_INLINE uint8_t dither_hi(uint8_t x) { return (x & 0xf0) | (x >> 4); }
-static WEBP_INLINE uint8_t dither_lo(uint8_t x) { return (x & 0x0f) | (x << 4); }
+static WEBP_INLINE uint8_t dither_hi(uint8_t x) {
+  return (x & 0xf0) | (x >> 4);
+}
+
+static WEBP_INLINE uint8_t dither_lo(uint8_t x) {
+  return (x & 0x0f) | (x << 4);
+}
 
 static void ApplyAlphaMultiply4444(uint8_t* rgba4444,
                                    int w, int h, int stride) {

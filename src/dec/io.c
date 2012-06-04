@@ -408,7 +408,7 @@ static int ExportAlpha(WebPDecParams* const p, int y_pos) {
 
 static int ExportAlphaRGBA4444(WebPDecParams* const p, int y_pos) {
   const WebPRGBABuffer* const buf = &p->output->u.RGBA;
-  uint8_t* base_rgba = buf->rgba + (p->last_y + y_pos) * buf->stride;
+  uint8_t* const base_rgba = buf->rgba + (p->last_y + y_pos) * buf->stride;
   uint8_t* alpha_dst = base_rgba + 1;
   int num_lines_out = 0;
   const WEBP_CSP_MODE colorspace = p->output->colorspace;
