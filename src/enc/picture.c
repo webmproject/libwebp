@@ -473,6 +473,13 @@ static int Import(WebPPicture* const picture,
   const int width = picture->width;
   const int height = picture->height;
 
+  if (import_alpha) {
+    picture->colorspace |= WEBP_CSP_ALPHA_BIT;
+  } else {
+    picture->colorspace &= ~WEBP_CSP_ALPHA_BIT;
+  }
+  if (!WebPPictureAlloc(picture)) return 0;
+
   if (!picture->use_argb_input) {
     // Import luma plane
     for (y = 0; y < height; ++y) {
@@ -578,29 +585,21 @@ static int Import(WebPPicture* const picture,
 
 int WebPPictureImportRGB(WebPPicture* const picture,
                          const uint8_t* const rgb, int rgb_stride) {
-  picture->colorspace &= ~WEBP_CSP_ALPHA_BIT;
-  if (!WebPPictureAlloc(picture)) return 0;
   return Import(picture, rgb, rgb_stride, 3, 0, 0);
 }
 
 int WebPPictureImportBGR(WebPPicture* const picture,
                          const uint8_t* const rgb, int rgb_stride) {
-  picture->colorspace &= ~WEBP_CSP_ALPHA_BIT;
-  if (!WebPPictureAlloc(picture)) return 0;
   return Import(picture, rgb, rgb_stride, 3, 1, 0);
 }
 
 int WebPPictureImportRGBA(WebPPicture* const picture,
                           const uint8_t* const rgba, int rgba_stride) {
-  picture->colorspace |= WEBP_CSP_ALPHA_BIT;
-  if (!WebPPictureAlloc(picture)) return 0;
   return Import(picture, rgba, rgba_stride, 4, 0, 1);
 }
 
 int WebPPictureImportBGRA(WebPPicture* const picture,
                           const uint8_t* const rgba, int rgba_stride) {
-  picture->colorspace |= WEBP_CSP_ALPHA_BIT;
-  if (!WebPPictureAlloc(picture)) return 0;
   return Import(picture, rgba, rgba_stride, 4, 1, 1);
 }
 
