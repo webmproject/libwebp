@@ -155,7 +155,6 @@ typedef void (*WebPUpsampleLinePairFunc)(
 
 // Fancy upsampling functions to convert YUV to RGB(A) modes
 extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
-extern WebPUpsampleLinePairFunc WebPUpsamplersKeepAlpha[/* MODE_LAST */];
 
 // Initializes SSE2 version of the fancy upsamplers.
 void WebPInitUpsamplersSSE2(void);
@@ -169,7 +168,6 @@ typedef void (*WebPSampleLinePairFunc)(
     uint8_t* top_dst, uint8_t* bottom_dst, int len);
 
 extern const WebPSampleLinePairFunc WebPSamplers[/* MODE_LAST */];
-extern const WebPSampleLinePairFunc WebPSamplersKeepAlpha[/* MODE_LAST */];
 
 // YUV444->RGB converters
 typedef void (*WebPYUV444Converter)(const uint8_t* y,
@@ -180,6 +178,23 @@ extern const WebPYUV444Converter WebPYUV444Converters[/* MODE_LAST */];
 
 // Main function to be called
 void WebPInitUpsamplers(void);
+
+//------------------------------------------------------------------------------
+// Pre-multiply planes with alpha values
+
+// Apply alpha pre-multiply on an rgba, bgra or argb plane of size w * h.
+// alpha_first should be 0 for argb, 1 for rgba or bgra (where alpha is last).
+extern void (*WebPApplyAlphaMultiply)(
+    uint8_t* rgba, int alpha_first, int w, int h, int stride);
+
+// Same, buf specifically for RGBA4444 format
+extern void (*WebPApplyAlphaMultiply4444)(
+    uint8_t* rgba4444, int w, int h, int stride);
+
+// To be called first before using the above.
+void WebPInitPremultiply(void);
+
+void WebPInitPremultiplySSE2(void);   // should not be called directly.
 
 //------------------------------------------------------------------------------
 

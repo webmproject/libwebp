@@ -24,6 +24,7 @@ extern "C" {
 
 typedef struct WebPDecParams WebPDecParams;
 typedef int (*OutputFunc)(const VP8Io* const io, WebPDecParams* const p);
+typedef int (*OutputRowFunc)(WebPDecParams* const p, int y_pos);
 
 struct WebPDecParams {
   WebPDecBuffer* output;             // output buffer.
@@ -34,9 +35,11 @@ struct WebPDecParams {
   const WebPDecoderOptions* options;  // if not NULL, use alt decoding features
   // rescalers
   WebPRescaler scaler_y, scaler_u, scaler_v, scaler_a;
-  void* memory;               // overall scratch memory for the output work.
-  OutputFunc emit;            // output RGB or YUV samples
-  OutputFunc emit_alpha;      // output alpha channel
+  void* memory;                  // overall scratch memory for the output work.
+
+  OutputFunc emit;               // output RGB or YUV samples
+  OutputFunc emit_alpha;         // output alpha channel
+  OutputRowFunc emit_alpha_row;  // output one line of rescaled alpha values
 };
 
 // Should be called first, before any use of the WebPDecParams object.
