@@ -577,11 +577,12 @@ static VP8StatusCode GetFeatures(const uint8_t* data, size_t data_size,
       return VP8_STATUS_BITSTREAM_ERROR;
     }
   } else {
+    int has_alpha;
     // Validates raw VP8L data.
-    if (!VP8LGetInfo(data, data_size, width, height)) {
+    if (!VP8LGetInfo(data, data_size, width, height, &has_alpha)) {
       return VP8_STATUS_BITSTREAM_ERROR;
     }
-    features->has_alpha = 1;
+    features->has_alpha = has_alpha;
   }
 
   return VP8_STATUS_OK;  // Return features from VP8 header.

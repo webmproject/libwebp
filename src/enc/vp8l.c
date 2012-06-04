@@ -30,6 +30,8 @@ extern "C" {
 
 #define PALETTE_KEY_RIGHT_SHIFT   22  // Key for 1K buffer.
 #define MAX_HUFF_IMAGE_SIZE       (32 * 1024 * 1024)
+#define MIN_HISTO_BITS            2
+#define MAX_HISTO_BITS            9
 
 // -----------------------------------------------------------------------------
 // Palette
@@ -38,6 +40,15 @@ static int CompareColors(const void* p1, const void* p2) {
   const uint32_t a = *(const uint32_t*)p1;
   const uint32_t b = *(const uint32_t*)p2;
   return (a < b) ? -1 : (a > b) ? 1 : 0;
+}
+
+static int HasRealAlpha(const uint32_t* const argb, int num_pix) {
+  int i;
+  for (i = 0; i < num_pix; ++i) {
+    // Checking for the presence of non-opaque alpha.
+    if (argb[i] < ARGB_BLACK) return 1;
+  }
+  return 0;
 }
 
 // If number of colors in the image is less than or equal to MAX_PALETTE_SIZE,
@@ -329,6 +340,7 @@ static int StoreFullHuffmanCode(VP8LBitWriter* const bw,
       const int nbits = VP8LBitsLog2Ceiling(trimmed_length - 1);
       const int nbitpairs = (nbits == 0) ? 1 : (nbits + 1) / 2;
       VP8LWriteBits(bw, 3, nbitpairs - 1);
+      assert(trimmed_length >= 2);
       VP8LWriteBits(bw, nbitpairs * 2, trimmed_length - 2);
     }
     StoreHuffmanTreeToBitMask(bw, tokens, length, &huffman_code);
@@ -501,7 +513,8 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
     }
     histogram_image_size = max_index;
 
-    VP8LWriteBits(bw, 4, histogram_bits);
+    assert(histogram_bits >= 2);
+    VP8LWriteBits(bw, 3, histogram_bits - 2);
     ok = EncodeImageInternal(bw, histogram_argb,
                              VP8LSubSampleSize(width, histogram_bits),
                              VP8LSubSampleSize(height, histogram_bits),
@@ -594,7 +607,8 @@ static int ApplyPredictFilter(const VP8LEncoder* const enc,
                     enc->transform_data_);
   VP8LWriteBits(bw, 1, TRANSFORM_PRESENT);
   VP8LWriteBits(bw, 2, PREDICTOR_TRANSFORM);
-  VP8LWriteBits(bw, 4, pred_bits);
+  assert(pred_bits >= 2);
+  VP8LWriteBits(bw, 3, pred_bits - 2);
   if (!EncodeImageInternal(bw, enc->transform_data_,
                            transform_width, transform_height, quality, 0, 0)) {
     return 0;
@@ -614,7 +628,8 @@ static int ApplyCrossColorFilter(const VP8LEncoder* const enc,
                           enc->argb_, enc->transform_data_);
   VP8LWriteBits(bw, 1, TRANSFORM_PRESENT);
   VP8LWriteBits(bw, 2, CROSS_COLOR_TRANSFORM);
-  VP8LWriteBits(bw, 4, ccolor_transform_bits);
+  assert(ccolor_transform_bits >= 2);
+  VP8LWriteBits(bw, 3, ccolor_transform_bits - 2);
   if (!EncodeImageInternal(bw, enc->transform_data_,
                            transform_width, transform_height, quality, 0, 0)) {
     return 0;
@@ -653,6 +668,12 @@ static int WriteImageSize(const WebPPicture* const pic,
 
   VP8LWriteBits(bw, VP8L_IMAGE_SIZE_BITS, width);
   VP8LWriteBits(bw, VP8L_IMAGE_SIZE_BITS, height);
+  return !bw->error_;
+}
+
+static int WriteRealAlphaAndVersion(VP8LBitWriter* const bw, int has_alpha) {
+  VP8LWriteBits(bw, 1, has_alpha);
+  VP8LWriteBits(bw, VP8L_VERSION_BITS, VP8L_VERSION);
   return !bw->error_;
 }
 
@@ -769,6 +790,7 @@ static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
   // Save palette to bitstream.
   VP8LWriteBits(bw, 1, TRANSFORM_PRESENT);
   VP8LWriteBits(bw, 2, COLOR_INDEXING_TRANSFORM);
+  assert(palette_size >= 2);
   VP8LWriteBits(bw, 8, palette_size - 1);
   for (i = palette_size - 1; i >= 1; --i) {
     palette[i] = VP8LSubPixels(palette[i], palette[i - 1]);
@@ -811,7 +833,8 @@ static int GetHistoBits(const WebPConfig* const config,
     if (huff_image_size <= MAX_HUFF_IMAGE_SIZE) break;
     ++histo_bits;
   }
-  return (histo_bits < 3) ? 3 : (histo_bits > 10) ? 10 : histo_bits;
+  return (histo_bits < MIN_HISTO_BITS) ? MIN_HISTO_BITS :
+      (histo_bits > MAX_HISTO_BITS) ? MAX_HISTO_BITS : histo_bits;
 }
 
 static void InitEncParams(VP8LEncoder* const enc) {
@@ -938,6 +961,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
 int VP8LEncodeImage(const WebPConfig* const config,
                     const WebPPicture* const picture) {
   int width, height;
+  int has_alpha;
   size_t coded_size;
   WebPEncodingError err = VP8_ENC_OK;
   VP8LBitWriter bw;
@@ -954,7 +978,17 @@ int VP8LEncodeImage(const WebPConfig* const config,
 
   // Write image size.
   VP8LBitWriterInit(&bw, (width * height) >> 1);
-  if (!WriteImageSize(picture, &bw)) goto Error;
+  if (!WriteImageSize(picture, &bw)) {
+    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+    goto Error;
+  }
+
+  has_alpha = HasRealAlpha(picture->argb, width * height);
+  // Write the non-trivial Alpha flag and lossless version.
+  if (!WriteRealAlphaAndVersion(&bw, has_alpha)) {
+    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+    goto Error;
+  }
 
   // Encode main image stream.
   err = VP8LEncodeStream(config, picture, &bw);

@@ -123,7 +123,7 @@ static WebPImageInfo* CreateImageInfo(uint32_t x_offset, uint32_t y_offset,
   WebPImageInfo* image_info = NULL;
 
   const int ok = is_lossless ?
-      VP8LGetInfo(data, size, &width, &height) :
+      VP8LGetInfo(data, size, &width, &height, NULL) :
       VP8GetInfo(data, size, size, &width, &height);
   if (!ok) return NULL;
 
@@ -500,7 +500,7 @@ static WebPMuxError GetImageWidthHeight(const WebPChunk* const image_chunk,
   ok = (tag == kChunks[IDX_VP8].tag) ?
       VP8GetInfo(image_chunk->data_, image_chunk->payload_size_,
                  image_chunk->payload_size_, &w, &h) :
-      VP8LGetInfo(image_chunk->data_, image_chunk->payload_size_, &w, &h);
+      VP8LGetInfo(image_chunk->data_, image_chunk->payload_size_, &w, &h, NULL);
   if (ok) {
     *width = w;
     *height = h;

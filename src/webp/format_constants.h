@@ -20,10 +20,11 @@
 
 // VP8L related constants.
 #define VP8L_SIGNATURE_SIZE          1      // VP8L signature size.
-#define VP8L_MAGIC_BYTE              0x64   // VP8L signature byte.
-#define VP8L_MAGIC_BYTE_RSVD         0x65   // VP8L reserved signature byte.
+#define VP8L_MAGIC_BYTE              0x2f   // VP8L signature byte.
 #define VP8L_IMAGE_SIZE_BITS         14     // Number of bits used to store
                                             // width and height.
+#define VP8L_VERSION_BITS            3      // 3 bits reserved for version.
+#define VP8L_VERSION                 0      // version 0
 
 #define MAX_PALETTE_SIZE             256
 #define MAX_CACHE_BITS               11

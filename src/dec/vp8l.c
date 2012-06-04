@@ -79,34 +79,37 @@ static int DecodeImageStream(int xsize, int ysize,
 //------------------------------------------------------------------------------
 
 int VP8LCheckSignature(const uint8_t* const data, size_t size) {
-  return (size >= 1) &&
-         (data[0] == VP8L_MAGIC_BYTE || data[0] == VP8L_MAGIC_BYTE_RSVD);
+  return (size >= 1) && (data[0] == VP8L_MAGIC_BYTE);
 }
 
-static int ReadImageSize(VP8LBitReader* const br,
-                         int* const width, int* const height) {
+static int ReadImageInfo(VP8LBitReader* const br,
+                         int* const width, int* const height,
+                         int* const has_alpha) {
   const uint8_t signature = VP8LReadBits(br, 8);
   if (!VP8LCheckSignature(&signature, 1)) {
     return 0;
   }
   *width = VP8LReadBits(br, VP8L_IMAGE_SIZE_BITS) + 1;
   *height = VP8LReadBits(br, VP8L_IMAGE_SIZE_BITS) + 1;
+  *has_alpha = VP8LReadBits(br, 1);
+  VP8LReadBits(br, VP8L_VERSION_BITS);  // Read/ignore the version number.
   return 1;
 }
 
 int VP8LGetInfo(const uint8_t* data, size_t data_size,
-                int* const width, int* const height) {
+                int* const width, int* const height, int* const has_alpha) {
   if (data == NULL || data_size < kHeaderBytes) {
     return 0;         // not enough data
   } else {
-    int w, h;
+    int w, h, a;
     VP8LBitReader br;
     VP8LInitBitReader(&br, data, data_size);
-    if (!ReadImageSize(&br, &w, &h)) {
+    if (!ReadImageInfo(&br, &w, &h, &a)) {
       return 0;
     }
     if (width != NULL) *width = w;
     if (height != NULL) *height = h;
+    if (has_alpha != NULL) *has_alpha = a;
     return 1;
   }
 }
@@ -308,7 +311,7 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
   int num_htree_groups = 1;
 
   if (VP8LReadBits(br, 1)) {      // use meta Huffman codes
-    const int huffman_precision = VP8LReadBits(br, 4);
+    const int huffman_precision = VP8LReadBits(br, 3) + 2;
     const int huffman_xsize = VP8LSubSampleSize(xsize, huffman_precision);
     const int huffman_ysize = VP8LSubSampleSize(ysize, huffman_precision);
     const int huffman_pixs = huffman_xsize * huffman_ysize;
@@ -735,7 +738,7 @@ static int ReadTransform(int* const xsize, int const* ysize,
   switch (type) {
     case PREDICTOR_TRANSFORM:
     case CROSS_COLOR_TRANSFORM:
-      transform->bits_ = VP8LReadBits(br, 4);
+      transform->bits_ = VP8LReadBits(br, 3) + 2;
       ok = DecodeImageStream(VP8LSubSampleSize(transform->xsize_,
                                                transform->bits_),
                              VP8LSubSampleSize(transform->ysize_,
@@ -1006,7 +1009,7 @@ int VP8LDecodeAlphaImageStream(int width, int height, const uint8_t* const data,
 //------------------------------------------------------------------------------
 
 int VP8LDecodeHeader(VP8LDecoder* const dec, VP8Io* const io) {
-  int width, height;
+  int width, height, has_alpha;
 
   if (dec == NULL) return 0;
   if (io == NULL) {
@@ -1017,7 +1020,7 @@ int VP8LDecodeHeader(VP8LDecoder* const dec, VP8Io* const io) {
   dec->io_ = io;
   dec->status_ = VP8_STATUS_OK;
   VP8LInitBitReader(&dec->br_, io->data, io->data_size);
-  if (!ReadImageSize(&dec->br_, &width, &height)) {
+  if (!ReadImageInfo(&dec->br_, &width, &height, &has_alpha)) {
     dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
     goto Error;
   }
