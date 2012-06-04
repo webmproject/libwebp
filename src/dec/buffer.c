@@ -22,7 +22,10 @@ extern "C" {
 // WebPDecBuffer
 
 // Number of bytes per pixel for the different color-spaces.
-static const int kModeBpp[MODE_LAST] = { 3, 4, 3, 4, 4, 2, 2, 1, 1 };
+static const int kModeBpp[MODE_LAST] = {
+  3, 4, 3, 4, 4, 2, 2,
+  4, 4, 4, 2,    // pre-multiplied modes
+  1, 1 };
 
 // Check that webp_csp_mode is within the bounds of WEBP_CSP_MODE.
 // Convert to an integer to handle both the unsigned/signed enum cases
@@ -38,7 +41,7 @@ static VP8StatusCode CheckDecBuffer(const WebPDecBuffer* const buffer) {
   const int height = buffer->height;
   if (!IsValidColorspace(mode)) {
     ok = 0;
-  } else if (mode >= MODE_YUV) {   // YUV checks
+  } else if (!WebPIsRGBMode(mode)) {   // YUV checks
     const WebPYUVABuffer* const buf = &buffer->u.YUVA;
     const size_t size = buf->y_stride * height;
     const size_t u_size = buf->u_stride * ((height + 1) / 2);
@@ -81,7 +84,7 @@ static VP8StatusCode AllocateBuffer(WebPDecBuffer* const buffer) {
     const int stride = w * kModeBpp[mode];
     const uint64_t size = (uint64_t)stride * h;
 
-    if (mode >= MODE_YUV) {
+    if (!WebPIsRGBMode(mode)) {
       uv_stride = (w + 1) / 2;
       uv_size = (uint64_t)uv_stride * ((h + 1) / 2);
       if (mode == MODE_YUVA) {
@@ -101,7 +104,7 @@ static VP8StatusCode AllocateBuffer(WebPDecBuffer* const buffer) {
       return VP8_STATUS_OUT_OF_MEMORY;
     }
 
-    if (mode >= MODE_YUV) {   // YUVA initialization
+    if (!WebPIsRGBMode(mode)) {   // YUVA initialization
       WebPYUVABuffer* const buf = &buffer->u.YUVA;
       buf->y = output;
       buf->y_stride = stride;

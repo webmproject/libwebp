@@ -19,6 +19,8 @@ extern "C" {
 #include <stdlib.h>
 #include "./lossless.h"
 #include "../dec/vp8li.h"
+#include "../dsp/yuv.h"
+#include "../dsp/dsp.h"
 
 #ifdef USE_LOSSLESS_ENCODER
 
@@ -1041,8 +1043,7 @@ static void CopyOrSwap(const uint32_t* src, int num_pixels, uint8_t* dst,
 }
 
 void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
-                        WEBP_CSP_MODE out_colorspace,
-                        uint8_t* const rgba) {
+                         WEBP_CSP_MODE out_colorspace, uint8_t* const rgba) {
   switch (out_colorspace) {
     case MODE_RGB:
       ConvertBGRAToRGB(in_data, num_pixels, rgba);
@@ -1050,17 +1051,33 @@ void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
     case MODE_RGBA:
       ConvertBGRAToRGBA(in_data, num_pixels, rgba);
       break;
+    case MODE_rgbA:
+      ConvertBGRAToRGBA(in_data, num_pixels, rgba);
+      WebPApplyAlphaMultiply(rgba, 0, num_pixels, 1, 0);
+      break;
     case MODE_BGR:
       ConvertBGRAToBGR(in_data, num_pixels, rgba);
       break;
     case MODE_BGRA:
       CopyOrSwap(in_data, num_pixels, rgba, 1);
       break;
+    case MODE_bgrA:
+      CopyOrSwap(in_data, num_pixels, rgba, 1);
+      WebPApplyAlphaMultiply(rgba, 0, num_pixels, 1, 0);
+      break;
     case MODE_ARGB:
       CopyOrSwap(in_data, num_pixels, rgba, 0);
       break;
+    case MODE_Argb:
+      CopyOrSwap(in_data, num_pixels, rgba, 0);
+      WebPApplyAlphaMultiply(rgba, 1, num_pixels, 1, 0);
+      break;
     case MODE_RGBA_4444:
       ConvertBGRAToRGBA4444(in_data, num_pixels, rgba);
+      break;
+    case MODE_rgbA_4444:
+      ConvertBGRAToRGBA4444(in_data, num_pixels, rgba);
+      WebPApplyAlphaMultiply4444(rgba, num_pixels, 1, 0);
       break;
     case MODE_RGB_565:
       ConvertBGRAToRGB565(in_data, num_pixels, rgba);

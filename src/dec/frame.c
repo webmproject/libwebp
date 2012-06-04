@@ -200,7 +200,12 @@ static int FinishRow(VP8Decoder* const dec, VP8Io* const io) {
       y_end = io->crop_bottom;    // make sure we don't overflow on last row.
     }
     io->a = NULL;
-    if (dec->alpha_data_ && y_start < y_end) {
+    if (dec->alpha_data_ != NULL && y_start < y_end) {
+      // TODO(skal): several things to correct here:
+      // * testing presence of alpha with dec->alpha_data_ is not a good idea
+      // * we're actually decompressing the full plane only once. It should be
+      //   more obvious from signature.
+      // * we could free alpha_data_ right after this call, but we don't own.
       io->a = VP8DecompressAlphaRows(dec, y_start, y_end - y_start);
       if (io->a == NULL) {
         return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
@@ -214,7 +219,7 @@ static int FinishRow(VP8Decoder* const dec, VP8Io* const io) {
       io->y += dec->cache_y_stride_ * delta_y;
       io->u += dec->cache_uv_stride_ * (delta_y >> 1);
       io->v += dec->cache_uv_stride_ * (delta_y >> 1);
-      if (io->a) {
+      if (io->a != NULL) {
         io->a += io->width * delta_y;
       }
     }
@@ -222,7 +227,7 @@ static int FinishRow(VP8Decoder* const dec, VP8Io* const io) {
       io->y += io->crop_left;
       io->u += io->crop_left >> 1;
       io->v += io->crop_left >> 1;
-      if (io->a) {
+      if (io->a != NULL) {
         io->a += io->crop_left;
       }
       io->mb_y = y_start - io->crop_top;
@@ -417,7 +422,8 @@ static int AllocateMemory(VP8Decoder* const dec) {
                             + kFilterExtraRows[dec->filter_type_]) * 3 / 2;
   const size_t cache_size = top_size * cache_height;
   const size_t alpha_size =
-      dec->alpha_data_ ? (dec->pic_hdr_.width_ * dec->pic_hdr_.height_) : 0;
+      (dec->alpha_data_ != NULL) ? dec->pic_hdr_.width_ * dec->pic_hdr_.height_
+                                 : 0;
   const size_t needed = intra_pred_mode_size
                       + top_size + mb_info_size + f_info_size
                       + yuv_size + coeffs_size

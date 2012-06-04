@@ -99,7 +99,9 @@ struct VP8Io {
   int use_scaling;
   int scaled_width, scaled_height;
 
-  // pointer to the alpha data (if present) corresponding to the rows
+  // If non NULL, pointer to the alpha data (if present) corresponding to the
+  // start of the current row (That is: it is pre-offset by mb_y and takes
+  // cropping into account).
   const uint8_t* a;
 };
 

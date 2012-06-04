@@ -477,7 +477,7 @@ static uint8_t* Decode(WEBP_CSP_MODE mode, const uint8_t* data,
     WebPCopyDecBuffer(&output, keep_info);
   }
   // return decoded samples (don't clear 'output'!)
-  return (mode >= MODE_YUV) ? output.u.YUVA.y : output.u.RGBA.rgba;
+  return WebPIsRGBMode(mode) ? output.u.RGBA.rgba : output.u.YUVA.y;
 }
 
 uint8_t* WebPDecodeRGB(const uint8_t* data, size_t data_size,
@@ -684,7 +684,7 @@ int WebPIoInitFromOptions(const WebPDecoderOptions* const options,
     h = options->crop_height;
     x = options->crop_left;
     y = options->crop_top;
-    if (src_colorspace >= MODE_YUV) {   // only snap for YUV420 or YUV422
+    if (!WebPIsRGBMode(src_colorspace)) {   // only snap for YUV420 or YUV422
       x &= ~1;
       y &= ~1;    // TODO(later): only for YUV420, not YUV422.
     }

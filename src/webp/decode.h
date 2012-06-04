@@ -113,12 +113,35 @@ typedef enum { MODE_RGB = 0, MODE_RGBA = 1,
                MODE_BGR = 2, MODE_BGRA = 3,
                MODE_ARGB = 4, MODE_RGBA_4444 = 5,
                MODE_RGB_565 = 6,
+               // RGB-premultiplied transparent modes (alpha value is preserved)
+               MODE_rgbA = 7,
+               MODE_bgrA = 8,
+               MODE_Argb = 9,
+               MODE_rgbA_4444 = 10,
                // YUV modes must come after RGB ones.
-               MODE_YUV = 7, MODE_YUVA = 8,  // yuv 4:2:0
-               MODE_LAST = 9
+               MODE_YUV = 11, MODE_YUVA = 12,  // yuv 4:2:0
+               MODE_LAST = 13
              } WEBP_CSP_MODE;
 
-// Generic structure for describing the sample buffer.
+// Some useful macros:
+static WEBP_INLINE int WebPIsPremultipliedMode(WEBP_CSP_MODE mode) {
+  return (mode == MODE_rgbA || mode == MODE_bgrA || mode == MODE_Argb ||
+          mode == MODE_rgbA_4444);
+}
+
+static WEBP_INLINE int WebPIsAlphaMode(WEBP_CSP_MODE mode) {
+  return (mode == MODE_RGBA || mode == MODE_BGRA || mode == MODE_ARGB ||
+          mode == MODE_RGBA_4444 || mode == MODE_YUVA ||
+          WebPIsPremultipliedMode(mode));
+}
+
+static WEBP_INLINE int WebPIsRGBMode(WEBP_CSP_MODE mode) {
+  return (mode < MODE_YUV);
+}
+
+//------------------------------------------------------------------------------
+// WebPDecBuffer: Generic structure for describing the sample buffer.
+
 typedef struct {    // view as RGBA
   uint8_t* rgba;    // pointer to RGBA samples
   int stride;       // stride in bytes from one scanline to the next.
