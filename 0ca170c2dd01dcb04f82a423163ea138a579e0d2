@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAK3//2cs\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-04T23:57:39Z",
+      "side": 1,
+      "message": "it\u0027d be nice to have a brief summary of the changes this encompasses.",
+      "revId": "0ca170c2dd01dcb04f82a423163ea138a579e0d2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
