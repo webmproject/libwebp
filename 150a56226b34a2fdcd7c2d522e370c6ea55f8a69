@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAK3//2mY\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-04T23:11:57Z",
+      "side": 1,
+      "message": "Except it\u0027s called: WebPPictureHasTransparency, ftfy",
+      "revId": "150a56226b34a2fdcd7c2d522e370c6ea55f8a69",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
