@@ -16,20 +16,12 @@ $ kramdown doc/webp-container-spec.txt --template doc/template.html > \
 
 kramdown can optionally syntax highlight code blocks, using CodeRay [3],
 a dependency of kramdown that rubygems will install automatically.  The
-following will apply inline CSS styling, and then use perl to strip
-line numbers and unwanted leading whitespace.
+following will apply inline CSS styling; an external stylesheet is not
+needed.
 
 $ kramdown doc/webp-lossless-bitstream-spec.txt --template \
-  doc/template.html --coderay-css style | \
-  perl -p -e 's|<span class="no">.*?</span>\s||gm' > \
+  doc/template.html --coderay-css style --coderay-line-numbers ' ' \
+  --coderay-default-lang c > \
   doc/output/webp-lossless-bitstream-spec.html
 
-Note that code blocks must be immediately followed by a language
-identifier for syntax highlighting to succeed.  Example:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int block_index = (y >> size_bits) * block_xsize +
-                  (x >> size_bits);
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{:lang='c'}
-
+[3]: http://coderay.rubychan.de/
