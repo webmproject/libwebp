@@ -34,6 +34,24 @@
       "revId": "878a916217bc3a36089c78e776612db05f5af283",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAK3//2IE\u003d",
+        "filename": "src/enc/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-06-05T05:51:57Z",
+      "side": 1,
+      "message": "yes, but we also have VP8LFastLog(), BitsLog2Floor(), VP8LBitsLog2Ceiling(), etc. and i must be missing some :)",
+      "parentUuid": "AAAAK3//2Ig\u003d",
+      "revId": "878a916217bc3a36089c78e776612db05f5af283",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
