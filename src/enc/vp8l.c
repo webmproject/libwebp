@@ -97,7 +97,7 @@ static int AnalyzeAndCreatePalette(const uint32_t* const argb, int num_pix,
   return 1;
 }
 
-static int AnalyzeEntropy(const uint32_t const *argb, int xsize, int ysize,
+static int AnalyzeEntropy(const uint32_t* const argb, int xsize, int ysize,
                           double* const nonpredicted_bits,
                           double* const predicted_bits) {
   int i;
@@ -707,12 +707,12 @@ static WebPEncodingError WriteImage(const WebPPicture* const pic,
 static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
                                                  int width, int height) {
   WebPEncodingError err = VP8_ENC_OK;
-  const size_t tile_size = 1 << enc->transform_bits_;
-  const size_t image_size = height * width;
-  const size_t argb_scratch_size = (tile_size + 1) * width;
+  const int tile_size = 1 << enc->transform_bits_;
+  const size_t image_size = width * height;
+  const size_t argb_scratch_size = tile_size * width + width;
   const size_t transform_data_size =
-      VP8LSubSampleSize(height, enc->transform_bits_) *
-      VP8LSubSampleSize(width, enc->transform_bits_);
+      VP8LSubSampleSize(width, enc->transform_bits_) *
+      VP8LSubSampleSize(height, enc->transform_bits_);
   const size_t total_size =
       image_size + argb_scratch_size + transform_data_size;
   uint32_t* mem = (uint32_t*)malloc(total_size * sizeof(*mem));
@@ -865,7 +865,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
                                    const WebPPicture* const picture,
                                    VP8LBitWriter* const bw) {
   WebPEncodingError err = VP8_ENC_OK;
-  const int quality = config->quality;
+  const int quality = (int)config->quality;
   const int width = picture->width;
   const int height = picture->height;
   VP8LEncoder* const enc = VP8LEncoderNew(config, picture);
@@ -997,7 +997,7 @@ int VP8LEncodeImage(const WebPConfig* const config,
     stats->PSNR[1] = 99.;
     stats->PSNR[2] = 99.;
     stats->PSNR[3] = 99.;
-    stats->coded_size = coded_size;
+    stats->coded_size = (int)coded_size;
   }
 
   if (picture->extra_info != NULL) {
