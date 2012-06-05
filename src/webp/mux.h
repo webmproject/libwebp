@@ -18,12 +18,11 @@
 //   int copy_data = 0;
 //   WebPMux* mux = WebPMuxNew();
 //   // ... (Prepare image data).
-//   WebPMuxSetImage(mux, image_data, image_data_size, alpha_data, alpha_size,
-//                   copy_data);
+//   WebPMuxSetImage(mux, image_data, alpha_data, copy_data);
 //   // ... (Prepare ICCP color profile data).
-//   WebPMuxSetColorProfile(mux, icc_data, icc_data_size, copy_data);
+//   WebPMuxSetColorProfile(mux, icc_data, copy_data);
 //   // ... (Prepare XMP metadata).
-//   WebPMuxSetMetadata(mux, xmp_data, xmp_data_size, copy_data);
+//   WebPMuxSetMetadata(mux, xmp_data, copy_data);
 //   // Get data from mux in WebP RIFF format.
 //   WebPMuxAssemble(mux, &output_data, &output_data_size);
 //   WebPMuxDelete(mux);
@@ -34,7 +33,7 @@
 //
 //   int copy_data = 0;
 //   // ... (Read data from file).
-//   WebPMux* mux = WebPMuxCreate(data, data_size, copy_data, NULL);
+//   WebPMux* mux = WebPMuxCreate(data, copy_data, NULL);
 //   WebPMuxGetImage(mux, &image, &alpha);
 //   // ... (Consume image; e.g. call WebPDecode() to decode the data).
 //   WebPMuxGetColorProfile(mux, &icc_profile);
@@ -111,13 +110,12 @@ WEBP_EXTERN(void) WebPMuxDelete(WebPMux* const mux);
 // Mux creation.
 
 // Internal, version-checked, entry point
-WEBP_EXTERN(WebPMux*) WebPMuxCreateInternal(const uint8_t*, size_t,
+WEBP_EXTERN(WebPMux*) WebPMuxCreateInternal(const WebPData* const,
                                             int, WebPMuxState* const, int);
 
 // Creates a mux object from raw data given in WebP RIFF format.
 // Parameters:
-//   data - (in) the raw data in WebP RIFF format
-//   size - (in) size of raw data
+//   bitstream - (in) the bitstream data in WebP RIFF format
 //   copy_data - (in) value 1 indicates given data WILL copied to the mux, and
 //               value 0 indicates data will NOT be copied.
 //   mux_state - (out) indicates the state of the mux returned. Can be passed
@@ -125,11 +123,11 @@ WEBP_EXTERN(WebPMux*) WebPMuxCreateInternal(const uint8_t*, size_t,
 // Returns:
 //   A pointer to the mux object created from given data - on success.
 //   NULL - In case of invalid data or memory error.
-static WEBP_INLINE WebPMux* WebPMuxCreate(const uint8_t* data, size_t size,
+static WEBP_INLINE WebPMux* WebPMuxCreate(const WebPData* const bitstream,
                                           int copy_data,
                                           WebPMuxState* const mux_state) {
   return WebPMuxCreateInternal(
-      data, size, copy_data, mux_state, WEBP_MUX_ABI_VERSION);
+      bitstream, copy_data, mux_state, WEBP_MUX_ABI_VERSION);
 }
 
 //------------------------------------------------------------------------------
@@ -139,11 +137,9 @@ static WEBP_INLINE WebPMux* WebPMuxCreate(const uint8_t* data, size_t size,
 // will be removed.
 // Parameters:
 //   mux - (in/out) object in which the image is to be set
-//   data - (in) the image data to be set. The data can be either a VP8/VP8L
+//   image - (in) the image data. The data can be either a VP8/VP8L
 //          bitstream or a single-image WebP file (non-animated & non-tiled)
-//   size - (in) size of the image data
-//   alpha_data - (in) the alpha data corresponding to the image (if present)
-//   alpha_size - (in) size of alpha chunk data
+//   alpha - (in) the alpha data of the image (if present)
 //   copy_data - (in) value 1 indicates given data WILL copied to the mux, and
 //               value 0 indicates data will NOT be copied.
 // Returns:
@@ -152,8 +148,7 @@ static WEBP_INLINE WebPMux* WebPMuxCreate(const uint8_t* data, size_t size,
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxSetImage(
     WebPMux* const mux,
-    const uint8_t* data, size_t size,
-    const uint8_t* alpha_data, size_t alpha_size,
+    const WebPData* const image, const WebPData* const alpha,
     int copy_data);
 
 // Gets a reference to the image in the mux object.
@@ -188,8 +183,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteImage(WebPMux* const mux);
 // be removed.
 // Parameters:
 //   mux - (in/out) object to which the XMP metadata is to be added
-//   data - (in) the XMP metadata data to be added
-//   size - (in) size of the XMP metadata data
+//   metadata - (in) the XMP metadata data to be added
 //   copy_data - (in) value 1 indicates given data WILL copied to the mux, and
 //               value 0 indicates data will NOT be copied.
 // Returns:
@@ -197,7 +191,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteImage(WebPMux* const mux);
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxSetMetadata(
-    WebPMux* const mux, const uint8_t* data, size_t size, int copy_data);
+    WebPMux* const mux, const WebPData* const metadata, int copy_data);
 
 // Gets a reference to the XMP metadata in the mux object.
 // The caller should NOT free the returned data.
@@ -227,8 +221,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteMetadata(WebPMux* const mux);
 // will be removed.
 // Parameters:
 //   mux - (in/out) object to which the color profile is to be added
-//   data - (in) the color profile data to be added
-//   size - (in) size of the color profile data
+//   color_profile - (in) the color profile data to be added
 //   copy_data - (in) value 1 indicates given data WILL copied to the mux, and
 //               value 0 indicates data will NOT be copied.
 // Returns:
@@ -236,7 +229,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteMetadata(WebPMux* const mux);
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error
 //   WEBP_MUX_OK - on success
 WEBP_EXTERN(WebPMuxError) WebPMuxSetColorProfile(
-    WebPMux* const mux, const uint8_t* data, size_t size, int copy_data);
+    WebPMux* const mux, const WebPData* const color_profile, int copy_data);
 
 // Gets a reference to the color profile in the mux object.
 // The caller should NOT free the returned data.
@@ -267,12 +260,10 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteColorProfile(WebPMux* const mux);
 // Parameters:
 //   mux - (in/out) object to which an animation frame is to be added
 //   nth - (in) The position at which the frame is to be added.
-//   data - (in) the raw VP8/VP8L image data corresponding to frame image. The
+//   image - (in) the raw VP8/VP8L image data corresponding to frame image. The
 //          data can be either a VP8/VP8L bitstream or a single-image WebP file
 //          (non-animated & non-tiled)
-//   size - (in) size of frame chunk data
-//   alpha_data - (in) the alpha data corresponding to frame image (if present)
-//   alpha_size - (in) size of alpha chunk data
+//   alpha - (in) the alpha data corresponding to frame image (if present)
 //   x_offset - (in) x-offset of the frame to be added
 //   y_offset - (in) y-offset of the frame to be added
 //   duration - (in) duration of the frame to be added (in milliseconds)
@@ -285,18 +276,15 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteColorProfile(WebPMux* const mux);
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxAddFrame(
     WebPMux* const mux, uint32_t nth,
-    const uint8_t* data, size_t size,
-    const uint8_t* alpha_data, size_t alpha_size,
+    const WebPData* const image, const WebPData* const alpha,
     uint32_t x_offset, uint32_t y_offset, uint32_t duration,
     int copy_data);
 
 // TODO(urvang): Create a struct as follows to reduce argument list size:
 // typedef struct {
 //  int nth;
-//  uint8_t* data;
-//  uint32_t data_size;
-//  uint8_t* alpha;
-//  uint32_t alpha_size;
+//  WebPData image;
+//  WebPData alpha;
 //  uint32_t x_offset, y_offset;
 //  uint32_t duration;
 // } FrameInfo;
@@ -367,12 +355,10 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetLoopCount(const WebPMux* const mux,
 // Parameters:
 //   mux - (in/out) object to which a tile is to be added
 //   nth - (in) The position at which the tile is to be added.
-//   data - (in) the raw VP8/VP8L image data corresponding to tile image.  The
+//   image - (in) the raw VP8/VP8L image data corresponding to tile image.  The
 //          data can be either a VP8/VP8L bitstream or a single-image WebP file
 //          (non-animated & non-tiled)
-//   size - (in) size of tile chunk data
-//   alpha_data - (in) the alpha data corresponding to tile image (if present)
-//   alpha_size - (in) size of alpha chunk data
+//   alpha - (in) the alpha data corresponding to tile image (if present)
 //   x_offset - (in) x-offset of the tile to be added
 //   y_offset - (in) y-offset of the tile to be added
 //   copy_data - (in) value 1 indicates given data WILL copied to the mux, and
@@ -384,8 +370,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetLoopCount(const WebPMux* const mux,
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxAddTile(
     WebPMux* const mux, uint32_t nth,
-    const uint8_t* data, size_t size,
-    const uint8_t* alpha_data, size_t alpha_size,
+    const WebPData* const image, const WebPData* const alpha,
     uint32_t x_offset, uint32_t y_offset,
     int copy_data);
 

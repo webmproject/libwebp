@@ -163,7 +163,7 @@ WebPChunk* ChunkSearchList(WebPChunk* first, uint32_t nth, uint32_t tag);
 
 // Fill the chunk with the given data & image_info.
 WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk,
-                                      const uint8_t* data, size_t data_size,
+                                      const WebPData* const data,
                                       WebPImageInfo* image_info,
                                       int copy_data, uint32_t tag);
 

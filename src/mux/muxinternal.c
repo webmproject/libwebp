@@ -132,7 +132,7 @@ static int ChunkSearchListToSet(WebPChunk** chunk_list, uint32_t nth,
 // Chunk writer methods.
 
 WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk,
-                                      const uint8_t* data, size_t data_size,
+                                      const WebPData* const data,
                                       WebPImageInfo* image_info,
                                       int copy_data, uint32_t tag) {
   // For internally allocated chunks, always copy data & make it owner of data.
@@ -141,26 +141,21 @@ WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk,
   }
 
   ChunkRelease(chunk);
-  if (data == NULL) {
-    data_size = 0;
-  } else if (data_size == 0) {
-    data = NULL;
-  }
 
   if (data != NULL) {
     if (copy_data) {
       // Copy data.
-      chunk->data_ = (uint8_t*)malloc(data_size);
+      chunk->data_ = (uint8_t*)malloc(data->size_);
       if (chunk->data_ == NULL) return WEBP_MUX_MEMORY_ERROR;
-      memcpy((uint8_t*)chunk->data_, data, data_size);
-      chunk->payload_size_ = data_size;
+      memcpy((uint8_t*)chunk->data_, data->bytes_, data->size_);
+      chunk->payload_size_ = data->size_;
 
       // Chunk is owner of data.
       chunk->owner_ = 1;
     } else {
       // Don't copy data.
-      chunk->data_ = data;
-      chunk->payload_size_ = data_size;
+      chunk->data_ = data->bytes_;
+      chunk->payload_size_ = data->size_;
     }
   }
 

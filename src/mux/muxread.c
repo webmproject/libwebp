@@ -55,6 +55,7 @@ static WebPMuxError ChunkAssignData(WebPChunk* chunk, const uint8_t* data,
                                     size_t data_size, size_t riff_size,
                                     int copy_data) {
   uint32_t chunk_size;
+  WebPData chunk_data;
 
   // Sanity checks.
   if (data_size < TAG_SIZE) return WEBP_MUX_NOT_ENOUGH_DATA;
@@ -67,25 +68,34 @@ static WebPMuxError ChunkAssignData(WebPChunk* chunk, const uint8_t* data,
   }
 
   // Data assignment.
-  return ChunkAssignDataImageInfo(chunk, data + CHUNK_HEADER_SIZE, chunk_size,
-                                  NULL, copy_data, GetLE32(data + 0));
+  chunk_data.bytes_ = data + CHUNK_HEADER_SIZE;
+  chunk_data.size_ = chunk_size;
+  return ChunkAssignDataImageInfo(chunk, &chunk_data, NULL, copy_data,
+                                  GetLE32(data + 0));
 }
 
 //------------------------------------------------------------------------------
 // Create a mux object from WebP-RIFF data.
 
-WebPMux* WebPMuxCreateInternal(const uint8_t* data, size_t size, int copy_data,
+WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
                                WebPMuxState* const mux_state, int version) {
   size_t riff_size;
   uint32_t tag;
   const uint8_t* end;
   WebPMux* mux = NULL;
   WebPMuxImage* wpi = NULL;
+  const uint8_t* data;
+  size_t size;
 
   if (mux_state) *mux_state = WEBP_MUX_STATE_PARTIAL;
 
   // Sanity checks.
   if (version != WEBP_MUX_ABI_VERSION) goto Err;  // version mismatch
+  if (bitstream == NULL) goto Err;
+
+  data = bitstream->bytes_;
+  size = bitstream->size_;
+
   if (data == NULL) goto Err;
   if (size < RIFF_HEADER_SIZE) return NULL;
   if (GetLE32(data + 0) != mktag('R', 'I', 'F', 'F') ||
