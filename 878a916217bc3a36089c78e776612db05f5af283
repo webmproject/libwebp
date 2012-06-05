@@ -16,6 +16,24 @@
       "revId": "878a916217bc3a36089c78e776612db05f5af283",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAK3//2Ig\u003d",
+        "filename": "src/enc/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-05T05:45:39Z",
+      "side": 1,
+      "message": "this is the only copy actually (other was in tcoder.c now deleted). that was my point though; could have held this if the decision was to use a dsp/(math|bits).c",
+      "parentUuid": "AAAAK3//2M8\u003d",
+      "revId": "878a916217bc3a36089c78e776612db05f5af283",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
