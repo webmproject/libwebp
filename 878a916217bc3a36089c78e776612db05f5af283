@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAK3//2M8\u003d",
+        "filename": "src/enc/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-06-05T05:27:18Z",
+      "side": 1,
+      "message": "one more copy of this one? Ok, after this patch, it\u0027ll be time to clear this log2() story for good by looking at where it be replaced by some simpler log() calls...",
+      "revId": "878a916217bc3a36089c78e776612db05f5af283",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
