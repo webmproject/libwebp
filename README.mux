@@ -75,12 +75,11 @@ profile & XMP metadata.
   int copy_data = 0;
   WebPMux* mux = WebPMuxNew();
   // ... (Prepare image data).
-  WebPMuxSetImage(mux, image_data, image_data_size, alpha_data, alpha_size,
-                  copy_data);
+  WebPMuxSetImage(mux, &image, &alpha, copy_data);
   // ... (Prepare ICCP color profile data).
-  WebPMuxSetColorProfile(mux, icc_data, icc_data_size, copy_data);
+  WebPMuxSetColorProfile(mux, &icc_profile, copy_data);
   // ... (Prepare XMP metadata).
-  WebPMuxSetMetadata(mux, xmp_data, xmp_data_size, copy_data);
+  WebPMuxSetMetadata(mux, &xmp, copy_data);
   // Get data from mux in WebP RIFF format.
   WebPMuxAssemble(mux, &output_data, &output_data_size);
   WebPMuxDelete(mux);
@@ -92,11 +91,11 @@ Example#2 (pseudo code): Get image & color profile data from a WebP file.
 
   int copy_data = 0;
   // ... (Read data from file).
-  WebPMux* mux = WebPMuxCreate(data, data_size, copy_data);
+  WebPMux* mux = WebPMuxCreate(&data, copy_data);
   WebPMuxGetImage(mux, &image, &alpha);
   // ... (Consume image; e.g. call WebPDecode() to decode the data).
-  WebPMuxGetColorProfile(mux, &icc_chunkdata);
-  // ... (Consume icc_chunkdata).
+  WebPMuxGetColorProfile(mux, &icc_profile);
+  // ... (Consume icc_profile).
   WebPMuxDelete(mux);
   free(data);
 
