@@ -7,6 +7,9 @@
 //
 // Author: Jyrki Alakuijala (jyrki@google.com)
 //
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #ifdef USE_LOSSLESS_ENCODER
 
@@ -16,6 +19,17 @@
 #include "./backward_references.h"
 #include "./histogram.h"
 #include "../dsp/lossless.h"
+
+#if defined(_MSC_VER) && !defined(NOT_HAVE_LOG2)
+# define NOT_HAVE_LOG2 1
+#endif
+
+#ifdef NOT_HAVE_LOG2
+static WEBP_INLINE double log2(double d) {
+  const double kLog2Reciprocal = 1.442695040888963;
+  return log(d) * kLog2Reciprocal;
+}
+#endif
 
 static void HistogramClear(VP8LHistogram* const p) {
   memset(p->literal_, 0, sizeof(p->literal_));
