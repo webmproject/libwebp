@@ -14,7 +14,7 @@
 
 #ifdef USE_LOSSLESS_ENCODER
 
-#include <stdint.h>
+#include "../webp/types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

@@ -14,7 +14,6 @@
 #ifdef USE_LOSSLESS_ENCODER
 
 #include <assert.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include "../webp/types.h"
 #include "../webp/format_constants.h"
