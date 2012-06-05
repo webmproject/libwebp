@@ -86,7 +86,7 @@ static int EncodeLossless(const uint8_t* data, int width, int height,
   config.method = effort_level;  // impact is very small
   // quality below 50 doesn't change things much (in speed and size).
   // quality above 80 can be very very slow.
-  config.quality = 40 + 10 * effort_level;
+  config.quality = 40 + 10.f * effort_level;
 
   VP8LBitWriterInit(&tmp_bw, (width * height) >> 3);
   ok = (VP8LEncodeStream(&config, &picture, &tmp_bw) == VP8_ENC_OK);

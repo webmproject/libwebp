@@ -132,7 +132,7 @@ float VP8LFastLog(int v) {
     }
     return kLogTable[v] + (log_cnt * LOG_2_BASE_E);
   }
-  return log(v);
+  return (float)log(v);
 }
 
 #endif
