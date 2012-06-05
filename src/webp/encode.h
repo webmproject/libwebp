@@ -278,15 +278,22 @@ WEBP_EXTERN(int) WebPPictureRescale(WebPPicture* const pic,
 // Returns 0 in case of memory error.
 WEBP_EXTERN(int) WebPPictureImportRGB(
     WebPPicture* const picture, const uint8_t* const rgb, int rgb_stride);
-// Same, but for RGBA buffer
+// Same, but for RGBA buffer.
 WEBP_EXTERN(int) WebPPictureImportRGBA(
     WebPPicture* const picture, const uint8_t* const rgba, int rgba_stride);
+// Same, but for RGBA buffer. Imports the RGB direct from the 32-bit format
+// input buffer ignoring the alpha channel. Avoids needing to copy the data
+// to a temporary 24-bit RGB buffer to import the RGB only.
+WEBP_EXTERN(int) WebPPictureImportRGBX(
+    WebPPicture* const picture, const uint8_t* const rgbx, int rgbx_stride);
 
-// Variant of the above, but taking BGR(A) input:
+// Variants of the above, but taking BGR(A|X) input.
 WEBP_EXTERN(int) WebPPictureImportBGR(
     WebPPicture* const picture, const uint8_t* const bgr, int bgr_stride);
 WEBP_EXTERN(int) WebPPictureImportBGRA(
     WebPPicture* const picture, const uint8_t* const bgra, int bgra_stride);
+WEBP_EXTERN(int) WebPPictureImportBGRX(
+    WebPPicture* const picture, const uint8_t* const bgrx, int bgrx_stride);
 
 // Helper function: given a width x height plane of YUV(A) samples
 // (with stride 'stride'), clean-up the YUV samples under fully transparent

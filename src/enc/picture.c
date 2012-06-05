@@ -604,6 +604,16 @@ int WebPPictureImportBGRA(WebPPicture* const picture,
   return Import(picture, rgba, rgba_stride, 4, 1, 1);
 }
 
+int WebPPictureImportRGBX(WebPPicture* const picture,
+                          const uint8_t* const rgba, int rgba_stride) {
+  return Import(picture, rgba, rgba_stride, 4, 0, 0);
+}
+
+int WebPPictureImportBGRX(WebPPicture* const picture,
+                          const uint8_t* const rgba, int rgba_stride) {
+  return Import(picture, rgba, rgba_stride, 4, 1, 0);
+}
+
 //------------------------------------------------------------------------------
 // Helper: clean up fully transparent area to help compressibility.
 
