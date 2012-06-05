@@ -336,7 +336,7 @@ WebPMuxError WebPMuxSetLoopCount(WebPMux* const mux, uint32_t loop_count) {
   return err;
 }
 
-static WebPMuxError MuxAddFrameTileInternal(
+static WebPMuxError MuxSetFrameTileInternal(
     WebPMux* const mux, uint32_t nth,
     const WebPData* const image, const WebPData* const alpha,
     uint32_t x_offset, uint32_t y_offset, uint32_t duration,
@@ -428,22 +428,22 @@ static WebPMuxError MuxAddFrameTileInternal(
 
 // TODO(urvang): Think about whether we need 'nth' while adding a frame or tile.
 
-WebPMuxError WebPMuxAddFrame(WebPMux* const mux, uint32_t nth,
+WebPMuxError WebPMuxSetFrame(WebPMux* const mux, uint32_t nth,
                              const WebPData* const image,
                              const WebPData* const alpha,
                              uint32_t x_offset, uint32_t y_offset,
                              uint32_t duration, int copy_data) {
-  return MuxAddFrameTileInternal(mux, nth, image, alpha,
+  return MuxSetFrameTileInternal(mux, nth, image, alpha,
                                  x_offset, y_offset, duration,
                                  copy_data, kChunks[IDX_FRAME].tag);
 }
 
-WebPMuxError WebPMuxAddTile(WebPMux* const mux, uint32_t nth,
+WebPMuxError WebPMuxSetTile(WebPMux* const mux, uint32_t nth,
                             const WebPData* const image,
                             const WebPData* const alpha,
                             uint32_t x_offset, uint32_t y_offset,
                             int copy_data) {
-  return MuxAddFrameTileInternal(mux, nth, image, alpha,
+  return MuxSetFrameTileInternal(mux, nth, image, alpha,
                                  x_offset, y_offset, 1,
                                  copy_data, kChunks[IDX_TILE].tag);
 }

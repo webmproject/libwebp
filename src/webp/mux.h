@@ -274,7 +274,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteColorProfile(WebPMux* const mux);
 //   WEBP_MUX_NOT_FOUND - If we have less than (nth-1) frames before adding.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxAddFrame(
+WEBP_EXTERN(WebPMuxError) WebPMuxSetFrame(
     WebPMux* const mux, uint32_t nth,
     const WebPData* const image, const WebPData* const alpha,
     uint32_t x_offset, uint32_t y_offset, uint32_t duration,
@@ -368,7 +368,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetLoopCount(const WebPMux* const mux,
 //   WEBP_MUX_NOT_FOUND - If we have less than (nth-1) tiles before adding.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxAddTile(
+WEBP_EXTERN(WebPMuxError) WebPMuxSetTile(
     WebPMux* const mux, uint32_t nth,
     const WebPData* const image, const WebPData* const alpha,
     uint32_t x_offset, uint32_t y_offset,
