@@ -270,7 +270,8 @@ WebPMuxError WebPMuxSetImage(WebPMux* const mux,
 
   // Add image chunk.
   ChunkInit(&chunk);
-  err = ChunkAssignDataImageInfo(&chunk, &image_raw, NULL, copy_data, image_tag);
+  err = ChunkAssignDataImageInfo(&chunk, &image_raw, NULL, copy_data,
+                                 image_tag);
   if (err != WEBP_MUX_OK) return err;
   err = ChunkSetNth(&chunk, &wpi.img_, 1);
   if (err != WEBP_MUX_OK) return err;
@@ -645,7 +646,7 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
 }
 
 WebPMuxError WebPMuxAssemble(WebPMux* const mux,
-                             uint8_t** output_data, size_t* output_size) {
+                             WebPData* const assembled_data) {
   size_t size = 0;
   uint8_t* data = NULL;
   uint8_t* dst = NULL;
@@ -653,12 +654,9 @@ WebPMuxError WebPMuxAssemble(WebPMux* const mux,
   int num_loop_chunks;
   WebPMuxError err;
 
-  if (mux == NULL || output_data == NULL || output_size == NULL) {
+  if (mux == NULL || assembled_data == NULL) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
-
-  *output_data = NULL;
-  *output_size = 0;
 
   // Remove LOOP chunk if unnecessary.
   err = WebPMuxNumNamedElements(mux, kChunks[IDX_LOOP].name,
@@ -715,8 +713,8 @@ WebPMuxError WebPMuxAssemble(WebPMux* const mux,
   }
 
   // Finalize.
-  *output_data = data;
-  *output_size = size;
+  assembled_data->bytes_ = data;
+  assembled_data->size_ = size;
 
   return err;
 }

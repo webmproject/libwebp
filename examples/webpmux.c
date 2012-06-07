@@ -135,12 +135,6 @@ static int WebPDataCopy(const WebPData* const src, WebPData* const dst) {
   return 1;
 }
 
-// Frees data allocated by WebPDataCopy.
-static void WebPDataFree(WebPData* const webpdata) {
-  free((void*)webpdata->bytes_);
-  memset(webpdata, 0, sizeof(*webpdata));
-}
-
 #define RETURN_IF_ERROR(ERR_MSG)                                     \
   if (err != WEBP_MUX_OK) {                                          \
     fprintf(stderr, ERR_MSG);                                        \
@@ -370,8 +364,8 @@ static int ReadImage(const char* filename,
     if (!ok) {
       fprintf(stderr, "Error allocating storage for image (%zu bytes) "
               "and alpha (%zu bytes) data\n", image.size_, alpha.size_);
-      WebPDataFree(image_ptr);
-      WebPDataFree(alpha_ptr);
+      WebPDataClear(image_ptr);
+      WebPDataClear(alpha_ptr);
     }
   } else {
     fprintf(stderr, "Failed to extract image data from file %s. Error: %d\n",
@@ -399,17 +393,15 @@ static int WriteData(const char* filename, const WebPData* const webpdata) {
 }
 
 static int WriteWebP(WebPMux* const mux, const char* filename) {
-  WebPData webpdata;
   int ok;
-
-  const WebPMuxError err = WebPMuxAssemble(
-      mux, (uint8_t**)&webpdata.bytes_, &webpdata.size_);
+  WebPData webp_data;
+  const WebPMuxError err = WebPMuxAssemble(mux, &webp_data);
   if (err != WEBP_MUX_OK) {
     fprintf(stderr, "Error (%d) assembling the WebP file.\n", err);
     return 0;
   }
-  ok = WriteData(filename, &webpdata);
-  WebPDataFree(&webpdata);
+  ok = WriteData(filename, &webp_data);
+  WebPDataClear(&webp_data);
   return ok;
 }
 
@@ -862,14 +854,14 @@ static int Process(const WebPMuxConfig* config) {
               ok = ParseFrameArgs(feature->args_[index].params_,
                                   &x_offset, &y_offset, &duration);
               if (!ok) {
-                WebPDataFree(&image);
-                WebPDataFree(&alpha);
+                WebPDataClear(&image);
+                WebPDataClear(&alpha);
                 ERROR_GOTO1("ERROR: Could not parse frame properties.\n", Err2);
               }
               err = WebPMuxSetFrame(mux, 0, &image, &alpha,
                                     x_offset, y_offset, duration, 1);
-              WebPDataFree(&image);
-              WebPDataFree(&alpha);
+              WebPDataClear(&image);
+              WebPDataClear(&alpha);
               if (err != WEBP_MUX_OK) {
                 ERROR_GOTO3("ERROR#%d: Could not add a frame at index %d.\n",
                             err, index, Err2);
@@ -893,13 +885,13 @@ static int Process(const WebPMuxConfig* config) {
             ok = ParseTileArgs(feature->args_[index].params_, &x_offset,
                                &y_offset);
             if (!ok) {
-              WebPDataFree(&image);
-              WebPDataFree(&alpha);
+              WebPDataClear(&image);
+              WebPDataClear(&alpha);
               ERROR_GOTO1("ERROR: Could not parse tile properties.\n", Err2);
             }
             err = WebPMuxSetTile(mux, 0, &image, &alpha, x_offset, y_offset, 1);
-            WebPDataFree(&image);
-            WebPDataFree(&alpha);
+            WebPDataClear(&image);
+            WebPDataClear(&alpha);
             if (err != WEBP_MUX_OK) {
               ERROR_GOTO3("ERROR#%d: Could not add a tile at index %d.\n",
                           err, index, Err2);

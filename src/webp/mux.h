@@ -24,10 +24,10 @@
 //   // ... (Prepare XMP metadata).
 //   WebPMuxSetMetadata(mux, &xmp, copy_data);
 //   // Get data from mux in WebP RIFF format.
-//   WebPMuxAssemble(mux, &output_data, &output_data_size);
+//   WebPMuxAssemble(mux, &output_data);
 //   WebPMuxDelete(mux);
-//   // ... (Consume output_data; e.g. write output_data to file).
-//   free(output_data);
+//   // ... (Consume output_data; e.g. write output_data.bytes_ to file).
+//   WebPDataClear(&output_data);
 //
 // Code Example#2: Get image & color profile data from a WebP file.
 //
@@ -89,6 +89,13 @@ typedef struct {
 } WebPData;
 
 //------------------------------------------------------------------------------
+// Life of a WebPData object.
+
+// Clears the contents of the 'webp_data' object by calling free(). Does not
+// deallocate the object itself.
+WEBP_EXTERN(void) WebPDataClear(WebPData* const webp_data);
+
+//------------------------------------------------------------------------------
 // Life of a Mux object
 
 // Internal, version-checked, entry point
@@ -138,7 +145,7 @@ static WEBP_INLINE WebPMux* WebPMuxCreate(const WebPData* const bitstream,
 // Parameters:
 //   mux - (in/out) object in which the image is to be set
 //   image - (in) the image data. The data can be either a VP8/VP8L
-//          bitstream or a single-image WebP file (non-animated & non-tiled)
+//           bitstream or a single-image WebP file (non-animated & non-tiled)
 //   alpha - (in) the alpha data of the image (if present)
 //   copy_data - (in) value 1 indicates given data WILL copied to the mux, and
 //               value 0 indicates data will NOT be copied.
@@ -438,15 +445,15 @@ WEBP_EXTERN(WebPMuxError) WebPMuxNumNamedElements(const WebPMux* const mux,
                                                   const char* name,
                                                   int* num_elements);
 
-// Assembles all chunks in WebP RIFF format and returns in output_data.
+// Assembles all chunks in WebP RIFF format and returns in 'assembled_data'.
 // This function also validates the mux object.
-// The content of '*output_data' is allocated using malloc(), and NOT
-// owned by the 'mux' object.
-// It MUST be deallocated by the caller by calling free().
+// Note: The content of 'assembled_data' will be ignored and overwritten.
+// Also, the content of 'assembled_data' is allocated using malloc(), and NOT
+// owned by the 'mux' object. It MUST be deallocated by the caller by calling
+// WebPDataClear().
 // Parameters:
 //   mux - (in/out) object whose chunks are to be assembled
-//   output_data - (out) byte array where assembled WebP data is returned
-//   output_size - (out) size of returned data
+//   assembled_data - (out) assembled WebP data
 // Returns:
 //   WEBP_MUX_BAD_DATA - if mux object is invalid.
 //   WEBP_MUX_INVALID_ARGUMENT - if either mux, output_data or output_size is
@@ -454,8 +461,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxNumNamedElements(const WebPMux* const mux,
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success
 WEBP_EXTERN(WebPMuxError) WebPMuxAssemble(WebPMux* const mux,
-                                          uint8_t** output_data,
-                                          size_t* output_size);
+                                          WebPData* const assembled_data);
 
 //------------------------------------------------------------------------------
 

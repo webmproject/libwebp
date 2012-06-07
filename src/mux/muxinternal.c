@@ -226,6 +226,16 @@ uint8_t* ChunkListEmit(const WebPChunk* chunk_list, uint8_t* dst) {
 }
 
 //------------------------------------------------------------------------------
+// Life of a WebPData object.
+
+void WebPDataClear(WebPData* const webp_data) {
+  if (webp_data != NULL) {
+    free((void*)webp_data->bytes_);
+    memset(webp_data, 0, sizeof(*webp_data));
+  }
+}
+
+//------------------------------------------------------------------------------
 // Life of a MuxImage object.
 
 void MuxImageInit(WebPMuxImage* const wpi) {
