@@ -68,17 +68,9 @@ static void ClearPreviousPic(void) {
   kParams.pic = NULL;
 }
 
-static void ClearData(WebPData* data) {
-  if (data != NULL) {
-    free((void*)data->bytes_);
-    data->bytes_ = NULL;
-    data->size_ = 0;
-  }
-}
-
 static void ClearParams(void) {
   ClearPreviousPic();
-  ClearData(&kParams.data);
+  WebPDataClear(&kParams.data);
   WebPMuxDelete(kParams.mux);
   kParams.mux = NULL;
 }
@@ -290,8 +282,7 @@ int main(int argc, char *argv[]) {
     goto Error;
   }
 
-  kParams.mux =
-      WebPMuxCreate(kParams.data.bytes_, kParams.data.size_, 0, NULL);
+  kParams.mux = WebPMuxCreate(&kParams.data, 0);
   if (kParams.mux == NULL) {
     fprintf(stderr, "Could not create demuxing object!\n");
     goto Error;
