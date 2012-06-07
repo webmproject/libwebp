@@ -503,6 +503,22 @@ static WEBP_INLINE WebPDemuxer* WebPDemuxPartial(
 WEBP_EXTERN(void) WebPDemuxDelete(WebPDemuxer* const dmux);
 
 //------------------------------------------------------------------------------
+// Data/information extraction.
+
+typedef enum {
+  WEBP_FF_FORMAT_FLAGS,  // Extended format flags present in the 'VP8X' chunk.
+  WEBP_FF_CANVAS_WIDTH,
+  WEBP_FF_CANVAS_HEIGHT,
+  WEBP_FF_LOOP_COUNT
+} WebPFormatFeature;
+
+// Get the 'feature' value from the 'dmux'.
+// NOTE: values are only valid if WebPDemux() was used or WebPDemuxPartial()
+// returned a state > WEBP_DEMUX_PARSING_HEADER.
+WEBP_EXTERN(uint32_t) WebPDemuxGetI(
+    const WebPDemuxer* const dmux, WebPFormatFeature feature);
+
+//------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
