@@ -33,6 +33,10 @@ extern "C" {
 #define MIN_HISTO_BITS            2
 #define MAX_HISTO_BITS            9
 
+// NO_HISTO_BITS needs to be large enough so that all bits in the image
+// size are thrown away by shifting.
+#define NO_HISTO_BITS             (VP8L_IMAGE_SIZE_BITS + 1)
+
 // -----------------------------------------------------------------------------
 // Palette
 
@@ -442,10 +446,11 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
                                int cache_bits, int histogram_bits) {
   int i;
   int ok = 0;
-  int write_histogram_image;
   const int use_2d_locality = 1;
   const int use_color_cache = (cache_bits > 0);
   const int histogram_image_xysize =
+      (histogram_bits == NO_HISTO_BITS) ?
+      1 :
       VP8LSubSampleSize(width, histogram_bits) *
       VP8LSubSampleSize(height, histogram_bits);
   VP8LHistogramSet* histogram_image =
@@ -456,7 +461,8 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   VP8LBackwardRefs refs;
   uint16_t* const histogram_symbols =
       (uint16_t*)malloc(histogram_image_xysize * sizeof(*histogram_symbols));
-
+  assert((histogram_bits >= 2 && histogram_bits <= 9) ||
+         histogram_bits == NO_HISTO_BITS);
   if (histogram_image == NULL || histogram_symbols == NULL) goto Error;
 
   // Calculate backward references from ARGB image.
@@ -488,30 +494,31 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   }
 
   // Huffman image + meta huffman.
-  write_histogram_image = (histogram_image_size > 1);
-  VP8LWriteBits(bw, 1, write_histogram_image);
-  if (write_histogram_image) {
-    uint32_t* const histogram_argb =
-        (uint32_t*)malloc(histogram_image_xysize * sizeof(*histogram_argb));
-    int max_index = 0;
-    if (histogram_argb == NULL) goto Error;
-    for (i = 0; i < histogram_image_xysize; ++i) {
-      const int index = histogram_symbols[i] & 0xffff;
-      histogram_argb[i] = 0xff000000 | (index << 8);
-      if (index >= max_index) {
-        max_index = index + 1;
+  if (histogram_bits != NO_HISTO_BITS) {
+    const int write_histogram_image = (histogram_image_size > 1);
+    VP8LWriteBits(bw, 1, write_histogram_image);
+    if (write_histogram_image) {
+      uint32_t* const histogram_argb =
+          (uint32_t*)malloc(histogram_image_xysize * sizeof(*histogram_argb));
+      int max_index = 0;
+      if (histogram_argb == NULL) goto Error;
+      for (i = 0; i < histogram_image_xysize; ++i) {
+        const int index = histogram_symbols[i] & 0xffff;
+        histogram_argb[i] = 0xff000000 | (index << 8);
+        if (index >= max_index) {
+          max_index = index + 1;
+        }
       }
-    }
-    histogram_image_size = max_index;
+      histogram_image_size = max_index;
 
-    assert(histogram_bits >= 2);
-    VP8LWriteBits(bw, 3, histogram_bits - 2);
-    ok = EncodeImageInternal(bw, histogram_argb,
-                             VP8LSubSampleSize(width, histogram_bits),
-                             VP8LSubSampleSize(height, histogram_bits),
-                             quality, 0, 0);
-    free(histogram_argb);
-    if (!ok) goto Error;
+      VP8LWriteBits(bw, 3, histogram_bits - 2);
+      ok = EncodeImageInternal(bw, histogram_argb,
+                               VP8LSubSampleSize(width, histogram_bits),
+                               VP8LSubSampleSize(height, histogram_bits),
+                               quality, 0, NO_HISTO_BITS);
+      free(histogram_argb);
+      if (!ok) goto Error;
+    }
   }
 
   // Store Huffman codes.
@@ -601,7 +608,8 @@ static int ApplyPredictFilter(const VP8LEncoder* const enc,
   assert(pred_bits >= 2);
   VP8LWriteBits(bw, 3, pred_bits - 2);
   if (!EncodeImageInternal(bw, enc->transform_data_,
-                           transform_width, transform_height, quality, 0, 0)) {
+                           transform_width, transform_height, quality, 0,
+                           NO_HISTO_BITS)) {
     return 0;
   }
   return 1;
@@ -622,7 +630,8 @@ static int ApplyCrossColorFilter(const VP8LEncoder* const enc,
   assert(ccolor_transform_bits >= 2);
   VP8LWriteBits(bw, 3, ccolor_transform_bits - 2);
   if (!EncodeImageInternal(bw, enc->transform_data_,
-                           transform_width, transform_height, quality, 0, 0)) {
+                           transform_width, transform_height, quality, 0,
+                           NO_HISTO_BITS)) {
     return 0;
   }
   return 1;
@@ -786,7 +795,8 @@ static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
   for (i = palette_size - 1; i >= 1; --i) {
     palette[i] = VP8LSubPixels(palette[i], palette[i - 1]);
   }
-  if (!EncodeImageInternal(bw, palette, palette_size, 1, quality, 0, 0)) {
+  if (!EncodeImageInternal(bw, palette, palette_size, 1, quality, 0,
+                           NO_HISTO_BITS)) {
     err = VP8_ENC_ERROR_INVALID_CONFIGURATION;
     goto Error;
   }
