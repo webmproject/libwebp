@@ -33,7 +33,7 @@
 //
 //   int copy_data = 0;
 //   // ... (Read data from file).
-//   WebPMux* mux = WebPMuxCreate(&data, copy_data, NULL);
+//   WebPMux* mux = WebPMuxCreate(&data, copy_data);
 //   WebPMuxGetImage(mux, &image, &alpha);
 //   // ... (Consume image; e.g. call WebPDecode() to decode the data).
 //   WebPMuxGetColorProfile(mux, &icc_profile);
@@ -63,12 +63,6 @@ typedef enum {
   WEBP_MUX_MEMORY_ERROR       = -5,
   WEBP_MUX_NOT_ENOUGH_DATA    = -6
 } WebPMuxError;
-
-typedef enum {
-  WEBP_MUX_STATE_PARTIAL  =  0,
-  WEBP_MUX_STATE_COMPLETE =  1,
-  WEBP_MUX_STATE_ERROR    = -1
-} WebPMuxState;
 
 // Flag values for different features used in VP8X chunk.
 typedef enum {
@@ -117,24 +111,19 @@ WEBP_EXTERN(void) WebPMuxDelete(WebPMux* const mux);
 // Mux creation.
 
 // Internal, version-checked, entry point
-WEBP_EXTERN(WebPMux*) WebPMuxCreateInternal(const WebPData* const,
-                                            int, WebPMuxState* const, int);
+WEBP_EXTERN(WebPMux*) WebPMuxCreateInternal(const WebPData* const, int, int);
 
 // Creates a mux object from raw data given in WebP RIFF format.
 // Parameters:
 //   bitstream - (in) the bitstream data in WebP RIFF format
 //   copy_data - (in) value 1 indicates given data WILL copied to the mux, and
 //               value 0 indicates data will NOT be copied.
-//   mux_state - (out) indicates the state of the mux returned. Can be passed
-//               NULL if not required.
 // Returns:
 //   A pointer to the mux object created from given data - on success.
 //   NULL - In case of invalid data or memory error.
 static WEBP_INLINE WebPMux* WebPMuxCreate(const WebPData* const bitstream,
-                                          int copy_data,
-                                          WebPMuxState* const mux_state) {
-  return WebPMuxCreateInternal(
-      bitstream, copy_data, mux_state, WEBP_MUX_ABI_VERSION);
+                                          int copy_data) {
+  return WebPMuxCreateInternal(bitstream, copy_data, WEBP_MUX_ABI_VERSION);
 }
 
 //------------------------------------------------------------------------------

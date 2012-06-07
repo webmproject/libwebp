@@ -78,7 +78,7 @@ static WebPMuxError ChunkAssignData(WebPChunk* chunk, const uint8_t* data,
 // Create a mux object from WebP-RIFF data.
 
 WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
-                               WebPMuxState* const mux_state, int version) {
+                               int version) {
   size_t riff_size;
   uint32_t tag;
   const uint8_t* end;
@@ -86,8 +86,6 @@ WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
   WebPMuxImage* wpi = NULL;
   const uint8_t* data;
   size_t size;
-
-  if (mux_state) *mux_state = WEBP_MUX_STATE_PARTIAL;
 
   // Sanity checks.
   if (version != WEBP_MUX_ABI_VERSION) goto Err;  // version mismatch
@@ -106,10 +104,7 @@ WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
   mux = WebPMuxNew();
   if (mux == NULL) goto Err;
 
-  if (size < RIFF_HEADER_SIZE + TAG_SIZE) {
-    mux->state_ = WEBP_MUX_STATE_PARTIAL;
-    goto Ok;
-  }
+  if (size < RIFF_HEADER_SIZE + TAG_SIZE) goto Err;
 
   tag = GetLE32(data + RIFF_HEADER_SIZE);
   if (tag != kChunks[IDX_VP8].tag &&
@@ -119,12 +114,9 @@ WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
   }
 
   riff_size = SizeWithPadding(GetLE32(data + TAG_SIZE));
-  if (riff_size > MAX_CHUNK_PAYLOAD) {
+  if (riff_size > MAX_CHUNK_PAYLOAD || riff_size > size) {
     goto Err;
-  } else if (riff_size > size) {
-    mux->state_ = WEBP_MUX_STATE_PARTIAL;
   } else {
-    mux->state_ = WEBP_MUX_STATE_COMPLETE;
     if (riff_size < size) {  // Redundant data after last chunk.
       size = riff_size;  // To make sure we don't read any data beyond mux_size.
     }
@@ -146,14 +138,7 @@ WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
 
     ChunkInit(&chunk);
     err = ChunkAssignData(&chunk, data, size, riff_size, copy_data);
-    if (err != WEBP_MUX_OK) {
-      if (err == WEBP_MUX_NOT_ENOUGH_DATA &&
-          mux->state_ == WEBP_MUX_STATE_PARTIAL) {
-        goto Ok;
-      } else {
-        goto Err;
-      }
-    }
+    if (err != WEBP_MUX_OK) goto Err;
 
     id = ChunkGetIdFromTag(chunk.tag_);
 
@@ -191,15 +176,12 @@ WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
   // Validate mux if complete.
   if (MuxValidate(mux) != WEBP_MUX_OK) goto Err;
 
- Ok:
   MuxImageDelete(wpi);
-  if (mux_state) *mux_state = mux->state_;
   return mux;  // All OK;
 
  Err:  // Something bad happened.
   MuxImageDelete(wpi);
   WebPMuxDelete(mux);
-  if (mux_state) *mux_state = WEBP_MUX_STATE_ERROR;
   return NULL;
 }
 
@@ -217,13 +199,7 @@ WebPMuxError WebPMuxGetFeatures(const WebPMux* const mux, uint32_t* flags) {
   err = MuxGet(mux, IDX_VP8X, 1, &data);
   if (err == WEBP_MUX_NOT_FOUND) {
     // Check if VP8/VP8L chunk is present.
-    err = WebPMuxGetImage(mux, &data, NULL);
-    if (err == WEBP_MUX_NOT_FOUND &&              // Data not available (yet).
-        mux->state_ == WEBP_MUX_STATE_PARTIAL) {  // Incremental case.
-      return WEBP_MUX_NOT_ENOUGH_DATA;
-    } else {
-      return err;
-    }
+    return WebPMuxGetImage(mux, &data, NULL);
   } else if (err != WEBP_MUX_OK) {
     return err;
   }

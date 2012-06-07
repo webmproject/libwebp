@@ -60,7 +60,6 @@ struct WebPMuxImage {
 
 // Main mux object. Stores data chunks.
 struct WebPMux {
-  WebPMuxState    state_;
   WebPMuxImage*   images_;
   WebPChunk*      iccp_;
   WebPChunk*      meta_;

@@ -507,12 +507,7 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
   WebPMuxError err;
 
   // Verify mux is not NULL.
-  if (mux == NULL || mux->state_ == WEBP_MUX_STATE_ERROR) {
-    return WEBP_MUX_INVALID_ARGUMENT;
-  }
-
-  // No further checks if mux is partial.
-  if (mux->state_ == WEBP_MUX_STATE_PARTIAL) return WEBP_MUX_OK;
+  if (mux == NULL) return WEBP_MUX_INVALID_ARGUMENT;
 
   // Verify mux has at least one image.
   if (mux->images_ == NULL) return WEBP_MUX_INVALID_ARGUMENT;
