@@ -148,7 +148,7 @@ static int HashChainFindCopy(const HashChain* const p,
   const uint64_t hash_code = GetPixPairHash64(&argb[index]);
   int prev_length = 0;
   int64_t best_val = 0;
-  const int iter_min_mult = (quality < 50) ? 2 : (quality <= 75) ? 4 : 8;
+  const int iter_min_mult = (quality < 50) ? 2 : (quality < 75) ? 4 : 8;
   const int iter_min = -quality * iter_min_mult;
   int iter_cnt = 10 + (quality >> 1);
   const int min_pos = (index > WINDOW_SIZE) ? index - WINDOW_SIZE : 0;
