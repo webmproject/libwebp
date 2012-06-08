@@ -96,7 +96,7 @@ static VP8StatusCode ParseVP8X(const uint8_t** data, size_t* data_size,
 
   *found_vp8x = 0;
 
-  if (*data_size < vp8x_size) {
+  if (*data_size < CHUNK_HEADER_SIZE) {
     return VP8_STATUS_NOT_ENOUGH_DATA;  // Insufficient data.
   }
 
@@ -105,6 +105,12 @@ static VP8StatusCode ParseVP8X(const uint8_t** data, size_t* data_size,
     if (chunk_size != VP8X_CHUNK_SIZE) {
       return VP8_STATUS_BITSTREAM_ERROR;  // Wrong chunk size.
     }
+
+    // Verify if enough data is available to validate the VP8X chunk.
+    if (*data_size < vp8x_size) {
+      return VP8_STATUS_NOT_ENOUGH_DATA;  // Insufficient data.
+    }
+
     if (flags != NULL) {
       *flags = get_le32(*data + 8);
     }
