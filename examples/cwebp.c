@@ -564,7 +564,8 @@ static void PrintExtraInfoLossy(const WebPPicture* const pic, int short_output,
     const int total = num_i4 + num_i16;
     fprintf(stderr, "File:      %s\n", file_name);
     fprintf(stderr, "Dimension: %d x %d%s\n",
-            pic->width, pic->height, (pic->a != NULL) ? " (with alpha)" : "");
+            pic->width, pic->height,
+            stats->alpha_data_size ? " (with alpha)" : "");
     fprintf(stderr, "Output:    "
             "%d bytes Y-U-V-All-PSNR %2.2f %2.2f %2.2f   %2.2f dB\n",
             stats->coded_size,
