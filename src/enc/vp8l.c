@@ -33,10 +33,6 @@ extern "C" {
 #define MIN_HISTO_BITS            2
 #define MAX_HISTO_BITS            9
 
-// NO_HISTO_BITS needs to be large enough so that all bits in the image
-// size are thrown away by shifting.
-#define NO_HISTO_BITS             (VP8L_IMAGE_SIZE_BITS + 1)
-
 // -----------------------------------------------------------------------------
 // Palette
 
@@ -440,6 +436,54 @@ static void StoreImageToBitMask(
   }
 }
 
+// Special case of EncodeImageInternal() for cache-bits=0, histo_bits=31
+static int EncodeImageNoHuffman(VP8LBitWriter* const bw,
+                                const uint32_t* const argb,
+                                int width, int height, int quality) {
+  int i;
+  int ok = 0;
+  VP8LBackwardRefs refs;
+  HuffmanTreeCode huffman_codes[5] = { { 0, NULL, NULL } };
+  const uint16_t histogram_symbols[1] = { 0 };    // only one tree, one symbol
+  VP8LHistogramSet* const histogram_image = VP8LAllocateHistogramSet(1, 0);
+  if (histogram_image == NULL) return 0;
+
+  // Calculate backward references from ARGB image.
+  if (!VP8LGetBackwardReferences(width, height, argb, quality, 0, 1, &refs)) {
+    goto Error;
+  }
+  // Build histogram image and symbols from backward references.
+  VP8LHistogramStoreRefs(&refs, histogram_image->histograms[0]);
+
+  // Create Huffman bit lengths and codes for each histogram image.
+  assert(histogram_image->size == 1);
+  if (!GetHuffBitLengthsAndCodes(histogram_image, huffman_codes)) {
+    goto Error;
+  }
+
+  // No color cache, no Huffman image.
+  VP8LWriteBits(bw, 1, 0);
+
+  // Store Huffman codes.
+  for (i = 0; i < 5; ++i) {
+    HuffmanTreeCode* const codes = &huffman_codes[i];
+    if (!StoreHuffmanCode(bw, codes)) {
+      goto Error;
+    }
+    ClearHuffmanTreeIfOnlyOneSymbol(codes);
+  }
+
+  // Store actual literals.
+  StoreImageToBitMask(bw, width, 0, &refs, histogram_symbols, huffman_codes);
+  ok = 1;
+
+ Error:
+  free(histogram_image);
+  VP8LClearBackwardRefs(&refs);
+  free(huffman_codes[0].codes);
+  return ok;
+}
+
 static int EncodeImageInternal(VP8LBitWriter* const bw,
                                const uint32_t* const argb,
                                int width, int height, int quality,
@@ -449,8 +493,6 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   const int use_2d_locality = 1;
   const int use_color_cache = (cache_bits > 0);
   const int histogram_image_xysize =
-      (histogram_bits == NO_HISTO_BITS) ?
-      1 :
       VP8LSubSampleSize(width, histogram_bits) *
       VP8LSubSampleSize(height, histogram_bits);
   VP8LHistogramSet* histogram_image =
@@ -461,8 +503,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   VP8LBackwardRefs refs;
   uint16_t* const histogram_symbols =
       (uint16_t*)malloc(histogram_image_xysize * sizeof(*histogram_symbols));
-  assert((histogram_bits >= 2 && histogram_bits <= 9) ||
-         histogram_bits == NO_HISTO_BITS);
+  assert(histogram_bits >= MIN_HISTO_BITS && histogram_bits <= MAX_HISTO_BITS);
   if (histogram_image == NULL || histogram_symbols == NULL) goto Error;
 
   // Calculate backward references from ARGB image.
@@ -470,14 +511,14 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
                                  use_2d_locality, &refs)) {
     goto Error;
   }
-  // Build histogram image & symbols from backward references.
+  // Build histogram image and symbols from backward references.
   if (!VP8LGetHistoImageSymbols(width, height, &refs,
                                 quality, histogram_bits, cache_bits,
                                 histogram_image,
                                 histogram_symbols)) {
     goto Error;
   }
-  // Create Huffman bit lengths & codes for each histogram image.
+  // Create Huffman bit lengths and codes for each histogram image.
   histogram_image_size = histogram_image->size;
   bit_array_size = 5 * histogram_image_size;
   huffman_codes = (HuffmanTreeCode*)calloc(bit_array_size,
@@ -494,7 +535,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   }
 
   // Huffman image + meta huffman.
-  if (histogram_bits != NO_HISTO_BITS) {
+  {
     const int write_histogram_image = (histogram_image_size > 1);
     VP8LWriteBits(bw, 1, write_histogram_image);
     if (write_histogram_image) {
@@ -512,10 +553,10 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
       histogram_image_size = max_index;
 
       VP8LWriteBits(bw, 3, histogram_bits - 2);
-      ok = EncodeImageInternal(bw, histogram_argb,
-                               VP8LSubSampleSize(width, histogram_bits),
-                               VP8LSubSampleSize(height, histogram_bits),
-                               quality, 0, NO_HISTO_BITS);
+      ok = EncodeImageNoHuffman(bw, histogram_argb,
+                                VP8LSubSampleSize(width, histogram_bits),
+                                VP8LSubSampleSize(height, histogram_bits),
+                                quality);
       free(histogram_argb);
       if (!ok) goto Error;
     }
@@ -607,9 +648,8 @@ static int ApplyPredictFilter(const VP8LEncoder* const enc,
   VP8LWriteBits(bw, 2, PREDICTOR_TRANSFORM);
   assert(pred_bits >= 2);
   VP8LWriteBits(bw, 3, pred_bits - 2);
-  if (!EncodeImageInternal(bw, enc->transform_data_,
-                           transform_width, transform_height, quality, 0,
-                           NO_HISTO_BITS)) {
+  if (!EncodeImageNoHuffman(bw, enc->transform_data_,
+                            transform_width, transform_height, quality)) {
     return 0;
   }
   return 1;
@@ -629,9 +669,8 @@ static int ApplyCrossColorFilter(const VP8LEncoder* const enc,
   VP8LWriteBits(bw, 2, CROSS_COLOR_TRANSFORM);
   assert(ccolor_transform_bits >= 2);
   VP8LWriteBits(bw, 3, ccolor_transform_bits - 2);
-  if (!EncodeImageInternal(bw, enc->transform_data_,
-                           transform_width, transform_height, quality, 0,
-                           NO_HISTO_BITS)) {
+  if (!EncodeImageNoHuffman(bw, enc->transform_data_,
+                            transform_width, transform_height, quality)) {
     return 0;
   }
   return 1;
@@ -795,8 +834,7 @@ static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
   for (i = palette_size - 1; i >= 1; --i) {
     palette[i] = VP8LSubPixels(palette[i], palette[i - 1]);
   }
-  if (!EncodeImageInternal(bw, palette, palette_size, 1, quality, 0,
-                           NO_HISTO_BITS)) {
+  if (!EncodeImageNoHuffman(bw, palette, palette_size, 1, quality)) {
     err = VP8_ENC_ERROR_INVALID_CONFIGURATION;
     goto Error;
   }

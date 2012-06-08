@@ -62,11 +62,16 @@ void VP8LHistogramCreate(VP8LHistogram* const p,
 // Set the palette_code_bits and reset the stats.
 void VP8LHistogramInit(VP8LHistogram* const p, int palette_code_bits);
 
+// Collect all the references into a histogram (without reset)
+void VP8LHistogramStoreRefs(const VP8LBackwardRefs* const refs,
+                            VP8LHistogram* const histo);
+
 // Allocate an array of pointer to histograms, allocated and initialized
 // using 'cache_bits'. Return NULL in case of memory error.
 VP8LHistogramSet* VP8LAllocateHistogramSet(int size, int cache_bits);
 
-void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const p,
+// Accumulate a token 'v' into a histogram.
+void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const histo,
                                      const PixOrCopy* const v);
 
 // Estimate how many bits the combined entropy of literals and distance

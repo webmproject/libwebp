@@ -40,17 +40,22 @@ static void HistogramClear(VP8LHistogram* const p) {
   p->bit_cost_ = 0;
 }
 
+void VP8LHistogramStoreRefs(const VP8LBackwardRefs* const refs,
+                            VP8LHistogram* const histo) {
+  int i;
+  for (i = 0; i < refs->size; ++i) {
+    VP8LHistogramAddSinglePixOrCopy(histo, &refs->refs[i]);
+  }
+}
+
 void VP8LHistogramCreate(VP8LHistogram* const p,
                          const VP8LBackwardRefs* const refs,
                          int palette_code_bits) {
-  int i;
   if (palette_code_bits >= 0) {
     p->palette_code_bits_ = palette_code_bits;
   }
   HistogramClear(p);
-  for (i = 0; i < refs->size; ++i) {
-    VP8LHistogramAddSinglePixOrCopy(p, &refs->refs[i]);
-  }
+  VP8LHistogramStoreRefs(refs, p);
 }
 
 void VP8LHistogramInit(VP8LHistogram* const p, int palette_code_bits) {
@@ -112,24 +117,24 @@ void VP8LConvertPopulationCountTableToBitEstimates(
   }
 }
 
-void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const p,
+void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const histo,
                                      const PixOrCopy* const v) {
   if (PixOrCopyIsLiteral(v)) {
-    ++p->alpha_[PixOrCopyLiteral(v, 3)];
-    ++p->red_[PixOrCopyLiteral(v, 2)];
-    ++p->literal_[PixOrCopyLiteral(v, 1)];
-    ++p->blue_[PixOrCopyLiteral(v, 0)];
+    ++histo->alpha_[PixOrCopyLiteral(v, 3)];
+    ++histo->red_[PixOrCopyLiteral(v, 2)];
+    ++histo->literal_[PixOrCopyLiteral(v, 1)];
+    ++histo->blue_[PixOrCopyLiteral(v, 0)];
   } else if (PixOrCopyIsCacheIdx(v)) {
     int literal_ix = 256 + NUM_LENGTH_CODES + PixOrCopyCacheIdx(v);
-    ++p->literal_[literal_ix];
+    ++histo->literal_[literal_ix];
   } else {
     int code, extra_bits_count, extra_bits_value;
     PrefixEncode(PixOrCopyLength(v),
                  &code, &extra_bits_count, &extra_bits_value);
-    ++p->literal_[256 + code];
+    ++histo->literal_[256 + code];
     PrefixEncode(PixOrCopyDistance(v),
                  &code, &extra_bits_count, &extra_bits_value);
-    ++p->distance_[code];
+    ++histo->distance_[code];
   }
 }
 
@@ -186,11 +191,11 @@ static double BitsEntropy(const int* const array, int n) {
 }
 
 double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p) {
-  double retval = BitsEntropy(&p->literal_[0], VP8LHistogramNumCodes(p)) +
-      BitsEntropy(&p->red_[0], 256) +
-      BitsEntropy(&p->blue_[0], 256) +
-      BitsEntropy(&p->alpha_[0], 256) +
-      BitsEntropy(&p->distance_[0], NUM_DISTANCE_CODES);
+  double retval = BitsEntropy(&p->literal_[0], VP8LHistogramNumCodes(p))
+                + BitsEntropy(&p->red_[0], 256)
+                + BitsEntropy(&p->blue_[0], 256)
+                + BitsEntropy(&p->alpha_[0], 256)
+                + BitsEntropy(&p->distance_[0], NUM_DISTANCE_CODES);
   // Compute the extra bits cost.
   int i;
   for (i = 2; i < NUM_LENGTH_CODES - 2; ++i) {
@@ -259,14 +264,13 @@ static void HistogramBuildImage(int xsize, int histo_bits,
                                 VP8LHistogramSet* const image) {
   int i;
   int x = 0, y = 0;
-  const int histo_xsize =
-      (histo_bits > 0) ? VP8LSubSampleSize(xsize, histo_bits) : 1;
+  const int histo_xsize = VP8LSubSampleSize(xsize, histo_bits);
+  VP8LHistogram** const histograms = image->histograms;
+  assert(histo_bits > 0);
   for (i = 0; i < backward_refs->size; ++i) {
     const PixOrCopy* const v = &backward_refs->refs[i];
-    const int ix =
-        (histo_bits > 0) ? (y >> histo_bits) * histo_xsize + (x >> histo_bits)
-                         : 0;
-    VP8LHistogramAddSinglePixOrCopy(image->histograms[ix], v);
+    const int ix = (y >> histo_bits) * histo_xsize + (x >> histo_bits);
+    VP8LHistogramAddSinglePixOrCopy(histograms[ix], v);
     x += PixOrCopyLength(v);
     while (x >= xsize) {
       x -= xsize;
