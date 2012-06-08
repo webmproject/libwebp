@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAK3//y4I\u003d",
+        "filename": "src/dec/webp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-06-08T09:11:51Z",
+      "side": 1,
+      "message": "ok for now, but we\u0027ll probably have to revisit this test later in order to support raw vp8/vp8l feature extraction that doesn\u0027t rely on RIFF+VP8/VP8L-chunk presence (if that\u0027s ever useful. not sure yet).",
+      "revId": "eaee9e79f78bf7777017cff819ea556973b972ad",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
