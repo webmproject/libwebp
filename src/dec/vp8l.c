@@ -22,7 +22,6 @@ extern "C" {
 
 #define NUM_ARGB_CACHE_ROWS          16
 
-static const size_t kHeaderBytes = 5;
 static const int kCodeLengthLiterals = 16;
 static const int kCodeLengthRepeatCode = 16;
 static const int kCodeLengthExtraBits[3] = { 2, 3, 7 };
@@ -98,7 +97,7 @@ static int ReadImageInfo(VP8LBitReader* const br,
 
 int VP8LGetInfo(const uint8_t* data, size_t data_size,
                 int* const width, int* const height, int* const has_alpha) {
-  if (data == NULL || data_size < kHeaderBytes) {
+  if (data == NULL || data_size < VP8L_FRAME_HEADER_SIZE) {
     return 0;         // not enough data
   } else {
     int w, h, a;
