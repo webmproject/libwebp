@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAK3//y84\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-06-08T04:25:50Z",
+      "side": 1,
+      "message": "TODO(later): it\u0027s a bit annoying to have some quality tuning parameters buried into deep function (and recalculated for every calls to HashChainFindCopy). Longer term, they should be in a stored structure once for all...",
+      "revId": "0424b1ef3bd9545e8e34b5f0a3ffab97ef378eeb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAK3//y80\u003d",
+        "filename": "src/enc/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 829,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-06-08T04:25:50Z",
+      "side": 1,
+      "message": "same comment here",
+      "revId": "0424b1ef3bd9545e8e34b5f0a3ffab97ef378eeb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
