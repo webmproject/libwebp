@@ -393,7 +393,7 @@ static ParseStatus ParseSingleImage(WebPDemuxer* const dmux) {
   if (status != PARSE_ERROR) {
     const int has_alpha = !!(dmux->feature_flags_ & ALPHA_FLAG);
     // Clear any alpha when the alpha flag is missing.
-    if (!has_alpha && frame->img_components_[1].size_) {
+    if (!has_alpha && frame->img_components_[1].size_ > 0) {
       frame->img_components_[1].offset_ = 0;
       frame->img_components_[1].size_ = 0;
     }
@@ -553,21 +553,26 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
     // Check frame properties and if the image is composed of tiles that each
     // fragment came from a 'TILE'.
     for (; f != NULL && f->frame_num_ == cur_frame_set; f = f->next_) {
+      const ChunkData* const image = f->img_components_;
+      const ChunkData* const alpha = f->img_components_ + 1;
+
       if (!has_tiles && f->is_tile_) return 0;
       if (!has_frames && f->frame_num_ > 1) return 0;
       if (f->x_offset_ < 0 || f->y_offset_ < 0) return 0;
       if (f->complete_) {
-        const ChunkData* const img_components_ = f->img_components_;
-
-        if (!img_components_[0].size_ && !img_components_[1].size_) return 0;
+        if (alpha->size_ == 0 && image->size_ == 0) return 0;
         // Ensure alpha precedes image bitstream.
-        if (img_components_[1].size_ &&
-            img_components_[1].offset_ > img_components_[0].offset_) {
+        if (alpha->size_ > 0 && alpha->offset_ > image->offset_) {
           return 0;
         }
 
         if (f->width_ <= 0 || f->height_ <= 0) return 0;
       } else {
+        // Ensure alpha precedes image bitstream.
+        if (alpha->size_ > 0 && image->size_ > 0 &&
+            alpha->offset_ > image->offset_) {
+          return 0;
+        }
         // There shouldn't be any frames after an incomplete one.
         if (f->next_ != NULL) return 0;
       }
@@ -663,6 +668,195 @@ uint32_t WebPDemuxGetI(const WebPDemuxer* const dmux,
     case WEBP_FF_LOOP_COUNT:    return (uint32_t)dmux->loop_count_;
   }
   return 0;
+}
+
+// -----------------------------------------------------------------------------
+// Frame iteration
+
+// Find the first 'frame_num' frame. There may be multiple in a tiled frame.
+static const Frame* GetFrame(const WebPDemuxer* const dmux, int frame_num) {
+  const Frame* f;
+  for (f = dmux->frames_; f != NULL; f = f->next_) {
+    if (frame_num == f->frame_num_) break;
+  }
+  return f;
+}
+
+// Returns tile 'tile_num' and the total count.
+static const Frame* GetTile(
+    const Frame* const frame_set, int tile_num, int* const count) {
+  const int this_frame = frame_set->frame_num_;
+  const Frame* f = frame_set;
+  const Frame* tile = NULL;
+  int total;
+
+  for (total = 0; f != NULL && f->frame_num_ == this_frame; f = f->next_) {
+    if (++total == tile_num) tile = f;
+  }
+  *count = total;
+  return tile;
+}
+
+static const uint8_t* GetFramePayload(const uint8_t* const mem_buf,
+                                      const Frame* const frame,
+                                      size_t* const data_size) {
+  *data_size = 0;
+  if (frame != NULL) {
+    const ChunkData* const image = frame->img_components_;
+    const ChunkData* const alpha = frame->img_components_ + 1;
+    size_t start_offset = image->offset_;
+    *data_size = image->size_;
+
+    // if alpha exists it precedes image, update the size allowing for
+    // intervening chunks.
+    if (alpha->size_ > 0) {
+      const size_t inter_size = (image->offset_ > 0)
+                              ? image->offset_ - (alpha->offset_ + alpha->size_)
+                              : 0;
+      start_offset = alpha->offset_;
+      *data_size  += alpha->size_ + inter_size;
+    }
+    return mem_buf + start_offset;
+  }
+  return NULL;
+}
+
+// Create a whole 'frame' from VP8 (+ alpha) or lossless.
+static int SynthesizeFrame(const WebPDemuxer* const dmux,
+                           const Frame* const first_frame,
+                           int tile_num, WebPIterator* const iter) {
+  const uint8_t* const mem_buf = dmux->mem_.buf_;
+  int num_tiles;
+  size_t payload_size = 0;
+  const Frame* const tile = GetTile(first_frame, tile_num, &num_tiles);
+  const uint8_t* const payload = GetFramePayload(mem_buf, tile, &payload_size);
+  if (payload == NULL) return 0;
+
+  iter->frame_num_   = first_frame->frame_num_;
+  iter->num_frames_  = dmux->num_frames_;
+  iter->tile_num_    = tile_num;
+  iter->num_tiles_   = num_tiles;
+  iter->x_offset_    = tile->x_offset_;
+  iter->y_offset_    = tile->y_offset_;
+  iter->width_       = tile->width_;
+  iter->height_      = tile->height_;
+  iter->duration_    = tile->duration_;
+  iter->complete_    = tile->complete_;
+  iter->tile_.bytes_ = payload;
+  iter->tile_.size_  = payload_size;
+  // TODO(jzern): adjust offsets for 'TILE's embedded in 'FRM 's
+  return 1;
+}
+
+static int SetFrame(int frame_num, WebPIterator* const iter) {
+  const Frame* frame;
+  const WebPDemuxer* const dmux = (WebPDemuxer*)iter->private_;
+  if (dmux == NULL || frame_num < 0) return 0;
+  if (frame_num > dmux->num_frames_) return 0;
+  if (frame_num == 0) frame_num = dmux->num_frames_;
+
+  frame = GetFrame(dmux, frame_num);
+  return SynthesizeFrame(dmux, frame, 1, iter);
+}
+
+int WebPDemuxGetFrame(const WebPDemuxer* const dmux,
+                      int frame, WebPIterator* const iter) {
+  if (iter == NULL) return 0;
+
+  memset(iter, 0, sizeof(*iter));
+  iter->private_ = (void*)dmux;
+  return SetFrame(frame, iter);
+}
+
+int WebPDemuxSetFrame(WebPIterator* const iter, int frame) {
+  if (iter == NULL) return 0;
+  return SetFrame(frame, iter);
+}
+
+int WebPDemuxSetTile(WebPIterator* const iter, int tile) {
+  if (iter != NULL && iter->private_ != NULL && tile > 0) {
+    const WebPDemuxer* const dmux = (WebPDemuxer*)iter->private_;
+    const Frame* const frame = GetFrame(dmux, iter->frame_num_);
+    if (frame == NULL) return 0;
+
+    return SynthesizeFrame(dmux, frame, tile, iter);
+  }
+  return 0;
+}
+
+void WebPDemuxReleaseIterator(WebPIterator* const iter) {
+  (void)iter;
+}
+
+// -----------------------------------------------------------------------------
+// Chunk iteration
+
+static int ChunkCount(const WebPDemuxer* const dmux, const char fourcc[4]) {
+  const uint8_t* const mem_buf = dmux->mem_.buf_;
+  const Chunk* c;
+  int count = 0;
+  for (c = dmux->chunks_; c != NULL; c = c->next_) {
+    const uint8_t* const header = mem_buf + c->data_.offset_;
+    if (!memcmp(header, fourcc, TAG_SIZE)) ++count;
+  }
+  return count;
+}
+
+static const Chunk* GetChunk(const WebPDemuxer* const dmux,
+                             const char fourcc[4], int chunk_num) {
+  const uint8_t* const mem_buf = dmux->mem_.buf_;
+  const Chunk* c;
+  int count = 0;
+  for (c = dmux->chunks_; c != NULL; c = c->next_) {
+    const uint8_t* const header = mem_buf + c->data_.offset_;
+    if (!memcmp(header, fourcc, TAG_SIZE)) ++count;
+    if (count == chunk_num) break;
+  }
+  return c;
+}
+
+static int SetChunk(const char fourcc[4], int chunk_num,
+                    WebPChunkIterator* const iter) {
+  const WebPDemuxer* const dmux = (WebPDemuxer*)iter->private_;
+  int count;
+
+  if (dmux == NULL || fourcc == NULL || chunk_num < 0) return 0;
+  count = ChunkCount(dmux, fourcc);
+  if (count == 0) return 0;
+  if (chunk_num == 0) chunk_num = count;
+
+  if (chunk_num <= count) {
+    const uint8_t* const mem_buf = dmux->mem_.buf_;
+    const Chunk* const chunk = GetChunk(dmux, fourcc, chunk_num);
+    iter->chunk_.bytes_ = mem_buf + chunk->data_.offset_ + CHUNK_HEADER_SIZE;
+    iter->chunk_.size_  = chunk->data_.size_ - CHUNK_HEADER_SIZE;
+    iter->num_chunks_   = count;
+    iter->chunk_num_    = chunk_num;
+    return 1;
+  }
+  return 0;
+}
+
+int WebPDemuxGetChunk(const WebPDemuxer* const dmux,
+                      const char fourcc[4], int chunk_num,
+                      WebPChunkIterator* const iter) {
+  if (iter == NULL) return 0;
+
+  memset(iter, 0, sizeof(*iter));
+  iter->private_ = (void*)dmux;
+  return SetChunk(fourcc, chunk_num, iter);
+}
+
+int WebPDemuxSetChunk(WebPChunkIterator* const iter, int chunk) {
+  if (iter != NULL) {
+    const uint8_t* const header = iter->chunk_.bytes_ - CHUNK_HEADER_SIZE;
+    return SetChunk((const char*)header, chunk, iter);
+  }
+  return 0;
+}
+
+void WebPDemuxReleaseChunkIterator(WebPChunkIterator* const iter) {
+  (void)iter;
 }
 
 #if defined(__cplusplus) || defined(c_plusplus)

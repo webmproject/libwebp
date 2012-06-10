@@ -519,6 +519,84 @@ WEBP_EXTERN(uint32_t) WebPDemuxGetI(
     const WebPDemuxer* const dmux, WebPFormatFeature feature);
 
 //------------------------------------------------------------------------------
+// Frame iteration.
+
+typedef struct {
+  int frame_num_;
+  int num_frames_;
+  int tile_num_;
+  int num_tiles_;
+  int x_offset_, y_offset_;  // offset relative to the canvas.
+  int width_, height_;       // dimensions of this frame or tile.
+  int duration_;   // display duration in milliseconds.
+  int complete_;   // true if 'tile_' contains a full frame. partial images may
+                   // still be decoded with the WebP incremental decoder.
+  WebPData tile_;  // The frame or tile given by 'frame_num_' and 'tile_num_'.
+
+  void* private_;
+} WebPIterator;
+
+// Retrieves frame 'frame_number' from 'dmux'.
+// 'iter->tile_' points to the first tile on return from this function.
+// Individual tiles may be extracted using WebPDemuxSetTile().
+// Setting 'frame_number' equal to 0 will return the last frame of the image.
+// Returns false if 'dmux' is NULL or frame 'frame_number' is not present.
+// Call WebPDemuxReleaseIterator() when use of the iterator is complete.
+// NOTE: 'dmux' must persist for the lifetime of 'iter'.
+WEBP_EXTERN(int) WebPDemuxGetFrame(
+    const WebPDemuxer* const dmux, int frame_number, WebPIterator* const iter);
+
+// Sets 'iter->tile_' to point to frame number 'frame_number'.
+// Returns true on success, false otherwise.
+WEBP_EXTERN(int) WebPDemuxSetFrame(WebPIterator* const iter, int frame_number);
+
+// Sets 'iter->tile_' to reflect tile number 'tile_number'.
+// Returns true if tile 'tile_number' is present, false otherwise.
+WEBP_EXTERN(int) WebPDemuxSetTile(WebPIterator* const iter, int tile_number);
+
+// Releases any memory associated with 'iter'.
+// Must be called before destroying the associated WebPDemuxer with
+// WebPDemuxDelete().
+WEBP_EXTERN(void) WebPDemuxReleaseIterator(WebPIterator* const iter);
+
+//------------------------------------------------------------------------------
+// Chunk iteration.
+
+typedef struct {
+  // The current and total number of chunks with the fourcc given to
+  // WebPDemuxGetChunk().
+  int chunk_num_;
+  int num_chunks_;
+  // The payload of the chunk.
+  WebPData chunk_;
+
+  void* private_;
+} WebPChunkIterator;
+
+// Retrieves the 'chunk_number' instance of the chunk with id 'fourcc' from
+// 'dmux'.
+// 'fourcc' is a character array containing the fourcc of the chunk to return,
+// e.g., "ICCP", "META", "EXIF", etc.
+// Setting 'chunk_number' equal to 0 will return the last chunk in a set.
+// Returns true if the chunk is found, false otherwise. Image related chunk
+// payloads are accessed through WebPDemuxGetFrame() and related functions.
+// Call WebPDemuxReleaseChunkIterator() when use of the iterator is complete.
+// NOTE: 'dmux' must persist for the lifetime of the iterator.
+WEBP_EXTERN(int) WebPDemuxGetChunk(const WebPDemuxer* const dmux,
+                                   const char fourcc[4], int chunk_number,
+                                   WebPChunkIterator* const iter);
+
+// Sets 'iter->chunk_' to point to chunk 'chunk_number'.
+// Returns true on success, false otherwise.
+WEBP_EXTERN(int) WebPDemuxSetChunk(WebPChunkIterator* const iter,
+                                   int chunk_number);
+
+// Releases any memory associated with 'iter'.
+// Must be called before destroying the associated WebPDemuxer with
+// WebPDemuxDelete().
+WEBP_EXTERN(void) WebPDemuxReleaseChunkIterator(WebPChunkIterator* const iter);
+
+//------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
