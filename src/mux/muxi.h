@@ -51,9 +51,9 @@ struct WebPChunk {
 // chunk and VP8/VP8L chunk),
 typedef struct WebPMuxImage WebPMuxImage;
 struct WebPMuxImage {
-  WebPChunk*  header_;      // Corresponds to FRAME_ID/TILE_ID.
-  WebPChunk*  alpha_;       // Corresponds to ALPHA_ID.
-  WebPChunk*  img_;         // Corresponds to IMAGE_ID.
+  WebPChunk*  header_;      // Corresponds to WEBP_CHUNK_FRAME/WEBP_CHUNK_TILE.
+  WebPChunk*  alpha_;       // Corresponds to WEBP_CHUNK_ALPHA.
+  WebPChunk*  img_;         // Corresponds to WEBP_CHUNK_IMAGE.
   int         is_partial_;  // True if only some of the chunks are filled.
   WebPMuxImage* next_;
 };
@@ -69,24 +69,10 @@ struct WebPMux {
   WebPChunk*  unknown_;
 };
 
-// TAG_ID enum: used to assign an ID to each type of chunk.
-typedef enum {
-  VP8X_ID,
-  ICCP_ID,
-  LOOP_ID,
-  FRAME_ID,
-  TILE_ID,
-  ALPHA_ID,
-  IMAGE_ID,
-  META_ID,
-  UNKNOWN_ID,
-  NIL_ID
-} TAG_ID;
-
 // CHUNK_INDEX enum: used for indexing within 'kChunks' (defined below) only.
-// Note: the reason for having two enums ('TAG_ID' and 'CHUNK_INDEX') is to
-// allow two different chunks to have the same id (e.g. TAG_ID 'IMAGE_ID' can
-// correspond to CHUNK_INDEX 'IDX_VP8' or 'IDX_VP8L').
+// Note: the reason for having two enums ('WebPChunkId' and 'CHUNK_INDEX') is to
+// allow two different chunks to have the same id (e.g. WebPChunkId
+// 'WEBP_CHUNK_IMAGE' can correspond to CHUNK_INDEX 'IDX_VP8' or 'IDX_VP8L').
 typedef enum {
   IDX_VP8X = 0,
   IDX_ICCP,
@@ -109,9 +95,8 @@ typedef enum {
   ((uint32_t)c1 | (c2 << 8) | (c3 << 16) | (c4 << 24))
 
 typedef struct {
-  const char*   name;
   uint32_t      tag;
-  TAG_ID        id;
+  WebPChunkId   id;
   uint32_t      size;
 } ChunkInfo;
 
@@ -144,17 +129,11 @@ static WEBP_INLINE size_t SizeWithPadding(size_t chunk_size) {
 // Initialize.
 void ChunkInit(WebPChunk* const chunk);
 
-// Get chunk index from chunk name.
-// Returns IDX_NIL if chunk name is NULL or not found.
-CHUNK_INDEX ChunkGetIndexFromName(const char* const name);
-
-// Get chunk index from chunk tag.
-// Returns IDX_NIL if not found.
+// Get chunk index from chunk tag. Returns IDX_NIL if not found.
 CHUNK_INDEX ChunkGetIndexFromTag(uint32_t tag);
 
-// Get chunk id from chunk tag.
-// Returns NIL_ID if not found.
-TAG_ID ChunkGetIdFromTag(uint32_t tag);
+// Get chunk id from chunk tag. Returns WEBP_CHUNK_NIL if not found.
+WebPChunkId ChunkGetIdFromTag(uint32_t tag);
 
 // Search for nth chunk with given 'tag' in the chunk list.
 // nth = 0 means "last of the list".
@@ -206,28 +185,28 @@ WebPMuxImage* MuxImageDelete(WebPMuxImage* const wpi);
 void MuxImageDeleteAll(WebPMuxImage** const wpi_list);
 
 // Count number of images matching the given tag id in the 'wpi_list'.
-int MuxImageCount(WebPMuxImage* const wpi_list, TAG_ID id);
+int MuxImageCount(WebPMuxImage* const wpi_list, WebPChunkId id);
 
 // Check if given ID corresponds to an image related chunk.
-static WEBP_INLINE int IsWPI(TAG_ID id) {
+static WEBP_INLINE int IsWPI(WebPChunkId id) {
   switch (id) {
-    case FRAME_ID:
-    case TILE_ID:
-    case ALPHA_ID:
-    case IMAGE_ID:  return 1;
+    case WEBP_CHUNK_FRAME:
+    case WEBP_CHUNK_TILE:
+    case WEBP_CHUNK_ALPHA:
+    case WEBP_CHUNK_IMAGE:  return 1;
     default:        return 0;
   }
 }
 
 // Get a reference to appropriate chunk list within an image given chunk tag.
 static WEBP_INLINE WebPChunk** MuxImageGetListFromId(WebPMuxImage* wpi,
-                                                     TAG_ID id) {
+                                                     WebPChunkId id) {
   assert(wpi != NULL);
   switch (id) {
-    case FRAME_ID:
-    case TILE_ID:  return &wpi->header_;
-    case ALPHA_ID: return &wpi->alpha_;
-    case IMAGE_ID: return &wpi->img_;
+    case WEBP_CHUNK_FRAME:
+    case WEBP_CHUNK_TILE:  return &wpi->header_;
+    case WEBP_CHUNK_ALPHA: return &wpi->alpha_;
+    case WEBP_CHUNK_IMAGE: return &wpi->img_;
     default: return NULL;
   }
 }
@@ -239,11 +218,11 @@ WebPMuxError MuxImageSetNth(const WebPMuxImage* wpi, WebPMuxImage** wpi_list,
 
 // Delete nth image in the image list with given tag id.
 WebPMuxError MuxImageDeleteNth(WebPMuxImage** wpi_list, uint32_t nth,
-                               TAG_ID id);
+                               WebPChunkId id);
 
 // Get nth image in the image list with given tag id.
 WebPMuxError MuxImageGetNth(const WebPMuxImage** wpi_list, uint32_t nth,
-                            TAG_ID id, WebPMuxImage** wpi);
+                            WebPChunkId id, WebPMuxImage** wpi);
 
 // Total size of a list of images.
 size_t MuxImageListDiskSize(const WebPMuxImage* wpi_list);
@@ -260,7 +239,7 @@ int MuxHasLosslessImages(const WebPMuxImage* images);
 // Returns the list where chunk with given ID is to be inserted in mux.
 // Return value is NULL if this chunk should be inserted in mux->images_ list
 // or if 'id' is not known.
-WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, TAG_ID id);
+WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, WebPChunkId id);
 
 // Validates that the given mux has a single image.
 WebPMuxError MuxValidateForImage(const WebPMux* const mux);

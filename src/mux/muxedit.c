@@ -205,13 +205,11 @@ static WebPMuxError DeleteChunks(WebPChunk** chunk_list, uint32_t tag) {
   return err;
 }
 
-static WebPMuxError MuxDeleteAllNamedData(WebPMux* const mux,
-                                          const char* const name) {
-  const CHUNK_INDEX idx = ChunkGetIndexFromName(name);
-  const TAG_ID id = kChunks[idx].id;
+static WebPMuxError MuxDeleteAllNamedData(WebPMux* const mux, CHUNK_INDEX idx) {
+  const WebPChunkId id = kChunks[idx].id;
   WebPChunk** chunk_list;
 
-  if (mux == NULL || name == NULL) return WEBP_MUX_INVALID_ARGUMENT;
+  if (mux == NULL) return WEBP_MUX_INVALID_ARGUMENT;
   if (IsWPI(id)) return WEBP_MUX_INVALID_ARGUMENT;
 
   chunk_list = MuxGetChunkListFromId(mux, id);
@@ -221,7 +219,7 @@ static WebPMuxError MuxDeleteAllNamedData(WebPMux* const mux,
 }
 
 static WebPMuxError DeleteLoopCount(WebPMux* const mux) {
-  return MuxDeleteAllNamedData(mux, kChunks[IDX_LOOP].name);
+  return MuxDeleteAllNamedData(mux, IDX_LOOP);
 }
 
 //------------------------------------------------------------------------------
@@ -462,18 +460,16 @@ WebPMuxError WebPMuxDeleteImage(WebPMux* const mux) {
 }
 
 WebPMuxError WebPMuxDeleteMetadata(WebPMux* const mux) {
-  return MuxDeleteAllNamedData(mux, kChunks[IDX_META].name);
+  return MuxDeleteAllNamedData(mux, IDX_META);
 }
 
 WebPMuxError WebPMuxDeleteColorProfile(WebPMux* const mux) {
-  return MuxDeleteAllNamedData(mux, kChunks[IDX_ICCP].name);
+  return MuxDeleteAllNamedData(mux, IDX_ICCP);
 }
 
-static WebPMuxError DeleteFrameTileInternal(WebPMux* const mux,
-                                            uint32_t nth,
-                                            const char* const name) {
-  const CHUNK_INDEX idx = ChunkGetIndexFromName(name);
-  const TAG_ID id = kChunks[idx].id;
+static WebPMuxError DeleteFrameTileInternal(WebPMux* const mux, uint32_t nth,
+                                            CHUNK_INDEX idx) {
+  const WebPChunkId id = kChunks[idx].id;
   if (mux == NULL) return WEBP_MUX_INVALID_ARGUMENT;
 
   assert(idx == IDX_FRAME || idx == IDX_TILE);
@@ -481,11 +477,11 @@ static WebPMuxError DeleteFrameTileInternal(WebPMux* const mux,
 }
 
 WebPMuxError WebPMuxDeleteFrame(WebPMux* const mux, uint32_t nth) {
-  return DeleteFrameTileInternal(mux, nth, kChunks[IDX_FRAME].name);
+  return DeleteFrameTileInternal(mux, nth, IDX_FRAME);
 }
 
 WebPMuxError WebPMuxDeleteTile(WebPMux* const mux, uint32_t nth) {
-  return DeleteFrameTileInternal(mux, nth, kChunks[IDX_TILE].name);
+  return DeleteFrameTileInternal(mux, nth, IDX_TILE);
 }
 
 //------------------------------------------------------------------------------
@@ -589,7 +585,7 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
 
   // If VP8X chunk(s) is(are) already present, remove them (and later add new
   // VP8X chunk with updated flags).
-  err = MuxDeleteAllNamedData(mux, kChunks[IDX_VP8X].name);
+  err = MuxDeleteAllNamedData(mux, IDX_VP8X);
   if (err != WEBP_MUX_OK && err != WEBP_MUX_NOT_FOUND) return err;
 
   // Set flags.
@@ -636,8 +632,7 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   PutLE32(data + 4, width);   // canvas width.
   PutLE32(data + 8, height);  // canvas height.
 
-  err = MuxAddChunk(mux, 1, kChunks[IDX_VP8X].tag, data, data_size,
-                    NULL, 1);
+  err = MuxAddChunk(mux, 1, kChunks[IDX_VP8X].tag, data, data_size, NULL, 1);
   return err;
 }
 
@@ -655,12 +650,10 @@ WebPMuxError WebPMuxAssemble(WebPMux* const mux,
   }
 
   // Remove LOOP chunk if unnecessary.
-  err = WebPMuxNumNamedElements(mux, kChunks[IDX_LOOP].name,
-                                &num_loop_chunks);
+  err = WebPMuxNumChunks(mux, kChunks[IDX_LOOP].id, &num_loop_chunks);
   if (err != WEBP_MUX_OK) return err;
   if (num_loop_chunks >= 1) {
-    err = WebPMuxNumNamedElements(mux, kChunks[IDX_FRAME].name,
-                                  &num_frames);
+    err = WebPMuxNumChunks(mux, kChunks[IDX_FRAME].id, &num_frames);
     if (err != WEBP_MUX_OK) return err;
     if (num_frames == 0) {
       err = DeleteLoopCount(mux);

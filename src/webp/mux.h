@@ -73,6 +73,20 @@ typedef enum {
   ALPHA_FLAG      = 0x00000010
 } WebPFeatureFlags;
 
+// IDs for different types of chunks.
+typedef enum {
+  WEBP_CHUNK_VP8X,     // VP8X
+  WEBP_CHUNK_ICCP,     // ICCP
+  WEBP_CHUNK_LOOP,     // LOOP
+  WEBP_CHUNK_FRAME,    // FRM
+  WEBP_CHUNK_TILE,     // TILE
+  WEBP_CHUNK_ALPHA,    // ALPH
+  WEBP_CHUNK_IMAGE,    // VP8/VP8L
+  WEBP_CHUNK_META,     // META
+  WEBP_CHUNK_UNKNOWN,  // Other chunks.
+  WEBP_CHUNK_NIL
+} WebPChunkId;
+
 typedef struct WebPMux WebPMux;   // main opaque object.
 
 // Data type used to describe 'raw' data, e.g., chunk data
@@ -423,16 +437,13 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetFeatures(const WebPMux* const mux,
 // Gets number of chunks having tag value tag in the mux object.
 // Parameters:
 //   mux - (in) object from which the info is to be fetched
-//   name - (in) chunk name specifying the type of chunk
-//          Can be any of: "vp8x", "iccp", "loop", "frame", "tile", "alpha",
-//          "image", "meta" or "unknown"
-//   num_elements - (out) number of chunks corresponding to the specified tag
+//   id - (in) chunk id specifying the type of chunk
+//   num_elements - (out) number of chunks with the given chunk id
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if either mux, tag or num_elements is NULL
+//   WEBP_MUX_INVALID_ARGUMENT - if either mux, or num_elements is NULL
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxNumNamedElements(const WebPMux* const mux,
-                                                  const char* name,
-                                                  int* num_elements);
+WEBP_EXTERN(WebPMuxError) WebPMuxNumChunks(const WebPMux* const mux,
+                                           WebPChunkId id, int* num_elements);
 
 // Assembles all chunks in WebP RIFF format and returns in 'assembled_data'.
 // This function also validates the mux object.

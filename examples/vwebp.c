@@ -304,7 +304,7 @@ int main(int argc, char *argv[]) {
     if (mux_err != WEBP_MUX_OK && mux_err != WEBP_MUX_NOT_FOUND) {
       goto Error;
     }
-    mux_err = WebPMuxNumNamedElements(kParams.mux, "image",
+    mux_err = WebPMuxNumChunks(kParams.mux, WEBP_CHUNK_IMAGE,
                                       &kParams.frame_max);
     if (mux_err != WEBP_MUX_OK) {
       goto Error;
