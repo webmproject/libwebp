@@ -829,7 +829,7 @@ static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
   // Save palette to bitstream.
   VP8LWriteBits(bw, 1, TRANSFORM_PRESENT);
   VP8LWriteBits(bw, 2, COLOR_INDEXING_TRANSFORM);
-  assert(palette_size >= 2);
+  assert(palette_size >= 1);
   VP8LWriteBits(bw, 8, palette_size - 1);
   for (i = palette_size - 1; i >= 1; --i) {
     palette[i] = VP8LSubPixels(palette[i], palette[i - 1]);

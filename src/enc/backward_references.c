@@ -613,7 +613,7 @@ static int BackwardReferencesHashChainFollowChosenPath(
       ++i;
     }
   }
-  assert(size < refs->max_size);
+  assert(size <= refs->max_size);
   refs->size = size;
   ok = 1;
 Error:
