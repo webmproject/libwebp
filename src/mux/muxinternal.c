@@ -20,18 +20,18 @@ extern "C" {
 #define UNDEFINED_CHUNK_SIZE (-1)
 
 const ChunkInfo kChunks[] = {
-  {"vp8x",    mktag('V', 'P', '8', 'X'),  VP8X_ID,    VP8X_CHUNK_SIZE},
-  {"iccp",    mktag('I', 'C', 'C', 'P'),  ICCP_ID,    UNDEFINED_CHUNK_SIZE},
-  {"loop",    mktag('L', 'O', 'O', 'P'),  LOOP_ID,    LOOP_CHUNK_SIZE},
-  {"frame",   mktag('F', 'R', 'M', ' '),  FRAME_ID,   FRAME_CHUNK_SIZE},
-  {"tile",    mktag('T', 'I', 'L', 'E'),  TILE_ID,    TILE_CHUNK_SIZE},
-  {"alpha",   mktag('A', 'L', 'P', 'H'),  ALPHA_ID,   UNDEFINED_CHUNK_SIZE},
-  {"image",   mktag('V', 'P', '8', ' '),  IMAGE_ID,   UNDEFINED_CHUNK_SIZE},
-  {"image",   mktag('V', 'P', '8', 'L'),  IMAGE_ID,   UNDEFINED_CHUNK_SIZE},
-  {"meta",    mktag('M', 'E', 'T', 'A'),  META_ID,    UNDEFINED_CHUNK_SIZE},
-  {"unknown", mktag('U', 'N', 'K', 'N'),  UNKNOWN_ID, UNDEFINED_CHUNK_SIZE},
+  { mktag('V', 'P', '8', 'X'),  WEBP_CHUNK_VP8X,    VP8X_CHUNK_SIZE },
+  { mktag('I', 'C', 'C', 'P'),  WEBP_CHUNK_ICCP,    UNDEFINED_CHUNK_SIZE },
+  { mktag('L', 'O', 'O', 'P'),  WEBP_CHUNK_LOOP,    LOOP_CHUNK_SIZE },
+  { mktag('F', 'R', 'M', ' '),  WEBP_CHUNK_FRAME,   FRAME_CHUNK_SIZE },
+  { mktag('T', 'I', 'L', 'E'),  WEBP_CHUNK_TILE,    TILE_CHUNK_SIZE },
+  { mktag('A', 'L', 'P', 'H'),  WEBP_CHUNK_ALPHA,   UNDEFINED_CHUNK_SIZE },
+  { mktag('V', 'P', '8', ' '),  WEBP_CHUNK_IMAGE,   UNDEFINED_CHUNK_SIZE },
+  { mktag('V', 'P', '8', 'L'),  WEBP_CHUNK_IMAGE,   UNDEFINED_CHUNK_SIZE },
+  { mktag('M', 'E', 'T', 'A'),  WEBP_CHUNK_META,    UNDEFINED_CHUNK_SIZE },
+  { mktag('U', 'N', 'K', 'N'),  WEBP_CHUNK_UNKNOWN, UNDEFINED_CHUNK_SIZE },
 
-  {NULL,      NIL_TAG,                    NIL_ID,     UNDEFINED_CHUNK_SIZE},
+  { NIL_TAG,                    WEBP_CHUNK_NIL,     UNDEFINED_CHUNK_SIZE }
 };
 
 //------------------------------------------------------------------------------
@@ -58,15 +58,6 @@ WebPChunk* ChunkRelease(WebPChunk* const chunk) {
 //------------------------------------------------------------------------------
 // Chunk misc methods.
 
-CHUNK_INDEX ChunkGetIndexFromName(const char* const name) {
-  int i;
-  if (name == NULL) return IDX_NIL;
-  for (i = 0; kChunks[i].name != NULL; ++i) {
-    if (!strcmp(name, kChunks[i].name)) return i;
-  }
-  return IDX_NIL;
-}
-
 CHUNK_INDEX ChunkGetIndexFromTag(uint32_t tag) {
   int i;
   for (i = 0; kChunks[i].tag != NIL_TAG; ++i) {
@@ -75,12 +66,12 @@ CHUNK_INDEX ChunkGetIndexFromTag(uint32_t tag) {
   return IDX_NIL;
 }
 
-TAG_ID ChunkGetIdFromTag(uint32_t tag) {
+WebPChunkId ChunkGetIdFromTag(uint32_t tag) {
   int i;
   for (i = 0; kChunks[i].tag != NIL_TAG; ++i) {
     if (tag == kChunks[i].tag) return kChunks[i].id;
   }
-  return NIL_ID;
+  return WEBP_CHUNK_NIL;
 }
 
 //------------------------------------------------------------------------------
@@ -258,13 +249,13 @@ WebPMuxImage* MuxImageRelease(WebPMuxImage* const wpi) {
 //------------------------------------------------------------------------------
 // MuxImage search methods.
 
-int MuxImageCount(WebPMuxImage* const wpi_list, TAG_ID id) {
+int MuxImageCount(WebPMuxImage* const wpi_list, WebPChunkId id) {
   int count = 0;
   WebPMuxImage* current;
   for (current = wpi_list; current != NULL; current = current->next_) {
     const WebPChunk* const wpi_chunk = *MuxImageGetListFromId(current, id);
     if (wpi_chunk != NULL) {
-      const TAG_ID wpi_chunk_id = ChunkGetIdFromTag(wpi_chunk->tag_);
+      const WebPChunkId wpi_chunk_id = ChunkGetIdFromTag(wpi_chunk->tag_);
       if (wpi_chunk_id == id) ++count;
     }
   }
@@ -296,14 +287,16 @@ static int SearchImageToSet(WebPMuxImage** wpi_list, uint32_t nth,
 //   where 'prev_wpi' is the pointer to the image at position (nth - 1).
 // Returns 1 if nth image with given id was found, 0 otherwise.
 static int SearchImageToGetOrDelete(WebPMuxImage** wpi_list, uint32_t nth,
-                                    TAG_ID id, WebPMuxImage*** const location) {
+                                    WebPChunkId id,
+                                    WebPMuxImage*** const location) {
   uint32_t count = 0;
   assert(wpi_list);
   *location = wpi_list;
 
   // Search makes sense only for the following.
-  assert(id == FRAME_ID || id == TILE_ID || id == IMAGE_ID);
-  assert(id != IMAGE_ID || nth == 1);
+  assert(id == WEBP_CHUNK_FRAME || id == WEBP_CHUNK_TILE ||
+         id == WEBP_CHUNK_IMAGE);
+  assert(id != WEBP_CHUNK_IMAGE || nth == 1);
 
   if (nth == 0) {
     nth = MuxImageCount(*wpi_list, id);
@@ -314,7 +307,7 @@ static int SearchImageToGetOrDelete(WebPMuxImage** wpi_list, uint32_t nth,
     WebPMuxImage* const cur_wpi = *wpi_list;
     const WebPChunk* const wpi_chunk = *MuxImageGetListFromId(cur_wpi, id);
     if (wpi_chunk != NULL) {
-      const TAG_ID wpi_chunk_id = ChunkGetIdFromTag(wpi_chunk->tag_);
+      const WebPChunkId wpi_chunk_id = ChunkGetIdFromTag(wpi_chunk->tag_);
       if (wpi_chunk_id == id) {
         ++count;
         if (count == nth) return 1;  // Found.
@@ -362,7 +355,7 @@ void MuxImageDeleteAll(WebPMuxImage** const wpi_list) {
 }
 
 WebPMuxError MuxImageDeleteNth(WebPMuxImage** wpi_list, uint32_t nth,
-                               TAG_ID id) {
+                               WebPChunkId id) {
   assert(wpi_list);
   if (!SearchImageToGetOrDelete(wpi_list, nth, id, &wpi_list)) {
     return WEBP_MUX_NOT_FOUND;
@@ -375,7 +368,7 @@ WebPMuxError MuxImageDeleteNth(WebPMuxImage** wpi_list, uint32_t nth,
 // MuxImage reader methods.
 
 WebPMuxError MuxImageGetNth(const WebPMuxImage** wpi_list, uint32_t nth,
-                            TAG_ID id, WebPMuxImage** wpi) {
+                            WebPChunkId id, WebPMuxImage** wpi) {
   assert(wpi_list);
   assert(wpi);
   if (!SearchImageToGetOrDelete((WebPMuxImage**)wpi_list, nth, id,
@@ -441,22 +434,22 @@ int MuxHasLosslessImages(const WebPMuxImage* images) {
 //------------------------------------------------------------------------------
 // Helper methods for mux.
 
-WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, TAG_ID id) {
+WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, WebPChunkId id) {
   assert(mux != NULL);
   switch(id) {
-    case VP8X_ID:    return (WebPChunk**)&mux->vp8x_;
-    case ICCP_ID:    return (WebPChunk**)&mux->iccp_;
-    case LOOP_ID:    return (WebPChunk**)&mux->loop_;
-    case META_ID:    return (WebPChunk**)&mux->meta_;
-    case UNKNOWN_ID: return (WebPChunk**)&mux->unknown_;
+    case WEBP_CHUNK_VP8X:    return (WebPChunk**)&mux->vp8x_;
+    case WEBP_CHUNK_ICCP:    return (WebPChunk**)&mux->iccp_;
+    case WEBP_CHUNK_LOOP:    return (WebPChunk**)&mux->loop_;
+    case WEBP_CHUNK_META:    return (WebPChunk**)&mux->meta_;
+    case WEBP_CHUNK_UNKNOWN: return (WebPChunk**)&mux->unknown_;
     default: return NULL;
   }
 }
 
 WebPMuxError MuxValidateForImage(const WebPMux* const mux) {
-  const int num_images = MuxImageCount(mux->images_, IMAGE_ID);
-  const int num_frames = MuxImageCount(mux->images_, FRAME_ID);
-  const int num_tiles  = MuxImageCount(mux->images_, TILE_ID);
+  const int num_images = MuxImageCount(mux->images_, WEBP_CHUNK_IMAGE);
+  const int num_frames = MuxImageCount(mux->images_, WEBP_CHUNK_FRAME);
+  const int num_tiles  = MuxImageCount(mux->images_, WEBP_CHUNK_TILE);
 
   if (num_images == 0) {
     // No images in mux.
@@ -485,7 +478,7 @@ static WebPMuxError ValidateChunk(const WebPMux* const mux, CHUNK_INDEX idx,
                                   WebPFeatureFlags vp8x_flags,
                                   int max, int* num) {
   const WebPMuxError err =
-      WebPMuxNumNamedElements(mux, kChunks[idx].name, num);
+      WebPMuxNumChunks(mux, kChunks[idx].id, num);
   if (err != WEBP_MUX_OK) return err;
   if (max > -1 && *num > max) return WEBP_MUX_INVALID_ARGUMENT;
   if (feature != NO_FLAG && IsNotCompatible(vp8x_flags & feature, *num)) {

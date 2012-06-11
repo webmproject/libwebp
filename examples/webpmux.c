@@ -195,7 +195,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
     RETURN_IF_ERROR("Failed to retrieve loop count\n");
     printf("Loop Count : %d\n", loop_count);
 
-    err = WebPMuxNumNamedElements(mux, "frame", &nFrames);
+    err = WebPMuxNumChunks(mux, WEBP_CHUNK_FRAME, &nFrames);
     RETURN_IF_ERROR("Failed to retrieve number of frames\n");
 
     printf("Number of frames: %d\n", nFrames);
@@ -220,7 +220,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
 
   if (flag & TILE_FLAG) {
     int nTiles;
-    err = WebPMuxNumNamedElements(mux, "tile", &nTiles);
+    err = WebPMuxNumChunks(mux, WEBP_CHUNK_TILE, &nTiles);
     RETURN_IF_ERROR("Failed to retrieve number of tiles\n");
 
     printf("Number of tiles: %d\n", nTiles);

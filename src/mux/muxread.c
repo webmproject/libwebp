@@ -132,7 +132,7 @@ WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
 
   // Loop over chunks.
   while (data != end) {
-    TAG_ID id;
+    WebPChunkId id;
     WebPChunk chunk;
     WebPMuxError err;
 
@@ -149,7 +149,7 @@ WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
       if (*wpi_chunk_ptr != NULL) goto Err;  // Consecutive alpha chunks or
                                              // consecutive frame/tile chunks.
       if (ChunkSetNth(&chunk, wpi_chunk_ptr, 1) != WEBP_MUX_OK) goto Err;
-      if (id == IMAGE_ID) {
+      if (id == WEBP_CHUNK_IMAGE) {
         wpi->is_partial_ = 0;  // wpi is completely filled.
         // Add this to mux->images_ list.
         if (MuxImageSetNth(wpi, &mux->images_, 0) != WEBP_MUX_OK) goto Err;
@@ -224,7 +224,8 @@ WebPMuxError WebPMuxGetImage(const WebPMux* const mux,
   if (err != WEBP_MUX_OK) return err;
 
   // All well. Get the image.
-  err = MuxImageGetNth((const WebPMuxImage**)&mux->images_, 1, IMAGE_ID, &wpi);
+  err = MuxImageGetNth((const WebPMuxImage**)&mux->images_, 1, WEBP_CHUNK_IMAGE,
+                       &wpi);
   assert(err == WEBP_MUX_OK);  // Already tested above.
 
   // Get alpha chunk (if present & requested).
@@ -268,7 +269,7 @@ WebPMuxError WebPMuxGetLoopCount(const WebPMux* const mux,
 
   err = MuxGet(mux, IDX_LOOP, 1, &image);
   if (err != WEBP_MUX_OK) return err;
-  if (image.size_ < kChunks[LOOP_ID].size) return WEBP_MUX_BAD_DATA;
+  if (image.size_ < kChunks[WEBP_CHUNK_LOOP].size) return WEBP_MUX_BAD_DATA;
   *loop_count = GetLE32(image.bytes_);
 
   return WEBP_MUX_OK;
@@ -283,9 +284,9 @@ static WebPMuxError MuxGetFrameTileInternal(
   WebPMuxError err;
   WebPMuxImage* wpi;
 
-  const int is_frame = (tag == kChunks[FRAME_ID].tag) ? 1 : 0;
+  const int is_frame = (tag == kChunks[WEBP_CHUNK_FRAME].tag) ? 1 : 0;
   const CHUNK_INDEX idx = is_frame ? IDX_FRAME : IDX_TILE;
-  const TAG_ID id = kChunks[idx].id;
+  const WebPChunkId id = kChunks[idx].id;
 
   if (mux == NULL || image == NULL ||
       x_offset == NULL || y_offset == NULL || (is_frame && duration == NULL)) {
@@ -342,6 +343,15 @@ WebPMuxError WebPMuxGetTile(const WebPMux* const mux, uint32_t nth,
                                  kChunks[IDX_TILE].tag);
 }
 
+// Get chunk index from chunk id. Returns IDX_NIL if not found.
+static CHUNK_INDEX ChunkGetIndexFromId(WebPChunkId id) {
+  int i;
+  for (i = 0; kChunks[i].id != WEBP_CHUNK_NIL; ++i) {
+    if (id == kChunks[i].id) return i;
+  }
+  return IDX_NIL;
+}
+
 // Count number of chunks matching 'tag' in the 'chunk_list'.
 // If tag == NIL_TAG, any tag will be matched.
 static int CountChunks(const WebPChunk* const chunk_list, uint32_t tag) {
@@ -355,12 +365,9 @@ static int CountChunks(const WebPChunk* const chunk_list, uint32_t tag) {
   return count;
 }
 
-WebPMuxError WebPMuxNumNamedElements(const WebPMux* const mux, const char* name,
+WebPMuxError WebPMuxNumChunks(const WebPMux* const mux, WebPChunkId id,
                                      int* num_elements) {
-  const CHUNK_INDEX idx = ChunkGetIndexFromName(name);
-  const TAG_ID id = kChunks[idx].id;
-
-  if (mux == NULL || name == NULL || num_elements == NULL) {
+  if (mux == NULL || num_elements == NULL) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
@@ -371,6 +378,7 @@ WebPMuxError WebPMuxNumNamedElements(const WebPMux* const mux, const char* name,
     if (chunk_list == NULL) {
       *num_elements = 0;
     } else {
+      const CHUNK_INDEX idx = ChunkGetIndexFromId(id);
       *num_elements = CountChunks(*chunk_list, kChunks[idx].tag);
     }
   }
