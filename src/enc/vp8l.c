@@ -27,7 +27,7 @@ extern "C" {
 #endif
 
 #define PALETTE_KEY_RIGHT_SHIFT   22  // Key for 1K buffer.
-#define MAX_HUFF_IMAGE_SIZE       (32 * 1024 * 1024)
+#define MAX_HUFF_IMAGE_SIZE       (16 * 1024 * 1024)
 #define MIN_HISTO_BITS            2
 #define MAX_HISTO_BITS            9
 
