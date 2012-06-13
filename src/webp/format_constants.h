@@ -25,6 +25,7 @@
                                             // width and height.
 #define VP8L_VERSION_BITS            3      // 3 bits reserved for version.
 #define VP8L_VERSION                 0      // version 0
+#define VP8L_FRAME_HEADER_SIZE       5      // Size of the VP8L frame header.
 
 #define MAX_PALETTE_SIZE             256
 #define MAX_CACHE_BITS               11

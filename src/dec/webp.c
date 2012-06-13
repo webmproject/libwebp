@@ -241,58 +241,117 @@ static VP8StatusCode ParseVP8Header(const uint8_t** data_ptr, size_t* data_size,
 
 //------------------------------------------------------------------------------
 
-VP8StatusCode WebPParseHeaders(WebPHeaderStructure* const headers) {
-  const uint8_t* buf;
-  size_t buf_size;
-  int found_vp8x;
+// Returns true if 'fourcc' matches a chunk that can appear in a 'VP8X' file.
+// Image chunks are dealt with separately so are not included here.
+static int IsExtendedFormatChunk(const uint8_t fourcc[4]) {
+  return (!memcmp(fourcc, "ALPH", TAG_SIZE) ||
+          !memcmp(fourcc, "FRM ", TAG_SIZE) ||
+          !memcmp(fourcc, "ICCP", TAG_SIZE) ||
+          !memcmp(fourcc, "LOOP", TAG_SIZE) ||
+          !memcmp(fourcc, "META", TAG_SIZE) ||
+          !memcmp(fourcc, "TILE", TAG_SIZE));
+}
+
+// Fetch 'width', 'height', 'has_alpha' and fill out 'headers' based on 'data'.
+// All the output parameters may be NULL. If 'headers' is NULL only the minimal
+// amount will be read to fetch the remaining parameters.
+// If 'headers' is non-NULL this function will attempt to locate both alpha
+// data (with or without a VP8X chunk) and the bitstream chunk (VP8/VP8L).
+static VP8StatusCode ParseHeadersInternal(
+    const uint8_t* data, size_t data_size,
+    int* const width, int* const height, int* const has_alpha,
+    WebPHeaderStructure* const headers) {
+  int found_vp8x = 0;
   VP8StatusCode status;
+  WebPHeaderStructure hdrs;
 
-  assert(headers);
-
-  buf = headers->data;
-  buf_size = headers->data_size;
-  headers->alpha_data = NULL;
-  headers->alpha_data_size = 0;
-  headers->compressed_size = 0;
-  headers->is_lossless = 0;
-  headers->offset = 0;
-  headers->riff_size = 0;
-
-  if (buf == NULL || buf_size < RIFF_HEADER_SIZE) {
+  if (data == NULL || data_size < RIFF_HEADER_SIZE) {
     return VP8_STATUS_NOT_ENOUGH_DATA;
   }
+  memset(&hdrs, 0, sizeof(hdrs));
+  hdrs.data = data;
+  hdrs.data_size = data_size;
 
   // Skip over RIFF header.
-  if (ParseRIFF(&buf, &buf_size, &headers->riff_size) != VP8_STATUS_OK) {
-    return VP8_STATUS_BITSTREAM_ERROR;  // Wrong RIFF header.
+  status = ParseRIFF(&data, &data_size, &hdrs.riff_size);
+  if (status != VP8_STATUS_OK) {
+    return status;   // Wrong RIFF header / insufficient data.
   }
 
-  // Skip over VP8X header.
-  status = ParseVP8X(&buf, &buf_size, &found_vp8x, NULL, NULL, NULL);
-  if (status != VP8_STATUS_OK) {
-    return status;  // Wrong VP8X chunk / insufficient data.
+  // Skip over VP8X.
+  {
+    uint32_t flags = 0;
+    status = ParseVP8X(&data, &data_size, &found_vp8x, width, height, &flags);
+    if (status != VP8_STATUS_OK) {
+      return status;  // Wrong VP8X / insufficient data.
+    }
+    if (has_alpha != NULL) *has_alpha = !!(flags & ALPHA_FLAG_BIT);
+    if (found_vp8x && headers == NULL) {
+      return VP8_STATUS_OK;  // Return features from VP8X header.
+    }
   }
-  if (found_vp8x) {
-    // Skip over optional chunks.
-    status = ParseOptionalChunks(&buf, &buf_size, headers->riff_size,
-                                 &headers->alpha_data,
-                                 &headers->alpha_data_size);
+
+  if (data_size < TAG_SIZE) return VP8_STATUS_NOT_ENOUGH_DATA;
+
+  // Skip over optional chunks.
+  // If a VP8X chunk was not found look for chunks that may be contained within
+  // one to initiate the parse.
+  if (found_vp8x || IsExtendedFormatChunk(data)) {
+    status = ParseOptionalChunks(&data, &data_size, hdrs.riff_size,
+                                 &hdrs.alpha_data, &hdrs.alpha_data_size);
     if (status != VP8_STATUS_OK) {
       return status;  // Found an invalid chunk size / insufficient data.
     }
   }
 
-  // Skip over VP8/VP8L chunk header.
-  status = ParseVP8Header(&buf, &buf_size, headers->riff_size,
-                          &headers->compressed_size, &headers->is_lossless);
+  // Skip over VP8/VP8L header.
+  status = ParseVP8Header(&data, &data_size, hdrs.riff_size,
+                          &hdrs.compressed_size, &hdrs.is_lossless);
   if (status != VP8_STATUS_OK) {
-    return status;  // Invalid VP8/VP8L header / insufficient data.
+    return status;  // Wrong VP8/VP8L chunk-header / insufficient data.
+  }
+  if (hdrs.compressed_size > MAX_CHUNK_PAYLOAD) {
+    return VP8_STATUS_BITSTREAM_ERROR;
   }
 
-  headers->offset = (uint32_t)(buf - headers->data);
-  assert((uint64_t)(buf - headers->data) < MAX_CHUNK_PAYLOAD);
-  assert(headers->offset == headers->data_size - buf_size);
-  return VP8_STATUS_OK;
+  if (!hdrs.is_lossless) {
+    if (data_size < VP8_FRAME_HEADER_SIZE) {
+      return VP8_STATUS_NOT_ENOUGH_DATA;
+    }
+    // Validates raw VP8 data.
+    if (!VP8GetInfo(data, data_size,
+                    (uint32_t)hdrs.compressed_size, width, height)) {
+      return VP8_STATUS_BITSTREAM_ERROR;
+    }
+  } else {
+    if (data_size < VP8L_FRAME_HEADER_SIZE) {
+      return VP8_STATUS_NOT_ENOUGH_DATA;
+    }
+    // Validates raw VP8L data.
+    if (!VP8LGetInfo(data, data_size, width, height, has_alpha)) {
+      return VP8_STATUS_BITSTREAM_ERROR;
+    }
+  }
+
+  if (has_alpha != NULL) {
+    // If the data did not contain a VP8X/VP8L chunk the only definitive way
+    // to set this is by looking for alpha data (from an ALPH chunk).
+    *has_alpha |= (hdrs.alpha_data != NULL);
+  }
+  if (headers != NULL) {
+    *headers = hdrs;
+    headers->offset = data - headers->data;
+    assert((uint64_t)(data - headers->data) < MAX_CHUNK_PAYLOAD);
+    assert(headers->offset == headers->data_size - data_size);
+  }
+  return VP8_STATUS_OK;  // Return features from VP8 header.
+}
+
+VP8StatusCode WebPParseHeaders(WebPHeaderStructure* const headers) {
+  assert(headers != NULL);
+  // fill out headers, ignore width/height/has_alpha.
+  return ParseHeadersInternal(headers->data, headers->data_size,
+                              NULL, NULL, NULL, headers);
 }
 
 //------------------------------------------------------------------------------
@@ -537,61 +596,15 @@ static void DefaultFeatures(WebPBitstreamFeatures* const features) {
 
 static VP8StatusCode GetFeatures(const uint8_t* data, size_t data_size,
                                  WebPBitstreamFeatures* const features) {
-  size_t chunk_size = 0;
-  size_t riff_size = 0;
-  int* const width = &features->width;
-  int* const height = &features->height;
-  int found_vp8x;
-  int is_lossless = 0;
-  VP8StatusCode status;
-
   if (features == NULL || data == NULL) {
     return VP8_STATUS_INVALID_PARAM;
   }
   DefaultFeatures(features);
 
-  // Skip over RIFF header.
-  status = ParseRIFF(&data, &data_size, &riff_size);
-  if (status != VP8_STATUS_OK) {
-    return status;   // Wrong RIFF header / insufficient data.
-  }
-
-  // Skip over VP8X.
-  {
-    uint32_t flags = 0;
-    status = ParseVP8X(&data, &data_size, &found_vp8x, width, height, &flags);
-    if (status != VP8_STATUS_OK) {
-      return status;  // Wrong VP8X / insufficient data.
-    }
-    features->has_alpha = !!(flags & ALPHA_FLAG_BIT);
-    if (found_vp8x) {
-      return VP8_STATUS_OK;  // Return features from VP8X header.
-    }
-  }
-
-  // Skip over VP8/VP8L header.
-  status = ParseVP8Header(&data, &data_size, riff_size,
-                          &chunk_size, &is_lossless);
-  if (status != VP8_STATUS_OK) {
-    return status;  // Wrong VP8/VP8L chunk-header / insufficient data.
-  }
-
-  if (!is_lossless) {
-    // Validates raw VP8 data.
-    if (chunk_size != (uint32_t)chunk_size ||
-        !VP8GetInfo(data, data_size, (uint32_t)chunk_size, width, height)) {
-      return VP8_STATUS_BITSTREAM_ERROR;
-    }
-  } else {
-    int has_alpha;
-    // Validates raw VP8L data.
-    if (!VP8LGetInfo(data, data_size, width, height, &has_alpha)) {
-      return VP8_STATUS_BITSTREAM_ERROR;
-    }
-    features->has_alpha = has_alpha;
-  }
-
-  return VP8_STATUS_OK;  // Return features from VP8 header.
+  // Only parse enough of the data to retrieve width/height/has_alpha.
+  return ParseHeadersInternal(data, data_size,
+                              &features->width, &features->height,
+                              &features->has_alpha, NULL);
 }
 
 //------------------------------------------------------------------------------
