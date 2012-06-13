@@ -21,9 +21,6 @@ extern "C" {
 #include "../dec/vp8li.h"
 #include "../dsp/yuv.h"
 #include "../dsp/dsp.h"
-
-#ifdef USE_LOSSLESS_ENCODER
-
 #include "../enc/histogram.h"
 
 // A lookup table for small values of log(int) to be used in entropy
@@ -134,8 +131,6 @@ float VP8LFastLog(int v) {
   }
   return (float)log(v);
 }
-
-#endif
 
 //------------------------------------------------------------------------------
 // Image transforms.
@@ -288,7 +283,6 @@ static const PredictorFunc kPredictors[16] = {
   Predictor0, Predictor0    // <- padding security sentinels
 };
 
-#ifdef USE_LOSSLESS_ENCODER
 // TODO(vikasa): Replace 256 etc with defines.
 static double PredictionCostSpatial(const int* counts,
                                     int weight_0, double exp_val) {
@@ -484,8 +478,6 @@ void VP8LResidualImage(int width, int height, int bits,
   }
 }
 
-#endif
-
 // Inverse prediction.
 static void PredictorInverseTransform(const VP8LTransform* const transform,
                                       int y_start, int y_end, uint32_t* data) {
@@ -537,7 +529,6 @@ static void PredictorInverseTransform(const VP8LTransform* const transform,
   }
 }
 
-#ifdef USE_LOSSLESS_ENCODER
 void VP8LSubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixs) {
   int i;
   for (i = 0; i < num_pixs; ++i) {
@@ -548,7 +539,6 @@ void VP8LSubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixs) {
     argb_data[i] = (argb & 0xff00ff00) | (new_r << 16) | new_b;
   }
 }
-#endif
 
 // Add green to blue and red channels (i.e. perform the inverse transform of
 // 'subtract green').
@@ -623,7 +613,6 @@ static WEBP_INLINE uint32_t TransformColor(const Multipliers* const m,
   return (argb & 0xff00ff00u) | (new_red << 16) | (new_blue);
 }
 
-#ifdef USE_LOSSLESS_ENCODER
 static WEBP_INLINE int SkipRepeatedPixels(const uint32_t* const argb,
                                           int ix, int xsize) {
   const uint32_t v = argb[ix];
@@ -862,7 +851,6 @@ void VP8LColorSpaceTransform(int width, int height, int bits, int step,
     }
   }
 }
-#endif
 
 // Color space inverse transform.
 static void ColorSpaceInverseTransform(const VP8LTransform* const transform,

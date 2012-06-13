@@ -12,8 +12,6 @@
 #ifndef WEBP_ENC_VP8LI_H_
 #define WEBP_ENC_VP8LI_H_
 
-#ifdef USE_LOSSLESS_ENCODER
-
 #include "./histogram.h"
 #include "../utils/bit_writer.h"
 #include "../webp/encode.h"
@@ -64,8 +62,6 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
-#endif
-
 #endif
 
 #endif  /* WEBP_ENC_VP8LI_H_ */

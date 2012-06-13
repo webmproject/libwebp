@@ -33,7 +33,6 @@ void VP8LInverseTransform(const struct VP8LTransform* const transform,
                           int row_start, int row_end,
                           const uint32_t* const in, uint32_t* const out);
 
-#ifdef USE_LOSSLESS_ENCODER
 // Subtracts green from blue and red channels.
 void VP8LSubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixs);
 
@@ -43,7 +42,6 @@ void VP8LResidualImage(int width, int height, int bits,
 
 void VP8LColorSpaceTransform(int width, int height, int bits, int step,
                              uint32_t* const argb, uint32_t* image);
-#endif
 
 //------------------------------------------------------------------------------
 // Color space conversion.
@@ -61,7 +59,6 @@ static WEBP_INLINE uint32_t VP8LSubSampleSize(uint32_t size,
   return (size + (1 << sampling_bits) - 1) >> sampling_bits;
 }
 
-#ifdef USE_LOSSLESS_ENCODER
 // Faster logarithm for small integers, with the property of log(0) == 0.
 float VP8LFastLog(int v);
 
@@ -73,7 +70,6 @@ static WEBP_INLINE uint32_t VP8LSubPixels(uint32_t a, uint32_t b) {
       0xff00ff00u + (a & 0x00ff00ffu) - (b & 0x00ff00ffu);
   return (alpha_and_green & 0xff00ff00u) | (red_and_blue & 0x00ff00ffu);
 }
-#endif
 
 //------------------------------------------------------------------------------
 

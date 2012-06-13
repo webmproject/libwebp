@@ -48,8 +48,6 @@ extern "C" {
 //           invalid quality or method, or
 //           memory allocation for the compressed data fails.
 
-#ifdef USE_LOSSLESS_ENCODER
-
 #include "../enc/vp8li.h"
 
 static int EncodeLossless(const uint8_t* data, int width, int height,
@@ -100,8 +98,6 @@ static int EncodeLossless(const uint8_t* data, int width, int height,
   return ok && !bw->error_;
 }
 
-#endif
-
 // -----------------------------------------------------------------------------
 
 static int EncodeAlphaInternal(const uint8_t* data, int width, int height,
@@ -115,9 +111,6 @@ static int EncodeAlphaInternal(const uint8_t* data, int width, int height,
   size_t expected_size;
   const size_t data_size = width * height;
 
-#ifndef USE_LOSSLESS_ENCODER
-  method = ALPHA_NO_COMPRESSION;
-#endif
   assert(filter >= 0 && filter < WEBP_FILTER_LAST);
   assert(method >= ALPHA_NO_COMPRESSION);
   assert(method <= ALPHA_LOSSLESS_COMPRESSION);
@@ -145,13 +138,8 @@ static int EncodeAlphaInternal(const uint8_t* data, int width, int height,
     ok = VP8BitWriterAppend(bw, alpha_src, width * height);
     ok = ok && !bw->error_;
   } else {
-#ifdef USE_LOSSLESS_ENCODER
     ok = EncodeLossless(alpha_src, width, height, effort_level, bw);
     VP8BitWriterFinish(bw);
-#else
-    (void)effort_level;
-    assert(0);  // not reached.
-#endif
   }
   return ok;
 }

@@ -11,8 +11,6 @@
 #include "config.h"
 #endif
 
-#ifdef USE_LOSSLESS_ENCODER
-
 #include <math.h>
 #include <stdio.h>
 
@@ -443,5 +441,3 @@ Error:
   free(image_out);
   return ok;
 }
-
-#endif

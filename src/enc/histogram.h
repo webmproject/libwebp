@@ -12,8 +12,6 @@
 #ifndef WEBP_ENC_HISTOGRAM_H_
 #define WEBP_ENC_HISTOGRAM_H_
 
-#ifdef USE_LOSSLESS_ENCODER
-
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -140,8 +138,6 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }
-#endif
-
 #endif
 
 #endif  // WEBP_ENC_HISTOGRAM_H_

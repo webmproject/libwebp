@@ -9,8 +9,6 @@
 //
 // Flate-like entropy encoding (Huffman) for webp lossless.
 
-#ifdef USE_LOSSLESS_ENCODER
-
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -438,5 +436,3 @@ int VP8LCreateHuffmanTree(int* const histogram, int tree_depth_limit,
   ConvertBitDepthsToSymbols(tree);
   return 1;
 }
-
-#endif

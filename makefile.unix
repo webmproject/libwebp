@@ -38,7 +38,6 @@ endif
 
 # Extra flags to enable experimental features and code
 # EXTRA_FLAGS += -DWEBP_EXPERIMENTAL_FEATURES
-EXTRA_FLAGS += -DUSE_LOSSLESS_ENCODER
 
 # Extra flags to enable multi-threading
 EXTRA_FLAGS += -DWEBP_USE_THREAD
@@ -142,6 +141,7 @@ HDRS = \
     src/utils/color_cache.h \
     src/utils/filters.h \
     src/utils/huffman.h \
+    src/utils/huffman_encode.h \
     src/utils/quant_levels.h \
     src/utils/rescaler.h \
     src/utils/thread.h \

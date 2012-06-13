@@ -187,7 +187,6 @@ void VP8BitWriterWipeOut(VP8BitWriter* const bw) {
   }
 }
 
-#ifdef USE_LOSSLESS_ENCODER
 //------------------------------------------------------------------------------
 // VP8LBitWriter
 
@@ -264,8 +263,6 @@ void VP8LWriteBits(VP8LBitWriter* const bw, int n_bits, uint32_t bits) {
     }
   }
 }
-
-#endif
 
 //------------------------------------------------------------------------------
 

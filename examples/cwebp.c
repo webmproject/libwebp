@@ -863,11 +863,9 @@ int main(int argc, const char *argv[]) {
       }
     } else if (!strcmp(argv[c], "-noalpha")) {
       keep_alpha = 0;
-#ifdef USE_LOSSLESS_ENCODER
     } else if (!strcmp(argv[c], "-lossless")) {
       config.lossless = 1;
       picture.use_argb_input = 1;
-#endif
     } else if (!strcmp(argv[c], "-size") && c < argc - 1) {
       config.target_size = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-psnr") && c < argc - 1) {
