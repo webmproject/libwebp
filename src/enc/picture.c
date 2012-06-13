@@ -113,7 +113,7 @@ int WebPPictureAlloc(WebPPicture* const picture) {
         return 0;
       }
       WebPPictureFree(picture);   // erase previous buffer
-      picture->argb = (uint32_t*)malloc(total_size);
+      picture->argb = (uint32_t*)malloc((size_t)total_size);
       if (picture->argb == NULL) return 0;
       picture->argb_stride = width;
     }

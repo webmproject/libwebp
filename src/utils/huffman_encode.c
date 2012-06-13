@@ -366,7 +366,7 @@ int VP8LCreateCompressedHuffmanTree(const HuffmanTreeCode* const tree,
     assert(tokens <= ending_token);
   }
   (void)ending_token;    // suppress 'unused variable' warning
-  return tokens - starting_token;
+  return (int)(tokens - starting_token);
 }
 
 // -----------------------------------------------------------------------------
