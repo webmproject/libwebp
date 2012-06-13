@@ -8,8 +8,6 @@
 // Author: Jyrki Alakuijala (jyrki@google.com)
 //
 
-#ifdef USE_LOSSLESS_ENCODER
-
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
@@ -816,5 +814,3 @@ int VP8LCalculateEstimateForCacheSize(const uint32_t* const argb,
   VP8LClearBackwardRefs(&refs);
   return ok;
 }
-
-#endif

@@ -365,14 +365,10 @@ int WebPEncode(const WebPConfig* const config, WebPPicture* const pic) {
     }
     DeleteVP8Encoder(enc);
   } else {
-#ifdef USE_LOSSLESS_ENCODER
     if (pic->argb == NULL)
       return WebPEncodingSetError(pic, VP8_ENC_ERROR_NULL_PARAMETER);
 
     ok = VP8LEncodeImage(config, pic);  // Sets pic->error in case of problem.
-#else
-    return WebPEncodingSetError(pic, VP8_ENC_ERROR_INVALID_CONFIGURATION);
-#endif
   }
 
   return ok;

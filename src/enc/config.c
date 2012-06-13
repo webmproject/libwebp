@@ -117,13 +117,8 @@ int WebPValidateConfig(const WebPConfig* const config) {
     return 0;
   if (config->alpha_quality < 0 || config->alpha_quality > 100)
     return 0;
-#ifdef USE_LOSSLESS_ENCODER
   if (config->lossless < 0 || config->lossless > 1)
     return 0;
-#else
-  if (config->lossless != 0)
-    return 0;
-#endif
   return 1;
 }
 

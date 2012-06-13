@@ -105,7 +105,6 @@ int WebPPictureAlloc(WebPPicture* const picture) {
         mem += uv0_size;
       }
     } else {
-#ifdef USE_LOSSLESS_ENCODER
       const uint64_t argb_size = (uint64_t)width * height;
       const uint64_t total_size = argb_size * sizeof(*picture->argb);
       if (width <= 0 || height <= 0 ||
@@ -117,9 +116,6 @@ int WebPPictureAlloc(WebPPicture* const picture) {
       picture->argb = (uint32_t*)malloc(total_size);
       if (picture->argb == NULL) return 0;
       picture->argb_stride = width;
-#else
-      return 0;
-#endif
     }
   }
   return 1;
@@ -133,18 +129,14 @@ static void WebPPictureGrabSpecs(const WebPPicture* const src,
   dst->y = dst->u = dst->v = NULL;
   dst->u0 = dst->v0 = NULL;
   dst->a = NULL;
-#ifdef USE_LOSSLESS_ENCODER
   dst->argb = NULL;
-#endif
 }
 
 // Release memory owned by 'picture'.
 void WebPPictureFree(WebPPicture* const picture) {
   if (picture != NULL) {
     free(picture->y);
-#ifdef USE_LOSSLESS_ENCODER
     free(picture->argb);
-#endif
     WebPPictureGrabSpecs(NULL, picture);
   }
 }
@@ -193,13 +185,9 @@ int WebPPictureCopy(const WebPPicture* const src, WebPPicture* const dst) {
     }
 #endif
   } else {
-#ifdef USE_LOSSLESS_ENCODER
     CopyPlane((uint8_t*)src->argb, 4 * src->argb_stride,
               (uint8_t*)dst->argb, 4 * dst->argb_stride,
               4 * dst->width, dst->height);
-#else
-    return 0;
-#endif
   }
   return 1;
 }
@@ -543,7 +531,6 @@ static int Import(WebPPicture* const picture,
       }
     }
   } else {
-#ifdef USE_LOSSLESS_ENCODER
     if (!import_alpha) {
       for (y = 0; y < height; ++y) {
         for (x = 0; x < width; ++x) {
@@ -571,9 +558,6 @@ static int Import(WebPPicture* const picture,
         }
       }
     }
-#else
-    return 0;
-#endif
   }
   return 1;
 }

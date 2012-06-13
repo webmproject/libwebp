@@ -12,8 +12,6 @@
 #ifndef WEBP_UTILS_HUFFMAN_ENCODE_H_
 #define WEBP_UTILS_HUFFMAN_ENCODE_H_
 
-#ifdef USE_LOSSLESS_ENCODER
-
 #include "../webp/types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -44,8 +42,6 @@ int VP8LCreateHuffmanTree(int* const histogram, int tree_depth_limit,
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }
-#endif
-
 #endif
 
 #endif  // WEBP_UTILS_HUFFMAN_ENCODE_H_
