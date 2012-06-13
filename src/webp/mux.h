@@ -464,6 +464,45 @@ WEBP_EXTERN(WebPMuxError) WebPMuxAssemble(WebPMux* const mux,
                                           WebPData* const assembled_data);
 
 //------------------------------------------------------------------------------
+// Demux API.
+// Enables extraction of image and extended format data from WebP files.
+
+#define WEBP_DEMUX_ABI_VERSION 0x0000
+
+typedef struct WebPDemuxer WebPDemuxer;
+
+typedef enum {
+  WEBP_DEMUX_PARSING_HEADER,  // Not enough data to parse full header.
+  WEBP_DEMUX_PARSED_HEADER,   // Header parsing complete, data may be available.
+  WEBP_DEMUX_DONE             // Entire file has been parsed.
+} WebPDemuxState;
+
+//------------------------------------------------------------------------------
+// Life of a Demux object
+
+// Internal, version-checked, entry point
+WEBP_EXTERN(WebPDemuxer*) WebPDemuxInternal(
+    const WebPData* const, int, WebPDemuxState* const, int);
+
+// Parses the WebP file given by 'data'.
+// A complete WebP file must be present in 'data' for the function to succeed.
+// Returns a WebPDemuxer object on successful parse, NULL otherwise.
+static WEBP_INLINE WebPDemuxer* WebPDemux(const WebPData* const data) {
+  return WebPDemuxInternal(data, 0, NULL, WEBP_DEMUX_ABI_VERSION);
+}
+
+// Parses the WebP file given by 'data'.
+// If 'state' is non-NULL it will be set to indicate the status of the demuxer.
+// Returns a WebPDemuxer object on successful parse, NULL otherwise.
+static WEBP_INLINE WebPDemuxer* WebPDemuxPartial(
+    const WebPData* const data, WebPDemuxState* const state) {
+  return WebPDemuxInternal(data, 1, state, WEBP_DEMUX_ABI_VERSION);
+}
+
+// Frees memory associated with 'dmux'.
+WEBP_EXTERN(void) WebPDemuxDelete(WebPDemuxer* const dmux);
+
+//------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
