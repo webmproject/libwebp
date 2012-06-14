@@ -101,13 +101,14 @@ lossless image. It is intended as a detailed reference for WebP lossless
 encoder and decoder implementation.
 
 In this document, we use extensively the syntax of the C programming
-language to describe the bitstream, and assume the existence of a function
-for reading bits, ReadBits(n). The bytes are read in the natural order of
-the stream containing them, and bits of each byte are read in the least-
-significant-bit-first order. When multiple bits are read at the same time
-the integer is constructed from the original data in the original order,
-the most significant bits of the returned integer are also the most
-significant bits of the original data. Thus the statement
+language to describe the bitstream, and assume the existence of a
+function for reading bits, `ReadBits(n)`. The bytes are read in the
+natural order of the stream containing them, and bits of each byte are
+read in the least-significant-bit-first order. When multiple bits are
+read at the same time the integer is constructed from the original data
+in the original order, the most significant bits of the returned
+integer are also the most significant bits of the original data. Thus
+the statement
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 b = ReadBits(2);
@@ -214,16 +215,16 @@ different types.
 
 ### Predictor transform
 
-The predictor transform can be used to  reduce  entropy  by  exploiting  the
-fact  that  neighboring  pixels  are  often  correlated.  In  the  predictor
-transform, the current pixel value is  predicted  from  the  pixels  already
-decoded  (in  scan-line  order)  and  only  the  residual  value  (actual  -
-predicted)  is  encoded.  The  prediction  mode  determines  the   type   of
-prediction to use. We divide the image into squares and all the pixels in  a
-square use same prediction mode.
+The predictor transform can be used to reduce entropy by exploiting the
+fact that neighboring pixels are often correlated. In the predictor
+transform, the current pixel value is predicted from the pixels already
+decoded (in scan-line order) and only the residual value (actual -
+predicted) is encoded. The _prediction mode_ determines the type of
+prediction to use. We divide the image into squares and all the pixels
+in a square use same prediction mode.
 
-The first 4 bits of prediction data define the block  width  and  height  in
-number of bits. The  number  of  block  columns,  block_xsize,  is  used  in
+The first 4 bits of prediction data define the block width and height in
+number of bits. The number of block columns, _block_xsize_, is used in
 indexing two-dimensionally.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -235,11 +236,12 @@ int block_xsize = DIV_ROUND_UP(image_width, 1 << size_bits);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The transform data contains the prediction mode for each block of the
-image. All the block_width * block_height pixels of a block use same
-prediction mode. The prediction modes are treated as pixels of an image and
-encoded using the same techniques described in chapter 4.
+image. All the `block_width * block_height` pixels of a block use same
+prediction mode. The prediction modes are treated as pixels of an image
+and encoded using the same techniques described in chapter 4.
 
-For a pixel x, y, one can compute the respective filter block address by:
+For a pixel _x, y_, one can compute the respective filter block address
+by:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int block_index = (y >> size_bits) * block_xsize +
@@ -288,7 +290,7 @@ defined as follows.
 | 13     | ClampedAddSubtractHalf(Average2(L, T), TL)              |
 
 
-Average2 is defined as follows for each ARGB component:
+`Average2` is defined as follows for each ARGB component:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 uint8 Average2(uint8 a, uint8 b) {
@@ -323,7 +325,7 @@ uint32 Select(uint32 L, uint32 T, uint32 TL) {
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The function ClampedAddSubstractFull and ClampedAddSubstractHalf are
+The function `ClampedAddSubstractFull` and `ClampedAddSubstractHalf` are
 performed for each ARGB component as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -378,10 +380,10 @@ typedef struct {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The actual color transformation is done by defining a color transform
-delta. The color transform delta depends on the ColorTransformElement which
-is same for all the pixels in a particular block. The delta is added during
-color transform. The inverse color transform then is just subtracting those
-deltas.
+delta. The color transform delta depends on the `ColorTransformElement`
+which is same for all the pixels in a particular block. The delta is
+added during color transform. The inverse color transform then is just
+subtracting those deltas.
 
 The color transform function is defined as follows:
 
@@ -413,9 +415,9 @@ void ColorTransform(uint8 red, uint8 blue, uint8 green,
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ColorTransformDelta is computed using a signed 8-bit integer representing a
-3.5-fixed-point number, and a signed 8-bit RGB color channel (c) [-
-128..127] and is defined as follows:
+`ColorTransformDelta` is computed using a signed 8-bit integer
+representing a 3.5-fixed-point number, and a signed 8-bit RGB color
+channel (c) [-128..127] and is defined as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int8 ColorTransformDelta(int8 t, int8 c) {
@@ -561,24 +563,25 @@ if (color_table_size <= 2) {
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The width_bits has a value of 0, 1, 2 or 3. A value of 0 indicates no pixel
-bundling to be done for the image. A value of 1 indicates that two pixels
-are combined together, and each pixel has a range of [0..15]. A value of 2
-indicates that four pixels are combined together, and each pixel has a
-range of [0..3]. A value of 3 indicates that eight pixels are combined
-together and each pixels has a range of [0..1], i.e., a binary value.
+The _width_bits_ has a value of 0, 1, 2 or 3. A value of 0 indicates no
+pixel bundling to be done for the image. A value of 1 indicates that two
+pixels are combined together, and each pixel has a range of [0..15]. A
+value of 2 indicates that four pixels are combined together, and each
+pixel has a range of [0..3]. A value of 3 indicates that eight pixels
+are combined together and each pixels has a range of [0..1], i.e., a
+binary value.
 
 The values are packed into the green component as follows:
 
-  * width_bits = 1: for every x value where x ≡ 0 (mod 2), a green value
+  * _width_bits_ = 1: for every x value where x ≡ 0 (mod 2), a green value
     at x is positioned into the 4 least-significant bits of the green
     value at x / 2, a green value at x + 1 is positioned into the 4 most-
     significant bits of the green value at x / 2.
-  * width_bits = 2: for every x value where x ≡ 0 (mod 4), a green value
+  * _width_bits_ = 2: for every x value where x ≡ 0 (mod 4), a green value
     at x is positioned into the 2 least-significant bits of the green
     value at x / 4, green values at x + 1 to x + 3 in order to the more
     significant bits of the green value at x / 4.
-  * width_bits = 3: for every x value where x ≡ 0 (mod 8), a green value
+  * _width_bits_ = 3: for every x value where x ≡ 0 (mod 8), a green value
     at x is positioned into the least-significant bit of the green value
     at x / 8, green values at x + 1 to x + 7 in order to the more
     significant bits of the green value at x / 8.
@@ -611,8 +614,8 @@ code, and in order to minimize this cost, statistically similar blocks can
 share an entropy code. The blocks sharing an entropy code can be found by
 clustering their statistical properties, or by repeatedly joining two
 randomly selected clusters when it reduces the overall amount of bits
-needed to encode the image. [See section "Decoding of meta Huffman codes"
-in Chapter 5 for an explanation of how this entropy image is stored.]
+needed to encode the image. [See section _"Decoding of meta Huffman codes"_
+in Chapter 5 for an explanation of how this _entropy image_ is stored.]
 
 Each pixel is encoded using one of three possible methods:
 
@@ -707,8 +710,8 @@ no difference in x, and 1 pixel difference in y (indicating previous row).
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The distances codes that map into these tuples are changes into scan-line
-order distances using the following formula: dist = x + y * xsize, where
-xsize is the width of the image in pixels.
+order distances using the following formula: _dist = x + y * xsize_, where
+_xsize_ is the width of the image in pixels.
 
 
 ### Color Cache Code
@@ -729,15 +732,15 @@ int color_cache_code_bits = ReadBits(br, 4);
 int color_cache_size = 1 << color_cache_code_bits;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-color_cache_code_bits defines the size of the color_cache by (1 <<
-color_cache_code_bits). The range of allowed values for
-color_cache_code_bits is [1..11]. Compliant decoders must indicate a
+_color_cache_code_bits_ defines the size of the color_cache by (1 <<
+_color_cache_code_bits_). The range of allowed values for
+_color_cache_code_bits_ is [1..11]. Compliant decoders must indicate a
 corrupted bit stream for other values.
 
-A color cache is an array of the size color_cache_size. Each entry stores
+A color cache is an array of the size _color_cache_size_. Each entry stores
 one ARGB color. Colors are looked up by indexing them by (0x1e35a7bd *
-color) >> (32 - color_cache_code_bits). Only one lookup is done in a color
-cache, there is no conflict resolution.
+_color_) >> (32 - _color_cache_code_bits_). Only one lookup is done in a
+color cache, there is no conflict resolution.
 
 In the beginning of decoding or encoding of an image, all entries in all
 color cache values are set to zero. The color cache code is converted to
@@ -796,8 +799,8 @@ Read next symbol S
 ### Decoding the code lengths
 
 There are two different ways to encode the code lengths of a Huffman code,
-indicated by the first bit of the code: simple code length code (1), and
-normal code length code (0).
+indicated by the first bit of the code: _simple code length code_ (1), and
+_normal code length code_ (0).
 
 
 #### Simple code length code
@@ -832,9 +835,9 @@ the color cache.
 
 #### Normal code length code
 
-The code lengths of a Huffman code are read as follows. num_codes specifies
+The code lengths of a Huffman code are read as follows. _num_codes_ specifies
 the number of code lengths, the rest of the codes lengths (according to the
-order in kCodeLengthCodeOrder) are zeros.
+order in _kCodeLengthCodeOrder_) are zeros.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int kCodeLengthCodes = 19;
@@ -856,7 +859,7 @@ for (i = 0; i < num_codes; ++i) {
 
 The entropy codes for alpha, red and blue have a total of 256 symbols. The
 entropy code for distance prefix codes has 40 symbols. The entropy code for
-green has 256 + 24 + color_cache_size, 256 symbols for different green
+green has 256 + 24 + _color_cache_size_, 256 symbols for different green
 symbols, 24 length code prefix symbols, and symbols for the color cache.
 
 The meta Huffman code, specified in the next section, defines how many
@@ -877,7 +880,7 @@ respectively. This meta Huffman code is used everywhere in the image.
 If this bit is one, the meta Huffman codes are controlled by the entropy
 image, where the index of the meta Huffman code is codified in the red and
 green components. The index can be obtained from the uint32 value by
-((pixel >> 8) & 0xffff), thus there can be up to 65536 unique meta Huffman
+_((pixel >> 8) & 0xffff)_, thus there can be up to 65536 unique meta Huffman
 codes. When decoding a Huffman encoded symbol at a pixel x, y, one chooses
 the meta Huffman code respective to these coordinates. However, not all
 bits of the coordinates are used for choosing the meta Huffman code, i.e.,
@@ -889,10 +892,10 @@ int huffman_xsize = DIV_ROUND_UP(xsize, 1 << huffman_bits);
 int huffman_ysize = DIV_ROUND_UP(ysize, 1 << huffman_bits);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-huffman_bits gives the amount of subsampling in the entropy image.
+_huffman_bits_ gives the amount of subsampling in the entropy image.
 
-After reading the huffman_bits, an entropy image stream of size
-huffman_xsize, huffman_ysize is read.
+After reading the _huffman_bits_, an entropy image stream of size
+_huffman_xsize_, _huffman_ysize_ is read.
 
 The meta Huffman code, identifying the five Huffman codes per meta Huffman
 code, is coded only by the number of codes:
@@ -909,11 +912,11 @@ meta_codes[(entropy_image[(y >> huffman_bits) * huffman_xsize +
                           (x >> huffman_bits)] >> 8) & 0xffff]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The huffman_code[5 * meta_code + k], codes with k == 0 are for the green &
-length code, k == 4 for the distance code, and the codes at k == 1, 2, and
+The _huffman_code[5 * meta_code + k]_, codes with _k_ == 0 are for the green &
+length code, _k_ == 4 for the distance code, and the codes at _k_ == 1, 2, and
 3, are for codes of length 256 for red, blue and alpha, respectively.
 
-The value of k for the reference position in meta_code determines the
+The value of k for the reference position in _meta_code_ determines the
 length of the Huffman code:
 
   * k = 0; length = 256 + 24 + cache_size
