@@ -9,10 +9,10 @@ end of this file.
 
 -->
 
-WebP Lossless Bitstream Specification
-=====================================
+Specification for WebP Lossless Bitstream 
+=========================================
 
-_Working Draft, v0.2, 20120523_
+_2012-06-08_
 
 
 Abstract
@@ -866,7 +866,9 @@ codes to the number of meta Huffman codes.
 
 ### Decoding of meta Huffman codes
 
-There are two ways to code the meta Huffman codes, indicated by one bit.
+There are two ways to code the meta Huffman codes, indicated by one bit
+for the ARGB image and is an implicit zero, i.e., not present in the
+stream for all predictor images and Huffman image itself. 
 
 If this bit is zero, there is only one meta Huffman code, using Huffman
 codes 0, 1, 2, 3 and 4 for green, alpha, red, blue and distance,
@@ -922,7 +924,7 @@ length of the Huffman code:
 Overall Structure of the Format
 -------------------------------
 
-Below there is a eagles-eye-view into the format in Backus-Naur form. It
+Below there is a eagles-eye-view into the format in Backus-Naur form. It 
 does not cover all details. End-of-image EOI is only implicitly coded into
 the number of pixels (xsize * ysize).
 
@@ -952,8 +954,7 @@ the number of pixels (xsize * ysize).
 #### Structure of the image data
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-<entropy-coded image> ::= <optional meta huffman>
-                          <color cache info><huffman codes>
+<entropy-coded image> ::= <color cache info><optional meta huffman><huffman codes>
                           <lz77-coded image>
 <optional meta huffman> ::= 1-bit value 0 |   
                             (1-bit value 1;
@@ -974,8 +975,8 @@ the number of pixels (xsize * ysize).
 A possible example sequence
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-<RIFF header><image size>1-bit<subtract-green-tx>
-1-bit<predictor-tx>0-bit<huffman image>
-<meta huffman code><color cache info><huffman codes>
+<RIFF header><image size>1-bit value 1<subtract-green-tx>
+1-bit value 1<predictor-tx>1-bit value 0<huffman image>
+<color cache info><meta huffman code><huffman codes>
 <lz77-coded image>
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
