@@ -18,15 +18,15 @@ _2012-06-08_
 Abstract
 --------
 
-WebP lossless is an image format for  lossless  compression
-of ARGB images. The lossless format  stores  and  restores  the  pixel
-values exactly, including the color values for zero alpha pixels.  The
+WebP lossless is an image format for lossless compression of ARGB
+images. The lossless format stores and restores the pixel values
+exactly, including the color values for zero alpha pixels. The
 format uses subresolution images, recursively embedded into the format
-itself, for storing statistical data about the  images,  such  as  the
-used entropy codes, spatial predictors, color  space  conversion,  and
-color table. LZ77, Huffman coding, and a  color  cache  are  used  for
-compression of the bulk data. Decoding speeds  faster  than  PNG  have
-been demonstrated, as well as 25 % denser compression than what can be
+itself, for storing statistical data about the images, such as the used
+entropy codes, spatial predictors, color space conversion, and color
+table. LZ77, Huffman coding, and a color cache are used for compression
+of the bulk data. Decoding speeds faster than PNG have been
+demonstrated, as well as 25 % denser compression than what can be
 achieved using today's PNG format.
 
 
@@ -93,8 +93,8 @@ scan-line order
   the next row.
 
 
-Introduction
-------------
+1 Introduction
+--------------
 
 This document describes the compressed data representation of a WebP
 lossless image. It is intended as a detailed reference for WebP lossless
@@ -138,8 +138,8 @@ in the bitstream contains the required data to apply the respective
 inverse transforms.
 
 
-RIFF Header
------------
+2 RIFF Header
+-------------
 
 The beginning of the header has the RIFF container. This consist of the
 following 21 bytes:
@@ -170,8 +170,8 @@ The 14-bit dynamics for image size limit the maximum size of a WebP
 lossless image to 16384✕16384 pixels.
 
 
-Transformations
----------------
+3 Transformations
+-----------------
 
 Transformations are reversible manipulations of the image data that can
 reduce the remaining symbolic entropy by modeling spatial and color
@@ -595,8 +595,8 @@ The values are packed into the green component as follows:
     significant bits of the green value at x / 8.
 
 
-Image Data
-----------
+4 Image Data
+------------
 
 Image data is an array of pixel values in scan-line order. We use image
 data in five different roles: The main role, an auxiliary role related
@@ -762,8 +762,8 @@ by inserting every pixel, be it produced by backward referencing or as
 literals, into the cache in the order they appear in the stream.
 
 
-Entropy Code
-------------
+5 Entropy Code
+--------------
 
 ### Huffman coding
 
@@ -944,8 +944,8 @@ length of the Huffman code:
   * k = 4, length = 40.
 
 
-Overall Structure of the Format
--------------------------------
+6 Overall Structure of the Format
+---------------------------------
 
 Below there is a eagles-eye-view into the format in Backus-Naur form. It 
 does not cover all details. End-of-image EOI is only implicitly coded
