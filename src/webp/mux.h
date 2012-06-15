@@ -554,7 +554,7 @@ WEBP_EXTERN(int) WebPDemuxPrevFrame(WebPIterator* const iter);
 
 // Sets 'iter->tile_' to reflect tile number 'tile_number'.
 // Returns true if tile 'tile_number' is present, false otherwise.
-WEBP_EXTERN(int) WebPDemuxSetTile(WebPIterator* const iter, int tile_number);
+WEBP_EXTERN(int) WebPDemuxSelectTile(WebPIterator* const iter, int tile_number);
 
 // Releases any memory associated with 'iter'.
 // Must be called before destroying the associated WebPDemuxer with
