@@ -146,6 +146,22 @@ typedef struct {
 typedef int (*WebPWriterFunction)(const uint8_t* data, size_t data_size,
                                   const WebPPicture* const picture);
 
+// WebPMemoryWrite: a special WebPWriterFunction that writes to memory using
+// the following WebPMemoryWriter object (to be set as a custom_ptr).
+typedef struct {
+  uint8_t* mem;       // final buffer (of size 'max_size', larger than 'size').
+  size_t   size;      // final size
+  size_t   max_size;  // total capacity
+} WebPMemoryWriter;
+
+// The following must be called first before any use.
+WEBP_EXTERN(void) WebPMemoryWriterInit(WebPMemoryWriter* const writer);
+
+// The custom writer to be used with WebPMemoryWriter as custom_ptr. Upon
+// completion, writer.mem and writer.size will hold the coded data.
+WEBP_EXTERN(int) WebPMemoryWrite(const uint8_t* data, size_t data_size,
+                                 const WebPPicture* const picture);
+
 // Progress hook, called from time to time to report progress. It can return 0
 // to request an abort of the encoding process, or 1 otherwise if all is OK.
 typedef int (*WebPProgressHook)(int percent, const WebPPicture* const picture);
