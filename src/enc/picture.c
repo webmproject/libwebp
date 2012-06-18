@@ -356,28 +356,22 @@ int WebPPictureRescale(WebPPicture* const pic, int width, int height) {
 }
 
 //------------------------------------------------------------------------------
-// Write-to-memory
+// WebPMemoryWriter: Write-to-memory
 
-typedef struct {
-  uint8_t** mem;
-  size_t    max_size;
-  size_t*   size;
-} WebPMemoryWriter;
-
-static void WebPMemoryWriterInit(WebPMemoryWriter* const writer) {
-  *writer->mem = NULL;
-  *writer->size = 0;
+void WebPMemoryWriterInit(WebPMemoryWriter* const writer) {
+  writer->mem = NULL;
+  writer->size = 0;
   writer->max_size = 0;
 }
 
-static int WebPMemoryWrite(const uint8_t* data, size_t data_size,
-                           const WebPPicture* const picture) {
+int WebPMemoryWrite(const uint8_t* data, size_t data_size,
+                    const WebPPicture* const picture) {
   WebPMemoryWriter* const w = (WebPMemoryWriter*)picture->custom_ptr;
   size_t next_size;
   if (w == NULL) {
     return 1;
   }
-  next_size = (*w->size) + data_size;
+  next_size = w->size + data_size;
   if (next_size > w->max_size) {
     uint8_t* new_mem;
     size_t next_max_size = w->max_size * 2;
@@ -387,16 +381,16 @@ static int WebPMemoryWrite(const uint8_t* data, size_t data_size,
     if (new_mem == NULL) {
       return 0;
     }
-    if ((*w->size) > 0) {
-      memcpy(new_mem, *w->mem, *w->size);
+    if (w->size > 0) {
+      memcpy(new_mem, w->mem, w->size);
     }
-    free(*w->mem);
-    *w->mem = new_mem;
+    free(w->mem);
+    w->mem = new_mem;
     w->max_size = next_max_size;
   }
   if (data_size > 0) {
-    memcpy((*w->mem) + (*w->size), data, data_size);
-    *w->size += data_size;
+    memcpy(w->mem + w->size, data, data_size);
+    w->size += data_size;
   }
   return 1;
 }
@@ -774,7 +768,6 @@ typedef int (*Importer)(WebPPicture* const, const uint8_t* const, int);
 
 static size_t Encode(const uint8_t* rgba, int width, int height, int stride,
                      Importer import, float quality_factor, uint8_t** output) {
-  size_t output_size = 0;
   WebPPicture pic;
   WebPConfig config;
   WebPMemoryWriter wrt;
@@ -789,19 +782,17 @@ static size_t Encode(const uint8_t* rgba, int width, int height, int stride,
   pic.height = height;
   pic.writer = WebPMemoryWrite;
   pic.custom_ptr = &wrt;
-
-  wrt.mem = output;
-  wrt.size = &output_size;
   WebPMemoryWriterInit(&wrt);
 
   ok = import(&pic, rgba, stride) && WebPEncode(&config, &pic);
   WebPPictureFree(&pic);
   if (!ok) {
-    free(*output);
+    free(wrt.mem);
     *output = NULL;
     return 0;
   }
-  return output_size;
+  *output = wrt.mem;
+  return wrt.size;
 }
 
 #define ENCODE_FUNC(NAME, IMPORTER) \
