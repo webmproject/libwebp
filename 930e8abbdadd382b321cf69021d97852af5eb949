@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAALH//98M\u003d",
+        "filename": "doc/webp-lossless-bitstream-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-18T20:58:42Z",
+      "side": 1,
+      "message": "These and the others are dealt with in:\n\nhttps://gerrit.chromium.org/gerrit/#change,25429",
+      "parentUuid": "AAAALH//+mQ\u003d",
+      "revId": "930e8abbdadd382b321cf69021d97852af5eb949",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAALH//+mM\u003d",
         "filename": "doc/webp-lossless-bitstream-spec.txt",
         "patchSetId": 1
