@@ -74,9 +74,15 @@ void VP8Delete(VP8Decoder* const dec) {
 
 int VP8SetError(VP8Decoder* const dec,
                 VP8StatusCode error, const char* const msg) {
-  dec->status_ = error;
-  dec->error_msg_ = msg;
-  dec->ready_ = 0;
+  // TODO This check would be unnecessary if alpha decompression was separated
+  // from VP8ProcessRow/FinishRow. This avoids setting 'dec->status_' to
+  // something other than VP8_STATUS_BITSTREAM_ERROR on alpha decompression
+  // failure.
+  if (dec->status_ == VP8_STATUS_OK) {
+    dec->status_ = error;
+    dec->error_msg_ = msg;
+    dec->ready_ = 0;
+  }
   return 0;
 }
 
