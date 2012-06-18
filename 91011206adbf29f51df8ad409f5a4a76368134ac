@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAALH//95M\u003d",
+        "filename": "doc/webp-lossless-bitstream-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 871,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-18T21:19:57Z",
+      "side": 1,
+      "message": "more whitespace, long lines; to be dealt with in a coming change",
+      "revId": "91011206adbf29f51df8ad409f5a4a76368134ac",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
