@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAALH//92o\u003d",
+        "filename": "doc/webp-lossless-bitstream-spec.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-18T21:44:26Z",
+      "side": 1,
+      "message": "this is wrong, see the pdf; should be ReadBits(3) + 2",
+      "revId": "b6c56c0ea9dc69cdfca5a9272bce1a4e1d9ba350",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALH//92c\u003d",
+        "filename": "doc/webp-lossless-bitstream-spec.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-18T21:44:26Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "b6c56c0ea9dc69cdfca5a9272bce1a4e1d9ba350",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALH//93g\u003d",
+        "filename": "doc/webp-lossless-bitstream-spec.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-18T21:44:26Z",
+      "side": 1,
+      "message": "This code block differs from the pdf.",
+      "revId": "b6c56c0ea9dc69cdfca5a9272bce1a4e1d9ba350",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
