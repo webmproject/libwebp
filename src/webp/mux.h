@@ -546,9 +546,11 @@ typedef struct {
 WEBP_EXTERN(int) WebPDemuxGetFrame(
     const WebPDemuxer* const dmux, int frame_number, WebPIterator* const iter);
 
-// Sets 'iter->tile_' to point to frame number 'frame_number'.
+// Sets 'iter->tile_' to point to the next ('iter->frame_num_' + 1) or previous
+// ('iter->frame_num_' - 1) frame. These functions do not loop.
 // Returns true on success, false otherwise.
-WEBP_EXTERN(int) WebPDemuxSetFrame(WebPIterator* const iter, int frame_number);
+WEBP_EXTERN(int) WebPDemuxNextFrame(WebPIterator* const iter);
+WEBP_EXTERN(int) WebPDemuxPrevFrame(WebPIterator* const iter);
 
 // Sets 'iter->tile_' to reflect tile number 'tile_number'.
 // Returns true if tile 'tile_number' is present, false otherwise.
