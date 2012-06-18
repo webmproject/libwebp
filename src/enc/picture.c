@@ -185,7 +185,7 @@ int WebPPictureCopy(const WebPPicture* const src, WebPPicture* const dst) {
     }
 #endif
   } else {
-    CopyPlane((uint8_t*)src->argb, 4 * src->argb_stride,
+    CopyPlane((const uint8_t*)src->argb, 4 * src->argb_stride,
               (uint8_t*)dst->argb, 4 * dst->argb_stride,
               4 * dst->width, dst->height);
   }
@@ -209,7 +209,7 @@ int WebPPictureCrop(WebPPicture* const pic,
   tmp.height = height;
   if (!WebPPictureAlloc(&tmp)) return 0;
 
-  {
+  if (!pic->use_argb_input) {
     const int y_offset = top * pic->y_stride + left;
     const int uv_offset = (top / 2) * pic->uv_stride + left / 2;
     CopyPlane(pic->y + y_offset, pic->y_stride,
@@ -218,28 +218,33 @@ int WebPPictureCrop(WebPPicture* const pic,
               tmp.u, tmp.uv_stride, HALVE(width), HALVE(height));
     CopyPlane(pic->v + uv_offset, pic->uv_stride,
               tmp.v, tmp.uv_stride, HALVE(width), HALVE(height));
-  }
 
-  if (tmp.a != NULL) {
-    const int a_offset = top * pic->a_stride + left;
-    CopyPlane(pic->a + a_offset, pic->a_stride,
-              tmp.a, tmp.a_stride, width, height);
-  }
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  if (tmp.u0 != NULL) {
-    int w = width;
-    int l = left;
-    if (tmp.colorspace == WEBP_YUV422) {
-      w = HALVE(w);
-      l = HALVE(l);
+    if (tmp.a != NULL) {
+      const int a_offset = top * pic->a_stride + left;
+      CopyPlane(pic->a + a_offset, pic->a_stride,
+                tmp.a, tmp.a_stride, width, height);
     }
-    CopyPlane(pic->u0 + top * pic->uv0_stride + l, pic->uv0_stride,
-              tmp.u0, tmp.uv0_stride, w, l);
-    CopyPlane(pic->v0 + top * pic->uv0_stride + l, pic->uv0_stride,
-              tmp.v0, tmp.uv0_stride, w, l);
-  }
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+    if (tmp.u0 != NULL) {
+      int w = width;
+      int l = left;
+      if (tmp.colorspace == WEBP_YUV422) {
+        w = HALVE(w);
+        l = HALVE(l);
+      }
+      CopyPlane(pic->u0 + top * pic->uv0_stride + l, pic->uv0_stride,
+                tmp.u0, tmp.uv0_stride, w, l);
+      CopyPlane(pic->v0 + top * pic->uv0_stride + l, pic->uv0_stride,
+                tmp.v0, tmp.uv0_stride, w, l);
+    }
 #endif
-
+  } else {
+    const uint8_t* const src =
+        (const uint8_t*)(pic->argb + top * pic->argb_stride + left);
+    CopyPlane(src, pic->argb_stride * 4,
+              (uint8_t*)tmp.argb, tmp.argb_stride * 4,
+              width * 4, height);
+  }
   WebPPictureFree(pic);
   *pic = tmp;
   return 1;
@@ -252,22 +257,20 @@ static void RescalePlane(const uint8_t* src,
                          int src_width, int src_height, int src_stride,
                          uint8_t* dst,
                          int dst_width, int dst_height, int dst_stride,
-                         int32_t* const work) {
+                         int32_t* const work,
+                         int num_channels) {
   WebPRescaler rescaler;
   int y = 0;
-
   WebPRescalerInit(&rescaler, src_width, src_height,
                    dst, dst_width, dst_height, dst_stride,
-                   1,
+                   num_channels,
                    src_width, dst_width,
                    src_height, dst_height,
                    work);
-  memset(work, 0, 2 * dst_width * sizeof(*work));
+  memset(work, 0, 2 * dst_width * num_channels * sizeof(*work));
   while (y < src_height) {
-    const int num_lines_in =
-        WebPRescalerImport(&rescaler, src_height - y, src, src_stride);
-    y += num_lines_in;
-    src += num_lines_in * src_stride;
+    y += WebPRescalerImport(&rescaler, src_height - y,
+                            src + y * src_stride, src_stride);
     WebPRescalerExport(&rescaler);
   }
 }
@@ -296,42 +299,56 @@ int WebPPictureRescale(WebPPicture* const pic, int width, int height) {
   tmp.height = height;
   if (!WebPPictureAlloc(&tmp)) return 0;
 
-  work = (int32_t*)malloc(2 * width * sizeof(*work));
-  if (work == NULL) {
-    WebPPictureFree(&tmp);
-    return 0;
-  }
-
-  RescalePlane(pic->y, prev_width, prev_height, pic->y_stride,
-               tmp.y, width, height, tmp.y_stride, work);
-  RescalePlane(pic->u,
-               HALVE(prev_width), HALVE(prev_height), pic->uv_stride,
-               tmp.u,
-               HALVE(width), HALVE(height), tmp.uv_stride, work);
-  RescalePlane(pic->v,
-               HALVE(prev_width), HALVE(prev_height), pic->uv_stride,
-               tmp.v,
-               HALVE(width), HALVE(height), tmp.uv_stride, work);
-
-  if (tmp.a != NULL) {
-    RescalePlane(pic->a, prev_width, prev_height, pic->a_stride,
-                 tmp.a, width, height, tmp.a_stride, work);
-  }
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  if (tmp.u0 != NULL) {
-    int s = 1;
-    if ((tmp.colorspace & WEBP_CSP_UV_MASK) == WEBP_YUV422) {
-      s = 2;
+  if (!pic->use_argb_input) {
+    work = (int32_t*)malloc(2 * width * sizeof(*work));
+    if (work == NULL) {
+      WebPPictureFree(&tmp);
+      return 0;
     }
-    RescalePlane(
-        pic->u0, (prev_width + s / 2) / s, prev_height, pic->uv0_stride,
-        tmp.u0, (width + s / 2) / s, height, tmp.uv0_stride, work);
-    RescalePlane(
-        pic->v0, (prev_width + s / 2) / s, prev_height, pic->uv0_stride,
-        tmp.v0, (width + s / 2) / s, height, tmp.uv0_stride, work);
-  }
-#endif
 
+    RescalePlane(pic->y, prev_width, prev_height, pic->y_stride,
+                 tmp.y, width, height, tmp.y_stride, work, 1);
+    RescalePlane(pic->u,
+                 HALVE(prev_width), HALVE(prev_height), pic->uv_stride,
+                 tmp.u,
+                 HALVE(width), HALVE(height), tmp.uv_stride, work, 1);
+    RescalePlane(pic->v,
+                 HALVE(prev_width), HALVE(prev_height), pic->uv_stride,
+                 tmp.v,
+                 HALVE(width), HALVE(height), tmp.uv_stride, work, 1);
+
+    if (tmp.a != NULL) {
+      RescalePlane(pic->a, prev_width, prev_height, pic->a_stride,
+                   tmp.a, width, height, tmp.a_stride, work, 1);
+    }
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+    if (tmp.u0 != NULL) {
+      int s = 1;
+      if ((tmp.colorspace & WEBP_CSP_UV_MASK) == WEBP_YUV422) {
+        s = 2;
+      }
+      RescalePlane(
+          pic->u0, (prev_width + s / 2) / s, prev_height, pic->uv0_stride,
+          tmp.u0, (width + s / 2) / s, height, tmp.uv0_stride, work, 1);
+      RescalePlane(
+          pic->v0, (prev_width + s / 2) / s, prev_height, pic->uv0_stride,
+          tmp.v0, (width + s / 2) / s, height, tmp.uv0_stride, work, 1);
+    }
+#endif
+  } else {
+    work = (int32_t*)malloc(2 * width * 4 * sizeof(*work));
+    if (work == NULL) {
+      WebPPictureFree(&tmp);
+      return 0;
+    }
+
+    RescalePlane((const uint8_t*)pic->argb, prev_width, prev_height,
+                 pic->argb_stride * 4,
+                 (uint8_t*)tmp.argb, width, height,
+                 tmp.argb_stride * 4,
+                 work, 4);
+
+  }
   WebPPictureFree(pic);
   free(work);
   *pic = tmp;
