@@ -779,7 +779,7 @@ int WebPDemuxPrevFrame(WebPIterator* const iter) {
   return SetFrame(iter->frame_num_ - 1, iter);
 }
 
-int WebPDemuxSetTile(WebPIterator* const iter, int tile) {
+int WebPDemuxSelectTile(WebPIterator* const iter, int tile) {
   if (iter != NULL && iter->private_ != NULL && tile > 0) {
     const WebPDemuxer* const dmux = (WebPDemuxer*)iter->private_;
     const Frame* const frame = GetFrame(dmux, iter->frame_num_);
