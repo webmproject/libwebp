@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAALH//+XU\u003d",
+        "filename": "doc/webp-lossless-bitstream-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 871,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-06-18T07:31:55Z",
+      "side": 1,
+      "message": "trailing whitespace (it\u0027s ok to do a final pass later, for these)",
+      "revId": "2a4c6c29a0714adb3ec60b0fbdea79b5495ef7c1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
