@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAALH//8yY\u003d",
+        "filename": "doc/webp-lossless-bitstream-spec.txt",
+        "patchSetId": 4
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-19T20:57:00Z",
+      "side": 1,
+      "message": "long line",
+      "revId": "9be2b87519bdf5a751da567d3e8e5619b28b4caf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALH//8yM\u003d",
+        "filename": "doc/webp-lossless-bitstream-spec.txt",
+        "patchSetId": 4
+      },
+      "lineNbr": 669,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-19T20:57:00Z",
+      "side": 1,
+      "message": "just \u0027int\u0027 not int32",
+      "revId": "9be2b87519bdf5a751da567d3e8e5619b28b4caf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALH//8yI\u003d",
+        "filename": "doc/webp-lossless-bitstream-spec.txt",
+        "patchSetId": 4
+      },
+      "lineNbr": 670,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-19T20:57:00Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "9be2b87519bdf5a751da567d3e8e5619b28b4caf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
