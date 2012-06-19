@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAALH//8iQ\u003d",
+        "filename": "src/enc/backward_references.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-06-19T22:51:21Z",
+      "side": 1,
+      "message": "i\u0027d invert the test and remove some ()\u0027s\n\nreturn _BitScanReverse(\u0026first_set_bit, n) ? first_set_bit : -1;",
+      "revId": "ec8553bbb250b48c1aa5dd192a2bf6d026deeb00",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
