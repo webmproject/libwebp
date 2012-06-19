@@ -37,6 +37,14 @@ extern "C" {
 static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
   return n == 0 ? -1 : 31 ^ __builtin_clz(n);
 }
+#elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
+#include <intrin.h>
+#pragma intrinsic(_BitScanReverse)
+
+static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
+  unsigned long first_set_bit;
+  return _BitScanReverse(&first_set_bit, n) ? first_set_bit : -1;
+}
 #else
 static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
   int log = 0;
