@@ -331,7 +331,7 @@ WebPMuxError MuxImagePush(const WebPMuxImage* wpi, WebPMuxImage** wpi_list) {
   if (*wpi_list != NULL) {
     (*wpi_list)->next_ = new_wpi;
   } else {
-  *wpi_list = new_wpi;
+    *wpi_list = new_wpi;
   }
   return WEBP_MUX_OK;
 }

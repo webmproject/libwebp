@@ -432,20 +432,20 @@ static WebPMuxError MuxPushFrameTileInternal(
 }
 
 WebPMuxError WebPMuxPushFrame(WebPMux* const mux,
-                             const WebPData* const bitstream,
-                             uint32_t x_offset, uint32_t y_offset,
-                             uint32_t duration, int copy_data) {
+                              const WebPData* const bitstream,
+                              uint32_t x_offset, uint32_t y_offset,
+                              uint32_t duration, int copy_data) {
   return MuxPushFrameTileInternal(mux, bitstream, x_offset, y_offset,
-                                 duration, copy_data, kChunks[IDX_FRAME].tag);
+                                  duration, copy_data, kChunks[IDX_FRAME].tag);
 }
 
 WebPMuxError WebPMuxPushTile(WebPMux* const mux,
-                            const WebPData* const bitstream,
-                            uint32_t x_offset, uint32_t y_offset,
-                            int copy_data) {
+                             const WebPData* const bitstream,
+                             uint32_t x_offset, uint32_t y_offset,
+                             int copy_data) {
   return MuxPushFrameTileInternal(mux, bitstream, x_offset, y_offset,
-                                 1 /* unused duration*/, copy_data,
-                                 kChunks[IDX_TILE].tag);
+                                  1 /* unused duration */, copy_data,
+                                  kChunks[IDX_TILE].tag);
 }
 
 //------------------------------------------------------------------------------
@@ -493,7 +493,7 @@ WebPMuxError WebPMuxDeleteTile(WebPMux* const mux, uint32_t nth) {
 // Assembly of the WebP RIFF file.
 
 WebPMuxError MuxGetImageWidthHeight(const WebPChunk* const image_chunk,
-                                        int* const width, int* const height) {
+                                    int* const width, int* const height) {
   const uint32_t tag = image_chunk->tag_;
   const WebPData* const data = &image_chunk->data_;
   int w, h;

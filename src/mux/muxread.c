@@ -382,8 +382,8 @@ static int CountChunks(const WebPChunk* const chunk_list, uint32_t tag) {
   return count;
 }
 
-WebPMuxError WebPMuxNumChunks(const WebPMux* const mux, WebPChunkId id,
-                                     int* num_elements) {
+WebPMuxError WebPMuxNumChunks(const WebPMux* const mux,
+                              WebPChunkId id, int* num_elements) {
   if (mux == NULL || num_elements == NULL) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }

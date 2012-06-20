@@ -798,7 +798,7 @@ static int Process(const WebPMuxConfig* config) {
                 ERROR_GOTO1("ERROR: Could not parse frame properties.\n", Err2);
               }
               err = WebPMuxPushFrame(mux, &webpdata, x_offset, y_offset,
-                                    duration, 1);
+                                     duration, 1);
               WebPDataClear(&webpdata);
               if (err != WEBP_MUX_OK) {
                 ERROR_GOTO3("ERROR#%d: Could not add a frame at index %d.\n",
