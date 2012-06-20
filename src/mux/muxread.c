@@ -26,8 +26,7 @@ extern "C" {
     const WebPChunk* const chunk = ChunkSearchList((LIST), nth,               \
                                                    kChunks[(INDEX)].tag);     \
     if (chunk) {                                                              \
-      data->bytes_ = chunk->data_;                                            \
-      data->size_ = chunk->payload_size_;                                     \
+      *data = chunk->data_;                                                   \
       return WEBP_MUX_OK;                                                     \
     } else {                                                                  \
       return WEBP_MUX_NOT_FOUND;                                              \
@@ -199,7 +198,9 @@ WebPMuxError WebPMuxGetFeatures(const WebPMux* const mux, uint32_t* flags) {
   err = MuxGet(mux, IDX_VP8X, 1, &data);
   if (err == WEBP_MUX_NOT_FOUND) {
     // Check if VP8/VP8L chunk is present.
-    return WebPMuxGetImage(mux, &data, NULL);
+    err = WebPMuxGetImage(mux, &data);
+    WebPDataClear(&data);
+    return err;
   } else if (err != WEBP_MUX_OK) {
     return err;
   }
@@ -211,12 +212,64 @@ WebPMuxError WebPMuxGetFeatures(const WebPMux* const mux, uint32_t* flags) {
   return WEBP_MUX_OK;
 }
 
+static uint8_t* EmitVP8XChunk(uint8_t* const dst, uint32_t width,
+                              uint32_t height, uint32_t flags) {
+  const size_t vp8x_size = CHUNK_HEADER_SIZE + VP8X_CHUNK_SIZE;
+  PutLE32(dst, mktag('V', 'P', '8', 'X'));
+  PutLE32(dst + TAG_SIZE, VP8X_CHUNK_SIZE);
+  PutLE32(dst + CHUNK_HEADER_SIZE, flags);
+  PutLE32(dst + CHUNK_HEADER_SIZE + 4, width);
+  PutLE32(dst + CHUNK_HEADER_SIZE + 8, height);
+  return dst + vp8x_size;
+}
+
+// Assemble a single image WebP bitstream from 'wpi'.
+static WebPMuxError SynthesizeBitstream(WebPMuxImage* const wpi,
+                                        WebPData* const bitstream) {
+  uint8_t* dst;
+
+  // Allocate data.
+  const int need_vp8x = (wpi->alpha_ != NULL);
+  const size_t vp8x_size = need_vp8x ? CHUNK_HEADER_SIZE + VP8X_CHUNK_SIZE : 0;
+  const size_t alpha_size = need_vp8x ? ChunkDiskSize(wpi->alpha_) : 0;
+  // Note: No need to output FRM/TILE chunk for a single image.
+  const size_t size = RIFF_HEADER_SIZE + vp8x_size + alpha_size +
+                      ChunkDiskSize(wpi->img_);
+  uint8_t* const data = (uint8_t*)malloc(size);
+  if (data == NULL) return WEBP_MUX_MEMORY_ERROR;
+
+  // Main RIFF header.
+  dst = MuxEmitRiffHeader(data, size);
+
+  if (need_vp8x) {
+    int w, h;
+    WebPMuxError err;
+    assert(wpi->img_ != NULL);
+    err = MuxGetImageWidthHeight(wpi->img_, &w, &h);
+    if (err != WEBP_MUX_OK) {
+      free(data);
+      return err;
+    }
+    dst = EmitVP8XChunk(dst, w, h, ALPHA_FLAG);  // VP8X.
+    dst = ChunkListEmit(wpi->alpha_, dst);       // ALPH.
+  }
+
+  // Bitstream.
+  dst = ChunkListEmit(wpi->img_, dst);
+  assert(dst == data + size);
+
+  // Output.
+  bitstream->bytes_ = data;
+  bitstream->size_ = size;
+  return WEBP_MUX_OK;
+}
+
 WebPMuxError WebPMuxGetImage(const WebPMux* const mux,
-                             WebPData* const image, WebPData* const alpha) {
+                             WebPData* const bitstream) {
   WebPMuxError err;
   WebPMuxImage* wpi = NULL;
 
-  if (mux == NULL || (image == NULL && alpha == NULL)) {
+  if (mux == NULL || bitstream == NULL) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
@@ -228,24 +281,7 @@ WebPMuxError WebPMuxGetImage(const WebPMux* const mux,
                        &wpi);
   assert(err == WEBP_MUX_OK);  // Already tested above.
 
-  // Get alpha chunk (if present & requested).
-  if (alpha != NULL) {
-    memset(alpha, 0, sizeof(*alpha));
-    if (wpi->alpha_ != NULL) {
-      alpha->bytes_ = wpi->alpha_->data_;
-      alpha->size_ = wpi->alpha_->payload_size_;
-    }
-  }
-
-  // Get image chunk.
-  if (image != NULL) {
-    memset(image, 0, sizeof(*image));
-    if (wpi->img_ != NULL) {
-      image->bytes_ = wpi->img_->data_;
-      image->size_ = wpi->img_->payload_size_;
-    }
-  }
-  return WEBP_MUX_OK;
+  return SynthesizeBitstream(wpi, bitstream);
 }
 
 WebPMuxError WebPMuxGetMetadata(const WebPMux* const mux,
@@ -276,11 +312,9 @@ WebPMuxError WebPMuxGetLoopCount(const WebPMux* const mux,
 }
 
 static WebPMuxError MuxGetFrameTileInternal(
-    const WebPMux* const mux, uint32_t nth,
-    WebPData* const image, WebPData* const alpha,
+    const WebPMux* const mux, uint32_t nth, WebPData* const bitstream,
     uint32_t* x_offset, uint32_t* y_offset, uint32_t* duration, uint32_t tag) {
-  const uint8_t* frame_tile_data;
-  size_t frame_tile_size;
+  const WebPData* frame_tile_data;
   WebPMuxError err;
   WebPMuxImage* wpi;
 
@@ -288,7 +322,7 @@ static WebPMuxError MuxGetFrameTileInternal(
   const CHUNK_INDEX idx = is_frame ? IDX_FRAME : IDX_TILE;
   const WebPChunkId id = kChunks[idx].id;
 
-  if (mux == NULL || image == NULL ||
+  if (mux == NULL || bitstream == NULL ||
       x_offset == NULL || y_offset == NULL || (is_frame && duration == NULL)) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
@@ -298,47 +332,30 @@ static WebPMuxError MuxGetFrameTileInternal(
   if (err != WEBP_MUX_OK) return err;
 
   // Get frame chunk.
-  assert(wpi->header_ != NULL);  // As GetNthImage() already checked header_.
-  frame_tile_data = wpi->header_->data_;
-  frame_tile_size = wpi->header_->payload_size_;
+  assert(wpi->header_ != NULL);  // As MuxImageGetNth() already checked header_.
+  frame_tile_data = &wpi->header_->data_;
 
-  if (frame_tile_size < kChunks[idx].size) return WEBP_MUX_BAD_DATA;
-  *x_offset = GetLE32(frame_tile_data + 0);
-  *y_offset = GetLE32(frame_tile_data + 4);
-  if (is_frame) *duration = GetLE32(frame_tile_data + 16);
+  if (frame_tile_data->size_ < kChunks[idx].size) return WEBP_MUX_BAD_DATA;
+  *x_offset = GetLE32(frame_tile_data->bytes_ + 0);
+  *y_offset = GetLE32(frame_tile_data->bytes_ + 4);
+  if (is_frame) *duration = GetLE32(frame_tile_data->bytes_ + 16);
 
-  // Get alpha chunk (if present & requested).
-  if (alpha != NULL) {
-    memset(alpha, 0, sizeof(*alpha));
-    if (wpi->alpha_ != NULL) {
-      alpha->bytes_ = wpi->alpha_->data_;
-      alpha->size_ = wpi->alpha_->payload_size_;
-    }
-  }
-
-  // Get image chunk.
-  memset(image, 0, sizeof(*image));
-  if (wpi->img_ != NULL) {
-    image->bytes_ = wpi->img_->data_;
-    image->size_ = wpi->img_->payload_size_;
-  }
-
-  return WEBP_MUX_OK;
+  return SynthesizeBitstream(wpi, bitstream);
 }
 
 WebPMuxError WebPMuxGetFrame(const WebPMux* const mux, uint32_t nth,
-                             WebPData* const image, WebPData* const alpha,
+                             WebPData* const bitstream,
                              uint32_t* x_offset, uint32_t* y_offset,
                              uint32_t* duration) {
-  return MuxGetFrameTileInternal(mux, nth, image, alpha,
+  return MuxGetFrameTileInternal(mux, nth, bitstream,
                                  x_offset, y_offset, duration,
                                  kChunks[IDX_FRAME].tag);
 }
 
 WebPMuxError WebPMuxGetTile(const WebPMux* const mux, uint32_t nth,
-                            WebPData* const image, WebPData* const alpha,
+                            WebPData* const bitstream,
                             uint32_t* x_offset, uint32_t* y_offset) {
-  return MuxGetFrameTileInternal(mux, nth, image, alpha,
+  return MuxGetFrameTileInternal(mux, nth, bitstream,
                                  x_offset, y_offset, NULL,
                                  kChunks[IDX_TILE].tag);
 }

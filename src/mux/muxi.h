@@ -38,12 +38,11 @@ typedef struct {
 typedef struct WebPChunk WebPChunk;
 struct WebPChunk {
   uint32_t        tag_;
-  size_t          payload_size_;
   WebPImageInfo*  image_info_;
   int             owner_;  // True if *data_ memory is owned internally.
                            // VP8X, Loop, and other internally created chunks
                            // like frame/tile are always owned.
-  const           uint8_t* data_;
+  WebPData        data_;
   WebPChunk*      next_;
 };
 
@@ -158,8 +157,9 @@ WebPChunk* ChunkDelete(WebPChunk* const chunk);
 
 // Size of a chunk including header and padding.
 static WEBP_INLINE size_t ChunkDiskSize(const WebPChunk* chunk) {
-  assert(chunk->payload_size_ < MAX_CHUNK_PAYLOAD);
-  return SizeWithPadding(chunk->payload_size_);
+  const size_t data_size = chunk->data_.size_;
+  assert(data_size < MAX_CHUNK_PAYLOAD);
+  return SizeWithPadding(data_size);
 }
 
 // Total size of a list of chunks.
@@ -167,6 +167,10 @@ size_t ChunksListDiskSize(const WebPChunk* chunk_list);
 
 // Write out the given list of chunks into 'dst'.
 uint8_t* ChunkListEmit(const WebPChunk* chunk_list, uint8_t* dst);
+
+// Get the width & height of image stored in 'image_chunk'.
+WebPMuxError MuxGetImageWidthHeight(const WebPChunk* const image_chunk,
+                                    int* const width, int* const height);
 
 //------------------------------------------------------------------------------
 // MuxImage object management.
@@ -224,17 +228,26 @@ WebPMuxError MuxImageDeleteNth(WebPMuxImage** wpi_list, uint32_t nth,
 WebPMuxError MuxImageGetNth(const WebPMuxImage** wpi_list, uint32_t nth,
                             WebPChunkId id, WebPMuxImage** wpi);
 
+// Total size of the given image.
+size_t MuxImageDiskSize(const WebPMuxImage* const wpi);
+
 // Total size of a list of images.
 size_t MuxImageListDiskSize(const WebPMuxImage* wpi_list);
+
+// Write out the given image into 'dst'.
+uint8_t* MuxImageEmit(const WebPMuxImage* const wpi, uint8_t* dst);
 
 // Write out the given list of images into 'dst'.
 uint8_t* MuxImageListEmit(const WebPMuxImage* wpi_list, uint8_t* dst);
 
+//------------------------------------------------------------------------------
+// Helper methods for mux.
+
 // Checks if the given image list contains at least one lossless image.
 int MuxHasLosslessImages(const WebPMuxImage* images);
 
-//------------------------------------------------------------------------------
-// Helper methods for mux.
+// Write out RIFF header into 'data', given total data size 'size'.
+uint8_t* MuxEmitRiffHeader(uint8_t* const data, size_t size);
 
 // Returns the list where chunk with given ID is to be inserted in mux.
 // Return value is NULL if this chunk should be inserted in mux->images_ list
