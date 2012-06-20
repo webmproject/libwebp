@@ -141,12 +141,10 @@ static int VP8LEncAnalyze(VP8LEncoder* const enc) {
   assert(pic != NULL && pic->argb != NULL);
 
   enc->use_palette_ =
-        AnalyzeAndCreatePalette(pic->argb, pic->width * pic->height,
-                                enc->palette_, &enc->palette_size_);
+        AnalyzeAndCreatePalette(pic, enc->palette_, &enc->palette_size_);
   if (!enc->use_palette_) {
     double non_pred_entropy, pred_entropy;
-    if (!AnalyzeEntropy(pic->argb, pic->width, pic->height,
-                        &non_pred_entropy, &pred_entropy)) {
+    if (!AnalyzeEntropy(pic, &non_pred_entropy, &pred_entropy)) {
       return 0;
     }
 
