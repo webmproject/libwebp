@@ -42,44 +42,45 @@ static int CompareColors(const void* p1, const void* p2) {
 
 // If number of colors in the image is less than or equal to MAX_PALETTE_SIZE,
 // creates a palette and returns true, else returns false.
-static int AnalyzeAndCreatePalette(const uint32_t* const argb, int num_pix,
+static int AnalyzeAndCreatePalette(const WebPPicture* const pic,
                                    uint32_t palette[MAX_PALETTE_SIZE],
                                    int* const palette_size) {
-  int i, key;
+  int i, x, y, key;
   int num_colors = 0;
   uint8_t in_use[MAX_PALETTE_SIZE * 4] = { 0 };
   uint32_t colors[MAX_PALETTE_SIZE * 4];
   static const uint32_t kHashMul = 0x1e35a7bd;
+  const uint32_t* argb = pic->argb;
+  uint32_t last_pix = ~argb[0];   // so we're sure that last_pix != argb[0]
 
-  key = (kHashMul * argb[0]) >> PALETTE_KEY_RIGHT_SHIFT;
-  colors[key] = argb[0];
-  in_use[key] = 1;
-  ++num_colors;
-
-  for (i = 1; i < num_pix; ++i) {
-    if (argb[i] == argb[i - 1]) {
-      continue;
-    }
-    key = (kHashMul * argb[i]) >> PALETTE_KEY_RIGHT_SHIFT;
-    while (1) {
-      if (!in_use[key]) {
-        colors[key] = argb[i];
-        in_use[key] = 1;
-        ++num_colors;
-        if (num_colors > MAX_PALETTE_SIZE) {
-          return 0;
+  for (y = 0; y < pic->height; ++y) {
+    for (x = 0; x < pic->width; ++x) {
+      if (argb[x] == last_pix) {
+        continue;
+      }
+      last_pix = argb[x];
+      key = (kHashMul * last_pix) >> PALETTE_KEY_RIGHT_SHIFT;
+      while (1) {
+        if (!in_use[key]) {
+          colors[key] = last_pix;
+          in_use[key] = 1;
+          ++num_colors;
+          if (num_colors > MAX_PALETTE_SIZE) {
+            return 0;
+          }
+          break;
+        } else if (colors[key] == last_pix) {
+          // The color is already there.
+          break;
+        } else {
+          // Some other color sits there.
+          // Do linear conflict resolution.
+          ++key;
+          key &= (MAX_PALETTE_SIZE * 4 - 1);  // key mask for 1K buffer.
         }
-        break;
-      } else if (colors[key] == argb[i]) {
-        // The color is already there.
-        break;
-      } else {
-        // Some other color sits there.
-        // Do linear conflict resolution.
-        ++key;
-        key &= (MAX_PALETTE_SIZE * 4 - 1);  // key mask for 1K buffer.
       }
     }
+    argb += pic->argb_stride;
   }
 
   num_colors = 0;
@@ -95,10 +96,14 @@ static int AnalyzeAndCreatePalette(const uint32_t* const argb, int num_pix,
   return 1;
 }
 
-static int AnalyzeEntropy(const uint32_t* const argb, int xsize, int ysize,
+static int AnalyzeEntropy(const WebPPicture* const pic,
                           double* const nonpredicted_bits,
                           double* const predicted_bits) {
-  int i;
+  int x, y;
+  const uint32_t* argb = pic->argb;
+  const uint32_t* last_line = NULL;
+  uint32_t last_pix = argb[0];    // so we're sure that pix_diff == 0
+
   VP8LHistogram* nonpredicted = NULL;
   VP8LHistogram* predicted = (VP8LHistogram*)malloc(2 * sizeof(*predicted));
   if (predicted == NULL) return 0;
@@ -106,19 +111,24 @@ static int AnalyzeEntropy(const uint32_t* const argb, int xsize, int ysize,
 
   VP8LHistogramInit(predicted, 0);
   VP8LHistogramInit(nonpredicted, 0);
-  for (i = 1; i < xsize * ysize; ++i) {
-    const uint32_t pix = argb[i];
-    const uint32_t pix_diff = VP8LSubPixels(pix, argb[i - 1]);
-    if (pix_diff == 0) continue;
-    if (i >= xsize && pix == argb[i - xsize]) {
-      continue;
+  for (y = 0; y < pic->height; ++y) {
+    for (x = 0; x < pic->width; ++x) {
+      const uint32_t pix = argb[x];
+      const uint32_t pix_diff = VP8LSubPixels(pix, last_pix);
+      if (pix_diff == 0) continue;
+      if (last_line != NULL && pix == last_line[x]) {
+        continue;
+      }
+      last_pix = pix;
+      {
+        const PixOrCopy pix_token = PixOrCopyCreateLiteral(pix);
+        const PixOrCopy pix_diff_token = PixOrCopyCreateLiteral(pix_diff);
+        VP8LHistogramAddSinglePixOrCopy(nonpredicted, &pix_token);
+        VP8LHistogramAddSinglePixOrCopy(predicted, &pix_diff_token);
+      }
     }
-    {
-      const PixOrCopy pix_token = PixOrCopyCreateLiteral(pix);
-      const PixOrCopy pix_diff_token = PixOrCopyCreateLiteral(pix_diff);
-      VP8LHistogramAddSinglePixOrCopy(nonpredicted, &pix_token);
-      VP8LHistogramAddSinglePixOrCopy(predicted, &pix_diff_token);
-    }
+    last_line = argb;
+    argb += pic->argb_stride;
   }
   *nonpredicted_bits = VP8LHistogramEstimateBitsBulk(nonpredicted);
   *predicted_bits = VP8LHistogramEstimateBitsBulk(predicted);
@@ -779,14 +789,17 @@ static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
 
 // Bundles multiple (2, 4 or 8) pixels into a single pixel.
 // Returns the new xsize.
-static void BundleColorMap(const uint32_t* const argb,
-                           int width, int height, int xbits,
-                           uint32_t* bundled_argb, int xs) {
-  int x, y;
+static void BundleColorMap(const WebPPicture* const pic,
+                           int xbits, uint32_t* bundled_argb, int xs) {
+  int y;
   const int bit_depth = 1 << (3 - xbits);
   uint32_t code = 0;
+  const uint32_t* argb = pic->argb;
+  const int width = pic->width;
+  const int height = pic->height;
 
   for (y = 0; y < height; ++y) {
+    int x;
     for (x = 0; x < width; ++x) {
       const int mask = (1 << xbits) - 1;
       const int xsub = x & mask;
@@ -794,9 +807,10 @@ static void BundleColorMap(const uint32_t* const argb,
         code = 0;
       }
       // TODO(vikasa): simplify the bundling logic.
-      code |= (argb[y * width + x] & 0xff00) << (bit_depth * xsub);
+      code |= (argb[x] & 0xff00) << (bit_depth * xsub);
       bundled_argb[y * xs + (x >> xbits)] = 0xff000000 | code;
     }
+    argb += pic->argb_stride;
   }
 }
 
@@ -805,21 +819,25 @@ static void BundleColorMap(const uint32_t* const argb,
 // later.
 static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
                                       VP8LEncoder* const enc,
-                                      int width, int height, int quality) {
+                                      int quality) {
   WebPEncodingError err = VP8_ENC_OK;
-  int i;
-  uint32_t* const argb = enc->pic_->argb;
+  int i, x, y;
+  const WebPPicture* const pic = enc->pic_;
+  const int width = pic->width;
+  const int height = pic->height;
   uint32_t* const palette = enc->palette_;
   const int palette_size = enc->palette_size_;
 
   // Replace each input pixel by corresponding palette index.
-  for (i = 0; i < width * height; ++i) {
-    int k;
-    for (k = 0; k < palette_size; ++k) {
-      const uint32_t pix = argb[i];
-      if (pix == palette[k]) {
-        argb[i] = 0xff000000u | (k << 8);
-        break;
+  for (y = 0; y < height; ++y) {
+    uint32_t* const argb = pic->argb + y * pic->argb_stride;
+    for (x = 0; x < width; ++x) {
+      const uint32_t pix = argb[x];
+      for (i = 0; i < palette_size; ++i) {
+        if (pix == palette[i]) {
+          argb[x] = 0xff000000u | (i << 8);
+          break;
+        }
       }
     }
   }
@@ -847,7 +865,7 @@ static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
     }
     err = AllocateTransformBuffer(enc, VP8LSubSampleSize(width, xbits), height);
     if (err != VP8_ENC_OK) goto Error;
-    BundleColorMap(argb, width, height, xbits, enc->argb_, enc->current_width_);
+    BundleColorMap(pic, xbits, enc->argb_, enc->current_width_);
   }
 
  Error:
@@ -932,17 +950,21 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   }
 
   if (enc->use_palette_) {
-    err = ApplyPalette(bw, enc, width, height, quality);
+    err = ApplyPalette(bw, enc, quality);
     if (err != VP8_ENC_OK) goto Error;
     enc->cache_bits_ = 0;
   }
 
   // In case image is not packed.
   if (enc->argb_ == NULL) {
-    const size_t image_size = height * width;
+    int y;
     err = AllocateTransformBuffer(enc, width, height);
     if (err != VP8_ENC_OK) goto Error;
-    memcpy(enc->argb_, picture->argb, image_size * sizeof(*enc->argb_));
+    for (y = 0; y < height; ++y) {
+      memcpy(enc->argb_ + y * width,
+             picture->argb + y * picture->argb_stride,
+             width * sizeof(*enc->argb_));
+    }
     enc->current_width_ = width;
   }
 
