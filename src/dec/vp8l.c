@@ -139,7 +139,7 @@ static WEBP_INLINE int PlaneCodeToDistance(int xsize, int plane_code) {
     const int dist_code = code_to_plane_lut[plane_code - 1];
     const int yoffset = dist_code >> 4;
     const int xoffset = 8 - (dist_code & 0xf);
-    int dist = yoffset * xsize + xoffset;
+    const int dist = yoffset * xsize + xoffset;
     return (dist >= 1) ? dist : 1;
   }
 }
