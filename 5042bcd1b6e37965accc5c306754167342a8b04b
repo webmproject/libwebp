@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAALH//8SA\u003d",
+        "filename": "doc/webp-lossless-bitstream-spec.txt",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-20T01:00:14Z",
+      "side": 1,
+      "message": "this could be 6/15 or today since you picked up the most recent changes.",
+      "revId": "5042bcd1b6e37965accc5c306754167342a8b04b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALH//8R0\u003d",
+        "filename": "doc/webp-lossless-bitstream-spec.txt",
+        "patchSetId": 5
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-20T01:00:14Z",
+      "side": 1,
+      "message": "s/Substract/Subtract/",
+      "revId": "5042bcd1b6e37965accc5c306754167342a8b04b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALH//8Rc\u003d",
+        "filename": "doc/webp-lossless-bitstream-spec.txt",
+        "patchSetId": 5
+      },
+      "lineNbr": 720,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-20T01:00:14Z",
+      "side": 1,
+      "message": "space after \u0027*\u0027",
+      "revId": "5042bcd1b6e37965accc5c306754167342a8b04b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
