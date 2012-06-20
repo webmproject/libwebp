@@ -1027,6 +1027,7 @@ int VP8LEncodeImage(const WebPConfig* const config,
   int width, height;
   int has_alpha;
   size_t coded_size;
+  int percent = 0;
   WebPEncodingError err = VP8_ENC_OK;
   VP8LBitWriter bw;
 
@@ -1039,6 +1040,11 @@ int VP8LEncodeImage(const WebPConfig* const config,
 
   width = picture->width;
   height = picture->height;
+  if (!WebPReportProgress(picture, 1, &percent)) {
+ UserAbort:
+    err = VP8_ENC_ERROR_USER_ABORT;
+    goto Error;
+  }
 
   // Write image size.
   VP8LBitWriterInit(&bw, (width * height) >> 1);
@@ -1054,13 +1060,20 @@ int VP8LEncodeImage(const WebPConfig* const config,
     goto Error;
   }
 
+  if (!WebPReportProgress(picture, 5, &percent)) goto UserAbort;
+
   // Encode main image stream.
   err = VP8LEncodeStream(config, picture, &bw);
   if (err != VP8_ENC_OK) goto Error;
 
+  // TODO(skal): have a fine-grained progress report in VP8LEncodeStream().
+  if (!WebPReportProgress(picture, 90, &percent)) goto UserAbort;
+
   // Finish the RIFF chunk.
   err = WriteImage(picture, &bw, &coded_size);
   if (err != VP8_ENC_OK) goto Error;
+
+  if (!WebPReportProgress(picture, 100, &percent)) goto UserAbort;
 
   // Collect some stats if needed.
   if (picture->stats != NULL) {
