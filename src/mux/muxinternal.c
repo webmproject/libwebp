@@ -48,7 +48,7 @@ WebPChunk* ChunkRelease(WebPChunk* const chunk) {
   if (chunk == NULL) return NULL;
   free(chunk->image_info_);
   if (chunk->owner_) {
-    free((void*)chunk->data_);
+    WebPDataClear(&chunk->data_);
   }
   next = chunk->next_;
   ChunkInit(chunk);
@@ -136,17 +136,16 @@ WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk,
   if (data != NULL) {
     if (copy_data) {
       // Copy data.
-      chunk->data_ = (uint8_t*)malloc(data->size_);
-      if (chunk->data_ == NULL) return WEBP_MUX_MEMORY_ERROR;
-      memcpy((uint8_t*)chunk->data_, data->bytes_, data->size_);
-      chunk->payload_size_ = data->size_;
+      chunk->data_.bytes_ = (uint8_t*)malloc(data->size_);
+      if (chunk->data_.bytes_ == NULL) return WEBP_MUX_MEMORY_ERROR;
+      memcpy((uint8_t*)chunk->data_.bytes_, data->bytes_, data->size_);
+      chunk->data_.size_ = data->size_;
 
       // Chunk is owner of data.
       chunk->owner_ = 1;
     } else {
       // Don't copy data.
-      chunk->data_ = data->bytes_;
-      chunk->payload_size_ = data->size_;
+      chunk->data_ = *data;
     }
   }
 
@@ -197,14 +196,15 @@ size_t ChunksListDiskSize(const WebPChunk* chunk_list) {
 }
 
 static uint8_t* ChunkEmit(const WebPChunk* const chunk, uint8_t* dst) {
+  const size_t chunk_size = chunk->data_.size_;
   assert(chunk);
   assert(chunk->tag_ != NIL_TAG);
   PutLE32(dst + 0, chunk->tag_);
-  PutLE32(dst + TAG_SIZE, (uint32_t)chunk->payload_size_);
-  assert(chunk->payload_size_ == (uint32_t)chunk->payload_size_);
-  memcpy(dst + CHUNK_HEADER_SIZE, chunk->data_, chunk->payload_size_);
-  if (chunk->payload_size_ & 1)
-    dst[CHUNK_HEADER_SIZE + chunk->payload_size_] = 0;  // Add padding.
+  PutLE32(dst + TAG_SIZE, (uint32_t)chunk_size);
+  assert(chunk_size == (uint32_t)chunk_size);
+  memcpy(dst + CHUNK_HEADER_SIZE, chunk->data_.bytes_, chunk_size);
+  if (chunk_size & 1)
+    dst[CHUNK_HEADER_SIZE + chunk_size] = 0;  // Add padding.
   return dst + ChunkDiskSize(chunk);
 }
 
@@ -217,13 +217,26 @@ uint8_t* ChunkListEmit(const WebPChunk* chunk_list, uint8_t* dst) {
 }
 
 //------------------------------------------------------------------------------
-// Life of a WebPData object.
+// Manipulation of a WebPData object.
 
 void WebPDataClear(WebPData* const webp_data) {
   if (webp_data != NULL) {
     free((void*)webp_data->bytes_);
     memset(webp_data, 0, sizeof(*webp_data));
   }
+}
+
+int WebPDataCopy(const WebPData* const src, WebPData* const dst) {
+  if (src == NULL || dst == NULL) return 0;
+
+  memset(dst, 0, sizeof(*dst));
+  if (src->bytes_ != NULL && src->size_ != 0) {
+    dst->bytes_ = (uint8_t*)malloc(src->size_);
+    if (dst->bytes_ == NULL) return 0;
+    memcpy((void*)dst->bytes_, src->bytes_, src->size_);
+    dst->size_ = src->size_;
+  }
+  return 1;
 }
 
 //------------------------------------------------------------------------------
@@ -383,7 +396,7 @@ WebPMuxError MuxImageGetNth(const WebPMuxImage** wpi_list, uint32_t nth,
 // MuxImage serialization methods.
 
 // Size of an image.
-static size_t MuxImageDiskSize(const WebPMuxImage* wpi) {
+size_t MuxImageDiskSize(const WebPMuxImage* const wpi) {
   size_t size = 0;
   if (wpi->header_ != NULL) size += ChunkDiskSize(wpi->header_);
   if (wpi->alpha_ != NULL) size += ChunkDiskSize(wpi->alpha_);
@@ -400,7 +413,7 @@ size_t MuxImageListDiskSize(const WebPMuxImage* wpi_list) {
   return size;
 }
 
-static uint8_t* MuxImageEmit(const WebPMuxImage* const wpi, uint8_t* dst) {
+uint8_t* MuxImageEmit(const WebPMuxImage* const wpi, uint8_t* dst) {
   // Ordering of chunks to be emitted is strictly as follows:
   // 1. Frame/Tile chunk (if present).
   // 2. Alpha chunk (if present).
@@ -420,6 +433,9 @@ uint8_t* MuxImageListEmit(const WebPMuxImage* wpi_list, uint8_t* dst) {
   return dst;
 }
 
+//------------------------------------------------------------------------------
+// Helper methods for mux.
+
 int MuxHasLosslessImages(const WebPMuxImage* images) {
   while (images != NULL) {
     assert(images->img_ != NULL);
@@ -431,8 +447,13 @@ int MuxHasLosslessImages(const WebPMuxImage* images) {
   return 0;
 }
 
-//------------------------------------------------------------------------------
-// Helper methods for mux.
+uint8_t* MuxEmitRiffHeader(uint8_t* const data, size_t size) {
+  PutLE32(data + 0, mktag('R', 'I', 'F', 'F'));
+  PutLE32(data + TAG_SIZE, (uint32_t)size - CHUNK_HEADER_SIZE);
+  assert(size == (uint32_t)size);
+  PutLE32(data + TAG_SIZE + CHUNK_SIZE_BYTES, mktag('W', 'E', 'B', 'P'));
+  return data + RIFF_HEADER_SIZE;
+}
 
 WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, WebPChunkId id) {
   assert(mux != NULL);

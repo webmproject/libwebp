@@ -11,14 +11,15 @@
 //          Vikas (vikasa@google.com)
 
 // This API allows manipulation of WebP container images containing features
-// like Color profile, XMP metadata, Animation & Tiling.
+// like Color profile, XMP metadata, Animation and Tiling.
 //
-// Code Example#1: Creating a MUX with image data, color profile & XMP metadata.
+// Code Example#1: Creating a MUX with image data, color profile and XMP
+// metadata.
 //
 //   int copy_data = 0;
 //   WebPMux* mux = WebPMuxNew();
 //   // ... (Prepare image data).
-//   WebPMuxSetImage(mux, &image, &alpha, copy_data);
+//   WebPMuxSetImage(mux, &image, copy_data);
 //   // ... (Prepare ICCP color profile data).
 //   WebPMuxSetColorProfile(mux, &icc_profile, copy_data);
 //   // ... (Prepare XMP metadata).
@@ -29,12 +30,12 @@
 //   // ... (Consume output_data; e.g. write output_data.bytes_ to file).
 //   WebPDataClear(&output_data);
 //
-// Code Example#2: Get image & color profile data from a WebP file.
+// Code Example#2: Get image and color profile data from a WebP file.
 //
 //   int copy_data = 0;
 //   // ... (Read data from file).
 //   WebPMux* mux = WebPMuxCreate(&data, copy_data);
-//   WebPMuxGetImage(mux, &image, &alpha);
+//   WebPMuxGetImage(mux, &image);
 //   // ... (Consume image; e.g. call WebPDecode() to decode the data).
 //   WebPMuxGetColorProfile(mux, &icc_profile);
 //   // ... (Consume icc_data).
@@ -97,11 +98,15 @@ typedef struct {
 } WebPData;
 
 //------------------------------------------------------------------------------
-// Life of a WebPData object.
+// Manipulation of a WebPData object.
 
 // Clears the contents of the 'webp_data' object by calling free(). Does not
 // deallocate the object itself.
 WEBP_EXTERN(void) WebPDataClear(WebPData* const webp_data);
+
+// Allocates necessary storage for 'dst' and copies the contents of 'src'.
+// Returns true on success.
+WEBP_EXTERN(int) WebPDataCopy(const WebPData* const src, WebPData* const dst);
 
 //------------------------------------------------------------------------------
 // Life of a Mux object
@@ -147,34 +152,31 @@ static WEBP_INLINE WebPMux* WebPMuxCreate(const WebPData* const bitstream,
 // will be removed.
 // Parameters:
 //   mux - (in/out) object in which the image is to be set
-//   image - (in) the image data. The data can be either a VP8/VP8L
-//           bitstream or a single-image WebP file (non-animated & non-tiled)
-//   alpha - (in) the alpha data of the image (if present)
+//   bitstream - (in) can either be a raw VP8/VP8L bitstream or a single-image
+//               WebP file (non-animated and non-tiled)
 //   copy_data - (in) value 1 indicates given data WILL copied to the mux, and
 //               value 0 indicates data will NOT be copied.
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL or data is NULL.
+//   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL or bitstream is NULL.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxSetImage(
-    WebPMux* const mux,
-    const WebPData* const image, const WebPData* const alpha,
-    int copy_data);
+    WebPMux* const mux, const WebPData* const bitstream, int copy_data);
 
-// Gets a reference to the image in the mux object.
-// The caller should NOT free the returned data.
+// Gets image data from the mux object.
+// The content of 'bitstream' is allocated using malloc(), and NOT
+// owned by the 'mux' object. It MUST be deallocated by the caller by calling
+// WebPDataClear().
 // Parameters:
 //   mux - (in) object from which the image is to be fetched
-//   image - (out) the image data
-//   alpha - (out) the alpha data of the image (if present)
+//   bitstream - (out) the image data
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if either mux or both image & alpha are NULL
+//   WEBP_MUX_INVALID_ARGUMENT - if either mux or bitstream is NULL
 //                               OR mux contains animation/tiling.
 //   WEBP_MUX_NOT_FOUND - if image is not present in mux object.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxGetImage(const WebPMux* const mux,
-                                          WebPData* const image,
-                                          WebPData* const alpha);
+                                          WebPData* const bitstream);
 
 // Deletes the image in the mux object.
 // Parameters:
@@ -197,7 +199,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteImage(WebPMux* const mux);
 //   copy_data - (in) value 1 indicates given data WILL copied to the mux, and
 //               value 0 indicates data will NOT be copied.
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL or data is NULL.
+//   WEBP_MUX_INVALID_ARGUMENT - if mux or metadata is NULL.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxSetMetadata(
@@ -235,7 +237,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteMetadata(WebPMux* const mux);
 //   copy_data - (in) value 1 indicates given data WILL copied to the mux, and
 //               value 0 indicates data will NOT be copied.
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL or data is NULL
+//   WEBP_MUX_INVALID_ARGUMENT - if mux or color_profile is NULL
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error
 //   WEBP_MUX_OK - on success
 WEBP_EXTERN(WebPMuxError) WebPMuxSetColorProfile(
@@ -270,23 +272,21 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteColorProfile(WebPMux* const mux);
 // Parameters:
 //   mux - (in/out) object to which an animation frame is to be added
 //   nth - (in) The position at which the frame is to be added.
-//   image - (in) the raw VP8/VP8L image data corresponding to frame image. The
-//          data can be either a VP8/VP8L bitstream or a single-image WebP file
-//          (non-animated & non-tiled)
-//   alpha - (in) the alpha data corresponding to frame image (if present)
+//   bitstream - (in) the image data corresponding to the frame. It can either
+//               be a raw VP8/VP8L bitstream or a single-image WebP file
+//               (non-animated and non-tiled)
 //   x_offset - (in) x-offset of the frame to be added
 //   y_offset - (in) y-offset of the frame to be added
 //   duration - (in) duration of the frame to be added (in milliseconds)
 //   copy_data - (in) value 1 indicates given data WILL copied to the mux, and
 //               value 0 indicates data will NOT be copied.
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL or data is NULL
+//   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL or bitstream is NULL
 //   WEBP_MUX_NOT_FOUND - If we have less than (nth-1) frames before adding.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxSetFrame(
-    WebPMux* const mux, uint32_t nth,
-    const WebPData* const image, const WebPData* const alpha,
+    WebPMux* const mux, uint32_t nth, const WebPData* const bitstream,
     uint32_t x_offset, uint32_t y_offset, uint32_t duration,
     int copy_data);
 
@@ -299,26 +299,26 @@ WEBP_EXTERN(WebPMuxError) WebPMuxSetFrame(
 //  uint32_t duration;
 // } FrameInfo;
 
-// Gets a reference to the nth animation frame from the mux object.
-// The caller should NOT free the returned data.
+// Gets the nth animation frame from the mux object.
+// The content of 'bitstream' is allocated using malloc(), and NOT
+// owned by the 'mux' object. It MUST be deallocated by the caller by calling
+// WebPDataClear().
 // nth=0 has a special meaning - last position.
 // Parameters:
 //   mux - (in) object from which the info is to be fetched
 //   nth - (in) index of the frame in the mux object
-//   image - (out) the image data
-//   alpha - (out) the alpha data corresponding to frame image (if present)
+//   bitstream - (out) the image data
 //   x_offset - (out) x-offset of the returned frame
 //   y_offset - (out) y-offset of the returned frame
 //   duration - (out) duration of the returned frame (in milliseconds)
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if either mux, image, x_offset,
+//   WEBP_MUX_INVALID_ARGUMENT - if either mux, bitstream, x_offset,
 //                               y_offset, or duration is NULL
 //   WEBP_MUX_NOT_FOUND - if there are less than nth frames in the mux object.
 //   WEBP_MUX_BAD_DATA - if nth frame chunk in mux is invalid.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxGetFrame(
-    const WebPMux* const mux, uint32_t nth,
-    WebPData* const image, WebPData* const alpha,
+    const WebPMux* const mux, uint32_t nth, WebPData* const bitstream,
     uint32_t* x_offset, uint32_t* y_offset, uint32_t* duration);
 
 // Deletes an animation frame from the mux object.
@@ -365,44 +365,41 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetLoopCount(const WebPMux* const mux,
 // Parameters:
 //   mux - (in/out) object to which a tile is to be added
 //   nth - (in) The position at which the tile is to be added.
-//   image - (in) the raw VP8/VP8L image data corresponding to tile image.  The
-//          data can be either a VP8/VP8L bitstream or a single-image WebP file
-//          (non-animated & non-tiled)
-//   alpha - (in) the alpha data corresponding to tile image (if present)
+//   bitstream - (in) the image data corresponding to the frame. It can either
+//               be a raw VP8/VP8L bitstream or a single-image WebP file
+//               (non-animated and non-tiled)
 //   x_offset - (in) x-offset of the tile to be added
 //   y_offset - (in) y-offset of the tile to be added
 //   copy_data - (in) value 1 indicates given data WILL copied to the mux, and
 //               value 0 indicates data will NOT be copied.
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL or data is NULL
+//   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL or bitstream is NULL
 //   WEBP_MUX_NOT_FOUND - If we have less than (nth-1) tiles before adding.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxSetTile(
-    WebPMux* const mux, uint32_t nth,
-    const WebPData* const image, const WebPData* const alpha,
-    uint32_t x_offset, uint32_t y_offset,
-    int copy_data);
+    WebPMux* const mux, uint32_t nth, const WebPData* const bitstream,
+    uint32_t x_offset, uint32_t y_offset, int copy_data);
 
-// Gets a reference to the nth tile from the mux object.
-// The caller should NOT free the returned data.
+// Gets the nth tile from the mux object.
+// The content of 'bitstream' is allocated using malloc(), and NOT
+// owned by the 'mux' object. It MUST be deallocated by the caller by calling
+// WebPDataClear().
 // nth=0 has a special meaning - last position.
 // Parameters:
 //   mux - (in) object from which the info is to be fetched
 //   nth - (in) index of the tile in the mux object
-//   image - (out) the image data
-//   alpha - (out) the alpha data corresponding to tile image (if present)
+//   bitstream - (out) the image data
 //   x_offset - (out) x-offset of the returned tile
 //   y_offset - (out) y-offset of the returned tile
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if either mux, image, x_offset or
+//   WEBP_MUX_INVALID_ARGUMENT - if either mux, bitstream, x_offset or
 //                               y_offset is NULL
 //   WEBP_MUX_NOT_FOUND - if there are less than nth tiles in the mux object.
 //   WEBP_MUX_BAD_DATA - if nth tile chunk in mux is invalid.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxGetTile(
-    const WebPMux* const mux, uint32_t nth,
-    WebPData* const image, WebPData* const alpha,
+    const WebPMux* const mux, uint32_t nth, WebPData* const bitstream,
     uint32_t* x_offset, uint32_t* y_offset);
 
 // Deletes a tile from the mux object.
@@ -427,7 +424,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteTile(WebPMux* const mux, uint32_t nth);
 //           mux object. This will be an OR of various flag values.
 //           Enum 'WebPFeatureFlags' can be used to test individual flag values.
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL or flags is NULL
+//   WEBP_MUX_INVALID_ARGUMENT - if mux or flags is NULL
 //   WEBP_MUX_NOT_FOUND - if VP8X chunk is not present in mux object.
 //   WEBP_MUX_BAD_DATA - if VP8X chunk in mux is invalid.
 //   WEBP_MUX_OK - on success.

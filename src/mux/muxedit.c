@@ -167,27 +167,32 @@ static WebPMuxError CreateDataFromImageInfo(const WebPImageInfo* image_info,
   return WEBP_MUX_OK;
 }
 
-// Outputs image data given data from a webp file (including RIFF header).
+// Outputs image data given a bitstream. The bitstream can either be a
+// single-image WebP file or raw VP8/VP8L data.
 // Also outputs 'is_lossless' to be true if the given bitstream is lossless.
 static WebPMuxError GetImageData(const WebPData* const bitstream,
                                  WebPData* const image, WebPData* const alpha,
                                  int* const is_lossless) {
+  memset(alpha, 0, sizeof(*alpha));  // Default: no alpha.
   if (bitstream->size_ < TAG_SIZE ||
       memcmp(bitstream->bytes_, "RIFF", TAG_SIZE)) {
     // It is NOT webp file data. Return input data as is.
     *image = *bitstream;
-    *is_lossless = VP8LCheckSignature(image->bytes_, image->size_);
-    return WEBP_MUX_OK;
   } else {
     // It is webp file data. Extract image data from it.
-    WebPMuxError err;
+    const WebPMuxImage* wpi;
     WebPMux* const mux = WebPMuxCreate(bitstream, 0);
     if (mux == NULL) return WEBP_MUX_BAD_DATA;
-    err = WebPMuxGetImage(mux, image, alpha);
+    wpi = mux->images_;
+    assert(wpi != NULL && wpi->img_ != NULL);
+    *image = wpi->img_->data_;
+    if (wpi->alpha_ != NULL) {
+      *alpha = wpi->alpha_->data_;
+    }
     WebPMuxDelete(mux);
-    *is_lossless = VP8LCheckSignature(image->bytes_, image->size_);
-    return err;
   }
+  *is_lossless = VP8LCheckSignature(image->bytes_, image->size_);
+  return WEBP_MUX_OK;
 }
 
 static WebPMuxError DeleteChunks(WebPChunk** chunk_list, uint32_t tag) {
@@ -226,25 +231,23 @@ static WebPMuxError DeleteLoopCount(WebPMux* const mux) {
 // Set API(s).
 
 WebPMuxError WebPMuxSetImage(WebPMux* const mux,
-                             const WebPData* const image,
-                             const WebPData* const alpha,
-                             int copy_data) {
+                             const WebPData* const bitstream, int copy_data) {
   WebPMuxError err;
   WebPChunk chunk;
   WebPMuxImage wpi;
-  WebPData image_raw;
-  const int has_alpha = (alpha != NULL && alpha->bytes_ != NULL);
+  WebPData image;
+  WebPData alpha;
   int is_lossless;
   int image_tag;
 
-  if (mux == NULL || image == NULL || image->bytes_ == NULL ||
-      image->size_ > MAX_CHUNK_PAYLOAD) {
+  if (mux == NULL || bitstream == NULL || bitstream->bytes_ == NULL ||
+      bitstream->size_ > MAX_CHUNK_PAYLOAD) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
   // If given data is for a whole webp file,
   // extract only the VP8/VP8L data from it.
-  err = GetImageData(image, &image_raw, NULL, &is_lossless);
+  err = GetImageData(bitstream, &image, &alpha, &is_lossless);
   if (err != WEBP_MUX_OK) return err;
   image_tag = is_lossless ? kChunks[IDX_VP8L].tag : kChunks[IDX_VP8].tag;
 
@@ -253,25 +256,34 @@ WebPMuxError WebPMuxSetImage(WebPMux* const mux,
 
   MuxImageInit(&wpi);
 
-  if (has_alpha) {  // Add alpha chunk.
+  if (alpha.bytes_ != NULL) {  // Add alpha chunk.
     ChunkInit(&chunk);
-    err = ChunkAssignDataImageInfo(&chunk, alpha, NULL, copy_data,
+    err = ChunkAssignDataImageInfo(&chunk, &alpha, NULL, copy_data,
                                    kChunks[IDX_ALPHA].tag);
-    if (err != WEBP_MUX_OK) return err;
+    if (err != WEBP_MUX_OK) goto Err;
     err = ChunkSetNth(&chunk, &wpi.alpha_, 1);
-    if (err != WEBP_MUX_OK) return err;
+    if (err != WEBP_MUX_OK) goto Err;
   }
 
   // Add image chunk.
   ChunkInit(&chunk);
-  err = ChunkAssignDataImageInfo(&chunk, &image_raw, NULL, copy_data,
-                                 image_tag);
-  if (err != WEBP_MUX_OK) return err;
+  err = ChunkAssignDataImageInfo(&chunk, &image, NULL, copy_data, image_tag);
+  if (err != WEBP_MUX_OK) goto Err;
   err = ChunkSetNth(&chunk, &wpi.img_, 1);
-  if (err != WEBP_MUX_OK) return err;
+  if (err != WEBP_MUX_OK) goto Err;
 
   // Add this image to mux.
-  return MuxImageSetNth(&wpi, &mux->images_, 1);
+  err = MuxImageSetNth(&wpi, &mux->images_, 1);
+  if (err != WEBP_MUX_OK) goto Err;
+
+  // All OK.
+  return WEBP_MUX_OK;
+
+ Err:
+  // Something bad happened.
+  ChunkRelease(&chunk);
+  MuxImageRelease(&wpi);
+  return err;
 }
 
 WebPMuxError WebPMuxSetMetadata(WebPMux* const mux,
@@ -332,12 +344,12 @@ WebPMuxError WebPMuxSetLoopCount(WebPMux* const mux, uint32_t loop_count) {
 }
 
 static WebPMuxError MuxSetFrameTileInternal(
-    WebPMux* const mux, uint32_t nth,
-    const WebPData* const image, const WebPData* const alpha,
+    WebPMux* const mux, uint32_t nth, const WebPData* const bitstream,
     uint32_t x_offset, uint32_t y_offset, uint32_t duration,
     int copy_data, uint32_t tag) {
   WebPChunk chunk;
-  WebPData image_raw;
+  WebPData image;
+  WebPData alpha;
   WebPMuxImage wpi;
   WebPMuxError err;
   WebPImageInfo* image_info = NULL;
@@ -345,44 +357,43 @@ static WebPMuxError MuxSetFrameTileInternal(
   size_t frame_tile_size = 0;
   WebPData frame_tile;
   const int is_frame = (tag == kChunks[IDX_FRAME].tag) ? 1 : 0;
-  const int has_alpha = (alpha != NULL && alpha->bytes_ != NULL);
   int is_lossless;
   int image_tag;
 
-  if (mux == NULL || image == NULL || image->bytes_ == NULL ||
-      image->size_ > MAX_CHUNK_PAYLOAD) {
+  if (mux == NULL || bitstream == NULL || bitstream->bytes_ == NULL ||
+      bitstream->size_ > MAX_CHUNK_PAYLOAD) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
   // If given data is for a whole webp file,
   // extract only the VP8/VP8L data from it.
-  err = GetImageData(image, &image_raw, NULL, &is_lossless);
+  err = GetImageData(bitstream, &image, &alpha, &is_lossless);
   if (err != WEBP_MUX_OK) return err;
   image_tag = is_lossless ? kChunks[IDX_VP8L].tag : kChunks[IDX_VP8].tag;
 
   ChunkInit(&chunk);
   MuxImageInit(&wpi);
 
-  if (has_alpha) {
+  if (alpha.bytes_ != NULL) {
     // Add alpha chunk.
-    err = ChunkAssignDataImageInfo(&chunk, alpha, NULL, copy_data,
+    err = ChunkAssignDataImageInfo(&chunk, &alpha, NULL, copy_data,
                                    kChunks[IDX_ALPHA].tag);
-    if (err != WEBP_MUX_OK) return err;
+    if (err != WEBP_MUX_OK) goto Err;
     err = ChunkSetNth(&chunk, &wpi.alpha_, 1);
-    if (err != WEBP_MUX_OK) return err;
+    if (err != WEBP_MUX_OK) goto Err;
     ChunkInit(&chunk);  // chunk owned by wpi.alpha_ now.
   }
 
   // Create image_info object.
-  image_info = CreateImageInfo(x_offset, y_offset, duration, &image_raw,
+  image_info = CreateImageInfo(x_offset, y_offset, duration, &image,
                                is_lossless);
   if (image_info == NULL) {
-    MuxImageRelease(&wpi);
-    return WEBP_MUX_MEMORY_ERROR;
+    err = WEBP_MUX_MEMORY_ERROR;
+    goto Err;
   }
 
   // Add image chunk.
-  err = ChunkAssignDataImageInfo(&chunk, &image_raw, image_info, copy_data,
+  err = ChunkAssignDataImageInfo(&chunk, &image, image_info, copy_data,
                                  image_tag);
   if (err != WEBP_MUX_OK) goto Err;
   image_info = NULL;  // Owned by 'chunk' now.
@@ -424,23 +435,20 @@ static WebPMuxError MuxSetFrameTileInternal(
 // TODO(urvang): Think about whether we need 'nth' while adding a frame or tile.
 
 WebPMuxError WebPMuxSetFrame(WebPMux* const mux, uint32_t nth,
-                             const WebPData* const image,
-                             const WebPData* const alpha,
+                             const WebPData* const bitstream,
                              uint32_t x_offset, uint32_t y_offset,
                              uint32_t duration, int copy_data) {
-  return MuxSetFrameTileInternal(mux, nth, image, alpha,
-                                 x_offset, y_offset, duration,
-                                 copy_data, kChunks[IDX_FRAME].tag);
+  return MuxSetFrameTileInternal(mux, nth, bitstream, x_offset, y_offset,
+                                 duration, copy_data, kChunks[IDX_FRAME].tag);
 }
 
 WebPMuxError WebPMuxSetTile(WebPMux* const mux, uint32_t nth,
-                            const WebPData* const image,
-                            const WebPData* const alpha,
+                            const WebPData* const bitstream,
                             uint32_t x_offset, uint32_t y_offset,
                             int copy_data) {
-  return MuxSetFrameTileInternal(mux, nth, image, alpha,
-                                 x_offset, y_offset, 1,
-                                 copy_data, kChunks[IDX_TILE].tag);
+  return MuxSetFrameTileInternal(mux, nth, bitstream, x_offset, y_offset,
+                                 1 /* unused duration*/, copy_data,
+                                 kChunks[IDX_TILE].tag);
 }
 
 //------------------------------------------------------------------------------
@@ -487,17 +495,17 @@ WebPMuxError WebPMuxDeleteTile(WebPMux* const mux, uint32_t nth) {
 //------------------------------------------------------------------------------
 // Assembly of the WebP RIFF file.
 
-static WebPMuxError GetImageWidthHeight(const WebPChunk* const image_chunk,
+WebPMuxError MuxGetImageWidthHeight(const WebPChunk* const image_chunk,
                                         int* const width, int* const height) {
   const uint32_t tag = image_chunk->tag_;
+  const WebPData* const data = &image_chunk->data_;
   int w, h;
   int ok;
   assert(image_chunk != NULL);
   assert(tag == kChunks[IDX_VP8].tag || tag ==  kChunks[IDX_VP8L].tag);
   ok = (tag == kChunks[IDX_VP8].tag) ?
-      VP8GetInfo(image_chunk->data_, image_chunk->payload_size_,
-                 image_chunk->payload_size_, &w, &h) :
-      VP8LGetInfo(image_chunk->data_, image_chunk->payload_size_, &w, &h, NULL);
+      VP8GetInfo(data->bytes_, data->size_, data->size_, &w, &h) :
+      VP8LGetInfo(data->bytes_, data->size_, &w, &h, NULL);
   if (ok) {
     *width = w;
     *height = h;
@@ -555,7 +563,7 @@ static WebPMuxError GetImageCanvasWidthHeight(
     // For a single image, extract the width & height from VP8/VP8L image-data.
     int w, h;
     const WebPChunk* const image_chunk = wpi->img_;
-    const WebPMuxError err = GetImageWidthHeight(image_chunk, &w, &h);
+    const WebPMuxError err = MuxGetImageWidthHeight(image_chunk, &w, &h);
     if (err != WEBP_MUX_OK) return err;
     *width = w;
     *height = h;
@@ -579,7 +587,8 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
 
   assert(mux != NULL);
   images = mux->images_;  // First image.
-  if (images == NULL || images->img_ == NULL || images->img_->data_ == NULL) {
+  if (images == NULL || images->img_ == NULL ||
+      images->img_->data_.bytes_ == NULL) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
@@ -589,11 +598,11 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   if (err != WEBP_MUX_OK && err != WEBP_MUX_NOT_FOUND) return err;
 
   // Set flags.
-  if (mux->iccp_ != NULL && mux->iccp_->data_ != NULL) {
+  if (mux->iccp_ != NULL && mux->iccp_->data_.bytes_ != NULL) {
     flags |= ICCP_FLAG;
   }
 
-  if (mux->meta_ != NULL && mux->meta_->data_ != NULL) {
+  if (mux->meta_ != NULL && mux->meta_->data_.bytes_ != NULL) {
     flags |= META_FLAG;
   }
 
@@ -607,7 +616,7 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
     }
   }
 
-  if (images->alpha_ != NULL && images->alpha_->data_ != NULL) {
+  if (images->alpha_ != NULL && images->alpha_->data_.bytes_ != NULL) {
     // This is an image with alpha channel.
     flags |= ALPHA_FLAG;
   }
@@ -674,14 +683,8 @@ WebPMuxError WebPMuxAssemble(WebPMux* const mux,
   data = (uint8_t*)malloc(size);
   if (data == NULL) return WEBP_MUX_MEMORY_ERROR;
 
-  // Main RIFF header.
-  PutLE32(data + 0, mktag('R', 'I', 'F', 'F'));
-  PutLE32(data + TAG_SIZE, (uint32_t)size - CHUNK_HEADER_SIZE);
-  assert(size == (uint32_t)size);
-  PutLE32(data + TAG_SIZE + CHUNK_SIZE_BYTES, mktag('W', 'E', 'B', 'P'));
-
-  // Chunks.
-  dst = data + RIFF_HEADER_SIZE;
+  // Emit header & chunks.
+  dst = MuxEmitRiffHeader(data, size);
   dst = ChunkListEmit(mux->vp8x_, dst);
   dst = ChunkListEmit(mux->iccp_, dst);
   dst = ChunkListEmit(mux->loop_, dst);

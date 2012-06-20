@@ -162,7 +162,7 @@ static int Decode(const int frame_number, uint32_t* const duration) {
 
   ClearPreviousPic();
   if (kParams.has_animation) {
-    if (WebPMuxGetFrame(kParams.mux, frame_number, &image_data, NULL,
+    if (WebPMuxGetFrame(kParams.mux, frame_number, &image_data,
                         &x_off, &y_off, duration) != WEBP_MUX_OK) {
       goto end;
     }
