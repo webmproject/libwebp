@@ -24,4 +24,6 @@ $ kramdown doc/webp-lossless-bitstream-spec.txt --template \
   --coderay-default-lang c > \
   doc/output/webp-lossless-bitstream-spec.html
 
+Optimally, use kramdown 0.13.7 or newer if syntax highlighting desired.
+
 [3]: http://coderay.rubychan.de/
