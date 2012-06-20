@@ -310,7 +310,6 @@ void VP8SetIntra4Mode(const VP8EncIterator* const it, const uint8_t* modes);
 void VP8SetIntraUVMode(const VP8EncIterator* const it, int mode);
 void VP8SetSkip(const VP8EncIterator* const it, int skip);
 void VP8SetSegment(const VP8EncIterator* const it, int segment);
-void VP8IteratorResetCosts(VP8EncIterator* const it);
 
 //------------------------------------------------------------------------------
 // Paginated token buffer
