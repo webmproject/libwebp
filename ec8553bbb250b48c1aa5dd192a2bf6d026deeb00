@@ -16,6 +16,24 @@
       "revId": "ec8553bbb250b48c1aa5dd192a2bf6d026deeb00",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALH//8cI\u003d",
+        "filename": "src/enc/backward_references.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-20T00:21:10Z",
+      "side": 1,
+      "message": "good point; this was more involved when I misunderstood the function behavior...",
+      "parentUuid": "AAAALH//8iQ\u003d",
+      "revId": "ec8553bbb250b48c1aa5dd192a2bf6d026deeb00",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
