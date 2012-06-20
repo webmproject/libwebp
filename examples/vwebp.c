@@ -146,6 +146,8 @@ static void StartDisplay(const WebPDecBuffer* const pic) {
   glutDisplayFunc(HandleDisplay);
   glutIdleFunc(NULL);
   glutKeyboardFunc(HandleKey);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_BLEND);
   glClearColor(0.0, 0.0, 0.0, 0.0);
   HandleReshape(pic->width, pic->height);
 }
