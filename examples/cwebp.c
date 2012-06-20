@@ -959,6 +959,23 @@ int main(int argc, const char *argv[]) {
     goto Error;
   }
 
+  // Check for unsupported command line options for lossless mode and log
+  // warning for such options.
+  if (config.lossless == 1) {
+    if (config.target_size > 0 || config.target_PSNR > 0) {
+      fprintf(stderr, "Encoding for specified size or PSNR is not supported"
+                      " for lossless encoding. Ignoring such option(s)!\n");
+    }
+    if (config.partition_limit > 0) {
+      fprintf(stderr, "Partition limit option is not required for lossless"
+                      " encoding. Ignoring this option!\n");
+    }
+    if (show_progress) {
+      fprintf(stderr, "Progress reporting option is not supported for lossless"
+                      " encoding. Ignoring this option!\n");
+    }
+  }
+
   if (!WebPValidateConfig(&config)) {
     fprintf(stderr, "Error! Invalid configuration.\n");
     goto Error;
