@@ -1023,9 +1023,12 @@ int main(int argc, const char *argv[]) {
   if (verbose) {
     StopwatchReadAndReset(&stop_watch);
   }
-  if (crop != 0 && !WebPPictureCrop(&picture, crop_x, crop_y, crop_w, crop_h)) {
-    fprintf(stderr, "Error! Cannot crop picture\n");
-    goto Error;
+  if (crop != 0) {
+    // We use self-cropping using a view.
+    if (!WebPPictureView(&picture, crop_x, crop_y, crop_w, crop_h, &picture)) {
+      fprintf(stderr, "Error! Cannot crop picture\n");
+      goto Error;
+    }
   }
   if ((resize_w | resize_h) > 0) {
     if (!WebPPictureRescale(&picture, resize_w, resize_h)) {

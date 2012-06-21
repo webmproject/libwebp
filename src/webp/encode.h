@@ -95,8 +95,8 @@ WEBP_EXTERN(int) WebPConfigInitInternal(
     WebPConfig* const, WebPPreset, float, int);
 
 // Should always be called, to initialize a fresh WebPConfig structure before
-// modification. Returns 0 in case of version mismatch. WebPConfigInit() must
-// have succeeded before using the 'config' object.
+// modification. Returns false in case of version mismatch. WebPConfigInit()
+// must have succeeded before using the 'config' object.
 static WEBP_INLINE int WebPConfigInit(WebPConfig* const config) {
   return WebPConfigInitInternal(config, WEBP_PRESET_DEFAULT, 75.f,
                                 WEBP_ENCODER_ABI_VERSION);
@@ -105,14 +105,15 @@ static WEBP_INLINE int WebPConfigInit(WebPConfig* const config) {
 // This function will initialize the configuration according to a predefined
 // set of parameters (referred to by 'preset') and a given quality factor.
 // This function can be called as a replacement to WebPConfigInit(). Will
-// return 0 in case of error.
+// return false in case of error.
 static WEBP_INLINE int WebPConfigPreset(WebPConfig* const config,
                                         WebPPreset preset, float quality) {
   return WebPConfigInitInternal(config, preset, quality,
                                 WEBP_ENCODER_ABI_VERSION);
 }
 
-// Returns 1 if all parameters are in valid range and the configuration is OK.
+// Returns true if 'config' is non-NULL and all configuration parameters are
+// within their valid ranges.
 WEBP_EXTERN(int) WebPValidateConfig(const WebPConfig* const config);
 
 //------------------------------------------------------------------------------
@@ -140,7 +141,7 @@ typedef struct {
                           // used during callbacks (like progress-report e.g.).
 } WebPAuxStats;
 
-// Signature for output function. Should return 1 if writing was successful.
+// Signature for output function. Should return true if writing was successful.
 // data/data_size is the segment of data to write, and 'picture' is for
 // reference (and so one can make use of picture->custom_ptr).
 typedef int (*WebPWriterFunction)(const uint8_t* data, size_t data_size,
@@ -162,8 +163,9 @@ WEBP_EXTERN(void) WebPMemoryWriterInit(WebPMemoryWriter* const writer);
 WEBP_EXTERN(int) WebPMemoryWrite(const uint8_t* data, size_t data_size,
                                  const WebPPicture* const picture);
 
-// Progress hook, called from time to time to report progress. It can return 0
-// to request an abort of the encoding process, or 1 otherwise if all is OK.
+// Progress hook, called from time to time to report progress. It can return
+// false to request an abort of the encoding process, or true otherwise if
+// everything is OK.
 typedef int (*WebPProgressHook)(int percent, const WebPPicture* const picture);
 
 typedef enum {
@@ -237,13 +239,17 @@ struct WebPPicture {
   int use_argb_input;     // Flag for encoder to use argb pixels as input.
   uint32_t* argb;         // Pointer to argb (32 bit) plane.
   int argb_stride;        // This is stride in pixels units, not bytes.
+
+  // private fields:
+  void* memory_;          // row chunk of memory for yuva planes
+  void* memory_argb_;     // and for argb too.
 };
 
 // Internal, version-checked, entry point
 WEBP_EXTERN(int) WebPPictureInitInternal(WebPPicture* const, int);
 
-// Should always be called, to initialize the structure. Returns 0 in case of
-// version mismatch. WebPPictureInit() must have succeeded before using the
+// Should always be called, to initialize the structure. Returns false in case
+// of version mismatch. WebPPictureInit() must have succeeded before using the
 // 'picture' object.
 static WEBP_INLINE int WebPPictureInit(WebPPicture* const picture) {
   return WebPPictureInitInternal(picture, WEBP_ENCODER_ABI_VERSION);
@@ -255,21 +261,23 @@ static WEBP_INLINE int WebPPictureInit(WebPPicture* const picture) {
 // Convenience allocation / deallocation based on picture->width/height:
 // Allocate y/u/v buffers as per colorspace/width/height specification.
 // Note! This function will free the previous buffer if needed.
-// Returns 0 in case of memory error.
+// Returns false in case of memory error.
 WEBP_EXTERN(int) WebPPictureAlloc(WebPPicture* const picture);
 
-// Release memory allocated by WebPPictureAlloc() or WebPPictureImport*()
-// Note that this function does _not_ free the memory pointed to by 'picture'.
+// Release the memory allocated by WebPPictureAlloc() or WebPPictureImport*().
+// Note that this function does _not_ free the memory used by the 'picture'
+// object itself.
 WEBP_EXTERN(void) WebPPictureFree(WebPPicture* const picture);
 
-// Copy the pixels of *src into *dst, using WebPPictureAlloc.
-// Returns 0 in case of memory allocation error.
+// Copy the pixels of *src into *dst, using WebPPictureAlloc. Upon return,
+// *dst will fully own the copied pixels (this is not a view).
+// Returns false in case of memory allocation error.
 WEBP_EXTERN(int) WebPPictureCopy(const WebPPicture* const src,
                                  WebPPicture* const dst);
 
 // Compute PSNR or SSIM distortion between two pictures.
 // Result is in dB, stores in result[] in the Y/U/V/Alpha/All order.
-// Returns 0 in case of error (pic1 and pic2 don't have same dimension, ...)
+// Returns false in case of error (pic1 and pic2 don't have same dimension, ...)
 // Warning: this function is rather CPU-intensive.
 WEBP_EXTERN(int) WebPPictureDistortion(
     const WebPPicture* const pic1, const WebPPicture* const pic2,
@@ -277,10 +285,32 @@ WEBP_EXTERN(int) WebPPictureDistortion(
     float result[5]);
 
 // self-crops a picture to the rectangle defined by top/left/width/height.
-// Returns 0 in case of memory allocation error, or if the rectangle is
+// Returns false in case of memory allocation error, or if the rectangle is
 // outside of the source picture.
+// The rectangle for the view is defined by the top-left corner pixel
+// coordinates (left, top) as well as its width and height. This rectangle
+// must be fully be comprised inside the 'src' source picture. If the source
+// picture uses the YUV420 colorspace, the top and left coordinates will be
+// snapped to even values.
 WEBP_EXTERN(int) WebPPictureCrop(WebPPicture* const picture,
                                  int left, int top, int width, int height);
+
+// Extracts a view from 'src' picture into 'dst'. The rectangle for the view
+// is defined by the top-left corner pixel coordinates (left, top) as well
+// as its width and height. This rectangle must be fully be comprised inside
+// the 'src' source picture. If the source picture uses the YUV420 colorspace,
+// the top and left coordinates will be snapped to even values.
+// Picture 'src' must out-live 'dst' picture. Self-extraction of view is allowed
+// ('src' equal to 'dst') as a mean of fast-cropping (but note that doing so,
+// the original dimension will be lost).
+// Returns false in case of memory allocation error or invalid parameters.
+WEBP_EXTERN(int) WebPPictureView(const WebPPicture* const src,
+                                 int left, int top, int width, int height,
+                                 WebPPicture* const dst);
+
+// Returns true if the 'picture' is actually a view and therefore does
+// not own the memory for pixels.
+WEBP_EXTERN(int) WebPPictureIsView(const WebPPicture* const picture);
 
 // Rescale a picture to new dimension width x height.
 // Now gamma correction is applied.
@@ -291,7 +321,7 @@ WEBP_EXTERN(int) WebPPictureRescale(WebPPicture* const pic,
 // Colorspace conversion function to import RGB samples.
 // Previous buffer will be free'd, if any.
 // *rgb buffer should have a size of at least height * rgb_stride.
-// Returns 0 in case of memory error.
+// Returns false in case of memory error.
 WEBP_EXTERN(int) WebPPictureImportRGB(
     WebPPicture* const picture, const uint8_t* const rgb, int rgb_stride);
 // Same, but for RGBA buffer.
