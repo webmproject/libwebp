@@ -51,10 +51,12 @@ static int AnalyzeAndCreatePalette(const WebPPicture* const pic,
   uint32_t colors[MAX_PALETTE_SIZE * 4];
   static const uint32_t kHashMul = 0x1e35a7bd;
   const uint32_t* argb = pic->argb;
+  const int width = pic->width;
+  const int height = pic->height;
   uint32_t last_pix = ~argb[0];   // so we're sure that last_pix != argb[0]
 
-  for (y = 0; y < pic->height; ++y) {
-    for (x = 0; x < pic->width; ++x) {
+  for (y = 0; y < height; ++y) {
+    for (x = 0; x < width; ++x) {
       if (argb[x] == last_pix) {
         continue;
       }
@@ -83,6 +85,7 @@ static int AnalyzeAndCreatePalette(const WebPPicture* const pic,
     argb += pic->argb_stride;
   }
 
+  // TODO(skal): could we reuse in_use[] to speed up ApplyPalette()?
   num_colors = 0;
   for (i = 0; i < (int)(sizeof(in_use) / sizeof(in_use[0])); ++i) {
     if (in_use[i]) {
@@ -708,7 +711,7 @@ static WebPEncodingError WriteRiffHeader(const WebPPicture* const pic,
 static int WriteImageSize(const WebPPicture* const pic,
                           VP8LBitWriter* const bw) {
   const int width = pic->width - 1;
-  const int height = pic->height -1;
+  const int height = pic->height - 1;
   assert(width < WEBP_MAX_DIMENSION && height < WEBP_MAX_DIMENSION);
 
   VP8LWriteBits(bw, VP8L_IMAGE_SIZE_BITS, width);
@@ -816,11 +819,11 @@ static void BundleColorMap(const WebPPicture* const pic,
 // Also, "enc->palette_" will be modified after this call and should not be used
 // later.
 static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
-                                      VP8LEncoder* const enc,
-                                      int quality) {
+                                      VP8LEncoder* const enc, int quality) {
   WebPEncodingError err = VP8_ENC_OK;
   int i, x, y;
   const WebPPicture* const pic = enc->pic_;
+  uint32_t* argb = pic->argb;
   const int width = pic->width;
   const int height = pic->height;
   uint32_t* const palette = enc->palette_;
@@ -828,7 +831,6 @@ static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
 
   // Replace each input pixel by corresponding palette index.
   for (y = 0; y < height; ++y) {
-    uint32_t* const argb = pic->argb + y * pic->argb_stride;
     for (x = 0; x < width; ++x) {
       const uint32_t pix = argb[x];
       for (i = 0; i < palette_size; ++i) {
@@ -838,6 +840,7 @@ static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
         }
       }
     }
+    argb += pic->argb_stride;
   }
 
   // Save palette to bitstream.
