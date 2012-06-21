@@ -409,6 +409,7 @@ static int InitThreadContext(VP8Decoder* const dec) {
 static int AllocateMemory(VP8Decoder* const dec) {
   const int num_caches = dec->num_caches_;
   const int mb_w = dec->mb_w_;
+  // Note: we use 'size_t' when there's no overflow risk, uint64_t otherwise.
   const size_t intra_pred_mode_size = 4 * mb_w * sizeof(uint8_t);
   const size_t top_size = (16 + 8 + 8) * mb_w;
   const size_t mb_info_size = (mb_w + 1) * sizeof(VP8MB);
@@ -421,24 +422,25 @@ static int AllocateMemory(VP8Decoder* const dec) {
   const size_t cache_height = (16 * num_caches
                             + kFilterExtraRows[dec->filter_type_]) * 3 / 2;
   const size_t cache_size = top_size * cache_height;
-  const size_t alpha_size =
-      (dec->alpha_data_ != NULL) ? dec->pic_hdr_.width_ * dec->pic_hdr_.height_
-                                 : 0;
-  const size_t needed = intra_pred_mode_size
-                      + top_size + mb_info_size + f_info_size
-                      + yuv_size + coeffs_size
-                      + cache_size + alpha_size + ALIGN_MASK;
+  // alpha_size is the only one that scales as width x height.
+  const uint64_t alpha_size = (dec->alpha_data_ != NULL) ?
+      (uint64_t)dec->pic_hdr_.width_ * dec->pic_hdr_.height_ : 0ULL;
+  const uint64_t needed = (uint64_t)intra_pred_mode_size
+                        + top_size + mb_info_size + f_info_size
+                        + yuv_size + coeffs_size
+                        + cache_size + alpha_size + ALIGN_MASK;
   uint8_t* mem;
 
+  if (needed != (size_t)needed) return 0;  // check for overflow
   if (needed > dec->mem_size_) {
     free(dec->mem_);
     dec->mem_size_ = 0;
-    dec->mem_ = (uint8_t*)malloc(needed);
+    dec->mem_ = (uint8_t*)malloc((size_t)needed);
     if (dec->mem_ == NULL) {
       return VP8SetError(dec, VP8_STATUS_OUT_OF_MEMORY,
                          "no memory during frame initialization.");
     }
-    dec->mem_size_ = needed;
+    dec->mem_size_ = (size_t)needed;
   }
 
   mem = (uint8_t*)dec->mem_;

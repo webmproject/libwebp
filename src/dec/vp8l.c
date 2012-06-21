@@ -334,6 +334,7 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
 
   if (br->error_) goto Error;
 
+  assert(num_htree_groups <= 0x10000);
   htree_groups = (HTreeGroup*)calloc(num_htree_groups, sizeof(*htree_groups));
   if (htree_groups == NULL) {
     dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
@@ -372,14 +373,17 @@ static int AllocateAndInitRescaler(VP8LDecoder* const dec, VP8Io* const io) {
   const int out_width = io->scaled_width;
   const int in_height = io->mb_h;
   const int out_height = io->scaled_height;
-  const size_t work_size = 2 * num_channels * out_width;
+  const uint64_t work_size = 2 * num_channels * (uint64_t)out_width;
   int32_t* work;        // Rescaler work area.
-  const size_t scaled_data_size = num_channels * out_width;
+  const uint64_t scaled_data_size = num_channels * (uint64_t)out_width;
   uint32_t* scaled_data;  // Temporary storage for scaled BGRA data.
-  const size_t memory_size = sizeof(*dec->rescaler) +
-                             work_size * sizeof(*work) +
-                             scaled_data_size * sizeof(*scaled_data);
-  uint8_t* memory = calloc(1, memory_size);
+  const uint64_t memory_size = sizeof(*dec->rescaler) +
+                               work_size * sizeof(*work) +
+                               scaled_data_size * sizeof(*scaled_data);
+  uint8_t* memory;
+
+  if (memory_size != (size_t)memory_size) return 0;  // overflow check
+  memory = (uint8_t*)calloc(1, (size_t)memory_size);
   if (memory == NULL) {
     dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
     return 0;
@@ -928,16 +932,20 @@ static int DecodeImageStream(int xsize, int ysize,
 // Allocate dec->argb_ and dec->argb_cache_ using dec->width_ and dec->height_
 
 static int AllocateARGBBuffers(VP8LDecoder* const dec, int final_width) {
-  const int num_pixels = dec->width_ * dec->height_;
+  const uint64_t num_pixels = (uint64_t)dec->width_ * dec->height_;
   // Scratch buffer corresponding to top-prediction row for transforming the
   // first row in the row-blocks.
-  const int cache_top_pixels = final_width;
+  const uint64_t cache_top_pixels = final_width;
   // Scratch buffer for temporary BGRA storage.
-  const int cache_pixels = final_width * NUM_ARGB_CACHE_ROWS;
-  const int total_num_pixels = num_pixels + cache_top_pixels + cache_pixels;
+  const uint64_t cache_pixels = (uint64_t)final_width * NUM_ARGB_CACHE_ROWS;
+  const uint64_t total_num_pixels =
+      num_pixels + cache_top_pixels + cache_pixels;
+  const uint64_t total_size = total_num_pixels * sizeof(*dec->argb_);
 
   assert(dec->width_ <= final_width);
-  dec->argb_ = (uint32_t*)malloc(total_num_pixels * sizeof(*dec->argb_));
+  // Check for overflow
+  if ((size_t)total_size != total_size) return 0;
+  dec->argb_ = (uint32_t*)malloc((size_t)total_size);
   if (dec->argb_ == NULL) {
     dec->argb_cache_ = NULL;
     dec->status_ = VP8_STATUS_OUT_OF_MEMORY;

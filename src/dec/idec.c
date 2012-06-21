@@ -135,6 +135,11 @@ static int AppendToMemBuffer(WebPIDecoder* const idec,
   MemBuffer* const mem = &idec->mem_;
   const uint8_t* const old_base = mem->buf_ + mem->start_;
   assert(mem->mode_ == MEM_MODE_APPEND);
+  if (data_size > MAX_CHUNK_PAYLOAD) {
+    // security safeguard: trying to allocate more than what the format
+    // allows for a chunk should be considered a smoke smell.
+    return 0;
+  }
 
   if (mem->end_ + data_size > mem->buf_size_) {  // Need some free memory
     const size_t current_size = MemDataSize(mem);
@@ -327,9 +332,9 @@ static int CopyParts0Data(WebPIDecoder* const idec) {
   const size_t psize = br->buf_end_ - br->buf_;
   MemBuffer* const mem = &idec->mem_;
   assert(!idec->is_lossless_);
-  assert(!mem->part0_buf_);
+  assert(mem->part0_buf_ == NULL);
   assert(psize > 0);
-  assert(psize <= mem->part0_size_);
+  assert(psize <= mem->part0_size_);  // Format limit: no need for runtime check
   if (mem->mode_ == MEM_MODE_APPEND) {
     // We copy and grab ownership of the partition #0 data.
     uint8_t* const part0_buf = (uint8_t*)malloc(psize);
