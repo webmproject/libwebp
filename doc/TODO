@@ -3,10 +3,6 @@
 * Determine that normative RFC 2119 terms (MUST, SHOULD, MAY, etc.) are
   truly intended in all cases where capitalized.
 
-* Document hierarchy WRT headings has a flaw, in that topics related to
-  animated WebPs are discussed under subheads of "Single-image WebP
-  Files".
-
 * Several passages could be made clearer.
 
   * Overall edit for scope.  Portions are phrased as an introduction to
@@ -15,10 +11,3 @@
 
   * To wit, suggest s/[spec|specification]/guide/g .  "Spec" can imply a
     standards track; in any case it's too formal for a work in progress.
-
-  * Sections and passages re "multi-image" should likely be suppressed
-    until multi-image drops.
-
-  * Improve the term "Mux-Container".
-
-
