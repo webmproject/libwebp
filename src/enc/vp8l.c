@@ -139,19 +139,24 @@ static int AnalyzeEntropy(const WebPPicture* const pic,
   return 1;
 }
 
-static int VP8LEncAnalyze(VP8LEncoder* const enc) {
+static int VP8LEncAnalyze(VP8LEncoder* const enc, WebPImageHint image_hint) {
   const WebPPicture* const pic = enc->pic_;
   assert(pic != NULL && pic->argb != NULL);
 
   enc->use_palette_ =
-        AnalyzeAndCreatePalette(pic, enc->palette_, &enc->palette_size_);
+      AnalyzeAndCreatePalette(pic, enc->palette_, &enc->palette_size_);
   if (!enc->use_palette_) {
-    double non_pred_entropy, pred_entropy;
-    if (!AnalyzeEntropy(pic, &non_pred_entropy, &pred_entropy)) {
-      return 0;
-    }
+    if (image_hint == WEBP_HINT_DEFAULT) {
+      double non_pred_entropy, pred_entropy;
+      if (!AnalyzeEntropy(pic, &non_pred_entropy, &pred_entropy)) {
+        return 0;
+      }
 
-    if (pred_entropy < 0.95 * non_pred_entropy) {
+      if (pred_entropy < 0.95 * non_pred_entropy) {
+        enc->use_predict_ = 1;
+        enc->use_cross_color_ = 1;
+      }
+    } else if (image_hint == WEBP_HINT_PHOTO) {
       enc->use_predict_ = 1;
       enc->use_cross_color_ = 1;
     }
@@ -945,7 +950,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   // ---------------------------------------------------------------------------
   // Analyze image (entropy, num_palettes etc)
 
-  if (!VP8LEncAnalyze(enc)) {
+  if (!VP8LEncAnalyze(enc, config->image_hint)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }

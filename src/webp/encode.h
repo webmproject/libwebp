@@ -46,6 +46,13 @@ WEBP_EXTERN(size_t) WebPEncodeBGRA(const uint8_t* bgra,
 //------------------------------------------------------------------------------
 // Coding parameters
 
+// Image characteristics hint for the underlying encoder.
+typedef enum {
+  WEBP_HINT_DEFAULT = 0,  // default preset.
+  WEBP_HINT_PICTURE,      // digital picture, like portrait, inner shot
+  WEBP_HINT_PHOTO         // outdoor photograph, with natural lighting
+} WebPImageHint;
+
 typedef struct {
   float quality;         // between 0 (smallest file) and 100 (biggest)
   int target_size;       // if non-zero, set the desired target size in bytes.
@@ -77,6 +84,7 @@ typedef struct {
   int alpha_quality;      // Between 0 (smallest size) and 100 (lossless).
                           // Default is 100.
   int lossless;           // Lossless encoding (0=lossy(default), 1=lossless).
+  WebPImageHint image_hint;  // Hint for image type.
 } WebPConfig;
 
 // Enumerate some predefined settings for WebPConfig, depending on the type
