@@ -585,10 +585,11 @@ WEBP_EXTERN(int) WebPDemuxGetChunk(const WebPDemuxer* const dmux,
                                    const char fourcc[4], int chunk_number,
                                    WebPChunkIterator* const iter);
 
-// Sets 'iter->chunk_' to point to chunk 'chunk_number'.
+// Sets 'iter->chunk_' to point to the next ('iter->chunk_num_' + 1) or previous
+// ('iter->chunk_num_' - 1) chunk. These functions do not loop.
 // Returns true on success, false otherwise.
-WEBP_EXTERN(int) WebPDemuxSetChunk(WebPChunkIterator* const iter,
-                                   int chunk_number);
+WEBP_EXTERN(int) WebPDemuxNextChunk(WebPChunkIterator* const iter);
+WEBP_EXTERN(int) WebPDemuxPrevChunk(WebPChunkIterator* const iter);
 
 // Releases any memory associated with 'iter'.
 // Must be called before destroying the associated WebPDemuxer with
