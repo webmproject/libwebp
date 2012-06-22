@@ -271,7 +271,7 @@ static ParseStatus NewFrame(const MemBuffer* const mem,
 static ParseStatus ParseFrame(
     WebPDemuxer* const dmux, uint32_t frame_chunk_size) {
   const int has_frames = !!(dmux->feature_flags_ & ANIMATION_FLAG);
-  const size_t min_size = frame_chunk_size + CHUNK_HEADER_SIZE;
+  const uint32_t min_size = frame_chunk_size + CHUNK_HEADER_SIZE;
   int added_frame = 0;
   MemBuffer* const mem = &dmux->mem_;
   Frame* frame;
@@ -307,7 +307,7 @@ static ParseStatus ParseFrame(
 static ParseStatus ParseTile(WebPDemuxer* const dmux,
                              uint32_t tile_chunk_size) {
   const int has_tiles = !!(dmux->feature_flags_ & TILE_FLAG);
-  const size_t min_size = tile_chunk_size + CHUNK_HEADER_SIZE;
+  const uint32_t min_size = tile_chunk_size + CHUNK_HEADER_SIZE;
   int added_tile = 0;
   MemBuffer* const mem = &dmux->mem_;
   Frame* frame;
