@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAALH//6Ro\u003d",
+        "filename": "src/mux/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-06-22T05:48:15Z",
+      "side": 1,
+      "message": "so, no separate library (libwebpdemux.a) for now?",
+      "revId": "01f129614f3939dfa0efb00a893551f94d366483",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
