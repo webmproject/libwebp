@@ -273,7 +273,7 @@ WebPMuxError WebPMuxSetImage(WebPMux* const mux,
   if (err != WEBP_MUX_OK) goto Err;
 
   // Add this image to mux.
-  err = MuxImageSetNth(&wpi, &mux->images_, 1);
+  err = MuxImagePush(&wpi, &mux->images_);
   if (err != WEBP_MUX_OK) goto Err;
 
   // All OK.
@@ -343,10 +343,9 @@ WebPMuxError WebPMuxSetLoopCount(WebPMux* const mux, uint32_t loop_count) {
   return err;
 }
 
-static WebPMuxError MuxSetFrameTileInternal(
-    WebPMux* const mux, uint32_t nth, const WebPData* const bitstream,
-    uint32_t x_offset, uint32_t y_offset, uint32_t duration,
-    int copy_data, uint32_t tag) {
+static WebPMuxError MuxPushFrameTileInternal(
+    WebPMux* const mux, const WebPData* const bitstream, uint32_t x_offset,
+    uint32_t y_offset, uint32_t duration, int copy_data, uint32_t tag) {
   WebPChunk chunk;
   WebPData image;
   WebPData alpha;
@@ -418,7 +417,7 @@ static WebPMuxError MuxSetFrameTileInternal(
   ChunkInit(&chunk);  // chunk owned by wpi.header_ now.
 
   // Add this WebPMuxImage to mux.
-  err = MuxImageSetNth(&wpi, &mux->images_, nth);
+  err = MuxImagePush(&wpi, &mux->images_);
   if (err != WEBP_MUX_OK) goto Err;
 
   // All is well.
@@ -432,21 +431,19 @@ static WebPMuxError MuxSetFrameTileInternal(
   return err;
 }
 
-// TODO(urvang): Think about whether we need 'nth' while adding a frame or tile.
-
-WebPMuxError WebPMuxSetFrame(WebPMux* const mux, uint32_t nth,
+WebPMuxError WebPMuxPushFrame(WebPMux* const mux,
                              const WebPData* const bitstream,
                              uint32_t x_offset, uint32_t y_offset,
                              uint32_t duration, int copy_data) {
-  return MuxSetFrameTileInternal(mux, nth, bitstream, x_offset, y_offset,
+  return MuxPushFrameTileInternal(mux, bitstream, x_offset, y_offset,
                                  duration, copy_data, kChunks[IDX_FRAME].tag);
 }
 
-WebPMuxError WebPMuxSetTile(WebPMux* const mux, uint32_t nth,
+WebPMuxError WebPMuxPushTile(WebPMux* const mux,
                             const WebPData* const bitstream,
                             uint32_t x_offset, uint32_t y_offset,
                             int copy_data) {
-  return MuxSetFrameTileInternal(mux, nth, bitstream, x_offset, y_offset,
+  return MuxPushFrameTileInternal(mux, bitstream, x_offset, y_offset,
                                  1 /* unused duration*/, copy_data,
                                  kChunks[IDX_TILE].tag);
 }

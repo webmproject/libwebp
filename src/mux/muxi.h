@@ -215,10 +215,8 @@ static WEBP_INLINE WebPChunk** MuxImageGetListFromId(WebPMuxImage* wpi,
   }
 }
 
-// Sets 'wpi' at nth position in the 'wpi_list'.
-// nth = 0 has the special meaning "last of the list".
-WebPMuxError MuxImageSetNth(const WebPMuxImage* wpi, WebPMuxImage** wpi_list,
-                            uint32_t nth);
+// Pushes 'wpi' at the end of 'wpi_list'.
+WebPMuxError MuxImagePush(const WebPMuxImage* wpi, WebPMuxImage** wpi_list);
 
 // Delete nth image in the image list with given tag id.
 WebPMuxError MuxImageDeleteNth(WebPMuxImage** wpi_list, uint32_t nth,

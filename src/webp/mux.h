@@ -267,11 +267,9 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteColorProfile(WebPMux* const mux);
 //------------------------------------------------------------------------------
 // Animation.
 
-// Adds an animation frame to the mux object.
-// nth=0 has a special meaning - last position.
+// Adds an animation frame at the end of the mux object.
 // Parameters:
 //   mux - (in/out) object to which an animation frame is to be added
-//   nth - (in) The position at which the frame is to be added.
 //   bitstream - (in) the image data corresponding to the frame. It can either
 //               be a raw VP8/VP8L bitstream or a single-image WebP file
 //               (non-animated and non-tiled)
@@ -282,17 +280,15 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteColorProfile(WebPMux* const mux);
 //               value 0 indicates data will NOT be copied.
 // Returns:
 //   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL or bitstream is NULL
-//   WEBP_MUX_NOT_FOUND - If we have less than (nth-1) frames before adding.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxSetFrame(
-    WebPMux* const mux, uint32_t nth, const WebPData* const bitstream,
+WEBP_EXTERN(WebPMuxError) WebPMuxPushFrame(
+    WebPMux* const mux, const WebPData* const bitstream,
     uint32_t x_offset, uint32_t y_offset, uint32_t duration,
     int copy_data);
 
 // TODO(urvang): Create a struct as follows to reduce argument list size:
 // typedef struct {
-//  int nth;
 //  WebPData image;
 //  WebPData alpha;
 //  uint32_t x_offset, y_offset;
@@ -360,11 +356,9 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetLoopCount(const WebPMux* const mux,
 //------------------------------------------------------------------------------
 // Tiling.
 
-// Adds a tile to the mux object.
-// nth=0 has a special meaning - last position.
+// Adds a tile at the end of the mux object.
 // Parameters:
-//   mux - (in/out) object to which a tile is to be added
-//   nth - (in) The position at which the tile is to be added.
+//   mux - (in/out) object to which a tile is to be added.
 //   bitstream - (in) the image data corresponding to the frame. It can either
 //               be a raw VP8/VP8L bitstream or a single-image WebP file
 //               (non-animated and non-tiled)
@@ -374,11 +368,10 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetLoopCount(const WebPMux* const mux,
 //               value 0 indicates data will NOT be copied.
 // Returns:
 //   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL or bitstream is NULL
-//   WEBP_MUX_NOT_FOUND - If we have less than (nth-1) tiles before adding.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxSetTile(
-    WebPMux* const mux, uint32_t nth, const WebPData* const bitstream,
+WEBP_EXTERN(WebPMuxError) WebPMuxPushTile(
+    WebPMux* const mux, const WebPData* const bitstream,
     uint32_t x_offset, uint32_t y_offset, int copy_data);
 
 // Gets the nth tile from the mux object.

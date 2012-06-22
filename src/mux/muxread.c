@@ -151,7 +151,7 @@ WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
       if (id == WEBP_CHUNK_IMAGE) {
         wpi->is_partial_ = 0;  // wpi is completely filled.
         // Add this to mux->images_ list.
-        if (MuxImageSetNth(wpi, &mux->images_, 0) != WEBP_MUX_OK) goto Err;
+        if (MuxImagePush(wpi, &mux->images_) != WEBP_MUX_OK) goto Err;
         MuxImageInit(wpi);  // Reset for reading next image.
       } else {
         wpi->is_partial_ = 1;  // wpi is only partially filled.

@@ -277,27 +277,6 @@ int MuxImageCount(WebPMuxImage* const wpi_list, WebPChunkId id) {
 
 // Outputs a pointer to 'prev_wpi->next_',
 //   where 'prev_wpi' is the pointer to the image at position (nth - 1).
-// Returns 1 if nth image was found, 0 otherwise.
-static int SearchImageToSet(WebPMuxImage** wpi_list, uint32_t nth,
-                            WebPMuxImage*** const location) {
-  uint32_t count = 0;
-  assert(wpi_list);
-  *location = wpi_list;
-
-  while (*wpi_list) {
-    WebPMuxImage* const cur_wpi = *wpi_list;
-    ++count;
-    if (count == nth) return 1;  // Found.
-    wpi_list = &cur_wpi->next_;
-    *location = wpi_list;
-  }
-
-  // *chunk_list is ok to be NULL if adding at last location.
-  return (nth == 0 || (count == nth - 1)) ? 1 : 0;
-}
-
-// Outputs a pointer to 'prev_wpi->next_',
-//   where 'prev_wpi' is the pointer to the image at position (nth - 1).
 // Returns 1 if nth image with given id was found, 0 otherwise.
 static int SearchImageToGetOrDelete(WebPMuxImage** wpi_list, uint32_t nth,
                                     WebPChunkId id,
@@ -335,19 +314,25 @@ static int SearchImageToGetOrDelete(WebPMuxImage** wpi_list, uint32_t nth,
 //------------------------------------------------------------------------------
 // MuxImage writer methods.
 
-WebPMuxError MuxImageSetNth(const WebPMuxImage* wpi, WebPMuxImage** wpi_list,
-                            uint32_t nth) {
+WebPMuxError MuxImagePush(const WebPMuxImage* wpi, WebPMuxImage** wpi_list) {
   WebPMuxImage* new_wpi;
 
-  if (!SearchImageToSet(wpi_list, nth, &wpi_list)) {
-    return WEBP_MUX_NOT_FOUND;
+  while (*wpi_list != NULL) {
+    WebPMuxImage* const cur_wpi = *wpi_list;
+    if (cur_wpi->next_ == NULL) break;
+    wpi_list = &cur_wpi->next_;
   }
 
   new_wpi = (WebPMuxImage*)malloc(sizeof(*new_wpi));
   if (new_wpi == NULL) return WEBP_MUX_MEMORY_ERROR;
   *new_wpi = *wpi;
-  new_wpi->next_ = *wpi_list;
+  new_wpi->next_ = NULL;
+
+  if (*wpi_list != NULL) {
+    (*wpi_list)->next_ = new_wpi;
+  } else {
   *wpi_list = new_wpi;
+  }
   return WEBP_MUX_OK;
 }
 

@@ -797,7 +797,7 @@ static int Process(const WebPMuxConfig* config) {
                 WebPDataClear(&webpdata);
                 ERROR_GOTO1("ERROR: Could not parse frame properties.\n", Err2);
               }
-              err = WebPMuxSetFrame(mux, 0, &webpdata, x_offset, y_offset,
+              err = WebPMuxPushFrame(mux, &webpdata, x_offset, y_offset,
                                     duration, 1);
               WebPDataClear(&webpdata);
               if (err != WEBP_MUX_OK) {
@@ -825,7 +825,7 @@ static int Process(const WebPMuxConfig* config) {
               WebPDataClear(&webpdata);
               ERROR_GOTO1("ERROR: Could not parse tile properties.\n", Err2);
             }
-            err = WebPMuxSetTile(mux, 0, &webpdata, x_offset, y_offset, 1);
+            err = WebPMuxPushTile(mux, &webpdata, x_offset, y_offset, 1);
             WebPDataClear(&webpdata);
             if (err != WEBP_MUX_OK) {
               ERROR_GOTO3("ERROR#%d: Could not add a tile at index %d.\n",
