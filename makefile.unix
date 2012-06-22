@@ -109,6 +109,7 @@ EX_UTIL_OBJS = \
     examples/example_util.o \
 
 MUX_OBJS = \
+    src/mux/demux.o \
     src/mux/muxedit.o \
     src/mux/muxinternal.o \
     src/mux/muxread.o \
