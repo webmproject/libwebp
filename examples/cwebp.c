@@ -744,6 +744,9 @@ static void HelpLong(void) {
   printf("                           One of: none, fast (default) or best.\n");
   printf("  -alpha_cleanup ......... Clean RGB values in transparent area.\n");
   printf("  -noalpha ............... discard any transparency information.\n");
+  printf("  -lossless .............. Encode image losslessly.\n");
+  printf("  -hint <string> ......... Specify image characteristics hint.\n");
+  printf("                           One of: photo or picture\n");
 
   printf("\n");
   printf("  -short ................. condense printed message\n");
@@ -866,6 +869,16 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-lossless")) {
       config.lossless = 1;
       picture.use_argb_input = 1;
+    } else if (!strcmp(argv[c], "-hint") && c < argc - 1) {
+      ++c;
+      if (!strcmp(argv[c], "photo")) {
+        config.image_hint = WEBP_HINT_PHOTO;
+      } else if (!strcmp(argv[c], "picture")) {
+        config.image_hint = WEBP_HINT_PICTURE;
+      } else {
+        fprintf(stderr, "Error! Unrecognized image hint: %s\n", argv[c]);
+        goto Error;
+      }
     } else if (!strcmp(argv[c], "-size") && c < argc - 1) {
       config.target_size = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-psnr") && c < argc - 1) {
