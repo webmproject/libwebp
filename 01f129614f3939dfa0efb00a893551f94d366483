@@ -34,6 +34,24 @@
       "revId": "01f129614f3939dfa0efb00a893551f94d366483",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALH//6Qg\u003d",
+        "filename": "src/mux/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-06-22T06:10:12Z",
+      "side": 1,
+      "message": "adding a demux.h sounds fine.\n\nAbout WebPData in types.h, it\u0027s less clear: we\u0027d have to bring the functions there too (WebPDataClear(), ...). Seems a stretch.\n\nOk, lets go ahead with the patch and do some rebalancing afterward...",
+      "parentUuid": "AAAALH//6Q0\u003d",
+      "revId": "01f129614f3939dfa0efb00a893551f94d366483",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
