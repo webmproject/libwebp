@@ -194,6 +194,7 @@ ENC_OBJS = \
     $(DIROBJ)\enc\webpenc.obj \
 
 MUX_OBJS = \
+    $(DIROBJ)\mux\demux.obj \
     $(DIROBJ)\mux\muxedit.obj \
     $(DIROBJ)\mux\muxinternal.obj \
     $(DIROBJ)\mux\muxread.obj \

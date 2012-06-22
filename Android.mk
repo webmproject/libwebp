@@ -35,6 +35,7 @@ LOCAL_SRC_FILES := \
     src/enc/syntax.c \
     src/enc/tree.c \
     src/enc/webpenc.c \
+    src/mux/demux.c \
     src/mux/muxedit.c \
     src/mux/muxinternal.c \
     src/mux/muxread.c \
