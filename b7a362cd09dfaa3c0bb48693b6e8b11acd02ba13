@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAALH//4+I\u003d",
+        "filename": "src/webp/decode_vp8.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-23T21:27:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAALH//5CA\u003d",
+      "revId": "b7a362cd09dfaa3c0bb48693b6e8b11acd02ba13",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAALH//5B8\u003d",
         "filename": "src/webp/decode_vp8.h",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2012-06-23T06:41:09Z",
       "side": 1,
       "message": "suggestion: can\u0027t we use WebPData? maybe it\u0027s not the right place to... not sure...",
+      "revId": "b7a362cd09dfaa3c0bb48693b6e8b11acd02ba13",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALH//4+E\u003d",
+        "filename": "src/webp/decode_vp8.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-23T21:27:55Z",
+      "side": 1,
+      "message": "After relocating WebPData to a common.h (?) maybe. The problem with that data structure is it\u0027s technically a part of libwebpmux (which if we split mux/demux might be better called format as the aggregate).",
+      "parentUuid": "AAAALH//5B8\u003d",
       "revId": "b7a362cd09dfaa3c0bb48693b6e8b11acd02ba13",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
