@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAALH//5CA\u003d",
+        "filename": "src/webp/decode_vp8.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-06-23T06:41:09Z",
+      "side": 1,
+      "message": "i\u0027d put this signature below (or above). It has nothing to do with VP8Io.",
+      "revId": "b7a362cd09dfaa3c0bb48693b6e8b11acd02ba13",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALH//5B8\u003d",
+        "filename": "src/webp/decode_vp8.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-06-23T06:41:09Z",
+      "side": 1,
+      "message": "suggestion: can\u0027t we use WebPData? maybe it\u0027s not the right place to... not sure...",
+      "revId": "b7a362cd09dfaa3c0bb48693b6e8b11acd02ba13",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
