@@ -116,6 +116,17 @@ static int CountOccurrences(const char* arglist[], int list_length,
   return num_occurences;
 }
 
+static const char* const kErrorMessages[] = {
+  "WEBP_MUX_ERROR", "WEBP_MUX_NOT_FOUND", "WEBP_MUX_INVALID_ARGUMENT",
+  "WEBP_MUX_INVALID_PARAMETER", "WEBP_MUX_BAD_DATA", "WEBP_MUX_MEMORY_ERROR",
+  "WEBP_MUX_NOT_ENOUGH_DATA"
+};
+
+static const char* ErrorString(WebPMuxError err) {
+  assert(err <= WEBP_MUX_ERROR && err >= WEBP_MUX_NOT_ENOUGH_DATA);
+  return kErrorMessages[-err];
+}
+
 static int IsNotCompatible(int count1, int count2) {
   return (count1 > 0) != (count2 > 0);
 }
@@ -337,7 +348,7 @@ static int WriteWebP(WebPMux* const mux, const char* filename) {
   WebPData webp_data;
   const WebPMuxError err = WebPMuxAssemble(mux, &webp_data);
   if (err != WEBP_MUX_OK) {
-    fprintf(stderr, "Error (%d) assembling the WebP file.\n", err);
+    fprintf(stderr, "Error (%s) assembling the WebP file.\n", ErrorString(err));
     return 0;
   }
   ok = WriteData(filename, &webp_data);
@@ -696,24 +707,27 @@ static int GetFrameTile(const WebPMux* mux,
     err = WebPMuxGetFrame(mux, num, &bitstream,
                           &x_offset, &y_offset, &duration);
     if (err != WEBP_MUX_OK) {
-      ERROR_GOTO3("ERROR#%d: Could not get frame %ld.\n", err, num, ErrGet);
+      ERROR_GOTO3("ERROR (%s): Could not get frame %ld.\n",
+                  ErrorString(err), num, ErrGet);
     }
   } else {
     err = WebPMuxGetTile(mux, num, &bitstream, &x_offset, &y_offset);
     if (err != WEBP_MUX_OK) {
-      ERROR_GOTO3("ERROR#%d: Could not get frame %ld.\n", err, num, ErrGet);
+      ERROR_GOTO3("ERROR (%s): Could not get frame %ld.\n",
+                  ErrorString(err), num, ErrGet);
     }
   }
 
   mux_single = WebPMuxNew();
   if (mux_single == NULL) {
     err = WEBP_MUX_MEMORY_ERROR;
-    ERROR_GOTO2("ERROR#%d: Could not allocate a mux object.\n", err, ErrGet);
+    ERROR_GOTO2("ERROR (%s): Could not allocate a mux object.\n",
+                ErrorString(err), ErrGet);
   }
   err = WebPMuxSetImage(mux_single, &bitstream, 1);
   if (err != WEBP_MUX_OK) {
-    ERROR_GOTO2("ERROR#%d: Could not create single image mux object.\n", err,
-                ErrGet);
+    ERROR_GOTO2("ERROR (%s): Could not create single image mux object.\n",
+                ErrorString(err), ErrGet);
   }
   ok = WriteWebP(mux_single, config->output_);
 
@@ -750,14 +764,16 @@ static int Process(const WebPMuxConfig* config) {
         case FEATURE_ICCP:
           err = WebPMuxGetColorProfile(mux, &webpdata);
           if (err != WEBP_MUX_OK) {
-            ERROR_GOTO2("ERROR#%d: Could not get color profile.\n", err, Err2);
+            ERROR_GOTO2("ERROR (%s): Could not get color profile.\n",
+                        ErrorString(err), Err2);
           }
           ok = WriteData(config->output_, &webpdata);
           break;
         case FEATURE_XMP:
           err = WebPMuxGetMetadata(mux, &webpdata);
           if (err != WEBP_MUX_OK) {
-            ERROR_GOTO2("ERROR#%d: Could not get XMP metadata.\n", err, Err2);
+            ERROR_GOTO2("ERROR (%s): Could not get XMP metadata.\n",
+                        ErrorString(err), Err2);
           }
           ok = WriteData(config->output_, &webpdata);
           break;
@@ -773,8 +789,8 @@ static int Process(const WebPMuxConfig* config) {
         case FEATURE_FRM:
           mux = WebPMuxNew();
           if (mux == NULL) {
-            ERROR_GOTO2("ERROR#%d: Could not allocate a mux object.\n",
-                        WEBP_MUX_MEMORY_ERROR, Err2);
+            ERROR_GOTO2("ERROR (%s): Could not allocate a mux object.\n",
+                        ErrorString(WEBP_MUX_MEMORY_ERROR), Err2);
           }
           for (index = 0; index < feature->arg_count_; ++index) {
             if (feature->args_[index].subtype_ == SUBTYPE_LOOP) {
@@ -784,7 +800,8 @@ static int Process(const WebPMuxConfig* config) {
               }
               err = WebPMuxSetLoopCount(mux, num);
               if (err != WEBP_MUX_OK) {
-                ERROR_GOTO2("ERROR#%d: Could not set loop count.\n", err, Err2);
+                ERROR_GOTO2("ERROR (%s): Could not set loop count.\n",
+                            ErrorString(err), Err2);
               }
             } else if (feature->args_[index].subtype_ == SUBTYPE_FRM) {
               uint32_t duration;
@@ -801,8 +818,8 @@ static int Process(const WebPMuxConfig* config) {
                                      duration, 1);
               WebPDataClear(&webpdata);
               if (err != WEBP_MUX_OK) {
-                ERROR_GOTO3("ERROR#%d: Could not add a frame at index %d.\n",
-                            err, index, Err2);
+                ERROR_GOTO3("ERROR (%s): Could not add a frame at index %d.\n",
+                            ErrorString(err), index, Err2);
               }
             } else {
               ERROR_GOTO1("ERROR: Invalid subtype for 'frame'", Err2);
@@ -813,8 +830,8 @@ static int Process(const WebPMuxConfig* config) {
         case FEATURE_TILE:
           mux = WebPMuxNew();
           if (mux == NULL) {
-            ERROR_GOTO2("ERROR#%d: Could not allocate a mux object.\n",
-                        WEBP_MUX_MEMORY_ERROR, Err2);
+            ERROR_GOTO2("ERROR (%s): Could not allocate a mux object.\n",
+                        ErrorString(WEBP_MUX_MEMORY_ERROR), Err2);
           }
           for (index = 0; index < feature->arg_count_; ++index) {
             ok = ReadFileToWebPData(feature->args_[index].filename_, &webpdata);
@@ -828,8 +845,8 @@ static int Process(const WebPMuxConfig* config) {
             err = WebPMuxPushTile(mux, &webpdata, x_offset, y_offset, 1);
             WebPDataClear(&webpdata);
             if (err != WEBP_MUX_OK) {
-              ERROR_GOTO3("ERROR#%d: Could not add a tile at index %d.\n",
-                          err, index, Err2);
+              ERROR_GOTO3("ERROR (%s): Could not add a tile at index %d.\n",
+                          ErrorString(err), index, Err2);
             }
           }
           break;
@@ -842,7 +859,8 @@ static int Process(const WebPMuxConfig* config) {
           err = WebPMuxSetColorProfile(mux, &color_profile, 1);
           free((void*)color_profile.bytes_);
           if (err != WEBP_MUX_OK) {
-            ERROR_GOTO2("ERROR#%d: Could not set color profile.\n", err, Err2);
+            ERROR_GOTO2("ERROR (%s): Could not set color profile.\n",
+                        ErrorString(err), Err2);
           }
           break;
 
@@ -854,7 +872,8 @@ static int Process(const WebPMuxConfig* config) {
           err = WebPMuxSetMetadata(mux, &metadata, 1);
           free((void*)metadata.bytes_);
           if (err != WEBP_MUX_OK) {
-            ERROR_GOTO2("ERROR#%d: Could not set XMP metadata.\n", err, Err2);
+            ERROR_GOTO2("ERROR (%s): Could not set XMP metadata.\n",
+                        ErrorString(err), Err2);
           }
           break;
 
@@ -872,15 +891,15 @@ static int Process(const WebPMuxConfig* config) {
         case FEATURE_ICCP:
           err = WebPMuxDeleteColorProfile(mux);
           if (err != WEBP_MUX_OK) {
-            ERROR_GOTO2("ERROR#%d: Could not delete color profile.\n", err,
-                        Err2);
+            ERROR_GOTO2("ERROR (%s): Could not delete color profile.\n",
+                        ErrorString(err), Err2);
           }
           break;
         case FEATURE_XMP:
           err = WebPMuxDeleteMetadata(mux);
           if (err != WEBP_MUX_OK) {
-            ERROR_GOTO2("ERROR#%d: Could not delete XMP metadata.\n", err,
-                        Err2);
+            ERROR_GOTO2("ERROR (%s): Could not delete XMP metadata.\n",
+                        ErrorString(err), Err2);
           }
           break;
         default:
