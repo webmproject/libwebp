@@ -15,6 +15,10 @@
 EXTRA_FLAGS= -DWEBP_HAVE_PNG -DWEBP_HAVE_JPEG
 EXTRA_LIBS= -lpng -ljpeg -lz
 ifeq ($(strip $(shell uname)), Darwin)
+  # Work around a problem linking tables marked as common symbols,
+  # cf., src/enc/yuv.[hc]
+  # Failure observed with: gcc 4.2.1 and 4.0.1.
+  EXTRA_FLAGS += -fno-common
   EXTRA_FLAGS += -I/opt/local/include
   EXTRA_LIBS  += -L/opt/local/lib
   GL_LIBS = -framework GLUT -framework OpenGL
