@@ -188,23 +188,19 @@ SSE2_UPSAMPLE_FUNC(UpsampleBgraLinePairSSE2, VP8YuvToBgra, 4)
 
 extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
 
-#endif  // FANCY_UPSAMPLING
-
 void WebPInitUpsamplersSSE2(void) {
-#ifdef FANCY_UPSAMPLING
   WebPUpsamplers[MODE_RGB]  = UpsampleRgbLinePairSSE2;
   WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePairSSE2;
   WebPUpsamplers[MODE_BGR]  = UpsampleBgrLinePairSSE2;
   WebPUpsamplers[MODE_BGRA] = UpsampleBgraLinePairSSE2;
-#endif  // FANCY_UPSAMPLING
 }
 
 void WebPInitPremultiplySSE2(void) {
-#ifdef FANCY_UPSAMPLING
   WebPUpsamplers[MODE_rgbA] = UpsampleRgbaLinePairSSE2;
   WebPUpsamplers[MODE_bgrA] = UpsampleBgraLinePairSSE2;
-#endif  // FANCY_UPSAMPLING
 }
+
+#endif  // FANCY_UPSAMPLING
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
