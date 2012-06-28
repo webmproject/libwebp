@@ -133,9 +133,19 @@ static WEBP_INLINE uint8_t GetByte(MemBuffer* const mem) {
   return byte;
 }
 
+static WEBP_INLINE int ReadLE24s(const uint8_t* const data) {
+  return (int)(data[0] << 0) | (data[1] << 8) | (data[2] << 16);
+}
+
 static WEBP_INLINE uint32_t ReadLE32(const uint8_t* const data) {
-  return (uint32_t)(data[0] << 0   | (data[1] << 8) |
-                   (data[2] << 16) | (data[3] << 24));
+  return (uint32_t)ReadLE24s(data) | (data[3] << 24);
+}
+
+static WEBP_INLINE int GetLE24s(MemBuffer* const mem) {
+  const uint8_t* const data = mem->buf_ + mem->start_;
+  const uint32_t val = ReadLE24s(data);
+  Skip(mem, 3);
+  return val;
 }
 
 static WEBP_INLINE uint32_t GetLE32(MemBuffer* const mem) {
@@ -432,8 +442,8 @@ static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
 
   dmux->feature_flags_ = GetByte(mem);
   Skip(mem, 3);  // Reserved.
-  dmux->canvas_width_  = GetLE32s(mem);
-  dmux->canvas_height_ = GetLE32s(mem);
+  dmux->canvas_width_  = 1 + GetLE24s(mem);
+  dmux->canvas_height_ = 1 + GetLE24s(mem);
   Skip(mem, vp8x_size - VP8X_CHUNK_SIZE);  // skip any trailing data.
   dmux->state_ = WEBP_DEMUX_PARSED_HEADER;
 

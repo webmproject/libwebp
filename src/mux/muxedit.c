@@ -569,10 +569,10 @@ static WebPMuxError GetImageCanvasWidthHeight(
 }
 
 // VP8X format:
-// Total Size : 12,
+// Total Size : 10,
 // Flags  : 4 bytes,
-// Width  : 4 bytes,
-// Height : 4 bytes.
+// Width  : 3 bytes,
+// Height : 3 bytes.
 static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   WebPMuxError err = WEBP_MUX_OK;
   uint32_t flags = 0;
@@ -635,8 +635,8 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   }
 
   PutLE32(data + 0, flags);   // VP8X chunk flags.
-  PutLE32(data + 4, width);   // canvas width.
-  PutLE32(data + 8, height);  // canvas height.
+  PutLE24(data + 4, width - 1);   // canvas width.
+  PutLE24(data + 7, height - 1);  // canvas height.
 
   err = MuxAddChunk(mux, 1, kChunks[IDX_VP8X].tag, data, data_size, NULL, 1);
   return err;

@@ -22,10 +22,14 @@ extern "C" {
 // Helper functions
 
 // TODO(later): Move to webp/format_constants.h?
-static void PutLE32(uint8_t* const data, uint32_t val) {
+static void PutLE24(uint8_t* const data, uint32_t val) {
   data[0] = (val >>  0) & 0xff;
   data[1] = (val >>  8) & 0xff;
   data[2] = (val >> 16) & 0xff;
+}
+
+static void PutLE32(uint8_t* const data, uint32_t val) {
+  PutLE24(data, val);
   data[3] = (val >> 24) & 0xff;
 }
 
@@ -65,6 +69,8 @@ static WebPEncodingError PutVP8XHeader(const VP8Encoder* const enc) {
   uint32_t flags = 0;
 
   assert(IsVP8XNeeded(enc));
+  assert(pic->width >= 1 && pic->height >= 1);
+  assert(pic->width <= MAX_CANVAS_SIZE && pic->height <= MAX_CANVAS_SIZE);
 
   if (enc->has_alpha_) {
     flags |= ALPHA_FLAG_BIT;
@@ -72,8 +78,8 @@ static WebPEncodingError PutVP8XHeader(const VP8Encoder* const enc) {
 
   PutLE32(vp8x + TAG_SIZE,              VP8X_CHUNK_SIZE);
   PutLE32(vp8x + CHUNK_HEADER_SIZE,     flags);
-  PutLE32(vp8x + CHUNK_HEADER_SIZE + 4, pic->width);
-  PutLE32(vp8x + CHUNK_HEADER_SIZE + 8, pic->height);
+  PutLE24(vp8x + CHUNK_HEADER_SIZE + 4, pic->width - 1);
+  PutLE24(vp8x + CHUNK_HEADER_SIZE + 7, pic->height - 1);
   if(!pic->writer(vp8x, sizeof(vp8x), pic)) {
     return VP8_ENC_ERROR_BAD_WRITE;
   }
@@ -273,12 +279,6 @@ static int EmitPartitionsSize(const VP8Encoder* const enc,
 #ifdef WEBP_EXPERIMENTAL_FEATURES
 
 #define KTRAILER_SIZE 8
-
-static void PutLE24(uint8_t* buf, size_t value) {
-  buf[0] = (value >>  0) & 0xff;
-  buf[1] = (value >>  8) & 0xff;
-  buf[2] = (value >> 16) & 0xff;
-}
 
 static int WriteExtensions(VP8Encoder* const enc) {
   uint8_t buffer[KTRAILER_SIZE];

@@ -38,15 +38,19 @@ extern "C" {
 //   12..15  "VP8X": 4-bytes tags, describing the extended-VP8 chunk.
 //   16..19  size of the VP8X chunk starting at offset 20.
 //   20..23  VP8X flags bit-map corresponding to the chunk-types present.
-//   24..27  Width of the Canvas Image.
-//   28..31  Height of the Canvas Image.
+//   24..26  Width of the Canvas Image.
+//   27..29  Height of the Canvas Image.
 // There can be extra chunks after the "VP8X" chunk (ICCP, TILE, FRM, VP8,
 // META  ...)
-// All 32-bits sizes are in little-endian order.
-// Note: chunk data must be padded to multiple of 2 in size
+// All sizes are in little-endian order.
+// Note: chunk data size must be padded to multiple of 2 when written.
+
+static WEBP_INLINE uint32_t get_le24(const uint8_t* const data) {
+  return data[0] | (data[1] << 8) | (data[2] << 16);
+}
 
 static WEBP_INLINE uint32_t get_le32(const uint8_t* const data) {
-  return data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
+  return (uint32_t)get_le24(data) | (data[3] << 24);
 }
 
 // Validates the RIFF container (if detected) and skips over it.
@@ -115,10 +119,10 @@ static VP8StatusCode ParseVP8X(const uint8_t** data, size_t* data_size,
       *flags = get_le32(*data + 8);
     }
     if (width != NULL) {
-      *width = get_le32(*data + 12);
+      *width = 1 + get_le24(*data + 12);
     }
     if (height != NULL) {
-      *height = get_le32(*data + 16);
+      *height = 1 + get_le24(*data + 15);
     }
     // Skip over VP8X header bytes.
     *data += vp8x_size;

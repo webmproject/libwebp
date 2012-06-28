@@ -108,9 +108,14 @@ static WEBP_INLINE uint32_t GetLE32(const uint8_t* const data) {
   return data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
 }
 
-static WEBP_INLINE void PutLE16(uint8_t* const data, uint16_t val) {
+static WEBP_INLINE void PutLE16(uint8_t* const data, uint32_t val) {
   data[0] = (val >> 0) & 0xff;
   data[1] = (val >> 8) & 0xff;
+}
+
+static WEBP_INLINE void PutLE24(uint8_t* const data, uint32_t val) {
+  PutLE16(data, val);
+  data[2] = (val >> 16);
 }
 
 static WEBP_INLINE void PutLE32(uint8_t* const data, uint32_t val) {

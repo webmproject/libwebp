@@ -215,11 +215,13 @@ WebPMuxError WebPMuxGetFeatures(const WebPMux* const mux, uint32_t* flags) {
 static uint8_t* EmitVP8XChunk(uint8_t* const dst, uint32_t width,
                               uint32_t height, uint32_t flags) {
   const size_t vp8x_size = CHUNK_HEADER_SIZE + VP8X_CHUNK_SIZE;
+  assert(width >= 1 && height >= 1);
+  assert(width <= MAX_CANVAS_SIZE && height <= MAX_CANVAS_SIZE);
   PutLE32(dst, mktag('V', 'P', '8', 'X'));
   PutLE32(dst + TAG_SIZE, VP8X_CHUNK_SIZE);
   PutLE32(dst + CHUNK_HEADER_SIZE, flags);
-  PutLE32(dst + CHUNK_HEADER_SIZE + 4, width);
-  PutLE32(dst + CHUNK_HEADER_SIZE + 8, height);
+  PutLE24(dst + CHUNK_HEADER_SIZE + 4, width - 1);
+  PutLE24(dst + CHUNK_HEADER_SIZE + 7, height - 1);
   return dst + vp8x_size;
 }
 
