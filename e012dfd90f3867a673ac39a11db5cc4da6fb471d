@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAALH//00c\u003d",
+        "filename": "src/dec/webp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-28T19:58:17Z",
+      "side": 1,
+      "message": "I think this is slightly misleading. The chunk data itself is padded to an even size, but the chunk size reported is odd.",
+      "revId": "e012dfd90f3867a673ac39a11db5cc4da6fb471d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALH//00Y\u003d",
+        "filename": "src/dec/webp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-06-28T19:58:17Z",
+      "side": 1,
+      "message": "cast may have been excessive here",
+      "revId": "e012dfd90f3867a673ac39a11db5cc4da6fb471d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
