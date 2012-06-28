@@ -345,8 +345,13 @@ int WebPEncode(const WebPConfig* const config, WebPPicture* const pic) {
 
   if (!config->lossless) {
     VP8Encoder* enc = NULL;
-    if (pic->y == NULL || pic->u == NULL || pic->v == NULL)
-      return WebPEncodingSetError(pic, VP8_ENC_ERROR_NULL_PARAMETER);
+    if (pic->y == NULL || pic->u == NULL || pic->v == NULL) {
+      if (pic->argb != NULL) {
+        if (!WebPPictureARGBToYUVA(pic, WEBP_YUV420)) return 0;
+      } else {
+        return WebPEncodingSetError(pic, VP8_ENC_ERROR_NULL_PARAMETER);
+      }
+    }
 
     enc = InitVP8Encoder(config, pic);
     if (enc == NULL) return 0;  // pic->error is already set.

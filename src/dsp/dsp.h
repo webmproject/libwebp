@@ -145,13 +145,13 @@ void VP8DspInit(void);
 
 #define FANCY_UPSAMPLING   // undefined to remove fancy upsampling support
 
-#ifdef FANCY_UPSAMPLING
 typedef void (*WebPUpsampleLinePairFunc)(
     const uint8_t* top_y, const uint8_t* bottom_y,
     const uint8_t* top_u, const uint8_t* top_v,
     const uint8_t* cur_u, const uint8_t* cur_v,
     uint8_t* top_dst, uint8_t* bottom_dst, int len);
 
+#ifdef FANCY_UPSAMPLING
 
 // Fancy upsampling functions to convert YUV to RGB(A) modes
 extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
@@ -168,6 +168,11 @@ typedef void (*WebPSampleLinePairFunc)(
     uint8_t* top_dst, uint8_t* bottom_dst, int len);
 
 extern const WebPSampleLinePairFunc WebPSamplers[/* MODE_LAST */];
+
+// General function for converting two lines of ARGB or RGBA.
+// 'alpha_is_last' should be true if 0xff000000 is stored in memory as
+// as 0x00, 0x00, 0x00, 0xff (little endian).
+WebPUpsampleLinePairFunc WebPGetLinePairConverter(int alpha_is_last);
 
 // YUV444->RGB converters
 typedef void (*WebPYUV444Converter)(const uint8_t* y,

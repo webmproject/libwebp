@@ -157,6 +157,48 @@ const WebPSampleLinePairFunc WebPSamplers[MODE_LAST] = {
 };
 
 //------------------------------------------------------------------------------
+
+#if !defined(FANCY_UPSAMPLING)
+#define DUAL_SAMPLE_FUNC(FUNC_NAME, FUNC)                                      \
+static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bot_y,              \
+                      const uint8_t* top_u, const uint8_t* top_v,              \
+                      const uint8_t* bot_u, const uint8_t* bot_v,              \
+                      uint8_t* top_dst, uint8_t* bot_dst, int len) {           \
+  const int half_len = len >> 1;                                               \
+  int x;                                                                       \
+  if (top_dst != NULL) {                                                       \
+    for (x = 0; x < half_len; ++x) {                                           \
+      FUNC(top_y[2 * x + 0], top_u[x], top_v[x], top_dst + 8 * x + 0);         \
+      FUNC(top_y[2 * x + 1], top_u[x], top_v[x], top_dst + 8 * x + 4);         \
+    }                                                                          \
+    if (len & 1) FUNC(top_y[2 * x + 0], top_u[x], top_v[x], top_dst + 8 * x);  \
+  }                                                                            \
+  if (bot_dst != NULL) {                                                       \
+    for (x = 0; x < half_len; ++x) {                                           \
+      FUNC(bot_y[2 * x + 0], bot_u[x], bot_v[x], bot_dst + 8 * x + 0);         \
+      FUNC(bot_y[2 * x + 1], bot_u[x], bot_v[x], bot_dst + 8 * x + 4);         \
+    }                                                                          \
+    if (len & 1) FUNC(bot_y[2 * x + 0], bot_u[x], bot_v[x], bot_dst + 8 * x);  \
+  }                                                                            \
+}
+
+DUAL_SAMPLE_FUNC(DualLineSamplerBGRA, VP8YuvToBgra)
+DUAL_SAMPLE_FUNC(DualLineSamplerARGB, VP8YuvToArgb)
+#undef DUAL_SAMPLE_FUNC
+
+#endif  // !FANCY_UPSAMPLING
+
+WebPUpsampleLinePairFunc WebPGetLinePairConverter(int alpha_is_last) {
+  WebPInitUpsamplers();
+  VP8YUVInit();
+#ifdef FANCY_UPSAMPLING
+  return WebPUpsamplers[alpha_is_last ? MODE_BGRA : MODE_ARGB];
+#else
+  return (alpha_is_last ? DualLineSamplerBGRA : DualLineSamplerARGB);
+#endif
+}
+
+//------------------------------------------------------------------------------
 // YUV444 converter
 
 #define YUV444_FUNC(FUNC_NAME, FUNC, XSTEP)                                    \

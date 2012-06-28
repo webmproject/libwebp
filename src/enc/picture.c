@@ -15,6 +15,7 @@
 
 #include "./vp8enci.h"
 #include "../utils/rescaler.h"
+#include "../dsp/dsp.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -22,6 +23,12 @@ extern "C" {
 
 #define HALVE(x) (((x) + 1) >> 1)
 #define IS_YUV_CSP(csp, YUV_CSP) (((csp) & WEBP_CSP_UV_MASK) == (YUV_CSP))
+
+static const union {
+  uint32_t argb;
+  uint8_t  bytes[4];
+} test_endian = { 0xff000000u };
+#define ALPHA_IS_LAST (test_endian.bytes[3] == 0xff)
 
 //------------------------------------------------------------------------------
 // WebPPicture
@@ -79,16 +86,17 @@ int WebPPictureAlloc(WebPPicture* const picture) {
           (size_t)total_size != total_size) {  // overflow on 32bit
         return 0;
       }
-      picture->y_stride  = y_stride;
-      picture->uv_stride = uv_stride;
-      picture->a_stride  = a_stride;
-      picture->uv0_stride  = uv0_stride;
+      // Clear previous buffer and allocate a new one.
       WebPPictureFree(picture);   // erase previous buffer
       mem = (uint8_t*)malloc((size_t)total_size);
       if (mem == NULL) return 0;
 
+      // From now on, we're in the clear, we can no longer fail...
       picture->memory_ = (void*)mem;
-
+      picture->y_stride  = y_stride;
+      picture->uv_stride = uv_stride;
+      picture->a_stride  = a_stride;
+      picture->uv0_stride = uv0_stride;
       // TODO(skal): we could align the y/u/v planes and adjust stride.
       picture->y = mem;
       mem += y_size;
@@ -117,12 +125,13 @@ int WebPPictureAlloc(WebPPicture* const picture) {
           (size_t)total_size != total_size) {
         return 0;
       }
+      // Clear previous buffer and allocate a new one.
       WebPPictureFree(picture);   // erase previous buffer
       memory = malloc((size_t)total_size);
       if (memory == NULL) return 0;
-      picture->memory_argb_ = memory;
 
       // TODO(skal): align plane to cache line?
+      picture->memory_argb_ = memory;
       picture->argb = (uint32_t*)memory;
       picture->argb_stride = width;
     }
@@ -130,26 +139,57 @@ int WebPPictureAlloc(WebPPicture* const picture) {
   return 1;
 }
 
-// Grab the 'specs' (writer, *opaque, width, height...) from 'src' and copy them
-// into 'dst'. Mark 'dst' as not owning any memory. 'src' can be NULL.
-static void WebPPictureGrabSpecs(const WebPPicture* const src,
-                                 WebPPicture* const dst) {
-  assert(dst != NULL);
-  if (src != NULL) *dst = *src;
-  dst->y = dst->u = dst->v = NULL;
-  dst->u0 = dst->v0 = NULL;
-  dst->a = NULL;
-  dst->argb = NULL;
-  dst->memory_ = NULL;
-  dst->memory_argb_ = NULL;
+// Remove reference to the ARGB buffer (doesn't free anything).
+static void PictureResetARGB(WebPPicture* const picture) {
+  picture->memory_argb_ = NULL;
+  picture->argb = NULL;
+  picture->argb_stride = 0;
 }
 
-// Release memory owned by 'picture'.
+// Remove reference to the YUVA buffer (doesn't free anything).
+static void PictureResetYUVA(WebPPicture* const picture) {
+  picture->memory_ = NULL;
+  picture->y = picture->u = picture->v = picture->a = NULL;
+  picture->u0 = picture->v0 = NULL;
+  picture->y_stride = picture->uv_stride = 0;
+  picture->a_stride = 0;
+  picture->uv0_stride = 0;
+}
+
+// Grab the 'specs' (writer, *opaque, width, height...) from 'src' and copy them
+// into 'dst'. Mark 'dst' as not owning any memory.
+static void WebPPictureGrabSpecs(const WebPPicture* const src,
+                                 WebPPicture* const dst) {
+  assert(src != NULL && dst != NULL);
+  *dst = *src;
+  PictureResetYUVA(dst);
+  PictureResetARGB(dst);
+}
+
+// Allocate a new argb buffer, discarding any existing one and preserving
+// the other YUV(A) buffer.
+static int PictureAllocARGB(WebPPicture* const picture) {
+  WebPPicture tmp;
+  free(picture->memory_argb_);
+  PictureResetARGB(picture);
+  picture->use_argb_input = 1;
+  WebPPictureGrabSpecs(picture, &tmp);
+  if (!WebPPictureAlloc(&tmp)) {
+    return WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
+  }
+  picture->memory_argb_ = tmp.memory_argb_;
+  picture->argb = tmp.argb;
+  picture->argb_stride = tmp.argb_stride;
+  return 1;
+}
+
+// Release memory owned by 'picture' (both YUV and ARGB buffers).
 void WebPPictureFree(WebPPicture* const picture) {
   if (picture != NULL) {
     free(picture->memory_);
     free(picture->memory_argb_);
-    WebPPictureGrabSpecs(NULL, picture);
+    PictureResetYUVA(picture);
+    PictureResetARGB(picture);
   }
 }
 
@@ -469,6 +509,43 @@ int WebPMemoryWrite(const uint8_t* data, size_t data_size,
 }
 
 //------------------------------------------------------------------------------
+// Detection of non-trivial transparency
+
+// Returns true if alpha[] has non-0xff values.
+static int CheckNonOpaque(const uint8_t* alpha, int width, int height,
+                          int x_step, int y_step) {
+  if (alpha == NULL) return 0;
+  while (height-- > 0) {
+    int x;
+    for (x = 0; x < width * x_step; x += x_step) {
+      if (alpha[x] != 0xff) return 1;  // TODO(skal): check 4/8 bytes at a time.
+    }
+    alpha += y_step;
+  }
+  return 0;
+}
+
+// Checking for the presence of non-opaque alpha.
+int WebPPictureHasTransparency(const WebPPicture* const picture) {
+  if (picture == NULL) return 0;
+  if (!picture->use_argb_input) {
+    return CheckNonOpaque(picture->a, picture->width, picture->height,
+                          1, picture->a_stride);
+  } else {
+    int x, y;
+    const uint32_t* argb = picture->argb;
+    if (argb == NULL) return 0;
+    for (y = 0; y < picture->height; ++y) {
+      for (x = 0; x < picture->width; ++x) {
+        if (argb[x] < 0xff000000u) return 1;   // test any alpha values != 0xff
+      }
+      argb += picture->argb_stride;
+    }
+  }
+  return 0;
+}
+
+//------------------------------------------------------------------------------
 // RGB -> YUV conversion
 // The exact naming is Y'CbCr, following the ITU-R BT.601 standard.
 // More information at: http://en.wikipedia.org/wiki/YCbCr
@@ -534,17 +611,103 @@ static void MakeGray(WebPPicture* const picture) {
   }
 }
 
+static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
+                              const uint8_t* const g_ptr,
+                              const uint8_t* const b_ptr,
+                              const uint8_t* const a_ptr,
+                              int step,         // bytes per pixel
+                              int rgb_stride,   // bytes per scanline
+                              WebPPicture* const picture) {
+  const WebPEncCSP uv_csp = picture->colorspace & WEBP_CSP_UV_MASK;
+  int x, y;
+  const int width = picture->width;
+  const int height = picture->height;
+  const int has_alpha = CheckNonOpaque(a_ptr, width, height, step, rgb_stride);
+
+  picture->colorspace = uv_csp;
+  picture->use_argb_input = 0;
+  if (has_alpha) {
+    picture->colorspace |= WEBP_CSP_ALPHA_BIT;
+  }
+  if (!WebPPictureAlloc(picture)) return 0;
+
+  // Import luma plane
+  for (y = 0; y < height; ++y) {
+    for (x = 0; x < width; ++x) {
+      const int offset = step * x + y * rgb_stride;
+      picture->y[x + y * picture->y_stride] =
+          rgb_to_y(r_ptr[offset], g_ptr[offset], b_ptr[offset]);
+    }
+  }
+
+  // Downsample U/V plane
+  if (uv_csp != WEBP_YUV400) {
+    for (y = 0; y < (height >> 1); ++y) {
+      for (x = 0; x < (width >> 1); ++x) {
+        RGB_TO_UV(x, y, SUM4);
+      }
+      if (picture->width & 1) {
+        RGB_TO_UV(x, y, SUM2V);
+      }
+    }
+    if (height & 1) {
+      for (x = 0; x < (width >> 1); ++x) {
+        RGB_TO_UV(x, y, SUM2H);
+      }
+      if (width & 1) {
+        RGB_TO_UV(x, y, SUM1);
+      }
+    }
+
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+    // Store original U/V samples too
+    if (uv_csp == WEBP_YUV422) {
+      for (y = 0; y < height; ++y) {
+        for (x = 0; x < (width >> 1); ++x) {
+          RGB_TO_UV0(2 * x, x, y, SUM2H);
+        }
+        if (width & 1) {
+          RGB_TO_UV0(2 * x, x, y, SUM1);
+        }
+      }
+    } else if (uv_csp == WEBP_YUV444) {
+      for (y = 0; y < height; ++y) {
+        for (x = 0; x < width; ++x) {
+          RGB_TO_UV0(x, x, y, SUM1);
+        }
+      }
+    }
+#endif
+  } else {
+    MakeGray(picture);
+  }
+
+  if (has_alpha) {
+    assert(step >= 4);
+    for (y = 0; y < height; ++y) {
+      for (x = 0; x < width; ++x) {
+        picture->a[x + y * picture->a_stride] =
+            a_ptr[step * x + y * rgb_stride];
+      }
+    }
+  }
+  return 1;
+}
+
 static int Import(WebPPicture* const picture,
                   const uint8_t* const rgb, int rgb_stride,
                   int step, int swap_rb, int import_alpha) {
-  const WebPEncCSP uv_csp = picture->colorspace & WEBP_CSP_UV_MASK;
-  int x, y;
   const uint8_t* const r_ptr = rgb + (swap_rb ? 2 : 0);
   const uint8_t* const g_ptr = rgb + 1;
   const uint8_t* const b_ptr = rgb + (swap_rb ? 0 : 2);
+  const uint8_t* const a_ptr = import_alpha ? rgb + 3 : NULL;
   const int width = picture->width;
   const int height = picture->height;
 
+  if (!picture->use_argb_input) {
+    return ImportYUVAFromRGBA(r_ptr, g_ptr, b_ptr, a_ptr, step, rgb_stride,
+                              picture);
+  }
   if (import_alpha) {
     picture->colorspace |= WEBP_CSP_ALPHA_BIT;
   } else {
@@ -552,94 +715,30 @@ static int Import(WebPPicture* const picture,
   }
   if (!WebPPictureAlloc(picture)) return 0;
 
-  if (!picture->use_argb_input) {
-    // Import luma plane
+  if (!import_alpha) {
+    int x, y;
     for (y = 0; y < height; ++y) {
       for (x = 0; x < width; ++x) {
         const int offset = step * x + y * rgb_stride;
-        picture->y[x + y * picture->y_stride] =
-          rgb_to_y(r_ptr[offset], g_ptr[offset], b_ptr[offset]);
-      }
-    }
-
-    // Downsample U/V plane
-    if (uv_csp != WEBP_YUV400) {
-      for (y = 0; y < (height >> 1); ++y) {
-        for (x = 0; x < (width >> 1); ++x) {
-          RGB_TO_UV(x, y, SUM4);
-        }
-        if (picture->width & 1) {
-          RGB_TO_UV(x, y, SUM2V);
-        }
-      }
-      if (height & 1) {
-        for (x = 0; x < (width >> 1); ++x) {
-          RGB_TO_UV(x, y, SUM2H);
-        }
-        if (width & 1) {
-          RGB_TO_UV(x, y, SUM1);
-        }
-      }
-
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-      // Store original U/V samples too
-      if (uv_csp == WEBP_YUV422) {
-        for (y = 0; y < height; ++y) {
-          for (x = 0; x < (width >> 1); ++x) {
-            RGB_TO_UV0(2 * x, x, y, SUM2H);
-          }
-          if (width & 1) {
-            RGB_TO_UV0(2 * x, x, y, SUM1);
-          }
-        }
-      } else if (uv_csp == WEBP_YUV444) {
-        for (y = 0; y < height; ++y) {
-          for (x = 0; x < width; ++x) {
-            RGB_TO_UV0(x, x, y, SUM1);
-          }
-        }
-      }
-#endif
-    } else {
-      MakeGray(picture);
-    }
-
-    if (import_alpha) {
-      const uint8_t* const a_ptr = rgb + 3;
-      assert(step >= 4);
-      for (y = 0; y < height; ++y) {
-        for (x = 0; x < width; ++x) {
-          picture->a[x + y * picture->a_stride] =
-            a_ptr[step * x + y * rgb_stride];
-        }
+        const uint32_t argb =
+            0xff000000u |
+            (r_ptr[offset] << 16) |
+            (g_ptr[offset] <<  8) |
+            (b_ptr[offset]);
+        picture->argb[x + y * picture->argb_stride] = argb;
       }
     }
   } else {
-    if (!import_alpha) {
-      for (y = 0; y < height; ++y) {
-        for (x = 0; x < width; ++x) {
-          const int offset = step * x + y * rgb_stride;
-          const uint32_t argb =
-              0xff000000 |
-              (r_ptr[offset] << 16) |
-              (g_ptr[offset] <<  8) |
-              (b_ptr[offset]);
-          picture->argb[x + y * picture->argb_stride] = argb;
-        }
-      }
-    } else {
-      const uint8_t* const a_ptr = rgb + 3;
-      assert(step >= 4);
-      for (y = 0; y < height; ++y) {
-        for (x = 0; x < width; ++x) {
-          const int offset = step * x + y * rgb_stride;
-          const uint32_t argb =
-              (a_ptr[offset] << 24) |
-              (r_ptr[offset] << 16) |
-              (g_ptr[offset] <<  8) |
-              (b_ptr[offset]);
-          picture->argb[x + y * picture->argb_stride] = argb;
-        }
+    int x, y;
+    assert(step >= 4);
+    for (y = 0; y < height; ++y) {
+      for (x = 0; x < width; ++x) {
+        const int offset = step * x + y * rgb_stride;
+        const uint32_t argb = (a_ptr[offset] << 24) |
+                              (r_ptr[offset] << 16) |
+                              (g_ptr[offset] <<  8) |
+                              (b_ptr[offset]);
+        picture->argb[x + y * picture->argb_stride] = argb;
       }
     }
   }
@@ -679,6 +778,96 @@ int WebPPictureImportRGBX(WebPPicture* const picture,
 int WebPPictureImportBGRX(WebPPicture* const picture,
                           const uint8_t* const rgba, int rgba_stride) {
   return Import(picture, rgba, rgba_stride, 4, 1, 0);
+}
+
+//------------------------------------------------------------------------------
+// Automatic YUV <-> ARGB conversions.
+
+int WebPPictureYUVAToARGB(WebPPicture* const picture) {
+  if (picture == NULL) return 0;
+  if (picture->memory_ == NULL || picture->y == NULL ||
+      picture->u == NULL || picture->v == NULL) {
+    return WebPEncodingSetError(picture, VP8_ENC_ERROR_NULL_PARAMETER);
+  }
+  if ((picture->colorspace & WEBP_CSP_ALPHA_BIT) && picture->a == NULL) {
+    return WebPEncodingSetError(picture, VP8_ENC_ERROR_NULL_PARAMETER);
+  }
+  if ((picture->colorspace & WEBP_CSP_UV_MASK) != WEBP_YUV420) {
+    return WebPEncodingSetError(picture, VP8_ENC_ERROR_INVALID_CONFIGURATION);
+  }
+  // Allocate a new argb buffer (discarding the previous one).
+  if (!PictureAllocARGB(picture)) return 0;
+
+  // Convert
+  {
+    int y;
+    const int width = picture->width;
+    const int height = picture->height;
+    const int argb_stride = 4 * picture->argb_stride;
+    uint8_t* dst = (uint8_t*)picture->argb;
+    const uint8_t *cur_u = picture->u, *cur_v = picture->v, *cur_y = picture->y;
+    WebPUpsampleLinePairFunc upsample = WebPGetLinePairConverter(ALPHA_IS_LAST);
+
+    // First row, with replicated top samples.
+    upsample(NULL, cur_y, cur_u, cur_v, cur_u, cur_v, NULL, dst, width);
+    cur_y += picture->y_stride;
+    dst += argb_stride;
+    // Center rows.
+    for (y = 1; y + 1 < height; y += 2) {
+      const uint8_t* const top_u = cur_u;
+      const uint8_t* const top_v = cur_v;
+      cur_u += picture->uv_stride;
+      cur_v += picture->uv_stride;
+      upsample(cur_y, cur_y + picture->y_stride, top_u, top_v, cur_u, cur_v,
+               dst, dst + argb_stride, width);
+      cur_y += 2 * picture->y_stride;
+      dst += 2 * argb_stride;
+    }
+    // Last row (if needed), with replicated bottom samples.
+    if (height > 1 && !(height & 1)) {
+      upsample(cur_y, NULL, cur_u, cur_v, cur_u, cur_v, dst, NULL, width);
+    }
+    // Insert alpha values if needed, in replacement for the default 0xff ones.
+    if (picture->colorspace & WEBP_CSP_ALPHA_BIT) {
+      for (y = 0; y < height; ++y) {
+        uint32_t* const dst = picture->argb + y * picture->argb_stride;
+        const uint8_t* const src = picture->a + y * picture->a_stride;
+        int x;
+        for (x = 0; x < width; ++x) {
+          dst[x] = (dst[x] & 0x00ffffffu) | (src[x] << 24);
+        }
+      }
+    }
+  }
+  return 1;
+}
+
+int WebPPictureARGBToYUVA(WebPPicture* const picture, WebPEncCSP colorspace) {
+  if (picture == NULL) return 0;
+  if (picture->argb == NULL) {
+    return WebPEncodingSetError(picture, VP8_ENC_ERROR_NULL_PARAMETER);
+  } else {
+    const uint8_t* const argb = (const uint8_t*)picture->argb;
+    const uint8_t* const r = ALPHA_IS_LAST ? argb + 2 : argb + 1;
+    const uint8_t* const g = ALPHA_IS_LAST ? argb + 1 : argb + 2;
+    const uint8_t* const b = ALPHA_IS_LAST ? argb + 0 : argb + 3;
+    const uint8_t* const a = ALPHA_IS_LAST ? argb + 3 : argb + 0;
+    // We work on a tmp copy of 'picture', because ImportYUVAFromRGBA()
+    // would be calling WebPPictureFree(picture) otherwise.
+    WebPPicture tmp = *picture;
+    PictureResetARGB(&tmp);  // reset ARGB buffer so that it's not free()'d.
+    tmp.use_argb_input = 0;
+    tmp.colorspace = colorspace & WEBP_CSP_UV_MASK;
+    if (!ImportYUVAFromRGBA(r, g, b, a, 4, 4 * picture->argb_stride, &tmp)) {
+      return WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
+    }
+    // Copy back the YUV specs into 'picture'.
+    tmp.argb = picture->argb;
+    tmp.argb_stride = picture->argb_stride;
+    tmp.memory_argb_ = picture->memory_argb_;
+    *picture = tmp;
+  }
+  return 1;
 }
 
 //------------------------------------------------------------------------------
@@ -746,32 +935,6 @@ void WebPCleanupTransparentArea(WebPPicture* const pic) {
 #undef SIZE
 #undef SIZE2
 
-// Checking for the presence of non-opaque alpha.
-int WebPPictureHasTransparency(const WebPPicture* const pic) {
-  if (pic == NULL) return 0;
-  if (!pic->use_argb_input) {
-    int x, y;
-    const uint8_t* alpha = pic->a;
-    if (alpha == NULL) return 0;
-    for (y = 0; y < pic->height; ++y) {
-      for (x = 0; x < pic->width; ++x) {
-        if (alpha[x] != 0xff) return 1;
-      }
-      alpha += pic->a_stride;
-    }
-  } else {
-    int x, y;
-    const uint32_t* argb = pic->argb;
-    if (argb == NULL) return 1;
-    for (y = 0; y < pic->height; ++y) {
-      for (x = 0; x < pic->width; ++x) {
-        if (argb[x] < 0xff000000) return 1;   // test any alpha values != 0xff
-      }
-      argb += pic->argb_stride;
-    }
-  }
-  return 0;
-}
 
 //------------------------------------------------------------------------------
 // Distortion
@@ -792,6 +955,11 @@ int WebPPictureDistortion(const WebPPicture* const pic1,
       pic1->u == NULL || pic2->u == NULL ||
       pic1->v == NULL || pic2->v == NULL ||
       result == NULL) {
+    return 0;
+  }
+  // TODO(skal): provide distortion for ARGB too.
+  if (pic1->use_argb_input == 1 ||
+      pic1->use_argb_input != pic2->use_argb_input) {
     return 0;
   }
 
