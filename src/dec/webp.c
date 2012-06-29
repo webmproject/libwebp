@@ -245,26 +245,22 @@ static VP8StatusCode ParseVP8Header(const uint8_t** data_ptr, size_t* data_size,
 
 //------------------------------------------------------------------------------
 
-// Returns true if 'fourcc' matches a chunk that can appear in a 'VP8X' file.
-// Image chunks are dealt with separately so are not included here.
-static int IsExtendedFormatChunk(const uint8_t fourcc[4]) {
-  return (!memcmp(fourcc, "ALPH", TAG_SIZE) ||
-          !memcmp(fourcc, "FRM ", TAG_SIZE) ||
-          !memcmp(fourcc, "ICCP", TAG_SIZE) ||
-          !memcmp(fourcc, "LOOP", TAG_SIZE) ||
-          !memcmp(fourcc, "META", TAG_SIZE) ||
-          !memcmp(fourcc, "TILE", TAG_SIZE));
-}
-
 // Fetch 'width', 'height', 'has_alpha' and fill out 'headers' based on 'data'.
 // All the output parameters may be NULL. If 'headers' is NULL only the minimal
 // amount will be read to fetch the remaining parameters.
 // If 'headers' is non-NULL this function will attempt to locate both alpha
 // data (with or without a VP8X chunk) and the bitstream chunk (VP8/VP8L).
+// Note: The following chunk sequences (before the raw VP8/VP8L data) are
+// considered valid by this function:
+// RIFF + VP8(L)
+// RIFF + VP8X + (optional chunks) + VP8(L)
+// ALPH + VP8 <-- Not a valid WebP format: only allowed for internal purpose.
+// VP8(L)     <-- Not a valid WebP format: only allowed for internal purpose.
 static VP8StatusCode ParseHeadersInternal(
     const uint8_t* data, size_t data_size,
     int* const width, int* const height, int* const has_alpha,
     WebPHeaderStructure* const headers) {
+  int found_riff = 0;
   int found_vp8x = 0;
   VP8StatusCode status;
   WebPHeaderStructure hdrs;
@@ -281,6 +277,7 @@ static VP8StatusCode ParseHeadersInternal(
   if (status != VP8_STATUS_OK) {
     return status;   // Wrong RIFF header / insufficient data.
   }
+  found_riff = (hdrs.riff_size > 0);
 
   // Skip over VP8X.
   {
@@ -288,6 +285,11 @@ static VP8StatusCode ParseHeadersInternal(
     status = ParseVP8X(&data, &data_size, &found_vp8x, width, height, &flags);
     if (status != VP8_STATUS_OK) {
       return status;  // Wrong VP8X / insufficient data.
+    }
+    if (!found_riff && found_vp8x) {
+      // Note: This restriction may be removed in the future, if it becomes
+      // necessary to send VP8X chunk to the decoder.
+      return VP8_STATUS_BITSTREAM_ERROR;
     }
     if (has_alpha != NULL) *has_alpha = !!(flags & ALPHA_FLAG_BIT);
     if (found_vp8x && headers == NULL) {
@@ -297,10 +299,9 @@ static VP8StatusCode ParseHeadersInternal(
 
   if (data_size < TAG_SIZE) return VP8_STATUS_NOT_ENOUGH_DATA;
 
-  // Skip over optional chunks.
-  // If a VP8X chunk was not found look for chunks that may be contained within
-  // one to initiate the parse.
-  if (found_vp8x || IsExtendedFormatChunk(data)) {
+  // Skip over optional chunks if data started with "RIFF + VP8X" or "ALPH".
+  if ((found_riff && found_vp8x) ||
+      (!found_riff && !found_vp8x && !memcmp(data, "ALPH", TAG_SIZE))) {
     status = ParseOptionalChunks(&data, &data_size, hdrs.riff_size,
                                  &hdrs.alpha_data, &hdrs.alpha_data_size);
     if (status != VP8_STATUS_OK) {
