@@ -613,9 +613,8 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
     }
   }
 
-  if (images->alpha_ != NULL && images->alpha_->data_.bytes_ != NULL) {
-    // This is an image with alpha channel.
-    flags |= ALPHA_FLAG;
+  if (MuxImageCount(images, WEBP_CHUNK_ALPHA) > 0) {
+    flags |= ALPHA_FLAG;  // Some images have an alpha channel.
   }
 
   if (flags == 0) {
