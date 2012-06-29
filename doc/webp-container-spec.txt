@@ -300,9 +300,7 @@ multiple frames. Data for each frame consists of:
     present at the beginning of each tile for a frame that is represented as
     multiple tile images.
 
-  * An optional 'ALPH' chunk with alpha bitstream of the frame/tile. If the
-    file contains transparency, this chunk MUST be present for each frame/tile
-    containing a 'VP8 ' chunk. It MUST NOT be present otherwise.
+  * An optional 'ALPH' chunk with alpha bitstream of the frame/tile.
 
   * A 'VP8 ' or a 'VP8L' chunk containing compressed image data of the
     frame/tile.
@@ -355,7 +353,8 @@ Metadata (M): 1 bit
 
 Alpha (L): 1 bit
 
-: Set if the file contains images with transparency information ("alpha").
+: Set if the file contains some (or all) images with transparency information
+("alpha").
 
 Rotation and Symmetry (R): 3 bits
 
@@ -540,10 +539,10 @@ Alpha bitstream: _Chunk Size_ - `1` bytes
 : Encoded alpha bitstream.
 
 This optional chunk contains encoded alpha data for a single frame/tile.
-Either **ALL or NONE** of the frame/tiles must contain this chunk. However,
-there is one exception to this rule: a frame/tile containing a 'VP8L' chunk
-SHOULD NOT contain this chunk. **Rationale**: the transparency information of
-a frame/tile is already part of the 'VP8L' chunk.
+For images with transparency, some of the frames/tiles may contain this chunk.
+However, a frame/tile containing a 'VP8L' chunk SHOULD NOT contain this chunk.
+**Rationale**: the transparency information of a frame/tile is already part of
+the 'VP8L' chunk.
 
 The alpha channel data is losslessly stored as raw data (when
 compression method is '0') or compressed using the lossless format

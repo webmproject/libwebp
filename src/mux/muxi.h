@@ -194,7 +194,7 @@ WebPMuxImage* MuxImageDelete(WebPMuxImage* const wpi);
 void MuxImageDeleteAll(WebPMuxImage** const wpi_list);
 
 // Count number of images matching the given tag id in the 'wpi_list'.
-int MuxImageCount(WebPMuxImage* const wpi_list, WebPChunkId id);
+int MuxImageCount(const WebPMuxImage* wpi_list, WebPChunkId id);
 
 // Check if given ID corresponds to an image related chunk.
 static WEBP_INLINE int IsWPI(WebPChunkId id) {
@@ -208,14 +208,14 @@ static WEBP_INLINE int IsWPI(WebPChunkId id) {
 }
 
 // Get a reference to appropriate chunk list within an image given chunk tag.
-static WEBP_INLINE WebPChunk** MuxImageGetListFromId(WebPMuxImage* wpi,
-                                                     WebPChunkId id) {
+static WEBP_INLINE WebPChunk** MuxImageGetListFromId(
+    const WebPMuxImage* const wpi, WebPChunkId id) {
   assert(wpi != NULL);
   switch (id) {
     case WEBP_CHUNK_FRAME:
-    case WEBP_CHUNK_TILE:  return &wpi->header_;
-    case WEBP_CHUNK_ALPHA: return &wpi->alpha_;
-    case WEBP_CHUNK_IMAGE: return &wpi->img_;
+    case WEBP_CHUNK_TILE:  return (WebPChunk**)&wpi->header_;
+    case WEBP_CHUNK_ALPHA: return (WebPChunk**)&wpi->alpha_;
+    case WEBP_CHUNK_IMAGE: return (WebPChunk**)&wpi->img_;
     default: return NULL;
   }
 }

@@ -262,9 +262,9 @@ WebPMuxImage* MuxImageRelease(WebPMuxImage* const wpi) {
 //------------------------------------------------------------------------------
 // MuxImage search methods.
 
-int MuxImageCount(WebPMuxImage* const wpi_list, WebPChunkId id) {
+int MuxImageCount(const WebPMuxImage* wpi_list, WebPChunkId id) {
   int count = 0;
-  WebPMuxImage* current;
+  const WebPMuxImage* current;
   for (current = wpi_list; current != NULL; current = current->next_) {
     const WebPChunk* const wpi_chunk = *MuxImageGetListFromId(current, id);
     if (wpi_chunk != NULL) {
@@ -558,13 +558,6 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
   } else {
     err = ValidateChunk(mux, IDX_ALPHA, ALPHA_FLAG, flags, -1, &num_alpha);
     if (err != WEBP_MUX_OK) return err;
-
-    // num_images & num_alpha_chunks are consistent.
-    if (num_alpha > 0 && num_alpha != num_images) {
-      // Note that "num_alpha > 0" is the correct test but "flags && ALPHA_FLAG"
-      // is NOT, because ALPHA_FLAG is based on first image only.
-      return WEBP_MUX_INVALID_ARGUMENT;
-    }
   }
 
   // num_tiles & num_images are consistent.
