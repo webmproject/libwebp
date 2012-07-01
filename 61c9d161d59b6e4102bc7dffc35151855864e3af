@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAALn///4Q\u003d",
+        "filename": "doc/webp-lossless-bitstream-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 665,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-07-01T21:18:41Z",
+      "side": 1,
+      "message": "are these ranges describing the original distance value or the \u0027extra bits\u0027 value?",
+      "revId": "61c9d161d59b6e4102bc7dffc35151855864e3af",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
