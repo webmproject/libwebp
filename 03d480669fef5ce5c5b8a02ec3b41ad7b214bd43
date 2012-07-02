@@ -16,6 +16,24 @@
       "revId": "03d480669fef5ce5c5b8a02ec3b41ad7b214bd43",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn///3U\u003d",
+        "filename": "src/utils/bit_writer.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-07-02T01:10:57Z",
+      "side": 1,
+      "message": "with the current implementation, yes. A distance of e.g., 662,145 will produce n_bits \u003d 18.\n\nsrc/enc/backward_references.h:PrefixEncode",
+      "parentUuid": "AAAALn///4I\u003d",
+      "revId": "03d480669fef5ce5c5b8a02ec3b41ad7b214bd43",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
