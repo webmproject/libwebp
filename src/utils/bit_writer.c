@@ -230,7 +230,7 @@ void VP8LWriteBits(VP8LBitWriter* const bw, int n_bits, uint32_t bits) {
   if (n_bits < 1) return;
 #if !defined(__BIG_ENDIAN__)
   // Technically, this branch of the code can write up to 25 bits at a time,
-  // but in deflate, the maximum number of bits written is 16 at a time.
+  // but in prefix encoding, the maximum number of bits written is 18 at a time.
   {
     uint8_t* p = &bw->buf_[bw->bit_pos_ >> 3];
     uint32_t v = *(const uint32_t*)(p);
@@ -251,7 +251,8 @@ void VP8LWriteBits(VP8LBitWriter* const bw, int n_bits, uint32_t bits) {
         *p++ = bits >> (16 - bits_reserved_in_first_byte);
       }
     }
-    *p = 0;
+    assert(n_bits <= 25);
+    *p = bits >> (24 - bits_reserved_in_first_byte);
     bw->bit_pos_ += n_bits;
   }
 #endif  // BIG_ENDIAN
