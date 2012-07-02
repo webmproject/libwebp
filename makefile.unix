@@ -12,8 +12,8 @@
 
 # These flag assume you have libpng and libjpeg installed. If not, either
 # follow below install instructions or just comment out the next lines.
-EXTRA_FLAGS= -DWEBP_HAVE_PNG -DWEBP_HAVE_JPEG
-EXTRA_LIBS= -lpng -ljpeg -lz
+EXTRA_FLAGS= -DWEBP_HAVE_PNG -DWEBP_HAVE_JPEG -DWEBP_HAVE_TIFF
+EXTRA_LIBS= -lpng -ltiff -ljpeg -lz
 ifeq ($(strip $(shell uname)), Darwin)
   # Work around a problem linking tables marked as common symbols,
   # cf., src/enc/yuv.[hc]
@@ -30,10 +30,12 @@ endif
 # 1. Install MacPorts (http://www.macports.org/install.php)
 # 2. Run "sudo port install jpeg"
 # 3. Run "sudo port install libpng"
+# 4. Run "sudo port install tiff"
 
 # To install libraries on Linux:
 # 1. Run "sudo apt-get install libjpeg62-dev"
 # 2. Run "sudo apt-get install libpng12-dev"
+# 3. Run "sudo apt-get install libtiff4-dev"
 
 # Uncomment for build for 32bit platform
 # Alternatively, you can just use the command
