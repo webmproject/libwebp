@@ -34,6 +34,24 @@
       "revId": "03d480669fef5ce5c5b8a02ec3b41ad7b214bd43",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn///xk\u003d",
+        "filename": "src/utils/bit_writer.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-07-02T08:47:44Z",
+      "side": 1,
+      "message": "good catch then!\nCould you update this comment maybe? (which is not big-endian specific, moreover, but rather generic)",
+      "parentUuid": "AAAALn///3U\u003d",
+      "revId": "03d480669fef5ce5c5b8a02ec3b41ad7b214bd43",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
