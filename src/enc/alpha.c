@@ -84,7 +84,7 @@ static int EncodeLossless(const uint8_t* data, int width, int height,
   config.method = effort_level;  // impact is very small
   // Set moderate default quality setting for alpha. Higher qualities (80 and
   // above) could be very slow.
-  config.quality = 10 + 15.f * effort_level;
+  config.quality = 10.f + 15.f * effort_level;
   if (config.quality > 100.f) config.quality = 100.f;
 
   VP8LBitWriterInit(&tmp_bw, (width * height) >> 3);
