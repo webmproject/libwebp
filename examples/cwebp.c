@@ -517,8 +517,8 @@ static int ReadTIFF(const char* const filename,
 #endif
 
 typedef enum {
-  PNG = 0,
-  JPEG,
+  PNG_ = 0,
+  JPEG_,
   TIFF_,  // 'TIFF' clashes with libtiff
   UNSUPPORTED
 } InputFileFormat;
@@ -535,9 +535,9 @@ static InputFileFormat GetImageType(FILE* in_file) {
 
   magic = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
   if (magic == 0x89504E47U) {
-    format = PNG;
+    format = PNG_;
   } else if (magic >= 0xFFD8FF00U && magic <= 0xFFD8FFFFU) {
-    format = JPEG;
+    format = JPEG_;
   } else if (magic == 0x49492A00 || magic == 0x4D4D002A) {
     format = TIFF_;
   }
@@ -556,9 +556,9 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
   if (pic->width == 0 || pic->height == 0) {
     // If no size specified, try to decode it as PNG/JPEG (as appropriate).
     const InputFileFormat format = GetImageType(in_file);
-    if (format == PNG) {
+    if (format == PNG_) {
       ok = ReadPNG(in_file, pic, keep_alpha);
-    } else if (format == JPEG) {
+    } else if (format == JPEG_) {
       ok = ReadJPEG(in_file, pic);
     } else if (format == TIFF_) {
       ok = ReadTIFF(filename, pic, keep_alpha);
