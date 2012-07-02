@@ -89,21 +89,21 @@ WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
   ChunkInit(&chunk);
 
   // Sanity checks.
-  if (version != WEBP_MUX_ABI_VERSION) goto Err;  // version mismatch
-  if (bitstream == NULL) goto Err;
+  if (version != WEBP_MUX_ABI_VERSION) return NULL;  // version mismatch
+  if (bitstream == NULL) return NULL;
 
   data = bitstream->bytes_;
   size = bitstream->size_;
 
-  if (data == NULL) goto Err;
+  if (data == NULL) return NULL;
   if (size < RIFF_HEADER_SIZE) return NULL;
   if (GetLE32(data + 0) != mktag('R', 'I', 'F', 'F') ||
       GetLE32(data + CHUNK_HEADER_SIZE) != mktag('W', 'E', 'B', 'P')) {
-    goto Err;
+    return NULL;
   }
 
   mux = WebPMuxNew();
-  if (mux == NULL) goto Err;
+  if (mux == NULL) return NULL;
 
   if (size < RIFF_HEADER_SIZE + TAG_SIZE) goto Err;
 
