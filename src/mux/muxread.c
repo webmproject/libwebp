@@ -85,23 +85,25 @@ WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
   WebPMuxImage* wpi = NULL;
   const uint8_t* data;
   size_t size;
+  WebPChunk chunk;
+  ChunkInit(&chunk);
 
   // Sanity checks.
-  if (version != WEBP_MUX_ABI_VERSION) goto Err;  // version mismatch
-  if (bitstream == NULL) goto Err;
+  if (version != WEBP_MUX_ABI_VERSION) return NULL;  // version mismatch
+  if (bitstream == NULL) return NULL;
 
   data = bitstream->bytes_;
   size = bitstream->size_;
 
-  if (data == NULL) goto Err;
+  if (data == NULL) return NULL;
   if (size < RIFF_HEADER_SIZE) return NULL;
   if (GetLE32(data + 0) != mktag('R', 'I', 'F', 'F') ||
       GetLE32(data + CHUNK_HEADER_SIZE) != mktag('W', 'E', 'B', 'P')) {
-    goto Err;
+    return NULL;
   }
 
   mux = WebPMuxNew();
-  if (mux == NULL) goto Err;
+  if (mux == NULL) return NULL;
 
   if (size < RIFF_HEADER_SIZE + TAG_SIZE) goto Err;
 
@@ -132,10 +134,8 @@ WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
   // Loop over chunks.
   while (data != end) {
     WebPChunkId id;
-    WebPChunk chunk;
     WebPMuxError err;
 
-    ChunkInit(&chunk);
     err = ChunkAssignData(&chunk, data, size, riff_size, copy_data);
     if (err != WEBP_MUX_OK) goto Err;
 
@@ -164,12 +164,12 @@ WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
       if (chunk_list == NULL) chunk_list = &mux->unknown_;
       if (ChunkSetNth(&chunk, chunk_list, 0) != WEBP_MUX_OK) goto Err;
     }
-
     {
       const size_t data_size = ChunkDiskSize(&chunk);
       data += data_size;
       size -= data_size;
     }
+    ChunkInit(&chunk);
   }
 
   // Validate mux if complete.
@@ -179,6 +179,7 @@ WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
   return mux;  // All OK;
 
  Err:  // Something bad happened.
+  ChunkRelease(&chunk);
   MuxImageDelete(wpi);
   WebPMuxDelete(mux);
   return NULL;
