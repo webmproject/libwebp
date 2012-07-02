@@ -1,18 +1,8 @@
 #
 # Stem for static libs and DLLs
 #
-LIB_NAME       = libwebp_a
-LIB_NAME_DEBUG = libwebp_a_debug
-
-#
-# Stem for DLL import libs
-#
-IMPLIB_NAME       = libwebp_dll
-IMPLIB_NAME_DEBUG = libwebp_dll_debug
-
-!IFNDEF DEP_PATH
-DEPS_PATH   = ../../deps
-!ENDIF
+LIBWEBP_BASENAME = libwebp
+LIBWEBPMUX_BASENAME = libwebpmux
 
 !IFNDEF ARCH
 !IF ! [ cl 2>&1 | find "x86" > NUL ]
@@ -66,7 +56,7 @@ DIROBJ = $(DIRBASE)\obj
 DIRLIB = $(DIRBASE)\lib
 DIRINC = $(DIRBASE)\include
 DIRBIN = $(DIRBASE)\bin
-LIBPDBNAME = $(DIROBJ)\$(TARGET).pdb
+LIBWEBP_PDBNAME = $(DIROBJ)\$(LIBWEBP_BASENAME).pdb
 OUTPUT_DIRS = $(DIRBIN) $(DIRINC) $(DIRLIB) \
               $(DIROBJ)\dec \
               $(DIROBJ)\dsp \
@@ -77,38 +67,38 @@ OUTPUT_DIRS = $(DIRBIN) $(DIRINC) $(DIRLIB) \
 
 # Target configuration
 !IF "$(CFG)" == "release-static"
-TARGET         = $(LIB_NAME).lib
 CC             = $(CCNODBG)
 STATICLIBBUILD = TRUE
 !ELSE IF "$(CFG)" == "debug-static"
-TARGET         = $(LIB_NAME_DEBUG).lib
 CC             = $(CCDEBUG)
 RTLIB          = $(RTLIBD)
 STATICLIBBUILD = TRUE
+LIBWEBP_BASENAME = $(LIBWEBP_BASENAME)_debug
+LIBWEBPMUX_BASENAME = $(LIBWEBPMUX_BASENAME)_debug
 !ELSE IF "$(CFG)" == "release-dynamic"
-TARGETDLL = $(LIB_NAME).dll
-TARGET    = $(IMPLIB_NAME).lib
 CC        = $(CCNODBG)
 DLLBUILD  = TRUE
 !ELSE IF "$(CFG)" == "debug-dynamic"
-TARGETDLL = $(LIB_NAME_DEBUG).dll
-TARGET    = $(IMPLIB_NAME_DEBUG).lib
 CC        = $(CCDEBUG)
 RTLIB     = $(RTLIBD)
 DLLBUILD  = TRUE
+LIBWEBP_BASENAME = $(LIBWEBP_BASENAME)_debug
+LIBWEBPMUX_BASENAME = $(LIBWEBPMUX_BASENAME)_debug
 !ENDIF
 
 !IF "$(STATICLIBBUILD)" == "TRUE"
 CC     = $(CC) $(RTLIB)
-LNK    = $(LNKLIB) /out:$(DIRLIB)\$(TARGET)
 CFGSET = TRUE
+LIBWEBP = $(DIRLIB)\$(LIBWEBP_BASENAME).lib
+LIBWEBPMUX = $(DIRLIB)\$(LIBWEBPMUX_BASENAME).lib
 !ELSE IF "$(DLLBUILD)" == "TRUE"
 DLLC   = webp_dll.c
 DLLINC = webp_dll.h
 CC     = $(CC) /I$(DIROBJ) /FI$(DLLINC) $(RTLIB) /DWEBP_DLL
-LNK    = $(LNKDLL) /out:$(DIRBIN)\$(TARGETDLL) /implib:$(DIRLIB)\$(TARGET)
-X_OBJS = $(DIROBJ)\$(DLLC:.c=.obj)
-LIBPDBNAME = $(DIROBJ)\$(TARGETDLL).pdb
+LIBWEBP = $(DIRLIB)\$(LIBWEBP_BASENAME)_dll.lib
+LIBWEBPMUX = $(DIRLIB)\$(LIBWEBPMUX_BASENAME)_dll.lib
+LIBWEBP_OBJS = $(DIROBJ)\$(DLLC:.c=.obj)
+LIBWEBP_PDBNAME = $(DIROBJ)\$(LIBWEBP_BASENAME)_dll.pdb
 CFGSET = TRUE
 !ENDIF
 
@@ -128,7 +118,7 @@ CFGSET = TRUE
 !MESSAGE <target> may be:
 !MESSAGE -  clean                         - perform a clean for CFG
 !MESSAGE -  experimental                  - build CFG with experimental
-!MESSAGE .                                  features enabled. Requires zlib.
+!MESSAGE .                                  features enabled.
 !MESSAGE - (empty) or all                 - build all targets for CFG
 !MESSAGE
 !MESSAGE RTLIBCFG controls the runtime library linkage - 'static' or 'dynamic'.
@@ -210,42 +200,47 @@ UTILS_OBJS = \
     $(DIROBJ)\utils\rescaler.obj \
     $(DIROBJ)\utils\thread.obj \
 
-X_OBJS = $(DEC_OBJS) $(DSP_OBJS) $(ENC_OBJS) $(MUX_OBJS) $(UTILS_OBJS) $(X_OBJS)
+LIBWEBP_OBJS = $(DEC_OBJS) $(DSP_OBJS) $(ENC_OBJS) $(UTILS_OBJS) $(LIBWEBP_OBJS)
+LIBWEBPMUX_OBJS = $(MUX_OBJS) $(LIBWEBPMUX_OBJS)
 
-EXAMPLES_OBJS = \
-    $(DIROBJ)\examples\cwebp.obj \
-    $(DIROBJ)\examples\dwebp.obj \
-    $(DIROBJ)\examples\webpmux.obj
+OUT_LIBS = $(LIBWEBP) $(LIBWEBPMUX)
+OUT_EXAMPLES = $(DIRBIN)\cwebp.exe $(DIRBIN)\dwebp.exe $(DIRBIN)\webpmux.exe
 
-all: $(DIRLIB)\$(TARGET) $(DIRBIN)\dwebp.exe $(DIRBIN)\cwebp.exe \
-     $(DIRBIN)\webpmux.exe
+all: $(OUT_LIBS) $(OUT_EXAMPLES)
+$(DIRBIN)\cwebp.exe: $(DIROBJ)\examples\cwebp.obj
+$(DIRBIN)\dwebp.exe: $(DIROBJ)\examples\dwebp.obj
+$(DIRBIN)\webpmux.exe: $(DIROBJ)\examples\webpmux.obj $(LIBWEBPMUX)
+$(OUT_EXAMPLES): $(EX_UTIL_OBJS) $(LIBWEBP)
 
-# Additional include and library paths (for zlib) can be passed via the CL and
-# LINK environment variables respectively:
-# > set CL=/I\zlib\include
-# > set LINK=\zlib\zlib.lib
-# > nmake /f Makefile.vc CFG=release-static experimental
 experimental:
 	$(MAKE) /f Makefile.vc \
 	    CFG=$(CFG) \
 	    CFLAGS="$(CFLAGS) /DWEBP_EXPERIMENTAL_FEATURES" /$(MAKEFLAGS)
 
-$(DIRLIB)\$(TARGET): $(X_OBJS)
-	$(LNK) $(LFLAGS) $(X_OBJS)
-	-xcopy $(DIROBJ)\*.pdb $(DIRLIB) /y
+$(LIBWEBP): $(LIBWEBP_OBJS)
+$(LIBWEBPMUX): $(LIBWEBPMUX_OBJS)
 
-$(X_OBJS): $(OUTPUT_DIRS)
+$(LIBWEBP_OBJS) $(LIBWEBPMUX_OBJS): $(OUTPUT_DIRS)
 
 !IF "$(DLLBUILD)" == "TRUE"
-$(X_OBJS): $(DIROBJ)\$(DLLINC) $(DIROBJ)\$(DLLC)
+$(LIBWEBP_OBJS): $(DIROBJ)\$(DLLINC) $(DIROBJ)\$(DLLC)
 
 {$(DIROBJ)}.c{$(DIROBJ)}.obj:
-	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo"$@"  $<
+	$(CC) $(CFLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$@  $<
+
+$(LIBWEBPMUX): $(LIBWEBP)
+
+$(LIBWEBP) $(LIBWEBPMUX):
+	$(LNKDLL) /out:$(DIRBIN)\$(@B:_dll=.dll) /implib:$@ $(LFLAGS) $**
+	-xcopy $(DIROBJ)\*.pdb $(DIRLIB) /y
+
 clean::
 	@-erase /s $(DIROBJ)\$(DLLC) $(DIROBJ)\$(DLLINC) 2> NUL
+!ELSE
+$(LIBWEBP) $(LIBWEBPMUX):
+	$(LNKLIB) /out:$@ $(LFLAGS) $**
+	-xcopy $(DIROBJ)\*.pdb $(DIRLIB) /y
 !ENDIF
-
-$(EXAMPLES_OBJS): $(EX_UTIL_OBJS) $(DIRLIB)\$(TARGET)
 
 $(OUTPUT_DIRS):
 	@if not exist "$(@)" mkdir "$(@)"
@@ -271,19 +266,19 @@ $(DIROBJ)\$(DLLC): $(DIROBJ)\$(DLLINC)
 {examples}.c{$(DIROBJ)\examples}.obj::
 	$(CC) $(CFLAGS) /Fd$(DIROBJ)\examples\ /Fo$(DIROBJ)\examples\  $<
 {src\dec}.c{$(DIROBJ)\dec}.obj::
-	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo$(DIROBJ)\dec\ $<
+	$(CC) $(CFLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$(DIROBJ)\dec\ $<
 {src\dsp}.c{$(DIROBJ)\dsp}.obj::
-	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo$(DIROBJ)\dsp\ $<
+	$(CC) $(CFLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$(DIROBJ)\dsp\ $<
 {src\enc}.c{$(DIROBJ)\enc}.obj::
-	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo$(DIROBJ)\enc\ $<
+	$(CC) $(CFLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$(DIROBJ)\enc\ $<
 {src\mux}.c{$(DIROBJ)\mux}.obj::
-	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo$(DIROBJ)\mux\ $<
+	$(CC) $(CFLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$(DIROBJ)\mux\ $<
 {src\utils}.c{$(DIROBJ)\utils}.obj::
-	$(CC) $(CFLAGS) /Fd$(LIBPDBNAME) /Fo$(DIROBJ)\utils\ $<
+	$(CC) $(CFLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$(DIROBJ)\utils\ $<
 
 {$(DIROBJ)\examples}.obj{$(DIRBIN)}.exe:
-	$(LNKEXE) $(LDFLAGS) /OUT:"$@" $< $(EX_UTIL_OBJS) \
-	    ole32.lib windowscodecs.lib shlwapi.lib $(DIRLIB)\$(TARGET)
+	$(LNKEXE) $(LDFLAGS) /OUT:$@ $** \
+	    ole32.lib windowscodecs.lib shlwapi.lib
 	$(MT) -manifest $@.manifest -outputresource:$@;1
 	del $@.manifest
 
