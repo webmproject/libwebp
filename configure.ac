@@ -98,6 +98,40 @@ AC_SUBST(JPEG_INCLUDES)
 CPPFLAGS=$SAVED_CPPFLAGS
 LIBS=$SAVED_LIBS
 
+dnl === check for TIFF support ===
+
+TIFF_INCLUDES=""
+TIFF_LIBS=""
+AC_ARG_WITH([tiffincludedir],
+            [AS_HELP_STRING([--with-tiffincludedir=DIR],
+                            [use TIFF includes from DIR])],
+            TIFF_INCLUDES="-I$withval")
+AC_ARG_WITH([tifflibdir],
+            AS_HELP_STRING([--with-tifflibdir=DIR],
+                           [use TIFF libraries from DIR]),
+            [TIFF_LIBS="-L$withval"])
+
+SAVED_CPPFLAGS=$CPPFLAGS
+SAVED_LIBS=$LIBS
+CPPFLAGS="$TIFF_INCLUDES $CPPFLAGS"
+LIBS="$TIFF_LIBS $LIBS"
+
+AC_CHECK_HEADER(tiffio.h,
+  AC_CHECK_LIB(tiff, TIFFGetVersion,
+               [TIFF_LIBS="$TIFF_LIBS -ltiff"
+                TIFF_INCLUDES="$TIFF_INCLUDES -DWEBP_HAVE_TIFF"
+                AC_DEFINE(WEBP_HAVE_TIFF, [1], [Set to 1 if TIFF library is installed])
+               ],
+               AC_MSG_WARN(Optional tiff library not found),
+               [$MATH_LIBS]),
+  AC_MSG_WARN(tiff library not available - no tiffio.h)
+)
+AC_SUBST(TIFF_LIBS)
+AC_SUBST(TIFF_INCLUDES)
+
+CPPFLAGS=$SAVED_CPPFLAGS
+LIBS=$SAVED_LIBS
+
 dnl === check for WIC support ===
 
 if test "$target_os" = "mingw32"; then
