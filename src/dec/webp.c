@@ -59,11 +59,12 @@ static WEBP_INLINE uint32_t get_le32(const uint8_t* const data) {
 //         VP8_STATUS_OK otherwise.
 // In case there are not enough bytes (partial RIFF container), return 0 for
 // *riff_size. Else return the RIFF size extracted from the header.
-static VP8StatusCode ParseRIFF(const uint8_t** data, size_t* data_size,
-                               size_t* riff_size) {
-  assert(data);
-  assert(data_size);
-  assert(riff_size);
+static VP8StatusCode ParseRIFF(const uint8_t** const data,
+                               size_t* const data_size,
+                               size_t* const riff_size) {
+  assert(data != NULL);
+  assert(data_size != NULL);
+  assert(riff_size != NULL);
 
   *riff_size = 0;  // Default: no RIFF present.
   if (*data_size >= RIFF_HEADER_SIZE && !memcmp(*data, "RIFF", TAG_SIZE)) {
@@ -144,23 +145,23 @@ static VP8StatusCode ParseVP8X(const uint8_t** const data,
 //         VP8_STATUS_OK otherwise.
 // If an alpha chunk is found, *alpha_data and *alpha_size are set
 // appropriately.
-static VP8StatusCode ParseOptionalChunks(const uint8_t** data,
-                                         size_t* data_size,
-                                         size_t riff_size,
-                                         const uint8_t** alpha_data,
-                                         size_t* alpha_size) {
+static VP8StatusCode ParseOptionalChunks(const uint8_t** const data,
+                                         size_t* const data_size,
+                                         size_t const riff_size,
+                                         const uint8_t** const alpha_data,
+                                         size_t* const alpha_size) {
   const uint8_t* buf;
   size_t buf_size;
   uint32_t total_size = TAG_SIZE +           // "WEBP".
                         CHUNK_HEADER_SIZE +  // "VP8Xnnnn".
                         VP8X_CHUNK_SIZE;     // data.
-  assert(data);
-  assert(data_size);
+  assert(data != NULL);
+  assert(data_size != NULL);
   buf = *data;
   buf_size = *data_size;
 
-  assert(alpha_data);
-  assert(alpha_size);
+  assert(alpha_data != NULL);
+  assert(alpha_size != NULL);
   *alpha_data = NULL;
   *alpha_size = 0;
 
@@ -211,19 +212,21 @@ static VP8StatusCode ParseOptionalChunks(const uint8_t** data,
 // If a VP8/VP8L chunk is found, *chunk_size is set to the total number of bytes
 // extracted from the VP8/VP8L chunk header.
 // The flag '*is_lossless' is set to 1 in case of VP8L chunk / raw VP8L data.
-static VP8StatusCode ParseVP8Header(const uint8_t** data_ptr, size_t* data_size,
+static VP8StatusCode ParseVP8Header(const uint8_t** const data_ptr,
+                                    size_t* const data_size,
                                     size_t riff_size,
-                                    size_t* chunk_size, int* is_lossless) {
+                                    size_t* const chunk_size,
+                                    int* const is_lossless) {
   const uint8_t* const data = *data_ptr;
   const int is_vp8 = !memcmp(data, "VP8 ", TAG_SIZE);
   const int is_vp8l = !memcmp(data, "VP8L", TAG_SIZE);
   const uint32_t minimal_size =
       TAG_SIZE + CHUNK_HEADER_SIZE;  // "WEBP" + "VP8 nnnn" OR
                                      // "WEBP" + "VP8Lnnnn"
-  assert(data);
-  assert(data_size);
-  assert(chunk_size);
-  assert(is_lossless);
+  assert(data != NULL);
+  assert(data_size != NULL);
+  assert(chunk_size != NULL);
+  assert(is_lossless != NULL);
 
   if (*data_size < CHUNK_HEADER_SIZE) {
     return VP8_STATUS_NOT_ENOUGH_DATA;  // Insufficient data.
@@ -262,10 +265,12 @@ static VP8StatusCode ParseVP8Header(const uint8_t** data_ptr, size_t* data_size,
 // RIFF + VP8X + (optional chunks) + VP8(L)
 // ALPH + VP8 <-- Not a valid WebP format: only allowed for internal purpose.
 // VP8(L)     <-- Not a valid WebP format: only allowed for internal purpose.
-static VP8StatusCode ParseHeadersInternal(
-    const uint8_t* data, size_t data_size,
-    int* const width, int* const height, int* const has_alpha,
-    WebPHeaderStructure* const headers) {
+static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
+                                          size_t data_size,
+                                          int* const width,
+                                          int* const height,
+                                          int* const has_alpha,
+                                          WebPHeaderStructure* const headers) {
   int found_riff = 0;
   int found_vp8x = 0;
   VP8StatusCode status;
@@ -378,7 +383,7 @@ void WebPResetDecParams(WebPDecParams* const params) {
 // "Into" decoding variants
 
 // Main flow
-static VP8StatusCode DecodeInto(const uint8_t* data, size_t data_size,
+static VP8StatusCode DecodeInto(const uint8_t* const data, size_t data_size,
                                 WebPDecParams* const params) {
   VP8StatusCode status;
   VP8Io io;
@@ -391,7 +396,7 @@ static VP8StatusCode DecodeInto(const uint8_t* data, size_t data_size,
     return status;
   }
 
-  assert(params);
+  assert(params != NULL);
   VP8InitIo(&io);
   io.data = headers.data + headers.offset;
   io.data_size = headers.data_size - headers.offset;
@@ -452,8 +457,10 @@ static VP8StatusCode DecodeInto(const uint8_t* data, size_t data_size,
 
 // Helpers
 static uint8_t* DecodeIntoRGBABuffer(WEBP_CSP_MODE colorspace,
-                                     const uint8_t* data, size_t data_size,
-                                     uint8_t* rgba, int stride, size_t size) {
+                                     const uint8_t* const data,
+                                     size_t data_size,
+                                     uint8_t* const rgba,
+                                     int stride, size_t size) {
   WebPDecParams params;
   WebPDecBuffer buf;
   if (rgba == NULL) {
@@ -527,9 +534,9 @@ uint8_t* WebPDecodeYUVInto(const uint8_t* data, size_t data_size,
 
 //------------------------------------------------------------------------------
 
-static uint8_t* Decode(WEBP_CSP_MODE mode, const uint8_t* data,
-                       size_t data_size, int* width, int* height,
-                       WebPDecBuffer* keep_info) {
+static uint8_t* Decode(WEBP_CSP_MODE mode, const uint8_t* const data,
+                       size_t data_size, int* const width, int* const height,
+                       WebPDecBuffer* const keep_info) {
   WebPDecParams params;
   WebPDecBuffer output;
 
@@ -600,12 +607,12 @@ uint8_t* WebPDecodeYUV(const uint8_t* data, size_t data_size,
 }
 
 static void DefaultFeatures(WebPBitstreamFeatures* const features) {
-  assert(features);
+  assert(features != NULL);
   memset(features, 0, sizeof(*features));
   features->bitstream_version = 0;
 }
 
-static VP8StatusCode GetFeatures(const uint8_t* data, size_t data_size,
+static VP8StatusCode GetFeatures(const uint8_t* const data, size_t data_size,
                                  WebPBitstreamFeatures* const features) {
   if (features == NULL || data == NULL) {
     return VP8_STATUS_INVALID_PARAM;
