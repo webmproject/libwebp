@@ -58,7 +58,8 @@ AC_CHECK_HEADER(png.h,
   AC_CHECK_LIB(png, png_get_libpng_ver,
                [PNG_LIBS="$PNG_LIBS -lpng"
                 PNG_INCLUDES="$PNG_INCLUDES -DWEBP_HAVE_PNG"
-                AC_DEFINE(WEBP_HAVE_PNG, [1], [Set to 1 if PNG library is installed])
+                AC_DEFINE(WEBP_HAVE_PNG, [1],
+                          [Set to 1 if PNG library is installed])
                ],
                AC_MSG_WARN(Optional png library not found),
                [$MATH_LIBS]),
@@ -85,7 +86,8 @@ AC_CHECK_HEADER(jpeglib.h,
   AC_CHECK_LIB(jpeg, jpeg_set_defaults,
                [JPEG_LIBS="$JPEG_LIBS -ljpeg"
                 JPEG_INCLUDES="$JPEG_INCLUDES -DWEBP_HAVE_JPEG"
-                AC_DEFINE(WEBP_HAVE_JPEG, [1], [Set to 1 if JPEG library is installed])
+                AC_DEFINE(WEBP_HAVE_JPEG, [1],
+                          [Set to 1 if JPEG library is installed])
                ],
                AC_MSG_WARN(Optional jpeg library not found),
                [$MATH_LIBS]),
@@ -112,7 +114,8 @@ AC_CHECK_HEADER(tiffio.h,
   AC_CHECK_LIB(tiff, TIFFGetVersion,
                [TIFF_LIBS="$TIFF_LIBS -ltiff"
                 TIFF_INCLUDES="$TIFF_INCLUDES -DWEBP_HAVE_TIFF"
-                AC_DEFINE(WEBP_HAVE_TIFF, [1], [Set to 1 if TIFF library is installed])
+                AC_DEFINE(WEBP_HAVE_TIFF, [1],
+                          [Set to 1 if TIFF library is installed])
                ],
                AC_MSG_WARN(Optional tiff library not found),
                [$MATH_LIBS]),
@@ -167,7 +170,7 @@ if test "$target_os" = "mingw32"; then
   fi
 fi
 
-dnl === If --enable-experimental is defined, add the flag WEBP_EXPERIMENTAL_FEATURES
+dnl === If --enable-experimental is defined, add -DWEBP_EXPERIMENTAL_FEATURES
 
 USE_EXPERIMENTAL_CODE=""
 AC_MSG_CHECKING(if --enable-experimental option is specified)
