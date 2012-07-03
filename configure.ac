@@ -16,6 +16,19 @@ AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=DIR],
             [pkgconfigdir="$withval"], [pkgconfigdir='${libdir}/pkgconfig'])
 AC_SUBST([pkgconfigdir])
 
+dnl === WITHLIB_OPTION([opt_pfx], [outvar_pfx])
+dnl ===   Defines --with-<opt_pfx>{include,lib}dir options which set
+dnl ===   the variables <outvar_pfx>_{INCLUDES,LIBS}.
+AC_DEFUN([WITHLIB_OPTION],
+  [AC_ARG_WITH([$1includedir],
+               AS_HELP_STRING([--with-$1includedir=DIR],
+                              [use $2 includes from DIR]),
+               $2_INCLUDES="-I$withval")
+   AC_ARG_WITH([$1libdir],
+               AS_HELP_STRING([--with-$1libdir=DIR],
+                              [use $2 libraries from DIR]),
+               [$2_LIBS="-L$withval"])])
+
 dnl === Check for native log2
 AC_SEARCH_LIBS([log2], [m],,
                [AC_DEFINE([NOT_HAVE_LOG2], [1],
@@ -34,14 +47,7 @@ if test -n "$LIBPNG_CONFIG"; then
   fi
 fi
 
-AC_ARG_WITH([pngincludedir],
-            AS_HELP_STRING([--with-pngincludedir=DIR],
-                           [use PNG includes from DIR]),
-            PNG_INCLUDES="-I$withval")
-AC_ARG_WITH([pnglibdir],
-            AS_HELP_STRING([--with-pnglibdir=DIR],
-                           [use PNG libraries from DIR]),
-            [PNG_LIBS="-L$withval"])
+WITHLIB_OPTION([png], [PNG])
 
 SAVED_CPPFLAGS=$CPPFLAGS
 SAVED_LIBS=$LIBS
@@ -68,14 +74,7 @@ dnl === check for JPEG support ===
 
 JPEG_INCLUDES=""
 JPEG_LIBS=""
-AC_ARG_WITH([jpegincludedir],
-            [AS_HELP_STRING([--with-jpegincludedir=DIR],
-                            [use JPEG includes from DIR])],
-            JPEG_INCLUDES="-I$withval")
-AC_ARG_WITH([jpeglibdir],
-            AS_HELP_STRING([--with-jpeglibdir=DIR],
-                           [use JPEG libraries from DIR]),
-            [JPEG_LIBS="-L$withval"])
+WITHLIB_OPTION([jpeg], [JPEG])
 
 SAVED_CPPFLAGS=$CPPFLAGS
 SAVED_LIBS=$LIBS
@@ -102,14 +101,7 @@ dnl === check for TIFF support ===
 
 TIFF_INCLUDES=""
 TIFF_LIBS=""
-AC_ARG_WITH([tiffincludedir],
-            [AS_HELP_STRING([--with-tiffincludedir=DIR],
-                            [use TIFF includes from DIR])],
-            TIFF_INCLUDES="-I$withval")
-AC_ARG_WITH([tifflibdir],
-            AS_HELP_STRING([--with-tifflibdir=DIR],
-                           [use TIFF libraries from DIR]),
-            [TIFF_LIBS="-L$withval"])
+WITHLIB_OPTION([tiff], [TIFF])
 
 SAVED_CPPFLAGS=$CPPFLAGS
 SAVED_LIBS=$LIBS
