@@ -329,9 +329,9 @@ Extended WebP file header:
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |  R  |L|M|I|A|T|                   Reserved                    |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                    Canvas Width               |             ...
+    |          Canvas Width Minus One               |             ...
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    ...    Canvas Height            |
+    ...  Canvas Height Minus One    |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Tiling (T): 1 bit
@@ -387,15 +387,17 @@ Reserved: 24 bits
 
 : SHOULD be `0`.
 
-Canvas Width: 24 bits
+Canvas Width Minus One: 24 bits
 
 : _1-based_ width of the canvas in pixels.
+  The actual canvas width is '1 + Canvas Width Minus One'
 
-Canvas Height: 24 bits
+Canvas Height Minus One: 24 bits
 
 : _1-based_ height of the canvas in pixels.
+  The actual canvas height is '1 + Canvas Height Minus One'
 
-The product of _Canvas Width_ and _Canvas Height_ SHOULD be at most `2^32 - 1`.
+The product of _Canvas Width_ and _Canvas Height_ MUST be at most `2^32 - 1`.
 
 Future specifications MAY add more fields.
 
@@ -433,11 +435,11 @@ Frame chunk:
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                        Frame X                |             ...
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    ...          Frame Y            |      Frame Width            ...
+    ...          Frame Y            |   Frame Width Minus One     ...
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    ...             |              Frame Height                     |
+    ...             |           Frame Height Minus One              |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |         Frame Duration        |
+    |            Frame Duration Minus One           |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Frame X: 24 bits (_uint24_)
@@ -448,18 +450,20 @@ Frame Y: 24 bits (_uint24_)
 
 : The Y coordinate of the upper left corner of the frame is `Frame Y * 2`
 
-Frame Width: 24 bits (_uint24_)
+Frame Width Minus One: 24 bits (_uint24_)
 
 : The _1-based_ width of the frame.
+  The Frame Width is '1 + Frame Width Minus One'
 
-Frame Height: 24 bits (_uint24_)
+Frame Height Minus One: 24 bits (_uint24_)
 
 : The _1-based_ height of the frame.
+  The Frame Height is '1 + Frame Height Minus One'
 
-Frame Duration: 24 bits (_uint24_)
+Frame Duration Minus One: 24 bits (_uint24_)
 
-: Time to wait before displaying the next frame, in 1 millisecond units
-(_1-based_).
+: _1-based_ time to wait before displaying the next frame, in 1 millisecond
+  units. The actual duration is '1 + Frame Duration Minus One' milliseconds.
 
 For images that are animations, this chunk contains information about a single
 frame, and describes the (optional) alpha chunk and the bitstream chunk that

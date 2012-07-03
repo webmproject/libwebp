@@ -218,6 +218,7 @@ static uint8_t* EmitVP8XChunk(uint8_t* const dst, uint32_t width,
   const size_t vp8x_size = CHUNK_HEADER_SIZE + VP8X_CHUNK_SIZE;
   assert(width >= 1 && height >= 1);
   assert(width <= MAX_CANVAS_SIZE && height <= MAX_CANVAS_SIZE);
+  assert(width * (uint64_t)height < MAX_IMAGE_AREA);
   PutLE32(dst, mktag('V', 'P', '8', 'X'));
   PutLE32(dst + TAG_SIZE, VP8X_CHUNK_SIZE);
   PutLE32(dst + CHUNK_HEADER_SIZE, flags);

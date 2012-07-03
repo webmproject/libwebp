@@ -58,7 +58,7 @@ static WEBP_INLINE uint32_t get_le32(const uint8_t* const data) {
 // Returns VP8_STATUS_BITSTREAM_ERROR for invalid header, and
 //         VP8_STATUS_OK otherwise.
 // In case there are not enough bytes (partial RIFF container), return 0 for
-// riff_size. Else return the riff_size extracted from the header.
+// *riff_size. Else return the RIFF size extracted from the header.
 static VP8StatusCode ParseRIFF(const uint8_t** data, size_t* data_size,
                                size_t* riff_size) {
   assert(data);
@@ -88,15 +88,18 @@ static VP8StatusCode ParseRIFF(const uint8_t** data, size_t* data_size,
 // Returns VP8_STATUS_BITSTREAM_ERROR for invalid VP8X header,
 //         VP8_STATUS_NOT_ENOUGH_DATA in case of insufficient data, and
 //         VP8_STATUS_OK otherwise.
-// If a VP8X chunk is found, found_vp8x is set to true and *width, *height and
-// *flags are set to the corresponding values extracted from the VP8X chunk.
-static VP8StatusCode ParseVP8X(const uint8_t** data, size_t* data_size,
-                               int* found_vp8x,
-                               int* width, int* height, uint32_t* flags) {
+// If a VP8X chunk is found, found_vp8x is set to true and *width_ptr,
+// *height_ptr and *flags_ptr are set to the corresponding values extracted
+// from the VP8X chunk.
+static VP8StatusCode ParseVP8X(const uint8_t** const data,
+                               size_t* const data_size,
+                               int* const found_vp8x,
+                               int* const width_ptr, int* const height_ptr,
+                               uint32_t* const flags_ptr) {
   const uint32_t vp8x_size = CHUNK_HEADER_SIZE + VP8X_CHUNK_SIZE;
-  assert(data);
-  assert(data_size);
-  assert(found_vp8x);
+  assert(data != NULL);
+  assert(data_size != NULL);
+  assert(found_vp8x != NULL);
 
   *found_vp8x = 0;
 
@@ -105,6 +108,8 @@ static VP8StatusCode ParseVP8X(const uint8_t** data, size_t* data_size,
   }
 
   if (!memcmp(*data, "VP8X", TAG_SIZE)) {
+    int width, height;
+    uint32_t flags;
     const uint32_t chunk_size = get_le32(*data + TAG_SIZE);
     if (chunk_size != VP8X_CHUNK_SIZE) {
       return VP8_STATUS_BITSTREAM_ERROR;  // Wrong chunk size.
@@ -114,16 +119,16 @@ static VP8StatusCode ParseVP8X(const uint8_t** data, size_t* data_size,
     if (*data_size < vp8x_size) {
       return VP8_STATUS_NOT_ENOUGH_DATA;  // Insufficient data.
     }
+    flags = get_le32(*data + 8);
+    width = 1 + get_le24(*data + 12);
+    height = 1 + get_le24(*data + 15);
+    if (width * (uint64_t)height >= MAX_IMAGE_AREA) {
+      return VP8_STATUS_BITSTREAM_ERROR;  // image is too large
+    }
 
-    if (flags != NULL) {
-      *flags = get_le32(*data + 8);
-    }
-    if (width != NULL) {
-      *width = 1 + get_le24(*data + 12);
-    }
-    if (height != NULL) {
-      *height = 1 + get_le24(*data + 15);
-    }
+    if (flags_ptr != NULL) *flags_ptr = flags;
+    if (width_ptr != NULL) *width_ptr = width;
+    if (height_ptr != NULL) *height_ptr = height;
     // Skip over VP8X header bytes.
     *data += vp8x_size;
     *data_size -= vp8x_size;
@@ -137,7 +142,8 @@ static VP8StatusCode ParseVP8X(const uint8_t** data, size_t* data_size,
 // Returns VP8_STATUS_BITSTREAM_ERROR if any invalid chunk size is encountered,
 //         VP8_STATUS_NOT_ENOUGH_DATA in case of insufficient data, and
 //         VP8_STATUS_OK otherwise.
-// If an alpha chunk is found, alpha_data and alpha_size are set appropriately.
+// If an alpha chunk is found, *alpha_data and *alpha_size are set
+// appropriately.
 static VP8StatusCode ParseOptionalChunks(const uint8_t** data,
                                          size_t* data_size,
                                          size_t riff_size,
@@ -202,9 +208,9 @@ static VP8StatusCode ParseOptionalChunks(const uint8_t** data,
 //         riff_size) VP8/VP8L header,
 //         VP8_STATUS_NOT_ENOUGH_DATA in case of insufficient data, and
 //         VP8_STATUS_OK otherwise.
-// If a VP8/VP8L chunk is found, chunk_size is set to the total number of bytes
+// If a VP8/VP8L chunk is found, *chunk_size is set to the total number of bytes
 // extracted from the VP8/VP8L chunk header.
-// The flag 'is_lossless' is set to 1 in case of VP8L chunk / raw VP8L data.
+// The flag '*is_lossless' is set to 1 in case of VP8L chunk / raw VP8L data.
 static VP8StatusCode ParseVP8Header(const uint8_t** data_ptr, size_t* data_size,
                                     size_t riff_size,
                                     size_t* chunk_size, int* is_lossless) {
@@ -245,9 +251,9 @@ static VP8StatusCode ParseVP8Header(const uint8_t** data_ptr, size_t* data_size,
 
 //------------------------------------------------------------------------------
 
-// Fetch 'width', 'height', 'has_alpha' and fill out 'headers' based on 'data'.
-// All the output parameters may be NULL. If 'headers' is NULL only the minimal
-// amount will be read to fetch the remaining parameters.
+// Fetch '*width', '*height', '*has_alpha' and fill out 'headers' based on
+// 'data'. All the output parameters may be NULL. If 'headers' is NULL only the
+// minimal amount will be read to fetch the remaining parameters.
 // If 'headers' is non-NULL this function will attempt to locate both alpha
 // data (with or without a VP8X chunk) and the bitstream chunk (VP8/VP8L).
 // Note: The following chunk sequences (before the raw VP8/VP8L data) are

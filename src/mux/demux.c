@@ -444,6 +444,9 @@ static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
   Skip(mem, 3);  // Reserved.
   dmux->canvas_width_  = 1 + GetLE24s(mem);
   dmux->canvas_height_ = 1 + GetLE24s(mem);
+  if (dmux->canvas_width_ * (uint64_t)dmux->canvas_height_ >= MAX_IMAGE_AREA) {
+    return PARSE_ERROR;  // image final dimension is too large
+  }
   Skip(mem, vp8x_size - VP8X_CHUNK_SIZE);  // skip any trailing data.
   dmux->state_ = WEBP_DEMUX_PARSED_HEADER;
 
