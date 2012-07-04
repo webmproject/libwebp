@@ -46,7 +46,6 @@ void ChunkInit(WebPChunk* const chunk) {
 WebPChunk* ChunkRelease(WebPChunk* const chunk) {
   WebPChunk* next;
   if (chunk == NULL) return NULL;
-  free(chunk->image_info_);
   if (chunk->owner_) {
     WebPDataClear(&chunk->data_);
   }
@@ -122,9 +121,7 @@ static int ChunkSearchListToSet(WebPChunk** chunk_list, uint32_t nth,
 //------------------------------------------------------------------------------
 // Chunk writer methods.
 
-WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk,
-                                      const WebPData* const data,
-                                      WebPImageInfo* image_info,
+WebPMuxError ChunkAssignData(WebPChunk* chunk, const WebPData* const data,
                                       int copy_data, uint32_t tag) {
   // For internally allocated chunks, always copy data & make it owner of data.
   if (tag == kChunks[IDX_VP8X].tag || tag == kChunks[IDX_LOOP].tag) {
@@ -147,10 +144,6 @@ WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk,
       // Don't copy data.
       chunk->data_ = *data;
     }
-  }
-
-  if (tag == kChunks[IDX_VP8].tag || tag == kChunks[IDX_VP8L].tag) {
-    chunk->image_info_ = image_info;
   }
 
   chunk->tag_ = tag;
