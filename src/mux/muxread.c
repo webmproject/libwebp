@@ -48,9 +48,10 @@ static WebPMuxError MuxGet(const WebPMux* const mux, CHUNK_INDEX idx,
 }
 #undef SWITCH_ID_LIST
 
-// Fill the chunk with the given data, after verifying that the data size
-// doesn't exceed 'max_size'.
-static WebPMuxError ChunkAssignData(WebPChunk* chunk, const uint8_t* data,
+// Fill the chunk with the given data (includes chunk header bytes), after some
+// verifications.
+static WebPMuxError ChunkVerifyAndAssignData(WebPChunk* chunk,
+                                             const uint8_t* data,
                                     size_t data_size, size_t riff_size,
                                     int copy_data) {
   uint32_t chunk_size;
@@ -69,8 +70,7 @@ static WebPMuxError ChunkAssignData(WebPChunk* chunk, const uint8_t* data,
   // Data assignment.
   chunk_data.bytes_ = data + CHUNK_HEADER_SIZE;
   chunk_data.size_ = chunk_size;
-  return ChunkAssignDataImageInfo(chunk, &chunk_data, NULL, copy_data,
-                                  GetLE32(data + 0));
+  return ChunkAssignData(chunk, &chunk_data, copy_data, GetLE32(data + 0));
 }
 
 //------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
     WebPChunkId id;
     WebPMuxError err;
 
-    err = ChunkAssignData(&chunk, data, size, riff_size, copy_data);
+    err = ChunkVerifyAndAssignData(&chunk, data, size, riff_size, copy_data);
     if (err != WEBP_MUX_OK) goto Err;
 
     id = ChunkGetIdFromTag(chunk.tag_);

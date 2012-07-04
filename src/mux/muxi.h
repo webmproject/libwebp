@@ -25,20 +25,10 @@ extern "C" {
 //------------------------------------------------------------------------------
 // Defines and constants.
 
-// Object to store metadata about images.
-typedef struct {
-  uint32_t    x_offset_;
-  uint32_t    y_offset_;
-  uint32_t    duration_;
-  uint32_t    width_;
-  uint32_t    height_;
-} WebPImageInfo;
-
 // Chunk object.
 typedef struct WebPChunk WebPChunk;
 struct WebPChunk {
   uint32_t        tag_;
-  WebPImageInfo*  image_info_;
   int             owner_;  // True if *data_ memory is owned internally.
                            // VP8X, Loop, and other internally created chunks
                            // like frame/tile are always owned.
@@ -143,10 +133,8 @@ WebPChunkId ChunkGetIdFromTag(uint32_t tag);
 // nth = 0 means "last of the list".
 WebPChunk* ChunkSearchList(WebPChunk* first, uint32_t nth, uint32_t tag);
 
-// Fill the chunk with the given data & image_info.
-WebPMuxError ChunkAssignDataImageInfo(WebPChunk* chunk,
-                                      const WebPData* const data,
-                                      WebPImageInfo* image_info,
+// Fill the chunk with the given data.
+WebPMuxError ChunkAssignData(WebPChunk* chunk, const WebPData* const data,
                                       int copy_data, uint32_t tag);
 
 // Sets 'chunk' at nth position in the 'chunk_list'.
