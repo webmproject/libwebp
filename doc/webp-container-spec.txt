@@ -286,10 +286,10 @@ An extended format file consists of:
 
   * An optional 'META' chunk with metadata.
 
-As will be described in the 'VP8X' chunk description, by checking a
-flag one can distinguish animated and non-animated images. A
-non-animated image has exactly one frame. An animated one may have
-multiple frames. Data for each frame consists of:
+A file MUST contain at least one frame. As will be described in the 'VP8X'
+chunk description, by checking a flag one can distinguish animated and
+non-animated images. A non-animated image has exactly one frame. An animated
+one may have multiple frames. Data for each frame consists of:
 
   * An optional 'FRM ' (fourth character is a significant space) chunk
     with animation frame metadata. It MUST be present in animated
