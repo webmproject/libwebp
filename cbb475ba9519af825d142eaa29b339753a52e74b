@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAALn//89s\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2012-07-06T07:25:09Z",
+      "side": 1,
+      "message": "\u003e\u003d ?\nMAX_LOOP_COUNT is (1  \u003c\u003c 16) (i.e 17 bits). So even the MAX_LOOP_COUNT is an invalid val for loop_count",
+      "revId": "cbb475ba9519af825d142eaa29b339753a52e74b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
