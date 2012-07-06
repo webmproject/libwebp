@@ -117,13 +117,12 @@ static int CountOccurrences(const char* arglist[], int list_length,
 }
 
 static const char* const kErrorMessages[] = {
-  "WEBP_MUX_ERROR", "WEBP_MUX_NOT_FOUND", "WEBP_MUX_INVALID_ARGUMENT",
-  "WEBP_MUX_INVALID_PARAMETER", "WEBP_MUX_BAD_DATA", "WEBP_MUX_MEMORY_ERROR",
-  "WEBP_MUX_NOT_ENOUGH_DATA"
+  "WEBP_MUX_NOT_FOUND", "WEBP_MUX_INVALID_ARGUMENT", "WEBP_MUX_BAD_DATA",
+  "WEBP_MUX_MEMORY_ERROR", "WEBP_MUX_NOT_ENOUGH_DATA"
 };
 
 static const char* ErrorString(WebPMuxError err) {
-  assert(err <= WEBP_MUX_ERROR && err >= WEBP_MUX_NOT_ENOUGH_DATA);
+  assert(err <= WEBP_MUX_NOT_FOUND && err >= WEBP_MUX_NOT_ENOUGH_DATA);
   return kErrorMessages[-err];
 }
 

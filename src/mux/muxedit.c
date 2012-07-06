@@ -99,8 +99,7 @@ static WebPMuxError MuxAddChunk(WebPMux* const mux, uint32_t nth, uint32_t tag,
   const WebPData chunk_data = { data, size };
   assert(mux != NULL);
   assert(size <= MAX_CHUNK_PAYLOAD);
-
-  if (idx == IDX_NIL) return WEBP_MUX_INVALID_PARAMETER;
+  assert(idx != IDX_NIL);
   return MuxSet(mux, idx, nth, &chunk_data, copy_data);
 }
 
