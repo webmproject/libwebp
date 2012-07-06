@@ -100,6 +100,9 @@ typedef struct {
 //------------------------------------------------------------------------------
 // Manipulation of a WebPData object.
 
+// Initializes the contents of the 'webp_data' object with default values.
+WEBP_EXTERN(void) WebPDataInit(WebPData* const webp_data);
+
 // Clears the contents of the 'webp_data' object by calling free(). Does not
 // deallocate the object itself.
 WEBP_EXTERN(void) WebPDataClear(WebPData* const webp_data);
