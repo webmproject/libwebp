@@ -186,7 +186,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
 
   if (flag & ANIMATION_FLAG) {
     int nFrames;
-    uint32_t loop_count;
+    int loop_count;
     err = WebPMuxGetLoopCount(mux, &loop_count);
     RETURN_IF_ERROR("Failed to retrieve loop count\n");
     printf("Loop Count : %d\n", loop_count);
@@ -200,7 +200,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
       printf("No.: x_offset y_offset duration image_size");
       printf("\n");
       for (i = 1; i <= nFrames; i++) {
-        uint32_t x_offset, y_offset, duration;
+        int x_offset, y_offset, duration;
         WebPData bitstream;
         err = WebPMuxGetFrame(mux, i, &bitstream,
                               &x_offset, &y_offset, &duration);
@@ -223,7 +223,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
       printf("No.: x_offset y_offset image_size");
       printf("\n");
       for (i = 1; i <= nTiles; i++) {
-        uint32_t x_offset, y_offset;
+        int x_offset, y_offset;
         WebPData bitstream;
         err = WebPMuxGetTile(mux, i, &bitstream, &x_offset, &y_offset);
         RETURN_IF_ERROR2("Failed to retrieve tile#%d\n", i);
@@ -356,13 +356,13 @@ static int WriteWebP(WebPMux* const mux, const char* filename) {
   return ok;
 }
 
-static int ParseFrameArgs(const char* args, uint32_t* x_offset,
-                          uint32_t* y_offset, uint32_t* duration) {
+static int ParseFrameArgs(const char* args, int* const x_offset,
+                          int* const y_offset, int* const duration) {
   return (sscanf(args, "+%d+%d+%d", x_offset, y_offset, duration) == 3);
 }
 
-static int ParseTileArgs(const char* args, uint32_t* x_offset,
-                         uint32_t* y_offset) {
+static int ParseTileArgs(const char* args,
+                         int* const x_offset, int* const y_offset) {
   return (sscanf(args, "+%d+%d", x_offset, y_offset) == 2);
 }
 
@@ -690,9 +690,9 @@ static int InitializeConfig(int argc, const char* argv[],
 static int GetFrameTile(const WebPMux* mux,
                         const WebPMuxConfig* config, int isFrame) {
   WebPData bitstream;
-  uint32_t x_offset = 0;
-  uint32_t y_offset = 0;
-  uint32_t duration = 0;
+  int x_offset = 0;
+  int y_offset = 0;
+  int duration = 0;
   WebPMuxError err = WEBP_MUX_OK;
   WebPMux* mux_single = NULL;
   long num = 0;
@@ -741,8 +741,8 @@ static int Process(const WebPMuxConfig* config) {
   WebPMux* mux = NULL;
   WebPData webpdata;
   WebPData metadata, color_profile;
-  uint32_t x_offset = 0;
-  uint32_t y_offset = 0;
+  int x_offset = 0;
+  int y_offset = 0;
   WebPMuxError err = WEBP_MUX_OK;
   int index = 0;
   int ok = 1;
@@ -804,7 +804,7 @@ static int Process(const WebPMuxConfig* config) {
                             ErrorString(err), Err2);
               }
             } else if (feature->args_[index].subtype_ == SUBTYPE_FRM) {
-              uint32_t duration;
+              int duration;
               ok = ReadFileToWebPData(feature->args_[index].filename_,
                                       &webpdata);
               if (!ok) goto Err2;

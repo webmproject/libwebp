@@ -80,8 +80,7 @@ typedef enum {
 
 #define NIL_TAG 0x00000000u  // To signal void chunk.
 
-#define mktag(c1, c2, c3, c4) \
-  ((uint32_t)c1 | (c2 << 8) | (c3 << 16) | (c4 << 24))
+#define MKFOURCC(a, b, c, d) ((uint32_t)(a) | (b) << 8 | (c) << 16 | (d) << 24)
 
 typedef struct {
   uint32_t      tag;
@@ -94,23 +93,35 @@ extern const ChunkInfo kChunks[IDX_LAST_CHUNK];
 //------------------------------------------------------------------------------
 // Helper functions.
 
+// Read 16, 24 or 32 bits stored in little-endian order.
+static WEBP_INLINE int GetLE16(const uint8_t* const data) {
+  return (int)(data[0] << 0) | (data[1] << 8);
+}
+
+static WEBP_INLINE int GetLE24(const uint8_t* const data) {
+  return GetLE16(data) | (data[2] << 16);
+}
+
 static WEBP_INLINE uint32_t GetLE32(const uint8_t* const data) {
-  return data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
+  return (uint32_t)GetLE16(data) | (GetLE16(data + 2) << 16);
 }
 
-static WEBP_INLINE void PutLE16(uint8_t* const data, uint32_t val) {
-  data[0] = (val >> 0) & 0xff;
-  data[1] = (val >> 8) & 0xff;
+// Store 16, 24 or 32 bits in little-endian order.
+static WEBP_INLINE void PutLE16(uint8_t* const data, int val) {
+  assert(val < (1 << 16));
+  data[0] = (val >> 0);
+  data[1] = (val >> 8);
 }
 
-static WEBP_INLINE void PutLE24(uint8_t* const data, uint32_t val) {
-  PutLE16(data, val);
+static WEBP_INLINE void PutLE24(uint8_t* const data, int val) {
+  assert(val < (1 << 24));
+  PutLE16(data, val & 0xffff);
   data[2] = (val >> 16);
 }
 
 static WEBP_INLINE void PutLE32(uint8_t* const data, uint32_t val) {
-  PutLE16(data, val);
-  PutLE16(data + 2, val >> 16);
+  PutLE16(data, (int)(val & 0xffff));
+  PutLE16(data + 2, (int)(val >> 16));
 }
 
 static WEBP_INLINE size_t SizeWithPadding(size_t chunk_size) {

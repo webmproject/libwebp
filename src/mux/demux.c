@@ -133,17 +133,30 @@ static WEBP_INLINE uint8_t GetByte(MemBuffer* const mem) {
   return byte;
 }
 
+// Read 16, 24 or 32 bits stored in little-endian order.
+static WEBP_INLINE int ReadLE16s(const uint8_t* const data) {
+  return (int)(data[0] << 0) | (data[1] << 8);
+}
+
 static WEBP_INLINE int ReadLE24s(const uint8_t* const data) {
-  return (int)(data[0] << 0) | (data[1] << 8) | (data[2] << 16);
+  return ReadLE16s(data) | (data[2] << 16);
 }
 
 static WEBP_INLINE uint32_t ReadLE32(const uint8_t* const data) {
   return (uint32_t)ReadLE24s(data) | (data[3] << 24);
 }
 
+// In addition to reading, skip the read bytes.
+static WEBP_INLINE int GetLE16s(MemBuffer* const mem) {
+  const uint8_t* const data = mem->buf_ + mem->start_;
+  const int val = ReadLE16s(data);
+  Skip(mem, 2);
+  return val;
+}
+
 static WEBP_INLINE int GetLE24s(MemBuffer* const mem) {
   const uint8_t* const data = mem->buf_ + mem->start_;
-  const uint32_t val = ReadLE24s(data);
+  const int val = ReadLE24s(data);
   Skip(mem, 3);
   return val;
 }
@@ -153,10 +166,6 @@ static WEBP_INLINE uint32_t GetLE32(MemBuffer* const mem) {
   const uint32_t val = ReadLE32(data);
   Skip(mem, 4);
   return val;
-}
-
-static WEBP_INLINE int GetLE32s(MemBuffer* const mem) {
-  return (int)GetLE32(mem);
 }
 
 // -----------------------------------------------------------------------------
@@ -289,12 +298,15 @@ static ParseStatus ParseFrame(
       NewFrame(mem, min_size, FRAME_CHUNK_SIZE, frame_chunk_size, &frame);
   if (status != PARSE_OK) return status;
 
-  frame->x_offset_ = GetLE32s(mem);
-  frame->y_offset_ = GetLE32s(mem);
-  frame->width_    = GetLE32s(mem);
-  frame->height_   = GetLE32s(mem);
-  frame->duration_ = GetLE32s(mem);
+  frame->x_offset_ = 2 * GetLE24s(mem);
+  frame->y_offset_ = 2 * GetLE24s(mem);
+  frame->width_    = 1 + GetLE24s(mem);
+  frame->height_   = 1 + GetLE24s(mem);
+  frame->duration_ = 1 + GetLE24s(mem);
   Skip(mem, frame_chunk_size - FRAME_CHUNK_SIZE);  // skip any trailing data.
+  if (frame->width_ * (uint64_t)frame->height_ >= MAX_IMAGE_AREA) {
+    return PARSE_ERROR;
+  }
 
   // Store a (potentially partial) frame only if the animation flag is set
   // and there is some data in 'frame'.
@@ -326,8 +338,8 @@ static ParseStatus ParseTile(WebPDemuxer* const dmux,
   if (status != PARSE_OK) return status;
 
   frame->is_tile_  = 1;
-  frame->x_offset_ = GetLE32s(mem);
-  frame->y_offset_ = GetLE32s(mem);
+  frame->x_offset_ = 2 * GetLE24s(mem);
+  frame->y_offset_ = 2 * GetLE24s(mem);
   Skip(mem, tile_chunk_size - TILE_CHUNK_SIZE);  // skip any trailing data.
 
   // Store a (potentially partial) tile only if the tile flag is set
@@ -481,7 +493,7 @@ static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
           status = PARSE_NEED_MORE_DATA;
         } else if (loop_chunks == 0) {
           ++loop_chunks;
-          dmux->loop_count_ = GetLE32s(mem);
+          dmux->loop_count_ = GetLE16s(mem);
           Skip(mem, chunk_size_padded - LOOP_CHUNK_SIZE);
         } else {
           store_chunk = 0;
