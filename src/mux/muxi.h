@@ -135,7 +135,7 @@ WebPChunk* ChunkSearchList(WebPChunk* first, uint32_t nth, uint32_t tag);
 
 // Fill the chunk with the given data.
 WebPMuxError ChunkAssignData(WebPChunk* chunk, const WebPData* const data,
-                                      int copy_data, uint32_t tag);
+                             int copy_data, uint32_t tag);
 
 // Sets 'chunk' at nth position in the 'chunk_list'.
 // nth = 0 has the special meaning "last of the list".

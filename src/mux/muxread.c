@@ -52,8 +52,8 @@ static WebPMuxError MuxGet(const WebPMux* const mux, CHUNK_INDEX idx,
 // verifications.
 static WebPMuxError ChunkVerifyAndAssignData(WebPChunk* chunk,
                                              const uint8_t* data,
-                                    size_t data_size, size_t riff_size,
-                                    int copy_data) {
+                                             size_t data_size, size_t riff_size,
+                                             int copy_data) {
   uint32_t chunk_size;
   WebPData chunk_data;
 

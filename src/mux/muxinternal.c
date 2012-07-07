@@ -122,7 +122,7 @@ static int ChunkSearchListToSet(WebPChunk** chunk_list, uint32_t nth,
 // Chunk writer methods.
 
 WebPMuxError ChunkAssignData(WebPChunk* chunk, const WebPData* const data,
-                                      int copy_data, uint32_t tag) {
+                             int copy_data, uint32_t tag) {
   // For internally allocated chunks, always copy data & make it owner of data.
   if (tag == kChunks[IDX_VP8X].tag || tag == kChunks[IDX_LOOP].tag) {
     copy_data = 1;

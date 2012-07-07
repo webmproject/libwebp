@@ -141,12 +141,12 @@ Specify a pre-processing filter. This option is a placeholder
 and has currently no effect.
 .TP
 .B \-alpha_filter string
-Specify the predictive filtering method for alpha plane. One of 'none', 'fast'
-or 'best', in increasing complexity and slowness order. Default is 'fast'.
-Internally, alpha filtering is performed using four possible predictions (none,
-horizontal, vertical, gradient). The 'best' mode will try each modes in turn and
-pick the one which gives the smaller size. The 'fast' mode will just try to
-form an a-priori guess without testing all modes.
+Specify the predictive filtering method for the alpha plane. One of 'none',
+\&'fast' or 'best', in increasing complexity and slowness order. Default is
+\&'fast'.  Internally, alpha filtering is performed using four possible
+predictions (none, horizontal, vertical, gradient). The 'best' mode will try
+each mode in turn and pick the one which gives the smaller size. The 'fast'
+mode will just try to form an a-priori guess without testing all modes.
 .TP
 .B \-alpha_method int
 Specify the algorithm used for alpha compression: 0 or 1. Algorithm 0 denotes
