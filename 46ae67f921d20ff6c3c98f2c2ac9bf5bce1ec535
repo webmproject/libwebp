@@ -1,0 +1,174 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAALn//8dQ\u003d",
+        "filename": "src/mux/demux.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-07-08T15:05:36Z",
+      "side": 1,
+      "message": "it\u0027s a little annoying to tie demux (read) with mux (read/write) libraries together. Here, it\u0027s just for compilation, so we\u0027re ok (we probably need a \u0027mux_util\u0027 header). Be let\u0027s make sure they can stay independent for now...",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn//8dM\u003d",
+        "filename": "src/mux/demux.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-07-08T15:05:36Z",
+      "side": 1,
+      "message": "the \u0027s\u0027 is not needed in the signature, since we\u0027re returning an uint32",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn//8dI\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-07-08T15:05:36Z",
+      "side": 1,
+      "message": "note (/comment?) that assert on upper bound is done in PutLE24()",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn//8dE\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-07-08T15:05:36Z",
+      "side": 1,
+      "message": "duration \u003e MAX_DURATION",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn//8c8\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 351,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-07-08T15:05:36Z",
+      "side": 1,
+      "message": "this precision should be in the .h doc",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn//8dA\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-07-08T15:05:36Z",
+      "side": 1,
+      "message": "x_offset \u0026\u003d ~1;",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn//8c4\u003d",
+        "filename": "src/mux/muxi.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-07-08T15:05:36Z",
+      "side": 1,
+      "message": "GetLE16() | GetLE16() is probably easier for the compiler",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn//8c0\u003d",
+        "filename": "src/webp/format_constants.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-07-08T15:05:36Z",
+      "side": 1,
+      "message": "1 \u003c\u003c 25",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn//8cw\u003d",
+        "filename": "src/webp/mux.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-07-08T15:05:36Z",
+      "side": 1,
+      "message": "ping",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn//8cs\u003d",
+        "filename": "src/webp/mux.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-07-08T15:05:36Z",
+      "side": 1,
+      "message": "is the image/alpha pair still needed? It\u0027s rather an all-in-one \u0027bitstream\u0027 now...",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
