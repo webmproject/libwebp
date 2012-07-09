@@ -22,8 +22,8 @@ extern "C" {
 
 void VP8InitBitReader(VP8BitReader* const br,
                       const uint8_t* const start, const uint8_t* const end) {
-  assert(br);
-  assert(start);
+  assert(br != NULL);
+  assert(start != NULL);
   assert(start <= end);
   br->range_   = MK(255 - 1);
   br->buf_     = start;
@@ -68,7 +68,7 @@ const bit_t kVP8NewRange[128] = {
 #undef MK
 
 void VP8LoadFinalBytes(VP8BitReader* const br) {
-  assert(br && br->buf_);
+  assert(br != NULL && br->buf_ != NULL);
   // Only read 8bits at a time
   if (br->buf_ < br->buf_end_) {
     br->value_ |= (bit_t)(*br->buf_++) << ((BITS) - 8 + br->missing_);
@@ -108,8 +108,9 @@ void VP8LInitBitReader(VP8LBitReader* const br,
                        const uint8_t* const start,
                        size_t length) {
   size_t i;
-  assert(br);
-  assert(start);
+  assert(br != NULL);
+  assert(start != NULL);
+  assert(length < 0xfffffff8u);   // can't happen with a RIFF chunk.
 
   br->buf_ = start;
   br->len_ = length;
@@ -126,6 +127,9 @@ void VP8LInitBitReader(VP8LBitReader* const br,
 
 void VP8LBitReaderSetBuffer(VP8LBitReader* const br,
                             const uint8_t* const buf, size_t len) {
+  assert(br != NULL);
+  assert(buf != NULL);
+  assert(len < 0xfffffff8u);   // can't happen with a RIFF chunk.
   br->eos_ = (br->pos_ >= len);
   br->buf_ = buf;
   br->len_ = len;
@@ -143,7 +147,7 @@ static void ShiftBytes(VP8LBitReader* const br) {
 void VP8LFillBitWindow(VP8LBitReader* const br) {
   if (br->bit_pos_ >= 32) {
 #if defined(__x86_64__)
-    if (br->pos_ < br->len_ - 8) {
+    if (br->pos_ + 8 < br->len_) {
       br->val_ >>= 32;
       // The expression below needs a little-endian arch to work correctly.
       // This gives a large speedup for decoding speed.
@@ -197,7 +201,7 @@ uint32_t VP8LReadBits(VP8LBitReader* const br, int n_bits) {
     val = (br->val_ >> br->bit_pos_) & kBitMask[n_bits];
     br->bit_pos_ += n_bits;
     if (br->bit_pos_ >= 40) {
-      if (br->pos_ < br->len_ - 5) {
+      if (br->pos_ + 5 < br->len_) {
         br->val_ >>= 40;
         br->val_ |=
             (((uint64_t)br->buf_[br->pos_ + 0]) << 24) |

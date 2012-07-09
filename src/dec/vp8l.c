@@ -159,7 +159,7 @@ static int ReadSymbolUnsafe(const HuffmanTree* tree, VP8LBitReader* const br) {
 
 static WEBP_INLINE int ReadSymbol(const HuffmanTree* tree,
                                   VP8LBitReader* const br) {
-  const int read_safe = (br->pos_ > br->len_ - 8);
+  const int read_safe = (br->pos_ + 8 > br->len_);
   if (!read_safe) {
     return ReadSymbolUnsafe(tree, br);
   } else {
