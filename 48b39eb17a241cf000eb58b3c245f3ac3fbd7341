@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAALn//7nQ\u003d",
+        "filename": "src/utils/bit_reader.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-07-09T23:56:01Z",
+      "side": 1,
+      "message": "TODO: this should probably be more inclusive...",
+      "revId": "48b39eb17a241cf000eb58b3c245f3ac3fbd7341",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
