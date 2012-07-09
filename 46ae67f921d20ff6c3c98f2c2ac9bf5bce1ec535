@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAALn//72A\u003d",
+        "filename": "src/mux/demux.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-07-09T20:57:11Z",
+      "side": 1,
+      "message": "agree. this is why things like:\n\n\u0027- Refactor some common functions in muxi.h and demux.c\u0027\n\nshould be done in separate changes...\n\nI would keep the local functions in this change",
+      "parentUuid": "AAAALn//8dQ\u003d",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAALn//8dM\u003d",
         "filename": "src/mux/demux.c",
         "patchSetId": 2
