@@ -112,6 +112,26 @@ static void PrintString(const char* const text) {
   }
 }
 
+static void DrawCheckerBoard(void) {
+  const int square_size = 8;  // must be a power of 2
+  int x, y;
+  GLint viewport[4];  // x, y, width, height
+
+  glPushMatrix();
+
+  glGetIntegerv(GL_VIEWPORT, viewport);
+  // shift to integer coordinates with (0,0) being top-left.
+  glOrtho(0, viewport[2], viewport[3], 0, -1, 1);
+  for (y = 0; y < viewport[3]; y += square_size) {
+    for (x = 0; x < viewport[2]; x += square_size) {
+      const GLubyte color = 128 + 64 * (!((x + y) & square_size));
+      glColor3ub(color, color, color);
+      glRecti(x, y, x + square_size, y + square_size);
+    }
+  }
+  glPopMatrix();
+}
+
 static void HandleDisplay(void) {
   const WebPDecBuffer* pic = kParams.pic;
   if (pic == NULL) return;
@@ -121,6 +141,7 @@ static void HandleDisplay(void) {
   glRasterPos2f(-1, 1);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   glPixelStorei(GL_UNPACK_ROW_LENGTH, pic->u.RGBA.stride / 4);
+  DrawCheckerBoard();
   glDrawPixels(pic->width, pic->height,
                GL_RGBA, GL_UNSIGNED_BYTE,
                (GLvoid*)pic->u.RGBA.rgba);
@@ -136,6 +157,7 @@ static void HandleDisplay(void) {
     glRasterPos2f(-0.95f, 0.80f);
     PrintString(tmp);
   }
+  glPopMatrix();
   glFlush();
 }
 
