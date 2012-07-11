@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "AAAALn//6Ic\u003d",
+        "filename": "src/mux/demux.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-07-11T05:59:08Z",
+      "side": 1,
+      "message": "Reverted this refactoring.",
+      "parentUuid": "AAAALn//72A\u003d",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAALn//8dM\u003d",
         "filename": "src/mux/demux.c",
         "patchSetId": 2
@@ -48,6 +66,24 @@
       "writtenOn": "2012-07-08T15:05:36Z",
       "side": 1,
       "message": "the \u0027s\u0027 is not needed in the signature, since we\u0027re returning an uint32",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn//6IY\u003d",
+        "filename": "src/mux/demux.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-07-11T05:59:08Z",
+      "side": 1,
+      "message": "\u0027s\u0027 is for \u0027skip\u0027.",
+      "parentUuid": "AAAALn//8dM\u003d",
       "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -71,6 +107,24 @@
     },
     {
       "key": {
+        "uuid": "AAAALn//6IQ\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-07-11T05:59:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAALn//8dI\u003d",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAALn//8dE\u003d",
         "filename": "src/mux/muxedit.c",
         "patchSetId": 2
@@ -82,6 +136,24 @@
       "writtenOn": "2012-07-08T15:05:36Z",
       "side": 1,
       "message": "duration \u003e MAX_DURATION",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn//6II\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-07-11T05:59:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAALn//8dE\u003d",
       "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -105,6 +177,24 @@
     },
     {
       "key": {
+        "uuid": "AAAALn//6IA\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 351,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-07-11T05:59:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAALn//8c8\u003d",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAALn//8dA\u003d",
         "filename": "src/mux/muxedit.c",
         "patchSetId": 2
@@ -116,6 +206,24 @@
       "writtenOn": "2012-07-08T15:05:36Z",
       "side": 1,
       "message": "x_offset \u0026\u003d ~1;",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn//6IM\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-07-11T05:59:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAALn//8dA\u003d",
       "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -139,6 +247,24 @@
     },
     {
       "key": {
+        "uuid": "AAAALn//6H8\u003d",
+        "filename": "src/mux/muxi.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-07-11T05:59:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAALn//8c4\u003d",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAALn//8c0\u003d",
         "filename": "src/webp/format_constants.h",
         "patchSetId": 2
@@ -150,6 +276,24 @@
       "writtenOn": "2012-07-08T15:05:36Z",
       "side": 1,
       "message": "1 \u003c\u003c 25",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn//6Hw\u003d",
+        "filename": "src/webp/format_constants.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-07-11T05:59:08Z",
+      "side": 1,
+      "message": "Not convinced by either actually. Let\u0027s discuss offline about what the right approach is.",
+      "parentUuid": "AAAALn//8c0\u003d",
       "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -173,6 +317,24 @@
     },
     {
       "key": {
+        "uuid": "AAAALn//6H4\u003d",
+        "filename": "src/webp/mux.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-07-11T05:59:08Z",
+      "side": 1,
+      "message": "It\u0027s under my radar.",
+      "parentUuid": "AAAALn//8cw\u003d",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAALn//8cs\u003d",
         "filename": "src/webp/mux.h",
         "patchSetId": 2
@@ -184,6 +346,24 @@
       "writtenOn": "2012-07-08T15:05:36Z",
       "side": 1,
       "message": "is the image/alpha pair still needed? It\u0027s rather an all-in-one \u0027bitstream\u0027 now...",
+      "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn//6H0\u003d",
+        "filename": "src/webp/mux.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-07-11T05:59:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAALn//8cs\u003d",
       "revId": "46ae67f921d20ff6c3c98f2c2ac9bf5bce1ec535",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
