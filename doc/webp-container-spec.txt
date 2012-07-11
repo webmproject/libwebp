@@ -523,6 +523,42 @@ Filtering method (F): 2 bits
   * `2`: Vertical filter.
   * `3`: Gradient filter.
 
+For each pixel, filtering is performed using the following calculations.
+Assume the alpha values surrounding the current `X` position are labeled as:
+
+     C | B |
+    ---+---+
+     A | X |
+
+We seek to compute the alpha value at position `X`. First, a prediction is
+made depending on the filtering method:
+
+  * Method `0`: predictor = 0
+  * Method `1`: predictor = A
+  * Method `2`: predictor = B
+  * Method `3`: predictor = clip(A + B - C)
+
+where `clip(v)` is equal to:
+
+  * 0    if v < 0
+  * 255  if v > 255
+  * v    otherwise
+
+The final value is derived by adding the decompressed value `X` to the
+predictor and using modulo-256 arithmetic to wrap the [256-511] range
+into the [0-255] one:
+
+`alpha = (predictor + X) % 256`
+
+There are special cases for left-most and top-most pixel positions:
+
+  * Top-left value at location (0,0) uses 0 as predictor value. Otherwise,
+  * For horizontal or gradient filtering methods, the left-most pixels at
+    location (0, y) are predicted using the location (0, y-1) just above.
+  * For vertical or gradient filtering methods, the top-most pixels at
+    location (x, 0) are predicted using the location (x-1, 0) on the left.
+
+
 Pre-processing (P): 2 bits
 
 : These INFORMATIVE bits are used to signal the pre-processing that has
