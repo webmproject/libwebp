@@ -12,7 +12,7 @@ end of this file.
 Specification for WebP Lossless Bitstream
 =========================================
 
-_2012-06-19_
+_Jyrki Alakuijala, Ph.D., Google, Inc., 2012-06-19_
 
 
 Abstract
