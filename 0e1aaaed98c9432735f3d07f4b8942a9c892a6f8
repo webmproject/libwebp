@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "AAAALn//5GE\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-07-11T23:31:10Z",
+      "side": 1,
+      "message": "\"(offset - 1)\" is unneeded\n\ni\u0027d remove \u0027gracefully convert\u0027 too \u003d\u003e\n\n\"// snap offsets to even position\"",
+      "revId": "0e1aaaed98c9432735f3d07f4b8942a9c892a6f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAALn//5oE\u003d",
         "filename": "src/mux/muxedit.c",
         "patchSetId": 3
@@ -81,6 +98,23 @@
       "writtenOn": "2012-07-11T18:41:01Z",
       "side": 1,
       "message": "remove the second \u0027only\u0027; s/would/will/",
+      "revId": "0e1aaaed98c9432735f3d07f4b8942a9c892a6f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn//5Fo\u003d",
+        "filename": "src/webp/mux.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-07-11T23:31:10Z",
+      "side": 1,
+      "message": "\"would be...\"\n\u003d\u003e \"will be snapped to even location\"",
       "revId": "0e1aaaed98c9432735f3d07f4b8942a9c892a6f8",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
