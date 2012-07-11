@@ -38,13 +38,15 @@ dnl === check for PNG support ===
 
 PNG_INCLUDES=""
 PNG_LIBS=""
-AC_PATH_PROG(LIBPNG_CONFIG, libpng-config)
+AC_PATH_PROGS(LIBPNG_CONFIG,
+              [libpng-config libpng15-config libpng14-config libpng12-config])
 if test -n "$LIBPNG_CONFIG"; then
   PNG_INCLUDES=`$LIBPNG_CONFIG --cflags`
   PNG_PREFIX=`$LIBPNG_CONFIG --prefix`
   if test "${PNG_PREFIX}/lib" != "/usr/lib" ; then
     PNG_LIBS="-L${PNG_PREFIX}/lib"
   fi
+  PNG_LIBS="$PNG_LIBS `$LIBPNG_CONFIG --libs`"
 fi
 
 WITHLIB_OPTION([png], [PNG])
@@ -55,15 +57,22 @@ CPPFLAGS="$PNG_INCLUDES $CPPFLAGS"
 LIBS="$PNG_LIBS $LIBS"
 
 AC_CHECK_HEADER(png.h,
-  AC_CHECK_LIB(png, png_get_libpng_ver,
-               [PNG_LIBS="$PNG_LIBS -lpng"
-                PNG_INCLUDES="$PNG_INCLUDES -DWEBP_HAVE_PNG"
-                AC_DEFINE(WEBP_HAVE_PNG, [1],
-                          [Set to 1 if PNG library is installed])
-               ],
-               AC_MSG_WARN(Optional png library not found),
-               [$MATH_LIBS]),
-  AC_MSG_WARN(png library not available - no png.h)
+  AC_SEARCH_LIBS(png_get_libpng_ver, [png],
+                 [test "$ac_cv_search_png_get_libpng_ver" = "none required" \
+                    || PNG_LIBS="$PNG_LIBS $ac_cv_search_png_get_libpng_ver"
+                  PNG_INCLUDES="$PNG_INCLUDES -DWEBP_HAVE_PNG"
+                  AC_DEFINE(WEBP_HAVE_PNG, [1],
+                            [Set to 1 if PNG library is installed])
+                 ],
+                 [AC_MSG_WARN(Optional png library not found)
+                  PNG_LIBS=""
+                  PNG_INCLUDES=""
+                 ],
+                 [$MATH_LIBS]),
+  [AC_MSG_WARN(png library not available - no png.h)
+   PNG_LIBS=""
+   PNG_INCLUDES=""
+  ],
 )
 AC_SUBST(PNG_LIBS)
 AC_SUBST(PNG_INCLUDES)
