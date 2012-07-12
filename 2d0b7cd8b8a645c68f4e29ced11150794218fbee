@@ -104,6 +104,23 @@
     },
     {
       "key": {
+        "uuid": "AAAALn//4uo\u003d",
+        "filename": "src/webp/mux.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-07-12T06:46:16Z",
+      "side": 1,
+      "message": "you could say it\u0027s rounded down to the nearest even number if you wanted to avoid the \u0026\u003d ~1; either way is ok I guess",
+      "revId": "2d0b7cd8b8a645c68f4e29ced11150794218fbee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAALn//4vk\u003d",
         "filename": "src/webp/mux.h",
         "patchSetId": 5
