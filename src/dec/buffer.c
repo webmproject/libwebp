@@ -43,11 +43,11 @@ static VP8StatusCode CheckDecBuffer(const WebPDecBuffer* const buffer) {
     ok = 0;
   } else if (!WebPIsRGBMode(mode)) {   // YUV checks
     const WebPYUVABuffer* const buf = &buffer->u.YUVA;
-    const size_t size = buf->y_stride * height;
-    const size_t u_size = buf->u_stride * ((height + 1) / 2);
-    const size_t v_size = buf->v_stride * ((height + 1) / 2);
-    const size_t a_size = buf->a_stride * height;
-    ok &= (size <= buf->y_size);
+    const uint64_t y_size = (uint64_t)buf->y_stride * height;
+    const uint64_t u_size = (uint64_t)buf->u_stride * ((height + 1) / 2);
+    const uint64_t v_size = (uint64_t)buf->v_stride * ((height + 1) / 2);
+    const uint64_t a_size = (uint64_t)buf->a_stride * height;
+    ok &= (y_size <= buf->y_size);
     ok &= (u_size <= buf->u_size);
     ok &= (v_size <= buf->v_size);
     ok &= (a_size <= buf->a_size);
@@ -59,7 +59,7 @@ static VP8StatusCode CheckDecBuffer(const WebPDecBuffer* const buffer) {
     }
   } else {    // RGB checks
     const WebPRGBABuffer* const buf = &buffer->u.RGBA;
-    const size_t size = buf->stride * height;
+    const uint64_t size = (uint64_t)buf->stride * height;
     ok &= (size <= buf->size);
     ok &= (buf->stride >= width * kModeBpp[mode]);
   }
@@ -108,23 +108,23 @@ static VP8StatusCode AllocateBuffer(WebPDecBuffer* const buffer) {
       WebPYUVABuffer* const buf = &buffer->u.YUVA;
       buf->y = output;
       buf->y_stride = stride;
-      buf->y_size = (int)size;
+      buf->y_size = (size_t)size;
       buf->u = output + size;
       buf->u_stride = uv_stride;
-      buf->u_size = (int)uv_size;
+      buf->u_size = (size_t)uv_size;
       buf->v = output + size + uv_size;
       buf->v_stride = uv_stride;
-      buf->v_size = (int)uv_size;
+      buf->v_size = (size_t)uv_size;
       if (mode == MODE_YUVA) {
         buf->a = output + size + 2 * uv_size;
       }
-      buf->a_size = (int)a_size;
+      buf->a_size = (size_t)a_size;
       buf->a_stride = a_stride;
     } else {  // RGBA initialization
       WebPRGBABuffer* const buf = &buffer->u.RGBA;
       buf->rgba = output;
       buf->stride = stride;
-      buf->size = (int)size;
+      buf->size = (size_t)size;
     }
   }
   return CheckDecBuffer(buffer);
