@@ -8,6 +8,9 @@
 // Multi-threaded worker
 //
 // Author: skal@google.com (Pascal Massimino)
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <assert.h>
 #include <string.h>   // for memset()

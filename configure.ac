@@ -34,6 +34,23 @@ AC_SEARCH_LIBS([log2], [m],,
                [AC_DEFINE([NOT_HAVE_LOG2], [1],
                           [Undefine this if you have log2().])])
 
+dnl === Check for pthread support
+AC_ARG_ENABLE([threading],
+              AS_HELP_STRING([--disable-threading],
+                             [Disable detection of thread support]),,
+              [enable_threading=yes])
+if test "$enable_threading" = "yes"; then
+  AC_MSG_NOTICE([checking for threading support...])
+  AX_PTHREAD([AC_DEFINE([WEBP_USE_THREAD], [1],
+                        [Undefine this to disable thread support.])
+              LIBS="$PTHREAD_LIBS $LIBS"
+              CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+              CC="$PTHREAD_CC"
+             ],
+             [enable_threading=no])
+fi
+AC_MSG_NOTICE([checking if threading is enabled... ${enable_threading-no}])
+
 dnl === check for PNG support ===
 
 PNG_INCLUDES=""
