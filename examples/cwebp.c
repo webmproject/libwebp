@@ -775,7 +775,7 @@ static void HelpLong(void) {
   printf("Usage:\n");
   printf(" cwebp [-preset <...>] [options] in_file [-o out_file]\n\n");
   printf("If input size (-s) for an image is not specified, "
-         "it is assumed to be a PNG or JPEG file.\n");
+         "it is assumed to be a PNG, JPEG or TIFF file.\n");
 #ifdef HAVE_WINCODEC_H
   printf("Windows builds can take as input any of the files handled by WIC\n");
 #endif
