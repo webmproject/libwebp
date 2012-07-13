@@ -97,8 +97,8 @@ WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
 
   if (data == NULL) return NULL;
   if (size < RIFF_HEADER_SIZE) return NULL;
-  if (GetLE32(data + 0) != mktag('R', 'I', 'F', 'F') ||
-      GetLE32(data + CHUNK_HEADER_SIZE) != mktag('W', 'E', 'B', 'P')) {
+  if (GetLE32(data + 0) != MKFOURCC('R', 'I', 'F', 'F') ||
+      GetLE32(data + CHUNK_HEADER_SIZE) != MKFOURCC('W', 'E', 'B', 'P')) {
     return NULL;
   }
 
@@ -213,13 +213,13 @@ WebPMuxError WebPMuxGetFeatures(const WebPMux* const mux, uint32_t* flags) {
   return WEBP_MUX_OK;
 }
 
-static uint8_t* EmitVP8XChunk(uint8_t* const dst, uint32_t width,
-                              uint32_t height, uint32_t flags) {
+static uint8_t* EmitVP8XChunk(uint8_t* const dst, int width,
+                              int height, uint32_t flags) {
   const size_t vp8x_size = CHUNK_HEADER_SIZE + VP8X_CHUNK_SIZE;
   assert(width >= 1 && height >= 1);
   assert(width <= MAX_CANVAS_SIZE && height <= MAX_CANVAS_SIZE);
   assert(width * (uint64_t)height < MAX_IMAGE_AREA);
-  PutLE32(dst, mktag('V', 'P', '8', 'X'));
+  PutLE32(dst, MKFOURCC('V', 'P', '8', 'X'));
   PutLE32(dst + TAG_SIZE, VP8X_CHUNK_SIZE);
   PutLE32(dst + CHUNK_HEADER_SIZE, flags);
   PutLE24(dst + CHUNK_HEADER_SIZE + 4, width - 1);
@@ -301,7 +301,7 @@ WebPMuxError WebPMuxGetColorProfile(const WebPMux* const mux,
 }
 
 WebPMuxError WebPMuxGetLoopCount(const WebPMux* const mux,
-                                 uint32_t* loop_count) {
+                                 int* const loop_count) {
   WebPData image;
   WebPMuxError err;
 
@@ -310,14 +310,15 @@ WebPMuxError WebPMuxGetLoopCount(const WebPMux* const mux,
   err = MuxGet(mux, IDX_LOOP, 1, &image);
   if (err != WEBP_MUX_OK) return err;
   if (image.size_ < kChunks[WEBP_CHUNK_LOOP].size) return WEBP_MUX_BAD_DATA;
-  *loop_count = GetLE32(image.bytes_);
+  *loop_count = GetLE16(image.bytes_);
 
   return WEBP_MUX_OK;
 }
 
 static WebPMuxError MuxGetFrameTileInternal(
     const WebPMux* const mux, uint32_t nth, WebPData* const bitstream,
-    uint32_t* x_offset, uint32_t* y_offset, uint32_t* duration, uint32_t tag) {
+    int* const x_offset, int* const y_offset, int* const duration,
+    uint32_t tag) {
   const WebPData* frame_tile_data;
   WebPMuxError err;
   WebPMuxImage* wpi;
@@ -340,27 +341,24 @@ static WebPMuxError MuxGetFrameTileInternal(
   frame_tile_data = &wpi->header_->data_;
 
   if (frame_tile_data->size_ < kChunks[idx].size) return WEBP_MUX_BAD_DATA;
-  *x_offset = GetLE32(frame_tile_data->bytes_ + 0);
-  *y_offset = GetLE32(frame_tile_data->bytes_ + 4);
-  if (is_frame) *duration = GetLE32(frame_tile_data->bytes_ + 16);
+  *x_offset = 2 * GetLE24(frame_tile_data->bytes_ + 0);
+  *y_offset = 2 * GetLE24(frame_tile_data->bytes_ + 3);
+  if (is_frame) *duration = 1 + GetLE24(frame_tile_data->bytes_ + 12);
 
   return SynthesizeBitstream(wpi, bitstream);
 }
 
 WebPMuxError WebPMuxGetFrame(const WebPMux* const mux, uint32_t nth,
-                             WebPData* const bitstream,
-                             uint32_t* x_offset, uint32_t* y_offset,
-                             uint32_t* duration) {
-  return MuxGetFrameTileInternal(mux, nth, bitstream,
-                                 x_offset, y_offset, duration,
-                                 kChunks[IDX_FRAME].tag);
+                             WebPData* const bitstream, int* const x_offset,
+                             int* const y_offset, int* const duration) {
+  return MuxGetFrameTileInternal(mux, nth, bitstream, x_offset, y_offset,
+                                 duration, kChunks[IDX_FRAME].tag);
 }
 
 WebPMuxError WebPMuxGetTile(const WebPMux* const mux, uint32_t nth,
                             WebPData* const bitstream,
-                            uint32_t* x_offset, uint32_t* y_offset) {
-  return MuxGetFrameTileInternal(mux, nth, bitstream,
-                                 x_offset, y_offset, NULL,
+                            int* const x_offset, int* const y_offset) {
+  return MuxGetFrameTileInternal(mux, nth, bitstream, x_offset, y_offset, NULL,
                                  kChunks[IDX_TILE].tag);
 }
 

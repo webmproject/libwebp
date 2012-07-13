@@ -20,16 +20,16 @@ extern "C" {
 #define UNDEFINED_CHUNK_SIZE (-1)
 
 const ChunkInfo kChunks[] = {
-  { mktag('V', 'P', '8', 'X'),  WEBP_CHUNK_VP8X,    VP8X_CHUNK_SIZE },
-  { mktag('I', 'C', 'C', 'P'),  WEBP_CHUNK_ICCP,    UNDEFINED_CHUNK_SIZE },
-  { mktag('L', 'O', 'O', 'P'),  WEBP_CHUNK_LOOP,    LOOP_CHUNK_SIZE },
-  { mktag('F', 'R', 'M', ' '),  WEBP_CHUNK_FRAME,   FRAME_CHUNK_SIZE },
-  { mktag('T', 'I', 'L', 'E'),  WEBP_CHUNK_TILE,    TILE_CHUNK_SIZE },
-  { mktag('A', 'L', 'P', 'H'),  WEBP_CHUNK_ALPHA,   UNDEFINED_CHUNK_SIZE },
-  { mktag('V', 'P', '8', ' '),  WEBP_CHUNK_IMAGE,   UNDEFINED_CHUNK_SIZE },
-  { mktag('V', 'P', '8', 'L'),  WEBP_CHUNK_IMAGE,   UNDEFINED_CHUNK_SIZE },
-  { mktag('M', 'E', 'T', 'A'),  WEBP_CHUNK_META,    UNDEFINED_CHUNK_SIZE },
-  { mktag('U', 'N', 'K', 'N'),  WEBP_CHUNK_UNKNOWN, UNDEFINED_CHUNK_SIZE },
+  { MKFOURCC('V', 'P', '8', 'X'),  WEBP_CHUNK_VP8X,    VP8X_CHUNK_SIZE },
+  { MKFOURCC('I', 'C', 'C', 'P'),  WEBP_CHUNK_ICCP,    UNDEFINED_CHUNK_SIZE },
+  { MKFOURCC('L', 'O', 'O', 'P'),  WEBP_CHUNK_LOOP,    LOOP_CHUNK_SIZE },
+  { MKFOURCC('F', 'R', 'M', ' '),  WEBP_CHUNK_FRAME,   FRAME_CHUNK_SIZE },
+  { MKFOURCC('T', 'I', 'L', 'E'),  WEBP_CHUNK_TILE,    TILE_CHUNK_SIZE },
+  { MKFOURCC('A', 'L', 'P', 'H'),  WEBP_CHUNK_ALPHA,   UNDEFINED_CHUNK_SIZE },
+  { MKFOURCC('V', 'P', '8', ' '),  WEBP_CHUNK_IMAGE,   UNDEFINED_CHUNK_SIZE },
+  { MKFOURCC('V', 'P', '8', 'L'),  WEBP_CHUNK_IMAGE,   UNDEFINED_CHUNK_SIZE },
+  { MKFOURCC('M', 'E', 'T', 'A'),  WEBP_CHUNK_META,    UNDEFINED_CHUNK_SIZE },
+  { MKFOURCC('U', 'N', 'K', 'N'),  WEBP_CHUNK_UNKNOWN, UNDEFINED_CHUNK_SIZE },
 
   { NIL_TAG,                    WEBP_CHUNK_NIL,     UNDEFINED_CHUNK_SIZE }
 };
@@ -426,10 +426,10 @@ int MuxHasLosslessImages(const WebPMuxImage* images) {
 }
 
 uint8_t* MuxEmitRiffHeader(uint8_t* const data, size_t size) {
-  PutLE32(data + 0, mktag('R', 'I', 'F', 'F'));
+  PutLE32(data + 0, MKFOURCC('R', 'I', 'F', 'F'));
   PutLE32(data + TAG_SIZE, (uint32_t)size - CHUNK_HEADER_SIZE);
   assert(size == (uint32_t)size);
-  PutLE32(data + TAG_SIZE + CHUNK_SIZE_BYTES, mktag('W', 'E', 'B', 'P'));
+  PutLE32(data + TAG_SIZE + CHUNK_SIZE_BYTES, MKFOURCC('W', 'E', 'B', 'P'));
   return data + RIFF_HEADER_SIZE;
 }
 

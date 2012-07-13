@@ -268,6 +268,8 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteColorProfile(WebPMux* const mux);
 // Animation.
 
 // Adds an animation frame at the end of the mux object.
+// Note: as WebP only supports even offsets, any odd offset will be snapped to
+// an even location using: offset &= ~1
 // Parameters:
 //   mux - (in/out) object to which an animation frame is to be added
 //   bitstream - (in) the image data corresponding to the frame. It can either
@@ -284,15 +286,13 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteColorProfile(WebPMux* const mux);
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxPushFrame(
     WebPMux* const mux, const WebPData* const bitstream,
-    uint32_t x_offset, uint32_t y_offset, uint32_t duration,
-    int copy_data);
+    int x_offset, int y_offset, int duration, int copy_data);
 
 // TODO(urvang): Create a struct as follows to reduce argument list size:
 // typedef struct {
-//  WebPData image;
-//  WebPData alpha;
-//  uint32_t x_offset, y_offset;
-//  uint32_t duration;
+//  WebPData bitstream;
+//  int x_offset, y_offset;
+//  int duration;
 // } FrameInfo;
 
 // Gets the nth animation frame from the mux object.
@@ -315,7 +315,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxPushFrame(
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxGetFrame(
     const WebPMux* const mux, uint32_t nth, WebPData* const bitstream,
-    uint32_t* x_offset, uint32_t* y_offset, uint32_t* duration);
+    int* const x_offset, int* const y_offset, int* const duration);
 
 // Deletes an animation frame from the mux object.
 // nth=0 has a special meaning - last position.
@@ -340,7 +340,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteFrame(WebPMux* const mux, uint32_t nth);
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxSetLoopCount(WebPMux* const mux,
-                                              uint32_t loop_count);
+                                              int loop_count);
 
 // Gets the animation loop count from the mux object.
 // Parameters:
@@ -351,12 +351,14 @@ WEBP_EXTERN(WebPMuxError) WebPMuxSetLoopCount(WebPMux* const mux,
 //   WEBP_MUX_NOT_FOUND - if loop chunk is not present in mux object.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxGetLoopCount(const WebPMux* const mux,
-                                              uint32_t* loop_count);
+                                              int* const loop_count);
 
 //------------------------------------------------------------------------------
 // Tiling.
 
 // Adds a tile at the end of the mux object.
+// Note: as WebP only supports even offsets, any odd offset will be snapped to
+// an even location using: offset &= ~1
 // Parameters:
 //   mux - (in/out) object to which a tile is to be added.
 //   bitstream - (in) the image data corresponding to the frame. It can either
@@ -372,7 +374,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetLoopCount(const WebPMux* const mux,
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxPushTile(
     WebPMux* const mux, const WebPData* const bitstream,
-    uint32_t x_offset, uint32_t y_offset, int copy_data);
+    int x_offset, int y_offset, int copy_data);
 
 // Gets the nth tile from the mux object.
 // The content of 'bitstream' is allocated using malloc(), and NOT
@@ -393,7 +395,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxPushTile(
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxGetTile(
     const WebPMux* const mux, uint32_t nth, WebPData* const bitstream,
-    uint32_t* x_offset, uint32_t* y_offset);
+    int* const x_offset, int* const y_offset);
 
 // Deletes a tile from the mux object.
 // nth=0 has a special meaning - last position

@@ -47,7 +47,7 @@ static struct {
   int print_info;
 
   uint32_t flags;
-  uint32_t loop_count;
+  int loop_count;
   int frame_num;
   int frame_max;
 
@@ -177,10 +177,10 @@ static void StartDisplay(const WebPDecBuffer* const pic) {
 //------------------------------------------------------------------------------
 // File decoding
 
-static int Decode(const int frame_number, uint32_t* const duration) {
+static int Decode(const int frame_number, int* const duration) {
   WebPDecoderConfig* const config = kParams.config;
   WebPData *data, image_data;
-  uint32_t x_off = 0, y_off = 0;
+  int x_off = 0, y_off = 0;
   WebPDecBuffer* const output_buffer = &config->output;
   int ok = 0;
 
@@ -214,7 +214,7 @@ static int Decode(const int frame_number, uint32_t* const duration) {
 
 static void decode_callback(int what) {
   if (what == 0 && !kParams.done) {
-    uint32_t duration = 0;
+    int duration = 0;
     if (kParams.mux != NULL) {
       if (!Decode(kParams.frame_num, &duration)) {
         kParams.decoding_error = 1;
@@ -339,7 +339,7 @@ int main(int argc, char *argv[]) {
 
   // Decode first frame
   {
-    uint32_t duration;
+    int duration;
     if (!Decode(1, &duration)) goto Error;
   }
 

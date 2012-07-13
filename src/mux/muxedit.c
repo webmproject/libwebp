@@ -19,11 +19,11 @@ extern "C" {
 
 // Object to store metadata about images.
 typedef struct {
-  uint32_t    x_offset_;
-  uint32_t    y_offset_;
-  uint32_t    duration_;
-  uint32_t    width_;
-  uint32_t    height_;
+  int x_offset_;
+  int y_offset_;
+  int duration_;
+  int width_;
+  int height_;
 } WebPImageInfo;
 
 //------------------------------------------------------------------------------
@@ -115,8 +115,8 @@ static WebPMuxError MuxAddChunk(WebPMux* const mux, uint32_t nth, uint32_t tag,
 
 // Create data for frame/tile given image data, offsets and duration.
 static WebPMuxError CreateFrameTileData(const WebPData* const image,
-                                        uint32_t x_offset, uint32_t y_offset,
-                                        uint32_t duration, int is_lossless,
+                                        int x_offset, int y_offset,
+                                        int duration, int is_lossless,
                                         int is_frame,
                                         WebPData* const frame_tile) {
   int width;
@@ -129,16 +129,19 @@ static WebPMuxError CreateFrameTileData(const WebPData* const image,
       VP8GetInfo(image->bytes_, image->size_, image->size_, &width, &height);
   if (!ok) return WEBP_MUX_INVALID_ARGUMENT;
 
+  assert(width > 0 && height > 0 && duration > 0);
+  // Note: assertion on upper bounds is done in PutLE24().
+
   frame_tile_bytes = (uint8_t*)malloc(frame_tile_size);
   if (frame_tile_bytes == NULL) return WEBP_MUX_MEMORY_ERROR;
 
-  PutLE32(frame_tile_bytes + 0, x_offset);
-  PutLE32(frame_tile_bytes + 4, y_offset);
+  PutLE24(frame_tile_bytes + 0, x_offset / 2);
+  PutLE24(frame_tile_bytes + 3, y_offset / 2);
 
   if (is_frame) {
-    PutLE32(frame_tile_bytes + 8, (uint32_t)width);
-    PutLE32(frame_tile_bytes + 12, (uint32_t)height);
-    PutLE32(frame_tile_bytes + 16, duration);
+    PutLE24(frame_tile_bytes + 6, width - 1);
+    PutLE24(frame_tile_bytes + 9, height - 1);
+    PutLE24(frame_tile_bytes + 12, duration - 1);
   }
 
   frame_tile->bytes_ = frame_tile_bytes;
@@ -300,11 +303,12 @@ WebPMuxError WebPMuxSetColorProfile(WebPMux* const mux,
   return MuxSet(mux, IDX_ICCP, 1, color_profile, copy_data);
 }
 
-WebPMuxError WebPMuxSetLoopCount(WebPMux* const mux, uint32_t loop_count) {
+WebPMuxError WebPMuxSetLoopCount(WebPMux* const mux, int loop_count) {
   WebPMuxError err;
   uint8_t* data = NULL;
 
   if (mux == NULL) return WEBP_MUX_INVALID_ARGUMENT;
+  if (loop_count >= MAX_LOOP_COUNT) return WEBP_MUX_INVALID_ARGUMENT;
 
   // Delete the existing LOOP chunk(s).
   err = DeleteLoopCount(mux);
@@ -314,7 +318,7 @@ WebPMuxError WebPMuxSetLoopCount(WebPMux* const mux, uint32_t loop_count) {
   data = (uint8_t*)malloc(kChunks[IDX_LOOP].size);
   if (data == NULL) return WEBP_MUX_MEMORY_ERROR;
 
-  PutLE32(data, loop_count);
+  PutLE16(data, loop_count);
   err = MuxAddChunk(mux, 1, kChunks[IDX_LOOP].tag, data,
                     kChunks[IDX_LOOP].size, 1);
   free(data);
@@ -322,8 +326,8 @@ WebPMuxError WebPMuxSetLoopCount(WebPMux* const mux, uint32_t loop_count) {
 }
 
 static WebPMuxError MuxPushFrameTileInternal(
-    WebPMux* const mux, const WebPData* const bitstream, uint32_t x_offset,
-    uint32_t y_offset, uint32_t duration, int copy_data, uint32_t tag) {
+    WebPMux* const mux, const WebPData* const bitstream, int x_offset,
+    int y_offset, int duration, int copy_data, uint32_t tag) {
   WebPChunk chunk;
   WebPData image;
   WebPData alpha;
@@ -334,10 +338,20 @@ static WebPMuxError MuxPushFrameTileInternal(
   int is_lossless;
   int image_tag;
 
+  // Sanity checks.
   if (mux == NULL || bitstream == NULL || bitstream->bytes_ == NULL ||
       bitstream->size_ > MAX_CHUNK_PAYLOAD) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
+  if (x_offset < 0 || x_offset >= MAX_POSITION_OFFSET ||
+      y_offset < 0 || y_offset >= MAX_POSITION_OFFSET ||
+      duration <= 0 || duration > MAX_DURATION) {
+    return WEBP_MUX_INVALID_ARGUMENT;
+  }
+
+  // Snap offsets to even positions.
+  x_offset &= ~1;
+  y_offset &= ~1;
 
   // If given data is for a whole webp file,
   // extract only the VP8/VP8L data from it.
@@ -394,15 +408,15 @@ static WebPMuxError MuxPushFrameTileInternal(
 
 WebPMuxError WebPMuxPushFrame(WebPMux* const mux,
                               const WebPData* const bitstream,
-                              uint32_t x_offset, uint32_t y_offset,
-                              uint32_t duration, int copy_data) {
+                              int x_offset, int y_offset,
+                              int duration, int copy_data) {
   return MuxPushFrameTileInternal(mux, bitstream, x_offset, y_offset,
                                   duration, copy_data, kChunks[IDX_FRAME].tag);
 }
 
 WebPMuxError WebPMuxPushTile(WebPMux* const mux,
                              const WebPData* const bitstream,
-                             uint32_t x_offset, uint32_t y_offset,
+                             int x_offset, int y_offset,
                              int copy_data) {
   return MuxPushFrameTileInternal(mux, bitstream, x_offset, y_offset,
                                   1 /* unused duration */, copy_data,
@@ -454,9 +468,8 @@ WebPMuxError WebPMuxDeleteTile(WebPMux* const mux, uint32_t nth) {
 // Assembly of the WebP RIFF file.
 
 static WebPMuxError GetFrameTileInfo(const WebPChunk* const frame_tile_chunk,
-                                     uint32_t* const x_offset,
-                                     uint32_t* const y_offset,
-                                     uint32_t* const duration) {
+                                     int* const x_offset, int* const y_offset,
+                                     int* const duration) {
   const uint32_t tag = frame_tile_chunk->tag_;
   const int is_frame = (tag == kChunks[IDX_FRAME].tag);
   const WebPData* const data = &frame_tile_chunk->data_;
@@ -466,9 +479,9 @@ static WebPMuxError GetFrameTileInfo(const WebPChunk* const frame_tile_chunk,
   assert(tag == kChunks[IDX_FRAME].tag || tag ==  kChunks[IDX_TILE].tag);
   if (data->size_ != expected_data_size) return WEBP_MUX_INVALID_ARGUMENT;
 
-  *x_offset = GetLE32(data->bytes_ + 0);
-  *y_offset = GetLE32(data->bytes_ + 4);
-  if (is_frame) *duration = GetLE32(data->bytes_ + 16);
+  *x_offset = 2 * GetLE24(data->bytes_ + 0);
+  *y_offset = 2 * GetLE24(data->bytes_ + 3);
+  if (is_frame) *duration = 1 + GetLE24(data->bytes_ + 12);
   return WEBP_MUX_OK;
 }
 
@@ -497,7 +510,7 @@ static WebPMuxError GetImageInfo(const WebPMuxImage* const wpi,
   const WebPChunk* const image_chunk = wpi->img_;
   const WebPChunk* const frame_tile_chunk = wpi->header_;
   WebPMuxError err;
-  uint32_t x_offset, y_offset, duration;
+  int x_offset, y_offset, duration;
   int width, height;
 
   memset(image_info, 0, sizeof(*image_info));
@@ -520,8 +533,8 @@ static WebPMuxError GetImageInfo(const WebPMuxImage* const wpi,
 }
 
 static WebPMuxError GetImageCanvasWidthHeight(
-    const WebPMux* const mux,
-    uint32_t flags, uint32_t* width, uint32_t* height) {
+    const WebPMux* const mux, uint32_t flags,
+    int* const width, int* const height) {
   WebPMuxImage* wpi = NULL;
   assert(mux != NULL);
   assert(width && height);
@@ -531,25 +544,21 @@ static WebPMuxError GetImageCanvasWidthHeight(
   assert(wpi->img_ != NULL);
 
   if (wpi->next_) {
-    uint32_t max_x = 0;
-    uint32_t max_y = 0;
-    uint64_t image_area = 0;
+    int max_x = 0;
+    int max_y = 0;
+    int64_t image_area = 0;
     // Aggregate the bounding box for animation frames & tiled images.
     for (; wpi != NULL; wpi = wpi->next_) {
       WebPImageInfo image_info;
       const WebPMuxError err = GetImageInfo(wpi, &image_info);
-      const uint32_t max_x_pos = image_info.x_offset_ + image_info.width_;
-      const uint32_t max_y_pos = image_info.y_offset_ + image_info.height_;
+      const int max_x_pos = image_info.x_offset_ + image_info.width_;
+      const int max_y_pos = image_info.y_offset_ + image_info.height_;
       if (err != WEBP_MUX_OK) return err;
+      assert(image_info.x_offset_ < MAX_POSITION_OFFSET);
+      assert(image_info.y_offset_ < MAX_POSITION_OFFSET);
 
-      if (max_x_pos < image_info.x_offset_) {  // Overflow occurred.
-          return WEBP_MUX_INVALID_ARGUMENT;
-        }
-      if (max_y_pos < image_info.y_offset_) {  // Overflow occurred.
-          return WEBP_MUX_INVALID_ARGUMENT;
-        }
-        if (max_x_pos > max_x) max_x = max_x_pos;
-        if (max_y_pos > max_y) max_y = max_y_pos;
+      if (max_x_pos > max_x) max_x = max_x_pos;
+      if (max_y_pos > max_y) max_y = max_y_pos;
       image_area += (image_info.width_ * image_info.height_);
     }
     *width = max_x;
@@ -583,8 +592,8 @@ static WebPMuxError GetImageCanvasWidthHeight(
 static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   WebPMuxError err = WEBP_MUX_OK;
   uint32_t flags = 0;
-  uint32_t width = 0;
-  uint32_t height = 0;
+  int width = 0;
+  int height = 0;
   uint8_t data[VP8X_CHUNK_SIZE];
   const size_t data_size = VP8X_CHUNK_SIZE;
   const WebPMuxImage* images = NULL;
@@ -631,6 +640,13 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
 
   err = GetImageCanvasWidthHeight(mux, flags, &width, &height);
   if (err != WEBP_MUX_OK) return err;
+
+  if (width <= 0 || height <= 0) {
+    return WEBP_MUX_INVALID_ARGUMENT;
+  }
+  if (width > MAX_CANVAS_SIZE || height > MAX_CANVAS_SIZE) {
+    return WEBP_MUX_INVALID_ARGUMENT;
+  }
 
   if (MuxHasLosslessImages(images)) {
     // We have a file with a VP8X chunk having some lossless images.
