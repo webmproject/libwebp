@@ -453,21 +453,21 @@ Frame Y: 24 bits (_uint24_)
 Frame Width Minus One: 24 bits (_uint24_)
 
 : The _1-based_ width of the frame.
-  The Frame Width is '1 + Frame Width Minus One'
+  The frame width is '1 + Frame Width Minus One'
 
 Frame Height Minus One: 24 bits (_uint24_)
 
 : The _1-based_ height of the frame.
-  The Frame Height is '1 + Frame Height Minus One'
+  The frame height is '1 + Frame Height Minus One'
 
 Frame Duration Minus One: 24 bits (_uint24_)
 
-: _1-based_ time to wait before displaying the next frame, in 1 millisecond
+: The _1-based_ time to wait before displaying the next frame, in 1 millisecond
   units. The actual duration is '1 + Frame Duration Minus One' milliseconds.
 
 For images that are animations, this chunk contains information about a single
-frame, and describes the (optional) alpha chunk and the bitstream chunk that
-follows it. If the _Animation flag_ is not set and this chunk is present,
+frame, and describes the optional alpha chunk and the bitstream chunk that
+follow it. If the _Animation flag_ is not set and this chunk is present,
 it SHOULD be ignored.
 
 
@@ -485,14 +485,14 @@ it SHOULD be ignored.
 
 Tile X: 24 bits (_uint24_)
 
-: X coordinate of the upper left corner of the tile is `Tile X * 2`
+: The X coordinate of the upper left corner of the tile is `Tile X * 2`
 
 Tile Y: 24 bits (_uint24_)
 
-: Y coordinate of the upper left corner of the tile is `Tile Y * 2`
+: The Y coordinate of the upper left corner of the tile is `Tile Y * 2`
 
 For images that contain tiling, this chunk contains information about a single
-tile and describes the (optional) alpha chunk and bitstream chunk that follow
+tile and describes the optional alpha chunk and the bitstream chunk that follow
 it. If the _Tile flag_ is not set and this chunk is present, it SHOULD be
 ignored.
 
@@ -584,17 +584,17 @@ However, a frame/tile containing a 'VP8L' chunk SHOULD NOT contain this chunk.
 **Rationale**: the transparency information of a frame/tile is already part of
 the 'VP8L' chunk.
 
-The alpha channel data is losslessly stored as raw data (when
+The alpha channel data is stored as uncompressed raw data (when
 compression method is '0') or compressed using the lossless format
 (when the compression method is '1').
 
   * Raw data: consists of a byte sequence of length width * height,
-    containing all the 8bit transparency values in scan order.
+    containing all the 8-bit transparency values in scan order.
 
   * Lossless format compression: the byte sequence is a compressed
     image-stream (as described in the [WebP Lossless Bitstream Format]
-    [webpllspec]) of implicit dimension width x height. (That is, this
-    image-stream does NOT contain any headers describing the image dimension).
+    [webpllspec]) of implicit dimension width x height. That is, this
+    image-stream does NOT contain any headers describing the image dimension.
 
     **Rationale**: the dimension is already known from other sources,
     so storing it again would be redundant and error-prone.
@@ -605,7 +605,7 @@ compression method is '0') or compressed using the lossless format
     of the ARGB quadruplet.
 
     **Rationale**: the green channel is allowed extra transformation
-    steps in the specification -unlike the other channels- that can
+    steps in the specification -- unlike the other channels -- that can
     improve compression.
 
 #### Bitstream (VP8/VP8L)
@@ -619,8 +619,9 @@ A bitstream chunk may be either (i) a VP8 chunk, using "VP8 " (note the
 significant fourth-character space) as its tag _or_ (ii) a VP8L chunk , using
 "VP8L" as its tag.
 
-The formats of VP8 and VP8L chunks are as described in sections _Simple file
-format (lossy)_ and _Simple file format (lossless)_ respectively.
+The formats of VP8 and VP8L chunks are as described in sections
+[Simple file format (lossy)](#simple-file-format-lossy)
+and [Simple file format (lossless)](#simple-file-format-lossless) respectively.
 
 #### Color profile
 
