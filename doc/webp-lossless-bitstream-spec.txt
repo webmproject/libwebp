@@ -662,14 +662,14 @@ instead of a million (distance) or several thousands (length).
 | 6           | 9..12           | 2          |
 | 7           | 13..16          | 2          |
 | ...         | ...             | ...        |
-| 38          | 262145..524288  | 17         |
-| 39          | 524289..1048576 | 17         |
+| 38          | 262145..524288  | 18         |
+| 39          | 524289..1048576 | 18         |
 
 The code to obtain a value from the prefix code is as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 if (prefix_code < 4) {
-  return prefix_code;
+  return prefix_code + 1;
 }
 int extra_bits = (prefix_code - 2) >> 1;
 int offset = (2 + (prefix_code & 1)) << extra_bits;
