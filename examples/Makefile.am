@@ -1,6 +1,9 @@
 AM_CPPFLAGS = -I$(top_srcdir)/src
 
-bin_PROGRAMS = dwebp cwebp webpmux
+bin_PROGRAMS = dwebp cwebp
+if WANT_MUX
+  bin_PROGRAMS += webpmux
+endif
 noinst_LTLIBRARIES = libexampleutil.la
 
 libexampleutil_la_SOURCES = example_util.c

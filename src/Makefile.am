@@ -1,4 +1,7 @@
-SUBDIRS = dec enc dsp utils mux
+SUBDIRS = dec enc dsp utils
+if WANT_MUX
+  SUBDIRS += mux
+endif
 
 AM_CPPFLAGS = -I$(top_srcdir)/src
 lib_LTLIBRARIES = libwebp.la

@@ -203,13 +203,14 @@ UTILS_OBJS = \
 LIBWEBP_OBJS = $(DEC_OBJS) $(DSP_OBJS) $(ENC_OBJS) $(UTILS_OBJS) $(LIBWEBP_OBJS)
 LIBWEBPMUX_OBJS = $(MUX_OBJS) $(LIBWEBPMUX_OBJS)
 
-OUT_LIBS = $(LIBWEBP) $(LIBWEBPMUX)
-OUT_EXAMPLES = $(DIRBIN)\cwebp.exe $(DIRBIN)\dwebp.exe $(DIRBIN)\webpmux.exe
+OUT_LIBS = $(LIBWEBP)
+OUT_EXAMPLES = $(DIRBIN)\cwebp.exe $(DIRBIN)\dwebp.exe
 
 all: $(OUT_LIBS) $(OUT_EXAMPLES)
 $(DIRBIN)\cwebp.exe: $(DIROBJ)\examples\cwebp.obj
 $(DIRBIN)\dwebp.exe: $(DIROBJ)\examples\dwebp.obj
 $(DIRBIN)\webpmux.exe: $(DIROBJ)\examples\webpmux.obj $(LIBWEBPMUX)
+$(DIRBIN)\webpmux.exe: $(EX_UTIL_OBJS) $(LIBWEBP)
 $(OUT_EXAMPLES): $(EX_UTIL_OBJS) $(LIBWEBP)
 
 experimental:
