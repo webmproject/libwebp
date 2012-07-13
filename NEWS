@@ -1,6 +1,6 @@
-- unreleased: version 0.2.0
+- 7/13/12: version 0.1.99
   * Alpha channel encode/decode support.
-  * Lossless decoder.
+  * Lossless encoder/decoder.
   Incompatible changes:
     * The encode ABI has been modified to support alpha encoding.
     * Deprecated function WebPINew() has been removed.
