@@ -13,7 +13,7 @@ end of this file.
 WebP Container Specification
 ============================
 
-_Working Draft, v0.4, 20120613_
+_Working Draft, v0.5, 20120713_
 
 
 * TOC placeholder
@@ -27,9 +27,8 @@ WebP is an image format that uses either (i) the VP8 key frame encoding
 to compress image data in a lossy way, or (ii) the WebP lossless encoding
 (and possibly other encodings in the future). These encoding schemes should
 make it more efficient than currently used formats. It is optimized for fast
-image transfer over the network (e.g., for websites). However, it also aims
-for feature parity (color profile, metadata, animation, etc.) with other
-formats. This document describes the structure of a WebP file.
+image transfer over the network (e.g., for websites). This document describes
+the structure of a WebP file.
 
 The WebP container (i.e., RIFF container for WebP) allows feature support over
 and above the basic use case of WebP (i.e., a file containing a single image
@@ -39,25 +38,7 @@ for:
   * **Lossless compression.** An image can be losslessly compressed, using the
     WebP Lossless Format.
 
-  * **Transparency.** An image may have transparency, i.e., an alpha channel
-    for each frame/tile.
-
-  * **Metadata.** An image can have metadata stored in any of the popular
-    metadata formats.
-
-  * **Color profiles.** An image can have an ICC profile characterizing a color
-    input or output device.
-
-  * **Animation.** An image may have pauses between frames, making it
-    an animation.
-
-  * **Tiling.** A single VP8 frame has an inherent limitation for width
-    or height of 2^14 pixels, and a 512 KiB limit on the size of the first
-    compressed partition. To support larger images, we support images
-    that are composed of multiple tiles, each encoded as a separate VP8
-    frame. All tiles form logically a single image:  they have common
-    metadata, color profile, etc. Tiling may also improve efficiency for
-    larger images, e.g., grass can be encoded differently than sky.
+  * **Transparency.** An image may have transparency, i.e., an alpha channel.
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
@@ -67,16 +48,9 @@ document are to be interpreted as described in [RFC 2119][].
 Terminology &amp; Basics
 ------------------------
 
-A WebP file contains either a still image (i.e., an encoded matrix of
-pixels) or an animation (see below), with possibly a color profile,
-metadata, etc. In case we need to refer only to the matrix of pixels,
-we will call it the _canvas_ of the image.
-
-The canvas of an image is built from one or multiple tiles. Each tile
-is a separately encoded VP8 key frame or a WebP lossless bitstream. Building
-an image from several tiles allows the format to overcome the size limitations
-of a single VP8 frame / WebP lossless bitstream. Tiles are an internal detail
-of the file:  they are not supposed to be exposed to the user.
+A WebP file contains a still image (i.e., an encoded matrix of pixels) and,
+optionally, transparency information. In case we need to refer only to the
+matrix of pixels, we will call it the _canvas_ of the image.
 
 Below are additional terms used throughout this document:
 
@@ -275,46 +249,17 @@ An extended format file consists of:
 
   * A 'VP8X' chunk with information about features used in the file.
 
-  * An optional 'ICCP' chunk with color profile.
+  * An optional 'ALPH' chunk with transparency information.
 
-  * Optionally, some other unknown chunk types that may be defined by future
-    specifications.
-
-  * An optional 'LOOP' chunk with animation control data.
-
-  * Data for all the frames.
-
-  * An optional 'META' chunk with metadata.
-
-A file MUST contain at least one frame. As will be described in the 'VP8X'
-chunk description, by checking a flag one can distinguish animated and
-non-animated images. A non-animated image has exactly one frame. An animated
-one may have multiple frames. Data for each frame consists of:
-
-  * An optional 'FRM ' (fourth character is a significant space) chunk
-    with animation frame metadata. It MUST be present in animated
-    images at the beginning of data for that frame. It MUST NOT be
-    present in non-animated images.
-
-  * An optional 'TILE' chunk with tile position metadata. It MUST be
-    present at the beginning of each tile for a frame that is represented as
-    multiple tile images.
-
-  * An optional 'ALPH' chunk with alpha bitstream of the frame/tile.
-
-  * A 'VP8 ' or a 'VP8L' chunk containing compressed image data of the
-    frame/tile.
-
-  * An optional unknown chunk type that may be defined by future
-    specifications.
+  * The image bitstream contained in either a 'VP8 ' or 'VP8L' chunk.
 
 All chunks SHOULD be placed in the same order as listed above. If a chunk
 appears in the wrong place, the file is invalid, but readers MAY parse the
 file, ignoring the chunks that come too late.
 
 **Rationale:** Setting the order of chunks should allow quicker file
-parsing. For example, if an ICCP chunk does not appear in its required
-position, a decoder can choose to stop searching for it.  The rule of
+parsing. For example, if an 'ALPH' chunk does not appear in its required
+position, a decoder can choose to stop searching for it. The rule of
 ignoring late chunks should make programs that need to do a full search
 give the same results as the ones stopping early.
 
@@ -327,61 +272,25 @@ Extended WebP file header:
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('VP8X')                      |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |  R  |L|M|I|A|T|                   Reserved                    |
+    | Rsv |L|  Rsv  |                   Reserved                    |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |          Canvas Width Minus One               |             ...
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     ...  Canvas Height Minus One    |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-Tiling (T): 1 bit
+Reserved (Rsv): 4 bits
 
-: Set if the image is represented by tiles.
-
-Animation (A): 1 bit
-
-: Set if the file is an animation. Data in 'LOOP' and 'FRM ' chunks
-  should be used to control the animation.
-
-ICC profile (I): 1 bit
-
-: Set if the file contains an 'ICCP' chunk.
-
-Metadata (M): 1 bit
-
-: Set if the file contains a 'META' chunk.
+: SHOULD be `0`.
 
 Alpha (L): 1 bit
 
 : Set if the file contains some (or all) images with transparency information
 ("alpha").
 
-Rotation and Symmetry (R): 3 bits
+Reserved (Rsv): 3 bits
 
-: Specify an isometry to be applied to every bitstream chunk decoded.
-
-The table below specifies into what coordinates a point (x,y) in the original
-coordinate system has to be transformed into:
-
-| Value |         Name               |     New coordinates                    |
-|:------|:--------------------------:|:--------------------------------------: |
-|   0   | Identify                   |     (x,y)                               |
-|-------
-|   1   | Horizontal symmetry        |     (x, CanvasHeight-1-y)               |
-|-------
-|   2   | Vertical symmetry          |     (CanvasWidth-1-x, y)                |
-|-------
-|   3   | Rotation 180 degrees       |     (CanvasWidth-1-x, CanvasHeight-1-y) |
-|-------
-|   4   | Diagonal symmetry 1        |     (y, x)                              |
-|-------
-|   5   | Rotation clockwise         |     (CanvasHeight-1-y, x)               |
-|-------
-|   6   | Rotation counter-clockwise |     (y, CanvasWidth-1-x)                |
-|-------
-|   7   | Diagonal symmetry 2        |     (CanvasHeight-1-y, CanvasWidth-1-x) |
-|-------
-{: rules="groups"}
+: SHOULD be `0`.
 
 Reserved: 24 bits
 
@@ -402,100 +311,6 @@ The product of _Canvas Width_ and _Canvas Height_ MUST be at most `2^32 - 1`.
 Future specifications MAY add more fields.
 
 ### Chunks
-
-#### Animation
-
-Loop Chunk:
-
-     0                   1                   2                   3
-     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                      ChunkHeader('LOOP')                      |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |          Loop Count           |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-Loop Count: 16 bits (_uint16_)
-
-: The number of times to loop the animation. `0` means infinitely.
-
-For images that are animations, this chunk contains the global
-parameters of the animation.
-
-This chunk MUST appear if the _Animation_ flag in chunk VP8X is set.
-If the _Animation_ flag is not set and this chunk is present, it
-SHOULD be ignored.
-
-Frame chunk:
-
-     0                   1                   2                   3
-     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                      ChunkHeader('FRM ')                      |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                        Frame X                |             ...
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    ...          Frame Y            |   Frame Width Minus One     ...
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    ...             |           Frame Height Minus One              |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |            Frame Duration Minus One           |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-Frame X: 24 bits (_uint24_)
-
-: The X coordinate of the upper left corner of the frame is `Frame X * 2`
-
-Frame Y: 24 bits (_uint24_)
-
-: The Y coordinate of the upper left corner of the frame is `Frame Y * 2`
-
-Frame Width Minus One: 24 bits (_uint24_)
-
-: The _1-based_ width of the frame.
-  The frame width is '1 + Frame Width Minus One'
-
-Frame Height Minus One: 24 bits (_uint24_)
-
-: The _1-based_ height of the frame.
-  The frame height is '1 + Frame Height Minus One'
-
-Frame Duration Minus One: 24 bits (_uint24_)
-
-: The _1-based_ time to wait before displaying the next frame, in 1 millisecond
-  units. The actual duration is '1 + Frame Duration Minus One' milliseconds.
-
-For images that are animations, this chunk contains information about a single
-frame, and describes the optional alpha chunk and the bitstream chunk that
-follow it. If the _Animation flag_ is not set and this chunk is present,
-it SHOULD be ignored.
-
-
-#### Tiling
-
-     0                   1                   2                   3
-     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                      ChunkHeader('TILE')                      |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                      Tile X                   |             ...
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    ...           Tile Y            |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-Tile X: 24 bits (_uint24_)
-
-: The X coordinate of the upper left corner of the tile is `Tile X * 2`
-
-Tile Y: 24 bits (_uint24_)
-
-: The Y coordinate of the upper left corner of the tile is `Tile Y * 2`
-
-For images that contain tiling, this chunk contains information about a single
-tile and describes the optional alpha chunk and the bitstream chunk that follow
-it. If the _Tile flag_ is not set and this chunk is present, it SHOULD be
-ignored.
-
 
 #### Alpha
 
@@ -578,10 +393,9 @@ Alpha bitstream: _Chunk Size_ - `1` bytes
 
 : Encoded alpha bitstream.
 
-This optional chunk contains encoded alpha data for a single frame/tile.
-For images with transparency, some of the frames/tiles may contain this chunk.
-However, a frame/tile containing a 'VP8L' chunk SHOULD NOT contain this chunk.
-**Rationale**: the transparency information of a frame/tile is already part of
+This optional chunk contains encoded alpha data for a single frame.
+An image containing a 'VP8L' chunk SHOULD NOT contain this chunk.
+**Rationale**: the transparency information of an image is already part of
 the 'VP8L' chunk.
 
 The alpha channel data is stored as uncompressed raw data (when
@@ -610,198 +424,40 @@ compression method is '0') or compressed using the lossless format
 
 #### Bitstream (VP8/VP8L)
 
-This chunk contains compressed image data. As described earlier, images
-with a simple file format (lossy/lossless) have a single bitstream chunk
-as the first subchunk of RIFF, while images with extended file format may
-contain several of them, one for each frame/tile.
+This chunk contains compressed image data.
 
 A bitstream chunk may be either (i) a VP8 chunk, using "VP8 " (note the
-significant fourth-character space) as its tag _or_ (ii) a VP8L chunk , using
+significant fourth-character space) as its tag _or_ (ii) a VP8L chunk, using
 "VP8L" as its tag.
 
 The formats of VP8 and VP8L chunks are as described in sections
 [Simple file format (lossy)](#simple-file-format-lossy)
 and [Simple file format (lossless)](#simple-file-format-lossless) respectively.
 
-#### Color profile
-
-     0                   1                   2                   3
-     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                      ChunkHeader('ICCP')                      |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                       Color Profile                           |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-Color Profile: _Chunk Size_ bytes
-
-: ICC profile.
-
-This chunk MUST appear before data for all the frames.
-
-There SHOULD be at most one such chunk. If there are more such chunks, readers
-MAY ignore all except the first one.
-See <http://www.color.org> for specifications.
-
-If this chunk is not present, sRGB SHOULD be assumed.
-
-#### Metadata
-
-     0                   1                   2                   3
-     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                      ChunkHeader('META')                      |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                             Metadata                          |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-Metadata: _Chunk Size_ bytes
-
-: image metadata.
-
-This chunk MUST appear after data for all the frames.
-
-There SHOULD be at most one such chunk. If there are more such chunks, readers
-MAY ignore all except the first one.
-
-Additional guidance about handling metadata can be found in the
-Metadata Working Group's [Guidelines for Handling Metadata][metadata].
-
 #### Unknown Chunks
 
 A file MAY contain other unknown chunks. Readers SHOULD be ignore these chunks.
 Writers SHOULD preserve them in their original order.
 
-### Assembling the Canvas from Tiles and Animation
-
-Here we provide an overview of how 'TILE' chunks and 'FRM '/'LOOP' chunks are
-used to assemble the canvas. The notation _VP8X.field_ means the field in
-the 'VP8X' chunk with the same description.
-
-Decoding a _non-animated_ canvas MUST be equivalent to the following
-pseudocode:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-assert not VP8X.flags.haveAnimation
-canvas ← new black image of size
-         VP8X.canvasWidth x VP8X.canvasHeight.
-tile_params.tileX = tile_params.tileY = 0
-for chunk in data_for_all_frames:
-    if chunk.tag == "TILE":
-        assert No other TILE chunk after the last Bitstream chunk
-        assert No ALPH chunk after the last Bitstream chunk
-        tile_params = chunk
-        assert VP8X.canvasWidth >=
-            tile_params.tileX + tile_params.tileWidth
-        assert VP8X.canvasHeight >=
-            tile_params.tileY + tile_params.tileHeight
-    if chunk.tag == "ALPH":
-        assert No other ALPH chunk after the last Bitstream chunk
-        tile_params.alpha = alpha_data
-    if chunk.tag == "VP8 " OR chunk.tag == "VP8L":
-        render image in chunk on canvas with top-left corner in
-            (tile_params.tileX, tile_params.tileY).
-    Ignore unknown chunks
-canvas contains the decoded canvas.
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Decoding an _animated_ canvas MUST be equivalent to the following
-pseudocode:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-assert VP8X.flags.haveAnimation
-canvas ← new black image of size
-         VP8X.canvasWidth x VP8X.canvasHeight.
-loop_count ← LOOP.loopCount
-if loop_count == 0:
-    loop_count = ∞
-frame_params ← nil
-for LOOP.loop = 0, ..., LOOP.loopCount-1
-    assert First chunk in data_for_all_frames is FRM
-    for chunk in data_for_all_frames:
-        if chunk.tag == "FRM ":
-            assert No other FRM chunk after the last Bitstream chunk
-            assert No ALPH chunk after the last Bitstream chunk
-            frame_params = chunk
-            assert VP8X.canvasWidth >=
-                frame_params.frameX + frame_params.frameWidth
-            assert VP8X.canvasHeight >=
-                frame_params.frameY + frame_params.frameHeight
-        if chunk.tag == "ALPH":
-            assert No other ALPH chunk after the last Bitstream chunk
-            frame_params.alpha = alpha_data
-        if chunk.tag == "VP8 " OR chunk.tag == "VP8L":
-            render image in chunk on canvas with top-left corner in
-                (frame_params.frameX, frame_params.frameY). Show the contents
-                of the image for frame_params.frameDuration * 1ms.
-        Ignore unknown chunks
-canvas contains the decoded canvas.
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-As described earlier, if an assert related to chunk ordering fails, the reader
-MAY ignore the badly-ordered chunks instead of failing to decode the file.
-
 Example file layouts
 --------------------
 
-A tiled image without transparency may look as follows:
+A lossy encoded image with alpha may look as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 RIFF/WEBP
 +- VP8X (descriptions of features used)
-+- ICCP (color profile)
-+- TILE (First tile parameters)
-+- VP8 (bitstream - first tile)
-+- TILE (Second tile parameters)
-+- VP8 (bitstream - second tile)
-+- TILE (third tile parameters)
-+- VP8 (bitstream - third tile)
-+- TILE (fourth tile parameters)
-+- VP8 (bitstream - fourth tile)
-+- META (metadata)
++- ALPH (alpha bitstream)
++- VP8 (bitstream)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-An animated image with transparency may look as follows:
+A losslessly encoded image may look as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 RIFF/WEBP
 +- VP8X (descriptions of features used)
-+- LOOP (animation control parameters)
-+- FRM (first animation frame parameters)
-+- ALPH (alpha bitstream - first frame)
-+- VP8 (bitstream - first frame)
-+- FRM (second animation frame parameters)
-+- ALPH (alpha bitstream - second frame)
-+- VP8 (bitstream - second frame)
-+- META (metadata)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A losslessly encoded non-animated non-tiled image may
-look as follows:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-RIFF/WEBP
-+- VP8X (descriptions of features used)
-+- ICCP (color profile)
 +- XYZW (unknown chunk)
 +- VP8L (lossless bitstream)
-+- META (metadata)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An animated image may have a mix of lossy and lossless
-bitstreams as follows:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-RIFF/WEBP
-+- VP8X (descriptions of features used)
-+- FRM (first animation frame parameters)
-+- VP8 (lossy bitstream - first frame)
-+- FRM (second animation frame parameters)
-+- VP8L (lossless bitstream - second frame)
-+- ABCD (unknown chunk)
-+- FRM (third animation frame parameters)
-+- VP8 (lossy bitstream - third frame)
-+- EFGH (unknown chunk)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [vp8spec]:  http://tools.ietf.org/html/rfc6386
