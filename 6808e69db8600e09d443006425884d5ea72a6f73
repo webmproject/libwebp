@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAALn//3wg\u003d",
+        "filename": "src/webp/format_constants.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-07-13T06:53:58Z",
+      "side": 1,
+      "message": "might need to revisit this one if we\u0027re going to stick to the even sized chunks with 0 padding...",
+      "revId": "6808e69db8600e09d443006425884d5ea72a6f73",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
