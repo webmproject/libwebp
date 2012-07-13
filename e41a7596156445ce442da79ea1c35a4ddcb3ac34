@@ -16,6 +16,24 @@
       "revId": "e41a7596156445ce442da79ea1c35a4ddcb3ac34",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn//4MA\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-07-13T18:33:52Z",
+      "side": 1,
+      "message": "yes, post branch I\u0027ll make this 0.1.99, followed soon by 0.2.0",
+      "parentUuid": "AAAALn//5JQ\u003d",
+      "revId": "e41a7596156445ce442da79ea1c35a4ddcb3ac34",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
