@@ -9,9 +9,11 @@ lib_LTLIBRARIES = libwebp.la
 libwebp_la_SOURCES =
 libwebpinclude_HEADERS =
 libwebpinclude_HEADERS += webp/decode.h
-libwebpinclude_HEADERS += webp/decode_vp8.h
 libwebpinclude_HEADERS += webp/encode.h
 libwebpinclude_HEADERS += webp/types.h
+noinst_HEADERS =
+noinst_HEADERS += webp/decode_vp8.h
+noinst_HEADERS += webp/format_constants.h
 
 libwebp_la_LIBADD =
 libwebp_la_LIBADD += dec/libwebpdecode.la
