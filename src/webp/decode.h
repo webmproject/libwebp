@@ -32,24 +32,26 @@ WEBP_EXTERN(int) WebPGetInfo(const uint8_t* data, size_t data_size,
                              int* width, int* height);
 
 // Decodes WEBP images pointed to by *data and returns RGB samples, along
-// with the dimensions in *width and *height.
+// with the dimensions in *width and *height. The ordering of samples in
+// memory is R, G, B, R, G, B... in scan order (endian-independent).
 // The returned pointer should be deleted calling free().
 // Returns NULL in case of error.
 WEBP_EXTERN(uint8_t*) WebPDecodeRGB(const uint8_t* data, size_t data_size,
                                     int* width, int* height);
 
-// Same as WebPDecodeRGB, but returning RGBA data.
+// Same as WebPDecodeRGB, but returning R, G, B, A, R, G, B, A... ordered data.
 WEBP_EXTERN(uint8_t*) WebPDecodeRGBA(const uint8_t* data, size_t data_size,
                                      int* width, int* height);
 
-// Same as WebPDecodeRGBA, but returning ARGB data.
+// Same as WebPDecodeRGBA, but returning A, R, G, B, A, R, G, B... ordered data.
 WEBP_EXTERN(uint8_t*) WebPDecodeARGB(const uint8_t* data, size_t data_size,
                                      int* width, int* height);
 
-// This variant decode to BGR instead of RGB.
+// Same as WebPDecodeRGB, but returning B, G, R, B, G, R... ordered data.
 WEBP_EXTERN(uint8_t*) WebPDecodeBGR(const uint8_t* data, size_t data_size,
                                     int* width, int* height);
-// This variant decodes to BGRA instead of RGBA.
+
+// Same as WebPDecodeBGR, but returning B, G, R, A, B, G, R, A... ordered data.
 WEBP_EXTERN(uint8_t*) WebPDecodeBGRA(const uint8_t* data, size_t data_size,
                                      int* width, int* height);
 
@@ -109,6 +111,10 @@ WEBP_EXTERN(uint8_t*) WebPDecodeYUVInto(
 // Output colorspaces and buffer
 
 // Colorspaces
+// Note: the naming describes the byte-ordering of packed samples in memory.
+// For instance, MODE_BGRA relates to samples ordered as B,G,R,A,B,G,R,A,...
+// Non-capital names (e.g.:MODE_Argb) relates to pre-multiplied RGB channels.
+// RGB-565 and RGBA-4444 are also endian-agnostic and byte-oriented.
 typedef enum { MODE_RGB = 0, MODE_RGBA = 1,
                MODE_BGR = 2, MODE_BGRA = 3,
                MODE_ARGB = 4, MODE_RGBA_4444 = 5,
