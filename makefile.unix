@@ -134,6 +134,11 @@ UTILS_OBJS = \
 LIBWEBP_OBJS = $(DEC_OBJS) $(DSP_OBJS) $(ENC_OBJS) $(UTILS_OBJS)
 LIBWEBPMUX_OBJS = $(MUX_OBJS)
 
+HDRS_INSTALLED = \
+    src/webp/decode.h \
+    src/webp/encode.h \
+    src/webp/types.h \
+
 HDRS = \
     src/dec/vp8i.h \
     src/dec/vp8li.h \
@@ -152,12 +157,10 @@ HDRS = \
     src/utils/quant_levels.h \
     src/utils/rescaler.h \
     src/utils/thread.h \
-    src/webp/decode.h \
     src/webp/decode_vp8.h \
-    src/webp/encode.h \
     src/webp/format_constants.h \
     src/webp/mux.h \
-    src/webp/types.h \
+    $(HDRS_INSTALLED) \
 
 OUT_LIBS = examples/libexample_util.a src/libwebp.a
 OUT_EXAMPLES = examples/cwebp examples/dwebp
@@ -200,7 +203,7 @@ dist: all
 	$(INSTALL) -m755 -d $(DESTDIR)/include/webp \
 	           $(DESTDIR)/doc $(DESTDIR)/lib
 	$(INSTALL) -m755 -s $(OUT_EXAMPLES) $(DESTDIR)
-	$(INSTALL) -m644 src/webp/*.h $(DESTDIR)/include/webp
+	$(INSTALL) -m644 $(HDRS_INSTALLED) $(DESTDIR)/include/webp
 	$(INSTALL) -m644 src/libwebp.a $(DESTDIR)/lib
 	umask 022; \
 	for m in man/[cd]webp.1; do \
