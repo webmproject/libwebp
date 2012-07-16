@@ -16,6 +16,24 @@
       "revId": "ff771e770506b76b951e06dea91617575da1f03a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAALn//2SY\u003d",
+        "filename": "src/dec/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-07-16T18:46:28Z",
+      "side": 1,
+      "message": "this lib uses them and they\u0027re global thus the non-_SOURCES location",
+      "parentUuid": "AAAALn//2z8\u003d",
+      "revId": "ff771e770506b76b951e06dea91617575da1f03a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
