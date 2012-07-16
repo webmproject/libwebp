@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAALn//2Tg\u003d",
+        "filename": "src/webp/decode.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-07-16T18:36:51Z",
+      "side": 1,
+      "message": "as line 46: same as WebPDecodeBGR?",
+      "revId": "647a66c42244f557f85cb2fb08408e42820c91c8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
