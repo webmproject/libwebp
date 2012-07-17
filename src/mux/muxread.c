@@ -76,7 +76,7 @@ static WebPMuxError ChunkVerifyAndAssignData(WebPChunk* chunk,
 //------------------------------------------------------------------------------
 // Create a mux object from WebP-RIFF data.
 
-WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
+WebPMux* WebPMuxCreateInternal(const WebPData* bitstream, int copy_data,
                                int version) {
   size_t riff_size;
   uint32_t tag;
@@ -188,7 +188,7 @@ WebPMux* WebPMuxCreateInternal(const WebPData* const bitstream, int copy_data,
 //------------------------------------------------------------------------------
 // Get API(s).
 
-WebPMuxError WebPMuxGetFeatures(const WebPMux* const mux, uint32_t* flags) {
+WebPMuxError WebPMuxGetFeatures(const WebPMux* mux, uint32_t* flags) {
   WebPData data;
   WebPMuxError err;
 
@@ -268,8 +268,7 @@ static WebPMuxError SynthesizeBitstream(WebPMuxImage* const wpi,
   return WEBP_MUX_OK;
 }
 
-WebPMuxError WebPMuxGetImage(const WebPMux* const mux,
-                             WebPData* const bitstream) {
+WebPMuxError WebPMuxGetImage(const WebPMux* mux, WebPData* bitstream) {
   WebPMuxError err;
   WebPMuxImage* wpi = NULL;
 
@@ -288,20 +287,18 @@ WebPMuxError WebPMuxGetImage(const WebPMux* const mux,
   return SynthesizeBitstream(wpi, bitstream);
 }
 
-WebPMuxError WebPMuxGetMetadata(const WebPMux* const mux,
-                                WebPData* const metadata) {
+WebPMuxError WebPMuxGetMetadata(const WebPMux* mux, WebPData* metadata) {
   if (mux == NULL || metadata == NULL) return WEBP_MUX_INVALID_ARGUMENT;
   return MuxGet(mux, IDX_META, 1, metadata);
 }
 
-WebPMuxError WebPMuxGetColorProfile(const WebPMux* const mux,
-                                    WebPData* const color_profile) {
+WebPMuxError WebPMuxGetColorProfile(const WebPMux* mux,
+                                    WebPData* color_profile) {
   if (mux == NULL || color_profile == NULL) return WEBP_MUX_INVALID_ARGUMENT;
   return MuxGet(mux, IDX_ICCP, 1, color_profile);
 }
 
-WebPMuxError WebPMuxGetLoopCount(const WebPMux* const mux,
-                                 int* const loop_count) {
+WebPMuxError WebPMuxGetLoopCount(const WebPMux* mux, int* loop_count) {
   WebPData image;
   WebPMuxError err;
 
@@ -348,16 +345,16 @@ static WebPMuxError MuxGetFrameTileInternal(
   return SynthesizeBitstream(wpi, bitstream);
 }
 
-WebPMuxError WebPMuxGetFrame(const WebPMux* const mux, uint32_t nth,
-                             WebPData* const bitstream, int* const x_offset,
-                             int* const y_offset, int* const duration) {
+WebPMuxError WebPMuxGetFrame(const WebPMux* mux, uint32_t nth,
+                             WebPData* bitstream,
+                             int* x_offset, int* y_offset, int* duration) {
   return MuxGetFrameTileInternal(mux, nth, bitstream, x_offset, y_offset,
                                  duration, kChunks[IDX_FRAME].tag);
 }
 
-WebPMuxError WebPMuxGetTile(const WebPMux* const mux, uint32_t nth,
-                            WebPData* const bitstream,
-                            int* const x_offset, int* const y_offset) {
+WebPMuxError WebPMuxGetTile(const WebPMux* mux, uint32_t nth,
+                            WebPData* bitstream,
+                            int* x_offset, int* y_offset) {
   return MuxGetFrameTileInternal(mux, nth, bitstream, x_offset, y_offset, NULL,
                                  kChunks[IDX_TILE].tag);
 }
@@ -384,7 +381,7 @@ static int CountChunks(const WebPChunk* const chunk_list, uint32_t tag) {
   return count;
 }
 
-WebPMuxError WebPMuxNumChunks(const WebPMux* const mux,
+WebPMuxError WebPMuxNumChunks(const WebPMux* mux,
                               WebPChunkId id, int* num_elements) {
   if (mux == NULL || num_elements == NULL) {
     return WEBP_MUX_INVALID_ARGUMENT;

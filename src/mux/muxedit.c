@@ -58,7 +58,7 @@ static void MuxRelease(WebPMux* const mux) {
   DeleteAllChunks(&mux->unknown_);
 }
 
-void WebPMuxDelete(WebPMux* const mux) {
+void WebPMuxDelete(WebPMux* mux) {
   // If mux is NULL MuxRelease is a noop.
   MuxRelease(mux);
   free(mux);
@@ -212,8 +212,8 @@ static WebPMuxError DeleteLoopCount(WebPMux* const mux) {
 //------------------------------------------------------------------------------
 // Set API(s).
 
-WebPMuxError WebPMuxSetImage(WebPMux* const mux,
-                             const WebPData* const bitstream, int copy_data) {
+WebPMuxError WebPMuxSetImage(WebPMux* mux,
+                             const WebPData* bitstream, int copy_data) {
   WebPMuxError err;
   WebPChunk chunk;
   WebPMuxImage wpi;
@@ -267,8 +267,7 @@ WebPMuxError WebPMuxSetImage(WebPMux* const mux,
   return err;
 }
 
-WebPMuxError WebPMuxSetMetadata(WebPMux* const mux,
-                                const WebPData* const metadata,
+WebPMuxError WebPMuxSetMetadata(WebPMux* mux, const WebPData* metadata,
                                 int copy_data) {
   WebPMuxError err;
 
@@ -285,8 +284,7 @@ WebPMuxError WebPMuxSetMetadata(WebPMux* const mux,
   return MuxSet(mux, IDX_META, 1, metadata, copy_data);
 }
 
-WebPMuxError WebPMuxSetColorProfile(WebPMux* const mux,
-                                    const WebPData* const color_profile,
+WebPMuxError WebPMuxSetColorProfile(WebPMux* mux, const WebPData* color_profile,
                                     int copy_data) {
   WebPMuxError err;
 
@@ -303,7 +301,7 @@ WebPMuxError WebPMuxSetColorProfile(WebPMux* const mux,
   return MuxSet(mux, IDX_ICCP, 1, color_profile, copy_data);
 }
 
-WebPMuxError WebPMuxSetLoopCount(WebPMux* const mux, int loop_count) {
+WebPMuxError WebPMuxSetLoopCount(WebPMux* mux, int loop_count) {
   WebPMuxError err;
   uint8_t* data = NULL;
 
@@ -406,16 +404,14 @@ static WebPMuxError MuxPushFrameTileInternal(
   return err;
 }
 
-WebPMuxError WebPMuxPushFrame(WebPMux* const mux,
-                              const WebPData* const bitstream,
+WebPMuxError WebPMuxPushFrame(WebPMux* mux, const WebPData* bitstream,
                               int x_offset, int y_offset,
                               int duration, int copy_data) {
   return MuxPushFrameTileInternal(mux, bitstream, x_offset, y_offset,
                                   duration, copy_data, kChunks[IDX_FRAME].tag);
 }
 
-WebPMuxError WebPMuxPushTile(WebPMux* const mux,
-                             const WebPData* const bitstream,
+WebPMuxError WebPMuxPushTile(WebPMux* mux, const WebPData* bitstream,
                              int x_offset, int y_offset,
                              int copy_data) {
   return MuxPushFrameTileInternal(mux, bitstream, x_offset, y_offset,
@@ -426,7 +422,7 @@ WebPMuxError WebPMuxPushTile(WebPMux* const mux,
 //------------------------------------------------------------------------------
 // Delete API(s).
 
-WebPMuxError WebPMuxDeleteImage(WebPMux* const mux) {
+WebPMuxError WebPMuxDeleteImage(WebPMux* mux) {
   WebPMuxError err;
 
   if (mux == NULL) return WEBP_MUX_INVALID_ARGUMENT;
@@ -439,11 +435,11 @@ WebPMuxError WebPMuxDeleteImage(WebPMux* const mux) {
   return WEBP_MUX_OK;
 }
 
-WebPMuxError WebPMuxDeleteMetadata(WebPMux* const mux) {
+WebPMuxError WebPMuxDeleteMetadata(WebPMux* mux) {
   return MuxDeleteAllNamedData(mux, IDX_META);
 }
 
-WebPMuxError WebPMuxDeleteColorProfile(WebPMux* const mux) {
+WebPMuxError WebPMuxDeleteColorProfile(WebPMux* mux) {
   return MuxDeleteAllNamedData(mux, IDX_ICCP);
 }
 
@@ -456,11 +452,11 @@ static WebPMuxError DeleteFrameTileInternal(WebPMux* const mux, uint32_t nth,
   return MuxImageDeleteNth(&mux->images_, nth, id);
 }
 
-WebPMuxError WebPMuxDeleteFrame(WebPMux* const mux, uint32_t nth) {
+WebPMuxError WebPMuxDeleteFrame(WebPMux* mux, uint32_t nth) {
   return DeleteFrameTileInternal(mux, nth, IDX_FRAME);
 }
 
-WebPMuxError WebPMuxDeleteTile(WebPMux* const mux, uint32_t nth) {
+WebPMuxError WebPMuxDeleteTile(WebPMux* mux, uint32_t nth) {
   return DeleteFrameTileInternal(mux, nth, IDX_TILE);
 }
 
@@ -664,8 +660,7 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   return err;
 }
 
-WebPMuxError WebPMuxAssemble(WebPMux* const mux,
-                             WebPData* const assembled_data) {
+WebPMuxError WebPMuxAssemble(WebPMux* mux, WebPData* assembled_data) {
   size_t size = 0;
   uint8_t* data = NULL;
   uint8_t* dst = NULL;

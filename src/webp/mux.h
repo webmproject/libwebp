@@ -102,11 +102,11 @@ typedef struct {
 
 // Clears the contents of the 'webp_data' object by calling free(). Does not
 // deallocate the object itself.
-WEBP_EXTERN(void) WebPDataClear(WebPData* const webp_data);
+WEBP_EXTERN(void) WebPDataClear(WebPData* webp_data);
 
 // Allocates necessary storage for 'dst' and copies the contents of 'src'.
 // Returns true on success.
-WEBP_EXTERN(int) WebPDataCopy(const WebPData* const src, WebPData* const dst);
+WEBP_EXTERN(int) WebPDataCopy(const WebPData* src, WebPData* dst);
 
 //------------------------------------------------------------------------------
 // Life of a Mux object
@@ -124,13 +124,13 @@ static WEBP_INLINE WebPMux* WebPMuxNew(void) {
 // Deletes the mux object.
 // Parameters:
 //   mux - (in/out) object to be deleted
-WEBP_EXTERN(void) WebPMuxDelete(WebPMux* const mux);
+WEBP_EXTERN(void) WebPMuxDelete(WebPMux* mux);
 
 //------------------------------------------------------------------------------
 // Mux creation.
 
 // Internal, version-checked, entry point
-WEBP_EXTERN(WebPMux*) WebPMuxCreateInternal(const WebPData* const, int, int);
+WEBP_EXTERN(WebPMux*) WebPMuxCreateInternal(const WebPData*, int, int);
 
 // Creates a mux object from raw data given in WebP RIFF format.
 // Parameters:
@@ -140,7 +140,7 @@ WEBP_EXTERN(WebPMux*) WebPMuxCreateInternal(const WebPData* const, int, int);
 // Returns:
 //   A pointer to the mux object created from given data - on success.
 //   NULL - In case of invalid data or memory error.
-static WEBP_INLINE WebPMux* WebPMuxCreate(const WebPData* const bitstream,
+static WEBP_INLINE WebPMux* WebPMuxCreate(const WebPData* bitstream,
                                           int copy_data) {
   return WebPMuxCreateInternal(bitstream, copy_data, WEBP_MUX_ABI_VERSION);
 }
@@ -160,8 +160,9 @@ static WEBP_INLINE WebPMux* WebPMuxCreate(const WebPData* const bitstream,
 //   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL or bitstream is NULL.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxSetImage(
-    WebPMux* const mux, const WebPData* const bitstream, int copy_data);
+WEBP_EXTERN(WebPMuxError) WebPMuxSetImage(WebPMux* mux,
+                                          const WebPData* bitstream,
+                                          int copy_data);
 
 // Gets image data from the mux object.
 // The content of 'bitstream' is allocated using malloc(), and NOT
@@ -175,8 +176,8 @@ WEBP_EXTERN(WebPMuxError) WebPMuxSetImage(
 //                               OR mux contains animation/tiling.
 //   WEBP_MUX_NOT_FOUND - if image is not present in mux object.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxGetImage(const WebPMux* const mux,
-                                          WebPData* const bitstream);
+WEBP_EXTERN(WebPMuxError) WebPMuxGetImage(const WebPMux* mux,
+                                          WebPData* bitstream);
 
 // Deletes the image in the mux object.
 // Parameters:
@@ -186,7 +187,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetImage(const WebPMux* const mux,
 //                               OR if mux contains animation/tiling.
 //   WEBP_MUX_NOT_FOUND - if image is not present in mux object.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxDeleteImage(WebPMux* const mux);
+WEBP_EXTERN(WebPMuxError) WebPMuxDeleteImage(WebPMux* mux);
 
 //------------------------------------------------------------------------------
 // XMP Metadata.
@@ -202,8 +203,9 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteImage(WebPMux* const mux);
 //   WEBP_MUX_INVALID_ARGUMENT - if mux or metadata is NULL.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxSetMetadata(
-    WebPMux* const mux, const WebPData* const metadata, int copy_data);
+WEBP_EXTERN(WebPMuxError) WebPMuxSetMetadata(WebPMux* mux,
+                                             const WebPData* metadata,
+                                             int copy_data);
 
 // Gets a reference to the XMP metadata in the mux object.
 // The caller should NOT free the returned data.
@@ -214,8 +216,8 @@ WEBP_EXTERN(WebPMuxError) WebPMuxSetMetadata(
 //   WEBP_MUX_INVALID_ARGUMENT - if either mux or metadata is NULL.
 //   WEBP_MUX_NOT_FOUND - if metadata is not present in mux object.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxGetMetadata(
-    const WebPMux* const mux, WebPData* const metadata);
+WEBP_EXTERN(WebPMuxError) WebPMuxGetMetadata(const WebPMux* mux,
+                                             WebPData* metadata);
 
 // Deletes the XMP metadata in the mux object.
 // Parameters:
@@ -224,7 +226,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetMetadata(
 //   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL
 //   WEBP_MUX_NOT_FOUND - If mux does not contain metadata.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxDeleteMetadata(WebPMux* const mux);
+WEBP_EXTERN(WebPMuxError) WebPMuxDeleteMetadata(WebPMux* mux);
 
 //------------------------------------------------------------------------------
 // ICC Color Profile.
@@ -240,8 +242,9 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteMetadata(WebPMux* const mux);
 //   WEBP_MUX_INVALID_ARGUMENT - if mux or color_profile is NULL
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error
 //   WEBP_MUX_OK - on success
-WEBP_EXTERN(WebPMuxError) WebPMuxSetColorProfile(
-    WebPMux* const mux, const WebPData* const color_profile, int copy_data);
+WEBP_EXTERN(WebPMuxError) WebPMuxSetColorProfile(WebPMux* mux,
+                                                 const WebPData* color_profile,
+                                                 int copy_data);
 
 // Gets a reference to the color profile in the mux object.
 // The caller should NOT free the returned data.
@@ -252,8 +255,8 @@ WEBP_EXTERN(WebPMuxError) WebPMuxSetColorProfile(
 //   WEBP_MUX_INVALID_ARGUMENT - if either mux or color_profile is NULL.
 //   WEBP_MUX_NOT_FOUND - if color profile is not present in mux object.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxGetColorProfile(
-    const WebPMux* const mux, WebPData* const color_profile);
+WEBP_EXTERN(WebPMuxError) WebPMuxGetColorProfile(const WebPMux* mux,
+                                                 WebPData* color_profile);
 
 // Deletes the color profile in the mux object.
 // Parameters:
@@ -262,7 +265,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetColorProfile(
 //   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL
 //   WEBP_MUX_NOT_FOUND - If mux does not contain color profile.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxDeleteColorProfile(WebPMux* const mux);
+WEBP_EXTERN(WebPMuxError) WebPMuxDeleteColorProfile(WebPMux* mux);
 
 //------------------------------------------------------------------------------
 // Animation.
@@ -285,7 +288,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteColorProfile(WebPMux* const mux);
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxPushFrame(
-    WebPMux* const mux, const WebPData* const bitstream,
+    WebPMux* mux, const WebPData* bitstream,
     int x_offset, int y_offset, int duration, int copy_data);
 
 // TODO(urvang): Create a struct as follows to reduce argument list size:
@@ -314,8 +317,8 @@ WEBP_EXTERN(WebPMuxError) WebPMuxPushFrame(
 //   WEBP_MUX_BAD_DATA - if nth frame chunk in mux is invalid.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxGetFrame(
-    const WebPMux* const mux, uint32_t nth, WebPData* const bitstream,
-    int* const x_offset, int* const y_offset, int* const duration);
+    const WebPMux* mux, uint32_t nth, WebPData* bitstream,
+    int* x_offset, int* y_offset, int* duration);
 
 // Deletes an animation frame from the mux object.
 // nth=0 has a special meaning - last position.
@@ -327,7 +330,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetFrame(
 //   WEBP_MUX_NOT_FOUND - If there are less than nth frames in the mux object
 //                        before deletion.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxDeleteFrame(WebPMux* const mux, uint32_t nth);
+WEBP_EXTERN(WebPMuxError) WebPMuxDeleteFrame(WebPMux* mux, uint32_t nth);
 
 // Sets the animation loop count in the mux object. Any existing loop count
 // value(s) will be removed.
@@ -339,8 +342,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteFrame(WebPMux* const mux, uint32_t nth);
 //   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxSetLoopCount(WebPMux* const mux,
-                                              int loop_count);
+WEBP_EXTERN(WebPMuxError) WebPMuxSetLoopCount(WebPMux* mux, int loop_count);
 
 // Gets the animation loop count from the mux object.
 // Parameters:
@@ -350,8 +352,8 @@ WEBP_EXTERN(WebPMuxError) WebPMuxSetLoopCount(WebPMux* const mux,
 //   WEBP_MUX_INVALID_ARGUMENT - if either of mux or loop_count is NULL
 //   WEBP_MUX_NOT_FOUND - if loop chunk is not present in mux object.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxGetLoopCount(const WebPMux* const mux,
-                                              int* const loop_count);
+WEBP_EXTERN(WebPMuxError) WebPMuxGetLoopCount(const WebPMux* mux,
+                                              int* loop_count);
 
 //------------------------------------------------------------------------------
 // Tiling.
@@ -373,7 +375,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetLoopCount(const WebPMux* const mux,
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxPushTile(
-    WebPMux* const mux, const WebPData* const bitstream,
+    WebPMux* mux, const WebPData* bitstream,
     int x_offset, int y_offset, int copy_data);
 
 // Gets the nth tile from the mux object.
@@ -394,8 +396,8 @@ WEBP_EXTERN(WebPMuxError) WebPMuxPushTile(
 //   WEBP_MUX_BAD_DATA - if nth tile chunk in mux is invalid.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxGetTile(
-    const WebPMux* const mux, uint32_t nth, WebPData* const bitstream,
-    int* const x_offset, int* const y_offset);
+    const WebPMux* mux, uint32_t nth, WebPData* bitstream,
+    int* x_offset, int* y_offset);
 
 // Deletes a tile from the mux object.
 // nth=0 has a special meaning - last position
@@ -407,7 +409,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetTile(
 //   WEBP_MUX_NOT_FOUND - If there are less than nth tiles in the mux object
 //                        before deletion.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxDeleteTile(WebPMux* const mux, uint32_t nth);
+WEBP_EXTERN(WebPMuxError) WebPMuxDeleteTile(WebPMux* mux, uint32_t nth);
 
 //------------------------------------------------------------------------------
 // Misc Utilities.
@@ -423,7 +425,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteTile(WebPMux* const mux, uint32_t nth);
 //   WEBP_MUX_NOT_FOUND - if VP8X chunk is not present in mux object.
 //   WEBP_MUX_BAD_DATA - if VP8X chunk in mux is invalid.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxGetFeatures(const WebPMux* const mux,
+WEBP_EXTERN(WebPMuxError) WebPMuxGetFeatures(const WebPMux* mux,
                                              uint32_t* flags);
 
 // Gets number of chunks having tag value tag in the mux object.
@@ -434,7 +436,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetFeatures(const WebPMux* const mux,
 // Returns:
 //   WEBP_MUX_INVALID_ARGUMENT - if either mux, or num_elements is NULL
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxNumChunks(const WebPMux* const mux,
+WEBP_EXTERN(WebPMuxError) WebPMuxNumChunks(const WebPMux* mux,
                                            WebPChunkId id, int* num_elements);
 
 // Assembles all chunks in WebP RIFF format and returns in 'assembled_data'.
@@ -452,8 +454,8 @@ WEBP_EXTERN(WebPMuxError) WebPMuxNumChunks(const WebPMux* const mux,
 //                               NULL.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success
-WEBP_EXTERN(WebPMuxError) WebPMuxAssemble(WebPMux* const mux,
-                                          WebPData* const assembled_data);
+WEBP_EXTERN(WebPMuxError) WebPMuxAssemble(WebPMux* mux,
+                                          WebPData* assembled_data);
 
 //------------------------------------------------------------------------------
 // Demux API.
@@ -474,12 +476,12 @@ typedef enum {
 
 // Internal, version-checked, entry point
 WEBP_EXTERN(WebPDemuxer*) WebPDemuxInternal(
-    const WebPData* const, int, WebPDemuxState* const, int);
+    const WebPData*, int, WebPDemuxState*, int);
 
 // Parses the WebP file given by 'data'.
 // A complete WebP file must be present in 'data' for the function to succeed.
 // Returns a WebPDemuxer object on successful parse, NULL otherwise.
-static WEBP_INLINE WebPDemuxer* WebPDemux(const WebPData* const data) {
+static WEBP_INLINE WebPDemuxer* WebPDemux(const WebPData* data) {
   return WebPDemuxInternal(data, 0, NULL, WEBP_DEMUX_ABI_VERSION);
 }
 
@@ -487,12 +489,12 @@ static WEBP_INLINE WebPDemuxer* WebPDemux(const WebPData* const data) {
 // If 'state' is non-NULL it will be set to indicate the status of the demuxer.
 // Returns a WebPDemuxer object on successful parse, NULL otherwise.
 static WEBP_INLINE WebPDemuxer* WebPDemuxPartial(
-    const WebPData* const data, WebPDemuxState* const state) {
+    const WebPData* data, WebPDemuxState* state) {
   return WebPDemuxInternal(data, 1, state, WEBP_DEMUX_ABI_VERSION);
 }
 
 // Frees memory associated with 'dmux'.
-WEBP_EXTERN(void) WebPDemuxDelete(WebPDemuxer* const dmux);
+WEBP_EXTERN(void) WebPDemuxDelete(WebPDemuxer* dmux);
 
 //------------------------------------------------------------------------------
 // Data/information extraction.
@@ -508,7 +510,7 @@ typedef enum {
 // NOTE: values are only valid if WebPDemux() was used or WebPDemuxPartial()
 // returned a state > WEBP_DEMUX_PARSING_HEADER.
 WEBP_EXTERN(uint32_t) WebPDemuxGetI(
-    const WebPDemuxer* const dmux, WebPFormatFeature feature);
+    const WebPDemuxer* dmux, WebPFormatFeature feature);
 
 //------------------------------------------------------------------------------
 // Frame iteration.
@@ -536,22 +538,22 @@ typedef struct {
 // Call WebPDemuxReleaseIterator() when use of the iterator is complete.
 // NOTE: 'dmux' must persist for the lifetime of 'iter'.
 WEBP_EXTERN(int) WebPDemuxGetFrame(
-    const WebPDemuxer* const dmux, int frame_number, WebPIterator* const iter);
+    const WebPDemuxer* dmux, int frame_number, WebPIterator* iter);
 
 // Sets 'iter->tile_' to point to the next ('iter->frame_num_' + 1) or previous
 // ('iter->frame_num_' - 1) frame. These functions do not loop.
 // Returns true on success, false otherwise.
-WEBP_EXTERN(int) WebPDemuxNextFrame(WebPIterator* const iter);
-WEBP_EXTERN(int) WebPDemuxPrevFrame(WebPIterator* const iter);
+WEBP_EXTERN(int) WebPDemuxNextFrame(WebPIterator* iter);
+WEBP_EXTERN(int) WebPDemuxPrevFrame(WebPIterator* iter);
 
 // Sets 'iter->tile_' to reflect tile number 'tile_number'.
 // Returns true if tile 'tile_number' is present, false otherwise.
-WEBP_EXTERN(int) WebPDemuxSelectTile(WebPIterator* const iter, int tile_number);
+WEBP_EXTERN(int) WebPDemuxSelectTile(WebPIterator* iter, int tile_number);
 
 // Releases any memory associated with 'iter'.
 // Must be called before destroying the associated WebPDemuxer with
 // WebPDemuxDelete().
-WEBP_EXTERN(void) WebPDemuxReleaseIterator(WebPIterator* const iter);
+WEBP_EXTERN(void) WebPDemuxReleaseIterator(WebPIterator* iter);
 
 //------------------------------------------------------------------------------
 // Chunk iteration.
@@ -576,20 +578,20 @@ typedef struct {
 // payloads are accessed through WebPDemuxGetFrame() and related functions.
 // Call WebPDemuxReleaseChunkIterator() when use of the iterator is complete.
 // NOTE: 'dmux' must persist for the lifetime of the iterator.
-WEBP_EXTERN(int) WebPDemuxGetChunk(const WebPDemuxer* const dmux,
+WEBP_EXTERN(int) WebPDemuxGetChunk(const WebPDemuxer* dmux,
                                    const char fourcc[4], int chunk_number,
-                                   WebPChunkIterator* const iter);
+                                   WebPChunkIterator* iter);
 
 // Sets 'iter->chunk_' to point to the next ('iter->chunk_num_' + 1) or previous
 // ('iter->chunk_num_' - 1) chunk. These functions do not loop.
 // Returns true on success, false otherwise.
-WEBP_EXTERN(int) WebPDemuxNextChunk(WebPChunkIterator* const iter);
-WEBP_EXTERN(int) WebPDemuxPrevChunk(WebPChunkIterator* const iter);
+WEBP_EXTERN(int) WebPDemuxNextChunk(WebPChunkIterator* iter);
+WEBP_EXTERN(int) WebPDemuxPrevChunk(WebPChunkIterator* iter);
 
 // Releases any memory associated with 'iter'.
 // Must be called before destroying the associated WebPDemuxer with
 // WebPDemuxDelete().
-WEBP_EXTERN(void) WebPDemuxReleaseChunkIterator(WebPChunkIterator* const iter);
+WEBP_EXTERN(void) WebPDemuxReleaseChunkIterator(WebPChunkIterator* iter);
 
 //------------------------------------------------------------------------------
 

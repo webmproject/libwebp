@@ -623,9 +623,8 @@ static void InitDemux(WebPDemuxer* const dmux, const MemBuffer* const mem) {
   dmux->mem_ = *mem;
 }
 
-WebPDemuxer* WebPDemuxInternal(
-    const WebPData* const data, int allow_partial,
-    WebPDemuxState* const state, int version) {
+WebPDemuxer* WebPDemuxInternal(const WebPData* data, int allow_partial,
+                               WebPDemuxState* state, int version) {
   const ChunkParser* parser;
   int partial;
   ParseStatus status = PARSE_ERROR;
@@ -662,7 +661,7 @@ WebPDemuxer* WebPDemuxInternal(
   return dmux;
 }
 
-void WebPDemuxDelete(WebPDemuxer* const dmux) {
+void WebPDemuxDelete(WebPDemuxer* dmux) {
   Chunk* c;
   Frame* f;
   if (dmux == NULL) return;
@@ -682,8 +681,7 @@ void WebPDemuxDelete(WebPDemuxer* const dmux) {
 
 // -----------------------------------------------------------------------------
 
-uint32_t WebPDemuxGetI(const WebPDemuxer* const dmux,
-                       WebPFormatFeature feature) {
+uint32_t WebPDemuxGetI(const WebPDemuxer* dmux, WebPFormatFeature feature) {
   if (dmux == NULL) return 0;
 
   switch (feature) {
@@ -784,8 +782,7 @@ static int SetFrame(int frame_num, WebPIterator* const iter) {
   return SynthesizeFrame(dmux, frame, 1, iter);
 }
 
-int WebPDemuxGetFrame(const WebPDemuxer* const dmux,
-                      int frame, WebPIterator* const iter) {
+int WebPDemuxGetFrame(const WebPDemuxer* dmux, int frame, WebPIterator* iter) {
   if (iter == NULL) return 0;
 
   memset(iter, 0, sizeof(*iter));
@@ -793,18 +790,18 @@ int WebPDemuxGetFrame(const WebPDemuxer* const dmux,
   return SetFrame(frame, iter);
 }
 
-int WebPDemuxNextFrame(WebPIterator* const iter) {
+int WebPDemuxNextFrame(WebPIterator* iter) {
   if (iter == NULL) return 0;
   return SetFrame(iter->frame_num_ + 1, iter);
 }
 
-int WebPDemuxPrevFrame(WebPIterator* const iter) {
+int WebPDemuxPrevFrame(WebPIterator* iter) {
   if (iter == NULL) return 0;
   if (iter->frame_num_ <= 1) return 0;
   return SetFrame(iter->frame_num_ - 1, iter);
 }
 
-int WebPDemuxSelectTile(WebPIterator* const iter, int tile) {
+int WebPDemuxSelectTile(WebPIterator* iter, int tile) {
   if (iter != NULL && iter->private_ != NULL && tile > 0) {
     const WebPDemuxer* const dmux = (WebPDemuxer*)iter->private_;
     const Frame* const frame = GetFrame(dmux, iter->frame_num_);
@@ -815,7 +812,7 @@ int WebPDemuxSelectTile(WebPIterator* const iter, int tile) {
   return 0;
 }
 
-void WebPDemuxReleaseIterator(WebPIterator* const iter) {
+void WebPDemuxReleaseIterator(WebPIterator* iter) {
   (void)iter;
 }
 
@@ -868,9 +865,9 @@ static int SetChunk(const char fourcc[4], int chunk_num,
   return 0;
 }
 
-int WebPDemuxGetChunk(const WebPDemuxer* const dmux,
+int WebPDemuxGetChunk(const WebPDemuxer* dmux,
                       const char fourcc[4], int chunk_num,
-                      WebPChunkIterator* const iter) {
+                      WebPChunkIterator* iter) {
   if (iter == NULL) return 0;
 
   memset(iter, 0, sizeof(*iter));
@@ -878,7 +875,7 @@ int WebPDemuxGetChunk(const WebPDemuxer* const dmux,
   return SetChunk(fourcc, chunk_num, iter);
 }
 
-int WebPDemuxNextChunk(WebPChunkIterator* const iter) {
+int WebPDemuxNextChunk(WebPChunkIterator* iter) {
   if (iter != NULL) {
     const char* const fourcc =
         (const char*)iter->chunk_.bytes_ - CHUNK_HEADER_SIZE;
@@ -887,7 +884,7 @@ int WebPDemuxNextChunk(WebPChunkIterator* const iter) {
   return 0;
 }
 
-int WebPDemuxPrevChunk(WebPChunkIterator* const iter) {
+int WebPDemuxPrevChunk(WebPChunkIterator* iter) {
   if (iter != NULL && iter->chunk_num_ > 1) {
     const char* const fourcc =
         (const char*)iter->chunk_.bytes_ - CHUNK_HEADER_SIZE;
@@ -896,7 +893,7 @@ int WebPDemuxPrevChunk(WebPChunkIterator* const iter) {
   return 0;
 }
 
-void WebPDemuxReleaseChunkIterator(WebPChunkIterator* const iter) {
+void WebPDemuxReleaseChunkIterator(WebPChunkIterator* iter) {
   (void)iter;
 }
 
