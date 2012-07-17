@@ -76,10 +76,6 @@ void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const histo,
 // approximately maps to.
 double VP8LHistogramEstimateBits(const VP8LHistogram* const p);
 
-// This function estimates the Huffman dictionary + other block overhead
-// size for creating a new deflate block.
-double VP8LHistogramEstimateBitsHeader(const VP8LHistogram* const p);
-
 // This function estimates the cost in bits excluding the bits needed to
 // represent the entropy code itself.
 double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p);
@@ -100,34 +96,13 @@ static WEBP_INLINE void VP8LHistogramAdd(VP8LHistogram* const p,
   }
 }
 
-static WEBP_INLINE void VP8LHistogramRemove(VP8LHistogram* const p,
-                                            const VP8LHistogram* const a) {
-  int i;
-  for (i = 0; i < PIX_OR_COPY_CODES_MAX; ++i) {
-    p->literal_[i] -= a->literal_[i];
-    assert(p->literal_[i] >= 0);
-  }
-  for (i = 0; i < NUM_DISTANCE_CODES; ++i) {
-    p->distance_[i] -= a->distance_[i];
-    assert(p->distance_[i] >= 0);
-  }
-  for (i = 0; i < 256; ++i) {
-    p->red_[i] -= a->red_[i];
-    p->blue_[i] -= a->blue_[i];
-    p->alpha_[i] -= a->alpha_[i];
-    assert(p->red_[i] >= 0);
-    assert(p->blue_[i] >= 0);
-    assert(p->alpha_[i] >= 0);
-  }
-}
-
 static WEBP_INLINE int VP8LHistogramNumCodes(const VP8LHistogram* const p) {
   return 256 + NUM_LENGTH_CODES +
       ((p->palette_code_bits_ > 0) ? (1 << p->palette_code_bits_) : 0);
 }
 
 void VP8LConvertPopulationCountTableToBitEstimates(
-    int n, const int* const population_counts, double* const output);
+    int num_symbols, const int population_counts[], double output[]);
 
 // Builds the histogram image.
 int VP8LGetHistoImageSymbols(int xsize, int ysize,
