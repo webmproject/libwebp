@@ -28,8 +28,6 @@ extern "C" {
 
 #define PALETTE_KEY_RIGHT_SHIFT   22  // Key for 1K buffer.
 #define MAX_HUFF_IMAGE_SIZE       (16 * 1024 * 1024)
-#define MIN_HISTO_BITS            2
-#define MAX_HISTO_BITS            9
 
 // -----------------------------------------------------------------------------
 // Palette
@@ -517,7 +515,8 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   VP8LBackwardRefs refs;
   uint16_t* const histogram_symbols =
       (uint16_t*)malloc(histogram_image_xysize * sizeof(*histogram_symbols));
-  assert(histogram_bits >= MIN_HISTO_BITS && histogram_bits <= MAX_HISTO_BITS);
+  assert(histogram_bits >= MIN_HUFFMAN_BITS);
+  assert(histogram_bits <= MAX_HUFFMAN_BITS);
   if (histogram_image == NULL || histogram_symbols == NULL) goto Error;
 
   // Calculate backward references from ARGB image.
@@ -894,8 +893,8 @@ static int GetHistoBits(const WebPConfig* const config,
     if (huff_image_size <= MAX_HUFF_IMAGE_SIZE) break;
     ++histo_bits;
   }
-  return (histo_bits < MIN_HISTO_BITS) ? MIN_HISTO_BITS :
-      (histo_bits > MAX_HISTO_BITS) ? MAX_HISTO_BITS : histo_bits;
+  return (histo_bits < MIN_HUFFMAN_BITS) ? MIN_HUFFMAN_BITS :
+         (histo_bits > MAX_HUFFMAN_BITS) ? MAX_HUFFMAN_BITS : histo_bits;
 }
 
 static void InitEncParams(VP8LEncoder* const enc) {
