@@ -34,7 +34,7 @@ static const union {
 // WebPPicture
 //------------------------------------------------------------------------------
 
-int WebPPictureAlloc(WebPPicture* const picture) {
+int WebPPictureAlloc(WebPPicture* picture) {
   if (picture != NULL) {
     const WebPEncCSP uv_csp = picture->colorspace & WEBP_CSP_UV_MASK;
     const int has_alpha = picture->colorspace & WEBP_CSP_ALPHA_BIT;
@@ -184,7 +184,7 @@ static int PictureAllocARGB(WebPPicture* const picture) {
 }
 
 // Release memory owned by 'picture' (both YUV and ARGB buffers).
-void WebPPictureFree(WebPPicture* const picture) {
+void WebPPictureFree(WebPPicture* picture) {
   if (picture != NULL) {
     free(picture->memory_);
     free(picture->memory_argb_);
@@ -230,7 +230,7 @@ static int AdjustAndCheckRectangle(const WebPPicture* const pic,
   return 1;
 }
 
-int WebPPictureCopy(const WebPPicture* const src, WebPPicture* const dst) {
+int WebPPictureCopy(const WebPPicture* src, WebPPicture* dst) {
   if (src == NULL || dst == NULL) return 0;
   if (src == dst) return 1;
 
@@ -268,7 +268,7 @@ int WebPPictureCopy(const WebPPicture* const src, WebPPicture* const dst) {
   return 1;
 }
 
-int WebPPictureIsView(const WebPPicture* const picture) {
+int WebPPictureIsView(const WebPPicture* picture) {
   if (picture == NULL) return 0;
   if (picture->use_argb_input) {
     return (picture->memory_argb_ == NULL);
@@ -276,9 +276,9 @@ int WebPPictureIsView(const WebPPicture* const picture) {
   return (picture->memory_ == NULL);
 }
 
-int WebPPictureView(const WebPPicture* const src,
+int WebPPictureView(const WebPPicture* src,
                     int left, int top, int width, int height,
-                    WebPPicture* const dst) {
+                    WebPPicture* dst) {
   if (src == NULL || dst == NULL) return 0;
 
   // verify rectangle position.
@@ -313,7 +313,7 @@ int WebPPictureView(const WebPPicture* const src,
 //------------------------------------------------------------------------------
 // Picture cropping
 
-int WebPPictureCrop(WebPPicture* const pic,
+int WebPPictureCrop(WebPPicture* pic,
                     int left, int top, int width, int height) {
   WebPPicture tmp;
 
@@ -391,7 +391,7 @@ static void RescalePlane(const uint8_t* src,
   }
 }
 
-int WebPPictureRescale(WebPPicture* const pic, int width, int height) {
+int WebPPictureRescale(WebPPicture* pic, int width, int height) {
   WebPPicture tmp;
   int prev_width, prev_height;
   int32_t* work;
@@ -471,14 +471,14 @@ int WebPPictureRescale(WebPPicture* const pic, int width, int height) {
 //------------------------------------------------------------------------------
 // WebPMemoryWriter: Write-to-memory
 
-void WebPMemoryWriterInit(WebPMemoryWriter* const writer) {
+void WebPMemoryWriterInit(WebPMemoryWriter* writer) {
   writer->mem = NULL;
   writer->size = 0;
   writer->max_size = 0;
 }
 
 int WebPMemoryWrite(const uint8_t* data, size_t data_size,
-                    const WebPPicture* const picture) {
+                    const WebPPicture* picture) {
   WebPMemoryWriter* const w = (WebPMemoryWriter*)picture->custom_ptr;
   size_t next_size;
   if (w == NULL) {
@@ -526,7 +526,7 @@ static int CheckNonOpaque(const uint8_t* alpha, int width, int height,
 }
 
 // Checking for the presence of non-opaque alpha.
-int WebPPictureHasTransparency(const WebPPicture* const picture) {
+int WebPPictureHasTransparency(const WebPPicture* picture) {
   if (picture == NULL) return 0;
   if (!picture->use_argb_input) {
     return CheckNonOpaque(picture->a, picture->width, picture->height,
@@ -750,40 +750,40 @@ static int Import(WebPPicture* const picture,
 #undef SUM1
 #undef RGB_TO_UV
 
-int WebPPictureImportRGB(WebPPicture* const picture,
-                         const uint8_t* const rgb, int rgb_stride) {
+int WebPPictureImportRGB(WebPPicture* picture,
+                         const uint8_t* rgb, int rgb_stride) {
   return Import(picture, rgb, rgb_stride, 3, 0, 0);
 }
 
-int WebPPictureImportBGR(WebPPicture* const picture,
-                         const uint8_t* const rgb, int rgb_stride) {
+int WebPPictureImportBGR(WebPPicture* picture,
+                         const uint8_t* rgb, int rgb_stride) {
   return Import(picture, rgb, rgb_stride, 3, 1, 0);
 }
 
-int WebPPictureImportRGBA(WebPPicture* const picture,
-                          const uint8_t* const rgba, int rgba_stride) {
+int WebPPictureImportRGBA(WebPPicture* picture,
+                          const uint8_t* rgba, int rgba_stride) {
   return Import(picture, rgba, rgba_stride, 4, 0, 1);
 }
 
-int WebPPictureImportBGRA(WebPPicture* const picture,
-                          const uint8_t* const rgba, int rgba_stride) {
+int WebPPictureImportBGRA(WebPPicture* picture,
+                          const uint8_t* rgba, int rgba_stride) {
   return Import(picture, rgba, rgba_stride, 4, 1, 1);
 }
 
-int WebPPictureImportRGBX(WebPPicture* const picture,
-                          const uint8_t* const rgba, int rgba_stride) {
+int WebPPictureImportRGBX(WebPPicture* picture,
+                          const uint8_t* rgba, int rgba_stride) {
   return Import(picture, rgba, rgba_stride, 4, 0, 0);
 }
 
-int WebPPictureImportBGRX(WebPPicture* const picture,
-                          const uint8_t* const rgba, int rgba_stride) {
+int WebPPictureImportBGRX(WebPPicture* picture,
+                          const uint8_t* rgba, int rgba_stride) {
   return Import(picture, rgba, rgba_stride, 4, 1, 0);
 }
 
 //------------------------------------------------------------------------------
 // Automatic YUV <-> ARGB conversions.
 
-int WebPPictureYUVAToARGB(WebPPicture* const picture) {
+int WebPPictureYUVAToARGB(WebPPicture* picture) {
   if (picture == NULL) return 0;
   if (picture->memory_ == NULL || picture->y == NULL ||
       picture->u == NULL || picture->v == NULL) {
@@ -842,7 +842,7 @@ int WebPPictureYUVAToARGB(WebPPicture* const picture) {
   return 1;
 }
 
-int WebPPictureARGBToYUVA(WebPPicture* const picture, WebPEncCSP colorspace) {
+int WebPPictureARGBToYUVA(WebPPicture* picture, WebPEncCSP colorspace) {
   if (picture == NULL) return 0;
   if (picture->argb == NULL) {
     return WebPEncodingSetError(picture, VP8_ENC_ERROR_NULL_PARAMETER);
@@ -896,7 +896,7 @@ static WEBP_INLINE void flatten(uint8_t* ptr, int v, int stride, int size) {
   }
 }
 
-void WebPCleanupTransparentArea(WebPPicture* const pic) {
+void WebPCleanupTransparentArea(WebPPicture* pic) {
   int x, y, w, h;
   const uint8_t* a_ptr;
   int values[3] = { 0 };
@@ -942,8 +942,7 @@ void WebPCleanupTransparentArea(WebPPicture* const pic) {
 // Max value returned in case of exact similarity.
 static const double kMinDistortion_dB = 99.;
 
-int WebPPictureDistortion(const WebPPicture* const pic1,
-                          const WebPPicture* const pic2,
+int WebPPictureDistortion(const WebPPicture* pic1, const WebPPicture* pic2,
                           int type, float result[5]) {
   int c;
   DistoStats stats[5];

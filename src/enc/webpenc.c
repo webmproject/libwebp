@@ -46,7 +46,7 @@ static int DummyWriter(const uint8_t* data, size_t data_size,
   return 1;
 }
 
-int WebPPictureInitInternal(WebPPicture* const picture, int version) {
+int WebPPictureInitInternal(WebPPicture* picture, int version) {
   if (version != WEBP_ENCODER_ABI_VERSION) {
     return 0;   // caller/system version mismatch!
   }
@@ -328,7 +328,7 @@ int WebPReportProgress(const WebPPicture* const pic,
 }
 //------------------------------------------------------------------------------
 
-int WebPEncode(const WebPConfig* const config, WebPPicture* const pic) {
+int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
   int ok;
 
   if (pic == NULL)
