@@ -140,6 +140,7 @@ HDRS_INSTALLED = \
     src/webp/types.h \
 
 HDRS = \
+    src/dec/decode_vp8.h \
     src/dec/vp8i.h \
     src/dec/vp8li.h \
     src/dec/webpi.h \
@@ -157,7 +158,6 @@ HDRS = \
     src/utils/quant_levels.h \
     src/utils/rescaler.h \
     src/utils/thread.h \
-    src/webp/decode_vp8.h \
     src/webp/format_constants.h \
     src/webp/mux.h \
     $(HDRS_INSTALLED) \
