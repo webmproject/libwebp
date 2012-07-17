@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAALn//1JQ\u003d",
+        "filename": "NEWS",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-07-17T18:18:42Z",
+      "side": 1,
+      "message": "...system-wide.",
+      "revId": "ec0cf823bba0d44173a043cde8a26cc69f3c9e08",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
