@@ -179,17 +179,17 @@ typedef struct {
 } WebPDecBuffer;
 
 // Internal, version-checked, entry point
-WEBP_EXTERN(int) WebPInitDecBufferInternal(WebPDecBuffer* const, int);
+WEBP_EXTERN(int) WebPInitDecBufferInternal(WebPDecBuffer*, int);
 
 // Initialize the structure as empty. Must be called before any other use.
 // Returns false in case of version mismatch
-static WEBP_INLINE int WebPInitDecBuffer(WebPDecBuffer* const buffer) {
+static WEBP_INLINE int WebPInitDecBuffer(WebPDecBuffer* buffer) {
   return WebPInitDecBufferInternal(buffer, WEBP_DECODER_ABI_VERSION);
 }
 
 // Free any memory associated with the buffer. Must always be called last.
 // Note: doesn't free the 'buffer' structure itself.
-WEBP_EXTERN(void) WebPFreeDecBuffer(WebPDecBuffer* const buffer);
+WEBP_EXTERN(void) WebPFreeDecBuffer(WebPDecBuffer* buffer);
 
 //------------------------------------------------------------------------------
 // Enumeration of the status codes
@@ -239,7 +239,7 @@ typedef struct WebPIDecoder WebPIDecoder;
 // is kept, which means that the lifespan of 'output_buffer' must be larger than
 // that of the returned WebPIDecoder object.
 // Returns NULL if the allocation failed.
-WEBP_EXTERN(WebPIDecoder*) WebPINewDecoder(WebPDecBuffer* const output_buffer);
+WEBP_EXTERN(WebPIDecoder*) WebPINewDecoder(WebPDecBuffer* output_buffer);
 
 // This function allocates and initializes an incremental-decoder object, which
 // will output the r/g/b(/a) samples specified by 'mode' into a preallocated
@@ -264,13 +264,13 @@ WEBP_EXTERN(WebPIDecoder*) WebPINewYUV(
 
 // Deletes the WebPIDecoder object and associated memory. Must always be called
 // if WebPINewDecoder, WebPINewRGB or WebPINewYUV succeeded.
-WEBP_EXTERN(void) WebPIDelete(WebPIDecoder* const idec);
+WEBP_EXTERN(void) WebPIDelete(WebPIDecoder* idec);
 
 // Copies and decodes the next available data. Returns VP8_STATUS_OK when
 // the image is successfully decoded. Returns VP8_STATUS_SUSPENDED when more
 // data is expected. Returns error in other cases.
 WEBP_EXTERN(VP8StatusCode) WebPIAppend(
-    WebPIDecoder* const idec, const uint8_t* const data, size_t data_size);
+    WebPIDecoder* idec, const uint8_t* data, size_t data_size);
 
 // A variant of the above function to be used when data buffer contains
 // partial data from the beginning. In this case data buffer is not copied
@@ -278,7 +278,7 @@ WEBP_EXTERN(VP8StatusCode) WebPIAppend(
 // Note that the value of the 'data' pointer can change between calls to
 // WebPIUpdate, for instance when the data buffer is resized to fit larger data.
 WEBP_EXTERN(VP8StatusCode) WebPIUpdate(
-    WebPIDecoder* const idec, const uint8_t* const data, size_t data_size);
+    WebPIDecoder* idec, const uint8_t* data, size_t data_size);
 
 // Returns the r/g/b/(a) image decoded so far. Returns NULL if output params
 // are not initialized yet. The r/g/b/(a) output type corresponds to the mode
@@ -287,13 +287,13 @@ WEBP_EXTERN(VP8StatusCode) WebPIUpdate(
 // (*last_y, *width etc.) can be NULL if corresponding information is not
 // needed.
 WEBP_EXTERN(uint8_t*) WebPIDecGetRGB(
-    const WebPIDecoder* const idec, int* last_y,
+    const WebPIDecoder* idec, int* last_y,
     int* width, int* height, int* stride);
 
 // Same as above function to get YUV image. Returns pointer to the luma plane
 // or NULL in case of error.
 WEBP_EXTERN(uint8_t*) WebPIDecGetYUV(
-    const WebPIDecoder* const idec, int* last_y,
+    const WebPIDecoder* idec, int* last_y,
     uint8_t** u, uint8_t** v,
     int* width, int* height, int* stride, int* uv_stride);
 
@@ -304,9 +304,7 @@ WEBP_EXTERN(uint8_t*) WebPIDecGetYUV(
 // Otherwise returns the pointer to the internal representation. This structure
 // is read-only, tied to WebPIDecoder's lifespan and should not be modified.
 WEBP_EXTERN(const WebPDecBuffer*) WebPIDecodedArea(
-    const WebPIDecoder* const idec,
-    int* const left, int* const top,
-    int* const width, int* const height);
+    const WebPIDecoder* idec, int* left, int* top, int* width, int* height);
 
 //------------------------------------------------------------------------------
 // Advanced decoding parametrization
@@ -355,7 +353,7 @@ typedef struct {
 
 // Internal, version-checked, entry point
 WEBP_EXTERN(VP8StatusCode) WebPGetFeaturesInternal(
-    const uint8_t*, size_t, WebPBitstreamFeatures* const, int);
+    const uint8_t*, size_t, WebPBitstreamFeatures*, int);
 
 // Retrieve features from the bitstream. The *features structure is filled
 // with information gathered from the bitstream.
@@ -363,7 +361,7 @@ WEBP_EXTERN(VP8StatusCode) WebPGetFeaturesInternal(
 // In case of error, features->bitstream_status will reflect the error code.
 static WEBP_INLINE VP8StatusCode WebPGetFeatures(
     const uint8_t* data, size_t data_size,
-    WebPBitstreamFeatures* const features) {
+    WebPBitstreamFeatures* features) {
   return WebPGetFeaturesInternal(data, data_size, features,
                                  WEBP_DECODER_ABI_VERSION);
 }
@@ -391,12 +389,12 @@ typedef struct {
 } WebPDecoderConfig;
 
 // Internal, version-checked, entry point
-WEBP_EXTERN(int) WebPInitDecoderConfigInternal(WebPDecoderConfig* const, int);
+WEBP_EXTERN(int) WebPInitDecoderConfigInternal(WebPDecoderConfig*, int);
 
 // Initialize the configuration as empty. This function must always be
 // called first, unless WebPGetFeatures() is to be called.
 // Returns false in case of mismatched version.
-static WEBP_INLINE int WebPInitDecoderConfig(WebPDecoderConfig* const config) {
+static WEBP_INLINE int WebPInitDecoderConfig(WebPDecoderConfig* config) {
   return WebPInitDecoderConfigInternal(config, WEBP_DECODER_ABI_VERSION);
 }
 
@@ -410,13 +408,13 @@ static WEBP_INLINE int WebPInitDecoderConfig(WebPDecoderConfig* const config) {
 // Returns NULL in case of error (and config->status will then reflect
 // the error condition).
 WEBP_EXTERN(WebPIDecoder*) WebPIDecode(const uint8_t* data, size_t data_size,
-                                       WebPDecoderConfig* const config);
+                                       WebPDecoderConfig* config);
 
 // Non-incremental version. This version decodes the full data at once, taking
 // 'config' into account. Return decoding status (VP8_STATUS_OK if decoding
 // was successful).
 WEBP_EXTERN(VP8StatusCode) WebPDecode(const uint8_t* data, size_t data_size,
-                                      WebPDecoderConfig* const config);
+                                      WebPDecoderConfig* config);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

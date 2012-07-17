@@ -649,7 +649,7 @@ int WebPGetInfo(const uint8_t* data, size_t data_size,
 //------------------------------------------------------------------------------
 // Advance decoding API
 
-int WebPInitDecoderConfigInternal(WebPDecoderConfig* const config,
+int WebPInitDecoderConfigInternal(WebPDecoderConfig* config,
                                   int version) {
   if (version != WEBP_DECODER_ABI_VERSION) {
     return 0;   // version mismatch
@@ -664,7 +664,7 @@ int WebPInitDecoderConfigInternal(WebPDecoderConfig* const config,
 }
 
 VP8StatusCode WebPGetFeaturesInternal(const uint8_t* data, size_t data_size,
-                                      WebPBitstreamFeatures* const features,
+                                      WebPBitstreamFeatures* features,
                                       int version) {
   VP8StatusCode status;
   if (version != WEBP_DECODER_ABI_VERSION) {
@@ -682,7 +682,7 @@ VP8StatusCode WebPGetFeaturesInternal(const uint8_t* data, size_t data_size,
 }
 
 VP8StatusCode WebPDecode(const uint8_t* data, size_t data_size,
-                         WebPDecoderConfig* const config) {
+                         WebPDecoderConfig* config) {
   WebPDecParams params;
   VP8StatusCode status;
 
