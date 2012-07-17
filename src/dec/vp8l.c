@@ -890,11 +890,21 @@ static int DecodeImageStream(int xsize, int ysize,
     goto End;
   }
 
-  data = (uint32_t*)malloc(transform_xsize * transform_ysize * sizeof(*data));
-  if (data == NULL) {
-    dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
-    ok = 0;
-    goto End;
+  {
+    const uint64_t total_size =
+        transform_xsize * transform_ysize * sizeof(*data);
+    if (total_size != (size_t)total_size) {
+      // This shouldn't happen, because of transform_bits limit, but...
+      dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
+      ok = 0;
+      goto End;
+    }
+    data = (uint32_t*)malloc((size_t)total_size);
+    if (data == NULL) {
+      dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
+      ok = 0;
+      goto End;
+    }
   }
 
   // Use the Huffman trees to decode the LZ77 encoded data.
