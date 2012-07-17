@@ -1008,7 +1008,8 @@ int WebPPictureDistortion(const WebPPicture* const pic1,
 typedef int (*Importer)(WebPPicture* const, const uint8_t* const, int);
 
 static size_t Encode(const uint8_t* rgba, int width, int height, int stride,
-                     Importer import, float quality_factor, uint8_t** output) {
+                     Importer import, float quality_factor, int lossless,
+                     uint8_t** output) {
   WebPPicture pic;
   WebPConfig config;
   WebPMemoryWriter wrt;
@@ -1019,6 +1020,8 @@ static size_t Encode(const uint8_t* rgba, int width, int height, int stride,
     return 0;  // shouldn't happen, except if system installation is broken
   }
 
+  config.lossless = !!lossless;
+  pic.use_argb_input = !!lossless;
   pic.width = width;
   pic.height = height;
   pic.writer = WebPMemoryWrite;
@@ -1036,10 +1039,10 @@ static size_t Encode(const uint8_t* rgba, int width, int height, int stride,
   return wrt.size;
 }
 
-#define ENCODE_FUNC(NAME, IMPORTER) \
-size_t NAME(const uint8_t* in, int w, int h, int bps, float q, \
-            uint8_t** out) { \
-  return Encode(in, w, h, bps, IMPORTER, q, out);  \
+#define ENCODE_FUNC(NAME, IMPORTER)                                     \
+size_t NAME(const uint8_t* in, int w, int h, int bps, float q,          \
+            uint8_t** out) {                                            \
+  return Encode(in, w, h, bps, IMPORTER, q, 0, out);                    \
 }
 
 ENCODE_FUNC(WebPEncodeRGB, WebPPictureImportRGB);
@@ -1048,6 +1051,19 @@ ENCODE_FUNC(WebPEncodeRGBA, WebPPictureImportRGBA);
 ENCODE_FUNC(WebPEncodeBGRA, WebPPictureImportBGRA);
 
 #undef ENCODE_FUNC
+
+#define LOSSLESS_DEFAULT_QUALITY 70.
+#define LOSSLESS_ENCODE_FUNC(NAME, IMPORTER)                                 \
+size_t NAME(const uint8_t* in, int w, int h, int bps, uint8_t** out) {       \
+  return Encode(in, w, h, bps, IMPORTER, LOSSLESS_DEFAULT_QUALITY, 1, out);  \
+}
+
+LOSSLESS_ENCODE_FUNC(WebPEncodeLosslessRGB, WebPPictureImportRGB);
+LOSSLESS_ENCODE_FUNC(WebPEncodeLosslessBGR, WebPPictureImportBGR);
+LOSSLESS_ENCODE_FUNC(WebPEncodeLosslessRGBA, WebPPictureImportRGBA);
+LOSSLESS_ENCODE_FUNC(WebPEncodeLosslessBGRA, WebPPictureImportBGRA);
+
+#undef LOSSLESS_ENCODE_FUNC
 
 //------------------------------------------------------------------------------
 

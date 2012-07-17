@@ -263,6 +263,20 @@ size_t WebPEncodeBGRA(const uint8_t* bgra, int width, int height, int stride,
 They will convert raw RGB samples to a WebP data. The only control supplied
 is the quality factor.
 
+There are some variants for using the lossless format:
+
+size_t WebPEncodeLosslessRGB(const uint8_t* rgb, int width, int height,
+                             int stride, uint8_t** output);
+size_t WebPEncodeLosslessBGR(const uint8_t* bgr, int width, int height,
+                             int stride, uint8_t** output);
+size_t WebPEncodeLosslessRGBA(const uint8_t* rgba, int width, int height,
+                              int stride, uint8_t** output);
+size_t WebPEncodeLosslessBGRA(const uint8_t* bgra, int width, int height,
+                              int stride, uint8_t** output);
+
+Of course in this case, no quality factor is needed since the compression
+occurs without loss of the input values, at the expense of larger output sizes.
+
 Advanced encoding API:
 ----------------------
 
