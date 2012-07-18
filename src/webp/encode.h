@@ -73,37 +73,42 @@ typedef enum {
 } WebPImageHint;
 
 typedef struct {
-  float quality;         // between 0 (smallest file) and 100 (biggest)
-  int target_size;       // if non-zero, set the desired target size in bytes.
-                         // Takes precedence over the 'compression' parameter.
-  float target_PSNR;     // if non-zero, specifies the minimal distortion to
-                         // try to achieve. Takes precedence over target_size.
-  int method;            // quality/speed trade-off (0=fast, 6=slower-better)
-  int segments;          // maximum number of segments to use, in [1..4]
-  int sns_strength;      // Spatial Noise Shaping. 0=off, 100=maximum.
-  int filter_strength;   // range: [0 = off .. 100 = strongest]
-  int filter_sharpness;  // range: [0 = off .. 7 = least sharp]
-  int filter_type;       // filtering type: 0 = simple, 1 = strong
-                         // (only used if filter_strength > 0 or autofilter > 0)
-  int autofilter;        // Auto adjust filter's strength [0 = off, 1 = on]
-  int pass;              // number of entropy-analysis passes (in [1..10]).
+  int lossless;           // Lossless encoding (0=lossy(default), 1=lossless).
+  float quality;          // between 0 (smallest file) and 100 (biggest)
+  int method;             // quality/speed trade-off (0=fast, 6=slower-better)
 
-  int show_compressed;   // if true, export the compressed picture back.
-                         // In-loop filtering is not applied.
-  int preprocessing;     // preprocessing filter (0=none, 1=segment-smooth)
-  int partitions;        // log2(number of token partitions) in [0..3]
-                         // Default is set to 0 for easier progressive decoding.
-  int partition_limit;   // quality degradation allowed to fit the 512k limit on
-                         // prediction modes coding (0=no degradation, 100=full)
+  WebPImageHint image_hint;  // Hint for image type (lossless only for now).
+
+  // Parameters related to lossy compression only:
+  int target_size;        // if non-zero, set the desired target size in bytes.
+                          // Takes precedence over the 'compression' parameter.
+  float target_PSNR;      // if non-zero, specifies the minimal distortion to
+                          // try to achieve. Takes precedence over target_size.
+  int segments;           // maximum number of segments to use, in [1..4]
+  int sns_strength;       // Spatial Noise Shaping. 0=off, 100=maximum.
+  int filter_strength;    // range: [0 = off .. 100 = strongest]
+  int filter_sharpness;   // range: [0 = off .. 7 = least sharp]
+  int filter_type;        // filtering type: 0 = simple, 1 = strong (only used
+                          // if filter_strength > 0 or autofilter > 0)
+  int autofilter;         // Auto adjust filter's strength [0 = off, 1 = on]
   int alpha_compression;  // Algorithm for encoding the alpha plane (0 = none,
-                          // 1 = backward reference counts encoded with
-                          // arithmetic encoder). Default is 1.
+                          // 1 = compressed with WebP lossless). Default is 1.
   int alpha_filtering;    // Predictive filtering method for alpha plane.
                           //  0: none, 1: fast, 2: best. Default if 1.
   int alpha_quality;      // Between 0 (smallest size) and 100 (lossless).
                           // Default is 100.
-  int lossless;           // Lossless encoding (0=lossy(default), 1=lossless).
-  WebPImageHint image_hint;  // Hint for image type.
+  int pass;               // number of entropy-analysis passes (in [1..10]).
+
+  int show_compressed;    // if true, export the compressed picture back.
+                          // In-loop filtering is not applied.
+  int preprocessing;      // preprocessing filter (0=none, 1=segment-smooth)
+  int partitions;         // log2(number of token partitions) in [0..3]. Default
+                          // is set to 0 for easier progressive decoding.
+  int partition_limit;    // quality degradation allowed to fit the 512k limit
+                          // on prediction modes coding (0: no degradation,
+                          // 100: maximum possible degradation).
+
+  uint32_t pad[8];        // padding for later use
 } WebPConfig;
 
 // Enumerate some predefined settings for WebPConfig, depending on the type
@@ -147,10 +152,11 @@ WEBP_EXTERN(int) WebPValidateConfig(const WebPConfig* config);
 
 typedef struct WebPPicture WebPPicture;   // main structure for I/O
 
-// non-essential structure for storing auxiliary statistics
+// Structure for storing auxiliary statistics (mostly for lossy encoding).
 typedef struct {
-  float PSNR[4];          // peak-signal-to-noise ratio for Y/U/V/All
   int coded_size;         // final size
+
+  float PSNR[4];          // peak-signal-to-noise ratio for Y/U/V/All
   int block_count[3];     // number of intra4/intra16/skipped macroblocks
   int header_bytes[2];    // approximate number of bytes spent for header
                           // and mode-partition #0
@@ -165,6 +171,8 @@ typedef struct {
 
   void* user_data;        // this field is free to be set to any value and
                           // used during callbacks (like progress-report e.g.).
+
+  uint32_t pad[6];        // padding for later use
 } WebPAuxStats;
 
 // Signature for output function. Should return true if writing was successful.
@@ -179,6 +187,7 @@ typedef struct {
   uint8_t* mem;       // final buffer (of size 'max_size', larger than 'size').
   size_t   size;      // final size
   size_t   max_size;  // total capacity
+  uint32_t pad[1];    // padding for later use
 } WebPMemoryWriter;
 
 // The following must be called first before any use.
@@ -228,20 +237,38 @@ typedef enum {
 // maximum width/height allowed (inclusive), in pixels
 #define WEBP_MAX_DIMENSION 16383
 
+// Main exchange structure (input samples, output bytes, statistics)
 struct WebPPicture {
-  // input
+
+  //   INPUT
+  //////////////
+  // Main flag for encoder selecting between ARGB or YUV input.
+  // It is recommended to use ARGB input (*argb, argb_stride) for lossless
+  // compression, and YUV input (*y, *u, *v, etc.) for lossy compression
+  // since these are the respective native colorspace for these formats.
+  int use_argb_input;
+
+  // YUV input (mostly used for input to lossy compression)
   WebPEncCSP colorspace;     // colorspace: should be YUV420 for now (=Y'CbCr).
   int width, height;         // dimensions (less or equal to WEBP_MAX_DIMENSION)
   uint8_t *y, *u, *v;        // pointers to luma/chroma planes.
   int y_stride, uv_stride;   // luma/chroma strides.
   uint8_t* a;                // pointer to the alpha plane
   int a_stride;              // stride of the alpha plane
+  uint32_t pad1[2];          // padding for later use
 
-  // output
+  // ARGB input (mostly used for input to lossless compression)
+  uint32_t* argb;            // Pointer to argb (32 bit) plane.
+  int argb_stride;           // This is stride in pixels units, not bytes.
+  uint32_t pad2[3];          // padding for later use
+
+  //   OUTPUT
+  ///////////////
+  // Byte-emission hook, to store compressed bytes as they are ready.
   WebPWriterFunction writer;  // can be NULL
   void* custom_ptr;           // can be used by the writer.
 
-  // map for extra information
+  // map for extra information (only for lossy compression mode)
   int extra_info_type;    // 1: intra type, 2: segment, 3: quant
                           // 4: intra-16 prediction mode,
                           // 5: chroma prediction mode,
@@ -251,24 +278,30 @@ struct WebPPicture {
                           // will be filled with a macroblock map, depending
                           // on extra_info_type.
 
-  // where to store statistics, if not NULL:
+  //   STATS AND REPORTS
+  ///////////////////////////
+  // Pointer to side statistics (updated only if not NULL)
   WebPAuxStats* stats;
 
-  // original samples (for non-YUV420 modes)
+  // Error code for the latest error encountered during encoding
+  WebPEncodingError error_code;
+
+  // If not NULL, report progress during encoding.
+  WebPProgressHook progress_hook;
+
+  uint32_t pad3[3];       // padding for later use
+
+  // Unused for now: original samples (for non-YUV420 modes)
   uint8_t *u0, *v0;
   int uv0_stride;
 
-  WebPEncodingError error_code;   // error code in case of problem.
+  uint32_t pad4[7];       // padding for later use
 
-  WebPProgressHook progress_hook;  // if not NULL, called while encoding.
-
-  int use_argb_input;     // Flag for encoder to use argb pixels as input.
-  uint32_t* argb;         // Pointer to argb (32 bit) plane.
-  int argb_stride;        // This is stride in pixels units, not bytes.
-
-  // private fields:
+  // PRIVATE FIELDS
+  ////////////////////
   void* memory_;          // row chunk of memory for yuva planes
   void* memory_argb_;     // and for argb too.
+  void* pad5[2];          // padding for later use
 };
 
 // Internal, version-checked, entry point

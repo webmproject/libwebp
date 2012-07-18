@@ -527,6 +527,7 @@ typedef struct {
                    // still be decoded with the WebP incremental decoder.
   WebPData tile_;  // The frame or tile given by 'frame_num_' and 'tile_num_'.
 
+  uint32_t pad[4];           // padding for later use
   void* private_;
 } WebPIterator;
 
@@ -563,9 +564,9 @@ typedef struct {
   // WebPDemuxGetChunk().
   int chunk_num_;
   int num_chunks_;
-  // The payload of the chunk.
-  WebPData chunk_;
+  WebPData chunk_;    // The payload of the chunk.
 
+  uint32_t pad[6];    // padding for later use
   void* private_;
 } WebPChunkIterator;
 

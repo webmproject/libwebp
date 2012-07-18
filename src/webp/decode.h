@@ -173,6 +173,8 @@ typedef struct {
     WebPRGBABuffer RGBA;
     WebPYUVABuffer YUVA;
   } u;                       // Nameless union of buffer parameters.
+  uint32_t       pad[4];     // padding for later use
+
   uint8_t* private_memory;   // Internally allocated memory (only when
                              // is_external_memory is false). Should not be used
                              // externally, but accessed via the buffer union.
@@ -341,14 +343,17 @@ WEBP_EXTERN(const WebPDecBuffer*) WebPIDecodedArea(
 
 // Features gathered from the bitstream
 typedef struct {
-  int width;        // the original width, as read from the bitstream
-  int height;       // the original height, as read from the bitstream
-  int has_alpha;    // true if bitstream contains an alpha channel
+  int width;        // Width in pixels, as read from the bitstream.
+  int height;       // Height in pixels, as read from the bitstream.
+  int has_alpha;    // True if the bitstream contains an alpha channel.
+
+  // Unused for now:
+  int bitstream_version;        // should be 0 for now. TODO(later)
   int no_incremental_decoding;  // if true, using incremental decoding is not
                                 // recommended.
   int rotate;                   // TODO(later)
   int uv_sampling;              // should be 0 for now. TODO(later)
-  int bitstream_version;        // should be 0 for now. TODO(later)
+  uint32_t pad[3];              // padding for later use
 } WebPBitstreamFeatures;
 
 // Internal, version-checked, entry point
@@ -379,6 +384,7 @@ typedef struct {
   int force_rotation;                 // forced rotation (to be applied _last_)
   int no_enhancement;                 // if true, discard enhancement layer
   int use_threads;                    // if true, use multi-threaded decoding
+  uint32_t pad[6];                    // padding for later use
 } WebPDecoderOptions;
 
 // Main object storing the configuration for advanced decoding.
