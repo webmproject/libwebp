@@ -41,7 +41,7 @@ int WebPPictureAlloc(WebPPicture* picture) {
     const int width = picture->width;
     const int height = picture->height;
 
-    if (!picture->use_argb_input) {
+    if (!picture->use_argb) {
       const int y_stride = width;
       const int uv_width = HALVE(width);
       const int uv_height = HALVE(height);
@@ -172,7 +172,7 @@ static int PictureAllocARGB(WebPPicture* const picture) {
   WebPPicture tmp;
   free(picture->memory_argb_);
   PictureResetARGB(picture);
-  picture->use_argb_input = 1;
+  picture->use_argb = 1;
   WebPPictureGrabSpecs(picture, &tmp);
   if (!WebPPictureAlloc(&tmp)) {
     return WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
@@ -209,7 +209,7 @@ static void CopyPlane(const uint8_t* src, int src_stride,
 // Adjust top-left corner to chroma sample position.
 static void SnapTopLeftPosition(const WebPPicture* const pic,
                                 int* const left, int* const top) {
-  if (!pic->use_argb_input) {
+  if (!pic->use_argb) {
     const int is_yuv422 = IS_YUV_CSP(pic->colorspace, WEBP_YUV422);
     if (IS_YUV_CSP(pic->colorspace, WEBP_YUV420) || is_yuv422) {
       *left &= ~1;
@@ -237,7 +237,7 @@ int WebPPictureCopy(const WebPPicture* src, WebPPicture* dst) {
   WebPPictureGrabSpecs(src, dst);
   if (!WebPPictureAlloc(dst)) return 0;
 
-  if (!src->use_argb_input) {
+  if (!src->use_argb) {
     CopyPlane(src->y, src->y_stride,
               dst->y, dst->y_stride, dst->width, dst->height);
     CopyPlane(src->u, src->uv_stride,
@@ -270,7 +270,7 @@ int WebPPictureCopy(const WebPPicture* src, WebPPicture* dst) {
 
 int WebPPictureIsView(const WebPPicture* picture) {
   if (picture == NULL) return 0;
-  if (picture->use_argb_input) {
+  if (picture->use_argb) {
     return (picture->memory_argb_ == NULL);
   }
   return (picture->memory_ == NULL);
@@ -289,7 +289,7 @@ int WebPPictureView(const WebPPicture* src,
   }
   dst->width = width;
   dst->height = height;
-  if (!src->use_argb_input) {
+  if (!src->use_argb) {
     dst->y = src->y + top * src->y_stride + left;
     dst->u = src->u + (top >> 1) * src->uv_stride + (left >> 1);
     dst->v = src->v + (top >> 1) * src->uv_stride + (left >> 1);
@@ -325,7 +325,7 @@ int WebPPictureCrop(WebPPicture* pic,
   tmp.height = height;
   if (!WebPPictureAlloc(&tmp)) return 0;
 
-  if (!pic->use_argb_input) {
+  if (!pic->use_argb) {
     const int y_offset = top * pic->y_stride + left;
     const int uv_offset = (top / 2) * pic->uv_stride + left / 2;
     CopyPlane(pic->y + y_offset, pic->y_stride,
@@ -415,7 +415,7 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
   tmp.height = height;
   if (!WebPPictureAlloc(&tmp)) return 0;
 
-  if (!pic->use_argb_input) {
+  if (!pic->use_argb) {
     work = (int32_t*)malloc(2 * width * sizeof(*work));
     if (work == NULL) {
       WebPPictureFree(&tmp);
@@ -528,7 +528,7 @@ static int CheckNonOpaque(const uint8_t* alpha, int width, int height,
 // Checking for the presence of non-opaque alpha.
 int WebPPictureHasTransparency(const WebPPicture* picture) {
   if (picture == NULL) return 0;
-  if (!picture->use_argb_input) {
+  if (!picture->use_argb) {
     return CheckNonOpaque(picture->a, picture->width, picture->height,
                           1, picture->a_stride);
   } else {
@@ -625,7 +625,7 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
   const int has_alpha = CheckNonOpaque(a_ptr, width, height, step, rgb_stride);
 
   picture->colorspace = uv_csp;
-  picture->use_argb_input = 0;
+  picture->use_argb = 0;
   if (has_alpha) {
     picture->colorspace |= WEBP_CSP_ALPHA_BIT;
   }
@@ -704,7 +704,7 @@ static int Import(WebPPicture* const picture,
   const int width = picture->width;
   const int height = picture->height;
 
-  if (!picture->use_argb_input) {
+  if (!picture->use_argb) {
     return ImportYUVAFromRGBA(r_ptr, g_ptr, b_ptr, a_ptr, step, rgb_stride,
                               picture);
   }
@@ -856,7 +856,7 @@ int WebPPictureARGBToYUVA(WebPPicture* picture, WebPEncCSP colorspace) {
     // would be calling WebPPictureFree(picture) otherwise.
     WebPPicture tmp = *picture;
     PictureResetARGB(&tmp);  // reset ARGB buffer so that it's not free()'d.
-    tmp.use_argb_input = 0;
+    tmp.use_argb = 0;
     tmp.colorspace = colorspace & WEBP_CSP_UV_MASK;
     if (!ImportYUVAFromRGBA(r, g, b, a, 4, 4 * picture->argb_stride, &tmp)) {
       return WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
@@ -957,8 +957,7 @@ int WebPPictureDistortion(const WebPPicture* pic1, const WebPPicture* pic2,
     return 0;
   }
   // TODO(skal): provide distortion for ARGB too.
-  if (pic1->use_argb_input == 1 ||
-      pic1->use_argb_input != pic2->use_argb_input) {
+  if (pic1->use_argb == 1 || pic1->use_argb != pic2->use_argb) {
     return 0;
   }
 
@@ -1020,7 +1019,7 @@ static size_t Encode(const uint8_t* rgba, int width, int height, int stride,
   }
 
   config.lossless = !!lossless;
-  pic.use_argb_input = !!lossless;
+  pic.use_argb = !!lossless;
   pic.width = width;
   pic.height = height;
   pic.writer = WebPMemoryWrite;
