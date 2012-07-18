@@ -128,6 +128,7 @@ WEBP_EXTERN(int) WebPConfigInitInternal(WebPConfig*, WebPPreset, float, int);
 // Should always be called, to initialize a fresh WebPConfig structure before
 // modification. Returns false in case of version mismatch. WebPConfigInit()
 // must have succeeded before using the 'config' object.
+// Note that the default values are lossless=0 and quality=75.
 static WEBP_INLINE int WebPConfigInit(WebPConfig* config) {
   return WebPConfigInitInternal(config, WEBP_PRESET_DEFAULT, 75.f,
                                 WEBP_ENCODER_ABI_VERSION);
@@ -310,6 +311,7 @@ WEBP_EXTERN(int) WebPPictureInitInternal(WebPPicture*, int);
 // Should always be called, to initialize the structure. Returns false in case
 // of version mismatch. WebPPictureInit() must have succeeded before using the
 // 'picture' object.
+// Note that, by default, use_argb is false and colorspace is WEBP_YUV420.
 static WEBP_INLINE int WebPPictureInit(WebPPicture* picture) {
   return WebPPictureInitInternal(picture, WEBP_ENCODER_ABI_VERSION);
 }
@@ -326,6 +328,8 @@ WEBP_EXTERN(int) WebPPictureAlloc(WebPPicture* picture);
 // Release the memory allocated by WebPPictureAlloc() or WebPPictureImport*().
 // Note that this function does _not_ free the memory used by the 'picture'
 // object itself.
+// Besides memory (which is reclaimed) all other fields of 'picture' are
+// preserved.
 WEBP_EXTERN(void) WebPPictureFree(WebPPicture* picture);
 
 // Copy the pixels of *src into *dst, using WebPPictureAlloc. Upon return,
