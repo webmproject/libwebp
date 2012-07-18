@@ -171,7 +171,7 @@ This layout SHOULD be used if the image requires _lossy_ encoding and does not
 require transparency or other advanced features provided by the extended format.
 Files with this layout are smaller and supported by older software.
 
-Simple WebP (lossy) file header:
+Simple WebP (lossy) file format:
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -211,7 +211,7 @@ This layout SHOULD be used if the image requires _lossless_ encoding (with an
 optional transparency channel) and does not require advanced features provided
 by the extended format.
 
-Simple WebP (lossless) file header:
+Simple WebP (lossless) file format:
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -393,10 +393,11 @@ Alpha bitstream: _Chunk Size_ - `1` bytes
 
 : Encoded alpha bitstream.
 
-This optional chunk contains encoded alpha data for a single frame.
-An image containing a 'VP8L' chunk SHOULD NOT contain this chunk.
-**Rationale**: the transparency information of an image is already part of
-the 'VP8L' chunk.
+This optional chunk contains encoded alpha data for the image. An image
+containing a 'VP8L' chunk SHOULD NOT contain this chunk.
+
+**Rationale**: The transparency information of the image is already part
+of the 'VP8L' chunk.
 
 The alpha channel data is stored as uncompressed raw data (when
 compression method is '0') or compressed using the lossless format
@@ -436,7 +437,7 @@ and [Simple file format (lossless)](#simple-file-format-lossless) respectively.
 
 #### Unknown Chunks
 
-A file MAY contain other unknown chunks. Readers SHOULD be ignore these chunks.
+A file MAY contain other unknown chunks. Readers SHOULD ignore these chunks.
 Writers SHOULD preserve them in their original order.
 
 Example file layouts
