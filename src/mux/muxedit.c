@@ -35,11 +35,14 @@ static void MuxInit(WebPMux* const mux) {
 }
 
 WebPMux* WebPNewInternal(int version) {
-  WebPMux* const mux = (version == WEBP_MUX_ABI_VERSION) ?
-                       (WebPMux*)malloc(sizeof(WebPMux)) : NULL;
-  // If mux is NULL MuxInit is a noop.
-  MuxInit(mux);
-  return mux;
+  if (WEBP_ABI_IS_INCOMPATIBLE(version, WEBP_MUX_ABI_VERSION)) {
+    return NULL;
+  } else {
+    WebPMux* const mux = (WebPMux*)malloc(sizeof(WebPMux));
+    // If mux is NULL MuxInit is a noop.
+    MuxInit(mux);
+    return mux;
+  }
 }
 
 static void DeleteAllChunks(WebPChunk** const chunk_list) {

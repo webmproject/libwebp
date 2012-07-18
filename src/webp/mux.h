@@ -51,7 +51,7 @@
 extern "C" {
 #endif
 
-#define WEBP_MUX_ABI_VERSION 0x0000
+#define WEBP_MUX_ABI_VERSION 0x0100        // MAJOR(8b) + MINOR(8b)
 
 // Error codes
 typedef enum {
@@ -461,7 +461,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxAssemble(WebPMux* mux,
 // Demux API.
 // Enables extraction of image and extended format data from WebP files.
 
-#define WEBP_DEMUX_ABI_VERSION 0x0000
+#define WEBP_DEMUX_ABI_VERSION 0x0100    // MAJOR(8b) + MINOR(8b)
 
 typedef struct WebPDemuxer WebPDemuxer;
 

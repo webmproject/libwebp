@@ -631,7 +631,7 @@ WebPDemuxer* WebPDemuxInternal(const WebPData* data, int allow_partial,
   MemBuffer mem;
   WebPDemuxer* dmux;
 
-  if (version != WEBP_DEMUX_ABI_VERSION) return NULL;
+  if (WEBP_ABI_IS_INCOMPATIBLE(version, WEBP_DEMUX_ABI_VERSION)) return NULL;
   if (data == NULL || data->bytes_ == NULL || data->size_ == 0) return NULL;
 
   if (!InitMemBuffer(&mem, data->bytes_, data->size_)) return NULL;
