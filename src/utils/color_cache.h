@@ -7,8 +7,8 @@
 //
 // Color Cache for WebP Lossless
 //
-// Authors: jyrki@google.com (Jyrki Alakuijala)
-//          urvang@google.com (Urvang Joshi)
+// Authors: Jyrki Alakuijala (jyrki@google.com)
+//          Urvang Joshi (urvang@google.com)
 
 #ifndef WEBP_UTILS_COLOR_CACHE_H_
 #define WEBP_UTILS_COLOR_CACHE_H_
