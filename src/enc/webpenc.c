@@ -47,7 +47,7 @@ static int DummyWriter(const uint8_t* data, size_t data_size,
 }
 
 int WebPPictureInitInternal(WebPPicture* picture, int version) {
-  if (version != WEBP_ENCODER_ABI_VERSION) {
+  if (WEBP_ABI_IS_INCOMPATIBLE(version, WEBP_ENCODER_ABI_VERSION)) {
     return 0;   // caller/system version mismatch!
   }
   if (picture != NULL) {

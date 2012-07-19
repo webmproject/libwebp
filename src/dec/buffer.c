@@ -167,7 +167,9 @@ VP8StatusCode WebPAllocateDecBuffer(int w, int h,
 // constructors / destructors
 
 int WebPInitDecBufferInternal(WebPDecBuffer* buffer, int version) {
-  if (version != WEBP_DECODER_ABI_VERSION) return 0;  // version mismatch
+  if (WEBP_ABI_IS_INCOMPATIBLE(version, WEBP_DECODER_ABI_VERSION)) {
+    return 0;  // version mismatch
+  }
   if (buffer == NULL) return 0;
   memset(buffer, 0, sizeof(*buffer));
   return 1;
