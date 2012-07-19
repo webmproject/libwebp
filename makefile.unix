@@ -195,7 +195,7 @@ examples/vwebp: examples/libexample_util.a src/mux/libwebpmux.a src/libwebp.a
 examples/vwebp: EXTRA_LIBS += $(GL_LIBS)
 examples/webpmux: examples/libexample_util.a src/mux/libwebpmux.a src/libwebp.a
 
-$(OUT_EXAMPLES) examples/vwebp:
+$(OUT_EXAMPLES) examples/vwebp examples/webpmux:
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 dist: DESTDIR := dist
