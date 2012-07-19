@@ -246,7 +246,7 @@ struct WebPPicture {
   // It is recommended to use ARGB input (*argb, argb_stride) for lossless
   // compression, and YUV input (*y, *u, *v, etc.) for lossy compression
   // since these are the respective native colorspace for these formats.
-  int use_argb_input;
+  int use_argb;
 
   // YUV input (mostly used for input to lossy compression)
   WebPEncCSP colorspace;     // colorspace: should be YUV420 for now (=Y'CbCr).
@@ -399,15 +399,15 @@ WEBP_EXTERN(int) WebPPictureImportBGRX(
     WebPPicture* picture, const uint8_t* bgrx, int bgrx_stride);
 
 // Converts picture->argb data to the YUVA format specified by 'colorspace'.
-// Upon return, picture->use_argb_input is set to false. The presence of
-// real non-opaque transparent values is detected, and 'colorspace' will be
+// Upon return, picture->use_argb is set to false. The presence of real
+// non-opaque transparent values is detected, and 'colorspace' will be
 // adjusted accordingly. Note that this method is lossy.
 // Returns false in case of error.
 WEBP_EXTERN(int) WebPPictureARGBToYUVA(WebPPicture* picture,
                                        WebPEncCSP colorspace);
 
-// Converts picture->yuv to picture->argb and sets picture->use_argb_input
-// to true. The input format must be YUV_420 or YUV_420A.
+// Converts picture->yuv to picture->argb and sets picture->use_argb to true.
+// The input format must be YUV_420 or YUV_420A.
 // Note that the use of this method is discouraged if one has access to the
 // raw ARGB samples, since using YUV420 is comparatively lossy. Also, the
 // conversion from YUV420 to ARGB incurs a small loss too.
@@ -433,8 +433,8 @@ WEBP_EXTERN(int) WebPPictureHasTransparency(const WebPPicture* picture);
 // Returns false in case of error, true otherwise.
 // In case of error, picture->error_code is updated accordingly.
 // 'picture' can hold the source samples in both YUV(A) or ARGB input, depending
-// on the value of 'picture->use_argb_input'. It is highly recommended to
-// use the former for lossy encoding, and the latter for lossless encoding
+// on the value of 'picture->use_argb'. It is highly recommended to use
+// the former for lossy encoding, and the latter for lossless encoding
 // (when config.lossless is true). Automatic conversion from one format to
 // another is provided but they both incur some loss.
 WEBP_EXTERN(int) WebPEncode(const WebPConfig* config, WebPPicture* picture);
