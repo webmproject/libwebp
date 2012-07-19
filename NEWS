@@ -1,12 +1,16 @@
-- 7/17/12: version 0.1.99
+- 7/19/12: version 0.1.99
+  * This is a pre-release of 0.2.0, not an rc to allow for further
+    incompatible changes based on user feedback.
   * Alpha channel encode/decode support.
   * Lossless encoder/decoder.
+  * Add TIFF input support to cwebp.
   Incompatible changes:
     * The encode ABI has been modified to support alpha encoding.
     * Deprecated function WebPINew() has been removed.
     * Decode function signatures have changed to consistently use size_t over
       int/uint32_t.
     * decode_vp8.h is no longer installed system-wide.
+    * cwebp will encode the alpha channel if present.
 
 - 9/19/11: version 0.1.3
   * Advanced decoding APIs.
