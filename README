@@ -49,11 +49,13 @@ will build the binaries examples/cwebp and examples/dwebp, along
 with the static library src/libwebp.a. No system-wide installation
 is supplied, as this is a simple alternative to the full installation
 system based on the autoconf tools (see below).
-Please refer the makefile.unix for additional details and customizations.
+Please refer to the makefile.unix for additional details and customizations.
 
 Using autoconf tools:
 ---------------------
-./autogen.sh
+When building from git sources, you will need to run autogen.sh to generate the
+configure script.
+
 ./configure
 make
 make install
@@ -61,7 +63,6 @@ make install
 should be all you need to have the following files
 
 /usr/local/include/webp/decode.h
-/usr/local/include/webp/decode_vp8.h
 /usr/local/include/webp/encode.h
 /usr/local/include/webp/types.h
 /usr/local/lib/libwebp.*
@@ -85,17 +86,22 @@ Currently the following functions are mapped:
 Decode:
   WebPGetDecoderVersion
   WebPGetInfo
-  WebPDecodeRGB
   WebPDecodeRGBA
   WebPDecodeARGB
-  WebPDecodeBGR
   WebPDecodeBGRA
+  WebPDecodeBGR
+  WebPDecodeRGB
+
 Encode:
   WebPGetEncoderVersion
-  WebPEncodeRGB
   WebPEncodeRGBA
-  WebPEncodeBGR
   WebPEncodeBGRA
+  WebPEncodeRGB
+  WebPEncodeBGR
+  WebPEncodeLosslessRGBA
+  WebPEncodeLosslessBGRA
+  WebPEncodeLosslessRGB
+  WebPEncodeLosslessBGR
 
 Java bindings:
 
@@ -111,9 +117,13 @@ decoding (dwebp) images.
 
 The easiest use should look like:
   cwebp input.png -q 80 -o output.webp
-which will convert the input PNG or JPEG file to a WebP file using a
-quality factor of 80 on a 0->100 scale (0 being the lowest quality,
-100 being the best. Default value is 75).
+which will convert the input file to a WebP file using a quality factor of 80
+on a 0->100 scale (0 being the lowest quality, 100 being the best. Default
+value is 75).
+You might want to try the -lossless flag too, which will compress the source
+(in RGBA format) without any loss. The -q quality parameter will in this case
+control the amount of processing time spent trying to make the output file as
+small as possible.
 
 A longer list of options is available using the -longhelp command line flag:
 
@@ -192,10 +202,11 @@ Namely:
      but with better quality.
      Typical value is around '75'.
   * 'f' option directly links to the filtering strength used by the codec's
-     in-loop processing. The higher, the smoother will highly-compressed area
-     look. This is particularly useful when aiming at very small files.
-     Typical values are around 20-30. Note that using the option -strong will
-     change the type of filtering. Use "-f 0" to turn filtering off.
+     in-loop processing. The higher the value, the smoother the
+     highly-compressed area will look. This is particularly useful when aiming
+     at very small files. Typical values are around 20-30. Note that using the
+     option -strong will change the type of filtering. Use "-f 0" to turn
+     filtering off.
   * 'm' controls the trade-off between encoding speed and quality. Default is 4.
      You can try -m 5 or -m 6 to explore more (time-consuming) encoding
      possibilities. A lower value will result in faster encoding at the expense
@@ -342,19 +353,17 @@ This is mainly just one function to call:
 
 #include "webp/decode.h"
 uint8_t* WebPDecodeRGB(const uint8_t* data, size_t data_size,
-                       int *width, int *height);
+                       int* width, int* height);
 
 Please have a look at the file src/webp/decode.h for the details.
 There are variants for decoding in BGR/RGBA/ARGB/BGRA order, along with
 decoding to raw Y'CbCr samples. One can also decode the image directly into a
 pre-allocated buffer.
 
-To detect a WebP file and gather picture's dimensions, the function:
+To detect a WebP file and gather the picture's dimensions, the function:
   int WebPGetInfo(const uint8_t* data, size_t data_size,
-                  int *width, int *height);
+                  int* width, int* height);
 is supplied. No decoding is involved when using it.
-
-A lower-level API is available from the header file <webp/decode_vp8.h>
 
 Incremental decoding API:
 =========================
@@ -383,15 +392,15 @@ or by just mentioning the new size of the transmitted data:
 
   WebPIUpdate(idec, buffer, size_of_transmitted_buffer);
 
-Note that 'buffer' can be modified between each calls to WebPIUpdate, in
+Note that 'buffer' can be modified between each call to WebPIUpdate, in
 particular when the buffer is resized to accommodate larger data.
 
 These functions will return the decoding status: either VP8_STATUS_SUSPENDED if
-decoding is not finished yet, or VP8_STATUS_OK when decoding is done.
-Any other status is an error condition.
+decoding is not finished yet or VP8_STATUS_OK when decoding is done. Any other
+status is an error condition.
 
-The idec object must always be released (even upon an error condition)
-by calling: WebPDelete(idec).
+The 'idec' object must always be released (even upon an error condition) by
+calling: WebPDelete(idec).
 
 To retrieve partially decoded picture samples, one must use the corresponding
 method: WebPIDecGetRGB or WebPIDecGetYUV.
