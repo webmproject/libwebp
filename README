@@ -13,7 +13,7 @@ WebP codec: library to encode and decode images in WebP format. This package
 contains the library that can be used in other programs to add WebP support,
 as well as the command line tools 'cwebp' and 'dwebp'.
 
-See http://code.google.com/speed/webp
+See http://developers.google.com/speed/webp
 
 Latest sources are available from http://www.webmproject.org/code/
 
