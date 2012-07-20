@@ -1,3 +1,626 @@
+d1fd782 Merge "add extra precision about default values and behaviour" into 0.2.0
+efc826e add extra precision about default values and behaviour
+9f29635 header/doc clean up
+ff9fd1b Makefile.vc: fix webpmux.exe *-dynamic builds
+8aacc7b remove INAM, ICOP, ... chunks from the test webp file.
+2fc1301 harmonize authors as "Name (mail@address)"
+4a9f37b Merge "update NEWS" into 0.2.0
+7415ae1 makefile.unix: provide examples/webpmux target
+ce82ced update NEWS
+641e28e Merge "man/cwebp.1: wording, change the date" into 0.2.0
+c37c23e README: cosmetics
+3976dcd man/cwebp.1: wording, change the date
+3e5bbe1 Merge "rename 'use_argb_input' to 'use_argb'" into 0.2.0
+ce90847 Merge "add some padding bytes areas for later use" into 0.2.0
+2390dab Merge "fixing the findings by Frederic Kayser to the bitstream spec" into 0.2.0
+0275159 add a very crude progress report for lossless
+dd10817 rename 'use_argb_input' to 'use_argb'
+90516ae add some padding bytes areas for later use
+d03b250 fixing the findings by Frederic Kayser to the bitstream spec
+ce156af add missing ABI compatibility checks
+9d45416 Merge "Doc: container spec text tweaks" into 0.2.0
+4e2e0a8 Doc: container spec text tweaks
+f7f16a2 add ABI compatibility check
+2a77557 Merge "swig: add WebPEncodeLossless* wrappers" into 0.2.0
+a3ec622 mux.h: remove '* const' from function parameters
+31426eb encode.h: remove '* const' from function parameters
+9838e5d decode.h: remove '* const' from function parameters
+4972302 swig: add WebPEncodeLossless* wrappers
+9ff00ca bump encoder/decoder versions
+c2416c9 add lossless quick encoding functions to the public API
+4c1f5d6 Merge "NEWS: mention decode_vp8.h is no longer installed" into 0.2.0
+6cb2277 NEWS: mention decode_vp8.h is no longer installed
+d5e5ad6 move decode_vp8.h from webp/ to dec/
+8d3b04a Merge "header clean-up" into 0.2.0
+02201c3 Merge "remove one malloc() by making color_cache non dynamic" into 0.2.0
+d708ec1 Merge "move MIN/MAX_HISTO_BITS to format_constants.h" into 0.2.0
+ab2da3e Merge "add a malloc() check" into 0.2.0
+2d571bd add a malloc() check
+7f0c178 remove one malloc() by making color_cache non dynamic
+6569cd7 Merge "VP8LFillBitWindow: use 64-bit path for msvc x64 builds" into 0.2.0
+23d34f3 header clean-up
+2a3ab6f move MIN/MAX_HISTO_BITS to format_constants.h
+985d3da Merge "shuffle variables in HashChainFindCopy" into 0.2.0
+cdf885c shuffle variables in HashChainFindCopy
+c3b014d Android.mk: add missing lossless files
+8c1cc6b makefile.unix dist: explicitly name installed includes
+7f4647e Merge "clarify the colorspace naming and byte ordering of decoded samples" into 0.2.0
+cbf6972 clarify the colorspace naming and byte ordering of decoded samples
+ff771e7 don't install webp/decode_vp8.h
+596dff7 VP8LFillBitWindow: use 64-bit path for msvc x64 builds
+3ca7ce9 Merge "doc: remove non-finalized chunk references" into 0.2.0
+1efaa5a Merge "bump versions" into 0.2.0
+51fa13e Merge "README: update cwebp help output" into 0.2.0
+12f9aed README: update cwebp help output
+f0b5def bump versions
+4c42a61 update AUTHORS
+6431a1c doc: remove non-finalized chunk references
+8130c4c Merge "build: remove libwebpmux from default targets/config"
+23b4443 Merge "configure: broaden test for libpng-config"
+85bff2c Merge "doc: correct lossless prefix coding table & code"
+05108f6 Merge "More spec/code matching in mux:"
+6808e69 More spec/code matching in mux:
+bd2b46f Merge "doc/webp-container-spec: light cosmetics"
+20ead32 doc/webp-container-spec: light cosmetics (full)
+1d40a8b configure: add pthread detection
+b5e9067 fix some int <-> size_t mix for buffer sizes
+e41a759 build: remove libwebpmux from default targets/config
+0fc2baa configure: broaden test for libpng-config
+45b8272 Merge "restore authorship to lossless bitstream doc"
+06ba059 restore authorship to lossless bitstream doc
+44a09a3 add missing description of the alpha filtering methods
+63db87d Merge "vwebp: add checkboard background for alpha display"
+a73b897 vwebp: add checkboard background for alpha display
+939158c Merge "vwebp: fix info display"
+b35c07d vwebp: fix info display
+48b39eb fix underflow for very short bitstreams
+7e62298 cosmetics: param alignment, manpage wording
+1bd7dd5 Merge changes I7b0afb0d,I7ecc9708
+ac69e63 Merge "Updated cwebp man's help for Alpha & Lossless."
+c0e8859 Get rid of image_info_ from WebPChunk struct.
+135ca69 WebP Container Spec:
+eb6f9b8 Updated cwebp man's help for Alpha & Lossless.
+0fa844f cosmetic fixes on assert and 'const' where applicable
+7f22bd2 check limit of width * height is 32 bits
+16c46e8 autoconf/make: cosmetics: break long lines
+ab22a07 configure: add helper macro to define --with-*
+c17699b configure: add libtiff test
+0e09732 Merge "cwebp: fix crash with yuv input + lossless"
+88a510f Merge "fix big-endian VP8LWriteBits"
+da99e3b Merge "Makefile.vc: split mux into separate lib"
+7bda392 cwebp: fix crash with yuv input + lossless
+f56a369 fix big-endian VP8LWriteBits
+54169d6 Merge "cwebp: name InputFileFormat members consistently"
+e2feefa Makefile.vc: split mux into separate lib
+27caa5a Merge "cwebp: add basic TIFF support"
+d8921dd cwebp: name InputFileFormat members consistently
+6f76d24 cwebp: add basic TIFF support
+4691407 Merge changes If39ab7f5,I3658b5ae
+cca7c7b Fixed nit: 10 -> 10.f
+5d09a24 WebPMuxCreate() error handling:
+777341c Fix a memleak in WebPMuxCreate()
+61c9d16 doc: correct lossless prefix coding table & code
+4c39757 Merge "mark VP8{,L}{GetInfo,CheckSignature} as WEBP_EXTERN"
+e4e36cc Merge "Mux: Allow only some frames/tiles to have alpha."
+ad2aad3 Merge "WebP Decoding error handling:"
+97649c8 Mux: Allow only some frames/tiles to have alpha.
+f864be3 Lower the quality settings for Alpha encoding.
+3ba81bb WebP Decoding error handling:
+fcc6992 add automatic YUVA/ARGB conversion during WebPEncode()
+802e012 fix compilation in non-FANCY_UPSAMPLING mode
+e012dfd make width/height coding match the spec
+228d96a mark VP8{,L}{GetInfo,CheckSignature} as WEBP_EXTERN
+637a314 remove the now unused *KeepA variants
+d11f6fc webpmux returns error strings rather than numbers
+fcec059 makefile.unix: cwebp: fix OSX link
+6b811f1 Merge "doc: remove lossless pdf"
+c963482 doc: remove lossless pdf
+b9ae4f0 cosmetics after mux changes b74ed6e, b494ad5
+b494ad5 Mux: only allow adding frame/tiles at the end.
+2c341b0 Merge "Added image characteristic hint for the codec."
+d373076 Added image characteristic hint for the codec.
+2ed2adb Merge "msvc: add intrinsic based BitsLog2Floor"
+e595e7c Merge "add demux.c to the makefiles"
+da47b5b Merge "demux: add {Next,Prev}Chunk"
+e5f4674 add demux.c to the makefiles
+4708393 demux: add {Next,Prev}Chunk
+e8a0a82 demux: quiet msvc warnings
+7f8472a Update the WebP Container Spec.
+31b68fe cleanup WebPPicture struct and API
+9144a18 add overflow check before calling malloc()
+81720c9 consistency cosmetics
+2ebe839 Merge "Add kramdown version information to README"
+7144308 enc/vp8l.c: fix build
+b7ac19f Add kramdown version information to README
+efdcb66 Merge "Edit for consistency, usage and grammar."
+0822010 Enable alpha in vvwebp
+8de9a08 Merge "Mux API change:"
+b74ed6e Mux API change:
+233a589 take picture->argb_stride into account for lossless coding
+04e33f1 Edit for consistency, usage and grammar.
+a575b4b Merge "cosmetics: add missing const"
+8d99b0f Merge "cosmetics: remove unimplemented function proto"
+69d0221 cosmetics: add missing const
+5b08318 cosmetics: remove unimplemented function proto
+b7fb0ed Log warning for unsupported options for lossless.
+e1f769f msvc: add intrinsic based BitsLog2Floor
+8a69c7d Bug-fix: Clamp backward dist to 1.
+b5b6ac9 Merge "Bring the special writer 'WebPMemoryWriter' to public API"
+a6a1909 Merge "Fix floating point exception with cwebp -progress"
+f2cee06 Fix floating point exception with cwebp -progress
+91b7a8c Bring the special writer 'WebPMemoryWriter' to public API
+310e297 support resize and crop for RGBA input
+a89835d Merge changes Ice662960,Ie8d7aa90,I2d996d5e,I01c04772
+ce614c0 Merge "dec/vp8: avoid setting decoder status twice"
+900285d dec/vp8: avoid setting decoder status twice
+8227adc Merge changes I6f02b0d0,I5cbc9c0a,I9dd9d4ed,Id684d2a1
+dcda59c Merge "demux: rename SetTile to SelectTile"
+622ef12 demux: rename SetTile to SelectTile
+81ebd37 Merge "demux: add {Next,Prev}Frame"
+02dd37a demux: add {Next,Prev}Frame
+4b79fa5 Merge "Limit the maximum size of huffman Image to 16MB."
+9aa34b3 Manually number "chapters," as chapter numbers are used in the narrative.
+2a4c6c2 Re-wrap at <= 72 columns
+a45adc1 Apply inline emphasis and monospacing, per gdoc / PDF
+9101120 Incorporate gdoc changes through 2012-06-08
+7a18248 Removed CodeRay syntax declarations ...
+b3ec18c Provide for code-block syntax highlighting.
+709d770 Replace high ASCII artifacts (curly quotes, etc.).
+930e8ab Lossless WebP doc largely ported to markdown text.
+18cae37 msvc: silence some build warnings
+b392308 Limit the maximum size of huffman Image to 16MB.
+f180df2 Merge "libwebp/demux: add Frame/Chunk iteration"
+2bbe1c9 Merge "Enable lossless encoder code"
+d0601b0 Merge changes I1d97a633,I81c59093
+78f3e34 Enable lossless encoder code
+d974a9c Merge "libwebp/demux: add simple format parsing"
+26bf223 Merge "libwebp: add WebPDemux stub functions"
+2f66668 Merge "modify WebPParseHeaders to allow reuse by GetFeatures"
+b402b1f libwebp/demux: add Frame/Chunk iteration
+ad9ada3 libwebp/demux: add WebPDemuxGetI
+2f2d4d5 libwebp/demux: add extended format parsing
+962dcef libwebp/demux: add simple format parsing
+f8f9408 libwebp: add WebPDemux stub functions
+fb47bb5 Merge "NumNamedElements() should take an enum param."
+7c68980 Fix asserts in Palette and BackwardReference code.
+fbdcb7e NumNamedElements() should take an enum param.
+fb4943b modify WebPParseHeaders to allow reuse by GetFeatures (old-decode-alph-3)
+3697b5c write an ad-hoc EncodeImageInternal variant
+eaee9e7 Bug-Fix: Decode small (less than 32 bytes) images.
+0bceae4 Merge "cwebp: fix alpha reporting in stats output"
+0424b1e Rebase default encoding settings.
+c71ff9e cwebp: fix alpha reporting in stats output
+e2ffe44 Merge "Stop indefinite recursion for Huffman Image."
+70eb2bd Stop indefinite recursion for Huffman Image.
+f3bab8e Update vwebp
+6d5c797 Remove support for partial files in Mux.
+f1df558 WebPMuxAssemble() returns WebPData*.
+814a063 Rename 'Add' APIs to 'Set'.
+bbb0218 Update Mux psuedo-code examples.
+4fc4a47 Use WebPData in MUX set APIs
+c67bc97 Merge "add WebPPictureImportRGBX() and WebPPictureImportBGRX()"
+27519bc add WebPPictureImportRGBX() and WebPPictureImportBGRX()
+f80cd27 factorize code in Import()
+9b71502 histogram: add log2 wrapper
+8c34378 Merge "fix some implicit type conversion warnings"
+42f6df9 fix some implicit type conversion warnings
+250c16e Merge "doc: update lossless pdf"
+9d9daba Merge "add a PDF of the lossless spec"
+8fbb918 prefer webp/types.h over stdint.h
+0ca170c doc: update lossless pdf
+0862ac6 add a PDF of the lossless spec
+437999f introduce a generic WebPPictureHasTransparency() function
+d2b6c6c cosmetic fixes after Idaba281a
+b4e6645 Merge "add colorspace for premultiplied alpha"
+48f8275 add colorspace for premultiplied alpha
+069f903 Change in lossless bit-stream.
+5f7bb3f Merge "WebPReportProgress: use non-encoder specific params"
+f18281f WebPReportProgress: use non-encoder specific params
+9ef3228 Add support for raw lossless bitstream in decoder.
+7cbee29 Fix bug: InitIo reseting fancy_upsampling flag.
+880fd98 vwebp: fix exit w/freeglut
+1875d92 trap two unchecked error conditions
+87b4a90 no need to have mux.h as noinst clause in enc/
+88f41ec doc: fix bit alignment in VP8X chunk
+52f5a4e Merge "fix bug with lossy-alpha output stride"
+3bde22d fix bug with lossy-alpha output stride
+42d61b6 update the spec for the lossy-alpha compression methods.
+e75dc80 Move some more defines to format_constants.h
+c13f663 Move consts to internal header format_constants.h
+7f2dfc9 use a bit-set transforms_seen_ instead of looping
+18da1f5 modulate alpha-compression effort according to config.method
+f5f2fff Merge "Alpha flag fix for lossless."
+c975c44 Alpha flag fix for lossless.
+4f067fb Merge "Android: only build dec_neon with NEON support"
+255c66b Android: only build dec_neon with NEON support
+8f9117a cosmetics: signature fixes
+39bf5d6 use header-less lossless bitstream for alpha channel
+75d7f3b Merge "make input data be 'const' for VP8LInverseTransform()"
+9a721c6 make input data be 'const' for VP8LInverseTransform()
+9fc64ed Disallow re-use of same transformation.
+98ec717  use a function pointer for ProcessRows()
+f7ae5e3 cosmetics: join line
+140b89a factor out buffer alloc in AllocateARGBBuffers()
+a107dfa Rectify WebPParseOptionalChunks().
+237eab6 Add two more color-spaces for lossless decoding.
+27f417a fix orthographic typo
+489ec33 add VP8LEncodeStream() to compress lossless image stream
+fa8bc3d make WebPEncodingSetError() take a const picture
+638528c bitstream update for lossy alpha compression
+d73e63a add DequantizeLevels() placeholder
+ec122e0 remove arch-dependent rand()
+d40e765 fix alignment
+1dd6a8b Merge "remove tcoder, switch alpha-plane compression to lossless"
+3e863dd remove tcoder, switch alpha-plane compression to lossless
+8d77dc2 Add support for lossless in mux:
+831bd13 Make tile size a function of encoding method.
+778c522 Merge "remove some variable shadowing"
+817c9dc Few more HuffmanTreeToken conversions.
+37a77a6 remove some variable shadowing
+89c07c9 Merge "normalize example header includes"
+4aff411 Merge "add example_util.[hc]"
+00b29e2 normalize example header includes
+061263a add example_util.[hc]
+c6882c4 merge all tree processing into a single VP8LProcessTree()
+9c7a3cf fix VP8LHistogramNumCodes to handle the case palette_code_bits == 0
+b5551d2 Merge "Added HuffmanTreeCode Struct for tree codes."
+8b85d01 Added HuffmanTreeCode Struct for tree codes.
+093f76d Merge "Allocate single memory in GetHuffBitLengthsAndCodes."
+41d8049 Allocate single memory in GetHuffBitLengthsAndCodes.
+1b04f6d Correct size in VP8L header.
+2924a5a Makefile.vc: split object lists based on directory
+c8f2416 Merge "add assert(tokens)"
+4323994 add assert(tokens)
+9f54745 Catch an error in DecodeImageData().
+ac8e5e4 minor typo and style fix
+9f566d1 clean-up around Huffman-encode
+c579a71 Introduce CHUNK_SIZE_BYTES in muxi.h.
+14757f8 Make sure huffman trees always have valid symbols
+4105061 makefile.unix: add support for building vwebp
+48b3772 Merge "fixed signed/unsigned comparison warning"
+57f696d Merge "EncodeImageInternal: fix potential leak"
+d972cdf EncodeImageInternal: fix potential leak
+5cd12c3 fixed signed/unsigned comparison warning
+cdca30d Merge "cosmetics: shorten long line"
+e025fb5 cosmetics: shorten long line
+22671ed Merge "enc/vp8l: fix double free on error"
+e1b9b05 Merge "cosmetics: VP8LCreateHuffmanTree: fix indent"
+a8e725f enc/vp8l: fix double free on error
+27541fb cosmetics: VP8LCreateHuffmanTree: fix indent
+1d38b25 cwebp/windows: use MAKE_REFGUID where appropriate
+817ef6e Merge "cwebp: fix WIC/Microsoft SDK compatibility issue"
+902d3e3 cwebp: fix WIC/Microsoft SDK compatibility issue
+89d803c Merge "Fix a crash due to wrong pointer-integer arithmetic."
+cb1bd74 Merge "Fix a crash in lossless decoder."
+de2fe20 Merge "Some cleanup in VP8LCreateHuffmanTree() (and related functions CompareHuffmanTrees() and SetBitDepths()): - Move 'tree_size' initialization and malloc for 'tree + tree_pool'   outside the loop. - Some renames/tweaks for readability."
+ce69177 Fix a crash due to wrong pointer-integer arithmetic.
+e40a368 Fix a crash in lossless decoder.
+3927ff3 remove unneeded error condition for WebPMuxNumNamedElements()
+2c140e1 Some cleanup in VP8LCreateHuffmanTree() (and related functions CompareHuffmanTrees() and SetBitDepths()): - Move 'tree_size' initialization and malloc for 'tree + tree_pool'   outside the loop. - Some renames/tweaks for readability.
+861a5b7 add support for animation
+eb5c16c Merge "Set correct encode size in encoder's stats."
+4abe04a fix the return value and handle missing input file case.
+2fafb85 Set correct encode size in encoder's stats.
+e7167a2 Provide one entry point for backward references.
+c4ccab6 Print relevant lossless encoding stats in cwebp.
+e3302cf GetHuffBitLengthsAndCodes: reduce level of indirection
+b5f2a9e enc/vp8l: fix uninitialized variable warning
+7885f8b makefile.unix: add lossless encoder files
+1261a4c Merge "cosmetics"
+3926b5b Merge "dsp/cpu.c: Android: fix crash on non-neon arm builds"
+834f937 dsp/cpu.c: Android: fix crash on non-neon arm builds
+126e160 cosmetics
+e38602d Merge branch 'lossless_encoder'
+e8d3d6a split StoreHuffmanCode() into smaller functions
+d0d8899 more consolidation: introduce VP8LHistogramSet
+1a210ef big code clean-up and refactoring and optimization
+41b5c8f Some cosmetics in histogram.c
+ada6ff7 Approximate FastLog between value range [256, 8192]
+ec123ca Forgot to update out_bit_costs to symbol_bit_costs at one instance.
+cf33ccd Evaluate output cluster's bit_costs once in HistogramRefine.
+781c01f Simple Huffman code changes.
+a2849bc Lossless decoder: remove an unneeded param in ReadHuffmanCodeLengths().
+b39e748 Reducing emerging palette size from 11 to 9 bits.
+bfc73db Move GetHistImageSymbols to histogram.c
+889a578 Improve predict vs no-predict heuristic.
+01f5066 code-moving and clean-up
+31035f3 reduce memory usage by allocating only one histo
+fbb501b Restrict histo_bits to ensure histo_image size is under 32MB
+8415ddf further simplification for the meta-Huffman coding
+e491729 A quick pass of cleanup in backward reference code
+83332b3 Make transform bits a function of encode method (-m).
+72920ca introduce -lossless option, protected by USE_LOSSLESS_ENCODER
+c6ac4df Run TraceBackwards for higher qualities.
+412222c Make histo_bits and transform_bits function of quality.
+149b509 Update lossless encoder strategy:
+0e6fa06 cache_bits passed to EncodeImageInternal()
+e38b40a Factorize code for clearing HtreeGroup.
+6f4a16e Removing the indirection of meta-huffman tables.
+3d33ecd Some renaming/comments related to palette in lossless encoder.
+4d02d58 Lossless encoder: correction in Palette storage
+4a63623 fix a memleak in EncodeImageInternal()
+0993a61 Full and final fix for prediction transform
+afd2102 Fix cross-color transform in lossless encoder
+b96d874 Need to write a '0' bit at the end of transforms.
+54dad7e Color cache size should be counted as 0 when cache bits = 0
+4f0c5ca Fix prediction transform in lossless encoder.
+36dabda Fix memory leak in method EncodeImageInternal for histogram_image.
+352a4f4 Get rid of PackLiteralBitLengths()
+d673b6b Change the predictor function to pass left pixel
+b2f9946 Fix CopyTileWithPrediction()
+84547f5 Add EncodeImageInternal() method.
+6b38378 Guard the lossless encoder (in flux) under a flag
+09f7532 Fix few nits (const qualifiers)
+648be39 Added implementation for various lossless functions
+32714ce Add VP8L prefix to backward ref & histogram methods.
+fcba7be Fixed header file tag (WEBP_UTILS_HUFFMAN_ENCODE_H_)
+bc70374 Add backward_ref, histogram & huffman encode modules from lossless.
+fdccaad Fixing nits
+227110c libwebp interface changes for lossless encoding.
+50679ac minor style fixes
+b38dfcc remove unneeded reference to NUM_LITERAL_CODES
+8979675 harmonize header description
+c04eb7b tcoder.c: define NOT_HAVE_LOG2 for MSVC builds
+9a214fa Merge "VP8[L]GetInfo: check input pointers"
+5c5be8b VP8[L]GetInfo: check input pointers
+0c188fe Merge changes I431acdfe,I713659b7
+b3515c6 mux: drop 'chunk' from ChunkInfo member names
+aea7923 muxi.h: remove some unused defines
+0142249 update NEWS file for next release
+29e3f7e Merge "dec: remove deprecated WebPINew()"
+4718e44 Merge "muxedit: a few more size_t changes"
+82654f9 Merge "muxedit: remove a few redundant NULL checks"
+02f27fb dec: remove deprecated WebPINew()
+ccddb3f muxedit: remove a few redundant NULL checks
+a6cdf71 muxedit: a few more size_t changes
+a384689 Merge "mux: remove unused LIST_ID"
+11ae46a alpha.c: quiet some size_t -> int conversion warnings
+dee4669 mux: remove unused LIST_ID
+03f1f49 mux: add version checked entry points
+6a0abda Merge "doc: tile/alpha corrections"
+c8139fb Merge "few cosmetics"
+6833873 Merge "lossless: remove some size_t -> int conversions"
+5249e94 doc: tile/alpha corrections
+d96e722 huffman: quiet int64 -> int conversion warning
+532020f lossless: remove some size_t -> int conversions
+23be6ed few cosmetics
+1349eda Merge "configure: AC_ARG_* use AS_HELP_STRING"
+bfbcc60 configure: AC_ARG_* use AS_HELP_STRING
+1427ca8 Merge "Makefile.am: header file maintenance"
+087332e Merge "remove unused parameter 'round' from CalcProba()"
+9630e16 remove unused parameter 'round' from CalcProba()
+92092ea Merge "bit_reader.h: correct include"
+a87fc3f Merge "mux: ensure # images = # tiles"
+53af99b Merge "mux: use size_t consistently"
+39a57da Makefile.am: header file maintenance
+1bd0bd0 bit_reader.h: correct include
+326a3c6 mux: ensure # images = # tiles
+95667b8 mux: use size_t consistently
+231ec1f Removing the indirection of meta-huffman tables.
+15ebcba check return pointer from MuxImageGetListFromId
+b0d6c4a Merge "configure: remove test for zlib.h"
+8cccac5 Merge "dsp/lossless: silence some build warnings"
+b08819a dsp/lossless: silence some build warnings
+7ae2252 Android.mk: SSE2 & NEON updates
+0a49e3f Merge "makefile.unix add missing header files"
+2e75a9a Merge "decode.h: use size_t consistently"
+fa13035 configure: remove test for zlib.h
+d3adc81 makefile.unix add missing header files
+262fe01 Merge "makefile.unix & Android.mk: cosmetics"
+4cce137 Merge "enc_sse2 add missing stdlib.h include"
+80256b8 enc_sse2 add missing stdlib.h include
+9b3d1f3 decode.h: use size_t consistently
+64083d3 Merge "Makefile.am: cosmetics"
+dceb8b4 Merge changes If1331d3c,I86fe3847
+0e33d7b Merge "webp/decode.h: fix prototypes"
+fac0f12 rename BitReader to VP8LBitReader
+fbd82b5 types.h: centralize use of stddef.h
+2154835 Makefile.am: cosmetics
+1c92bd3 vp8io: use size_t for buffer size
+90ead71 fix some more uint32_t -> size_t typing
+cbe705c webp/decode.h: fix prototypes
+3f8ec1c makefile.unix & Android.mk: cosmetics
+217ec7f Remove tabs in configure.ac
+b3d35fc Merge "Android.mk & Makefile.vc: add new files"
+0df04b9 Android.mk & Makefile.vc: add new files
+e4f20c5 Merge "automake: replace 'silent-rules' w/AM_SILENT_RULES"
+8d254a0 cosmetics
+6860c2e fix some uint32_t -> size_t typing
+4af1858 Fix a crash due to max symbol in a tree >= alphabet size
+6f01b83 split the VP8 and VP8L decoding properly
+f2623db enable lossless decoder
+b96efd7 add dec/vp8i.h changes from experimental
+19f6398 add dec/vp8l{i.h,.c} from experimental
+c4ae53c add utils/bit_reader.[hc] changes from experimental
+514d008 add dsp/lossless.[hc] from experimental
+9c67291 add utils/huffman.[hc] from experimental
+337914a add utils/color_cache.[hc] from experimental
+b3bf8fe the read-overflow code-path wasn't reporting as an error
+1db888b take colorspace into account when cropping
+61c2d51 move the rescaling code into its own file and make enc/ and dec/ use it.
+efc2016 Make rescaler methods generic
+3eacee8 Move rescaler methods out of io.c.
+a69b893 automake: replace 'silent-rules' w/AM_SILENT_RULES
+6f7bf64 issue 111: fix little-endian problem in bit-reader
+ed278e2 Removed unnecessary lookup
+cd8c3ba fix some warnings: down-cast and possibly-uninitialized variable
+0a7102b ~1% improvement of alpha compression
+3bc1b14 Merge "Reformat container doc"
+dc17abd mux: cosmetics
+cb5810d Merge "WebPMuxGetImage: allow image param to be NULL"
+506a4af mux: cosmetics
+135e8b1 WebPMuxGetImage: allow image param to be NULL
+de556b6 Merge "README.mux: reword some descriptions"
+0ee2aeb Makefile.vc: use batch mode rules
+d9acddc msvc: move {i,p}db creation to object directory
+237c9aa Merge "expose WebPFree function for DLL builds"
+b3e4054 silence msvc debug build warning
+45feb55 expose WebPFree function for DLL builds
+11316d8 README.mux: reword some descriptions
+4be52f4 factorize WebPMuxValidate
+14f6b9f mux: light cleanup
+5e96a5d add more param checks to WebPPictureDistortion()
+8abaf82 Merge "silence some type size related warnings"
+1601a39 silence some type size related warnings
+f3abe52 Merge "idec: simplify buffer size calculation"
+a9c5cd4 idec: simplify buffer size calculation
+7b06bd7 Merge "configure/automake: add silent-rules option"
+e9a7d14 Reformat container doc
+d4e5c7f configure/automake: add silent-rules option
+5081db7 configure/automake: no -version-info for convenience libs
+85b6ff6 Merge "idec: fix WebPIUpdate failure"
+7bb6a9c idec: fix internal state corruption
+89cd1bb idec: fix WebPIUpdate failure
+01b6380 4-5% faster decoding, optimized byte loads in arithmetic decoder.
+631117e Merge "cosmetics & warnings"
+a0b2736 cosmetics & warnings
+f73947f use 32bit for storing dequant coeffs, instead of 16b.
+b960030 Merge "store prediction mode array as uint8_t[16], not int[16]."
+7b67881 store prediction mode array as uint8_t[16], not int[16].
+cab8d4d Merge "NEON TransformOne"
+ba503fd NEON TransformOne
+9f740e3 Merge "gcc warning fix: remove the 'const' qualifier."
+f76d358 gcc warning fix: remove the 'const' qualifier.
+e78478d Merge "webpmux: make more use of WebPData"
+f85bba3 Merge "manpages: add BUGS section"
+48a43bb Merge "makefile.unix: variable cosmetics"
+c274dc9 makefile.unix: variable cosmetics
+1f7b859 re-organize the error-handling in the main loop a bit
+1336fa7 Only recompute level_cost_[] when needed
+771ee44 manpages: add BUGS section
+0f7820e webpmux: make more use of WebPData
+974aaff examples: logging updates
+6c14aad Merge "better token buffer code"
+f405425 better token buffer code
+18d959f Merge "mux: add WebPData type"
+eec4b87 mux: add WebPData type
+0de3096 use 16bit counters for recording proba counts
+7f23678 fix for LevelCost + little speed-up
+7107d54 further speed-up/cleanup of RecordCoeffs() and GetResidualCost()
+fd22104 Introduce Token buffer (unused for now)
+5fa148f Merge "speed-up GetResidualCost()"
+28a9d9b speed-up GetResidualCost()
+11e7dad Merge "misc cosmetics"
+378086b misc cosmetics
+d61479f add -print_psnr and -print_ssim options to cwebp.
+2e3e8b2 add a WebPCleanupTransparentArea() method
+552c121 Merge "mux: plug some memory leaks on error"
+a2a81f7 Merge "fix Mach-O shared library build"
+b3482c4 Merge "fix gcc-4.0 apple 32-bit build"
+e4e3ec1 fix gcc-4.0 apple 32-bit build
+b0d2fec mux: plug some memory leaks on error
+f0d2c7a pass of cosmetics
+b309a6f fix Mach-O shared library build
+241ddd3 doc: delete mux container pdf
+8b1ba27 doc: update VP8 decode guide link
+7e4371c WebPMuxCreate: fix unchecked malloc
+eb42558 Merge "have makefile.unix clean up src/webp/*~ too"
+a85c363 Merge "correct EncodeAlpha documentation"
+a33842f Merge "Update webp container spec with alpha filter options."
+8d6490d Incremental support for some of the mux APIs.
+b8375ab have makefile.unix clean up src/webp/*~ too
+b5855fc correct EncodeAlpha documentation
+dba37fe Update webp container spec with alpha filter options.
+2e74ec8 fix compile under MINGW
+716d1d7 fix suboptimal MAX_LEN cut-off limit
+57cab7b Harmonize the alpha-filter predictions at boundary
+3a98953 Merge "Fix bug for Alpha in RGBA_4444 color-mode."
+8ca2076 Introduce a 'fast' alpha mode
+221a06b Fix bug for Alpha in RGBA_4444 color-mode.
+ad1e163 cosmetics: normalize copyright headers
+c77424d cosmetics: light include cleanup
+9d0e17c fix msvc build breakage after 252028a
+7c4c177 Some readability fixes for mux library
+d8a47e6 Merge "Add predictive filtering option for Alpha."
+252028a Add predictive filtering option for Alpha.
+9b69be1 Merge "Simplify mux library code"
+a056170 Simplify mux library code
+992187a improve log2 test
+e852f83 update Android.mk file list
+a90cb2b reduce number of copies and mallocs in alpha plane enc/dec
+b1662b0 fix some more type conversion warnings w/MSVC
+223d8c6 fix some uint64_t -> int conversion warnings with MSC
+c1a0437 Merge "simplify checks for enabling SSE2 code"
+f06817a simplify checks for enabling SSE2 code
+948d4fe silence a msvc build warning
+9117954 vwebp: msvc build tweaks
+7937b40 simple WebP viewer, based on OpenGL
+6aac1df add a bunch of missing 'extern "C"'
+421eb99 Merge "Remove assigned-but-not-used variable "br""
+91e27f4 better fitting names for upsampling functions
+a5d7ed5 Remove assigned-but-not-used variable "br"
+f62d2c9 remove unused 'has_alpha' from VP8GetInfo() signature
+08e8658 trap alpha-decoding error
+b361eca add cut-off to arith coder probability update.
+8666a93 Some bug-fixes for images with alpha.
+273a12a fix off-by-1 diff in case cropping and simple filtering
+2f741d1 webpmux: ReadImage: fix ptr free in error case
+721f3f4 fix alpha decode
+60942c8 fix the has_alpha_ order
+30971c9 Implement progress report (and user abort)
+eda520a cosmetics after 9523f2a
+38bd5bb Merge "Better alpha support in webpmux binary"
+ccbaebf Merge "Updated the includes to relative paths."
+d71fbdc fix small typo in error message array
+cdf97aa Better alpha support in webpmux binary
+885f25b Updated the includes to relative paths.
+a0ec9aa Update WebP encoder (cwebp) to support Alpha.
+667b769 Fixed the include for types.h within mux.h
+9523f2a Add Alpha Encode support from WebPEncode.
+16612dd Merge "Add Alpha Decode support from WebPDecode."
+d117a94 Add Alpha Decode support from WebPDecode.
+6722873 cosmetics after e1947a9
+e1947a9 Add Alpha encode/decode code.
+afc4c5d simplify code by introducing a CopyPlane() helper func
+113b312 Merge "MUX API Updates"
+c398f59 MUX API Updates
+5acf04e remove orphan source file
+059f03e Merge "dec: validate colorspace before using as array index"
+70a0398 Merge "factorize some code"
+9b243b3 factorize some code
+372e2b4 Correct a bug in ReadPNG() with GRAY_ALPHA images
+469d6eb Merge "Makefile.am: remove redundant noinst_HEADERS"
+9fe3372 dec: validate colorspace before using as array index
+8962030 remove orphan source file
+ced3e3f Makefile.am: remove redundant noinst_HEADERS
+964387e use WEBP_INLINE for inline function declarations
+90880a1 Merge "manpages: break long lines"
+b591089 Merge "manpages: minor formatting updates"
+4c451e4 Merge "Rectify the Chunk parsing logic."
+04e84cf examples: slight cleanup
+099717c manpages: break long lines
+1daf39b manpages: minor formatting updates
+abd030b fix missing "(void)" in function signature
+f6a7d75 remove useless test
+f07b213 Rectify the Chunk parsing logic.
+b8634f7 webpmux: fix lib link order
+42c2e68 Fix missing coma (on uncompiled code)
+d8329d4 Android.mk: add missing source files
+13a54df Merge "More aggressive copy-edit; add TODO; validate HTML5"
+868b96a More aggressive copy-edit; add TODO; validate HTML5
+767afea configure: check for a symbol contained in libpng
+408b891 Merge "Linewrap at 72 cols. Casual copy-edit."
+3ae318c Merge "Restore (most) emphasis; add emphasis to normative RFC 2119 terms (MUST, etc.)"
+918eb2d Merge "Basic container doc source clean-up; fix lists and pseudocode blocks."
+03bec9e Linewrap at 72 cols. Casual copy-edit.
+2678d81 Restore (most) emphasis; add emphasis to normative RFC 2119 terms (MUST, etc.)
+428674d Basic container doc source clean-up; fix lists and pseudocode blocks.
+6a77d92 Merge "Makefile.vc: cosmetics"
+28c38e8 Merge "Makefile.vc: condense directory creation rules"
+55be2cf Initial import of container spec document, from pdftotext transform.
+a82a788 Makefile.vc: cosmetics
+c8f41ce Makefile.vc: condense directory creation rules
+2b877cd Some fixes to Makefile.vc to support the src\mux directory.
+3eb969b Merge "Add Makefile.vc for Mux library & binary."
+e78e971 Add Makefile.vc for Mux library & binary.
+6aedde5 Add manual for WebPMux tool.
+8a360d0 Merge "Added WebPMux Binary."
+a4f32ca Added WebPMux Binary.
+f3bf4c7 Added Mux Container Spec & README for MUX-API.
+9f761cf Changed function signature for WebPMuxCreate
+5f31b5e Merge "Add Mux library for manipulating WebP container."
+2315785 Add Mux library for manipulating WebP container.
+7e198ab update ChangeLog (v0.1.3)
 dfc9c1e Harmonize the dates
 28ad70c Fix PNG decoding bug
 846e93c Update AUTHORS & add .mailmap
