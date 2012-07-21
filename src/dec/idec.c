@@ -533,7 +533,7 @@ static VP8StatusCode IDecode(WebPIDecoder* idec) {
 //------------------------------------------------------------------------------
 // Public functions
 
-WebPIDecoder* WebPINewDecoder(WebPDecBuffer* const output_buffer) {
+WebPIDecoder* WebPINewDecoder(WebPDecBuffer* output_buffer) {
   WebPIDecoder* idec = (WebPIDecoder*)calloc(1, sizeof(WebPIDecoder));
   if (idec == NULL) {
     return NULL;
@@ -554,7 +554,7 @@ WebPIDecoder* WebPINewDecoder(WebPDecBuffer* const output_buffer) {
 }
 
 WebPIDecoder* WebPIDecode(const uint8_t* data, size_t data_size,
-                          WebPDecoderConfig* const config) {
+                          WebPDecoderConfig* config) {
   WebPIDecoder* idec;
 
   // Parse the bitstream's features, if requested:
@@ -575,7 +575,7 @@ WebPIDecoder* WebPIDecode(const uint8_t* data, size_t data_size,
   return idec;
 }
 
-void WebPIDelete(WebPIDecoder* const idec) {
+void WebPIDelete(WebPIDecoder* idec) {
   if (idec == NULL) return;
   if (idec->dec_ != NULL) {
     if (!idec->is_lossless_) {
@@ -638,8 +638,8 @@ static VP8StatusCode IDecCheckStatus(const WebPIDecoder* const idec) {
   return VP8_STATUS_SUSPENDED;
 }
 
-VP8StatusCode WebPIAppend(WebPIDecoder* const idec,
-                          const uint8_t* const data, size_t data_size) {
+VP8StatusCode WebPIAppend(WebPIDecoder* idec,
+                          const uint8_t* data, size_t data_size) {
   VP8StatusCode status;
   if (idec == NULL || data == NULL) {
     return VP8_STATUS_INVALID_PARAM;
@@ -659,8 +659,8 @@ VP8StatusCode WebPIAppend(WebPIDecoder* const idec,
   return IDecode(idec);
 }
 
-VP8StatusCode WebPIUpdate(WebPIDecoder* const idec,
-                          const uint8_t* const data, size_t data_size) {
+VP8StatusCode WebPIUpdate(WebPIDecoder* idec,
+                          const uint8_t* data, size_t data_size) {
   VP8StatusCode status;
   if (idec == NULL || data == NULL) {
     return VP8_STATUS_INVALID_PARAM;
@@ -692,9 +692,9 @@ static const WebPDecBuffer* GetOutputBuffer(const WebPIDecoder* const idec) {
   return idec->params_.output;
 }
 
-const WebPDecBuffer* WebPIDecodedArea(const WebPIDecoder* const idec,
-                                      int* const left, int* const top,
-                                      int* const width, int* const height) {
+const WebPDecBuffer* WebPIDecodedArea(const WebPIDecoder* idec,
+                                      int* left, int* top,
+                                      int* width, int* height) {
   const WebPDecBuffer* const src = GetOutputBuffer(idec);
   if (left) *left = 0;
   if (top) *top = 0;
@@ -709,7 +709,7 @@ const WebPDecBuffer* WebPIDecodedArea(const WebPIDecoder* const idec,
   return src;
 }
 
-uint8_t* WebPIDecGetRGB(const WebPIDecoder* const idec, int* last_y,
+uint8_t* WebPIDecGetRGB(const WebPIDecoder* idec, int* last_y,
                         int* width, int* height, int* stride) {
   const WebPDecBuffer* const src = GetOutputBuffer(idec);
   if (!src) return NULL;
@@ -725,7 +725,7 @@ uint8_t* WebPIDecGetRGB(const WebPIDecoder* const idec, int* last_y,
   return src->u.RGBA.rgba;
 }
 
-uint8_t* WebPIDecGetYUV(const WebPIDecoder* const idec, int* last_y,
+uint8_t* WebPIDecGetYUV(const WebPIDecoder* idec, int* last_y,
                         uint8_t** u, uint8_t** v,
                         int* width, int* height, int *stride, int* uv_stride) {
   const WebPDecBuffer* const src = GetOutputBuffer(idec);

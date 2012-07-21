@@ -8,7 +8,7 @@
 // Image transforms and color space conversion methods for lossless decoder.
 //
 // Authors: Vikas Arora (vikaas.arora@gmail.com)
-//          jyrki@google.com (Jyrki Alakuijala)
+//          Jyrki Alakuijala (jyrki@google.com)
 //          Urvang Joshi (urvang@google.com)
 
 #if defined(__cplusplus) || defined(c_plusplus)

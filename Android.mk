@@ -24,22 +24,26 @@ LOCAL_SRC_FILES := \
     src/dsp/yuv.c \
     src/enc/alpha.c \
     src/enc/analysis.c \
+    src/enc/backward_references.c \
     src/enc/config.c \
     src/enc/cost.c \
     src/enc/filter.c \
     src/enc/frame.c \
+    src/enc/histogram.c \
     src/enc/iterator.c \
     src/enc/layer.c \
     src/enc/picture.c \
     src/enc/quant.c \
     src/enc/syntax.c \
     src/enc/tree.c \
+    src/enc/vp8l.c \
     src/enc/webpenc.c \
     src/utils/bit_reader.c \
     src/utils/bit_writer.c \
     src/utils/color_cache.c \
     src/utils/filters.c \
     src/utils/huffman.c \
+    src/utils/huffman_encode.c \
     src/utils/quant_levels.c \
     src/utils/rescaler.c \
     src/utils/thread.c \

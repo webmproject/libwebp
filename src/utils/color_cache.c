@@ -7,7 +7,7 @@
 //
 // Color Cache for WebP Lossless
 //
-// Author: jyrki@google.com (Jyrki Alakuijala)
+// Author: Jyrki Alakuijala (jyrki@google.com)
 
 #include <assert.h>
 #include <stdlib.h>
@@ -35,12 +35,8 @@ int VP8LColorCacheInit(VP8LColorCache* const cc, int hash_bits) {
 void VP8LColorCacheClear(VP8LColorCache* const cc) {
   if (cc != NULL) {
     free(cc->colors_);
+    cc->colors_ = NULL;
   }
-}
-
-void VP8LColorCacheDelete(VP8LColorCache* const cc) {
-  VP8LColorCacheClear(cc);
-  free(cc);
 }
 
 #if defined(__cplusplus) || defined(c_plusplus)

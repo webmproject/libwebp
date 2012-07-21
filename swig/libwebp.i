@@ -90,6 +90,10 @@ static jint returned_buffer_size(
     { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeBGR",  1 },
     { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeRGBA", 1 },
     { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeBGRA", 1 },
+    { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessRGB",  1 },
+    { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessBGR",  1 },
+    { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessRGBA", 1 },
+    { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessBGRA", 1 },
     { NULL, 0 }
   };
   const struct sizemap *p;
@@ -108,6 +112,9 @@ static jint returned_buffer_size(
 typedef size_t (*WebPEncodeFunction)(const uint8_t* rgb,
                                      int width, int height, int stride,
                                      float quality_factor, uint8_t** output);
+typedef size_t (*WebPEncodeLosslessFunction)(const uint8_t* rgb,
+                                             int width, int height, int stride,
+                                             uint8_t** output);
 
 static uint8_t* encode(const uint8_t* rgb,
                        int width, int height, int stride,
@@ -117,6 +124,19 @@ static uint8_t* encode(const uint8_t* rgb,
   uint8_t *output = NULL;
   const size_t image_size =
       encfn(rgb, width, height, stride, quality_factor, &output);
+  // the values of following two will be interpreted by returned_buffer_size()
+  // as 'width' and 'height' in the size calculation.
+  *output_size = image_size;
+  *unused = 1;
+  return image_size ? output : NULL;
+}
+
+static uint8_t* encode_lossless(const uint8_t* rgb,
+                                int width, int height, int stride,
+                                WebPEncodeLosslessFunction encfn,
+                                int* output_size, int* unused) {
+  uint8_t *output = NULL;
+  const size_t image_size = encfn(rgb, width, height, stride, &output);
   // the values of following two will be interpreted by returned_buffer_size()
   // as 'width' and 'height' in the size calculation.
   *output_size = image_size;
@@ -137,6 +157,10 @@ static uint8_t* encode(const uint8_t* rgb,
 %newobject wrap_WebPEncodeBGR;
 %newobject wrap_WebPEncodeRGBA;
 %newobject wrap_WebPEncodeBGRA;
+%newobject wrap_WebPEncodeLosslessRGB;
+%newobject wrap_WebPEncodeLosslessBGR;
+%newobject wrap_WebPEncodeLosslessRGBA;
+%newobject wrap_WebPEncodeLosslessBGRA;
 
 #ifdef SWIGJAVA
 // There's no reason to call these directly
@@ -144,6 +168,10 @@ static uint8_t* encode(const uint8_t* rgb,
 %javamethodmodifiers wrap_WebPEncodeBGR "private";
 %javamethodmodifiers wrap_WebPEncodeRGBA "private";
 %javamethodmodifiers wrap_WebPEncodeBGRA "private";
+%javamethodmodifiers wrap_WebPEncodeLosslessRGB "private";
+%javamethodmodifiers wrap_WebPEncodeLosslessBGR "private";
+%javamethodmodifiers wrap_WebPEncodeLosslessRGBA "private";
+%javamethodmodifiers wrap_WebPEncodeLosslessBGRA "private";
 #endif  /* SWIGJAVA */
 
 %inline %{
@@ -152,33 +180,36 @@ static uint8_t* encode(const uint8_t* rgb,
 // than dealing with the return pointer.
 // The additional parameters are to allow reuse of returned_buffer_size(),
 // unused2 and output_size will be used in this case.
-static uint8_t* wrap_WebPEncodeRGB(
-    const uint8_t* rgb, int* unused1, int* unused2, int* output_size,
-    int width, int height, int stride, float quality_factor) {
-  return encode(rgb, width, height, stride, quality_factor,
-                WebPEncodeRGB, output_size, unused2);
-}
+#define LOSSY_WRAPPER(FUNC)                                             \
+  static uint8_t* wrap_##FUNC(                                          \
+      const uint8_t* rgb, int* unused1, int* unused2, int* output_size, \
+      int width, int height, int stride, float quality_factor) {        \
+    return encode(rgb, width, height, stride, quality_factor,           \
+                  FUNC, output_size, unused2);                          \
+  }                                                                     \
 
-static uint8_t* wrap_WebPEncodeBGR(
-    const uint8_t* bgr, int* unused1, int* unused2, int* output_size,
-    int width, int height, int stride, float quality_factor) {
-  return encode(bgr, width, height, stride, quality_factor,
-                WebPEncodeBGR, output_size, unused2);
-}
+LOSSY_WRAPPER(WebPEncodeRGB)
+LOSSY_WRAPPER(WebPEncodeBGR)
+LOSSY_WRAPPER(WebPEncodeRGBA)
+LOSSY_WRAPPER(WebPEncodeBGRA)
 
-static uint8_t* wrap_WebPEncodeRGBA(
-    const uint8_t* rgba, int* unused1, int* unused2, int* output_size,
-    int width, int height, int stride, float quality_factor) {
-  return encode(rgba, width, height, stride, quality_factor,
-                WebPEncodeRGBA, output_size, unused2);
-}
+#undef LOSSY_WRAPPER
 
-static uint8_t* wrap_WebPEncodeBGRA(
-    const uint8_t* bgra, int* unused1, int* unused2, int* output_size,
-    int width, int height, int stride, float quality_factor) {
-  return encode(bgra, width, height, stride, quality_factor,
-                WebPEncodeBGRA, output_size, unused2);
-}
+#define LOSSLESS_WRAPPER(FUNC)                                          \
+  static uint8_t* wrap_##FUNC(                                          \
+      const uint8_t* rgb, int* unused1, int* unused2, int* output_size, \
+      int width, int height, int stride) {                              \
+    return encode_lossless(rgb, width, height, stride,                  \
+                           FUNC, output_size, unused2);                 \
+  }                                                                     \
+
+LOSSLESS_WRAPPER(WebPEncodeLosslessRGB)
+LOSSLESS_WRAPPER(WebPEncodeLosslessBGR)
+LOSSLESS_WRAPPER(WebPEncodeLosslessRGBA)
+LOSSLESS_WRAPPER(WebPEncodeLosslessBGRA)
+
+#undef LOSSLESS_WRAPPER
+
 %}
 
 //------------------------------------------------------------------------------
@@ -225,6 +256,30 @@ static uint8_t* wrap_WebPEncodeBGRA(
                                       float quality_factor) {
     return wrap_WebPEncodeBGRA(
         bgra, UNUSED, UNUSED, outputSize, width, height, stride, quality_factor);
+  }
+
+  public static byte[] WebPEncodeLosslessRGB(
+      byte[] rgb, int width, int height, int stride) {
+    return wrap_WebPEncodeLosslessRGB(
+        rgb, UNUSED, UNUSED, outputSize, width, height, stride);
+  }
+
+  public static byte[] WebPEncodeLosslessBGR(
+      byte[] bgr, int width, int height, int stride) {
+    return wrap_WebPEncodeLosslessBGR(
+        bgr, UNUSED, UNUSED, outputSize, width, height, stride);
+  }
+
+  public static byte[] WebPEncodeLosslessRGBA(
+      byte[] rgba, int width, int height, int stride) {
+    return wrap_WebPEncodeLosslessRGBA(
+        rgba, UNUSED, UNUSED, outputSize, width, height, stride);
+  }
+
+  public static byte[] WebPEncodeLosslessBGRA(
+      byte[] bgra, int width, int height, int stride) {
+    return wrap_WebPEncodeLosslessBGRA(
+        bgra, UNUSED, UNUSED, outputSize, width, height, stride);
   }
 %}
 #endif  /* SWIGJAVA */

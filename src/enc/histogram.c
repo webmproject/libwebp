@@ -88,8 +88,7 @@ VP8LHistogramSet* VP8LAllocateHistogramSet(int size, int cache_bits) {
 // -----------------------------------------------------------------------------
 
 void VP8LConvertPopulationCountTableToBitEstimates(
-    int num_symbols, const int* const population_counts,
-    double* const output) {
+    int num_symbols, const int population_counts[], double output[]) {
   int sum = 0;
   int nonzeros = 0;
   int i;
@@ -206,9 +205,6 @@ double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p) {
   return retval;
 }
 
-double VP8LHistogramEstimateBits(const VP8LHistogram* const p) {
-  return VP8LHistogramEstimateBitsHeader(p) + VP8LHistogramEstimateBitsBulk(p);
-}
 
 // Returns the cost encode the rle-encoded entropy code.
 // The constants in this function are experimental.
@@ -249,12 +245,17 @@ static double HuffmanCost(const int* const population, int length) {
   return retval;
 }
 
-double VP8LHistogramEstimateBitsHeader(const VP8LHistogram* const p) {
+// Estimates the Huffman dictionary + other block overhead size.
+static double HistogramEstimateBitsHeader(const VP8LHistogram* const p) {
   return HuffmanCost(&p->alpha_[0], 256) +
          HuffmanCost(&p->red_[0], 256) +
          HuffmanCost(&p->literal_[0], VP8LHistogramNumCodes(p)) +
          HuffmanCost(&p->blue_[0], 256) +
          HuffmanCost(&p->distance_[0], NUM_DISTANCE_CODES);
+}
+
+double VP8LHistogramEstimateBits(const VP8LHistogram* const p) {
+  return HistogramEstimateBitsHeader(p) + VP8LHistogramEstimateBitsBulk(p);
 }
 
 static void HistogramBuildImage(int xsize, int histo_bits,

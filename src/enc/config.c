@@ -19,9 +19,9 @@ extern "C" {
 // WebPConfig
 //------------------------------------------------------------------------------
 
-int WebPConfigInitInternal(WebPConfig* const config,
+int WebPConfigInitInternal(WebPConfig* config,
                            WebPPreset preset, float quality, int version) {
-  if (version != WEBP_ENCODER_ABI_VERSION) {
+  if (WEBP_ABI_IS_INCOMPATIBLE(version, WEBP_ENCODER_ABI_VERSION)) {
     return 0;   // caller/system version mismatch!
   }
   if (config == NULL) return 0;
@@ -80,7 +80,7 @@ int WebPConfigInitInternal(WebPConfig* const config,
   return WebPValidateConfig(config);
 }
 
-int WebPValidateConfig(const WebPConfig* const config) {
+int WebPValidateConfig(const WebPConfig* config) {
   if (config == NULL) return 0;
   if (config->quality < 0 || config->quality > 100)
     return 0;

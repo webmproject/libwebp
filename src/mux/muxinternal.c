@@ -212,20 +212,20 @@ uint8_t* ChunkListEmit(const WebPChunk* chunk_list, uint8_t* dst) {
 //------------------------------------------------------------------------------
 // Manipulation of a WebPData object.
 
-void WebPDataInit(WebPData* const webp_data) {
+void WebPDataInit(WebPData* webp_data) {
   if (webp_data != NULL) {
     memset(webp_data, 0, sizeof(*webp_data));
   }
 }
 
-void WebPDataClear(WebPData* const webp_data) {
+void WebPDataClear(WebPData* webp_data) {
   if (webp_data != NULL) {
     free((void*)webp_data->bytes_);
     WebPDataInit(webp_data);
   }
 }
 
-int WebPDataCopy(const WebPData* const src, WebPData* const dst) {
+int WebPDataCopy(const WebPData* src, WebPData* dst) {
   if (src == NULL || dst == NULL) return 0;
 
   WebPDataInit(dst);

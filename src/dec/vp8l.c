@@ -7,8 +7,8 @@
 //
 // main entry for the decoder
 //
-// Author: Vikas Arora (vikaas.arora@gmail.com)
-//         jyrki@google.com (Jyrki Alakuijala)
+// Authors: Vikas Arora (vikaas.arora@gmail.com)
+//          Jyrki Alakuijala (jyrki@google.com)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -565,13 +565,14 @@ static int DecodeImageData(VP8LDecoder* const dec,
   int col = 0, row = 0;
   VP8LBitReader* const br = &dec->br_;
   VP8LMetadata* const hdr = &dec->hdr_;
-  VP8LColorCache* const color_cache = hdr->color_cache_;
   HTreeGroup* htree_group = hdr->htree_groups_;
   uint32_t* src = data;
   uint32_t* last_cached = data;
   uint32_t* const src_end = data + width * height;
   const int len_code_limit = NUM_LITERAL_CODES + NUM_LENGTH_CODES;
   const int color_cache_limit = len_code_limit + hdr->color_cache_size_;
+  VP8LColorCache* const color_cache =
+      (hdr->color_cache_size_ > 0) ? &hdr->color_cache_ : NULL;
   const int mask = hdr->huffman_mask_;
 
   assert(htree_group != NULL);
@@ -784,7 +785,7 @@ static void ClearMetadata(VP8LMetadata* const hdr) {
 
   free(hdr->huffman_image_);
   DeleteHtreeGroups(hdr->htree_groups_, hdr->num_htree_groups_);
-  VP8LColorCacheDelete(hdr->color_cache_);
+  VP8LColorCacheClear(&hdr->color_cache_);
   InitMetadata(hdr);
 }
 
@@ -875,13 +876,13 @@ static int DecodeImageStream(int xsize, int ysize,
   // Finish setting up the color-cache
   if (color_cache_bits > 0) {
     hdr->color_cache_size_ = 1 << color_cache_bits;
-    hdr->color_cache_ = (VP8LColorCache*)malloc(sizeof(*hdr->color_cache_));
-    if (hdr->color_cache_ == NULL ||
-        !VP8LColorCacheInit(hdr->color_cache_, color_cache_bits)) {
+    if (!VP8LColorCacheInit(&hdr->color_cache_, color_cache_bits)) {
       dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
       ok = 0;
       goto End;
     }
+  } else {
+    hdr->color_cache_size_ = 0;
   }
   UpdateDecoder(dec, transform_xsize, transform_ysize);
 
@@ -890,11 +891,21 @@ static int DecodeImageStream(int xsize, int ysize,
     goto End;
   }
 
-  data = (uint32_t*)malloc(transform_xsize * transform_ysize * sizeof(*data));
-  if (data == NULL) {
-    dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
-    ok = 0;
-    goto End;
+  {
+    const uint64_t total_size =
+        transform_xsize * transform_ysize * sizeof(*data);
+    if (total_size != (size_t)total_size) {
+      // This shouldn't happen, because of transform_bits limit, but...
+      dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
+      ok = 0;
+      goto End;
+    }
+    data = (uint32_t*)malloc((size_t)total_size);
+    if (data == NULL) {
+      dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
+      ok = 0;
+      goto End;
+    }
   }
 
   // Use the Huffman trees to decode the LZ77 encoded data.
