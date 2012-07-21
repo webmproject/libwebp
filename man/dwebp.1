@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DWEBP 1 "January 24, 2012"
+.TH DWEBP 1 "July 20, 2012"
 .SH NAME
 dwebp \- decompress a WebP file to an image file
 .SH SYNOPSIS
@@ -11,7 +11,7 @@ This manual page documents the
 .B dwebp
 command.
 .PP
-\fBdwebp\fP decompresses WebP files into PNG, PPM or PGM images.
+\fBdwebp\fP decompresses WebP files into PNG, PAM, PPM or PGM images.
 .SH OPTIONS
 The basic options are:
 .TP
@@ -24,8 +24,11 @@ Print the version number (as major.minor.revision) and exit.
 .B \-o string
 Specify the name of the output file (as PNG format by default).
 .TP
+.B \-pam
+Change the output format to PAM (retains alpha).
+.TP
 .B \-ppm
-Change the output format to PPM.
+Change the output format to PPM (discards alpha).
 .TP
 .B \-pgm
 Change the output format to PGM. The output consist of luma/chroma
