@@ -335,9 +335,7 @@ static void Help(void) {
          "  -mt .......... use multi-threading\n"
          "  -crop <x> <y> <w> <h> ... crop output with the given rectangle\n"
          "  -scale <w> <h> .......... scale the output (*after* any cropping)\n"
-#ifdef WEBP_EXPERIMENTAL_FEATURES
          "  -alpha ....... only save the alpha plane.\n"
-#endif
          "  -h     ....... this help message.\n"
          "  -v     ....... verbose (e.g. print encoding/decoding times)\n"
 #ifndef WEBP_DLL
