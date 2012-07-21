@@ -146,7 +146,7 @@ static void ShiftBytes(VP8LBitReader* const br) {
 
 void VP8LFillBitWindow(VP8LBitReader* const br) {
   if (br->bit_pos_ >= 32) {
-#if defined(__x86_64__)
+#if defined(__x86_64__) || defined(_M_X64)
     if (br->pos_ + 8 < br->len_) {
       br->val_ >>= 32;
       // The expression below needs a little-endian arch to work correctly.

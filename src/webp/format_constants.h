@@ -40,6 +40,9 @@
 #define NUM_DISTANCE_CODES           40
 #define CODE_LENGTH_CODES            19
 
+#define MIN_HUFFMAN_BITS             2  // min number of Huffman bits
+#define MAX_HUFFMAN_BITS             9  // max number of Huffman bits
+
 #define TRANSFORM_PRESENT            1  // The bit to be written when next data
                                         // to be read is a transform.
 #define NUM_TRANSFORMS               4  // Maximum number of allowed transform

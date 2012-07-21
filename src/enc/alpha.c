@@ -62,7 +62,7 @@ static int EncodeLossless(const uint8_t* data, int width, int height,
   WebPPictureInit(&picture);
   picture.width = width;
   picture.height = height;
-  picture.use_argb_input = 1;
+  picture.use_argb = 1;
   if (!WebPPictureAlloc(&picture)) return 0;
 
   // Transfer the alpha values to the green channel.

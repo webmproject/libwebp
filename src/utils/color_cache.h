@@ -7,8 +7,8 @@
 //
 // Color Cache for WebP Lossless
 //
-// Authors: jyrki@google.com (Jyrki Alakuijala)
-//          urvang@google.com (Urvang Joshi)
+// Authors: Jyrki Alakuijala (jyrki@google.com)
+//          Urvang Joshi (urvang@google.com)
 
 #ifndef WEBP_UTILS_COLOR_CACHE_H_
 #define WEBP_UTILS_COLOR_CACHE_H_
@@ -56,11 +56,8 @@ static WEBP_INLINE int VP8LColorCacheContains(const VP8LColorCache* const cc,
 // Returns false in case of memory error.
 int VP8LColorCacheInit(VP8LColorCache* const color_cache, int hash_bits);
 
-// Delete the color cache.
+// Delete the memory associated to color cache.
 void VP8LColorCacheClear(VP8LColorCache* const color_cache);
-
-// Delete the color_cache object.
-void VP8LColorCacheDelete(VP8LColorCache* const color_cache);
 
 //------------------------------------------------------------------------------
 

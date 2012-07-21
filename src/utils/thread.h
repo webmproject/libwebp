@@ -7,7 +7,7 @@
 //
 // Multi-threaded worker
 //
-// Author: skal@google.com (Pascal Massimino)
+// Author: Skal (pascal.massimino@gmail.com)
 
 #ifndef WEBP_UTILS_THREAD_H_
 #define WEBP_UTILS_THREAD_H_

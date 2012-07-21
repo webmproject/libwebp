@@ -5,9 +5,9 @@
 //  Additional IP Rights Grant:  http://www.webmproject.org/license/additional/
 // -----------------------------------------------------------------------------
 //
-// Author: jyrki@google.com (Jyrki Alakuijala)
+// Author: Jyrki Alakuijala (jyrki@google.com)
 //
-// Flate-like entropy encoding (Huffman) for webp lossless
+// Entropy encoding (Huffman) for webp lossless
 
 #ifndef WEBP_UTILS_HUFFMAN_ENCODE_H_
 #define WEBP_UTILS_HUFFMAN_ENCODE_H_

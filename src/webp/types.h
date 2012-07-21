@@ -39,4 +39,7 @@ typedef long long int int64_t;
 #define WEBP_EXTERN(type) extern type
 #endif  /* WEBP_EXTERN */
 
+// Macro to check ABI compatibility (same major revision number)
+#define WEBP_ABI_IS_INCOMPATIBLE(a, b) (((a) >> 8) != ((b) >> 8))
+
 #endif  /* WEBP_WEBP_TYPES_H_ */

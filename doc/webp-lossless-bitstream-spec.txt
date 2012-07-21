@@ -130,7 +130,7 @@ internally.
 
 Broadly, a WebP lossless image contains header data, transform
 information and actual image data. Headers contain width and height of
-the image. A WebP lossless image can go through five different types of
+the image. A WebP lossless image can go through four different types of
 transformation before being entropy encoded. The transform information
 in the bitstream contains the data required to apply the respective
 inverse transforms.
@@ -781,7 +781,7 @@ prefixes, and the result of this coding is further Huffman coded.
 
 For every pixel (x, y) in the image, there is a definition of which
 entropy code to use. First, there is an integer called 'meta Huffman
-code' that can be obtained from a subresolution 2D image. This
+code' that can be obtained from the entropy image. This
 meta Huffman code identifies a set of five Huffman codes, one for green
 (along with length codes and color cache codes), one for each of red,
 blue and alpha, and one for distance. The Huffman codes are identified
@@ -886,7 +886,7 @@ codes to the number of meta Huffman codes.
 
 There are two ways to code the meta Huffman codes, indicated by one bit
 for the ARGB image and is an implicit zero, i.e., not present in the
-stream for all predictor images and Huffman image itself.
+stream for all transform images and the entropy image itself.
 
 If this bit is zero, there is only one meta Huffman code, using Huffman
 codes 0, 1, 2, 3 and 4 for green, alpha, red, blue and distance,
@@ -953,8 +953,8 @@ of pixels (xsize * ysize).
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <format> ::= <RIFF header><image size><image stream>
-<image stream> ::= (<optional-transform><image stream>) |
-                    <entropy-coded image>
+<image stream> ::= (<optional-transform><image stream>);
+                    <spatially-coded image>
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -964,23 +964,24 @@ of pixels (xsize * ysize).
 <optional-transform> ::= 1-bit <transform> <optional-transform> | 0-bit
 <transform> ::= <predictor-tx> | <color-tx> | <subtract-green-tx> |
                 <color-indexing-tx>
-<predictor-tx> ::= 2-bit value 0; 4-bit sub-pixel code | <entropy-coded image>
-<color-tx> ::= 2-bit value 1; 4-bit sub-pixel code | <entropy-coded image>
+<predictor-tx> ::= 2-bit value 0; <predictor image>
+<predictor image> ::= 3-bit sub-pixel code | <entropy-coded image>
+<color-tx> ::= 2-bit value 1; <color image>
+<color image> ::= 3-bit sub-pixel code | <entropy-coded image>
 <subtract-green-tx> ::= 2-bit value 2
-<color-indexing-tx> ::= 2-bit value 3; 8-bit color count | <entropy-coded image>
+<color-indexing-tx> ::= 2-bit value 3; <color-indexing image>
+<color-indexing image> ::= 8-bit color count; <entropy-coded image>
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 #### Structure of the Image Data
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-<entropy-coded image> ::= <color cache info><optional meta huffman>
-                          <huffman codes><lz77-coded image>
-<optional meta huffman> ::= 1-bit value 0 |
-                            (1-bit value 1;
-                            <huffman image><meta Huffman size>)
-<huffman image> ::= 4-bit subsample value; <image stream>
-<meta huffman size> ::= 4-bit length; meta Huffman size (subtracted by 2).
+<spatially-coded image> ::= <meta huffman><entropy-coded image>
+<entropy-coded image> ::= <color cache info><huffman codes><lz77-coded image>
+<meta huffman> ::= 1-bit value 0 |
+                   (1-bit value 1; <entropy image>)
+<entropy image> ::= 3-bit subsample value; <entropy-coded image>
 <color cache info> ::= 1 bit value 0 |
                        (1-bit value 1; 4-bit value for color cache size)
 <huffman codes> ::= <huffman code> | <huffman code><huffman codes>
@@ -996,7 +997,7 @@ A possible example sequence:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <RIFF header><image size>1-bit value 1<subtract-green-tx>
-1-bit value 1<predictor-tx>1-bit value 0<huffman image>
-<color cache info><meta huffman code><huffman codes>
+1-bit value 1<predictor-tx>1-bit value 0<meta huffman>
+<color cache info><huffman codes>
 <lz77-coded image>
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

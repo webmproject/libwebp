@@ -5,9 +5,9 @@
 //  Additional IP Rights Grant:  http://www.webmproject.org/license/additional/
 // -----------------------------------------------------------------------------
 //
-// Author: jyrki@google.com (Jyrki Alakuijala)
+// Author: Jyrki Alakuijala (jyrki@google.com)
 //
-// Flate-like entropy encoding (Huffman) for webp lossless.
+// Entropy encoding (Huffman) for webp lossless.
 
 #include <assert.h>
 #include <stdlib.h>

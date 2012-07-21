@@ -829,6 +829,10 @@ static jint returned_buffer_size(
     { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeBGR",  1 },
     { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeRGBA", 1 },
     { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeBGRA", 1 },
+    { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessRGB",  1 },
+    { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessBGR",  1 },
+    { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessRGBA", 1 },
+    { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessBGRA", 1 },
     { NULL, 0 }
   };
   const struct sizemap *p;
@@ -847,6 +851,9 @@ static jint returned_buffer_size(
 typedef size_t (*WebPEncodeFunction)(const uint8_t* rgb,
                                      int width, int height, int stride,
                                      float quality_factor, uint8_t** output);
+typedef size_t (*WebPEncodeLosslessFunction)(const uint8_t* rgb,
+                                             int width, int height, int stride,
+                                             uint8_t** output);
 
 static uint8_t* encode(const uint8_t* rgb,
                        int width, int height, int stride,
@@ -863,39 +870,55 @@ static uint8_t* encode(const uint8_t* rgb,
   return image_size ? output : NULL;
 }
 
+static uint8_t* encode_lossless(const uint8_t* rgb,
+                                int width, int height, int stride,
+                                WebPEncodeLosslessFunction encfn,
+                                int* output_size, int* unused) {
+  uint8_t *output = NULL;
+  const size_t image_size = encfn(rgb, width, height, stride, &output);
+  // the values of following two will be interpreted by returned_buffer_size()
+  // as 'width' and 'height' in the size calculation.
+  *output_size = image_size;
+  *unused = 1;
+  return image_size ? output : NULL;
+}
+
 
 // Changes the return type of WebPEncode* to more closely match Decode*.
 // This also makes it easier to wrap the output buffer in a native type rather
 // than dealing with the return pointer.
 // The additional parameters are to allow reuse of returned_buffer_size(),
 // unused2 and output_size will be used in this case.
-static uint8_t* wrap_WebPEncodeRGB(
-    const uint8_t* rgb, int* unused1, int* unused2, int* output_size,
-    int width, int height, int stride, float quality_factor) {
-  return encode(rgb, width, height, stride, quality_factor,
-                WebPEncodeRGB, output_size, unused2);
-}
+#define LOSSY_WRAPPER(FUNC)                                             \
+  static uint8_t* wrap_##FUNC(                                          \
+      const uint8_t* rgb, int* unused1, int* unused2, int* output_size, \
+      int width, int height, int stride, float quality_factor) {        \
+    return encode(rgb, width, height, stride, quality_factor,           \
+                  FUNC, output_size, unused2);                          \
+  }                                                                     \
 
-static uint8_t* wrap_WebPEncodeBGR(
-    const uint8_t* bgr, int* unused1, int* unused2, int* output_size,
-    int width, int height, int stride, float quality_factor) {
-  return encode(bgr, width, height, stride, quality_factor,
-                WebPEncodeBGR, output_size, unused2);
-}
+LOSSY_WRAPPER(WebPEncodeRGB)
+LOSSY_WRAPPER(WebPEncodeBGR)
+LOSSY_WRAPPER(WebPEncodeRGBA)
+LOSSY_WRAPPER(WebPEncodeBGRA)
 
-static uint8_t* wrap_WebPEncodeRGBA(
-    const uint8_t* rgba, int* unused1, int* unused2, int* output_size,
-    int width, int height, int stride, float quality_factor) {
-  return encode(rgba, width, height, stride, quality_factor,
-                WebPEncodeRGBA, output_size, unused2);
-}
+#undef LOSSY_WRAPPER
 
-static uint8_t* wrap_WebPEncodeBGRA(
-    const uint8_t* bgra, int* unused1, int* unused2, int* output_size,
-    int width, int height, int stride, float quality_factor) {
-  return encode(bgra, width, height, stride, quality_factor,
-                WebPEncodeBGRA, output_size, unused2);
-}
+#define LOSSLESS_WRAPPER(FUNC)                                          \
+  static uint8_t* wrap_##FUNC(                                          \
+      const uint8_t* rgb, int* unused1, int* unused2, int* output_size, \
+      int width, int height, int stride) {                              \
+    return encode_lossless(rgb, width, height, stride,                  \
+                           FUNC, output_size, unused2);                 \
+  }                                                                     \
+
+LOSSLESS_WRAPPER(WebPEncodeLosslessRGB)
+LOSSLESS_WRAPPER(WebPEncodeLosslessBGR)
+LOSSLESS_WRAPPER(WebPEncodeLosslessRGBA)
+LOSSLESS_WRAPPER(WebPEncodeLosslessBGRA)
+
+#undef LOSSLESS_WRAPPER
+
 
 
 /* Work around broken gcj jni.h */
@@ -1455,6 +1478,198 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeBG
   arg7 = (int)jarg7;
   arg8 = (float)jarg8;
   result = (uint8_t *)wrap_WebPEncodeBGRA((uint8_t const *)arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);
+  jresult = SWIG_JavaArrayOutSchar(jenv, result, FillMeInAsSizeCannotBeDeterminedAutomatically);
+  SWIG_JavaArrayArgoutSchar(jenv, jarr1, arg1, jarg1);
+  {
+    jint jvalue = (jint)temp4;
+    (*jenv)->SetIntArrayRegion(jenv, jarg4, 0, 1, &jvalue);
+  }
+  free(arg1);
+
+
+
+  free(result);
+  return jresult;
+}
+
+
+SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessRGB(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jint jarg3, jintArray jarg4, jint jarg5, jint jarg6, jint jarg7) {
+  jbyteArray jresult = 0 ;
+  uint8_t *arg1 = (uint8_t *) 0 ;
+  int *arg2 = (int *) 0 ;
+  int *arg3 = (int *) 0 ;
+  int *arg4 = (int *) 0 ;
+  int arg5 ;
+  int arg6 ;
+  int arg7 ;
+  jbyte *jarr1 ;
+  int temp4 ;
+  uint8_t *result = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  if (!SWIG_JavaArrayInSchar(jenv, &jarr1, &arg1, jarg1)) return 0;
+  arg2 = (int *)&jarg2;
+  arg3 = (int *)&jarg3;
+  {
+    if (!jarg4) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg4) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    arg4 = &temp4;
+  }
+  arg5 = (int)jarg5;
+  arg6 = (int)jarg6;
+  arg7 = (int)jarg7;
+  result = (uint8_t *)wrap_WebPEncodeLosslessRGB((uint8_t const *)arg1,arg2,arg3,arg4,arg5,arg6,arg7);
+  jresult = SWIG_JavaArrayOutSchar(jenv, result, FillMeInAsSizeCannotBeDeterminedAutomatically);
+  SWIG_JavaArrayArgoutSchar(jenv, jarr1, arg1, jarg1);
+  {
+    jint jvalue = (jint)temp4;
+    (*jenv)->SetIntArrayRegion(jenv, jarg4, 0, 1, &jvalue);
+  }
+  free(arg1);
+
+
+
+  free(result);
+  return jresult;
+}
+
+
+SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessBGR(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jint jarg3, jintArray jarg4, jint jarg5, jint jarg6, jint jarg7) {
+  jbyteArray jresult = 0 ;
+  uint8_t *arg1 = (uint8_t *) 0 ;
+  int *arg2 = (int *) 0 ;
+  int *arg3 = (int *) 0 ;
+  int *arg4 = (int *) 0 ;
+  int arg5 ;
+  int arg6 ;
+  int arg7 ;
+  jbyte *jarr1 ;
+  int temp4 ;
+  uint8_t *result = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  if (!SWIG_JavaArrayInSchar(jenv, &jarr1, &arg1, jarg1)) return 0;
+  arg2 = (int *)&jarg2;
+  arg3 = (int *)&jarg3;
+  {
+    if (!jarg4) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg4) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    arg4 = &temp4;
+  }
+  arg5 = (int)jarg5;
+  arg6 = (int)jarg6;
+  arg7 = (int)jarg7;
+  result = (uint8_t *)wrap_WebPEncodeLosslessBGR((uint8_t const *)arg1,arg2,arg3,arg4,arg5,arg6,arg7);
+  jresult = SWIG_JavaArrayOutSchar(jenv, result, FillMeInAsSizeCannotBeDeterminedAutomatically);
+  SWIG_JavaArrayArgoutSchar(jenv, jarr1, arg1, jarg1);
+  {
+    jint jvalue = (jint)temp4;
+    (*jenv)->SetIntArrayRegion(jenv, jarg4, 0, 1, &jvalue);
+  }
+  free(arg1);
+
+
+
+  free(result);
+  return jresult;
+}
+
+
+SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessRGBA(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jint jarg3, jintArray jarg4, jint jarg5, jint jarg6, jint jarg7) {
+  jbyteArray jresult = 0 ;
+  uint8_t *arg1 = (uint8_t *) 0 ;
+  int *arg2 = (int *) 0 ;
+  int *arg3 = (int *) 0 ;
+  int *arg4 = (int *) 0 ;
+  int arg5 ;
+  int arg6 ;
+  int arg7 ;
+  jbyte *jarr1 ;
+  int temp4 ;
+  uint8_t *result = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  if (!SWIG_JavaArrayInSchar(jenv, &jarr1, &arg1, jarg1)) return 0;
+  arg2 = (int *)&jarg2;
+  arg3 = (int *)&jarg3;
+  {
+    if (!jarg4) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg4) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    arg4 = &temp4;
+  }
+  arg5 = (int)jarg5;
+  arg6 = (int)jarg6;
+  arg7 = (int)jarg7;
+  result = (uint8_t *)wrap_WebPEncodeLosslessRGBA((uint8_t const *)arg1,arg2,arg3,arg4,arg5,arg6,arg7);
+  jresult = SWIG_JavaArrayOutSchar(jenv, result, FillMeInAsSizeCannotBeDeterminedAutomatically);
+  SWIG_JavaArrayArgoutSchar(jenv, jarr1, arg1, jarg1);
+  {
+    jint jvalue = (jint)temp4;
+    (*jenv)->SetIntArrayRegion(jenv, jarg4, 0, 1, &jvalue);
+  }
+  free(arg1);
+
+
+
+  free(result);
+  return jresult;
+}
+
+
+SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessBGRA(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jint jarg3, jintArray jarg4, jint jarg5, jint jarg6, jint jarg7) {
+  jbyteArray jresult = 0 ;
+  uint8_t *arg1 = (uint8_t *) 0 ;
+  int *arg2 = (int *) 0 ;
+  int *arg3 = (int *) 0 ;
+  int *arg4 = (int *) 0 ;
+  int arg5 ;
+  int arg6 ;
+  int arg7 ;
+  jbyte *jarr1 ;
+  int temp4 ;
+  uint8_t *result = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  if (!SWIG_JavaArrayInSchar(jenv, &jarr1, &arg1, jarg1)) return 0;
+  arg2 = (int *)&jarg2;
+  arg3 = (int *)&jarg3;
+  {
+    if (!jarg4) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
+      return 0;
+    }
+    if ((*jenv)->GetArrayLength(jenv, jarg4) == 0) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
+      return 0;
+    }
+    arg4 = &temp4;
+  }
+  arg5 = (int)jarg5;
+  arg6 = (int)jarg6;
+  arg7 = (int)jarg7;
+  result = (uint8_t *)wrap_WebPEncodeLosslessBGRA((uint8_t const *)arg1,arg2,arg3,arg4,arg5,arg6,arg7);
   jresult = SWIG_JavaArrayOutSchar(jenv, result, FillMeInAsSizeCannotBeDeterminedAutomatically);
   SWIG_JavaArrayArgoutSchar(jenv, jarr1, arg1, jarg1);
   {

@@ -4,6 +4,7 @@ noinst_LTLIBRARIES = libwebpdecode.la
 libwebpdecode_la_SOURCES =
 libwebpdecode_la_SOURCES += alpha.c
 libwebpdecode_la_SOURCES += buffer.c
+libwebpdecode_la_SOURCES += decode_vp8.h
 libwebpdecode_la_SOURCES += frame.c
 libwebpdecode_la_SOURCES += idec.c
 libwebpdecode_la_SOURCES += io.c
@@ -19,9 +20,9 @@ libwebpdecode_la_SOURCES += webpi.h
 
 libwebpdecodeinclude_HEADERS =
 libwebpdecodeinclude_HEADERS += ../webp/decode.h
-libwebpdecodeinclude_HEADERS += ../webp/decode_vp8.h
 libwebpdecodeinclude_HEADERS += ../webp/types.h
-noinst_HEADERS = ../webp/format_constants.h
+noinst_HEADERS =
+noinst_HEADERS += ../webp/format_constants.h
 
 libwebpdecode_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE)
 libwebpdecodeincludedir = $(includedir)/webp

@@ -146,18 +146,20 @@ static int HashChainFindCopy(const HashChain* const p,
   const uint64_t hash_code = GetPixPairHash64(&argb[index]);
   int prev_length = 0;
   int64_t best_val = 0;
+  int best_length = 0;
+  int best_distance = 0;
+  const uint32_t* const argb_start = argb + index;
   const int iter_min_mult = (quality < 50) ? 2 : (quality < 75) ? 4 : 8;
   const int iter_min = -quality * iter_min_mult;
   int iter_cnt = 10 + (quality >> 1);
   const int min_pos = (index > WINDOW_SIZE) ? index - WINDOW_SIZE : 0;
-  int32_t pos;
-  int64_t val;
-  int best_length = 0;
-  int best_distance = 0;
+  int pos;
+
   assert(xsize > 0);
   for (pos = p->hash_to_first_index_[hash_code];
        pos >= min_pos;
        pos = p->chain_[pos]) {
+    int64_t val;
     int curr_length;
     if (iter_cnt < 0) {
       if (iter_cnt < iter_min || best_val >= 0xff0000) {
@@ -166,10 +168,10 @@ static int HashChainFindCopy(const HashChain* const p,
     }
     --iter_cnt;
     if (best_length != 0 &&
-        argb[pos + best_length - 1] != argb[index + best_length - 1]) {
+        argb[pos + best_length - 1] != argb_start[best_length - 1]) {
       continue;
     }
-    curr_length = FindMatchLength(argb + pos, argb + index, maxlen);
+    curr_length = FindMatchLength(argb + pos, argb_start, maxlen);
     if (curr_length < prev_length) {
       continue;
     }

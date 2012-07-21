@@ -7,7 +7,7 @@
 //
 // Utilities for building and looking up Huffman trees.
 //
-// Author: urvang@google.com (Urvang Joshi)
+// Author: Urvang Joshi (urvang@google.com)
 
 #include <assert.h>
 #include <stdlib.h>

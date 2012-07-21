@@ -166,14 +166,16 @@ VP8StatusCode WebPAllocateDecBuffer(int w, int h,
 //------------------------------------------------------------------------------
 // constructors / destructors
 
-int WebPInitDecBufferInternal(WebPDecBuffer* const buffer, int version) {
-  if (version != WEBP_DECODER_ABI_VERSION) return 0;  // version mismatch
+int WebPInitDecBufferInternal(WebPDecBuffer* buffer, int version) {
+  if (WEBP_ABI_IS_INCOMPATIBLE(version, WEBP_DECODER_ABI_VERSION)) {
+    return 0;  // version mismatch
+  }
   if (buffer == NULL) return 0;
   memset(buffer, 0, sizeof(*buffer));
   return 1;
 }
 
-void WebPFreeDecBuffer(WebPDecBuffer* const buffer) {
+void WebPFreeDecBuffer(WebPDecBuffer* buffer) {
   if (buffer != NULL) {
     if (!buffer->is_external_memory)
       free(buffer->private_memory);

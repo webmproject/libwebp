@@ -64,13 +64,13 @@ extern void* VP8GetCPUInfo;   // opaque forward declaration.
 static int verbose = 0;
 
 static int ReadYUV(FILE* in_file, WebPPicture* const pic) {
-  const int use_argb_input = pic->use_argb_input;
+  const int use_argb = pic->use_argb;
   const int uv_width = (pic->width + 1) / 2;
   const int uv_height = (pic->height + 1) / 2;
   int y;
   int ok = 0;
 
-  pic->use_argb_input = 0;
+  pic->use_argb = 0;
   if (!WebPPictureAlloc(pic)) return ok;
 
   for (y = 0; y < pic->height; ++y) {
@@ -87,7 +87,7 @@ static int ReadYUV(FILE* in_file, WebPPicture* const pic) {
       goto End;
   }
   ok = 1;
-  if (use_argb_input) ok = WebPPictureYUVAToARGB(pic);
+  if (use_argb) ok = WebPPictureYUVAToARGB(pic);
 
  End:
   return ok;
@@ -775,7 +775,7 @@ static void HelpLong(void) {
   printf("Usage:\n");
   printf(" cwebp [-preset <...>] [options] in_file [-o out_file]\n\n");
   printf("If input size (-s) for an image is not specified, "
-         "it is assumed to be a PNG or JPEG file.\n");
+         "it is assumed to be a PNG, JPEG or TIFF file.\n");
 #ifdef HAVE_WINCODEC_H
   printf("Windows builds can take as input any of the files handled by WIC\n");
 #endif
@@ -943,7 +943,7 @@ int main(int argc, const char *argv[]) {
       keep_alpha = 0;
     } else if (!strcmp(argv[c], "-lossless")) {
       config.lossless = 1;
-      picture.use_argb_input = 1;
+      picture.use_argb = 1;
     } else if (!strcmp(argv[c], "-hint") && c < argc - 1) {
       ++c;
       if (!strcmp(argv[c], "photo")) {
@@ -1049,17 +1049,13 @@ int main(int argc, const char *argv[]) {
 
   // Check for unsupported command line options for lossless mode and log
   // warning for such options.
-  if (config.lossless == 1) {
+  if (!quiet && config.lossless == 1) {
     if (config.target_size > 0 || config.target_PSNR > 0) {
       fprintf(stderr, "Encoding for specified size or PSNR is not supported"
                       " for lossless encoding. Ignoring such option(s)!\n");
     }
     if (config.partition_limit > 0) {
       fprintf(stderr, "Partition limit option is not required for lossless"
-                      " encoding. Ignoring this option!\n");
-    }
-    if (show_progress) {
-      fprintf(stderr, "Progress reporting option is not supported for lossless"
                       " encoding. Ignoring this option!\n");
     }
   }
@@ -1143,7 +1139,7 @@ int main(int argc, const char *argv[]) {
 
   // Write info
   if (dump_file) {
-    if (picture.use_argb_input) {
+    if (picture.use_argb) {
       fprintf(stderr, "Warning: can't dump file (-d option) in lossless mode.");
     } else if (!DumpPicture(&picture, dump_file)) {
       fprintf(stderr, "Warning, couldn't dump picture %s\n", dump_file);

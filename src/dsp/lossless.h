@@ -7,8 +7,8 @@
 //
 // Image transforms and color space conversion methods for lossless decoder.
 //
-// Author: Vikas Arora (vikaas.arora@gmail.com)
-//         jyrki@google.com (Jyrki Alakuijala)
+// Authors: Vikas Arora (vikaas.arora@gmail.com)
+//          Jyrki Alakuijala (jyrki@google.com)
 
 #ifndef WEBP_DSP_LOSSLESS_H_
 #define WEBP_DSP_LOSSLESS_H_
