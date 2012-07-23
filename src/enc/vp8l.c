@@ -754,7 +754,7 @@ static WebPEncodingError WriteImage(const WebPPicture* const pic,
       goto Error;
     }
   }
-  *coded_size = vp8l_size;
+  *coded_size = CHUNK_HEADER_SIZE + riff_size;
   return VP8_ENC_OK;
 
  Error:
