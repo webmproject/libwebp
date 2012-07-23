@@ -21,16 +21,16 @@ extern "C" {
 #endif
 
 // Replace the input 'data' of size 'width'x'height' with 'num-levels'
-// quantized values. If not NULL, 'mse' will contain the mean-squared error.
+// quantized values. If not NULL, 'sse' will contain the sum of squared error.
 // Valid range for 'num_levels' is [2, 256].
 // Returns false in case of error (data is NULL, or parameters are invalid).
-int QuantizeLevels(uint8_t* data, int width, int height, int num_levels,
-                   float* mse);
+int QuantizeLevels(uint8_t* const data, int width, int height, int num_levels,
+                   uint64_t* const sse);
 
 // Apply post-processing to input 'data' of size 'width'x'height' assuming
 // that the source was quantized to a reduced number of levels.
 // Returns false in case of error (data is NULL, invalid parameters, ...).
-int DequantizeLevels(uint8_t* data, int width, int height);
+int DequantizeLevels(uint8_t* const data, int width, int height);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
