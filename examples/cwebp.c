@@ -614,6 +614,25 @@ static void PrintValues(const int values[4]) {
   fprintf(stderr, "|\n");
 }
 
+static void PrintFullLosslessInfo(const WebPAuxStats* const stats,
+                                  const char* const description) {
+  fprintf(stderr, "Lossless-%s compressed size: %d bytes\n",
+          description, stats->lossless_size);
+  if (stats->lossless_features) {
+    fprintf(stderr, "  * Lossless features used:");
+    if (stats->lossless_features & 1) fprintf(stderr, " PREDICTION");
+    if (stats->lossless_features & 2) fprintf(stderr, " CROSS-COLOR-TRANSFORM");
+    if (stats->lossless_features & 4) fprintf(stderr, " SUBTRACT-GREEN");
+    if (stats->lossless_features & 8) fprintf(stderr, " PALETTE");
+    fprintf(stderr, "\n");
+  }
+  fprintf(stderr, "  * Precision Bits: histogram=%d transform=%d cache=%d\n",
+          stats->histogram_bits, stats->transform_bits, stats->cache_bits);
+  if (stats->palette_size > 0) {
+    fprintf(stderr, "  * Palette size:   %d\n", stats->palette_size);
+  }
+}
+
 static void PrintExtraInfoLossless(const WebPPicture* const pic,
                                    int short_output,
                                    const char* const file_name) {
@@ -624,6 +643,7 @@ static void PrintExtraInfoLossless(const WebPPicture* const pic,
     fprintf(stderr, "File:      %s\n", file_name);
     fprintf(stderr, "Dimension: %d x %d\n", pic->width, pic->height);
     fprintf(stderr, "Output:    %d bytes\n", stats->coded_size);
+    PrintFullLosslessInfo(stats, "ARGB");
   }
 }
 
@@ -658,9 +678,9 @@ static void PrintExtraInfoLossy(const WebPPicture* const pic, int short_output,
               100.f * stats->header_bytes[0] / stats->coded_size,
               stats->header_bytes[1],
               100.f * stats->header_bytes[1] / stats->coded_size);
-      if (stats->alpha_data_size) {
-        fprintf(stderr, "             transparency:   %6d\n",
-                stats->alpha_data_size);
+      if (stats->alpha_data_size > 0) {
+        fprintf(stderr, "             transparency:   %6d (%.1f dB)\n",
+                stats->alpha_data_size, stats->PSNR[4]);
       }
       if (stats->layer_data_size) {
         fprintf(stderr, "             enhancement:    %6d\n",
@@ -686,8 +706,11 @@ static void PrintExtraInfoLossy(const WebPPicture* const pic, int short_output,
       fprintf(stderr, " segments total:  ");
       PrintByteCount(totals, stats->coded_size, NULL);
     }
+    if (stats->lossless_size > 0) {
+      PrintFullLosslessInfo(stats, "alpha");
+    }
   }
-  if (pic->extra_info) {
+  if (pic->extra_info != NULL) {
     const int mb_w = (pic->width + 15) / 16;
     const int mb_h = (pic->height + 15) / 16;
     const int type = pic->extra_info_type;
@@ -1100,8 +1123,10 @@ int main(int argc, const char *argv[]) {
       fprintf(stderr, "be performed, but its results discarded.\n\n");
     }
   }
-  picture.stats = &stats;
-  stats.user_data = (void*)in_file;
+  if (!quiet) {
+    picture.stats = &stats;
+    stats.user_data = (void*)in_file;
+  }
 
   // Compress
   if (verbose) {

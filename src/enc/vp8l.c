@@ -610,7 +610,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
 
 // Check if it would be a good idea to subtract green from red and blue. We
 // only impact entropy in red/blue components, don't bother to look at others.
-static int EvalAndApplySubtractGreen(const VP8LEncoder* const enc,
+static int EvalAndApplySubtractGreen(VP8LEncoder* const enc,
                                      int width, int height,
                                      VP8LBitWriter* const bw) {
   if (!enc->use_palette_) {
@@ -639,7 +639,8 @@ static int EvalAndApplySubtractGreen(const VP8LEncoder* const enc,
     free(histo);
 
     // Check if subtracting green yields low entropy.
-    if (bit_cost_after < bit_cost_before) {
+    enc->use_subtract_green_ = (bit_cost_after < bit_cost_before);
+    if (enc->use_subtract_green_) {
       VP8LWriteBits(bw, 1, TRANSFORM_PRESENT);
       VP8LWriteBits(bw, 2, SUBTRACT_GREEN);
       VP8LSubtractGreenFromBlueAndRed(enc->argb_, width * height);
@@ -938,6 +939,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   const int width = picture->width;
   const int height = picture->height;
   VP8LEncoder* const enc = VP8LEncoderNew(config, picture);
+  const size_t byte_position = VP8LBitWriterNumBytes(bw);
 
   if (enc == NULL) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
@@ -1017,6 +1019,20 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
     goto Error;
   }
 
+  if (picture->stats != NULL) {
+    WebPAuxStats* const stats = picture->stats;
+    stats->lossless_features = 0;
+    if (enc->use_predict_) stats->lossless_features |= 1;
+    if (enc->use_cross_color_) stats->lossless_features |= 2;
+    if (enc->use_subtract_green_) stats->lossless_features |= 4;
+    if (enc->use_palette_) stats->lossless_features |= 8;
+    stats->histogram_bits = enc->histo_bits_;
+    stats->transform_bits = enc->transform_bits_;
+    stats->cache_bits = enc->cache_bits_;
+    stats->palette_size = enc->palette_size_;
+    stats->lossless_size = VP8LBitWriterNumBytes(bw) - byte_position;
+  }
+
  Error:
   VP8LEncoderDelete(enc);
   return err;
@@ -1044,6 +1060,16 @@ int VP8LEncodeImage(const WebPConfig* const config,
  UserAbort:
     err = VP8_ENC_ERROR_USER_ABORT;
     goto Error;
+  }
+  // Reset stats (for pure lossless coding)
+  if (picture->stats != NULL) {
+    WebPAuxStats* const stats = picture->stats;
+    memset(stats, 0, sizeof(*stats));
+    stats->PSNR[0] = 99.;
+    stats->PSNR[1] = 99.;
+    stats->PSNR[2] = 99.;
+    stats->PSNR[3] = 99.;
+    stats->PSNR[4] = 99.;
   }
 
   // Write image size.
@@ -1075,15 +1101,10 @@ int VP8LEncodeImage(const WebPConfig* const config,
 
   if (!WebPReportProgress(picture, 100, &percent)) goto UserAbort;
 
-  // Collect some stats if needed.
+  // Save size.
   if (picture->stats != NULL) {
-    WebPAuxStats* const stats = picture->stats;
-    memset(stats, 0, sizeof(*stats));
-    stats->PSNR[0] = 99.;
-    stats->PSNR[1] = 99.;
-    stats->PSNR[2] = 99.;
-    stats->PSNR[3] = 99.;
-    stats->coded_size = (int)coded_size;
+    picture->stats->coded_size += (int)coded_size;
+    picture->stats->lossless_size = (int)coded_size;
   }
 
   if (picture->extra_info != NULL) {

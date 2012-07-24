@@ -284,6 +284,7 @@ static void FinalizePSNR(const VP8Encoder* const enc) {
   stats->PSNR[1] = (float)GetPSNR(sse[1], size / 4);
   stats->PSNR[2] = (float)GetPSNR(sse[2], size / 4);
   stats->PSNR[3] = (float)GetPSNR(sse[0] + sse[1] + sse[2], size * 3 / 2);
+  stats->PSNR[4] = (float)GetPSNR(sse[3], size);
 }
 
 static void StoreStats(VP8Encoder* const enc) {
