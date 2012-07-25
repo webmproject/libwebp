@@ -268,7 +268,7 @@ static int EncodeAlpha(VP8Encoder* const enc,
       *output_size = VP8BitWriterSize(&bw);
       *output = VP8BitWriterBuf(&bw);
       if (pic->stats != NULL) {         // need stats?
-        pic->stats->coded_size += *output_size;
+        pic->stats->coded_size += (int)(*output_size);
         enc->sse_[3] = sse;
       }
     }

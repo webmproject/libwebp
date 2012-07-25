@@ -1030,7 +1030,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
     stats->transform_bits = enc->transform_bits_;
     stats->cache_bits = enc->cache_bits_;
     stats->palette_size = enc->palette_size_;
-    stats->lossless_size = VP8LBitWriterNumBytes(bw) - byte_position;
+    stats->lossless_size = (int)(VP8LBitWriterNumBytes(bw) - byte_position);
   }
 
  Error:
@@ -1065,11 +1065,11 @@ int VP8LEncodeImage(const WebPConfig* const config,
   if (picture->stats != NULL) {
     WebPAuxStats* const stats = picture->stats;
     memset(stats, 0, sizeof(*stats));
-    stats->PSNR[0] = 99.;
-    stats->PSNR[1] = 99.;
-    stats->PSNR[2] = 99.;
-    stats->PSNR[3] = 99.;
-    stats->PSNR[4] = 99.;
+    stats->PSNR[0] = 99.f;
+    stats->PSNR[1] = 99.f;
+    stats->PSNR[2] = 99.f;
+    stats->PSNR[3] = 99.f;
+    stats->PSNR[4] = 99.f;
   }
 
   // Write image size.
