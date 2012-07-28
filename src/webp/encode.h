@@ -170,9 +170,6 @@ typedef struct {
   int alpha_data_size;    // size of the transparency data
   int layer_data_size;    // size of the enhancement layer data
 
-  void* user_data;        // this field is free to be set to any value and
-                          // used during callbacks (like progress-report e.g.).
-
   // lossless encoder statistics
   uint32_t lossless_features;  // bit0:predictor bit1:cross-color transform
                                // bit2:subtract-green bit3:color indexing
@@ -298,6 +295,9 @@ struct WebPPicture {
 
   // If not NULL, report progress during encoding.
   WebPProgressHook progress_hook;
+
+  void* user_data;        // this field is free to be set to any value and
+                          // used during callbacks (like progress-report e.g.).
 
   uint32_t pad3[3];       // padding for later use
 
