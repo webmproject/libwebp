@@ -909,7 +909,7 @@ int main(int argc, const char *argv[]) {
       !WebPPictureInit(&original_picture) ||
       !WebPConfigInit(&config)) {
     fprintf(stderr, "Error! Version mismatch!\n");
-    goto Error;
+    return -1;
   }
 
   if (argc == 1) {
