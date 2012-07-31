@@ -1057,7 +1057,10 @@ int VP8LEncodeImage(const WebPConfig* const config,
 
   width = picture->width;
   height = picture->height;
-  VP8LBitWriterInit(&bw, (width * height) >> 1);
+  if (!VP8LBitWriterInit(&bw, (width * height) >> 1)) {
+    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+    goto Error;
+  }
 
   if (!WebPReportProgress(picture, 1, &percent)) {
  UserAbort:
