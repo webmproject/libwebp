@@ -199,6 +199,7 @@ UTILS_OBJS = \
     $(DIROBJ)\utils\quant_levels.obj \
     $(DIROBJ)\utils\rescaler.obj \
     $(DIROBJ)\utils\thread.obj \
+    $(DIROBJ)\utils\utils.obj \
 
 LIBWEBP_OBJS = $(DEC_OBJS) $(DSP_OBJS) $(ENC_OBJS) $(UTILS_OBJS) $(LIBWEBP_OBJS)
 LIBWEBPMUX_OBJS = $(MUX_OBJS) $(LIBWEBPMUX_OBJS)
