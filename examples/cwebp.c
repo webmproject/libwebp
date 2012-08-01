@@ -779,7 +779,7 @@ static int DumpPicture(const WebPPicture* const picture, const char* PGM_name) {
 
 static int ProgressReport(int percent, const WebPPicture* const picture) {
   printf("[%s]: %3d %%      \r",
-         (char*)picture->stats->user_data, percent);
+         (char*)picture->user_data, percent);
   fflush(stdout);
   return 1;  // all ok
 }
@@ -1127,7 +1127,7 @@ int main(int argc, const char *argv[]) {
   }
   if (!quiet) {
     picture.stats = &stats;
-    stats.user_data = (void*)in_file;
+    picture.user_data = (void*)in_file;
   }
 
   // Compress
