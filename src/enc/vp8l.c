@@ -1050,11 +1050,17 @@ int VP8LEncodeImage(const WebPConfig* const config,
 
   if (config == NULL || picture->argb == NULL) {
     err = VP8_ENC_ERROR_NULL_PARAMETER;
-    goto Error;
+    WebPEncodingSetError(picture, err);
+    return 0;
   }
 
   width = picture->width;
   height = picture->height;
+  if (!VP8LBitWriterInit(&bw, (width * height) >> 1)) {
+    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+    goto Error;
+  }
+
   if (!WebPReportProgress(picture, 1, &percent)) {
  UserAbort:
     err = VP8_ENC_ERROR_USER_ABORT;
@@ -1072,7 +1078,6 @@ int VP8LEncodeImage(const WebPConfig* const config,
   }
 
   // Write image size.
-  VP8LBitWriterInit(&bw, (width * height) >> 1);
   if (!WriteImageSize(picture, &bw)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
