@@ -47,6 +47,7 @@ LOCAL_SRC_FILES := \
     src/utils/quant_levels.c \
     src/utils/rescaler.c \
     src/utils/thread.c \
+    src/utils/utils.c \
 
 LOCAL_CFLAGS := -Wall -DANDROID -DHAVE_MALLOC_H -DHAVE_PTHREAD \
                 -DNOT_HAVE_LOG2 -DWEBP_USE_THREAD \

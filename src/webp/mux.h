@@ -56,13 +56,11 @@ extern "C" {
 // Error codes
 typedef enum {
   WEBP_MUX_OK                 =  1,
-  WEBP_MUX_ERROR              =  0,
-  WEBP_MUX_NOT_FOUND          = -1,
-  WEBP_MUX_INVALID_ARGUMENT   = -2,
-  WEBP_MUX_INVALID_PARAMETER  = -3,
-  WEBP_MUX_BAD_DATA           = -4,
-  WEBP_MUX_MEMORY_ERROR       = -5,
-  WEBP_MUX_NOT_ENOUGH_DATA    = -6
+  WEBP_MUX_NOT_FOUND          =  0,
+  WEBP_MUX_INVALID_ARGUMENT   = -1,
+  WEBP_MUX_BAD_DATA           = -2,
+  WEBP_MUX_MEMORY_ERROR       = -3,
+  WEBP_MUX_NOT_ENOUGH_DATA    = -4
 } WebPMuxError;
 
 // Flag values for different features used in VP8X chunk.
@@ -99,6 +97,9 @@ typedef struct {
 
 //------------------------------------------------------------------------------
 // Manipulation of a WebPData object.
+
+// Initializes the contents of the 'webp_data' object with default values.
+WEBP_EXTERN(void) WebPDataInit(WebPData* webp_data);
 
 // Clears the contents of the 'webp_data' object by calling free(). Does not
 // deallocate the object itself.

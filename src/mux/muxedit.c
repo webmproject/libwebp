@@ -17,15 +17,6 @@
 extern "C" {
 #endif
 
-// Object to store metadata about images.
-typedef struct {
-  int x_offset_;
-  int y_offset_;
-  int duration_;
-  int width_;
-  int height_;
-} WebPImageInfo;
-
 //------------------------------------------------------------------------------
 // Life of a mux object.
 
@@ -111,8 +102,7 @@ static WebPMuxError MuxAddChunk(WebPMux* const mux, uint32_t nth, uint32_t tag,
   const WebPData chunk_data = { data, size };
   assert(mux != NULL);
   assert(size <= MAX_CHUNK_PAYLOAD);
-
-  if (idx == IDX_NIL) return WEBP_MUX_INVALID_PARAMETER;
+  assert(idx != IDX_NIL);
   return MuxSet(mux, idx, nth, &chunk_data, copy_data);
 }
 
@@ -158,7 +148,7 @@ static WebPMuxError CreateFrameTileData(const WebPData* const image,
 static WebPMuxError GetImageData(const WebPData* const bitstream,
                                  WebPData* const image, WebPData* const alpha,
                                  int* const is_lossless) {
-  memset(alpha, 0, sizeof(*alpha));  // Default: no alpha.
+  WebPDataInit(alpha);  // Default: no alpha.
   if (bitstream->size_ < TAG_SIZE ||
       memcmp(bitstream->bytes_, "RIFF", TAG_SIZE)) {
     // It is NOT webp file data. Return input data as is.
@@ -360,7 +350,7 @@ static WebPMuxError MuxPushFrameTileInternal(
   if (err != WEBP_MUX_OK) return err;
   image_tag = is_lossless ? kChunks[IDX_VP8L].tag : kChunks[IDX_VP8].tag;
 
-  memset(&frame_tile, 0, sizeof(frame_tile));
+  WebPDataInit(&frame_tile);
   ChunkInit(&chunk);
   MuxImageInit(&wpi);
 
@@ -505,30 +495,19 @@ WebPMuxError MuxGetImageWidthHeight(const WebPChunk* const image_chunk,
 }
 
 static WebPMuxError GetImageInfo(const WebPMuxImage* const wpi,
-                                 WebPImageInfo* const image_info) {
+                                 int* const x_offset, int* const y_offset,
+                                 int* const duration,
+                                 int* const width, int* const height) {
   const WebPChunk* const image_chunk = wpi->img_;
   const WebPChunk* const frame_tile_chunk = wpi->header_;
-  WebPMuxError err;
-  int x_offset, y_offset, duration;
-  int width, height;
-
-  memset(image_info, 0, sizeof(*image_info));
 
   // Get offsets and duration from FRM/TILE chunk.
-  err = GetFrameTileInfo(frame_tile_chunk, &x_offset, &y_offset, &duration);
+  const WebPMuxError err =
+      GetFrameTileInfo(frame_tile_chunk, x_offset, y_offset, duration);
   if (err != WEBP_MUX_OK) return err;
 
   // Get width and height from VP8/VP8L chunk.
-  err = MuxGetImageWidthHeight(image_chunk, &width, &height);
-  if (err != WEBP_MUX_OK) return err;
-
-  // All OK: fill up image_info.
-  image_info->x_offset_ = x_offset;
-  image_info->y_offset_ = y_offset;
-  image_info->duration_ = duration;
-  image_info->width_    = width;
-  image_info->height_   = height;
-  return WEBP_MUX_OK;
+  return MuxGetImageWidthHeight(image_chunk, width, height);
 }
 
 static WebPMuxError GetImageCanvasWidthHeight(
@@ -536,7 +515,7 @@ static WebPMuxError GetImageCanvasWidthHeight(
     int* const width, int* const height) {
   WebPMuxImage* wpi = NULL;
   assert(mux != NULL);
-  assert(width && height);
+  assert(width != NULL && height != NULL);
 
   wpi = mux->images_;
   assert(wpi != NULL);
@@ -548,17 +527,18 @@ static WebPMuxError GetImageCanvasWidthHeight(
     int64_t image_area = 0;
     // Aggregate the bounding box for animation frames & tiled images.
     for (; wpi != NULL; wpi = wpi->next_) {
-      WebPImageInfo image_info;
-      const WebPMuxError err = GetImageInfo(wpi, &image_info);
-      const int max_x_pos = image_info.x_offset_ + image_info.width_;
-      const int max_y_pos = image_info.y_offset_ + image_info.height_;
+      int x_offset, y_offset, duration, w, h;
+      const WebPMuxError err = GetImageInfo(wpi, &x_offset, &y_offset,
+                                            &duration, &w, &h);
+      const int max_x_pos = x_offset + w;
+      const int max_y_pos = y_offset + h;
       if (err != WEBP_MUX_OK) return err;
-      assert(image_info.x_offset_ < MAX_POSITION_OFFSET);
-      assert(image_info.y_offset_ < MAX_POSITION_OFFSET);
+      assert(x_offset < MAX_POSITION_OFFSET);
+      assert(y_offset < MAX_POSITION_OFFSET);
 
       if (max_x_pos > max_x) max_x = max_x_pos;
       if (max_y_pos > max_y) max_y = max_y_pos;
-      image_area += (image_info.width_ * image_info.height_);
+      image_area += w * h;
     }
     *width = max_x;
     *height = max_y;
