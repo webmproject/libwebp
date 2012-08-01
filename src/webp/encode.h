@@ -69,7 +69,9 @@ WEBP_EXTERN(size_t) WebPEncodeLosslessBGRA(const uint8_t* bgra,
 typedef enum {
   WEBP_HINT_DEFAULT = 0,  // default preset.
   WEBP_HINT_PICTURE,      // digital picture, like portrait, inner shot
-  WEBP_HINT_PHOTO         // outdoor photograph, with natural lighting
+  WEBP_HINT_PHOTO,        // outdoor photograph, with natural lighting
+  WEBP_HINT_GRAPH,        // Discrete tone image (graph, map-tile etc).
+  WEBP_HINT_LAST
 } WebPImageHint;
 
 typedef struct {

@@ -844,7 +844,7 @@ static void HelpLong(void) {
   printf("  -noalpha ............... discard any transparency information.\n");
   printf("  -lossless .............. Encode image losslessly.\n");
   printf("  -hint <string> ......... Specify image characteristics hint.\n");
-  printf("                           One of: photo or picture\n");
+  printf("                           One of: photo, picture or graph\n");
 
   printf("\n");
   printf("  -short ................. condense printed message\n");
@@ -973,6 +973,8 @@ int main(int argc, const char *argv[]) {
         config.image_hint = WEBP_HINT_PHOTO;
       } else if (!strcmp(argv[c], "picture")) {
         config.image_hint = WEBP_HINT_PICTURE;
+      } else if (!strcmp(argv[c], "graph")) {
+        config.image_hint = WEBP_HINT_GRAPH;
       } else {
         fprintf(stderr, "Error! Unrecognized image hint: %s\n", argv[c]);
         goto Error;

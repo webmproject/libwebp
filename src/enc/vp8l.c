@@ -141,7 +141,7 @@ static int VP8LEncAnalyze(VP8LEncoder* const enc, WebPImageHint image_hint) {
   const WebPPicture* const pic = enc->pic_;
   assert(pic != NULL && pic->argb != NULL);
 
-  enc->use_palette_ =
+  enc->use_palette_ = (image_hint == WEBP_HINT_GRAPH) ? 0 :
       AnalyzeAndCreatePalette(pic, enc->palette_, &enc->palette_size_);
   if (!enc->use_palette_) {
     if (image_hint == WEBP_HINT_DEFAULT) {
@@ -161,7 +161,6 @@ static int VP8LEncAnalyze(VP8LEncoder* const enc, WebPImageHint image_hint) {
   }
   return 1;
 }
-
 
 static int GetHuffBitLengthsAndCodes(
     const VP8LHistogramSet* const histogram_image,

@@ -168,7 +168,7 @@ options:
   -noalpha ............... discard any transparency information.
   -lossless .............. Encode image losslessly.
   -hint <string> ......... Specify image characteristics hint.
-                           One of: photo or picture
+                           One of: photo, picture or graph.
 
   -short ................. condense printed message
   -quiet ................. don't print anything.
