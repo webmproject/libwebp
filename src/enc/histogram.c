@@ -17,6 +17,7 @@
 #include "./backward_references.h"
 #include "./histogram.h"
 #include "../dsp/lossless.h"
+#include "../utils/utils.h"
 
 #if defined(_MSC_VER) && !defined(NOT_HAVE_LOG2)
 # define NOT_HAVE_LOG2 1
@@ -65,10 +66,10 @@ VP8LHistogramSet* VP8LAllocateHistogramSet(int size, int cache_bits) {
   int i;
   VP8LHistogramSet* set;
   VP8LHistogram* bulk;
-  const size_t total_size = sizeof(*set)
-                          + size * sizeof(*set->histograms)
-                          + size * sizeof(**set->histograms);
-  uint8_t* memory = (uint8_t*)malloc(total_size);
+  const uint64_t total_size = (uint64_t)sizeof(*set)
+                            + size * sizeof(*set->histograms)
+                            + size * sizeof(**set->histograms);
+  uint8_t* memory = (uint8_t*)WebPSafeMalloc(total_size, sizeof(*memory));
   if (memory == NULL) return NULL;
 
   set = (VP8LHistogramSet*)memory;

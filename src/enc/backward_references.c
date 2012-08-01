@@ -15,6 +15,7 @@
 #include "./backward_references.h"
 #include "./histogram.h"
 #include "../utils/color_cache.h"
+#include "../utils/utils.h"
 
 #define VALUES_IN_BYTE 256
 
@@ -93,7 +94,8 @@ int VP8LBackwardRefsAlloc(VP8LBackwardRefs* const refs, int max_size) {
   assert(refs != NULL);
   refs->size = 0;
   refs->max_size = 0;
-  refs->refs = (PixOrCopy*)malloc(max_size * sizeof(*refs->refs));
+  refs->refs = (PixOrCopy*)WebPSafeMalloc((uint64_t)max_size,
+                                          sizeof(*refs->refs));
   if (refs->refs == NULL) return 0;
   refs->max_size = max_size;
   return 1;
@@ -110,7 +112,7 @@ static WEBP_INLINE uint64_t GetPixPairHash64(const uint32_t* const argb) {
 
 static int HashChainInit(HashChain* const p, int size) {
   int i;
-  p->chain_ = (int*)malloc(size * sizeof(*p->chain_));
+  p->chain_ = (int*)WebPSafeMalloc((uint64_t)size, sizeof(*p->chain_));
   if (p->chain_ == NULL) {
     return 0;
   }
@@ -437,7 +439,8 @@ static int BackwardReferencesHashChainDistanceOnly(
   const int quality = 100;
   const int pix_count = xsize * ysize;
   const int use_color_cache = (cache_bits > 0);
-  double* const cost = (double*)malloc(pix_count * sizeof(*cost));
+  double* const cost =
+      (double*)WebPSafeMalloc((uint64_t)pix_count, sizeof(*cost));
   CostModel* cost_model = (CostModel*)malloc(sizeof(*cost_model));
   HashChain* hash_chain = (HashChain*)malloc(sizeof(*hash_chain));
   VP8LColorCache hashers;
@@ -564,7 +567,8 @@ static int TraceBackwards(const uint32_t* const dist_array,
   }
   // Allocate.
   *chosen_path_size = count;
-  *chosen_path = (uint32_t*)malloc(count * sizeof(*chosen_path));
+  *chosen_path =
+      (uint32_t*)WebPSafeMalloc((uint64_t)count, sizeof(**chosen_path));
   if (*chosen_path == NULL) return 0;
 
   // Write in reverse order.
@@ -658,7 +662,7 @@ static int BackwardReferencesTraceBackwards(int xsize, int ysize,
   uint32_t* chosen_path = NULL;
   int chosen_path_size = 0;
   uint32_t* dist_array =
-      (uint32_t*)malloc(dist_array_size * sizeof(*dist_array));
+      (uint32_t*)WebPSafeMalloc((uint64_t)dist_array_size, sizeof(*dist_array));
 
   if (dist_array == NULL) goto Error;
 

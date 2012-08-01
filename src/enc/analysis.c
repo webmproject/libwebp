@@ -15,6 +15,7 @@
 
 #include "./vp8enci.h"
 #include "./cost.h"
+#include "../utils/utils.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -35,7 +36,8 @@ static void SmoothSegmentMap(VP8Encoder* const enc) {
   const int w = enc->mb_w_;
   const int h = enc->mb_h_;
   const int majority_cnt_3_x_3_grid = 5;
-  uint8_t* const tmp = (uint8_t*)malloc(w * h * sizeof(uint8_t));
+  uint8_t* const tmp = (uint8_t*)WebPSafeMalloc((uint64_t)w * h, sizeof(*tmp));
+  assert((uint64_t)(w * h) == (uint64_t)w * h);   // no overflow, as per spec
 
   if (tmp == NULL) return;
   for (y = 1; y < h - 1; ++y) {

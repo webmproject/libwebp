@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "./huffman.h"
+#include "../utils/utils.h"
 #include "../webp/format_constants.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -49,8 +50,8 @@ static int TreeInit(HuffmanTree* const tree, int num_leaves) {
   // Note that a Huffman tree is a full binary tree; and in a full binary tree
   // with L leaves, the total number of nodes N = 2 * L - 1.
   tree->max_nodes_ = 2 * num_leaves - 1;
-  tree->root_ =
-      (HuffmanTreeNode*)malloc(tree->max_nodes_ * sizeof(*tree->root_));
+  tree->root_ = (HuffmanTreeNode*)WebPSafeMalloc((uint64_t)tree->max_nodes_,
+                                                 sizeof(*tree->root_));
   if (tree->root_ == NULL) return 0;
   TreeNodeInit(tree->root_);  // Initialize root.
   tree->num_nodes_ = 1;
@@ -173,7 +174,8 @@ int HuffmanTreeBuildImplicit(HuffmanTree* const tree,
     int ok = 0;
 
     // Get Huffman codes from the code lengths.
-    int* const codes = (int*)malloc(code_lengths_size * sizeof(*codes));
+    int* const codes =
+        (int*)WebPSafeMalloc((uint64_t)code_lengths_size, sizeof(*codes));
     if (codes == NULL) goto End;
 
     if (!HuffmanCodeLengthsToCodes(code_lengths, code_lengths_size, codes)) {
