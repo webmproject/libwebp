@@ -256,8 +256,10 @@ static int BackwardReferencesHashChain(int xsize, int ysize,
   VP8LColorCache hashers;
 
   if (hash_chain == NULL) return 0;
-  cc_init = VP8LColorCacheInit(&hashers, cache_bits);
-  if (!cc_init) goto Error;
+  if (use_color_cache) {
+    cc_init = VP8LColorCacheInit(&hashers, cache_bits);
+    if (!cc_init) goto Error;
+  }
 
   if (!HashChainInit(hash_chain, pix_count)) goto Error;
 
@@ -289,15 +291,16 @@ static int BackwardReferencesHashChain(int xsize, int ysize,
         HashChainFindCopy(hash_chain, quality,
                           i + 1, xsize, argb, maxlen, &offset2, &len2);
         if (len2 > len + 1) {
+          const uint32_t pixel = argb[i];
           // Alternative#2 is a better match. So push pixel at 'i' as literal.
-          if (use_color_cache && VP8LColorCacheContains(&hashers, argb[i])) {
-            const int ix = VP8LColorCacheGetIndex(&hashers, argb[i]);
+          if (use_color_cache && VP8LColorCacheContains(&hashers, pixel)) {
+            const int ix = VP8LColorCacheGetIndex(&hashers, pixel);
             refs->refs[refs->size] = PixOrCopyCreateCacheIdx(ix);
           } else {
-            refs->refs[refs->size] = PixOrCopyCreateLiteral(argb[i]);
+            refs->refs[refs->size] = PixOrCopyCreateLiteral(pixel);
           }
           ++refs->size;
-          VP8LColorCacheInsert(&hashers, argb[i]);
+          if (use_color_cache) VP8LColorCacheInsert(&hashers, pixel);
           i++;  // Backward reference to be done for next pixel.
           len = len2;
           offset = offset2;
@@ -307,24 +310,30 @@ static int BackwardReferencesHashChain(int xsize, int ysize,
         len = MAX_LENGTH - 1;
       }
       refs->refs[refs->size++] = PixOrCopyCreateCopy(offset, len);
-      for (k = 0; k < len; ++k) {
-        VP8LColorCacheInsert(&hashers, argb[i + k]);
-        if (k != 0 && i + k + 1 < pix_count) {
-          // Add to the hash_chain (but cannot add the last pixel).
+      if (use_color_cache) {
+        for (k = 0; k < len; ++k) {
+          VP8LColorCacheInsert(&hashers, argb[i + k]);
+        }
+      }
+      // Add to the hash_chain (but cannot add the last pixel).
+      {
+        const int last = (len < pix_count - 1 - i) ? len : pix_count - 1 - i;
+        for (k = 1; k < last; ++k) {
           HashChainInsert(hash_chain, &argb[i + k], i + k);
         }
       }
       i += len;
     } else {
-      if (use_color_cache && VP8LColorCacheContains(&hashers, argb[i])) {
+      const uint32_t pixel = argb[i];
+      if (use_color_cache && VP8LColorCacheContains(&hashers, pixel)) {
         // push pixel as a PixOrCopyCreateCacheIdx pixel
-        int ix = VP8LColorCacheGetIndex(&hashers, argb[i]);
+        const int ix = VP8LColorCacheGetIndex(&hashers, pixel);
         refs->refs[refs->size] = PixOrCopyCreateCacheIdx(ix);
       } else {
-        refs->refs[refs->size] = PixOrCopyCreateLiteral(argb[i]);
+        refs->refs[refs->size] = PixOrCopyCreateLiteral(pixel);
       }
       ++refs->size;
-      VP8LColorCacheInsert(&hashers, argb[i]);
+      if (use_color_cache) VP8LColorCacheInsert(&hashers, pixel);
       if (i + 1 < pix_count) {
         HashChainInsert(hash_chain, &argb[i], i);
       }
@@ -437,8 +446,12 @@ static int BackwardReferencesHashChainDistanceOnly(
 
   if (cost == NULL || cost_model == NULL || hash_chain == NULL) goto Error;
 
-  cc_init = VP8LColorCacheInit(&hashers, cache_bits);
-  if (!cc_init || !HashChainInit(hash_chain, pix_count)) goto Error;
+  if (!HashChainInit(hash_chain, pix_count)) goto Error;
+
+  if (use_color_cache) {
+    cc_init = VP8LColorCacheInit(&hashers, cache_bits);
+    if (!cc_init) goto Error;
+  }
 
   if (!CostModelBuild(cost_model, xsize, ysize, recursive_cost_model, argb,
                       cache_bits)) {
@@ -486,14 +499,20 @@ static int BackwardReferencesHashChainDistanceOnly(
           // Long copy for short distances, let's skip the middle
           // lookups for better copies.
           // 1) insert the hashes.
-          for (k = 0; k < len; ++k) {
-            VP8LColorCacheInsert(&hashers, argb[i + k]);
-            if (i + k + 1 < pix_count) {
-              // Add to the hash_chain (but cannot add the last pixel).
+          if (use_color_cache) {
+            for (k = 0; k < len; ++k) {
+              VP8LColorCacheInsert(&hashers, argb[i + k]);
+            }
+          }
+          // 2) Add to the hash_chain (but cannot add the last pixel)
+          {
+            const int last = (len < pix_count - 1 - i) ? len
+                                                       : pix_count - 1 - i;
+            for (k = 0; k < last; ++k) {
               HashChainInsert(hash_chain, &argb[i + k], i + k);
             }
           }
-          // 2) jump.
+          // 3) jump.
           i += len - 1;  // for loop does ++i, thus -1 here.
           goto next_symbol;
         }
@@ -515,7 +534,7 @@ static int BackwardReferencesHashChainDistanceOnly(
         cost[i] = cost_val;
         dist_array[i] = 1;  // only one is inserted.
       }
-      VP8LColorCacheInsert(&hashers, argb[i]);
+      if (use_color_cache) VP8LColorCacheInsert(&hashers, argb[i]);
     }
  next_symbol: ;
   }
@@ -574,10 +593,12 @@ static int BackwardReferencesHashChainFollowChosenPath(
   HashChain* hash_chain = (HashChain*)malloc(sizeof(*hash_chain));
   VP8LColorCache hashers;
 
-  if (hash_chain == NULL ||
-      !(cc_init = VP8LColorCacheInit(&hashers, cache_bits)) ||
-      !HashChainInit(hash_chain, pix_count)) {
+  if (hash_chain == NULL || !HashChainInit(hash_chain, pix_count)) {
     goto Error;
+  }
+  if (use_color_cache) {
+    cc_init = VP8LColorCacheInit(&hashers, cache_bits);
+    if (!cc_init) goto Error;
   }
 
   refs->size = 0;
@@ -590,10 +611,14 @@ static int BackwardReferencesHashChainFollowChosenPath(
                         i, xsize, argb, maxlen, &offset, &len);
       assert(len == maxlen);
       refs->refs[size] = PixOrCopyCreateCopy(offset, len);
-      for (k = 0; k < len; ++k) {
-        VP8LColorCacheInsert(&hashers, argb[i + k]);
-        if (i + k + 1 < pix_count) {
-          // Add to the hash_chain (but cannot add the last pixel).
+      if (use_color_cache) {
+        for (k = 0; k < len; ++k) {
+          VP8LColorCacheInsert(&hashers, argb[i + k]);
+        }
+      }
+      {
+        const int last = (len < pix_count - 1 - i) ? len : pix_count - 1 - i;
+        for (k = 0; k < last; ++k) {
           HashChainInsert(hash_chain, &argb[i + k], i + k);
         }
       }
@@ -606,7 +631,7 @@ static int BackwardReferencesHashChainFollowChosenPath(
       } else {
         refs->refs[size] = PixOrCopyCreateLiteral(argb[i]);
       }
-      VP8LColorCacheInsert(&hashers, argb[i]);
+      if (use_color_cache) VP8LColorCacheInsert(&hashers, argb[i]);
       if (i + 1 < pix_count) {
         HashChainInsert(hash_chain, &argb[i], i);
       }
@@ -755,13 +780,18 @@ static int ComputeCacheHistogram(const uint32_t* const argb,
   int i;
   uint32_t k;
   VP8LColorCache hashers;
+  const int use_color_cache = (cache_bits > 0);
+  int cc_init = 0;
 
-  if (!VP8LColorCacheInit(&hashers, cache_bits)) return 0;
+  if (use_color_cache) {
+    cc_init = VP8LColorCacheInit(&hashers, cache_bits);
+    if (!cc_init) return 0;
+  }
 
   for (i = 0; i < refs->size; ++i) {
     const PixOrCopy* const v = &refs->refs[i];
     if (PixOrCopyIsLiteral(v)) {
-      if (cache_bits != 0 &&
+      if (use_color_cache &&
           VP8LColorCacheContains(&hashers, argb[pixel_index])) {
         // push pixel as a cache index
         const int ix = VP8LColorCacheGetIndex(&hashers, argb[pixel_index]);
@@ -773,15 +803,17 @@ static int ComputeCacheHistogram(const uint32_t* const argb,
     } else {
       VP8LHistogramAddSinglePixOrCopy(histo, v);
     }
-    for (k = 0; k < PixOrCopyLength(v); ++k) {
-      VP8LColorCacheInsert(&hashers, argb[pixel_index]);
-      ++pixel_index;
+    if (use_color_cache) {
+      for (k = 0; k < PixOrCopyLength(v); ++k) {
+        VP8LColorCacheInsert(&hashers, argb[pixel_index + k]);
+      }
     }
+    pixel_index += PixOrCopyLength(v);
   }
   assert(pixel_index == xsize * ysize);
   (void)xsize;  // xsize is not used in non-debug compilations otherwise.
   (void)ysize;  // ysize is not used in non-debug compilations otherwise.
-  VP8LColorCacheClear(&hashers);
+  if (cc_init) VP8LColorCacheClear(&hashers);
   return 1;
 }
 
