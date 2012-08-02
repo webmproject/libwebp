@@ -15,6 +15,7 @@
 
 #include "./vp8enci.h"
 #include "../utils/rescaler.h"
+#include "../utils/utils.h"
 #include "../dsp/dsp.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -81,14 +82,12 @@ int WebPPictureAlloc(WebPPicture* picture) {
 
       // Security and validation checks
       if (width <= 0 || height <= 0 ||         // luma/alpha param error
-          uv_width < 0 || uv_height < 0 ||     // u/v param error
-          y_size >= (1ULL << 40) ||            // reasonable global size
-          (size_t)total_size != total_size) {  // overflow on 32bit
+          uv_width < 0 || uv_height < 0) {     // u/v param error
         return 0;
       }
       // Clear previous buffer and allocate a new one.
       WebPPictureFree(picture);   // erase previous buffer
-      mem = (uint8_t*)malloc((size_t)total_size);
+      mem = (uint8_t*)WebPSafeMalloc(total_size, sizeof(*mem));
       if (mem == NULL) return 0;
 
       // From now on, we're in the clear, we can no longer fail...
@@ -119,15 +118,12 @@ int WebPPictureAlloc(WebPPicture* picture) {
     } else {
       void* memory;
       const uint64_t argb_size = (uint64_t)width * height;
-      const uint64_t total_size = argb_size * sizeof(*picture->argb);
-      if (width <= 0 || height <= 0 ||
-          argb_size >= (1ULL << 40) ||
-          (size_t)total_size != total_size) {
+      if (width <= 0 || height <= 0) {
         return 0;
       }
       // Clear previous buffer and allocate a new one.
       WebPPictureFree(picture);   // erase previous buffer
-      memory = malloc((size_t)total_size);
+      memory = WebPSafeMalloc(argb_size, sizeof(*picture->argb));
       if (memory == NULL) return 0;
 
       // TODO(skal): align plane to cache line?
@@ -416,7 +412,7 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
   if (!WebPPictureAlloc(&tmp)) return 0;
 
   if (!pic->use_argb) {
-    work = (int32_t*)malloc(2 * width * sizeof(*work));
+    work = (int32_t*)WebPSafeMalloc(2ULL * width, sizeof(*work));
     if (work == NULL) {
       WebPPictureFree(&tmp);
       return 0;
@@ -449,7 +445,7 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
     }
 #endif
   } else {
-    work = (int32_t*)malloc(2 * width * 4 * sizeof(*work));
+    work = (int32_t*)WebPSafeMalloc(2ULL * width * 4, sizeof(*work));
     if (work == NULL) {
       WebPPictureFree(&tmp);
       return 0;
@@ -480,17 +476,17 @@ void WebPMemoryWriterInit(WebPMemoryWriter* writer) {
 int WebPMemoryWrite(const uint8_t* data, size_t data_size,
                     const WebPPicture* picture) {
   WebPMemoryWriter* const w = (WebPMemoryWriter*)picture->custom_ptr;
-  size_t next_size;
+  uint64_t next_size;
   if (w == NULL) {
     return 1;
   }
-  next_size = w->size + data_size;
+  next_size = (uint64_t)w->size + data_size;
   if (next_size > w->max_size) {
     uint8_t* new_mem;
-    size_t next_max_size = w->max_size * 2;
+    uint64_t next_max_size = 2ULL * w->max_size;
     if (next_max_size < next_size) next_max_size = next_size;
-    if (next_max_size < 8192) next_max_size = 8192;
-    new_mem = (uint8_t*)malloc(next_max_size);
+    if (next_max_size < 8192ULL) next_max_size = 8192ULL;
+    new_mem = (uint8_t*)WebPSafeMalloc(next_max_size, 1);
     if (new_mem == NULL) {
       return 0;
     }
@@ -499,7 +495,8 @@ int WebPMemoryWrite(const uint8_t* data, size_t data_size,
     }
     free(w->mem);
     w->mem = new_mem;
-    w->max_size = next_max_size;
+    // down-cast is ok, thanks to WebPSafeMalloc
+    w->max_size = (size_t)next_max_size;
   }
   if (data_size > 0) {
     memcpy(w->mem + w->size, data, data_size);

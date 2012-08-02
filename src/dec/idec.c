@@ -15,6 +15,7 @@
 
 #include "./webpi.h"
 #include "./vp8i.h"
+#include "../utils/utils.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -143,14 +144,15 @@ static int AppendToMemBuffer(WebPIDecoder* const idec,
 
   if (mem->end_ + data_size > mem->buf_size_) {  // Need some free memory
     const size_t current_size = MemDataSize(mem);
-    const size_t new_size = current_size + data_size;
-    const size_t extra_size = (new_size + CHUNK_SIZE - 1) & ~(CHUNK_SIZE - 1);
-    uint8_t* const new_buf = (uint8_t*)malloc(extra_size);
+    const uint64_t new_size = (uint64_t)current_size + data_size;
+    const uint64_t extra_size = (new_size + CHUNK_SIZE - 1) & ~(CHUNK_SIZE - 1);
+    uint8_t* const new_buf =
+        (uint8_t*)WebPSafeMalloc(extra_size, sizeof(*new_buf));
     if (new_buf == NULL) return 0;
     memcpy(new_buf, old_base, current_size);
     free(mem->buf_);
     mem->buf_ = new_buf;
-    mem->buf_size_ = extra_size;
+    mem->buf_size_ = (size_t)extra_size;
     mem->start_ = 0;
     mem->end_ = current_size;
   }
@@ -534,7 +536,7 @@ static VP8StatusCode IDecode(WebPIDecoder* idec) {
 // Public functions
 
 WebPIDecoder* WebPINewDecoder(WebPDecBuffer* output_buffer) {
-  WebPIDecoder* idec = (WebPIDecoder*)calloc(1, sizeof(WebPIDecoder));
+  WebPIDecoder* idec = (WebPIDecoder*)calloc(1, sizeof(*idec));
   if (idec == NULL) {
     return NULL;
   }

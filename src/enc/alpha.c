@@ -111,6 +111,7 @@ static int EncodeAlphaInternal(const uint8_t* const data, int width, int height,
   size_t expected_size;
   const size_t data_size = width * height;
 
+  assert((uint64_t)data_size == (uint64_t)width * height);  // as per spec
   assert(filter >= 0 && filter < WEBP_FILTER_LAST);
   assert(method >= ALPHA_NO_COMPRESSION);
   assert(method <= ALPHA_LOSSLESS_COMPRESSION);
@@ -171,6 +172,7 @@ static int EncodeAlpha(VP8Encoder* const enc,
   const int reduce_levels = (quality < 100);
 
   // quick sanity checks
+  assert((uint64_t)data_size == (uint64_t)width * height);  // as per spec
   assert(enc != NULL && pic != NULL && pic->a != NULL);
   assert(output != NULL && output_size != NULL);
   assert(width > 0 && height > 0);

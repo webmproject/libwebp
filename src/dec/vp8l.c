@@ -15,6 +15,7 @@
 #include "./vp8li.h"
 #include "../dsp/lossless.h"
 #include "../utils/huffman.h"
+#include "../utils/utils.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -264,7 +265,8 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
       return 0;
     }
 
-    code_lengths = (int*)calloc(alphabet_size, sizeof(*code_lengths));
+    code_lengths =
+        (int*)WebPSafeCalloc((uint64_t)alphabet_size, sizeof(*code_lengths));
     if (code_lengths == NULL) {
       dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
       return 0;
@@ -335,7 +337,9 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
   if (br->error_) goto Error;
 
   assert(num_htree_groups <= 0x10000);
-  htree_groups = (HTreeGroup*)calloc(num_htree_groups, sizeof(*htree_groups));
+  htree_groups =
+      (HTreeGroup*)WebPSafeCalloc((uint64_t)num_htree_groups,
+                                  sizeof(*htree_groups));
   if (htree_groups == NULL) {
     dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
     goto Error;
@@ -380,10 +384,7 @@ static int AllocateAndInitRescaler(VP8LDecoder* const dec, VP8Io* const io) {
   const uint64_t memory_size = sizeof(*dec->rescaler) +
                                work_size * sizeof(*work) +
                                scaled_data_size * sizeof(*scaled_data);
-  uint8_t* memory;
-
-  if (memory_size != (size_t)memory_size) return 0;  // overflow check
-  memory = (uint8_t*)calloc(1, (size_t)memory_size);
+  uint8_t* memory = (uint8_t*)WebPSafeCalloc(memory_size, sizeof(*memory));
   if (memory == NULL) {
     dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
     return 0;
@@ -700,7 +701,8 @@ static int ExpandColorMap(int num_colors, VP8LTransform* const transform) {
   int i;
   const int final_num_colors = 1 << (8 >> transform->bits_);
   uint32_t* const new_color_map =
-      (uint32_t*)malloc(final_num_colors * sizeof(*new_color_map));
+      (uint32_t*)WebPSafeMalloc((uint64_t)final_num_colors,
+                                sizeof(*new_color_map));
   if (new_color_map == NULL) {
     return 0;
   } else {
@@ -892,15 +894,8 @@ static int DecodeImageStream(int xsize, int ysize,
   }
 
   {
-    const uint64_t total_size =
-        transform_xsize * transform_ysize * sizeof(*data);
-    if (total_size != (size_t)total_size) {
-      // This shouldn't happen, because of transform_bits limit, but...
-      dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
-      ok = 0;
-      goto End;
-    }
-    data = (uint32_t*)malloc((size_t)total_size);
+    const uint64_t total_size = (uint64_t)transform_xsize * transform_ysize;
+    data = (uint32_t*)WebPSafeMalloc(total_size, sizeof(*data));
     if (data == NULL) {
       dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
       ok = 0;
@@ -951,12 +946,9 @@ static int AllocateARGBBuffers(VP8LDecoder* const dec, int final_width) {
   const uint64_t cache_pixels = (uint64_t)final_width * NUM_ARGB_CACHE_ROWS;
   const uint64_t total_num_pixels =
       num_pixels + cache_top_pixels + cache_pixels;
-  const uint64_t total_size = total_num_pixels * sizeof(*dec->argb_);
 
   assert(dec->width_ <= final_width);
-  // Check for overflow
-  if ((size_t)total_size != total_size) return 0;
-  dec->argb_ = (uint32_t*)malloc((size_t)total_size);
+  dec->argb_ = (uint32_t*)WebPSafeMalloc(total_num_pixels, sizeof(*dec->argb_));
   if (dec->argb_ == NULL) {
     dec->argb_cache_ = NULL;
     dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
