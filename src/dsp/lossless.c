@@ -328,7 +328,7 @@ static const PredictorFunc kPredictors[16] = {
 
 // TODO(vikasa): Replace 256 etc with defines.
 static float PredictionCostSpatial(const int* counts,
-                                    int weight_0, double exp_val) {
+                                   int weight_0, double exp_val) {
   const int significant_symbols = 16;
   const double exp_decay_factor = 0.6;
   double bits = weight_0 * counts[0];
