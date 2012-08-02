@@ -19,17 +19,6 @@
 #include "../dsp/lossless.h"
 #include "../utils/utils.h"
 
-#if defined(_MSC_VER) && !defined(NOT_HAVE_LOG2)
-# define NOT_HAVE_LOG2 1
-#endif
-
-#ifdef NOT_HAVE_LOG2
-static WEBP_INLINE double log2(double d) {
-  const double kLog2Reciprocal = 1.442695040888963;
-  return log(d) * kLog2Reciprocal;
-}
-#endif
-
 static void HistogramClear(VP8LHistogram* const p) {
   memset(p->literal_, 0, sizeof(p->literal_));
   memset(p->red_, 0, sizeof(p->red_));
@@ -88,33 +77,6 @@ VP8LHistogramSet* VP8LAllocateHistogramSet(int size, int cache_bits) {
 
 // -----------------------------------------------------------------------------
 
-void VP8LConvertPopulationCountTableToBitEstimates(
-    int num_symbols, const int population_counts[], double output[]) {
-  int sum = 0;
-  int nonzeros = 0;
-  int i;
-  for (i = 0; i < num_symbols; ++i) {
-    sum += population_counts[i];
-    if (population_counts[i] > 0) {
-      ++nonzeros;
-    }
-  }
-  if (nonzeros <= 1) {
-    memset(output, 0, num_symbols * sizeof(*output));
-    return;
-  }
-  {
-    const double log2sum = log2(sum);
-    for (i = 0; i < num_symbols; ++i) {
-      if (population_counts[i] == 0) {
-        output[i] = log2sum;
-      } else {
-        output[i] = log2sum - log2(population_counts[i]);
-      }
-    }
-  }
-}
-
 void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const histo,
                                      const PixOrCopy* const v) {
   if (PixOrCopyIsLiteral(v)) {
@@ -139,7 +101,7 @@ void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const histo,
 
 
 static double BitsEntropy(const int* const array, int n) {
-  double retval = 0;
+  double retval = 0.;
   int sum = 0;
   int nonzeros = 0;
   int max_val = 0;
@@ -149,15 +111,14 @@ static double BitsEntropy(const int* const array, int n) {
     if (array[i] != 0) {
       sum += array[i];
       ++nonzeros;
-      retval += array[i] * VP8LFastLog(array[i]);
+      retval -= VP8LFastSLog2(array[i]);
       if (max_val < array[i]) {
         max_val = array[i];
       }
     }
   }
-  retval -= sum * VP8LFastLog(sum);
-  retval *= -1.4426950408889634;  // 1.0 / -Log(2);
-  mix = 0.627;
+  retval += VP8LFastSLog2(sum);
+
   if (nonzeros < 5) {
     if (nonzeros <= 1) {
       return 0;
@@ -177,15 +138,15 @@ static double BitsEntropy(const int* const array, int n) {
     } else {
       mix = 0.7;  // nonzeros == 4.
     }
+  } else {
+    mix = 0.627;
   }
+
   {
     double min_limit = 2 * sum - max_val;
     min_limit = mix * min_limit + (1.0 - mix) * retval;
-    if (retval < min_limit) {
-      return min_limit;
-    }
+    return (retval < min_limit) ? min_limit : retval;
   }
-  return retval;
 }
 
 double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p) {

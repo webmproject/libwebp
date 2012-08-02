@@ -101,9 +101,6 @@ static WEBP_INLINE int VP8LHistogramNumCodes(const VP8LHistogram* const p) {
       ((p->palette_code_bits_ > 0) ? (1 << p->palette_code_bits_) : 0);
 }
 
-void VP8LConvertPopulationCountTableToBitEstimates(
-    int num_symbols, const int population_counts[], double output[]);
-
 // Builds the histogram image.
 int VP8LGetHistoImageSymbols(int xsize, int ysize,
                              const VP8LBackwardRefs* const refs,

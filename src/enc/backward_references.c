@@ -14,6 +14,7 @@
 
 #include "./backward_references.h"
 #include "./histogram.h"
+#include "../dsp/lossless.h"
 #include "../utils/color_cache.h"
 #include "../utils/utils.h"
 
@@ -357,46 +358,65 @@ typedef struct {
   double literal_[PIX_OR_COPY_CODES_MAX];
   double blue_[VALUES_IN_BYTE];
   double distance_[NUM_DISTANCE_CODES];
-  int cache_bits_;
 } CostModel;
 
 static int BackwardReferencesTraceBackwards(
     int xsize, int ysize, int recursive_cost_model,
     const uint32_t* const argb, int cache_bits, VP8LBackwardRefs* const refs);
 
-static int CostModelBuild(CostModel* const p, int xsize, int ysize,
+static void ConvertPopulationCountTableToBitEstimates(
+    int num_symbols, const int population_counts[], double output[]) {
+  int sum = 0;
+  int nonzeros = 0;
+  int i;
+  for (i = 0; i < num_symbols; ++i) {
+    sum += population_counts[i];
+    if (population_counts[i] > 0) {
+      ++nonzeros;
+    }
+  }
+  if (nonzeros <= 1) {
+    memset(output, 0, num_symbols * sizeof(*output));
+  } else {
+    const double logsum = VP8LFastLog2(sum);
+    for (i = 0; i < num_symbols; ++i) {
+      output[i] = logsum - VP8LFastLog2(population_counts[i]);
+    }
+  }
+}
+
+static int CostModelBuild(CostModel* const m, int xsize, int ysize,
                           int recursion_level, const uint32_t* const argb,
                           int cache_bits) {
   int ok = 0;
   VP8LHistogram histo;
   VP8LBackwardRefs refs;
+  const int quality = 100;
 
   if (!VP8LBackwardRefsAlloc(&refs, xsize * ysize)) goto Error;
 
-  p->cache_bits_ = cache_bits;
   if (recursion_level > 0) {
     if (!BackwardReferencesTraceBackwards(xsize, ysize, recursion_level - 1,
                                           argb, cache_bits, &refs)) {
       goto Error;
     }
   } else {
-    const int quality = 100;
     if (!BackwardReferencesHashChain(xsize, ysize, argb, cache_bits, quality,
                                      &refs)) {
       goto Error;
     }
   }
   VP8LHistogramCreate(&histo, &refs, cache_bits);
-  VP8LConvertPopulationCountTableToBitEstimates(
-      VP8LHistogramNumCodes(&histo), histo.literal_, p->literal_);
-  VP8LConvertPopulationCountTableToBitEstimates(
-      VALUES_IN_BYTE, histo.red_, p->red_);
-  VP8LConvertPopulationCountTableToBitEstimates(
-      VALUES_IN_BYTE, histo.blue_, p->blue_);
-  VP8LConvertPopulationCountTableToBitEstimates(
-      VALUES_IN_BYTE, histo.alpha_, p->alpha_);
-  VP8LConvertPopulationCountTableToBitEstimates(
-      NUM_DISTANCE_CODES, histo.distance_, p->distance_);
+  ConvertPopulationCountTableToBitEstimates(
+      VP8LHistogramNumCodes(&histo), histo.literal_, m->literal_);
+  ConvertPopulationCountTableToBitEstimates(
+      VALUES_IN_BYTE, histo.red_, m->red_);
+  ConvertPopulationCountTableToBitEstimates(
+      VALUES_IN_BYTE, histo.blue_, m->blue_);
+  ConvertPopulationCountTableToBitEstimates(
+      VALUES_IN_BYTE, histo.alpha_, m->alpha_);
+  ConvertPopulationCountTableToBitEstimates(
+      NUM_DISTANCE_CODES, histo.distance_, m->distance_);
   ok = 1;
 
  Error:
@@ -404,30 +424,30 @@ static int CostModelBuild(CostModel* const p, int xsize, int ysize,
   return ok;
 }
 
-static WEBP_INLINE double GetLiteralCost(const CostModel* const p, uint32_t v) {
-  return p->alpha_[v >> 24] +
-      p->red_[(v >> 16) & 0xff] +
-      p->literal_[(v >> 8) & 0xff] +
-      p->blue_[v & 0xff];
+static WEBP_INLINE double GetLiteralCost(const CostModel* const m, uint32_t v) {
+  return m->alpha_[v >> 24] +
+         m->red_[(v >> 16) & 0xff] +
+         m->literal_[(v >> 8) & 0xff] +
+         m->blue_[v & 0xff];
 }
 
-static WEBP_INLINE double GetCacheCost(const CostModel* const p, uint32_t idx) {
+static WEBP_INLINE double GetCacheCost(const CostModel* const m, uint32_t idx) {
   const int literal_idx = VALUES_IN_BYTE + NUM_LENGTH_CODES + idx;
-  return p->literal_[literal_idx];
+  return m->literal_[literal_idx];
 }
 
-static WEBP_INLINE double GetLengthCost(const CostModel* const p,
+static WEBP_INLINE double GetLengthCost(const CostModel* const m,
                                         uint32_t length) {
   int code, extra_bits_count, extra_bits_value;
   PrefixEncode(length, &code, &extra_bits_count, &extra_bits_value);
-  return p->literal_[VALUES_IN_BYTE + code] + extra_bits_count;
+  return m->literal_[VALUES_IN_BYTE + code] + extra_bits_count;
 }
 
-static WEBP_INLINE double GetDistanceCost(const CostModel* const p,
+static WEBP_INLINE double GetDistanceCost(const CostModel* const m,
                                           uint32_t distance) {
   int code, extra_bits_count, extra_bits_value;
   PrefixEncode(distance, &code, &extra_bits_count, &extra_bits_value);
-  return p->distance_[code] + extra_bits_count;
+  return m->distance_[code] + extra_bits_count;
 }
 
 static int BackwardReferencesHashChainDistanceOnly(
