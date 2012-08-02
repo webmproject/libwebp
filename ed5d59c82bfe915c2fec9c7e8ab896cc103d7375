@@ -36,6 +36,23 @@
     },
     {
       "key": {
+        "uuid": "AAAAPH//+IA\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 683,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-08-02T05:42:10Z",
+      "side": 1,
+      "message": "double -\u003e float conversion",
+      "revId": "ed5d59c82bfe915c2fec9c7e8ab896cc103d7375",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAPH//+IM\u003d",
         "filename": "src/dsp/lossless.c",
         "patchSetId": 1
@@ -45,6 +62,23 @@
         "id": 1002219
       },
       "writtenOn": "2012-08-02T05:40:29Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "ed5d59c82bfe915c2fec9c7e8ab896cc103d7375",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAPH//+H8\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 747,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-08-02T05:42:10Z",
       "side": 1,
       "message": "ditto",
       "revId": "ed5d59c82bfe915c2fec9c7e8ab896cc103d7375",
