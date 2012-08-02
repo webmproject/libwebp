@@ -132,7 +132,7 @@ static HRESULT ReadPictureWithWIC(const char* filename,
   IWICBitmapDecoder* pDecoder = NULL;
   IStream* pStream = NULL;
   UINT frameCount = 0;
-  UINT width, height = 0;
+  UINT width = 0, height = 0;
   BYTE* rgb = NULL;
   WICPixelFormatGUID srcPixelFormat = { 0 };
   GUID srcContainerFormat = { 0 };

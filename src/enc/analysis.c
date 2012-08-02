@@ -147,7 +147,7 @@ static void SetSegmentAlphas(VP8Encoder* const enc,
 static void AssignSegments(VP8Encoder* const enc, const int alphas[256]) {
   const int nb = enc->segment_hdr_.num_segments_;
   int centers[NUM_MB_SEGMENTS];
-  int weighted_average;
+  int weighted_average = 0;
   int map[256];
   int a, n, k;
   int min_a = 0, max_a = 255, range_a;
