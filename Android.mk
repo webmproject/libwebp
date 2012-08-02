@@ -50,7 +50,7 @@ LOCAL_SRC_FILES := \
     src/utils/utils.c \
 
 LOCAL_CFLAGS := -Wall -DANDROID -DHAVE_MALLOC_H -DHAVE_PTHREAD \
-                -DNOT_HAVE_LOG2 -DWEBP_USE_THREAD \
+                -DWEBP_USE_THREAD \
                 -finline-functions -frename-registers -ffast-math \
                 -s -fomit-frame-pointer -Isrc/webp
 

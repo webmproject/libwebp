@@ -29,11 +29,6 @@ AC_DEFUN([WITHLIB_OPTION],
                               [use $2 libraries from DIR]),
                [$2_LIBS="-L$withval"])])
 
-dnl === Check for native log2
-AC_SEARCH_LIBS([log2], [m],,
-               [AC_DEFINE([NOT_HAVE_LOG2], [1],
-                          [Undefine this if you have log2().])])
-
 dnl === Check for pthread support
 AC_ARG_ENABLE([threading],
               AS_HELP_STRING([--disable-threading],
