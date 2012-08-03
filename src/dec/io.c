@@ -162,15 +162,22 @@ static int EmitFancyRGB(const VP8Io* const io, WebPDecParams* const p) {
 
 static int EmitAlphaYUV(const VP8Io* const io, WebPDecParams* const p) {
   const uint8_t* alpha = io->a;
+  const WebPYUVABuffer* const buf = &p->output->u.YUVA;
+  const int mb_w = io->mb_w;
+  const int mb_h = io->mb_h;
+  uint8_t* dst = buf->a + io->mb_y * buf->a_stride;
+  int j;
+
   if (alpha != NULL) {
-    int j;
-    const int mb_w = io->mb_w;
-    const int mb_h = io->mb_h;
-    const WebPYUVABuffer* const buf = &p->output->u.YUVA;
-    uint8_t* dst = buf->a + io->mb_y * buf->a_stride;
     for (j = 0; j < mb_h; ++j) {
       memcpy(dst, alpha, mb_w * sizeof(*dst));
       alpha += io->width;
+      dst += buf->a_stride;
+    }
+  } else if (buf->a != NULL) {
+    // the user requested alpha, but there is none, set it to opaque.
+    for (j = 0; j < mb_h; ++j) {
+      memset(dst, 0xff, mb_w * sizeof(*dst));
       dst += buf->a_stride;
     }
   }
