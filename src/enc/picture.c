@@ -17,6 +17,7 @@
 #include "../utils/rescaler.h"
 #include "../utils/utils.h"
 #include "../dsp/dsp.h"
+#include "../dsp/yuv.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -544,33 +545,6 @@ int WebPPictureHasTransparency(const WebPPicture* picture) {
 
 //------------------------------------------------------------------------------
 // RGB -> YUV conversion
-// The exact naming is Y'CbCr, following the ITU-R BT.601 standard.
-// More information at: http://en.wikipedia.org/wiki/YCbCr
-// Y = 0.2569 * R + 0.5044 * G + 0.0979 * B + 16
-// U = -0.1483 * R - 0.2911 * G + 0.4394 * B + 128
-// V = 0.4394 * R - 0.3679 * G - 0.0715 * B + 128
-// We use 16bit fixed point operations.
-
-enum { YUV_FRAC = 16 };
-
-static WEBP_INLINE int clip_uv(int v) {
-   v = (v + (257 << (YUV_FRAC + 2 - 1))) >> (YUV_FRAC + 2);
-   return ((v & ~0xff) == 0) ? v : (v < 0) ? 0 : 255;
-}
-
-static WEBP_INLINE int rgb_to_y(int r, int g, int b) {
-  const int kRound = (1 << (YUV_FRAC - 1)) + (16 << YUV_FRAC);
-  const int luma = 16839 * r + 33059 * g + 6420 * b;
-  return (luma + kRound) >> YUV_FRAC;  // no need to clip
-}
-
-static WEBP_INLINE int rgb_to_u(int r, int g, int b) {
-  return clip_uv(-9719 * r - 19081 * g + 28800 * b);
-}
-
-static WEBP_INLINE int rgb_to_v(int r, int g, int b) {
-  return clip_uv(+28800 * r - 24116 * g - 4684 * b);
-}
 
 // TODO: we can do better than simply 2x2 averaging on U/V samples.
 #define SUM4(ptr) ((ptr)[0] + (ptr)[step] + \
@@ -584,8 +558,8 @@ static WEBP_INLINE int rgb_to_v(int r, int g, int b) {
   const int r = SUM(r_ptr + src);                        \
   const int g = SUM(g_ptr + src);                        \
   const int b = SUM(b_ptr + src);                        \
-  picture->u[dst] = rgb_to_u(r, g, b);                   \
-  picture->v[dst] = rgb_to_v(r, g, b);                   \
+  picture->u[dst] = VP8RGBToU(r, g, b);                  \
+  picture->v[dst] = VP8RGBToV(r, g, b);                  \
 }
 
 #define RGB_TO_UV0(x_in, x_out, y, SUM) {                \
@@ -594,8 +568,8 @@ static WEBP_INLINE int rgb_to_v(int r, int g, int b) {
   const int r = SUM(r_ptr + src);                        \
   const int g = SUM(g_ptr + src);                        \
   const int b = SUM(b_ptr + src);                        \
-  picture->u0[dst] = rgb_to_u(r, g, b);                  \
-  picture->v0[dst] = rgb_to_v(r, g, b);                  \
+  picture->u0[dst] = VP8RGBToU(r, g, b);                 \
+  picture->v0[dst] = VP8RGBToV(r, g, b);                 \
 }
 
 static void MakeGray(WebPPicture* const picture) {
@@ -633,7 +607,7 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
     for (x = 0; x < width; ++x) {
       const int offset = step * x + y * rgb_stride;
       picture->y[x + y * picture->y_stride] =
-          rgb_to_y(r_ptr[offset], g_ptr[offset], b_ptr[offset]);
+          VP8RGBToY(r_ptr[offset], g_ptr[offset], b_ptr[offset]);
     }
   }
 
@@ -643,7 +617,7 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
       for (x = 0; x < (width >> 1); ++x) {
         RGB_TO_UV(x, y, SUM4);
       }
-      if (picture->width & 1) {
+      if (width & 1) {
         RGB_TO_UV(x, y, SUM2V);
       }
     }
