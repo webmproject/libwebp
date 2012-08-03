@@ -51,18 +51,23 @@ static VP8StatusCode CheckDecBuffer(const WebPDecBuffer* const buffer) {
     ok &= (y_size <= buf->y_size);
     ok &= (u_size <= buf->u_size);
     ok &= (v_size <= buf->v_size);
-    ok &= (a_size <= buf->a_size);
     ok &= (buf->y_stride >= width);
     ok &= (buf->u_stride >= (width + 1) / 2);
     ok &= (buf->v_stride >= (width + 1) / 2);
-    if (buf->a) {
+    ok &= (buf->y != NULL);
+    ok &= (buf->u != NULL);
+    ok &= (buf->v != NULL);
+    if (mode == MODE_YUVA) {
       ok &= (buf->a_stride >= width);
+      ok &= (a_size <= buf->a_size);
+      ok &= (buf->a != NULL);
     }
   } else {    // RGB checks
     const WebPRGBABuffer* const buf = &buffer->u.RGBA;
     const uint64_t size = (uint64_t)buf->stride * height;
     ok &= (size <= buf->size);
     ok &= (buf->stride >= width * kModeBpp[mode]);
+    ok &= (buf->rgba != NULL);
   }
   return ok ? VP8_STATUS_OK : VP8_STATUS_INVALID_PARAM;
 }
