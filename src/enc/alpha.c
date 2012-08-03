@@ -234,8 +234,10 @@ static int EncodeAlpha(VP8Encoder* const enc,
 
     // Try the other mode(s).
     {
-      WebPAuxStats best_stats = { 0 };
+      WebPAuxStats best_stats;
       size_t best_score = VP8BitWriterSize(&bw);
+
+      memset(&best_stats, 0, sizeof(best_stats));  // prevent spurious warning
       if (pic->stats != NULL) best_stats = *pic->stats;
       for (test_filter = WEBP_FILTER_HORIZONTAL;
            ok && (test_filter <= WEBP_FILTER_GRADIENT);
