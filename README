@@ -405,12 +405,12 @@ The 'idec' object must always be released (even upon an error condition) by
 calling: WebPDelete(idec).
 
 To retrieve partially decoded picture samples, one must use the corresponding
-method: WebPIDecGetRGB or WebPIDecGetYUV.
+method: WebPIDecGetRGB or WebPIDecGetYUVA.
 It will return the last displayable pixel row.
 
 Lastly, note that decoding can also be performed into a pre-allocated pixel
 buffer. This buffer must be passed when creating a WebPIDecoder, calling
-WebPINewRGB() or WebPINewYUV().
+WebPINewRGB() or WebPINewYUVA().
 
 Please have a look at the src/webp/decode.h header for further details.
 
