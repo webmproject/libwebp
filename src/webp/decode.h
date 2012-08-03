@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-#define WEBP_DECODER_ABI_VERSION 0x0100    // MAJOR(8b) + MINOR(8b)
+#define WEBP_DECODER_ABI_VERSION 0x0200    // MAJOR(8b) + MINOR(8b)
 
 // Return the decoder's version number, packed in hexadecimal using 8bits for
 // each of major/minor/revision. E.g: v2.5.7 is 0x020507.

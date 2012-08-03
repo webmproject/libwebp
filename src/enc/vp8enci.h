@@ -26,8 +26,8 @@ extern "C" {
 
 // version numbers
 #define ENC_MAJ_VERSION 0
-#define ENC_MIN_VERSION 1
-#define ENC_REV_VERSION 99
+#define ENC_MIN_VERSION 2
+#define ENC_REV_VERSION 0
 
 // size of histogram used by CollectHistogram.
 #define MAX_COEFF_THRESH   64
