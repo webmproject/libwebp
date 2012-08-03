@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAPH//9Og\u003d",
+        "filename": "src/enc/alpha.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-08-03T00:20:49Z",
+      "side": 1,
+      "message": "may add one empty line before this one",
+      "revId": "64f0315dd5180f7c6b821a50ed5d53a2cac62592",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
