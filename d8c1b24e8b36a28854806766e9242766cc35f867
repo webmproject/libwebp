@@ -16,6 +16,24 @@
       "revId": "d8c1b24e8b36a28854806766e9242766cc35f867",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAPH//8eY\u003d",
+        "filename": "src/dec/io.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-08-03T19:05:44Z",
+      "side": 1,
+      "message": "true, even if buf-\u003ea was NULL dst won\u0027t be touched...",
+      "parentUuid": "AAAAPH//8nk\u003d",
+      "revId": "d8c1b24e8b36a28854806766e9242766cc35f867",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
