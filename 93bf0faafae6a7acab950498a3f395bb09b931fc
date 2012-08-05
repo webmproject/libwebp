@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAPH//7/Q\u003d",
+        "filename": "ChangeLog",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-08-05T18:00:07Z",
+      "side": 1,
+      "message": "strange, these are duplicated... No big deal.",
+      "revId": "93bf0faafae6a7acab950498a3f395bb09b931fc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
