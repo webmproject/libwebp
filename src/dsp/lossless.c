@@ -935,7 +935,7 @@ static void ColorIndexInverseTransform(
       uint32_t packed_pixels = 0;
       int x;
       for (x = 0; x < width; ++x) {
-        // We need to load fresh 'packed_pixels' once every 'bytes_per_pixels'
+        // We need to load fresh 'packed_pixels' once every 'pixels_per_byte'
         // increments of x. Fortunately, pixels_per_byte is a power of 2, so
         // can just use a mask for that, instead of decrementing a counter.
         if ((x & count_mask) == 0) packed_pixels = ((*src++) >> 8) & 0xff;
@@ -976,7 +976,21 @@ void VP8LInverseTransform(const VP8LTransform* const transform,
       ColorSpaceInverseTransform(transform, row_start, row_end, out);
       break;
     case COLOR_INDEXING_TRANSFORM:
+      if (in == out && transform->bits_ > 0) {
+        // Move packed pixels to the end of unpacked region, so that unpacking
+        // can occur seamlessly.
+        // Also, note that this is the only transform that applies on
+        // the effective width of VP8LSubSampleSize(xsize_, bits_). All other
+        // transforms work on effective width of xsize_.
+        const int out_stride = (row_end - row_start) * transform->xsize_;
+        const int in_stride = (row_end - row_start) *
+            VP8LSubSampleSize(transform->xsize_, transform->bits_);
+        uint32_t* const src = out + out_stride - in_stride;
+        memmove(src, out, in_stride * sizeof(*src));
+        ColorIndexInverseTransform(transform, row_start, row_end, src, out);
+      } else {
       ColorIndexInverseTransform(transform, row_start, row_end, in, out);
+      }
       break;
   }
 }

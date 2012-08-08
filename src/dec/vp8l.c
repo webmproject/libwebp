@@ -615,20 +615,22 @@ static WEBP_INLINE HTreeGroup* GetHtreeGroupForPos(VP8LMetadata* const hdr,
 
 typedef void (*ProcessRowsFunc)(VP8LDecoder* const dec, int row);
 
-static void ApplyTransforms(VP8LDecoder* const dec, int num_rows,
+static void ApplyInverseTransforms(VP8LDecoder* const dec, int num_rows,
                             const uint32_t* const rows) {
   int n = dec->next_transform_;
   const int cache_pixs = dec->width_ * num_rows;
-  uint32_t* rows_data = dec->argb_cache_;
   const int start_row = dec->last_row_;
   const int end_row = start_row + num_rows;
+  const uint32_t* rows_in = rows;
+  uint32_t* const rows_out = dec->argb_cache_;
 
   // Inverse transforms.
   // TODO: most transforms only need to operate on the cropped region only.
-  memcpy(rows_data, rows, cache_pixs * sizeof(*rows_data));
+  memcpy(rows_out, rows_in, cache_pixs * sizeof(*rows_out));
   while (n-- > 0) {
     VP8LTransform* const transform = &dec->transforms_[n];
-    VP8LInverseTransform(transform, start_row, end_row, rows, rows_data);
+    VP8LInverseTransform(transform, start_row, end_row, rows_in, rows_out);
+    rows_in = rows_out;
   }
 }
 
@@ -639,7 +641,7 @@ static void ProcessRows(VP8LDecoder* const dec, int row) {
   const int num_rows = row - dec->last_row_;
 
   if (num_rows <= 0) return;  // Nothing to be done.
-  ApplyTransforms(dec, num_rows, rows);
+  ApplyInverseTransforms(dec, num_rows, rows);
 
   // Emit output.
   {
@@ -1066,7 +1068,7 @@ static void ExtractAlphaRows(VP8LDecoder* const dec, int row) {
   const uint32_t* const in = dec->argb_ + dec->width_ * dec->last_row_;
 
   if (num_rows <= 0) return;  // Nothing to be done.
-  ApplyTransforms(dec, num_rows, in);
+  ApplyInverseTransforms(dec, num_rows, in);
 
   // Extract alpha (which is stored in the green plane).
   {
