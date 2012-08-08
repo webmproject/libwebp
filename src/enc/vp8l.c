@@ -29,6 +29,7 @@ extern "C" {
 
 #define PALETTE_KEY_RIGHT_SHIFT   22  // Key for 1K buffer.
 #define MAX_HUFF_IMAGE_SIZE       (16 * 1024 * 1024)
+#define MAX_COLORS_FOR_GRAPH      64
 
 // -----------------------------------------------------------------------------
 // Palette
@@ -98,11 +99,11 @@ static int AnalyzeAndCreatePalette(const WebPPicture* const pic,
   return 1;
 }
 
-static int AnalyzeEntropy(const WebPPicture* const pic,
+static int AnalyzeEntropy(const uint32_t* argb,
+                          int width, int height, int argb_stride,
                           double* const nonpredicted_bits,
                           double* const predicted_bits) {
   int x, y;
-  const uint32_t* argb = pic->argb;
   const uint32_t* last_line = NULL;
   uint32_t last_pix = argb[0];    // so we're sure that pix_diff == 0
 
@@ -114,8 +115,8 @@ static int AnalyzeEntropy(const WebPPicture* const pic,
 
   VP8LHistogramInit(predicted, 0);
   VP8LHistogramInit(nonpredicted, 0);
-  for (y = 0; y < pic->height; ++y) {
-    for (x = 0; x < pic->width; ++x) {
+  for (y = 0; y < height; ++y) {
+    for (x = 0; x < width; ++x) {
       const uint32_t pix = argb[x];
       const uint32_t pix_diff = VP8LSubPixels(pix, last_pix);
       if (pix_diff == 0) continue;
@@ -131,7 +132,7 @@ static int AnalyzeEntropy(const WebPPicture* const pic,
       }
     }
     last_line = argb;
-    argb += pic->argb_stride;
+    argb += argb_stride;
   }
   *nonpredicted_bits = VP8LHistogramEstimateBitsBulk(nonpredicted);
   *predicted_bits = VP8LHistogramEstimateBitsBulk(predicted);
@@ -143,24 +144,35 @@ static int VP8LEncAnalyze(VP8LEncoder* const enc, WebPImageHint image_hint) {
   const WebPPicture* const pic = enc->pic_;
   assert(pic != NULL && pic->argb != NULL);
 
-  enc->use_palette_ = (image_hint == WEBP_HINT_GRAPH) ? 0 :
+  enc->use_palette_ =
       AnalyzeAndCreatePalette(pic, enc->palette_, &enc->palette_size_);
-  if (!enc->use_palette_) {
-    if (image_hint == WEBP_HINT_DEFAULT) {
-      double non_pred_entropy, pred_entropy;
-      if (!AnalyzeEntropy(pic, &non_pred_entropy, &pred_entropy)) {
-        return 0;
-      }
 
-      if (pred_entropy < 0.95 * non_pred_entropy) {
-        enc->use_predict_ = 1;
-        enc->use_cross_color_ = 1;
-      }
-    } else if (image_hint == WEBP_HINT_PHOTO) {
-      enc->use_predict_ = 1;
-      enc->use_cross_color_ = 1;
+  if (image_hint == WEBP_HINT_GRAPH) {
+    if (enc->use_palette_ && enc->palette_size_ < MAX_COLORS_FOR_GRAPH) {
+      enc->use_palette_ = 0;
     }
   }
+
+  if (!enc->use_palette_) {
+    if (image_hint == WEBP_HINT_PHOTO) {
+      enc->use_predict_ = 1;
+      enc->use_cross_color_ = 1;
+    } else {
+      double non_pred_entropy, pred_entropy;
+      if (!AnalyzeEntropy(pic->argb, pic->width, pic->height, pic->argb_stride,
+                          &non_pred_entropy, &pred_entropy)) {
+        return 0;
+      }
+      if (pred_entropy < 0.95 * non_pred_entropy) {
+        enc->use_predict_ = 1;
+        // TODO(vikasa): Observed some correlation of cross_color transform with
+        // predict. Need to investigate this further and add separate heuristic
+        // for setting use_cross_color flag.
+        enc->use_cross_color_ = 1;
+      }
+    }
+  }
+
   return 1;
 }
 
@@ -961,6 +973,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   if (enc->use_palette_) {
     err = ApplyPalette(bw, enc, quality);
     if (err != VP8_ENC_OK) goto Error;
+    // Color cache is disabled for palette.
     enc->cache_bits_ = 0;
   }
 
