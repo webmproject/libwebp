@@ -797,19 +797,6 @@ static void ClearTransform(VP8LTransform* const transform) {
   transform->data_ = NULL;
 }
 
-static void ApplyInverseTransforms(VP8LDecoder* const dec, int start_idx,
-                                   uint32_t* const decoded_data) {
-  int n = dec->next_transform_;
-  assert(start_idx >= 0);
-  while (n-- > start_idx) {
-    VP8LTransform* const transform = &dec->transforms_[n];
-    VP8LInverseTransform(transform, 0, transform->ysize_,
-                         decoded_data, decoded_data);
-    ClearTransform(transform);
-  }
-  dec->next_transform_ = start_idx;
-}
-
 // For security reason, we need to remap the color map to span
 // the total possible bundled values, and not just the num_colors.
 static int ExpandColorMap(int num_colors, VP8LTransform* const transform) {
@@ -964,7 +951,6 @@ static int DecodeImageStream(int xsize, int ysize,
   VP8LBitReader* const br = &dec->br_;
   VP8LMetadata* const hdr = &dec->hdr_;
   uint32_t* data = NULL;
-  const int transform_start_idx = dec->next_transform_;
   int color_cache_bits = 0;
 
   // Read the transforms (may recurse).
@@ -1023,9 +1009,6 @@ static int DecodeImageStream(int xsize, int ysize,
   // Use the Huffman trees to decode the LZ77 encoded data.
   ok = DecodeImageData(dec, data, transform_xsize, transform_ysize, NULL);
   ok = ok && !br->error_;
-
-  // Apply transforms on the decoded data.
-  if (ok) ApplyInverseTransforms(dec, transform_start_idx, data);
 
  End:
 
