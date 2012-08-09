@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAPH//3YE\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 619,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-08-09T20:51:13Z",
+      "side": 1,
+      "message": "i still see four missing spaces... (in gerrit)",
+      "revId": "f56e98fd11e687175ccc7f52f13f28c7df5419de",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
