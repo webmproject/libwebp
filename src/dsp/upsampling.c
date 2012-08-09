@@ -271,8 +271,7 @@ static void ApplyAlphaMultiply(uint8_t* rgba, int alpha_first,
 
 // rgbA4444
 
-#define MULTIPLIER(a)  ((a) * 0x11)
-#define PREMULTIPLY(x, m) (((x) * (m)) >> 12)
+#define MULTIPLIER(a)  ((a) * 0x1111)    // 0x1111 ~= (1 << 16) / 15
 
 static WEBP_INLINE uint8_t dither_hi(uint8_t x) {
   return (x & 0xf0) | (x >> 4);
@@ -282,24 +281,27 @@ static WEBP_INLINE uint8_t dither_lo(uint8_t x) {
   return (x & 0x0f) | (x << 4);
 }
 
+static WEBP_INLINE uint8_t multiply(uint8_t x, uint32_t m) {
+  return (x * m) >> 16;
+}
+
 static void ApplyAlphaMultiply4444(uint8_t* rgba4444,
                                    int w, int h, int stride) {
   while (h-- > 0) {
     int i;
     for (i = 0; i < w; ++i) {
-      const uint8_t a = dither_lo(rgba4444[2 * i + 1]);
+      const uint8_t a = (rgba4444[2 * i + 1] & 0x0f);
       const uint32_t mult = MULTIPLIER(a);
-      const uint8_t r = PREMULTIPLY(dither_hi(rgba4444[2 * i + 0]), mult);
-      const uint8_t g = PREMULTIPLY(dither_lo(rgba4444[2 * i + 0]), mult);
-      const uint8_t b = PREMULTIPLY(dither_hi(rgba4444[2 * i + 1]), mult);
-      rgba4444[2 * i + 0] = (r & 0xf0) | (g & 0x0f);
+      const uint8_t r = multiply(dither_hi(rgba4444[2 * i + 0]), mult);
+      const uint8_t g = multiply(dither_lo(rgba4444[2 * i + 0]), mult);
+      const uint8_t b = multiply(dither_hi(rgba4444[2 * i + 1]), mult);
+      rgba4444[2 * i + 0] = (r & 0xf0) | ((g >> 4) & 0x0f);
       rgba4444[2 * i + 1] = (b & 0xf0) | a;
     }
     rgba4444 += stride;
   }
 }
 #undef MULTIPLIER
-#undef PREMULTIPLY
 
 void (*WebPApplyAlphaMultiply)(uint8_t*, int, int, int, int)
     = ApplyAlphaMultiply;
