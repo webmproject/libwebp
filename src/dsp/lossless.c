@@ -989,7 +989,7 @@ void VP8LInverseTransform(const VP8LTransform* const transform,
         memmove(src, out, in_stride * sizeof(*src));
         ColorIndexInverseTransform(transform, row_start, row_end, src, out);
       } else {
-      ColorIndexInverseTransform(transform, row_start, row_end, in, out);
+        ColorIndexInverseTransform(transform, row_start, row_end, in, out);
       }
       break;
   }

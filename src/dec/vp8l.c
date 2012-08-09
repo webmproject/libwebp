@@ -616,7 +616,7 @@ static WEBP_INLINE HTreeGroup* GetHtreeGroupForPos(VP8LMetadata* const hdr,
 typedef void (*ProcessRowsFunc)(VP8LDecoder* const dec, int row);
 
 static void ApplyInverseTransforms(VP8LDecoder* const dec, int num_rows,
-                            const uint32_t* const rows) {
+                                   const uint32_t* const rows) {
   int n = dec->next_transform_;
   const int cache_pixs = dec->width_ * num_rows;
   const int start_row = dec->last_row_;
