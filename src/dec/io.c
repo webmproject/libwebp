@@ -196,6 +196,7 @@ static int EmitAlphaRGB(const VP8Io* const io, WebPDecParams* const p) {
     const WebPRGBABuffer* const buf = &p->output->u.RGBA;
     int start_y = io->mb_y;
     int num_rows = mb_h;
+    uint32_t alpha_mask = 0xff;
 
     // We compensate for the 1-line delay of fancy upscaler.
     // This is similar to EmitFancyRGB().
@@ -219,11 +220,16 @@ static int EmitAlphaRGB(const VP8Io* const io, WebPDecParams* const p) {
       uint8_t* const base_rgba = buf->rgba + start_y * buf->stride;
       uint8_t* dst = base_rgba + (alpha_first ? 0 : 3);
       for (j = 0; j < num_rows; ++j) {
-        for (i = 0; i < mb_w; ++i) dst[4 * i] = alpha[i];
+        for (i = 0; i < mb_w; ++i) {
+          const uint32_t alpha_value = alpha[i];
+          dst[4 * i] = alpha_value;
+          alpha_mask &= alpha_value;
+        }
         alpha += io->width;
         dst += buf->stride;
       }
-      if (WebPIsPremultipliedMode(colorspace)) {
+      // alpha_mask is < 0xff if there's non-trivial alpha to premultiply with.
+      if (alpha_mask != 0xff && WebPIsPremultipliedMode(colorspace)) {
         WebPApplyAlphaMultiply(base_rgba, alpha_first,
                                mb_w, num_rows, buf->stride);
       }
@@ -241,16 +247,18 @@ static int EmitAlphaRGBA4444(const VP8Io* const io, WebPDecParams* const p) {
     const WebPRGBABuffer* const buf = &p->output->u.RGBA;
     uint8_t* const base_rgba = buf->rgba + io->mb_y * buf->stride;
     uint8_t* alpha_dst = base_rgba + 1;
+    uint32_t alpha_mask = 0x0f;
     for (j = 0; j < mb_h; ++j) {
       for (i = 0; i < mb_w; ++i) {
         // Fill in the alpha value (converted to 4 bits).
-        const uint32_t alpha_val = VP8Clip4Bits(alpha[i]);
-        alpha_dst[2 * i] = (alpha_dst[2 * i] & 0xf0) | alpha_val;
+        const uint32_t alpha_value = VP8Clip4Bits(alpha[i]);
+        alpha_dst[2 * i] = (alpha_dst[2 * i] & 0xf0) | alpha_value;
+        alpha_mask &= alpha_value;
       }
       alpha += io->width;
       alpha_dst += buf->stride;
     }
-    if (p->output->colorspace == MODE_rgbA_4444) {
+    if (alpha_mask != 0x0f && p->output->colorspace == MODE_rgbA_4444) {
       WebPApplyAlphaMultiply4444(base_rgba, mb_w, mb_h, buf->stride);
     }
   }
@@ -396,17 +404,22 @@ static int ExportAlpha(WebPDecParams* const p, int y_pos) {
   uint8_t* dst = base_rgba + (alpha_first ? 0 : 3);
   int num_lines_out = 0;
   const int is_premult_alpha = WebPIsPremultipliedMode(colorspace);
+  uint32_t alpha_mask = 0xff;
   const int width = p->scaler_a.dst_width;
 
   while (WebPRescalerHasPendingOutput(&p->scaler_a)) {
     int i;
     assert(p->last_y + y_pos + num_lines_out < p->output->height);
     WebPRescalerExportRow(&p->scaler_a);
-    for (i = 0; i < width; ++i) dst[4 * i] = p->scaler_a.dst[i];
+    for (i = 0; i < width; ++i) {
+      const uint32_t alpha_value = p->scaler_a.dst[i];
+      dst[4 * i] = alpha_value;
+      alpha_mask &= alpha_value;
+    }
     dst += buf->stride;
     ++num_lines_out;
   }
-  if (is_premult_alpha) {
+  if (is_premult_alpha && alpha_mask != 0xff) {
     WebPApplyAlphaMultiply(base_rgba, alpha_first,
                            width, num_lines_out, buf->stride);
   }
@@ -421,6 +434,7 @@ static int ExportAlphaRGBA4444(WebPDecParams* const p, int y_pos) {
   const WEBP_CSP_MODE colorspace = p->output->colorspace;
   const int width = p->scaler_a.dst_width;
   const int is_premult_alpha = WebPIsPremultipliedMode(colorspace);
+  uint32_t alpha_mask = 0x0f;
 
   while (WebPRescalerHasPendingOutput(&p->scaler_a)) {
     int i;
@@ -428,13 +442,14 @@ static int ExportAlphaRGBA4444(WebPDecParams* const p, int y_pos) {
     WebPRescalerExportRow(&p->scaler_a);
     for (i = 0; i < width; ++i) {
       // Fill in the alpha value (converted to 4 bits).
-      const uint32_t alpha_val = VP8Clip4Bits(p->scaler_a.dst[i]);
-      alpha_dst[2 * i] = (alpha_dst[2 * i] & 0xf0) | alpha_val;
+      const uint32_t alpha_value = VP8Clip4Bits(p->scaler_a.dst[i]);
+      alpha_dst[2 * i] = (alpha_dst[2 * i] & 0xf0) | alpha_value;
+      alpha_mask &= alpha_value;
     }
     alpha_dst += buf->stride;
     ++num_lines_out;
   }
-  if (is_premult_alpha) {
+  if (is_premult_alpha && alpha_mask != 0x0f) {
     WebPApplyAlphaMultiply4444(base_rgba, width, num_lines_out, buf->stride);
   }
   return num_lines_out;
