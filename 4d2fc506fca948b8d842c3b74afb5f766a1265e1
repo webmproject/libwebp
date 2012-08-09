@@ -34,6 +34,24 @@
       "revId": "4d2fc506fca948b8d842c3b74afb5f766a1265e1",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAPH//3eo\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 619,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-08-09T19:54:55Z",
+      "side": 1,
+      "message": "It\u0027s good in this patchset; lossless.c had some whitespace issues too from:\n\nhttps://gerrit.chromium.org/gerrit/#/c/29653/3",
+      "parentUuid": "AAAAPH//3qA\u003d",
+      "revId": "4d2fc506fca948b8d842c3b74afb5f766a1265e1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
