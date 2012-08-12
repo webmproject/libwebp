@@ -261,7 +261,7 @@ static int EmitAlphaRGBA4444(const VP8Io* const io, WebPDecParams* const p) {
       for (j = 0; j < num_rows; ++j) {
         for (i = 0; i < mb_w; ++i) {
           // Fill in the alpha value (converted to 4 bits).
-          const uint32_t alpha_value = VP8Clip4Bits(alpha[i]);
+          const uint32_t alpha_value = alpha[i] >> 4;
           alpha_dst[2 * i] = (alpha_dst[2 * i] & 0xf0) | alpha_value;
           alpha_mask &= alpha_value;
         }
@@ -453,7 +453,7 @@ static int ExportAlphaRGBA4444(WebPDecParams* const p, int y_pos) {
     WebPRescalerExportRow(&p->scaler_a);
     for (i = 0; i < width; ++i) {
       // Fill in the alpha value (converted to 4 bits).
-      const uint32_t alpha_value = VP8Clip4Bits(p->scaler_a.dst[i]);
+      const uint32_t alpha_value = p->scaler_a.dst[i] >> 4;
       alpha_dst[2 * i] = (alpha_dst[2 * i] & 0xf0) | alpha_value;
       alpha_mask &= alpha_value;
     }

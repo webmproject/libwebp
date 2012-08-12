@@ -90,11 +90,6 @@ static WEBP_INLINE void VP8YuvToRgba(uint8_t y, uint8_t u, uint8_t v,
   rgba[3] = 0xff;
 }
 
-static WEBP_INLINE uint32_t VP8Clip4Bits(uint8_t c) {
-  const uint32_t v = (c + 8) >> 4;
-  return (v > 15) ? 15 : v;
-}
-
 // Must be called before everything, to initialize the tables.
 void VP8YUVInit(void);
 
