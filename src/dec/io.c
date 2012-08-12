@@ -184,38 +184,45 @@ static int EmitAlphaYUV(const VP8Io* const io, WebPDecParams* const p) {
   return 0;
 }
 
+static int GetAlphaSourceRow(const VP8Io* const io,
+                             const uint8_t** alpha, int* const num_rows) {
+  int start_y = io->mb_y;
+  *num_rows = io->mb_h;
+
+  // Compensate for the 1-line delay of the fancy upscaler.
+  // This is similar to EmitFancyRGB().
+  if (io->fancy_upsampling) {
+    if (start_y == 0) {
+      // We don't process the last row yet. It'll be done during the next call.
+      --*num_rows;
+    } else {
+      --start_y;
+      // Fortunately, *alpha data is persistent, so we can go back
+      // one row and finish alpha blending, now that the fancy upscaler
+      // completed the YUV->RGB interpolation.
+      *alpha -= io->width;
+    }
+    if (io->crop_top + io->mb_y + io->mb_h == io->crop_bottom) {
+      // If it's the very last call, we process all the remaing rows!
+      *num_rows = io->crop_bottom - io->crop_top - start_y;
+    }
+  }
+  return start_y;
+}
+
 static int EmitAlphaRGB(const VP8Io* const io, WebPDecParams* const p) {
   const uint8_t* alpha = io->a;
   if (alpha != NULL) {
     const int mb_w = io->mb_w;
-    const int mb_h = io->mb_h;
     int i, j;
     const WEBP_CSP_MODE colorspace = p->output->colorspace;
     const int alpha_first =
         (colorspace == MODE_ARGB || colorspace == MODE_Argb);
     const WebPRGBABuffer* const buf = &p->output->u.RGBA;
-    int start_y = io->mb_y;
-    int num_rows = mb_h;
+    int num_rows;
+    const int start_y = GetAlphaSourceRow(io, &alpha, &num_rows);
     uint32_t alpha_mask = 0xff;
 
-    // We compensate for the 1-line delay of fancy upscaler.
-    // This is similar to EmitFancyRGB().
-    if (io->fancy_upsampling) {
-      if (start_y == 0) {
-        // We don't process the last row yet. It'll be done during next call.
-        --num_rows;
-      } else {
-        --start_y;
-        // Fortunately, *alpha data is persistent, so we can go back
-        // one row and finish alpha blending, now that the fancy upscaler
-        // completed the YUV->RGB interpolation.
-        alpha -= io->width;
-      }
-      if (io->crop_top + io->mb_y + mb_h == io->crop_bottom) {
-        // If it's the very last call, we process all the remaing rows!
-        num_rows = io->crop_bottom - io->crop_top - start_y;
-      }
-    }
     {
       uint8_t* const base_rgba = buf->rgba + start_y * buf->stride;
       uint8_t* dst = base_rgba + (alpha_first ? 0 : 3);
@@ -242,24 +249,28 @@ static int EmitAlphaRGBA4444(const VP8Io* const io, WebPDecParams* const p) {
   const uint8_t* alpha = io->a;
   if (alpha != NULL) {
     const int mb_w = io->mb_w;
-    const int mb_h = io->mb_h;
     int i, j;
     const WebPRGBABuffer* const buf = &p->output->u.RGBA;
-    uint8_t* const base_rgba = buf->rgba + io->mb_y * buf->stride;
-    uint8_t* alpha_dst = base_rgba + 1;
+    int num_rows;
+    const int start_y = GetAlphaSourceRow(io, &alpha, &num_rows);
     uint32_t alpha_mask = 0x0f;
-    for (j = 0; j < mb_h; ++j) {
-      for (i = 0; i < mb_w; ++i) {
-        // Fill in the alpha value (converted to 4 bits).
-        const uint32_t alpha_value = VP8Clip4Bits(alpha[i]);
-        alpha_dst[2 * i] = (alpha_dst[2 * i] & 0xf0) | alpha_value;
-        alpha_mask &= alpha_value;
+
+    {
+      uint8_t* const base_rgba = buf->rgba + start_y * buf->stride;
+      uint8_t* alpha_dst = base_rgba + 1;
+      for (j = 0; j < num_rows; ++j) {
+        for (i = 0; i < mb_w; ++i) {
+          // Fill in the alpha value (converted to 4 bits).
+          const uint32_t alpha_value = VP8Clip4Bits(alpha[i]);
+          alpha_dst[2 * i] = (alpha_dst[2 * i] & 0xf0) | alpha_value;
+          alpha_mask &= alpha_value;
+        }
+        alpha += io->width;
+        alpha_dst += buf->stride;
       }
-      alpha += io->width;
-      alpha_dst += buf->stride;
-    }
-    if (alpha_mask != 0x0f && p->output->colorspace == MODE_rgbA_4444) {
-      WebPApplyAlphaMultiply4444(base_rgba, mb_w, mb_h, buf->stride);
+      if (alpha_mask != 0x0f && p->output->colorspace == MODE_rgbA_4444) {
+        WebPApplyAlphaMultiply4444(base_rgba, mb_w, num_rows, buf->stride);
+      }
     }
   }
   return 0;
