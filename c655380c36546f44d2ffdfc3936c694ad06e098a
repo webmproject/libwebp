@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAPH//x4c\u003d",
+        "filename": "src/dec/io.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-08-16T15:42:53Z",
+      "side": 1,
+      "message": "why not use MODE_rgbA_4444 explicitly?\nWebPApplyAlphaMultiply4444() really can\u0027t work with anything else than this mode...\nOr maybe we\u0027ll have a bgrA_4444 mode someday?",
+      "revId": "c655380c36546f44d2ffdfc3936c694ad06e098a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
