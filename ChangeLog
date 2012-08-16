@@ -1,3 +1,14 @@
+c655380 dec/io.c: cosmetics
+fe1958f RGBA4444: harmonize lossless/lossy alpha values
+681cb30 fix RGBA4444 output w/fancy upsampling
+f06c1d8 Merge "Alignment fix" into 0.2.0
+f56e98f Alignment fix
+6fe843b avoid rgb-premultiply if there's only trivial alpha values
+528a11a fix the ARGB4444 premultiply arithmetic
+a0a4885 Lossless decoder fix for a special transform order
+62dd9bb Update encoding heuristic w.r.t palette colors.
+6f4272b remove unused ApplyInverseTransform()
+93bf0fa Update ChangeLog (v0.2.0-rc1)
 5934fc5 update AUTHORS
 014a711 update NEWS
 43b0d61 add support for ARGB -> YUVA conversion for lossless decoder
