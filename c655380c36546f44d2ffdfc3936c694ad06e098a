@@ -16,6 +16,24 @@
       "revId": "c655380c36546f44d2ffdfc3936c694ad06e098a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAPH//xpk\u003d",
+        "filename": "src/dec/io.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-08-16T18:33:12Z",
+      "side": 1,
+      "message": "it\u0027s excessive, true. was just looking for some symmetry with EmitAlphaRGB",
+      "parentUuid": "AAAAPH//x4c\u003d",
+      "revId": "c655380c36546f44d2ffdfc3936c694ad06e098a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
