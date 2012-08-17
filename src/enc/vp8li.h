@@ -38,6 +38,7 @@ typedef struct {
 
   // Encoding parameters derived from image characteristics.
   int use_cross_color_;
+  int use_subtract_green_;
   int use_predict_;
   int use_palette_;
   int palette_size_;

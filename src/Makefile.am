@@ -20,7 +20,7 @@ libwebp_la_LIBADD += dsp/libwebpdsp.la
 libwebp_la_LIBADD += enc/libwebpencode.la
 libwebp_la_LIBADD += utils/libwebputils.la
 
-libwebp_la_LDFLAGS = -version-info 3:0:0
+libwebp_la_LDFLAGS = -version-info 4:0:0
 libwebpincludedir = $(includedir)/webp
 
 pkgconfig_DATA = libwebp.pc

@@ -27,8 +27,8 @@ extern "C" {
 
 // version numbers
 #define DEC_MAJ_VERSION 0
-#define DEC_MIN_VERSION 1
-#define DEC_REV_VERSION 99
+#define DEC_MIN_VERSION 2
+#define DEC_REV_VERSION 0
 
 #define ONLY_KEYFRAME_CODE      // to remove any code related to P-Frames
 

@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "./huffman_encode.h"
+#include "../utils/utils.h"
 #include "../webp/format_constants.h"
 
 // -----------------------------------------------------------------------------
@@ -196,7 +197,7 @@ static int GenerateOptimalTree(const int* const histogram, int histogram_size,
   // population and all the inserted nodes combining two existing nodes.
   // The tree pool needs 2 * (tree_size_orig - 1) entities, and the
   // tree needs exactly tree_size_orig entities.
-  tree = (HuffmanTree*)malloc(3 * tree_size_orig * sizeof(*tree));
+  tree = (HuffmanTree*)WebPSafeMalloc(3ULL * tree_size_orig, sizeof(*tree));
   if (tree == NULL) return 0;
   tree_pool = tree + tree_size_orig;
 

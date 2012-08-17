@@ -16,6 +16,7 @@
 
 #include "./vp8enci.h"
 #include "./vp8li.h"
+#include "../utils/utils.h"
 
 // #define PRINT_MEMORY_INFO
 
@@ -164,13 +165,14 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
       config->autofilter ? sizeof(LFStats) + ALIGN_CST : 0;
   VP8Encoder* enc;
   uint8_t* mem;
-  size_t size = sizeof(VP8Encoder) + ALIGN_CST  // main struct
-              + cache_size                      // working caches
-              + info_size                       // modes info
-              + preds_size                      // prediction modes
-              + samples_size                    // top/left samples
-              + nz_size                         // coeff context bits
-              + lf_stats_size;                  // autofilter stats
+  const uint64_t size = (uint64_t)sizeof(VP8Encoder)   // main struct
+                      + ALIGN_CST                      // cache alignment
+                      + cache_size                     // working caches
+                      + info_size                      // modes info
+                      + preds_size                     // prediction modes
+                      + samples_size                   // top/left samples
+                      + nz_size                        // coeff context bits
+                      + lf_stats_size;                 // autofilter stats
 
 #ifdef PRINT_MEMORY_INFO
   printf("===================================\n");
@@ -198,7 +200,7 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
          mb_w * mb_h * 384 * sizeof(uint8_t));
   printf("===================================\n");
 #endif
-  mem = (uint8_t*)malloc(size);
+  mem = (uint8_t*)WebPSafeMalloc(size, sizeof(*mem));
   if (mem == NULL) {
     WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
     return NULL;
@@ -284,6 +286,7 @@ static void FinalizePSNR(const VP8Encoder* const enc) {
   stats->PSNR[1] = (float)GetPSNR(sse[1], size / 4);
   stats->PSNR[2] = (float)GetPSNR(sse[2], size / 4);
   stats->PSNR[3] = (float)GetPSNR(sse[0] + sse[1] + sse[2], size * 3 / 2);
+  stats->PSNR[4] = (float)GetPSNR(sse[3], size);
 }
 
 static void StoreStats(VP8Encoder* const enc) {
@@ -342,6 +345,8 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
     return WebPEncodingSetError(pic, VP8_ENC_ERROR_BAD_DIMENSION);
   if (pic->width > WEBP_MAX_DIMENSION || pic->height > WEBP_MAX_DIMENSION)
     return WebPEncodingSetError(pic, VP8_ENC_ERROR_BAD_DIMENSION);
+
+  if (pic->stats != NULL) memset(pic->stats, 0, sizeof(*pic->stats));
 
   if (!config->lossless) {
     VP8Encoder* enc = NULL;

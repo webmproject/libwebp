@@ -5,7 +5,7 @@
 //  Additional IP Rights Grant:  http://www.webmproject.org/license/additional/
 // -----------------------------------------------------------------------------
 //
-// inline YUV->RGB conversion function
+// inline YUV<->RGB conversion function
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
@@ -13,6 +13,9 @@
 #define WEBP_DSP_YUV_H_
 
 #include "../dec/decode_vp8.h"
+
+//------------------------------------------------------------------------------
+// YUV -> RGB conversion
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -87,13 +90,36 @@ static WEBP_INLINE void VP8YuvToRgba(uint8_t y, uint8_t u, uint8_t v,
   rgba[3] = 0xff;
 }
 
-static WEBP_INLINE uint32_t VP8Clip4Bits(uint8_t c) {
-  const uint32_t v = (c + 8) >> 4;
-  return (v > 15) ? 15 : v;
-}
-
 // Must be called before everything, to initialize the tables.
 void VP8YUVInit(void);
+
+//------------------------------------------------------------------------------
+// RGB -> YUV conversion
+// The exact naming is Y'CbCr, following the ITU-R BT.601 standard.
+// More information at: http://en.wikipedia.org/wiki/YCbCr
+// Y = 0.2569 * R + 0.5044 * G + 0.0979 * B + 16
+// U = -0.1483 * R - 0.2911 * G + 0.4394 * B + 128
+// V = 0.4394 * R - 0.3679 * G - 0.0715 * B + 128
+// We use 16bit fixed point operations.
+
+static WEBP_INLINE int VP8ClipUV(int v) {
+   v = (v + (257 << (YUV_FIX + 2 - 1))) >> (YUV_FIX + 2);
+   return ((v & ~0xff) == 0) ? v : (v < 0) ? 0 : 255;
+}
+
+static WEBP_INLINE int VP8RGBToY(int r, int g, int b) {
+  const int kRound = (1 << (YUV_FIX - 1)) + (16 << YUV_FIX);
+  const int luma = 16839 * r + 33059 * g + 6420 * b;
+  return (luma + kRound) >> YUV_FIX;  // no need to clip
+}
+
+static WEBP_INLINE int VP8RGBToU(int r, int g, int b) {
+  return VP8ClipUV(-9719 * r - 19081 * g + 28800 * b);
+}
+
+static WEBP_INLINE int VP8RGBToV(int r, int g, int b) {
+  return VP8ClipUV(+28800 * r - 24116 * g - 4684 * b);
+}
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

@@ -26,8 +26,8 @@ extern "C" {
 
 // version numbers
 #define ENC_MAJ_VERSION 0
-#define ENC_MIN_VERSION 1
-#define ENC_REV_VERSION 99
+#define ENC_MIN_VERSION 2
+#define ENC_REV_VERSION 0
 
 // size of histogram used by CollectHistogram.
 #define MAX_COEFF_THRESH   64
@@ -402,7 +402,7 @@ struct VP8Encoder {
 
   // probabilities and statistics
   VP8Proba proba_;
-  uint64_t sse_[3];        // sum of Y/U/V squared errors for all macroblocks
+  uint64_t sse_[4];        // sum of Y/U/V/A squared errors for all macroblocks
   uint64_t sse_count_;     // pixel count for the sse_[] stats
   int      coded_size_;
   int      residual_bytes_[3][4];
@@ -488,9 +488,9 @@ void VP8SetSegmentParams(VP8Encoder* const enc, float quality);
 int VP8Decimate(VP8EncIterator* const it, VP8ModeScore* const rd, int rd_opt);
 
   // in alpha.c
-void VP8EncInitAlpha(VP8Encoder* enc);           // initialize alpha compression
-int VP8EncFinishAlpha(VP8Encoder* enc);          // finalize compressed data
-void VP8EncDeleteAlpha(VP8Encoder* enc);         // delete compressed data
+void VP8EncInitAlpha(VP8Encoder* const enc);    // initialize alpha compression
+int VP8EncFinishAlpha(VP8Encoder* const enc);   // finalize compressed data
+void VP8EncDeleteAlpha(VP8Encoder* const enc);  // delete compressed data
 
   // in layer.c
 void VP8EncInitLayer(VP8Encoder* const enc);     // init everything

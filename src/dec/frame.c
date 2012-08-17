@@ -11,6 +11,7 @@
 
 #include <stdlib.h>
 #include "./vp8i.h"
+#include "../utils/utils.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -435,11 +436,12 @@ static int AllocateMemory(VP8Decoder* const dec) {
   if (needed > dec->mem_size_) {
     free(dec->mem_);
     dec->mem_size_ = 0;
-    dec->mem_ = (uint8_t*)malloc((size_t)needed);
+    dec->mem_ = WebPSafeMalloc(needed, sizeof(uint8_t));
     if (dec->mem_ == NULL) {
       return VP8SetError(dec, VP8_STATUS_OUT_OF_MEMORY,
                          "no memory during frame initialization.");
     }
+    // down-cast is ok, thanks to WebPSafeAlloc() above.
     dec->mem_size_ = (size_t)needed;
   }
 

@@ -20,6 +20,8 @@ libwebputils_la_SOURCES += rescaler.c
 libwebputils_la_SOURCES += rescaler.h
 libwebputils_la_SOURCES += thread.c
 libwebputils_la_SOURCES += thread.h
+libwebputils_la_SOURCES += utils.c
+libwebputils_la_SOURCES += utils.h
 
 libwebputilsinclude_HEADERS = ../webp/types.h
 libwebputilsincludedir = $(includedir)/webp

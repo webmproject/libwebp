@@ -120,7 +120,7 @@ int WebPValidateConfig(const WebPConfig* config) {
     return 0;
   if (config->lossless < 0 || config->lossless > 1)
     return 0;
-  if (config->image_hint > WEBP_HINT_PHOTO)
+  if (config->image_hint >= WEBP_HINT_LAST)
     return 0;
   return 1;
 }

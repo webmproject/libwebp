@@ -61,6 +61,8 @@ typedef struct {
   VP8LDecodeState  state_;
   VP8Io           *io_;
 
+  const WebPDecBuffer *output_;    // shortcut to io->opaque->output
+
   uint32_t        *argb_;          // Internal data: always in BGRA color mode.
   uint32_t        *argb_cache_;    // Scratch buffer for temporary BGRA storage.
 

@@ -1,3 +1,10 @@
+- 8/3/12: version 0.2.0
+  * Add support for ARGB -> YUVA conversion for lossless decoder
+    New functions: WebPINewYUVA, WebPIDecGetYUVA
+  * Add stats for lossless and alpha encoding
+  * Security related hardening: allocation and size checks
+  * Add PAM output support to dwebp
+
 - 7/19/12: version 0.1.99
   * This is a pre-release of 0.2.0, not an rc to allow for further
     incompatible changes based on user feedback.

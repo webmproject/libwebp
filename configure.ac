@@ -1,6 +1,6 @@
-AC_INIT([libwebp], [0.1.99],
+AC_INIT([libwebp], [0.2.0],
         [http://code.google.com/p/webp/issues],,
-        [http://code.google.com/speed/webp])
+        [http://developers.google.com/speed/webp])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 AC_PROG_LIBTOOL
@@ -28,11 +28,6 @@ AC_DEFUN([WITHLIB_OPTION],
                AS_HELP_STRING([--with-$1libdir=DIR],
                               [use $2 libraries from DIR]),
                [$2_LIBS="-L$withval"])])
-
-dnl === Check for native log2
-AC_SEARCH_LIBS([log2], [m],,
-               [AC_DEFINE([NOT_HAVE_LOG2], [1],
-                          [Undefine this if you have log2().])])
 
 dnl === Check for pthread support
 AC_ARG_ENABLE([threading],

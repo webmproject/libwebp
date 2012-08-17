@@ -15,6 +15,7 @@
 
 #include "./webpi.h"
 #include "./vp8i.h"
+#include "../utils/utils.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -143,14 +144,15 @@ static int AppendToMemBuffer(WebPIDecoder* const idec,
 
   if (mem->end_ + data_size > mem->buf_size_) {  // Need some free memory
     const size_t current_size = MemDataSize(mem);
-    const size_t new_size = current_size + data_size;
-    const size_t extra_size = (new_size + CHUNK_SIZE - 1) & ~(CHUNK_SIZE - 1);
-    uint8_t* const new_buf = (uint8_t*)malloc(extra_size);
+    const uint64_t new_size = (uint64_t)current_size + data_size;
+    const uint64_t extra_size = (new_size + CHUNK_SIZE - 1) & ~(CHUNK_SIZE - 1);
+    uint8_t* const new_buf =
+        (uint8_t*)WebPSafeMalloc(extra_size, sizeof(*new_buf));
     if (new_buf == NULL) return 0;
     memcpy(new_buf, old_base, current_size);
     free(mem->buf_);
     mem->buf_ = new_buf;
-    mem->buf_size_ = extra_size;
+    mem->buf_size_ = (size_t)extra_size;
     mem->start_ = 0;
     mem->end_ = current_size;
   }
@@ -534,7 +536,7 @@ static VP8StatusCode IDecode(WebPIDecoder* idec) {
 // Public functions
 
 WebPIDecoder* WebPINewDecoder(WebPDecBuffer* output_buffer) {
-  WebPIDecoder* idec = (WebPIDecoder*)calloc(1, sizeof(WebPIDecoder));
+  WebPIDecoder* idec = (WebPIDecoder*)calloc(1, sizeof(*idec));
   if (idec == NULL) {
     return NULL;
   }
@@ -565,7 +567,7 @@ WebPIDecoder* WebPIDecode(const uint8_t* data, size_t data_size,
   }
   // Create an instance of the incremental decoder
   idec = WebPINewDecoder(config ? &config->output : NULL);
-  if (!idec) {
+  if (idec == NULL) {
     return NULL;
   }
   // Finish initialization
@@ -597,7 +599,7 @@ WebPIDecoder* WebPINewRGB(WEBP_CSP_MODE mode, uint8_t* output_buffer,
   WebPIDecoder* idec;
   if (mode >= MODE_YUV) return NULL;
   idec = WebPINewDecoder(NULL);
-  if (!idec) return NULL;
+  if (idec == NULL) return NULL;
   idec->output_.colorspace = mode;
   idec->output_.is_external_memory = 1;
   idec->output_.u.RGBA.rgba = output_buffer;
@@ -606,12 +608,13 @@ WebPIDecoder* WebPINewRGB(WEBP_CSP_MODE mode, uint8_t* output_buffer,
   return idec;
 }
 
-WebPIDecoder* WebPINewYUV(uint8_t* luma, size_t luma_size, int luma_stride,
-                          uint8_t* u, size_t u_size, int u_stride,
-                          uint8_t* v, size_t v_size, int v_stride) {
+WebPIDecoder* WebPINewYUVA(uint8_t* luma, size_t luma_size, int luma_stride,
+                           uint8_t* u, size_t u_size, int u_stride,
+                           uint8_t* v, size_t v_size, int v_stride,
+                           uint8_t* a, size_t a_size, int a_stride) {
   WebPIDecoder* const idec = WebPINewDecoder(NULL);
-  if (!idec) return NULL;
-  idec->output_.colorspace = MODE_YUV;
+  if (idec == NULL) return NULL;
+  idec->output_.colorspace = (a == NULL) ? MODE_YUV : MODE_YUVA;
   idec->output_.is_external_memory = 1;
   idec->output_.u.YUVA.y = luma;
   idec->output_.u.YUVA.y_stride = luma_stride;
@@ -622,7 +625,19 @@ WebPIDecoder* WebPINewYUV(uint8_t* luma, size_t luma_size, int luma_stride,
   idec->output_.u.YUVA.v = v;
   idec->output_.u.YUVA.v_stride = v_stride;
   idec->output_.u.YUVA.v_size = v_size;
+  idec->output_.u.YUVA.a = a;
+  idec->output_.u.YUVA.a_stride = a_stride;
+  idec->output_.u.YUVA.a_size = a_size;
   return idec;
+}
+
+WebPIDecoder* WebPINewYUV(uint8_t* luma, size_t luma_size, int luma_stride,
+                          uint8_t* u, size_t u_size, int u_stride,
+                          uint8_t* v, size_t v_size, int v_stride) {
+  return WebPINewYUVA(luma, luma_size, luma_stride,
+                      u, u_size, u_stride,
+                      v, v_size, v_stride,
+                      NULL, 0, 0);
 }
 
 //------------------------------------------------------------------------------
@@ -696,15 +711,15 @@ const WebPDecBuffer* WebPIDecodedArea(const WebPIDecoder* idec,
                                       int* left, int* top,
                                       int* width, int* height) {
   const WebPDecBuffer* const src = GetOutputBuffer(idec);
-  if (left) *left = 0;
-  if (top) *top = 0;
+  if (left != NULL) *left = 0;
+  if (top != NULL) *top = 0;
   // TODO(skal): later include handling of rotations.
   if (src) {
-    if (width) *width = src->width;
-    if (height) *height = idec->params_.last_y;
+    if (width != NULL) *width = src->width;
+    if (height != NULL) *height = idec->params_.last_y;
   } else {
-    if (width) *width = 0;
-    if (height) *height = 0;
+    if (width != NULL) *width = 0;
+    if (height != NULL) *height = 0;
   }
   return src;
 }
@@ -712,35 +727,38 @@ const WebPDecBuffer* WebPIDecodedArea(const WebPIDecoder* idec,
 uint8_t* WebPIDecGetRGB(const WebPIDecoder* idec, int* last_y,
                         int* width, int* height, int* stride) {
   const WebPDecBuffer* const src = GetOutputBuffer(idec);
-  if (!src) return NULL;
+  if (src == NULL) return NULL;
   if (src->colorspace >= MODE_YUV) {
     return NULL;
   }
 
-  if (last_y) *last_y = idec->params_.last_y;
-  if (width) *width = src->width;
-  if (height) *height = src->height;
-  if (stride) *stride = src->u.RGBA.stride;
+  if (last_y != NULL) *last_y = idec->params_.last_y;
+  if (width != NULL) *width = src->width;
+  if (height != NULL) *height = src->height;
+  if (stride != NULL) *stride = src->u.RGBA.stride;
 
   return src->u.RGBA.rgba;
 }
 
-uint8_t* WebPIDecGetYUV(const WebPIDecoder* idec, int* last_y,
-                        uint8_t** u, uint8_t** v,
-                        int* width, int* height, int *stride, int* uv_stride) {
+uint8_t* WebPIDecGetYUVA(const WebPIDecoder* idec, int* last_y,
+                         uint8_t** u, uint8_t** v, uint8_t** a,
+                         int* width, int* height,
+                         int* stride, int* uv_stride, int* a_stride) {
   const WebPDecBuffer* const src = GetOutputBuffer(idec);
-  if (!src) return NULL;
+  if (src == NULL) return NULL;
   if (src->colorspace < MODE_YUV) {
     return NULL;
   }
 
-  if (last_y) *last_y = idec->params_.last_y;
-  if (u) *u = src->u.YUVA.u;
-  if (v) *v = src->u.YUVA.v;
-  if (width) *width = src->width;
-  if (height) *height = src->height;
-  if (stride) *stride = src->u.YUVA.y_stride;
-  if (uv_stride) *uv_stride = src->u.YUVA.u_stride;
+  if (last_y != NULL) *last_y = idec->params_.last_y;
+  if (u != NULL) *u = src->u.YUVA.u;
+  if (v != NULL) *v = src->u.YUVA.v;
+  if (a != NULL) *a = src->u.YUVA.a;
+  if (width != NULL) *width = src->width;
+  if (height != NULL) *height = src->height;
+  if (stride != NULL) *stride = src->u.YUVA.y_stride;
+  if (uv_stride != NULL) *uv_stride = src->u.YUVA.u_stride;
+  if (a_stride != NULL) *a_stride = src->u.YUVA.a_stride;
 
   return src->u.YUVA.y;
 }

@@ -15,7 +15,9 @@
 
 #include "./vp8enci.h"
 #include "../utils/rescaler.h"
+#include "../utils/utils.h"
 #include "../dsp/dsp.h"
+#include "../dsp/yuv.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -81,14 +83,12 @@ int WebPPictureAlloc(WebPPicture* picture) {
 
       // Security and validation checks
       if (width <= 0 || height <= 0 ||         // luma/alpha param error
-          uv_width < 0 || uv_height < 0 ||     // u/v param error
-          y_size >= (1ULL << 40) ||            // reasonable global size
-          (size_t)total_size != total_size) {  // overflow on 32bit
+          uv_width < 0 || uv_height < 0) {     // u/v param error
         return 0;
       }
       // Clear previous buffer and allocate a new one.
       WebPPictureFree(picture);   // erase previous buffer
-      mem = (uint8_t*)malloc((size_t)total_size);
+      mem = (uint8_t*)WebPSafeMalloc(total_size, sizeof(*mem));
       if (mem == NULL) return 0;
 
       // From now on, we're in the clear, we can no longer fail...
@@ -119,15 +119,12 @@ int WebPPictureAlloc(WebPPicture* picture) {
     } else {
       void* memory;
       const uint64_t argb_size = (uint64_t)width * height;
-      const uint64_t total_size = argb_size * sizeof(*picture->argb);
-      if (width <= 0 || height <= 0 ||
-          argb_size >= (1ULL << 40) ||
-          (size_t)total_size != total_size) {
+      if (width <= 0 || height <= 0) {
         return 0;
       }
       // Clear previous buffer and allocate a new one.
       WebPPictureFree(picture);   // erase previous buffer
-      memory = malloc((size_t)total_size);
+      memory = WebPSafeMalloc(argb_size, sizeof(*picture->argb));
       if (memory == NULL) return 0;
 
       // TODO(skal): align plane to cache line?
@@ -416,7 +413,7 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
   if (!WebPPictureAlloc(&tmp)) return 0;
 
   if (!pic->use_argb) {
-    work = (int32_t*)malloc(2 * width * sizeof(*work));
+    work = (int32_t*)WebPSafeMalloc(2ULL * width, sizeof(*work));
     if (work == NULL) {
       WebPPictureFree(&tmp);
       return 0;
@@ -449,7 +446,7 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
     }
 #endif
   } else {
-    work = (int32_t*)malloc(2 * width * 4 * sizeof(*work));
+    work = (int32_t*)WebPSafeMalloc(2ULL * width * 4, sizeof(*work));
     if (work == NULL) {
       WebPPictureFree(&tmp);
       return 0;
@@ -480,17 +477,17 @@ void WebPMemoryWriterInit(WebPMemoryWriter* writer) {
 int WebPMemoryWrite(const uint8_t* data, size_t data_size,
                     const WebPPicture* picture) {
   WebPMemoryWriter* const w = (WebPMemoryWriter*)picture->custom_ptr;
-  size_t next_size;
+  uint64_t next_size;
   if (w == NULL) {
     return 1;
   }
-  next_size = w->size + data_size;
+  next_size = (uint64_t)w->size + data_size;
   if (next_size > w->max_size) {
     uint8_t* new_mem;
-    size_t next_max_size = w->max_size * 2;
+    uint64_t next_max_size = 2ULL * w->max_size;
     if (next_max_size < next_size) next_max_size = next_size;
-    if (next_max_size < 8192) next_max_size = 8192;
-    new_mem = (uint8_t*)malloc(next_max_size);
+    if (next_max_size < 8192ULL) next_max_size = 8192ULL;
+    new_mem = (uint8_t*)WebPSafeMalloc(next_max_size, 1);
     if (new_mem == NULL) {
       return 0;
     }
@@ -499,7 +496,8 @@ int WebPMemoryWrite(const uint8_t* data, size_t data_size,
     }
     free(w->mem);
     w->mem = new_mem;
-    w->max_size = next_max_size;
+    // down-cast is ok, thanks to WebPSafeMalloc
+    w->max_size = (size_t)next_max_size;
   }
   if (data_size > 0) {
     memcpy(w->mem + w->size, data, data_size);
@@ -547,33 +545,6 @@ int WebPPictureHasTransparency(const WebPPicture* picture) {
 
 //------------------------------------------------------------------------------
 // RGB -> YUV conversion
-// The exact naming is Y'CbCr, following the ITU-R BT.601 standard.
-// More information at: http://en.wikipedia.org/wiki/YCbCr
-// Y = 0.2569 * R + 0.5044 * G + 0.0979 * B + 16
-// U = -0.1483 * R - 0.2911 * G + 0.4394 * B + 128
-// V = 0.4394 * R - 0.3679 * G - 0.0715 * B + 128
-// We use 16bit fixed point operations.
-
-enum { YUV_FRAC = 16 };
-
-static WEBP_INLINE int clip_uv(int v) {
-   v = (v + (257 << (YUV_FRAC + 2 - 1))) >> (YUV_FRAC + 2);
-   return ((v & ~0xff) == 0) ? v : (v < 0) ? 0 : 255;
-}
-
-static WEBP_INLINE int rgb_to_y(int r, int g, int b) {
-  const int kRound = (1 << (YUV_FRAC - 1)) + (16 << YUV_FRAC);
-  const int luma = 16839 * r + 33059 * g + 6420 * b;
-  return (luma + kRound) >> YUV_FRAC;  // no need to clip
-}
-
-static WEBP_INLINE int rgb_to_u(int r, int g, int b) {
-  return clip_uv(-9719 * r - 19081 * g + 28800 * b);
-}
-
-static WEBP_INLINE int rgb_to_v(int r, int g, int b) {
-  return clip_uv(+28800 * r - 24116 * g - 4684 * b);
-}
 
 // TODO: we can do better than simply 2x2 averaging on U/V samples.
 #define SUM4(ptr) ((ptr)[0] + (ptr)[step] + \
@@ -587,8 +558,8 @@ static WEBP_INLINE int rgb_to_v(int r, int g, int b) {
   const int r = SUM(r_ptr + src);                        \
   const int g = SUM(g_ptr + src);                        \
   const int b = SUM(b_ptr + src);                        \
-  picture->u[dst] = rgb_to_u(r, g, b);                   \
-  picture->v[dst] = rgb_to_v(r, g, b);                   \
+  picture->u[dst] = VP8RGBToU(r, g, b);                  \
+  picture->v[dst] = VP8RGBToV(r, g, b);                  \
 }
 
 #define RGB_TO_UV0(x_in, x_out, y, SUM) {                \
@@ -597,8 +568,8 @@ static WEBP_INLINE int rgb_to_v(int r, int g, int b) {
   const int r = SUM(r_ptr + src);                        \
   const int g = SUM(g_ptr + src);                        \
   const int b = SUM(b_ptr + src);                        \
-  picture->u0[dst] = rgb_to_u(r, g, b);                  \
-  picture->v0[dst] = rgb_to_v(r, g, b);                  \
+  picture->u0[dst] = VP8RGBToU(r, g, b);                 \
+  picture->v0[dst] = VP8RGBToV(r, g, b);                 \
 }
 
 static void MakeGray(WebPPicture* const picture) {
@@ -636,7 +607,7 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
     for (x = 0; x < width; ++x) {
       const int offset = step * x + y * rgb_stride;
       picture->y[x + y * picture->y_stride] =
-          rgb_to_y(r_ptr[offset], g_ptr[offset], b_ptr[offset]);
+          VP8RGBToY(r_ptr[offset], g_ptr[offset], b_ptr[offset]);
     }
   }
 
@@ -646,7 +617,7 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
       for (x = 0; x < (width >> 1); ++x) {
         RGB_TO_UV(x, y, SUM4);
       }
-      if (picture->width & 1) {
+      if (width & 1) {
         RGB_TO_UV(x, y, SUM2V);
       }
     }
