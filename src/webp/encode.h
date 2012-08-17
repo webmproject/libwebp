@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-#define WEBP_ENCODER_ABI_VERSION 0x0100    // MAJOR(8b) + MINOR(8b)
+#define WEBP_ENCODER_ABI_VERSION 0x0200    // MAJOR(8b) + MINOR(8b)
 
 // Return the encoder's version number, packed in hexadecimal using 8bits for
 // each of major/minor/revision. E.g: v2.5.7 is 0x020507.
@@ -69,7 +69,9 @@ WEBP_EXTERN(size_t) WebPEncodeLosslessBGRA(const uint8_t* bgra,
 typedef enum {
   WEBP_HINT_DEFAULT = 0,  // default preset.
   WEBP_HINT_PICTURE,      // digital picture, like portrait, inner shot
-  WEBP_HINT_PHOTO         // outdoor photograph, with natural lighting
+  WEBP_HINT_PHOTO,        // outdoor photograph, with natural lighting
+  WEBP_HINT_GRAPH,        // Discrete tone image (graph, map-tile etc).
+  WEBP_HINT_LAST
 } WebPImageHint;
 
 typedef struct {
@@ -157,7 +159,7 @@ typedef struct WebPPicture WebPPicture;   // main structure for I/O
 typedef struct {
   int coded_size;         // final size
 
-  float PSNR[4];          // peak-signal-to-noise ratio for Y/U/V/All
+  float PSNR[5];          // peak-signal-to-noise ratio for Y/U/V/All/Alpha
   int block_count[3];     // number of intra4/intra16/skipped macroblocks
   int header_bytes[2];    // approximate number of bytes spent for header
                           // and mode-partition #0
@@ -170,10 +172,16 @@ typedef struct {
   int alpha_data_size;    // size of the transparency data
   int layer_data_size;    // size of the enhancement layer data
 
-  void* user_data;        // this field is free to be set to any value and
-                          // used during callbacks (like progress-report e.g.).
+  // lossless encoder statistics
+  uint32_t lossless_features;  // bit0:predictor bit1:cross-color transform
+                               // bit2:subtract-green bit3:color indexing
+  int histogram_bits;          // number of precision bits of histogram
+  int transform_bits;          // precision bits for transform
+  int cache_bits;              // number of bits for color cache lookup
+  int palette_size;            // number of color in palette, if used
+  int lossless_size;           // final lossless size
 
-  uint32_t pad[6];        // padding for later use
+  uint32_t pad[4];        // padding for later use
 } WebPAuxStats;
 
 // Signature for output function. Should return true if writing was successful.
@@ -289,6 +297,9 @@ struct WebPPicture {
 
   // If not NULL, report progress during encoding.
   WebPProgressHook progress_hook;
+
+  void* user_data;        // this field is free to be set to any value and
+                          // used during callbacks (like progress-report e.g.).
 
   uint32_t pad3[3];       // padding for later use
 

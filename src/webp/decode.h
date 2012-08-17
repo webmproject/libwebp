@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-#define WEBP_DECODER_ABI_VERSION 0x0100    // MAJOR(8b) + MINOR(8b)
+#define WEBP_DECODER_ABI_VERSION 0x0200    // MAJOR(8b) + MINOR(8b)
 
 // Return the decoder's version number, packed in hexadecimal using 8bits for
 // each of major/minor/revision. E.g: v2.5.7 is 0x020507.
@@ -233,7 +233,7 @@ typedef enum {
 //
 //     // The above call decodes the current available buffer.
 //     // Part of the image can now be refreshed by calling to
-//     // WebPIDecGetRGB()/WebPIDecGetYUV() etc.
+//     // WebPIDecGetRGB()/WebPIDecGetYUVA() etc.
 //   }
 //   WebPIDelete(idec);
 
@@ -260,9 +260,18 @@ WEBP_EXTERN(WebPIDecoder*) WebPINewRGB(
 // will output the raw luma/chroma samples into a preallocated planes. The luma
 // plane is specified by its pointer 'luma', its size 'luma_size' and its stride
 // 'luma_stride'. Similarly, the chroma-u plane is specified by the 'u',
-// 'u_size' and 'u_stride' parameters, and the chroma-v plane by 'v', 'v_size'
-// and 'v_size'.
+// 'u_size' and 'u_stride' parameters, and the chroma-v plane by 'v'
+// and 'v_size'. And same for the alpha-plane. The 'a' pointer can be pass
+// NULL in case one is not interested in the transparency plane.
 // Returns NULL if the allocation failed.
+WEBP_EXTERN(WebPIDecoder*) WebPINewYUVA(
+    uint8_t* luma, size_t luma_size, int luma_stride,
+    uint8_t* u, size_t u_size, int u_stride,
+    uint8_t* v, size_t v_size, int v_stride,
+    uint8_t* a, size_t a_size, int a_stride);
+
+// Deprecated version of the above, without the alpha plane.
+// Kept for backward compatibility.
 WEBP_EXTERN(WebPIDecoder*) WebPINewYUV(
     uint8_t* luma, size_t luma_size, int luma_stride,
     uint8_t* u, size_t u_size, int u_stride,
@@ -296,12 +305,22 @@ WEBP_EXTERN(uint8_t*) WebPIDecGetRGB(
     const WebPIDecoder* idec, int* last_y,
     int* width, int* height, int* stride);
 
-// Same as above function to get YUV image. Returns pointer to the luma plane
-// or NULL in case of error.
-WEBP_EXTERN(uint8_t*) WebPIDecGetYUV(
+// Same as above function to get a YUVA image. Returns pointer to the luma
+// plane or NULL in case of error. If there is no alpha information
+// the alpha pointer '*a' will be returned NULL.
+WEBP_EXTERN(uint8_t*) WebPIDecGetYUVA(
     const WebPIDecoder* idec, int* last_y,
-    uint8_t** u, uint8_t** v,
-    int* width, int* height, int* stride, int* uv_stride);
+    uint8_t** u, uint8_t** v, uint8_t** a,
+    int* width, int* height, int* stride, int* uv_stride, int* a_stride);
+
+// Deprecated alpha-less version of WebPIDecGetYUVA(): it will ignore the
+// alpha information (if present). Kept for backward compatibility.
+static WEBP_INLINE uint8_t* WebPIDecGetYUV(
+    const WebPIDecoder* idec, int* last_y, uint8_t** u, uint8_t** v,
+    int* width, int* height, int* stride, int* uv_stride) {
+  return WebPIDecGetYUVA(idec, last_y, u, v, NULL, width, height,
+                         stride, uv_stride, NULL);
+}
 
 // Generic call to retrieve information about the displayable area.
 // If non NULL, the left/right/width/height pointers are filled with the visible

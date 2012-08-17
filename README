@@ -4,7 +4,7 @@
           \__\__/\____/\_____/__/ ____  ___
                 / _/ /    \    \ /  _ \/ _/
                /  \_/   / /   \ \   __/  \__
-               \____/____/\_____/_____/____/v0.1.99
+               \____/____/\_____/_____/____/v0.2.0
 
 Description:
 ============
@@ -13,7 +13,7 @@ WebP codec: library to encode and decode images in WebP format. This package
 contains the library that can be used in other programs to add WebP support,
 as well as the command line tools 'cwebp' and 'dwebp'.
 
-See http://code.google.com/speed/webp
+See http://developers.google.com/speed/webp
 
 Latest sources are available from http://www.webmproject.org/code/
 
@@ -168,7 +168,7 @@ options:
   -noalpha ............... discard any transparency information.
   -lossless .............. Encode image losslessly.
   -hint <string> ......... Specify image characteristics hint.
-                           One of: photo or picture
+                           One of: photo, picture or graph
 
   -short ................. condense printed message
   -quiet ................. don't print anything.
@@ -231,7 +231,8 @@ Usage: dwebp in_file [options] [-o out_file]
 
 Decodes the WebP image file to PNG format [Default]
 Use following options to convert into alternate image formats:
-  -ppm ......... save the raw RGB samples as color PPM
+  -pam ......... save the raw RGBA samples as a color PAM
+  -ppm ......... save the raw RGB samples as a color PPM
   -pgm ......... save the raw YUV samples as a grayscale PGM
                  file with IMC4 layout.
  Other options are:
@@ -241,6 +242,7 @@ Use following options to convert into alternate image formats:
   -mt .......... use multi-threading
   -crop <x> <y> <w> <h> ... crop output with the given rectangle
   -scale <w> <h> .......... scale the output (*after* any cropping)
+  -alpha ....... only save the alpha plane.
   -h     ....... this help message.
   -v     ....... verbose (e.g. print encoding/decoding times)
   -noasm ....... disable all assembly optimizations.
@@ -403,12 +405,12 @@ The 'idec' object must always be released (even upon an error condition) by
 calling: WebPDelete(idec).
 
 To retrieve partially decoded picture samples, one must use the corresponding
-method: WebPIDecGetRGB or WebPIDecGetYUV.
+method: WebPIDecGetRGB or WebPIDecGetYUVA.
 It will return the last displayable pixel row.
 
 Lastly, note that decoding can also be performed into a pre-allocated pixel
 buffer. This buffer must be passed when creating a WebPIDecoder, calling
-WebPINewRGB() or WebPINewYUV().
+WebPINewRGB() or WebPINewYUVA().
 
 Please have a look at the src/webp/decode.h header for further details.
 

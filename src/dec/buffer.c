@@ -13,6 +13,7 @@
 
 #include "./vp8i.h"
 #include "./webpi.h"
+#include "../utils/utils.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -50,18 +51,23 @@ static VP8StatusCode CheckDecBuffer(const WebPDecBuffer* const buffer) {
     ok &= (y_size <= buf->y_size);
     ok &= (u_size <= buf->u_size);
     ok &= (v_size <= buf->v_size);
-    ok &= (a_size <= buf->a_size);
     ok &= (buf->y_stride >= width);
     ok &= (buf->u_stride >= (width + 1) / 2);
     ok &= (buf->v_stride >= (width + 1) / 2);
-    if (buf->a) {
+    ok &= (buf->y != NULL);
+    ok &= (buf->u != NULL);
+    ok &= (buf->v != NULL);
+    if (mode == MODE_YUVA) {
       ok &= (buf->a_stride >= width);
+      ok &= (a_size <= buf->a_size);
+      ok &= (buf->a != NULL);
     }
   } else {    // RGB checks
     const WebPRGBABuffer* const buf = &buffer->u.RGBA;
     const uint64_t size = (uint64_t)buf->stride * height;
     ok &= (size <= buf->size);
     ok &= (buf->stride >= width * kModeBpp[mode]);
+    ok &= (buf->rgba != NULL);
   }
   return ok ? VP8_STATUS_OK : VP8_STATUS_INVALID_PARAM;
 }
@@ -95,14 +101,11 @@ static VP8StatusCode AllocateBuffer(WebPDecBuffer* const buffer) {
     total_size = size + 2 * uv_size + a_size;
 
     // Security/sanity checks
-    if (((size_t)total_size != total_size) || (total_size >= (1ULL << 40))) {
-      return VP8_STATUS_INVALID_PARAM;
-    }
-
-    buffer->private_memory = output = (uint8_t*)malloc((size_t)total_size);
+    output = (uint8_t*)WebPSafeMalloc(total_size, sizeof(*output));
     if (output == NULL) {
       return VP8_STATUS_OUT_OF_MEMORY;
     }
+    buffer->private_memory = output;
 
     if (!WebPIsRGBMode(mode)) {   // YUVA initialization
       WebPYUVABuffer* const buf = &buffer->u.YUVA;

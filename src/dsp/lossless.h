@@ -59,8 +59,10 @@ static WEBP_INLINE uint32_t VP8LSubSampleSize(uint32_t size,
   return (size + (1 << sampling_bits) - 1) >> sampling_bits;
 }
 
-// Faster logarithm for small integers, with the property of log(0) == 0.
-float VP8LFastLog(int v);
+// Faster logarithm for integers, with the property of log2(0) == 0.
+float VP8LFastLog2(int v);
+// Fast calculation of v * log2(v) for integer input.
+static WEBP_INLINE float VP8LFastSLog2(int v) { return VP8LFastLog2(v) * v; }
 
 // In-place difference of each component with mod 256.
 static WEBP_INLINE uint32_t VP8LSubPixels(uint32_t a, uint32_t b) {

@@ -130,6 +130,7 @@ UTILS_OBJS = \
     src/utils/quant_levels.o \
     src/utils/rescaler.o \
     src/utils/thread.o \
+    src/utils/utils.o \
 
 LIBWEBP_OBJS = $(DEC_OBJS) $(DSP_OBJS) $(ENC_OBJS) $(UTILS_OBJS)
 LIBWEBPMUX_OBJS = $(MUX_OBJS)

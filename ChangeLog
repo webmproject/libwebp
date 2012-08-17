@@ -1,3 +1,57 @@
+c655380 dec/io.c: cosmetics
+fe1958f RGBA4444: harmonize lossless/lossy alpha values
+681cb30 fix RGBA4444 output w/fancy upsampling
+f06c1d8 Merge "Alignment fix" into 0.2.0
+f56e98f Alignment fix
+6fe843b avoid rgb-premultiply if there's only trivial alpha values
+528a11a fix the ARGB4444 premultiply arithmetic
+a0a4885 Lossless decoder fix for a special transform order
+62dd9bb Update encoding heuristic w.r.t palette colors.
+6f4272b remove unused ApplyInverseTransform()
+93bf0fa Update ChangeLog (v0.2.0-rc1)
+5934fc5 update AUTHORS
+014a711 update NEWS
+43b0d61 add support for ARGB -> YUVA conversion for lossless decoder
+33705ca bump version to 0.2.0
+c40d7ef fix alpha-plane check + add extra checks
+a06f802 MODE_YUVA: set alpha to opaque if the image has none
+52a87dd Merge "silence one more warning" into 0.2.0
+3b02309 silence one more warning
+f94b04f move some RGB->YUV functions to yuv.h
+4b71ba0 README: sync [cd]webp help output
+c9ae57f man/dwebp.1: add links to output file format details
+292ec5c quiet a few 'uninitialized' warnings
+4af3f6c fix indentation
+9b261bf remove the last NOT_HAVE_LOG2 instances
+323dc4d remove use of log2(). Use VP8LFastLog2() instead.
+8c515d5 Merge "harness some malloc/calloc to use WebPSafeMalloc and WebPSafeCalloc" into 0.2.0
+d4b4bb0 Merge changes I46090628,I1a41b2ce into 0.2.0
+bff34ac harness some malloc/calloc to use WebPSafeMalloc and WebPSafeCalloc
+a3c063c Merge "extra size check for security" into 0.2.0
+5e79630 Merge "WebPEncode: clear stats at the start of encode" into 0.2.0
+f1edf62 Merge "rationalize use of color-cache" into 0.2.0
+c193331 extra size check for security
+906be65 rationalize use of color-cache
+dd1c387 Add image-hint for low-color images.
+4eb7aa6 Merge "WebPCheckMalloc() and WebPCheckCalloc():" into 0.2.0
+80cc730 WebPCheckMalloc() and WebPCheckCalloc():
+183cba8 check VP8LBitWriterInit return
+cbfa9ee lossless: fix crash on user abort
+256afef cwebp: exit immediately on version mismatch
+475d87d WebPEncode: clear stats at the start of encode
+a7cc729 fix type and conversion warnings
+7d853d7 add stats for lossless
+d39177b make QuantizeLevels() store the sum of squared error
+5955cf5 replace x*155/100 by x*101581>>16
+7d732f9 make QuantizeLevels() store the sum of squared error
+e45a446 replace x*155/100 by x*101581>>16
+159b75d cwebp output size consistency:
+cbee59e Merge commit 'v0.1.99'
+1889e9b dwebp: report -alpha option
+3bc3f7c Merge "dwebp: add PAM output support" into 0.2.0
+d919ed0 dwebp: add PAM output support
+85e215d README/manpages/configure: update website link
+c3a207b Update ChangeLog (v0.1.99)
 d1fd782 Merge "add extra precision about default values and behaviour" into 0.2.0
 efc826e add extra precision about default values and behaviour
 9f29635 header/doc clean up
@@ -14,6 +68,7 @@ c37c23e README: cosmetics
 ce90847 Merge "add some padding bytes areas for later use" into 0.2.0
 2390dab Merge "fixing the findings by Frederic Kayser to the bitstream spec" into 0.2.0
 0275159 add a very crude progress report for lossless
+a4b9b1c Remove some unused enum values.
 dd10817 rename 'use_argb_input' to 'use_argb'
 90516ae add some padding bytes areas for later use
 d03b250 fixing the findings by Frederic Kayser to the bitstream spec
@@ -46,6 +101,7 @@ c3b014d Android.mk: add missing lossless files
 8c1cc6b makefile.unix dist: explicitly name installed includes
 7f4647e Merge "clarify the colorspace naming and byte ordering of decoded samples" into 0.2.0
 cbf6972 clarify the colorspace naming and byte ordering of decoded samples
+857650c Mux: Add WebPDataInit() and remove WebPImageInfo
 ff771e7 don't install webp/decode_vp8.h
 596dff7 VP8LFillBitWindow: use 64-bit path for msvc x64 builds
 3ca7ce9 Merge "doc: remove non-finalized chunk references" into 0.2.0
