@@ -190,6 +190,8 @@ WebPMux* WebPMuxCreateInternal(const WebPData* bitstream, int copy_data,
 //------------------------------------------------------------------------------
 // Get API(s).
 
+// TODO(urvang): Change the behavior of this to return ALPHA_FLAG when the mux
+// doesn't contain a VP8X chunk, but does contain a VP8L chunk with real alpha.
 WebPMuxError WebPMuxGetFeatures(const WebPMux* mux, uint32_t* flags) {
   WebPData data;
   WebPMuxError err;
@@ -200,10 +202,7 @@ WebPMuxError WebPMuxGetFeatures(const WebPMux* mux, uint32_t* flags) {
   // Check if VP8X chunk is present.
   err = MuxGet(mux, IDX_VP8X, 1, &data);
   if (err == WEBP_MUX_NOT_FOUND) {
-    // Check if VP8/VP8L chunk is present.
-    err = WebPMuxGetImage(mux, &data);
-    WebPDataClear(&data);
-    return err;
+    return MuxValidateForImage(mux);  // Check if a single image is present.
   } else if (err != WEBP_MUX_OK) {
     return err;
   }
@@ -230,7 +229,7 @@ static uint8_t* EmitVP8XChunk(uint8_t* const dst, int width,
 }
 
 // Assemble a single image WebP bitstream from 'wpi'.
-static WebPMuxError SynthesizeBitstream(WebPMuxImage* const wpi,
+static WebPMuxError SynthesizeBitstream(const WebPMuxImage* const wpi,
                                         WebPData* const bitstream) {
   uint8_t* dst;
 
@@ -270,25 +269,6 @@ static WebPMuxError SynthesizeBitstream(WebPMuxImage* const wpi,
   return WEBP_MUX_OK;
 }
 
-WebPMuxError WebPMuxGetImage(const WebPMux* mux, WebPData* bitstream) {
-  WebPMuxError err;
-  WebPMuxImage* wpi = NULL;
-
-  if (mux == NULL || bitstream == NULL) {
-    return WEBP_MUX_INVALID_ARGUMENT;
-  }
-
-  err = MuxValidateForImage(mux);
-  if (err != WEBP_MUX_OK) return err;
-
-  // All well. Get the image.
-  err = MuxImageGetNth((const WebPMuxImage**)&mux->images_, 1, WEBP_CHUNK_IMAGE,
-                       &wpi);
-  assert(err == WEBP_MUX_OK);  // Already tested above.
-
-  return SynthesizeBitstream(wpi, bitstream);
-}
-
 WebPMuxError WebPMuxGetChunk(const WebPMux* mux, const char fourcc[4],
                              WebPData* chunk_data) {
   const CHUNK_INDEX idx = ChunkGetIndexFromFourCC(fourcc);
@@ -306,6 +286,56 @@ WebPMuxError WebPMuxGetChunk(const WebPMux* mux, const char fourcc[4],
   }
 }
 
+static WebPMuxError MuxGetImageInternal(const WebPMuxImage* const wpi,
+                                        WebPMuxFrameInfo* const info) {
+  // Set some defaults for unrelated fields.
+  info->x_offset_ = 0;
+  info->y_offset_ = 0;
+  info->duration_ = 1;
+  // Extract data for related fields.
+  info->id = ChunkGetIdFromTag(wpi->img_->tag_);
+  return SynthesizeBitstream(wpi, &info->bitstream_);
+}
+
+static WebPMuxError MuxGetFrameTileInternal(const WebPMuxImage* const wpi,
+                                            WebPMuxFrameInfo* const frame) {
+  const int is_frame = (wpi->header_->tag_ == kChunks[IDX_FRAME].tag);
+  const CHUNK_INDEX idx = is_frame ? IDX_FRAME : IDX_TILE;
+  const WebPData* frame_tile_data;
+  assert(wpi->header_ != NULL);  // Already checked by WebPMuxGetFrame().
+  // Get frame/tile chunk.
+  frame_tile_data = &wpi->header_->data_;
+  if (frame_tile_data->size_ < kChunks[idx].size) return WEBP_MUX_BAD_DATA;
+  // Extract info.
+  frame->x_offset_ = 2 * GetLE24(frame_tile_data->bytes_ + 0);
+  frame->y_offset_ = 2 * GetLE24(frame_tile_data->bytes_ + 3);
+  frame->duration_ = is_frame ? 1 + GetLE24(frame_tile_data->bytes_ + 12) : 1;
+  frame->id = ChunkGetIdFromTag(wpi->header_->tag_);
+  return SynthesizeBitstream(wpi, &frame->bitstream_);
+}
+
+WebPMuxError WebPMuxGetFrame(
+    const WebPMux* mux, uint32_t nth, WebPMuxFrameInfo* frame) {
+  WebPMuxError err;
+  WebPMuxImage* wpi;
+
+  // Sanity checks.
+  if (mux == NULL || frame == NULL) {
+    return WEBP_MUX_INVALID_ARGUMENT;
+  }
+
+  // Get the nth WebPMuxImage.
+  err = MuxImageGetNth((const WebPMuxImage**)&mux->images_, nth, &wpi);
+  if (err != WEBP_MUX_OK) return err;
+
+  // Get frame info.
+  if (wpi->header_ == NULL) {
+    return MuxGetImageInternal(wpi, frame);
+  } else {
+    return MuxGetFrameTileInternal(wpi, frame);
+  }
+}
+
 WebPMuxError WebPMuxGetLoopCount(const WebPMux* mux, int* loop_count) {
   WebPData image;
   WebPMuxError err;
@@ -318,49 +348,6 @@ WebPMuxError WebPMuxGetLoopCount(const WebPMux* mux, int* loop_count) {
   *loop_count = GetLE16(image.bytes_);
 
   return WEBP_MUX_OK;
-}
-
-static WebPMuxError MuxGetFrameTileInternal(
-    const WebPMux* const mux, uint32_t nth,
-    WebPMuxFrameInfo* const frame_tile_info, uint32_t tag) {
-  const WebPData* frame_tile_data;
-  WebPMuxError err;
-  WebPMuxImage* wpi;
-
-  const int is_frame = (tag == kChunks[WEBP_CHUNK_FRAME].tag) ? 1 : 0;
-  const CHUNK_INDEX idx = is_frame ? IDX_FRAME : IDX_TILE;
-  const WebPChunkId id = kChunks[idx].id;
-
-  if (mux == NULL || frame_tile_info == NULL) {
-    return WEBP_MUX_INVALID_ARGUMENT;
-  }
-
-  // Get the nth WebPMuxImage.
-  err = MuxImageGetNth((const WebPMuxImage**)&mux->images_, nth, id, &wpi);
-  if (err != WEBP_MUX_OK) return err;
-
-  // Get frame chunk.
-  assert(wpi->header_ != NULL);  // As MuxImageGetNth() already checked header_.
-  frame_tile_data = &wpi->header_->data_;
-
-  if (frame_tile_data->size_ < kChunks[idx].size) return WEBP_MUX_BAD_DATA;
-  frame_tile_info->x_offset_ = 2 * GetLE24(frame_tile_data->bytes_ + 0);
-  frame_tile_info->y_offset_ = 2 * GetLE24(frame_tile_data->bytes_ + 3);
-  if (is_frame) {
-    frame_tile_info->duration_ = 1 + GetLE24(frame_tile_data->bytes_ + 12);
-  }
-
-  return SynthesizeBitstream(wpi, &frame_tile_info->bitstream_);
-}
-
-WebPMuxError WebPMuxGetFrame(const WebPMux* mux, uint32_t nth,
-                             WebPMuxFrameInfo* frame) {
-  return MuxGetFrameTileInternal(mux, nth, frame, kChunks[IDX_FRAME].tag);
-}
-
-WebPMuxError WebPMuxGetTile(const WebPMux* mux, uint32_t nth,
-                            WebPMuxFrameInfo* tile) {
-  return MuxGetFrameTileInternal(mux, nth, tile, kChunks[IDX_TILE].tag);
 }
 
 // Get chunk index from chunk id. Returns IDX_NIL if not found.
