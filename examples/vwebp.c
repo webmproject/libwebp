@@ -329,7 +329,7 @@ int main(int argc, char *argv[]) {
       goto Error;
     }
     mux_err = WebPMuxNumChunks(kParams.mux, WEBP_CHUNK_IMAGE,
-                                      &kParams.frame_max);
+                               &kParams.frame_max);
     if (mux_err != WEBP_MUX_OK) {
       goto Error;
     }

@@ -31,7 +31,7 @@ const ChunkInfo kChunks[] = {
   { MKFOURCC('M', 'E', 'T', 'A'),  WEBP_CHUNK_META,    UNDEFINED_CHUNK_SIZE },
   { MKFOURCC('U', 'N', 'K', 'N'),  WEBP_CHUNK_UNKNOWN, UNDEFINED_CHUNK_SIZE },
 
-  { NIL_TAG,                    WEBP_CHUNK_NIL,     UNDEFINED_CHUNK_SIZE }
+  { NIL_TAG,                       WEBP_CHUNK_NIL,     UNDEFINED_CHUNK_SIZE }
 };
 
 //------------------------------------------------------------------------------
