@@ -277,8 +277,10 @@ static void PrintHelp(void) {
   printf("\n");
   printf("SET_OPTIONS:\n");
   printf(" Set color profile/metadata.\n");
-  printf("   icc       Set ICC Color profile.\n");
-  printf("   xmp       Set XMP metadata.\n");
+  printf("   icc  file.icc     Set ICC Color profile.\n");
+  printf("   xmp  file.xmp     Set XMP metadata.\n");
+  printf("   where:    'file.icc' contains the color profile to be set,\n");
+  printf("             'file.xmp' contains the metadata to be set\n");
 
   printf("\n");
   printf("STRIP_OPTIONS:\n");

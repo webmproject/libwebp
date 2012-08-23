@@ -39,8 +39,10 @@ GET_OPTIONS:
 
 SET_OPTIONS:
  Set color profile/metadata.
-   icc       Set ICC Color profile.
-   xmp       Set XMP metadata.
+   icc  file.icc     Set ICC Color profile.
+   xmp  file.xmp     Set XMP metadata.
+   where:    'file.icc' contains the color profile to be set,
+             'file.xmp' contains the metadata to be set
 
 STRIP_OPTIONS:
  Strip color profile/metadata.
