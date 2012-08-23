@@ -50,8 +50,8 @@ and extract/strip relevant data from the container file.
 .B icc
 Get ICC Color profile.
 .TP
-.B xmp
-Get XMP metadata.
+.B meta
+Get XMP/EXIF metadata.
 .TP
 .B tile n
 Get nth tile.
@@ -66,18 +66,18 @@ Set ICC Color profile.
 .P
 Where: 'file.icc' contains the color profile to be set.
 .TP
-.B xmp file.xmp
-Set XMP metadata.
+.B meta file.meta
+Set XMP/EXIF metadata.
 .P
-Where: 'file.xmp' contains the metadata to be set.
+Where: 'file.meta' contains the metadata to be set.
 
 .SS STRIP_OPTIONS (\-strip)
 .TP
 .B icc
 Strip ICC Color profile.
 .TP
-.B xmp
-Strip XMP metadata.
+.B meta
+Strip XMP/EXIF metadata.
 
 .SS TILE_OPTIONS (\-tile)
 .TP
@@ -114,9 +114,9 @@ webpmux \-set icc image_profile.icc in.webp \-o icc_container.webp
 .br
 webpmux \-get icc icc_container.webp \-o image_profile.icc
 .br
-webpmux \-set xmp image_metadata.xmp in.webp \-o xmp_container.webp
+webpmux \-set meta image_metadata.meta in.webp \-o meta_container.webp
 .br
-webpmux \-get xmp xmp_container.webp \-o image_metadata.xmp
+webpmux \-get meta meta_container.webp \-o image_metadata.meta
 .br
 webpmux \-frame anim_1.webp +0+0+0 \-frame anim_2.webp +50+50+0 \-loop 10
 \-o anim_container.webp

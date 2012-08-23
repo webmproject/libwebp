@@ -31,17 +31,17 @@
             -o out_animation_container.webp
 
     webpmux -set icc image_profile.icc in.webp -o out_icc_container.webp
-    webpmux -set xmp image_metadata.xmp in.webp -o out_xmp_container.webp
+    webpmux -set meta image_metadata.meta in.webp -o out_meta_container.webp
 
   Extract relevant data from WebP container file:
     webpmux -get tile n in.webp -o out_tile.webp
     webpmux -get frame n in.webp -o out_frame.webp
     webpmux -get icc in.webp -o image_profile.icc
-    webpmux -get xmp in.webp -o image_metadata.xmp
+    webpmux -get meta in.webp -o image_metadata.meta
 
   Strip data from WebP Container file:
     webpmux -strip icc in.webp -o out.webp
-    webpmux -strip xmp in.webp -o out.webp
+    webpmux -strip meta in.webp -o out.webp
 
   Misc:
     webpmux -info in.webp
@@ -81,7 +81,7 @@ typedef struct {
 
 typedef enum {
   NIL_FEATURE = 0,
-  FEATURE_XMP,
+  FEATURE_META,
   FEATURE_ICCP,
   FEATURE_FRM,
   FEATURE_TILE
@@ -242,8 +242,8 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
   if (flag & META_FLAG) {
     WebPData metadata;
     err = WebPMuxGetChunk(mux, "META", &metadata);
-    RETURN_IF_ERROR("Failed to retrieve the XMP metadata\n");
-    printf("Size of the XMP metadata: %zu\n", metadata.size_);
+    RETURN_IF_ERROR("Failed to retrieve the metadata\n");
+    printf("Size of the metadata: %zu\n", metadata.size_);
   }
 
   if ((flag & ALPHA_FLAG) && !(flag & (ANIMATION_FLAG | TILE_FLAG))) {
@@ -270,7 +270,7 @@ static void PrintHelp(void) {
   printf("GET_OPTIONS:\n");
   printf(" Extract relevant data.\n");
   printf("   icc       Get ICCP Color profile.\n");
-  printf("   xmp       Get XMP metadata.\n");
+  printf("   meta      Get XMP/EXIF metadata.\n");
   printf("   tile n    Get nth tile.\n");
   printf("   frame n   Get nth frame.\n");
 
@@ -278,15 +278,15 @@ static void PrintHelp(void) {
   printf("SET_OPTIONS:\n");
   printf(" Set color profile/metadata.\n");
   printf("   icc  file.icc     Set ICC Color profile.\n");
-  printf("   xmp  file.xmp     Set XMP metadata.\n");
+  printf("   meta file.meta    Set XMP/EXIF metadata.\n");
   printf("   where:    'file.icc' contains the color profile to be set,\n");
-  printf("             'file.xmp' contains the metadata to be set\n");
+  printf("             'file.meta' contains the metadata to be set\n");
 
   printf("\n");
   printf("STRIP_OPTIONS:\n");
   printf(" Strip color profile/metadata.\n");
   printf("   icc       Strip ICCP color profile.\n");
-  printf("   xmp       Strip XMP metadata.\n");
+  printf("   meta      Strip XMP/EXIF metadata.\n");
 
   printf("\n");
   printf("TILE_OPTIONS(i):\n");
@@ -430,7 +430,7 @@ static int ValidateCommandLine(int argc, const char* argv[],
 
   assert(ok == 1);
   if (num_frame_args == 0 && num_tile_args == 0) {
-    // Single argument ('set' action for XMP or ICCP, OR a 'get' action).
+    // Single argument ('set' action for META or ICCP, OR a 'get' action).
     *num_feature_args = 1;
   } else {
     // Multiple arguments ('set' action for animation or tiling).
@@ -570,10 +570,10 @@ static int ParseCommandLine(int argc, const char* argv[],
         ERROR_GOTO1("ERROR: Action must be specified before other arguments.\n",
                     ErrParse);
       }
-      if (!strcmp(argv[i], "icc") || !strcmp(argv[i], "xmp")) {
+      if (!strcmp(argv[i], "icc") || !strcmp(argv[i], "meta")) {
         if (FEATURETYPE_IS_NIL) {
           feature->type_ = (!strcmp(argv[i], "icc")) ? FEATURE_ICCP :
-              FEATURE_XMP;
+              FEATURE_META;
         } else {
           ERROR_GOTO1("ERROR: Multiple features specified.\n", ErrParse);
         }
@@ -764,10 +764,10 @@ static int Process(const WebPMuxConfig* config) {
           }
           ok = WriteData(config->output_, &color_profile);
           break;
-        case FEATURE_XMP:
+        case FEATURE_META:
           err = WebPMuxGetChunk(mux, "META", &metadata);
           if (err != WEBP_MUX_OK) {
-            ERROR_GOTO2("ERROR (%s): Could not get XMP metadata.\n",
+            ERROR_GOTO2("ERROR (%s): Could not get the metadata.\n",
                         ErrorString(err), Err2);
           }
           ok = WriteData(config->output_, &metadata);
@@ -858,7 +858,7 @@ static int Process(const WebPMuxConfig* config) {
           }
           break;
 
-        case FEATURE_XMP:
+        case FEATURE_META:
           ok = CreateMux(config->input_, &mux);
           if (!ok) goto Err2;
           ok = ReadFileToWebPData(feature->args_[0].filename_, &metadata);
@@ -866,7 +866,7 @@ static int Process(const WebPMuxConfig* config) {
           err = WebPMuxSetChunk(mux, "META", &metadata, 1);
           free((void*)metadata.bytes_);
           if (err != WEBP_MUX_OK) {
-            ERROR_GOTO2("ERROR (%s): Could not set XMP metadata.\n",
+            ERROR_GOTO2("ERROR (%s): Could not set the metadata.\n",
                         ErrorString(err), Err2);
           }
           break;
@@ -889,10 +889,10 @@ static int Process(const WebPMuxConfig* config) {
                         ErrorString(err), Err2);
           }
           break;
-        case FEATURE_XMP:
+        case FEATURE_META:
           err = WebPMuxDeleteChunk(mux, "META");
           if (err != WEBP_MUX_OK) {
-            ERROR_GOTO2("ERROR (%s): Could not delete XMP metadata.\n",
+            ERROR_GOTO2("ERROR (%s): Could not delete the metadata.\n",
                         ErrorString(err), Err2);
           }
           break;

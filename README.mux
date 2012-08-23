@@ -8,7 +8,7 @@ Description:
 ============
 
 WebP Mux: library to create a WebP container object for features like
-color profile, XMP metadata, animation & tiling. A reference command line
+color profile, metadata, animation & tiling. A reference command line
 tool 'webpmux' and WebP container specification 'doc/webp-container-spec.txt'
 are also provided in this package.
 
@@ -33,21 +33,21 @@ Usage: webpmux -get GET_OPTIONS INPUT -o OUTPUT
 GET_OPTIONS:
  Extract relevant data.
    icc       Get ICCP Color profile.
-   xmp       Get XMP metadata.
+   meta      Get XMP/EXIF metadata.
    tile n    Get nth tile.
    frame n   Get nth frame.
 
 SET_OPTIONS:
  Set color profile/metadata.
    icc  file.icc     Set ICC Color profile.
-   xmp  file.xmp     Set XMP metadata.
+   meta file.meta    Set XMP/EXIF metadata.
    where:    'file.icc' contains the color profile to be set,
-             'file.xmp' contains the metadata to be set
+             'file.meta' contains the metadata to be set
 
 STRIP_OPTIONS:
  Strip color profile/metadata.
    icc       Strip ICCP color profile.
-   xmp       Strip XMP metadata.
+   meta      Strip XMP/EXIF metadata.
 
 TILE_OPTIONS(i):
  Create tiled image.
@@ -67,9 +67,9 @@ INPUT & OUTPUT are in webp format.
 WebP Mux API:
 ==============
 The WebP Mux API contains methods for adding data to and reading data from
-WebPMux (a WebP container object). This API currently supports XMP metadata,
-color profile, animation & tiling. Other features will be added in subsequent
-releases.
+WebPMux (a WebP container object). This API currently supports XMP/EXIF
+metadata, ICC color profile, animation & tiling. Other features will be added in
+subsequent releases.
 
 Example#1 (pseudo code): Creating a WebPMux object with image data, color
 profile & XMP metadata.
