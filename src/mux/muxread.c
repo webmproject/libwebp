@@ -289,15 +289,21 @@ WebPMuxError WebPMuxGetImage(const WebPMux* mux, WebPData* bitstream) {
   return SynthesizeBitstream(wpi, bitstream);
 }
 
-WebPMuxError WebPMuxGetMetadata(const WebPMux* mux, WebPData* metadata) {
-  if (mux == NULL || metadata == NULL) return WEBP_MUX_INVALID_ARGUMENT;
-  return MuxGet(mux, IDX_META, 1, metadata);
-}
-
-WebPMuxError WebPMuxGetColorProfile(const WebPMux* mux,
-                                    WebPData* color_profile) {
-  if (mux == NULL || color_profile == NULL) return WEBP_MUX_INVALID_ARGUMENT;
-  return MuxGet(mux, IDX_ICCP, 1, color_profile);
+WebPMuxError WebPMuxGetChunk(const WebPMux* mux, const char fourcc[4],
+                             WebPData* chunk_data) {
+  const CHUNK_INDEX idx = ChunkGetIndexFromFourCC(fourcc);
+  if (mux == NULL || chunk_data == NULL || IsWPI(kChunks[idx].id)) {
+    return WEBP_MUX_INVALID_ARGUMENT;
+  }
+  if (idx != IDX_UNKNOWN) {  // A known chunk type.
+    return MuxGet(mux, idx, 1, chunk_data);
+  } else {                   // An unknown chunk type.
+    const WebPChunk* const chunk =
+        ChunkSearchList(mux->unknown_, 1, ChunkGetTagFromFourCC(fourcc));
+    if (chunk == NULL) return WEBP_MUX_NOT_FOUND;
+    *chunk_data = chunk->data_;
+    return WEBP_MUX_OK;
+  }
 }
 
 WebPMuxError WebPMuxGetLoopCount(const WebPMux* mux, int* loop_count) {

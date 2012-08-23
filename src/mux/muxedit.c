@@ -185,8 +185,8 @@ static WebPMuxError DeleteChunks(WebPChunk** chunk_list, uint32_t tag) {
   return err;
 }
 
-static WebPMuxError MuxDeleteAllNamedData(WebPMux* const mux, CHUNK_INDEX idx) {
-  const WebPChunkId id = kChunks[idx].id;
+static WebPMuxError MuxDeleteAllNamedData(WebPMux* const mux, uint32_t tag) {
+  const WebPChunkId id = ChunkGetIdFromTag(tag);
   WebPChunk** chunk_list;
 
   if (mux == NULL) return WEBP_MUX_INVALID_ARGUMENT;
@@ -195,11 +195,11 @@ static WebPMuxError MuxDeleteAllNamedData(WebPMux* const mux, CHUNK_INDEX idx) {
   chunk_list = MuxGetChunkListFromId(mux, id);
   if (chunk_list == NULL) return WEBP_MUX_INVALID_ARGUMENT;
 
-  return DeleteChunks(chunk_list, kChunks[idx].tag);
+  return DeleteChunks(chunk_list, tag);
 }
 
 static WebPMuxError DeleteLoopCount(WebPMux* const mux) {
-  return MuxDeleteAllNamedData(mux, IDX_LOOP);
+  return MuxDeleteAllNamedData(mux, kChunks[IDX_LOOP].tag);
 }
 
 //------------------------------------------------------------------------------
@@ -260,39 +260,24 @@ WebPMuxError WebPMuxSetImage(WebPMux* mux,
   return err;
 }
 
-WebPMuxError WebPMuxSetMetadata(WebPMux* mux, const WebPData* metadata,
-                                int copy_data) {
+WebPMuxError WebPMuxSetChunk(WebPMux* mux, const char fourcc[4],
+                             const WebPData* chunk_data, int copy_data) {
+  const CHUNK_INDEX idx = ChunkGetIndexFromFourCC(fourcc);
+  const uint32_t tag = ChunkGetTagFromFourCC(fourcc);
   WebPMuxError err;
-
-  if (mux == NULL || metadata == NULL || metadata->bytes_ == NULL ||
-      metadata->size_ > MAX_CHUNK_PAYLOAD) {
+  if (mux == NULL || chunk_data == NULL || chunk_data->bytes_ == NULL ||
+      chunk_data->size_ > MAX_CHUNK_PAYLOAD) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
-  // Delete the existing metadata chunk(s).
-  err = WebPMuxDeleteMetadata(mux);
+  // Delete existing chunk(s) with the same 'fourcc'.
+  err = MuxDeleteAllNamedData(mux, tag);
   if (err != WEBP_MUX_OK && err != WEBP_MUX_NOT_FOUND) return err;
 
-  // Add the given metadata chunk.
-  return MuxSet(mux, IDX_META, 1, metadata, copy_data);
+  // Add the given chunk.
+  return MuxSet(mux, idx, 1, chunk_data, copy_data);
 }
 
-WebPMuxError WebPMuxSetColorProfile(WebPMux* mux, const WebPData* color_profile,
-                                    int copy_data) {
-  WebPMuxError err;
-
-  if (mux == NULL || color_profile == NULL || color_profile->bytes_ == NULL ||
-      color_profile->size_ > MAX_CHUNK_PAYLOAD) {
-    return WEBP_MUX_INVALID_ARGUMENT;
-  }
-
-  // Delete the existing ICCP chunk(s).
-  err = WebPMuxDeleteColorProfile(mux);
-  if (err != WEBP_MUX_OK && err != WEBP_MUX_NOT_FOUND) return err;
-
-  // Add the given ICCP chunk.
-  return MuxSet(mux, IDX_ICCP, 1, color_profile, copy_data);
-}
 
 WebPMuxError WebPMuxSetLoopCount(WebPMux* mux, int loop_count) {
   WebPMuxError err;
@@ -437,12 +422,8 @@ WebPMuxError WebPMuxDeleteImage(WebPMux* mux) {
   return WEBP_MUX_OK;
 }
 
-WebPMuxError WebPMuxDeleteMetadata(WebPMux* mux) {
-  return MuxDeleteAllNamedData(mux, IDX_META);
-}
-
-WebPMuxError WebPMuxDeleteColorProfile(WebPMux* mux) {
-  return MuxDeleteAllNamedData(mux, IDX_ICCP);
+WebPMuxError WebPMuxDeleteChunk(WebPMux* mux, const char fourcc[4]) {
+  return MuxDeleteAllNamedData(mux, ChunkGetTagFromFourCC(fourcc));
 }
 
 static WebPMuxError DeleteFrameTileInternal(WebPMux* const mux, uint32_t nth,
@@ -595,7 +576,7 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
 
   // If VP8X chunk(s) is(are) already present, remove them (and later add new
   // VP8X chunk with updated flags).
-  err = MuxDeleteAllNamedData(mux, IDX_VP8X);
+  err = MuxDeleteAllNamedData(mux, kChunks[IDX_VP8X].tag);
   if (err != WEBP_MUX_OK && err != WEBP_MUX_NOT_FOUND) return err;
 
   // Set flags.

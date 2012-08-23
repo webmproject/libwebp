@@ -73,6 +73,16 @@ WebPChunkId ChunkGetIdFromTag(uint32_t tag) {
   return WEBP_CHUNK_NIL;
 }
 
+uint32_t ChunkGetTagFromFourCC(const char fourcc[4]) {
+  return MKFOURCC(fourcc[0], fourcc[1], fourcc[2], fourcc[3]);
+}
+
+CHUNK_INDEX ChunkGetIndexFromFourCC(const char fourcc[4]) {
+  const uint32_t tag = ChunkGetTagFromFourCC(fourcc);
+  const CHUNK_INDEX idx = ChunkGetIndexFromTag(tag);
+  return (idx == IDX_NIL) ? IDX_UNKNOWN : idx;
+}
+
 //------------------------------------------------------------------------------
 // Chunk search methods.
 

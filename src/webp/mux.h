@@ -21,9 +21,9 @@
 //   // ... (Prepare image data).
 //   WebPMuxSetImage(mux, &image, copy_data);
 //   // ... (Prepare ICCP color profile data).
-//   WebPMuxSetColorProfile(mux, &icc_profile, copy_data);
+//   WebPMuxSetChunk(mux, "ICCP", &icc_profile, copy_data);
 //   // ... (Prepare XMP metadata).
-//   WebPMuxSetMetadata(mux, &xmp, copy_data);
+//   WebPMuxSetChunk(mux, "META", &xmp, copy_data);
 //   // Get data from mux in WebP RIFF format.
 //   WebPMuxAssemble(mux, &output_data);
 //   WebPMuxDelete(mux);
@@ -37,7 +37,7 @@
 //   WebPMux* mux = WebPMuxCreate(&data, copy_data);
 //   WebPMuxGetImage(mux, &image);
 //   // ... (Consume image; e.g. call WebPDecode() to decode the data).
-//   WebPMuxGetColorProfile(mux, &icc_profile);
+//   WebPMuxGetChunk(mux, "ICCP", &icc_profile);
 //   // ... (Consume icc_data).
 //   WebPMuxDelete(mux);
 //   free(data);
@@ -191,82 +191,56 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetImage(const WebPMux* mux,
 WEBP_EXTERN(WebPMuxError) WebPMuxDeleteImage(WebPMux* mux);
 
 //------------------------------------------------------------------------------
-// XMP Metadata.
+// Chunks.
 
-// Sets the XMP metadata in the mux object. Any existing metadata chunk(s) will
-// be removed.
+// Note: Only non-image related chunks should be managed through chunk APIs.
+// (Image related chunks are: "FRM ", "TILE", "VP8 ", "VP8L" and "ALPH").
+
+// Adds a chunk with id 'fourcc' and data 'chunk_data' in the mux object.
+// Any existing chunk(s) with the same id will be removed.
 // Parameters:
-//   mux - (in/out) object to which the XMP metadata is to be added
-//   metadata - (in) the XMP metadata data to be added
+//   mux - (in/out) object to which the chunk is to be added
+//   fourcc - (in) a character array containing the fourcc of the given chunk;
+//                 e.g., "ICCP", "META" etc.
+//   chunk_data - (in) the chunk data to be added
 //   copy_data - (in) value 1 indicates given data WILL copied to the mux, and
 //               value 0 indicates data will NOT be copied.
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if mux or metadata is NULL.
+//   WEBP_MUX_INVALID_ARGUMENT - if mux or chunk_data is NULL
+//                               or if fourcc corresponds to an image chunk.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxSetMetadata(WebPMux* mux,
-                                             const WebPData* metadata,
-                                             int copy_data);
+WEBP_EXTERN(WebPMuxError) WebPMuxSetChunk(
+    WebPMux* mux, const char fourcc[4], const WebPData* chunk_data,
+    int copy_data);
 
-// Gets a reference to the XMP metadata in the mux object.
+// Gets a reference to the data of the chunk with id 'fourcc' in the mux object.
 // The caller should NOT free the returned data.
 // Parameters:
-//   mux - (in) object from which the XMP metadata is to be fetched
-//   metadata - (out) XMP metadata
+//   mux - (in) object from which the chunk data is to be fetched
+//   fourcc - (in) a character array containing the fourcc of the chunk;
+//                 e.g., "ICCP", "META" etc.
+//   chunk_data - (out) returned chunk data
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if either mux or metadata is NULL.
-//   WEBP_MUX_NOT_FOUND - if metadata is not present in mux object.
+//   WEBP_MUX_INVALID_ARGUMENT - if either mux or chunk_data is NULL
+//                               or if fourcc corresponds to an image chunk.
+//   WEBP_MUX_NOT_FOUND - If mux does not contain a chunk with the given id.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxGetMetadata(const WebPMux* mux,
-                                             WebPData* metadata);
+WEBP_EXTERN(WebPMuxError) WebPMuxGetChunk(
+    const WebPMux* mux, const char fourcc[4], WebPData* chunk_data);
 
-// Deletes the XMP metadata in the mux object.
+// Deletes the chunk with the given 'fourcc' from the mux object.
 // Parameters:
-//   mux - (in/out) object from which XMP metadata is to be deleted
+//   mux - (in/out) object from which the chunk is to be deleted
+//   fourcc - (in) a character array containing the fourcc of the chunk;
+//                 e.g., "ICCP", "META" etc.
 // Returns:
 //   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL
-//   WEBP_MUX_NOT_FOUND - If mux does not contain metadata.
+//                               or if fourcc corresponds to an image chunk.
+//   WEBP_MUX_NOT_FOUND - If mux does not contain a chunk with the given fourcc.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxDeleteMetadata(WebPMux* mux);
-
-//------------------------------------------------------------------------------
-// ICC Color Profile.
-
-// Sets the color profile in the mux object. Any existing color profile chunk(s)
-// will be removed.
-// Parameters:
-//   mux - (in/out) object to which the color profile is to be added
-//   color_profile - (in) the color profile data to be added
-//   copy_data - (in) value 1 indicates given data WILL copied to the mux, and
-//               value 0 indicates data will NOT be copied.
-// Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if mux or color_profile is NULL
-//   WEBP_MUX_MEMORY_ERROR - on memory allocation error
-//   WEBP_MUX_OK - on success
-WEBP_EXTERN(WebPMuxError) WebPMuxSetColorProfile(WebPMux* mux,
-                                                 const WebPData* color_profile,
-                                                 int copy_data);
-
-// Gets a reference to the color profile in the mux object.
-// The caller should NOT free the returned data.
-// Parameters:
-//   mux - (in) object from which the color profile data is to be fetched
-//   color_profile - (out) color profile data
-// Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if either mux or color_profile is NULL.
-//   WEBP_MUX_NOT_FOUND - if color profile is not present in mux object.
-//   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxGetColorProfile(const WebPMux* mux,
-                                                 WebPData* color_profile);
-
-// Deletes the color profile in the mux object.
-// Parameters:
-//   mux - (in/out) object from which color profile is to be deleted
-// Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL
-//   WEBP_MUX_NOT_FOUND - If mux does not contain color profile.
-//   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxDeleteColorProfile(WebPMux* mux);
+WEBP_EXTERN(WebPMuxError) WebPMuxDeleteChunk(
+    WebPMux* mux, const char fourcc[4]);
 
 //------------------------------------------------------------------------------
 // Animation.

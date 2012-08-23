@@ -234,14 +234,14 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
 
   if (flag & ICCP_FLAG) {
     WebPData icc_profile;
-    err = WebPMuxGetColorProfile(mux, &icc_profile);
+    err = WebPMuxGetChunk(mux, "ICCP", &icc_profile);
     RETURN_IF_ERROR("Failed to retrieve the color profile\n");
     printf("Size of the color profile data: %zu\n", icc_profile.size_);
   }
 
   if (flag & META_FLAG) {
     WebPData metadata;
-    err = WebPMuxGetMetadata(mux, &metadata);
+    err = WebPMuxGetChunk(mux, "META", &metadata);
     RETURN_IF_ERROR("Failed to retrieve the XMP metadata\n");
     printf("Size of the XMP metadata: %zu\n", metadata.size_);
   }
@@ -755,7 +755,7 @@ static int Process(const WebPMuxConfig* config) {
           break;
 
         case FEATURE_ICCP:
-          err = WebPMuxGetColorProfile(mux, &color_profile);
+          err = WebPMuxGetChunk(mux, "ICCP", &color_profile);
           if (err != WEBP_MUX_OK) {
             ERROR_GOTO2("ERROR (%s): Could not get color profile.\n",
                         ErrorString(err), Err2);
@@ -763,7 +763,7 @@ static int Process(const WebPMuxConfig* config) {
           ok = WriteData(config->output_, &color_profile);
           break;
         case FEATURE_XMP:
-          err = WebPMuxGetMetadata(mux, &metadata);
+          err = WebPMuxGetChunk(mux, "META", &metadata);
           if (err != WEBP_MUX_OK) {
             ERROR_GOTO2("ERROR (%s): Could not get XMP metadata.\n",
                         ErrorString(err), Err2);
@@ -848,7 +848,7 @@ static int Process(const WebPMuxConfig* config) {
           if (!ok) goto Err2;
           ok = ReadFileToWebPData(feature->args_[0].filename_, &color_profile);
           if (!ok) goto Err2;
-          err = WebPMuxSetColorProfile(mux, &color_profile, 1);
+          err = WebPMuxSetChunk(mux, "ICCP", &color_profile, 1);
           free((void*)color_profile.bytes_);
           if (err != WEBP_MUX_OK) {
             ERROR_GOTO2("ERROR (%s): Could not set color profile.\n",
@@ -861,7 +861,7 @@ static int Process(const WebPMuxConfig* config) {
           if (!ok) goto Err2;
           ok = ReadFileToWebPData(feature->args_[0].filename_, &metadata);
           if (!ok) goto Err2;
-          err = WebPMuxSetMetadata(mux, &metadata, 1);
+          err = WebPMuxSetChunk(mux, "META", &metadata, 1);
           free((void*)metadata.bytes_);
           if (err != WEBP_MUX_OK) {
             ERROR_GOTO2("ERROR (%s): Could not set XMP metadata.\n",
@@ -881,14 +881,14 @@ static int Process(const WebPMuxConfig* config) {
       if (!ok) goto Err2;
       switch (feature->type_) {
         case FEATURE_ICCP:
-          err = WebPMuxDeleteColorProfile(mux);
+          err = WebPMuxDeleteChunk(mux, "ICCP");
           if (err != WEBP_MUX_OK) {
             ERROR_GOTO2("ERROR (%s): Could not delete color profile.\n",
                         ErrorString(err), Err2);
           }
           break;
         case FEATURE_XMP:
-          err = WebPMuxDeleteMetadata(mux);
+          err = WebPMuxDeleteChunk(mux, "META");
           if (err != WEBP_MUX_OK) {
             ERROR_GOTO2("ERROR (%s): Could not delete XMP metadata.\n",
                         ErrorString(err), Err2);
