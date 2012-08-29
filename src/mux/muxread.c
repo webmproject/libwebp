@@ -315,9 +315,8 @@ WebPMuxError WebPMuxGetLoopCount(const WebPMux* mux, int* loop_count) {
 }
 
 static WebPMuxError MuxGetFrameTileInternal(
-    const WebPMux* const mux, uint32_t nth, WebPData* const bitstream,
-    int* const x_offset, int* const y_offset, int* const duration,
-    uint32_t tag) {
+    const WebPMux* const mux, uint32_t nth,
+    WebPMuxFrameInfo* const frame_tile_info, uint32_t tag) {
   const WebPData* frame_tile_data;
   WebPMuxError err;
   WebPMuxImage* wpi;
@@ -326,8 +325,7 @@ static WebPMuxError MuxGetFrameTileInternal(
   const CHUNK_INDEX idx = is_frame ? IDX_FRAME : IDX_TILE;
   const WebPChunkId id = kChunks[idx].id;
 
-  if (mux == NULL || bitstream == NULL ||
-      x_offset == NULL || y_offset == NULL || (is_frame && duration == NULL)) {
+  if (mux == NULL || frame_tile_info == NULL) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
@@ -340,25 +338,23 @@ static WebPMuxError MuxGetFrameTileInternal(
   frame_tile_data = &wpi->header_->data_;
 
   if (frame_tile_data->size_ < kChunks[idx].size) return WEBP_MUX_BAD_DATA;
-  *x_offset = 2 * GetLE24(frame_tile_data->bytes_ + 0);
-  *y_offset = 2 * GetLE24(frame_tile_data->bytes_ + 3);
-  if (is_frame) *duration = 1 + GetLE24(frame_tile_data->bytes_ + 12);
+  frame_tile_info->x_offset_ = 2 * GetLE24(frame_tile_data->bytes_ + 0);
+  frame_tile_info->y_offset_ = 2 * GetLE24(frame_tile_data->bytes_ + 3);
+  if (is_frame) {
+    frame_tile_info->duration_ = 1 + GetLE24(frame_tile_data->bytes_ + 12);
+  }
 
-  return SynthesizeBitstream(wpi, bitstream);
+  return SynthesizeBitstream(wpi, &frame_tile_info->bitstream_);
 }
 
 WebPMuxError WebPMuxGetFrame(const WebPMux* mux, uint32_t nth,
-                             WebPData* bitstream,
-                             int* x_offset, int* y_offset, int* duration) {
-  return MuxGetFrameTileInternal(mux, nth, bitstream, x_offset, y_offset,
-                                 duration, kChunks[IDX_FRAME].tag);
+                             WebPMuxFrameInfo* frame) {
+  return MuxGetFrameTileInternal(mux, nth, frame, kChunks[IDX_FRAME].tag);
 }
 
 WebPMuxError WebPMuxGetTile(const WebPMux* mux, uint32_t nth,
-                            WebPData* bitstream,
-                            int* x_offset, int* y_offset) {
-  return MuxGetFrameTileInternal(mux, nth, bitstream, x_offset, y_offset, NULL,
-                                 kChunks[IDX_TILE].tag);
+                            WebPMuxFrameInfo* tile) {
+  return MuxGetFrameTileInternal(mux, nth, tile, kChunks[IDX_TILE].tag);
 }
 
 // Get chunk index from chunk id. Returns IDX_NIL if not found.

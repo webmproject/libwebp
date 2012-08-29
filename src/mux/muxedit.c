@@ -317,8 +317,10 @@ WebPMuxError WebPMuxSetLoopCount(WebPMux* mux, int loop_count) {
 }
 
 static WebPMuxError MuxPushFrameTileInternal(
-    WebPMux* const mux, const WebPData* const bitstream, int x_offset,
-    int y_offset, int duration, int copy_data, uint32_t tag) {
+    WebPMux* const mux, const WebPMuxFrameInfo* const frame_tile_info,
+    int copy_data, uint32_t tag) {
+  const WebPData* bitstream;
+  int x_offset, y_offset, duration;
   WebPChunk chunk;
   WebPData image;
   WebPData alpha;
@@ -330,13 +332,21 @@ static WebPMuxError MuxPushFrameTileInternal(
   int image_tag;
 
   // Sanity checks.
-  if (mux == NULL || bitstream == NULL || bitstream->bytes_ == NULL ||
-      bitstream->size_ > MAX_CHUNK_PAYLOAD) {
+  if (mux == NULL || frame_tile_info == NULL) {
+    return WEBP_MUX_INVALID_ARGUMENT;
+  }
+
+  bitstream = &frame_tile_info->bitstream_;
+  x_offset = frame_tile_info->x_offset_;
+  y_offset = frame_tile_info->y_offset_;
+  duration = is_frame ? frame_tile_info->duration_ : 1 /* unused */;
+
+  if (bitstream->bytes_ == NULL || bitstream->size_ > MAX_CHUNK_PAYLOAD) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
   if (x_offset < 0 || x_offset >= MAX_POSITION_OFFSET ||
       y_offset < 0 || y_offset >= MAX_POSITION_OFFSET ||
-      duration <= 0 || duration > MAX_DURATION) {
+      (is_frame && (duration <= 0 || duration > MAX_DURATION))) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
@@ -397,18 +407,17 @@ static WebPMuxError MuxPushFrameTileInternal(
   return err;
 }
 
-WebPMuxError WebPMuxPushFrame(WebPMux* mux, const WebPData* bitstream,
-                              int x_offset, int y_offset,
-                              int duration, int copy_data) {
-  return MuxPushFrameTileInternal(mux, bitstream, x_offset, y_offset,
-                                  duration, copy_data, kChunks[IDX_FRAME].tag);
+WebPMuxError WebPMuxPushFrame(WebPMux* mux,
+                              const WebPMuxFrameInfo* frame,
+                              int copy_data) {
+  return MuxPushFrameTileInternal(mux, frame, copy_data,
+                                  kChunks[IDX_FRAME].tag);
 }
 
-WebPMuxError WebPMuxPushTile(WebPMux* mux, const WebPData* bitstream,
-                             int x_offset, int y_offset,
+WebPMuxError WebPMuxPushTile(WebPMux* mux,
+                             const WebPMuxFrameInfo* tile,
                              int copy_data) {
-  return MuxPushFrameTileInternal(mux, bitstream, x_offset, y_offset,
-                                  1 /* unused duration */, copy_data,
+  return MuxPushFrameTileInternal(mux, tile /*unused duration*/, copy_data,
                                   kChunks[IDX_TILE].tag);
 }
 
