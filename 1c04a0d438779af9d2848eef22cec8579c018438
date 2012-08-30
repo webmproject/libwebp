@@ -16,6 +16,24 @@
       "revId": "1c04a0d438779af9d2848eef22cec8579c018438",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAPn//4jM\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-08-30T05:05:52Z",
+      "side": 1,
+      "message": "Given that fourcc is an array (as opposed to a pointer), I think what you meant is whether we are checking for an empty \u0027fourcc\u0027.\n\nIn fact, we aren\u0027t. How about having a IsValidFourCC() method which checks if each character in fourcc is either a capital letter or a space?",
+      "parentUuid": "AAAAPn//5QQ\u003d",
+      "revId": "1c04a0d438779af9d2848eef22cec8579c018438",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
