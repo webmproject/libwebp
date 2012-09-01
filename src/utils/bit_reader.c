@@ -169,7 +169,7 @@ void VP8LFillBitWindow(VP8LBitReader* const br) {
 }
 
 uint32_t VP8LReadOneBit(VP8LBitReader* const br) {
-  const uint32_t val = (br->val_ >> br->bit_pos_) & 1;
+  const uint32_t val = (uint32_t)((br->val_ >> br->bit_pos_) & 1);
   // Flag an error at end_of_stream.
   if (!br->eos_) {
     ++br->bit_pos_;
@@ -198,7 +198,7 @@ uint32_t VP8LReadBits(VP8LBitReader* const br, int n_bits) {
         if ((br->bit_pos_ + n_bits) > 64) return val;
       }
     }
-    val = (br->val_ >> br->bit_pos_) & kBitMask[n_bits];
+    val = (uint32_t)((br->val_ >> br->bit_pos_) & kBitMask[n_bits]);
     br->bit_pos_ += n_bits;
     if (br->bit_pos_ >= 40) {
       if (br->pos_ + 5 < br->len_) {
