@@ -49,8 +49,6 @@ extern VP8CPUInfo VP8GetCPUInfo;
 //------------------------------------------------------------------------------
 // Encoding
 
-int VP8GetAlpha(const int histo[]);
-
 // Transforms
 // VP8Idct: Does one of two inverse transforms. If do_two is set, the transforms
 //          will be done for (ref, in, dst) and (ref + 4, in + 16, dst + 4).
@@ -85,10 +83,11 @@ typedef int (*VP8QuantizeBlock)(int16_t in[16], int16_t out[16],
                                 int n, const struct VP8Matrix* const mtx);
 extern VP8QuantizeBlock VP8EncQuantizeBlock;
 
-// Compute susceptibility based on DCT-coeff histograms:
-// the higher, the "easier" the macroblock is to compress.
-typedef int (*VP8CHisto)(const uint8_t* ref, const uint8_t* pred,
-                         int start_block, int end_block);
+// Collect histogram for susceptibility calculation and accumulate in histo[].
+struct VP8Histogram;
+typedef void (*VP8CHisto)(const uint8_t* ref, const uint8_t* pred,
+                          int start_block, int end_block,
+                          struct VP8Histogram* const histo);
 extern const int VP8DspScan[16 + 4 + 4];
 extern VP8CHisto VP8CollectHistogram;
 

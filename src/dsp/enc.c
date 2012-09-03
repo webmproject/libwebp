@@ -17,30 +17,17 @@
 extern "C" {
 #endif
 
+static WEBP_INLINE uint8_t clip_8b(int v) {
+  return (!(v & ~0xff)) ? v : (v < 0) ? 0 : 255;
+}
+
+static WEBP_INLINE int clip_max(int v, int max) {
+  return (v > max) ? max : v;
+}
+
 //------------------------------------------------------------------------------
 // Compute susceptibility based on DCT-coeff histograms:
 // the higher, the "easier" the macroblock is to compress.
-
-static int ClipAlpha(int alpha) {
-  return alpha < 0 ? 0 : alpha > 255 ? 255 : alpha;
-}
-
-int VP8GetAlpha(const int histo[MAX_COEFF_THRESH + 1]) {
-  int num = 0, den = 0, val = 0;
-  int k;
-  int alpha;
-  // note: changing this loop to avoid the numerous "k + 1" slows things down.
-  for (k = 0; k < MAX_COEFF_THRESH; ++k) {
-    if (histo[k + 1]) {
-      val += histo[k + 1];
-      num += val * (k + 1);
-      den += (k + 1) * (k + 1);
-    }
-  }
-  // we scale the value to a usable [0..255] range
-  alpha = den ? 10 * num / den - 5 : 0;
-  return ClipAlpha(alpha);
-}
 
 const int VP8DspScan[16 + 4 + 4] = {
   // Luma
@@ -53,27 +40,23 @@ const int VP8DspScan[16 + 4 + 4] = {
   8 + 0 * BPS,  12 + 0 * BPS, 8 + 4 * BPS, 12 + 4 * BPS     // V
 };
 
-static int CollectHistogram(const uint8_t* ref, const uint8_t* pred,
-                            int start_block, int end_block) {
-  int histo[MAX_COEFF_THRESH + 1] = { 0 };
-  int16_t out[16];
-  int j, k;
+static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
+                             int start_block, int end_block,
+                             VP8Histogram* const histo) {
+  int j;
   for (j = start_block; j < end_block; ++j) {
+    int k;
+    int16_t out[16];
+
     VP8FTransform(ref + VP8DspScan[j], pred + VP8DspScan[j], out);
 
-    // Convert coefficients to bin (within out[]).
+    // Convert coefficients to bin.
     for (k = 0; k < 16; ++k) {
-      const int v = abs(out[k]) >> 2;
-      out[k] = (v > MAX_COEFF_THRESH) ? MAX_COEFF_THRESH : v;
-    }
-
-    // Use bin to update histogram.
-    for (k = 0; k < 16; ++k) {
-      histo[out[k]]++;
+      const int v = abs(out[k]) >> 3;  // TODO(skal): add rounding?
+      const int clipped_value = clip_max(v, MAX_COEFF_THRESH);
+      histo->distribution[clipped_value]++;
     }
   }
-
-  return VP8GetAlpha(histo);
 }
 
 //------------------------------------------------------------------------------
@@ -89,15 +72,12 @@ static void InitTables(void) {
   if (!tables_ok) {
     int i;
     for (i = -255; i <= 255 + 255; ++i) {
-      clip1[255 + i] = (i < 0) ? 0 : (i > 255) ? 255 : i;
+      clip1[255 + i] = clip_8b(i);
     }
     tables_ok = 1;
   }
 }
 
-static WEBP_INLINE uint8_t clip_8b(int v) {
-  return (!(v & ~0xff)) ? v : v < 0 ? 0 : 255;
-}
 
 //------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)

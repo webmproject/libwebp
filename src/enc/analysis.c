@@ -23,10 +23,6 @@ extern "C" {
 
 #define MAX_ITERS_K_MEANS  6
 
-static int ClipAlpha(int alpha) {
-  return alpha < 0 ? 0 : alpha > 255 ? 255 : alpha;
-}
-
 //------------------------------------------------------------------------------
 // Smooth the segment map by replacing isolated block by the majority of its
 // neighbours.
@@ -115,7 +111,7 @@ static void SetSegmentProbas(VP8Encoder* const enc) {
 }
 
 static WEBP_INLINE int clip(int v, int m, int M) {
-  return v < m ? m : v > M ? M : v;
+  return (v < m) ? m : (v > M) ? M : v;
 }
 
 static void SetSegmentAlphas(VP8Encoder* const enc,
@@ -142,22 +138,63 @@ static void SetSegmentAlphas(VP8Encoder* const enc,
 }
 
 //------------------------------------------------------------------------------
+// Compute susceptibility based on DCT-coeff histograms:
+// the higher, the "easier" the macroblock is to compress.
+
+#define MAX_ALPHA 255                // 8b of precision for susceptibilities.
+#define ALPHA_SCALE (2 * MAX_ALPHA)  // scaling factor for alpha.
+#define DEFAULT_ALPHA (-1)
+#define IS_BETTER_ALPHA(alpha, best_alpha) ((alpha) > (best_alpha))
+
+static int FinalAlphaValue(int alpha) {
+  alpha = MAX_ALPHA - alpha;
+  return clip(alpha, 0, MAX_ALPHA);
+}
+
+static int GetAlpha(const VP8Histogram* const histo) {
+  int max_value = 0, last_non_zero = 1;
+  int k;
+  int alpha;
+  for (k = 0; k <= MAX_COEFF_THRESH; ++k) {
+    const int value = histo->distribution[k];
+    if (value > 0) {
+      if (value > max_value) max_value = value;
+      last_non_zero = k;
+    }
+  }
+  // 'alpha' will later be clipped to [0..MAX_ALPHA] range, clamping outer
+  // values which happen to be mostly noise. This leaves the maximum precision
+  // for handling the useful small values which contribute most.
+  alpha = (max_value > 1) ? ALPHA_SCALE * last_non_zero / max_value : 0;
+  return alpha;
+}
+
+static void MergeHistograms(const VP8Histogram* const in,
+                            VP8Histogram* const out) {
+  int i;
+  for (i = 0; i <= MAX_COEFF_THRESH; ++i) {
+    out->distribution[i] += in->distribution[i];
+  }
+}
+
+//------------------------------------------------------------------------------
 // Simplified k-Means, to assign Nb segments based on alpha-histogram
 
-static void AssignSegments(VP8Encoder* const enc, const int alphas[256]) {
+static void AssignSegments(VP8Encoder* const enc,
+                           const int alphas[MAX_ALPHA + 1]) {
   const int nb = enc->segment_hdr_.num_segments_;
   int centers[NUM_MB_SEGMENTS];
   int weighted_average = 0;
-  int map[256];
+  int map[MAX_ALPHA + 1];
   int a, n, k;
-  int min_a = 0, max_a = 255, range_a;
+  int min_a = 0, max_a = MAX_ALPHA, range_a;
   // 'int' type is ok for histo, and won't overflow
   int accum[NUM_MB_SEGMENTS], dist_accum[NUM_MB_SEGMENTS];
 
   // bracket the input
-  for (n = 0; n < 256 && alphas[n] == 0; ++n) {}
+  for (n = 0; n <= MAX_ALPHA && alphas[n] == 0; ++n) {}
   min_a = n;
-  for (n = 255; n > min_a && alphas[n] == 0; --n) {}
+  for (n = MAX_ALPHA; n > min_a && alphas[n] == 0; --n) {}
   max_a = n;
   range_a = max_a - min_a;
 
@@ -210,7 +247,7 @@ static void AssignSegments(VP8Encoder* const enc, const int alphas[256]) {
     VP8MBInfo* const mb = &enc->mb_info_[n];
     const int alpha = mb->alpha_;
     mb->segment_ = map[alpha];
-    mb->alpha_ = centers[map[alpha]];     // just for the record.
+    mb->alpha_ = centers[map[alpha]];  // for the record.
   }
 
   if (nb > 1) {
@@ -236,15 +273,19 @@ static void AssignSegments(VP8Encoder* const enc, const int alphas[256]) {
 static int MBAnalyzeBestIntra16Mode(VP8EncIterator* const it) {
   const int max_mode = (it->enc_->method_ >= 3) ? MAX_INTRA16_MODE : 4;
   int mode;
-  int best_alpha = -1;
+  int best_alpha = DEFAULT_ALPHA;
   int best_mode = 0;
 
   VP8MakeLuma16Preds(it);
   for (mode = 0; mode < max_mode; ++mode) {
-    const int alpha = VP8CollectHistogram(it->yuv_in_ + Y_OFF,
-                                          it->yuv_p_ + VP8I16ModeOffsets[mode],
-                                          0, 16);
-    if (alpha > best_alpha) {
+    VP8Histogram histo = { { 0 } };
+    int alpha;
+
+    VP8CollectHistogram(it->yuv_in_ + Y_OFF,
+                        it->yuv_p_ + VP8I16ModeOffsets[mode],
+                        0, 16, &histo);
+    alpha = GetAlpha(&histo);
+    if (IS_BETTER_ALPHA(alpha, best_alpha)) {
       best_alpha = alpha;
       best_mode = mode;
     }
@@ -257,45 +298,58 @@ static int MBAnalyzeBestIntra4Mode(VP8EncIterator* const it,
                                    int best_alpha) {
   uint8_t modes[16];
   const int max_mode = (it->enc_->method_ >= 3) ? MAX_INTRA4_MODE : NUM_BMODES;
-  int i4_alpha = 0;
+  int i4_alpha;
+  VP8Histogram total_histo = { { 0 } };
+  int cur_histo = 0;
+
   VP8IteratorStartI4(it);
   do {
     int mode;
-    int best_mode_alpha = -1;
+    int best_mode_alpha = DEFAULT_ALPHA;
+    VP8Histogram histos[2];
     const uint8_t* const src = it->yuv_in_ + Y_OFF + VP8Scan[it->i4_];
 
     VP8MakeIntra4Preds(it);
     for (mode = 0; mode < max_mode; ++mode) {
-      const int alpha = VP8CollectHistogram(src,
-                                            it->yuv_p_ + VP8I4ModeOffsets[mode],
-                                            0, 1);
-      if (alpha > best_mode_alpha) {
+      int alpha;
+
+      memset(&histos[cur_histo], 0, sizeof(histos[cur_histo]));
+      VP8CollectHistogram(src, it->yuv_p_ + VP8I4ModeOffsets[mode],
+                          0, 1, &histos[cur_histo]);
+      alpha = GetAlpha(&histos[cur_histo]);
+      if (IS_BETTER_ALPHA(alpha, best_mode_alpha)) {
         best_mode_alpha = alpha;
         modes[it->i4_] = mode;
+        cur_histo ^= 1;   // keep track of best histo so far.
       }
     }
-    i4_alpha += best_mode_alpha;
+    // accumulate best histogram
+    MergeHistograms(&histos[cur_histo ^ 1], &total_histo);
     // Note: we reuse the original samples for predictors
   } while (VP8IteratorRotateI4(it, it->yuv_in_ + Y_OFF));
 
-  if (i4_alpha > best_alpha) {
+  i4_alpha = GetAlpha(&total_histo);
+  if (IS_BETTER_ALPHA(i4_alpha, best_alpha)) {
     VP8SetIntra4Mode(it, modes);
-    best_alpha = ClipAlpha(i4_alpha);
+    best_alpha = i4_alpha;
   }
   return best_alpha;
 }
 
 static int MBAnalyzeBestUVMode(VP8EncIterator* const it) {
-  int best_alpha = -1;
+  int best_alpha = DEFAULT_ALPHA;
   int best_mode = 0;
   const int max_mode = (it->enc_->method_ >= 3) ? MAX_UV_MODE : 4;
   int mode;
   VP8MakeChroma8Preds(it);
   for (mode = 0; mode < max_mode; ++mode) {
-    const int alpha = VP8CollectHistogram(it->yuv_in_ + U_OFF,
-                                          it->yuv_p_ + VP8UVModeOffsets[mode],
-                                          16, 16 + 4 + 4);
-    if (alpha > best_alpha) {
+    VP8Histogram histo = { { 0 } };
+    int alpha;
+    VP8CollectHistogram(it->yuv_in_ + U_OFF,
+                        it->yuv_p_ + VP8UVModeOffsets[mode],
+                        16, 16 + 4 + 4, &histo);
+    alpha = GetAlpha(&histo);
+    if (IS_BETTER_ALPHA(alpha, best_alpha)) {
       best_alpha = alpha;
       best_mode = mode;
     }
@@ -305,7 +359,7 @@ static int MBAnalyzeBestUVMode(VP8EncIterator* const it) {
 }
 
 static void MBAnalyze(VP8EncIterator* const it,
-                      int alphas[256], int* const uv_alpha) {
+                      int alphas[MAX_ALPHA + 1], int* const uv_alpha) {
   const VP8Encoder* const enc = it->enc_;
   int best_alpha, best_uv_alpha;
 
@@ -324,10 +378,11 @@ static void MBAnalyze(VP8EncIterator* const it,
   best_uv_alpha = MBAnalyzeBestUVMode(it);
 
   // Final susceptibility mix
-  best_alpha = (best_alpha + best_uv_alpha + 1) / 2;
+  best_alpha = (3 * best_alpha + best_uv_alpha + 2) >> 2;
+  best_alpha = FinalAlphaValue(best_alpha);
   alphas[best_alpha]++;
   *uv_alpha += best_uv_alpha;
-  it->mb_->alpha_ = best_alpha;   // Informative only.
+  it->mb_->alpha_ = best_alpha;   // for later remapping.
 }
 
 //------------------------------------------------------------------------------
@@ -342,7 +397,7 @@ static void MBAnalyze(VP8EncIterator* const it,
 
 int VP8EncAnalyze(VP8Encoder* const enc) {
   int ok = 1;
-  int alphas[256] = { 0 };
+  int alphas[MAX_ALPHA + 1] = { 0 };
   VP8EncIterator it;
 
   VP8IteratorInit(enc, &it);

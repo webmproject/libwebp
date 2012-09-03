@@ -736,6 +736,7 @@ static void StoreSideInfo(const VP8EncIterator* const it) {
         const int b = (int)((it->luma_bits_ + it->uv_bits_ + 7) >> 3);
         *info = (b > 255) ? 255 : b; break;
       }
+      case 7: *info = mb->alpha_; break;
       default: *info = 0; break;
     };
   }
