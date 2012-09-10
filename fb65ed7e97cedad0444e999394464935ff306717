@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAPn//xUo\u003d",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-09-10T19:59:11Z",
+      "side": 1,
+      "message": "_M_IX86 for msvc",
+      "revId": "fb65ed7e97cedad0444e999394464935ff306717",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAPn//xUk\u003d",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-09-10T19:59:11Z",
+      "side": 1,
+      "message": "there\u0027s an _M_ARM now too",
+      "revId": "fb65ed7e97cedad0444e999394464935ff306717",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAPn//xUY\u003d",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-09-10T19:59:11Z",
+      "side": 1,
+      "message": "this (rename?) seems incomplete, SBITS is unused",
+      "revId": "fb65ed7e97cedad0444e999394464935ff306717",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAPn//xUc\u003d",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-09-10T19:59:11Z",
+      "side": 1,
+      "message": "Derived?",
+      "revId": "fb65ed7e97cedad0444e999394464935ff306717",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
