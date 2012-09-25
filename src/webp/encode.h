@@ -20,6 +20,15 @@ extern "C" {
 
 #define WEBP_ENCODER_ABI_VERSION 0x0200    // MAJOR(8b) + MINOR(8b)
 
+typedef enum WebPImageHint WebPImageHint;
+typedef enum WebPEncCSP WebPEncCSP;
+typedef struct WebPConfig WebPConfig;
+typedef enum WebPPreset WebPPreset;
+typedef struct WebPPicture WebPPicture;   // main structure for I/O
+typedef struct WebPAuxStats WebPAuxStats;
+typedef struct WebPMemoryWriter WebPMemoryWriter;
+typedef enum WebPEncodingError WebPEncodingError;
+
 // Return the encoder's version number, packed in hexadecimal using 8bits for
 // each of major/minor/revision. E.g: v2.5.7 is 0x020507.
 WEBP_EXTERN(int) WebPGetEncoderVersion(void);
@@ -66,15 +75,16 @@ WEBP_EXTERN(size_t) WebPEncodeLosslessBGRA(const uint8_t* bgra,
 // Coding parameters
 
 // Image characteristics hint for the underlying encoder.
-typedef enum {
+enum WebPImageHint {
   WEBP_HINT_DEFAULT = 0,  // default preset.
   WEBP_HINT_PICTURE,      // digital picture, like portrait, inner shot
   WEBP_HINT_PHOTO,        // outdoor photograph, with natural lighting
   WEBP_HINT_GRAPH,        // Discrete tone image (graph, map-tile etc).
   WEBP_HINT_LAST
-} WebPImageHint;
+};
 
-typedef struct {
+// Compression parameters.
+struct WebPConfig {
   int lossless;           // Lossless encoding (0=lossy(default), 1=lossless).
   float quality;          // between 0 (smallest file) and 100 (biggest)
   int method;             // quality/speed trade-off (0=fast, 6=slower-better)
@@ -111,18 +121,18 @@ typedef struct {
                           // 100: maximum possible degradation).
 
   uint32_t pad[8];        // padding for later use
-} WebPConfig;
+};
 
 // Enumerate some predefined settings for WebPConfig, depending on the type
 // of source picture. These presets are used when calling WebPConfigPreset().
-typedef enum {
+enum WebPPreset {
   WEBP_PRESET_DEFAULT = 0,  // default preset.
   WEBP_PRESET_PICTURE,      // digital picture, like portrait, inner shot
   WEBP_PRESET_PHOTO,        // outdoor photograph, with natural lighting
   WEBP_PRESET_DRAWING,      // hand or line drawing, with high-contrast details
   WEBP_PRESET_ICON,         // small-sized colorful images
   WEBP_PRESET_TEXT          // text-like
-} WebPPreset;
+};
 
 // Internal, version-checked, entry point
 WEBP_EXTERN(int) WebPConfigInitInternal(WebPConfig*, WebPPreset, float, int);
@@ -152,11 +162,9 @@ WEBP_EXTERN(int) WebPValidateConfig(const WebPConfig* config);
 
 //------------------------------------------------------------------------------
 // Input / Output
-
-typedef struct WebPPicture WebPPicture;   // main structure for I/O
-
 // Structure for storing auxiliary statistics (mostly for lossy encoding).
-typedef struct {
+
+struct WebPAuxStats {
   int coded_size;         // final size
 
   float PSNR[5];          // peak-signal-to-noise ratio for Y/U/V/All/Alpha
@@ -182,7 +190,7 @@ typedef struct {
   int lossless_size;           // final lossless size
 
   uint32_t pad[4];        // padding for later use
-} WebPAuxStats;
+};
 
 // Signature for output function. Should return true if writing was successful.
 // data/data_size is the segment of data to write, and 'picture' is for
@@ -192,12 +200,12 @@ typedef int (*WebPWriterFunction)(const uint8_t* data, size_t data_size,
 
 // WebPMemoryWrite: a special WebPWriterFunction that writes to memory using
 // the following WebPMemoryWriter object (to be set as a custom_ptr).
-typedef struct {
+struct WebPMemoryWriter {
   uint8_t* mem;       // final buffer (of size 'max_size', larger than 'size').
   size_t   size;      // final size
   size_t   max_size;  // total capacity
   uint32_t pad[1];    // padding for later use
-} WebPMemoryWriter;
+};
 
 // The following must be called first before any use.
 WEBP_EXTERN(void) WebPMemoryWriterInit(WebPMemoryWriter* writer);
@@ -212,7 +220,8 @@ WEBP_EXTERN(int) WebPMemoryWrite(const uint8_t* data, size_t data_size,
 // everything is OK.
 typedef int (*WebPProgressHook)(int percent, const WebPPicture* picture);
 
-typedef enum {
+// Color spaces.
+enum WebPEncCSP {
   // chroma sampling
   WEBP_YUV420 = 0,   // 4:2:0
   WEBP_YUV422 = 1,   // 4:2:2
@@ -225,10 +234,10 @@ typedef enum {
   WEBP_YUV444A = 6,
   WEBP_YUV400A = 7,   // grayscale + alpha
   WEBP_CSP_ALPHA_BIT = 4   // bit that is set if alpha is present
-} WebPEncCSP;
+};
 
 // Encoding error conditions.
-typedef enum {
+enum WebPEncodingError {
   VP8_ENC_OK = 0,
   VP8_ENC_ERROR_OUT_OF_MEMORY,            // memory error allocating objects
   VP8_ENC_ERROR_BITSTREAM_OUT_OF_MEMORY,  // memory error while flushing bits
@@ -241,7 +250,7 @@ typedef enum {
   VP8_ENC_ERROR_FILE_TOO_BIG,             // file is bigger than 4G
   VP8_ENC_ERROR_USER_ABORT,               // abort request by user
   VP8_ENC_ERROR_LAST                      // list terminator. always last.
-} WebPEncodingError;
+};
 
 // maximum width/height allowed (inclusive), in pixels
 #define WEBP_MAX_DIMENSION 16383
