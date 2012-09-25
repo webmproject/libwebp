@@ -37,7 +37,8 @@ extern "C" {
 static int CompareColors(const void* p1, const void* p2) {
   const uint32_t a = *(const uint32_t*)p1;
   const uint32_t b = *(const uint32_t*)p2;
-  return (a < b) ? -1 : (a > b) ? 1 : 0;
+  assert(a != b);
+  return (a < b) ? -1 : 1;
 }
 
 // If number of colors in the image is less than or equal to MAX_PALETTE_SIZE,

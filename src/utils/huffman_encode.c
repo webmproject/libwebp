@@ -138,13 +138,8 @@ static int CompareHuffmanTrees(const void* ptr1, const void* ptr2) {
   } else if (t1->total_count_ < t2->total_count_) {
     return 1;
   } else {
-    if (t1->value_ < t2->value_) {
-      return -1;
-    }
-    if (t1->value_ > t2->value_) {
-      return 1;
-    }
-    return 0;
+    assert(t1->value_ != t2->value_);
+    return (t1->value_ < t2->value_) ? -1 : 1;
   }
 }
 
