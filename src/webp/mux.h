@@ -53,27 +53,40 @@ extern "C" {
 
 #define WEBP_MUX_ABI_VERSION 0x0100        // MAJOR(8b) + MINOR(8b)
 
+typedef struct WebPMux WebPMux;   // main opaque object.
+typedef struct WebPData WebPData;
+typedef enum WebPMuxError WebPMuxError;
+typedef enum WebPFeatureFlags WebPFeatureFlags;
+typedef enum WebPChunkId WebPChunkId;
+typedef struct WebPMuxFrameInfo WebPMuxFrameInfo;
+
+typedef struct WebPDemuxer WebPDemuxer;
+typedef enum WebPDemuxState WebPDemuxState;
+typedef enum WebPFormatFeature WebPFormatFeature;
+typedef struct WebPIterator WebPIterator;
+typedef struct WebPChunkIterator WebPChunkIterator;
+
 // Error codes
-typedef enum {
+enum WebPMuxError {
   WEBP_MUX_OK                 =  1,
   WEBP_MUX_NOT_FOUND          =  0,
   WEBP_MUX_INVALID_ARGUMENT   = -1,
   WEBP_MUX_BAD_DATA           = -2,
   WEBP_MUX_MEMORY_ERROR       = -3,
   WEBP_MUX_NOT_ENOUGH_DATA    = -4
-} WebPMuxError;
+};
 
 // Flag values for different features used in VP8X chunk.
-typedef enum {
+enum WebPFeatureFlags {
   TILE_FLAG       = 0x00000001,
   ANIMATION_FLAG  = 0x00000002,
   ICCP_FLAG       = 0x00000004,
   META_FLAG       = 0x00000008,
   ALPHA_FLAG      = 0x00000010
-} WebPFeatureFlags;
+};
 
 // IDs for different types of chunks.
-typedef enum {
+enum WebPChunkId {
   WEBP_CHUNK_VP8X,     // VP8X
   WEBP_CHUNK_ICCP,     // ICCP
   WEBP_CHUNK_LOOP,     // LOOP
@@ -84,16 +97,14 @@ typedef enum {
   WEBP_CHUNK_META,     // META
   WEBP_CHUNK_UNKNOWN,  // Other chunks.
   WEBP_CHUNK_NIL
-} WebPChunkId;
-
-typedef struct WebPMux WebPMux;   // main opaque object.
+};
 
 // Data type used to describe 'raw' data, e.g., chunk data
 // (ICC profile, metadata) and WebP compressed image data.
-typedef struct {
+struct WebPData {
   const uint8_t* bytes_;
   size_t size_;
-} WebPData;
+};
 
 //------------------------------------------------------------------------------
 // Manipulation of a WebPData object.
@@ -246,14 +257,14 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteChunk(
 // Animation.
 
 // Encapsulates data about a single frame/tile.
-typedef struct {
+struct WebPMuxFrameInfo {
   WebPData bitstream_;  // image data: can either be a raw VP8/VP8L bitstream
                         // or a single-image WebP file.
   int x_offset_;        // x-offset of the frame.
   int y_offset_;        // y-offset of the frame.
   int duration_;        // duration of the frame (in milliseconds).
   uint32_t pad[3];      // padding for later use
-} WebPMuxFrameInfo;
+};
 
 // Adds an animation frame at the end of the mux object.
 // Note: as WebP only supports even offsets, any odd offset will be snapped to
@@ -423,13 +434,11 @@ WEBP_EXTERN(WebPMuxError) WebPMuxAssemble(WebPMux* mux,
 
 #define WEBP_DEMUX_ABI_VERSION 0x0100    // MAJOR(8b) + MINOR(8b)
 
-typedef struct WebPDemuxer WebPDemuxer;
-
-typedef enum {
+enum WebPDemuxState {
   WEBP_DEMUX_PARSING_HEADER,  // Not enough data to parse full header.
   WEBP_DEMUX_PARSED_HEADER,   // Header parsing complete, data may be available.
   WEBP_DEMUX_DONE             // Entire file has been parsed.
-} WebPDemuxState;
+};
 
 //------------------------------------------------------------------------------
 // Life of a Demux object
@@ -459,12 +468,12 @@ WEBP_EXTERN(void) WebPDemuxDelete(WebPDemuxer* dmux);
 //------------------------------------------------------------------------------
 // Data/information extraction.
 
-typedef enum {
+enum WebPFormatFeature {
   WEBP_FF_FORMAT_FLAGS,  // Extended format flags present in the 'VP8X' chunk.
   WEBP_FF_CANVAS_WIDTH,
   WEBP_FF_CANVAS_HEIGHT,
   WEBP_FF_LOOP_COUNT
-} WebPFormatFeature;
+};
 
 // Get the 'feature' value from the 'dmux'.
 // NOTE: values are only valid if WebPDemux() was used or WebPDemuxPartial()
@@ -475,7 +484,7 @@ WEBP_EXTERN(uint32_t) WebPDemuxGetI(
 //------------------------------------------------------------------------------
 // Frame iteration.
 
-typedef struct {
+struct WebPIterator {
   int frame_num_;
   int num_frames_;
   int tile_num_;
@@ -489,7 +498,7 @@ typedef struct {
 
   uint32_t pad[4];           // padding for later use
   void* private_;
-} WebPIterator;
+};
 
 // Retrieves frame 'frame_number' from 'dmux'.
 // 'iter->tile_' points to the first tile on return from this function.
@@ -519,7 +528,7 @@ WEBP_EXTERN(void) WebPDemuxReleaseIterator(WebPIterator* iter);
 //------------------------------------------------------------------------------
 // Chunk iteration.
 
-typedef struct {
+struct WebPChunkIterator {
   // The current and total number of chunks with the fourcc given to
   // WebPDemuxGetChunk().
   int chunk_num_;
@@ -528,7 +537,7 @@ typedef struct {
 
   uint32_t pad[6];    // padding for later use
   void* private_;
-} WebPChunkIterator;
+};
 
 // Retrieves the 'chunk_number' instance of the chunk with id 'fourcc' from
 // 'dmux'.

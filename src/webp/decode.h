@@ -20,6 +20,16 @@ extern "C" {
 
 #define WEBP_DECODER_ABI_VERSION 0x0200    // MAJOR(8b) + MINOR(8b)
 
+typedef struct WebPRGBABuffer WebPRGBABuffer;
+typedef struct WebPYUVABuffer WebPYUVABuffer;
+typedef struct WebPDecBuffer WebPDecBuffer;
+typedef enum VP8StatusCode VP8StatusCode;
+typedef enum WEBP_CSP_MODE WEBP_CSP_MODE;
+typedef struct WebPIDecoder WebPIDecoder;
+typedef struct WebPBitstreamFeatures WebPBitstreamFeatures;
+typedef struct WebPDecoderOptions WebPDecoderOptions;
+typedef struct WebPDecoderConfig WebPDecoderConfig;
+
 // Return the decoder's version number, packed in hexadecimal using 8bits for
 // each of major/minor/revision. E.g: v2.5.7 is 0x020507.
 WEBP_EXTERN(int) WebPGetDecoderVersion(void);
@@ -119,19 +129,20 @@ WEBP_EXTERN(uint8_t*) WebPDecodeYUVInto(
 // For instance, MODE_BGRA relates to samples ordered as B,G,R,A,B,G,R,A,...
 // Non-capital names (e.g.:MODE_Argb) relates to pre-multiplied RGB channels.
 // RGB-565 and RGBA-4444 are also endian-agnostic and byte-oriented.
-typedef enum { MODE_RGB = 0, MODE_RGBA = 1,
-               MODE_BGR = 2, MODE_BGRA = 3,
-               MODE_ARGB = 4, MODE_RGBA_4444 = 5,
-               MODE_RGB_565 = 6,
-               // RGB-premultiplied transparent modes (alpha value is preserved)
-               MODE_rgbA = 7,
-               MODE_bgrA = 8,
-               MODE_Argb = 9,
-               MODE_rgbA_4444 = 10,
-               // YUV modes must come after RGB ones.
-               MODE_YUV = 11, MODE_YUVA = 12,  // yuv 4:2:0
-               MODE_LAST = 13
-             } WEBP_CSP_MODE;
+enum WEBP_CSP_MODE {
+  MODE_RGB = 0, MODE_RGBA = 1,
+  MODE_BGR = 2, MODE_BGRA = 3,
+  MODE_ARGB = 4, MODE_RGBA_4444 = 5,
+  MODE_RGB_565 = 6,
+  // RGB-premultiplied transparent modes (alpha value is preserved)
+  MODE_rgbA = 7,
+  MODE_bgrA = 8,
+  MODE_Argb = 9,
+  MODE_rgbA_4444 = 10,
+  // YUV modes must come after RGB ones.
+  MODE_YUV = 11, MODE_YUVA = 12,  // yuv 4:2:0
+  MODE_LAST = 13
+};
 
 // Some useful macros:
 static WEBP_INLINE int WebPIsPremultipliedMode(WEBP_CSP_MODE mode) {
@@ -152,13 +163,13 @@ static WEBP_INLINE int WebPIsRGBMode(WEBP_CSP_MODE mode) {
 //------------------------------------------------------------------------------
 // WebPDecBuffer: Generic structure for describing the output sample buffer.
 
-typedef struct {    // view as RGBA
+struct WebPRGBABuffer {    // view as RGBA
   uint8_t* rgba;    // pointer to RGBA samples
   int stride;       // stride in bytes from one scanline to the next.
   size_t size;      // total size of the *rgba buffer.
-} WebPRGBABuffer;
+};
 
-typedef struct {              // view as YUVA
+struct WebPYUVABuffer {              // view as YUVA
   uint8_t* y, *u, *v, *a;     // pointer to luma, chroma U/V, alpha samples
   int y_stride;               // luma stride
   int u_stride, v_stride;     // chroma strides
@@ -166,10 +177,10 @@ typedef struct {              // view as YUVA
   size_t y_size;              // luma plane size
   size_t u_size, v_size;      // chroma planes size
   size_t a_size;              // alpha-plane size
-} WebPYUVABuffer;
+};
 
 // Output buffer
-typedef struct {
+struct WebPDecBuffer {
   WEBP_CSP_MODE colorspace;  // Colorspace.
   int width, height;         // Dimensions.
   int is_external_memory;    // If true, 'internal_memory' pointer is not used.
@@ -182,7 +193,7 @@ typedef struct {
   uint8_t* private_memory;   // Internally allocated memory (only when
                              // is_external_memory is false). Should not be used
                              // externally, but accessed via the buffer union.
-} WebPDecBuffer;
+};
 
 // Internal, version-checked, entry point
 WEBP_EXTERN(int) WebPInitDecBufferInternal(WebPDecBuffer*, int);
@@ -200,7 +211,7 @@ WEBP_EXTERN(void) WebPFreeDecBuffer(WebPDecBuffer* buffer);
 //------------------------------------------------------------------------------
 // Enumeration of the status codes
 
-typedef enum {
+enum VP8StatusCode {
   VP8_STATUS_OK = 0,
   VP8_STATUS_OUT_OF_MEMORY,
   VP8_STATUS_INVALID_PARAM,
@@ -209,7 +220,7 @@ typedef enum {
   VP8_STATUS_SUSPENDED,
   VP8_STATUS_USER_ABORT,
   VP8_STATUS_NOT_ENOUGH_DATA
-} VP8StatusCode;
+};
 
 //------------------------------------------------------------------------------
 // Incremental decoding
@@ -236,8 +247,6 @@ typedef enum {
 //     // WebPIDecGetRGB()/WebPIDecGetYUVA() etc.
 //   }
 //   WebPIDelete(idec);
-
-typedef struct WebPIDecoder WebPIDecoder;
 
 // Creates a new incremental decoder with the supplied buffer parameter.
 // This output_buffer can be passed NULL, in which case a default output buffer
@@ -365,7 +374,7 @@ WEBP_EXTERN(const WebPDecBuffer*) WebPIDecodedArea(
 */
 
 // Features gathered from the bitstream
-typedef struct {
+struct WebPBitstreamFeatures {
   int width;        // Width in pixels, as read from the bitstream.
   int height;       // Height in pixels, as read from the bitstream.
   int has_alpha;    // True if the bitstream contains an alpha channel.
@@ -377,7 +386,7 @@ typedef struct {
   int rotate;                   // TODO(later)
   int uv_sampling;              // should be 0 for now. TODO(later)
   uint32_t pad[3];              // padding for later use
-} WebPBitstreamFeatures;
+};
 
 // Internal, version-checked, entry point
 WEBP_EXTERN(VP8StatusCode) WebPGetFeaturesInternal(
@@ -395,7 +404,7 @@ static WEBP_INLINE VP8StatusCode WebPGetFeatures(
 }
 
 // Decoding options
-typedef struct {
+struct WebPDecoderOptions {
   int bypass_filtering;               // if true, skip the in-loop filtering
   int no_fancy_upsampling;            // if true, use faster pointwise upsampler
   int use_cropping;                   // if true, cropping is applied _first_
@@ -410,14 +419,14 @@ typedef struct {
   int force_rotation;                 // forced rotation (to be applied _last_)
   int no_enhancement;                 // if true, discard enhancement layer
   uint32_t pad[6];                    // padding for later use
-} WebPDecoderOptions;
+};
 
 // Main object storing the configuration for advanced decoding.
-typedef struct {
+struct WebPDecoderConfig {
   WebPBitstreamFeatures input;  // Immutable bitstream features (optional)
   WebPDecBuffer output;         // Output buffer (can point to external mem)
   WebPDecoderOptions options;   // Decoding options
-} WebPDecoderConfig;
+};
 
 // Internal, version-checked, entry point
 WEBP_EXTERN(int) WebPInitDecoderConfigInternal(WebPDecoderConfig*, int);
