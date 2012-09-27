@@ -46,22 +46,15 @@ static struct {
   int decoding_error;
   int print_info;
 
-  uint32_t flags;
   int loop_count;
-  int frame_num;
-  int frame_max;
 
   const char* file_name;
   WebPData data;
-  WebPMux* mux;
   WebPDecoderConfig* config;
   const WebPDecBuffer* pic;
-} kParams = {
-  0, 0, 0, 0,         // has_animation, ...
-  0, 1, 1, 0,         // flags, ...
-  NULL, { NULL, 0 },  // file_name, ...
-  NULL, NULL, NULL    // mux, ...
-};
+  WebPDemuxer* dmux;
+  WebPIterator frameiter;
+} kParams;
 
 static void ClearPreviousPic(void) {
   WebPFreeDecBuffer((WebPDecBuffer*)kParams.pic);
@@ -71,8 +64,9 @@ static void ClearPreviousPic(void) {
 static void ClearParams(void) {
   ClearPreviousPic();
   WebPDataClear(&kParams.data);
-  WebPMuxDelete(kParams.mux);
-  kParams.mux = NULL;
+  WebPDemuxReleaseIterator(&kParams.frameiter);
+  WebPDemuxDelete(kParams.dmux);
+  kParams.dmux = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -177,36 +171,24 @@ static void StartDisplay(const WebPDecBuffer* const pic) {
 //------------------------------------------------------------------------------
 // File decoding
 
-static int Decode(const int frame_number, int* const duration) {
+static int Decode(int* const duration) {
+  const WebPIterator* const iter = &kParams.frameiter;
   WebPDecoderConfig* const config = kParams.config;
-  WebPData *data, image_data;
-  int x_off = 0, y_off = 0;
   WebPDecBuffer* const output_buffer = &config->output;
   int ok = 0;
 
   ClearPreviousPic();
-  if (kParams.has_animation) {
-    if (WebPMuxGetFrame(kParams.mux, frame_number, &image_data,
-                        &x_off, &y_off, duration) != WEBP_MUX_OK) {
-      goto end;
-    }
-    if (x_off != 0 || y_off != 0) {
-      fprintf(stderr,
-              "Frame offsets not yet supported! Forcing offset to 0,0\n");
-      x_off = y_off = 0;
-    }
-    data = &image_data;
-  } else {
-    data = &kParams.data;
+  if (iter->x_offset_ != 0 || iter->y_offset_ != 0) {
+    fprintf(stderr,
+            "Frame offsets not yet supported! Forcing offset to 0,0\n");
   }
-
   output_buffer->colorspace = MODE_RGBA;
-  ok = (WebPDecode(data->bytes_, data->size_, config) == VP8_STATUS_OK);
-
- end:
+  ok = (WebPDecode(iter->tile_.bytes_, iter->tile_.size_,
+                   config) == VP8_STATUS_OK);
   if (!ok) {
-    fprintf(stderr, "Decoding of frame #%d failed!\n", frame_number);
+    fprintf(stderr, "Decoding of frame #%d failed!\n", iter->frame_num_);
   } else {
+    *duration = iter->duration_;
     kParams.pic = output_buffer;
   }
   return ok;
@@ -215,16 +197,21 @@ static int Decode(const int frame_number, int* const duration) {
 static void decode_callback(int what) {
   if (what == 0 && !kParams.done) {
     int duration = 0;
-    if (kParams.mux != NULL) {
-      if (!Decode(kParams.frame_num, &duration)) {
+    if (kParams.dmux != NULL) {
+      if (!Decode(&duration)) {
         kParams.decoding_error = 1;
         kParams.done = 1;
       } else {
-        ++kParams.frame_num;
-        if (kParams.frame_num > kParams.frame_max) {
-          kParams.frame_num = 1;
-          --kParams.loop_count;
-          kParams.done = (kParams.loop_count == 0);
+        WebPIterator* const iter = &kParams.frameiter;
+        if (!WebPDemuxNextFrame(iter)) {
+          WebPDemuxReleaseIterator(iter);
+          if (WebPDemuxGetFrame(kParams.dmux, 1, iter)) {
+            --kParams.loop_count;
+            kParams.done = (kParams.loop_count == 0);
+          } else {
+            kParams.decoding_error = 1;
+            kParams.done = 1;
+          }
         }
       }
     }
@@ -252,7 +239,6 @@ static void Help(void) {
 
 int main(int argc, char *argv[]) {
   WebPDecoderConfig config;
-  WebPMuxError mux_err;
   int c;
 
   if (!WebPInitDecoderConfig(&config)) {
@@ -306,41 +292,28 @@ int main(int argc, char *argv[]) {
     goto Error;
   }
 
-  kParams.mux = WebPMuxCreate(&kParams.data, 0);
-  if (kParams.mux == NULL) {
+  kParams.dmux = WebPDemux(&kParams.data);
+  if (kParams.dmux == NULL) {
     fprintf(stderr, "Could not create demuxing object!\n");
     goto Error;
   }
 
-  mux_err = WebPMuxGetFeatures(kParams.mux, &kParams.flags);
-  if (mux_err != WEBP_MUX_OK) {
-    goto Error;
-  }
-  if (kParams.flags & TILE_FLAG) {
+  if (WebPDemuxGetI(kParams.dmux, WEBP_FF_FORMAT_FLAGS) & TILE_FLAG) {
     fprintf(stderr, "Tiling is not supported for now!\n");
     goto Error;
   }
 
-  kParams.has_animation = !!(kParams.flags & ANIMATION_FLAG);
+  if (!WebPDemuxGetFrame(kParams.dmux, 1, &kParams.frameiter)) goto Error;
 
-  if (kParams.has_animation) {
-    mux_err = WebPMuxGetLoopCount(kParams.mux, &kParams.loop_count);
-    if (mux_err != WEBP_MUX_OK && mux_err != WEBP_MUX_NOT_FOUND) {
-      goto Error;
-    }
-    mux_err = WebPMuxNumChunks(kParams.mux, WEBP_CHUNK_IMAGE,
-                               &kParams.frame_max);
-    if (mux_err != WEBP_MUX_OK) {
-      goto Error;
-    }
-    printf("VP8X: Found %d images in file (loop count = %d)\n",
-           kParams.frame_max, kParams.loop_count);
-  }
+  kParams.has_animation = (kParams.frameiter.num_frames_ > 1);
+  kParams.loop_count = (int)WebPDemuxGetI(kParams.dmux, WEBP_FF_LOOP_COUNT);
+  printf("VP8X: Found %d images in file (loop count = %d)\n",
+         kParams.frameiter.num_frames_, kParams.loop_count);
 
   // Decode first frame
   {
     int duration;
-    if (!Decode(1, &duration)) goto Error;
+    if (!Decode(&duration)) goto Error;
   }
 
   // Start display (and timer)
