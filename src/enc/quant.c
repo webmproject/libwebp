@@ -229,10 +229,50 @@ static double QualityToCompression(double q) {
   return (c < 0.75) ? c * (2. / 3.) : 2. * c - 1.;
 }
 
+static int SegmentsAreEquivalent(const VP8SegmentInfo* const S1,
+                                 const VP8SegmentInfo* const S2) {
+  return (S1->quant_ == S2->quant_) && (S1->fstrength_ == S2->fstrength_);
+}
+
+static void SimplifySegments(VP8Encoder* const enc) {
+  int map[NUM_MB_SEGMENTS] = { 0, 1, 2, 3 };
+  const int num_segments = enc->segment_hdr_.num_segments_;
+  int num_final_segments = 1;
+  int s1, s2;
+  for (s1 = 1; s1 < num_segments; ++s1) {    // find similar segments
+    const VP8SegmentInfo* const S1 = &enc->dqm_[s1];
+    int found = 0;
+    // check if we already have similar segment
+    for (s2 = 0; s2 < num_final_segments; ++s2) {
+      const VP8SegmentInfo* const S2 = &enc->dqm_[s2];
+      if (SegmentsAreEquivalent(S1, S2)) {
+        found = 1;
+        break;
+      }
+    }
+    map[s1] = s2;
+    if (!found) {
+      if (num_final_segments != s1) {
+        enc->dqm_[num_final_segments] = enc->dqm_[s1];
+      }
+      ++num_final_segments;
+    }
+  }
+  if (num_final_segments < num_segments) {  // Remap
+    int i = enc->mb_w_* enc->mb_h_;
+    while (i-- > 0) enc->mb_info_[i].segment_ = map[enc->mb_info_[i].segment_];
+    enc->segment_hdr_.num_segments_ = num_final_segments;
+    // Replicate the trailing segment infos (it's mostly cosmetics)
+    for (i = num_final_segments; i < num_segments; ++i) {
+      enc->dqm_[i] = enc->dqm_[num_final_segments - 1];
+    }
+  }
+}
+
 void VP8SetSegmentParams(VP8Encoder* const enc, float quality) {
   int i;
   int dq_uv_ac, dq_uv_dc;
-  const int num_segments = enc->config_->segments;
+  const int num_segments = enc->segment_hdr_.num_segments_;
   const double amp = SNS_TO_DQ * enc->config_->sns_strength / 100. / 128.;
   const double c_base = QualityToCompression(quality);
   for (i = 0; i < num_segments; ++i) {
@@ -281,9 +321,11 @@ void VP8SetSegmentParams(VP8Encoder* const enc, float quality) {
   enc->dq_uv_dc_ = dq_uv_dc;
   enc->dq_uv_ac_ = dq_uv_ac;
 
-  SetupMatrices(enc);
-
   SetupFilterStrength(enc);   // initialize segments' filtering, eventually
+
+  if (num_segments > 1) SimplifySegments(enc);
+
+  SetupMatrices(enc);         // finalize quantization matrices
 }
 
 //------------------------------------------------------------------------------
