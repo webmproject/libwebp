@@ -23,8 +23,10 @@ extern "C" {
 typedef struct WebPRGBABuffer WebPRGBABuffer;
 typedef struct WebPYUVABuffer WebPYUVABuffer;
 typedef struct WebPDecBuffer WebPDecBuffer;
+#if !(defined(__cplusplus) || defined(c_plusplus))
 typedef enum VP8StatusCode VP8StatusCode;
 typedef enum WEBP_CSP_MODE WEBP_CSP_MODE;
+#endif
 typedef struct WebPIDecoder WebPIDecoder;
 typedef struct WebPBitstreamFeatures WebPBitstreamFeatures;
 typedef struct WebPDecoderOptions WebPDecoderOptions;

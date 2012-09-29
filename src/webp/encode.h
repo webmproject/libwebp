@@ -20,14 +20,16 @@ extern "C" {
 
 #define WEBP_ENCODER_ABI_VERSION 0x0200    // MAJOR(8b) + MINOR(8b)
 
+#if !(defined(__cplusplus) || defined(c_plusplus))
 typedef enum WebPImageHint WebPImageHint;
 typedef enum WebPEncCSP WebPEncCSP;
-typedef struct WebPConfig WebPConfig;
 typedef enum WebPPreset WebPPreset;
+typedef enum WebPEncodingError WebPEncodingError;
+#endif
+typedef struct WebPConfig WebPConfig;
 typedef struct WebPPicture WebPPicture;   // main structure for I/O
 typedef struct WebPAuxStats WebPAuxStats;
 typedef struct WebPMemoryWriter WebPMemoryWriter;
-typedef enum WebPEncodingError WebPEncodingError;
 
 // Return the encoder's version number, packed in hexadecimal using 8bits for
 // each of major/minor/revision. E.g: v2.5.7 is 0x020507.

@@ -55,14 +55,18 @@ extern "C" {
 
 typedef struct WebPMux WebPMux;   // main opaque object.
 typedef struct WebPData WebPData;
+#if !(defined(__cplusplus) || defined(c_plusplus))
 typedef enum WebPMuxError WebPMuxError;
 typedef enum WebPFeatureFlags WebPFeatureFlags;
 typedef enum WebPChunkId WebPChunkId;
+#endif
 typedef struct WebPMuxFrameInfo WebPMuxFrameInfo;
 
 typedef struct WebPDemuxer WebPDemuxer;
+#if !(defined(__cplusplus) || defined(c_plusplus))
 typedef enum WebPDemuxState WebPDemuxState;
 typedef enum WebPFormatFeature WebPFormatFeature;
+#endif
 typedef struct WebPIterator WebPIterator;
 typedef struct WebPChunkIterator WebPChunkIterator;
 
