@@ -68,47 +68,7 @@ static void SmoothSegmentMap(VP8Encoder* const enc) {
 }
 
 //------------------------------------------------------------------------------
-// Finalize Segment probability based on the coding tree
-
-static int GetProba(int a, int b) {
-  int proba;
-  const int total = a + b;
-  if (total == 0) return 255;  // that's the default probability.
-  proba = (255 * a + total / 2) / total;
-  return proba;
-}
-
-static void SetSegmentProbas(VP8Encoder* const enc) {
-  int p[NUM_MB_SEGMENTS] = { 0 };
-  int n;
-
-  for (n = 0; n < enc->mb_w_ * enc->mb_h_; ++n) {
-    const VP8MBInfo* const mb = &enc->mb_info_[n];
-    p[mb->segment_]++;
-  }
-  if (enc->pic_->stats) {
-    for (n = 0; n < NUM_MB_SEGMENTS; ++n) {
-      enc->pic_->stats->segment_size[n] = p[n];
-    }
-  }
-  if (enc->segment_hdr_.num_segments_ > 1) {
-    uint8_t* const probas = enc->proba_.segments_;
-    probas[0] = GetProba(p[0] + p[1], p[2] + p[3]);
-    probas[1] = GetProba(p[0], p[1]);
-    probas[2] = GetProba(p[2], p[3]);
-
-    enc->segment_hdr_.update_map_ =
-        (probas[0] != 255) || (probas[1] != 255) || (probas[2] != 255);
-    enc->segment_hdr_.size_ =
-      p[0] * (VP8BitCost(0, probas[0]) + VP8BitCost(0, probas[1])) +
-      p[1] * (VP8BitCost(0, probas[0]) + VP8BitCost(1, probas[1])) +
-      p[2] * (VP8BitCost(1, probas[0]) + VP8BitCost(0, probas[2])) +
-      p[3] * (VP8BitCost(1, probas[0]) + VP8BitCost(1, probas[2]));
-  } else {
-    enc->segment_hdr_.update_map_ = 0;
-    enc->segment_hdr_.size_ = 0;
-  }
-}
+// set segment susceptibility alpha_ / beta_
 
 static WEBP_INLINE int clip(int v, int m, int M) {
   return (v < m) ? m : (v > M) ? M : v;
@@ -255,7 +215,6 @@ static void AssignSegments(VP8Encoder* const enc,
     if (smooth) SmoothSegmentMap(enc);
   }
 
-  SetSegmentProbas(enc);                             // Assign final proba
   SetSegmentAlphas(enc, centers, weighted_average);  // pick some alphas.
 }
 
