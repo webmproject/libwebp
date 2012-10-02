@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAQH//+BY\u003d",
+        "filename": "src/enc/frame.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-10-02T18:19:18Z",
+      "side": 1,
+      "message": "the proba variable could be dropped",
+      "revId": "fee6627538ecd46e9212ae91921b31ddde924619",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQH//+Bg\u003d",
+        "filename": "src/enc/frame.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-10-02T18:19:18Z",
+      "side": 1,
+      "message": "indent is off",
+      "revId": "fee6627538ecd46e9212ae91921b31ddde924619",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQH//+BE\u003d",
+        "filename": "src/enc/quant.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-10-02T18:19:18Z",
+      "side": 1,
+      "message": "space before \u0027*\u0027",
+      "revId": "fee6627538ecd46e9212ae91921b31ddde924619",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
