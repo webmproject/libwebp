@@ -529,7 +529,12 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
                                 sizeof(*histogram_symbols));
   assert(histogram_bits >= MIN_HUFFMAN_BITS);
   assert(histogram_bits <= MAX_HUFFMAN_BITS);
-  if (histogram_image == NULL || histogram_symbols == NULL) goto Error;
+
+  if (histogram_image == NULL || histogram_symbols == NULL) {
+    free(histogram_image);
+    free(histogram_symbols);
+    return 0;
+  }
 
   // Calculate backward references from ARGB image.
   if (!VP8LGetBackwardReferences(width, height, argb, quality, cache_bits,
