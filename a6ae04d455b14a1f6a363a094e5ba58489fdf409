@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAQH//87o\u003d",
+        "filename": "src/enc/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-10-03T19:30:12Z",
+      "side": 1,
+      "message": "there might be other cases like this, I\u0027ll have to have a look...this came up when debugging issue 128",
+      "revId": "a6ae04d455b14a1f6a363a094e5ba58489fdf409",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
