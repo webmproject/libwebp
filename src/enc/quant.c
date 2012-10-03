@@ -259,7 +259,7 @@ static void SimplifySegments(VP8Encoder* const enc) {
     }
   }
   if (num_final_segments < num_segments) {  // Remap
-    int i = enc->mb_w_* enc->mb_h_;
+    int i = enc->mb_w_ * enc->mb_h_;
     while (i-- > 0) enc->mb_info_[i].segment_ = map[enc->mb_info_[i].segment_];
     enc->segment_hdr_.num_segments_ = num_final_segments;
     // Replicate the trailing segment infos (it's mostly cosmetics)

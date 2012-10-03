@@ -215,11 +215,9 @@ static int FinalizeTokenProbas(VP8Encoder* const enc) {
 // Finalize Segment probability based on the coding tree
 
 static int GetProba(int a, int b) {
-  int proba;
   const int total = a + b;
-  if (total == 0) return 255;  // that's the default probability.
-  proba = (255 * a + total / 2) / total;
-  return proba;
+  return (total == 0) ? 255     // that's the default probability.
+                      : (255 * a + total / 2) / total;  // rounded proba
 }
 
 static void SetSegmentProbas(VP8Encoder* const enc) {
@@ -244,10 +242,10 @@ static void SetSegmentProbas(VP8Encoder* const enc) {
     enc->segment_hdr_.update_map_ =
         (probas[0] != 255) || (probas[1] != 255) || (probas[2] != 255);
     enc->segment_hdr_.size_ =
-      p[0] * (VP8BitCost(0, probas[0]) + VP8BitCost(0, probas[1])) +
-      p[1] * (VP8BitCost(0, probas[0]) + VP8BitCost(1, probas[1])) +
-      p[2] * (VP8BitCost(1, probas[0]) + VP8BitCost(0, probas[2])) +
-      p[3] * (VP8BitCost(1, probas[0]) + VP8BitCost(1, probas[2]));
+        p[0] * (VP8BitCost(0, probas[0]) + VP8BitCost(0, probas[1])) +
+        p[1] * (VP8BitCost(0, probas[0]) + VP8BitCost(1, probas[1])) +
+        p[2] * (VP8BitCost(1, probas[0]) + VP8BitCost(0, probas[2])) +
+        p[3] * (VP8BitCost(1, probas[0]) + VP8BitCost(1, probas[2]));
   } else {
     enc->segment_hdr_.update_map_ = 0;
     enc->segment_hdr_.size_ = 0;
