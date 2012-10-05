@@ -152,9 +152,9 @@ static int HashChainFindCopy(const HashChain* const p,
   int best_length = 0;
   int best_distance = 0;
   const uint32_t* const argb_start = argb + index;
-  const int iter_min_mult = (quality < 50) ? 2 : (quality < 75) ? 4 : 8;
+  const int iter_min_mult = (quality < 36) ? 1 : 1 + ((quality - 36) >> 3);
   const int iter_min = -quality * iter_min_mult;
-  int iter_cnt = 10 + (quality >> 1);
+  int iter_cnt = 10 + (quality >> 2);
   const int min_pos = (index > WINDOW_SIZE) ? index - WINDOW_SIZE : 0;
   int pos;
 
@@ -362,7 +362,8 @@ typedef struct {
 
 static int BackwardReferencesTraceBackwards(
     int xsize, int ysize, int recursive_cost_model,
-    const uint32_t* const argb, int cache_bits, VP8LBackwardRefs* const refs);
+    const uint32_t* const argb, int quality, int cache_bits,
+    VP8LBackwardRefs* const refs);
 
 static void ConvertPopulationCountTableToBitEstimates(
     int num_symbols, const int population_counts[], double output[]) {
@@ -387,17 +388,16 @@ static void ConvertPopulationCountTableToBitEstimates(
 
 static int CostModelBuild(CostModel* const m, int xsize, int ysize,
                           int recursion_level, const uint32_t* const argb,
-                          int cache_bits) {
+                          int quality, int cache_bits) {
   int ok = 0;
   VP8LHistogram histo;
   VP8LBackwardRefs refs;
-  const int quality = 100;
 
   if (!VP8LBackwardRefsAlloc(&refs, xsize * ysize)) goto Error;
 
   if (recursion_level > 0) {
     if (!BackwardReferencesTraceBackwards(xsize, ysize, recursion_level - 1,
-                                          argb, cache_bits, &refs)) {
+                                          argb, quality, cache_bits, &refs)) {
       goto Error;
     }
   } else {
@@ -452,11 +452,10 @@ static WEBP_INLINE double GetDistanceCost(const CostModel* const m,
 
 static int BackwardReferencesHashChainDistanceOnly(
     int xsize, int ysize, int recursive_cost_model, const uint32_t* const argb,
-    int cache_bits, uint32_t* const dist_array) {
+    int quality, int cache_bits, uint32_t* const dist_array) {
   int i;
   int ok = 0;
   int cc_init = 0;
-  const int quality = 100;
   const int pix_count = xsize * ysize;
   const int use_color_cache = (cache_bits > 0);
   float* const cost =
@@ -477,7 +476,7 @@ static int BackwardReferencesHashChainDistanceOnly(
   }
 
   if (!CostModelBuild(cost_model, xsize, ysize, recursive_cost_model, argb,
-                      cache_bits)) {
+                      quality, cache_bits)) {
     goto Error;
   }
 
@@ -601,10 +600,10 @@ static int TraceBackwards(const uint32_t* const dist_array,
 }
 
 static int BackwardReferencesHashChainFollowChosenPath(
-    int xsize, int ysize, const uint32_t* const argb, int cache_bits,
+    int xsize, int ysize, const uint32_t* const argb,
+    int quality, int cache_bits,
     const uint32_t* const chosen_path, int chosen_path_size,
     VP8LBackwardRefs* const refs) {
-  const int quality = 100;
   const int pix_count = xsize * ysize;
   const int use_color_cache = (cache_bits > 0);
   int size = 0;
@@ -674,7 +673,7 @@ Error:
 static int BackwardReferencesTraceBackwards(int xsize, int ysize,
                                             int recursive_cost_model,
                                             const uint32_t* const argb,
-                                            int cache_bits,
+                                            int quality, int cache_bits,
                                             VP8LBackwardRefs* const refs) {
   int ok = 0;
   const int dist_array_size = xsize * ysize;
@@ -686,7 +685,8 @@ static int BackwardReferencesTraceBackwards(int xsize, int ysize,
   if (dist_array == NULL) goto Error;
 
   if (!BackwardReferencesHashChainDistanceOnly(
-      xsize, ysize, recursive_cost_model, argb, cache_bits, dist_array)) {
+      xsize, ysize, recursive_cost_model, argb, quality, cache_bits,
+      dist_array)) {
     goto Error;
   }
   if (!TraceBackwards(dist_array, dist_array_size,
@@ -696,7 +696,8 @@ static int BackwardReferencesTraceBackwards(int xsize, int ysize,
   free(dist_array);   // no need to retain this memory any longer
   dist_array = NULL;
   if (!BackwardReferencesHashChainFollowChosenPath(
-      xsize, ysize, argb, cache_bits, chosen_path, chosen_path_size, refs)) {
+      xsize, ysize, argb, quality, cache_bits, chosen_path, chosen_path_size,
+      refs)) {
     goto Error;
   }
   ok = 1;
@@ -761,8 +762,8 @@ int VP8LGetBackwardReferences(int width, int height,
 
   // Choose appropriate backward reference.
   if (lz77_is_useful) {
-    // TraceBackwards is costly. Run it for higher qualities.
-    const int try_lz77_trace_backwards = (quality >= 75);
+    // TraceBackwards is costly. Don't execute it at lower quality (q <= 25).
+    const int try_lz77_trace_backwards = (quality > 25);
     *best = refs_lz77;   // default guess: lz77 is better
     VP8LClearBackwardRefs(&refs_rle);
     if (try_lz77_trace_backwards) {
@@ -771,8 +772,8 @@ int VP8LGetBackwardReferences(int width, int height,
       if (!VP8LBackwardRefsAlloc(&refs_trace, num_pix)) {
         goto End;
       }
-      if (BackwardReferencesTraceBackwards(
-          width, height, recursion_level, argb, cache_bits, &refs_trace)) {
+      if (BackwardReferencesTraceBackwards(width, height, recursion_level, argb,
+                                           quality, cache_bits, &refs_trace)) {
         VP8LClearBackwardRefs(&refs_lz77);
         *best = refs_trace;
       }
