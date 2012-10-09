@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAQH//42Q\u003d",
+        "filename": "src/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-10-09T07:00:55Z",
+      "side": 1,
+      "message": "you may want to add a comment about the why\u0027s of this \u0027no-undefined\u0027, since the relation to mingw/dll is not obvious.",
+      "revId": "d6968479d468be2f505c823ac207e8bf924e3e36",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
