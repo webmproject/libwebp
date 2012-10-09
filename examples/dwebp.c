@@ -67,14 +67,12 @@ typedef enum {
 
 #ifdef HAVE_WINCODEC_H
 
-#define IFS(fn)                \
-  do {                         \
-     if (SUCCEEDED(hr))        \
-     {                         \
-        hr = (fn);             \
-        if (FAILED(hr) && verbose)           \
-          fprintf(stderr, #fn " failed %08x\n", hr);  \
-     }                         \
+#define IFS(fn)                                                     \
+  do {                                                              \
+     if (SUCCEEDED(hr)) {                                           \
+        hr = (fn);                                                  \
+        if (FAILED(hr)) fprintf(stderr, #fn " failed %08x\n", hr);  \
+     }                                                              \
   } while (0)
 
 #ifdef __cplusplus
