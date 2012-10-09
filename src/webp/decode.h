@@ -355,7 +355,7 @@ WEBP_EXTERN(const WebPDecBuffer*) WebPIDecodedArea(
      CHECK(WebPGetFeatures(data, data_size, &config.input) == VP8_STATUS_OK);
 
      // C) Adjust 'config', if needed
-     config.no_fancy = 1;
+     config.no_fancy_upsampling = 1;
      config.output.colorspace = MODE_BGRA;
      // etc.
 
