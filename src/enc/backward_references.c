@@ -552,7 +552,7 @@ static int BackwardReferencesHashChainDistanceOnly(
         cost_val += GetLiteralCost(cost_model, argb[i]) * mul1;
       }
       if (cost[i] > cost_val) {
-        cost[i] = cost_val;
+        cost[i] = (float)cost_val;
         dist_array[i] = 1;  // only one is inserted.
       }
       if (use_color_cache) VP8LColorCacheInsert(&hashers, argb[i]);
