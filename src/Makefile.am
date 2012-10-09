@@ -20,7 +20,11 @@ libwebp_la_LIBADD += dsp/libwebpdsp.la
 libwebp_la_LIBADD += enc/libwebpencode.la
 libwebp_la_LIBADD += utils/libwebputils.la
 
-libwebp_la_LDFLAGS = -version-info 4:0:0
+# Use '-no-undefined' to declare that libwebp does not depend on any libraries
+# other than the ones listed on the command line, i.e., after linking, it will
+# not have unresolved symbols. Some platforms (Windows among them) require all
+# symbols in shared libraries to be resolved at library creation.
+libwebp_la_LDFLAGS = -no-undefined -version-info 4:0:0
 libwebpincludedir = $(includedir)/webp
 
 pkgconfig_DATA = libwebp.pc
