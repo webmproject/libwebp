@@ -16,6 +16,24 @@
       "revId": "d6968479d468be2f505c823ac207e8bf924e3e36",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQH//4n4\u003d",
+        "filename": "src/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-10-09T17:58:20Z",
+      "side": 1,
+      "message": "Good point. I borrowed some text from the libtool manual...",
+      "parentUuid": "AAAAQH//42Q\u003d",
+      "revId": "d6968479d468be2f505c823ac207e8bf924e3e36",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
