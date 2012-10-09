@@ -179,18 +179,19 @@ static HRESULT ReadPictureWithWIC(const char* filename,
   IFS(IWICBitmapFrameDecode_GetPixelFormat(pFrame, &srcPixelFormat));
   IFS(IWICBitmapDecoder_GetContainerFormat(pDecoder, &srcContainerFormat));
 
-  has_alpha = keep_alpha;
-  for (i = 0;
-       has_alpha && i < sizeof(alphaContainers)/sizeof(alphaContainers[0]);
-       ++i) {
-    if (IsEqualGUID(MAKE_REFGUID(srcContainerFormat),
-                    MAKE_REFGUID(*alphaContainers[i]))) {
-      has_alpha =
-          IsEqualGUID(MAKE_REFGUID(srcPixelFormat),
-                      MAKE_REFGUID(GUID_WICPixelFormat32bppRGBA_)) ||
-          IsEqualGUID(MAKE_REFGUID(srcPixelFormat),
-                      MAKE_REFGUID(GUID_WICPixelFormat32bppBGRA_));
-      break;
+  if (keep_alpha) {
+    for (i = 0;
+         i < sizeof(alphaContainers) / sizeof(alphaContainers[0]);
+         ++i) {
+      if (IsEqualGUID(MAKE_REFGUID(srcContainerFormat),
+                      MAKE_REFGUID(*alphaContainers[i]))) {
+        has_alpha =
+            IsEqualGUID(MAKE_REFGUID(srcPixelFormat),
+                        MAKE_REFGUID(GUID_WICPixelFormat32bppRGBA_)) ||
+            IsEqualGUID(MAKE_REFGUID(srcPixelFormat),
+                        MAKE_REFGUID(GUID_WICPixelFormat32bppBGRA_));
+        break;
+      }
     }
   }
 
