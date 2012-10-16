@@ -249,14 +249,15 @@ static uint32_t MyRand(uint32_t *seed) {
 }
 
 static int HistogramCombine(const VP8LHistogramSet* const in,
-                            VP8LHistogramSet* const out, int num_pairs) {
+                            VP8LHistogramSet* const out,
+                            int min_cluster_size, int iter_mult,
+                            int num_pairs, int num_tries_no_success) {
   int ok = 0;
   int i, iter;
   uint32_t seed = 0;
   int tries_with_no_success = 0;
-  const int min_cluster_size = 2;
   int out_size = in->size;
-  const int outer_iters = in->size * 3;
+  const int outer_iters = in->size * iter_mult;
   VP8LHistogram* const histos = (VP8LHistogram*)malloc(2 * sizeof(*histos));
   VP8LHistogram* cur_combo = histos + 0;    // trial merged histogram
   VP8LHistogram* best_combo = histos + 1;   // best merged histogram so far
@@ -315,7 +316,7 @@ static int HistogramCombine(const VP8LHistogramSet* const in,
       }
       tries_with_no_success = 0;
     }
-    if (++tries_with_no_success >= 50) {
+    if (++tries_with_no_success >= num_tries_no_success) {
       break;
     }
   }
@@ -384,8 +385,13 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
   int ok = 0;
   const int histo_xsize = histo_bits ? VP8LSubSampleSize(xsize, histo_bits) : 1;
   const int histo_ysize = histo_bits ? VP8LSubSampleSize(ysize, histo_bits) : 1;
-  const int num_histo_pairs = 10 + quality / 2;  // For HistogramCombine().
   const int histo_image_raw_size = histo_xsize * histo_ysize;
+  // Heuristic params for HistogramCombine().
+  const int num_pairs = 8 + (quality >> 1);
+  const int num_tries_no_success = 8 + (quality >> 1);
+  const int min_cluster_size = (quality >= 25) ? ((quality >= 75) ? 2 : 3) : 4;
+  const int iter_mult = (quality >= 25) ? ((quality >= 75) ? 3 : 2) : 1;
+
   VP8LHistogramSet* const image_out =
       VP8LAllocateHistogramSet(histo_image_raw_size, cache_bits);
   if (image_out == NULL) return 0;
@@ -393,7 +399,8 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
   // Build histogram image.
   HistogramBuildImage(xsize, histo_bits, refs, image_out);
   // Collapse similar histograms.
-  if (!HistogramCombine(image_out, image_in, num_histo_pairs)) {
+  if (!HistogramCombine(image_out, image_in, min_cluster_size, iter_mult,
+                        num_pairs, num_tries_no_success)) {
     goto Error;
   }
   // Find the optimal map from original histograms to the final ones.
