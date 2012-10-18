@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAQn//6cE\u003d",
+        "filename": "src/enc/picture.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 958,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-10-18T18:48:16Z",
+      "side": 1,
+      "message": "this could be local to the else",
+      "revId": "01289129b40b7cdb3c28950330ab9d55dc577b57",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
