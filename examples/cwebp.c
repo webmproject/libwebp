@@ -833,8 +833,9 @@ static void HelpLong(void) {
   printf("  -444 / -422 / -gray ..... Change colorspace\n");
 #endif
   printf("  -map <int> ............. print map of extra info.\n");
-  printf("  -print_ssim ............ prints averaged SSIM distortion.\n");
   printf("  -print_psnr ............ prints averaged PSNR distortion.\n");
+  printf("  -print_ssim ............ prints averaged SSIM distortion.\n");
+  printf("  -print_lsim ............ prints local-similarity distortion.\n");
   printf("  -d <file.pgm> .......... dump the compressed output (PGM file).\n");
   printf("  -alpha_method <int> .... Transparency-compression method (0..1)\n");
   printf("  -alpha_filter <string> . predictive filtering for alpha plane.\n");
@@ -898,7 +899,7 @@ int main(int argc, const char *argv[]) {
   int resize_w = 0, resize_h = 0;
   int show_progress = 0;
   WebPPicture picture;
-  int print_distortion = 0;        // 1=PSNR, 2=SSIM
+  int print_distortion = -1;        // -1=off, 0=PSNR, 1=SSIM, 2=LSIM
   WebPPicture original_picture;    // when PSNR or SSIM is requested
   WebPConfig config;
   WebPAuxStats stats;
@@ -928,12 +929,15 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-d") && c < argc - 1) {
       dump_file = argv[++c];
       config.show_compressed = 1;
-    } else if (!strcmp(argv[c], "-print_ssim")) {
-      config.show_compressed = 1;
-      print_distortion = 2;
     } else if (!strcmp(argv[c], "-print_psnr")) {
       config.show_compressed = 1;
+      print_distortion = 0;
+    } else if (!strcmp(argv[c], "-print_ssim")) {
+      config.show_compressed = 1;
       print_distortion = 1;
+    } else if (!strcmp(argv[c], "-print_lsim")) {
+      config.show_compressed = 1;
+      print_distortion = 2;
     } else if (!strcmp(argv[c], "-short")) {
       short_output++;
     } else if (!strcmp(argv[c], "-s") && c < argc - 2) {
@@ -1149,7 +1153,7 @@ int main(int argc, const char *argv[]) {
   if (picture.extra_info_type > 0) {
     AllocExtraInfo(&picture);
   }
-  if (print_distortion > 0) {  // Save original picture for later comparison
+  if (print_distortion >= 0) {  // Save original picture for later comparison
     WebPPictureCopy(&picture, &original_picture);
   }
   if (!WebPEncode(&config, &picture)) {
@@ -1179,12 +1183,13 @@ int main(int argc, const char *argv[]) {
       PrintExtraInfoLossy(&picture, short_output, in_file);
     }
   }
-  if (!quiet && !short_output && print_distortion > 0) {  // print distortion
+  if (!quiet && !short_output && print_distortion >= 0) {  // print distortion
+    static const char* distortion_names[] = { "PSNR", "SSIM", "LSIM" };
     float values[5];
     WebPPictureDistortion(&picture, &original_picture,
-                          (print_distortion == 1) ? 0 : 1, values);
+                          print_distortion, values);
     fprintf(stderr, "%s: Y:%.2f U:%.2f V:%.2f A:%.2f  Total:%.2f\n",
-            (print_distortion == 1) ? "PSNR" : "SSIM",
+            distortion_names[print_distortion],
             values[0], values[1], values[2], values[3], values[4]);
   }
   return_value = 0;
