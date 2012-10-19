@@ -7,12 +7,29 @@
 //
 // inline YUV<->RGB conversion function
 //
+// The exact naming is Y'CbCr, following the ITU-R BT.601 standard.
+// More information at: http://en.wikipedia.org/wiki/YCbCr
+// Y = 0.2569 * R + 0.5044 * G + 0.0979 * B + 16
+// U = -0.1483 * R - 0.2911 * G + 0.4394 * B + 128
+// V = 0.4394 * R - 0.3679 * G - 0.0715 * B + 128
+// We use 16bit fixed point operations for RGB->YUV conversion.
+//
 // Author: Skal (pascal.massimino@gmail.com)
 
 #ifndef WEBP_DSP_YUV_H_
 #define WEBP_DSP_YUV_H_
 
 #include "../dec/decode_vp8.h"
+
+#if defined(WEBP_EXPERIMENTAL_FEATURES)
+// Do NOT activate this feature for real compression. This is only experimental!
+// This flag is for comparison purpose against JPEG's "YUVj" natural colorspace.
+// This colorspace is close to Rec.601's Y'CbCr model with the notable
+// difference of allowing larger range for luma/chroma.
+// See http://en.wikipedia.org/wiki/YCbCr#JPEG_conversion paragraph, and its
+// difference with http://en.wikipedia.org/wiki/YCbCr#ITU-R_BT.601_conversion
+// #define USE_YUVj
+#endif
 
 //------------------------------------------------------------------------------
 // YUV -> RGB conversion
@@ -95,17 +112,13 @@ void VP8YUVInit(void);
 
 //------------------------------------------------------------------------------
 // RGB -> YUV conversion
-// The exact naming is Y'CbCr, following the ITU-R BT.601 standard.
-// More information at: http://en.wikipedia.org/wiki/YCbCr
-// Y = 0.2569 * R + 0.5044 * G + 0.0979 * B + 16
-// U = -0.1483 * R - 0.2911 * G + 0.4394 * B + 128
-// V = 0.4394 * R - 0.3679 * G - 0.0715 * B + 128
-// We use 16bit fixed point operations.
 
 static WEBP_INLINE int VP8ClipUV(int v) {
    v = (v + (257 << (YUV_FIX + 2 - 1))) >> (YUV_FIX + 2);
    return ((v & ~0xff) == 0) ? v : (v < 0) ? 0 : 255;
 }
+
+#ifndef USE_YUVj
 
 static WEBP_INLINE int VP8RGBToY(int r, int g, int b) {
   const int kRound = (1 << (YUV_FIX - 1)) + (16 << YUV_FIX);
@@ -114,12 +127,37 @@ static WEBP_INLINE int VP8RGBToY(int r, int g, int b) {
 }
 
 static WEBP_INLINE int VP8RGBToU(int r, int g, int b) {
-  return VP8ClipUV(-9719 * r - 19081 * g + 28800 * b);
+  const int u = -9719 * r - 19081 * g + 28800 * b;
+  return VP8ClipUV(u);
 }
 
 static WEBP_INLINE int VP8RGBToV(int r, int g, int b) {
-  return VP8ClipUV(+28800 * r - 24116 * g - 4684 * b);
+  const int v = +28800 * r - 24116 * g - 4684 * b;
+  return VP8ClipUV(v);
 }
+
+#else
+
+// This JPEG-YUV colorspace, only for comparison!
+// These are also 16-bit precision coefficients from Rec.601, but with full
+// [0..255] output range.
+static WEBP_INLINE int VP8RGBToY(int r, int g, int b) {
+  const int kRound = (1 << (YUV_FIX - 1));
+  const int luma = 19595 * r + 38470 * g + 7471 * b;
+  return (luma + kRound) >> YUV_FIX;  // no need to clip
+}
+
+static WEBP_INLINE int VP8RGBToU(int r, int g, int b) {
+  const int u = -11058 * r - 21710 * g + 32768 * b;
+  return VP8ClipUV(u);
+}
+
+static WEBP_INLINE int VP8RGBToV(int r, int g, int b) {
+  const int v = 32768 * r - 27439 * g - 5329 * b;
+  return VP8ClipUV(v);
+}
+
+#endif    // USE_YUVj
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
