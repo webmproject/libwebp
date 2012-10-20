@@ -915,9 +915,9 @@ void WebPCleanupTransparentArea(WebPPicture* pic) {
 // search radius. Shouldn't be too large.
 #define RADIUS 2
 
-static double AccumulateLSIM(const uint8_t* src, int src_stride,
-                             const uint8_t* ref, int ref_stride,
-                             int w, int h) {
+static float AccumulateLSIM(const uint8_t* src, int src_stride,
+                            const uint8_t* ref, int ref_stride,
+                            int w, int h) {
   int x, y;
   double total_sse = 0.;
   for (y = 0; y < h; ++y) {
@@ -939,7 +939,7 @@ static double AccumulateLSIM(const uint8_t* src, int src_stride,
       total_sse += best_sse;
     }
   }
-  return total_sse;
+  return (float)total_sse;
 }
 #undef RADIUS
 
@@ -993,7 +993,7 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
     sse[3] = has_alpha ? AccumulateLSIM(src->a, src->a_stride,
                                         ref->a, ref->a_stride,
                                         src->width, src->height)
-                       : 0;
+                       : 0.f;
     result[0] = GetPSNR(sse[0] / (src->width * src->height));
     result[1] = GetPSNR(sse[1] / (uv_w * uv_h));
     result[2] = GetPSNR(sse[2] / (uv_w * uv_h));
