@@ -113,6 +113,12 @@ static int ReadYUV(FILE* in_file, WebPPicture* const pic) {
 #define MAKE_REFGUID(x) &(x)
 #endif
 
+typedef struct WICFormatImporter {
+  const GUID* pixel_format;
+  int bytes_per_pixel;
+  int (*import)(WebPPicture* const, const uint8_t* const, int);
+} WICFormatImporter;
+
 static HRESULT OpenInputStream(const char* filename, IStream** ppStream) {
   HRESULT hr = S_OK;
   IFS(SHCreateStreamOnFileA(filename, STGM_READ, ppStream));
@@ -123,6 +129,31 @@ static HRESULT OpenInputStream(const char* filename, IStream** ppStream) {
 
 static HRESULT ReadPictureWithWIC(const char* filename,
                                   WebPPicture* const pic, int keep_alpha) {
+  // From Microsoft SDK 7.0a -- wincodec.h
+  // Create local copies for compatibility when building against earlier
+  // versions of the SDK.
+  WEBP_DEFINE_GUID(GUID_WICPixelFormat24bppBGR_,
+                   0x6fddc324, 0x4e03, 0x4bfe,
+                   0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0c);
+  WEBP_DEFINE_GUID(GUID_WICPixelFormat24bppRGB_,
+                   0x6fddc324, 0x4e03, 0x4bfe,
+                   0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0d);
+  WEBP_DEFINE_GUID(GUID_WICPixelFormat32bppBGRA_,
+                   0x6fddc324, 0x4e03, 0x4bfe,
+                   0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0f);
+  WEBP_DEFINE_GUID(GUID_WICPixelFormat32bppRGBA_,
+                   0xf5c7ad2d, 0x6a8d, 0x43dd,
+                   0xa7, 0xa8, 0xa2, 0x99, 0x35, 0x26, 0x1a, 0xe9);
+  const WICFormatImporter alphaFormatImporters[] = {
+    { &GUID_WICPixelFormat32bppBGRA_, 4, WebPPictureImportBGRA },
+    { &GUID_WICPixelFormat32bppRGBA_, 4, WebPPictureImportRGBA },
+    { NULL, 0, NULL },
+  };
+  const WICFormatImporter nonAlphaFormatImporters[] = {
+    { &GUID_WICPixelFormat24bppBGR_, 3, WebPPictureImportBGR },
+    { &GUID_WICPixelFormat24bppRGB_, 3, WebPPictureImportRGB },
+    { NULL, 0, NULL },
+  };
   HRESULT hr = S_OK;
   IWICBitmapFrameDecode* pFrame = NULL;
   IWICFormatConverter* pConverter = NULL;
@@ -133,6 +164,7 @@ static HRESULT ReadPictureWithWIC(const char* filename,
   UINT width = 0, height = 0;
   BYTE* rgb = NULL;
   WICPixelFormatGUID srcPixelFormat = { 0 };
+  const WICFormatImporter* importer = NULL;
   GUID srcContainerFormat = { 0 };
   const GUID* alphaContainers[] = {
     &GUID_ContainerFormatBmp,
@@ -141,18 +173,6 @@ static HRESULT ReadPictureWithWIC(const char* filename,
   };
   int has_alpha = 0;
   int i, stride;
-  // From Microsoft SDK 7.0a
-  // Create local copies for compatibility when building against earlier
-  // versions of the SDK.
-  WEBP_DEFINE_GUID(GUID_WICPixelFormat24bppRGB_,
-                   0x6fddc324, 0x4e03, 0x4bfe,
-                   0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0d);
-  WEBP_DEFINE_GUID(GUID_WICPixelFormat32bppRGBA_,
-                   0xf5c7ad2d, 0x6a8d, 0x43dd,
-                   0xa7, 0xa8, 0xa2, 0x99, 0x35, 0x26, 0x1a, 0xe9);
-  WEBP_DEFINE_GUID(GUID_WICPixelFormat32bppBGRA_,
-                   0x6fddc324, 0x4e03, 0x4bfe,
-                   0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0f);
 
   IFS(CoInitialize(NULL));
   IFS(CoCreateInstance(MAKE_REFGUID(CLSID_WICImagingFactory), NULL,
@@ -195,15 +215,27 @@ static HRESULT ReadPictureWithWIC(const char* filename,
 
   // Prepare for pixel format conversion (if necessary).
   IFS(IWICImagingFactory_CreateFormatConverter(pFactory, &pConverter));
+
+  for (importer = has_alpha ? alphaFormatImporters : nonAlphaFormatImporters;
+       hr == S_OK && importer->import != NULL; ++importer) {
+    BOOL canConvert;
+    const HRESULT cchr = IWICFormatConverter_CanConvert(
+        pConverter,
+        MAKE_REFGUID(srcPixelFormat),
+        MAKE_REFGUID(*importer->pixel_format),
+        &canConvert);
+    if (SUCCEEDED(cchr) && canConvert) break;
+  }
+  if (importer->import == NULL) hr = E_FAIL;
+
   IFS(IWICFormatConverter_Initialize(pConverter, (IWICBitmapSource*)pFrame,
-          has_alpha ? MAKE_REFGUID(GUID_WICPixelFormat32bppRGBA_)
-                    : MAKE_REFGUID(GUID_WICPixelFormat24bppRGB_),
+          importer->pixel_format,
           WICBitmapDitherTypeNone,
           NULL, 0.0, WICBitmapPaletteTypeCustom));
 
   // Decode.
   IFS(IWICFormatConverter_GetSize(pConverter, &width, &height));
-  stride = (has_alpha ? 4 : 3) * width * sizeof(*rgb);
+  stride = importer->bytes_per_pixel * width * sizeof(*rgb);
   if (SUCCEEDED(hr)) {
     rgb = (BYTE*)malloc(stride * height);
     if (rgb == NULL)
@@ -217,8 +249,7 @@ static HRESULT ReadPictureWithWIC(const char* filename,
     int ok;
     pic->width = width;
     pic->height = height;
-    ok = has_alpha ? WebPPictureImportRGBA(pic, rgb, stride)
-                   : WebPPictureImportRGB(pic, rgb, stride);
+    ok = importer->import(pic, rgb, stride);
     if (!ok)
       hr = E_FAIL;
   }
