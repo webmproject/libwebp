@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAQn//3cI\u003d",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 687,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-10-23T01:48:11Z",
+      "side": 1,
+      "message": "const",
+      "revId": "2880d8fc20a1d7c0f07f7e50182d659f61cbd199",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQn//3bQ\u003d",
+        "filename": "src/webp/mux.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-10-23T01:48:11Z",
+      "side": 1,
+      "message": "WILL be copied",
+      "revId": "2880d8fc20a1d7c0f07f7e50182d659f61cbd199",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
