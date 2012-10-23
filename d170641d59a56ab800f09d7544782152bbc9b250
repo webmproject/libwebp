@@ -16,6 +16,24 @@
       "revId": "d170641d59a56ab800f09d7544782152bbc9b250",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQn//3gU\u003d",
+        "filename": "src/enc/picture.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 996,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-10-23T01:03:27Z",
+      "side": 1,
+      "message": "Sure, can\u0027t hurt.",
+      "parentUuid": "AAAAQn//4Z0\u003d",
+      "revId": "d170641d59a56ab800f09d7544782152bbc9b250",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
