@@ -13,7 +13,7 @@ end of this file.
 WebP Container Specification
 ============================
 
-_Working Draft, v0.6, 20121031_
+_Working Draft, v0.7, 20121101_
 
 
 * TOC placeholder
@@ -27,8 +27,9 @@ WebP is an image format that uses either (i) the VP8 key frame encoding
 to compress image data in a lossy way, or (ii) the WebP lossless encoding
 (and possibly other encodings in the future). These encoding schemes should
 make it more efficient than currently used formats. It is optimized for fast
-image transfer over the network (e.g., for websites). This document describes
-the structure of a WebP file.
+image transfer over the network (e.g., for websites). The WebP format has
+feature parity (color profile, metadata etc) with other formats as well. This
+document describes the structure of a WebP file.
 
 The WebP container (i.e., RIFF container for WebP) allows feature support over
 and above the basic use case of WebP (i.e., a file containing a single image
@@ -37,6 +38,8 @@ for:
 
   * **Lossless compression.** An image can be losslessly compressed, using the
     WebP Lossless Format.
+
+  * **Metadata.** An image may have metadata stored in EXIF or XMP formats.
 
   * **Transparency.** An image may have transparency, i.e., an alpha channel.
 
@@ -258,6 +261,10 @@ An extended format file consists of:
 
   * The image bitstream contained in either a 'VP8 ' or 'VP8L' chunk.
 
+  * An optional 'EXIF' chunk with EXIF metadata.
+
+  * An optional 'XMP ' chunk with XMP metadata.
+
 All chunks SHOULD be placed in the same order as listed above. If a chunk
 appears in the wrong place, the file is invalid, but readers MAY parse the
 file, ignoring the chunks that come too late.
@@ -277,16 +284,24 @@ Extended WebP file header:
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('VP8X')                      |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    | R |I|L|  Rsv  |                   Reserved                    |
+    |Rsv|I|L|E|X| R |                   Reserved                    |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |          Canvas Width Minus One               |             ...
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     ...  Canvas Height Minus One    |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-Reserved (Rsv): 4 bits
+Reserved (R): 2 bits
 
 : SHOULD be `0`.
+
+XMP metadata (X): 1 bit
+
+: Set if the file contains XMP metadata.
+
+EXIF metadata (E): 1 bit
+
+: Set if the file contains EXIF metadata.
 
 Alpha (L): 1 bit
 
@@ -297,7 +312,7 @@ ICC profile (I): 1 bit
 
 : Set if the file contains an ICC profile.
 
-Reserved (R): 2 bits
+Reserved (Rsv): 2 bits
 
 : SHOULD be `0`.
 
@@ -466,6 +481,48 @@ See the [ICC Specification][iccspec] for details.
 
 If this chunk is not present, sRGB SHOULD be assumed.
 
+#### Metadata
+
+Metadata can be stored in 'EXIF' or 'XMP ' chunks.
+
+There SHOULD be at most one chunk of each type ('EXIF' and 'XMP '). If there
+are more such chunks, readers MAY ignore all except the first one. Also, a file
+may possibly contain both 'EXIF' and 'XMP ' chunks.
+
+The chunks are defined as follows:
+
+EXIF chunk:
+
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                      ChunkHeader('EXIF')                      |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                        EXIF Metadata                          |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+EXIF Metadata: _Chunk Size_ bytes
+
+: image metadata in EXIF format.
+
+
+XMP chunk:
+
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                      ChunkHeader('XMP ')                      |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                        XMP Metadata                           |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+XMP Metadata: _Chunk Size_ bytes
+
+: image metadata in XMP format.
+
+Additional guidance about handling metadata can be found in the
+Metadata Working Group's [Guidelines for Handling Metadata][metadata].
+
 #### Unknown Chunks
 
 A file MAY contain other unknown chunks. Readers SHOULD ignore these chunks.
@@ -492,16 +549,19 @@ RIFF/WEBP
 +- VP8L (lossless bitstream)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A lossless image with ICC profile may look as follows:
+A lossless image with ICC profile and XMP metadata may
+look as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 RIFF/WEBP
 +- VP8X (descriptions of features used)
 +- ICCP (color profile)
 +- VP8L (lossless bitstream)
++- XMP  (metadata)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [vp8spec]:  http://tools.ietf.org/html/rfc6386
 [webpllspec]: https://gerrit.chromium.org/gerrit/gitweb?p=webm/libwebp.git;a=blob;f=doc/webp-lossless-bitstream-spec.txt;hb=master
 [iccspec]: http://www.color.org/icc_specs2.xalter
+[metadata]: http://www.metadataworkinggroup.org/pdf/mwg_guidance.pdf
 [rfc 2119]: http://tools.ietf.org/html/rfc2119
