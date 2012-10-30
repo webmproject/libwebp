@@ -1,3 +1,21 @@
+abc0604 Merge "update NEWS" into 0.2.0
+57cf313 update NEWS
+25f585c bump version to 0.2.1
+fed7c04 libwebp: validate chunk size in ParseOptionalChunks
+552cd9b cwebp (windows): fix alpha image import on XP
+b14fea9 autoconf/libwebp: enable dll builds for mingw
+4a8fb27 [cd]webp: always output windows errors
+d662158 fix double to float conversion warning
+72b96a6 cwebp: fix jpg encodes on XP
+734f762 VP8LAllocateHistogramSet: fix overflow in size calculation
+f9cb58f GetHistoBits: fix integer overflow
+b30add2 EncodeImageInternal: fix uninitialized free
+3de58d7 fix the -g/O3 discrepancy for 32bit compile
+77aa7d5 fix the BITS=8 case
+e5970bd Make *InitSSE2() functions be empty on non-SSE2 platform
+ef5cc47 make *InitSSE2() functions be empty on non-SSE2 platform
+c4ea259 make VP8DspInitNEON() public
+4238bc0 Update ChangeLog (v0.2.0)
 c655380 dec/io.c: cosmetics
 fe1958f RGBA4444: harmonize lossless/lossy alpha values
 681cb30 fix RGBA4444 output w/fancy upsampling
