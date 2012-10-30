@@ -189,7 +189,7 @@ static WebPMuxError MuxDeleteAllNamedData(WebPMux* const mux, uint32_t tag) {
   const WebPChunkId id = ChunkGetIdFromTag(tag);
   WebPChunk** chunk_list;
 
-  if (mux == NULL) return WEBP_MUX_INVALID_ARGUMENT;
+  assert(mux != NULL);
   if (IsWPI(id)) return WEBP_MUX_INVALID_ARGUMENT;
 
   chunk_list = MuxGetChunkListFromId(mux, id);
@@ -199,6 +199,7 @@ static WebPMuxError MuxDeleteAllNamedData(WebPMux* const mux, uint32_t tag) {
 }
 
 static WebPMuxError DeleteLoopCount(WebPMux* const mux) {
+  if (mux == NULL) return WEBP_MUX_INVALID_ARGUMENT;
   return MuxDeleteAllNamedData(mux, kChunks[IDX_LOOP].tag);
 }
 
@@ -207,13 +208,15 @@ static WebPMuxError DeleteLoopCount(WebPMux* const mux) {
 
 WebPMuxError WebPMuxSetChunk(WebPMux* mux, const char fourcc[4],
                              const WebPData* chunk_data, int copy_data) {
-  const CHUNK_INDEX idx = ChunkGetIndexFromFourCC(fourcc);
-  const uint32_t tag = ChunkGetTagFromFourCC(fourcc);
+  CHUNK_INDEX idx;
+  uint32_t tag;
   WebPMuxError err;
-  if (mux == NULL || chunk_data == NULL || chunk_data->bytes == NULL ||
-      chunk_data->size > MAX_CHUNK_PAYLOAD) {
+  if (mux == NULL || fourcc == NULL || chunk_data == NULL ||
+      chunk_data->bytes == NULL || chunk_data->size > MAX_CHUNK_PAYLOAD) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
+  idx = ChunkGetIndexFromFourCC(fourcc);
+  tag = ChunkGetTagFromFourCC(fourcc);
 
   // Delete existing chunk(s) with the same 'fourcc'.
   err = MuxDeleteAllNamedData(mux, tag);
@@ -377,6 +380,7 @@ WebPMuxError WebPMuxSetLoopCount(WebPMux* mux, int loop_count) {
 // Delete API(s).
 
 WebPMuxError WebPMuxDeleteChunk(WebPMux* mux, const char fourcc[4]) {
+  if (mux == NULL || fourcc == NULL) return WEBP_MUX_INVALID_ARGUMENT;
   return MuxDeleteAllNamedData(mux, ChunkGetTagFromFourCC(fourcc));
 }
 

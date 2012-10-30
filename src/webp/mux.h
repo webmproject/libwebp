@@ -179,7 +179,7 @@ static WEBP_INLINE WebPMux* WebPMuxCreate(const WebPData* bitstream,
 //   copy_data - (in) value 1 indicates given data WILL be copied to the mux
 //               and value 0 indicates data will NOT be copied.
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if mux or chunk_data is NULL
+//   WEBP_MUX_INVALID_ARGUMENT - if mux, fourcc or chunk_data is NULL
 //                               or if fourcc corresponds to an image chunk.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
@@ -195,7 +195,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxSetChunk(
 //                 e.g., "ICCP", "META" etc.
 //   chunk_data - (out) returned chunk data
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if either mux or chunk_data is NULL
+//   WEBP_MUX_INVALID_ARGUMENT - if either mux, fourcc or chunk_data is NULL
 //                               or if fourcc corresponds to an image chunk.
 //   WEBP_MUX_NOT_FOUND - If mux does not contain a chunk with the given id.
 //   WEBP_MUX_OK - on success.
@@ -208,7 +208,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetChunk(
 //   fourcc - (in) a character array containing the fourcc of the chunk;
 //                 e.g., "ICCP", "META" etc.
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL
+//   WEBP_MUX_INVALID_ARGUMENT - if mux or fourcc is NULL
 //                               or if fourcc corresponds to an image chunk.
 //   WEBP_MUX_NOT_FOUND - If mux does not contain a chunk with the given fourcc.
 //   WEBP_MUX_OK - on success.
