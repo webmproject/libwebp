@@ -142,6 +142,12 @@ static int IsNotCompatible(int count1, int count2) {
     return err;                                                      \
   }
 
+#define RETURN_IF_ERROR3(ERR_MSG, FORMAT_STR1, FORMAT_STR2)          \
+  if (err != WEBP_MUX_OK) {                                          \
+    fprintf(stderr, ERR_MSG, FORMAT_STR1, FORMAT_STR2);              \
+    return err;                                                      \
+  }
+
 #define ERROR_GOTO1(ERR_MSG, LABEL)                                  \
   do {                                                               \
     fprintf(stderr, ERR_MSG);                                        \
@@ -183,51 +189,36 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
   if (flag & ALPHA_FLAG)     printf(" transparency");
   printf("\n");
 
-  if (flag & ANIMATION_FLAG) {
+  if ((flag & ANIMATION_FLAG) || (flag & TILE_FLAG)) {
+    const int is_anim = !!(flag & ANIMATION_FLAG);
+    const WebPChunkId id = is_anim ? WEBP_CHUNK_FRAME : WEBP_CHUNK_TILE;
+    const char* const type_str = is_anim ? "frame" : "tile";
     int nFrames;
-    int loop_count;
-    err = WebPMuxGetLoopCount(mux, &loop_count);
-    RETURN_IF_ERROR("Failed to retrieve loop count\n");
-    printf("Loop Count : %d\n", loop_count);
 
-    err = WebPMuxNumChunks(mux, WEBP_CHUNK_FRAME, &nFrames);
-    RETURN_IF_ERROR("Failed to retrieve number of frames\n");
+    if (is_anim) {
+      int loop_count;
+      err = WebPMuxGetLoopCount(mux, &loop_count);
+      RETURN_IF_ERROR("Failed to retrieve loop count\n");
+      printf("Loop Count : %d\n", loop_count);
+    }
 
-    printf("Number of frames: %d\n", nFrames);
+    err = WebPMuxNumChunks(mux, id, &nFrames);
+    RETURN_IF_ERROR2("Failed to retrieve number of %ss\n", type_str);
+
+    printf("Number of %ss: %d\n", type_str, nFrames);
     if (nFrames > 0) {
       int i;
-      printf("No.: x_offset y_offset duration image_size");
-      printf("\n");
+      printf("No.: x_offset y_offset ");
+      if (is_anim) printf("duration ");
+      printf("image_size\n");
       for (i = 1; i <= nFrames; i++) {
         WebPMuxFrameInfo frame;
         err = WebPMuxGetFrame(mux, i, &frame);
-        RETURN_IF_ERROR2("Failed to retrieve frame#%d\n", i);
-        printf("%3d: %8d %8d %8d %10zu", i, frame.x_offset_, frame.y_offset_,
-               frame.duration_, frame.bitstream_.size_);
+        RETURN_IF_ERROR3("Failed to retrieve %s#%d\n", type_str, i);
+        printf("%3d: %8d %8d ", i, frame.x_offset_, frame.y_offset_);
+        if (is_anim) printf("%8d ", frame.duration_);
+        printf("%10zu\n", frame.bitstream_.size_);
         WebPDataClear(&frame.bitstream_);
-        printf("\n");
-      }
-    }
-  }
-
-  if (flag & TILE_FLAG) {
-    int nTiles;
-    err = WebPMuxNumChunks(mux, WEBP_CHUNK_TILE, &nTiles);
-    RETURN_IF_ERROR("Failed to retrieve number of tiles\n");
-
-    printf("Number of tiles: %d\n", nTiles);
-    if (nTiles > 0) {
-      int i;
-      printf("No.: x_offset y_offset image_size");
-      printf("\n");
-      for (i = 1; i <= nTiles; i++) {
-        WebPMuxFrameInfo tile;
-        err = WebPMuxGetTile(mux, i, &tile);
-        RETURN_IF_ERROR2("Failed to retrieve tile#%d\n", i);
-        printf("%3d: %8d %8d %10zu",
-               i, tile.x_offset_, tile.y_offset_, tile.bitstream_.size_);
-        WebPDataClear(&tile.bitstream_);
-        printf("\n");
       }
     }
   }
@@ -247,10 +238,10 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
   }
 
   if ((flag & ALPHA_FLAG) && !(flag & (ANIMATION_FLAG | TILE_FLAG))) {
-    WebPData bitstream;
-    err = WebPMuxGetImage(mux, &bitstream);
+    WebPMuxFrameInfo image;
+    err = WebPMuxGetFrame(mux, 1, &image);
     RETURN_IF_ERROR("Failed to retrieve the image\n");
-    printf("Size of the image (with alpha): %zu\n", bitstream.size_);
+    printf("Size of the image (with alpha): %zu\n", image.bitstream_.size_);
   }
 
   return WEBP_MUX_OK;
@@ -693,6 +684,7 @@ static int GetFrameTile(const WebPMux* mux,
   WebPMux* mux_single = NULL;
   long num = 0;
   int ok = 1;
+  const WebPChunkId id = isFrame ? WEBP_CHUNK_FRAME : WEBP_CHUNK_TILE;
   WebPMuxFrameInfo info;
   WebPDataInit(&info.bitstream_);
 
@@ -701,18 +693,11 @@ static int GetFrameTile(const WebPMux* mux,
     ERROR_GOTO1("ERROR: Frame/Tile index must be non-negative.\n", ErrGet);
   }
 
-  if (isFrame) {
-    err = WebPMuxGetFrame(mux, num, &info);
-    if (err != WEBP_MUX_OK) {
-      ERROR_GOTO3("ERROR (%s): Could not get frame %ld.\n",
-                  ErrorString(err), num, ErrGet);
-    }
-  } else {
-    err = WebPMuxGetTile(mux, num, &info);
-    if (err != WEBP_MUX_OK) {
-      ERROR_GOTO3("ERROR (%s): Could not get frame %ld.\n",
-                  ErrorString(err), num, ErrGet);
-    }
+  err = WebPMuxGetFrame(mux, num, &info);
+  if (err == WEBP_MUX_OK && info.id != id) err = WEBP_MUX_NOT_FOUND;
+  if (err != WEBP_MUX_OK) {
+    ERROR_GOTO3("ERROR (%s): Could not get frame %ld.\n",
+                ErrorString(err), num, ErrGet);
   }
 
   mux_single = WebPMuxNew();
@@ -726,6 +711,7 @@ static int GetFrameTile(const WebPMux* mux,
     ERROR_GOTO2("ERROR (%s): Could not create single image mux object.\n",
                 ErrorString(err), ErrGet);
   }
+
   ok = WriteWebP(mux_single, config->output_);
 
  ErrGet:
@@ -808,6 +794,7 @@ static int Process(const WebPMuxConfig* config) {
                 WebPDataClear(&frame.bitstream_);
                 ERROR_GOTO1("ERROR: Could not parse frame properties.\n", Err2);
               }
+              frame.id = WEBP_CHUNK_FRAME;
               err = WebPMuxPushFrame(mux, &frame, 1);
               WebPDataClear(&frame.bitstream_);
               if (err != WEBP_MUX_OK) {
@@ -836,7 +823,8 @@ static int Process(const WebPMuxConfig* config) {
               WebPDataClear(&tile.bitstream_);
               ERROR_GOTO1("ERROR: Could not parse tile properties.\n", Err2);
             }
-            err = WebPMuxPushTile(mux, &tile, 1);
+            tile.id = WEBP_CHUNK_TILE;
+            err = WebPMuxPushFrame(mux, &tile, 1);
             WebPDataClear(&tile.bitstream_);
             if (err != WEBP_MUX_OK) {
               ERROR_GOTO3("ERROR (%s): Could not add a tile at index %d.\n",

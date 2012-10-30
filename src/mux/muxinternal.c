@@ -109,7 +109,7 @@ WebPChunk* ChunkSearchList(WebPChunk* first, uint32_t nth, uint32_t tag) {
 
 // Outputs a pointer to 'prev_chunk->next_',
 //   where 'prev_chunk' is the pointer to the chunk at position (nth - 1).
-// Returns 1 if nth chunk was found, 0 otherwise.
+// Returns true if nth chunk was found.
 static int ChunkSearchListToSet(WebPChunk** chunk_list, uint32_t nth,
                                 WebPChunk*** const location) {
   uint32_t count = 0;
@@ -275,10 +275,14 @@ int MuxImageCount(const WebPMuxImage* wpi_list, WebPChunkId id) {
   int count = 0;
   const WebPMuxImage* current;
   for (current = wpi_list; current != NULL; current = current->next_) {
-    const WebPChunk* const wpi_chunk = *MuxImageGetListFromId(current, id);
-    if (wpi_chunk != NULL) {
-      const WebPChunkId wpi_chunk_id = ChunkGetIdFromTag(wpi_chunk->tag_);
-      if (wpi_chunk_id == id) ++count;
+    if (id == WEBP_CHUNK_NIL) {
+      ++count;  // Special case: count all images.
+    } else {
+      const WebPChunk* const wpi_chunk = *MuxImageGetListFromId(current, id);
+      if (wpi_chunk != NULL) {
+        const WebPChunkId wpi_chunk_id = ChunkGetIdFromTag(wpi_chunk->tag_);
+        if (wpi_chunk_id == id) ++count;  // Count images with a matching 'id'.
+      }
     }
   }
   return count;
@@ -286,34 +290,22 @@ int MuxImageCount(const WebPMuxImage* wpi_list, WebPChunkId id) {
 
 // Outputs a pointer to 'prev_wpi->next_',
 //   where 'prev_wpi' is the pointer to the image at position (nth - 1).
-// Returns 1 if nth image with given id was found, 0 otherwise.
+// Returns true if nth image was found.
 static int SearchImageToGetOrDelete(WebPMuxImage** wpi_list, uint32_t nth,
-                                    WebPChunkId id,
                                     WebPMuxImage*** const location) {
   uint32_t count = 0;
   assert(wpi_list);
   *location = wpi_list;
 
-  // Search makes sense only for the following.
-  assert(id == WEBP_CHUNK_FRAME || id == WEBP_CHUNK_TILE ||
-         id == WEBP_CHUNK_IMAGE);
-  assert(id != WEBP_CHUNK_IMAGE || nth == 1);
-
   if (nth == 0) {
-    nth = MuxImageCount(*wpi_list, id);
+    nth = MuxImageCount(*wpi_list, WEBP_CHUNK_NIL);
     if (nth == 0) return 0;  // Not found.
   }
 
   while (*wpi_list) {
     WebPMuxImage* const cur_wpi = *wpi_list;
-    const WebPChunk* const wpi_chunk = *MuxImageGetListFromId(cur_wpi, id);
-    if (wpi_chunk != NULL) {
-      const WebPChunkId wpi_chunk_id = ChunkGetIdFromTag(wpi_chunk->tag_);
-      if (wpi_chunk_id == id) {
-        ++count;
-        if (count == nth) return 1;  // Found.
-      }
-    }
+    ++count;
+    if (count == nth) return 1;  // Found.
     wpi_list = &cur_wpi->next_;
     *location = wpi_list;
   }
@@ -361,10 +353,9 @@ void MuxImageDeleteAll(WebPMuxImage** const wpi_list) {
   }
 }
 
-WebPMuxError MuxImageDeleteNth(WebPMuxImage** wpi_list, uint32_t nth,
-                               WebPChunkId id) {
+WebPMuxError MuxImageDeleteNth(WebPMuxImage** wpi_list, uint32_t nth) {
   assert(wpi_list);
-  if (!SearchImageToGetOrDelete(wpi_list, nth, id, &wpi_list)) {
+  if (!SearchImageToGetOrDelete(wpi_list, nth, &wpi_list)) {
     return WEBP_MUX_NOT_FOUND;
   }
   *wpi_list = MuxImageDelete(*wpi_list);
@@ -375,10 +366,10 @@ WebPMuxError MuxImageDeleteNth(WebPMuxImage** wpi_list, uint32_t nth,
 // MuxImage reader methods.
 
 WebPMuxError MuxImageGetNth(const WebPMuxImage** wpi_list, uint32_t nth,
-                            WebPChunkId id, WebPMuxImage** wpi) {
+                            WebPMuxImage** wpi) {
   assert(wpi_list);
   assert(wpi);
-  if (!SearchImageToGetOrDelete((WebPMuxImage**)wpi_list, nth, id,
+  if (!SearchImageToGetOrDelete((WebPMuxImage**)wpi_list, nth,
                                 (WebPMuxImage***)&wpi_list)) {
     return WEBP_MUX_NOT_FOUND;
   }

@@ -205,61 +205,6 @@ static WebPMuxError DeleteLoopCount(WebPMux* const mux) {
 //------------------------------------------------------------------------------
 // Set API(s).
 
-WebPMuxError WebPMuxSetImage(WebPMux* mux,
-                             const WebPData* bitstream, int copy_data) {
-  WebPMuxError err;
-  WebPChunk chunk;
-  WebPMuxImage wpi;
-  WebPData image;
-  WebPData alpha;
-  int is_lossless;
-  int image_tag;
-
-  if (mux == NULL || bitstream == NULL || bitstream->bytes_ == NULL ||
-      bitstream->size_ > MAX_CHUNK_PAYLOAD) {
-    return WEBP_MUX_INVALID_ARGUMENT;
-  }
-
-  // If given data is for a whole webp file,
-  // extract only the VP8/VP8L data from it.
-  err = GetImageData(bitstream, &image, &alpha, &is_lossless);
-  if (err != WEBP_MUX_OK) return err;
-  image_tag = is_lossless ? kChunks[IDX_VP8L].tag : kChunks[IDX_VP8].tag;
-
-  // Delete the existing images.
-  MuxImageDeleteAll(&mux->images_);
-
-  MuxImageInit(&wpi);
-
-  if (alpha.bytes_ != NULL) {  // Add alpha chunk.
-    ChunkInit(&chunk);
-    err = ChunkAssignData(&chunk, &alpha, copy_data, kChunks[IDX_ALPHA].tag);
-    if (err != WEBP_MUX_OK) goto Err;
-    err = ChunkSetNth(&chunk, &wpi.alpha_, 1);
-    if (err != WEBP_MUX_OK) goto Err;
-  }
-
-  // Add image chunk.
-  ChunkInit(&chunk);
-  err = ChunkAssignData(&chunk, &image, copy_data, image_tag);
-  if (err != WEBP_MUX_OK) goto Err;
-  err = ChunkSetNth(&chunk, &wpi.img_, 1);
-  if (err != WEBP_MUX_OK) goto Err;
-
-  // Add this image to mux.
-  err = MuxImagePush(&wpi, &mux->images_);
-  if (err != WEBP_MUX_OK) goto Err;
-
-  // All OK.
-  return WEBP_MUX_OK;
-
- Err:
-  // Something bad happened.
-  ChunkRelease(&chunk);
-  MuxImageRelease(&wpi);
-  return err;
-}
-
 WebPMuxError WebPMuxSetChunk(WebPMux* mux, const char fourcc[4],
                              const WebPData* chunk_data, int copy_data) {
   const CHUNK_INDEX idx = ChunkGetIndexFromFourCC(fourcc);
@@ -278,105 +223,60 @@ WebPMuxError WebPMuxSetChunk(WebPMux* mux, const char fourcc[4],
   return MuxSet(mux, idx, 1, chunk_data, copy_data);
 }
 
-
-WebPMuxError WebPMuxSetLoopCount(WebPMux* mux, int loop_count) {
+// Creates a chunk from given 'data' and sets it as 1st chunk in 'chunk_list'.
+static WebPMuxError AddDataToChunkList(
+    const WebPData* const data, int copy_data, uint32_t tag,
+    WebPChunk** chunk_list) {
+  WebPChunk chunk;
   WebPMuxError err;
-  uint8_t* data = NULL;
-
-  if (mux == NULL) return WEBP_MUX_INVALID_ARGUMENT;
-  if (loop_count >= MAX_LOOP_COUNT) return WEBP_MUX_INVALID_ARGUMENT;
-
-  // Delete the existing LOOP chunk(s).
-  err = DeleteLoopCount(mux);
-  if (err != WEBP_MUX_OK && err != WEBP_MUX_NOT_FOUND) return err;
-
-  // Add the given loop count.
-  data = (uint8_t*)malloc(kChunks[IDX_LOOP].size);
-  if (data == NULL) return WEBP_MUX_MEMORY_ERROR;
-
-  PutLE16(data, loop_count);
-  err = MuxAddChunk(mux, 1, kChunks[IDX_LOOP].tag, data,
-                    kChunks[IDX_LOOP].size, 1);
-  free(data);
+  ChunkInit(&chunk);
+  err = ChunkAssignData(&chunk, data, copy_data, tag);
+  if (err != WEBP_MUX_OK) goto Err;
+  err = ChunkSetNth(&chunk, chunk_list, 1);
+  if (err != WEBP_MUX_OK) goto Err;
+  return WEBP_MUX_OK;
+ Err:
+  ChunkRelease(&chunk);
   return err;
 }
 
-static WebPMuxError MuxPushFrameTileInternal(
-    WebPMux* const mux, const WebPMuxFrameInfo* const frame_tile_info,
-    int copy_data, uint32_t tag) {
-  const WebPData* bitstream;
-  int x_offset, y_offset, duration;
-  WebPChunk chunk;
-  WebPData image;
-  WebPData alpha;
+// Extracts image & alpha data from the given bitstream and then sets wpi.alpha_
+// and wpi.img_ appropriately.
+static WebPMuxError SetAlphaAndImageChunks(
+    const WebPData* const bitstream, int copy_data, WebPMuxImage* const wpi) {
+  int is_lossless = 0;
+  WebPData image, alpha;
+  WebPMuxError err = GetImageData(bitstream, &image, &alpha, &is_lossless);
+  const int image_tag =
+      is_lossless ? kChunks[IDX_VP8L].tag : kChunks[IDX_VP8].tag;
+  if (err != WEBP_MUX_OK) return err;
+  if (alpha.bytes_ != NULL) {
+    err = AddDataToChunkList(&alpha, copy_data, kChunks[IDX_ALPHA].tag,
+                             &wpi->alpha_);
+    if (err != WEBP_MUX_OK) return err;
+  }
+  return AddDataToChunkList(&image, copy_data, image_tag, &wpi->img_);
+}
+
+WebPMuxError WebPMuxSetImage(WebPMux* mux, const WebPData* bitstream,
+                             int copy_data) {
   WebPMuxImage wpi;
   WebPMuxError err;
-  WebPData frame_tile;
-  const int is_frame = (tag == kChunks[IDX_FRAME].tag) ? 1 : 0;
-  int is_lossless;
-  int image_tag;
 
   // Sanity checks.
-  if (mux == NULL || frame_tile_info == NULL) {
+  if (mux == NULL || bitstream == NULL || bitstream->bytes_ == NULL ||
+      bitstream->size_ > MAX_CHUNK_PAYLOAD) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
-  bitstream = &frame_tile_info->bitstream_;
-  x_offset = frame_tile_info->x_offset_;
-  y_offset = frame_tile_info->y_offset_;
-  duration = is_frame ? frame_tile_info->duration_ : 1 /* unused */;
-
-  if (bitstream->bytes_ == NULL || bitstream->size_ > MAX_CHUNK_PAYLOAD) {
-    return WEBP_MUX_INVALID_ARGUMENT;
-  }
-  if (x_offset < 0 || x_offset >= MAX_POSITION_OFFSET ||
-      y_offset < 0 || y_offset >= MAX_POSITION_OFFSET ||
-      (is_frame && (duration <= 0 || duration > MAX_DURATION))) {
-    return WEBP_MUX_INVALID_ARGUMENT;
+  if (mux->images_ != NULL) {
+    // Only one 'simple image' can be added in mux. So, remove present images.
+    MuxImageDeleteAll(&mux->images_);
   }
 
-  // Snap offsets to even positions.
-  x_offset &= ~1;
-  y_offset &= ~1;
-
-  // If given data is for a whole webp file,
-  // extract only the VP8/VP8L data from it.
-  err = GetImageData(bitstream, &image, &alpha, &is_lossless);
-  if (err != WEBP_MUX_OK) return err;
-  image_tag = is_lossless ? kChunks[IDX_VP8L].tag : kChunks[IDX_VP8].tag;
-
-  WebPDataInit(&frame_tile);
-  ChunkInit(&chunk);
   MuxImageInit(&wpi);
-
-  if (alpha.bytes_ != NULL) {
-    // Add alpha chunk.
-    err = ChunkAssignData(&chunk, &alpha, copy_data, kChunks[IDX_ALPHA].tag);
-    if (err != WEBP_MUX_OK) goto Err;
-    err = ChunkSetNth(&chunk, &wpi.alpha_, 1);
-    if (err != WEBP_MUX_OK) goto Err;
-    ChunkInit(&chunk);  // chunk owned by wpi.alpha_ now.
-  }
-
-  // Add image chunk.
-  err = ChunkAssignData(&chunk, &image, copy_data, image_tag);
+  err = SetAlphaAndImageChunks(bitstream, copy_data, &wpi);
   if (err != WEBP_MUX_OK) goto Err;
-  err = ChunkSetNth(&chunk, &wpi.img_, 1);
-  if (err != WEBP_MUX_OK) goto Err;
-  ChunkInit(&chunk);  // chunk owned by wpi.img_ now.
-
-  // Create frame/tile data.
-  err = CreateFrameTileData(&image, x_offset, y_offset, duration, is_lossless,
-                            is_frame, &frame_tile);
-  if (err != WEBP_MUX_OK) goto Err;
-
-  // Add frame/tile chunk (with copy_data = 1).
-  err = ChunkAssignData(&chunk, &frame_tile, 1, tag);
-  if (err != WEBP_MUX_OK) goto Err;
-  WebPDataClear(&frame_tile);
-  err = ChunkSetNth(&chunk, &wpi.header_, 1);
-  if (err != WEBP_MUX_OK) goto Err;
-  ChunkInit(&chunk);  // chunk owned by wpi.header_ now.
 
   // Add this WebPMuxImage to mux.
   err = MuxImagePush(&wpi, &mux->images_);
@@ -386,61 +286,103 @@ static WebPMuxError MuxPushFrameTileInternal(
   return WEBP_MUX_OK;
 
  Err:  // Something bad happened.
-  WebPDataClear(&frame_tile);
-  ChunkRelease(&chunk);
   MuxImageRelease(&wpi);
   return err;
 }
 
-WebPMuxError WebPMuxPushFrame(WebPMux* mux,
-                              const WebPMuxFrameInfo* frame,
+WebPMuxError WebPMuxPushFrame(WebPMux* mux, const WebPMuxFrameInfo* frame,
                               int copy_data) {
-  return MuxPushFrameTileInternal(mux, frame, copy_data,
-                                  kChunks[IDX_FRAME].tag);
+  WebPMuxImage wpi;
+  WebPMuxError err;
+  int is_frame;
+  const WebPData* const bitstream = &frame->bitstream_;
+
+  // Sanity checks.
+  if (mux == NULL || frame == NULL) return WEBP_MUX_INVALID_ARGUMENT;
+
+  is_frame = (frame->id == WEBP_CHUNK_FRAME);
+  if (!(is_frame || (frame->id == WEBP_CHUNK_TILE))) {
+    return WEBP_MUX_INVALID_ARGUMENT;
+  }
+
+  if (bitstream->bytes_ == NULL || bitstream->size_ > MAX_CHUNK_PAYLOAD) {
+    return WEBP_MUX_INVALID_ARGUMENT;
+  }
+
+  if (mux->images_ != NULL) {
+    const WebPMuxImage* const image = mux->images_;
+    const uint32_t image_id = (image->header_ != NULL) ?
+        ChunkGetIdFromTag(image->header_->tag_) : WEBP_CHUNK_IMAGE;
+    if (image_id != frame->id) {
+      return WEBP_MUX_INVALID_ARGUMENT;  // Conflicting frame types.
+    }
+  }
+
+  MuxImageInit(&wpi);
+  err = SetAlphaAndImageChunks(bitstream, copy_data, &wpi);
+  if (err != WEBP_MUX_OK) goto Err;
+  assert(wpi.img_ != NULL);  // As SetAlphaAndImageChunks() was successful.
+
+  {
+    const int is_lossless = (wpi.img_->tag_ == kChunks[IDX_VP8L].tag);
+    const int x_offset = frame->x_offset_ & ~1;  // Snap offsets to even.
+    const int y_offset = frame->y_offset_ & ~1;
+    const int duration = is_frame ? frame->duration_ : 1 /* unused */;
+    const uint32_t tag = kChunks[is_frame ? IDX_FRAME : IDX_TILE].tag;
+    WebPData frame_tile;
+    if (x_offset < 0 || x_offset >= MAX_POSITION_OFFSET ||
+        y_offset < 0 || y_offset >= MAX_POSITION_OFFSET ||
+        (duration <= 0 || duration > MAX_DURATION)) {
+      err = WEBP_MUX_INVALID_ARGUMENT;
+      goto Err;
+    }
+    err = CreateFrameTileData(&wpi.img_->data_, x_offset, y_offset, duration,
+                              is_lossless, is_frame, &frame_tile);
+    if (err != WEBP_MUX_OK) goto Err;
+    // Add frame/tile chunk (with copy_data = 1).
+    err = AddDataToChunkList(&frame_tile, 1, tag, &wpi.header_);
+    WebPDataClear(&frame_tile);  // frame_tile owned by wpi.header_ now.
+    if (err != WEBP_MUX_OK) goto Err;
+  }
+
+  // Add this WebPMuxImage to mux.
+  err = MuxImagePush(&wpi, &mux->images_);
+  if (err != WEBP_MUX_OK) goto Err;
+
+  // All is well.
+  return WEBP_MUX_OK;
+
+ Err:  // Something bad happened.
+  MuxImageRelease(&wpi);
+  return err;
 }
 
-WebPMuxError WebPMuxPushTile(WebPMux* mux,
-                             const WebPMuxFrameInfo* tile,
-                             int copy_data) {
-  return MuxPushFrameTileInternal(mux, tile /*unused duration*/, copy_data,
-                                  kChunks[IDX_TILE].tag);
+WebPMuxError WebPMuxSetLoopCount(WebPMux* mux, int loop_count) {
+  WebPMuxError err;
+  uint8_t data[LOOP_CHUNK_SIZE];
+
+  if (mux == NULL) return WEBP_MUX_INVALID_ARGUMENT;
+  if (loop_count >= MAX_LOOP_COUNT) return WEBP_MUX_INVALID_ARGUMENT;
+
+  // Delete the existing LOOP chunk(s).
+  err = DeleteLoopCount(mux);
+  if (err != WEBP_MUX_OK && err != WEBP_MUX_NOT_FOUND) return err;
+
+  // Add the given loop count.
+  PutLE16(data, loop_count);
+  return MuxAddChunk(mux, 1, kChunks[IDX_LOOP].tag, data, sizeof(data), 1);
 }
 
 //------------------------------------------------------------------------------
 // Delete API(s).
 
-WebPMuxError WebPMuxDeleteImage(WebPMux* mux) {
-  WebPMuxError err;
-
-  if (mux == NULL) return WEBP_MUX_INVALID_ARGUMENT;
-
-  err = MuxValidateForImage(mux);
-  if (err != WEBP_MUX_OK) return err;
-
-  // All well, delete image.
-  MuxImageDeleteAll(&mux->images_);
-  return WEBP_MUX_OK;
-}
-
 WebPMuxError WebPMuxDeleteChunk(WebPMux* mux, const char fourcc[4]) {
   return MuxDeleteAllNamedData(mux, ChunkGetTagFromFourCC(fourcc));
 }
 
-static WebPMuxError DeleteFrameTileInternal(WebPMux* const mux, uint32_t nth,
-                                            CHUNK_INDEX idx) {
-  const WebPChunkId id = kChunks[idx].id;
-  if (mux == NULL) return WEBP_MUX_INVALID_ARGUMENT;
-
-  assert(idx == IDX_FRAME || idx == IDX_TILE);
-  return MuxImageDeleteNth(&mux->images_, nth, id);
-}
-
 WebPMuxError WebPMuxDeleteFrame(WebPMux* mux, uint32_t nth) {
-  return DeleteFrameTileInternal(mux, nth, IDX_FRAME);
-}
-
-WebPMuxError WebPMuxDeleteTile(WebPMux* mux, uint32_t nth) {
-  return DeleteFrameTileInternal(mux, nth, IDX_TILE);
+  if (mux == NULL) return WEBP_MUX_INVALID_ARGUMENT;
+  return MuxImageDeleteNth(&mux->images_, nth);
 }
 
 //------------------------------------------------------------------------------

@@ -199,6 +199,7 @@ WebPMuxImage* MuxImageDelete(WebPMuxImage* const wpi);
 void MuxImageDeleteAll(WebPMuxImage** const wpi_list);
 
 // Count number of images matching the given tag id in the 'wpi_list'.
+// If id == WEBP_CHUNK_NIL, all images will be matched.
 int MuxImageCount(const WebPMuxImage* wpi_list, WebPChunkId id);
 
 // Check if given ID corresponds to an image related chunk.
@@ -228,13 +229,12 @@ static WEBP_INLINE WebPChunk** MuxImageGetListFromId(
 // Pushes 'wpi' at the end of 'wpi_list'.
 WebPMuxError MuxImagePush(const WebPMuxImage* wpi, WebPMuxImage** wpi_list);
 
-// Delete nth image in the image list with given tag id.
-WebPMuxError MuxImageDeleteNth(WebPMuxImage** wpi_list, uint32_t nth,
-                               WebPChunkId id);
+// Delete nth image in the image list.
+WebPMuxError MuxImageDeleteNth(WebPMuxImage** wpi_list, uint32_t nth);
 
-// Get nth image in the image list with given tag id.
+// Get nth image in the image list.
 WebPMuxError MuxImageGetNth(const WebPMuxImage** wpi_list, uint32_t nth,
-                            WebPChunkId id, WebPMuxImage** wpi);
+                            WebPMuxImage** wpi);
 
 // Total size of the given image.
 size_t MuxImageDiskSize(const WebPMuxImage* const wpi);
