@@ -237,7 +237,7 @@ static WebPMuxError SynthesizeBitstream(const WebPMuxImage* const wpi,
   const int need_vp8x = (wpi->alpha_ != NULL);
   const size_t vp8x_size = need_vp8x ? CHUNK_HEADER_SIZE + VP8X_CHUNK_SIZE : 0;
   const size_t alpha_size = need_vp8x ? ChunkDiskSize(wpi->alpha_) : 0;
-  // Note: No need to output FRM/TILE chunk for a single image.
+  // Note: No need to output ANMF/FRGM chunk for a single image.
   const size_t size = RIFF_HEADER_SIZE + vp8x_size + alpha_size +
                       ChunkDiskSize(wpi->img_);
   uint8_t* const data = (uint8_t*)malloc(size);
@@ -299,8 +299,8 @@ static WebPMuxError MuxGetImageInternal(const WebPMuxImage* const wpi,
 
 static WebPMuxError MuxGetFrameTileInternal(const WebPMuxImage* const wpi,
                                             WebPMuxFrameInfo* const frame) {
-  const int is_frame = (wpi->header_->tag_ == kChunks[IDX_FRAME].tag);
-  const CHUNK_INDEX idx = is_frame ? IDX_FRAME : IDX_TILE;
+  const int is_frame = (wpi->header_->tag_ == kChunks[IDX_ANMF].tag);
+  const CHUNK_INDEX idx = is_frame ? IDX_ANMF : IDX_FRGM;
   const WebPData* frame_tile_data;
   assert(wpi->header_ != NULL);  // Already checked by WebPMuxGetFrame().
   // Get frame/tile chunk.

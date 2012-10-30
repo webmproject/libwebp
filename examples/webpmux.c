@@ -191,7 +191,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
 
   if ((flag & ANIMATION_FLAG) || (flag & TILE_FLAG)) {
     const int is_anim = !!(flag & ANIMATION_FLAG);
-    const WebPChunkId id = is_anim ? WEBP_CHUNK_FRAME : WEBP_CHUNK_TILE;
+    const WebPChunkId id = is_anim ? WEBP_CHUNK_ANMF : WEBP_CHUNK_FRGM;
     const char* const type_str = is_anim ? "frame" : "tile";
     int nFrames;
 
@@ -684,7 +684,7 @@ static int GetFrameTile(const WebPMux* mux,
   WebPMux* mux_single = NULL;
   long num = 0;
   int ok = 1;
-  const WebPChunkId id = isFrame ? WEBP_CHUNK_FRAME : WEBP_CHUNK_TILE;
+  const WebPChunkId id = isFrame ? WEBP_CHUNK_ANMF : WEBP_CHUNK_FRGM;
   WebPMuxFrameInfo info;
   WebPDataInit(&info.bitstream_);
 
@@ -794,7 +794,7 @@ static int Process(const WebPMuxConfig* config) {
                 WebPDataClear(&frame.bitstream_);
                 ERROR_GOTO1("ERROR: Could not parse frame properties.\n", Err2);
               }
-              frame.id = WEBP_CHUNK_FRAME;
+              frame.id = WEBP_CHUNK_ANMF;
               err = WebPMuxPushFrame(mux, &frame, 1);
               WebPDataClear(&frame.bitstream_);
               if (err != WEBP_MUX_OK) {
@@ -823,7 +823,7 @@ static int Process(const WebPMuxConfig* config) {
               WebPDataClear(&tile.bitstream_);
               ERROR_GOTO1("ERROR: Could not parse tile properties.\n", Err2);
             }
-            tile.id = WEBP_CHUNK_TILE;
+            tile.id = WEBP_CHUNK_FRGM;
             err = WebPMuxPushFrame(mux, &tile, 1);
             WebPDataClear(&tile.bitstream_);
             if (err != WEBP_MUX_OK) {

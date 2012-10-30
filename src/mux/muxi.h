@@ -31,16 +31,16 @@ struct WebPChunk {
   uint32_t        tag_;
   int             owner_;  // True if *data_ memory is owned internally.
                            // VP8X, Loop, and other internally created chunks
-                           // like frame/tile are always owned.
+                           // like ANMF/FRGM are always owned.
   WebPData        data_;
   WebPChunk*      next_;
 };
 
-// MuxImage object. Store a full webp image (including frame/tile chunk, alpha
+// MuxImage object. Store a full WebP image (including ANMF/FRGM chunk, ALPH
 // chunk and VP8/VP8L chunk),
 typedef struct WebPMuxImage WebPMuxImage;
 struct WebPMuxImage {
-  WebPChunk*  header_;      // Corresponds to WEBP_CHUNK_FRAME/WEBP_CHUNK_TILE.
+  WebPChunk*  header_;      // Corresponds to WEBP_CHUNK_ANMF/WEBP_CHUNK_FRGM.
   WebPChunk*  alpha_;       // Corresponds to WEBP_CHUNK_ALPHA.
   WebPChunk*  img_;         // Corresponds to WEBP_CHUNK_IMAGE.
   int         is_partial_;  // True if only some of the chunks are filled.
@@ -66,8 +66,8 @@ typedef enum {
   IDX_VP8X = 0,
   IDX_ICCP,
   IDX_LOOP,
-  IDX_FRAME,
-  IDX_TILE,
+  IDX_ANMF,
+  IDX_FRGM,
   IDX_ALPHA,
   IDX_VP8,
   IDX_VP8L,
@@ -205,8 +205,8 @@ int MuxImageCount(const WebPMuxImage* wpi_list, WebPChunkId id);
 // Check if given ID corresponds to an image related chunk.
 static WEBP_INLINE int IsWPI(WebPChunkId id) {
   switch (id) {
-    case WEBP_CHUNK_FRAME:
-    case WEBP_CHUNK_TILE:
+    case WEBP_CHUNK_ANMF:
+    case WEBP_CHUNK_FRGM:
     case WEBP_CHUNK_ALPHA:
     case WEBP_CHUNK_IMAGE:  return 1;
     default:        return 0;
@@ -218,8 +218,8 @@ static WEBP_INLINE WebPChunk** MuxImageGetListFromId(
     const WebPMuxImage* const wpi, WebPChunkId id) {
   assert(wpi != NULL);
   switch (id) {
-    case WEBP_CHUNK_FRAME:
-    case WEBP_CHUNK_TILE:  return (WebPChunk**)&wpi->header_;
+    case WEBP_CHUNK_ANMF:
+    case WEBP_CHUNK_FRGM:  return (WebPChunk**)&wpi->header_;
     case WEBP_CHUNK_ALPHA: return (WebPChunk**)&wpi->alpha_;
     case WEBP_CHUNK_IMAGE: return (WebPChunk**)&wpi->img_;
     default: return NULL;

@@ -94,8 +94,8 @@ enum WebPChunkId {
   WEBP_CHUNK_VP8X,     // VP8X
   WEBP_CHUNK_ICCP,     // ICCP
   WEBP_CHUNK_LOOP,     // LOOP
-  WEBP_CHUNK_FRAME,    // FRM
-  WEBP_CHUNK_TILE,     // TILE
+  WEBP_CHUNK_ANMF,     // ANMF
+  WEBP_CHUNK_FRGM,     // FRGM
   WEBP_CHUNK_ALPHA,    // ALPH
   WEBP_CHUNK_IMAGE,    // VP8/VP8L
   WEBP_CHUNK_META,     // META
@@ -165,7 +165,7 @@ static WEBP_INLINE WebPMux* WebPMuxCreate(const WebPData* bitstream,
 // Non-image chunks.
 
 // Note: Only non-image related chunks should be managed through chunk APIs.
-// (Image related chunks are: "FRM ", "TILE", "VP8 ", "VP8L" and "ALPH").
+// (Image related chunks are: "ANMF", "FRGM", "VP8 ", "VP8L" and "ALPH").
 // To add, get and delete images, use APIs WebPMuxSetImage(),
 // WebPMuxPushFrame(), WebPMuxGetFrame() and WebPMuxDeleteFrame().
 
@@ -226,8 +226,8 @@ struct WebPMuxFrameInfo {
   int         y_offset_;   // y-offset of the frame.
   int         duration_;   // duration of the frame (in milliseconds).
 
-  WebPChunkId id;          // frame type: should be one of WEBP_CHUNK_FRAME,
-                           // WEBP_CHUNK_TILE or WEBP_CHUNK_IMAGE
+  WebPChunkId id;          // frame type: should be one of WEBP_CHUNK_ANMF,
+                           // WEBP_CHUNK_FRGM or WEBP_CHUNK_IMAGE
   uint32_t pad[3];         // padding for later use
 };
 
@@ -247,7 +247,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxSetImage(
     WebPMux* mux, const WebPData* bitstream, int copy_data);
 
 // Adds a frame at the end of the mux object.
-// Notes: (1) frame.id should be one of WEBP_CHUNK_FRAME or WEBP_CHUNK_TILE
+// Notes: (1) frame.id should be one of WEBP_CHUNK_ANMF or WEBP_CHUNK_FRGM
 //        (2) For setting a non-animated non-tiled image, use WebPMuxSetImage()
 //            instead.
 //        (3) Type of frame being pushed must be same as the frames in mux.

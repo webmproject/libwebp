@@ -23,8 +23,8 @@ const ChunkInfo kChunks[] = {
   { MKFOURCC('V', 'P', '8', 'X'),  WEBP_CHUNK_VP8X,    VP8X_CHUNK_SIZE },
   { MKFOURCC('I', 'C', 'C', 'P'),  WEBP_CHUNK_ICCP,    UNDEFINED_CHUNK_SIZE },
   { MKFOURCC('L', 'O', 'O', 'P'),  WEBP_CHUNK_LOOP,    LOOP_CHUNK_SIZE },
-  { MKFOURCC('F', 'R', 'M', ' '),  WEBP_CHUNK_FRAME,   FRAME_CHUNK_SIZE },
-  { MKFOURCC('T', 'I', 'L', 'E'),  WEBP_CHUNK_TILE,    TILE_CHUNK_SIZE },
+  { MKFOURCC('A', 'N', 'M', 'F'),  WEBP_CHUNK_ANMF,    ANMF_CHUNK_SIZE },
+  { MKFOURCC('F', 'R', 'G', 'M'),  WEBP_CHUNK_FRGM,    FRGM_CHUNK_SIZE },
   { MKFOURCC('A', 'L', 'P', 'H'),  WEBP_CHUNK_ALPHA,   UNDEFINED_CHUNK_SIZE },
   { MKFOURCC('V', 'P', '8', ' '),  WEBP_CHUNK_IMAGE,   UNDEFINED_CHUNK_SIZE },
   { MKFOURCC('V', 'P', '8', 'L'),  WEBP_CHUNK_IMAGE,   UNDEFINED_CHUNK_SIZE },
@@ -400,8 +400,8 @@ size_t MuxImageListDiskSize(const WebPMuxImage* wpi_list) {
 
 uint8_t* MuxImageEmit(const WebPMuxImage* const wpi, uint8_t* dst) {
   // Ordering of chunks to be emitted is strictly as follows:
-  // 1. Frame/Tile chunk (if present).
-  // 2. Alpha chunk (if present).
+  // 1. ANMF/FRGM chunk (if present).
+  // 2. ALPH chunk (if present).
   // 3. VP8/VP8L chunk.
   assert(wpi);
   if (wpi->header_ != NULL) dst = ChunkEmit(wpi->header_, dst);
@@ -454,8 +454,8 @@ WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, WebPChunkId id) {
 
 WebPMuxError MuxValidateForImage(const WebPMux* const mux) {
   const int num_images = MuxImageCount(mux->images_, WEBP_CHUNK_IMAGE);
-  const int num_frames = MuxImageCount(mux->images_, WEBP_CHUNK_FRAME);
-  const int num_tiles  = MuxImageCount(mux->images_, WEBP_CHUNK_TILE);
+  const int num_frames = MuxImageCount(mux->images_, WEBP_CHUNK_ANMF);
+  const int num_tiles  = MuxImageCount(mux->images_, WEBP_CHUNK_FRGM);
 
   if (num_images == 0) {
     // No images in mux.
@@ -526,7 +526,7 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
   // At most one loop chunk.
   err = ValidateChunk(mux, IDX_LOOP, NO_FLAG, flags, 1, &num_loop_chunks);
   if (err != WEBP_MUX_OK) return err;
-  err = ValidateChunk(mux, IDX_FRAME, NO_FLAG, flags, -1, &num_frames);
+  err = ValidateChunk(mux, IDX_ANMF, NO_FLAG, flags, -1, &num_frames);
   if (err != WEBP_MUX_OK) return err;
 
   {
@@ -540,7 +540,7 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
   }
 
   // Tiling: TILE_FLAG and tile chunk(s) are consistent.
-  err = ValidateChunk(mux, IDX_TILE, TILE_FLAG, flags, -1, &num_tiles);
+  err = ValidateChunk(mux, IDX_FRGM, TILE_FLAG, flags, -1, &num_tiles);
   if (err != WEBP_MUX_OK) return err;
 
   // Verify either VP8X chunk is present OR there is only one elem in

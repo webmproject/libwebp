@@ -115,7 +115,7 @@ static WebPMuxError CreateFrameTileData(const WebPData* const image,
   int width;
   int height;
   uint8_t* frame_tile_bytes;
-  const size_t frame_tile_size = kChunks[is_frame ? IDX_FRAME : IDX_TILE].size;
+  const size_t frame_tile_size = kChunks[is_frame ? IDX_ANMF : IDX_FRGM].size;
 
   const int ok = is_lossless ?
       VP8LGetInfo(image->bytes_, image->size_, &width, &height, NULL) :
@@ -300,8 +300,8 @@ WebPMuxError WebPMuxPushFrame(WebPMux* mux, const WebPMuxFrameInfo* frame,
   // Sanity checks.
   if (mux == NULL || frame == NULL) return WEBP_MUX_INVALID_ARGUMENT;
 
-  is_frame = (frame->id == WEBP_CHUNK_FRAME);
-  if (!(is_frame || (frame->id == WEBP_CHUNK_TILE))) {
+  is_frame = (frame->id == WEBP_CHUNK_ANMF);
+  if (!(is_frame || (frame->id == WEBP_CHUNK_FRGM))) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
@@ -328,7 +328,7 @@ WebPMuxError WebPMuxPushFrame(WebPMux* mux, const WebPMuxFrameInfo* frame,
     const int x_offset = frame->x_offset_ & ~1;  // Snap offsets to even.
     const int y_offset = frame->y_offset_ & ~1;
     const int duration = is_frame ? frame->duration_ : 1 /* unused */;
-    const uint32_t tag = kChunks[is_frame ? IDX_FRAME : IDX_TILE].tag;
+    const uint32_t tag = kChunks[is_frame ? IDX_ANMF : IDX_FRGM].tag;
     WebPData frame_tile;
     if (x_offset < 0 || x_offset >= MAX_POSITION_OFFSET ||
         y_offset < 0 || y_offset >= MAX_POSITION_OFFSET ||
@@ -392,12 +392,12 @@ static WebPMuxError GetFrameTileInfo(const WebPChunk* const frame_tile_chunk,
                                      int* const x_offset, int* const y_offset,
                                      int* const duration) {
   const uint32_t tag = frame_tile_chunk->tag_;
-  const int is_frame = (tag == kChunks[IDX_FRAME].tag);
+  const int is_frame = (tag == kChunks[IDX_ANMF].tag);
   const WebPData* const data = &frame_tile_chunk->data_;
   const size_t expected_data_size =
-      is_frame ? FRAME_CHUNK_SIZE : TILE_CHUNK_SIZE;
+      is_frame ? ANMF_CHUNK_SIZE : FRGM_CHUNK_SIZE;
   assert(frame_tile_chunk != NULL);
-  assert(tag == kChunks[IDX_FRAME].tag || tag ==  kChunks[IDX_TILE].tag);
+  assert(tag == kChunks[IDX_ANMF].tag || tag ==  kChunks[IDX_FRGM].tag);
   if (data->size_ != expected_data_size) return WEBP_MUX_INVALID_ARGUMENT;
 
   *x_offset = 2 * GetLE24(data->bytes_ + 0);
@@ -433,7 +433,7 @@ static WebPMuxError GetImageInfo(const WebPMuxImage* const wpi,
   const WebPChunk* const image_chunk = wpi->img_;
   const WebPChunk* const frame_tile_chunk = wpi->header_;
 
-  // Get offsets and duration from FRM/TILE chunk.
+  // Get offsets and duration from ANMF/FRGM chunk.
   const WebPMuxError err =
       GetFrameTileInfo(frame_tile_chunk, x_offset, y_offset, duration);
   if (err != WEBP_MUX_OK) return err;
@@ -531,10 +531,10 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   }
 
   if (images->header_ != NULL) {
-    if (images->header_->tag_ == kChunks[IDX_TILE].tag) {
+    if (images->header_->tag_ == kChunks[IDX_FRGM].tag) {
       // This is a tiled image.
       flags |= TILE_FLAG;
-    } else if (images->header_->tag_ == kChunks[IDX_FRAME].tag) {
+    } else if (images->header_->tag_ == kChunks[IDX_ANMF].tag) {
       // This is an image with animation.
       flags |= ANIMATION_FLAG;
     }
@@ -591,7 +591,7 @@ WebPMuxError WebPMuxAssemble(WebPMux* mux, WebPData* assembled_data) {
   err = WebPMuxNumChunks(mux, kChunks[IDX_LOOP].id, &num_loop_chunks);
   if (err != WEBP_MUX_OK) return err;
   if (num_loop_chunks >= 1) {
-    err = WebPMuxNumChunks(mux, kChunks[IDX_FRAME].id, &num_frames);
+    err = WebPMuxNumChunks(mux, kChunks[IDX_ANMF].id, &num_frames);
     if (err != WEBP_MUX_OK) return err;
     if (num_frames == 0) {
       err = DeleteLoopCount(mux);

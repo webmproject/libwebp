@@ -39,7 +39,7 @@ typedef struct Frame {
   int x_offset_, y_offset_;
   int width_, height_;
   int duration_;
-  int is_tile_;    // this is an image fragment from a 'TILE'.
+  int is_tile_;    // this is an image fragment from a tile.
   int frame_num_;  // the referent frame number for use in assembling tiles.
   int complete_;   // img_components_ contains a full image.
   ChunkData img_components_[2];  // 0=VP8{,L} 1=ALPH
@@ -285,7 +285,7 @@ static ParseStatus NewFrame(const MemBuffer* const mem,
   return (*frame == NULL) ? PARSE_ERROR : PARSE_OK;
 }
 
-// Parse a 'FRM ' chunk and any image bearing chunks that immediately follow.
+// Parse a 'ANMF' chunk and any image bearing chunks that immediately follow.
 // 'frame_chunk_size' is the previously validated, padded chunk size.
 static ParseStatus ParseFrame(
     WebPDemuxer* const dmux, uint32_t frame_chunk_size) {
@@ -295,7 +295,7 @@ static ParseStatus ParseFrame(
   MemBuffer* const mem = &dmux->mem_;
   Frame* frame;
   ParseStatus status =
-      NewFrame(mem, min_size, FRAME_CHUNK_SIZE, frame_chunk_size, &frame);
+      NewFrame(mem, min_size, ANMF_CHUNK_SIZE, frame_chunk_size, &frame);
   if (status != PARSE_OK) return status;
 
   frame->x_offset_ = 2 * GetLE24s(mem);
@@ -303,7 +303,7 @@ static ParseStatus ParseFrame(
   frame->width_    = 1 + GetLE24s(mem);
   frame->height_   = 1 + GetLE24s(mem);
   frame->duration_ = 1 + GetLE24s(mem);
-  Skip(mem, frame_chunk_size - FRAME_CHUNK_SIZE);  // skip any trailing data.
+  Skip(mem, frame_chunk_size - ANMF_CHUNK_SIZE);  // skip any trailing data.
   if (frame->width_ * (uint64_t)frame->height_ >= MAX_IMAGE_AREA) {
     return PARSE_ERROR;
   }
@@ -324,7 +324,7 @@ static ParseStatus ParseFrame(
   return status;
 }
 
-// Parse a 'TILE' chunk and any image bearing chunks that immediately follow.
+// Parse a 'FRGM' chunk and any image bearing chunks that immediately follow.
 // 'tile_chunk_size' is the previously validated, padded chunk size.
 static ParseStatus ParseTile(WebPDemuxer* const dmux,
                              uint32_t tile_chunk_size) {
@@ -334,13 +334,13 @@ static ParseStatus ParseTile(WebPDemuxer* const dmux,
   MemBuffer* const mem = &dmux->mem_;
   Frame* frame;
   ParseStatus status =
-      NewFrame(mem, min_size, TILE_CHUNK_SIZE, tile_chunk_size, &frame);
+      NewFrame(mem, min_size, FRGM_CHUNK_SIZE, tile_chunk_size, &frame);
   if (status != PARSE_OK) return status;
 
   frame->is_tile_  = 1;
   frame->x_offset_ = 2 * GetLE24s(mem);
   frame->y_offset_ = 2 * GetLE24s(mem);
-  Skip(mem, tile_chunk_size - TILE_CHUNK_SIZE);  // skip any trailing data.
+  Skip(mem, tile_chunk_size - FRGM_CHUNK_SIZE);  // skip any trailing data.
 
   // Store a (potentially partial) tile only if the tile flag is set
   // and the tile contains some data.
@@ -501,11 +501,11 @@ static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
         }
         break;
       }
-      case MKFOURCC('F', 'R', 'M', ' '): {
+      case MKFOURCC('A', 'N', 'M', 'F'): {
         status = ParseFrame(dmux, chunk_size_padded);
         break;
       }
-      case MKFOURCC('T', 'I', 'L', 'E'): {
+      case MKFOURCC('F', 'R', 'G', 'M'): {
         if (dmux->num_frames_ == 0) dmux->num_frames_ = 1;
         status = ParseTile(dmux, chunk_size_padded);
         break;
@@ -576,7 +576,7 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
     int frame_count = 0, tile_count = 0;
 
     // Check frame properties and if the image is composed of tiles that each
-    // fragment came from a 'TILE'.
+    // fragment came from a tile.
     for (; f != NULL && f->frame_num_ == cur_frame_set; f = f->next_) {
       const ChunkData* const image = f->img_components_;
       const ChunkData* const alpha = f->img_components_ + 1;
@@ -767,7 +767,7 @@ static int SynthesizeFrame(const WebPDemuxer* const dmux,
   iter->complete_    = tile->complete_;
   iter->tile_.bytes_ = payload;
   iter->tile_.size_  = payload_size;
-  // TODO(jzern): adjust offsets for 'TILE's embedded in 'FRM 's
+  // TODO(jzern): adjust offsets for 'FRGM's embedded in 'ANMF's
   return 1;
 }
 
