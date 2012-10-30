@@ -1,3 +1,8 @@
+- 10/30/12: version 0.2.1
+  * Various security related fixes
+  * cwebp.exe: fix import errors on Windows XP
+  * enable DLL builds for mingw targets
+
 - 8/3/12: version 0.2.0
   * Add support for ARGB -> YUVA conversion for lossless decoder
     New functions: WebPINewYUVA, WebPIDecGetYUVA
