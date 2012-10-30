@@ -143,10 +143,10 @@ WebPMuxError ChunkAssignData(WebPChunk* chunk, const WebPData* const data,
   if (data != NULL) {
     if (copy_data) {
       // Copy data.
-      chunk->data_.bytes_ = (uint8_t*)malloc(data->size_);
-      if (chunk->data_.bytes_ == NULL) return WEBP_MUX_MEMORY_ERROR;
-      memcpy((uint8_t*)chunk->data_.bytes_, data->bytes_, data->size_);
-      chunk->data_.size_ = data->size_;
+      chunk->data_.bytes = (uint8_t*)malloc(data->size);
+      if (chunk->data_.bytes == NULL) return WEBP_MUX_MEMORY_ERROR;
+      memcpy((uint8_t*)chunk->data_.bytes, data->bytes, data->size);
+      chunk->data_.size = data->size;
 
       // Chunk is owner of data.
       chunk->owner_ = 1;
@@ -199,13 +199,13 @@ size_t ChunksListDiskSize(const WebPChunk* chunk_list) {
 }
 
 static uint8_t* ChunkEmit(const WebPChunk* const chunk, uint8_t* dst) {
-  const size_t chunk_size = chunk->data_.size_;
+  const size_t chunk_size = chunk->data_.size;
   assert(chunk);
   assert(chunk->tag_ != NIL_TAG);
   PutLE32(dst + 0, chunk->tag_);
   PutLE32(dst + TAG_SIZE, (uint32_t)chunk_size);
   assert(chunk_size == (uint32_t)chunk_size);
-  memcpy(dst + CHUNK_HEADER_SIZE, chunk->data_.bytes_, chunk_size);
+  memcpy(dst + CHUNK_HEADER_SIZE, chunk->data_.bytes, chunk_size);
   if (chunk_size & 1)
     dst[CHUNK_HEADER_SIZE + chunk_size] = 0;  // Add padding.
   return dst + ChunkDiskSize(chunk);
@@ -230,7 +230,7 @@ void WebPDataInit(WebPData* webp_data) {
 
 void WebPDataClear(WebPData* webp_data) {
   if (webp_data != NULL) {
-    free((void*)webp_data->bytes_);
+    free((void*)webp_data->bytes);
     WebPDataInit(webp_data);
   }
 }
@@ -239,11 +239,11 @@ int WebPDataCopy(const WebPData* src, WebPData* dst) {
   if (src == NULL || dst == NULL) return 0;
 
   WebPDataInit(dst);
-  if (src->bytes_ != NULL && src->size_ != 0) {
-    dst->bytes_ = (uint8_t*)malloc(src->size_);
-    if (dst->bytes_ == NULL) return 0;
-    memcpy((void*)dst->bytes_, src->bytes_, src->size_);
-    dst->size_ = src->size_;
+  if (src->bytes != NULL && src->size != 0) {
+    dst->bytes = (uint8_t*)malloc(src->size);
+    if (dst->bytes == NULL) return 0;
+    memcpy((void*)dst->bytes, src->bytes, src->size);
+    dst->size = src->size;
   }
   return 1;
 }

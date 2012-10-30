@@ -167,7 +167,7 @@ WebPChunk* ChunkDelete(WebPChunk* const chunk);
 
 // Size of a chunk including header and padding.
 static WEBP_INLINE size_t ChunkDiskSize(const WebPChunk* chunk) {
-  const size_t data_size = chunk->data_.size_;
+  const size_t data_size = chunk->data_.size;
   assert(data_size < MAX_CHUNK_PAYLOAD);
   return SizeWithPadding(data_size);
 }

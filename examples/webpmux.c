@@ -215,10 +215,10 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
         WebPMuxFrameInfo frame;
         err = WebPMuxGetFrame(mux, i, &frame);
         RETURN_IF_ERROR3("Failed to retrieve %s#%d\n", type_str, i);
-        printf("%3d: %8d %8d ", i, frame.x_offset_, frame.y_offset_);
-        if (is_anim) printf("%8d ", frame.duration_);
-        printf("%10zu\n", frame.bitstream_.size_);
-        WebPDataClear(&frame.bitstream_);
+        printf("%3d: %8d %8d ", i, frame.x_offset, frame.y_offset);
+        if (is_anim) printf("%8d ", frame.duration);
+        printf("%10zu\n", frame.bitstream.size);
+        WebPDataClear(&frame.bitstream);
       }
     }
   }
@@ -227,21 +227,21 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
     WebPData icc_profile;
     err = WebPMuxGetChunk(mux, "ICCP", &icc_profile);
     RETURN_IF_ERROR("Failed to retrieve the color profile\n");
-    printf("Size of the color profile data: %zu\n", icc_profile.size_);
+    printf("Size of the color profile data: %zu\n", icc_profile.size);
   }
 
   if (flag & META_FLAG) {
     WebPData metadata;
     err = WebPMuxGetChunk(mux, "META", &metadata);
     RETURN_IF_ERROR("Failed to retrieve the metadata\n");
-    printf("Size of the metadata: %zu\n", metadata.size_);
+    printf("Size of the metadata: %zu\n", metadata.size);
   }
 
   if ((flag & ALPHA_FLAG) && !(flag & (ANIMATION_FLAG | TILE_FLAG))) {
     WebPMuxFrameInfo image;
     err = WebPMuxGetFrame(mux, 1, &image);
     RETURN_IF_ERROR("Failed to retrieve the image\n");
-    printf("Size of the image (with alpha): %zu\n", image.bitstream_.size_);
+    printf("Size of the image (with alpha): %zu\n", image.bitstream.size);
   }
 
   return WEBP_MUX_OK;
@@ -302,8 +302,8 @@ static int ReadFileToWebPData(const char* const filename,
   const uint8_t* data;
   size_t size;
   if (!ExUtilReadFile(filename, &data, &size)) return 0;
-  webp_data->bytes_ = data;
-  webp_data->size_ = size;
+  webp_data->bytes = data;
+  webp_data->size = size;
   return 1;
 }
 
@@ -312,7 +312,7 @@ static int CreateMux(const char* const filename, WebPMux** mux) {
   assert(mux != NULL);
   if (!ReadFileToWebPData(filename, &bitstream)) return 0;
   *mux = WebPMuxCreate(&bitstream, 1);
-  free((void*)bitstream.bytes_);
+  free((void*)bitstream.bytes);
   if (*mux != NULL) return 1;
   fprintf(stderr, "Failed to create mux object from file %s.\n", filename);
   return 0;
@@ -325,10 +325,10 @@ static int WriteData(const char* filename, const WebPData* const webpdata) {
     fprintf(stderr, "Error opening output WebP file %s!\n", filename);
     return 0;
   }
-  if (fwrite(webpdata->bytes_, webpdata->size_, 1, fout) != 1) {
+  if (fwrite(webpdata->bytes, webpdata->size, 1, fout) != 1) {
     fprintf(stderr, "Error writing file %s!\n", filename);
   } else {
-    fprintf(stderr, "Saved file %s (%zu bytes)\n", filename, webpdata->size_);
+    fprintf(stderr, "Saved file %s (%zu bytes)\n", filename, webpdata->size);
     ok = 1;
   }
   if (fout != stdout) fclose(fout);
@@ -350,11 +350,11 @@ static int WriteWebP(WebPMux* const mux, const char* filename) {
 
 static int ParseFrameArgs(const char* args, WebPMuxFrameInfo* const info) {
   return (sscanf(args, "+%d+%d+%d",
-                 &info->x_offset_, &info->y_offset_, &info->duration_) == 3);
+                 &info->x_offset, &info->y_offset, &info->duration) == 3);
 }
 
 static int ParseTileArgs(const char* args, WebPMuxFrameInfo* const info) {
-  return (sscanf(args, "+%d+%d", &info->x_offset_, &info->y_offset_) == 2);
+  return (sscanf(args, "+%d+%d", &info->x_offset, &info->y_offset) == 2);
 }
 
 //------------------------------------------------------------------------------
@@ -686,7 +686,7 @@ static int GetFrameTile(const WebPMux* mux,
   int ok = 1;
   const WebPChunkId id = isFrame ? WEBP_CHUNK_ANMF : WEBP_CHUNK_FRGM;
   WebPMuxFrameInfo info;
-  WebPDataInit(&info.bitstream_);
+  WebPDataInit(&info.bitstream);
 
   num = strtol(config->feature_.args_[0].params_, NULL, 10);
   if (num < 0) {
@@ -706,7 +706,7 @@ static int GetFrameTile(const WebPMux* mux,
     ERROR_GOTO2("ERROR (%s): Could not allocate a mux object.\n",
                 ErrorString(err), ErrGet);
   }
-  err = WebPMuxSetImage(mux_single, &info.bitstream_, 1);
+  err = WebPMuxSetImage(mux_single, &info.bitstream, 1);
   if (err != WEBP_MUX_OK) {
     ERROR_GOTO2("ERROR (%s): Could not create single image mux object.\n",
                 ErrorString(err), ErrGet);
@@ -715,7 +715,7 @@ static int GetFrameTile(const WebPMux* mux,
   ok = WriteWebP(mux_single, config->output_);
 
  ErrGet:
-  WebPDataClear(&info.bitstream_);
+  WebPDataClear(&info.bitstream);
   WebPMuxDelete(mux_single);
   return ok;
 }
@@ -787,16 +787,16 @@ static int Process(const WebPMuxConfig* config) {
             } else if (feature->args_[index].subtype_ == SUBTYPE_FRM) {
               WebPMuxFrameInfo frame;
               ok = ReadFileToWebPData(feature->args_[index].filename_,
-                                      &frame.bitstream_);
+                                      &frame.bitstream);
               if (!ok) goto Err2;
               ok = ParseFrameArgs(feature->args_[index].params_, &frame);
               if (!ok) {
-                WebPDataClear(&frame.bitstream_);
+                WebPDataClear(&frame.bitstream);
                 ERROR_GOTO1("ERROR: Could not parse frame properties.\n", Err2);
               }
               frame.id = WEBP_CHUNK_ANMF;
               err = WebPMuxPushFrame(mux, &frame, 1);
-              WebPDataClear(&frame.bitstream_);
+              WebPDataClear(&frame.bitstream);
               if (err != WEBP_MUX_OK) {
                 ERROR_GOTO3("ERROR (%s): Could not add a frame at index %d.\n",
                             ErrorString(err), index, Err2);
@@ -816,16 +816,16 @@ static int Process(const WebPMuxConfig* config) {
           for (index = 0; index < feature->arg_count_; ++index) {
             WebPMuxFrameInfo tile;
             ok = ReadFileToWebPData(feature->args_[index].filename_,
-                                    &tile.bitstream_);
+                                    &tile.bitstream);
             if (!ok) goto Err2;
             ok = ParseTileArgs(feature->args_[index].params_, &tile);
             if (!ok) {
-              WebPDataClear(&tile.bitstream_);
+              WebPDataClear(&tile.bitstream);
               ERROR_GOTO1("ERROR: Could not parse tile properties.\n", Err2);
             }
             tile.id = WEBP_CHUNK_FRGM;
             err = WebPMuxPushFrame(mux, &tile, 1);
-            WebPDataClear(&tile.bitstream_);
+            WebPDataClear(&tile.bitstream);
             if (err != WEBP_MUX_OK) {
               ERROR_GOTO3("ERROR (%s): Could not add a tile at index %d.\n",
                           ErrorString(err), index, Err2);
@@ -839,7 +839,7 @@ static int Process(const WebPMuxConfig* config) {
           ok = ReadFileToWebPData(feature->args_[0].filename_, &color_profile);
           if (!ok) goto Err2;
           err = WebPMuxSetChunk(mux, "ICCP", &color_profile, 1);
-          free((void*)color_profile.bytes_);
+          free((void*)color_profile.bytes);
           if (err != WEBP_MUX_OK) {
             ERROR_GOTO2("ERROR (%s): Could not set color profile.\n",
                         ErrorString(err), Err2);
@@ -852,7 +852,7 @@ static int Process(const WebPMuxConfig* config) {
           ok = ReadFileToWebPData(feature->args_[0].filename_, &metadata);
           if (!ok) goto Err2;
           err = WebPMuxSetChunk(mux, "META", &metadata, 1);
-          free((void*)metadata.bytes_);
+          free((void*)metadata.bytes);
           if (err != WEBP_MUX_OK) {
             ERROR_GOTO2("ERROR (%s): Could not set the metadata.\n",
                         ErrorString(err), Err2);

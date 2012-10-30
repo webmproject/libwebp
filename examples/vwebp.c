@@ -178,17 +178,17 @@ static int Decode(int* const duration) {
   int ok = 0;
 
   ClearPreviousPic();
-  if (iter->x_offset_ != 0 || iter->y_offset_ != 0) {
+  if (iter->x_offset != 0 || iter->y_offset != 0) {
     fprintf(stderr,
             "Frame offsets not yet supported! Forcing offset to 0,0\n");
   }
   output_buffer->colorspace = MODE_RGBA;
-  ok = (WebPDecode(iter->tile_.bytes_, iter->tile_.size_,
+  ok = (WebPDecode(iter->tile.bytes, iter->tile.size,
                    config) == VP8_STATUS_OK);
   if (!ok) {
-    fprintf(stderr, "Decoding of frame #%d failed!\n", iter->frame_num_);
+    fprintf(stderr, "Decoding of frame #%d failed!\n", iter->frame_num);
   } else {
-    *duration = iter->duration_;
+    *duration = iter->duration;
     kParams.pic = output_buffer;
   }
   return ok;
@@ -288,7 +288,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (!ExUtilReadFile(kParams.file_name,
-                      &kParams.data.bytes_, &kParams.data.size_)) {
+                      &kParams.data.bytes, &kParams.data.size)) {
     goto Error;
   }
 
@@ -305,10 +305,10 @@ int main(int argc, char *argv[]) {
 
   if (!WebPDemuxGetFrame(kParams.dmux, 1, &kParams.frameiter)) goto Error;
 
-  kParams.has_animation = (kParams.frameiter.num_frames_ > 1);
+  kParams.has_animation = (kParams.frameiter.num_frames > 1);
   kParams.loop_count = (int)WebPDemuxGetI(kParams.dmux, WEBP_FF_LOOP_COUNT);
   printf("VP8X: Found %d images in file (loop count = %d)\n",
-         kParams.frameiter.num_frames_, kParams.loop_count);
+         kParams.frameiter.num_frames, kParams.loop_count);
 
   // Decode first frame
   {

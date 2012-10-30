@@ -632,9 +632,9 @@ WebPDemuxer* WebPDemuxInternal(const WebPData* data, int allow_partial,
   WebPDemuxer* dmux;
 
   if (WEBP_ABI_IS_INCOMPATIBLE(version, WEBP_DEMUX_ABI_VERSION)) return NULL;
-  if (data == NULL || data->bytes_ == NULL || data->size_ == 0) return NULL;
+  if (data == NULL || data->bytes == NULL || data->size == 0) return NULL;
 
-  if (!InitMemBuffer(&mem, data->bytes_, data->size_)) return NULL;
+  if (!InitMemBuffer(&mem, data->bytes, data->size)) return NULL;
   if (!ReadHeader(&mem)) return NULL;
 
   partial = (mem.buf_size_ < mem.riff_end_);
@@ -755,18 +755,18 @@ static int SynthesizeFrame(const WebPDemuxer* const dmux,
   const uint8_t* const payload = GetFramePayload(mem_buf, tile, &payload_size);
   if (payload == NULL) return 0;
 
-  iter->frame_num_   = first_frame->frame_num_;
-  iter->num_frames_  = dmux->num_frames_;
-  iter->tile_num_    = tile_num;
-  iter->num_tiles_   = num_tiles;
-  iter->x_offset_    = tile->x_offset_;
-  iter->y_offset_    = tile->y_offset_;
-  iter->width_       = tile->width_;
-  iter->height_      = tile->height_;
-  iter->duration_    = tile->duration_;
-  iter->complete_    = tile->complete_;
-  iter->tile_.bytes_ = payload;
-  iter->tile_.size_  = payload_size;
+  iter->frame_num  = first_frame->frame_num_;
+  iter->num_frames = dmux->num_frames_;
+  iter->tile_num   = tile_num;
+  iter->num_tiles  = num_tiles;
+  iter->x_offset   = tile->x_offset_;
+  iter->y_offset   = tile->y_offset_;
+  iter->width      = tile->width_;
+  iter->height     = tile->height_;
+  iter->duration   = tile->duration_;
+  iter->complete   = tile->complete_;
+  iter->tile.bytes = payload;
+  iter->tile.size  = payload_size;
   // TODO(jzern): adjust offsets for 'FRGM's embedded in 'ANMF's
   return 1;
 }
@@ -792,19 +792,19 @@ int WebPDemuxGetFrame(const WebPDemuxer* dmux, int frame, WebPIterator* iter) {
 
 int WebPDemuxNextFrame(WebPIterator* iter) {
   if (iter == NULL) return 0;
-  return SetFrame(iter->frame_num_ + 1, iter);
+  return SetFrame(iter->frame_num + 1, iter);
 }
 
 int WebPDemuxPrevFrame(WebPIterator* iter) {
   if (iter == NULL) return 0;
-  if (iter->frame_num_ <= 1) return 0;
-  return SetFrame(iter->frame_num_ - 1, iter);
+  if (iter->frame_num <= 1) return 0;
+  return SetFrame(iter->frame_num - 1, iter);
 }
 
 int WebPDemuxSelectTile(WebPIterator* iter, int tile) {
   if (iter != NULL && iter->private_ != NULL && tile > 0) {
     const WebPDemuxer* const dmux = (WebPDemuxer*)iter->private_;
-    const Frame* const frame = GetFrame(dmux, iter->frame_num_);
+    const Frame* const frame = GetFrame(dmux, iter->frame_num);
     if (frame == NULL) return 0;
 
     return SynthesizeFrame(dmux, frame, tile, iter);
@@ -856,10 +856,10 @@ static int SetChunk(const char fourcc[4], int chunk_num,
   if (chunk_num <= count) {
     const uint8_t* const mem_buf = dmux->mem_.buf_;
     const Chunk* const chunk = GetChunk(dmux, fourcc, chunk_num);
-    iter->chunk_.bytes_ = mem_buf + chunk->data_.offset_ + CHUNK_HEADER_SIZE;
-    iter->chunk_.size_  = chunk->data_.size_ - CHUNK_HEADER_SIZE;
-    iter->num_chunks_   = count;
-    iter->chunk_num_    = chunk_num;
+    iter->chunk.bytes = mem_buf + chunk->data_.offset_ + CHUNK_HEADER_SIZE;
+    iter->chunk.size  = chunk->data_.size_ - CHUNK_HEADER_SIZE;
+    iter->num_chunks  = count;
+    iter->chunk_num   = chunk_num;
     return 1;
   }
   return 0;
@@ -878,17 +878,17 @@ int WebPDemuxGetChunk(const WebPDemuxer* dmux,
 int WebPDemuxNextChunk(WebPChunkIterator* iter) {
   if (iter != NULL) {
     const char* const fourcc =
-        (const char*)iter->chunk_.bytes_ - CHUNK_HEADER_SIZE;
-    return SetChunk(fourcc, iter->chunk_num_ + 1, iter);
+        (const char*)iter->chunk.bytes - CHUNK_HEADER_SIZE;
+    return SetChunk(fourcc, iter->chunk_num + 1, iter);
   }
   return 0;
 }
 
 int WebPDemuxPrevChunk(WebPChunkIterator* iter) {
-  if (iter != NULL && iter->chunk_num_ > 1) {
+  if (iter != NULL && iter->chunk_num > 1) {
     const char* const fourcc =
-        (const char*)iter->chunk_.bytes_ - CHUNK_HEADER_SIZE;
-    return SetChunk(fourcc, iter->chunk_num_ - 1, iter);
+        (const char*)iter->chunk.bytes - CHUNK_HEADER_SIZE;
+    return SetChunk(fourcc, iter->chunk_num - 1, iter);
   }
   return 0;
 }

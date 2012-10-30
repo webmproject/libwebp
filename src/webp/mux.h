@@ -27,7 +27,7 @@
 //   // Get data from mux in WebP RIFF format.
 //   WebPMuxAssemble(mux, &output_data);
 //   WebPMuxDelete(mux);
-//   // ... (Consume output_data; e.g. write output_data.bytes_ to file).
+//   // ... (Consume output_data; e.g. write output_data.bytes to file).
 //   WebPDataClear(&output_data);
 //
 // Code Example#2: Get image and color profile data from a WebP file.
@@ -106,8 +106,8 @@ enum WebPChunkId {
 // Data type used to describe 'raw' data, e.g., chunk data
 // (ICC profile, metadata) and WebP compressed image data.
 struct WebPData {
-  const uint8_t* bytes_;
-  size_t size_;
+  const uint8_t* bytes;
+  size_t size;
 };
 
 //------------------------------------------------------------------------------
@@ -220,15 +220,15 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteChunk(
 
 // Encapsulates data about a single frame/tile.
 struct WebPMuxFrameInfo {
-  WebPData    bitstream_;  // image data: can either be a raw VP8/VP8L bitstream
-                           // or a single-image WebP file.
-  int         x_offset_;   // x-offset of the frame.
-  int         y_offset_;   // y-offset of the frame.
-  int         duration_;   // duration of the frame (in milliseconds).
+  WebPData    bitstream;  // image data: can either be a raw VP8/VP8L bitstream
+                          // or a single-image WebP file.
+  int         x_offset;   // x-offset of the frame.
+  int         y_offset;   // y-offset of the frame.
+  int         duration;   // duration of the frame (in milliseconds).
 
-  WebPChunkId id;          // frame type: should be one of WEBP_CHUNK_ANMF,
-                           // WEBP_CHUNK_FRGM or WEBP_CHUNK_IMAGE
-  uint32_t pad[3];         // padding for later use
+  WebPChunkId id;         // frame type: should be one of WEBP_CHUNK_ANMF,
+                          // WEBP_CHUNK_FRGM or WEBP_CHUNK_IMAGE
+  uint32_t pad[3];        // padding for later use
 };
 
 // Sets the (non-animated and non-tiled) image in the mux object.
@@ -267,7 +267,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxPushFrame(
     WebPMux* mux, const WebPMuxFrameInfo* frame, int copy_data);
 
 // Gets the nth frame from the mux object.
-// The content of 'frame->bitstream_' is allocated using malloc(), and NOT
+// The content of 'frame->bitstream' is allocated using malloc(), and NOT
 // owned by the 'mux' object. It MUST be deallocated by the caller by calling
 // WebPDataClear().
 // nth=0 has a special meaning - last position.
@@ -424,19 +424,19 @@ WEBP_EXTERN(uint32_t) WebPDemuxGetI(
 // Frame iteration.
 
 struct WebPIterator {
-  int frame_num_;
-  int num_frames_;
-  int tile_num_;
-  int num_tiles_;
-  int x_offset_, y_offset_;  // offset relative to the canvas.
-  int width_, height_;       // dimensions of this frame or tile.
-  int duration_;   // display duration in milliseconds.
-  int complete_;   // true if 'tile_' contains a full frame. partial images may
-                   // still be decoded with the WebP incremental decoder.
-  WebPData tile_;  // The frame or tile given by 'frame_num_' and 'tile_num_'.
+  int frame_num;
+  int num_frames;
+  int tile_num;
+  int num_tiles;
+  int x_offset, y_offset;  // offset relative to the canvas.
+  int width, height;       // dimensions of this frame or tile.
+  int duration;            // display duration in milliseconds.
+  int complete;   // true if 'tile_' contains a full frame. partial images may
+                  // still be decoded with the WebP incremental decoder.
+  WebPData tile;  // The frame or tile given by 'frame_num_' and 'tile_num_'.
 
   uint32_t pad[4];           // padding for later use
-  void* private_;
+  void* private_;            // for internal use only.
 };
 
 // Retrieves frame 'frame_number' from 'dmux'.
@@ -470,11 +470,11 @@ WEBP_EXTERN(void) WebPDemuxReleaseIterator(WebPIterator* iter);
 struct WebPChunkIterator {
   // The current and total number of chunks with the fourcc given to
   // WebPDemuxGetChunk().
-  int chunk_num_;
-  int num_chunks_;
-  WebPData chunk_;    // The payload of the chunk.
+  int chunk_num;
+  int num_chunks;
+  WebPData chunk;    // The payload of the chunk.
 
-  uint32_t pad[6];    // padding for later use
+  uint32_t pad[6];   // padding for later use
   void* private_;
 };
 

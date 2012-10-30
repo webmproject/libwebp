@@ -85,7 +85,7 @@ profile & XMP metadata.
   // Get data from mux in WebP RIFF format.
   WebPMuxAssemble(mux, &output_data);
   WebPMuxDelete(mux);
-  // ... (Consume output_data; e.g. write output_data.bytes_ to file).
+  // ... (Consume output_data; e.g. write output_data.bytes to file).
   WebPDataClear(&output_data);
 
 

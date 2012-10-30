@@ -68,8 +68,8 @@ static WebPMuxError ChunkVerifyAndAssignData(WebPChunk* chunk,
   }
 
   // Data assignment.
-  chunk_data.bytes_ = data + CHUNK_HEADER_SIZE;
-  chunk_data.size_ = chunk_size;
+  chunk_data.bytes = data + CHUNK_HEADER_SIZE;
+  chunk_data.size = chunk_size;
   return ChunkAssignData(chunk, &chunk_data, copy_data, GetLE32(data + 0));
 }
 
@@ -94,8 +94,8 @@ WebPMux* WebPMuxCreateInternal(const WebPData* bitstream, int copy_data,
   }
   if (bitstream == NULL) return NULL;
 
-  data = bitstream->bytes_;
-  size = bitstream->size_;
+  data = bitstream->bytes;
+  size = bitstream->size;
 
   if (data == NULL) return NULL;
   if (size < RIFF_HEADER_SIZE) return NULL;
@@ -207,10 +207,10 @@ WebPMuxError WebPMuxGetFeatures(const WebPMux* mux, uint32_t* flags) {
     return err;
   }
 
-  if (data.size_ < CHUNK_SIZE_BYTES) return WEBP_MUX_BAD_DATA;
+  if (data.size < CHUNK_SIZE_BYTES) return WEBP_MUX_BAD_DATA;
 
   // All OK. Fill up flags.
-  *flags = GetLE32(data.bytes_);
+  *flags = GetLE32(data.bytes);
   return WEBP_MUX_OK;
 }
 
@@ -264,8 +264,8 @@ static WebPMuxError SynthesizeBitstream(const WebPMuxImage* const wpi,
   assert(dst == data + size);
 
   // Output.
-  bitstream->bytes_ = data;
-  bitstream->size_ = size;
+  bitstream->bytes = data;
+  bitstream->size = size;
   return WEBP_MUX_OK;
 }
 
@@ -289,12 +289,12 @@ WebPMuxError WebPMuxGetChunk(const WebPMux* mux, const char fourcc[4],
 static WebPMuxError MuxGetImageInternal(const WebPMuxImage* const wpi,
                                         WebPMuxFrameInfo* const info) {
   // Set some defaults for unrelated fields.
-  info->x_offset_ = 0;
-  info->y_offset_ = 0;
-  info->duration_ = 1;
+  info->x_offset = 0;
+  info->y_offset = 0;
+  info->duration = 1;
   // Extract data for related fields.
   info->id = ChunkGetIdFromTag(wpi->img_->tag_);
-  return SynthesizeBitstream(wpi, &info->bitstream_);
+  return SynthesizeBitstream(wpi, &info->bitstream);
 }
 
 static WebPMuxError MuxGetFrameTileInternal(const WebPMuxImage* const wpi,
@@ -305,13 +305,13 @@ static WebPMuxError MuxGetFrameTileInternal(const WebPMuxImage* const wpi,
   assert(wpi->header_ != NULL);  // Already checked by WebPMuxGetFrame().
   // Get frame/tile chunk.
   frame_tile_data = &wpi->header_->data_;
-  if (frame_tile_data->size_ < kChunks[idx].size) return WEBP_MUX_BAD_DATA;
+  if (frame_tile_data->size < kChunks[idx].size) return WEBP_MUX_BAD_DATA;
   // Extract info.
-  frame->x_offset_ = 2 * GetLE24(frame_tile_data->bytes_ + 0);
-  frame->y_offset_ = 2 * GetLE24(frame_tile_data->bytes_ + 3);
-  frame->duration_ = is_frame ? 1 + GetLE24(frame_tile_data->bytes_ + 12) : 1;
+  frame->x_offset = 2 * GetLE24(frame_tile_data->bytes + 0);
+  frame->y_offset = 2 * GetLE24(frame_tile_data->bytes + 3);
+  frame->duration = is_frame ? 1 + GetLE24(frame_tile_data->bytes + 12) : 1;
   frame->id = ChunkGetIdFromTag(wpi->header_->tag_);
-  return SynthesizeBitstream(wpi, &frame->bitstream_);
+  return SynthesizeBitstream(wpi, &frame->bitstream);
 }
 
 WebPMuxError WebPMuxGetFrame(
@@ -344,8 +344,8 @@ WebPMuxError WebPMuxGetLoopCount(const WebPMux* mux, int* loop_count) {
 
   err = MuxGet(mux, IDX_LOOP, 1, &image);
   if (err != WEBP_MUX_OK) return err;
-  if (image.size_ < kChunks[WEBP_CHUNK_LOOP].size) return WEBP_MUX_BAD_DATA;
-  *loop_count = GetLE16(image.bytes_);
+  if (image.size < kChunks[WEBP_CHUNK_LOOP].size) return WEBP_MUX_BAD_DATA;
+  *loop_count = GetLE16(image.bytes);
 
   return WEBP_MUX_OK;
 }
