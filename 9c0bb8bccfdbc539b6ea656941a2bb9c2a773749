@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAQ3//7ko\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2012-10-31T23:34:45Z",
+      "side": 1,
+      "message": "This date has to be today\u0027s or the one for which corresponding internal change was made ?",
+      "revId": "9c0bb8bccfdbc539b6ea656941a2bb9c2a773749",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
