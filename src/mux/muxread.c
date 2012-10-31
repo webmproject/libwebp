@@ -271,13 +271,16 @@ static WebPMuxError SynthesizeBitstream(const WebPMuxImage* const wpi,
 
 WebPMuxError WebPMuxGetChunk(const WebPMux* mux, const char fourcc[4],
                              WebPData* chunk_data) {
-  const CHUNK_INDEX idx = ChunkGetIndexFromFourCC(fourcc);
-  if (mux == NULL || chunk_data == NULL || IsWPI(kChunks[idx].id)) {
+  CHUNK_INDEX idx;
+  if (mux == NULL || fourcc == NULL || chunk_data == NULL) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
-  if (idx != IDX_UNKNOWN) {  // A known chunk type.
+  idx = ChunkGetIndexFromFourCC(fourcc);
+  if (IsWPI(kChunks[idx].id)) {     // An image chunk.
+    return WEBP_MUX_INVALID_ARGUMENT;
+  } else if (idx != IDX_UNKNOWN) {  // A known chunk type.
     return MuxGet(mux, idx, 1, chunk_data);
-  } else {                   // An unknown chunk type.
+  } else {                          // An unknown chunk type.
     const WebPChunk* const chunk =
         ChunkSearchList(mux->unknown_, 1, ChunkGetTagFromFourCC(fourcc));
     if (chunk == NULL) return WEBP_MUX_NOT_FOUND;
