@@ -87,6 +87,7 @@ DSP_OBJS = \
     src/dsp/dec_neon.o \
     src/dsp/dec_sse2.o \
     src/dsp/enc.o \
+    src/dsp/enc_neon.o \
     src/dsp/enc_sse2.o \
     src/dsp/lossless.o \
     src/dsp/upsampling.o \

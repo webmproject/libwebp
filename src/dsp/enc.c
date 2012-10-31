@@ -686,6 +686,7 @@ VP8QuantizeBlock VP8EncQuantizeBlock;
 VP8BlockCopy VP8Copy4x4;
 
 extern void VP8EncDspInitSSE2(void);
+extern void VP8EncDspInitNEON(void);
 
 void VP8EncDspInit(void) {
   InitTables();
@@ -713,6 +714,10 @@ void VP8EncDspInit(void) {
 #if defined(WEBP_USE_SSE2)
     if (VP8GetCPUInfo(kSSE2)) {
       VP8EncDspInitSSE2();
+    }
+#elif defined(WEBP_USE_NEON)
+    if (VP8GetCPUInfo(kNEON)) {
+      VP8EncDspInitNEON();
     }
 #endif
   }
