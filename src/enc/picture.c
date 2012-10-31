@@ -290,8 +290,11 @@ int WebPPictureView(const WebPPicture* src,
     dst->y = src->y + top * src->y_stride + left;
     dst->u = src->u + (top >> 1) * src->uv_stride + (left >> 1);
     dst->v = src->v + (top >> 1) * src->uv_stride + (left >> 1);
+    dst->y_stride = src->y_stride;
+    dst->uv_stride = src->uv_stride;
     if (src->a != NULL) {
       dst->a = src->a + top * src->a_stride + left;
+      dst->a_stride = src->a_stride;
     }
 #ifdef WEBP_EXPERIMENTAL_FEATURES
     if (src->u0 != NULL) {
@@ -299,10 +302,12 @@ int WebPPictureView(const WebPPicture* src,
           IS_YUV_CSP(dst->colorspace, WEBP_YUV422) ? (left >> 1) : left;
       dst->u0 = src->u0 + top * src->uv0_stride + left_pos;
       dst->v0 = src->v0 + top * src->uv0_stride + left_pos;
+      dst->uv0_stride = src->uv0_stride;
     }
 #endif
   } else {
     dst->argb = src->argb + top * src->argb_stride + left;
+    dst->argb_stride = src->argb_stride;
   }
   return 1;
 }
