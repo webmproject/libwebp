@@ -514,8 +514,12 @@ static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
         store_chunk = !!(dmux->feature_flags_ & ICCP_FLAG);
         goto Skip;
       }
-      case MKFOURCC('M', 'E', 'T', 'A'): {
-        store_chunk = !!(dmux->feature_flags_ & META_FLAG);
+      case MKFOURCC('X', 'M', 'P', ' '): {
+        store_chunk = !!(dmux->feature_flags_ & XMP_FLAG);
+        goto Skip;
+      }
+      case MKFOURCC('E', 'X', 'I', 'F'): {
+        store_chunk = !!(dmux->feature_flags_ & EXIF_FLAG);
         goto Skip;
       }
  Skip:

@@ -28,7 +28,8 @@ const ChunkInfo kChunks[] = {
   { MKFOURCC('A', 'L', 'P', 'H'),  WEBP_CHUNK_ALPHA,   UNDEFINED_CHUNK_SIZE },
   { MKFOURCC('V', 'P', '8', ' '),  WEBP_CHUNK_IMAGE,   UNDEFINED_CHUNK_SIZE },
   { MKFOURCC('V', 'P', '8', 'L'),  WEBP_CHUNK_IMAGE,   UNDEFINED_CHUNK_SIZE },
-  { MKFOURCC('M', 'E', 'T', 'A'),  WEBP_CHUNK_META,    UNDEFINED_CHUNK_SIZE },
+  { MKFOURCC('E', 'X', 'I', 'F'),  WEBP_CHUNK_EXIF,    UNDEFINED_CHUNK_SIZE },
+  { MKFOURCC('X', 'M', 'P', ' '),  WEBP_CHUNK_XMP,     UNDEFINED_CHUNK_SIZE },
   { MKFOURCC('U', 'N', 'K', 'N'),  WEBP_CHUNK_UNKNOWN, UNDEFINED_CHUNK_SIZE },
 
   { NIL_TAG,                       WEBP_CHUNK_NIL,     UNDEFINED_CHUNK_SIZE }
@@ -446,7 +447,8 @@ WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, WebPChunkId id) {
     case WEBP_CHUNK_VP8X:    return (WebPChunk**)&mux->vp8x_;
     case WEBP_CHUNK_ICCP:    return (WebPChunk**)&mux->iccp_;
     case WEBP_CHUNK_LOOP:    return (WebPChunk**)&mux->loop_;
-    case WEBP_CHUNK_META:    return (WebPChunk**)&mux->meta_;
+    case WEBP_CHUNK_EXIF:    return (WebPChunk**)&mux->exif_;
+    case WEBP_CHUNK_XMP:     return (WebPChunk**)&mux->xmp_;
     case WEBP_CHUNK_UNKNOWN: return (WebPChunk**)&mux->unknown_;
     default: return NULL;
   }
@@ -495,7 +497,8 @@ static WebPMuxError ValidateChunk(const WebPMux* const mux, CHUNK_INDEX idx,
 
 WebPMuxError MuxValidate(const WebPMux* const mux) {
   int num_iccp;
-  int num_meta;
+  int num_exif;
+  int num_xmp;
   int num_loop_chunks;
   int num_frames;
   int num_tiles;
@@ -518,8 +521,12 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
   err = ValidateChunk(mux, IDX_ICCP, ICCP_FLAG, flags, 1, &num_iccp);
   if (err != WEBP_MUX_OK) return err;
 
+  // At most one EXIF metadata.
+  err = ValidateChunk(mux, IDX_EXIF, EXIF_FLAG, flags, 1, &num_exif);
+  if (err != WEBP_MUX_OK) return err;
+
   // At most one XMP metadata.
-  err = ValidateChunk(mux, IDX_META, META_FLAG, flags, 1, &num_meta);
+  err = ValidateChunk(mux, IDX_XMP, XMP_FLAG, flags, 1, &num_xmp);
   if (err != WEBP_MUX_OK) return err;
 
   // Animation: ANIMATION_FLAG, loop chunk and frame chunk(s) are consistent.

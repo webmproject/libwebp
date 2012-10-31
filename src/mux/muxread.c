@@ -42,7 +42,8 @@ static WebPMuxError MuxGet(const WebPMux* const mux, CHUNK_INDEX idx,
   SWITCH_ID_LIST(IDX_VP8X, mux->vp8x_);
   SWITCH_ID_LIST(IDX_ICCP, mux->iccp_);
   SWITCH_ID_LIST(IDX_LOOP, mux->loop_);
-  SWITCH_ID_LIST(IDX_META, mux->meta_);
+  SWITCH_ID_LIST(IDX_EXIF, mux->exif_);
+  SWITCH_ID_LIST(IDX_XMP, mux->xmp_);
   SWITCH_ID_LIST(IDX_UNKNOWN, mux->unknown_);
   return WEBP_MUX_NOT_FOUND;
 }

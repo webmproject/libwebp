@@ -11,7 +11,7 @@
 //          Vikas (vikasa@google.com)
 
 // This API allows manipulation of WebP container images containing features
-// like Color profile, XMP metadata, Animation and Tiling.
+// like color profile, metadata, animation and tiling.
 //
 // Code Example#1: Creating a MUX with image data, color profile and XMP
 // metadata.
@@ -23,7 +23,7 @@
 //   // ... (Prepare ICCP color profile data).
 //   WebPMuxSetChunk(mux, "ICCP", &icc_profile, copy_data);
 //   // ... (Prepare XMP metadata).
-//   WebPMuxSetChunk(mux, "META", &xmp, copy_data);
+//   WebPMuxSetChunk(mux, "XMP ", &xmp, copy_data);
 //   // Get data from mux in WebP RIFF format.
 //   WebPMuxAssemble(mux, &output_data);
 //   WebPMuxDelete(mux);
@@ -84,9 +84,10 @@ enum WebPMuxError {
 enum WebPFeatureFlags {
   TILE_FLAG       = 0x00000001,
   ANIMATION_FLAG  = 0x00000002,
-  ICCP_FLAG       = 0x00000004,
-  META_FLAG       = 0x00000008,
-  ALPHA_FLAG      = 0x00000010
+  XMP_FLAG        = 0x00000004,
+  EXIF_FLAG       = 0x00000008,
+  ALPHA_FLAG      = 0x00000010,
+  ICCP_FLAG       = 0x00000020
 };
 
 // IDs for different types of chunks.
@@ -98,7 +99,8 @@ enum WebPChunkId {
   WEBP_CHUNK_FRGM,     // FRGM
   WEBP_CHUNK_ALPHA,    // ALPH
   WEBP_CHUNK_IMAGE,    // VP8/VP8L
-  WEBP_CHUNK_META,     // META
+  WEBP_CHUNK_EXIF,     // EXIF
+  WEBP_CHUNK_XMP,      // XMP
   WEBP_CHUNK_UNKNOWN,  // Other chunks.
   WEBP_CHUNK_NIL
 };
@@ -174,7 +176,7 @@ static WEBP_INLINE WebPMux* WebPMuxCreate(const WebPData* bitstream,
 // Parameters:
 //   mux - (in/out) object to which the chunk is to be added
 //   fourcc - (in) a character array containing the fourcc of the given chunk;
-//                 e.g., "ICCP", "META" etc.
+//                 e.g., "ICCP", "XMP ", "EXIF" etc.
 //   chunk_data - (in) the chunk data to be added
 //   copy_data - (in) value 1 indicates given data WILL be copied to the mux
 //               and value 0 indicates data will NOT be copied.
@@ -192,7 +194,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxSetChunk(
 // Parameters:
 //   mux - (in) object from which the chunk data is to be fetched
 //   fourcc - (in) a character array containing the fourcc of the chunk;
-//                 e.g., "ICCP", "META" etc.
+//                 e.g., "ICCP", "XMP ", "EXIF" etc.
 //   chunk_data - (out) returned chunk data
 // Returns:
 //   WEBP_MUX_INVALID_ARGUMENT - if either mux, fourcc or chunk_data is NULL
@@ -206,7 +208,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetChunk(
 // Parameters:
 //   mux - (in/out) object from which the chunk is to be deleted
 //   fourcc - (in) a character array containing the fourcc of the chunk;
-//                 e.g., "ICCP", "META" etc.
+//                 e.g., "ICCP", "XMP ", "EXIF" etc.
 // Returns:
 //   WEBP_MUX_INVALID_ARGUMENT - if mux or fourcc is NULL
 //                               or if fourcc corresponds to an image chunk.
@@ -481,7 +483,7 @@ struct WebPChunkIterator {
 // Retrieves the 'chunk_number' instance of the chunk with id 'fourcc' from
 // 'dmux'.
 // 'fourcc' is a character array containing the fourcc of the chunk to return,
-// e.g., "ICCP", "META", "EXIF", etc.
+// e.g., "ICCP", "XMP ", "EXIF", etc.
 // Setting 'chunk_number' equal to 0 will return the last chunk in a set.
 // Returns true if the chunk is found, false otherwise. Image related chunk
 // payloads are accessed through WebPDemuxGetFrame() and related functions.

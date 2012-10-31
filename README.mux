@@ -8,7 +8,7 @@ Description:
 ============
 
 WebP Mux: library to create a WebP container object for features like
-color profile, metadata, animation & tiling. A reference command line
+color profile, metadata, animation and tiling. A reference command line
 tool 'webpmux' and WebP container specification 'doc/webp-container-spec.txt'
 are also provided in this package.
 
@@ -32,56 +32,63 @@ Usage: webpmux -get GET_OPTIONS INPUT -o OUTPUT
 
 GET_OPTIONS:
  Extract relevant data.
-   icc       Get ICCP Color profile.
-   meta      Get XMP/EXIF metadata.
+   icc       Get ICC profile.
+   exif      Get EXIF metadata.
+   xmp       Get XMP metadata.
    tile n    Get nth tile.
    frame n   Get nth frame.
 
 SET_OPTIONS:
  Set color profile/metadata.
-   icc  file.icc     Set ICC Color profile.
-   meta file.meta    Set XMP/EXIF metadata.
-   where:    'file.icc' contains the color profile to be set,
-             'file.meta' contains the metadata to be set
+   icc  file.icc     Set ICC profile.
+   exif file.exif    Set EXIF metadata.
+   xmp  file.xmp     Set XMP metadata.
+   where:    'file.icc' contains the ICC profile to be set,
+             'file.exif' contains the EXIF metadata to be set and
+             'file.xmp' contains the XMP metadata to be set
 
 STRIP_OPTIONS:
  Strip color profile/metadata.
-   icc       Strip ICCP color profile.
-   meta      Strip XMP/EXIF metadata.
+   icc       Strip ICC profile.
+   exif      Strip EXIF metadata.
+   xmp       Strip XMP metadata.
 
 TILE_OPTIONS(i):
  Create tiled image.
    file_i +xi+yi
-   where:    'file_i' is the i'th tile (webp format),
+   where:    'file_i' is the i'th tile (WebP format),
              'xi','yi' specify the image offset for this tile.
 
 FRAME_OPTIONS(i):
  Create animation.
    file_i +xi+yi+di
-   where:    'file_i' is the i'th animation frame (webp format),
+   where:    'file_i' is the i'th animation frame (WebP format),
              'xi','yi' specify the image offset for this frame.
              'di' is the pause duration before next frame.
 
-INPUT & OUTPUT are in webp format.
+INPUT and OUTPUT are in WebP format.
+
+Note: The nature of EXIF, XMP and ICC data is not checked and is assumed to be
+valid.
 
 WebP Mux API:
 ==============
 The WebP Mux API contains methods for adding data to and reading data from
 WebPMux (a WebP container object). This API currently supports XMP/EXIF
-metadata, ICC color profile, animation & tiling. Other features will be added in
-subsequent releases.
+metadata, ICC profile, animation and tiling. Other features will be added
+in subsequent releases.
 
 Example#1 (pseudo code): Creating a WebPMux object with image data, color
-profile & XMP metadata.
+profile and XMP metadata.
 
   int copy_data = 0;
   WebPMux* mux = WebPMuxNew();
   // ... (Prepare image data).
   WebPMuxSetImage(mux, &image, copy_data);
-  // ... (Prepare ICCP color profile data).
+  // ... (Prepare ICC profile data).
   WebPMuxSetChunk(mux, "ICCP", &icc_profile, copy_data);
   // ... (Prepare XMP metadata).
-  WebPMuxSetChunk(mux, "META", &xmp, copy_data);
+  WebPMuxSetChunk(mux, "XMP ", &xmp, copy_data);
   // Get data from mux in WebP RIFF format.
   WebPMuxAssemble(mux, &output_data);
   WebPMuxDelete(mux);
@@ -89,7 +96,7 @@ profile & XMP metadata.
   WebPDataClear(&output_data);
 
 
-Example#2 (pseudo code): Get image & color profile data from a WebP file.
+Example#2 (pseudo code): Get image and color profile data from a WebP file.
 
   int copy_data = 0;
   // ... (Read data from file).
