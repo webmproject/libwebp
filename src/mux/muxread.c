@@ -364,19 +364,19 @@ static WebPMuxError MuxGetImageInternal(const WebPMuxImage* const wpi,
   return SynthesizeBitstream(wpi, &info->bitstream);
 }
 
-static WebPMuxError MuxGetFrameTileInternal(const WebPMuxImage* const wpi,
-                                            WebPMuxFrameInfo* const frame) {
+static WebPMuxError MuxGetFrameFragmentInternal(const WebPMuxImage* const wpi,
+                                                WebPMuxFrameInfo* const frame) {
   const int is_frame = (wpi->header_->tag_ == kChunks[IDX_ANMF].tag);
   const CHUNK_INDEX idx = is_frame ? IDX_ANMF : IDX_FRGM;
-  const WebPData* frame_tile_data;
+  const WebPData* frame_frgm_data;
   assert(wpi->header_ != NULL);  // Already checked by WebPMuxGetFrame().
-  // Get frame/tile chunk.
-  frame_tile_data = &wpi->header_->data_;
-  if (frame_tile_data->size < kChunks[idx].size) return WEBP_MUX_BAD_DATA;
+  // Get frame/fragment chunk.
+  frame_frgm_data = &wpi->header_->data_;
+  if (frame_frgm_data->size < kChunks[idx].size) return WEBP_MUX_BAD_DATA;
   // Extract info.
-  frame->x_offset = 2 * GetLE24(frame_tile_data->bytes + 0);
-  frame->y_offset = 2 * GetLE24(frame_tile_data->bytes + 3);
-  frame->duration = is_frame ? 1 + GetLE24(frame_tile_data->bytes + 12) : 1;
+  frame->x_offset = 2 * GetLE24(frame_frgm_data->bytes + 0);
+  frame->y_offset = 2 * GetLE24(frame_frgm_data->bytes + 3);
+  frame->duration = is_frame ? 1 + GetLE24(frame_frgm_data->bytes + 12) : 1;
   frame->id = ChunkGetIdFromTag(wpi->header_->tag_);
   return SynthesizeBitstream(wpi, &frame->bitstream);
 }
@@ -399,7 +399,7 @@ WebPMuxError WebPMuxGetFrame(
   if (wpi->header_ == NULL) {
     return MuxGetImageInternal(wpi, frame);
   } else {
-    return MuxGetFrameTileInternal(wpi, frame);
+    return MuxGetFrameFragmentInternal(wpi, frame);
   }
 }
 

@@ -183,7 +183,7 @@ static int Decode(int* const duration) {
             "Frame offsets not yet supported! Forcing offset to 0,0\n");
   }
   output_buffer->colorspace = MODE_RGBA;
-  ok = (WebPDecode(iter->tile.bytes, iter->tile.size,
+  ok = (WebPDecode(iter->fragment.bytes, iter->fragment.size,
                    config) == VP8_STATUS_OK);
   if (!ok) {
     fprintf(stderr, "Decoding of frame #%d failed!\n", iter->frame_num);
@@ -298,8 +298,8 @@ int main(int argc, char *argv[]) {
     goto Error;
   }
 
-  if (WebPDemuxGetI(kParams.dmux, WEBP_FF_FORMAT_FLAGS) & TILE_FLAG) {
-    fprintf(stderr, "Tiling is not supported for now!\n");
+  if (WebPDemuxGetI(kParams.dmux, WEBP_FF_FORMAT_FLAGS) & FRAGMENTS_FLAG) {
+    fprintf(stderr, "Image fragments are not supported for now!\n");
     goto Error;
   }
 

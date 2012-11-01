@@ -476,16 +476,16 @@ WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, WebPChunkId id) {
 WebPMuxError MuxValidateForImage(const WebPMux* const mux) {
   const int num_images = MuxImageCount(mux->images_, WEBP_CHUNK_IMAGE);
   const int num_frames = MuxImageCount(mux->images_, WEBP_CHUNK_ANMF);
-  const int num_tiles  = MuxImageCount(mux->images_, WEBP_CHUNK_FRGM);
+  const int num_fragments = MuxImageCount(mux->images_, WEBP_CHUNK_FRGM);
 
   if (num_images == 0) {
     // No images in mux.
     return WEBP_MUX_NOT_FOUND;
-  } else if (num_images == 1 && num_frames == 0 && num_tiles == 0) {
+  } else if (num_images == 1 && num_frames == 0 && num_fragments == 0) {
     // Valid case (single image).
     return WEBP_MUX_OK;
   } else {
-    // Frame/Tile case OR an invalid mux.
+    // Frame/Fragment case OR an invalid mux.
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 }
@@ -520,7 +520,7 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
   int num_xmp;
   int num_loop_chunks;
   int num_frames;
-  int num_tiles;
+  int num_fragments;
   int num_vp8x;
   int num_images;
   int num_alpha;
@@ -565,8 +565,8 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
     }
   }
 
-  // Tiling: TILE_FLAG and tile chunk(s) are consistent.
-  err = ValidateChunk(mux, IDX_FRGM, TILE_FLAG, flags, -1, &num_tiles);
+  // Fragmentation: FRAGMENTS_FLAG and FRGM chunk(s) are consistent.
+  err = ValidateChunk(mux, IDX_FRGM, FRAGMENTS_FLAG, flags, -1, &num_fragments);
   if (err != WEBP_MUX_OK) return err;
 
   // Verify either VP8X chunk is present OR there is only one elem in
@@ -586,8 +586,8 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
     if (err != WEBP_MUX_OK) return err;
   }
 
-  // num_tiles & num_images are consistent.
-  if (num_tiles > 0 && num_images != num_tiles) {
+  // num_fragments & num_images are consistent.
+  if (num_fragments > 0 && num_images != num_fragments) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 

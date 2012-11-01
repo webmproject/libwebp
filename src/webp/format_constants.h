@@ -83,7 +83,7 @@ typedef enum {
 #define MAX_IMAGE_AREA      (1ULL << 32) // 32-bit max for width x height.
 #define MAX_LOOP_COUNT      (1 << 16)    // maximum value for loop-count
 #define MAX_DURATION        (1 << 24)    // maximum duration
-#define MAX_POSITION_OFFSET (1 << 24)    // maximum frame/tile x/y offset
+#define MAX_POSITION_OFFSET (1 << 24)    // maximum frame/fragment x/y offset
 
 // Maximum chunk payload is such that adding the header and padding won't
 // overflow a uint32_t.

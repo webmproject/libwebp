@@ -17,11 +17,11 @@
 /*  Usage examples:
 
   Create container WebP file:
-    webpmux -tile tile_1.webp +0+0 \
-            -tile tile_2.webp +960+0 \
-            -tile tile_3.webp +0+576 \
-            -tile tile_4.webp +960+576 \
-            -o out_tile_container.webp
+    webpmux -frgm fragment_1.webp +0+0 \
+            -frgm fragment_2.webp +960+0 \
+            -frgm fragment_3.webp +0+576 \
+            -frgm fragment_4.webp +960+576 \
+            -o out_fragment_container.webp
 
     webpmux -frame anim_1.webp +0+0+0 \
             -frame anim_2.webp +25+25+100 \
@@ -35,7 +35,7 @@
     webpmux -set xmp image_metadata.xmp in.webp -o out_xmp_container.webp
 
   Extract relevant data from WebP container file:
-    webpmux -get tile n in.webp -o out_tile.webp
+    webpmux -get frgm n in.webp -o out_fragment.webp
     webpmux -get frame n in.webp -o out_frame.webp
     webpmux -get icc in.webp -o image_profile.icc
     webpmux -get exif in.webp -o image_metadata.exif
@@ -87,8 +87,8 @@ typedef enum {
   FEATURE_EXIF,
   FEATURE_XMP,
   FEATURE_ICCP,
-  FEATURE_FRM,
-  FEATURE_TILE,
+  FEATURE_ANMF,
+  FEATURE_FRGM,
   LAST_FEATURE
 } FeatureType;
 
@@ -98,7 +98,7 @@ static const char* const kFourccList[LAST_FEATURE] = {
 
 static const char* const kDescriptions[LAST_FEATURE] = {
   NULL, "EXIF metadata", "XMP metadata", "ICC profile",
-  "Animation frame", "Tile fragment"
+  "Animation frame", "Image fragment"
 };
 
 typedef struct {
@@ -197,17 +197,17 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
   // Print the features present.
   printf("Features present:");
   if (flag & ANIMATION_FLAG) printf(" animation");
-  if (flag & TILE_FLAG)      printf(" tiling");
+  if (flag & FRAGMENTS_FLAG) printf(" image fragments");
   if (flag & ICCP_FLAG)      printf(" icc profile");
   if (flag & EXIF_FLAG)      printf(" EXIF metadata");
   if (flag & XMP_FLAG)       printf(" XMP metadata");
   if (flag & ALPHA_FLAG)     printf(" transparency");
   printf("\n");
 
-  if ((flag & ANIMATION_FLAG) || (flag & TILE_FLAG)) {
+  if ((flag & ANIMATION_FLAG) || (flag & FRAGMENTS_FLAG)) {
     const int is_anim = !!(flag & ANIMATION_FLAG);
     const WebPChunkId id = is_anim ? WEBP_CHUNK_ANMF : WEBP_CHUNK_FRGM;
-    const char* const type_str = is_anim ? "frame" : "tile";
+    const char* const type_str = is_anim ? "frame" : "fragment";
     int nFrames;
 
     if (is_anim) {
@@ -259,7 +259,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
     printf("Size of the XMP metadata: %zu\n", xmp.size);
   }
 
-  if ((flag & ALPHA_FLAG) && !(flag & (ANIMATION_FLAG | TILE_FLAG))) {
+  if ((flag & ALPHA_FLAG) && !(flag & (ANIMATION_FLAG | FRAGMENTS_FLAG))) {
     WebPMuxFrameInfo image;
     err = WebPMuxGetFrame(mux, 1, &image);
     RETURN_IF_ERROR("Failed to retrieve the image\n");
@@ -273,7 +273,7 @@ static void PrintHelp(void) {
   printf("Usage: webpmux -get GET_OPTIONS INPUT -o OUTPUT\n");
   printf("       webpmux -set SET_OPTIONS INPUT -o OUTPUT\n");
   printf("       webpmux -strip STRIP_OPTIONS INPUT -o OUTPUT\n");
-  printf("       webpmux -tile TILE_OPTIONS [-tile...] -o OUTPUT\n");
+  printf("       webpmux -frgm FRAGMENT_OPTIONS [-frgm...] -o OUTPUT\n");
   printf("       webpmux -frame FRAME_OPTIONS [-frame...]");
   printf(" -loop LOOP_COUNT -o OUTPUT\n");
   printf("       webpmux -info INPUT\n");
@@ -285,7 +285,7 @@ static void PrintHelp(void) {
   printf("   icc       Get ICC profile.\n");
   printf("   exif      Get EXIF metadata.\n");
   printf("   xmp       Get XMP metadata.\n");
-  printf("   tile n    Get nth tile.\n");
+  printf("   frgm n    Get nth fragment.\n");
   printf("   frame n   Get nth frame.\n");
 
   printf("\n");
@@ -306,11 +306,12 @@ static void PrintHelp(void) {
   printf("   xmp       Strip XMP metadata.\n");
 
   printf("\n");
-  printf("TILE_OPTIONS(i):\n");
-  printf(" Create tiled image.\n");
+  printf("FRAGMENT_OPTIONS(i):\n");
+  printf(" Create fragmented image.\n");
   printf("   file_i +xi+yi\n");
-  printf("   where:    'file_i' is the i'th tile (WebP format),\n");
-  printf("             'xi','yi' specify the image offset for this tile.\n");
+  printf("   where:    'file_i' is the i'th fragment (WebP format),\n");
+  printf("             'xi','yi' specify the image offset for this fragment."
+         "\n");
 
   printf("\n");
   printf("FRAME_OPTIONS(i):\n");
@@ -382,7 +383,7 @@ static int ParseFrameArgs(const char* args, WebPMuxFrameInfo* const info) {
                  &info->x_offset, &info->y_offset, &info->duration) == 3);
 }
 
-static int ParseTileArgs(const char* args, WebPMuxFrameInfo* const info) {
+static int ParseFragmentArgs(const char* args, WebPMuxFrameInfo* const info) {
   return (sscanf(args, "+%d+%d", &info->x_offset, &info->y_offset) == 2);
 }
 
@@ -406,7 +407,7 @@ static void DeleteConfig(WebPMuxConfig* config) {
 static int ValidateCommandLine(int argc, const char* argv[],
                                int* num_feature_args) {
   int num_frame_args;
-  int num_tile_args;
+  int num_frgm_args;
   int num_loop_args;
   int ok = 1;
 
@@ -432,7 +433,7 @@ static int ValidateCommandLine(int argc, const char* argv[],
 
   // Compound checks.
   num_frame_args = CountOccurrences(argv, argc, "-frame");
-  num_tile_args = CountOccurrences(argv, argc, "-tile");
+  num_frgm_args = CountOccurrences(argv, argc, "-frgm");
   num_loop_args = CountOccurrences(argv, argc, "-loop");
 
   if (num_loop_args > 1) {
@@ -443,21 +444,21 @@ static int ValidateCommandLine(int argc, const char* argv[],
     ERROR_GOTO1("ERROR: Both frames and loop count have to be specified.\n",
                 ErrValidate);
   }
-  if (num_frame_args > 0 && num_tile_args > 0) {
-    ERROR_GOTO1("ERROR: Only one of frames & tiles can be specified at a time."
-                "\n", ErrValidate);
+  if (num_frame_args > 0 && num_frgm_args > 0) {
+    ERROR_GOTO1("ERROR: Only one of frames & fragments can be specified at a "
+                "time.\n", ErrValidate);
   }
 
   assert(ok == 1);
-  if (num_frame_args == 0 && num_tile_args == 0) {
+  if (num_frame_args == 0 && num_frgm_args == 0) {
     // Single argument ('set' action for ICCP/EXIF/XMP, OR a 'get' action).
     *num_feature_args = 1;
   } else {
-    // Multiple arguments ('set' action for animation or tiling).
+    // Multiple arguments ('set' action for animation or fragmented image).
     if (num_frame_args > 0) {
       *num_feature_args = num_frame_args + num_loop_args;
     } else {
-      *num_feature_args = num_tile_args;
+      *num_feature_args = num_frgm_args;
     }
   }
 
@@ -522,8 +523,8 @@ static int ParseCommandLine(int argc, const char* argv[],
         } else {
           ERROR_GOTO1("ERROR: Multiple actions specified.\n", ErrParse);
         }
-        if (FEATURETYPE_IS_NIL || feature->type_ == FEATURE_FRM) {
-          feature->type_ = FEATURE_FRM;
+        if (FEATURETYPE_IS_NIL || feature->type_ == FEATURE_ANMF) {
+          feature->type_ = FEATURE_ANMF;
         } else {
           ERROR_GOTO1("ERROR: Multiple features specified.\n", ErrParse);
         }
@@ -539,8 +540,8 @@ static int ParseCommandLine(int argc, const char* argv[],
         } else {
           ERROR_GOTO1("ERROR: Multiple actions specified.\n", ErrParse);
         }
-        if (FEATURETYPE_IS_NIL || feature->type_ == FEATURE_FRM) {
-          feature->type_ = FEATURE_FRM;
+        if (FEATURETYPE_IS_NIL || feature->type_ == FEATURE_ANMF) {
+          feature->type_ = FEATURE_ANMF;
         } else {
           ERROR_GOTO1("ERROR: Multiple features specified.\n", ErrParse);
         }
@@ -548,15 +549,15 @@ static int ParseCommandLine(int argc, const char* argv[],
         arg->params_ = argv[i + 1];
         ++feature_arg_index;
         i += 2;
-      } else if (!strcmp(argv[i], "-tile")) {
+      } else if (!strcmp(argv[i], "-frgm")) {
         CHECK_NUM_ARGS_LESS(3, ErrParse);
         if (ACTION_IS_NIL || config->action_type_ == ACTION_SET) {
           config->action_type_ = ACTION_SET;
         } else {
           ERROR_GOTO1("ERROR: Multiple actions specified.\n", ErrParse);
         }
-        if (FEATURETYPE_IS_NIL || feature->type_ == FEATURE_TILE) {
-          feature->type_ = FEATURE_TILE;
+        if (FEATURETYPE_IS_NIL || feature->type_ == FEATURE_FRGM) {
+          feature->type_ = FEATURE_FRGM;
         } else {
           ERROR_GOTO1("ERROR: Multiple features specified.\n", ErrParse);
         }
@@ -607,11 +608,11 @@ static int ParseCommandLine(int argc, const char* argv[],
           ++i;
         }
       } else if ((!strcmp(argv[i], "frame") ||
-                  !strcmp(argv[i], "tile")) &&
+                  !strcmp(argv[i], "frgm")) &&
                   (config->action_type_ == ACTION_GET)) {
         CHECK_NUM_ARGS_LESS(2, ErrParse);
-        feature->type_ = (!strcmp(argv[i], "frame")) ? FEATURE_FRM :
-            FEATURE_TILE;
+        feature->type_ = (!strcmp(argv[i], "frame")) ? FEATURE_ANMF :
+            FEATURE_FRGM;
         arg->params_ = argv[i + 1];
         ++feature_arg_index;
         i += 2;
@@ -649,8 +650,8 @@ static int ValidateConfig(WebPMuxConfig* config) {
   if (config->input_ == NULL) {
     if (config->action_type_ != ACTION_SET) {
       ERROR_GOTO1("ERROR: No input file specified.\n", ErrValidate2);
-    } else if (feature->type_ != FEATURE_FRM &&
-               feature->type_ != FEATURE_TILE) {
+    } else if (feature->type_ != FEATURE_ANMF &&
+               feature->type_ != FEATURE_FRGM) {
       ERROR_GOTO1("ERROR: No input file specified.\n", ErrValidate2);
     }
   }
@@ -708,8 +709,8 @@ static int InitializeConfig(int argc, const char* argv[],
 //------------------------------------------------------------------------------
 // Processing.
 
-static int GetFrameTile(const WebPMux* mux,
-                        const WebPMuxConfig* config, int isFrame) {
+static int GetFrameFragment(const WebPMux* mux,
+                            const WebPMuxConfig* config, int isFrame) {
   WebPMuxError err = WEBP_MUX_OK;
   WebPMux* mux_single = NULL;
   long num = 0;
@@ -720,7 +721,7 @@ static int GetFrameTile(const WebPMux* mux,
 
   num = strtol(config->feature_.args_[0].params_, NULL, 10);
   if (num < 0) {
-    ERROR_GOTO1("ERROR: Frame/Tile index must be non-negative.\n", ErrGet);
+    ERROR_GOTO1("ERROR: Frame/Fragment index must be non-negative.\n", ErrGet);
   }
 
   err = WebPMuxGetFrame(mux, num, &info);
@@ -764,10 +765,10 @@ static int Process(const WebPMuxConfig* config) {
       ok = CreateMux(config->input_, &mux);
       if (!ok) goto Err2;
       switch (feature->type_) {
-        case FEATURE_FRM:
-        case FEATURE_TILE:
-          ok = GetFrameTile(mux, config,
-                            (feature->type_ == FEATURE_FRM) ? 1 : 0);
+        case FEATURE_ANMF:
+         case FEATURE_FRGM:
+           ok = GetFrameFragment(mux, config,
+                                 (feature->type_ == FEATURE_ANMF) ? 1 : 0);
           break;
 
         case FEATURE_ICCP:
@@ -789,7 +790,7 @@ static int Process(const WebPMuxConfig* config) {
 
     case ACTION_SET:
       switch (feature->type_) {
-        case FEATURE_FRM:
+        case FEATURE_ANMF:
           mux = WebPMuxNew();
           if (mux == NULL) {
             ERROR_GOTO2("ERROR (%s): Could not allocate a mux object.\n",
@@ -829,27 +830,28 @@ static int Process(const WebPMuxConfig* config) {
           }
           break;
 
-        case FEATURE_TILE:
+        case FEATURE_FRGM:
           mux = WebPMuxNew();
           if (mux == NULL) {
             ERROR_GOTO2("ERROR (%s): Could not allocate a mux object.\n",
                         ErrorString(WEBP_MUX_MEMORY_ERROR), Err2);
           }
           for (index = 0; index < feature->arg_count_; ++index) {
-            WebPMuxFrameInfo tile;
+            WebPMuxFrameInfo frgm;
+            frgm.id = WEBP_CHUNK_FRGM;
             ok = ReadFileToWebPData(feature->args_[index].filename_,
-                                    &tile.bitstream);
+                                    &frgm.bitstream);
             if (!ok) goto Err2;
-            ok = ParseTileArgs(feature->args_[index].params_, &tile);
+            ok = ParseFragmentArgs(feature->args_[index].params_, &frgm);
             if (!ok) {
-              WebPDataClear(&tile.bitstream);
-              ERROR_GOTO1("ERROR: Could not parse tile properties.\n", Err2);
+              WebPDataClear(&frgm.bitstream);
+              ERROR_GOTO1("ERROR: Could not parse fragment properties.\n",
+                          Err2);
             }
-            tile.id = WEBP_CHUNK_FRGM;
-            err = WebPMuxPushFrame(mux, &tile, 1);
-            WebPDataClear(&tile.bitstream);
+            err = WebPMuxPushFrame(mux, &frgm, 1);
+            WebPDataClear(&frgm.bitstream);
             if (err != WEBP_MUX_OK) {
-              ERROR_GOTO3("ERROR (%s): Could not add a tile at index %d.\n",
+              ERROR_GOTO3("ERROR (%s): Could not add a fragment at index %d.\n",
                           ErrorString(err), index, Err2);
             }
           }

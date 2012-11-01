@@ -11,7 +11,7 @@
 //          Vikas (vikasa@google.com)
 
 // This API allows manipulation of WebP container images containing features
-// like color profile, metadata, animation and tiling.
+// like color profile, metadata, animation and fragmented images.
 //
 // Code Example#1: Creating a MUX with image data, color profile and XMP
 // metadata.
@@ -82,7 +82,7 @@ enum WebPMuxError {
 
 // Flag values for different features used in VP8X chunk.
 enum WebPFeatureFlags {
-  TILE_FLAG       = 0x00000001,
+  FRAGMENTS_FLAG  = 0x00000001,
   ANIMATION_FLAG  = 0x00000002,
   XMP_FLAG        = 0x00000004,
   EXIF_FLAG       = 0x00000008,
@@ -233,12 +233,12 @@ struct WebPMuxFrameInfo {
   uint32_t pad[3];        // padding for later use
 };
 
-// Sets the (non-animated and non-tiled) image in the mux object.
-// Note: Any existing images (including frames/tiles) will be removed.
+// Sets the (non-animated and non-fragmented) image in the mux object.
+// Note: Any existing images (including frames/fragments) will be removed.
 // Parameters:
 //   mux - (in/out) object in which the image is to be set
 //   bitstream - (in) can either be a raw VP8/VP8L bitstream or a single-image
-//               WebP file (non-animated and non-tiled)
+//               WebP file (non-animated and non-fragmented)
 //   copy_data - (in) value 1 indicates given data WILL be copied to the mux
 //               and value 0 indicates data will NOT be copied.
 // Returns:
@@ -250,8 +250,8 @@ WEBP_EXTERN(WebPMuxError) WebPMuxSetImage(
 
 // Adds a frame at the end of the mux object.
 // Notes: (1) frame.id should be one of WEBP_CHUNK_ANMF or WEBP_CHUNK_FRGM
-//        (2) For setting a non-animated non-tiled image, use WebPMuxSetImage()
-//            instead.
+//        (2) For setting a non-animated non-fragmented image, use
+//            WebPMuxSetImage() instead.
 //        (3) Type of frame being pushed must be same as the frames in mux.
 //        (4) As WebP only supports even offsets, any odd offset will be snapped
 //            to an even location using: offset &= ~1
@@ -428,22 +428,23 @@ WEBP_EXTERN(uint32_t) WebPDemuxGetI(
 struct WebPIterator {
   int frame_num;
   int num_frames;
-  int tile_num;
-  int num_tiles;
+  int fragment_num;
+  int num_fragments;
   int x_offset, y_offset;  // offset relative to the canvas.
-  int width, height;       // dimensions of this frame or tile.
+  int width, height;       // dimensions of this frame or fragment.
   int duration;            // display duration in milliseconds.
-  int complete;   // true if 'tile_' contains a full frame. partial images may
-                  // still be decoded with the WebP incremental decoder.
-  WebPData tile;  // The frame or tile given by 'frame_num_' and 'tile_num_'.
+  int complete;   // true if 'fragment' contains a full frame. partial images
+                  // may still be decoded with the WebP incremental decoder.
+  WebPData fragment;  // The frame or fragment given by 'frame_num' and
+                      // 'fragment_num'.
 
   uint32_t pad[4];           // padding for later use
   void* private_;            // for internal use only.
 };
 
 // Retrieves frame 'frame_number' from 'dmux'.
-// 'iter->tile_' points to the first tile on return from this function.
-// Individual tiles may be extracted using WebPDemuxSetTile().
+// 'iter->fragment' points to the first fragment on return from this function.
+// Individual fragments may be extracted using WebPDemuxSetFragment().
 // Setting 'frame_number' equal to 0 will return the last frame of the image.
 // Returns false if 'dmux' is NULL or frame 'frame_number' is not present.
 // Call WebPDemuxReleaseIterator() when use of the iterator is complete.
@@ -451,14 +452,14 @@ struct WebPIterator {
 WEBP_EXTERN(int) WebPDemuxGetFrame(
     const WebPDemuxer* dmux, int frame_number, WebPIterator* iter);
 
-// Sets 'iter->tile_' to point to the next ('iter->frame_num_' + 1) or previous
-// ('iter->frame_num_' - 1) frame. These functions do not loop.
+// Sets 'iter->fragment' to point to the next ('iter->frame_num' + 1) or
+// previous ('iter->frame_num' - 1) frame. These functions do not loop.
 // Returns true on success, false otherwise.
 WEBP_EXTERN(int) WebPDemuxNextFrame(WebPIterator* iter);
 WEBP_EXTERN(int) WebPDemuxPrevFrame(WebPIterator* iter);
 
-// Sets 'iter->tile_' to reflect tile number 'tile_number'.
-// Returns true if tile 'tile_number' is present, false otherwise.
+// Sets 'iter->fragment' to reflect fragment number 'fragment_num'.
+// Returns true if fragment 'fragment_num' is present, false otherwise.
 WEBP_EXTERN(int) WebPDemuxSelectTile(WebPIterator* iter, int tile_number);
 
 // Releases any memory associated with 'iter'.
@@ -493,8 +494,8 @@ WEBP_EXTERN(int) WebPDemuxGetChunk(const WebPDemuxer* dmux,
                                    const char fourcc[4], int chunk_number,
                                    WebPChunkIterator* iter);
 
-// Sets 'iter->chunk_' to point to the next ('iter->chunk_num_' + 1) or previous
-// ('iter->chunk_num_' - 1) chunk. These functions do not loop.
+// Sets 'iter->chunk' to point to the next ('iter->chunk_num' + 1) or previous
+// ('iter->chunk_num' - 1) chunk. These functions do not loop.
 // Returns true on success, false otherwise.
 WEBP_EXTERN(int) WebPDemuxNextChunk(WebPChunkIterator* iter);
 WEBP_EXTERN(int) WebPDemuxPrevChunk(WebPChunkIterator* iter);
