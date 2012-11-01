@@ -103,7 +103,7 @@ extern VP8DecIdct2 VP8Transform;
 extern VP8DecIdct VP8TransformUV;
 extern VP8DecIdct VP8TransformDC;
 extern VP8DecIdct VP8TransformDCUV;
-extern void (*VP8TransformWHT)(const int16_t* in, int16_t* out);
+extern VP8WHT VP8TransformWHT;
 
 // *dst is the destination block, with stride BPS. Boundary samples are
 // assumed accessible when needed.
