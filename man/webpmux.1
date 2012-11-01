@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH WEBPMUX 1 "January 24, 2012"
+.TH WEBPMUX 1 "October 23, 2012"
 .SH NAME
 webpmux \- command line tool to create WebP Mux/container file.
 .SH SYNOPSIS
@@ -23,15 +23,21 @@ webpmux \- command line tool to create WebP Mux/container file.
 .br
 .B webpmux \-frgm
 .I FRAGMENT_OPTIONS
-.B [\-frgm...] \-o
+.B [ \-frgm ... ] \-o
 .I OUTPUT
 .br
 .B webpmux \-frame
 .I FRAME_OPTIONS
-.B [\-frame...] \-loop
+.B [ \-frame ... ] [ \-loop
 .I LOOP_COUNT
-.B \-o
+.B ]
+.br
+.RS 8
+.B [ \-bgcolor
+.I BACKGROUND_COLOR
+.B ] \-o
 .I OUTPUT
+.RE
 .br
 .B webpmux \-info
 .I INPUT
@@ -98,12 +104,21 @@ image offset for this fragment.
 
 .SS FRAME_OPTIONS (\-frame)
 .TP
-.B file_i +xi+yi+di
+.B file_i +xi+yi+di+mi
 Where: 'file_i' is the i'th frame (WebP format), 'xi','yi' specify the image
-offset for this frame and 'di' is the pause duration before next frame.
+offset for this frame, 'di' is the pause duration before next frame and 'mi' is
+the dispose method for this frame (0 or 1).
 .TP
 .B \-loop n
 Loop the frames n number of times. 0 indicates the frames should loop forever.
+Valid range is 0 to 65535 [Default: 0 (infinite)].
+.TP
+.B \-bgcolor A,R,G,B
+Background color of the canvas.
+.br
+where: 'A', 'R', 'G' and 'B' are integers in the range 0 to 255 specifying the
+Alpha, Red, Green and Blue component values respectively
+[Default: 255,255,255,255].
 
 .SS INPUT
 .TP
@@ -144,7 +159,10 @@ webpmux \-get exif exif_container.webp \-o image_metadata.exif
 webpmux \-strip exif exif_container.webp \-o without_exif.webp
 .br
 webpmux \-frame anim_1.webp +0+0+0 \-frame anim_2.webp +50+50+0 \-loop 10
-\-o anim_container.webp
+.br
+.RS 8
+\-bgcolor 255,255,255,255 \-o anim_container.webp
+.RE
 .br
 webpmux \-get frame 2 anim_container.webp \-o frame_2.webp
 .br

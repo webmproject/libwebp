@@ -47,7 +47,7 @@ static void MuxRelease(WebPMux* const mux) {
   MuxImageDeleteAll(&mux->images_);
   DeleteAllChunks(&mux->vp8x_);
   DeleteAllChunks(&mux->iccp_);
-  DeleteAllChunks(&mux->loop_);
+  DeleteAllChunks(&mux->anim_);
   DeleteAllChunks(&mux->exif_);
   DeleteAllChunks(&mux->xmp_);
   DeleteAllChunks(&mux->unknown_);
@@ -82,7 +82,7 @@ static WebPMuxError MuxSet(WebPMux* const mux, CHUNK_INDEX idx, uint32_t nth,
   ChunkInit(&chunk);
   SWITCH_ID_LIST(IDX_VP8X, &mux->vp8x_);
   SWITCH_ID_LIST(IDX_ICCP, &mux->iccp_);
-  SWITCH_ID_LIST(IDX_LOOP, &mux->loop_);
+  SWITCH_ID_LIST(IDX_ANIM, &mux->anim_);
   SWITCH_ID_LIST(IDX_EXIF, &mux->exif_);
   SWITCH_ID_LIST(IDX_XMP,  &mux->xmp_);
   if (idx == IDX_UNKNOWN && data->size > TAG_SIZE) {
@@ -109,11 +109,10 @@ static WebPMuxError MuxAddChunk(WebPMux* const mux, uint32_t nth, uint32_t tag,
 }
 
 // Create data for frame/tile given image data, offsets and duration.
-static WebPMuxError CreateFrameFragmentData(const WebPData* const image,
-                                            int x_offset, int y_offset,
-                                            int duration, int is_lossless,
-                                            int is_frame,
-                                            WebPData* const frame_frgm) {
+static WebPMuxError CreateFrameFragmentData(
+    const WebPData* const image, int x_offset, int y_offset, int duration,
+    WebPMuxAnimDispose dispose_method, int is_lossless, int is_frame,
+    WebPData* const frame_frgm) {
   int width;
   int height;
   uint8_t* frame_frgm_bytes;
@@ -124,7 +123,8 @@ static WebPMuxError CreateFrameFragmentData(const WebPData* const image,
       VP8GetInfo(image->bytes, image->size, image->size, &width, &height);
   if (!ok) return WEBP_MUX_INVALID_ARGUMENT;
 
-  assert(width > 0 && height > 0 && duration > 0);
+  assert(width > 0 && height > 0 && duration >= 0);
+  assert(dispose_method == (dispose_method & 1));
   // Note: assertion on upper bounds is done in PutLE24().
 
   frame_frgm_bytes = (uint8_t*)malloc(frame_frgm_size);
@@ -136,7 +136,8 @@ static WebPMuxError CreateFrameFragmentData(const WebPData* const image,
   if (is_frame) {
     PutLE24(frame_frgm_bytes + 6, width - 1);
     PutLE24(frame_frgm_bytes + 9, height - 1);
-    PutLE24(frame_frgm_bytes + 12, duration - 1);
+    PutLE24(frame_frgm_bytes + 12, duration);
+    frame_frgm_bytes[15] = (dispose_method & 1);
   }
 
   frame_frgm->bytes = frame_frgm_bytes;
@@ -198,11 +199,6 @@ static WebPMuxError MuxDeleteAllNamedData(WebPMux* const mux, uint32_t tag) {
   if (chunk_list == NULL) return WEBP_MUX_INVALID_ARGUMENT;
 
   return DeleteChunks(chunk_list, tag);
-}
-
-static WebPMuxError DeleteLoopCount(WebPMux* const mux) {
-  if (mux == NULL) return WEBP_MUX_INVALID_ARGUMENT;
-  return MuxDeleteAllNamedData(mux, kChunks[IDX_LOOP].tag);
 }
 
 //------------------------------------------------------------------------------
@@ -333,16 +329,20 @@ WebPMuxError WebPMuxPushFrame(WebPMux* mux, const WebPMuxFrameInfo* frame,
     const int x_offset = frame->x_offset & ~1;  // Snap offsets to even.
     const int y_offset = frame->y_offset & ~1;
     const int duration = is_frame ? frame->duration : 1 /* unused */;
+    const WebPMuxAnimDispose dispose_method =
+        is_frame ? frame->dispose_method : 0 /* unused */;
     const uint32_t tag = kChunks[is_frame ? IDX_ANMF : IDX_FRGM].tag;
     WebPData frame_frgm;
     if (x_offset < 0 || x_offset >= MAX_POSITION_OFFSET ||
         y_offset < 0 || y_offset >= MAX_POSITION_OFFSET ||
-        (duration <= 0 || duration > MAX_DURATION)) {
+        (duration < 0 || duration >= MAX_DURATION) ||
+        dispose_method != (dispose_method & 1)) {
       err = WEBP_MUX_INVALID_ARGUMENT;
       goto Err;
     }
     err = CreateFrameFragmentData(&wpi.img_->data_, x_offset, y_offset,
-                                  duration, is_lossless, is_frame, &frame_frgm);
+                                  duration, dispose_method, is_lossless,
+                                  is_frame, &frame_frgm);
     if (err != WEBP_MUX_OK) goto Err;
     // Add frame/fragment chunk (with copy_data = 1).
     err = AddDataToChunkList(&frame_frgm, 1, tag, &wpi.header_);
@@ -362,20 +362,24 @@ WebPMuxError WebPMuxPushFrame(WebPMux* mux, const WebPMuxFrameInfo* frame,
   return err;
 }
 
-WebPMuxError WebPMuxSetLoopCount(WebPMux* mux, int loop_count) {
+WebPMuxError WebPMuxSetAnimationParams(WebPMux* mux,
+                                       const WebPMuxAnimParams* params) {
   WebPMuxError err;
-  uint8_t data[LOOP_CHUNK_SIZE];
+  uint8_t data[ANIM_CHUNK_SIZE];
 
-  if (mux == NULL) return WEBP_MUX_INVALID_ARGUMENT;
-  if (loop_count >= MAX_LOOP_COUNT) return WEBP_MUX_INVALID_ARGUMENT;
+  if (mux == NULL || params == NULL) return WEBP_MUX_INVALID_ARGUMENT;
+  if (params->loop_count < 0 || params->loop_count >= MAX_LOOP_COUNT) {
+    return WEBP_MUX_INVALID_ARGUMENT;
+  }
 
-  // Delete the existing LOOP chunk(s).
-  err = DeleteLoopCount(mux);
+  // Delete any existing ANIM chunk(s).
+  err = MuxDeleteAllNamedData(mux, kChunks[IDX_ANIM].tag);
   if (err != WEBP_MUX_OK && err != WEBP_MUX_NOT_FOUND) return err;
 
-  // Add the given loop count.
-  PutLE16(data, loop_count);
-  return MuxAddChunk(mux, 1, kChunks[IDX_LOOP].tag, data, sizeof(data), 1);
+  // Set the animation parameters.
+  PutLE32(data, params->bgcolor);
+  PutLE16(data + 4, params->loop_count);
+  return MuxAddChunk(mux, 1, kChunks[IDX_ANIM].tag, data, sizeof(data), 1);
 }
 
 //------------------------------------------------------------------------------
@@ -408,7 +412,7 @@ static WebPMuxError GetFrameFragmentInfo(
 
   *x_offset = 2 * GetLE24(data->bytes + 0);
   *y_offset = 2 * GetLE24(data->bytes + 3);
-  if (is_frame) *duration = 1 + GetLE24(data->bytes + 12);
+  if (is_frame) *duration = GetLE24(data->bytes + 12);
   return WEBP_MUX_OK;
 }
 
@@ -586,21 +590,21 @@ WebPMuxError WebPMuxAssemble(WebPMux* mux, WebPData* assembled_data) {
   uint8_t* data = NULL;
   uint8_t* dst = NULL;
   int num_frames;
-  int num_loop_chunks;
+  int num_anim_chunks;
   WebPMuxError err;
 
   if (mux == NULL || assembled_data == NULL) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
-  // Remove LOOP chunk if unnecessary.
-  err = WebPMuxNumChunks(mux, kChunks[IDX_LOOP].id, &num_loop_chunks);
+  // Remove ANIM chunk if unnecessary.
+  err = WebPMuxNumChunks(mux, kChunks[IDX_ANIM].id, &num_anim_chunks);
   if (err != WEBP_MUX_OK) return err;
-  if (num_loop_chunks >= 1) {
+  if (num_anim_chunks >= 1) {
     err = WebPMuxNumChunks(mux, kChunks[IDX_ANMF].id, &num_frames);
     if (err != WEBP_MUX_OK) return err;
     if (num_frames == 0) {
-      err = DeleteLoopCount(mux);
+      err = MuxDeleteAllNamedData(mux, kChunks[IDX_ANIM].tag);
       if (err != WEBP_MUX_OK) return err;
     }
   }
@@ -611,7 +615,7 @@ WebPMuxError WebPMuxAssemble(WebPMux* mux, WebPData* assembled_data) {
 
   // Allocate data.
   size = ChunksListDiskSize(mux->vp8x_) + ChunksListDiskSize(mux->iccp_)
-       + ChunksListDiskSize(mux->loop_) + MuxImageListDiskSize(mux->images_)
+       + ChunksListDiskSize(mux->anim_) + MuxImageListDiskSize(mux->images_)
        + ChunksListDiskSize(mux->exif_) + ChunksListDiskSize(mux->xmp_)
        + ChunksListDiskSize(mux->unknown_) + RIFF_HEADER_SIZE;
 
@@ -622,7 +626,7 @@ WebPMuxError WebPMuxAssemble(WebPMux* mux, WebPData* assembled_data) {
   dst = MuxEmitRiffHeader(data, size);
   dst = ChunkListEmit(mux->vp8x_, dst);
   dst = ChunkListEmit(mux->iccp_, dst);
-  dst = ChunkListEmit(mux->loop_, dst);
+  dst = ChunkListEmit(mux->anim_, dst);
   dst = MuxImageListEmit(mux->images_, dst);
   dst = ChunkListEmit(mux->exif_, dst);
   dst = ChunkListEmit(mux->xmp_, dst);

@@ -30,7 +30,7 @@ typedef struct WebPChunk WebPChunk;
 struct WebPChunk {
   uint32_t        tag_;
   int             owner_;  // True if *data_ memory is owned internally.
-                           // VP8X, Loop, and other internally created chunks
+                           // VP8X, ANIM, and other internally created chunks
                            // like ANMF/FRGM are always owned.
   WebPData        data_;
   WebPChunk*      next_;
@@ -53,7 +53,7 @@ struct WebPMux {
   WebPChunk*      iccp_;
   WebPChunk*      exif_;
   WebPChunk*      xmp_;
-  WebPChunk*      loop_;
+  WebPChunk*      anim_;
   WebPChunk*      vp8x_;
 
   WebPChunk*  unknown_;
@@ -66,7 +66,7 @@ struct WebPMux {
 typedef enum {
   IDX_VP8X = 0,
   IDX_ICCP,
-  IDX_LOOP,
+  IDX_ANIM,
   IDX_ANMF,
   IDX_FRGM,
   IDX_ALPHA,

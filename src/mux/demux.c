@@ -39,6 +39,7 @@ typedef struct Frame {
   int x_offset_, y_offset_;
   int width_, height_;
   int duration_;
+  WebPMuxAnimDispose dispose_method_;
   int is_fragment_;  // this is a frame fragment (and not a full frame).
   int frame_num_;  // the referent frame number for use in assembling fragments.
   int complete_;   // img_components_ contains a full image.
@@ -58,6 +59,7 @@ struct WebPDemuxer {
   uint32_t feature_flags_;
   int canvas_width_, canvas_height_;
   int loop_count_;
+  uint32_t bgcolor_;
   int num_frames_;
   Frame* frames_;
   Chunk* chunks_;  // non-image chunks
@@ -290,9 +292,7 @@ static ParseStatus NewFrame(const MemBuffer* const mem,
 static ParseStatus ParseFrame(
     WebPDemuxer* const dmux, uint32_t frame_chunk_size) {
   const int has_frames = !!(dmux->feature_flags_ & ANIMATION_FLAG);
-  const uint32_t padding = (ANMF_CHUNK_SIZE & 1);
-  const uint32_t anmf_payload_size =
-      frame_chunk_size - (ANMF_CHUNK_SIZE + padding);
+  const uint32_t anmf_payload_size = frame_chunk_size - ANMF_CHUNK_SIZE;
   int added_frame = 0;
   MemBuffer* const mem = &dmux->mem_;
   Frame* frame;
@@ -300,12 +300,12 @@ static ParseStatus ParseFrame(
       NewFrame(mem, ANMF_CHUNK_SIZE, frame_chunk_size, &frame);
   if (status != PARSE_OK) return status;
 
-  frame->x_offset_ = 2 * GetLE24s(mem);
-  frame->y_offset_ = 2 * GetLE24s(mem);
-  frame->width_    = 1 + GetLE24s(mem);
-  frame->height_   = 1 + GetLE24s(mem);
-  frame->duration_ = 1 + GetLE24s(mem);
-  Skip(mem, padding);
+  frame->x_offset_       = 2 * GetLE24s(mem);
+  frame->y_offset_       = 2 * GetLE24s(mem);
+  frame->width_          = 1 + GetLE24s(mem);
+  frame->height_         = 1 + GetLE24s(mem);
+  frame->duration_       = GetLE24s(mem);
+  frame->dispose_method_ = (WebPMuxAnimDispose)(GetByte(mem) & 1);
   if (frame->width_ * (uint64_t)frame->height_ >= MAX_IMAGE_AREA) {
     return PARSE_ERROR;
   }
@@ -331,9 +331,7 @@ static ParseStatus ParseFrame(
 static ParseStatus ParseFragment(WebPDemuxer* const dmux,
                                  uint32_t fragment_chunk_size) {
   const int has_fragments = !!(dmux->feature_flags_ & FRAGMENTS_FLAG);
-  const uint32_t padding = (FRGM_CHUNK_SIZE & 1);
-  const uint32_t frgm_payload_size =
-      fragment_chunk_size - (FRGM_CHUNK_SIZE + padding);
+  const uint32_t frgm_payload_size = fragment_chunk_size - FRGM_CHUNK_SIZE;
   int added_fragment = 0;
   MemBuffer* const mem = &dmux->mem_;
   Frame* frame;
@@ -344,7 +342,6 @@ static ParseStatus ParseFragment(WebPDemuxer* const dmux,
   frame->is_fragment_  = 1;
   frame->x_offset_ = 2 * GetLE24s(mem);
   frame->y_offset_ = 2 * GetLE24s(mem);
-  Skip(mem, padding);
 
   // Store a fragment only if the fragments flag is set and all data for this
   // fragment is available.
@@ -444,7 +441,7 @@ static ParseStatus ParseSingleImage(WebPDemuxer* const dmux) {
 
 static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
   MemBuffer* const mem = &dmux->mem_;
-  int loop_chunks = 0;
+  int anim_chunks = 0;
   uint32_t vp8x_size;
   ParseStatus status = PARSE_OK;
 
@@ -493,15 +490,16 @@ static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
         status = ParseSingleImage(dmux);
         break;
       }
-      case MKFOURCC('L', 'O', 'O', 'P'): {
-        if (chunk_size_padded < LOOP_CHUNK_SIZE) return PARSE_ERROR;
+      case MKFOURCC('A', 'N', 'I', 'M'): {
+        if (chunk_size_padded < ANIM_CHUNK_SIZE) return PARSE_ERROR;
 
         if (MemDataSize(mem) < chunk_size_padded) {
           status = PARSE_NEED_MORE_DATA;
-        } else if (loop_chunks == 0) {
-          ++loop_chunks;
+        } else if (anim_chunks == 0) {
+          ++anim_chunks;
+          dmux->bgcolor_ = GetLE32(mem);
           dmux->loop_count_ = GetLE16s(mem);
-          Skip(mem, chunk_size_padded - LOOP_CHUNK_SIZE);
+          Skip(mem, chunk_size_padded - ANIM_CHUNK_SIZE);
         } else {
           store_chunk = 0;
           goto Skip;
@@ -629,6 +627,7 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
 static void InitDemux(WebPDemuxer* const dmux, const MemBuffer* const mem) {
   dmux->state_ = WEBP_DEMUX_PARSING_HEADER;
   dmux->loop_count_ = 1;
+  dmux->bgcolor_ = 0xFFFFFFFF;  // White background by default.
   dmux->canvas_width_ = -1;
   dmux->canvas_height_ = -1;
   dmux->mem_ = *mem;
@@ -696,10 +695,11 @@ uint32_t WebPDemuxGetI(const WebPDemuxer* dmux, WebPFormatFeature feature) {
   if (dmux == NULL) return 0;
 
   switch (feature) {
-    case WEBP_FF_FORMAT_FLAGS:  return dmux->feature_flags_;
-    case WEBP_FF_CANVAS_WIDTH:  return (uint32_t)dmux->canvas_width_;
-    case WEBP_FF_CANVAS_HEIGHT: return (uint32_t)dmux->canvas_height_;
-    case WEBP_FF_LOOP_COUNT:    return (uint32_t)dmux->loop_count_;
+    case WEBP_FF_FORMAT_FLAGS:     return dmux->feature_flags_;
+    case WEBP_FF_CANVAS_WIDTH:     return (uint32_t)dmux->canvas_width_;
+    case WEBP_FF_CANVAS_HEIGHT:    return (uint32_t)dmux->canvas_height_;
+    case WEBP_FF_LOOP_COUNT:       return (uint32_t)dmux->loop_count_;
+    case WEBP_FF_BACKGROUND_COLOR: return dmux->bgcolor_;
   }
   return 0;
 }
@@ -778,6 +778,7 @@ static int SynthesizeFrame(const WebPDemuxer* const dmux,
   iter->width          = fragment->width_;
   iter->height         = fragment->height_;
   iter->duration       = fragment->duration_;
+  iter->dispose_method = fragment->dispose_method_;
   iter->complete       = fragment->complete_;
   iter->fragment.bytes = payload;
   iter->fragment.size  = payload_size;

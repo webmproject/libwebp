@@ -65,8 +65,8 @@ typedef enum {
 #define CHUNK_SIZE_BYTES   4     // Size needed to store chunk's size.
 #define CHUNK_HEADER_SIZE  8     // Size of a chunk header.
 #define RIFF_HEADER_SIZE   12    // Size of the RIFF header ("RIFFnnnnWEBP").
-#define ANMF_CHUNK_SIZE    15    // Size of a ANMF chunk.
-#define LOOP_CHUNK_SIZE    2     // Size of a LOOP chunk.
+#define ANMF_CHUNK_SIZE    16    // Size of an ANMF chunk.
+#define ANIM_CHUNK_SIZE    6     // Size of an ANIM chunk.
 #define FRGM_CHUNK_SIZE    6     // Size of a FRGM chunk.
 #define VP8X_CHUNK_SIZE    10    // Size of a VP8X chunk.
 

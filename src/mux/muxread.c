@@ -41,7 +41,7 @@ static WebPMuxError MuxGet(const WebPMux* const mux, CHUNK_INDEX idx,
 
   SWITCH_ID_LIST(IDX_VP8X, mux->vp8x_);
   SWITCH_ID_LIST(IDX_ICCP, mux->iccp_);
-  SWITCH_ID_LIST(IDX_LOOP, mux->loop_);
+  SWITCH_ID_LIST(IDX_ANIM, mux->anim_);
   SWITCH_ID_LIST(IDX_EXIF, mux->exif_);
   SWITCH_ID_LIST(IDX_XMP, mux->xmp_);
   SWITCH_ID_LIST(IDX_UNKNOWN, mux->unknown_);
@@ -376,7 +376,10 @@ static WebPMuxError MuxGetFrameFragmentInternal(const WebPMuxImage* const wpi,
   // Extract info.
   frame->x_offset = 2 * GetLE24(frame_frgm_data->bytes + 0);
   frame->y_offset = 2 * GetLE24(frame_frgm_data->bytes + 3);
-  frame->duration = is_frame ? 1 + GetLE24(frame_frgm_data->bytes + 12) : 1;
+  frame->duration = is_frame ? GetLE24(frame_frgm_data->bytes + 12) : 1;
+  frame->dispose_method =
+      is_frame ? (WebPMuxAnimDispose)(frame_frgm_data->bytes[15] & 1)
+               : WEBP_MUX_DISPOSE_NONE;
   frame->id = ChunkGetIdFromTag(wpi->header_->tag_);
   return SynthesizeBitstream(wpi, &frame->bitstream);
 }
@@ -403,16 +406,18 @@ WebPMuxError WebPMuxGetFrame(
   }
 }
 
-WebPMuxError WebPMuxGetLoopCount(const WebPMux* mux, int* loop_count) {
-  WebPData image;
+WebPMuxError WebPMuxGetAnimationParams(const WebPMux* mux,
+                                       WebPMuxAnimParams* params) {
+  WebPData anim;
   WebPMuxError err;
 
-  if (mux == NULL || loop_count == NULL) return WEBP_MUX_INVALID_ARGUMENT;
+  if (mux == NULL || params == NULL) return WEBP_MUX_INVALID_ARGUMENT;
 
-  err = MuxGet(mux, IDX_LOOP, 1, &image);
+  err = MuxGet(mux, IDX_ANIM, 1, &anim);
   if (err != WEBP_MUX_OK) return err;
-  if (image.size < kChunks[WEBP_CHUNK_LOOP].size) return WEBP_MUX_BAD_DATA;
-  *loop_count = GetLE16(image.bytes);
+  if (anim.size < kChunks[WEBP_CHUNK_ANIM].size) return WEBP_MUX_BAD_DATA;
+  params->bgcolor = GetLE32(anim.bytes);
+  params->loop_count = GetLE16(anim.bytes + 4);
 
   return WEBP_MUX_OK;
 }

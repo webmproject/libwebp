@@ -26,7 +26,8 @@ Usage: webpmux -get GET_OPTIONS INPUT -o OUTPUT
        webpmux -set SET_OPTIONS INPUT -o OUTPUT
        webpmux -strip STRIP_OPTIONS INPUT -o OUTPUT
        webpmux -frgm FRAGMENT_OPTIONS [-frgm...] -o OUTPUT
-       webpmux -frame FRAME_OPTIONS [-frame...] -loop LOOP_COUNT -o OUTPUT
+       webpmux -frame FRAME_OPTIONS [-frame...] [-loop LOOP_COUNT]
+               [-bgcolor BACKGROUND_COLOR] -o OUTPUT
        webpmux -info INPUT
        webpmux [-h|-help]
 
@@ -61,12 +62,24 @@ FRAGMENT_OPTIONS(i):
 
 FRAME_OPTIONS(i):
  Create animation.
-   file_i +xi+yi+di
+   file_i +xi+yi+di+mi
    where:    'file_i' is the i'th animation frame (WebP format),
              'xi','yi' specify the image offset for this frame.
              'di' is the pause duration before next frame.
+             'mi' is the dispose method for this frame (0 or 1).
 
-INPUT and OUTPUT are in WebP format.
+LOOP_COUNT:
+ Number of times to repeat the animation.
+ Valid range is 0 to 65535 [Default: 0 (infinite)].
+
+BACKGROUND_COLOR:
+ Background color of the canvas.
+  A,R,G,B
+  where:    'A', 'R', 'G' and 'B' are integers in the range 0 to 255 specifying
+            the Alpha, Red, Green and Blue component values respectively
+            [Default: 255,255,255,255].
+
+INPUT & OUTPUT are in WebP format.
 
 Note: The nature of EXIF, XMP and ICC data is not checked and is assumed to be
 valid.

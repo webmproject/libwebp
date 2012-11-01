@@ -22,7 +22,7 @@ extern "C" {
 const ChunkInfo kChunks[] = {
   { MKFOURCC('V', 'P', '8', 'X'),  WEBP_CHUNK_VP8X,    VP8X_CHUNK_SIZE },
   { MKFOURCC('I', 'C', 'C', 'P'),  WEBP_CHUNK_ICCP,    UNDEFINED_CHUNK_SIZE },
-  { MKFOURCC('L', 'O', 'O', 'P'),  WEBP_CHUNK_LOOP,    LOOP_CHUNK_SIZE },
+  { MKFOURCC('A', 'N', 'I', 'M'),  WEBP_CHUNK_ANIM,    ANIM_CHUNK_SIZE },
   { MKFOURCC('A', 'N', 'M', 'F'),  WEBP_CHUNK_ANMF,    ANMF_CHUNK_SIZE },
   { MKFOURCC('F', 'R', 'G', 'M'),  WEBP_CHUNK_FRGM,    FRGM_CHUNK_SIZE },
   { MKFOURCC('A', 'L', 'P', 'H'),  WEBP_CHUNK_ALPHA,   UNDEFINED_CHUNK_SIZE },
@@ -135,7 +135,7 @@ static int ChunkSearchListToSet(WebPChunk** chunk_list, uint32_t nth,
 WebPMuxError ChunkAssignData(WebPChunk* chunk, const WebPData* const data,
                              int copy_data, uint32_t tag) {
   // For internally allocated chunks, always copy data & make it owner of data.
-  if (tag == kChunks[IDX_VP8X].tag || tag == kChunks[IDX_LOOP].tag) {
+  if (tag == kChunks[IDX_VP8X].tag || tag == kChunks[IDX_ANIM].tag) {
     copy_data = 1;
   }
 
@@ -462,10 +462,10 @@ uint8_t* MuxEmitRiffHeader(uint8_t* const data, size_t size) {
 
 WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, WebPChunkId id) {
   assert(mux != NULL);
-  switch(id) {
+  switch (id) {
     case WEBP_CHUNK_VP8X:    return (WebPChunk**)&mux->vp8x_;
     case WEBP_CHUNK_ICCP:    return (WebPChunk**)&mux->iccp_;
-    case WEBP_CHUNK_LOOP:    return (WebPChunk**)&mux->loop_;
+    case WEBP_CHUNK_ANIM:    return (WebPChunk**)&mux->anim_;
     case WEBP_CHUNK_EXIF:    return (WebPChunk**)&mux->exif_;
     case WEBP_CHUNK_XMP:     return (WebPChunk**)&mux->xmp_;
     case WEBP_CHUNK_UNKNOWN: return (WebPChunk**)&mux->unknown_;
@@ -518,7 +518,7 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
   int num_iccp;
   int num_exif;
   int num_xmp;
-  int num_loop_chunks;
+  int num_anim;
   int num_frames;
   int num_fragments;
   int num_vp8x;
@@ -548,19 +548,19 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
   err = ValidateChunk(mux, IDX_XMP, XMP_FLAG, flags, 1, &num_xmp);
   if (err != WEBP_MUX_OK) return err;
 
-  // Animation: ANIMATION_FLAG, loop chunk and frame chunk(s) are consistent.
-  // At most one loop chunk.
-  err = ValidateChunk(mux, IDX_LOOP, NO_FLAG, flags, 1, &num_loop_chunks);
+  // Animation: ANIMATION_FLAG, ANIM chunk and ANMF chunk(s) are consistent.
+  // At most one ANIM chunk.
+  err = ValidateChunk(mux, IDX_ANIM, NO_FLAG, flags, 1, &num_anim);
   if (err != WEBP_MUX_OK) return err;
   err = ValidateChunk(mux, IDX_ANMF, NO_FLAG, flags, -1, &num_frames);
   if (err != WEBP_MUX_OK) return err;
 
   {
     const int has_animation = !!(flags & ANIMATION_FLAG);
-    if (has_animation && (num_loop_chunks == 0 || num_frames == 0)) {
+    if (has_animation && (num_anim == 0 || num_frames == 0)) {
       return WEBP_MUX_INVALID_ARGUMENT;
     }
-    if (!has_animation && (num_loop_chunks == 1 || num_frames > 0)) {
+    if (!has_animation && (num_anim == 1 || num_frames > 0)) {
       return WEBP_MUX_INVALID_ARGUMENT;
     }
   }

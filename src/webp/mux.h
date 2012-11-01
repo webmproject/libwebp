@@ -59,8 +59,10 @@ typedef struct WebPData WebPData;
 typedef enum WebPMuxError WebPMuxError;
 typedef enum WebPFeatureFlags WebPFeatureFlags;
 typedef enum WebPChunkId WebPChunkId;
+typedef enum WebPMuxAnimDispose WebPMuxAnimDispose;
 #endif
 typedef struct WebPMuxFrameInfo WebPMuxFrameInfo;
+typedef struct WebPMuxAnimParams WebPMuxAnimParams;
 
 typedef struct WebPDemuxer WebPDemuxer;
 #if !(defined(__cplusplus) || defined(c_plusplus))
@@ -94,7 +96,7 @@ enum WebPFeatureFlags {
 enum WebPChunkId {
   WEBP_CHUNK_VP8X,     // VP8X
   WEBP_CHUNK_ICCP,     // ICCP
-  WEBP_CHUNK_LOOP,     // LOOP
+  WEBP_CHUNK_ANIM,     // ANIM
   WEBP_CHUNK_ANMF,     // ANMF
   WEBP_CHUNK_FRGM,     // FRGM
   WEBP_CHUNK_ALPHA,    // ALPH
@@ -220,6 +222,13 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteChunk(
 //------------------------------------------------------------------------------
 // Images.
 
+// Dispose method (animation only). Indicates how the area used by the current
+// frame is to be treated before rendering the next frame on the canvas.
+enum WebPMuxAnimDispose {
+  WEBP_MUX_DISPOSE_NONE,       // Do not dispose.
+  WEBP_MUX_DISPOSE_BACKGROUND  // Dispose to background color.
+};
+
 // Encapsulates data about a single frame/tile.
 struct WebPMuxFrameInfo {
   WebPData    bitstream;  // image data: can either be a raw VP8/VP8L bitstream
@@ -230,7 +239,8 @@ struct WebPMuxFrameInfo {
 
   WebPChunkId id;         // frame type: should be one of WEBP_CHUNK_ANMF,
                           // WEBP_CHUNK_FRGM or WEBP_CHUNK_IMAGE
-  uint32_t pad[3];        // padding for later use
+  WebPMuxAnimDispose dispose_method;  // Disposal method for the frame.
+  uint32_t    pad[2];     // padding for later use
 };
 
 // Sets the (non-animated and non-fragmented) image in the mux object.
@@ -300,28 +310,38 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteFrame(WebPMux* mux, uint32_t nth);
 //------------------------------------------------------------------------------
 // Animation.
 
-// Sets the animation loop count in the mux object. Any existing loop count
-// value(s) will be removed.
+// Animation parameters.
+struct WebPMuxAnimParams {
+  uint32_t bgcolor;  // Background color of the canvas stored (in MSB order) as:
+                     // Bits 00 to 07: Alpha.
+                     // Bits 08 to 15: Red.
+                     // Bits 16 to 23: Green.
+                     // Bits 24 to 31: Blue.
+  int loop_count;    // Number of times to repeat the animation [0 = infinite].
+};
+
+// Sets the animation parameters in the mux object. Any existing ANIM chunks
+// will be removed.
 // Parameters:
-//   mux - (in/out) object in which loop chunk is to be set/added
-//   loop_count - (in) animation loop count value.
-//                Note that loop_count of zero denotes infinite loop.
+//   mux - (in/out) object in which ANIM chunk is to be set/added
+//   params - (in) animation parameters.
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL
+//   WEBP_MUX_INVALID_ARGUMENT - if either mux or params is NULL
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxSetLoopCount(WebPMux* mux, int loop_count);
+WEBP_EXTERN(WebPMuxError) WebPMuxSetAnimationParams(
+    WebPMux* mux, const WebPMuxAnimParams* params);
 
-// Gets the animation loop count from the mux object.
+// Gets the animation parameters from the mux object.
 // Parameters:
-//   mux - (in) object from which the loop count is to be fetched
-//   loop_count - (out) the loop_count value present in the LOOP chunk
+//   mux - (in) object from which the animation parameters to be fetched
+//   params - (out) animation parameters extracted from the ANIM chunk
 // Returns:
-//   WEBP_MUX_INVALID_ARGUMENT - if either of mux or loop_count is NULL
-//   WEBP_MUX_NOT_FOUND - if loop chunk is not present in mux object.
+//   WEBP_MUX_INVALID_ARGUMENT - if either of mux or params is NULL
+//   WEBP_MUX_NOT_FOUND - if ANIM chunk is not present in mux object.
 //   WEBP_MUX_OK - on success.
-WEBP_EXTERN(WebPMuxError) WebPMuxGetLoopCount(const WebPMux* mux,
-                                              int* loop_count);
+WEBP_EXTERN(WebPMuxError) WebPMuxGetAnimationParams(
+    const WebPMux* mux, WebPMuxAnimParams* params);
 
 //------------------------------------------------------------------------------
 // Misc Utilities.
@@ -413,7 +433,8 @@ enum WebPFormatFeature {
   WEBP_FF_FORMAT_FLAGS,  // Extended format flags present in the 'VP8X' chunk.
   WEBP_FF_CANVAS_WIDTH,
   WEBP_FF_CANVAS_HEIGHT,
-  WEBP_FF_LOOP_COUNT
+  WEBP_FF_LOOP_COUNT,
+  WEBP_FF_BACKGROUND_COLOR
 };
 
 // Get the 'feature' value from the 'dmux'.
@@ -433,6 +454,7 @@ struct WebPIterator {
   int x_offset, y_offset;  // offset relative to the canvas.
   int width, height;       // dimensions of this frame or fragment.
   int duration;            // display duration in milliseconds.
+  WebPMuxAnimDispose dispose_method;  // dispose method for the frame.
   int complete;   // true if 'fragment' contains a full frame. partial images
                   // may still be decoded with the WebP incremental decoder.
   WebPData fragment;  // The frame or fragment given by 'frame_num' and
