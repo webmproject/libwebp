@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAQ3//7Zk\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-11-01T02:02:23Z",
+      "side": 1,
+      "message": "Maybe keep the \u0027Rsv\u0027 naming, since there\u0027s already an \u0027R\u0027 at line 315",
+      "revId": "bb222573a05c175150f1711d05d3d5a74caf5069",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQ3//7Zg\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 489,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-11-01T02:02:23Z",
+      "side": 1,
+      "message": "file -\u003e bitstream",
+      "revId": "bb222573a05c175150f1711d05d3d5a74caf5069",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
