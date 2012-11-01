@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAQ3//638\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-11-01T18:25:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAQ3//7Zk\u003d",
+      "revId": "bb222573a05c175150f1711d05d3d5a74caf5069",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAQ3//7Zg\u003d",
         "filename": "doc/webp-container-spec.txt",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2012-11-01T02:02:23Z",
       "side": 1,
       "message": "file -\u003e bitstream",
+      "revId": "bb222573a05c175150f1711d05d3d5a74caf5069",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQ3//630\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 489,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-11-01T18:25:06Z",
+      "side": 1,
+      "message": "Note that we are using \u0027bistream chunk\u0027 term to signify a VP8/VP8L chunk.",
+      "parentUuid": "AAAAQ3//7Zg\u003d",
       "revId": "bb222573a05c175150f1711d05d3d5a74caf5069",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
