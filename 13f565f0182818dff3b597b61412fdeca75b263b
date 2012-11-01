@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAQ3//6sQ\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-11-01T21:54:54Z",
+      "side": 1,
+      "message": "const int kStep ?\n\nbtw, can\u0027t you use an immediate for kStep? (just asking)",
+      "revId": "13f565f0182818dff3b597b61412fdeca75b263b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQ3//6sI\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-11-01T21:54:54Z",
+      "side": 1,
+      "message": "\u003e 80cols",
+      "revId": "13f565f0182818dff3b597b61412fdeca75b263b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQ3//6sE\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-11-01T21:54:54Z",
+      "side": 1,
+      "message": "\u003e 80cols",
+      "revId": "13f565f0182818dff3b597b61412fdeca75b263b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
