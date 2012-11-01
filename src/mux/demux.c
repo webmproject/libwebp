@@ -194,11 +194,11 @@ static int AddFrame(WebPDemuxer* const dmux, Frame* const frame) {
 }
 
 // Store image bearing chunks to 'frame'.
-static ParseStatus StoreFrame(int frame_num, MemBuffer* const mem,
-                              Frame* const frame) {
+static ParseStatus StoreFrame(int frame_num, uint32_t min_size,
+                              MemBuffer* const mem, Frame* const frame) {
   int alpha_chunks = 0;
   int image_chunks = 0;
-  int done = (MemDataSize(mem) < CHUNK_HEADER_SIZE);
+  int done = (MemDataSize(mem) < min_size);
   ParseStatus status = PARSE_OK;
 
   if (done) return PARSE_NEED_MORE_DATA;
@@ -275,10 +275,10 @@ static ParseStatus StoreFrame(int frame_num, MemBuffer* const mem,
 // Returns PARSE_OK on success with *frame pointing to the new Frame.
 // Returns PARSE_NEED_MORE_DATA with insufficient data, PARSE_ERROR otherwise.
 static ParseStatus NewFrame(const MemBuffer* const mem,
-                            uint32_t min_size, uint32_t expected_size,
-                            uint32_t actual_size, Frame** frame) {
+                            uint32_t min_size, uint32_t actual_size,
+                            Frame** frame) {
   if (SizeIsInvalid(mem, min_size)) return PARSE_ERROR;
-  if (actual_size < expected_size) return PARSE_ERROR;
+  if (actual_size < min_size) return PARSE_ERROR;
   if (MemDataSize(mem) < min_size)  return PARSE_NEED_MORE_DATA;
 
   *frame = (Frame*)calloc(1, sizeof(**frame));
@@ -290,12 +290,14 @@ static ParseStatus NewFrame(const MemBuffer* const mem,
 static ParseStatus ParseFrame(
     WebPDemuxer* const dmux, uint32_t frame_chunk_size) {
   const int has_frames = !!(dmux->feature_flags_ & ANIMATION_FLAG);
-  const uint32_t min_size = frame_chunk_size + CHUNK_HEADER_SIZE;
+  const uint32_t padding = (ANMF_CHUNK_SIZE & 1);
+  const uint32_t anmf_payload_size =
+      frame_chunk_size - (ANMF_CHUNK_SIZE + padding);
   int added_frame = 0;
   MemBuffer* const mem = &dmux->mem_;
   Frame* frame;
   ParseStatus status =
-      NewFrame(mem, min_size, ANMF_CHUNK_SIZE, frame_chunk_size, &frame);
+      NewFrame(mem, ANMF_CHUNK_SIZE, frame_chunk_size, &frame);
   if (status != PARSE_OK) return status;
 
   frame->x_offset_ = 2 * GetLE24s(mem);
@@ -303,14 +305,14 @@ static ParseStatus ParseFrame(
   frame->width_    = 1 + GetLE24s(mem);
   frame->height_   = 1 + GetLE24s(mem);
   frame->duration_ = 1 + GetLE24s(mem);
-  Skip(mem, frame_chunk_size - ANMF_CHUNK_SIZE);  // skip any trailing data.
+  Skip(mem, padding);
   if (frame->width_ * (uint64_t)frame->height_ >= MAX_IMAGE_AREA) {
     return PARSE_ERROR;
   }
 
-  // Store a (potentially partial) frame only if the animation flag is set
-  // and there is some data in 'frame'.
-  status = StoreFrame(dmux->num_frames_ + 1, mem, frame);
+  // Store a frame only if the animation flag is set and all data for this frame
+  // is available.
+  status = StoreFrame(dmux->num_frames_ + 1, anmf_payload_size, mem, frame);
   if (status != PARSE_ERROR && has_frames && frame->frame_num_ > 0) {
     added_frame = AddFrame(dmux, frame);
     if (added_frame) {
@@ -329,22 +331,24 @@ static ParseStatus ParseFrame(
 static ParseStatus ParseTile(WebPDemuxer* const dmux,
                              uint32_t tile_chunk_size) {
   const int has_tiles = !!(dmux->feature_flags_ & TILE_FLAG);
-  const uint32_t min_size = tile_chunk_size + CHUNK_HEADER_SIZE;
+  const uint32_t padding = (FRGM_CHUNK_SIZE & 1);
+  const uint32_t frgm_payload_size =
+      tile_chunk_size - (FRGM_CHUNK_SIZE + padding);
   int added_tile = 0;
   MemBuffer* const mem = &dmux->mem_;
   Frame* frame;
   ParseStatus status =
-      NewFrame(mem, min_size, FRGM_CHUNK_SIZE, tile_chunk_size, &frame);
+      NewFrame(mem, FRGM_CHUNK_SIZE, tile_chunk_size, &frame);
   if (status != PARSE_OK) return status;
 
   frame->is_tile_  = 1;
   frame->x_offset_ = 2 * GetLE24s(mem);
   frame->y_offset_ = 2 * GetLE24s(mem);
-  Skip(mem, tile_chunk_size - FRGM_CHUNK_SIZE);  // skip any trailing data.
+  Skip(mem, padding);
 
-  // Store a (potentially partial) tile only if the tile flag is set
-  // and the tile contains some data.
-  status = StoreFrame(dmux->num_frames_, mem, frame);
+  // Store a tile only if the tile flag is set and all data for this tile
+  // is available.
+  status = StoreFrame(dmux->num_frames_, frgm_payload_size, mem, frame);
   if (status != PARSE_ERROR && has_tiles && frame->frame_num_ > 0) {
     // Note num_frames_ is incremented only when all tiles have been consumed.
     added_tile = AddFrame(dmux, frame);
@@ -411,7 +415,9 @@ static ParseStatus ParseSingleImage(WebPDemuxer* const dmux) {
   frame = (Frame*)calloc(1, sizeof(*frame));
   if (frame == NULL) return PARSE_ERROR;
 
-  status = StoreFrame(1, &dmux->mem_, frame);
+  // For the single image case, we allow parsing of a partial frame. But we need
+  // at least CHUNK_HEADER_SIZE for parsing.
+  status = StoreFrame(1, CHUNK_HEADER_SIZE, &dmux->mem_, frame);
   if (status != PARSE_ERROR) {
     const int has_alpha = !!(dmux->feature_flags_ & ALPHA_FLAG);
     // Clear any alpha when the alpha flag is missing.

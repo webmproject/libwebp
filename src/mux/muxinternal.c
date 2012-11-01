@@ -399,13 +399,32 @@ size_t MuxImageListDiskSize(const WebPMuxImage* wpi_list) {
   return size;
 }
 
+// Special case as ANMF/FRGM chunk encapsulates other image chunks.
+static uint8_t* ChunkEmitSpecial(const WebPChunk* const header,
+                                 size_t total_size, uint8_t* dst) {
+  const size_t header_size = header->data_.size;
+  const size_t offset_to_next = total_size - CHUNK_HEADER_SIZE;
+  assert(header->tag_ == kChunks[IDX_ANMF].tag ||
+         header->tag_ == kChunks[IDX_FRGM].tag);
+  PutLE32(dst + 0, header->tag_);
+  PutLE32(dst + TAG_SIZE, (uint32_t)offset_to_next);
+  assert(header_size == (uint32_t)header_size);
+  memcpy(dst + CHUNK_HEADER_SIZE, header->data_.bytes, header_size);
+  if (header_size & 1) {
+    dst[CHUNK_HEADER_SIZE + header_size] = 0;  // Add padding.
+  }
+  return dst + ChunkDiskSize(header);
+}
+
 uint8_t* MuxImageEmit(const WebPMuxImage* const wpi, uint8_t* dst) {
   // Ordering of chunks to be emitted is strictly as follows:
   // 1. ANMF/FRGM chunk (if present).
   // 2. ALPH chunk (if present).
   // 3. VP8/VP8L chunk.
   assert(wpi);
-  if (wpi->header_ != NULL) dst = ChunkEmit(wpi->header_, dst);
+  if (wpi->header_ != NULL) {
+    dst = ChunkEmitSpecial(wpi->header_, MuxImageDiskSize(wpi), dst);
+  }
   if (wpi->alpha_ != NULL) dst = ChunkEmit(wpi->alpha_, dst);
   if (wpi->img_ != NULL) dst = ChunkEmit(wpi->img_, dst);
   return dst;
