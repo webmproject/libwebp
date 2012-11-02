@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAQ3//6eU\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 3
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-11-02T02:29:34Z",
+      "side": 1,
+      "message": "The WebP format...",
+      "revId": "a2979c4ee26dfb8bb30a37146584c100cf27e6fd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQ3//6eE\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 3
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-11-02T02:29:34Z",
+      "side": 1,
+      "message": "Rsv for consistency with the rest of the doc",
+      "revId": "a2979c4ee26dfb8bb30a37146584c100cf27e6fd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQ3//6d8\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 3
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-11-02T02:29:34Z",
+      "side": 1,
+      "message": "This last sentence is redundant with the first.",
+      "revId": "a2979c4ee26dfb8bb30a37146584c100cf27e6fd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
