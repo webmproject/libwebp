@@ -24,7 +24,11 @@ libwebp_la_LIBADD += utils/libwebputils.la
 # other than the ones listed on the command line, i.e., after linking, it will
 # not have unresolved symbols. Some platforms (Windows among them) require all
 # symbols in shared libraries to be resolved at library creation.
+<<<<<<< HEAD   (0ca584 Merge "Color profile specification in container spec")
 libwebp_la_LDFLAGS = -no-undefined -version-info 4:0:0
+=======
+libwebp_la_LDFLAGS = -no-undefined -version-info 4:1:0
+>>>>>>> BRANCH (74fefc Update ChangeLog)
 libwebpincludedir = $(includedir)/webp
 
 pkgconfig_DATA = libwebp.pc

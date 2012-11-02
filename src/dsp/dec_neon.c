@@ -314,6 +314,7 @@ static void TransformTwoNEON(const int16_t* in, uint8_t* dst, int do_two) {
   }
 }
 
+<<<<<<< HEAD   (0ca584 Merge "Color profile specification in container spec")
 static void TransformWHT(const int16_t* in, int16_t* out) {
   const int kStep = 32; // The store is only incrementing the pointer as if we
                         // had stored a single byte.
@@ -381,6 +382,8 @@ static void TransformWHT(const int16_t* in, int16_t* out) {
   );
 }
 
+=======
+>>>>>>> BRANCH (74fefc Update ChangeLog)
 #endif   // WEBP_USE_NEON
 
 //------------------------------------------------------------------------------

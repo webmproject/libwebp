@@ -1,4 +1,4 @@
-AC_INIT([libwebp], [0.2.0],
+AC_INIT([libwebp], [0.2.1],
         [http://code.google.com/p/webp/issues],,
         [http://developers.google.com/speed/webp])
 AC_CANONICAL_TARGET
