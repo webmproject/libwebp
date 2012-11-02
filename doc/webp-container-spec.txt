@@ -13,7 +13,7 @@ end of this file.
 WebP Container Specification
 ============================
 
-_Working Draft, v0.8, 20121102_
+_Working Draft, v0.9, 20121105_
 
 
 * TOC placeholder
@@ -28,8 +28,8 @@ to compress image data in a lossy way, or (ii) the WebP lossless encoding
 (and possibly other encodings in the future). These encoding schemes should
 make it more efficient than currently used formats. It is optimized for fast
 image transfer over the network (e.g., for websites). The WebP format has
-feature parity (color profile, metadata etc) with other formats as well. This
-document describes the structure of a WebP file.
+feature parity (color profile, metadata, animation etc) with other formats as
+well. This document describes the structure of a WebP file.
 
 The WebP container (i.e., RIFF container for WebP) allows feature support over
 and above the basic use case of WebP (i.e., a file containing a single image
@@ -45,6 +45,9 @@ for:
 
   * **Color Profile.** An image may have an embedded ICC profile as described
     by the [International Color Consortium][iccspec].
+
+  * **Animation.** An image may have multiple frames with pauses between them,
+    making it an animation.
 
   * **Image Fragmentation.** A single bitstream in WebP has an inherent
     limitation for width or height of 2^14 pixels, and, when using VP8, a 512
@@ -63,8 +66,9 @@ document are to be interpreted as described in [RFC 2119][].
 Terminology &amp; Basics
 ------------------------
 
-A WebP file contains a still image (i.e., an encoded matrix of pixels) and,
-optionally, transparency information. In case we need to refer only to the
+A WebP file contains either a still image (i.e., an encoded matrix of pixels)
+or an [animation](#animation)). Optionally, it can also contain transparency
+information, color profile and metadata. In case we need to refer only to the
 matrix of pixels, we will call it the _canvas_ of the image.
 
 Below are additional terms used throughout this document:
@@ -269,29 +273,21 @@ An extended format file consists of:
 
   * An optional 'ICCP' chunk with color profile.
 
-  * Image data (described below).
+  * An optional 'ANIM' chunk with animation control data.
+
+  * Image data.
 
   * An optional 'EXIF' chunk with EXIF metadata.
 
   * An optional 'XMP ' chunk with XMP metadata.
 
-The image can be fragmented or non-fragmented, as will be described in the
-[Extended WebP file header](#extended_header) section.
+For a _still image_, the _image data_ consists of a single frame, whereas for
+an _animated image_, it consists of multiple frames. More details about frames
+can be found in the [Animation](#animation) section.
 
-For a _non-fragmented_ image, the _image data_ consists of:
-
-  * An optional 'ALPH' chunk with transparency information.
-
-  * The image bitstream contained in either a 'VP8 ' or 'VP8L' chunk.
-
-For a _fragmented_ image, the _image data_ consists of multiple fragments,
-where each fragment consists of:
-
-  * A 'FRGM' chunk with the fragment information.
-
-  * An optional 'ALPH' chunk with transparency information.
-
-  * The bitstream for the fragment contained in either a 'VP8 ' or 'VP8L' chunk.
+Moreover, each frame can be fragmented or non-fragmented, as will be described
+in the [Extended WebP file header](#extended_header) section. More details about
+fragments can be found in the [Fragments](#fragments) section.
 
 All chunks SHOULD be placed in the same order as listed above. If a chunk
 appears in the wrong place, the file is invalid, but readers MAY parse the
@@ -313,7 +309,7 @@ Extended WebP file header:
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('VP8X')                      |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |Rsv|I|L|E|X|R|F|                   Reserved                    |
+    |Rsv|I|L|E|X|A|F|                   Reserved                    |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |          Canvas Width Minus One               |             ...
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -341,13 +337,14 @@ XMP metadata (X): 1 bit
 
 : Set if the file contains XMP metadata.
 
-Reserved (R): 1 bit
+Animation (A): 1 bit
 
-: SHOULD be `0`.
+: Set if this is an animated image. Data in 'ANIM' and 'ANMF' chunks should be
+used to control the animation.
 
 Image Fragmentation (F): 1 bit
 
-: Set if the image is represented by fragments.
+: Set if any of the frames in the image are represented by fragments.
 
 Reserved: 24 bits
 
@@ -369,7 +366,112 @@ Future specifications MAY add more fields.
 
 ### Chunks
 
-#### Image Fragments
+#### Animation
+
+An animation is controlled by ANIM and ANMF chunks.
+
+ANIM Chunk:
+
+For an animated image, this chunk contains the _global parameters_ of the
+animation.
+
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                      ChunkHeader('ANIM')                      |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                       Background Color                        |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |          Loop Count           |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+Background Color: 32 bits (_uint32_)
+
+: The background color of the canvas in \[Blue, Green, Red, Alpha\] byte order.
+The background color is the color used for those pixels of the canvas that are
+not covered by a frame. Background color is also used when disposal method is
+`1`.
+
+Loop Count: 16 bits (_uint16_)
+
+: The number of times to loop the animation. `0` means infinitely.
+
+This chunk MUST appear if the _Animation_ flag in the VP8X chunk is set.
+If the _Animation_ flag is not set and this chunk is present, it
+SHOULD be ignored.
+
+
+ANMF chunk:
+
+For animated images, this chunk contains information about a _single_ frame.
+If the _Animation flag_ is not set, then this chunk SHOULD NOT be present.
+
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                      ChunkHeader('ANMF')                      |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                        Frame X                |             ...
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    ...          Frame Y            |   Frame Width Minus One     ...
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    ...             |           Frame Height Minus One              |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                 Frame Duration                |  Reserved   |D|
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                         Frame Data                            |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+Frame X: 24 bits (_uint24_)
+
+: The X coordinate of the upper left corner of the frame is `Frame X * 2`
+
+Frame Y: 24 bits (_uint24_)
+
+: The Y coordinate of the upper left corner of the frame is `Frame Y * 2`
+
+Frame Width Minus One: 24 bits (_uint24_)
+
+: The _1-based_ width of the frame.
+  The frame width is `1 + Frame Width Minus One`
+
+Frame Height Minus One: 24 bits (_uint24_)
+
+: The _1-based_ height of the frame.
+  The frame height is `1 + Frame Height Minus One`
+
+Frame Duration: 24 bits (_uint24_)
+
+: The time to wait before displaying the next frame, in 1 millisecond units.
+In particular, frame duration of 0 is useful when one wants to update multiple
+areas of the canvas at once during the animation.
+
+Reserved: 7 bits
+
+: SHOULD be 0.
+
+Disposal method (D): 1 bit
+
+: Indicates how the area used by this frame is to be treated before rendering
+the next frame on canvas:
+
+  * `0`: Do not dispose. Keep the area used by this frame as it is and render
+    the next frame on top of it.
+
+  * `1`: Dispose to background color (also part of this chunk). Restore the
+    area used by this frame to background color before rendering the next frame.
+
+Frame Data: _Chunk Size_ - `16` bytes
+
+: For a fragmented frame, it consists of multiple [fragment chunks](#fragments).
+
+: For a non-fragmented frame, it consists of:
+
+  * An optional [alpha subchunk](#alpha) for the frame.
+
+  * A [bitstream subchunk](#bitstream-vp8vp8l) for the frame.
+
+#### Fragments
 
 For images that are represented by fragments, this chunk contains data for
 a single fragment. If the _Image Fragmentation Flag_ is not set, then this chunk
@@ -403,11 +505,11 @@ Fragment Data: _Chunk Size_ - `6` bytes
 Note: The width and height of the fragment is obtained from the bitstream
 subchunk.
 
-The fragments of an image SHOULD have the following properties:
+The fragments of a frame SHOULD have the following properties:
 
-  * They collectively cover the whole canvas.
+  * They collectively cover the whole frame.
 
-  * No pair of fragments have any overlapping region on the canvas.
+  * No pair of fragments have any overlapping region on the frame.
 
   * No portion of any fragment should be located outside of the canvas.
 
@@ -492,11 +594,11 @@ Alpha bitstream: _Chunk Size_ - `1` bytes
 
 : Encoded alpha bitstream.
 
-This optional chunk contains encoded alpha data for this frame. A frame
-containing a 'VP8L' chunk SHOULD NOT contain this chunk.
+This optional chunk contains encoded alpha data for this frame/fragment. A
+frame/fragment containing a 'VP8L' chunk SHOULD NOT contain this chunk.
 
-**Rationale**: The transparency information of the frame is already part
-of the 'VP8L' chunk.
+**Rationale**: The transparency information is already part of the 'VP8L'
+chunk.
 
 The alpha channel data is stored as uncompressed raw data (when
 compression method is '0') or compressed using the lossless format
@@ -524,7 +626,7 @@ compression method is '0') or compressed using the lossless format
 
 #### Bitstream (VP8/VP8L)
 
-This chunk contains compressed image data.
+This chunk contains compressed bitstream data for a single frame/fragment.
 
 A bitstream chunk may be either (i) a VP8 chunk, using "VP8 " (note the
 significant fourth-character space) as its tag _or_ (ii) a VP8L chunk, using
@@ -548,7 +650,7 @@ Color Profile: _Chunk Size_ bytes
 
 : ICC profile.
 
-This chunk MUST appear before data for all the frames.
+This chunk MUST appear before the image data.
 
 There SHOULD be at most one such chunk. If there are more such chunks, readers
 MAY ignore all except the first one.
@@ -603,11 +705,11 @@ Metadata Working Group's [Guidelines for Handling Metadata][metadata].
 A file MAY contain other unknown chunks. Readers SHOULD ignore these chunks.
 Writers SHOULD preserve them in their original order.
 
-### Assembling the Canvas from fragments
+### Assembling the Canvas from fragments/frames
 
-Here we provide an overview of how 'FRGM' chunks are used to assemble the
-canvas in case of a fragmented-image. The notation _VP8X.field_ means the field
-in the 'VP8X' chunk with the same description.
+Here we provide an overview of how a reader should assemble a canvas in case
+of a fragmented-image and in case of an animated image. The notation
+_VP8X.field_ means the field in the 'VP8X' chunk with the same description.
 
 Displaying a _fragmented image_ canvas MUST be equivalent to the following
 pseudocode:
@@ -636,6 +738,48 @@ for chunk in image_data:
     assert fragment has the properties mentioned in "Image Fragments" section.
     render fragment with frame_params.alpha and frame_params.bitstream on canvas
     with top-left corner in (frgm_params.fragmentX, frgm_params.fragmentY).
+canvas contains the decoded canvas.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Displaying an _animated image_ canvas MUST be equivalent to the following
+pseudocode:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+assert VP8X.flags.hasAnimation
+canvas ← new image of size VP8X.canvasWidth x VP8X.canvasHeight with
+background color ANIM.background_color.
+loop_count ← ANIM.loopCount
+dispose_method ← ANIM.disposeMethod
+if loop_count == 0:
+    loop_count = ∞
+frame_params ← nil
+for loop = 0, ..., loop_count - 1
+    assert next chunk in image_data is ANMF
+    frame_params.frameX = Frame X
+    frame_params.frameY = Frame Y
+    frame_params.frameWidth = Frame Width Minus One + 1
+    frame_params.frameHeight = Frame Height Minus One + 1
+    frame_params.frameDuration = Frame Duration
+    assert VP8X.canvasWidth >= frame_params.frameX + frame_params.frameWidth
+    assert VP8X.canvasHeight >= frame_params.frameY + frame_params.frameHeight
+    if VP8X.flags.hasFragments and first subchunk in 'Frame Data' is FRGM
+        // Fragmented frame.
+        frame_params.{bitstream,alpha} = canvas decoded from subchunks in
+                                         'Frame Data' as per the pseudocode for
+                                         _fragmented image_ above.
+    else
+        // Non-fragmented frame.
+        for subchunk in 'Frame Data':
+            if subchunk.tag == "ALPH":
+                assert alpha subchunks not found in 'Frame Data' earlier
+                frame_params.alpha = alpha_data
+            else if subchunk.tag == "VP8 " OR subchunk.tag == "VP8L":
+                assert bitstream subchunks not found in 'Frame Data' earlier
+                frame_params.bitstream = bitstream_data
+    render frame with frame_params.alpha and frame_params.bitstream on canvas
+    with top-left corner in (frame_params.frameX, frame_params.frameY), using
+    dispose method dispose_method.
+    Show the contents of the image for frame_params.frameDuration * 1ms.
 canvas contains the decoded canvas.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -680,6 +824,19 @@ RIFF/WEBP
 +- FRGM (fragment2 parameters + data)
 +- FRGM (fragment3 parameters + data)
 +- FRGM (fragment4 parameters + data)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An animated image with EXIF metadata may look as follows:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+RIFF/WEBP
++- VP8X (descriptions of features used)
++- ANIM (global animation parameters)
++- ANMF (frame1 parameters + data)
++- ANMF (frame2 parameters + data)
++- ANMF (frame3 parameters + data)
++- ANMF (frame4 parameters + data)
++- EXIF (metadata)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [vp8spec]:  http://tools.ietf.org/html/rfc6386
