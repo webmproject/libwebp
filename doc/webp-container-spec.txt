@@ -13,7 +13,7 @@ end of this file.
 WebP Container Specification
 ============================
 
-_Working Draft, v0.7, 20121101_
+_Working Draft, v0.7, 20121102_
 
 
 * TOC placeholder
@@ -291,28 +291,28 @@ Extended WebP file header:
     ...  Canvas Height Minus One    |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-Reserved (R): 2 bits
+Reserved (Rsv): 2 bits
 
 : SHOULD be `0`.
 
-XMP metadata (X): 1 bit
+ICC profile (I): 1 bit
 
-: Set if the file contains XMP metadata.
-
-EXIF metadata (E): 1 bit
-
-: Set if the file contains EXIF metadata.
+: Set if the file contains an ICC profile.
 
 Alpha (L): 1 bit
 
 : Set if the file contains some (or all) images with transparency information
 ("alpha").
 
-ICC profile (I): 1 bit
+EXIF metadata (E): 1 bit
 
-: Set if the file contains an ICC profile.
+: Set if the file contains EXIF metadata.
 
-Reserved (Rsv): 2 bits
+XMP metadata (X): 1 bit
+
+: Set if the file contains XMP metadata.
+
+Reserved (R): 2 bits
 
 : SHOULD be `0`.
 
@@ -346,12 +346,18 @@ Future specifications MAY add more fields.
     |Rsv| P | F | C |     Alpha Bitstream...                        |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-Compression method (C): 2 bits
+Reserved (Rsv): 2 bits
 
-: The compression method used:
+: SHOULD be `0`.
 
-  * `0`: No compression.
-  * `1`: Compressed using the WebP lossless format.
+Pre-processing (P): 2 bits
+
+: These INFORMATIVE bits are used to signal the pre-processing that has
+been performed during compression. The decoder can use this information to
+e.g. dither the values or smooth the gradients prior to display.
+
+  * `0`: no pre-processing
+  * `1`: level reduction
 
 Filtering method (F): 2 bits
 
@@ -398,20 +404,14 @@ There are special cases for left-most and top-most pixel positions:
     location (x, 0) are predicted using the location (x-1, 0) on the left.
 
 
-Pre-processing (P): 2 bits
-
-: These INFORMATIVE bits are used to signal the pre-processing that has
-been performed during compression. The decoder can use this information to
-e.g. dither the values or smooth the gradients prior to display.
-
-  * `0`: no pre-processing
-  * `1`: level reduction
-
 Decoders are not required to use this information in any specified way.
 
-Reserved (Rsv): 2 bits
+Compression method (C): 2 bits
 
-: SHOULD be `0`.
+: The compression method used:
+
+  * `0`: No compression.
+  * `1`: Compressed using the WebP lossless format.
 
 Alpha bitstream: _Chunk Size_ - `1` bytes
 
