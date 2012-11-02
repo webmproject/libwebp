@@ -13,7 +13,7 @@ end of this file.
 WebP Container Specification
 ============================
 
-_Working Draft, v0.5, 20120713_
+_Working Draft, v0.6, 20121031_
 
 
 * TOC placeholder
@@ -39,6 +39,9 @@ for:
     WebP Lossless Format.
 
   * **Transparency.** An image may have transparency, i.e., an alpha channel.
+
+  * **Color Profile.** An image may have an embedded ICC profile as described
+    by the [International Color Consortium][iccspec].
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
@@ -249,6 +252,8 @@ An extended format file consists of:
 
   * A 'VP8X' chunk with information about features used in the file.
 
+  * An optional 'ICCP' chunk with color profile.
+
   * An optional 'ALPH' chunk with transparency information.
 
   * The image bitstream contained in either a 'VP8 ' or 'VP8L' chunk.
@@ -272,7 +277,7 @@ Extended WebP file header:
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('VP8X')                      |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    | Rsv |L|  Rsv  |                   Reserved                    |
+    | R |I|L|  Rsv  |                   Reserved                    |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |          Canvas Width Minus One               |             ...
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -288,7 +293,11 @@ Alpha (L): 1 bit
 : Set if the file contains some (or all) images with transparency information
 ("alpha").
 
-Reserved (Rsv): 3 bits
+ICC profile (I): 1 bit
+
+: Set if the file contains an ICC profile.
+
+Reserved (R): 2 bits
 
 : SHOULD be `0`.
 
@@ -435,6 +444,28 @@ The formats of VP8 and VP8L chunks are as described in sections
 [Simple file format (lossy)](#simple-file-format-lossy)
 and [Simple file format (lossless)](#simple-file-format-lossless) respectively.
 
+#### Color profile
+
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                      ChunkHeader('ICCP')                      |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                       Color Profile                           |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+Color Profile: _Chunk Size_ bytes
+
+: ICC profile.
+
+This chunk MUST appear before data for all the frames.
+
+There SHOULD be at most one such chunk. If there are more such chunks, readers
+MAY ignore all except the first one.
+See the [ICC Specification][iccspec] for details.
+
+If this chunk is not present, sRGB SHOULD be assumed.
+
 #### Unknown Chunks
 
 A file MAY contain other unknown chunks. Readers SHOULD ignore these chunks.
@@ -461,7 +492,16 @@ RIFF/WEBP
 +- VP8L (lossless bitstream)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+A lossless image with ICC profile may look as follows:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+RIFF/WEBP
++- VP8X (descriptions of features used)
++- ICCP (color profile)
++- VP8L (lossless bitstream)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 [vp8spec]:  http://tools.ietf.org/html/rfc6386
 [webpllspec]: https://gerrit.chromium.org/gerrit/gitweb?p=webm/libwebp.git;a=blob;f=doc/webp-lossless-bitstream-spec.txt;hb=master
-[metadata]: http://www.metadataworkinggroup.org/pdf/mwg_guidance.pdf
+[iccspec]: http://www.color.org/icc_specs2.xalter
 [rfc 2119]: http://tools.ietf.org/html/rfc2119
