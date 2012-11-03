@@ -104,6 +104,24 @@
       "revId": "a2979c4ee26dfb8bb30a37146584c100cf27e6fd",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQ3//5gg\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 3
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-11-03T02:30:58Z",
+      "side": 1,
+      "message": "Well that\u0027s what the first sentence says and guidance is given elsewhere about which to prefer.",
+      "parentUuid": "AAAAQ3//58M\u003d",
+      "revId": "a2979c4ee26dfb8bb30a37146584c100cf27e6fd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
