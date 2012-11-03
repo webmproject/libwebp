@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAQ3//5c4\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-11-03T15:48:42Z",
+      "side": 1,
+      "message": "why this change?",
+      "revId": "3d75bb0327816094117d11e82118cfa294070db2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
