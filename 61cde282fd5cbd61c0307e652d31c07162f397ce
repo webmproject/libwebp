@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAQ3//5A8\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-11-05T20:22:44Z",
+      "side": 1,
+      "message": "this and the height should probably be given as code (``) to match the Frame [XY] lines.",
+      "revId": "61cde282fd5cbd61c0307e652d31c07162f397ce",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
