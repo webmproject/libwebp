@@ -341,6 +341,94 @@ static void FTransform(const uint8_t* src, const uint8_t* ref,
   );
 }
 
+static void FTransformWHT(const int16_t* in, int16_t* out) {
+  const int kStep = 32;
+  __asm__ volatile (
+    // d0 = in[0 * 16] , d1 = in[1 * 16]
+    // d2 = in[2 * 16] , d3 = in[3 * 16]
+    "vld1.16         d0[0], [%[in]], %[kStep]   \n"
+    "vld1.16         d1[0], [%[in]], %[kStep]   \n"
+    "vld1.16         d2[0], [%[in]], %[kStep]   \n"
+    "vld1.16         d3[0], [%[in]], %[kStep]   \n"
+    "vld1.16         d0[1], [%[in]], %[kStep]   \n"
+    "vld1.16         d1[1], [%[in]], %[kStep]   \n"
+    "vld1.16         d2[1], [%[in]], %[kStep]   \n"
+    "vld1.16         d3[1], [%[in]], %[kStep]   \n"
+    "vld1.16         d0[2], [%[in]], %[kStep]   \n"
+    "vld1.16         d1[2], [%[in]], %[kStep]   \n"
+    "vld1.16         d2[2], [%[in]], %[kStep]   \n"
+    "vld1.16         d3[2], [%[in]], %[kStep]   \n"
+    "vld1.16         d0[3], [%[in]], %[kStep]   \n"
+    "vld1.16         d1[3], [%[in]], %[kStep]   \n"
+    "vld1.16         d2[3], [%[in]], %[kStep]   \n"
+    "vld1.16         d3[3], [%[in]], %[kStep]   \n"
+
+    "vaddl.s16       q2, d0, d2                 \n"
+    "vshl.s32        q2, q2, #2                 \n" // a0=(in[0*16]+in[2*16])<<2
+    "vaddl.s16       q3, d1, d3                 \n"
+    "vshl.s32        q3, q3, #2                 \n" // a1=(in[1*16]+in[3*16])<<2
+    "vsubl.s16       q4, d1, d3                 \n"
+    "vshl.s32        q4, q4, #2                 \n" // a2=(in[1*16]-in[3*16])<<2
+    "vsubl.s16       q5, d0, d2                 \n"
+    "vshl.s32        q5, q5, #2                 \n" // a3=(in[0*16]-in[2*16])<<2
+
+    "vceq.s32        q10, q2, #0                \n"
+    "vmvn.s32        q10, q10                   \n" // (a0 != 0)
+    "vqadd.s32       q6, q2, q3                 \n" // (a0 + a1)
+    "vqsub.s32       q6, q6, q10                \n" // (a0 + a1) + (a0 != 0)
+    "vqadd.s32       q7, q5, q4                 \n" // a3 + a2
+    "vqsub.s32       q8, q5, q4                 \n" // a3 - a2
+    "vqsub.s32       q9, q2, q3                 \n" // a0 - a1
+
+    // Transpose
+    // q6 = tmp[0, 1,  2,  3] ; q7 = tmp[ 4,  5,  6,  7]
+    // q8 = tmp[8, 9, 10, 11] ; q9 = tmp[12, 13, 14, 15]
+    "vswp            d13, d16                   \n" // vtrn.64 q0, q2
+    "vswp            d15, d18                   \n" // vtrn.64 q1, q3
+    "vtrn.32         q6, q7                     \n"
+    "vtrn.32         q8, q9                     \n"
+
+    "vqadd.s32       q0, q6, q8                 \n" // a0 = tmp[0] + tmp[8]
+    "vqadd.s32       q1, q7, q9                 \n" // a1 = tmp[4] + tmp[12]
+    "vqsub.s32       q2, q7, q9                 \n" // a2 = tmp[4] - tmp[12]
+    "vqsub.s32       q3, q6, q8                 \n" // a3 = tmp[0] - tmp[8]
+
+    "vqadd.s32       q4, q0, q1                 \n" // b0 = a0 + a1
+    "vqadd.s32       q5, q3, q2                 \n" // b1 = a3 + a2
+    "vqsub.s32       q6, q3, q2                 \n" // b2 = a3 - a2
+    "vqsub.s32       q7, q0, q1                 \n" // b3 = a0 - a1
+
+    "vmov.32         q0, #3                     \n" // q0 = 3
+
+    "vcgt.s32        q1, q4, #0                 \n" // (b0>0)
+    "vqsub.s32       q2, q4, q1                 \n" // (b0+(b0>0))
+    "vqadd.s32       q3, q2, q0                 \n" // (b0+(b0>0)+3)
+    "vshrn.s32       d18, q3, #3                \n" // (b0+(b0>0)+3) >> 3
+
+    "vcgt.s32        q1, q5, #0                 \n" // (b1>0)
+    "vqsub.s32       q2, q5, q1                 \n" // (b1+(b1>0))
+    "vqadd.s32       q3, q2, q0                 \n" // (b1+(b1>0)+3)
+    "vshrn.s32       d19, q3, #3                \n" // (b1+(b1>0)+3) >> 3
+
+    "vcgt.s32        q1, q6, #0                 \n" // (b2>0)
+    "vqsub.s32       q2, q6, q1                 \n" // (b2+(b2>0))
+    "vqadd.s32       q3, q2, q0                 \n" // (b2+(b2>0)+3)
+    "vshrn.s32       d20, q3, #3                \n" // (b2+(b2>0)+3) >> 3
+
+    "vcgt.s32        q1, q7, #0                 \n" // (b3>0)
+    "vqsub.s32       q2, q7, q1                 \n" // (b3+(b3>0))
+    "vqadd.s32       q3, q2, q0                 \n" // (b3+(b3>0)+3)
+    "vshrn.s32       d21, q3, #3                \n" // (b3+(b3>0)+3) >> 3
+
+    "vst1.16         {q9, q10}, [%[out]]        \n"
+
+    : [in] "+r"(in)
+    : [kStep] "r"(kStep), [out] "r"(out)
+    : "memory", "q0", "q1", "q2", "q3", "q4", "q5",
+      "q6", "q7", "q8", "q9", "q10"       // clobbered
+  ) ;
+}
+
 #endif   // WEBP_USE_NEON
 
 //------------------------------------------------------------------------------
@@ -354,6 +442,7 @@ void VP8EncDspInitNEON(void) {
   VP8FTransform = FTransform;
 
   VP8ITransformWHT = ITransformWHT;
+  VP8FTransformWHT = FTransformWHT;
 #endif   // WEBP_USE_NEON
 }
 
