@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAQ3//4pw\u003d",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-11-06T02:32:44Z",
+      "side": 1,
+      "message": "this should be indented 2 spaces",
+      "revId": "b286a4ca4d5e32fa31d945df6fb8a174077c25af",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQ3//4ps\u003d",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-11-06T02:32:44Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "b286a4ca4d5e32fa31d945df6fb8a174077c25af",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQ3//4pA\u003d",
+        "filename": "man/webpmux.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-11-06T02:32:44Z",
+      "side": 1,
+      "message": "this will become the section header in the same way as INPUT/OUPUT so it can be on the same line",
+      "revId": "b286a4ca4d5e32fa31d945df6fb8a174077c25af",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQ3//4o8\u003d",
+        "filename": "man/webpmux.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-11-06T02:32:44Z",
+      "side": 1,
+      "message": "weird that the source file has more examples than the man page...",
+      "revId": "b286a4ca4d5e32fa31d945df6fb8a174077c25af",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQ3//4ow\u003d",
+        "filename": "src/webp/format_constants.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-11-06T02:32:44Z",
+      "side": 1,
+      "message": "...be the same as...in the \u0027WebPFeatureFlags\u0027...",
+      "revId": "b286a4ca4d5e32fa31d945df6fb8a174077c25af",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
