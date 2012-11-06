@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAQ3//4BA\u003d",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-11-06T22:43:24Z",
+      "side": 1,
+      "message": "\u0027ICC profile\u0027 is most frequently used on color.org; dropping the P from ICC would at least remove the redundant \u0027profile\u0027",
+      "revId": "3bf315d91ed27ace8020569c300b3b5779a00768",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQ3//3+k\u003d",
+        "filename": "src/webp/format_constants.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-11-06T22:43:24Z",
+      "side": 1,
+      "message": "in the \u0027WebPFeatureFlags\u0027",
+      "revId": "3bf315d91ed27ace8020569c300b3b5779a00768",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
