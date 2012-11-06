@@ -25,17 +25,21 @@ ifeq ($(strip $(shell uname)), Darwin)
 else
   GL_LIBS = -lglut -lGL
 endif
+GIF_LIBS = -lgif
+
 
 # To install libraries on Mac OS X:
 # 1. Install MacPorts (http://www.macports.org/install.php)
 # 2. Run "sudo port install jpeg"
 # 3. Run "sudo port install libpng"
 # 4. Run "sudo port install tiff"
+# 5. Run "sudo port install giflib"
 
 # To install libraries on Linux:
 # 1. Run "sudo apt-get install libjpeg62-dev"
 # 2. Run "sudo apt-get install libpng12-dev"
 # 3. Run "sudo apt-get install libtiff4-dev"
+# 4. Run "sudo apt-get install libgif-dev"
 
 # Uncomment for build for 32bit platform
 # Alternatively, you can just use the command
@@ -169,7 +173,8 @@ OUT_EXAMPLES = examples/cwebp examples/dwebp
 
 OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES)
 ifeq ($(MAKECMDGOALS),clean)
-  OUTPUT += examples/vwebp examples/webpmux src/mux/libwebpmux.a
+  OUTPUT += examples/gif2webp examples/vwebp examples/webpmux
+  OUTPUT += src/mux/libwebpmux.a
 endif
 
 all: ex
@@ -188,16 +193,19 @@ ex: $(OUT_EXAMPLES)
 
 examples/cwebp: examples/cwebp.o
 examples/dwebp: examples/dwebp.o
+examples/gif2webp: examples/gif2webp.o
 examples/vwebp: examples/vwebp.o
 examples/webpmux: examples/webpmux.o
 
 examples/cwebp: src/libwebp.a
 examples/dwebp: examples/libexample_util.a src/libwebp.a
+examples/gif2webp: examples/libexample_util.a src/mux/libwebpmux.a src/libwebp.a
+examples/gif2webp: EXTRA_LIBS += $(GIF_LIBS)
 examples/vwebp: examples/libexample_util.a src/mux/libwebpmux.a src/libwebp.a
 examples/vwebp: EXTRA_LIBS += $(GL_LIBS)
 examples/webpmux: examples/libexample_util.a src/mux/libwebpmux.a src/libwebp.a
 
-$(OUT_EXAMPLES) examples/vwebp examples/webpmux:
+$(OUT_EXAMPLES) examples/gif2webp examples/vwebp examples/webpmux:
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 dist: DESTDIR := dist
