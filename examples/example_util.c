@@ -54,6 +54,24 @@ int ExUtilReadFile(const char* const file_name,
   return 1;
 }
 
+int ExUtilWriteFile(const char* const file_name,
+                    const uint8_t* data, size_t data_size) {
+  int ok;
+  FILE* out;
+
+  if (file_name == NULL || data == NULL) {
+    return 0;
+  }
+  out = fopen(file_name, "wb");
+  if (out == NULL) {
+    fprintf(stderr, "Error! Cannot open output file '%s'\n", file_name);
+    return 0;
+  }
+  ok = (fwrite(data, data_size, 1, out) == 1);
+  fclose(out);
+  return ok;
+}
+
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
 #endif
