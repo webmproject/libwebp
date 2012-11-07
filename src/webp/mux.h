@@ -482,7 +482,7 @@ WEBP_EXTERN(int) WebPDemuxPrevFrame(WebPIterator* iter);
 
 // Sets 'iter->fragment' to reflect fragment number 'fragment_num'.
 // Returns true if fragment 'fragment_num' is present, false otherwise.
-WEBP_EXTERN(int) WebPDemuxSelectTile(WebPIterator* iter, int tile_number);
+WEBP_EXTERN(int) WebPDemuxSelectFragment(WebPIterator* iter, int fragment_num);
 
 // Releases any memory associated with 'iter'.
 // Must be called before destroying the associated WebPDemuxer with
