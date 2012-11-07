@@ -344,6 +344,14 @@ static void MBAnalyze(VP8EncIterator* const it,
   it->mb_->alpha_ = best_alpha;   // for later remapping.
 }
 
+static void DefaultMBInfo(VP8MBInfo* const mb) {
+  mb->type_ = 1;     // I16x16
+  mb->uv_mode_ = 0;
+  mb->skip_ = 0;     // not skipped
+  mb->segment_ = 0;  // default segment
+  mb->alpha_ = 0;
+}
+
 //------------------------------------------------------------------------------
 // Main analysis loop:
 // Collect all susceptibilities for each macroblock and record their
@@ -356,20 +364,34 @@ static void MBAnalyze(VP8EncIterator* const it,
 
 int VP8EncAnalyze(VP8Encoder* const enc) {
   int ok = 1;
-  int alphas[MAX_ALPHA + 1] = { 0 };
-  VP8EncIterator it;
+  const int do_segments =
+      (enc->segment_hdr_.num_segments_ > 1) ||
+      (enc->method_ <= 2);  // for methods 0,1,2, we need preds_[] to be filled.
+  if (do_segments) {
+    int alphas[MAX_ALPHA + 1] = { 0 };
+    VP8EncIterator it;
 
-  VP8IteratorInit(enc, &it);
-  enc->uv_alpha_ = 0;
-  do {
-    VP8IteratorImport(&it);
-    MBAnalyze(&it, alphas, &enc->uv_alpha_);
-    ok = VP8IteratorProgress(&it, 20);
-    // Let's pretend we have perfect lossless reconstruction.
-  } while (ok && VP8IteratorNext(&it, it.yuv_in_));
-  enc->uv_alpha_ /= enc->mb_w_ * enc->mb_h_;
-  if (ok) AssignSegments(enc, alphas);
-
+    VP8IteratorInit(enc, &it);
+    enc->uv_alpha_ = 0;
+    do {
+      VP8IteratorImport(&it);
+      MBAnalyze(&it, alphas, &enc->uv_alpha_);
+      ok = VP8IteratorProgress(&it, 20);
+      // Let's pretend we have perfect lossless reconstruction.
+    } while (ok && VP8IteratorNext(&it, it.yuv_in_));
+    enc->uv_alpha_ /= enc->mb_w_ * enc->mb_h_;
+    if (ok) AssignSegments(enc, alphas);
+  } else {   // Use only one default segment.
+    int n;
+    for (n = 0; n < enc->mb_w_ * enc->mb_h_; ++n) {
+      DefaultMBInfo(&enc->mb_info_[n]);
+    }
+    // Default susceptibilities.
+    enc->dqm_[0].alpha_ = 0;
+    enc->dqm_[0].beta_ = 0;
+    enc->uv_alpha_ = 0;   // we can't compute this one.
+    WebPReportProgress(enc->pic_, enc->percent_ + 20, &enc->percent_);
+  }
   return ok;
 }
 
