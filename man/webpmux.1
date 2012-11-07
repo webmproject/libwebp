@@ -48,10 +48,13 @@ and extract/strip relevant data from the container file.
 .SS GET_OPTIONS (\-get):
 .TP
 .B icc
-Get ICC Color profile.
+Get ICC profile.
 .TP
-.B meta
-Get XMP/EXIF metadata.
+.B exif
+Get EXIF metadata.
+.TP
+.B xmp
+Get XMP metadata.
 .TP
 .B tile n
 Get nth tile.
@@ -62,33 +65,41 @@ Get nth frame.
 .SS SET_OPTIONS (\-set)
 .TP
 .B icc file.icc
-Set ICC Color profile.
+Set ICC profile.
 .P
-Where: 'file.icc' contains the color profile to be set.
+Where: 'file.icc' contains the ICC profile to be set.
 .TP
-.B meta file.meta
-Set XMP/EXIF metadata.
+.B exif file.exif
+Set EXIF metadata.
 .P
-Where: 'file.meta' contains the metadata to be set.
+Where: 'file.exif' contains the EXIF metadata to be set.
+.TP
+.B xmp file.xmp
+Set XMP metadata.
+.P
+Where: 'file.xmp' contains the XMP metadata to be set.
 
 .SS STRIP_OPTIONS (\-strip)
 .TP
 .B icc
-Strip ICC Color profile.
+Strip ICC profile.
 .TP
-.B meta
-Strip XMP/EXIF metadata.
+.B exif
+Strip EXIF metadata.
+.TP
+.B xmp
+Strip XMP metadata.
 
 .SS TILE_OPTIONS (\-tile)
 .TP
 .B file_i +xi+yi
-Where: 'file_i' is the i'th tile (webp format) and 'xi','yi' specify the image
+Where: 'file_i' is the i'th tile (WebP format) and 'xi','yi' specify the image
 offset for this tile.
 
 .SS FRAME_OPTIONS (\-frame)
 .TP
 .B file_i +xi+yi+di
-Where: 'file_i' is the i'th frame (webp format), 'xi','yi' specify the image
+Where: 'file_i' is the i'th frame (WebP format), 'xi','yi' specify the image
 offset for this frame and 'di' is the pause duration before next frame.
 .TP
 .B \-loop n
@@ -102,6 +113,10 @@ Input file in WebP format.
 .TP
 Output file in WebP format.
 
+.SS Note:
+.TP
+The nature of EXIF, XMP and ICC data is not checked and is assumed to be valid.
+
 .SH BUGS
 Please report all bugs to our issue tracker:
 http://code.google.com/p/webp/issues
@@ -114,14 +129,29 @@ webpmux \-set icc image_profile.icc in.webp \-o icc_container.webp
 .br
 webpmux \-get icc icc_container.webp \-o image_profile.icc
 .br
-webpmux \-set meta image_metadata.meta in.webp \-o meta_container.webp
+webpmux \-strip icc icc_container.webp \-o without_icc.webp
 .br
-webpmux \-get meta meta_container.webp \-o image_metadata.meta
+webpmux \-set xmp image_metadata.xmp in.webp \-o xmp_container.webp
+.br
+webpmux \-get xmp xmp_container.webp \-o image_metadata.xmp
+.br
+webpmux \-strip xmp xmp_container.webp \-o without_xmp.webp
+.br
+webpmux \-set exif image_metadata.exif in.webp \-o exif_container.webp
+.br
+webpmux \-get exif exif_container.webp \-o image_metadata.exif
+.br
+webpmux \-strip exif exif_container.webp \-o without_exif.webp
 .br
 webpmux \-frame anim_1.webp +0+0+0 \-frame anim_2.webp +50+50+0 \-loop 10
 \-o anim_container.webp
 .br
 webpmux \-get frame 2 anim_container.webp \-o frame_2.webp
+.br
+webpmux \-tile tile_1.webp +0+0 \-tile tile_2.webp +960+0 \-tile tile_3.webp
++0+576 \-tile tile_4.webp +960+576 \-o tile_container.webp
+.br
+webpmux \-get tile 2 tile_container.webp \-o tile_2.webp
 
 .SH AUTHORS
 \fBwebpmux\fP is written by the WebP team.

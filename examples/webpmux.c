@@ -31,17 +31,20 @@
             -o out_animation_container.webp
 
     webpmux -set icc image_profile.icc in.webp -o out_icc_container.webp
-    webpmux -set meta image_metadata.meta in.webp -o out_meta_container.webp
+    webpmux -set exif image_metadata.exif in.webp -o out_exif_container.webp
+    webpmux -set xmp image_metadata.xmp in.webp -o out_xmp_container.webp
 
   Extract relevant data from WebP container file:
     webpmux -get tile n in.webp -o out_tile.webp
     webpmux -get frame n in.webp -o out_frame.webp
     webpmux -get icc in.webp -o image_profile.icc
-    webpmux -get meta in.webp -o image_metadata.meta
+    webpmux -get exif in.webp -o image_metadata.exif
+    webpmux -get xmp in.webp -o image_metadata.xmp
 
   Strip data from WebP Container file:
     webpmux -strip icc in.webp -o out.webp
-    webpmux -strip meta in.webp -o out.webp
+    webpmux -strip exif in.webp -o out.webp
+    webpmux -strip xmp in.webp -o out.webp
 
   Misc:
     webpmux -info in.webp
@@ -81,11 +84,22 @@ typedef struct {
 
 typedef enum {
   NIL_FEATURE = 0,
-  FEATURE_META,
+  FEATURE_EXIF,
+  FEATURE_XMP,
   FEATURE_ICCP,
   FEATURE_FRM,
-  FEATURE_TILE
+  FEATURE_TILE,
+  LAST_FEATURE
 } FeatureType;
+
+static const char* const kFourccList[LAST_FEATURE] = {
+  NULL, "EXIF", "XMP ", "ICCP", "ANMF", "FRGM"
+};
+
+static const char* const kDescriptions[LAST_FEATURE] = {
+  NULL, "EXIF metadata", "XMP metadata", "ICC profile",
+  "Animation frame", "Tile fragment"
+};
 
 typedef struct {
   FeatureType type_;
@@ -185,7 +199,8 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
   if (flag & ANIMATION_FLAG) printf(" animation");
   if (flag & TILE_FLAG)      printf(" tiling");
   if (flag & ICCP_FLAG)      printf(" icc profile");
-  if (flag & META_FLAG)      printf(" metadata");
+  if (flag & EXIF_FLAG)      printf(" EXIF metadata");
+  if (flag & XMP_FLAG)       printf(" XMP metadata");
   if (flag & ALPHA_FLAG)     printf(" transparency");
   printf("\n");
 
@@ -226,15 +241,22 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
   if (flag & ICCP_FLAG) {
     WebPData icc_profile;
     err = WebPMuxGetChunk(mux, "ICCP", &icc_profile);
-    RETURN_IF_ERROR("Failed to retrieve the color profile\n");
-    printf("Size of the color profile data: %zu\n", icc_profile.size);
+    RETURN_IF_ERROR("Failed to retrieve the ICC profile\n");
+    printf("Size of the ICC profile data: %zu\n", icc_profile.size);
   }
 
-  if (flag & META_FLAG) {
-    WebPData metadata;
-    err = WebPMuxGetChunk(mux, "META", &metadata);
-    RETURN_IF_ERROR("Failed to retrieve the metadata\n");
-    printf("Size of the metadata: %zu\n", metadata.size);
+  if (flag & EXIF_FLAG) {
+    WebPData exif;
+    err = WebPMuxGetChunk(mux, "EXIF", &exif);
+    RETURN_IF_ERROR("Failed to retrieve the EXIF metadata\n");
+    printf("Size of the EXIF metadata: %zu\n", exif.size);
+  }
+
+  if (flag & XMP_FLAG) {
+    WebPData xmp;
+    err = WebPMuxGetChunk(mux, "XMP ", &xmp);
+    RETURN_IF_ERROR("Failed to retrieve the XMP metadata\n");
+    printf("Size of the XMP metadata: %zu\n", xmp.size);
   }
 
   if ((flag & ALPHA_FLAG) && !(flag & (ANIMATION_FLAG | TILE_FLAG))) {
@@ -260,41 +282,48 @@ static void PrintHelp(void) {
   printf("\n");
   printf("GET_OPTIONS:\n");
   printf(" Extract relevant data.\n");
-  printf("   icc       Get ICCP Color profile.\n");
-  printf("   meta      Get XMP/EXIF metadata.\n");
+  printf("   icc       Get ICC profile.\n");
+  printf("   exif      Get EXIF metadata.\n");
+  printf("   xmp       Get XMP metadata.\n");
   printf("   tile n    Get nth tile.\n");
   printf("   frame n   Get nth frame.\n");
 
   printf("\n");
   printf("SET_OPTIONS:\n");
   printf(" Set color profile/metadata.\n");
-  printf("   icc  file.icc     Set ICC Color profile.\n");
-  printf("   meta file.meta    Set XMP/EXIF metadata.\n");
-  printf("   where:    'file.icc' contains the color profile to be set,\n");
-  printf("             'file.meta' contains the metadata to be set\n");
+  printf("   icc  file.icc     Set ICC profile.\n");
+  printf("   exif file.exif    Set EXIF metadata.\n");
+  printf("   xmp  file.xmp     Set XMP metadata.\n");
+  printf("   where:    'file.icc' contains the ICC profile to be set,\n");
+  printf("             'file.exif' contains the EXIF metadata to be set\n");
+  printf("             'file.xmp' contains the XMP metadata to be set\n");
 
   printf("\n");
   printf("STRIP_OPTIONS:\n");
   printf(" Strip color profile/metadata.\n");
-  printf("   icc       Strip ICCP color profile.\n");
-  printf("   meta      Strip XMP/EXIF metadata.\n");
+  printf("   icc       Strip ICC profile.\n");
+  printf("   exif      Strip EXIF metadata.\n");
+  printf("   xmp       Strip XMP metadata.\n");
 
   printf("\n");
   printf("TILE_OPTIONS(i):\n");
   printf(" Create tiled image.\n");
   printf("   file_i +xi+yi\n");
-  printf("   where:    'file_i' is the i'th tile (webp format),\n");
+  printf("   where:    'file_i' is the i'th tile (WebP format),\n");
   printf("             'xi','yi' specify the image offset for this tile.\n");
 
   printf("\n");
   printf("FRAME_OPTIONS(i):\n");
   printf(" Create animation.\n");
   printf("   file_i +xi+yi+di\n");
-  printf("   where:    'file_i' is the i'th animation frame (webp format),\n");
+  printf("   where:    'file_i' is the i'th animation frame (WebP format),\n");
   printf("             'xi','yi' specify the image offset for this frame.\n");
   printf("             'di' is the pause duration before next frame.\n");
 
-  printf("\nINPUT & OUTPUT are in webp format.\n");
+  printf("\nINPUT & OUTPUT are in WebP format.\n");
+
+  printf("\nNote: The nature of EXIF, XMP and ICC data is not checked and is "
+         "assumed to be valid.\n");
 }
 
 static int ReadFileToWebPData(const char* const filename,
@@ -421,7 +450,7 @@ static int ValidateCommandLine(int argc, const char* argv[],
 
   assert(ok == 1);
   if (num_frame_args == 0 && num_tile_args == 0) {
-    // Single argument ('set' action for META or ICCP, OR a 'get' action).
+    // Single argument ('set' action for ICCP/EXIF/XMP, OR a 'get' action).
     *num_feature_args = 1;
   } else {
     // Multiple arguments ('set' action for animation or tiling).
@@ -561,10 +590,11 @@ static int ParseCommandLine(int argc, const char* argv[],
         ERROR_GOTO1("ERROR: Action must be specified before other arguments.\n",
                     ErrParse);
       }
-      if (!strcmp(argv[i], "icc") || !strcmp(argv[i], "meta")) {
+      if (!strcmp(argv[i], "icc") || !strcmp(argv[i], "exif") ||
+          !strcmp(argv[i], "xmp")) {
         if (FEATURETYPE_IS_NIL) {
           feature->type_ = (!strcmp(argv[i], "icc")) ? FEATURE_ICCP :
-              FEATURE_META;
+              (!strcmp(argv[i], "exif")) ? FEATURE_EXIF : FEATURE_XMP;
         } else {
           ERROR_GOTO1("ERROR: Multiple features specified.\n", ErrParse);
         }
@@ -723,7 +753,7 @@ static int GetFrameTile(const WebPMux* mux,
 // Read and process config.
 static int Process(const WebPMuxConfig* config) {
   WebPMux* mux = NULL;
-  WebPData metadata, color_profile;
+  WebPData chunk;
   WebPMuxError err = WEBP_MUX_OK;
   int index = 0;
   int ok = 1;
@@ -735,28 +765,20 @@ static int Process(const WebPMuxConfig* config) {
       if (!ok) goto Err2;
       switch (feature->type_) {
         case FEATURE_FRM:
-          ok = GetFrameTile(mux, config, 1);
-          break;
-
         case FEATURE_TILE:
-          ok = GetFrameTile(mux, config, 0);
+          ok = GetFrameTile(mux, config,
+                            (feature->type_ == FEATURE_FRM) ? 1 : 0);
           break;
 
         case FEATURE_ICCP:
-          err = WebPMuxGetChunk(mux, "ICCP", &color_profile);
+        case FEATURE_EXIF:
+        case FEATURE_XMP:
+          err = WebPMuxGetChunk(mux, kFourccList[feature->type_], &chunk);
           if (err != WEBP_MUX_OK) {
-            ERROR_GOTO2("ERROR (%s): Could not get color profile.\n",
-                        ErrorString(err), Err2);
+            ERROR_GOTO3("ERROR (%s): Could not get the %s.\n",
+                        ErrorString(err), kDescriptions[feature->type_], Err2);
           }
-          ok = WriteData(config->output_, &color_profile);
-          break;
-        case FEATURE_META:
-          err = WebPMuxGetChunk(mux, "META", &metadata);
-          if (err != WEBP_MUX_OK) {
-            ERROR_GOTO2("ERROR (%s): Could not get the metadata.\n",
-                        ErrorString(err), Err2);
-          }
-          ok = WriteData(config->output_, &metadata);
+          ok = WriteData(config->output_, &chunk);
           break;
 
         default:
@@ -834,28 +856,17 @@ static int Process(const WebPMuxConfig* config) {
           break;
 
         case FEATURE_ICCP:
+        case FEATURE_EXIF:
+        case FEATURE_XMP:
           ok = CreateMux(config->input_, &mux);
           if (!ok) goto Err2;
-          ok = ReadFileToWebPData(feature->args_[0].filename_, &color_profile);
+          ok = ReadFileToWebPData(feature->args_[0].filename_, &chunk);
           if (!ok) goto Err2;
-          err = WebPMuxSetChunk(mux, "ICCP", &color_profile, 1);
-          free((void*)color_profile.bytes);
+          err = WebPMuxSetChunk(mux, kFourccList[feature->type_], &chunk, 1);
+          free((void*)chunk.bytes);
           if (err != WEBP_MUX_OK) {
-            ERROR_GOTO2("ERROR (%s): Could not set color profile.\n",
-                        ErrorString(err), Err2);
-          }
-          break;
-
-        case FEATURE_META:
-          ok = CreateMux(config->input_, &mux);
-          if (!ok) goto Err2;
-          ok = ReadFileToWebPData(feature->args_[0].filename_, &metadata);
-          if (!ok) goto Err2;
-          err = WebPMuxSetChunk(mux, "META", &metadata, 1);
-          free((void*)metadata.bytes);
-          if (err != WEBP_MUX_OK) {
-            ERROR_GOTO2("ERROR (%s): Could not set the metadata.\n",
-                        ErrorString(err), Err2);
+            ERROR_GOTO3("ERROR (%s): Could not set the %s.\n",
+                        ErrorString(err), kDescriptions[feature->type_], Err2);
           }
           break;
 
@@ -869,22 +880,14 @@ static int Process(const WebPMuxConfig* config) {
     case ACTION_STRIP:
       ok = CreateMux(config->input_, &mux);
       if (!ok) goto Err2;
-      switch (feature->type_) {
-        case FEATURE_ICCP:
-          err = WebPMuxDeleteChunk(mux, "ICCP");
-          if (err != WEBP_MUX_OK) {
-            ERROR_GOTO2("ERROR (%s): Could not delete color profile.\n",
-                        ErrorString(err), Err2);
-          }
-          break;
-        case FEATURE_META:
-          err = WebPMuxDeleteChunk(mux, "META");
-          if (err != WEBP_MUX_OK) {
-            ERROR_GOTO2("ERROR (%s): Could not delete the metadata.\n",
-                        ErrorString(err), Err2);
-          }
-          break;
-        default:
+      if (feature->type_ == FEATURE_ICCP || feature->type_ == FEATURE_EXIF ||
+          feature->type_ == FEATURE_XMP) {
+        err = WebPMuxDeleteChunk(mux, kFourccList[feature->type_]);
+        if (err != WEBP_MUX_OK) {
+          ERROR_GOTO3("ERROR (%s): Could not strip the %s.\n",
+                      ErrorString(err), kDescriptions[feature->type_], Err2);
+        }
+      } else {
           ERROR_GOTO1("ERROR: Invalid feature for action 'strip'.\n", Err2);
           break;
       }

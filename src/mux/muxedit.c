@@ -48,7 +48,8 @@ static void MuxRelease(WebPMux* const mux) {
   DeleteAllChunks(&mux->vp8x_);
   DeleteAllChunks(&mux->iccp_);
   DeleteAllChunks(&mux->loop_);
-  DeleteAllChunks(&mux->meta_);
+  DeleteAllChunks(&mux->exif_);
+  DeleteAllChunks(&mux->xmp_);
   DeleteAllChunks(&mux->unknown_);
 }
 
@@ -82,7 +83,8 @@ static WebPMuxError MuxSet(WebPMux* const mux, CHUNK_INDEX idx, uint32_t nth,
   SWITCH_ID_LIST(IDX_VP8X, &mux->vp8x_);
   SWITCH_ID_LIST(IDX_ICCP, &mux->iccp_);
   SWITCH_ID_LIST(IDX_LOOP, &mux->loop_);
-  SWITCH_ID_LIST(IDX_META, &mux->meta_);
+  SWITCH_ID_LIST(IDX_EXIF, &mux->exif_);
+  SWITCH_ID_LIST(IDX_XMP,  &mux->xmp_);
   if (idx == IDX_UNKNOWN && data->size > TAG_SIZE) {
     // For raw-data unknown chunk, the first four bytes should be the tag to be
     // used for the chunk.
@@ -529,11 +531,12 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   if (mux->iccp_ != NULL && mux->iccp_->data_.bytes != NULL) {
     flags |= ICCP_FLAG;
   }
-
-  if (mux->meta_ != NULL && mux->meta_->data_.bytes != NULL) {
-    flags |= META_FLAG;
+  if (mux->exif_ != NULL && mux->exif_->data_.bytes != NULL) {
+    flags |= EXIF_FLAG;
   }
-
+  if (mux->xmp_ != NULL && mux->xmp_->data_.bytes != NULL) {
+    flags |= XMP_FLAG;
+  }
   if (images->header_ != NULL) {
     if (images->header_->tag_ == kChunks[IDX_FRGM].tag) {
       // This is a tiled image.
@@ -543,7 +546,6 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
       flags |= ANIMATION_FLAG;
     }
   }
-
   if (MuxImageCount(images, WEBP_CHUNK_ALPHA) > 0) {
     flags |= ALPHA_FLAG;  // Some images have an alpha channel.
   }
@@ -610,8 +612,8 @@ WebPMuxError WebPMuxAssemble(WebPMux* mux, WebPData* assembled_data) {
   // Allocate data.
   size = ChunksListDiskSize(mux->vp8x_) + ChunksListDiskSize(mux->iccp_)
        + ChunksListDiskSize(mux->loop_) + MuxImageListDiskSize(mux->images_)
-       + ChunksListDiskSize(mux->meta_) + ChunksListDiskSize(mux->unknown_)
-       + RIFF_HEADER_SIZE;
+       + ChunksListDiskSize(mux->exif_) + ChunksListDiskSize(mux->xmp_)
+       + ChunksListDiskSize(mux->unknown_) + RIFF_HEADER_SIZE;
 
   data = (uint8_t*)malloc(size);
   if (data == NULL) return WEBP_MUX_MEMORY_ERROR;
@@ -622,7 +624,8 @@ WebPMuxError WebPMuxAssemble(WebPMux* mux, WebPData* assembled_data) {
   dst = ChunkListEmit(mux->iccp_, dst);
   dst = ChunkListEmit(mux->loop_, dst);
   dst = MuxImageListEmit(mux->images_, dst);
-  dst = ChunkListEmit(mux->meta_, dst);
+  dst = ChunkListEmit(mux->exif_, dst);
+  dst = ChunkListEmit(mux->xmp_, dst);
   dst = ChunkListEmit(mux->unknown_, dst);
   assert(dst == data + size);
 

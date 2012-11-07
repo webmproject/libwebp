@@ -51,7 +51,8 @@ struct WebPMuxImage {
 struct WebPMux {
   WebPMuxImage*   images_;
   WebPChunk*      iccp_;
-  WebPChunk*      meta_;
+  WebPChunk*      exif_;
+  WebPChunk*      xmp_;
   WebPChunk*      loop_;
   WebPChunk*      vp8x_;
 
@@ -71,7 +72,8 @@ typedef enum {
   IDX_ALPHA,
   IDX_VP8,
   IDX_VP8L,
-  IDX_META,
+  IDX_EXIF,
+  IDX_XMP,
   IDX_UNKNOWN,
 
   IDX_NIL,
