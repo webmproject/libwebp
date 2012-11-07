@@ -8,9 +8,9 @@ Description:
 ============
 
 WebP Mux: library to create a WebP container object for features like
-color profile, metadata, animation and tiling. A reference command line
-tool 'webpmux' and WebP container specification 'doc/webp-container-spec.txt'
-are also provided in this package.
+color profile, metadata, animation and fragmented images. A reference command
+line tool 'webpmux' and WebP container specification
+'doc/webp-container-spec.txt' are also provided in this package.
 
 WebP Mux tool:
 ==============
@@ -25,7 +25,7 @@ A list of options is available using the -help command line flag:
 Usage: webpmux -get GET_OPTIONS INPUT -o OUTPUT
        webpmux -set SET_OPTIONS INPUT -o OUTPUT
        webpmux -strip STRIP_OPTIONS INPUT -o OUTPUT
-       webpmux -tile TILE_OPTIONS [-tile...] -o OUTPUT
+       webpmux -frgm FRAGMENT_OPTIONS [-frgm...] -o OUTPUT
        webpmux -frame FRAME_OPTIONS [-frame...] -loop LOOP_COUNT -o OUTPUT
        webpmux -info INPUT
        webpmux [-h|-help]
@@ -35,7 +35,7 @@ GET_OPTIONS:
    icc       Get ICC profile.
    exif      Get EXIF metadata.
    xmp       Get XMP metadata.
-   tile n    Get nth tile.
+   frgm n    Get nth fragment.
    frame n   Get nth frame.
 
 SET_OPTIONS:
@@ -53,11 +53,11 @@ STRIP_OPTIONS:
    exif      Strip EXIF metadata.
    xmp       Strip XMP metadata.
 
-TILE_OPTIONS(i):
- Create tiled image.
+FRAGMENT_OPTIONS(i):
+ Create fragmented image.
    file_i +xi+yi
-   where:    'file_i' is the i'th tile (WebP format),
-             'xi','yi' specify the image offset for this tile.
+   where:    'file_i' is the i'th fragment (WebP format),
+             'xi','yi' specify the image offset for this fragment.
 
 FRAME_OPTIONS(i):
  Create animation.
@@ -75,8 +75,8 @@ WebP Mux API:
 ==============
 The WebP Mux API contains methods for adding data to and reading data from
 WebPMux (a WebP container object). This API currently supports XMP/EXIF
-metadata, ICC profile, animation and tiling. Other features will be added
-in subsequent releases.
+metadata, ICC profile, animation and fragmented images. Other features
+will be added in subsequent releases.
 
 Example#1 (pseudo code): Creating a WebPMux object with image data, color
 profile and XMP metadata.

@@ -21,9 +21,9 @@ webpmux \- command line tool to create WebP Mux/container file.
 .B \-o
 .I OUTPUT
 .br
-.B webpmux \-tile
-.I TILE_OPTIONS
-.B [\-tile...] \-o
+.B webpmux \-frgm
+.I FRAGMENT_OPTIONS
+.B [\-frgm...] \-o
 .I OUTPUT
 .br
 .B webpmux \-frame
@@ -56,8 +56,8 @@ Get EXIF metadata.
 .B xmp
 Get XMP metadata.
 .TP
-.B tile n
-Get nth tile.
+.B frgm n
+Get nth fragment.
 .TP
 .B frame n
 Get nth frame.
@@ -90,11 +90,11 @@ Strip EXIF metadata.
 .B xmp
 Strip XMP metadata.
 
-.SS TILE_OPTIONS (\-tile)
+.SS FRAGMENT_OPTIONS (\-frgm)
 .TP
 .B file_i +xi+yi
-Where: 'file_i' is the i'th tile (WebP format) and 'xi','yi' specify the image
-offset for this tile.
+Where: 'file_i' is the i'th fragment (WebP format) and 'xi','yi' specify the
+image offset for this fragment.
 
 .SS FRAME_OPTIONS (\-frame)
 .TP

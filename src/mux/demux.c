@@ -39,8 +39,8 @@ typedef struct Frame {
   int x_offset_, y_offset_;
   int width_, height_;
   int duration_;
-  int is_tile_;    // this is an image fragment from a tile.
-  int frame_num_;  // the referent frame number for use in assembling tiles.
+  int is_fragment_;  // this is a frame fragment (and not a full frame).
+  int frame_num_;  // the referent frame number for use in assembling fragments.
   int complete_;   // img_components_ contains a full image.
   ChunkData img_components_[2];  // 0=VP8{,L} 1=ALPH
   struct Frame* next_;
@@ -194,11 +194,11 @@ static int AddFrame(WebPDemuxer* const dmux, Frame* const frame) {
 }
 
 // Store image bearing chunks to 'frame'.
-static ParseStatus StoreFrame(int frame_num, MemBuffer* const mem,
-                              Frame* const frame) {
+static ParseStatus StoreFrame(int frame_num, uint32_t min_size,
+                              MemBuffer* const mem, Frame* const frame) {
   int alpha_chunks = 0;
   int image_chunks = 0;
-  int done = (MemDataSize(mem) < CHUNK_HEADER_SIZE);
+  int done = (MemDataSize(mem) < min_size);
   ParseStatus status = PARSE_OK;
 
   if (done) return PARSE_NEED_MORE_DATA;
@@ -275,10 +275,10 @@ static ParseStatus StoreFrame(int frame_num, MemBuffer* const mem,
 // Returns PARSE_OK on success with *frame pointing to the new Frame.
 // Returns PARSE_NEED_MORE_DATA with insufficient data, PARSE_ERROR otherwise.
 static ParseStatus NewFrame(const MemBuffer* const mem,
-                            uint32_t min_size, uint32_t expected_size,
-                            uint32_t actual_size, Frame** frame) {
+                            uint32_t min_size, uint32_t actual_size,
+                            Frame** frame) {
   if (SizeIsInvalid(mem, min_size)) return PARSE_ERROR;
-  if (actual_size < expected_size) return PARSE_ERROR;
+  if (actual_size < min_size) return PARSE_ERROR;
   if (MemDataSize(mem) < min_size)  return PARSE_NEED_MORE_DATA;
 
   *frame = (Frame*)calloc(1, sizeof(**frame));
@@ -290,12 +290,14 @@ static ParseStatus NewFrame(const MemBuffer* const mem,
 static ParseStatus ParseFrame(
     WebPDemuxer* const dmux, uint32_t frame_chunk_size) {
   const int has_frames = !!(dmux->feature_flags_ & ANIMATION_FLAG);
-  const uint32_t min_size = frame_chunk_size + CHUNK_HEADER_SIZE;
+  const uint32_t padding = (ANMF_CHUNK_SIZE & 1);
+  const uint32_t anmf_payload_size =
+      frame_chunk_size - (ANMF_CHUNK_SIZE + padding);
   int added_frame = 0;
   MemBuffer* const mem = &dmux->mem_;
   Frame* frame;
   ParseStatus status =
-      NewFrame(mem, min_size, ANMF_CHUNK_SIZE, frame_chunk_size, &frame);
+      NewFrame(mem, ANMF_CHUNK_SIZE, frame_chunk_size, &frame);
   if (status != PARSE_OK) return status;
 
   frame->x_offset_ = 2 * GetLE24s(mem);
@@ -303,14 +305,14 @@ static ParseStatus ParseFrame(
   frame->width_    = 1 + GetLE24s(mem);
   frame->height_   = 1 + GetLE24s(mem);
   frame->duration_ = 1 + GetLE24s(mem);
-  Skip(mem, frame_chunk_size - ANMF_CHUNK_SIZE);  // skip any trailing data.
+  Skip(mem, padding);
   if (frame->width_ * (uint64_t)frame->height_ >= MAX_IMAGE_AREA) {
     return PARSE_ERROR;
   }
 
-  // Store a (potentially partial) frame only if the animation flag is set
-  // and there is some data in 'frame'.
-  status = StoreFrame(dmux->num_frames_ + 1, mem, frame);
+  // Store a frame only if the animation flag is set and all data for this frame
+  // is available.
+  status = StoreFrame(dmux->num_frames_ + 1, anmf_payload_size, mem, frame);
   if (status != PARSE_ERROR && has_frames && frame->frame_num_ > 0) {
     added_frame = AddFrame(dmux, frame);
     if (added_frame) {
@@ -325,33 +327,36 @@ static ParseStatus ParseFrame(
 }
 
 // Parse a 'FRGM' chunk and any image bearing chunks that immediately follow.
-// 'tile_chunk_size' is the previously validated, padded chunk size.
-static ParseStatus ParseTile(WebPDemuxer* const dmux,
-                             uint32_t tile_chunk_size) {
-  const int has_tiles = !!(dmux->feature_flags_ & TILE_FLAG);
-  const uint32_t min_size = tile_chunk_size + CHUNK_HEADER_SIZE;
-  int added_tile = 0;
+// 'fragment_chunk_size' is the previously validated, padded chunk size.
+static ParseStatus ParseFragment(WebPDemuxer* const dmux,
+                                 uint32_t fragment_chunk_size) {
+  const int has_fragments = !!(dmux->feature_flags_ & FRAGMENTS_FLAG);
+  const uint32_t padding = (FRGM_CHUNK_SIZE & 1);
+  const uint32_t frgm_payload_size =
+      fragment_chunk_size - (FRGM_CHUNK_SIZE + padding);
+  int added_fragment = 0;
   MemBuffer* const mem = &dmux->mem_;
   Frame* frame;
   ParseStatus status =
-      NewFrame(mem, min_size, FRGM_CHUNK_SIZE, tile_chunk_size, &frame);
+      NewFrame(mem, FRGM_CHUNK_SIZE, fragment_chunk_size, &frame);
   if (status != PARSE_OK) return status;
 
-  frame->is_tile_  = 1;
+  frame->is_fragment_  = 1;
   frame->x_offset_ = 2 * GetLE24s(mem);
   frame->y_offset_ = 2 * GetLE24s(mem);
-  Skip(mem, tile_chunk_size - FRGM_CHUNK_SIZE);  // skip any trailing data.
+  Skip(mem, padding);
 
-  // Store a (potentially partial) tile only if the tile flag is set
-  // and the tile contains some data.
-  status = StoreFrame(dmux->num_frames_, mem, frame);
-  if (status != PARSE_ERROR && has_tiles && frame->frame_num_ > 0) {
-    // Note num_frames_ is incremented only when all tiles have been consumed.
-    added_tile = AddFrame(dmux, frame);
-    if (!added_tile) status = PARSE_ERROR;
+  // Store a fragment only if the fragments flag is set and all data for this
+  // fragment is available.
+  status = StoreFrame(dmux->num_frames_, frgm_payload_size, mem, frame);
+  if (status != PARSE_ERROR && has_fragments && frame->frame_num_ > 0) {
+    // Note num_frames_ is incremented only when all fragments have been
+    // consumed.
+    added_fragment = AddFrame(dmux, frame);
+    if (!added_fragment) status = PARSE_ERROR;
   }
 
-  if (!added_tile) free(frame);
+  if (!added_fragment) free(frame);
   return status;
 }
 
@@ -411,7 +416,9 @@ static ParseStatus ParseSingleImage(WebPDemuxer* const dmux) {
   frame = (Frame*)calloc(1, sizeof(*frame));
   if (frame == NULL) return PARSE_ERROR;
 
-  status = StoreFrame(1, &dmux->mem_, frame);
+  // For the single image case, we allow parsing of a partial frame. But we need
+  // at least CHUNK_HEADER_SIZE for parsing.
+  status = StoreFrame(1, CHUNK_HEADER_SIZE, &dmux->mem_, frame);
   if (status != PARSE_ERROR) {
     const int has_alpha = !!(dmux->feature_flags_ & ALPHA_FLAG);
     // Clear any alpha when the alpha flag is missing.
@@ -507,7 +514,7 @@ static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
       }
       case MKFOURCC('F', 'R', 'G', 'M'): {
         if (dmux->num_frames_ == 0) dmux->num_frames_ = 1;
-        status = ParseTile(dmux, chunk_size_padded);
+        status = ParseFragment(dmux, chunk_size_padded);
         break;
       }
       case MKFOURCC('I', 'C', 'C', 'P'): {
@@ -565,7 +572,7 @@ static int IsValidSimpleFormat(const WebPDemuxer* const dmux) {
 }
 
 static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
-  const int has_tiles = !!(dmux->feature_flags_ & TILE_FLAG);
+  const int has_fragments = !!(dmux->feature_flags_ & FRAGMENTS_FLAG);
   const int has_frames = !!(dmux->feature_flags_ & ANIMATION_FLAG);
   const Frame* f;
 
@@ -577,15 +584,15 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
 
   for (f = dmux->frames_; f != NULL; f = f->next_) {
     const int cur_frame_set = f->frame_num_;
-    int frame_count = 0, tile_count = 0;
+    int frame_count = 0, fragment_count = 0;
 
-    // Check frame properties and if the image is composed of tiles that each
-    // fragment came from a tile.
+    // Check frame properties and if the image is composed of fragments that
+    // each fragment came from a fragment.
     for (; f != NULL && f->frame_num_ == cur_frame_set; f = f->next_) {
       const ChunkData* const image = f->img_components_;
       const ChunkData* const alpha = f->img_components_ + 1;
 
-      if (!has_tiles && f->is_tile_) return 0;
+      if (!has_fragments && f->is_fragment_) return 0;
       if (!has_frames && f->frame_num_ > 1) return 0;
       if (f->x_offset_ < 0 || f->y_offset_ < 0) return 0;
       if (f->complete_) {
@@ -606,11 +613,11 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
         if (f->next_ != NULL) return 0;
       }
 
-      tile_count += f->is_tile_;
+      fragment_count += f->is_fragment_;
       ++frame_count;
     }
-    if (!has_tiles && frame_count > 1) return 0;
-    if (tile_count > 0 && frame_count != tile_count) return 0;
+    if (!has_fragments && frame_count > 1) return 0;
+    if (fragment_count > 0 && frame_count != fragment_count) return 0;
     if (f == NULL) break;
   }
   return 1;
@@ -700,7 +707,8 @@ uint32_t WebPDemuxGetI(const WebPDemuxer* dmux, WebPFormatFeature feature) {
 // -----------------------------------------------------------------------------
 // Frame iteration
 
-// Find the first 'frame_num' frame. There may be multiple in a tiled frame.
+// Find the first 'frame_num' frame. There may be multiple such frames in a
+// fragmented frame.
 static const Frame* GetFrame(const WebPDemuxer* const dmux, int frame_num) {
   const Frame* f;
   for (f = dmux->frames_; f != NULL; f = f->next_) {
@@ -709,19 +717,19 @@ static const Frame* GetFrame(const WebPDemuxer* const dmux, int frame_num) {
   return f;
 }
 
-// Returns tile 'tile_num' and the total count.
-static const Frame* GetTile(
-    const Frame* const frame_set, int tile_num, int* const count) {
+// Returns fragment 'fragment_num' and the total count.
+static const Frame* GetFragment(
+    const Frame* const frame_set, int fragment_num, int* const count) {
   const int this_frame = frame_set->frame_num_;
   const Frame* f = frame_set;
-  const Frame* tile = NULL;
+  const Frame* fragment = NULL;
   int total;
 
   for (total = 0; f != NULL && f->frame_num_ == this_frame; f = f->next_) {
-    if (++total == tile_num) tile = f;
+    if (++total == fragment_num) fragment = f;
   }
   *count = total;
-  return tile;
+  return fragment;
 }
 
 static const uint8_t* GetFramePayload(const uint8_t* const mem_buf,
@@ -751,26 +759,28 @@ static const uint8_t* GetFramePayload(const uint8_t* const mem_buf,
 // Create a whole 'frame' from VP8 (+ alpha) or lossless.
 static int SynthesizeFrame(const WebPDemuxer* const dmux,
                            const Frame* const first_frame,
-                           int tile_num, WebPIterator* const iter) {
+                           int fragment_num, WebPIterator* const iter) {
   const uint8_t* const mem_buf = dmux->mem_.buf_;
-  int num_tiles;
+  int num_fragments;
   size_t payload_size = 0;
-  const Frame* const tile = GetTile(first_frame, tile_num, &num_tiles);
-  const uint8_t* const payload = GetFramePayload(mem_buf, tile, &payload_size);
+  const Frame* const fragment =
+      GetFragment(first_frame, fragment_num, &num_fragments);
+  const uint8_t* const payload =
+      GetFramePayload(mem_buf, fragment, &payload_size);
   if (payload == NULL) return 0;
 
-  iter->frame_num  = first_frame->frame_num_;
-  iter->num_frames = dmux->num_frames_;
-  iter->tile_num   = tile_num;
-  iter->num_tiles  = num_tiles;
-  iter->x_offset   = tile->x_offset_;
-  iter->y_offset   = tile->y_offset_;
-  iter->width      = tile->width_;
-  iter->height     = tile->height_;
-  iter->duration   = tile->duration_;
-  iter->complete   = tile->complete_;
-  iter->tile.bytes = payload;
-  iter->tile.size  = payload_size;
+  iter->frame_num      = first_frame->frame_num_;
+  iter->num_frames     = dmux->num_frames_;
+  iter->fragment_num   = fragment_num;
+  iter->num_fragments  = num_fragments;
+  iter->x_offset       = fragment->x_offset_;
+  iter->y_offset       = fragment->y_offset_;
+  iter->width          = fragment->width_;
+  iter->height         = fragment->height_;
+  iter->duration       = fragment->duration_;
+  iter->complete       = fragment->complete_;
+  iter->fragment.bytes = payload;
+  iter->fragment.size  = payload_size;
   // TODO(jzern): adjust offsets for 'FRGM's embedded in 'ANMF's
   return 1;
 }
@@ -805,13 +815,13 @@ int WebPDemuxPrevFrame(WebPIterator* iter) {
   return SetFrame(iter->frame_num - 1, iter);
 }
 
-int WebPDemuxSelectTile(WebPIterator* iter, int tile) {
-  if (iter != NULL && iter->private_ != NULL && tile > 0) {
+int WebPDemuxSelectFragment(WebPIterator* iter, int fragment_num) {
+  if (iter != NULL && iter->private_ != NULL && fragment_num > 0) {
     const WebPDemuxer* const dmux = (WebPDemuxer*)iter->private_;
     const Frame* const frame = GetFrame(dmux, iter->frame_num);
     if (frame == NULL) return 0;
 
-    return SynthesizeFrame(dmux, frame, tile, iter);
+    return SynthesizeFrame(dmux, frame, fragment_num, iter);
   }
   return 0;
 }
