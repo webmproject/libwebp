@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAQ3//2mU\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-11-08T06:19:42Z",
+      "side": 1,
+      "message": "This is fairly useless on its own. Prefer something like:\n\nmux.h: correct ... prototype\n\nand then mention the change ID or even better add the \u0027git log --oneline\u0027 for the commit",
+      "revId": "037436da993e9042cf5c9e142c2ece1180adb907",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQ3//2mQ\u003d",
+        "filename": "src/webp/mux.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-11-08T06:19:42Z",
+      "side": 1,
+      "message": "fragment?",
+      "revId": "037436da993e9042cf5c9e142c2ece1180adb907",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
