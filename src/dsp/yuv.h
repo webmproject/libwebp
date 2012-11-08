@@ -114,8 +114,8 @@ void VP8YUVInit(void);
 // RGB -> YUV conversion
 
 static WEBP_INLINE int VP8ClipUV(int v) {
-   v = (v + (257 << (YUV_FIX + 2 - 1))) >> (YUV_FIX + 2);
-   return ((v & ~0xff) == 0) ? v : (v < 0) ? 0 : 255;
+  v = (v + (257 << (YUV_FIX + 2 - 1))) >> (YUV_FIX + 2);
+  return ((v & ~0xff) == 0) ? v : (v < 0) ? 0 : 255;
 }
 
 #ifndef USE_YUVj

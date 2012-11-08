@@ -229,7 +229,7 @@ enum WebPMuxAnimDispose {
   WEBP_MUX_DISPOSE_BACKGROUND  // Dispose to background color.
 };
 
-// Encapsulates data about a single frame/tile.
+// Encapsulates data about a single frame/fragment.
 struct WebPMuxFrameInfo {
   WebPData    bitstream;  // image data: can either be a raw VP8/VP8L bitstream
                           // or a single-image WebP file.
@@ -460,8 +460,8 @@ struct WebPIterator {
   WebPData fragment;  // The frame or fragment given by 'frame_num' and
                       // 'fragment_num'.
 
-  uint32_t pad[4];           // padding for later use
-  void* private_;            // for internal use only.
+  uint32_t pad[4];         // padding for later use.
+  void* private_;          // for internal use only.
 };
 
 // Retrieves frame 'frame_number' from 'dmux'.

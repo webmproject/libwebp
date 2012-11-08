@@ -229,7 +229,7 @@ static int GenerateOptimalTree(const int* const histogram, int histogram_size,
         tree_pool[tree_pool_size++] = tree[tree_size - 1];
         tree_pool[tree_pool_size++] = tree[tree_size - 2];
         count = tree_pool[tree_pool_size - 1].total_count_ +
-            tree_pool[tree_pool_size - 2].total_count_;
+                tree_pool[tree_pool_size - 2].total_count_;
         tree_size -= 2;
         {
           // Search for the insertion point.

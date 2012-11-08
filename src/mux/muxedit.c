@@ -108,7 +108,7 @@ static WebPMuxError MuxAddChunk(WebPMux* const mux, uint32_t nth, uint32_t tag,
   return MuxSet(mux, idx, nth, &chunk_data, copy_data);
 }
 
-// Create data for frame/tile given image data, offsets and duration.
+// Create data for frame/fragment given image data, offsets and duration.
 static WebPMuxError CreateFrameFragmentData(
     const WebPData* const image, int x_offset, int y_offset, int duration,
     WebPMuxAnimDispose dispose_method, int is_lossless, int is_frame,

@@ -802,9 +802,9 @@ static int Process(const WebPMuxConfig* config) {
       if (!ok) goto Err2;
       switch (feature->type_) {
         case FEATURE_ANMF:
-         case FEATURE_FRGM:
-           ok = GetFrameFragment(mux, config,
-                                 (feature->type_ == FEATURE_ANMF) ? 1 : 0);
+        case FEATURE_FRGM:
+          ok = GetFrameFragment(mux, config,
+                                (feature->type_ == FEATURE_ANMF) ? 1 : 0);
           break;
 
         case FEATURE_ICCP:
