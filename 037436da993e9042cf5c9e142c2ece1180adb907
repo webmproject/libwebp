@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAQ3//2Wo\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-11-08T19:07:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAQ3//2mU\u003d",
+      "revId": "037436da993e9042cf5c9e142c2ece1180adb907",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAQ3//2mQ\u003d",
         "filename": "src/webp/mux.h",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2012-11-08T06:19:42Z",
       "side": 1,
       "message": "fragment?",
+      "revId": "037436da993e9042cf5c9e142c2ece1180adb907",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAQ3//2WY\u003d",
+        "filename": "src/webp/mux.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2012-11-08T19:07:22Z",
+      "side": 1,
+      "message": "Similar comment \u0026 cosmetic are in a separate change (will send it out once changes under review are merged).",
+      "parentUuid": "AAAAQ3//2mQ\u003d",
       "revId": "037436da993e9042cf5c9e142c2ece1180adb907",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
