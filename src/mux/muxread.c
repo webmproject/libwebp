@@ -254,27 +254,32 @@ WebPMux* WebPMuxCreateInternal(const WebPData* bitstream, int copy_data,
 //------------------------------------------------------------------------------
 // Get API(s).
 
-// TODO(urvang): Change the behavior of this to return ALPHA_FLAG when the mux
-// doesn't contain a VP8X chunk, but does contain a VP8L chunk with real alpha.
 WebPMuxError WebPMuxGetFeatures(const WebPMux* mux, uint32_t* flags) {
   WebPData data;
-  WebPMuxError err;
 
   if (mux == NULL || flags == NULL) return WEBP_MUX_INVALID_ARGUMENT;
   *flags = 0;
 
   // Check if VP8X chunk is present.
-  err = MuxGet(mux, IDX_VP8X, 1, &data);
-  if (err == WEBP_MUX_NOT_FOUND) {
-    return MuxValidateForImage(mux);  // Check if a single image is present.
-  } else if (err != WEBP_MUX_OK) {
-    return err;
+  if (MuxGet(mux, IDX_VP8X, 1, &data) == WEBP_MUX_OK) {
+    if (data.size < CHUNK_SIZE_BYTES) return WEBP_MUX_BAD_DATA;
+    *flags = GetLE32(data.bytes);  // All OK. Fill up flags.
+  } else {
+    WebPMuxError err = MuxValidateForImage(mux);  // Check for single image.
+    if (err != WEBP_MUX_OK) return err;
+    if (MuxHasLosslessImages(mux->images_)) {
+      const WebPData* const vp8l_data = &mux->images_->img_->data_;
+      int has_alpha = 0;
+      if (!VP8LGetInfo(vp8l_data->bytes, vp8l_data->size, NULL, NULL,
+                       &has_alpha)) {
+        return WEBP_MUX_BAD_DATA;
+      }
+      if (has_alpha) {
+        *flags = ALPHA_FLAG;
+      }
+    }
   }
 
-  if (data.size < CHUNK_SIZE_BYTES) return WEBP_MUX_BAD_DATA;
-
-  // All OK. Fill up flags.
-  *flags = GetLE32(data.bytes);
   return WEBP_MUX_OK;
 }
 

@@ -578,12 +578,14 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
   if (num_vp8x == 0 && num_images != 1) return WEBP_MUX_INVALID_ARGUMENT;
 
   // ALPHA_FLAG & alpha chunk(s) are consistent.
-  if (num_vp8x > 0 && MuxHasLosslessImages(mux->images_)) {
-    // Special case: we have a VP8X chunk as well as some lossless images.
-    if (!(flags & ALPHA_FLAG)) return WEBP_MUX_INVALID_ARGUMENT;
+  if (MuxHasLosslessImages(mux->images_)) {
+    if (num_vp8x > 0) {
+      // Special case: we have a VP8X chunk as well as some lossless images.
+      if (!(flags & ALPHA_FLAG)) return WEBP_MUX_INVALID_ARGUMENT;
+    }
   } else {
-    err = ValidateChunk(mux, IDX_ALPHA, ALPHA_FLAG, flags, -1, &num_alpha);
-    if (err != WEBP_MUX_OK) return err;
+      err = ValidateChunk(mux, IDX_ALPHA, ALPHA_FLAG, flags, -1, &num_alpha);
+      if (err != WEBP_MUX_OK) return err;
   }
 
   // num_fragments & num_images are consistent.
