@@ -13,7 +13,7 @@ end of this file.
 WebP Container Specification
 ============================
 
-_Working Draft, v0.9, 20121105_
+_Working Draft, v1.0, 20121109_
 
 
 * TOC placeholder
@@ -67,7 +67,7 @@ Terminology &amp; Basics
 ------------------------
 
 A WebP file contains either a still image (i.e., an encoded matrix of pixels)
-or an [animation](#animation)). Optionally, it can also contain transparency
+or an [animation](#animation). Optionally, it can also contain transparency
 information, color profile and metadata. In case we need to refer only to the
 matrix of pixels, we will call it the _canvas_ of the image.
 
@@ -118,8 +118,8 @@ Chunk Size: 32 bits (_uint32_)
 
 Chunk Payload: _Chunk Size_ bytes
 
-: The data payload. If _Chunk Size_ is odd a single padding byte that
-  SHOULD be `0` is added.
+: The data payload. If _Chunk Size_ is odd, a single padding byte -- that
+  SHOULD be `0` -- is added.
 
 _ChunkHeader('ABCD')_
 
@@ -280,6 +280,8 @@ An extended format file consists of:
   * An optional 'EXIF' chunk with EXIF metadata.
 
   * An optional 'XMP ' chunk with XMP metadata.
+
+  * An optional list of [unknown chunks](#unknown-chunks).
 
 For a _still image_, the _image data_ consists of a single frame, whereas for
 an _animated image_, it consists of multiple frames. More details about frames
@@ -471,6 +473,8 @@ Frame Data: _Chunk Size_ - `16` bytes
 
   * A [bitstream subchunk](#bitstream-vp8vp8l) for the frame.
 
+  * An optional list of [unknown chunks](#unknown-chunks).
+
 #### Fragments
 
 For images that are represented by fragments, this chunk contains data for
@@ -501,6 +505,7 @@ Fragment Data: _Chunk Size_ - `6` bytes
 
   * An optional [alpha subchunk](#alpha) for the fragment.
   * The [bitstream subchunk](#bitstream-vp8vp8l) for the fragment.
+  * An optional list of [unknown chunks](#unknown-chunks).
 
 Note: The width and height of the fragment is obtained from the bitstream
 subchunk.
@@ -702,8 +707,22 @@ Metadata Working Group's [Guidelines for Handling Metadata][metadata].
 
 #### Unknown Chunks
 
-A file MAY contain other unknown chunks. Readers SHOULD ignore these chunks.
-Writers SHOULD preserve them in their original order.
+A RIFF chunk (described in [this](#terminology-amp-basics) section) whose _chunk
+tag_ is different from any of the chunks described in this document, is
+considered an _unknown chunk_.
+
+**Rationale**: Allowing unknown chunks gives a provision for future extension
+of the format, and also allows storage of any application-specific data.
+
+A file MAY contain unknown chunks:
+
+  * At the end of the file as described in [Extended WebP file
+    header](#extended_header) section.
+  * At the end of FRGM and ANMF chunks as described in [Fragments](#fragments)
+    and [Animation](#animation) sections.
+
+Readers SHOULD ignore these chunks. Writers SHOULD preserve them in their
+original order.
 
 ### Assembling the Canvas from fragments/frames
 
