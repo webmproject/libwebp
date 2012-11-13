@@ -722,7 +722,7 @@ A file MAY contain unknown chunks:
     and [Animation](#animation) sections.
 
 Readers SHOULD ignore these chunks. Writers SHOULD preserve them in their
-original order.
+original order (unless they specifically intend to modify these chunks).
 
 ### Assembling the Canvas from fragments/frames
 
