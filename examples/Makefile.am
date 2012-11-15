@@ -4,6 +4,11 @@ bin_PROGRAMS = dwebp cwebp
 if WANT_MUX
   bin_PROGRAMS += webpmux
 endif
+
+if BUILD_GIF2WEBP
+  bin_PROGRAMS += gif2webp
+endif
+
 noinst_LTLIBRARIES = libexampleutil.la
 
 libexampleutil_la_SOURCES = example_util.c
@@ -19,6 +24,11 @@ cwebp_SOURCES = cwebp.c stopwatch.h
 cwebp_CPPFLAGS  = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
 cwebp_CPPFLAGS += $(JPEG_INCLUDES) $(PNG_INCLUDES) $(TIFF_INCLUDES)
 cwebp_LDADD = ../src/libwebp.la $(JPEG_LIBS) $(PNG_LIBS) $(TIFF_LIBS)
+
+gif2webp_SOURCES = gif2webp.c
+gif2webp_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
+gif2webp_LDADD  = libexampleutil.la ../src/mux/libwebpmux.la ../src/libwebp.la
+gif2webp_LDADD += $(GIF_LIBS)
 
 webpmux_SOURCES = webpmux.c
 webpmux_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
