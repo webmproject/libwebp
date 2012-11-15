@@ -569,30 +569,30 @@ static int TTransform(const uint8_t* in, const uint16_t* w) {
   int i;
   // horizontal pass
   for (i = 0; i < 4; ++i, in += BPS) {
-    const int a0 = (in[0] + in[2]) << 2;
-    const int a1 = (in[1] + in[3]) << 2;
-    const int a2 = (in[1] - in[3]) << 2;
-    const int a3 = (in[0] - in[2]) << 2;
-    tmp[0 + i * 4] = a0 + a1 + (a0 != 0);
+    const int a0 = in[0] + in[2];
+    const int a1 = in[1] + in[3];
+    const int a2 = in[1] - in[3];
+    const int a3 = in[0] - in[2];
+    tmp[0 + i * 4] = a0 + a1;
     tmp[1 + i * 4] = a3 + a2;
     tmp[2 + i * 4] = a3 - a2;
     tmp[3 + i * 4] = a0 - a1;
   }
   // vertical pass
   for (i = 0; i < 4; ++i, ++w) {
-    const int a0 = (tmp[0 + i] + tmp[8 + i]);
-    const int a1 = (tmp[4 + i] + tmp[12+ i]);
-    const int a2 = (tmp[4 + i] - tmp[12+ i]);
-    const int a3 = (tmp[0 + i] - tmp[8 + i]);
+    const int a0 = tmp[0 + i] + tmp[8 + i];
+    const int a1 = tmp[4 + i] + tmp[12+ i];
+    const int a2 = tmp[4 + i] - tmp[12+ i];
+    const int a3 = tmp[0 + i] - tmp[8 + i];
     const int b0 = a0 + a1;
     const int b1 = a3 + a2;
     const int b2 = a3 - a2;
     const int b3 = a0 - a1;
-    // abs((b + (b<0) + 3) >> 3) = (abs(b) + 3) >> 3
-    sum += w[ 0] * ((abs(b0) + 3) >> 3);
-    sum += w[ 4] * ((abs(b1) + 3) >> 3);
-    sum += w[ 8] * ((abs(b2) + 3) >> 3);
-    sum += w[12] * ((abs(b3) + 3) >> 3);
+
+    sum += w[ 0] * abs(b0);
+    sum += w[ 4] * abs(b1);
+    sum += w[ 8] * abs(b2);
+    sum += w[12] * abs(b3);
   }
   return sum;
 }
@@ -601,7 +601,7 @@ static int Disto4x4(const uint8_t* const a, const uint8_t* const b,
                     const uint16_t* const w) {
   const int sum1 = TTransform(a, w);
   const int sum2 = TTransform(b, w);
-  return (abs(sum2 - sum1) + 8) >> 4;
+  return abs(sum2 - sum1) >> 5;
 }
 
 static int Disto16x16(const uint8_t* const a, const uint8_t* const b,

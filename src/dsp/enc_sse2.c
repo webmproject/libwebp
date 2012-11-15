@@ -502,8 +502,6 @@ static int TTransformSSE2(const uint8_t* inA, const uint8_t* inB,
   int32_t sum[4];
   __m128i tmp_0, tmp_1, tmp_2, tmp_3;
   const __m128i zero = _mm_setzero_si128();
-  const __m128i one = _mm_set1_epi16(1);
-  const __m128i three = _mm_set1_epi16(3);
 
   // Load, combine and tranpose inputs.
   {
@@ -550,17 +548,14 @@ static int TTransformSSE2(const uint8_t* inA, const uint8_t* inB,
   // Horizontal pass and subsequent transpose.
   {
     // Calculate a and b (two 4x4 at once).
-    const __m128i a0 = _mm_slli_epi16(_mm_add_epi16(tmp_0, tmp_2), 2);
-    const __m128i a1 = _mm_slli_epi16(_mm_add_epi16(tmp_1, tmp_3), 2);
-    const __m128i a2 = _mm_slli_epi16(_mm_sub_epi16(tmp_1, tmp_3), 2);
-    const __m128i a3 = _mm_slli_epi16(_mm_sub_epi16(tmp_0, tmp_2), 2);
-    // b0_extra = (a0 != 0);
-    const __m128i b0_extra = _mm_andnot_si128(_mm_cmpeq_epi16 (a0, zero), one);
-    const __m128i b0_base = _mm_add_epi16(a0, a1);
+    const __m128i a0 = _mm_add_epi16(tmp_0, tmp_2);
+    const __m128i a1 = _mm_add_epi16(tmp_1, tmp_3);
+    const __m128i a2 = _mm_sub_epi16(tmp_1, tmp_3);
+    const __m128i a3 = _mm_sub_epi16(tmp_0, tmp_2);
+    const __m128i b0 = _mm_add_epi16(a0, a1);
     const __m128i b1 = _mm_add_epi16(a3, a2);
     const __m128i b2 = _mm_sub_epi16(a3, a2);
     const __m128i b3 = _mm_sub_epi16(a0, a1);
-    const __m128i b0 = _mm_add_epi16(b0_base, b0_extra);
     // a00 a01 a02 a03   b00 b01 b02 b03
     // a10 a11 a12 a13   b10 b11 b12 b13
     // a20 a21 a22 a23   b20 b21 b22 b23
@@ -635,19 +630,6 @@ static int TTransformSSE2(const uint8_t* inA, const uint8_t* inB,
       B_b2 = _mm_sub_epi16(B_b2, sign_B_b2);
     }
 
-    // b = abs(b) + 3
-    A_b0 = _mm_add_epi16(A_b0, three);
-    A_b2 = _mm_add_epi16(A_b2, three);
-    B_b0 = _mm_add_epi16(B_b0, three);
-    B_b2 = _mm_add_epi16(B_b2, three);
-
-    // abs((b + (b<0) + 3) >> 3) = (abs(b) + 3) >> 3
-    // b = (abs(b) + 3) >> 3
-    A_b0 = _mm_srai_epi16(A_b0, 3);
-    A_b2 = _mm_srai_epi16(A_b2, 3);
-    B_b0 = _mm_srai_epi16(B_b0, 3);
-    B_b2 = _mm_srai_epi16(B_b2, 3);
-
     // weighted sums
     A_b0 = _mm_madd_epi16(A_b0, w_0);
     A_b2 = _mm_madd_epi16(A_b2, w_8);
@@ -666,7 +648,7 @@ static int TTransformSSE2(const uint8_t* inA, const uint8_t* inB,
 static int Disto4x4SSE2(const uint8_t* const a, const uint8_t* const b,
                         const uint16_t* const w) {
   const int diff_sum = TTransformSSE2(a, b, w);
-  return (abs(diff_sum) + 8) >> 4;
+  return abs(diff_sum) >> 5;
 }
 
 static int Disto16x16SSE2(const uint8_t* const a, const uint8_t* const b,
