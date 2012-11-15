@@ -23,11 +23,11 @@
             -frgm fragment_4.webp +960+576 \
             -o out_fragment_container.webp
 
-    webpmux -frame anim_1.webp +0+0+0+0 \
-            -frame anim_2.webp +25+25+100+1 \
-            -frame anim_3.webp +50+50+100+1 \
-            -frame anim_4.webp +0+0+100+0 \
-            -loop 10 -bgcolor 255,255,255,255 \
+    webpmux -frame anim_1.webp +100+10+10   \
+            -frame anim_2.webp +100+25+25+1 \
+            -frame anim_3.webp +100+50+50+1 \
+            -frame anim_4.webp +100         \
+            -loop 10 -bgcolor 128,255,255,255 \
             -o out_animation_container.webp
 
     webpmux -set icc image_profile.icc in.webp -o out_icc_container.webp
@@ -394,10 +394,19 @@ static int WriteWebP(WebPMux* const mux, const char* filename) {
 }
 
 static int ParseFrameArgs(const char* args, WebPMuxFrameInfo* const info) {
-  int dispose_method;
-  if (sscanf(args, "+%d+%d+%d+%d", &info->x_offset, &info->y_offset,
-             &info->duration, &dispose_method) != 4) {
-    return 0;
+  int dispose_method, dummy;
+  const int num_args = sscanf(args, "+%d+%d+%d+%d+%d",
+                              &info->duration, &info->x_offset, &info->y_offset,
+                              &dispose_method, &dummy);
+  switch (num_args) {
+    case 1:
+      info->x_offset = info->y_offset = 0;  // fall through
+    case 3:
+      dispose_method = 0;  // fall through
+    case 4:
+      break;
+    default:
+      return 0;
   }
   // Note: The sanity of the following conversion is checked by
   // WebPMuxSetAnimationParams().
