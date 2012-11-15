@@ -194,7 +194,7 @@ static void TransformSSE2(const int16_t* in, uint8_t* dst, int do_two) {
 
   // Add inverse transform to 'dst' and store.
   {
-    const __m128i zero = _mm_set1_epi16(0);
+    const __m128i zero = _mm_setzero_si128();
     // Load the reference(s).
     __m128i dst0, dst1, dst2, dst3;
     if (do_two) {

@@ -243,7 +243,7 @@ static void ITransformSSE2(const uint8_t* ref, const int16_t* in, uint8_t* dst,
 
   // Add inverse transform to 'ref' and store.
   {
-    const __m128i zero = _mm_set1_epi16(0);
+    const __m128i zero = _mm_setzero_si128();
     // Load the reference(s).
     __m128i ref0, ref1, ref2, ref3;
     if (do_two) {
@@ -442,10 +442,101 @@ static void FTransformSSE2(const uint8_t* src, const uint8_t* ref,
 //------------------------------------------------------------------------------
 // Metric
 
-static int SSE4x4SSE2(const uint8_t* a, const uint8_t* b) {
-  const __m128i zero = _mm_set1_epi16(0);
+static int SSE_Nx4SSE2(const uint8_t* a, const uint8_t* b,
+                       int num_quads, int do_16) {
+  const __m128i zero = _mm_setzero_si128();
+  __m128i sum1 = zero;
+  __m128i sum2 = zero;
 
-  // Load values.
+  while (num_quads-- > 0) {
+    // Note: for the !do_16 case, we read 16 pixels instead of 8 but that's ok,
+    // thanks to buffer over-allocation to that effect.
+    const __m128i a0 = _mm_loadu_si128((__m128i*)&a[BPS * 0]);
+    const __m128i a1 = _mm_loadu_si128((__m128i*)&a[BPS * 1]);
+    const __m128i a2 = _mm_loadu_si128((__m128i*)&a[BPS * 2]);
+    const __m128i a3 = _mm_loadu_si128((__m128i*)&a[BPS * 3]);
+    const __m128i b0 = _mm_loadu_si128((__m128i*)&b[BPS * 0]);
+    const __m128i b1 = _mm_loadu_si128((__m128i*)&b[BPS * 1]);
+    const __m128i b2 = _mm_loadu_si128((__m128i*)&b[BPS * 2]);
+    const __m128i b3 = _mm_loadu_si128((__m128i*)&b[BPS * 3]);
+
+    // compute clip0(a-b) and clip0(b-a)
+    const __m128i a0p = _mm_subs_epu8(a0, b0);
+    const __m128i a0m = _mm_subs_epu8(b0, a0);
+    const __m128i a1p = _mm_subs_epu8(a1, b1);
+    const __m128i a1m = _mm_subs_epu8(b1, a1);
+    const __m128i a2p = _mm_subs_epu8(a2, b2);
+    const __m128i a2m = _mm_subs_epu8(b2, a2);
+    const __m128i a3p = _mm_subs_epu8(a3, b3);
+    const __m128i a3m = _mm_subs_epu8(b3, a3);
+
+    // compute |a-b| with 8b arithmetic as clip0(a-b) | clip0(b-a)
+    const __m128i diff0 = _mm_or_si128(a0p, a0m);
+    const __m128i diff1 = _mm_or_si128(a1p, a1m);
+    const __m128i diff2 = _mm_or_si128(a2p, a2m);
+    const __m128i diff3 = _mm_or_si128(a3p, a3m);
+
+    // unpack (only four operations, instead of eight)
+    const __m128i low0 = _mm_unpacklo_epi8(diff0, zero);
+    const __m128i low1 = _mm_unpacklo_epi8(diff1, zero);
+    const __m128i low2 = _mm_unpacklo_epi8(diff2, zero);
+    const __m128i low3 = _mm_unpacklo_epi8(diff3, zero);
+
+    // multiply with self
+    const __m128i low_madd0 = _mm_madd_epi16(low0, low0);
+    const __m128i low_madd1 = _mm_madd_epi16(low1, low1);
+    const __m128i low_madd2 = _mm_madd_epi16(low2, low2);
+    const __m128i low_madd3 = _mm_madd_epi16(low3, low3);
+
+    // collect in a cascading way
+    const __m128i low_sum0 = _mm_add_epi32(low_madd0, low_madd1);
+    const __m128i low_sum1 = _mm_add_epi32(low_madd2, low_madd3);
+    sum1 = _mm_add_epi32(sum1, low_sum0);
+    sum2 = _mm_add_epi32(sum2, low_sum1);
+
+    if (do_16) {  // if necessary, process the higher 8 bytes similarly
+      const __m128i hi0 = _mm_unpackhi_epi8(diff0, zero);
+      const __m128i hi1 = _mm_unpackhi_epi8(diff1, zero);
+      const __m128i hi2 = _mm_unpackhi_epi8(diff2, zero);
+      const __m128i hi3 = _mm_unpackhi_epi8(diff3, zero);
+
+      const __m128i hi_madd0 = _mm_madd_epi16(hi0, hi0);
+      const __m128i hi_madd1 = _mm_madd_epi16(hi1, hi1);
+      const __m128i hi_madd2 = _mm_madd_epi16(hi2, hi2);
+      const __m128i hi_madd3 = _mm_madd_epi16(hi3, hi3);
+      const __m128i hi_sum0 = _mm_add_epi32(hi_madd0, hi_madd1);
+      const __m128i hi_sum1 = _mm_add_epi32(hi_madd2, hi_madd3);
+      sum1 = _mm_add_epi32(sum1, hi_sum0);
+      sum2 = _mm_add_epi32(sum2, hi_sum1);
+    }
+    a += 4 * BPS;
+    b += 4 * BPS;
+  }
+  {
+    int32_t tmp[4];
+    const __m128i sum = _mm_add_epi32(sum1, sum2);
+    _mm_storeu_si128((__m128i*)tmp, sum);
+    return (tmp[3] + tmp[2] + tmp[1] + tmp[0]);
+  }
+}
+
+static int SSE16x16SSE2(const uint8_t* a, const uint8_t* b) {
+  return SSE_Nx4SSE2(a, b, 4, 1);
+}
+
+static int SSE16x8SSE2(const uint8_t* a, const uint8_t* b) {
+  return SSE_Nx4SSE2(a, b, 2, 1);
+}
+
+static int SSE8x8SSE2(const uint8_t* a, const uint8_t* b) {
+  return SSE_Nx4SSE2(a, b, 2, 0);
+}
+
+static int SSE4x4SSE2(const uint8_t* a, const uint8_t* b) {
+  const __m128i zero = _mm_setzero_si128();
+
+  // Load values. Note that we read 8 pixels instead of 4,
+  // but the a/b buffers are over-allocated to that effect.
   const __m128i a0 = _mm_loadl_epi64((__m128i*)&a[BPS * 0]);
   const __m128i a1 = _mm_loadl_epi64((__m128i*)&a[BPS * 1]);
   const __m128i a2 = _mm_loadl_epi64((__m128i*)&a[BPS * 2]);
@@ -483,6 +574,7 @@ static int SSE4x4SSE2(const uint8_t* a, const uint8_t* b) {
   const __m128i sum0 = _mm_add_epi32(madd0, madd1);
   const __m128i sum1 = _mm_add_epi32(madd2, madd3);
   const __m128i sum2 = _mm_add_epi32(sum0, sum1);
+
   int32_t tmp[4];
   _mm_storeu_si128((__m128i*)tmp, sum2);
   return (tmp[3] + tmp[2] + tmp[1] + tmp[0]);
@@ -663,7 +755,6 @@ static int Disto16x16SSE2(const uint8_t* const a, const uint8_t* const b,
   return D;
 }
 
-
 //------------------------------------------------------------------------------
 // Quantization
 //
@@ -672,8 +763,7 @@ static int Disto16x16SSE2(const uint8_t* const a, const uint8_t* const b,
 static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
                              int n, const VP8Matrix* const mtx) {
   const __m128i max_coeff_2047 = _mm_set1_epi16(2047);
-  const __m128i zero = _mm_set1_epi16(0);
-  __m128i sign0, sign8;
+  const __m128i zero = _mm_setzero_si128();
   __m128i coeff0, coeff8;
   __m128i out0, out8;
   __m128i packed_out;
@@ -695,8 +785,8 @@ static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
   const __m128i zthresh8 = _mm_loadu_si128((__m128i*)&mtx->zthresh_[8]);
 
   // sign(in) = in >> 15  (0x0000 if positive, 0xffff if negative)
-  sign0 = _mm_srai_epi16(in0, 15);
-  sign8 = _mm_srai_epi16(in8, 15);
+  const __m128i sign0 = _mm_srai_epi16(in0, 15);
+  const __m128i sign8 = _mm_srai_epi16(in8, 15);
 
   // coeff = abs(in) = (in ^ sign) - sign
   coeff0 = _mm_xor_si128(in0, sign0);
@@ -814,6 +904,9 @@ void VP8EncDspInitSSE2(void) {
   VP8EncQuantizeBlock = QuantizeBlockSSE2;
   VP8ITransform = ITransformSSE2;
   VP8FTransform = FTransformSSE2;
+  VP8SSE16x16 = SSE16x16SSE2;
+  VP8SSE16x8 = SSE16x8SSE2;
+  VP8SSE8x8 = SSE8x8SSE2;
   VP8SSE4x4 = SSE4x4SSE2;
   VP8TDisto4x4 = Disto4x4SSE2;
   VP8TDisto16x16 = Disto16x16SSE2;
