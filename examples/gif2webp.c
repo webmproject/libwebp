@@ -41,7 +41,15 @@ static int MyReader(GifFileType* gif, GifByteType* buffer, int length) {
   return fread(buffer, 1, length, file);
 }
 
-static void Remap(const uint8_t* const src, GifFileType* const gif,
+static void ClearPicture(WebPPicture* const picture, uint32_t color) {
+  int x, y;
+  for (y = 0; y < picture->height; ++y) {
+    uint32_t* const dst = picture->argb + y * picture->argb_stride;
+    for (x = 0; x < picture->width; ++x) dst[x] = color;
+  }
+}
+
+static void Remap(const uint8_t* const src, const GifFileType* const gif,
                   uint32_t* dst, int len) {
   int i;
   const GifColorType* colors;
@@ -97,6 +105,9 @@ static int ReadSubImage(GifFileType* gif, WebPPicture* pic, WebPPicture* view) {
       Remap(tmp, gif, dst + y * view->argb_stride, sub_w);
     }
   }
+  // re-align the view with even offset (and adjust dimensions if needed).
+  WebPPictureView(pic, offset_x & ~1, offset_y & ~1,
+                  sub_w + (offset_x & 1), sub_h + (offset_y & 1), view);
   ok = 1;
 
  End:
@@ -161,16 +172,19 @@ int main(int argc, const char *argv[]) {
   WebPPicture picture;
   WebPPicture view;
   WebPMemoryWriter memory;
-  WebPMuxFrameInfo frame = {
-      {NULL, 0}, 0, 0, 100, WEBP_CHUNK_ANMF, WEBP_MUX_DISPOSE_NONE
-  };
+  WebPMuxFrameInfo frame;
   WebPMuxAnimParams anim = { WHITE_COLOR, 0 };
+
   int done;
   int c;
   int quiet = 0;
   WebPConfig config;
   WebPMux* mux = NULL;
   WebPData webp_data = { NULL, 0 };
+
+  memset(&frame, 0, sizeof(frame));
+  frame.id = WEBP_CHUNK_ANMF;
+  frame.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
 
   if (!WebPConfigInit(&config) || !WebPPictureInit(&picture)) {
     fprintf(stderr, "Error! Version mismatch!\n");
@@ -242,12 +256,14 @@ int main(int argc, const char *argv[]) {
   picture.writer = WebPMemoryWrite;
   picture.custom_ptr = &memory;
   if (!WebPPictureAlloc(&picture)) goto End;
+
   if (gif->SColorMap != NULL &&
       !GetColorFromIndex(gif->SColorMap, gif->SBackGroundColor,
                          &anim.bgcolor)) {
     fprintf(stderr, "GIF decode error: invalid background color index.\n");
     goto End;
   }
+  ClearPicture(&picture, anim.bgcolor);
 
   mux = WebPMuxNew();
   if (mux == NULL) {
@@ -263,11 +279,13 @@ int main(int argc, const char *argv[]) {
 
     switch (type) {
       case IMAGE_DESC_RECORD_TYPE: {
+        if (frame.dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
+          ClearPicture(&picture, anim.bgcolor);
+        }
+
         if (!DGifGetImageDesc(gif)) goto End;
         if (!ReadSubImage(gif, &picture, &view)) goto End;
 
-        frame.x_offset = gif->Image.Left;
-        frame.y_offset = gif->Image.Top;
         WebPMemoryWriterInit(&memory);
         if (!config.lossless) {
           // We need to call BGRA variant because of the way we do Remap().
@@ -284,17 +302,26 @@ int main(int argc, const char *argv[]) {
           fprintf(stderr, "Error code: %d\n", view.error_code);
           goto End;
         }
-        frame.bitstream.bytes = memory.mem;
-        frame.bitstream.size = memory.size;
 
         // Now we have all the info about the frame, as a Graphic Control
         // Extension Block always appears before the Image Descriptor Block.
         // So add the frame to mux.
+        frame.x_offset = gif->Image.Left & ~1;
+        frame.y_offset = gif->Image.Top & ~1;
+        frame.bitstream.bytes = memory.mem;
+        frame.bitstream.size = memory.size;
         err = WebPMuxPushFrame(mux, &frame, 1);
         if (err != WEBP_MUX_OK) {
           fprintf(stderr, "ERROR (%s): Could not add animation frame.\n",
                   ErrorString(err));
           goto End;
+        }
+        if (verbose) {
+          fprintf(stderr, "Added frame %dx%d (offset:%d,%d duration:%d) ",
+                  view.width, view.height, frame.x_offset, frame.y_offset,
+                  frame.duration);
+          fprintf(stderr, "dispose:%d transparent index:%d\n",
+                  frame.dispose_method, transparent_index);
         }
         WebPDataClear(&frame.bitstream);
         break;
@@ -315,8 +342,16 @@ int main(int argc, const char *argv[]) {
             const int delay = data[2] | (data[3] << 8);  // In 10 ms units.
             if (data[0] != 4) goto End;
             frame.duration = delay * 10;  // Duration is in 1 ms units for WebP.
-            frame.dispose_method = (dispose == 0) ?
-                WEBP_MUX_DISPOSE_NONE : WEBP_MUX_DISPOSE_BACKGROUND;
+            if (dispose == 3) {
+              fprintf(stderr, "WARNING: GIF_DISPOSE_RESTORE not supported.");
+              // failsafe. TODO(urvang): emulate the correct behaviour by
+              // recoding the whole frame.
+              frame.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
+            } else {
+              frame.dispose_method =
+                (dispose == 2) ? WEBP_MUX_DISPOSE_BACKGROUND
+                               : WEBP_MUX_DISPOSE_NONE;
+            }
             transparent_index = (flags & GIF_TRANSPARENT_MASK) ? data[4] : -1;
             break;
           }

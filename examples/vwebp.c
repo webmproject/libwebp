@@ -46,7 +46,9 @@ static struct {
   int decoding_error;
   int print_info;
 
+  int canvas_width, canvas_height;
   int loop_count;
+  uint32_t bg_color;
 
   const char* file_name;
   WebPData data;
@@ -106,6 +108,10 @@ static void PrintString(const char* const text) {
   }
 }
 
+static float GetColorf(uint32_t color, int shift) {
+  return (color >> shift) / 255.f;
+}
+
 static void DrawCheckerBoard(void) {
   const int square_size = 8;  // must be a power of 2
   int x, y;
@@ -127,15 +133,20 @@ static void DrawCheckerBoard(void) {
 }
 
 static void HandleDisplay(void) {
-  const WebPDecBuffer* pic = kParams.pic;
+  const WebPDecBuffer* const pic = kParams.pic;
+  const WebPIterator* const iter = &kParams.frameiter;
+  double xoff, yoff;
   if (pic == NULL) return;
-  glClear(GL_COLOR_BUFFER_BIT);
   glPushMatrix();
   glPixelZoom(1, -1);
-  glRasterPos2f(-1, 1);
+  xoff = 2. * iter->x_offset / kParams.canvas_width;
+  yoff = 2. * iter->y_offset / kParams.canvas_height;
+  glRasterPos2f(-1. + xoff, 1. - yoff);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   glPixelStorei(GL_UNPACK_ROW_LENGTH, pic->u.RGBA.stride / 4);
-  DrawCheckerBoard();
+  if (iter->dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
+    glClear(GL_COLOR_BUFFER_BIT);  // use clear color
+  }
   glDrawPixels(pic->width, pic->height,
                GL_RGBA, GL_UNSIGNED_BYTE,
                (GLvoid*)pic->u.RGBA.rgba);
@@ -150,45 +161,53 @@ static void HandleDisplay(void) {
     glColor4f(0.0, 0.0, 0.0, 1.0);
     glRasterPos2f(-0.95f, 0.80f);
     PrintString(tmp);
+    if (iter->x_offset != 0 || iter->y_offset != 0) {
+      snprintf(tmp, sizeof(tmp), " (offset:%d,%d)",
+               iter->x_offset, iter->y_offset);
+      glRasterPos2f(-0.95f, 0.70f);
+      PrintString(tmp);
+    }
   }
   glPopMatrix();
   glFlush();
 }
 
-static void StartDisplay(const WebPDecBuffer* const pic) {
+static void StartDisplay(void) {
+  const int width = kParams.canvas_width;
+  const int height = kParams.canvas_height;
   glutInitDisplayMode(GLUT_RGBA);
-  glutInitWindowSize(pic->width, pic->height);
+  glutInitWindowSize(width, height);
   glutCreateWindow("WebP viewer");
   glutDisplayFunc(HandleDisplay);
   glutIdleFunc(NULL);
   glutKeyboardFunc(HandleKey);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable(GL_BLEND);
-  glClearColor(0.0, 0.0, 0.0, 0.0);
-  HandleReshape(pic->width, pic->height);
+  glClearColor(GetColorf(kParams.bg_color, 0),
+               GetColorf(kParams.bg_color, 8),
+               GetColorf(kParams.bg_color, 16),
+               GetColorf(kParams.bg_color, 24));
+  HandleReshape(width, height);
+  glClear(GL_COLOR_BUFFER_BIT);
+  DrawCheckerBoard();
 }
 
 //------------------------------------------------------------------------------
 // File decoding
 
-static int Decode(int* const duration) {
+static int Decode(void) {   // Fills kParams.frameiter
   const WebPIterator* const iter = &kParams.frameiter;
   WebPDecoderConfig* const config = kParams.config;
   WebPDecBuffer* const output_buffer = &config->output;
   int ok = 0;
 
   ClearPreviousPic();
-  if (iter->x_offset != 0 || iter->y_offset != 0) {
-    fprintf(stderr,
-            "Frame offsets not yet supported! Forcing offset to 0,0\n");
-  }
   output_buffer->colorspace = MODE_RGBA;
   ok = (WebPDecode(iter->fragment.bytes, iter->fragment.size,
                    config) == VP8_STATUS_OK);
   if (!ok) {
     fprintf(stderr, "Decoding of frame #%d failed!\n", iter->frame_num);
   } else {
-    *duration = iter->duration;
     kParams.pic = output_buffer;
   }
   return ok;
@@ -198,25 +217,27 @@ static void decode_callback(int what) {
   if (what == 0 && !kParams.done) {
     int duration = 0;
     if (kParams.dmux != NULL) {
-      if (!Decode(&duration)) {
-        kParams.decoding_error = 1;
-        kParams.done = 1;
-      } else {
-        WebPIterator* const iter = &kParams.frameiter;
-        if (!WebPDemuxNextFrame(iter)) {
-          WebPDemuxReleaseIterator(iter);
-          if (WebPDemuxGetFrame(kParams.dmux, 1, iter)) {
-            --kParams.loop_count;
-            kParams.done = (kParams.loop_count == 0);
-          } else {
-            kParams.decoding_error = 1;
-            kParams.done = 1;
-          }
+      WebPIterator* const iter = &kParams.frameiter;
+      if (!WebPDemuxNextFrame(iter)) {
+        WebPDemuxReleaseIterator(iter);
+        if (WebPDemuxGetFrame(kParams.dmux, 1, iter)) {
+          --kParams.loop_count;
+          kParams.done = (kParams.loop_count == 0);
+        } else {
+          kParams.decoding_error = 1;
+          kParams.done = 1;
+          return;
         }
       }
+      duration = iter->duration;
     }
-    glutPostRedisplay();
-    glutTimerFunc(duration, decode_callback, what);
+    if (!Decode()) {
+      kParams.decoding_error = 1;
+      kParams.done = 1;
+    } else {
+      glutPostRedisplay();
+      glutTimerFunc(duration, decode_callback, what);
+    }
   }
 }
 
@@ -231,8 +252,7 @@ static void Help(void) {
          "  -nofancy ..... don't use the fancy YUV420 upscaler.\n"
          "  -nofilter .... disable in-loop filtering.\n"
          "  -mt .......... use multi-threading\n"
-         "  -crop <x> <y> <w> <h> ... crop output with the given rectangle\n"
-         "  -scale <w> <h> .......... scale the output (*after* any cropping)\n"
+         "  -info ........ print info.\n"
          "  -h     ....... this help message.\n"
         );
 }
@@ -255,6 +275,8 @@ int main(int argc, char *argv[]) {
       config.options.no_fancy_upsampling = 1;
     } else if (!strcmp(argv[c], "-nofilter")) {
       config.options.bypass_filtering = 1;
+    } else if (!strcmp(argv[c], "-info")) {
+      kParams.print_info = 1;
     } else if (!strcmp(argv[c], "-version")) {
       const int version = WebPGetDecoderVersion();
       printf("%d.%d.%d\n",
@@ -262,16 +284,6 @@ int main(int argc, char *argv[]) {
       return 0;
     } else if (!strcmp(argv[c], "-mt")) {
       config.options.use_threads = 1;
-    } else if (!strcmp(argv[c], "-crop") && c < argc - 4) {
-      config.options.use_cropping = 1;
-      config.options.crop_left   = strtol(argv[++c], NULL, 0);
-      config.options.crop_top    = strtol(argv[++c], NULL, 0);
-      config.options.crop_width  = strtol(argv[++c], NULL, 0);
-      config.options.crop_height = strtol(argv[++c], NULL, 0);
-    } else if (!strcmp(argv[c], "-scale") && c < argc - 2) {
-      config.options.use_scaling = 1;
-      config.options.scaled_width  = strtol(argv[++c], NULL, 0);
-      config.options.scaled_height = strtol(argv[++c], NULL, 0);
     } else if (argv[c][0] == '-') {
       printf("Unknown option '%s'\n", argv[c]);
       Help();
@@ -302,26 +314,35 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Image fragments are not supported for now!\n");
     goto Error;
   }
+  kParams.canvas_width = WebPDemuxGetI(kParams.dmux, WEBP_FF_CANVAS_WIDTH);
+  kParams.canvas_height = WebPDemuxGetI(kParams.dmux, WEBP_FF_CANVAS_HEIGHT);
+  if (kParams.print_info) {
+    printf("Canvas: %d x %d\n", kParams.canvas_width, kParams.canvas_height);
+  }
 
   if (!WebPDemuxGetFrame(kParams.dmux, 1, &kParams.frameiter)) goto Error;
 
   kParams.has_animation = (kParams.frameiter.num_frames > 1);
   kParams.loop_count = (int)WebPDemuxGetI(kParams.dmux, WEBP_FF_LOOP_COUNT);
+  kParams.bg_color = WebPDemuxGetI(kParams.dmux, WEBP_FF_BACKGROUND_COLOR);
   printf("VP8X: Found %d images in file (loop count = %d)\n",
          kParams.frameiter.num_frames, kParams.loop_count);
 
   // Decode first frame
-  {
-    int duration;
-    if (!Decode(&duration)) goto Error;
-  }
+  if (!Decode()) goto Error;
+
+  // Position iterator to last frame. Next call to HandleDisplay will wrap over.
+  // We take this into account by bumping up loop_count.
+  WebPDemuxGetFrame(kParams.dmux, 0, &kParams.frameiter);
+  if (kParams.loop_count) ++kParams.loop_count;
 
   // Start display (and timer)
   glutInit(&argc, argv);
 #ifdef FREEGLUT
   glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
 #endif
-  StartDisplay(kParams.pic);
+  StartDisplay();
+
   if (kParams.has_animation) glutTimerFunc(0, decode_callback, 0);
   glutMainLoop();
 
