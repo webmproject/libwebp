@@ -135,12 +135,12 @@ static void DrawCheckerBoard(void) {
 static void HandleDisplay(void) {
   const WebPDecBuffer* const pic = kParams.pic;
   const WebPIterator* const iter = &kParams.frameiter;
-  double xoff, yoff;
+  GLfloat xoff, yoff;
   if (pic == NULL) return;
   glPushMatrix();
   glPixelZoom(1, -1);
-  xoff = 2. * iter->x_offset / kParams.canvas_width;
-  yoff = 2. * iter->y_offset / kParams.canvas_height;
+  xoff = (GLfloat)(2. * iter->x_offset / kParams.canvas_width);
+  yoff = (GLfloat)(2. * iter->y_offset / kParams.canvas_height);
   glRasterPos2f(-1. + xoff, 1. - yoff);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   glPixelStorei(GL_UNPACK_ROW_LENGTH, pic->u.RGBA.stride / 4);
