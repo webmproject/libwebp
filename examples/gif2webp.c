@@ -349,8 +349,8 @@ int main(int argc, const char *argv[]) {
               frame.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
             } else {
               frame.dispose_method =
-                (dispose == 2) ? WEBP_MUX_DISPOSE_BACKGROUND
-                               : WEBP_MUX_DISPOSE_NONE;
+                  (dispose == 2) ? WEBP_MUX_DISPOSE_BACKGROUND
+                                 : WEBP_MUX_DISPOSE_NONE;
             }
             transparent_index = (flags & GIF_TRANSPARENT_MASK) ? data[4] : -1;
             break;
