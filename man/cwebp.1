@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "July 19, 2012"
+.TH CWEBP 1 "November 15, 2012"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -30,9 +30,15 @@ A summary of all the possible options.
 Print the version number (as major.minor.revision) and exit.
 .TP
 .B \-q float
-Specify the compression factor for RGB channels between 0 and 100. A small
-factor produces a smaller file with lower quality. Best quality is achieved
-using a value of 100. The default is 75.
+Specify the compression factor for RGB channels between 0 and 100. The default
+is 75.
+.br
+In case of lossy compression (default), a small factor produces a smaller file
+with lower quality. Best quality is achieved by using a value of 100.
+.br
+In case of lossless compression (specified by the \-lossless option), a small
+factor enables faster compression speed, but produces a larger file. Maximum
+compression is achieved by using a value of 100.
 .TP
 .B \-alpha_q int
 Specify the compression factor for alpha compression between 0 and 100.
