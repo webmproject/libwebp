@@ -222,15 +222,15 @@ static const int16_t kCoeff16[] = {
   5352,  5352,  5352, 5352, 2217,  2217,  2217, 2217
 };
 static const int32_t kCoeff32[] = {
-  14500, 14500, 14500, 14500,
-  7500,   7500,  7500,  7500,
+   1812,  1812,  1812,  1812,
+    937,   937,   937,   937,
   12000, 12000, 12000, 12000,
   51000, 51000, 51000, 51000
 };
 
 static void FTransform(const uint8_t* src, const uint8_t* ref,
                        int16_t* out) {
- const int kBPS = BPS;
+  const int kBPS = BPS;
   const uint8_t* src_ptr = src;
   const uint8_t* ref_ptr = ref;
   int16_t* coeff16 = kCoeff16;
@@ -253,45 +253,45 @@ static void FTransform(const uint8_t* src, const uint8_t* ref,
     "vtrn.32     q4, q5                       \n"
     "vtrn.32     q6, q7                       \n"
 
-    // {q0, q1} = q4 - q6
+    // d[0-3] = src - ref
     "vsubl.u8    q0, d8, d12                  \n"
     "vsubl.u8    q1, d9, d13                  \n"
 
     // load coeff16 into q8(d16=5352, d17=2217)
     "vld1.16     {q8}, [%[coeff16]]           \n"
 
-    // load coeff32 high half into q9 = 14500, q10 = 7500
+    // load coeff32 high half into q9 = 1812, q10 = 937
     "vld1.32     {q9, q10}, [%[coeff32]]!     \n"
 
     // load coeff32 low half into q11=12000, q12=51000
     "vld1.32     {q11,q12}, [%[coeff32]]      \n"
 
     // part 1
-    // transpose d0=ip[0], d1=ip[1], d2=ip[2], d3=ip[3]
+    // Transpose. Register dN is the same as dN in C
     "vtrn.32         d0, d2                   \n"
     "vtrn.32         d1, d3                   \n"
     "vtrn.16         d0, d1                   \n"
     "vtrn.16         d2, d3                   \n"
 
-    "vadd.s16        d4, d0, d3               \n" // a1 = ip[0] + ip[3]
-    "vadd.s16        d5, d1, d2               \n" // b1 = ip[1] + ip[2]
-    "vsub.s16        d6, d1, d2               \n" // c1 = ip[1] - ip[2]
-    "vsub.s16        d7, d0, d3               \n" // d1 = ip[0] - ip[3]
+    "vadd.s16        d4, d0, d3               \n" // a0 = d0 + d3
+    "vadd.s16        d5, d1, d2               \n" // a1 = d1 + d2
+    "vsub.s16        d6, d1, d2               \n" // a2 = d1 - d2
+    "vsub.s16        d7, d0, d3               \n" // a3 = d0 - d3
 
-    "vshl.s16        q2, q2, #3               \n" // (a1, b1) << 3
-    "vshl.s16        q3, q3, #3               \n" // (c1, d1) << 3
+    "vadd.s16        d0, d4, d5               \n" // a0 + a1
+    "vshl.s16        d0, d0, #3               \n" // temp[0+i*4] = (a0+a1) << 3
+    "vsub.s16        d2, d4, d5               \n" // a0 - a1
+    "vshl.s16        d2, d2, #3               \n" // (temp[2+i*4] = (a0-a1) << 3
 
-    "vadd.s16        d0, d4, d5               \n" // op[0] = a1 + b1
-    "vsub.s16        d2, d4, d5               \n" // op[2] = a1 - b1
-    "vmlal.s16       q9, d7, d16              \n" // d1*5352 + 14500
-    "vmlal.s16       q10, d7, d17             \n" // d1*2217 + 7500
-    "vmlal.s16       q9, d6, d17              \n" // c1*2217 + d1*5352 + 14500
-    "vmlsl.s16       q10, d6, d16             \n" // d1*2217 - c1*5352 + 7500
+    "vmlal.s16       q9, d7, d16              \n" // a3*5352 + 1812
+    "vmlal.s16       q10, d7, d17             \n" // a3*2217 + 937
+    "vmlal.s16       q9, d6, d17              \n" // a2*2217 + a3*5352 + 1812
+    "vmlsl.s16       q10, d6, d16             \n" // a3*2217 + 937 - a2*5352
 
-    // op[1] = (c1*2217 + d1*5352 + 14500) >> 12
-    // op[3] = (d1*2217 - c1*5352 +  7500) >> 12
-    "vshrn.s32       d1, q9, #12              \n"
-    "vshrn.s32       d3, q10, #12             \n"
+    // temp[1+i*4] = (d2*2217 + d3*5352 + 1812) >> 9
+    // temp[3+i*4] = (d3*2217 + 937 - d2*5352) >> 9
+    "vshrn.s32       d1, q9, #9               \n"
+    "vshrn.s32       d3, q10, #9              \n"
 
     // part 2
     // transpose d0=ip[0], d1=ip[4], d2=ip[8], d3=ip[12]
@@ -398,7 +398,7 @@ static void FTransformWHT(const int16_t* in, int16_t* out) {
     "vqsub.s32       q6, q3, q2                 \n" // b2 = a3 - a2
     "vqsub.s32       q7, q0, q1                 \n" // b3 = a0 - a1
 
-    "vmov.32         q0, #3                     \n" // q0 = 3
+    "vmov.s32         q0, #3                    \n" // q0 = 3
 
     "vcgt.s32        q1, q4, #0                 \n" // (b0>0)
     "vqsub.s32       q2, q4, q1                 \n" // (b0+(b0>0))
