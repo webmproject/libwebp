@@ -813,30 +813,24 @@ static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
   return err;
 }
 
-// Bundles multiple (2, 4 or 8) pixels into a single pixel.
-// Returns the new xsize.
-static void BundleColorMap(const WebPPicture* const pic,
-                           int xbits, uint32_t* bundled_argb, int xs) {
-  int y;
-  const int bit_depth = 1 << (3 - xbits);
-  uint32_t code = 0;
-  const uint32_t* argb = pic->argb;
-  const int width = pic->width;
-  const int height = pic->height;
-
-  for (y = 0; y < height; ++y) {
-    int x;
+// Bundles multiple (1, 2, 4 or 8) pixels into a single pixel.
+static void BundleColorMap(const uint8_t* const row, int width,
+                           int xbits, uint32_t* const dst) {
+  int x;
+  if (xbits > 0) {
+    const int bit_depth = 1 << (3 - xbits);
+    const int mask = (1 << xbits) - 1;
+    uint32_t code = 0xff000000;
     for (x = 0; x < width; ++x) {
-      const int mask = (1 << xbits) - 1;
       const int xsub = x & mask;
       if (xsub == 0) {
-        code = 0;
+        code = 0xff000000;
       }
-      // TODO(vikasa): simplify the bundling logic.
-      code |= (argb[x] & 0xff00) << (bit_depth * xsub);
-      bundled_argb[y * xs + (x >> xbits)] = 0xff000000 | code;
+      code |= row[x] << (8 + bit_depth * xsub);
+      dst[x >> xbits] = code;
     }
-    argb += pic->argb_stride;
+  } else {
+    for (x = 0; x < width; ++x) dst[x] = 0xff000000 | (row[x] << 8);
   }
 }
 
@@ -848,24 +842,43 @@ static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
   WebPEncodingError err = VP8_ENC_OK;
   int i, x, y;
   const WebPPicture* const pic = enc->pic_;
-  uint32_t* argb = pic->argb;
+  uint32_t* src = pic->argb;
+  uint32_t* dst;
   const int width = pic->width;
   const int height = pic->height;
   uint32_t* const palette = enc->palette_;
   const int palette_size = enc->palette_size_;
+  uint8_t* row = NULL;
+  int xbits;
 
   // Replace each input pixel by corresponding palette index.
+  // This is done line by line.
+  if (palette_size <= 4) {
+    xbits = (palette_size <= 2) ? 3 : 2;
+  } else {
+    xbits = (palette_size <= 16) ? 1 : 0;
+  }
+
+  err = AllocateTransformBuffer(enc, VP8LSubSampleSize(width, xbits), height);
+  if (err != VP8_ENC_OK) goto Error;
+  dst = enc->argb_;
+
+  row = WebPSafeMalloc((uint64_t)width, sizeof(*row));
+  if (row == NULL) return VP8_ENC_ERROR_OUT_OF_MEMORY;
+
   for (y = 0; y < height; ++y) {
     for (x = 0; x < width; ++x) {
-      const uint32_t pix = argb[x];
+      const uint32_t pix = src[x];
       for (i = 0; i < palette_size; ++i) {
         if (pix == palette[i]) {
-          argb[x] = 0xff000000u | (i << 8);
+          row[x] = i;
           break;
         }
       }
     }
-    argb += pic->argb_stride;
+    BundleColorMap(row, width, xbits, dst);
+    src += pic->argb_stride;
+    dst += enc->current_width_;
   }
 
   // Save palette to bitstream.
@@ -881,20 +894,8 @@ static WebPEncodingError ApplyPalette(VP8LBitWriter* const bw,
     goto Error;
   }
 
-  if (palette_size <= 16) {
-    // Image can be packed (multiple pixels per uint32_t).
-    int xbits = 1;
-    if (palette_size <= 2) {
-      xbits = 3;
-    } else if (palette_size <= 4) {
-      xbits = 2;
-    }
-    err = AllocateTransformBuffer(enc, VP8LSubSampleSize(width, xbits), height);
-    if (err != VP8_ENC_OK) goto Error;
-    BundleColorMap(pic, xbits, enc->argb_, enc->current_width_);
-  }
-
  Error:
+  free(row);
   return err;
 }
 
