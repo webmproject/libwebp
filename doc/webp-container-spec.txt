@@ -13,9 +13,6 @@ end of this file.
 WebP Container Specification
 ============================
 
-_Working Draft, v1.0, 20121109_
-
-
 * TOC placeholder
 {:toc}
 
@@ -62,6 +59,12 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
 document are to be interpreted as described in [RFC 2119][].
 
+**Note:** Out of the features mentioned above, lossy compression, lossless
+compression and transparency are finalized and are to be considered stable.
+On the other hand, metadata, color profile, animation and image fragmentation
+are experimental as of now, and are open to discussion, feedback and comments.
+The same is indicated using annotation "_status: experimental_" in the relevant
+sections of this document.
 
 Terminology &amp; Basics
 ------------------------
@@ -271,17 +274,17 @@ An extended format file consists of:
 
   * A 'VP8X' chunk with information about features used in the file.
 
-  * An optional 'ICCP' chunk with color profile.
+  * An optional 'ICCP' chunk with color profile. _\[status: experimental\]_
 
-  * An optional 'ANIM' chunk with animation control data.
+  * An optional 'ANIM' chunk with animation control data. _\[status: experimental\]_
 
   * Image data.
 
-  * An optional 'EXIF' chunk with EXIF metadata.
+  * An optional 'EXIF' chunk with EXIF metadata. _\[status: experimental\]_
 
-  * An optional 'XMP ' chunk with XMP metadata.
+  * An optional 'XMP ' chunk with XMP metadata. _\[status: experimental\]_
 
-  * An optional list of [unknown chunks](#unknown-chunks).
+  * An optional list of [unknown chunks](#unknown-chunks). _\[status: experimental\]_
 
 For a _still image_, the _image data_ consists of a single frame, whereas for
 an _animated image_, it consists of multiple frames. More details about frames
@@ -322,7 +325,7 @@ Reserved (Rsv): 2 bits
 
 : SHOULD be `0`.
 
-ICC profile (I): 1 bit
+ICC profile (I): 1 bit _\[status: experimental\]_
 
 : Set if the file contains an ICC profile.
 
@@ -331,20 +334,20 @@ Alpha (L): 1 bit
 : Set if any of the frames of the image contain transparency information
 ("alpha").
 
-EXIF metadata (E): 1 bit
+EXIF metadata (E): 1 bit _\[status: experimental\]_
 
 : Set if the file contains EXIF metadata.
 
-XMP metadata (X): 1 bit
+XMP metadata (X): 1 bit _\[status: experimental\]_
 
 : Set if the file contains XMP metadata.
 
-Animation (A): 1 bit
+Animation (A): 1 bit _\[status: experimental\]_
 
 : Set if this is an animated image. Data in 'ANIM' and 'ANMF' chunks should be
 used to control the animation.
 
-Image Fragmentation (F): 1 bit
+Image Fragmentation (F): 1 bit _\[status: experimental\]_
 
 : Set if any of the frames in the image are represented by fragments.
 
@@ -368,7 +371,7 @@ Future specifications MAY add more fields.
 
 ### Chunks
 
-#### Animation
+#### Animation _\[status: experimental\]_
 
 An animation is controlled by ANIM and ANMF chunks.
 
@@ -475,7 +478,7 @@ Frame Data: _Chunk Size_ - `16` bytes
 
   * An optional list of [unknown chunks](#unknown-chunks).
 
-#### Fragments
+#### Fragments _\[status: experimental\]_
 
 For images that are represented by fragments, this chunk contains data for
 a single fragment. If the _Image Fragmentation Flag_ is not set, then this chunk
@@ -641,7 +644,7 @@ The formats of VP8 and VP8L chunks are as described in sections
 [Simple file format (lossy)](#simple-file-format-lossy)
 and [Simple file format (lossless)](#simple-file-format-lossless) respectively.
 
-#### Color profile
+#### Color profile _\[status: experimental\]_
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -663,7 +666,7 @@ See the [ICC Specification][iccspec] for details.
 
 If this chunk is not present, sRGB SHOULD be assumed.
 
-#### Metadata
+#### Metadata _\[status: experimental\]_
 
 Metadata can be stored in 'EXIF' or 'XMP ' chunks.
 
@@ -705,7 +708,7 @@ XMP Metadata: _Chunk Size_ bytes
 Additional guidance about handling metadata can be found in the
 Metadata Working Group's [Guidelines for Handling Metadata][metadata].
 
-#### Unknown Chunks
+#### Unknown Chunks _\[status: experimental\]_
 
 A RIFF chunk (described in [this](#terminology-amp-basics) section) whose _chunk
 tag_ is different from any of the chunks described in this document, is
@@ -724,7 +727,7 @@ A file MAY contain unknown chunks:
 Readers SHOULD ignore these chunks. Writers SHOULD preserve them in their
 original order (unless they specifically intend to modify these chunks).
 
-### Assembling the Canvas from fragments/frames
+### Assembling the Canvas from fragments/frames _\[status: experimental\]_
 
 Here we provide an overview of how a reader should assemble a canvas in case
 of a fragmented-image and in case of an animated image. The notation
