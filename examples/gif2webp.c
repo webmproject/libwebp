@@ -19,8 +19,6 @@
 #include "config.h"
 #endif
 
-// TODO(later): Use WEBP_USE_GIF flag here, determined at config time.
-
 #include <gif_lib.h>
 #include "webp/encode.h"
 #include "webp/mux.h"

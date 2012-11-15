@@ -148,6 +148,32 @@ AC_SUBST(TIFF_INCLUDES)
 CPPFLAGS=$SAVED_CPPFLAGS
 LIBS=$SAVED_LIBS
 
+dnl === check for GIF support ===
+
+WEBP_HAVE_GIF=""
+GIF_LIBS=""
+WITHLIB_OPTION([gif], [GIF])
+
+SAVED_LIBS=$LIBS
+LIBS="$GIF_LIBS $LIBS"
+
+AC_CHECK_HEADER(gif_lib.h,
+  AC_CHECK_LIB([gif], [DGifOpenFileHandle],
+               [GIF_LIBS="$GIF_LIBS -lgif"
+                WEBP_HAVE_GIF=1
+               ],
+               AC_MSG_WARN(Optional gif library not found),
+               [$MATH_LIBS]),
+  AC_MSG_WARN(gif library not available - no gif_lib.h)
+)
+AC_SUBST(GIF_LIBS)
+
+CPPFLAGS=$SAVED_CPPFLAGS
+LIBS=$SAVED_LIBS
+
+AM_CONDITIONAL([BUILD_GIF2WEBP], [test "$WEBP_HAVE_GIF" = "1" -a \
+                                  "$enable_experimental_libwebpmux" = "yes"])
+
 dnl === check for WIC support ===
 
 if test "$target_os" = "mingw32"; then
