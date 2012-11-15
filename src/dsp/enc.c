@@ -134,25 +134,25 @@ static void FTransform(const uint8_t* src, const uint8_t* ref, int16_t* out) {
   int i;
   int tmp[16];
   for (i = 0; i < 4; ++i, src += BPS, ref += BPS) {
-    const int d0 = src[0] - ref[0];
+    const int d0 = src[0] - ref[0];   // 9bit dynamic range ([-255,255])
     const int d1 = src[1] - ref[1];
     const int d2 = src[2] - ref[2];
     const int d3 = src[3] - ref[3];
-    const int a0 = (d0 + d3) << 3;
-    const int a1 = (d1 + d2) << 3;
-    const int a2 = (d1 - d2) << 3;
-    const int a3 = (d0 - d3) << 3;
-    tmp[0 + i * 4] = (a0 + a1);
-    tmp[1 + i * 4] = (a2 * 2217 + a3 * 5352 + 14500) >> 12;
-    tmp[2 + i * 4] = (a0 - a1);
-    tmp[3 + i * 4] = (a3 * 2217 - a2 * 5352 +  7500) >> 12;
+    const int a0 = (d0 + d3);         // 10b                      [-510,510]
+    const int a1 = (d1 + d2);
+    const int a2 = (d1 - d2);
+    const int a3 = (d0 - d3);
+    tmp[0 + i * 4] = (a0 + a1) << 3;  // 14b                      [-8160,8160]
+    tmp[1 + i * 4] = (a2 * 2217 + a3 * 5352 + 1812) >> 9;      // [-7536,7542]
+    tmp[2 + i * 4] = (a0 - a1) << 3;
+    tmp[3 + i * 4] = (a3 * 2217 - a2 * 5352 +  937) >> 9;
   }
   for (i = 0; i < 4; ++i) {
-    const int a0 = (tmp[0 + i] + tmp[12 + i]);
+    const int a0 = (tmp[0 + i] + tmp[12 + i]);  // 15b
     const int a1 = (tmp[4 + i] + tmp[ 8 + i]);
     const int a2 = (tmp[4 + i] - tmp[ 8 + i]);
     const int a3 = (tmp[0 + i] - tmp[12 + i]);
-    out[0 + i] = (a0 + a1 + 7) >> 4;
+    out[0 + i] = (a0 + a1 + 7) >> 4;            // 12b
     out[4 + i] = ((a2 * 2217 + a3 * 5352 + 12000) >> 16) + (a3 != 0);
     out[8 + i] = (a0 - a1 + 7) >> 4;
     out[12+ i] = ((a3 * 2217 - a2 * 5352 + 51000) >> 16);

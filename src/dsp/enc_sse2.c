@@ -295,8 +295,8 @@ static void FTransformSSE2(const uint8_t* src, const uint8_t* ref,
                            int16_t* out) {
   const __m128i zero = _mm_setzero_si128();
   const __m128i seven = _mm_set1_epi16(7);
-  const __m128i k7500 = _mm_set1_epi32(7500);
-  const __m128i k14500 = _mm_set1_epi32(14500);
+  const __m128i k937 = _mm_set1_epi32(937);
+  const __m128i k1812 = _mm_set1_epi32(1812);
   const __m128i k51000 = _mm_set1_epi32(51000);
   const __m128i k12000_plus_one = _mm_set1_epi32(12000 + (1 << 16));
   const __m128i k5352_2217 = _mm_set_epi16(5352,  2217, 5352,  2217,
@@ -352,32 +352,32 @@ static void FTransformSSE2(const uint8_t* src, const uint8_t* ref,
   // First pass and subsequent transpose.
   {
     // Same operations are done on the (0,3) and (1,2) pairs.
-    // b0 = (a0 + a3) << 3
-    // b1 = (a1 + a2) << 3
-    // b3 = (a0 - a3) << 3
-    // b2 = (a1 - a2) << 3
+    // b0 = (a0 + a3)
+    // b1 = (a1 + a2)
+    // b3 = (a0 - a3)
+    // b2 = (a1 - a2)
     const __m128i a01 = _mm_add_epi16(v01, v32);
     const __m128i a32 = _mm_sub_epi16(v01, v32);
-    const __m128i b01 = _mm_slli_epi16(a01, 3);
-    const __m128i b32 = _mm_slli_epi16(a32, 3);
-    const __m128i b11 = _mm_unpackhi_epi64(b01, b01);
-    const __m128i b22 = _mm_unpackhi_epi64(b32, b32);
+    const __m128i b11 = _mm_unpackhi_epi64(a01, a01);
+    const __m128i b22 = _mm_unpackhi_epi64(a32, a32);
 
-    // e0 = b0 + b1
-    // e2 = b0 - b1
-    const __m128i e0 = _mm_add_epi16(b01, b11);
-    const __m128i e2 = _mm_sub_epi16(b01, b11);
-    const __m128i e02 = _mm_unpacklo_epi64(e0, e2);
+    // e0 = (b0 + b1)
+    // e2 = (b0 - b1)
+    const __m128i e0 = _mm_add_epi16(a01, b11);
+    const __m128i e2 = _mm_sub_epi16(a01, b11);
+    // e02 = [e0 | e2] << 3
+    const __m128i e0_e2 = _mm_unpacklo_epi64(e0, e2);
+    const __m128i e02 = _mm_slli_epi16(e0_e2, 3);
 
-    // e1 = (b3 * 5352 + b2 * 2217 + 14500) >> 12
-    // e3 = (b3 * 2217 - b2 * 5352 +  7500) >> 12
-    const __m128i b23 = _mm_unpacklo_epi16(b22, b32);
+    // e1 = (b3 * 5352 + b2 * 2217 + 1812) >> 9
+    // e3 = (b3 * 2217 - b2 * 5352 + 937) >> 9
+    const __m128i b23 = _mm_unpacklo_epi16(b22, a32);
     const __m128i c1 = _mm_madd_epi16(b23, k5352_2217);
     const __m128i c3 = _mm_madd_epi16(b23, k2217_5352);
-    const __m128i d1 = _mm_add_epi32(c1, k14500);
-    const __m128i d3 = _mm_add_epi32(c3, k7500);
-    const __m128i e1 = _mm_srai_epi32(d1, 12);
-    const __m128i e3 = _mm_srai_epi32(d3, 12);
+    const __m128i d1 = _mm_add_epi32(c1, k1812);
+    const __m128i d3 = _mm_add_epi32(c3, k937);
+    const __m128i e1 = _mm_srai_epi32(d1, 9);
+    const __m128i e3 = _mm_srai_epi32(d3, 9);
     const __m128i e13 = _mm_packs_epi32(e1, e3);
 
     // Transpose.
@@ -406,13 +406,12 @@ static void FTransformSSE2(const uint8_t* src, const uint8_t* ref,
     const __m128i a32 = _mm_sub_epi16(v01, v32);
     const __m128i a11 = _mm_unpackhi_epi64(a01, a01);
     const __m128i a22 = _mm_unpackhi_epi64(a32, a32);
+    const __m128i a01_plus_7 = _mm_add_epi16(a01, seven);
 
     // d0 = (a0 + a1 + 7) >> 4;
     // d2 = (a0 - a1 + 7) >> 4;
-    const __m128i b0 = _mm_add_epi16(a01, a11);
-    const __m128i b2 = _mm_sub_epi16(a01, a11);
-    const __m128i c0 = _mm_add_epi16(b0, seven);
-    const __m128i c2 = _mm_add_epi16(b2, seven);
+    const __m128i c0 = _mm_add_epi16(a01_plus_7, a11);
+    const __m128i c2 = _mm_sub_epi16(a01_plus_7, a11);
     const __m128i d0 = _mm_srai_epi16(c0, 4);
     const __m128i d2 = _mm_srai_epi16(c2, 4);
 
@@ -430,6 +429,7 @@ static void FTransformSSE2(const uint8_t* src, const uint8_t* ref,
     // f1 = f1 + (a3 != 0);
     // The compare will return (0xffff, 0) for (==0, !=0). To turn that into the
     // desired (0, 1), we add one earlier through k12000_plus_one.
+    // -> f1 = f1 + 1 - (a3 == 0)
     const __m128i g1 = _mm_add_epi16(f1, _mm_cmpeq_epi16(a32, zero));
 
     _mm_storel_epi64((__m128i*)&out[ 0], d0);
