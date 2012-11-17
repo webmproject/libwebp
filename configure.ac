@@ -75,6 +75,7 @@ AC_CHECK_HEADER(png.h,
                   PNG_INCLUDES="$PNG_INCLUDES -DWEBP_HAVE_PNG"
                   AC_DEFINE(WEBP_HAVE_PNG, [1],
                             [Set to 1 if PNG library is installed])
+                  png_support=yes
                  ],
                  [AC_MSG_WARN(Optional png library not found)
                   PNG_LIBS=""
@@ -109,6 +110,7 @@ AC_CHECK_HEADER(jpeglib.h,
                 JPEG_INCLUDES="$JPEG_INCLUDES -DWEBP_HAVE_JPEG"
                 AC_DEFINE(WEBP_HAVE_JPEG, [1],
                           [Set to 1 if JPEG library is installed])
+                jpeg_support=yes
                ],
                AC_MSG_WARN(Optional jpeg library not found),
                [$MATH_LIBS]),
@@ -137,6 +139,7 @@ AC_CHECK_HEADER(tiffio.h,
                 TIFF_INCLUDES="$TIFF_INCLUDES -DWEBP_HAVE_TIFF"
                 AC_DEFINE(WEBP_HAVE_TIFF, [1],
                           [Set to 1 if TIFF library is installed])
+                tiff_support=yes
                ],
                AC_MSG_WARN(Optional tiff library not found),
                [$MATH_LIBS]),
@@ -150,7 +153,6 @@ LIBS=$SAVED_LIBS
 
 dnl === check for GIF support ===
 
-WEBP_HAVE_GIF=""
 GIF_LIBS=""
 WITHLIB_OPTION([gif], [GIF])
 
@@ -160,7 +162,7 @@ LIBS="$GIF_LIBS $LIBS"
 AC_CHECK_HEADER(gif_lib.h,
   AC_CHECK_LIB([gif], [DGifOpenFileHandle],
                [GIF_LIBS="$GIF_LIBS -lgif"
-                WEBP_HAVE_GIF=1
+                gif_support=yes
                ],
                AC_MSG_WARN(Optional gif library not found),
                [$MATH_LIBS]),
@@ -171,8 +173,11 @@ AC_SUBST(GIF_LIBS)
 CPPFLAGS=$SAVED_CPPFLAGS
 LIBS=$SAVED_LIBS
 
-AM_CONDITIONAL([BUILD_GIF2WEBP], [test "$WEBP_HAVE_GIF" = "1" -a \
-                                  "$enable_experimental_libwebpmux" = "yes"])
+if test "$gif_support" = "yes" -a \
+        "$enable_experimental_libwebpmux" = "yes"; then
+  build_gif2webp=yes
+fi
+AM_CONDITIONAL([BUILD_GIF2WEBP], [test "${build_gif2webp}" = "yes"])
 
 dnl === check for WIC support ===
 
@@ -251,3 +256,30 @@ AC_CONFIG_FILES([Makefile src/Makefile man/Makefile \
 
 
 AC_OUTPUT
+
+AC_MSG_NOTICE([
+WebP Configuration Summary
+--------------------------
+
+Shared libraries: ${enable_shared}
+Static libraries: ${enable_static}
+Threaded decode: ${enable_threading-no}
+libwebp: yes
+libwebpmux: ${enable_experimental_libwebpmux-no}
+
+Tools:
+cwebp: yes
+  Input format support
+  ====================
+  JPEG : ${jpeg_support-no}
+  PNG  : ${png_support-no}
+  TIFF : ${tiff_support-no}
+  WIC  : ${wic_support-no}
+dwebp: yes
+  Output format support
+  =====================
+  PNG  : ${png_support-no}
+  WIC  : ${wic_support-no}
+gif2webp: ${build_gif2webp-no}
+webpmux: ${enable_experimental_libwebpmux-no}
+])
