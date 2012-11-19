@@ -3,6 +3,7 @@
 #
 LIBWEBP_BASENAME = libwebp
 LIBWEBPMUX_BASENAME = libwebpmux
+LIBWEBPDEMUX_BASENAME = libwebpdemux
 
 !IFNDEF ARCH
 !IF ! [ cl 2>&1 | find "x86" > NUL ]
@@ -59,6 +60,7 @@ DIRBIN = $(DIRBASE)\bin
 LIBWEBP_PDBNAME = $(DIROBJ)\$(LIBWEBP_BASENAME).pdb
 OUTPUT_DIRS = $(DIRBIN) $(DIRINC) $(DIRLIB) \
               $(DIROBJ)\dec \
+              $(DIROBJ)\demux \
               $(DIROBJ)\dsp \
               $(DIROBJ)\enc \
               $(DIROBJ)\examples \
@@ -75,6 +77,7 @@ RTLIB          = $(RTLIBD)
 STATICLIBBUILD = TRUE
 LIBWEBP_BASENAME = $(LIBWEBP_BASENAME)_debug
 LIBWEBPMUX_BASENAME = $(LIBWEBPMUX_BASENAME)_debug
+LIBWEBPDEMUX_BASENAME = $(LIBWEBPDEMUX_BASENAME)_debug
 !ELSE IF "$(CFG)" == "release-dynamic"
 CC        = $(CCNODBG)
 DLLBUILD  = TRUE
@@ -84,6 +87,7 @@ RTLIB     = $(RTLIBD)
 DLLBUILD  = TRUE
 LIBWEBP_BASENAME = $(LIBWEBP_BASENAME)_debug
 LIBWEBPMUX_BASENAME = $(LIBWEBPMUX_BASENAME)_debug
+LIBWEBPDEMUX_BASENAME = $(LIBWEBPDEMUX_BASENAME)_debug
 !ENDIF
 
 !IF "$(STATICLIBBUILD)" == "TRUE"
@@ -91,12 +95,14 @@ CC     = $(CC) $(RTLIB)
 CFGSET = TRUE
 LIBWEBP = $(DIRLIB)\$(LIBWEBP_BASENAME).lib
 LIBWEBPMUX = $(DIRLIB)\$(LIBWEBPMUX_BASENAME).lib
+LIBWEBPDEMUX = $(DIRLIB)\$(LIBWEBPDEMUX_BASENAME).lib
 !ELSE IF "$(DLLBUILD)" == "TRUE"
 DLLC   = webp_dll.c
 DLLINC = webp_dll.h
 CC     = $(CC) /I$(DIROBJ) /FI$(DLLINC) $(RTLIB) /DWEBP_DLL
 LIBWEBP = $(DIRLIB)\$(LIBWEBP_BASENAME)_dll.lib
 LIBWEBPMUX = $(DIRLIB)\$(LIBWEBPMUX_BASENAME)_dll.lib
+LIBWEBPDEMUX = $(DIRLIB)\$(LIBWEBPMDEMUX_BASENAME)_dll.lib
 LIBWEBP_OBJS = $(DIROBJ)\$(DLLC:.c=.obj)
 LIBWEBP_PDBNAME = $(DIROBJ)\$(LIBWEBP_BASENAME)_dll.pdb
 CFGSET = TRUE
@@ -151,6 +157,9 @@ DEC_OBJS = \
     $(DIROBJ)\dec\vp8l.obj \
     $(DIROBJ)\dec\webp.obj \
 
+DEMUX_OBJS = \
+    $(DIROBJ)\demux\demux.obj \
+
 DSP_OBJS = \
     $(DIROBJ)\dsp\cpu.obj \
     $(DIROBJ)\dsp\dec.obj \
@@ -184,7 +193,6 @@ ENC_OBJS = \
     $(DIROBJ)\enc\webpenc.obj \
 
 MUX_OBJS = \
-    $(DIROBJ)\mux\demux.obj \
     $(DIROBJ)\mux\muxedit.obj \
     $(DIROBJ)\mux\muxinternal.obj \
     $(DIROBJ)\mux\muxread.obj \
@@ -203,6 +211,7 @@ UTILS_OBJS = \
 
 LIBWEBP_OBJS = $(DEC_OBJS) $(DSP_OBJS) $(ENC_OBJS) $(UTILS_OBJS) $(LIBWEBP_OBJS)
 LIBWEBPMUX_OBJS = $(MUX_OBJS) $(LIBWEBPMUX_OBJS)
+LIBWEBPDEMUX_OBJS = $(DEMUX_OBJS) $(LIBWEBPDEMUX_OBJS)
 
 OUT_LIBS = $(LIBWEBP)
 OUT_EXAMPLES = $(DIRBIN)\cwebp.exe $(DIRBIN)\dwebp.exe
@@ -221,25 +230,28 @@ experimental:
 
 $(LIBWEBP): $(LIBWEBP_OBJS)
 $(LIBWEBPMUX): $(LIBWEBPMUX_OBJS)
+$(LIBWEBPDEMUX): $(LIBWEBPDEMUX_OBJS)
 
-$(LIBWEBP_OBJS) $(LIBWEBPMUX_OBJS): $(OUTPUT_DIRS)
+$(LIBWEBP_OBJS) $(LIBWEBPMUX_OBJS) $(LIBWEBPDEMUX_OBJS): $(OUTPUT_DIRS)
 
 !IF "$(DLLBUILD)" == "TRUE"
-$(LIBWEBP_OBJS) $(LIBWEBPMUX_OBJS): $(DIROBJ)\$(DLLINC) $(DIROBJ)\$(DLLC)
+$(LIBWEBP_OBJS) $(LIBWEBPMUX_OBJS) $(LIBWEBPDEMUX_OBJS):
+	$(DIROBJ)\$(DLLINC) $(DIROBJ)\$(DLLC)
 
 {$(DIROBJ)}.c{$(DIROBJ)}.obj:
 	$(CC) $(CFLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$@  $<
 
 $(LIBWEBPMUX): $(LIBWEBP)
+$(LIBWEBPDEMUX): $(LIBWEBP)
 
-$(LIBWEBP) $(LIBWEBPMUX):
+$(LIBWEBP) $(LIBWEBPMUX) $(LIBWEBPDEMUX):
 	$(LNKDLL) /out:$(DIRBIN)\$(@B:_dll=.dll) /implib:$@ $(LFLAGS) $**
 	-xcopy $(DIROBJ)\*.pdb $(DIRLIB) /y
 
 clean::
 	@-erase /s $(DIROBJ)\$(DLLC) $(DIROBJ)\$(DLLINC) 2> NUL
 !ELSE
-$(LIBWEBP) $(LIBWEBPMUX):
+$(LIBWEBP) $(LIBWEBPMUX) $(LIBWEBPDEMUX):
 	$(LNKLIB) /out:$@ $(LFLAGS) $**
 	-xcopy $(DIROBJ)\*.pdb $(DIRLIB) /y
 !ENDIF
@@ -269,6 +281,8 @@ $(DIROBJ)\$(DLLC): $(DIROBJ)\$(DLLINC)
 	$(CC) $(CFLAGS) /Fd$(DIROBJ)\examples\ /Fo$(DIROBJ)\examples\  $<
 {src\dec}.c{$(DIROBJ)\dec}.obj::
 	$(CC) $(CFLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$(DIROBJ)\dec\ $<
+{src\demux}.c{$(DIROBJ)\demux}.obj::
+	$(CC) $(CFLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$(DIROBJ)\demux\ $<
 {src\dsp}.c{$(DIROBJ)\dsp}.obj::
 	$(CC) $(CFLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$(DIROBJ)\dsp\ $<
 {src\enc}.c{$(DIROBJ)\enc}.obj::

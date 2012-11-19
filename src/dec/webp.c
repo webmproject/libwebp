@@ -308,7 +308,7 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
       // necessary to send VP8X chunk to the decoder.
       return VP8_STATUS_BITSTREAM_ERROR;
     }
-    if (has_alpha != NULL) *has_alpha = !!(flags & ALPHA_FLAG_BIT);
+    if (has_alpha != NULL) *has_alpha = !!(flags & ALPHA_FLAG);
     if (found_vp8x && headers == NULL) {
       return VP8_STATUS_OK;  // Return features from VP8X header.
     }

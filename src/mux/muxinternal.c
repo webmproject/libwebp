@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include "./muxi.h"
+#include "../utils/utils.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -218,35 +219,6 @@ uint8_t* ChunkListEmit(const WebPChunk* chunk_list, uint8_t* dst) {
     chunk_list = chunk_list->next_;
   }
   return dst;
-}
-
-//------------------------------------------------------------------------------
-// Manipulation of a WebPData object.
-
-void WebPDataInit(WebPData* webp_data) {
-  if (webp_data != NULL) {
-    memset(webp_data, 0, sizeof(*webp_data));
-  }
-}
-
-void WebPDataClear(WebPData* webp_data) {
-  if (webp_data != NULL) {
-    free((void*)webp_data->bytes);
-    WebPDataInit(webp_data);
-  }
-}
-
-int WebPDataCopy(const WebPData* src, WebPData* dst) {
-  if (src == NULL || dst == NULL) return 0;
-
-  WebPDataInit(dst);
-  if (src->bytes != NULL && src->size != 0) {
-    dst->bytes = (uint8_t*)malloc(src->size);
-    if (dst->bytes == NULL) return 0;
-    memcpy((void*)dst->bytes, src->bytes, src->size);
-    dst->size = src->size;
-  }
-  return 1;
 }
 
 //------------------------------------------------------------------------------

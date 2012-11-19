@@ -20,7 +20,7 @@
 #include <string.h>
 
 #include "webp/decode.h"
-#include "webp/mux.h"
+#include "webp/demux.h"
 
 #ifdef __APPLE__
 #include <GLUT/glut.h>
