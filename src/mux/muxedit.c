@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include "./muxi.h"
+#include "../utils/utils.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

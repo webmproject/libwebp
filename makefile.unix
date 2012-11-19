@@ -2,7 +2,8 @@
 # system, for simple local building of the libraries and tools.
 # It will not install the libraries system-wide, but just create the 'cwebp'
 # and 'dwebp' tools in the examples/ directory, along with the static
-# libraries 'src/libwebp.a' and 'src/mux/libwebpmux.a'.
+# libraries 'src/libwebp.a', 'src/mux/libwebpmux.a' and
+# 'src/demux/libwebpdemux.a'.
 #
 # To build the library and examples, use:
 #    make -f makefile.unix
@@ -85,6 +86,9 @@ DEC_OBJS = \
     src/dec/vp8l.o \
     src/dec/webp.o \
 
+DEMUX_OBJS = \
+    src/demux/demux.o \
+
 DSP_OBJS = \
     src/dsp/cpu.o \
     src/dsp/dec.o \
@@ -120,7 +124,6 @@ EX_UTIL_OBJS = \
     examples/example_util.o \
 
 MUX_OBJS = \
-    src/mux/demux.o \
     src/mux/muxedit.o \
     src/mux/muxinternal.o \
     src/mux/muxread.o \
@@ -139,6 +142,7 @@ UTILS_OBJS = \
 
 LIBWEBP_OBJS = $(DEC_OBJS) $(DSP_OBJS) $(ENC_OBJS) $(UTILS_OBJS)
 LIBWEBPMUX_OBJS = $(MUX_OBJS)
+LIBWEBPDEMUX_OBJS = $(DEMUX_OBJS)
 
 HDRS_INSTALLED = \
     src/webp/decode.h \
@@ -164,8 +168,10 @@ HDRS = \
     src/utils/quant_levels.h \
     src/utils/rescaler.h \
     src/utils/thread.h \
+    src/webp/demux.h \
     src/webp/format_constants.h \
     src/webp/mux.h \
+    src/webp/mux_types.h \
     $(HDRS_INSTALLED) \
 
 OUT_LIBS = examples/libexample_util.a src/libwebp.a
@@ -174,7 +180,7 @@ OUT_EXAMPLES = examples/cwebp examples/dwebp
 OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES)
 ifeq ($(MAKECMDGOALS),clean)
   OUTPUT += examples/gif2webp examples/vwebp examples/webpmux
-  OUTPUT += src/mux/libwebpmux.a
+  OUTPUT += src/demux/libwebpdemux.a src/mux/libwebpmux.a
 endif
 
 all: ex
@@ -185,6 +191,7 @@ all: ex
 examples/libexample_util.a: $(EX_UTIL_OBJS)
 src/libwebp.a: $(LIBWEBP_OBJS)
 src/mux/libwebpmux.a: $(LIBWEBPMUX_OBJS)
+src/demux/libwebpdemux.a: $(LIBWEBPDEMUX_OBJS)
 
 %.a:
 	$(AR) $(ARFLAGS) $@ $^
@@ -201,7 +208,8 @@ examples/cwebp: src/libwebp.a
 examples/dwebp: examples/libexample_util.a src/libwebp.a
 examples/gif2webp: examples/libexample_util.a src/mux/libwebpmux.a src/libwebp.a
 examples/gif2webp: EXTRA_LIBS += $(GIF_LIBS)
-examples/vwebp: examples/libexample_util.a src/mux/libwebpmux.a src/libwebp.a
+examples/vwebp: examples/libexample_util.a src/demux/libwebpdemux.a
+examples/vwebp: src/libwebp.a
 examples/vwebp: EXTRA_LIBS += $(GL_LIBS)
 examples/webpmux: examples/libexample_util.a src/mux/libwebpmux.a src/libwebp.a
 
@@ -228,6 +236,7 @@ clean:
 	$(RM) $(OUTPUT) *~ \
               examples/*.o examples/*~ \
               src/dec/*.o src/dec/*~ \
+              src/demux/*.o src/demux/*~ \
               src/dsp/*.o src/dsp/*~ \
               src/enc/*.o src/enc/*~ \
               src/mux/*.o src/mux/*~ \

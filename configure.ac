@@ -238,6 +238,14 @@ AC_ARG_ENABLE([experimental-libwebpmux],
 AC_MSG_RESULT(${enable_experimental_libwebpmux-no})
 AM_CONDITIONAL([WANT_MUX], [test "$enable_experimental_libwebpmux" = "yes"])
 
+dnl === Check whether libwebpdemux should be built
+AC_MSG_CHECKING(whether libwebpdemux is to be built)
+AC_ARG_ENABLE([experimental-libwebpdemux],
+              AS_HELP_STRING([--enable-experimental-libwebpdemux],
+                             [Build libwebpdemux @<:@default=no@:>@]))
+AC_MSG_RESULT(${enable_experimental_libwebpdemux-no})
+AM_CONDITIONAL([WANT_DEMUX], [test "$enable_experimental_libwebpdemux" = "yes"])
+
 dnl =========================
 
 AC_CONFIG_MACRO_DIR([m4])
@@ -245,8 +253,8 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile src/Makefile man/Makefile \
                  examples/Makefile src/dec/Makefile \
                  src/enc/Makefile src/dsp/Makefile \
+                 src/demux/Makefile src/mux/Makefile \
                  src/utils/Makefile \
-                 src/mux/Makefile \
                  src/libwebp.pc])
 
 

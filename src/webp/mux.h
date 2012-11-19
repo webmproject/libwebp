@@ -45,7 +45,8 @@
 #ifndef WEBP_WEBP_MUX_H_
 #define WEBP_WEBP_MUX_H_
 
-#include "./types.h"
+#include "./format_constants.h"
+#include "./mux_types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -54,23 +55,12 @@ extern "C" {
 #define WEBP_MUX_ABI_VERSION 0x0100        // MAJOR(8b) + MINOR(8b)
 
 typedef struct WebPMux WebPMux;   // main opaque object.
-typedef struct WebPData WebPData;
 #if !(defined(__cplusplus) || defined(c_plusplus))
 typedef enum WebPMuxError WebPMuxError;
-typedef enum WebPFeatureFlags WebPFeatureFlags;
 typedef enum WebPChunkId WebPChunkId;
-typedef enum WebPMuxAnimDispose WebPMuxAnimDispose;
 #endif
 typedef struct WebPMuxFrameInfo WebPMuxFrameInfo;
 typedef struct WebPMuxAnimParams WebPMuxAnimParams;
-
-typedef struct WebPDemuxer WebPDemuxer;
-#if !(defined(__cplusplus) || defined(c_plusplus))
-typedef enum WebPDemuxState WebPDemuxState;
-typedef enum WebPFormatFeature WebPFormatFeature;
-#endif
-typedef struct WebPIterator WebPIterator;
-typedef struct WebPChunkIterator WebPChunkIterator;
 
 // Error codes
 enum WebPMuxError {
@@ -80,16 +70,6 @@ enum WebPMuxError {
   WEBP_MUX_BAD_DATA           = -2,
   WEBP_MUX_MEMORY_ERROR       = -3,
   WEBP_MUX_NOT_ENOUGH_DATA    = -4
-};
-
-// Flag values for different features used in VP8X chunk.
-enum WebPFeatureFlags {
-  FRAGMENTS_FLAG  = 0x00000001,
-  ANIMATION_FLAG  = 0x00000002,
-  XMP_FLAG        = 0x00000004,
-  EXIF_FLAG       = 0x00000008,
-  ALPHA_FLAG      = 0x00000010,
-  ICCP_FLAG       = 0x00000020
 };
 
 // IDs for different types of chunks.
@@ -106,27 +86,6 @@ enum WebPChunkId {
   WEBP_CHUNK_UNKNOWN,  // Other chunks.
   WEBP_CHUNK_NIL
 };
-
-// Data type used to describe 'raw' data, e.g., chunk data
-// (ICC profile, metadata) and WebP compressed image data.
-struct WebPData {
-  const uint8_t* bytes;
-  size_t size;
-};
-
-//------------------------------------------------------------------------------
-// Manipulation of a WebPData object.
-
-// Initializes the contents of the 'webp_data' object with default values.
-WEBP_EXTERN(void) WebPDataInit(WebPData* webp_data);
-
-// Clears the contents of the 'webp_data' object by calling free(). Does not
-// deallocate the object itself.
-WEBP_EXTERN(void) WebPDataClear(WebPData* webp_data);
-
-// Allocates necessary storage for 'dst' and copies the contents of 'src'.
-// Returns true on success.
-WEBP_EXTERN(int) WebPDataCopy(const WebPData* src, WebPData* dst);
 
 //------------------------------------------------------------------------------
 // Life of a Mux object
@@ -221,13 +180,6 @@ WEBP_EXTERN(WebPMuxError) WebPMuxDeleteChunk(
 
 //------------------------------------------------------------------------------
 // Images.
-
-// Dispose method (animation only). Indicates how the area used by the current
-// frame is to be treated before rendering the next frame on the canvas.
-enum WebPMuxAnimDispose {
-  WEBP_MUX_DISPOSE_NONE,       // Do not dispose.
-  WEBP_MUX_DISPOSE_BACKGROUND  // Dispose to background color.
-};
 
 // Encapsulates data about a single frame/fragment.
 struct WebPMuxFrameInfo {
@@ -388,144 +340,6 @@ WEBP_EXTERN(WebPMuxError) WebPMuxNumChunks(const WebPMux* mux,
 //   WEBP_MUX_OK - on success
 WEBP_EXTERN(WebPMuxError) WebPMuxAssemble(WebPMux* mux,
                                           WebPData* assembled_data);
-
-//------------------------------------------------------------------------------
-// Demux API.
-// Enables extraction of image and extended format data from WebP files.
-
-#define WEBP_DEMUX_ABI_VERSION 0x0100    // MAJOR(8b) + MINOR(8b)
-
-enum WebPDemuxState {
-  WEBP_DEMUX_PARSING_HEADER,  // Not enough data to parse full header.
-  WEBP_DEMUX_PARSED_HEADER,   // Header parsing complete, data may be available.
-  WEBP_DEMUX_DONE             // Entire file has been parsed.
-};
-
-//------------------------------------------------------------------------------
-// Life of a Demux object
-
-// Internal, version-checked, entry point
-WEBP_EXTERN(WebPDemuxer*) WebPDemuxInternal(
-    const WebPData*, int, WebPDemuxState*, int);
-
-// Parses the WebP file given by 'data'.
-// A complete WebP file must be present in 'data' for the function to succeed.
-// Returns a WebPDemuxer object on successful parse, NULL otherwise.
-static WEBP_INLINE WebPDemuxer* WebPDemux(const WebPData* data) {
-  return WebPDemuxInternal(data, 0, NULL, WEBP_DEMUX_ABI_VERSION);
-}
-
-// Parses the WebP file given by 'data'.
-// If 'state' is non-NULL it will be set to indicate the status of the demuxer.
-// Returns a WebPDemuxer object on successful parse, NULL otherwise.
-static WEBP_INLINE WebPDemuxer* WebPDemuxPartial(
-    const WebPData* data, WebPDemuxState* state) {
-  return WebPDemuxInternal(data, 1, state, WEBP_DEMUX_ABI_VERSION);
-}
-
-// Frees memory associated with 'dmux'.
-WEBP_EXTERN(void) WebPDemuxDelete(WebPDemuxer* dmux);
-
-//------------------------------------------------------------------------------
-// Data/information extraction.
-
-enum WebPFormatFeature {
-  WEBP_FF_FORMAT_FLAGS,  // Extended format flags present in the 'VP8X' chunk.
-  WEBP_FF_CANVAS_WIDTH,
-  WEBP_FF_CANVAS_HEIGHT,
-  WEBP_FF_LOOP_COUNT,
-  WEBP_FF_BACKGROUND_COLOR
-};
-
-// Get the 'feature' value from the 'dmux'.
-// NOTE: values are only valid if WebPDemux() was used or WebPDemuxPartial()
-// returned a state > WEBP_DEMUX_PARSING_HEADER.
-WEBP_EXTERN(uint32_t) WebPDemuxGetI(
-    const WebPDemuxer* dmux, WebPFormatFeature feature);
-
-//------------------------------------------------------------------------------
-// Frame iteration.
-
-struct WebPIterator {
-  int frame_num;
-  int num_frames;
-  int fragment_num;
-  int num_fragments;
-  int x_offset, y_offset;  // offset relative to the canvas.
-  int width, height;       // dimensions of this frame or fragment.
-  int duration;            // display duration in milliseconds.
-  WebPMuxAnimDispose dispose_method;  // dispose method for the frame.
-  int complete;   // true if 'fragment' contains a full frame. partial images
-                  // may still be decoded with the WebP incremental decoder.
-  WebPData fragment;  // The frame or fragment given by 'frame_num' and
-                      // 'fragment_num'.
-
-  uint32_t pad[4];         // padding for later use.
-  void* private_;          // for internal use only.
-};
-
-// Retrieves frame 'frame_number' from 'dmux'.
-// 'iter->fragment' points to the first fragment on return from this function.
-// Individual fragments may be extracted using WebPDemuxSetFragment().
-// Setting 'frame_number' equal to 0 will return the last frame of the image.
-// Returns false if 'dmux' is NULL or frame 'frame_number' is not present.
-// Call WebPDemuxReleaseIterator() when use of the iterator is complete.
-// NOTE: 'dmux' must persist for the lifetime of 'iter'.
-WEBP_EXTERN(int) WebPDemuxGetFrame(
-    const WebPDemuxer* dmux, int frame_number, WebPIterator* iter);
-
-// Sets 'iter->fragment' to point to the next ('iter->frame_num' + 1) or
-// previous ('iter->frame_num' - 1) frame. These functions do not loop.
-// Returns true on success, false otherwise.
-WEBP_EXTERN(int) WebPDemuxNextFrame(WebPIterator* iter);
-WEBP_EXTERN(int) WebPDemuxPrevFrame(WebPIterator* iter);
-
-// Sets 'iter->fragment' to reflect fragment number 'fragment_num'.
-// Returns true if fragment 'fragment_num' is present, false otherwise.
-WEBP_EXTERN(int) WebPDemuxSelectFragment(WebPIterator* iter, int fragment_num);
-
-// Releases any memory associated with 'iter'.
-// Must be called before destroying the associated WebPDemuxer with
-// WebPDemuxDelete().
-WEBP_EXTERN(void) WebPDemuxReleaseIterator(WebPIterator* iter);
-
-//------------------------------------------------------------------------------
-// Chunk iteration.
-
-struct WebPChunkIterator {
-  // The current and total number of chunks with the fourcc given to
-  // WebPDemuxGetChunk().
-  int chunk_num;
-  int num_chunks;
-  WebPData chunk;    // The payload of the chunk.
-
-  uint32_t pad[6];   // padding for later use
-  void* private_;
-};
-
-// Retrieves the 'chunk_number' instance of the chunk with id 'fourcc' from
-// 'dmux'.
-// 'fourcc' is a character array containing the fourcc of the chunk to return,
-// e.g., "ICCP", "XMP ", "EXIF", etc.
-// Setting 'chunk_number' equal to 0 will return the last chunk in a set.
-// Returns true if the chunk is found, false otherwise. Image related chunk
-// payloads are accessed through WebPDemuxGetFrame() and related functions.
-// Call WebPDemuxReleaseChunkIterator() when use of the iterator is complete.
-// NOTE: 'dmux' must persist for the lifetime of the iterator.
-WEBP_EXTERN(int) WebPDemuxGetChunk(const WebPDemuxer* dmux,
-                                   const char fourcc[4], int chunk_number,
-                                   WebPChunkIterator* iter);
-
-// Sets 'iter->chunk' to point to the next ('iter->chunk_num' + 1) or previous
-// ('iter->chunk_num' - 1) chunk. These functions do not loop.
-// Returns true on success, false otherwise.
-WEBP_EXTERN(int) WebPDemuxNextChunk(WebPChunkIterator* iter);
-WEBP_EXTERN(int) WebPDemuxPrevChunk(WebPChunkIterator* iter);
-
-// Releases any memory associated with 'iter'.
-// Must be called before destroying the associated WebPDemuxer with
-// WebPDemuxDelete().
-WEBP_EXTERN(void) WebPDemuxReleaseChunkIterator(WebPChunkIterator* iter);
 
 //------------------------------------------------------------------------------
 

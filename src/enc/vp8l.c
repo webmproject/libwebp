@@ -712,13 +712,6 @@ static int ApplyCrossColorFilter(const VP8LEncoder* const enc,
 
 // -----------------------------------------------------------------------------
 
-static void PutLE32(uint8_t* const data, uint32_t val) {
-  data[0] = (val >>  0) & 0xff;
-  data[1] = (val >>  8) & 0xff;
-  data[2] = (val >> 16) & 0xff;
-  data[3] = (val >> 24) & 0xff;
-}
-
 static WebPEncodingError WriteRiffHeader(const WebPPicture* const pic,
                                          size_t riff_size, size_t vp8l_size) {
   uint8_t riff[RIFF_HEADER_SIZE + CHUNK_HEADER_SIZE + VP8L_SIGNATURE_SIZE] = {
