@@ -11,10 +11,14 @@
 
 #### Customizable part ####
 
-# These flag assume you have libpng and libjpeg installed. If not, either
-# follow below install instructions or just comment out the next lines.
+# These flags assume you have libpng, libjpeg, libtiff and libgif installed. If
+# not, either follow the install instructions below or just comment out the next
+# four lines.
 EXTRA_FLAGS= -DWEBP_HAVE_PNG -DWEBP_HAVE_JPEG -DWEBP_HAVE_TIFF
-EXTRA_LIBS= -lpng -ltiff -ljpeg -lz
+DWEBP_LIBS= -lpng -lz
+CWEBP_LIBS= $(DWEBP_LIBS) -ljpeg -ltiff
+GIF_LIBS = -lgif
+
 ifeq ($(strip $(shell uname)), Darwin)
   # Work around a problem linking tables marked as common symbols,
   # cf., src/enc/yuv.[hc]
@@ -26,7 +30,6 @@ ifeq ($(strip $(shell uname)), Darwin)
 else
   GL_LIBS = -lglut -lGL
 endif
-GIF_LIBS = -lgif
 
 
 # To install libraries on Mac OS X:
@@ -205,7 +208,9 @@ examples/vwebp: examples/vwebp.o
 examples/webpmux: examples/webpmux.o
 
 examples/cwebp: src/libwebp.a
+examples/cwebp: EXTRA_LIBS += $(CWEBP_LIBS)
 examples/dwebp: examples/libexample_util.a src/libwebp.a
+examples/dwebp: EXTRA_LIBS += $(DWEBP_LIBS)
 examples/gif2webp: examples/libexample_util.a src/mux/libwebpmux.a src/libwebp.a
 examples/gif2webp: EXTRA_LIBS += $(GIF_LIBS)
 examples/vwebp: examples/libexample_util.a src/demux/libwebpdemux.a
