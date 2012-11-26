@@ -113,7 +113,8 @@ static int Record(int bit, proba_t* const stats) {
 // Note: no need to record the fixed probas.
 static int RecordCoeffs(int ctx, const VP8Residual* const res) {
   int n = res->first;
-  proba_t* s = res->stats[VP8EncBands[n]][ctx];
+  // should be stats[VP8EncBands[n]], but it's equivalent for n=0 or 1
+  proba_t* s = res->stats[n][ctx];
   if (res->last  < 0) {
     Record(0, s + 0);
     return 0;
@@ -282,16 +283,17 @@ static void SetResidualCoeffs(const int16_t* const coeffs,
 
 static int GetResidualCost(int ctx, const VP8Residual* const res) {
   int n = res->first;
-  int p0 = res->prob[VP8EncBands[n]][ctx][0];
-  const uint16_t* t = res->cost[VP8EncBands[n]][ctx];
+  // should be prob[VP8EncBands[n]], but it's equivalent for n=0 or 1
+  int p0 = res->prob[n][ctx][0];
+  const uint16_t* t = res->cost[n][ctx];
   int cost;
 
   if (res->last < 0) {
     return VP8BitCost(0, p0);
   }
   cost = 0;
-  while (n <= res->last) {
-    const int v = res->coeffs[n];
+  while (n < res->last) {
+    int v = res->coeffs[n];
     const int b = VP8EncBands[n + 1];
     ++n;
     if (v == 0) {
@@ -300,19 +302,28 @@ static int GetResidualCost(int ctx, const VP8Residual* const res) {
       t = res->cost[b][0];
       continue;
     }
+    v = abs(v);
     cost += VP8BitCost(1, p0);
-    if (2u >= (unsigned int)(v + 1)) {   // v = -1 or 1
-      // short-case for "VP8LevelCost(t, 1)" (256 is VP8LevelFixedCosts[1]):
-      cost += 256 + t[1];
-      p0 = res->prob[b][1][0];
-      t = res->cost[b][1];
-    } else {
-      cost += VP8LevelCost(t, abs(v));
-      p0 = res->prob[b][2][0];
-      t = res->cost[b][2];
+    cost += VP8LevelCost(t, v);
+    {
+      const int ctx = (v == 1) ? 1 : 2;
+      p0 = res->prob[b][ctx][0];
+      t = res->cost[b][ctx];
     }
   }
-  if (n < 16) cost += VP8BitCost(0, p0);
+  // Last coefficient is always non-zero
+  {
+    const int v = abs(res->coeffs[n]);
+    assert(v != 0);
+    cost += VP8BitCost(1, p0);
+    cost += VP8LevelCost(t, v);
+    if (n < 15) {
+      const int b = VP8EncBands[n + 1];
+      const int ctx = (v == 1) ? 1 : 2;
+      const int p0 = res->prob[b][ctx][0];
+      cost += VP8BitCost(0, p0);
+    }
+  }
   return cost;
 }
 
@@ -383,7 +394,8 @@ int VP8GetCostUV(VP8EncIterator* const it, const VP8ModeScore* const rd) {
 
 static int PutCoeffs(VP8BitWriter* const bw, int ctx, const VP8Residual* res) {
   int n = res->first;
-  const uint8_t* p = res->prob[VP8EncBands[n]][ctx];
+  // should be prob[VP8EncBands[n]], but it's equivalent for n=0 or 1
+  const uint8_t* p = res->prob[n][ctx];
   if (!VP8PutBit(bw, res->last >= 0, p[0])) {
     return 0;
   }
