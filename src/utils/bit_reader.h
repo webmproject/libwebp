@@ -25,7 +25,8 @@ extern "C" {
 #endif
 
 //------------------------------------------------------------------------------
-// BITS can be either 32, 16 or 8. Pick values that fit natural register size.
+// BITS can be either 32, 24, 16 or 8.
+// Pick values that fit natural register size.
 
 #if defined(__i386__) || defined(_M_IX86)      // x86 32bit
 #define BITS 16
@@ -42,6 +43,9 @@ extern "C" {
 #if (BITS == 32)
 typedef uint64_t bit_t;   // natural register type
 typedef uint32_t lbit_t;  // natural type for memory I/O
+#elif (BITS == 24)
+typedef uint32_t bit_t;
+typedef uint32_t lbit_t;
 #elif (BITS == 16)
 typedef uint32_t bit_t;
 typedef uint16_t lbit_t;
@@ -93,23 +97,26 @@ static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
     lbit_t in_bits = *(lbit_t*)br->buf_;
     br->buf_ += (BITS) >> 3;
 #if !defined(__BIG_ENDIAN__)
-#if (BITS == 32)
+#if (BITS == 32) || (BITS == 24)
 #if defined(__i386__) || defined(__x86_64__)
     __asm__ volatile("bswap %k0" : "=r"(in_bits) : "0"(in_bits));
-    bits = (bit_t)in_bits;   // 32b -> 64b zero-extension
+    bits = (bit_t)in_bits;   // 24b/32b -> 32b/64b zero-extension
 #elif defined(_MSC_VER)
     bits = _byteswap_ulong(in_bits);
 #else
     bits = (bit_t)(in_bits >> 24) | ((in_bits >> 8) & 0xff00)
          | ((in_bits << 8) & 0xff0000)  | (in_bits << 24);
 #endif  // x86
+#if (BITS == 24)
+    bits >>= 8;
+#endif
 #elif (BITS == 16)
     // gcc will recognize a 'rorw $8, ...' here:
     bits = (bit_t)(in_bits >> 8) | ((in_bits & 0xff) << 8);
 #else   // BITS == 8
     bits = (bit_t)in_bits;
 #endif
-#else    // LITTLE_ENDIAN
+#else    // BIG_ENDIAN
     bits = (bit_t)in_bits;
 #endif
     br->value_ |= bits << br->missing_;
