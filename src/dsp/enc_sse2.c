@@ -22,6 +22,35 @@ extern "C" {
 #include "../enc/vp8enci.h"
 
 //------------------------------------------------------------------------------
+// Quite useful macro for debugging. Left here for convenience.
+
+#if 0
+#include <stdio.h>
+static void PrintReg(const __m128i r, const char* const name, int size) {
+  int n;
+  union {
+    __m128i r;
+    uint8_t i8[16];
+    uint16_t i16[8];
+    uint32_t i32[4];
+    uint64_t i64[2];
+  } tmp;
+  tmp.r = r;
+  printf("%s\t: ", name);
+  if (size == 8) {
+    for (n = 0; n < 16; ++n) printf("%.2x ", tmp.i8[n]);
+  } else if (size == 16) {
+    for (n = 0; n < 8; ++n) printf("%.4x ", tmp.i16[n]);
+  } else if (size == 32) {
+    for (n = 0; n < 4; ++n) printf("%.8x ", tmp.i32[n]);
+  } else {
+    for (n = 0; n < 2; ++n) printf("%.16lx ", tmp.i64[n]);
+  }
+  printf("\n");
+}
+#endif
+
+//------------------------------------------------------------------------------
 // Compute susceptibility based on DCT-coeff histograms:
 // the higher, the "easier" the macroblock is to compress.
 
@@ -303,8 +332,14 @@ static void FTransformSSE2(const uint8_t* src, const uint8_t* ref,
                                            5352,  2217, 5352,  2217);
   const __m128i k2217_5352 = _mm_set_epi16(2217, -5352, 2217, -5352,
                                            2217, -5352, 2217, -5352);
-
+  const __m128i k88p = _mm_set_epi16(8, 8, 8, 8, 8, 8, 8, 8);
+  const __m128i k88m = _mm_set_epi16(-8, 8, -8, 8, -8, 8, -8, 8);
+  const __m128i k5352_2217p = _mm_set_epi16(2217, 5352, 2217, 5352,
+                                            2217, 5352, 2217, 5352);
+  const __m128i k5352_2217m = _mm_set_epi16(-5352, 2217, -5352, 2217,
+                                            -5352, 2217, -5352, 2217);
   __m128i v01, v32;
+
 
   // Difference between src and ref and initial transpose.
   {
@@ -326,73 +361,50 @@ static void FTransformSSE2(const uint8_t* src, const uint8_t* ref,
     const __m128i ref_1 = _mm_unpacklo_epi8(ref1, zero);
     const __m128i ref_2 = _mm_unpacklo_epi8(ref2, zero);
     const __m128i ref_3 = _mm_unpacklo_epi8(ref3, zero);
-    // Compute difference.
+    // Compute difference. -> 00 01 02 03 00 00 00 00
     const __m128i diff0 = _mm_sub_epi16(src_0, ref_0);
     const __m128i diff1 = _mm_sub_epi16(src_1, ref_1);
     const __m128i diff2 = _mm_sub_epi16(src_2, ref_2);
     const __m128i diff3 = _mm_sub_epi16(src_3, ref_3);
 
-    // Transpose.
+
+    // Unpack and shuffle
     // 00 01 02 03   0 0 0 0
     // 10 11 12 13   0 0 0 0
     // 20 21 22 23   0 0 0 0
     // 30 31 32 33   0 0 0 0
-    const __m128i transpose0_0 = _mm_unpacklo_epi16(diff0, diff1);
-    const __m128i transpose0_1 = _mm_unpacklo_epi16(diff2, diff3);
-    // 00 10 01 11   02 12 03 13
-    // 20 30 21 31   22 32 23 33
-    const __m128i v23 = _mm_unpackhi_epi32(transpose0_0, transpose0_1);
-    v01 = _mm_unpacklo_epi32(transpose0_0, transpose0_1);
-    v32 = _mm_shuffle_epi32(v23, _MM_SHUFFLE(1, 0, 3, 2));
-    // a02 a12 a22 a32   a03 a13 a23 a33
-    // a00 a10 a20 a30   a01 a11 a21 a31
-    // a03 a13 a23 a33   a02 a12 a22 a32
-  }
+    const __m128i shuf01 = _mm_unpacklo_epi32(diff0, diff1);
+    const __m128i shuf23 = _mm_unpacklo_epi32(diff2, diff3);
+    // 00 01 10 11 02 03 12 13
+    // 20 21 30 31 22 23 32 33
+    const __m128i shuf01_p = _mm_shufflehi_epi16(shuf01, _MM_SHUFFLE(2, 3, 0, 1));
+    const __m128i shuf23_p = _mm_shufflehi_epi16(shuf23, _MM_SHUFFLE(2, 3, 0, 1));
+    // 00 01 10 11 03 02 13 12
+    // 20 21 30 31 23 22 33 32
+    const __m128i s01 = _mm_unpacklo_epi64(shuf01_p, shuf23_p);
+    const __m128i s32 = _mm_unpackhi_epi64(shuf01_p, shuf23_p);
+    // 00 01 10 11 20 21 30 31
+    // 03 02 13 12 23 22 33 32
+    const __m128i a01 = _mm_add_epi16(s01, s32);
+    const __m128i a32 = _mm_sub_epi16(s01, s32);
+    // [d0 + d3 | d1 + d2 | ...] = [a0 a1 | a0' a1' | ... ]
+    // [d0 - d3 | d1 - d2 | ...] = [a3 a2 | a3' a2' | ... ]
 
-  // First pass and subsequent transpose.
-  {
-    // Same operations are done on the (0,3) and (1,2) pairs.
-    // b0 = (a0 + a3)
-    // b1 = (a1 + a2)
-    // b3 = (a0 - a3)
-    // b2 = (a1 - a2)
-    const __m128i a01 = _mm_add_epi16(v01, v32);
-    const __m128i a32 = _mm_sub_epi16(v01, v32);
-    const __m128i b11 = _mm_unpackhi_epi64(a01, a01);
-    const __m128i b22 = _mm_unpackhi_epi64(a32, a32);
-
-    // e0 = (b0 + b1)
-    // e2 = (b0 - b1)
-    const __m128i e0 = _mm_add_epi16(a01, b11);
-    const __m128i e2 = _mm_sub_epi16(a01, b11);
-    // e02 = [e0 | e2] << 3
-    const __m128i e0_e2 = _mm_unpacklo_epi64(e0, e2);
-    const __m128i e02 = _mm_slli_epi16(e0_e2, 3);
-
-    // e1 = (b3 * 5352 + b2 * 2217 + 1812) >> 9
-    // e3 = (b3 * 2217 - b2 * 5352 + 937) >> 9
-    const __m128i b23 = _mm_unpacklo_epi16(b22, a32);
-    const __m128i c1 = _mm_madd_epi16(b23, k5352_2217);
-    const __m128i c3 = _mm_madd_epi16(b23, k2217_5352);
-    const __m128i d1 = _mm_add_epi32(c1, k1812);
-    const __m128i d3 = _mm_add_epi32(c3, k937);
-    const __m128i e1 = _mm_srai_epi32(d1, 9);
-    const __m128i e3 = _mm_srai_epi32(d3, 9);
-    const __m128i e13 = _mm_packs_epi32(e1, e3);
-
-    // Transpose.
-    // 00 01 02 03  20 21 22 23
-    // 10 11 12 13  30 31 32 33
-    const __m128i transpose0_0 = _mm_unpacklo_epi16(e02, e13);
-    const __m128i transpose0_1 = _mm_unpackhi_epi16(e02, e13);
-    // 00 10 01 11   02 12 03 13
-    // 20 30 21 31   22 32 23 33
-    const __m128i v23 = _mm_unpackhi_epi32(transpose0_0, transpose0_1);
-    v01 = _mm_unpacklo_epi32(transpose0_0, transpose0_1);
-    v32 = _mm_shuffle_epi32(v23, _MM_SHUFFLE(1, 0, 3, 2));
-    // 02 12 22 32   03 13 23 33
-    // 00 10 20 30   01 11 21 31
-    // 03 13 23 33   02 12 22 32
+    const __m128i tmp0 = _mm_madd_epi16(a01, k88p);  // [ (a0 + a1) << 3, ... ]
+    const __m128i tmp2 = _mm_madd_epi16(a01, k88m);  // [ (a0 - a1) << 3, ... ]
+    const __m128i tmp1_1 = _mm_madd_epi16(a32, k5352_2217p);
+    const __m128i tmp3_1 = _mm_madd_epi16(a32, k5352_2217m);
+    const __m128i tmp1_2 = _mm_add_epi32(tmp1_1, k1812);
+    const __m128i tmp3_2 = _mm_add_epi32(tmp3_1, k937);
+    const __m128i tmp1   = _mm_srai_epi32(tmp1_2, 9);
+    const __m128i tmp3   = _mm_srai_epi32(tmp3_2, 9);
+    const __m128i s03 = _mm_packs_epi32(tmp0, tmp2);
+    const __m128i s12 = _mm_packs_epi32(tmp1, tmp3);
+    const __m128i s_lo = _mm_unpacklo_epi16(s03, s12);   // 0 1 0 1 0 1...
+    const __m128i s_hi = _mm_unpackhi_epi16(s03, s12);   // 2 3 2 3 2 3
+    const __m128i v23 = _mm_unpackhi_epi32(s_lo, s_hi);
+    v01 = _mm_unpacklo_epi32(s_lo, s_hi);
+    v32 = _mm_shuffle_epi32(v23, _MM_SHUFFLE(1, 0, 3, 2));  // 3 2 3 2 3 2..
   }
 
   // Second pass
