@@ -458,7 +458,7 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
 //------------------------------------------------------------------------------
 // Residual decoding (Paragraph 13.2 / 13.3)
 
-static const uint8_t kBands[16 + 1] = {
+static const int kBands[16 + 1] = {
   0, 1, 2, 3, 6, 4, 5, 6, 6, 6, 6, 6, 6, 6, 6, 7,
   0  // extra entry as sentinel
 };
@@ -474,6 +474,39 @@ static const uint8_t kZigzag[16] = {
 };
 
 typedef const uint8_t (*ProbaArray)[NUM_CTX][NUM_PROBAS];  // for const-casting
+typedef const uint8_t (*ProbaCtxArray)[NUM_PROBAS];
+
+// See section 13-2: http://tools.ietf.org/html/rfc6386#section-13.2
+static int GetLargeValue(VP8BitReader* const br, const uint8_t* const p) {
+  int v;
+  if (!VP8GetBit(br, p[3])) {
+    if (!VP8GetBit(br, p[4])) {
+      v = 2;
+    } else {
+      v = 3 + VP8GetBit(br, p[5]);
+    }
+  } else {
+    if (!VP8GetBit(br, p[6])) {
+      if (!VP8GetBit(br, p[7])) {
+        v = 5 + VP8GetBit(br, 159);
+      } else {
+        v = 7 + 2 * VP8GetBit(br, 165);
+        v += VP8GetBit(br, 145);
+      }
+    } else {
+      const uint8_t* tab;
+      const int bit1 = VP8GetBit(br, p[8]);
+      const int bit0 = VP8GetBit(br, p[9 + bit1]);
+      const int cat = 2 * bit1 + bit0;
+      v = 0;
+      for (tab = kCat3456[cat]; *tab; ++tab) {
+        v += v + VP8GetBit(br, *tab);
+      }
+      v += 3 + (8 << cat);
+    }
+  }
+  return v;
+}
 
 // Returns the position of the last non-zero coeff plus one
 // (and 0 if there's no coeff at all)
@@ -484,54 +517,26 @@ static int GetCoeffs(VP8BitReader* const br, ProbaArray prob,
   if (!VP8GetBit(br, p[0])) {   // first EOB is more a 'CBP' bit.
     return 0;
   }
-  while (1) {
-    ++n;
+  for (; n < 16; ++n) {
+    const ProbaCtxArray p_ctx = prob[kBands[n + 1]];
     if (!VP8GetBit(br, p[1])) {
-      p = prob[kBands[n]][0];
+      p = p_ctx[0];
     } else {  // non zero coeff
-      int v, j;
+      int v;
       if (!VP8GetBit(br, p[2])) {
-        p = prob[kBands[n]][1];
         v = 1;
+        p = p_ctx[1];
       } else {
-        if (!VP8GetBit(br, p[3])) {
-          if (!VP8GetBit(br, p[4])) {
-            v = 2;
-          } else {
-            v = 3 + VP8GetBit(br, p[5]);
-          }
-        } else {
-          if (!VP8GetBit(br, p[6])) {
-            if (!VP8GetBit(br, p[7])) {
-              v = 5 + VP8GetBit(br, 159);
-            } else {
-              v = 7 + 2 * VP8GetBit(br, 165);
-              v += VP8GetBit(br, 145);
-            }
-          } else {
-            const uint8_t* tab;
-            const int bit1 = VP8GetBit(br, p[8]);
-            const int bit0 = VP8GetBit(br, p[9 + bit1]);
-            const int cat = 2 * bit1 + bit0;
-            v = 0;
-            for (tab = kCat3456[cat]; *tab; ++tab) {
-              v += v + VP8GetBit(br, *tab);
-            }
-            v += 3 + (8 << cat);
-          }
-        }
-        p = prob[kBands[n]][2];
+        v = GetLargeValue(br, p);
+        p = p_ctx[2];
       }
-      j = kZigzag[n - 1];
-      out[j] = VP8GetSigned(br, v) * dq[j > 0];
-      if (n == 16 || !VP8GetBit(br, p[0])) {   // EOB
-        return n;
+      out[kZigzag[n]] = VP8GetSigned(br, v) * dq[n > 0];
+      if (n < 15 && !VP8GetBit(br, p[0])) {   // EOB
+        return n + 1;
       }
-    }
-    if (n == 16) {
-      return 16;
     }
   }
+  return 16;
 }
 
 // Alias-safe way of converting 4bytes to 32bits.
