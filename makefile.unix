@@ -119,6 +119,7 @@ ENC_OBJS = \
     src/enc/picture.o \
     src/enc/quant.o \
     src/enc/syntax.o \
+    src/enc/token.o \
     src/enc/tree.o \
     src/enc/vp8l.o \
     src/enc/webpenc.o \

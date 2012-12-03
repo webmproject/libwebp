@@ -16,6 +16,7 @@ libwebpencode_la_SOURCES += layer.c
 libwebpencode_la_SOURCES += picture.c
 libwebpencode_la_SOURCES += quant.c
 libwebpencode_la_SOURCES += syntax.c
+libwebpencode_la_SOURCES += token.c
 libwebpencode_la_SOURCES += tree.c
 libwebpencode_la_SOURCES += vp8enci.h
 libwebpencode_la_SOURCES += vp8l.c

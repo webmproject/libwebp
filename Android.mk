@@ -35,6 +35,7 @@ LOCAL_SRC_FILES := \
     src/enc/picture.c \
     src/enc/quant.c \
     src/enc/syntax.c \
+    src/enc/token.c \
     src/enc/tree.c \
     src/enc/vp8l.c \
     src/enc/webpenc.c \

@@ -188,6 +188,7 @@ ENC_OBJS = \
     $(DIROBJ)\enc\picture.obj \
     $(DIROBJ)\enc\quant.obj \
     $(DIROBJ)\enc\syntax.obj \
+    $(DIROBJ)\enc\token.obj \
     $(DIROBJ)\enc\tree.obj \
     $(DIROBJ)\enc\vp8l.obj \
     $(DIROBJ)\enc\webpenc.obj \
