@@ -236,7 +236,7 @@ predicted) is encoded. The _prediction mode_ determines the type of
 prediction to use. We divide the image into squares and all the pixels
 in a square use same prediction mode.
 
-The first 4 bits of prediction data define the block width and height in
+The first 3 bits of prediction data define the block width and height in
 number of bits. The number of block columns, `block_xsize`, is used in
 indexing two-dimensionally.
 
