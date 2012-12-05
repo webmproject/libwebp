@@ -436,7 +436,7 @@ consistent with each other.
 
 Now we describe the contents of color transform data so that decoding
 can apply the inverse color transform and recover the original red and
-blue values. The first 4 bits of the color transform data contain the
+blue values. The first 3 bits of the color transform data contain the
 width and height of the image block in number of bits, just like the
 predictor transform:
 
