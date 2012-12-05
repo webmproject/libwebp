@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAARn//+mc\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-05T08:22:07Z",
+      "side": 1,
+      "message": "should probably by a generic method associated to MetadataPayload. Like MetadataCopy(const uint8_t* data, size_t data, MetadataPayload* dst)",
+      "revId": "7a68608f1f56791b28363c18abcc78d8c87f3323",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAARn//+mY\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-05T08:22:07Z",
+      "side": 1,
+      "message": "\u003d\u003d 0",
+      "revId": "7a68608f1f56791b28363c18abcc78d8c87f3323",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAARn//+mU\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-05T08:22:07Z",
+      "side": 1,
+      "message": "i\u0027d put the ++ after this block (l490), to avoid the *(src-1) at 485.\nLike:\nint c;\n\nc \u003d *src;\nif (c !\u003d \u0027\\n\u0027) {\n  fprintf(stderr, ...);\n  return 0;\n}\n++src;\nwhile (...)",
+      "revId": "7a68608f1f56791b28363c18abcc78d8c87f3323",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAARn//+mg\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-05T08:22:07Z",
+      "side": 1,
+      "message": "what happens to the value possibly returned in end_info at line 614?",
+      "revId": "7a68608f1f56791b28363c18abcc78d8c87f3323",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
