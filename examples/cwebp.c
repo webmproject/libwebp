@@ -327,7 +327,7 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
     // If no size specified, try to decode it as PNG/JPEG (as appropriate).
     const InputFileFormat format = GetImageType(in_file);
     if (format == PNG_) {
-      ok = ReadPNG(in_file, pic, keep_alpha);
+      ok = ReadPNG(in_file, pic, keep_alpha, metadata);
     } else if (format == JPEG_) {
       ok = ReadJPEG(in_file, pic);
     } else if (format == TIFF_) {
