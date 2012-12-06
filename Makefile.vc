@@ -172,6 +172,7 @@ DSP_OBJS = \
     $(DIROBJ)\dsp\yuv.obj \
 
 EX_FORMAT_DEC_OBJS = \
+    $(DIROBJ)\examples/jpegdec.obj \
     $(DIROBJ)\examples/pngdec.obj \
 
 EX_UTIL_OBJS = \

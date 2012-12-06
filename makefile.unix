@@ -125,6 +125,7 @@ ENC_OBJS = \
     src/enc/webpenc.o \
 
 EX_FORMAT_DEC_OBJS = \
+    examples/jpegdec.o \
     examples/pngdec.o \
 
 EX_UTIL_OBJS = \
