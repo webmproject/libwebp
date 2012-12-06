@@ -46,6 +46,7 @@
 
 
 #include "webp/encode.h"
+#include "./metadata.h"
 #include "./stopwatch.h"
 #ifndef WEBP_DLL
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -270,8 +271,9 @@ static HRESULT ReadPictureWithWIC(const char* filename,
 }
 
 static int ReadPicture(const char* const filename, WebPPicture* const pic,
-                       int keep_alpha) {
+                       int keep_alpha, Metadata* const metadata) {
   int ok;
+  (void)metadata;  // TODO(jzern): add metadata extraction using WIC
   if (pic->width != 0 && pic->height != 0) {
     // If image size is specified, infer it as YUV format.
     FILE* in_file = fopen(filename, "rb");
@@ -578,9 +580,10 @@ static InputFileFormat GetImageType(FILE* in_file) {
 }
 
 static int ReadPicture(const char* const filename, WebPPicture* const pic,
-                       int keep_alpha) {
+                       int keep_alpha, Metadata* const metadata) {
   int ok = 0;
   FILE* in_file = fopen(filename, "rb");
+  (void)metadata;  // TODO(jzern): add metadata extraction to the formats below.
   if (in_file == NULL) {
     fprintf(stderr, "Error! Cannot open input file '%s'\n", filename);
     return ok;
@@ -934,8 +937,10 @@ int main(int argc, const char *argv[]) {
   WebPPicture original_picture;    // when PSNR or SSIM is requested
   WebPConfig config;
   WebPAuxStats stats;
+  Metadata metadata;
   Stopwatch stop_watch;
 
+  MetadataInit(&metadata);
   if (!WebPPictureInit(&picture) ||
       !WebPPictureInit(&original_picture) ||
       !WebPConfigInit(&config)) {
@@ -1128,7 +1133,7 @@ int main(int argc, const char *argv[]) {
   if (verbose) {
     StopwatchReadAndReset(&stop_watch);
   }
-  if (!ReadPicture(in_file, &picture, keep_alpha)) {
+  if (!ReadPicture(in_file, &picture, keep_alpha, &metadata)) {
     fprintf(stderr, "Error! Cannot read input picture file '%s'\n", in_file);
     goto Error;
   }
@@ -1227,6 +1232,7 @@ int main(int argc, const char *argv[]) {
 
  Error:
   free(picture.extra_info);
+  MetadataFree(&metadata);
   WebPPictureFree(&picture);
   WebPPictureFree(&original_picture);
   if (out != NULL) {
