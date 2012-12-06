@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAARn//9ko\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-06T07:01:18Z",
+      "side": 1,
+      "message": "yes good point.",
+      "parentUuid": "AAAARn//+mc\u003d",
+      "revId": "7a68608f1f56791b28363c18abcc78d8c87f3323",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAARn//+mY\u003d",
         "filename": "examples/cwebp.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2012-12-05T08:22:07Z",
       "side": 1,
       "message": "\u003d\u003d 0",
+      "revId": "7a68608f1f56791b28363c18abcc78d8c87f3323",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAARn//9kk\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-06T07:01:18Z",
+      "side": 1,
+      "message": "Done, though I wonder if there\u0027s some inconsistency elsewhere...will have to check",
+      "parentUuid": "AAAARn//+mY\u003d",
       "revId": "7a68608f1f56791b28363c18abcc78d8c87f3323",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "AAAARn//9kg\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-06T07:01:18Z",
+      "side": 1,
+      "message": "Done, dropped the temporary",
+      "parentUuid": "AAAARn//+mU\u003d",
+      "revId": "7a68608f1f56791b28363c18abcc78d8c87f3323",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAARn//+mg\u003d",
         "filename": "examples/cwebp.c",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2012-12-05T08:22:07Z",
       "side": 1,
       "message": "what happens to the value possibly returned in end_info at line 614?",
+      "revId": "7a68608f1f56791b28363c18abcc78d8c87f3323",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAARn//9mU\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-06T07:01:18Z",
+      "side": 1,
+      "message": "returned in? that\u0027s a destroy, so it\u0027s initialized to NULL to allow the block to be used -- same for info.",
+      "parentUuid": "AAAARn//+mg\u003d",
       "revId": "7a68608f1f56791b28363c18abcc78d8c87f3323",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
