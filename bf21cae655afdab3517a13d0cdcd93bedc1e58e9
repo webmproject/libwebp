@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAARn//9mw\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-06T06:39:31Z",
+      "side": 1,
+      "message": "makes sense -\u003e metadata.h",
+      "parentUuid": "AAAARn//+m0\u003d",
+      "revId": "bf21cae655afdab3517a13d0cdcd93bedc1e58e9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAARn//+m4\u003d",
         "filename": "examples/cwebp.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2012-12-05T08:10:14Z",
       "side": 1,
       "message": "are we guaranteed to have stddef.h included, for offsetof() ?",
+      "revId": "bf21cae655afdab3517a13d0cdcd93bedc1e58e9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAARn//9m0\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-06T06:39:31Z",
+      "side": 1,
+      "message": "it\u0027s part of c89 and exists there in msvc and gcc toolchains at least",
+      "parentUuid": "AAAARn//+m4\u003d",
       "revId": "bf21cae655afdab3517a13d0cdcd93bedc1e58e9",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
