@@ -171,6 +171,9 @@ DSP_OBJS = \
     $(DIROBJ)\dsp\upsampling_sse2.obj \
     $(DIROBJ)\dsp\yuv.obj \
 
+EX_FORMAT_DEC_OBJS = \
+    $(DIROBJ)\examples/pngdec.obj \
+
 EX_UTIL_OBJS = \
     $(DIROBJ)\examples\example_util.obj \
 
@@ -218,7 +221,7 @@ OUT_LIBS = $(LIBWEBP)
 OUT_EXAMPLES = $(DIRBIN)\cwebp.exe $(DIRBIN)\dwebp.exe
 
 all: $(OUT_LIBS) $(OUT_EXAMPLES)
-$(DIRBIN)\cwebp.exe: $(DIROBJ)\examples\cwebp.obj
+$(DIRBIN)\cwebp.exe: $(DIROBJ)\examples\cwebp.obj $(EX_FORMAT_DEC_OBJS)
 $(DIRBIN)\dwebp.exe: $(DIROBJ)\examples\dwebp.obj
 $(DIRBIN)\webpmux.exe: $(DIROBJ)\examples\webpmux.obj $(LIBWEBPMUX)
 $(DIRBIN)\webpmux.exe: $(EX_UTIL_OBJS) $(LIBWEBP)

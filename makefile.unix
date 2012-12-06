@@ -124,6 +124,9 @@ ENC_OBJS = \
     src/enc/vp8l.o \
     src/enc/webpenc.o \
 
+EX_FORMAT_DEC_OBJS = \
+    examples/pngdec.o \
+
 EX_UTIL_OBJS = \
     examples/example_util.o \
 
@@ -189,6 +192,8 @@ endif
 
 all: ex
 
+$(EX_FORMAT_DEC_OBJS): %.o: %.h
+
 %.o: %.c $(HDRS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
@@ -202,7 +207,7 @@ src/demux/libwebpdemux.a: $(LIBWEBPDEMUX_OBJS)
 
 ex: $(OUT_EXAMPLES)
 
-examples/cwebp: examples/cwebp.o
+examples/cwebp: examples/cwebp.o $(EX_FORMAT_DEC_OBJS)
 examples/dwebp: examples/dwebp.o
 examples/gif2webp: examples/gif2webp.o
 examples/vwebp: examples/vwebp.o
