@@ -18,10 +18,6 @@
 #include "config.h"
 #endif
 
-#ifdef WEBP_HAVE_TIFF
-#include <tiffio.h>
-#endif
-
 #ifdef HAVE_WINCODEC_H
 #ifdef __MINGW32__
 #define INITGUID  // Without this GUIDs are declared extern and fail to link
@@ -41,6 +37,7 @@
 #include "./metadata.h"
 #include "./pngdec.h"
 #include "./stopwatch.h"
+#include "./tiffdec.h"
 #ifndef WEBP_DLL
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -287,69 +284,6 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
 }
 
 #else  // !HAVE_WINCODEC_H
-
-#ifdef WEBP_HAVE_TIFF
-static int ReadTIFF(const char* const filename,
-                    WebPPicture* const pic, int keep_alpha) {
-  TIFF* const tif = TIFFOpen(filename, "r");
-  uint32 width, height;
-  uint32* raster;
-  int ok = 0;
-  int dircount = 1;
-
-  if (tif == NULL) {
-    fprintf(stderr, "Error! Cannot open TIFF file '%s'\n", filename);
-    return 0;
-  }
-
-  while (TIFFReadDirectory(tif)) ++dircount;
-
-  if (dircount > 1) {
-    fprintf(stderr, "Warning: multi-directory TIFF files are not supported.\n"
-                    "Only the first will be used, %d will be ignored.\n",
-                    dircount - 1);
-  }
-
-  TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &width);
-  TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &height);
-  raster = (uint32*)_TIFFmalloc(width * height * sizeof(*raster));
-  if (raster != NULL) {
-    if (TIFFReadRGBAImageOriented(tif, width, height, raster,
-                                  ORIENTATION_TOPLEFT, 1)) {
-      const int stride = width * sizeof(*raster);
-      pic->width = width;
-      pic->height = height;
-      // TIFF data is ABGR
-#ifdef __BIG_ENDIAN__
-      TIFFSwabArrayOfLong(raster, width * height);
-#endif
-      ok = keep_alpha
-         ? WebPPictureImportRGBA(pic, (const uint8_t*)raster, stride)
-         : WebPPictureImportRGBX(pic, (const uint8_t*)raster, stride);
-    }
-    _TIFFfree(raster);
-  } else {
-    fprintf(stderr, "Error allocating TIFF RGBA memory!\n");
-  }
-
-  if (ok && keep_alpha == 2) {
-    WebPCleanupTransparentArea(pic);
-  }
-
-  TIFFClose(tif);
-  return ok;
-}
-#else
-static int ReadTIFF(const char* const filename,
-                    WebPPicture* const pic, int keep_alpha) {
-  (void)filename;
-  (void)pic;
-  (void)keep_alpha;
-  fprintf(stderr, "TIFF support not compiled. Please install the libtiff "
-          "development package before building.\n");
-  return 0;
-}
-#endif
 
 typedef enum {
   PNG_ = 0,

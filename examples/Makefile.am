@@ -23,6 +23,7 @@ dwebp_LDADD = libexampleutil.la ../src/libwebp.la $(PNG_LIBS) $(JPEG_LIBS)
 cwebp_SOURCES  = cwebp.c metadata.h stopwatch.h
 cwebp_SOURCES += jpegdec.c jpegdec.h
 cwebp_SOURCES += pngdec.c pngdec.h
+cwebp_SOURCES += tiffdec.c tiffdec.h
 cwebp_CPPFLAGS  = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
 cwebp_CPPFLAGS += $(JPEG_INCLUDES) $(PNG_INCLUDES) $(TIFF_INCLUDES)
 cwebp_LDADD = ../src/libwebp.la $(JPEG_LIBS) $(PNG_LIBS) $(TIFF_LIBS)
