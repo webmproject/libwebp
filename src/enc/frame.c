@@ -845,7 +845,7 @@ int VP8StatLoop(VP8Encoder* const enc) {
 #if DEBUG_SEARCH
       printf("#%d size=%d PSNR=%.2f q=%.2f\n", pass, size, PSNR, q);
 #endif
-      if (!size) return 0;
+      if (size == 0) return 0;
       if (enc->config_->target_PSNR > 0) {
         criterion = (PSNR < enc->config_->target_PSNR);
       } else {
