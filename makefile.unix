@@ -126,6 +126,7 @@ ENC_OBJS = \
 
 EX_FORMAT_DEC_OBJS = \
     examples/jpegdec.o \
+    examples/metadata.o \
     examples/pngdec.o \
     examples/tiffdec.o \
 

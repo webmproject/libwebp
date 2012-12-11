@@ -30,21 +30,13 @@ typedef struct Metadata {
 
 #define METADATA_OFFSET(x) offsetof(Metadata, x)
 
-static void MetadataInit(Metadata* const m) {
-  memset(m, 0, sizeof(*m));
-}
+void MetadataInit(Metadata* const metadata);
+void MetadataPayloadDelete(MetadataPayload* const payload);
+void MetadataFree(Metadata* const metadata);
 
-static void MetadataPayloadDelete(MetadataPayload* const payload) {
-  free(payload->bytes);
-  payload->bytes = NULL;
-  payload->size = 0;
-}
-
-static void MetadataFree(Metadata* const m) {
-  MetadataPayloadDelete(&m->exif);
-  MetadataPayloadDelete(&m->iccp);
-  MetadataPayloadDelete(&m->xmp);
-}
+// Stores 'metadata' to 'payload->bytes', returns false on allocation error.
+int MetadataCopy(const char* metadata, size_t metadata_len,
+                 MetadataPayload* const payload);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

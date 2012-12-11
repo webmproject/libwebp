@@ -173,6 +173,7 @@ DSP_OBJS = \
 
 EX_FORMAT_DEC_OBJS = \
     $(DIROBJ)\examples/jpegdec.obj \
+    $(DIROBJ)\examples/metadata.obj \
     $(DIROBJ)\examples/pngdec.obj \
     $(DIROBJ)\examples/tiffdec.obj \
 
