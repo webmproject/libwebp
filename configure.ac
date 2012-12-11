@@ -273,6 +273,7 @@ Shared libraries: ${enable_shared}
 Static libraries: ${enable_static}
 Threaded decode: ${enable_threading-no}
 libwebp: yes
+libwebpdemux: ${enable_experimental_libwebpdemux-no}
 libwebpmux: ${enable_experimental_libwebpmux-no}
 
 Tools:
