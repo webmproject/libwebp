@@ -29,8 +29,8 @@ struct my_error_mgr {
 };
 
 static void my_error_exit(j_common_ptr dinfo) {
-  struct my_error_mgr* myerr = (struct my_error_mgr*) dinfo->err;
-  (*dinfo->err->output_message) (dinfo);
+  struct my_error_mgr* myerr = (struct my_error_mgr*)dinfo->err;
+  (*dinfo->err->output_message)(dinfo);
   longjmp(myerr->setjmp_buffer, 1);
 }
 
@@ -76,8 +76,8 @@ int ReadJPEG(FILE* in_file, WebPPicture* const pic) {
   }
   row_ptr = rgb;
 
-  buffer = (*dinfo.mem->alloc_sarray) ((j_common_ptr) &dinfo,
-                                       JPOOL_IMAGE, stride, 1);
+  buffer = (*dinfo.mem->alloc_sarray)((j_common_ptr)&dinfo,
+                                      JPOOL_IMAGE, stride, 1);
   if (buffer == NULL) {
     goto End;
   }
@@ -99,9 +99,7 @@ int ReadJPEG(FILE* in_file, WebPPicture* const pic) {
   ok = WebPPictureImportRGB(pic, rgb, stride);
 
  End:
-  if (rgb) {
-    free(rgb);
-  }
+  free(rgb);
   return ok;
 }
 #else  // !WEBP_HAVE_JPEG
