@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAARn//6Nw\u003d",
+        "filename": "examples/pngdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-12T20:56:41Z",
+      "side": 1,
+      "message": "Indeed, at the cost of a few longer lines...",
+      "parentUuid": "AAAARn//6cE\u003d",
+      "revId": "4cadb1aad0757031bdc50841429464a5e14ac647",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAARn//6cg\u003d",
         "filename": "examples/pngdec.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2012-12-12T08:38:31Z",
       "side": 1,
       "message": "i\u0027d initialize \u0027text\u0027 to NULL and \u0027num\u0027 to 0, just in case.",
+      "revId": "4cadb1aad0757031bdc50841429464a5e14ac647",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAARn//6N8\u003d",
+        "filename": "examples/pngdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-12T20:56:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAARn//6cg\u003d",
       "revId": "4cadb1aad0757031bdc50841429464a5e14ac647",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "AAAARn//6QQ\u003d",
+        "filename": "examples/pngdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-12T20:56:41Z",
+      "side": 1,
+      "message": "png.h: /* png_get_text also returns the number of text chunks in *num_text */\n\nset \u0027num \u003d ...\u0027 to make it a bit clearer.",
+      "parentUuid": "AAAARn//6ck\u003d",
+      "revId": "4cadb1aad0757031bdc50841429464a5e14ac647",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAARn//6cs\u003d",
         "filename": "examples/pngdec.c",
         "patchSetId": 3
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "AAAARn//6QE\u003d",
+        "filename": "examples/pngdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-12T20:56:41Z",
+      "side": 1,
+      "message": "you\u0027d have to cast differently per-version anyway as the prototype changed...\n\npng.h:2211: note: expected ‘png_bytepp’ but argument is of type ‘char **’",
+      "parentUuid": "AAAARn//6cs\u003d",
+      "revId": "4cadb1aad0757031bdc50841429464a5e14ac647",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAARn//6cw\u003d",
         "filename": "examples/pngdec.c",
         "patchSetId": 3
@@ -81,6 +153,24 @@
       "writtenOn": "2012-12-12T08:38:31Z",
       "side": 1,
       "message": "ExtractMetadataFromPNG should only be called if metadata !\u003d NULL (or it\u0027ll crash)",
+      "revId": "4cadb1aad0757031bdc50841429464a5e14ac647",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAARn//6P4\u003d",
+        "filename": "examples/pngdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-12T20:56:41Z",
+      "side": 1,
+      "message": "that\u0027s fair, we were more in control when this was all in cwebp, but some paranoia won\u0027t hurt.\n\nadded a NULL check in ProcessRawProfile to similarly distrust the png api...",
+      "parentUuid": "AAAARn//6cw\u003d",
       "revId": "4cadb1aad0757031bdc50841429464a5e14ac647",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
