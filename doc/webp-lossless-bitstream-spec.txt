@@ -604,9 +604,11 @@ to entropy coding, and three further roles related to transforms.
   4. Color indexing image. An array of up to 256 ARGB colors is used for
      transforming a green-only image, using the green value as an index
      to this one-dimensional array.
-  5. Color transformation image. Defines signed 3.5 fixed-point
-     multipliers that are used to predict the red, green, and blue
-     components, to reduce entropy.
+  5. Color transform image. It is created by `ColorTransformElement` values
+     (defined in [Color Transform](#color-transform)) for different blocks of
+     the image. Each `ColorTransformElement` `'cte'` is treated as a pixel whose
+     alpha component is `255`, red component is `cte.red_to_blue`, green
+     component is `cte.green_to_blue` and blue component is `cte.green_to_red`.
 
 To divide the image into multiple regions, the image is first divided
 into a set of fixed-size blocks (typically 16x16 blocks). Each of these
