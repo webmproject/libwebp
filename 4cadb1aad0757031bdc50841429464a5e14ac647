@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAARn//6cE\u003d",
+        "filename": "examples/pngdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-12T08:38:31Z",
+      "side": 1,
+      "message": "strictly speaking, you don\u0027t necessarily need to name this struct.\nYou could use:\n\nstatic const struct {\n ...\n} kPNGMetadataMap[] \u003d {\n  {...},\n  {...},\n ...\n};\n\nsimply\n\n(and not use the \u0027iter\u0027 variable at line 134)",
+      "revId": "4cadb1aad0757031bdc50841429464a5e14ac647",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAARn//6cg\u003d",
+        "filename": "examples/pngdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-12T08:38:31Z",
+      "side": 1,
+      "message": "i\u0027d initialize \u0027text\u0027 to NULL and \u0027num\u0027 to 0, just in case.",
+      "revId": "4cadb1aad0757031bdc50841429464a5e14ac647",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAARn//6ck\u003d",
+        "filename": "examples/pngdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-12T08:38:31Z",
+      "side": 1,
+      "message": "you should check the return value of png_get_text to be !\u003d 0.\n\n(although i guess in this error case, that \u0027num\u0027 would be 0 too)",
+      "revId": "4cadb1aad0757031bdc50841429464a5e14ac647",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAARn//6cs\u003d",
+        "filename": "examples/pngdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-12T08:38:31Z",
+      "side": 1,
+      "message": "can\u0027t you just use a\nchar* profile;\n\nvariable and let png_get_iCCP() at line 174 do the appropriate cast for you? This would avoid the #ifdefs based on lib version...",
+      "revId": "4cadb1aad0757031bdc50841429464a5e14ac647",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAARn//6cw\u003d",
+        "filename": "examples/pngdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-12T08:38:31Z",
+      "side": 1,
+      "message": "ExtractMetadataFromPNG should only be called if metadata !\u003d NULL (or it\u0027ll crash)",
+      "revId": "4cadb1aad0757031bdc50841429464a5e14ac647",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
