@@ -236,20 +236,6 @@ static int ParseFilterHeader(VP8BitReader* br, VP8Decoder* const dec) {
     }
   }
   dec->filter_type_ = (hdr->level_ == 0) ? 0 : hdr->simple_ ? 1 : 2;
-  if (dec->filter_type_ > 0) {    // precompute filter levels per segment
-    if (dec->segment_hdr_.use_segment_) {
-      int s;
-      for (s = 0; s < NUM_MB_SEGMENTS; ++s) {
-        int strength = dec->segment_hdr_.filter_strength_[s];
-        if (!dec->segment_hdr_.absolute_delta_) {
-          strength += hdr->level_;
-        }
-        dec->filter_levels_[s] = strength;
-      }
-    } else {
-      dec->filter_levels_[0] = hdr->level_;
-    }
-  }
   return !br->eof_;
 }
 
@@ -675,6 +661,12 @@ int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br) {
     dec->non_zero_ac_ = 0;
   }
 
+  if (dec->filter_type_ > 0) {  // store filter info
+    VP8FInfo* const finfo = dec->f_info_ + dec->mb_x_;
+    *finfo = dec->fstrengths_[dec->segment_][dec->is_i4x4_];
+    finfo->f_inner_ = (!info->skip_ || dec->is_i4x4_);
+  }
+
   return (!token_br->eof_);
 }
 
@@ -698,10 +690,8 @@ static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
         return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
                            "Premature end-of-file encountered.");
       }
+      // Reconstruct and emit samples.
       VP8ReconstructBlock(dec);
-
-      // Store data and save block's filtering params
-      VP8StoreBlock(dec);
     }
     if (!VP8ProcessRow(dec, io)) {
       return VP8SetError(dec, VP8_STATUS_USER_ABORT, "Output aborted.");

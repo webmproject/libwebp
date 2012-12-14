@@ -425,9 +425,8 @@ static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
         }
         return VP8_STATUS_SUSPENDED;
       }
+      // Reconstruct and emit samples.
       VP8ReconstructBlock(dec);
-      // Store data and save block's filtering params
-      VP8StoreBlock(dec);
 
       // Release buffer only if there is only one partition
       if (dec->num_parts_ == 1) {
