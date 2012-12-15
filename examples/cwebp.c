@@ -33,11 +33,14 @@
 
 
 #include "webp/encode.h"
-#include "./jpegdec.h"
+
 #include "./metadata.h"
-#include "./pngdec.h"
 #include "./stopwatch.h"
+
+#include "./jpegdec.h"
+#include "./pngdec.h"
 #include "./tiffdec.h"
+
 #ifndef WEBP_DLL
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
