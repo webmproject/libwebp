@@ -26,18 +26,17 @@ int ReadTIFF(const char* const filename,
   uint32 width, height;
   uint32* raster;
   int ok = 0;
-  int dircount = 1;
+  tdir_t dircount;
 
   if (tif == NULL) {
     fprintf(stderr, "Error! Cannot open TIFF file '%s'\n", filename);
     return 0;
   }
 
-  while (TIFFReadDirectory(tif)) ++dircount;
-
+  dircount = TIFFNumberOfDirectories(tif);
   if (dircount > 1) {
     fprintf(stderr, "Warning: multi-directory TIFF files are not supported.\n"
-                    "Only the first will be used, %d will be ignored.\n",
+                    "Only the first will be used, %hu will be ignored.\n",
                     dircount - 1);
   }
 
