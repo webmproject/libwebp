@@ -334,7 +334,7 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
     } else if (format == JPEG_) {
       ok = ReadJPEG(in_file, pic);
     } else if (format == TIFF_) {
-      ok = ReadTIFF(filename, pic, keep_alpha);
+      ok = ReadTIFF(filename, pic, keep_alpha, metadata);
     }
   } else {
     // If image size is specified, infer it as YUV format.
