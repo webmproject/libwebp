@@ -784,28 +784,42 @@ prefixes, and the result of this coding is further Huffman coded.
 For every pixel (x, y) in the image, there is a definition of which
 entropy code to use. First, there is an integer called 'meta Huffman
 code' that can be obtained from the entropy image. This
-meta Huffman code identifies a set of five Huffman codes, one for green
-(along with length codes and color cache codes), one for each of red,
-blue and alpha, and one for distance. The Huffman codes are identified
-by their position in a table by an integer.
+meta Huffman code identifies a set of five Huffman codes:
+
+  * Huffman code #1: used for green channel, backward-reference length and
+    color cache
+  * Huffman code #2, #3 and #4: used for red, blue and alpha channels
+    respectively.
+  * Huffman code #5: used for backward-reference distance.
 
 
 ### Decoding Flow of Image Data
 
-Read next symbol S
+Read next symbol S from the bitsteam using Huffman code #1. Note that S is any
+integer in the range `0` to `(256 + 24 + `
+[`color_cache_size`](#color-cache-code)`- 1)`.
 
-  1. S < 256
-     1. Use S as green component
-     2. read alpha
-     3. read red
-     4. read blue
-  2. S < 256 + 24
+The interpretation of S depends on its value:
+
+  1. if S < 256
+     1. Use S as the green component
+     1. Read red from the bitstream using Huffman code #2
+     1. Read blue from the bitstream using Huffman code #3
+     1. Read alpha from the bitstream using Huffman code #4
+  1. if S < 256 + 24
      1. Use S - 256 as a length prefix code
-     2. read length extra bits
-     3. read distance prefix code
-     4. read distance extra bits
-  3. S >= 256 + 24
-     1. Use ARGB color from the color cache, at index S - 256 + 24
+     1. Read extra bits for length from the bitstream
+     1. Determine backward-reference length L from length prefix code and the
+        extra bits read.
+     1. Read distance prefix code from the bitstream using Huffman code #5
+     1. Read extra bits for distance from the bitstream
+     1. Determine backward-reference distance D from distance prefix code and
+        the extra bits read.
+     1. Copy the L pixels (in scan-line order) from the sequence of pixels
+        prior to them by D pixels.
+  1. if S >= 256 + 24
+     1. Use S - (256 + 24) as the index into the color cache.
+     1. Get ARGB color from the color cache at that index.
 
 
 ### Decoding the Code Lengths
@@ -955,15 +969,15 @@ of pixels (xsize * ysize).
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <format> ::= <RIFF header><image size><image stream>
-<image stream> ::= (<optional-transform><image stream>);
-                    <spatially-coded image>
+<image stream> ::= <optional-transform><spatially-coded image>
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 #### Structure of Transforms
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-<optional-transform> ::= 1-bit <transform> <optional-transform> | 0-bit
+<optional-transform> ::= (1-bit value 1; <transform> <optional-transform>) |
+                         1-bit value 0
 <transform> ::= <predictor-tx> | <color-tx> | <subtract-green-tx> |
                 <color-indexing-tx>
 <predictor-tx> ::= 2-bit value 0; <predictor image>
@@ -991,8 +1005,8 @@ of pixels (xsize * ysize).
 <simple huffman code> ::= see "Simple code length code" for details
 <normal huffman code> ::= <code length code>; encoded code lengths
 <code length code> ::= see section "Normal code length code"
-<lz77-coded image> ::= (<argb-pixel> | <color-cache-code> | <lz77-copy>) |
-                       (<lz77-coded image> | "")
+<lz77-coded image> ::= ((<argb-pixel> | <lz77-copy> | <color-cache-code>)
+                       <lz77-coded image>) | ""
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A possible example sequence:
