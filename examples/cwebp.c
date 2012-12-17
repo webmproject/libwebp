@@ -332,7 +332,7 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
     if (format == PNG_) {
       ok = ReadPNG(in_file, pic, keep_alpha);
     } else if (format == JPEG_) {
-      ok = ReadJPEG(in_file, pic);
+      ok = ReadJPEG(in_file, pic, metadata);
     } else if (format == TIFF_) {
       ok = ReadTIFF(filename, pic, keep_alpha);
     }
