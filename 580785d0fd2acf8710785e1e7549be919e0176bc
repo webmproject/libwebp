@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAATH///Cs\u003d",
+        "filename": "examples/tiffdec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-18T10:40:02Z",
+      "side": 1,
+      "message": "\u0027tif\u0027 doesn\u0027t stay \u0027const TIFF\u0027 during the function call?",
+      "revId": "580785d0fd2acf8710785e1e7549be919e0176bc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATH///Co\u003d",
+        "filename": "examples/tiffdec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-18T10:40:02Z",
+      "side": 1,
+      "message": "isn\u0027t it rather \"if (!TIFFGetField(...))\" ?",
+      "revId": "580785d0fd2acf8710785e1e7549be919e0176bc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATH///Ck\u003d",
+        "filename": "examples/tiffdec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-18T10:40:02Z",
+      "side": 1,
+      "message": "no clean-up of \u0027metadata\u0027 is required upon error?",
+      "revId": "580785d0fd2acf8710785e1e7549be919e0176bc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
