@@ -1,0 +1,242 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAATH///DQ\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-18T10:35:23Z",
+      "side": 1,
+      "message": "add a small comment about what \u0027seq\u0027 is",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATH///Fg\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-18T10:35:23Z",
+      "side": 1,
+      "message": "JPEG_APP0 + 1 is actually JPEG_APP1",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATH///Fc\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-18T10:35:23Z",
+      "side": 1,
+      "message": "-\u003e JPEG_APP2",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATH///DI\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-18T10:35:23Z",
+      "side": 1,
+      "message": "function name is probably better looking non-capitalized",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATH///FU\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-18T10:35:23Z",
+      "side": 1,
+      "message": "const char kICCPSignature[] instead?",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATH///FY\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-18T10:35:23Z",
+      "side": 1,
+      "message": "\"strlen(kICCPSignature) + 1\" instead?\n\n(will be turned into a compile-time constant by gcc)",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATH///FQ\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-18T10:35:23Z",
+      "side": 1,
+      "message": "so, kICCPSignatureLength + 2",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATH///FM\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-18T10:35:23Z",
+      "side": 1,
+      "message": "JPEG_APP2",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATH///DM\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-18T10:35:23Z",
+      "side": 1,
+      "message": "isn\u0027t it \u0027return 0\u0027 rather? (and below too). Or, discarding the profile is not considered an error?",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATH///DE\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-18T10:35:23Z",
+      "side": 1,
+      "message": "suggestion: you can do 127-130 earlier at line 119, doesn\u0027t have to be in that particular block 124-\u003e137",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATH///C8\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-18T10:35:23Z",
+      "side": 1,
+      "message": "JPEG_APP1",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATH///C4\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-18T10:35:23Z",
+      "side": 1,
+      "message": "JPEG_APP1",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATH///DA\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-18T10:35:23Z",
+      "side": 1,
+      "message": "at this point, metadata-\u003eiccp.bytes has been malloc\u0027d.\nWho is responsible for the free() ? I see in particular an error condition at line 177 that is not freeing it.",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATH///C0\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-18T10:35:23Z",
+      "side": 1,
+      "message": "maybe some cleanup on metadata (if not NULL) should be done here, in case of error",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
