@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAATH//+Ck\u003d",
+        "filename": "examples/tiffdec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-19T08:47:06Z",
+      "side": 1,
+      "message": "no:\n\ntiffio.h: extern\tint TIFFGetField(TIFF*, ttag_t, ...);",
+      "parentUuid": "AAAATH///Cs\u003d",
+      "revId": "580785d0fd2acf8710785e1e7549be919e0176bc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAATH///Co\u003d",
         "filename": "examples/tiffdec.c",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "AAAATH//+Cc\u003d",
+        "filename": "examples/tiffdec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-19T08:47:06Z",
+      "side": 1,
+      "message": "No I want to warn if it\u0027s present:\n\nRETURN VALUES\n\n       1 is returned if the tag is defined in the current directory; otherwise a 0 is returned.",
+      "parentUuid": "AAAATH///Co\u003d",
+      "revId": "580785d0fd2acf8710785e1e7549be919e0176bc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAATH///Ck\u003d",
         "filename": "examples/tiffdec.c",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2012-12-18T10:40:02Z",
       "side": 1,
       "message": "no clean-up of \u0027metadata\u0027 is required upon error?",
+      "revId": "580785d0fd2acf8710785e1e7549be919e0176bc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATH//+CY\u003d",
+        "filename": "examples/tiffdec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-19T08:47:06Z",
+      "side": 1,
+      "message": "we can settle this on the jpegdec and I\u0027ll bring everything else inline.",
+      "parentUuid": "AAAATH///Ck\u003d",
       "revId": "580785d0fd2acf8710785e1e7549be919e0176bc",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
