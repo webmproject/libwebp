@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "AAAATn///oQ\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-20T02:33:43Z",
+      "side": 1,
+      "message": "added JPEG_APP[12] defines",
+      "parentUuid": "AAAATH//+DY\u003d",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAATH///Fc\u003d",
         "filename": "examples/jpegdec.c",
         "patchSetId": 1
@@ -101,6 +119,24 @@
       "side": 1,
       "message": "ditto",
       "parentUuid": "AAAATH///Fc\u003d",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATn///oM\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-20T02:33:43Z",
+      "side": 1,
+      "message": "added JPEG_APP[12] defines",
+      "parentUuid": "AAAATH//+DU\u003d",
       "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -264,6 +300,24 @@
     },
     {
       "key": {
+        "uuid": "AAAATn///oI\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-20T02:33:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAATH///FM\u003d",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAATH///DM\u003d",
         "filename": "examples/jpegdec.c",
         "patchSetId": 1
@@ -293,6 +347,24 @@
       "side": 1,
       "message": "Tried to capture that in the function comment., but what\u0027s your preference? (It\u0027s true pngdec is the opposite, I wasn\u0027t really thinking so we can resolve this now; currently there\u0027s no indication of what the user actually wants here...)\n\ndiscard and still get an image\n\nor\n\nerror; rerun minus option to get an image",
       "parentUuid": "AAAATH///DM\u003d",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATn///oE\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-20T02:33:43Z",
+      "side": 1,
+      "message": "Normalized all formats, they fail on corrupt metadata; cwebp will send a NULL metadata when non is required to allow the image to be encoded.",
+      "parentUuid": "AAAATH//+DI\u003d",
       "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -334,6 +406,24 @@
     },
     {
       "key": {
+        "uuid": "AAAATn///oA\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-20T02:33:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAATH//+DE\u003d",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAATH///C8\u003d",
         "filename": "examples/jpegdec.c",
         "patchSetId": 1
@@ -351,6 +441,24 @@
     },
     {
       "key": {
+        "uuid": "AAAATn///n8\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-20T02:33:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAATH///C8\u003d",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAATH///C4\u003d",
         "filename": "examples/jpegdec.c",
         "patchSetId": 1
@@ -362,6 +470,24 @@
       "writtenOn": "2012-12-18T10:35:23Z",
       "side": 1,
       "message": "JPEG_APP1",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATn///n4\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-20T02:33:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAATH///C4\u003d",
       "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -397,6 +523,24 @@
       "side": 1,
       "message": "I\u0027m relying on cwebp to always perform cleanup as with the pictures, etc.",
       "parentUuid": "AAAATH///DA\u003d",
+      "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAATn///n0\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-20T02:33:43Z",
+      "side": 1,
+      "message": "Better to cleanup here; I normalized all the formats so pic/metadata will get freed on error even though cwebp does the right thing",
+      "parentUuid": "AAAATH//+DA\u003d",
       "revId": "a12dbde31ecffc20156319a625f016ab62932c8e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
