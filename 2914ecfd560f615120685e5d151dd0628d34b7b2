@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAT3////g\u003d",
+        "filename": "examples/tiffdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2012-12-20T07:55:39Z",
+      "side": 1,
+      "message": "maybe test the return values to be ok (\u003d\u003d1)?\n\nok \u003d (TIFFGETField(...) \u003d\u003d 1) \u0026\u0026 (TIFFGetField(...) \u003d\u003d 1);\n\nbut then, you need an \u0027ok \u003d 0\u0027 at line 105.",
+      "revId": "2914ecfd560f615120685e5d151dd0628d34b7b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
