@@ -441,7 +441,7 @@ width and height of the image block in number of bits, just like the
 predictor transform:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int size_bits = ReadStream(3) + 2;
+int size_bits = ReadBits(3) + 2;
 int block_width = 1 << size_bits;
 int block_height = 1 << size_bits;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -518,7 +518,7 @@ follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // 8 bit value for color table size
-int color_table_size = ReadStream(8) + 1;
+int color_table_size = ReadBits(8) + 1;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The color table is stored using the image storage format itself. The
@@ -592,82 +592,107 @@ The values are packed into the green component as follows:
 4 Image Data
 ------------
 
-Image data is an array of pixel values in scan-line order. We use image
-data in five different roles: The main role, an auxiliary role related
-to entropy coding, and three further roles related to transforms.
+Image data is an array of pixel values in scan-line order.
 
-  1. ARGB image.
-  2. Entropy image. The red and green components define the meta Huffman
-     code used in a particular area of the image.
-  3. Predictor image. The green component defines which of the 14 values
-     is used within a particular square of the image.
-  4. Color indexing image. An array of up to 256 ARGB colors is used for
-     transforming a green-only image, using the green value as an index
-     to this one-dimensional array.
-  5. Color transform image. It is created by `ColorTransformElement` values
+### 4.1 Roles of Image Data
+
+We use image data in five different roles:
+
+  1. ARGB image: Stores the actual pixels of the image.
+  1. Entropy image: Stores the
+     [meta Huffman codes](#decoding-of-meta-huffman-codes). The red and green
+     components of a pixel define the meta Huffman code used in a particular
+     block of the ARGB image.
+  1. Predictor image: Stores the metadata for [Predictor
+     Transform](#predictor-transform). The green component of a pixel defines
+     which of the 14 predictors is used within a particular block of the
+     ARGB image.
+  1. Color transform image. It is created by `ColorTransformElement` values
      (defined in [Color Transform](#color-transform)) for different blocks of
      the image. Each `ColorTransformElement` `'cte'` is treated as a pixel whose
      alpha component is `255`, red component is `cte.red_to_blue`, green
      component is `cte.green_to_blue` and blue component is `cte.green_to_red`.
+  1. Color indexing image: An array of of size `color_table_size` (up to 256
+     ARGB values) storing the metadata for the
+     [Color Indexing Transform](#color-indexing-transform). This is stored as an
+     image of width `color_table_size` and height `1`.
 
-To divide the image into multiple regions, the image is first divided
-into a set of fixed-size blocks (typically 16x16 blocks). Each of these
-blocks can be modeled using an entropy code, in a way where several
-blocks can share the same entropy code. There is a cost in transmitting
-an entropy code, and in order to minimize this cost, statistically
-similar blocks can share an entropy code. The blocks sharing an entropy
-code can be found by clustering their statistical properties, or by
-repeatedly joining two randomly selected clusters when it reduces the
-overall amount of bits needed to encode the image. See the section
-[Decoding of Meta Huffman Codes](#decoding-of-meta-huffman-codes) in
-[Chapter 5](#entropy-code) for an explanation of how this entropy image
-is stored.
+### 4.2 Encoding of Image data
 
-Each pixel is encoded using one of three possible methods:
+The encoding of image data is independent of its role.
 
-  1. Huffman coded literals, where each channel (green, alpha, red,
-     blue) is entropy-coded independently;
-  2. LZ77, a sequence of pixels in scan-line order copied from elsewhere
+The image is first divided into a set of fixed-size blocks (typically 16x16
+blocks). Each of these blocks are modeled using their own entropy codes. Also,
+several blocks may share the same entropy codes.
+
+**Rationale:** Storing an entropy code incurs a cost. This cost can be minimized
+if statistically similar blocks share an entropy code, thereby storing that code
+only once. For example, an encoder can find similar blocks by clustering them
+using their statistical properties, or by repeatedly joining a pair of randomly
+selected clusters when it reduces the overall amount of bits needed to encode
+the image.
+
+Each pixel is encoded using one of the three possible methods:
+
+  1. Huffman coded literal: each channel (green, red, blue and alpha) is
+     entropy-coded independently;
+  2. LZ77 backward reference: a sequence of pixels are copied from elsewhere
      in the image; or
-  3. Color cache, using a short multiplicative hash code (color cache
+  3. Color cache code: using a short multiplicative hash code (color cache
      index) of a recently seen color.
 
-In the following sections we introduce the main concepts in LZ77 prefix
-coding, LZ77 entropy coding, LZ77 distance mapping, and color cache
-codes. The actual details of the entropy code are described in more
-detail in [Chapter 5](#entropy-code).
+The following sub-sections describe each of these in detail.
 
+#### 4.2.1 Huffman Coded Literals
 
-### LZ77 Prefix Coding
+The pixel is stored as Huffman coded values of green, red, blue and alpha (in
+that order). See [this section](#decoding-entropy-coded-image-data) for details.
 
-Prefix coding divides large integer values into two parts: the prefix
-code and the extra bits. The benefit of this approach is that entropy
-coding is later used only for the prefix code, reducing the resources
-needed by the entropy code. The extra bits are stored as they are,
-without an entropy code.
+#### 4.2.2 LZ77 Backward Reference
 
-This prefix code is used for coding backward reference lengths and
-distances. The extra bits form an integer that is added to the lower
-value of the range. Hence the LZ77 lengths and distances are divided
-into prefix codes and extra bits. Performing the Huffman coding only on
-the prefixes reduces the size of the Huffman codes to tens of values
-instead of a million (distance) or several thousands (length).
+Backward references are tuples of _length_ and _distance code_:
 
-| Prefix code | Value range     | Extra bits |
-| ----------- | --------------- | ---------- |
-| 0           | 1               | 0          |
-| 1           | 2               | 0          |
-| 2           | 3               | 0          |
-| 3           | 4               | 0          |
-| 4           | 5..6            | 1          |
-| 5           | 7..8            | 1          |
-| 6           | 9..12           | 2          |
-| 7           | 13..16          | 2          |
-| ...         | ...             | ...        |
-| 38          | 262145..524288  | 18         |
-| 39          | 524289..1048576 | 18         |
+  * Length indicates how many pixels in scan-line order are to be copied.
+  * Distance code is a number indicating the position of a previously seen
+    pixel, from which the pixels are to be copied. The exact mapping is
+    described [below](#distance-mapping).
 
-The code to obtain a value from the prefix code is as follows:
+The length and distance values are stored using **LZ77 prefix coding**.
+
+LZ77 prefix coding divides large integer values into two parts: the _prefix
+code_ and the _extra bits_: the prefix code is stored using an entropy code,
+while the extra bits are stored as they are (without an entropy code).
+
+**Rationale**: This approach reduces the storage requirement for the entropy
+code. Also, large values are usually rare, and so extra bits would be used for
+very few values in the image. Thus, this approach results in a better
+compression overall.
+
+The following table denotes the prefix codes and extra bits used for storing
+different range of values.
+
+Note: The maximum backward reference length is limited to 4096. Hence, only the
+first 24 prefix codes (with the respective extra bits) are meaningful for length
+values. For distance values, however, all the 40 prefix codes are valid.
+
+| Value range     | Prefix code | Extra bits |
+| --------------- | ----------- | ---------- |
+| 1               | 0           | 0          |
+| 2               | 1           | 0          |
+| 3               | 2           | 0          |
+| 4               | 3           | 0          |
+| 5..6            | 4           | 1          |
+| 7..8            | 5           | 1          |
+| 9..12           | 6           | 2          |
+| 13..16          | 7           | 2          |
+| ...             | ...         | ...        |
+| 3072..4096      | 23          | 10         |
+| ...             | ...         | ...        |
+| 524289..786432  | 38          | 18         |
+| 786433..1048576 | 39          | 18         |
+
+The pseudocode to obtain a (length or distance) value from the prefix code is
+as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 if (prefix_code < 4) {
@@ -678,26 +703,28 @@ int offset = (2 + (prefix_code & 1)) << extra_bits;
 return offset + ReadBits(extra_bits) + 1;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+**Distance Mapping:**
+{:#distance-mapping}
 
-### LZ77 Backward Reference Entropy Coding
+As noted previously, distance code is a number indicating the position of a
+previously seen pixel, from which the pixels are to be copied. This sub-section
+defines the mapping between a distance code and the position of a previous
+pixel.
 
-Backward references are tuples of length and distance. Length indicates
-how many pixels in scan-line order are to be copied. The length is
-codified in two steps: prefix and extra bits. Only the first 24 prefix
-codes with their respective extra bits are used for length codes,
-limiting the maximum length to 4096. For distances, all 40 prefix codes
-are used.
+The distance codes larger than 120 denote the pixel-distance in scan-line
+order, offset by 120.
 
+The smallest distance codes [1..120] are special, and are reserved for a close
+neighborhood of the current pixel. This neighborhood consists of 120 pixels:
 
-### LZ77 Distance Mapping
+  * Pixels that are 1 to 7 rows above the current pixel, and are up to 8 columns
+    to the left or up to 7 columns to the right of the current pixel. \[Total
+    such pixels = `7 * (8 + 1 + 7) = 112`\].
+  * Pixels that are in same row as the current pixel, and are up to 8 columns to
+    the left of the current pixel. \[`8` such pixels\].
 
-120 smallest distance codes [1..120] are reserved for a close
-neighborhood within the current pixel. The rest are pure distance codes
-in scan-line order, just offset by 120. The smallest codes are coded
-into x and y offsets by the following table. Each tuple shows the x and
-the y coordinates in 2D offsets -- for example the first tuple (0, 1)
-means 0 for no difference in x, and 1 pixel difference in y (indicating
-previous row).
+The mapping between distance code `i` and the neighboring pixel offset
+`(xi, yi)` is as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 (0, 1),  (1, 0),  (1, 1),  (-1, 1), (0, 2),  (2, 0),  (1, 2),  (-1, 2),
@@ -717,29 +744,42 @@ previous row).
 (-6, 7), (7, 6),  (-7, 6), (8, 5),  (7, 7),  (-7, 7), (8, 6),  (8, 7)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The distances codes that map into these tuples are changes into
-scan-line order distances using the following formula:
-_dist = x + y * xsize_, where _xsize_ is the width of the image in
-pixels. If a decoder detects a computed _dist_ value smaller than 1,
-the value of 1 is used instead.
+For example, distance code `1` indicates offset of `(0, 1)` for the neighboring
+pixel, that is, the pixel above the current pixel (0-pixel difference in
+X-direction and 1 pixel difference in Y-direction). Similarly, distance code
+`3` indicates left-top pixel.
+
+The decoder can convert a distances code 'i' to a scan-line order distance
+'dist' as follows:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+(xi, yi) = distance_map[i]
+dist = x + y * xsize
+if (dist < 1) {
+  dist = 1
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+where 'distance_map' is the mapping noted above and `xsize` is the width of the
+image in pixels.
 
 
-### Color Cache Code
+#### 4.2.3 Color Cache Coding
 
-Color cache stores a set of colors that have been recently used in the
-image. Using the color cache code, the color cache colors can be
-referred to more efficiently than emitting the respective ARGB values
-independently or sending them as backward references with a length of
-one pixel.
+Color cache stores a set of colors that have been recently used in the image.
 
-Color cache codes are coded as follows. First, there is a bit that
-indicates if the color cache is used or not. If this bit is 0, no color
-cache codes exist, and they are not transmitted in the Huffman code that
-decodes the green symbols and the length prefix codes. However, if this
-bit is 1, the color cache size is read:
+**Rationale:** This way, the recently used colors can sometimes be referred to
+more efficiently than emitting them using other two methods (described in
+[4.2.1](#huffman-coded-literals) and [4.2.2](#lz77-backward-reference)).
+
+Color cache codes are stored as follows. First, there is a 1-bit value that
+indicates if the color cache is used. If this bit is 0, no color cache codes
+exist, and they are not transmitted in the Huffman code that decodes the green
+symbols and the length prefix codes. However, if this bit is 1, the color cache
+size is read next:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int color_cache_code_bits = ReadBits(br, 4);
+int color_cache_code_bits = ReadBits(4);
 int color_cache_size = 1 << color_cache_code_bits;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -748,7 +788,7 @@ int color_cache_size = 1 << color_cache_code_bits;
 `color_cache_code_bits` is [1..11]. Compliant decoders must indicate a
 corrupted bitstream for other values.
 
-A color cache is an array of the size `color_cache_size`. Each entry
+A color cache is an array of size `color_cache_size`. Each entry
 stores one ARGB color. Colors are looked up by indexing them by
 (0x1e35a7bd * `color`) >> (32 - `color_cache_code_bits`). Only one
 lookup is done in a color cache; there is no conflict resolution.
@@ -763,28 +803,83 @@ literals, into the cache in the order they appear in the stream.
 5 Entropy Code
 --------------
 
-### Huffman Coding
+### 5.1 Overview
 
-Most of the data is coded using a canonical Huffman code. This includes
-the following:
+Most of the data is coded using [canonical Huffman code][canonical_huff]. Hence,
+the codes are transmitted by sending the _Huffman code lengths_, as opposed to
+the actual _Huffman codes_.
 
-  * a combined code that defines either the value of the green
-    component, a color cache code, or a prefix of the length codes;
-  * the data for alpha, red and blue components; and
-  * prefixes of the distance codes.
+In particular, the format uses **spatially-variant Huffman coding**. In other
+words, different blocks of the image can potentially use different entropy
+codes.
 
-The Huffman codes are transmitted by sending the code lengths; the
-actual symbols are implicit and done in order for each length. The
-Huffman code lengths are run-length-encoded using three different
-prefixes, and the result of this coding is further Huffman coded.
+**Rationale**: Different areas of the image may have different characteristics. So, allowing them to use different entropy codes provides more flexibility and
+potentially a better compression.
 
+### 5.2 Details
 
-### Spatially-variant Huffman Coding
+The encoded image data consists of two parts:
 
-For every pixel (x, y) in the image, there is a definition of which
-entropy code to use. First, there is an integer called 'meta Huffman
-code' that can be obtained from the entropy image. This
-meta Huffman code identifies a set of five Huffman codes:
+  1. Meta Huffman codes
+  1. Entropy-coded image data
+
+#### 5.2.1 Decoding of Meta Huffman Codes
+
+As noted earlier, the format allows the use of different Huffman codes for
+different blocks of the image. _Meta Huffman codes_ are indexes identifying
+which Huffman codes to use in different parts of the image.
+
+Meta Huffman codes may be used _only_ when the image is being used in the
+[role](#roles-of-image-data) of an _ARGB image_.
+
+There are two possibilities for the meta Huffman codes, indicated by a 1-bit
+value:
+
+  * If this bit is zero, there is only one meta Huffman code used everywhere in
+    the image. No more data is stored.
+  * If this bit is one, the image uses multiple meta Huffman codes. These meta
+    Huffman codes are stored as an _entropy image_ (described below).
+
+**Entropy image:**
+
+The entropy image defines which Huffman codes are used in different parts of the
+image, as described below.
+
+The first 3-bits contain the `huffman_bits` value. The dimensions of the entropy
+image are derived from 'huffman_bits'.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+int huffman_bits = ReadBits(3) + 2;
+int huffman_xsize = DIV_ROUND_UP(xsize, 1 << huffman_bits);
+int huffman_ysize = DIV_ROUND_UP(ysize, 1 << huffman_bits);
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+where `DIV_ROUND_UP` is as defined [earlier](#predictor-transform).
+
+Next bits contain an entropy image of width `huffman_xsize` and height
+'huffman_ysize'.
+
+**Interpretation of Meta Huffman Codes:**
+
+The number of meta Huffman codes in the ARGB image can be obtained by finding
+the largest meta Huffman code from the entropy image.
+
+Now, given a pixel (x, y) in the ARGB image, we can obtain the meta Huffman code
+to be used as follows:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+int position = (y >> huffman_bits) * huffman_xsize + (x >> huffman_bits);
+int meta_huff_code = (entropy_image[pos] >> 8) & 0xffff;
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `meta_huff_code` selects _a set of 5 Huffman codes_.  The decoder then uses
+one of these 5 Huffman code to decode the pixel (x, y) as explained in the
+[next section](#decoding-entropy-coded-image-data).
+
+#### 5.2.2 Decoding Entropy-coded Image Data
+
+For the current position (x, y) in the image, the decoder first identifies a set
+of 5 Huffman codes to be used (as explained in the last section). These are:
 
   * Huffman code #1: used for green channel, backward-reference length and
     color cache
@@ -792,12 +887,13 @@ meta Huffman code identifies a set of five Huffman codes:
     respectively.
   * Huffman code #5: used for backward-reference distance.
 
+Given this set of Huffman codes, the pixel (x, y) is read and decoded as
+follows:
 
-### Decoding Flow of Image Data
-
-Read next symbol S from the bitsteam using Huffman code #1. Note that S is any
-integer in the range `0` to `(256 + 24 + `
-[`color_cache_size`](#color-cache-code)`- 1)`.
+Read next symbol S from the bitstream using Huffman code #1. \[See
+[next section](#decoding-the-code-lengths) for details on decoding the Huffman
+code lengths\]. Note that S is any integer in the range `0` to
+`(256 + 24 + ` [`color_cache_size`](#color-cache-code)`- 1)`.
 
 The interpretation of S depends on its value:
 
@@ -822,46 +918,53 @@ The interpretation of S depends on its value:
      1. Get ARGB color from the color cache at that index.
 
 
-### Decoding the Code Lengths
+**Decoding the Code Lengths:**
+{:#decoding-the-code-lengths}
 
-There are two different ways to encode the code lengths of a Huffman
-code, indicated by the first bit of the code: _simple code length code_
-(1), and _normal code length code_ (0).
+This section describes the details about reading a symbol from the bitstream by
+decoding the Huffman code length.
 
+The Huffman code lengths can be coded in two ways. The method used is specified
+by a 1-bit value.
 
-#### Simple Code Length Code
+  * If this bit is 1, it is a _simple code length code_, and
+  * If this bit is 0, it is a _normal code length code_.
 
-This variant can codify 1 or 2 non-zero length codes in the range of [0,
-255]. All other code lengths are implicitly zeros.
+**(i) Simple Code Length Code:**
 
-The first bit indicates the number of codes:
+This variant is used in the special case when only 1 or 2 Huffman code lengths
+are non-zero, and are in the range of [0, 255]. All other Huffman code lengths
+are implicitly zeros.
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int num_symbols = ReadBits(1) + 1;
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The first symbol is stored either using a 1-bit code for values of 0 and
-1, or using a 8-bit code for values in range [0, 255]. The second
-symbol, when present, is coded as an 8-bit code.
+The first bit indicates the number of non-zero code lengths:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int first_symbol_len_code = VP8LReadBits(br, 1);
-symbols[0] = ReadBits(1 + 7 * first_symbol_len_code);
-if (num_symbols == 2) {
-  symbols[1] = ReadBits(8);
+int num_code_lengths = ReadBits(1) + 1;
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The first code length is stored either using a 1-bit code for values of 0 and 1,
+or using an 8-bit code for values in range [0, 255]. The second code length,
+when present, is coded as an 8-bit code.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+int is_first_8bits = ReadBits(1);
+code_lengths[0] = ReadBits(1 + 7 * is_first_8bits);
+if (num_code_lengths == 2) {
+  code_lengths[1] = ReadBits(8);
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Empty trees can be coded as trees that contain one 0 symbol, and can be
-codified using four bits. For example, a distance tree can be empty if
-there are no backward references. Similarly, alpha, red, and blue trees
-can be empty if all pixels within the same meta Huffman code are
-produced using the color cache.
+**Note:** Another special case is when _all_ Huffman code lengths are _zeros_
+(an empty Huffman code). For example, a Huffman code for distance can be empty
+if there are no backward references. Similarly, Huffman codes for alpha, red,
+and blue can be empty if all pixels within the same meta Huffman code are
+produced using the color cache. However, this case doesn't need a special
+handling, as empty Huffman codes can be coded as those containing a single
+symbol `0`.
 
+**(ii) Normal Code Length Code:**
 
-#### Normal Code Length Code
-
-The code lengths of a Huffman code are read as follows: `num_codes`
+The code lengths of a Huffman code are read as follows: `num_code_lengths`
 specifies the number of code lengths; the rest of the code lengths
 (according to the order in `kCodeLengthCodeOrder`) are zeros.
 
@@ -870,8 +973,9 @@ int kCodeLengthCodes = 19;
 int kCodeLengthCodeOrder[kCodeLengthCodes] = {
   17, 18, 0, 1, 2, 3, 4, 5, 16, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
 };
-int num_codes = 4 + ReadStream(4);
-for (i = 0; i < num_codes; ++i) {
+int code_lengths[kCodeLengthCodes] = { 0 };  // All zeros.
+int num_code_lengths = 4 + ReadBits(4);
+for (i = 0; i < num_code_lengths; ++i) {
   code_lengths[kCodeLengthCodeOrder[i]] = ReadBits(3);
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -880,81 +984,12 @@ for (i = 0; i < num_codes; ++i) {
     * Value 0 means no symbols have been coded.
     * Values [1..15] indicate the bit length of the respective code.
   * Code 16 repeats the previous non-zero value [3..6] times, i.e.,
-    3 + `ReadStream(2)` times.  If code 16 is used before a non-zero
+    3 + `ReadBits(2)` times.  If code 16 is used before a non-zero
     value has been emitted, a value of 8 is repeated.
-  * Code 17 emits a streak of zeros [3..10], i.e., 3 + `ReadStream(3)`
+  * Code 17 emits a streak of zeros [3..10], i.e., 3 + `ReadBits(3)`
     times.
   * Code 18 emits a streak of zeros of length [11..138], i.e.,
-    11 + `ReadStream(7)` times.
-
-The entropy codes for alpha, red and blue have a total of 256 symbols.
-The entropy code for distance prefix codes has 40 symbols. The entropy
-code for green has 256 + 24 + `color_cache_size`, 256 symbols for
-different green symbols, 24 length code prefix symbols, and symbols for
-the color cache.
-
-The meta Huffman code, specified in the next section, defines how many
-Huffman codes there are. There are always 5 times the number of Huffman
-codes to the number of meta Huffman codes.
-
-
-### Decoding of Meta Huffman Codes
-
-There are two ways to code the meta Huffman codes, indicated by one bit
-for the ARGB image and is an implicit zero, i.e., not present in the
-stream for all transform images and the entropy image itself.
-
-If this bit is zero, there is only one meta Huffman code, using Huffman
-codes 0, 1, 2, 3 and 4 for green, alpha, red, blue and distance,
-respectively. This meta Huffman code is used everywhere in the image.
-
-If this bit is one, the meta Huffman codes are controlled by the entropy
-image, where the index of the meta Huffman code is codified in the red
-and green components. The index can be obtained from the uint32 value by
-_((pixel >> 8) & 0xffff)_, thus there can be up to 65536 unique meta
-Huffman codes. When decoding a Huffman encoded symbol at a pixel x, y,
-one chooses the meta Huffman code respective to these coordinates.
-However, not all bits of the coordinates are used for choosing the meta
-Huffman code, i.e., the entropy image is of subresolution to the real
-image.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int huffman_bits = ReadBits(3) + 2;
-int huffman_xsize = DIV_ROUND_UP(xsize, 1 << huffman_bits);
-int huffman_ysize = DIV_ROUND_UP(ysize, 1 << huffman_bits);
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-`huffman_bits` gives the amount of subsampling in the entropy image.
-
-After reading the `huffman_bits`, an entropy image stream of size
-`huffman_xsize`, `huffman_ysize` is read.
-
-The meta Huffman code, identifying the five Huffman codes per meta
-Huffman code, is coded only by the number of codes:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int num_meta_codes = max(entropy_image) + 1;
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Now, we can obtain the five Huffman codes for green, alpha, red, blue
-and distance for a given (x, y) by the following expression:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-meta_codes[(entropy_image[(y >> huffman_bits) * huffman_xsize +
-                          (x >> huffman_bits)] >> 8) & 0xffff]
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The `huffman_code[5 * meta_code + k]`, codes with _k_ == 0 are for the
-green & length code, _k_ == 4 for the distance code, and the codes at
-_k_ == 1, 2, and 3, are for codes of length 256 for red, blue and alpha,
-respectively.
-
-The value of _k_ for the reference position in `meta_code` determines the
-length of the Huffman code:
-
-  * k = 0; length = 256 + 24 + cache_size
-  * k = 1, 2, or 3;  length = 256
-  * k = 4, length = 40.
+    11 + `ReadBits(7)` times.
 
 
 6 Overall Structure of the Format
@@ -981,9 +1016,9 @@ of pixels (xsize * ysize).
 <transform> ::= <predictor-tx> | <color-tx> | <subtract-green-tx> |
                 <color-indexing-tx>
 <predictor-tx> ::= 2-bit value 0; <predictor image>
-<predictor image> ::= 3-bit sub-pixel code | <entropy-coded image>
+<predictor image> ::= 3-bit sub-pixel code ; <entropy-coded image>
 <color-tx> ::= 2-bit value 1; <color image>
-<color image> ::= 3-bit sub-pixel code | <entropy-coded image>
+<color image> ::= 3-bit sub-pixel code ; <entropy-coded image>
 <subtract-green-tx> ::= 2-bit value 2
 <color-indexing-tx> ::= 2-bit value 3; <color-indexing image>
 <color-indexing image> ::= 8-bit color count; <entropy-coded image>
@@ -1017,3 +1052,5 @@ A possible example sequence:
 <color cache info><huffman codes>
 <lz77-coded image>
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[canonical_huff]: http://en.wikipedia.org/wiki/Canonical_Huffman_code
