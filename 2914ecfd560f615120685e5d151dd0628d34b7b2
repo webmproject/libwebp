@@ -16,6 +16,24 @@
       "revId": "2914ecfd560f615120685e5d151dd0628d34b7b2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAT3///Mw\u003d",
+        "filename": "examples/tiffdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-21T02:47:11Z",
+      "side": 1,
+      "message": "I agree it would probably be safer. pulled this from the sample in libtiff docs; I\u0027ll correct this in a followup.",
+      "parentUuid": "AAAAT3////g\u003d",
+      "revId": "2914ecfd560f615120685e5d151dd0628d34b7b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
