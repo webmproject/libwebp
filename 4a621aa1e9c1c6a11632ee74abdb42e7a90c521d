@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAT3///M4\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-21T02:37:17Z",
+      "side": 1,
+      "message": "unfortunately not; not jpeg-turbo either.",
+      "parentUuid": "AAAAT3////U\u003d",
+      "revId": "4a621aa1e9c1c6a11632ee74abdb42e7a90c521d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAT3////Y\u003d",
         "filename": "examples/jpegdec.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2012-12-20T08:03:32Z",
       "side": 1,
       "message": "suggest using ()\u0027s",
+      "revId": "4a621aa1e9c1c6a11632ee74abdb42e7a90c521d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAT3///M8\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-21T02:37:17Z",
+      "side": 1,
+      "message": "oops, had that locally, forgot to commit and push.",
+      "parentUuid": "AAAAT3////Y\u003d",
       "revId": "4a621aa1e9c1c6a11632ee74abdb42e7a90c521d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
