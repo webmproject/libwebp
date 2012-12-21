@@ -17,12 +17,14 @@
 extern "C" {
 #endif
 
+struct Metadata;
 struct WebPPicture;
 
 // Reads a JPEG from 'in_file', returning the decoded output in 'pic'.
 // The output is RGB.
 // Returns true on success.
-int ReadJPEG(FILE* in_file, struct WebPPicture* const pic);
+int ReadJPEG(FILE* in_file, struct WebPPicture* const pic,
+             struct Metadata* const metadata);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
