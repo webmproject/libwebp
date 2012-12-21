@@ -16,6 +16,24 @@
       "revId": "faadcd745b3478cd0005252799dab34b0fac35cf",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAT3///NI\u003d",
+        "filename": "examples/pngdec.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2012-12-21T02:33:13Z",
+      "side": 1,
+      "message": "quite so, dropped.",
+      "parentUuid": "AAAAT3////0\u003d",
+      "revId": "faadcd745b3478cd0005252799dab34b0fac35cf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
