@@ -41,8 +41,11 @@ int ReadTIFF(const char* const filename,
                     dircount - 1);
   }
 
-  TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &width);
-  TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &height);
+  if (!(TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &width) &&
+        TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &height))) {
+    fprintf(stderr, "Error! Cannot retrieve TIFF image dimensions.\n");
+    return 0;
+  }
   raster = (uint32*)_TIFFmalloc(width * height * sizeof(*raster));
   if (raster != NULL) {
     if (TIFFReadRGBAImageOriented(tif, width, height, raster,
