@@ -16,13 +16,15 @@
 extern "C" {
 #endif
 
+struct Metadata;
 struct WebPPicture;
 
 // Reads a PNG from 'in_file', returning the decoded output in 'pic'.
 // If 'keep_alpha' is true and the PNG has an alpha channel, the output is RGBA
 // otherwise it will be RGB.
 // Returns true on success.
-int ReadPNG(FILE* in_file, struct WebPPicture* const pic, int keep_alpha);
+int ReadPNG(FILE* in_file, struct WebPPicture* const pic, int keep_alpha,
+            struct Metadata* const metadata);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
