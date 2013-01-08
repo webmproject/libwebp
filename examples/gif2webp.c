@@ -132,6 +132,26 @@ static int GetColorFromIndex(const ColorMapObject* const color_map, GifWord idx,
   }
 }
 
+static void DisplayGifError(const GifFileType* const gif) {
+  // GIFLIB_MAJOR is only defined in libgif >= 4.2.0.
+  // libgif 4.2.0 has retired PrintGifError() and added GifErrorString().
+#if defined(GIFLIB_MAJOR) && defined(GIFLIB_MINOR) && \
+        ((GIFLIB_MAJOR == 4 && GIFLIB_MINOR >= 2) || GIFLIB_MAJOR > 4)
+#if GIFLIB_MAJOR >= 5
+    // Static string actually, hence the const char* cast.
+    const char* error_str = (const char*)GifErrorString(gif->Error);
+#else
+    const char* error_str = (const char*)GifErrorString();
+#endif
+    if (error_str == NULL) error_str = "Unknown error";
+    fprintf(stderr, "GIFLib Error: %s\n", error_str);
+#else
+    fprintf(stderr, "GIFLib Error: ");
+    PrintGifError();
+    fprintf(stderr, "\n");
+#endif
+}
+
 static const char* const kErrorMessages[] = {
   "WEBP_MUX_NOT_FOUND", "WEBP_MUX_INVALID_ARGUMENT", "WEBP_MUX_BAD_DATA",
   "WEBP_MUX_MEMORY_ERROR", "WEBP_MUX_NOT_ENOUGH_DATA"
@@ -241,7 +261,12 @@ int main(int argc, const char *argv[]) {
   }
 
   // Start the decoder object
+#if defined(GIFLIB_MAJOR) && (GIFLIB_MAJOR >= 5)
+  // There was an API change in version 5.0.0.
+  gif = DGifOpenFileName(in_file, &gif_error);
+#else
   gif = DGifOpenFileName(in_file);
+#endif
   if (gif == NULL) goto End;
 
   // Allocate picture buffer
@@ -437,7 +462,7 @@ int main(int argc, const char *argv[]) {
   if (out != NULL && out_file != NULL) fclose(out);
 
   if (gif_error != 0) {
-    PrintGifError();
+    DisplayGifError(gif);
   }
   if (gif != NULL) {
     DGifCloseFile(gif);
