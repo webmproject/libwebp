@@ -43,11 +43,6 @@
 
 static int transparent_index = -1;  // No transparency by default.
 
-static int MyReader(GifFileType* gif, GifByteType* buffer, int length) {
-  FILE* const file = (FILE*)gif->UserData;
-  return fread(buffer, 1, length, file);
-}
-
 static void ClearPicture(WebPPicture* const picture, uint32_t color) {
   int x, y;
   for (y = 0; y < picture->height; ++y) {
@@ -174,7 +169,6 @@ int main(int argc, const char *argv[]) {
   int ok = 0;
   const char *in_file = NULL, *out_file = NULL;
   FILE* out = NULL;
-  FILE* in = NULL;
   GifFileType* gif = NULL;
   WebPPicture picture;
   WebPPicture view;
@@ -246,14 +240,8 @@ int main(int argc, const char *argv[]) {
     goto End;
   }
 
-  in = fopen(in_file, "rb");
-  if (in == NULL) {
-    fprintf(stderr, "Can't open input file '%s'\n", in_file);
-    goto End;
-  }
-
   // Start the decoder object
-  gif = DGifOpen(in, MyReader);
+  gif = DGifOpenFileName(in_file);
   if (gif == NULL) goto End;
 
   // Allocate picture buffer
@@ -447,7 +435,6 @@ int main(int argc, const char *argv[]) {
   WebPMuxDelete(mux);
   WebPPictureFree(&picture);
   if (out != NULL && out_file != NULL) fclose(out);
-  if (in != NULL && in_file != NULL) fclose(in);
 
   if (gif_error != 0) {
     PrintGifError();
