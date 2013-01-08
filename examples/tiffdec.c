@@ -36,7 +36,7 @@ int ReadTIFF(const char* const filename,
   dircount = TIFFNumberOfDirectories(tif);
   if (dircount > 1) {
     fprintf(stderr, "Warning: multi-directory TIFF files are not supported.\n"
-                    "Only the first will be used, %hu will be ignored.\n",
+                    "Only the first will be used, %d will be ignored.\n",
                     dircount - 1);
   }
 
