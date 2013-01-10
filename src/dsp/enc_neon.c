@@ -233,8 +233,8 @@ static void FTransform(const uint8_t* src, const uint8_t* ref,
   const int kBPS = BPS;
   const uint8_t* src_ptr = src;
   const uint8_t* ref_ptr = ref;
-  int16_t* coeff16 = kCoeff16;
-  int32_t* coeff32 = kCoeff32;
+  const int16_t* coeff16 = kCoeff16;
+  const int32_t* coeff32 = kCoeff32;
 
   __asm__ volatile (
     // load src into q4, q5 in high half
@@ -429,6 +429,213 @@ static void FTransformWHT(const int16_t* in, int16_t* out) {
   ) ;
 }
 
+//------------------------------------------------------------------------------
+// Texture distortion
+//
+// We try to match the spectral content (weighted) between source and
+// reconstructed samples.
+
+// Hadamard transform
+// Returns the weighted sum of the absolute value of transformed coefficients.
+// This uses a TTransform helper function in C
+static int Disto4x4(const uint8_t* const a, const uint8_t* const b,
+                    const uint16_t* const w) {
+  const int kBPS = BPS;
+  const uint8_t* A = a;
+  const uint8_t* B = b;
+  const uint16_t* W = w;
+  int sum;
+  __asm__ volatile (
+    "vld1.32         d0[0], [%[a]], %[kBPS]   \n"
+    "vld1.32         d0[1], [%[a]], %[kBPS]   \n"
+    "vld1.32         d2[0], [%[a]], %[kBPS]   \n"
+    "vld1.32         d2[1], [%[a]]            \n"
+
+    "vld1.32         d1[0], [%[b]], %[kBPS]   \n"
+    "vld1.32         d1[1], [%[b]], %[kBPS]   \n"
+    "vld1.32         d3[0], [%[b]], %[kBPS]   \n"
+    "vld1.32         d3[1], [%[b]]            \n"
+
+    // a d0/d2, b d1/d3
+    // d0/d1: 01 01 01 01
+    // d2/d3: 23 23 23 23
+    // But: it goes 01 45 23 67
+    // Notice the middle values are transposed
+    "vtrn.16         q0, q1                   \n"
+
+    // {a0, a1} = {in[0] + in[2], in[1] + in[3]}
+    "vaddl.u8        q2, d0, d2               \n"
+    "vaddl.u8        q10, d1, d3              \n"
+    // {a3, a2} = {in[0] - in[2], in[1] - in[3]}
+    "vsubl.u8        q3, d0, d2               \n"
+    "vsubl.u8        q11, d1, d3              \n"
+
+    // tmp[0] = a0 + a1
+    "vpaddl.s16      q0, q2                   \n"
+    "vpaddl.s16      q8, q10                  \n"
+
+    // tmp[1] = a3 + a2
+    "vpaddl.s16      q1, q3                   \n"
+    "vpaddl.s16      q9, q11                  \n"
+
+    // No pair subtract
+    // q2 = {a0, a3}
+    // q3 = {a1, a2}
+    "vtrn.16         q2, q3                   \n"
+    "vtrn.16         q10, q11                 \n"
+
+    // {tmp[3], tmp[2]} = {a0 - a1, a3 - a2}
+    "vsubl.s16       q12, d4, d6              \n"
+    "vsubl.s16       q13, d5, d7              \n"
+    "vsubl.s16       q14, d20, d22            \n"
+    "vsubl.s16       q15, d21, d23            \n"
+
+    // separate tmp[3] and tmp[2]
+    // q12 = tmp[3]
+    // q13 = tmp[2]
+    "vtrn.32         q12, q13                 \n"
+    "vtrn.32         q14, q15                 \n"
+
+    // Transpose tmp for a
+    "vswp            d1, d26                  \n" // vtrn.64
+    "vswp            d3, d24                  \n" // vtrn.64
+    "vtrn.32         q0, q1                   \n"
+    "vtrn.32         q13, q12                 \n"
+
+    // Transpose tmp for b
+    "vswp            d17, d30                 \n" // vtrn.64
+    "vswp            d19, d28                 \n" // vtrn.64
+    "vtrn.32         q8, q9                   \n"
+    "vtrn.32         q15, q14                 \n"
+
+    // The first Q register is a, the second b.
+    // q0/8 tmp[0-3]
+    // q13/15 tmp[4-7]
+    // q1/9 tmp[8-11]
+    // q12/14 tmp[12-15]
+
+    // These are still in 01 45 23 67 order. We fix it easily in the addition
+    // case but the subtraction propegates them.
+    "vswp            d3, d27                  \n"
+    "vswp            d19, d31                 \n"
+
+    // a0 = tmp[0] + tmp[8]
+    "vadd.s32        q2, q0, q1               \n"
+    "vadd.s32        q3, q8, q9               \n"
+
+    // a1 = tmp[4] + tmp[12]
+    "vadd.s32        q10, q13, q12            \n"
+    "vadd.s32        q11, q15, q14            \n"
+
+    // a2 = tmp[4] - tmp[12]
+    "vsub.s32        q13, q13, q12            \n"
+    "vsub.s32        q15, q15, q14            \n"
+
+    // a3 = tmp[0] - tmp[8]
+    "vsub.s32        q0, q0, q1               \n"
+    "vsub.s32        q8, q8, q9               \n"
+
+    // b0 = a0 + a1
+    "vadd.s32        q1, q2, q10              \n"
+    "vadd.s32        q9, q3, q11              \n"
+
+    // b1 = a3 + a2
+    "vadd.s32        q12, q0, q13             \n"
+    "vadd.s32        q14, q8, q15             \n"
+
+    // b2 = a3 - a2
+    "vsub.s32        q0, q0, q13              \n"
+    "vsub.s32        q8, q8, q15              \n"
+
+    // b3 = a0 - a1
+    "vsub.s32        q2, q2, q10              \n"
+    "vsub.s32        q3, q3, q11              \n"
+
+    "vld1.64         {q10, q11}, [%[w]]       \n"
+
+    // abs(b0)
+    "vabs.s32        q1, q1                   \n"
+    "vabs.s32        q9, q9                   \n"
+    // abs(b1)
+    "vabs.s32        q12, q12                 \n"
+    "vabs.s32        q14, q14                 \n"
+    // abs(b2)
+    "vabs.s32        q0, q0                   \n"
+    "vabs.s32        q8, q8                   \n"
+    // abs(b3)
+    "vabs.s32        q2, q2                   \n"
+    "vabs.s32        q3, q3                   \n"
+
+    // expand w before using.
+    "vmovl.u16       q13, d20                 \n"
+    "vmovl.u16       q15, d21                 \n"
+
+    // w[0] * abs(b0)
+    "vmul.u32        q1, q1, q13              \n"
+    "vmul.u32        q9, q9, q13              \n"
+
+    // w[4] * abs(b1)
+    "vmla.u32        q1, q12, q15             \n"
+    "vmla.u32        q9, q14, q15             \n"
+
+    // expand w before using.
+    "vmovl.u16       q13, d22                 \n"
+    "vmovl.u16       q15, d23                 \n"
+
+    // w[8] * abs(b1)
+    "vmla.u32        q1, q0, q13              \n"
+    "vmla.u32        q9, q8, q13              \n"
+
+    // w[12] * abs(b1)
+    "vmla.u32        q1, q2, q15              \n"
+    "vmla.u32        q9, q3, q15              \n"
+
+    // Sum the arrays
+    "vpaddl.u32      q1, q1                   \n"
+    "vpaddl.u32      q9, q9                   \n"
+    "vadd.u64        d2, d3                   \n"
+    "vadd.u64        d18, d19                 \n"
+
+    // Hadamard transform needs 4 bits of extra precision (2 bits in each
+    // direction) for dynamic raw. Weights w[] are 16bits at max, so the maximum
+    // precision for coeff is 8bit of input + 4bits of Hadamard transform +
+    // 16bits for w[] + 2 bits of abs() summation.
+    //
+    // This uses a maximum of 31 bits (signed). Discarding the top 32 bits is
+    // A-OK.
+
+    // sum2 - sum1
+    "vsub.u32        d0, d2, d18              \n"
+    // abs(sum2 - sum1)
+    "vabs.s32        d0, d0                   \n"
+    // abs(sum2 - sum1) >> 5
+    "vshr.u32        d0, #5                   \n"
+
+    // It would be better to move the value straight into r0 but I'm not
+    // entirely sure how this works with inline assembly.
+    "vmov.32         %[sum], d0[0]            \n"
+
+    : [sum] "=r"(sum), [a] "+r"(A), [b] "+r"(B), [w] "+r"(W)
+    : [kBPS] "r"(kBPS)
+    : "memory", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9",
+      "q10", "q11", "q12", "q13", "q14", "q15"  // clobbered
+  ) ;
+
+  return sum;
+}
+
+static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
+                      const uint16_t* const w) {
+  int D = 0;
+  int x, y;
+  for (y = 0; y < 16 * BPS; y += 4 * BPS) {
+    for (x = 0; x < 16; x += 4) {
+      D += Disto4x4(a + x + y, b + x + y, w);
+    }
+  }
+  return D;
+}
+
 #endif   // WEBP_USE_NEON
 
 //------------------------------------------------------------------------------
@@ -443,6 +650,9 @@ void VP8EncDspInitNEON(void) {
 
   VP8ITransformWHT = ITransformWHT;
   VP8FTransformWHT = FTransformWHT;
+
+  VP8TDisto4x4 = Disto4x4;
+  VP8TDisto16x16 = Disto16x16;
 #endif   // WEBP_USE_NEON
 }
 
