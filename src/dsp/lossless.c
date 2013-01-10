@@ -21,7 +21,6 @@ extern "C" {
 #include "../dec/vp8li.h"
 #include "../dsp/yuv.h"
 #include "../dsp/dsp.h"
-#include "../enc/histogram.h"
 
 #define MAX_DIFF_COST (1e30f)
 
