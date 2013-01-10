@@ -19,9 +19,51 @@
 #include <tiffio.h>
 
 #include "webp/encode.h"
+#include "./metadata.h"
+
+static const struct {
+  ttag_t tag;
+  size_t storage_offset;
+} kTIFFMetadataMap[] = {
+  { TIFFTAG_ICCPROFILE, METADATA_OFFSET(iccp) },
+  { TIFFTAG_XMLPACKET,  METADATA_OFFSET(xmp) },
+  { 0, 0 },
+};
+
+// Returns true on success. The caller must use MetadataFree() on 'metadata' in
+// all cases.
+static int ExtractMetadataFromTIFF(TIFF* const tif, Metadata* const metadata) {
+  int i;
+  uint32 exif_ifd_offset;
+
+  for (i = 0; kTIFFMetadataMap[i].tag != 0; ++i) {
+    MetadataPayload* const payload =
+        (MetadataPayload*)((uint8_t*)metadata +
+                           kTIFFMetadataMap[i].storage_offset);
+    void* tag_data;
+    uint32 tag_data_len;
+
+    if (TIFFGetField(tif, kTIFFMetadataMap[i].tag, &tag_data_len, &tag_data) &&
+        !MetadataCopy((const char*)tag_data, tag_data_len, payload)) {
+      return 0;
+    }
+  }
+
+  // TODO(jzern): To extract the raw EXIF directory some parsing of it would be
+  // necessary to determine the overall size. In addition, value offsets in
+  // individual directory entries may need to be updated as, depending on the
+  // type, they are file based.
+  // Exif 2.2 Section 4.6.2 Tag Structure
+  // TIFF Revision 6.0 Part 1 Section 2 TIFF Structure #Image File Directory
+  if (TIFFGetField(tif, TIFFTAG_EXIFIFD, &exif_ifd_offset)) {
+    fprintf(stderr, "Warning: EXIF extraction from TIFF is unsupported.\n");
+  }
+  return 1;
+}
 
 int ReadTIFF(const char* const filename,
-             WebPPicture* const pic, int keep_alpha) {
+             WebPPicture* const pic, int keep_alpha,
+             Metadata* const metadata) {
   TIFF* const tif = TIFFOpen(filename, "r");
   uint32 width, height;
   uint32* raster;
@@ -65,8 +107,18 @@ int ReadTIFF(const char* const filename,
     fprintf(stderr, "Error allocating TIFF RGBA memory!\n");
   }
 
-  if (ok && keep_alpha == 2) {
-    WebPCleanupTransparentArea(pic);
+  if (ok) {
+    if (keep_alpha == 2) {
+      WebPCleanupTransparentArea(pic);
+    }
+    if (metadata != NULL) {
+      ok = ExtractMetadataFromTIFF(tif, metadata);
+      if (!ok) {
+        fprintf(stderr, "Error extracting TIFF metadata!\n");
+        MetadataFree(metadata);
+        WebPPictureFree(pic);
+      }
+    }
   }
 
   TIFFClose(tif);
@@ -74,10 +126,12 @@ int ReadTIFF(const char* const filename,
 }
 #else  // !WEBP_HAVE_TIFF
 int ReadTIFF(const char* const filename,
-             struct WebPPicture* const pic, int keep_alpha) {
+             struct WebPPicture* const pic, int keep_alpha,
+             struct Metadata* const metadata) {
   (void)filename;
   (void)pic;
   (void)keep_alpha;
+  (void)metadata;
   fprintf(stderr, "TIFF support not compiled. Please install the libtiff "
           "development package before building.\n");
   return 0;
