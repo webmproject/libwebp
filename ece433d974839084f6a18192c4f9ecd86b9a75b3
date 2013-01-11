@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAVH//6So\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 442,
+      "author": {
+        "id": 1115898
+      },
+      "writtenOn": "2013-01-11T22:47:38Z",
+      "side": 1,
+      "message": "indent is wrong.",
+      "revId": "ece433d974839084f6a18192c4f9ecd86b9a75b3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//6Sg\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1115898
+      },
+      "writtenOn": "2013-01-11T22:47:38Z",
+      "side": 1,
+      "message": "vld1.64 instead to load 2?",
+      "revId": "ece433d974839084f6a18192c4f9ecd86b9a75b3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//6Ss\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1115898
+      },
+      "writtenOn": "2013-01-11T22:47:38Z",
+      "side": 1,
+      "message": "Can you use vqadd.u32 here instead?",
+      "revId": "ece433d974839084f6a18192c4f9ecd86b9a75b3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//6R0\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 609,
+      "author": {
+        "id": 1115898
+      },
+      "writtenOn": "2013-01-11T22:47:38Z",
+      "side": 1,
+      "message": "should declare flags are clobbered.\nTechnically kBPS is a memory variable?",
+      "revId": "ece433d974839084f6a18192c4f9ecd86b9a75b3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
