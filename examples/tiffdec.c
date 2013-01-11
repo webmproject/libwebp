@@ -34,7 +34,7 @@ static const struct {
 // all cases.
 static int ExtractMetadataFromTIFF(TIFF* const tif, Metadata* const metadata) {
   int i;
-  uint32 exif_ifd_offset;
+  toff_t exif_ifd_offset;
 
   for (i = 0; kTIFFMetadataMap[i].tag != 0; ++i) {
     MetadataPayload* const payload =
