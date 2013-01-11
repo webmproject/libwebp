@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//6RU\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 442,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2013-01-11T22:56:51Z",
+      "side": 1,
+      "message": "what should it be? it looks correct to me",
+      "parentUuid": "AAAAVH//6So\u003d",
+      "revId": "ece433d974839084f6a18192c4f9ecd86b9a75b3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//6Sg\u003d",
         "filename": "src/dsp/enc_neon.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2013-01-11T22:47:38Z",
       "side": 1,
       "message": "vld1.64 instead to load 2?",
+      "revId": "ece433d974839084f6a18192c4f9ecd86b9a75b3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//6RY\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2013-01-11T22:56:51Z",
+      "side": 1,
+      "message": "stride of 32 between every load",
+      "parentUuid": "AAAAVH//6Sg\u003d",
       "revId": "ece433d974839084f6a18192c4f9ecd86b9a75b3",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//6RI\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2013-01-11T22:56:51Z",
+      "side": 1,
+      "message": "that would require them to be interleaved. there are two sums i want out of this. in order to use vqadd, d0 would be for A, d1 for B, d2 for A, d3 for B so that vqadd would have d0 + d2 and d1 + d3",
+      "parentUuid": "AAAAVH//6Ss\u003d",
+      "revId": "ece433d974839084f6a18192c4f9ecd86b9a75b3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//6R0\u003d",
         "filename": "src/dsp/enc_neon.c",
         "patchSetId": 2
@@ -64,6 +118,24 @@
       "writtenOn": "2013-01-11T22:47:38Z",
       "side": 1,
       "message": "should declare flags are clobbered.\nTechnically kBPS is a memory variable?",
+      "revId": "ece433d974839084f6a18192c4f9ecd86b9a75b3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//6RE\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 609,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2013-01-11T22:56:51Z",
+      "side": 1,
+      "message": "woops sorry forgot to add +r for a, b and w",
+      "parentUuid": "AAAAVH//6R0\u003d",
       "revId": "ece433d974839084f6a18192c4f9ecd86b9a75b3",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
