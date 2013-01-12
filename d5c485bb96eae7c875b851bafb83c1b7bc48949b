@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAVH//6AQ\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-12T10:33:27Z",
+      "side": 1,
+      "message": "align the \u0027\u003d\u0027 maybe",
+      "revId": "d5c485bb96eae7c875b851bafb83c1b7bc48949b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//6AM\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 858,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-12T10:33:27Z",
+      "side": 1,
+      "message": "what about a table with possible string/flag pairs?\n\nstatic const struct {\n  const char* option;\n  int flag;\n} Tokens[] \u003d {\n  {\"all\", METADATA_ALL },\n  {\"none\", 0 },\n  {\"exif\", METADATA_EXIF},\n\netc...\n};\n\n\n?",
+      "revId": "d5c485bb96eae7c875b851bafb83c1b7bc48949b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//6AI\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 876,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-12T10:33:27Z",
+      "side": 1,
+      "message": "maybe add a \"TODO(jzern): remove\" for easy grep",
+      "revId": "d5c485bb96eae7c875b851bafb83c1b7bc48949b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
