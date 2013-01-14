@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAVH//5ZA\u003d",
+        "filename": "README",
+        "patchSetId": 2
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-14T23:26:44Z",
+      "side": 1,
+      "message": "...to the output if present.",
+      "revId": "88306f0cd0de7c19c66a4de03edee1219fec59a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//5Y8\u003d",
+        "filename": "README",
+        "patchSetId": 2
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-14T23:26:44Z",
+      "side": 1,
+      "message": "valid -\u003e Valid",
+      "revId": "88306f0cd0de7c19c66a4de03edee1219fec59a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//5Y4\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-14T23:26:44Z",
+      "side": 1,
+      "message": "same comments as for \u0027README\u0027",
+      "revId": "88306f0cd0de7c19c66a4de03edee1219fec59a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//5Y0\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 873,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-14T23:26:44Z",
+      "side": 1,
+      "message": "this test is not really needed (strncmp() will take care of that).\n\nCould be removed, just for readability",
+      "revId": "88306f0cd0de7c19c66a4de03edee1219fec59a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//5Ys\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 935,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-14T23:26:44Z",
+      "side": 1,
+      "message": "i guess you\u0027ll later have to pass keep_metadata altogether down the ReadPicture() function...",
+      "revId": "88306f0cd0de7c19c66a4de03edee1219fec59a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
