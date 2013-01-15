@@ -320,7 +320,6 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
                        int keep_alpha, Metadata* const metadata) {
   int ok = 0;
   FILE* in_file = fopen(filename, "rb");
-  (void)metadata;  // TODO(jzern): add metadata extraction to the formats below.
   if (in_file == NULL) {
     fprintf(stderr, "Error! Cannot open input file '%s'\n", filename);
     return ok;
@@ -555,6 +554,129 @@ enum {
   METADATA_ALL  = METADATA_EXIF | METADATA_ICCP | METADATA_XMP
 };
 
+static const int kChunkHeaderSize = 8;
+static const int kTagSize = 4;
+
+// Outputs, in little endian, 'num' bytes from 'val' to 'out'.
+static int WriteLE(FILE* const out, uint32_t val, int num) {
+  uint8_t buf[4];
+  int i;
+  for (i = 0; i < num; ++i) {
+    buf[i] = (uint8_t)(val & 0xff);
+    val >>= 8;
+  }
+  return (fwrite(buf, num, 1, out) == 1);
+}
+
+static int WriteLE24(FILE* const out, uint32_t val) {
+  return WriteLE(out, val, 3);
+}
+
+static int WriteLE32(FILE* const out, uint32_t val) {
+  return WriteLE(out, val, 4);
+}
+
+static int WriteMetadataChunk(FILE* const out, const char fourcc[4],
+                              const MetadataPayload* const payload) {
+  const uint8_t zero = 0;
+  const size_t need_padding = payload->size & 1;
+  int ok = (fwrite(fourcc, kTagSize, 1, out) == 1);
+  ok = ok && WriteLE32(out, (uint32_t)payload->size);
+  ok = ok && (fwrite(payload->bytes, payload->size, 1, out) == 1);
+  return ok && (fwrite(&zero, need_padding, need_padding, out) == need_padding);
+}
+
+// Sets 'flag' in 'vp8x_flags' and updates 'metadata_size' with the size of the
+// chunk if there is metadata and 'keep' is true.
+static int UpdateFlagsAndSize(const MetadataPayload* const payload,
+                              int keep, int flag,
+                              uint32_t* vp8x_flags, uint64_t* metadata_size) {
+  if (keep && payload->bytes != NULL && payload->size > 0) {
+    *vp8x_flags |= flag;
+    *metadata_size += kChunkHeaderSize + payload->size + (payload->size & 1);
+    return 1;
+  }
+  return 0;
+}
+
+// Writes a WebP file using the image contained in 'memory_writer' and the
+// metadata from 'metadata'. Metadata is controlled by 'keep_metadata' and the
+// availability in 'metadata'. Returns true on success.
+// For details see doc/webp-container-spec.txt#extended-file-format.
+static int WriteWebPWithMetadata(FILE* const out,
+                                 const WebPPicture* const picture,
+                                 const WebPMemoryWriter* const memory_writer,
+                                 const Metadata* const metadata,
+                                 int keep_metadata) {
+  const char kVP8XHeader[] = "VP8X\x0a\x00\x00\x00";
+  const int kAlphaFlag = 0x10;
+  const int kEXIFFlag  = 0x08;
+  const int kICCPFlag  = 0x20;
+  const int kXMPFlag   = 0x04;
+  const size_t kRiffHeaderSize = 12;
+  const size_t kMaxChunkPayload = ~0 - kChunkHeaderSize - 1;
+  const size_t kMinSize = kRiffHeaderSize + kChunkHeaderSize;
+  uint32_t flags = 0;
+  uint64_t metadata_size = 0;
+  const int write_exif = UpdateFlagsAndSize(&metadata->exif,
+                                            !!(keep_metadata & METADATA_EXIF),
+                                            kEXIFFlag, &flags, &metadata_size);
+  const int write_iccp = UpdateFlagsAndSize(&metadata->iccp,
+                                            !!(keep_metadata & METADATA_ICCP),
+                                            kICCPFlag, &flags, &metadata_size);
+  const int write_xmp  = UpdateFlagsAndSize(&metadata->xmp,
+                                            !!(keep_metadata & METADATA_XMP),
+                                            kXMPFlag, &flags, &metadata_size);
+  uint8_t* webp = memory_writer->mem;
+  size_t webp_size = memory_writer->size;
+  if (webp_size < kMinSize) return 0;
+  if (webp_size - kChunkHeaderSize + metadata_size > kMaxChunkPayload) {
+    fprintf(stderr, "Error! Addition of metadata would exceed "
+                    "container size limit.\n");
+    return 0;
+  }
+
+  if (metadata_size > 0) {
+    const int kVP8XChunkSize = 18;
+    const int has_vp8x = !memcmp(webp + kRiffHeaderSize, "VP8X", kTagSize);
+    const uint32_t riff_size = (uint32_t)(webp_size - kChunkHeaderSize +
+                                          (has_vp8x ? 0 : kVP8XChunkSize) +
+                                          metadata_size);
+    // RIFF
+    int ok = (fwrite(webp, kTagSize, 1, out) == 1);
+    // RIFF size (file header size is not recorded)
+    ok = ok && WriteLE32(out, riff_size);
+    webp += kChunkHeaderSize;
+    webp_size -= kChunkHeaderSize;
+    // WEBP
+    ok = ok && (fwrite(webp, kTagSize, 1, out) == 1);
+    webp += kTagSize;
+    webp_size -= kTagSize;
+    if (has_vp8x) {  // update the existing VP8X flags
+      webp[kChunkHeaderSize] |= (uint8_t)(flags & 0xff);
+      ok = ok && (fwrite(webp, kVP8XChunkSize, 1, out) == 1);
+      webp_size -= kVP8XChunkSize;
+    } else {
+      const int is_lossless = !memcmp(webp, "VP8L", kTagSize);
+      // The alpha flag is forced with lossless images.
+      if (is_lossless) flags |= kAlphaFlag;
+      ok = ok && (fwrite(kVP8XHeader, kChunkHeaderSize, 1, out) == 1);
+      ok = ok && WriteLE32(out, flags);
+      ok = ok && WriteLE24(out, picture->width - 1);
+      ok = ok && WriteLE24(out, picture->height - 1);
+    }
+    if (write_iccp) ok = ok && WriteMetadataChunk(out, "ICCP", &metadata->iccp);
+    // Image
+    ok = ok && (fwrite(webp, webp_size, 1, out) == 1);
+    if (write_exif) ok = ok && WriteMetadataChunk(out, "EXIF", &metadata->exif);
+    if (write_xmp)  ok = ok && WriteMetadataChunk(out, "XMP ", &metadata->xmp);
+    return ok;
+  } else {
+    // No metadata, just write the original image file.
+    return (fwrite(webp, webp_size, 1, out) == 1);
+  }
+}
+
 //------------------------------------------------------------------------------
 
 static int ProgressReport(int percent, const WebPPicture* const picture) {
@@ -692,6 +814,7 @@ int main(int argc, const char *argv[]) {
   WebPPicture original_picture;    // when PSNR or SSIM is requested
   WebPConfig config;
   WebPAuxStats stats;
+  WebPMemoryWriter memory_writer;
   Metadata metadata;
   Stopwatch stop_watch;
 
@@ -889,11 +1012,13 @@ int main(int argc, const char *argv[]) {
         }
         start = token + 1;
       }
+#ifdef HAVE_WINCODEC_H
       if (keep_metadata != 0) {
         // TODO(jzern): remove when -metadata is supported on all platforms.
         fprintf(stderr, "Warning: -metadata is currently unsupported on this"
                         " platform. Ignoring this option!\n");
       }
+#endif
     } else if (!strcmp(argv[c], "-v")) {
       verbose = 1;
     } else if (argv[c][0] == '-') {
@@ -955,8 +1080,14 @@ int main(int argc, const char *argv[]) {
         fprintf(stderr, "Saving file '%s'\n", out_file);
       }
     }
-    picture.writer = MyWriter;
-    picture.custom_ptr = (void*)out;
+    if (keep_metadata == 0) {
+      picture.writer = MyWriter;
+      picture.custom_ptr = (void*)out;
+    } else {
+      WebPMemoryWriterInit(&memory_writer);
+      picture.writer = WebPMemoryWrite;
+      picture.custom_ptr = (void*)&memory_writer;
+    }
   } else {
     out = NULL;
     if (!quiet && !short_output) {
@@ -1009,6 +1140,14 @@ int main(int argc, const char *argv[]) {
       fprintf(stderr, "Warning: can't dump file (-d option) in lossless mode.");
     } else if (!DumpPicture(&picture, dump_file)) {
       fprintf(stderr, "Warning, couldn't dump picture %s\n", dump_file);
+    }
+  }
+
+  if (keep_metadata != 0 && out != NULL) {
+    if (!WriteWebPWithMetadata(out, &picture, &memory_writer,
+                               &metadata, keep_metadata)) {
+      fprintf(stderr, "Error writing WebP file with metadata!\n");
+      goto Error;
     }
   }
 
