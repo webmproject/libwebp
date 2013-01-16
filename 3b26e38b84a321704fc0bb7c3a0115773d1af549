@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "AAAAVH//4B0\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-16T18:53:43Z",
+      "side": 1,
+      "message": "the style is consistent with the rest of the file except for the placement of these \u0027*\u0027s",
+      "revId": "3b26e38b84a321704fc0bb7c3a0115773d1af549",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//4L8\u003d",
         "filename": "src/dsp/enc_neon.c",
         "patchSetId": 3
