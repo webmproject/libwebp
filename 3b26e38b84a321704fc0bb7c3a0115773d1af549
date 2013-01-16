@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAVH//4L8\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 598,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-16T13:41:58Z",
+      "side": 1,
+      "message": "Hadamard transform needs 4 bits of extra precision (2 bits in each direction) for dynamic raw. Weights w[] are 16bits at max, so the maximum precision for coeff is 8bit of input + 4bits of Hadamard transform + 16bits for w[] + 2 bits of abs() summation.\n \nSo, you\u0027re using 31 bits (signed) at max, and it\u0027s safe to discard the top 32bits.",
+      "revId": "3b26e38b84a321704fc0bb7c3a0115773d1af549",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
