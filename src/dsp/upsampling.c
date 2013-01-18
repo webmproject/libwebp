@@ -328,6 +328,11 @@ void WebPInitUpsamplers(void) {
       WebPInitUpsamplersSSE2();
     }
 #endif
+#if defined(WEBP_USE_NEON)
+    if (VP8GetCPUInfo(kNEON)) {
+      WebPInitUpsamplersNEON();
+    }
+#endif
   }
 #endif  // FANCY_UPSAMPLING
 }
@@ -346,6 +351,11 @@ void WebPInitPremultiply(void) {
 #if defined(WEBP_USE_SSE2)
     if (VP8GetCPUInfo(kSSE2)) {
       WebPInitPremultiplySSE2();
+    }
+#endif
+#if defined(WEBP_USE_NEON)
+    if (VP8GetCPUInfo(kNEON)) {
+      WebPInitPremultiplyNEON();
     }
 #endif
   }

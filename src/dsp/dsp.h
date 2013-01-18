@@ -158,6 +158,9 @@ extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
 // Initializes SSE2 version of the fancy upsamplers.
 void WebPInitUpsamplersSSE2(void);
 
+// NEON version
+void WebPInitUpsamplersNEON(void);
+
 #endif    // FANCY_UPSAMPLING
 
 // Point-sampling methods.
@@ -199,6 +202,7 @@ extern void (*WebPApplyAlphaMultiply4444)(
 void WebPInitPremultiply(void);
 
 void WebPInitPremultiplySSE2(void);   // should not be called directly.
+void WebPInitPremultiplyNEON(void);
 
 //------------------------------------------------------------------------------
 
