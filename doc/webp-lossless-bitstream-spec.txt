@@ -857,38 +857,58 @@ int huffman_ysize = DIV_ROUND_UP(ysize, 1 << huffman_bits);
 where `DIV_ROUND_UP` is as defined [earlier](#predictor-transform).
 
 Next bits contain an entropy image of width `huffman_xsize` and height
-'huffman_ysize'.
+`huffman_ysize`.
 
 **Interpretation of Meta Huffman Codes:**
 
-The number of meta Huffman codes in the ARGB image can be obtained by finding
-the largest meta Huffman code from the entropy image.
+For any given pixel (x, y), there is a set of five Huffman codes associated with
+it. These codes are (in bitstream order):
 
-Now, given a pixel (x, y) in the ARGB image, we can obtain the meta Huffman code
-to be used as follows:
+  * **Huffman code #1**: used for green channel, backward-reference length and
+    color cache
+  * **Huffman code #2, #3 and #4**: used for red, blue and alpha channels
+    respectively.
+  * **Huffman code #5**: used for backward-reference distance.
+
+From here on, we refer to this set as a **Huffman code group**.
+
+The number of Huffman code groups in the ARGB image can be obtained by finding
+the _largest meta Huffman code_ from the entropy image:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+int num_huff_groups = max(entropy image) + 1;
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+where `max(entropy image)` indicates the largest Huffman code stored in the
+entropy image.
+
+As each Huffman code groups contains five Huffman codes, the total number of
+Huffman codes is:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+int num_huff_codes = 5 * num_huff_groups;
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Given a pixel (x, y) in the ARGB image, we can obtain the corresponding Huffman
+codes to be used as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int position = (y >> huffman_bits) * huffman_xsize + (x >> huffman_bits);
 int meta_huff_code = (entropy_image[pos] >> 8) & 0xffff;
+HuffmanCodeGroup huff_group = huffman_code_groups[meta_huff_code];
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The `meta_huff_code` selects _a set of 5 Huffman codes_.  The decoder then uses
-one of these 5 Huffman code to decode the pixel (x, y) as explained in the
-[next section](#decoding-entropy-coded-image-data).
+where, we have assumed the existence of `HuffmanCodeGroup` structure, which
+represents a set of five Huffman codes. Also, `huffman_code_groups` is an array
+of `HuffmanCodeGroup` (of size `num_huff_groups`).
+
+The decoder then uses Huffman code group `huff_group` to decode the pixel
+(x, y) as explained in the [next section](#decoding-entropy-coded-image-data).
 
 #### 5.2.2 Decoding Entropy-coded Image Data
 
-For the current position (x, y) in the image, the decoder first identifies a set
-of 5 Huffman codes to be used (as explained in the last section). These are:
-
-  * Huffman code #1: used for green channel, backward-reference length and
-    color cache
-  * Huffman code #2, #3 and #4: used for red, blue and alpha channels
-    respectively.
-  * Huffman code #5: used for backward-reference distance.
-
-Given this set of Huffman codes, the pixel (x, y) is read and decoded as
-follows:
+For the current position (x, y) in the image, the decoder first identifies the
+corresponding Huffman code group (as explained in the last section). Given the
+Huffman code group, the pixel is read and decoded as follows:
 
 Read next symbol S from the bitstream using Huffman code #1. \[See
 [next section](#decoding-the-code-lengths) for details on decoding the Huffman
@@ -1035,7 +1055,11 @@ of pixels (xsize * ysize).
 <entropy image> ::= 3-bit subsample value; <entropy-coded image>
 <color cache info> ::= 1 bit value 0 |
                        (1-bit value 1; 4-bit value for color cache size)
-<huffman codes> ::= <huffman code> | <huffman code><huffman codes>
+<huffman codes> ::= <huffman code group> | <huffman code group><huffman codes>
+<huffman code group> ::= <huffman code><huffman code><huffman code>
+                         <huffman code><huffman code>
+                         See "Interpretation of Meta Huffman codes" to
+                         understand what each of these 5 Huffman codes are for.
 <huffman code> ::= <simple huffman code> | <normal huffman code>
 <simple huffman code> ::= see "Simple code length code" for details
 <normal huffman code> ::= <code length code>; encoded code lengths
