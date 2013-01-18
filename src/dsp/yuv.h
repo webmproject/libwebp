@@ -14,6 +14,18 @@
 // V = 0.4394 * R - 0.3679 * G - 0.0715 * B + 128
 // We use 16bit fixed point operations for RGB->YUV conversion.
 //
+// For the Y'CbCr to RGB conversion, the BT.601 specification reads:
+//   R = 1.164 * (Y-16) + 1.596 * (V-128)
+//   G = 1.164 * (Y-16) - 0.813 * (V-128) - 0.391 * (U-128)
+//   B = 1.164 * (Y-16)                   + 2.018 * (U-128)
+// where Y is in the [16,235] range, and U/V in the [16,240] range.
+// But the common term 1.164 * (Y-16) can be handled as an offset in the
+// VP8kClip[] table. So the formulae should be read as:
+//   R = 1.164 * [Y + 1.371 * (V-128)                  ] - 18.624
+//   G = 1.164 * [Y - 0.698 * (V-128) - 0.336 * (U-128)] - 18.624
+//   B = 1.164 * [Y                   + 1.733 * (U-128)] - 18.624
+// once factorized. Here too, 16bit fixed precision is used.
+//
 // Author: Skal (pascal.massimino@gmail.com)
 
 #ifndef WEBP_DSP_YUV_H_
