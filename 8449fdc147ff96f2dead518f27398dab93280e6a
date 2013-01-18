@@ -16,6 +16,24 @@
       "revId": "8449fdc147ff96f2dead518f27398dab93280e6a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//2Dc\u003d",
+        "filename": "src/dsp/upsampling_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2013-01-18T18:59:53Z",
+      "side": 1,
+      "message": "Yes it\u0027s required for intrinsics: http://infocenter.arm.com/help/index.jsp?topic\u003d/com.arm.doc.dht0004a/CHDBAIDJ.html",
+      "parentUuid": "AAAAVH//2Qo\u003d",
+      "revId": "8449fdc147ff96f2dead518f27398dab93280e6a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
