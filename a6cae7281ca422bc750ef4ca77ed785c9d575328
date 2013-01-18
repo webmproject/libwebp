@@ -16,6 +16,24 @@
       "revId": "a6cae7281ca422bc750ef4ca77ed785c9d575328",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//134\u003d",
+        "filename": "doc/webp-lossless-bitstream-spec.txt",
+        "patchSetId": 3
+      },
+      "lineNbr": 1063,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-01-18T22:40:43Z",
+      "side": 1,
+      "message": "Oops sorry, sometimes vi behaves in strange ways.",
+      "parentUuid": "AAAAVH//140\u003d",
+      "revId": "a6cae7281ca422bc750ef4ca77ed785c9d575328",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
