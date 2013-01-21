@@ -157,18 +157,19 @@ static void GetParamsForHashChainFindCopy(int quality, int xsize,
 }
 
 static int HashChainFindCopy(const HashChain* const p,
-                             int index, int xsize,
+                             int base_position, int xsize,
                              const uint32_t* const argb, int maxlen,
                              int window_size, int iter_pos, int iter_limit,
                              int* const distance_ptr,
                              int* const length_ptr) {
-  const uint64_t hash_code = GetPixPairHash64(&argb[index]);
+  const uint64_t hash_code = GetPixPairHash64(&argb[base_position]);
   int prev_length = 0;
   int64_t best_val = 0;
   int best_length = 0;
   int best_distance = 0;
-  const uint32_t* const argb_start = argb + index;
-  const int min_pos = (index > window_size) ? index - window_size : 0;
+  const uint32_t* const argb_start = argb + base_position;
+  const int min_pos =
+      (base_position > window_size) ? base_position - window_size : 0;
   int pos;
 
   assert(xsize > 0);
@@ -193,9 +194,9 @@ static int HashChainFindCopy(const HashChain* const p,
     }
     val = 65536 * curr_length;
     // Favoring 2d locality here gives savings for certain images.
-    if (index - pos < 9 * xsize) {
-      const int y = (index - pos) / xsize;
-      int x = (index - pos) % xsize;
+    if (base_position - pos < 9 * xsize) {
+      const int y = (base_position - pos) / xsize;
+      int x = (base_position - pos) % xsize;
       if (x > xsize / 2) {
         x = xsize - x;
       }
@@ -211,7 +212,7 @@ static int HashChainFindCopy(const HashChain* const p,
       prev_length = curr_length;
       best_val = val;
       best_length = curr_length;
-      best_distance = index - pos;
+      best_distance = base_position - pos;
       if (curr_length >= MAX_LENGTH) {
         break;
       }

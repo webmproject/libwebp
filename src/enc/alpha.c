@@ -88,9 +88,9 @@ static int EncodeLossless(const uint8_t* const data, int width, int height,
   ok = ok && (VP8LEncodeStream(&config, &picture, &tmp_bw) == VP8_ENC_OK);
   WebPPictureFree(&picture);
   if (ok) {
-    const uint8_t* const data = VP8LBitWriterFinish(&tmp_bw);
-    const size_t data_size = VP8LBitWriterNumBytes(&tmp_bw);
-    VP8BitWriterAppend(bw, data, data_size);
+    const uint8_t* const buffer = VP8LBitWriterFinish(&tmp_bw);
+    const size_t buffer_size = VP8LBitWriterNumBytes(&tmp_bw);
+    VP8BitWriterAppend(bw, buffer, buffer_size);
   }
   VP8LBitWriterDestroy(&tmp_bw);
   return ok && !bw->error_;

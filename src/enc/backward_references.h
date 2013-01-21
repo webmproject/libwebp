@@ -65,11 +65,11 @@ static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
 #endif
 
 static WEBP_INLINE int VP8LBitsLog2Ceiling(uint32_t n) {
-  const int floor = BitsLog2Floor(n);
+  const int log_floor = BitsLog2Floor(n);
   if (n == (n & ~(n - 1)))  // zero or a power of two.
-    return floor;
+    return log_floor;
   else
-    return floor + 1;
+    return log_floor + 1;
 }
 
 // Splitting of distance and length codes into prefixes and

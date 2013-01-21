@@ -281,11 +281,11 @@ static void SetResidualCoeffs(const int16_t* const coeffs,
 //------------------------------------------------------------------------------
 // Mode costs
 
-static int GetResidualCost(int ctx, const VP8Residual* const res) {
+static int GetResidualCost(int ctx0, const VP8Residual* const res) {
   int n = res->first;
   // should be prob[VP8EncBands[n]], but it's equivalent for n=0 or 1
-  int p0 = res->prob[n][ctx][0];
-  const uint16_t* t = res->cost[n][ctx];
+  int p0 = res->prob[n][ctx0][0];
+  const uint16_t* t = res->cost[n][ctx0];
   int cost;
 
   if (res->last < 0) {
@@ -320,8 +320,8 @@ static int GetResidualCost(int ctx, const VP8Residual* const res) {
     if (n < 15) {
       const int b = VP8EncBands[n + 1];
       const int ctx = (v == 1) ? 1 : 2;
-      const int p0 = res->prob[b][ctx][0];
-      cost += VP8BitCost(0, p0);
+      const int last_p0 = res->prob[b][ctx][0];
+      cost += VP8BitCost(0, last_p0);
     }
   }
   return cost;

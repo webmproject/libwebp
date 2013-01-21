@@ -806,11 +806,11 @@ int WebPPictureYUVAToARGB(WebPPicture* picture) {
     // Insert alpha values if needed, in replacement for the default 0xff ones.
     if (picture->colorspace & WEBP_CSP_ALPHA_BIT) {
       for (y = 0; y < height; ++y) {
-        uint32_t* const dst = picture->argb + y * picture->argb_stride;
+        uint32_t* const argb_dst = picture->argb + y * picture->argb_stride;
         const uint8_t* const src = picture->a + y * picture->a_stride;
         int x;
         for (x = 0; x < width; ++x) {
-          dst[x] = (dst[x] & 0x00ffffffu) | (src[x] << 24);
+          argb_dst[x] = (argb_dst[x] & 0x00ffffffu) | (src[x] << 24);
         }
       }
     }
@@ -926,17 +926,17 @@ static float AccumulateLSIM(const uint8_t* src, int src_stride,
   int x, y;
   double total_sse = 0.;
   for (y = 0; y < h; ++y) {
-    const int y0 = (y - RADIUS < 0) ? 0 : y - RADIUS;
-    const int y1 = (y + RADIUS + 1 >= h) ? h : y + RADIUS + 1;
+    const int y_0 = (y - RADIUS < 0) ? 0 : y - RADIUS;
+    const int y_1 = (y + RADIUS + 1 >= h) ? h : y + RADIUS + 1;
     for (x = 0; x < w; ++x) {
-      const int x0 = (x - RADIUS < 0) ? 0 : x - RADIUS;
-      const int x1 = (x + RADIUS + 1 >= w) ? w : x + RADIUS + 1;
+      const int x_0 = (x - RADIUS < 0) ? 0 : x - RADIUS;
+      const int x_1 = (x + RADIUS + 1 >= w) ? w : x + RADIUS + 1;
       double best_sse = 255. * 255.;
       const double value = (double)ref[y * ref_stride + x];
       int i, j;
-      for (j = y0; j < y1; ++j) {
+      for (j = y_0; j < y_1; ++j) {
         const uint8_t* s = src + j * src_stride;
-        for (i = x0; i < x1; ++i) {
+        for (i = x_0; i < x_1; ++i) {
           const double sse = (double)(s[i] - value) * (s[i] - value);
           if (sse < best_sse) best_sse = sse;
         }

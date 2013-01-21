@@ -310,8 +310,8 @@ static void SaveOutput(const WebPDecBuffer* const buffer,
   if (ok) {
     printf("Saved file %s\n", out_file);
     if (verbose) {
-      const double time = StopwatchReadAndReset(&stop_watch);
-      printf("Time to write output: %.3fs\n", time);
+      const double write_time = StopwatchReadAndReset(&stop_watch);
+      printf("Time to write output: %.3fs\n", write_time);
     }
   } else {
     fprintf(stderr, "Error writing file %s !!\n", out_file);
@@ -462,8 +462,8 @@ int main(int argc, const char *argv[]) {
     status = WebPDecode(data, data_size, &config);
 
     if (verbose) {
-      const double time = StopwatchReadAndReset(&stop_watch);
-      printf("Time to decode picture: %.3fs\n", time);
+      const double decode_time = StopwatchReadAndReset(&stop_watch);
+      printf("Time to decode picture: %.3fs\n", decode_time);
     }
  end:
     free((void*)data);
