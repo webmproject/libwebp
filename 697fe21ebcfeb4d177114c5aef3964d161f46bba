@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//0+A\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 2
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2013-01-22T22:29:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//1Bg\u003d",
+      "revId": "697fe21ebcfeb4d177114c5aef3964d161f46bba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//1BQ\u003d",
         "filename": "configure.ac",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2013-01-22T22:14:04Z",
       "side": 1,
       "message": "\u0027-\u0027 separated names is more consistent with autoconf: --enable-swap-16bit-csp (e.g., --disable-silent-rules, etc)",
+      "revId": "697fe21ebcfeb4d177114c5aef3964d161f46bba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//098\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 2
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2013-01-22T22:29:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//1BQ\u003d",
       "revId": "697fe21ebcfeb4d177114c5aef3964d161f46bba",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//094\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 2
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2013-01-22T22:29:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//1Ac\u003d",
+      "revId": "697fe21ebcfeb4d177114c5aef3964d161f46bba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//1AU\u003d",
         "filename": "configure.ac",
         "patchSetId": 2
@@ -64,6 +118,24 @@
       "writtenOn": "2013-01-22T22:14:04Z",
       "side": 1,
       "message": "ditto",
+      "revId": "697fe21ebcfeb4d177114c5aef3964d161f46bba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//09w\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 2
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2013-01-22T22:29:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//1AU\u003d",
       "revId": "697fe21ebcfeb4d177114c5aef3964d161f46bba",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//0+I\u003d",
+        "filename": "src/webp/decode.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2013-01-22T22:29:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//0/w\u003d",
+      "revId": "697fe21ebcfeb4d177114c5aef3964d161f46bba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//0/o\u003d",
         "filename": "src/webp/decode.h",
         "patchSetId": 2
@@ -98,6 +188,24 @@
       "writtenOn": "2013-01-22T22:14:04Z",
       "side": 1,
       "message": "too bad we bounded ourselves in here; otherwise I think it would be more appropriate to define a new type to avoid the potential of libraries with differing behavior.",
+      "revId": "697fe21ebcfeb4d177114c5aef3964d161f46bba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0+E\u003d",
+        "filename": "src/webp/decode.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2013-01-22T22:29:02Z",
+      "side": 1,
+      "message": "Even if we could have solution for RGBA, there were no solution to RGB_565 w.r.t adding new colormodes.",
+      "parentUuid": "AAAAVH//0/o\u003d",
       "revId": "697fe21ebcfeb4d177114c5aef3964d161f46bba",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
