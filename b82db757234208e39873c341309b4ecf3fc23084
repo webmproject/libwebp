@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//06Q\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 3
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2013-01-22T22:53:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//07A\u003d",
+      "revId": "b82db757234208e39873c341309b4ecf3fc23084",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//06w\u003d",
         "filename": "src/webp/decode.h",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2013-01-22T22:47:01Z",
       "side": 1,
       "message": "sorry I should have been more specific: no comma after \u0027case\u0027",
+      "revId": "b82db757234208e39873c341309b4ecf3fc23084",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//06M\u003d",
+        "filename": "src/webp/decode.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2013-01-22T22:53:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//06w\u003d",
       "revId": "b82db757234208e39873c341309b4ecf3fc23084",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
