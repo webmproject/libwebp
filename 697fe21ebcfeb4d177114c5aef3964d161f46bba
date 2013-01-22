@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAVH//1Bg\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 2
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-22T22:14:04Z",
+      "side": 1,
+      "message": "drop this below the comment and add a newline prior to it like the --enable-experimental section",
+      "revId": "697fe21ebcfeb4d177114c5aef3964d161f46bba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//1BQ\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 2
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-22T22:14:04Z",
+      "side": 1,
+      "message": "\u0027-\u0027 separated names is more consistent with autoconf: --enable-swap-16bit-csp (e.g., --disable-silent-rules, etc)",
+      "revId": "697fe21ebcfeb4d177114c5aef3964d161f46bba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//1Ac\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 2
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-22T22:14:04Z",
+      "side": 1,
+      "message": "here too; they\u0027ll be set to \u0027_\u0027s for the variable test below",
+      "revId": "697fe21ebcfeb4d177114c5aef3964d161f46bba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//1AU\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 2
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-22T22:14:04Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "697fe21ebcfeb4d177114c5aef3964d161f46bba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0/w\u003d",
+        "filename": "src/webp/decode.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-22T22:14:04Z",
+      "side": 1,
+      "message": "s/In case,/In (the) case/",
+      "revId": "697fe21ebcfeb4d177114c5aef3964d161f46bba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0/o\u003d",
+        "filename": "src/webp/decode.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-22T22:14:04Z",
+      "side": 1,
+      "message": "too bad we bounded ourselves in here; otherwise I think it would be more appropriate to define a new type to avoid the potential of libraries with differing behavior.",
+      "revId": "697fe21ebcfeb4d177114c5aef3964d161f46bba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
