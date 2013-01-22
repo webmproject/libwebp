@@ -23,5 +23,5 @@ noinst_HEADERS += ../dec/decode_vp8.h
 noinst_HEADERS += ../webp/decode.h
 
 libwebpdsp_la_LDFLAGS = -lm
-libwebpdsp_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE)
+libwebpdsp_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE) $(USE_SWAP_16BIT_CSP)
 libwebpdspincludedir = $(includedir)/webp

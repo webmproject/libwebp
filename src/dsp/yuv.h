@@ -74,10 +74,17 @@ static WEBP_INLINE void VP8YuvToRgb565(uint8_t y, uint8_t u, uint8_t v,
   const int r_off = VP8kVToR[v];
   const int g_off = (VP8kVToG[v] + VP8kUToG[u]) >> YUV_FIX;
   const int b_off = VP8kUToB[u];
-  rgb[0] = ((VP8kClip[y + r_off - YUV_RANGE_MIN] & 0xf8) |
-            (VP8kClip[y + g_off - YUV_RANGE_MIN] >> 5));
-  rgb[1] = (((VP8kClip[y + g_off - YUV_RANGE_MIN] << 3) & 0xe0) |
-            (VP8kClip[y + b_off - YUV_RANGE_MIN] >> 3));
+  const uint8_t rg = ((VP8kClip[y + r_off - YUV_RANGE_MIN] & 0xf8) |
+                      (VP8kClip[y + g_off - YUV_RANGE_MIN] >> 5));
+  const uint8_t gb = (((VP8kClip[y + g_off - YUV_RANGE_MIN] << 3) & 0xe0) |
+                      (VP8kClip[y + b_off - YUV_RANGE_MIN] >> 3));
+#ifdef WEBP_SWAP_16BIT_CSP
+  rgb[0] = gb;
+  rgb[1] = rg;
+#else
+  rgb[0] = rg;
+  rgb[1] = gb;
+#endif
 }
 
 static WEBP_INLINE void VP8YuvToArgb(uint8_t y, uint8_t u, uint8_t v,
@@ -91,10 +98,16 @@ static WEBP_INLINE void VP8YuvToRgba4444(uint8_t y, uint8_t u, uint8_t v,
   const int r_off = VP8kVToR[v];
   const int g_off = (VP8kVToG[v] + VP8kUToG[u]) >> YUV_FIX;
   const int b_off = VP8kUToB[u];
-  // Don't update alpha (last 4 bits of argb[1])
-  argb[0] = ((VP8kClip4Bits[y + r_off - YUV_RANGE_MIN] << 4) |
-             VP8kClip4Bits[y + g_off - YUV_RANGE_MIN]);
-  argb[1] = 0x0f | (VP8kClip4Bits[y + b_off - YUV_RANGE_MIN] << 4);
+  const uint8_t rg = ((VP8kClip4Bits[y + r_off - YUV_RANGE_MIN] << 4) |
+                      VP8kClip4Bits[y + g_off - YUV_RANGE_MIN]);
+  const uint8_t ba = (VP8kClip4Bits[y + b_off - YUV_RANGE_MIN] << 4) | 0x0f;
+#ifdef WEBP_SWAP_16BIT_CSP
+  argb[0] = ba;
+  argb[1] = rg;
+#else
+  argb[0] = rg;
+  argb[1] = ba;
+#endif
 }
 
 static WEBP_INLINE void VP8YuvToBgr(uint8_t y, uint8_t u, uint8_t v,
