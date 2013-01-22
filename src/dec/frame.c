@@ -494,6 +494,7 @@ static int AllocateMemory(VP8Decoder* const dec) {
   // alpha plane
   dec->alpha_plane_ = alpha_size ? (uint8_t*)mem : NULL;
   mem += alpha_size;
+  assert(mem <= (uint8_t*)dec->mem_ + dec->mem_size_);
 
   // note: left-info is initialized once for all.
   memset(dec->mb_info_ - 1, 0, mb_info_size);
