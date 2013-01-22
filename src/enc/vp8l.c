@@ -221,7 +221,7 @@ static int GetHuffBitLengthsAndCodes(
   }
 
   // Create Huffman trees.
-  for (i = 0; i < histogram_image_size; ++i) {
+  for (i = 0; ok && (i < histogram_image_size); ++i) {
     HuffmanTreeCode* const codes = &huffman_codes[5 * i];
     VP8LHistogram* const histo = histogram_image->histograms[i];
     ok = ok && VP8LCreateHuffmanTree(histo->literal_, 15, codes + 0);
@@ -232,7 +232,11 @@ static int GetHuffBitLengthsAndCodes(
   }
 
  End:
-  if (!ok) free(mem_buf);
+  if (!ok) {
+    free(mem_buf);
+    // If one VP8LCreateHuffmanTree() above fails, we need to clean up behind.
+    memset(huffman_codes, 0, 5 * histogram_image_size * sizeof(*huffman_codes));
+  }
   return ok;
 }
 
