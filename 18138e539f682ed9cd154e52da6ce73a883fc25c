@@ -16,6 +16,24 @@
       "revId": "18138e539f682ed9cd154e52da6ce73a883fc25c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//ztw\u003d",
+        "filename": "src/dsp/enc_sse2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T22:51:18Z",
+      "side": 1,
+      "message": "not really no. uploaded another which keeps the alignment, but we can forget about this if we don\u0027t want to strictly hold to 80cols here.",
+      "parentUuid": "AAAAVH//zwg\u003d",
+      "revId": "18138e539f682ed9cd154e52da6ce73a883fc25c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
