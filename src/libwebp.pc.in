@@ -3,9 +3,9 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name:		libwebp
-Description:	Library for the WebP graphics format
-Version:	@PACKAGE_VERSION@
-Cflags:		-I${includedir}
-Libs:		-L${libdir} -lwebp
-Libs.private:	-lm
+Name: libwebp
+Description: Library for the WebP graphics format
+Version: @PACKAGE_VERSION@
+Cflags: -I${includedir}
+Libs: -L${libdir} -lwebp
+Libs.private: -lm
