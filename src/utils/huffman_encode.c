@@ -188,6 +188,10 @@ static int GenerateOptimalTree(const int* const histogram, int histogram_size,
     }
   }
 
+  if (tree_size_orig == 0) {   // pretty optimal already!
+    return 1;
+  }
+
   // 3 * tree_size is enough to cover all the nodes representing a
   // population and all the inserted nodes combining two existing nodes.
   // The tree pool needs 2 * (tree_size_orig - 1) entities, and the
