@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//0II\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T19:32:22Z",
+      "side": 1,
+      "message": "Yes unfortunately those are in format_constants.h a non-installed header; so we need this to be able to be compiled with a binary distribution",
+      "parentUuid": "AAAAVH//0f4\u003d",
+      "revId": "42355997284ecaefc1e02414fed51969b10c0c26",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//0fw\u003d",
         "filename": "examples/cwebp.c",
         "patchSetId": 2
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//0Hw\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T19:32:22Z",
+      "side": 1,
+      "message": "seems unlikely given we\u0027re the source of the webp, but metadata would be unchecked so it\u0027s not totally unnecessary. worst case without is a broken file...",
+      "parentUuid": "AAAAVH//0f0\u003d",
+      "revId": "42355997284ecaefc1e02414fed51969b10c0c26",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//0fs\u003d",
         "filename": "examples/cwebp.c",
         "patchSetId": 2
@@ -64,6 +100,24 @@
       "writtenOn": "2013-01-23T09:56:49Z",
       "side": 1,
       "message": "i\u0027d put an: \n\n... } else {\n  return (fwrite(webp, webp_size, 1, out) \u003d\u003d 1);\t\n}",
+      "revId": "42355997284ecaefc1e02414fed51969b10c0c26",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0H8\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 663,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T19:32:22Z",
+      "side": 1,
+      "message": "done locally, unnecessary, but may make it a bit clearer",
+      "parentUuid": "AAAAVH//0fs\u003d",
       "revId": "42355997284ecaefc1e02414fed51969b10c0c26",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
