@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//0F8\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 3
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2013-01-23T19:44:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//0KI\u003d",
+      "revId": "b0252b724185cc34a38e9b5b6738761d88ad78f3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//0KE\u003d",
         "filename": "configure.ac",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2013-01-23T19:06:32Z",
       "side": 1,
       "message": "built",
+      "revId": "b0252b724185cc34a38e9b5b6738761d88ad78f3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0F4\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 3
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2013-01-23T19:44:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//0KE\u003d",
       "revId": "b0252b724185cc34a38e9b5b6738761d88ad78f3",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
