@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAVH//zr8\u003d",
+        "filename": "src/dsp/enc_sse2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-23T23:05:40Z",
+      "side": 1,
+      "message": "oh, i didn\u0027t see in gerrit it was over 80cols.\n\nYeah, this version seems better...",
+      "revId": "be7c96b069fd0cb5a70ef24bf5db0d197d255408",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
