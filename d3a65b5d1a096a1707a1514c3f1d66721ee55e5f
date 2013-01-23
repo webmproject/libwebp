@@ -16,6 +16,24 @@
       "revId": "d3a65b5d1a096a1707a1514c3f1d66721ee55e5f",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//zso\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 617,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T23:00:05Z",
+      "side": 1,
+      "message": "either way.",
+      "parentUuid": "AAAAVH//zw0\u003d",
+      "revId": "d3a65b5d1a096a1707a1514c3f1d66721ee55e5f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
