@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAVH//0Fk\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 5
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T19:56:59Z",
+      "side": 1,
+      "message": "As in the other blocks, s/Building/Build/",
+      "revId": "0aeba52852e948d55047ab5aea33f9f778ac4e91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0Fg\u003d",
+        "filename": "examples/Makefile.am",
+        "patchSetId": 5
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T19:56:59Z",
+      "side": 1,
+      "message": "drop this line, it\u0027s unnecessary for the change",
+      "revId": "0aeba52852e948d55047ab5aea33f9f778ac4e91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0Ew\u003d",
+        "filename": "examples/Makefile.am",
+        "patchSetId": 5
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T19:56:59Z",
+      "side": 1,
+      "message": "note this isn\u0027t strictly necessary, but should be ok if the user requested the lib, except in the case of sharing a changed dwebp between builds...",
+      "revId": "0aeba52852e948d55047ab5aea33f9f778ac4e91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0Fc\u003d",
+        "filename": "src/Makefile.am",
+        "patchSetId": 5
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T19:56:59Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "0aeba52852e948d55047ab5aea33f9f778ac4e91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0FU\u003d",
+        "filename": "src/Makefile.am",
+        "patchSetId": 5
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T19:56:59Z",
+      "side": 1,
+      "message": "-version-info should be 0:0:0 on a new lib",
+      "revId": "0aeba52852e948d55047ab5aea33f9f778ac4e91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
