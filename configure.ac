@@ -268,6 +268,14 @@ AC_ARG_ENABLE([experimental-libwebpdemux],
 AC_MSG_RESULT(${enable_experimental_libwebpdemux-no})
 AM_CONDITIONAL([WANT_DEMUX], [test "$enable_experimental_libwebpdemux" = "yes"])
 
+dnl === Check whether decoder library should be built.
+AC_MSG_CHECKING(whether decoder library is to be built)
+AC_ARG_ENABLE([libwebpdecoder],
+              AS_HELP_STRING([--enable-libwebpdecoder],
+                             [Building libwebpdecoder @<:@default=no@:>@]))
+AC_MSG_RESULT(${enable_libwebpdecoder-no})
+AM_CONDITIONAL([BUILD_LIBWEBPDECODER], [test "$enable_libwebpdecoder" = "yes"])
+
 dnl =========================
 
 AC_CONFIG_MACRO_DIR([m4])
@@ -290,6 +298,7 @@ Shared libraries: ${enable_shared}
 Static libraries: ${enable_static}
 Threaded decode: ${enable_threading-no}
 libwebp: yes
+libwebpdecoder: ${enable_libwebpdecoder-no}
 libwebpdemux: ${enable_experimental_libwebpdemux-no}
 libwebpmux: ${enable_experimental_libwebpmux-no}
 

@@ -1,6 +1,7 @@
 AM_CPPFLAGS = -I$(top_srcdir)/src
 
 bin_PROGRAMS = dwebp cwebp
+
 if WANT_MUX
   bin_PROGRAMS += webpmux
 endif
@@ -18,7 +19,13 @@ libexampleutilincludedir =
 dwebp_SOURCES = dwebp.c stopwatch.h
 dwebp_CPPFLAGS  = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
 dwebp_CPPFLAGS += $(JPEG_INCLUDES) $(PNG_INCLUDES)
-dwebp_LDADD = libexampleutil.la ../src/libwebp.la $(PNG_LIBS) $(JPEG_LIBS)
+dwebp_LDADD = libexampleutil.la $(PNG_LIBS) $(JPEG_LIBS)
+
+if BUILD_LIBWEBPDECODER
+  dwebp_LDADD += ../src/libwebpdecoder.la
+else
+  dwebp_LDADD += ../src/libwebp.la
+endif
 
 cwebp_SOURCES  = cwebp.c metadata.c metadata.h stopwatch.h
 cwebp_SOURCES += jpegdec.c jpegdec.h
