@@ -33,6 +33,7 @@ libwebp_la_LIBADD += utils/libwebputils.la
 # symbols in shared libraries to be resolved at library creation.
 libwebp_la_LDFLAGS = -no-undefined -version-info 4:1:0
 libwebpincludedir = $(includedir)/webp
+pkgconfig_DATA = libwebp.pc
 
 if BUILD_LIBWEBPDECODER
   libwebpdecoder_la_SOURCES =
@@ -47,7 +48,7 @@ if BUILD_LIBWEBPDECODER
 
   libwebpdecoder_la_LDFLAGS = -no-undefined -version-info 0:0:0
   libwebpdecoderincludedir = $(includedir)/webp
+  pkgconfig_DATA += libwebpdecoder.pc
 endif
 
-pkgconfig_DATA = libwebp.pc
 ${pkgconfig_DATA}: ${top_builddir}/config.status
