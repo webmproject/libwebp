@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//0I4\u003d",
+        "filename": "Makefile.vc",
+        "patchSetId": 1
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T19:19:15Z",
+      "side": 1,
+      "message": "oops. windows is ok with this, but I\u0027ll normalize later.",
+      "parentUuid": "AAAAVH//0fk\u003d",
+      "revId": "a452a5554aed4e00d09b0c95988b598aae4a7847",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//0fg\u003d",
         "filename": "examples/wicdec.c",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//0I0\u003d",
+        "filename": "examples/wicdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T19:19:15Z",
+      "side": 1,
+      "message": "Nope, there\u0027s an fprintf on the other side.",
+      "parentUuid": "AAAAVH//0fg\u003d",
+      "revId": "a452a5554aed4e00d09b0c95988b598aae4a7847",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//0fY\u003d",
         "filename": "examples/wicdec.c",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2013-01-23T10:02:19Z",
       "side": 1,
       "message": "TODO(later): this should be done at higher (common) level",
+      "revId": "a452a5554aed4e00d09b0c95988b598aae4a7847",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0Iw\u003d",
+        "filename": "examples/wicdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T19:19:15Z",
+      "side": 1,
+      "message": "Should be possible, a blind call with keep_alpha\u003d\u003d2 or a look at colorspace/argb, would suffice on the outside",
+      "parentUuid": "AAAAVH//0fY\u003d",
       "revId": "a452a5554aed4e00d09b0c95988b598aae4a7847",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
