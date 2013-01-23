@@ -92,6 +92,9 @@ static int MuxImageParse(const WebPChunk* const chunk, int copy_data,
     const size_t hdr_size = (chunk->tag_ == kChunks[IDX_ANMF].tag) ?
         ANMF_CHUNK_SIZE : FRGM_CHUNK_SIZE;
     const WebPData temp = { bytes, hdr_size };
+    // Each of ANMF and FRGM chunk contain a header at the beginning. So, its
+    // size should at least be 'hdr_size'.
+    if (size < hdr_size) goto Fail;
     ChunkAssignData(&subchunk, &temp, copy_data, chunk->tag_);
   }
   ChunkSetNth(&subchunk, &wpi->header_, 1);
