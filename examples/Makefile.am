@@ -1,7 +1,6 @@
 AM_CPPFLAGS = -I$(top_srcdir)/src
 
 bin_PROGRAMS = dwebp cwebp
-
 if WANT_MUX
   bin_PROGRAMS += webpmux
 endif

@@ -272,7 +272,7 @@ dnl === Check whether decoder library should be built.
 AC_MSG_CHECKING(whether decoder library is to be built)
 AC_ARG_ENABLE([libwebpdecoder],
               AS_HELP_STRING([--enable-libwebpdecoder],
-                             [Building libwebpdecoder @<:@default=no@:>@]))
+                             [Build libwebpdecoder @<:@default=no@:>@]))
 AC_MSG_RESULT(${enable_libwebpdecoder-no})
 AM_CONDITIONAL([BUILD_LIBWEBPDECODER], [test "$enable_libwebpdecoder" = "yes"])
 
