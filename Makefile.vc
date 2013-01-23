@@ -172,11 +172,11 @@ DSP_OBJS = \
     $(DIROBJ)\dsp\yuv.obj \
 
 EX_FORMAT_DEC_OBJS = \
-    $(DIROBJ)\examples/jpegdec.obj \
-    $(DIROBJ)\examples/metadata.obj \
-    $(DIROBJ)\examples/pngdec.obj \
-    $(DIROBJ)\examples/tiffdec.obj \
-    $(DIROBJ)\examples/wicdec.obj \
+    $(DIROBJ)\examples\jpegdec.obj \
+    $(DIROBJ)\examples\metadata.obj \
+    $(DIROBJ)\examples\pngdec.obj \
+    $(DIROBJ)\examples\tiffdec.obj \
+    $(DIROBJ)\examples\wicdec.obj \
 
 EX_UTIL_OBJS = \
     $(DIROBJ)\examples\example_util.obj \
