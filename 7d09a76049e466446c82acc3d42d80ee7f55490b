@@ -87,6 +87,23 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//0e4\u003d",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-23T10:17:23Z",
+      "side": 1,
+      "message": "What about having several entries. Like:\n\nCOMMON_SOURCES \u003d cpu.c dec.c dec_neon.c ... lossless.c ... yuv.h\nENC_SOURCES \u003d enc.c enc_neon.c enc_sse2.c\n\nlibwebpdsp_la_SOURCES \u003d $(COMMON_SOURCES) $(ENC_SOURCES)\n\nlibwebpdsp_decoder_only_la_SOURCES \u003d $(COMMON_SOURCES)\n\n\nand same for the other Makefile.am\n\n(we wouldn\u0027t install the intermediate libwebp_dsp_decoder_only.a libraries, of course)",
+      "revId": "7d09a76049e466446c82acc3d42d80ee7f55490b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//0u4\u003d",
         "filename": "src/utils/Makefile.am",
         "patchSetId": 1
