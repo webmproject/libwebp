@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAVH//0f4\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-23T09:56:49Z",
+      "side": 1,
+      "message": "don\u0027t we have some constants already for this \u002720\u0027?\n(and \u002718\u0027 below)",
+      "revId": "42355997284ecaefc1e02414fed51969b10c0c26",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0fw\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-23T09:56:49Z",
+      "side": 1,
+      "message": "don\u0027t we have a constant for that too?",
+      "revId": "42355997284ecaefc1e02414fed51969b10c0c26",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0f0\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-23T09:56:49Z",
+      "side": 1,
+      "message": "shoudn\u0027t you check for some overflow here?",
+      "revId": "42355997284ecaefc1e02414fed51969b10c0c26",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0fs\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 663,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-23T09:56:49Z",
+      "side": 1,
+      "message": "i\u0027d put an: \n\n... } else {\n  return (fwrite(webp, webp_size, 1, out) \u003d\u003d 1);\t\n}",
+      "revId": "42355997284ecaefc1e02414fed51969b10c0c26",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
