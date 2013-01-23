@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//0v8\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T01:12:03Z",
+      "side": 1,
+      "message": "Probably, I haven\u0027t thought about where: metadata.c, example_util.c or another file to encompass all the file output...",
+      "parentUuid": "AAAAVH//08U\u003d",
+      "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//09s\u003d",
         "filename": "examples/cwebp.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2013-01-22T22:35:11Z",
       "side": 1,
       "message": "\"(uint8_t)(val \u0026 0xff)\" ?",
+      "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0zA\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 564,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T01:12:03Z",
+      "side": 1,
+      "message": "this is equivalent given C\u0027s value preserving, but explicit is ok -- I wonder if there are other locations that would require this treatment.",
+      "parentUuid": "AAAAVH//09s\u003d",
       "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//0yI\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T01:12:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//09k\u003d",
+      "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//09g\u003d",
         "filename": "examples/cwebp.c",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2013-01-22T22:35:11Z",
       "side": 1,
       "message": "()\u0027s",
+      "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0yY\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T01:12:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//09g\u003d",
       "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//0yU\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 584,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T01:12:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//09c\u003d",
+      "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//09Y\u003d",
         "filename": "examples/cwebp.c",
         "patchSetId": 1
@@ -98,6 +188,24 @@
       "writtenOn": "2013-01-22T22:35:11Z",
       "side": 1,
       "message": "()\u0027s\n\n\nAnd: is it ok to call \"fwrite(.., 0, 0, ...)\"?",
+      "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0yM\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T01:12:03Z",
+      "side": 1,
+      "message": "Done. and yes errors or otherwise return 0",
+      "parentUuid": "AAAAVH//09Y\u003d",
       "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//0yg\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 606,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T01:12:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//09M\u003d",
+      "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//09A\u003d",
         "filename": "examples/cwebp.c",
         "patchSetId": 1
@@ -132,6 +258,24 @@
       "writtenOn": "2013-01-22T22:35:11Z",
       "side": 1,
       "message": "debug?",
+      "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0ys\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T01:12:03Z",
+      "side": 1,
+      "message": "yes, this was just a POC; dropped",
+      "parentUuid": "AAAAVH//09A\u003d",
       "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//0yA\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 634,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T01:12:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//088\u003d",
+      "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//080\u003d",
         "filename": "examples/cwebp.c",
         "patchSetId": 1
@@ -166,6 +328,24 @@
       "writtenOn": "2013-01-22T22:35:11Z",
       "side": 1,
       "message": "the size computation could go into a separate local variable...",
+      "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0x4\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 636,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T01:12:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//080\u003d",
       "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -189,6 +369,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//0x0\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T01:12:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//08w\u003d",
+      "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//08s\u003d",
         "filename": "examples/cwebp.c",
         "patchSetId": 1
@@ -200,6 +398,24 @@
       "writtenOn": "2013-01-22T22:35:11Z",
       "side": 1,
       "message": "merge comment with above line",
+      "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0rA\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 646,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T01:12:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//08s\u003d",
       "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -223,6 +439,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//0xs\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 648,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T01:12:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//08o\u003d",
+      "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//08k\u003d",
         "filename": "examples/cwebp.c",
         "patchSetId": 1
@@ -234,6 +468,24 @@
       "writtenOn": "2013-01-22T22:35:11Z",
       "side": 1,
       "message": "()\u0027s",
+      "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0xo\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 651,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T01:12:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//08k\u003d",
       "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -257,6 +509,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//0xk\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 658,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T01:12:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//08g\u003d",
+      "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//08c\u003d",
         "filename": "examples/cwebp.c",
         "patchSetId": 1
@@ -268,6 +538,24 @@
       "writtenOn": "2013-01-22T22:35:11Z",
       "side": 1,
       "message": "more explicitly: \"Error writing Metadata in the webp file!\" ?",
+      "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0xQ\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1135,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-23T01:12:03Z",
+      "side": 1,
+      "message": "reworded slightly as the failure here could be file i/o and others, so \u0027error writing webp file with metadata\u0027 should cover that, though there is the case where metadata is specified and the source has none...",
+      "parentUuid": "AAAAVH//08c\u003d",
       "revId": "4dc950febcc1ce075e06489d532d5dbcff299fd4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
