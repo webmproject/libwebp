@@ -377,8 +377,10 @@ static void FTransformSSE2(const uint8_t* src, const uint8_t* ref,
     const __m128i shuf23 = _mm_unpacklo_epi32(diff2, diff3);
     // 00 01 10 11 02 03 12 13
     // 20 21 30 31 22 23 32 33
-    const __m128i shuf01_p = _mm_shufflehi_epi16(shuf01, _MM_SHUFFLE(2, 3, 0, 1));
-    const __m128i shuf23_p = _mm_shufflehi_epi16(shuf23, _MM_SHUFFLE(2, 3, 0, 1));
+    const __m128i shuf01_p =
+        _mm_shufflehi_epi16(shuf01, _MM_SHUFFLE(2, 3, 0, 1));
+    const __m128i shuf23_p =
+        _mm_shufflehi_epi16(shuf23, _MM_SHUFFLE(2, 3, 0, 1));
     // 00 01 10 11 03 02 13 12
     // 20 21 30 31 23 22 33 32
     const __m128i s01 = _mm_unpacklo_epi64(shuf01_p, shuf23_p);
