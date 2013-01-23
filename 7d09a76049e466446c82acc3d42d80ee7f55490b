@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAVH//0vQ\u003d",
+        "filename": "src/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-01-23T00:46:52Z",
+      "side": 1,
+      "message": "indent line (here and below)",
+      "revId": "7d09a76049e466446c82acc3d42d80ee7f55490b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0vI\u003d",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-01-23T00:46:52Z",
+      "side": 1,
+      "message": "indent lines",
+      "revId": "7d09a76049e466446c82acc3d42d80ee7f55490b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0u4\u003d",
+        "filename": "src/utils/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-01-23T00:46:52Z",
+      "side": 1,
+      "message": "same comment",
+      "revId": "7d09a76049e466446c82acc3d42d80ee7f55490b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
