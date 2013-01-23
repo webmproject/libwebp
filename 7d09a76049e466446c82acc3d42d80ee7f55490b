@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "AAAAVH//0fQ\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-23T10:10:16Z",
+      "side": 1,
+      "message": "i\u0027d word that positively, to match the --enable-decode-only flag:\n\"Check whether the decode-only library should be built.\"",
+      "revId": "7d09a76049e466446c82acc3d42d80ee7f55490b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0fM\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-23T10:10:16Z",
+      "side": 1,
+      "message": "add a line about decode-only enabled or not?",
+      "revId": "7d09a76049e466446c82acc3d42d80ee7f55490b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//0vQ\u003d",
         "filename": "src/Makefile.am",
         "patchSetId": 1
@@ -13,6 +47,23 @@
       "writtenOn": "2013-01-23T00:46:52Z",
       "side": 1,
       "message": "indent line (here and below)",
+      "revId": "7d09a76049e466446c82acc3d42d80ee7f55490b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//0fI\u003d",
+        "filename": "src/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-23T10:10:16Z",
+      "side": 1,
+      "message": "this is going to be confusing:\nthis option will generate a libwebp.a library that is potentially different depending on the configure flag, with no real possibility to inspect its content or know what it is.\n\nWhat about having a totally separate library libwebpdecoder.a\n(that is built and installed when --enable-decode-only is specified) ?",
       "revId": "7d09a76049e466446c82acc3d42d80ee7f55490b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
