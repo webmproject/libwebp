@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAVH//zwg\u003d",
+        "filename": "src/dsp/enc_sse2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-23T22:26:17Z",
+      "side": 1,
+      "message": "not sure it gains in readability...",
+      "revId": "18138e539f682ed9cd154e52da6ce73a883fc25c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
