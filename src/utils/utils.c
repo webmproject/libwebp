@@ -30,12 +30,14 @@ static int CheckSizeArgumentsOverflow(uint64_t nmemb, size_t size) {
 
 void* WebPSafeMalloc(uint64_t nmemb, size_t size) {
   if (!CheckSizeArgumentsOverflow(nmemb, size)) return NULL;
-  return (nmemb > 0 && size > 0) ? malloc((size_t)(nmemb * size)) : NULL;
+  assert(nmemb * size > 0);
+  return malloc((size_t)(nmemb * size));
 }
 
 void* WebPSafeCalloc(uint64_t nmemb, size_t size) {
   if (!CheckSizeArgumentsOverflow(nmemb, size)) return NULL;
-  return (nmemb > 0 && size > 0) ? calloc((size_t)nmemb, size) : NULL;
+  assert(nmemb * size > 0);
+  return calloc((size_t)nmemb, size);
 }
 
 //------------------------------------------------------------------------------
