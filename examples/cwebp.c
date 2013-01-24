@@ -79,7 +79,6 @@ static int ReadYUV(FILE* in_file, WebPPicture* const pic) {
 static int ReadPicture(const char* const filename, WebPPicture* const pic,
                        int keep_alpha, Metadata* const metadata) {
   int ok;
-  (void)metadata;  // TODO(jzern): add metadata extraction using WIC
   if (pic->width != 0 && pic->height != 0) {
     // If image size is specified, infer it as YUV format.
     FILE* in_file = fopen(filename, "rb");
@@ -91,7 +90,7 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
     fclose(in_file);
   } else {
     // If no size specified, try to decode it using WIC.
-    ok = ReadPictureWithWIC(filename, pic, keep_alpha);
+    ok = ReadPictureWithWIC(filename, pic, keep_alpha, metadata);
   }
   if (!ok) {
     fprintf(stderr, "Error! Could not process file %s\n", filename);
@@ -826,10 +825,10 @@ int main(int argc, const char *argv[]) {
         start = token + 1;
       }
 #ifdef HAVE_WINCODEC_H
-      if (keep_metadata != 0) {
+      if (keep_metadata != 0 && keep_metadata != METADATA_ICCP) {
         // TODO(jzern): remove when -metadata is supported on all platforms.
-        fprintf(stderr, "Warning: -metadata is currently unsupported on this"
-                        " platform. Ignoring this option!\n");
+        fprintf(stderr, "Warning: only ICC profile extraction is currently"
+                        " supported on this platform!\n");
       }
 #endif
     } else if (!strcmp(argv[c], "-v")) {
