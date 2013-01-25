@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//xo8\u003d",
+        "filename": "examples/wicdec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-25T22:10:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAVH//yRM\u003d",
+      "revId": "36fb2d1c179152a61b3cff86ce45fcfed8c48a30",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//yRI\u003d",
         "filename": "examples/wicdec.c",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//xo4\u003d",
+        "filename": "examples/wicdec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-25T22:10:21Z",
+      "side": 1,
+      "message": "Fixed. Relying on _GetProfileBytes was a bad idea, at best the hr would be wrong...",
+      "parentUuid": "AAAAVH//yRI\u003d",
+      "revId": "36fb2d1c179152a61b3cff86ce45fcfed8c48a30",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//yRE\u003d",
         "filename": "examples/wicdec.c",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2013-01-25T08:38:30Z",
       "side": 1,
       "message": "better would be to separate this handling of metadata from the CleanupTransparentArea() above, by using another \"if (SUCCEEDED(hr)) { ... }\" block.",
+      "revId": "36fb2d1c179152a61b3cff86ce45fcfed8c48a30",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//xoo\u003d",
+        "filename": "examples/wicdec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-25T22:10:21Z",
+      "side": 1,
+      "message": "separate as in \u0027with a newline\u0027? Same layout in tiffdec.c now actually and the transparent call won\u0027t remain for much longer.",
+      "parentUuid": "AAAAVH//yRE\u003d",
       "revId": "36fb2d1c179152a61b3cff86ce45fcfed8c48a30",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
