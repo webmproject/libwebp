@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAVH//xqY\u003d",
+        "filename": "NEWS",
+        "patchSetId": 4
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-25T21:55:59Z",
+      "side": 1,
+      "message": "s/new/New/g",
+      "revId": "ebca033b0c5bcf7c97744efadbbc289279d7fdcb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//xqA\u003d",
+        "filename": "src/dec/idec.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-25T21:55:59Z",
+      "side": 1,
+      "message": "a_size \u003d 0 and a_stride \u003d 0",
+      "revId": "ebca033b0c5bcf7c97744efadbbc289279d7fdcb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
