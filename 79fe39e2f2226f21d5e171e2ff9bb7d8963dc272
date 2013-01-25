@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAVH//xg0\u003d",
+        "filename": "iosbuild.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-25T23:08:53Z",
+      "side": 1,
+      "message": "balance the whitespace around the {}s",
+      "revId": "79fe39e2f2226f21d5e171e2ff9bb7d8963dc272",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//xhE\u003d",
+        "filename": "iosbuild.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-25T23:08:53Z",
+      "side": 1,
+      "message": "You can add:\n\n--build\u003d$(${SRCDIR}/config.guess)\n\nfor compatibility and to quiet a warning with newer versions",
+      "revId": "79fe39e2f2226f21d5e171e2ff9bb7d8963dc272",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//xhM\u003d",
+        "filename": "iosbuild.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-25T23:08:53Z",
+      "side": 1,
+      "message": "you can add V\u003d0 so if the autotools are new enough the build will be quieter.",
+      "revId": "79fe39e2f2226f21d5e171e2ff9bb7d8963dc272",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//xjw\u003d",
+        "filename": "iosbuild.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-25T23:08:53Z",
+      "side": 1,
+      "message": "${SRCDIR}/src/webp/*\n\nthis is a bit heavy handed as we only install a subset of these files...",
+      "revId": "79fe39e2f2226f21d5e171e2ff9bb7d8963dc272",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
