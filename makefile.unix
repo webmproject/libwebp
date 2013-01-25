@@ -106,6 +106,7 @@ DSP_OBJS = \
     src/dsp/enc_sse2.o \
     src/dsp/lossless.o \
     src/dsp/upsampling.o \
+    src/dsp/upsampling_neon.o \
     src/dsp/upsampling_sse2.o \
     src/dsp/yuv.o \
 
