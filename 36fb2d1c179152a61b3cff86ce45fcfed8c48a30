@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAVH//yRM\u003d",
+        "filename": "examples/wicdec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-25T08:38:30Z",
+      "side": 1,
+      "message": "\u0027c\u0027 -\u003e \u0027num_color_contexts\u0027 ?",
+      "revId": "36fb2d1c179152a61b3cff86ce45fcfed8c48a30",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//yRI\u003d",
+        "filename": "examples/wicdec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-25T08:38:30Z",
+      "side": 1,
+      "message": "this call can fail...",
+      "revId": "36fb2d1c179152a61b3cff86ce45fcfed8c48a30",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//yRE\u003d",
+        "filename": "examples/wicdec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-01-25T08:38:30Z",
+      "side": 1,
+      "message": "better would be to separate this handling of metadata from the CleanupTransparentArea() above, by using another \"if (SUCCEEDED(hr)) { ... }\" block.",
+      "revId": "36fb2d1c179152a61b3cff86ce45fcfed8c48a30",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
