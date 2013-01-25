@@ -878,8 +878,8 @@ int main(int argc, const char *argv[]) {
   picture.progress_hook = (show_progress && !quiet) ? ProgressReport : NULL;
 
   if (verbose) {
-    const double time = StopwatchReadAndReset(&stop_watch);
-    fprintf(stderr, "Time to read input: %.3fs\n", time);
+    const double read_time = StopwatchReadAndReset(&stop_watch);
+    fprintf(stderr, "Time to read input: %.3fs\n", read_time);
   }
 
   // Open the output
@@ -943,8 +943,8 @@ int main(int argc, const char *argv[]) {
     goto Error;
   }
   if (verbose) {
-    const double time = StopwatchReadAndReset(&stop_watch);
-    fprintf(stderr, "Time to encode picture: %.3fs\n", time);
+    const double encode_time = StopwatchReadAndReset(&stop_watch);
+    fprintf(stderr, "Time to encode picture: %.3fs\n", encode_time);
   }
 
   // Write info
