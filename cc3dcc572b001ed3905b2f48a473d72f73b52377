@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAVH//yfk\u003d",
+        "filename": "iosbuild.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-01-25T02:24:44Z",
+      "side": 1,
+      "message": "Configuring in your source directory is messy if you have different toolchains you regularly use. Consider a SRCDIR and avoiding autogen if configure exists:\n\ndiff --git a/iosbuild.sh b/iosbuild.sh\nindex d404f1e..9b575d8 100755\n--- a/iosbuild.sh\n+++ b/iosbuild.sh\n@@ -20,6 +20,7 @@ declare -r OLDPATH\u003d${PATH}\n # Add iPhoneOS-V6 to the list of platforms below if you need armv6 support.\n # Note that iPhoneOS-V6 support is not available with the iOS6 SDK.\n declare -r PLATFORMS\u003d\"iPhoneSimulator iPhoneOS-V7 iPhoneOS-V7s\"\n+declare -r SRCDIR\u003d$(dirname $0)\n declare -r TOPDIR\u003d$(pwd)\n declare -r BUILDDIR\u003d\"${TOPDIR}/iosbuild\"\n declare -r TARGETDIR\u003d\"${TOPDIR}/WebP.framework\"\n@@ -43,7 +44,7 @@ rm -rf ${TARGETDIR}\n mkdir -p ${BUILDDIR}\n mkdir -p ${TARGETDIR}/Headers/\n \n-sh autogen.sh\n+[[ -e ${SRCDIR}/configure ]] || (cd ${SRCDIR} \u0026\u0026 sh autogen.sh)\n \n for PLATFORM in ${PLATFORMS}; do\n   if [[ \"${PLATFORM}\" \u003d\u003d \"iPhoneOS-V7s\" ]]; then\n@@ -70,7 +71,7 @@ for PLATFORM in ${PLATFORMS}; do\n   export LDFLAGS\u003d\"-arch ${ARCH} -pipe -isysroot ${SDKROOT}\"\n   export PATH\u003d\"${DEVROOT}/usr/bin:${OLDPATH}\"\n \n-  ./configure --host\u003d${ARCH}-apple-darwin --prefix\u003d${ROOTDIR} --disable-shared \\\n+  ${SRCDIR}/configure --host\u003d${ARCH}-apple-darwin --prefix\u003d${ROOTDIR} --disable-shared \\\n     --enable-static --enable-libwebpdecoder\n \n   # run make only in the src/ directory to create libwebpdecoder.a",
+      "revId": "cc3dcc572b001ed3905b2f48a473d72f73b52377",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
