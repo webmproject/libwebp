@@ -269,19 +269,27 @@ WEBP_EXTERN(WebPIDecoder*) WebPINewDecoder(WebPDecBuffer* output_buffer);
 // will output the RGB/A samples specified by 'csp' into a preallocated
 // buffer 'output_buffer'. The size of this buffer is at least
 // 'output_buffer_size' and the stride (distance in bytes between two scanlines)
-// is specified by 'output_stride'. Returns NULL if the allocation failed.
+// is specified by 'output_stride'.
+// Additionally, output_buffer can be passed NULL in which case the output
+// buffer will be allocated automatically when the decoding starts. The
+// colorspace 'csp' is taken into account for allocating this buffer. All other
+// parameters are ignored.
+// Returns NULL if the allocation failed, or if some parameters are invalid.
 WEBP_EXTERN(WebPIDecoder*) WebPINewRGB(
     WEBP_CSP_MODE csp,
     uint8_t* output_buffer, size_t output_buffer_size, int output_stride);
 
 // This function allocates and initializes an incremental-decoder object, which
-// will output the raw luma/chroma samples into a preallocated planes. The luma
-// plane is specified by its pointer 'luma', its size 'luma_size' and its stride
-// 'luma_stride'. Similarly, the chroma-u plane is specified by the 'u',
-// 'u_size' and 'u_stride' parameters, and the chroma-v plane by 'v'
-// and 'v_size'. And same for the alpha-plane. The 'a' pointer can be pass
-// NULL in case one is not interested in the transparency plane.
-// Returns NULL if the allocation failed.
+// will output the raw luma/chroma samples into a preallocated planes if
+// supplied. The luma plane is specified by its pointer 'luma', its size
+// 'luma_size' and its stride 'luma_stride'. Similarly, the chroma-u plane
+// is specified by the 'u', 'u_size' and 'u_stride' parameters, and the chroma-v
+// plane by 'v' and 'v_size'. And same for the alpha-plane. The 'a' pointer
+// can be pass NULL in case one is not interested in the transparency plane.
+// Conversely, 'luma' can be passed NULL if no preallocated planes are supplied.
+// In this case, the output buffer will be automatically allocated (using
+// MODE_YUVA) when decoding starts. All parameters are then ignored.
+// Returns NULL if the allocation failed or if a parameter is invalid.
 WEBP_EXTERN(WebPIDecoder*) WebPINewYUVA(
     uint8_t* luma, size_t luma_size, int luma_stride,
     uint8_t* u, size_t u_size, int u_stride,
