@@ -21,3 +21,5 @@ examples/[cd]webp
 /doc/output
 *.idb
 *.pdb
+/iosbuild
+/WebP.framework
