@@ -191,7 +191,7 @@ static void FUNC_NAME(const uint8_t *top_y, const uint8_t *bottom_y,    \
                       const uint8_t *top_u, const uint8_t *top_v,       \
                       const uint8_t *cur_u, const uint8_t *cur_v,       \
                       uint8_t *top_dst, uint8_t *bottom_dst, int len) { \
-  int b;                                                                \
+  int block;                                                            \
   /* 16 byte aligned array to cache reconstructed u and v */            \
   uint8_t uv_buf[2 * 32 + 15];                                          \
   uint8_t *const r_uv = (uint8_t*)((uintptr_t)(uv_buf + 15) & ~15);     \
@@ -221,11 +221,11 @@ static void FUNC_NAME(const uint8_t *top_y, const uint8_t *bottom_y,    \
     VP8YuvTo ## FMT(bottom_y[0], u0, v0, bottom_dst);                   \
   }                                                                     \
                                                                         \
-  for (b = 0; b < num_blocks; ++b) {                                    \
+  for (block = 0; block < num_blocks; ++block) {                        \
     UPSAMPLE_16PIXELS(top_u, cur_u, r_uv);                              \
     UPSAMPLE_16PIXELS(top_v, cur_v, r_uv + 16);                         \
     CONVERT2RGB_8(FMT, XSTEP, top_y, bottom_y, r_uv,                    \
-                  top_dst, bottom_dst, 16 * b + 1, 16);                 \
+                  top_dst, bottom_dst, 16 * block + 1, 16);             \
     top_u += 8;                                                         \
     cur_u += 8;                                                         \
     top_v += 8;                                                         \
