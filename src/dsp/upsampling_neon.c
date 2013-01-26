@@ -59,8 +59,12 @@ extern "C" {
   c = vrhadd_u8(c, diag2);                                              \
   d = vrhadd_u8(d, diag1);                                              \
                                                                         \
-  vst2_u8(out,      (uint8x8x2_t){{ a, b }});                           \
-  vst2_u8(out + 32, (uint8x8x2_t){{ c, d }});                           \
+  {                                                                     \
+    const uint8x8x2_t a_b = {{ a, b }};                                 \
+    const uint8x8x2_t c_d = {{ c, d }};                                 \
+    vst2_u8(out,      a_b);                                             \
+    vst2_u8(out + 32, c_d);                                             \
+  }                                                                     \
 }
 
 // Turn the macro into a function for reducing code-size when non-critical
@@ -150,10 +154,25 @@ static const int16_t coef[4] = { CVR / 4, CUG, CVG / 2, CUB / 4 };
 
 #define v255 vmov_n_u8(255)
 
-#define STR_Rgb(out, r, g, b)  vst3_u8(out, (uint8x8x3_t){{ r, g, b }})
-#define STR_Bgr(out, r, g, b)  vst3_u8(out, (uint8x8x3_t){{ b, g, r }})
-#define STR_Rgba(out, r, g, b) vst4_u8(out, (uint8x8x4_t){{ r, g, b, v255 }})
-#define STR_Bgra(out, r, g, b) vst4_u8(out, (uint8x8x4_t){{ b, g, r, v255 }})
+#define STR_Rgb(out, r, g, b) do {                                      \
+  const uint8x8x3_t r_g_b = {{ r, g, b }};                              \
+  vst3_u8(out, r_g_b);                                                  \
+} while (0)
+
+#define STR_Bgr(out, r, g, b) do {                                      \
+  const uint8x8x3_t b_g_r = {{ b, g, r }};                              \
+  vst3_u8(out, b_g_r);                                                  \
+} while (0)
+
+#define STR_Rgba(out, r, g, b) do {                                     \
+  const uint8x8x4_t r_g_b_v255 = {{ r, g, b, v255 }};                   \
+  vst4_u8(out, r_g_b_v255);                                             \
+} while (0)
+
+#define STR_Bgra(out, r, g, b) do {                                     \
+  const uint8x8x4_t b_g_r_v255 = {{ b, g, r, v255 }};                   \
+  vst4_u8(out, b_g_r_v255);                                             \
+} while (0)
 
 #define CONVERT1(FMT, XSTEP, N, src_y, src_uv, rgb, cur_x) {            \
   int i;                                                                \
