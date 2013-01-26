@@ -13,7 +13,7 @@ set -e
 
 # Extract the latest SDK version from the final field of the form: iphoneosX.Y
 declare -r SDK=$(xcodebuild -showsdks \
-  | grep iphoneos | sort | tail -n 1 | awk '{ print substr($NF, 9)}'
+  | grep iphoneos | sort | tail -n 1 | awk '{print substr($NF, 9)}'
 )
 declare -r OLDPATH=${PATH}
 
@@ -72,12 +72,13 @@ for PLATFORM in ${PLATFORMS}; do
   export PATH="${DEVROOT}/usr/bin:${OLDPATH}"
 
   ${SRCDIR}/configure --host=${ARCH}-apple-darwin --prefix=${ROOTDIR} \
+    --build=$(${SRCDIR}/config.guess) \
     --disable-shared --enable-static \
     --enable-libwebpdecoder --enable-swap-16bit-csp
 
   # run make only in the src/ directory to create libwebpdecoder.a
   cd src/
-  make
+  make V=0
   make install
 
   LIBLIST+=" ${ROOTDIR}/lib/libwebpdecoder.a"
@@ -88,5 +89,5 @@ for PLATFORM in ${PLATFORMS}; do
   export PATH=${OLDPATH}
 done
 
-cp -a src/webp/* ${TARGETDIR}/Headers/
+cp -a ${SRCDIR}/src/webp/* ${TARGETDIR}/Headers/
 ${LIPO} -create ${LIBLIST} -output ${TARGETDIR}/WebP
