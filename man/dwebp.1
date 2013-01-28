@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DWEBP 1 "August 2, 2012"
+.TH DWEBP 1 "January 28, 2013"
 .SH NAME
 dwebp \- decompress a WebP file to an image file
 .SH SYNOPSIS
@@ -31,9 +31,15 @@ Change the output format to PAM (retains alpha).
 Change the output format to PPM (discards alpha).
 .TP
 .B \-pgm
-Change the output format to PGM. The output consist of luma/chroma
+Change the output format to PGM. The output consists of luma/chroma
 samples instead of RGB, using the ICM4 layout. This option is mainly
-for verification and debugging purpose.
+for verification and debugging purposes.
+.TP
+.B \-yuv
+Change the output format to raw YUV. The output consists of
+luma/chroma-U/chroma-V samples instead of RGB, saved sequentially as
+individual planes. This option is mainly for verification and debugging
+ purposes.
 .TP
 .B \-nofancy
 Don't use the fancy upscaler for YUV420. This may lead to jaggy

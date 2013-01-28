@@ -240,6 +240,8 @@ Use following options to convert into alternate image formats:
   -ppm ......... save the raw RGB samples as a color PPM
   -pgm ......... save the raw YUV samples as a grayscale PGM
                  file with IMC4 layout.
+  -yuv ......... save the raw YUV samples in flat layout.
+
  Other options are:
   -version  .... print version number and exit.
   -nofancy ..... don't use the fancy YUV420 upscaler.

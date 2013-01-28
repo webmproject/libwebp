@@ -62,6 +62,7 @@ typedef enum {
   PAM,
   PPM,
   PGM,
+  YUV,
   ALPHA_PLANE_ONLY  // this is for experimenting only
 } OutputFileFormat;
 
@@ -238,32 +239,50 @@ static int WriteAlphaPlane(FILE* fout, const WebPDecBuffer* const buffer) {
   return 1;
 }
 
-static int WritePGM(FILE* fout, const WebPDecBuffer* const buffer) {
+// format=PGM: save a grayscale PGM file using the IMC4 layout
+// (http://www.fourcc.org/yuv.php#IMC4). This is a very convenient format for
+// viewing the samples, esp. for odd dimensions.
+// format=YUV: just save the Y/U/V/A planes sequentially without header.
+static int WritePGMOrYUV(FILE* fout, const WebPDecBuffer* const buffer,
+                         OutputFileFormat format) {
   const int width = buffer->width;
   const int height = buffer->height;
   const WebPYUVABuffer* const yuv = &buffer->u.YUVA;
-  // Save a grayscale PGM file using the IMC4 layout
-  // (http://www.fourcc.org/yuv.php#IMC4). This is a very
-  // convenient format for viewing the samples, esp. for
-  // odd dimensions.
   int ok = 1;
   int y;
+  const int pad = (format == YUV) ? 0 : 1;
   const int uv_width = (width + 1) / 2;
   const int uv_height = (height + 1) / 2;
-  const int out_stride = (width + 1) & ~1;
+  const int out_stride = (width + pad) & ~pad;
   const int a_height = yuv->a ? height : 0;
-  fprintf(fout, "P5\n%d %d\n255\n", out_stride, height + uv_height + a_height);
+  if (format == PGM) {
+    fprintf(fout, "P5\n%d %d\n255\n",
+            out_stride, height + uv_height + a_height);
+  }
   for (y = 0; ok && y < height; ++y) {
     ok &= (fwrite(yuv->y + y * yuv->y_stride, width, 1, fout) == 1);
-    if (width & 1) fputc(0, fout);    // padding byte
+    if (format == PGM) {
+      if (width & 1) fputc(0, fout);    // padding byte
+    }
   }
-  for (y = 0; ok && y < uv_height; ++y) {
-    ok &= (fwrite(yuv->u + y * yuv->u_stride, uv_width, 1, fout) == 1);
-    ok &= (fwrite(yuv->v + y * yuv->v_stride, uv_width, 1, fout) == 1);
+  if (format == PGM) {   // IMC4 layout
+    for (y = 0; ok && y < uv_height; ++y) {
+      ok &= (fwrite(yuv->u + y * yuv->u_stride, uv_width, 1, fout) == 1);
+      ok &= (fwrite(yuv->v + y * yuv->v_stride, uv_width, 1, fout) == 1);
+    }
+  } else {
+    for (y = 0; ok && y < uv_height; ++y) {
+      ok &= (fwrite(yuv->u + y * yuv->u_stride, uv_width, 1, fout) == 1);
+    }
+    for (y = 0; ok && y < uv_height; ++y) {
+      ok &= (fwrite(yuv->v + y * yuv->v_stride, uv_width, 1, fout) == 1);
+    }
   }
   for (y = 0; ok && y < a_height; ++y) {
     ok &= (fwrite(yuv->a + y * yuv->a_stride, width, 1, fout) == 1);
-    if (width & 1) fputc(0, fout);    // padding byte
+    if (format == PGM) {
+      if (width & 1) fputc(0, fout);    // padding byte
+    }
   }
   return ok;
 }
@@ -299,8 +318,8 @@ static void SaveOutput(const WebPDecBuffer* const buffer,
     ok &= WritePPM(fout, buffer, 1);
   } else if (format == PPM) {
     ok &= WritePPM(fout, buffer, 0);
-  } else if (format == PGM) {
-    ok &= WritePGM(fout, buffer);
+  } else if (format == PGM || format == YUV) {
+    ok &= WritePGMOrYUV(fout, buffer, format);
   } else if (format == ALPHA_PLANE_ONLY) {
     ok &= WriteAlphaPlane(fout, buffer);
   }
@@ -326,6 +345,8 @@ static void Help(void) {
          "  -ppm ......... save the raw RGB samples as a color PPM\n"
          "  -pgm ......... save the raw YUV samples as a grayscale PGM\n"
          "                 file with IMC4 layout.\n"
+         "  -yuv ......... save the raw YUV samples in flat layout.\n"
+         "\n"
          " Other options are:\n"
          "  -version  .... print version number and exit.\n"
          "  -nofancy ..... don't use the fancy YUV420 upscaler.\n"
@@ -385,6 +406,8 @@ int main(int argc, const char *argv[]) {
       return 0;
     } else if (!strcmp(argv[c], "-pgm")) {
       format = PGM;
+    } else if (!strcmp(argv[c], "-yuv")) {
+      format = YUV;
     } else if (!strcmp(argv[c], "-mt")) {
       config.options.use_threads = 1;
     } else if (!strcmp(argv[c], "-crop") && c < argc - 4) {
@@ -450,6 +473,7 @@ int main(int argc, const char *argv[]) {
         output_buffer->colorspace = MODE_RGB;  // drops alpha for PPM
         break;
       case PGM:
+      case YUV:
         output_buffer->colorspace = bitstream->has_alpha ? MODE_YUVA : MODE_YUV;
         break;
       case ALPHA_PLANE_ONLY:
