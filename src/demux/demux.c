@@ -643,6 +643,7 @@ WebPDemuxer* WebPDemuxInternal(const WebPData* data, int allow_partial,
     if (!memcmp(parser->id, GetBuffer(&dmux->mem_), TAG_SIZE)) {
       status = parser->parse(dmux);
       if (status == PARSE_OK) dmux->state_ = WEBP_DEMUX_DONE;
+      if (status == PARSE_NEED_MORE_DATA && !partial) status = PARSE_ERROR;
       if (status != PARSE_ERROR && !parser->valid(dmux)) status = PARSE_ERROR;
       break;
     }
