@@ -8,6 +8,7 @@
 //  WebP container demux.
 //
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -754,6 +755,7 @@ static int SynthesizeFrame(const WebPDemuxer* const dmux,
   const uint8_t* const payload =
       GetFramePayload(mem_buf, fragment, &payload_size);
   if (payload == NULL) return 0;
+  assert(first_frame != NULL);
 
   iter->frame_num      = first_frame->frame_num_;
   iter->num_frames     = dmux->num_frames_;
@@ -780,6 +782,8 @@ static int SetFrame(int frame_num, WebPIterator* const iter) {
   if (frame_num == 0) frame_num = dmux->num_frames_;
 
   frame = GetFrame(dmux, frame_num);
+  if (frame == NULL) return 0;
+
   return SynthesizeFrame(dmux, frame, 1, iter);
 }
 
