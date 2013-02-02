@@ -632,6 +632,7 @@ int main(int argc, const char *argv[]) {
   Stopwatch stop_watch;
 
   MetadataInit(&metadata);
+  WebPMemoryWriterInit(&memory_writer);
   if (!WebPPictureInit(&picture) ||
       !WebPPictureInit(&original_picture) ||
       !WebPConfigInit(&config)) {
@@ -897,7 +898,6 @@ int main(int argc, const char *argv[]) {
       picture.writer = MyWriter;
       picture.custom_ptr = (void*)out;
     } else {
-      WebPMemoryWriterInit(&memory_writer);
       picture.writer = WebPMemoryWrite;
       picture.custom_ptr = (void*)&memory_writer;
     }
@@ -983,6 +983,7 @@ int main(int argc, const char *argv[]) {
   return_value = 0;
 
  Error:
+  free(memory_writer.mem);
   free(picture.extra_info);
   MetadataFree(&metadata);
   WebPPictureFree(&picture);
