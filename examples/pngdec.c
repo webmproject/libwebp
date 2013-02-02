@@ -144,9 +144,9 @@ static int ExtractMetadataFromPNG(png_structp png,
               text_length = text->itxt_length;
               break;
 #endif
-            default:
             case PNG_TEXT_COMPRESSION_NONE:
             case PNG_TEXT_COMPRESSION_zTXt:
+            default:
               text_length = text->text_length;
               break;
           }
