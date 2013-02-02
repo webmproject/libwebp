@@ -16,6 +16,24 @@
       "revId": "c8395df7fb2593f5ced89312b00585781ab70b73",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//s3g\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 883,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-02-02T18:29:22Z",
+      "side": 1,
+      "message": "probably better in the absence of merging the two ReadPicture()s. On the first pass I thought it more related to the \u0027read\u0027, but it probably makes more logical sense out here given it\u0027s a post-process.",
+      "parentUuid": "AAAAVH//s5g\u003d",
+      "revId": "c8395df7fb2593f5ced89312b00585781ab70b73",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
