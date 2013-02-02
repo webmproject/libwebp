@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH GIF2WEBP 1 "November 15, 2012"
+.TH GIF2WEBP 1 "February 01, 2013"
 .SH NAME
 gif2webp \- Convert a GIF image to WebP
 .SH SYNOPSIS
@@ -15,7 +15,7 @@ command.
 .SH OPTIONS
 The basic options are:
 .TP
-.B \-o string
+.BI \-o " string
 Specify the name of the output WebP file. If omitted, \fBgif2webp\fP will
 perform conversion but only report statistics.
 .TP
@@ -28,7 +28,7 @@ Print the version number (as major.minor.revision) and exit.
 .B \-lossy
 Encode the image using lossy compression.
 .TP
-.B \-q float
+.BI \-q " float
 Specify the compression factor for RGB channels between 0 and 100. The default
 is 75.
 .br
@@ -40,7 +40,7 @@ In case of lossy compression (specified by the \-lossy option), a small factor
 produces a smaller file with lower quality. Best quality is achieved by using a
 value of 100.
 .TP
-.B \-m int
+.BI \-m " int
 Specify the compression method to use. This parameter controls the
 trade off between encoding speed and the compressed file size and quality.
 Possible values range from 0 to 6. Default value is 4.
@@ -49,7 +49,7 @@ additional encoding possibilities and decide on the quality gain.
 Lower value can result is faster processing time at the expense of
 larger file size and lower compression quality.
 .TP
-.B \-f int
+.BI \-f " int
 For lossy encoding only (specified by the \-lossy option). Specify the strength
 of the deblocking filter, between 0 (no filtering) and 100 (maximum filtering).
 A value of 0 will turn off any filtering. Higher value will increase the

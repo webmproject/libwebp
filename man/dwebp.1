@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DWEBP 1 "January 28, 2013"
+.TH DWEBP 1 "February 01, 2013"
 .SH NAME
 dwebp \- decompress a WebP file to an image file
 .SH SYNOPSIS
@@ -21,7 +21,7 @@ Print usage summary.
 .B \-version
 Print the version number (as major.minor.revision) and exit.
 .TP
-.B \-o string
+.BI \-o " string
 Specify the name of the output file (as PNG format by default).
 .TP
 .B \-pam
@@ -53,7 +53,7 @@ but will make the decoding faster.
 .B \-mt
 Use multi-threading for decoding, if possible.
 .TP
-.B \-crop x_position y_position width height
+.BI \-crop " x_position y_position width height
 Crop the decoded picture to a rectangle with top-left corner at coordinates
 (\fBx_position\fP, \fBy_position\fP) and size \fBwidth\fP x \fBheight\fP.
 This cropping area must be fully contained within the source rectangle.
@@ -61,7 +61,7 @@ The top-left corner will be snapped to even coordinates if needed.
 This option is meant to reduce the memory needed for cropping large images.
 Note: the cropping is applied \fIbefore\fP any scaling.
 .TP
-.B \-scale width height
+.BI \-scale " width height
 Rescale the decoded picture to dimension \fBwidth\fP x \fBheight\fP. This
 option is mostly intended to reducing the memory needed to decode large images,
 when only a small version is needed (thumbnail, preview, etc.).  Note: scaling

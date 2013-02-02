@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH WEBPMUX 1 "October 23, 2012"
+.TH WEBPMUX 1 "February 01, 2013"
 .SH NAME
 webpmux \- command line tool to create WebP Mux/container file.
 .SH SYNOPSIS
@@ -62,25 +62,25 @@ Get EXIF metadata.
 .B xmp
 Get XMP metadata.
 .TP
-.B frgm n
+.BI frgm " n
 Get nth fragment.
 .TP
-.B frame n
+.BI frame " n
 Get nth frame.
 
 .SS SET_OPTIONS (\-set)
 .TP
-.B icc file.icc
+.BI icc " file.icc
 Set ICC profile.
 .P
 Where: 'file.icc' contains the ICC profile to be set.
 .TP
-.B exif file.exif
+.BI exif " file.exif
 Set EXIF metadata.
 .P
 Where: 'file.exif' contains the EXIF metadata to be set.
 .TP
-.B xmp file.xmp
+.BI xmp " file.xmp
 Set XMP metadata.
 .P
 Where: 'file.xmp' contains the XMP metadata to be set.
@@ -98,13 +98,13 @@ Strip XMP metadata.
 
 .SS FRAGMENT_OPTIONS (\-frgm)
 .TP
-.B file_i +xi+yi
+.I file_i +xi+yi
 Where: 'file_i' is the i'th fragment (WebP format) and 'xi','yi' specify the
 image offset for this fragment.
 
 .SS FRAME_OPTIONS (\-frame)
 .TP
-.B file_i +di[+xi+yi[+mi]]
+.I file_i +di[+xi+yi[+mi]]
 Where: 'file_i' is the i'th frame (WebP format), 'xi','yi' specify the image
 offset for this frame, 'di' is the pause duration before next frame and 'mi' is
 the dispose method for this frame (0 for NONE or 1 for BACKGROUND).
@@ -112,11 +112,11 @@ the dispose method for this frame (0 for NONE or 1 for BACKGROUND).
 Additionally, if 'mi' is ommitted then'xi' and 'yi' can be omitted and will
 default to +0+0.
 .TP
-.B \-loop n
+.BI \-loop " n
 Loop the frames n number of times. 0 indicates the frames should loop forever.
 Valid range is 0 to 65535 [Default: 0 (infinite)].
 .TP
-.B \-bgcolor A,R,G,B
+.BI \-bgcolor " A,R,G,B
 Background color of the canvas.
 .br
 where: 'A', 'R', 'G' and 'B' are integers in the range 0 to 255 specifying the
