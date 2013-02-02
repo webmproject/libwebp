@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "January 11, 2013"
+.TH CWEBP 1 "February 01, 2013"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -16,7 +16,7 @@ Input format can be either PNG, JPEG, TIFF or raw Y'CbCr samples.
 .SH OPTIONS
 The basic options are:
 .TP
-.B \-o string
+.BI \-o " string
 Specify the name of the output WebP file. If omitted, \fBcwebp\fP will
 perform compression but only report statistics.
 .TP
@@ -29,7 +29,7 @@ A summary of all the possible options.
 .B \-version
 Print the version number (as major.minor.revision) and exit.
 .TP
-.B \-q float
+.BI \-q " float
 Specify the compression factor for RGB channels between 0 and 100. The default
 is 75.
 .br
@@ -40,19 +40,19 @@ In case of lossless compression (specified by the \-lossless option), a small
 factor enables faster compression speed, but produces a larger file. Maximum
 compression is achieved by using a value of 100.
 .TP
-.B \-alpha_q int
+.BI \-alpha_q " int
 Specify the compression factor for alpha compression between 0 and 100.
 Lossless compression of alpha is achieved using a value of 100, while the lower
 values result in a lossy compression. The default is 100.
 .TP
-.B \-f int
+.BI \-f " int
 Specify the strength of the deblocking filter, between 0 (no filtering)
 and 100 (maximum filtering). A value of 0 will turn off any filtering.
 Higher value will increase the strength of the filtering process applied
 after decoding the picture. The higher the value the smoother the picture will
 appear. Typical values are usually in the range of 20 to 50.
 .TP
-.B \-preset string
+.BI \-preset " string
 Specify a set of pre-defined parameters to suit a particular type of
 source material. Possible values are:  \fBdefault\fP, \fBphoto\fP,
 \fBpicture\fP, \fBdrawing\fP, \fBicon\fP, \fBtext\fP. Since
@@ -60,14 +60,14 @@ source material. Possible values are:  \fBdefault\fP, \fBphoto\fP,
 \fB\-q\fP one), this option should preferably appear first in the
 order of the arguments.
 .TP
-.B \-sns int
+.BI \-sns " int
 Specify the amplitude of the spatial noise shaping. Spatial noise shaping
 (or \fBsns\fP for short) refers to a general collection of built-in algorithms
 used to decide which area of the picture should use relatively less bits,
 and where else to better transfer these bits. The possible range goes from
 0 (algorithm is off) to 100 (the maximal effect). The default value is 80.
 .TP
-.B \-m int
+.BI \-m " int
 Specify the compression method to use. This parameter controls the
 trade off between encoding speed and the compressed file size and quality.
 Possible values range from 0 to 6. Default value is 4.
@@ -83,7 +83,7 @@ the filtering strength to reach a well-balanced quality.
 .SH ADDITIONAL OPTIONS
 More advanced options are:
 .TP
-.B \-sharpness int
+.BI \-sharpness " int
 Specify the sharpness of the filtering (if used).
 Range is 0 (sharpest) to 7 (least sharp). Default is 0.
 .TP
@@ -91,11 +91,11 @@ Range is 0 (sharpest) to 7 (least sharp). Default is 0.
 Use a stronger filtering than the default one (if filtering is being
 used thanks to the \fB\-f\fP option). Strong filtering is off by default.
 .TP
-.B \-segments int
+.BI \-segments " int
 Change the number of partitions to use during the segmentation of the
 sns algorithm. Segments should be in range 1 to 4. Default value is 4.
 .TP
-.B \-partition_limit int
+.BI \-partition_limit " int
 Degrade quality by limiting the number of bits used by some macroblocks.
 Range is 0 (no degradation, the default) to 100 (full degradation).
 Useful values are usually around 30-70 for moderately large images.
@@ -114,39 +114,39 @@ If using \fB-partition_limit\fP is not enough to meet the 512k constraint, one
 should use less segments in order to save more header bits per macroblock.
 See the \fB-segments\fP option.
 .TP
-.B \-size int
+.BI \-size " int
 Specify a target size (in bytes) to try and reach for the compressed output.
 Compressor will make several pass of partial encoding in order to get as
 close as possible to this target.
 .TP
-.B \-psnr float
+.BI \-psnr " float
 Specify a target PSNR (in dB) to try and reach for the compressed output.
 Compressor will make several pass of partial encoding in order to get as
 close as possible to this target.
 .TP
-.B \-pass int
+.BI \-pass " int
 Set a maximum number of passes to use during the dichotomy used by
 options \fB\-size\fP or \fB\-psnr\fP. Maximum value is 10.
 .TP
-.B \-crop x_position y_position width height
+.BI \-crop " x_position y_position width height
 Crop the source to a rectangle with top-left corner at coordinates
 (\fBx_position\fP, \fBy_position\fP) and size \fBwidth\fP x \fBheight\fP.
 This cropping area must be fully contained within the source rectangle.
 .TP
-.B \-s width height
+.BI \-s " width height
 Specify that the input file actually consists of raw Y'CbCr samples following
 the ITU-R BT.601 recommendation, in 4:2:0 linear format.
 The luma plane has size \fBwidth\fP x \fBheight\fP.
 .TP
-.B \-map int
+.BI \-map " int
 Output additional ASCII-map of encoding information. Possible map values
 range from 1 to 6. This is only meant to help debugging.
 .TP
-.B \-pre int
+.BI \-pre " int
 Specify a pre-processing filter. This option is a placeholder
 and has currently no effect.
 .TP
-.B \-alpha_filter string
+.BI \-alpha_filter " string
 Specify the predictive filtering method for the alpha plane. One of 'none',
 \&'fast' or 'best', in increasing complexity and slowness order. Default is
 \&'fast'. Internally, alpha filtering is performed using four possible
@@ -154,7 +154,7 @@ predictions (none, horizontal, vertical, gradient). The 'best' mode will try
 each mode in turn and pick the one which gives the smaller size. The 'fast'
 mode will just try to form an a-priori guess without testing all modes.
 .TP
-.B \-alpha_method int
+.BI \-alpha_method " int
 Specify the algorithm used for alpha compression: 0 or 1. Algorithm 0 denotes
 no compression, 1 uses WebP lossless format for compression. The default is 1.
 .TP
@@ -168,11 +168,11 @@ Using this option will discard the alpha channel.
 .B \-lossless
 Encode the image without any loss.
 .TP
-.B \-hint string
+.BI \-hint " string
 Specify the hint about input image type. Possible values are:
 \fBphoto\fP, \fBpicture\fP or \fBgraph\fP.
 .TP
-.B \-metadata string
+.BI \-metadata " string
 A comma separated list of metadata to copy from the input to the output if
 present.
 Valid values: \fBall\fP, \fBnone\fP, \fBexif\fP, \fBiccp\fP, \fBxmp\fP.
