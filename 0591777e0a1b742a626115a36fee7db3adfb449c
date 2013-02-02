@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAVH//s5I\u003d",
+        "filename": "examples/wicdec.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-02-02T08:24:38Z",
+      "side": 1,
+      "message": "btw: is calling \"IUnknown_Release(NULL)\" ok?\n\n(this could happen, if loop at l81 fails mid-way)",
+      "revId": "0591777e0a1b742a626115a36fee7db3adfb449c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
