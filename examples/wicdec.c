@@ -257,9 +257,6 @@ int ReadPictureWithWIC(const char* const filename,
       hr = E_FAIL;
   }
   if (SUCCEEDED(hr)) {
-    if (has_alpha && keep_alpha == 2) {
-      WebPCleanupTransparentArea(pic);
-    }
     if (metadata != NULL) {
       hr = ExtractMetadata(pFactory, pFrame, metadata);
       if (FAILED(hr)) {

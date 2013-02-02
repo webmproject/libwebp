@@ -274,9 +274,6 @@ int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha,
   if (!ok) {
     goto Error;
   }
-  if (has_alpha && keep_alpha == 2) {
-    WebPCleanupTransparentArea(pic);
-  }
 
  End:
   return ok;

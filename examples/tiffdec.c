@@ -108,9 +108,6 @@ int ReadTIFF(const char* const filename,
   }
 
   if (ok) {
-    if (keep_alpha == 2) {
-      WebPCleanupTransparentArea(pic);
-    }
     if (metadata != NULL) {
       ok = ExtractMetadataFromTIFF(tif, metadata);
       if (!ok) {
