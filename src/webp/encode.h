@@ -214,6 +214,7 @@ WEBP_EXTERN(void) WebPMemoryWriterInit(WebPMemoryWriter* writer);
 
 // The custom writer to be used with WebPMemoryWriter as custom_ptr. Upon
 // completion, writer.mem and writer.size will hold the coded data.
+// writer.mem must be freed using the call 'free(writer.mem)'.
 WEBP_EXTERN(int) WebPMemoryWrite(const uint8_t* data, size_t data_size,
                                  const WebPPicture* picture);
 
