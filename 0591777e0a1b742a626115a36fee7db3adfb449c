@@ -16,6 +16,24 @@
       "revId": "0591777e0a1b742a626115a36fee7db3adfb449c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//s3U\u003d",
+        "filename": "examples/wicdec.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-02-02T18:42:17Z",
+      "side": 1,
+      "message": "Not at all! This is just a macro that does:\nIUnknown_Release(This) (This)-\u003e...",
+      "parentUuid": "AAAAVH//s5I\u003d",
+      "revId": "0591777e0a1b742a626115a36fee7db3adfb449c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
