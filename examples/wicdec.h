@@ -14,6 +14,7 @@
 extern "C" {
 #endif
 
+struct Metadata;
 struct WebPPicture;
 
 // Reads an image from 'filename', returning the decoded output in 'pic'.
@@ -21,7 +22,8 @@ struct WebPPicture;
 // RGBA otherwise it will be RGB.
 // Returns true on success.
 int ReadPictureWithWIC(const char* const filename,
-                       struct WebPPicture* const pic, int keep_alpha);
+                       struct WebPPicture* const pic, int keep_alpha,
+                       struct Metadata* const metadata);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

@@ -28,6 +28,7 @@
 #include <wincodec.h>
 
 #include "webp/encode.h"
+#include "./metadata.h"
 
 #define IFS(fn)                                                     \
   do {                                                              \
@@ -61,8 +62,76 @@ static HRESULT OpenInputStream(const char* filename, IStream** ppStream) {
   return hr;
 }
 
+// Stores the first non-zero sized color profile from 'pFrame' to 'iccp'.
+// Returns an HRESULT to indicate success or failure. The caller is responsible
+// for freeing 'iccp->bytes' in either case.
+static HRESULT ExtractICCP(IWICImagingFactory* const pFactory,
+                           IWICBitmapFrameDecode* const pFrame,
+                           MetadataPayload* const iccp) {
+  HRESULT hr = S_OK;
+  UINT i, count;
+  IWICColorContext** ppColorContext;
+
+  IFS(IWICBitmapFrameDecode_GetColorContexts(pFrame, 0, NULL, &count));
+  if (FAILED(hr) || count == 0) return hr;
+
+  ppColorContext = (IWICColorContext**)calloc(count, sizeof(*ppColorContext));
+  if (ppColorContext == NULL) return E_OUTOFMEMORY;
+  for (i = 0; SUCCEEDED(hr) && i < count; ++i) {
+    IFS(IWICImagingFactory_CreateColorContext(pFactory, &ppColorContext[i]));
+  }
+
+  if (SUCCEEDED(hr)) {
+    UINT num_color_contexts;
+    IFS(IWICBitmapFrameDecode_GetColorContexts(pFrame,
+                                               count, ppColorContext,
+                                               &num_color_contexts));
+    for (i = 0; SUCCEEDED(hr) && i < num_color_contexts; ++i) {
+      WICColorContextType type;
+      IFS(IWICColorContext_GetType(ppColorContext[i], &type));
+      if (SUCCEEDED(hr) && type == WICColorContextProfile) {
+        UINT size;
+        IFS(IWICColorContext_GetProfileBytes(ppColorContext[i],
+                                             0, NULL, &size));
+        if (size > 0) {
+          iccp->bytes = (uint8_t*)malloc(size);
+          if (iccp->bytes == NULL) {
+            hr = E_OUTOFMEMORY;
+            break;
+          }
+          iccp->size = size;
+          IFS(IWICColorContext_GetProfileBytes(ppColorContext[i],
+                                               (UINT)iccp->size, iccp->bytes,
+                                               &size));
+          if (SUCCEEDED(hr) && size != iccp->size) {
+            fprintf(stderr, "Warning! ICC profile size (%u) != expected (%u)\n",
+                    size, iccp->size);
+            iccp->size = size;
+          }
+          break;
+        }
+      }
+    }
+  }
+  for (i = 0; i < count; ++i) {
+    if (ppColorContext[i] != NULL) IUnknown_Release(ppColorContext[i]);
+  }
+  free(ppColorContext);
+  return hr;
+}
+
+static HRESULT ExtractMetadata(IWICImagingFactory* const pFactory,
+                               IWICBitmapFrameDecode* const pFrame,
+                               Metadata* const metadata) {
+  // TODO(jzern): add XMP/EXIF extraction.
+  const HRESULT hr = ExtractICCP(pFactory, pFrame, &metadata->iccp);
+  if (FAILED(hr)) MetadataFree(metadata);
+  return hr;
+}
+
 int ReadPictureWithWIC(const char* const filename,
-                       WebPPicture* const pic, int keep_alpha) {
+                       WebPPicture* const pic, int keep_alpha,
+                       Metadata* const metadata) {
   // From Microsoft SDK 7.0a -- wincodec.h
   // Create local copies for compatibility when building against earlier
   // versions of the SDK.
@@ -191,6 +260,12 @@ int ReadPictureWithWIC(const char* const filename,
     if (has_alpha && keep_alpha == 2) {
       WebPCleanupTransparentArea(pic);
     }
+    if (metadata != NULL) {
+      hr = ExtractMetadata(pFactory, pFrame, metadata);
+      if (FAILED(hr)) {
+        fprintf(stderr, "Error extracting image metadata using WIC!\n");
+      }
+    }
   }
 
   // Cleanup.
@@ -204,10 +279,12 @@ int ReadPictureWithWIC(const char* const filename,
 }
 #else  // !HAVE_WINCODEC_H
 int ReadPictureWithWIC(const char* const filename,
-                       struct WebPPicture* const pic, int keep_alpha) {
+                       struct WebPPicture* const pic, int keep_alpha,
+                       struct Metadata* const metadata) {
   (void)filename;
   (void)pic;
   (void)keep_alpha;
+  (void)metadata;
   fprintf(stderr, "Windows Imaging Component (WIC) support not compiled. "
                   "Visual Studio and mingw-w64 builds support WIC. Make sure "
                   "wincodec.h detection is working correctly if using autoconf "
