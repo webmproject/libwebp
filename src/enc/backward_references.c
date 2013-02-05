@@ -597,33 +597,23 @@ Error:
   return ok;
 }
 
-static int TraceBackwards(const uint32_t* const dist_array,
-                          int dist_array_size,
-                          uint32_t** const chosen_path,
-                          int* const chosen_path_size) {
-  int i;
-  // Count how many.
-  int count = 0;
-  for (i = dist_array_size - 1; i >= 0; ) {
-    int k = dist_array[i];
-    assert(k >= 1);
-    ++count;
-    i -= k;
+// We pack the path at the end of *dist_array and return
+// a pointer to this part of the array. Example:
+// dist_array = [1x2xx3x2] => packed [1x2x1232], chosen_path = [1232]
+static void TraceBackwards(uint32_t* const dist_array,
+                           int dist_array_size,
+                           uint32_t** const chosen_path,
+                           int* const chosen_path_size) {
+  uint32_t* path = dist_array + dist_array_size;
+  uint32_t* cur = dist_array + dist_array_size - 1;
+  while (cur >= dist_array) {
+    const int k = *cur;
+    --path;
+    *path = k;
+    cur -= k;
   }
-  // Allocate.
-  *chosen_path_size = count;
-  *chosen_path =
-      (uint32_t*)WebPSafeMalloc((uint64_t)count, sizeof(**chosen_path));
-  if (*chosen_path == NULL) return 0;
-
-  // Write in reverse order.
-  for (i = dist_array_size - 1; i >= 0; ) {
-    int k = dist_array[i];
-    assert(k >= 1);
-    (*chosen_path)[--count] = k;
-    i -= k;
-  }
-  return 1;
+  *chosen_path = path;
+  *chosen_path_size = dist_array + dist_array_size - path;
 }
 
 static int BackwardReferencesHashChainFollowChosenPath(
@@ -722,12 +712,7 @@ static int BackwardReferencesTraceBackwards(int xsize, int ysize,
       dist_array)) {
     goto Error;
   }
-  if (!TraceBackwards(dist_array, dist_array_size,
-                      &chosen_path, &chosen_path_size)) {
-    goto Error;
-  }
-  free(dist_array);   // no need to retain this memory any longer
-  dist_array = NULL;
+  TraceBackwards(dist_array, dist_array_size, &chosen_path, &chosen_path_size);
   if (!BackwardReferencesHashChainFollowChosenPath(
       xsize, ysize, argb, quality, cache_bits, chosen_path, chosen_path_size,
       refs)) {
@@ -735,7 +720,6 @@ static int BackwardReferencesTraceBackwards(int xsize, int ysize,
   }
   ok = 1;
  Error:
-  free(chosen_path);
   free(dist_array);
   return ok;
 }
