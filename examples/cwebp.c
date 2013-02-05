@@ -580,6 +580,7 @@ static void HelpLong(void) {
   printf("  -progress .............. report encoding progress\n");
   printf("\n");
   printf("Experimental Options:\n");
+  printf("  -jpeg_like ............. Roughly match expected JPEG size.\n");
   printf("  -af .................... auto-adjust filter strength.\n");
   printf("  -pre <int> ............. pre-processing filter\n");
   printf("\n");
@@ -719,6 +720,8 @@ int main(int argc, const char *argv[]) {
       config.filter_strength = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-af")) {
       config.autofilter = 1;
+    } else if (!strcmp(argv[c], "-jpeg_like")) {
+      config.emulate_jpeg_size = 1;
     } else if (!strcmp(argv[c], "-strong")) {
       config.filter_type = 1;
     } else if (!strcmp(argv[c], "-sharpness") && c < argc - 1) {
