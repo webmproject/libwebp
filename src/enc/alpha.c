@@ -79,10 +79,9 @@ static int EncodeLossless(const uint8_t* const data, int width, int height,
   WebPConfigInit(&config);
   config.lossless = 1;
   config.method = effort_level;  // impact is very small
-  // Set moderate default quality setting for alpha. Higher qualities (80 and
-  // above) could be very slow.
-  config.quality = 10.f + 15.f * effort_level;
-  if (config.quality > 100.f) config.quality = 100.f;
+  // Set a moderate default quality setting for alpha.
+  config.quality = 6.f * effort_level;
+  assert(config.quality >= 0 && config.quality <= 100.f);
 
   ok = VP8LBitWriterInit(&tmp_bw, (width * height) >> 3);
   ok = ok && (VP8LEncodeStream(&config, &picture, &tmp_bw) == VP8_ENC_OK);
