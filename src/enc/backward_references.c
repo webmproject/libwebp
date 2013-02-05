@@ -486,6 +486,7 @@ static int BackwardReferencesHashChainDistanceOnly(
   VP8LColorCache hashers;
   const double mul0 = (recursive_cost_model != 0) ? 1.0 : 0.68;
   const double mul1 = (recursive_cost_model != 0) ? 1.0 : 0.82;
+  const int min_distance_code = 2;  // TODO(vikasa): tune as function of quality
   int window_size = WINDOW_SIZE;
   int iter_pos = 1;
   int iter_limit = -1;
@@ -543,7 +544,7 @@ static int BackwardReferencesHashChainDistanceOnly(
         }
         // This if is for speedup only. It roughly doubles the speed, and
         // makes compression worse by .1 %.
-        if (len >= 128 && code < 2) {
+        if (len >= 128 && code <= min_distance_code) {
           // Long copy for short distances, let's skip the middle
           // lookups for better copies.
           // 1) insert the hashes.
