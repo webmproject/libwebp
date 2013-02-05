@@ -32,10 +32,10 @@
 
 #define IFS(fn)                                                     \
   do {                                                              \
-     if (SUCCEEDED(hr)) {                                           \
-        hr = (fn);                                                  \
-        if (FAILED(hr)) fprintf(stderr, #fn " failed %08x\n", hr);  \
-     }                                                              \
+    if (SUCCEEDED(hr)) {                                            \
+      hr = (fn);                                                    \
+      if (FAILED(hr)) fprintf(stderr, #fn " failed %08lx\n", hr);   \
+    }                                                               \
   } while (0)
 
 // modified version of DEFINE_GUID from guiddef.h.
@@ -57,10 +57,14 @@ typedef struct WICFormatImporter {
 static HRESULT OpenInputStream(const char* filename, IStream** ppStream) {
   HRESULT hr = S_OK;
   IFS(SHCreateStreamOnFileA(filename, STGM_READ, ppStream));
-  if (FAILED(hr))
-    fprintf(stderr, "Error opening input file %s (%08x)\n", filename, hr);
+  if (FAILED(hr)) {
+    fprintf(stderr, "Error opening input file %s (%08lx)\n", filename, hr);
+  }
   return hr;
 }
+
+// -----------------------------------------------------------------------------
+// Metadata processing
 
 // Stores the first non-zero sized color profile from 'pFrame' to 'iccp'.
 // Returns an HRESULT to indicate success or failure. The caller is responsible
@@ -129,9 +133,14 @@ static HRESULT ExtractMetadata(IWICImagingFactory* const pFactory,
   return hr;
 }
 
+// -----------------------------------------------------------------------------
+
 int ReadPictureWithWIC(const char* const filename,
                        WebPPicture* const pic, int keep_alpha,
                        Metadata* const metadata) {
+  // From Microsoft SDK 6.0a -- ks.h
+  // Define a local copy to avoid link errors under mingw.
+  WEBP_DEFINE_GUID(GUID_NULL_, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
   // From Microsoft SDK 7.0a -- wincodec.h
   // Create local copies for compatibility when building against earlier
   // versions of the SDK.
@@ -166,16 +175,17 @@ int ReadPictureWithWIC(const char* const filename,
   UINT frameCount = 0;
   UINT width = 0, height = 0;
   BYTE* rgb = NULL;
-  WICPixelFormatGUID srcPixelFormat = { 0 };
+  WICPixelFormatGUID srcPixelFormat = GUID_WICPixelFormatUndefined;
   const WICFormatImporter* importer = NULL;
-  GUID srcContainerFormat = { 0 };
+  GUID srcContainerFormat = GUID_NULL_;
   const GUID* alphaContainers[] = {
     &GUID_ContainerFormatBmp,
     &GUID_ContainerFormatPng,
-    &GUID_ContainerFormatTiff
+    &GUID_ContainerFormatTiff,
+    NULL
   };
   int has_alpha = 0;
-  int i, stride;
+  int stride;
 
   IFS(CoInitialize(NULL));
   IFS(CoCreateInstance(MAKE_REFGUID(CLSID_WICImagingFactory), NULL,
@@ -201,11 +211,9 @@ int ReadPictureWithWIC(const char* const filename,
   IFS(IWICBitmapDecoder_GetContainerFormat(pDecoder, &srcContainerFormat));
 
   if (keep_alpha) {
-    for (i = 0;
-         i < sizeof(alphaContainers) / sizeof(alphaContainers[0]);
-         ++i) {
-      if (IsEqualGUID(MAKE_REFGUID(srcContainerFormat),
-                      MAKE_REFGUID(*alphaContainers[i]))) {
+    const GUID** guid;
+    for (guid = alphaContainers; *guid != NULL; ++guid) {
+      if (IsEqualGUID(MAKE_REFGUID(srcContainerFormat), MAKE_REFGUID(**guid))) {
         has_alpha =
             IsEqualGUID(MAKE_REFGUID(srcPixelFormat),
                         MAKE_REFGUID(GUID_WICPixelFormat32bppRGBA_)) ||

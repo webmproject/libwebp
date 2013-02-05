@@ -70,10 +70,10 @@ typedef enum {
 
 #define IFS(fn)                                                     \
   do {                                                              \
-     if (SUCCEEDED(hr)) {                                           \
-        hr = (fn);                                                  \
-        if (FAILED(hr)) fprintf(stderr, #fn " failed %08x\n", hr);  \
-     }                                                              \
+    if (SUCCEEDED(hr)) {                                            \
+      hr = (fn);                                                    \
+      if (FAILED(hr)) fprintf(stderr, #fn " failed %08lx\n", hr);   \
+    }                                                               \
   } while (0)
 
 #ifdef __cplusplus
@@ -86,8 +86,10 @@ static HRESULT CreateOutputStream(const char* out_file_name,
                                   IStream** ppStream) {
   HRESULT hr = S_OK;
   IFS(SHCreateStreamOnFileA(out_file_name, STGM_WRITE | STGM_CREATE, ppStream));
-  if (FAILED(hr))
-    fprintf(stderr, "Error opening output file %s (%08x)\n", out_file_name, hr);
+  if (FAILED(hr)) {
+    fprintf(stderr, "Error opening output file %s (%08lx)\n",
+            out_file_name, hr);
+  }
   return hr;
 }
 
