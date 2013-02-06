@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAVH//qnI\u003d",
+        "filename": "examples/wicdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-02-06T10:40:43Z",
+      "side": 1,
+      "message": "don\u0027t you want to put it below (like, at line 157) with the rest?",
+      "revId": "d7e9ffbc299b53cc89c976755d84c1d34c74a59b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
