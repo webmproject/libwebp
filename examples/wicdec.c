@@ -40,7 +40,8 @@
 
 // modified version of DEFINE_GUID from guiddef.h.
 #define WEBP_DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
-  const GUID name = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
+  static const GUID name = \
+      { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
 
 #ifdef __cplusplus
 #define MAKE_REFGUID(x) (x)
@@ -53,6 +54,22 @@ typedef struct WICFormatImporter {
   int bytes_per_pixel;
   int (*import)(WebPPicture* const, const uint8_t* const, int);
 } WICFormatImporter;
+
+// From Microsoft SDK 7.0a -- wincodec.h
+// Create local copies for compatibility when building against earlier
+// versions of the SDK.
+WEBP_DEFINE_GUID(GUID_WICPixelFormat24bppBGR_,
+                 0x6fddc324, 0x4e03, 0x4bfe,
+                 0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0c);
+WEBP_DEFINE_GUID(GUID_WICPixelFormat24bppRGB_,
+                 0x6fddc324, 0x4e03, 0x4bfe,
+                 0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0d);
+WEBP_DEFINE_GUID(GUID_WICPixelFormat32bppBGRA_,
+                 0x6fddc324, 0x4e03, 0x4bfe,
+                 0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0f);
+WEBP_DEFINE_GUID(GUID_WICPixelFormat32bppRGBA_,
+                 0xf5c7ad2d, 0x6a8d, 0x43dd,
+                 0xa7, 0xa8, 0xa2, 0x99, 0x35, 0x26, 0x1a, 0xe9);
 
 static HRESULT OpenInputStream(const char* filename, IStream** ppStream) {
   HRESULT hr = S_OK;
@@ -135,27 +152,58 @@ static HRESULT ExtractMetadata(IWICImagingFactory* const pFactory,
 
 // -----------------------------------------------------------------------------
 
+static int HasPalette(GUID pixel_format) {
+  return (IsEqualGUID(MAKE_REFGUID(pixel_format),
+                      MAKE_REFGUID(GUID_WICPixelFormat1bppIndexed)) ||
+          IsEqualGUID(MAKE_REFGUID(pixel_format),
+                      MAKE_REFGUID(GUID_WICPixelFormat2bppIndexed)) ||
+          IsEqualGUID(MAKE_REFGUID(pixel_format),
+                      MAKE_REFGUID(GUID_WICPixelFormat4bppIndexed)) ||
+          IsEqualGUID(MAKE_REFGUID(pixel_format),
+                      MAKE_REFGUID(GUID_WICPixelFormat8bppIndexed)));
+}
+
+static int HasAlpha(IWICImagingFactory* const pFactory,
+                    IWICBitmapDecoder* const pDecoder,
+                    IWICBitmapFrameDecode* const pFrame,
+                    GUID srcPixelFormat) {
+  int has_alpha;
+  if (HasPalette(srcPixelFormat)) {
+    IWICPalette* pFramePalette = NULL;
+    IWICPalette* pGlobalPalette = NULL;
+    BOOL frame_palette_has_alpha = FALSE;
+    BOOL global_palette_has_alpha = FALSE;
+
+    // A palette may exist at the frame or container level,
+    // check IWICPalette::HasAlpha() for both if present.
+    if (SUCCEEDED(IWICImagingFactory_CreatePalette(pFactory, &pFramePalette)) &&
+        SUCCEEDED(IWICBitmapFrameDecode_CopyPalette(pFrame, pFramePalette))) {
+      IWICPalette_HasAlpha(pFramePalette, &frame_palette_has_alpha);
+    }
+    if (SUCCEEDED(IWICImagingFactory_CreatePalette(pFactory,
+                                                   &pGlobalPalette)) &&
+        SUCCEEDED(IWICBitmapDecoder_CopyPalette(pDecoder, pGlobalPalette))) {
+      IWICPalette_HasAlpha(pGlobalPalette, &global_palette_has_alpha);
+    }
+    has_alpha = frame_palette_has_alpha || global_palette_has_alpha;
+
+    if (pFramePalette != NULL) IUnknown_Release(pFramePalette);
+    if (pGlobalPalette != NULL) IUnknown_Release(pGlobalPalette);
+  } else {
+    has_alpha = IsEqualGUID(MAKE_REFGUID(srcPixelFormat),
+                            MAKE_REFGUID(GUID_WICPixelFormat32bppRGBA_)) ||
+                IsEqualGUID(MAKE_REFGUID(srcPixelFormat),
+                            MAKE_REFGUID(GUID_WICPixelFormat32bppBGRA_));
+  }
+  return has_alpha;
+}
+
 int ReadPictureWithWIC(const char* const filename,
                        WebPPicture* const pic, int keep_alpha,
                        Metadata* const metadata) {
   // From Microsoft SDK 6.0a -- ks.h
   // Define a local copy to avoid link errors under mingw.
   WEBP_DEFINE_GUID(GUID_NULL_, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-  // From Microsoft SDK 7.0a -- wincodec.h
-  // Create local copies for compatibility when building against earlier
-  // versions of the SDK.
-  WEBP_DEFINE_GUID(GUID_WICPixelFormat24bppBGR_,
-                   0x6fddc324, 0x4e03, 0x4bfe,
-                   0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0c);
-  WEBP_DEFINE_GUID(GUID_WICPixelFormat24bppRGB_,
-                   0x6fddc324, 0x4e03, 0x4bfe,
-                   0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0d);
-  WEBP_DEFINE_GUID(GUID_WICPixelFormat32bppBGRA_,
-                   0x6fddc324, 0x4e03, 0x4bfe,
-                   0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0f);
-  WEBP_DEFINE_GUID(GUID_WICPixelFormat32bppRGBA_,
-                   0xf5c7ad2d, 0x6a8d, 0x43dd,
-                   0xa7, 0xa8, 0xa2, 0x99, 0x35, 0x26, 0x1a, 0xe9);
   const WICFormatImporter alphaFormatImporters[] = {
     { &GUID_WICPixelFormat32bppBGRA_, 4, WebPPictureImportBGRA },
     { &GUID_WICPixelFormat32bppRGBA_, 4, WebPPictureImportRGBA },
@@ -214,11 +262,7 @@ int ReadPictureWithWIC(const char* const filename,
     const GUID** guid;
     for (guid = alphaContainers; *guid != NULL; ++guid) {
       if (IsEqualGUID(MAKE_REFGUID(srcContainerFormat), MAKE_REFGUID(**guid))) {
-        has_alpha =
-            IsEqualGUID(MAKE_REFGUID(srcPixelFormat),
-                        MAKE_REFGUID(GUID_WICPixelFormat32bppRGBA_)) ||
-            IsEqualGUID(MAKE_REFGUID(srcPixelFormat),
-                        MAKE_REFGUID(GUID_WICPixelFormat32bppBGRA_));
+        has_alpha = HasAlpha(pFactory, pDecoder, pFrame, srcPixelFormat);
         break;
       }
     }
