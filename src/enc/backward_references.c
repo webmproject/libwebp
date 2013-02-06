@@ -614,7 +614,7 @@ static void TraceBackwards(uint32_t* const dist_array,
     cur -= k;
   }
   *chosen_path = path;
-  *chosen_path_size = dist_array + dist_array_size - path;
+  *chosen_path_size = (int)(dist_array + dist_array_size - path);
 }
 
 static int BackwardReferencesHashChainFollowChosenPath(
