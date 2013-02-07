@@ -34,6 +34,24 @@
       "revId": "d7e9ffbc299b53cc89c976755d84c1d34c74a59b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//pjU\u003d",
+        "filename": "examples/wicdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-02-07T07:20:45Z",
+      "side": 1,
+      "message": "Added a comment as to the origin. the rest of the GUID\u0027s are moving in the next cl anyway.",
+      "parentUuid": "AAAAVH//pjw\u003d",
+      "revId": "d7e9ffbc299b53cc89c976755d84c1d34c74a59b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
