@@ -16,6 +16,24 @@
       "revId": "d7e9ffbc299b53cc89c976755d84c1d34c74a59b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//pjw\u003d",
+        "filename": "examples/wicdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-02-07T07:04:24Z",
+      "side": 1,
+      "message": "this is a more generic GUID and is separate from wincodec.h; the actual definition is in a driver include header, but I guess the compatibility part is true...",
+      "parentUuid": "AAAAVH//qnI\u003d",
+      "revId": "d7e9ffbc299b53cc89c976755d84c1d34c74a59b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
