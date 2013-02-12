@@ -16,6 +16,58 @@
       "revId": "b90d6a74b4506e3307e66c371a30032b6f61587e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//nWQ\u003d",
+        "filename": "emscripten/vwebp-sdl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-02-12T04:52:33Z",
+      "side": 1,
+      "message": "sudo port install libsdl\ngcc -o vwebp-sdl vwebp-sdl.c ../examples/example_util.c -O3 -lwebp -lSDL -lm\n\n\nbut i get the following compile error:\nUndefined symbols for architecture x86_64:\n  \"_main\", referenced from:\n      start in crt1.10.6.o\n     (maybe you meant: _SDL_main)\n\n\nnot sure why yet.",
+      "parentUuid": "AAAAVH//nXk\u003d",
+      "revId": "b90d6a74b4506e3307e66c371a30032b6f61587e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//nWI\u003d",
+        "filename": "emscripten/vwebp-sdl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-02-12T04:52:33Z",
+      "side": 1,
+      "message": "note that SDL_main uses \"char* argv[]\", without the \u0027const\u0027.",
+      "revId": "b90d6a74b4506e3307e66c371a30032b6f61587e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//nWM\u003d",
+        "filename": "emscripten/vwebp-sdl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-02-12T04:52:33Z",
+      "side": 1,
+      "message": "\"../examples/test.webp\" instead?",
+      "revId": "b90d6a74b4506e3307e66c371a30032b6f61587e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
