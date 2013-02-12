@@ -157,7 +157,6 @@ typedef int64_t score_t;     // type used for scores, rate, distortion
 static WEBP_INLINE int QUANTDIV(int n, int iQ, int B) {
   return (n * iQ + B) >> QFIX;
 }
-extern const uint8_t VP8Zigzag[16];
 
 // size of histogram used by CollectHistogram.
 #define MAX_COEFF_THRESH   31
