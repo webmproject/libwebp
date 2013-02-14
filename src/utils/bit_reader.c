@@ -15,7 +15,11 @@
 extern "C" {
 #endif
 
-#define MK(X) (((bit_t)(X) << (BITS)) | (MASK))
+#ifndef USE_RIGHT_JUSTIFY
+#define MK(X) (((range_t)(X) << (BITS)) | (MASK))
+#else
+#define MK(X) ((range_t)(X))
+#endif
 
 //------------------------------------------------------------------------------
 // VP8BitReader
@@ -29,7 +33,7 @@ void VP8InitBitReader(VP8BitReader* const br,
   br->buf_     = start;
   br->buf_end_ = end;
   br->value_   = 0;
-  br->missing_ = 8;   // to load the very first 8bits
+  br->bits_    = -8;   // to load the very first 8bits
   br->eof_     = 0;
 }
 
@@ -46,7 +50,7 @@ const uint8_t kVP8Log2Range[128] = {
 };
 
 // range = (range << kVP8Log2Range[range]) + trailing 1's
-const bit_t kVP8NewRange[128] = {
+const range_t kVP8NewRange[128] = {
   MK(127), MK(127), MK(191), MK(127), MK(159), MK(191), MK(223), MK(127),
   MK(143), MK(159), MK(175), MK(191), MK(207), MK(223), MK(239), MK(127),
   MK(135), MK(143), MK(151), MK(159), MK(167), MK(175), MK(183), MK(191),
@@ -71,9 +75,19 @@ void VP8LoadFinalBytes(VP8BitReader* const br) {
   assert(br != NULL && br->buf_ != NULL);
   // Only read 8bits at a time
   if (br->buf_ < br->buf_end_) {
-    br->value_ |= (bit_t)(*br->buf_++) << ((BITS) - 8 + br->missing_);
-    br->missing_ -= 8;
-  } else {
+#ifndef USE_RIGHT_JUSTIFY
+    br->value_ |= (bit_t)(*br->buf_++) << ((BITS) - 8 - br->bits_);
+#else
+    br->value_ = (bit_t)(*br->buf_++) | (br->value_ << 8);
+#endif
+    br->bits_ += 8;
+  } else if (!br->eof_) {
+#ifdef USE_RIGHT_JUSTIFY
+    // These are not strictly needed, but it makes the behaviour
+    // consistent for both USE_RIGHT_JUSTIFY and !USE_RIGHT_JUSTIFY.
+    br->value_ <<= 8;
+    br->bits_ += 8;
+#endif
     br->eof_ = 1;
   }
 }
