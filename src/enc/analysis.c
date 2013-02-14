@@ -318,7 +318,8 @@ static int MBAnalyzeBestUVMode(VP8EncIterator* const it) {
 }
 
 static void MBAnalyze(VP8EncIterator* const it,
-                      int alphas[MAX_ALPHA + 1], int* const uv_alpha) {
+                      int alphas[MAX_ALPHA + 1],
+                      int* const alpha, int* const uv_alpha) {
   const VP8Encoder* const enc = it->enc_;
   int best_alpha, best_uv_alpha;
 
@@ -340,8 +341,11 @@ static void MBAnalyze(VP8EncIterator* const it,
   best_alpha = (3 * best_alpha + best_uv_alpha + 2) >> 2;
   best_alpha = FinalAlphaValue(best_alpha);
   alphas[best_alpha]++;
-  *uv_alpha += best_uv_alpha;
   it->mb_->alpha_ = best_alpha;   // for later remapping.
+
+  // Accumulate for later complexity analysis.
+  *alpha += best_alpha;   // mixed susceptibility (not just luma)
+  *uv_alpha += best_uv_alpha;
 }
 
 static void DefaultMBInfo(VP8MBInfo* const mb) {
@@ -362,35 +366,42 @@ static void DefaultMBInfo(VP8MBInfo* const mb) {
 // and decide intra4/intra16, but that's usually almost always a bad choice at
 // this stage.
 
+static void ResetAllMBInfo(VP8Encoder* const enc) {
+  int n;
+  for (n = 0; n < enc->mb_w_ * enc->mb_h_; ++n) {
+    DefaultMBInfo(&enc->mb_info_[n]);
+  }
+  // Default susceptibilities.
+  enc->dqm_[0].alpha_ = 0;
+  enc->dqm_[0].beta_ = 0;
+  // Note: we can't compute this alpha_ / uv_alpha_.
+  WebPReportProgress(enc->pic_, enc->percent_ + 20, &enc->percent_);
+}
+
 int VP8EncAnalyze(VP8Encoder* const enc) {
   int ok = 1;
   const int do_segments =
+      enc->config_->emulate_jpeg_size ||   // We need the complexity evaluation.
       (enc->segment_hdr_.num_segments_ > 1) ||
       (enc->method_ <= 2);  // for methods 0,1,2, we need preds_[] to be filled.
+  enc->alpha_ = 0;
+  enc->uv_alpha_ = 0;
   if (do_segments) {
     int alphas[MAX_ALPHA + 1] = { 0 };
     VP8EncIterator it;
 
     VP8IteratorInit(enc, &it);
-    enc->uv_alpha_ = 0;
     do {
       VP8IteratorImport(&it);
-      MBAnalyze(&it, alphas, &enc->uv_alpha_);
+      MBAnalyze(&it, alphas, &enc->alpha_, &enc->uv_alpha_);
       ok = VP8IteratorProgress(&it, 20);
       // Let's pretend we have perfect lossless reconstruction.
     } while (ok && VP8IteratorNext(&it, it.yuv_in_));
+    enc->alpha_ /= enc->mb_w_ * enc->mb_h_;
     enc->uv_alpha_ /= enc->mb_w_ * enc->mb_h_;
     if (ok) AssignSegments(enc, alphas);
   } else {   // Use only one default segment.
-    int n;
-    for (n = 0; n < enc->mb_w_ * enc->mb_h_; ++n) {
-      DefaultMBInfo(&enc->mb_info_[n]);
-    }
-    // Default susceptibilities.
-    enc->dqm_[0].alpha_ = 0;
-    enc->dqm_[0].beta_ = 0;
-    enc->uv_alpha_ = 0;   // we can't compute this one.
-    WebPReportProgress(enc->pic_, enc->percent_ + 20, &enc->percent_);
+    ResetAllMBInfo(enc);
   }
   return ok;
 }

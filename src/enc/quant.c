@@ -224,9 +224,35 @@ static void SetupFilterStrength(VP8Encoder* const enc) {
 // We want to emulate jpeg-like behaviour where the expected "good" quality
 // is around q=75. Internally, our "good" middle is around c=50. So we
 // map accordingly using linear piece-wise function
-static double QualityToCompression(double q) {
-  const double c = q / 100.;
-  return (c < 0.75) ? c * (2. / 3.) : 2. * c - 1.;
+static double QualityToCompression(double c) {
+  const double linear_c = (c < 0.75) ? c * (2. / 3.) : 2. * c - 1.;
+  // The file size roughly scales as pow(quantizer, 3.). Actually, the
+  // exponent is somewhere between 2.8 and 3.2, but we're mostly interested
+  // in the mid-quant range. So we scale the compressibility inversely to
+  // this power-law: quant ~= compression ^ 1/3. This law holds well for
+  // low quant. Finer modelling for high-quant would make use of kAcTable[]
+  // more explicitly.
+  const double v = pow(linear_c, 1 / 3.);
+  return v;
+}
+
+static double QualityToJPEGCompression(double c, double alpha) {
+  // We map the complexity 'alpha' and quality setting 'c' to a compression
+  // exponent empirically matched to the compression curve of libjpeg6b.
+  // On average, the WebP output size will be roughly similar to that of a
+  // JPEG file compressed with same quality factor.
+  const double amin = 0.30;
+  const double amax = 0.85;
+  const double exp_min = 0.4;
+  const double exp_max = 0.9;
+  const double slope = (exp_min - exp_max) / (amax - amin);
+  // Linearly interpolate 'expn' from exp_min to exp_max
+  // in the [amin, amax] range.
+  const double expn = (alpha > amax) ? exp_min
+                    : (alpha < amin) ? exp_max
+                    : exp_max + slope * (alpha - amin);
+  const double v = pow(c, expn);
+  return v;
 }
 
 static int SegmentsAreEquivalent(const VP8SegmentInfo* const S1,
@@ -274,18 +300,14 @@ void VP8SetSegmentParams(VP8Encoder* const enc, float quality) {
   int dq_uv_ac, dq_uv_dc;
   const int num_segments = enc->segment_hdr_.num_segments_;
   const double amp = SNS_TO_DQ * enc->config_->sns_strength / 100. / 128.;
-  const double c_base = QualityToCompression(quality);
+  const double Q = quality / 100.;
+  const double c_base = enc->config_->emulate_jpeg_size ?
+      QualityToJPEGCompression(Q, enc->alpha_ / 255.) :
+      QualityToCompression(Q);
   for (i = 0; i < num_segments; ++i) {
-    // The file size roughly scales as pow(quantizer, 3.). Actually, the
-    // exponent is somewhere between 2.8 and 3.2, but we're mostly interested
-    // in the mid-quant range. So we scale the compressibility inversely to
-    // this power-law: quant ~= compression ^ 1/3. This law holds well for
-    // low quant. Finer modelling for high-quant would make use of kAcTable[]
-    // more explicitely.
-    // Additionally, we modulate the base exponent 1/3 to accommodate for the
-    // quantization susceptibility and allow denser segments to be quantized
-    // more.
-    const double expn = (1. - amp * enc->dqm_[i].alpha_) / 3.;
+    // We modulate the base coefficient to accommodate for the quantization
+    // susceptibility and allow denser segments to be quantized more.
+    const double expn = 1. - amp * enc->dqm_[i].alpha_;
     const double c = pow(c_base, expn);
     const int q = (int)(127. * (1. - c));
     assert(expn > 0.);

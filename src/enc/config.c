@@ -46,6 +46,7 @@ int WebPConfigInitInternal(WebPConfig* config,
   config->alpha_quality = 100;
   config->lossless = 0;
   config->image_hint = WEBP_HINT_DEFAULT;
+  config->emulate_jpeg_size = 0;
 
   // TODO(skal): tune.
   switch (preset) {
@@ -121,6 +122,8 @@ int WebPValidateConfig(const WebPConfig* config) {
   if (config->lossless < 0 || config->lossless > 1)
     return 0;
   if (config->image_hint >= WEBP_HINT_LAST)
+    return 0;
+  if (config->emulate_jpeg_size < 0 || config->emulate_jpeg_size > 1)
     return 0;
   return 1;
 }
