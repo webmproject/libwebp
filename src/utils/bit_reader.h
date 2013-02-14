@@ -56,20 +56,29 @@ extern "C" {
 // -> we're back to height active 'value_' bits (marked 'v') and BITS cached
 // bits (marked 'B')
 //
-// The right-justify strategy tends to use less shifts, so let's use it:
-
-#define USE_RIGHT_JUSTIFY
+// The right-justify strategy tends to use less shifts and is often faster.
 
 //------------------------------------------------------------------------------
 // BITS can be either 32, 24, 16 or 8.
 // Pick values that fit natural register size.
 
+#if !defined(WEBP_REFERENCE_IMPLEMENTATION)
+
+#define USE_RIGHT_JUSTIFY
+
 #if defined(__i386__) || defined(_M_IX86)      // x86 32bit
 #define BITS 16
 #elif defined(__arm__) || defined(_M_ARM)     // ARM
-#define BITS 8
+#define BITS 24
 #else                      // reasonable default
-#define BITS 32
+#define BITS 24
+#endif
+
+#else     // reference choices
+
+#define USE_RIGHT_JUSTIFY
+#define BITS 8
+
 #endif
 
 //------------------------------------------------------------------------------

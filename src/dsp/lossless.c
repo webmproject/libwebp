@@ -1079,20 +1079,27 @@ static void CopyOrSwap(const uint32_t* src, int num_pixels, uint8_t* dst,
     const uint32_t* const src_end = src + num_pixels;
     while (src < src_end) {
       uint32_t argb = *src++;
+
+#if !defined(WEBP_REFERENCE_IMPLEMENTATION)
 #if !defined(__BIG_ENDIAN__) && (defined(__i386__) || defined(__x86_64__))
       __asm__ volatile("bswap %0" : "=r"(argb) : "0"(argb));
       *(uint32_t*)dst = argb;
-      dst += sizeof(argb);
 #elif !defined(__BIG_ENDIAN__) && defined(_MSC_VER)
       argb = _byteswap_ulong(argb);
       *(uint32_t*)dst = argb;
-      dst += sizeof(argb);
 #else
-      *dst++ = (argb >> 24) & 0xff;
-      *dst++ = (argb >> 16) & 0xff;
-      *dst++ = (argb >>  8) & 0xff;
-      *dst++ = (argb >>  0) & 0xff;
+      dst[0] = (argb >> 24) & 0xff;
+      dst[1] = (argb >> 16) & 0xff;
+      dst[2] = (argb >>  8) & 0xff;
+      dst[3] = (argb >>  0) & 0xff;
 #endif
+#else   // WEBP_REFERENCE_IMPLEMENTATION
+      dst[0] = (argb >> 24) & 0xff;
+      dst[1] = (argb >> 16) & 0xff;
+      dst[2] = (argb >>  8) & 0xff;
+      dst[3] = (argb >>  0) & 0xff;
+#endif
+      dst += sizeof(argb);
     }
   } else {
     memcpy(dst, src, num_pixels * sizeof(*src));
