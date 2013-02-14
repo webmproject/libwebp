@@ -13,7 +13,7 @@
 #include "./vp8i.h"
 #include "./vp8li.h"
 #include "../utils/filters.h"
-#include "../utils/quant_levels.h"
+#include "../utils/quant_levels_dec.h"
 #include "../webp/format_constants.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)

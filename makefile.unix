@@ -2,7 +2,7 @@
 # system, for simple local building of the libraries and tools.
 # It will not install the libraries system-wide, but just create the 'cwebp'
 # and 'dwebp' tools in the examples/ directory, along with the static
-# libraries 'src/libwebp.a', 'src/mux/libwebpmux.a' and
+# libraries 'src/libwebp.a', 'src/libwebpdecoder.a', 'src/mux/libwebpmux.a' and
 # 'src/demux/libwebpdemux.a'.
 #
 # To build the library and examples, use:
@@ -78,7 +78,7 @@ CFLAGS = -O3 -DNDEBUG $(EXTRA_FLAGS)
 INSTALL = install
 GROFF = /usr/bin/groff
 COL = /usr/bin/col
-LDFLAGS = $(EXTRA_LIBS) -lm
+LDFLAGS = $(EXTRA_LIBS) $(EXTRA_FLAGS) -lm
 
 DEC_OBJS = \
     src/dec/alpha.o \
@@ -96,19 +96,21 @@ DEC_OBJS = \
 DEMUX_OBJS = \
     src/demux/demux.o \
 
-DSP_OBJS = \
+DSP_DEC_OBJS = \
     src/dsp/cpu.o \
     src/dsp/dec.o \
     src/dsp/dec_neon.o \
     src/dsp/dec_sse2.o \
-    src/dsp/enc.o \
-    src/dsp/enc_neon.o \
-    src/dsp/enc_sse2.o \
     src/dsp/lossless.o \
     src/dsp/upsampling.o \
     src/dsp/upsampling_neon.o \
     src/dsp/upsampling_sse2.o \
     src/dsp/yuv.o \
+
+DSP_ENC_OBJS = \
+    src/dsp/enc.o \
+    src/dsp/enc_neon.o \
+    src/dsp/enc_sse2.o \
 
 ENC_OBJS = \
     src/enc/alpha.o \
@@ -143,19 +145,24 @@ MUX_OBJS = \
     src/mux/muxinternal.o \
     src/mux/muxread.o \
 
-UTILS_OBJS = \
+UTILS_DEC_OBJS = \
     src/utils/bit_reader.o \
-    src/utils/bit_writer.o \
     src/utils/color_cache.o \
     src/utils/filters.o \
     src/utils/huffman.o \
-    src/utils/huffman_encode.o \
-    src/utils/quant_levels.o \
+    src/utils/quant_levels_dec.o \
     src/utils/rescaler.o \
     src/utils/thread.o \
     src/utils/utils.o \
 
-LIBWEBP_OBJS = $(DEC_OBJS) $(DSP_OBJS) $(ENC_OBJS) $(UTILS_OBJS)
+UTILS_ENC_OBJS = \
+    src/utils/bit_writer.o \
+    src/utils/huffman_encode.o \
+    src/utils/quant_levels.o \
+
+LIBWEBPDECODER_OBJS = $(DEC_OBJS) $(DSP_DEC_OBJS) $(UTILS_DEC_OBJS)
+LIBWEBP_OBJS = $(LIBWEBPDECODER_OBJS) $(ENC_OBJS) $(DSP_ENC_OBJS) \
+               $(UTILS_ENC_OBJS)
 LIBWEBPMUX_OBJS = $(MUX_OBJS)
 LIBWEBPDEMUX_OBJS = $(DEMUX_OBJS)
 
@@ -181,6 +188,7 @@ HDRS = \
     src/utils/huffman.h \
     src/utils/huffman_encode.h \
     src/utils/quant_levels.h \
+    src/utils/quant_levels_dec.h \
     src/utils/rescaler.h \
     src/utils/thread.h \
     src/webp/demux.h \
@@ -189,7 +197,7 @@ HDRS = \
     src/webp/mux_types.h \
     $(HDRS_INSTALLED) \
 
-OUT_LIBS = examples/libexample_util.a src/libwebp.a
+OUT_LIBS = examples/libexample_util.a src/libwebpdecoder.a src/libwebp.a
 OUT_EXAMPLES = examples/cwebp examples/dwebp
 
 OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES)
@@ -206,6 +214,7 @@ $(EX_FORMAT_DEC_OBJS): %.o: %.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 examples/libexample_util.a: $(EX_UTIL_OBJS)
+src/libwebpdecoder.a: $(LIBWEBPDECODER_OBJS)
 src/libwebp.a: $(LIBWEBP_OBJS)
 src/mux/libwebpmux.a: $(LIBWEBPMUX_OBJS)
 src/demux/libwebpdemux.a: $(LIBWEBPDEMUX_OBJS)
@@ -223,14 +232,15 @@ examples/webpmux: examples/webpmux.o
 
 examples/cwebp: src/libwebp.a
 examples/cwebp: EXTRA_LIBS += $(CWEBP_LIBS)
-examples/dwebp: examples/libexample_util.a src/libwebp.a
+examples/dwebp: examples/libexample_util.a src/libwebpdecoder.a
 examples/dwebp: EXTRA_LIBS += $(DWEBP_LIBS)
 examples/gif2webp: examples/libexample_util.a src/mux/libwebpmux.a src/libwebp.a
 examples/gif2webp: EXTRA_LIBS += $(GIF_LIBS)
 examples/vwebp: examples/libexample_util.a src/demux/libwebpdemux.a
 examples/vwebp: src/libwebp.a
 examples/vwebp: EXTRA_LIBS += $(GL_LIBS)
-examples/webpmux: examples/libexample_util.a src/mux/libwebpmux.a src/libwebp.a
+examples/webpmux: examples/libexample_util.a src/mux/libwebpmux.a
+examples/webpmux: src/libwebpdecoder.a
 
 $(OUT_EXAMPLES) examples/gif2webp examples/vwebp examples/webpmux:
 	$(CC) -o $@ $^ $(LDFLAGS)
@@ -271,7 +281,8 @@ superclean: clean
 	$(RM) Makefile */Makefile */*/Makefile
 	$(RM) Makefile.in */Makefile.in */*/Makefile.in
 	$(RM) config.log autom4te.cache libtool config.h stamp-h1
-	$(RM) aclocal.m4 compile config.guess config.h.in config.sub config.status
+	$(RM) aclocal.m4 compile
+	$(RM) config.guess config.h.in config.sub config.status
 	$(RM) configure depcomp install-sh ltmain.sh missing src/libwebp.pc
 	$(RM) m4/*
 

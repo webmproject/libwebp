@@ -213,6 +213,7 @@ UTILS_OBJS = \
     $(DIROBJ)\utils\huffman.obj \
     $(DIROBJ)\utils\huffman_encode.obj \
     $(DIROBJ)\utils\quant_levels.obj \
+    $(DIROBJ)\utils\quant_levels_dec.obj \
     $(DIROBJ)\utils\rescaler.obj \
     $(DIROBJ)\utils\thread.obj \
     $(DIROBJ)\utils\utils.obj \

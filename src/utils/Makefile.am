@@ -14,8 +14,8 @@ COMMON_SOURCES += filters.c
 COMMON_SOURCES += filters.h
 COMMON_SOURCES += huffman.c
 COMMON_SOURCES += huffman.h
-COMMON_SOURCES += quant_levels.c
-COMMON_SOURCES += quant_levels.h
+COMMON_SOURCES += quant_levels_dec.c
+COMMON_SOURCES += quant_levels_dec.h
 COMMON_SOURCES += rescaler.c
 COMMON_SOURCES += rescaler.h
 COMMON_SOURCES += thread.c
@@ -28,6 +28,8 @@ ENC_SOURCES += bit_writer.c
 ENC_SOURCES += bit_writer.h
 ENC_SOURCES += huffman_encode.c
 ENC_SOURCES += huffman_encode.h
+ENC_SOURCES += quant_levels.c
+ENC_SOURCES += quant_levels.h
 
 
 libwebputils_la_SOURCES = $(COMMON_SOURCES) $(ENC_SOURCES)
