@@ -151,7 +151,8 @@ options:
   -sns <int> ............. Spatial Noise Shaping (0:off, 100:max)
   -f <int> ............... filter strength (0=off..100)
   -sharpness <int> ....... filter sharpness (0:most .. 7:least sharp)
-  -strong ................ use strong filter instead of simple.
+  -strong ................ use strong filter instead of simple (default).
+  -nostrong .............. use simple filter instead of strong.
   -partition_limit <int> . limit quality to fit the 512k limit on
                            the first partition (0=no degradation ... 100=full)
   -pass <int> ............ analysis pass number (1..10)
@@ -211,8 +212,8 @@ Namely:
      in-loop processing. The higher the value, the smoother the
      highly-compressed area will look. This is particularly useful when aiming
      at very small files. Typical values are around 20-30. Note that using the
-     option -strong will change the type of filtering. Use "-f 0" to turn
-     filtering off.
+     option -strong/-nostrong will change the type of filtering. Use "-f 0" to
+     turn filtering off.
   * 'm' controls the trade-off between encoding speed and quality. Default is 4.
      You can try -m 5 or -m 6 to explore more (time-consuming) encoding
      possibilities. A lower value will result in faster encoding at the expense

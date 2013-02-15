@@ -537,7 +537,9 @@ static void HelpLong(void) {
   printf("  -f <int> ............... filter strength (0=off..100)\n");
   printf("  -sharpness <int> ....... "
          "filter sharpness (0:most .. 7:least sharp)\n");
-  printf("  -strong ................ use strong filter instead of simple.\n");
+  printf("  -strong ................ use strong filter instead "
+                                     "of simple (default).\n");
+  printf("  -nostrong .............. use simple filter instead of strong.\n");
   printf("  -partition_limit <int> . limit quality to fit the 512k limit on\n");
   printf("                           "
          "the first partition (0=no degradation ... 100=full)\n");
@@ -724,6 +726,8 @@ int main(int argc, const char *argv[]) {
       config.emulate_jpeg_size = 1;
     } else if (!strcmp(argv[c], "-strong")) {
       config.filter_type = 1;
+    } else if (!strcmp(argv[c], "-nostrong")) {
+      config.filter_type = 0;
     } else if (!strcmp(argv[c], "-sharpness") && c < argc - 1) {
       config.filter_sharpness = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-pass") && c < argc - 1) {

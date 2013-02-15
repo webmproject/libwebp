@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "February 6, 2013"
+.TH CWEBP 1 "February 15, 2013"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -94,8 +94,12 @@ Specify the sharpness of the filtering (if used).
 Range is 0 (sharpest) to 7 (least sharp). Default is 0.
 .TP
 .B \-strong
-Use a stronger filtering than the default one (if filtering is being
-used thanks to the \fB\-f\fP option). Strong filtering is off by default.
+Use strong filtering (if filtering is being used thanks to the
+\fB\-f\fP option). Strong filtering is on by default.
+.TP
+.B \-nostrong
+Disable strong filtering (if filtering is being used thanks to the
+\fB\-f\fP option) and use simple filtering instead.
 .TP
 .BI \-segments " int
 Change the number of partitions to use during the segmentation of the
@@ -224,7 +228,7 @@ cwebp \-q 50 -lossless picture.png \-o picture_lossless.webp
 .br
 cwebp \-q 70 picture_with_alpha.png \-o picture_with_alpha.webp
 .br
-cwebp \-sns 70 \-f 50 \-strong \-af \-size 60000 picture.png \-o picture.webp
+cwebp \-sns 70 \-f 50 \-size 60000 picture.png \-o picture.webp
 
 .SH AUTHORS
 \fBcwebp\fP was written by the WebP team.
