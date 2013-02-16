@@ -82,10 +82,9 @@ typedef enum {
 #define MAKE_REFGUID(x) &(x)
 #endif
 
-static HRESULT CreateOutputStream(const char* out_file_name,
-                                  IStream** ppStream) {
+static HRESULT CreateOutputStream(const char* out_file_name, IStream** stream) {
   HRESULT hr = S_OK;
-  IFS(SHCreateStreamOnFileA(out_file_name, STGM_WRITE | STGM_CREATE, ppStream));
+  IFS(SHCreateStreamOnFileA(out_file_name, STGM_WRITE | STGM_CREATE, stream));
   if (FAILED(hr)) {
     fprintf(stderr, "Error opening output file %s (%08lx)\n",
             out_file_name, hr);
@@ -97,41 +96,42 @@ static HRESULT WriteUsingWIC(const char* out_file_name, REFGUID container_guid,
                              unsigned char* rgb, int stride,
                              uint32_t width, uint32_t height, int has_alpha) {
   HRESULT hr = S_OK;
-  IWICImagingFactory* pFactory = NULL;
-  IWICBitmapFrameEncode* pFrame = NULL;
-  IWICBitmapEncoder* pEncoder = NULL;
-  IStream* pStream = NULL;
+  IWICImagingFactory* factory = NULL;
+  IWICBitmapFrameEncode* frame = NULL;
+  IWICBitmapEncoder* encoder = NULL;
+  IStream* stream = NULL;
   WICPixelFormatGUID pixel_format = has_alpha ? GUID_WICPixelFormat32bppBGRA
                                               : GUID_WICPixelFormat24bppBGR;
 
   IFS(CoInitialize(NULL));
   IFS(CoCreateInstance(MAKE_REFGUID(CLSID_WICImagingFactory), NULL,
-          CLSCTX_INPROC_SERVER, MAKE_REFGUID(IID_IWICImagingFactory),
-          (LPVOID*)&pFactory));
+                       CLSCTX_INPROC_SERVER,
+                       MAKE_REFGUID(IID_IWICImagingFactory),
+                       (LPVOID*)&factory));
   if (hr == REGDB_E_CLASSNOTREG) {
     fprintf(stderr,
             "Couldn't access Windows Imaging Component (are you running "
             "Windows XP SP3 or newer?). PNG support not available. "
             "Use -ppm or -pgm for available PPM and PGM formats.\n");
   }
-  IFS(CreateOutputStream(out_file_name, &pStream));
-  IFS(IWICImagingFactory_CreateEncoder(pFactory, container_guid, NULL,
-          &pEncoder));
-  IFS(IWICBitmapEncoder_Initialize(pEncoder, pStream,
+  IFS(CreateOutputStream(out_file_name, &stream));
+  IFS(IWICImagingFactory_CreateEncoder(factory, container_guid, NULL,
+                                       &encoder));
+  IFS(IWICBitmapEncoder_Initialize(encoder, stream,
                                    WICBitmapEncoderNoCache));
-  IFS(IWICBitmapEncoder_CreateNewFrame(pEncoder, &pFrame, NULL));
-  IFS(IWICBitmapFrameEncode_Initialize(pFrame, NULL));
-  IFS(IWICBitmapFrameEncode_SetSize(pFrame, width, height));
-  IFS(IWICBitmapFrameEncode_SetPixelFormat(pFrame, &pixel_format));
-  IFS(IWICBitmapFrameEncode_WritePixels(pFrame, height, stride,
-          height * stride, rgb));
-  IFS(IWICBitmapFrameEncode_Commit(pFrame));
-  IFS(IWICBitmapEncoder_Commit(pEncoder));
+  IFS(IWICBitmapEncoder_CreateNewFrame(encoder, &frame, NULL));
+  IFS(IWICBitmapFrameEncode_Initialize(frame, NULL));
+  IFS(IWICBitmapFrameEncode_SetSize(frame, width, height));
+  IFS(IWICBitmapFrameEncode_SetPixelFormat(frame, &pixel_format));
+  IFS(IWICBitmapFrameEncode_WritePixels(frame, height, stride,
+                                        height * stride, rgb));
+  IFS(IWICBitmapFrameEncode_Commit(frame));
+  IFS(IWICBitmapEncoder_Commit(encoder));
 
-  if (pFrame != NULL) IUnknown_Release(pFrame);
-  if (pEncoder != NULL) IUnknown_Release(pEncoder);
-  if (pFactory != NULL) IUnknown_Release(pFactory);
-  if (pStream != NULL) IUnknown_Release(pStream);
+  if (frame != NULL) IUnknown_Release(frame);
+  if (encoder != NULL) IUnknown_Release(encoder);
+  if (factory != NULL) IUnknown_Release(factory);
+  if (stream != NULL) IUnknown_Release(stream);
   return hr;
 }
 
@@ -144,8 +144,8 @@ static int WritePNG(const char* out_file_name,
   const int has_alpha = (buffer->colorspace == MODE_BGRA);
 
   return SUCCEEDED(WriteUsingWIC(out_file_name,
-             MAKE_REFGUID(GUID_ContainerFormatPng), rgb, stride, width,
-             height, has_alpha));
+                                 MAKE_REFGUID(GUID_ContainerFormatPng),
+                                 rgb, stride, width, height, has_alpha));
 }
 
 #elif defined(WEBP_HAVE_PNG)    // !HAVE_WINCODEC_H

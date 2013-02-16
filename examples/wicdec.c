@@ -71,9 +71,9 @@ WEBP_DEFINE_GUID(GUID_WICPixelFormat32bppRGBA_,
                  0xf5c7ad2d, 0x6a8d, 0x43dd,
                  0xa7, 0xa8, 0xa2, 0x99, 0x35, 0x26, 0x1a, 0xe9);
 
-static HRESULT OpenInputStream(const char* filename, IStream** ppStream) {
+static HRESULT OpenInputStream(const char* filename, IStream** stream) {
   HRESULT hr = S_OK;
-  IFS(SHCreateStreamOnFileA(filename, STGM_READ, ppStream));
+  IFS(SHCreateStreamOnFileA(filename, STGM_READ, stream));
   if (FAILED(hr)) {
     fprintf(stderr, "Error opening input file %s (%08lx)\n", filename, hr);
   }
@@ -83,36 +83,36 @@ static HRESULT OpenInputStream(const char* filename, IStream** ppStream) {
 // -----------------------------------------------------------------------------
 // Metadata processing
 
-// Stores the first non-zero sized color profile from 'pFrame' to 'iccp'.
+// Stores the first non-zero sized color profile from 'frame' to 'iccp'.
 // Returns an HRESULT to indicate success or failure. The caller is responsible
 // for freeing 'iccp->bytes' in either case.
-static HRESULT ExtractICCP(IWICImagingFactory* const pFactory,
-                           IWICBitmapFrameDecode* const pFrame,
+static HRESULT ExtractICCP(IWICImagingFactory* const factory,
+                           IWICBitmapFrameDecode* const frame,
                            MetadataPayload* const iccp) {
   HRESULT hr = S_OK;
   UINT i, count;
-  IWICColorContext** ppColorContext;
+  IWICColorContext** color_contexts;
 
-  IFS(IWICBitmapFrameDecode_GetColorContexts(pFrame, 0, NULL, &count));
+  IFS(IWICBitmapFrameDecode_GetColorContexts(frame, 0, NULL, &count));
   if (FAILED(hr) || count == 0) return hr;
 
-  ppColorContext = (IWICColorContext**)calloc(count, sizeof(*ppColorContext));
-  if (ppColorContext == NULL) return E_OUTOFMEMORY;
+  color_contexts = (IWICColorContext**)calloc(count, sizeof(*color_contexts));
+  if (color_contexts == NULL) return E_OUTOFMEMORY;
   for (i = 0; SUCCEEDED(hr) && i < count; ++i) {
-    IFS(IWICImagingFactory_CreateColorContext(pFactory, &ppColorContext[i]));
+    IFS(IWICImagingFactory_CreateColorContext(factory, &color_contexts[i]));
   }
 
   if (SUCCEEDED(hr)) {
     UINT num_color_contexts;
-    IFS(IWICBitmapFrameDecode_GetColorContexts(pFrame,
-                                               count, ppColorContext,
+    IFS(IWICBitmapFrameDecode_GetColorContexts(frame,
+                                               count, color_contexts,
                                                &num_color_contexts));
     for (i = 0; SUCCEEDED(hr) && i < num_color_contexts; ++i) {
       WICColorContextType type;
-      IFS(IWICColorContext_GetType(ppColorContext[i], &type));
+      IFS(IWICColorContext_GetType(color_contexts[i], &type));
       if (SUCCEEDED(hr) && type == WICColorContextProfile) {
         UINT size;
-        IFS(IWICColorContext_GetProfileBytes(ppColorContext[i],
+        IFS(IWICColorContext_GetProfileBytes(color_contexts[i],
                                              0, NULL, &size));
         if (size > 0) {
           iccp->bytes = (uint8_t*)malloc(size);
@@ -121,7 +121,7 @@ static HRESULT ExtractICCP(IWICImagingFactory* const pFactory,
             break;
           }
           iccp->size = size;
-          IFS(IWICColorContext_GetProfileBytes(ppColorContext[i],
+          IFS(IWICColorContext_GetProfileBytes(color_contexts[i],
                                                (UINT)iccp->size, iccp->bytes,
                                                &size));
           if (SUCCEEDED(hr) && size != iccp->size) {
@@ -135,17 +135,17 @@ static HRESULT ExtractICCP(IWICImagingFactory* const pFactory,
     }
   }
   for (i = 0; i < count; ++i) {
-    if (ppColorContext[i] != NULL) IUnknown_Release(ppColorContext[i]);
+    if (color_contexts[i] != NULL) IUnknown_Release(color_contexts[i]);
   }
-  free(ppColorContext);
+  free(color_contexts);
   return hr;
 }
 
-static HRESULT ExtractMetadata(IWICImagingFactory* const pFactory,
-                               IWICBitmapFrameDecode* const pFrame,
+static HRESULT ExtractMetadata(IWICImagingFactory* const factory,
+                               IWICBitmapFrameDecode* const frame,
                                Metadata* const metadata) {
   // TODO(jzern): add XMP/EXIF extraction.
-  const HRESULT hr = ExtractICCP(pFactory, pFrame, &metadata->iccp);
+  const HRESULT hr = ExtractICCP(factory, frame, &metadata->iccp);
   if (FAILED(hr)) MetadataFree(metadata);
   return hr;
 }
@@ -163,36 +163,35 @@ static int HasPalette(GUID pixel_format) {
                       MAKE_REFGUID(GUID_WICPixelFormat8bppIndexed)));
 }
 
-static int HasAlpha(IWICImagingFactory* const pFactory,
-                    IWICBitmapDecoder* const pDecoder,
-                    IWICBitmapFrameDecode* const pFrame,
-                    GUID srcPixelFormat) {
+static int HasAlpha(IWICImagingFactory* const factory,
+                    IWICBitmapDecoder* const decoder,
+                    IWICBitmapFrameDecode* const frame,
+                    GUID pixel_format) {
   int has_alpha;
-  if (HasPalette(srcPixelFormat)) {
-    IWICPalette* pFramePalette = NULL;
-    IWICPalette* pGlobalPalette = NULL;
+  if (HasPalette(pixel_format)) {
+    IWICPalette* frame_palette = NULL;
+    IWICPalette* global_palette = NULL;
     BOOL frame_palette_has_alpha = FALSE;
     BOOL global_palette_has_alpha = FALSE;
 
     // A palette may exist at the frame or container level,
     // check IWICPalette::HasAlpha() for both if present.
-    if (SUCCEEDED(IWICImagingFactory_CreatePalette(pFactory, &pFramePalette)) &&
-        SUCCEEDED(IWICBitmapFrameDecode_CopyPalette(pFrame, pFramePalette))) {
-      IWICPalette_HasAlpha(pFramePalette, &frame_palette_has_alpha);
+    if (SUCCEEDED(IWICImagingFactory_CreatePalette(factory, &frame_palette)) &&
+        SUCCEEDED(IWICBitmapFrameDecode_CopyPalette(frame, frame_palette))) {
+      IWICPalette_HasAlpha(frame_palette, &frame_palette_has_alpha);
     }
-    if (SUCCEEDED(IWICImagingFactory_CreatePalette(pFactory,
-                                                   &pGlobalPalette)) &&
-        SUCCEEDED(IWICBitmapDecoder_CopyPalette(pDecoder, pGlobalPalette))) {
-      IWICPalette_HasAlpha(pGlobalPalette, &global_palette_has_alpha);
+    if (SUCCEEDED(IWICImagingFactory_CreatePalette(factory, &global_palette)) &&
+        SUCCEEDED(IWICBitmapDecoder_CopyPalette(decoder, global_palette))) {
+      IWICPalette_HasAlpha(global_palette, &global_palette_has_alpha);
     }
     has_alpha = frame_palette_has_alpha || global_palette_has_alpha;
 
-    if (pFramePalette != NULL) IUnknown_Release(pFramePalette);
-    if (pGlobalPalette != NULL) IUnknown_Release(pGlobalPalette);
+    if (frame_palette != NULL) IUnknown_Release(frame_palette);
+    if (global_palette != NULL) IUnknown_Release(global_palette);
   } else {
-    has_alpha = IsEqualGUID(MAKE_REFGUID(srcPixelFormat),
+    has_alpha = IsEqualGUID(MAKE_REFGUID(pixel_format),
                             MAKE_REFGUID(GUID_WICPixelFormat32bppRGBA_)) ||
-                IsEqualGUID(MAKE_REFGUID(srcPixelFormat),
+                IsEqualGUID(MAKE_REFGUID(pixel_format),
                             MAKE_REFGUID(GUID_WICPixelFormat32bppBGRA_));
   }
   return has_alpha;
@@ -204,29 +203,29 @@ int ReadPictureWithWIC(const char* const filename,
   // From Microsoft SDK 6.0a -- ks.h
   // Define a local copy to avoid link errors under mingw.
   WEBP_DEFINE_GUID(GUID_NULL_, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-  const WICFormatImporter alphaFormatImporters[] = {
+  static const WICFormatImporter kAlphaFormatImporters[] = {
     { &GUID_WICPixelFormat32bppBGRA_, 4, WebPPictureImportBGRA },
     { &GUID_WICPixelFormat32bppRGBA_, 4, WebPPictureImportRGBA },
     { NULL, 0, NULL },
   };
-  const WICFormatImporter nonAlphaFormatImporters[] = {
+  static const WICFormatImporter kNonAlphaFormatImporters[] = {
     { &GUID_WICPixelFormat24bppBGR_, 3, WebPPictureImportBGR },
     { &GUID_WICPixelFormat24bppRGB_, 3, WebPPictureImportRGB },
     { NULL, 0, NULL },
   };
   HRESULT hr = S_OK;
-  IWICBitmapFrameDecode* pFrame = NULL;
-  IWICFormatConverter* pConverter = NULL;
-  IWICImagingFactory* pFactory = NULL;
-  IWICBitmapDecoder* pDecoder = NULL;
-  IStream* pStream = NULL;
-  UINT frameCount = 0;
+  IWICBitmapFrameDecode* frame = NULL;
+  IWICFormatConverter* converter = NULL;
+  IWICImagingFactory* factory = NULL;
+  IWICBitmapDecoder* decoder = NULL;
+  IStream* stream = NULL;
+  UINT frame_count = 0;
   UINT width = 0, height = 0;
   BYTE* rgb = NULL;
-  WICPixelFormatGUID srcPixelFormat = GUID_WICPixelFormatUndefined;
+  WICPixelFormatGUID src_pixel_format = GUID_WICPixelFormatUndefined;
   const WICFormatImporter* importer = NULL;
-  GUID srcContainerFormat = GUID_NULL_;
-  const GUID* alphaContainers[] = {
+  GUID src_container_format = GUID_NULL_;
+  static const GUID* kAlphaContainers[] = {
     &GUID_ContainerFormatBmp,
     &GUID_ContainerFormatPng,
     &GUID_ContainerFormatTiff,
@@ -237,8 +236,9 @@ int ReadPictureWithWIC(const char* const filename,
 
   IFS(CoInitialize(NULL));
   IFS(CoCreateInstance(MAKE_REFGUID(CLSID_WICImagingFactory), NULL,
-          CLSCTX_INPROC_SERVER, MAKE_REFGUID(IID_IWICImagingFactory),
-          (LPVOID*)&pFactory));
+                       CLSCTX_INPROC_SERVER,
+                       MAKE_REFGUID(IID_IWICImagingFactory),
+                       (LPVOID*)&factory));
   if (hr == REGDB_E_CLASSNOTREG) {
     fprintf(stderr,
             "Couldn't access Windows Imaging Component (are you running "
@@ -246,58 +246,60 @@ int ReadPictureWithWIC(const char* const filename,
             "Use -s for the available YUV input.\n");
   }
   // Prepare for image decoding.
-  IFS(OpenInputStream(filename, &pStream));
-  IFS(IWICImagingFactory_CreateDecoderFromStream(pFactory, pStream, NULL,
-          WICDecodeMetadataCacheOnDemand, &pDecoder));
-  IFS(IWICBitmapDecoder_GetFrameCount(pDecoder, &frameCount));
-  if (SUCCEEDED(hr) && frameCount == 0) {
+  IFS(OpenInputStream(filename, &stream));
+  IFS(IWICImagingFactory_CreateDecoderFromStream(
+          factory, stream, NULL,
+          WICDecodeMetadataCacheOnDemand, &decoder));
+  IFS(IWICBitmapDecoder_GetFrameCount(decoder, &frame_count));
+  if (SUCCEEDED(hr) && frame_count == 0) {
     fprintf(stderr, "No frame found in input file.\n");
     hr = E_FAIL;
   }
-  IFS(IWICBitmapDecoder_GetFrame(pDecoder, 0, &pFrame));
-  IFS(IWICBitmapFrameDecode_GetPixelFormat(pFrame, &srcPixelFormat));
-  IFS(IWICBitmapDecoder_GetContainerFormat(pDecoder, &srcContainerFormat));
+  IFS(IWICBitmapDecoder_GetFrame(decoder, 0, &frame));
+  IFS(IWICBitmapFrameDecode_GetPixelFormat(frame, &src_pixel_format));
+  IFS(IWICBitmapDecoder_GetContainerFormat(decoder, &src_container_format));
 
   if (keep_alpha) {
     const GUID** guid;
-    for (guid = alphaContainers; *guid != NULL; ++guid) {
-      if (IsEqualGUID(MAKE_REFGUID(srcContainerFormat), MAKE_REFGUID(**guid))) {
-        has_alpha = HasAlpha(pFactory, pDecoder, pFrame, srcPixelFormat);
+    for (guid = kAlphaContainers; *guid != NULL; ++guid) {
+      if (IsEqualGUID(MAKE_REFGUID(src_container_format),
+                      MAKE_REFGUID(**guid))) {
+        has_alpha = HasAlpha(factory, decoder, frame, src_pixel_format);
         break;
       }
     }
   }
 
   // Prepare for pixel format conversion (if necessary).
-  IFS(IWICImagingFactory_CreateFormatConverter(pFactory, &pConverter));
+  IFS(IWICImagingFactory_CreateFormatConverter(factory, &converter));
 
-  for (importer = has_alpha ? alphaFormatImporters : nonAlphaFormatImporters;
+  for (importer = has_alpha ? kAlphaFormatImporters : kNonAlphaFormatImporters;
        hr == S_OK && importer->import != NULL; ++importer) {
-    BOOL canConvert;
+    BOOL can_convert;
     const HRESULT cchr = IWICFormatConverter_CanConvert(
-        pConverter,
-        MAKE_REFGUID(srcPixelFormat),
+        converter,
+        MAKE_REFGUID(src_pixel_format),
         MAKE_REFGUID(*importer->pixel_format),
-        &canConvert);
-    if (SUCCEEDED(cchr) && canConvert) break;
+        &can_convert);
+    if (SUCCEEDED(cchr) && can_convert) break;
   }
   if (importer->import == NULL) hr = E_FAIL;
 
-  IFS(IWICFormatConverter_Initialize(pConverter, (IWICBitmapSource*)pFrame,
-          importer->pixel_format,
-          WICBitmapDitherTypeNone,
-          NULL, 0.0, WICBitmapPaletteTypeCustom));
+  IFS(IWICFormatConverter_Initialize(converter, (IWICBitmapSource*)frame,
+                                     importer->pixel_format,
+                                     WICBitmapDitherTypeNone,
+                                     NULL, 0.0, WICBitmapPaletteTypeCustom));
 
   // Decode.
-  IFS(IWICFormatConverter_GetSize(pConverter, &width, &height));
+  IFS(IWICFormatConverter_GetSize(converter, &width, &height));
   stride = importer->bytes_per_pixel * width * sizeof(*rgb);
   if (SUCCEEDED(hr)) {
     rgb = (BYTE*)malloc(stride * height);
     if (rgb == NULL)
       hr = E_OUTOFMEMORY;
   }
-  IFS(IWICFormatConverter_CopyPixels(pConverter, NULL, stride,
-          stride * height, rgb));
+  IFS(IWICFormatConverter_CopyPixels(converter, NULL,
+                                     stride, stride * height, rgb));
 
   // WebP conversion.
   if (SUCCEEDED(hr)) {
@@ -305,12 +307,11 @@ int ReadPictureWithWIC(const char* const filename,
     pic->width = width;
     pic->height = height;
     ok = importer->import(pic, rgb, stride);
-    if (!ok)
-      hr = E_FAIL;
+    if (!ok) hr = E_FAIL;
   }
   if (SUCCEEDED(hr)) {
     if (metadata != NULL) {
-      hr = ExtractMetadata(pFactory, pFrame, metadata);
+      hr = ExtractMetadata(factory, frame, metadata);
       if (FAILED(hr)) {
         fprintf(stderr, "Error extracting image metadata using WIC!\n");
       }
@@ -318,11 +319,11 @@ int ReadPictureWithWIC(const char* const filename,
   }
 
   // Cleanup.
-  if (pConverter != NULL) IUnknown_Release(pConverter);
-  if (pFrame != NULL) IUnknown_Release(pFrame);
-  if (pDecoder != NULL) IUnknown_Release(pDecoder);
-  if (pFactory != NULL) IUnknown_Release(pFactory);
-  if (pStream != NULL) IUnknown_Release(pStream);
+  if (converter != NULL) IUnknown_Release(converter);
+  if (frame != NULL) IUnknown_Release(frame);
+  if (decoder != NULL) IUnknown_Release(decoder);
+  if (factory != NULL) IUnknown_Release(factory);
+  if (stream != NULL) IUnknown_Release(stream);
   free(rgb);
   return SUCCEEDED(hr);
 }
