@@ -258,14 +258,16 @@ static WEBP_INLINE int VP8GetSigned(VP8BitReader* const br, int v) {
 // -----------------------------------------------------------------------------
 // Bitreader for lossless format
 
+typedef uint64_t vp8l_val_t;  // right now, this bit-reader can only use 64bit.
+
 typedef struct {
-  uint64_t       val_;
-  const uint8_t* buf_;
-  size_t         len_;
-  size_t         pos_;
-  int            bit_pos_;
-  int            eos_;
-  int            error_;
+  vp8l_val_t     val_;        // pre-fetched bits
+  const uint8_t* buf_;        // input byte buffer
+  size_t         len_;        // buffer length
+  size_t         pos_;        // byte position in buf_
+  int            bit_pos_;    // current bit-reading position in val_
+  int            eos_;        // bitstream is finished
+  int            error_;      // an error occurred (buffer overflow attempt...)
 } VP8LBitReader;
 
 void VP8LInitBitReader(VP8LBitReader* const br,
@@ -281,17 +283,14 @@ void VP8LBitReaderSetBuffer(VP8LBitReader* const br,
 // Flags eos if this read attempt is going to cross the read buffer.
 uint32_t VP8LReadBits(VP8LBitReader* const br, int n_bits);
 
-// Reads one bit from Read Buffer. Flags an error in case end_of_stream.
-// Flags eos after reading last bit from the buffer.
-uint32_t VP8LReadOneBit(VP8LBitReader* const br);
+// Return the prefetched bits, so they can be looked up.
+static WEBP_INLINE uint32_t VP8LPrefetchBits(VP8LBitReader* const br) {
+  return (uint32_t)(br->val_ >> br->bit_pos_);
+}
 
-// VP8LReadOneBitUnsafe is faster than VP8LReadOneBit, but it can be called only
-// 32 times after the last VP8LFillBitWindow. Any subsequent calls
-// (without VP8LFillBitWindow) will return invalid data.
-static WEBP_INLINE uint32_t VP8LReadOneBitUnsafe(VP8LBitReader* const br) {
-  const uint32_t val = (uint32_t)((br->val_ >> br->bit_pos_) & 1);
-  ++br->bit_pos_;
-  return val;
+// Discard 'num_bits' bits from the cache.
+static WEBP_INLINE void VP8LDiscardBits(VP8LBitReader* const br, int num_bits) {
+  br->bit_pos_ += num_bits;
 }
 
 // Advances the Read buffer by 4 bytes to make room for reading next 32 bits.
