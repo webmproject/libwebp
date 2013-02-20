@@ -14,7 +14,7 @@
 #include "./dsp.h"
 
 // Define the following if target arch is sure to have SSE2
-#define WEBP_TARGET_HAS_SSE2
+// #define WEBP_TARGET_HAS_SSE2
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
