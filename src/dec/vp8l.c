@@ -154,8 +154,7 @@ static WEBP_INLINE int ReadSymbol(const HuffmanTree* tree,
                                   VP8LBitReader* const br) {
   const HuffmanTreeNode* node = tree->root_;
   int num_bits = 0;
-  uint32_t bits;
-  bits = VP8LPrefetchBits(br);
+  uint32_t bits = VP8LPrefetchBits(br);
   assert(node != NULL);
   while (!HuffmanTreeNodeIsLeaf(node)) {
     node = HuffmanTreeNextNode(node, bits & 1);
