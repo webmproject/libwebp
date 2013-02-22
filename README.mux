@@ -7,17 +7,18 @@
 Description:
 ============
 
-WebP Mux: library to create a WebP container object for features like
-color profile, metadata, animation and fragmented images. A reference command
-line tool 'webpmux' and WebP container specification
-'doc/webp-container-spec.txt' are also provided in this package.
+WebPMux: set of two libraries 'Mux' and 'Demux' for creation, extraction and
+manipulation of an extended format WebP file, which can have features like
+color profile, metadata, animation and fragmented images. Reference
+command-line tools 'webpmux' and 'vwebp' as well as the WebP container
+specification 'doc/webp-container-spec.txt' are also provided in this package.
 
 WebP Mux tool:
 ==============
 
 The examples/ directory contains a tool (webpmux) for manipulating WebP
-files. The webpmux tool can be used to create a WebP container file and to
-extract or strip relevant data from the container file.
+files. The webpmux tool can be used to create an extended format WebP file and
+also to extract or strip relevant data from such a file.
 
 A list of options is available using the -help command line flag:
 
@@ -84,12 +85,29 @@ INPUT & OUTPUT are in WebP format.
 Note: The nature of EXIF, XMP and ICC data is not checked and is assumed to be
 valid.
 
-WebP Mux API:
-==============
-The WebP Mux API contains methods for adding data to and reading data from
-WebPMux (a WebP container object). This API currently supports XMP/EXIF
-metadata, ICC profile, animation and fragmented images. Other features
-will be added in subsequent releases.
+WebP viewer tool:
+================
+
+The examples/ directory also contains a tool (vwebp) for viewing WebP files.
+It decodes the image and visualizes it using OpenGL.
+
+A list of options is available using the -h command line flag:
+
+> vwebp -h
+Decodes the WebP image file and visualize it using OpenGL
+Options are:
+  -version  .... print version number and exit.
+  -nofancy ..... don't use the fancy YUV420 upscaler.
+  -nofilter .... disable in-loop filtering.
+  -mt .......... use multi-threading
+  -info ........ print info.
+  -h     ....... this help message.
+
+Mux API:
+========
+The Mux API contains methods for adding data to and reading data from WebP
+files. This API currently supports XMP/EXIF metadata, ICC profile, animation
+and fragmented images. Other features may be added in subsequent releases.
 
 Example#1 (pseudo code): Creating a WebPMux object with image data, color
 profile and XMP metadata.
@@ -122,7 +140,51 @@ Example#2 (pseudo code): Get image and color profile data from a WebP file.
   free(data);
 
 
-For detailed Mux API reference, please refer to the header file (src/webp/mux.h)
+For a detailed Mux API reference, please refer to the header file
+(src/webp/mux.h).
+
+Demux API:
+=========
+The Demux API enables extraction of images and extended format data from
+WebP files. This API currently supports reading of XMP/EXIF metadata, ICC
+profile, animation and fragmented images. Other features may be added in
+subsequent releases.
+
+Code Example: Demuxing WebP data to extract all the frames, ICC profile
+and EXIF/XMP metadata.
+
+  WebPDemuxer* demux = WebPDemux(&webp_data);
+  uint32_t width = WebPDemuxGetI(demux, WEBP_FF_CANVAS_WIDTH);
+  uint32_t height = WebPDemuxGetI(demux, WEBP_FF_CANVAS_HEIGHT);
+  // ... (Get information about the features present in the WebP file).
+  uint32_t flags = WebPDemuxGetI(demux, WEBP_FF_FORMAT_FLAGS);
+
+  // ... (Iterate over all frames).
+  WebPIterator iter;
+  if (WebPDemuxGetFrame(demux, 1, &iter)) {
+    do {
+      // ... (Consume 'iter'; e.g. Decode 'iter.fragment' with WebPDecode(),
+      // ... and get other frame properties like width, height, offsets etc.
+      // ... see 'struct WebPIterator' below for more info).
+    } while (WebPDemuxNextFrame(&iter));
+    WebPDemuxReleaseIterator(&iter);
+  }
+
+  // ... (Extract metadata).
+  WebPChunkIterator chunk_iter;
+  if (flags & ICCP_FLAG) WebPDemuxGetChunk(demux, "ICCP", 1, &chunk_iter);
+  // ... (Consume the ICC profile in 'chunk_iter.chunk').
+  if (flags & EXIF_FLAG) WebPDemuxGetChunk(demux, "EXIF", 1, &chunk_iter);
+  // ... (Consume the EXIF metadata in 'chunk_iter.chunk').
+  if (flags & XMP_FLAG) WebPDemuxGetChunk(demux, "XMP ", 1, &chunk_iter);
+  // ... (Consume the XMP metadata in 'chunk_iter.chunk').
+  WebPDemuxReleaseChunkIterator(&chunk_iter);
+  WebPDemuxDelete(demux);
+
+
+For a detailed Demux API reference, please refer to the header file
+(src/webp/demux.h).
+
 
 Bugs:
 =====
