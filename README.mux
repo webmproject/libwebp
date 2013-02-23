@@ -174,8 +174,10 @@ and EXIF/XMP metadata.
   WebPChunkIterator chunk_iter;
   if (flags & ICCP_FLAG) WebPDemuxGetChunk(demux, "ICCP", 1, &chunk_iter);
   // ... (Consume the ICC profile in 'chunk_iter.chunk').
+  WebPDemuxReleaseChunkIterator(&chunk_iter);
   if (flags & EXIF_FLAG) WebPDemuxGetChunk(demux, "EXIF", 1, &chunk_iter);
   // ... (Consume the EXIF metadata in 'chunk_iter.chunk').
+  WebPDemuxReleaseChunkIterator(&chunk_iter);
   if (flags & XMP_FLAG) WebPDemuxGetChunk(demux, "XMP ", 1, &chunk_iter);
   // ... (Consume the XMP metadata in 'chunk_iter.chunk').
   WebPDemuxReleaseChunkIterator(&chunk_iter);
