@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//ew4\u003d",
+        "filename": "makefile.unix",
+        "patchSetId": 3
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-02-24T20:41:34Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "AAAAVH//kfA\u003d",
+      "revId": "2137419403f10db6c6a6b449a84beba4763d27f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//ke8\u003d",
         "filename": "makefile.unix",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2013-02-15T02:49:08Z",
       "side": 1,
       "message": "ditto",
+      "revId": "2137419403f10db6c6a6b449a84beba4763d27f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//ew0\u003d",
+        "filename": "makefile.unix",
+        "patchSetId": 3
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-02-24T20:41:34Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "AAAAVH//ke8\u003d",
       "revId": "2137419403f10db6c6a6b449a84beba4763d27f0",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAVH//eww\u003d",
+        "filename": "makefile.unix",
+        "patchSetId": 3
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-02-24T20:41:34Z",
+      "side": 1,
+      "message": "fixed",
+      "parentUuid": "AAAAVH//ke4\u003d",
+      "revId": "2137419403f10db6c6a6b449a84beba4763d27f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAVH//kew\u003d",
         "filename": "src/utils/quant_levels_dec.h",
         "patchSetId": 3
@@ -64,6 +118,24 @@
       "writtenOn": "2013-02-15T02:49:08Z",
       "side": 1,
       "message": "shouldn\u0027t be necessary",
+      "revId": "2137419403f10db6c6a6b449a84beba4763d27f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAVH//ews\u003d",
+        "filename": "src/utils/quant_levels_dec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-02-24T20:41:34Z",
+      "side": 1,
+      "message": "indeed, removed",
+      "parentUuid": "AAAAVH//kew\u003d",
       "revId": "2137419403f10db6c6a6b449a84beba4763d27f0",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
