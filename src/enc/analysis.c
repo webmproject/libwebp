@@ -223,14 +223,18 @@ static void AssignSegments(VP8Encoder* const enc,
 // susceptibility and set best modes for this macroblock.
 // Segment assignment is done later.
 
-// Number of modes to inspect for alpha_ evaluation. For high-quality settings,
-// we don't need to test all the possible modes during the analysis phase.
+// Number of modes to inspect for alpha_ evaluation. For high-quality settings
+// (method >= FAST_ANALYSIS_METHOD) we don't need to test all the possible modes
+// during the analysis phase.
+#define FAST_ANALYSIS_METHOD 4  // method above which we do partial analysis
 #define MAX_INTRA16_MODE 2
 #define MAX_INTRA4_MODE  2
 #define MAX_UV_MODE      2
 
 static int MBAnalyzeBestIntra16Mode(VP8EncIterator* const it) {
-  const int max_mode = (it->enc_->method_ >= 3) ? MAX_INTRA16_MODE : 4;
+  const int max_mode =
+      (it->enc_->method_ >= FAST_ANALYSIS_METHOD) ? MAX_INTRA16_MODE
+                                                  : NUM_PRED_MODES;
   int mode;
   int best_alpha = DEFAULT_ALPHA;
   int best_mode = 0;
@@ -256,7 +260,9 @@ static int MBAnalyzeBestIntra16Mode(VP8EncIterator* const it) {
 static int MBAnalyzeBestIntra4Mode(VP8EncIterator* const it,
                                    int best_alpha) {
   uint8_t modes[16];
-  const int max_mode = (it->enc_->method_ >= 3) ? MAX_INTRA4_MODE : NUM_BMODES;
+  const int max_mode =
+      (it->enc_->method_ >= FAST_ANALYSIS_METHOD) ? MAX_INTRA4_MODE
+                                                  : NUM_BMODES;
   int i4_alpha;
   VP8Histogram total_histo = { { 0 } };
   int cur_histo = 0;
@@ -298,7 +304,9 @@ static int MBAnalyzeBestIntra4Mode(VP8EncIterator* const it,
 static int MBAnalyzeBestUVMode(VP8EncIterator* const it) {
   int best_alpha = DEFAULT_ALPHA;
   int best_mode = 0;
-  const int max_mode = (it->enc_->method_ >= 3) ? MAX_UV_MODE : 4;
+  const int max_mode =
+      (it->enc_->method_ >= FAST_ANALYSIS_METHOD) ? MAX_UV_MODE
+                                                  : NUM_PRED_MODES;
   int mode;
   VP8MakeChroma8Preds(it);
   for (mode = 0; mode < max_mode; ++mode) {
@@ -328,7 +336,7 @@ static void MBAnalyze(VP8EncIterator* const it,
   VP8SetSegment(it, 0);      // default segment, spec-wise.
 
   best_alpha = MBAnalyzeBestIntra16Mode(it);
-  if (enc->method_ != 3) {
+  if (enc->method_ >= 5) {
     // We go and make a fast decision for intra4/intra16.
     // It's usually not a good and definitive pick, but helps seeding the stats
     // about level bit-cost.
@@ -383,7 +391,7 @@ int VP8EncAnalyze(VP8Encoder* const enc) {
   const int do_segments =
       enc->config_->emulate_jpeg_size ||   // We need the complexity evaluation.
       (enc->segment_hdr_.num_segments_ > 1) ||
-      (enc->method_ <= 2);  // for methods 0,1,2, we need preds_[] to be filled.
+      (enc->method_ == 0);  // for method 0, we need preds_[] to be filled.
   enc->alpha_ = 0;
   enc->uv_alpha_ = 0;
   if (do_segments) {
