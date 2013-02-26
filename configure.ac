@@ -7,9 +7,7 @@ AC_PROG_LIBTOOL
 AM_PROG_CC_C_O
 
 dnl === Enable less verbose output when building.
-dnl === If an older aclocal exits with an error comment these lines out.
-m4_define_default([AM_SILENT_RULES], [])
-AM_SILENT_RULES
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=DIR],
             [Path to the pkgconfig directory @<:@LIBDIR/pkgconfig@:>@]),
