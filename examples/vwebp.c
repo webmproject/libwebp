@@ -278,9 +278,12 @@ int main(int argc, char *argv[]) {
     } else if (!strcmp(argv[c], "-info")) {
       kParams.print_info = 1;
     } else if (!strcmp(argv[c], "-version")) {
-      const int version = WebPGetDecoderVersion();
-      printf("%d.%d.%d\n",
-        (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
+      const int dec_version = WebPGetDecoderVersion();
+      const int dmux_version = WebPGetDemuxVersion();
+      printf("WebP Decoder version: %d.%d.%d\nWebP Demux version: %d.%d.%d\n",
+             (dec_version >> 16) & 0xff, (dec_version >> 8) & 0xff,
+             dec_version & 0xff, (dmux_version >> 16) & 0xff,
+             (dmux_version >> 8) & 0xff, dmux_version & 0xff);
       return 0;
     } else if (!strcmp(argv[c], "-mt")) {
       config.options.use_threads = 1;

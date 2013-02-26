@@ -88,6 +88,12 @@ enum WebPChunkId {
 };
 
 //------------------------------------------------------------------------------
+
+// Returns the version number of the mux library, packed in hexadecimal using
+// 8bits or each of major/minor/revision. E.g: v2.5.7 is 0x020507.
+WEBP_EXTERN(int) WebPGetMuxVersion(void);
+
+//------------------------------------------------------------------------------
 // Life of a Mux object
 
 // Internal, version-checked, entry point

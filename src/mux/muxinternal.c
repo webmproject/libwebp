@@ -37,6 +37,12 @@ const ChunkInfo kChunks[] = {
 };
 
 //------------------------------------------------------------------------------
+
+int WebPGetMuxVersion(void) {
+  return (MUX_MAJ_VERSION << 16) | (MUX_MIN_VERSION << 8) | MUX_REV_VERSION;
+}
+
+//------------------------------------------------------------------------------
 // Life of a chunk object.
 
 void ChunkInit(WebPChunk* const chunk) {

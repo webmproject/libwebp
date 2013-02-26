@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+#define DMUX_MAJ_VERSION 0
+#define DMUX_MIN_VERSION 1
+#define DMUX_REV_VERSION 0
+
 typedef struct {
   size_t start_;        // start location of the data
   size_t end_;          // end location
@@ -87,6 +91,12 @@ static const ChunkParser kMasterChunks[] = {
   { { 'V', 'P', '8', 'X' }, ParseVP8X,        IsValidExtendedFormat },
   { { '0', '0', '0', '0' }, NULL,             NULL },
 };
+
+//------------------------------------------------------------------------------
+
+int WebPGetDemuxVersion(void) {
+  return (DMUX_MAJ_VERSION << 16) | (DMUX_MIN_VERSION << 8) | DMUX_REV_VERSION;
+}
 
 // -----------------------------------------------------------------------------
 // MemBuffer

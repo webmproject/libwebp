@@ -49,6 +49,7 @@
   Misc:
     webpmux -info in.webp
     webpmux [ -h | -help ]
+    webpmux -version
 */
 
 #include <assert.h>
@@ -277,6 +278,7 @@ static void PrintHelp(void) {
   printf("               [-bgcolor BACKGROUND_COLOR] -o OUTPUT\n");
   printf("       webpmux -info INPUT\n");
   printf("       webpmux [-h|-help]\n");
+  printf("       webpmux -version\n");
 
   printf("\n");
   printf("GET_OPTIONS:\n");
@@ -626,6 +628,12 @@ static int ParseCommandLine(int argc, const char* argv[],
         i += 2;
       } else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "-help")) {
         PrintHelp();
+        DeleteConfig(config);
+        exit(0);
+      } else if (!strcmp(argv[i], "-version")) {
+        const int version = WebPGetMuxVersion();
+        printf("%d.%d.%d\n",
+               (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
         DeleteConfig(config);
         exit(0);
       } else {

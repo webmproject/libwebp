@@ -31,6 +31,7 @@ Usage: webpmux -get GET_OPTIONS INPUT -o OUTPUT
                [-bgcolor BACKGROUND_COLOR] -o OUTPUT
        webpmux -info INPUT
        webpmux [-h|-help]
+       webpmux -version
 
 GET_OPTIONS:
  Extract relevant data.

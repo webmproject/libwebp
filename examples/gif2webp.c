@@ -233,9 +233,12 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-f") && c < argc - 1) {
       config.filter_strength = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-version")) {
-      const int version = WebPGetEncoderVersion();
-      printf("%d.%d.%d\n",
-        (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
+      const int enc_version = WebPGetEncoderVersion();
+      const int mux_version = WebPGetMuxVersion();
+      printf("WebP Encoder version: %d.%d.%d\nWebP Mux version: %d.%d.%d\n",
+             (enc_version >> 16) & 0xff, (enc_version >> 8) & 0xff,
+             enc_version & 0xff, (mux_version >> 16) & 0xff,
+             (mux_version >> 8) & 0xff, mux_version & 0xff);
       return 0;
     } else if (!strcmp(argv[c], "-quiet")) {
       quiet = 1;

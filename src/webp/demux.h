@@ -63,6 +63,12 @@ typedef struct WebPIterator WebPIterator;
 typedef struct WebPChunkIterator WebPChunkIterator;
 
 //------------------------------------------------------------------------------
+
+// Returns the version number of the demux library, packed in hexadecimal using
+// 8bits for each of major/minor/revision. E.g: v2.5.7 is 0x020507.
+WEBP_EXTERN(int) WebPGetDemuxVersion(void);
+
+//------------------------------------------------------------------------------
 // Life of a Demux object
 
 enum WebPDemuxState {
