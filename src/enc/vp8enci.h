@@ -57,6 +57,13 @@ enum { NUM_MB_SEGMENTS = 4,
        MAX_VARIABLE_LEVEL = 67  // last (inclusive) level with variable cost
      };
 
+typedef enum {   // Rate-distortion optimization levels
+  RD_OPT_NONE        = 0,  // no rd-opt
+  RD_OPT_BASIC       = 1,  // basic scoring (no trellis)
+  RD_OPT_TRELLIS     = 2,  // perform trellis-quant on the final decision only
+  RD_OPT_TRELLIS_ALL = 3   // trellis-quant for every scoring (much slower)
+} VP8RDLevel;
+
 // YUV-cache parameters. Cache is 16-pixels wide.
 // The original or reconstructed samples can be accessed using VP8Scan[]
 // The predicted blocks can be accessed using offsets to yuv_p_ and
@@ -405,9 +412,9 @@ struct VP8Encoder {
   int      block_count_[3];
 
   // quality/speed settings
-  int method_;              // 0=fastest, 6=best/slowest.
-  int rd_opt_level_;        // Deduced from method_.
-  int max_i4_header_bits_;  // partition #0 safeness factor
+  int method_;               // 0=fastest, 6=best/slowest.
+  VP8RDLevel rd_opt_level_;  // Deduced from method_.
+  int max_i4_header_bits_;   // partition #0 safeness factor
 
   // Memory
   VP8MBInfo* mb_info_;   // contextual macroblock infos (mb_w_ + 1)
@@ -486,7 +493,8 @@ int VP8EncAnalyze(VP8Encoder* const enc);
 // Sets up segment's quantization values, base_quant_ and filter strengths.
 void VP8SetSegmentParams(VP8Encoder* const enc, float quality);
 // Pick best modes and fills the levels. Returns true if skipped.
-int VP8Decimate(VP8EncIterator* const it, VP8ModeScore* const rd, int rd_opt);
+int VP8Decimate(VP8EncIterator* const it, VP8ModeScore* const rd,
+                VP8RDLevel rd_opt);
 
   // in alpha.c
 void VP8EncInitAlpha(VP8Encoder* const enc);    // initialize alpha compression

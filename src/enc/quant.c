@@ -956,7 +956,8 @@ static void SimpleQuantize(VP8EncIterator* const it, VP8ModeScore* const rd) {
 //------------------------------------------------------------------------------
 // Entry point
 
-int VP8Decimate(VP8EncIterator* const it, VP8ModeScore* const rd, int rd_opt) {
+int VP8Decimate(VP8EncIterator* const it, VP8ModeScore* const rd,
+                VP8RDLevel rd_opt) {
   int is_skipped;
 
   InitScore(rd);
@@ -966,16 +967,14 @@ int VP8Decimate(VP8EncIterator* const it, VP8ModeScore* const rd, int rd_opt) {
   VP8MakeLuma16Preds(it);
   VP8MakeChroma8Preds(it);
 
-  // for rd_opt = 2, we perform trellis-quant on the final decision only.
-  // for rd_opt > 2, we use it for every scoring (=much slower).
-  if (rd_opt > 0) {
-    it->do_trellis_ = (rd_opt > 2);
+  if (rd_opt > RD_OPT_NONE) {
+    it->do_trellis_ = (rd_opt >= RD_OPT_TRELLIS_ALL);
     PickBestIntra16(it, rd);
     if (it->enc_->method_ >= 2) {
       PickBestIntra4(it, rd);
     }
     PickBestUV(it, rd);
-    if (rd_opt == 2) {
+    if (rd_opt == RD_OPT_TRELLIS) {   // finish off with trellis-optim now
       it->do_trellis_ = 1;
       SimpleQuantize(it, rd);
     }

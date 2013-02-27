@@ -695,7 +695,7 @@ int VP8EncLoop(VP8Encoder* const enc) {
   VP8EncIterator it;
   VP8ModeScore info;
   const int dont_use_skip = !enc->proba_.use_skip_proba_;
-  const int rd_opt = enc->rd_opt_level_;
+  const VP8RDLevel rd_opt = enc->rd_opt_level_;
   const int kAverageBytesPerMB = 5;     // TODO: have a kTable[quality/10]
   const int bytes_per_parts =
     enc->mb_w_ * enc->mb_h_ * kAverageBytesPerMB / enc->num_parts_;
@@ -762,8 +762,8 @@ int VP8EncLoop(VP8Encoder* const enc) {
 
 #define kHeaderSizeEstimate (15 + 20 + 10)      // TODO: fix better
 
-static int OneStatPass(VP8Encoder* const enc, float q, int rd_opt, int nb_mbs,
-                       float* const PSNR, int percent_delta) {
+static int OneStatPass(VP8Encoder* const enc, float q, VP8RDLevel rd_opt,
+                       int nb_mbs, float* const PSNR, int percent_delta) {
   VP8EncIterator it;
   uint64_t size = 0;
   uint64_t distortion = 0;
@@ -829,7 +829,7 @@ int VP8StatLoop(VP8Encoder* const enc) {
   // No target size: just do several pass without changing 'q'
   if (!do_search) {
     for (pass = 0; pass < max_passes; ++pass) {
-      const int rd_opt = (enc->method_ > 2);
+      const VP8RDLevel rd_opt = (enc->method_ > 2) ? RD_OPT_BASIC : RD_OPT_NONE;
       if (!OneStatPass(enc, q, rd_opt, nb_mbs, NULL, percent_per_pass)) {
         return 0;
       }
@@ -837,10 +837,9 @@ int VP8StatLoop(VP8Encoder* const enc) {
   } else {
     // binary search for a size close to target
     for (pass = 0; pass < max_passes && (dqs[pass] > 0); ++pass) {
-      const int rd_opt = 1;
       float PSNR;
       int criterion;
-      const int size = OneStatPass(enc, q, rd_opt, nb_mbs, &PSNR,
+      const int size = OneStatPass(enc, q, RD_OPT_BASIC, nb_mbs, &PSNR,
                                    percent_per_pass);
 #if DEBUG_SEARCH
       printf("#%d size=%d PSNR=%.2f q=%.2f\n", pass, size, PSNR, q);
