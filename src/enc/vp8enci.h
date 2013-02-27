@@ -44,7 +44,8 @@ enum { B_DC_PRED = 0,   // 4x4 modes
 
        // Luma16 or UV modes
        DC_PRED = B_DC_PRED, V_PRED = B_VE_PRED,
-       H_PRED = B_HE_PRED, TM_PRED = B_TM_PRED
+       H_PRED = B_HE_PRED, TM_PRED = B_TM_PRED,
+       NUM_PRED_MODES = 4
      };
 
 enum { NUM_MB_SEGMENTS = 4,

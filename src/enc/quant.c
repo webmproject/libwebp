@@ -27,6 +27,8 @@
 #define SNS_TO_DQ 0.9     // Scaling constant between the sns value and the QP
                           // power-law modulation. Must be strictly less than 1.
 
+#define I4_PENALTY 4000   // Rate-penalty for quick i4/i16 decision
+
 #define MULT_8B(a, b) (((a) * (b) + 128) >> 8)
 
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -773,7 +775,7 @@ static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* const rd) {
   int mode;
 
   rd->mode_i16 = -1;
-  for (mode = 0; mode < 4; ++mode) {
+  for (mode = 0; mode < NUM_PRED_MODES; ++mode) {
     uint8_t* const tmp_dst = it->yuv_out2_ + Y_OFF;  // scratch buffer
     int nz;
 
@@ -902,7 +904,7 @@ static void PickBestUV(VP8EncIterator* const it, VP8ModeScore* const rd) {
 
   rd->mode_uv = -1;
   InitScore(&rd_best);
-  for (mode = 0; mode < 4; ++mode) {
+  for (mode = 0; mode < NUM_PRED_MODES; ++mode) {
     VP8ModeScore rd_uv;
 
     // Reconstruct
@@ -931,10 +933,10 @@ static void PickBestUV(VP8EncIterator* const it, VP8ModeScore* const rd) {
 
 static void SimpleQuantize(VP8EncIterator* const it, VP8ModeScore* const rd) {
   const VP8Encoder* const enc = it->enc_;
-  const int i16 = (it->mb_->type_ == 1);
+  const int is_i16 = (it->mb_->type_ == 1);
   int nz = 0;
 
-  if (i16) {
+  if (is_i16) {
     nz = ReconstructIntra16(it, rd, it->yuv_out_ + Y_OFF, it->preds_[0]);
   } else {
     VP8IteratorStartI4(it);
@@ -953,12 +955,66 @@ static void SimpleQuantize(VP8EncIterator* const it, VP8ModeScore* const rd) {
   rd->nz = nz;
 }
 
+// Refine intra16/intra4 sub-modes based on distortion only (not rate).
+static void DistoRefine(VP8EncIterator* const it, int try_both_i4_i16) {
+  const int is_i16 = (it->mb_->type_ == 1);
+  score_t best_score = MAX_COST;
+
+  if (try_both_i4_i16 || is_i16) {
+    int mode;
+    int best_mode = -1;
+    for (mode = 0; mode < NUM_PRED_MODES; ++mode) {
+      const uint8_t* const ref = it->yuv_p_ + VP8I16ModeOffsets[mode];
+      const uint8_t* const src = it->yuv_in_ + Y_OFF;
+      const score_t score = VP8SSE16x16(src, ref);
+      if (score < best_score) {
+        best_mode = mode;
+        best_score = score;
+      }
+    }
+    VP8SetIntra16Mode(it, best_mode);
+  }
+  if (try_both_i4_i16 || !is_i16) {
+    uint8_t modes_i4[16];
+    // We don't evaluate the rate here, but just account for it through a
+    // constant penalty (i4 mode usually needs more bits compared to i16).
+    score_t score_i4 = (score_t)I4_PENALTY;
+
+    VP8IteratorStartI4(it);
+    do {
+      int mode;
+      int best_sub_mode = -1;
+      score_t best_sub_score = MAX_COST;
+      const uint8_t* const src = it->yuv_in_ + Y_OFF + VP8Scan[it->i4_];
+
+      // TODO(skal): we don't really need the prediction pixels here,
+      // but just the distortion against 'src'.
+      VP8MakeIntra4Preds(it);
+      for (mode = 0; mode < NUM_BMODES; ++mode) {
+        const uint8_t* const ref = it->yuv_p_ + VP8I4ModeOffsets[mode];
+        const score_t score = VP8SSE4x4(src, ref);
+        if (score < best_sub_score) {
+          best_sub_mode = mode;
+          best_sub_score = score;
+        }
+      }
+      modes_i4[it->i4_] = best_sub_mode;
+      score_i4 += best_sub_score;
+      if (score_i4 >= best_score) break;
+    } while (VP8IteratorRotateI4(it, it->yuv_in_ + Y_OFF));
+    if (score_i4 < best_score) {
+      VP8SetIntra4Mode(it, modes_i4);
+    }
+  }
+}
+
 //------------------------------------------------------------------------------
 // Entry point
 
 int VP8Decimate(VP8EncIterator* const it, VP8ModeScore* const rd,
                 VP8RDLevel rd_opt) {
   int is_skipped;
+  const int method = it->enc_->method_;
 
   InitScore(rd);
 
@@ -970,7 +1026,7 @@ int VP8Decimate(VP8EncIterator* const it, VP8ModeScore* const rd,
   if (rd_opt > RD_OPT_NONE) {
     it->do_trellis_ = (rd_opt >= RD_OPT_TRELLIS_ALL);
     PickBestIntra16(it, rd);
-    if (it->enc_->method_ >= 2) {
+    if (method >= 2) {
       PickBestIntra4(it, rd);
     }
     PickBestUV(it, rd);
@@ -979,8 +1035,9 @@ int VP8Decimate(VP8EncIterator* const it, VP8ModeScore* const rd,
       SimpleQuantize(it, rd);
     }
   } else {
-    // TODO: for method_ == 2, pick the best intra4/intra16 based on SSE
-    it->do_trellis_ = (it->enc_->method_ == 2);
+    // For method == 2, pick the best intra4/intra16 based on SSE (~tad slower).
+    // For method <= 1, we refine intra4 or intra16 (but don't re-examine mode).
+    DistoRefine(it, (method >= 2));
     SimpleQuantize(it, rd);
   }
   is_skipped = (rd->nz == 0);
