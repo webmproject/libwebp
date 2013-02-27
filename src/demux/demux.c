@@ -13,7 +13,7 @@
 #include <string.h>
 
 #include "../utils/utils.h"
-#include "../webp/decode.h"  // WebPGetInfo
+#include "../webp/decode.h"     // WebPGetFeatures
 #include "../webp/demux.h"
 #include "../webp/format_constants.h"
 
@@ -192,12 +192,17 @@ static int AddFrame(WebPDemuxer* const dmux, Frame* const frame) {
 }
 
 // Store image bearing chunks to 'frame'.
+// If 'has_vp8l_alpha' is not NULL, it will be set to true if the frame is a
+// lossless image with alpha.
 static ParseStatus StoreFrame(int frame_num, uint32_t min_size,
-                              MemBuffer* const mem, Frame* const frame) {
+                              MemBuffer* const mem, Frame* const frame,
+                              int* const has_vp8l_alpha) {
   int alpha_chunks = 0;
   int image_chunks = 0;
   int done = (MemDataSize(mem) < min_size);
   ParseStatus status = PARSE_OK;
+
+  if (has_vp8l_alpha != NULL) *has_vp8l_alpha = 0;  // Default.
 
   if (done) return PARSE_NEED_MORE_DATA;
 
@@ -229,20 +234,22 @@ static ParseStatus StoreFrame(int frame_num, uint32_t min_size,
       case MKFOURCC('V', 'P', '8', ' '):
       case MKFOURCC('V', 'P', '8', 'L'):
         if (image_chunks == 0) {
-          int width = 0, height = 0;
+          WebPBitstreamFeatures features;
+          ChunkData* const image = frame->img_components_;
           ++image_chunks;
-          frame->img_components_[0].offset_ = chunk_start_offset;
-          frame->img_components_[0].size_ = chunk_size;
+          image->offset_ = chunk_start_offset;
+          image->size_ = chunk_size;
           // Extract the width and height from the bitstream, tolerating
           // failures when the data is incomplete.
-          if (!WebPGetInfo(mem->buf_ + frame->img_components_[0].offset_,
-                           frame->img_components_[0].size_, &width, &height) &&
+          if ((WebPGetFeatures(mem->buf_ + image->offset_, image->size_,
+                               &features) != VP8_STATUS_OK) &&
               status != PARSE_NEED_MORE_DATA) {
             return PARSE_ERROR;
           }
 
-          frame->width_ = width;
-          frame->height_ = height;
+          frame->width_ = features.width;
+          frame->height_ = features.height;
+          if (has_vp8l_alpha != NULL) *has_vp8l_alpha = features.has_alpha;
           frame->frame_num_ = frame_num;
           frame->complete_ = (status == PARSE_OK);
           Skip(mem, payload_available);
@@ -308,7 +315,8 @@ static ParseStatus ParseFrame(
 
   // Store a frame only if the animation flag is set and all data for this frame
   // is available.
-  status = StoreFrame(dmux->num_frames_ + 1, anmf_payload_size, mem, frame);
+  status = StoreFrame(dmux->num_frames_ + 1, anmf_payload_size, mem, frame,
+                      NULL);
   if (status != PARSE_ERROR && has_frames && frame->frame_num_ > 0) {
     added_frame = AddFrame(dmux, frame);
     if (added_frame) {
@@ -341,7 +349,7 @@ static ParseStatus ParseFragment(WebPDemuxer* const dmux,
 
   // Store a fragment only if the fragments flag is set and all data for this
   // fragment is available.
-  status = StoreFrame(dmux->num_frames_, frgm_payload_size, mem, frame);
+  status = StoreFrame(dmux->num_frames_, frgm_payload_size, mem, frame, NULL);
   if (status != PARSE_ERROR && has_fragments && frame->frame_num_ > 0) {
     // Note num_frames_ is incremented only when all fragments have been
     // consumed.
@@ -401,6 +409,7 @@ static ParseStatus ParseSingleImage(WebPDemuxer* const dmux) {
   MemBuffer* const mem = &dmux->mem_;
   Frame* frame;
   ParseStatus status;
+  int has_vp8l_alpha = 0;  // Frame contains a lossless image with alpha.
 
   if (dmux->frames_ != NULL) return PARSE_ERROR;
   if (SizeIsInvalid(mem, min_size)) return PARSE_ERROR;
@@ -411,7 +420,8 @@ static ParseStatus ParseSingleImage(WebPDemuxer* const dmux) {
 
   // For the single image case, we allow parsing of a partial frame. But we need
   // at least CHUNK_HEADER_SIZE for parsing.
-  status = StoreFrame(1, CHUNK_HEADER_SIZE, &dmux->mem_, frame);
+  status = StoreFrame(1, CHUNK_HEADER_SIZE, &dmux->mem_, frame,
+                      &has_vp8l_alpha);
   if (status != PARSE_ERROR) {
     const int has_alpha = !!(dmux->feature_flags_ & ALPHA_FLAG);
     // Clear any alpha when the alpha flag is missing.
@@ -421,10 +431,12 @@ static ParseStatus ParseSingleImage(WebPDemuxer* const dmux) {
     }
 
     // Use the frame width/height as the canvas values for non-vp8x files.
+    // Also, set ALPHA_FLAG if this is a lossless image with alpha.
     if (!dmux->is_ext_format_ && frame->width_ > 0 && frame->height_ > 0) {
       dmux->state_ = WEBP_DEMUX_PARSED_HEADER;
       dmux->canvas_width_ = frame->width_;
       dmux->canvas_height_ = frame->height_;
+      dmux->feature_flags_ |= has_vp8l_alpha ? ALPHA_FLAG : 0;
     }
     AddFrame(dmux, frame);
     dmux->num_frames_ = 1;
