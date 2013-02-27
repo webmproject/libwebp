@@ -411,8 +411,9 @@ WEBP_EXTERN(VP8StatusCode) WebPGetFeaturesInternal(
 
 // Retrieve features from the bitstream. The *features structure is filled
 // with information gathered from the bitstream.
-// Returns false in case of error or version mismatch.
-// In case of error, features->bitstream_status will reflect the error code.
+// Returns VP8_STATUS_OK when the features are successfully retrieved. Returns
+// VP8_STATUS_NOT_ENOUGH_DATA when more data is needed to retrieved the
+// features. Returns error in other cases.
 static WEBP_INLINE VP8StatusCode WebPGetFeatures(
     const uint8_t* data, size_t data_size,
     WebPBitstreamFeatures* features) {
