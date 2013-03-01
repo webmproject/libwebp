@@ -326,23 +326,24 @@ void VP8SetSegment(const VP8EncIterator* const it, int segment);
 //------------------------------------------------------------------------------
 // Paginated token buffer
 
-// WIP: #define USE_TOKEN_BUFFER
+// WIP:#define USE_TOKEN_BUFFER
 
 typedef struct VP8Tokens VP8Tokens;  // struct details in token.c
 
 typedef struct {
+#ifdef USE_TOKEN_BUFFER
   VP8Tokens* pages_;        // first page
   VP8Tokens** last_page_;   // last page
   uint16_t* tokens_;        // set to (*last_page_)->tokens_
   int left_;          // how many free tokens left before the page is full.
   int error_;         // true in case of malloc error
+#endif
 } VP8TBuffer;
 
 void VP8TBufferInit(VP8TBuffer* const b);    // initialize an empty buffer
+void VP8TBufferClear(VP8TBuffer* const b);   // de-allocate pages memory
 
 #ifdef USE_TOKEN_BUFFER
-
-void VP8TBufferClear(VP8TBuffer* const b);   // de-allocate pages memory
 
 int VP8EmitTokens(const VP8TBuffer* const b, VP8BitWriter* const bw,
                   const uint8_t* const probas, int final_pass);
@@ -378,9 +379,8 @@ struct VP8Encoder {
 
   int percent_;                             // for progress
 
-#ifdef USE_TOKEN_BUFFER
+  int use_tokens_;                          // if true, use Token buffer
   VP8TBuffer tokens_;                       // token buffer
-#endif
 
   // transparency blob
   int has_alpha_;
@@ -475,7 +475,7 @@ void VP8MakeIntra4Preds(const VP8EncIterator* const it);
 int VP8GetCostLuma16(VP8EncIterator* const it, const VP8ModeScore* const rd);
 int VP8GetCostLuma4(VP8EncIterator* const it, const int16_t levels[16]);
 int VP8GetCostUV(VP8EncIterator* const it, const VP8ModeScore* const rd);
-// Main stat / coding passes
+// Main coding calls
 int VP8EncLoop(VP8Encoder* const enc);
 int VP8StatLoop(VP8Encoder* const enc);
 

@@ -33,6 +33,10 @@ struct VP8Tokens {
   VP8Tokens* next_;
 };
 
+//------------------------------------------------------------------------------
+
+#ifdef USE_TOKEN_BUFFER
+
 void VP8TBufferInit(VP8TBuffer* const b) {
   b->tokens_ = NULL;
   b->pages_ = NULL;
@@ -41,13 +45,9 @@ void VP8TBufferInit(VP8TBuffer* const b) {
   b->error_ = 0;
 }
 
-//------------------------------------------------------------------------------
-
-#ifdef USE_TOKEN_BUFFER
-
 void VP8TBufferClear(VP8TBuffer* const b) {
   if (b != NULL) {
-    const VP8Tokens* p = b->rows_;
+    const VP8Tokens* p = b->pages_;
     while (p != NULL) {
       const VP8Tokens* const next = p->next_;
       free((void*)p);
@@ -63,7 +63,7 @@ static int TBufferNewPage(VP8TBuffer* const b) {
     b->error_ = 1;
     return 0;
   }
-  *b->last_page__ = page;
+  *b->last_page_ = page;
   b->last_page_ = &page->next_;
   b->left_ = MAX_NUM_TOKEN;
   b->tokens_ = page->tokens_;
@@ -185,7 +185,7 @@ static void Record(int bit, proba_t* const stats) {
 }
 
 void VP8TokenToStats(const VP8TBuffer* const b, proba_t* const stats) {
-  const VP8Tokens* p = b->rows_;
+  const VP8Tokens* p = b->pages_;
   while (p != NULL) {
     const int N = (p->next_ == NULL) ? b->left_ : 0;
     int n = MAX_NUM_TOKEN;
@@ -201,7 +201,8 @@ void VP8TokenToStats(const VP8TBuffer* const b, proba_t* const stats) {
 
 int VP8EmitTokens(const VP8TBuffer* const b, VP8BitWriter* const bw,
                   const uint8_t* const probas, int final_pass) {
-  const VP8Tokens* p = b->rows_;
+  const VP8Tokens* p = b->pages_;
+  (void)final_pass;
   if (b->error_) return 0;
   while (p != NULL) {
     const VP8Tokens* const next = p->next_;
@@ -221,6 +222,14 @@ int VP8EmitTokens(const VP8TBuffer* const b, VP8BitWriter* const bw,
 }
 
 //------------------------------------------------------------------------------
+#else
+
+void VP8TBufferInit(VP8TBuffer* const b) {
+  (void)b;
+}
+void VP8TBufferClear(VP8TBuffer* const b) {
+  (void)b;
+}
 
 #endif    // USE_TOKEN_BUFFER
 
