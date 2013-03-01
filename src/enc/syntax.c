@@ -316,7 +316,9 @@ static size_t GeneratePartition0(VP8Encoder* const enc) {
 
   PutSegmentHeader(bw, enc);
   PutFilterHeader(bw, &enc->filter_hdr_);
-  VP8PutValue(bw, enc->config_->partitions, 2);
+  VP8PutValue(bw, enc->num_parts_ == 8 ? 3 :
+                  enc->num_parts_ == 4 ? 2 :
+                  enc->num_parts_ == 2 ? 1 : 0, 2);
   PutQuant(bw, enc);
   VP8PutBitUniform(bw, 0);   // no proba update
   VP8WriteProbas(bw, &enc->proba_);
