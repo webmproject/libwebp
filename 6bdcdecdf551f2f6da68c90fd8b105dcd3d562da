@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAVH//ZaA\u003d",
+        "filename": "src/enc/alpha.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-01T07:44:44Z",
+      "side": 1,
+      "message": "there\u0027s a potential race between here and VP8EncLoop:ResetSSE()",
+      "revId": "6bdcdecdf551f2f6da68c90fd8b105dcd3d562da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
