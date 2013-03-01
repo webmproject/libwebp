@@ -625,7 +625,10 @@ static void SetBlock(uint8_t* p, int value, int size) {
 #endif
 
 static void ResetSSE(VP8Encoder* const enc) {
-  memset(enc->sse_, 0, sizeof(enc->sse_));
+  enc->sse_[0] = 0;
+  enc->sse_[1] = 0;
+  enc->sse_[2] = 0;
+  // Note: enc->sse_[3] is managed by alpha.c
   enc->sse_count_ = 0;
 }
 

@@ -125,6 +125,8 @@ static void MapConfigToTools(VP8Encoder* const enc) {
   enc->max_i4_header_bits_ =
       256 * 16 * 16 *                 // upper bound: up to 16bit per 4x4 block
       (limit * limit) / (100 * 100);  // ... modulated with a quadratic curve.
+
+  enc->thread_level_ = enc->config_->thread_level;
 }
 
 // Memory scaling with dimensions:
@@ -266,14 +268,16 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
   return enc;
 }
 
-static void DeleteVP8Encoder(VP8Encoder* enc) {
+static int DeleteVP8Encoder(VP8Encoder* enc) {
+  int ok = 1;
   if (enc != NULL) {
-    VP8EncDeleteAlpha(enc);
+    ok = VP8EncDeleteAlpha(enc);
 #ifdef WEBP_EXPERIMENTAL_FEATURES
     VP8EncDeleteLayer(enc);
 #endif
     free(enc);
   }
+  return ok;
 }
 
 //------------------------------------------------------------------------------
@@ -336,7 +340,7 @@ int WebPReportProgress(const WebPPicture* const pic,
 //------------------------------------------------------------------------------
 
 int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
-  int ok;
+  int ok = 0;
 
   if (pic == NULL)
     return 0;
@@ -365,19 +369,21 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
     enc = InitVP8Encoder(config, pic);
     if (enc == NULL) return 0;  // pic->error is already set.
     // Note: each of the tasks below account for 20% in the progress report.
-    ok = VP8EncAnalyze(enc)
-      && VP8StatLoop(enc)
-      && VP8EncLoop(enc)
-      && VP8EncFinishAlpha(enc)
+    ok = VP8EncAnalyze(enc);
+
+    // Analysis is done, proceed to actual coding.
+    ok = ok && VP8EncStartAlpha(enc);   // possibly done in parallel
+    ok = ok && VP8StatLoop(enc) && VP8EncLoop(enc);
+    ok = ok && VP8EncFinishAlpha(enc);
 #ifdef WEBP_EXPERIMENTAL_FEATURES
-      && VP8EncFinishLayer(enc)
+    ok = ok && VP8EncFinishLayer(enc);
 #endif
-      && VP8EncWrite(enc);
+    ok = ok && VP8EncWrite(enc);
     StoreStats(enc);
     if (!ok) {
       VP8EncFreeBitWriters(enc);
     }
-    DeleteVP8Encoder(enc);
+    ok &= DeleteVP8Encoder(enc);  // must always be called, even if !ok
   } else {
     if (pic->argb == NULL)
       return WebPEncodingSetError(pic, VP8_ENC_ERROR_NULL_PARAMETER);
