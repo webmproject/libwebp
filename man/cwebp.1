@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "February 15, 2013"
+.TH CWEBP 1 "February 28, 2013"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -81,6 +81,10 @@ Change the internal parameter mapping to better match the expected size
 of JPEG compression. This flag will generally produce an output file of
 similar size to its JPEG equivalent (for the same \fB\-q\fP setting), but
 with less visual distortion.
+.TP
+.B \-mt
+Use multi-threading for encoding, if possible. This option is only effective
+when using lossy compression on a source with a transparency channel.
 .TP
 .B \-af
 Turns auto-filter on. This algorithm will spend additional time optimizing

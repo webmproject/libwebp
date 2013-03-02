@@ -158,6 +158,7 @@ options:
   -pass <int> ............ analysis pass number (1..10)
   -crop <x> <y> <w> <h> .. crop picture with the given rectangle
   -resize <w> <h> ........ resize picture (after any cropping)
+  -mt .................... use multi-threading if available
   -map <int> ............. print map of extra info.
   -print_psnr ............ prints averaged PSNR distortion.
   -print_ssim ............ prints averaged SSIM distortion.

@@ -546,6 +546,7 @@ static void HelpLong(void) {
   printf("  -pass <int> ............ analysis pass number (1..10)\n");
   printf("  -crop <x> <y> <w> <h> .. crop picture with the given rectangle\n");
   printf("  -resize <w> <h> ........ resize picture (after any cropping)\n");
+  printf("  -mt .................... use multi-threading if available\n");
 #ifdef WEBP_EXPERIMENTAL_FEATURES
   printf("  -444 / -422 / -gray ..... Change colorspace\n");
 #endif
@@ -724,6 +725,8 @@ int main(int argc, const char *argv[]) {
       config.autofilter = 1;
     } else if (!strcmp(argv[c], "-jpeg_like")) {
       config.emulate_jpeg_size = 1;
+    } else if (!strcmp(argv[c], "-mt")) {
+      ++config.thread_level;  // increase thread level
     } else if (!strcmp(argv[c], "-strong")) {
       config.filter_type = 1;
     } else if (!strcmp(argv[c], "-nostrong")) {

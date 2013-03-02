@@ -16,6 +16,7 @@
 #include "../webp/encode.h"
 #include "../dsp/dsp.h"
 #include "../utils/bit_writer.h"
+#include "../utils/thread.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -386,6 +387,7 @@ struct VP8Encoder {
   int has_alpha_;
   uint8_t* alpha_data_;       // non-NULL if transparency is present
   uint32_t alpha_data_size_;
+  WebPWorker alpha_worker_;
 
   // enhancement layer
   int use_layer_;
@@ -416,6 +418,7 @@ struct VP8Encoder {
   int method_;               // 0=fastest, 6=best/slowest.
   VP8RDLevel rd_opt_level_;  // Deduced from method_.
   int max_i4_header_bits_;   // partition #0 safeness factor
+  int thread_level_;         // derived from config->thread_level
 
   // Memory
   VP8MBInfo* mb_info_;   // contextual macroblock infos (mb_w_ + 1)
@@ -499,8 +502,9 @@ int VP8Decimate(VP8EncIterator* const it, VP8ModeScore* const rd,
 
   // in alpha.c
 void VP8EncInitAlpha(VP8Encoder* const enc);    // initialize alpha compression
+int VP8EncStartAlpha(VP8Encoder* const enc);    // start alpha coding process
 int VP8EncFinishAlpha(VP8Encoder* const enc);   // finalize compressed data
-void VP8EncDeleteAlpha(VP8Encoder* const enc);  // delete compressed data
+int VP8EncDeleteAlpha(VP8Encoder* const enc);   // delete compressed data
 
   // in layer.c
 void VP8EncInitLayer(VP8Encoder* const enc);     // init everything
