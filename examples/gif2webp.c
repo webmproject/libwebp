@@ -283,8 +283,8 @@ int main(int argc, const char *argv[]) {
   if (gif->SColorMap != NULL &&
       !GetColorFromIndex(gif->SColorMap, gif->SBackGroundColor,
                          &anim.bgcolor)) {
-    fprintf(stderr, "GIF decode error: invalid background color index.\n");
-    goto End;
+    fprintf(stderr, "GIF decode warning: invalid background color index. "
+            "Assuming white background.\n");
   }
   ClearPicture(&picture, anim.bgcolor);
 
