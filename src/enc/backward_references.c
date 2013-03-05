@@ -555,10 +555,10 @@ static int BackwardReferencesHashChainDistanceOnly(
           }
           // 2) Add to the hash_chain (but cannot add the last pixel)
           {
-            const int last = (len < pix_count - 1 - i) ? len
-                                                       : pix_count - 1 - i;
-            for (k = 0; k < last; ++k) {
-              HashChainInsert(hash_chain, &argb[i + k], i + k);
+            const int last = (len + i < pix_count - 1) ? len + i
+                                                       : pix_count - 1;
+            for (k = i; k < last; ++k) {
+              HashChainInsert(hash_chain, &argb[k], k);
             }
           }
           // 3) jump.

@@ -390,16 +390,11 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
   // Heuristic params for HistogramCombine().
   const int num_tries_no_success = 8 + (quality >> 1);
   const int iter_mult = (quality < 27) ? 1 : 1 + ((quality - 27) >> 4);
-  int num_pairs = (quality >> 1);
+  const int num_pairs = (quality < 25) ? 10 : (5 * quality) >> 3;
 
   VP8LHistogramSet* const image_out =
       VP8LAllocateHistogramSet(histo_image_raw_size, cache_bits);
   if (image_out == NULL) return 0;
-
-  if (num_pairs > (histo_image_raw_size >> 2)) {
-    num_pairs = histo_image_raw_size >> 2;
-  }
-  num_pairs += 10;
 
   // Build histogram image.
   HistogramBuildImage(xsize, histo_bits, refs, image_out);
