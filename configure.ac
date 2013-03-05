@@ -283,7 +283,8 @@ AC_CONFIG_FILES([Makefile src/Makefile man/Makefile \
                  src/enc/Makefile src/dsp/Makefile \
                  src/demux/Makefile src/mux/Makefile \
                  src/utils/Makefile \
-                 src/libwebp.pc src/libwebpdecoder.pc])
+                 src/libwebp.pc src/libwebpdecoder.pc \
+                 src/demux/libwebpdemux.pc])
 
 
 AC_OUTPUT
