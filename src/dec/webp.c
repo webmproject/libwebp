@@ -672,19 +672,13 @@ int WebPInitDecoderConfigInternal(WebPDecoderConfig* config,
 VP8StatusCode WebPGetFeaturesInternal(const uint8_t* data, size_t data_size,
                                       WebPBitstreamFeatures* features,
                                       int version) {
-  VP8StatusCode status;
   if (WEBP_ABI_IS_INCOMPATIBLE(version, WEBP_DECODER_ABI_VERSION)) {
     return VP8_STATUS_INVALID_PARAM;   // version mismatch
   }
   if (features == NULL) {
     return VP8_STATUS_INVALID_PARAM;
   }
-
-  status = GetFeatures(data, data_size, features);
-  if (status == VP8_STATUS_NOT_ENOUGH_DATA) {
-    return VP8_STATUS_BITSTREAM_ERROR;  // Not-enough-data treated as error.
-  }
-  return status;
+  return GetFeatures(data, data_size, features);
 }
 
 VP8StatusCode WebPDecode(const uint8_t* data, size_t data_size,
