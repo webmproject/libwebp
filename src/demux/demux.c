@@ -337,6 +337,7 @@ static ParseStatus ParseFrame(
 // 'fragment_chunk_size' is the previously validated, padded chunk size.
 static ParseStatus ParseFragment(WebPDemuxer* const dmux,
                                  uint32_t fragment_chunk_size) {
+  const int frame_num = 1;  // All fragments belong to the 1st (and only) frame.
   const int has_fragments = !!(dmux->feature_flags_ & FRAGMENTS_FLAG);
   const uint32_t frgm_payload_size = fragment_chunk_size - FRGM_CHUNK_SIZE;
   int added_fragment = 0;
@@ -352,12 +353,14 @@ static ParseStatus ParseFragment(WebPDemuxer* const dmux,
 
   // Store a fragment only if the fragments flag is set and all data for this
   // fragment is available.
-  status = StoreFrame(dmux->num_frames_, frgm_payload_size, mem, frame, NULL);
+  status = StoreFrame(frame_num, frgm_payload_size, mem, frame, NULL);
   if (status != PARSE_ERROR && has_fragments && frame->frame_num_ > 0) {
-    // Note num_frames_ is incremented only when all fragments have been
-    // consumed.
     added_fragment = AddFrame(dmux, frame);
-    if (!added_fragment) status = PARSE_ERROR;
+    if (!added_fragment) {
+      status = PARSE_ERROR;
+    } else {
+      dmux->num_frames_ = 1;
+    }
   }
 
   if (!added_fragment) free(frame);
@@ -522,7 +525,6 @@ static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
         break;
       }
       case MKFOURCC('F', 'R', 'G', 'M'): {
-        if (dmux->num_frames_ == 0) dmux->num_frames_ = 1;
         status = ParseFragment(dmux, chunk_size_padded);
         break;
       }
@@ -712,6 +714,7 @@ uint32_t WebPDemuxGetI(const WebPDemuxer* dmux, WebPFormatFeature feature) {
     case WEBP_FF_CANVAS_HEIGHT:    return (uint32_t)dmux->canvas_height_;
     case WEBP_FF_LOOP_COUNT:       return (uint32_t)dmux->loop_count_;
     case WEBP_FF_BACKGROUND_COLOR: return dmux->bgcolor_;
+    case WEBP_FF_FRAME_COUNT:      return (uint32_t)dmux->num_frames_;
   }
   return 0;
 }

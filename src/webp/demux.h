@@ -107,7 +107,11 @@ enum WebPFormatFeature {
   WEBP_FF_CANVAS_WIDTH,
   WEBP_FF_CANVAS_HEIGHT,
   WEBP_FF_LOOP_COUNT,
-  WEBP_FF_BACKGROUND_COLOR
+  WEBP_FF_BACKGROUND_COLOR,
+  WEBP_FF_FRAME_COUNT    // Number of frames present in the demux object.
+                         // In case of a partial demux, this is the number of
+                         // frames seen so far, with the last frame possibly
+                         // being partial.
 };
 
 // Get the 'feature' value from the 'dmux'.
@@ -121,7 +125,7 @@ WEBP_EXTERN(uint32_t) WebPDemuxGetI(
 
 struct WebPIterator {
   int frame_num;
-  int num_frames;
+  int num_frames;          // equivalent to WEBP_FF_FRAME_COUNT.
   int fragment_num;
   int num_fragments;
   int x_offset, y_offset;  // offset relative to the canvas.
