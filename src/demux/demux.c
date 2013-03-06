@@ -234,19 +234,22 @@ static ParseStatus StoreFrame(int frame_num, uint32_t min_size,
       case MKFOURCC('V', 'P', '8', ' '):
       case MKFOURCC('V', 'P', '8', 'L'):
         if (image_chunks == 0) {
+          // Extract the bitstream features, tolerating failures when the data
+          // is incomplete.
           WebPBitstreamFeatures features;
-          ChunkData* const image = frame->img_components_;
-          ++image_chunks;
-          image->offset_ = chunk_start_offset;
-          image->size_ = chunk_size;
-          // Extract the width and height from the bitstream, tolerating
-          // failures when the data is incomplete.
-          if ((WebPGetFeatures(mem->buf_ + image->offset_, image->size_,
-                               &features) != VP8_STATUS_OK) &&
-              status != PARSE_NEED_MORE_DATA) {
+          const VP8StatusCode vp8_status =
+              WebPGetFeatures(mem->buf_ + chunk_start_offset, chunk_size,
+                              &features);
+          if (status == PARSE_NEED_MORE_DATA &&
+              vp8_status == VP8_STATUS_NOT_ENOUGH_DATA) {
+            return PARSE_NEED_MORE_DATA;
+          } else if (vp8_status != VP8_STATUS_OK) {
+            // We have enough data, and yet WebPGetFeatures() failed.
             return PARSE_ERROR;
           }
-
+          ++image_chunks;
+          frame->img_components_[0].offset_ = chunk_start_offset;
+          frame->img_components_[0].size_ = chunk_size;
           frame->width_ = features.width;
           frame->height_ = features.height;
           if (has_vp8l_alpha != NULL) *has_vp8l_alpha = features.has_alpha;
