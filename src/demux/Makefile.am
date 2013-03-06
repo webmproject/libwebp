@@ -8,5 +8,6 @@ libwebpdemuxinclude_HEADERS =
 libwebpdemuxinclude_HEADERS += ../webp/demux.h
 libwebpdemuxinclude_HEADERS += ../webp/types.h
 
-libwebpdemux_la_LDFLAGS = -version-info 0:0:0
+libwebpdemux_la_LIBADD = ../libwebp.la
+libwebpdemux_la_LDFLAGS = -no-undefined -version-info 0:0:0
 libwebpdemuxincludedir = $(includedir)/webp
