@@ -267,8 +267,48 @@ a decoded WebP file. It's not yet integrated in the automake or makefile.unix
 build system, but you can try to manually compile it using the recommendations
 at the top of the source file.
 
-Usage: 'vwebp my_picture.webp'
+Usage: vwebp in_file [options]
 
+Decodes the WebP image file and visualize it using OpenGL
+Options are:
+  -version  .... print version number and exit.
+  -noicc ....... don't use the icc profile if present.
+  -nofancy ..... don't use the fancy YUV420 upscaler.
+  -nofilter .... disable in-loop filtering.
+  -mt .......... use multi-threading.
+  -info ........ print info.
+  -h     ....... this help message.
+
+Keyboard shortcuts:
+  'c' ................ toggle use of color profile.
+  'i' ................ overlay file information.
+  'q' / 'Q' / ESC .... quit.
+
+Building:
+---------
+
+Prerequisites:
+1) OpenGL & OpenGL Utility Toolkit (GLUT)
+  Linux:
+    $ sudo apt-get install freeglut3-dev mesa-common-dev
+  Mac + XCode:
+    - These libraries should be available in the OpenGL / GLUT frameworks.
+  Windows:
+    http://freeglut.sourceforge.net/index.php#download
+
+2) (Optional) qcms (Quick Color Management System)
+  i. Download qcms from Mozilla / Chromium:
+    http://hg.mozilla.org/mozilla-central/file/0e7639e3bdfb/gfx/qcms
+    http://src.chromium.org/viewvc/chrome/trunk/src/third_party/qcms
+  ii. Build and archive the source files as libqcms.a / qcms.lib
+  iii. Update makefile.unix / Makefile.vc
+    a) Define WEBP_HAVE_QCMS
+    b) Update include / library paths to reference the qcms directory.
+
+Build using makefile.unix / Makefile.vc:
+$ make -f makefile.unix examples/vwebp
+> nmake /f Makefile.vc CFG=release-static \
+    ../obj/x64/release-static/bin/vwebp.exe
 
 Encoding API:
 =============
