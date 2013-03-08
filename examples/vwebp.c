@@ -251,9 +251,13 @@ static void Help(void) {
          "  -version  .... print version number and exit.\n"
          "  -nofancy ..... don't use the fancy YUV420 upscaler.\n"
          "  -nofilter .... disable in-loop filtering.\n"
-         "  -mt .......... use multi-threading\n"
+         "  -mt .......... use multi-threading.\n"
          "  -info ........ print info.\n"
          "  -h     ....... this help message.\n"
+         "\n"
+         "Keyboard shortcuts:\n"
+         "  'i' ................ overlay file information.\n"
+         "  'q' / 'Q' / ESC .... quit.\n"
         );
 }
 
