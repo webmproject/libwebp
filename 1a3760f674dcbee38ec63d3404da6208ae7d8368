@@ -1,0 +1,191 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAWH//+eg\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-08T20:46:05Z",
+      "side": 1,
+      "message": "could be a positive \u0027emit_details\u0027, but either way...",
+      "revId": "1a3760f674dcbee38ec63d3404da6208ae7d8368",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWH//+ec\u003d",
+        "filename": "man/cwebp.1",
+        "patchSetId": 3
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-08T20:46:05Z",
+      "side": 1,
+      "message": "...four times...",
+      "revId": "1a3760f674dcbee38ec63d3404da6208ae7d8368",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWH//+eU\u003d",
+        "filename": "man/cwebp.1",
+        "patchSetId": 3
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-08T20:46:05Z",
+      "side": 1,
+      "message": "s/bitsteam/bitstream/\n\n...it forces...",
+      "revId": "1a3760f674dcbee38ec63d3404da6208ae7d8368",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWH//+eM\u003d",
+        "filename": "man/cwebp.1",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-08T20:46:05Z",
+      "side": 1,
+      "message": "\\fB\\-low_memory\\fP or at least escape the \u0027-\u0027",
+      "revId": "1a3760f674dcbee38ec63d3404da6208ae7d8368",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWH//+ds\u003d",
+        "filename": "src/enc/frame.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 816,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-08T20:46:05Z",
+      "side": 1,
+      "message": "indent + 2",
+      "revId": "1a3760f674dcbee38ec63d3404da6208ae7d8368",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWH//+dg\u003d",
+        "filename": "src/enc/frame.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 819,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-08T20:46:05Z",
+      "side": 1,
+      "message": "given the ok \u0026\u0026 test, \u0026\u003d seems unneeded.",
+      "revId": "1a3760f674dcbee38ec63d3404da6208ae7d8368",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWH//+dM\u003d",
+        "filename": "src/enc/token.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-08T20:46:05Z",
+      "side": 1,
+      "message": "weird indent",
+      "revId": "1a3760f674dcbee38ec63d3404da6208ae7d8368",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWH//+fs\u003d",
+        "filename": "src/enc/token.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-08T20:46:05Z",
+      "side": 1,
+      "message": "these are of different signs...",
+      "revId": "1a3760f674dcbee38ec63d3404da6208ae7d8368",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWH//+dI\u003d",
+        "filename": "src/enc/token.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-08T20:46:05Z",
+      "side": 1,
+      "message": "intentional 0x3ffu -\u003e 0xffu change?",
+      "revId": "1a3760f674dcbee38ec63d3404da6208ae7d8368",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWH//+dE\u003d",
+        "filename": "src/enc/vp8enci.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-08T20:46:05Z",
+      "side": 1,
+      "message": "allocated memory _left_ behind?",
+      "revId": "1a3760f674dcbee38ec63d3404da6208ae7d8368",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWH//+cw\u003d",
+        "filename": "src/webp/encode.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-08T20:46:05Z",
+      "side": 1,
+      "message": "good catch, we forgot this before...need to make a check on the others before release",
+      "revId": "1a3760f674dcbee38ec63d3404da6208ae7d8368",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}

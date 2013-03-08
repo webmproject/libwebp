@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAWH//+ek\u003d",
+        "filename": "src/enc/frame.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-08T20:46:05Z",
+      "side": 0,
+      "message": "this relo makes the diff hard to parse...",
+      "revId": "ad2503203a264f769e9e85bab2d7fe4e10cc1138",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
