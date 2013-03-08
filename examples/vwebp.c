@@ -153,12 +153,12 @@ static void HandleDisplay(void) {
   if (kParams.print_info) {
     char tmp[32];
 
-    glColor4f(0.0, 0.0, 0.0, 1.0);
+    glColor4f(0.90, 0.0, 0.90, 1.0);
     glRasterPos2f(-0.95f, 0.90f);
     PrintString(kParams.file_name);
 
     snprintf(tmp, sizeof(tmp), "Dimension:%d x %d", pic->width, pic->height);
-    glColor4f(0.0, 0.0, 0.0, 1.0);
+    glColor4f(0.90, 0.0, 0.90, 1.0);
     glRasterPos2f(-0.95f, 0.80f);
     PrintString(tmp);
     if (iter->x_offset != 0 || iter->y_offset != 0) {
