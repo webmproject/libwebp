@@ -16,6 +16,23 @@
       "revId": "ad2503203a264f769e9e85bab2d7fe4e10cc1138",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWH//+Uc\u003d",
+        "filename": "src/enc/vp8enci.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-08T22:41:50Z",
+      "side": 0,
+      "message": "note the build is broken on windows due to this empty struct currently...",
+      "revId": "ad2503203a264f769e9e85bab2d7fe4e10cc1138",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
