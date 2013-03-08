@@ -317,10 +317,10 @@ static void PrintHelp(void) {
   printf("\n");
   printf("FRAME_OPTIONS(i):\n");
   printf(" Create animation.\n");
-  printf("   file_i +xi+yi+di+mi\n");
+  printf("   file_i +di+xi+yi+mi\n");
   printf("   where:    'file_i' is the i'th animation frame (WebP format),\n");
-  printf("             'xi','yi' specify the image offset for this frame.\n");
   printf("             'di' is the pause duration before next frame.\n");
+  printf("             'xi','yi' specify the image offset for this frame.\n");
   printf("             'mi' is the dispose method for this frame (0 or 1).\n");
 
   printf("\n");
