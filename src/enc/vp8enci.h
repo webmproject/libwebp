@@ -175,6 +175,9 @@ struct VP8Histogram {
   int distribution[MAX_COEFF_THRESH + 1];
 };
 
+// Uncomment the following to remove token-buffer code:
+// #define DISABLE_TOKEN_BUFFER
+
 //------------------------------------------------------------------------------
 // Headers
 
@@ -327,12 +330,10 @@ void VP8SetSegment(const VP8EncIterator* const it, int segment);
 //------------------------------------------------------------------------------
 // Paginated token buffer
 
-// WIP:#define USE_TOKEN_BUFFER
-
 typedef struct VP8Tokens VP8Tokens;  // struct details in token.c
 
 typedef struct {
-#ifdef USE_TOKEN_BUFFER
+#if !defined(DISABLE_TOKEN_BUFFER)
   VP8Tokens* pages_;        // first page
   VP8Tokens** last_page_;   // last page
   uint16_t* tokens_;        // set to (*last_page_)->tokens_
@@ -344,15 +345,22 @@ typedef struct {
 void VP8TBufferInit(VP8TBuffer* const b);    // initialize an empty buffer
 void VP8TBufferClear(VP8TBuffer* const b);   // de-allocate pages memory
 
-#ifdef USE_TOKEN_BUFFER
+#if !defined(DISABLE_TOKEN_BUFFER)
 
-int VP8EmitTokens(const VP8TBuffer* const b, VP8BitWriter* const bw,
+// Finalizes bitstream when probabilities are known.
+// Deletes the allocated token memory if final_pass is true.
+int VP8EmitTokens(VP8TBuffer* const b, VP8BitWriter* const bw,
                   const uint8_t* const probas, int final_pass);
-int VP8RecordCoeffTokens(int ctx, int first, int last,
-                         const int16_t* const coeffs, VP8TBuffer* tokens);
+
+// record the coding of coefficients without knowing the probabilities yet
+int VP8RecordCoeffTokens(int ctx, int coeff_type, int first, int last,
+                         const int16_t* const coeffs,
+                         VP8TBuffer* const tokens);
+
+// unused for now
 void VP8TokenToStats(const VP8TBuffer* const b, proba_t* const stats);
 
-#endif  // USE_TOKEN_BUFFER
+#endif  // !DISABLE_TOKEN_BUFFER
 
 //------------------------------------------------------------------------------
 // VP8Encoder
@@ -377,11 +385,9 @@ struct VP8Encoder {
   // per-partition boolean decoders.
   VP8BitWriter bw_;                         // part0
   VP8BitWriter parts_[MAX_NUM_PARTITIONS];  // token partitions
+  VP8TBuffer tokens_;                       // token buffer
 
   int percent_;                             // for progress
-
-  int use_tokens_;                          // if true, use Token buffer
-  VP8TBuffer tokens_;                       // token buffer
 
   // transparency blob
   int has_alpha_;
@@ -419,6 +425,8 @@ struct VP8Encoder {
   VP8RDLevel rd_opt_level_;  // Deduced from method_.
   int max_i4_header_bits_;   // partition #0 safeness factor
   int thread_level_;         // derived from config->thread_level
+  int do_search_;            // derived from config->target_XXX
+  int use_tokens_;           // if true, use token buffer
 
   // Memory
   VP8MBInfo* mb_info_;   // contextual macroblock infos (mb_w_ + 1)
@@ -480,7 +488,7 @@ int VP8GetCostLuma4(VP8EncIterator* const it, const int16_t levels[16]);
 int VP8GetCostUV(VP8EncIterator* const it, const VP8ModeScore* const rd);
 // Main coding calls
 int VP8EncLoop(VP8Encoder* const enc);
-int VP8StatLoop(VP8Encoder* const enc);
+int VP8EncTokenLoop(VP8Encoder* const enc);
 
   // in webpenc.c
 // Assign an error code to a picture. Return false for convenience.

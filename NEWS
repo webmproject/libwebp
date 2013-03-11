@@ -2,6 +2,7 @@
   * WebPINewRGB/WebPINewYUVA accept being passed a NULL output buffer
     and will perform auto-allocation.
   * default filter option is now '-strong -f 60'
+  * encoding speed-up for lossy methods 3 to 6
 
 - 10/30/12: version 0.2.1
   * Various security related fixes
