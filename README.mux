@@ -64,10 +64,10 @@ FRAGMENT_OPTIONS(i):
 
 FRAME_OPTIONS(i):
  Create animation.
-   file_i +xi+yi+di+mi
+   file_i +di+xi+yi+mi
    where:    'file_i' is the i'th animation frame (WebP format),
-             'xi','yi' specify the image offset for this frame.
              'di' is the pause duration before next frame.
+             'xi','yi' specify the image offset for this frame.
              'mi' is the dispose method for this frame (0 or 1).
 
 LOOP_COUNT:
