@@ -3,6 +3,7 @@
     and will perform auto-allocation.
   * default filter option is now '-strong -f 60'
   * encoding speed-up for lossy methods 3 to 6
+  * alpha encoding can be done in parallel to lossy using 'cwebp -mt ...'
 
 - 10/30/12: version 0.2.1
   * Various security related fixes
