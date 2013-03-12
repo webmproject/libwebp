@@ -109,14 +109,17 @@ static void ResetBoundaryPredictions(VP8Encoder* const enc) {
 //-------------------+---+---+---+---+---+---+---+
 // rd-opt i4/16      |   |   | ~ | x | x | x | x |
 //-------------------+---+---+---+---+---+---+---+
+// token buffer (opt)|   |   |   | x | x | x | x |
+//-------------------+---+---+---+---+---+---+---+
 // Trellis           |   |   |   |   |   | x |Ful|
 //-------------------+---+---+---+---+---+---+---+
 // full-SNS          |   |   |   |   | x | x | x |
 //-------------------+---+---+---+---+---+---+---+
 
 static void MapConfigToTools(VP8Encoder* const enc) {
-  const int method = enc->config_->method;
-  const int limit = 100 - enc->config_->partition_limit;
+  const WebPConfig* const config = enc->config_;
+  const int method = config->method;
+  const int limit = 100 - config->partition_limit;
   enc->method_ = method;
   enc->rd_opt_level_ = (method >= 6) ? RD_OPT_TRELLIS_ALL
                      : (method >= 5) ? RD_OPT_TRELLIS
@@ -126,7 +129,17 @@ static void MapConfigToTools(VP8Encoder* const enc) {
       256 * 16 * 16 *                 // upper bound: up to 16bit per 4x4 block
       (limit * limit) / (100 * 100);  // ... modulated with a quadratic curve.
 
-  enc->thread_level_ = enc->config_->thread_level;
+  enc->thread_level_ = config->thread_level;
+
+  enc->do_search_ = (config->target_size > 0 || config->target_PSNR > 0);
+  if (!config->low_memory) {
+#if !defined(DISABLE_TOKEN_BUFFER)
+    enc->use_tokens_ = (method >= 3) && !enc->do_search_;
+#endif
+    if (enc->use_tokens_) {
+      enc->num_parts_ = 1;   // doesn't work with multi-partition
+    }
+  }
 }
 
 // Memory scaling with dimensions:
@@ -265,6 +278,7 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
   VP8EncInitLayer(enc);
 #endif
 
+  VP8TBufferInit(&enc->tokens_);
   return enc;
 }
 
@@ -275,6 +289,7 @@ static int DeleteVP8Encoder(VP8Encoder* enc) {
 #ifdef WEBP_EXPERIMENTAL_FEATURES
     VP8EncDeleteLayer(enc);
 #endif
+    VP8TBufferClear(&enc->tokens_);
     free(enc);
   }
   return ok;
@@ -373,11 +388,16 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
 
     // Analysis is done, proceed to actual coding.
     ok = ok && VP8EncStartAlpha(enc);   // possibly done in parallel
-    ok = ok && VP8StatLoop(enc) && VP8EncLoop(enc);
+    if (!enc->use_tokens_) {
+      ok = VP8EncLoop(enc);
+    } else {
+      ok = VP8EncTokenLoop(enc);
+    }
     ok = ok && VP8EncFinishAlpha(enc);
 #ifdef WEBP_EXPERIMENTAL_FEATURES
     ok = ok && VP8EncFinishLayer(enc);
 #endif
+
     ok = ok && VP8EncWrite(enc);
     StoreStats(enc);
     if (!ok) {

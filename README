@@ -159,6 +159,7 @@ options:
   -crop <x> <y> <w> <h> .. crop picture with the given rectangle
   -resize <w> <h> ........ resize picture (after any cropping)
   -mt .................... use multi-threading if available
+  -low_memory ............ reduce memory usage (slower encoding)
   -map <int> ............. print map of extra info.
   -print_psnr ............ prints averaged PSNR distortion.
   -print_ssim ............ prints averaged SSIM distortion.

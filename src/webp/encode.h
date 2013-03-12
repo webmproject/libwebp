@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-#define WEBP_ENCODER_ABI_VERSION 0x0200    // MAJOR(8b) + MINOR(8b)
+#define WEBP_ENCODER_ABI_VERSION 0x0201    // MAJOR(8b) + MINOR(8b)
 
 #if !(defined(__cplusplus) || defined(c_plusplus))
 typedef enum WebPImageHint WebPImageHint;
@@ -126,8 +126,9 @@ struct WebPConfig {
                           // JPEG compression. Generally, the output size will
                           // be similar but the degradation will be lower.
   int thread_level;       // If non-zero, try and use multi-threaded encoding.
+  int low_memory;         // If set, reduce memory usage (but increase CPU use).
 
-  uint32_t pad[6];        // padding for later use
+  uint32_t pad[5];        // padding for later use
 };
 
 // Enumerate some predefined settings for WebPConfig, depending on the type

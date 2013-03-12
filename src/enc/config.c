@@ -48,6 +48,7 @@ int WebPConfigInitInternal(WebPConfig* config,
   config->image_hint = WEBP_HINT_DEFAULT;
   config->emulate_jpeg_size = 0;
   config->thread_level = 0;
+  config->low_memory = 0;
 
   // TODO(skal): tune.
   switch (preset) {
@@ -127,6 +128,8 @@ int WebPValidateConfig(const WebPConfig* config) {
   if (config->emulate_jpeg_size < 0 || config->emulate_jpeg_size > 1)
     return 0;
   if (config->thread_level < 0 || config->thread_level > 1)
+    return 0;
+  if (config->low_memory < 0 || config->low_memory > 1)
     return 0;
   return 1;
 }

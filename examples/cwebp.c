@@ -229,6 +229,7 @@ static void PrintExtraInfoLossless(const WebPPicture* const pic,
 }
 
 static void PrintExtraInfoLossy(const WebPPicture* const pic, int short_output,
+                                int full_details,
                                 const char* const file_name) {
   const WebPAuxStats* const stats = pic->stats;
   if (short_output) {
@@ -270,22 +271,26 @@ static void PrintExtraInfoLossy(const WebPPicture* const pic, int short_output,
       fprintf(stderr, " Residuals bytes  "
                       "|segment 1|segment 2|segment 3"
                       "|segment 4|  total\n");
-      fprintf(stderr, "  intra4-coeffs:  ");
-      PrintByteCount(stats->residual_bytes[0], stats->coded_size, totals);
-      fprintf(stderr, " intra16-coeffs:  ");
-      PrintByteCount(stats->residual_bytes[1], stats->coded_size, totals);
-      fprintf(stderr, "  chroma coeffs:  ");
-      PrintByteCount(stats->residual_bytes[2], stats->coded_size, totals);
+      if (full_details) {
+        fprintf(stderr, "  intra4-coeffs:  ");
+        PrintByteCount(stats->residual_bytes[0], stats->coded_size, totals);
+        fprintf(stderr, " intra16-coeffs:  ");
+        PrintByteCount(stats->residual_bytes[1], stats->coded_size, totals);
+        fprintf(stderr, "  chroma coeffs:  ");
+        PrintByteCount(stats->residual_bytes[2], stats->coded_size, totals);
+      }
       fprintf(stderr, "    macroblocks:  ");
       PrintPercents(stats->segment_size, total);
       fprintf(stderr, "      quantizer:  ");
       PrintValues(stats->segment_quant);
       fprintf(stderr, "   filter level:  ");
       PrintValues(stats->segment_level);
-      fprintf(stderr, "------------------+---------");
-      fprintf(stderr, "+---------+---------+---------+-----------------\n");
-      fprintf(stderr, " segments total:  ");
-      PrintByteCount(totals, stats->coded_size, NULL);
+      if (full_details) {
+        fprintf(stderr, "------------------+---------");
+        fprintf(stderr, "+---------+---------+---------+-----------------\n");
+        fprintf(stderr, " segments total:  ");
+        PrintByteCount(totals, stats->coded_size, NULL);
+      }
     }
     if (stats->lossless_size > 0) {
       PrintFullLosslessInfo(stats, "alpha");
@@ -547,6 +552,7 @@ static void HelpLong(void) {
   printf("  -crop <x> <y> <w> <h> .. crop picture with the given rectangle\n");
   printf("  -resize <w> <h> ........ resize picture (after any cropping)\n");
   printf("  -mt .................... use multi-threading if available\n");
+  printf("  -low_memory ............ reduce memory usage (slower encoding)\n");
 #ifdef WEBP_EXPERIMENTAL_FEATURES
   printf("  -444 / -422 / -gray ..... Change colorspace\n");
 #endif
@@ -727,6 +733,8 @@ int main(int argc, const char *argv[]) {
       config.emulate_jpeg_size = 1;
     } else if (!strcmp(argv[c], "-mt")) {
       ++config.thread_level;  // increase thread level
+    } else if (!strcmp(argv[c], "-low_memory")) {
+      config.low_memory = 1;
     } else if (!strcmp(argv[c], "-strong")) {
       config.filter_type = 1;
     } else if (!strcmp(argv[c], "-nostrong")) {
@@ -980,7 +988,7 @@ int main(int argc, const char *argv[]) {
     if (config.lossless) {
       PrintExtraInfoLossless(&picture, short_output, in_file);
     } else {
-      PrintExtraInfoLossy(&picture, short_output, in_file);
+      PrintExtraInfoLossy(&picture, short_output, config.low_memory, in_file);
     }
   }
   if (!quiet && !short_output && print_distortion >= 0) {  // print distortion
