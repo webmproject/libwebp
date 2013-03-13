@@ -374,6 +374,22 @@ enum {
 static const int kChunkHeaderSize = 8;
 static const int kTagSize = 4;
 
+static void PrintMetadataInfo(const Metadata* const metadata,
+                              int metadata_written) {
+  if (metadata == NULL || metadata_written == 0) return;
+
+  fprintf(stderr, "Metadata:\n");
+  if (metadata_written & METADATA_ICCP) {
+    fprintf(stderr, "  * ICC profile:  %6zu bytes\n", metadata->iccp.size);
+  }
+  if (metadata_written & METADATA_EXIF) {
+    fprintf(stderr, "  * EXIF data:    %6zu bytes\n", metadata->exif.size);
+  }
+  if (metadata_written & METADATA_XMP) {
+    fprintf(stderr, "  * XMP data:     %6zu bytes\n", metadata->xmp.size);
+  }
+}
+
 // Outputs, in little endian, 'num' bytes from 'val' to 'out'.
 static int WriteLE(FILE* const out, uint32_t val, int num) {
   uint8_t buf[4];
@@ -424,7 +440,8 @@ static int WriteWebPWithMetadata(FILE* const out,
                                  const WebPPicture* const picture,
                                  const WebPMemoryWriter* const memory_writer,
                                  const Metadata* const metadata,
-                                 int keep_metadata) {
+                                 int keep_metadata,
+                                 int* const metadata_written) {
   const char kVP8XHeader[] = "VP8X\x0a\x00\x00\x00";
   const int kAlphaFlag = 0x10;
   const int kEXIFFlag  = 0x08;
@@ -446,6 +463,9 @@ static int WriteWebPWithMetadata(FILE* const out,
                                             kXMPFlag, &flags, &metadata_size);
   uint8_t* webp = memory_writer->mem;
   size_t webp_size = memory_writer->size;
+
+  *metadata_written = 0;
+
   if (webp_size < kMinSize) return 0;
   if (webp_size - kChunkHeaderSize + metadata_size > kMaxChunkPayload) {
     fprintf(stderr, "Error! Addition of metadata would exceed "
@@ -482,11 +502,20 @@ static int WriteWebPWithMetadata(FILE* const out,
       ok = ok && WriteLE24(out, picture->width - 1);
       ok = ok && WriteLE24(out, picture->height - 1);
     }
-    if (write_iccp) ok = ok && WriteMetadataChunk(out, "ICCP", &metadata->iccp);
+    if (write_iccp) {
+      ok = ok && WriteMetadataChunk(out, "ICCP", &metadata->iccp);
+      *metadata_written |= METADATA_ICCP;
+    }
     // Image
     ok = ok && (fwrite(webp, webp_size, 1, out) == 1);
-    if (write_exif) ok = ok && WriteMetadataChunk(out, "EXIF", &metadata->exif);
-    if (write_xmp)  ok = ok && WriteMetadataChunk(out, "XMP ", &metadata->xmp);
+    if (write_exif) {
+      ok = ok && WriteMetadataChunk(out, "EXIF", &metadata->exif);
+      *metadata_written |= METADATA_EXIF;
+    }
+    if (write_xmp) {
+      ok = ok && WriteMetadataChunk(out, "XMP ", &metadata->xmp);
+      *metadata_written |= METADATA_XMP;
+    }
     return ok;
   } else {
     // No metadata, just write the original image file.
@@ -631,6 +660,7 @@ int main(int argc, const char *argv[]) {
   int resize_w = 0, resize_h = 0;
   int show_progress = 0;
   int keep_metadata = 0;
+  int metadata_written = 0;
   WebPPicture picture;
   int print_distortion = -1;        // -1=off, 0=PSNR, 1=SSIM, 2=LSIM
   WebPPicture original_picture;    // when PSNR or SSIM is requested
@@ -978,7 +1008,7 @@ int main(int argc, const char *argv[]) {
 
   if (keep_metadata != 0 && out != NULL) {
     if (!WriteWebPWithMetadata(out, &picture, &memory_writer,
-                               &metadata, keep_metadata)) {
+                               &metadata, keep_metadata, &metadata_written)) {
       fprintf(stderr, "Error writing WebP file with metadata!\n");
       goto Error;
     }
@@ -989,6 +1019,9 @@ int main(int argc, const char *argv[]) {
       PrintExtraInfoLossless(&picture, short_output, in_file);
     } else {
       PrintExtraInfoLossy(&picture, short_output, config.low_memory, in_file);
+    }
+    if (!short_output) {
+      PrintMetadataInfo(&metadata, metadata_written);
     }
   }
   if (!quiet && !short_output && print_distortion >= 0) {  // print distortion
