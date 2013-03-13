@@ -244,8 +244,8 @@ AC_MSG_CHECKING(if --enable-experimental option is specified)
 AC_ARG_ENABLE([experimental], AS_HELP_STRING([--enable-experimental],
                                              [Activate experimental features]))
 if test "$enable_experimental" = "yes"; then
-        AC_DEFINE(EXPERIMENTAL,,[Enable experimental code])
-        USE_EXPERIMENTAL_CODE="-DWEBP_EXPERIMENTAL_FEATURES"
+  AC_DEFINE(WEBP_EXPERIMENTAL_FEATURES, [1], [Enable experimental code])
+  USE_EXPERIMENTAL_CODE="-DWEBP_EXPERIMENTAL_FEATURES"
 fi
 AC_MSG_RESULT(${enable_experimental-no})
 AC_SUBST(USE_EXPERIMENTAL_CODE)
