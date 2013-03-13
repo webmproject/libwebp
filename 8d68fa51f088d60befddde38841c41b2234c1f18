@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAWX///yI\u003d",
+        "filename": "src/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-03-13T16:00:44Z",
+      "side": 1,
+      "message": "maybe: put this comment first, before the SUBDIRS \u003d... line mentioned.",
+      "revId": "8d68fa51f088d60befddde38841c41b2234c1f18",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
