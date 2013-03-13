@@ -8,6 +8,10 @@
 //  WebP container demux.
 //
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -333,6 +337,7 @@ static ParseStatus ParseFrame(
   return status;
 }
 
+#ifdef WEBP_EXPERIMENTAL_FEATURES
 // Parse a 'FRGM' chunk and any image bearing chunks that immediately follow.
 // 'fragment_chunk_size' is the previously validated, padded chunk size.
 static ParseStatus ParseFragment(WebPDemuxer* const dmux,
@@ -366,6 +371,7 @@ static ParseStatus ParseFragment(WebPDemuxer* const dmux,
   if (!added_fragment) free(frame);
   return status;
 }
+#endif  // WEBP_EXPERIMENTAL_FEATURES
 
 // General chunk storage starting with the header at 'start_offset' allowing
 // the user to request the payload via a fourcc string. 'size' includes the
@@ -524,10 +530,12 @@ static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
         status = ParseFrame(dmux, chunk_size_padded);
         break;
       }
+#ifdef WEBP_EXPERIMENTAL_FEATURES
       case MKFOURCC('F', 'R', 'G', 'M'): {
         status = ParseFragment(dmux, chunk_size_padded);
         break;
       }
+#endif
       case MKFOURCC('I', 'C', 'C', 'P'): {
         store_chunk = !!(dmux->feature_flags_ & ICCP_FLAG);
         goto Skip;
