@@ -196,7 +196,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
   printf("Features present:");
   if (flag & ANIMATION_FLAG) printf(" animation");
   if (flag & FRAGMENTS_FLAG) printf(" image fragments");
-  if (flag & ICCP_FLAG)      printf(" icc profile");
+  if (flag & ICCP_FLAG)      printf(" ICC profile");
   if (flag & EXIF_FLAG)      printf(" EXIF metadata");
   if (flag & XMP_FLAG)       printf(" XMP metadata");
   if (flag & ALPHA_FLAG)     printf(" transparency");
