@@ -10,3 +10,4 @@ libwebpdemuxinclude_HEADERS += ../webp/types.h
 
 libwebpdemux_la_LDFLAGS = -version-info 0:0:0
 libwebpdemuxincludedir = $(includedir)/webp
+pkgconfig_DATA = libwebpdemux.pc
