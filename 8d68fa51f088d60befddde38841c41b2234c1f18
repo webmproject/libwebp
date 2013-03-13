@@ -16,6 +16,24 @@
       "revId": "8d68fa51f088d60befddde38841c41b2234c1f18",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWX///b8\u003d",
+        "filename": "src/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-13T19:30:39Z",
+      "side": 1,
+      "message": "done. reworded slightly..",
+      "parentUuid": "AAAAWX///yI\u003d",
+      "revId": "8d68fa51f088d60befddde38841c41b2234c1f18",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
