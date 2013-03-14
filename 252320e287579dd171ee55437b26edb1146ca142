@@ -16,6 +16,24 @@
       "revId": "252320e287579dd171ee55437b26edb1146ca142",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWX//+0k\u003d",
+        "filename": "src/demux/demux.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 534,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-14T05:37:21Z",
+      "side": 1,
+      "message": "Right so in a solely fragmented file the demuxer open will fail; tested this with vwebp.",
+      "parentUuid": "AAAAWX///BI\u003d",
+      "revId": "252320e287579dd171ee55437b26edb1146ca142",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
