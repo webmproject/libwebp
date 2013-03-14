@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAWX//+L8\u003d",
+        "filename": "src/utils/filters.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-14T20:06:32Z",
+      "side": 1,
+      "message": "weird alignment here.",
+      "revId": "08481d146e44d20a4870933892279eb7de6b8d89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWX//+Lw\u003d",
+        "filename": "src/utils/filters.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-14T20:06:32Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "08481d146e44d20a4870933892279eb7de6b8d89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
