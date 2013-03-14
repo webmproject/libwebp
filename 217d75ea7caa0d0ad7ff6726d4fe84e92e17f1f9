@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAWX///Bg\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-03-14T00:10:14Z",
+      "side": 1,
+      "message": "0 \u003d\u003e NULL",
+      "revId": "217d75ea7caa0d0ad7ff6726d4fe84e92e17f1f9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWX///Bc\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 504,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-03-14T00:10:14Z",
+      "side": 1,
+      "message": "you should probably initialize *metadata_written to 0 at the beginning of the funcion",
+      "revId": "217d75ea7caa0d0ad7ff6726d4fe84e92e17f1f9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
