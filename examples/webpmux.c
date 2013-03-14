@@ -763,12 +763,12 @@ static int InitializeConfig(int argc, const char* argv[],
 // Processing.
 
 static int GetFrameFragment(const WebPMux* mux,
-                            const WebPMuxConfig* config, int isFrame) {
+                            const WebPMuxConfig* config, int is_frame) {
   WebPMuxError err = WEBP_MUX_OK;
   WebPMux* mux_single = NULL;
   long num = 0;
   int ok = 1;
-  const WebPChunkId id = isFrame ? WEBP_CHUNK_ANMF : WEBP_CHUNK_FRGM;
+  const WebPChunkId id = is_frame ? WEBP_CHUNK_ANMF : WEBP_CHUNK_FRGM;
   WebPMuxFrameInfo info;
   WebPDataInit(&info.bitstream);
 
