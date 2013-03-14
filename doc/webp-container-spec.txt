@@ -60,9 +60,9 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 document are to be interpreted as described in [RFC 2119][].
 
 **Note:** Out of the features mentioned above, lossy compression, lossless
-compression and transparency are finalized and are to be considered stable.
-On the other hand, metadata, color profile, animation and image fragmentation
-are experimental as of now, and are open to discussion, feedback and comments.
+compression, transparency, metadata, color profile and animation are finalized
+and are to be considered stable. On the other hand, image fragmentation is
+experimental as of now, and is open to discussion, feedback and comments.
 The same is indicated using annotation "_status: experimental_" in the relevant
 sections of this document.
 
@@ -274,15 +274,15 @@ An extended format file consists of:
 
   * A 'VP8X' chunk with information about features used in the file.
 
-  * An optional 'ICCP' chunk with color profile. _\[status: experimental\]_
+  * An optional 'ICCP' chunk with color profile.
 
-  * An optional 'ANIM' chunk with animation control data. _\[status: experimental\]_
+  * An optional 'ANIM' chunk with animation control data.
 
   * Image data.
 
-  * An optional 'EXIF' chunk with EXIF metadata. _\[status: experimental\]_
+  * An optional 'EXIF' chunk with EXIF metadata.
 
-  * An optional 'XMP ' chunk with XMP metadata. _\[status: experimental\]_
+  * An optional 'XMP ' chunk with XMP metadata.
 
   * An optional list of [unknown chunks](#unknown-chunks). _\[status: experimental\]_
 
@@ -325,7 +325,7 @@ Reserved (Rsv): 2 bits
 
 : SHOULD be `0`.
 
-ICC profile (I): 1 bit _\[status: experimental\]_
+ICC profile (I): 1 bit
 
 : Set if the file contains an ICC profile.
 
@@ -334,15 +334,15 @@ Alpha (L): 1 bit
 : Set if any of the frames of the image contain transparency information
 ("alpha").
 
-EXIF metadata (E): 1 bit _\[status: experimental\]_
+EXIF metadata (E): 1 bit
 
 : Set if the file contains EXIF metadata.
 
-XMP metadata (X): 1 bit _\[status: experimental\]_
+XMP metadata (X): 1 bit
 
 : Set if the file contains XMP metadata.
 
-Animation (A): 1 bit _\[status: experimental\]_
+Animation (A): 1 bit
 
 : Set if this is an animated image. Data in 'ANIM' and 'ANMF' chunks should be
 used to control the animation.
@@ -371,7 +371,7 @@ Future specifications MAY add more fields.
 
 ### Chunks
 
-#### Animation _\[status: experimental\]_
+#### Animation
 
 An animation is controlled by ANIM and ANMF chunks.
 
@@ -644,7 +644,7 @@ The formats of VP8 and VP8L chunks are as described in sections
 [Simple file format (lossy)](#simple-file-format-lossy)
 and [Simple file format (lossless)](#simple-file-format-lossless) respectively.
 
-#### Color profile _\[status: experimental\]_
+#### Color profile
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -666,7 +666,7 @@ See the [ICC Specification][iccspec] for details.
 
 If this chunk is not present, sRGB SHOULD be assumed.
 
-#### Metadata _\[status: experimental\]_
+#### Metadata
 
 Metadata can be stored in 'EXIF' or 'XMP ' chunks.
 
@@ -727,14 +727,14 @@ A file MAY contain unknown chunks:
 Readers SHOULD ignore these chunks. Writers SHOULD preserve them in their
 original order (unless they specifically intend to modify these chunks).
 
-### Assembling the Canvas from fragments/frames _\[status: experimental\]_
+### Assembling the Canvas from fragments/frames
 
 Here we provide an overview of how a reader should assemble a canvas in case
 of a fragmented-image and in case of an animated image. The notation
 _VP8X.field_ means the field in the 'VP8X' chunk with the same description.
 
 Displaying a _fragmented image_ canvas MUST be equivalent to the following
-pseudocode:
+pseudocode: _\[status: experimental\]_
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 assert VP8X.flags.hasFragments
