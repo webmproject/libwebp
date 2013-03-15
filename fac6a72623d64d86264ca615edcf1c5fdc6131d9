@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAWX//82k\u003d",
+        "filename": "README",
+        "patchSetId": 1
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-03-15T22:35:58Z",
+      "side": 1,
+      "message": "\"-noicc\", simply?",
+      "revId": "fac6a72623d64d86264ca615edcf1c5fdc6131d9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWX//818\u003d",
+        "filename": "examples/vwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-03-15T22:35:58Z",
+      "side": 1,
+      "message": "you could move this #ifdef inside the  ApplyColorProfile() function, so it\u0027s an empty function in case WEBP_HAVE_QCMS is not defined.",
+      "revId": "fac6a72623d64d86264ca615edcf1c5fdc6131d9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWX//814\u003d",
+        "filename": "examples/vwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-03-15T22:35:58Z",
+      "side": 1,
+      "message": "you don\u0027t really need to protect this block with WEBP_HAVE_QCMS",
+      "revId": "fac6a72623d64d86264ca615edcf1c5fdc6131d9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
