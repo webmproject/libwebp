@@ -26,7 +26,6 @@ A list of options is available using the -help command line flag:
 Usage: webpmux -get GET_OPTIONS INPUT -o OUTPUT
        webpmux -set SET_OPTIONS INPUT -o OUTPUT
        webpmux -strip STRIP_OPTIONS INPUT -o OUTPUT
-       webpmux -frgm FRAGMENT_OPTIONS [-frgm...] -o OUTPUT
        webpmux -frame FRAME_OPTIONS [-frame...] [-loop LOOP_COUNT]
                [-bgcolor BACKGROUND_COLOR] -o OUTPUT
        webpmux -info INPUT
@@ -38,7 +37,6 @@ GET_OPTIONS:
    icc       Get ICC profile.
    exif      Get EXIF metadata.
    xmp       Get XMP metadata.
-   frgm n    Get nth fragment.
    frame n   Get nth frame.
 
 SET_OPTIONS:
@@ -55,12 +53,6 @@ STRIP_OPTIONS:
    icc       Strip ICC profile.
    exif      Strip EXIF metadata.
    xmp       Strip XMP metadata.
-
-FRAGMENT_OPTIONS(i):
- Create fragmented image.
-   file_i +xi+yi
-   where:    'file_i' is the i'th fragment (WebP format),
-             'xi','yi' specify the image offset for this fragment.
 
 FRAME_OPTIONS(i):
  Create animation.
