@@ -242,6 +242,8 @@ OUT_EXAMPLES = $(DIRBIN)\cwebp.exe $(DIRBIN)\dwebp.exe
 all: $(OUT_LIBS) $(OUT_EXAMPLES)
 $(DIRBIN)\cwebp.exe: $(DIROBJ)\examples\cwebp.obj $(EX_FORMAT_DEC_OBJS)
 $(DIRBIN)\dwebp.exe: $(DIROBJ)\examples\dwebp.obj
+$(DIRBIN)\vwebp.exe: $(DIROBJ)\examples\vwebp.obj
+$(DIRBIN)\vwebp.exe: $(EX_UTIL_OBJS) $(LIBWEBPDEMUX) $(LIBWEBP)
 $(DIRBIN)\webpmux.exe: $(DIROBJ)\examples\webpmux.obj $(LIBWEBPMUX)
 $(DIRBIN)\webpmux.exe: $(EX_UTIL_OBJS) $(LIBWEBP)
 $(OUT_EXAMPLES): $(EX_UTIL_OBJS) $(LIBWEBP)
