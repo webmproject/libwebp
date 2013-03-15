@@ -379,7 +379,7 @@ static void PrintMetadataInfo(const Metadata* const metadata,
   if (metadata == NULL || metadata_written == 0) return;
 
   fprintf(stderr, "Metadata:\n");
-  if (metadata_written & METADATA_ICCP) {
+  if (metadata_written & METADATA_ICC) {
     fprintf(stderr, "  * ICC profile:  %6zu bytes\n", metadata->iccp.size);
   }
   if (metadata_written & METADATA_EXIF) {
@@ -504,7 +504,7 @@ static int WriteWebPWithMetadata(FILE* const out,
     }
     if (write_iccp) {
       ok = ok && WriteMetadataChunk(out, "ICCP", &metadata->iccp);
-      *metadata_written |= METADATA_ICCP;
+      *metadata_written |= METADATA_ICC;
     }
     // Image
     ok = ok && (fwrite(webp, webp_size, 1, out) == 1);
