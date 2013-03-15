@@ -366,9 +366,9 @@ static int DumpPicture(const WebPPicture* const picture, const char* PGM_name) {
 
 enum {
   METADATA_EXIF = (1 << 0),
-  METADATA_ICCP = (1 << 1),
+  METADATA_ICC  = (1 << 1),
   METADATA_XMP  = (1 << 2),
-  METADATA_ALL  = METADATA_EXIF | METADATA_ICCP | METADATA_XMP
+  METADATA_ALL  = METADATA_EXIF | METADATA_ICC | METADATA_XMP
 };
 
 static const int kChunkHeaderSize = 8;
@@ -456,7 +456,7 @@ static int WriteWebPWithMetadata(FILE* const out,
                                             !!(keep_metadata & METADATA_EXIF),
                                             kEXIFFlag, &flags, &metadata_size);
   const int write_iccp = UpdateFlagsAndSize(&metadata->iccp,
-                                            !!(keep_metadata & METADATA_ICCP),
+                                            !!(keep_metadata & METADATA_ICC),
                                             kICCPFlag, &flags, &metadata_size);
   const int write_xmp  = UpdateFlagsAndSize(&metadata->xmp,
                                             !!(keep_metadata & METADATA_XMP),
@@ -604,7 +604,7 @@ static void HelpLong(void) {
   printf("                           ");
   printf("copy from the input to the output if present.\n");
   printf("                           "
-         "Valid values: all, none (default), exif, iccp, xmp\n");
+         "Valid values: all, none (default), exif, icc, xmp\n");
 
   printf("\n");
   printf("  -short ................. condense printed message\n");
@@ -842,7 +842,7 @@ int main(int argc, const char *argv[]) {
         { "all",  METADATA_ALL },
         { "none", 0 },
         { "exif", METADATA_EXIF },
-        { "iccp", METADATA_ICCP },
+        { "icc",  METADATA_ICC },
         { "xmp",  METADATA_XMP },
       };
       const size_t kNumTokens = sizeof(kTokens) / sizeof(kTokens[0]);
@@ -874,7 +874,7 @@ int main(int argc, const char *argv[]) {
         start = token + 1;
       }
 #ifdef HAVE_WINCODEC_H
-      if (keep_metadata != 0 && keep_metadata != METADATA_ICCP) {
+      if (keep_metadata != 0 && keep_metadata != METADATA_ICC) {
         // TODO(jzern): remove when -metadata is supported on all platforms.
         fprintf(stderr, "Warning: only ICC profile extraction is currently"
                         " supported on this platform!\n");
