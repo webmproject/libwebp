@@ -59,7 +59,7 @@ extern "C" {
 // The right-justify strategy tends to use less shifts and is often faster.
 
 //------------------------------------------------------------------------------
-// BITS can be either 32, 24, 16 or 8.
+// BITS can be any multiple of 8 from 8 to 56 (inclusive).
 // Pick values that fit natural register size.
 
 #if !defined(WEBP_REFERENCE_IMPLEMENTATION)
@@ -68,7 +68,9 @@ extern "C" {
 
 #if defined(__i386__) || defined(_M_IX86)      // x86 32bit
 #define BITS 16
-#elif defined(__arm__) || defined(_M_ARM)     // ARM
+#elif defined(__x86_64__) || defined(_M_X64)   // x86 64bit
+#define BITS 56
+#elif defined(__arm__) || defined(_M_ARM)      // ARM
 #define BITS 24
 #else                      // reasonable default
 #define BITS 24
@@ -84,9 +86,15 @@ extern "C" {
 //------------------------------------------------------------------------------
 // Derived types and constants
 
-#if (BITS == 32)
-typedef uint64_t bit_t;   // natural register type
-typedef uint32_t lbit_t;  // natural type for memory I/O
+// bit_t = natural register type
+// lbit_t = natural type for memory I/O
+
+#if (BITS > 32)
+typedef uint64_t bit_t;
+typedef uint64_t lbit_t;
+#elif (BITS == 32)
+typedef uint64_t bit_t;
+typedef uint32_t lbit_t;
 #elif (BITS == 24)
 typedef uint32_t bit_t;
 typedef uint32_t lbit_t;
@@ -148,19 +156,36 @@ static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
     lbit_t in_bits = *(lbit_t*)br->buf_;
     br->buf_ += (BITS) >> 3;
 #if !defined(__BIG_ENDIAN__)
-#if (BITS == 32) || (BITS == 24)
+#if (BITS > 32)
+// gcc 4.3 has builtin functions for swap32/swap64
+#if defined(__GNUC__) && \
+           (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))
+    bits = (bit_t)__builtin_bswap64(in_bits);
+#elif defined(_MSC_VER)
+    bits = (bit_t)_byteswap_uint64(in_bits);
+#elif defined(__x86_64__)
+    __asm__ volatile("bswapq %0" : "=r"(bits) : "0"(in_bits));
+#else  // generic code for swapping 64-bit values (suggested by bdb@)
+    bits = (bit_t)in_bits;
+    bits = ((bits & 0xffffffff00000000ull) >> 32) |
+           ((bits & 0x00000000ffffffffull) << 32);
+    bits = ((bits & 0xffff0000ffff0000ull) >> 16) |
+           ((bits & 0x0000ffff0000ffffull) << 16);
+    bits = ((bits & 0xff00ff00ff00ff00ull) >> 8) |
+           ((bits & 0x00ff00ff00ff00ffull) << 8);
+#endif
+    bits >>= 64 - BITS;
+#elif (BITS >= 24)
 #if defined(__i386__) || defined(__x86_64__)
     __asm__ volatile("bswap %k0" : "=r"(in_bits) : "0"(in_bits));
     bits = (bit_t)in_bits;   // 24b/32b -> 32b/64b zero-extension
 #elif defined(_MSC_VER)
-    bits = _byteswap_ulong(in_bits);
+    bits = (bit_t)_byteswap_ulong(in_bits);
 #else
     bits = (bit_t)(in_bits >> 24) | ((in_bits >> 8) & 0xff00)
          | ((in_bits << 8) & 0xff0000)  | (in_bits << 24);
 #endif  // x86
-#if (BITS == 24)
-    bits >>= 8;
-#endif
+    bits >>= (32 - BITS);
 #elif (BITS == 16)
     // gcc will recognize a 'rorw $8, ...' here:
     bits = (bit_t)(in_bits >> 8) | ((in_bits & 0xff) << 8);
@@ -248,7 +273,7 @@ static WEBP_INLINE int VP8GetBit(VP8BitReader* const br, int prob) {
 }
 
 static WEBP_INLINE int VP8GetSigned(VP8BitReader* const br, int v) {
-  const bit_t split = (br->range_ >> 1);
+  const range_t split = (br->range_ >> 1);
   const int bit = VP8BitUpdate(br, split);
   VP8Shift(br);
   return bit ? -v : v;
