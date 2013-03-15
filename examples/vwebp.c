@@ -141,7 +141,7 @@ static void HandleDisplay(void) {
   glPixelZoom(1, -1);
   xoff = (GLfloat)(2. * iter->x_offset / kParams.canvas_width);
   yoff = (GLfloat)(2. * iter->y_offset / kParams.canvas_height);
-  glRasterPos2f(-1. + xoff, 1. - yoff);
+  glRasterPos2f(-1.f + xoff, 1.f - yoff);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   glPixelStorei(GL_UNPACK_ROW_LENGTH, pic->u.RGBA.stride / 4);
   if (iter->dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
@@ -153,12 +153,12 @@ static void HandleDisplay(void) {
   if (kParams.print_info) {
     char tmp[32];
 
-    glColor4f(0.90, 0.0, 0.90, 1.0);
+    glColor4f(0.90f, 0.0f, 0.90f, 1.0f);
     glRasterPos2f(-0.95f, 0.90f);
     PrintString(kParams.file_name);
 
     snprintf(tmp, sizeof(tmp), "Dimension:%d x %d", pic->width, pic->height);
-    glColor4f(0.90, 0.0, 0.90, 1.0);
+    glColor4f(0.90f, 0.0f, 0.90f, 1.0f);
     glRasterPos2f(-0.95f, 0.80f);
     PrintString(tmp);
     if (iter->x_offset != 0 || iter->y_offset != 0) {
