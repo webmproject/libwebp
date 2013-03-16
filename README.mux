@@ -9,9 +9,9 @@ Description:
 
 WebPMux: set of two libraries 'Mux' and 'Demux' for creation, extraction and
 manipulation of an extended format WebP file, which can have features like
-color profile, metadata, animation and fragmented images. Reference
-command-line tools 'webpmux' and 'vwebp' as well as the WebP container
-specification 'doc/webp-container-spec.txt' are also provided in this package.
+color profile, metadata and animation. Reference command-line tools 'webpmux'
+and 'vwebp' as well as the WebP container specification
+'doc/webp-container-spec.txt' are also provided in this package.
 
 WebP Mux tool:
 ==============
@@ -45,7 +45,7 @@ SET_OPTIONS:
    exif file.exif    Set EXIF metadata.
    xmp  file.xmp     Set XMP metadata.
    where:    'file.icc' contains the ICC profile to be set,
-             'file.exif' contains the EXIF metadata to be set and
+             'file.exif' contains the EXIF metadata to be set
              'file.xmp' contains the XMP metadata to be set
 
 STRIP_OPTIONS:
@@ -78,29 +78,18 @@ INPUT & OUTPUT are in WebP format.
 Note: The nature of EXIF, XMP and ICC data is not checked and is assumed to be
 valid.
 
-WebP viewer tool:
-================
+Visualization tool:
+===================
 
 The examples/ directory also contains a tool (vwebp) for viewing WebP files.
-It decodes the image and visualizes it using OpenGL.
-
-A list of options is available using the -h command line flag:
-
-> vwebp -h
-Decodes the WebP image file and visualize it using OpenGL
-Options are:
-  -version  .... print version number and exit.
-  -nofancy ..... don't use the fancy YUV420 upscaler.
-  -nofilter .... disable in-loop filtering.
-  -mt .......... use multi-threading
-  -info ........ print info.
-  -h     ....... this help message.
+It decodes the image and visualizes it using OpenGL. See the libwebp README
+for details on building and running this program.
 
 Mux API:
 ========
 The Mux API contains methods for adding data to and reading data from WebP
-files. This API currently supports XMP/EXIF metadata, ICC profile, animation
-and fragmented images. Other features may be added in subsequent releases.
+files. This API currently supports XMP/EXIF metadata, ICC profile and animation.
+Other features may be added in subsequent releases.
 
 Example#1 (pseudo code): Creating a WebPMux object with image data, color
 profile and XMP metadata.
@@ -137,11 +126,11 @@ For a detailed Mux API reference, please refer to the header file
 (src/webp/mux.h).
 
 Demux API:
-=========
+==========
 The Demux API enables extraction of images and extended format data from
 WebP files. This API currently supports reading of XMP/EXIF metadata, ICC
-profile, animation and fragmented images. Other features may be added in
-subsequent releases.
+profile and animated images. Other features may be added in subsequent
+releases.
 
 Code Example: Demuxing WebP data to extract all the frames, ICC profile
 and EXIF/XMP metadata.
