@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH WEBPMUX 1 "February 26, 2013"
+.TH WEBPMUX 1 "March 16, 2013"
 .SH NAME
 webpmux \- command line tool to create WebP Mux/container file.
 .SH SYNOPSIS
@@ -19,11 +19,6 @@ webpmux \- command line tool to create WebP Mux/container file.
 .I STRIP_OPTIONS
 .I INPUT
 .B \-o
-.I OUTPUT
-.br
-.B webpmux \-frgm
-.I FRAGMENT_OPTIONS
-.B [ \-frgm ... ] \-o
 .I OUTPUT
 .br
 .B webpmux \-frame
@@ -64,9 +59,6 @@ Get EXIF metadata.
 .B xmp
 Get XMP metadata.
 .TP
-.BI frgm " n
-Get nth fragment.
-.TP
 .BI frame " n
 Get nth frame.
 
@@ -97,12 +89,6 @@ Strip EXIF metadata.
 .TP
 .B xmp
 Strip XMP metadata.
-
-.SS FRAGMENT_OPTIONS (\-frgm)
-.TP
-.I file_i +xi+yi
-Where: 'file_i' is the i'th fragment (WebP format) and 'xi','yi' specify the
-image offset for this fragment.
 
 .SS FRAME_OPTIONS (\-frame)
 .TP
@@ -163,18 +149,13 @@ webpmux \-get exif exif_container.webp \-o image_metadata.exif
 .br
 webpmux \-strip exif exif_container.webp \-o without_exif.webp
 .br
-webpmux \-frame anim_1.webp +0+0+0 \-frame anim_2.webp +50+50+0 \-loop 10
+webpmux \-frame anim_1.webp +100 \-frame anim_2.webp +100+50+50 \-loop 10
 .br
 .RS 8
 \-bgcolor 255,255,255,255 \-o anim_container.webp
 .RE
 .br
 webpmux \-get frame 2 anim_container.webp \-o frame_2.webp
-.br
-webpmux \-tile tile_1.webp +0+0 \-tile tile_2.webp +960+0 \-tile tile_3.webp
-+0+576 \-tile tile_4.webp +960+576 \-o tile_container.webp
-.br
-webpmux \-get tile 2 tile_container.webp \-o tile_2.webp
 
 .SH AUTHORS
 \fBwebpmux\fP is written by the WebP team.
