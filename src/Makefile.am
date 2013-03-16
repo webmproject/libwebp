@@ -15,11 +15,14 @@ if BUILD_LIBWEBPDECODER
   lib_LTLIBRARIES += libwebpdecoder.la
 endif
 
+common_HEADERS =
+common_HEADERS += webp/decode.h
+common_HEADERS += webp/types.h
+commondir = $(includedir)/webp
+
 libwebp_la_SOURCES =
 libwebpinclude_HEADERS =
-libwebpinclude_HEADERS += webp/decode.h
 libwebpinclude_HEADERS += webp/encode.h
-libwebpinclude_HEADERS += webp/types.h
 noinst_HEADERS =
 noinst_HEADERS += webp/format_constants.h
 
@@ -39,9 +42,6 @@ pkgconfig_DATA = libwebp.pc
 
 if BUILD_LIBWEBPDECODER
   libwebpdecoder_la_SOURCES =
-  libwebpdecoderinclude_HEADERS =
-  libwebpdecoderinclude_HEADERS += webp/decode.h
-  libwebpdecoderinclude_HEADERS += webp/types.h
 
   libwebpdecoder_la_LIBADD =
   libwebpdecoder_la_LIBADD += dec/libwebpdecode.la
@@ -49,7 +49,6 @@ if BUILD_LIBWEBPDECODER
   libwebpdecoder_la_LIBADD += utils/libwebputilsdecode.la
 
   libwebpdecoder_la_LDFLAGS = -no-undefined -version-info 0:0:0
-  libwebpdecoderincludedir = $(includedir)/webp
   pkgconfig_DATA += libwebpdecoder.pc
 endif
 
