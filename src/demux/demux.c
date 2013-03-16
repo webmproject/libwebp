@@ -235,8 +235,10 @@ static ParseStatus StoreFrame(int frame_num, uint32_t min_size,
           goto Done;
         }
         break;
-      case MKFOURCC('V', 'P', '8', ' '):
       case MKFOURCC('V', 'P', '8', 'L'):
+        if (alpha_chunks > 0) return PARSE_ERROR;  // VP8L has its own alpha
+        // fall through
+      case MKFOURCC('V', 'P', '8', ' '):
         if (image_chunks == 0) {
           // Extract the bitstream features, tolerating failures when the data
           // is incomplete.
@@ -506,6 +508,9 @@ static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
       case MKFOURCC('A', 'L', 'P', 'H'):
       case MKFOURCC('V', 'P', '8', ' '):
       case MKFOURCC('V', 'P', '8', 'L'): {
+        // check that this isn't an animation (all frames should be in an ANMF).
+        if (anim_chunks > 0) return PARSE_ERROR;
+
         Rewind(mem, CHUNK_HEADER_SIZE);
         status = ParseSingleImage(dmux);
         break;
@@ -527,6 +532,7 @@ static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
         break;
       }
       case MKFOURCC('A', 'N', 'M', 'F'): {
+        if (anim_chunks == 0) return PARSE_ERROR;  // 'ANIM' precedes frames.
         status = ParseFrame(dmux, chunk_size_padded);
         break;
       }
@@ -623,6 +629,9 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
 
         if (f->width_ <= 0 || f->height_ <= 0) return 0;
       } else {
+        // There shouldn't be a partial frame in a complete file.
+        if (dmux->state_ == WEBP_DEMUX_DONE) return 0;
+
         // Ensure alpha precedes image bitstream.
         if (alpha->size_ > 0 && image->size_ > 0 &&
             alpha->offset_ > image->offset_) {
