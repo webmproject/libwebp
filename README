@@ -49,7 +49,7 @@ will build the binaries examples/cwebp and examples/dwebp, along
 with the static library src/libwebp.a. No system-wide installation
 is supplied, as this is a simple alternative to the full installation
 system based on the autoconf tools (see below).
-Please refer to the makefile.unix for additional details and customizations.
+Please refer to makefile.unix for additional details and customizations.
 
 Using autoconf tools:
 ---------------------
@@ -71,10 +71,11 @@ should be all you need to have the following files
 
 installed.
 
-Note: The encoding and decoding libraries are compiled separately
-(as src/dec/libwebpdecode.* and src/dec/libwebpencode.*). They
-can be installed independently using a minor modification in the
-corresponding Makefile.am configure files (see comments there).
+Note: A decode-only library, libwebpdecoder, is available using the
+'--enable-libwebpdecoder' flag. The encode library is built separately and can
+be installed independently using a minor modification in the corresponding
+Makefile.am configure files (see comments there). See './configure --help' for
+more options.
 
 SWIG bindings:
 --------------
@@ -263,9 +264,8 @@ Visualization tool:
 
 There's a little self-serve visualization tool called 'vwebp' under the
 examples/ directory. It uses OpenGL to open a simple drawing window and show
-a decoded WebP file. It's not yet integrated in the automake or makefile.unix
-build system, but you can try to manually compile it using the recommendations
-at the top of the source file.
+a decoded WebP file. It's not yet integrated in the automake build system, but
+you can try to manually compile it using the recommendations below.
 
 Usage: vwebp in_file [options]
 
