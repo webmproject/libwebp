@@ -168,7 +168,9 @@ LIBWEBPDEMUX_OBJS = $(DEMUX_OBJS)
 
 HDRS_INSTALLED = \
     src/webp/decode.h \
+    src/webp/demux.h \
     src/webp/encode.h \
+    src/webp/mux.h \
     src/webp/types.h \
 
 HDRS = \
@@ -191,22 +193,22 @@ HDRS = \
     src/utils/quant_levels_dec.h \
     src/utils/rescaler.h \
     src/utils/thread.h \
-    src/webp/demux.h \
     src/webp/format_constants.h \
-    src/webp/mux.h \
     src/webp/mux_types.h \
     $(HDRS_INSTALLED) \
 
 OUT_LIBS = examples/libexample_util.a src/libwebpdecoder.a src/libwebp.a
 OUT_EXAMPLES = examples/cwebp examples/dwebp
+EXTRA_EXAMPLES = examples/gif2webp examples/vwebp examples/webpmux
 
 OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES)
 ifeq ($(MAKECMDGOALS),clean)
-  OUTPUT += examples/gif2webp examples/vwebp examples/webpmux
+  OUTPUT += $(EXTRA_EXAMPLES)
   OUTPUT += src/demux/libwebpdemux.a src/mux/libwebpmux.a
 endif
 
-all: ex
+ex: $(OUT_EXAMPLES)
+all: ex $(EXTRA_EXAMPLES)
 
 $(EX_FORMAT_DEC_OBJS): %.o: %.h
 
@@ -221,8 +223,6 @@ src/demux/libwebpdemux.a: $(LIBWEBPDEMUX_OBJS)
 
 %.a:
 	$(AR) $(ARFLAGS) $@ $^
-
-ex: $(OUT_EXAMPLES)
 
 examples/cwebp: examples/cwebp.o $(EX_FORMAT_DEC_OBJS)
 examples/dwebp: examples/dwebp.o
@@ -242,18 +242,21 @@ examples/vwebp: EXTRA_LIBS += $(GL_LIBS)
 examples/webpmux: examples/libexample_util.a src/mux/libwebpmux.a
 examples/webpmux: src/libwebpdecoder.a
 
-$(OUT_EXAMPLES) examples/gif2webp examples/vwebp examples/webpmux:
+$(OUT_EXAMPLES) $(EXTRA_EXAMPLES):
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 dist: DESTDIR := dist
+dist: OUT_EXAMPLES += $(EXTRA_EXAMPLES)
 dist: all
 	$(INSTALL) -m755 -d $(DESTDIR)/include/webp \
 	           $(DESTDIR)/doc $(DESTDIR)/lib
 	$(INSTALL) -m755 -s $(OUT_EXAMPLES) $(DESTDIR)
 	$(INSTALL) -m644 $(HDRS_INSTALLED) $(DESTDIR)/include/webp
 	$(INSTALL) -m644 src/libwebp.a $(DESTDIR)/lib
+	$(INSTALL) -m644 src/demux/libwebpdemux.a $(DESTDIR)/lib
+	$(INSTALL) -m644 src/mux/libwebpmux.a $(DESTDIR)/lib
 	umask 022; \
-	for m in man/[cd]webp.1; do \
+	for m in man/[cd]webp.1 man/gif2webp.1 man/webpmux.1; do \
 	  basenam=$$(basename $$m .1); \
 	  $(GROFF) -t -e -man -T utf8 $$m \
 	    | $(COL) -bx >$(DESTDIR)/doc/$${basenam}.txt; \
