@@ -142,10 +142,12 @@ static void DisplayGifError(const GifFileType* const gif) {
     const char* error_str = (const char*)GifErrorString(gif->Error);
 #else
     const char* error_str = (const char*)GifErrorString();
+    (void)gif;
 #endif
     if (error_str == NULL) error_str = "Unknown error";
     fprintf(stderr, "GIFLib Error: %s\n", error_str);
 #else
+    (void)gif;
     fprintf(stderr, "GIFLib Error: ");
     PrintGifError();
     fprintf(stderr, "\n");
