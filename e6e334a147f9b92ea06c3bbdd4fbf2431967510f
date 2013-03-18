@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAWX//8M8\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-03-18T06:44:29Z",
+      "side": 1,
+      "message": "nit: you can add some {}\u0027s here, for coherency\u0027s sake with the surroundings",
+      "revId": "e6e334a147f9b92ea06c3bbdd4fbf2431967510f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
