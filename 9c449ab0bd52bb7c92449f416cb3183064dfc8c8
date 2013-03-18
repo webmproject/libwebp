@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAWX//8NE\u003d",
+        "filename": "makefile.unix",
+        "patchSetId": 1
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-03-18T06:42:48Z",
+      "side": 1,
+      "message": "replace \"examples/gif2webp examples/vwebp examples/webpmux\"\nby $(EXTRA_EXAMPLES), simply?",
+      "revId": "9c449ab0bd52bb7c92449f416cb3183064dfc8c8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
