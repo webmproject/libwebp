@@ -34,6 +34,24 @@
       "revId": "28bb4107b1f03c22a30847755a5e92b5ce2ce676",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWX//8NQ\u003d",
+        "filename": "NEWS",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-03-18T06:39:21Z",
+      "side": 1,
+      "message": "all right, that\u0027s fine. going into the subtleties of ABI/API in this general NEWS file is probably a bit too much.",
+      "parentUuid": "AAAAWX//8WA\u003d",
+      "revId": "28bb4107b1f03c22a30847755a5e92b5ce2ce676",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
