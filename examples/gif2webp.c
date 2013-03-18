@@ -132,21 +132,24 @@ static int GetColorFromIndex(const ColorMapObject* const color_map, GifWord idx,
   }
 }
 
-static void DisplayGifError(const GifFileType* const gif) {
+static void DisplayGifError(const GifFileType* const gif, int gif_error) {
   // GIFLIB_MAJOR is only defined in libgif >= 4.2.0.
   // libgif 4.2.0 has retired PrintGifError() and added GifErrorString().
 #if defined(GIFLIB_MAJOR) && defined(GIFLIB_MINOR) && \
         ((GIFLIB_MAJOR == 4 && GIFLIB_MINOR >= 2) || GIFLIB_MAJOR > 4)
 #if GIFLIB_MAJOR >= 5
     // Static string actually, hence the const char* cast.
-    const char* error_str = (const char*)GifErrorString(gif->Error);
+    const char* error_str = (const char*)GifErrorString(
+        (gif == NULL) ? gif_error : gif->Error);
 #else
     const char* error_str = (const char*)GifErrorString();
+    (void)gif;
 #endif
     if (error_str == NULL) error_str = "Unknown error";
-    fprintf(stderr, "GIFLib Error: %s\n", error_str);
+    fprintf(stderr, "GIFLib Error %d: %s\n", gif_error, error_str);
 #else
-    fprintf(stderr, "GIFLib Error: ");
+    (void)gif;
+    fprintf(stderr, "GIFLib Error %d: ", gif_error);
     PrintGifError();
     fprintf(stderr, "\n");
 #endif
@@ -184,7 +187,7 @@ static void Help(void) {
 
 int main(int argc, const char *argv[]) {
   int verbose = 0;
-  int gif_error = -1;
+  int gif_error = GIF_ERROR;
   WebPMuxError err = WEBP_MUX_OK;
   int ok = 0;
   const char *in_file = NULL, *out_file = NULL;
@@ -340,11 +343,11 @@ int main(int argc, const char *argv[]) {
           goto End;
         }
         if (verbose) {
-          fprintf(stderr, "Added frame %dx%d (offset:%d,%d duration:%d) ",
-                  view.width, view.height, frame.x_offset, frame.y_offset,
-                  frame.duration);
-          fprintf(stderr, "dispose:%d transparent index:%d\n",
-                  frame.dispose_method, transparent_index);
+          printf("Added frame %dx%d (offset:%d,%d duration:%d) ",
+                 view.width, view.height, frame.x_offset, frame.y_offset,
+                 frame.duration);
+          printf("dispose:%d transparent index:%d\n",
+                 frame.dispose_method, transparent_index);
         }
         WebPDataClear(&frame.bitstream);
         break;
@@ -389,7 +392,7 @@ int main(int argc, const char *argv[]) {
               if (data == NULL) goto End;  // Loop count sub-block missing.
               if (data[0] != 3 && data[1] != 1) break;   // wrong size/marker
               anim.loop_count = data[2] | (data[3] << 8);
-              if (verbose) fprintf(stderr, "Loop count: %d\n", anim.loop_count);
+              if (verbose) printf("Loop count: %d\n", anim.loop_count);
             } else if (!memcmp(data + 1, "XMP dataXMP", 11)) {
               // Read XMP metadata.
               WebPData xmp;
@@ -398,7 +401,7 @@ int main(int argc, const char *argv[]) {
               xmp.bytes = (uint8_t*)data;
               xmp.size = data[0] + 1;
               WebPMuxSetChunk(mux, "XMP ", &xmp, 1);
-              if (verbose) fprintf(stderr, "XMP size: %zu\n", xmp.size);
+              if (verbose) printf("XMP size: %zu\n", xmp.size);
             } else if (!memcmp(data + 1, "ICCRGBG1012", 11)) {
               // Read ICC profile.
               WebPData icc;
@@ -407,7 +410,7 @@ int main(int argc, const char *argv[]) {
               icc.bytes = (uint8_t*)data;
               icc.size = data[0] + 1;
               WebPMuxSetChunk(mux, "ICCP", &icc, 1);
-              if (verbose) fprintf(stderr, "ICC size: %zu\n", icc.size);
+              if (verbose) printf("ICC size: %zu\n", icc.size);
             }
             break;
           }
@@ -451,12 +454,18 @@ int main(int argc, const char *argv[]) {
       fprintf(stderr, "Error writing output file: %s\n", out_file);
       goto End;
     }
-    if (!quiet) fprintf(stderr, "Saved output file: %s\n", out_file);
+    if (!quiet) {
+      printf("Saved output file: %s\n", out_file);
+    }
+  } else {
+    if (!quiet) {
+      printf("Nothing written; use -o flag to save the result.\n");
+    }
   }
 
   // All OK.
   ok = 1;
-  gif_error = 0;
+  gif_error = GIF_OK;
 
  End:
   WebPDataClear(&webp_data);
@@ -464,8 +473,8 @@ int main(int argc, const char *argv[]) {
   WebPPictureFree(&picture);
   if (out != NULL && out_file != NULL) fclose(out);
 
-  if (gif_error != 0) {
-    DisplayGifError(gif);
+  if (gif_error != GIF_OK) {
+    DisplayGifError(gif, gif_error);
   }
   if (gif != NULL) {
     DGifCloseFile(gif);
