@@ -16,6 +16,24 @@
       "revId": "28bb4107b1f03c22a30847755a5e92b5ce2ce676",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWX//8WA\u003d",
+        "filename": "NEWS",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-18T00:13:12Z",
+      "side": 1,
+      "message": "OK I could reword it to say it\u0027s ABI compatible...the point of the padding added means this should be a drop in replacement for users of 0.2.x",
+      "parentUuid": "AAAAWX//8WI\u003d",
+      "revId": "28bb4107b1f03c22a30847755a5e92b5ce2ce676",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
