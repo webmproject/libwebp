@@ -45,7 +45,6 @@
 #ifndef WEBP_WEBP_DEMUX_H_
 #define WEBP_WEBP_DEMUX_H_
 
-#include "./format_constants.h"
 #include "./mux_types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)

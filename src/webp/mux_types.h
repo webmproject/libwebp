@@ -5,7 +5,7 @@
 //  Additional IP Rights Grant:  http://www.webmproject.org/license/additional/
 // -----------------------------------------------------------------------------
 //
-// Internal header for some common data-types used by mux and demux libraries.
+// Data-types common to the mux and demux libraries.
 //
 // Author: Urvang (urvang@google.com)
 
@@ -20,14 +20,23 @@
 extern "C" {
 #endif
 
-// Create fourcc of the chunk from the chunk tag characters.
-#define MKFOURCC(a, b, c, d) ((uint32_t)(a) | (b) << 8 | (c) << 16 | (d) << 24)
+#if !(defined(__cplusplus) || defined(c_plusplus))
+typedef enum WebPFeatureFlags WebPFeatureFlags;
+typedef enum WebPMuxAnimDispose WebPMuxAnimDispose;
+#endif
+
+// VP8X Feature Flags.
+enum WebPFeatureFlags {
+  FRAGMENTS_FLAG  = 0x00000001,
+  ANIMATION_FLAG  = 0x00000002,
+  XMP_FLAG        = 0x00000004,
+  EXIF_FLAG       = 0x00000008,
+  ALPHA_FLAG      = 0x00000010,
+  ICCP_FLAG       = 0x00000020
+};
 
 // Dispose method (animation only). Indicates how the area used by the current
 // frame is to be treated before rendering the next frame on the canvas.
-#if !(defined(__cplusplus) || defined(c_plusplus))
-typedef enum WebPMuxAnimDispose WebPMuxAnimDispose;
-#endif
 enum WebPMuxAnimDispose {
   WEBP_MUX_DISPOSE_NONE,       // Do not dispose.
   WEBP_MUX_DISPOSE_BACKGROUND  // Dispose to background color.
