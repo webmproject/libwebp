@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAWX//6Lc\u003d",
+        "filename": "src/webp/demux.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-19T18:48:40Z",
+      "side": 1,
+      "message": "A bit redundant with the second sentence, but better balanced with the Partial() update.",
+      "revId": "f66be3b5e09db5f3be6875bbbe8b60d191e649b9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
