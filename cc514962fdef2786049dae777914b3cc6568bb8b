@@ -16,6 +16,24 @@
       "revId": "cc514962fdef2786049dae777914b3cc6568bb8b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWX//5z8\u003d",
+        "filename": "src/dec/webp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-19T23:11:20Z",
+      "side": 1,
+      "message": "Done here and in enc/syntax",
+      "parentUuid": "AAAAWX//50o\u003d",
+      "revId": "cc514962fdef2786049dae777914b3cc6568bb8b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
