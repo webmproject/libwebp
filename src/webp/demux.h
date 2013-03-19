@@ -81,14 +81,13 @@ enum WebPDemuxState {
 WEBP_EXTERN(WebPDemuxer*) WebPDemuxInternal(
     const WebPData*, int, WebPDemuxState*, int);
 
-// Parses the WebP file given by 'data'.
-// A complete WebP file must be present in 'data' for the function to succeed.
+// Parses the full WebP file given by 'data'.
 // Returns a WebPDemuxer object on successful parse, NULL otherwise.
 static WEBP_INLINE WebPDemuxer* WebPDemux(const WebPData* data) {
   return WebPDemuxInternal(data, 0, NULL, WEBP_DEMUX_ABI_VERSION);
 }
 
-// Parses the WebP file given by 'data'.
+// Parses the possibly incomplete WebP file given by 'data'.
 // If 'state' is non-NULL it will be set to indicate the status of the demuxer.
 // Returns a WebPDemuxer object on successful parse, NULL otherwise.
 static WEBP_INLINE WebPDemuxer* WebPDemuxPartial(
