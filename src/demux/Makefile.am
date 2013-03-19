@@ -6,6 +6,7 @@ libwebpdemux_la_SOURCES += demux.c
 
 libwebpdemuxinclude_HEADERS =
 libwebpdemuxinclude_HEADERS += ../webp/demux.h
+libwebpdemuxinclude_HEADERS += ../webp/mux_types.h
 libwebpdemuxinclude_HEADERS += ../webp/types.h
 
 libwebpdemux_la_LIBADD = ../libwebp.la
