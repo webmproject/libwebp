@@ -301,7 +301,7 @@ static ParseStatus NewFrame(const MemBuffer* const mem,
 
 // Parse a 'ANMF' chunk and any image bearing chunks that immediately follow.
 // 'frame_chunk_size' is the previously validated, padded chunk size.
-static ParseStatus ParseFrame(
+static ParseStatus ParseAnimationFrame(
     WebPDemuxer* const dmux, uint32_t frame_chunk_size) {
   const int has_frames = !!(dmux->feature_flags_ & ANIMATION_FLAG);
   const uint32_t anmf_payload_size = frame_chunk_size - ANMF_CHUNK_SIZE;
@@ -322,8 +322,8 @@ static ParseStatus ParseFrame(
     return PARSE_ERROR;
   }
 
-  // Store a frame only if the animation flag is set and all data for this frame
-  // is available.
+  // Store a frame only if the animation flag is set there is some data for
+  // this frame is available.
   status = StoreFrame(dmux->num_frames_ + 1, anmf_payload_size, mem, frame,
                       NULL);
   if (status != PARSE_ERROR && has_frames && frame->frame_num_ > 0) {
@@ -354,12 +354,12 @@ static ParseStatus ParseFragment(WebPDemuxer* const dmux,
       NewFrame(mem, FRGM_CHUNK_SIZE, fragment_chunk_size, &frame);
   if (status != PARSE_OK) return status;
 
-  frame->is_fragment_  = 1;
+  frame->is_fragment_ = 1;
   frame->x_offset_ = 2 * ReadLE24s(mem);
   frame->y_offset_ = 2 * ReadLE24s(mem);
 
-  // Store a fragment only if the fragments flag is set and all data for this
-  // fragment is available.
+  // Store a fragment only if the fragments flag is set there is some data for
+  // this fragment is available.
   status = StoreFrame(frame_num, frgm_payload_size, mem, frame, NULL);
   if (status != PARSE_ERROR && has_fragments && frame->frame_num_ > 0) {
     added_fragment = AddFrame(dmux, frame);
@@ -375,7 +375,7 @@ static ParseStatus ParseFragment(WebPDemuxer* const dmux,
 }
 #endif  // WEBP_EXPERIMENTAL_FEATURES
 
-// General chunk storage starting with the header at 'start_offset' allowing
+// General chunk storage, starting with the header at 'start_offset', allowing
 // the user to request the payload via a fourcc string. 'size' includes the
 // header and the unpadded payload size.
 // Returns true on success, false otherwise.
@@ -432,7 +432,7 @@ static ParseStatus ParseSingleImage(WebPDemuxer* const dmux) {
   frame = (Frame*)calloc(1, sizeof(*frame));
   if (frame == NULL) return PARSE_ERROR;
 
-  // For the single image case, we allow parsing of a partial frame. But we need
+  // For the single image case we allow parsing of a partial frame, but we need
   // at least CHUNK_HEADER_SIZE for parsing.
   status = StoreFrame(1, CHUNK_HEADER_SIZE, &dmux->mem_, frame,
                       &has_vp8l_alpha);
@@ -533,7 +533,7 @@ static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
       }
       case MKFOURCC('A', 'N', 'M', 'F'): {
         if (anim_chunks == 0) return PARSE_ERROR;  // 'ANIM' precedes frames.
-        status = ParseFrame(dmux, chunk_size_padded);
+        status = ParseAnimationFrame(dmux, chunk_size_padded);
         break;
       }
 #ifdef WEBP_EXPERIMENTAL_FEATURES
