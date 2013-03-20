@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAWX//4ls\u003d",
+        "filename": "src/webp/decode.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-03-20T20:32:55Z",
+      "side": 1,
+      "message": "let\u0027s just go for a plain \u0027int\u0027 instead of bitfield",
+      "revId": "2da0d08c1af98671b27f431e102796f41b29b87f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
