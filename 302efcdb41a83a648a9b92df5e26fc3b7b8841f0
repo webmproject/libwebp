@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAWX//4Uo\u003d",
+        "filename": "src/dec/webp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-03-20T22:52:05Z",
+      "side": 1,
+      "message": "note that the doc comment in webpi.h could use an update",
+      "revId": "302efcdb41a83a648a9b92df5e26fc3b7b8841f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
