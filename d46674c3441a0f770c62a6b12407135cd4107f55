@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAWX//4kE\u003d",
+        "filename": "src/webp/decode.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-03-20T20:41:44Z",
+      "side": 1,
+      "message": "can you move it at 398 ? (with the really-used fields)",
+      "revId": "d46674c3441a0f770c62a6b12407135cd4107f55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
