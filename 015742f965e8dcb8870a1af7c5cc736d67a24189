@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAWX//4k4\u003d",
+        "filename": "src/dec/webp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-03-20T22:09:17Z",
+      "side": 1,
+      "message": "i\u0027m not sure this is the place to report an error.\n\ncaller might just call this function to get a list of the bitstream\u0027s features, and not necessarily to attempt a decoding...",
+      "revId": "015742f965e8dcb8870a1af7c5cc736d67a24189",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
