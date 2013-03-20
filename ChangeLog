@@ -1,3 +1,303 @@
+ad8b86d update NEWS
+3e084f6 Merge "demux cosmetics: comments/rename internal function" into 0.3.0
+d3f8c62 Merge "move WebPFeatureFlags declaration" into 0.3.0
+7386fe5 Merge "libwebp{demux,mux}: install mux_types.h" into 0.3.0
+d6cd4e9 Merge "bump decode abi" into 0.3.0
+17f8da5 bump decode abi
+97684ae Merge "add doc precision about WebPDemuxPartial()" into 0.3.0
+f933fd2 move WebPFeatureFlags declaration
+289bc47 libwebp{demux,mux}: install mux_types.h
+224e8d4 add doc precision about WebPDemuxPartial()
+4c18e80 demux cosmetics: comments/rename internal function
+7cfd1bf update AUTHORS
+401f7b8 Merge "speed-up lossless (~3%) with ad-hoc histogram cost evaluation" into 0.3.0
+1fc8ffc Merge "makefile.unix: dist related changes" into 0.3.0
+8a89c6e Merge changes I466c377f,Ib761ebd3,I694857fc into 0.3.0
+f4ffb2d speed-up lossless (~3%) with ad-hoc histogram cost evaluation
+723847d gif2webp: only write error messages to stderr
+701b9e2 makefile.unix: dist related changes
+bb85b43 Merge "update NEWS" into 0.3.0
+59423a2 gif2webp: fix crash on open failure with libgif5
+9acb17d gif2webp: silence a unused param warning
+7d9fdc2 Merge "README updates" into 0.3.0
+5621934 Merge "build: fix install race on shared headers" into 0.3.0
+70809d8 Merge "bump version to 0.3.0" into 0.3.0
+d851cd1 demux: make the parse a bit more strict
+28bb410 update NEWS
+cef9388 bump version to 0.3.0
+9048494 build: fix install race on shared headers
+1e67e8e README updates
+42b611a Merge "configure: drop experimental from mux/demux" into 0.3.0
+096a8e3 Merge "vwebp: add color profile support" into 0.3.0
+ddfee5d vwebp: add color profile support
+0d6927d Merge "Mark fragment options as experimental in webpmux" into 0.3.0
+5dbd403 Mark fragment options as experimental in webpmux
+a0a6648 configure: drop experimental from mux/demux
+ee65bad Merge "add support for BITS > 32" into 0.3.0
+744930d add support for BITS > 32
+7dd288f cwebp: fix build
+19a8dd0 Merge "Makefile.vc: add vwebp.exe target" into 0.3.0
+50eedda Merge "examples: normalize icc related program arguments" into 0.3.0
+757f637 Merge "Makefile.vc: add libwebpdecoder target" into 0.3.0
+b65c4b7 Makefile.vc: add libwebpdecoder target
+f8db7b4 Merge "vwebp: replace doubles w/floats where appropriate" into 0.3.0
+d99aa56 Makefile.vc: add vwebp.exe target
+013023e vwebp: replace doubles w/floats where appropriate
+9b3db89 README.mux: add version reference
+7b6a26c Merge "cwebp: output metadata statistics" into 0.3.0
+d8dc72a examples: normalize icc related program arguments
+7bfc905 Merge "make alpha unfilter work in-place" into 0.3.0
+0037b2d Merge "add LUT-free reference code for YUV->RGB conversion." into 0.3.0
+166bf74 Merge "demux: disable fragment parsing" into 0.3.0
+126974b add LUT-free reference code for YUV->RGB conversion.
+0aef3eb make alpha unfilter work in-place
+14ef500 Merge "Remove 'status: experimental' from container spec" into 0.3.0
+d40c98e Merge "webpmux binary: tiny style fix" into 0.3.0
+0bc4268 cwebp: output metadata statistics
+bc03980 Merge "autoconf: normalize experimental define" into 0.3.0
+d1e21b1 Remove 'status: experimental' from container spec
+7681bb9 webpmux binary: tiny style fix
+a3dd3d0 avoid installing example_util.h
+252320e demux: disable fragment parsing
+537bde0 autoconf: normalize experimental define
+5e338e0 Merge changes I33e8a613,I8e8a7b44 into 0.3.0
+d9d0ea1 Merge changes If21e3ec7,I991fc30b into 0.3.0
+627f5ca automake: add reference to libwebp for mux/demux
+eef73d0 don't consolidate proba stats too often
+05ec4cc libwebp{,decoder}.pc: add pthread flags
+1bfcf5b add libwebpmux.pc
+26ca843 add libwebpdemux.pc
+69e2590 Merge "Tune Lossless compression for lower qualities."
+0478b5d Tune Lossless compression for lower qualities.
+39f7586 add a mention of parallel alpha encoding in the NEWS
+5a21d96 Merge "1.5x-2x faster encoding for method 3 and up"
+9bfbdd1 1.5x-2x faster encoding for method 3 and up
+27dc741 Correct frame options order in README.mux
+be2fd17 Mux: fix a scenario with bad ANMF/FRGM size
+19eb012 Merge "Demux: Add option to get frame count using GetI()"
+7368b8c Merge "WebPGetFeatures() out of if condition for clarity."
+f604c9a Merge "fix windows build"
+153f94e fix windows build
+847b492 Merge "vwebp: use magenta for 'i'nfo display"
+25ea46b Merge "vwebp: add keyboard shortcuts to help output"
+bea7cca vwebp: use magenta for 'i'nfo display
+8fab161 webpmux: correct -frame param order in help output
+03cc23d vwebp: add keyboard shortcuts to help output
+068eba8 Demux: Add option to get frame count using GetI()
+988b8f5 WebPGetFeatures() out of if condition for clarity.
+6933d91 Merge "gif2webp: Be lenient about background color index."
+4d0f7c5 Merge "WebPGetFeatures() behavior change:"
+fdeeb01 gif2webp: Be lenient about background color index.
+ad25032 Merge "multi-threaded alpha encoding for lossy"
+4e32d3e Merge "fix compilation of token.c"
+f817930 multi-threaded alpha encoding for lossy
+8805035 fix compilation of token.c
+fc81621 code using the actual values for num_parts_, not the ones from config
+7265535 Merge "move the config check from .c to .h"
+dd9e76f move the config check from .c to .h
+956b217 WebPGetFeatures() behavior change:
+df02e4c WebPDemuxGetI behavior change:
+633c004 Merge "rebalance method tools (-m) for methods [0..4]"
+58ca6f6 rebalance method tools (-m) for methods [0..4]
+7648c3c Merge "describe rd-opt levels introduce VP8RDLevel enum"
+67fb100 Merge "autoconf: enable silent-rules by default"
+a5042a3 GetVersion() methods for mux and demux
+5189957 describe rd-opt levels introduce VP8RDLevel enum
+4e094ac autoconf: enable silent-rules by default
+b7eaa85 inline VP8LFastLog2() and VP8LFastSLog2 for small values
+5cf7792 split quant_levels.c into decoder and encoder version
+e5d3ffe Merge "Update code example in README.mux"
+ac5a915 Update code example in README.mux
+38a91e9 Add example code snippet for demux API
+5f557f3 README.mux: add info about Demux API and vwebp
+c0ba090 backward_references: avoid signed integer overflow
+943386d disable SSE2 for now
+9479fb7 lossless encoding speedup
+ec2030a merge two lines together
+b67956c Merge "Remove ReadOneBit() and ReadSymbolUnsafe()"
+1667bde Remove ReadOneBit() and ReadSymbolUnsafe()
+3151669 wicdec + dwebp cosmetics: normalize formatting
+92668da change default filtering parameters:   * type is now 'strong'   * strength is now '60'
+b7490f8 introduce WEBP_REFERENCE_IMPLEMENTATION compile option
+3383885 faster decoding (3%-6%)
+5c3e381 Merge "add a -jpeg_like option"
+c231104 remove unused declaration of VP8Zigzag
+3615295 Merge "wicdec: add alpha support for paletted formats"
+c9f1649 wicdec: add alpha support for paletted formats
+1262f81 Merge "wicdec: silence some warnings"
+e7ea61e wicdec: silence some warnings
+23c0f35 fix missing intptr_t->int cast for MSVC
+e895059 add a -jpeg_like option
+1f803f6 Merge "Tune alpha quality mapping to more reasonable values."
+1267d49 Tune alpha quality mapping to more reasonable values.
+043076e Merge "speed-up lossless in BackwardTrace"
+f3a44dc remove one malloc from TraceBackwards()
+0fc1a3a speed-up lossless in BackwardTrace
+7c732e5 cwebp: centralize WebPCleanupTransparentArea()
+7381254 Merge "wicdec: add ICC profile extraction"
+e83ff7d wicdec: add ICC profile extraction
+146c6e3 Merge "cosmetics: pngdec: normalize default label location"
+a8f549d Merge "manpages: italicize option parameters"
+e118db8 Merge "encode.h: note the need to free() WebPMemoryWriter"
+1dfee6d cosmetics: pngdec: normalize default label location
+14c3820 manpages: italicize option parameters
+7defbfa encode.h: note the need to free() WebPMemoryWriter
+88d382a cwebp: cleanup after memory_writer
+12d6cec fix extra space in dwebp.1 man
+b01681a Fix for demuxer frame iteration:
+56c12aa Demuxer creation fix:
+66c810b add a -yuv option to dwebp (very similar to -pgm)
+841a3ba Merge "Remove -Wshadow warnings."
+8fd0252 Merge "upsampling_neon.c: fix build"
+6efed26 Remove -Wshadow warnings.
+60904aa Merge "allow WebPINewRGB/YUVA to be passed a NULL output buffer."
+b7adf37 allow WebPINewRGB/YUVA to be passed a NULL output buffer.
+27f8f74 upsampling_neon.c: fix build
+06b9cdf gitignore: add IOS related directories
+f112221 Merge "Fix more comments for iobuild.sh"
+fe4d25d Fix more comments for iobuild.sh
+1de3e25 Merge "NEON optimised yuv to rgb conversion"
+090b708 NEON optimised yuv to rgb conversion
+daa0647 Merge "Add ios build script for building iOS library."
+79fe39e Add ios build script for building iOS library.
+126c035 remove some more -Wshadow warnings
+522e9d6 Merge "cwebp: enable '-metadata'"
+76ec5fa cwebp: enable '-metadata'
+aeb91a9 Merge "cosmetics: break a few long lines"
+be7c96b cosmetics: break a few long lines
+cff8ddb Merge "add libwebpdecoder.pc"
+93148ab Merge "libwebp.pc.in: detab"
+6477f95 Merge "Makefile.vc: normalize path separator"
+bed1ed7 add libwebpdecoder.pc
+46168b2 libwebp.pc.in: detab
+a941a34 Fixed few nits in the build files.
+dd7a49b Makefile.vc: normalize path separator
+9161be8 Merge "cwebp: extract WIC decoding to its own module"
+08e7c58 Merge "Provide an option to build decoder library."
+0aeba52 Provide an option to build decoder library.
+757ebcb catch malloc(0)/calloc(0) with an assert
+152ec3d Merge "handle malloc(0) and calloc(0) uniformly on all platforms"
+a452a55 cwebp: extract WIC decoding to its own module
+2b252a5 Merge "Provide option to swap bytes for 16 bit colormodes"
+94a48b4 Provide option to swap bytes for 16 bit colormodes
+42f8f93 handle malloc(0) and calloc(0) uniformly on all platforms
+8b2152c Merge "add an extra assert to check memory bounds"
+0d19fbf remove some -Wshadow warnings
+cd22f65 add an extra assert to check memory bounds
+8189fed Merge "Add details and reference about the YUV->RGB conversion"
+1d2702b Merge "Formatting fixes in lossless bitstream spec"
+8425aae Formatting fixes in lossless bitstream spec
+a556cb1 Add details and reference about the YUV->RGB conversion
+d8f21e0 add link to SSIM description on Wikipedia
+18e9167 Merge "WebP-lossless spec clarifications:"
+98e25b9 Merge "cwebp: add -metadata option"
+f01c2a5 WebP-lossless spec clarifications:
+f4a9797 Merge "Disto4x4 and Disto16x16 in NEON"
+47b7b0b Disto4x4 and Disto16x16 in NEON
+7eaee9f cwebp: add -metadata option
+36c52c2 tiffdec: use toff_t for exif ifd offset
+7c8111e Merge "cwebp/tiffdec: add TIFF metadata extraction"
+e6409ad Remove redundant include from dsp/lossless code.
+1ab5b3a Merge "configure: fix --with-gifincludedir"
+03c749e configure: fix --with-gifincludedir
+8b65063 multiple libgif versions support for gif2webp
+476e293 gif2webp: Use DGifOpenFileName()
+b50f277 tiffdec: correct format string
+2b9048e Merge "tiffdec: check error returns for width/height"
+a1b5a9a Merge "cwebp/tiff: use the first image directory"
+079423f tiffdec: check error returns for width/height
+d62824a Merge "cwebp/jpegdec: add JPEG metadata extraction"
+03afaca Merge "cwebp: add PNG metadata extraction"
+2c72496 cwebp/jpegdec: add JPEG metadata extraction
+dba64d9 cwebp: add PNG metadata extraction
+1f075f8 Lossless spec corrections/rewording/clarifications
+2914ecf cwebp/tiffdec: add TIFF metadata extraction
+d82a3e3 More corrections/clarifications in lossless spec:
+bd00255 cwebp/tiff: use the first image directory
+df7aa07 Merge "Cleanup around jpegdec"
+0f57dcc decoding speed-up (~1%)
+bcec339 Lossless bitstream clarification:
+6bf2087 add examples/metadata.c
+207f89c Merge "configure: add libwebpdemux status to summary"
+1bd287a Cleanup around jpegdec
+9145567 Merge "cosmetics: use '== 0' in size checks"
+d6b88b7 cosmetics: use '== 0' in size checks
+d3dace2 cosmetics: jpegdec
+2f69af7 configure: add libwebpdemux status to summary
+1c1c564 cwebp: extract tiff decoding to its own module
+6a871d6 cwebp: extract jpeg decoding to its own module
+2ee228f cwebp: extract png decoding to its own module
+4679db0 Merge "cwebp: add metadata framework"
+63aba3a cwebp: add metadata framework
+931bd51 lossless bitstream: block size bits correction
+e4fc4c1 lossless bitstream: block size bits correction
+d65ec67 fix build, move token.c to src/enc/
+657f5c9 move token buffer to its own file (token.c)
+c34a375 introduce GetLargeValue() to slim-fast GetCoeffs().
+d5838cd faster non-transposing SSE2 4x4 FTransform
+f76191f speed up GetResidualCost()
+ba2aa0f Add support for BITS=24 case
+2e7f6e8 makefile.unix: Dependency on libraries
+dca8421 Merge "Separate out mux and demux code and libraries:"
+23782f9 Separate out mux and demux code and libraries:
+bd56a01 configure: add summary output
+90e5e31 dwebp manual: point to webpmux, gif2webp.
+540790c gif2webp.c: add a note about prerequisites
+d1edf69 cwebp man page: meaning of '-q' for lossy/lossless
+79efa1d Add man page for gif2webp utility
+2243e40 Merge "gif2webp build support with autoconf tools"
+c40efca gif2webp build support with autoconf tools
+6523e2d WebP Container:
+4da788d Merge "simplify the fwd transform"
+42c3b55 simplify the fwd transform
+41a6ced user GLfloat instead of float
+b542611 fix indentation
+68f282f * handle offset in anim viewer 'vwebp' * fix gif2webp to handle disposal method and odd offset correctly
+118cb31 Merge "add SSE2 version of Sum of Square error for 16x16, 16x8 and 8x8 case"
+8a7c3cc Merge "Change the order of -frame argument to be more natural"
+99e0a70 Merge "Simplify the texture evaluation Disto4x4()"
+0f923c3 make the bundling work in a tmp buffer
+e5c3b3f Simplify the texture evaluation Disto4x4()
+4860008 Change the order of -frame argument to be more natural
+35bfd4c add SSE2 version of Sum of Square error for 16x16, 16x8 and 8x8 case
+a7305c2 Clarification for unknown chunks
+4c4398e Refine WebP Container Spec wrt unknown chunks.
+2ca642e Rectify WebPMuxGetFeatures:
+7caab1d Some cosmetic/comment fixes.
+60b2651 Merge "Write a GIF to WebP converter based on libgif."
+c7127a4 Merge "Add NEON version of FTransformWHT"
+11b2721 Write a GIF to WebP converter based on libgif.
+e9a15a3 ExUtilWriteFile() to write memory segment to file
+74356eb Add a simple cleanup step in mux assembly:
+51bb1e5 mux.h: correct WebPDemuxSelectFragment() prototype
+22a0fd9 Add NEON version of FTransformWHT
+fa30c86 Update mux code to match the spec wrt animation
+d9c5fbe by-pass Analysis pass in case segments=1
+d2ad445 Merge changes Ibeccffc3,Id1585b16
+5c8be25 Merge "Chunk fourCCs for XMP/EXIF"
+a00a3da Use 'frgm' instead of 'tile' in webpmux parameters
+81b8a74 Design change in ANMF and FRGM chunks:
+f903cba Chunk fourCCs for XMP/EXIF
+812933d Tune performance of HistogramCombine
+52ad197 Animation specification in container spec
+001b930 Image fragment specification in container spec
+391f9db Ordering of description of bits in container spec
+d573577 Metadata specification in container spec
+1c4609b Merge commit 'v0.2.1'
+0ca584c Merge "Color profile specification in container spec"
+e8b41ad add NEON asm version for WHT inverse transform
+af6f0db Color profile specification in container spec
+a61a824 Merge "Add NULL check in chunk APIs"
+0e8b7ee fix WebPPictureView() unassigned strides
+75e5f17 ARM/NEON: 30% encoding speed-up
+02b4356 Add NULL check in chunk APIs
+a077072 mux struct naming
+6c66dde Merge "Tune Lossless encoder"
+ab5ea21 Tune Lossless encoder
+74fefc8 Update ChangeLog (v0.2.1, origin/0.2.0)
+92f8059 Rename some chunks:
+3bb4bbe Merge "Mux API change:"
+d0c79f0 Mux API change:
 abc0604 Merge "update NEWS" into 0.2.0
 57cf313 update NEWS
 25f585c bump version to 0.2.1
@@ -15,6 +315,55 @@ b30add2 EncodeImageInternal: fix uninitialized free
 e5970bd Make *InitSSE2() functions be empty on non-SSE2 platform
 ef5cc47 make *InitSSE2() functions be empty on non-SSE2 platform
 c4ea259 make VP8DspInitNEON() public
+8344ead Merge "libwebp: validate chunk size in ParseOptionalChunks"
+4828bb9 Merge "cwebp (windows): fix alpha image import on XP"
+3076333 libwebp: validate chunk size in ParseOptionalChunks
+7048189 AccumulateLSIM: fix double -> float warnings
+eda8ee4 cwebp (windows): fix alpha image import on XP
+c6e9865 Merge "add EXPERIMENTAL code for YUV-JPEG colorspace"
+f0360b4 add EXPERIMENTAL code for YUV-JPEG colorspace
+f86e6ab add LSIM metric to WebPPictureDistortion()
+c3aa215 Speed up HistogramCombine for lower qualities.
+1765cb1 Merge "autoconf/libwebp: enable dll builds for mingw"
+a13562e autoconf/libwebp: enable dll builds for mingw
+9f469b5 typo: no_fancy -> no_fancy_upsampling
+1a27f2f Merge "fix double to float conversion warning"
+cf1e90d Merge "cwebp: fix jpg encodes on XP"
+f2b5d19 [cd]webp: always output windows errors
+e855208 fix double to float conversion warning
+ecd66f7 cwebp: fix jpg encodes on XP
+7b3eb37 Tune lossless compression to get better gains.
+ce8bff4 Merge "VP8LAllocateHistogramSet: fix overflow in size calculation"
+ab5b67a Merge "EncodeImageInternal: fix uninitialized free"
+7fee5d1 Merge "GetHistoBits: fix integer overflow"
+a6ae04d VP8LAllocateHistogramSet: fix overflow in size calculation
+80237c4 GetHistoBits: fix integer overflow
+8a99723 EncodeImageInternal: fix uninitialized free
+0b9e682 minor cosmetics
+a792b91 fix the -g/O3 discrepancy for 32bit compile
+73ba435 Merge "detect and merge similar segments"
+fee6627 detect and merge similar segments
+0c44f41 src/webp/*.h: don't forward declare enums in C++
+d7a5ac8 vwebp: use demux interface
+931e0ea Merge "replace 'typedef struct {} X;" by "typedef struct X X; struct X {};""
+8f216f7 remove cases of equal comparison for qsort()
+28d25c8 replace 'typedef struct {} X;" by "typedef struct X X; struct X {};"
+2afee60 speed up for ARM using 8bit for boolean decoder
+5725cab new segmentation algorithm
+2cf1f81 Merge "fix the BITS=8 case"
+12f78ae fix the BITS=8 case
+6920c71 fix MSVC warnings regarding implicit uint64 to uint32 conversions
+f6c096a webpmux binary: Rename 'xmp' option to 'meta'
+ddfe871 webpmux help correction
+b7c5544 Merge "Make *InitSSE2() functions be empty on non-SSE2 platform"
+1c04a0d Common APIs for chunks metadata and color profile.
+2a3117a Merge "Create WebPMuxFrameInfo struct for Mux APIs"
+5c3a723 Make *InitSSE2() functions be empty on non-SSE2 platform
+7c6e60f make *InitSSE2() functions be empty on non-SSE2 platform
+c7eb457 make VP8DspInitNEON() public
+ab3234a Create WebPMuxFrameInfo struct for Mux APIs
+e3990fd Alignment fixes
+e55fbd6 Merge branch '0.2.0'
 4238bc0 Update ChangeLog (v0.2.0)
 c655380 dec/io.c: cosmetics
 fe1958f RGBA4444: harmonize lossless/lossy alpha values
@@ -135,7 +484,7 @@ f0b5def bump versions
 05108f6 Merge "More spec/code matching in mux:"
 6808e69 More spec/code matching in mux:
 bd2b46f Merge "doc/webp-container-spec: light cosmetics"
-20ead32 doc/webp-container-spec: light cosmetics (full)
+20ead32 doc/webp-container-spec: light cosmetics
 1d40a8b configure: add pthread detection
 b5e9067 fix some int <-> size_t mix for buffer sizes
 e41a759 build: remove libwebpmux from default targets/config
@@ -258,7 +607,7 @@ f8f9408 libwebp: add WebPDemux stub functions
 fb47bb5 Merge "NumNamedElements() should take an enum param."
 7c68980 Fix asserts in Palette and BackwardReference code.
 fbdcb7e NumNamedElements() should take an enum param.
-fb4943b modify WebPParseHeaders to allow reuse by GetFeatures (old-decode-alph-3)
+fb4943b modify WebPParseHeaders to allow reuse by GetFeatures
 3697b5c write an ad-hoc EncodeImageInternal variant
 eaee9e7 Bug-Fix: Decode small (less than 32 bytes) images.
 0bceae4 Merge "cwebp: fix alpha reporting in stats output"
