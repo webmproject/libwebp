@@ -44,8 +44,8 @@ int ExUtilReadFile(const char* const file_name,
   fclose(in);
 
   if (!ok) {
-    fprintf(stderr, "Could not read %zu bytes of data from file %s\n",
-            file_size, file_name);
+    fprintf(stderr, "Could not read %d bytes of data from file %s\n",
+            (int)file_size, file_name);
     free(file_data);
     return 0;
   }

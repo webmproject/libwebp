@@ -232,7 +232,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
         RETURN_IF_ERROR3("Failed to retrieve %s#%d\n", type_str, i);
         printf("%3d: %8d %8d ", i, frame.x_offset, frame.y_offset);
         if (is_anim) printf("%8d %7d ", frame.duration, frame.dispose_method);
-        printf("%10zu\n", frame.bitstream.size);
+        printf("%10d\n", (int)frame.bitstream.size);
         WebPDataClear(&frame.bitstream);
       }
     }
@@ -242,28 +242,28 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
     WebPData icc_profile;
     err = WebPMuxGetChunk(mux, "ICCP", &icc_profile);
     RETURN_IF_ERROR("Failed to retrieve the ICC profile\n");
-    printf("Size of the ICC profile data: %zu\n", icc_profile.size);
+    printf("Size of the ICC profile data: %d\n", (int)icc_profile.size);
   }
 
   if (flag & EXIF_FLAG) {
     WebPData exif;
     err = WebPMuxGetChunk(mux, "EXIF", &exif);
     RETURN_IF_ERROR("Failed to retrieve the EXIF metadata\n");
-    printf("Size of the EXIF metadata: %zu\n", exif.size);
+    printf("Size of the EXIF metadata: %d\n", (int)exif.size);
   }
 
   if (flag & XMP_FLAG) {
     WebPData xmp;
     err = WebPMuxGetChunk(mux, "XMP ", &xmp);
     RETURN_IF_ERROR("Failed to retrieve the XMP metadata\n");
-    printf("Size of the XMP metadata: %zu\n", xmp.size);
+    printf("Size of the XMP metadata: %d\n", (int)xmp.size);
   }
 
   if ((flag & ALPHA_FLAG) && !(flag & (ANIMATION_FLAG | FRAGMENTS_FLAG))) {
     WebPMuxFrameInfo image;
     err = WebPMuxGetFrame(mux, 1, &image);
     RETURN_IF_ERROR("Failed to retrieve the image\n");
-    printf("Size of the image (with alpha): %zu\n", image.bitstream.size);
+    printf("Size of the image (with alpha): %d\n", (int)image.bitstream.size);
   }
 
   return WEBP_MUX_OK;
@@ -382,7 +382,8 @@ static int WriteData(const char* filename, const WebPData* const webpdata) {
   if (fwrite(webpdata->bytes, webpdata->size, 1, fout) != 1) {
     fprintf(stderr, "Error writing file %s!\n", filename);
   } else {
-    fprintf(stderr, "Saved file %s (%zu bytes)\n", filename, webpdata->size);
+    fprintf(stderr, "Saved file %s (%d bytes)\n",
+            filename, (int)webpdata->size);
     ok = 1;
   }
   if (fout != stdout) fclose(fout);

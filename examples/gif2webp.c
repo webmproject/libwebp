@@ -401,7 +401,7 @@ int main(int argc, const char *argv[]) {
               xmp.bytes = (uint8_t*)data;
               xmp.size = data[0] + 1;
               WebPMuxSetChunk(mux, "XMP ", &xmp, 1);
-              if (verbose) printf("XMP size: %zu\n", xmp.size);
+              if (verbose) printf("XMP size: %d\n", (int)xmp.size);
             } else if (!memcmp(data + 1, "ICCRGBG1012", 11)) {
               // Read ICC profile.
               WebPData icc;
@@ -410,7 +410,7 @@ int main(int argc, const char *argv[]) {
               icc.bytes = (uint8_t*)data;
               icc.size = data[0] + 1;
               WebPMuxSetChunk(mux, "ICCP", &icc, 1);
-              if (verbose) printf("ICC size: %zu\n", icc.size);
+              if (verbose) printf("ICC size: %d\n", (int)icc.size);
             }
             break;
           }

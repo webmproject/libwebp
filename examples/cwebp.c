@@ -380,13 +380,13 @@ static void PrintMetadataInfo(const Metadata* const metadata,
 
   fprintf(stderr, "Metadata:\n");
   if (metadata_written & METADATA_ICC) {
-    fprintf(stderr, "  * ICC profile:  %6zu bytes\n", metadata->iccp.size);
+    fprintf(stderr, "  * ICC profile:  %6d bytes\n", (int)metadata->iccp.size);
   }
   if (metadata_written & METADATA_EXIF) {
-    fprintf(stderr, "  * EXIF data:    %6zu bytes\n", metadata->exif.size);
+    fprintf(stderr, "  * EXIF data:    %6d bytes\n", (int)metadata->exif.size);
   }
   if (metadata_written & METADATA_XMP) {
-    fprintf(stderr, "  * XMP data:     %6zu bytes\n", metadata->xmp.size);
+    fprintf(stderr, "  * XMP data:     %6d bytes\n", (int)metadata->xmp.size);
   }
 }
 
