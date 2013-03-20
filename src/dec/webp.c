@@ -372,10 +372,19 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
 }
 
 VP8StatusCode WebPParseHeaders(WebPHeaderStructure* const headers) {
+  VP8StatusCode status;
+  int has_animation = 0;
   assert(headers != NULL);
-  // fill out headers, ignore width/height/has_alpha/has_animation.
-  return ParseHeadersInternal(headers->data, headers->data_size,
-                              NULL, NULL, NULL, NULL, headers);
+  // fill out headers, ignore width/height/has_alpha.
+  status = ParseHeadersInternal(headers->data, headers->data_size,
+                                NULL, NULL, NULL, &has_animation, headers);
+  if (status == VP8_STATUS_OK || status == VP8_STATUS_NOT_ENOUGH_DATA) {
+    // TODO(jzern): full support of animation frames will require API additions.
+    if (has_animation) {
+      status = VP8_STATUS_UNSUPPORTED_FEATURE;
+    }
+  }
+  return status;
 }
 
 //------------------------------------------------------------------------------
