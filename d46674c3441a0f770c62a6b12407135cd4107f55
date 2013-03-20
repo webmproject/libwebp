@@ -34,6 +34,24 @@
       "revId": "d46674c3441a0f770c62a6b12407135cd4107f55",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWX//4is\u003d",
+        "filename": "src/webp/decode.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-20T20:56:39Z",
+      "side": 1,
+      "message": "OK I relented, maybe was being overly pedantic; as these should really be thought of as padding. in the end the result will be the same regardless if the user was reading these fields or attempts to decode the image",
+      "parentUuid": "AAAAWX//4j8\u003d",
+      "revId": "d46674c3441a0f770c62a6b12407135cd4107f55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
