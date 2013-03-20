@@ -9,6 +9,7 @@ libwebpmux_la_SOURCES += muxread.c
 
 libwebpmuxinclude_HEADERS =
 libwebpmuxinclude_HEADERS += ../webp/mux.h
+libwebpmuxinclude_HEADERS += ../webp/mux_types.h
 libwebpmuxinclude_HEADERS += ../webp/types.h
 
 libwebpmux_la_LIBADD = ../libwebp.la

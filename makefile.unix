@@ -171,6 +171,7 @@ HDRS_INSTALLED = \
     src/webp/demux.h \
     src/webp/encode.h \
     src/webp/mux.h \
+    src/webp/mux_types.h \
     src/webp/types.h \
 
 HDRS = \
@@ -194,7 +195,6 @@ HDRS = \
     src/utils/rescaler.h \
     src/utils/thread.h \
     src/webp/format_constants.h \
-    src/webp/mux_types.h \
     $(HDRS_INSTALLED) \
 
 OUT_LIBS = examples/libexample_util.a src/libwebpdecoder.a src/libwebp.a
