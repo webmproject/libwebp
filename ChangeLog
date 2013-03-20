@@ -1,3 +1,10 @@
+2560c24 update NEWS
+f43bafc Merge changes Iecccb09c,If5ee9fd2,I3e181ce4 into 0.3.0
+a788644 dwebp: warn when decoding animated webp's
+302efcd Decode: return more meaningful error for animation
+ad45273 WebPBitstreamFeatures: add has_animation field
+783dfa4 disable FRGM decoding for good in libwebpmux
+4b956be Update ChangeLog
 ad8b86d update NEWS
 3e084f6 Merge "demux cosmetics: comments/rename internal function" into 0.3.0
 d3f8c62 Merge "move WebPFeatureFlags declaration" into 0.3.0
