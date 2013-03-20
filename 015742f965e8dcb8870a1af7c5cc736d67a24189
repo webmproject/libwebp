@@ -16,6 +16,24 @@
       "revId": "015742f965e8dcb8870a1af7c5cc736d67a24189",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAWX//4Zo\u003d",
+        "filename": "src/dec/webp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-20T22:13:49Z",
+      "side": 1,
+      "message": "this is not part of the public api, but is called in response to Decode()/DecodeInto(); this and (the public) WebPGetFeatures() use ParseHeadersInternal()",
+      "parentUuid": "AAAAWX//4k4\u003d",
+      "revId": "015742f965e8dcb8870a1af7c5cc736d67a24189",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
