@@ -117,17 +117,20 @@ static int ReadSubImage(GifFileType* gif, WebPPicture* pic, WebPPicture* view) {
   return ok;
 }
 
-static int GetColorFromIndex(const ColorMapObject* const color_map, GifWord idx,
-                             uint32_t* const argb) {
-  assert(color_map != NULL && color_map->Colors != NULL);
-  if (idx >= color_map->ColorCount) {
-    return 0;  // Invalid index.
+static int GetBackgroundColor(const ColorMapObject* const color_map,
+                              GifWord bgcolor_idx, uint32_t* const bgcolor) {
+  if (transparent_index != -1 && bgcolor_idx == transparent_index) {
+    *bgcolor = TRANSPARENT_COLOR;  // Special case.
+    return 1;
+  } else if (color_map == NULL || color_map->Colors == NULL
+             || bgcolor_idx >= color_map->ColorCount) {
+    return 0;  // Invalid color map or index.
   } else {
-    const GifColorType color = color_map->Colors[idx];
-    *argb = (0xff        << 24)
-          | (color.Red   << 16)
-          | (color.Green <<  8)
-          | (color.Blue  <<  0);
+    const GifColorType color = color_map->Colors[bgcolor_idx];
+    *bgcolor = (0xff        << 24)
+             | (color.Red   << 16)
+             | (color.Green <<  8)
+             | (color.Blue  <<  0);
     return 1;
   }
 }
@@ -199,6 +202,7 @@ int main(int argc, const char *argv[]) {
   WebPMuxFrameInfo frame;
   WebPMuxAnimParams anim = { WHITE_COLOR, 0 };
 
+  int is_first_frame = 1;
   int done;
   int c;
   int quiet = 0;
@@ -282,14 +286,6 @@ int main(int argc, const char *argv[]) {
   picture.writer = WebPMemoryWrite;
   picture.custom_ptr = &memory;
   if (!WebPPictureAlloc(&picture)) goto End;
-
-  if (gif->SColorMap != NULL &&
-      !GetColorFromIndex(gif->SColorMap, gif->SBackGroundColor,
-                         &anim.bgcolor)) {
-    fprintf(stderr, "GIF decode warning: invalid background color index. "
-            "Assuming white background.\n");
-  }
-  ClearPicture(&picture, anim.bgcolor);
 
   mux = WebPMuxNew();
   if (mux == NULL) {
@@ -379,6 +375,15 @@ int main(int argc, const char *argv[]) {
                                  : WEBP_MUX_DISPOSE_NONE;
             }
             transparent_index = (flags & GIF_TRANSPARENT_MASK) ? data[4] : -1;
+            if (is_first_frame) {
+              if (!GetBackgroundColor(gif->SColorMap, gif->SBackGroundColor,
+                                      &anim.bgcolor)) {
+                fprintf(stderr, "GIF decode warning: invalid background color "
+                        "index. Assuming white background.\n");
+              }
+              ClearPicture(&picture, anim.bgcolor);
+              is_first_frame = 0;
+            }
             break;
           }
           case PLAINTEXT_EXT_FUNC_CODE: {
