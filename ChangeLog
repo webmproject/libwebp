@@ -1,3 +1,5 @@
+14d42af examples: don't use C99 %zu
+5ccf1fe update ChangeLog
 2560c24 update NEWS
 f43bafc Merge changes Iecccb09c,If5ee9fd2,I3e181ce4 into 0.3.0
 a788644 dwebp: warn when decoding animated webp's
