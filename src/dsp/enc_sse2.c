@@ -776,7 +776,7 @@ static int Disto16x16SSE2(const uint8_t* const a, const uint8_t* const b,
 // Simple quantization
 static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
                              int n, const VP8Matrix* const mtx) {
-  const __m128i max_coeff_2047 = _mm_set1_epi16(2047);
+  const __m128i max_coeff_2047 = _mm_set1_epi16(MAX_LEVEL);
   const __m128i zero = _mm_setzero_si128();
   __m128i coeff0, coeff8;
   __m128i out0, out8;
@@ -812,10 +812,6 @@ static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
   coeff0 = _mm_add_epi16(coeff0, sharpen0);
   coeff8 = _mm_add_epi16(coeff8, sharpen8);
 
-  // if (coeff > 2047) coeff = 2047
-  coeff0 = _mm_min_epi16(coeff0, max_coeff_2047);
-  coeff8 = _mm_min_epi16(coeff8, max_coeff_2047);
-
   // out = (coeff * iQ + B) >> QFIX;
   {
     // doing calculations with 32b precision (QFIX=17)
@@ -843,9 +839,14 @@ static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
     out_04 = _mm_srai_epi32(out_04, QFIX);
     out_08 = _mm_srai_epi32(out_08, QFIX);
     out_12 = _mm_srai_epi32(out_12, QFIX);
+
     // pack result as 16b
     out0 = _mm_packs_epi32(out_00, out_04);
     out8 = _mm_packs_epi32(out_08, out_12);
+
+    // if (coeff > 2047) coeff = 2047
+    out0 = _mm_min_epi16(out0, max_coeff_2047);
+    out8 = _mm_min_epi16(out8, max_coeff_2047);
   }
 
   // get sign back (if (sign[j]) out_n = -out_n)

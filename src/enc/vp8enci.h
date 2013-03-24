@@ -55,8 +55,9 @@ enum { NUM_MB_SEGMENTS = 4,
        NUM_BANDS = 8,
        NUM_CTX = 3,
        NUM_PROBAS = 11,
-       MAX_LF_LEVELS = 64,      // Maximum loop filter level
-       MAX_VARIABLE_LEVEL = 67  // last (inclusive) level with variable cost
+       MAX_LF_LEVELS = 64,       // Maximum loop filter level
+       MAX_VARIABLE_LEVEL = 67,  // last (inclusive) level with variable cost
+       MAX_LEVEL = 2047          // max level (note: max codable is 2047 + 67)
      };
 
 typedef enum {   // Rate-distortion optimization levels
