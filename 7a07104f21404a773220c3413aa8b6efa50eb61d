@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAWn///4k\u003d",
+        "filename": "examples/vwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-03-24T15:18:30Z",
+      "side": 1,
+      "message": "you need to init prev_frame.x_offset / y_offset too",
+      "revId": "7a07104f21404a773220c3413aa8b6efa50eb61d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
