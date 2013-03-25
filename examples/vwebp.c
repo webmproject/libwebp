@@ -62,6 +62,11 @@ static struct {
   const WebPDecBuffer* pic;
   WebPDemuxer* dmux;
   WebPIterator frameiter;
+  struct {
+    int width, height;
+    int x_offset, y_offset;
+    enum WebPMuxAnimDispose dispose_method;
+  } prev_frame;
   WebPChunkIterator iccp;
 } kParams;
 
@@ -287,9 +292,31 @@ static void HandleDisplay(void) {
   glRasterPos2f(-1.f + xoff, 1.f - yoff);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   glPixelStorei(GL_UNPACK_ROW_LENGTH, pic->u.RGBA.stride / 4);
-  if (iter->dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
+
+  if (kParams.prev_frame.dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
+    // TODO(later): these offsets and those above should factor in window size.
+    //              they will be incorrect if the window is resized.
+    // glScissor() takes window coordinates (0,0 at bottom left).
+    const int window_x = kParams.prev_frame.x_offset;
+    const int window_y = kParams.canvas_height -
+                         kParams.prev_frame.y_offset -
+                         kParams.prev_frame.height;
+    glEnable(GL_SCISSOR_TEST);
+    // Only updated the requested area, not the whole canvas.
+    glScissor(window_x, window_y,
+              kParams.prev_frame.width, kParams.prev_frame.height);
+
     glClear(GL_COLOR_BUFFER_BIT);  // use clear color
+    DrawCheckerBoard();
+
+    glDisable(GL_SCISSOR_TEST);
   }
+  kParams.prev_frame.width = iter->width;
+  kParams.prev_frame.height = iter->height;
+  kParams.prev_frame.x_offset = iter->x_offset;
+  kParams.prev_frame.y_offset = iter->y_offset;
+  kParams.prev_frame.dispose_method = iter->dispose_method;
+
   glDrawPixels(pic->width, pic->height,
                GL_RGBA, GL_UNSIGNED_BYTE,
                (GLvoid*)pic->u.RGBA.rgba);
@@ -425,6 +452,11 @@ int main(int argc, char *argv[]) {
   if (kParams.print_info) {
     printf("Canvas: %d x %d\n", kParams.canvas_width, kParams.canvas_height);
   }
+
+  kParams.prev_frame.width = kParams.canvas_width;
+  kParams.prev_frame.height = kParams.canvas_height;
+  kParams.prev_frame.x_offset = kParams.prev_frame.y_offset = 0;
+  kParams.prev_frame.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
 
   memset(&kParams.iccp, 0, sizeof(kParams.iccp));
   kParams.has_color_profile =
