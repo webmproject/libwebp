@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAW3///Z0\u003d",
+        "filename": "src/enc/vp8enci.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-25T21:50:28Z",
+      "side": 1,
+      "message": "drop these 2 lines, the version in this branch is 0.3.0",
+      "revId": "a30fb8c40114426446c786eec707dd48c007ea81",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
