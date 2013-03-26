@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAW3//+Bc\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-26T23:46:58Z",
+      "side": 1,
+      "message": "Reworded slightly, but essentially this.",
+      "parentUuid": "AAAAW3//+Cw\u003d",
+      "revId": "522255199066191ddf5a97cb8271ad78d20c9b69",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAW3//+I4\u003d",
         "filename": "doc/webp-container-spec.txt",
         "patchSetId": 1
@@ -48,6 +66,24 @@
       "writtenOn": "2013-03-26T22:21:47Z",
       "side": 1,
       "message": "[optional suggestion] I think we have mainly used the term \u0027FourCC\u0027 in this section (\u0027RIFF file format\u0027) only. So, you could move the description of \u0027FourCC\u0027 directly, too.",
+      "revId": "522255199066191ddf5a97cb8271ad78d20c9b69",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAW3//+BI\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-26T23:46:58Z",
+      "side": 1,
+      "message": "I think the basics should be here. I was mainly concerned with isolating the RIFF header just before introducing the WebP file header.",
+      "parentUuid": "AAAAW3//+I4\u003d",
       "revId": "522255199066191ddf5a97cb8271ad78d20c9b69",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -71,6 +107,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAW3//+A8\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-26T23:46:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAW3//+Iw\u003d",
+      "revId": "522255199066191ddf5a97cb8271ad78d20c9b69",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAW3//+IY\u003d",
         "filename": "doc/webp-container-spec.txt",
         "patchSetId": 1
@@ -82,6 +136,24 @@
       "writtenOn": "2013-03-26T22:21:47Z",
       "side": 1,
       "message": "This is a good place to mention the size limit:\n\n\"The maximum value  of this field is 2^32 minus 10 bytes. And thus, the size of the whole file is at most 4GiB minus 2 bytes.\"",
+      "revId": "522255199066191ddf5a97cb8271ad78d20c9b69",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAW3//+Bg\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-26T23:46:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAW3//+IY\u003d",
       "revId": "522255199066191ddf5a97cb8271ad78d20c9b69",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
