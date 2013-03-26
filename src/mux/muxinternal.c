@@ -160,7 +160,7 @@ WebPMuxError ChunkAssignData(WebPChunk* chunk, const WebPData* const data,
   return WEBP_MUX_OK;
 }
 
-WebPMuxError ChunkSetNth(const WebPChunk* chunk, WebPChunk** chunk_list,
+WebPMuxError ChunkSetNth(WebPChunk* chunk, WebPChunk** chunk_list,
                          uint32_t nth) {
   WebPChunk* new_chunk;
 
@@ -171,6 +171,7 @@ WebPMuxError ChunkSetNth(const WebPChunk* chunk, WebPChunk** chunk_list,
   new_chunk = (WebPChunk*)malloc(sizeof(*new_chunk));
   if (new_chunk == NULL) return WEBP_MUX_MEMORY_ERROR;
   *new_chunk = *chunk;
+  chunk->owner_ = 0;
   new_chunk->next_ = *chunk_list;
   *chunk_list = new_chunk;
   return WEBP_MUX_OK;
