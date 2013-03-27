@@ -364,6 +364,7 @@ Future specifications MAY add more fields.
 An animation is controlled by ANIM and ANMF chunks.
 
 ANIM Chunk:
+{:#anim_chunk}
 
 For an animated image, this chunk contains the _global parameters_ of the
 animation.
@@ -380,10 +381,14 @@ animation.
 
 Background Color: 32 bits (_uint32_)
 
-: The background color of the canvas in \[Blue, Green, Red, Alpha\] byte order.
-The background color is the color used for those pixels of the canvas that are
-not covered by a frame. Background color is also used when disposal method is
-`1`.
+: The default background color of the canvas in \[Blue, Green, Red, Alpha\]
+byte order. This color is used to fill the unused space on the canvas around the
+frames, as well as the transparent pixels of the first frame. Background color
+is also used when disposal method is `1`.
+
+**Note**: Viewers that have a preferred background against which to present the
+images (web browsers, for example) should ignore this value and use their
+preferred background color instead.
 
 Loop Count: 16 bits (_uint16_)
 
@@ -451,8 +456,9 @@ the next frame on canvas:
   * `0`: Do not dispose. Keep the area used by this frame as it is and render
     the next frame on top of it.
 
-  * `1`: Dispose to background color (also part of this chunk). Restore the
-    area used by this frame to background color before rendering the next frame.
+  * `1`: Dispose to background color. Restore the area used by this frame to
+    background color before rendering the next frame. The background color is
+    part of the [ANIM chunk](#anim_chunk).
 
 Frame Data: _Chunk Size_ - `16` bytes
 
