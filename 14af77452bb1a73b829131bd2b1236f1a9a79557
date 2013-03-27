@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAW3//96o\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 470,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-03-27T00:32:02Z",
+      "side": 1,
+      "message": "Looks OK.\nAlternately: \"The individual subchunks of _Frame Data_ above are also _padded_, as described in the ...\"",
+      "revId": "14af77452bb1a73b829131bd2b1236f1a9a79557",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
