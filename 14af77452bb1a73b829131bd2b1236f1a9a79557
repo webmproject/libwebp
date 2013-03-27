@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "AAAAW3//9sc\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-03-27T08:03:22Z",
+      "side": 1,
+      "message": "could you add a mention here, that the _Frame Data_ payload follows the RIFF structure and syntax (although not stricto-sensu being some)?",
+      "revId": "14af77452bb1a73b829131bd2b1236f1a9a79557",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAW3//96o\u003d",
         "filename": "doc/webp-container-spec.txt",
         "patchSetId": 1
