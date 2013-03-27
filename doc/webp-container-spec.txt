@@ -450,15 +450,45 @@ Reserved: 7 bits
 
 Disposal method (D): 1 bit
 
-: Indicates how the area used by this frame is to be treated before rendering
-the next frame on canvas:
+: Indicates how _the current frame_ is to be treated after it has been displayed
+(before rendering the next frame) on the canvas:
 
-  * `0`: Do not dispose. Keep the area used by this frame as it is and render
-    the next frame on top of it.
+  * `0`: Do not dispose. Leave the canvas as is.
 
-  * `1`: Dispose to background color. Restore the area used by this frame to
-    background color before rendering the next frame. The background color is
-    part of the [ANIM chunk](#anim_chunk).
+  * `1`: Dispose to background color. Fill the _rectangle_ on the canvas covered
+    by the _current frame_ with background color specified in the
+    [ANIM chunk](#anim_chunk).
+
+After disposing the current frame, render the next frame on the canvas using
+[alpha-blending](#alpha-blending). If the next frame does not have an alpha
+channel, assume alpha value of 255, effectively replacing the rectangle.
+
+**Notes**:
+
+  * The frame disposal only applies to the _frame rectangle_, that is, the
+    rectangle defined by _Frame X_, _Frame Y_, _frame width_ and _frame height_.
+    It may or may not cover the whole canvas.
+
+{:#alpha-blending}
+  * **Alpha-blending**:
+
+    Given that each of the R, G, B and A channels is 8-bit, and the RGB
+    channels are _not premultiplied_ by alpha, the formula for blending
+    'dst' onto 'src' is:
+
+~~~~~
+    blend.A = src.A + dst.A * (1 - src.A / 255)
+    if blend.A = 0 then
+      blend.RGB = 0
+    else
+      blend.RGB = (src.RGB * src.A +
+                   dst.RGB * dst.A * (1 - src.A / 255)) / blend.A
+~~~~~
+
+  * Alpha-blending SHOULD be done in linear color space, by taking into account
+    the [color profile](#color-profile) of the image. If the color profile is
+    not present, sRGB is to be assumed. (Note that sRGB also needs to be
+    linearized due to a gamma of ~2.2).
 
 Frame Data: _Chunk Size_ - `16` bytes
 
