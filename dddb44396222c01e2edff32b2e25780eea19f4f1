@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAW3//9Q0\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-27T18:37:00Z",
+      "side": 1,
+      "message": "Keep the/this; one or the other",
+      "revId": "dddb44396222c01e2edff32b2e25780eea19f4f1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAW3//9QU\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-27T18:37:00Z",
+      "side": 1,
+      "message": "embedding a formula directly might be helpful",
+      "revId": "dddb44396222c01e2edff32b2e25780eea19f4f1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
