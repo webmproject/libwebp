@@ -466,6 +466,9 @@ Frame Data: _Chunk Size_ - `16` bytes
 
   * An optional list of [unknown chunks](#unknown-chunks).
 
+**Note**: The 'ANMF' payload, _Frame Data_ above, consists of individual
+_padded_ chunks as described by the [RIFF file format](#riff-file-format).
+
 #### Fragments _\[status: experimental\]_
 
 For images that are represented by fragments, this chunk contains data for
