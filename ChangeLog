@@ -1,3 +1,24 @@
+d52b405 Cosmetic fixes
+6cb4a61 misc style fix
+68111ab add missing YUVA->ARGB automatic conversion in WebPEncode()
+403bfe8 Container spec: Clarify frame disposal
+3e7a13a Merge "Container spec: clarify the background color field" into 0.3.0
+14af774 container doc: add a note about the 'ANMF' payload
+cc635ef Container spec: clarify the background color field
+e3e3394 container doc: move RIFF description to own section
+4299f39 libwebp/mux: fix double free
+33f9a69 Merge "demux: keep a frame tail pointer; used in AddFrame" into 0.3.0
+a2a7b95 use WebPDataCopy() instead of re-coding it.
+6f18f12 demux: keep a frame tail pointer; used in AddFrame
+e5af49e add doc precision about WebPParseHeaders() return codes
+db46daa Merge "Makefile.vc: fix dynamic builds" into 0.3.0
+53c77af Merge "gif2webp: Bgcolor fix for a special case" into 0.3.0
+a5ebd14 gif2webp: Bgcolor fix for a special case
+6378f23 Merge "vwebp/animation: fix background dispose" into 0.3.0
+3c8eb9a fix bad saturation order in QuantizeBlock
+04c7a2e vwebp/animation: fix background dispose
+81a5069 Makefile.vc: fix dynamic builds
+5f25c39 update ChangeLog
 14d42af examples: don't use C99 %zu
 5ccf1fe update ChangeLog
 2560c24 update NEWS
