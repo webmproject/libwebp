@@ -266,7 +266,6 @@ enum WebPEncodingError {
 
 // Main exchange structure (input samples, output bytes, statistics)
 struct WebPPicture {
-
   //   INPUT
   //////////////
   // Main flag for encoder selecting between ARGB or YUV input.
