@@ -374,11 +374,8 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
   if (!config->lossless) {
     VP8Encoder* enc = NULL;
     if (pic->y == NULL || pic->u == NULL || pic->v == NULL) {
-      if (pic->argb != NULL) {
-        if (!WebPPictureARGBToYUVA(pic, WEBP_YUV420)) return 0;
-      } else {
-        return WebPEncodingSetError(pic, VP8_ENC_ERROR_NULL_PARAMETER);
-      }
+      // Make sure we have YUVA samples.
+      if (!WebPPictureARGBToYUVA(pic, WEBP_YUV420)) return 0;
     }
 
     enc = InitVP8Encoder(config, pic);
@@ -405,8 +402,10 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
     }
     ok &= DeleteVP8Encoder(enc);  // must always be called, even if !ok
   } else {
-    if (pic->argb == NULL)
-      return WebPEncodingSetError(pic, VP8_ENC_ERROR_NULL_PARAMETER);
+    // Make sure we have ARGB samples.
+    if (pic->argb == NULL && !WebPPictureYUVAToARGB(pic)) {
+      return 0;
+    }
 
     ok = VP8LEncodeImage(config, pic);  // Sets pic->error in case of problem.
   }
