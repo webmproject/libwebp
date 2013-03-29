@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAW3//7MU\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 700,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-29T06:54:18Z",
+      "side": 1,
+      "message": "should someone be able to cancel this with a later -keep_alpha?",
+      "revId": "7928e0f6b6aa0bd16a553c787f3041b67a48c335",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAW3//7M8\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-29T06:54:18Z",
+      "side": 1,
+      "message": "not needed",
+      "revId": "7928e0f6b6aa0bd16a553c787f3041b67a48c335",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAW3//7Ms\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 974,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-29T06:54:18Z",
+      "side": 1,
+      "message": "trailing whitespace",
+      "revId": "7928e0f6b6aa0bd16a553c787f3041b67a48c335",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAW3//7Mg\u003d",
+        "filename": "man/cwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-29T06:54:18Z",
+      "side": 1,
+      "message": ".BI \\-blend_alpha \" int",
+      "revId": "7928e0f6b6aa0bd16a553c787f3041b67a48c335",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAW3//7Mo\u003d",
+        "filename": "man/cwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-29T06:54:18Z",
+      "side": 1,
+      "message": "This option uses...",
+      "revId": "7928e0f6b6aa0bd16a553c787f3041b67a48c335",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAW3//7MM\u003d",
+        "filename": "src/enc/picture.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 955,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-29T06:54:18Z",
+      "side": 1,
+      "message": "one too many spaces on the indent",
+      "revId": "7928e0f6b6aa0bd16a553c787f3041b67a48c335",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAW3//7MI\u003d",
+        "filename": "src/enc/picture.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 961,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-29T06:54:18Z",
+      "side": 1,
+      "message": "the second should be 2 * x + 0 for balance",
+      "revId": "7928e0f6b6aa0bd16a553c787f3041b67a48c335",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAW3//7ME\u003d",
+        "filename": "src/enc/picture.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 973,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-29T06:54:18Z",
+      "side": 1,
+      "message": "\u0026 0xff",
+      "revId": "7928e0f6b6aa0bd16a553c787f3041b67a48c335",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
