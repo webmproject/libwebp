@@ -16,6 +16,24 @@
       "revId": "8b707caf5f7759139424a11f92d372a539914848",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAW3//60E\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 5
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-03-29T18:43:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAW3//63U\u003d",
+      "revId": "8b707caf5f7759139424a11f92d372a539914848",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
