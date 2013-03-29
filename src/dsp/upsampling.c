@@ -32,7 +32,7 @@ WebPUpsampleLinePairFunc WebPUpsamplers[MODE_LAST];
 //  ([3*a +   b + 9*c + 3*d      a + 3*b + 3*c + 9*d]   [8 8]) / 16
 
 // We process u and v together stashed into 32bit (16bit each).
-#define LOAD_UV(u,v) ((u) | ((v) << 16))
+#define LOAD_UV(u, v) ((u) | ((v) << 16))
 
 #define UPSAMPLE_FUNC(FUNC_NAME, FUNC, XSTEP)                                  \
 static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \

@@ -315,8 +315,8 @@ static void TransformTwoNEON(const int16_t* in, uint8_t* dst, int do_two) {
 }
 
 static void TransformWHT(const int16_t* in, int16_t* out) {
-  const int kStep = 32; // The store is only incrementing the pointer as if we
-                        // had stored a single byte.
+  const int kStep = 32;  // The store is only incrementing the pointer as if we
+                         // had stored a single byte.
   __asm__ volatile (
     // part 1
     // load data into q0, q1
