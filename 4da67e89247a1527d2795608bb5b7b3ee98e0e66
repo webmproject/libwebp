@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAW3//62Q\u003d",
+        "filename": "man/cwebp.1",
+        "patchSetId": 3
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-03-29T18:30:33Z",
+      "side": 1,
+      "message": "...blends the alpha channel to blend the source...\ndoesn\u0027t make sense.",
+      "revId": "4da67e89247a1527d2795608bb5b7b3ee98e0e66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
