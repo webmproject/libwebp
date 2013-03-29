@@ -28,7 +28,6 @@ static int IsVP8XNeeded(const VP8Encoder* const enc) {
 }
 
 static int PutPaddingByte(const WebPPicture* const pic) {
-
   const uint8_t pad_byte[1] = { 0 };
   return !!pic->writer(pad_byte, 1, pic);
 }
@@ -69,7 +68,7 @@ static WebPEncodingError PutVP8XHeader(const VP8Encoder* const enc) {
   PutLE32(vp8x + CHUNK_HEADER_SIZE,     flags);
   PutLE24(vp8x + CHUNK_HEADER_SIZE + 4, pic->width - 1);
   PutLE24(vp8x + CHUNK_HEADER_SIZE + 7, pic->height - 1);
-  if(!pic->writer(vp8x, sizeof(vp8x), pic)) {
+  if (!pic->writer(vp8x, sizeof(vp8x), pic)) {
     return VP8_ENC_ERROR_BAD_WRITE;
   }
   return VP8_ENC_OK;

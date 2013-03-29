@@ -462,7 +462,6 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
                  (uint8_t*)tmp.argb, width, height,
                  tmp.argb_stride * 4,
                  work, 4);
-
   }
   WebPPictureFree(pic);
   free(work);

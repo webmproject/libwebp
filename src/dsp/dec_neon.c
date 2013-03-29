@@ -79,7 +79,7 @@ extern "C" {
   "vld4.8   {" #c1"[6], " #c2"[6], " #c3"[6], " #c4"[6]}," #b1 "," #stride"\n" \
   "vld4.8   {" #c1"[7], " #c2"[7], " #c3"[7], " #c4"[7]}," #b2 "," #stride"\n"
 
-#define STORE8x2(c1, c2, p,stride)                                             \
+#define STORE8x2(c1, c2, p, stride)                                            \
   "vst2.8   {" #c1"[0], " #c2"[0]}," #p "," #stride " \n"                      \
   "vst2.8   {" #c1"[1], " #c2"[1]}," #p "," #stride " \n"                      \
   "vst2.8   {" #c1"[2], " #c2"[2]}," #p "," #stride " \n"                      \
