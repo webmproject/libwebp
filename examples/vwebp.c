@@ -5,13 +5,7 @@
 //  Additional IP Rights Grant:  http://www.webmproject.org/license/additional/
 // -----------------------------------------------------------------------------
 //
-//  Simple WebP file viewer.
-//
-// Compiling on linux:
-//   sudo apt-get install freeglut3-dev mesa-common-dev
-//   gcc -o vwebp vwebp.c -O3 -lwebp -lwebpmux -lglut -lGL -lpthread -lm
-// Compiling on Mac + XCode:
-//   gcc -o vwebp vwebp.c -lwebp -lwebpmux -framework GLUT -framework OpenGL
+//  Simple OpenGL-based WebP file viewer.
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
