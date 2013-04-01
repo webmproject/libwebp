@@ -7,15 +7,6 @@
 //
 //  simple tool to convert animated GIFs to WebP
 //
-// Getting the prerequisites:
-// Debian-like linux:
-//   sudo apt-get install libgif-dev
-// MacPorts
-//   sudo port install giflib
-//
-// Compiling:
-//   gcc -o gif2webp gif2webp.c -O3 -lwebpmux -lwebp -lgif -lpthread -lm
-//
 // Authors: Skal (pascal.massimino@gmail.com)
 //          Urvang (urvang@google.com)
 

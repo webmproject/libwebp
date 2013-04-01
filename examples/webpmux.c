@@ -8,9 +8,6 @@
 //  Simple command-line to create a WebP container file and to extract or strip
 //  relevant data from the container file.
 //
-//  Compile with:     gcc -o webpmux webpmux.c -lwebpmux -lwebp
-//
-//
 // Authors: Vikas (vikaas.arora@gmail.com),
 //          Urvang (urvang@google.com)
 

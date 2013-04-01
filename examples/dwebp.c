@@ -5,9 +5,7 @@
 //  Additional IP Rights Grant:  http://www.webmproject.org/license/additional/
 // -----------------------------------------------------------------------------
 //
-//  Command-line tool for decoding a WebP image
-//
-//  Compile with:     gcc -o dwebp dwebp.c -lwebpdecode
+//  Command-line tool for decoding a WebP image.
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
