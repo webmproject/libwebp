@@ -8,7 +8,7 @@
 //  Simple WebP file viewer.
 //
 // Compiling on linux:
-//   sudo apt-get install libglut3-dev mesa-common-dev
+//   sudo apt-get install freeglut3-dev mesa-common-dev
 //   gcc -o vwebp vwebp.c -O3 -lwebp -lwebpmux -lglut -lGL -lpthread -lm
 // Compiling on Mac + XCode:
 //   gcc -o vwebp vwebp.c -lwebp -lwebpmux -framework GLUT -framework OpenGL
@@ -19,9 +19,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "webp/decode.h"
-#include "webp/demux.h"
-
 #ifdef __APPLE__
 #include <GLUT/glut.h>
 #else
@@ -30,6 +27,13 @@
 #include <GL/freeglut.h>
 #endif
 #endif
+
+#ifdef WEBP_HAVE_QCMS
+#include <qcms.h>
+#endif
+
+#include "webp/decode.h"
+#include "webp/demux.h"
 
 #include "./example_util.h"
 
@@ -42,9 +46,11 @@ static void Help(void);
 // Unfortunate global variables. Gathered into a struct for comfort.
 static struct {
   int has_animation;
+  int has_color_profile;
   int done;
   int decoding_error;
   int print_info;
+  int use_color_profile;
 
   int canvas_width, canvas_height;
   int loop_count;
@@ -56,6 +62,12 @@ static struct {
   const WebPDecBuffer* pic;
   WebPDemuxer* dmux;
   WebPIterator frameiter;
+  struct {
+    int width, height;
+    int x_offset, y_offset;
+    enum WebPMuxAnimDispose dispose_method;
+  } prev_frame;
+  WebPChunkIterator iccp;
 } kParams;
 
 static void ClearPreviousPic(void) {
@@ -67,8 +79,126 @@ static void ClearParams(void) {
   ClearPreviousPic();
   WebPDataClear(&kParams.data);
   WebPDemuxReleaseIterator(&kParams.frameiter);
+  WebPDemuxReleaseChunkIterator(&kParams.iccp);
   WebPDemuxDelete(kParams.dmux);
   kParams.dmux = NULL;
+}
+
+// -----------------------------------------------------------------------------
+// Color profile handling
+static int ApplyColorProfile(const WebPData* const profile,
+                             WebPDecBuffer* const rgba) {
+#ifdef WEBP_HAVE_QCMS
+  int i, ok = 0;
+  uint8_t* line;
+  uint8_t major_revision;
+  qcms_profile* input_profile = NULL;
+  qcms_profile* output_profile = NULL;
+  qcms_transform* transform = NULL;
+  const qcms_data_type input_type = QCMS_DATA_RGBA_8;
+  const qcms_data_type output_type = QCMS_DATA_RGBA_8;
+  const qcms_intent intent = QCMS_INTENT_DEFAULT;
+
+  if (profile == NULL || rgba == NULL) return 0;
+  if (profile->bytes == NULL || profile->size < 10) return 1;
+  major_revision = profile->bytes[8];
+
+  qcms_enable_iccv4();
+  input_profile = qcms_profile_from_memory(profile->bytes, profile->size);
+  // qcms_profile_is_bogus() is broken with ICCv4.
+  if (input_profile == NULL ||
+      (major_revision < 4 && qcms_profile_is_bogus(input_profile))) {
+    fprintf(stderr, "Color profile is bogus!\n");
+    goto Error;
+  }
+
+  output_profile = qcms_profile_sRGB();
+  if (output_profile == NULL) {
+    fprintf(stderr, "Error creating output color profile!\n");
+    goto Error;
+  }
+
+  qcms_profile_precache_output_transform(output_profile);
+  transform = qcms_transform_create(input_profile, input_type,
+                                    output_profile, output_type,
+                                    intent);
+  if (transform == NULL) {
+    fprintf(stderr, "Error creating color transform!\n");
+    goto Error;
+  }
+
+  line = rgba->u.RGBA.rgba;
+  for (i = 0; i < rgba->height; ++i, line += rgba->u.RGBA.stride) {
+    qcms_transform_data(transform, line, line, rgba->width);
+  }
+  ok = 1;
+
+ Error:
+  if (input_profile != NULL) qcms_profile_release(input_profile);
+  if (output_profile != NULL) qcms_profile_release(output_profile);
+  if (transform != NULL) qcms_transform_release(transform);
+  return ok;
+#else
+  (void)profile;
+  (void)rgba;
+  return 1;
+#endif  // WEBP_HAVE_QCMS
+}
+
+//------------------------------------------------------------------------------
+// File decoding
+
+static int Decode(void) {   // Fills kParams.frameiter
+  const WebPIterator* const iter = &kParams.frameiter;
+  WebPDecoderConfig* const config = kParams.config;
+  WebPDecBuffer* const output_buffer = &config->output;
+  int ok = 0;
+
+  ClearPreviousPic();
+  output_buffer->colorspace = MODE_RGBA;
+  ok = (WebPDecode(iter->fragment.bytes, iter->fragment.size,
+                   config) == VP8_STATUS_OK);
+  if (!ok) {
+    fprintf(stderr, "Decoding of frame #%d failed!\n", iter->frame_num);
+  } else {
+    kParams.pic = output_buffer;
+    if (kParams.use_color_profile) {
+      ok = ApplyColorProfile(&kParams.iccp.chunk, output_buffer);
+      if (!ok) {
+        fprintf(stderr, "Applying color profile to frame #%d failed!\n",
+                iter->frame_num);
+      }
+    }
+  }
+  return ok;
+}
+
+static void decode_callback(int what) {
+  if (what == 0 && !kParams.done) {
+    int duration = 0;
+    if (kParams.dmux != NULL) {
+      WebPIterator* const iter = &kParams.frameiter;
+      if (!WebPDemuxNextFrame(iter)) {
+        WebPDemuxReleaseIterator(iter);
+        if (WebPDemuxGetFrame(kParams.dmux, 1, iter)) {
+          --kParams.loop_count;
+          kParams.done = (kParams.loop_count == 0);
+        } else {
+          kParams.decoding_error = 1;
+          kParams.done = 1;
+          return;
+        }
+      }
+      duration = iter->duration;
+    }
+    if (!Decode()) {
+      kParams.decoding_error = 1;
+      kParams.done = 1;
+    } else {
+      glutPostRedisplay();
+      glutTimerFunc(duration, decode_callback, what);
+    }
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -84,6 +214,24 @@ static void HandleKey(unsigned char key, int pos_x, int pos_y) {
     ClearParams();
     exit(0);
 #endif
+  } else if (key == 'c') {
+    if (kParams.has_color_profile && !kParams.decoding_error) {
+      kParams.use_color_profile = 1 - kParams.use_color_profile;
+
+      if (kParams.has_animation) {
+        // Restart the completed animation to pickup the color profile change.
+        if (kParams.done && kParams.loop_count == 0) {
+          kParams.loop_count =
+              (int)WebPDemuxGetI(kParams.dmux, WEBP_FF_LOOP_COUNT) + 1;
+          kParams.done = 0;
+          // Start the decode loop immediately.
+          glutTimerFunc(0, decode_callback, 0);
+        }
+      } else {
+        Decode();
+        glutPostRedisplay();
+      }
+    }
   } else if (key == 'i') {
     kParams.print_info = 1 - kParams.print_info;
     glutPostRedisplay();
@@ -141,24 +289,46 @@ static void HandleDisplay(void) {
   glPixelZoom(1, -1);
   xoff = (GLfloat)(2. * iter->x_offset / kParams.canvas_width);
   yoff = (GLfloat)(2. * iter->y_offset / kParams.canvas_height);
-  glRasterPos2f(-1. + xoff, 1. - yoff);
+  glRasterPos2f(-1.f + xoff, 1.f - yoff);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   glPixelStorei(GL_UNPACK_ROW_LENGTH, pic->u.RGBA.stride / 4);
-  if (iter->dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
+
+  if (kParams.prev_frame.dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
+    // TODO(later): these offsets and those above should factor in window size.
+    //              they will be incorrect if the window is resized.
+    // glScissor() takes window coordinates (0,0 at bottom left).
+    const int window_x = kParams.prev_frame.x_offset;
+    const int window_y = kParams.canvas_height -
+                         kParams.prev_frame.y_offset -
+                         kParams.prev_frame.height;
+    glEnable(GL_SCISSOR_TEST);
+    // Only updated the requested area, not the whole canvas.
+    glScissor(window_x, window_y,
+              kParams.prev_frame.width, kParams.prev_frame.height);
+
     glClear(GL_COLOR_BUFFER_BIT);  // use clear color
+    DrawCheckerBoard();
+
+    glDisable(GL_SCISSOR_TEST);
   }
+  kParams.prev_frame.width = iter->width;
+  kParams.prev_frame.height = iter->height;
+  kParams.prev_frame.x_offset = iter->x_offset;
+  kParams.prev_frame.y_offset = iter->y_offset;
+  kParams.prev_frame.dispose_method = iter->dispose_method;
+
   glDrawPixels(pic->width, pic->height,
                GL_RGBA, GL_UNSIGNED_BYTE,
                (GLvoid*)pic->u.RGBA.rgba);
   if (kParams.print_info) {
     char tmp[32];
 
-    glColor4f(0.90, 0.0, 0.90, 1.0);
+    glColor4f(0.90f, 0.0f, 0.90f, 1.0f);
     glRasterPos2f(-0.95f, 0.90f);
     PrintString(kParams.file_name);
 
     snprintf(tmp, sizeof(tmp), "Dimension:%d x %d", pic->width, pic->height);
-    glColor4f(0.90, 0.0, 0.90, 1.0);
+    glColor4f(0.90f, 0.0f, 0.90f, 1.0f);
     glRasterPos2f(-0.95f, 0.80f);
     PrintString(tmp);
     if (iter->x_offset != 0 || iter->y_offset != 0) {
@@ -193,55 +363,6 @@ static void StartDisplay(void) {
 }
 
 //------------------------------------------------------------------------------
-// File decoding
-
-static int Decode(void) {   // Fills kParams.frameiter
-  const WebPIterator* const iter = &kParams.frameiter;
-  WebPDecoderConfig* const config = kParams.config;
-  WebPDecBuffer* const output_buffer = &config->output;
-  int ok = 0;
-
-  ClearPreviousPic();
-  output_buffer->colorspace = MODE_RGBA;
-  ok = (WebPDecode(iter->fragment.bytes, iter->fragment.size,
-                   config) == VP8_STATUS_OK);
-  if (!ok) {
-    fprintf(stderr, "Decoding of frame #%d failed!\n", iter->frame_num);
-  } else {
-    kParams.pic = output_buffer;
-  }
-  return ok;
-}
-
-static void decode_callback(int what) {
-  if (what == 0 && !kParams.done) {
-    int duration = 0;
-    if (kParams.dmux != NULL) {
-      WebPIterator* const iter = &kParams.frameiter;
-      if (!WebPDemuxNextFrame(iter)) {
-        WebPDemuxReleaseIterator(iter);
-        if (WebPDemuxGetFrame(kParams.dmux, 1, iter)) {
-          --kParams.loop_count;
-          kParams.done = (kParams.loop_count == 0);
-        } else {
-          kParams.decoding_error = 1;
-          kParams.done = 1;
-          return;
-        }
-      }
-      duration = iter->duration;
-    }
-    if (!Decode()) {
-      kParams.decoding_error = 1;
-      kParams.done = 1;
-    } else {
-      glutPostRedisplay();
-      glutTimerFunc(duration, decode_callback, what);
-    }
-  }
-}
-
-//------------------------------------------------------------------------------
 // Main
 
 static void Help(void) {
@@ -249,6 +370,7 @@ static void Help(void) {
          "Decodes the WebP image file and visualize it using OpenGL\n"
          "Options are:\n"
          "  -version  .... print version number and exit.\n"
+         "  -noicc ....... don't use the icc profile if present.\n"
          "  -nofancy ..... don't use the fancy YUV420 upscaler.\n"
          "  -nofilter .... disable in-loop filtering.\n"
          "  -mt .......... use multi-threading.\n"
@@ -256,6 +378,7 @@ static void Help(void) {
          "  -h     ....... this help message.\n"
          "\n"
          "Keyboard shortcuts:\n"
+         "  'c' ................ toggle use of color profile.\n"
          "  'i' ................ overlay file information.\n"
          "  'q' / 'Q' / ESC .... quit.\n"
         );
@@ -270,11 +393,14 @@ int main(int argc, char *argv[]) {
     return -1;
   }
   kParams.config = &config;
+  kParams.use_color_profile = 1;
 
   for (c = 1; c < argc; ++c) {
     if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
       Help();
       return 0;
+    } else if (!strcmp(argv[c], "-noicc")) {
+      kParams.use_color_profile = 0;
     } else if (!strcmp(argv[c], "-nofancy")) {
       config.options.no_fancy_upsampling = 1;
     } else if (!strcmp(argv[c], "-nofilter")) {
@@ -325,6 +451,25 @@ int main(int argc, char *argv[]) {
   kParams.canvas_height = WebPDemuxGetI(kParams.dmux, WEBP_FF_CANVAS_HEIGHT);
   if (kParams.print_info) {
     printf("Canvas: %d x %d\n", kParams.canvas_width, kParams.canvas_height);
+  }
+
+  kParams.prev_frame.width = kParams.canvas_width;
+  kParams.prev_frame.height = kParams.canvas_height;
+  kParams.prev_frame.x_offset = kParams.prev_frame.y_offset = 0;
+  kParams.prev_frame.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
+
+  memset(&kParams.iccp, 0, sizeof(kParams.iccp));
+  kParams.has_color_profile =
+      !!(WebPDemuxGetI(kParams.dmux, WEBP_FF_FORMAT_FLAGS) & ICCP_FLAG);
+  if (kParams.has_color_profile) {
+#ifdef WEBP_HAVE_QCMS
+    if (!WebPDemuxGetChunk(kParams.dmux, "ICCP", 1, &kParams.iccp)) goto Error;
+    printf("VP8X: Found color profile\n");
+#else
+    fprintf(stderr, "Warning: color profile present, but qcms is unavailable!\n"
+            "Build libqcms from Mozilla or Chromium and define WEBP_HAVE_QCMS "
+            "before building.\n");
+#endif
   }
 
   if (!WebPDemuxGetFrame(kParams.dmux, 1, &kParams.frameiter)) goto Error;

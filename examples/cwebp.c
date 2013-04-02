@@ -366,13 +366,29 @@ static int DumpPicture(const WebPPicture* const picture, const char* PGM_name) {
 
 enum {
   METADATA_EXIF = (1 << 0),
-  METADATA_ICCP = (1 << 1),
+  METADATA_ICC  = (1 << 1),
   METADATA_XMP  = (1 << 2),
-  METADATA_ALL  = METADATA_EXIF | METADATA_ICCP | METADATA_XMP
+  METADATA_ALL  = METADATA_EXIF | METADATA_ICC | METADATA_XMP
 };
 
 static const int kChunkHeaderSize = 8;
 static const int kTagSize = 4;
+
+static void PrintMetadataInfo(const Metadata* const metadata,
+                              int metadata_written) {
+  if (metadata == NULL || metadata_written == 0) return;
+
+  fprintf(stderr, "Metadata:\n");
+  if (metadata_written & METADATA_ICC) {
+    fprintf(stderr, "  * ICC profile:  %6d bytes\n", (int)metadata->iccp.size);
+  }
+  if (metadata_written & METADATA_EXIF) {
+    fprintf(stderr, "  * EXIF data:    %6d bytes\n", (int)metadata->exif.size);
+  }
+  if (metadata_written & METADATA_XMP) {
+    fprintf(stderr, "  * XMP data:     %6d bytes\n", (int)metadata->xmp.size);
+  }
+}
 
 // Outputs, in little endian, 'num' bytes from 'val' to 'out'.
 static int WriteLE(FILE* const out, uint32_t val, int num) {
@@ -424,7 +440,8 @@ static int WriteWebPWithMetadata(FILE* const out,
                                  const WebPPicture* const picture,
                                  const WebPMemoryWriter* const memory_writer,
                                  const Metadata* const metadata,
-                                 int keep_metadata) {
+                                 int keep_metadata,
+                                 int* const metadata_written) {
   const char kVP8XHeader[] = "VP8X\x0a\x00\x00\x00";
   const int kAlphaFlag = 0x10;
   const int kEXIFFlag  = 0x08;
@@ -439,13 +456,16 @@ static int WriteWebPWithMetadata(FILE* const out,
                                             !!(keep_metadata & METADATA_EXIF),
                                             kEXIFFlag, &flags, &metadata_size);
   const int write_iccp = UpdateFlagsAndSize(&metadata->iccp,
-                                            !!(keep_metadata & METADATA_ICCP),
+                                            !!(keep_metadata & METADATA_ICC),
                                             kICCPFlag, &flags, &metadata_size);
   const int write_xmp  = UpdateFlagsAndSize(&metadata->xmp,
                                             !!(keep_metadata & METADATA_XMP),
                                             kXMPFlag, &flags, &metadata_size);
   uint8_t* webp = memory_writer->mem;
   size_t webp_size = memory_writer->size;
+
+  *metadata_written = 0;
+
   if (webp_size < kMinSize) return 0;
   if (webp_size - kChunkHeaderSize + metadata_size > kMaxChunkPayload) {
     fprintf(stderr, "Error! Addition of metadata would exceed "
@@ -482,11 +502,20 @@ static int WriteWebPWithMetadata(FILE* const out,
       ok = ok && WriteLE24(out, picture->width - 1);
       ok = ok && WriteLE24(out, picture->height - 1);
     }
-    if (write_iccp) ok = ok && WriteMetadataChunk(out, "ICCP", &metadata->iccp);
+    if (write_iccp) {
+      ok = ok && WriteMetadataChunk(out, "ICCP", &metadata->iccp);
+      *metadata_written |= METADATA_ICC;
+    }
     // Image
     ok = ok && (fwrite(webp, webp_size, 1, out) == 1);
-    if (write_exif) ok = ok && WriteMetadataChunk(out, "EXIF", &metadata->exif);
-    if (write_xmp)  ok = ok && WriteMetadataChunk(out, "XMP ", &metadata->xmp);
+    if (write_exif) {
+      ok = ok && WriteMetadataChunk(out, "EXIF", &metadata->exif);
+      *metadata_written |= METADATA_EXIF;
+    }
+    if (write_xmp) {
+      ok = ok && WriteMetadataChunk(out, "XMP ", &metadata->xmp);
+      *metadata_written |= METADATA_XMP;
+    }
     return ok;
   } else {
     // No metadata, just write the original image file.
@@ -575,7 +604,7 @@ static void HelpLong(void) {
   printf("                           ");
   printf("copy from the input to the output if present.\n");
   printf("                           "
-         "Valid values: all, none (default), exif, iccp, xmp\n");
+         "Valid values: all, none (default), exif, icc, xmp\n");
 
   printf("\n");
   printf("  -short ................. condense printed message\n");
@@ -631,6 +660,7 @@ int main(int argc, const char *argv[]) {
   int resize_w = 0, resize_h = 0;
   int show_progress = 0;
   int keep_metadata = 0;
+  int metadata_written = 0;
   WebPPicture picture;
   int print_distortion = -1;        // -1=off, 0=PSNR, 1=SSIM, 2=LSIM
   WebPPicture original_picture;    // when PSNR or SSIM is requested
@@ -812,7 +842,7 @@ int main(int argc, const char *argv[]) {
         { "all",  METADATA_ALL },
         { "none", 0 },
         { "exif", METADATA_EXIF },
-        { "iccp", METADATA_ICCP },
+        { "icc",  METADATA_ICC },
         { "xmp",  METADATA_XMP },
       };
       const size_t kNumTokens = sizeof(kTokens) / sizeof(kTokens[0]);
@@ -844,7 +874,7 @@ int main(int argc, const char *argv[]) {
         start = token + 1;
       }
 #ifdef HAVE_WINCODEC_H
-      if (keep_metadata != 0 && keep_metadata != METADATA_ICCP) {
+      if (keep_metadata != 0 && keep_metadata != METADATA_ICC) {
         // TODO(jzern): remove when -metadata is supported on all platforms.
         fprintf(stderr, "Warning: only ICC profile extraction is currently"
                         " supported on this platform!\n");
@@ -978,7 +1008,7 @@ int main(int argc, const char *argv[]) {
 
   if (keep_metadata != 0 && out != NULL) {
     if (!WriteWebPWithMetadata(out, &picture, &memory_writer,
-                               &metadata, keep_metadata)) {
+                               &metadata, keep_metadata, &metadata_written)) {
       fprintf(stderr, "Error writing WebP file with metadata!\n");
       goto Error;
     }
@@ -989,6 +1019,9 @@ int main(int argc, const char *argv[]) {
       PrintExtraInfoLossless(&picture, short_output, in_file);
     } else {
       PrintExtraInfoLossy(&picture, short_output, config.low_memory, in_file);
+    }
+    if (!short_output) {
+      PrintMetadataInfo(&metadata, metadata_written);
     }
   }
   if (!quiet && !short_output && print_distortion >= 0) {  // print distortion

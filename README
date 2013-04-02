@@ -4,7 +4,7 @@
           \__\__/\____/\_____/__/ ____  ___
                 / _/ /    \    \ /  _ \/ _/
                /  \_/   / /   \ \   __/  \__
-               \____/____/\_____/_____/____/v0.2.1
+               \____/____/\_____/_____/____/v0.3.0
 
 Description:
 ============
@@ -49,7 +49,7 @@ will build the binaries examples/cwebp and examples/dwebp, along
 with the static library src/libwebp.a. No system-wide installation
 is supplied, as this is a simple alternative to the full installation
 system based on the autoconf tools (see below).
-Please refer to the makefile.unix for additional details and customizations.
+Please refer to makefile.unix for additional details and customizations.
 
 Using autoconf tools:
 ---------------------
@@ -71,10 +71,11 @@ should be all you need to have the following files
 
 installed.
 
-Note: The encoding and decoding libraries are compiled separately
-(as src/dec/libwebpdecode.* and src/dec/libwebpencode.*). They
-can be installed independently using a minor modification in the
-corresponding Makefile.am configure files (see comments there).
+Note: A decode-only library, libwebpdecoder, is available using the
+'--enable-libwebpdecoder' flag. The encode library is built separately and can
+be installed independently using a minor modification in the corresponding
+Makefile.am configure files (see comments there). See './configure --help' for
+more options.
 
 SWIG bindings:
 --------------
@@ -176,7 +177,7 @@ options:
 
   -metadata <string> ..... comma separated list of metadata to
                            copy from the input to the output if present.
-                           Valid values: all, none (default), exif, iccp, xmp
+                           Valid values: all, none (default), exif, icc, xmp
 
   -short ................. condense printed message
   -quiet ................. don't print anything.
@@ -263,12 +264,51 @@ Visualization tool:
 
 There's a little self-serve visualization tool called 'vwebp' under the
 examples/ directory. It uses OpenGL to open a simple drawing window and show
-a decoded WebP file. It's not yet integrated in the automake or makefile.unix
-build system, but you can try to manually compile it using the recommendations
-at the top of the source file.
+a decoded WebP file. It's not yet integrated in the automake build system, but
+you can try to manually compile it using the recommendations below.
 
-Usage: 'vwebp my_picture.webp'
+Usage: vwebp in_file [options]
 
+Decodes the WebP image file and visualize it using OpenGL
+Options are:
+  -version  .... print version number and exit.
+  -noicc ....... don't use the icc profile if present.
+  -nofancy ..... don't use the fancy YUV420 upscaler.
+  -nofilter .... disable in-loop filtering.
+  -mt .......... use multi-threading.
+  -info ........ print info.
+  -h     ....... this help message.
+
+Keyboard shortcuts:
+  'c' ................ toggle use of color profile.
+  'i' ................ overlay file information.
+  'q' / 'Q' / ESC .... quit.
+
+Building:
+---------
+
+Prerequisites:
+1) OpenGL & OpenGL Utility Toolkit (GLUT)
+  Linux:
+    $ sudo apt-get install freeglut3-dev mesa-common-dev
+  Mac + XCode:
+    - These libraries should be available in the OpenGL / GLUT frameworks.
+  Windows:
+    http://freeglut.sourceforge.net/index.php#download
+
+2) (Optional) qcms (Quick Color Management System)
+  i. Download qcms from Mozilla / Chromium:
+    http://hg.mozilla.org/mozilla-central/file/0e7639e3bdfb/gfx/qcms
+    http://src.chromium.org/viewvc/chrome/trunk/src/third_party/qcms
+  ii. Build and archive the source files as libqcms.a / qcms.lib
+  iii. Update makefile.unix / Makefile.vc
+    a) Define WEBP_HAVE_QCMS
+    b) Update include / library paths to reference the qcms directory.
+
+Build using makefile.unix / Makefile.vc:
+$ make -f makefile.unix examples/vwebp
+> nmake /f Makefile.vc CFG=release-static \
+    ../obj/x64/release-static/bin/vwebp.exe
 
 Encoding API:
 =============

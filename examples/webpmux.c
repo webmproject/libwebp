@@ -17,12 +17,6 @@
 /*  Usage examples:
 
   Create container WebP file:
-    webpmux -frgm fragment_1.webp +0+0 \
-            -frgm fragment_2.webp +960+0 \
-            -frgm fragment_3.webp +0+576 \
-            -frgm fragment_4.webp +960+576 \
-            -o out_fragment_container.webp
-
     webpmux -frame anim_1.webp +100+10+10   \
             -frame anim_2.webp +100+25+25+1 \
             -frame anim_3.webp +100+50+50+1 \
@@ -51,6 +45,10 @@
     webpmux [ -h | -help ]
     webpmux -version
 */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <assert.h>
 #include <stdio.h>
@@ -185,6 +183,9 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
   uint32_t flag;
 
   WebPMuxError err = WebPMuxGetFeatures(mux, &flag);
+#ifndef WEBP_EXPERIMENTAL_FEATURES
+  if (flag & FRAGMENTS_FLAG) err = WEBP_MUX_INVALID_ARGUMENT;
+#endif
   RETURN_IF_ERROR("Failed to retrieve features\n");
 
   if (flag == 0) {
@@ -196,7 +197,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
   printf("Features present:");
   if (flag & ANIMATION_FLAG) printf(" animation");
   if (flag & FRAGMENTS_FLAG) printf(" image fragments");
-  if (flag & ICCP_FLAG)      printf(" icc profile");
+  if (flag & ICCP_FLAG)      printf(" ICC profile");
   if (flag & EXIF_FLAG)      printf(" EXIF metadata");
   if (flag & XMP_FLAG)       printf(" XMP metadata");
   if (flag & ALPHA_FLAG)     printf(" transparency");
@@ -231,7 +232,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
         RETURN_IF_ERROR3("Failed to retrieve %s#%d\n", type_str, i);
         printf("%3d: %8d %8d ", i, frame.x_offset, frame.y_offset);
         if (is_anim) printf("%8d %7d ", frame.duration, frame.dispose_method);
-        printf("%10zu\n", frame.bitstream.size);
+        printf("%10d\n", (int)frame.bitstream.size);
         WebPDataClear(&frame.bitstream);
       }
     }
@@ -241,28 +242,28 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
     WebPData icc_profile;
     err = WebPMuxGetChunk(mux, "ICCP", &icc_profile);
     RETURN_IF_ERROR("Failed to retrieve the ICC profile\n");
-    printf("Size of the ICC profile data: %zu\n", icc_profile.size);
+    printf("Size of the ICC profile data: %d\n", (int)icc_profile.size);
   }
 
   if (flag & EXIF_FLAG) {
     WebPData exif;
     err = WebPMuxGetChunk(mux, "EXIF", &exif);
     RETURN_IF_ERROR("Failed to retrieve the EXIF metadata\n");
-    printf("Size of the EXIF metadata: %zu\n", exif.size);
+    printf("Size of the EXIF metadata: %d\n", (int)exif.size);
   }
 
   if (flag & XMP_FLAG) {
     WebPData xmp;
     err = WebPMuxGetChunk(mux, "XMP ", &xmp);
     RETURN_IF_ERROR("Failed to retrieve the XMP metadata\n");
-    printf("Size of the XMP metadata: %zu\n", xmp.size);
+    printf("Size of the XMP metadata: %d\n", (int)xmp.size);
   }
 
   if ((flag & ALPHA_FLAG) && !(flag & (ANIMATION_FLAG | FRAGMENTS_FLAG))) {
     WebPMuxFrameInfo image;
     err = WebPMuxGetFrame(mux, 1, &image);
     RETURN_IF_ERROR("Failed to retrieve the image\n");
-    printf("Size of the image (with alpha): %zu\n", image.bitstream.size);
+    printf("Size of the image (with alpha): %d\n", (int)image.bitstream.size);
   }
 
   return WEBP_MUX_OK;
@@ -272,7 +273,9 @@ static void PrintHelp(void) {
   printf("Usage: webpmux -get GET_OPTIONS INPUT -o OUTPUT\n");
   printf("       webpmux -set SET_OPTIONS INPUT -o OUTPUT\n");
   printf("       webpmux -strip STRIP_OPTIONS INPUT -o OUTPUT\n");
+#ifdef WEBP_EXPERIMENTAL_FEATURES
   printf("       webpmux -frgm FRAGMENT_OPTIONS [-frgm...] -o OUTPUT\n");
+#endif
   printf("       webpmux -frame FRAME_OPTIONS [-frame...] [-loop LOOP_COUNT]"
          "\n");
   printf("               [-bgcolor BACKGROUND_COLOR] -o OUTPUT\n");
@@ -286,7 +289,9 @@ static void PrintHelp(void) {
   printf("   icc       Get ICC profile.\n");
   printf("   exif      Get EXIF metadata.\n");
   printf("   xmp       Get XMP metadata.\n");
+#ifdef WEBP_EXPERIMENTAL_FEATURES
   printf("   frgm n    Get nth fragment.\n");
+#endif
   printf("   frame n   Get nth frame.\n");
 
   printf("\n");
@@ -306,6 +311,7 @@ static void PrintHelp(void) {
   printf("   exif      Strip EXIF metadata.\n");
   printf("   xmp       Strip XMP metadata.\n");
 
+#ifdef WEBP_EXPERIMENTAL_FEATURES
   printf("\n");
   printf("FRAGMENT_OPTIONS(i):\n");
   printf(" Create fragmented image.\n");
@@ -313,6 +319,7 @@ static void PrintHelp(void) {
   printf("   where:    'file_i' is the i'th fragment (WebP format),\n");
   printf("             'xi','yi' specify the image offset for this fragment."
          "\n");
+#endif
 
   printf("\n");
   printf("FRAME_OPTIONS(i):\n");
@@ -375,7 +382,8 @@ static int WriteData(const char* filename, const WebPData* const webpdata) {
   if (fwrite(webpdata->bytes, webpdata->size, 1, fout) != 1) {
     fprintf(stderr, "Error writing file %s!\n", filename);
   } else {
-    fprintf(stderr, "Saved file %s (%zu bytes)\n", filename, webpdata->size);
+    fprintf(stderr, "Saved file %s (%d bytes)\n",
+            filename, (int)webpdata->size);
     ok = 1;
   }
   if (fout != stdout) fclose(fout);
@@ -596,6 +604,7 @@ static int ParseCommandLine(int argc, const char* argv[],
         arg->params_ = argv[i + 1];
         ++feature_arg_index;
         i += 2;
+#ifdef WEBP_EXPERIMENTAL_FEATURES
       } else if (!strcmp(argv[i], "-frgm")) {
         CHECK_NUM_ARGS_LESS(3, ErrParse);
         if (ACTION_IS_NIL || config->action_type_ == ACTION_SET) {
@@ -612,6 +621,7 @@ static int ParseCommandLine(int argc, const char* argv[],
         arg->params_ = argv[i + 2];
         ++feature_arg_index;
         i += 3;
+#endif
       } else if (!strcmp(argv[i], "-o")) {
         CHECK_NUM_ARGS_LESS(2, ErrParse);
         config->output_ = argv[i + 1];
@@ -660,8 +670,12 @@ static int ParseCommandLine(int argc, const char* argv[],
         } else {
           ++i;
         }
+#ifdef WEBP_EXPERIMENTAL_FEATURES
       } else if ((!strcmp(argv[i], "frame") ||
                   !strcmp(argv[i], "frgm")) &&
+#else
+      } else if (!strcmp(argv[i], "frame") &&
+#endif
                   (config->action_type_ == ACTION_GET)) {
         CHECK_NUM_ARGS_LESS(2, ErrParse);
         feature->type_ = (!strcmp(argv[i], "frame")) ? FEATURE_ANMF :
@@ -763,12 +777,12 @@ static int InitializeConfig(int argc, const char* argv[],
 // Processing.
 
 static int GetFrameFragment(const WebPMux* mux,
-                            const WebPMuxConfig* config, int isFrame) {
+                            const WebPMuxConfig* config, int is_frame) {
   WebPMuxError err = WEBP_MUX_OK;
   WebPMux* mux_single = NULL;
   long num = 0;
   int ok = 1;
-  const WebPChunkId id = isFrame ? WEBP_CHUNK_ANMF : WEBP_CHUNK_FRGM;
+  const WebPChunkId id = is_frame ? WEBP_CHUNK_ANMF : WEBP_CHUNK_FRGM;
   WebPMuxFrameInfo info;
   WebPDataInit(&info.bitstream);
 

@@ -60,9 +60,9 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 document are to be interpreted as described in [RFC 2119][].
 
 **Note:** Out of the features mentioned above, lossy compression, lossless
-compression and transparency are finalized and are to be considered stable.
-On the other hand, metadata, color profile, animation and image fragmentation
-are experimental as of now, and are open to discussion, feedback and comments.
+compression, transparency, metadata, color profile and animation are finalized
+and are to be considered stable. On the other hand, image fragmentation is
+experimental as of now, and is open to discussion, feedback and comments.
 The same is indicated using annotation "_status: experimental_" in the relevant
 sections of this document.
 
@@ -93,10 +93,20 @@ _uint32_
 
 : A 32-bit, little-endian, unsigned integer.
 
+_FourCC_
+
+: A _FourCC_ (four-character code) is a _uint32_ created by concatenating four
+  ASCII characters in little-endian order.
+
 _1-based_
 
 : An unsigned integer field storing values offset by `-1`. e.g., Such a field
 would store value _25_ as _24_.
+
+RIFF file format
+----------------
+The WebP file format is based on the RIFF (resource interchange file format)
+document format.
 
 The basic element of a RIFF file is a _chunk_. It consists of:
 
@@ -112,12 +122,12 @@ The basic element of a RIFF file is a _chunk_. It consists of:
 
 Chunk FourCC: 32 bits
 
-: ASCII four character code or _chunk tag_ used for chunk identification.
+: ASCII four-character code used for chunk identification.
 
 Chunk Size: 32 bits (_uint32_)
 
-: The size of the chunk (_ckSize_) not including this field, the chunk
-  identifier and padding.
+: The size of the chunk not including this field, the chunk identifier or
+  padding.
 
 Chunk Payload: _Chunk Size_ bytes
 
@@ -126,43 +136,13 @@ Chunk Payload: _Chunk Size_ bytes
 
 _ChunkHeader('ABCD')_
 
-: This is used to describe the fourcc and size header of individual
-  chunks, where 'ABCD' is the fourcc for the chunk. This element's
+: This is used to describe the _FourCC_ and _Chunk Size_ header of individual
+  chunks, where 'ABCD' is the FourCC for the chunk. This element's
   size is 8 bytes.
 
-: Note that, in this specification, all chunk tag characters are in
-  file order, not in byte order of a uint32 of any particular
-  architecture.
-
-_list of chunks_
-
-: A concatenation of multiple chunks.
-
-: We will refer to the first chunk as having _position_ 0, the second
-  as position 1, etc. By _chunk with index 0 among "ABCD"_ we mean
-  the first chunk among the chunks of type "ABCD" in the list, the
-  _chunk with index 1 among "ABCD"_ is the second such chunk, etc.
-
-A WebP file MUST begin with a single chunk with a tag 'RIFF'. All
-other defined chunks are contained within this chunk. The file SHOULD
-NOT contain anything after it.
-
-The maximum size of RIFF's _ckSize_ is 2^32 minus 10 bytes. The size
-of the whole file is at most 4GiB minus 2 bytes.
-
-**Note:** some RIFF libraries are said to have bugs when handling files
-larger than 1GiB or 2GiB. If you are using an existing library, check
-that it handles large files correctly.
-
-The first four bytes of the RIFF chunk contents (i.e., bytes 8-11 of the file)
-MUST be the ASCII string "WEBP". They are followed by a list of chunks. As the
-size of any chunk is even, the size of the RIFF chunk is also even.  The
-contents of the chunks in that list will be described in the following sections.
-
-**Note:** RIFF has a convention that all-uppercase chunks are standard
-chunks that apply to any RIFF file format, while chunks specific to a
-file format are all lowercase. WebP does not follow this convention.
-
+**Note:** RIFF has a convention that all-uppercase chunk FourCCs are standard
+chunks that apply to any RIFF file format, while FourCCs specific to a file
+format are all lowercase. WebP does not follow this convention.
 
 WebP file header
 ----------------
@@ -183,11 +163,19 @@ WebP file header
 
 File Size: 32 bits (_uint32_)
 
-: The size of the file in bytes starting at offset 8.
+: The size of the file in bytes starting at offset 8. The maximum value of
+this field is 2^32 minus 10 bytes and thus the size of the whole file is at
+most 4GiB minus 2 bytes.
 
 'WEBP': 32 bits
 
 : The ASCII characters 'W' 'E' 'B' 'P'.
+
+A WebP file MUST begin with a RIFF header with the FourCC 'WEBP'. The file size
+in the header is the total size of the chunks that follow plus `4` bytes for
+the 'WEBP' FourCC. The file SHOULD NOT contain anything after it. As the size
+of any chunk is even, the size given by the RIFF header is also even. The
+contents of individual chunks will be described in the following sections.
 
 Simple file format (lossy)
 --------------------------
@@ -274,15 +262,15 @@ An extended format file consists of:
 
   * A 'VP8X' chunk with information about features used in the file.
 
-  * An optional 'ICCP' chunk with color profile. _\[status: experimental\]_
+  * An optional 'ICCP' chunk with color profile.
 
-  * An optional 'ANIM' chunk with animation control data. _\[status: experimental\]_
+  * An optional 'ANIM' chunk with animation control data.
 
   * Image data.
 
-  * An optional 'EXIF' chunk with EXIF metadata. _\[status: experimental\]_
+  * An optional 'EXIF' chunk with EXIF metadata.
 
-  * An optional 'XMP ' chunk with XMP metadata. _\[status: experimental\]_
+  * An optional 'XMP ' chunk with XMP metadata.
 
   * An optional list of [unknown chunks](#unknown-chunks). _\[status: experimental\]_
 
@@ -325,7 +313,7 @@ Reserved (Rsv): 2 bits
 
 : SHOULD be `0`.
 
-ICC profile (I): 1 bit _\[status: experimental\]_
+ICC profile (I): 1 bit
 
 : Set if the file contains an ICC profile.
 
@@ -334,15 +322,15 @@ Alpha (L): 1 bit
 : Set if any of the frames of the image contain transparency information
 ("alpha").
 
-EXIF metadata (E): 1 bit _\[status: experimental\]_
+EXIF metadata (E): 1 bit
 
 : Set if the file contains EXIF metadata.
 
-XMP metadata (X): 1 bit _\[status: experimental\]_
+XMP metadata (X): 1 bit
 
 : Set if the file contains XMP metadata.
 
-Animation (A): 1 bit _\[status: experimental\]_
+Animation (A): 1 bit
 
 : Set if this is an animated image. Data in 'ANIM' and 'ANMF' chunks should be
 used to control the animation.
@@ -371,11 +359,12 @@ Future specifications MAY add more fields.
 
 ### Chunks
 
-#### Animation _\[status: experimental\]_
+#### Animation
 
 An animation is controlled by ANIM and ANMF chunks.
 
 ANIM Chunk:
+{:#anim_chunk}
 
 For an animated image, this chunk contains the _global parameters_ of the
 animation.
@@ -392,10 +381,14 @@ animation.
 
 Background Color: 32 bits (_uint32_)
 
-: The background color of the canvas in \[Blue, Green, Red, Alpha\] byte order.
-The background color is the color used for those pixels of the canvas that are
-not covered by a frame. Background color is also used when disposal method is
-`1`.
+: The default background color of the canvas in \[Blue, Green, Red, Alpha\]
+byte order. This color is used to fill the unused space on the canvas around the
+frames, as well as the transparent pixels of the first frame. Background color
+is also used when disposal method is `1`.
+
+**Note**: Viewers that have a preferred background against which to present the
+images (web browsers, for example) should ignore this value and use their
+preferred background color instead.
 
 Loop Count: 16 bits (_uint16_)
 
@@ -457,14 +450,45 @@ Reserved: 7 bits
 
 Disposal method (D): 1 bit
 
-: Indicates how the area used by this frame is to be treated before rendering
-the next frame on canvas:
+: Indicates how _the current frame_ is to be treated after it has been displayed
+(before rendering the next frame) on the canvas:
 
-  * `0`: Do not dispose. Keep the area used by this frame as it is and render
-    the next frame on top of it.
+  * `0`: Do not dispose. Leave the canvas as is.
 
-  * `1`: Dispose to background color (also part of this chunk). Restore the
-    area used by this frame to background color before rendering the next frame.
+  * `1`: Dispose to background color. Fill the _rectangle_ on the canvas covered
+    by the _current frame_ with background color specified in the
+    [ANIM chunk](#anim_chunk).
+
+After disposing the current frame, render the next frame on the canvas using
+[alpha-blending](#alpha-blending). If the next frame does not have an alpha
+channel, assume alpha value of 255, effectively replacing the rectangle.
+
+**Notes**:
+
+  * The frame disposal only applies to the _frame rectangle_, that is, the
+    rectangle defined by _Frame X_, _Frame Y_, _frame width_ and _frame height_.
+    It may or may not cover the whole canvas.
+
+{:#alpha-blending}
+  * **Alpha-blending**:
+
+    Given that each of the R, G, B and A channels is 8-bit, and the RGB
+    channels are _not premultiplied_ by alpha, the formula for blending
+    'dst' onto 'src' is:
+
+~~~~~
+    blend.A = src.A + dst.A * (1 - src.A / 255)
+    if blend.A = 0 then
+      blend.RGB = 0
+    else
+      blend.RGB = (src.RGB * src.A +
+                   dst.RGB * dst.A * (1 - src.A / 255)) / blend.A
+~~~~~
+
+  * Alpha-blending SHOULD be done in linear color space, by taking into account
+    the [color profile](#color-profile) of the image. If the color profile is
+    not present, sRGB is to be assumed. (Note that sRGB also needs to be
+    linearized due to a gamma of ~2.2).
 
 Frame Data: _Chunk Size_ - `16` bytes
 
@@ -477,6 +501,9 @@ Frame Data: _Chunk Size_ - `16` bytes
   * A [bitstream subchunk](#bitstream-vp8vp8l) for the frame.
 
   * An optional list of [unknown chunks](#unknown-chunks).
+
+**Note**: The 'ANMF' payload, _Frame Data_ above, consists of individual
+_padded_ chunks as described by the [RIFF file format](#riff-file-format).
 
 #### Fragments _\[status: experimental\]_
 
@@ -644,7 +671,7 @@ The formats of VP8 and VP8L chunks are as described in sections
 [Simple file format (lossy)](#simple-file-format-lossy)
 and [Simple file format (lossless)](#simple-file-format-lossless) respectively.
 
-#### Color profile _\[status: experimental\]_
+#### Color profile
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -666,7 +693,7 @@ See the [ICC Specification][iccspec] for details.
 
 If this chunk is not present, sRGB SHOULD be assumed.
 
-#### Metadata _\[status: experimental\]_
+#### Metadata
 
 Metadata can be stored in 'EXIF' or 'XMP ' chunks.
 
@@ -727,14 +754,14 @@ A file MAY contain unknown chunks:
 Readers SHOULD ignore these chunks. Writers SHOULD preserve them in their
 original order (unless they specifically intend to modify these chunks).
 
-### Assembling the Canvas from fragments/frames _\[status: experimental\]_
+### Assembling the Canvas from fragments/frames
 
 Here we provide an overview of how a reader should assemble a canvas in case
 of a fragmented-image and in case of an animated image. The notation
 _VP8X.field_ means the field in the 'VP8X' chunk with the same description.
 
 Displaying a _fragmented image_ canvas MUST be equivalent to the following
-pseudocode:
+pseudocode: _\[status: experimental\]_
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 assert VP8X.flags.hasFragments

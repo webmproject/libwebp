@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-#define WEBP_DECODER_ABI_VERSION 0x0200    // MAJOR(8b) + MINOR(8b)
+#define WEBP_DECODER_ABI_VERSION 0x0201    // MAJOR(8b) + MINOR(8b)
 
 typedef struct WebPRGBABuffer WebPRGBABuffer;
 typedef struct WebPYUVABuffer WebPYUVABuffer;
@@ -392,9 +392,10 @@ WEBP_EXTERN(const WebPDecBuffer*) WebPIDecodedArea(
 
 // Features gathered from the bitstream
 struct WebPBitstreamFeatures {
-  int width;        // Width in pixels, as read from the bitstream.
-  int height;       // Height in pixels, as read from the bitstream.
-  int has_alpha;    // True if the bitstream contains an alpha channel.
+  int width;          // Width in pixels, as read from the bitstream.
+  int height;         // Height in pixels, as read from the bitstream.
+  int has_alpha;      // True if the bitstream contains an alpha channel.
+  int has_animation;  // True if the bitstream is an animation.
 
   // Unused for now:
   int bitstream_version;        // should be 0 for now. TODO(later)
@@ -402,7 +403,7 @@ struct WebPBitstreamFeatures {
                                 // recommended.
   int rotate;                   // TODO(later)
   int uv_sampling;              // should be 0 for now. TODO(later)
-  uint32_t pad[3];              // padding for later use
+  uint32_t pad[2];              // padding for later use
 };
 
 // Internal, version-checked, entry point
