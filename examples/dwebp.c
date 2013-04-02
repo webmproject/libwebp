@@ -460,6 +460,13 @@ int main(int argc, const char *argv[]) {
       goto end;
     }
 
+    if (bitstream->has_animation) {
+      fprintf(stderr,
+              "Error! Decoding of an animated WebP file is not supported.\n"
+              "       Use webpmux to extract the individual frames or\n"
+              "       vwebp to view this image.\n");
+    }
+
     switch (format) {
       case PNG:
 #ifdef HAVE_WINCODEC_H

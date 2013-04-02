@@ -121,7 +121,8 @@ WebPMuxError ChunkAssignData(WebPChunk* chunk, const WebPData* const data,
 
 // Sets 'chunk' at nth position in the 'chunk_list'.
 // nth = 0 has the special meaning "last of the list".
-WebPMuxError ChunkSetNth(const WebPChunk* chunk, WebPChunk** chunk_list,
+// On success ownership is transferred from 'chunk' to the 'chunk_list'.
+WebPMuxError ChunkSetNth(WebPChunk* chunk, WebPChunk** chunk_list,
                          uint32_t nth);
 
 // Releases chunk and returns chunk->next_.

@@ -5,7 +5,10 @@ if BUILD_LIBWEBPDECODER
   noinst_LTLIBRARIES += libwebputilsdecode.la
 endif
 
-COMMON_SOURCES  =
+common_HEADERS = ../webp/types.h
+commondir = $(includedir)/webp
+
+COMMON_SOURCES =
 COMMON_SOURCES += bit_reader.c
 COMMON_SOURCES += bit_reader.h
 COMMON_SOURCES += color_cache.c
@@ -23,7 +26,7 @@ COMMON_SOURCES += thread.h
 COMMON_SOURCES += utils.c
 COMMON_SOURCES += utils.h
 
-ENC_SOURCES  =
+ENC_SOURCES =
 ENC_SOURCES += bit_writer.c
 ENC_SOURCES += bit_writer.h
 ENC_SOURCES += huffman_encode.c
@@ -31,15 +34,8 @@ ENC_SOURCES += huffman_encode.h
 ENC_SOURCES += quant_levels.c
 ENC_SOURCES += quant_levels.h
 
-
 libwebputils_la_SOURCES = $(COMMON_SOURCES) $(ENC_SOURCES)
-
-libwebputilsinclude_HEADERS = ../webp/types.h
-libwebputilsincludedir = $(includedir)/webp
 
 if BUILD_LIBWEBPDECODER
   libwebputilsdecode_la_SOURCES = $(COMMON_SOURCES)
-
-  libwebputilsdecodeinclude_HEADERS = $(libwebputilsinclude_HEADERS)
-  libwebputilsdecodeincludedir = $(libwebputilsincludedir)
 endif

@@ -1,4 +1,4 @@
-AC_INIT([libwebp], [0.2.1],
+AC_INIT([libwebp], [0.3.0],
         [http://code.google.com/p/webp/issues],,
         [http://developers.google.com/speed/webp])
 AC_CANONICAL_TARGET
@@ -176,7 +176,7 @@ CPPFLAGS=$SAVED_CPPFLAGS
 LIBS=$SAVED_LIBS
 
 if test "$gif_support" = "yes" -a \
-        "$enable_experimental_libwebpmux" = "yes"; then
+        "$enable_libwebpmux" = "yes"; then
   build_gif2webp=yes
 fi
 AM_CONDITIONAL([BUILD_GIF2WEBP], [test "${build_gif2webp}" = "yes"])
@@ -244,27 +244,27 @@ AC_MSG_CHECKING(if --enable-experimental option is specified)
 AC_ARG_ENABLE([experimental], AS_HELP_STRING([--enable-experimental],
                                              [Activate experimental features]))
 if test "$enable_experimental" = "yes"; then
-        AC_DEFINE(EXPERIMENTAL,,[Enable experimental code])
-        USE_EXPERIMENTAL_CODE="-DWEBP_EXPERIMENTAL_FEATURES"
+  AC_DEFINE(WEBP_EXPERIMENTAL_FEATURES, [1], [Enable experimental code])
+  USE_EXPERIMENTAL_CODE="-DWEBP_EXPERIMENTAL_FEATURES"
 fi
 AC_MSG_RESULT(${enable_experimental-no})
 AC_SUBST(USE_EXPERIMENTAL_CODE)
 
 dnl === Check whether libwebpmux should be built
 AC_MSG_CHECKING(whether libwebpmux is to be built)
-AC_ARG_ENABLE([experimental-libwebpmux],
-              AS_HELP_STRING([--enable-experimental-libwebpmux],
+AC_ARG_ENABLE([libwebpmux],
+              AS_HELP_STRING([--enable-libwebpmux],
                              [Build libwebpmux @<:@default=no@:>@]))
-AC_MSG_RESULT(${enable_experimental_libwebpmux-no})
-AM_CONDITIONAL([WANT_MUX], [test "$enable_experimental_libwebpmux" = "yes"])
+AC_MSG_RESULT(${enable_libwebpmux-no})
+AM_CONDITIONAL([WANT_MUX], [test "$enable_libwebpmux" = "yes"])
 
 dnl === Check whether libwebpdemux should be built
 AC_MSG_CHECKING(whether libwebpdemux is to be built)
-AC_ARG_ENABLE([experimental-libwebpdemux],
-              AS_HELP_STRING([--enable-experimental-libwebpdemux],
+AC_ARG_ENABLE([libwebpdemux],
+              AS_HELP_STRING([--enable-libwebpdemux],
                              [Build libwebpdemux @<:@default=no@:>@]))
-AC_MSG_RESULT(${enable_experimental_libwebpdemux-no})
-AM_CONDITIONAL([WANT_DEMUX], [test "$enable_experimental_libwebpdemux" = "yes"])
+AC_MSG_RESULT(${enable_libwebpdemux-no})
+AM_CONDITIONAL([WANT_DEMUX], [test "$enable_libwebpdemux" = "yes"])
 
 dnl === Check whether decoder library should be built.
 AC_MSG_CHECKING(whether decoder library is to be built)
@@ -283,7 +283,8 @@ AC_CONFIG_FILES([Makefile src/Makefile man/Makefile \
                  src/enc/Makefile src/dsp/Makefile \
                  src/demux/Makefile src/mux/Makefile \
                  src/utils/Makefile \
-                 src/libwebp.pc src/libwebpdecoder.pc])
+                 src/libwebp.pc src/libwebpdecoder.pc \
+                 src/demux/libwebpdemux.pc src/mux/libwebpmux.pc])
 
 
 AC_OUTPUT
@@ -297,8 +298,8 @@ Static libraries: ${enable_static}
 Threaded decode: ${enable_threading-no}
 libwebp: yes
 libwebpdecoder: ${enable_libwebpdecoder-no}
-libwebpdemux: ${enable_experimental_libwebpdemux-no}
-libwebpmux: ${enable_experimental_libwebpmux-no}
+libwebpdemux: ${enable_libwebpdemux-no}
+libwebpmux: ${enable_libwebpmux-no}
 
 Tools:
 cwebp: yes
@@ -314,5 +315,5 @@ dwebp: yes
   PNG  : ${png_support-no}
   WIC  : ${wic_support-no}
 gif2webp: ${build_gif2webp-no}
-webpmux: ${enable_experimental_libwebpmux-no}
+webpmux: ${enable_libwebpmux-no}
 ])

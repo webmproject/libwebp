@@ -127,8 +127,8 @@ static int EncodeAlphaInternal(const uint8_t* const data, int width, int height,
   VP8BitWriterAppend(bw, &header, ALPHA_HEADER_LEN);
 
   filter_func = WebPFilters[filter];
-  if (filter_func) {
-    filter_func(data, width, height, 1, width, tmp_alpha);
+  if (filter_func != NULL) {
+    filter_func(data, width, height, width, tmp_alpha);
     alpha_src = tmp_alpha;
   }  else {
     alpha_src = data;

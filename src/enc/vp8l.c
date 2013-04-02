@@ -563,6 +563,9 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
       !GetHuffBitLengthsAndCodes(histogram_image, huffman_codes)) {
     goto Error;
   }
+  // Free combined histograms.
+  free(histogram_image);
+  histogram_image = NULL;
 
   // Color Cache parameters.
   VP8LWriteBits(bw, 1, use_color_cache);
@@ -609,9 +612,6 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
       ClearHuffmanTreeIfOnlyOneSymbol(codes);
     }
   }
-  // Free combined histograms.
-  free(histogram_image);
-  histogram_image = NULL;
 
   // Store actual literals.
   StoreImageToBitMask(bw, width, histogram_bits, &refs,
@@ -619,7 +619,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   ok = 1;
 
  Error:
-  if (!ok) free(histogram_image);
+  free(histogram_image);
 
   VP8LClearBackwardRefs(&refs);
   if (huffman_codes != NULL) {

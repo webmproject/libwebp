@@ -79,9 +79,9 @@ static int StoreICCP(j_decompress_ptr dinfo, MetadataPayload* const iccp) {
       ICCPSegment* segment;
 
       if (segment_size == 0 || count == 0 || seq == 0) {
-        fprintf(stderr, "[ICCP] size (%zu) / count (%d) / sequence number (%d)"
+        fprintf(stderr, "[ICCP] size (%d) / count (%d) / sequence number (%d)"
                         " cannot be 0!\n",
-                segment_size, seq, count);
+                (int)segment_size, seq, count);
         return 0;
       }
 

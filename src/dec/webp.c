@@ -14,7 +14,7 @@
 #include "./vp8i.h"
 #include "./vp8li.h"
 #include "./webpi.h"
-#include "../webp/format_constants.h"
+#include "../webp/mux_types.h"  // ALPHA_FLAG
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -276,6 +276,7 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
                                           int* const width,
                                           int* const height,
                                           int* const has_alpha,
+                                          int* const has_animation,
                                           WebPHeaderStructure* const headers) {
   int found_riff = 0;
   int found_vp8x = 0;
@@ -309,6 +310,7 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
       return VP8_STATUS_BITSTREAM_ERROR;
     }
     if (has_alpha != NULL) *has_alpha = !!(flags & ALPHA_FLAG);
+    if (has_animation != NULL) *has_animation = !!(flags & ANIMATION_FLAG);
     if (found_vp8x && headers == NULL) {
       return VP8_STATUS_OK;  // Return features from VP8X header.
     }
@@ -370,10 +372,19 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
 }
 
 VP8StatusCode WebPParseHeaders(WebPHeaderStructure* const headers) {
+  VP8StatusCode status;
+  int has_animation = 0;
   assert(headers != NULL);
   // fill out headers, ignore width/height/has_alpha.
-  return ParseHeadersInternal(headers->data, headers->data_size,
-                              NULL, NULL, NULL, headers);
+  status = ParseHeadersInternal(headers->data, headers->data_size,
+                                NULL, NULL, NULL, &has_animation, headers);
+  if (status == VP8_STATUS_OK || status == VP8_STATUS_NOT_ENOUGH_DATA) {
+    // TODO(jzern): full support of animation frames will require API additions.
+    if (has_animation) {
+      status = VP8_STATUS_UNSUPPORTED_FEATURE;
+    }
+  }
+  return status;
 }
 
 //------------------------------------------------------------------------------
@@ -625,10 +636,11 @@ static VP8StatusCode GetFeatures(const uint8_t* const data, size_t data_size,
   }
   DefaultFeatures(features);
 
-  // Only parse enough of the data to retrieve width/height/has_alpha.
+  // Only parse enough of the data to retrieve the features.
   return ParseHeadersInternal(data, data_size,
                               &features->width, &features->height,
-                              &features->has_alpha, NULL);
+                              &features->has_alpha, &features->has_animation,
+                              NULL);
 }
 
 //------------------------------------------------------------------------------

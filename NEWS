@@ -1,9 +1,17 @@
-- next version:
+- 3/20/13: version 0.3.0
+  This is a binary compatible release.
   * WebPINewRGB/WebPINewYUVA accept being passed a NULL output buffer
     and will perform auto-allocation.
   * default filter option is now '-strong -f 60'
   * encoding speed-up for lossy methods 3 to 6
   * alpha encoding can be done in parallel to lossy using 'cwebp -mt ...'
+  * color profile, metadata (XMP/EXIF) and animation support finalized in the
+    container.
+  * various NEON assembly additions
+  Tool updates / additions:
+    * gif2webp added
+    * vwebp given color profile & animation support
+    * cwebp can preserve color profile / metadata with '-metadata'
 
 - 10/30/12: version 0.2.1
   * Various security related fixes

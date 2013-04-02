@@ -11,9 +11,7 @@ endif
 
 noinst_LTLIBRARIES = libexampleutil.la
 
-libexampleutil_la_SOURCES = example_util.c
-libexampleutilinclude_HEADERS = example_util.h
-libexampleutilincludedir =
+libexampleutil_la_SOURCES = example_util.c example_util.h
 
 dwebp_SOURCES = dwebp.c stopwatch.h
 dwebp_CPPFLAGS  = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)

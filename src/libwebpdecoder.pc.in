@@ -8,4 +8,4 @@ Description: Library for the WebP graphics format (decode only)
 Version: @PACKAGE_VERSION@
 Cflags: -I${includedir}
 Libs: -L${libdir} -lwebpdecoder
-Libs.private: -lm
+Libs.private: -lm @PTHREAD_CFLAGS@ @PTHREAD_LIBS@

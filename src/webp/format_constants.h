@@ -12,6 +12,9 @@
 #ifndef WEBP_WEBP_FORMAT_CONSTANTS_H_
 #define WEBP_WEBP_FORMAT_CONSTANTS_H_
 
+// Create fourcc of the chunk from the chunk tag characters.
+#define MKFOURCC(a, b, c, d) ((uint32_t)(a) | (b) << 8 | (c) << 16 | (d) << 24)
+
 // VP8 related constants.
 #define VP8_SIGNATURE 0x9d012a              // Signature in VP8 data.
 #define VP8_MAX_PARTITION0_SIZE (1 << 19)   // max size of mode partition
@@ -70,6 +73,7 @@ typedef enum {
 #define FRGM_CHUNK_SIZE    6     // Size of a FRGM chunk.
 #define VP8X_CHUNK_SIZE    10    // Size of a VP8X chunk.
 
+<<<<<<< HEAD   (e9a799 Cosmetic fixes)
 // VP8X Feature Flags.
 #if !(defined(__cplusplus) || defined(c_plusplus))
 typedef enum WebPFeatureFlags WebPFeatureFlags;
@@ -83,6 +87,8 @@ enum WebPFeatureFlags {
   ICCP_FLAG       = 0x00000020
 };
 
+=======
+>>>>>>> BRANCH (1e0d4b Update ChangeLog)
 #define MAX_CANVAS_SIZE     (1 << 24)     // 24-bit max for VP8X width/height.
 #define MAX_IMAGE_AREA      (1ULL << 32)  // 32-bit max for width x height.
 #define MAX_LOOP_COUNT      (1 << 16)     // maximum value for loop-count

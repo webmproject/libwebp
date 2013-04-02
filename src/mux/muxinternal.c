@@ -96,7 +96,7 @@ CHUNK_INDEX ChunkGetIndexFromFourCC(const char fourcc[4]) {
 
 // Returns next chunk in the chunk list with the given tag.
 static WebPChunk* ChunkSearchNextInList(WebPChunk* chunk, uint32_t tag) {
-  while (chunk && chunk->tag_ != tag) {
+  while (chunk != NULL && chunk->tag_ != tag) {
     chunk = chunk->next_;
   }
   return chunk;
@@ -105,7 +105,7 @@ static WebPChunk* ChunkSearchNextInList(WebPChunk* chunk, uint32_t tag) {
 WebPChunk* ChunkSearchList(WebPChunk* first, uint32_t nth, uint32_t tag) {
   uint32_t iter = nth;
   first = ChunkSearchNextInList(first, tag);
-  if (!first) return NULL;
+  if (first == NULL) return NULL;
 
   while (--iter != 0) {
     WebPChunk* next_chunk = ChunkSearchNextInList(first->next_, tag);
@@ -121,10 +121,10 @@ WebPChunk* ChunkSearchList(WebPChunk* first, uint32_t nth, uint32_t tag) {
 static int ChunkSearchListToSet(WebPChunk** chunk_list, uint32_t nth,
                                 WebPChunk*** const location) {
   uint32_t count = 0;
-  assert(chunk_list);
+  assert(chunk_list != NULL);
   *location = chunk_list;
 
-  while (*chunk_list) {
+  while (*chunk_list != NULL) {
     WebPChunk* const cur_chunk = *chunk_list;
     ++count;
     if (count == nth) return 1;  // Found.
@@ -149,27 +149,18 @@ WebPMuxError ChunkAssignData(WebPChunk* chunk, const WebPData* const data,
   ChunkRelease(chunk);
 
   if (data != NULL) {
-    if (copy_data) {
-      // Copy data.
-      chunk->data_.bytes = (uint8_t*)malloc(data->size);
-      if (chunk->data_.bytes == NULL) return WEBP_MUX_MEMORY_ERROR;
-      memcpy((uint8_t*)chunk->data_.bytes, data->bytes, data->size);
-      chunk->data_.size = data->size;
-
-      // Chunk is owner of data.
-      chunk->owner_ = 1;
-    } else {
-      // Don't copy data.
+    if (copy_data) {        // Copy data.
+      if (!WebPDataCopy(data, &chunk->data_)) return WEBP_MUX_MEMORY_ERROR;
+      chunk->owner_ = 1;    // Chunk is owner of data.
+    } else {                // Don't copy data.
       chunk->data_ = *data;
     }
   }
-
   chunk->tag_ = tag;
-
   return WEBP_MUX_OK;
 }
 
-WebPMuxError ChunkSetNth(const WebPChunk* chunk, WebPChunk** chunk_list,
+WebPMuxError ChunkSetNth(WebPChunk* chunk, WebPChunk** chunk_list,
                          uint32_t nth) {
   WebPChunk* new_chunk;
 
@@ -180,6 +171,7 @@ WebPMuxError ChunkSetNth(const WebPChunk* chunk, WebPChunk** chunk_list,
   new_chunk = (WebPChunk*)malloc(sizeof(*new_chunk));
   if (new_chunk == NULL) return WEBP_MUX_MEMORY_ERROR;
   *new_chunk = *chunk;
+  chunk->owner_ = 0;
   new_chunk->next_ = *chunk_list;
   *chunk_list = new_chunk;
   return WEBP_MUX_OK;
@@ -199,7 +191,7 @@ WebPChunk* ChunkDelete(WebPChunk* const chunk) {
 
 size_t ChunksListDiskSize(const WebPChunk* chunk_list) {
   size_t size = 0;
-  while (chunk_list) {
+  while (chunk_list != NULL) {
     size += ChunkDiskSize(chunk_list);
     chunk_list = chunk_list->next_;
   }
@@ -220,7 +212,7 @@ static uint8_t* ChunkEmit(const WebPChunk* const chunk, uint8_t* dst) {
 }
 
 uint8_t* ChunkListEmit(const WebPChunk* chunk_list, uint8_t* dst) {
-  while (chunk_list) {
+  while (chunk_list != NULL) {
     dst = ChunkEmit(chunk_list, dst);
     chunk_list = chunk_list->next_;
   }
@@ -281,7 +273,7 @@ static int SearchImageToGetOrDelete(WebPMuxImage** wpi_list, uint32_t nth,
     if (nth == 0) return 0;  // Not found.
   }
 
-  while (*wpi_list) {
+  while (*wpi_list != NULL) {
     WebPMuxImage* const cur_wpi = *wpi_list;
     ++count;
     if (count == nth) return 1;  // Found.
@@ -327,7 +319,7 @@ WebPMuxImage* MuxImageDelete(WebPMuxImage* const wpi) {
 }
 
 void MuxImageDeleteAll(WebPMuxImage** const wpi_list) {
-  while (*wpi_list) {
+  while (*wpi_list != NULL) {
     *wpi_list = MuxImageDelete(*wpi_list);
   }
 }
@@ -370,7 +362,7 @@ size_t MuxImageDiskSize(const WebPMuxImage* const wpi) {
 
 size_t MuxImageListDiskSize(const WebPMuxImage* wpi_list) {
   size_t size = 0;
-  while (wpi_list) {
+  while (wpi_list != NULL) {
     size += MuxImageDiskSize(wpi_list);
     wpi_list = wpi_list->next_;
   }
@@ -409,7 +401,7 @@ uint8_t* MuxImageEmit(const WebPMuxImage* const wpi, uint8_t* dst) {
 }
 
 uint8_t* MuxImageListEmit(const WebPMuxImage* wpi_list, uint8_t* dst) {
-  while (wpi_list) {
+  while (wpi_list != NULL) {
     dst = MuxImageEmit(wpi_list, dst);
     wpi_list = wpi_list->next_;
   }

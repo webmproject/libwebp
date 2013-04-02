@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-enum { YUV_HALF = 1 << (YUV_FIX - 1) };
+#ifdef WEBP_YUV_USE_TABLE
 
 int16_t VP8kVToR[256], VP8kUToB[256];
 int32_t VP8kVToG[256], VP8kUToG[256];
@@ -61,6 +61,12 @@ void VP8YUVInit(void) {
 
   done = 1;
 }
+
+#else
+
+void VP8YUVInit(void) {}
+
+#endif  // WEBP_YUV_USE_TABLE
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
