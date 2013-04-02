@@ -16,6 +16,24 @@
       "revId": "87f7ffaffc5a68b3de9c632019329ab5b786f4da",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAW3//5NE\u003d",
+        "filename": "src/webp/format_constants.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-04-02T05:16:13Z",
+      "side": 0,
+      "message": "This is gerrit replaying the merge and showing the conflict.\nIt\u0027s from these two:\n\nhttps://gerrit.chromium.org/gerrit/#/q/Ib764cb09bd78ab6e72c60f495d55b752ad4dbe4d,n,z\n\nThe resolution is to the right.",
+      "parentUuid": "AAAAW3//5R8\u003d",
+      "revId": "87f7ffaffc5a68b3de9c632019329ab5b786f4da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
