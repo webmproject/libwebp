@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAW3//5R8\u003d",
+        "filename": "src/webp/format_constants.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-04-02T02:45:40Z",
+      "side": 0,
+      "message": "where is this conflict coming from?",
+      "revId": "87f7ffaffc5a68b3de9c632019329ab5b786f4da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
