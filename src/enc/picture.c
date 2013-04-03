@@ -32,6 +32,10 @@ static const union {
 } test_endian = { 0xff000000u };
 #define ALPHA_IS_LAST (test_endian.bytes[3] == 0xff)
 
+static WEBP_INLINE uint32_t MakeARGB32(int r, int g, int b) {
+  return (0xff000000u | (r << 16) | (g << 8) | b);
+}
+
 //------------------------------------------------------------------------------
 // WebPPicture
 //------------------------------------------------------------------------------
@@ -696,10 +700,7 @@ static int Import(WebPPicture* const picture,
       for (x = 0; x < width; ++x) {
         const int offset = step * x + y * rgb_stride;
         const uint32_t argb =
-            0xff000000u |
-            (r_ptr[offset] << 16) |
-            (g_ptr[offset] <<  8) |
-            (b_ptr[offset]);
+            MakeARGB32(r_ptr[offset], g_ptr[offset], b_ptr[offset]);
         picture->argb[x + y * picture->argb_stride] = argb;
       }
     }
@@ -909,6 +910,89 @@ void WebPCleanupTransparentArea(WebPPicture* pic) {
 
 #undef SIZE
 #undef SIZE2
+
+//------------------------------------------------------------------------------
+// Blend color and remove transparency info
+
+#define BLEND(V0, V1, ALPHA) \
+    ((((V0) * (255 - (ALPHA)) + (V1) * (ALPHA)) * 0x101) >> 16)
+#define BLEND_10BIT(V0, V1, ALPHA) \
+    ((((V0) * (1020 - (ALPHA)) + (V1) * (ALPHA)) * 0x101) >> 18)
+
+void WebPBlendAlpha(WebPPicture* pic, uint32_t background_rgb) {
+  const int red = (background_rgb >> 16) & 0xff;
+  const int green = (background_rgb >> 8) & 0xff;
+  const int blue = (background_rgb >> 0) & 0xff;
+  int x, y;
+  if (pic == NULL) return;
+  if (!pic->use_argb) {
+    const int uv_width = (pic->width >> 1);  // omit last pixel during u/v loop
+    const int Y0 = VP8RGBToY(red, green, blue);
+    // VP8RGBToU/V expects the u/v values summed over four pixels
+    const int U0 = VP8RGBToU(4 * red, 4 * green, 4 * blue);
+    const int V0 = VP8RGBToV(4 * red, 4 * green, 4 * blue);
+    const int has_alpha = pic->colorspace & WEBP_CSP_ALPHA_BIT;
+    if (!has_alpha || pic->a == NULL) return;    // nothing to do
+    for (y = 0; y < pic->height; ++y) {
+      // Luma blending
+      uint8_t* const y_ptr = pic->y + y * pic->y_stride;
+      uint8_t* const a_ptr = pic->a + y * pic->a_stride;
+      for (x = 0; x < pic->width; ++x) {
+        const int alpha = a_ptr[x];
+        if (alpha < 0xff) {
+          y_ptr[x] = BLEND(Y0, y_ptr[x], a_ptr[x]);
+        }
+      }
+      // Chroma blending every even line
+      if ((y & 1) == 0) {
+        uint8_t* const u = pic->u + (y >> 1) * pic->uv_stride;
+        uint8_t* const v = pic->v + (y >> 1) * pic->uv_stride;
+        uint8_t* const a_ptr2 =
+            (y + 1 == pic->height) ? a_ptr : a_ptr + pic->a_stride;
+        for (x = 0; x < uv_width; ++x) {
+          // Average four alpha values into a single blending weight.
+          // TODO(skal): might lead to visible contouring. Can we do better?
+          const int alpha =
+              a_ptr[2 * x + 0] + a_ptr[2 * x + 1] +
+              a_ptr2[2 * x + 0] + a_ptr2[2 * x + 1];
+          u[x] = BLEND_10BIT(U0, u[x], alpha);
+          v[x] = BLEND_10BIT(V0, v[x], alpha);
+        }
+        if (pic->width & 1) {   // rightmost pixel
+          const int alpha = 2 * (a_ptr[2 * x + 0] + a_ptr2[2 * x + 0]);
+          u[x] = BLEND_10BIT(U0, u[x], alpha);
+          v[x] = BLEND_10BIT(V0, v[x], alpha);
+        }
+      }
+      memset(a_ptr, 0xff, pic->width);
+    }
+  } else {
+    uint32_t* argb = pic->argb;
+    const uint32_t background = MakeARGB32(red, green, blue);
+    for (y = 0; y < pic->height; ++y) {
+      for (x = 0; x < pic->width; ++x) {
+        const int alpha = (argb[x] >> 24) & 0xff;
+        if (alpha != 0xff) {
+          if (alpha > 0) {
+            int r = (argb[x] >> 16) & 0xff;
+            int g = (argb[x] >>  8) & 0xff;
+            int b = (argb[x] >>  0) & 0xff;
+            r = BLEND(red, r, alpha);
+            g = BLEND(green, g, alpha);
+            b = BLEND(blue, b, alpha);
+            argb[x] = MakeARGB32(r, g, b);
+          } else {
+            argb[x] = background;
+          }
+        }
+      }
+      argb += pic->argb_stride;
+    }
+  }
+}
+
+#undef BLEND
+#undef BLEND_10BIT
 
 //------------------------------------------------------------------------------
 // local-min distortion

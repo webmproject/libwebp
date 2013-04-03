@@ -456,6 +456,11 @@ WEBP_EXTERN(void) WebPCleanupTransparentArea(WebPPicture* picture);
 // alpha plane can be ignored altogether e.g.).
 WEBP_EXTERN(int) WebPPictureHasTransparency(const WebPPicture* picture);
 
+// Remove the transparency information (if present) by blending the color with
+// the background color 'background_rgb' (specified as 24bit RGB triplet).
+// After this call, all alpha values are reset to 0xff.
+WEBP_EXTERN(void) WebPBlendAlpha(WebPPicture* pic, uint32_t background_rgb);
+
 //------------------------------------------------------------------------------
 // Main call
 
