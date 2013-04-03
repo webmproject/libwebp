@@ -3,6 +3,11 @@ AC_INIT([libwebp], [0.3.0],
         [http://developers.google.com/speed/webp])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
+
+dnl === automake >= 1.12 requires this for 'unusual archivers' support.
+dnl === it must occur before LT_INIT (AC_PROG_LIBTOOL).
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
+
 AC_PROG_LIBTOOL
 AM_PROG_CC_C_O
 
