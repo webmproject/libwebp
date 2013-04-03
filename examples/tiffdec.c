@@ -98,6 +98,7 @@ int ReadTIFF(const char* const filename,
 #ifdef __BIG_ENDIAN__
       TIFFSwabArrayOfLong(raster, width * height);
 #endif
+      pic->use_argb = 1;
       ok = keep_alpha
          ? WebPPictureImportRGBA(pic, (const uint8_t*)raster, stride)
          : WebPPictureImportRGBX(pic, (const uint8_t*)raster, stride);

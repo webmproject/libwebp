@@ -594,6 +594,10 @@ static void HelpLong(void) {
   printf("  -alpha_filter <string> . predictive filtering for alpha plane.\n");
   printf("                           One of: none, fast (default) or best.\n");
   printf("  -alpha_cleanup ......... Clean RGB values in transparent area.\n");
+  printf("  -blend_alpha <hex> ..... Blend colors against background color\n"
+         "                           expressed as RGB values written in\n"
+         "                           hexadecimal, e.g. 0xc0e0d0 for red=0xc0\n"
+         "                           green=0xe0 and blue=0xd0.\n");
   printf("  -noalpha ............... discard any transparency information.\n");
   printf("  -lossless .............. Encode image losslessly.\n");
   printf("  -hint <string> ......... Specify image characteristics hint.\n");
@@ -656,6 +660,8 @@ int main(int argc, const char *argv[]) {
   int short_output = 0;
   int quiet = 0;
   int keep_alpha = 1;
+  int blend_alpha = 0;
+  uint32_t background_color = 0xffffffu;
   int crop = 0, crop_x = 0, crop_y = 0, crop_w = 0, crop_h = 0;
   int resize_w = 0, resize_h = 0;
   int show_progress = 0;
@@ -720,6 +726,10 @@ int main(int argc, const char *argv[]) {
       config.alpha_compression = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-alpha_cleanup")) {
       keep_alpha = keep_alpha ? 2 : 0;
+    } else if (!strcmp(argv[c], "-blend_alpha") && c < argc - 1) {
+      blend_alpha = 1;
+      background_color = strtol(argv[++c], NULL, 16);  // <- parses '0x' prefix
+      background_color = background_color & 0x00ffffffu;
     } else if (!strcmp(argv[c], "-alpha_filter") && c < argc - 1) {
       ++c;
       if (!strcmp(argv[c], "none")) {
@@ -736,7 +746,6 @@ int main(int argc, const char *argv[]) {
       keep_alpha = 0;
     } else if (!strcmp(argv[c], "-lossless")) {
       config.lossless = 1;
-      picture.use_argb = 1;
     } else if (!strcmp(argv[c], "-hint") && c < argc - 1) {
       ++c;
       if (!strcmp(argv[c], "photo")) {
@@ -924,6 +933,11 @@ int main(int argc, const char *argv[]) {
     goto Error;
   }
   picture.progress_hook = (show_progress && !quiet) ? ProgressReport : NULL;
+
+  if (blend_alpha) {
+    WebPBlendAlpha(&picture, background_color);
+  }
+
   if (keep_alpha == 2) {
     WebPCleanupTransparentArea(&picture);
   }

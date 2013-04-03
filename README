@@ -170,6 +170,10 @@ options:
   -alpha_filter <string> . predictive filtering for alpha plane.
                            One of: none, fast (default) or best.
   -alpha_cleanup ......... Clean RGB values in transparent area.
+  -blend_alpha <hex> ..... Blend colors against background color
+                           expressed as RGB values written in
+                           hexadecimal, e.g. 0xc0e0d0 for red=0xc0
+                           green=0xe0 and blue=0xd0.
   -noalpha ............... discard any transparency information.
   -lossless .............. Encode image losslessly.
   -hint <string> ......... Specify image characteristics hint.
