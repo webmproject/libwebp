@@ -386,9 +386,9 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
     // Analysis is done, proceed to actual coding.
     ok = ok && VP8EncStartAlpha(enc);   // possibly done in parallel
     if (!enc->use_tokens_) {
-      ok = VP8EncLoop(enc);
+      ok = ok && VP8EncLoop(enc);
     } else {
-      ok = VP8EncTokenLoop(enc);
+      ok = ok && VP8EncTokenLoop(enc);
     }
     ok = ok && VP8EncFinishAlpha(enc);
 #ifdef WEBP_EXPERIMENTAL_FEATURES
