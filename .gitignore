@@ -1,8 +1,9 @@
 *.l[ao]
-*.o
+*.[ao]
 .deps
 .libs
 /aclocal.m4
+/ar-lib
 /autom4te.cache
 /compile
 /config.*
@@ -16,7 +17,9 @@
 /stamp-h1
 Makefile
 Makefile.in
-examples/[cd]webp
+examples/[cdv]webp
+examples/gif2webp
+examples/webpmux
 /output
 /doc/output
 *.idb
