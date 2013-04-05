@@ -207,7 +207,6 @@ int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha,
  Error:
     MetadataFree(metadata);
     png_destroy_read_struct(&png, &info, &end_info);
-    free(rgb);
     goto End;
   }
 
@@ -270,13 +269,13 @@ int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha,
   pic->use_argb = 1;
   ok = has_alpha ? WebPPictureImportRGBA(pic, rgb, stride)
                  : WebPPictureImportRGB(pic, rgb, stride);
-  free(rgb);
 
   if (!ok) {
     goto Error;
   }
 
  End:
+  free(rgb);
   return ok;
 }
 #else  // !WEBP_HAVE_PNG
