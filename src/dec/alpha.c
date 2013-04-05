@@ -113,11 +113,13 @@ const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
 
   if (row == 0) {
     // Decode everything during the first call.
+    assert(!dec->is_alpha_decoded_);
     if (!DecodeAlpha(dec->alpha_data_, (size_t)dec->alpha_data_size_,
                      dec->pic_hdr_.width_, dec->pic_hdr_.height_, stride,
                      dec->alpha_plane_)) {
       return NULL;  // Error.
     }
+    dec->is_alpha_decoded_ = 1;
   }
 
   // Return a pointer to the current decoded row.
