@@ -130,7 +130,8 @@ CFGSET = TRUE
 !MESSAGE -  clean                         - perform a clean for CFG
 !MESSAGE -  experimental                  - build CFG with experimental
 !MESSAGE .                                  features enabled.
-!MESSAGE - (empty) or all                 - build all targets for CFG
+!MESSAGE - (empty)                        - build libwebp-based targets for CFG
+!MESSAGE - all                            - build (de)mux-based targets for CFG
 !MESSAGE
 !MESSAGE RTLIBCFG controls the runtime library linkage - 'static' or 'dynamic'.
 !MESSAGE OBJDIR is the path where you like to build (obj, bins, etc.),
@@ -238,8 +239,10 @@ LIBWEBPDEMUX_OBJS = $(DEMUX_OBJS) $(LIBWEBPDEMUX_OBJS)
 
 OUT_LIBS = $(LIBWEBPDECODER) $(LIBWEBP)
 OUT_EXAMPLES = $(DIRBIN)\cwebp.exe $(DIRBIN)\dwebp.exe
+EXTRA_EXAMPLES = $(DIRBIN)\vwebp.exe $(DIRBIN)\webpmux.exe
 
-all: $(OUT_LIBS) $(OUT_EXAMPLES)
+ex: $(OUT_LIBS) $(OUT_EXAMPLES)
+all: ex $(EXTRA_EXAMPLES)
 $(DIRBIN)\cwebp.exe: $(DIROBJ)\examples\cwebp.obj $(EX_FORMAT_DEC_OBJS)
 $(DIRBIN)\dwebp.exe: $(DIROBJ)\examples\dwebp.obj
 $(DIRBIN)\vwebp.exe: $(DIROBJ)\examples\vwebp.obj
@@ -247,6 +250,7 @@ $(DIRBIN)\vwebp.exe: $(EX_UTIL_OBJS) $(LIBWEBPDEMUX) $(LIBWEBP)
 $(DIRBIN)\webpmux.exe: $(DIROBJ)\examples\webpmux.obj $(LIBWEBPMUX)
 $(DIRBIN)\webpmux.exe: $(EX_UTIL_OBJS) $(LIBWEBP)
 $(OUT_EXAMPLES): $(EX_UTIL_OBJS) $(LIBWEBP)
+$(EX_UTIL_OBJS) $(EX_FORMAT_DEC_OBJS): $(OUTPUT_DIRS)
 
 experimental:
 	$(MAKE) /f Makefile.vc \
