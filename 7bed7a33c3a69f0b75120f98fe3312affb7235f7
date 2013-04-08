@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAXH//7/8\u003d",
+        "filename": "src/dec/idec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-04-08T21:32:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAXH//8xo\u003d",
+      "revId": "7bed7a33c3a69f0b75120f98fe3312affb7235f7",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAXH//8BQ\u003d",
         "filename": "src/dec/idec.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2013-04-08T21:22:52Z",
       "side": 1,
       "message": "it might not warrant a change, but I thought I\u0027d mention that this threw me at first, using \u0027new_\u0027mem_start in a \u0027current_\u0027size calculation.",
+      "revId": "7bed7a33c3a69f0b75120f98fe3312affb7235f7",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAXH//7/s\u003d",
+        "filename": "src/dec/idec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-04-08T21:32:05Z",
+      "side": 1,
+      "message": "Acknoledged, although this seems better than writing \u0027old_start - old_base\u0027 again (or using one more variable to denote \u0027old_start - old_base\u0027) I think.",
+      "parentUuid": "AAAAXH//8BQ\u003d",
       "revId": "7bed7a33c3a69f0b75120f98fe3312affb7235f7",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
