@@ -24,18 +24,18 @@ PLATFORM_LDFLAGS = /SAFESEH
 #############################################################
 ## Nothing more to do below this line!
 
-MT         = mt.exe
-CCNODBG    = cl.exe /nologo /O2 /DNDEBUG
-CCDEBUG    = cl.exe /nologo /Od /Gm /Zi /D_DEBUG /RTC1
-CFLAGS     = /Isrc /nologo /W3 /EHsc /c /GS
+NOLOGO     = /nologo
+CCNODBG    = cl.exe $(NOLOGO) /O2 /DNDEBUG
+CCDEBUG    = cl.exe $(NOLOGO) /Od /Gm /Zi /D_DEBUG /RTC1
+CFLAGS     = /Isrc $(NOLOGO) /W3 /EHsc /c /GS
 CFLAGS     = $(CFLAGS) /DWIN32 /D_CRT_SECURE_NO_WARNINGS /DWIN32_LEAN_AND_MEAN
 CFLAGS     = $(CFLAGS) /DHAVE_WINCODEC_H /DWEBP_USE_THREAD
 LDFLAGS    = /LARGEADDRESSAWARE /MANIFEST /NXCOMPAT /DYNAMICBASE
 LDFLAGS    = $(LDFLAGS) $(PLATFORM_LDFLAGS)
-LNKDLL     = link.exe /DLL
-LNKLIB     = link.exe /lib
-LNKEXE     = link.exe
-LFLAGS     = /nologo /machine:$(ARCH)
+LNKDLL     = link.exe /DLL $(NOLOGO)
+LNKEXE     = link.exe $(NOLOGO)
+LNKLIB     = lib.exe $(NOLOGO)
+MT         = mt.exe $(NOLOGO)
 
 CFGSET     = FALSE
 !IF "$(OBJDIR)" == ""
@@ -278,7 +278,7 @@ clean::
 	@-erase /s $(DIROBJ)\$(DLLC) $(DIROBJ)\$(DLLINC) 2> NUL
 !ELSE
 $(LIBWEBPDECODER) $(LIBWEBP) $(LIBWEBPMUX) $(LIBWEBPDEMUX):
-	$(LNKLIB) /out:$@ $(LFLAGS) $**
+	$(LNKLIB) /out:$@ $**
 	-xcopy $(DIROBJ)\*.pdb $(DIRLIB) /y
 !ENDIF
 
