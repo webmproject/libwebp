@@ -262,6 +262,12 @@ enum VP8StatusCode {
 // is used (with MODE_RGB). Otherwise, an internal reference to 'output_buffer'
 // is kept, which means that the lifespan of 'output_buffer' must be larger than
 // that of the returned WebPIDecoder object.
+// The supplied 'output_buffer' content MUST NOT be changed between calls to
+// WebPIAppend() or WebPIUpdate() unless 'output_buffer.is_external_memory' is
+// set to 1. In such a case, it is allowed to modify the pointers, size and
+// stride of output_buffer.u.RGBA or output_buffer.u.YUVA, provided they remain
+// within valid bounds.
+// All other fields of WebPDecBuffer MUST remain constant between calls.
 // Returns NULL if the allocation failed.
 WEBP_EXTERN(WebPIDecoder*) WebPINewDecoder(WebPDecBuffer* output_buffer);
 
