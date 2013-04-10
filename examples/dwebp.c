@@ -62,6 +62,7 @@ typedef enum {
   PAM,
   PPM,
   PGM,
+  BMP,
   YUV,
   ALPHA_PLANE_ONLY  // this is for experimenting only
 } OutputFileFormat;
@@ -225,6 +226,72 @@ static int WritePPM(FILE* fout, const WebPDecBuffer* const buffer, int alpha) {
   return 1;
 }
 
+static void PutLE16(uint8_t* const dst, uint32_t value) {
+  dst[0] = (value >> 0) & 0xff;
+  dst[1] = (value >> 8) & 0xff;
+}
+
+static void PutLE32(uint8_t* const dst, uint32_t value) {
+  PutLE16(dst + 0, (value >>  0) & 0xffff);
+  PutLE16(dst + 2, (value >> 16) & 0xffff);
+}
+
+#define BMP_HEADER_SIZE 54
+static int WriteBMP(FILE* fout, const WebPDecBuffer* const buffer) {
+  const int has_alpha = (buffer->colorspace != MODE_BGR);
+  const uint32_t width = buffer->width;
+  const uint32_t height = buffer->height;
+  const uint8_t* const rgba = buffer->u.RGBA.rgba;
+  const int stride = buffer->u.RGBA.stride;
+  const size_t bytes_per_px = has_alpha ? 4 : 3;
+  uint32_t y;
+  const int line_size = bytes_per_px * width;
+  const int bmp_stride = (line_size + 3) & ~3;   // pad to 4
+  const uint32_t total_size = bmp_stride * height + BMP_HEADER_SIZE;
+  uint8_t bmp_header[BMP_HEADER_SIZE] = { 0 };
+
+  // bitmap file header
+  PutLE16(bmp_header + 0, 0x4d42);                // signature 'BM'
+  PutLE32(bmp_header + 2, total_size);            // size including header
+  PutLE32(bmp_header + 6, 0);                     // reserved
+  PutLE32(bmp_header + 10, BMP_HEADER_SIZE);      // offset to pixel array
+  // bitmap info header
+  PutLE32(bmp_header + 14, 40);                   // DIB header size
+  PutLE32(bmp_header + 18, width);                // dimensions
+  PutLE32(bmp_header + 22, -(int)height);         // vertical flip!
+  PutLE16(bmp_header + 26, 1);                    // number of planes
+  PutLE16(bmp_header + 28, bytes_per_px * 8);     // bits per pixel
+  PutLE32(bmp_header + 30, 0);                    // no compression (BI_RGB)
+  PutLE32(bmp_header + 34, 0);                    // image size (dummy)
+  PutLE32(bmp_header + 38, 2400);                 // x pixels/meter
+  PutLE32(bmp_header + 42, 2400);                 // y pixels/meter
+  PutLE32(bmp_header + 46, 0);                    // number of palette colors
+  PutLE32(bmp_header + 50, 0);                    // important color count
+
+  // TODO(skal): color profile
+
+  // write header
+  if (fwrite(bmp_header, sizeof(bmp_header), 1, fout) != 1) {
+    return 0;
+  }
+
+  // write pixel array
+  for (y = 0; y < height; ++y) {
+    if (fwrite(rgba + y * stride, line_size, 1, fout) != 1) {
+      return 0;
+    }
+    // write padding zeroes
+    if (bmp_stride != line_size) {
+      const uint8_t zeroes[3] = { 0 };
+      if (fwrite(zeroes, bmp_stride - line_size, 1, fout) != 1) {
+        return 0;
+      }
+    }
+  }
+  return 1;
+}
+#undef BMP_HEADER_SIZE
+
 static int WriteAlphaPlane(FILE* fout, const WebPDecBuffer* const buffer) {
   const uint32_t width = buffer->width;
   const uint32_t height = buffer->height;
@@ -320,6 +387,8 @@ static void SaveOutput(const WebPDecBuffer* const buffer,
     ok &= WritePPM(fout, buffer, 1);
   } else if (format == PPM) {
     ok &= WritePPM(fout, buffer, 0);
+  } else if (format == BMP) {
+    ok &= WriteBMP(fout, buffer);
   } else if (format == PGM || format == YUV) {
     ok &= WritePGMOrYUV(fout, buffer, format);
   } else if (format == ALPHA_PLANE_ONLY) {
@@ -345,9 +414,10 @@ static void Help(void) {
          "Use following options to convert into alternate image formats:\n"
          "  -pam ......... save the raw RGBA samples as a color PAM\n"
          "  -ppm ......... save the raw RGB samples as a color PPM\n"
+         "  -bmp ......... save as uncompressed BMP format\n"
          "  -pgm ......... save the raw YUV samples as a grayscale PGM\n"
-         "                 file with IMC4 layout.\n"
-         "  -yuv ......... save the raw YUV samples in flat layout.\n"
+         "                 file with IMC4 layout\n"
+         "  -yuv ......... save the raw YUV samples in flat layout\n"
          "\n"
          " Other options are:\n"
          "  -version  .... print version number and exit.\n"
@@ -401,6 +471,8 @@ int main(int argc, const char *argv[]) {
       format = PAM;
     } else if (!strcmp(argv[c], "-ppm")) {
       format = PPM;
+    } else if (!strcmp(argv[c], "-bmp")) {
+      format = BMP;
     } else if (!strcmp(argv[c], "-version")) {
       const int version = WebPGetDecoderVersion();
       printf("%d.%d.%d\n",
@@ -480,6 +552,9 @@ int main(int argc, const char *argv[]) {
         break;
       case PPM:
         output_buffer->colorspace = MODE_RGB;  // drops alpha for PPM
+        break;
+      case BMP:
+        output_buffer->colorspace = bitstream->has_alpha ? MODE_BGRA : MODE_BGR;
         break;
       case PGM:
       case YUV:
