@@ -247,7 +247,6 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
   VP8PictureHeader* pic_hdr;
   VP8BitReader* br;
   VP8StatusCode status;
-  WebPHeaderStructure headers;
 
   if (dec == NULL) {
     return 0;
@@ -257,33 +256,8 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
     return VP8SetError(dec, VP8_STATUS_INVALID_PARAM,
                        "null VP8Io passed to VP8GetHeaders()");
   }
-
-  // Process Pre-VP8 chunks.
-  headers.data = io->data;
-  headers.data_size = io->data_size;
-  status = WebPParseHeaders(&headers);
-  if (status != VP8_STATUS_OK) {
-    return VP8SetError(dec, status, "Incorrect/incomplete header.");
-  }
-  if (headers.is_lossless) {
-    return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
-                       "Unexpected lossless format encountered.");
-  }
-
-  if (dec->alpha_data_ == NULL) {
-    assert(dec->alpha_data_size_ == 0);
-    // We have NOT set alpha data yet. Set it now.
-    // (This is to ensure that dec->alpha_data_ is NOT reset to NULL if
-    // WebPParseHeaders() is called more than once, as in incremental decoding
-    // case.)
-    dec->alpha_data_ = headers.alpha_data;
-    dec->alpha_data_size_ = headers.alpha_data_size;
-  }
-
-  // Process the VP8 frame header.
-  buf = headers.data + headers.offset;
-  buf_size = headers.data_size - headers.offset;
-  assert(headers.data_size >= headers.offset);  // WebPParseHeaders' guarantee
+  buf = io->data;
+  buf_size = io->data_size;
   if (buf_size < 4) {
     return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
                        "Truncated header.");

@@ -130,7 +130,8 @@ static WEBP_INLINE int VP8InitIo(VP8Io* const io) {
   return VP8InitIoInternal(io, WEBP_DECODER_ABI_VERSION);
 }
 
-// Start decoding a new picture. Returns true if ok.
+// Decode the VP8 frame header. Returns true if ok.
+// Note: 'io->data' must be pointing to the start of the VP8 frame header.
 int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io);
 
 // Decode a picture. Will call VP8GetHeaders() if it wasn't done already.
