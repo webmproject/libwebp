@@ -268,7 +268,7 @@ static void RestoreContext(const MBContext* context, VP8Decoder* const dec,
 static VP8StatusCode IDecError(WebPIDecoder* const idec, VP8StatusCode error) {
   if (idec->state_ == STATE_VP8_DATA) {
     VP8Io* const io = &idec->io_;
-    if (io->teardown) {
+    if (io->teardown != NULL) {
       io->teardown(io);
     }
   }
@@ -574,7 +574,8 @@ WebPIDecoder* WebPINewDecoder(WebPDecBuffer* output_buffer) {
   VP8InitIo(&idec->io_);
 
   WebPResetDecParams(&idec->params_);
-  idec->params_.output = output_buffer ? output_buffer : &idec->output_;
+  idec->params_.output = (output_buffer != NULL) ? output_buffer
+                                                 : &idec->output_;
   WebPInitCustomIo(&idec->params_, &idec->io_);  // Plug the I/O functions.
 
   return idec;

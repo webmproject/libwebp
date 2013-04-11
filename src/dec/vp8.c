@@ -766,9 +766,7 @@ void VP8Clear(VP8Decoder* const dec) {
   if (dec->use_threads_) {
     WebPWorkerEnd(&dec->worker_);
   }
-  if (dec->mem_) {
-    free(dec->mem_);
-  }
+  free(dec->mem_);
   dec->mem_ = NULL;
   dec->mem_size_ = 0;
   memset(&dec->br_, 0, sizeof(dec->br_));

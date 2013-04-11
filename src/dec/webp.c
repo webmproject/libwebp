@@ -397,7 +397,7 @@ VP8StatusCode WebPParseHeaders(WebPHeaderStructure* const headers) {
 // WebPDecParams
 
 void WebPResetDecParams(WebPDecParams* const params) {
-  if (params) {
+  if (params != NULL) {
     memset(params, 0, sizeof(*params));
   }
 }

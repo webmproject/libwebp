@@ -179,7 +179,7 @@ static int FinishRow(VP8Decoder* const dec, VP8Io* const io) {
     FilterRow(dec);
   }
 
-  if (io->put) {
+  if (io->put != NULL) {
     if (!first_row) {
       y_start -= extra_y_rows;
       io->y = ydst;
@@ -288,7 +288,7 @@ int VP8ProcessRow(VP8Decoder* const dec, VP8Io* const io) {
 VP8StatusCode VP8EnterCritical(VP8Decoder* const dec, VP8Io* const io) {
   // Call setup() first. This may trigger additional decoding features on 'io'.
   // Note: Afterward, we must call teardown() not matter what.
-  if (io->setup && !io->setup(io)) {
+  if (io->setup != NULL && !io->setup(io)) {
     VP8SetError(dec, VP8_STATUS_USER_ABORT, "Frame setup failed");
     return dec->status_;
   }
@@ -346,7 +346,7 @@ int VP8ExitCritical(VP8Decoder* const dec, VP8Io* const io) {
     ok = WebPWorkerSync(&dec->worker_);
   }
 
-  if (io->teardown) {
+  if (io->teardown != NULL) {
     io->teardown(io);
   }
   return ok;
