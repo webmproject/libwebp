@@ -53,11 +53,11 @@ extern "C" {
 
 #define WEBP_DEMUX_ABI_VERSION 0x0100    // MAJOR(8b) + MINOR(8b)
 
+// Note: forward declaring enumerations is not allowed in (strict) C and C++,
+// the types are left here for reference.
+// typedef enum WebPDemuxState WebPDemuxState;
+// typedef enum WebPFormatFeature WebPFormatFeature;
 typedef struct WebPDemuxer WebPDemuxer;
-#if !(defined(__cplusplus) || defined(c_plusplus))
-typedef enum WebPDemuxState WebPDemuxState;
-typedef enum WebPFormatFeature WebPFormatFeature;
-#endif
 typedef struct WebPIterator WebPIterator;
 typedef struct WebPChunkIterator WebPChunkIterator;
 
@@ -70,11 +70,11 @@ WEBP_EXTERN(int) WebPGetDemuxVersion(void);
 //------------------------------------------------------------------------------
 // Life of a Demux object
 
-enum WebPDemuxState {
+typedef enum WebPDemuxState {
   WEBP_DEMUX_PARSING_HEADER,  // Not enough data to parse full header.
   WEBP_DEMUX_PARSED_HEADER,   // Header parsing complete, data may be available.
   WEBP_DEMUX_DONE             // Entire file has been parsed.
-};
+} WebPDemuxState;
 
 // Internal, version-checked, entry point
 WEBP_EXTERN(WebPDemuxer*) WebPDemuxInternal(
@@ -100,7 +100,7 @@ WEBP_EXTERN(void) WebPDemuxDelete(WebPDemuxer* dmux);
 //------------------------------------------------------------------------------
 // Data/information extraction.
 
-enum WebPFormatFeature {
+typedef enum WebPFormatFeature {
   WEBP_FF_FORMAT_FLAGS,  // Extended format flags present in the 'VP8X' chunk.
   WEBP_FF_CANVAS_WIDTH,
   WEBP_FF_CANVAS_HEIGHT,
@@ -110,7 +110,7 @@ enum WebPFormatFeature {
                          // In case of a partial demux, this is the number of
                          // frames seen so far, with the last frame possibly
                          // being partial.
-};
+} WebPFormatFeature;
 
 // Get the 'feature' value from the 'dmux'.
 // NOTE: values are only valid if WebPDemux() was used or WebPDemuxPartial()
