@@ -20,13 +20,13 @@ extern "C" {
 
 #define WEBP_DECODER_ABI_VERSION 0x0201    // MAJOR(8b) + MINOR(8b)
 
+// Note: forward declaring enumerations is not allowed in (strict) C and C++,
+// the types are left here for reference.
+// typedef enum VP8StatusCode VP8StatusCode;
+// typedef enum WEBP_CSP_MODE WEBP_CSP_MODE;
 typedef struct WebPRGBABuffer WebPRGBABuffer;
 typedef struct WebPYUVABuffer WebPYUVABuffer;
 typedef struct WebPDecBuffer WebPDecBuffer;
-#if !(defined(__cplusplus) || defined(c_plusplus))
-typedef enum VP8StatusCode VP8StatusCode;
-typedef enum WEBP_CSP_MODE WEBP_CSP_MODE;
-#endif
 typedef struct WebPIDecoder WebPIDecoder;
 typedef struct WebPBitstreamFeatures WebPBitstreamFeatures;
 typedef struct WebPDecoderOptions WebPDecoderOptions;
@@ -138,7 +138,7 @@ WEBP_EXTERN(uint8_t*) WebPDecodeYUVInto(
 // RGBA-4444: [b3 b2 b1 b0 a3 a2 a1 a0], [r3 r2 r1 r0 g3 g2 g1 g0], ...
 // RGB-565: [g2 g1 g0 b4 b3 b2 b1 b0], [r4 r3 r2 r1 r0 g5 g4 g3], ...
 
-enum WEBP_CSP_MODE {
+typedef enum WEBP_CSP_MODE {
   MODE_RGB = 0, MODE_RGBA = 1,
   MODE_BGR = 2, MODE_BGRA = 3,
   MODE_ARGB = 4, MODE_RGBA_4444 = 5,
@@ -151,7 +151,7 @@ enum WEBP_CSP_MODE {
   // YUV modes must come after RGB ones.
   MODE_YUV = 11, MODE_YUVA = 12,  // yuv 4:2:0
   MODE_LAST = 13
-};
+} WEBP_CSP_MODE;
 
 // Some useful macros:
 static WEBP_INLINE int WebPIsPremultipliedMode(WEBP_CSP_MODE mode) {
@@ -220,7 +220,7 @@ WEBP_EXTERN(void) WebPFreeDecBuffer(WebPDecBuffer* buffer);
 //------------------------------------------------------------------------------
 // Enumeration of the status codes
 
-enum VP8StatusCode {
+typedef enum VP8StatusCode {
   VP8_STATUS_OK = 0,
   VP8_STATUS_OUT_OF_MEMORY,
   VP8_STATUS_INVALID_PARAM,
@@ -229,7 +229,7 @@ enum VP8StatusCode {
   VP8_STATUS_SUSPENDED,
   VP8_STATUS_USER_ABORT,
   VP8_STATUS_NOT_ENOUGH_DATA
-};
+} VP8StatusCode;
 
 //------------------------------------------------------------------------------
 // Incremental decoding
