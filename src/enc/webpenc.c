@@ -173,7 +173,7 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
   const int preds_h = 4 * mb_h + 1;
   const size_t preds_size = preds_w * preds_h * sizeof(uint8_t);
   const int top_stride = mb_w * 16;
-  const size_t nz_size = (mb_w + 1) * sizeof(uint32_t);
+  const size_t nz_size = (mb_w + 1) * sizeof(uint32_t) + ALIGN_CST;
   const size_t cache_size = (3 * YUV_SIZE + PRED_SIZE) * sizeof(uint8_t);
   const size_t info_size = mb_w * mb_h * sizeof(VP8MBInfo);
   const size_t samples_size = (2 * top_stride +         // top-luma/u/v
@@ -206,7 +206,7 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
          "               total: %ld\n",
          sizeof(VP8Encoder) + ALIGN_CST, cache_size, info_size,
          preds_size, samples_size, nz_size, lf_stats_size, size);
-  printf("Transcient object sizes:\n"
+  printf("Transient object sizes:\n"
          "      VP8EncIterator: %ld\n"
          "        VP8ModeScore: %ld\n"
          "      VP8SegmentInfo: %ld\n"
@@ -243,6 +243,7 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
   mem += info_size;
   enc->preds_ = ((uint8_t*)mem) + 1 + enc->preds_w_;
   mem += preds_w * preds_h * sizeof(uint8_t);
+  mem = (uint8_t*)DO_ALIGN(mem);
   enc->nz_ = 1 + (uint32_t*)mem;
   mem += nz_size;
   enc->lf_stats_ = lf_stats_size ? (LFStats*)DO_ALIGN(mem) : NULL;
