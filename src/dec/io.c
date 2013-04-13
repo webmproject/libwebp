@@ -601,7 +601,7 @@ static int CustomPut(const VP8Io* io) {
     return 0;
   }
   num_lines_out = p->emit(io, p);
-  if (p->emit_alpha) {
+  if (p->emit_alpha != NULL) {
     p->emit_alpha(io, p);
   }
   p->last_y += num_lines_out;
