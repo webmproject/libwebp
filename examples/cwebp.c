@@ -109,15 +109,15 @@ typedef enum {
 
 static InputFileFormat GetImageType(FILE* in_file) {
   InputFileFormat format = UNSUPPORTED;
-  unsigned int magic;
-  unsigned char buf[4];
+  uint32_t magic;
+  uint8_t buf[4];
 
   if ((fread(&buf[0], 4, 1, in_file) != 1) ||
       (fseek(in_file, 0, SEEK_SET) != 0)) {
     return format;
   }
 
-  magic = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
+  magic = ((uint32_t)buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
   if (magic == 0x89504E47U) {
     format = PNG_;
   } else if (magic >= 0xFFD8FF00U && magic <= 0xFFD8FFFFU) {
