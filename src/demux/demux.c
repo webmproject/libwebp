@@ -317,6 +317,7 @@ static ParseStatus ParseAnimationFrame(
   frame->duration_       = ReadLE24s(mem);
   frame->dispose_method_ = (WebPMuxAnimDispose)(ReadByte(mem) & 1);
   if (frame->width_ * (uint64_t)frame->height_ >= MAX_IMAGE_AREA) {
+    free(frame);
     return PARSE_ERROR;
   }
 
