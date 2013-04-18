@@ -209,6 +209,8 @@ int main(int argc, const char *argv[]) {
   WebPConfig config;
   WebPMux* mux = NULL;
   WebPData webp_data = { NULL, 0 };
+  int stored_icc = 0;  // Whether we have already stored an ICC profile.
+  int stored_xmp = 0;
 
   memset(&frame, 0, sizeof(frame));
   frame.id = WEBP_CHUNK_ANMF;
@@ -398,24 +400,70 @@ int main(int argc, const char *argv[]) {
               if (data[0] != 3 && data[1] != 1) break;   // wrong size/marker
               anim.loop_count = data[2] | (data[3] << 8);
               if (verbose) printf("Loop count: %d\n", anim.loop_count);
-            } else if (!memcmp(data + 1, "XMP dataXMP", 11)) {
-              // Read XMP metadata.
-              WebPData xmp;
-              if (DGifGetExtensionNext(gif, &data) == GIF_ERROR) goto End;
-              if (data == NULL) goto End;
-              xmp.bytes = (uint8_t*)data;
-              xmp.size = data[0] + 1;
-              WebPMuxSetChunk(mux, "XMP ", &xmp, 1);
-              if (verbose) printf("XMP size: %d\n", (int)xmp.size);
-            } else if (!memcmp(data + 1, "ICCRGBG1012", 11)) {
-              // Read ICC profile.
-              WebPData icc;
-              if (DGifGetExtensionNext(gif, &data) == GIF_ERROR) goto End;
-              if (data == NULL) goto End;
-              icc.bytes = (uint8_t*)data;
-              icc.size = data[0] + 1;
-              WebPMuxSetChunk(mux, "ICCP", &icc, 1);
-              if (verbose) printf("ICC size: %d\n", (int)icc.size);
+            } else {  // An extension containing metadata.
+              // We only store the first encountered chunk of each type.
+              const int is_xmp =
+                  !stored_xmp && !memcmp(data + 1, "XMP DataXMP", 11);
+              const int is_icc =
+                  !stored_icc && !memcmp(data + 1, "ICCRGBG1012", 11);
+              if (is_xmp || is_icc) {
+                const char fourccs[2][4] = { "XMP " , "ICCP" };
+                const char* const features[2] = { "XMP" , "ICC" };
+                WebPData metadata = { NULL, 0 };
+                // Construct metadata from sub-blocks.
+                // Usual case (including ICC profile): In each sub-block, the
+                // first byte specifies its size in bytes (0 to 255) and the
+                // rest of the bytes contain the data.
+                // Special case for XMP data: In each sub-block, the first byte
+                // is also part of the XMP payload. XMP in GIF also has a 257
+                // byte padding data. See the XMP specification for details.
+                while (1) {
+                  WebPData prev_metadata = metadata;
+                  WebPData subblock;
+                  if (DGifGetExtensionNext(gif, &data) == GIF_ERROR) {
+                    WebPDataClear(&metadata);
+                    goto End;
+                  }
+                  if (data == NULL) break;  // Finished.
+                  subblock.size = is_xmp ? data[0] + 1 : data[0];
+                  assert(subblock.size > 0);
+                  subblock.bytes = is_xmp ? data : data + 1;
+                  metadata.bytes =
+                      (uint8_t*)realloc((void*)metadata.bytes,
+                                        prev_metadata.size + subblock.size);
+                  if (metadata.bytes == NULL) {
+                    WebPDataClear(&prev_metadata);
+                    goto End;
+                  }
+                  metadata.size += subblock.size;
+                  memcpy((void*)metadata.bytes + prev_metadata.size,
+                         subblock.bytes, subblock.size);
+                }
+                if (is_xmp) {
+                  // XMP padding data is 0x01, 0xff, 0xfe ... 0x01, 0x00.
+                  const int xmp_pading_size = 257;
+                  if (metadata.size > xmp_pading_size) {
+                    metadata.size -= xmp_pading_size;
+                  }
+                }
+
+                // Add metadata chunk.
+                err = WebPMuxSetChunk(mux, fourccs[is_icc], &metadata, 1);
+                if (verbose) {
+                  printf("%s size: %d\n", features[is_icc], (int)metadata.size);
+                }
+                WebPDataClear(&metadata);
+                if (err != WEBP_MUX_OK) {
+                  fprintf(stderr, "ERROR (%s): Could not set %s chunk.\n",
+                          ErrorString(err), features[is_icc]);
+                  goto End;
+                }
+                if (is_icc) {
+                  stored_icc = 1;
+                } else if (is_xmp) {
+                  stored_xmp = 1;
+                }
+              }
             }
             break;
           }
@@ -423,9 +471,9 @@ int main(int argc, const char *argv[]) {
             break;  // skip
           }
         }
-        do {
+        while (data != NULL) {
           if (DGifGetExtensionNext(gif, &data) == GIF_ERROR) goto End;
-        } while (data != NULL);
+        }
         break;
       }
       case TERMINATE_RECORD_TYPE: {
