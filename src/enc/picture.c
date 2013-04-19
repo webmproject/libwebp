@@ -710,7 +710,7 @@ static int Import(WebPPicture* const picture,
     for (y = 0; y < height; ++y) {
       for (x = 0; x < width; ++x) {
         const int offset = step * x + y * rgb_stride;
-        const uint32_t argb = (a_ptr[offset] << 24) |
+        const uint32_t argb = ((uint32_t)a_ptr[offset] << 24) |
                               (r_ptr[offset] << 16) |
                               (g_ptr[offset] <<  8) |
                               (b_ptr[offset]);
@@ -810,7 +810,7 @@ int WebPPictureYUVAToARGB(WebPPicture* picture) {
         const uint8_t* const src = picture->a + y * picture->a_stride;
         int x;
         for (x = 0; x < width; ++x) {
-          argb_dst[x] = (argb_dst[x] & 0x00ffffffu) | (src[x] << 24);
+          argb_dst[x] = (argb_dst[x] & 0x00ffffffu) | ((uint32_t)src[x] << 24);
         }
       }
     }
