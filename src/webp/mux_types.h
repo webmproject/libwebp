@@ -20,31 +20,31 @@
 extern "C" {
 #endif
 
-#if !(defined(__cplusplus) || defined(c_plusplus))
-typedef enum WebPFeatureFlags WebPFeatureFlags;
-typedef enum WebPMuxAnimDispose WebPMuxAnimDispose;
-#endif
+// Note: forward declaring enumerations is not allowed in (strict) C and C++,
+// the types are left here for reference.
+// typedef enum WebPFeatureFlags WebPFeatureFlags;
+// typedef enum WebPMuxAnimDispose WebPMuxAnimDispose;
+typedef struct WebPData WebPData;
 
 // VP8X Feature Flags.
-enum WebPFeatureFlags {
+typedef enum WebPFeatureFlags {
   FRAGMENTS_FLAG  = 0x00000001,
   ANIMATION_FLAG  = 0x00000002,
   XMP_FLAG        = 0x00000004,
   EXIF_FLAG       = 0x00000008,
   ALPHA_FLAG      = 0x00000010,
   ICCP_FLAG       = 0x00000020
-};
+} WebPFeatureFlags;
 
 // Dispose method (animation only). Indicates how the area used by the current
 // frame is to be treated before rendering the next frame on the canvas.
-enum WebPMuxAnimDispose {
+typedef enum WebPMuxAnimDispose {
   WEBP_MUX_DISPOSE_NONE,       // Do not dispose.
   WEBP_MUX_DISPOSE_BACKGROUND  // Dispose to background color.
-};
+} WebPMuxAnimDispose;
 
 // Data type used to describe 'raw' data, e.g., chunk data
 // (ICC profile, metadata) and WebP compressed image data.
-typedef struct WebPData WebPData;
 struct WebPData {
   const uint8_t* bytes;
   size_t size;

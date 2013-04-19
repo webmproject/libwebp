@@ -20,12 +20,12 @@ extern "C" {
 
 #define WEBP_ENCODER_ABI_VERSION 0x0201    // MAJOR(8b) + MINOR(8b)
 
-#if !(defined(__cplusplus) || defined(c_plusplus))
-typedef enum WebPImageHint WebPImageHint;
-typedef enum WebPEncCSP WebPEncCSP;
-typedef enum WebPPreset WebPPreset;
-typedef enum WebPEncodingError WebPEncodingError;
-#endif
+// Note: forward declaring enumerations is not allowed in (strict) C and C++,
+// the types are left here for reference.
+// typedef enum WebPImageHint WebPImageHint;
+// typedef enum WebPEncCSP WebPEncCSP;
+// typedef enum WebPPreset WebPPreset;
+// typedef enum WebPEncodingError WebPEncodingError;
 typedef struct WebPConfig WebPConfig;
 typedef struct WebPPicture WebPPicture;   // main structure for I/O
 typedef struct WebPAuxStats WebPAuxStats;
@@ -77,13 +77,13 @@ WEBP_EXTERN(size_t) WebPEncodeLosslessBGRA(const uint8_t* bgra,
 // Coding parameters
 
 // Image characteristics hint for the underlying encoder.
-enum WebPImageHint {
+typedef enum WebPImageHint {
   WEBP_HINT_DEFAULT = 0,  // default preset.
   WEBP_HINT_PICTURE,      // digital picture, like portrait, inner shot
   WEBP_HINT_PHOTO,        // outdoor photograph, with natural lighting
   WEBP_HINT_GRAPH,        // Discrete tone image (graph, map-tile etc).
   WEBP_HINT_LAST
-};
+} WebPImageHint;
 
 // Compression parameters.
 struct WebPConfig {
@@ -133,14 +133,14 @@ struct WebPConfig {
 
 // Enumerate some predefined settings for WebPConfig, depending on the type
 // of source picture. These presets are used when calling WebPConfigPreset().
-enum WebPPreset {
+typedef enum WebPPreset {
   WEBP_PRESET_DEFAULT = 0,  // default preset.
   WEBP_PRESET_PICTURE,      // digital picture, like portrait, inner shot
   WEBP_PRESET_PHOTO,        // outdoor photograph, with natural lighting
   WEBP_PRESET_DRAWING,      // hand or line drawing, with high-contrast details
   WEBP_PRESET_ICON,         // small-sized colorful images
   WEBP_PRESET_TEXT          // text-like
-};
+} WebPPreset;
 
 // Internal, version-checked, entry point
 WEBP_EXTERN(int) WebPConfigInitInternal(WebPConfig*, WebPPreset, float, int);
@@ -230,7 +230,7 @@ WEBP_EXTERN(int) WebPMemoryWrite(const uint8_t* data, size_t data_size,
 typedef int (*WebPProgressHook)(int percent, const WebPPicture* picture);
 
 // Color spaces.
-enum WebPEncCSP {
+typedef enum WebPEncCSP {
   // chroma sampling
   WEBP_YUV420 = 0,   // 4:2:0
   WEBP_YUV422 = 1,   // 4:2:2
@@ -243,10 +243,10 @@ enum WebPEncCSP {
   WEBP_YUV444A = 6,
   WEBP_YUV400A = 7,   // grayscale + alpha
   WEBP_CSP_ALPHA_BIT = 4   // bit that is set if alpha is present
-};
+} WebPEncCSP;
 
 // Encoding error conditions.
-enum WebPEncodingError {
+typedef enum WebPEncodingError {
   VP8_ENC_OK = 0,
   VP8_ENC_ERROR_OUT_OF_MEMORY,            // memory error allocating objects
   VP8_ENC_ERROR_BITSTREAM_OUT_OF_MEMORY,  // memory error while flushing bits
@@ -259,7 +259,7 @@ enum WebPEncodingError {
   VP8_ENC_ERROR_FILE_TOO_BIG,             // file is bigger than 4G
   VP8_ENC_ERROR_USER_ABORT,               // abort request by user
   VP8_ENC_ERROR_LAST                      // list terminator. always last.
-};
+} WebPEncodingError;
 
 // maximum width/height allowed (inclusive), in pixels
 #define WEBP_MAX_DIMENSION 16383
