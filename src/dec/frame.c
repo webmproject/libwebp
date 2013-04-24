@@ -534,12 +534,12 @@ static const int kScan[16] = {
   0 + 12 * BPS,  4 + 12 * BPS, 8 + 12 * BPS, 12 + 12 * BPS
 };
 
-static WEBP_INLINE int CheckMode(VP8Decoder* const dec, int mode) {
+static WEBP_INLINE int CheckMode(int mb_x, int mb_y, int mode) {
   if (mode == B_DC_PRED) {
-    if (dec->mb_x_ == 0) {
-      return (dec->mb_y_ == 0) ? B_DC_PRED_NOTOPLEFT : B_DC_PRED_NOLEFT;
+    if (mb_x == 0) {
+      return (mb_y == 0) ? B_DC_PRED_NOTOPLEFT : B_DC_PRED_NOLEFT;
     } else {
-      return (dec->mb_y_ == 0) ? B_DC_PRED_NOTOP : B_DC_PRED;
+      return (mb_y == 0) ? B_DC_PRED_NOTOP : B_DC_PRED;
     }
   }
   return mode;
@@ -624,7 +624,7 @@ void VP8ReconstructBlock(VP8Decoder* const dec) {
         }
       }
     } else {    // 16x16
-      const int pred_func = CheckMode(dec, dec->imodes_[0]);
+      const int pred_func = CheckMode(dec->mb_x_, dec->mb_y_, dec->imodes_[0]);
       VP8PredLuma16[pred_func](y_dst);
       if (dec->non_zero_) {
         for (n = 0; n < 16; n++) {
@@ -639,7 +639,7 @@ void VP8ReconstructBlock(VP8Decoder* const dec) {
     }
     {
       // Chroma
-      const int pred_func = CheckMode(dec, dec->uvmode_);
+      const int pred_func = CheckMode(dec->mb_x_, dec->mb_y_, dec->uvmode_);
       VP8PredChroma8[pred_func](u_dst);
       VP8PredChroma8[pred_func](v_dst);
 
