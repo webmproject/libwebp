@@ -626,7 +626,7 @@ void VP8ReconstructBlock(VP8Decoder* const dec) {
     } else {    // 16x16
       const int pred_func = CheckMode(dec->mb_x_, dec->mb_y_, dec->imodes_[0]);
       VP8PredLuma16[pred_func](y_dst);
-      if (dec->non_zero_) {
+      if (dec->non_zero_ & 0xffff) {
         for (n = 0; n < 16; n++) {
           uint8_t* const dst = y_dst + kScan[n];
           if (dec->non_zero_ac_ & (1 << n)) {
