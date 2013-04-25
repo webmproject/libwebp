@@ -16,6 +16,24 @@
       "revId": "9dbc9d1909c2a86ac8a798b2c0fbccb3d42704fd",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAXX//1/g\u003d",
+        "filename": "src/dec/vp8i.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-04-25T19:10:54Z",
+      "side": 1,
+      "message": "My guess is Frank was thinking alignment for simd, but in truth the padding was probably already happening in most cases to the size of the base type",
+      "parentUuid": "AAAAXX//2js\u003d",
+      "revId": "9dbc9d1909c2a86ac8a798b2c0fbccb3d42704fd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
