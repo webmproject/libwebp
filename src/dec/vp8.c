@@ -121,6 +121,9 @@ int VP8GetInfo(const uint8_t* data, size_t data_size, size_t chunk_size,
     if (((bits >> 5)) >= chunk_size) {  // partition_length
       return 0;         // inconsistent size information.
     }
+    if (w == 0 || h == 0) {
+      return 0;         // We don't support both width and height to be zero.
+    }
 
     if (width) {
       *width = w;
