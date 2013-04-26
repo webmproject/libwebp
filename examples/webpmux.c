@@ -173,11 +173,11 @@ static const char* ErrorString(WebPMuxError err) {
   } while (0)
 
 #define ERROR_GOTO3(ERR_MSG, FORMAT_STR1, FORMAT_STR2, LABEL)        \
-   do {                                                              \
-     fprintf(stderr, ERR_MSG, FORMAT_STR1, FORMAT_STR2);             \
-     ok = 0;                                                         \
-     goto LABEL;                                                     \
-   } while (0)
+  do {                                                               \
+    fprintf(stderr, ERR_MSG, FORMAT_STR1, FORMAT_STR2);              \
+    ok = 0;                                                          \
+    goto LABEL;                                                      \
+  } while (0)
 
 static WebPMuxError DisplayInfo(const WebPMux* mux) {
   uint32_t flag;
