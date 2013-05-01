@@ -8,12 +8,15 @@
 //  Simple OpenGL-based WebP file viewer.
 //
 // Author: Skal (pascal.massimino@gmail.com)
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef __APPLE__
+#if defined(HAVE_GLUT_GLUT_H)
 #include <GLUT/glut.h>
 #else
 #include <GL/glut.h>
