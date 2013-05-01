@@ -83,6 +83,92 @@ if test "$enable_threading" = "yes"; then
 fi
 AC_MSG_NOTICE([checking if threading is enabled... ${enable_threading-no}])
 
+dnl === check for OpenGL/GLUT support ===
+CLEAR_LIBVARS([GL])
+WITHLIB_OPTION([gl], [GL])
+
+LIBCHECK_PROLOGUE([GL])
+
+glut_cflags="none"
+glut_ldflags="none"
+case $host_os in
+  darwin*)
+    # Special case for OSX builds. Append these to give the user a chance to
+    # override with --with-gl*
+    glut_cflags="$glut_cflags|-framework GLUT -framework OpenGL"
+    glut_ldflags="$glut_ldflags|-framework GLUT -framework OpenGL"
+    ;;
+esac
+
+GLUT_SAVED_CPPFLAGS="$CPPFLAGS"
+SAVED_IFS="$IFS"
+IFS="|"
+for flag in $glut_cflags; do
+  # restore IFS immediately as the autoconf macros may need the default.
+  IFS="$SAVED_IFS"
+  unset ac_cv_header_GL_glut_h
+  unset ac_cv_header_OpenGL_glut_h
+
+  case $flag in
+    none) ;;
+    *) CPPFLAGS="$flag $CPPFLAGS";;
+  esac
+  AC_CHECK_HEADERS([GL/glut.h GLUT/glut.h OpenGL/glut.h],
+                   [glut_headers=yes;
+                    test "$flag" = "none" || GL_INCLUDES="$CPPFLAGS";
+                    break])
+  CPPFLAGS="$GLUT_SAVED_CPPFLAGS"
+  test "$glut_headers" = "yes" && break
+done
+IFS="$SAVED_IFS"
+
+if test "$glut_headers" = "yes"; then
+  AC_LANG_PUSH([C])
+  GLUT_SAVED_LDFLAGS="$LDFLAGS"
+  SAVED_IFS="$IFS"
+  IFS="|"
+  for flag in $glut_ldflags; do
+    # restore IFS immediately as the autoconf macros may need the default.
+    IFS="$SAVED_IFS"
+    unset ac_cv_search_glBegin
+
+    case $flag in
+      none) ;;
+      *) LDFLAGS="$flag $LDFLAGS";;
+    esac
+
+    # find libGL
+    GL_SAVED_LIBS="$LIBS"
+    AC_SEARCH_LIBS([glBegin], [GL OpenGL])
+    LIBS="$GL_SAVED_LIBS"
+
+    # A direct link to libGL may not be necessary on e.g., linux.
+    for lib in "" $ac_cv_search_glBegin; do
+      unset ac_cv_search_glutMainLoop
+      AC_SEARCH_LIBS([glutMainLoop], [glut], [glut_support=yes], [], [$lib])
+      if test "$glut_support" = "yes"; then
+        GL_LIBS="$LDFLAGS"
+        if test "$ac_cv_search_glutMainLoop" != "none required"; then
+          GL_LIBS="$GL_LIBS $ac_cv_search_glutMainLoop"
+        fi
+        GL_LIBS="$GL_LIBS $lib"
+        break
+      fi
+    done
+    LDFLAGS="$GLUT_SAVED_LDFLAGS"
+    test "$glut_support" = "yes" && break
+  done
+  IFS="$SAVED_IFS"
+  AC_LANG_POP
+fi
+
+LIBCHECK_EPILOGUE([GL])
+
+if test "$glut_support" = "yes" -a "$enable_libwebpdemux" = "yes"; then
+  build_vwebp=yes
+fi
+AM_CONDITIONAL([BUILD_VWEBP], [test "$build_vwebp" = "yes"])
+
 dnl === check for PNG support ===
 
 CLEAR_LIBVARS([PNG])
@@ -305,18 +391,19 @@ libwebpdemux: ${enable_libwebpdemux-no}
 libwebpmux: ${enable_libwebpmux-no}
 
 Tools:
-cwebp: yes
+cwebp : yes
   Input format support
   ====================
   JPEG : ${jpeg_support-no}
   PNG  : ${png_support-no}
   TIFF : ${tiff_support-no}
   WIC  : ${wic_support-no}
-dwebp: yes
+dwebp : yes
   Output format support
   =====================
   PNG  : ${png_support-no}
   WIC  : ${wic_support-no}
-gif2webp: ${build_gif2webp-no}
-webpmux: ${enable_libwebpmux-no}
+gif2webp : ${build_gif2webp-no}
+webpmux  : ${enable_libwebpmux-no}
+vwebp    : ${build_vwebp-no}
 ])
