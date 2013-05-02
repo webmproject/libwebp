@@ -51,7 +51,7 @@
 extern "C" {
 #endif
 
-#define WEBP_MUX_ABI_VERSION 0x0100        // MAJOR(8b) + MINOR(8b)
+#define WEBP_MUX_ABI_VERSION 0x0101        // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -303,7 +303,25 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetAnimationParams(
 //------------------------------------------------------------------------------
 // Misc Utilities.
 
+// Gets the canvas size from the mux object.
+// Note: This method assumes that VP8X chunk, if present, is up-to-date. That
+// is, the mux object hasn't been modified since the last call to
+// WebPMuxAssemble() or WebMuxCreate().
+// Parameters:
+//   mux - (in) object from which the canvas size is to be fetched
+//   width - (out) canvas width
+//   height - (out) canvas height
+// Returns:
+//   WEBP_MUX_INVALID_ARGUMENT - if mux, width or height is NULL
+//   WEBP_MUX_BAD_DATA - if VP8X/VP8/VP8L chunk or canvas size is invalid.
+//   WEBP_MUX_OK - on success.
+WEBP_EXTERN(WebPMuxError) WebPMuxGetCanvasSize(const WebPMux* mux,
+                                               int* width, int* height);
+
 // Gets the feature flags from the mux object.
+// Note: This method assumes that VP8X chunk, if present, is up-to-date. That
+// is, the mux object hasn't been modified since the last call to
+// WebPMuxAssemble() or WebMuxCreate().
 // Parameters:
 //   mux - (in) object from which the features are to be fetched
 //   flags - (out) the flags specifying which features are present in the
@@ -311,8 +329,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetAnimationParams(
 //           Enum 'WebPFeatureFlags' can be used to test individual flag values.
 // Returns:
 //   WEBP_MUX_INVALID_ARGUMENT - if mux or flags is NULL
-//   WEBP_MUX_NOT_FOUND - if VP8X chunk is not present in mux object.
-//   WEBP_MUX_BAD_DATA - if VP8X chunk in mux is invalid.
+//   WEBP_MUX_BAD_DATA - if VP8X/VP8L chunk in mux is invalid.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxGetFeatures(const WebPMux* mux,
                                              uint32_t* flags);

@@ -236,6 +236,12 @@ WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, WebPChunkId id);
 // Validates that the given mux has a single image.
 WebPMuxError MuxValidateForImage(const WebPMux* const mux);
 
+// Get the canvas width and height after validating that VP8X/VP8/VP8L chunk and
+// canvas size are valid. This method can be used for validation-only purposes
+// by passing 'width' and 'height' to be NULL.
+WebPMuxError MuxGetCanvasSize(const WebPMux* const mux, int* width,
+                              int* height);
+
 // Validates the given mux object.
 WebPMuxError MuxValidate(const WebPMux* const mux);
 

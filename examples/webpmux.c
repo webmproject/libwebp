@@ -180,9 +180,14 @@ static const char* ErrorString(WebPMuxError err) {
   } while (0)
 
 static WebPMuxError DisplayInfo(const WebPMux* mux) {
+  int width, height;
   uint32_t flag;
 
-  WebPMuxError err = WebPMuxGetFeatures(mux, &flag);
+  WebPMuxError err = WebPMuxGetCanvasSize(mux, &width, &height);
+  RETURN_IF_ERROR("Failed to retrieve canvas width/height.\n");
+  printf("Canvas size: %d x %d\n", width, height);
+
+  err = WebPMuxGetFeatures(mux, &flag);
 #ifndef WEBP_EXPERIMENTAL_FEATURES
   if (flag & FRAGMENTS_FLAG) err = WEBP_MUX_INVALID_ARGUMENT;
 #endif
