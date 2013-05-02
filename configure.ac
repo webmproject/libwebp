@@ -14,6 +14,18 @@ AM_PROG_CC_C_O
 dnl === Enable less verbose output when building.
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+dnl === SET_IF_UNSET(shell_var, value)
+dnl ===   Set the shell variable 'shell_var' to 'value' if it is unset.
+AC_DEFUN([SET_IF_UNSET], [test "${$1+set}" = "set" || $1=$2])
+
+AC_ARG_ENABLE([everything],
+              AS_HELP_STRING([--enable-everything],
+                             [Enable all optional targets. These can still be
+                              disabled with --disable-target]),
+              [SET_IF_UNSET([enable_libwebpdecoder], [$enableval])
+               SET_IF_UNSET([enable_libwebpdemux], [$enableval])
+               SET_IF_UNSET([enable_libwebpmux], [$enableval])])
+
 AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=DIR],
             [Path to the pkgconfig directory @<:@LIBDIR/pkgconfig@:>@]),
             [pkgconfigdir="$withval"], [pkgconfigdir='${libdir}/pkgconfig'])
