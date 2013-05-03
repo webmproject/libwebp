@@ -443,23 +443,6 @@ WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, WebPChunkId id) {
   }
 }
 
-WebPMuxError MuxValidateForImage(const WebPMux* const mux) {
-  const int num_images = MuxImageCount(mux->images_, WEBP_CHUNK_IMAGE);
-  const int num_frames = MuxImageCount(mux->images_, WEBP_CHUNK_ANMF);
-  const int num_fragments = MuxImageCount(mux->images_, WEBP_CHUNK_FRGM);
-
-  if (num_images == 0) {
-    // No images in mux.
-    return WEBP_MUX_NOT_FOUND;
-  } else if (num_images == 1 && num_frames == 0 && num_fragments == 0) {
-    // Valid case (single image).
-    return WEBP_MUX_OK;
-  } else {
-    // Frame/Fragment case OR an invalid mux.
-    return WEBP_MUX_INVALID_ARGUMENT;
-  }
-}
-
 static int IsNotCompatible(int feature, int num_items) {
   return (feature != 0) != (num_items > 0);
 }
