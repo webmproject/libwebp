@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAXn//5rI\u003d",
+        "filename": "src/mux/muxi.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-05-07T19:48:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAXn//6EY\u003d",
+      "revId": "d8aeac49fc0e5acf7c0262164b5fe73ca6a56fab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAXn//6EI\u003d",
         "filename": "src/mux/muxi.h",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2013-05-07T16:23:22Z",
       "side": 1,
       "message": "\u0027ValidateAnd\u0027 is not really needed. Validation is kind of implied as a side-effect (it\u0027s not a full in-depth validation, for that matter).",
+      "revId": "d8aeac49fc0e5acf7c0262164b5fe73ca6a56fab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAXn//5q8\u003d",
+        "filename": "src/mux/muxi.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-05-07T19:48:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAXn//6EI\u003d",
       "revId": "d8aeac49fc0e5acf7c0262164b5fe73ca6a56fab",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAXn//5qw\u003d",
+        "filename": "src/mux/muxinternal.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 506,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-05-07T19:48:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAXn//6EE\u003d",
+      "revId": "d8aeac49fc0e5acf7c0262164b5fe73ca6a56fab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAXn//6EA\u003d",
         "filename": "src/mux/muxread.c",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2013-05-07T16:23:22Z",
       "side": 1,
       "message": "shouldn\u0027t that be \"!\u003d\" instead of \"\u003c\" ?",
+      "revId": "d8aeac49fc0e5acf7c0262164b5fe73ca6a56fab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAXn//5qY\u003d",
+        "filename": "src/mux/muxread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-05-07T19:48:07Z",
+      "side": 1,
+      "message": "I think it is OK to be lenient by ignoring extra bytes in VP8X chunk.\nThis is consistent with demux as well.",
+      "parentUuid": "AAAAXn//6EA\u003d",
       "revId": "d8aeac49fc0e5acf7c0262164b5fe73ca6a56fab",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
