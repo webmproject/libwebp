@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAXn//6Ik\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-05-07T15:49:17Z",
+      "side": 1,
+      "message": "note: these \"$$1_...\" are looking a little awkward at reading...",
+      "revId": "4ef144779260bdd4f4b06d2ccf67f6756e1f0f57",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
