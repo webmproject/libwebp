@@ -19,6 +19,10 @@ AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=DIR],
             [pkgconfigdir="$withval"], [pkgconfigdir='${libdir}/pkgconfig'])
 AC_SUBST([pkgconfigdir])
 
+dnl === CLEAR_LIBVARS([var_pfx])
+dnl ===   Clears <var_pfx>_{INCLUDES,LIBS}.
+AC_DEFUN([CLEAR_LIBVARS], [$1_INCLUDES=""; $1_LIBS=""])
+
 dnl === WITHLIB_OPTION([opt_pfx], [outvar_pfx])
 dnl ===   Defines --with-<opt_pfx>{include,lib}dir options which set
 dnl ===   the variables <outvar_pfx>_{INCLUDES,LIBS}.
@@ -31,6 +35,24 @@ AC_DEFUN([WITHLIB_OPTION],
                AS_HELP_STRING([--with-$1libdir=DIR],
                               [use $2 libraries from DIR]),
                [$2_LIBS="-L$withval"])])
+
+dnl === LIBCHECK_PROLOGUE([var_pfx])
+dnl ===   Caches the current values of CPPFLAGS/LIBS in SAVED_* then
+dnl ===   prepends the current values with <var_pfx>_{INCLUDES,LIBS}.
+AC_DEFUN([LIBCHECK_PROLOGUE],
+         [SAVED_CPPFLAGS=$CPPFLAGS
+          SAVED_LIBS=$LIBS
+          CPPFLAGS="$$1_INCLUDES $CPPFLAGS"
+          LIBS="$$1_LIBS $LIBS"])
+
+dnl === LIBCHECK_EPILOGUE([var_pfx])
+dnl ===   Restores the values of CPPFLAGS/LIBS from SAVED_* and exports
+dnl ===   <var_pfx>_{INCLUDES,LIBS} with AC_SUBST.
+AC_DEFUN([LIBCHECK_EPILOGUE],
+         [AC_SUBST($1_LIBS)
+          AC_SUBST($1_INCLUDES)
+          CPPFLAGS=$SAVED_CPPFLAGS
+          LIBS=$SAVED_LIBS])
 
 dnl === Check for pthread support
 AC_ARG_ENABLE([threading],
@@ -51,8 +73,7 @@ AC_MSG_NOTICE([checking if threading is enabled... ${enable_threading-no}])
 
 dnl === check for PNG support ===
 
-PNG_INCLUDES=""
-PNG_LIBS=""
+CLEAR_LIBVARS([PNG])
 AC_PATH_PROGS(LIBPNG_CONFIG,
               [libpng-config libpng15-config libpng14-config libpng12-config])
 if test -n "$LIBPNG_CONFIG"; then
@@ -66,11 +87,7 @@ fi
 
 WITHLIB_OPTION([png], [PNG])
 
-SAVED_CPPFLAGS=$CPPFLAGS
-SAVED_LIBS=$LIBS
-CPPFLAGS="$PNG_INCLUDES $CPPFLAGS"
-LIBS="$PNG_LIBS $LIBS"
-
+LIBCHECK_PROLOGUE([PNG])
 AC_CHECK_HEADER(png.h,
   AC_SEARCH_LIBS(png_get_libpng_ver, [png],
                  [test "$ac_cv_search_png_get_libpng_ver" = "none required" \
@@ -90,23 +107,14 @@ AC_CHECK_HEADER(png.h,
    PNG_INCLUDES=""
   ],
 )
-AC_SUBST(PNG_LIBS)
-AC_SUBST(PNG_INCLUDES)
-
-CPPFLAGS=$SAVED_CPPFLAGS
-LIBS=$SAVED_LIBS
+LIBCHECK_EPILOGUE([PNG])
 
 dnl === check for JPEG support ===
 
-JPEG_INCLUDES=""
-JPEG_LIBS=""
+CLEAR_LIBVARS([JPEG])
 WITHLIB_OPTION([jpeg], [JPEG])
 
-SAVED_CPPFLAGS=$CPPFLAGS
-SAVED_LIBS=$LIBS
-CPPFLAGS="$JPEG_INCLUDES $CPPFLAGS"
-LIBS="$JPEG_LIBS $LIBS"
-
+LIBCHECK_PROLOGUE([JPEG])
 AC_CHECK_HEADER(jpeglib.h,
   AC_CHECK_LIB(jpeg, jpeg_set_defaults,
                [JPEG_LIBS="$JPEG_LIBS -ljpeg"
@@ -119,23 +127,14 @@ AC_CHECK_HEADER(jpeglib.h,
                [$MATH_LIBS]),
   AC_MSG_WARN(jpeg library not available - no jpeglib.h)
 )
-AC_SUBST(JPEG_LIBS)
-AC_SUBST(JPEG_INCLUDES)
-
-CPPFLAGS=$SAVED_CPPFLAGS
-LIBS=$SAVED_LIBS
+LIBCHECK_EPILOGUE([JPEG])
 
 dnl === check for TIFF support ===
 
-TIFF_INCLUDES=""
-TIFF_LIBS=""
+CLEAR_LIBVARS([TIFF])
 WITHLIB_OPTION([tiff], [TIFF])
 
-SAVED_CPPFLAGS=$CPPFLAGS
-SAVED_LIBS=$LIBS
-CPPFLAGS="$TIFF_INCLUDES $CPPFLAGS"
-LIBS="$TIFF_LIBS $LIBS"
-
+LIBCHECK_PROLOGUE([TIFF])
 AC_CHECK_HEADER(tiffio.h,
   AC_CHECK_LIB(tiff, TIFFGetVersion,
                [TIFF_LIBS="$TIFF_LIBS -ltiff"
@@ -148,23 +147,14 @@ AC_CHECK_HEADER(tiffio.h,
                [$MATH_LIBS]),
   AC_MSG_WARN(tiff library not available - no tiffio.h)
 )
-AC_SUBST(TIFF_LIBS)
-AC_SUBST(TIFF_INCLUDES)
-
-CPPFLAGS=$SAVED_CPPFLAGS
-LIBS=$SAVED_LIBS
+LIBCHECK_EPILOGUE([TIFF])
 
 dnl === check for GIF support ===
 
-GIF_INCLUDES=""
-GIF_LIBS=""
+CLEAR_LIBVARS([GIF])
 WITHLIB_OPTION([gif], [GIF])
 
-SAVED_CPPFLAGS=$CPPFLAGS
-SAVED_LIBS=$LIBS
-CPPFLAGS="$GIF_INCLUDES $CPPFLAGS"
-LIBS="$GIF_LIBS $LIBS"
-
+LIBCHECK_PROLOGUE([GIF])
 AC_CHECK_HEADER(gif_lib.h,
   AC_CHECK_LIB([gif], [DGifOpenFileHandle],
                [GIF_LIBS="$GIF_LIBS -lgif"
@@ -174,11 +164,7 @@ AC_CHECK_HEADER(gif_lib.h,
                [$MATH_LIBS]),
   AC_MSG_WARN(gif library not available - no gif_lib.h)
 )
-AC_SUBST(GIF_LIBS)
-AC_SUBST(GIF_INCLUDES)
-
-CPPFLAGS=$SAVED_CPPFLAGS
-LIBS=$SAVED_LIBS
+LIBCHECK_EPILOGUE([GIF])
 
 if test "$gif_support" = "yes" -a \
         "$enable_libwebpmux" = "yes"; then
