@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAXn//6Hk\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-05-07T15:54:50Z",
+      "side": 1,
+      "message": "alignment of the \u0027:\u0027 ?",
+      "revId": "94fef4b48852394fbffcdd66e8a995a047d0ea36",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
