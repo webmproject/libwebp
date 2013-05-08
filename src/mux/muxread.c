@@ -260,6 +260,38 @@ WebPMux* WebPMuxCreateInternal(const WebPData* bitstream, int copy_data,
 //------------------------------------------------------------------------------
 // Get API(s).
 
+WebPMuxError MuxGetCanvasSize(const WebPMux* const mux, int* width,
+                              int* height) {
+  int w, h;
+  WebPData data;
+  assert(mux != NULL);
+
+  // Check if VP8X chunk is present.
+  if (MuxGet(mux, IDX_VP8X, 1, &data) == WEBP_MUX_OK) {
+    if (data.size < VP8X_CHUNK_SIZE) return WEBP_MUX_BAD_DATA;
+    w = GetLE24(data.bytes + 4) + 1;
+    h = GetLE24(data.bytes + 7) + 1;
+  } else {  // Single image case.
+    WebPMuxError err = MuxValidateForImage(mux);
+    if (err != WEBP_MUX_OK) return err;
+    err = MuxGetImageWidthHeight(mux->images_->img_, &w, &h);
+    if (err != WEBP_MUX_OK) return err;
+  }
+  if (w * (uint64_t)h >= MAX_IMAGE_AREA) return WEBP_MUX_BAD_DATA;
+
+  if (width) *width = w;
+  if (height) *height = h;
+  return WEBP_MUX_OK;
+}
+
+WebPMuxError WebPMuxGetCanvasSize(const WebPMux* mux, int* width, int* height) {
+  if (mux == NULL || width == NULL || height == NULL) {
+    return WEBP_MUX_INVALID_ARGUMENT;
+  }
+  return MuxGetCanvasSize(mux, width, height);
+}
+
+
 WebPMuxError WebPMuxGetFeatures(const WebPMux* mux, uint32_t* flags) {
   WebPData data;
 

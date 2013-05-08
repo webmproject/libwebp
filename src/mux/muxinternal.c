@@ -503,6 +503,10 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
   // Verify mux has at least one image.
   if (mux->images_ == NULL) return WEBP_MUX_INVALID_ARGUMENT;
 
+  // Validate that VP8X/VP8/VP8L chunk and canvas size are valid.
+  err = MuxGetCanvasSize(mux, NULL, NULL);
+  if (err != WEBP_MUX_OK) return err;
+
   err = WebPMuxGetFeatures(mux, &flags);
   if (err != WEBP_MUX_OK) return err;
 
