@@ -260,6 +260,24 @@ WebPMux* WebPMuxCreateInternal(const WebPData* bitstream, int copy_data,
 //------------------------------------------------------------------------------
 // Get API(s).
 
+// Validates that the given mux has a single image.
+static WebPMuxError ValidateForSingleImage(const WebPMux* const mux) {
+  const int num_images = MuxImageCount(mux->images_, WEBP_CHUNK_IMAGE);
+  const int num_frames = MuxImageCount(mux->images_, WEBP_CHUNK_ANMF);
+  const int num_fragments = MuxImageCount(mux->images_, WEBP_CHUNK_FRGM);
+
+  if (num_images == 0) {
+    // No images in mux.
+    return WEBP_MUX_NOT_FOUND;
+  } else if (num_images == 1 && num_frames == 0 && num_fragments == 0) {
+    // Valid case (single image).
+    return WEBP_MUX_OK;
+  } else {
+    // Frame/Fragment case OR an invalid mux.
+    return WEBP_MUX_INVALID_ARGUMENT;
+  }
+}
+
 WebPMuxError MuxGetCanvasSize(const WebPMux* const mux, int* width,
                               int* height) {
   int w, h;
@@ -272,7 +290,7 @@ WebPMuxError MuxGetCanvasSize(const WebPMux* const mux, int* width,
     w = GetLE24(data.bytes + 4) + 1;
     h = GetLE24(data.bytes + 7) + 1;
   } else {  // Single image case.
-    WebPMuxError err = MuxValidateForImage(mux);
+    WebPMuxError err = ValidateForSingleImage(mux);
     if (err != WEBP_MUX_OK) return err;
     err = MuxGetImageWidthHeight(mux->images_->img_, &w, &h);
     if (err != WEBP_MUX_OK) return err;
@@ -291,7 +309,6 @@ WebPMuxError WebPMuxGetCanvasSize(const WebPMux* mux, int* width, int* height) {
   return MuxGetCanvasSize(mux, width, height);
 }
 
-
 WebPMuxError WebPMuxGetFeatures(const WebPMux* mux, uint32_t* flags) {
   WebPData data;
 
@@ -303,7 +320,7 @@ WebPMuxError WebPMuxGetFeatures(const WebPMux* mux, uint32_t* flags) {
     if (data.size < CHUNK_SIZE_BYTES) return WEBP_MUX_BAD_DATA;
     *flags = GetLE32(data.bytes);  // All OK. Fill up flags.
   } else {
-    WebPMuxError err = MuxValidateForImage(mux);  // Check for single image.
+    WebPMuxError err = ValidateForSingleImage(mux);  // Check for single image.
     if (err != WEBP_MUX_OK) return err;
     if (MuxHasLosslessImages(mux->images_)) {
       const WebPData* const vp8l_data = &mux->images_->img_->data_;

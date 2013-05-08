@@ -233,9 +233,6 @@ uint8_t* MuxEmitRiffHeader(uint8_t* const data, size_t size);
 // or if 'id' is not known.
 WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, WebPChunkId id);
 
-// Validates that the given mux has a single image.
-WebPMuxError MuxValidateForImage(const WebPMux* const mux);
-
 // Get the canvas width and height after validating that VP8X/VP8/VP8L chunk and
 // canvas size are valid. This method can be used for validation-only purposes
 // by passing 'width' and 'height' to be NULL.
