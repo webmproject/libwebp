@@ -71,7 +71,10 @@ int WebPGetEncoderVersion(void);
 %{
 #include "webp/decode.h"
 #include "webp/encode.h"
+%}
 
+#ifdef SWIGJAVA
+%{
 #define FillMeInAsSizeCannotBeDeterminedAutomatically \
     (result ? returned_buffer_size(__FUNCTION__, arg3, arg4) : 0)
 
@@ -108,6 +111,10 @@ static jint returned_buffer_size(
 
   return size;
 }
+%}
+#endif  /* SWIGJAVA */
+
+%{
 
 typedef size_t (*WebPEncodeFunction)(const uint8_t* rgb,
                                      int width, int height, int stride,
