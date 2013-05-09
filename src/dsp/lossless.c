@@ -1325,6 +1325,27 @@ void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
   }
 }
 
+// Bundles multiple (1, 2, 4 or 8) pixels into a single pixel.
+void VP8LBundleColorMap(const uint8_t* const row, int width,
+                        int xbits, uint32_t* const dst) {
+  int x;
+  if (xbits > 0) {
+    const int bit_depth = 1 << (3 - xbits);
+    const int mask = (1 << xbits) - 1;
+    uint32_t code = 0xff000000;
+    for (x = 0; x < width; ++x) {
+      const int xsub = x & mask;
+      if (xsub == 0) {
+        code = 0xff000000;
+      }
+      code |= row[x] << (8 + bit_depth * xsub);
+      dst[x >> xbits] = code;
+    }
+  } else {
+    for (x = 0; x < width; ++x) dst[x] = 0xff000000 | (row[x] << 8);
+  }
+}
+
 //------------------------------------------------------------------------------
 
 #if defined(__cplusplus) || defined(c_plusplus)
