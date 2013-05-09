@@ -61,6 +61,7 @@ typedef enum {
   PPM,
   PGM,
   BMP,
+  TIFF,
   YUV,
   ALPHA_PLANE_ONLY  // this is for experimenting only
 } OutputFileFormat;
@@ -290,6 +291,80 @@ static int WriteBMP(FILE* fout, const WebPDecBuffer* const buffer) {
 }
 #undef BMP_HEADER_SIZE
 
+#define NUM_IFD_ENTRIES 15
+#define EXTRA_DATA_SIZE 16
+// 10b for signature/header + n * 12b entries + 4b for IFD terminator:
+#define EXTRA_DATA_OFFSET (10 + 12 * NUM_IFD_ENTRIES + 4)
+#define TIFF_HEADER_SIZE (EXTRA_DATA_OFFSET + EXTRA_DATA_SIZE)
+
+static int WriteTIFF(FILE* fout, const WebPDecBuffer* const buffer) {
+  const int has_alpha = (buffer->colorspace != MODE_RGB);
+  const uint32_t width = buffer->width;
+  const uint32_t height = buffer->height;
+  const uint8_t* const rgba = buffer->u.RGBA.rgba;
+  const int stride = buffer->u.RGBA.stride;
+  const uint8_t bytes_per_px = has_alpha ? 4 : 3;
+  // For non-alpha case, we omit tag 0x152 (ExtraSamples).
+  const uint8_t num_ifd_entries = has_alpha ? NUM_IFD_ENTRIES
+                                            : NUM_IFD_ENTRIES - 1;
+  uint8_t tiff_header[TIFF_HEADER_SIZE] = {
+    0x49, 0x49, 0x2a, 0x00,   // little endian signature
+    8, 0, 0, 0,               // offset to the unique IFD that follows
+    // IFD (offset = 8). Entries must be written in increasing tag order.
+    num_ifd_entries, 0,       // Number of entries in the IFD (12 bytes each).
+    0x00, 0x01, 3, 0, 1, 0, 0, 0, 0, 0, 0, 0,    //  10: Width  (TBD)
+    0x01, 0x01, 3, 0, 1, 0, 0, 0, 0, 0, 0, 0,    //  22: Height (TBD)
+    0x02, 0x01, 3, 0, bytes_per_px, 0, 0, 0,     //  34: BitsPerSample: 8888
+        EXTRA_DATA_OFFSET + 0, 0, 0, 0,
+    0x03, 0x01, 3, 0, 1, 0, 0, 0, 1, 0, 0, 0,    //  46: Compression: none
+    0x06, 0x01, 3, 0, 1, 0, 0, 0, 2, 0, 0, 0,    //  58: Photometric: RGB
+    0x11, 0x01, 4, 0, 1, 0, 0, 0,                //  70: Strips offset:
+        TIFF_HEADER_SIZE, 0, 0, 0,               //      data follows header
+    0x12, 0x01, 3, 0, 1, 0, 0, 0, 1, 0, 0, 0,    //  82: Orientation: topleft
+    0x15, 0x01, 3, 0, 1, 0, 0, 0,                //  94: SamplesPerPixels
+        bytes_per_px, 0, 0, 0,
+    0x16, 0x01, 3, 0, 1, 0, 0, 0, 0, 0, 0, 0,    // 106: Rows per strip (TBD)
+    0x17, 0x01, 4, 0, 1, 0, 0, 0, 0, 0, 0, 0,    // 118: StripByteCount (TBD)
+    0x1a, 0x01, 5, 0, 1, 0, 0, 0,                // 130: X-resolution
+        EXTRA_DATA_OFFSET + 8, 0, 0, 0,
+    0x1b, 0x01, 5, 0, 1, 0, 0, 0,                // 142: Y-resolution
+        EXTRA_DATA_OFFSET + 8, 0, 0, 0,
+    0x1c, 0x01, 3, 0, 1, 0, 0, 0, 1, 0, 0, 0,    // 154: PlanarConfiguration
+    0x28, 0x01, 3, 0, 1, 0, 0, 0, 2, 0, 0, 0,    // 166: ResolutionUnit (inch)
+    0x52, 0x01, 3, 0, 1, 0, 0, 0, 1, 0, 0, 0,    // 178: ExtraSamples: rgbA
+    0, 0, 0, 0,                                  // 190: IFD terminator
+    // EXTRA_DATA_OFFSET:
+    8, 0, 8, 0, 8, 0, 8, 0,      // BitsPerSample
+    72, 0, 0, 0, 1, 0, 0, 0      // 72 pixels/inch, for X/Y-resolution
+  };
+  uint32_t y;
+
+  // Fill placeholders in IFD:
+  PutLE32(tiff_header + 10 + 8, width);
+  PutLE32(tiff_header + 22 + 8, height);
+  PutLE32(tiff_header + 106 + 8, height);
+  PutLE32(tiff_header + 118 + 8, width * bytes_per_px * height);
+  if (!has_alpha) PutLE32(tiff_header + 178, 0);  // IFD terminator
+
+  // write header
+  if (fwrite(tiff_header, sizeof(tiff_header), 1, fout) != 1) {
+    return 0;
+  }
+  // write pixel values
+  for (y = 0; y < height; ++y) {
+    if (fwrite(rgba + y * stride, bytes_per_px, width, fout) != width) {
+      return 0;
+    }
+  }
+
+  return 1;
+}
+
+#undef TIFF_HEADER_SIZE
+#undef EXTRA_DATA_OFFSET
+#undef EXTRA_DATA_SIZE
+#undef NUM_IFD_ENTRIES
+
 static int WriteAlphaPlane(FILE* fout, const WebPDecBuffer* const buffer) {
   const uint32_t width = buffer->width;
   const uint32_t height = buffer->height;
@@ -387,6 +462,8 @@ static void SaveOutput(const WebPDecBuffer* const buffer,
     ok &= WritePPM(fout, buffer, 0);
   } else if (format == BMP) {
     ok &= WriteBMP(fout, buffer);
+  } else if (format == TIFF) {
+    ok &= WriteTIFF(fout, buffer);
   } else if (format == PGM || format == YUV) {
     ok &= WritePGMOrYUV(fout, buffer, format);
   } else if (format == ALPHA_PLANE_ONLY) {
@@ -413,6 +490,7 @@ static void Help(void) {
          "  -pam ......... save the raw RGBA samples as a color PAM\n"
          "  -ppm ......... save the raw RGB samples as a color PPM\n"
          "  -bmp ......... save as uncompressed BMP format\n"
+         "  -tiff ........ save as uncompressed TIFF format\n"
          "  -pgm ......... save the raw YUV samples as a grayscale PGM\n"
          "                 file with IMC4 layout\n"
          "  -yuv ......... save the raw YUV samples in flat layout\n"
@@ -471,6 +549,8 @@ int main(int argc, const char *argv[]) {
       format = PPM;
     } else if (!strcmp(argv[c], "-bmp")) {
       format = BMP;
+    } else if (!strcmp(argv[c], "-tiff")) {
+      format = TIFF;
     } else if (!strcmp(argv[c], "-version")) {
       const int version = WebPGetDecoderVersion();
       printf("%d.%d.%d\n",
@@ -553,6 +633,10 @@ int main(int argc, const char *argv[]) {
         break;
       case BMP:
         output_buffer->colorspace = bitstream->has_alpha ? MODE_BGRA : MODE_BGR;
+        break;
+      case TIFF:    // note: force pre-multiplied alpha
+        output_buffer->colorspace =
+            bitstream->has_alpha ? MODE_rgbA : MODE_RGB;
         break;
       case PGM:
       case YUV:
