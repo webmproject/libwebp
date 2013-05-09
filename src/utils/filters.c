@@ -154,8 +154,7 @@ static void GradientUnfilter(int width, int height, int stride, uint8_t* data) {
 #undef SANITY_CHECK
 
 // -----------------------------------------------------------------------------
-// Quick estimate of a potentially interesting filter mode to try, in addition
-// to the default NONE.
+// Quick estimate of a potentially interesting filter mode to try.
 
 #define SMAX 16
 #define SDIFF(a, b) (abs((a) - (b)) >> 4)   // Scoring diff, in [0..SMAX)
@@ -165,6 +164,7 @@ WEBP_FILTER_TYPE EstimateBestFilter(const uint8_t* data,
   int i, j;
   int bins[WEBP_FILTER_LAST][SMAX];
   memset(bins, 0, sizeof(bins));
+
   // We only sample every other pixels. That's enough.
   for (j = 2; j < height - 1; j += 2) {
     const uint8_t* const p = data + j * stride;
