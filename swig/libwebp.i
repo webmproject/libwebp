@@ -28,13 +28,13 @@
 
 // map uint8_t* such that a byte[] is used
 // this will generate a few spurious warnings in the wrapper code
-%apply signed char[] { uint8_t * }
+%apply signed char[] { uint8_t* }
 #endif  /* SWIGJAVA */
 
 //------------------------------------------------------------------------------
 // Decoder specific
 
-%apply int *OUTPUT { int *width, int *height }
+%apply int* OUTPUT { int* width, int* height }
 
 // free the buffer returned by these functions after copying into
 // the native type
@@ -47,18 +47,18 @@
 
 int WebPGetDecoderVersion(void);
 int WebPGetInfo(const uint8_t* data, size_t data_size,
-                int *width, int *height);
+                int* width, int* height);
 
 uint8_t* WebPDecodeRGB(const uint8_t* data, size_t data_size,
-                       int *width, int *height);
+                       int* width, int* height);
 uint8_t* WebPDecodeRGBA(const uint8_t* data, size_t data_size,
-                        int *width, int *height);
+                        int* width, int* height);
 uint8_t* WebPDecodeARGB(const uint8_t* data, size_t data_size,
                         int* width, int* height);
 uint8_t* WebPDecodeBGR(const uint8_t* data, size_t data_size,
-                       int *width, int *height);
+                       int* width, int* height);
 uint8_t* WebPDecodeBGRA(const uint8_t* data, size_t data_size,
-                        int *width, int *height);
+                        int* width, int* height);
 
 //------------------------------------------------------------------------------
 // Encoder specific
@@ -76,12 +76,12 @@ int WebPGetEncoderVersion(void);
 #ifdef SWIGJAVA
 %{
 #define FillMeInAsSizeCannotBeDeterminedAutomatically \
-    (result ? returned_buffer_size(__FUNCTION__, arg3, arg4) : 0)
+    (result ? ReturnedBufferSize(__FUNCTION__, arg3, arg4) : 0)
 
-static jint returned_buffer_size(
-    const char *function, int *width, int *height) {
+static jint ReturnedBufferSize(
+    const char* function, int* width, int* height) {
   static const struct sizemap {
-    const char *function;
+    const char* function;
     int size_multiplier;
   } size_map[] = {
     { "Java_com_google_webp_libwebpJNI_WebPDecodeRGB",  3 },
@@ -99,7 +99,7 @@ static jint returned_buffer_size(
     { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessBGRA", 1 },
     { NULL, 0 }
   };
-  const struct sizemap *p;
+  const struct sizemap* p;
   jint size = -1;
 
   for (p = size_map; p->function; p++) {
@@ -123,29 +123,29 @@ typedef size_t (*WebPEncodeLosslessFunction)(const uint8_t* rgb,
                                              int width, int height, int stride,
                                              uint8_t** output);
 
-static uint8_t* encode(const uint8_t* rgb,
-                       int width, int height, int stride,
-                       float quality_factor,
-                       WebPEncodeFunction encfn,
-                       int* output_size, int* unused) {
-  uint8_t *output = NULL;
+static uint8_t* EncodeLossy(const uint8_t* rgb,
+                            int width, int height, int stride,
+                            float quality_factor,
+                            WebPEncodeFunction encfn,
+                            int* output_size, int* unused) {
+  uint8_t* output = NULL;
   const size_t image_size =
       encfn(rgb, width, height, stride, quality_factor, &output);
-  // the values of following two will be interpreted by returned_buffer_size()
+  // the values of following two will be interpreted by ReturnedBufferSize()
   // as 'width' and 'height' in the size calculation.
   *output_size = image_size;
   *unused = 1;
   return image_size ? output : NULL;
 }
 
-static uint8_t* encode_lossless(const uint8_t* rgb,
-                                int width, int height, int stride,
-                                WebPEncodeLosslessFunction encfn,
-                                int* output_size, int* unused) {
-  uint8_t *output = NULL;
+static uint8_t* EncodeLossless(const uint8_t* rgb,
+                               int width, int height, int stride,
+                               WebPEncodeLosslessFunction encfn,
+                               int* output_size, int* unused) {
+  uint8_t* output = NULL;
   const size_t image_size = encfn(rgb, width, height, stride, &output);
-  // the values of following two will be interpreted by returned_buffer_size()
-  // as 'width' and 'height' in the size calculation.
+  // the values of the following two will be interpreted by
+  // ReturnedBufferSize() as 'width' and 'height' in the size calculation.
   *output_size = image_size;
   *unused = 1;
   return image_size ? output : NULL;
@@ -155,8 +155,8 @@ static uint8_t* encode_lossless(const uint8_t* rgb,
 //------------------------------------------------------------------------------
 // libwebp/encode wrapper functions
 
-%apply int *INPUT { int *unused1, int *unused2 }
-%apply int *OUTPUT { int *output_size }
+%apply int* INPUT { int* unused1, int* unused2 }
+%apply int* OUTPUT { int* output_size }
 
 // free the buffer returned by these functions after copying into
 // the native type
@@ -185,14 +185,14 @@ static uint8_t* encode_lossless(const uint8_t* rgb,
 // Changes the return type of WebPEncode* to more closely match Decode*.
 // This also makes it easier to wrap the output buffer in a native type rather
 // than dealing with the return pointer.
-// The additional parameters are to allow reuse of returned_buffer_size(),
+// The additional parameters are to allow reuse of ReturnedBufferSize(),
 // unused2 and output_size will be used in this case.
 #define LOSSY_WRAPPER(FUNC)                                             \
   static uint8_t* wrap_##FUNC(                                          \
       const uint8_t* rgb, int* unused1, int* unused2, int* output_size, \
       int width, int height, int stride, float quality_factor) {        \
-    return encode(rgb, width, height, stride, quality_factor,           \
-                  FUNC, output_size, unused2);                          \
+    return EncodeLossy(rgb, width, height, stride, quality_factor,      \
+                       FUNC, output_size, unused2);                     \
   }                                                                     \
 
 LOSSY_WRAPPER(WebPEncodeRGB)
@@ -206,8 +206,8 @@ LOSSY_WRAPPER(WebPEncodeBGRA)
   static uint8_t* wrap_##FUNC(                                          \
       const uint8_t* rgb, int* unused1, int* unused2, int* output_size, \
       int width, int height, int stride) {                              \
-    return encode_lossless(rgb, width, height, stride,                  \
-                           FUNC, output_size, unused2);                 \
+    return EncodeLossless(rgb, width, height, stride,                   \
+                          FUNC, output_size, unused2);                  \
   }                                                                     \
 
 LOSSLESS_WRAPPER(WebPEncodeLosslessRGB)
