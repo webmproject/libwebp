@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAX3//9cA\u003d",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-05-10T18:55:18Z",
+      "side": 1,
+      "message": "this is wrong for non-alpha actually as the first 4 bytes will be read as the next IFD offset since num is set to NUM-1",
+      "revId": "4e2108b165cac399bb42db385c333702251d699d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAX3//9cE\u003d",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-05-10T18:55:18Z",
+      "side": 1,
+      "message": "last one could be 0 in the non-alpha case",
+      "revId": "4e2108b165cac399bb42db385c333702251d699d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
