@@ -60,7 +60,7 @@ static int DecodeAlpha(const uint8_t* data, size_t data_size,
   }
 
   if (method == ALPHA_NO_COMPRESSION) {
-    const size_t alpha_decoded_size = height * width;
+    const size_t alpha_decoded_size = width * height;
     ok = (alpha_data_size >= alpha_decoded_size);
     if (ok) memcpy(output, alpha_data, alpha_decoded_size);
   } else {
