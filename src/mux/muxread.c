@@ -278,27 +278,34 @@ static WebPMuxError ValidateForSingleImage(const WebPMux* const mux) {
   }
 }
 
-WebPMuxError MuxGetCanvasSize(const WebPMux* const mux, int* width,
-                              int* height) {
+// Get the canvas width, height and flags after validating that VP8X/VP8/VP8L
+// chunk and canvas size are valid.
+static WebPMuxError MuxGetCanvasInfo(const WebPMux* const mux,
+                                     int* width, int* height, uint32_t* flags) {
   int w, h;
+  uint32_t f = 0;
   WebPData data;
   assert(mux != NULL);
 
   // Check if VP8X chunk is present.
   if (MuxGet(mux, IDX_VP8X, 1, &data) == WEBP_MUX_OK) {
     if (data.size < VP8X_CHUNK_SIZE) return WEBP_MUX_BAD_DATA;
+    f = GetLE32(data.bytes);
     w = GetLE24(data.bytes + 4) + 1;
     h = GetLE24(data.bytes + 7) + 1;
   } else {  // Single image case.
+    int has_alpha;
     WebPMuxError err = ValidateForSingleImage(mux);
     if (err != WEBP_MUX_OK) return err;
-    err = MuxGetImageWidthHeight(mux->images_->img_, &w, &h);
+    err = MuxGetImageInfo(mux->images_->img_, &w, &h, &has_alpha);
     if (err != WEBP_MUX_OK) return err;
+    if (has_alpha) f |= ALPHA_FLAG;
   }
   if (w * (uint64_t)h >= MAX_IMAGE_AREA) return WEBP_MUX_BAD_DATA;
 
-  if (width) *width = w;
-  if (height) *height = h;
+  if (width != NULL) *width = w;
+  if (height != NULL) *height = h;
+  if (flags != NULL) *flags = f;
   return WEBP_MUX_OK;
 }
 
@@ -306,36 +313,12 @@ WebPMuxError WebPMuxGetCanvasSize(const WebPMux* mux, int* width, int* height) {
   if (mux == NULL || width == NULL || height == NULL) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
-  return MuxGetCanvasSize(mux, width, height);
+  return MuxGetCanvasInfo(mux, width, height, NULL);
 }
 
 WebPMuxError WebPMuxGetFeatures(const WebPMux* mux, uint32_t* flags) {
-  WebPData data;
-
   if (mux == NULL || flags == NULL) return WEBP_MUX_INVALID_ARGUMENT;
-  *flags = 0;
-
-  // Check if VP8X chunk is present.
-  if (MuxGet(mux, IDX_VP8X, 1, &data) == WEBP_MUX_OK) {
-    if (data.size < CHUNK_SIZE_BYTES) return WEBP_MUX_BAD_DATA;
-    *flags = GetLE32(data.bytes);  // All OK. Fill up flags.
-  } else {
-    WebPMuxError err = ValidateForSingleImage(mux);  // Check for single image.
-    if (err != WEBP_MUX_OK) return err;
-    if (MuxHasLosslessImages(mux->images_)) {
-      const WebPData* const vp8l_data = &mux->images_->img_->data_;
-      int has_alpha = 0;
-      if (!VP8LGetInfo(vp8l_data->bytes, vp8l_data->size, NULL, NULL,
-                       &has_alpha)) {
-        return WEBP_MUX_BAD_DATA;
-      }
-      if (has_alpha) {
-        *flags = ALPHA_FLAG;
-      }
-    }
-  }
-
-  return WEBP_MUX_OK;
+  return MuxGetCanvasInfo(mux, NULL, NULL, flags);
 }
 
 static uint8_t* EmitVP8XChunk(uint8_t* const dst, int width,
@@ -374,7 +357,7 @@ static WebPMuxError SynthesizeBitstream(const WebPMuxImage* const wpi,
     int w, h;
     WebPMuxError err;
     assert(wpi->img_ != NULL);
-    err = MuxGetImageWidthHeight(wpi->img_, &w, &h);
+    err = MuxGetImageInfo(wpi->img_, &w, &h, NULL);
     if (err != WEBP_MUX_OK) {
       free(data);
       return err;

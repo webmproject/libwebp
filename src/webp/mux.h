@@ -329,7 +329,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetCanvasSize(const WebPMux* mux,
 //           Enum 'WebPFeatureFlags' can be used to test individual flag values.
 // Returns:
 //   WEBP_MUX_INVALID_ARGUMENT - if mux or flags is NULL.
-//   WEBP_MUX_BAD_DATA - if VP8X/VP8L chunk in mux is invalid.
+//   WEBP_MUX_BAD_DATA - if VP8X/VP8/VP8L chunk or canvas size is invalid.
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxGetFeatures(const WebPMux* mux,
                                              uint32_t* flags);
