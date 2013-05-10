@@ -432,7 +432,7 @@ int main(int argc, const char *argv[]) {
                 }
                 if (is_xmp) {
                   // XMP padding data is 0x01, 0xff, 0xfe ... 0x01, 0x00.
-                  const int xmp_pading_size = 257;
+                  const size_t xmp_pading_size = 257;
                   if (metadata.size > xmp_pading_size) {
                     metadata.size -= xmp_pading_size;
                   }
