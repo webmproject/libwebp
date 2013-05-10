@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAX3//+k4\u003d",
+        "filename": "README",
+        "patchSetId": 2
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-05-10T01:15:22Z",
+      "side": 1,
+      "message": "new format summary: bitmap/tiff should end up in NEWS at some point",
+      "revId": "bad97ed2f59806b64e26a94f3d4a41bf3ab21251",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAX3//+j8\u003d",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-05-10T01:15:22Z",
+      "side": 1,
+      "message": "maybe a note giving the rundown of the integers here.",
+      "revId": "bad97ed2f59806b64e26a94f3d4a41bf3ab21251",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAX3//+RA\u003d",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-05-10T01:15:22Z",
+      "side": 1,
+      "message": "indent could be 2 here.",
+      "revId": "bad97ed2f59806b64e26a94f3d4a41bf3ab21251",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAX3//+QU\u003d",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-05-10T01:15:22Z",
+      "side": 1,
+      "message": "pre-mult isn\u0027t strictly necessary, but for the use and coverage is ok",
+      "revId": "bad97ed2f59806b64e26a94f3d4a41bf3ab21251",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAX3//+RM\u003d",
+        "filename": "man/dwebp.1",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-05-10T01:15:22Z",
+      "side": 1,
+      "message": "date",
+      "revId": "bad97ed2f59806b64e26a94f3d4a41bf3ab21251",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
