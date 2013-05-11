@@ -149,9 +149,10 @@ size_t ChunksListDiskSize(const WebPChunk* chunk_list);
 // Write out the given list of chunks into 'dst'.
 uint8_t* ChunkListEmit(const WebPChunk* chunk_list, uint8_t* dst);
 
-// Get the width & height of image stored in 'image_chunk'.
-WebPMuxError MuxGetImageWidthHeight(const WebPChunk* const image_chunk,
-                                    int* const width, int* const height);
+// Get the width, height and has_alpha info of image stored in 'image_chunk'.
+WebPMuxError MuxGetImageInfo(const WebPChunk* const image_chunk,
+                             int* const width, int* const height,
+                             int* const has_alpha);
 
 //------------------------------------------------------------------------------
 // MuxImage object management.
@@ -232,12 +233,6 @@ uint8_t* MuxEmitRiffHeader(uint8_t* const data, size_t size);
 // Return value is NULL if this chunk should be inserted in mux->images_ list
 // or if 'id' is not known.
 WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, WebPChunkId id);
-
-// Get the canvas width and height after validating that VP8X/VP8/VP8L chunk and
-// canvas size are valid. This method can be used for validation-only purposes
-// by passing 'width' and 'height' to be NULL.
-WebPMuxError MuxGetCanvasSize(const WebPMux* const mux, int* width,
-                              int* height);
 
 // Validates the given mux object.
 WebPMuxError MuxValidate(const WebPMux* const mux);

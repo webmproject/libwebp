@@ -422,20 +422,23 @@ static WebPMuxError GetFrameFragmentInfo(
   return WEBP_MUX_OK;
 }
 
-WebPMuxError MuxGetImageWidthHeight(const WebPChunk* const image_chunk,
-                                    int* const width, int* const height) {
+WebPMuxError MuxGetImageInfo(const WebPChunk* const image_chunk,
+                             int* const width, int* const height,
+                             int* const has_alpha) {
   const uint32_t tag = image_chunk->tag_;
   const WebPData* const data = &image_chunk->data_;
   int w, h;
+  int a = 0;
   int ok;
   assert(image_chunk != NULL);
-  assert(tag == kChunks[IDX_VP8].tag || tag ==  kChunks[IDX_VP8L].tag);
+  assert(tag == kChunks[IDX_VP8].tag || tag == kChunks[IDX_VP8L].tag);
   ok = (tag == kChunks[IDX_VP8].tag) ?
       VP8GetInfo(data->bytes, data->size, data->size, &w, &h) :
-      VP8LGetInfo(data->bytes, data->size, &w, &h, NULL);
+      VP8LGetInfo(data->bytes, data->size, &w, &h, &a);
   if (ok) {
-    *width = w;
-    *height = h;
+    if (width != NULL) *width = w;
+    if (height != NULL) *height = h;
+    if (has_alpha != NULL) *has_alpha = a;
     return WEBP_MUX_OK;
   } else {
     return WEBP_MUX_BAD_DATA;
@@ -455,7 +458,7 @@ static WebPMuxError GetImageInfo(const WebPMuxImage* const wpi,
   if (err != WEBP_MUX_OK) return err;
 
   // Get width and height from VP8/VP8L chunk.
-  return MuxGetImageWidthHeight(image_chunk, width, height);
+  return MuxGetImageInfo(image_chunk, width, height, NULL);
 }
 
 static WebPMuxError GetImageCanvasWidthHeight(
@@ -503,7 +506,7 @@ static WebPMuxError GetImageCanvasWidthHeight(
     // For a single image, extract the width & height from VP8/VP8L image-data.
     int w, h;
     const WebPChunk* const image_chunk = wpi->img_;
-    const WebPMuxError err = MuxGetImageWidthHeight(image_chunk, &w, &h);
+    const WebPMuxError err = MuxGetImageInfo(image_chunk, &w, &h, NULL);
     if (err != WEBP_MUX_OK) return err;
     *width = w;
     *height = h;
