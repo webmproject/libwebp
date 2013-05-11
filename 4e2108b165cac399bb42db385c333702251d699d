@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAX3//81A\u003d",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-05-11T08:48:30Z",
+      "side": 1,
+      "message": "hmm... indeed. I added a code line to put the IFD terminator at the right place in case of non-alpha.",
+      "parentUuid": "AAAAX3//9cA\u003d",
+      "revId": "4e2108b165cac399bb42db385c333702251d699d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAX3//9cE\u003d",
         "filename": "examples/dwebp.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2013-05-10T18:55:18Z",
       "side": 1,
       "message": "last one could be 0 in the non-alpha case",
+      "revId": "4e2108b165cac399bb42db385c333702251d699d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAX3//81I\u003d",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-05-11T08:48:30Z",
+      "side": 1,
+      "message": "that\u0027s not needed, since we set the number of data values to be equal to \u0027bytes_per_px\u0027 at line 317. The last \u00278,0\u0027 pair is ignored in non-alpha case.",
+      "parentUuid": "AAAAX3//9cE\u003d",
       "revId": "4e2108b165cac399bb42db385c333702251d699d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
