@@ -69,6 +69,24 @@
       "revId": "4e2108b165cac399bb42db385c333702251d699d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAX3//8zw\u003d",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-05-11T19:05:14Z",
+      "side": 1,
+      "message": "Yes, better would have been for me to say those 2 bytes are unnecessary. They\u0027re harmless here though, so best to keep the payload simple",
+      "parentUuid": "AAAAX3//81I\u003d",
+      "revId": "4e2108b165cac399bb42db385c333702251d699d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
