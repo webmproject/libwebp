@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAX3//8zM\u003d",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-05-11T19:07:04Z",
+      "side": 1,
+      "message": "testing, of course.",
+      "revId": "5145b0af55616e276defe15c3eb658cc6d1e0c2b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
