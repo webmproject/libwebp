@@ -143,9 +143,6 @@ static WEBP_INLINE size_t ChunkDiskSize(const WebPChunk* chunk) {
   return SizeWithPadding(data_size);
 }
 
-// Total size of a list of chunks.
-size_t ChunksListDiskSize(const WebPChunk* chunk_list);
-
 // Write out the given list of chunks into 'dst'.
 uint8_t* ChunkListEmit(const WebPChunk* chunk_list, uint8_t* dst);
 
@@ -167,9 +164,6 @@ WebPMuxImage* MuxImageRelease(WebPMuxImage* const wpi);
 // 'wpi' can be NULL.
 WebPMuxImage* MuxImageDelete(WebPMuxImage* const wpi);
 
-// Delete all images in 'wpi_list'.
-void MuxImageDeleteAll(WebPMuxImage** const wpi_list);
-
 // Count number of images matching the given tag id in the 'wpi_list'.
 // If id == WEBP_CHUNK_NIL, all images will be matched.
 int MuxImageCount(const WebPMuxImage* wpi_list, WebPChunkId id);
@@ -182,19 +176,6 @@ static WEBP_INLINE int IsWPI(WebPChunkId id) {
     case WEBP_CHUNK_ALPHA:
     case WEBP_CHUNK_IMAGE:  return 1;
     default:        return 0;
-  }
-}
-
-// Get a reference to appropriate chunk list within an image given chunk tag.
-static WEBP_INLINE WebPChunk** MuxImageGetListFromId(
-    const WebPMuxImage* const wpi, WebPChunkId id) {
-  assert(wpi != NULL);
-  switch (id) {
-    case WEBP_CHUNK_ANMF:
-    case WEBP_CHUNK_FRGM:  return (WebPChunk**)&wpi->header_;
-    case WEBP_CHUNK_ALPHA: return (WebPChunk**)&wpi->alpha_;
-    case WEBP_CHUNK_IMAGE: return (WebPChunk**)&wpi->img_;
-    default: return NULL;
   }
 }
 
@@ -211,14 +192,8 @@ WebPMuxError MuxImageGetNth(const WebPMuxImage** wpi_list, uint32_t nth,
 // Total size of the given image.
 size_t MuxImageDiskSize(const WebPMuxImage* const wpi);
 
-// Total size of a list of images.
-size_t MuxImageListDiskSize(const WebPMuxImage* wpi_list);
-
 // Write out the given image into 'dst'.
 uint8_t* MuxImageEmit(const WebPMuxImage* const wpi, uint8_t* dst);
-
-// Write out the given list of images into 'dst'.
-uint8_t* MuxImageListEmit(const WebPMuxImage* wpi_list, uint8_t* dst);
 
 //------------------------------------------------------------------------------
 // Helper methods for mux.
