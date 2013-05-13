@@ -63,7 +63,8 @@ typedef struct {
 
   const WebPDecBuffer *output_;    // shortcut to io->opaque->output
 
-  uint32_t        *argb_;          // Internal data: always in BGRA color mode.
+  uint32_t        *pixels_;        // Internal data: either uint8_t* for alpha
+                                   // or uint32_t* for BGRA.
   uint32_t        *argb_cache_;    // Scratch buffer for temporary BGRA storage.
 
   VP8LBitReader    br_;
