@@ -194,6 +194,7 @@ static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
 #endif
 #else    // BIG_ENDIAN
     bits = (bit_t)in_bits;
+    if (BITS != 8 * sizeof(bit_t)) bits >>= (8 * sizeof(bit_t) - BITS);
 #endif
 #ifndef USE_RIGHT_JUSTIFY
     br->value_ |= bits << (-br->bits_);
