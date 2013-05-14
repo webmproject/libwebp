@@ -1063,7 +1063,8 @@ static int AllocateInternalBuffers(VP8LDecoder* const dec, int final_width,
   const uint64_t num_pixels = (uint64_t)dec->width_ * dec->height_;
   // Scratch buffer corresponding to top-prediction row for transforming the
   // first row in the row-blocks. Not needed for paletted alpha.
-  const uint64_t cache_top_pixels = argb_cache_needed ? final_width : 0ULL;
+  const uint64_t cache_top_pixels =
+      argb_cache_needed ? (uint16_t)final_width : 0ULL;
   // Scratch buffer for temporary BGRA storage. Not needed for paletted alpha.
   const uint64_t cache_pixels =
       argb_cache_needed ? (uint64_t)final_width * NUM_ARGB_CACHE_ROWS : 0ULL;
