@@ -1093,38 +1093,63 @@ static void ColorSpaceInverseTransform(const VP8LTransform* const transform,
 }
 
 // Separate out pixels packed together using pixel-bundling.
-static void ColorIndexInverseTransform(
-    const VP8LTransform* const transform,
-    int y_start, int y_end, const uint32_t* src, uint32_t* dst) {
-  int y;
-  const int bits_per_pixel = 8 >> transform->bits_;
-  const int width = transform->xsize_;
-  const uint32_t* const color_map = transform->data_;
-  if (bits_per_pixel < 8) {
-    const int pixels_per_byte = 1 << transform->bits_;
-    const int count_mask = pixels_per_byte - 1;
-    const uint32_t bit_mask = (1 << bits_per_pixel) - 1;
-    for (y = y_start; y < y_end; ++y) {
-      uint32_t packed_pixels = 0;
-      int x;
-      for (x = 0; x < width; ++x) {
-        // We need to load fresh 'packed_pixels' once every 'pixels_per_byte'
-        // increments of x. Fortunately, pixels_per_byte is a power of 2, so
-        // can just use a mask for that, instead of decrementing a counter.
-        if ((x & count_mask) == 0) packed_pixels = ((*src++) >> 8) & 0xff;
-        *dst++ = color_map[packed_pixels & bit_mask];
-        packed_pixels >>= bits_per_pixel;
-      }
-    }
-  } else {
-    for (y = y_start; y < y_end; ++y) {
-      int x;
-      for (x = 0; x < width; ++x) {
-        *dst++ = color_map[((*src++) >> 8) & 0xff];
-      }
-    }
-  }
+// We define two methods for ARGB data (uint32_t) and alpha-only data (uint8_t).
+#define COLOR_INDEX_INVERSE(FUNC_NAME, TYPE, GET_INDEX, GET_VALUE)             \
+void FUNC_NAME(const VP8LTransform* const transform,                           \
+               int y_start, int y_end, const TYPE* src, TYPE* dst) {           \
+  int y;                                                                       \
+  const int bits_per_pixel = 8 >> transform->bits_;                            \
+  const int width = transform->xsize_;                                         \
+  const uint32_t* const color_map = transform->data_;                          \
+  if (bits_per_pixel < 8) {                                                    \
+    const int pixels_per_byte = 1 << transform->bits_;                         \
+    const int count_mask = pixels_per_byte - 1;                                \
+    const uint32_t bit_mask = (1 << bits_per_pixel) - 1;                       \
+    for (y = y_start; y < y_end; ++y) {                                        \
+      uint32_t packed_pixels = 0;                                              \
+      int x;                                                                   \
+      for (x = 0; x < width; ++x) {                                            \
+        /* We need to load fresh 'packed_pixels' once every                */  \
+        /* 'pixels_per_byte' increments of x. Fortunately, pixels_per_byte */  \
+        /* is a power of 2, so can just use a mask for that, instead of    */  \
+        /* decrementing a counter.                                         */  \
+        if ((x & count_mask) == 0) packed_pixels = GET_INDEX(*src++);          \
+        *dst++ = GET_VALUE(color_map[packed_pixels & bit_mask]);               \
+        packed_pixels >>= bits_per_pixel;                                      \
+      }                                                                        \
+    }                                                                          \
+  } else {                                                                     \
+    for (y = y_start; y < y_end; ++y) {                                        \
+      int x;                                                                   \
+      for (x = 0; x < width; ++x) {                                            \
+        *dst++ = GET_VALUE(color_map[GET_INDEX(*src++)]);                      \
+      }                                                                        \
+    }                                                                          \
+  }                                                                            \
 }
+
+static WEBP_INLINE uint32_t GetARGBIndex(uint32_t index) {
+  return (index >> 8) & 0xff;
+}
+
+static WEBP_INLINE uint8_t GetAlphaIndex(uint8_t index) {
+  return index;
+}
+
+static WEBP_INLINE uint32_t GetARGBValue(uint32_t val) {
+  return val;
+}
+
+static WEBP_INLINE uint8_t GetAlphaValue(uint32_t val) {
+  return (val >> 8) & 0xff;
+}
+
+static COLOR_INDEX_INVERSE(ColorIndexInverseTransform, uint32_t, GetARGBIndex,
+                           GetARGBValue)
+COLOR_INDEX_INVERSE(VP8LColorIndexInverseTransformAlpha, uint8_t, GetAlphaIndex,
+                    GetAlphaValue)
+
+#undef COLOR_INDEX_INVERSE
 
 void VP8LInverseTransform(const VP8LTransform* const transform,
                           int row_start, int row_end,
