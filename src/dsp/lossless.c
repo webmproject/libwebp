@@ -1128,12 +1128,12 @@ void FUNC_NAME(const VP8LTransform* const transform,                           \
   }                                                                            \
 }
 
-static WEBP_INLINE uint32_t GetARGBIndex(uint32_t index) {
-  return (index >> 8) & 0xff;
+static WEBP_INLINE uint32_t GetARGBIndex(uint32_t idx) {
+  return (idx >> 8) & 0xff;
 }
 
-static WEBP_INLINE uint8_t GetAlphaIndex(uint8_t index) {
-  return index;
+static WEBP_INLINE uint8_t GetAlphaIndex(uint8_t idx) {
+  return idx;
 }
 
 static WEBP_INLINE uint32_t GetARGBValue(uint32_t val) {
