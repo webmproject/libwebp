@@ -243,8 +243,7 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
   mem += info_size;
   enc->preds_ = ((uint8_t*)mem) + 1 + enc->preds_w_;
   mem += preds_w * preds_h * sizeof(uint8_t);
-  mem = (uint8_t*)DO_ALIGN(mem);
-  enc->nz_ = 1 + (uint32_t*)mem;
+  enc->nz_ = 1 + (uint32_t*)DO_ALIGN(mem);
   mem += nz_size;
   enc->lf_stats_ = lf_stats_size ? (LFStats*)DO_ALIGN(mem) : NULL;
   mem += lf_stats_size;
@@ -261,6 +260,7 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
   mem += 16;
   enc->v_left_ = (uint8_t*)mem;
   mem += 8;
+  assert(mem <= (uint8_t*)enc + size);
 
   enc->config_ = config;
   enc->profile_ = use_filter ? ((config->filter_type == 1) ? 0 : 1) : 2;
