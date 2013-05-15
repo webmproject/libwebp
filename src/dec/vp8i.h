@@ -151,10 +151,10 @@ typedef struct {
 // Informations about the macroblocks.
 
 typedef struct {  // filter specs
-  unsigned int f_level_:6;      // filter strength: 0..63
-  unsigned int f_ilevel_:6;     // inner limit: 1..63
-  unsigned int f_inner_:1;      // do inner filtering?
-  unsigned int pad_:19;
+  uint8_t f_level_;      // filter strength: 0..63
+  uint8_t f_ilevel_;     // inner limit: 1..63
+  uint8_t f_inner_;      // do inner filtering?
+  uint8_t pad_;          // mostly needed for struct aligning on ARM
 } VP8FInfo;
 
 typedef struct {  // used for syntax-parsing
