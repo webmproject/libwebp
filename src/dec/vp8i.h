@@ -159,9 +159,8 @@ typedef struct {  // filter specs
 
 typedef struct {  // used for syntax-parsing
   unsigned int nz_:24;       // non-zero AC/DC coeffs (24bit)
-  unsigned int dc_nz_:1;     // non-zero DC coeffs
-  unsigned int skip_:1;      // block type
-  unsigned int pad_:6;
+  unsigned int nz_dc_:1;     // non-zero DC coeffs
+  unsigned int pad_:7;
 } VP8MB;
 
 // Dequantization matrices
@@ -304,7 +303,7 @@ void VP8ParseQuant(VP8Decoder* const dec);
 // in frame.c
 int VP8InitFrame(VP8Decoder* const dec, VP8Io* io);
 // Predict a block and add residual
-void VP8ReconstructBlock(VP8Decoder* const dec);
+void VP8ReconstructBlock(const VP8Decoder* const dec);
 // Call io->setup() and finish setting up scan parameters.
 // After this call returns, one must always call VP8ExitCritical() with the
 // same parameters. Both functions should be used in pair. Returns VP8_STATUS_OK

@@ -524,11 +524,11 @@ static const PackedNz kUnpackTab[16] = {
 #endif
 #define PACK(X, S) ((((X).i32 * PACK_CST) & 0xff000000) >> (S))
 
-static void ParseResiduals(VP8Decoder* const dec,
-                           VP8MB* const mb, VP8BitReader* const token_br) {
+static int ParseResiduals(VP8Decoder* const dec,
+                          VP8MB* const mb, VP8BitReader* const token_br) {
   int out_t_nz, out_l_nz, first;
   ProbaArray ac_prob;
-  const VP8QuantMatrix* q = &dec->dqm_[dec->segment_];
+  const VP8QuantMatrix* const q = &dec->dqm_[dec->segment_];
   int16_t* dst = dec->coeffs_;
   VP8MB* const left_mb = dec->mb_info_ - 1;
   PackedNz nz_ac, nz_dc;
@@ -537,12 +537,11 @@ static void ParseResiduals(VP8Decoder* const dec,
   uint32_t non_zero_dc = 0;
   int x, y, ch;
 
-  nz_dc.i32 = nz_ac.i32 = 0;
   memset(dst, 0, 384 * sizeof(*dst));
   if (!dec->is_i4x4_) {    // parse DC
     int16_t dc[16] = { 0 };
-    const int ctx = mb->dc_nz_ + left_mb->dc_nz_;
-    mb->dc_nz_ = left_mb->dc_nz_ =
+    const int ctx = mb->nz_dc_ + left_mb->nz_dc_;
+    mb->nz_dc_ = left_mb->nz_dc_ =
         (GetCoeffs(token_br, (ProbaArray)dec->proba_.coeffs_[1],
                    ctx, q->y2_mat_, 0, dc) > 0);
     first = 1;
@@ -600,7 +599,7 @@ static void ParseResiduals(VP8Decoder* const dec,
 
   dec->non_zero_ac_ = non_zero_ac;
   dec->non_zero_ = non_zero_ac | non_zero_dc;
-  mb->skip_ = !dec->non_zero_;
+  return !dec->non_zero_;   // will be used for further optimization
 }
 #undef PACK
 
@@ -610,7 +609,8 @@ static void ParseResiduals(VP8Decoder* const dec,
 int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br) {
   VP8BitReader* const br = &dec->br_;
   VP8MB* const left = dec->mb_info_ - 1;
-  VP8MB* const info = dec->mb_info_ + dec->mb_x_;
+  VP8MB* const mb = dec->mb_info_ + dec->mb_x_;
+  int skip;
 
   // Note: we don't save segment map (yet), as we don't expect
   // to decode more than 1 keyframe.
@@ -620,19 +620,19 @@ int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br) {
         VP8GetBit(br, dec->proba_.segments_[1]) :
         2 + VP8GetBit(br, dec->proba_.segments_[2]);
   }
-  info->skip_ = dec->use_skip_proba_ ? VP8GetBit(br, dec->skip_p_) : 0;
+  skip = dec->use_skip_proba_ ? VP8GetBit(br, dec->skip_p_) : 0;
 
   VP8ParseIntraMode(br, dec);
   if (br->eof_) {
     return 0;
   }
 
-  if (!info->skip_) {
-    ParseResiduals(dec, info, token_br);
+  if (!skip) {
+    skip = ParseResiduals(dec, mb, token_br);
   } else {
-    left->nz_ = info->nz_ = 0;
+    left->nz_ = mb->nz_ = 0;
     if (!dec->is_i4x4_) {
-      left->dc_nz_ = info->dc_nz_ = 0;
+      left->nz_dc_ = mb->nz_dc_ = 0;
     }
     dec->non_zero_ = 0;
     dec->non_zero_ac_ = 0;
@@ -641,16 +641,16 @@ int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br) {
   if (dec->filter_type_ > 0) {  // store filter info
     VP8FInfo* const finfo = dec->f_info_ + dec->mb_x_;
     *finfo = dec->fstrengths_[dec->segment_][dec->is_i4x4_];
-    finfo->f_inner_ = (!info->skip_ || dec->is_i4x4_);
+    finfo->f_inner_ = !skip || dec->is_i4x4_;
   }
 
-  return (!token_br->eof_);
+  return !token_br->eof_;
 }
 
 void VP8InitScanline(VP8Decoder* const dec) {
   VP8MB* const left = dec->mb_info_ - 1;
   left->nz_ = 0;
-  left->dc_nz_ = 0;
+  left->nz_dc_ = 0;
   memset(dec->intra_l_, B_DC_PRED, sizeof(dec->intra_l_));
   dec->filter_row_ =
     (dec->filter_type_ > 0) &&

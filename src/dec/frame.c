@@ -534,7 +534,7 @@ static const int kScan[16] = {
   0 + 12 * BPS,  4 + 12 * BPS, 8 + 12 * BPS, 12 + 12 * BPS
 };
 
-static WEBP_INLINE int CheckMode(int mb_x, int mb_y, int mode) {
+static int CheckMode(int mb_x, int mb_y, int mode) {
   if (mode == B_DC_PRED) {
     if (mb_x == 0) {
       return (mb_y == 0) ? B_DC_PRED_NOTOPLEFT : B_DC_PRED_NOLEFT;
@@ -545,11 +545,11 @@ static WEBP_INLINE int CheckMode(int mb_x, int mb_y, int mode) {
   return mode;
 }
 
-static WEBP_INLINE void Copy32b(uint8_t* dst, uint8_t* src) {
-  *(uint32_t*)dst = *(uint32_t*)src;
+static void Copy32b(uint8_t* dst, uint8_t* src) {
+  memcpy(dst, src, 4);
 }
 
-void VP8ReconstructBlock(VP8Decoder* const dec) {
+void VP8ReconstructBlock(const VP8Decoder* const dec) {
   int j;
   uint8_t* const y_dst = dec->yuv_b_ + Y_OFF;
   uint8_t* const u_dst = dec->yuv_b_ + U_OFF;
@@ -583,7 +583,7 @@ void VP8ReconstructBlock(VP8Decoder* const dec) {
     uint8_t* const top_y = dec->y_t_ + dec->mb_x_ * 16;
     uint8_t* const top_u = dec->u_t_ + dec->mb_x_ * 8;
     uint8_t* const top_v = dec->v_t_ + dec->mb_x_ * 8;
-    const int16_t* coeffs = dec->coeffs_;
+    const int16_t* const coeffs = dec->coeffs_;
     int n;
 
     if (dec->mb_y_ > 0) {
@@ -659,13 +659,13 @@ void VP8ReconstructBlock(VP8Decoder* const dec) {
           VP8TransformDCUV(v_coeffs, v_dst);
         }
       }
+    }
 
-      // stash away top samples for next block
-      if (dec->mb_y_ < dec->mb_h_ - 1) {
-        memcpy(top_y, y_dst + 15 * BPS, 16);
-        memcpy(top_u, u_dst +  7 * BPS,  8);
-        memcpy(top_v, v_dst +  7 * BPS,  8);
-      }
+    // stash away top samples for next block
+    if (dec->mb_y_ < dec->mb_h_ - 1) {
+      memcpy(top_y, y_dst + 15 * BPS, 16);
+      memcpy(top_u, u_dst +  7 * BPS,  8);
+      memcpy(top_v, v_dst +  7 * BPS,  8);
     }
   }
   // Transfer reconstructed samples from yuv_b_ cache to final destination.
