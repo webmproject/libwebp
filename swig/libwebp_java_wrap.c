@@ -813,14 +813,16 @@ jdoubleArray SWIG_JavaArrayOutDouble (JNIEnv *jenv, double *result, jsize sz) {
 
 
 #define FillMeInAsSizeCannotBeDeterminedAutomatically \
-    (result ? ReturnedBufferSize(__FUNCTION__, arg3, arg4) : 0)
+    (result ? (jint)ReturnedBufferSize(__FUNCTION__, arg3, arg4) : 0)
 
-static jint ReturnedBufferSize(
+
+static size_t ReturnedBufferSize(
     const char* function, int* width, int* height) {
   static const struct sizemap {
     const char* function;
     int size_multiplier;
   } size_map[] = {
+#ifdef SWIGJAVA
     { "Java_com_google_webp_libwebpJNI_WebPDecodeRGB",  3 },
     { "Java_com_google_webp_libwebpJNI_WebPDecodeRGBA", 4 },
     { "Java_com_google_webp_libwebpJNI_WebPDecodeARGB", 4 },
@@ -834,12 +836,20 @@ static jint ReturnedBufferSize(
     { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessBGR",  1 },
     { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessRGBA", 1 },
     { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessBGRA", 1 },
+#endif
+#ifdef SWIGPYTHON
+    { "WebPDecodeRGB",  3 },
+    { "WebPDecodeRGBA", 4 },
+    { "WebPDecodeARGB", 4 },
+    { "WebPDecodeBGR",  3 },
+    { "WebPDecodeBGRA", 4 },
+#endif
     { NULL, 0 }
   };
   const struct sizemap* p;
-  jint size = -1;
+  size_t size = 0;
 
-  for (p = size_map; p->function; p++) {
+  for (p = size_map; p->function; ++p) {
     if (!strcmp(function, p->function)) {
       size = *width * *height * p->size_multiplier;
       break;
@@ -848,7 +858,6 @@ static jint ReturnedBufferSize(
 
   return size;
 }
-
 
 
 typedef size_t (*WebPEncodeFunction)(const uint8_t* rgb,

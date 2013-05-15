@@ -8,15 +8,26 @@
 // libwebp swig interface definition
 //
 // Author: James Zern (jzern@google.com)
-//
-// For java bindings compile with:
-//  $ mkdir -p java/com/google/webp
-//  $ swig -ignoremissing -I../src \
-//         -java \
-//         -package com.google.webp \
-//         -outdir java/com/google/webp \
-//         -o libwebp_java_wrap.c libwebp.i
+
+/*
+  Java bindings:
+  $ mkdir -p java/com/google/webp
+  $ swig -java \
+         -package com.google.webp \
+         -outdir java/com/google/webp \
+         -o libwebp_java_wrap.c libwebp.i
+
+  Python bindings:
+  $ swig -python \
+         -outdir . \
+         -o libwebp_python_wrap.c libwebp.i
+*/
+
+#ifdef SWIGPYTHON
+%module(package="com.google.webp") libwebp
+#else
 %module libwebp
+#endif  /* SWIGPYTHON */
 
 %include "constraints.i"
 %include "typemaps.i"
@@ -30,6 +41,14 @@
 // this will generate a few spurious warnings in the wrapper code
 %apply signed char[] { uint8_t* }
 #endif  /* SWIGJAVA */
+
+#ifdef SWIGPYTHON
+%apply (char* STRING, size_t LENGTH) { (const uint8_t* data, size_t data_size) }
+%typemap(out) uint8_t* {
+  $result = PyString_FromStringAndSize(
+      (const char*)$1, ReturnedBufferSize("$symname", arg3, arg4));
+}
+#endif  /* SWIGPYTHON */
 
 //------------------------------------------------------------------------------
 // Decoder specific
@@ -76,14 +95,19 @@ int WebPGetEncoderVersion(void);
 #ifdef SWIGJAVA
 %{
 #define FillMeInAsSizeCannotBeDeterminedAutomatically \
-    (result ? ReturnedBufferSize(__FUNCTION__, arg3, arg4) : 0)
+    (result ? (jint)ReturnedBufferSize(__FUNCTION__, arg3, arg4) : 0)
+%}
+#endif  /* SWIGJAVA */
 
-static jint ReturnedBufferSize(
+#if defined(SWIGJAVA) || defined(SWIGPYTHON)
+%{
+static size_t ReturnedBufferSize(
     const char* function, int* width, int* height) {
   static const struct sizemap {
     const char* function;
     int size_multiplier;
   } size_map[] = {
+#ifdef SWIGJAVA
     { "Java_com_google_webp_libwebpJNI_WebPDecodeRGB",  3 },
     { "Java_com_google_webp_libwebpJNI_WebPDecodeRGBA", 4 },
     { "Java_com_google_webp_libwebpJNI_WebPDecodeARGB", 4 },
@@ -97,12 +121,20 @@ static jint ReturnedBufferSize(
     { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessBGR",  1 },
     { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessRGBA", 1 },
     { "Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessBGRA", 1 },
+#endif
+#ifdef SWIGPYTHON
+    { "WebPDecodeRGB",  3 },
+    { "WebPDecodeRGBA", 4 },
+    { "WebPDecodeARGB", 4 },
+    { "WebPDecodeBGR",  3 },
+    { "WebPDecodeBGRA", 4 },
+#endif
     { NULL, 0 }
   };
   const struct sizemap* p;
-  jint size = -1;
+  size_t size = 0;
 
-  for (p = size_map; p->function; p++) {
+  for (p = size_map; p->function; ++p) {
     if (!strcmp(function, p->function)) {
       size = *width * *height * p->size_multiplier;
       break;
@@ -112,10 +144,9 @@ static jint ReturnedBufferSize(
   return size;
 }
 %}
-#endif  /* SWIGJAVA */
+#endif  /* SWIGJAVA || SWIGPYTHON */
 
 %{
-
 typedef size_t (*WebPEncodeFunction)(const uint8_t* rgb,
                                      int width, int height, int stride,
                                      float quality_factor, uint8_t** output);
