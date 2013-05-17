@@ -38,8 +38,14 @@
                        See: http://www.swig.org/Doc1.3/Java.html#enumerations */
 
 // map uint8_t* such that a byte[] is used
-// this will generate a few spurious warnings in the wrapper code
-%apply signed char[] { uint8_t* }
+%{
+#include "webp/types.h"
+%}
+// from arrays_java.i (signed char)
+JAVA_ARRAYS_DECL(uint8_t, jbyte, Byte, Uint8)
+JAVA_ARRAYS_IMPL(uint8_t, jbyte, Byte, Uint8)
+JAVA_ARRAYS_TYPEMAPS(uint8_t, byte, jbyte, Uint8, "[B")
+%apply uint8_t[] { uint8_t* }
 #endif  /* SWIGJAVA */
 
 #ifdef SWIGPYTHON
