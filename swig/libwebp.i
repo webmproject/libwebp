@@ -69,6 +69,18 @@
 %typemap(freearg) const uint8_t* rgb {
   PyBuffer_Release(&rgb_buffer$argnum);
 }
+
+%define DECODE_AUTODOC(func)
+%feature("autodoc", #func "(uint8_t data) -> (rgb, width, height)") func;
+%enddef
+
+%feature("autodoc", "1");
+DECODE_AUTODOC(WebPDecodeRGB);
+DECODE_AUTODOC(WebPDecodeRGBA);
+DECODE_AUTODOC(WebPDecodeARGB);
+DECODE_AUTODOC(WebPDecodeBGR);
+DECODE_AUTODOC(WebPDecodeBGRA);
+%feature("autodoc", "WebPGetInfo(uint8_t data) -> (width, height)") WebPGetInfo;
 #endif  /* SWIGPYTHON */
 
 //------------------------------------------------------------------------------
@@ -241,6 +253,11 @@ static uint8_t* EncodeLossless(const uint8_t* rgb,
 %javamethodmodifiers wrap_WebPEncodeLosslessBGRA "private";
 #endif  /* SWIGJAVA */
 
+#ifdef SWIGPYTHON
+// This autodoc will serve as a catch-all for wrap_*.
+%feature("autodoc", "private, do not call directly.");
+#endif
+
 %inline %{
 // Changes the return type of WebPEncode* to more closely match Decode*.
 // This also makes it easier to wrap the output buffer in a native type rather
@@ -359,6 +376,7 @@ _UNUSED = 1
 %define CALL_ENCODE_LOSSY_WRAPPER(func)
 %pythoncode %{
 def func(rgb, width, height, stride, quality_factor):
+  """func(uint8_t rgb, int width, int height, int stride, float quality_factor) -> lossy_webp"""
   webp = wrap_##func(
       rgb, _UNUSED, _UNUSED, width, height, stride, quality_factor)
   if len(webp[0]) == 0:
@@ -370,6 +388,7 @@ def func(rgb, width, height, stride, quality_factor):
 %define CALL_ENCODE_LOSSLESS_WRAPPER(func)
 %pythoncode %{
 def func(rgb, width, height, stride):
+  """func(uint8_t rgb, int width, int height, int stride) -> lossless_webp"""
   webp = wrap_##func(rgb, _UNUSED, _UNUSED, width, height, stride)
   if len(webp[0]) == 0:
     return None

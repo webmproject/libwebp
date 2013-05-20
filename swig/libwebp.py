@@ -69,71 +69,72 @@ except AttributeError:
 
 
 def WebPGetDecoderVersion():
+  """WebPGetDecoderVersion() -> int"""
   return _libwebp.WebPGetDecoderVersion()
-WebPGetDecoderVersion = _libwebp.WebPGetDecoderVersion
 
 def WebPGetInfo(*args):
+  """WebPGetInfo(uint8_t data) -> (width, height)"""
   return _libwebp.WebPGetInfo(*args)
-WebPGetInfo = _libwebp.WebPGetInfo
 
 def WebPDecodeRGB(*args):
+  """WebPDecodeRGB(uint8_t data) -> (rgb, width, height)"""
   return _libwebp.WebPDecodeRGB(*args)
-WebPDecodeRGB = _libwebp.WebPDecodeRGB
 
 def WebPDecodeRGBA(*args):
+  """WebPDecodeRGBA(uint8_t data) -> (rgb, width, height)"""
   return _libwebp.WebPDecodeRGBA(*args)
-WebPDecodeRGBA = _libwebp.WebPDecodeRGBA
 
 def WebPDecodeARGB(*args):
+  """WebPDecodeARGB(uint8_t data) -> (rgb, width, height)"""
   return _libwebp.WebPDecodeARGB(*args)
-WebPDecodeARGB = _libwebp.WebPDecodeARGB
 
 def WebPDecodeBGR(*args):
+  """WebPDecodeBGR(uint8_t data) -> (rgb, width, height)"""
   return _libwebp.WebPDecodeBGR(*args)
-WebPDecodeBGR = _libwebp.WebPDecodeBGR
 
 def WebPDecodeBGRA(*args):
+  """WebPDecodeBGRA(uint8_t data) -> (rgb, width, height)"""
   return _libwebp.WebPDecodeBGRA(*args)
-WebPDecodeBGRA = _libwebp.WebPDecodeBGRA
 
 def WebPGetEncoderVersion():
+  """WebPGetEncoderVersion() -> int"""
   return _libwebp.WebPGetEncoderVersion()
-WebPGetEncoderVersion = _libwebp.WebPGetEncoderVersion
 
 def wrap_WebPEncodeRGB(*args):
+  """private, do not call directly."""
   return _libwebp.wrap_WebPEncodeRGB(*args)
-wrap_WebPEncodeRGB = _libwebp.wrap_WebPEncodeRGB
 
 def wrap_WebPEncodeBGR(*args):
+  """private, do not call directly."""
   return _libwebp.wrap_WebPEncodeBGR(*args)
-wrap_WebPEncodeBGR = _libwebp.wrap_WebPEncodeBGR
 
 def wrap_WebPEncodeRGBA(*args):
+  """private, do not call directly."""
   return _libwebp.wrap_WebPEncodeRGBA(*args)
-wrap_WebPEncodeRGBA = _libwebp.wrap_WebPEncodeRGBA
 
 def wrap_WebPEncodeBGRA(*args):
+  """private, do not call directly."""
   return _libwebp.wrap_WebPEncodeBGRA(*args)
-wrap_WebPEncodeBGRA = _libwebp.wrap_WebPEncodeBGRA
 
 def wrap_WebPEncodeLosslessRGB(*args):
+  """private, do not call directly."""
   return _libwebp.wrap_WebPEncodeLosslessRGB(*args)
-wrap_WebPEncodeLosslessRGB = _libwebp.wrap_WebPEncodeLosslessRGB
 
 def wrap_WebPEncodeLosslessBGR(*args):
+  """private, do not call directly."""
   return _libwebp.wrap_WebPEncodeLosslessBGR(*args)
-wrap_WebPEncodeLosslessBGR = _libwebp.wrap_WebPEncodeLosslessBGR
 
 def wrap_WebPEncodeLosslessRGBA(*args):
+  """private, do not call directly."""
   return _libwebp.wrap_WebPEncodeLosslessRGBA(*args)
-wrap_WebPEncodeLosslessRGBA = _libwebp.wrap_WebPEncodeLosslessRGBA
 
 def wrap_WebPEncodeLosslessBGRA(*args):
+  """private, do not call directly."""
   return _libwebp.wrap_WebPEncodeLosslessBGRA(*args)
-wrap_WebPEncodeLosslessBGRA = _libwebp.wrap_WebPEncodeLosslessBGRA
 _UNUSED = 1
 
 def WebPEncodeRGB(rgb, width, height, stride, quality_factor):
+  """WebPEncodeRGB(uint8_t rgb, int width, int height, int stride, float quality_factor) -> lossy_webp"""
   webp = wrap_WebPEncodeRGB(
       rgb, _UNUSED, _UNUSED, width, height, stride, quality_factor)
   if len(webp[0]) == 0:
@@ -141,6 +142,7 @@ def WebPEncodeRGB(rgb, width, height, stride, quality_factor):
   return webp[0]
 
 def WebPEncodeRGBA(rgb, width, height, stride, quality_factor):
+  """WebPEncodeRGBA(uint8_t rgb, int width, int height, int stride, float quality_factor) -> lossy_webp"""
   webp = wrap_WebPEncodeRGBA(
       rgb, _UNUSED, _UNUSED, width, height, stride, quality_factor)
   if len(webp[0]) == 0:
@@ -148,6 +150,7 @@ def WebPEncodeRGBA(rgb, width, height, stride, quality_factor):
   return webp[0]
 
 def WebPEncodeBGR(rgb, width, height, stride, quality_factor):
+  """WebPEncodeBGR(uint8_t rgb, int width, int height, int stride, float quality_factor) -> lossy_webp"""
   webp = wrap_WebPEncodeBGR(
       rgb, _UNUSED, _UNUSED, width, height, stride, quality_factor)
   if len(webp[0]) == 0:
@@ -155,6 +158,7 @@ def WebPEncodeBGR(rgb, width, height, stride, quality_factor):
   return webp[0]
 
 def WebPEncodeBGRA(rgb, width, height, stride, quality_factor):
+  """WebPEncodeBGRA(uint8_t rgb, int width, int height, int stride, float quality_factor) -> lossy_webp"""
   webp = wrap_WebPEncodeBGRA(
       rgb, _UNUSED, _UNUSED, width, height, stride, quality_factor)
   if len(webp[0]) == 0:
@@ -162,24 +166,28 @@ def WebPEncodeBGRA(rgb, width, height, stride, quality_factor):
   return webp[0]
 
 def WebPEncodeLosslessRGB(rgb, width, height, stride):
+  """WebPEncodeLosslessRGB(uint8_t rgb, int width, int height, int stride) -> lossless_webp"""
   webp = wrap_WebPEncodeLosslessRGB(rgb, _UNUSED, _UNUSED, width, height, stride)
   if len(webp[0]) == 0:
     return None
   return webp[0]
 
 def WebPEncodeLosslessRGBA(rgb, width, height, stride):
+  """WebPEncodeLosslessRGBA(uint8_t rgb, int width, int height, int stride) -> lossless_webp"""
   webp = wrap_WebPEncodeLosslessRGBA(rgb, _UNUSED, _UNUSED, width, height, stride)
   if len(webp[0]) == 0:
     return None
   return webp[0]
 
 def WebPEncodeLosslessBGR(rgb, width, height, stride):
+  """WebPEncodeLosslessBGR(uint8_t rgb, int width, int height, int stride) -> lossless_webp"""
   webp = wrap_WebPEncodeLosslessBGR(rgb, _UNUSED, _UNUSED, width, height, stride)
   if len(webp[0]) == 0:
     return None
   return webp[0]
 
 def WebPEncodeLosslessBGRA(rgb, width, height, stride):
+  """WebPEncodeLosslessBGRA(uint8_t rgb, int width, int height, int stride) -> lossless_webp"""
   webp = wrap_WebPEncodeLosslessBGRA(rgb, _UNUSED, _UNUSED, width, height, stride)
   if len(webp[0]) == 0:
     return None
