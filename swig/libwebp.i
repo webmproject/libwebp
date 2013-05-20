@@ -46,7 +46,28 @@
 %apply (char* STRING, size_t LENGTH) { (const uint8_t* data, size_t data_size) }
 %typemap(out) uint8_t* {
   $result = PyString_FromStringAndSize(
-      (const char*)$1, ReturnedBufferSize("$symname", arg3, arg4));
+      (const char*)$1,
+      ($1 == NULL) ? 0 : ReturnedBufferSize("$symname", arg3, arg4));
+}
+
+%typemap (in) const uint8_t* rgb (Py_buffer rgb_buffer) {
+  // NB: with Python < 2.6 the old style buffer protocol may be used:
+  // Py_ssize_t unused;
+  // PyObject_AsReadBuffer($input, (const void**)(&$1), &unused);
+  if (!PyObject_CheckBuffer($input)) {
+    SWIG_exception_fail(SWIG_TypeError,
+                        "in method '$symname', argument $argnum"
+                        " does not support the buffer interface");
+  }
+  if (PyObject_GetBuffer($input, &rgb_buffer, PyBUF_SIMPLE)) {
+    SWIG_exception_fail(SWIG_RuntimeError,
+                        "in method '$symname', unable to get buffer view");
+  }
+  $1 = ($1_ltype)rgb_buffer.buf;
+}
+
+%typemap(freearg) const uint8_t* rgb {
+  PyBuffer_Release(&rgb_buffer$argnum);
 }
 #endif  /* SWIGPYTHON */
 
@@ -128,6 +149,14 @@ static size_t ReturnedBufferSize(
     { "WebPDecodeARGB", 4 },
     { "WebPDecodeBGR",  3 },
     { "WebPDecodeBGRA", 4 },
+    { "wrap_WebPEncodeRGB",  1 },
+    { "wrap_WebPEncodeBGR",  1 },
+    { "wrap_WebPEncodeRGBA", 1 },
+    { "wrap_WebPEncodeBGRA", 1 },
+    { "wrap_WebPEncodeLosslessRGB",  1 },
+    { "wrap_WebPEncodeLosslessBGR",  1 },
+    { "wrap_WebPEncodeLosslessRGBA", 1 },
+    { "wrap_WebPEncodeLosslessBGRA", 1 },
 #endif
     { NULL, 0 }
   };
@@ -321,3 +350,39 @@ LOSSLESS_WRAPPER(WebPEncodeLosslessBGRA)
   }
 %}
 #endif  /* SWIGJAVA */
+
+#ifdef SWIGPYTHON
+%pythoncode %{
+_UNUSED = 1
+%}
+
+%define CALL_ENCODE_LOSSY_WRAPPER(func)
+%pythoncode %{
+def func(rgb, width, height, stride, quality_factor):
+  webp = wrap_##func(
+      rgb, _UNUSED, _UNUSED, width, height, stride, quality_factor)
+  if len(webp[0]) == 0:
+    return None
+  return webp[0]
+%}
+%enddef
+
+%define CALL_ENCODE_LOSSLESS_WRAPPER(func)
+%pythoncode %{
+def func(rgb, width, height, stride):
+  webp = wrap_##func(rgb, _UNUSED, _UNUSED, width, height, stride)
+  if len(webp[0]) == 0:
+    return None
+  return webp[0]
+%}
+%enddef
+
+CALL_ENCODE_LOSSY_WRAPPER(WebPEncodeRGB)
+CALL_ENCODE_LOSSY_WRAPPER(WebPEncodeRGBA)
+CALL_ENCODE_LOSSY_WRAPPER(WebPEncodeBGR)
+CALL_ENCODE_LOSSY_WRAPPER(WebPEncodeBGRA)
+CALL_ENCODE_LOSSLESS_WRAPPER(WebPEncodeLosslessRGB)
+CALL_ENCODE_LOSSLESS_WRAPPER(WebPEncodeLosslessRGBA)
+CALL_ENCODE_LOSSLESS_WRAPPER(WebPEncodeLosslessBGR)
+CALL_ENCODE_LOSSLESS_WRAPPER(WebPEncodeLosslessBGRA)
+#endif  /* SWIGPYTHON */

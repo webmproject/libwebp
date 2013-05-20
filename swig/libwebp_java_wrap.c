@@ -843,6 +843,14 @@ static size_t ReturnedBufferSize(
     { "WebPDecodeARGB", 4 },
     { "WebPDecodeBGR",  3 },
     { "WebPDecodeBGRA", 4 },
+    { "wrap_WebPEncodeRGB",  1 },
+    { "wrap_WebPEncodeBGR",  1 },
+    { "wrap_WebPEncodeRGBA", 1 },
+    { "wrap_WebPEncodeBGRA", 1 },
+    { "wrap_WebPEncodeLosslessRGB",  1 },
+    { "wrap_WebPEncodeLosslessBGR",  1 },
+    { "wrap_WebPEncodeLosslessRGBA", 1 },
+    { "wrap_WebPEncodeLosslessBGRA", 1 },
 #endif
     { NULL, 0 }
   };

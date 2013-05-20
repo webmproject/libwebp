@@ -131,6 +131,60 @@ wrap_WebPEncodeLosslessRGBA = _libwebp.wrap_WebPEncodeLosslessRGBA
 def wrap_WebPEncodeLosslessBGRA(*args):
   return _libwebp.wrap_WebPEncodeLosslessBGRA(*args)
 wrap_WebPEncodeLosslessBGRA = _libwebp.wrap_WebPEncodeLosslessBGRA
+_UNUSED = 1
+
+def WebPEncodeRGB(rgb, width, height, stride, quality_factor):
+  webp = wrap_WebPEncodeRGB(
+      rgb, _UNUSED, _UNUSED, width, height, stride, quality_factor)
+  if len(webp[0]) == 0:
+    return None
+  return webp[0]
+
+def WebPEncodeRGBA(rgb, width, height, stride, quality_factor):
+  webp = wrap_WebPEncodeRGBA(
+      rgb, _UNUSED, _UNUSED, width, height, stride, quality_factor)
+  if len(webp[0]) == 0:
+    return None
+  return webp[0]
+
+def WebPEncodeBGR(rgb, width, height, stride, quality_factor):
+  webp = wrap_WebPEncodeBGR(
+      rgb, _UNUSED, _UNUSED, width, height, stride, quality_factor)
+  if len(webp[0]) == 0:
+    return None
+  return webp[0]
+
+def WebPEncodeBGRA(rgb, width, height, stride, quality_factor):
+  webp = wrap_WebPEncodeBGRA(
+      rgb, _UNUSED, _UNUSED, width, height, stride, quality_factor)
+  if len(webp[0]) == 0:
+    return None
+  return webp[0]
+
+def WebPEncodeLosslessRGB(rgb, width, height, stride):
+  webp = wrap_WebPEncodeLosslessRGB(rgb, _UNUSED, _UNUSED, width, height, stride)
+  if len(webp[0]) == 0:
+    return None
+  return webp[0]
+
+def WebPEncodeLosslessRGBA(rgb, width, height, stride):
+  webp = wrap_WebPEncodeLosslessRGBA(rgb, _UNUSED, _UNUSED, width, height, stride)
+  if len(webp[0]) == 0:
+    return None
+  return webp[0]
+
+def WebPEncodeLosslessBGR(rgb, width, height, stride):
+  webp = wrap_WebPEncodeLosslessBGR(rgb, _UNUSED, _UNUSED, width, height, stride)
+  if len(webp[0]) == 0:
+    return None
+  return webp[0]
+
+def WebPEncodeLosslessBGRA(rgb, width, height, stride):
+  webp = wrap_WebPEncodeLosslessBGRA(rgb, _UNUSED, _UNUSED, width, height, stride)
+  if len(webp[0]) == 0:
+    return None
+  return webp[0]
+
 # This file is compatible with both classic and new-style classes.
 
 
