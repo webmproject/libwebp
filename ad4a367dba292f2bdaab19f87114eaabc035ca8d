@@ -16,6 +16,24 @@
       "revId": "ad4a367dba292f2bdaab19f87114eaabc035ca8d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAYX//+oY\u003d",
+        "filename": "swig/libwebp.i",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-05-21T17:50:39Z",
+      "side": 1,
+      "message": "1.3.40 has this declaration (from arrays_java.i) so besides the appearance of that file which did happen somewhere in 1.3.x, no.\n\nI don\u0027t think this adds any requirements that were already present.",
+      "parentUuid": "AAAAYX///bM\u003d",
+      "revId": "ad4a367dba292f2bdaab19f87114eaabc035ca8d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
