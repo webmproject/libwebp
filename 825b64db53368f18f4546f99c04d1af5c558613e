@@ -16,6 +16,24 @@
       "revId": "825b64db53368f18f4546f99c04d1af5c558613e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAYX//+nE\u003d",
+        "filename": "swig/libwebp_python_wrap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 4666,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-05-21T17:58:01Z",
+      "side": 1,
+      "message": "This is auto-generated; I don\u0027t know of a way to influence this.\nThe struct definition from Python.h is const, though.",
+      "parentUuid": "AAAAYX///bE\u003d",
+      "revId": "825b64db53368f18f4546f99c04d1af5c558613e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
