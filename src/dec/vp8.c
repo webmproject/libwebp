@@ -526,7 +526,8 @@ static const PackedNz kUnpackTab[16] = {
 
 static int ParseResiduals(VP8Decoder* const dec,
                           VP8MB* const mb, VP8BitReader* const token_br) {
-  int out_t_nz, out_l_nz, first;
+  uint32_t out_t_nz, out_l_nz;
+  int first;
   ProbaArray ac_prob;
   const VP8QuantMatrix* const q = &dec->dqm_[dec->segment_];
   int16_t* dst = dec->coeffs_;

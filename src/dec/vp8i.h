@@ -157,10 +157,9 @@ typedef struct {  // filter specs
   uint8_t pad_;          // mostly needed for struct aligning on ARM
 } VP8FInfo;
 
-typedef struct {  // used for syntax-parsing
-  unsigned int nz_:24;       // non-zero AC/DC coeffs (24bit)
-  unsigned int nz_dc_:1;     // non-zero DC coeffs
-  unsigned int pad_:7;
+typedef struct {  // Top/Left Contexts used for syntax-parsing
+  uint8_t nz_;        // non-zero AC/DC coeffs (4bit for luma + 4bit for chroma)
+  uint8_t nz_dc_;     // non-zero DC coeff (1bit)
 } VP8MB;
 
 // Dequantization matrices
