@@ -209,7 +209,7 @@
       // success code
       if (SWIG_IsNewObj(res) {
         ...
-	delete *ptr;
+        delete *ptr;
       } else {
         ...
       }
@@ -310,32 +310,32 @@ typedef struct swig_type_info *(*swig_dycast_func)(void **);
 
 /* Structure to store information on one type */
 typedef struct swig_type_info {
-  const char             *name;			/* mangled name of this type */
-  const char             *str;			/* human readable name of this type */
-  swig_dycast_func        dcast;		/* dynamic cast function down a hierarchy */
-  struct swig_cast_info  *cast;			/* linked list of types that can cast into this type */
-  void                   *clientdata;		/* language specific type data */
-  int                    owndata;		/* flag if the structure owns the clientdata */
+  const char             *name;                 /* mangled name of this type */
+  const char             *str;                  /* human readable name of this type */
+  swig_dycast_func        dcast;                /* dynamic cast function down a hierarchy */
+  struct swig_cast_info  *cast;                 /* linked list of types that can cast into this type */
+  void                   *clientdata;           /* language specific type data */
+  int                    owndata;               /* flag if the structure owns the clientdata */
 } swig_type_info;
 
 /* Structure to store a type and conversion function used for casting */
 typedef struct swig_cast_info {
-  swig_type_info         *type;			/* pointer to type that is equivalent to this type */
-  swig_converter_func     converter;		/* function to cast the void pointers */
-  struct swig_cast_info  *next;			/* pointer to next cast in linked list */
-  struct swig_cast_info  *prev;			/* pointer to the previous cast */
+  swig_type_info         *type;                 /* pointer to type that is equivalent to this type */
+  swig_converter_func     converter;            /* function to cast the void pointers */
+  struct swig_cast_info  *next;                 /* pointer to next cast in linked list */
+  struct swig_cast_info  *prev;                 /* pointer to the previous cast */
 } swig_cast_info;
 
 /* Structure used to store module information
  * Each module generates one structure like this, and the runtime collects
  * all of these structures and stores them in a circularly linked list.*/
 typedef struct swig_module_info {
-  swig_type_info         **types;		/* Array of pointers to swig_type_info structures that are in this module */
-  size_t                 size;		        /* Number of types in this module */
-  struct swig_module_info *next;		/* Pointer to next element in circularly linked list */
-  swig_type_info         **type_initial;	/* Array of initially generated type structures */
-  swig_cast_info         **cast_initial;	/* Array of initially generated casting structures */
-  void                    *clientdata;		/* Language specific module data */
+  swig_type_info         **types;               /* Array of pointers to swig_type_info structures that are in this module */
+  size_t                 size;                  /* Number of types in this module */
+  struct swig_module_info *next;                /* Pointer to next element in circularly linked list */
+  swig_type_info         **type_initial;        /* Array of initially generated type structures */
+  swig_cast_info         **cast_initial;        /* Array of initially generated casting structures */
+  void                    *clientdata;          /* Language specific module data */
 } swig_module_info;
 
 /*
@@ -347,7 +347,7 @@ typedef struct swig_module_info {
 */
 SWIGRUNTIME int
 SWIG_TypeNameComp(const char *f1, const char *l1,
-		  const char *f2, const char *l2) {
+                  const char *f2, const char *l2) {
   for (;(f1 != l1) && (f2 != l2); ++f1, ++f2) {
     while ((*f1 == ' ') && (f1 != l1)) ++f1;
     while ((*f2 == ' ') && (f2 != l2)) ++f2;
@@ -514,7 +514,7 @@ SWIG_TypeClientData(swig_type_info *ti, void *clientdata) {
     if (!cast->converter) {
       swig_type_info *tc = cast->type;
       if (!tc->clientdata) {
-	SWIG_TypeClientData(tc, clientdata);
+        SWIG_TypeClientData(tc, clientdata);
       }
     }
     cast = cast->next;
@@ -537,32 +537,32 @@ SWIG_TypeNewClientData(swig_type_info *ti, void *clientdata) {
 SWIGRUNTIME swig_type_info *
 SWIG_MangledTypeQueryModule(swig_module_info *start,
                             swig_module_info *end,
-		            const char *name) {
+                            const char *name) {
   swig_module_info *iter = start;
   do {
     if (iter->size) {
       register size_t l = 0;
       register size_t r = iter->size - 1;
       do {
-	/* since l+r >= 0, we can (>> 1) instead (/ 2) */
-	register size_t i = (l + r) >> 1;
-	const char *iname = iter->types[i]->name;
-	if (iname) {
-	  register int compare = strcmp(name, iname);
-	  if (compare == 0) {
-	    return iter->types[i];
-	  } else if (compare < 0) {
-	    if (i) {
-	      r = i - 1;
-	    } else {
-	      break;
-	    }
-	  } else if (compare > 0) {
-	    l = i + 1;
-	  }
-	} else {
-	  break; /* should never happen */
-	}
+        /* since l+r >= 0, we can (>> 1) instead (/ 2) */
+        register size_t i = (l + r) >> 1;
+        const char *iname = iter->types[i]->name;
+        if (iname) {
+          register int compare = strcmp(name, iname);
+          if (compare == 0) {
+            return iter->types[i];
+          } else if (compare < 0) {
+            if (i) {
+              r = i - 1;
+            } else {
+              break;
+            }
+          } else if (compare > 0) {
+            l = i + 1;
+          }
+        } else {
+          break; /* should never happen */
+        }
       } while (l <= r);
     }
     iter = iter->next;
@@ -582,7 +582,7 @@ SWIG_MangledTypeQueryModule(swig_module_info *start,
 SWIGRUNTIME swig_type_info *
 SWIG_TypeQueryModule(swig_module_info *start,
                      swig_module_info *end,
-		     const char *name) {
+                     const char *name) {
   /* STEP 1: Search the name field using binary search */
   swig_type_info *ret = SWIG_MangledTypeQueryModule(start, end, name);
   if (ret) {
@@ -594,8 +594,8 @@ SWIG_TypeQueryModule(swig_module_info *start,
     do {
       register size_t i = 0;
       for (; i < iter->size; ++i) {
-	if (iter->types[i]->str && (SWIG_TypeEquiv(iter->types[i]->str, name)))
-	  return iter->types[i];
+        if (iter->types[i]->str && (SWIG_TypeEquiv(iter->types[i]->str, name)))
+          return iter->types[i];
       }
       iter = iter->next;
     } while (iter != end);
@@ -709,18 +709,18 @@ SWIG_UnpackDataName(const char *c, void *ptr, size_t sz, const char *name) {
 #endif
 
 /*  Errors in SWIG */
-#define  SWIG_UnknownError    	   -1
-#define  SWIG_IOError        	   -2
-#define  SWIG_RuntimeError   	   -3
-#define  SWIG_IndexError     	   -4
-#define  SWIG_TypeError      	   -5
-#define  SWIG_DivisionByZero 	   -6
-#define  SWIG_OverflowError  	   -7
-#define  SWIG_SyntaxError    	   -8
-#define  SWIG_ValueError     	   -9
-#define  SWIG_SystemError    	   -10
-#define  SWIG_AttributeError 	   -11
-#define  SWIG_MemoryError    	   -12
+#define  SWIG_UnknownError         -1
+#define  SWIG_IOError              -2
+#define  SWIG_RuntimeError         -3
+#define  SWIG_IndexError           -4
+#define  SWIG_TypeError            -5
+#define  SWIG_DivisionByZero       -6
+#define  SWIG_OverflowError        -7
+#define  SWIG_SyntaxError          -8
+#define  SWIG_ValueError           -9
+#define  SWIG_SystemError          -10
+#define  SWIG_AttributeError       -11
+#define  SWIG_MemoryError          -12
 #define  SWIG_NullReferenceError   -13
 
 
@@ -902,13 +902,13 @@ static long PyNumber_AsSsize_t (PyObject *x, void *SWIGUNUSEDPARM(exc))
 #endif
 
 #if PY_VERSION_HEX < 0x02040000
-#define Py_VISIT(op)				\
-  do { 						\
-    if (op) {					\
-      int vret = visit((op), arg);		\
-      if (vret)					\
-        return vret;				\
-    }						\
+#define Py_VISIT(op)                            \
+  do {                                          \
+    if (op) {                                   \
+      int vret = visit((op), arg);              \
+      if (vret)                                 \
+        return vret;                            \
+    }                                           \
   } while (0)
 #endif
 
@@ -1147,7 +1147,7 @@ SWIGRUNTIME PyObject* SWIG_PyInstanceMethod_New(PyObject *SWIGUNUSEDPARM(self), 
 #define SWIG_NewPointerObj(ptr, type, flags)            SWIG_Python_NewPointerObj(NULL, ptr, type, flags)
 #endif
 
-#define SWIG_InternalNewPointerObj(ptr, type, flags)	SWIG_Python_NewPointerObj(NULL, ptr, type, flags)
+#define SWIG_InternalNewPointerObj(ptr, type, flags)    SWIG_Python_NewPointerObj(NULL, ptr, type, flags)
 
 #define SWIG_CheckImplicit(ty)                          SWIG_Python_CheckImplicit(ty)
 #define SWIG_AcquirePtr(ptr, src)                       SWIG_Python_AcquirePtr(ptr, src)
@@ -1177,10 +1177,10 @@ SWIGRUNTIME PyObject* SWIG_PyInstanceMethod_New(PyObject *SWIGUNUSEDPARM(self), 
 #define SWIG_NewClientData(obj)                         SwigPyClientData_New(obj)
 
 #define SWIG_SetErrorObj                                SWIG_Python_SetErrorObj
-#define SWIG_SetErrorMsg                        	SWIG_Python_SetErrorMsg
-#define SWIG_ErrorType(code)                    	SWIG_Python_ErrorType(code)
-#define SWIG_Error(code, msg)            		SWIG_Python_SetErrorMsg(SWIG_ErrorType(code), msg)
-#define SWIG_fail                        		goto fail
+#define SWIG_SetErrorMsg                                SWIG_Python_SetErrorMsg
+#define SWIG_ErrorType(code)                            SWIG_Python_ErrorType(code)
+#define SWIG_Error(code, msg)                           SWIG_Python_SetErrorMsg(SWIG_ErrorType(code), msg)
+#define SWIG_fail                                       goto fail
 
 
 /* Runtime API implementation */
@@ -1288,7 +1288,7 @@ SWIG_Python_UnpackTuple(PyObject *args, const char *name, Py_ssize_t min, Py_ssi
       return 1;
     } else {
       PyErr_Format(PyExc_TypeError, "%s expected %s%d arguments, got none",
-		   name, (min == max ? "" : "at least "), (int)min);
+                   name, (min == max ? "" : "at least "), (int)min);
       return 0;
     }
   }
@@ -1297,7 +1297,7 @@ SWIG_Python_UnpackTuple(PyObject *args, const char *name, Py_ssize_t min, Py_ssi
       register int i;
       objs[0] = args;
       for (i = 1; i < max; ++i) {
-	objs[i] = 0;
+        objs[i] = 0;
       }
       return 2;
     }
@@ -1307,19 +1307,19 @@ SWIG_Python_UnpackTuple(PyObject *args, const char *name, Py_ssize_t min, Py_ssi
     register Py_ssize_t l = PyTuple_GET_SIZE(args);
     if (l < min) {
       PyErr_Format(PyExc_TypeError, "%s expected %s%d arguments, got %d",
-		   name, (min == max ? "" : "at least "), (int)min, (int)l);
+                   name, (min == max ? "" : "at least "), (int)min, (int)l);
       return 0;
     } else if (l > max) {
       PyErr_Format(PyExc_TypeError, "%s expected %s%d arguments, got %d",
-		   name, (min == max ? "" : "at most "), (int)max, (int)l);
+                   name, (min == max ? "" : "at most "), (int)max, (int)l);
       return 0;
     } else {
       register int i;
       for (i = 0; i < l; ++i) {
-	objs[i] = PyTuple_GET_ITEM(args, i);
+        objs[i] = PyTuple_GET_ITEM(args, i);
       }
       for (; l < max; ++l) {
-	objs[l] = 0;
+        objs[l] = 0;
       }
       return i + 1;
     }
@@ -1328,9 +1328,9 @@ SWIG_Python_UnpackTuple(PyObject *args, const char *name, Py_ssize_t min, Py_ssi
 
 /* A functor is a function object with one single object argument */
 #if PY_VERSION_HEX >= 0x02020000
-#define SWIG_Python_CallFunctor(functor, obj)	        PyObject_CallFunctionObjArgs(functor, obj, NULL);
+#define SWIG_Python_CallFunctor(functor, obj)           PyObject_CallFunctionObjArgs(functor, obj, NULL);
 #else
-#define SWIG_Python_CallFunctor(functor, obj)	        PyObject_CallFunction(functor, "O", obj);
+#define SWIG_Python_CallFunctor(functor, obj)           PyObject_CallFunction(functor, "O", obj);
 #endif
 
 /*
@@ -1353,8 +1353,8 @@ SWIG_Python_UnpackTuple(PyObject *args, const char *name, Py_ssize_t min, Py_ssi
 
 #define SWIG_POINTER_IMPLICIT_CONV  (SWIG_POINTER_DISOWN   << 1)
 
-#define SWIG_BUILTIN_TP_INIT	    (SWIG_POINTER_OWN << 2)
-#define SWIG_BUILTIN_INIT	    (SWIG_BUILTIN_TP_INIT | SWIG_POINTER_OWN)
+#define SWIG_BUILTIN_TP_INIT        (SWIG_POINTER_OWN << 2)
+#define SWIG_BUILTIN_INIT           (SWIG_BUILTIN_TP_INIT | SWIG_POINTER_OWN)
 
 #ifdef __cplusplus
 extern "C" {
@@ -1448,11 +1448,11 @@ SwigPyClientData_New(PyObject* obj)
       data->newraw = PyObject_GetAttrString(data->klass, (char *)"__new__");
 #endif
       if (data->newraw) {
-	Py_INCREF(data->newraw);
-	data->newargs = PyTuple_New(1);
-	PyTuple_SetItem(data->newargs, 0, obj);
+        Py_INCREF(data->newraw);
+        data->newargs = PyTuple_New(1);
+        PyTuple_SetItem(data->newargs, 0, obj);
       } else {
-	data->newargs = obj;
+        data->newargs = obj;
       }
       Py_INCREF(data->newargs);
     }
@@ -1516,11 +1516,11 @@ SwigPyObject_format(const char* fmt, SwigPyObject *v)
       PyObject *ofmt = SWIG_Python_str_FromChar(fmt);
       if (ofmt) {
 #if PY_VERSION_HEX >= 0x03000000
-	res = PyUnicode_Format(ofmt,args);
+        res = PyUnicode_Format(ofmt,args);
 #else
-	res = PyString_Format(ofmt,args);
+        res = PyString_Format(ofmt,args);
 #endif
-	Py_DECREF(ofmt);
+        Py_DECREF(ofmt);
       }
       Py_DECREF(args);
     }
@@ -1667,14 +1667,14 @@ SwigPyObject_dealloc(PyObject *v)
       /* destroy is always a VARARGS method */
       PyObject *res;
       if (data->delargs) {
-	/* we need to create a temporary object to carry the destroy operation */
-	PyObject *tmp = SwigPyObject_New(sobj->ptr, ty, 0);
-	res = SWIG_Python_CallFunctor(destroy, tmp);
-	Py_DECREF(tmp);
+        /* we need to create a temporary object to carry the destroy operation */
+        PyObject *tmp = SwigPyObject_New(sobj->ptr, ty, 0);
+        res = SWIG_Python_CallFunctor(destroy, tmp);
+        Py_DECREF(tmp);
       } else {
-	PyCFunction meth = PyCFunction_GET_FUNCTION(destroy);
-	PyObject *mself = PyCFunction_GET_SELF(destroy);
-	res = ((*meth)(mself, v));
+        PyCFunction meth = PyCFunction_GET_FUNCTION(destroy);
+        PyObject *mself = PyCFunction_GET_SELF(destroy);
+        res = ((*meth)(mself, v));
       }
       Py_XDECREF(res);
     }
@@ -1764,17 +1764,17 @@ SwigPyObject_own(PyObject *v, PyObject *args)
       PyObject *obj = PyBool_FromLong(sobj->own);
       if (val) {
 #ifdef METH_NOARGS
-	if (PyObject_IsTrue(val)) {
-	  SwigPyObject_acquire(v);
-	} else {
-	  SwigPyObject_disown(v);
-	}
+        if (PyObject_IsTrue(val)) {
+          SwigPyObject_acquire(v);
+        } else {
+          SwigPyObject_disown(v);
+        }
 #else
-	if (PyObject_IsTrue(val)) {
-	  SwigPyObject_acquire(v,args);
-	} else {
-	  SwigPyObject_disown(v,args);
-	}
+        if (PyObject_IsTrue(val)) {
+          SwigPyObject_acquire(v,args);
+        } else {
+          SwigPyObject_disown(v,args);
+        }
 #endif
       }
       return obj;
@@ -1832,12 +1832,12 @@ SwigPyObject_TypeOnce(void) {
     (unaryfunc)0,  /*nb_positive*/
     (unaryfunc)0,  /*nb_absolute*/
     (inquiry)0,    /*nb_nonzero*/
-    0,		   /*nb_invert*/
-    0,		   /*nb_lshift*/
-    0,		   /*nb_rshift*/
-    0,		   /*nb_and*/
-    0,		   /*nb_xor*/
-    0,		   /*nb_or*/
+    0,             /*nb_invert*/
+    0,             /*nb_lshift*/
+    0,             /*nb_rshift*/
+    0,             /*nb_and*/
+    0,             /*nb_xor*/
+    0,             /*nb_or*/
 #if PY_VERSION_HEX < 0x03000000
     0,   /*nb_coerce*/
 #endif
@@ -2221,16 +2221,16 @@ SWIG_Python_GetSwigThis(PyObject *pyobj)
     } else {
 #ifdef PyWeakref_CheckProxy
       if (PyWeakref_CheckProxy(pyobj)) {
-	PyObject *wobj = PyWeakref_GET_OBJECT(pyobj);
-	return wobj ? SWIG_Python_GetSwigThis(wobj) : 0;
+        PyObject *wobj = PyWeakref_GET_OBJECT(pyobj);
+        return wobj ? SWIG_Python_GetSwigThis(wobj) : 0;
       }
 #endif
       obj = PyObject_GetAttr(pyobj,SWIG_This());
       if (obj) {
-	Py_DECREF(obj);
+        Py_DECREF(obj);
       } else {
-	if (PyErr_Occurred()) PyErr_Clear();
-	return 0;
+        if (PyErr_Occurred()) PyErr_Clear();
+        return 0;
       }
     }
   }
@@ -2433,12 +2433,12 @@ SWIG_Python_NewShadowInstance(SwigPyClientData *data, PyObject *swig_this)
 #if !defined(SWIG_PYTHON_SLOW_GETSET_THIS)
       PyObject **dictptr = _PyObject_GetDictPtr(inst);
       if (dictptr != NULL) {
-	PyObject *dict = *dictptr;
-	if (dict == NULL) {
-	  dict = PyDict_New();
-	  *dictptr = dict;
-	  PyDict_SetItem(dict, SWIG_This(), swig_this);
-	}
+        PyObject *dict = *dictptr;
+        if (dict == NULL) {
+          dict = PyDict_New();
+          *dictptr = dict;
+          PyDict_SetItem(dict, SWIG_This(), swig_this);
+        }
       }
 #else
       PyObject *key = SWIG_This();
@@ -2548,7 +2548,7 @@ SWIG_Python_NewPointerObj(PyObject *self, void *ptr, swig_type_info *type, int f
       if (newobj->ptr) {
         PyObject *next_self = clientdata->pytype->tp_alloc(clientdata->pytype, 0);
         while (newobj->next)
-	  newobj = (SwigPyObject *) newobj->next;
+          newobj = (SwigPyObject *) newobj->next;
         newobj->next = next_self;
         newobj = (SwigPyObject *)next_self;
       }
@@ -2608,7 +2608,7 @@ SWIG_Python_GetModule(void) {
     type_pointer = PyCapsule_Import(SWIGPY_CAPSULE_NAME, 0);
 # else
     type_pointer = PyCObject_Import((char*)"swig_runtime_data" SWIG_RUNTIME_VERSION,
-				    (char*)"type_pointer" SWIG_TYPE_TABLE_NAME);
+                                    (char*)"type_pointer" SWIG_TYPE_TABLE_NAME);
 # endif
     if (PyErr_Occurred()) {
       PyErr_Clear();
@@ -2628,12 +2628,12 @@ PyModule_AddObject(PyObject *m, char *name, PyObject *o)
   PyObject *dict;
   if (!PyModule_Check(m)) {
     PyErr_SetString(PyExc_TypeError,
-		    "PyModule_AddObject() needs module as first arg");
+                    "PyModule_AddObject() needs module as first arg");
     return SWIG_ERROR;
   }
   if (!o) {
     PyErr_SetString(PyExc_TypeError,
-		    "PyModule_AddObject() needs non-NULL value");
+                    "PyModule_AddObject() needs non-NULL value");
     return SWIG_ERROR;
   }
 
@@ -2641,7 +2641,7 @@ PyModule_AddObject(PyObject *m, char *name, PyObject *o)
   if (dict == NULL) {
     /* Internal error -- modules must have a dict! */
     PyErr_Format(PyExc_SystemError, "module '%s' has no __dict__",
-		 PyModule_GetName(m));
+                 PyModule_GetName(m));
     return SWIG_ERROR;
   }
   if (PyDict_SetItemString(dict, name, o))
@@ -2760,9 +2760,9 @@ SWIG_Python_AddErrMesg(const char* mesg, int infront)
       Py_XINCREF(type);
       PyErr_Clear();
       if (infront) {
-	PyErr_Format(type, "%s %s", mesg, tmp = SWIG_Python_str_AsChar(old_str));
+        PyErr_Format(type, "%s %s", mesg, tmp = SWIG_Python_str_AsChar(old_str));
       } else {
-	PyErr_Format(type, "%s %s", tmp = SWIG_Python_str_AsChar(old_str), mesg);
+        PyErr_Format(type, "%s %s", tmp = SWIG_Python_str_AsChar(old_str), mesg);
       }
       SWIG_Python_str_DelForPy3(tmp);
       Py_DECREF(old_str);
@@ -2802,27 +2802,27 @@ SWIG_Python_TypeError(const char *type, PyObject *obj)
     if (obj && SwigPyObject_Check(obj)) {
       const char *otype = (const char *) SwigPyObject_GetDesc(obj);
       if (otype) {
-	PyErr_Format(PyExc_TypeError, "a '%s' is expected, 'SwigPyObject(%s)' is received",
-		     type, otype);
-	return;
+        PyErr_Format(PyExc_TypeError, "a '%s' is expected, 'SwigPyObject(%s)' is received",
+                     type, otype);
+        return;
       }
     } else
 #endif
     {
       const char *otype = (obj ? obj->ob_type->tp_name : 0);
       if (otype) {
-	PyObject *str = PyObject_Str(obj);
-	const char *cstr = str ? SWIG_Python_str_AsChar(str) : 0;
-	if (cstr) {
-	  PyErr_Format(PyExc_TypeError, "a '%s' is expected, '%s(%s)' is received",
-		       type, otype, cstr);
+        PyObject *str = PyObject_Str(obj);
+        const char *cstr = str ? SWIG_Python_str_AsChar(str) : 0;
+        if (cstr) {
+          PyErr_Format(PyExc_TypeError, "a '%s' is expected, '%s(%s)' is received",
+                       type, otype, cstr);
           SWIG_Python_str_DelForPy3(cstr);
-	} else {
-	  PyErr_Format(PyExc_TypeError, "a '%s' is expected, '%s' is received",
-		       type, otype);
-	}
-	Py_XDECREF(str);
-	return;
+        } else {
+          PyErr_Format(PyExc_TypeError, "a '%s' is expected, '%s' is received",
+                       type, otype);
+        }
+        Py_XDECREF(str);
+        return;
       }
     }
     PyErr_Format(PyExc_TypeError, "a '%s' is expected", type);
@@ -3003,33 +3003,33 @@ SWIG_AsCharPtrAndSize(PyObject *obj, char** cptr, size_t* psize, int *alloc)
 #endif
     if (cptr) {
       if (alloc) {
-	/*
-	   In python the user should not be able to modify the inner
-	   string representation. To warranty that, if you define
-	   SWIG_PYTHON_SAFE_CSTRINGS, a new/copy of the python string
-	   buffer is always returned.
+        /*
+           In python the user should not be able to modify the inner
+           string representation. To warranty that, if you define
+           SWIG_PYTHON_SAFE_CSTRINGS, a new/copy of the python string
+           buffer is always returned.
 
-	   The default behavior is just to return the pointer value,
-	   so, be careful.
-	*/
+           The default behavior is just to return the pointer value,
+           so, be careful.
+        */
 #if defined(SWIG_PYTHON_SAFE_CSTRINGS)
-	if (*alloc != SWIG_OLDOBJ)
+        if (*alloc != SWIG_OLDOBJ)
 #else
-	if (*alloc == SWIG_NEWOBJ)
+        if (*alloc == SWIG_NEWOBJ)
 #endif
-	  {
-	    *cptr = (char *)memcpy((char *)malloc((len + 1)*sizeof(char)), cstr, sizeof(char)*(len + 1));
-	    *alloc = SWIG_NEWOBJ;
-	  }
-	else {
-	  *cptr = cstr;
-	  *alloc = SWIG_OLDOBJ;
-	}
+          {
+            *cptr = (char *)memcpy((char *)malloc((len + 1)*sizeof(char)), cstr, sizeof(char)*(len + 1));
+            *alloc = SWIG_NEWOBJ;
+          }
+        else {
+          *cptr = cstr;
+          *alloc = SWIG_OLDOBJ;
+        }
       } else {
         #if PY_VERSION_HEX>=0x03000000
         assert(0); /* Should never reach here in Python 3 */
         #endif
-	*cptr = SWIG_Python_str_AsChar(obj);
+        *cptr = SWIG_Python_str_AsChar(obj);
       }
     }
     if (psize) *psize = len + 1;
@@ -3042,10 +3042,10 @@ SWIG_AsCharPtrAndSize(PyObject *obj, char** cptr, size_t* psize, int *alloc)
     if (pchar_descriptor) {
       void* vptr = 0;
       if (SWIG_ConvertPtr(obj, &vptr, pchar_descriptor, 0) == SWIG_OK) {
-	if (cptr) *cptr = (char *) vptr;
-	if (psize) *psize = vptr ? (strlen((char *)vptr) + 1) : 0;
-	if (alloc) *alloc = SWIG_OLDOBJ;
-	return SWIG_OK;
+        if (cptr) *cptr = (char *) vptr;
+        if (psize) *psize = vptr ? (strlen((char *)vptr) + 1) : 0;
+        if (alloc) *alloc = SWIG_OLDOBJ;
+        return SWIG_OK;
       }
     }
   }
@@ -3085,10 +3085,10 @@ SWIG_AsVal_double (PyObject *obj, double *val)
     if (!dispatch) {
       long v = PyLong_AsLong(obj);
       if (!PyErr_Occurred()) {
-	if (val) *val = v;
-	return SWIG_AddCast(SWIG_AddCast(SWIG_OK));
+        if (val) *val = v;
+        return SWIG_AddCast(SWIG_AddCast(SWIG_OK));
       } else {
-	PyErr_Clear();
+        PyErr_Clear();
       }
     }
   }
@@ -3167,8 +3167,8 @@ SWIG_AsVal_unsigned_SS_long (PyObject *obj, unsigned long *val)
       double d;
       int res = SWIG_AddCast(SWIG_AsVal_double (obj,&d));
       if (SWIG_IsOK(res) && SWIG_CanCastAsInteger(&d, 0, ULONG_MAX)) {
-	if (val) *val = (unsigned long)(d);
-	return res;
+        if (val) *val = (unsigned long)(d);
+        return res;
       }
     }
   }
@@ -3218,6 +3218,14 @@ static size_t ReturnedBufferSize(
     { "WebPDecodeARGB", 4 },
     { "WebPDecodeBGR",  3 },
     { "WebPDecodeBGRA", 4 },
+    { "wrap_WebPEncodeRGB",  1 },
+    { "wrap_WebPEncodeBGR",  1 },
+    { "wrap_WebPEncodeRGBA", 1 },
+    { "wrap_WebPEncodeBGRA", 1 },
+    { "wrap_WebPEncodeLosslessRGB",  1 },
+    { "wrap_WebPEncodeLosslessBGR",  1 },
+    { "wrap_WebPEncodeLosslessRGBA", 1 },
+    { "wrap_WebPEncodeLosslessBGRA", 1 },
 #endif
     { NULL, 0 }
   };
@@ -3347,8 +3355,8 @@ SWIG_AsVal_long (PyObject *obj, long* val)
       double d;
       int res = SWIG_AddCast(SWIG_AsVal_double (obj,&d));
       if (SWIG_IsOK(res) && SWIG_CanCastAsInteger(&d, LONG_MIN, LONG_MAX)) {
-	if (val) *val = (long)(d);
-	return res;
+        if (val) *val = (long)(d);
+        return res;
       }
     }
   }
@@ -3481,7 +3489,8 @@ SWIGINTERN PyObject *_wrap_WebPDecodeRGB(PyObject *SWIGUNUSEDPARM(self), PyObjec
   result = (uint8_t *)WebPDecodeRGB((uint8_t const *)arg1,arg2,arg3,arg4);
   {
     resultobj = PyString_FromStringAndSize(
-      (const char*)result, ReturnedBufferSize("WebPDecodeRGB", arg3, arg4));
+      (const char*)result,
+      (result == NULL) ? 0 : ReturnedBufferSize("WebPDecodeRGB", arg3, arg4));
   }
   if (SWIG_IsTmpObj(res3)) {
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg3)));
@@ -3533,7 +3542,8 @@ SWIGINTERN PyObject *_wrap_WebPDecodeRGBA(PyObject *SWIGUNUSEDPARM(self), PyObje
   result = (uint8_t *)WebPDecodeRGBA((uint8_t const *)arg1,arg2,arg3,arg4);
   {
     resultobj = PyString_FromStringAndSize(
-      (const char*)result, ReturnedBufferSize("WebPDecodeRGBA", arg3, arg4));
+      (const char*)result,
+      (result == NULL) ? 0 : ReturnedBufferSize("WebPDecodeRGBA", arg3, arg4));
   }
   if (SWIG_IsTmpObj(res3)) {
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg3)));
@@ -3585,7 +3595,8 @@ SWIGINTERN PyObject *_wrap_WebPDecodeARGB(PyObject *SWIGUNUSEDPARM(self), PyObje
   result = (uint8_t *)WebPDecodeARGB((uint8_t const *)arg1,arg2,arg3,arg4);
   {
     resultobj = PyString_FromStringAndSize(
-      (const char*)result, ReturnedBufferSize("WebPDecodeARGB", arg3, arg4));
+      (const char*)result,
+      (result == NULL) ? 0 : ReturnedBufferSize("WebPDecodeARGB", arg3, arg4));
   }
   if (SWIG_IsTmpObj(res3)) {
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg3)));
@@ -3637,7 +3648,8 @@ SWIGINTERN PyObject *_wrap_WebPDecodeBGR(PyObject *SWIGUNUSEDPARM(self), PyObjec
   result = (uint8_t *)WebPDecodeBGR((uint8_t const *)arg1,arg2,arg3,arg4);
   {
     resultobj = PyString_FromStringAndSize(
-      (const char*)result, ReturnedBufferSize("WebPDecodeBGR", arg3, arg4));
+      (const char*)result,
+      (result == NULL) ? 0 : ReturnedBufferSize("WebPDecodeBGR", arg3, arg4));
   }
   if (SWIG_IsTmpObj(res3)) {
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg3)));
@@ -3689,7 +3701,8 @@ SWIGINTERN PyObject *_wrap_WebPDecodeBGRA(PyObject *SWIGUNUSEDPARM(self), PyObje
   result = (uint8_t *)WebPDecodeBGRA((uint8_t const *)arg1,arg2,arg3,arg4);
   {
     resultobj = PyString_FromStringAndSize(
-      (const char*)result, ReturnedBufferSize("WebPDecodeBGRA", arg3, arg4));
+      (const char*)result,
+      (result == NULL) ? 0 : ReturnedBufferSize("WebPDecodeBGRA", arg3, arg4));
   }
   if (SWIG_IsTmpObj(res3)) {
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg3)));
@@ -3735,8 +3748,7 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeRGB(PyObject *SWIGUNUSEDPARM(self), Py
   int arg6 ;
   int arg7 ;
   float arg8 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
+  Py_buffer rgb_buffer1 ;
   int temp2 ;
   int res2 = 0 ;
   int temp3 ;
@@ -3762,11 +3774,21 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeRGB(PyObject *SWIGUNUSEDPARM(self), Py
 
   arg4 = &temp4;
   if (!PyArg_ParseTuple(args,(char *)"OOOOOOO:wrap_WebPEncodeRGB",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_uint8_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "wrap_WebPEncodeRGB" "', argument " "1"" of type '" "uint8_t const *""'");
+  {
+    // NB: with Python < 2.6 the old style buffer protocol may be used:
+    // Py_ssize_t unused;
+    // PyObject_AsReadBuffer(obj0, (const void**)(&arg1), &unused);
+    if (!PyObject_CheckBuffer(obj0)) {
+      SWIG_exception_fail(SWIG_TypeError,
+        "in method 'wrap_WebPEncodeRGB', argument 1"
+        " does not support the buffer interface");
+    }
+    if (PyObject_GetBuffer(obj0, &rgb_buffer1, PyBUF_SIMPLE)) {
+      SWIG_exception_fail(SWIG_RuntimeError,
+        "in method 'wrap_WebPEncodeRGB', unable to get buffer view");
+    }
+    arg1 = (uint8_t *)rgb_buffer1.buf;
   }
-  arg1 = (uint8_t *)(argp1);
   if (!(SWIG_IsOK((res2 = SWIG_ConvertPtr(obj1,SWIG_as_voidptrptr(&arg2),SWIGTYPE_p_int,0))))) {
     int val;
     int ecode = SWIG_AsVal_int(obj1, &val);
@@ -3810,7 +3832,8 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeRGB(PyObject *SWIGUNUSEDPARM(self), Py
   result = (uint8_t *)wrap_WebPEncodeRGB((uint8_t const *)arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);
   {
     resultobj = PyString_FromStringAndSize(
-      (const char*)result, ReturnedBufferSize("wrap_WebPEncodeRGB", arg3, arg4));
+      (const char*)result,
+      (result == NULL) ? 0 : ReturnedBufferSize("wrap_WebPEncodeRGB", arg3, arg4));
   }
   if (SWIG_IsTmpObj(res4)) {
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg4)));
@@ -3818,11 +3841,17 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeRGB(PyObject *SWIGUNUSEDPARM(self), Py
     int new_flags = SWIG_IsNewObj(res4) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg4), SWIGTYPE_p_int, new_flags));
   }
+  {
+    PyBuffer_Release(&rgb_buffer1);
+  }
   if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   free(result);
   return resultobj;
 fail:
+  {
+    PyBuffer_Release(&rgb_buffer1);
+  }
   if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   return NULL;
@@ -3839,8 +3868,7 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeBGR(PyObject *SWIGUNUSEDPARM(self), Py
   int arg6 ;
   int arg7 ;
   float arg8 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
+  Py_buffer rgb_buffer1 ;
   int temp2 ;
   int res2 = 0 ;
   int temp3 ;
@@ -3866,11 +3894,21 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeBGR(PyObject *SWIGUNUSEDPARM(self), Py
 
   arg4 = &temp4;
   if (!PyArg_ParseTuple(args,(char *)"OOOOOOO:wrap_WebPEncodeBGR",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_uint8_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "wrap_WebPEncodeBGR" "', argument " "1"" of type '" "uint8_t const *""'");
+  {
+    // NB: with Python < 2.6 the old style buffer protocol may be used:
+    // Py_ssize_t unused;
+    // PyObject_AsReadBuffer(obj0, (const void**)(&arg1), &unused);
+    if (!PyObject_CheckBuffer(obj0)) {
+      SWIG_exception_fail(SWIG_TypeError,
+        "in method 'wrap_WebPEncodeBGR', argument 1"
+        " does not support the buffer interface");
+    }
+    if (PyObject_GetBuffer(obj0, &rgb_buffer1, PyBUF_SIMPLE)) {
+      SWIG_exception_fail(SWIG_RuntimeError,
+        "in method 'wrap_WebPEncodeBGR', unable to get buffer view");
+    }
+    arg1 = (uint8_t *)rgb_buffer1.buf;
   }
-  arg1 = (uint8_t *)(argp1);
   if (!(SWIG_IsOK((res2 = SWIG_ConvertPtr(obj1,SWIG_as_voidptrptr(&arg2),SWIGTYPE_p_int,0))))) {
     int val;
     int ecode = SWIG_AsVal_int(obj1, &val);
@@ -3914,7 +3952,8 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeBGR(PyObject *SWIGUNUSEDPARM(self), Py
   result = (uint8_t *)wrap_WebPEncodeBGR((uint8_t const *)arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);
   {
     resultobj = PyString_FromStringAndSize(
-      (const char*)result, ReturnedBufferSize("wrap_WebPEncodeBGR", arg3, arg4));
+      (const char*)result,
+      (result == NULL) ? 0 : ReturnedBufferSize("wrap_WebPEncodeBGR", arg3, arg4));
   }
   if (SWIG_IsTmpObj(res4)) {
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg4)));
@@ -3922,11 +3961,17 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeBGR(PyObject *SWIGUNUSEDPARM(self), Py
     int new_flags = SWIG_IsNewObj(res4) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg4), SWIGTYPE_p_int, new_flags));
   }
+  {
+    PyBuffer_Release(&rgb_buffer1);
+  }
   if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   free(result);
   return resultobj;
 fail:
+  {
+    PyBuffer_Release(&rgb_buffer1);
+  }
   if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   return NULL;
@@ -3943,8 +3988,7 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeRGBA(PyObject *SWIGUNUSEDPARM(self), P
   int arg6 ;
   int arg7 ;
   float arg8 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
+  Py_buffer rgb_buffer1 ;
   int temp2 ;
   int res2 = 0 ;
   int temp3 ;
@@ -3970,11 +4014,21 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeRGBA(PyObject *SWIGUNUSEDPARM(self), P
 
   arg4 = &temp4;
   if (!PyArg_ParseTuple(args,(char *)"OOOOOOO:wrap_WebPEncodeRGBA",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_uint8_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "wrap_WebPEncodeRGBA" "', argument " "1"" of type '" "uint8_t const *""'");
+  {
+    // NB: with Python < 2.6 the old style buffer protocol may be used:
+    // Py_ssize_t unused;
+    // PyObject_AsReadBuffer(obj0, (const void**)(&arg1), &unused);
+    if (!PyObject_CheckBuffer(obj0)) {
+      SWIG_exception_fail(SWIG_TypeError,
+        "in method 'wrap_WebPEncodeRGBA', argument 1"
+        " does not support the buffer interface");
+    }
+    if (PyObject_GetBuffer(obj0, &rgb_buffer1, PyBUF_SIMPLE)) {
+      SWIG_exception_fail(SWIG_RuntimeError,
+        "in method 'wrap_WebPEncodeRGBA', unable to get buffer view");
+    }
+    arg1 = (uint8_t *)rgb_buffer1.buf;
   }
-  arg1 = (uint8_t *)(argp1);
   if (!(SWIG_IsOK((res2 = SWIG_ConvertPtr(obj1,SWIG_as_voidptrptr(&arg2),SWIGTYPE_p_int,0))))) {
     int val;
     int ecode = SWIG_AsVal_int(obj1, &val);
@@ -4018,7 +4072,8 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeRGBA(PyObject *SWIGUNUSEDPARM(self), P
   result = (uint8_t *)wrap_WebPEncodeRGBA((uint8_t const *)arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);
   {
     resultobj = PyString_FromStringAndSize(
-      (const char*)result, ReturnedBufferSize("wrap_WebPEncodeRGBA", arg3, arg4));
+      (const char*)result,
+      (result == NULL) ? 0 : ReturnedBufferSize("wrap_WebPEncodeRGBA", arg3, arg4));
   }
   if (SWIG_IsTmpObj(res4)) {
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg4)));
@@ -4026,11 +4081,17 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeRGBA(PyObject *SWIGUNUSEDPARM(self), P
     int new_flags = SWIG_IsNewObj(res4) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg4), SWIGTYPE_p_int, new_flags));
   }
+  {
+    PyBuffer_Release(&rgb_buffer1);
+  }
   if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   free(result);
   return resultobj;
 fail:
+  {
+    PyBuffer_Release(&rgb_buffer1);
+  }
   if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   return NULL;
@@ -4047,8 +4108,7 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeBGRA(PyObject *SWIGUNUSEDPARM(self), P
   int arg6 ;
   int arg7 ;
   float arg8 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
+  Py_buffer rgb_buffer1 ;
   int temp2 ;
   int res2 = 0 ;
   int temp3 ;
@@ -4074,11 +4134,21 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeBGRA(PyObject *SWIGUNUSEDPARM(self), P
 
   arg4 = &temp4;
   if (!PyArg_ParseTuple(args,(char *)"OOOOOOO:wrap_WebPEncodeBGRA",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_uint8_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "wrap_WebPEncodeBGRA" "', argument " "1"" of type '" "uint8_t const *""'");
+  {
+    // NB: with Python < 2.6 the old style buffer protocol may be used:
+    // Py_ssize_t unused;
+    // PyObject_AsReadBuffer(obj0, (const void**)(&arg1), &unused);
+    if (!PyObject_CheckBuffer(obj0)) {
+      SWIG_exception_fail(SWIG_TypeError,
+        "in method 'wrap_WebPEncodeBGRA', argument 1"
+        " does not support the buffer interface");
+    }
+    if (PyObject_GetBuffer(obj0, &rgb_buffer1, PyBUF_SIMPLE)) {
+      SWIG_exception_fail(SWIG_RuntimeError,
+        "in method 'wrap_WebPEncodeBGRA', unable to get buffer view");
+    }
+    arg1 = (uint8_t *)rgb_buffer1.buf;
   }
-  arg1 = (uint8_t *)(argp1);
   if (!(SWIG_IsOK((res2 = SWIG_ConvertPtr(obj1,SWIG_as_voidptrptr(&arg2),SWIGTYPE_p_int,0))))) {
     int val;
     int ecode = SWIG_AsVal_int(obj1, &val);
@@ -4122,7 +4192,8 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeBGRA(PyObject *SWIGUNUSEDPARM(self), P
   result = (uint8_t *)wrap_WebPEncodeBGRA((uint8_t const *)arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);
   {
     resultobj = PyString_FromStringAndSize(
-      (const char*)result, ReturnedBufferSize("wrap_WebPEncodeBGRA", arg3, arg4));
+      (const char*)result,
+      (result == NULL) ? 0 : ReturnedBufferSize("wrap_WebPEncodeBGRA", arg3, arg4));
   }
   if (SWIG_IsTmpObj(res4)) {
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg4)));
@@ -4130,11 +4201,17 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeBGRA(PyObject *SWIGUNUSEDPARM(self), P
     int new_flags = SWIG_IsNewObj(res4) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg4), SWIGTYPE_p_int, new_flags));
   }
+  {
+    PyBuffer_Release(&rgb_buffer1);
+  }
   if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   free(result);
   return resultobj;
 fail:
+  {
+    PyBuffer_Release(&rgb_buffer1);
+  }
   if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   return NULL;
@@ -4150,8 +4227,7 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessRGB(PyObject *SWIGUNUSEDPARM(s
   int arg5 ;
   int arg6 ;
   int arg7 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
+  Py_buffer rgb_buffer1 ;
   int temp2 ;
   int res2 = 0 ;
   int temp3 ;
@@ -4174,11 +4250,21 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessRGB(PyObject *SWIGUNUSEDPARM(s
 
   arg4 = &temp4;
   if (!PyArg_ParseTuple(args,(char *)"OOOOOO:wrap_WebPEncodeLosslessRGB",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_uint8_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "wrap_WebPEncodeLosslessRGB" "', argument " "1"" of type '" "uint8_t const *""'");
+  {
+    // NB: with Python < 2.6 the old style buffer protocol may be used:
+    // Py_ssize_t unused;
+    // PyObject_AsReadBuffer(obj0, (const void**)(&arg1), &unused);
+    if (!PyObject_CheckBuffer(obj0)) {
+      SWIG_exception_fail(SWIG_TypeError,
+        "in method 'wrap_WebPEncodeLosslessRGB', argument 1"
+        " does not support the buffer interface");
+    }
+    if (PyObject_GetBuffer(obj0, &rgb_buffer1, PyBUF_SIMPLE)) {
+      SWIG_exception_fail(SWIG_RuntimeError,
+        "in method 'wrap_WebPEncodeLosslessRGB', unable to get buffer view");
+    }
+    arg1 = (uint8_t *)rgb_buffer1.buf;
   }
-  arg1 = (uint8_t *)(argp1);
   if (!(SWIG_IsOK((res2 = SWIG_ConvertPtr(obj1,SWIG_as_voidptrptr(&arg2),SWIGTYPE_p_int,0))))) {
     int val;
     int ecode = SWIG_AsVal_int(obj1, &val);
@@ -4217,7 +4303,8 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessRGB(PyObject *SWIGUNUSEDPARM(s
   result = (uint8_t *)wrap_WebPEncodeLosslessRGB((uint8_t const *)arg1,arg2,arg3,arg4,arg5,arg6,arg7);
   {
     resultobj = PyString_FromStringAndSize(
-      (const char*)result, ReturnedBufferSize("wrap_WebPEncodeLosslessRGB", arg3, arg4));
+      (const char*)result,
+      (result == NULL) ? 0 : ReturnedBufferSize("wrap_WebPEncodeLosslessRGB", arg3, arg4));
   }
   if (SWIG_IsTmpObj(res4)) {
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg4)));
@@ -4225,11 +4312,17 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessRGB(PyObject *SWIGUNUSEDPARM(s
     int new_flags = SWIG_IsNewObj(res4) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg4), SWIGTYPE_p_int, new_flags));
   }
+  {
+    PyBuffer_Release(&rgb_buffer1);
+  }
   if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   free(result);
   return resultobj;
 fail:
+  {
+    PyBuffer_Release(&rgb_buffer1);
+  }
   if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   return NULL;
@@ -4245,8 +4338,7 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessBGR(PyObject *SWIGUNUSEDPARM(s
   int arg5 ;
   int arg6 ;
   int arg7 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
+  Py_buffer rgb_buffer1 ;
   int temp2 ;
   int res2 = 0 ;
   int temp3 ;
@@ -4269,11 +4361,21 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessBGR(PyObject *SWIGUNUSEDPARM(s
 
   arg4 = &temp4;
   if (!PyArg_ParseTuple(args,(char *)"OOOOOO:wrap_WebPEncodeLosslessBGR",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_uint8_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "wrap_WebPEncodeLosslessBGR" "', argument " "1"" of type '" "uint8_t const *""'");
+  {
+    // NB: with Python < 2.6 the old style buffer protocol may be used:
+    // Py_ssize_t unused;
+    // PyObject_AsReadBuffer(obj0, (const void**)(&arg1), &unused);
+    if (!PyObject_CheckBuffer(obj0)) {
+      SWIG_exception_fail(SWIG_TypeError,
+        "in method 'wrap_WebPEncodeLosslessBGR', argument 1"
+        " does not support the buffer interface");
+    }
+    if (PyObject_GetBuffer(obj0, &rgb_buffer1, PyBUF_SIMPLE)) {
+      SWIG_exception_fail(SWIG_RuntimeError,
+        "in method 'wrap_WebPEncodeLosslessBGR', unable to get buffer view");
+    }
+    arg1 = (uint8_t *)rgb_buffer1.buf;
   }
-  arg1 = (uint8_t *)(argp1);
   if (!(SWIG_IsOK((res2 = SWIG_ConvertPtr(obj1,SWIG_as_voidptrptr(&arg2),SWIGTYPE_p_int,0))))) {
     int val;
     int ecode = SWIG_AsVal_int(obj1, &val);
@@ -4312,7 +4414,8 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessBGR(PyObject *SWIGUNUSEDPARM(s
   result = (uint8_t *)wrap_WebPEncodeLosslessBGR((uint8_t const *)arg1,arg2,arg3,arg4,arg5,arg6,arg7);
   {
     resultobj = PyString_FromStringAndSize(
-      (const char*)result, ReturnedBufferSize("wrap_WebPEncodeLosslessBGR", arg3, arg4));
+      (const char*)result,
+      (result == NULL) ? 0 : ReturnedBufferSize("wrap_WebPEncodeLosslessBGR", arg3, arg4));
   }
   if (SWIG_IsTmpObj(res4)) {
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg4)));
@@ -4320,11 +4423,17 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessBGR(PyObject *SWIGUNUSEDPARM(s
     int new_flags = SWIG_IsNewObj(res4) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg4), SWIGTYPE_p_int, new_flags));
   }
+  {
+    PyBuffer_Release(&rgb_buffer1);
+  }
   if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   free(result);
   return resultobj;
 fail:
+  {
+    PyBuffer_Release(&rgb_buffer1);
+  }
   if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   return NULL;
@@ -4340,8 +4449,7 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessRGBA(PyObject *SWIGUNUSEDPARM(
   int arg5 ;
   int arg6 ;
   int arg7 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
+  Py_buffer rgb_buffer1 ;
   int temp2 ;
   int res2 = 0 ;
   int temp3 ;
@@ -4364,11 +4472,21 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessRGBA(PyObject *SWIGUNUSEDPARM(
 
   arg4 = &temp4;
   if (!PyArg_ParseTuple(args,(char *)"OOOOOO:wrap_WebPEncodeLosslessRGBA",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_uint8_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "wrap_WebPEncodeLosslessRGBA" "', argument " "1"" of type '" "uint8_t const *""'");
+  {
+    // NB: with Python < 2.6 the old style buffer protocol may be used:
+    // Py_ssize_t unused;
+    // PyObject_AsReadBuffer(obj0, (const void**)(&arg1), &unused);
+    if (!PyObject_CheckBuffer(obj0)) {
+      SWIG_exception_fail(SWIG_TypeError,
+        "in method 'wrap_WebPEncodeLosslessRGBA', argument 1"
+        " does not support the buffer interface");
+    }
+    if (PyObject_GetBuffer(obj0, &rgb_buffer1, PyBUF_SIMPLE)) {
+      SWIG_exception_fail(SWIG_RuntimeError,
+        "in method 'wrap_WebPEncodeLosslessRGBA', unable to get buffer view");
+    }
+    arg1 = (uint8_t *)rgb_buffer1.buf;
   }
-  arg1 = (uint8_t *)(argp1);
   if (!(SWIG_IsOK((res2 = SWIG_ConvertPtr(obj1,SWIG_as_voidptrptr(&arg2),SWIGTYPE_p_int,0))))) {
     int val;
     int ecode = SWIG_AsVal_int(obj1, &val);
@@ -4407,7 +4525,8 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessRGBA(PyObject *SWIGUNUSEDPARM(
   result = (uint8_t *)wrap_WebPEncodeLosslessRGBA((uint8_t const *)arg1,arg2,arg3,arg4,arg5,arg6,arg7);
   {
     resultobj = PyString_FromStringAndSize(
-      (const char*)result, ReturnedBufferSize("wrap_WebPEncodeLosslessRGBA", arg3, arg4));
+      (const char*)result,
+      (result == NULL) ? 0 : ReturnedBufferSize("wrap_WebPEncodeLosslessRGBA", arg3, arg4));
   }
   if (SWIG_IsTmpObj(res4)) {
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg4)));
@@ -4415,11 +4534,17 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessRGBA(PyObject *SWIGUNUSEDPARM(
     int new_flags = SWIG_IsNewObj(res4) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg4), SWIGTYPE_p_int, new_flags));
   }
+  {
+    PyBuffer_Release(&rgb_buffer1);
+  }
   if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   free(result);
   return resultobj;
 fail:
+  {
+    PyBuffer_Release(&rgb_buffer1);
+  }
   if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   return NULL;
@@ -4435,8 +4560,7 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessBGRA(PyObject *SWIGUNUSEDPARM(
   int arg5 ;
   int arg6 ;
   int arg7 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
+  Py_buffer rgb_buffer1 ;
   int temp2 ;
   int res2 = 0 ;
   int temp3 ;
@@ -4459,11 +4583,21 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessBGRA(PyObject *SWIGUNUSEDPARM(
 
   arg4 = &temp4;
   if (!PyArg_ParseTuple(args,(char *)"OOOOOO:wrap_WebPEncodeLosslessBGRA",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_uint8_t, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "wrap_WebPEncodeLosslessBGRA" "', argument " "1"" of type '" "uint8_t const *""'");
+  {
+    // NB: with Python < 2.6 the old style buffer protocol may be used:
+    // Py_ssize_t unused;
+    // PyObject_AsReadBuffer(obj0, (const void**)(&arg1), &unused);
+    if (!PyObject_CheckBuffer(obj0)) {
+      SWIG_exception_fail(SWIG_TypeError,
+        "in method 'wrap_WebPEncodeLosslessBGRA', argument 1"
+        " does not support the buffer interface");
+    }
+    if (PyObject_GetBuffer(obj0, &rgb_buffer1, PyBUF_SIMPLE)) {
+      SWIG_exception_fail(SWIG_RuntimeError,
+        "in method 'wrap_WebPEncodeLosslessBGRA', unable to get buffer view");
+    }
+    arg1 = (uint8_t *)rgb_buffer1.buf;
   }
-  arg1 = (uint8_t *)(argp1);
   if (!(SWIG_IsOK((res2 = SWIG_ConvertPtr(obj1,SWIG_as_voidptrptr(&arg2),SWIGTYPE_p_int,0))))) {
     int val;
     int ecode = SWIG_AsVal_int(obj1, &val);
@@ -4502,7 +4636,8 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessBGRA(PyObject *SWIGUNUSEDPARM(
   result = (uint8_t *)wrap_WebPEncodeLosslessBGRA((uint8_t const *)arg1,arg2,arg3,arg4,arg5,arg6,arg7);
   {
     resultobj = PyString_FromStringAndSize(
-      (const char*)result, ReturnedBufferSize("wrap_WebPEncodeLosslessBGRA", arg3, arg4));
+      (const char*)result,
+      (result == NULL) ? 0 : ReturnedBufferSize("wrap_WebPEncodeLosslessBGRA", arg3, arg4));
   }
   if (SWIG_IsTmpObj(res4)) {
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*arg4)));
@@ -4510,11 +4645,17 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessBGRA(PyObject *SWIGUNUSEDPARM(
     int new_flags = SWIG_IsNewObj(res4) ? (SWIG_POINTER_OWN |  0 ) :  0 ;
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_NewPointerObj((void*)(arg4), SWIGTYPE_p_int, new_flags));
   }
+  {
+    PyBuffer_Release(&rgb_buffer1);
+  }
   if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   free(result);
   return resultobj;
 fail:
+  {
+    PyBuffer_Release(&rgb_buffer1);
+  }
   if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   return NULL;
@@ -4522,24 +4663,24 @@ fail:
 
 
 static PyMethodDef SwigMethods[] = {
-	 { (char *)"SWIG_PyInstanceMethod_New", (PyCFunction)SWIG_PyInstanceMethod_New, METH_O, NULL},
-	 { (char *)"WebPGetDecoderVersion", _wrap_WebPGetDecoderVersion, METH_VARARGS, NULL},
-	 { (char *)"WebPGetInfo", _wrap_WebPGetInfo, METH_VARARGS, NULL},
-	 { (char *)"WebPDecodeRGB", _wrap_WebPDecodeRGB, METH_VARARGS, NULL},
-	 { (char *)"WebPDecodeRGBA", _wrap_WebPDecodeRGBA, METH_VARARGS, NULL},
-	 { (char *)"WebPDecodeARGB", _wrap_WebPDecodeARGB, METH_VARARGS, NULL},
-	 { (char *)"WebPDecodeBGR", _wrap_WebPDecodeBGR, METH_VARARGS, NULL},
-	 { (char *)"WebPDecodeBGRA", _wrap_WebPDecodeBGRA, METH_VARARGS, NULL},
-	 { (char *)"WebPGetEncoderVersion", _wrap_WebPGetEncoderVersion, METH_VARARGS, NULL},
-	 { (char *)"wrap_WebPEncodeRGB", _wrap_wrap_WebPEncodeRGB, METH_VARARGS, NULL},
-	 { (char *)"wrap_WebPEncodeBGR", _wrap_wrap_WebPEncodeBGR, METH_VARARGS, NULL},
-	 { (char *)"wrap_WebPEncodeRGBA", _wrap_wrap_WebPEncodeRGBA, METH_VARARGS, NULL},
-	 { (char *)"wrap_WebPEncodeBGRA", _wrap_wrap_WebPEncodeBGRA, METH_VARARGS, NULL},
-	 { (char *)"wrap_WebPEncodeLosslessRGB", _wrap_wrap_WebPEncodeLosslessRGB, METH_VARARGS, NULL},
-	 { (char *)"wrap_WebPEncodeLosslessBGR", _wrap_wrap_WebPEncodeLosslessBGR, METH_VARARGS, NULL},
-	 { (char *)"wrap_WebPEncodeLosslessRGBA", _wrap_wrap_WebPEncodeLosslessRGBA, METH_VARARGS, NULL},
-	 { (char *)"wrap_WebPEncodeLosslessBGRA", _wrap_wrap_WebPEncodeLosslessBGRA, METH_VARARGS, NULL},
-	 { NULL, NULL, 0, NULL }
+         { (char *)"SWIG_PyInstanceMethod_New", (PyCFunction)SWIG_PyInstanceMethod_New, METH_O, NULL},
+         { (char *)"WebPGetDecoderVersion", _wrap_WebPGetDecoderVersion, METH_VARARGS, NULL},
+         { (char *)"WebPGetInfo", _wrap_WebPGetInfo, METH_VARARGS, NULL},
+         { (char *)"WebPDecodeRGB", _wrap_WebPDecodeRGB, METH_VARARGS, NULL},
+         { (char *)"WebPDecodeRGBA", _wrap_WebPDecodeRGBA, METH_VARARGS, NULL},
+         { (char *)"WebPDecodeARGB", _wrap_WebPDecodeARGB, METH_VARARGS, NULL},
+         { (char *)"WebPDecodeBGR", _wrap_WebPDecodeBGR, METH_VARARGS, NULL},
+         { (char *)"WebPDecodeBGRA", _wrap_WebPDecodeBGRA, METH_VARARGS, NULL},
+         { (char *)"WebPGetEncoderVersion", _wrap_WebPGetEncoderVersion, METH_VARARGS, NULL},
+         { (char *)"wrap_WebPEncodeRGB", _wrap_wrap_WebPEncodeRGB, METH_VARARGS, NULL},
+         { (char *)"wrap_WebPEncodeBGR", _wrap_wrap_WebPEncodeBGR, METH_VARARGS, NULL},
+         { (char *)"wrap_WebPEncodeRGBA", _wrap_wrap_WebPEncodeRGBA, METH_VARARGS, NULL},
+         { (char *)"wrap_WebPEncodeBGRA", _wrap_wrap_WebPEncodeBGRA, METH_VARARGS, NULL},
+         { (char *)"wrap_WebPEncodeLosslessRGB", _wrap_wrap_WebPEncodeLosslessRGB, METH_VARARGS, NULL},
+         { (char *)"wrap_WebPEncodeLosslessBGR", _wrap_wrap_WebPEncodeLosslessBGR, METH_VARARGS, NULL},
+         { (char *)"wrap_WebPEncodeLosslessRGBA", _wrap_wrap_WebPEncodeLosslessRGBA, METH_VARARGS, NULL},
+         { (char *)"wrap_WebPEncodeLosslessBGRA", _wrap_wrap_WebPEncodeLosslessBGRA, METH_VARARGS, NULL},
+         { NULL, NULL, 0, NULL }
 };
 
 
