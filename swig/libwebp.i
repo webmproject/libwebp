@@ -273,57 +273,35 @@ LOSSLESS_WRAPPER(WebPEncodeLosslessBGRA)
 %pragma(java) modulecode=%{
   private static final int UNUSED = 1;
   private static int outputSize[] = { 0 };
+%}
 
-  public static byte[] WebPEncodeRGB(byte[] rgb,
-                                     int width, int height, int stride,
-                                     float quality_factor) {
-    return wrap_WebPEncodeRGB(
+
+%define CALL_ENCODE_LOSSY_WRAPPER(func)
+%pragma(java) modulecode=%{
+  public static byte[] func(
+      byte[] rgb, int width, int height, int stride, float quality_factor) {
+    return wrap_##func(
         rgb, UNUSED, UNUSED, outputSize, width, height, stride, quality_factor);
   }
+%}
+%enddef
 
-  public static byte[] WebPEncodeBGR(byte[] bgr,
-                                     int width, int height, int stride,
-                                     float quality_factor) {
-    return wrap_WebPEncodeBGR(
-        bgr, UNUSED, UNUSED, outputSize, width, height, stride, quality_factor);
-  }
-
-  public static byte[] WebPEncodeRGBA(byte[] rgba,
-                                      int width, int height, int stride,
-                                      float quality_factor) {
-    return wrap_WebPEncodeRGBA(
-        rgba, UNUSED, UNUSED, outputSize, width, height, stride, quality_factor);
-  }
-
-  public static byte[] WebPEncodeBGRA(byte[] bgra,
-                                      int width, int height, int stride,
-                                      float quality_factor) {
-    return wrap_WebPEncodeBGRA(
-        bgra, UNUSED, UNUSED, outputSize, width, height, stride, quality_factor);
-  }
-
-  public static byte[] WebPEncodeLosslessRGB(
+%define CALL_ENCODE_LOSSLESS_WRAPPER(func)
+%pragma(java) modulecode=%{
+  public static byte[] func(
       byte[] rgb, int width, int height, int stride) {
-    return wrap_WebPEncodeLosslessRGB(
+    return wrap_##func(
         rgb, UNUSED, UNUSED, outputSize, width, height, stride);
   }
-
-  public static byte[] WebPEncodeLosslessBGR(
-      byte[] bgr, int width, int height, int stride) {
-    return wrap_WebPEncodeLosslessBGR(
-        bgr, UNUSED, UNUSED, outputSize, width, height, stride);
-  }
-
-  public static byte[] WebPEncodeLosslessRGBA(
-      byte[] rgba, int width, int height, int stride) {
-    return wrap_WebPEncodeLosslessRGBA(
-        rgba, UNUSED, UNUSED, outputSize, width, height, stride);
-  }
-
-  public static byte[] WebPEncodeLosslessBGRA(
-      byte[] bgra, int width, int height, int stride) {
-    return wrap_WebPEncodeLosslessBGRA(
-        bgra, UNUSED, UNUSED, outputSize, width, height, stride);
-  }
 %}
+%enddef
+
+CALL_ENCODE_LOSSY_WRAPPER(WebPEncodeRGB)
+CALL_ENCODE_LOSSY_WRAPPER(WebPEncodeRGBA)
+CALL_ENCODE_LOSSY_WRAPPER(WebPEncodeBGR)
+CALL_ENCODE_LOSSY_WRAPPER(WebPEncodeBGRA)
+CALL_ENCODE_LOSSLESS_WRAPPER(WebPEncodeLosslessRGB)
+CALL_ENCODE_LOSSLESS_WRAPPER(WebPEncodeLosslessRGBA)
+CALL_ENCODE_LOSSLESS_WRAPPER(WebPEncodeLosslessBGR)
+CALL_ENCODE_LOSSLESS_WRAPPER(WebPEncodeLosslessBGRA)
 #endif  /* SWIGJAVA */
