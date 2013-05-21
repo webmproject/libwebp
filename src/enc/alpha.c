@@ -243,6 +243,8 @@ static int ApplyFilters(const uint8_t* alpha, int width, int height,
             VP8BitWriterWipeOut(&best.bw);
             best = trial;
             if (stats != NULL) best.stats = *stats;
+          } else {
+            VP8BitWriterWipeOut(&trial.bw);
           }
         } else {
           VP8BitWriterWipeOut(&trial.bw);
