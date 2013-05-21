@@ -226,11 +226,13 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
       for (i = 1; i <= nFrames; i++) {
         WebPMuxFrameInfo frame;
         err = WebPMuxGetFrame(mux, i, &frame);
-        RETURN_IF_ERROR3("Failed to retrieve %s#%d\n", type_str, i);
-        printf("%3d: %8d %8d ", i, frame.x_offset, frame.y_offset);
-        if (is_anim) printf("%8d %7d ", frame.duration, frame.dispose_method);
-        printf("%10d\n", (int)frame.bitstream.size);
+        if (err == WEBP_MUX_OK) {
+          printf("%3d: %8d %8d ", i, frame.x_offset, frame.y_offset);
+          if (is_anim) printf("%8d %7d ", frame.duration, frame.dispose_method);
+          printf("%10d\n", (int)frame.bitstream.size);
+        }
         WebPDataClear(&frame.bitstream);
+        RETURN_IF_ERROR3("Failed to retrieve %s#%d\n", type_str, i);
       }
     }
   }
@@ -259,8 +261,11 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
   if ((flag & ALPHA_FLAG) && !(flag & (ANIMATION_FLAG | FRAGMENTS_FLAG))) {
     WebPMuxFrameInfo image;
     err = WebPMuxGetFrame(mux, 1, &image);
+    if (err == WEBP_MUX_OK) {
+      printf("Size of the image (with alpha): %d\n", (int)image.bitstream.size);
+    }
+    WebPDataClear(&image.bitstream);
     RETURN_IF_ERROR("Failed to retrieve the image\n");
-    printf("Size of the image (with alpha): %d\n", (int)image.bitstream.size);
   }
 
   return WEBP_MUX_OK;
