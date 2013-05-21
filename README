@@ -80,8 +80,8 @@ more options.
 SWIG bindings:
 --------------
 
-To generate language bindings from swig/libwebp.i swig-1.3
-(http://www.swig.org) is required. 2.0 may work, but has not been tested.
+To generate language bindings from swig/libwebp.i at least swig-1.3
+(http://www.swig.org) is required.
 
 Currently the following functions are mapped:
 Decode:
@@ -104,11 +104,19 @@ Encode:
   WebPEncodeLosslessRGB
   WebPEncodeLosslessBGR
 
+See swig/README for more detailed build instructions.
+
 Java bindings:
 
 To build the swig-generated JNI wrapper code at least JDK-1.5 (or equivalent)
 is necessary for enum support. The output is intended to be a shared object /
 DLL that can be loaded via System.loadLibrary("webp_jni").
+
+Python bindings:
+
+To build the swig-generated Python extension code at least Python 2.6 is
+required. Python < 2.6 may build with some minor changes to libwebp.i or the
+generated code, but is untested.
 
 Encoding tool:
 ==============
