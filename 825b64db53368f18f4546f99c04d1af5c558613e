@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAYX///bE\u003d",
+        "filename": "swig/libwebp_python_wrap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 4666,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-05-21T04:15:23Z",
+      "side": 1,
+      "message": "general remark: not \"const char*\" instead of just \"char*\" ?\n\n(i\u0027m asking, because it\u0027s a static array)",
+      "revId": "825b64db53368f18f4546f99c04d1af5c558613e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
