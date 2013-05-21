@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAYX///bM\u003d",
+        "filename": "swig/libwebp.i",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-05-21T04:13:28Z",
+      "side": 1,
+      "message": "do these require a minimum version of SWIG to work?",
+      "revId": "ad4a367dba292f2bdaab19f87114eaabc035ca8d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
