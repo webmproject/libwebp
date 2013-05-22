@@ -188,8 +188,6 @@ int main(int argc, const char *argv[]) {
   FILE* out = NULL;
   GifFileType* gif = NULL;
   WebPPicture picture;
-  WebPPicture view;
-  WebPMemoryWriter memory;
   WebPMuxFrameInfo frame;
   WebPMuxAnimParams anim = { WHITE_COLOR, 0 };
 
@@ -276,9 +274,7 @@ int main(int argc, const char *argv[]) {
   picture.width = gif->SWidth;
   picture.height = gif->SHeight;
   picture.use_argb = 1;
-  picture.writer = WebPMemoryWrite;
-  picture.custom_ptr = &memory;
-  if (!WebPPictureAlloc(&picture)) goto End;
+    if (!WebPPictureAlloc(&picture)) goto End;
 
   mux = WebPMuxNew();
   if (mux == NULL) {
@@ -294,27 +290,33 @@ int main(int argc, const char *argv[]) {
 
     switch (type) {
       case IMAGE_DESC_RECORD_TYPE: {
+        WebPPicture sub_image;
+        WebPMemoryWriter memory;
+
         if (frame.dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
           ClearPicture(&picture, anim.bgcolor);
         }
 
         if (!DGifGetImageDesc(gif)) goto End;
-        if (!ReadSubImage(gif, &picture, &view)) goto End;
+        if (!ReadSubImage(gif, &picture, &sub_image)) goto End;
 
-        WebPMemoryWriterInit(&memory);
         if (!config.lossless) {
-          // We need to call BGRA variant because of the way we do Remap().
-          // TODO(later): This works for little-endian only due to uint32_t to
-          // uint8_t conversion. Make it work for big-endian too.
-          WebPPictureImportBGRA(&view, (uint8_t*)view.argb,
-                                view.argb_stride * sizeof(*view.argb));
-          view.use_argb = 0;
+          // We need to call BGRA variant because of the way we do Remap(). Note
+          // that 'sub_image' will no longer be a view and own some memory.
+          WebPPictureImportBGRA(
+              &sub_image, (uint8_t*)sub_image.argb,
+              sub_image.argb_stride * sizeof(*sub_image.argb));
+          sub_image.use_argb = 0;
         } else {
-          view.use_argb = 1;
+          sub_image.use_argb = 1;
         }
-        if (!WebPEncode(&config, &view)) {
+
+        sub_image.writer = WebPMemoryWrite;
+        sub_image.custom_ptr = &memory;
+        WebPMemoryWriterInit(&memory);
+        if (!WebPEncode(&config, &sub_image)) {
           fprintf(stderr, "Error! Cannot encode picture as WebP\n");
-          fprintf(stderr, "Error code: %d\n", view.error_code);
+          fprintf(stderr, "Error code: %d\n", sub_image.error_code);
           goto End;
         }
 
@@ -333,12 +335,14 @@ int main(int argc, const char *argv[]) {
         }
         if (verbose) {
           printf("Added frame %dx%d (offset:%d,%d duration:%d) ",
-                 view.width, view.height, frame.x_offset, frame.y_offset,
+                 sub_image.width, sub_image.height,
+                 frame.x_offset, frame.y_offset,
                  frame.duration);
           printf("dispose:%d transparent index:%d\n",
                  frame.dispose_method, transparent_index);
         }
         WebPDataClear(&frame.bitstream);
+        WebPPictureFree(&sub_image);
         break;
       }
       case EXTENSION_RECORD_TYPE: {
@@ -398,7 +402,7 @@ int main(int argc, const char *argv[]) {
               const int is_icc =
                   !stored_icc && !memcmp(data + 1, "ICCRGBG1012", 11);
               if (is_xmp || is_icc) {
-                const char fourccs[2][4] = { "XMP " , "ICCP" };
+                const char* const fourccs[2] = { "XMP " , "ICCP" };
                 const char* const features[2] = { "XMP" , "ICC" };
                 WebPData metadata = { NULL, 0 };
                 // Construct metadata from sub-blocks.
@@ -427,7 +431,7 @@ int main(int argc, const char *argv[]) {
                     goto End;
                   }
                   metadata.size += subblock.size;
-                  memcpy((void*)metadata.bytes + prev_metadata.size,
+                  memcpy((void*)(metadata.bytes + prev_metadata.size),
                          subblock.bytes, subblock.size);
                 }
                 if (is_xmp) {
