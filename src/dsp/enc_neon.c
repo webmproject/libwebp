@@ -322,7 +322,7 @@ static void FTransform(const uint8_t* src, const uint8_t* ref,
     "vmlal.s16       q11, d6, d17             \n" // c1*2217 + d1*5352 + 12000
     "vmlsl.s16       q12, d6, d16             \n" // d1*2217 - c1*5352 + 51000
 
-    "vmvn.s16        d4, d4                   \n"
+    "vmvn            d4, d4                   \n" // !(d1 == 0)
     // op[4] = (c1*2217 + d1*5352 + 12000)>>16
     "vshrn.s32       d1, q11, #16             \n"
     // op[4] += (d1!=0)
