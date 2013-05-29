@@ -132,20 +132,20 @@ static void DisplayGifError(const GifFileType* const gif, int gif_error) {
 #if defined(GIFLIB_MAJOR) && defined(GIFLIB_MINOR) && \
         ((GIFLIB_MAJOR == 4 && GIFLIB_MINOR >= 2) || GIFLIB_MAJOR > 4)
 #if GIFLIB_MAJOR >= 5
-    // Static string actually, hence the const char* cast.
-    const char* error_str = (const char*)GifErrorString(
-        (gif == NULL) ? gif_error : gif->Error);
+  // Static string actually, hence the const char* cast.
+  const char* error_str = (const char*)GifErrorString(
+      (gif == NULL) ? gif_error : gif->Error);
 #else
-    const char* error_str = (const char*)GifErrorString();
-    (void)gif;
+  const char* error_str = (const char*)GifErrorString();
+  (void)gif;
 #endif
-    if (error_str == NULL) error_str = "Unknown error";
-    fprintf(stderr, "GIFLib Error %d: %s\n", gif_error, error_str);
+  if (error_str == NULL) error_str = "Unknown error";
+  fprintf(stderr, "GIFLib Error %d: %s\n", gif_error, error_str);
 #else
-    (void)gif;
-    fprintf(stderr, "GIFLib Error %d: ", gif_error);
-    PrintGifError();
-    fprintf(stderr, "\n");
+  (void)gif;
+  fprintf(stderr, "GIFLib Error %d: ", gif_error);
+  PrintGifError();
+  fprintf(stderr, "\n");
 #endif
 }
 
@@ -274,7 +274,7 @@ int main(int argc, const char *argv[]) {
   picture.width = gif->SWidth;
   picture.height = gif->SHeight;
   picture.use_argb = 1;
-    if (!WebPPictureAlloc(&picture)) goto End;
+  if (!WebPPictureAlloc(&picture)) goto End;
 
   mux = WebPMuxNew();
   if (mux == NULL) {
