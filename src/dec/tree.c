@@ -337,17 +337,19 @@ void VP8ResetProba(VP8Proba* const proba) {
 void VP8ParseIntraMode(VP8BitReader* const br,  VP8Decoder* const dec) {
   uint8_t* const top = dec->intra_t_ + 4 * dec->mb_x_;
   uint8_t* const left = dec->intra_l_;
+  VP8MBData* const block = dec->mb_data_;
+
   // Hardcoded 16x16 intra-mode decision tree.
-  dec->is_i4x4_ = !VP8GetBit(br, 145);   // decide for B_PRED first
-  if (!dec->is_i4x4_) {
+  block->is_i4x4_ = !VP8GetBit(br, 145);   // decide for B_PRED first
+  if (!block->is_i4x4_) {
     const int ymode =
         VP8GetBit(br, 156) ? (VP8GetBit(br, 128) ? TM_PRED : H_PRED)
                            : (VP8GetBit(br, 163) ? V_PRED : DC_PRED);
-    dec->imodes_[0] = ymode;
+    block->imodes_[0] = ymode;
     memset(top, ymode, 4 * sizeof(top[0]));
     memset(left, ymode, 4 * sizeof(left[0]));
   } else {
-    uint8_t* modes = dec->imodes_;
+    uint8_t* modes = block->imodes_;
     int y;
     for (y = 0; y < 4; ++y) {
       int ymode = left[y];
@@ -380,9 +382,9 @@ void VP8ParseIntraMode(VP8BitReader* const br,  VP8Decoder* const dec) {
     }
   }
   // Hardcoded UVMode decision tree
-  dec->uvmode_ = !VP8GetBit(br, 142) ? DC_PRED
-               : !VP8GetBit(br, 114) ? V_PRED
-               : VP8GetBit(br, 183) ? TM_PRED : H_PRED;
+  block->uvmode_ = !VP8GetBit(br, 142) ? DC_PRED
+                 : !VP8GetBit(br, 114) ? V_PRED
+                 : VP8GetBit(br, 183) ? TM_PRED : H_PRED;
 }
 
 //------------------------------------------------------------------------------

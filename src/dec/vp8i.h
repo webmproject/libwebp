@@ -168,6 +168,20 @@ typedef struct {
   quant_t y1_mat_, y2_mat_, uv_mat_;
 } VP8QuantMatrix;
 
+// Data needed to reconstruct a macroblock
+typedef struct {
+  int16_t coeffs_[384];   // 384 coeffs = (16+4+4) * 4*4
+  uint8_t is_i4x4_;       // true if intra4x4
+  uint8_t imodes_[16];    // one 16x16 mode (#0) or sixteen 4x4 modes
+  uint8_t uvmode_;        // chroma prediction mode
+  // bit-wise info about the content of each sub-4x4 blocks: there are 16 bits
+  // for luma (bits #0->#15), then 4 bits for chroma-u (#16->#19) and 4 bits for
+  // chroma-v (#20->#23), each corresponding to one 4x4 block in decoding order.
+  // If the bit is set, the 4x4 block contains some non-zero coefficients.
+  uint32_t non_zero_;
+  uint32_t non_zero_ac_;
+} VP8MBData;
+
 // Persistent information needed by the parallel processing
 typedef struct {
   int id_;            // cache row to process (in [0..2])
@@ -238,11 +252,11 @@ struct VP8Decoder {
   uint8_t  intra_l_[4];  // left intra modes values
   uint8_t* y_t_;         // top luma samples: 16 * mb_w_
   uint8_t* u_t_, *v_t_;  // top u/v samples: 8 * mb_w_ each
+  uint8_t segment_;      // segment of the currently parsed block
 
   VP8MB* mb_info_;       // contextual macroblock info (mb_w_ + 1)
   VP8FInfo* f_info_;     // filter strength info
   uint8_t* yuv_b_;       // main block for Y/U/V (size = YUV_SIZE)
-  int16_t* coeffs_;      // 384 coeffs = (16+8+8) * 4*4
 
   uint8_t* cache_y_;     // macroblock row for storing unfiltered samples
   uint8_t* cache_u_;
@@ -256,17 +270,7 @@ struct VP8Decoder {
 
   // Per macroblock non-persistent infos.
   int mb_x_, mb_y_;       // current position, in macroblock units
-  uint8_t is_i4x4_;       // true if intra4x4
-  uint8_t imodes_[16];    // one 16x16 mode (#0) or sixteen 4x4 modes
-  uint8_t uvmode_;        // chroma prediction mode
-  uint8_t segment_;       // block's segment
-
-  // bit-wise info about the content of each sub-4x4 blocks: there are 16 bits
-  // for luma (bits #0->#15), then 4 bits for chroma-u (#16->#19) and 4 bits for
-  // chroma-v (#20->#23), each corresponding to one 4x4 block in decoding order.
-  // If the bit is set, the 4x4 block contains some non-zero coefficients.
-  uint32_t non_zero_;
-  uint32_t non_zero_ac_;
+  VP8MBData* mb_data_;    // reconstruction data
 
   // Filtering side-info
   int filter_type_;                          // 0=off, 1=simple, 2=complex

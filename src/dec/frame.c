@@ -417,7 +417,7 @@ static int AllocateMemory(VP8Decoder* const dec) {
           mb_w * (dec->use_threads_ ? 2 : 1) * sizeof(VP8FInfo)
         : 0;
   const size_t yuv_size = YUV_SIZE * sizeof(*dec->yuv_b_);
-  const size_t coeffs_size = 384 * sizeof(*dec->coeffs_);
+  const size_t mb_data_size = sizeof(*dec->mb_data_);
   const size_t cache_height = (16 * num_caches
                             + kFilterExtraRows[dec->filter_type_]) * 3 / 2;
   const size_t cache_size = top_size * cache_height;
@@ -426,7 +426,7 @@ static int AllocateMemory(VP8Decoder* const dec) {
       (uint64_t)dec->pic_hdr_.width_ * dec->pic_hdr_.height_ : 0ULL;
   const uint64_t needed = (uint64_t)intra_pred_mode_size
                         + top_size + mb_info_size + f_info_size
-                        + yuv_size + coeffs_size
+                        + yuv_size + mb_data_size
                         + cache_size + alpha_size + ALIGN_MASK;
   uint8_t* mem;
 
@@ -473,8 +473,8 @@ static int AllocateMemory(VP8Decoder* const dec) {
   dec->yuv_b_ = (uint8_t*)mem;
   mem += yuv_size;
 
-  dec->coeffs_ = (int16_t*)mem;
-  mem += coeffs_size;
+  dec->mb_data_ = (VP8MBData*)mem;
+  mem += mb_data_size;
 
   dec->cache_y_stride_ = 16 * mb_w;
   dec->cache_uv_stride_ = 8 * mb_w;
@@ -554,6 +554,7 @@ void VP8ReconstructBlock(const VP8Decoder* const dec) {
   uint8_t* const y_dst = dec->yuv_b_ + Y_OFF;
   uint8_t* const u_dst = dec->yuv_b_ + U_OFF;
   uint8_t* const v_dst = dec->yuv_b_ + V_OFF;
+  const VP8MBData* const block = dec->mb_data_;
 
   // Rotate in the left samples from previously decoded block. We move four
   // pixels at a time for alignment reason, and because of in-loop filter.
@@ -583,7 +584,7 @@ void VP8ReconstructBlock(const VP8Decoder* const dec) {
     uint8_t* const top_y = dec->y_t_ + dec->mb_x_ * 16;
     uint8_t* const top_u = dec->u_t_ + dec->mb_x_ * 8;
     uint8_t* const top_v = dec->v_t_ + dec->mb_x_ * 8;
-    const int16_t* const coeffs = dec->coeffs_;
+    const int16_t* const coeffs = block->coeffs_;
     int n;
 
     if (dec->mb_y_ > 0) {
@@ -599,8 +600,7 @@ void VP8ReconstructBlock(const VP8Decoder* const dec) {
     }
 
     // predict and add residuals
-
-    if (dec->is_i4x4_) {   // 4x4
+    if (block->is_i4x4_) {   // 4x4
       uint32_t* const top_right = (uint32_t*)(y_dst - BPS + 16);
 
       if (dec->mb_y_ > 0) {
@@ -613,25 +613,26 @@ void VP8ReconstructBlock(const VP8Decoder* const dec) {
       // replicate the top-right pixels below
       top_right[BPS] = top_right[2 * BPS] = top_right[3 * BPS] = top_right[0];
 
-      // predict and add residues for all 4x4 blocks in turn.
+      // predict and add residuals for all 4x4 blocks in turn.
       for (n = 0; n < 16; n++) {
         uint8_t* const dst = y_dst + kScan[n];
-        VP8PredLuma4[dec->imodes_[n]](dst);
-        if (dec->non_zero_ac_ & (1 << n)) {
+        VP8PredLuma4[block->imodes_[n]](dst);
+        if (block->non_zero_ac_ & (1 << n)) {
           VP8Transform(coeffs + n * 16, dst, 0);
-        } else if (dec->non_zero_ & (1 << n)) {  // only DC is present
+        } else if (block->non_zero_ & (1 << n)) {  // only DC is present
           VP8TransformDC(coeffs + n * 16, dst);
         }
       }
     } else {    // 16x16
-      const int pred_func = CheckMode(dec->mb_x_, dec->mb_y_, dec->imodes_[0]);
+      const int pred_func = CheckMode(dec->mb_x_, dec->mb_y_,
+                                      block->imodes_[0]);
       VP8PredLuma16[pred_func](y_dst);
-      if (dec->non_zero_ & 0xffff) {
+      if (block->non_zero_ & 0xffff) {
         for (n = 0; n < 16; n++) {
           uint8_t* const dst = y_dst + kScan[n];
-          if (dec->non_zero_ac_ & (1 << n)) {
+          if (block->non_zero_ac_ & (1 << n)) {
             VP8Transform(coeffs + n * 16, dst, 0);
-          } else if (dec->non_zero_ & (1 << n)) {  // only DC is present
+          } else if (block->non_zero_ & (1 << n)) {  // only DC is present
             VP8TransformDC(coeffs + n * 16, dst);
           }
         }
@@ -639,21 +640,21 @@ void VP8ReconstructBlock(const VP8Decoder* const dec) {
     }
     {
       // Chroma
-      const int pred_func = CheckMode(dec->mb_x_, dec->mb_y_, dec->uvmode_);
+      const int pred_func = CheckMode(dec->mb_x_, dec->mb_y_, block->uvmode_);
       VP8PredChroma8[pred_func](u_dst);
       VP8PredChroma8[pred_func](v_dst);
 
-      if (dec->non_zero_ & 0x0f0000) {   // chroma-U
-        const int16_t* const u_coeffs = dec->coeffs_ + 16 * 16;
-        if (dec->non_zero_ac_ & 0x0f0000) {
+      if (block->non_zero_ & 0x0f0000) {   // chroma-U
+        const int16_t* const u_coeffs = coeffs + 16 * 16;
+        if (block->non_zero_ac_ & 0x0f0000) {
           VP8TransformUV(u_coeffs, u_dst);
         } else {
           VP8TransformDCUV(u_coeffs, u_dst);
         }
       }
-      if (dec->non_zero_ & 0xf00000) {   // chroma-V
-        const int16_t* const v_coeffs = dec->coeffs_ + 20 * 16;
-        if (dec->non_zero_ac_ & 0xf00000) {
+      if (block->non_zero_ & 0xf00000) {   // chroma-V
+        const int16_t* const v_coeffs = coeffs + 20 * 16;
+        if (block->non_zero_ac_ & 0xf00000) {
           VP8TransformUV(v_coeffs, v_dst);
         } else {
           VP8TransformDCUV(v_coeffs, v_dst);

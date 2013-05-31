@@ -530,7 +530,8 @@ static int ParseResiduals(VP8Decoder* const dec,
   int first;
   ProbaArray ac_prob;
   const VP8QuantMatrix* const q = &dec->dqm_[dec->segment_];
-  int16_t* dst = dec->coeffs_;
+  VP8MBData* const block = dec->mb_data_;
+  int16_t* dst = block->coeffs_;
   VP8MB* const left_mb = dec->mb_info_ - 1;
   PackedNz nz_ac, nz_dc;
   PackedNz tnz, lnz;
@@ -539,7 +540,7 @@ static int ParseResiduals(VP8Decoder* const dec,
   int x, y, ch;
 
   memset(dst, 0, 384 * sizeof(*dst));
-  if (!dec->is_i4x4_) {    // parse DC
+  if (!block->is_i4x4_) {    // parse DC
     int16_t dc[16] = { 0 };
     const int ctx = mb->nz_dc_ + left_mb->nz_dc_;
     mb->nz_dc_ = left_mb->nz_dc_ =
@@ -598,9 +599,9 @@ static int ParseResiduals(VP8Decoder* const dec,
   mb->nz_ = out_t_nz;
   left_mb->nz_ = out_l_nz;
 
-  dec->non_zero_ac_ = non_zero_ac;
-  dec->non_zero_ = non_zero_ac | non_zero_dc;
-  return !dec->non_zero_;   // will be used for further optimization
+  block->non_zero_ac_ = non_zero_ac;
+  block->non_zero_ = non_zero_ac | non_zero_dc;
+  return !block->non_zero_;   // will be used for further optimization
 }
 #undef PACK
 
@@ -611,6 +612,7 @@ int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br) {
   VP8BitReader* const br = &dec->br_;
   VP8MB* const left = dec->mb_info_ - 1;
   VP8MB* const mb = dec->mb_info_ + dec->mb_x_;
+  VP8MBData* const block = dec->mb_data_;
   int skip;
 
   // Note: we don't save segment map (yet), as we don't expect
@@ -632,17 +634,17 @@ int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br) {
     skip = ParseResiduals(dec, mb, token_br);
   } else {
     left->nz_ = mb->nz_ = 0;
-    if (!dec->is_i4x4_) {
+    if (!block->is_i4x4_) {
       left->nz_dc_ = mb->nz_dc_ = 0;
     }
-    dec->non_zero_ = 0;
-    dec->non_zero_ac_ = 0;
+    block->non_zero_ = 0;
+    block->non_zero_ac_ = 0;
   }
 
   if (dec->filter_type_ > 0) {  // store filter info
     VP8FInfo* const finfo = dec->f_info_ + dec->mb_x_;
-    *finfo = dec->fstrengths_[dec->segment_][dec->is_i4x4_];
-    finfo->f_inner_ = !skip || dec->is_i4x4_;
+    *finfo = dec->fstrengths_[dec->segment_][block->is_i4x4_];
+    finfo->f_inner_ = !skip || block->is_i4x4_;
   }
 
   return !token_br->eof_;
