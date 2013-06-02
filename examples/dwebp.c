@@ -242,10 +242,10 @@ static int WriteBMP(FILE* fout, const WebPDecBuffer* const buffer) {
   const uint32_t height = buffer->height;
   const uint8_t* const rgba = buffer->u.RGBA.rgba;
   const int stride = buffer->u.RGBA.stride;
-  const size_t bytes_per_px = has_alpha ? 4 : 3;
+  const uint32_t bytes_per_px = has_alpha ? 4 : 3;
   uint32_t y;
-  const int line_size = bytes_per_px * width;
-  const int bmp_stride = (line_size + 3) & ~3;   // pad to 4
+  const uint32_t line_size = bytes_per_px * width;
+  const uint32_t bmp_stride = (line_size + 3) & ~3;   // pad to 4
   const uint32_t total_size = bmp_stride * height + BMP_HEADER_SIZE;
   uint8_t bmp_header[BMP_HEADER_SIZE] = { 0 };
 
