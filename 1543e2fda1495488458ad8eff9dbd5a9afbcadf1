@@ -16,6 +16,24 @@
       "revId": "1543e2fda1495488458ad8eff9dbd5a9afbcadf1",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAZ3//6No\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-06-05T17:39:05Z",
+      "side": 1,
+      "message": "pretty minimal in this case probably. uses +\u003d when available avoiding exponential time growth of the assignment.",
+      "parentUuid": "AAAAZ3//6kQ\u003d",
+      "revId": "1543e2fda1495488458ad8eff9dbd5a9afbcadf1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
