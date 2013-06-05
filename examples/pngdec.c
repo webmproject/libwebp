@@ -108,6 +108,8 @@ static const struct {
   // See also: ExifTool on CPAN.
   { "Raw profile type exif", ProcessRawProfile, METADATA_OFFSET(exif) },
   { "Raw profile type xmp",  ProcessRawProfile, METADATA_OFFSET(xmp) },
+  // Exiftool puts exif data in APP1 chunk, too.
+  { "Raw profile type APP1", ProcessRawProfile, METADATA_OFFSET(exif) },
   // XMP Specification Part 3, Section 3 #PNG
   { "XML:com.adobe.xmp",     MetadataCopy,      METADATA_OFFSET(xmp) },
   { NULL, NULL, 0 },
