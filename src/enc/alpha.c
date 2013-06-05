@@ -216,7 +216,7 @@ static void InitFilterTrial(FilterTrial* const score) {
 }
 
 static int ApplyFilters(const uint8_t* alpha, int width, int height,
-                        uint64_t data_size, int method, int filter,
+                        size_t data_size, int method, int filter,
                         int reduce_levels, int effort_level,
                         uint8_t** const output, size_t* const output_size,
                         WebPAuxStats* const stats) {
