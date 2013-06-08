@@ -170,18 +170,31 @@ if test "$glut_headers" = "yes"; then
     LIBS="$GL_SAVED_LIBS"
 
     # A direct link to libGL may not be necessary on e.g., linux.
-    for lib in "" $ac_cv_search_glBegin; do
-      unset ac_cv_search_glutMainLoop
-      AC_SEARCH_LIBS([glutMainLoop], [glut], [glut_support=yes], [], [$lib])
+    GLUT_SAVED_LIBS="$LIBS"
+    for lib in "" "-lglut" "-lglut $ac_cv_search_glBegin"; do
+      LIBS="$lib"
+      AC_LINK_IFELSE(
+        [AC_LANG_PROGRAM([
+           #ifdef __cplusplus
+           # define EXTERN_C extern "C"
+           #else
+           # define EXTERN_C
+           #endif
+           EXTERN_C char glOrtho();
+           EXTERN_C char glutMainLoop();
+          ],[
+           glOrtho();
+           glutMainLoop();
+          ])
+        ],
+        [glut_support=yes], []
+      )
       if test "$glut_support" = "yes"; then
-        GL_LIBS="$LDFLAGS"
-        if test "$ac_cv_search_glutMainLoop" != "none required"; then
-          GL_LIBS="$GL_LIBS $ac_cv_search_glutMainLoop"
-        fi
-        GL_LIBS="$GL_LIBS $lib"
+        GL_LIBS="$LDFLAGS $lib"
         break
       fi
     done
+    LIBS="$GLUT_SAVED_LIBS"
     LDFLAGS="$GLUT_SAVED_LDFLAGS"
     test "$glut_support" = "yes" && break
   done
