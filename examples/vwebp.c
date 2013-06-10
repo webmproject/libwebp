@@ -436,6 +436,11 @@ int main(int argc, char *argv[]) {
     goto Error;
   }
 
+  if (!WebPGetInfo(kParams.data.bytes, kParams.data.size, NULL, NULL)) {
+    fprintf(stderr, "Input file doesn't appear to be WebP format.\n");
+    goto Error;
+  }
+
   kParams.dmux = WebPDemux(&kParams.data);
   if (kParams.dmux == NULL) {
     fprintf(stderr, "Could not create demuxing object!\n");
