@@ -74,6 +74,9 @@ typedef struct {
   int              width_;
   int              height_;
   int              last_row_;      // last input row decoded so far.
+  int              last_pixel_;    // last pixel decoded so far. However, it may
+                                   // not be transformed, scaled and
+                                   // color-converted yet.
   int              last_out_row_;  // last row output so far.
 
   VP8LMetadata     hdr_;

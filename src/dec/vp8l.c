@@ -685,22 +685,26 @@ static void ProcessRows(VP8LDecoder* const dec, int row) {
 
 #define DECODE_DATA_FUNC(FUNC_NAME, TYPE, STORE_PIXEL)                         \
 static int FUNC_NAME(VP8LDecoder* const dec, TYPE* const data, int width,      \
-                     int height, ProcessRowsFunc process_func) {               \
+                     int height, int last_row,                                 \
+                     ProcessRowsFunc process_func) {                           \
   int ok = 1;                                                                  \
-  int col = 0, row = 0;                                                        \
+  int row = dec->last_pixel_ / width;                                          \
+  int col = dec->last_pixel_ % width;                                          \
   VP8LBitReader* const br = &dec->br_;                                         \
   VP8LMetadata* const hdr = &dec->hdr_;                                        \
-  HTreeGroup* htree_group = hdr->htree_groups_;                                \
-  TYPE* src = data;                                                            \
-  TYPE* last_cached = data;                                                    \
-  TYPE* const src_end = data + width * height;                                 \
+  HTreeGroup* htree_group = GetHtreeGroupForPos(hdr, col, row);                \
+  TYPE* src = data + dec->last_pixel_;                                         \
+  TYPE* last_cached = src;                                                     \
+  TYPE* const src_end = data + width * height;     /* End of data */           \
+  TYPE* const src_last = data + width * last_row;  /* Last pixel to decode */  \
   const int len_code_limit = NUM_LITERAL_CODES + NUM_LENGTH_CODES;             \
   const int color_cache_limit = len_code_limit + hdr->color_cache_size_;       \
   VP8LColorCache* const color_cache =                                          \
       (hdr->color_cache_size_ > 0) ? &hdr->color_cache_ : NULL;                \
   const int mask = hdr->huffman_mask_;                                         \
   assert(htree_group != NULL);                                                 \
-  while (!br->eos_ && src < src_end) {                                         \
+  assert(src_last <= src_end);                                                 \
+  while (!br->eos_ && src < src_last) {                                        \
     int code;                                                                  \
     /* Only update when changing tile. Note we could use this test:        */  \
     /* if "((((prev_col ^ col) | prev_row ^ row)) > mask)" -> tile changed */  \
@@ -788,8 +792,9 @@ End:                                                                           \
     ok = 0;                                                                    \
     dec->status_ =                                                             \
         (!br->eos_) ? VP8_STATUS_BITSTREAM_ERROR : VP8_STATUS_SUSPENDED;       \
-  } else if (src == src_end) {                                                 \
-    dec->state_ = READ_DATA;                                                   \
+  } else {                                                                     \
+    dec->last_pixel_ = src - data;                                             \
+    if (src == src_end) dec->state_ = READ_DATA;                               \
   }                                                                            \
   return ok;                                                                   \
 }
@@ -1030,7 +1035,8 @@ static int DecodeImageStream(int xsize, int ysize,
   }
 
   // Use the Huffman trees to decode the LZ77 encoded data.
-  ok = DecodeImageData(dec, data, transform_xsize, transform_ysize, NULL);
+  ok = DecodeImageData(dec, data, transform_xsize, transform_ysize,
+                       transform_ysize, NULL);
   ok = ok && !br->error_;
 
  End:
@@ -1052,6 +1058,7 @@ static int DecodeImageStream(int xsize, int ysize,
       assert(data == NULL);
       assert(is_level0);
     }
+    dec->last_pixel_ = 0;  // Reset for future DECODE_DATA_FUNC() calls.
     if (!is_level0) ClearMetadata(hdr);  // Clean up temporary data behind.
   }
   return ok;
@@ -1157,9 +1164,9 @@ int VP8LDecodeAlphaImageStream(int width, int height, const uint8_t* const data,
   dec->action_ = READ_DATA;
   ok = (bytes_per_pixel == sizeof(uint8_t)) ?
       DecodeAlphaData(dec, (uint8_t*)dec->pixels_, dec->width_, dec->height_,
-                      ExtractPalettedAlphaRows) :
+                      dec->height_, ExtractPalettedAlphaRows) :
       DecodeImageData(dec, dec->pixels_, dec->width_, dec->height_,
-                      ExtractAlphaRows);
+                      dec->height_, ExtractAlphaRows);
 
  Err:
   VP8LDelete(dec);
@@ -1226,7 +1233,7 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
   // Decode.
   dec->action_ = READ_DATA;
   if (!DecodeImageData(dec, dec->pixels_, dec->width_, dec->height_,
-                       ProcessRows)) {
+                       dec->height_, ProcessRows)) {
     goto Err;
   }
 
