@@ -13,6 +13,7 @@
 
 #include <stdlib.h>
 
+#include "./alphai.h"
 #include "./vp8i.h"
 #include "./vp8li.h"
 #include "./webpi.h"
@@ -748,6 +749,8 @@ void VP8Clear(VP8Decoder* const dec) {
   if (dec->use_threads_) {
     WebPWorkerEnd(&dec->worker_);
   }
+  ALPHDelete(dec->alph_dec_);
+  dec->alph_dec_ = NULL;
   free(dec->mem_);
   dec->mem_ = NULL;
   dec->mem_size_ = 0;

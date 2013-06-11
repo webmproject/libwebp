@@ -201,11 +201,8 @@ static int FinishRow(VP8Decoder* const dec, VP8Io* const io) {
     }
     io->a = NULL;
     if (dec->alpha_data_ != NULL && y_start < y_end) {
-      // TODO(skal): several things to correct here:
-      // * testing presence of alpha with dec->alpha_data_ is not a good idea
-      // * we're actually decompressing the full plane only once. It should be
-      //   more obvious from signature.
-      // * we could free alpha_data_ right after this call, but we don't own.
+      // TODO(skal): testing presence of alpha with dec->alpha_data_ is not a
+      // good idea.
       io->a = VP8DecompressAlphaRows(dec, y_start, y_end - y_start);
       if (io->a == NULL) {
         return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,

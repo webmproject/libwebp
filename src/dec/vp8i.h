@@ -279,12 +279,14 @@ struct VP8Decoder {
   int filter_row_;                           // per-row flag
   VP8FInfo fstrengths_[NUM_MB_SEGMENTS][2];  // precalculated per-segment/type
 
-  // extensions
-  const uint8_t* alpha_data_;   // compressed alpha data (if present)
+  // Alpha
+  struct ALPHDecoder* alph_dec_;  // alpha-plane decoder object
+  const uint8_t* alpha_data_;     // compressed alpha data (if present)
   size_t alpha_data_size_;
   int is_alpha_decoded_;  // true if alpha_data_ is decoded in alpha_plane_
   uint8_t* alpha_plane_;        // output. Persistent, contains the whole data.
 
+  // extensions
   int layer_colorspace_;
   const uint8_t* layer_data_;   // compressed layer data (if present)
   size_t layer_data_size_;

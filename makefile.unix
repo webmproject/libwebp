@@ -176,6 +176,7 @@ HDRS_INSTALLED = \
     src/webp/types.h \
 
 HDRS = \
+    src/dec/alphai.h \
     src/dec/decode_vp8.h \
     src/dec/vp8i.h \
     src/dec/vp8li.h \

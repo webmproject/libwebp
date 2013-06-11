@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "./alphai.h"
 #include "./vp8li.h"
 #include "../dsp/lossless.h"
 #include "../dsp/yuv.h"
@@ -1125,52 +1126,72 @@ static void ExtractPalettedAlphaRows(VP8LDecoder* const dec, int row) {
   dec->last_row_ = dec->last_out_row_ = row;
 }
 
-int VP8LDecodeAlphaImageStream(int width, int height, const uint8_t* const data,
-                               size_t data_size, uint8_t* const output) {
-  VP8Io io;
-  int ok = 0;
-  VP8LDecoder* const dec = VP8LNew();
-  size_t bytes_per_pixel = sizeof(uint32_t);  // Default: BGRA mode.
-  if (dec == NULL) return 0;
+int VP8LDecodeAlphaHeader(ALPHDecoder* const alph_dec,
+                          const uint8_t* const data, size_t data_size,
+                          uint8_t* const output) {
+  VP8LDecoder* dec;
+  VP8Io* io;
+  assert(alph_dec != NULL);
+  alph_dec->vp8l_dec_ = VP8LNew();
+  if (alph_dec->vp8l_dec_ == NULL) return 0;
+  dec = alph_dec->vp8l_dec_;
 
-  dec->width_ = width;
-  dec->height_ = height;
-  dec->io_ = &io;
+  alph_dec->bytes_per_pixel_ = sizeof(uint32_t);  // Default: BGRA mode.
 
-  VP8InitIo(&io);
-  WebPInitCustomIo(NULL, &io);    // Just a sanity Init. io won't be used.
-  io.opaque = output;
-  io.width = width;
-  io.height = height;
+  dec->width_ = alph_dec->width_;
+  dec->height_ = alph_dec->height_;
+  dec->io_ = &alph_dec->io_;
+  io = dec->io_;
+
+  VP8InitIo(io);
+  WebPInitCustomIo(NULL, io);  // Just a sanity Init. io won't be used.
+  io->opaque = output;
+  io->width = alph_dec->width_;
+  io->height = alph_dec->height_;
 
   dec->status_ = VP8_STATUS_OK;
   VP8LInitBitReader(&dec->br_, data, data_size);
 
   dec->action_ = READ_HDR;
-  if (!DecodeImageStream(width, height, 1, dec, NULL)) goto Err;
+  if (!DecodeImageStream(alph_dec->width_, alph_dec->height_, 1, dec, NULL)) {
+    goto Err;
+  }
 
   // Special case: if alpha data contains only the color indexing transform
   // (a frequent case), we will use DecodeAlphaData() method that only needs
   // allocation of 1 byte per pixel (alpha channel).
   if (dec->next_transform_ == 1 &&
       dec->transforms_[0].type_ == COLOR_INDEXING_TRANSFORM) {
-    bytes_per_pixel = sizeof(uint8_t);
+    alph_dec->bytes_per_pixel_ = sizeof(uint8_t);
   }
 
   // Allocate internal buffers (note that dec->width_ may have changed here).
-  if (!AllocateInternalBuffers(dec, width, bytes_per_pixel)) goto Err;
+  if (!AllocateInternalBuffers(dec, alph_dec->width_,
+                               alph_dec->bytes_per_pixel_)) {
+    goto Err;
+  }
 
-  // Decode (with special row processing).
   dec->action_ = READ_DATA;
-  ok = (bytes_per_pixel == sizeof(uint8_t)) ?
-      DecodeAlphaData(dec, (uint8_t*)dec->pixels_, dec->width_, dec->height_,
-                      dec->height_, ExtractPalettedAlphaRows) :
-      DecodeImageData(dec, dec->pixels_, dec->width_, dec->height_,
-                      dec->height_, ExtractAlphaRows);
+  return 1;
 
  Err:
-  VP8LDelete(dec);
-  return ok;
+  VP8LDelete(alph_dec->vp8l_dec_);
+  alph_dec->vp8l_dec_ = NULL;
+  return 0;
+}
+
+int VP8LDecodeAlphaImageStream(ALPHDecoder* const alph_dec, int last_row) {
+  VP8LDecoder* const dec = alph_dec->vp8l_dec_;
+  assert(dec != NULL);
+  assert(dec->action_ == READ_DATA);
+  assert(last_row <= dec->height_);
+
+  // Decode (with special row processing).
+  return (alph_dec->bytes_per_pixel_ == sizeof(uint8_t)) ?
+      DecodeAlphaData(dec, (uint8_t*)dec->pixels_, dec->width_, dec->height_,
+                      last_row, ExtractPalettedAlphaRows) :
+      DecodeImageData(dec, dec->pixels_, dec->width_, dec->height_, last_row,
+                      ExtractAlphaRows);
 }
 
 //------------------------------------------------------------------------------
