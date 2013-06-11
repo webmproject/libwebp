@@ -78,7 +78,7 @@ static int DecodeAlpha(const uint8_t* data, size_t data_size,
       unfilter_func(width, height, width, 0, height, output);
     }
     if (pre_processing == ALPHA_PREPROCESSED_LEVELS) {
-      ok = DequantizeLevels(output, width, height);
+      ok = DequantizeLevels(output, width, height, 0, height);
     }
   }
 
