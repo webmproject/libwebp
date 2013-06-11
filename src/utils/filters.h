@@ -34,7 +34,7 @@ typedef enum {
 typedef void (*WebPFilterFunc)(const uint8_t* in, int width, int height,
                                int stride, uint8_t* out);
 typedef void (*WebPUnfilterFunc)(int width, int height, int stride,
-                                 uint8_t* data);
+                                 int row, int num_rows, uint8_t* data);
 
 // Filter the given data using the given predictor.
 // 'in' corresponds to a 2-dimensional pixel array of size (stride * height)
@@ -44,6 +44,8 @@ typedef void (*WebPUnfilterFunc)(int width, int height, int stride,
 extern const WebPFilterFunc WebPFilters[WEBP_FILTER_LAST];
 
 // In-place reconstruct the original data from the given filtered data.
+// The reconstruction will be done for 'num_rows' rows starting from 'row'
+// (assuming rows upto 'row - 1' are already reconstructed).
 extern const WebPUnfilterFunc WebPUnfilters[WEBP_FILTER_LAST];
 
 // Fast estimate of a potentially good filter.

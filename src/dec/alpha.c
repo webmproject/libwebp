@@ -75,7 +75,7 @@ static int DecodeAlpha(const uint8_t* data, size_t data_size,
     if (unfilter_func != NULL) {
       // TODO(vikas): Implement on-the-fly decoding & filter mechanism to decode
       // and apply filter per image-row.
-      unfilter_func(width, height, width, output);
+      unfilter_func(width, height, width, 0, height, output);
     }
     if (pre_processing == ALPHA_PREPROCESSED_LEVELS) {
       ok = DequantizeLevels(output, width, height);
