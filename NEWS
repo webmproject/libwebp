@@ -1,5 +1,8 @@
-- Next version:
+- 6/13/13: version 0.3.1
+  This is a binary compatible release.
   * Add incremental decoding support for images containing ALPH and ICCP chunks.
+  * Python bindings via swig for the simple encode/decode interfaces similar to
+    Java.
 
 - 3/20/13: version 0.3.0
   This is a binary compatible release.
