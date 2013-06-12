@@ -30,7 +30,7 @@ extern "C" {
 // version numbers
 #define ENC_MAJ_VERSION 0
 #define ENC_MIN_VERSION 3
-#define ENC_REV_VERSION 0
+#define ENC_REV_VERSION 1
 
 // intra prediction modes
 enum { B_DC_PRED = 0,   // 4x4 modes
