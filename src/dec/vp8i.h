@@ -193,6 +193,11 @@ typedef struct {
   VP8Io io_;          // copy of the VP8Io to pass to put()
 } VP8ThreadContext;
 
+// Saved top samples, per macroblock. Fits into a cache-line.
+typedef struct {
+  uint8_t y[16], u[8], v[8];
+} VP8TopSamples;
+
 //------------------------------------------------------------------------------
 // VP8Decoder: the main opaque structure handed over to user
 
@@ -250,17 +255,17 @@ struct VP8Decoder {
 #endif
 
   // Boundary data cache and persistent buffers.
-  uint8_t* intra_t_;     // top intra modes values: 4 * mb_w_
-  uint8_t  intra_l_[4];  // left intra modes values
-  uint8_t* y_t_;         // top luma samples: 16 * mb_w_
-  uint8_t* u_t_, *v_t_;  // top u/v samples: 8 * mb_w_ each
-  uint8_t segment_;      // segment of the currently parsed block
+  uint8_t* intra_t_;      // top intra modes values: 4 * mb_w_
+  uint8_t  intra_l_[4];   // left intra modes values
 
-  VP8MB* mb_info_;       // contextual macroblock info (mb_w_ + 1)
-  VP8FInfo* f_info_;     // filter strength info
-  uint8_t* yuv_b_;       // main block for Y/U/V (size = YUV_SIZE)
+  uint8_t segment_;       // segment of the currently parsed block
+  VP8TopSamples* yuv_t_;  // top y/u/v samples
 
-  uint8_t* cache_y_;     // macroblock row for storing unfiltered samples
+  VP8MB* mb_info_;        // contextual macroblock info (mb_w_ + 1)
+  VP8FInfo* f_info_;      // filter strength info
+  uint8_t* yuv_b_;        // main block for Y/U/V (size = YUV_SIZE)
+
+  uint8_t* cache_y_;      // macroblock row for storing unfiltered samples
   uint8_t* cache_u_;
   uint8_t* cache_v_;
   int cache_y_stride_;

@@ -409,7 +409,7 @@ static int AllocateMemory(VP8Decoder* const dec) {
   const int mb_w = dec->mb_w_;
   // Note: we use 'size_t' when there's no overflow risk, uint64_t otherwise.
   const size_t intra_pred_mode_size = 4 * mb_w * sizeof(uint8_t);
-  const size_t top_size = (16 + 8 + 8) * mb_w;
+  const size_t top_size = sizeof(VP8TopSamples) * mb_w;
   const size_t mb_info_size = (mb_w + 1) * sizeof(VP8MB);
   const size_t f_info_size =
       (dec->filter_type_ > 0) ?
@@ -446,12 +446,8 @@ static int AllocateMemory(VP8Decoder* const dec) {
   dec->intra_t_ = (uint8_t*)mem;
   mem += intra_pred_mode_size;
 
-  dec->y_t_ = (uint8_t*)mem;
-  mem += 16 * mb_w;
-  dec->u_t_ = (uint8_t*)mem;
-  mem += 8 * mb_w;
-  dec->v_t_ = (uint8_t*)mem;
-  mem += 8 * mb_w;
+  dec->yuv_t_ = (VP8TopSamples*)mem;
+  mem += top_size;
 
   dec->mb_info_ = ((VP8MB*)mem) + 1;
   mem += mb_info_size;
@@ -580,16 +576,14 @@ void VP8ReconstructBlock(const VP8Decoder* const dec) {
   }
   {
     // bring top samples into the cache
-    uint8_t* const top_y = dec->y_t_ + dec->mb_x_ * 16;
-    uint8_t* const top_u = dec->u_t_ + dec->mb_x_ * 8;
-    uint8_t* const top_v = dec->v_t_ + dec->mb_x_ * 8;
+    VP8TopSamples* const top_yuv = dec->yuv_t_ + dec->mb_x_;
     const int16_t* const coeffs = block->coeffs_;
     int n;
 
     if (dec->mb_y_ > 0) {
-      memcpy(y_dst - BPS, top_y, 16);
-      memcpy(u_dst - BPS, top_u, 8);
-      memcpy(v_dst - BPS, top_v, 8);
+      memcpy(y_dst - BPS, top_yuv[0].y, 16);
+      memcpy(u_dst - BPS, top_yuv[0].u, 8);
+      memcpy(v_dst - BPS, top_yuv[0].v, 8);
     } else if (dec->mb_x_ == 0) {
       // we only need to do this init once at block (0,0).
       // Afterward, it remains valid for the whole topmost row.
@@ -604,9 +598,9 @@ void VP8ReconstructBlock(const VP8Decoder* const dec) {
 
       if (dec->mb_y_ > 0) {
         if (dec->mb_x_ >= dec->mb_w_ - 1) {    // on rightmost border
-          top_right[0] = top_y[15] * 0x01010101u;
+          memset(top_right, top_yuv[0].y[15], sizeof(*top_right));
         } else {
-          memcpy(top_right, top_y + 16, sizeof(*top_right));
+          memcpy(top_right, top_yuv[1].y, sizeof(*top_right));
         }
       }
       // replicate the top-right pixels below
@@ -663,9 +657,9 @@ void VP8ReconstructBlock(const VP8Decoder* const dec) {
 
     // stash away top samples for next block
     if (dec->mb_y_ < dec->mb_h_ - 1) {
-      memcpy(top_y, y_dst + 15 * BPS, 16);
-      memcpy(top_u, u_dst +  7 * BPS,  8);
-      memcpy(top_v, v_dst +  7 * BPS,  8);
+      memcpy(top_yuv[0].y, y_dst + 15 * BPS, 16);
+      memcpy(top_yuv[0].u, u_dst +  7 * BPS,  8);
+      memcpy(top_yuv[0].v, v_dst +  7 * BPS,  8);
     }
   }
   // Transfer reconstructed samples from yuv_b_ cache to final destination.
