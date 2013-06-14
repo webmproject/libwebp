@@ -16,6 +16,23 @@
       "revId": "da71853adb5dd2946e94b34c68827d7703f7e58e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAZ3//vPs\u003d",
+        "filename": "swig/libwebp_python_wrap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-06-14T05:03:34Z",
+      "side": 1,
+      "message": "as a post process to swig, please strip the trailing whitespace with e.g., s/\\s+$//",
+      "revId": "da71853adb5dd2946e94b34c68827d7703f7e58e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
