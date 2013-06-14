@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAZ3//vNc\u003d",
+        "filename": "src/webp/decode.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-06-14T05:29:17Z",
+      "side": 1,
+      "message": "we already have WebPGetFeatures() (see line 426 of this file).\n\nWhy do you need to expose this low-level VP8-only function?",
+      "parentUuid": "AAAAZ3//vP8\u003d",
+      "revId": "da71853adb5dd2946e94b34c68827d7703f7e58e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAZ3//vPU\u003d",
         "filename": "swig/libwebp.i",
         "patchSetId": 1
