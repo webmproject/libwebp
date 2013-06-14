@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAZ3//uoY\u003d",
+        "filename": "src/webp/decode.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1002174
+      },
+      "writtenOn": "2013-06-14T17:19:55Z",
+      "side": 1,
+      "message": "sorry, i misunderstood. i meant to expose WebPGetFeatures. will change it.",
+      "parentUuid": "AAAAZ3//vNc\u003d",
+      "revId": "da71853adb5dd2946e94b34c68827d7703f7e58e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAZ3//vPU\u003d",
         "filename": "swig/libwebp.i",
         "patchSetId": 1
