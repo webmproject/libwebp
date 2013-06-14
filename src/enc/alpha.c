@@ -217,6 +217,8 @@ static void InitFilterTrial(FilterTrial* const score) {
   VP8BitWriterInit(&score->bw, 0);
 }
 
+// TODO(urvang): This method name is misleading. Should be renamed to
+// ApplyFiltersAndEncode() perhaps.
 static int ApplyFilters(const uint8_t* alpha, int width, int height,
                         size_t data_size, int method, int filter,
                         int reduce_levels, int effort_level,
@@ -224,8 +226,11 @@ static int ApplyFilters(const uint8_t* alpha, int width, int height,
                         WebPAuxStats* const stats) {
   int ok = 1;
   uint8_t* filtered_alpha = NULL;
-  uint32_t try_map = GetFilterMap(alpha, width, height, filter, effort_level);
+  uint32_t try_map =
+      GetFilterMap(alpha, width, height, filter, effort_level);
 
+  // TODO(urvang): In case of no filtering, this malloc is unnecessary. Also,
+  // the whole loop below should be avoided in that case.
   filtered_alpha = (uint8_t*)malloc(data_size);
   ok = (filtered_alpha != NULL);
 
@@ -294,6 +299,11 @@ static int EncodeAlpha(VP8Encoder* const enc,
 
   if (method < ALPHA_NO_COMPRESSION || method > ALPHA_LOSSLESS_COMPRESSION) {
     return 0;
+  }
+
+  if (method == ALPHA_NO_COMPRESSION) {
+    // Don't filter, as filtering will make no impact on compressed size.
+    filter = WEBP_FILTER_NONE;
   }
 
   quant_alpha = (uint8_t*)malloc(data_size);
