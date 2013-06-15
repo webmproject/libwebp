@@ -128,7 +128,7 @@ static HRESULT ExtractICCP(IWICImagingFactory* const factory,
                                                &size));
           if (SUCCEEDED(hr) && size != iccp->size) {
             fprintf(stderr, "Warning! ICC profile size (%u) != expected (%u)\n",
-                    size, iccp->size);
+                    size, (uint32_t)iccp->size);
             iccp->size = size;
           }
           break;
