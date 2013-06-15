@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAZ3//t2Y\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 495,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-06-15T05:29:03Z",
+      "side": 1,
+      "message": "can\u0027t you just initialize duration to 0 too? (line 490)",
+      "revId": "65febe3ceeaf6071ffc32b1abc21102a798caac5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
