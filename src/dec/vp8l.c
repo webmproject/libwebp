@@ -794,7 +794,7 @@ End:                                                                           \
     dec->status_ =                                                             \
         (!br->eos_) ? VP8_STATUS_BITSTREAM_ERROR : VP8_STATUS_SUSPENDED;       \
   } else {                                                                     \
-    dec->last_pixel_ = src - data;                                             \
+    dec->last_pixel_ = (int)(src - data);                                      \
     if (src == src_end) dec->state_ = READ_DATA;                               \
   }                                                                            \
   return ok;                                                                   \
