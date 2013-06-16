@@ -112,6 +112,9 @@ static WEBP_INLINE void DoVerticalFilter(const uint8_t* in,
     row = 1;
     in += stride;
     out += stride;
+  } else {
+    // We are starting from in-between. Make sure 'preds' points to prev row.
+    preds -= stride;
   }
 
   // Filter line-by-line.
