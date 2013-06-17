@@ -1,3 +1,7 @@
+7288950 Regression fix for alpha channels using color cache:
+2e377b5 wicdec: silence a format warning
+ad9e42a muxedit: silence some uninitialized warnings
+825e73b update ChangeLog
 abf6f69 update NEWS
 5a92c1a bump version to 0.3.1
 67bc353 Revert "add WebPBlendAlpha() function to blend colors against background"
