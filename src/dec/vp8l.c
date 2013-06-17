@@ -1157,11 +1157,12 @@ int VP8LDecodeAlphaHeader(ALPHDecoder* const alph_dec,
     goto Err;
   }
 
-  // Special case: if alpha data contains only the color indexing transform
-  // (a frequent case), we will use DecodeAlphaData() method that only needs
-  // allocation of 1 byte per pixel (alpha channel).
+  // Special case: if alpha data uses only the color indexing transform and
+  // doesn't use color cache (a frequent case), we will use DecodeAlphaData()
+  // method that only needs allocation of 1 byte per pixel (alpha channel).
   if (dec->next_transform_ == 1 &&
-      dec->transforms_[0].type_ == COLOR_INDEXING_TRANSFORM) {
+      dec->transforms_[0].type_ == COLOR_INDEXING_TRANSFORM &&
+      dec->hdr_.color_cache_size_ == 0) {
     alph_dec->bytes_per_pixel_ = sizeof(uint8_t);
   }
 
