@@ -34,6 +34,24 @@
       "revId": "65febe3ceeaf6071ffc32b1abc21102a798caac5",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAaH///5Y\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 495,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-06-17T06:23:34Z",
+      "side": 1,
+      "message": "sgtm. In this case however, \u0027duration\u0027 is passed to the GetImageInfo() function. So, the compiler would have hard time finding out its value isn\u0027t actually used on the other side of the call...",
+      "parentUuid": "AAAAZ3//tzU\u003d",
+      "revId": "65febe3ceeaf6071ffc32b1abc21102a798caac5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
