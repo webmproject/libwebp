@@ -71,7 +71,7 @@ static int EncodeLossless(const uint8_t* const data, int width, int height,
     const uint8_t* src = data;
     for (j = 0; j < picture.height; ++j) {
       for (i = 0; i < picture.width; ++i) {
-        dst[i] = (src[i] << 8) | 0xff000000u;
+        dst[i] = src[i] << 8;  // we leave A/R/B channels zero'd.
       }
       src += width;
       dst += picture.argb_stride;
