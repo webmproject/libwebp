@@ -1067,29 +1067,35 @@ static int DecodeImageStream(int xsize, int ysize,
 
 //------------------------------------------------------------------------------
 // Allocate internal buffers dec->pixels_ and dec->argb_cache_.
-static int AllocateInternalBuffers(VP8LDecoder* const dec, int final_width,
-                                   size_t bytes_per_pixel) {
-  const int argb_cache_needed = (bytes_per_pixel == sizeof(uint32_t));
+static int AllocateInternalBuffers32b(VP8LDecoder* const dec, int final_width) {
   const uint64_t num_pixels = (uint64_t)dec->width_ * dec->height_;
   // Scratch buffer corresponding to top-prediction row for transforming the
   // first row in the row-blocks. Not needed for paletted alpha.
-  const uint64_t cache_top_pixels =
-      argb_cache_needed ? (uint16_t)final_width : 0ULL;
+  const uint64_t cache_top_pixels = (uint16_t)final_width;
   // Scratch buffer for temporary BGRA storage. Not needed for paletted alpha.
-  const uint64_t cache_pixels =
-      argb_cache_needed ? (uint64_t)final_width * NUM_ARGB_CACHE_ROWS : 0ULL;
+  const uint64_t cache_pixels = (uint64_t)final_width * NUM_ARGB_CACHE_ROWS;
   const uint64_t total_num_pixels =
       num_pixels + cache_top_pixels + cache_pixels;
 
   assert(dec->width_ <= final_width);
-  dec->pixels_ = (uint32_t*)WebPSafeMalloc(total_num_pixels, bytes_per_pixel);
+  dec->pixels_ = (uint32_t*)WebPSafeMalloc(total_num_pixels, sizeof(uint32_t));
   if (dec->pixels_ == NULL) {
     dec->argb_cache_ = NULL;    // for sanity check
     dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
     return 0;
   }
-  dec->argb_cache_ =
-      argb_cache_needed ? dec->pixels_ + num_pixels + cache_top_pixels : NULL;
+  dec->argb_cache_ = dec->pixels_ + num_pixels + cache_top_pixels;
+  return 1;
+}
+
+static int AllocateInternalBuffers8b(VP8LDecoder* const dec) {
+  const uint64_t total_num_pixels = (uint64_t)dec->width_ * dec->height_;
+  dec->argb_cache_ = NULL;    // for sanity check
+  dec->pixels_ = (uint32_t*)WebPSafeMalloc(total_num_pixels, sizeof(uint8_t));
+  if (dec->pixels_ == NULL) {
+    dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
+    return 0;
+  }
   return 1;
 }
 
@@ -1129,14 +1135,13 @@ static void ExtractPalettedAlphaRows(VP8LDecoder* const dec, int row) {
 int VP8LDecodeAlphaHeader(ALPHDecoder* const alph_dec,
                           const uint8_t* const data, size_t data_size,
                           uint8_t* const output) {
+  int ok = 0;
   VP8LDecoder* dec;
   VP8Io* io;
   assert(alph_dec != NULL);
   alph_dec->vp8l_dec_ = VP8LNew();
   if (alph_dec->vp8l_dec_ == NULL) return 0;
   dec = alph_dec->vp8l_dec_;
-
-  alph_dec->bytes_per_pixel_ = sizeof(uint32_t);  // Default: BGRA mode.
 
   dec->width_ = alph_dec->width_;
   dec->height_ = alph_dec->height_;
@@ -1163,14 +1168,15 @@ int VP8LDecodeAlphaHeader(ALPHDecoder* const alph_dec,
   if (dec->next_transform_ == 1 &&
       dec->transforms_[0].type_ == COLOR_INDEXING_TRANSFORM &&
       dec->hdr_.color_cache_size_ == 0) {
-    alph_dec->bytes_per_pixel_ = sizeof(uint8_t);
+    alph_dec->use_8b_decode = 1;
+    ok = AllocateInternalBuffers8b(dec);
+  } else {
+    // Allocate internal buffers (note that dec->width_ may have changed here).
+    alph_dec->use_8b_decode = 0;
+    ok = AllocateInternalBuffers32b(dec, alph_dec->width_);
   }
 
-  // Allocate internal buffers (note that dec->width_ may have changed here).
-  if (!AllocateInternalBuffers(dec, alph_dec->width_,
-                               alph_dec->bytes_per_pixel_)) {
-    goto Err;
-  }
+  if (!ok) goto Err;
 
   dec->action_ = READ_DATA;
   return 1;
@@ -1188,11 +1194,11 @@ int VP8LDecodeAlphaImageStream(ALPHDecoder* const alph_dec, int last_row) {
   assert(last_row <= dec->height_);
 
   // Decode (with special row processing).
-  return (alph_dec->bytes_per_pixel_ == sizeof(uint8_t)) ?
+  return alph_dec->use_8b_decode ?
       DecodeAlphaData(dec, (uint8_t*)dec->pixels_, dec->width_, dec->height_,
                       last_row, ExtractPalettedAlphaRows) :
-      DecodeImageData(dec, dec->pixels_, dec->width_, dec->height_, last_row,
-                      ExtractAlphaRows);
+      DecodeImageData(dec, dec->pixels_, dec->width_, dec->height_,
+                      last_row, ExtractAlphaRows);
 }
 
 //------------------------------------------------------------------------------
@@ -1228,7 +1234,6 @@ int VP8LDecodeHeader(VP8LDecoder* const dec, VP8Io* const io) {
 }
 
 int VP8LDecodeImage(VP8LDecoder* const dec) {
-  const size_t bytes_per_pixel = sizeof(uint32_t);
   VP8Io* io = NULL;
   WebPDecParams* params = NULL;
 
@@ -1248,7 +1253,7 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
     goto Err;
   }
 
-  if (!AllocateInternalBuffers(dec, io->width, bytes_per_pixel)) goto Err;
+  if (!AllocateInternalBuffers32b(dec, io->width)) goto Err;
 
   if (io->use_scaling && !AllocateAndInitRescaler(dec, io)) goto Err;
 
