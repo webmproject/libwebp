@@ -128,14 +128,14 @@ static int TreeAddSymbol(HuffmanTree* const tree,
     if (NodeIsEmpty(node)) {
       if (IsFull(tree)) return 0;    // error: too many symbols.
       AssignChildren(tree, node);
-    } else if (HuffmanTreeNodeIsLeaf(node)) {
+    } else if (!HuffmanTreeNodeIsNotLeaf(node)) {
       return 0;  // leaf is already occupied.
     }
     node += node->children_ + ((code >> code_length) & 1);
   }
   if (NodeIsEmpty(node)) {
     node->children_ = 0;      // turn newly created node into a leaf.
-  } else if (!HuffmanTreeNodeIsLeaf(node)) {
+  } else if (HuffmanTreeNodeIsNotLeaf(node)) {
     return 0;   // trying to assign a symbol to already used code.
   }
   node->symbol_ = symbol;  // Add symbol in this node.

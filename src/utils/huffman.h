@@ -35,10 +35,10 @@ struct HuffmanTree {
   int num_nodes_;           // number of currently occupied nodes
 };
 
-// Returns true if the given node is a leaf of the Huffman tree.
-static WEBP_INLINE int HuffmanTreeNodeIsLeaf(
+// Returns true if the given node is not a leaf of the Huffman tree.
+static WEBP_INLINE int HuffmanTreeNodeIsNotLeaf(
     const HuffmanTreeNode* const node) {
-  return (node->children_ == 0);
+  return node->children_;
 }
 
 // Go down one level. Most critical function. 'right_child' must be 0 or 1.

@@ -316,9 +316,10 @@ static WEBP_INLINE uint32_t VP8LPrefetchBits(VP8LBitReader* const br) {
   return (uint32_t)(br->val_ >> br->bit_pos_);
 }
 
-// Discard 'num_bits' bits from the cache.
-static WEBP_INLINE void VP8LDiscardBits(VP8LBitReader* const br, int num_bits) {
-  br->bit_pos_ += num_bits;
+// For jumping over a number of bits in the bit stream when accessed with
+// VP8LPrefetchBits and VP8LFillBitWindow.
+static WEBP_INLINE void VP8LSetBitPos(VP8LBitReader* const br, int val) {
+  br->bit_pos_ = val;
 }
 
 // Advances the Read buffer by 4 bytes to make room for reading next 32 bits.

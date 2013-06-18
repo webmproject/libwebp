@@ -156,15 +156,15 @@ static WEBP_INLINE int PlaneCodeToDistance(int xsize, int plane_code) {
 static WEBP_INLINE int ReadSymbol(const HuffmanTree* tree,
                                   VP8LBitReader* const br) {
   const HuffmanTreeNode* node = tree->root_;
-  int num_bits = 0;
   uint32_t bits = VP8LPrefetchBits(br);
+  int bitpos = br->bit_pos_;
   assert(node != NULL);
-  while (!HuffmanTreeNodeIsLeaf(node)) {
+  while (HuffmanTreeNodeIsNotLeaf(node)) {
     node = HuffmanTreeNextNode(node, bits & 1);
     bits >>= 1;
-    ++num_bits;
+    ++bitpos;
   }
-  VP8LDiscardBits(br, num_bits);
+  VP8LSetBitPos(br, bitpos);
   return node->symbol_;
 }
 
