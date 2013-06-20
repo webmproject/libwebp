@@ -178,6 +178,7 @@ static int GetNumColors(const uint8_t* data, int width, int height,
   return colors;
 }
 
+<<<<<<< HEAD   (24cc30 ~20% faster lossless decoding)
 // Given the input 'filter' option, return an OR'd bit-set of filters to try.
 static uint32_t GetFilterMap(const uint8_t* alpha, int width, int height,
                              int filter, int effort_level) {
@@ -271,6 +272,8 @@ static int ApplyFilters(const uint8_t* alpha, int width, int height,
   return ok;
 }
 
+=======
+>>>>>>> BRANCH (2a04b0 update ChangeLog)
 static int EncodeAlpha(VP8Encoder* const enc,
                        int quality, int method, int filter,
                        int effort_level,
@@ -324,13 +327,110 @@ static int EncodeAlpha(VP8Encoder* const enc,
   }
 
   if (ok) {
+<<<<<<< HEAD   (24cc30 ~20% faster lossless decoding)
     ok = ApplyFilters(quant_alpha, width, height, data_size, method, filter,
                       reduce_levels, effort_level, output, output_size,
                       pic->stats);
     if (pic->stats != NULL) {  // need stats?
       pic->stats->coded_size += (int)(*output_size);
       enc->sse_[3] = sse;
+=======
+    VP8BitWriter bw;
+    int test_filter;
+    uint8_t* filtered_alpha = NULL;
+    int try_filter_none = (effort_level > 3);
+
+    if (filter == WEBP_FILTER_FAST) {  // Quick estimate of the best candidate.
+      const int kMinColorsForFilterNone = 16;
+      const int kMaxColorsForFilterNone = 192;
+      const int num_colors = GetNumColors(quant_alpha, width, height, width);
+      // For low number of colors, NONE yeilds better compression.
+      filter = (num_colors <= kMinColorsForFilterNone) ? WEBP_FILTER_NONE :
+               EstimateBestFilter(quant_alpha, width, height, width);
+      // For large number of colors, try FILTER_NONE in addition to the best
+      // filter as well.
+      if (num_colors > kMaxColorsForFilterNone) {
+        try_filter_none = 1;
+      }
+>>>>>>> BRANCH (2a04b0 update ChangeLog)
     }
+<<<<<<< HEAD   (24cc30 ~20% faster lossless decoding)
+=======
+
+    // Test for WEBP_FILTER_NONE for higher effort levels.
+    if (try_filter_none || filter == WEBP_FILTER_NONE) {
+      ok = EncodeAlphaInternal(quant_alpha, width, height,
+                               method, WEBP_FILTER_NONE, reduce_levels,
+                               effort_level, NULL, &bw, pic->stats);
+
+      if (!ok) {
+        VP8BitWriterWipeOut(&bw);
+        goto End;
+      }
+    }
+    // Stop?
+    if (filter == WEBP_FILTER_NONE) {
+      goto Ok;
+    }
+
+    filtered_alpha = (uint8_t*)malloc(data_size);
+    ok = (filtered_alpha != NULL);
+    if (!ok) {
+      goto End;
+    }
+
+    // Try the other mode(s).
+    {
+      WebPAuxStats best_stats;
+      size_t best_score = try_filter_none ?
+                          VP8BitWriterSize(&bw) : (size_t)~0U;
+      int wipe_tmp_bw = try_filter_none;
+
+      memset(&best_stats, 0, sizeof(best_stats));  // prevent spurious warning
+      if (pic->stats != NULL) best_stats = *pic->stats;
+      for (test_filter =
+           try_filter_none ? WEBP_FILTER_HORIZONTAL : WEBP_FILTER_NONE;
+           ok && (test_filter <= WEBP_FILTER_GRADIENT);
+           ++test_filter) {
+        VP8BitWriter tmp_bw;
+        if (filter != WEBP_FILTER_BEST && test_filter != filter) {
+          continue;
+        }
+        ok = EncodeAlphaInternal(quant_alpha, width, height,
+                                 method, test_filter, reduce_levels,
+                                 effort_level, filtered_alpha, &tmp_bw,
+                                 pic->stats);
+        if (ok) {
+          const size_t score = VP8BitWriterSize(&tmp_bw);
+          if (score < best_score) {
+            // swap bitwriter objects.
+            VP8BitWriter tmp = tmp_bw;
+            tmp_bw = bw;
+            bw = tmp;
+            best_score = score;
+            if (pic->stats != NULL) best_stats = *pic->stats;
+          }
+        } else {
+          VP8BitWriterWipeOut(&bw);
+        }
+        if (wipe_tmp_bw) {
+          VP8BitWriterWipeOut(&tmp_bw);
+        }
+        wipe_tmp_bw = 1;  // For next filter trial for WEBP_FILTER_BEST.
+      }
+      if (pic->stats != NULL) *pic->stats = best_stats;
+    }
+ Ok:
+    if (ok) {
+      *output_size = VP8BitWriterSize(&bw);
+      *output = VP8BitWriterBuf(&bw);
+      if (pic->stats != NULL) {         // need stats?
+        pic->stats->coded_size += (int)(*output_size);
+        enc->sse_[3] = sse;
+      }
+    }
+    free(filtered_alpha);
+>>>>>>> BRANCH (2a04b0 update ChangeLog)
   }
 
   free(quant_alpha);

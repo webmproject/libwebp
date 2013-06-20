@@ -824,7 +824,11 @@ static void ApplyPalette(uint32_t* src, uint32_t* dst,
   }
 
   if (use_LUT) {
+<<<<<<< HEAD   (24cc30 ~20% faster lossless decoding)
     uint8_t inv_palette[MAX_PALETTE_SIZE] = { 0 };
+=======
+    int inv_palette[MAX_PALETTE_SIZE] = { 0 };
+>>>>>>> BRANCH (2a04b0 update ChangeLog)
     for (i = 0; i < palette_size; ++i) {
       const int color = (palette[i] >> 8) & 0xff;
       inv_palette[color] = i;

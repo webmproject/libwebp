@@ -276,7 +276,11 @@ int main(int argc, const char *argv[]) {
   picture.width = gif->SWidth;
   picture.height = gif->SHeight;
   picture.use_argb = 1;
+<<<<<<< HEAD   (24cc30 ~20% faster lossless decoding)
   if (!WebPPictureAlloc(&picture)) goto End;
+=======
+    if (!WebPPictureAlloc(&picture)) goto End;
+>>>>>>> BRANCH (2a04b0 update ChangeLog)
 
   mux = WebPMuxNew();
   if (mux == NULL) {

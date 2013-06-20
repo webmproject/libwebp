@@ -105,6 +105,7 @@ static WEBP_INLINE size_t MemDataSize(const MemBuffer* mem) {
 // Check if we need to preserve the compressed alpha data, as it may not have
 // been decoded yet.
 static int NeedCompressedAlpha(const WebPIDecoder* const idec) {
+<<<<<<< HEAD   (24cc30 ~20% faster lossless decoding)
   if (idec->state_ == STATE_WEBP_HEADER) {
     // We haven't parsed the headers yet, so we don't know whether the image is
     // lossy or lossless. This also means that we haven't parsed the ALPH chunk.
@@ -115,6 +116,18 @@ static int NeedCompressedAlpha(const WebPIDecoder* const idec) {
   } else {
     const VP8Decoder* const dec = (VP8Decoder*)idec->dec_;
     assert(dec != NULL);  // Must be true as idec->state_ != STATE_WEBP_HEADER.
+=======
+  if (idec->state_ == STATE_PRE_VP8) {
+    // We haven't parsed the headers yet, so we don't know whether the image is
+    // lossy or lossless. This also means that we haven't parsed the ALPH chunk.
+    return 0;
+  }
+  if (idec->is_lossless_) {
+    return 0;  // ALPH chunk is not present for lossless images.
+  } else {
+    const VP8Decoder* const dec = (VP8Decoder*)idec->dec_;
+    assert(dec != NULL);  // Must be true as idec->state_ != STATE_PRE_VP8.
+>>>>>>> BRANCH (2a04b0 update ChangeLog)
     return (dec->alpha_data_ != NULL) && !dec->is_alpha_decoded_;
   }
 }
@@ -144,6 +157,7 @@ static void DoRemap(WebPIDecoder* const idec, ptrdiff_t offset) {
       }
       assert(last_part >= 0);
       dec->parts_[last_part].buf_end_ = mem->buf_ + mem->end_;
+<<<<<<< HEAD   (24cc30 ~20% faster lossless decoding)
       if (NeedCompressedAlpha(idec)) {
         ALPHDecoder* const alph_dec = dec->alph_dec_;
         dec->alpha_data_ += offset;
@@ -160,6 +174,9 @@ static void DoRemap(WebPIDecoder* const idec, ptrdiff_t offset) {
           }
         }
       }
+=======
+      if (NeedCompressedAlpha(idec)) dec->alpha_data_ += offset;
+>>>>>>> BRANCH (2a04b0 update ChangeLog)
     } else {    // Resize lossless bitreader
       VP8LDecoder* const dec = (VP8LDecoder*)idec->dec_;
       VP8LBitReaderSetBuffer(&dec->br_, new_base, MemDataSize(mem));

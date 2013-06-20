@@ -4,7 +4,7 @@
           \__\__/\____/\_____/__/ ____  ___
                 / _/ /    \    \ /  _ \/ _/
                /  \_/   / /   \ \   __/  \__
-               \____/____/\_____/_____/____/v0.3.0
+               \____/____/\_____/_____/____/v0.3.1
 
 Description:
 ============
@@ -111,6 +111,12 @@ Java bindings:
 To build the swig-generated JNI wrapper code at least JDK-1.5 (or equivalent)
 is necessary for enum support. The output is intended to be a shared object /
 DLL that can be loaded via System.loadLibrary("webp_jni").
+
+Python bindings:
+
+To build the swig-generated Python extension code at least Python 2.6 is
+required. Python < 2.6 may build with some minor changes to libwebp.i or the
+generated code, but is untested.
 
 Python bindings:
 

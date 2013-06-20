@@ -694,6 +694,7 @@ static void ProcessRows(VP8LDecoder* const dec, int row) {
 
 #define DECODE_DATA_FUNC(FUNC_NAME, TYPE, STORE_PIXEL)                         \
 static int FUNC_NAME(VP8LDecoder* const dec, TYPE* const data, int width,      \
+<<<<<<< HEAD   (24cc30 ~20% faster lossless decoding)
                      int height, int last_row,                                 \
                      ProcessRowsFunc process_func) {                           \
   int ok = 1;                                                                  \
@@ -804,6 +805,113 @@ End:                                                                           \
   } else {                                                                     \
     dec->last_pixel_ = (int)(src - data);                                      \
     if (src == src_end) dec->state_ = READ_DATA;                               \
+=======
+                     int height, ProcessRowsFunc process_func) {               \
+  int ok = 1;                                                                  \
+  int col = 0, row = 0;                                                        \
+  VP8LBitReader* const br = &dec->br_;                                         \
+  VP8LMetadata* const hdr = &dec->hdr_;                                        \
+  HTreeGroup* htree_group = hdr->htree_groups_;                                \
+  TYPE* src = data;                                                            \
+  TYPE* last_cached = data;                                                    \
+  TYPE* const src_end = data + width * height;                                 \
+  const int len_code_limit = NUM_LITERAL_CODES + NUM_LENGTH_CODES;             \
+  const int color_cache_limit = len_code_limit + hdr->color_cache_size_;       \
+  VP8LColorCache* const color_cache =                                          \
+      (hdr->color_cache_size_ > 0) ? &hdr->color_cache_ : NULL;                \
+  const int mask = hdr->huffman_mask_;                                         \
+  assert(htree_group != NULL);                                                 \
+  while (!br->eos_ && src < src_end) {                                         \
+    int code;                                                                  \
+    /* Only update when changing tile. Note we could use this test:        */  \
+    /* if "((((prev_col ^ col) | prev_row ^ row)) > mask)" -> tile changed */  \
+    /* but that's actually slower and needs storing the previous col/row.  */  \
+    if ((col & mask) == 0) {                                                   \
+      htree_group = GetHtreeGroupForPos(hdr, col, row);                        \
+    }                                                                          \
+    VP8LFillBitWindow(br);                                                     \
+    code = ReadSymbol(&htree_group->htrees_[GREEN], br);                       \
+    if (code < NUM_LITERAL_CODES) {  /* Literal*/                              \
+      int red, green, blue, alpha;                                             \
+      red = ReadSymbol(&htree_group->htrees_[RED], br);                        \
+      green = code;                                                            \
+      VP8LFillBitWindow(br);                                                   \
+      blue = ReadSymbol(&htree_group->htrees_[BLUE], br);                      \
+      alpha = ReadSymbol(&htree_group->htrees_[ALPHA], br);                    \
+      *src = STORE_PIXEL(alpha, red, green, blue);                             \
+    AdvanceByOne:                                                              \
+      ++src;                                                                   \
+      ++col;                                                                   \
+      if (col >= width) {                                                      \
+        col = 0;                                                               \
+        ++row;                                                                 \
+        if ((process_func != NULL) && (row % NUM_ARGB_CACHE_ROWS == 0)) {      \
+          process_func(dec, row);                                              \
+        }                                                                      \
+        if (color_cache != NULL) {                                             \
+          while (last_cached < src) {                                          \
+            VP8LColorCacheInsert(color_cache, *last_cached++);                 \
+          }                                                                    \
+        }                                                                      \
+      }                                                                        \
+    } else if (code < len_code_limit) {  /* Backward reference */              \
+      int dist_code, dist;                                                     \
+      const int length_sym = code - NUM_LITERAL_CODES;                         \
+      const int length = GetCopyLength(length_sym, br);                        \
+      const int dist_symbol = ReadSymbol(&htree_group->htrees_[DIST], br);     \
+      VP8LFillBitWindow(br);                                                   \
+      dist_code = GetCopyDistance(dist_symbol, br);                            \
+      dist = PlaneCodeToDistance(width, dist_code);                            \
+      if (src - data < dist || src_end - src < length) {                       \
+        ok = 0;                                                                \
+        goto End;                                                              \
+      }                                                                        \
+      {                                                                        \
+        int i;                                                                 \
+        for (i = 0; i < length; ++i) src[i] = src[i - dist];                   \
+        src += length;                                                         \
+      }                                                                        \
+      col += length;                                                           \
+      while (col >= width) {                                                   \
+        col -= width;                                                          \
+        ++row;                                                                 \
+        if ((process_func != NULL) && (row % NUM_ARGB_CACHE_ROWS == 0)) {      \
+          process_func(dec, row);                                              \
+        }                                                                      \
+      }                                                                        \
+      if (src < src_end) {                                                     \
+        htree_group = GetHtreeGroupForPos(hdr, col, row);                      \
+        if (color_cache != NULL) {                                             \
+          while (last_cached < src) {                                          \
+            VP8LColorCacheInsert(color_cache, *last_cached++);                 \
+          }                                                                    \
+        }                                                                      \
+      }                                                                        \
+    } else if (code < color_cache_limit) {  /* Color cache */                  \
+      const int key = code - len_code_limit;                                   \
+      assert(color_cache != NULL);                                             \
+      while (last_cached < src) {                                              \
+        VP8LColorCacheInsert(color_cache, *last_cached++);                     \
+      }                                                                        \
+      *src = VP8LColorCacheLookup(color_cache, key);                           \
+      goto AdvanceByOne;                                                       \
+    } else {  /* Not reached */                                                \
+      ok = 0;                                                                  \
+      goto End;                                                                \
+    }                                                                          \
+    ok = !br->error_;                                                          \
+    if (!ok) goto End;                                                         \
+  }                                                                            \
+  /* Process the remaining rows corresponding to last row-block. */            \
+  if (process_func != NULL) process_func(dec, row);                            \
+End:                                                                           \
+  if (br->error_ || !ok || (br->eos_ && src < src_end)) {                      \
+    ok = 0;                                                                    \
+    dec->status_ =                                                             \
+        (!br->eos_) ? VP8_STATUS_BITSTREAM_ERROR : VP8_STATUS_SUSPENDED;       \
+  } else if (src == src_end) {                                                 \
+    dec->state_ = READ_DATA;                                                   \
+>>>>>>> BRANCH (2a04b0 update ChangeLog)
   }                                                                            \
   return ok;                                                                   \
 }
@@ -1075,23 +1183,42 @@ static int DecodeImageStream(int xsize, int ysize,
 
 //------------------------------------------------------------------------------
 // Allocate internal buffers dec->pixels_ and dec->argb_cache_.
+<<<<<<< HEAD   (24cc30 ~20% faster lossless decoding)
 static int AllocateInternalBuffers32b(VP8LDecoder* const dec, int final_width) {
+=======
+static int AllocateInternalBuffers(VP8LDecoder* const dec, int final_width,
+                                   size_t bytes_per_pixel) {
+  const int argb_cache_needed = (bytes_per_pixel == sizeof(uint32_t));
+>>>>>>> BRANCH (2a04b0 update ChangeLog)
   const uint64_t num_pixels = (uint64_t)dec->width_ * dec->height_;
   // Scratch buffer corresponding to top-prediction row for transforming the
   // first row in the row-blocks. Not needed for paletted alpha.
+<<<<<<< HEAD   (24cc30 ~20% faster lossless decoding)
   const uint64_t cache_top_pixels = (uint16_t)final_width;
   // Scratch buffer for temporary BGRA storage. Not needed for paletted alpha.
   const uint64_t cache_pixels = (uint64_t)final_width * NUM_ARGB_CACHE_ROWS;
+=======
+  const uint64_t cache_top_pixels =
+      argb_cache_needed ? (uint16_t)final_width : 0ULL;
+  // Scratch buffer for temporary BGRA storage. Not needed for paletted alpha.
+  const uint64_t cache_pixels =
+      argb_cache_needed ? (uint64_t)final_width * NUM_ARGB_CACHE_ROWS : 0ULL;
+>>>>>>> BRANCH (2a04b0 update ChangeLog)
   const uint64_t total_num_pixels =
       num_pixels + cache_top_pixels + cache_pixels;
 
   assert(dec->width_ <= final_width);
+<<<<<<< HEAD   (24cc30 ~20% faster lossless decoding)
   dec->pixels_ = (uint32_t*)WebPSafeMalloc(total_num_pixels, sizeof(uint32_t));
+=======
+  dec->pixels_ = (uint32_t*)WebPSafeMalloc(total_num_pixels, bytes_per_pixel);
+>>>>>>> BRANCH (2a04b0 update ChangeLog)
   if (dec->pixels_ == NULL) {
     dec->argb_cache_ = NULL;    // for sanity check
     dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
     return 0;
   }
+<<<<<<< HEAD   (24cc30 ~20% faster lossless decoding)
   dec->argb_cache_ = dec->pixels_ + num_pixels + cache_top_pixels;
   return 1;
 }
@@ -1104,6 +1231,10 @@ static int AllocateInternalBuffers8b(VP8LDecoder* const dec) {
     dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
     return 0;
   }
+=======
+  dec->argb_cache_ =
+      argb_cache_needed ? dec->pixels_ + num_pixels + cache_top_pixels : NULL;
+>>>>>>> BRANCH (2a04b0 update ChangeLog)
   return 1;
 }
 
@@ -1126,6 +1257,20 @@ static void ExtractAlphaRows(VP8LDecoder* const dec, int row) {
     int i;
     for (i = 0; i < cache_pixs; ++i) dst[i] = (src[i] >> 8) & 0xff;
   }
+<<<<<<< HEAD   (24cc30 ~20% faster lossless decoding)
+=======
+  dec->last_row_ = dec->last_out_row_ = row;
+}
+
+// Row-processing for the special case when alpha data contains only one
+// transform: color indexing.
+static void ExtractPalettedAlphaRows(VP8LDecoder* const dec, int row) {
+  const int num_rows = row - dec->last_row_;
+  const uint8_t* const in =
+      (uint8_t*)dec->pixels_ + dec->width_ * dec->last_row_;
+  if (num_rows <= 0) return;  // Nothing to be done.
+  ApplyInverseTransformsAlpha(dec, num_rows, in);
+>>>>>>> BRANCH (2a04b0 update ChangeLog)
   dec->last_row_ = dec->last_out_row_ = row;
 }
 
@@ -1144,12 +1289,18 @@ int VP8LDecodeAlphaHeader(ALPHDecoder* const alph_dec,
                           const uint8_t* const data, size_t data_size,
                           uint8_t* const output) {
   int ok = 0;
+<<<<<<< HEAD   (24cc30 ~20% faster lossless decoding)
   VP8LDecoder* dec;
   VP8Io* io;
   assert(alph_dec != NULL);
   alph_dec->vp8l_dec_ = VP8LNew();
   if (alph_dec->vp8l_dec_ == NULL) return 0;
   dec = alph_dec->vp8l_dec_;
+=======
+  VP8LDecoder* const dec = VP8LNew();
+  size_t bytes_per_pixel = sizeof(uint32_t);  // Default: BGRA mode.
+  if (dec == NULL) return 0;
+>>>>>>> BRANCH (2a04b0 update ChangeLog)
 
   dec->width_ = alph_dec->width_;
   dec->height_ = alph_dec->height_;
@@ -1176,6 +1327,7 @@ int VP8LDecodeAlphaHeader(ALPHDecoder* const alph_dec,
   if (dec->next_transform_ == 1 &&
       dec->transforms_[0].type_ == COLOR_INDEXING_TRANSFORM &&
       dec->hdr_.color_cache_size_ == 0) {
+<<<<<<< HEAD   (24cc30 ~20% faster lossless decoding)
     alph_dec->use_8b_decode = 1;
     ok = AllocateInternalBuffers8b(dec);
   } else {
@@ -1183,11 +1335,26 @@ int VP8LDecodeAlphaHeader(ALPHDecoder* const alph_dec,
     alph_dec->use_8b_decode = 0;
     ok = AllocateInternalBuffers32b(dec, alph_dec->width_);
   }
+=======
+    bytes_per_pixel = sizeof(uint8_t);
+  }
+
+  // Allocate internal buffers (note that dec->width_ may have changed here).
+  if (!AllocateInternalBuffers(dec, width, bytes_per_pixel)) goto Err;
+>>>>>>> BRANCH (2a04b0 update ChangeLog)
 
   if (!ok) goto Err;
 
   dec->action_ = READ_DATA;
+<<<<<<< HEAD   (24cc30 ~20% faster lossless decoding)
   return 1;
+=======
+  ok = (bytes_per_pixel == sizeof(uint8_t)) ?
+      DecodeAlphaData(dec, (uint8_t*)dec->pixels_, dec->width_, dec->height_,
+                      ExtractPalettedAlphaRows) :
+      DecodeImageData(dec, dec->pixels_, dec->width_, dec->height_,
+                      ExtractAlphaRows);
+>>>>>>> BRANCH (2a04b0 update ChangeLog)
 
  Err:
   VP8LDelete(alph_dec->vp8l_dec_);
@@ -1242,6 +1409,7 @@ int VP8LDecodeHeader(VP8LDecoder* const dec, VP8Io* const io) {
 }
 
 int VP8LDecodeImage(VP8LDecoder* const dec) {
+  const size_t bytes_per_pixel = sizeof(uint32_t);
   VP8Io* io = NULL;
   WebPDecParams* params = NULL;
 
@@ -1261,14 +1429,22 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
     goto Err;
   }
 
+<<<<<<< HEAD   (24cc30 ~20% faster lossless decoding)
   if (!AllocateInternalBuffers32b(dec, io->width)) goto Err;
+=======
+  if (!AllocateInternalBuffers(dec, io->width, bytes_per_pixel)) goto Err;
+>>>>>>> BRANCH (2a04b0 update ChangeLog)
 
   if (io->use_scaling && !AllocateAndInitRescaler(dec, io)) goto Err;
 
   // Decode.
   dec->action_ = READ_DATA;
   if (!DecodeImageData(dec, dec->pixels_, dec->width_, dec->height_,
+<<<<<<< HEAD   (24cc30 ~20% faster lossless decoding)
                        dec->height_, ProcessRows)) {
+=======
+                       ProcessRows)) {
+>>>>>>> BRANCH (2a04b0 update ChangeLog)
     goto Err;
   }
 
