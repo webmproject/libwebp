@@ -13,6 +13,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 #include "./huffman.h"
 #include "../utils/utils.h"
 #include "../webp/format_constants.h"
@@ -57,6 +58,7 @@ static int TreeInit(HuffmanTree* const tree, int num_leaves) {
   if (tree->root_ == NULL) return 0;
   TreeNodeInit(tree->root_);  // Initialize root.
   tree->num_nodes_ = 1;
+  memset(tree->lut_bits_, 255, sizeof(tree->lut_bits_));
   return 1;
 }
 
@@ -117,10 +119,30 @@ int HuffmanCodeLengthsToCodes(const int* const code_lengths,
   return 1;
 }
 
+static int ReverseBits(int bits, int num_bits) {
+  int retval = 0;
+  int i;
+  for (i = 0; i < num_bits; ++i) {
+    retval <<= 1;
+    retval |= bits & 1;
+    bits >>= 1;
+  }
+  return retval;
+}
+
 static int TreeAddSymbol(HuffmanTree* const tree,
                          int symbol, int code, int code_length) {
   HuffmanTreeNode* node = tree->root_;
   const HuffmanTreeNode* const max_node = tree->root_ + tree->max_nodes_;
+  if (code_length <= HUFF_LUT_BITS) {
+    const int base_code = ReverseBits(code, code_length);
+    int i;
+    for (i = 0; i < (1 << (HUFF_LUT_BITS - code_length)); ++i) {
+      const int idx = base_code | (i << code_length);
+      tree->lut_symbol_[idx] = symbol;
+      tree->lut_bits_[idx] = code_length;
+    }
+  }
   while (code_length-- > 0) {
     if (node >= max_node) {
       return 0;

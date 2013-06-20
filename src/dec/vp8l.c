@@ -158,6 +158,14 @@ static WEBP_INLINE int ReadSymbol(const HuffmanTree* tree,
   const HuffmanTreeNode* node = tree->root_;
   uint32_t bits = VP8LPrefetchBits(br);
   int bitpos = br->bit_pos_;
+  // Check if we find the bit combination from the Huffman lookup table.
+  const int lut_ix = bits & (HUFF_LUT - 1);
+  const int lut_bits = tree->lut_bits_[lut_ix];
+  if (lut_bits <= HUFF_LUT_BITS) {
+    VP8LSetBitPos(br, bitpos + lut_bits);
+    return tree->lut_symbol_[lut_ix];
+  }
+  // Decode the value from a binary tree.
   assert(node != NULL);
   while (HuffmanTreeNodeIsNotLeaf(node)) {
     node = HuffmanTreeNextNode(node, bits & 1);

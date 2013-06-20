@@ -28,8 +28,14 @@ typedef struct {
 } HuffmanTreeNode;
 
 // Huffman Tree.
+#define HUFF_LUT_BITS 7
+#define HUFF_LUT (1U << HUFF_LUT_BITS)
 typedef struct HuffmanTree HuffmanTree;
 struct HuffmanTree {
+  // Fast lookup for short bit lengths.
+  uint8_t lut_bits_[HUFF_LUT];
+  int lut_symbol_[HUFF_LUT];
+  // Complete tree for lookups.
   HuffmanTreeNode* root_;   // all the nodes, starting at root.
   int max_nodes_;           // max number of nodes
   int num_nodes_;           // number of currently occupied nodes
