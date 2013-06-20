@@ -217,13 +217,12 @@ static void InitFilterTrial(FilterTrial* const score) {
   VP8BitWriterInit(&score->bw, 0);
 }
 
-// TODO(urvang): This method name is misleading. Should be renamed to
-// ApplyFiltersAndEncode() perhaps.
-static int ApplyFilters(const uint8_t* alpha, int width, int height,
-                        size_t data_size, int method, int filter,
-                        int reduce_levels, int effort_level,
-                        uint8_t** const output, size_t* const output_size,
-                        WebPAuxStats* const stats) {
+static int ApplyFiltersAndEncode(const uint8_t* alpha, int width, int height,
+                                 size_t data_size, int method, int filter,
+                                 int reduce_levels, int effort_level,
+                                 uint8_t** const output,
+                                 size_t* const output_size,
+                                 WebPAuxStats* const stats) {
   int ok = 1;
   uint8_t* filtered_alpha = NULL;
   uint32_t try_map =
@@ -324,9 +323,9 @@ static int EncodeAlpha(VP8Encoder* const enc,
   }
 
   if (ok) {
-    ok = ApplyFilters(quant_alpha, width, height, data_size, method, filter,
-                      reduce_levels, effort_level, output, output_size,
-                      pic->stats);
+    ok = ApplyFiltersAndEncode(quant_alpha, width, height, data_size, method,
+                               filter, reduce_levels, effort_level, output,
+                               output_size, pic->stats);
     if (pic->stats != NULL) {  // need stats?
       pic->stats->coded_size += (int)(*output_size);
       enc->sse_[3] = sse;
