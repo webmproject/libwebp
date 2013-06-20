@@ -1,3 +1,60 @@
+7288950 Regression fix for alpha channels using color cache:
+2e377b5 wicdec: silence a format warning
+ad9e42a muxedit: silence some uninitialized warnings
+825e73b update ChangeLog
+abf6f69 update NEWS
+5a92c1a bump version to 0.3.1
+67bc353 Revert "add WebPBlendAlpha() function to blend colors against background"
+38cc011 Simplify forward-WHT + SSE2 version
+f32097e probe input file and quick-check for WebP format.
+a2aed1d configure: improve gl/glut library test
+c7e89cb update copyright text
+a00380d configure: remove use of AS_VAR_APPEND
+a94a88d fix EXIF parsing in PNG
+a71e5d8 add doc precision for WebPPictureCopy() and WebPPictureView()
+8287012 remove datatype qualifier for vmnv
+e190843 fix a memory leak in gif2webp
+0b18b9e fix two minor memory leaks in webpmux
+db5095d remove some cruft from swig/libwebp.jar
+850e956 README: update swig notes
+bddd9b0 swig/python: add minimal documentation
+d573a8d swig: add python encode support
+6b93187 swig/java: reduce wrapper function code duplication
+6fe536f swig/java: rework uint8_t typemap
+a2ea464 Fix the bug in ApplyPalette.
+7bb28d2 webp/lossless: fix big endian BGRA output
+f036d4b Speed up ApplyPalette for ARGB pixels.
+8112c8c remove some warnings:
+cc128e0 Further reduce memory to decode lossy+alpha images
+07db70d fix for big-endian
+eda8a7d gif2webp: Fix signed/unsigned comparison mismatch
+31f346f Makefile.vc: fix libwebpdemux dll variable typo
+6c76d28 swig: add python (decode) support
+b4f5bb6 swig: cosmetics
+498d4dd WebP-Lossless encoding improvements.
+26e7244 swig: ifdef some Java specific code
+8ecec68 configure: add warning related flags
+e676b04 configure: add GLUT detection; build vwebp
+b0ffc43 Alpha decoding: significantly reduce memory usage
+20aa7a8 configure: add --enable-everything
+b8307cc configure.ac: add some helper macros
+980e7ae Remove the gcc compilation comments
+7f25ff9 gif2webp: Fix ICC and XMP support
+d8e5321 Add missing name to AUTHORS
+11edf5e Demux: Fix a potential memleak
+c7b9218 don't forward declare enums
+7a650c6 prevent signed int overflow in left shift ops
+31bea32 add precision about dynamic output reallocation with IDecoder
+c22877f Add incremental support for extended format files
+5051245 Makefile.vc: have 'all' target build everything
+8191dec Makefile.vc: flags cleanup
+b9d7473 Makefile.vc: drop /FD flag
+5568dbc update gitignore
+f4c7b65 WebPEncode: An additional check. Start VP8EncLoop/VP8EncTokenLoop only if VP8EncStartAlpha succeeded.
+1fb04be pngdec: Avoid a double-free.
+dcbb1ca add WebPBlendAlpha() function to blend colors against background
+bc9f5fb configure.ac: add AM_PROG_AR for automake >= 1.12
+1e0d4b8 Update ChangeLog (tag: v0.3.0-rc7, tag: v0.3.0)
 d52b405 Cosmetic fixes
 6cb4a61 misc style fix
 68111ab add missing YUVA->ARGB automatic conversion in WebPEncode()
@@ -18,7 +75,7 @@ a5ebd14 gif2webp: Bgcolor fix for a special case
 3c8eb9a fix bad saturation order in QuantizeBlock
 04c7a2e vwebp/animation: fix background dispose
 81a5069 Makefile.vc: fix dynamic builds
-5f25c39 update ChangeLog
+5f25c39 update ChangeLog (tag: v0.3.0-rc6)
 14d42af examples: don't use C99 %zu
 5ccf1fe update ChangeLog
 2560c24 update NEWS
@@ -324,7 +381,7 @@ a61a824 Merge "Add NULL check in chunk APIs"
 a077072 mux struct naming
 6c66dde Merge "Tune Lossless encoder"
 ab5ea21 Tune Lossless encoder
-74fefc8 Update ChangeLog (v0.2.1, origin/0.2.0)
+74fefc8 Update ChangeLog (tag: v0.2.1, origin/0.2.0)
 92f8059 Rename some chunks:
 3bb4bbe Merge "Mux API change:"
 d0c79f0 Mux API change:
@@ -394,7 +451,7 @@ c7eb457 make VP8DspInitNEON() public
 ab3234a Create WebPMuxFrameInfo struct for Mux APIs
 e3990fd Alignment fixes
 e55fbd6 Merge branch '0.2.0'
-4238bc0 Update ChangeLog (v0.2.0)
+4238bc0 Update ChangeLog (tag: v0.2.0)
 c655380 dec/io.c: cosmetics
 fe1958f RGBA4444: harmonize lossless/lossy alpha values
 681cb30 fix RGBA4444 output w/fancy upsampling
@@ -405,7 +462,7 @@ f56e98f Alignment fix
 a0a4885 Lossless decoder fix for a special transform order
 62dd9bb Update encoding heuristic w.r.t palette colors.
 6f4272b remove unused ApplyInverseTransform()
-93bf0fa Update ChangeLog (v0.2.0-rc1)
+93bf0fa Update ChangeLog (tag: v0.2.0-rc1)
 5934fc5 update AUTHORS
 014a711 update NEWS
 43b0d61 add support for ARGB -> YUVA conversion for lossless decoder
@@ -448,7 +505,7 @@ cbee59e Merge commit 'v0.1.99'
 3bc3f7c Merge "dwebp: add PAM output support" into 0.2.0
 d919ed0 dwebp: add PAM output support
 85e215d README/manpages/configure: update website link
-c3a207b Update ChangeLog (v0.1.99)
+c3a207b Update ChangeLog (tag: v0.1.99)
 d1fd782 Merge "add extra precision about default values and behaviour" into 0.2.0
 efc826e add extra precision about default values and behaviour
 9f29635 header/doc clean up
@@ -1073,7 +1130,7 @@ f3bf4c7 Added Mux Container Spec & README for MUX-API.
 9f761cf Changed function signature for WebPMuxCreate
 5f31b5e Merge "Add Mux library for manipulating WebP container."
 2315785 Add Mux library for manipulating WebP container.
-7e198ab update ChangeLog (v0.1.3)
+7e198ab update ChangeLog (tag: v0.1.3)
 dfc9c1e Harmonize the dates
 28ad70c Fix PNG decoding bug
 846e93c Update AUTHORS & add .mailmap
@@ -1214,7 +1271,7 @@ cfbf88a add SSE2 functions. ~2x faster encoding on average.
 e7ff3f9 merge two ITransforms together when applicable and change the TTransform to return the sum directly.
 ca55413 fix WebPIDecGetRGB() to accept any RGB(A) mode, not just MODE_RGB
 8aa50ef fix some 'man' typos
-d3f3bdd update ChangeLog (v0.1.2)
+d3f3bdd update ChangeLog (tag: v0.1.2)
 d7e9a69 update contributor list
 261abb8 add a 'superclean' section
 276ae82 Remove files not mean to be in git, and update .gitignore
