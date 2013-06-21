@@ -386,9 +386,14 @@ byte order. This color is used to fill the unused space on the canvas around the
 frames, as well as the transparent pixels of the first frame. Background color
 is also used when disposal method is `1`.
 
-**Note**: Viewers that have a preferred background against which to present the
-images (web browsers, for example) should ignore this value and use their
-preferred background color instead.
+**Notes**:
+
+  * Background color may contain non-trivial alpha even though _Alpha_ flag in
+    [VP8X chunk](#extended_header) is unset.
+
+  * Viewers that have a preferred background against which to present the
+    images (web browsers, for example) should ignore this value and use their
+    preferred background color instead.
 
 Loop Count: 16 bits (_uint16_)
 
