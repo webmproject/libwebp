@@ -36,11 +36,11 @@
 
 static int transparent_index = -1;  // No transparency by default.
 
-static void ClearPicture(WebPPicture* const picture, uint32_t color) {
+static void ClearPicture(WebPPicture* const picture) {
   int x, y;
   for (y = 0; y < picture->height; ++y) {
     uint32_t* const dst = picture->argb + y * picture->argb_stride;
-    for (x = 0; x < picture->width; ++x) dst[x] = color;
+    for (x = 0; x < picture->width; ++x) dst[x] = TRANSPARENT_COLOR;
   }
 }
 
@@ -296,7 +296,7 @@ int main(int argc, const char *argv[]) {
         WebPMemoryWriter memory;
 
         if (frame.dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
-          ClearPicture(&picture, anim.bgcolor);
+          ClearPicture(&picture);
         }
 
         if (!DGifGetImageDesc(gif)) goto End;
@@ -380,7 +380,7 @@ int main(int argc, const char *argv[]) {
                 fprintf(stderr, "GIF decode warning: invalid background color "
                         "index. Assuming white background.\n");
               }
-              ClearPicture(&picture, anim.bgcolor);
+              ClearPicture(&picture);
               is_first_frame = 0;
             }
             break;
