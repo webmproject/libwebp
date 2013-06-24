@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+// Uncomment the following to use look-up table for ReverseBits()
+// (might be faster on some platform)
+// #define USE_LUT_REVERSE_BITS
+
 #define NON_EXISTENT_SYMBOL (-1)
 
 static void TreeNodeInit(HuffmanTreeNode* const node) {
@@ -119,9 +123,12 @@ int HuffmanCodeLengthsToCodes(const int* const code_lengths,
   return 1;
 }
 
-static int ReverseBits(int bits, int num_bits) {
+#ifndef USE_LUT_REVERSE_BITS
+
+static int ReverseBitsShort(int bits, int num_bits) {
   int retval = 0;
   int i;
+  assert(num_bits <= 8);   // Not a hard requirement, just for coherency.
   for (i = 0; i < num_bits; ++i) {
     retval <<= 1;
     retval |= bits & 1;
@@ -130,12 +137,27 @@ static int ReverseBits(int bits, int num_bits) {
   return retval;
 }
 
+#else
+
+static const uint8_t kReversedBits[16] = {  // Pre-reversed 4-bit values.
+  0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,
+  0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf
+};
+
+static int ReverseBitsShort(int bits, int num_bits) {
+  const uint8_t v = (kReversedBits[bits & 0xf] << 4) | kReversedBits[bits >> 4];
+  assert(num_bits <= 8);
+  return v >> (8 - num_bits);
+}
+
+#endif
+
 static int TreeAddSymbol(HuffmanTree* const tree,
                          int symbol, int code, int code_length) {
   HuffmanTreeNode* node = tree->root_;
   const HuffmanTreeNode* const max_node = tree->root_ + tree->max_nodes_;
   if (code_length <= HUFF_LUT_BITS) {
-    const int base_code = ReverseBits(code, code_length);
+    const int base_code = ReverseBitsShort(code, code_length);
     int i;
     for (i = 0; i < (1 << (HUFF_LUT_BITS - code_length)); ++i) {
       const int idx = base_code | (i << code_length);
