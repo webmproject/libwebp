@@ -99,13 +99,19 @@ static int EncodeLossless(const uint8_t* const data, int width, int height,
 
 // -----------------------------------------------------------------------------
 
+// Small struct to hold the result of a filter mode compression attempt.
+typedef struct {
+  size_t score;
+  VP8BitWriter bw;
+  WebPAuxStats stats;
+} FilterTrial;
+
 // This function always returns an initialized 'bw' object, even upon error.
 static int EncodeAlphaInternal(const uint8_t* const data, int width, int height,
                                int method, int filter, int reduce_levels,
                                int effort_level,  // in [0..6] range
                                uint8_t* const tmp_alpha,
-                               VP8BitWriter* const bw,
-                               WebPAuxStats* const stats) {
+                               FilterTrial* result) {
   int ok = 0;
   const uint8_t* alpha_src;
   WebPFilterFunc filter_func;
@@ -126,8 +132,8 @@ static int EncodeAlphaInternal(const uint8_t* const data, int width, int height,
   header = method | (filter << 2);
   if (reduce_levels) header |= ALPHA_PREPROCESSED_LEVELS << 4;
 
-  VP8BitWriterInit(bw, expected_size);
-  VP8BitWriterAppend(bw, &header, ALPHA_HEADER_LEN);
+  VP8BitWriterInit(&result->bw, expected_size);
+  VP8BitWriterAppend(&result->bw, &header, ALPHA_HEADER_LEN);
 
   filter_func = WebPFilters[filter];
   if (filter_func != NULL) {
@@ -138,12 +144,14 @@ static int EncodeAlphaInternal(const uint8_t* const data, int width, int height,
   }
 
   if (method == ALPHA_NO_COMPRESSION) {
-    ok = VP8BitWriterAppend(bw, alpha_src, width * height);
-    ok = ok && !bw->error_;
+    ok = VP8BitWriterAppend(&result->bw, alpha_src, width * height);
+    ok = ok && !result->bw.error_;
   } else {
-    ok = EncodeLossless(alpha_src, width, height, effort_level, bw, stats);
-    VP8BitWriterFinish(bw);
+    ok = EncodeLossless(alpha_src, width, height, effort_level,
+                        &result->bw, &result->stats);
+    VP8BitWriterFinish(&result->bw);
   }
+  result->score = VP8BitWriterSize(&result->bw);
   return ok;
 }
 
@@ -178,6 +186,9 @@ static int GetNumColors(const uint8_t* data, int width, int height,
   return colors;
 }
 
+#define FILTER_TRY_NONE (1 << WEBP_FILTER_NONE)
+#define FILTER_TRY_ALL ((1 << WEBP_FILTER_LAST) - 1)
+
 // Given the input 'filter' option, return an OR'd bit-set of filters to try.
 static uint32_t GetFilterMap(const uint8_t* alpha, int width, int height,
                              int filter, int effort_level) {
@@ -195,22 +206,15 @@ static uint32_t GetFilterMap(const uint8_t* alpha, int width, int height,
     // For large number of colors, try FILTER_NONE in addition to the best
     // filter as well.
     if (try_filter_none || num_colors > kMaxColorsForFilterNone) {
-      bit_map |= 1 << WEBP_FILTER_NONE;
+      bit_map |= FILTER_TRY_NONE;
     }
   } else if (filter == WEBP_FILTER_NONE) {
-    bit_map = 1 << WEBP_FILTER_NONE;
-  } else {  // WEBP_FILTER_BEST
-    bit_map = (1 << WEBP_FILTER_LAST) - 1;  // try all.
+    bit_map = FILTER_TRY_NONE;
+  } else {  // WEBP_FILTER_BEST -> try all
+    bit_map = FILTER_TRY_ALL;
   }
   return bit_map;
 }
-
-// Small struct to hold the result of a filter mode compression attempt.
-typedef struct {
-  size_t score;
-  VP8BitWriter bw;
-  WebPAuxStats stats;
-} FilterTrial;
 
 static void InitFilterTrial(FilterTrial* const score) {
   score->score = (size_t)~0U;
@@ -224,48 +228,39 @@ static int ApplyFiltersAndEncode(const uint8_t* alpha, int width, int height,
                                  size_t* const output_size,
                                  WebPAuxStats* const stats) {
   int ok = 1;
-  uint8_t* filtered_alpha = NULL;
+  FilterTrial best;
   uint32_t try_map =
       GetFilterMap(alpha, width, height, filter, effort_level);
+  InitFilterTrial(&best);
+  if (try_map != FILTER_TRY_NONE) {
+    uint8_t* filtered_alpha =  (uint8_t*)malloc(data_size);
+    if (filtered_alpha == NULL) return 0;
 
-  // TODO(urvang): In case of no filtering, this malloc is unnecessary. Also,
-  // the whole loop below should be avoided in that case.
-  filtered_alpha = (uint8_t*)malloc(data_size);
-  ok = (filtered_alpha != NULL);
-
-  if (ok) {
-    FilterTrial best;
-    InitFilterTrial(&best);
-
-    for (filter = WEBP_FILTER_NONE; try_map; ++filter, try_map >>= 1) {
+    for (filter = WEBP_FILTER_NONE; ok && try_map; ++filter, try_map >>= 1) {
       if (try_map & 1) {
         FilterTrial trial;
         ok = EncodeAlphaInternal(alpha, width, height, method, filter,
                                  reduce_levels, effort_level, filtered_alpha,
-                                 &trial.bw, stats);
-        if (ok) {
-          trial.score = VP8BitWriterSize(&trial.bw);
-          if (trial.score < best.score) {
-            VP8BitWriterWipeOut(&best.bw);
-            best = trial;
-            if (stats != NULL) best.stats = *stats;
-          } else {
-            VP8BitWriterWipeOut(&trial.bw);
-          }
+                                 &trial);
+        if (ok && trial.score < best.score) {
+          VP8BitWriterWipeOut(&best.bw);
+          best = trial;
         } else {
           VP8BitWriterWipeOut(&trial.bw);
-          VP8BitWriterWipeOut(&best.bw);
-          break;
         }
       }
     }
-
-    if (ok) {
-      if (stats != NULL) *stats = best.stats;
-      *output_size = VP8BitWriterSize(&best.bw);
-      *output = VP8BitWriterBuf(&best.bw);
-    }
     free(filtered_alpha);
+  } else {
+    ok = EncodeAlphaInternal(alpha, width, height, method, WEBP_FILTER_NONE,
+                             reduce_levels, effort_level, NULL, &best);
+  }
+  if (ok) {
+    if (stats != NULL) *stats = best.stats;
+    *output_size = VP8BitWriterSize(&best.bw);
+    *output = VP8BitWriterBuf(&best.bw);
+  } else {
+    VP8BitWriterWipeOut(&best.bw);
   }
   return ok;
 }
