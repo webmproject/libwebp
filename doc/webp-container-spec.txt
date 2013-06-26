@@ -382,18 +382,17 @@ animation.
 Background Color: 32 bits (_uint32_)
 
 : The default background color of the canvas in \[Blue, Green, Red, Alpha\]
-byte order. This color is used to fill the unused space on the canvas around the
-frames, as well as the transparent pixels of the first frame. Background color
-is also used when disposal method is `1`.
+byte order. This color MAY be used to fill the unused space on the canvas around
+the frames, as well as the transparent pixels of the first frame. Background
+color is also used when disposal method is `1`.
 
-**Notes**:
+**Note**:
 
-  * Background color may contain non-trivial alpha even though _Alpha_ flag in
-    [VP8X chunk](#extended_header) is unset.
+  * Background color MAY contain a transparency value (alpha), even if the
+    _Alpha_ flag in [VP8X chunk](#extended_header) is unset.
 
-  * Viewers that have a preferred background against which to present the
-    images (web browsers, for example) should ignore this value and use their
-    preferred background color instead.
+  * Viewer applications SHOULD treat the background color value as a hint, and
+    are not required to use it.
 
 Loop Count: 16 bits (_uint16_)
 
