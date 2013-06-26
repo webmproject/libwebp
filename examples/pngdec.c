@@ -21,6 +21,7 @@
 #include <png.h>
 #include <setjmp.h>   // note: this must be included *after* png.h
 #include <stdlib.h>
+#include <string.h>
 
 #include "webp/encode.h"
 #include "./metadata.h"
