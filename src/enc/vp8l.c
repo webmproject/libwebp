@@ -956,6 +956,9 @@ static VP8LEncoder* VP8LEncoderNew(const WebPConfig* const config,
   }
   enc->config_ = config;
   enc->pic_ = picture;
+
+  VP8LDspInit();
+
   return enc;
 }
 

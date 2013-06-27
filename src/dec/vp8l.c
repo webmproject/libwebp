@@ -1036,6 +1036,9 @@ VP8LDecoder* VP8LNew(void) {
   dec->status_ = VP8_STATUS_OK;
   dec->action_ = READ_DIM;
   dec->state_ = READ_DIM;
+
+  VP8LDspInit();  // Init critical function pointers.
+
   return dec;
 }
 
