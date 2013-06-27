@@ -120,8 +120,8 @@ int VP8LGetInfo(const uint8_t* data, size_t data_size,
 
 //------------------------------------------------------------------------------
 
-static WEBP_INLINE size_t GetCopyDistance(int distance_symbol,
-                                          VP8LBitReader* const br) {
+static WEBP_INLINE int GetCopyDistance(int distance_symbol,
+                                       VP8LBitReader* const br) {
   int extra_bits, offset;
   if (distance_symbol < 4) {
     return distance_symbol + 1;
@@ -131,8 +131,8 @@ static WEBP_INLINE size_t GetCopyDistance(int distance_symbol,
   return offset + VP8LReadBits(br, extra_bits) + 1;
 }
 
-static WEBP_INLINE size_t GetCopyLength(int length_symbol,
-                                        VP8LBitReader* const br) {
+static WEBP_INLINE int GetCopyLength(int length_symbol,
+                                     VP8LBitReader* const br) {
   // Length and distance prefixes are encoded the same way.
   return GetCopyDistance(length_symbol, br);
 }
@@ -726,9 +726,9 @@ static int DecodeAlphaData(VP8LDecoder* const dec, uint8_t* const data,
   VP8LBitReader* const br = &dec->br_;
   VP8LMetadata* const hdr = &dec->hdr_;
   const HTreeGroup* htree_group = GetHtreeGroupForPos(hdr, col, row);
-  size_t pos = dec->last_pixel_;         // current position
-  const size_t end = width * height;     // End of data
-  const size_t last = width * last_row;  // Last pixel to decode
+  int pos = dec->last_pixel_;         // current position
+  const int end = width * height;     // End of data
+  const int last = width * last_row;  // Last pixel to decode
   const int len_code_limit = NUM_LITERAL_CODES + NUM_LENGTH_CODES;
   const int mask = hdr->huffman_mask_;
   assert(htree_group != NULL);
@@ -755,15 +755,15 @@ static int DecodeAlphaData(VP8LDecoder* const dec, uint8_t* const data,
         }
       }
     } else if (code < len_code_limit) {  // Backward reference
-      size_t dist_code, dist;
+      int dist_code, dist;
       const int length_sym = code - NUM_LITERAL_CODES;
-      const size_t length = GetCopyLength(length_sym, br);
+      const int length = GetCopyLength(length_sym, br);
       const int dist_symbol = ReadSymbol(&htree_group->htrees_[DIST], br);
       VP8LFillBitWindow(br);
       dist_code = GetCopyDistance(dist_symbol, br);
       dist = PlaneCodeToDistance(width, dist_code);
       if (pos >= dist && end - pos >= length) {
-        size_t i;
+        int i;
         for (i = 0; i < length; ++i) data[pos + i] = data[pos + i - dist];
       } else {
         ok = 0;
@@ -865,11 +865,10 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
       VP8LFillBitWindow(br);
       dist_code = GetCopyDistance(dist_symbol, br);
       dist = PlaneCodeToDistance(width, dist_code);
-      if (src - data < dist || src_end - src < length) {
+      if (src - data < (ptrdiff_t)dist || src_end - src < (ptrdiff_t)length) {
         ok = 0;
         goto End;
-      }
-      {
+      } else {
         int i;
         for (i = 0; i < length; ++i) src[i] = src[i - dist];
         src += length;
