@@ -63,6 +63,7 @@ static int TreeInit(HuffmanTree* const tree, int num_leaves) {
   TreeNodeInit(tree->root_);  // Initialize root.
   tree->num_nodes_ = 1;
   memset(tree->lut_bits_, 255, sizeof(tree->lut_bits_));
+  memset(tree->lut_jump_, 0, sizeof(tree->lut_jump_));
   return 1;
 }
 
@@ -154,16 +155,21 @@ static int ReverseBitsShort(int bits, int num_bits) {
 
 static int TreeAddSymbol(HuffmanTree* const tree,
                          int symbol, int code, int code_length) {
+  int step = HUFF_LUT_BITS;
+  int base_code;
   HuffmanTreeNode* node = tree->root_;
   const HuffmanTreeNode* const max_node = tree->root_ + tree->max_nodes_;
   if (code_length <= HUFF_LUT_BITS) {
-    const int base_code = ReverseBitsShort(code, code_length);
     int i;
+    base_code = ReverseBitsShort(code, code_length);
     for (i = 0; i < (1 << (HUFF_LUT_BITS - code_length)); ++i) {
       const int idx = base_code | (i << code_length);
       tree->lut_symbol_[idx] = symbol;
       tree->lut_bits_[idx] = code_length;
     }
+  } else {
+    base_code = ReverseBitsShort((code >> (code_length - HUFF_LUT_BITS)),
+                                 HUFF_LUT_BITS);
   }
   while (code_length-- > 0) {
     if (node >= max_node) {
@@ -176,6 +182,9 @@ static int TreeAddSymbol(HuffmanTree* const tree,
       return 0;  // leaf is already occupied.
     }
     node += node->children_ + ((code >> code_length) & 1);
+    if (--step == 0) {
+      tree->lut_jump_[base_code] = node - tree->root_;
+    }
   }
   if (NodeIsEmpty(node)) {
     node->children_ = 0;      // turn newly created node into a leaf.

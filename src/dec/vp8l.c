@@ -165,6 +165,10 @@ static WEBP_INLINE int ReadSymbol(const HuffmanTree* tree,
     VP8LSetBitPos(br, bitpos + lut_bits);
     return tree->lut_symbol_[lut_ix];
   }
+  node += tree->lut_jump_[lut_ix];
+  bitpos += HUFF_LUT_BITS;
+  bits >>= HUFF_LUT_BITS;
+
   // Decode the value from a binary tree.
   assert(node != NULL);
   while (HuffmanTreeNodeIsNotLeaf(node)) {
