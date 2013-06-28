@@ -171,11 +171,11 @@ static WEBP_INLINE int ReadSymbol(const HuffmanTree* tree,
 
   // Decode the value from a binary tree.
   assert(node != NULL);
-  while (HuffmanTreeNodeIsNotLeaf(node)) {
+  do {
     node = HuffmanTreeNextNode(node, bits & 1);
     bits >>= 1;
     ++bitpos;
-  }
+  } while (HuffmanTreeNodeIsNotLeaf(node));
   VP8LSetBitPos(br, bitpos);
   return node->symbol_;
 }
