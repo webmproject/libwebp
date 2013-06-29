@@ -57,6 +57,7 @@ static int TreeInit(HuffmanTree* const tree, int num_leaves) {
   // Note that a Huffman tree is a full binary tree; and in a full binary tree
   // with L leaves, the total number of nodes N = 2 * L - 1.
   tree->max_nodes_ = 2 * num_leaves - 1;
+  assert(tree->max_nodes_ < (1 << 16));   // limit for the lut_jump_ table
   tree->root_ = (HuffmanTreeNode*)WebPSafeMalloc((uint64_t)tree->max_nodes_,
                                                  sizeof(*tree->root_));
   if (tree->root_ == NULL) return 0;
@@ -159,12 +160,13 @@ static int TreeAddSymbol(HuffmanTree* const tree,
   int base_code;
   HuffmanTreeNode* node = tree->root_;
   const HuffmanTreeNode* const max_node = tree->root_ + tree->max_nodes_;
+  assert(symbol == (int16_t)symbol);
   if (code_length <= HUFF_LUT_BITS) {
     int i;
     base_code = ReverseBitsShort(code, code_length);
     for (i = 0; i < (1 << (HUFF_LUT_BITS - code_length)); ++i) {
       const int idx = base_code | (i << code_length);
-      tree->lut_symbol_[idx] = symbol;
+      tree->lut_symbol_[idx] = (int16_t)symbol;
       tree->lut_bits_[idx] = code_length;
     }
   } else {
@@ -183,7 +185,7 @@ static int TreeAddSymbol(HuffmanTree* const tree,
     }
     node += node->children_ + ((code >> code_length) & 1);
     if (--step == 0) {
-      tree->lut_jump_[base_code] = node - tree->root_;
+      tree->lut_jump_[base_code] = (int16_t)(node - tree->root_);
     }
   }
   if (NodeIsEmpty(node)) {
