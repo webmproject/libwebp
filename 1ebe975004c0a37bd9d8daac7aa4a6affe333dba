@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAbn//43c\u003d",
+        "filename": "src/utils/huffman.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-06-29T03:32:56Z",
+      "side": 1,
+      "message": "asserts might be excessive, I didn\u0027t really have a look around to check the assumptions...",
+      "revId": "1ebe975004c0a37bd9d8daac7aa4a6affe333dba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
