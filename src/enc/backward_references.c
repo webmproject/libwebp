@@ -780,8 +780,8 @@ int VP8LGetBackwardReferences(int width, int height,
 
   // Choose appropriate backward reference.
   if (lz77_is_useful) {
-    // TraceBackwards is costly. Don't execute it at lower quality (q <= 10).
-    const int try_lz77_trace_backwards = (quality > 10);
+    // TraceBackwards is costly. Don't execute it at lower quality.
+    const int try_lz77_trace_backwards = (quality >= 25);
     *best = refs_lz77;   // default guess: lz77 is better
     VP8LClearBackwardRefs(&refs_rle);
     if (try_lz77_trace_backwards) {

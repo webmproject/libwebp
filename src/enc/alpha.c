@@ -81,8 +81,10 @@ static int EncodeLossless(const uint8_t* const data, int width, int height,
   WebPConfigInit(&config);
   config.lossless = 1;
   config.method = effort_level;  // impact is very small
-  // Set a moderate default quality setting for alpha.
-  config.quality = 10.f * effort_level;
+  // Set a low default quality for encoding alpha. Ensure that Alpha quality at
+  // lower methods (3 and below) is less than the threshold for triggering
+  // costly 'BackwardReferencesTraceBackwards'.
+  config.quality = 8.f * effort_level;
   assert(config.quality >= 0 && config.quality <= 100.f);
 
   ok = VP8LBitWriterInit(&tmp_bw, (width * height) >> 3);
