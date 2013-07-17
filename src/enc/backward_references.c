@@ -163,7 +163,7 @@ static void GetParamsForHashChainFindCopy(int quality, int xsize,
 
 static int HashChainFindCopy(const HashChain* const p,
                              int base_position, int xsize_signed,
-                             const uint32_t* const argb, int maxlen,
+                             const uint32_t* const argb, int max_len,
                              int window_size, int iter_pos, int iter_limit,
                              int* const distance_ptr,
                              int* const length_ptr) {
@@ -176,25 +176,34 @@ static int HashChainFindCopy(const HashChain* const p,
       (base_position > window_size) ? base_position - window_size : 0;
   int pos;
   assert(xsize > 0);
+  if (max_len > MAX_LENGTH) {
+    max_len = MAX_LENGTH;
+  }
   for (pos = p->hash_to_first_index_[GetPixPairHash64(argb_start)];
        pos >= min_pos;
        pos = p->chain_[pos]) {
     uint64_t val;
     uint32_t curr_length;
     uint32_t distance;
+    const uint64_t* const ptr1 =
+        (const uint64_t*)(argb + pos + best_length - 1);
+    const uint64_t* const ptr2 =
+        (const uint64_t*)(argb_start + best_length - 1);
+
     if (iter_pos < 0) {
       if (iter_pos < iter_limit || best_val >= 0xff0000) {
         break;
       }
     }
     --iter_pos;
-    if (argb[pos + best_length - 1] != argb_start[best_length - 1]) {
-      continue;
-    }
-    curr_length = FindMatchLength(argb + pos, argb_start, maxlen);
-    if (curr_length < best_length) {
-      continue;
-    }
+
+    // Before 'expensive' linear match, check if the two arrays match at the
+    // current best length index and also for the succeeding elements.
+    if (*ptr1 != *ptr2) continue;
+
+    curr_length = FindMatchLength(argb + pos, argb_start, max_len);
+    if (curr_length < best_length) continue;
+
     distance = (uint32_t)(base_position - pos);
     val = curr_length << 16;
     // Favoring 2d locality here gives savings for certain images.
@@ -213,7 +222,7 @@ static int HashChainFindCopy(const HashChain* const p,
       best_val = val;
       best_length = curr_length;
       best_distance = distance;
-      if (curr_length >= MAX_LENGTH) {
+      if (curr_length >= (uint32_t)max_len) {
         break;
       }
       if ((best_distance == 1 || distance == xsize) &&
@@ -291,11 +300,8 @@ static int BackwardReferencesHashChain(int xsize, int ysize,
     int offset = 0;
     int len = 0;
     if (i < pix_count - 1) {  // FindCopy(i,..) reads pixels at [i] and [i + 1].
-      int maxlen = pix_count - i;
-      if (maxlen > MAX_LENGTH) {
-        maxlen = MAX_LENGTH;
-      }
-      HashChainFindCopy(hash_chain, i, xsize, argb, maxlen,
+      int max_len = pix_count - i;
+      HashChainFindCopy(hash_chain, i, xsize, argb, max_len,
                         window_size, iter_pos, iter_limit,
                         &offset, &len);
     }
@@ -307,11 +313,8 @@ static int BackwardReferencesHashChain(int xsize, int ysize,
       int k;
       HashChainInsert(hash_chain, &argb[i], i);
       if (i < pix_count - 2) {  // FindCopy(i+1,..) reads [i + 1] and [i + 2].
-        int maxlen = pix_count - (i + 1);
-        if (maxlen > MAX_LENGTH) {
-          maxlen = MAX_LENGTH;
-        }
-        HashChainFindCopy(hash_chain, i + 1, xsize, argb, maxlen,
+        int max_len = pix_count - (i + 1);
+        HashChainFindCopy(hash_chain, i + 1, xsize, argb, max_len,
                           window_size, iter_pos, iter_limit,
                           &offset2, &len2);
         if (len2 > len + 1) {
@@ -522,11 +525,8 @@ static int BackwardReferencesHashChainDistanceOnly(
       int offset = 0;
       int len = 0;
       if (i < pix_count - 1) {  // FindCopy reads pixels at [i] and [i + 1].
-        int maxlen = shortmax ? 2 : MAX_LENGTH;
-        if (maxlen > pix_count - i) {
-          maxlen = pix_count - i;
-        }
-        HashChainFindCopy(hash_chain, i, xsize, argb, maxlen,
+        int max_len = shortmax ? 2 : pix_count - i;
+        HashChainFindCopy(hash_chain, i, xsize, argb, max_len,
                           window_size, iter_pos, iter_limit,
                           &offset, &len);
       }
@@ -650,12 +650,12 @@ static int BackwardReferencesHashChainFollowChosenPath(
   for (ix = 0; ix < chosen_path_size; ++ix, ++size) {
     int offset = 0;
     int len = 0;
-    int maxlen = chosen_path[ix];
-    if (maxlen != 1) {
-      HashChainFindCopy(hash_chain, i, xsize, argb, maxlen,
+    int max_len = chosen_path[ix];
+    if (max_len != 1) {
+      HashChainFindCopy(hash_chain, i, xsize, argb, max_len,
                         window_size, iter_pos, iter_limit,
                         &offset, &len);
-      assert(len == maxlen);
+      assert(len == max_len);
       refs->refs[size] = PixOrCopyCreateCopy(offset, len);
       if (use_color_cache) {
         for (k = 0; k < len; ++k) {
