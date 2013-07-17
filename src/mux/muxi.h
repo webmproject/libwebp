@@ -101,10 +101,10 @@ extern const ChunkInfo kChunks[IDX_LAST_CHUNK];
 // Initialize.
 void ChunkInit(WebPChunk* const chunk);
 
-// Get chunk index from chunk tag. Returns IDX_NIL if not found.
+// Get chunk index from chunk tag. Returns IDX_UNKNOWN if not found.
 CHUNK_INDEX ChunkGetIndexFromTag(uint32_t tag);
 
-// Get chunk id from chunk tag. Returns WEBP_CHUNK_NIL if not found.
+// Get chunk id from chunk tag. Returns WEBP_CHUNK_UNKNOWN if not found.
 WebPChunkId ChunkGetIdFromTag(uint32_t tag);
 
 // Convert a fourcc string to a tag.
@@ -207,8 +207,6 @@ int MuxHasLosslessImages(const WebPMuxImage* images);
 uint8_t* MuxEmitRiffHeader(uint8_t* const data, size_t size);
 
 // Returns the list where chunk with given ID is to be inserted in mux.
-// Return value is NULL if this chunk should be inserted in mux->images_ list
-// or if 'id' is not known.
 WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, WebPChunkId id);
 
 // Validates the given mux object.

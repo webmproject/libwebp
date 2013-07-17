@@ -75,48 +75,31 @@ void WebPMuxDelete(WebPMux* mux) {
 // Handy MACRO, makes MuxSet() very symmetric to MuxGet().
 #define SWITCH_ID_LIST(INDEX, LIST)                                            \
   if (idx == (INDEX)) {                                                        \
-    err = ChunkAssignData(&chunk, data, copy_data, kChunks[(INDEX)].tag);      \
+    err = ChunkAssignData(&chunk, data, copy_data, tag);                       \
     if (err == WEBP_MUX_OK) {                                                  \
       err = ChunkSetNth(&chunk, (LIST), nth);                                  \
     }                                                                          \
     return err;                                                                \
   }
 
-static WebPMuxError MuxSet(WebPMux* const mux, CHUNK_INDEX idx, uint32_t nth,
+static WebPMuxError MuxSet(WebPMux* const mux, uint32_t tag, uint32_t nth,
                            const WebPData* const data, int copy_data) {
   WebPChunk chunk;
   WebPMuxError err = WEBP_MUX_NOT_FOUND;
+  const CHUNK_INDEX idx = ChunkGetIndexFromTag(tag);
   assert(mux != NULL);
   assert(!IsWPI(kChunks[idx].id));
 
   ChunkInit(&chunk);
-  SWITCH_ID_LIST(IDX_VP8X, &mux->vp8x_);
-  SWITCH_ID_LIST(IDX_ICCP, &mux->iccp_);
-  SWITCH_ID_LIST(IDX_ANIM, &mux->anim_);
-  SWITCH_ID_LIST(IDX_EXIF, &mux->exif_);
-  SWITCH_ID_LIST(IDX_XMP,  &mux->xmp_);
-  if (idx == IDX_UNKNOWN && data->size > TAG_SIZE) {
-    // For raw-data unknown chunk, the first four bytes should be the tag to be
-    // used for the chunk.
-    const WebPData tmp = { data->bytes + TAG_SIZE, data->size - TAG_SIZE };
-    err = ChunkAssignData(&chunk, &tmp, copy_data, GetLE32(data->bytes + 0));
-    if (err == WEBP_MUX_OK)
-      err = ChunkSetNth(&chunk, &mux->unknown_, nth);
-  }
+  SWITCH_ID_LIST(IDX_VP8X,    &mux->vp8x_);
+  SWITCH_ID_LIST(IDX_ICCP,    &mux->iccp_);
+  SWITCH_ID_LIST(IDX_ANIM,    &mux->anim_);
+  SWITCH_ID_LIST(IDX_EXIF,    &mux->exif_);
+  SWITCH_ID_LIST(IDX_XMP,     &mux->xmp_);
+  SWITCH_ID_LIST(IDX_UNKNOWN, &mux->unknown_);
   return err;
 }
 #undef SWITCH_ID_LIST
-
-static WebPMuxError MuxAddChunk(WebPMux* const mux, uint32_t nth, uint32_t tag,
-                                const uint8_t* data, size_t size,
-                                int copy_data) {
-  const CHUNK_INDEX idx = ChunkGetIndexFromTag(tag);
-  const WebPData chunk_data = { data, size };
-  assert(mux != NULL);
-  assert(size <= MAX_CHUNK_PAYLOAD);
-  assert(idx != IDX_NIL);
-  return MuxSet(mux, idx, nth, &chunk_data, copy_data);
-}
 
 // Create data for frame/fragment given image data, offsets and duration.
 static WebPMuxError CreateFrameFragmentData(
@@ -200,15 +183,9 @@ static WebPMuxError DeleteChunks(WebPChunk** chunk_list, uint32_t tag) {
 
 static WebPMuxError MuxDeleteAllNamedData(WebPMux* const mux, uint32_t tag) {
   const WebPChunkId id = ChunkGetIdFromTag(tag);
-  WebPChunk** chunk_list;
-
   assert(mux != NULL);
   if (IsWPI(id)) return WEBP_MUX_INVALID_ARGUMENT;
-
-  chunk_list = MuxGetChunkListFromId(mux, id);
-  if (chunk_list == NULL) return WEBP_MUX_INVALID_ARGUMENT;
-
-  return DeleteChunks(chunk_list, tag);
+  return DeleteChunks(MuxGetChunkListFromId(mux, id), tag);
 }
 
 //------------------------------------------------------------------------------
@@ -231,7 +208,7 @@ WebPMuxError WebPMuxSetChunk(WebPMux* mux, const char fourcc[4],
   if (err != WEBP_MUX_OK && err != WEBP_MUX_NOT_FOUND) return err;
 
   // Add the given chunk.
-  return MuxSet(mux, idx, 1, chunk_data, copy_data);
+  return MuxSet(mux, tag, 1, chunk_data, copy_data);
 }
 
 // Creates a chunk from given 'data' and sets it as 1st chunk in 'chunk_list'.
@@ -381,6 +358,7 @@ WebPMuxError WebPMuxSetAnimationParams(WebPMux* mux,
                                        const WebPMuxAnimParams* params) {
   WebPMuxError err;
   uint8_t data[ANIM_CHUNK_SIZE];
+  const WebPData anim = { data, ANIM_CHUNK_SIZE };
 
   if (mux == NULL || params == NULL) return WEBP_MUX_INVALID_ARGUMENT;
   if (params->loop_count < 0 || params->loop_count >= MAX_LOOP_COUNT) {
@@ -394,7 +372,7 @@ WebPMuxError WebPMuxSetAnimationParams(WebPMux* mux,
   // Set the animation parameters.
   PutLE32(data, params->bgcolor);
   PutLE16(data + 4, params->loop_count);
-  return MuxAddChunk(mux, 1, kChunks[IDX_ANIM].tag, data, sizeof(data), 1);
+  return MuxSet(mux, kChunks[IDX_ANIM].tag, 1, &anim, 1);
 }
 
 //------------------------------------------------------------------------------
@@ -534,7 +512,7 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   int width = 0;
   int height = 0;
   uint8_t data[VP8X_CHUNK_SIZE];
-  const size_t data_size = VP8X_CHUNK_SIZE;
+  const WebPData vp8x = { data, VP8X_CHUNK_SIZE };
   const WebPMuxImage* images = NULL;
 
   assert(mux != NULL);
@@ -599,8 +577,7 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   PutLE24(data + 4, width - 1);   // canvas width.
   PutLE24(data + 7, height - 1);  // canvas height.
 
-  err = MuxAddChunk(mux, 1, kChunks[IDX_VP8X].tag, data, data_size, 1);
-  return err;
+  return MuxSet(mux, kChunks[IDX_VP8X].tag, 1, &vp8x, 1);
 }
 
 // Cleans up 'mux' by removing any unnecessary chunks.

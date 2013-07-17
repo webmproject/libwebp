@@ -237,7 +237,6 @@ WebPMux* WebPMuxCreateInternal(const WebPData* bitstream, int copy_data,
         if (wpi->is_partial_) goto Err;  // Encountered a non-image chunk before
                                          // getting all chunks of an image.
         chunk_list = MuxGetChunkListFromId(mux, id);  // List to add this chunk.
-        if (chunk_list == NULL) chunk_list = &mux->unknown_;
         if (ChunkSetNth(&chunk, chunk_list, 0) != WEBP_MUX_OK) goto Err;
         break;
     }
@@ -502,12 +501,8 @@ WebPMuxError WebPMuxNumChunks(const WebPMux* mux,
     *num_elements = MuxImageCount(mux->images_, id);
   } else {
     WebPChunk* const* chunk_list = MuxGetChunkListFromId(mux, id);
-    if (chunk_list == NULL) {
-      *num_elements = 0;
-    } else {
-      const CHUNK_INDEX idx = ChunkGetIndexFromId(id);
-      *num_elements = CountChunks(*chunk_list, kChunks[idx].tag);
-    }
+    const CHUNK_INDEX idx = ChunkGetIndexFromId(id);
+    *num_elements = CountChunks(*chunk_list, kChunks[idx].tag);
   }
 
   return WEBP_MUX_OK;

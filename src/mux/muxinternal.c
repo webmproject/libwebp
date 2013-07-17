@@ -33,7 +33,7 @@ const ChunkInfo kChunks[] = {
   { MKFOURCC('V', 'P', '8', 'L'),  WEBP_CHUNK_IMAGE,   UNDEFINED_CHUNK_SIZE },
   { MKFOURCC('E', 'X', 'I', 'F'),  WEBP_CHUNK_EXIF,    UNDEFINED_CHUNK_SIZE },
   { MKFOURCC('X', 'M', 'P', ' '),  WEBP_CHUNK_XMP,     UNDEFINED_CHUNK_SIZE },
-  { MKFOURCC('U', 'N', 'K', 'N'),  WEBP_CHUNK_UNKNOWN, UNDEFINED_CHUNK_SIZE },
+  { NIL_TAG,                       WEBP_CHUNK_UNKNOWN, UNDEFINED_CHUNK_SIZE },
 
   { NIL_TAG,                       WEBP_CHUNK_NIL,     UNDEFINED_CHUNK_SIZE }
 };
@@ -72,7 +72,7 @@ CHUNK_INDEX ChunkGetIndexFromTag(uint32_t tag) {
   for (i = 0; kChunks[i].tag != NIL_TAG; ++i) {
     if (tag == kChunks[i].tag) return i;
   }
-  return IDX_NIL;
+  return IDX_UNKNOWN;
 }
 
 WebPChunkId ChunkGetIdFromTag(uint32_t tag) {
@@ -80,7 +80,7 @@ WebPChunkId ChunkGetIdFromTag(uint32_t tag) {
   for (i = 0; kChunks[i].tag != NIL_TAG; ++i) {
     if (tag == kChunks[i].tag) return kChunks[i].id;
   }
-  return WEBP_CHUNK_NIL;
+  return WEBP_CHUNK_UNKNOWN;
 }
 
 uint32_t ChunkGetTagFromFourCC(const char fourcc[4]) {
@@ -89,8 +89,7 @@ uint32_t ChunkGetTagFromFourCC(const char fourcc[4]) {
 
 CHUNK_INDEX ChunkGetIndexFromFourCC(const char fourcc[4]) {
   const uint32_t tag = ChunkGetTagFromFourCC(fourcc);
-  const CHUNK_INDEX idx = ChunkGetIndexFromTag(tag);
-  return (idx == IDX_NIL) ? IDX_UNKNOWN : idx;
+  return ChunkGetIndexFromTag(tag);
 }
 
 //------------------------------------------------------------------------------
@@ -421,8 +420,7 @@ WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, WebPChunkId id) {
     case WEBP_CHUNK_ANIM:    return (WebPChunk**)&mux->anim_;
     case WEBP_CHUNK_EXIF:    return (WebPChunk**)&mux->exif_;
     case WEBP_CHUNK_XMP:     return (WebPChunk**)&mux->xmp_;
-    case WEBP_CHUNK_UNKNOWN: return (WebPChunk**)&mux->unknown_;
-    default: return NULL;
+    default:                 return (WebPChunk**)&mux->unknown_;
   }
 }
 
