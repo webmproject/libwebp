@@ -497,8 +497,10 @@ static int WriteWebPWithMetadata(FILE* const out,
       webp_size -= kVP8XChunkSize;
     } else {
       const int is_lossless = !memcmp(webp, "VP8L", kTagSize);
-      // The alpha flag is forced with lossless images.
-      if (is_lossless) flags |= kAlphaFlag;
+      if (is_lossless) {
+        // Presence of alpha is stored in the 29th bit of VP8L data.
+        if (webp[kChunkHeaderSize + 3] & (1 << 5)) flags |= kAlphaFlag;
+      }
       ok = ok && (fwrite(kVP8XHeader, kChunkHeaderSize, 1, out) == 1);
       ok = ok && WriteLE32(out, flags);
       ok = ok && WriteLE24(out, picture->width - 1);

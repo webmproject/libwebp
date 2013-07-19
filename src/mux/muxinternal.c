@@ -393,12 +393,9 @@ uint8_t* MuxImageEmit(const WebPMuxImage* const wpi, uint8_t* dst) {
 //------------------------------------------------------------------------------
 // Helper methods for mux.
 
-int MuxHasLosslessImages(const WebPMuxImage* images) {
+int MuxHasAlpha(const WebPMuxImage* images) {
   while (images != NULL) {
-    assert(images->img_ != NULL);
-    if (images->img_->tag_ == kChunks[IDX_VP8L].tag) {
-      return 1;
-    }
+    if (images->has_alpha_) return 1;
     images = images->next_;
   }
   return 0;
@@ -512,14 +509,18 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
   if (num_vp8x == 0 && num_images != 1) return WEBP_MUX_INVALID_ARGUMENT;
 
   // ALPHA_FLAG & alpha chunk(s) are consistent.
-  if (MuxHasLosslessImages(mux->images_)) {
+  if (MuxHasAlpha(mux->images_)) {
     if (num_vp8x > 0) {
-      // Special case: we have a VP8X chunk as well as some lossless images.
+      // VP8X chunk is present, so it should contain ALPHA_FLAG.
       if (!(flags & ALPHA_FLAG)) return WEBP_MUX_INVALID_ARGUMENT;
-    }
-  } else {
-      err = ValidateChunk(mux, IDX_ALPHA, ALPHA_FLAG, flags, -1, &num_alpha);
+    } else {
+      // VP8X chunk is not present, so ALPH chunks should NOT be present either.
+      err = WebPMuxNumChunks(mux, WEBP_CHUNK_ALPHA, &num_alpha);
       if (err != WEBP_MUX_OK) return err;
+      if (num_alpha > 0) return WEBP_MUX_INVALID_ARGUMENT;
+    }
+  } else {  // Mux doesn't need alpha. So, ALPHA_FLAG should NOT be present.
+    if (flags & ALPHA_FLAG) return WEBP_MUX_INVALID_ARGUMENT;
   }
 
   // num_fragments & num_images are consistent.
