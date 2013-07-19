@@ -53,7 +53,7 @@
 extern "C" {
 #endif
 
-#define WEBP_DEMUX_ABI_VERSION 0x0100    // MAJOR(8b) + MINOR(8b)
+#define WEBP_DEMUX_ABI_VERSION 0x0101    // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -136,8 +136,9 @@ struct WebPIterator {
                   // may still be decoded with the WebP incremental decoder.
   WebPData fragment;  // The frame or fragment given by 'frame_num' and
                       // 'fragment_num'.
+  int has_alpha;      // True if the frame or fragment contains transparency.
 
-  uint32_t pad[4];         // padding for later use.
+  uint32_t pad[3];         // padding for later use.
   void* private_;          // for internal use only.
 };
 

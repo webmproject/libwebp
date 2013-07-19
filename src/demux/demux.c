@@ -47,6 +47,7 @@ typedef struct {
 typedef struct Frame {
   int x_offset_, y_offset_;
   int width_, height_;
+  int has_alpha_;
   int duration_;
   WebPMuxAnimDispose dispose_method_;
   int is_fragment_;  // this is a frame fragment (and not a full frame).
@@ -196,17 +197,12 @@ static int AddFrame(WebPDemuxer* const dmux, Frame* const frame) {
 }
 
 // Store image bearing chunks to 'frame'.
-// If 'has_vp8l_alpha' is not NULL, it will be set to true if the frame is a
-// lossless image with alpha.
 static ParseStatus StoreFrame(int frame_num, uint32_t min_size,
-                              MemBuffer* const mem, Frame* const frame,
-                              int* const has_vp8l_alpha) {
+                              MemBuffer* const mem, Frame* const frame) {
   int alpha_chunks = 0;
   int image_chunks = 0;
   int done = (MemDataSize(mem) < min_size);
   ParseStatus status = PARSE_OK;
-
-  if (has_vp8l_alpha != NULL) *has_vp8l_alpha = 0;  // Default.
 
   if (done) return PARSE_NEED_MORE_DATA;
 
@@ -229,6 +225,7 @@ static ParseStatus StoreFrame(int frame_num, uint32_t min_size,
           ++alpha_chunks;
           frame->img_components_[1].offset_ = chunk_start_offset;
           frame->img_components_[1].size_ = chunk_size;
+          frame->has_alpha_ = 1;
           frame->frame_num_ = frame_num;
           Skip(mem, payload_available);
         } else {
@@ -258,7 +255,7 @@ static ParseStatus StoreFrame(int frame_num, uint32_t min_size,
           frame->img_components_[0].size_ = chunk_size;
           frame->width_ = features.width;
           frame->height_ = features.height;
-          if (has_vp8l_alpha != NULL) *has_vp8l_alpha = features.has_alpha;
+          frame->has_alpha_ |= features.has_alpha;
           frame->frame_num_ = frame_num;
           frame->complete_ = (status == PARSE_OK);
           Skip(mem, payload_available);
@@ -325,8 +322,7 @@ static ParseStatus ParseAnimationFrame(
 
   // Store a frame only if the animation flag is set there is some data for
   // this frame is available.
-  status = StoreFrame(dmux->num_frames_ + 1, anmf_payload_size, mem, frame,
-                      NULL);
+  status = StoreFrame(dmux->num_frames_ + 1, anmf_payload_size, mem, frame);
   if (status != PARSE_ERROR && has_frames && frame->frame_num_ > 0) {
     added_frame = AddFrame(dmux, frame);
     if (added_frame) {
@@ -361,7 +357,7 @@ static ParseStatus ParseFragment(WebPDemuxer* const dmux,
 
   // Store a fragment only if the fragments flag is set there is some data for
   // this fragment is available.
-  status = StoreFrame(frame_num, frgm_payload_size, mem, frame, NULL);
+  status = StoreFrame(frame_num, frgm_payload_size, mem, frame);
   if (status != PARSE_ERROR && has_fragments && frame->frame_num_ > 0) {
     added_fragment = AddFrame(dmux, frame);
     if (!added_fragment) {
@@ -424,7 +420,6 @@ static ParseStatus ParseSingleImage(WebPDemuxer* const dmux) {
   MemBuffer* const mem = &dmux->mem_;
   Frame* frame;
   ParseStatus status;
-  int has_vp8l_alpha = 0;  // Frame contains a lossless image with alpha.
 
   if (dmux->frames_ != NULL) return PARSE_ERROR;
   if (SizeIsInvalid(mem, min_size)) return PARSE_ERROR;
@@ -435,14 +430,14 @@ static ParseStatus ParseSingleImage(WebPDemuxer* const dmux) {
 
   // For the single image case we allow parsing of a partial frame, but we need
   // at least CHUNK_HEADER_SIZE for parsing.
-  status = StoreFrame(1, CHUNK_HEADER_SIZE, &dmux->mem_, frame,
-                      &has_vp8l_alpha);
+  status = StoreFrame(1, CHUNK_HEADER_SIZE, &dmux->mem_, frame);
   if (status != PARSE_ERROR) {
     const int has_alpha = !!(dmux->feature_flags_ & ALPHA_FLAG);
     // Clear any alpha when the alpha flag is missing.
     if (!has_alpha && frame->img_components_[1].size_ > 0) {
       frame->img_components_[1].offset_ = 0;
       frame->img_components_[1].size_ = 0;
+      frame->has_alpha_ = 0;
     }
 
     // Use the frame width/height as the canvas values for non-vp8x files.
@@ -451,7 +446,7 @@ static ParseStatus ParseSingleImage(WebPDemuxer* const dmux) {
       dmux->state_ = WEBP_DEMUX_PARSED_HEADER;
       dmux->canvas_width_ = frame->width_;
       dmux->canvas_height_ = frame->height_;
-      dmux->feature_flags_ |= has_vp8l_alpha ? ALPHA_FLAG : 0;
+      dmux->feature_flags_ |= frame->has_alpha_ ? ALPHA_FLAG : 0;
     }
     AddFrame(dmux, frame);
     dmux->num_frames_ = 1;
@@ -836,6 +831,7 @@ static int SynthesizeFrame(const WebPDemuxer* const dmux,
   iter->y_offset       = fragment->y_offset_;
   iter->width          = fragment->width_;
   iter->height         = fragment->height_;
+  iter->has_alpha      = fragment->has_alpha_;
   iter->duration       = fragment->duration_;
   iter->dispose_method = fragment->dispose_method_;
   iter->complete       = fragment->complete_;
