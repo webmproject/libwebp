@@ -193,14 +193,12 @@ static WebPMuxError MuxDeleteAllNamedData(WebPMux* const mux, uint32_t tag) {
 
 WebPMuxError WebPMuxSetChunk(WebPMux* mux, const char fourcc[4],
                              const WebPData* chunk_data, int copy_data) {
-  CHUNK_INDEX idx;
   uint32_t tag;
   WebPMuxError err;
   if (mux == NULL || fourcc == NULL || chunk_data == NULL ||
       chunk_data->bytes == NULL || chunk_data->size > MAX_CHUNK_PAYLOAD) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
-  idx = ChunkGetIndexFromFourCC(fourcc);
   tag = ChunkGetTagFromFourCC(fourcc);
 
   // Delete existing chunk(s) with the same 'fourcc'.
