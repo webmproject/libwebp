@@ -39,12 +39,6 @@ WebPMux* WebPNewInternal(int version) {
   }
 }
 
-static void DeleteAllChunks(WebPChunk** const chunk_list) {
-  while (*chunk_list) {
-    *chunk_list = ChunkDelete(*chunk_list);
-  }
-}
-
 // Delete all images in 'wpi_list'.
 static void DeleteAllImages(WebPMuxImage** const wpi_list) {
   while (*wpi_list != NULL) {
@@ -55,12 +49,12 @@ static void DeleteAllImages(WebPMuxImage** const wpi_list) {
 static void MuxRelease(WebPMux* const mux) {
   if (mux == NULL) return;
   DeleteAllImages(&mux->images_);
-  DeleteAllChunks(&mux->vp8x_);
-  DeleteAllChunks(&mux->iccp_);
-  DeleteAllChunks(&mux->anim_);
-  DeleteAllChunks(&mux->exif_);
-  DeleteAllChunks(&mux->xmp_);
-  DeleteAllChunks(&mux->unknown_);
+  ChunkListDelete(&mux->vp8x_);
+  ChunkListDelete(&mux->iccp_);
+  ChunkListDelete(&mux->anim_);
+  ChunkListDelete(&mux->exif_);
+  ChunkListDelete(&mux->xmp_);
+  ChunkListDelete(&mux->unknown_);
 }
 
 void WebPMuxDelete(WebPMux* mux) {
@@ -581,16 +575,6 @@ static WebPMuxError MuxCleanup(WebPMux* const mux) {
     if (err != WEBP_MUX_OK) return err;
   }
   return WEBP_MUX_OK;
-}
-
-// Total size of a list of chunks.
-static size_t ChunkListDiskSize(const WebPChunk* chunk_list) {
-  size_t size = 0;
-  while (chunk_list != NULL) {
-    size += ChunkDiskSize(chunk_list);
-    chunk_list = chunk_list->next_;
-  }
-  return size;
 }
 
 // Total size of a list of images.

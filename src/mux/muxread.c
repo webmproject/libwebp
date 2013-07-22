@@ -147,6 +147,11 @@ static int MuxImageParse(const WebPChunk* const chunk, int copy_data,
         if (!MuxImageFinalize(wpi)) goto Fail;
         wpi->is_partial_ = 0;  // wpi is completely filled.
         break;
+      case WEBP_CHUNK_UNKNOWN:
+        if (wpi->is_partial_) goto Fail;  // Encountered an unknown chunk
+                                          // before some image chunks.
+        if (ChunkSetNth(&subchunk, &wpi->unknown_, 0) != WEBP_MUX_OK) goto Fail;
+        break;
       default:
         goto Fail;
         break;

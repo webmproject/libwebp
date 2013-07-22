@@ -187,6 +187,12 @@ WebPChunk* ChunkDelete(WebPChunk* const chunk) {
   return next;
 }
 
+void ChunkListDelete(WebPChunk** const chunk_list) {
+  while (*chunk_list != NULL) {
+    *chunk_list = ChunkDelete(*chunk_list);
+  }
+}
+
 //------------------------------------------------------------------------------
 // Chunk serialization methods.
 
@@ -211,6 +217,15 @@ uint8_t* ChunkListEmit(const WebPChunk* chunk_list, uint8_t* dst) {
   return dst;
 }
 
+size_t ChunkListDiskSize(const WebPChunk* chunk_list) {
+  size_t size = 0;
+  while (chunk_list != NULL) {
+    size += ChunkDiskSize(chunk_list);
+    chunk_list = chunk_list->next_;
+  }
+  return size;
+}
+
 //------------------------------------------------------------------------------
 // Life of a MuxImage object.
 
@@ -225,6 +240,7 @@ WebPMuxImage* MuxImageRelease(WebPMuxImage* const wpi) {
   ChunkDelete(wpi->header_);
   ChunkDelete(wpi->alpha_);
   ChunkDelete(wpi->img_);
+  ChunkListDelete(&wpi->unknown_);
 
   next = wpi->next_;
   MuxImageInit(wpi);
@@ -356,6 +372,7 @@ size_t MuxImageDiskSize(const WebPMuxImage* const wpi) {
   if (wpi->header_ != NULL) size += ChunkDiskSize(wpi->header_);
   if (wpi->alpha_ != NULL) size += ChunkDiskSize(wpi->alpha_);
   if (wpi->img_ != NULL) size += ChunkDiskSize(wpi->img_);
+  if (wpi->unknown_ != NULL) size += ChunkListDiskSize(wpi->unknown_);
   return size;
 }
 
@@ -387,6 +404,7 @@ uint8_t* MuxImageEmit(const WebPMuxImage* const wpi, uint8_t* dst) {
   }
   if (wpi->alpha_ != NULL) dst = ChunkEmit(wpi->alpha_, dst);
   if (wpi->img_ != NULL) dst = ChunkEmit(wpi->img_, dst);
+  if (wpi->unknown_ != NULL) dst = ChunkListEmit(wpi->unknown_, dst);
   return dst;
 }
 

@@ -48,6 +48,7 @@ struct WebPMuxImage {
   WebPChunk*  header_;      // Corresponds to WEBP_CHUNK_ANMF/WEBP_CHUNK_FRGM.
   WebPChunk*  alpha_;       // Corresponds to WEBP_CHUNK_ALPHA.
   WebPChunk*  img_;         // Corresponds to WEBP_CHUNK_IMAGE.
+  WebPChunk*  unknown_;     // Corresponds to WEBP_CHUNK_UNKNOWN.
   int         width_;
   int         height_;
   int         has_alpha_;   // Through ALPH chunk or as part of VP8L.
@@ -136,6 +137,9 @@ WebPChunk* ChunkRelease(WebPChunk* const chunk);
 // Deletes given chunk & returns chunk->next_.
 WebPChunk* ChunkDelete(WebPChunk* const chunk);
 
+// Deletes all chunks in the given chunk list.
+void ChunkListDelete(WebPChunk** const chunk_list);
+
 // Returns size of the chunk including chunk header and padding byte (if any).
 static WEBP_INLINE size_t SizeWithPadding(size_t chunk_size) {
   return CHUNK_HEADER_SIZE + ((chunk_size + 1) & ~1U);
@@ -147,6 +151,9 @@ static WEBP_INLINE size_t ChunkDiskSize(const WebPChunk* chunk) {
   assert(data_size < MAX_CHUNK_PAYLOAD);
   return SizeWithPadding(data_size);
 }
+
+// Total size of a list of chunks.
+size_t ChunkListDiskSize(const WebPChunk* chunk_list);
 
 // Write out the given list of chunks into 'dst'.
 uint8_t* ChunkListEmit(const WebPChunk* chunk_list, uint8_t* dst);
