@@ -39,12 +39,6 @@ WebPMux* WebPNewInternal(int version) {
   }
 }
 
-static void DeleteAllChunks(WebPChunk** const chunk_list) {
-  while (*chunk_list) {
-    *chunk_list = ChunkDelete(*chunk_list);
-  }
-}
-
 // Delete all images in 'wpi_list'.
 static void DeleteAllImages(WebPMuxImage** const wpi_list) {
   while (*wpi_list != NULL) {
@@ -55,12 +49,12 @@ static void DeleteAllImages(WebPMuxImage** const wpi_list) {
 static void MuxRelease(WebPMux* const mux) {
   if (mux == NULL) return;
   DeleteAllImages(&mux->images_);
-  DeleteAllChunks(&mux->vp8x_);
-  DeleteAllChunks(&mux->iccp_);
-  DeleteAllChunks(&mux->anim_);
-  DeleteAllChunks(&mux->exif_);
-  DeleteAllChunks(&mux->xmp_);
-  DeleteAllChunks(&mux->unknown_);
+  ChunkListDelete(&mux->vp8x_);
+  ChunkListDelete(&mux->iccp_);
+  ChunkListDelete(&mux->anim_);
+  ChunkListDelete(&mux->exif_);
+  ChunkListDelete(&mux->xmp_);
+  ChunkListDelete(&mux->unknown_);
 }
 
 void WebPMuxDelete(WebPMux* mux) {
@@ -103,34 +97,26 @@ static WebPMuxError MuxSet(WebPMux* const mux, uint32_t tag, uint32_t nth,
 
 // Create data for frame/fragment given image data, offsets and duration.
 static WebPMuxError CreateFrameFragmentData(
-    const WebPData* const image, int x_offset, int y_offset, int duration,
-    WebPMuxAnimDispose dispose_method, int is_lossless, int is_frame,
+    int width, int height, const WebPMuxFrameInfo* const info, int is_frame,
     WebPData* const frame_frgm) {
-  int width;
-  int height;
   uint8_t* frame_frgm_bytes;
   const size_t frame_frgm_size = kChunks[is_frame ? IDX_ANMF : IDX_FRGM].size;
 
-  const int ok = is_lossless ?
-      VP8LGetInfo(image->bytes, image->size, &width, &height, NULL) :
-      VP8GetInfo(image->bytes, image->size, image->size, &width, &height);
-  if (!ok) return WEBP_MUX_INVALID_ARGUMENT;
-
-  assert(width > 0 && height > 0 && duration >= 0);
-  assert(dispose_method == (dispose_method & 1));
+  assert(width > 0 && height > 0 && info->duration >= 0);
+  assert(info->dispose_method == (info->dispose_method & 1));
   // Note: assertion on upper bounds is done in PutLE24().
 
   frame_frgm_bytes = (uint8_t*)malloc(frame_frgm_size);
   if (frame_frgm_bytes == NULL) return WEBP_MUX_MEMORY_ERROR;
 
-  PutLE24(frame_frgm_bytes + 0, x_offset / 2);
-  PutLE24(frame_frgm_bytes + 3, y_offset / 2);
+  PutLE24(frame_frgm_bytes + 0, info->x_offset / 2);
+  PutLE24(frame_frgm_bytes + 3, info->y_offset / 2);
 
   if (is_frame) {
     PutLE24(frame_frgm_bytes + 6, width - 1);
     PutLE24(frame_frgm_bytes + 9, height - 1);
-    PutLE24(frame_frgm_bytes + 12, duration);
-    frame_frgm_bytes[15] = (dispose_method & 1);
+    PutLE24(frame_frgm_bytes + 12, info->duration);
+    frame_frgm_bytes[15] = (info->dispose_method & 1);
   }
 
   frame_frgm->bytes = frame_frgm_bytes;
@@ -241,7 +227,9 @@ static WebPMuxError SetAlphaAndImageChunks(
                              &wpi->alpha_);
     if (err != WEBP_MUX_OK) return err;
   }
-  return AddDataToChunkList(&image, copy_data, image_tag, &wpi->img_);
+  err = AddDataToChunkList(&image, copy_data, image_tag, &wpi->img_);
+  if (err != WEBP_MUX_OK) return err;
+  return MuxImageFinalize(wpi) ? WEBP_MUX_OK : WEBP_MUX_INVALID_ARGUMENT;
 }
 
 WebPMuxError WebPMuxSetImage(WebPMux* mux, const WebPData* bitstream,
@@ -315,24 +303,24 @@ WebPMuxError WebPMuxPushFrame(WebPMux* mux, const WebPMuxFrameInfo* frame,
   assert(wpi.img_ != NULL);  // As SetAlphaAndImageChunks() was successful.
 
   {
-    const int is_lossless = (wpi.img_->tag_ == kChunks[IDX_VP8L].tag);
-    const int x_offset = frame->x_offset & ~1;  // Snap offsets to even.
-    const int y_offset = frame->y_offset & ~1;
-    const int duration = is_frame ? frame->duration : 1 /* unused */;
-    const WebPMuxAnimDispose dispose_method =
-        is_frame ? frame->dispose_method : 0 /* unused */;
-    const uint32_t tag = kChunks[is_frame ? IDX_ANMF : IDX_FRGM].tag;
     WebPData frame_frgm;
-    if (x_offset < 0 || x_offset >= MAX_POSITION_OFFSET ||
-        y_offset < 0 || y_offset >= MAX_POSITION_OFFSET ||
-        (duration < 0 || duration >= MAX_DURATION) ||
-        dispose_method != (dispose_method & 1)) {
+    const uint32_t tag = kChunks[is_frame ? IDX_ANMF : IDX_FRGM].tag;
+    WebPMuxFrameInfo tmp = *frame;
+    tmp.x_offset &= ~1;  // Snap offsets to even.
+    tmp.y_offset &= ~1;
+    if (!is_frame) {  // Reset unused values.
+      tmp.duration = 1;
+      tmp.dispose_method = 0;
+    }
+    if (tmp.x_offset < 0 || tmp.x_offset >= MAX_POSITION_OFFSET ||
+        tmp.y_offset < 0 || tmp.y_offset >= MAX_POSITION_OFFSET ||
+        (tmp.duration < 0 || tmp.duration >= MAX_DURATION) ||
+        tmp.dispose_method != (tmp.dispose_method & 1)) {
       err = WEBP_MUX_INVALID_ARGUMENT;
       goto Err;
     }
-    err = CreateFrameFragmentData(&wpi.img_->data_, x_offset, y_offset,
-                                  duration, dispose_method, is_lossless,
-                                  is_frame, &frame_frgm);
+    err = CreateFrameFragmentData(wpi.width_, wpi.height_, &tmp, is_frame,
+                                  &frame_frgm);
     if (err != WEBP_MUX_OK) goto Err;
     // Add frame/fragment chunk (with copy_data = 1).
     err = AddDataToChunkList(&frame_frgm, 1, tag, &wpi.header_);
@@ -407,34 +395,10 @@ static WebPMuxError GetFrameFragmentInfo(
   return WEBP_MUX_OK;
 }
 
-WebPMuxError MuxGetImageInfo(const WebPChunk* const image_chunk,
-                             int* const width, int* const height,
-                             int* const has_alpha) {
-  const uint32_t tag = image_chunk->tag_;
-  const WebPData* const data = &image_chunk->data_;
-  int w, h;
-  int a = 0;
-  int ok;
-  assert(image_chunk != NULL);
-  assert(tag == kChunks[IDX_VP8].tag || tag == kChunks[IDX_VP8L].tag);
-  ok = (tag == kChunks[IDX_VP8].tag) ?
-      VP8GetInfo(data->bytes, data->size, data->size, &w, &h) :
-      VP8LGetInfo(data->bytes, data->size, &w, &h, &a);
-  if (ok) {
-    if (width != NULL) *width = w;
-    if (height != NULL) *height = h;
-    if (has_alpha != NULL) *has_alpha = a;
-    return WEBP_MUX_OK;
-  } else {
-    return WEBP_MUX_BAD_DATA;
-  }
-}
-
 static WebPMuxError GetImageInfo(const WebPMuxImage* const wpi,
                                  int* const x_offset, int* const y_offset,
                                  int* const duration,
                                  int* const width, int* const height) {
-  const WebPChunk* const image_chunk = wpi->img_;
   const WebPChunk* const frame_frgm_chunk = wpi->header_;
 
   // Get offsets and duration from ANMF/FRGM chunk.
@@ -443,7 +407,9 @@ static WebPMuxError GetImageInfo(const WebPMuxImage* const wpi,
   if (err != WEBP_MUX_OK) return err;
 
   // Get width and height from VP8/VP8L chunk.
-  return MuxGetImageInfo(image_chunk, width, height, NULL);
+  if (width != NULL) *width = wpi->width_;
+  if (height != NULL) *height = wpi->height_;
+  return 1;
 }
 
 static WebPMuxError GetImageCanvasWidthHeight(
@@ -488,13 +454,9 @@ static WebPMuxError GetImageCanvasWidthHeight(
       return WEBP_MUX_INVALID_ARGUMENT;
     }
   } else {
-    // For a single image, extract the width & height from VP8/VP8L image-data.
-    int w, h;
-    const WebPChunk* const image_chunk = wpi->img_;
-    const WebPMuxError err = MuxGetImageInfo(image_chunk, &w, &h, NULL);
-    if (err != WEBP_MUX_OK) return err;
-    *width = w;
-    *height = h;
+    // For a single image, canvas dimensions are same as image dimensions.
+    *width = wpi->width_;
+    *height = wpi->height_;
   }
   return WEBP_MUX_OK;
 }
@@ -563,9 +525,8 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
-  if (MuxHasLosslessImages(images)) {
-    // We have a file with a VP8X chunk having some lossless images.
-    // As lossless images implicitly contain alpha, force ALPHA_FLAG to be true.
+  if (MuxHasAlpha(images)) {
+    // This means some frames explicitly/implicitly contain alpha.
     // Note: This 'flags' update must NOT be done for a lossless image
     // without a VP8X chunk!
     flags |= ALPHA_FLAG;
@@ -612,16 +573,6 @@ static WebPMuxError MuxCleanup(WebPMux* const mux) {
     if (err != WEBP_MUX_OK) return err;
   }
   return WEBP_MUX_OK;
-}
-
-// Total size of a list of chunks.
-static size_t ChunkListDiskSize(const WebPChunk* chunk_list) {
-  size_t size = 0;
-  while (chunk_list != NULL) {
-    size += ChunkDiskSize(chunk_list);
-    chunk_list = chunk_list->next_;
-  }
-  return size;
 }
 
 // Total size of a list of images.

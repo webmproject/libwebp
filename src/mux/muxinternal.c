@@ -187,6 +187,12 @@ WebPChunk* ChunkDelete(WebPChunk* const chunk) {
   return next;
 }
 
+void ChunkListDelete(WebPChunk** const chunk_list) {
+  while (*chunk_list != NULL) {
+    *chunk_list = ChunkDelete(*chunk_list);
+  }
+}
+
 //------------------------------------------------------------------------------
 // Chunk serialization methods.
 
@@ -211,6 +217,15 @@ uint8_t* ChunkListEmit(const WebPChunk* chunk_list, uint8_t* dst) {
   return dst;
 }
 
+size_t ChunkListDiskSize(const WebPChunk* chunk_list) {
+  size_t size = 0;
+  while (chunk_list != NULL) {
+    size += ChunkDiskSize(chunk_list);
+    chunk_list = chunk_list->next_;
+  }
+  return size;
+}
+
 //------------------------------------------------------------------------------
 // Life of a MuxImage object.
 
@@ -225,6 +240,7 @@ WebPMuxImage* MuxImageRelease(WebPMuxImage* const wpi) {
   ChunkDelete(wpi->header_);
   ChunkDelete(wpi->alpha_);
   ChunkDelete(wpi->img_);
+  ChunkListDelete(&wpi->unknown_);
 
   next = wpi->next_;
   MuxImageInit(wpi);
@@ -356,6 +372,7 @@ size_t MuxImageDiskSize(const WebPMuxImage* const wpi) {
   if (wpi->header_ != NULL) size += ChunkDiskSize(wpi->header_);
   if (wpi->alpha_ != NULL) size += ChunkDiskSize(wpi->alpha_);
   if (wpi->img_ != NULL) size += ChunkDiskSize(wpi->img_);
+  if (wpi->unknown_ != NULL) size += ChunkListDiskSize(wpi->unknown_);
   return size;
 }
 
@@ -387,18 +404,16 @@ uint8_t* MuxImageEmit(const WebPMuxImage* const wpi, uint8_t* dst) {
   }
   if (wpi->alpha_ != NULL) dst = ChunkEmit(wpi->alpha_, dst);
   if (wpi->img_ != NULL) dst = ChunkEmit(wpi->img_, dst);
+  if (wpi->unknown_ != NULL) dst = ChunkListEmit(wpi->unknown_, dst);
   return dst;
 }
 
 //------------------------------------------------------------------------------
 // Helper methods for mux.
 
-int MuxHasLosslessImages(const WebPMuxImage* images) {
+int MuxHasAlpha(const WebPMuxImage* images) {
   while (images != NULL) {
-    assert(images->img_ != NULL);
-    if (images->img_->tag_ == kChunks[IDX_VP8L].tag) {
-      return 1;
-    }
+    if (images->has_alpha_) return 1;
     images = images->next_;
   }
   return 0;
@@ -512,14 +527,18 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
   if (num_vp8x == 0 && num_images != 1) return WEBP_MUX_INVALID_ARGUMENT;
 
   // ALPHA_FLAG & alpha chunk(s) are consistent.
-  if (MuxHasLosslessImages(mux->images_)) {
+  if (MuxHasAlpha(mux->images_)) {
     if (num_vp8x > 0) {
-      // Special case: we have a VP8X chunk as well as some lossless images.
+      // VP8X chunk is present, so it should contain ALPHA_FLAG.
       if (!(flags & ALPHA_FLAG)) return WEBP_MUX_INVALID_ARGUMENT;
-    }
-  } else {
-      err = ValidateChunk(mux, IDX_ALPHA, ALPHA_FLAG, flags, -1, &num_alpha);
+    } else {
+      // VP8X chunk is not present, so ALPH chunks should NOT be present either.
+      err = WebPMuxNumChunks(mux, WEBP_CHUNK_ALPHA, &num_alpha);
       if (err != WEBP_MUX_OK) return err;
+      if (num_alpha > 0) return WEBP_MUX_INVALID_ARGUMENT;
+    }
+  } else {  // Mux doesn't need alpha. So, ALPHA_FLAG should NOT be present.
+    if (flags & ALPHA_FLAG) return WEBP_MUX_INVALID_ARGUMENT;
   }
 
   // num_fragments & num_images are consistent.
