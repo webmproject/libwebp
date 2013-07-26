@@ -147,6 +147,7 @@ MUX_OBJS = \
     src/mux/muxread.o \
 
 UTILS_DEC_OBJS = \
+    src/utils/alpha_processing.o \
     src/utils/bit_reader.o \
     src/utils/color_cache.o \
     src/utils/filters.o \
@@ -186,6 +187,7 @@ HDRS = \
     src/dsp/yuv.h \
     src/enc/cost.h \
     src/enc/vp8enci.h \
+    src/utils/alpha_processing.h \
     src/utils/bit_reader.h \
     src/utils/bit_writer.h \
     src/utils/color_cache.h \

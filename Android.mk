@@ -39,6 +39,7 @@ LOCAL_SRC_FILES := \
     src/enc/tree.c \
     src/enc/vp8l.c \
     src/enc/webpenc.c \
+    src/utils/alpha_processing.c \
     src/utils/bit_reader.c \
     src/utils/bit_writer.c \
     src/utils/color_cache.c \

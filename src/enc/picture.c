@@ -16,6 +16,7 @@
 #include <math.h>
 
 #include "./vp8enci.h"
+#include "../utils/alpha_processing.h"
 #include "../utils/rescaler.h"
 #include "../utils/utils.h"
 #include "../dsp/dsp.h"
@@ -399,6 +400,28 @@ static void RescalePlane(const uint8_t* src,
   }
 }
 
+static void AlphaMultiplyARGB(WebPPicture* const pic, int inverse) {
+  uint32_t* ptr = pic->argb;
+  int y;
+  for (y = 0; y < pic->height; ++y) {
+    WebPMultARGBRow(ptr, pic->width, inverse);
+    ptr += pic->argb_stride;
+  }
+}
+
+static void AlphaMultiplyY(WebPPicture* const pic, int inverse) {
+  const uint8_t* ptr_a = pic->a;
+  if (ptr_a != NULL) {
+    uint8_t* ptr_y = pic->y;
+    int y;
+    for (y = 0; y < pic->height; ++y) {
+      WebPMultRow(ptr_y, ptr_a, pic->width, inverse);
+      ptr_y += pic->y_stride;
+      ptr_a += pic->a_stride;
+    }
+  }
+}
+
 int WebPPictureRescale(WebPPicture* pic, int width, int height) {
   WebPPicture tmp;
   int prev_width, prev_height;
@@ -429,9 +452,19 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
       WebPPictureFree(&tmp);
       return 0;
     }
+    // If present, we need to rescale alpha first (for AlphaMultiplyY).
+    if (pic->a != NULL) {
+      RescalePlane(pic->a, prev_width, prev_height, pic->a_stride,
+                   tmp.a, width, height, tmp.a_stride, work, 1);
+    }
 
+    // We take transparency into account on the luma plane only. That's not
+    // totally exact blending, but still is a good approximation.
+    AlphaMultiplyY(pic, 0);
     RescalePlane(pic->y, prev_width, prev_height, pic->y_stride,
                  tmp.y, width, height, tmp.y_stride, work, 1);
+    AlphaMultiplyY(&tmp, 1);
+
     RescalePlane(pic->u,
                  HALVE(prev_width), HALVE(prev_height), pic->uv_stride,
                  tmp.u,
@@ -441,10 +474,6 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
                  tmp.v,
                  HALVE(width), HALVE(height), tmp.uv_stride, work, 1);
 
-    if (tmp.a != NULL) {
-      RescalePlane(pic->a, prev_width, prev_height, pic->a_stride,
-                   tmp.a, width, height, tmp.a_stride, work, 1);
-    }
 #ifdef WEBP_EXPERIMENTAL_FEATURES
     if (tmp.u0 != NULL) {
       const int s = IS_YUV_CSP(tmp.colorspace, WEBP_YUV422) ? 2 : 1;
@@ -462,12 +491,16 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
       WebPPictureFree(&tmp);
       return 0;
     }
-
+    // In order to correctly interpolate colors, we need to apply the alpha
+    // weighting first (black-matting), scale the RGB values, and remove
+    // the premultiplication afterward (while preserving the alpha channel).
+    AlphaMultiplyARGB(pic, 0);
     RescalePlane((const uint8_t*)pic->argb, prev_width, prev_height,
                  pic->argb_stride * 4,
                  (uint8_t*)tmp.argb, width, height,
                  tmp.argb_stride * 4,
                  work, 4);
+    AlphaMultiplyARGB(&tmp, 1);
   }
   WebPPictureFree(pic);
   free(work);
