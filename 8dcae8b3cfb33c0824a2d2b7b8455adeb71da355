@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAcX//t/c\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-07-26T23:35:31Z",
+      "side": 1,
+      "message": "bad indent",
+      "revId": "8dcae8b3cfb33c0824a2d2b7b8455adeb71da355",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcX//t/Y\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-07-26T23:35:31Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "8dcae8b3cfb33c0824a2d2b7b8455adeb71da355",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
