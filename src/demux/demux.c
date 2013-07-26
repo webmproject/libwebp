@@ -390,20 +390,20 @@ static int StoreChunk(WebPDemuxer* const dmux,
 // -----------------------------------------------------------------------------
 // Primary chunk parsing
 
-static int ReadHeader(MemBuffer* const mem) {
+static ParseStatus ReadHeader(MemBuffer* const mem) {
   const size_t min_size = RIFF_HEADER_SIZE + CHUNK_HEADER_SIZE;
   uint32_t riff_size;
 
   // Basic file level validation.
-  if (MemDataSize(mem) < min_size) return 0;
+  if (MemDataSize(mem) < min_size) return PARSE_NEED_MORE_DATA;
   if (memcmp(GetBuffer(mem), "RIFF", CHUNK_SIZE_BYTES) ||
       memcmp(GetBuffer(mem) + CHUNK_HEADER_SIZE, "WEBP", CHUNK_SIZE_BYTES)) {
-    return 0;
+    return PARSE_ERROR;
   }
 
   riff_size = GetLE32(GetBuffer(mem) + TAG_SIZE);
-  if (riff_size < CHUNK_HEADER_SIZE) return 0;
-  if (riff_size > MAX_CHUNK_PAYLOAD) return 0;
+  if (riff_size < CHUNK_HEADER_SIZE) return PARSE_ERROR;
+  if (riff_size > MAX_CHUNK_PAYLOAD) return PARSE_ERROR;
 
   // There's no point in reading past the end of the RIFF chunk
   mem->riff_end_ = riff_size + CHUNK_HEADER_SIZE;
@@ -412,7 +412,7 @@ static int ReadHeader(MemBuffer* const mem) {
   }
 
   Skip(mem, RIFF_HEADER_SIZE);
-  return 1;
+  return PARSE_OK;
 }
 
 static ParseStatus ParseSingleImage(WebPDemuxer* const dmux) {
@@ -692,11 +692,20 @@ WebPDemuxer* WebPDemuxInternal(const WebPData* data, int allow_partial,
   MemBuffer mem;
   WebPDemuxer* dmux;
 
+  if (state != NULL) *state = WEBP_DEMUX_PARSE_ERROR;
+
   if (WEBP_ABI_IS_INCOMPATIBLE(version, WEBP_DEMUX_ABI_VERSION)) return NULL;
   if (data == NULL || data->bytes == NULL || data->size == 0) return NULL;
 
   if (!InitMemBuffer(&mem, data->bytes, data->size)) return NULL;
-  if (!ReadHeader(&mem)) return NULL;
+  status = ReadHeader(&mem);
+  if (status != PARSE_OK) {
+    if (state != NULL) {
+      *state = (status == PARSE_NEED_MORE_DATA) ? WEBP_DEMUX_PARSING_HEADER
+                                                : WEBP_DEMUX_PARSE_ERROR;
+    }
+    return NULL;
+  }
 
   partial = (mem.buf_size_ < mem.riff_end_);
   if (!allow_partial && partial) return NULL;
@@ -705,16 +714,18 @@ WebPDemuxer* WebPDemuxInternal(const WebPData* data, int allow_partial,
   if (dmux == NULL) return NULL;
   InitDemux(dmux, &mem);
 
+  status = PARSE_ERROR;
   for (parser = kMasterChunks; parser->parse != NULL; ++parser) {
     if (!memcmp(parser->id, GetBuffer(&dmux->mem_), TAG_SIZE)) {
       status = parser->parse(dmux);
       if (status == PARSE_OK) dmux->state_ = WEBP_DEMUX_DONE;
       if (status == PARSE_NEED_MORE_DATA && !partial) status = PARSE_ERROR;
       if (status != PARSE_ERROR && !parser->valid(dmux)) status = PARSE_ERROR;
+      if (status == PARSE_ERROR) dmux->state_ = WEBP_DEMUX_PARSE_ERROR;
       break;
     }
   }
-  if (state) *state = dmux->state_;
+  if (state != NULL) *state = dmux->state_;
 
   if (status == PARSE_ERROR) {
     WebPDemuxDelete(dmux);

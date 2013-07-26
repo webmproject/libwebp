@@ -73,9 +73,11 @@ WEBP_EXTERN(int) WebPGetDemuxVersion(void);
 // Life of a Demux object
 
 typedef enum WebPDemuxState {
-  WEBP_DEMUX_PARSING_HEADER,  // Not enough data to parse full header.
-  WEBP_DEMUX_PARSED_HEADER,   // Header parsing complete, data may be available.
-  WEBP_DEMUX_DONE             // Entire file has been parsed.
+  WEBP_DEMUX_PARSE_ERROR    = -1,  // An error occurred while parsing.
+  WEBP_DEMUX_PARSING_HEADER =  0,  // Not enough data to parse full header.
+  WEBP_DEMUX_PARSED_HEADER  =  1,  // Header parsing complete,
+                                   // data may be available.
+  WEBP_DEMUX_DONE           =  2   // Entire file has been parsed.
 } WebPDemuxState;
 
 // Internal, version-checked, entry point
@@ -90,7 +92,8 @@ static WEBP_INLINE WebPDemuxer* WebPDemux(const WebPData* data) {
 
 // Parses the possibly incomplete WebP file given by 'data'.
 // If 'state' is non-NULL it will be set to indicate the status of the demuxer.
-// Returns a WebPDemuxer object on successful parse, NULL otherwise.
+// Returns NULL in case of error or if there isn't enough data to start parsing;
+// and a WebPDemuxer object on successful parse.
 static WEBP_INLINE WebPDemuxer* WebPDemuxPartial(
     const WebPData* data, WebPDemuxState* state) {
   return WebPDemuxInternal(data, 1, state, WEBP_DEMUX_ABI_VERSION);
