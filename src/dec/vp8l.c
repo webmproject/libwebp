@@ -434,7 +434,7 @@ static int Export(WebPRescaler* const rescaler, WEBP_CSP_MODE colorspace,
 // Emit scaled rows.
 static int EmitRescaledRowsRGBA(const VP8LDecoder* const dec,
                                 uint8_t* in, int in_stride, int mb_h,
-                            uint8_t* const out, int out_stride) {
+                                uint8_t* const out, int out_stride) {
   const WEBP_CSP_MODE colorspace = dec->output_->colorspace;
   int num_lines_in = 0;
   int num_lines_out = 0;
@@ -683,7 +683,7 @@ static void ProcessRows(VP8LDecoder* const dec, int row) {
         uint8_t* const rgba = buf->rgba + dec->last_out_row_ * buf->stride;
         const int num_rows_out = io->use_scaling ?
             EmitRescaledRowsRGBA(dec, rows_data, in_stride, io->mb_h,
-                             rgba, buf->stride) :
+                                 rgba, buf->stride) :
             EmitRows(output->colorspace, rows_data, in_stride,
                      io->mb_w, io->mb_h, rgba, buf->stride);
         // Update 'last_out_row_'.
