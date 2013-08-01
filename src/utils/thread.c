@@ -133,7 +133,7 @@ static int pthread_cond_wait(pthread_cond_t* const condition,
 
 //------------------------------------------------------------------------------
 
-static THREADFN WebPWorkerThreadLoop(void *ptr) {    // thread loop
+static THREADFN ThreadLoop(void* ptr) {    // thread loop
   WebPWorker* const worker = (WebPWorker*)ptr;
   int done = 0;
   while (!done) {
@@ -157,8 +157,8 @@ static THREADFN WebPWorkerThreadLoop(void *ptr) {    // thread loop
 }
 
 // main thread state control
-static void WebPWorkerChangeState(WebPWorker* const worker,
-                                  WebPWorkerStatus new_status) {
+static void ChangeState(WebPWorker* const worker,
+                        WebPWorkerStatus new_status) {
   // no-op when attempting to change state on a thread that didn't come up
   if (worker->status_ < OK) return;
 
@@ -186,7 +186,7 @@ void WebPWorkerInit(WebPWorker* const worker) {
 
 int WebPWorkerSync(WebPWorker* const worker) {
 #ifdef WEBP_USE_THREAD
-  WebPWorkerChangeState(worker, OK);
+  ChangeState(worker, OK);
 #endif
   assert(worker->status_ <= OK);
   return !worker->had_error;
@@ -202,7 +202,7 @@ int WebPWorkerReset(WebPWorker* const worker) {
       return 0;
     }
     pthread_mutex_lock(&worker->mutex_);
-    ok = !pthread_create(&worker->thread_, NULL, WebPWorkerThreadLoop, worker);
+    ok = !pthread_create(&worker->thread_, NULL, ThreadLoop, worker);
     if (ok) worker->status_ = OK;
     pthread_mutex_unlock(&worker->mutex_);
 #else
@@ -217,7 +217,7 @@ int WebPWorkerReset(WebPWorker* const worker) {
 
 void WebPWorkerLaunch(WebPWorker* const worker) {
 #ifdef WEBP_USE_THREAD
-  WebPWorkerChangeState(worker, WORK);
+  ChangeState(worker, WORK);
 #else
   if (worker->hook)
     worker->had_error |= !worker->hook(worker->data1, worker->data2);
@@ -227,7 +227,7 @@ void WebPWorkerLaunch(WebPWorker* const worker) {
 void WebPWorkerEnd(WebPWorker* const worker) {
   if (worker->status_ >= OK) {
 #ifdef WEBP_USE_THREAD
-    WebPWorkerChangeState(worker, NOT_OK);
+    ChangeState(worker, NOT_OK);
     pthread_join(worker->thread_, NULL);
     pthread_mutex_destroy(&worker->mutex_);
     pthread_cond_destroy(&worker->condition_);
