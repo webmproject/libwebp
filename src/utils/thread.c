@@ -126,14 +126,14 @@ static int pthread_cond_wait(pthread_cond_t* const condition,
   return !ok;
 }
 
-#else  // _WIN32
+#else  // !_WIN32
 # define THREADFN void*
 # define THREAD_RETURN(val) val
-#endif
+#endif  // _WIN32
 
 //------------------------------------------------------------------------------
 
-static THREADFN ThreadLoop(void* ptr) {    // thread loop
+static THREADFN ThreadLoop(void* ptr) {
   WebPWorker* const worker = (WebPWorker*)ptr;
   int done = 0;
   while (!done) {
