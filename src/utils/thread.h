@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-#if WEBP_USE_THREAD
+#ifdef WEBP_USE_THREAD
 
 #if defined(_WIN32)
 
@@ -55,7 +55,7 @@ typedef int (*WebPWorkerHook)(void*, void*);
 
 // Synchronize object used to launch job in the worker thread
 typedef struct {
-#if WEBP_USE_THREAD
+#ifdef WEBP_USE_THREAD
   pthread_mutex_t mutex_;
   pthread_cond_t  condition_;
   pthread_t       thread_;
