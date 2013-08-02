@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAcn//8IE\u003d",
+        "filename": "src/utils/thread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-08-02T19:15:35Z",
+      "side": 1,
+      "message": "given you have the prototype in the header, this could go below with the other public functions to at least keep those in decl-order.",
+      "revId": "101a9142314967acae6af830045e1aea5f7e4bc1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
