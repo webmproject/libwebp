@@ -79,6 +79,11 @@ int WebPWorkerSync(WebPWorker* const worker);
 // hook/data1/data2 can be changed at any time before calling this function,
 // but not be changed afterward until the next call to WebPWorkerSync().
 void WebPWorkerLaunch(WebPWorker* const worker);
+// This function is similar to WebPWorkerLaunch() except that it calls the
+// hook directly instead of using a thread. Convenient to bypass the thread
+// mechanism while still using the WebPWorker structs. WebPWorkerSync() must
+// still be called afterward (for error reporting).
+void WebPWorkerExecute(WebPWorker* const worker);
 // Kill the thread and terminate the object. To use the object again, one
 // must call WebPWorkerReset() again.
 void WebPWorkerEnd(WebPWorker* const worker);
