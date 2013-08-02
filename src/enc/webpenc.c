@@ -178,10 +178,8 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
   const size_t nz_size = (mb_w + 1) * sizeof(uint32_t) + ALIGN_CST;
   const size_t cache_size = (3 * YUV_SIZE + PRED_SIZE) * sizeof(uint8_t);
   const size_t info_size = mb_w * mb_h * sizeof(VP8MBInfo);
-  const size_t samples_size = (2 * top_stride +         // top-luma/u/v
-                               16 + 16 + 16 + 8 + 1 +   // left y/u/v
-                               2 * ALIGN_CST)           // align all
-                               * sizeof(uint8_t);
+  const size_t samples_size = 2 * top_stride * sizeof(uint8_t)  // top-luma/u/v
+                            + ALIGN_CST;                        // align all
   const size_t lf_stats_size =
       config->autofilter ? sizeof(LFStats) + ALIGN_CST : 0;
   VP8Encoder* enc;
@@ -255,13 +253,6 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
   enc->y_top_ = (uint8_t*)mem;
   enc->uv_top_ = enc->y_top_ + top_stride;
   mem += 2 * top_stride;
-  mem = (uint8_t*)DO_ALIGN(mem + 1);
-  enc->y_left_ = (uint8_t*)mem;
-  mem += 16 + 16;
-  enc->u_left_ = (uint8_t*)mem;
-  mem += 16;
-  enc->v_left_ = (uint8_t*)mem;
-  mem += 8;
   assert(mem <= (uint8_t*)enc + size);
 
   enc->config_ = config;

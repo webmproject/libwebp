@@ -24,12 +24,11 @@ extern "C" {
 //------------------------------------------------------------------------------
 
 static void InitLeft(VP8EncIterator* const it) {
-  const VP8Encoder* const enc = it->enc_;
-  enc->y_left_[-1] = enc->u_left_[-1] = enc->v_left_[-1] =
+  it->y_left_[-1] = it->u_left_[-1] = it->v_left_[-1] =
       (it->y_ > 0) ? 129 : 127;
-  memset(enc->y_left_, 129, 16);
-  memset(enc->u_left_, 129, 8);
-  memset(enc->v_left_, 129, 8);
+  memset(it->y_left_, 129, 16);
+  memset(it->u_left_, 129, 8);
+  memset(it->v_left_, 129, 8);
   it->left_nz_[8] = 0;
 }
 
@@ -40,17 +39,21 @@ static void InitTop(VP8EncIterator* const it) {
   memset(enc->nz_, 0, enc->mb_w_ * sizeof(*enc->nz_));
 }
 
-void VP8IteratorReset(VP8EncIterator* const it) {
+void VP8IteratorSetRow(VP8EncIterator* const it, int y) {
   VP8Encoder* const enc = it->enc_;
   it->x_ = 0;
-  it->y_ = 0;
-  it->y_offset_ = 0;
-  it->uv_offset_ = 0;
-  it->mb_ = enc->mb_info_;
-  it->preds_ = enc->preds_;
+  it->y_ = y;
+  it->bw_ = &enc->parts_[y & (enc->num_parts_ - 1)];
+  it->preds_ = enc->preds_ + y * 4 * enc->preds_w_;
   it->nz_ = enc->nz_;
-  it->bw_ = &enc->parts_[0];
-  it->done_ = enc->mb_w_* enc->mb_h_;
+  it->mb_ = enc->mb_info_ + y * enc->mb_w_;
+  InitLeft(it);
+}
+
+void VP8IteratorReset(VP8EncIterator* const it) {
+  VP8Encoder* const enc = it->enc_;
+  VP8IteratorSetRow(it, 0);
+  it->count_down_ = enc->mb_w_ * enc->mb_h_;
   InitTop(it);
   InitLeft(it);
   memset(it->bit_count_, 0, sizeof(it->bit_count_));
@@ -68,12 +71,15 @@ void VP8IteratorInit(VP8Encoder* const enc, VP8EncIterator* const it) {
   it->yuv_p_    = enc->yuv_p_;
   it->lf_stats_ = enc->lf_stats_;
   it->percent0_ = enc->percent_;
+  it->y_left_ = (uint8_t*)DO_ALIGN(it->yuv_left_mem_ + 1);
+  it->u_left_ = it->y_left_ + 16 + 16;
+  it->v_left_ = it->u_left_ + 16;
   VP8IteratorReset(it);
 }
 
 int VP8IteratorProgress(const VP8EncIterator* const it, int delta) {
   VP8Encoder* const enc = it->enc_;
-  if (delta && enc->pic_->progress_hook) {
+  if (delta && enc->pic_->progress_hook != NULL) {
     const int percent = (enc->mb_h_ <= 1)
                       ? it->percent0_
                       : it->percent0_ + delta * it->y_ / (enc->mb_h_ - 1);
@@ -247,23 +253,23 @@ void VP8IteratorBytesToNz(VP8EncIterator* const it) {
 int VP8IteratorNext(VP8EncIterator* const it,
                     const uint8_t* const block_to_save) {
   VP8Encoder* const enc = it->enc_;
-  if (block_to_save) {
+  if (block_to_save != NULL) {
     const int x = it->x_, y = it->y_;
     const uint8_t* const ysrc = block_to_save + Y_OFF;
     const uint8_t* const usrc = block_to_save + U_OFF;
     if (x < enc->mb_w_ - 1) {   // left
       int i;
       for (i = 0; i < 16; ++i) {
-        enc->y_left_[i] = ysrc[15 + i * BPS];
+        it->y_left_[i] = ysrc[15 + i * BPS];
       }
       for (i = 0; i < 8; ++i) {
-        enc->u_left_[i] = usrc[7 + i * BPS];
-        enc->v_left_[i] = usrc[15 + i * BPS];
+        it->u_left_[i] = usrc[7 + i * BPS];
+        it->v_left_[i] = usrc[15 + i * BPS];
       }
       // top-left (before 'top'!)
-      enc->y_left_[-1] = enc->y_top_[x * 16 + 15];
-      enc->u_left_[-1] = enc->uv_top_[x * 16 + 0 + 7];
-      enc->v_left_[-1] = enc->uv_top_[x * 16 + 8 + 7];
+      it->y_left_[-1] = enc->y_top_[x * 16 + 15];
+      it->u_left_[-1] = enc->uv_top_[x * 16 + 0 + 7];
+      it->v_left_[-1] = enc->uv_top_[x * 16 + 8 + 7];
     }
     if (y < enc->mb_h_ - 1) {  // top
       memcpy(enc->y_top_ + x * 16, ysrc + 15 * BPS, 16);
@@ -271,19 +277,14 @@ int VP8IteratorNext(VP8EncIterator* const it,
     }
   }
 
-  it->mb_++;
   it->preds_ += 4;
-  it->nz_++;
-  it->x_++;
+  it->mb_ += 1;
+  it->nz_ += 1;
+  it->x_ += 1;
   if (it->x_ == enc->mb_w_) {
-    it->x_ = 0;
-    it->y_++;
-    it->bw_ = &enc->parts_[it->y_ & (enc->num_parts_ - 1)];
-    it->preds_ = enc->preds_ + it->y_ * 4 * enc->preds_w_;
-    it->nz_ = enc->nz_;
-    InitLeft(it);
+    VP8IteratorSetRow(it, ++it->y_);
   }
-  return (0 < --it->done_);
+  return (0 < --it->count_down_);
 }
 
 //------------------------------------------------------------------------------
@@ -370,7 +371,7 @@ void VP8IteratorStartI4(VP8EncIterator* const it) {
 
   // Import the boundary samples
   for (i = 0; i < 17; ++i) {    // left
-    it->i4_boundary_[i] = enc->y_left_[15 - i];
+    it->i4_boundary_[i] = it->y_left_[15 - i];
   }
   for (i = 0; i < 16; ++i) {    // top
     it->i4_boundary_[17 + i] = enc->y_top_[it->x_ * 16 + i];

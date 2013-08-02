@@ -271,7 +271,6 @@ typedef struct {
 // right neighbouring data (samples, predictions, contexts, ...)
 typedef struct {
   int x_, y_;                      // current macroblock
-  int y_offset_, uv_offset_;       // offset to the luma / chroma planes
   int y_stride_, uv_stride_;       // respective strides
   uint8_t*      yuv_in_;           // borrowed from enc_ (for now)
   uint8_t*      yuv_out_;          // ''
@@ -292,22 +291,29 @@ typedef struct {
   uint64_t      uv_bits_;          // macroblock bit-cost for chroma
   LFStats*      lf_stats_;         // filter stats (borrowed from enc_)
   int           do_trellis_;       // if true, perform extra level optimisation
-  int           done_;             // true when scan is finished
+  int           count_down_;       // number of mb still to be processed
   int           percent0_;         // saved initial progress percent
+
+  uint8_t* y_left_;    // left luma samples (addressable from index -1 to 15).
+  uint8_t* u_left_;    // left u samples (addressable from index -1 to 7)
+  uint8_t* v_left_;    // left v samples (addressable from index -1 to 7)
+  uint8_t  yuv_left_mem_[17 + 16 + 16 + 8 + ALIGN_CST];  // memory for *_left_
 } VP8EncIterator;
 
   // in iterator.c
-// must be called first.
+// must be called first
 void VP8IteratorInit(VP8Encoder* const enc, VP8EncIterator* const it);
-// restart a scan.
+// restart a scan
 void VP8IteratorReset(VP8EncIterator* const it);
+// reset iterator position to row 'y'
+void VP8IteratorSetRow(VP8EncIterator* const it, int y);
 // import samples from source
 void VP8IteratorImport(const VP8EncIterator* const it);
 // export decimated samples
 void VP8IteratorExport(const VP8EncIterator* const it);
-// go to next macroblock. Returns !done_. If *block_to_save is non-null, will
-// save the boundary values to top_/left_ arrays. block_to_save can be
-// it->yuv_out_ or it->yuv_in_.
+// go to next macroblock. Returns false if not finished. If *block_to_save is
+// non-null, will save the boundary values to top_/left_ arrays. block_to_save
+// can be it->yuv_out_ or it->yuv_in_.
 int VP8IteratorNext(VP8EncIterator* const it,
                     const uint8_t* const block_to_save);
 // Report progression based on macroblock rows. Return 0 for user-abort request.
@@ -441,11 +447,7 @@ struct VP8Encoder {
   uint8_t*   yuv_p_;     // scratch buffer for prediction
   uint8_t   *y_top_;     // top luma samples.
   uint8_t   *uv_top_;    // top u/v samples.
-                         // U and V are packed into 16 pixels (8 U + 8 V)
-  uint8_t   *y_left_;    // left luma samples (adressable from index -1 to 15).
-  uint8_t   *u_left_;    // left u samples (adressable from index -1 to 7)
-  uint8_t   *v_left_;    // left v samples (adressable from index -1 to 7)
-
+                         // U and V are packed into 16 bytes (8 U + 8 V)
   LFStats   *lf_stats_;  // autofilter stats (if NULL, autofilter is off)
 };
 
