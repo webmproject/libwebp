@@ -448,12 +448,12 @@ static void StoreImageToBitMask(
       int bits, n_bits;
       int code, distance;
 
-      PrefixEncode(v->len, &code, &n_bits, &bits);
+      VP8LPrefixEncode(v->len, &code, &n_bits, &bits);
       WriteHuffmanCode(bw, codes, 256 + code);
       VP8LWriteBits(bw, n_bits, bits);
 
       distance = PixOrCopyDistance(v);
-      PrefixEncode(distance, &code, &n_bits, &bits);
+      VP8LPrefixEncode(distance, &code, &n_bits, &bits);
       WriteHuffmanCode(bw, codes + 4, code);
       VP8LWriteBits(bw, n_bits, bits);
     }

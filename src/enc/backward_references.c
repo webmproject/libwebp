@@ -462,16 +462,16 @@ static WEBP_INLINE double GetCacheCost(const CostModel* const m, uint32_t idx) {
 
 static WEBP_INLINE double GetLengthCost(const CostModel* const m,
                                         uint32_t length) {
-  int code, extra_bits_count, extra_bits_value;
-  PrefixEncode(length, &code, &extra_bits_count, &extra_bits_value);
-  return m->literal_[VALUES_IN_BYTE + code] + extra_bits_count;
+  int code, extra_bits, extra_bits_val;
+  VP8LPrefixEncode(length, &code, &extra_bits, &extra_bits_val);
+  return m->literal_[VALUES_IN_BYTE + code] + extra_bits;
 }
 
 static WEBP_INLINE double GetDistanceCost(const CostModel* const m,
                                           uint32_t distance) {
-  int code, extra_bits_count, extra_bits_value;
-  PrefixEncode(distance, &code, &extra_bits_count, &extra_bits_value);
-  return m->distance_[code] + extra_bits_count;
+  int code, extra_bits, extra_bits_val;
+  VP8LPrefixEncode(distance, &code, &extra_bits, &extra_bits_val);
+  return m->distance_[code] + extra_bits;
 }
 
 static int BackwardReferencesHashChainDistanceOnly(
