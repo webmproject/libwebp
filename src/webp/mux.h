@@ -199,7 +199,8 @@ struct WebPMuxFrameInfo {
   WebPChunkId id;         // frame type: should be one of WEBP_CHUNK_ANMF,
                           // WEBP_CHUNK_FRGM or WEBP_CHUNK_IMAGE
   WebPMuxAnimDispose dispose_method;  // Disposal method for the frame.
-  uint32_t    pad[2];     // padding for later use
+  WebPMuxAnimBlend   blend_method;    // Blend operation for the frame.
+  uint32_t    pad[1];     // padding for later use
 };
 
 // Sets the (non-animated and non-fragmented) image in the mux object.

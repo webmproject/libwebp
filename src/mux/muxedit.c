@@ -116,7 +116,9 @@ static WebPMuxError CreateFrameFragmentData(
     PutLE24(frame_frgm_bytes + 6, width - 1);
     PutLE24(frame_frgm_bytes + 9, height - 1);
     PutLE24(frame_frgm_bytes + 12, info->duration);
-    frame_frgm_bytes[15] = (info->dispose_method & 1);
+    frame_frgm_bytes[15] =
+        (info->blend_method == WEBP_MUX_NO_BLEND ? 2 : 0) |
+        (info->dispose_method == WEBP_MUX_DISPOSE_BACKGROUND ? 1 : 0);
   }
 
   frame_frgm->bytes = frame_frgm_bytes;
@@ -310,7 +312,8 @@ WebPMuxError WebPMuxPushFrame(WebPMux* mux, const WebPMuxFrameInfo* frame,
     tmp.y_offset &= ~1;
     if (!is_frame) {  // Reset unused values.
       tmp.duration = 1;
-      tmp.dispose_method = 0;
+      tmp.dispose_method = WEBP_MUX_DISPOSE_NONE;
+      tmp.blend_method = WEBP_MUX_BLEND;
     }
     if (tmp.x_offset < 0 || tmp.x_offset >= MAX_POSITION_OFFSET ||
         tmp.y_offset < 0 || tmp.y_offset >= MAX_POSITION_OFFSET ||
