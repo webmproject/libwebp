@@ -49,6 +49,19 @@ additional encoding possibilities and decide on the quality gain.
 Lower value can result is faster processing time at the expense of
 larger file size and lower compression quality.
 .TP
+.BI \-kmax " int
+Relevant only for animated images with large number of frames (>50).
+Specify the maximum distance between consecutive key frames (independently
+decodable frames) in the output image. The tool will insert some key frames into
+the output image as needed so that this criteria is satisfied. A value of 0 will
+turn off insertion of key frames.
+Typical values are in the range 5 to 30. Default value is 9.
+When lower values are used, more frames will be converted to key frames. This
+may lead to smaller number of frames required to decode a frame on average,
+thereby improving the decoding performance. But this may lead to slightly bigger
+file sizes.
+Higher values may lead to worse decoding performance, but smaller file sizes.
+.TP
 .BI \-f " int
 For lossy encoding only (specified by the \-lossy option). Specify the strength
 of the deblocking filter, between 0 (no filtering) and 100 (maximum filtering).
