@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAcn//wCI\u003d",
+        "filename": "src/demux/demux.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-10T03:10:53Z",
+      "side": 1,
+      "message": "i\u0027d rather go with constructs like:\n\nframe-\u003edispose_method_ \u003d (bits \u0026 1) ? WEBP_MUX_DISPOSE_BACKGROUND : WEBP_MUX_DISPOSE_NONE;\n\nframe-\u003eblend_method_ \u003d (bits \u0026 2) ? WEBP_MUX_NO_BLEND : WEBP_MUX_BLEND;",
+      "revId": "b926c88566d8c6c6e3c37dc514193aedbb07316a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//wCE\u003d",
+        "filename": "src/mux/muxedit.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-10T03:10:53Z",
+      "side": 1,
+      "message": "same here:\n\n\u003d (info-\u003eblend_method \u003d\u003d WEBP_MUX_NO_BLEND ? 2 : 0) | (info-\u003edispose_method \u003d\u003d WEBP_MUX_DISPOSE_BACKGROUND ? 1 : 0);",
+      "revId": "b926c88566d8c6c6e3c37dc514193aedbb07316a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//wCA\u003d",
+        "filename": "src/mux/muxread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-10T03:10:53Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "b926c88566d8c6c6e3c37dc514193aedbb07316a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//wB8\u003d",
+        "filename": "src/webp/demux.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-10T03:10:53Z",
+      "side": 1,
+      "message": "add small comment",
+      "revId": "b926c88566d8c6c6e3c37dc514193aedbb07316a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//wB4\u003d",
+        "filename": "src/webp/mux_types.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-10T03:10:53Z",
+      "side": 1,
+      "message": "reminds me: probably a good idea to add reference to the related spec\u0027s paragraph numbers in the comment (here and elsewhere)",
+      "revId": "b926c88566d8c6c6e3c37dc514193aedbb07316a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
