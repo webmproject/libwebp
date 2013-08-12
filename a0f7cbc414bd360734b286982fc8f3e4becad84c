@@ -16,6 +16,24 @@
       "revId": "a0f7cbc414bd360734b286982fc8f3e4becad84c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//u9c\u003d",
+        "filename": "examples/vwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-12T18:50:25Z",
+      "side": 1,
+      "message": "Umm, it was good enough till now.\nBut now that we are testing \u0027dispose_method\u0027 of *previous* frame and \u0027blend_method\u0027 of *current* frame in the \u0027if\u0027 condition at #295, one would like to make that explicitly clear.",
+      "parentUuid": "AAAAcn//wBg\u003d",
+      "revId": "a0f7cbc414bd360734b286982fc8f3e4becad84c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
