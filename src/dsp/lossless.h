@@ -147,6 +147,14 @@ static WEBP_INLINE int VP8LBitsLog2Ceiling(uint32_t n) {
 // Splitting of distance and length codes into prefixes and
 // extra bits. The prefixes are encoded with an entropy code
 // while the extra bits are stored just as normal bits.
+static WEBP_INLINE void VP8LPrefixEncodeBitsNoLUT(int distance, int* const code,
+                                                  int* const extra_bits) {
+  const int highest_bit = BitsLog2Floor(--distance);
+  const int second_highest_bit = (distance >> (highest_bit - 1)) & 1;
+  *extra_bits = highest_bit - 1;
+  *code = 2 * highest_bit + second_highest_bit;
+}
+
 static WEBP_INLINE void VP8LPrefixEncodeNoLUT(int distance, int* const code,
                                               int* const extra_bits,
                                               int* const extra_bits_value) {
@@ -158,17 +166,33 @@ static WEBP_INLINE void VP8LPrefixEncodeNoLUT(int distance, int* const code,
 }
 
 #define PREFIX_LOOKUP_IDX_MAX   512
+typedef struct {
+  int8_t code_;
+  int8_t extra_bits_;
+} VP8LPrefixCode;
+
 // These tables are derived using VP8LPrefixEncodeNoLUT.
-extern const int8_t kPrefixEncodeCode[PREFIX_LOOKUP_IDX_MAX];
-extern const int8_t kPrefixEncodeExtraBits[PREFIX_LOOKUP_IDX_MAX];
-extern const uint8_t kPrefixEncodeExtraBitsVal[PREFIX_LOOKUP_IDX_MAX];
+extern const VP8LPrefixCode kPrefixEncodeCode[PREFIX_LOOKUP_IDX_MAX];
+extern const uint8_t kPrefixEncodeExtraBitsValue[PREFIX_LOOKUP_IDX_MAX];
+static WEBP_INLINE void VP8LPrefixEncodeBits(int distance, int* const code,
+                                             int* const extra_bits) {
+  if (distance < PREFIX_LOOKUP_IDX_MAX) {
+    const VP8LPrefixCode prefix_code = kPrefixEncodeCode[distance];
+    *code = prefix_code.code_;
+    *extra_bits = prefix_code.extra_bits_;
+  } else {
+    VP8LPrefixEncodeBitsNoLUT(distance, code, extra_bits);
+  }
+}
+
 static WEBP_INLINE void VP8LPrefixEncode(int distance, int* const code,
                                          int* const extra_bits,
                                          int* const extra_bits_value) {
   if (distance < PREFIX_LOOKUP_IDX_MAX) {
-    *code = kPrefixEncodeCode[distance];
-    *extra_bits = kPrefixEncodeExtraBits[distance];
-    *extra_bits_value = kPrefixEncodeExtraBitsVal[distance];
+    const VP8LPrefixCode prefix_code = kPrefixEncodeCode[distance];
+    *code = prefix_code.code_;
+    *extra_bits = prefix_code.extra_bits_;
+    *extra_bits_value = kPrefixEncodeExtraBitsValue[distance];
   } else {
     VP8LPrefixEncodeNoLUT(distance, code, extra_bits, extra_bits_value);
   }
