@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAcn//rl8\u003d",
+        "filename": "NEWS",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T16:33:56Z",
+      "side": 1,
+      "message": "any chance of making that fit in 1 line?\n\n\"container spec amended with new \u0027blending method\u0027 for animation\"",
+      "revId": "1fbf4b7b9ed79b615433585ad8c3a5ba5511f88a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rl4\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T16:33:56Z",
+      "side": 1,
+      "message": "disposing -\u003e disposing of ?",
+      "revId": "1fbf4b7b9ed79b615433585ad8c3a5ba5511f88a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rl0\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T16:33:56Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "1fbf4b7b9ed79b615433585ad8c3a5ba5511f88a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rls\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T16:33:56Z",
+      "side": 1,
+      "message": "isn\u0027t \u0027on the canvas\u0027 redundant here?",
+      "revId": "1fbf4b7b9ed79b615433585ad8c3a5ba5511f88a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
