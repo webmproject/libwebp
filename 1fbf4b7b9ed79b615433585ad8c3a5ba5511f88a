@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAcn//rOw\u003d",
+        "filename": "NEWS",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-14T18:51:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//rQ0\u003d",
+      "revId": "1fbf4b7b9ed79b615433585ad8c3a5ba5511f88a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAcn//rl4\u003d",
         "filename": "doc/webp-container-spec.txt",
         "patchSetId": 2
@@ -48,6 +66,24 @@
       "writtenOn": "2013-08-14T16:33:56Z",
       "side": 1,
       "message": "disposing -\u003e disposing of ?",
+      "revId": "1fbf4b7b9ed79b615433585ad8c3a5ba5511f88a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rRk\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-14T18:51:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//rl4\u003d",
       "revId": "1fbf4b7b9ed79b615433585ad8c3a5ba5511f88a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -71,6 +107,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAcn//rRg\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-14T18:51:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//rl0\u003d",
+      "revId": "1fbf4b7b9ed79b615433585ad8c3a5ba5511f88a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAcn//rls\u003d",
         "filename": "doc/webp-container-spec.txt",
         "patchSetId": 2
@@ -82,6 +136,24 @@
       "writtenOn": "2013-08-14T16:33:56Z",
       "side": 1,
       "message": "isn\u0027t \u0027on the canvas\u0027 redundant here?",
+      "revId": "1fbf4b7b9ed79b615433585ad8c3a5ba5511f88a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rRU\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-14T18:51:48Z",
+      "side": 1,
+      "message": "Yup, removed the repetition.",
+      "parentUuid": "AAAAcn//rls\u003d",
       "revId": "1fbf4b7b9ed79b615433585ad8c3a5ba5511f88a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
