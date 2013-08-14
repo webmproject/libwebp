@@ -430,6 +430,8 @@ static int ParseFrameArgs(const char* args, WebPMuxFrameInfo* const info) {
   // Note: The sanity of the following conversion is checked by
   // WebPMuxSetAnimationParams().
   info->dispose_method = (WebPMuxAnimDispose)dispose_method;
+  // TODO(urvang): Add support for parsing blending method too.
+  info->blend_method = WEBP_MUX_BLEND;
   return 1;
 }
 

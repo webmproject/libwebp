@@ -50,6 +50,7 @@ typedef struct Frame {
   int has_alpha_;
   int duration_;
   WebPMuxAnimDispose dispose_method_;
+  WebPMuxAnimBlend blend_method_;
   int is_fragment_;  // this is a frame fragment (and not a full frame).
   int frame_num_;  // the referent frame number for use in assembling fragments.
   int complete_;   // img_components_ contains a full image.
@@ -303,6 +304,7 @@ static ParseStatus ParseAnimationFrame(
   const int has_frames = !!(dmux->feature_flags_ & ANIMATION_FLAG);
   const uint32_t anmf_payload_size = frame_chunk_size - ANMF_CHUNK_SIZE;
   int added_frame = 0;
+  int bits;
   MemBuffer* const mem = &dmux->mem_;
   Frame* frame;
   ParseStatus status =
@@ -314,7 +316,10 @@ static ParseStatus ParseAnimationFrame(
   frame->width_          = 1 + ReadLE24s(mem);
   frame->height_         = 1 + ReadLE24s(mem);
   frame->duration_       = ReadLE24s(mem);
-  frame->dispose_method_ = (WebPMuxAnimDispose)(ReadByte(mem) & 1);
+  bits = ReadByte(mem);
+  frame->dispose_method_ =
+      (bits & 1) ? WEBP_MUX_DISPOSE_BACKGROUND : WEBP_MUX_DISPOSE_NONE;
+  frame->blend_method_ = (bits & 2) ? WEBP_MUX_NO_BLEND : WEBP_MUX_BLEND;
   if (frame->width_ * (uint64_t)frame->height_ >= MAX_IMAGE_AREA) {
     free(frame);
     return PARSE_ERROR;
@@ -845,6 +850,7 @@ static int SynthesizeFrame(const WebPDemuxer* const dmux,
   iter->has_alpha      = fragment->has_alpha_;
   iter->duration       = fragment->duration_;
   iter->dispose_method = fragment->dispose_method_;
+  iter->blend_method   = fragment->blend_method_;
   iter->complete       = fragment->complete_;
   iter->fragment.bytes = payload;
   iter->fragment.size  = payload_size;
