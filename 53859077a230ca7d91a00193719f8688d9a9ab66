@@ -1,0 +1,378 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAcn//rlg\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "this should be a command-line option",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//raM\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "natural order is usually:\n\nx_offset, y_offset;\nwidth, height;",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rkw\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "transparent -\u003e transparent color",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rkQ\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "this is hard to read.\nI\u0027d rather keep a \u0027ClearRectangle(WebPPicture* const picture, int  left, int top, int width, int height) {\n  ...\n}\n\nseparate function, and use here:\n\nif (rect !\u003d NULL) {\n  ClearRectangle(picture, rect-\u003ey_offset, rect-\u003ex_offset, rect-\u003ewidth, rect-\u003eheight);\n} else {\n  ClearRectangle(picture, 0, 0, picture-\u003ewidth, picture-\u003eheight);\n}",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rjc\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "This is strange naming, since CurrentFrame isn\u0027t touched here. Should be rather BlendCurrentFrameInCanvas() or equivalent.\n\nAlso: argument order. The output should be last, inputs first.",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rig\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "you\u0027re iterating in a strange order. Should be height/width, not width/height.",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rjo\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "i\u0027d use the standard \u0027src\u0027 and \u0027dst\u0027 name here instead of canvas_pixel and new_pixel\n\n(esp. since \u0027new_pixel\u0027 isn\u0027t the output)",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rj0\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "you don\u0027t need the pointer:\n\nconst uint32_t new_pixel \u003d curr_frame-\u003eargb[i + j * curr_frame-\u003eargb_stride];\n...",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rjs\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "why not save canvas_pixel to 0x00ffffff here? Is it better for compression to leave the RGB part of it untouched?",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rkI\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "independent -\u003e independently",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//ris\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "should we be here at all if \u0027is_first_frame\u0027?\nWhat about passing prev \u003d\u003d NULL if it\u0027s the first frame?\n\n(i wonder what \u0027prev\u0027 points to if first frame, actually)",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rf0\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "blank -\u003e all transparent\n\nwould be more explicit",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rgo\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "do you need to do this scan here? Shouldn\u0027t it be in another function (and the result cached and attached to each pictures).\n\nRisk is you\u0027ll be doing this repeatedly over and over IsIndependentFrame() is called with same \u0027prev\u0027 param.",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rik\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "you\u0027re iterating in a strange order. Should be height/width, not width/height.",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rbU\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "can go at line 137",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rgI\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "seems to me this loop could be merge with the above one (_if_ you\u0027re not caching the result of the prev-frame scan)",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//raw\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "height/width instead of width/height",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//raQ\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "can be inside the \"if\" at line 172:\n\nif (curr_alpha \u003d\u003d 0) {\n  *curr_pixel \u003d prev-\u003eargb[j * prev-\u003eargb_stride + i];\n}",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rVo\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "code is a copy of 238-239.\nThere should be one location only, where we force an I-frame with the NO_BLEND method, for coherency\u0027s sake.",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rW0\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "you should use WebPPictureCopy()",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rWk\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "if it doesn\u0027t fit in one line, then you should join the init of \u0027current\u0027 and \u0027previous\u0027:\n\nif (!WebPConfigInit(\u0026config) ||\n    !WebPPictureInit(\u0026current) || !WebPPictureInit(\u0026previous)) {\n...\n}",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//rV0\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-14T18:05:04Z",
+      "side": 1,
+      "message": "not sure this should be done here, in the middle of the main loop. Should rather be a \u0027Dispose()\u0027 or \u0027PostProcessFrame()\u0027.\nOr maybe this should be done at the beginning ReadSubImage().\n\nAlso, it seems the decoupling of tasks could be better separated as:\n\n- decode-from-GIF\n- handle Dispose() method of previous frame\n- analysis of prev/curr frame, optimize if needed\n- code curr\n- mux it\n- de-allocate temp resources (memory, etc.)\n- loop",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
