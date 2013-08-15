@@ -7,7 +7,7 @@
 // be found in the AUTHORS file in the root of the source tree.
 // -----------------------------------------------------------------------------
 //
-// Token probabilities
+// Coding of token probabilities, intra modes and segments.
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
@@ -23,7 +23,6 @@ extern "C" {
 // Paragraph 13.5
 const uint8_t
   VP8CoeffsProba0[NUM_TYPES][NUM_BANDS][NUM_CTX][NUM_PROBAS] = {
-  // genereated using vp8_default_coef_probs() in entropy.c:129
   { { { 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128 },
       { 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128 },
       { 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128 }
@@ -320,7 +319,7 @@ void VP8CodeIntraModes(VP8Encoder* const enc) {
   VP8EncIterator it;
   VP8IteratorInit(enc, &it);
   do {
-    const VP8MBInfo* mb = it.mb_;
+    const VP8MBInfo* const mb = it.mb_;
     const uint8_t* preds = it.preds_;
     if (enc->segment_hdr_.update_map_) {
       PutSegment(bw, mb->segment_, enc->proba_.segments_);
@@ -345,7 +344,7 @@ void VP8CodeIntraModes(VP8Encoder* const enc) {
       }
     }
     PutUVMode(bw, mb->uv_mode_);
-  } while (VP8IteratorNext(&it, 0));
+  } while (VP8IteratorNext(&it, NULL));
 }
 
 //------------------------------------------------------------------------------
