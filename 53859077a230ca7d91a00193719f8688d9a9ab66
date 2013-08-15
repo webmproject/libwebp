@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAcn//qfY\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//rlg\u003d",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAcn//raM\u003d",
         "filename": "examples/gif2webp.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2013-08-14T18:05:04Z",
       "side": 1,
       "message": "natural order is usually:\n\nx_offset, y_offset;\nwidth, height;",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//qwA\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//raM\u003d",
       "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAcn//qv8\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//rkw\u003d",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAcn//rkQ\u003d",
         "filename": "examples/gif2webp.c",
         "patchSetId": 2
@@ -64,6 +118,24 @@
       "writtenOn": "2013-08-14T18:05:04Z",
       "side": 1,
       "message": "this is hard to read.\nI\u0027d rather keep a \u0027ClearRectangle(WebPPicture* const picture, int  left, int top, int width, int height) {\n  ...\n}\n\nseparate function, and use here:\n\nif (rect !\u003d NULL) {\n  ClearRectangle(picture, rect-\u003ey_offset, rect-\u003ex_offset, rect-\u003ewidth, rect-\u003eheight);\n} else {\n  ClearRectangle(picture, 0, 0, picture-\u003ewidth, picture-\u003eheight);\n}",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//qvY\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//rkQ\u003d",
       "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAcn//qvI\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//rjc\u003d",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAcn//rig\u003d",
         "filename": "examples/gif2webp.c",
         "patchSetId": 2
@@ -98,6 +188,24 @@
       "writtenOn": "2013-08-14T18:05:04Z",
       "side": 1,
       "message": "you\u0027re iterating in a strange order. Should be height/width, not width/height.",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//qtw\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//rig\u003d",
       "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAcn//qdg\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//rjo\u003d",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAcn//rj0\u003d",
         "filename": "examples/gif2webp.c",
         "patchSetId": 2
@@ -132,6 +258,24 @@
       "writtenOn": "2013-08-14T18:05:04Z",
       "side": 1,
       "message": "you don\u0027t need the pointer:\n\nconst uint32_t new_pixel \u003d curr_frame-\u003eargb[i + j * curr_frame-\u003eargb_stride];\n...",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//qdc\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//rj0\u003d",
       "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAcn//qsM\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Not sure I understand.\nAre you asking why we do blending into the canvas at all? That\u0027s because when we create an I-frame, it must not be dependent on previously decoded frames.\n[It will be dependent if we set canvas pixel to TRANSPARENT_COLOR].",
+      "parentUuid": "AAAAcn//rjs\u003d",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAcn//rkI\u003d",
         "filename": "examples/gif2webp.c",
         "patchSetId": 2
@@ -166,6 +328,24 @@
       "writtenOn": "2013-08-14T18:05:04Z",
       "side": 1,
       "message": "independent -\u003e independently",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//qrI\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//rkI\u003d",
       "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -189,6 +369,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAcn//qbQ\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Agreed, it\u0027s better to handle this trivial case outside.\n\nP.S.: We do WebPPictureCopy() at 441, so \u0027prev\u0027 would be all transparent for the first frame.",
+      "parentUuid": "AAAAcn//ris\u003d",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAcn//rf0\u003d",
         "filename": "examples/gif2webp.c",
         "patchSetId": 2
@@ -200,6 +398,24 @@
       "writtenOn": "2013-08-14T18:05:04Z",
       "side": 1,
       "message": "blank -\u003e all transparent\n\nwould be more explicit",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//qrE\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//rf0\u003d",
       "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -223,6 +439,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAcn//qdA\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Umm, this method is called only once for each frame. And \u0027prev\u0027 changes each frame, too.\nSo, we never call this method twice for the same \u0027prev\u0027 param, right?",
+      "parentUuid": "AAAAcn//rgo\u003d",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAcn//rik\u003d",
         "filename": "examples/gif2webp.c",
         "patchSetId": 2
@@ -234,6 +468,24 @@
       "writtenOn": "2013-08-14T18:05:04Z",
       "side": 1,
       "message": "you\u0027re iterating in a strange order. Should be height/width, not width/height.",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//qqw\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//rik\u003d",
       "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -257,6 +509,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAcn//qqM\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//rbU\u003d",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAcn//rgI\u003d",
         "filename": "examples/gif2webp.c",
         "patchSetId": 2
@@ -268,6 +538,24 @@
       "writtenOn": "2013-08-14T18:05:04Z",
       "side": 1,
       "message": "seems to me this loop could be merge with the above one (_if_ you\u0027re not caching the result of the prev-frame scan)",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//qc8\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "see the other comment.",
+      "parentUuid": "AAAAcn//rgI\u003d",
       "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -291,6 +579,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAcn//qps\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//raw\u003d",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAcn//raQ\u003d",
         "filename": "examples/gif2webp.c",
         "patchSetId": 2
@@ -302,6 +608,24 @@
       "writtenOn": "2013-08-14T18:05:04Z",
       "side": 1,
       "message": "can be inside the \"if\" at line 172:\n\nif (curr_alpha \u003d\u003d 0) {\n  *curr_pixel \u003d prev-\u003eargb[j * prev-\u003eargb_stride + i];\n}",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//qpc\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//raQ\u003d",
       "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -325,6 +649,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAcn//qo8\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//rVo\u003d",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAcn//rW0\u003d",
         "filename": "examples/gif2webp.c",
         "patchSetId": 2
@@ -336,6 +678,24 @@
       "writtenOn": "2013-08-14T18:05:04Z",
       "side": 1,
       "message": "you should use WebPPictureCopy()",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//qpQ\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "That would call WebPPictureAlloc(), thereby reallocating \u0027prev\u0027 picture at every frame.\nTo avoid the same, we need to call CopyPlane() instead.",
+      "parentUuid": "AAAAcn//rW0\u003d",
       "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -359,6 +719,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAcn//qo4\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAcn//rWk\u003d",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAcn//rV0\u003d",
         "filename": "examples/gif2webp.c",
         "patchSetId": 2
@@ -370,6 +748,24 @@
       "writtenOn": "2013-08-14T18:05:04Z",
       "side": 1,
       "message": "not sure this should be done here, in the middle of the main loop. Should rather be a \u0027Dispose()\u0027 or \u0027PostProcessFrame()\u0027.\nOr maybe this should be done at the beginning ReadSubImage().\n\nAlso, it seems the decoupling of tasks could be better separated as:\n\n- decode-from-GIF\n- handle Dispose() method of previous frame\n- analysis of prev/curr frame, optimize if needed\n- code curr\n- mux it\n- de-allocate temp resources (memory, etc.)\n- loop",
+      "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAcn//qWk\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-15T00:40:56Z",
+      "side": 1,
+      "message": "We need to inspect \u0027frame.dispose_method\u0027 before it is rewritten by metadata of next GIF frame (ilne#536).\nThat why we need to do it here, rather than in ReadSubImage().\n\nRegarding \u0027decoupling of tasks\u0027, yes, it\u0027s a fair ask. I\u0027d like to test thoroughly before doing that though.",
+      "parentUuid": "AAAAcn//rV0\u003d",
       "revId": "53859077a230ca7d91a00193719f8688d9a9ab66",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
