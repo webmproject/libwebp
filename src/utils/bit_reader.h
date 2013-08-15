@@ -19,7 +19,6 @@
 #ifdef _MSC_VER
 #include <stdlib.h>  // _byteswap_ulong
 #endif
-#include <string.h>  // For memcpy
 #include "../webp/types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -155,7 +154,7 @@ static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
   if (br->buf_ + sizeof(lbit_t) <= br->buf_end_) {
     // convert memory type to register type (with some zero'ing!)
     bit_t bits;
-    lbit_t in_bits = *(lbit_t*)br->buf_;
+    const lbit_t in_bits = *(const lbit_t*)br->buf_;
     br->buf_ += (BITS) >> 3;
 #if !defined(__BIG_ENDIAN__)
 #if (BITS > 32)
@@ -254,6 +253,7 @@ static WEBP_INLINE void VP8Shift(VP8BitReader* const br) {
   br->bits_ -= shift;
 #endif
 }
+
 static WEBP_INLINE int VP8GetBit(VP8BitReader* const br, int prob) {
 #ifndef USE_RIGHT_JUSTIFY
   // It's important to avoid generating a 64bit x 64bit multiply here.
@@ -281,7 +281,6 @@ static WEBP_INLINE int VP8GetSigned(VP8BitReader* const br, int v) {
   VP8Shift(br);
   return bit ? -v : v;
 }
-
 
 // -----------------------------------------------------------------------------
 // Bitreader for lossless format
@@ -322,7 +321,7 @@ static WEBP_INLINE void VP8LSetBitPos(VP8LBitReader* const br, int val) {
   br->bit_pos_ = val;
 }
 
-// Advances the Read buffer by 4 bytes to make room for reading next 32 bits.
+// Advances the read buffer by 4 bytes to make room for reading next 32 bits.
 void VP8LFillBitWindow(VP8LBitReader* const br);
 
 #if defined(__cplusplus) || defined(c_plusplus)
