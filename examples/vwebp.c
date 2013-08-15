@@ -388,7 +388,7 @@ static void Help(void) {
 int main(int argc, char *argv[]) {
   WebPDecoderConfig config;
   int c;
-  const WebPIterator* const curr = &kParams.curr_frame;
+  WebPIterator* const curr = &kParams.curr_frame;
   WebPIterator* const prev = &kParams.prev_frame;
 
   if (!WebPInitDecoderConfig(&config)) {
