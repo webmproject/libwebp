@@ -37,6 +37,11 @@
 #include <wincodec.h>
 #endif
 
+#if defined(_WIN32)
+#include <fcntl.h>   // for _O_BINARY
+#include <io.h>      // for _setmode()
+#endif
+
 #include "webp/decode.h"
 #include "./example_util.h"
 #include "./stopwatch.h"
@@ -431,10 +436,11 @@ static int WritePGMOrYUV(FILE* fout, const WebPDecBuffer* const buffer,
   return ok;
 }
 
-static void SaveOutput(const WebPDecBuffer* const buffer,
+static int SaveOutput(const WebPDecBuffer* const buffer,
                        OutputFileFormat format, const char* const out_file) {
   FILE* fout = NULL;
   int needs_open_file = 1;
+  int use_stdout = !strcmp(out_file, "-");
   int ok = 1;
   Stopwatch stop_watch;
 
@@ -444,11 +450,20 @@ static void SaveOutput(const WebPDecBuffer* const buffer,
 #ifdef HAVE_WINCODEC_H
   needs_open_file = (format != PNG);
 #endif
+  use_stdout &= needs_open_file;
+
+#if defined(_WIN32)
+  if (use_stdout && _setmode(_fileno(stdout), _O_BINARY) == -1) {
+    fprintf(stderr, "Failed to reopen stdout in O_BINARY mode.\n");
+    return -1;
+  }
+#endif
+
   if (needs_open_file) {
-    fout = fopen(out_file, "wb");
-    if (!fout) {
+    fout = use_stdout ? stdout : fopen(out_file, "wb");
+    if (fout == NULL) {
       fprintf(stderr, "Error opening output file %s\n", out_file);
-      return;
+      return 0;
     }
   }
 
@@ -471,18 +486,27 @@ static void SaveOutput(const WebPDecBuffer* const buffer,
   } else if (format == ALPHA_PLANE_ONLY) {
     ok &= WriteAlphaPlane(fout, buffer);
   }
-  if (fout) {
+  if (fout != NULL && fout != stdout) {
     fclose(fout);
   }
   if (ok) {
-    printf("Saved file %s\n", out_file);
+    if (fout != stdout) {
+      fprintf(stderr, "Saved file %s\n", out_file);
+    } else {
+      fprintf(stderr, "Saved to stdout\n");
+    }
     if (verbose) {
       const double write_time = StopwatchReadAndReset(&stop_watch);
-      printf("Time to write output: %.3fs\n", write_time);
+      fprintf(stderr, "Time to write output: %.3fs\n", write_time);
     }
   } else {
-    fprintf(stderr, "Error writing file %s !!\n", out_file);
+    if (fout != stdout) {
+      fprintf(stderr, "Error writing to stdout !!\n");
+    } else {
+      fprintf(stderr, "Error writing file %s !!\n", out_file);
+    }
   }
+  return ok;
 }
 
 static void Help(void) {
@@ -519,6 +543,7 @@ static const char* const kStatusMessages[] = {
 };
 
 int main(int argc, const char *argv[]) {
+  int ok = 0;
   const char *in_file = NULL;
   const char *out_file = NULL;
 
@@ -598,7 +623,6 @@ int main(int argc, const char *argv[]) {
   {
     Stopwatch stop_watch;
     VP8StatusCode status = VP8_STATUS_OK;
-    int ok;
     size_t data_size = 0;
     const uint8_t* data = NULL;
 
@@ -655,7 +679,7 @@ int main(int argc, const char *argv[]) {
 
     if (verbose) {
       const double decode_time = StopwatchReadAndReset(&stop_watch);
-      printf("Time to decode picture: %.3fs\n", decode_time);
+      fprintf(stderr, "Time to decode picture: %.3fs\n", decode_time);
     }
  end:
     free((void*)data);
@@ -667,20 +691,21 @@ int main(int argc, const char *argv[]) {
     }
   }
 
-  if (out_file) {
-    printf("Decoded %s. Dimensions: %d x %d%s. Now saving...\n", in_file,
-           output_buffer->width, output_buffer->height,
+  if (out_file != NULL) {
+    fprintf(stderr, "Decoded %s. Dimensions: %d x %d%s. Now saving...\n",
+            in_file, output_buffer->width, output_buffer->height,
            bitstream->has_alpha ? " (with alpha)" : "");
-    SaveOutput(output_buffer, format, out_file);
+    ok = SaveOutput(output_buffer, format, out_file);
   } else {
-    printf("File %s can be decoded (dimensions: %d x %d)%s.\n",
+    fprintf(stderr, "File %s can be decoded (dimensions: %d x %d)%s.\n",
            in_file, output_buffer->width, output_buffer->height,
            bitstream->has_alpha ? " (with alpha)" : "");
-    printf("Nothing written; use -o flag to save the result as e.g. PNG.\n");
+    fprintf(stderr, "Nothing written; "
+                    "use -o flag to save the result as e.g. PNG.\n");
   }
   WebPFreeDecBuffer(output_buffer);
 
-  return 0;
+  return ok ? 0 : -1;
 }
 
 //------------------------------------------------------------------------------
