@@ -111,13 +111,11 @@ static void Upsample32Pixels(const uint8_t r1[], const uint8_t r2[],
 #define CONVERT2RGB(FUNC, XSTEP, top_y, bottom_y, uv,                          \
                     top_dst, bottom_dst, cur_x, num_pixels) {                  \
   int n;                                                                       \
-  if (top_y) {                                                                 \
-    for (n = 0; n < (num_pixels); ++n) {                                       \
-      FUNC(top_y[(cur_x) + n], (uv)[n], (uv)[32 + n],                          \
-           top_dst + ((cur_x) + n) * XSTEP);                                   \
-    }                                                                          \
+  for (n = 0; n < (num_pixels); ++n) {                                         \
+    FUNC(top_y[(cur_x) + n], (uv)[n], (uv)[32 + n],                            \
+         top_dst + ((cur_x) + n) * XSTEP);                                     \
   }                                                                            \
-  if (bottom_y) {                                                              \
+  if (bottom_y != NULL) {                                                      \
     for (n = 0; n < (num_pixels); ++n) {                                       \
       FUNC(bottom_y[(cur_x) + n], (uv)[64 + n], (uv)[64 + 32 + n],             \
            bottom_dst + ((cur_x) + n) * XSTEP);                                \
@@ -145,12 +143,13 @@ static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \
                                                                                \
   assert(len > 0);                                                             \
   /* Treat the first pixel in regular way */                                   \
-  if (top_y) {                                                                 \
+  assert(top_y != NULL);                                                       \
+  {                                                                            \
     const int u0 = (top_u[0] + u_diag) >> 1;                                   \
     const int v0 = (top_v[0] + v_diag) >> 1;                                   \
     FUNC(top_y[0], u0, v0, top_dst);                                           \
   }                                                                            \
-  if (bottom_y) {                                                              \
+  if (bottom_y != NULL) {                                                      \
     const int u0 = (cur_u[0] + u_diag) >> 1;                                   \
     const int v0 = (cur_v[0] + v_diag) >> 1;                                   \
     FUNC(bottom_y[0], u0, v0, bottom_dst);                                     \
@@ -192,6 +191,8 @@ SSE2_UPSAMPLE_FUNC(UpsampleBgraLinePairSSE2, VP8YuvToBgra, 4)
 
 //------------------------------------------------------------------------------
 
+#ifdef FANCY_UPSAMPLING
+
 extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
 
 void WebPInitUpsamplersSSE2(void) {
@@ -210,8 +211,13 @@ void WebPInitPremultiplySSE2(void) {
 #endif   // WEBP_USE_SSE2
 }
 
+#else
+
+// this empty function is to avoid an empty .o
+void WebPInitPremultiplySSE2(void);
+
+#endif  // FANCY_UPSAMPLING
+
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
 #endif
-
-

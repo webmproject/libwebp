@@ -189,20 +189,16 @@ static const int16_t coef[4] = { CVR / 4, CUG, CVG / 2, CUB / 4 };
 
 #define CONVERT2RGB_8(FMT, XSTEP, top_y, bottom_y, uv,                  \
                       top_dst, bottom_dst, cur_x, len) {                \
-  if (top_y) {                                                          \
-    CONVERT8(FMT, XSTEP, len, top_y, uv, top_dst, cur_x)                \
-  }                                                                     \
-  if (bottom_y) {                                                       \
+  CONVERT8(FMT, XSTEP, len, top_y, uv, top_dst, cur_x)                  \
+  if (bottom_y != NULL) {                                               \
     CONVERT8(FMT, XSTEP, len, bottom_y, (uv) + 32, bottom_dst, cur_x)   \
   }                                                                     \
 }
 
 #define CONVERT2RGB_1(FMT, XSTEP, top_y, bottom_y, uv,                  \
                       top_dst, bottom_dst, cur_x, len) {                \
-  if (top_y) {                                                          \
-    CONVERT1(FMT, XSTEP, len, top_y, uv, top_dst, cur_x);               \
-  }                                                                     \
-  if (bottom_y) {                                                       \
+  CONVERT1(FMT, XSTEP, len, top_y, uv, top_dst, cur_x);                 \
+  if (bottom_y != NULL) {                                               \
     CONVERT1(FMT, XSTEP, len, bottom_y, (uv) + 32, bottom_dst, cur_x);  \
   }                                                                     \
 }
@@ -231,12 +227,13 @@ static void FUNC_NAME(const uint8_t *top_y, const uint8_t *bottom_y,    \
   const uint8x8_t u128 = vmov_n_u8(128);                                \
                                                                         \
   /* Treat the first pixel in regular way */                            \
-  if (top_y) {                                                          \
+  assert(top_y != NULL);                                                \
+  {                                                                     \
     const int u0 = (top_u[0] + u_diag) >> 1;                            \
     const int v0 = (top_v[0] + v_diag) >> 1;                            \
     VP8YuvTo ## FMT(top_y[0], u0, v0, top_dst);                         \
   }                                                                     \
-  if (bottom_y) {                                                       \
+  if (bottom_y != NULL) {                                               \
     const int u0 = (cur_u[0] + u_diag) >> 1;                            \
     const int v0 = (cur_v[0] + v_diag) >> 1;                            \
     VP8YuvTo ## FMT(bottom_y[0], u0, v0, bottom_dst);                   \
@@ -271,6 +268,8 @@ NEON_UPSAMPLE_FUNC(UpsampleBgraLinePairNEON, Bgra, 4)
 
 //------------------------------------------------------------------------------
 
+#ifdef FANCY_UPSAMPLING
+
 extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
 
 void WebPInitUpsamplersNEON(void) {
@@ -288,6 +287,14 @@ void WebPInitPremultiplyNEON(void) {
   WebPUpsamplers[MODE_bgrA] = UpsampleBgraLinePairNEON;
 #endif   // WEBP_USE_NEON
 }
+
+#else
+
+// this empty function is to avoid an empty .o
+void WebPInitPremultiplyNEON(void) {}
+
+#endif  // FANCY_UPSAMPLING
+
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"

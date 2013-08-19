@@ -820,7 +820,7 @@ int WebPPictureYUVAToARGB(WebPPicture* picture) {
     WebPUpsampleLinePairFunc upsample = WebPGetLinePairConverter(ALPHA_IS_LAST);
 
     // First row, with replicated top samples.
-    upsample(NULL, cur_y, cur_u, cur_v, cur_u, cur_v, NULL, dst, width);
+    upsample(cur_y, NULL, cur_u, cur_v, cur_u, cur_v, dst, NULL, width);
     cur_y += picture->y_stride;
     dst += argb_stride;
     // Center rows.
