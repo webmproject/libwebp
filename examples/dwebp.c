@@ -501,9 +501,9 @@ static int SaveOutput(const WebPDecBuffer* const buffer,
     }
   } else {
     if (fout != stdout) {
-      fprintf(stderr, "Error writing to stdout !!\n");
-    } else {
       fprintf(stderr, "Error writing file %s !!\n", out_file);
+    } else {
+      fprintf(stderr, "Error writing to stdout !!\n");
     }
   }
   return ok;
