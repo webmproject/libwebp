@@ -16,6 +16,24 @@
       "revId": "b41adc66574246a29fa1cd17db29510bd196d3f1",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAc3//6kU\u003d",
+        "filename": "man/gif2webp.1",
+        "patchSetId": 7
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-08-20T18:49:45Z",
+      "side": 1,
+      "message": "Agreed.\nUsing the term \u0027key frame\u0027 instead of \u0027I-frame\u0027 or \u0027independent frame\u0027 throughout now.\nAlso, changed \u0027imax\u0027 to \u0027kmax\u0027.",
+      "parentUuid": "AAAAc3//7iE\u003d",
+      "revId": "b41adc66574246a29fa1cd17db29510bd196d3f1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
