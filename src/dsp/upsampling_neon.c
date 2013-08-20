@@ -267,7 +267,6 @@ void WebPInitPremultiplyNEON(void) {}
 
 #endif  // FANCY_UPSAMPLING
 
-
 #if defined(__cplusplus) || defined(c_plusplus)
 }    // extern "C"
 #endif

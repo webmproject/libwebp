@@ -100,7 +100,7 @@ static WEBP_INLINE uint8_t VP8YUVToG(int y, int u, int v) {
 }
 
 static WEBP_INLINE uint8_t VP8YUVToB(int y, int u) {
-  return VP8Clip8(kYScale * y  + kUToB * u + kBCst);
+  return VP8Clip8(kYScale * y + kUToB * u + kBCst);
 }
 
 static WEBP_INLINE void VP8YuvToRgb(uint8_t y, uint8_t u, uint8_t v,

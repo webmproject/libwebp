@@ -437,7 +437,7 @@ static int WritePGMOrYUV(FILE* fout, const WebPDecBuffer* const buffer,
 }
 
 static int SaveOutput(const WebPDecBuffer* const buffer,
-                       OutputFileFormat format, const char* const out_file) {
+                      OutputFileFormat format, const char* const out_file) {
   FILE* fout = NULL;
   int needs_open_file = 1;
   int use_stdout = !strcmp(out_file, "-");
@@ -694,12 +694,12 @@ int main(int argc, const char *argv[]) {
   if (out_file != NULL) {
     fprintf(stderr, "Decoded %s. Dimensions: %d x %d%s. Now saving...\n",
             in_file, output_buffer->width, output_buffer->height,
-           bitstream->has_alpha ? " (with alpha)" : "");
+            bitstream->has_alpha ? " (with alpha)" : "");
     ok = SaveOutput(output_buffer, format, out_file);
   } else {
     fprintf(stderr, "File %s can be decoded (dimensions: %d x %d)%s.\n",
-           in_file, output_buffer->width, output_buffer->height,
-           bitstream->has_alpha ? " (with alpha)" : "");
+            in_file, output_buffer->width, output_buffer->height,
+            bitstream->has_alpha ? " (with alpha)" : "");
     fprintf(stderr, "Nothing written; "
                     "use -o flag to save the result as e.g. PNG.\n");
   }
