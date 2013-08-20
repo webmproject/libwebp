@@ -100,7 +100,7 @@ static HRESULT CreateOutputStream(const char* out_file_name, IStream** stream) {
 }
 
 static HRESULT WriteUsingWIC(const char* out_file_name, REFGUID container_guid,
-                             unsigned char* rgb, int stride,
+                             uint8_t* rgb, int stride,
                              uint32_t width, uint32_t height, int has_alpha) {
   HRESULT hr = S_OK;
   IWICImagingFactory* factory = NULL;
@@ -146,7 +146,7 @@ static int WritePNG(const char* out_file_name,
                     const WebPDecBuffer* const buffer) {
   const uint32_t width = buffer->width;
   const uint32_t height = buffer->height;
-  unsigned char* const rgb = buffer->u.RGBA.rgba;
+  uint8_t* const rgb = buffer->u.RGBA.rgba;
   const int stride = buffer->u.RGBA.stride;
   const int has_alpha = (buffer->colorspace == MODE_BGRA);
 
@@ -164,7 +164,7 @@ static void PNGAPI error_function(png_structp png, png_const_charp dummy) {
 static int WritePNG(FILE* out_file, const WebPDecBuffer* const buffer) {
   const uint32_t width = buffer->width;
   const uint32_t height = buffer->height;
-  unsigned char* const rgb = buffer->u.RGBA.rgba;
+  uint8_t* const rgb = buffer->u.RGBA.rgba;
   const int stride = buffer->u.RGBA.stride;
   const int has_alpha = (buffer->colorspace == MODE_RGBA);
   png_structp png;
@@ -213,7 +213,7 @@ static int WritePNG(FILE* out_file, const WebPDecBuffer* const buffer) {
 static int WritePPM(FILE* fout, const WebPDecBuffer* const buffer, int alpha) {
   const uint32_t width = buffer->width;
   const uint32_t height = buffer->height;
-  const unsigned char* const rgb = buffer->u.RGBA.rgba;
+  const uint8_t* const rgb = buffer->u.RGBA.rgba;
   const int stride = buffer->u.RGBA.stride;
   const size_t bytes_per_px = alpha ? 4 : 3;
   uint32_t y;
@@ -375,7 +375,7 @@ static int WriteTIFF(FILE* fout, const WebPDecBuffer* const buffer) {
 static int WriteAlphaPlane(FILE* fout, const WebPDecBuffer* const buffer) {
   const uint32_t width = buffer->width;
   const uint32_t height = buffer->height;
-  const unsigned char* const a = buffer->u.YUVA.a;
+  const uint8_t* const a = buffer->u.YUVA.a;
   const int a_stride = buffer->u.YUVA.a_stride;
   uint32_t y;
   assert(a != NULL);
