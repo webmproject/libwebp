@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAc3//6MM\u003d",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-20T22:10:05Z",
+      "side": 1,
+      "message": "add a small comment about what this include is for",
+      "revId": "5017e81e5496b0bfd1a741769fd0e91e026b62bb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAc3//6Oc\u003d",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-20T22:10:05Z",
+      "side": 1,
+      "message": "pass \u0027use_stdout\u0027 argument here instead of re-doing the strcmp()",
+      "revId": "5017e81e5496b0bfd1a741769fd0e91e026b62bb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAc3//6ME\u003d",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-20T22:10:05Z",
+      "side": 1,
+      "message": "initialize to 0",
+      "revId": "5017e81e5496b0bfd1a741769fd0e91e026b62bb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
