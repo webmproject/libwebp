@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAc3//7iE\u003d",
+        "filename": "man/gif2webp.1",
+        "patchSetId": 7
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-08-20T01:26:25Z",
+      "side": 1,
+      "message": "maybe we should use the name \u0027key-frames\u0027 in the man, rather than I-frame",
+      "revId": "b41adc66574246a29fa1cd17db29510bd196d3f1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
