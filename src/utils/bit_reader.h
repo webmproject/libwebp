@@ -54,7 +54,7 @@ extern "C" {
 // And just after calling VP8LoadNewBytes():
 //  [........vvvvvvvvBBBBBBBBBBBBBBBB]LSB || [........vvvvvvvvBBBBBBBBBBBBBBBB]
 //
-// -> we're back to height active 'value_' bits (marked 'v') and BITS cached
+// -> we're back to eight active 'value_' bits (marked 'v') and BITS cached
 // bits (marked 'B')
 //
 // The right-justify strategy tends to use less shifts and is often faster.
@@ -178,8 +178,11 @@ static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
     bits >>= 64 - BITS;
 #elif (BITS >= 24)
 #if defined(__i386__) || defined(__x86_64__)
-    __asm__ volatile("bswap %k0" : "=r"(in_bits) : "0"(in_bits));
-    bits = (bit_t)in_bits;   // 24b/32b -> 32b/64b zero-extension
+    {
+      lbit_t swapped_in_bits;
+      __asm__ volatile("bswap %k0" : "=r"(swapped_in_bits) : "0"(in_bits));
+      bits = (bit_t)swapped_in_bits;   // 24b/32b -> 32b/64b zero-extension
+    }
 #elif defined(_MSC_VER)
     bits = (bit_t)_byteswap_ulong(in_bits);
 #else
