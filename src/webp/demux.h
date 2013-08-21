@@ -94,6 +94,10 @@ static WEBP_INLINE WebPDemuxer* WebPDemux(const WebPData* data) {
 // If 'state' is non-NULL it will be set to indicate the status of the demuxer.
 // Returns NULL in case of error or if there isn't enough data to start parsing;
 // and a WebPDemuxer object on successful parse.
+// Note that WebPDemuxer keeps internal pointers to 'data' memory segment.
+// If this data is volatile, the demuxer object should be deleted (by calling
+// WebPDemuxDelete()) and WebPDemuxPartial() called again on the new data.
+// This is usually an inexpensive operation.
 static WEBP_INLINE WebPDemuxer* WebPDemuxPartial(
     const WebPData* data, WebPDemuxState* state) {
   return WebPDemuxInternal(data, 1, state, WEBP_DEMUX_ABI_VERSION);
