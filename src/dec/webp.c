@@ -285,6 +285,7 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
                                           int* const height,
                                           int* const has_alpha,
                                           int* const has_animation,
+                                          int* const format,
                                           WebPHeaderStructure* const headers) {
   int canvas_width = 0;
   int canvas_height = 0;
@@ -292,6 +293,9 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
   int image_height = 0;
   int found_riff = 0;
   int found_vp8x = 0;
+  int animation_present = 0;
+  int fragments_present = 0;
+
   VP8StatusCode status;
   WebPHeaderStructure hdrs;
 
@@ -312,8 +316,6 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
   // Skip over VP8X.
   {
     uint32_t flags = 0;
-    int animation_present;
-    int fragments_present;
     status = ParseVP8X(&data, &data_size, &found_vp8x,
                        &canvas_width, &canvas_height, &flags);
     if (status != VP8_STATUS_OK) {
@@ -328,6 +330,7 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
     }
     if (has_alpha != NULL) *has_alpha = !!(flags & ALPHA_FLAG);
     if (has_animation != NULL) *has_animation = animation_present;
+    if (format != NULL) *format = 0;   // default = undefined
 
     if (found_vp8x && (animation_present || fragments_present) &&
         headers == NULL) {
@@ -357,6 +360,10 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
   }
   if (hdrs.compressed_size > MAX_CHUNK_PAYLOAD) {
     return VP8_STATUS_BITSTREAM_ERROR;
+  }
+
+  if (format != NULL && !(animation_present || fragments_present)) {
+    *format = hdrs.is_lossless ? 2 : 1;
   }
 
   if (!hdrs.is_lossless) {
@@ -405,7 +412,8 @@ VP8StatusCode WebPParseHeaders(WebPHeaderStructure* const headers) {
   assert(headers != NULL);
   // fill out headers, ignore width/height/has_alpha.
   status = ParseHeadersInternal(headers->data, headers->data_size,
-                                NULL, NULL, NULL, &has_animation, headers);
+                                NULL, NULL, NULL, &has_animation,
+                                NULL, headers);
   if (status == VP8_STATUS_OK || status == VP8_STATUS_NOT_ENOUGH_DATA) {
     // TODO(jzern): full support of animation frames will require API additions.
     if (has_animation) {
@@ -652,7 +660,6 @@ uint8_t* WebPDecodeYUV(const uint8_t* data, size_t data_size,
 static void DefaultFeatures(WebPBitstreamFeatures* const features) {
   assert(features != NULL);
   memset(features, 0, sizeof(*features));
-  features->bitstream_version = 0;
 }
 
 static VP8StatusCode GetFeatures(const uint8_t* const data, size_t data_size,
@@ -666,7 +673,7 @@ static VP8StatusCode GetFeatures(const uint8_t* const data, size_t data_size,
   return ParseHeadersInternal(data, data_size,
                               &features->width, &features->height,
                               &features->has_alpha, &features->has_animation,
-                              NULL);
+                              &features->format, NULL);
 }
 
 //------------------------------------------------------------------------------

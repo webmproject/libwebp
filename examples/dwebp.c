@@ -573,6 +573,10 @@ static const char* const kStatusMessages[] = {
   "UNSUPPORTED_FEATURE", "SUSPENDED", "USER_ABORT", "NOT_ENOUGH_DATA"
 };
 
+static const char* const kFormatType[] = {
+  "unspecified", "lossy", "lossless"
+};
+
 int main(int argc, const char *argv[]) {
   int ok = 0;
   const char *in_file = NULL;
@@ -741,14 +745,18 @@ int main(int argc, const char *argv[]) {
   }
 
   if (out_file != NULL) {
-    fprintf(stderr, "Decoded %s. Dimensions: %d x %d%s. Now saving...\n",
+    fprintf(stderr, "Decoded %s. Dimensions: %d x %d %s. Format: %s. "
+                    "Now saving...\n",
             in_file, output_buffer->width, output_buffer->height,
-            bitstream->has_alpha ? " (with alpha)" : "");
+            bitstream->has_alpha ? " (with alpha)" : "",
+            kFormatType[bitstream->format]);
     ok = SaveOutput(output_buffer, format, out_file);
   } else {
-    fprintf(stderr, "File %s can be decoded (dimensions: %d x %d)%s.\n",
+    fprintf(stderr, "File %s can be decoded "
+                    "(dimensions: %d x %d %s. Format: %s).\n",
             in_file, output_buffer->width, output_buffer->height,
-            bitstream->has_alpha ? " (with alpha)" : "");
+            bitstream->has_alpha ? " (with alpha)" : "",
+            kFormatType[bitstream->format]);
     fprintf(stderr, "Nothing written; "
                     "use -o flag to save the result as e.g. PNG.\n");
   }

@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#define WEBP_DECODER_ABI_VERSION 0x0201    // MAJOR(8b) + MINOR(8b)
+#define WEBP_DECODER_ABI_VERSION 0x0202    // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -404,9 +404,9 @@ struct WebPBitstreamFeatures {
   int height;         // Height in pixels, as read from the bitstream.
   int has_alpha;      // True if the bitstream contains an alpha channel.
   int has_animation;  // True if the bitstream is an animation.
+  int format;         // 0 = undefined (/mixed), 1 = lossy, 2 = lossless
 
   // Unused for now:
-  int bitstream_version;        // should be 0 for now. TODO(later)
   int no_incremental_decoding;  // if true, using incremental decoding is not
                                 // recommended.
   int rotate;                   // TODO(later)
