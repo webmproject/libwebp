@@ -17,32 +17,34 @@
 //
 // Code Example#1: Creating a MUX with image data, color profile and XMP
 // metadata.
-//
-//   int copy_data = 0;
-//   WebPMux* mux = WebPMuxNew();
-//   // ... (Prepare image data).
-//   WebPMuxSetImage(mux, &image, copy_data);
-//   // ... (Prepare ICCP color profile data).
-//   WebPMuxSetChunk(mux, "ICCP", &icc_profile, copy_data);
-//   // ... (Prepare XMP metadata).
-//   WebPMuxSetChunk(mux, "XMP ", &xmp, copy_data);
-//   // Get data from mux in WebP RIFF format.
-//   WebPMuxAssemble(mux, &output_data);
-//   WebPMuxDelete(mux);
-//   // ... (Consume output_data; e.g. write output_data.bytes to file).
-//   WebPDataClear(&output_data);
-//
+/*
+  int copy_data = 0;
+  WebPMux* mux = WebPMuxNew();
+  // ... (Prepare image data).
+  WebPMuxSetImage(mux, &image, copy_data);
+  // ... (Prepare ICCP color profile data).
+  WebPMuxSetChunk(mux, "ICCP", &icc_profile, copy_data);
+  // ... (Prepare XMP metadata).
+  WebPMuxSetChunk(mux, "XMP ", &xmp, copy_data);
+  // Get data from mux in WebP RIFF format.
+  WebPMuxAssemble(mux, &output_data);
+  WebPMuxDelete(mux);
+  // ... (Consume output_data; e.g. write output_data.bytes to file).
+  WebPDataClear(&output_data);
+*/
+
 // Code Example#2: Get image and color profile data from a WebP file.
-//
-//   int copy_data = 0;
-//   // ... (Read data from file).
-//   WebPMux* mux = WebPMuxCreate(&data, copy_data);
-//   WebPMuxGetFrame(mux, 1, &image);
-//   // ... (Consume image; e.g. call WebPDecode() to decode the data).
-//   WebPMuxGetChunk(mux, "ICCP", &icc_profile);
-//   // ... (Consume icc_data).
-//   WebPMuxDelete(mux);
-//   free(data);
+/*
+  int copy_data = 0;
+  // ... (Read data from file).
+  WebPMux* mux = WebPMuxCreate(&data, copy_data);
+  WebPMuxGetFrame(mux, 1, &image);
+  // ... (Consume image; e.g. call WebPDecode() to decode the data).
+  WebPMuxGetChunk(mux, "ICCP", &icc_profile);
+  // ... (Consume icc_data).
+  WebPMuxDelete(mux);
+  free(data);
+*/
 
 #ifndef WEBP_WEBP_MUX_H_
 #define WEBP_WEBP_MUX_H_
