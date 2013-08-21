@@ -419,7 +419,7 @@ If the _Animation flag_ is not set, then this chunk SHOULD NOT be present.
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     ...             |           Frame Height Minus One              |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                 Frame Duration                |  Reserved   |D|
+    |                 Frame Duration                |  Reserved |B|D|
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                         Frame Data                            |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -448,9 +448,23 @@ Frame Duration: 24 bits (_uint24_)
 In particular, frame duration of 0 is useful when one wants to update multiple
 areas of the canvas at once during the animation.
 
-Reserved: 7 bits
+Reserved: 6 bits
 
 : SHOULD be 0.
+
+Blending method (B): 1 bit
+
+: Indicates how transparent pixels of _the current frame_ are to be blended with
+corresponding pixels of the previous canvas:
+
+  * `0`: Use alpha blending. After disposing of the previous frame, render the
+    current frame on the canvas using [alpha-blending](#alpha-blending). If the
+    current frame does not have an alpha channel, assume alpha value of 255,
+    effectively replacing the rectangle.
+
+  * `1`: Do not blend. After disposing of the previous frame, render the
+    current frame on the canvas by overwriting the rectangle covered by the
+    current frame.
 
 Disposal method (D): 1 bit
 
@@ -462,10 +476,6 @@ Disposal method (D): 1 bit
   * `1`: Dispose to background color. Fill the _rectangle_ on the canvas covered
     by the _current frame_ with background color specified in the
     [ANIM chunk](#anim_chunk).
-
-After disposing the current frame, render the next frame on the canvas using
-[alpha-blending](#alpha-blending). If the next frame does not have an alpha
-channel, assume alpha value of 255, effectively replacing the rectangle.
 
 **Notes**:
 
