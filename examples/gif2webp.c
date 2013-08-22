@@ -34,7 +34,13 @@
 
 //------------------------------------------------------------------------------
 
-static int transparent_index = -1;  // No transparency by default.
+// Global variables gathered in a struct.
+static struct {
+  int transparent_index;         // Index of transparent color in the color map.
+  int is_first_frame;
+  size_t count_since_key_frame;  // Frames seen since the last key frame.
+  size_t key_frame_interval;     // Max distance between key frames.
+} kParams;
 
 static void ClearRectangle(WebPPicture* const picture,
                            int left, int top, int width, int height) {
@@ -104,7 +110,7 @@ static void Remap(const uint8_t* const src, const GifFileType* const gif,
 
   for (i = 0; i < len; ++i) {
     const GifColorType c = colors[src[i]];
-    dst[i] = (src[i] == transparent_index) ? TRANSPARENT_COLOR
+    dst[i] = (src[i] == kParams.transparent_index) ? TRANSPARENT_COLOR
            : c.Blue | (c.Green << 8) | (c.Red << 16) | (0xff << 24);
   }
 }
@@ -116,6 +122,8 @@ static int IsKeyFrame(const WebPPicture* const curr,
                       const WebPPicture* const prev) {
   int i, j;
   int is_key_frame = 1;
+
+  if (kParams.is_first_frame) return 1;
 
   // If previous canvas (with previous frame disposed) is all transparent,
   // current frame is a key frame.
@@ -183,11 +191,9 @@ static void ConvertToKeyFrame(WebPPicture* const curr,
   rect->height = curr->height;
 }
 
-static int ReadSubImage(GifFileType* gif, WebPPicture* const prev,
-                        int is_first_frame, size_t key_frame_interval,
-                        size_t* const count_since_key_frame,
-                        WebPFrameRect* const gif_rect, WebPPicture* sub_image,
-                        WebPMuxFrameInfo* const info, WebPPicture* const curr) {
+// Read the GIF image frame.
+static int ReadFrame(GifFileType* const gif, WebPFrameRect* const gif_rect,
+                     WebPPicture* const sub_image, WebPPicture* const curr) {
   const GifImageDesc image_desc = gif->Image;
   uint32_t* dst = NULL;
   uint8_t* tmp = NULL;
@@ -229,6 +235,19 @@ static int ReadSubImage(GifFileType* gif, WebPPicture* const prev,
       Remap(tmp, gif, dst + y * sub_image->argb_stride, rect.width);
     }
   }
+  ok = 1;
+
+ End:
+  free(tmp);
+  return ok;
+}
+
+// Optimize the image frame for WebP.
+static void OptimizeFrame(const WebPFrameRect* const gif_rect,
+                          WebPPicture* const curr, WebPPicture* const prev,
+                          WebPPicture* const sub_image,
+                          WebPMuxFrameInfo* const info) {
+  WebPFrameRect rect = *gif_rect;
 
   // Snap to even offsets (and adjust dimensions if needed).
   rect.width += (rect.x_offset & 1);
@@ -237,17 +256,17 @@ static int ReadSubImage(GifFileType* gif, WebPPicture* const prev,
   rect.y_offset &= ~1;
 
   // Make this a key frame if needed.
-  if (is_first_frame || IsKeyFrame(curr, &rect, prev)) {
-    *count_since_key_frame = 0;
+  if (IsKeyFrame(curr, &rect, prev)) {
+    kParams.count_since_key_frame = 0;
   } else {
-    ++*count_since_key_frame;
-    if (*count_since_key_frame > key_frame_interval) {
+    ++kParams.count_since_key_frame;
+    if (kParams.count_since_key_frame > kParams.key_frame_interval) {
       ConvertToKeyFrame(curr, prev, &rect);
-      *count_since_key_frame = 0;
+      kParams.count_since_key_frame = 0;
     }
   }
 
-  if (*count_since_key_frame == 0) {
+  if (kParams.count_since_key_frame == 0) {
     info->blend_method = WEBP_MUX_NO_BLEND;  // Key frame, so no need to blend.
   } else {
     info->blend_method = WEBP_MUX_BLEND;  // The blending method in GIF.
@@ -266,16 +285,52 @@ static int ReadSubImage(GifFileType* gif, WebPPicture* const prev,
                   sub_image);
   info->x_offset = rect.x_offset;
   info->y_offset = rect.y_offset;
+}
+
+static int EncodeFrame(const WebPConfig* const config,
+                       WebPPicture* const sub_image,
+                       WebPData* const encoded_data) {
+  int ok = 0;
+  WebPMemoryWriter memory;
+  if (!config->lossless) {
+    // We need to call BGRA variant because of the way we do Remap(). Note
+    // that 'sub_image' will no longer be a view and own some memory.
+    if (!WebPPictureImportBGRA(
+            sub_image, (uint8_t*)sub_image->argb,
+            sub_image->argb_stride * sizeof(*sub_image->argb))) {
+      goto End;
+    }
+    sub_image->use_argb = 0;
+  } else {
+    sub_image->use_argb = 1;
+  }
+
+  sub_image->writer = WebPMemoryWrite;
+  sub_image->custom_ptr = &memory;
+  WebPMemoryWriterInit(&memory);
+  if (!WebPEncode(config, sub_image)) goto End;
+
+  encoded_data->bytes = memory.mem;
+  encoded_data->size  = memory.size;
   ok = 1;
 
  End:
-  free(tmp);
   return ok;
+}
+
+static void DisposeFrame(WebPMuxAnimDispose dispose_method,
+                         const WebPFrameRect* const gif_rect,
+                         WebPPicture* const frame, WebPPicture* const canvas) {
+  if (dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
+    ClearPicture(frame, NULL);
+    ClearPicture(canvas, gif_rect);
+  }
 }
 
 static int GetBackgroundColor(const ColorMapObject* const color_map,
                               GifWord bgcolor_idx, uint32_t* const bgcolor) {
-  if (transparent_index != -1 && bgcolor_idx == transparent_index) {
+  if (kParams.transparent_index != -1 &&
+      bgcolor_idx == kParams.transparent_index) {
     *bgcolor = TRANSPARENT_COLOR;  // Special case.
     return 1;
   } else if (color_map == NULL || color_map->Colors == NULL
@@ -358,9 +413,6 @@ int main(int argc, const char *argv[]) {
   WebPMuxFrameInfo frame;
   WebPMuxAnimParams anim = { WHITE_COLOR, 0 };
 
-  int is_first_frame = 1;
-  size_t count_since_key_frame = 0;  // Frames seen since the last key frame.
-  size_t key_frame_interval = 9;  // Max distance between key frames.
   int done;
   int c;
   int quiet = 0;
@@ -369,6 +421,12 @@ int main(int argc, const char *argv[]) {
   WebPData webp_data = { NULL, 0 };
   int stored_icc = 0;  // Whether we have already stored an ICC profile.
   int stored_xmp = 0;
+
+  // Initialize global variables.
+  kParams.transparent_index = -1;  // No transparency by default.
+  kParams.is_first_frame = 1;
+  kParams.key_frame_interval = 9;
+  kParams.count_since_key_frame = 0;
 
   memset(&frame, 0, sizeof(frame));
   frame.id = WEBP_CHUNK_ANMF;
@@ -400,8 +458,8 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-m") && c < argc - 1) {
       config.method = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-kmax") && c < argc - 1) {
-      key_frame_interval = strtoul(argv[++c], NULL, 0);
-      if (key_frame_interval == 0) key_frame_interval = ~0;
+      kParams.key_frame_interval = strtoul(argv[++c], NULL, 0);
+      if (kParams.key_frame_interval == 0) kParams.key_frame_interval = ~0;
     } else if (!strcmp(argv[c], "-f") && c < argc - 1) {
       config.filter_strength = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-version")) {
@@ -467,31 +525,16 @@ int main(int argc, const char *argv[]) {
       case IMAGE_DESC_RECORD_TYPE: {
         WebPPicture sub_image;
         WebPFrameRect gif_rect;
-        WebPMemoryWriter memory;
 
         if (!DGifGetImageDesc(gif)) goto End;
-        if (!ReadSubImage(gif, &previous, is_first_frame, key_frame_interval,
-                          &count_since_key_frame, &gif_rect, &sub_image, &frame,
-                          &current)) {
+        if (!ReadFrame(gif, &gif_rect, &sub_image, &current)) {
           goto End;
         }
 
-        if (!config.lossless) {
-          // We need to call BGRA variant because of the way we do Remap(). Note
-          // that 'sub_image' will no longer be a view and own some memory.
-          WebPPictureImportBGRA(
-              &sub_image, (uint8_t*)sub_image.argb,
-              sub_image.argb_stride * sizeof(*sub_image.argb));
-          sub_image.use_argb = 0;
-        } else {
-          sub_image.use_argb = 1;
-        }
+        OptimizeFrame(&gif_rect, &current, &previous, &sub_image, &frame);
 
-        sub_image.writer = WebPMemoryWrite;
-        sub_image.custom_ptr = &memory;
-        WebPMemoryWriterInit(&memory);
-        if (!WebPEncode(&config, &sub_image)) {
-          fprintf(stderr, "Error! Cannot encode current as WebP\n");
+        if (!EncodeFrame(&config, &sub_image, &frame.bitstream)) {
+          fprintf(stderr, "Error! Cannot encode frame as WebP\n");
           fprintf(stderr, "Error code: %d\n", sub_image.error_code);
           goto End;
         }
@@ -499,8 +542,6 @@ int main(int argc, const char *argv[]) {
         // Now we have all the info about the frame, as a Graphic Control
         // Extension Block always appears before the Image Descriptor Block.
         // So add the frame to mux.
-        frame.bitstream.bytes = memory.mem;
-        frame.bitstream.size = memory.size;
         err = WebPMuxPushFrame(mux, &frame, 1);
         if (err != WEBP_MUX_OK) {
           fprintf(stderr, "ERROR (%s): Could not add animation frame.\n",
@@ -513,16 +554,14 @@ int main(int argc, const char *argv[]) {
                  frame.x_offset, frame.y_offset,
                  frame.duration);
           printf("dispose:%d blend:%d transparent index:%d\n",
-                 frame.dispose_method, frame.blend_method, transparent_index);
+                 frame.dispose_method, frame.blend_method,
+                 kParams.transparent_index);
         }
         WebPDataClear(&frame.bitstream);
         WebPPictureFree(&sub_image);
-        is_first_frame = 0;
+        kParams.is_first_frame = 0;
 
-        if (frame.dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
-          ClearPicture(&current, NULL);
-          ClearPicture(&previous, &gif_rect);
-        }
+        DisposeFrame(frame.dispose_method, &gif_rect, &current, &previous);
         break;
       }
       case EXTENSION_RECORD_TYPE: {
@@ -551,8 +590,9 @@ int main(int argc, const char *argv[]) {
                   (dispose == 2) ? WEBP_MUX_DISPOSE_BACKGROUND
                                  : WEBP_MUX_DISPOSE_NONE;
             }
-            transparent_index = (flags & GIF_TRANSPARENT_MASK) ? data[4] : -1;
-            if (is_first_frame) {
+            kParams.transparent_index =
+                (flags & GIF_TRANSPARENT_MASK) ? data[4] : -1;
+            if (kParams.is_first_frame) {
               if (!GetBackgroundColor(gif->SColorMap, gif->SBackGroundColor,
                                       &anim.bgcolor)) {
                 fprintf(stderr, "GIF decode warning: invalid background color "
