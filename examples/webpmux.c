@@ -228,14 +228,17 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
     if (nFrames > 0) {
       int i;
       printf("No.: x_offset y_offset ");
-      if (is_anim) printf("duration dispose ");
+      if (is_anim) printf("duration dispose blend ");
       printf("image_size\n");
       for (i = 1; i <= nFrames; i++) {
         WebPMuxFrameInfo frame;
         err = WebPMuxGetFrame(mux, i, &frame);
         if (err == WEBP_MUX_OK) {
           printf("%3d: %8d %8d ", i, frame.x_offset, frame.y_offset);
-          if (is_anim) printf("%8d %7d ", frame.duration, frame.dispose_method);
+          if (is_anim) {
+            printf("%8d %7d %5d", frame.duration, frame.dispose_method,
+                   frame.blend_method);
+          }
           printf("%10d\n", (int)frame.bitstream.size);
         }
         WebPDataClear(&frame.bitstream);
@@ -333,11 +336,13 @@ static void PrintHelp(void) {
   printf("\n");
   printf("FRAME_OPTIONS(i):\n");
   printf(" Create animation.\n");
-  printf("   file_i +di+xi+yi+mi\n");
+  printf("   file_i +di+[xi+yi[+mi[bi]]]\n");
   printf("   where:    'file_i' is the i'th animation frame (WebP format),\n");
   printf("             'di' is the pause duration before next frame.\n");
   printf("             'xi','yi' specify the image offset for this frame.\n");
   printf("             'mi' is the dispose method for this frame (0 or 1).\n");
+  printf("             'bi' is the blending method for this frame (+b or -b)."
+         "\n");
 
   printf("\n");
   printf("LOOP_COUNT:\n");
@@ -414,24 +419,33 @@ static int WriteWebP(WebPMux* const mux, const char* filename) {
 
 static int ParseFrameArgs(const char* args, WebPMuxFrameInfo* const info) {
   int dispose_method, dummy;
-  const int num_args = sscanf(args, "+%d+%d+%d+%d+%d",
-                              &info->duration, &info->x_offset, &info->y_offset,
-                              &dispose_method, &dummy);
+  char plus_minus, blend_method;
+  const int num_args = sscanf(args, "+%d+%d+%d+%d%c%c+%d", &info->duration,
+                              &info->x_offset, &info->y_offset, &dispose_method,
+                              &plus_minus, &blend_method, &dummy);
   switch (num_args) {
     case 1:
       info->x_offset = info->y_offset = 0;  // fall through
     case 3:
       dispose_method = 0;  // fall through
     case 4:
+      plus_minus = '+';
+      blend_method = 'b';  // fall through
+    case 6:
       break;
+    case 2:
+    case 5:
     default:
       return 0;
   }
   // Note: The sanity of the following conversion is checked by
-  // WebPMuxSetAnimationParams().
+  // WebPMuxPushFrame().
   info->dispose_method = (WebPMuxAnimDispose)dispose_method;
-  // TODO(urvang): Add support for parsing blending method too.
-  info->blend_method = WEBP_MUX_BLEND;
+
+  if (blend_method != 'b') return 0;
+  if (plus_minus != '-' && plus_minus != '+') return 0;
+  info->blend_method =
+      (plus_minus == '+') ? WEBP_MUX_BLEND : WEBP_MUX_NO_BLEND;
   return 1;
 }
 

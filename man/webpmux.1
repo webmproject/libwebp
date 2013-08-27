@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH WEBPMUX 1 "March 16, 2013"
+.TH WEBPMUX 1 "August 26, 2013"
 .SH NAME
 webpmux \- command line tool to create WebP Mux/container file.
 .SH SYNOPSIS
@@ -92,12 +92,14 @@ Strip XMP metadata.
 
 .SS FRAME_OPTIONS (\-frame)
 .TP
-.I file_i +di[+xi+yi[+mi]]
+.I file_i +di[+xi+yi[+mi[bi]]]
 Where: 'file_i' is the i'th frame (WebP format), 'xi','yi' specify the image
-offset for this frame, 'di' is the pause duration before next frame and 'mi' is
-the dispose method for this frame (0 for NONE or 1 for BACKGROUND).
-'mi' can be omitted and will default to 0 (NONE).
-Additionally, if 'mi' is ommitted then'xi' and 'yi' can be omitted and will
+offset for this frame, 'di' is the pause duration before next frame, 'mi' is
+the dispose method for this frame (0 for NONE or 1 for BACKGROUND) and 'bi' is
+the blending method for this frame (+b for BLEND or -b for NO_BLEND).
+Argument 'bi' can be omitted and will default to +b (BLEND).
+Also, 'mi' can be omitted if 'bi' is omitted and will default to 0 (NONE).
+Finally, if 'mi' and 'bi' are omitted then 'xi' and 'yi' can be omitted and will
 default to +0+0.
 .TP
 .BI \-loop " n
@@ -149,10 +151,13 @@ webpmux \-get exif exif_container.webp \-o image_metadata.exif
 .br
 webpmux \-strip exif exif_container.webp \-o without_exif.webp
 .br
-webpmux \-frame anim_1.webp +100 \-frame anim_2.webp +100+50+50 \-loop 10
+webpmux \-frame anim_1.webp +100 \-frame anim_2.webp +100+50+50
 .br
 .RS 8
-\-bgcolor 255,255,255,255 \-o anim_container.webp
+\-frame anim_2.webp +100+50+50+1+b \-loop 10 \-bgcolor 255,255,255,255
+.br
+.RS 8
+\-o anim_container.webp
 .RE
 .br
 webpmux \-get frame 2 anim_container.webp \-o frame_2.webp

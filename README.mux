@@ -56,11 +56,12 @@ STRIP_OPTIONS:
 
 FRAME_OPTIONS(i):
  Create animation.
-   file_i +di+xi+yi+mi
+   file_i +di+[xi+yi[+mi[bi]]]
    where:    'file_i' is the i'th animation frame (WebP format),
              'di' is the pause duration before next frame.
              'xi','yi' specify the image offset for this frame.
              'mi' is the dispose method for this frame (0 or 1).
+             'bi' is the blending method for this frame (+b or -b).
 
 LOOP_COUNT:
  Number of times to repeat the animation.
