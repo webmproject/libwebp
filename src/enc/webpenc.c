@@ -176,7 +176,6 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
   const size_t preds_size = preds_w * preds_h * sizeof(uint8_t);
   const int top_stride = mb_w * 16;
   const size_t nz_size = (mb_w + 1) * sizeof(uint32_t) + ALIGN_CST;
-  const size_t cache_size = (3 * YUV_SIZE + PRED_SIZE) * sizeof(uint8_t);
   const size_t info_size = mb_w * mb_h * sizeof(VP8MBInfo);
   const size_t samples_size = 2 * top_stride * sizeof(uint8_t)  // top-luma/u/v
                             + ALIGN_CST;                        // align all
@@ -186,7 +185,6 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
   uint8_t* mem;
   const uint64_t size = (uint64_t)sizeof(VP8Encoder)   // main struct
                       + ALIGN_CST                      // cache alignment
-                      + cache_size                     // working caches
                       + info_size                      // modes info
                       + preds_size                     // prediction modes
                       + samples_size                   // top/left samples
@@ -197,14 +195,13 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
   printf("===================================\n");
   printf("Memory used:\n"
          "             encoder: %ld\n"
-         "         block cache: %ld\n"
          "                info: %ld\n"
          "               preds: %ld\n"
          "         top samples: %ld\n"
          "            non-zero: %ld\n"
          "            lf-stats: %ld\n"
          "               total: %ld\n",
-         sizeof(VP8Encoder) + ALIGN_CST, cache_size, info_size,
+         sizeof(VP8Encoder) + ALIGN_CST, info_size,
          preds_size, samples_size, nz_size, lf_stats_size, size);
   printf("Transient object sizes:\n"
          "      VP8EncIterator: %ld\n"
@@ -231,14 +228,6 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
   enc->mb_w_ = mb_w;
   enc->mb_h_ = mb_h;
   enc->preds_w_ = preds_w;
-  enc->yuv_in_ = (uint8_t*)mem;
-  mem += YUV_SIZE;
-  enc->yuv_out_ = (uint8_t*)mem;
-  mem += YUV_SIZE;
-  enc->yuv_out2_ = (uint8_t*)mem;
-  mem += YUV_SIZE;
-  enc->yuv_p_ = (uint8_t*)mem;
-  mem += PRED_SIZE;
   enc->mb_info_ = (VP8MBInfo*)mem;
   mem += info_size;
   enc->preds_ = ((uint8_t*)mem) + 1 + enc->preds_w_;

@@ -47,6 +47,8 @@ void VP8IteratorSetRow(VP8EncIterator* const it, int y) {
   it->preds_ = enc->preds_ + y * 4 * enc->preds_w_;
   it->nz_ = enc->nz_;
   it->mb_ = enc->mb_info_ + y * enc->mb_w_;
+  it->y_top_ = enc->y_top_;
+  it->uv_top_ = enc->uv_top_;
   InitLeft(it);
 }
 
@@ -64,11 +66,10 @@ void VP8IteratorInit(VP8Encoder* const enc, VP8EncIterator* const it) {
   it->enc_ = enc;
   it->y_stride_  = enc->pic_->y_stride;
   it->uv_stride_ = enc->pic_->uv_stride;
-  // TODO(later): for multithreading, these should be owned by 'it'.
-  it->yuv_in_   = enc->yuv_in_;
-  it->yuv_out_  = enc->yuv_out_;
-  it->yuv_out2_ = enc->yuv_out2_;
-  it->yuv_p_    = enc->yuv_p_;
+  it->yuv_in_   = (uint8_t*)DO_ALIGN(it->yuv_mem_);
+  it->yuv_out_  = it->yuv_in_ + YUV_SIZE;
+  it->yuv_out2_ = it->yuv_out_ + YUV_SIZE;
+  it->yuv_p_    = it->yuv_out2_ + YUV_SIZE;
   it->lf_stats_ = enc->lf_stats_;
   it->percent0_ = enc->percent_;
   it->y_left_ = (uint8_t*)DO_ALIGN(it->yuv_left_mem_ + 1);
@@ -267,19 +268,21 @@ int VP8IteratorNext(VP8EncIterator* const it,
         it->v_left_[i] = usrc[15 + i * BPS];
       }
       // top-left (before 'top'!)
-      it->y_left_[-1] = enc->y_top_[x * 16 + 15];
-      it->u_left_[-1] = enc->uv_top_[x * 16 + 0 + 7];
-      it->v_left_[-1] = enc->uv_top_[x * 16 + 8 + 7];
+      it->y_left_[-1] = it->y_top_[15];
+      it->u_left_[-1] = it->uv_top_[0 + 7];
+      it->v_left_[-1] = it->uv_top_[8 + 7];
     }
     if (y < enc->mb_h_ - 1) {  // top
-      memcpy(enc->y_top_ + x * 16, ysrc + 15 * BPS, 16);
-      memcpy(enc->uv_top_ + x * 16, usrc + 7 * BPS, 8 + 8);
+      memcpy(it->y_top_, ysrc + 15 * BPS, 16);
+      memcpy(it->uv_top_, usrc + 7 * BPS, 8 + 8);
     }
   }
 
   it->preds_ += 4;
   it->mb_ += 1;
   it->nz_ += 1;
+  it->y_top_ += 16;
+  it->uv_top_ += 16;
   it->x_ += 1;
   if (it->x_ == enc->mb_w_) {
     VP8IteratorSetRow(it, ++it->y_);
@@ -374,12 +377,12 @@ void VP8IteratorStartI4(VP8EncIterator* const it) {
     it->i4_boundary_[i] = it->y_left_[15 - i];
   }
   for (i = 0; i < 16; ++i) {    // top
-    it->i4_boundary_[17 + i] = enc->y_top_[it->x_ * 16 + i];
+    it->i4_boundary_[17 + i] = it->y_top_[i];
   }
   // top-right samples have a special case on the far right of the picture
   if (it->x_ < enc->mb_w_ - 1) {
     for (i = 16; i < 16 + 4; ++i) {
-      it->i4_boundary_[17 + i] = enc->y_top_[it->x_ * 16 + i];
+      it->i4_boundary_[17 + i] = it->y_top_[i];
     }
   } else {    // else, replicate the last valid pixel four times
     for (i = 16; i < 16 + 4; ++i) {

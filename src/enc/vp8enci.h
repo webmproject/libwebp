@@ -74,7 +74,7 @@ typedef enum {   // Rate-distortion optimization levels
 // The predicted blocks can be accessed using offsets to yuv_p_ and
 // the arrays VP8*ModeOffsets[];
 //         +----+      YUV Samples area. See VP8Scan[] for accessing the blocks.
-//  Y_OFF  |YYYY| <- original samples  (enc->yuv_in_)
+//  Y_OFF  |YYYY| <- original samples  ('yuv_in_')
 //         |YYYY|
 //         |YYYY|
 //         |YYYY|
@@ -272,10 +272,10 @@ typedef struct {
 typedef struct {
   int x_, y_;                      // current macroblock
   int y_stride_, uv_stride_;       // respective strides
-  uint8_t*      yuv_in_;           // borrowed from enc_ (for now)
-  uint8_t*      yuv_out_;          // ''
-  uint8_t*      yuv_out2_;         // ''
-  uint8_t*      yuv_p_;            // ''
+  uint8_t*      yuv_in_;           // input samples
+  uint8_t*      yuv_out_;          // output samples
+  uint8_t*      yuv_out2_;         // secondary buffer swapped with yuv_out_.
+  uint8_t*      yuv_p_;            // scratch buffer for prediction
   VP8Encoder*   enc_;              // back-pointer
   VP8MBInfo*    mb_;               // current macroblock
   VP8BitWriter* bw_;               // current bit-writer
@@ -297,7 +297,13 @@ typedef struct {
   uint8_t* y_left_;    // left luma samples (addressable from index -1 to 15).
   uint8_t* u_left_;    // left u samples (addressable from index -1 to 7)
   uint8_t* v_left_;    // left v samples (addressable from index -1 to 7)
-  uint8_t  yuv_left_mem_[17 + 16 + 16 + 8 + ALIGN_CST];  // memory for *_left_
+
+  uint8_t* y_top_;     // top luma samples at position 'x_'
+  uint8_t* uv_top_;    // top u/v samples at position 'x_', packed as 16 bytes
+
+  // memory for storing y/u/v_left_ and yuv_in_/out_*
+  uint8_t yuv_left_mem_[17 + 16 + 16 + 8 + ALIGN_CST];     // memory for *_left_
+  uint8_t yuv_mem_[3 * YUV_SIZE + PRED_SIZE + ALIGN_CST];  // memory for yuv_*
 } VP8EncIterator;
 
   // in iterator.c
@@ -441,10 +447,6 @@ struct VP8Encoder {
   VP8MBInfo* mb_info_;   // contextual macroblock infos (mb_w_ + 1)
   uint8_t*   preds_;     // predictions modes: (4*mb_w+1) * (4*mb_h+1)
   uint32_t*  nz_;        // non-zero bit context: mb_w+1
-  uint8_t*   yuv_in_;    // input samples
-  uint8_t*   yuv_out_;   // output samples
-  uint8_t*   yuv_out2_;  // secondary scratch out-buffer. swapped with yuv_out_.
-  uint8_t*   yuv_p_;     // scratch buffer for prediction
   uint8_t   *y_top_;     // top luma samples.
   uint8_t   *uv_top_;    // top u/v samples.
                          // U and V are packed into 16 bytes (8 U + 8 V)
