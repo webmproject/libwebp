@@ -232,7 +232,6 @@ int ReadJPEG(FILE* in_file, WebPPicture* const pic, Metadata* const metadata) {
   jpeg_read_header(&dinfo, TRUE);
 
   dinfo.out_color_space = JCS_RGB;
-  dinfo.dct_method = JDCT_IFAST;
   dinfo.do_fancy_upsampling = TRUE;
 
   jpeg_start_decompress(&dinfo);
