@@ -12,37 +12,38 @@
 
 // Code Example: Demuxing WebP data to extract all the frames, ICC profile
 // and EXIF/XMP metadata.
-//
-//   WebPDemuxer* demux = WebPDemux(&webp_data);
-//
-//   uint32_t width = WebPDemuxGetI(demux, WEBP_FF_CANVAS_WIDTH);
-//   uint32_t height = WebPDemuxGetI(demux, WEBP_FF_CANVAS_HEIGHT);
-//   // ... (Get information about the features present in the WebP file).
-//   uint32_t flags = WebPDemuxGetI(demux, WEBP_FF_FORMAT_FLAGS);
-//
-//   // ... (Iterate over all frames).
-//   WebPIterator iter;
-//   if (WebPDemuxGetFrame(demux, 1, &iter)) {
-//     do {
-//       // ... (Consume 'iter'; e.g. Decode 'iter.fragment' with WebPDecode(),
-//       // ... and get other frame properties like width, height, offsets etc.
-//       // ... see 'struct WebPIterator' below for more info).
-//     } while (WebPDemuxNextFrame(&iter));
-//     WebPDemuxReleaseIterator(&iter);
-//   }
-//
-//   // ... (Extract metadata).
-//   WebPChunkIterator chunk_iter;
-//   if (flags & ICCP_FLAG) WebPDemuxGetChunk(demux, "ICCP", 1, &chunk_iter);
-//   // ... (Consume the ICC profile in 'chunk_iter.chunk').
-//   WebPDemuxReleaseChunkIterator(&chunk_iter);
-//   if (flags & EXIF_FLAG) WebPDemuxGetChunk(demux, "EXIF", 1, &chunk_iter);
-//   // ... (Consume the EXIF metadata in 'chunk_iter.chunk').
-//   WebPDemuxReleaseChunkIterator(&chunk_iter);
-//   if (flags & XMP_FLAG) WebPDemuxGetChunk(demux, "XMP ", 1, &chunk_iter);
-//   // ... (Consume the XMP metadata in 'chunk_iter.chunk').
-//   WebPDemuxReleaseChunkIterator(&chunk_iter);
-//   WebPDemuxDelete(demux);
+/*
+  WebPDemuxer* demux = WebPDemux(&webp_data);
+
+  uint32_t width = WebPDemuxGetI(demux, WEBP_FF_CANVAS_WIDTH);
+  uint32_t height = WebPDemuxGetI(demux, WEBP_FF_CANVAS_HEIGHT);
+  // ... (Get information about the features present in the WebP file).
+  uint32_t flags = WebPDemuxGetI(demux, WEBP_FF_FORMAT_FLAGS);
+
+  // ... (Iterate over all frames).
+  WebPIterator iter;
+  if (WebPDemuxGetFrame(demux, 1, &iter)) {
+    do {
+      // ... (Consume 'iter'; e.g. Decode 'iter.fragment' with WebPDecode(),
+      // ... and get other frame properties like width, height, offsets etc.
+      // ... see 'struct WebPIterator' below for more info).
+    } while (WebPDemuxNextFrame(&iter));
+    WebPDemuxReleaseIterator(&iter);
+  }
+
+  // ... (Extract metadata).
+  WebPChunkIterator chunk_iter;
+  if (flags & ICCP_FLAG) WebPDemuxGetChunk(demux, "ICCP", 1, &chunk_iter);
+  // ... (Consume the ICC profile in 'chunk_iter.chunk').
+  WebPDemuxReleaseChunkIterator(&chunk_iter);
+  if (flags & EXIF_FLAG) WebPDemuxGetChunk(demux, "EXIF", 1, &chunk_iter);
+  // ... (Consume the EXIF metadata in 'chunk_iter.chunk').
+  WebPDemuxReleaseChunkIterator(&chunk_iter);
+  if (flags & XMP_FLAG) WebPDemuxGetChunk(demux, "XMP ", 1, &chunk_iter);
+  // ... (Consume the XMP metadata in 'chunk_iter.chunk').
+  WebPDemuxReleaseChunkIterator(&chunk_iter);
+  WebPDemuxDelete(demux);
+*/
 
 #ifndef WEBP_WEBP_DEMUX_H_
 #define WEBP_WEBP_DEMUX_H_
