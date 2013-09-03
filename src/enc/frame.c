@@ -835,7 +835,7 @@ static int PostLoopFinalize(VP8EncIterator* const it, int ok) {
   }
 
   if (ok) {      // All good. Finish up.
-    if (enc->pic_->stats) {           // finalize byte counters...
+    if (enc->pic_->stats != NULL) {  // finalize byte counters...
       int i, s;
       for (i = 0; i <= 2; ++i) {
         for (s = 0; s < NUM_MB_SEGMENTS; ++s) {
@@ -908,15 +908,14 @@ int VP8EncLoop(VP8Encoder* const enc) {
 
 int VP8EncTokenLoop(VP8Encoder* const enc) {
   int ok;
-  // Roughly refresh the proba height times per pass
+  // Roughly refresh the proba eight times per pass
   int max_count = (enc->mb_w_ * enc->mb_h_) >> 3;
-  int cnt;
+  int num_pass_left = enc->config_->pass;
   VP8EncIterator it;
   VP8Proba* const proba = &enc->proba_;
   const VP8RDLevel rd_opt = enc->rd_opt_level_;
 
   if (max_count < MIN_COUNT) max_count = MIN_COUNT;
-  cnt = max_count;
 
   assert(enc->num_parts_ == 1);
   assert(enc->use_tokens_);
@@ -929,37 +928,42 @@ int VP8EncTokenLoop(VP8Encoder* const enc) {
   ok = PreLoopInitialize(enc);
   if (!ok) return 0;
 
-  VP8IteratorInit(enc, &it);
-  VP8InitFilter(&it);
-  do {
-    VP8ModeScore info;
-    VP8IteratorImport(&it);
-    if (--cnt < 0) {
-      FinalizeTokenProbas(proba);
-      VP8CalculateLevelCosts(proba);  // refresh cost tables for rd-opt
-      cnt = max_count;
+  while (ok && num_pass_left-- > 0) {
+    int cnt = max_count;
+    VP8IteratorInit(enc, &it);
+    if (num_pass_left == 0) {
+      VP8InitFilter(&it);  // don't collect stats until last pass (too costly)
     }
-    VP8Decimate(&it, &info, rd_opt);
-    RecordTokens(&it, &info, &enc->tokens_);
+    VP8TBufferClear(&enc->tokens_);
+    do {
+      VP8ModeScore info;
+      VP8IteratorImport(&it);
+      if (--cnt < 0) {
+        FinalizeTokenProbas(proba);
+        VP8CalculateLevelCosts(proba);  // refresh cost tables for rd-opt
+        cnt = max_count;
+      }
+      VP8Decimate(&it, &info, rd_opt);
+      RecordTokens(&it, &info, &enc->tokens_);
 #ifdef WEBP_EXPERIMENTAL_FEATURES
-    if (enc->use_layer_) {
-      VP8EncCodeLayerBlock(&it);
-    }
+      if (enc->use_layer_) {
+        VP8EncCodeLayerBlock(&it);
+      }
 #endif
-    StoreSideInfo(&it);
-    VP8StoreFilterStats(&it);
-    VP8IteratorExport(&it);
-    ok = VP8IteratorProgress(&it, 20);
-  } while (ok && VP8IteratorNext(&it, it.yuv_out_));
-
+      if (num_pass_left == 0) {
+        StoreSideInfo(&it);
+        VP8StoreFilterStats(&it);
+        VP8IteratorExport(&it);
+        ok = VP8IteratorProgress(&it, 20);
+      }
+    } while (ok && VP8IteratorNext(&it, it.yuv_out_));
+  }
   ok = ok && WebPReportProgress(enc->pic_, enc->percent_ + 20, &enc->percent_);
-
   if (ok) {
     FinalizeTokenProbas(proba);
     ok = VP8EmitTokens(&enc->tokens_, enc->parts_ + 0,
                        (const uint8_t*)proba->coeffs_, 1);
   }
-
   return PostLoopFinalize(&it, ok);
 }
 
