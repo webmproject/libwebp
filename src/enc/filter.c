@@ -340,13 +340,13 @@ static double GetMBSSIM(const uint8_t* yuv1, const uint8_t* yuv2) {
 // loop filter strength
 
 void VP8InitFilter(VP8EncIterator* const it) {
-  int s, i;
-  if (!it->lf_stats_) return;
-
-  InitTables();
-  for (s = 0; s < NUM_MB_SEGMENTS; s++) {
-    for (i = 0; i < MAX_LF_LEVELS; i++) {
-      (*it->lf_stats_)[s][i] = 0;
+  if (it->lf_stats_ != NULL) {
+    int s, i;
+    InitTables();
+    for (s = 0; s < NUM_MB_SEGMENTS; s++) {
+      for (i = 0; i < MAX_LF_LEVELS; i++) {
+        (*it->lf_stats_)[s][i] = 0;
+      }
     }
   }
 }
@@ -361,7 +361,7 @@ void VP8StoreFilterStats(VP8EncIterator* const it) {
   const int delta_max = it->enc_->dqm_[s].quant_;
   const int step_size = (delta_max - delta_min >= 4) ? 4 : 1;
 
-  if (!it->lf_stats_) return;
+  if (it->lf_stats_ == NULL) return;
 
   // NOTE: Currently we are applying filter only across the sublock edges
   // There are two reasons for that.
@@ -385,24 +385,22 @@ void VP8StoreFilterStats(VP8EncIterator* const it) {
 }
 
 void VP8AdjustFilterStrength(VP8EncIterator* const it) {
-  int s;
-  VP8Encoder* const enc = it->enc_;
-
-  if (!it->lf_stats_) {
-    return;
-  }
-  for (s = 0; s < NUM_MB_SEGMENTS; s++) {
-    int i, best_level = 0;
-    // Improvement over filter level 0 should be at least 1e-5 (relatively)
-    double best_v = 1.00001 * (*it->lf_stats_)[s][0];
-    for (i = 1; i < MAX_LF_LEVELS; i++) {
-      const double v = (*it->lf_stats_)[s][i];
-      if (v > best_v) {
-        best_v = v;
-        best_level = i;
+  if (it->lf_stats_ != NULL) {
+    int s;
+    VP8Encoder* const enc = it->enc_;
+    for (s = 0; s < NUM_MB_SEGMENTS; s++) {
+      int i, best_level = 0;
+      // Improvement over filter level 0 should be at least 1e-5 (relatively)
+      double best_v = 1.00001 * (*it->lf_stats_)[s][0];
+      for (i = 1; i < MAX_LF_LEVELS; i++) {
+        const double v = (*it->lf_stats_)[s][i];
+        if (v > best_v) {
+          best_v = v;
+          best_level = i;
+        }
       }
+      enc->dqm_[s].fstrength_ = best_level;
     }
-    enc->dqm_[s].fstrength_ = best_level;
   }
 }
 
