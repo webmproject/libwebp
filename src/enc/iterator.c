@@ -55,11 +55,19 @@ void VP8IteratorSetRow(VP8EncIterator* const it, int y) {
 void VP8IteratorReset(VP8EncIterator* const it) {
   VP8Encoder* const enc = it->enc_;
   VP8IteratorSetRow(it, 0);
-  it->count_down_ = enc->mb_w_ * enc->mb_h_;
+  VP8IteratorSetCountDown(it, enc->mb_w_ * enc->mb_h_);  // default
   InitTop(it);
   InitLeft(it);
   memset(it->bit_count_, 0, sizeof(it->bit_count_));
   it->do_trellis_ = 0;
+}
+
+void VP8IteratorSetCountDown(VP8EncIterator* const it, int count_down) {
+  it->count_down_ = it->count_down0_ = count_down;
+}
+
+int VP8IteratorIsDone(const VP8EncIterator* const it) {
+  return (it->count_down_ <= 0);
 }
 
 void VP8IteratorInit(VP8Encoder* const enc, VP8EncIterator* const it) {
@@ -81,9 +89,10 @@ void VP8IteratorInit(VP8Encoder* const enc, VP8EncIterator* const it) {
 int VP8IteratorProgress(const VP8EncIterator* const it, int delta) {
   VP8Encoder* const enc = it->enc_;
   if (delta && enc->pic_->progress_hook != NULL) {
-    const int percent = (enc->mb_h_ <= 1)
+    const int done = it->count_down0_ - it->count_down_;
+    const int percent = (it->count_down0_ <= 0)
                       ? it->percent0_
-                      : it->percent0_ + delta * it->y_ / (enc->mb_h_ - 1);
+                      : it->percent0_ + delta * done / it->count_down0_;
     return WebPReportProgress(enc->pic_, percent, &enc->percent_);
   }
   return 1;
@@ -92,6 +101,8 @@ int VP8IteratorProgress(const VP8EncIterator* const it, int delta) {
 //------------------------------------------------------------------------------
 // Import the source samples into the cache. Takes care of replicating
 // boundary pixels if necessary.
+
+static WEBP_INLINE int MinSize(int a, int b) { return (a < b) ? a : b; }
 
 static void ImportBlock(const uint8_t* src, int src_stride,
                         uint8_t* dst, int w, int h, int size) {
@@ -110,30 +121,55 @@ static void ImportBlock(const uint8_t* src, int src_stride,
   }
 }
 
-void VP8IteratorImport(const VP8EncIterator* const it) {
+static void ImportLine(const uint8_t* src, int src_stride,
+                       uint8_t* dst, int len, int total_len) {
+  int i;
+  for (i = 0; i < len; ++i, src += src_stride) dst[i] = *src;
+  for (; i < total_len; ++i) dst[i] = dst[len - 1];
+}
+
+void VP8IteratorImport(VP8EncIterator* const it, uint8_t* tmp_32) {
   const VP8Encoder* const enc = it->enc_;
   const int x = it->x_, y = it->y_;
   const WebPPicture* const pic = enc->pic_;
-  const uint8_t* const ysrc = pic->y + (y * pic->y_stride + x) * 16;
+  const uint8_t* const ysrc = pic->y + (y * pic->y_stride  + x) * 16;
   const uint8_t* const usrc = pic->u + (y * pic->uv_stride + x) * 8;
   const uint8_t* const vsrc = pic->v + (y * pic->uv_stride + x) * 8;
-  uint8_t* const ydst = it->yuv_in_ + Y_OFF;
-  uint8_t* const udst = it->yuv_in_ + U_OFF;
-  uint8_t* const vdst = it->yuv_in_ + V_OFF;
-  int w = (pic->width - x * 16);
-  int h = (pic->height - y * 16);
+  const int w = MinSize(pic->width - x * 16, 16);
+  const int h = MinSize(pic->height - y * 16, 16);
+  const int uv_w = (w + 1) >> 1;
+  const int uv_h = (h + 1) >> 1;
 
-  if (w > 16) w = 16;
-  if (h > 16) h = 16;
+  ImportBlock(ysrc, pic->y_stride,  it->yuv_in_ + Y_OFF, w, h, 16);
+  ImportBlock(usrc, pic->uv_stride, it->yuv_in_ + U_OFF, uv_w, uv_h, 8);
+  ImportBlock(vsrc, pic->uv_stride, it->yuv_in_ + V_OFF, uv_w, uv_h, 8);
 
-  // Luma plane
-  ImportBlock(ysrc, pic->y_stride, ydst, w, h, 16);
+  if (tmp_32 == NULL) return;
 
-  {   // U/V planes
-    const int uv_w = (w + 1) >> 1;
-    const int uv_h = (h + 1) >> 1;
-    ImportBlock(usrc, pic->uv_stride, udst, uv_w, uv_h, 8);
-    ImportBlock(vsrc, pic->uv_stride, vdst, uv_w, uv_h, 8);
+  // Import source (uncompressed) samples into boundary.
+  if (x == 0) {
+    InitLeft(it);
+  } else {
+    if (y == 0) {
+      it->y_left_[-1] = it->u_left_[-1] = it->v_left_[-1] = 127;
+    } else {
+      it->y_left_[-1] = ysrc[- 1 - pic->y_stride];
+      it->u_left_[-1] = usrc[- 1 - pic->uv_stride];
+      it->v_left_[-1] = vsrc[- 1 - pic->uv_stride];
+    }
+    ImportLine(ysrc - 1, pic->y_stride,  it->y_left_, h,   16);
+    ImportLine(usrc - 1, pic->uv_stride, it->u_left_, uv_h, 8);
+    ImportLine(vsrc - 1, pic->uv_stride, it->v_left_, uv_h, 8);
+  }
+
+  it->y_top_  = tmp_32 + 0;
+  it->uv_top_ = tmp_32 + 16;
+  if (y == 0) {
+    memset(tmp_32, 127, 32 * sizeof(*tmp_32));
+  } else {
+    ImportLine(ysrc - pic->y_stride,  1, tmp_32,          w,   16);
+    ImportLine(usrc - pic->uv_stride, 1, tmp_32 + 16,     uv_w, 8);
+    ImportLine(vsrc - pic->uv_stride, 1, tmp_32 + 16 + 8, uv_w, 8);
   }
 }
 
@@ -251,40 +287,40 @@ void VP8IteratorBytesToNz(VP8EncIterator* const it) {
 //------------------------------------------------------------------------------
 // Advance to the next position, doing the bookeeping.
 
-int VP8IteratorNext(VP8EncIterator* const it,
-                    const uint8_t* const block_to_save) {
+void VP8IteratorSaveBoundary(VP8EncIterator* const it,
+                             const uint8_t* const block_to_save) {
   VP8Encoder* const enc = it->enc_;
-  if (block_to_save != NULL) {
-    const int x = it->x_, y = it->y_;
-    const uint8_t* const ysrc = block_to_save + Y_OFF;
-    const uint8_t* const usrc = block_to_save + U_OFF;
-    if (x < enc->mb_w_ - 1) {   // left
-      int i;
-      for (i = 0; i < 16; ++i) {
-        it->y_left_[i] = ysrc[15 + i * BPS];
-      }
-      for (i = 0; i < 8; ++i) {
-        it->u_left_[i] = usrc[7 + i * BPS];
-        it->v_left_[i] = usrc[15 + i * BPS];
-      }
-      // top-left (before 'top'!)
-      it->y_left_[-1] = it->y_top_[15];
-      it->u_left_[-1] = it->uv_top_[0 + 7];
-      it->v_left_[-1] = it->uv_top_[8 + 7];
+  const int x = it->x_, y = it->y_;
+  const uint8_t* const ysrc = block_to_save + Y_OFF;
+  const uint8_t* const usrc = block_to_save + U_OFF;
+  if (x < enc->mb_w_ - 1) {   // left
+    int i;
+    for (i = 0; i < 16; ++i) {
+      it->y_left_[i] = ysrc[15 + i * BPS];
     }
-    if (y < enc->mb_h_ - 1) {  // top
-      memcpy(it->y_top_, ysrc + 15 * BPS, 16);
-      memcpy(it->uv_top_, usrc + 7 * BPS, 8 + 8);
+    for (i = 0; i < 8; ++i) {
+      it->u_left_[i] = usrc[7 + i * BPS];
+      it->v_left_[i] = usrc[15 + i * BPS];
     }
+    // top-left (before 'top'!)
+    it->y_left_[-1] = it->y_top_[15];
+    it->u_left_[-1] = it->uv_top_[0 + 7];
+    it->v_left_[-1] = it->uv_top_[8 + 7];
   }
+  if (y < enc->mb_h_ - 1) {  // top
+    memcpy(it->y_top_, ysrc + 15 * BPS, 16);
+    memcpy(it->uv_top_, usrc + 7 * BPS, 8 + 8);
+  }
+}
 
+int VP8IteratorNext(VP8EncIterator* const it) {
   it->preds_ += 4;
   it->mb_ += 1;
   it->nz_ += 1;
   it->y_top_ += 16;
   it->uv_top_ += 16;
   it->x_ += 1;
-  if (it->x_ == enc->mb_w_) {
+  if (it->x_ == it->enc_->mb_w_) {
     VP8IteratorSetRow(it, ++it->y_);
   }
   return (0 < --it->count_down_);

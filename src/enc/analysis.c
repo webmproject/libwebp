@@ -384,32 +384,111 @@ static void ResetAllMBInfo(VP8Encoder* const enc) {
   // Default susceptibilities.
   enc->dqm_[0].alpha_ = 0;
   enc->dqm_[0].beta_ = 0;
-  // Note: we can't compute this alpha_ / uv_alpha_.
+  // Note: we can't compute this alpha_ / uv_alpha_ -> set to default value.
+  enc->alpha_ = 0;
+  enc->uv_alpha_ = 0;
   WebPReportProgress(enc->pic_, enc->percent_ + 20, &enc->percent_);
 }
 
+// struct used to collect job result
+typedef struct {
+  WebPWorker worker;
+  int alphas[MAX_ALPHA + 1];
+  int alpha, uv_alpha;
+  VP8EncIterator it;
+  int delta_progress;
+} SegmentJob;
+
+// main work call
+static int DoSegmentsJob(SegmentJob* const job, VP8EncIterator* const it) {
+  int ok = 1;
+  if (!VP8IteratorIsDone(it)) {
+    uint8_t tmp[32 + ALIGN_CST];
+    uint8_t* const scratch = (uint8_t*)DO_ALIGN(tmp);
+    do {
+      // Let's pretend we have perfect lossless reconstruction.
+      VP8IteratorImport(it, scratch);
+      MBAnalyze(it, job->alphas, &job->alpha, &job->uv_alpha);
+      ok = VP8IteratorProgress(it, job->delta_progress);
+    } while (ok && VP8IteratorNext(it));
+  }
+  return ok;
+}
+
+static void MergeJobs(const SegmentJob* const src, SegmentJob* const dst) {
+  int i;
+  for (i = 0; i <= MAX_ALPHA; ++i) dst->alphas[i] += src->alphas[i];
+  dst->alpha += src->alpha;
+  dst->uv_alpha += src->uv_alpha;
+}
+
+// initialize the job struct with some TODOs
+static void InitSegmentJob(VP8Encoder* const enc, SegmentJob* const job,
+                           int start_row, int end_row) {
+  WebPWorkerInit(&job->worker);
+  job->worker.data1 = job;
+  job->worker.data2 = &job->it;
+  job->worker.hook = (WebPWorkerHook)DoSegmentsJob;
+  VP8IteratorInit(enc, &job->it);
+  VP8IteratorSetRow(&job->it, start_row);
+  VP8IteratorSetCountDown(&job->it, (end_row - start_row) * enc->mb_w_);
+  memset(job->alphas, 0, sizeof(job->alphas));
+  job->alpha = 0;
+  job->uv_alpha = 0;
+  // only one of both jobs can record the progress, since we don't
+  // expect the user's hook to be multi-thread safe
+  job->delta_progress = (start_row == 0) ? 20 : 0;
+}
+
+// main entry point
 int VP8EncAnalyze(VP8Encoder* const enc) {
   int ok = 1;
   const int do_segments =
       enc->config_->emulate_jpeg_size ||   // We need the complexity evaluation.
       (enc->segment_hdr_.num_segments_ > 1) ||
       (enc->method_ == 0);  // for method 0, we need preds_[] to be filled.
-  enc->alpha_ = 0;
-  enc->uv_alpha_ = 0;
   if (do_segments) {
-    int alphas[MAX_ALPHA + 1] = { 0 };
-    VP8EncIterator it;
-
-    VP8IteratorInit(enc, &it);
-    do {
-      VP8IteratorImport(&it);
-      MBAnalyze(&it, alphas, &enc->alpha_, &enc->uv_alpha_);
-      ok = VP8IteratorProgress(&it, 20);
-      // Let's pretend we have perfect lossless reconstruction.
-    } while (ok && VP8IteratorNext(&it, it.yuv_in_));
-    enc->alpha_ /= enc->mb_w_ * enc->mb_h_;
-    enc->uv_alpha_ /= enc->mb_w_ * enc->mb_h_;
-    if (ok) AssignSegments(enc, alphas);
+    const int last_row = enc->mb_h_;
+    // We give a little more than a half work to the main thread.
+    const int split_row = (9 * last_row + 15) >> 4;
+    const int total_mb = last_row * enc->mb_w_;
+#ifdef WEBP_USE_THREAD
+    const int kMinSplitRow = 2;  // minimal rows needed for mt to be worth it
+    const int do_mt = (enc->thread_level_ > 0) && (split_row >= kMinSplitRow);
+#else
+    const int do_mt = 0;
+#endif
+    SegmentJob main_job;
+    if (do_mt) {
+      SegmentJob side_job;
+      // Note the use of '&' instead of '&&' because we must call the functions
+      // no matter what.
+      InitSegmentJob(enc, &main_job, 0, split_row);
+      InitSegmentJob(enc, &side_job, split_row, last_row);
+      // we don't need to call Reset() on main_job.worker, since we're calling
+      // WebPWorkerExecute() on it
+      ok &= WebPWorkerReset(&side_job.worker);
+      // launch the two jobs in parallel
+      if (ok) {
+        WebPWorkerLaunch(&side_job.worker);
+        WebPWorkerExecute(&main_job.worker);
+        ok &= WebPWorkerSync(&side_job.worker);
+        ok &= WebPWorkerSync(&main_job.worker);
+      }
+      WebPWorkerEnd(&side_job.worker);
+      if (ok) MergeJobs(&side_job, &main_job);  // merge results together
+    } else {
+      // Even for single-thread case, we use the generic Worker tools.
+      InitSegmentJob(enc, &main_job, 0, last_row);
+      WebPWorkerExecute(&main_job.worker);
+      ok &= WebPWorkerSync(&main_job.worker);
+    }
+    WebPWorkerEnd(&main_job.worker);
+    if (ok) {
+      enc->alpha_ = main_job.alpha / total_mb;
+      enc->uv_alpha_ = main_job.uv_alpha / total_mb;
+      AssignSegments(enc, main_job.alphas);
+    }
   } else {   // Use only one default segment.
     ResetAllMBInfo(enc);
   }

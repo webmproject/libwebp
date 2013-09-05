@@ -344,7 +344,7 @@ void VP8CodeIntraModes(VP8Encoder* const enc) {
       }
     }
     PutUVMode(bw, mb->uv_mode_);
-  } while (VP8IteratorNext(&it, NULL));
+  } while (VP8IteratorNext(&it));
 }
 
 //------------------------------------------------------------------------------

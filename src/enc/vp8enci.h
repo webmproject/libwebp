@@ -292,6 +292,7 @@ typedef struct {
   LFStats*      lf_stats_;         // filter stats (borrowed from enc_)
   int           do_trellis_;       // if true, perform extra level optimisation
   int           count_down_;       // number of mb still to be processed
+  int           count_down0_;      // starting counter value (for progress)
   int           percent0_;         // saved initial progress percent
 
   uint8_t* y_left_;    // left luma samples (addressable from index -1 to 15).
@@ -313,15 +314,22 @@ void VP8IteratorInit(VP8Encoder* const enc, VP8EncIterator* const it);
 void VP8IteratorReset(VP8EncIterator* const it);
 // reset iterator position to row 'y'
 void VP8IteratorSetRow(VP8EncIterator* const it, int y);
-// import samples from source
-void VP8IteratorImport(const VP8EncIterator* const it);
+// set count down (=number of iterations to go)
+void VP8IteratorSetCountDown(VP8EncIterator* const it, int count_down);
+// return true if iteration is finished
+int VP8IteratorIsDone(const VP8EncIterator* const it);
+// Import uncompressed samples from source.
+// If tmp_32 is not NULL, import boundary samples too.
+// tmp_32 is a 32-bytes scratch buffer that must be aligned in memory.
+void VP8IteratorImport(VP8EncIterator* const it, uint8_t* tmp_32);
 // export decimated samples
 void VP8IteratorExport(const VP8EncIterator* const it);
-// go to next macroblock. Returns false if not finished. If *block_to_save is
-// non-null, will save the boundary values to top_/left_ arrays. block_to_save
-// can be it->yuv_out_ or it->yuv_in_.
-int VP8IteratorNext(VP8EncIterator* const it,
-                    const uint8_t* const block_to_save);
+// go to next macroblock. Returns false if not finished.
+int VP8IteratorNext(VP8EncIterator* const it);
+// save the boundary values to top_/left_ arrays for next iterations.
+// block_to_save can be it->yuv_out_ or it->yuv_in_.
+void VP8IteratorSaveBoundary(VP8EncIterator* const it,
+                             const uint8_t* const block_to_save);
 // Report progression based on macroblock rows. Return 0 for user-abort request.
 int VP8IteratorProgress(const VP8EncIterator* const it,
                         int final_delta_percent);

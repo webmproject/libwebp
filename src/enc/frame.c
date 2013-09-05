@@ -721,7 +721,7 @@ static int OneStatPass(VP8Encoder* const enc, float q, VP8RDLevel rd_opt,
   VP8IteratorInit(enc, &it);
   do {
     VP8ModeScore info;
-    VP8IteratorImport(&it);
+    VP8IteratorImport(&it, NULL);
     if (VP8Decimate(&it, &info, rd_opt)) {
       // Just record the number of skips and act like skip_proba is not used.
       enc->proba_.nb_skip_++;
@@ -731,7 +731,8 @@ static int OneStatPass(VP8Encoder* const enc, float q, VP8RDLevel rd_opt,
     distortion += info.D;
     if (percent_delta && !VP8IteratorProgress(&it, percent_delta))
       return 0;
-  } while (VP8IteratorNext(&it, it.yuv_out_) && --nb_mbs > 0);
+    VP8IteratorSaveBoundary(&it, it.yuv_out_);
+  } while (VP8IteratorNext(&it) && --nb_mbs > 0);
   size += FinalizeSkipProba(enc);
   size += FinalizeTokenProbas(&enc->proba_);
   size += enc->segment_hdr_.size_;
@@ -877,7 +878,7 @@ int VP8EncLoop(VP8Encoder* const enc) {
     const int dont_use_skip = !enc->proba_.use_skip_proba_;
     const VP8RDLevel rd_opt = enc->rd_opt_level_;
 
-    VP8IteratorImport(&it);
+    VP8IteratorImport(&it, NULL);
     // Warning! order is important: first call VP8Decimate() and
     // *then* decide how to code the skip decision if there's one.
     if (!VP8Decimate(&it, &info, rd_opt) || dont_use_skip) {
@@ -894,7 +895,8 @@ int VP8EncLoop(VP8Encoder* const enc) {
     VP8StoreFilterStats(&it);
     VP8IteratorExport(&it);
     ok = VP8IteratorProgress(&it, 20);
-  } while (ok && VP8IteratorNext(&it, it.yuv_out_));
+    VP8IteratorSaveBoundary(&it, it.yuv_out_);
+  } while (ok && VP8IteratorNext(&it));
 
   return PostLoopFinalize(&it, ok);
 }
@@ -937,7 +939,7 @@ int VP8EncTokenLoop(VP8Encoder* const enc) {
     VP8TBufferClear(&enc->tokens_);
     do {
       VP8ModeScore info;
-      VP8IteratorImport(&it);
+      VP8IteratorImport(&it, NULL);
       if (--cnt < 0) {
         FinalizeTokenProbas(proba);
         VP8CalculateLevelCosts(proba);  // refresh cost tables for rd-opt
@@ -956,7 +958,8 @@ int VP8EncTokenLoop(VP8Encoder* const enc) {
         VP8IteratorExport(&it);
         ok = VP8IteratorProgress(&it, 20);
       }
-    } while (ok && VP8IteratorNext(&it, it.yuv_out_));
+      VP8IteratorSaveBoundary(&it, it.yuv_out_);
+    } while (ok && VP8IteratorNext(&it));
   }
   ok = ok && WebPReportProgress(enc->pic_, enc->percent_ + 20, &enc->percent_);
   if (ok) {
