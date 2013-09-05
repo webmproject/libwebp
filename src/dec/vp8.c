@@ -505,28 +505,6 @@ static int GetCoeffs(VP8BitReader* const br, ProbaArray prob,
   return 16;
 }
 
-// Alias-safe way of converting 4bytes to 32bits.
-typedef union {
-  uint8_t  i8[4];
-  uint32_t i32;
-} PackedNz;
-
-// Table to unpack four bits into four bytes
-static const PackedNz kUnpackTab[16] = {
-  {{0, 0, 0, 0}},  {{1, 0, 0, 0}},  {{0, 1, 0, 0}},  {{1, 1, 0, 0}},
-  {{0, 0, 1, 0}},  {{1, 0, 1, 0}},  {{0, 1, 1, 0}},  {{1, 1, 1, 0}},
-  {{0, 0, 0, 1}},  {{1, 0, 0, 1}},  {{0, 1, 0, 1}},  {{1, 1, 0, 1}},
-  {{0, 0, 1, 1}},  {{1, 0, 1, 1}},  {{0, 1, 1, 1}},  {{1, 1, 1, 1}} };
-
-// Macro to pack four LSB of four bytes into four bits.
-#if defined(__PPC__) || defined(_M_PPC) || defined(_ARCH_PPC) || \
-    defined(__BIG_ENDIAN__)
-#define PACK_CST 0x08040201U
-#else
-#define PACK_CST 0x01020408U
-#endif
-#define PACK(X, S) ((((X).i32 * PACK_CST) & 0xff000000) >> (S))
-
 static int ParseResiduals(VP8Decoder* const dec,
                           VP8MB* const mb, VP8BitReader* const token_br) {
   uint32_t out_t_nz, out_l_nz;
@@ -536,8 +514,7 @@ static int ParseResiduals(VP8Decoder* const dec,
   VP8MBData* const block = dec->mb_data_;
   int16_t* dst = block->coeffs_;
   VP8MB* const left_mb = dec->mb_info_ - 1;
-  PackedNz nz_ac, nz_dc;
-  PackedNz tnz, lnz;
+  uint8_t tnz, lnz;
   uint32_t non_zero_ac = 0;
   uint32_t non_zero_dc = 0;
   int x, y, ch;
@@ -557,48 +534,55 @@ static int ParseResiduals(VP8Decoder* const dec,
     ac_prob = (ProbaArray)dec->proba_.coeffs_[3];
   }
 
-  tnz = kUnpackTab[mb->nz_ & 0xf];
-  lnz = kUnpackTab[left_mb->nz_ & 0xf];
+  tnz = mb->nz_ & 0x0f;
+  lnz = left_mb->nz_ & 0x0f;
   for (y = 0; y < 4; ++y) {
-    int l = lnz.i8[y];
+    int l = lnz & 1;
+    uint32_t nz_dc = 0, nz_ac = 0;
     for (x = 0; x < 4; ++x) {
-      const int ctx = l + tnz.i8[x];
+      const int ctx = l + (tnz & 1);
       const int nz = GetCoeffs(token_br, ac_prob, ctx,
                                q->y1_mat_, first, dst);
-      tnz.i8[x] = l = (nz > 0);
-      nz_dc.i8[x] = (dst[0] != 0);
-      nz_ac.i8[x] = (nz > 1);
+      l = (nz > 0);
+      tnz = (tnz >> 1) | (l << 7);
+      nz_dc = (nz_dc << 1) | (dst[0] != 0);
+      nz_ac = (nz_ac << 1) | (nz > 1);
       dst += 16;
     }
-    lnz.i8[y] = l;
-    non_zero_dc |= PACK(nz_dc, 24 - y * 4);
-    non_zero_ac |= PACK(nz_ac, 24 - y * 4);
+    tnz >>= 4;
+    lnz = (lnz >> 1) | (l << 7);
+    non_zero_dc = (non_zero_dc << 4) | nz_dc;
+    non_zero_ac = (non_zero_ac << 4) | nz_ac;
   }
-  out_t_nz = PACK(tnz, 24);
-  out_l_nz = PACK(lnz, 24);
+  out_t_nz = tnz;
+  out_l_nz = lnz >> 4;
 
-  tnz = kUnpackTab[mb->nz_ >> 4];
-  lnz = kUnpackTab[left_mb->nz_ >> 4];
   for (ch = 0; ch < 4; ch += 2) {
+    uint32_t nz_dc = 0, nz_ac = 0;
+    tnz = mb->nz_ >> (4 + ch);
+    lnz = left_mb->nz_ >> (4 + ch);
     for (y = 0; y < 2; ++y) {
-      int l = lnz.i8[ch + y];
+      int l = lnz & 1;
       for (x = 0; x < 2; ++x) {
-        const int ctx = l + tnz.i8[ch + x];
+        const int ctx = l + (tnz & 1);
         const int nz =
             GetCoeffs(token_br, (ProbaArray)dec->proba_.coeffs_[2],
                       ctx, q->uv_mat_, 0, dst);
-        tnz.i8[ch + x] = l = (nz > 0);
-        nz_dc.i8[y * 2 + x] = (dst[0] != 0);
-        nz_ac.i8[y * 2 + x] = (nz > 1);
+        l = (nz > 0);
+        tnz = (tnz >> 1) | (l << 3);
+        nz_dc = (nz_dc << 1) | (dst[0] != 0);
+        nz_ac = (nz_ac << 1) | (nz > 1);
         dst += 16;
       }
-      lnz.i8[ch + y] = l;
+      tnz >>= 2;
+      lnz = (lnz >> 1) | (l << 5);
     }
-    non_zero_dc |= PACK(nz_dc, 8 - ch * 2);
-    non_zero_ac |= PACK(nz_ac, 8 - ch * 2);
+    // Note: we don't really need the per-4x4 details for U/V blocks.
+    non_zero_dc |= (nz_dc & 0x0f) << (16 + 2 * ch);
+    non_zero_ac |= (nz_ac & 0x0f) << (16 + 2 * ch);
+    out_t_nz |= (tnz << 4) << ch;
+    out_l_nz |= (lnz & 0xf0) << ch;
   }
-  out_t_nz |= PACK(tnz, 20);
-  out_l_nz |= PACK(lnz, 20);
   mb->nz_ = out_t_nz;
   left_mb->nz_ = out_l_nz;
 
@@ -606,7 +590,6 @@ static int ParseResiduals(VP8Decoder* const dec,
   block->non_zero_ = non_zero_ac | non_zero_dc;
   return !block->non_zero_;   // will be used for further optimization
 }
-#undef PACK
 
 //------------------------------------------------------------------------------
 // Main loop

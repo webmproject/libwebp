@@ -595,6 +595,7 @@ void VP8ReconstructBlock(const VP8Decoder* const dec) {
     // predict and add residuals
     if (block->is_i4x4_) {   // 4x4
       uint32_t* const top_right = (uint32_t*)(y_dst - BPS + 16);
+      uint32_t bits = (block->non_zero_ & 0xffff) | (block->non_zero_ac_ << 16);
 
       if (dec->mb_y_ > 0) {
         if (dec->mb_x_ >= dec->mb_w_ - 1) {    // on rightmost border
@@ -607,25 +608,26 @@ void VP8ReconstructBlock(const VP8Decoder* const dec) {
       top_right[BPS] = top_right[2 * BPS] = top_right[3 * BPS] = top_right[0];
 
       // predict and add residuals for all 4x4 blocks in turn.
-      for (n = 0; n < 16; n++) {
+      for (n = 0; n < 16; ++n, bits <<= 1) {
         uint8_t* const dst = y_dst + kScan[n];
         VP8PredLuma4[block->imodes_[n]](dst);
-        if (block->non_zero_ac_ & (1 << n)) {
+        if (bits & (1UL << 31)) {
           VP8Transform(coeffs + n * 16, dst, 0);
-        } else if (block->non_zero_ & (1 << n)) {  // only DC is present
+        } else if (bits & (1UL << 15)) {  // only DC is present
           VP8TransformDC(coeffs + n * 16, dst);
         }
       }
     } else {    // 16x16
       const int pred_func = CheckMode(dec->mb_x_, dec->mb_y_,
                                       block->imodes_[0]);
+      uint32_t bits = (block->non_zero_ & 0xffff) | (block->non_zero_ac_ << 16);
       VP8PredLuma16[pred_func](y_dst);
-      if (block->non_zero_ & 0xffff) {
-        for (n = 0; n < 16; n++) {
+      if (bits & 0xffff) {
+        for (n = 0; n < 16; ++n, bits <<= 1) {
           uint8_t* const dst = y_dst + kScan[n];
-          if (block->non_zero_ac_ & (1 << n)) {
+          if (bits & (1UL << 31)) {
             VP8Transform(coeffs + n * 16, dst, 0);
-          } else if (block->non_zero_ & (1 << n)) {  // only DC is present
+          } else if (bits & (1UL << 15)) {  // only DC is present
             VP8TransformDC(coeffs + n * 16, dst);
           }
         }
