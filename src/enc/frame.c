@@ -720,7 +720,7 @@ static int OneStatPass(VP8Encoder* const enc, float q, VP8RDLevel rd_opt,
     distortion += info.D;
     if (percent_delta && !VP8IteratorProgress(&it, percent_delta))
       return 0;
-    VP8IteratorSaveBoundary(&it, it.yuv_out_);
+    VP8IteratorSaveBoundary(&it);
   } while (VP8IteratorNext(&it) && --nb_mbs > 0);
   size += FinalizeSkipProba(enc);
   size += FinalizeTokenProbas(&enc->proba_);
@@ -884,7 +884,7 @@ int VP8EncLoop(VP8Encoder* const enc) {
     VP8StoreFilterStats(&it);
     VP8IteratorExport(&it);
     ok = VP8IteratorProgress(&it, 20);
-    VP8IteratorSaveBoundary(&it, it.yuv_out_);
+    VP8IteratorSaveBoundary(&it);
   } while (ok && VP8IteratorNext(&it));
 
   return PostLoopFinalize(&it, ok);
@@ -947,7 +947,7 @@ int VP8EncTokenLoop(VP8Encoder* const enc) {
         VP8IteratorExport(&it);
         ok = VP8IteratorProgress(&it, 20);
       }
-      VP8IteratorSaveBoundary(&it, it.yuv_out_);
+      VP8IteratorSaveBoundary(&it);
     } while (ok && VP8IteratorNext(&it));
   }
   ok = ok && WebPReportProgress(enc->pic_, enc->percent_ + 20, &enc->percent_);

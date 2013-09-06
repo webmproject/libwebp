@@ -287,20 +287,19 @@ void VP8IteratorBytesToNz(VP8EncIterator* const it) {
 //------------------------------------------------------------------------------
 // Advance to the next position, doing the bookeeping.
 
-void VP8IteratorSaveBoundary(VP8EncIterator* const it,
-                             const uint8_t* const block_to_save) {
+void VP8IteratorSaveBoundary(VP8EncIterator* const it) {
   VP8Encoder* const enc = it->enc_;
   const int x = it->x_, y = it->y_;
-  const uint8_t* const ysrc = block_to_save + Y_OFF;
-  const uint8_t* const usrc = block_to_save + U_OFF;
+  const uint8_t* const ysrc = it->yuv_out_ + Y_OFF;
+  const uint8_t* const uvsrc = it->yuv_out_ + U_OFF;
   if (x < enc->mb_w_ - 1) {   // left
     int i;
     for (i = 0; i < 16; ++i) {
       it->y_left_[i] = ysrc[15 + i * BPS];
     }
     for (i = 0; i < 8; ++i) {
-      it->u_left_[i] = usrc[7 + i * BPS];
-      it->v_left_[i] = usrc[15 + i * BPS];
+      it->u_left_[i] = uvsrc[7 + i * BPS];
+      it->v_left_[i] = uvsrc[15 + i * BPS];
     }
     // top-left (before 'top'!)
     it->y_left_[-1] = it->y_top_[15];
@@ -309,7 +308,7 @@ void VP8IteratorSaveBoundary(VP8EncIterator* const it,
   }
   if (y < enc->mb_h_ - 1) {  // top
     memcpy(it->y_top_, ysrc + 15 * BPS, 16);
-    memcpy(it->uv_top_, usrc + 7 * BPS, 8 + 8);
+    memcpy(it->uv_top_, uvsrc + 7 * BPS, 8 + 8);
   }
 }
 

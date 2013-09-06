@@ -326,10 +326,8 @@ void VP8IteratorImport(VP8EncIterator* const it, uint8_t* tmp_32);
 void VP8IteratorExport(const VP8EncIterator* const it);
 // go to next macroblock. Returns false if not finished.
 int VP8IteratorNext(VP8EncIterator* const it);
-// save the boundary values to top_/left_ arrays for next iterations.
-// block_to_save can be it->yuv_out_ or it->yuv_in_.
-void VP8IteratorSaveBoundary(VP8EncIterator* const it,
-                             const uint8_t* const block_to_save);
+// save the yuv_out_ boundary values to top_/left_ arrays for next iterations.
+void VP8IteratorSaveBoundary(VP8EncIterator* const it);
 // Report progression based on macroblock rows. Return 0 for user-abort request.
 int VP8IteratorProgress(const VP8EncIterator* const it,
                         int final_delta_percent);
