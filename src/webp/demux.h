@@ -153,7 +153,7 @@ struct WebPIterator {
 
 // Retrieves frame 'frame_number' from 'dmux'.
 // 'iter->fragment' points to the first fragment on return from this function.
-// Individual fragments may be extracted using WebPDemuxSetFragment().
+// Individual fragments may be extracted using WebPDemuxSelectFragment().
 // Setting 'frame_number' equal to 0 will return the last frame of the image.
 // Returns false if 'dmux' is NULL or frame 'frame_number' is not present.
 // Call WebPDemuxReleaseIterator() when use of the iterator is complete.
