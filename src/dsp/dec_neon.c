@@ -22,7 +22,7 @@ extern "C" {
 
 #include "../dec/vp8i.h"
 
-#define QRegs "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7",                  \
+#define QRegs "q0", "q1", "q2", "q3",                                          \
               "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15"
 
 #define FLIP_SIGN_BIT2(a, b, s)                                                \
@@ -101,9 +101,9 @@ static void SimpleVFilter16NEON(uint8_t* p, int stride, int thresh) {
     "vld1.u8    {q1}, [%[p]], %[stride]        \n"  // p1
     "vld1.u8    {q2}, [%[p]], %[stride]        \n"  // p0
     "vld1.u8    {q3}, [%[p]], %[stride]        \n"  // q0
-    "vld1.u8    {q4}, [%[p]]                   \n"  // q1
+    "vld1.u8    {q12}, [%[p]]                  \n"  // q1
 
-    DO_FILTER2(q1, q2, q3, q4, %[thresh])
+    DO_FILTER2(q1, q2, q3, q12, %[thresh])
 
     "sub        %[p], %[p], %[stride], lsl #1  \n"  // p -= 2 * stride
 
@@ -122,18 +122,18 @@ static void SimpleHFilter16NEON(uint8_t* p, int stride, int thresh) {
     "add        r5, r4, %[stride]              \n"  // base2 = base1 + stride
 
     LOAD8x4(d2, d3, d4, d5, [r4], [r5], r6)
-    LOAD8x4(d6, d7, d8, d9, [r4], [r5], r6)
-    "vswp       d3, d6                         \n"  // p1:q1 p0:q3
-    "vswp       d5, d8                         \n"  // q0:q2 q1:q4
-    "vswp       q2, q3                         \n"  // p1:q1 p0:q2 q0:q3 q1:q4
+    LOAD8x4(d24, d25, d26, d27, [r4], [r5], r6)
+    "vswp       d3, d24                        \n"  // p1:q1 p0:q3
+    "vswp       d5, d26                        \n"  // q0:q2 q1:q4
+    "vswp       q2, q12                        \n"  // p1:q1 p0:q2 q0:q3 q1:q4
 
-    DO_FILTER2(q1, q2, q3, q4, %[thresh])
+    DO_FILTER2(q1, q2, q12, q13, %[thresh])
 
     "sub        %[p], %[p], #1                 \n"  // p - 1
 
-    "vswp        d5, d6                        \n"
+    "vswp        d5, d24                       \n"
     STORE8x2(d4, d5, [%[p]], %[stride])
-    STORE8x2(d6, d7, [%[p]], %[stride])
+    STORE8x2(d24, d25, [%[p]], %[stride])
 
     : [p] "+r"(p)
     : [stride] "r"(stride), [thresh] "r"(thresh)
