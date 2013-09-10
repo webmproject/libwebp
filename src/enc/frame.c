@@ -716,7 +716,7 @@ static int OneStatPass(VP8Encoder* const enc, float q, VP8RDLevel rd_opt,
       enc->proba_.nb_skip_++;
     }
     RecordResiduals(&it, &info);
-    size += info.R;
+    size += info.R + info.H;
     distortion += info.D;
     if (percent_delta && !VP8IteratorProgress(&it, percent_delta))
       return 0;

@@ -430,6 +430,7 @@ static void InitScore(VP8ModeScore* const rd) {
   rd->D  = 0;
   rd->SD = 0;
   rd->R  = 0;
+  rd->H  = 0;
   rd->nz = 0;
   rd->score = MAX_COST;
 }
@@ -438,6 +439,7 @@ static void CopyScore(VP8ModeScore* const dst, const VP8ModeScore* const src) {
   dst->D  = src->D;
   dst->SD = src->SD;
   dst->R  = src->R;
+  dst->H  = src->H;
   dst->nz = src->nz;      // note that nz is not accumulated, but just copied.
   dst->score = src->score;
 }
@@ -446,6 +448,7 @@ static void AddScore(VP8ModeScore* const dst, const VP8ModeScore* const src) {
   dst->D  += src->D;
   dst->SD += src->SD;
   dst->R  += src->R;
+  dst->H  += src->H;
   dst->nz |= src->nz;     // here, new nz bits are accumulated.
   dst->score += src->score;
 }
@@ -474,7 +477,7 @@ typedef struct {
 
 static WEBP_INLINE void SetRDScore(int lambda, VP8ModeScore* const rd) {
   // TODO: incorporate the "* 256" in the tables?
-  rd->score = rd->R * lambda + 256 * (rd->D + rd->SD);
+  rd->score = (rd->R + rd->H) * lambda + 256 * (rd->D + rd->SD);
 }
 
 static WEBP_INLINE score_t RDScoreTrellis(int lambda, score_t rate,
@@ -787,7 +790,7 @@ static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* const rd) {
     rd16.SD = tlambda ? MULT_8B(tlambda, VP8TDisto16x16(src, tmp_dst, kWeightY))
             : 0;
     rd16.R = VP8GetCostLuma16(it, &rd16);
-    rd16.R += VP8FixedCostsI16[mode];
+    rd16.H = VP8FixedCostsI16[mode];
 
     // Since we always examine Intra16 first, we can overwrite *rd directly.
     SetRDScore(lambda, &rd16);
@@ -831,7 +834,8 @@ static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
   }
 
   InitScore(&rd_best);
-  rd_best.score = 211;  // '211' is the value of VP8BitCost(0, 145)
+  rd_best.H = 211;  // '211' is the value of VP8BitCost(0, 145)
+  SetRDScore(dqm->lambda_mode_, &rd_best);
   VP8IteratorStartI4(it);
   do {
     VP8ModeScore rd_i4;
@@ -858,7 +862,7 @@ static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
           tlambda ? MULT_8B(tlambda, VP8TDisto4x4(src, tmp_dst, kWeightY))
                   : 0;
       rd_tmp.R = VP8GetCostLuma4(it, tmp_levels);
-      rd_tmp.R += mode_costs[mode];
+      rd_tmp.H = mode_costs[mode];
 
       SetRDScore(lambda, &rd_tmp);
       if (best_mode < 0 || rd_tmp.score < rd_i4.score) {
@@ -870,14 +874,17 @@ static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
     }
     SetRDScore(dqm->lambda_mode_, &rd_i4);
     AddScore(&rd_best, &rd_i4);
-    total_header_bits += mode_costs[best_mode];
-    if (rd_best.score >= rd->score ||
-        total_header_bits > enc->max_i4_header_bits_) {
+    if (rd_best.score >= rd->score) {
+      return 0;
+    }
+    total_header_bits += rd_i4.H;   // <- equal to mode_costs[best_mode];
+    if (total_header_bits > enc->max_i4_header_bits_) {
       return 0;
     }
     // Copy selected samples if not in the right place already.
-    if (best_block != best_blocks + VP8Scan[it->i4_])
+    if (best_block != best_blocks + VP8Scan[it->i4_]) {
       VP8Copy4x4(best_block, best_blocks + VP8Scan[it->i4_]);
+    }
     rd->modes_i4[it->i4_] = best_mode;
     it->top_nz_[it->i4_ & 3] = it->left_nz_[it->i4_ >> 2] = (rd_i4.nz ? 1 : 0);
   } while (VP8IteratorRotateI4(it, best_blocks));
@@ -914,7 +921,7 @@ static void PickBestUV(VP8EncIterator* const it, VP8ModeScore* const rd) {
     rd_uv.D  = VP8SSE16x8(src, tmp_dst);
     rd_uv.SD = 0;    // TODO: should we call TDisto? it tends to flatten areas.
     rd_uv.R  = VP8GetCostUV(it, &rd_uv);
-    rd_uv.R += VP8FixedCostsUV[mode];
+    rd_uv.H  = VP8FixedCostsUV[mode];
 
     SetRDScore(lambda, &rd_uv);
     if (mode == 0 || rd_uv.score < rd_best.score) {
