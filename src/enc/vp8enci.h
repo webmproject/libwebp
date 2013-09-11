@@ -379,6 +379,9 @@ int VP8RecordCoeffTokens(int ctx, int coeff_type, int first, int last,
                          const int16_t* const coeffs,
                          VP8TBuffer* const tokens);
 
+// Estimate the final coded size given a set of 'probas'.
+size_t VP8EstimateTokenSize(VP8TBuffer* const b, const uint8_t* const probas);
+
 // unused for now
 void VP8TokenToStats(const VP8TBuffer* const b, proba_t* const stats);
 
