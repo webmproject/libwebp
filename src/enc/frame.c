@@ -18,6 +18,7 @@
 
 #include "./vp8enci.h"
 #include "./cost.h"
+#include "../webp/format_constants.h"  // RIFF constants
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -38,6 +39,63 @@ typedef struct {
   StatsArray* stats;
   CostArray*  cost;
 } VP8Residual;
+
+//------------------------------------------------------------------------------
+// multi-pass convergence
+
+#define HEADER_SIZE_ESTIMATE (RIFF_HEADER_SIZE + CHUNK_HEADER_SIZE +  \
+                              VP8_FRAME_HEADER_SIZE)
+#define DQ_LIMIT 0.4  // convergence is considered reached if dq < DQ_LIMIT
+// we allow 2k of extra head-room in PARTITION0 limit.
+#define PARTITION0_SIZE_LIMIT ((VP8_MAX_PARTITION0_SIZE - 2048ULL) << 11)
+
+typedef struct {  // struct for organizing convergence in either size or PSNR
+  int is_first;
+  float dq;
+  float q, last_q;
+  double value, last_value;   // PSNR or size
+  double target;
+  int do_size_search;
+} PassStats;
+
+static int InitPassStats(const VP8Encoder* const enc, PassStats* const s) {
+  const uint64_t target_size = (uint64_t)enc->config_->target_size;
+  const int do_size_search = (target_size != 0);
+  const float target_PSNR = enc->config_->target_PSNR;
+
+  s->is_first = 1;
+  s->dq = 10.f;
+  s->q = s->last_q = enc->config_->quality;
+  s->target = do_size_search ? (double)target_size
+            : (target_PSNR > 0.) ? target_PSNR
+            : 40.;   // default, just in case
+  s->value = s->last_value = 0.;
+  s->do_size_search = do_size_search;
+  return do_size_search;
+}
+
+static float Clamp(float v, float min, float max) {
+  return (v < min) ? min : (v > max) ? max : v;
+}
+
+static float ComputeNextQ(PassStats* const s) {
+  float dq;
+  if (s->is_first) {
+    dq = (s->value > s->target) ? -s->dq : s->dq;
+    s->is_first = 0;
+  } else if (s->value != s->last_value) {
+    const double slope = (s->target - s->value) / (s->last_value - s->value);
+    dq = slope * (s->last_q - s->q);
+  } else {
+    dq = 0.;  // we're done?!
+  }
+  // Limit variable to avoid large swings.
+  s->dq = Clamp(dq, -30.f, 30.f);
+  s->last_q = s->q;
+  s->last_value = s->value;
+  s->q = Clamp(s->q + s->dq, 0.f, 100.f);
+  return s->q;
+}
 
 //------------------------------------------------------------------------------
 // Tables for level coding
@@ -674,40 +732,37 @@ static void StoreSideInfo(const VP8EncIterator* const it) {
 #endif
 }
 
+static double GetPSNR(uint64_t mse, uint64_t size) {
+  return (mse > 0 && size > 0) ? 10. * log10(255. * 255. * size / mse) : 99;
+}
+
 //------------------------------------------------------------------------------
 //  StatLoop(): only collect statistics (number of skips, token usage, ...).
 //  This is used for deciding optimal probabilities. It also modifies the
 //  quantizer value if some target (size, PNSR) was specified.
 
-#define kHeaderSizeEstimate (15 + 20 + 10)      // TODO: fix better
-
 static void SetLoopParams(VP8Encoder* const enc, float q) {
   // Make sure the quality parameter is inside valid bounds
-  if (q < 0.) {
-    q = 0;
-  } else if (q > 100.) {
-    q = 100;
-  }
+  q = Clamp(q, 0.f, 100.f);
 
   VP8SetSegmentParams(enc, q);      // setup segment quantizations and filters
   SetSegmentProbas(enc);            // compute segment probabilities
 
   ResetStats(enc);
-  ResetTokenStats(enc);
-
   ResetSSE(enc);
 }
 
-static int OneStatPass(VP8Encoder* const enc, float q, VP8RDLevel rd_opt,
-                       int nb_mbs, float* const PSNR, int percent_delta) {
+static uint64_t OneStatPass(VP8Encoder* const enc, VP8RDLevel rd_opt,
+                            int nb_mbs, int percent_delta,
+                            PassStats* const s) {
   VP8EncIterator it;
   uint64_t size = 0;
+  uint64_t size_p0 = 0;
   uint64_t distortion = 0;
   const uint64_t pixel_count = nb_mbs * 384;
 
-  SetLoopParams(enc, q);
-
   VP8IteratorInit(enc, &it);
+  SetLoopParams(enc, s->q);
   do {
     VP8ModeScore info;
     VP8IteratorImport(&it, NULL);
@@ -717,39 +772,43 @@ static int OneStatPass(VP8Encoder* const enc, float q, VP8RDLevel rd_opt,
     }
     RecordResiduals(&it, &info);
     size += info.R + info.H;
+    size_p0 += info.H;
     distortion += info.D;
     if (percent_delta && !VP8IteratorProgress(&it, percent_delta))
       return 0;
     VP8IteratorSaveBoundary(&it);
   } while (VP8IteratorNext(&it) && --nb_mbs > 0);
-  size += FinalizeSkipProba(enc);
-  size += FinalizeTokenProbas(&enc->proba_);
-  size += enc->segment_hdr_.size_;
-  size = ((size + 1024) >> 11) + kHeaderSizeEstimate;
 
-  if (PSNR) {
-    *PSNR = (float)(10.* log10(255. * 255. * pixel_count / distortion));
+  size_p0 += enc->segment_hdr_.size_;
+  if (s->do_size_search) {
+    size += FinalizeSkipProba(enc);
+    size += FinalizeTokenProbas(&enc->proba_);
+    size = ((size + size_p0 + 1024) >> 11) + HEADER_SIZE_ESTIMATE;
+    s->value = (double)size;
+  } else {
+    s->value = GetPSNR(distortion, pixel_count);
   }
-  return (int)size;
+  return size_p0;
 }
-
-// successive refinement increments.
-static const int dqs[] = { 20, 15, 10, 8, 6, 4, 2, 1, 0 };
 
 static int StatLoop(VP8Encoder* const enc) {
   const int method = enc->method_;
   const int do_search = enc->do_search_;
   const int fast_probe = ((method == 0 || method == 3) && !do_search);
-  float q = enc->config_->quality;
-  const int max_passes = enc->config_->pass;
+  int num_pass_left = enc->config_->pass;
   const int task_percent = 20;
-  const int percent_per_pass = (task_percent + max_passes / 2) / max_passes;
+  const int percent_per_pass =
+      (task_percent + num_pass_left / 2) / num_pass_left;
   const int final_percent = enc->percent_ + task_percent;
-  int pass;
-  int nb_mbs;
+  const VP8RDLevel rd_opt =
+      (method >= 3 || do_search) ? RD_OPT_BASIC : RD_OPT_NONE;
+  int nb_mbs = enc->mb_w_ * enc->mb_h_;
+  PassStats stats;
+
+  InitPassStats(enc, &stats);
+  ResetTokenStats(enc);
 
   // Fast mode: quick analysis pass over few mbs. Better than nothing.
-  nb_mbs = enc->mb_w_ * enc->mb_h_;
   if (fast_probe) {
     if (method == 3) {  // we need more stats for method 3 to be reliable.
       nb_mbs = (nb_mbs > 200) ? nb_mbs >> 1 : 100;
@@ -758,37 +817,35 @@ static int StatLoop(VP8Encoder* const enc) {
     }
   }
 
-  // No target size: just do several pass without changing 'q'
-  if (!do_search) {
-    for (pass = 0; pass < max_passes; ++pass) {
-      const VP8RDLevel rd_opt = (method >= 3) ? RD_OPT_BASIC : RD_OPT_NONE;
-      if (!OneStatPass(enc, q, rd_opt, nb_mbs, NULL, percent_per_pass)) {
-        return 0;
-      }
-    }
-  } else {
-    // binary search for a size close to target
-    for (pass = 0; pass < max_passes && (dqs[pass] > 0); ++pass) {
-      float PSNR;
-      int criterion;
-      const int size = OneStatPass(enc, q, RD_OPT_BASIC, nb_mbs, &PSNR,
-                                   percent_per_pass);
-#if DEBUG_SEARCH
-      printf("#%d size=%d PSNR=%.2f q=%.2f\n", pass, size, PSNR, q);
+  while (num_pass_left-- > 0) {
+    const int is_last_pass = (fabs(stats.dq) <= DQ_LIMIT) ||
+                             (num_pass_left == 0) ||
+                             (enc->max_i4_header_bits_ == 0);
+    const uint64_t size_p0 =
+        OneStatPass(enc, rd_opt, nb_mbs, percent_per_pass, &stats);
+    if (size_p0 == 0) return 0;
+#if (DEBUG_SEARCH > 0)
+    printf("#%d value:%.1lf -> %.1lf   q:%.2f -> %.2f\n",
+           num_pass_left, stats.last_value, stats.value, stats.last_q, stats.q);
 #endif
-      if (size == 0) return 0;
-      if (enc->config_->target_PSNR > 0) {
-        criterion = (PSNR < enc->config_->target_PSNR);
-      } else {
-        criterion = (size < enc->config_->target_size);
-      }
-      // dichotomize
-      if (criterion) {
-        q += dqs[pass];
-      } else {
-        q -= dqs[pass];
-      }
+    if (enc->max_i4_header_bits_ > 0 && size_p0 > PARTITION0_SIZE_LIMIT) {
+      ++num_pass_left;
+      enc->max_i4_header_bits_ >>= 1;  // strengthen header bit limitation...
+      continue;                        // ...and start over
     }
+    if (is_last_pass) {
+      break;
+    }
+    // If no target size: just do several pass without changing 'q'
+    if (do_search) {
+      ComputeNextQ(&stats);
+      if (fabs(stats.dq) <= DQ_LIMIT) break;
+    }
+  }
+  if (!do_search || !stats.do_size_search) {
+    // Need to finalize probas now, since it wasn't done during the search.
+    FinalizeSkipProba(enc);
+    FinalizeTokenProbas(&enc->proba_);
   }
   VP8CalculateLevelCosts(&enc->proba_);  // finalize costs
   return WebPReportProgress(enc->pic_, final_percent, &enc->percent_);
@@ -895,16 +952,23 @@ int VP8EncLoop(VP8Encoder* const enc) {
 
 #if !defined(DISABLE_TOKEN_BUFFER)
 
-#define MIN_COUNT 96   // minimum number of macroblocks before updating stats
+#define MIN_COUNT 96  // minimum number of macroblocks before updating stats
 
 int VP8EncTokenLoop(VP8Encoder* const enc) {
-  int ok;
   // Roughly refresh the proba eight times per pass
   int max_count = (enc->mb_w_ * enc->mb_h_) >> 3;
   int num_pass_left = enc->config_->pass;
+  const int do_search = enc->do_search_;
   VP8EncIterator it;
   VP8Proba* const proba = &enc->proba_;
   const VP8RDLevel rd_opt = enc->rd_opt_level_;
+  const uint64_t pixel_count = enc->mb_w_ * enc->mb_h_ * 384;
+  PassStats stats;
+  int ok;
+
+  InitPassStats(enc, &stats);
+  ok = PreLoopInitialize(enc);
+  if (!ok) return 0;
 
   if (max_count < MIN_COUNT) max_count = MIN_COUNT;
 
@@ -912,17 +976,18 @@ int VP8EncTokenLoop(VP8Encoder* const enc) {
   assert(enc->use_tokens_);
   assert(proba->use_skip_proba_ == 0);
   assert(rd_opt >= RD_OPT_BASIC);   // otherwise, token-buffer won't be useful
-  assert(!enc->do_search_);         // TODO(skal): handle pass and dichotomy
-
-  SetLoopParams(enc, enc->config_->quality);
-
-  ok = PreLoopInitialize(enc);
-  if (!ok) return 0;
 
   while (ok && num_pass_left-- > 0) {
+    const int is_last_pass = (fabs(stats.dq) <= DQ_LIMIT) ||
+                             (num_pass_left == 0) ||
+                             (enc->max_i4_header_bits_ == 0);
+    uint64_t size_p0 = 0;
+    uint64_t distortion = 0;
     int cnt = max_count;
     VP8IteratorInit(enc, &it);
-    if (num_pass_left == 0) {
+    SetLoopParams(enc, stats.q);
+    if (is_last_pass) {
+      ResetTokenStats(enc);
       VP8InitFilter(&it);  // don't collect stats until last pass (too costly)
     }
     VP8TBufferClear(&enc->tokens_);
@@ -936,12 +1001,14 @@ int VP8EncTokenLoop(VP8Encoder* const enc) {
       }
       VP8Decimate(&it, &info, rd_opt);
       RecordTokens(&it, &info, &enc->tokens_);
+      size_p0 += info.H;
+      distortion += info.D;
 #ifdef WEBP_EXPERIMENTAL_FEATURES
       if (enc->use_layer_) {
         VP8EncCodeLayerBlock(&it);
       }
 #endif
-      if (num_pass_left == 0) {
+      if (is_last_pass) {
         StoreSideInfo(&it);
         VP8StoreFilterStats(&it);
         VP8IteratorExport(&it);
@@ -949,13 +1016,45 @@ int VP8EncTokenLoop(VP8Encoder* const enc) {
       }
       VP8IteratorSaveBoundary(&it);
     } while (ok && VP8IteratorNext(&it));
+    if (!ok) break;
+
+    size_p0 += enc->segment_hdr_.size_;
+    if (stats.do_size_search) {
+      uint64_t size = FinalizeTokenProbas(&enc->proba_);
+      size += VP8EstimateTokenSize(&enc->tokens_,
+                                   (const uint8_t*)proba->coeffs_);
+      size = (size + size_p0 + 1024) >> 11;  // -> size in bytes
+      size += HEADER_SIZE_ESTIMATE;
+      stats.value = (double)size;
+    } else {  // compute and store PSNR
+      stats.value = GetPSNR(distortion, pixel_count);
+    }
+
+#if (DEBUG_SEARCH > 0)
+    printf("#%2d metric:%.1lf -> %.1lf   last_q=%.2lf q=%.2lf dq=%.2lf\n",
+           num_pass_left, stats.last_value, stats.value,
+           stats.last_q, stats.q, stats.dq);
+#endif
+    if (size_p0 > PARTITION0_SIZE_LIMIT) {
+      ++num_pass_left;
+      enc->max_i4_header_bits_ >>= 1;  // strengthen header bit limitation...
+      continue;                        // ...and start over
+    }
+    if (is_last_pass) {
+      break;   // done
+    }
+    if (do_search) {
+      ComputeNextQ(&stats);  // Adjust q
+    }
   }
-  ok = ok && WebPReportProgress(enc->pic_, enc->percent_ + 20, &enc->percent_);
   if (ok) {
-    FinalizeTokenProbas(proba);
+    if (!stats.do_size_search) {
+      FinalizeTokenProbas(&enc->proba_);
+    }
     ok = VP8EmitTokens(&enc->tokens_, enc->parts_ + 0,
                        (const uint8_t*)proba->coeffs_, 1);
   }
+  ok = ok && WebPReportProgress(enc->pic_, enc->percent_ + 20, &enc->percent_);
   return PostLoopFinalize(&it, ok);
 }
 

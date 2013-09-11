@@ -136,7 +136,7 @@ static void MapConfigToTools(VP8Encoder* const enc) {
   enc->do_search_ = (config->target_size > 0 || config->target_PSNR > 0);
   if (!config->low_memory) {
 #if !defined(DISABLE_TOKEN_BUFFER)
-    enc->use_tokens_ = (method >= 3) && !enc->do_search_;
+    enc->use_tokens_ = (enc->rd_opt_level_ >= RD_OPT_BASIC);  // need rd stats
 #endif
     if (enc->use_tokens_) {
       enc->num_parts_ = 1;   // doesn't work with multi-partition
@@ -281,7 +281,7 @@ static int DeleteVP8Encoder(VP8Encoder* enc) {
 //------------------------------------------------------------------------------
 
 static double GetPSNR(uint64_t err, uint64_t size) {
-  return err ? 10. * log10(255. * 255. * size / err) : 99.;
+  return (err > 0 && size > 0) ? 10. * log10(255. * 255. * size / err) : 99.;
 }
 
 static void FinalizePSNR(const VP8Encoder* const enc) {
