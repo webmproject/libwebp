@@ -85,7 +85,7 @@ static float ComputeNextQ(PassStats* const s) {
     s->is_first = 0;
   } else if (s->value != s->last_value) {
     const double slope = (s->target - s->value) / (s->last_value - s->value);
-    dq = slope * (s->last_q - s->q);
+    dq = (float)(slope * (s->last_q - s->q));
   } else {
     dq = 0.;  // we're done?!
   }
