@@ -20,6 +20,8 @@
 #include "config.h"
 #endif
 
+#ifdef WEBP_HAVE_GIF
+
 #include <gif_lib.h>
 #include "webp/encode.h"
 #include "webp/mux.h"
@@ -635,5 +637,15 @@ int main(int argc, const char *argv[]) {
 
   return !ok;
 }
+
+#else  // !WEBP_HAVE_GIF
+
+int main(int argc, const char *argv[]) {
+  fprintf(stderr, "GIF support not enabled in %s.\n", argv[0]);
+  (void)argc;
+  return 0;
+}
+
+#endif
 
 //------------------------------------------------------------------------------

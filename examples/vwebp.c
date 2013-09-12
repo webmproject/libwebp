@@ -18,6 +18,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(WEBP_HAVE_GL)
+
 #if defined(HAVE_GLUT_GLUT_H)
 #include <GLUT/glut.h>
 #else
@@ -514,5 +516,15 @@ int main(int argc, char *argv[]) {
   ClearParams();
   return -1;
 }
+
+#else   // !WEBP_HAVE_GL
+
+int main(int argc, const char *argv[]) {
+  fprintf(stderr, "OpenGL support not enabled in %s.\n", argv[0]);
+  (void)argc;
+  return 0;
+}
+
+#endif
 
 //------------------------------------------------------------------------------
