@@ -403,10 +403,12 @@ static WebPMuxError GetImageInfo(const WebPMuxImage* const wpi,
                                  int* const duration,
                                  int* const width, int* const height) {
   const WebPChunk* const frame_frgm_chunk = wpi->header_;
+  WebPMuxError err;
+  assert(wpi != NULL);
+  assert(frame_frgm_chunk != NULL);
 
   // Get offsets and duration from ANMF/FRGM chunk.
-  const WebPMuxError err =
-      GetFrameFragmentInfo(frame_frgm_chunk, x_offset, y_offset, duration);
+  err = GetFrameFragmentInfo(frame_frgm_chunk, x_offset, y_offset, duration);
   if (err != WEBP_MUX_OK) return err;
 
   // Get width and height from VP8/VP8L chunk.
@@ -426,10 +428,12 @@ static WebPMuxError GetImageCanvasWidthHeight(
   assert(wpi != NULL);
   assert(wpi->img_ != NULL);
 
-  if (wpi->next_) {
+  if (wpi->next_ != NULL) {
     int max_x = 0;
     int max_y = 0;
     int64_t image_area = 0;
+    // if we have a chain of wpi's, header_ is necessarily set
+    assert(wpi->header_ != NULL);
     // Aggregate the bounding box for animation frames & fragmented images.
     for (; wpi != NULL; wpi = wpi->next_) {
       int x_offset = 0, y_offset = 0, duration = 0, w = 0, h = 0;

@@ -43,7 +43,10 @@ static int BitWriterResize(VP8BitWriter* const bw, size_t extra_size) {
     bw->error_ = 1;
     return 0;
   }
-  memcpy(new_buf, bw->buf_, bw->pos_);
+  if (bw->pos_ > 0) {
+    assert(bw->buf_ != NULL);
+    memcpy(new_buf, bw->buf_, bw->pos_);
+  }
   free(bw->buf_);
   bw->buf_ = new_buf;
   bw->max_pos_ = new_size;

@@ -425,6 +425,7 @@ static ParseStatus ParseSingleImage(WebPDemuxer* const dmux) {
   MemBuffer* const mem = &dmux->mem_;
   Frame* frame;
   ParseStatus status;
+  int image_added = 0;
 
   if (dmux->frames_ != NULL) return PARSE_ERROR;
   if (SizeIsInvalid(mem, min_size)) return PARSE_ERROR;
@@ -453,12 +454,15 @@ static ParseStatus ParseSingleImage(WebPDemuxer* const dmux) {
       dmux->canvas_height_ = frame->height_;
       dmux->feature_flags_ |= frame->has_alpha_ ? ALPHA_FLAG : 0;
     }
-    AddFrame(dmux, frame);
-    dmux->num_frames_ = 1;
-  } else {
-    free(frame);
+    if (!AddFrame(dmux, frame)) {
+      status = PARSE_ERROR;  // last frame was left incomplete
+    } else {
+      image_added = 1;
+      dmux->num_frames_ = 1;
+    }
   }
 
+  if (!image_added) free(frame);
   return status;
 }
 

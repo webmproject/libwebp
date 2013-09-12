@@ -123,6 +123,7 @@ int WebPPictureAlloc(WebPPicture* picture) {
         picture->v0 = mem;
         mem += uv0_size;
       }
+      (void)mem;  // makes the static analyzer happy
     } else {
       void* memory;
       const uint64_t argb_size = (uint64_t)width * height;
@@ -698,6 +699,7 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
 
   if (has_alpha) {
     assert(step >= 4);
+    assert(picture->a != NULL);
     for (y = 0; y < height; ++y) {
       for (x = 0; x < width; ++x) {
         picture->a[x + y * picture->a_stride] =

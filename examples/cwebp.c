@@ -929,7 +929,7 @@ int main(int argc, const char *argv[]) {
 
   // Read the input
   if (verbose) {
-    StopwatchReadAndReset(&stop_watch);
+    StopwatchReset(&stop_watch);
   }
   if (!ReadPicture(in_file, &picture, keep_alpha,
                    (keep_metadata == 0) ? NULL : &metadata)) {
@@ -983,7 +983,7 @@ int main(int argc, const char *argv[]) {
 
   // Compress
   if (verbose) {
-    StopwatchReadAndReset(&stop_watch);
+    StopwatchReset(&stop_watch);
   }
   if (crop != 0) {
     // We use self-cropping using a view.

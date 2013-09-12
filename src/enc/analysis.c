@@ -153,6 +153,8 @@ static void AssignSegments(VP8Encoder* const enc,
   // 'int' type is ok for histo, and won't overflow
   int accum[NUM_MB_SEGMENTS], dist_accum[NUM_MB_SEGMENTS];
 
+  assert(nb >= 1);
+
   // bracket the input
   for (n = 0; n <= MAX_ALPHA && alphas[n] == 0; ++n) {}
   min_a = n;
@@ -161,8 +163,9 @@ static void AssignSegments(VP8Encoder* const enc,
   range_a = max_a - min_a;
 
   // Spread initial centers evenly
-  for (n = 1, k = 0; n < 2 * nb; n += 2) {
-    centers[k++] = min_a + (n * range_a) / (2 * nb);
+  for (k = 0, n = 1; k < nb; ++k, n += 2) {
+    assert(n < 2 * nb);
+    centers[k] = min_a + (n * range_a) / (2 * nb);
   }
 
   for (k = 0; k < MAX_ITERS_K_MEANS; ++k) {     // few iters are enough
@@ -177,7 +180,7 @@ static void AssignSegments(VP8Encoder* const enc,
     n = 0;    // track the nearest center for current 'a'
     for (a = min_a; a <= max_a; ++a) {
       if (alphas[a]) {
-        while (n < nb - 1 && abs(a - centers[n + 1]) < abs(a - centers[n])) {
+        while (n + 1 < nb && abs(a - centers[n + 1]) < abs(a - centers[n])) {
           n++;
         }
         map[a] = n;
