@@ -141,6 +141,9 @@ EX_FORMAT_DEC_OBJS = \
 EX_UTIL_OBJS = \
     examples/example_util.o \
 
+GIF2WEBP_UTIL_OBJS = \
+    examples/gif2webp_util.o \
+
 MUX_OBJS = \
     src/mux/muxedit.o \
     src/mux/muxinternal.o \
@@ -220,6 +223,7 @@ $(EX_FORMAT_DEC_OBJS): %.o: %.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 examples/libexample_util.a: $(EX_UTIL_OBJS)
+examples/libgif2webp_util.a: $(GIF2WEBP_UTIL_OBJS)
 src/libwebpdecoder.a: $(LIBWEBPDECODER_OBJS)
 src/libwebp.a: $(LIBWEBP_OBJS)
 src/mux/libwebpmux.a: $(LIBWEBPMUX_OBJS)
@@ -238,7 +242,8 @@ examples/cwebp: src/libwebp.a
 examples/cwebp: EXTRA_LIBS += $(CWEBP_LIBS)
 examples/dwebp: examples/libexample_util.a src/libwebpdecoder.a
 examples/dwebp: EXTRA_LIBS += $(DWEBP_LIBS)
-examples/gif2webp: examples/libexample_util.a src/mux/libwebpmux.a src/libwebp.a
+examples/gif2webp: examples/libexample_util.a examples/libgif2webp_util.a
+examples/gif2webp: src/mux/libwebpmux.a src/libwebp.a
 examples/gif2webp: EXTRA_LIBS += $(GIF_LIBS)
 examples/vwebp: examples/libexample_util.a src/demux/libwebpdemux.a
 examples/vwebp: src/libwebp.a
