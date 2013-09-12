@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdH//+dA\u003d",
+        "filename": "src/utils/bit_writer.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-09-12T07:24:26Z",
+      "side": 1,
+      "message": "may be better to keep this one outside the if; shouldn\u0027t see a null warning for this call.",
+      "revId": "1fc1532ca617781e2ab6238b63ece9833880db59",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
