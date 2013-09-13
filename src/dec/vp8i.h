@@ -128,11 +128,19 @@ typedef struct {
   int8_t filter_strength_[NUM_MB_SEGMENTS];  // filter strength for segments
 } VP8SegmentHeader;
 
+
+// probas associated to one of the contexts
+typedef uint8_t VP8ProbaArray[NUM_PROBAS];
+
+typedef struct {   // all the probas associated to one band
+  VP8ProbaArray probas_[NUM_CTX];
+} VP8BandProbas;
+
 // Struct collecting all frame-persistent probabilities.
 typedef struct {
   uint8_t segments_[MB_FEATURE_TREE_PROBS];
   // Type: 0:Intra16-AC  1:Intra16-DC   2:Chroma   3:Intra4
-  uint8_t coeffs_[NUM_TYPES][NUM_BANDS][NUM_CTX][NUM_PROBAS];
+  VP8BandProbas bands_[NUM_TYPES][NUM_BANDS];
 #ifndef ONLY_KEYFRAME_CODE
   uint8_t ymode_[4], uvmode_[3];
   uint8_t mv_[2][NUM_MV_PROBAS];
