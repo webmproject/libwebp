@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdH//+Sg\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-09-13T18:56:42Z",
+      "side": 1,
+      "message": "maybe note that the CL environment variable can be used to convey the additional flags set CL\u003d/DWEBP_HAVE_GL",
+      "revId": "8a494134de985cd133bec13f964364a12afb0232",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdH//+Sk\u003d",
+        "filename": "makefile.unix",
+        "patchSetId": 4
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-09-13T18:56:42Z",
+      "side": 1,
+      "message": "could go around line 246 similar to vwebp",
+      "revId": "8a494134de985cd133bec13f964364a12afb0232",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
