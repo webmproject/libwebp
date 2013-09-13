@@ -16,6 +16,24 @@
       "revId": "ac0f58ff93073da9bed8de0415360f44c3c73332",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdH//+WA\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 3
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-09-13T07:47:13Z",
+      "side": 1,
+      "message": "revamped a bit...\n\n(it was more under the \"Input format support\" section, i thought)",
+      "parentUuid": "AAAAdH//+Wc\u003d",
+      "revId": "ac0f58ff93073da9bed8de0415360f44c3c73332",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
