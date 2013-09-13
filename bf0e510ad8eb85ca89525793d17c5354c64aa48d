@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdH//+Vs\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 932,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-09-13T09:35:07Z",
+      "side": 1,
+      "message": "ok, let\u0027s have a proper method: i added a StopwatchReset() method to be called first, instead of having a single do-it-all function.",
+      "parentUuid": "AAAAdH//+WM\u003d",
+      "revId": "bf0e510ad8eb85ca89525793d17c5354c64aa48d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdH//+WE\u003d",
         "filename": "src/demux/demux.c",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2013-09-13T07:49:56Z",
       "side": 1,
       "message": "this is ok, but it couldn\u0027t happen as dmux-\u003eframes_ check at the top prevents it; an assert on last_frame_ might clear the warning\n\nnote the other AddFrame checks are boolean !AddFrame...",
+      "revId": "bf0e510ad8eb85ca89525793d17c5354c64aa48d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdH//+Vk\u003d",
+        "filename": "src/demux/demux.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-09-13T09:35:07Z",
+      "side": 1,
+      "message": "yes, there\u0027s a lot of ricochets in  the logic here that make it impossible to have an incomplete last_frame_ (the analyzer fails to see it, it seems).\n Still, since code have the tendency to move around, i just added the check/free for safety.",
+      "parentUuid": "AAAAdH//+WE\u003d",
       "revId": "bf0e510ad8eb85ca89525793d17c5354c64aa48d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
