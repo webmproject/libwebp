@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdH//+XQ\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-09-13T03:08:10Z",
+      "side": 1,
+      "message": "for now you\u0027ll have to set it globally or rely on the user to update the CL environment variable, similar to how WEBP_HAVE_QCMS is handled today:\n\nset CL\u003d/DWEBP_HAVE_GL /IC:\\opt\\freeglut\\include",
+      "revId": "e110580956c14338b1a674c68dc81de810d29314",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdH//+XM\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-09-13T03:08:10Z",
+      "side": 1,
+      "message": "this is fine in the autoconf build, but note we won\u0027t build vwebp even with --enabled-everything if glut can\u0027t be found as an empty vwebp is probably not that useful",
+      "revId": "e110580956c14338b1a674c68dc81de810d29314",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdH//+XI\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 759,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-09-13T03:08:10Z",
+      "side": 1,
+      "message": "ditto on the pragma",
+      "revId": "e110580956c14338b1a674c68dc81de810d29314",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdH//+XU\u003d",
+        "filename": "examples/vwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-09-13T03:08:10Z",
+      "side": 1,
+      "message": "this is spelled #pragma warning(\"...\") on msvc builds",
+      "revId": "e110580956c14338b1a674c68dc81de810d29314",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
