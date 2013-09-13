@@ -474,8 +474,9 @@ static int SaveOutput(const WebPDecBuffer* const buffer,
   int ok = 1;
   Stopwatch stop_watch;
 
-  if (verbose)
-    StopwatchReadAndReset(&stop_watch);
+  if (verbose) {
+    StopwatchReset(&stop_watch);
+  }
 
 #ifdef HAVE_WINCODEC_H
   needs_open_file = (format != PNG);
@@ -657,8 +658,9 @@ int main(int argc, const char *argv[]) {
 
     if (!ExUtilReadFile(in_file, &data, &data_size)) return -1;
 
-    if (verbose)
-      StopwatchReadAndReset(&stop_watch);
+    if (verbose) {
+      StopwatchReset(&stop_watch);
+    }
 
     status = WebPGetFeatures(data, data_size, bitstream);
     if (status != VP8_STATUS_OK) {

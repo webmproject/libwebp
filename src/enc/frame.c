@@ -976,6 +976,7 @@ int VP8EncTokenLoop(VP8Encoder* const enc) {
   assert(enc->use_tokens_);
   assert(proba->use_skip_proba_ == 0);
   assert(rd_opt >= RD_OPT_BASIC);   // otherwise, token-buffer won't be useful
+  assert(num_pass_left > 0);
 
   while (ok && num_pass_left-- > 0) {
     const int is_last_pass = (fabs(stats.dq) <= DQ_LIMIT) ||

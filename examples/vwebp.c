@@ -57,7 +57,7 @@ static struct {
 
   const char* file_name;
   WebPData data;
-  WebPDecoderConfig* config;
+  WebPDecoderConfig config;
   const WebPDecBuffer* pic;
   WebPDemuxer* dmux;
   WebPIterator curr_frame;
@@ -146,7 +146,7 @@ static int ApplyColorProfile(const WebPData* const profile,
 
 static int Decode(void) {   // Fills kParams.curr_frame
   const WebPIterator* const curr = &kParams.curr_frame;
-  WebPDecoderConfig* const config = kParams.config;
+  WebPDecoderConfig* const config = &kParams.config;
   WebPDecBuffer* const output_buffer = &config->output;
   int ok = 0;
 
@@ -386,16 +386,15 @@ static void Help(void) {
 }
 
 int main(int argc, char *argv[]) {
-  WebPDecoderConfig config;
   int c;
+  WebPDecoderConfig* const config = &kParams.config;
   WebPIterator* const curr = &kParams.curr_frame;
   WebPIterator* const prev = &kParams.prev_frame;
 
-  if (!WebPInitDecoderConfig(&config)) {
+  if (!WebPInitDecoderConfig(config)) {
     fprintf(stderr, "Library version mismatch!\n");
     return -1;
   }
-  kParams.config = &config;
   kParams.use_color_profile = 1;
 
   for (c = 1; c < argc; ++c) {
@@ -405,9 +404,9 @@ int main(int argc, char *argv[]) {
     } else if (!strcmp(argv[c], "-noicc")) {
       kParams.use_color_profile = 0;
     } else if (!strcmp(argv[c], "-nofancy")) {
-      config.options.no_fancy_upsampling = 1;
+      config->options.no_fancy_upsampling = 1;
     } else if (!strcmp(argv[c], "-nofilter")) {
-      config.options.bypass_filtering = 1;
+      config->options.bypass_filtering = 1;
     } else if (!strcmp(argv[c], "-info")) {
       kParams.print_info = 1;
     } else if (!strcmp(argv[c], "-version")) {
@@ -419,7 +418,7 @@ int main(int argc, char *argv[]) {
              (dmux_version >> 8) & 0xff, dmux_version & 0xff);
       return 0;
     } else if (!strcmp(argv[c], "-mt")) {
-      config.options.use_threads = 1;
+      config->options.use_threads = 1;
     } else if (argv[c][0] == '-') {
       printf("Unknown option '%s'\n", argv[c]);
       Help();
