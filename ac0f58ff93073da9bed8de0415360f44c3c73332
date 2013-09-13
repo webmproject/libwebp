@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdH//+Wc\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 3
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-09-13T07:37:28Z",
+      "side": 1,
+      "message": "this is under a cwebp heading; the gif availability was conveyed through gif2webp until now",
+      "revId": "ac0f58ff93073da9bed8de0415360f44c3c73332",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
