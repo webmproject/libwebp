@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdH//+WM\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 932,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-09-13T07:49:56Z",
+      "side": 1,
+      "message": "the location of this differs in cwebp/dwebp in/out of the block; probably ok here given it\u0027s only used with verbose, but it could go to the top with the other inits",
+      "revId": "bf0e510ad8eb85ca89525793d17c5354c64aa48d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdH//+WE\u003d",
+        "filename": "src/demux/demux.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-09-13T07:49:56Z",
+      "side": 1,
+      "message": "this is ok, but it couldn\u0027t happen as dmux-\u003eframes_ check at the top prevents it; an assert on last_frame_ might clear the warning\n\nnote the other AddFrame checks are boolean !AddFrame...",
+      "revId": "bf0e510ad8eb85ca89525793d17c5354c64aa48d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
