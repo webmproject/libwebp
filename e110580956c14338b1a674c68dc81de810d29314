@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdH//+W8\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-09-13T06:23:48Z",
+      "side": 1,
+      "message": "sounds fine with me",
+      "parentUuid": "AAAAdH//+XM\u003d",
+      "revId": "e110580956c14338b1a674c68dc81de810d29314",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdH//+XI\u003d",
         "filename": "examples/gif2webp.c",
         "patchSetId": 1
@@ -64,6 +82,24 @@
       "writtenOn": "2013-09-13T03:08:10Z",
       "side": 1,
       "message": "this is spelled #pragma warning(\"...\") on msvc builds",
+      "revId": "e110580956c14338b1a674c68dc81de810d29314",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdH//+W4\u003d",
+        "filename": "examples/vwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-09-13T06:23:48Z",
+      "side": 1,
+      "message": "argh, wouldn\u0027t work with gcc.\n\nOk, i just removed the #warning\u0027s, they\u0027re not really necessary, considering the portability trouble.",
+      "parentUuid": "AAAAdH//+XU\u003d",
       "revId": "e110580956c14338b1a674c68dc81de810d29314",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
