@@ -187,6 +187,8 @@ if test "$glut_headers" = "yes"; then
            glutMainLoop();
           ])
         ],
+        AC_DEFINE(WEBP_HAVE_GL, [1],
+                  [Set to 1 if OpenGL is supported])
         [glut_support=yes], []
       )
       if test "$glut_support" = "yes"; then
@@ -296,6 +298,8 @@ LIBCHECK_PROLOGUE([GIF])
 AC_CHECK_HEADER(gif_lib.h,
   AC_CHECK_LIB([gif], [DGifOpenFileHandle],
                [GIF_LIBS="$GIF_LIBS -lgif"
+                AC_DEFINE(WEBP_HAVE_GIF, [1],
+                          [Set to 1 if GIF library is installed])
                 gif_support=yes
                ],
                AC_MSG_WARN(Optional gif library not found),
@@ -443,7 +447,8 @@ dwebp : yes
   =====================
   PNG  : ${png_support-no}
   WIC  : ${wic_support-no}
-gif2webp : ${build_gif2webp-no}
-webpmux  : ${enable_libwebpmux-no}
-vwebp    : ${build_vwebp-no}
+GIF support : ${gif_support-no}
+gif2webp    : ${build_gif2webp-no}
+webpmux     : ${enable_libwebpmux-no}
+vwebp       : ${build_vwebp-no}
 ])
