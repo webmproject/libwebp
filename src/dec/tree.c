@@ -327,7 +327,7 @@ static const uint8_t kBModesProba[NUM_BMODES][NUM_BMODES][NUM_BMODES - 1] = {
 
 void VP8ResetProba(VP8Proba* const proba) {
   memset(proba->segments_, 255u, sizeof(proba->segments_));
-  memcpy(proba->coeffs_, CoeffsProba0, sizeof(CoeffsProba0));
+  // proba->bands_[][] is initialized later
 #ifndef ONLY_KEYFRAME_CODE
   memcpy(proba->mv_, kMVProba0, sizeof(kMVProba0));
   memcpy(proba->ymode_, kYModeProbaInter0, sizeof(kYModeProbaInter0));
@@ -547,9 +547,9 @@ void VP8ParseProba(VP8BitReader* const br, VP8Decoder* const dec) {
     for (b = 0; b < NUM_BANDS; ++b) {
       for (c = 0; c < NUM_CTX; ++c) {
         for (p = 0; p < NUM_PROBAS; ++p) {
-          if (VP8GetBit(br, CoeffsUpdateProba[t][b][c][p])) {
-            proba->coeffs_[t][b][c][p] = VP8GetValue(br, 8);
-          }
+          const int v = VP8GetBit(br, CoeffsUpdateProba[t][b][c][p]) ?
+                        VP8GetValue(br, 8) : CoeffsProba0[t][b][c][p];
+          proba->bands_[t][b].probas_[c][p] = v;
         }
       }
     }

@@ -439,9 +439,6 @@ static const uint8_t kZigzag[16] = {
   0, 1, 4, 8,  5, 2, 3, 6,  9, 12, 13, 10,  7, 11, 14, 15
 };
 
-typedef const uint8_t (*ProbaArray)[NUM_CTX][NUM_PROBAS];  // for const-casting
-typedef const uint8_t (*ProbaCtxArray)[NUM_PROBAS];
-
 // See section 13-2: http://tools.ietf.org/html/rfc6386#section-13.2
 static int GetLargeValue(VP8BitReader* const br, const uint8_t* const p) {
   int v;
@@ -476,15 +473,15 @@ static int GetLargeValue(VP8BitReader* const br, const uint8_t* const p) {
 
 // Returns the position of the last non-zero coeff plus one
 // (and 0 if there's no coeff at all)
-static int GetCoeffs(VP8BitReader* const br, ProbaArray prob,
+static int GetCoeffs(VP8BitReader* const br, const VP8BandProbas* const prob,
                      int ctx, const quant_t dq, int n, int16_t* out) {
   // n is either 0 or 1 here. kBands[n] is not necessary for extracting '*p'.
-  const uint8_t* p = prob[n][ctx];
+  const uint8_t* p = prob[n].probas_[ctx];
   if (!VP8GetBit(br, p[0])) {   // first EOB is more a 'CBP' bit.
     return 0;
   }
   for (; n < 16; ++n) {
-    const ProbaCtxArray p_ctx = prob[kBands[n + 1]];
+    const VP8ProbaArray *p_ctx = &prob[kBands[n + 1]].probas_[0];
     if (!VP8GetBit(br, p[1])) {
       p = p_ctx[0];
     } else {  // non zero coeff
@@ -507,9 +504,8 @@ static int GetCoeffs(VP8BitReader* const br, ProbaArray prob,
 
 static int ParseResiduals(VP8Decoder* const dec,
                           VP8MB* const mb, VP8BitReader* const token_br) {
-  uint32_t out_t_nz, out_l_nz;
-  int first;
-  ProbaArray ac_prob;
+  VP8BandProbas (* const bands)[NUM_BANDS] = dec->proba_.bands_; 
+  const VP8BandProbas* ac_proba;
   const VP8QuantMatrix* const q = &dec->dqm_[dec->segment_];
   VP8MBData* const block = dec->mb_data_;
   int16_t* dst = block->coeffs_;
@@ -518,20 +514,21 @@ static int ParseResiduals(VP8Decoder* const dec,
   uint32_t non_zero_ac = 0;
   uint32_t non_zero_dc = 0;
   int x, y, ch;
+  uint32_t out_t_nz, out_l_nz;
+  int first;
 
   memset(dst, 0, 384 * sizeof(*dst));
   if (!block->is_i4x4_) {    // parse DC
     int16_t dc[16] = { 0 };
     const int ctx = mb->nz_dc_ + left_mb->nz_dc_;
     mb->nz_dc_ = left_mb->nz_dc_ =
-        (GetCoeffs(token_br, (ProbaArray)dec->proba_.coeffs_[1],
-                   ctx, q->y2_mat_, 0, dc) > 0);
-    first = 1;
-    ac_prob = (ProbaArray)dec->proba_.coeffs_[0];
+        (GetCoeffs(token_br, bands[1], ctx, q->y2_mat_, 0, dc) > 0);
     VP8TransformWHT(dc, dst);
+    first = 1;
+    ac_proba = bands[0];
   } else {
     first = 0;
-    ac_prob = (ProbaArray)dec->proba_.coeffs_[3];
+    ac_proba = bands[3];
   }
 
   tnz = mb->nz_ & 0x0f;
@@ -541,8 +538,7 @@ static int ParseResiduals(VP8Decoder* const dec,
     uint32_t nz_dc = 0, nz_ac = 0;
     for (x = 0; x < 4; ++x) {
       const int ctx = l + (tnz & 1);
-      const int nz = GetCoeffs(token_br, ac_prob, ctx,
-                               q->y1_mat_, first, dst);
+      const int nz = GetCoeffs(token_br, ac_proba, ctx, q->y1_mat_, first, dst);
       l = (nz > 0);
       tnz = (tnz >> 1) | (l << 7);
       nz_dc = (nz_dc << 1) | (dst[0] != 0);
@@ -565,9 +561,7 @@ static int ParseResiduals(VP8Decoder* const dec,
       int l = lnz & 1;
       for (x = 0; x < 2; ++x) {
         const int ctx = l + (tnz & 1);
-        const int nz =
-            GetCoeffs(token_br, (ProbaArray)dec->proba_.coeffs_[2],
-                      ctx, q->uv_mat_, 0, dst);
+        const int nz = GetCoeffs(token_br, bands[2], ctx, q->uv_mat_, 0, dst);
         l = (nz > 0);
         tnz = (tnz >> 1) | (l << 3);
         nz_dc = (nz_dc << 1) | (dst[0] != 0);
