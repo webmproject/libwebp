@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdH//+NQ\u003d",
+        "filename": "examples/gif2webp_util.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-09-16T20:18:45Z",
+      "side": 1,
+      "message": "btw: \"assert(kmax \u003e\u003d kmin)\" ?",
+      "revId": "e89c6fc867b4ad97997fe033118ceac9860cc936",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
