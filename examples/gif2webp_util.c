@@ -110,11 +110,11 @@ static int EncodeFrame(const WebPConfig* const config, WebPPicture* const pic,
   return 1;
 }
 
-// Returns cached frame at given 'index'.
+// Returns cached frame at given 'position' index.
 static EncodedFrame* CacheGetFrame(const WebPFrameCache* const cache,
-                                   size_t index) {
-  assert(cache->start + index < cache->size);
-  return &cache->encoded_frames[cache->start + index];
+                                   size_t position) {
+  assert(cache->start + position < cache->size);
+  return &cache->encoded_frames[cache->start + position];
 }
 
 // Calculate the penalty incurred if we encode given frame as a key frame
@@ -140,9 +140,9 @@ int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
                            WebPPicture* const sub_frame_pic,
                            const WebPMuxFrameInfo* const key_frame_info,
                            WebPPicture* const key_frame_pic) {
-  const size_t index = cache->count;
-  EncodedFrame* const encoded_frame = CacheGetFrame(cache, index);
-  assert(index < cache->size);
+  const size_t position = cache->count;
+  EncodedFrame* const encoded_frame = CacheGetFrame(cache, position);
+  assert(position < cache->size);
   assert(sub_frame_pic != NULL || key_frame_pic != NULL);
   if (sub_frame_pic != NULL && !SetFrame(config, sub_frame_info, sub_frame_pic,
                                          &encoded_frame->sub_frame)) {
@@ -156,7 +156,7 @@ int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
   ++cache->count;
 
   if (sub_frame_pic == NULL && key_frame_pic != NULL) {  // Keyframe.
-    cache->keyframe = index;
+    cache->keyframe = position;
     cache->flush_count = cache->count;
     cache->count_since_key_frame = 0;
   } else {
@@ -167,7 +167,7 @@ int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
     } else {  // Analyze size difference of the two variants.
       const int64_t curr_delta = KeyFramePenalty(encoded_frame);
       if (curr_delta <= cache->best_delta) {  // Pick this as keyframe.
-        cache->keyframe = index;
+        cache->keyframe = position;
         cache->best_delta = curr_delta;
         cache->flush_count = cache->count - 1;  // We can flush previous frames.
       }
