@@ -53,6 +53,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "webp/decode.h"
 #include "webp/mux.h"
 #include "./example_util.h"
 
@@ -227,17 +228,28 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
     printf("Number of %ss: %d\n", type_str, nFrames);
     if (nFrames > 0) {
       int i;
-      printf("No.: x_offset y_offset ");
-      if (is_anim) printf("duration dispose blend ");
+      printf("No.: width height alpha x_offset y_offset ");
+      if (is_anim) printf("duration   dispose blend ");
       printf("image_size\n");
       for (i = 1; i <= nFrames; i++) {
         WebPMuxFrameInfo frame;
         err = WebPMuxGetFrame(mux, i, &frame);
         if (err == WEBP_MUX_OK) {
-          printf("%3d: %8d %8d ", i, frame.x_offset, frame.y_offset);
+          WebPBitstreamFeatures features;
+          const VP8StatusCode status = WebPGetFeatures(
+              frame.bitstream.bytes, frame.bitstream.size, &features);
+          assert(status == VP8_STATUS_OK);  // Checked by WebPMuxCreate().
+          (void)status;
+          printf("%3d: %5d %5d %5s %8d %8d ", i, features.width,
+                 features.height, features.has_alpha ? "yes" : "no",
+                 frame.x_offset, frame.y_offset);
           if (is_anim) {
-            printf("%8d %7d %5d", frame.duration, frame.dispose_method,
-                   frame.blend_method);
+            const char* const dispose =
+                (frame.dispose_method == WEBP_MUX_DISPOSE_NONE) ? "none"
+                                                                : "background";
+            const char* const blend =
+                (frame.blend_method == WEBP_MUX_BLEND) ? "yes" : "no";
+            printf("%8d %10s %5s ", frame.duration, dispose, blend);
           }
           printf("%10d\n", (int)frame.bitstream.size);
         }
