@@ -74,6 +74,7 @@ WebPFrameCache* WebPFrameCacheNew(size_t kmin, size_t kmax) {
   cache->kmin = kmin;
   cache->kmax = kmax;
   cache->count_since_key_frame = 0;
+  assert(kmax > kmin);
   cache->size = kmax - kmin;
   cache->encoded_frames =
       (EncodedFrame*)calloc(cache->size, sizeof(*cache->encoded_frames));
