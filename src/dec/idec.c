@@ -606,6 +606,10 @@ void WebPIDelete(WebPIDecoder* idec) {
   if (idec == NULL) return;
   if (idec->dec_ != NULL) {
     if (!idec->is_lossless_) {
+      if (idec->state_ == STATE_VP8_DATA) {
+        // Synchronize the thread, clean-up and check for errors.
+        VP8ExitCritical(idec->dec_, &idec->io_);
+      }
       VP8Delete(idec->dec_);
     } else {
       VP8LDelete(idec->dec_);
