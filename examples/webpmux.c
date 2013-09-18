@@ -146,12 +146,6 @@ static const char* ErrorString(WebPMuxError err) {
     return err;                                                      \
   }
 
-#define RETURN_IF_ERROR2(ERR_MSG, FORMAT_STR)                        \
-  if (err != WEBP_MUX_OK) {                                          \
-    fprintf(stderr, ERR_MSG, FORMAT_STR);                            \
-    return err;                                                      \
-  }
-
 #define RETURN_IF_ERROR3(ERR_MSG, FORMAT_STR1, FORMAT_STR2)          \
   if (err != WEBP_MUX_OK) {                                          \
     fprintf(stderr, ERR_MSG, FORMAT_STR1, FORMAT_STR2);              \
@@ -184,7 +178,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
   uint32_t flag;
 
   WebPMuxError err = WebPMuxGetCanvasSize(mux, &width, &height);
-  RETURN_IF_ERROR("Failed to retrieve canvas width/height.\n");
+  assert(err == WEBP_MUX_OK);  // As WebPMuxCreate() was successful earlier.
   printf("Canvas size: %d x %d\n", width, height);
 
   err = WebPMuxGetFeatures(mux, &flag);
@@ -217,13 +211,13 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
     if (is_anim) {
       WebPMuxAnimParams params;
       err = WebPMuxGetAnimationParams(mux, &params);
-      RETURN_IF_ERROR("Failed to retrieve animation parameters\n");
+      assert(err == WEBP_MUX_OK);
       printf("Background color : 0x%.8X  Loop Count : %d\n",
              params.bgcolor, params.loop_count);
     }
 
     err = WebPMuxNumChunks(mux, id, &nFrames);
-    RETURN_IF_ERROR2("Failed to retrieve number of %ss\n", type_str);
+    assert(err == WEBP_MUX_OK);
 
     printf("Number of %ss: %d\n", type_str, nFrames);
     if (nFrames > 0) {
@@ -262,21 +256,21 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
   if (flag & ICCP_FLAG) {
     WebPData icc_profile;
     err = WebPMuxGetChunk(mux, "ICCP", &icc_profile);
-    RETURN_IF_ERROR("Failed to retrieve the ICC profile\n");
+    assert(err == WEBP_MUX_OK);
     printf("Size of the ICC profile data: %d\n", (int)icc_profile.size);
   }
 
   if (flag & EXIF_FLAG) {
     WebPData exif;
     err = WebPMuxGetChunk(mux, "EXIF", &exif);
-    RETURN_IF_ERROR("Failed to retrieve the EXIF metadata\n");
+    assert(err == WEBP_MUX_OK);
     printf("Size of the EXIF metadata: %d\n", (int)exif.size);
   }
 
   if (flag & XMP_FLAG) {
     WebPData xmp;
     err = WebPMuxGetChunk(mux, "XMP ", &xmp);
-    RETURN_IF_ERROR("Failed to retrieve the XMP metadata\n");
+    assert(err == WEBP_MUX_OK);
     printf("Size of the XMP metadata: %d\n", (int)xmp.size);
   }
 
