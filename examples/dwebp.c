@@ -559,6 +559,7 @@ static void Help(void) {
          "  -crop <x> <y> <w> <h> ... crop output with the given rectangle\n"
          "  -scale <w> <h> .......... scale the output (*after* any cropping)\n"
          "  -alpha ....... only save the alpha plane.\n"
+         "  -incremental . use incremental decoding (useful for tests)\n"
          "  -h     ....... this help message.\n"
          "  -v     ....... verbose (e.g. print encoding/decoding times)\n"
 #ifndef WEBP_DLL
@@ -581,6 +582,7 @@ int main(int argc, const char *argv[]) {
   WebPDecBuffer* const output_buffer = &config.output;
   WebPBitstreamFeatures* const bitstream = &config.input;
   OutputFileFormat format = PNG;
+  int incremental = 0;
   int c;
 
   if (!WebPInitDecoderConfig(&config)) {
@@ -635,6 +637,8 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-noasm")) {
       VP8GetCPUInfo = NULL;
 #endif
+    } else if (!strcmp(argv[c], "-incremental")) {
+      incremental = 1;
     } else if (argv[c][0] == '-') {
       fprintf(stderr, "Unknown option '%s'\n", argv[c]);
       Help();
@@ -706,7 +710,21 @@ int main(int argc, const char *argv[]) {
         free((void*)data);
         return -1;
     }
-    status = WebPDecode(data, data_size, &config);
+
+    // Decoding call.
+    if (!incremental) {
+      status = WebPDecode(data, data_size, &config);
+    } else {
+      WebPIDecoder* const idec = WebPINewDecoder(output_buffer);
+      if (idec == NULL) {
+        fprintf(stderr, "Failed during WebPINewDecoder().\n");
+        status = VP8_STATUS_OUT_OF_MEMORY;
+        ok = 0;
+      } else {
+        status = WebPIUpdate(idec, data, data_size);
+        WebPIDelete(idec);
+      }
+    }
 
     if (verbose) {
       const double decode_time = StopwatchReadAndReset(&stop_watch);
@@ -718,7 +736,7 @@ int main(int argc, const char *argv[]) {
     if (!ok) {
       fprintf(stderr, "Decoding of %s failed.\n", in_file);
       fprintf(stderr, "Status: %d (%s)\n", status, kStatusMessages[status]);
-      return -1;
+      goto Exit;
     }
   }
 
@@ -734,8 +752,8 @@ int main(int argc, const char *argv[]) {
     fprintf(stderr, "Nothing written; "
                     "use -o flag to save the result as e.g. PNG.\n");
   }
+ Exit:
   WebPFreeDecBuffer(output_buffer);
-
   return ok ? 0 : -1;
 }
 
