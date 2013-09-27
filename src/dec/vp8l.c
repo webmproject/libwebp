@@ -84,20 +84,19 @@ static int DecodeImageStream(int xsize, int ysize,
 //------------------------------------------------------------------------------
 
 int VP8LCheckSignature(const uint8_t* const data, size_t size) {
-  return (size >= 1) && (data[0] == VP8L_MAGIC_BYTE);
+  return (size >= VP8L_FRAME_HEADER_SIZE &&
+          data[0] == VP8L_MAGIC_BYTE &&
+          (data[4] >> 5) == 0);  // version
 }
 
 static int ReadImageInfo(VP8LBitReader* const br,
                          int* const width, int* const height,
                          int* const has_alpha) {
-  const uint8_t signature = VP8LReadBits(br, 8);
-  if (!VP8LCheckSignature(&signature, 1)) {
-    return 0;
-  }
+  if (VP8LReadBits(br, 8) != VP8L_MAGIC_BYTE) return 0;
   *width = VP8LReadBits(br, VP8L_IMAGE_SIZE_BITS) + 1;
   *height = VP8LReadBits(br, VP8L_IMAGE_SIZE_BITS) + 1;
   *has_alpha = VP8LReadBits(br, 1);
-  VP8LReadBits(br, VP8L_VERSION_BITS);  // Read/ignore the version number.
+  if (VP8LReadBits(br, VP8L_VERSION_BITS) != 0) return 0;
   return 1;
 }
 
@@ -105,6 +104,8 @@ int VP8LGetInfo(const uint8_t* data, size_t data_size,
                 int* const width, int* const height, int* const has_alpha) {
   if (data == NULL || data_size < VP8L_FRAME_HEADER_SIZE) {
     return 0;         // not enough data
+  } else if (!VP8LCheckSignature(data, data_size)) {
+    return 0;         // bad signature
   } else {
     int w, h, a;
     VP8LBitReader br;
