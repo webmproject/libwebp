@@ -166,6 +166,11 @@ static int OptimizeAndEncodeFrame(
     // Update prev_canvas by simply copying from 'curr'.
     WebPUtilCopyPixels(curr, prev_canvas);
   } else {
+    if (!config->lossless) {
+      // For lossy compression, it's better to replace transparent pixels of
+      // 'curr' with actual RGB values, whenever possible.
+      WebPUtilReduceTransparency(prev_canvas, &rect, curr);
+    }
     if (!WebPFrameCacheShouldTryKeyFrame(cache)) {
       // Add this as a frame rectangle.
       if (!WebPFrameCacheAddFrame(cache, config, info, sub_image, NULL, NULL)) {

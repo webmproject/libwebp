@@ -287,6 +287,25 @@ void WebPUtilBlendPixels(const WebPPicture* const src,
   }
 }
 
+void WebPUtilReduceTransparency(const WebPPicture* const src,
+                                const WebPFrameRect* const rect,
+                                WebPPicture* const dst) {
+  int j;
+  assert(src->width == dst->width && src->height == dst->height);
+  for (j = rect->y_offset; j < rect->y_offset + rect->height; ++j) {
+    int i;
+    for (i = rect->x_offset; i < rect->x_offset + rect->width; ++i) {
+      const uint32_t src_pixel = src->argb[j * src->argb_stride + i];
+      const int src_alpha = src_pixel >> 24;
+      const uint32_t dst_pixel = dst->argb[j * dst->argb_stride + i];
+      const int dst_alpha = dst_pixel >> 24;
+      if (dst_alpha == 0 && src_alpha == 0xff) {
+        dst->argb[j * dst->argb_stride + i] = src_pixel;
+      }
+    }
+  }
+}
+
 //------------------------------------------------------------------------------
 // Key frame related utilities.
 

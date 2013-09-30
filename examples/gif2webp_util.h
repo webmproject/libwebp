@@ -86,6 +86,11 @@ void WebPUtilBlendPixels(const struct WebPPicture* const src,
                          const WebPFrameRect* const src_rect,
                          struct WebPPicture* const dst);
 
+// Replace transparent pixels within 'dst_rect' of 'dst' by those in the 'src'.
+void WebPUtilReduceTransparency(const struct WebPPicture* const src,
+                                const WebPFrameRect* const dst_rect,
+                                struct WebPPicture* const dst);
+
 //------------------------------------------------------------------------------
 // Key frame related.
 
