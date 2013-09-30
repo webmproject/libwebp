@@ -307,8 +307,11 @@ int main(int argc, const char *argv[]) {
   WebPData webp_data = { NULL, 0 };
   int stored_icc = 0;  // Whether we have already stored an ICC profile.
   int stored_xmp = 0;
-  size_t kmin = 9;
-  size_t kmax = 17;
+
+  int default_kmin = 1;  // Whether to use default kmin value.
+  int default_kmax = 1;
+  size_t kmin = 0;
+  size_t kmax = 0;
 
   memset(&frame, 0, sizeof(frame));
   frame.id = WEBP_CHUNK_ANMF;
@@ -341,8 +344,10 @@ int main(int argc, const char *argv[]) {
       config.method = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-kmax") && c < argc - 1) {
       kmax = strtoul(argv[++c], NULL, 0);
+      default_kmax = 0;
     } else if (!strcmp(argv[c], "-kmin") && c < argc - 1) {
       kmin = strtoul(argv[++c], NULL, 0);
+      default_kmin = 0;
     } else if (!strcmp(argv[c], "-f") && c < argc - 1) {
       config.filter_strength = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-version")) {
@@ -366,6 +371,13 @@ int main(int argc, const char *argv[]) {
     }
   }
 
+  // Appropriate default kmin, kmax values for lossy and lossless.
+  if (default_kmin) {
+    kmin = config.lossless ? 9 : 3;
+  }
+  if (default_kmax) {
+    kmax = config.lossless ? 17 : 5;
+  }
   SanitizeKeyFrameIntervals(&kmin, &kmax);
 
   cache = WebPFrameCacheNew(kmin, kmax);

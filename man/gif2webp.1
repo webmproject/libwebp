@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH GIF2WEBP 1 "February 01, 2013"
+.TH GIF2WEBP 1 "September 30, 2013"
 .SH NAME
 gif2webp \- Convert a GIF image to WebP
 .SH SYNOPSIS
@@ -58,8 +58,8 @@ some key frames into the output animation as needed so that this criteria is
 satisfied.
 .br
 A 'kmin' value of 0 will turn off insertion of key frames.
-Typical values are in the range 5 to 30. Default values are kmin = 9 and
-kmax = 17.
+Typical values are in the range 3 to 30. Default values are kmin = 9,
+kmax = 17 for lossless compression and kmin = 3, kmax = 5 for lossy compression.
 .br
 These two options are relevant only for animated images with large number of
 frames (>50).
