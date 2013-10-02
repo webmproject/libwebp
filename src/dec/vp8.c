@@ -472,19 +472,20 @@ static int GetLargeValue(VP8BitReader* const br, const uint8_t* const p) {
 }
 
 // Returns the position of the last non-zero coeff plus one
-// (and 0 if there's no coeff at all)
 static int GetCoeffs(VP8BitReader* const br, const VP8BandProbas* const prob,
                      int ctx, const quant_t dq, int n, int16_t* out) {
   // n is either 0 or 1 here. kBands[n] is not necessary for extracting '*p'.
   const uint8_t* p = prob[n].probas_[ctx];
-  if (!VP8GetBit(br, p[0])) {   // first EOB is more a 'CBP' bit.
-    return 0;
-  }
   for (; n < 16; ++n) {
-    const VP8ProbaArray *p_ctx = &prob[kBands[n + 1]].probas_[0];
-    if (!VP8GetBit(br, p[1])) {
-      p = p_ctx[0];
-    } else {  // non zero coeff
+    if (!VP8GetBit(br, p[0])) {
+      return n;  // previous coeff was last non-zero coeff
+    }
+    while (!VP8GetBit(br, p[1])) {       // sequence of zero coeffs
+      p = prob[kBands[++n]].probas_[0];
+      if (n == 16) return 16;
+    }
+    {        // non zero coeff
+      const VP8ProbaArray* const p_ctx = &prob[kBands[n + 1]].probas_[0];
       int v;
       if (!VP8GetBit(br, p[2])) {
         v = 1;
@@ -494,9 +495,6 @@ static int GetCoeffs(VP8BitReader* const br, const VP8BandProbas* const prob,
         p = p_ctx[2];
       }
       out[kZigzag[n]] = VP8GetSigned(br, v) * dq[n > 0];
-      if (n < 15 && !VP8GetBit(br, p[0])) {   // EOB
-        return n + 1;
-      }
     }
   }
   return 16;
@@ -504,7 +502,7 @@ static int GetCoeffs(VP8BitReader* const br, const VP8BandProbas* const prob,
 
 static int ParseResiduals(VP8Decoder* const dec,
                           VP8MB* const mb, VP8BitReader* const token_br) {
-  VP8BandProbas (* const bands)[NUM_BANDS] = dec->proba_.bands_; 
+  VP8BandProbas (* const bands)[NUM_BANDS] = dec->proba_.bands_;
   const VP8BandProbas* ac_proba;
   const VP8QuantMatrix* const q = &dec->dqm_[dec->segment_];
   VP8MBData* const block = dec->mb_data_;
@@ -539,7 +537,7 @@ static int ParseResiduals(VP8Decoder* const dec,
     for (x = 0; x < 4; ++x) {
       const int ctx = l + (tnz & 1);
       const int nz = GetCoeffs(token_br, ac_proba, ctx, q->y1_mat_, first, dst);
-      l = (nz > 0);
+      l = (nz > first);
       tnz = (tnz >> 1) | (l << 7);
       nz_dc = (nz_dc << 1) | (dst[0] != 0);
       nz_ac = (nz_ac << 1) | (nz > 1);
