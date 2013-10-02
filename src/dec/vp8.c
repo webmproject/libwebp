@@ -519,9 +519,15 @@ static int ParseResiduals(VP8Decoder* const dec,
   if (!block->is_i4x4_) {    // parse DC
     int16_t dc[16] = { 0 };
     const int ctx = mb->nz_dc_ + left_mb->nz_dc_;
-    mb->nz_dc_ = left_mb->nz_dc_ =
-        (GetCoeffs(token_br, bands[1], ctx, q->y2_mat_, 0, dc) > 0);
-    VP8TransformWHT(dc, dst);
+    const int nz = GetCoeffs(token_br, bands[1], ctx, q->y2_mat_, 0, dc);
+    mb->nz_dc_ = left_mb->nz_dc_ = (nz > 0);
+    if (nz > 1) {   // more than just the DC -> perform the full transform
+      VP8TransformWHT(dc, dst);
+    } else {        // only DC is non-zero -> inlined simplified transform
+      int i;
+      const int dc0 = (dc[0] + 3) >> 3;
+      for (i = 0; i < 16 * 16; i += 16) dst[i] = dc0;
+    }
     first = 1;
     ac_proba = bands[0];
   } else {
