@@ -1,6 +1,13 @@
-LOCAL_PATH:= $(call my-dir)
+LOCAL_PATH := $(call my-dir)
+
+WEBP_CFLAGS := -Wall -DANDROID -DHAVE_MALLOC_H -DHAVE_PTHREAD -DWEBP_USE_THREAD
+
+ifeq ($(APP_OPTIM),release)
+  WEBP_CFLAGS += -finline-functions -frename-registers -ffast-math -s
+endif
 
 include $(CLEAR_VARS)
+
 LOCAL_SRC_FILES := \
     src/dec/alpha.c \
     src/dec/buffer.c \
@@ -52,13 +59,7 @@ LOCAL_SRC_FILES := \
     src/utils/thread.c \
     src/utils/utils.c \
 
-LOCAL_CFLAGS := -Wall -DANDROID -DHAVE_MALLOC_H -DHAVE_PTHREAD \
-                -DWEBP_USE_THREAD \
-
-ifeq ($(APP_OPTIM),release)
-  LOCAL_CFLAGS += -finline-functions -frename-registers -ffast-math -s
-endif
-
+LOCAL_CFLAGS := $(WEBP_CFLAGS)
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
 
 # prefer arm over thumb mode for performance gains
@@ -77,5 +78,19 @@ LOCAL_STATIC_LIBRARIES := cpufeatures
 LOCAL_MODULE := webp
 
 include $(BUILD_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := \
+    examples/dwebp.c \
+    examples/example_util.c \
+
+LOCAL_CFLAGS := $(WEBP_CFLAGS)
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/src
+LOCAL_STATIC_LIBRARIES := webp
+
+LOCAL_MODULE := dwebp
+
+include $(BUILD_EXECUTABLE)
 
 $(call import-module,android/cpufeatures)
