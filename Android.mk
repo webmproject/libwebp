@@ -54,10 +54,15 @@ LOCAL_SRC_FILES := \
 
 LOCAL_CFLAGS := -Wall -DANDROID -DHAVE_MALLOC_H -DHAVE_PTHREAD \
                 -DWEBP_USE_THREAD \
-                -finline-functions -frename-registers -ffast-math \
-                -s -fomit-frame-pointer -Isrc/webp
+
+ifeq ($(APP_OPTIM),release)
+  LOCAL_CFLAGS += -finline-functions -frename-registers -ffast-math -s
+endif
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
+
+# prefer arm over thumb mode for performance gains
+LOCAL_ARM_MODE := arm
 
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
   # Setting LOCAL_ARM_NEON will enable -mfpu=neon which may cause illegal
@@ -69,7 +74,7 @@ ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
 endif
 LOCAL_STATIC_LIBRARIES := cpufeatures
 
-LOCAL_MODULE:= webp
+LOCAL_MODULE := webp
 
 include $(BUILD_STATIC_LIBRARY)
 
