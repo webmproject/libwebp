@@ -62,9 +62,9 @@ static void SanitizeKeyFrameIntervals(size_t* const kmin_ptr,
   }
   // Limit the max number of frames that are allocated.
   if (kmax - kmin > MAX_CACHE_SIZE) {
+    kmin = kmax - MAX_CACHE_SIZE;
     fprintf(stderr,
             "WARNING: Setting kmin = %zu, so that kmax - kmin <= 30.\n", kmin);
-    kmin = kmax - MAX_CACHE_SIZE;
   }
   *kmin_ptr = kmin;
   *kmax_ptr = kmax;
