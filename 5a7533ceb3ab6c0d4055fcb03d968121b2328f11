@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdH//8qo\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-10-04T19:19:59Z",
+      "side": 1,
+      "message": "note we moved away from %zu for the other examples to avoid format string compatibility issues. That might not be an issue here as giflib is heavy c99...",
+      "revId": "5a7533ceb3ab6c0d4055fcb03d968121b2328f11",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
