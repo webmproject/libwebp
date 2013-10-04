@@ -16,6 +16,24 @@
       "revId": "5a7533ceb3ab6c0d4055fcb03d968121b2328f11",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdH//8qc\u003d",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-10-04T19:24:58Z",
+      "side": 1,
+      "message": "ok, might be worth a clean-up pass in another CL later...",
+      "parentUuid": "AAAAdH//8qo\u003d",
+      "revId": "5a7533ceb3ab6c0d4055fcb03d968121b2328f11",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
