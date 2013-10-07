@@ -55,6 +55,7 @@ static void SmoothSegmentMap(VP8Encoder* const enc) {
       for (n = 0; n < NUM_MB_SEGMENTS; ++n) {
         if (cnt[n] >= majority_cnt_3_x_3_grid) {
           majority_seg = n;
+          break;
         }
       }
       tmp[x + y * w] = majority_seg;
