@@ -184,12 +184,15 @@ typedef struct {
   uint8_t is_i4x4_;       // true if intra4x4
   uint8_t imodes_[16];    // one 16x16 mode (#0) or sixteen 4x4 modes
   uint8_t uvmode_;        // chroma prediction mode
-  // bit-wise info about the content of each sub-4x4 blocks: there are 16 bits
-  // for luma (bits #15->#0), then 4 bits for chroma-u (#19->#16) and 4 bits for
-  // chroma-v (#23->#20), each corresponding to one 4x4 block in decoding order.
-  // If the bit is set, the 4x4 block contains some non-zero coefficients.
-  uint32_t non_zero_;
-  uint32_t non_zero_ac_;
+  // bit-wise info about the content of each sub-4x4 blocks (in decoding order).
+  // Each of the 4x4 blocks for y/u/v is associated with a 2b code according to:
+  //   code=0 -> no coefficient
+  //   code=1 -> only DC
+  //   code=2 -> first three coefficients are non-zero
+  //   code=3 -> more than three coefficients are non-zero
+  // This allows to call specialized transform functions.
+  uint32_t non_zero_y_;
+  uint32_t non_zero_uv_;
 } VP8MBData;
 
 // Persistent information needed by the parallel processing

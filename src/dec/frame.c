@@ -544,6 +544,34 @@ static void Copy32b(uint8_t* dst, uint8_t* src) {
   memcpy(dst, src, 4);
 }
 
+static void DoTransform(uint32_t bits, const int16_t* const src,
+                        uint8_t* const dst) {
+  switch (bits >> 30) {
+    case 3:
+      VP8Transform(src, dst, 0);
+      break;
+    case 2:
+      VP8TransformAC3(src, dst);
+      break;
+    case 1:
+      VP8TransformDC(src, dst);
+      break;
+    default:
+      break;
+  }
+}
+
+static void DoUVTransform(uint32_t bits, const int16_t* const src,
+                          uint8_t* const dst) {
+  if (bits & 0xff) {    // any non-zero coeff at all?
+    if (bits & 0xaa) {  // any non-zero AC coefficient?
+      VP8TransformUV(src, dst);   // note we don't use the AC3 variant for U/V
+    } else {
+      VP8TransformDCUV(src, dst);
+    }
+  }
+}
+
 void VP8ReconstructBlock(const VP8Decoder* const dec) {
   int j;
   uint8_t* const y_dst = dec->yuv_b_ + Y_OFF;
@@ -578,6 +606,7 @@ void VP8ReconstructBlock(const VP8Decoder* const dec) {
     // bring top samples into the cache
     VP8TopSamples* const top_yuv = dec->yuv_t_ + dec->mb_x_;
     const int16_t* const coeffs = block->coeffs_;
+    uint32_t bits = block->non_zero_y_;
     int n;
 
     if (dec->mb_y_ > 0) {
@@ -595,7 +624,6 @@ void VP8ReconstructBlock(const VP8Decoder* const dec) {
     // predict and add residuals
     if (block->is_i4x4_) {   // 4x4
       uint32_t* const top_right = (uint32_t*)(y_dst - BPS + 16);
-      uint32_t bits = (block->non_zero_ & 0xffff) | (block->non_zero_ac_ << 16);
 
       if (dec->mb_y_ > 0) {
         if (dec->mb_x_ >= dec->mb_w_ - 1) {    // on rightmost border
@@ -608,53 +636,29 @@ void VP8ReconstructBlock(const VP8Decoder* const dec) {
       top_right[BPS] = top_right[2 * BPS] = top_right[3 * BPS] = top_right[0];
 
       // predict and add residuals for all 4x4 blocks in turn.
-      for (n = 0; n < 16; ++n, bits <<= 1) {
+      for (n = 0; n < 16; ++n, bits <<= 2) {
         uint8_t* const dst = y_dst + kScan[n];
         VP8PredLuma4[block->imodes_[n]](dst);
-        if (bits & (1UL << 31)) {
-          VP8Transform(coeffs + n * 16, dst, 0);
-        } else if (bits & (1UL << 15)) {  // only DC is present
-          VP8TransformDC(coeffs + n * 16, dst);
-        }
+        DoTransform(bits, coeffs + n * 16, dst);
       }
     } else {    // 16x16
       const int pred_func = CheckMode(dec->mb_x_, dec->mb_y_,
                                       block->imodes_[0]);
-      uint32_t bits = (block->non_zero_ & 0xffff) | (block->non_zero_ac_ << 16);
       VP8PredLuma16[pred_func](y_dst);
-      if (bits & 0xffff) {
-        for (n = 0; n < 16; ++n, bits <<= 1) {
-          uint8_t* const dst = y_dst + kScan[n];
-          if (bits & (1UL << 31)) {
-            VP8Transform(coeffs + n * 16, dst, 0);
-          } else if (bits & (1UL << 15)) {  // only DC is present
-            VP8TransformDC(coeffs + n * 16, dst);
-          }
+      if (bits != 0) {
+        for (n = 0; n < 16; ++n, bits <<= 2) {
+          DoTransform(bits, coeffs + n * 16, y_dst + kScan[n]);
         }
       }
     }
     {
       // Chroma
+      const uint32_t bits_uv = block->non_zero_uv_;
       const int pred_func = CheckMode(dec->mb_x_, dec->mb_y_, block->uvmode_);
       VP8PredChroma8[pred_func](u_dst);
       VP8PredChroma8[pred_func](v_dst);
-
-      if (block->non_zero_ & 0x0f0000) {   // chroma-U
-        const int16_t* const u_coeffs = coeffs + 16 * 16;
-        if (block->non_zero_ac_ & 0x0f0000) {
-          VP8TransformUV(u_coeffs, u_dst);
-        } else {
-          VP8TransformDCUV(u_coeffs, u_dst);
-        }
-      }
-      if (block->non_zero_ & 0xf00000) {   // chroma-V
-        const int16_t* const v_coeffs = coeffs + 20 * 16;
-        if (block->non_zero_ac_ & 0xf00000) {
-          VP8TransformUV(v_coeffs, v_dst);
-        } else {
-          VP8TransformDCUV(v_coeffs, v_dst);
-        }
-      }
+      DoUVTransform(bits_uv >> 0, coeffs + 16 * 16, u_dst);
+      DoUVTransform(bits_uv >> 8, coeffs + 20 * 16, v_dst);
     }
 
     // stash away top samples for next block

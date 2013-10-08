@@ -103,6 +103,7 @@ typedef void (*VP8DecIdct)(const int16_t* coeffs, uint8_t* dst);
 // when doing two transforms, coeffs is actually int16_t[2][16].
 typedef void (*VP8DecIdct2)(const int16_t* coeffs, uint8_t* dst, int do_two);
 extern VP8DecIdct2 VP8Transform;
+extern VP8DecIdct VP8TransformAC3;
 extern VP8DecIdct VP8TransformUV;
 extern VP8DecIdct VP8TransformDC;
 extern VP8DecIdct VP8TransformDCUV;

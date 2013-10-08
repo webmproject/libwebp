@@ -509,8 +509,8 @@ static int ParseResiduals(VP8Decoder* const dec,
   int16_t* dst = block->coeffs_;
   VP8MB* const left_mb = dec->mb_info_ - 1;
   uint8_t tnz, lnz;
-  uint32_t non_zero_ac = 0;
-  uint32_t non_zero_dc = 0;
+  uint32_t non_zero_y = 0;
+  uint32_t non_zero_uv = 0;
   int x, y, ch;
   uint32_t out_t_nz, out_l_nz;
   int first;
@@ -539,26 +539,27 @@ static int ParseResiduals(VP8Decoder* const dec,
   lnz = left_mb->nz_ & 0x0f;
   for (y = 0; y < 4; ++y) {
     int l = lnz & 1;
-    uint32_t nz_dc = 0, nz_ac = 0;
+    uint32_t nz_coeffs = 0;
     for (x = 0; x < 4; ++x) {
       const int ctx = l + (tnz & 1);
       const int nz = GetCoeffs(token_br, ac_proba, ctx, q->y1_mat_, first, dst);
       l = (nz > first);
       tnz = (tnz >> 1) | (l << 7);
-      nz_dc = (nz_dc << 1) | (dst[0] != 0);
-      nz_ac = (nz_ac << 1) | (nz > 1);
+      nz_coeffs <<= 2;
+      if (nz > 3) nz_coeffs |= 3;
+      else if (nz > 1) nz_coeffs |= 2;
+      else if (dst[0] != 0) nz_coeffs |= 1;
       dst += 16;
     }
     tnz >>= 4;
     lnz = (lnz >> 1) | (l << 7);
-    non_zero_dc = (non_zero_dc << 4) | nz_dc;
-    non_zero_ac = (non_zero_ac << 4) | nz_ac;
+    non_zero_y = (non_zero_y << 8) | nz_coeffs;
   }
   out_t_nz = tnz;
   out_l_nz = lnz >> 4;
 
   for (ch = 0; ch < 4; ch += 2) {
-    uint32_t nz_dc = 0, nz_ac = 0;
+    uint32_t nz_coeffs = 0;
     tnz = mb->nz_ >> (4 + ch);
     lnz = left_mb->nz_ >> (4 + ch);
     for (y = 0; y < 2; ++y) {
@@ -568,25 +569,26 @@ static int ParseResiduals(VP8Decoder* const dec,
         const int nz = GetCoeffs(token_br, bands[2], ctx, q->uv_mat_, 0, dst);
         l = (nz > 0);
         tnz = (tnz >> 1) | (l << 3);
-        nz_dc = (nz_dc << 1) | (dst[0] != 0);
-        nz_ac = (nz_ac << 1) | (nz > 1);
+        nz_coeffs <<= 2;
+        if (nz > 3) nz_coeffs |= 3;
+        else if (nz > 1) nz_coeffs |= 2;
+        else if (dst[0] != 0) nz_coeffs |= 1;
         dst += 16;
       }
       tnz >>= 2;
       lnz = (lnz >> 1) | (l << 5);
     }
     // Note: we don't really need the per-4x4 details for U/V blocks.
-    non_zero_dc |= (nz_dc & 0x0f) << (16 + 2 * ch);
-    non_zero_ac |= (nz_ac & 0x0f) << (16 + 2 * ch);
+    non_zero_uv |= nz_coeffs << (4 * ch);
     out_t_nz |= (tnz << 4) << ch;
     out_l_nz |= (lnz & 0xf0) << ch;
   }
   mb->nz_ = out_t_nz;
   left_mb->nz_ = out_l_nz;
 
-  block->non_zero_ac_ = non_zero_ac;
-  block->non_zero_ = non_zero_ac | non_zero_dc;
-  return !block->non_zero_;   // will be used for further optimization
+  block->non_zero_y_ = non_zero_y;
+  block->non_zero_uv_ = non_zero_uv;
+  return !(non_zero_y | non_zero_uv);  // will be used for further optimization
 }
 
 //------------------------------------------------------------------------------
@@ -621,8 +623,8 @@ int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br) {
     if (!block->is_i4x4_) {
       left->nz_dc_ = mb->nz_dc_ = 0;
     }
-    block->non_zero_ = 0;
-    block->non_zero_ac_ = 0;
+    block->non_zero_y_ = 0;
+    block->non_zero_uv_ = 0;
   }
 
   if (dec->filter_type_ > 0) {  // store filter info
