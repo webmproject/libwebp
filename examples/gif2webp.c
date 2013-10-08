@@ -170,6 +170,7 @@ static int OptimizeAndEncodeFrame(
       // For lossy compression, it's better to replace transparent pixels of
       // 'curr' with actual RGB values, whenever possible.
       WebPUtilReduceTransparency(prev_canvas, &rect, curr);
+      WebPUtilFlattenSimilarBlocks(prev_canvas, &rect, curr);
     }
     if (!WebPFrameCacheShouldTryKeyFrame(cache)) {
       // Add this as a frame rectangle.

@@ -91,6 +91,12 @@ void WebPUtilReduceTransparency(const struct WebPPicture* const src,
                                 const WebPFrameRect* const dst_rect,
                                 struct WebPPicture* const dst);
 
+// Replace similar blocks of pixels by a 'see-through' transparent block
+// with uniform average color.
+void WebPUtilFlattenSimilarBlocks(const WebPPicture* const src,
+                                  const WebPFrameRect* const rect,
+                                  WebPPicture* const dst);
+
 //------------------------------------------------------------------------------
 // Key frame related.
 
