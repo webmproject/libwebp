@@ -46,7 +46,7 @@ static void DoFilter(const VP8Decoder* const dec, int mb_x, int mb_y) {
   const VP8ThreadContext* const ctx = &dec->thread_ctx_;
   const int cache_id = ctx->id_;
   const int y_bps = dec->cache_y_stride_;
-  VP8FInfo* const f_info = ctx->f_info_ + mb_x;
+  const VP8FInfo* const f_info = ctx->f_info_ + mb_x;
   uint8_t* const y_dst = dec->cache_y_ + cache_id * 16 * y_bps + mb_x * 16;
   const int level = f_info->f_level_;
   const int ilevel = f_info->f_ilevel_;
