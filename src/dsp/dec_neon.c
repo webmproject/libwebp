@@ -324,39 +324,39 @@ static void TransformWHT(const int16_t* in, int16_t* out) {
     // load data into q0, q1
     "vld1.16         {q0, q1}, [%[in]]           \n"
 
-    "vaddl.s16       q2, d0, d3                  \n" // a0 = in[0] + in[12]
-    "vaddl.s16       q3, d1, d2                  \n" // a1 = in[4] + in[8]
-    "vsubl.s16       q4, d1, d2                  \n" // a2 = in[4] - in[8]
-    "vsubl.s16       q5, d0, d3                  \n" // a3 = in[0] - in[12]
+    "vaddl.s16       q2, d0, d3                  \n"  // a0 = in[0] + in[12]
+    "vaddl.s16       q3, d1, d2                  \n"  // a1 = in[4] + in[8]
+    "vsubl.s16       q10, d1, d2                 \n"  // a2 = in[4] - in[8]
+    "vsubl.s16       q11, d0, d3                 \n"  // a3 = in[0] - in[12]
 
-    "vadd.s32        q0, q2, q3                  \n" // tmp[0] = a0 + a1
-    "vsub.s32        q2, q2, q3                  \n" // tmp[8] = a0 - a1
-    "vadd.s32        q1, q5, q4                  \n" // tmp[4] = a3 + a2
-    "vsub.s32        q3, q5, q4                  \n" // tmp[12] = a3 - a2
+    "vadd.s32        q0, q2, q3                  \n"  // tmp[0] = a0 + a1
+    "vsub.s32        q2, q2, q3                  \n"  // tmp[8] = a0 - a1
+    "vadd.s32        q1, q11, q10                \n"  // tmp[4] = a3 + a2
+    "vsub.s32        q3, q11, q10                \n"  // tmp[12] = a3 - a2
 
     // Transpose
     // q0 = tmp[0, 4, 8, 12], q1 = tmp[2, 6, 10, 14]
     // q2 = tmp[1, 5, 9, 13], q3 = tmp[3, 7, 11, 15]
-    "vswp            d1, d4                      \n" // vtrn.64 q0, q2
-    "vswp            d3, d6                      \n" // vtrn.64 q1, q3
+    "vswp            d1, d4                      \n"  // vtrn.64 q0, q2
+    "vswp            d3, d6                      \n"  // vtrn.64 q1, q3
     "vtrn.32         q0, q1                      \n"
     "vtrn.32         q2, q3                      \n"
 
-    "vmov.s32        q4, #3                      \n" // dc = 3
-    "vadd.s32        q0, q0, q4                  \n" // dc = tmp[0] + 3
-    "vadd.s32        q6, q0, q3                  \n" // a0 = dc + tmp[3]
-    "vadd.s32        q7, q1, q2                  \n" // a1 = tmp[1] + tmp[2]
-    "vsub.s32        q8, q1, q2                  \n" // a2 = tmp[1] - tmp[2]
-    "vsub.s32        q9, q0, q3                  \n" // a3 = dc - tmp[3]
+    "vmov.s32        q10, #3                     \n"  // dc = 3
+    "vadd.s32        q0, q0, q10                 \n"  // dc = tmp[0] + 3
+    "vadd.s32        q12, q0, q3                 \n"  // a0 = dc + tmp[3]
+    "vadd.s32        q13, q1, q2                 \n"  // a1 = tmp[1] + tmp[2]
+    "vsub.s32        q8, q1, q2                  \n"  // a2 = tmp[1] - tmp[2]
+    "vsub.s32        q9, q0, q3                  \n"  // a3 = dc - tmp[3]
 
-    "vadd.s32        q0, q6, q7                  \n"
-    "vshrn.s32       d0, q0, #3                  \n" // (a0 + a1) >> 3
+    "vadd.s32        q0, q12, q13                \n"
+    "vshrn.s32       d0, q0, #3                  \n"  // (a0 + a1) >> 3
     "vadd.s32        q1, q9, q8                  \n"
-    "vshrn.s32       d1, q1, #3                  \n" // (a3 + a2) >> 3
-    "vsub.s32        q2, q6, q7                  \n"
-    "vshrn.s32       d2, q2, #3                  \n" // (a0 - a1) >> 3
+    "vshrn.s32       d1, q1, #3                  \n"  // (a3 + a2) >> 3
+    "vsub.s32        q2, q12, q13                \n"
+    "vshrn.s32       d2, q2, #3                  \n"  // (a0 - a1) >> 3
     "vsub.s32        q3, q9, q8                  \n"
-    "vshrn.s32       d3, q3, #3                  \n" // (a3 - a2) >> 3
+    "vshrn.s32       d3, q3, #3                  \n"  // (a3 - a2) >> 3
 
     // set the results to output
     "vst1.16         d0[0], [%[out]], %[kStep]   \n"
@@ -378,8 +378,8 @@ static void TransformWHT(const int16_t* in, int16_t* out) {
 
     : [out] "+r"(out)  // modified registers
     : [in] "r"(in), [kStep] "r"(kStep)  // constants
-    : "memory", "q0", "q1", "q2", "q3", "q4",
-      "q5", "q6", "q7", "q8", "q9"  // clobbered
+    : "memory", "q0", "q1", "q2", "q3",
+      "q8", "q9", "q10", "q11", "q12", "q13"  // clobbered
   );
 }
 
