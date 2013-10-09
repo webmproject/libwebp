@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdH//8J0\u003d",
+        "filename": "src/dec/vp8.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-10-09T09:46:08Z",
+      "side": 1,
+      "message": "you\u0027re right!\nfixed as per  https://gerrit.chromium.org/gerrit/67450\n(which was the original plan)",
+      "parentUuid": "AAAAdH//8KE\u003d",
+      "revId": "f9bbc2a034aa1943364881c4eadbf68433002350",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdH//8KA\u003d",
         "filename": "src/dec/vp8.c",
         "patchSetId": 1
