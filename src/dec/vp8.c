@@ -500,6 +500,12 @@ static int GetCoeffs(VP8BitReader* const br, const VP8BandProbas* const prob,
   return 16;
 }
 
+static WEBP_INLINE uint32_t NzCodeBits(uint32_t nz_coeffs, int nz, int dc_nz) {
+  nz_coeffs <<= 2;
+  nz_coeffs |= (nz > 3) ? 3 : (nz > 1) ? 2 : dc_nz;
+  return nz_coeffs;
+}
+
 static int ParseResiduals(VP8Decoder* const dec,
                           VP8MB* const mb, VP8BitReader* const token_br) {
   VP8BandProbas (* const bands)[NUM_BANDS] = dec->proba_.bands_;
@@ -545,10 +551,7 @@ static int ParseResiduals(VP8Decoder* const dec,
       const int nz = GetCoeffs(token_br, ac_proba, ctx, q->y1_mat_, first, dst);
       l = (nz > first);
       tnz = (tnz >> 1) | (l << 7);
-      nz_coeffs <<= 2;
-      if (nz > 3) nz_coeffs |= 3;
-      else if (nz > 1) nz_coeffs |= 2;
-      else if (dst[0] != 0) nz_coeffs |= 1;
+      nz_coeffs = NzCodeBits(nz_coeffs, nz, dst[0] != 0);
       dst += 16;
     }
     tnz >>= 4;
@@ -569,10 +572,7 @@ static int ParseResiduals(VP8Decoder* const dec,
         const int nz = GetCoeffs(token_br, bands[2], ctx, q->uv_mat_, 0, dst);
         l = (nz > 0);
         tnz = (tnz >> 1) | (l << 3);
-        nz_coeffs <<= 2;
-        if (nz > 3) nz_coeffs |= 3;
-        else if (nz > 1) nz_coeffs |= 2;
-        else if (dst[0] != 0) nz_coeffs |= 1;
+        nz_coeffs = NzCodeBits(nz_coeffs, nz, dst[0] != 0);
         dst += 16;
       }
       tnz >>= 2;
