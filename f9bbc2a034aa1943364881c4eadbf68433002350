@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdH//8KE\u003d",
+        "filename": "src/dec/vp8.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-10-09T07:55:25Z",
+      "side": 1,
+      "message": "single line conditionals when there are else clauses is generally frowned on.",
+      "revId": "f9bbc2a034aa1943364881c4eadbf68433002350",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdH//8KA\u003d",
+        "filename": "src/dec/vp8.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-10-09T07:55:25Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "f9bbc2a034aa1943364881c4eadbf68433002350",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
