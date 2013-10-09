@@ -476,7 +476,11 @@ int main(int argc, const char *argv[]) {
             if (data[0] != 4) goto End;
             frame.duration = delay * 10;  // Duration is in 1 ms units for WebP.
             if (dispose == 3) {
-              fprintf(stderr, "WARNING: GIF_DISPOSE_RESTORE not supported.");
+              static int warning_printed = 0;
+              if (!warning_printed) {
+                fprintf(stderr, "WARNING: GIF_DISPOSE_RESTORE unsupported.\n");
+                warning_printed = 1;
+              }
               // failsafe. TODO(urvang): emulate the correct behaviour by
               // recoding the whole frame.
               frame.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
@@ -490,7 +494,7 @@ int main(int argc, const char *argv[]) {
               if (!GetBackgroundColor(gif->SColorMap, gif->SBackGroundColor,
                                       &anim.bgcolor)) {
                 fprintf(stderr, "GIF decode warning: invalid background color "
-                        "index. Assuming white background.\n");
+                                "index. Assuming white background.\n");
               }
               WebPUtilClearPic(&curr_frame, NULL);
               WebPUtilClearPic(&prev_canvas, NULL);
