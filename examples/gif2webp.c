@@ -329,6 +329,7 @@ int main(int argc, const char *argv[]) {
     return -1;
   }
   config.lossless = 1;  // Use lossless compression by default.
+  config.image_hint = WEBP_HINT_GRAPH;   // always low-color
 
   if (argc == 1) {
     Help();
