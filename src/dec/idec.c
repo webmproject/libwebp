@@ -451,16 +451,11 @@ static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
   VP8Io* const io = &idec->io_;
 
   assert(dec->ready_);
-
   for (; dec->mb_y_ < dec->mb_h_; ++dec->mb_y_) {
     VP8BitReader* token_br = &dec->parts_[dec->mb_y_ & (dec->num_parts_ - 1)];
-    if (dec->mb_x_ == 0) {
-      VP8InitScanline(dec);
-    }
-    for (; dec->mb_x_ < dec->mb_w_;  dec->mb_x_++) {
+    for (; dec->mb_x_ < dec->mb_w_; ++dec->mb_x_) {
       MBContext context;
       SaveContext(dec, token_br, &context);
-
       if (!VP8DecodeMB(dec, token_br)) {
         RestoreContext(&context, dec, token_br);
         // We shouldn't fail when MAX_MB data was available
@@ -469,19 +464,20 @@ static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
         }
         return VP8_STATUS_SUSPENDED;
       }
-      // Reconstruct and emit samples.
-      VP8ReconstructBlock(dec);
-
       // Release buffer only if there is only one partition
       if (dec->num_parts_ == 1) {
         idec->mem_.start_ = token_br->buf_ - idec->mem_.buf_;
         assert(idec->mem_.start_ <= idec->mem_.end_);
       }
     }
+    VP8InitScanline(dec);   // Prepare for next scanline
+
+    // Reconstruct the samples.
+    VP8ReconstructBlocks(dec, dec->mb_y_);
+    // Filter and emit the row.
     if (!VP8ProcessRow(dec, io)) {
       return IDecError(idec, VP8_STATUS_USER_ABORT);
     }
-    dec->mb_x_ = 0;
   }
   // Synchronize the thread and check for errors.
   if (!VP8ExitCritical(dec, io)) {

@@ -292,7 +292,6 @@ struct VP8Decoder {
 
   // Filtering side-info
   int filter_type_;                          // 0=off, 1=simple, 2=complex
-  int filter_row_;                           // per-row flag
   VP8FInfo fstrengths_[NUM_MB_SEGMENTS][2];  // precalculated per-segment/type
 
   // Alpha
@@ -325,8 +324,8 @@ void VP8ParseQuant(VP8Decoder* const dec);
 
 // in frame.c
 int VP8InitFrame(VP8Decoder* const dec, VP8Io* io);
-// Predict a block and add residual
-void VP8ReconstructBlock(const VP8Decoder* const dec);
+// Reconstruct a full row of blocks (prediction + residual adding)
+void VP8ReconstructBlocks(const VP8Decoder* const dec, int mb_y);
 // Call io->setup() and finish setting up scan parameters.
 // After this call returns, one must always call VP8ExitCritical() with the
 // same parameters. Both functions should be used in pair. Returns VP8_STATUS_OK

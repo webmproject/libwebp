@@ -511,7 +511,7 @@ static int ParseResiduals(VP8Decoder* const dec,
   VP8BandProbas (* const bands)[NUM_BANDS] = dec->proba_.bands_;
   const VP8BandProbas* ac_proba;
   const VP8QuantMatrix* const q = &dec->dqm_[dec->segment_];
-  VP8MBData* const block = dec->mb_data_;
+  VP8MBData* const block = dec->mb_data_ + dec->mb_x_;
   int16_t* dst = block->coeffs_;
   VP8MB* const left_mb = dec->mb_info_ - 1;
   uint8_t tnz, lnz;
@@ -598,7 +598,7 @@ int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br) {
   VP8BitReader* const br = &dec->br_;
   VP8MB* const left = dec->mb_info_ - 1;
   VP8MB* const mb = dec->mb_info_ + dec->mb_x_;
-  VP8MBData* const block = dec->mb_data_;
+  VP8MBData* const block = dec->mb_data_ + dec->mb_x_;
   int skip;
 
   // Note: we don't save segment map (yet), as we don't expect
@@ -641,24 +641,25 @@ void VP8InitScanline(VP8Decoder* const dec) {
   left->nz_ = 0;
   left->nz_dc_ = 0;
   memset(dec->intra_l_, B_DC_PRED, sizeof(dec->intra_l_));
-  dec->filter_row_ =
-    (dec->filter_type_ > 0) &&
-    (dec->mb_y_ >= dec->tl_mb_y_) && (dec->mb_y_ <= dec->br_mb_y_);
+  dec->mb_x_ = 0;
 }
 
 static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
   for (dec->mb_y_ = 0; dec->mb_y_ < dec->br_mb_y_; ++dec->mb_y_) {
+    // Parse bitstream for this row.
     VP8BitReader* const token_br =
         &dec->parts_[dec->mb_y_ & (dec->num_parts_ - 1)];
-    VP8InitScanline(dec);
-    for (dec->mb_x_ = 0; dec->mb_x_ < dec->mb_w_;  dec->mb_x_++) {
+    for (; dec->mb_x_ < dec->mb_w_; ++dec->mb_x_) {
       if (!VP8DecodeMB(dec, token_br)) {
         return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
                            "Premature end-of-file encountered.");
       }
-      // Reconstruct and emit samples.
-      VP8ReconstructBlock(dec);
     }
+    VP8InitScanline(dec);   // Prepare for next scanline
+
+    // Reconstruct the samples.
+    VP8ReconstructBlocks(dec, dec->mb_y_);
+    // Filter and emit the row.
     if (!VP8ProcessRow(dec, io)) {
       return VP8SetError(dec, VP8_STATUS_USER_ABORT, "Output aborted.");
     }

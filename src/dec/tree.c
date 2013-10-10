@@ -338,7 +338,7 @@ void VP8ResetProba(VP8Proba* const proba) {
 void VP8ParseIntraMode(VP8BitReader* const br, VP8Decoder* const dec) {
   uint8_t* const top = dec->intra_t_ + 4 * dec->mb_x_;
   uint8_t* const left = dec->intra_l_;
-  VP8MBData* const block = dec->mb_data_;
+  VP8MBData* const block = dec->mb_data_ + dec->mb_x_;
 
   block->is_i4x4_ = !VP8GetBit(br, 145);   // decide for B_PRED first
   if (!block->is_i4x4_) {
