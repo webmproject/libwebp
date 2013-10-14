@@ -197,11 +197,12 @@ typedef struct {
 
 // Persistent information needed by the parallel processing
 typedef struct {
-  int id_;            // cache row to process (in [0..2])
-  int mb_y_;          // macroblock position of the row
-  int filter_row_;    // true if row-filtering is needed
-  VP8FInfo* f_info_;  // filter strengths
-  VP8Io io_;          // copy of the VP8Io to pass to put()
+  int id_;              // cache row to process (in [0..2])
+  int mb_y_;            // macroblock position of the row
+  int filter_row_;      // true if row-filtering is needed
+  VP8FInfo* f_info_;    // filter strengths (swapped with dec->f_info_)
+  VP8MBData* mb_data_;  // reconstruction data (swapped with dec->mb_data_)
+  VP8Io io_;            // copy of the VP8Io to pass to put()
 } VP8ThreadContext;
 
 // Saved top samples, per macroblock. Fits into a cache-line.
@@ -287,8 +288,8 @@ struct VP8Decoder {
   size_t mem_size_;
 
   // Per macroblock non-persistent infos.
-  int mb_x_, mb_y_;       // current position, in macroblock units
-  VP8MBData* mb_data_;    // reconstruction data
+  int mb_x_, mb_y_;          // current position, in macroblock units
+  VP8MBData* mb_data_;       // parsed reconstruction data
 
   // Filtering side-info
   int filter_type_;                          // 0=off, 1=simple, 2=complex
@@ -324,8 +325,6 @@ void VP8ParseQuant(VP8Decoder* const dec);
 
 // in frame.c
 int VP8InitFrame(VP8Decoder* const dec, VP8Io* io);
-// Reconstruct a full row of blocks (prediction + residual adding)
-void VP8ReconstructBlocks(const VP8Decoder* const dec, int mb_y);
 // Call io->setup() and finish setting up scan parameters.
 // After this call returns, one must always call VP8ExitCritical() with the
 // same parameters. Both functions should be used in pair. Returns VP8_STATUS_OK
