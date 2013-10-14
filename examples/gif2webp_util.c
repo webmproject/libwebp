@@ -20,215 +20,7 @@
 #define KEYFRAME_NONE       -1
 
 //------------------------------------------------------------------------------
-// Encoded frame.
-
-// Used to store two candidates of encoded data for an animation frame. One of
-// the two will be chosen later.
-typedef struct {
-  WebPMuxFrameInfo sub_frame;  // Encoded frame rectangle.
-  WebPMuxFrameInfo key_frame;  // Encoded frame if it was converted to keyframe.
-} EncodedFrame;
-
-// Release the data contained by 'encoded_frame'.
-static void FrameRelease(EncodedFrame* const encoded_frame) {
-  WebPDataClear(&encoded_frame->sub_frame.bitstream);
-  WebPDataClear(&encoded_frame->key_frame.bitstream);
-  memset(encoded_frame, 0, sizeof(*encoded_frame));
-}
-
-//------------------------------------------------------------------------------
-// Frame cache.
-
-// Used to store encoded frames that haven't been output yet.
-struct WebPFrameCache {
-  EncodedFrame* encoded_frames;  // Array of encoded frames.
-  size_t size;               // Number of allocated data elements.
-  size_t start;              // Start index.
-  size_t count;              // Number of valid data elements.
-  int flush_count;           // If >0, ‘flush_count’ frames starting from
-                             // 'start' are ready to be added to mux.
-  int64_t best_delta;        // min(canvas size - frame size) over the frames.
-                             // Can be negative in certain cases due to
-                             // transparent pixels in a frame.
-  int keyframe;              // Index of selected keyframe relative to 'start'.
-
-  size_t kmin;                   // Min distance between key frames.
-  size_t kmax;                   // Max distance between key frames.
-  size_t count_since_key_frame;  // Frames seen since the last key frame.
-};
-
-// Reset the counters in the cache struct. Doesn't touch 'cache->encoded_frames'
-// and 'cache->size'.
-static void CacheReset(WebPFrameCache* const cache) {
-  cache->start = 0;
-  cache->count = 0;
-  cache->flush_count = 0;
-  cache->best_delta = DELTA_INFINITY;
-  cache->keyframe = KEYFRAME_NONE;
-}
-
-WebPFrameCache* WebPFrameCacheNew(size_t kmin, size_t kmax) {
-  WebPFrameCache* cache = (WebPFrameCache*)malloc(sizeof(*cache));
-  if (cache == NULL) return NULL;
-  CacheReset(cache);
-  cache->kmin = kmin;
-  cache->kmax = kmax;
-  cache->count_since_key_frame = 0;
-  assert(kmax > kmin);
-  cache->size = kmax - kmin;
-  cache->encoded_frames =
-      (EncodedFrame*)calloc(cache->size, sizeof(*cache->encoded_frames));
-  if (cache->encoded_frames == NULL) {
-    free(cache);
-    return NULL;
-  }
-  return cache;
-}
-
-void WebPFrameCacheDelete(WebPFrameCache* const cache) {
-  if (cache != NULL) {
-    size_t i;
-    for (i = 0; i < cache->size; ++i) {
-      FrameRelease(&cache->encoded_frames[i]);
-    }
-    free(cache->encoded_frames);
-    free(cache);
-  }
-}
-
-static int EncodeFrame(const WebPConfig* const config, WebPPicture* const pic,
-                       WebPData* const encoded_data) {
-  WebPMemoryWriter memory;
-  pic->use_argb = 1;
-  pic->writer = WebPMemoryWrite;
-  pic->custom_ptr = &memory;
-  WebPMemoryWriterInit(&memory);
-  if (!WebPEncode(config, pic)) {
-    return 0;
-  }
-  encoded_data->bytes = memory.mem;
-  encoded_data->size  = memory.size;
-  return 1;
-}
-
-// Returns cached frame at given 'position' index.
-static EncodedFrame* CacheGetFrame(const WebPFrameCache* const cache,
-                                   size_t position) {
-  assert(cache->start + position < cache->size);
-  return &cache->encoded_frames[cache->start + position];
-}
-
-// Calculate the penalty incurred if we encode given frame as a key frame
-// instead of a sub-frame.
-static int64_t KeyFramePenalty(const EncodedFrame* const encoded_frame) {
-  return ((int64_t)encoded_frame->key_frame.bitstream.size -
-          encoded_frame->sub_frame.bitstream.size);
-}
-
-static int SetFrame(const WebPConfig* const config,
-                    const WebPMuxFrameInfo* const info, WebPPicture* const pic,
-                    WebPMuxFrameInfo* const dst) {
-  *dst = *info;
-  if (!EncodeFrame(config, pic, &dst->bitstream)) {
-    return 0;
-  }
-  return 1;
-}
-
-int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
-                           const WebPConfig* const config,
-                           const WebPMuxFrameInfo* const sub_frame_info,
-                           WebPPicture* const sub_frame_pic,
-                           const WebPMuxFrameInfo* const key_frame_info,
-                           WebPPicture* const key_frame_pic) {
-  const size_t position = cache->count;
-  EncodedFrame* const encoded_frame = CacheGetFrame(cache, position);
-  assert(position < cache->size);
-  assert(sub_frame_pic != NULL || key_frame_pic != NULL);
-  if (sub_frame_pic != NULL && !SetFrame(config, sub_frame_info, sub_frame_pic,
-                                         &encoded_frame->sub_frame)) {
-    return 0;
-  }
-  if (key_frame_pic != NULL && !SetFrame(config, key_frame_info, key_frame_pic,
-                                         &encoded_frame->key_frame)) {
-    return 0;
-  }
-
-  ++cache->count;
-
-  if (sub_frame_pic == NULL && key_frame_pic != NULL) {  // Keyframe.
-    cache->keyframe = position;
-    cache->flush_count = cache->count;
-    cache->count_since_key_frame = 0;
-  } else {
-    ++cache->count_since_key_frame;
-    if (sub_frame_pic != NULL && key_frame_pic == NULL) {  // Non-keyframe.
-      assert(cache->count_since_key_frame < cache->kmax);
-      cache->flush_count = cache->count;
-    } else {  // Analyze size difference of the two variants.
-      const int64_t curr_delta = KeyFramePenalty(encoded_frame);
-      if (curr_delta <= cache->best_delta) {  // Pick this as keyframe.
-        cache->keyframe = position;
-        cache->best_delta = curr_delta;
-        cache->flush_count = cache->count - 1;  // We can flush previous frames.
-      }
-      if (cache->count_since_key_frame == cache->kmax) {
-        cache->flush_count = cache->count;
-        cache->count_since_key_frame = 0;
-      }
-    }
-  }
-
-  return 1;
-}
-
-WebPMuxError WebPFrameCacheFlush(WebPFrameCache* const cache, int verbose,
-                                 WebPMux* const mux) {
-  while (cache->flush_count > 0) {
-    WebPMuxFrameInfo* info;
-    WebPMuxError err;
-    EncodedFrame* const curr = CacheGetFrame(cache, 0);
-    // Pick frame or full canvas.
-    if (cache->keyframe == 0) {
-      info = &curr->key_frame;
-      info->blend_method = WEBP_MUX_NO_BLEND;
-      cache->keyframe = KEYFRAME_NONE;
-      cache->best_delta = DELTA_INFINITY;
-    } else {
-      info = &curr->sub_frame;
-      info->blend_method = WEBP_MUX_BLEND;
-    }
-    // Add to mux.
-    err = WebPMuxPushFrame(mux, info, 1);
-    if (err != WEBP_MUX_OK) return err;
-    if (verbose) {
-      printf("Added frame. offset:%d,%d duration:%d dispose:%d blend:%d\n",
-             info->x_offset, info->y_offset, info->duration,
-             info->dispose_method, info->blend_method);
-    }
-    FrameRelease(curr);
-    ++cache->start;
-    --cache->flush_count;
-    --cache->count;
-    if (cache->keyframe != KEYFRAME_NONE) --cache->keyframe;
-  }
-
-  if (cache->count == 0) CacheReset(cache);
-  return WEBP_MUX_OK;
-}
-
-WebPMuxError WebPFrameCacheFlushAll(WebPFrameCache* const cache, int verbose,
-                                    WebPMux* const mux) {
-  cache->flush_count = cache->count;  // Force flushing of all frames.
-  return WebPFrameCacheFlush(cache, verbose, mux);
-}
-
-int WebPFrameCacheShouldTryKeyFrame(const WebPFrameCache* const cache) {
-  return cache->count_since_key_frame >= cache->kmin;
-}
-
-//------------------------------------------------------------------------------
-// Frame rectangle and related utilities.
+// Helper utilities.
 
 static void ClearRectangle(WebPPicture* const picture,
                            int left, int top, int width, int height) {
@@ -237,12 +29,11 @@ static void ClearRectangle(WebPPicture* const picture,
     uint32_t* const dst = picture->argb + j * picture->argb_stride;
     int i;
     for (i = left; i < left + width; ++i) {
-      dst[i] = TRANSPARENT_COLOR;
+      dst[i] = WEBP_UTIL_TRANSPARENT_COLOR;
     }
   }
 }
 
-// Clear pixels in 'picture' within given 'rect' to transparent color.
 void WebPUtilClearPic(WebPPicture* const picture,
                       const WebPFrameRect* const rect) {
   if (rect != NULL) {
@@ -264,15 +55,18 @@ static void CopyPlane(const uint8_t* src, int src_stride,
   }
 }
 
-void WebPUtilCopyPixels(const WebPPicture* const src, WebPPicture* const dst) {
+// Copy pixels from 'src' to 'dst' honoring strides. 'src' and 'dst' are assumed
+// to be already allocated.
+static void CopyPixels(const WebPPicture* const src, WebPPicture* const dst) {
   assert(src->width == dst->width && src->height == dst->height);
   CopyPlane((uint8_t*)src->argb, 4 * src->argb_stride, (uint8_t*)dst->argb,
             4 * dst->argb_stride, 4 * src->width, src->height);
 }
 
-void WebPUtilBlendPixels(const WebPPicture* const src,
-                         const WebPFrameRect* const rect,
-                         WebPPicture* const dst) {
+// Given 'src' picture and its frame rectangle 'rect', blend it into 'dst'.
+static void BlendPixels(const WebPPicture* const src,
+                        const WebPFrameRect* const rect,
+                        WebPPicture* const dst) {
   int j;
   assert(src->width == dst->width && src->height == dst->height);
   for (j = rect->y_offset; j < rect->y_offset + rect->height; ++j) {
@@ -287,9 +81,10 @@ void WebPUtilBlendPixels(const WebPPicture* const src,
   }
 }
 
-void WebPUtilReduceTransparency(const WebPPicture* const src,
-                                const WebPFrameRect* const rect,
-                                WebPPicture* const dst) {
+// Replace transparent pixels within 'dst_rect' of 'dst' by those in the 'src'.
+static void ReduceTransparency(const WebPPicture* const src,
+                               const WebPFrameRect* const rect,
+                               WebPPicture* const dst) {
   int i, j;
   assert(src != NULL && dst != NULL && rect != NULL);
   assert(src->width == dst->width && src->height == dst->height);
@@ -306,9 +101,11 @@ void WebPUtilReduceTransparency(const WebPPicture* const src,
   }
 }
 
-void WebPUtilFlattenSimilarBlocks(const WebPPicture* const src,
-                                  const WebPFrameRect* const rect,
-                                  WebPPicture* const dst) {
+// Replace similar blocks of pixels by a 'see-through' transparent block
+// with uniform average color.
+static void FlattenSimilarBlocks(const WebPPicture* const src,
+                                 const WebPFrameRect* const rect,
+                                 WebPPicture* const dst) {
   int i, j;
   const int block_size = 8;
   const int y_start = (rect->y_offset + block_size) & ~(block_size - 1);
@@ -359,9 +156,11 @@ void WebPUtilFlattenSimilarBlocks(const WebPPicture* const src,
 //------------------------------------------------------------------------------
 // Key frame related utilities.
 
-int WebPUtilIsKeyFrame(const WebPPicture* const curr,
-                       const WebPFrameRect* const curr_rect,
-                       const WebPPicture* const prev) {
+// Returns true if 'curr' frame with frame rectangle 'curr_rect' is a key frame,
+// that is, it can be decoded independently of 'prev' canvas.
+static int IsKeyFrame(const WebPPicture* const curr,
+                      const WebPFrameRect* const curr_rect,
+                      const WebPPicture* const prev) {
   int i, j;
   int is_key_frame = 1;
 
@@ -404,9 +203,11 @@ int WebPUtilIsKeyFrame(const WebPPicture* const curr,
   return 0;
 }
 
-void WebPUtilConvertToKeyFrame(const WebPPicture* const prev,
-                               WebPFrameRect* const rect,
-                               WebPPicture* const curr) {
+// Given 'prev' frame and current frame rectangle 'rect', convert 'curr' frame
+// to a key frame.
+static void ConvertToKeyFrame(const WebPPicture* const prev,
+                              WebPFrameRect* const rect,
+                              WebPPicture* const curr) {
   int j;
   assert(curr->width == prev->width && curr->height == prev->height);
 
@@ -428,6 +229,318 @@ void WebPUtilConvertToKeyFrame(const WebPPicture* const prev,
   rect->y_offset = 0;
   rect->width = curr->width;
   rect->height = curr->height;
+}
+
+//------------------------------------------------------------------------------
+// Encoded frame.
+
+// Used to store two candidates of encoded data for an animation frame. One of
+// the two will be chosen later.
+typedef struct {
+  WebPMuxFrameInfo sub_frame;  // Encoded frame rectangle.
+  WebPMuxFrameInfo key_frame;  // Encoded frame if it was converted to keyframe.
+} EncodedFrame;
+
+// Release the data contained by 'encoded_frame'.
+static void FrameRelease(EncodedFrame* const encoded_frame) {
+  WebPDataClear(&encoded_frame->sub_frame.bitstream);
+  WebPDataClear(&encoded_frame->key_frame.bitstream);
+  memset(encoded_frame, 0, sizeof(*encoded_frame));
+}
+
+//------------------------------------------------------------------------------
+// Frame cache.
+
+// Used to store encoded frames that haven't been output yet.
+struct WebPFrameCache {
+  EncodedFrame* encoded_frames;  // Array of encoded frames.
+  size_t size;               // Number of allocated data elements.
+  size_t start;              // Start index.
+  size_t count;              // Number of valid data elements.
+  int flush_count;           // If >0, ‘flush_count’ frames starting from
+                             // 'start' are ready to be added to mux.
+  int64_t best_delta;        // min(canvas size - frame size) over the frames.
+                             // Can be negative in certain cases due to
+                             // transparent pixels in a frame.
+  int keyframe;              // Index of selected keyframe relative to 'start'.
+
+  size_t kmin;                   // Min distance between key frames.
+  size_t kmax;                   // Max distance between key frames.
+  size_t count_since_key_frame;  // Frames seen since the last key frame.
+  WebPPicture prev_canvas;   // Previous canvas (properly disposed).
+  WebPPicture curr_canvas;   // Current canvas (temporary buffer).
+  int is_first_frame;        // True if no frames have been added to the cache
+                             // since WebPFrameCacheNew().
+};
+
+// Reset the counters in the cache struct. Doesn't touch 'cache->encoded_frames'
+// and 'cache->size'.
+static void CacheReset(WebPFrameCache* const cache) {
+  cache->start = 0;
+  cache->count = 0;
+  cache->flush_count = 0;
+  cache->best_delta = DELTA_INFINITY;
+  cache->keyframe = KEYFRAME_NONE;
+}
+
+WebPFrameCache* WebPFrameCacheNew(int width, int height,
+                                  size_t kmin, size_t kmax) {
+  WebPFrameCache* cache = (WebPFrameCache*)malloc(sizeof(*cache));
+  if (cache == NULL) return NULL;
+  CacheReset(cache);
+  cache->is_first_frame = 1;
+
+  // Picture buffers.
+  if (!WebPPictureInit(&cache->prev_canvas) ||
+      !WebPPictureInit(&cache->curr_canvas)) {
+    return NULL;
+  }
+  cache->prev_canvas.width = width;
+  cache->prev_canvas.height = height;
+  cache->prev_canvas.use_argb = 1;
+  if (!WebPPictureAlloc(&cache->prev_canvas) ||
+      !WebPPictureCopy(&cache->prev_canvas, &cache->curr_canvas)) {
+    goto Err;
+  }
+  WebPUtilClearPic(&cache->prev_canvas, NULL);
+
+  // Cache data.
+  cache->kmin = kmin;
+  cache->kmax = kmax;
+  cache->count_since_key_frame = 0;
+  assert(kmax > kmin);
+  cache->size = kmax - kmin;
+  cache->encoded_frames =
+      (EncodedFrame*)calloc(cache->size, sizeof(*cache->encoded_frames));
+  if (cache->encoded_frames == NULL) goto Err;
+
+  return cache;  // All OK.
+
+ Err:
+  WebPFrameCacheDelete(cache);
+  return NULL;
+}
+
+void WebPFrameCacheDelete(WebPFrameCache* const cache) {
+  if (cache != NULL) {
+    size_t i;
+    for (i = 0; i < cache->size; ++i) {
+      FrameRelease(&cache->encoded_frames[i]);
+    }
+    free(cache->encoded_frames);
+    WebPPictureFree(&cache->prev_canvas);
+    WebPPictureFree(&cache->curr_canvas);
+    free(cache);
+  }
+}
+
+static int EncodeFrame(const WebPConfig* const config, WebPPicture* const pic,
+                       WebPData* const encoded_data) {
+  WebPMemoryWriter memory;
+  pic->use_argb = 1;
+  pic->writer = WebPMemoryWrite;
+  pic->custom_ptr = &memory;
+  WebPMemoryWriterInit(&memory);
+  if (!WebPEncode(config, pic)) {
+    return 0;
+  }
+  encoded_data->bytes = memory.mem;
+  encoded_data->size  = memory.size;
+  return 1;
+}
+
+// Returns cached frame at given 'position' index.
+static EncodedFrame* CacheGetFrame(const WebPFrameCache* const cache,
+                                   size_t position) {
+  assert(cache->start + position < cache->size);
+  return &cache->encoded_frames[cache->start + position];
+}
+
+// Calculate the penalty incurred if we encode given frame as a key frame
+// instead of a sub-frame.
+static int64_t KeyFramePenalty(const EncodedFrame* const encoded_frame) {
+  return ((int64_t)encoded_frame->key_frame.bitstream.size -
+          encoded_frame->sub_frame.bitstream.size);
+}
+
+static int SetFrame(const WebPConfig* const config, int is_key_frame,
+                    const WebPPicture* const prev_canvas,
+                    WebPPicture* const frame, const WebPFrameRect* const rect,
+                    const WebPMuxFrameInfo* const info,
+                    WebPPicture* const sub_frame,
+                    EncodedFrame* encoded_frame) {
+  WebPMuxFrameInfo* const dst =
+      is_key_frame ? &encoded_frame->key_frame : &encoded_frame->sub_frame;
+  *dst = *info;
+
+  if (!config->lossless && !is_key_frame) {
+    // For lossy compression of a frame, it's better to replace transparent
+    // pixels of 'curr' with actual RGB values, whenever possible.
+    ReduceTransparency(prev_canvas, rect, frame);
+    FlattenSimilarBlocks(prev_canvas, rect, frame);
+  }
+
+  if (!EncodeFrame(config, sub_frame, &dst->bitstream)) {
+    return 0;
+  }
+  return 1;
+}
+
+static void DisposeFrame(WebPMuxAnimDispose dispose_method,
+                         const WebPFrameRect* const gif_rect,
+                         WebPPicture* const frame, WebPPicture* const canvas) {
+  if (dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
+    WebPUtilClearPic(frame, NULL);
+    WebPUtilClearPic(canvas, gif_rect);
+  }
+}
+
+int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
+                           const WebPConfig* const config,
+                           const WebPFrameRect* const orig_rect,
+                           WebPPicture* const frame,
+                           WebPMuxFrameInfo* const info) {
+  int ok = 0;
+  WebPFrameRect rect = *orig_rect;
+  WebPPicture sub_image;  // View extracted from 'frame' with rectangle 'rect'.
+  WebPPicture* const prev_canvas = &cache->prev_canvas;
+  const size_t position = cache->count;
+  EncodedFrame* const encoded_frame = CacheGetFrame(cache, position);
+  assert(position < cache->size);
+
+  // Snap to even offsets (and adjust dimensions if needed).
+  rect.width += (rect.x_offset & 1);
+  rect.height += (rect.y_offset & 1);
+  rect.x_offset &= ~1;
+  rect.y_offset &= ~1;
+
+  if (!WebPPictureView(frame, rect.x_offset, rect.y_offset,
+                       rect.width, rect.height, &sub_image)) {
+    return 0;
+  }
+  info->x_offset = rect.x_offset;
+  info->y_offset = rect.y_offset;
+
+  ++cache->count;
+
+  if (cache->is_first_frame || IsKeyFrame(frame, &rect, prev_canvas)) {
+    // Add this as a key frame.
+    if (!SetFrame(config, 1, NULL, NULL, NULL, info, &sub_image,
+                  encoded_frame)) {
+      goto End;
+    }
+    cache->keyframe = position;
+    cache->flush_count = cache->count;
+    cache->count_since_key_frame = 0;
+    // Update prev_canvas by simply copying from 'curr'.
+    CopyPixels(frame, prev_canvas);
+  } else {
+    ++cache->count_since_key_frame;
+    if (cache->count_since_key_frame <= cache->kmin) {
+      // Add this as a frame rectangle.
+      if (!SetFrame(config, 0, prev_canvas, frame, &rect, info, &sub_image,
+                    encoded_frame)) {
+        goto End;
+      }
+      cache->flush_count = cache->count;
+      // Update prev_canvas by blending 'curr' into it.
+      BlendPixels(frame, orig_rect, prev_canvas);
+    } else {
+      WebPPicture full_image;
+      WebPMuxFrameInfo full_image_info;
+      int frame_added;
+      int64_t curr_delta;
+
+      // Add frame rectangle to cache.
+      if (!SetFrame(config, 0, prev_canvas, frame, &rect, info, &sub_image,
+                    encoded_frame)) {
+        goto End;
+      }
+
+      // Convert to a key frame.
+      CopyPixels(frame, &cache->curr_canvas);
+      ConvertToKeyFrame(prev_canvas, &rect, &cache->curr_canvas);
+      if (!WebPPictureView(&cache->curr_canvas, rect.x_offset, rect.y_offset,
+                           rect.width, rect.height, &full_image)) {
+        goto End;
+      }
+      full_image_info = *info;
+      full_image_info.x_offset = rect.x_offset;
+      full_image_info.y_offset = rect.y_offset;
+
+      // Add key frame to cache, too.
+      frame_added = SetFrame(config, 1, NULL, NULL, NULL, &full_image_info,
+                             &full_image, encoded_frame);
+      WebPPictureFree(&full_image);
+      if (!frame_added) goto End;
+
+      // Analyze size difference of the two variants.
+      curr_delta = KeyFramePenalty(encoded_frame);
+      if (curr_delta <= cache->best_delta) {  // Pick this as keyframe.
+        cache->keyframe = position;
+        cache->best_delta = curr_delta;
+        cache->flush_count = cache->count - 1;  // We can flush previous frames.
+      }
+      if (cache->count_since_key_frame == cache->kmax) {
+        cache->flush_count = cache->count;
+        cache->count_since_key_frame = 0;
+      }
+
+      // Update prev_canvas by simply copying from 'curr_canvas'.
+      CopyPixels(&cache->curr_canvas, prev_canvas);
+    }
+  }
+
+  DisposeFrame(info->dispose_method, orig_rect, frame, prev_canvas);
+
+  cache->is_first_frame = 0;
+  ok = 1;
+
+ End:
+  WebPPictureFree(&sub_image);
+  if (!ok) --cache->count;  // We reset the count, as the frame addition failed.
+  return ok;
+}
+
+WebPMuxError WebPFrameCacheFlush(WebPFrameCache* const cache, int verbose,
+                                 WebPMux* const mux) {
+  while (cache->flush_count > 0) {
+    WebPMuxFrameInfo* info;
+    WebPMuxError err;
+    EncodedFrame* const curr = CacheGetFrame(cache, 0);
+    // Pick frame or full canvas.
+    if (cache->keyframe == 0) {
+      info = &curr->key_frame;
+      info->blend_method = WEBP_MUX_NO_BLEND;
+      cache->keyframe = KEYFRAME_NONE;
+      cache->best_delta = DELTA_INFINITY;
+    } else {
+      info = &curr->sub_frame;
+      info->blend_method = WEBP_MUX_BLEND;
+    }
+    // Add to mux.
+    err = WebPMuxPushFrame(mux, info, 1);
+    if (err != WEBP_MUX_OK) return err;
+    if (verbose) {
+      printf("Added frame. offset:%d,%d duration:%d dispose:%d blend:%d\n",
+             info->x_offset, info->y_offset, info->duration,
+             info->dispose_method, info->blend_method);
+    }
+    FrameRelease(curr);
+    ++cache->start;
+    --cache->flush_count;
+    --cache->count;
+    if (cache->keyframe != KEYFRAME_NONE) --cache->keyframe;
+  }
+
+  if (cache->count == 0) CacheReset(cache);
+  return WEBP_MUX_OK;
+}
+
+WebPMuxError WebPFrameCacheFlushAll(WebPFrameCache* const cache, int verbose,
+                                    WebPMux* const mux) {
+  cache->flush_count = cache->count;  // Force flushing of all frames.
+  return WebPFrameCacheFlush(cache, verbose, mux);
 }
 
 //------------------------------------------------------------------------------

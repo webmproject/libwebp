@@ -36,9 +36,7 @@
 
 //------------------------------------------------------------------------------
 
-// Global variables gathered in a struct.
 static int transparent_index = -1;  // Index of transparent color in the map.
-static int is_first_frame = 1;     // Whether we are processing the first frame.
 
 static void SanitizeKeyFrameIntervals(size_t* const kmin_ptr,
                                       size_t* const kmax_ptr) {
@@ -81,14 +79,15 @@ static void Remap(const uint8_t* const src, const GifFileType* const gif,
 
   for (i = 0; i < len; ++i) {
     const GifColorType c = colors[src[i]];
-    dst[i] = (src[i] == transparent_index) ? TRANSPARENT_COLOR
+    dst[i] = (src[i] == transparent_index) ? WEBP_UTIL_TRANSPARENT_COLOR
            : c.Blue | (c.Green << 8) | (c.Red << 16) | (0xff << 24);
   }
 }
 
 // Read the GIF image frame.
 static int ReadFrame(GifFileType* const gif, WebPFrameRect* const gif_rect,
-                     WebPPicture* const sub_image, WebPPicture* const curr) {
+                     WebPPicture* const webp_frame) {
+  WebPPicture sub_image;
   const GifImageDesc image_desc = gif->Image;
   uint32_t* dst = NULL;
   uint8_t* tmp = NULL;
@@ -99,13 +98,13 @@ static int ReadFrame(GifFileType* const gif, WebPFrameRect* const gif_rect,
   *gif_rect = rect;
 
   // Use a view for the sub-picture:
-  if (!WebPPictureView(curr, rect.x_offset, rect.y_offset,
-                       rect.width, rect.height, sub_image)) {
+  if (!WebPPictureView(webp_frame, rect.x_offset, rect.y_offset,
+                       rect.width, rect.height, &sub_image)) {
     fprintf(stderr, "Sub-image %dx%d at position %d,%d is invalid!\n",
             rect.width, rect.height, rect.x_offset, rect.y_offset);
-    goto End;
+    return 0;
   }
-  dst = sub_image->argb;
+  dst = sub_image.argb;
 
   tmp = (uint8_t*)malloc(rect.width * sizeof(*tmp));
   if (tmp == NULL) goto End;
@@ -120,107 +119,29 @@ static int ReadFrame(GifFileType* const gif, WebPFrameRect* const gif_rect,
       for (y = interlace_offsets[pass]; y < rect.height;
            y += interlace_jumps[pass]) {
         if (DGifGetLine(gif, tmp, rect.width) == GIF_ERROR) goto End;
-        Remap(tmp, gif, dst + y * sub_image->argb_stride, rect.width);
+        Remap(tmp, gif, dst + y * sub_image.argb_stride, rect.width);
       }
     }
   } else {  // Non-interlaced image.
     int y;
     for (y = 0; y < rect.height; ++y) {
       if (DGifGetLine(gif, tmp, rect.width) == GIF_ERROR) goto End;
-      Remap(tmp, gif, dst + y * sub_image->argb_stride, rect.width);
+      Remap(tmp, gif, dst + y * sub_image.argb_stride, rect.width);
     }
   }
   ok = 1;
 
  End:
+  if (!ok) webp_frame->error_code = sub_image.error_code;
+  WebPPictureFree(&sub_image);
   free(tmp);
   return ok;
-}
-
-// Optimize the image frame for WebP and encode it.
-static int OptimizeAndEncodeFrame(
-    const WebPConfig* const config, const WebPFrameRect* const gif_rect,
-    WebPPicture* const curr, WebPPicture* const prev_canvas,
-    WebPPicture* const curr_canvas, WebPPicture* const sub_image,
-    WebPMuxFrameInfo* const info, WebPFrameCache* const cache) {
-  WebPFrameRect rect = *gif_rect;
-
-  // Snap to even offsets (and adjust dimensions if needed).
-  rect.width += (rect.x_offset & 1);
-  rect.height += (rect.y_offset & 1);
-  rect.x_offset &= ~1;
-  rect.y_offset &= ~1;
-
-  if (!WebPPictureView(curr, rect.x_offset, rect.y_offset,
-                       rect.width, rect.height, sub_image)) {
-    return 0;
-  }
-  info->x_offset = rect.x_offset;
-  info->y_offset = rect.y_offset;
-
-  if (is_first_frame || WebPUtilIsKeyFrame(curr, &rect, prev_canvas)) {
-    // Add this as a key frame.
-    if (!WebPFrameCacheAddFrame(cache, config, NULL, NULL, info, sub_image)) {
-      return 0;
-    }
-    // Update prev_canvas by simply copying from 'curr'.
-    WebPUtilCopyPixels(curr, prev_canvas);
-  } else {
-    if (!config->lossless) {
-      // For lossy compression, it's better to replace transparent pixels of
-      // 'curr' with actual RGB values, whenever possible.
-      WebPUtilReduceTransparency(prev_canvas, &rect, curr);
-      WebPUtilFlattenSimilarBlocks(prev_canvas, &rect, curr);
-    }
-    if (!WebPFrameCacheShouldTryKeyFrame(cache)) {
-      // Add this as a frame rectangle.
-      if (!WebPFrameCacheAddFrame(cache, config, info, sub_image, NULL, NULL)) {
-        return 0;
-      }
-      // Update prev_canvas by blending 'curr' into it.
-      WebPUtilBlendPixels(curr, gif_rect, prev_canvas);
-    } else {
-      WebPPicture full_image;
-      WebPMuxFrameInfo full_image_info;
-      int ok;
-
-      // Convert to a key frame.
-      WebPUtilCopyPixels(curr, curr_canvas);
-      WebPUtilConvertToKeyFrame(prev_canvas, &rect, curr_canvas);
-      if (!WebPPictureView(curr_canvas, rect.x_offset, rect.y_offset,
-                           rect.width, rect.height, &full_image)) {
-        return 0;
-      }
-      full_image_info = *info;
-      full_image_info.x_offset = rect.x_offset;
-      full_image_info.y_offset = rect.y_offset;
-
-      // Add both variants to cache: frame rectangle and key frame.
-      ok = WebPFrameCacheAddFrame(cache, config, info, sub_image,
-                                  &full_image_info, &full_image);
-      WebPPictureFree(&full_image);
-      if (!ok) return 0;
-
-      // Update prev_canvas by simply copying from 'curr_canvas'.
-      WebPUtilCopyPixels(curr_canvas, prev_canvas);
-    }
-  }
-  return 1;
-}
-
-static void DisposeFrame(WebPMuxAnimDispose dispose_method,
-                         const WebPFrameRect* const gif_rect,
-                         WebPPicture* const frame, WebPPicture* const canvas) {
-  if (dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
-    WebPUtilClearPic(frame, NULL);
-    WebPUtilClearPic(canvas, gif_rect);
-  }
 }
 
 static int GetBackgroundColor(const ColorMapObject* const color_map,
                               GifWord bgcolor_idx, uint32_t* const bgcolor) {
   if (transparent_index != -1 && bgcolor_idx == transparent_index) {
-    *bgcolor = TRANSPARENT_COLOR;  // Special case.
+    *bgcolor = WEBP_UTIL_TRANSPARENT_COLOR;  // Special case.
     return 1;
   } else if (color_map == NULL || color_map->Colors == NULL
              || bgcolor_idx >= color_map->ColorCount) {
@@ -299,13 +220,12 @@ int main(int argc, const char *argv[]) {
   FILE* out = NULL;
   GifFileType* gif = NULL;
   WebPConfig config;
-  WebPPicture curr_frame;
-  WebPPicture prev_canvas;
-  WebPPicture curr_canvas;
-  WebPMuxFrameInfo frame;
+  WebPPicture frame;
+  WebPMuxFrameInfo info;
   WebPMuxAnimParams anim = { WHITE_COLOR, 0 };
   WebPFrameCache* cache = NULL;
 
+  int is_first_frame = 1;     // Whether we are processing the first frame.
   int done;
   int c;
   int quiet = 0;
@@ -319,13 +239,12 @@ int main(int argc, const char *argv[]) {
   size_t kmin = 0;
   size_t kmax = 0;
 
-  memset(&frame, 0, sizeof(frame));
-  frame.id = WEBP_CHUNK_ANMF;
-  frame.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
-  frame.blend_method = WEBP_MUX_BLEND;
+  memset(&info, 0, sizeof(info));
+  info.id = WEBP_CHUNK_ANMF;
+  info.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
+  info.blend_method = WEBP_MUX_BLEND;
 
-  if (!WebPConfigInit(&config) || !WebPPictureInit(&curr_frame) ||
-      !WebPPictureInit(&prev_canvas) || !WebPPictureInit(&curr_canvas)) {
+  if (!WebPConfigInit(&config) || !WebPPictureInit(&frame)) {
     fprintf(stderr, "Error! Version mismatch!\n");
     return -1;
   }
@@ -387,9 +306,6 @@ int main(int argc, const char *argv[]) {
   }
   SanitizeKeyFrameIntervals(&kmin, &kmax);
 
-  cache = WebPFrameCacheNew(kmin, kmax);
-  if (cache == NULL) goto End;
-
   if (!WebPValidateConfig(&config)) {
     fprintf(stderr, "Error! Invalid configuration.\n");
     goto End;
@@ -411,12 +327,14 @@ int main(int argc, const char *argv[]) {
   if (gif == NULL) goto End;
 
   // Allocate current buffer
-  curr_frame.width = gif->SWidth;
-  curr_frame.height = gif->SHeight;
-  curr_frame.use_argb = 1;
-  if (!WebPPictureAlloc(&curr_frame)) goto End;
-  if (!WebPPictureCopy(&curr_frame, &prev_canvas)) goto End;
-  if (!WebPPictureCopy(&curr_frame, &curr_canvas)) goto End;
+  frame.width = gif->SWidth;
+  frame.height = gif->SHeight;
+  frame.use_argb = 1;
+  if (!WebPPictureAlloc(&frame)) goto End;
+
+  // Initialize cache
+  cache = WebPFrameCacheNew(frame.width, frame.height, kmin, kmax);
+  if (cache == NULL) goto End;
 
   mux = WebPMuxNew();
   if (mux == NULL) {
@@ -432,21 +350,17 @@ int main(int argc, const char *argv[]) {
 
     switch (type) {
       case IMAGE_DESC_RECORD_TYPE: {
-        WebPPicture sub_image;
         WebPFrameRect gif_rect;
 
         if (!DGifGetImageDesc(gif)) goto End;
-        if (!ReadFrame(gif, &gif_rect, &sub_image, &curr_frame)) {
+        if (!ReadFrame(gif, &gif_rect, &frame)) {
           goto End;
         }
 
-        if (!OptimizeAndEncodeFrame(&config, &gif_rect, &curr_frame,
-                                    &prev_canvas, &curr_canvas, &sub_image,
-                                    &frame, cache)) {
+        if (!WebPFrameCacheAddFrame(cache, &config, &gif_rect, &frame, &info)) {
           fprintf(stderr, "Error! Cannot encode frame as WebP\n");
-          fprintf(stderr, "Error code: %d\n", sub_image.error_code);
+          fprintf(stderr, "Error code: %d\n", frame.error_code);
         }
-        WebPPictureFree(&sub_image);
 
         err = WebPFrameCacheFlush(cache, verbose, mux);
         if (err != WEBP_MUX_OK) {
@@ -454,9 +368,6 @@ int main(int argc, const char *argv[]) {
                   ErrorString(err));
           goto End;
         }
-
-        DisposeFrame(frame.dispose_method, &gif_rect,
-                     &curr_frame, &prev_canvas);
         is_first_frame = 0;
         break;
       }
@@ -475,7 +386,7 @@ int main(int argc, const char *argv[]) {
             const int dispose = (flags >> GIF_DISPOSE_SHIFT) & GIF_DISPOSE_MASK;
             const int delay = data[2] | (data[3] << 8);  // In 10 ms units.
             if (data[0] != 4) goto End;
-            frame.duration = delay * 10;  // Duration is in 1 ms units for WebP.
+            info.duration = delay * 10;  // Duration is in 1 ms units for WebP.
             if (dispose == 3) {
               static int warning_printed = 0;
               if (!warning_printed) {
@@ -484,9 +395,9 @@ int main(int argc, const char *argv[]) {
               }
               // failsafe. TODO(urvang): emulate the correct behaviour by
               // recoding the whole frame.
-              frame.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
+              info.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
             } else {
-              frame.dispose_method =
+              info.dispose_method =
                   (dispose == 2) ? WEBP_MUX_DISPOSE_BACKGROUND
                                  : WEBP_MUX_DISPOSE_NONE;
             }
@@ -497,8 +408,7 @@ int main(int argc, const char *argv[]) {
                 fprintf(stderr, "GIF decode warning: invalid background color "
                                 "index. Assuming white background.\n");
               }
-              WebPUtilClearPic(&curr_frame, NULL);
-              WebPUtilClearPic(&prev_canvas, NULL);
+              WebPUtilClearPic(&frame, NULL);
             }
             break;
           }
@@ -645,9 +555,7 @@ int main(int argc, const char *argv[]) {
  End:
   WebPDataClear(&webp_data);
   WebPMuxDelete(mux);
-  WebPPictureFree(&curr_frame);
-  WebPPictureFree(&prev_canvas);
-  WebPPictureFree(&curr_canvas);
+  WebPPictureFree(&frame);
   WebPFrameCacheDelete(cache);
   if (out != NULL && out_file != NULL) fclose(out);
 
