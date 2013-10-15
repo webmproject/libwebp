@@ -100,6 +100,9 @@ enum { MB_FEATURE_TREE_PROBS = 3,
 #define U_OFF    (Y_OFF + BPS * 16 + BPS)
 #define V_OFF    (U_OFF + 16)
 
+// minimal width under which lossy multi-threading is always disabled
+#define MIN_WIDTH_FOR_THREADS 512
+
 //------------------------------------------------------------------------------
 // Headers
 
@@ -229,7 +232,8 @@ struct VP8Decoder {
 
   // Worker
   WebPWorker worker_;
-  int use_threads_;    // use multi-thread
+  int mt_method_;      // multi-thread method: 0=off, 1=[parse+recon][filter]
+                       // 2=[parse][recon+filter]
   int cache_id_;       // current cache row
   int num_caches_;     // number of cached rows of 16 pixels (1, 2 or 3)
   VP8ThreadContext thread_ctx_;  // Thread context
@@ -288,8 +292,8 @@ struct VP8Decoder {
   size_t mem_size_;
 
   // Per macroblock non-persistent infos.
-  int mb_x_, mb_y_;          // current position, in macroblock units
-  VP8MBData* mb_data_;       // parsed reconstruction data
+  int mb_x_, mb_y_;       // current position, in macroblock units
+  VP8MBData* mb_data_;    // parsed reconstruction data
 
   // Filtering side-info
   int filter_type_;                          // 0=off, 1=simple, 2=complex
@@ -333,6 +337,11 @@ VP8StatusCode VP8EnterCritical(VP8Decoder* const dec, VP8Io* const io);
 // Must always be called in pair with VP8EnterCritical().
 // Returns false in case of error.
 int VP8ExitCritical(VP8Decoder* const dec, VP8Io* const io);
+// Return the multi-threading method to use (0=off), depending
+// on options and bitstream size. Only for lossy decoding.
+int VP8GetThreadMethod(const WebPDecoderOptions* const options,
+                       const WebPHeaderStructure* const headers,
+                       int width, int height);
 // Process the last decoded row (filtering + output)
 int VP8ProcessRow(VP8Decoder* const dec, VP8Io* const io);
 // To be called at the start of a new scanline, to initialize predictors.

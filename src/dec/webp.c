@@ -452,11 +452,6 @@ static VP8StatusCode DecodeInto(const uint8_t* const data, size_t data_size,
     if (dec == NULL) {
       return VP8_STATUS_OUT_OF_MEMORY;
     }
-#ifdef WEBP_USE_THREAD
-    dec->use_threads_ = params->options && (params->options->use_threads > 0);
-#else
-    dec->use_threads_ = 0;
-#endif
     dec->alpha_data_ = headers.alpha_data;
     dec->alpha_data_size_ = headers.alpha_data_size;
 
@@ -468,6 +463,9 @@ static VP8StatusCode DecodeInto(const uint8_t* const data, size_t data_size,
       status = WebPAllocateDecBuffer(io.width, io.height, params->options,
                                      params->output);
       if (status == VP8_STATUS_OK) {  // Decode
+        // This change must be done before calling VP8Decode()
+        dec->mt_method_ = VP8GetThreadMethod(params->options, &headers,
+                                             io.width, io.height);
         if (!VP8Decode(dec, &io)) {
           status = dec->status_;
         }

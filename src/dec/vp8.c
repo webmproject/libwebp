@@ -662,8 +662,8 @@ static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
       return VP8SetError(dec, VP8_STATUS_USER_ABORT, "Output aborted.");
     }
   }
-  if (dec->use_threads_ && !WebPWorkerSync(&dec->worker_)) {
-    return 0;
+  if (dec->mt_method_ > 0) {
+    if (!WebPWorkerSync(&dec->worker_)) return 0;
   }
 
   // Finish
@@ -728,7 +728,7 @@ void VP8Clear(VP8Decoder* const dec) {
   if (dec == NULL) {
     return;
   }
-  if (dec->use_threads_) {
+  if (dec->mt_method_ > 0) {
     WebPWorkerEnd(&dec->worker_);
   }
   ALPHDelete(dec->alph_dec_);

@@ -181,7 +181,9 @@ static int FinishRow(VP8Decoder* const dec, VP8Io* const io) {
   const int is_first_row = (mb_y == 0);
   const int is_last_row = (mb_y >= dec->br_mb_y_ - 1);
 
-  ReconstructRow(dec, ctx);
+  if (dec->mt_method_ == 2) {
+    ReconstructRow(dec, ctx);
+  }
 
   if (ctx->filter_row_) {
     FilterRow(dec);
@@ -263,10 +265,11 @@ int VP8ProcessRow(VP8Decoder* const dec, VP8Io* const io) {
   const int filter_row =
       (dec->filter_type_ > 0) &&
       (dec->mb_y_ >= dec->tl_mb_y_) && (dec->mb_y_ <= dec->br_mb_y_);
-  if (!dec->use_threads_) {
+  if (dec->mt_method_ == 0) {
     // ctx->id_ and ctx->f_info_ are already set
     ctx->mb_y_ = dec->mb_y_;
     ctx->filter_row_ = filter_row;
+    ReconstructRow(dec, ctx);
     ok = FinishRow(dec, io);
   } else {
     WebPWorker* const worker = &dec->worker_;
@@ -278,17 +281,20 @@ int VP8ProcessRow(VP8Decoder* const dec, VP8Io* const io) {
       ctx->id_ = dec->cache_id_;
       ctx->mb_y_ = dec->mb_y_;
       ctx->filter_row_ = filter_row;
-      {
+      if (dec->mt_method_ == 2) {  // swap macroblock data
         VP8MBData* const tmp = ctx->mb_data_;
         ctx->mb_data_ = dec->mb_data_;
         dec->mb_data_ = tmp;
+      } else {
+        // perform reconstruction directly in main thread
+        ReconstructRow(dec, ctx);
       }
-      if (filter_row) {    // just swap filter info
+      if (filter_row) {            // swap filter info
         VP8FInfo* const tmp = ctx->f_info_;
         ctx->f_info_ = dec->f_info_;
         dec->f_info_ = tmp;
       }
-      WebPWorkerLaunch(worker);
+      WebPWorkerLaunch(worker);    // (reconstruct)+filter in parallel
       if (++dec->cache_id_ == dec->num_caches_) {
         dec->cache_id_ = 0;
       }
@@ -357,7 +363,7 @@ VP8StatusCode VP8EnterCritical(VP8Decoder* const dec, VP8Io* const io) {
 
 int VP8ExitCritical(VP8Decoder* const dec, VP8Io* const io) {
   int ok = 1;
-  if (dec->use_threads_) {
+  if (dec->mt_method_ > 0) {
     ok = WebPWorkerSync(&dec->worker_);
   }
 
@@ -397,7 +403,7 @@ int VP8ExitCritical(VP8Decoder* const dec, VP8Io* const io) {
 // Initialize multi/single-thread worker
 static int InitThreadContext(VP8Decoder* const dec) {
   dec->cache_id_ = 0;
-  if (dec->use_threads_) {
+  if (dec->mt_method_ > 0) {
     WebPWorker* const worker = &dec->worker_;
     if (!WebPWorkerReset(worker)) {
       return VP8SetError(dec, VP8_STATUS_OUT_OF_MEMORY,
@@ -412,6 +418,28 @@ static int InitThreadContext(VP8Decoder* const dec) {
     dec->num_caches_ = ST_CACHE_LINES;
   }
   return 1;
+}
+
+int VP8GetThreadMethod(const WebPDecoderOptions* const options,
+                       const WebPHeaderStructure* const headers,
+                       int width, int height) {
+  if (options == NULL || options->use_threads == 0) {
+    return 0;
+  }
+  (void)headers;
+  (void)width;
+  (void)height;
+  assert(!headers->is_lossless);
+#if defined(WEBP_USE_THREAD)
+  if (width < MIN_WIDTH_FOR_THREADS) return 0;
+  // TODO(skal): tune the heuristic further
+#if 0
+  if (height < 2 * width) return 2;
+#endif
+  return 2;
+#else   // !WEBP_USE_THREAD
+  return 0;
+#endif
 }
 
 #undef MT_CACHE_LINES
@@ -429,11 +457,11 @@ static int AllocateMemory(VP8Decoder* const dec) {
   const size_t mb_info_size = (mb_w + 1) * sizeof(VP8MB);
   const size_t f_info_size =
       (dec->filter_type_ > 0) ?
-          mb_w * (dec->use_threads_ ? 2 : 1) * sizeof(VP8FInfo)
+          mb_w * (dec->mt_method_ > 0 ? 2 : 1) * sizeof(VP8FInfo)
         : 0;
   const size_t yuv_size = YUV_SIZE * sizeof(*dec->yuv_b_);
   const size_t mb_data_size =
-      (dec->use_threads_ ? 2 : 1) * mb_w * sizeof(*dec->mb_data_);
+      (dec->mt_method_ == 2 ? 2 : 1) * mb_w * sizeof(*dec->mb_data_);
   const size_t cache_height = (16 * num_caches
                             + kFilterExtraRows[dec->filter_type_]) * 3 / 2;
   const size_t cache_size = top_size * cache_height;
@@ -473,7 +501,7 @@ static int AllocateMemory(VP8Decoder* const dec) {
   mem += f_info_size;
   dec->thread_ctx_.id_ = 0;
   dec->thread_ctx_.f_info_ = dec->f_info_;
-  if (dec->use_threads_) {
+  if (dec->mt_method_ > 0) {
     // secondary cache line. The deblocking process need to make use of the
     // filtering strength from previous macroblock row, while the new ones
     // are being decoded in parallel. We'll just swap the pointers.
@@ -487,7 +515,7 @@ static int AllocateMemory(VP8Decoder* const dec) {
 
   dec->mb_data_ = (VP8MBData*)mem;
   dec->thread_ctx_.mb_data_ = (VP8MBData*)mem;
-  if (dec->use_threads_) {
+  if (dec->mt_method_ == 2) {
     dec->thread_ctx_.mb_data_ += mb_w;
   }
   mem += mb_data_size;
