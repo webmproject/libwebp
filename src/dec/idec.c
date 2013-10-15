@@ -472,9 +472,7 @@ static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
     }
     VP8InitScanline(dec);   // Prepare for next scanline
 
-    // Reconstruct the samples.
-    VP8ReconstructBlocks(dec, dec->mb_y_);
-    // Filter and emit the row.
+    // Reconstruct, filter and emit the row.
     if (!VP8ProcessRow(dec, io)) {
       return IDecError(idec, VP8_STATUS_USER_ABORT);
     }
