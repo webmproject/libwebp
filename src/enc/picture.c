@@ -590,6 +590,64 @@ int WebPPictureHasTransparency(const WebPPicture* picture) {
 //------------------------------------------------------------------------------
 // RGB -> YUV conversion
 
+#define DITHER_FIX 8   // fixed-point precision for dithering
+
+#define kRandomTableSize 55
+static const uint32_t kRandomTable[kRandomTableSize] = {  // 31b-range values
+  0x0de15230, 0x03b31886, 0x775faccb, 0x1c88626a, 0x68385c55, 0x14b3b828,
+  0x4a85fef8, 0x49ddb84b, 0x64fcf397, 0x5c550289, 0x4a290000, 0x0d7ec1da,
+  0x5940b7ab, 0x5492577d, 0x4e19ca72, 0x38d38c69, 0x0c01ee65, 0x32a1755f,
+  0x5437f652, 0x5abb2c32, 0x0faa57b1, 0x73f533e7, 0x685feeda, 0x7563cce2,
+  0x6e990e83, 0x4730a7ed, 0x4fc0d9c6, 0x496b153c, 0x4f1403fa, 0x541afb0c,
+  0x73990b32, 0x26d7cb1c, 0x6fcc3706, 0x2cbb77d8, 0x75762f2a, 0x6425ccdd,
+  0x24b35461, 0x0a7d8715, 0x220414a8, 0x141ebf67, 0x56b41583, 0x73e502e3,
+  0x44cab16f, 0x28264d42, 0x73baaefb, 0x0a50ebed, 0x1d6ab6fb, 0x0d3ad40b,
+  0x35db3b68, 0x2b081e83, 0x77ce6b95, 0x5181e5f0, 0x78853bbc, 0x009f9494,
+  0x27e5ed3c
+};
+
+typedef struct {
+  int index1_, index2_;
+  uint32_t tab_[kRandomTableSize];
+  int amp_;
+} VP8Random;
+
+static void InitRandom(VP8Random* const rg, float dithering) {
+  memcpy(rg->tab_, kRandomTable, sizeof(rg->tab_));
+  rg->index1_ = 0;
+  rg->index2_ = 31;
+  rg->amp_ = (dithering < 0.0) ? 0
+           : (dithering > 1.0) ? (1 << DITHER_FIX)
+           : (uint32_t)((1 << DITHER_FIX) * dithering);
+}
+
+// D.Knuth's Difference-based random generator.
+static WEBP_INLINE int Random(VP8Random* const rg, int num_bits) {
+  int diff;
+  assert(num_bits + DITHER_FIX <= 31);
+  diff = rg->tab_[rg->index1_] - rg->tab_[rg->index2_];
+  if (diff < 0) diff += (1u << 31);
+  rg->tab_[rg->index1_] = diff;
+  if (++rg->index1_ == kRandomTableSize) rg->index1_ = 0;
+  if (++rg->index2_ == kRandomTableSize) rg->index2_ = 0;
+  diff = (diff << 1) >> (32 - num_bits);    // sign-extend, 0-center
+  diff = (diff * rg->amp_) >> DITHER_FIX;   // restrict range
+  diff += 1 << (num_bits - 1);              // shift back to 0.5-center
+  return diff;
+}
+
+static int RGBToY(int r, int g, int b, VP8Random* const rg) {
+  return VP8RGBToY(r, g, b, Random(rg, YUV_FIX));
+}
+
+static int RGBToU(int r, int g, int b, VP8Random* const rg) {
+  return VP8RGBToU(r, g, b, Random(rg, YUV_FIX + 2));
+}
+
+static int RGBToV(int r, int g, int b, VP8Random* const rg) {
+  return VP8RGBToV(r, g, b, Random(rg, YUV_FIX + 2));
+}
+
 // TODO: we can do better than simply 2x2 averaging on U/V samples.
 #define SUM4(ptr) ((ptr)[0] + (ptr)[step] + \
                    (ptr)[rgb_stride] + (ptr)[rgb_stride + step])
@@ -602,8 +660,8 @@ int WebPPictureHasTransparency(const WebPPicture* picture) {
   const int r = SUM(r_ptr + src);                        \
   const int g = SUM(g_ptr + src);                        \
   const int b = SUM(b_ptr + src);                        \
-  picture->u[dst] = VP8RGBToU(r, g, b);                  \
-  picture->v[dst] = VP8RGBToV(r, g, b);                  \
+  picture->u[dst] = RGBToU(r, g, b, &rg);                \
+  picture->v[dst] = RGBToV(r, g, b, &rg);                \
 }
 
 #define RGB_TO_UV0(x_in, x_out, y, SUM) {                \
@@ -612,8 +670,8 @@ int WebPPictureHasTransparency(const WebPPicture* picture) {
   const int r = SUM(r_ptr + src);                        \
   const int g = SUM(g_ptr + src);                        \
   const int b = SUM(b_ptr + src);                        \
-  picture->u0[dst] = VP8RGBToU(r, g, b);                 \
-  picture->v0[dst] = VP8RGBToV(r, g, b);                 \
+  picture->u0[dst] = RGBToU(r, g, b, &rg);               \
+  picture->v0[dst] = RGBToV(r, g, b, &rg);               \
 }
 
 static void MakeGray(WebPPicture* const picture) {
@@ -632,12 +690,14 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
                               const uint8_t* const a_ptr,
                               int step,         // bytes per pixel
                               int rgb_stride,   // bytes per scanline
+                              float dithering,
                               WebPPicture* const picture) {
   const WebPEncCSP uv_csp = picture->colorspace & WEBP_CSP_UV_MASK;
   int x, y;
   const int width = picture->width;
   const int height = picture->height;
   const int has_alpha = CheckNonOpaque(a_ptr, width, height, step, rgb_stride);
+  VP8Random rg;
 
   picture->colorspace = uv_csp;
   picture->use_argb = 0;
@@ -646,12 +706,14 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
   }
   if (!WebPPictureAlloc(picture)) return 0;
 
+  InitRandom(&rg, dithering);
+
   // Import luma plane
   for (y = 0; y < height; ++y) {
     for (x = 0; x < width; ++x) {
       const int offset = step * x + y * rgb_stride;
       picture->y[x + y * picture->y_stride] =
-          VP8RGBToY(r_ptr[offset], g_ptr[offset], b_ptr[offset]);
+          RGBToY(r_ptr[offset], g_ptr[offset], b_ptr[offset], &rg);
     }
   }
 
@@ -722,7 +784,7 @@ static int Import(WebPPicture* const picture,
 
   if (!picture->use_argb) {
     return ImportYUVAFromRGBA(r_ptr, g_ptr, b_ptr, a_ptr, step, rgb_stride,
-                              picture);
+                              0.f /* no dithering */, picture);
   }
   if (import_alpha) {
     picture->colorspace |= WEBP_CSP_ALPHA_BIT;
@@ -855,7 +917,8 @@ int WebPPictureYUVAToARGB(WebPPicture* picture) {
   return 1;
 }
 
-int WebPPictureARGBToYUVA(WebPPicture* picture, WebPEncCSP colorspace) {
+int WebPPictureARGBToYUVADithered(WebPPicture* picture, WebPEncCSP colorspace,
+                                  float dithering) {
   if (picture == NULL) return 0;
   if (picture->argb == NULL) {
     return WebPEncodingSetError(picture, VP8_ENC_ERROR_NULL_PARAMETER);
@@ -871,7 +934,8 @@ int WebPPictureARGBToYUVA(WebPPicture* picture, WebPEncCSP colorspace) {
     PictureResetARGB(&tmp);  // reset ARGB buffer so that it's not free()'d.
     tmp.use_argb = 0;
     tmp.colorspace = colorspace & WEBP_CSP_UV_MASK;
-    if (!ImportYUVAFromRGBA(r, g, b, a, 4, 4 * picture->argb_stride, &tmp)) {
+    if (!ImportYUVAFromRGBA(r, g, b, a, 4, 4 * picture->argb_stride, dithering,
+                            &tmp)) {
       return WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
     }
     // Copy back the YUV specs into 'picture'.
@@ -881,6 +945,10 @@ int WebPPictureARGBToYUVA(WebPPicture* picture, WebPEncCSP colorspace) {
     *picture = tmp;
   }
   return 1;
+}
+
+int WebPPictureARGBToYUVA(WebPPicture* picture, WebPEncCSP colorspace) {
+  return WebPPictureARGBToYUVADithered(picture, colorspace, 0.f);
 }
 
 //------------------------------------------------------------------------------
@@ -960,14 +1028,16 @@ void WebPBlendAlpha(WebPPicture* pic, uint32_t background_rgb) {
   const int red = (background_rgb >> 16) & 0xff;
   const int green = (background_rgb >> 8) & 0xff;
   const int blue = (background_rgb >> 0) & 0xff;
+  VP8Random rg;
   int x, y;
   if (pic == NULL) return;
+  InitRandom(&rg, 0.f);
   if (!pic->use_argb) {
     const int uv_width = (pic->width >> 1);  // omit last pixel during u/v loop
-    const int Y0 = VP8RGBToY(red, green, blue);
+    const int Y0 = RGBToY(red, green, blue, &rg);
     // VP8RGBToU/V expects the u/v values summed over four pixels
-    const int U0 = VP8RGBToU(4 * red, 4 * green, 4 * blue);
-    const int V0 = VP8RGBToV(4 * red, 4 * green, 4 * blue);
+    const int U0 = RGBToU(4 * red, 4 * green, 4 * blue, &rg);
+    const int V0 = RGBToV(4 * red, 4 * green, 4 * blue, &rg);
     const int has_alpha = pic->colorspace & WEBP_CSP_ALPHA_BIT;
     if (!has_alpha || pic->a == NULL) return;    // nothing to do
     for (y = 0; y < pic->height; ++y) {

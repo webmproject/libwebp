@@ -481,7 +481,8 @@ static void ConvertToYUVA(const uint32_t* const src, int width, int y_pos,
     uint8_t* const y = buf->y + y_pos * buf->y_stride;
     for (i = 0; i < width; ++i) {
       const uint32_t p = src[i];
-      y[i] = VP8RGBToY((p >> 16) & 0xff, (p >> 8) & 0xff, (p >> 0) & 0xff);
+      y[i] = VP8RGBToY((p >> 16) & 0xff, (p >> 8) & 0xff, (p >> 0) & 0xff,
+                       YUV_HALF);
     }
   }
 
@@ -500,11 +501,11 @@ static void ConvertToYUVA(const uint32_t* const src, int width, int y_pos,
       const int g = ((v0 >>  7) & 0x1fe) + ((v1 >>  7) & 0x1fe);
       const int b = ((v0 <<  1) & 0x1fe) + ((v1 <<  1) & 0x1fe);
       if (!(y_pos & 1)) {  // even lines: store values
-        u[i] = VP8RGBToU(r, g, b);
-        v[i] = VP8RGBToV(r, g, b);
+        u[i] = VP8RGBToU(r, g, b, YUV_HALF << 2);
+        v[i] = VP8RGBToV(r, g, b, YUV_HALF << 2);
       } else {             // odd lines: average with previous values
-        const int tmp_u = VP8RGBToU(r, g, b);
-        const int tmp_v = VP8RGBToV(r, g, b);
+        const int tmp_u = VP8RGBToU(r, g, b, YUV_HALF << 2);
+        const int tmp_v = VP8RGBToV(r, g, b, YUV_HALF << 2);
         // Approximated average-of-four. But it's an acceptable diff.
         u[i] = (u[i] + tmp_u + 1) >> 1;
         v[i] = (v[i] + tmp_v + 1) >> 1;
@@ -516,11 +517,11 @@ static void ConvertToYUVA(const uint32_t* const src, int width, int y_pos,
       const int g = (v0 >>  6) & 0x3fc;
       const int b = (v0 <<  2) & 0x3fc;
       if (!(y_pos & 1)) {  // even lines
-        u[i] = VP8RGBToU(r, g, b);
-        v[i] = VP8RGBToV(r, g, b);
+        u[i] = VP8RGBToU(r, g, b, YUV_HALF << 2);
+        v[i] = VP8RGBToV(r, g, b, YUV_HALF << 2);
       } else {             // odd lines (note: we could just skip this)
-        const int tmp_u = VP8RGBToU(r, g, b);
-        const int tmp_v = VP8RGBToV(r, g, b);
+        const int tmp_u = VP8RGBToU(r, g, b, YUV_HALF << 2);
+        const int tmp_v = VP8RGBToV(r, g, b, YUV_HALF << 2);
         u[i] = (u[i] + tmp_u + 1) >> 1;
         v[i] = (v[i] + tmp_v + 1) >> 1;
       }

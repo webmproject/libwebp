@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "March 28, 2013"
+.TH CWEBP 1 "October 17, 2013"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -168,8 +168,9 @@ Output additional ASCII-map of encoding information. Possible map values
 range from 1 to 6. This is only meant to help debugging.
 .TP
 .BI \-pre " int
-Specify a pre-processing filter. This option is a placeholder
-and has currently no effect.
+Specify some pre-processing steps. Using a value of '2' will trigger
+quality-dependent pseudo-random dithering during RGBA->YUVA conversion
+(lossy compression only).
 .TP
 .BI \-alpha_filter " string
 Specify the predictive filtering method for the alpha plane. One of 'none',
