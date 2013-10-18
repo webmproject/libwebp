@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+// Uncomment to disable gamma-compression during RGB->U/V averaging
+#define USE_GAMMA_COMPRESSION
+
 #define HALVE(x) (((x) + 1) >> 1)
 #define IS_YUV_CSP(csp, YUV_CSP) (((csp) & WEBP_CSP_UV_MASK) == (YUV_CSP))
 
@@ -648,12 +651,77 @@ static int RGBToV(int r, int g, int b, VP8Random* const rg) {
   return VP8RGBToV(r, g, b, Random(rg, YUV_FIX + 2));
 }
 
-// TODO: we can do better than simply 2x2 averaging on U/V samples.
-#define SUM4(ptr) ((ptr)[0] + (ptr)[step] + \
-                   (ptr)[rgb_stride] + (ptr)[rgb_stride + step])
-#define SUM2H(ptr) (2 * (ptr)[0] + 2 * (ptr)[step])
-#define SUM2V(ptr) (2 * (ptr)[0] + 2 * (ptr)[rgb_stride])
+//------------------------------------------------------------------------------
+
+#if defined(USE_GAMMA_COMPRESSION)
+
+// gamma-compensates loss of resolution during chroma subsampling
+#define kGamma 0.80
+#define kGammaFix 12     // fixed-point precision for linear values
+#define kGammaScale ((1 << kGammaFix) - 1)
+#define kGammaTabFix 7   // fixed-point fractional bits precision
+#define kGammaTabScale (1 << kGammaTabFix)
+#define kGammaTabRounder (kGammaTabScale >> 1)
+#define kGammaTabSize (1 << (kGammaFix - kGammaTabFix))
+
+static int kLinearToGammaTab[kGammaTabSize + 1];
+static uint16_t kGammaToLinearTab[256];
+static int kGammaTablesOk = 0;
+
+static void InitGammaTables(void) {
+  if (!kGammaTablesOk) {
+    int v;
+    const double scale = 1. / kGammaScale;
+    for (v = 0; v <= 255; ++v) {
+      kGammaToLinearTab[v] =
+          (uint16_t)(pow(v / 255., kGamma) * kGammaScale + .5);
+    }
+    for (v = 0; v <= kGammaTabSize; ++v) {
+      const double x = scale * (v << kGammaTabFix);
+      kLinearToGammaTab[v] = (int)(pow(x, 1. / kGamma) * 255. + .5);
+    }
+    kGammaTablesOk = 1;
+  }
+}
+
+static WEBP_INLINE uint32_t GammaToLinear(uint8_t v) {
+  return kGammaToLinearTab[v];
+}
+
+static WEBP_INLINE int LinearToGamma(uint32_t v, int shift) {
+  const int tab_pos = v >> (kGammaTabFix + shift);    // integer part
+  const int x = v & ((kGammaTabScale << shift) - 1);  // fractional part
+  const int v0 = kLinearToGammaTab[tab_pos];
+  const int v1 = kLinearToGammaTab[tab_pos + 1];
+  const int y = v1 * x + v0 * ((kGammaTabScale << shift) - x);  // interpolate
+  return (y + kGammaTabRounder) >> kGammaTabFix;         // descale
+}
+
+#else
+
+static void InitGammaTables(void) {}
+static WEBP_INLINE uint32_t GammaToLinear(uint8_t v) { return v; }
+static WEBP_INLINE int LinearToGamma(uint32_t v, int shift) {
+  (void)shift;
+  return v;
+}
+
+#endif    // USE_GAMMA_COMPRESSION
+
+//------------------------------------------------------------------------------
+
+#define SUM4(ptr) LinearToGamma(                         \
+    GammaToLinear((ptr)[0]) +                            \
+    GammaToLinear((ptr)[step]) +                         \
+    GammaToLinear((ptr)[rgb_stride]) +                   \
+    GammaToLinear((ptr)[rgb_stride + step]), 2)          \
+
+#define SUM2H(ptr) \
+    LinearToGamma(GammaToLinear((ptr)[0]) + GammaToLinear((ptr)[step]), 1)
+#define SUM2V(ptr) \
+    LinearToGamma(GammaToLinear((ptr)[0]) + GammaToLinear((ptr)[rgb_stride]), 1)
 #define SUM1(ptr)  (4 * (ptr)[0])
+
 #define RGB_TO_UV(x, y, SUM) {                           \
   const int src = (2 * (step * (x) + (y) * rgb_stride)); \
   const int dst = (x) + (y) * picture->uv_stride;        \
@@ -707,6 +775,7 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
   if (!WebPPictureAlloc(picture)) return 0;
 
   InitRandom(&rg, dithering);
+  InitGammaTables();
 
   // Import luma plane
   for (y = 0; y < height; ++y) {
