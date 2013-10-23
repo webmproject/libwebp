@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "October 17, 2013"
+.TH CWEBP 1 "October 23, 2013"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -152,6 +152,11 @@ close as possible to this target.
 .BI \-pass " int
 Set a maximum number of passes to use during the dichotomy used by
 options \fB\-size\fP or \fB\-psnr\fP. Maximum value is 10.
+.TP
+.BI \-resize " width height
+Resize the source to a rectangle with size \fBwidth\fP x \fBheight\fP.
+If either (but not both) of the \fBwidth\fP or \fBheight\fP parameters is 0,
+the value will be calculated preserving the aspect-ratio.
 .TP
 .BI \-crop " x_position y_position width height
 Crop the source to a rectangle with top-left corner at coordinates
