@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdH//6qc\u003d",
+        "filename": "man/cwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-10-23T09:23:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdH//6qw\u003d",
+      "revId": "bc084f4b790172fcd1ed6659a708e5b4dab14638",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdH//6qs\u003d",
         "filename": "man/cwebp.1",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdH//6qY\u003d",
+        "filename": "man/cwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-10-23T09:23:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdH//6qs\u003d",
+      "revId": "bc084f4b790172fcd1ed6659a708e5b4dab14638",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdH//6qo\u003d",
         "filename": "man/cwebp.1",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2013-10-23T08:41:27Z",
       "side": 1,
       "message": "...the value will be calculated preserving the aspect-ratio...?",
+      "revId": "bc084f4b790172fcd1ed6659a708e5b4dab14638",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdH//6qU\u003d",
+        "filename": "man/cwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-10-23T09:23:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdH//6qo\u003d",
       "revId": "bc084f4b790172fcd1ed6659a708e5b4dab14638",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
