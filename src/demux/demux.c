@@ -623,7 +623,7 @@ static int CheckFrameBounds(const Frame* const frame, int exact,
 static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
   const int has_fragments = !!(dmux->feature_flags_ & FRAGMENTS_FLAG);
   const int has_frames = !!(dmux->feature_flags_ & ANIMATION_FLAG);
-  const Frame* f;
+  const Frame* f = dmux->frames_;
 
   if (dmux->state_ == WEBP_DEMUX_PARSING_HEADER) return 1;
 
@@ -631,7 +631,7 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
   if (dmux->loop_count_ < 0) return 0;
   if (dmux->state_ == WEBP_DEMUX_DONE && dmux->frames_ == NULL) return 0;
 
-  for (f = dmux->frames_; f != NULL; f = f->next_) {
+  while (f != NULL) {
     const int cur_frame_set = f->frame_num_;
     int frame_count = 0, fragment_count = 0;
 
