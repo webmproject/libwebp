@@ -127,7 +127,7 @@ static const uint8_t kBiasMatrices[3][16] = {  // [3] = [luma-ac,luma-dc,chroma]
     96, 96, 96, 96 }
 };
 
-// Sharpening by (slightly) raising the hi-frequency coeffs (only for trellis).
+// Sharpening by (slightly) raising the hi-frequency coeffs.
 // Hack-ish but helpful for mid-bitrate range. Use with care.
 static const uint8_t kFreqSharpening[16] = {
   0,  30, 60, 90,
@@ -147,14 +147,13 @@ static int ExpandMatrix(VP8Matrix* const m, int type) {
     m->q_[i] = m->q_[1];
   }
   for (i = 0; i < 16; ++i) {
-    const int j = kZigzag[i];
-    const int bias = kBiasMatrices[type][j];
-    m->iq_[j] = (1 << QFIX) / m->q_[j];
-    m->bias_[j] = BIAS(bias);
+    const int bias = kBiasMatrices[type][i];
+    m->iq_[i] = (1 << QFIX) / m->q_[i];
+    m->bias_[i] = BIAS(bias);
     // TODO(skal): tune kCoeffThresh[]
-    m->zthresh_[j] = ((256 /*+ kCoeffThresh[j]*/ - bias) * m->q_[j] + 127) >> 8;
-    m->sharpen_[j] = (kFreqSharpening[j] * m->q_[j]) >> 11;
-    sum += m->q_[j];
+    m->zthresh_[i] = ((256 /*+ kCoeffThresh[i]*/ - bias) * m->q_[i] + 127) >> 8;
+    m->sharpen_[i] = (kFreqSharpening[i] * m->q_[i]) >> 11;
+    sum += m->q_[i];
   }
   return (sum + 8) >> 4;
 }
