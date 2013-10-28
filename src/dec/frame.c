@@ -34,26 +34,18 @@ static void ReconstructRow(const VP8Decoder* const dec,
 //                 U/V, so it's 8 samples total (because of the 2x upsampling).
 static const uint8_t kFilterExtraRows[3] = { 0, 2, 8 };
 
-static WEBP_INLINE int hev_thresh_from_level(int level, int keyframe) {
-  if (keyframe) {
-    return (level >= 40) ? 2 : (level >= 15) ? 1 : 0;
-  } else {
-    return (level >= 40) ? 3 : (level >= 20) ? 2 : (level >= 15) ? 1 : 0;
-  }
-}
-
 static void DoFilter(const VP8Decoder* const dec, int mb_x, int mb_y) {
   const VP8ThreadContext* const ctx = &dec->thread_ctx_;
   const int cache_id = ctx->id_;
   const int y_bps = dec->cache_y_stride_;
   const VP8FInfo* const f_info = ctx->f_info_ + mb_x;
   uint8_t* const y_dst = dec->cache_y_ + cache_id * 16 * y_bps + mb_x * 16;
-  const int level = f_info->f_level_;
   const int ilevel = f_info->f_ilevel_;
-  const int limit = 2 * level + ilevel;
-  if (level == 0) {
+  const int limit = f_info->f_limit_;
+  if (limit == 0) {
     return;
   }
+  assert(limit >= 3);
   if (dec->filter_type_ == 1) {   // simple
     if (mb_x > 0) {
       VP8SimpleHFilter16(y_dst, y_bps, limit + 4);
@@ -71,8 +63,7 @@ static void DoFilter(const VP8Decoder* const dec, int mb_x, int mb_y) {
     const int uv_bps = dec->cache_uv_stride_;
     uint8_t* const u_dst = dec->cache_u_ + cache_id * 8 * uv_bps + mb_x * 8;
     uint8_t* const v_dst = dec->cache_v_ + cache_id * 8 * uv_bps + mb_x * 8;
-    const int hev_thresh =
-        hev_thresh_from_level(level, dec->frm_hdr_.key_frame_);
+    const int hev_thresh = f_info->hev_thresh_;
     if (mb_x > 0) {
       VP8HFilter16(y_dst, y_bps, limit + 4, ilevel, hev_thresh);
       VP8HFilter8(u_dst, v_dst, uv_bps, limit + 4, ilevel, hev_thresh);
@@ -132,19 +123,25 @@ static void PrecomputeFilterStrengths(VP8Decoder* const dec) {
           }
         }
         level = (level < 0) ? 0 : (level > 63) ? 63 : level;
-        info->f_level_ = level;
-
-        if (hdr->sharpness_ > 0) {
-          if (hdr->sharpness_ > 4) {
-            level >>= 2;
-          } else {
-            level >>= 1;
+        if (level > 0) {
+          int ilevel = level;
+          if (hdr->sharpness_ > 0) {
+            if (hdr->sharpness_ > 4) {
+              ilevel >>= 2;
+            } else {
+              ilevel >>= 1;
+            }
+            if (ilevel > 9 - hdr->sharpness_) {
+              ilevel = 9 - hdr->sharpness_;
+            }
           }
-          if (level > 9 - hdr->sharpness_) {
-            level = 9 - hdr->sharpness_;
-          }
+          if (ilevel < 1) ilevel = 1;
+          info->f_ilevel_ = ilevel;
+          info->f_limit_ = 2 * level + ilevel;
+          info->hev_thresh_ = (level >= 40) ? 2 : (level >= 15) ? 1 : 0;
+        } else {
+          info->f_limit_ = 0;  // no filtering
         }
-        info->f_ilevel_ = (level < 1) ? 1 : level;
         info->f_inner_ = i4x4;
       }
     }

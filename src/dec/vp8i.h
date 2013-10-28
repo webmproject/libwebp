@@ -164,10 +164,10 @@ typedef struct {
 // Informations about the macroblocks.
 
 typedef struct {  // filter specs
-  uint8_t f_level_;      // filter strength: 0..63
-  uint8_t f_ilevel_;     // inner limit: 1..63
+  uint8_t f_limit_;      // filter limit in [3..189], or 0 if no filtering
+  uint8_t f_ilevel_;     // inner limit in [1..63]
   uint8_t f_inner_;      // do inner filtering?
-  uint8_t pad_;          // mostly needed for struct aligning on ARM
+  uint8_t hev_thresh_;   // high edge variance threshold in [0..2]
 } VP8FInfo;
 
 typedef struct {  // Top/Left Contexts used for syntax-parsing
