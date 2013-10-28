@@ -630,7 +630,7 @@ int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br) {
   if (dec->filter_type_ > 0) {  // store filter info
     VP8FInfo* const finfo = dec->f_info_ + dec->mb_x_;
     *finfo = dec->fstrengths_[dec->segment_][block->is_i4x4_];
-    finfo->f_inner_ = !skip || block->is_i4x4_;
+    finfo->f_inner_ |= !skip;
   }
 
   return !token_br->eof_;

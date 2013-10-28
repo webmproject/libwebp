@@ -145,7 +145,7 @@ static void PrecomputeFilterStrengths(VP8Decoder* const dec) {
           }
         }
         info->f_ilevel_ = (level < 1) ? 1 : level;
-        info->f_inner_ = 0;
+        info->f_inner_ = i4x4;
       }
     }
   }
