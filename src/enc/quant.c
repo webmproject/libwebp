@@ -13,6 +13,7 @@
 
 #include <assert.h>
 #include <math.h>
+#include <stdlib.h>  // for abs()
 
 #include "./vp8enci.h"
 #include "./cost.h"
@@ -181,17 +182,17 @@ static void SetupMatrices(VP8Encoder* enc) {
     q16 = ExpandMatrix(&m->y2_, 1);
     quv = ExpandMatrix(&m->uv_, 2);
 
-    // TODO: Switch to kLambda*[] tables?
-    {
-      m->lambda_i4_  = (3 * q4 * q4) >> 7;
-      m->lambda_i16_ = (3 * q16 * q16);
-      m->lambda_uv_  = (3 * quv * quv) >> 6;
-      m->lambda_mode_    = (1 * q4 * q4) >> 7;
-      m->lambda_trellis_i4_  = (7 * q4 * q4) >> 3;
-      m->lambda_trellis_i16_ = (q16 * q16) >> 2;
-      m->lambda_trellis_uv_  = (quv *quv) << 1;
-      m->tlambda_            = (tlambda_scale * q4) >> 5;
-    }
+    m->lambda_i4_          = (3 * q4 * q4) >> 7;
+    m->lambda_i16_         = (3 * q16 * q16);
+    m->lambda_uv_          = (3 * quv * quv) >> 6;
+    m->lambda_mode_        = (1 * q4 * q4) >> 7;
+    m->lambda_trellis_i4_  = (7 * q4 * q4) >> 3;
+    m->lambda_trellis_i16_ = (q16 * q16) >> 2;
+    m->lambda_trellis_uv_  = (quv *quv) << 1;
+    m->tlambda_            = (tlambda_scale * q4) >> 5;
+
+    m->min_disto_ = 10 * m->y1_.q_[0];   // quantization-aware min disto
+    m->max_edge_  = 0;
   }
 }
 
@@ -200,16 +201,21 @@ static void SetupMatrices(VP8Encoder* enc) {
 
 // Very small filter-strength values have close to no visual effect. So we can
 // save a little decoding-CPU by turning filtering off for these.
-#define FSTRENGTH_CUTOFF 3
+#define FSTRENGTH_CUTOFF 2
 
 static void SetupFilterStrength(VP8Encoder* const enc) {
   int i;
-  const int level0 = enc->config_->filter_strength;
+  // level0 is in [0..500]. Using '-f 50' as filter_strength is mid-filtering.
+  const int level0 = 5 * enc->config_->filter_strength;
   for (i = 0; i < NUM_MB_SEGMENTS; ++i) {
-    // Segments with lower quantizer will be less filtered. TODO: tune (wrt SNS)
-    const int level = level0 * 256 * enc->dqm_[i].quant_ / 128;
-    const int f = level / (256 + enc->dqm_[i].beta_);
-    enc->dqm_[i].fstrength_ = (f < FSTRENGTH_CUTOFF) ? 0 : (f > 63) ? 63 : f;
+    VP8SegmentInfo* const m = &enc->dqm_[i];
+    // We focus on the quantization of AC coeffs.
+    const int qstep = kAcTable[clip(m->quant_, 0, 127)] >> 2;
+    const int base_strength =
+        VP8FilterStrengthFromDelta(enc->filter_hdr_.sharpness_, qstep);
+    // Segments with lower complexity ('beta') will be less filtered.
+    const int f = base_strength * level0 / (256 + m->beta_);
+    m->fstrength_ = (f < FSTRENGTH_CUTOFF) ? 0 : (f > 63) ? 63 : f;
   }
   // We record the initial strength (mainly for the case of 1-segment only).
   enc->filter_hdr_.level_ = enc->dqm_[0].fstrength_;
@@ -648,10 +654,10 @@ static int ReconstructIntra16(VP8EncIterator* const it,
                               VP8ModeScore* const rd,
                               uint8_t* const yuv_out,
                               int mode) {
-  const VP8Encoder* const enc = it->enc_;
+  VP8Encoder* const enc = it->enc_;
   const uint8_t* const ref = it->yuv_p_ + VP8I16ModeOffsets[mode];
   const uint8_t* const src = it->yuv_in_ + Y_OFF;
-  const VP8SegmentInfo* const dqm = &enc->dqm_[it->mb_->segment_];
+  VP8SegmentInfo* const dqm = &enc->dqm_[it->mb_->segment_];
   int nz = 0;
   int n;
   int16_t tmp[16][16], dc_tmp[16];
@@ -757,6 +763,17 @@ static int ReconstructUV(VP8EncIterator* const it, VP8ModeScore* const rd,
 // RD-opt decision. Reconstruct each modes, evalue distortion and bit-cost.
 // Pick the mode is lower RD-cost = Rate + lamba * Distortion.
 
+static void StoreMaxDelta(VP8SegmentInfo* const dqm, const int16_t DCs[16]) {
+  // We look at the first three AC coefficients to determine what is the average
+  // delta between each sub-4x4 block.
+  const int v0 = abs(DCs[1]);
+  const int v1 = abs(DCs[4]);
+  const int v2 = abs(DCs[5]);
+  int max_v = (v0 > v1) ? v1 : v0;
+  max_v = (v2 > max_v) ? v2 : max_v;
+  if (max_v > dqm->max_edge_) dqm->max_edge_ = max_v;
+}
+
 static void SwapPtr(uint8_t** a, uint8_t** b) {
   uint8_t* const tmp = *a;
   *a = *b;
@@ -768,8 +785,8 @@ static void SwapOut(VP8EncIterator* const it) {
 }
 
 static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* const rd) {
-  const VP8Encoder* const enc = it->enc_;
-  const VP8SegmentInfo* const dqm = &enc->dqm_[it->mb_->segment_];
+  VP8Encoder* const enc = it->enc_;
+  VP8SegmentInfo* const dqm = &enc->dqm_[it->mb_->segment_];
   const int lambda = dqm->lambda_i16_;
   const int tlambda = dqm->tlambda_;
   const uint8_t* const src = it->yuv_in_ + Y_OFF;
@@ -804,6 +821,13 @@ static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* const rd) {
   }
   SetRDScore(dqm->lambda_mode_, rd);   // finalize score for mode decision.
   VP8SetIntra16Mode(it, rd->mode_i16);
+
+  // we have a blocky macroblock (only DCs are non-zero) with fairly high
+  // distortion, record max delta so we can later adjust the minimal filtering
+  // strength needed to smooth these blocks out.
+  if ((rd->nz & 0xffff) == 0 && rd->D > dqm->min_disto_) {
+    StoreMaxDelta(dqm, rd->y_dc_levels);
+  }
 }
 
 //------------------------------------------------------------------------------
