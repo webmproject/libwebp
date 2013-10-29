@@ -248,6 +248,8 @@ typedef struct {
   int beta_;       // filter-susceptibility, range [0,255].
   int quant_;      // final segment quantizer.
   int fstrength_;  // final in-loop filtering strength
+  int max_edge_;   // max edge delta (for filtering strength)
+  int min_disto_;  // minimum distortion required to trigger filtering record
   // reactivities
   int lambda_i16_, lambda_i4_, lambda_uv_;
   int lambda_mode_, lambda_trellis_, tlambda_;
@@ -554,6 +556,10 @@ double VP8SSIMGetSquaredError(const DistoStats* const stats);
 void VP8InitFilter(VP8EncIterator* const it);
 void VP8StoreFilterStats(VP8EncIterator* const it);
 void VP8AdjustFilterStrength(VP8EncIterator* const it);
+
+// returns the approximate filtering strength needed to smooth a edge
+// step of 'delta', given a sharpness parameter 'sharpness'.
+int VP8FilterStrengthFromDelta(int sharpness, int delta);
 
 //------------------------------------------------------------------------------
 
