@@ -12,6 +12,11 @@
 // Author: James Zern (jzern@google.com)
 
 /*
+  Go bindings:
+  $ swig -go \
+         -outdir . \
+         -o libwebp_go_wrap.c libwebp.swig
+
   Java bindings:
   $ mkdir -p java/com/google/webp
   $ swig -java \
@@ -33,6 +38,13 @@
 
 %include "constraints.i"
 %include "typemaps.i"
+
+#ifdef SWIGGO
+%apply (char* STRING, size_t LENGTH) { (const uint8_t* data, size_t data_size) }
+
+%rename(wrapped_WebPGetInfo) WebPGetInfo(const uint8_t* data, size_t data_size,
+                                         int* width, int* height);
+#endif  /* SWIGGO */
 
 #ifdef SWIGJAVA
 %include "arrays_java.i";
@@ -96,6 +108,12 @@ DECODE_AUTODOC(WebPDecodeBGRA);
 
 %apply int* OUTPUT { int* width, int* height }
 
+int WebPGetDecoderVersion(void);
+int WebPGetInfo(const uint8_t* data, size_t data_size,
+                int* width, int* height);
+
+#if defined(SWIGJAVA) || defined(SWIGPYTHON)
+
 // free the buffer returned by these functions after copying into
 // the native type
 %newobject WebPDecodeRGB;
@@ -104,10 +122,6 @@ DECODE_AUTODOC(WebPDecodeBGRA);
 %newobject WebPDecodeBGR;
 %newobject WebPDecodeBGRA;
 %typemap(newfree) uint8_t* "free($1);"
-
-int WebPGetDecoderVersion(void);
-int WebPGetInfo(const uint8_t* data, size_t data_size,
-                int* width, int* height);
 
 uint8_t* WebPDecodeRGB(const uint8_t* data, size_t data_size,
                        int* width, int* height);
@@ -120,10 +134,16 @@ uint8_t* WebPDecodeBGR(const uint8_t* data, size_t data_size,
 uint8_t* WebPDecodeBGRA(const uint8_t* data, size_t data_size,
                         int* width, int* height);
 
+#endif  /* SWIGJAVA || SWIGPYTHON */
+
 //------------------------------------------------------------------------------
 // Encoder specific
 
+#if defined(SWIGJAVA) || defined(SWIGPYTHON)
+
 int WebPGetEncoderVersion(void);
+
+#endif  /* SWIGJAVA || SWIGPYTHON */
 
 //------------------------------------------------------------------------------
 // Wrapper code additions
@@ -193,7 +213,6 @@ static size_t ReturnedBufferSize(
   return size;
 }
 %}
-#endif  /* SWIGJAVA || SWIGPYTHON */
 
 %{
 typedef size_t (*WebPEncodeFunction)(const uint8_t* rgb,
@@ -232,8 +251,12 @@ static uint8_t* EncodeLossless(const uint8_t* rgb,
 }
 %}
 
+#endif  /* SWIGJAVA || SWIGPYTHON */
+
 //------------------------------------------------------------------------------
 // libwebp/encode wrapper functions
+
+#if defined(SWIGJAVA) || defined(SWIGPYTHON)
 
 %apply int* INPUT { int* unused1, int* unused2 }
 %apply int* OUTPUT { int* output_size }
@@ -304,8 +327,27 @@ LOSSLESS_WRAPPER(WebPEncodeLosslessBGRA)
 
 %}
 
+#endif  /* SWIGJAVA || SWIGPYTHON */
+
 //------------------------------------------------------------------------------
 // Language specific
+
+#ifdef SWIGGO
+%insert(go_wrapper) %{
+
+// WebPGetInfo has 2 output parameters, provide a version in the more natural
+// go idiom:
+func WebPGetInfo(webp []byte) (ok bool, width int, height int) {
+    w := []int{0}
+    h := []int{0}
+    ok = Wrapped_WebPGetInfo(string(webp), w, h) != 0
+    width = w[0]
+    height = h[0]
+    return
+}
+
+%}
+#endif  /* SWIGGO */
 
 #ifdef SWIGJAVA
 %{
