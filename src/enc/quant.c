@@ -169,20 +169,8 @@ static const uint16_t kCoeffThresh[16] = {
   30, 30, 30, 30
 };
 
-// TODO(skal): tune more. Coeff thresholding?
-static const uint8_t kBiasMatrices[3][16] = {  // [3] = [luma-ac,luma-dc,chroma]
-  { 96, 96, 96, 96,
-    96, 96, 96, 96,
-    96, 96, 96, 96,
-    96, 96, 96, 96 },
-  { 96, 96, 96, 96,
-    96, 96, 96, 96,
-    96, 96, 96, 96,
-    96, 96, 96, 96 },
-  { 96, 96, 96, 96,
-    96, 96, 96, 96,
-    96, 96, 96, 96,
-    96, 96, 96, 96 }
+static const uint8_t kBiasMatrices[3][2] = {  // [luma-ac,luma-dc,chroma][dc,ac]
+  { 96, 110 }, { 96, 112 }, { 112, 120 }
 };
 
 // Sharpening by (slightly) raising the hi-frequency coeffs.
@@ -205,7 +193,8 @@ static int ExpandMatrix(VP8Matrix* const m, int type) {
     m->q_[i] = m->q_[1];
   }
   for (i = 0; i < 16; ++i) {
-    const int bias = kBiasMatrices[type][i];
+    const int is_ac_coeff = (i > 0);
+    const int bias = kBiasMatrices[type][is_ac_coeff];
     m->iq_[i] = (1 << QFIX) / m->q_[i];
     m->bias_[i] = BIAS(bias);
     // TODO(skal): tune kCoeffThresh[]
