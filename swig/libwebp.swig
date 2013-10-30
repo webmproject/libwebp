@@ -17,12 +17,12 @@
   $ swig -java \
          -package com.google.webp \
          -outdir java/com/google/webp \
-         -o libwebp_java_wrap.c libwebp.i
+         -o libwebp_java_wrap.c libwebp.swig
 
   Python bindings:
   $ swig -python \
          -outdir . \
-         -o libwebp_python_wrap.c libwebp.i
+         -o libwebp_python_wrap.c libwebp.swig
 */
 
 #ifdef SWIGPYTHON
