@@ -179,7 +179,7 @@ void VP8LFillBitWindow(VP8LBitReader* const br) {
     }
 #endif
     ShiftBytes(br);       // Slow path.
-    if (br->pos_ == br->len_ && br->bit_pos_ == LBITS) {
+    if (br->pos_ == br->len_ && br->bit_pos_ >= LBITS) {
       br->eos_ = 1;
     }
   }
