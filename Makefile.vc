@@ -224,6 +224,7 @@ UTILS_DEC_OBJS = \
     $(DIROBJ)\utils\huffman.obj \
     $(DIROBJ)\utils\quant_levels_dec.obj \
     $(DIROBJ)\utils\rescaler.obj \
+    $(DIROBJ)\utils\random.obj \
     $(DIROBJ)\utils\thread.obj \
     $(DIROBJ)\utils\utils.obj \
 

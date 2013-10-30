@@ -156,6 +156,7 @@ UTILS_DEC_OBJS = \
     src/utils/filters.o \
     src/utils/huffman.o \
     src/utils/quant_levels_dec.o \
+    src/utils/random.o \
     src/utils/rescaler.o \
     src/utils/thread.o \
     src/utils/utils.o \
@@ -199,6 +200,7 @@ HDRS = \
     src/utils/huffman_encode.h \
     src/utils/quant_levels.h \
     src/utils/quant_levels_dec.h \
+    src/utils/random.h \
     src/utils/rescaler.h \
     src/utils/thread.h \
     src/webp/format_constants.h \

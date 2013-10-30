@@ -55,6 +55,7 @@ LOCAL_SRC_FILES := \
     src/utils/huffman_encode.c \
     src/utils/quant_levels.c \
     src/utils/quant_levels_dec.c \
+    src/utils/random.c \
     src/utils/rescaler.c \
     src/utils/thread.c \
     src/utils/utils.c \
