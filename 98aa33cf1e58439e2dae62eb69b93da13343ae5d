@@ -16,6 +16,24 @@
       "revId": "98aa33cf1e58439e2dae62eb69b93da13343ae5d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdX///MY\u003d",
+        "filename": "src/utils/random.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-10-30T10:24:41Z",
+      "side": 1,
+      "message": "indeed!\n\n\u003d\u003e  https://gerrit.chromium.org/gerrit/67706",
+      "parentUuid": "AAAAdX///Mg\u003d",
+      "revId": "98aa33cf1e58439e2dae62eb69b93da13343ae5d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
