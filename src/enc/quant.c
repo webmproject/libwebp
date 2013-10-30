@@ -34,9 +34,66 @@
 
 #define MULT_8B(a, b) (((a) * (b) + 128) >> 8)
 
+// #define DEBUG_BLOCK
+
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
 #endif
+
+//------------------------------------------------------------------------------
+
+#if defined(DEBUG_BLOCK)
+
+#include <stdio.h>
+#include <stdlib.h>
+
+static void PrintBlockInfo(const VP8EncIterator* const it,
+                           const VP8ModeScore* const rd) {
+  int i, j;
+  const int is_i16 = (it->mb_->type_ == 1);
+  printf("SOURCE / OUTPUT / ABS DELTA\n");
+  for (j = 0; j < 24; ++j) {
+    if (j == 16) printf("\n");   // newline before the U/V block
+    for (i = 0; i < 16; ++i) printf("%3d ", it->yuv_in_[i + j * BPS]);
+    printf("     ");
+    for (i = 0; i < 16; ++i) printf("%3d ", it->yuv_out_[i + j * BPS]);
+    printf("     ");
+    for (i = 0; i < 16; ++i) {
+      printf("%1d ", abs(it->yuv_out_[i + j * BPS] - it->yuv_in_[i + j * BPS]));
+    }
+    printf("\n");
+  }
+  printf("\nD:%d SD:%d R:%d H:%d nz:0x%x score:%d\n",
+    (int)rd->D, (int)rd->SD, (int)rd->R, (int)rd->H, (int)rd->nz,
+    (int)rd->score);
+  if (is_i16) {
+    printf("Mode: %d\n", rd->mode_i16);
+    printf("y_dc_levels:");
+    for (i = 0; i < 16; ++i) printf("%3d ", rd->y_dc_levels[i]);
+    printf("\n");
+  } else {
+    printf("Modes[16]: ");
+    for (i = 0; i < 16; ++i) printf("%d ", rd->modes_i4[i]);
+    printf("\n");
+  }
+  printf("y_ac_levels:\n");
+  for (j = 0; j < 16; ++j) {
+    for (i = is_i16 ? 1 : 0; i < 16; ++i) {
+      printf("%4d ", rd->y_ac_levels[j][i]);
+    }
+    printf("\n");
+  }
+  printf("\n");
+  printf("uv_levels (mode=%d):\n", rd->mode_uv);
+  for (j = 0; j < 8; ++j) {
+    for (i = 0; i < 16; ++i) {
+      printf("%4d ", rd->uv_levels[j][i]);
+    }
+    printf("\n");
+  }
+}
+
+#endif   // DEBUG_BLOCK
 
 //------------------------------------------------------------------------------
 
