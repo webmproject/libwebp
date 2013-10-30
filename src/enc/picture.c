@@ -17,6 +17,7 @@
 
 #include "./vp8enci.h"
 #include "../utils/alpha_processing.h"
+#include "../utils/random.h"
 #include "../utils/rescaler.h"
 #include "../utils/utils.h"
 #include "../dsp/dsp.h"
@@ -593,62 +594,16 @@ int WebPPictureHasTransparency(const WebPPicture* picture) {
 //------------------------------------------------------------------------------
 // RGB -> YUV conversion
 
-#define DITHER_FIX 8   // fixed-point precision for dithering
-
-#define kRandomTableSize 55
-static const uint32_t kRandomTable[kRandomTableSize] = {  // 31b-range values
-  0x0de15230, 0x03b31886, 0x775faccb, 0x1c88626a, 0x68385c55, 0x14b3b828,
-  0x4a85fef8, 0x49ddb84b, 0x64fcf397, 0x5c550289, 0x4a290000, 0x0d7ec1da,
-  0x5940b7ab, 0x5492577d, 0x4e19ca72, 0x38d38c69, 0x0c01ee65, 0x32a1755f,
-  0x5437f652, 0x5abb2c32, 0x0faa57b1, 0x73f533e7, 0x685feeda, 0x7563cce2,
-  0x6e990e83, 0x4730a7ed, 0x4fc0d9c6, 0x496b153c, 0x4f1403fa, 0x541afb0c,
-  0x73990b32, 0x26d7cb1c, 0x6fcc3706, 0x2cbb77d8, 0x75762f2a, 0x6425ccdd,
-  0x24b35461, 0x0a7d8715, 0x220414a8, 0x141ebf67, 0x56b41583, 0x73e502e3,
-  0x44cab16f, 0x28264d42, 0x73baaefb, 0x0a50ebed, 0x1d6ab6fb, 0x0d3ad40b,
-  0x35db3b68, 0x2b081e83, 0x77ce6b95, 0x5181e5f0, 0x78853bbc, 0x009f9494,
-  0x27e5ed3c
-};
-
-typedef struct {
-  int index1_, index2_;
-  uint32_t tab_[kRandomTableSize];
-  int amp_;
-} VP8Random;
-
-static void InitRandom(VP8Random* const rg, float dithering) {
-  memcpy(rg->tab_, kRandomTable, sizeof(rg->tab_));
-  rg->index1_ = 0;
-  rg->index2_ = 31;
-  rg->amp_ = (dithering < 0.0) ? 0
-           : (dithering > 1.0) ? (1 << DITHER_FIX)
-           : (uint32_t)((1 << DITHER_FIX) * dithering);
-}
-
-// D.Knuth's Difference-based random generator.
-static WEBP_INLINE int Random(VP8Random* const rg, int num_bits) {
-  int diff;
-  assert(num_bits + DITHER_FIX <= 31);
-  diff = rg->tab_[rg->index1_] - rg->tab_[rg->index2_];
-  if (diff < 0) diff += (1u << 31);
-  rg->tab_[rg->index1_] = diff;
-  if (++rg->index1_ == kRandomTableSize) rg->index1_ = 0;
-  if (++rg->index2_ == kRandomTableSize) rg->index2_ = 0;
-  diff = (diff << 1) >> (32 - num_bits);    // sign-extend, 0-center
-  diff = (diff * rg->amp_) >> DITHER_FIX;   // restrict range
-  diff += 1 << (num_bits - 1);              // shift back to 0.5-center
-  return diff;
-}
-
 static int RGBToY(int r, int g, int b, VP8Random* const rg) {
-  return VP8RGBToY(r, g, b, Random(rg, YUV_FIX));
+  return VP8RGBToY(r, g, b, VP8RandomBits(rg, YUV_FIX));
 }
 
 static int RGBToU(int r, int g, int b, VP8Random* const rg) {
-  return VP8RGBToU(r, g, b, Random(rg, YUV_FIX + 2));
+  return VP8RGBToU(r, g, b, VP8RandomBits(rg, YUV_FIX + 2));
 }
 
 static int RGBToV(int r, int g, int b, VP8Random* const rg) {
-  return VP8RGBToV(r, g, b, Random(rg, YUV_FIX + 2));
+  return VP8RGBToV(r, g, b, VP8RandomBits(rg, YUV_FIX + 2));
 }
 
 //------------------------------------------------------------------------------
@@ -774,7 +729,7 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
   }
   if (!WebPPictureAlloc(picture)) return 0;
 
-  InitRandom(&rg, dithering);
+  VP8InitRandom(&rg, dithering);
   InitGammaTables();
 
   // Import luma plane
@@ -1100,7 +1055,7 @@ void WebPBlendAlpha(WebPPicture* pic, uint32_t background_rgb) {
   VP8Random rg;
   int x, y;
   if (pic == NULL) return;
-  InitRandom(&rg, 0.f);
+  VP8InitRandom(&rg, 0.f);
   if (!pic->use_argb) {
     const int uv_width = (pic->width >> 1);  // omit last pixel during u/v loop
     const int Y0 = RGBToY(red, green, blue, &rg);
