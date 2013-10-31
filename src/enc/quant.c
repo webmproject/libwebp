@@ -32,6 +32,13 @@
 
 #define I4_PENALTY 4000   // Rate-penalty for quick i4/i16 decision
 
+// number of non-zero coeffs below which we consider the block very flat
+// (and apply a penalty to complex predictions)
+#define FLATNESS_LIMIT_I16 10      // I16 mode
+#define FLATNESS_LIMIT_I4  3       // I4 mode
+#define FLATNESS_LIMIT_UV  2       // UV mode
+#define FLATNESS_PENALTY   140     // roughly ~1bit per block
+
 #define MULT_8B(a, b) (((a) * (b) + 128) >> 8)
 
 // #define DEBUG_BLOCK
@@ -830,7 +837,21 @@ static void SwapOut(VP8EncIterator* const it) {
   SwapPtr(&it->yuv_out_, &it->yuv_out2_);
 }
 
+static score_t IsFlat(const int16_t* levels, int num_blocks, score_t thresh) {
+  score_t score = 0;
+  while (num_blocks-- > 0) {      // TODO(skal): refine positional scoring?
+    int i;
+    for (i = 1; i < 16; ++i) {    // omit DC, we're only interested in AC
+      score += (levels[i] != 0);
+      if (score > thresh) return 0;
+    }
+    levels += 16;
+  }
+  return 1;
+}
+
 static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* const rd) {
+  const int kNumBlocks = 16;
   VP8Encoder* const enc = it->enc_;
   VP8SegmentInfo* const dqm = &enc->dqm_[it->mb_->segment_];
   const int lambda = dqm->lambda_i16_;
@@ -851,8 +872,13 @@ static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* const rd) {
     rd16.D = VP8SSE16x16(src, tmp_dst);
     rd16.SD = tlambda ? MULT_8B(tlambda, VP8TDisto16x16(src, tmp_dst, kWeightY))
             : 0;
-    rd16.R = VP8GetCostLuma16(it, &rd16);
     rd16.H = VP8FixedCostsI16[mode];
+    rd16.R = VP8GetCostLuma16(it, &rd16);
+    if (mode > 0 &&
+        IsFlat(rd16.y_ac_levels[0], kNumBlocks, FLATNESS_LIMIT_I16)) {
+      // penalty to avoid flat area to be mispredicted by complex mode
+      rd16.R += FLATNESS_PENALTY * kNumBlocks;
+    }
 
     // Since we always examine Intra16 first, we can overwrite *rd directly.
     SetRDScore(lambda, &rd16);
@@ -907,6 +933,7 @@ static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
   SetRDScore(dqm->lambda_mode_, &rd_best);
   VP8IteratorStartI4(it);
   do {
+    const int kNumBlocks = 1;
     VP8ModeScore rd_i4;
     int mode;
     int best_mode = -1;
@@ -930,8 +957,11 @@ static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
       rd_tmp.SD =
           tlambda ? MULT_8B(tlambda, VP8TDisto4x4(src, tmp_dst, kWeightY))
                   : 0;
-      rd_tmp.R = VP8GetCostLuma4(it, tmp_levels);
       rd_tmp.H = mode_costs[mode];
+      rd_tmp.R = VP8GetCostLuma4(it, tmp_levels);
+      if (mode > 0 && IsFlat(tmp_levels, kNumBlocks, FLATNESS_LIMIT_I4)) {
+        rd_tmp.R += FLATNESS_PENALTY * kNumBlocks;
+      }
 
       SetRDScore(lambda, &rd_tmp);
       if (best_mode < 0 || rd_tmp.score < rd_i4.score) {
@@ -969,6 +999,7 @@ static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
 //------------------------------------------------------------------------------
 
 static void PickBestUV(VP8EncIterator* const it, VP8ModeScore* const rd) {
+  const int kNumBlocks = 8;
   const VP8Encoder* const enc = it->enc_;
   const VP8SegmentInfo* const dqm = &enc->dqm_[it->mb_->segment_];
   const int lambda = dqm->lambda_uv_;
@@ -989,8 +1020,11 @@ static void PickBestUV(VP8EncIterator* const it, VP8ModeScore* const rd) {
     // Compute RD-score
     rd_uv.D  = VP8SSE16x8(src, tmp_dst);
     rd_uv.SD = 0;    // TODO: should we call TDisto? it tends to flatten areas.
-    rd_uv.R  = VP8GetCostUV(it, &rd_uv);
     rd_uv.H  = VP8FixedCostsUV[mode];
+    rd_uv.R  = VP8GetCostUV(it, &rd_uv);
+    if (mode > 0 && IsFlat(rd_uv.uv_levels[0], kNumBlocks, FLATNESS_LIMIT_UV)) {
+      rd_uv.R += FLATNESS_PENALTY * kNumBlocks;
+    }
 
     SetRDScore(lambda, &rd_uv);
     if (mode == 0 || rd_uv.score < rd_best.score) {
