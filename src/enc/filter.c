@@ -18,8 +18,11 @@
 extern "C" {
 #endif
 
-// this table gives, for a given sharpness, the filtering strength to be
+// This table gives, for a given sharpness, the filtering strength to be
 // used (at least) in order to filter a given edge step delta.
+// This is constructed by brute force inspection: for all delta, we iterate
+// over all possible filtering strength / thresh until needs_filter() returns
+// true.
 #define MAX_DELTA_SIZE 64
 static const uint8_t kLevelsFromDelta[8][MAX_DELTA_SIZE] = {
   { 0,   1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
