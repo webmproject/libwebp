@@ -33,56 +33,8 @@ static const int8_t kYModesIntra4[18] = {
 };
 #endif
 
-#ifndef ONLY_KEYFRAME_CODE
-
-// inter prediction modes
-enum {
-  LEFT4 = 0, ABOVE4 = 1, ZERO4 = 2, NEW4 = 3,
-  NEARESTMV, NEARMV, ZEROMV, NEWMV, SPLITMV };
-
-static const int8_t kYModesInter[8] = {
-  -DC_PRED, 1,
-    2, 3,
-      -V_PRED, -H_PRED,
-      -TM_PRED, -B_PRED
-};
-
-static const int8_t kMBSplit[6] = {
-  -3, 1,
-    -2, 2,
-      -0, -1
-};
-
-static const int8_t kMVRef[8] = {
-  -ZEROMV, 1,
-    -NEARESTMV, 2,
-      -NEARMV, 3,
-        -NEWMV, -SPLITMV
-};
-
-static const int8_t kMVRef4[6] = {
-  -LEFT4, 1,
-    -ABOVE4, 2,
-      -ZERO4, -NEW4
-};
-#endif
-
 //------------------------------------------------------------------------------
 // Default probabilities
-
-// Inter
-#ifndef ONLY_KEYFRAME_CODE
-static const uint8_t kYModeProbaInter0[4] = { 112, 86, 140, 37 };
-static const uint8_t kUVModeProbaInter0[3] = { 162, 101, 204 };
-static const uint8_t kMVProba0[2][NUM_MV_PROBAS] = {
-  { 162, 128, 225, 146, 172, 147, 214,  39,
-    156, 128, 129, 132,  75, 145, 178, 206,
-    239, 254, 254 },
-  { 164, 128, 204, 170, 119, 235, 140, 230,
-    228, 128, 130, 130,  74, 148, 180, 203,
-    236, 254, 254 }
-};
-#endif
 
 // Paragraph 13.5
 static const uint8_t
@@ -328,11 +280,6 @@ static const uint8_t kBModesProba[NUM_BMODES][NUM_BMODES][NUM_BMODES - 1] = {
 void VP8ResetProba(VP8Proba* const proba) {
   memset(proba->segments_, 255u, sizeof(proba->segments_));
   // proba->bands_[][] is initialized later
-#ifndef ONLY_KEYFRAME_CODE
-  memcpy(proba->mv_, kMVProba0, sizeof(kMVProba0));
-  memcpy(proba->ymode_, kYModeProbaInter0, sizeof(kYModeProbaInter0));
-  memcpy(proba->uvmode_, kUVModeProbaInter0, sizeof(kUVModeProbaInter0));
-#endif
 }
 
 void VP8ParseIntraMode(VP8BitReader* const br, VP8Decoder* const dec) {
@@ -528,17 +475,6 @@ static const uint8_t
   }
 };
 
-#ifndef ONLY_KEYFRAME_CODE
-static const uint8_t MVUpdateProba[2][NUM_MV_PROBAS] = {
-  { 237, 246, 253, 253, 254, 254, 254, 254,
-    254, 254, 254, 254, 254, 254, 250, 250,
-    252, 254, 254 },
-  { 231, 243, 245, 253, 254, 254, 254, 254,
-    254, 254, 254, 254, 254, 254, 251, 251,
-    254, 254, 254 }
-};
-#endif
-
 // Paragraph 9.9
 void VP8ParseProba(VP8BitReader* const br, VP8Decoder* const dec) {
   VP8Proba* const proba = &dec->proba_;
@@ -558,34 +494,6 @@ void VP8ParseProba(VP8BitReader* const br, VP8Decoder* const dec) {
   if (dec->use_skip_proba_) {
     dec->skip_p_ = VP8GetValue(br, 8);
   }
-#ifndef ONLY_KEYFRAME_CODE
-  if (!dec->frm_hdr_.key_frame_) {
-    int i;
-    dec->intra_p_ = VP8GetValue(br, 8);
-    dec->last_p_ = VP8GetValue(br, 8);
-    dec->golden_p_ = VP8GetValue(br, 8);
-    if (VP8Get(br)) {   // update y-mode
-      for (i = 0; i < 4; ++i) {
-        proba->ymode_[i] = VP8GetValue(br, 8);
-      }
-    }
-    if (VP8Get(br)) {   // update uv-mode
-      for (i = 0; i < 3; ++i) {
-        proba->uvmode_[i] = VP8GetValue(br, 8);
-      }
-    }
-    // update MV
-    for (i = 0; i < 2; ++i) {
-      int k;
-      for (k = 0; k < NUM_MV_PROBAS; ++k) {
-        if (VP8GetBit(br, MVUpdateProba[i][k])) {
-          const int v = VP8GetValue(br, 7);
-          proba->mv_[i][k] = v ? v << 1 : 1;
-        }
-      }
-    }
-  }
-#endif
 }
 
 #if defined(__cplusplus) || defined(c_plusplus)

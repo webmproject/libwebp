@@ -359,38 +359,11 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
 
   // Frame buffer marking
   if (!frm_hdr->key_frame_) {
-    // Paragraph 9.7
-#ifndef ONLY_KEYFRAME_CODE
-    dec->buffer_flags_ = VP8Get(br) << 0;   // update golden
-    dec->buffer_flags_ |= VP8Get(br) << 1;  // update alt ref
-    if (!(dec->buffer_flags_ & 1)) {
-      dec->buffer_flags_ |= VP8GetValue(br, 2) << 2;
-    }
-    if (!(dec->buffer_flags_ & 2)) {
-      dec->buffer_flags_ |= VP8GetValue(br, 2) << 4;
-    }
-    dec->buffer_flags_ |= VP8Get(br) << 6;    // sign bias golden
-    dec->buffer_flags_ |= VP8Get(br) << 7;    // sign bias alt ref
-#else
     return VP8SetError(dec, VP8_STATUS_UNSUPPORTED_FEATURE,
                        "Not a key frame.");
-#endif
-  } else {
-    dec->buffer_flags_ = 0x003 | 0x100;
   }
 
-  // Paragraph 9.8
-#ifndef ONLY_KEYFRAME_CODE
-  dec->update_proba_ = VP8Get(br);
-  if (!dec->update_proba_) {    // save for later restore
-    dec->proba_saved_ = dec->proba_;
-  }
-  dec->buffer_flags_ &= 1 << 8;
-  dec->buffer_flags_ |=
-      (frm_hdr->key_frame_ || VP8Get(br)) << 8;    // refresh last frame
-#else
-  VP8Get(br);   // just ignore the value of update_proba_
-#endif
+  VP8Get(br);   // ignore the value of update_proba_
 
   VP8ParseProba(br, dec);
 
@@ -667,12 +640,6 @@ static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
   }
 
   // Finish
-#ifndef ONLY_KEYFRAME_CODE
-  if (!dec->update_proba_) {
-    dec->proba_ = dec->proba_saved_;
-  }
-#endif
-
 #ifdef WEBP_EXPERIMENTAL_FEATURES
   if (dec->layer_data_size_ > 0) {
     if (!VP8DecodeLayer(dec)) {
