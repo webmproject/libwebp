@@ -324,10 +324,10 @@ static int BackwardReferencesHashChain(int xsize, int ysize,
             const int ix = VP8LColorCacheGetIndex(&hashers, pixel);
             refs->refs[refs->size] = PixOrCopyCreateCacheIdx(ix);
           } else {
+            if (use_color_cache) VP8LColorCacheInsert(&hashers, pixel);
             refs->refs[refs->size] = PixOrCopyCreateLiteral(pixel);
           }
           ++refs->size;
-          if (use_color_cache) VP8LColorCacheInsert(&hashers, pixel);
           i++;  // Backward reference to be done for next pixel.
           len = len2;
           offset = offset2;
@@ -357,10 +357,10 @@ static int BackwardReferencesHashChain(int xsize, int ysize,
         const int ix = VP8LColorCacheGetIndex(&hashers, pixel);
         refs->refs[refs->size] = PixOrCopyCreateCacheIdx(ix);
       } else {
+        if (use_color_cache) VP8LColorCacheInsert(&hashers, pixel);
         refs->refs[refs->size] = PixOrCopyCreateLiteral(pixel);
       }
       ++refs->size;
-      if (use_color_cache) VP8LColorCacheInsert(&hashers, pixel);
       if (i + 1 < pix_count) {
         HashChainInsert(hash_chain, &argb[i], i);
       }
@@ -577,13 +577,13 @@ static int BackwardReferencesHashChainDistanceOnly(
         const int ix = VP8LColorCacheGetIndex(&hashers, argb[i]);
         cost_val += GetCacheCost(cost_model, ix) * mul0;
       } else {
+        if (use_color_cache) VP8LColorCacheInsert(&hashers, argb[i]);
         cost_val += GetLiteralCost(cost_model, argb[i]) * mul1;
       }
       if (cost[i] > cost_val) {
         cost[i] = (float)cost_val;
         dist_array[i] = 1;  // only one is inserted.
       }
-      if (use_color_cache) VP8LColorCacheInsert(&hashers, argb[i]);
     }
  next_symbol: ;
   }
@@ -675,9 +675,9 @@ static int BackwardReferencesHashChainFollowChosenPath(
         const int idx = VP8LColorCacheGetIndex(&hashers, argb[i]);
         refs->refs[size] = PixOrCopyCreateCacheIdx(idx);
       } else {
+        if (use_color_cache) VP8LColorCacheInsert(&hashers, argb[i]);
         refs->refs[size] = PixOrCopyCreateLiteral(argb[i]);
       }
-      if (use_color_cache) VP8LColorCacheInsert(&hashers, argb[i]);
       if (i + 1 < pix_count) {
         HashChainInsert(hash_chain, &argb[i], i);
       }
