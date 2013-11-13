@@ -603,6 +603,8 @@ static int IsValidSimpleFormat(const WebPDemuxer* const dmux) {
 
 // If 'exact' is true, check that the image resolution matches the canvas.
 // If 'exact' is false, check that the x/y offsets do not exceed the canvas.
+// TODO(jzern): this is insufficient in the fragmented image case if the
+// expectation is that the fragments completely cover the canvas.
 static int CheckFrameBounds(const Frame* const frame, int exact,
                             int canvas_width, int canvas_height) {
   if (exact) {
@@ -630,6 +632,9 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
   if (dmux->canvas_width_ <= 0 || dmux->canvas_height_ <= 0) return 0;
   if (dmux->loop_count_ < 0) return 0;
   if (dmux->state_ == WEBP_DEMUX_DONE && dmux->frames_ == NULL) return 0;
+#ifndef WEBP_EXPERIMENTAL_FEATURES
+  if (has_fragments) return 0;
+#endif
 
   while (f != NULL) {
     const int cur_frame_set = f->frame_num_;
@@ -641,8 +646,10 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
       const ChunkData* const image = f->img_components_;
       const ChunkData* const alpha = f->img_components_ + 1;
 
+      if (has_fragments && !f->is_fragment_) return 0;
       if (!has_fragments && f->is_fragment_) return 0;
       if (!has_frames && f->frame_num_ > 1) return 0;
+
       if (f->complete_) {
         if (alpha->size_ == 0 && image->size_ == 0) return 0;
         // Ensure alpha precedes image bitstream.
