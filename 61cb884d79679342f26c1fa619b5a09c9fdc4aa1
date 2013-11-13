@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdX//9q8\u003d",
+        "filename": "src/demux/demux.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 675,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-11-13T22:37:01Z",
+      "side": 1,
+      "message": "Consider a case where a file:\n- Has ANIMATION_FLAG on (in VP8X chunk), but is actually just a single image bitstream (or a single-frame animation); and\n- Has different width/height in VP8X chunk and VP8 chunk.\n\nWould that be caught?\n\nIf not, CheckFrameBounds() should be called with exact \u003d 1 for \"f-\u003enext_ \u003d\u003d NULL at line#628\" case too.",
+      "revId": "61cb884d79679342f26c1fa619b5a09c9fdc4aa1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
