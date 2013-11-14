@@ -513,8 +513,9 @@ static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
       case MKFOURCC('A', 'L', 'P', 'H'):
       case MKFOURCC('V', 'P', '8', ' '):
       case MKFOURCC('V', 'P', '8', 'L'): {
+        const int has_frames = !!(dmux->feature_flags_ & ANIMATION_FLAG);
         // check that this isn't an animation (all frames should be in an ANMF).
-        if (anim_chunks > 0) return PARSE_ERROR;
+        if (anim_chunks > 0 || has_frames) return PARSE_ERROR;
 
         Rewind(mem, CHUNK_HEADER_SIZE);
         status = ParseSingleImage(dmux);
