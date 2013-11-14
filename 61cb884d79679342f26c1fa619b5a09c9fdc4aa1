@@ -52,6 +52,24 @@
       "revId": "61cb884d79679342f26c1fa619b5a09c9fdc4aa1",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdX//9dc\u003d",
+        "filename": "src/demux/demux.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 675,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2013-11-14T19:37:15Z",
+      "side": 1,
+      "message": "Yes, I was talking about a plain VP8+ALPH file.\nSure, a separate change sounds good.",
+      "parentUuid": "AAAAdX//9i8\u003d",
+      "revId": "61cb884d79679342f26c1fa619b5a09c9fdc4aa1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
