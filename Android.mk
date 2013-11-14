@@ -3,7 +3,8 @@ LOCAL_PATH := $(call my-dir)
 WEBP_CFLAGS := -Wall -DANDROID -DHAVE_MALLOC_H -DHAVE_PTHREAD -DWEBP_USE_THREAD
 
 ifeq ($(APP_OPTIM),release)
-  WEBP_CFLAGS += -finline-functions -frename-registers -ffast-math -s
+  WEBP_CFLAGS += -finline-functions -frename-registers -ffast-math -s \
+                 -ffunction-sections -fdata-sections
 endif
 
 include $(CLEAR_VARS)
