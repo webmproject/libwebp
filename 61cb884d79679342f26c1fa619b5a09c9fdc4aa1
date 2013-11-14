@@ -16,6 +16,24 @@
       "revId": "61cb884d79679342f26c1fa619b5a09c9fdc4aa1",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdX//9jI\u003d",
+        "filename": "src/demux/demux.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 675,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-11-14T03:59:59Z",
+      "side": 1,
+      "message": "so if someone extracts a single frame from an animation and leaves the bit set we\u0027ll start failing?",
+      "parentUuid": "AAAAdX//9q8\u003d",
+      "revId": "61cb884d79679342f26c1fa619b5a09c9fdc4aa1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
