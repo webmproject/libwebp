@@ -360,8 +360,8 @@ static ParseStatus ParseFragment(WebPDemuxer* const dmux,
   frame->x_offset_ = 2 * ReadLE24s(mem);
   frame->y_offset_ = 2 * ReadLE24s(mem);
 
-  // Store a fragment only if the fragments flag is set there is some data for
-  // this fragment is available.
+  // Store a fragment only if the 'fragments' flag is set and there is some
+  // data available.
   status = StoreFrame(frame_num, frgm_payload_size, mem, frame);
   if (status != PARSE_ERROR && has_fragments && frame->frame_num_ > 0) {
     added_fragment = AddFrame(dmux, frame);
@@ -682,7 +682,6 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
     }
     if (!has_fragments && frame_count > 1) return 0;
     if (fragment_count > 0 && frame_count != fragment_count) return 0;
-    if (f == NULL) break;
   }
   return 1;
 }
