@@ -75,6 +75,7 @@ struct WebPDemuxer {
   Frame* frames_;
   Frame** frames_tail_;
   Chunk* chunks_;  // non-image chunks
+  Chunk** chunks_tail_;
 };
 
 typedef enum {
@@ -179,10 +180,9 @@ static WEBP_INLINE uint32_t ReadLE32(MemBuffer* const mem) {
 // Secondary chunk parsing
 
 static void AddChunk(WebPDemuxer* const dmux, Chunk* const chunk) {
-  Chunk** c = &dmux->chunks_;
-  while (*c != NULL) c = &(*c)->next_;
-  *c = chunk;
+  *dmux->chunks_tail_ = chunk;
   chunk->next_ = NULL;
+  dmux->chunks_tail_ = &chunk->next_;
 }
 
 // Add a frame to the end of the list, ensuring the last frame is complete.
@@ -697,6 +697,7 @@ static void InitDemux(WebPDemuxer* const dmux, const MemBuffer* const mem) {
   dmux->canvas_width_ = -1;
   dmux->canvas_height_ = -1;
   dmux->frames_tail_ = &dmux->frames_;
+  dmux->chunks_tail_ = &dmux->chunks_;
   dmux->mem_ = *mem;
 }
 
