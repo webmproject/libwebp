@@ -466,35 +466,11 @@ static ParseStatus ParseSingleImage(WebPDemuxer* const dmux) {
   return status;
 }
 
-static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
+static ParseStatus ParseVP8XChunks(WebPDemuxer* const dmux) {
+  const int is_animation = !!(dmux->feature_flags_ & ANIMATION_FLAG);
   MemBuffer* const mem = &dmux->mem_;
   int anim_chunks = 0;
-  uint32_t vp8x_size;
   ParseStatus status = PARSE_OK;
-
-  if (MemDataSize(mem) < CHUNK_HEADER_SIZE) return PARSE_NEED_MORE_DATA;
-
-  dmux->is_ext_format_ = 1;
-  Skip(mem, TAG_SIZE);  // VP8X
-  vp8x_size = ReadLE32(mem);
-  if (vp8x_size > MAX_CHUNK_PAYLOAD) return PARSE_ERROR;
-  if (vp8x_size < VP8X_CHUNK_SIZE) return PARSE_ERROR;
-  vp8x_size += vp8x_size & 1;
-  if (SizeIsInvalid(mem, vp8x_size)) return PARSE_ERROR;
-  if (MemDataSize(mem) < vp8x_size) return PARSE_NEED_MORE_DATA;
-
-  dmux->feature_flags_ = ReadByte(mem);
-  Skip(mem, 3);  // Reserved.
-  dmux->canvas_width_  = 1 + ReadLE24s(mem);
-  dmux->canvas_height_ = 1 + ReadLE24s(mem);
-  if (dmux->canvas_width_ * (uint64_t)dmux->canvas_height_ >= MAX_IMAGE_AREA) {
-    return PARSE_ERROR;  // image final dimension is too large
-  }
-  Skip(mem, vp8x_size - VP8X_CHUNK_SIZE);  // skip any trailing data.
-  dmux->state_ = WEBP_DEMUX_PARSED_HEADER;
-
-  if (SizeIsInvalid(mem, CHUNK_HEADER_SIZE)) return PARSE_ERROR;
-  if (MemDataSize(mem) < CHUNK_HEADER_SIZE) return PARSE_NEED_MORE_DATA;
 
   do {
     int store_chunk = 1;
@@ -513,7 +489,6 @@ static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
       case MKFOURCC('A', 'L', 'P', 'H'):
       case MKFOURCC('V', 'P', '8', ' '):
       case MKFOURCC('V', 'P', '8', 'L'): {
-        const int is_animation = !!(dmux->feature_flags_ & ANIMATION_FLAG);
         // check that this isn't an animation (all frames should be in an ANMF).
         if (anim_chunks > 0 || is_animation) return PARSE_ERROR;
 
@@ -552,12 +527,12 @@ static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
         store_chunk = !!(dmux->feature_flags_ & ICCP_FLAG);
         goto Skip;
       }
-      case MKFOURCC('X', 'M', 'P', ' '): {
-        store_chunk = !!(dmux->feature_flags_ & XMP_FLAG);
-        goto Skip;
-      }
       case MKFOURCC('E', 'X', 'I', 'F'): {
         store_chunk = !!(dmux->feature_flags_ & EXIF_FLAG);
+        goto Skip;
+      }
+      case MKFOURCC('X', 'M', 'P', ' '): {
+        store_chunk = !!(dmux->feature_flags_ & XMP_FLAG);
         goto Skip;
       }
  Skip:
@@ -586,6 +561,37 @@ static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
   } while (status == PARSE_OK);
 
   return status;
+}
+
+static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
+  MemBuffer* const mem = &dmux->mem_;
+  uint32_t vp8x_size;
+
+  if (MemDataSize(mem) < CHUNK_HEADER_SIZE) return PARSE_NEED_MORE_DATA;
+
+  dmux->is_ext_format_ = 1;
+  Skip(mem, TAG_SIZE);  // VP8X
+  vp8x_size = ReadLE32(mem);
+  if (vp8x_size > MAX_CHUNK_PAYLOAD) return PARSE_ERROR;
+  if (vp8x_size < VP8X_CHUNK_SIZE) return PARSE_ERROR;
+  vp8x_size += vp8x_size & 1;
+  if (SizeIsInvalid(mem, vp8x_size)) return PARSE_ERROR;
+  if (MemDataSize(mem) < vp8x_size) return PARSE_NEED_MORE_DATA;
+
+  dmux->feature_flags_ = ReadByte(mem);
+  Skip(mem, 3);  // Reserved.
+  dmux->canvas_width_  = 1 + ReadLE24s(mem);
+  dmux->canvas_height_ = 1 + ReadLE24s(mem);
+  if (dmux->canvas_width_ * (uint64_t)dmux->canvas_height_ >= MAX_IMAGE_AREA) {
+    return PARSE_ERROR;  // image final dimension is too large
+  }
+  Skip(mem, vp8x_size - VP8X_CHUNK_SIZE);  // skip any trailing data.
+  dmux->state_ = WEBP_DEMUX_PARSED_HEADER;
+
+  if (SizeIsInvalid(mem, CHUNK_HEADER_SIZE)) return PARSE_ERROR;
+  if (MemDataSize(mem) < CHUNK_HEADER_SIZE) return PARSE_NEED_MORE_DATA;
+
+  return ParseVP8XChunks(dmux);
 }
 
 // -----------------------------------------------------------------------------
