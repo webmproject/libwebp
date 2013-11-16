@@ -301,7 +301,7 @@ static ParseStatus NewFrame(const MemBuffer* const mem,
 // 'frame_chunk_size' is the previously validated, padded chunk size.
 static ParseStatus ParseAnimationFrame(
     WebPDemuxer* const dmux, uint32_t frame_chunk_size) {
-  const int has_frames = !!(dmux->feature_flags_ & ANIMATION_FLAG);
+  const int is_animation = !!(dmux->feature_flags_ & ANIMATION_FLAG);
   const uint32_t anmf_payload_size = frame_chunk_size - ANMF_CHUNK_SIZE;
   int added_frame = 0;
   int bits;
@@ -328,7 +328,7 @@ static ParseStatus ParseAnimationFrame(
   // Store a frame only if the animation flag is set there is some data for
   // this frame is available.
   status = StoreFrame(dmux->num_frames_ + 1, anmf_payload_size, mem, frame);
-  if (status != PARSE_ERROR && has_frames && frame->frame_num_ > 0) {
+  if (status != PARSE_ERROR && is_animation && frame->frame_num_ > 0) {
     added_frame = AddFrame(dmux, frame);
     if (added_frame) {
       ++dmux->num_frames_;
@@ -347,7 +347,7 @@ static ParseStatus ParseAnimationFrame(
 static ParseStatus ParseFragment(WebPDemuxer* const dmux,
                                  uint32_t fragment_chunk_size) {
   const int frame_num = 1;  // All fragments belong to the 1st (and only) frame.
-  const int has_fragments = !!(dmux->feature_flags_ & FRAGMENTS_FLAG);
+  const int is_fragmented = !!(dmux->feature_flags_ & FRAGMENTS_FLAG);
   const uint32_t frgm_payload_size = fragment_chunk_size - FRGM_CHUNK_SIZE;
   int added_fragment = 0;
   MemBuffer* const mem = &dmux->mem_;
@@ -363,7 +363,7 @@ static ParseStatus ParseFragment(WebPDemuxer* const dmux,
   // Store a fragment only if the 'fragments' flag is set and there is some
   // data available.
   status = StoreFrame(frame_num, frgm_payload_size, mem, frame);
-  if (status != PARSE_ERROR && has_fragments && frame->frame_num_ > 0) {
+  if (status != PARSE_ERROR && is_fragmented && frame->frame_num_ > 0) {
     added_fragment = AddFrame(dmux, frame);
     if (!added_fragment) {
       status = PARSE_ERROR;
@@ -513,9 +513,9 @@ static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
       case MKFOURCC('A', 'L', 'P', 'H'):
       case MKFOURCC('V', 'P', '8', ' '):
       case MKFOURCC('V', 'P', '8', 'L'): {
-        const int has_frames = !!(dmux->feature_flags_ & ANIMATION_FLAG);
+        const int is_animation = !!(dmux->feature_flags_ & ANIMATION_FLAG);
         // check that this isn't an animation (all frames should be in an ANMF).
-        if (anim_chunks > 0 || has_frames) return PARSE_ERROR;
+        if (anim_chunks > 0 || is_animation) return PARSE_ERROR;
 
         Rewind(mem, CHUNK_HEADER_SIZE);
         status = ParseSingleImage(dmux);
@@ -624,8 +624,8 @@ static int CheckFrameBounds(const Frame* const frame, int exact,
 }
 
 static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
-  const int has_fragments = !!(dmux->feature_flags_ & FRAGMENTS_FLAG);
-  const int has_frames = !!(dmux->feature_flags_ & ANIMATION_FLAG);
+  const int is_animation = !!(dmux->feature_flags_ & ANIMATION_FLAG);
+  const int is_fragmented = !!(dmux->feature_flags_ & FRAGMENTS_FLAG);
   const Frame* f = dmux->frames_;
 
   if (dmux->state_ == WEBP_DEMUX_PARSING_HEADER) return 1;
@@ -634,7 +634,7 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
   if (dmux->loop_count_ < 0) return 0;
   if (dmux->state_ == WEBP_DEMUX_DONE && dmux->frames_ == NULL) return 0;
 #ifndef WEBP_EXPERIMENTAL_FEATURES
-  if (has_fragments) return 0;
+  if (is_fragmented) return 0;
 #endif
 
   while (f != NULL) {
@@ -647,9 +647,9 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
       const ChunkData* const image = f->img_components_;
       const ChunkData* const alpha = f->img_components_ + 1;
 
-      if (has_fragments && !f->is_fragment_) return 0;
-      if (!has_fragments && f->is_fragment_) return 0;
-      if (!has_frames && f->frame_num_ > 1) return 0;
+      if (is_fragmented && !f->is_fragment_) return 0;
+      if (!is_fragmented && f->is_fragment_) return 0;
+      if (!is_animation && f->frame_num_ > 1) return 0;
 
       if (f->complete_) {
         if (alpha->size_ == 0 && image->size_ == 0) return 0;
@@ -673,7 +673,7 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
       }
 
       if (f->width_ > 0 && f->height_ > 0 &&
-          !CheckFrameBounds(f, !(has_frames || has_fragments),
+          !CheckFrameBounds(f, !(is_animation || is_fragmented),
                             dmux->canvas_width_, dmux->canvas_height_)) {
         return 0;
       }
@@ -681,7 +681,7 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
       fragment_count += f->is_fragment_;
       ++frame_count;
     }
-    if (!has_fragments && frame_count > 1) return 0;
+    if (!is_fragmented && frame_count > 1) return 0;
     if (fragment_count > 0 && frame_count != fragment_count) return 0;
   }
   return 1;
