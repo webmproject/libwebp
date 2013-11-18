@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH GIF2WEBP 1 "September 30, 2013"
+.TH GIF2WEBP 1 "November 13, 2013"
 .SH NAME
 gif2webp \- Convert a GIF image to WebP
 .SH SYNOPSIS
@@ -27,6 +27,10 @@ Print the version number (as major.minor.revision) and exit.
 .TP
 .B \-lossy
 Encode the image using lossy compression.
+.TP
+.B \-mixed
+Mixed compression mode: optimize compression of the image by picking either
+lossy or lossless compression for each frame heuristically.
 .TP
 .BI \-q " float
 Specify the compression factor for RGB channels between 0 and 100. The default

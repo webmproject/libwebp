@@ -212,6 +212,8 @@ static void Help(void) {
   printf("options:\n");
   printf("  -h / -help  ............ this help\n");
   printf("  -lossy ................. Encode image using lossy compression.\n");
+  printf("  -mixed ................. For each frame in the image, pick lossy\n"
+         "                           or lossless compression heuristically.\n");
   printf("  -q <float> ............. quality factor (0:small..100:big)\n");
   printf("  -m <int> ............... compression method (0=fast, 6=slowest)\n");
   printf("  -kmin <int> ............ Min distance between key frames\n");
@@ -253,6 +255,7 @@ int main(int argc, const char *argv[]) {
   int default_kmax = 1;
   size_t kmin = 0;
   size_t kmax = 0;
+  int allow_mixed = 0;   // If true, each frame can be lossy or lossless.
 
   memset(&info, 0, sizeof(info));
   info.id = WEBP_CHUNK_ANMF;
@@ -278,6 +281,9 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-o") && c < argc - 1) {
       out_file = argv[++c];
     } else if (!strcmp(argv[c], "-lossy")) {
+      config.lossless = 0;
+    } else if (!strcmp(argv[c], "-mixed")) {
+      allow_mixed = 1;
       config.lossless = 0;
     } else if (!strcmp(argv[c], "-q") && c < argc - 1) {
       config.quality = (float)strtod(argv[++c], NULL);
@@ -348,7 +354,7 @@ int main(int argc, const char *argv[]) {
   if (!WebPPictureAlloc(&frame)) goto End;
 
   // Initialize cache
-  cache = WebPFrameCacheNew(frame.width, frame.height, kmin, kmax);
+  cache = WebPFrameCacheNew(frame.width, frame.height, kmin, kmax, allow_mixed);
   if (cache == NULL) goto End;
 
   mux = WebPMuxNew();

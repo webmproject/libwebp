@@ -267,6 +267,7 @@ struct WebPFrameCache {
   size_t kmin;                   // Min distance between key frames.
   size_t kmax;                   // Max distance between key frames.
   size_t count_since_key_frame;  // Frames seen since the last key frame.
+  int allow_mixed;           // If true, each frame can be lossy or lossless.
   WebPPicture prev_canvas;   // Previous canvas (properly disposed).
   WebPPicture curr_canvas;   // Current canvas (temporary buffer).
   int is_first_frame;        // True if no frames have been added to the cache
@@ -284,7 +285,7 @@ static void CacheReset(WebPFrameCache* const cache) {
 }
 
 WebPFrameCache* WebPFrameCacheNew(int width, int height,
-                                  size_t kmin, size_t kmax) {
+                                  size_t kmin, size_t kmax, int allow_mixed) {
   WebPFrameCache* cache = (WebPFrameCache*)malloc(sizeof(*cache));
   if (cache == NULL) return NULL;
   CacheReset(cache);
@@ -305,6 +306,7 @@ WebPFrameCache* WebPFrameCacheNew(int width, int height,
   WebPUtilClearPic(&cache->prev_canvas, NULL);
 
   // Cache data.
+  cache->allow_mixed = allow_mixed;
   cache->kmin = kmin;
   cache->kmax = kmax;
   cache->count_since_key_frame = 0;
@@ -335,19 +337,150 @@ void WebPFrameCacheDelete(WebPFrameCache* const cache) {
 }
 
 static int EncodeFrame(const WebPConfig* const config, WebPPicture* const pic,
-                       WebPData* const encoded_data) {
-  WebPMemoryWriter memory;
+                       WebPMemoryWriter* const memory) {
   pic->use_argb = 1;
   pic->writer = WebPMemoryWrite;
-  pic->custom_ptr = &memory;
-  WebPMemoryWriterInit(&memory);
+  pic->custom_ptr = memory;
   if (!WebPEncode(config, pic)) {
     return 0;
   }
-  encoded_data->bytes = memory.mem;
-  encoded_data->size  = memory.size;
   return 1;
 }
+
+static void GetEncodedData(const WebPMemoryWriter* const memory,
+                           WebPData* const encoded_data) {
+  encoded_data->bytes = memory->mem;
+  encoded_data->size  = memory->size;
+}
+
+#define MIN_COLORS_LOSSY     31  // Don't try lossy below this threshold.
+#define MAX_COLORS_LOSSLESS 194  // Don't try lossless above this threshold.
+#define MAX_COLOR_COUNT     256  // Power of 2 greater than MAX_COLORS_LOSSLESS.
+#define HASH_SIZE (MAX_COLOR_COUNT * 4)
+#define HASH_RIGHT_SHIFT     22  // 32 - log2(HASH_SIZE).
+
+// TODO(urvang): Also used in enc/vp8l.c. Move to utils.
+// If the number of colors in the 'pic' is at least MAX_COLOR_COUNT, return
+// MAX_COLOR_COUNT. Otherwise, return the exact number of colors in the 'pic'.
+static int GetColorCount(const WebPPicture* const pic) {
+  int x, y;
+  int num_colors = 0;
+  uint8_t in_use[HASH_SIZE] = { 0 };
+  uint32_t colors[HASH_SIZE];
+  static const uint32_t kHashMul = 0x1e35a7bd;
+  const uint32_t* argb = pic->argb;
+  const int width = pic->width;
+  const int height = pic->height;
+  uint32_t last_pix = ~argb[0];   // so we're sure that last_pix != argb[0]
+
+  for (y = 0; y < height; ++y) {
+    for (x = 0; x < width; ++x) {
+      int key;
+      if (argb[x] == last_pix) {
+        continue;
+      }
+      last_pix = argb[x];
+      key = (kHashMul * last_pix) >> HASH_RIGHT_SHIFT;
+      while (1) {
+        if (!in_use[key]) {
+          colors[key] = last_pix;
+          in_use[key] = 1;
+          ++num_colors;
+          if (num_colors >= MAX_COLOR_COUNT) {
+            return MAX_COLOR_COUNT;  // Exact count not needed.
+          }
+          break;
+        } else if (colors[key] == last_pix) {
+          break;  // The color is already there.
+        } else {
+          // Some other color sits here, so do linear conflict resolution.
+          ++key;
+          key &= (HASH_SIZE - 1);  // Key mask.
+        }
+      }
+    }
+    argb += pic->argb_stride;
+  }
+  return num_colors;
+}
+
+#undef MAX_COLOR_COUNT
+#undef HASH_SIZE
+#undef HASH_RIGHT_SHIFT
+
+static int SetFrame(const WebPConfig* const config, int allow_mixed,
+                    int is_key_frame, const WebPPicture* const prev_canvas,
+                    WebPPicture* const frame, const WebPFrameRect* const rect,
+                    const WebPMuxFrameInfo* const info,
+                    WebPPicture* const sub_frame, EncodedFrame* encoded_frame) {
+  int try_lossless;
+  int try_lossy;
+  int try_both;
+  WebPMemoryWriter mem1, mem2;
+  WebPData* encoded_data;
+  WebPMuxFrameInfo* const dst =
+      is_key_frame ? &encoded_frame->key_frame : &encoded_frame->sub_frame;
+  *dst = *info;
+  encoded_data = &dst->bitstream;
+  WebPMemoryWriterInit(&mem1);
+  WebPMemoryWriterInit(&mem2);
+
+  if (!allow_mixed) {
+    try_lossless = config->lossless;
+    try_lossy = !try_lossless;
+  } else {  // Use a heuristic for trying lossless and/or lossy compression.
+    const int num_colors = GetColorCount(sub_frame);
+    try_lossless = (num_colors < MAX_COLORS_LOSSLESS);
+    try_lossy = (num_colors >= MIN_COLORS_LOSSY);
+  }
+  try_both = try_lossless && try_lossy;
+
+  if (try_lossless) {
+    WebPConfig config_ll = *config;
+    config_ll.lossless = 1;
+    if (!EncodeFrame(&config_ll, sub_frame, &mem1)) {
+      goto Err;
+    }
+  }
+
+  if (try_lossy) {
+    WebPConfig config_lossy = *config;
+    config_lossy.lossless = 0;
+    if (!is_key_frame) {
+      // For lossy compression of a frame, it's better to replace transparent
+      // pixels of 'curr' with actual RGB values, whenever possible.
+      ReduceTransparency(prev_canvas, rect, frame);
+      // TODO(later): Investigate if this helps lossless compression as well.
+      FlattenSimilarBlocks(prev_canvas, rect, frame);
+    }
+    if (!EncodeFrame(&config_lossy, sub_frame, &mem2)) {
+      goto Err;
+    }
+  }
+
+  if (try_both) {  // Pick the encoding with smallest size.
+    // TODO(later): Perhaps a rough SSIM/PSNR produced by the encoder should
+    // also be a criteria, in addition to sizes.
+    if (mem1.size <= mem2.size) {
+      free(mem2.mem);
+      GetEncodedData(&mem1, encoded_data);
+    } else {
+      free(mem1.mem);
+      GetEncodedData(&mem2, encoded_data);
+    }
+  } else {
+    GetEncodedData(try_lossless ? &mem1 : &mem2, encoded_data);
+  }
+  return 1;
+
+ Err:
+  free(mem1.mem);
+  free(mem2.mem);
+  return 0;
+}
+
+#undef MIN_COLORS_LOSSY
+#undef MAX_COLORS_LOSSLESS
 
 // Returns cached frame at given 'position' index.
 static EncodedFrame* CacheGetFrame(const WebPFrameCache* const cache,
@@ -361,29 +494,6 @@ static EncodedFrame* CacheGetFrame(const WebPFrameCache* const cache,
 static int64_t KeyFramePenalty(const EncodedFrame* const encoded_frame) {
   return ((int64_t)encoded_frame->key_frame.bitstream.size -
           encoded_frame->sub_frame.bitstream.size);
-}
-
-static int SetFrame(const WebPConfig* const config, int is_key_frame,
-                    const WebPPicture* const prev_canvas,
-                    WebPPicture* const frame, const WebPFrameRect* const rect,
-                    const WebPMuxFrameInfo* const info,
-                    WebPPicture* const sub_frame,
-                    EncodedFrame* encoded_frame) {
-  WebPMuxFrameInfo* const dst =
-      is_key_frame ? &encoded_frame->key_frame : &encoded_frame->sub_frame;
-  *dst = *info;
-
-  if (!config->lossless && !is_key_frame) {
-    // For lossy compression of a frame, it's better to replace transparent
-    // pixels of 'curr' with actual RGB values, whenever possible.
-    ReduceTransparency(prev_canvas, rect, frame);
-    FlattenSimilarBlocks(prev_canvas, rect, frame);
-  }
-
-  if (!EncodeFrame(config, sub_frame, &dst->bitstream)) {
-    return 0;
-  }
-  return 1;
 }
 
 static void DisposeFrame(WebPMuxAnimDispose dispose_method,
@@ -405,6 +515,7 @@ int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
   WebPPicture sub_image;  // View extracted from 'frame' with rectangle 'rect'.
   WebPPicture* const prev_canvas = &cache->prev_canvas;
   const size_t position = cache->count;
+  const int allow_mixed = cache->allow_mixed;
   EncodedFrame* const encoded_frame = CacheGetFrame(cache, position);
   assert(position < cache->size);
 
@@ -425,7 +536,7 @@ int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
 
   if (cache->is_first_frame || IsKeyFrame(frame, &rect, prev_canvas)) {
     // Add this as a key frame.
-    if (!SetFrame(config, 1, NULL, NULL, NULL, info, &sub_image,
+    if (!SetFrame(config, allow_mixed, 1, NULL, NULL, NULL, info, &sub_image,
                   encoded_frame)) {
       goto End;
     }
@@ -438,8 +549,8 @@ int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
     ++cache->count_since_key_frame;
     if (cache->count_since_key_frame <= cache->kmin) {
       // Add this as a frame rectangle.
-      if (!SetFrame(config, 0, prev_canvas, frame, &rect, info, &sub_image,
-                    encoded_frame)) {
+      if (!SetFrame(config, allow_mixed, 0, prev_canvas, frame, &rect, info,
+                    &sub_image, encoded_frame)) {
         goto End;
       }
       cache->flush_count = cache->count;
@@ -452,8 +563,8 @@ int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
       int64_t curr_delta;
 
       // Add frame rectangle to cache.
-      if (!SetFrame(config, 0, prev_canvas, frame, &rect, info, &sub_image,
-                    encoded_frame)) {
+      if (!SetFrame(config, allow_mixed, 0, prev_canvas, frame, &rect, info,
+                    &sub_image, encoded_frame)) {
         goto End;
       }
 
@@ -469,8 +580,8 @@ int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
       full_image_info.y_offset = rect.y_offset;
 
       // Add key frame to cache, too.
-      frame_added = SetFrame(config, 1, NULL, NULL, NULL, &full_image_info,
-                             &full_image, encoded_frame);
+      frame_added = SetFrame(config, allow_mixed, 1, NULL, NULL, NULL,
+                             &full_image_info, &full_image, encoded_frame);
       WebPPictureFree(&full_image);
       if (!frame_added) goto End;
 
@@ -498,7 +609,10 @@ int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
 
  End:
   WebPPictureFree(&sub_image);
-  if (!ok) --cache->count;  // We reset the count, as the frame addition failed.
+  if (!ok) {
+    FrameRelease(encoded_frame);
+    --cache->count;  // We reset the count, as the frame addition failed.
+  }
   return ok;
 }
 
