@@ -643,20 +643,23 @@ static WEBP_INLINE uint32_t GammaToLinear(uint8_t v) {
   return kGammaToLinearTab[v];
 }
 
-static WEBP_INLINE int LinearToGamma(uint32_t v, int shift) {
-  const int tab_pos = v >> (kGammaTabFix + shift);    // integer part
-  const int x = v & ((kGammaTabScale << shift) - 1);  // fractional part
+// Convert a linear value 'v' to YUV_FIX+2 fixed-point precision
+// U/V value, suitable for RGBToU/V calls.
+static WEBP_INLINE int LinearToGamma(uint32_t base_value, int shift) {
+  const int v = base_value << shift;              // final uplifted value
+  const int tab_pos = v >> (kGammaTabFix + 2);    // integer part
+  const int x = v & ((kGammaTabScale << 2) - 1);  // fractional part
   const int v0 = kLinearToGammaTab[tab_pos];
   const int v1 = kLinearToGammaTab[tab_pos + 1];
-  const int y = v1 * x + v0 * ((kGammaTabScale << shift) - x);  // interpolate
-  return (y + kGammaTabRounder) >> kGammaTabFix;         // descale
+  const int y = v1 * x + v0 * ((kGammaTabScale << 2) - x);   // interpolate
+  return (y + kGammaTabRounder) >> kGammaTabFix;             // descale
 }
 
 #else
 
 static void InitGammaTables(void) {}
 static WEBP_INLINE uint32_t GammaToLinear(uint8_t v) { return v; }
-static WEBP_INLINE int LinearToGamma(uint32_t v, int shift) {
+static WEBP_INLINE int LinearToGamma(uint32_t base_value, int shift) {
   (void)shift;
   return v;
 }
@@ -669,13 +672,14 @@ static WEBP_INLINE int LinearToGamma(uint32_t v, int shift) {
     GammaToLinear((ptr)[0]) +                            \
     GammaToLinear((ptr)[step]) +                         \
     GammaToLinear((ptr)[rgb_stride]) +                   \
-    GammaToLinear((ptr)[rgb_stride + step]), 2)          \
+    GammaToLinear((ptr)[rgb_stride + step]), 0)          \
 
 #define SUM2H(ptr) \
     LinearToGamma(GammaToLinear((ptr)[0]) + GammaToLinear((ptr)[step]), 1)
 #define SUM2V(ptr) \
     LinearToGamma(GammaToLinear((ptr)[0]) + GammaToLinear((ptr)[rgb_stride]), 1)
-#define SUM1(ptr)  (4 * (ptr)[0])
+#define SUM1(ptr)  \
+    LinearToGamma(GammaToLinear((ptr)[0]), 2)
 
 #define RGB_TO_UV(x, y, SUM) {                           \
   const int src = (2 * (step * (x) + (y) * rgb_stride)); \
