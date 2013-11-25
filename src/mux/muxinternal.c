@@ -16,10 +16,6 @@
 #include "./muxi.h"
 #include "../utils/utils.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #define UNDEFINED_CHUNK_SIZE (-1)
 
 const ChunkInfo kChunks[] = {
@@ -553,6 +549,3 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

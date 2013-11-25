@@ -17,10 +17,6 @@
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #define RFIX 30
 #define MULT_FIX(x, y) (((int64_t)(x) * (y) + (1 << (RFIX - 1))) >> RFIX)
 
@@ -154,6 +150,3 @@ int WebPRescalerExport(WebPRescaler* const rescaler) {
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

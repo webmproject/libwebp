@@ -18,10 +18,6 @@
 #include "../utils/quant_levels_dec.h"
 #include "../webp/format_constants.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 // ALPHDecoder object.
 
@@ -163,6 +159,3 @@ const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
   return dec->alpha_plane_ + row * width;
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

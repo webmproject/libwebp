@@ -14,10 +14,6 @@
 
 #include "./dsp.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #if defined(WEBP_USE_SSE2)
 
 // The 3-coeff sparse transform in SSE2 is not really faster than the plain-C
@@ -958,6 +954,3 @@ void VP8DspInitSSE2(void) {
 #endif   // WEBP_USE_SSE2
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

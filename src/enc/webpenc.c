@@ -22,10 +22,6 @@
 
 // #define PRINT_MEMORY_INFO
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #ifdef PRINT_MEMORY_INFO
 #include <stdio.h>
 #endif
@@ -406,6 +402,3 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
   return ok;
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

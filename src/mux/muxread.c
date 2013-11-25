@@ -16,10 +16,6 @@
 #include "./muxi.h"
 #include "../utils/utils.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 // Helper method(s).
 
@@ -542,6 +538,3 @@ WebPMuxError WebPMuxNumChunks(const WebPMux* mux,
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

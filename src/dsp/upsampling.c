@@ -14,10 +14,6 @@
 #include "./dsp.h"
 #include "./yuv.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #include <assert.h>
 
 //------------------------------------------------------------------------------
@@ -368,6 +364,3 @@ void WebPInitPremultiply(void) {
 #endif  // FANCY_UPSAMPLING
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

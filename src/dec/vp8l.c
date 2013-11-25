@@ -22,10 +22,6 @@
 #include "../utils/huffman.h"
 #include "../utils/utils.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #define NUM_ARGB_CACHE_ROWS          16
 
 static const int kCodeLengthLiterals = 16;
@@ -1382,6 +1378,3 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

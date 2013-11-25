@@ -13,10 +13,6 @@
 
 #include "./dsp.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #if defined(WEBP_USE_SSE2)
 
 #include <assert.h>
@@ -220,6 +216,3 @@ void WebPInitPremultiplySSE2(void) {}
 
 #endif  // FANCY_UPSAMPLING
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

@@ -15,10 +15,6 @@
 
 #include "./vp8enci.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 
 void VP8EncInitLayer(VP8Encoder* const enc) {
@@ -46,6 +42,3 @@ void VP8EncDeleteLayer(VP8Encoder* enc) {
   free(enc->layer_data_);
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

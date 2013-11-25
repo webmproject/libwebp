@@ -23,10 +23,6 @@
 #include "../webp/demux.h"
 #include "../webp/format_constants.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #define DMUX_MAJ_VERSION 0
 #define DMUX_MIN_VERSION 1
 #define DMUX_REV_VERSION 1
@@ -1004,6 +1000,3 @@ void WebPDemuxReleaseChunkIterator(WebPChunkIterator* iter) {
   (void)iter;
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}  // extern "C"
-#endif

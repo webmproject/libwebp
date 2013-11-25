@@ -13,10 +13,6 @@
 
 #include "./yuv.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 
 #if defined(WEBP_YUV_USE_TABLE)
 
@@ -209,6 +205,3 @@ void VP8YUVInitSSE2(void) {}
 
 #endif  // WEBP_USE_SSE2
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

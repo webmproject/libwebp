@@ -23,10 +23,6 @@
 #include "./cost.h"
 #include "./vp8enci.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #if !defined(DISABLE_TOKEN_BUFFER)
 
 // we use pages to reduce the number of memcpy()
@@ -275,6 +271,3 @@ void VP8TBufferClear(VP8TBuffer* const b) {
 
 #endif    // !DISABLE_TOKEN_BUFFER
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

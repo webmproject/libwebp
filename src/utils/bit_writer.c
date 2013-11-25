@@ -17,10 +17,6 @@
 #include <stdlib.h>
 #include "./bit_writer.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 // VP8BitWriter
 
@@ -284,6 +280,3 @@ void VP8LWriteBits(VP8LBitWriter* const bw, int n_bits, uint32_t bits) {
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

@@ -15,10 +15,6 @@
 
 #include "./dsp.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #if defined(WEBP_USE_SSE2)
 #include <emmintrin.h>
 #endif
@@ -1534,6 +1530,3 @@ void VP8LDspInit(void) {
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

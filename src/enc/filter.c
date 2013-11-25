@@ -14,10 +14,6 @@
 #include <assert.h>
 #include "./vp8enci.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 // This table gives, for a given sharpness, the filtering strength to be
 // used (at least) in order to filter a given edge step delta.
 // This is constructed by brute force inspection: for all delta, we iterate
@@ -473,6 +469,3 @@ void VP8AdjustFilterStrength(VP8EncIterator* const it) {
 
 // -----------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

@@ -18,10 +18,6 @@
 #include "./webpi.h"
 #include "../webp/mux_types.h"  // ALPHA_FLAG
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 // RIFF layout is:
 //   Offset  tag
@@ -812,6 +808,3 @@ int WebPIoInitFromOptions(const WebPDecoderOptions* const options,
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

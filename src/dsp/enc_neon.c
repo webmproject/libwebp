@@ -13,10 +13,6 @@
 
 #include "./dsp.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #if defined(WEBP_USE_NEON)
 
 #include "../enc/vp8enci.h"
@@ -634,6 +630,3 @@ void VP8EncDspInitNEON(void) {
 #endif   // WEBP_USE_NEON
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

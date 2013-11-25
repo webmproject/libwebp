@@ -18,10 +18,6 @@
 #include "../dsp/dsp.h"
 #include "../dsp/yuv.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 // Main YUV<->RGB conversion functions
 
@@ -630,6 +626,3 @@ void WebPInitCustomIo(WebPDecParams* const params, VP8Io* const io) {
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

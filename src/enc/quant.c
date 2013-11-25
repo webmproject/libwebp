@@ -43,10 +43,6 @@
 
 // #define DEBUG_BLOCK
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 
 #if defined(DEBUG_BLOCK)
@@ -1159,6 +1155,3 @@ int VP8Decimate(VP8EncIterator* const it, VP8ModeScore* const rd,
   return is_skipped;
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

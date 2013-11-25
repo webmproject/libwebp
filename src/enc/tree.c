@@ -13,10 +13,6 @@
 
 #include "./vp8enci.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 // Default probabilities
 
@@ -506,6 +502,3 @@ void VP8WriteProbas(VP8BitWriter* const bw, const VP8Proba* const probas) {
   }
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

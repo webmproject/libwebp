@@ -15,10 +15,6 @@
 #include <string.h>   // for memset()
 #include "./thread.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #ifdef WEBP_USE_THREAD
 
 #if defined(_WIN32)
@@ -243,6 +239,3 @@ void WebPWorkerEnd(WebPWorker* const worker) {
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif
