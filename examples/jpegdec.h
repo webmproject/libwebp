@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include "webp/types.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -28,7 +28,7 @@ struct WebPPicture;
 int ReadJPEG(FILE* in_file, struct WebPPicture* const pic,
              struct Metadata* const metadata);
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

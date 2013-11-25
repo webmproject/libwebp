@@ -18,7 +18,7 @@
 
 #include "webp/mux.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -73,7 +73,7 @@ WebPMuxError WebPFrameCacheFlushAll(WebPFrameCache* const cache, int verbose,
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

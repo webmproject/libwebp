@@ -18,7 +18,7 @@
 #include "config.h"
 #endif
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -90,7 +90,7 @@ void WebPWorkerEnd(WebPWorker* const worker);
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

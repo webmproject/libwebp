@@ -16,7 +16,7 @@
 
 #include "../webp/types.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -39,7 +39,7 @@ void WebPMultRows(uint8_t* ptr, int stride,
                   const uint8_t* alpha, int alpha_stride,
                   int width, int num_rows, int inverse);
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

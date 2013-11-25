@@ -24,7 +24,7 @@
 #include "../webp/format_constants.h"
 #include "../webp/types.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -94,7 +94,7 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
                              VP8LHistogramSet* const image_in,
                              uint16_t* const histogram_symbols);
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }
 #endif
 

@@ -17,7 +17,7 @@
 #include <assert.h>
 #include "../webp/types.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -55,7 +55,7 @@ static WEBP_INLINE int VP8RandomBits(VP8Random* const rg, int num_bits) {
   return VP8RandomBits2(rg, num_bits, rg->amp_);
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

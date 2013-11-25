@@ -16,7 +16,7 @@
 
 #include "../webp/decode.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -178,7 +178,7 @@ WEBP_EXTERN(int) VP8LGetInfo(
     const uint8_t* data, size_t data_size,  // data available so far
     int* const width, int* const height, int* const has_alpha);
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

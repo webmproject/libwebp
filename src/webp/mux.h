@@ -51,7 +51,7 @@
 
 #include "./mux_types.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -370,7 +370,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxAssemble(WebPMux* mux,
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

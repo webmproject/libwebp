@@ -14,7 +14,7 @@
 #ifndef WEBP_UTILS_RESCALER_H_
 #define WEBP_UTILS_RESCALER_H_
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -77,7 +77,7 @@ int WebPRescalerExport(WebPRescaler* const rescaler);
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

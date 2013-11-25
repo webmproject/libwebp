@@ -16,7 +16,7 @@
 
 #include "./types.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -484,7 +484,7 @@ WEBP_EXTERN(WebPIDecoder*) WebPIDecode(const uint8_t* data, size_t data_size,
 WEBP_EXTERN(VP8StatusCode) WebPDecode(const uint8_t* data, size_t data_size,
                                       WebPDecoderConfig* config);
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

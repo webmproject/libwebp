@@ -17,7 +17,7 @@
 #include <assert.h>
 #include "../webp/types.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -80,7 +80,7 @@ int HuffmanCodeLengthsToCodes(const int* const code_lengths,
                               int code_lengths_size, int* const huff_codes);
 
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

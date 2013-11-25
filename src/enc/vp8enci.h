@@ -20,7 +20,7 @@
 #include "../utils/bit_writer.h"
 #include "../utils/thread.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -563,7 +563,7 @@ int VP8FilterStrengthFromDelta(int sharpness, int delta);
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

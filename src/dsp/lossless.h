@@ -18,7 +18,7 @@
 #include "../webp/types.h"
 #include "../webp/decode.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -213,7 +213,7 @@ void VP8LBundleColorMap(const uint8_t* const row, int width,
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

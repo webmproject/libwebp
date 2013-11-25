@@ -19,7 +19,7 @@
 #include "../dec/vp8li.h"
 #include "../webp/mux.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -223,7 +223,7 @@ WebPMuxError MuxValidate(const WebPMux* const mux);
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

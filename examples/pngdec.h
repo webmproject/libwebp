@@ -14,7 +14,7 @@
 
 #include <stdio.h>
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -28,7 +28,7 @@ struct WebPPicture;
 int ReadPNG(FILE* in_file, struct WebPPicture* const pic, int keep_alpha,
             struct Metadata* const metadata);
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

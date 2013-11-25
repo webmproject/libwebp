@@ -55,7 +55,7 @@
 //------------------------------------------------------------------------------
 // YUV -> RGB conversion
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -310,7 +310,7 @@ static WEBP_INLINE int VP8_RGB_TO_V(int r, int g, int b, int rounding) {
 
 #endif    // USE_YUVj
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

@@ -15,7 +15,7 @@
 
 #include "webp/types.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -40,7 +40,7 @@ void MetadataFree(Metadata* const metadata);
 int MetadataCopy(const char* metadata, size_t metadata_len,
                  MetadataPayload* const payload);
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

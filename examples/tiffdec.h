@@ -12,7 +12,7 @@
 #ifndef WEBP_EXAMPLES_TIFFDEC_H_
 #define WEBP_EXAMPLES_TIFFDEC_H_
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -27,7 +27,7 @@ int ReadTIFF(const char* const filename,
              struct WebPPicture* const pic, int keep_alpha,
              struct Metadata* const metadata);
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

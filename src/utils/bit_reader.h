@@ -21,7 +21,7 @@
 #endif
 #include "../webp/types.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -327,7 +327,7 @@ static WEBP_INLINE void VP8LSetBitPos(VP8LBitReader* const br, int val) {
 // Advances the read buffer by 4 bytes to make room for reading next 32 bits.
 void VP8LFillBitWindow(VP8LBitReader* const br);
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

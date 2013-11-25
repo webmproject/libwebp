@@ -18,7 +18,7 @@
 #include <string.h>  // memset()
 #include "./types.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -90,7 +90,7 @@ static WEBP_INLINE int WebPDataCopy(const WebPData* src, WebPData* dst) {
   return 1;
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

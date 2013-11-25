@@ -22,7 +22,7 @@
 #include "../utils/huffman.h"
 #include "../webp/format_constants.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -130,7 +130,7 @@ void VP8LDelete(VP8LDecoder* const dec);
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

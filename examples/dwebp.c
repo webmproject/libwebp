@@ -49,13 +49,13 @@
 
 static int verbose = 0;
 #ifndef WEBP_DLL
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
 extern void* VP8GetCPUInfo;   // opaque forward declaration.
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 #endif  // WEBP_DLL

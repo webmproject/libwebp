@@ -17,7 +17,7 @@
 #include "./webpi.h"
 #include "../utils/filters.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -48,7 +48,7 @@ void ALPHDelete(ALPHDecoder* const dec);
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

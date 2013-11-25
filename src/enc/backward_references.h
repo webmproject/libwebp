@@ -18,7 +18,7 @@
 #include "../webp/types.h"
 #include "../webp/format_constants.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -145,7 +145,7 @@ int VP8LCalculateEstimateForCacheSize(const uint32_t* const argb,
                                       int xsize, int ysize,
                                       int* const best_cache_bits);
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }
 #endif
 

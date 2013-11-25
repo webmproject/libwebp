@@ -19,7 +19,7 @@
 #include "../webp/encode.h"
 #include "../webp/format_constants.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -63,7 +63,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

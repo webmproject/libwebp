@@ -16,7 +16,7 @@
 
 #include "./types.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -491,7 +491,7 @@ WEBP_EXTERN(int) WebPEncode(const WebPConfig* config, WebPPicture* picture);
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

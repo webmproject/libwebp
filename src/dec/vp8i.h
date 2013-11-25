@@ -21,7 +21,7 @@
 #include "../utils/thread.h"
 #include "../dsp/dsp.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -352,7 +352,7 @@ int VP8DecodeLayer(VP8Decoder* const dec);
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

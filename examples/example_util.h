@@ -15,7 +15,7 @@
 
 #include "webp/types.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -29,7 +29,7 @@ int ExUtilReadFile(const char* const file_name,
 int ExUtilWriteFile(const char* const file_name,
                     const uint8_t* data, size_t data_size);
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 
