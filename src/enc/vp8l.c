@@ -892,7 +892,7 @@ static WebPEncodingError EncodePalette(VP8LBitWriter* const bw,
   if (err != VP8_ENC_OK) goto Error;
   dst = enc->argb_;
 
-  row = WebPSafeMalloc((uint64_t)width, sizeof(*row));
+  row = (uint8_t*)WebPSafeMalloc((uint64_t)width, sizeof(*row));
   if (row == NULL) return VP8_ENC_ERROR_OUT_OF_MEMORY;
 
   ApplyPalette(src, dst, pic->argb_stride, enc->current_width_,
