@@ -15,6 +15,9 @@ set -e
 declare -r SDK=$(xcodebuild -showsdks \
   | grep iphoneos | sort | tail -n 1 | awk '{print substr($NF, 9)}'
 )
+# Extract Xcode version.
+declare -r XCODE=$(xcodebuild -version | grep Xcode | cut -d " " -f2)
+
 declare -r OLDPATH=${PATH}
 
 # Add iPhoneOS-V6 to the list of platforms below if you need armv6 support.
@@ -63,12 +66,24 @@ for PLATFORM in ${PLATFORMS}; do
   ROOTDIR="${BUILDDIR}/${PLATFORM}-${SDK}-${ARCH}"
   mkdir -p "${ROOTDIR}"
 
-  export DEVROOT="${PLATFORMSROOT}/${PLATFORM}.platform/Developer"
-  export SDKROOT="${DEVROOT}/SDKs/${PLATFORM}${SDK}.sdk"
+  SDKROOT="${PLATFORMSROOT}/${PLATFORM}.platform/Developer/SDKs/${PLATFORM}${SDK}.sdk/"
+  CFLAGS="-arch ${ARCH} -pipe -isysroot ${SDKROOT}"
+  LDFLAGS="-arch ${ARCH} -pipe -isysroot ${SDKROOT}"
 
-  export CFLAGS="-arch ${ARCH} -pipe -isysroot ${SDKROOT}"
+  if [[ -z "${XCODE}" ]]; then
+    echo "XCODE not available"
+    exit 1
+  elif [[ ${SDK} < 5.0.0 ]]; then
+    DEVROOT="${PLATFORMSROOT}/${PLATFORM}.platform/Developer/"
+  else
+    DEVROOT="${DEVELOPER}/Toolchains/XcodeDefault.xctoolchain"
+    CFLAGS+=" -miphoneos-version-min=5.0"
+    LDFLAGS+=" -miphoneos-version-min=5.0"
+  fi
+
+  export CFLAGS
+  export LDFLAGS
   export CXXFLAGS=${CFLAGS}
-  export LDFLAGS="-arch ${ARCH} -pipe -isysroot ${SDKROOT}"
   export PATH="${DEVROOT}/usr/bin:${OLDPATH}"
 
   ${SRCDIR}/configure --host=${ARCH}-apple-darwin --prefix=${ROOTDIR} \
