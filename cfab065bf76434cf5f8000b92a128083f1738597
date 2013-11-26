@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdX//78M\u003d",
+        "filename": "man/dwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-11-26T23:12:04Z",
+      "side": 1,
+      "message": ".TP",
+      "revId": "cfab065bf76434cf5f8000b92a128083f1738597",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdX//78I\u003d",
+        "filename": "man/dwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-11-26T23:12:04Z",
+      "side": 1,
+      "message": "It helps by ...",
+      "revId": "cfab065bf76434cf5f8000b92a128083f1738597",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdX//78E\u003d",
+        "filename": "src/dec/frame.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-11-26T23:12:04Z",
+      "side": 1,
+      "message": "...provide a...",
+      "revId": "cfab065bf76434cf5f8000b92a128083f1738597",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
