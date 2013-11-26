@@ -474,6 +474,7 @@ static VP8StatusCode DecodeInto(const uint8_t* const data, size_t data_size,
         // This change must be done before calling VP8Decode()
         dec->mt_method_ = VP8GetThreadMethod(params->options, &headers,
                                              io.width, io.height);
+        VP8InitDithering(params->options, dec);
         if (!VP8Decode(dec, &io)) {
           status = dec->status_;
         }

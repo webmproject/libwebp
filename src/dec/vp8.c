@@ -561,6 +561,12 @@ static int ParseResiduals(VP8Decoder* const dec,
 
   block->non_zero_y_ = non_zero_y;
   block->non_zero_uv_ = non_zero_uv;
+
+  // We look at the mode-code of each block and check if some blocks have less
+  // than three non-zero coeffs (code < 2). This is to avoid dithering flat and
+  // empty blocks.
+  block->dither_ = (non_zero_uv & 0xaaaa) ? 0 : q->dither_;
+
   return !(non_zero_y | non_zero_uv);  // will be used for further optimization
 }
 

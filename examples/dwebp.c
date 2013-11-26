@@ -555,6 +555,8 @@ static void Help(void) {
          "  -version  .... print version number and exit.\n"
          "  -nofancy ..... don't use the fancy YUV420 upscaler.\n"
          "  -nofilter .... disable in-loop filtering.\n"
+         "  -nodither .... disable dithering.\n"
+         "  -dither <d> .. dithering strength (in 0..100)\n"
          "  -mt .......... use multi-threading\n"
          "  -crop <x> <y> <w> <h> ... crop output with the given rectangle\n"
          "  -scale <w> <h> .......... scale the output (*after* any cropping)\n"
@@ -625,6 +627,10 @@ int main(int argc, const char *argv[]) {
       format = YUV;
     } else if (!strcmp(argv[c], "-mt")) {
       config.options.use_threads = 1;
+    } else if (!strcmp(argv[c], "-nodither")) {
+      config.options.dithering_strength = 0;
+    } else if (!strcmp(argv[c], "-dither") && c < argc - 1) {
+      config.options.dithering_strength = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-crop") && c < argc - 4) {
       config.options.use_cropping = 1;
       config.options.crop_left   = strtol(argv[++c], NULL, 0);
@@ -719,7 +725,7 @@ int main(int argc, const char *argv[]) {
     if (!incremental) {
       status = WebPDecode(data, data_size, &config);
     } else {
-      WebPIDecoder* const idec = WebPINewDecoder(output_buffer);
+      WebPIDecoder* const idec = WebPIDecode(data, data_size, &config);
       if (idec == NULL) {
         fprintf(stderr, "Failed during WebPINewDecoder().\n");
         status = VP8_STATUS_OUT_OF_MEMORY;

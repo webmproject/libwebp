@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DWEBP 1 "May 10, 2013"
+.TH DWEBP 1 "November 26, 2013"
 .SH NAME
 dwebp \- decompress a WebP file to an image file
 .SH SYNOPSIS
@@ -55,7 +55,15 @@ edges (especially the red ones), but should be faster.
 .B \-nofilter
 Don't use the in-loop filtering process even if it is required by
 the bitstream. This may produce visible blocks on the non-compliant output,
-but will make the decoding faster.
+but it will make the decoding faster.
+.TP
+.B \-dither " strength
+Specify a dithering \fBstrength\fP between 0 and 100. Dithering is a
+post-processing effect applied to chroma components in lossy compression.
+It helps by smoothing gradients and avoiding banding artifacts.
+.TP
+.B \-nodither
+Disable all dithering (default).
 .TP
 .B \-mt
 Use multi-threading for decoding, if possible.

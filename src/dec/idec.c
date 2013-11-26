@@ -423,6 +423,7 @@ static VP8StatusCode DecodePartition0(WebPIDecoder* const idec) {
   // This change must be done before calling VP8InitFrame()
   dec->mt_method_ = VP8GetThreadMethod(params->options, NULL,
                                        io->width, io->height);
+  VP8InitDithering(params->options, dec);
   if (!CopyParts0Data(idec)) {
     return IDecError(idec, VP8_STATUS_OUT_OF_MEMORY);
   }

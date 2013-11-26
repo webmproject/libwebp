@@ -149,6 +149,82 @@ static void PrecomputeFilterStrengths(VP8Decoder* const dec) {
 }
 
 //------------------------------------------------------------------------------
+// Dithering
+
+#define DITHER_AMP_TAB_SIZE 12
+static const int kQuantToDitherAmp[DITHER_AMP_TAB_SIZE] = {
+  // roughly, it's dqm->uv_mat_[1]
+  8, 7, 6, 4, 4, 2, 2, 2, 1, 1, 1, 1
+};
+
+void VP8InitDithering(const WebPDecoderOptions* const options,
+                      VP8Decoder* const dec) {
+  assert(dec != NULL);
+  if (options != NULL) {
+    const int d = options->dithering_strength;
+    const int max_amp = (1 << VP8_RANDOM_DITHER_FIX) - 1;
+    const int f = (d < 0) ? 0 : (d > 100) ? max_amp : (d * max_amp / 100);
+    if (f > 0) {
+      int s;
+      int all_amp = 0;
+      for (s = 0; s < NUM_MB_SEGMENTS; ++s) {
+        VP8QuantMatrix* const dqm = &dec->dqm_[s];
+        if (dqm->uv_quant_ < DITHER_AMP_TAB_SIZE) {
+          // TODO(skal): should we specially dither more for uv_quant_ < 0?
+          const int idx = (dqm->uv_quant_ < 0) ? 0 : dqm->uv_quant_;
+          dqm->dither_ = (f * kQuantToDitherAmp[idx]) >> 3;
+        }
+        all_amp |= dqm->dither_;
+      }
+      if (all_amp != 0) {
+        VP8InitRandom(&dec->dithering_rg_, 1.0f);
+        dec->dither_ = 1;
+      }
+    }
+  }
+}
+
+// minimal amp that will provide a non-zero dithering effect
+#define MIN_DITHER_AMP 4
+#define DITHER_DESCALE 4
+#define DITHER_DESCALE_ROUNDER (1 << (DITHER_DESCALE - 1))
+#define DITHER_AMP_BITS 8
+#define DITHER_AMP_CENTER (1 << DITHER_AMP_BITS)
+
+static void Dither8x8(VP8Random* const rg, uint8_t* dst, int bps, int amp) {
+  int i, j;
+  for (j = 0; j < 8; ++j) {
+    for (i = 0; i < 8; ++i) {
+      // TODO: could be made faster with SSE2
+      const int bits =
+          VP8RandomBits2(rg, DITHER_AMP_BITS + 1, amp) - DITHER_AMP_CENTER;
+      // Convert to range: [-2,2] for dither=50, [-4,4] for dither=100
+      const int delta = (bits + DITHER_DESCALE_ROUNDER) >> DITHER_DESCALE;
+      const int v = (int)dst[i] + delta;
+      dst[i] = (v < 0) ? 0 : (v > 255) ? 255u : (uint8_t)v;
+    }
+    dst += bps;
+  }
+}
+
+static void DitherRow(VP8Decoder* const dec) {
+  int mb_x;
+  assert(dec->dither_);
+  for (mb_x = dec->tl_mb_x_; mb_x < dec->br_mb_x_; ++mb_x) {
+    const VP8ThreadContext* const ctx = &dec->thread_ctx_;
+    const VP8MBData* const data = ctx->mb_data_ + mb_x;
+    const int cache_id = ctx->id_;
+    const int uv_bps = dec->cache_uv_stride_;
+    if (data->dither_ >= MIN_DITHER_AMP) {
+      uint8_t* const u_dst = dec->cache_u_ + cache_id * 8 * uv_bps + mb_x * 8;
+      uint8_t* const v_dst = dec->cache_v_ + cache_id * 8 * uv_bps + mb_x * 8;
+      Dither8x8(&dec->dithering_rg_, u_dst, uv_bps, data->dither_);
+      Dither8x8(&dec->dithering_rg_, v_dst, uv_bps, data->dither_);
+    }
+  }
+}
+
+//------------------------------------------------------------------------------
 // This function is called after a row of macroblocks is finished decoding.
 // It also takes into account the following restrictions:
 //  * In case of in-loop filtering, we must hold off sending some of the bottom
@@ -184,6 +260,10 @@ static int FinishRow(VP8Decoder* const dec, VP8Io* const io) {
 
   if (ctx->filter_row_) {
     FilterRow(dec);
+  }
+
+  if (dec->dither_) {
+    DitherRow(dec);
   }
 
   if (io->put != NULL) {
