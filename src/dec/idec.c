@@ -484,7 +484,8 @@ static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
   return VP8_STATUS_OK;
 }
 
-static int ErrorStatusLossless(WebPIDecoder* const idec, VP8StatusCode status) {
+static VP8StatusCode ErrorStatusLossless(WebPIDecoder* const idec,
+                                         VP8StatusCode status) {
   if (status == VP8_STATUS_SUSPENDED || status == VP8_STATUS_NOT_ENOUGH_DATA) {
     return VP8_STATUS_SUSPENDED;
   }
