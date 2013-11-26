@@ -414,7 +414,7 @@ static WebPMuxError GetImageInfo(const WebPMuxImage* const wpi,
   // Get width and height from VP8/VP8L chunk.
   if (width != NULL) *width = wpi->width_;
   if (height != NULL) *height = wpi->height_;
-  return 1;
+  return WEBP_MUX_OK;
 }
 
 static WebPMuxError GetImageCanvasWidthHeight(

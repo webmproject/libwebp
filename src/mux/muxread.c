@@ -505,7 +505,7 @@ WebPMuxError WebPMuxGetAnimationParams(const WebPMux* mux,
 static CHUNK_INDEX ChunkGetIndexFromId(WebPChunkId id) {
   int i;
   for (i = 0; kChunks[i].id != WEBP_CHUNK_NIL; ++i) {
-    if (id == kChunks[i].id) return i;
+    if (id == kChunks[i].id) return (CHUNK_INDEX)i;
   }
   return IDX_NIL;
 }

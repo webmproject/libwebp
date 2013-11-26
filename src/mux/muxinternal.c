@@ -70,7 +70,7 @@ WebPChunk* ChunkRelease(WebPChunk* const chunk) {
 CHUNK_INDEX ChunkGetIndexFromTag(uint32_t tag) {
   int i;
   for (i = 0; kChunks[i].tag != NIL_TAG; ++i) {
-    if (tag == kChunks[i].tag) return i;
+    if (tag == kChunks[i].tag) return (CHUNK_INDEX)i;
   }
   return IDX_UNKNOWN;
 }
@@ -451,7 +451,7 @@ static int IsNotCompatible(int feature, int num_items) {
 // On success returns WEBP_MUX_OK and stores the chunk count in *num.
 static WebPMuxError ValidateChunk(const WebPMux* const mux, CHUNK_INDEX idx,
                                   WebPFeatureFlags feature,
-                                  WebPFeatureFlags vp8x_flags,
+                                  uint32_t vp8x_flags,
                                   int max, int* num) {
   const WebPMuxError err =
       WebPMuxNumChunks(mux, kChunks[idx].id, num);
