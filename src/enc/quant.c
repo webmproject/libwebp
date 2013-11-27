@@ -25,7 +25,7 @@
 
 #define MID_ALPHA 64      // neutral value for susceptibility
 #define MIN_ALPHA 30      // lowest usable value for susceptibility
-#define MAX_ALPHA 100     // higher meaninful value for susceptibility
+#define MAX_ALPHA 100     // higher meaningful value for susceptibility
 
 #define SNS_TO_DQ 0.9     // Scaling constant between the sns value and the QP
                           // power-law modulation. Must be strictly less than 1.
@@ -292,7 +292,7 @@ static double QualityToCompression(double c) {
   // exponent is somewhere between 2.8 and 3.2, but we're mostly interested
   // in the mid-quant range. So we scale the compressibility inversely to
   // this power-law: quant ~= compression ^ 1/3. This law holds well for
-  // low quant. Finer modelling for high-quant would make use of kAcTable[]
+  // low quant. Finer modeling for high-quant would make use of kAcTable[]
   // more explicitly.
   const double v = pow(linear_c, 1 / 3.);
   return v;
@@ -814,7 +814,7 @@ static int ReconstructUV(VP8EncIterator* const it, VP8ModeScore* const rd,
 
 //------------------------------------------------------------------------------
 // RD-opt decision. Reconstruct each modes, evalue distortion and bit-cost.
-// Pick the mode is lower RD-cost = Rate + lamba * Distortion.
+// Pick the mode is lower RD-cost = Rate + lambda * Distortion.
 
 static void StoreMaxDelta(VP8SegmentInfo* const dqm, const int16_t DCs[16]) {
   // We look at the first three AC coefficients to determine what is the average

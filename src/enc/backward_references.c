@@ -156,7 +156,7 @@ static void GetParamsForHashChainFindCopy(int quality, int xsize,
   *window_size = (max_window_size > WINDOW_SIZE) ? WINDOW_SIZE
                : max_window_size;
   *iter_pos = 8 + (quality >> 3);
-  // For lower entropy images, the rigourous search loop in HashChainFindCopy
+  // For lower entropy images, the rigorous search loop in HashChainFindCopy
   // can be relaxed.
   *iter_limit = (cache_bits > 0) ? iter_neg : iter_neg / 2;
 }

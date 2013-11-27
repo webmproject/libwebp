@@ -644,7 +644,7 @@ static int TTransformSSE2(const uint8_t* inA, const uint8_t* inB,
   __m128i tmp_0, tmp_1, tmp_2, tmp_3;
   const __m128i zero = _mm_setzero_si128();
 
-  // Load, combine and tranpose inputs.
+  // Load, combine and transpose inputs.
   {
     const __m128i inA_0 = _mm_loadl_epi64((__m128i*)&inA[BPS * 0]);
     const __m128i inA_1 = _mm_loadl_epi64((__m128i*)&inA[BPS * 1]);

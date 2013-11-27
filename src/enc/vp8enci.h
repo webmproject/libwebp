@@ -256,7 +256,7 @@ typedef struct {
   int lambda_trellis_i16_, lambda_trellis_i4_, lambda_trellis_uv_;
 } VP8SegmentInfo;
 
-// Handy transcient struct to accumulate score and info during RD-optimization
+// Handy transient struct to accumulate score and info during RD-optimization
 // and mode evaluation.
 typedef struct {
   score_t D, SD;              // Distortion, spectral distortion

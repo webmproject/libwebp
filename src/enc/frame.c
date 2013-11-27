@@ -739,7 +739,7 @@ static double GetPSNR(uint64_t mse, uint64_t size) {
 //------------------------------------------------------------------------------
 //  StatLoop(): only collect statistics (number of skips, token usage, ...).
 //  This is used for deciding optimal probabilities. It also modifies the
-//  quantizer value if some target (size, PNSR) was specified.
+//  quantizer value if some target (size, PSNR) was specified.
 
 static void SetLoopParams(VP8Encoder* const enc, float q) {
   // Make sure the quality parameter is inside valid bounds

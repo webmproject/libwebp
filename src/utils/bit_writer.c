@@ -256,7 +256,7 @@ void VP8LWriteBits(VP8LBitWriter* const bw, int n_bits, uint32_t bits) {
     uint8_t* p = &bw->buf_[bw->bit_pos_ >> 3];
     const int bits_reserved_in_first_byte = bw->bit_pos_ & 7;
     const int bits_left_to_write = n_bits - 8 + bits_reserved_in_first_byte;
-    // implicit & 0xff is assumed for uint8_t arithmetics
+    // implicit & 0xff is assumed for uint8_t arithmetic
     *p++ |= bits << bits_reserved_in_first_byte;
     bits >>= 8 - bits_reserved_in_first_byte;
     if (bits_left_to_write >= 1) {

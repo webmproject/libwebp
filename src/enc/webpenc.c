@@ -157,7 +157,7 @@ static void MapConfigToTools(VP8Encoder* const enc) {
 //             non-zero: 196
 //             lf-stats: 2048
 //                total: 68635
-// Transcient object sizes:
+// Transient object sizes:
 //       VP8EncIterator: 352
 //         VP8ModeScore: 912
 //       VP8SegmentInfo: 532
