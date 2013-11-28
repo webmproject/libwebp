@@ -485,7 +485,8 @@ static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
   return VP8_STATUS_OK;
 }
 
-static int ErrorStatusLossless(WebPIDecoder* const idec, VP8StatusCode status) {
+static VP8StatusCode ErrorStatusLossless(WebPIDecoder* const idec,
+                                         VP8StatusCode status) {
   if (status == VP8_STATUS_SUSPENDED || status == VP8_STATUS_NOT_ENOUGH_DATA) {
     return VP8_STATUS_SUSPENDED;
   }
@@ -619,11 +620,11 @@ void WebPIDelete(WebPIDecoder* idec) {
     if (!idec->is_lossless_) {
       if (idec->state_ == STATE_VP8_DATA) {
         // Synchronize the thread, clean-up and check for errors.
-        VP8ExitCritical(idec->dec_, &idec->io_);
+        VP8ExitCritical((VP8Decoder*)idec->dec_, &idec->io_);
       }
-      VP8Delete(idec->dec_);
+      VP8Delete((VP8Decoder*)idec->dec_);
     } else {
-      VP8LDelete(idec->dec_);
+      VP8LDelete((VP8LDecoder*)idec->dec_);
     }
   }
   ClearMemBuffer(&idec->mem_);
