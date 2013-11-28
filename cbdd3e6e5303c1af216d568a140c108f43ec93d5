@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdX//70o\u003d",
+        "filename": "examples/vwebp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-11-28T01:01:05Z",
+      "side": 1,
+      "message": "fwiw dwebp uses: c \u003c argc - 1",
+      "revId": "cbdd3e6e5303c1af216d568a140c108f43ec93d5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdX//70g\u003d",
+        "filename": "src/dec/frame.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-11-28T01:01:05Z",
+      "side": 1,
+      "message": "the compiler should be smart enough to pull these loop invariants",
+      "revId": "cbdd3e6e5303c1af216d568a140c108f43ec93d5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
