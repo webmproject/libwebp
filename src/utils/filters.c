@@ -228,7 +228,8 @@ WEBP_FILTER_TYPE EstimateBestFilter(const uint8_t* data,
     }
   }
   {
-    WEBP_FILTER_TYPE filter, best_filter = WEBP_FILTER_NONE;
+    int filter;
+    WEBP_FILTER_TYPE best_filter = WEBP_FILTER_NONE;
     int best_score = 0x7fffffff;
     for (filter = WEBP_FILTER_NONE; filter < WEBP_FILTER_LAST; ++filter) {
       int score = 0;
@@ -239,7 +240,7 @@ WEBP_FILTER_TYPE EstimateBestFilter(const uint8_t* data,
       }
       if (score < best_score) {
         best_score = score;
-        best_filter = filter;
+        best_filter = (WEBP_FILTER_TYPE)filter;
       }
     }
     return best_filter;
