@@ -85,7 +85,7 @@ static int ALPHInit(ALPHDecoder* const dec, const uint8_t* data,
 }
 
 // Decodes, unfilters and dequantizes *at least* 'num_rows' rows of alpha
-// starting from row number 'row'. It assumes that rows upto (row - 1) have
+// starting from row number 'row'. It assumes that rows up to (row - 1) have
 // already been decoded.
 // Returns false in case of bitstream error.
 static int ALPHDecode(VP8Decoder* const dec, int row, int num_rows) {

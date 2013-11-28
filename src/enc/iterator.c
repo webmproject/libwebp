@@ -285,7 +285,7 @@ void VP8IteratorBytesToNz(VP8EncIterator* const it) {
 #undef BIT
 
 //------------------------------------------------------------------------------
-// Advance to the next position, doing the bookeeping.
+// Advance to the next position, doing the bookkeeping.
 
 void VP8IteratorSaveBoundary(VP8EncIterator* const it) {
   VP8Encoder* const enc = it->enc_;

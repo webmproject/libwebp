@@ -201,7 +201,7 @@ static uint32_t GetFilterMap(const uint8_t* alpha, int width, int height,
     const int kMinColorsForFilterNone = 16;
     const int kMaxColorsForFilterNone = 192;
     const int num_colors = GetNumColors(alpha, width, height, width);
-    // For low number of colors, NONE yeilds better compression.
+    // For low number of colors, NONE yields better compression.
     filter = (num_colors <= kMinColorsForFilterNone) ? WEBP_FILTER_NONE :
              EstimateBestFilter(alpha, width, height, width);
     bit_map |= 1 << filter;

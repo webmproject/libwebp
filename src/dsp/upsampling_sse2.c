@@ -51,7 +51,7 @@ extern "C" {
   (out) = _mm_sub_epi8(tmp0, tmp4);    /* (k + in + 1) / 2 - lsb_correction */ \
 } while (0)
 
-// pack and store two alterning pixel rows
+// pack and store two alternating pixel rows
 #define PACK_AND_STORE(a, b, da, db, out) do {                                 \
   const __m128i t_a = _mm_avg_epu8(a, da);  /* (9a + 3b + 3c +  d + 8) / 16 */ \
   const __m128i t_b = _mm_avg_epu8(b, db);  /* (3a + 9b +  c + 3d + 8) / 16 */ \
