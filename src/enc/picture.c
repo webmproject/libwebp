@@ -888,8 +888,7 @@ int WebPPictureImportBGRX(WebPPicture* picture,
 
 int WebPPictureYUVAToARGB(WebPPicture* picture) {
   if (picture == NULL) return 0;
-  if (picture->memory_ == NULL || picture->y == NULL ||
-      picture->u == NULL || picture->v == NULL) {
+  if (picture->y == NULL || picture->u == NULL || picture->v == NULL) {
     return WebPEncodingSetError(picture, VP8_ENC_ERROR_NULL_PARAMETER);
   }
   if ((picture->colorspace & WEBP_CSP_ALPHA_BIT) && picture->a == NULL) {
