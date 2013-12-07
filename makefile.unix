@@ -262,8 +262,8 @@ dist: DESTDIR := dist
 dist: OUT_EXAMPLES += $(EXTRA_EXAMPLES)
 dist: all
 	$(INSTALL) -m755 -d $(DESTDIR)/include/webp \
-	           $(DESTDIR)/doc $(DESTDIR)/lib
-	$(INSTALL) -m755 -s $(OUT_EXAMPLES) $(DESTDIR)
+	           $(DESTDIR)/bin $(DESTDIR)/doc $(DESTDIR)/lib
+	$(INSTALL) -m755 -s $(OUT_EXAMPLES) $(DESTDIR)/bin
 	$(INSTALL) -m644 $(HDRS_INSTALLED) $(DESTDIR)/include/webp
 	$(INSTALL) -m644 src/libwebp.a $(DESTDIR)/lib
 	$(INSTALL) -m644 src/demux/libwebpdemux.a $(DESTDIR)/lib
