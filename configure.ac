@@ -316,7 +316,13 @@ AM_CONDITIONAL([BUILD_GIF2WEBP], [test "${build_gif2webp}" = "yes"])
 
 dnl === check for WIC support ===
 
-if test "$target_os" = "mingw32"; then
+AC_ARG_ENABLE([wic],
+              AS_HELP_STRING([--disable-wic],
+                             [Disable Windows Imaging Component (WIC) detection.
+                              @<:@default=auto@:>@]),,
+              [enable_wic=yes])
+
+if test "$target_os" = "mingw32" -a "$enable_wic" = "yes"; then
   AC_CHECK_HEADERS([wincodec.h shlwapi.h windows.h])
   if test "$ac_cv_header_wincodec_h" = "yes"; then
     AC_MSG_CHECKING(for Windows Imaging Component support)
