@@ -729,7 +729,7 @@ int main(int argc, const char *argv[]) {
       if (idec == NULL) {
         fprintf(stderr, "Failed during WebPINewDecoder().\n");
         status = VP8_STATUS_OUT_OF_MEMORY;
-        ok = 0;
+        goto end;
       } else {
         status = WebPIUpdate(idec, data, data_size);
         WebPIDelete(idec);
