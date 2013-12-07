@@ -186,7 +186,7 @@ static int WritePNG(const char* out_file_name, int use_stdout,
 }
 
 #elif defined(WEBP_HAVE_PNG)    // !HAVE_WINCODEC_H
-static void PNGAPI error_function(png_structp png, png_const_charp dummy) {
+static void PNGAPI PNGErrorFunction(png_structp png, png_const_charp dummy) {
   (void)dummy;  // remove variable-unused warning
   longjmp(png_jmpbuf(png), 1);
 }
@@ -202,7 +202,7 @@ static int WritePNG(FILE* out_file, const WebPDecBuffer* const buffer) {
   png_uint_32 y;
 
   png = png_create_write_struct(PNG_LIBPNG_VER_STRING,
-                                NULL, error_function, NULL);
+                                NULL, PNGErrorFunction, NULL);
   if (png == NULL) {
     return 0;
   }
