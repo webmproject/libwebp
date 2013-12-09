@@ -169,19 +169,13 @@ static const uint16_t kAcTable2[128] = {
   385, 393, 401, 409, 416, 424, 432, 440
 };
 
-static const uint16_t kCoeffThresh[16] = {
-  0,  10, 20, 30,
-  10, 20, 30, 30,
-  20, 30, 30, 30,
-  30, 30, 30, 30
-};
-
 static const uint8_t kBiasMatrices[3][2] = {  // [luma-ac,luma-dc,chroma][dc,ac]
-  { 96, 110 }, { 96, 112 }, { 112, 120 }
+  { 96, 110 }, { 96, 108 }, { 110, 115 }
 };
 
 // Sharpening by (slightly) raising the hi-frequency coeffs.
 // Hack-ish but helpful for mid-bitrate range. Use with care.
+#define SHARPEN_BITS 11  // number of descaling bits for sharpening bias
 static const uint8_t kFreqSharpening[16] = {
   0,  30, 60, 90,
   30, 60, 90, 90,
@@ -204,9 +198,15 @@ static int ExpandMatrix(VP8Matrix* const m, int type) {
     const int bias = kBiasMatrices[type][is_ac_coeff];
     m->iq_[i] = (1 << QFIX) / m->q_[i];
     m->bias_[i] = BIAS(bias);
-    // TODO(skal): tune kCoeffThresh[]
-    m->zthresh_[i] = ((256 /*+ kCoeffThresh[i]*/ - bias) * m->q_[i] + 127) >> 8;
-    m->sharpen_[i] = (kFreqSharpening[i] * m->q_[i]) >> 11;
+    // zthresh_ is the exact value such that QUANTDIV(coeff, iQ, B) is:
+    //   * zero if coeff <= zthresh
+    //   * non-zero if coeff > zthresh
+    m->zthresh_[i] = ((1 << QFIX) - 1 - m->bias_[i]) / m->iq_[i];
+    if (type == 0) {  // we only use sharpening for AC luma coeffs
+      m->sharpen_[i] = (kFreqSharpening[i] * m->q_[i]) >> SHARPEN_BITS;
+    } else {
+      m->sharpen_[i] = 0;
+    }
     sum += m->q_[i];
   }
   return (sum + 8) >> 4;

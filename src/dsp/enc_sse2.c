@@ -830,8 +830,6 @@ static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
   const __m128i bias8 = _mm_loadu_si128((__m128i*)&mtx->bias_[8]);
   const __m128i q0 = _mm_loadu_si128((__m128i*)&mtx->q_[0]);
   const __m128i q8 = _mm_loadu_si128((__m128i*)&mtx->q_[8]);
-  const __m128i zthresh0 = _mm_loadu_si128((__m128i*)&mtx->zthresh_[0]);
-  const __m128i zthresh8 = _mm_loadu_si128((__m128i*)&mtx->zthresh_[8]);
 
   // sign(in) = in >> 15  (0x0000 if positive, 0xffff if negative)
   const __m128i sign0 = _mm_srai_epi16(in0, 15);
@@ -894,17 +892,8 @@ static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
   in0 = _mm_mullo_epi16(out0, q0);
   in8 = _mm_mullo_epi16(out8, q8);
 
-  // if (coeff <= mtx->zthresh_) {in=0; out=0;}
-  {
-    __m128i cmp0 = _mm_cmpgt_epi16(coeff0, zthresh0);
-    __m128i cmp8 = _mm_cmpgt_epi16(coeff8, zthresh8);
-    in0 = _mm_and_si128(in0, cmp0);
-    in8 = _mm_and_si128(in8, cmp8);
-    _mm_storeu_si128((__m128i*)&in[0], in0);
-    _mm_storeu_si128((__m128i*)&in[8], in8);
-    out0 = _mm_and_si128(out0, cmp0);
-    out8 = _mm_and_si128(out8, cmp8);
-  }
+  _mm_storeu_si128((__m128i*)&in[0], in0);
+  _mm_storeu_si128((__m128i*)&in[8], in8);
 
   // zigzag the output before storing it.
   //
