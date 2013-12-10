@@ -204,6 +204,12 @@ static const char* ErrorString(WebPMuxError err) {
   return kErrorMessages[-err];
 }
 
+enum {
+  METADATA_ICC  = (1 << 0),
+  METADATA_XMP  = (1 << 1),
+  METADATA_ALL  = METADATA_ICC | METADATA_XMP
+};
+
 //------------------------------------------------------------------------------
 
 static void Help(void) {
@@ -219,7 +225,11 @@ static void Help(void) {
   printf("  -kmin <int> ............ Min distance between key frames\n");
   printf("  -kmax <int> ............ Max distance between key frames\n");
   printf("  -f <int> ............... filter strength (0=off..100)\n");
-  printf("\n");
+  printf("  -metadata <string> ..... comma separated list of metadata to\n");
+  printf("                           ");
+  printf("copy from the input to the output if present.\n");
+  printf("                           "
+         "Valid values: all, none, icc, xmp (default)\n");
   printf("  -version ............... print version number and exit.\n");
   printf("  -v ..................... verbose.\n");
   printf("  -quiet ................. don't print anything.\n");
@@ -248,6 +258,7 @@ int main(int argc, const char *argv[]) {
   int quiet = 0;
   WebPMux* mux = NULL;
   WebPData webp_data = { NULL, 0 };
+  int keep_metadata = METADATA_XMP;  // ICC not output by default.
   int stored_icc = 0;  // Whether we have already stored an ICC profile.
   int stored_xmp = 0;
 
@@ -297,6 +308,45 @@ int main(int argc, const char *argv[]) {
       default_kmin = 0;
     } else if (!strcmp(argv[c], "-f") && c < argc - 1) {
       config.filter_strength = strtol(argv[++c], NULL, 0);
+    } else if (!strcmp(argv[c], "-metadata") && c < argc - 1) {
+      static const struct {
+        const char* option;
+        int flag;
+      } kTokens[] = {
+        { "all",  METADATA_ALL },
+        { "none", 0 },
+        { "icc",  METADATA_ICC },
+        { "xmp",  METADATA_XMP },
+      };
+      const size_t kNumTokens = sizeof(kTokens) / sizeof(*kTokens);
+      const char* start = argv[++c];
+      const char* const end = start + strlen(start);
+
+      keep_metadata = 0;
+      while (start < end) {
+        size_t i;
+        const char* token = strchr(start, ',');
+        if (token == NULL) token = end;
+
+        for (i = 0; i < kNumTokens; ++i) {
+          if ((size_t)(token - start) == strlen(kTokens[i].option) &&
+              !strncmp(start, kTokens[i].option, strlen(kTokens[i].option))) {
+            if (kTokens[i].flag != 0) {
+              keep_metadata |= kTokens[i].flag;
+            } else {
+              keep_metadata = 0;
+            }
+            break;
+          }
+        }
+        if (i == kNumTokens) {
+          fprintf(stderr, "Error! Unknown metadata type '%.*s'\n",
+                  (int)(token - start), start);
+          Help();
+          return -1;
+        }
+        start = token + 1;
+      }
     } else if (!strcmp(argv[c], "-version")) {
       const int enc_version = WebPGetEncoderVersion();
       const int mux_version = WebPGetMuxVersion();
@@ -446,11 +496,14 @@ int main(int argc, const char *argv[]) {
               anim.loop_count = data[2] | (data[3] << 8);
               if (verbose) printf("Loop count: %d\n", anim.loop_count);
             } else {  // An extension containing metadata.
-              // We only store the first encountered chunk of each type.
-              const int is_xmp =
-                  !stored_xmp && !memcmp(data + 1, "XMP DataXMP", 11);
-              const int is_icc =
-                  !stored_icc && !memcmp(data + 1, "ICCRGBG1012", 11);
+              // We only store the first encountered chunk of each type, and
+              // only if requested by the user.
+              const int is_xmp = (keep_metadata & METADATA_XMP) &&
+                                 !stored_xmp &&
+                                 !memcmp(data + 1, "XMP DataXMP", 11);
+              const int is_icc = (keep_metadata & METADATA_ICC) &&
+                                 !stored_icc &&
+                                 !memcmp(data + 1, "ICCRGBG1012", 11);
               if (is_xmp || is_icc) {
                 const char* const fourccs[2] = { "XMP " , "ICCP" };
                 const char* const features[2] = { "XMP" , "ICC" };
