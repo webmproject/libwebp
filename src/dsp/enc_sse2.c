@@ -930,6 +930,11 @@ static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
   }
 }
 
+static int QuantizeBlockWHTSSE2(int16_t in[16], int16_t out[16],
+                                const VP8Matrix* const mtx) {
+  return QuantizeBlockSSE2(in, out, 0, mtx);
+}
+
 #endif   // WEBP_USE_SSE2
 
 //------------------------------------------------------------------------------
@@ -941,6 +946,7 @@ void VP8EncDspInitSSE2(void) {
 #if defined(WEBP_USE_SSE2)
   VP8CollectHistogram = CollectHistogramSSE2;
   VP8EncQuantizeBlock = QuantizeBlockSSE2;
+  VP8EncQuantizeBlockWHT = QuantizeBlockWHTSSE2;
   VP8ITransform = ITransformSSE2;
   VP8FTransform = FTransformSSE2;
   VP8FTransformWHT = FTransformWHTSSE2;

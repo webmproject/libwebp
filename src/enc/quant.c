@@ -723,7 +723,7 @@ static int ReconstructIntra16(VP8EncIterator* const it,
     VP8FTransform(src + VP8Scan[n], ref + VP8Scan[n], tmp[n]);
   }
   VP8FTransformWHT(tmp[0], dc_tmp);
-  nz |= VP8EncQuantizeBlock(dc_tmp, rd->y_dc_levels, 0, &dqm->y2_) << 24;
+  nz |= VP8EncQuantizeBlockWHT(dc_tmp, rd->y_dc_levels, &dqm->y2_) << 24;
 
   if (DO_TRELLIS_I16 && it->do_trellis_) {
     int x, y;
