@@ -190,7 +190,7 @@ static void ITransformWHT(const int16_t* in, int16_t* out) {
 
 static void FTransformWHT(const int16_t* in, int16_t* out) {
   // input is 12b signed
-  int16_t tmp[16];
+  int32_t tmp[16];
   int i;
   for (i = 0; i < 4; ++i, in += 64) {
     const int a0 = (in[0 * 16] + in[2 * 16]);  // 13b

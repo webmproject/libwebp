@@ -456,7 +456,7 @@ static void FTransformSSE2(const uint8_t* src, const uint8_t* ref,
 }
 
 static void FTransformWHTSSE2(const int16_t* in, int16_t* out) {
-  int16_t tmp[16];
+  int32_t tmp[16];
   int i;
   for (i = 0; i < 4; ++i, in += 64) {
     const int a0 = (in[0 * 16] + in[2 * 16]);
@@ -469,22 +469,22 @@ static void FTransformWHTSSE2(const int16_t* in, int16_t* out) {
     tmp[3 + i * 4] = a0 - a1;
   }
   {
-    const __m128i src0 = _mm_loadl_epi64((__m128i*)&tmp[0]);
-    const __m128i src1 = _mm_loadl_epi64((__m128i*)&tmp[4]);
-    const __m128i src2 = _mm_loadl_epi64((__m128i*)&tmp[8]);
-    const __m128i src3 = _mm_loadl_epi64((__m128i*)&tmp[12]);
-    const __m128i a0 = _mm_add_epi16(src0, src2);
-    const __m128i a1 = _mm_add_epi16(src1, src3);
-    const __m128i a2 = _mm_sub_epi16(src1, src3);
-    const __m128i a3 = _mm_sub_epi16(src0, src2);
-    const __m128i b0 = _mm_srai_epi16(_mm_adds_epi16(a0, a1), 1);
-    const __m128i b1 = _mm_srai_epi16(_mm_adds_epi16(a3, a2), 1);
-    const __m128i b2 = _mm_srai_epi16(_mm_subs_epi16(a3, a2), 1);
-    const __m128i b3 = _mm_srai_epi16(_mm_subs_epi16(a0, a1), 1);
-    _mm_storel_epi64((__m128i*)&out[ 0], b0);
-    _mm_storel_epi64((__m128i*)&out[ 4], b1);
-    _mm_storel_epi64((__m128i*)&out[ 8], b2);
-    _mm_storel_epi64((__m128i*)&out[12], b3);
+    const __m128i src0 = _mm_loadu_si128((__m128i*)&tmp[0]);
+    const __m128i src1 = _mm_loadu_si128((__m128i*)&tmp[4]);
+    const __m128i src2 = _mm_loadu_si128((__m128i*)&tmp[8]);
+    const __m128i src3 = _mm_loadu_si128((__m128i*)&tmp[12]);
+    const __m128i a0 = _mm_add_epi32(src0, src2);
+    const __m128i a1 = _mm_add_epi32(src1, src3);
+    const __m128i a2 = _mm_sub_epi32(src1, src3);
+    const __m128i a3 = _mm_sub_epi32(src0, src2);
+    const __m128i b0 = _mm_srai_epi32(_mm_add_epi32(a0, a1), 1);
+    const __m128i b1 = _mm_srai_epi32(_mm_add_epi32(a3, a2), 1);
+    const __m128i b2 = _mm_srai_epi32(_mm_sub_epi32(a3, a2), 1);
+    const __m128i b3 = _mm_srai_epi32(_mm_sub_epi32(a0, a1), 1);
+    const __m128i out0 = _mm_packs_epi32(b0, b1);
+    const __m128i out1 = _mm_packs_epi32(b2, b3);
+    _mm_storeu_si128((__m128i*)&out[0], out0);
+    _mm_storeu_si128((__m128i*)&out[8], out1);
   }
 }
 
