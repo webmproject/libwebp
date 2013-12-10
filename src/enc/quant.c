@@ -188,12 +188,8 @@ static const uint8_t kFreqSharpening[16] = {
 
 // Returns the average quantizer
 static int ExpandMatrix(VP8Matrix* const m, int type) {
-  int i;
-  int sum = 0;
-  for (i = 2; i < 16; ++i) {
-    m->q_[i] = m->q_[1];
-  }
-  for (i = 0; i < 16; ++i) {
+  int i, sum;
+  for (i = 0; i < 2; ++i) {
     const int is_ac_coeff = (i > 0);
     const int bias = kBiasMatrices[type][is_ac_coeff];
     m->iq_[i] = (1 << QFIX) / m->q_[i];
@@ -202,6 +198,14 @@ static int ExpandMatrix(VP8Matrix* const m, int type) {
     //   * zero if coeff <= zthresh
     //   * non-zero if coeff > zthresh
     m->zthresh_[i] = ((1 << QFIX) - 1 - m->bias_[i]) / m->iq_[i];
+  }
+  for (i = 2; i < 16; ++i) {
+    m->q_[i] = m->q_[1];
+    m->iq_[i] = m->iq_[1];
+    m->bias_[i] = m->bias_[1];
+    m->zthresh_[i] = m->zthresh_[1];
+  }
+  for (sum = 0, i = 0; i < 16; ++i) {
     if (type == 0) {  // we only use sharpening for AC luma coeffs
       m->sharpen_[i] = (kFreqSharpening[i] * m->q_[i]) >> SHARPEN_BITS;
     } else {
