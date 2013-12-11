@@ -154,7 +154,7 @@ static int ReadFrame(GifFileType* const gif, WebPFrameRect* const gif_rect,
 }
 
 static int GetBackgroundColor(const ColorMapObject* const color_map,
-                              GifWord bgcolor_idx, uint32_t* const bgcolor) {
+                              int bgcolor_idx, uint32_t* const bgcolor) {
   if (transparent_index != -1 && bgcolor_idx == transparent_index) {
     *bgcolor = WEBP_UTIL_TRANSPARENT_COLOR;  // Special case.
     return 1;
