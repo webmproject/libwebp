@@ -598,11 +598,10 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
     // note: it's important to take sign of the _original_ coeff,
     // so we don't have to consider level < 0 afterward.
     const int sign = (in[j] < 0);
-    int coeff0 = (sign ? -in[j] : in[j]) + mtx->sharpen_[j];
-    int level0;
-    if (coeff0 > 2047) coeff0 = 2047;
+    const int coeff0 = (sign ? -in[j] : in[j]) + mtx->sharpen_[j];
+    int level0 = QUANTDIV(coeff0, iQ, B);
+    if (level0 > MAX_LEVEL) level0 = MAX_LEVEL;
 
-    level0 = QUANTDIV(coeff0, iQ, B);
     // test all alternate level values around level0.
     for (m = -MIN_DELTA; m <= MAX_DELTA; ++m) {
       Node* const cur = &NODE(n, m);
@@ -614,7 +613,7 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
       cur->sign = sign;
       cur->level = level;
       cur->ctx = (level == 0) ? 0 : (level == 1) ? 1 : 2;
-      if (level >= 2048 || level < 0) {   // node is dead?
+      if (level > MAX_LEVEL || level < 0) {   // node is dead?
         cur->cost = MAX_COST;
         continue;
       }
