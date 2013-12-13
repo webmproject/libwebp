@@ -649,6 +649,9 @@ int main(int argc, const char *argv[]) {
 #endif
     } else if (!strcmp(argv[c], "-incremental")) {
       incremental = 1;
+    } else if (!strcmp(argv[c], "--")) {
+      if (c < argc - 1) in_file = argv[++c];
+      break;
     } else if (argv[c][0] == '-') {
       fprintf(stderr, "Unknown option '%s'\n", argv[c]);
       Help();
