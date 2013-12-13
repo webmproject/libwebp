@@ -359,6 +359,9 @@ int main(int argc, const char *argv[]) {
       quiet = 1;
     } else if (!strcmp(argv[c], "-v")) {
       verbose = 1;
+    } else if (!strcmp(argv[c], "--")) {
+      if (c < argc - 1) in_file = argv[++c];
+      break;
     } else if (argv[c][0] == '-') {
       fprintf(stderr, "Error! Unknown option '%s'\n", argv[c]);
       Help();
