@@ -425,6 +425,9 @@ int main(int argc, char *argv[]) {
       return 0;
     } else if (!strcmp(argv[c], "-mt")) {
       config->options.use_threads = 1;
+    } else if (!strcmp(argv[c], "--")) {
+      if (c < argc - 1) kParams.file_name = argv[++c];
+      break;
     } else if (argv[c][0] == '-') {
       printf("Unknown option '%s'\n", argv[c]);
       Help();
