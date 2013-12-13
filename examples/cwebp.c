@@ -1024,11 +1024,32 @@ int main(int argc, const char *argv[]) {
     }
   }
 
-  if (keep_metadata != 0 && out != NULL) {
-    if (!WriteWebPWithMetadata(out, &picture, &memory_writer,
-                               &metadata, keep_metadata, &metadata_written)) {
-      fprintf(stderr, "Error writing WebP file with metadata!\n");
-      goto Error;
+  if (keep_metadata != 0) {
+    if (out != NULL) {
+      if (!WriteWebPWithMetadata(out, &picture, &memory_writer,
+                                 &metadata, keep_metadata, &metadata_written)) {
+        fprintf(stderr, "Error writing WebP file with metadata!\n");
+        goto Error;
+      }
+    } else {  // output is disabled, just display the metadata stats.
+      const struct {
+        const MetadataPayload* const payload;
+        int flag;
+      } *iter, info[] = {
+        { &metadata.exif, METADATA_EXIF },
+        { &metadata.iccp, METADATA_ICC },
+        { &metadata.xmp, METADATA_XMP },
+        { NULL, 0 }
+      };
+      uint32_t unused1 = 0;
+      uint64_t unused2 = 0;
+
+      for (iter = info; iter->payload != NULL; ++iter) {
+        if (UpdateFlagsAndSize(iter->payload, !!(keep_metadata & iter->flag),
+                               0, &unused1, &unused2)) {
+          metadata_written |= iter->flag;
+        }
+      }
     }
   }
 
