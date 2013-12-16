@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdX//6I4\u003d",
+        "filename": "man/cwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-12-16T17:24:20Z",
+      "side": 1,
+      "message": "not sure we should have this example in the man page as primary example...",
+      "revId": "ae1d00a14952a2d7485ee175cd729560a62d77be",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
