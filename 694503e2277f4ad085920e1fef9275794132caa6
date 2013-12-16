@@ -16,6 +16,24 @@
       "revId": "694503e2277f4ad085920e1fef9275794132caa6",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdX//5/s\u003d",
+        "filename": "man/cwebp.1",
+        "patchSetId": 3
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-12-16T23:18:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdX//6B0\u003d",
+      "revId": "694503e2277f4ad085920e1fef9275794132caa6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
