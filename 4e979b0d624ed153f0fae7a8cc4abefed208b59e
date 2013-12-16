@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdX//6Iw\u003d",
+        "filename": "man/dwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-12-16T17:25:16Z",
+      "side": 1,
+      "message": "not sure this should be one of the primary example in the man page...",
+      "revId": "4e979b0d624ed153f0fae7a8cc4abefed208b59e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
