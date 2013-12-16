@@ -243,9 +243,11 @@ typedef struct {
 
 // Release the data contained by 'encoded_frame'.
 static void FrameRelease(EncodedFrame* const encoded_frame) {
-  WebPDataClear(&encoded_frame->sub_frame.bitstream);
-  WebPDataClear(&encoded_frame->key_frame.bitstream);
-  memset(encoded_frame, 0, sizeof(*encoded_frame));
+  if (encoded_frame != NULL) {
+    WebPDataClear(&encoded_frame->sub_frame.bitstream);
+    WebPDataClear(&encoded_frame->key_frame.bitstream);
+    memset(encoded_frame, 0, sizeof(*encoded_frame));
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -289,6 +291,9 @@ WebPFrameCache* WebPFrameCacheNew(int width, int height,
   WebPFrameCache* cache = (WebPFrameCache*)malloc(sizeof(*cache));
   if (cache == NULL) return NULL;
   CacheReset(cache);
+  // sanity init, so we can call WebPFrameCacheDelete():
+  cache->encoded_frames = NULL;
+
   cache->is_first_frame = 1;
 
   // Picture buffers.
@@ -325,11 +330,13 @@ WebPFrameCache* WebPFrameCacheNew(int width, int height,
 
 void WebPFrameCacheDelete(WebPFrameCache* const cache) {
   if (cache != NULL) {
-    size_t i;
-    for (i = 0; i < cache->size; ++i) {
-      FrameRelease(&cache->encoded_frames[i]);
+    if (cache->encoded_frames != NULL) {
+      size_t i;
+      for (i = 0; i < cache->size; ++i) {
+        FrameRelease(&cache->encoded_frames[i]);
+      }
+      free(cache->encoded_frames);
     }
-    free(cache->encoded_frames);
     WebPPictureFree(&cache->prev_canvas);
     WebPPictureFree(&cache->curr_canvas);
     free(cache);
