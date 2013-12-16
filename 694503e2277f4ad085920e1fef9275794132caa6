@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdX//6B0\u003d",
+        "filename": "man/cwebp.1",
+        "patchSetId": 3
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-12-16T22:44:48Z",
+      "side": 1,
+      "message": "i\u0027d use something obviously silly like \u0027\\-\\-\\-\\-picture.png\u0027\nto clearly differentiate the output name from an option...",
+      "revId": "694503e2277f4ad085920e1fef9275794132caa6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
