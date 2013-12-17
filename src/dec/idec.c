@@ -20,10 +20,6 @@
 #include "./vp8i.h"
 #include "../utils/utils.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 // In append mode, buffer allocations increase as multiples of this value.
 // Needs to be a power of 2.
 #define CHUNK_SIZE 4096
@@ -851,6 +847,3 @@ int WebPISetIOHooks(WebPIDecoder* const idec,
   return 1;
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

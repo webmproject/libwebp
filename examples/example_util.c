@@ -14,10 +14,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 // -----------------------------------------------------------------------------
 // File I/O
 
@@ -74,6 +70,3 @@ int ExUtilWriteFile(const char* const file_name,
   return ok;
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

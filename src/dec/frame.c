@@ -15,10 +15,6 @@
 #include "./vp8i.h"
 #include "../utils/utils.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #define ALIGN_MASK (32 - 1)
 
 static void ReconstructRow(const VP8Decoder* const dec,
@@ -820,6 +816,3 @@ static void ReconstructRow(const VP8Decoder* const dec,
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

@@ -20,10 +20,6 @@
 #include "./cost.h"
 #include "../webp/format_constants.h"  // RIFF constants
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #define SEGMENT_VISU 0
 #define DEBUG_SEARCH 0    // useful to track search convergence
 
@@ -1070,6 +1066,3 @@ int VP8EncTokenLoop(VP8Encoder* const enc) {
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

@@ -19,10 +19,6 @@
 #include "../utils/quant_levels.h"
 #include "../webp/format_constants.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 // -----------------------------------------------------------------------------
 // Encodes the given alpha data via specified compression method 'method'.
 // The pre-processing (quantization) is performed if 'quality' is less than 100.
@@ -412,6 +408,3 @@ int VP8EncDeleteAlpha(VP8Encoder* const enc) {
   return ok;
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

@@ -18,10 +18,6 @@
 #include "../webp/mux_types.h"         // ALPHA_FLAG
 #include "./vp8enci.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 // Helper functions
 
@@ -425,6 +421,3 @@ int VP8EncWrite(VP8Encoder* const enc) {
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

@@ -13,10 +13,6 @@
 
 #include "./dsp.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #if defined(WEBP_USE_SSE2)
 #include <stdlib.h>  // for abs()
 #include <emmintrin.h>
@@ -959,6 +955,3 @@ void VP8EncDspInitSSE2(void) {
 #endif   // WEBP_USE_SSE2
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

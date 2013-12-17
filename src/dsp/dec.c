@@ -14,10 +14,6 @@
 #include "./dsp.h"
 #include "../dec/vp8i.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 // run-time tables (~4k)
 
@@ -758,6 +754,3 @@ void VP8DspInit(void) {
   }
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

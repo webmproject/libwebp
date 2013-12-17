@@ -13,10 +13,6 @@
 
 #include "./bit_reader.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #ifndef USE_RIGHT_JUSTIFY
 #define MK(X) (((range_t)(X) << (BITS)) | (MASK))
 #else
@@ -209,6 +205,3 @@ uint32_t VP8LReadBits(VP8LBitReader* const br, int n_bits) {
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

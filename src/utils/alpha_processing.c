@@ -14,10 +14,6 @@
 #include <assert.h>
 #include "./alpha_processing.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 // Tables can be faster on some platform but incur some extra binary size (~2k).
 // #define USE_TABLES_FOR_ALPHA_MULT
 
@@ -198,6 +194,3 @@ void WebPMultRows(uint8_t* ptr, int stride,
 #undef HALF
 #undef MFIX
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

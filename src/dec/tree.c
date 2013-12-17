@@ -15,10 +15,6 @@
 
 #define USE_GENERIC_TREE
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #ifdef USE_GENERIC_TREE
 static const int8_t kYModesIntra4[18] = {
   -B_DC_PRED, 1,
@@ -496,6 +492,3 @@ void VP8ParseProba(VP8BitReader* const br, VP8Decoder* const dec) {
   }
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

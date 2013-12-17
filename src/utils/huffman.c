@@ -18,10 +18,6 @@
 #include "../utils/utils.h"
 #include "../webp/format_constants.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 // Uncomment the following to use look-up table for ReverseBits()
 // (might be faster on some platform)
 // #define USE_LUT_REVERSE_BITS
@@ -290,6 +286,3 @@ int HuffmanTreeBuildExplicit(HuffmanTree* const tree,
   return ok;
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

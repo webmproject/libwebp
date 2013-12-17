@@ -13,10 +13,6 @@
 
 #include "./vp8i.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 static WEBP_INLINE int clip(int v, int M) {
   return v < 0 ? 0 : v > M ? M : v;
 }
@@ -112,6 +108,3 @@ void VP8ParseQuant(VP8Decoder* const dec) {
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

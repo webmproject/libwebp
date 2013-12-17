@@ -14,10 +14,6 @@
 
 #include "./dsp.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #if defined(WEBP_USE_NEON)
 
 #include <assert.h>
@@ -267,6 +263,3 @@ void WebPInitPremultiplyNEON(void) {}
 
 #endif  // FANCY_UPSAMPLING
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

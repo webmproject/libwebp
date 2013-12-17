@@ -25,10 +25,6 @@
 #include "../utils/utils.h"
 #include "../webp/format_constants.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #define PALETTE_KEY_RIGHT_SHIFT   22  // Key for 1K buffer.
 #define MAX_HUFF_IMAGE_SIZE       (16 * 1024 * 1024)
 #define MAX_COLORS_FOR_GRAPH      64
@@ -1170,6 +1166,3 @@ int VP8LEncodeImage(const WebPConfig* const config,
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

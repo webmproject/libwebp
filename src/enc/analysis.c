@@ -19,10 +19,6 @@
 #include "./cost.h"
 #include "../utils/utils.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #define MAX_ITERS_K_MEANS  6
 
 //------------------------------------------------------------------------------
@@ -499,6 +495,3 @@ int VP8EncAnalyze(VP8Encoder* const enc) {
   return ok;
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

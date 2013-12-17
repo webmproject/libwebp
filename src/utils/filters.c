@@ -16,10 +16,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 // Helpful macro.
 
@@ -268,6 +264,3 @@ const WebPUnfilterFunc WebPUnfilters[WEBP_FILTER_LAST] = {
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

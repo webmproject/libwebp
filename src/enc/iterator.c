@@ -15,10 +15,6 @@
 
 #include "./vp8enci.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 // VP8Iterator
 //------------------------------------------------------------------------------
@@ -458,6 +454,3 @@ int VP8IteratorRotateI4(VP8EncIterator* const it,
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

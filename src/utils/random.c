@@ -14,10 +14,6 @@
 #include <string.h>
 #include "./random.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 
 // 31b-range values
@@ -45,6 +41,3 @@ void VP8InitRandom(VP8Random* const rg, float dithering) {
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

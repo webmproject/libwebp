@@ -19,10 +19,6 @@
 #include "./webpi.h"
 #include "../utils/bit_reader.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 
 int WebPGetDecoderVersion(void) {
@@ -715,6 +711,3 @@ void VP8Clear(VP8Decoder* const dec) {
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif
