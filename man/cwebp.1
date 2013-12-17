@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "October 23, 2013"
+.TH CWEBP 1 "December 12, 2013"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -255,6 +255,8 @@ cwebp \-q 50 -lossless picture.png \-o picture_lossless.webp
 cwebp \-q 70 picture_with_alpha.png \-o picture_with_alpha.webp
 .br
 cwebp \-sns 70 \-f 50 \-size 60000 picture.png \-o picture.webp
+.br
+cwebp \-o picture.webp \-\- \-\-\-picture.png
 
 .SH AUTHORS
 \fBcwebp\fP was written by the WebP team.
