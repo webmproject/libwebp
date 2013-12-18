@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH WEBPMUX 1 "August 26, 2013"
+.TH WEBPMUX 1 "December 17, 2013"
 .SH NAME
 webpmux \- command line tool to create WebP Mux/container file.
 .SH SYNOPSIS
@@ -161,6 +161,12 @@ webpmux \-frame anim_1.webp +100 \-frame anim_2.webp +100+50+50
 .RE
 .br
 webpmux \-get frame 2 anim_container.webp \-o frame_2.webp
+.br
+webpmux \-set icc image_profile.icc \-o icc_container.webp \-\- \-\-\-in.webp
+.br
+webpmux \-get icc \-o image_profile.icc \-\- \-\-\-icc_container.webp
+.br
+webpmux \-strip icc \-o without_icc.webp \-\- \-\-\-icc_container.webp
 
 .SH AUTHORS
 \fBwebpmux\fP is written by the WebP team.

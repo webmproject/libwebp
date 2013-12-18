@@ -677,6 +677,17 @@ static int ParseCommandLine(int argc, const char* argv[],
                (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
         DeleteConfig(config);
         exit(0);
+      } else if (!strcmp(argv[i], "--")) {
+        if (i < argc - 1) {
+          ++i;
+          if (config->input_ == NULL) {
+            config->input_ = argv[i];
+          } else {
+            ERROR_GOTO2("ERROR at '%s': Multiple input files specified.\n",
+                        argv[i], ErrParse);
+          }
+        }
+        break;
       } else {
         ERROR_GOTO2("ERROR: Unknown option: '%s'.\n", argv[i], ErrParse);
       }
