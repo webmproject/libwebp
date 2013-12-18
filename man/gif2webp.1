@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH GIF2WEBP 1 "December 12, 2013"
+.TH GIF2WEBP 1 "December 17, 2013"
 .SH NAME
 gif2webp \- Convert a GIF image to WebP
 .SH SYNOPSIS
@@ -97,6 +97,10 @@ A value of 0 will turn off any filtering. Higher value will increase the
 strength of the filtering process applied after decoding the picture. The higher
 the value the smoother the picture will appear. Typical values are usually in
 the range of 20 to 50.
+.TP
+.B \-mt
+Use multi-threading for encoding, if possible. This option is only effective
+when using lossy compression.
 .TP
 .B \-v
 Print extra information.

@@ -230,6 +230,8 @@ static void Help(void) {
   printf("copy from the input to the output if present.\n");
   printf("                           "
          "Valid values: all, none, icc, xmp (default)\n");
+  printf("  -mt .................... use multi-threading if available\n");
+  printf("\n");
   printf("  -version ............... print version number and exit.\n");
   printf("  -v ..................... verbose.\n");
   printf("  -quiet ................. don't print anything.\n");
@@ -347,6 +349,8 @@ int main(int argc, const char *argv[]) {
         }
         start = token + 1;
       }
+    } else if (!strcmp(argv[c], "-mt")) {
+      ++config.thread_level;
     } else if (!strcmp(argv[c], "-version")) {
       const int enc_version = WebPGetEncoderVersion();
       const int mux_version = WebPGetMuxVersion();
