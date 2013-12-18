@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn///pM\u003d",
+        "filename": "README",
+        "patchSetId": 1
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-12-18T18:50:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn///w8\u003d",
+      "revId": "aa98a72c308d20d0c63013c75a32707f6ce37735",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn///w0\u003d",
         "filename": "README",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn///pI\u003d",
+        "filename": "README",
+        "patchSetId": 1
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-12-18T18:50:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn///w0\u003d",
+      "revId": "aa98a72c308d20d0c63013c75a32707f6ce37735",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn///w4\u003d",
         "filename": "README",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2013-12-18T08:02:06Z",
       "side": 1,
       "message": "Add a note that the resulting animated WebP can be viewed using \u0027vwebp\u0027 tool?",
+      "revId": "aa98a72c308d20d0c63013c75a32707f6ce37735",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn///pE\u003d",
+        "filename": "README",
+        "patchSetId": 1
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-12-18T18:50:10Z",
+      "side": 1,
+      "message": "Good point, done.",
+      "parentUuid": "AAAAdn///w4\u003d",
       "revId": "aa98a72c308d20d0c63013c75a32707f6ce37735",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
