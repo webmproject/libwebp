@@ -671,7 +671,7 @@ static void Copy32b(uint8_t* dst, uint8_t* src) {
   memcpy(dst, src, 4);
 }
 
-static void DoTransform(uint32_t bits, const int16_t* const src,
+static WEBP_INLINE void DoTransform(uint32_t bits, const int16_t* const src,
                         uint8_t* const dst) {
   switch (bits >> 30) {
     case 3:

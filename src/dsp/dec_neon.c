@@ -160,7 +160,7 @@ static void SimpleHFilter16iNEON(uint8_t* p, int stride, int thresh) {
 //-----------------------------------------------------------------------------
 // Inverse transforms (Paragraph 14.4)
 
-static void TransformOneNEON(const int16_t *in, uint8_t *dst) {
+static void TransformOne(const int16_t* in, uint8_t* dst) {
   const int kBPS = BPS;
   const int16_t constants[] = {20091, 17734, 0, 0};
   /* kC1, kC2. Padded because vld1.16 loads 8 bytes
@@ -309,11 +309,42 @@ static void TransformOneNEON(const int16_t *in, uint8_t *dst) {
   );
 }
 
-static void TransformTwoNEON(const int16_t* in, uint8_t* dst, int do_two) {
-  TransformOneNEON(in, dst);
+static void TransformTwo(const int16_t* in, uint8_t* dst, int do_two) {
+  TransformOne(in, dst);
   if (do_two) {
-    TransformOneNEON(in + 16, dst + 4);
+    TransformOne(in + 16, dst + 4);
   }
+}
+
+static void TransformDC(const int16_t* in, uint8_t* dst) {
+  const int DC = (in[0] + 4) >> 3;
+  const int kBPS = BPS;
+  __asm__ volatile (
+    "vdup.16         q1, %[DC]        \n"
+
+    "vld1.32         d0[0], [%[dst]], %[kBPS]    \n"
+    "vld1.32         d1[0], [%[dst]], %[kBPS]    \n"
+    "vld1.32         d0[1], [%[dst]], %[kBPS]    \n"
+    "vld1.32         d1[1], [%[dst]], %[kBPS]    \n"
+
+    "sub         %[dst], %[dst], %[kBPS], lsl #2 \n"
+
+    // add DC and convert to s16.
+    "vaddw.u8        q2, q1, d0                  \n"
+    "vaddw.u8        q3, q1, d1                  \n"
+    // convert back to u8 with saturation
+    "vqmovun.s16     d0,  q2                     \n"
+    "vqmovun.s16     d1,  q3                     \n"
+
+    "vst1.32         d0[0], [%[dst]], %[kBPS]    \n"
+    "vst1.32         d1[0], [%[dst]], %[kBPS]    \n"
+    "vst1.32         d0[1], [%[dst]], %[kBPS]    \n"
+    "vst1.32         d1[1], [%[dst]]             \n"
+    : [in] "+r"(in), [dst] "+r"(dst)  /* modified registers */
+    : [kBPS] "r"(kBPS),   /* constants */
+      [DC] "r"(DC)
+    : "memory", "q0", "q1", "q2", "q3"  /* clobbered */
+  );
 }
 
 static void TransformWHT(const int16_t* in, int16_t* out) {
@@ -392,7 +423,9 @@ extern void VP8DspInitNEON(void);
 
 void VP8DspInitNEON(void) {
 #if defined(WEBP_USE_NEON)
-  VP8Transform = TransformTwoNEON;
+  VP8Transform = TransformTwo;
+  VP8TransformAC3 = TransformOne;  // no special code here
+  VP8TransformDC = TransformDC;
   VP8TransformWHT = TransformWHT;
 
   VP8SimpleVFilter16 = SimpleVFilter16NEON;
