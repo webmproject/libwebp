@@ -328,15 +328,19 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
     if (has_animation != NULL) *has_animation = animation_present;
     if (format != NULL) *format = 0;   // default = undefined
 
+    image_width = canvas_width;
+    image_height = canvas_height;
     if (found_vp8x && (animation_present || fragments_present) &&
         headers == NULL) {
-      if (width != NULL) *width = canvas_width;
-      if (height != NULL) *height = canvas_height;
-      return VP8_STATUS_OK;  // Just return features from VP8X header.
+      status = VP8_STATUS_OK;
+      goto ReturnWidthHeight;  // Just return features from VP8X header.
     }
   }
 
-  if (data_size < TAG_SIZE) return VP8_STATUS_NOT_ENOUGH_DATA;
+  if (data_size < TAG_SIZE) {
+    status = VP8_STATUS_NOT_ENOUGH_DATA;
+    goto ReturnWidthHeight;
+  }
 
   // Skip over optional chunks if data started with "RIFF + VP8X" or "ALPH".
   if ((found_riff && found_vp8x) ||
@@ -344,7 +348,7 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
     status = ParseOptionalChunks(&data, &data_size, hdrs.riff_size,
                                  &hdrs.alpha_data, &hdrs.alpha_data_size);
     if (status != VP8_STATUS_OK) {
-      return status;  // Found an invalid chunk size / insufficient data.
+      goto ReturnWidthHeight;  // Invalid chunk size / insufficient data.
     }
   }
 
@@ -352,7 +356,7 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
   status = ParseVP8Header(&data, &data_size, hdrs.riff_size,
                           &hdrs.compressed_size, &hdrs.is_lossless);
   if (status != VP8_STATUS_OK) {
-    return status;  // Wrong VP8/VP8L chunk-header / insufficient data.
+    goto ReturnWidthHeight;  // Wrong VP8/VP8L chunk-header / insufficient data.
   }
   if (hdrs.compressed_size > MAX_CHUNK_PAYLOAD) {
     return VP8_STATUS_BITSTREAM_ERROR;
@@ -364,7 +368,8 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
 
   if (!hdrs.is_lossless) {
     if (data_size < VP8_FRAME_HEADER_SIZE) {
-      return VP8_STATUS_NOT_ENOUGH_DATA;
+      status = VP8_STATUS_NOT_ENOUGH_DATA;
+      goto ReturnWidthHeight;
     }
     // Validates raw VP8 data.
     if (!VP8GetInfo(data, data_size, (uint32_t)hdrs.compressed_size,
@@ -373,7 +378,8 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
     }
   } else {
     if (data_size < VP8L_FRAME_HEADER_SIZE) {
-      return VP8_STATUS_NOT_ENOUGH_DATA;
+      status = VP8_STATUS_NOT_ENOUGH_DATA;
+      goto ReturnWidthHeight;
     }
     // Validates raw VP8L data.
     if (!VP8LGetInfo(data, data_size, &image_width, &image_height, has_alpha)) {
@@ -386,20 +392,26 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
       return VP8_STATUS_BITSTREAM_ERROR;
     }
   }
-  if (width != NULL) *width = image_width;
-  if (height != NULL) *height = image_height;
-  if (has_alpha != NULL) {
-    // If the data did not contain a VP8X/VP8L chunk the only definitive way
-    // to set this is by looking for alpha data (from an ALPH chunk).
-    *has_alpha |= (hdrs.alpha_data != NULL);
-  }
   if (headers != NULL) {
     *headers = hdrs;
     headers->offset = data - headers->data;
     assert((uint64_t)(data - headers->data) < MAX_CHUNK_PAYLOAD);
     assert(headers->offset == headers->data_size - data_size);
   }
-  return VP8_STATUS_OK;  // Return features from VP8 header.
+ ReturnWidthHeight:
+  if (status == VP8_STATUS_OK ||
+      (status == VP8_STATUS_NOT_ENOUGH_DATA && found_vp8x && headers == NULL)) {
+    if (has_alpha != NULL) {
+      // If the data did not contain a VP8X/VP8L chunk the only definitive way
+      // to set this is by looking for alpha data (from an ALPH chunk).
+      *has_alpha |= (hdrs.alpha_data != NULL);
+    }
+    if (width != NULL) *width = image_width;
+    if (height != NULL) *height = image_height;
+    return VP8_STATUS_OK;
+  } else {
+    return status;
+  }
 }
 
 VP8StatusCode WebPParseHeaders(WebPHeaderStructure* const headers) {
