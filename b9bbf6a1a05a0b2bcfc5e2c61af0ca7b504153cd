@@ -16,6 +16,24 @@
       "revId": "b9bbf6a1a05a0b2bcfc5e2c61af0ca7b504153cd",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn///fc\u003d",
+        "filename": "NEWS",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2013-12-19T06:51:40Z",
+      "side": 1,
+      "message": "yes I expected some additions, but wasn\u0027t sure about the dithering. it\u0027s probably worth mentioning here.",
+      "parentUuid": "AAAAdn///fs\u003d",
+      "revId": "b9bbf6a1a05a0b2bcfc5e2c61af0ca7b504153cd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
