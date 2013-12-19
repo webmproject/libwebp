@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn///fI\u003d",
+        "filename": "makefile.unix",
+        "patchSetId": 1
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2013-12-19T07:52:52Z",
+      "side": 1,
+      "message": "nice catch",
+      "revId": "ad26df1a05804456b44e83a7bdb2a4b27f1198f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
