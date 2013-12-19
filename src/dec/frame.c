@@ -395,7 +395,7 @@ VP8StatusCode VP8EnterCritical(VP8Decoder* const dec, VP8Io* const io) {
 
   // Define the area where we can skip in-loop filtering, in case of cropping.
   //
-  // 'Simple' filter reads two luma samples outside of the macroblock and
+  // 'Simple' filter reads two luma samples outside of the macroblock
   // and filters one. It doesn't filter the chroma samples. Hence, we can
   // avoid doing the in-loop filtering before crop_top/crop_left position.
   // For the 'Complex' filter, 3 samples are read and up to 3 are filtered.
@@ -668,7 +668,7 @@ static void Copy32b(uint8_t* dst, uint8_t* src) {
 }
 
 static WEBP_INLINE void DoTransform(uint32_t bits, const int16_t* const src,
-                        uint8_t* const dst) {
+                                    uint8_t* const dst) {
   switch (bits >> 30) {
     case 3:
       VP8Transform(src, dst, 0);
