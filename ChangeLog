@@ -1,3 +1,9 @@
+256e433 update NEWS description with new general features
+2962534 Merge "gif2webp: don't use C99 %zu" into 0.4.0
+3b9f9dd gif2webp: don't use C99 %zu
+b5b2e3c cwebp: fix metadata output w/lossy+alpha
+ad26df1 makefile.unix: clean up libgif2webp_util.a
+c3b4557 update Changelog
 ca84112 Merge "bump version to 0.4.0" into 0.4.0
 8c524db bump version to 0.4.0
 eec2398 update AUTHORS & .mailmap
