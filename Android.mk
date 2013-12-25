@@ -23,6 +23,7 @@ LOCAL_SRC_FILES := \
     src/dec/webp.c \
     src/dsp/cpu.c \
     src/dsp/dec.c \
+    src/dsp/dec_mips32.c \
     src/dsp/dec_sse2.c \
     src/dsp/enc.c \
     src/dsp/enc_sse2.c \

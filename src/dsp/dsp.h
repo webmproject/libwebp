@@ -41,10 +41,15 @@ extern "C" {
 #define WEBP_USE_NEON
 #endif
 
+#if defined(__mips__)
+#define WEBP_USE_MIPS32
+#endif
+
 typedef enum {
   kSSE2,
   kSSE3,
-  kNEON
+  kNEON,
+  kMIPS32
 } CPUFeature;
 // returns true if the CPU supports the feature.
 typedef int (*VP8CPUInfo)(CPUFeature feature);

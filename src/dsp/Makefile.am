@@ -11,6 +11,7 @@ commondir = $(includedir)/webp
 COMMON_SOURCES =
 COMMON_SOURCES += cpu.c
 COMMON_SOURCES += dec.c
+COMMON_SOURCES += dec_mips32.c
 COMMON_SOURCES += dec_neon.c
 COMMON_SOURCES += dec_sse2.c
 COMMON_SOURCES += dsp.h

@@ -169,6 +169,7 @@ DEMUX_OBJS = \
 DSP_DEC_OBJS = \
     $(DIROBJ)\dsp\cpu.obj \
     $(DIROBJ)\dsp\dec.obj \
+    $(DIROBJ)\dsp\dec_mips32.obj \
     $(DIROBJ)\dsp\dec_neon.obj \
     $(DIROBJ)\dsp\dec_sse2.obj \
     $(DIROBJ)\dsp\lossless.obj \
