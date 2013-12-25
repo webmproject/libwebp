@@ -73,6 +73,8 @@ extern "C" {
 #define BITS 56
 #elif defined(__arm__) || defined(_M_ARM)      // ARM
 #define BITS 24
+#elif defined(__mips__)                        // MIPS
+#define BITS 24
 #else                      // reasonable default
 #define BITS 24
 #endif
@@ -154,7 +156,19 @@ static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
   if (br->buf_ + sizeof(lbit_t) <= br->buf_end_) {
     // convert memory type to register type (with some zero'ing!)
     bit_t bits;
+#if defined(__mips__)                          // MIPS
+    // This is needed because of un-aligned read.
+    lbit_t in_bits;
+    lbit_t* p_buf_ = (lbit_t*)br->buf_;
+    __asm__ volatile(
+      "ulw    %[in_bits], 0(%[p_buf_])         \n\t"
+      : [in_bits]"=r"(in_bits)
+      : [p_buf_]"r"(p_buf_)
+      : "memory"
+    );
+#else
     const lbit_t in_bits = *(const lbit_t*)br->buf_;
+#endif
     br->buf_ += (BITS) >> 3;
 #if !defined(__BIG_ENDIAN__)
 #if (BITS > 32)
