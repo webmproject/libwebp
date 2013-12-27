@@ -18,6 +18,7 @@ COMMON_SOURCES += dsp.h
 COMMON_SOURCES += lossless.c
 COMMON_SOURCES += lossless.h
 COMMON_SOURCES += upsampling.c
+COMMON_SOURCES += upsampling_mips32.c
 COMMON_SOURCES += upsampling_neon.c
 COMMON_SOURCES += upsampling_sse2.c
 COMMON_SOURCES += yuv.c

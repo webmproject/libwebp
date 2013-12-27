@@ -29,6 +29,7 @@ LOCAL_SRC_FILES := \
     src/dsp/enc_sse2.c \
     src/dsp/lossless.c \
     src/dsp/upsampling.c \
+    src/dsp/upsampling_mips32.c \
     src/dsp/upsampling_sse2.c \
     src/dsp/yuv.c \
     src/enc/alpha.c \

@@ -189,6 +189,9 @@ typedef void (*WebPSampleLinePairFunc)(
 // Sampling functions to convert YUV to RGB(A) modes
 extern WebPSampleLinePairFunc WebPSamplers[/* MODE_LAST */];
 
+// Initializes MIPS version of the samplers.
+void WebPInitSamplersMIPS32(void);
+
 // General function for converting two lines of ARGB or RGBA.
 // 'alpha_is_last' should be true if 0xff000000 is stored in memory as
 // as 0x00, 0x00, 0x00, 0xff (little endian).

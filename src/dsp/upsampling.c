@@ -343,6 +343,11 @@ void WebPInitSamplers(void) {
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
+#if defined(WEBP_USE_MIPS32)
+    if (VP8GetCPUInfo(kMIPS32)) {
+      WebPInitSamplersMIPS32();
+    }
+#endif  // WEBP_USE_MIPS32
   }
 }
 
