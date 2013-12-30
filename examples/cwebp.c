@@ -497,6 +497,7 @@ static int WriteWebPWithMetadata(FILE* const out,
     if (has_vp8x) {  // update the existing VP8X flags
       webp[kChunkHeaderSize] |= (uint8_t)(flags & 0xff);
       ok = ok && (fwrite(webp, kVP8XChunkSize, 1, out) == 1);
+      webp += kVP8XChunkSize;
       webp_size -= kVP8XChunkSize;
     } else {
       const int is_lossless = !memcmp(webp, "VP8L", kTagSize);
