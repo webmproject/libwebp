@@ -214,6 +214,7 @@ OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES)
 ifeq ($(MAKECMDGOALS),clean)
   OUTPUT += $(EXTRA_EXAMPLES)
   OUTPUT += src/demux/libwebpdemux.a src/mux/libwebpmux.a
+  OUTPUT += examples/libgif2webp_util.a
 endif
 
 ex: $(OUT_EXAMPLES)

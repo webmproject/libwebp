@@ -58,7 +58,7 @@ static void SanitizeKeyFrameIntervals(size_t* const kmin_ptr,
     kmin = kmax - 1;
     if (print_warning) {
       fprintf(stderr,
-              "WARNING: Setting kmin = %zu, so that kmin < kmax.\n", kmin);
+              "WARNING: Setting kmin = %d, so that kmin < kmax.\n", (int)kmin);
     }
   } else if (kmin < (kmax / 2 + 1)) {
     // This ensures that cache.keyframe + kmin >= kmax is always true. So, we
@@ -66,8 +66,8 @@ static void SanitizeKeyFrameIntervals(size_t* const kmin_ptr,
     kmin = (kmax / 2 + 1);
     if (print_warning) {
       fprintf(stderr,
-              "WARNING: Setting kmin = %zu, so that kmin >= kmax / 2 + 1.\n",
-              kmin);
+              "WARNING: Setting kmin = %d, so that kmin >= kmax / 2 + 1.\n",
+              (int)kmin);
     }
   }
   // Limit the max number of frames that are allocated.
@@ -75,8 +75,8 @@ static void SanitizeKeyFrameIntervals(size_t* const kmin_ptr,
     kmin = kmax - MAX_CACHE_SIZE;
     if (print_warning) {
       fprintf(stderr,
-              "WARNING: Setting kmin = %zu, so that kmax - kmin <= 30.\n",
-              kmin);
+              "WARNING: Setting kmin = %d, so that kmax - kmin <= 30.\n",
+              (int)kmin);
     }
   }
   *kmin_ptr = kmin;
