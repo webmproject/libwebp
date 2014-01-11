@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//9dU\u003d",
+        "filename": "man/dwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-11T20:59:00Z",
+      "side": 1,
+      "message": "date",
+      "revId": "0aa50e29a2f362021cdce072532707c0528db7e4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//9Ro\u003d",
+        "filename": "src/dec/buffer.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-11T20:59:00Z",
+      "side": 1,
+      "message": "mixed assignment and code here.",
+      "revId": "0aa50e29a2f362021cdce072532707c0528db7e4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//9Rk\u003d",
+        "filename": "src/dec/webpi.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-11T20:59:00Z",
+      "side": 1,
+      "message": "...by negating...",
+      "revId": "0aa50e29a2f362021cdce072532707c0528db7e4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
