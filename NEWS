@@ -1,4 +1,9 @@
-- Next version:
+- 12/19/13: version 0.4.0
+  * improved gif2webp tool
+  * numerous fixes, compression improvement and speed-up
+  * dither option added to decoder (dwebp -dither 50 ...)
+  * improved multi-threaded modes (-mt option)
+  * improved filtering strength determination
   * New function: WebPMuxGetCanvasSize
   * BMP and TIFF format output added to 'dwebp'
   * Significant memory reduction for decoding lossy images with alpha.
