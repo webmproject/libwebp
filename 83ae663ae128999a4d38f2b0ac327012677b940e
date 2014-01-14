@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//894\u003d",
+        "filename": "src/dec/idec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-14T06:47:56Z",
+      "side": 1,
+      "message": "FlipBuffer checks output, can it be NULL here anyway?\nnote in dec/webp.c output is passed directly",
+      "revId": "83ae663ae128999a4d38f2b0ac327012677b940e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
