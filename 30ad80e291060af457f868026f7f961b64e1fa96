@@ -16,6 +16,24 @@
       "revId": "30ad80e291060af457f868026f7f961b64e1fa96",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//8n0\u003d",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1004029
+      },
+      "writtenOn": "2014-01-16T09:41:25Z",
+      "side": 1,
+      "message": "you are right, this will be removed in next patch",
+      "parentUuid": "AAAAdn//8q0\u003d",
+      "revId": "30ad80e291060af457f868026f7f961b64e1fa96",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
