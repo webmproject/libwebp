@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//8q0\u003d",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-16T00:40:18Z",
+      "side": 1,
+      "message": "shouldn\u0027t the general else case work here? if __mips__ changed from 24 -\u003e 32 for some reason this would break.",
+      "revId": "30ad80e291060af457f868026f7f961b64e1fa96",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
