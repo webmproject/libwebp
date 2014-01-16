@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "AAAAdn//8nM\u003d",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-16T15:58:03Z",
+      "side": 1,
+      "message": "could you add a comment that this is needed because of un-aligned read, please?",
+      "revId": "30ad80e291060af457f868026f7f961b64e1fa96",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//8q0\u003d",
         "filename": "src/utils/bit_reader.h",
         "patchSetId": 2
@@ -31,6 +48,24 @@
       "side": 1,
       "message": "you are right, this will be removed in next patch",
       "parentUuid": "AAAAdn//8q0\u003d",
+      "revId": "30ad80e291060af457f868026f7f961b64e1fa96",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//8nI\u003d",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-16T15:58:03Z",
+      "side": 1,
+      "message": "alternatively, if it makes a speed difference, you can keep this generic version specialized for 24BITS (but not necessarily for MIPS):\n\n...\n#elif (BITS \u003d\u003d 24)\n  bits \u003d (bit_t)((in_bits \u003e\u003e 8) \u0026 0xff00) | ((in_bits \u003c\u003c 8) \u0026 0xff0000)\n         | (in_bits \u003c\u003c 24);\n#else  // (BITS \u003e 24)\n  bits \u003d (bit_t)(in_bits \u003e\u003e 24) | ((in_bits \u003e\u003e 8) \u0026 0xff00)\n         | ((in_bits \u003c\u003c 8) \u0026 0xff0000)  | (in_bits \u003c\u003c 24);\n#endif\n...\n\n(note that i added a (bit_t) case in front of the BITS\u003d\u003d24 case,\nfor good measure)",
+      "parentUuid": "AAAAdn//8n0\u003d",
       "revId": "30ad80e291060af457f868026f7f961b64e1fa96",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
