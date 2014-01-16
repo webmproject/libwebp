@@ -552,20 +552,21 @@ static void Help(void) {
          "  -yuv ......... save the raw YUV samples in flat layout\n"
          "\n"
          " Other options are:\n"
-         "  -version  .... print version number and exit.\n"
-         "  -nofancy ..... don't use the fancy YUV420 upscaler.\n"
-         "  -nofilter .... disable in-loop filtering.\n"
-         "  -nodither .... disable dithering.\n"
+         "  -version  .... print version number and exit\n"
+         "  -nofancy ..... don't use the fancy YUV420 upscaler\n"
+         "  -nofilter .... disable in-loop filtering\n"
+         "  -nodither .... disable dithering\n"
          "  -dither <d> .. dithering strength (in 0..100)\n"
          "  -mt .......... use multi-threading\n"
          "  -crop <x> <y> <w> <h> ... crop output with the given rectangle\n"
          "  -scale <w> <h> .......... scale the output (*after* any cropping)\n"
-         "  -alpha ....... only save the alpha plane.\n"
+         "  -flip ........ flip the output vertically\n"
+         "  -alpha ....... only save the alpha plane\n"
          "  -incremental . use incremental decoding (useful for tests)\n"
-         "  -h     ....... this help message.\n"
+         "  -h     ....... this help message\n"
          "  -v     ....... verbose (e.g. print encoding/decoding times)\n"
 #ifndef WEBP_DLL
-         "  -noasm ....... disable all assembly optimizations.\n"
+         "  -noasm ....... disable all assembly optimizations\n"
 #endif
         );
 }
@@ -641,6 +642,8 @@ int main(int argc, const char *argv[]) {
       config.options.use_scaling = 1;
       config.options.scaled_width  = strtol(argv[++c], NULL, 0);
       config.options.scaled_height = strtol(argv[++c], NULL, 0);
+    } else if (!strcmp(argv[c], "-flip")) {
+      config.options.flip = 1;
     } else if (!strcmp(argv[c], "-v")) {
       verbose = 1;
 #ifndef WEBP_DLL

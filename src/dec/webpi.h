@@ -93,9 +93,14 @@ int WebPIoInitFromOptions(const WebPDecoderOptions* const options,
 // dimension / etc.). If *options is not NULL, also verify that the options'
 // parameters are valid and apply them to the width/height dimensions of the
 // output buffer. This takes cropping / scaling / rotation into account.
+// Also incorporates the options->flip flag to flip the buffer parameters if
+// needed.
 VP8StatusCode WebPAllocateDecBuffer(int width, int height,
                                     const WebPDecoderOptions* const options,
                                     WebPDecBuffer* const buffer);
+
+// Flip buffer vertically by negating the various strides.
+VP8StatusCode WebPFlipBuffer(WebPDecBuffer* const buffer);
 
 // Copy 'src' into 'dst' buffer, making sure 'dst' is not marked as owner of the
 // memory (still held by 'src').
@@ -104,8 +109,6 @@ void WebPCopyDecBuffer(const WebPDecBuffer* const src,
 
 // Copy and transfer ownership from src to dst (beware of parameter order!)
 void WebPGrabDecBuffer(WebPDecBuffer* const src, WebPDecBuffer* const dst);
-
-
 
 //------------------------------------------------------------------------------
 

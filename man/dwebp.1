@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DWEBP 1 "December 12, 2013"
+.TH DWEBP 1 "January 11, 2014"
 .SH NAME
 dwebp \- decompress a WebP file to an image file
 .SH SYNOPSIS
@@ -75,6 +75,9 @@ This cropping area must be fully contained within the source rectangle.
 The top-left corner will be snapped to even coordinates if needed.
 This option is meant to reduce the memory needed for cropping large images.
 Note: the cropping is applied \fIbefore\fP any scaling.
+.TP
+.B \-flip
+Flip decoded image vertically (can be useful for OpenGL textures for instance).
 .TP
 .BI \-scale " width height
 Rescale the decoded picture to dimension \fBwidth\fP x \fBheight\fP. This

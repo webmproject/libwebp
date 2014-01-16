@@ -262,19 +262,20 @@ Use following options to convert into alternate image formats:
   -yuv ......... save the raw YUV samples in flat layout
 
  Other options are:
-  -version  .... print version number and exit.
-  -nofancy ..... don't use the fancy YUV420 upscaler.
-  -nofilter .... disable in-loop filtering.
-  -nodither .... disable dithering.
+  -version  .... print version number and exit
+  -nofancy ..... don't use the fancy YUV420 upscaler
+  -nofilter .... disable in-loop filtering
+  -nodither .... disable dithering
   -dither <d> .. dithering strength (in 0..100)
   -mt .......... use multi-threading
   -crop <x> <y> <w> <h> ... crop output with the given rectangle
   -scale <w> <h> .......... scale the output (*after* any cropping)
-  -alpha ....... only save the alpha plane.
+  -flip ........ flip the output vertically
+  -alpha ....... only save the alpha plane
   -incremental . use incremental decoding (useful for tests)
-  -h     ....... this help message.
+  -h     ....... this help message
   -v     ....... verbose (e.g. print encoding/decoding times)
-  -noasm ....... disable all assembly optimizations.
+  -noasm ....... disable all assembly optimizations
 
 Visualization tool:
 ===================

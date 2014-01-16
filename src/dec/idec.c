@@ -246,6 +246,19 @@ static int CheckMemBufferMode(MemBuffer* const mem, MemBufferMode expected) {
   return 1;
 }
 
+// To be called last.
+static VP8StatusCode FinishDecoding(WebPIDecoder* const idec) {
+  const WebPDecoderOptions* const options = idec->params_.options;
+  WebPDecBuffer* const output = idec->params_.output;
+
+  idec->state_ = STATE_DONE;
+  if (options != NULL && options->flip) {
+    return WebPFlipBuffer(output);
+  } else {
+    return VP8_STATUS_OK;
+  }
+}
+
 //------------------------------------------------------------------------------
 // Macroblock-decoding contexts
 
@@ -476,9 +489,7 @@ static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
     return IDecError(idec, VP8_STATUS_USER_ABORT);
   }
   dec->ready_ = 0;
-  idec->state_ = STATE_DONE;
-
-  return VP8_STATUS_OK;
+  return FinishDecoding(idec);
 }
 
 static VP8StatusCode ErrorStatusLossless(WebPIDecoder* const idec,
@@ -530,9 +541,7 @@ static VP8StatusCode DecodeVP8LData(WebPIDecoder* const idec) {
     return ErrorStatusLossless(idec, dec->status_);
   }
 
-  idec->state_ = STATE_DONE;
-
-  return VP8_STATUS_OK;
+  return FinishDecoding(idec);
 }
 
   // Main decoding loop
