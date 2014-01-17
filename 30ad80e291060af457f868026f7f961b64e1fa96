@@ -69,6 +69,42 @@
       "revId": "30ad80e291060af457f868026f7f961b64e1fa96",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//8eQ\u003d",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-17T01:58:45Z",
+      "side": 1,
+      "message": "I realized later that I should have made the same suggestion, though on x86 I was assuming this was relatively cheap.",
+      "parentUuid": "AAAAdn//8nI\u003d",
+      "revId": "30ad80e291060af457f868026f7f961b64e1fa96",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//8eM\u003d",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-17T01:58:45Z",
+      "side": 1,
+      "message": "note with gerrit you can upload a new change for _this_ patchset. just use git commit --amend and repush. To keep the noise down you can just push this one.",
+      "parentUuid": "AAAAdn//8n0\u003d",
+      "revId": "30ad80e291060af457f868026f7f961b64e1fa96",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
