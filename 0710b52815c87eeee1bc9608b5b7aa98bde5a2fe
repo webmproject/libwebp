@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//8B4\u003d",
+        "filename": "src/dsp/dec_mips32.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-21T19:18:53Z",
+      "side": 1,
+      "message": "do you plan on reusing these tables and constants?\n\nOtherwise they could go into dec_mips32.c instead of being declared in this header...",
+      "revId": "0710b52815c87eeee1bc9608b5b7aa98bde5a2fe",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
