@@ -32,7 +32,8 @@ AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=DIR],
 AC_SUBST([pkgconfigdir])
 
 dnl === TEST_AND_ADD_CFLAGS(flag)
-dnl ===   Checks whether $CC supports 'flag' and adds it to AM_CFLAGS on success.
+dnl ===   Checks whether $CC supports 'flag' and adds it to AM_CFLAGS
+dnl ===   on success.
 AC_DEFUN([TEST_AND_ADD_CFLAGS],
          [SAVED_CFLAGS="$CFLAGS"
           CFLAGS="-Werror $1"
@@ -111,207 +112,235 @@ fi
 AC_MSG_NOTICE([checking if threading is enabled... ${enable_threading-no}])
 
 dnl === check for OpenGL/GLUT support ===
-CLEAR_LIBVARS([GL])
-WITHLIB_OPTION([gl], [GL])
 
-LIBCHECK_PROLOGUE([GL])
+AC_ARG_ENABLE([gl], AS_HELP_STRING([--disable-gl],
+                                   [Disable detection of OpenGL support
+                                    @<:@default=auto@:>@]))
+AS_IF([test "x$enable_gl" != "xno"], [
+  CLEAR_LIBVARS([GL])
+  WITHLIB_OPTION([gl], [GL])
 
-glut_cflags="none"
-glut_ldflags="none"
-case $host_os in
-  darwin*)
-    # Special case for OSX builds. Append these to give the user a chance to
-    # override with --with-gl*
-    glut_cflags="$glut_cflags|-framework GLUT -framework OpenGL"
-    glut_ldflags="$glut_ldflags|-framework GLUT -framework OpenGL"
-    ;;
-esac
+  LIBCHECK_PROLOGUE([GL])
 
-GLUT_SAVED_CPPFLAGS="$CPPFLAGS"
-SAVED_IFS="$IFS"
-IFS="|"
-for flag in $glut_cflags; do
-  # restore IFS immediately as the autoconf macros may need the default.
-  IFS="$SAVED_IFS"
-  unset ac_cv_header_GL_glut_h
-  unset ac_cv_header_OpenGL_glut_h
-
-  case $flag in
-    none) ;;
-    *) CPPFLAGS="$flag $CPPFLAGS";;
+  glut_cflags="none"
+  glut_ldflags="none"
+  case $host_os in
+    darwin*)
+      # Special case for OSX builds. Append these to give the user a chance to
+      # override with --with-gl*
+      glut_cflags="$glut_cflags|-framework GLUT -framework OpenGL"
+      glut_ldflags="$glut_ldflags|-framework GLUT -framework OpenGL"
+      ;;
   esac
-  AC_CHECK_HEADERS([GL/glut.h GLUT/glut.h OpenGL/glut.h],
-                   [glut_headers=yes;
-                    test "$flag" = "none" || GL_INCLUDES="$CPPFLAGS";
-                    break])
-  CPPFLAGS="$GLUT_SAVED_CPPFLAGS"
-  test "$glut_headers" = "yes" && break
-done
-IFS="$SAVED_IFS"
 
-if test "$glut_headers" = "yes"; then
-  AC_LANG_PUSH([C])
-  GLUT_SAVED_LDFLAGS="$LDFLAGS"
+  GLUT_SAVED_CPPFLAGS="$CPPFLAGS"
   SAVED_IFS="$IFS"
   IFS="|"
-  for flag in $glut_ldflags; do
+  for flag in $glut_cflags; do
     # restore IFS immediately as the autoconf macros may need the default.
     IFS="$SAVED_IFS"
-    unset ac_cv_search_glBegin
+    unset ac_cv_header_GL_glut_h
+    unset ac_cv_header_OpenGL_glut_h
 
     case $flag in
       none) ;;
-      *) LDFLAGS="$flag $LDFLAGS";;
+      *) CPPFLAGS="$flag $CPPFLAGS";;
     esac
-
-    # find libGL
-    GL_SAVED_LIBS="$LIBS"
-    AC_SEARCH_LIBS([glBegin], [GL OpenGL])
-    LIBS="$GL_SAVED_LIBS"
-
-    # A direct link to libGL may not be necessary on e.g., linux.
-    GLUT_SAVED_LIBS="$LIBS"
-    for lib in "" "-lglut" "-lglut $ac_cv_search_glBegin"; do
-      LIBS="$lib"
-      AC_LINK_IFELSE(
-        [AC_LANG_PROGRAM([
-           #ifdef __cplusplus
-           # define EXTERN_C extern "C"
-           #else
-           # define EXTERN_C
-           #endif
-           EXTERN_C char glOrtho();
-           EXTERN_C char glutMainLoop();
-          ],[
-           glOrtho();
-           glutMainLoop();
-          ])
-        ],
-        AC_DEFINE(WEBP_HAVE_GL, [1],
-                  [Set to 1 if OpenGL is supported])
-        [glut_support=yes], []
-      )
-      if test "$glut_support" = "yes"; then
-        GL_LIBS="$LDFLAGS $lib"
-        break
-      fi
-    done
-    LIBS="$GLUT_SAVED_LIBS"
-    LDFLAGS="$GLUT_SAVED_LDFLAGS"
-    test "$glut_support" = "yes" && break
+    AC_CHECK_HEADERS([GL/glut.h GLUT/glut.h OpenGL/glut.h],
+                     [glut_headers=yes;
+                      test "$flag" = "none" || GL_INCLUDES="$CPPFLAGS";
+                      break])
+    CPPFLAGS="$GLUT_SAVED_CPPFLAGS"
+    test "$glut_headers" = "yes" && break
   done
   IFS="$SAVED_IFS"
-  AC_LANG_POP
-fi
 
-LIBCHECK_EPILOGUE([GL])
+  if test "$glut_headers" = "yes"; then
+    AC_LANG_PUSH([C])
+    GLUT_SAVED_LDFLAGS="$LDFLAGS"
+    SAVED_IFS="$IFS"
+    IFS="|"
+    for flag in $glut_ldflags; do
+      # restore IFS immediately as the autoconf macros may need the default.
+      IFS="$SAVED_IFS"
+      unset ac_cv_search_glBegin
 
-if test "$glut_support" = "yes" -a "$enable_libwebpdemux" = "yes"; then
-  build_vwebp=yes
-fi
+      case $flag in
+        none) ;;
+        *) LDFLAGS="$flag $LDFLAGS";;
+      esac
+
+      # find libGL
+      GL_SAVED_LIBS="$LIBS"
+      AC_SEARCH_LIBS([glBegin], [GL OpenGL])
+      LIBS="$GL_SAVED_LIBS"
+
+      # A direct link to libGL may not be necessary on e.g., linux.
+      GLUT_SAVED_LIBS="$LIBS"
+      for lib in "" "-lglut" "-lglut $ac_cv_search_glBegin"; do
+        LIBS="$lib"
+        AC_LINK_IFELSE(
+          [AC_LANG_PROGRAM([
+             #ifdef __cplusplus
+             # define EXTERN_C extern "C"
+             #else
+             # define EXTERN_C
+             #endif
+             EXTERN_C char glOrtho();
+             EXTERN_C char glutMainLoop();
+            ],[
+             glOrtho();
+             glutMainLoop();
+            ])
+          ],
+          AC_DEFINE(WEBP_HAVE_GL, [1],
+                    [Set to 1 if OpenGL is supported])
+          [glut_support=yes], []
+        )
+        if test "$glut_support" = "yes"; then
+          GL_LIBS="$LDFLAGS $lib"
+          break
+        fi
+      done
+      LIBS="$GLUT_SAVED_LIBS"
+      LDFLAGS="$GLUT_SAVED_LDFLAGS"
+      test "$glut_support" = "yes" && break
+    done
+    IFS="$SAVED_IFS"
+    AC_LANG_POP
+  fi
+
+  LIBCHECK_EPILOGUE([GL])
+
+  if test "$glut_support" = "yes" -a "$enable_libwebpdemux" = "yes"; then
+    build_vwebp=yes
+  fi
+])
 AM_CONDITIONAL([BUILD_VWEBP], [test "$build_vwebp" = "yes"])
 
 dnl === check for PNG support ===
 
-CLEAR_LIBVARS([PNG])
-AC_PATH_PROGS(LIBPNG_CONFIG,
-              [libpng-config libpng15-config libpng14-config libpng12-config])
-if test -n "$LIBPNG_CONFIG"; then
-  PNG_INCLUDES=`$LIBPNG_CONFIG --cflags`
-  PNG_PREFIX=`$LIBPNG_CONFIG --prefix`
-  if test "${PNG_PREFIX}/lib" != "/usr/lib" ; then
-    PNG_LIBS="-L${PNG_PREFIX}/lib"
+AC_ARG_ENABLE([png], AS_HELP_STRING([--disable-png],
+                                    [Disable detection of PNG format support
+                                     @<:@default=auto@:>@]))
+AS_IF([test "x$enable_png" != "xno"], [
+  CLEAR_LIBVARS([PNG])
+  AC_PATH_PROGS(LIBPNG_CONFIG,
+                [libpng-config libpng15-config libpng14-config libpng12-config])
+  if test -n "$LIBPNG_CONFIG"; then
+    PNG_INCLUDES=`$LIBPNG_CONFIG --cflags`
+    PNG_PREFIX=`$LIBPNG_CONFIG --prefix`
+    if test "${PNG_PREFIX}/lib" != "/usr/lib" ; then
+      PNG_LIBS="-L${PNG_PREFIX}/lib"
+    fi
+    PNG_LIBS="$PNG_LIBS `$LIBPNG_CONFIG --libs`"
   fi
-  PNG_LIBS="$PNG_LIBS `$LIBPNG_CONFIG --libs`"
-fi
 
-WITHLIB_OPTION([png], [PNG])
+  WITHLIB_OPTION([png], [PNG])
 
-LIBCHECK_PROLOGUE([PNG])
-AC_CHECK_HEADER(png.h,
-  AC_SEARCH_LIBS(png_get_libpng_ver, [png],
-                 [test "$ac_cv_search_png_get_libpng_ver" = "none required" \
-                    || PNG_LIBS="$PNG_LIBS $ac_cv_search_png_get_libpng_ver"
-                  PNG_INCLUDES="$PNG_INCLUDES -DWEBP_HAVE_PNG"
-                  AC_DEFINE(WEBP_HAVE_PNG, [1],
-                            [Set to 1 if PNG library is installed])
-                  png_support=yes
-                 ],
-                 [AC_MSG_WARN(Optional png library not found)
-                  PNG_LIBS=""
-                  PNG_INCLUDES=""
-                 ],
-                 [$MATH_LIBS]),
-  [AC_MSG_WARN(png library not available - no png.h)
-   PNG_LIBS=""
-   PNG_INCLUDES=""
-  ],
-)
-LIBCHECK_EPILOGUE([PNG])
+  LIBCHECK_PROLOGUE([PNG])
+  AC_CHECK_HEADER(png.h,
+    AC_SEARCH_LIBS(png_get_libpng_ver, [png],
+                   [test "$ac_cv_search_png_get_libpng_ver" = "none required" \
+                      || PNG_LIBS="$PNG_LIBS $ac_cv_search_png_get_libpng_ver"
+                    PNG_INCLUDES="$PNG_INCLUDES -DWEBP_HAVE_PNG"
+                    AC_DEFINE(WEBP_HAVE_PNG, [1],
+                              [Set to 1 if PNG library is installed])
+                    png_support=yes
+                   ],
+                   [AC_MSG_WARN(Optional png library not found)
+                    PNG_LIBS=""
+                    PNG_INCLUDES=""
+                   ],
+                   [$MATH_LIBS]),
+    [AC_MSG_WARN(png library not available - no png.h)
+     PNG_LIBS=""
+     PNG_INCLUDES=""
+    ],
+  )
+  LIBCHECK_EPILOGUE([PNG])
+])
 
 dnl === check for JPEG support ===
 
-CLEAR_LIBVARS([JPEG])
-WITHLIB_OPTION([jpeg], [JPEG])
+AC_ARG_ENABLE([jpeg],
+              AS_HELP_STRING([--disable-jpeg],
+                             [Disable detection of JPEG format support
+                              @<:@default=auto@:>@]))
+AS_IF([test "x$enable_jpeg" != "xno"], [
+  CLEAR_LIBVARS([JPEG])
+  WITHLIB_OPTION([jpeg], [JPEG])
 
-LIBCHECK_PROLOGUE([JPEG])
-AC_CHECK_HEADER(jpeglib.h,
-  AC_CHECK_LIB(jpeg, jpeg_set_defaults,
-               [JPEG_LIBS="$JPEG_LIBS -ljpeg"
-                JPEG_INCLUDES="$JPEG_INCLUDES -DWEBP_HAVE_JPEG"
-                AC_DEFINE(WEBP_HAVE_JPEG, [1],
-                          [Set to 1 if JPEG library is installed])
-                jpeg_support=yes
-               ],
-               AC_MSG_WARN(Optional jpeg library not found),
-               [$MATH_LIBS]),
-  AC_MSG_WARN(jpeg library not available - no jpeglib.h)
-)
-LIBCHECK_EPILOGUE([JPEG])
+  LIBCHECK_PROLOGUE([JPEG])
+  AC_CHECK_HEADER(jpeglib.h,
+    AC_CHECK_LIB(jpeg, jpeg_set_defaults,
+                 [JPEG_LIBS="$JPEG_LIBS -ljpeg"
+                  JPEG_INCLUDES="$JPEG_INCLUDES -DWEBP_HAVE_JPEG"
+                  AC_DEFINE(WEBP_HAVE_JPEG, [1],
+                            [Set to 1 if JPEG library is installed])
+                  jpeg_support=yes
+                 ],
+                 AC_MSG_WARN(Optional jpeg library not found),
+                 [$MATH_LIBS]),
+    AC_MSG_WARN(jpeg library not available - no jpeglib.h)
+  )
+  LIBCHECK_EPILOGUE([JPEG])
+])
 
 dnl === check for TIFF support ===
 
-CLEAR_LIBVARS([TIFF])
-WITHLIB_OPTION([tiff], [TIFF])
+AC_ARG_ENABLE([tiff],
+              AS_HELP_STRING([--disable-tiff],
+                             [Disable detection of TIFF format support
+                              @<:@default=auto@:>@]))
+AS_IF([test "x$enable_tiff" != "xno"], [
+  CLEAR_LIBVARS([TIFF])
+  WITHLIB_OPTION([tiff], [TIFF])
 
-LIBCHECK_PROLOGUE([TIFF])
-AC_CHECK_HEADER(tiffio.h,
-  AC_CHECK_LIB(tiff, TIFFGetVersion,
-               [TIFF_LIBS="$TIFF_LIBS -ltiff"
-                TIFF_INCLUDES="$TIFF_INCLUDES -DWEBP_HAVE_TIFF"
-                AC_DEFINE(WEBP_HAVE_TIFF, [1],
-                          [Set to 1 if TIFF library is installed])
-                tiff_support=yes
-               ],
-               AC_MSG_WARN(Optional tiff library not found),
-               [$MATH_LIBS]),
-  AC_MSG_WARN(tiff library not available - no tiffio.h)
-)
-LIBCHECK_EPILOGUE([TIFF])
+  LIBCHECK_PROLOGUE([TIFF])
+  AC_CHECK_HEADER(tiffio.h,
+    AC_CHECK_LIB(tiff, TIFFGetVersion,
+                 [TIFF_LIBS="$TIFF_LIBS -ltiff"
+                  TIFF_INCLUDES="$TIFF_INCLUDES -DWEBP_HAVE_TIFF"
+                  AC_DEFINE(WEBP_HAVE_TIFF, [1],
+                            [Set to 1 if TIFF library is installed])
+                  tiff_support=yes
+                 ],
+                 AC_MSG_WARN(Optional tiff library not found),
+                 [$MATH_LIBS]),
+    AC_MSG_WARN(tiff library not available - no tiffio.h)
+  )
+  LIBCHECK_EPILOGUE([TIFF])
+])
 
 dnl === check for GIF support ===
 
-CLEAR_LIBVARS([GIF])
-WITHLIB_OPTION([gif], [GIF])
+AC_ARG_ENABLE([gif], AS_HELP_STRING([--disable-gif],
+                                    [Disable detection of GIF format support
+                                     @<:@default=auto@:>@]))
+AS_IF([test "x$enable_gif" != "xno"], [
+  CLEAR_LIBVARS([GIF])
+  WITHLIB_OPTION([gif], [GIF])
 
-LIBCHECK_PROLOGUE([GIF])
-AC_CHECK_HEADER(gif_lib.h,
-  AC_CHECK_LIB([gif], [DGifOpenFileHandle],
-               [GIF_LIBS="$GIF_LIBS -lgif"
-                AC_DEFINE(WEBP_HAVE_GIF, [1],
-                          [Set to 1 if GIF library is installed])
-                gif_support=yes
-               ],
-               AC_MSG_WARN(Optional gif library not found),
-               [$MATH_LIBS]),
-  AC_MSG_WARN(gif library not available - no gif_lib.h)
-)
-LIBCHECK_EPILOGUE([GIF])
+  LIBCHECK_PROLOGUE([GIF])
+  AC_CHECK_HEADER(gif_lib.h,
+    AC_CHECK_LIB([gif], [DGifOpenFileHandle],
+                 [GIF_LIBS="$GIF_LIBS -lgif"
+                  AC_DEFINE(WEBP_HAVE_GIF, [1],
+                            [Set to 1 if GIF library is installed])
+                  gif_support=yes
+                 ],
+                 AC_MSG_WARN(Optional gif library not found),
+                 [$MATH_LIBS]),
+    AC_MSG_WARN(gif library not available - no gif_lib.h)
+  )
+  LIBCHECK_EPILOGUE([GIF])
 
-if test "$gif_support" = "yes" -a \
-        "$enable_libwebpmux" = "yes"; then
-  build_gif2webp=yes
-fi
+  if test "$gif_support" = "yes" -a \
+          "$enable_libwebpmux" = "yes"; then
+    build_gif2webp=yes
+  fi
+])
 AM_CONDITIONAL([BUILD_GIF2WEBP], [test "${build_gif2webp}" = "yes"])
 
 dnl === check for WIC support ===
