@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//78s\u003d",
+        "filename": "Android.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-21T23:20:35Z",
+      "side": 1,
+      "message": "can you keep these sorted please, here and in the other makefiles",
+      "revId": "08af189f066051d8b2eb39269bc39fcb2c633433",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//79A\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-21T23:20:35Z",
+      "side": 1,
+      "message": "part of the CLA is a copyright grant, so this should be the standard webp copyright; you can keep the author note though",
+      "revId": "08af189f066051d8b2eb39269bc39fcb2c633433",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//78w\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-21T23:20:35Z",
+      "side": 1,
+      "message": "\u0027*\u0027 in our code is associated with the type not the variable; no space before \u0027*\u0027 in the cast",
+      "revId": "08af189f066051d8b2eb39269bc39fcb2c633433",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//788\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-21T23:20:35Z",
+      "side": 1,
+      "message": "can you break this up with some comments as in dec_neon/sse2?",
+      "revId": "08af189f066051d8b2eb39269bc39fcb2c633433",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//784\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-21T23:20:35Z",
+      "side": 1,
+      "message": "to match the rest of the source can you change most of these /**/ style comments to // ? they\u0027re not strictly ansi, but are easily stripped if that style of build is needed",
+      "revId": "08af189f066051d8b2eb39269bc39fcb2c633433",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//780\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 391,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-21T23:20:35Z",
+      "side": 1,
+      "message": "2 spaces then // WEBP...",
+      "revId": "08af189f066051d8b2eb39269bc39fcb2c633433",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
