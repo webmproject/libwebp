@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//8GY\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-21T09:50:58Z",
+      "side": 1,
+      "message": "note that this hard-codes some mips-specific code without\nthe possibility to disable it (with -noasm e.g.).\n\nI think that\u0027s ok for now, we can later reorganized the code (and maybe write an SSE2 variant too) and make it switchable at run-time through the regular pointer-to-function mechanism we use elsewhere in src/dsp/...",
+      "revId": "5bd29d1d4a7d8924f3b04fa5fd17e1a4aa007fb3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//8Gg\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-21T09:50:58Z",
+      "side": 1,
+      "message": "this block (and 169-\u003e175) is similar to the original code in 95-114.\n\nTo avoid code duplication could you change the organization into:\nuint8_t* WebPRescalerExportRow(WebPRescaler* const wrk) {\n  if (wrk-\u003ey_accum \u003c\u003d 0) {\n    int x_out \u003d 0;\n    uint8_t* const dst \u003d wrk-\u003edst; \n    int32_t* const irow \u003d wrk-\u003eirow;\n    const int32_t* const frow \u003d wrk-\u003efrow;\n    const int yscale \u003d wrk-\u003efy_scale * (-wrk-\u003ey_accum);\n    const int x_out_max \u003d wrk-\u003edst_width * wrk-\u003enum_channels;\n\n#if defined(__mips__)\n    if ((wrk-\u003efxy_scale \u003e\u003e 32) \u003d\u003d 0) {\n        ...  MIPS-specific code here\n      x_out \u003d x_out_max;   // this will make the following for() code be skipped\n   }\n#endif   // __mips__\n \n    for (; x_out \u003c x_out_max; ++x_out) {\n      const int frac \u003d (int)MULT_FIX(frow[x_out], yscale);\n      const int v \u003d (int)MULT_FIX(irow[x_out] - frac, wrk-\u003efxy_scale);\n      dst[x_out] \u003d (!(v \u0026 ~0xff)) ? v : (v \u003c 0) ? 0 : 255;\n      irow[x_out] \u003d frac;   // new fractional start\n    }\n    wrk-\u003ey_accum +\u003d wrk-\u003ey_add;\n    wrk-\u003edst +\u003d wrk-\u003edst_stride;\n    return dst;\n  } else {\n    return NULL;\n  }\n}\n\n\nplease?",
+      "revId": "5bd29d1d4a7d8924f3b04fa5fd17e1a4aa007fb3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//8Go\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-21T09:50:58Z",
+      "side": 1,
+      "message": "space after \u0027if\u0027",
+      "revId": "5bd29d1d4a7d8924f3b04fa5fd17e1a4aa007fb3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//8Gk\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-21T09:50:58Z",
+      "side": 1,
+      "message": "you can use:\nconst int temp2 \u003d (int)(wrk-\u003efxy_scale);",
+      "revId": "5bd29d1d4a7d8924f3b04fa5fd17e1a4aa007fb3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//8Gc\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-21T09:50:58Z",
+      "side": 1,
+      "message": "you can use another temporary variable name to avoid removing the \u0027const\u0027 from \u0027const int x_out_max\u0027",
+      "revId": "5bd29d1d4a7d8924f3b04fa5fd17e1a4aa007fb3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
