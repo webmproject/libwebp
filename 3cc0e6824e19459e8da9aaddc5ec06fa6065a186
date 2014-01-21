@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//8CM\u003d",
+        "filename": "src/dsp/upsampling.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-21T19:08:30Z",
+      "side": 1,
+      "message": "you should create a separate file (upsampling_mips.c?) for these functions, instead of overwriting the C-version.\nThese functions would be plugged-in by adding at 427 something like:\n\n#if defined(__mips__)\nWebPInitUpsamplersMIPS();\n#endif\n\nsimilarly to the SSE2 versions for instance.\n\nGoing forward we should have a \"if (VP8GetCPUInfo(kMIPS32))  { ... } \" too i guess.",
+      "revId": "3cc0e6824e19459e8da9aaddc5ec06fa6065a186",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
