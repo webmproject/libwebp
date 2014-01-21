@@ -1,0 +1,174 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//8GQ\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-21T10:02:45Z",
+      "side": 1,
+      "message": "here too, might want to later make the code switchable at run-time through pointer-to-functions.\n\nFor now, we can go ahead with the #ifdef switch and reorder the code later.\n\nJust some code-style remarks:",
+      "revId": "fc523670c4d183c1429c64009ca63a52082f3df3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//8GM\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-21T10:02:45Z",
+      "side": 1,
+      "message": "space before \u0027\u003d\u0027",
+      "revId": "fc523670c4d183c1429c64009ca63a52082f3df3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//8GI\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-21T10:02:45Z",
+      "side": 1,
+      "message": "most of these variables can be \u0027const int\u0027 i guess",
+      "revId": "fc523670c4d183c1429c64009ca63a52082f3df3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//8GE\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-21T10:02:45Z",
+      "side": 1,
+      "message": "no space before \u0027*\u0027: \n\n\u0027const uint8_t* src1 \u003d src + channel;\u0027\n\n(note the case is not needed)",
+      "revId": "fc523670c4d183c1429c64009ca63a52082f3df3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//8GA\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-21T10:02:45Z",
+      "side": 1,
+      "message": "spaces around \u0027\u003c\u003c\u0027",
+      "revId": "fc523670c4d183c1429c64009ca63a52082f3df3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//8F8\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-21T10:02:45Z",
+      "side": 1,
+      "message": "no new line after \u0027{\u0027",
+      "revId": "fc523670c4d183c1429c64009ca63a52082f3df3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//8F4\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-21T10:02:45Z",
+      "side": 1,
+      "message": "no new line here too",
+      "revId": "fc523670c4d183c1429c64009ca63a52082f3df3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//8F0\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-21T10:02:45Z",
+      "side": 1,
+      "message": "and here",
+      "revId": "fc523670c4d183c1429c64009ca63a52082f3df3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//8Fw\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-21T10:02:45Z",
+      "side": 1,
+      "message": "and here",
+      "revId": "fc523670c4d183c1429c64009ca63a52082f3df3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//8Fs\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-21T10:02:45Z",
+      "side": 1,
+      "message": "space before \u0027//\u0027",
+      "revId": "fc523670c4d183c1429c64009ca63a52082f3df3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
