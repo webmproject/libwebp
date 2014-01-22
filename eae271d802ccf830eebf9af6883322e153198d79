@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//72M\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 2
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-22T04:20:32Z",
+      "side": 1,
+      "message": "probably name this --enable-gl for compatibility with the other related variables for now",
+      "revId": "eae271d802ccf830eebf9af6883322e153198d79",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//72I\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 2
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-22T04:20:32Z",
+      "side": 1,
+      "message": "I dropped AS_VAR_APPEND for compatibility with autoconf-2.59/automake-1.7. I\u0027m not sure of the provenance of AS_IF()",
+      "revId": "eae271d802ccf830eebf9af6883322e153198d79",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//72E\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 2
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-22T04:20:32Z",
+      "side": 1,
+      "message": "here and elsewhere can you break these to 80 characters please",
+      "revId": "eae271d802ccf830eebf9af6883322e153198d79",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//72A\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 2
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-22T04:20:32Z",
+      "side": 1,
+      "message": "here and elsewhere, this is spelled: @\u003c:@default...you missed the second @",
+      "revId": "eae271d802ccf830eebf9af6883322e153198d79",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
