@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//7kw\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 3
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-23T04:01:01Z",
+      "side": 1,
+      "message": "these should be displayed as --disable-* keeping them in line with the other auto\u0027s we have: wic, threading",
+      "revId": "8022cf7729732fe06df303fb2b7244dd0844d16d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//7ko\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 3
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-23T04:01:01Z",
+      "side": 1,
+      "message": "s/png/PNG/",
+      "revId": "8022cf7729732fe06df303fb2b7244dd0844d16d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//7ks\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 3
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-23T04:01:01Z",
+      "side": 1,
+      "message": "s/jpeg/JPEG/",
+      "revId": "8022cf7729732fe06df303fb2b7244dd0844d16d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//7kk\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 3
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-23T04:01:01Z",
+      "side": 1,
+      "message": "s/tiff/TIFF/",
+      "revId": "8022cf7729732fe06df303fb2b7244dd0844d16d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//7kg\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 3
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-23T04:01:01Z",
+      "side": 1,
+      "message": "s/gif/GIF/",
+      "revId": "8022cf7729732fe06df303fb2b7244dd0844d16d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
