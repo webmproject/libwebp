@@ -225,18 +225,15 @@ static void AssignSegments(VP8Encoder* const enc,
 // susceptibility and set best modes for this macroblock.
 // Segment assignment is done later.
 
-// Number of modes to inspect for alpha_ evaluation. For high-quality settings
-// (method >= FAST_ANALYSIS_METHOD) we don't need to test all the possible modes
-// during the analysis phase.
-#define FAST_ANALYSIS_METHOD 4  // method above which we do partial analysis
+// Number of modes to inspect for alpha_ evaluation. We don't need to test all
+// the possible modes during the analysis phase: we risk falling into a local
+// optimum, or be subject to boundary effect
 #define MAX_INTRA16_MODE 2
 #define MAX_INTRA4_MODE  2
 #define MAX_UV_MODE      2
 
 static int MBAnalyzeBestIntra16Mode(VP8EncIterator* const it) {
-  const int max_mode =
-      (it->enc_->method_ >= FAST_ANALYSIS_METHOD) ? MAX_INTRA16_MODE
-                                                  : NUM_PRED_MODES;
+  const int max_mode = MAX_INTRA16_MODE;
   int mode;
   int best_alpha = DEFAULT_ALPHA;
   int best_mode = 0;
@@ -262,9 +259,7 @@ static int MBAnalyzeBestIntra16Mode(VP8EncIterator* const it) {
 static int MBAnalyzeBestIntra4Mode(VP8EncIterator* const it,
                                    int best_alpha) {
   uint8_t modes[16];
-  const int max_mode =
-      (it->enc_->method_ >= FAST_ANALYSIS_METHOD) ? MAX_INTRA4_MODE
-                                                  : NUM_BMODES;
+  const int max_mode = MAX_INTRA4_MODE;
   int i4_alpha;
   VP8Histogram total_histo = { { 0 } };
   int cur_histo = 0;
@@ -306,10 +301,9 @@ static int MBAnalyzeBestIntra4Mode(VP8EncIterator* const it,
 static int MBAnalyzeBestUVMode(VP8EncIterator* const it) {
   int best_alpha = DEFAULT_ALPHA;
   int best_mode = 0;
-  const int max_mode =
-      (it->enc_->method_ >= FAST_ANALYSIS_METHOD) ? MAX_UV_MODE
-                                                  : NUM_PRED_MODES;
+  const int max_mode = MAX_UV_MODE;
   int mode;
+
   VP8MakeChroma8Preds(it);
   for (mode = 0; mode < max_mode; ++mode) {
     VP8Histogram histo = { { 0 } };
