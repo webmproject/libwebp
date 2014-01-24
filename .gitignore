@@ -1,5 +1,6 @@
 *.l[ao]
 *.[ao]
+*.pc
 .deps
 .libs
 /aclocal.m4
@@ -14,6 +15,7 @@
 /libtool
 /ltmain.sh
 /missing
+/mkinstalldirs
 /stamp-h1
 Makefile
 Makefile.in
