@@ -553,8 +553,8 @@ static int CustomSetup(VP8Io* io) {
   } else {
     if (is_rgb) {
       p->emit = EmitSampledRGB;   // default
-#ifdef FANCY_UPSAMPLING
       if (io->fancy_upsampling) {
+#ifdef FANCY_UPSAMPLING
         const int uv_width = (io->mb_w + 1) >> 1;
         p->memory = malloc(io->mb_w + 2 * uv_width);
         if (p->memory == NULL) {
@@ -565,8 +565,10 @@ static int CustomSetup(VP8Io* io) {
         p->tmp_v = p->tmp_u + uv_width;
         p->emit = EmitFancyRGB;
         WebPInitUpsamplers();
-      }
 #endif
+      } else {
+        WebPInitSamplers();
+      }
     } else {
       p->emit = EmitYUV;
     }

@@ -109,6 +109,9 @@ UPSAMPLE_FUNC(UpsampleRgb565LinePair,  VP8YuvToRgb565,  2)
 //------------------------------------------------------------------------------
 // simple point-sampling
 
+
+WebPSampleLinePairFunc WebPSamplers[MODE_LAST];
+
 #define SAMPLE_FUNC(FUNC_NAME, FUNC, XSTEP)                                    \
 static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \
                       const uint8_t* u, const uint8_t* v,                      \
@@ -142,20 +145,6 @@ SAMPLE_FUNC(SampleRgba4444LinePair, VP8YuvToRgba4444, 2)
 SAMPLE_FUNC(SampleRgb565LinePair,   VP8YuvToRgb565, 2)
 
 #undef SAMPLE_FUNC
-
-const WebPSampleLinePairFunc WebPSamplers[MODE_LAST] = {
-  SampleRgbLinePair,       // MODE_RGB
-  SampleRgbaLinePair,      // MODE_RGBA
-  SampleBgrLinePair,       // MODE_BGR
-  SampleBgraLinePair,      // MODE_BGRA
-  SampleArgbLinePair,      // MODE_ARGB
-  SampleRgba4444LinePair,  // MODE_RGBA_4444
-  SampleRgb565LinePair,    // MODE_RGB_565
-  SampleRgbaLinePair,      // MODE_rgbA
-  SampleBgraLinePair,      // MODE_bgrA
-  SampleArgbLinePair,      // MODE_Argb
-  SampleRgba4444LinePair   // MODE_rgbA_4444
-};
 
 //------------------------------------------------------------------------------
 
@@ -337,6 +326,24 @@ void WebPInitUpsamplers(void) {
 #endif
   }
 #endif  // FANCY_UPSAMPLING
+}
+
+void WebPInitSamplers(void) {
+  WebPSamplers[MODE_RGB]       = SampleRgbLinePair;
+  WebPSamplers[MODE_RGBA]      = SampleRgbaLinePair;
+  WebPSamplers[MODE_BGR]       = SampleBgrLinePair;
+  WebPSamplers[MODE_BGRA]      = SampleBgraLinePair;
+  WebPSamplers[MODE_ARGB]      = SampleArgbLinePair;
+  WebPSamplers[MODE_RGBA_4444] = SampleRgba4444LinePair;
+  WebPSamplers[MODE_RGB_565]   = SampleRgb565LinePair;
+  WebPSamplers[MODE_rgbA]      = SampleRgbaLinePair;
+  WebPSamplers[MODE_bgrA]      = SampleBgraLinePair;
+  WebPSamplers[MODE_Argb]      = SampleArgbLinePair;
+  WebPSamplers[MODE_rgbA_4444] = SampleRgba4444LinePair;
+
+  // If defined, use CPUInfo() to overwrite some pointers with faster versions.
+  if (VP8GetCPUInfo != NULL) {
+  }
 }
 
 void WebPInitPremultiply(void) {

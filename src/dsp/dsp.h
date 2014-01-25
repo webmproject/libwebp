@@ -186,7 +186,8 @@ typedef void (*WebPSampleLinePairFunc)(
     const uint8_t* u, const uint8_t* v,
     uint8_t* top_dst, uint8_t* bottom_dst, int len);
 
-extern const WebPSampleLinePairFunc WebPSamplers[/* MODE_LAST */];
+// Sampling functions to convert YUV to RGB(A) modes
+extern WebPSampleLinePairFunc WebPSamplers[/* MODE_LAST */];
 
 // General function for converting two lines of ARGB or RGBA.
 // 'alpha_is_last' should be true if 0xff000000 is stored in memory as
@@ -202,6 +203,7 @@ extern const WebPYUV444Converter WebPYUV444Converters[/* MODE_LAST */];
 
 // Main function to be called
 void WebPInitUpsamplers(void);
+void WebPInitSamplers(void);
 
 //------------------------------------------------------------------------------
 // Pre-multiply planes with alpha values
