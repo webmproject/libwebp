@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//6kM\u003d",
+        "filename": "src/dsp/upsampling_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-28T18:19:12Z",
+      "side": 1,
+      "message": "this \u0027extern\u0027 declaration is not needed here, since it\u0027s already declared in dsp.h",
+      "revId": "c99d59ade95e82d13bb2a86d24422ff92716cd21",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
