@@ -72,15 +72,14 @@ struct WebPIDecoder {
   MemBuffer mem_;          // input memory buffer.
   WebPDecBuffer output_;   // output buffer (when no external one is supplied)
   size_t chunk_size_;      // Compressed VP8/VP8L size extracted from Header.
+
+  int last_mb_y_;          // last row reached for intra-mode decoding
 };
 
 // MB context to restore in case VP8DecodeMB() fails
 typedef struct {
   VP8MB left_;
   VP8MB info_;
-  uint8_t intra_t_[4];
-  uint8_t intra_l_[4];
-  VP8BitReader br_;
   VP8BitReader token_br_;
 } MBContext;
 
@@ -264,30 +263,16 @@ static VP8StatusCode FinishDecoding(WebPIDecoder* const idec) {
 
 static void SaveContext(const VP8Decoder* dec, const VP8BitReader* token_br,
                         MBContext* const context) {
-  const VP8BitReader* const br = &dec->br_;
-  const VP8MB* const left = dec->mb_info_ - 1;
-  const VP8MB* const info = dec->mb_info_ + dec->mb_x_;
-
-  context->left_ = *left;
-  context->info_ = *info;
-  context->br_ = *br;
+  context->left_ = dec->mb_info_[-1];
+  context->info_ = dec->mb_info_[dec->mb_x_];
   context->token_br_ = *token_br;
-  memcpy(context->intra_t_, dec->intra_t_ + 4 * dec->mb_x_, 4);
-  memcpy(context->intra_l_, dec->intra_l_, 4);
 }
 
 static void RestoreContext(const MBContext* context, VP8Decoder* const dec,
                            VP8BitReader* const token_br) {
-  VP8BitReader* const br = &dec->br_;
-  VP8MB* const left = dec->mb_info_ - 1;
-  VP8MB* const info = dec->mb_info_ + dec->mb_x_;
-
-  *left = context->left_;
-  *info = context->info_;
-  *br = context->br_;
+  dec->mb_info_[-1] = context->left_;
+  dec->mb_info_[dec->mb_x_] = context->info_;
   *token_br = context->token_br_;
-  memcpy(dec->intra_t_ + 4 * dec->mb_x_, context->intra_t_, 4);
-  memcpy(dec->intra_l_, context->intra_l_, 4);
 }
 
 //------------------------------------------------------------------------------
@@ -459,16 +444,26 @@ static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
 
   assert(dec->ready_);
   for (; dec->mb_y_ < dec->mb_h_; ++dec->mb_y_) {
-    VP8BitReader* token_br = &dec->parts_[dec->mb_y_ & (dec->num_parts_ - 1)];
+    if (idec->last_mb_y_ != dec->mb_y_) {
+      if (!VP8ParseIntraModeRow(&dec->br_, dec)) {
+        // note: normally, error shouldn't occur since we already have the whole
+        // partition0 available here in DecodeRemaining(). Reaching EOF while
+        // reading intra modes really means a BITSTREAM_ERROR.
+        return IDecError(idec, VP8_STATUS_BITSTREAM_ERROR);
+      }
+      idec->last_mb_y_ = dec->mb_y_;
+    }
     for (; dec->mb_x_ < dec->mb_w_; ++dec->mb_x_) {
+      VP8BitReader* const token_br =
+          &dec->parts_[dec->mb_y_ & (dec->num_parts_ - 1)];
       MBContext context;
       SaveContext(dec, token_br, &context);
       if (!VP8DecodeMB(dec, token_br)) {
-        RestoreContext(&context, dec, token_br);
         // We shouldn't fail when MAX_MB data was available
         if (dec->num_parts_ == 1 && MemDataSize(&idec->mem_) > MAX_MB_SIZE) {
           return IDecError(idec, VP8_STATUS_BITSTREAM_ERROR);
         }
+        RestoreContext(&context, dec, token_br);
         return VP8_STATUS_SUSPENDED;
       }
       // Release buffer only if there is only one partition
@@ -584,6 +579,8 @@ WebPIDecoder* WebPINewDecoder(WebPDecBuffer* output_buffer) {
 
   idec->state_ = STATE_WEBP_HEADER;
   idec->chunk_size_ = 0;
+
+  idec->last_mb_y_ = -1;
 
   InitMemBuffer(&idec->mem_);
   WebPInitDecBuffer(&idec->output_);

@@ -317,7 +317,6 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
 
     VP8ResetProba(&dec->proba_);
     ResetSegmentHeader(&dec->segment_hdr_);
-    dec->segment_ = 0;    // default for intra
   }
 
   // Check if we have all the partition #0 available, and initialize dec->br_
@@ -479,8 +478,8 @@ static int ParseResiduals(VP8Decoder* const dec,
                           VP8MB* const mb, VP8BitReader* const token_br) {
   VP8BandProbas (* const bands)[NUM_BANDS] = dec->proba_.bands_;
   const VP8BandProbas* ac_proba;
-  const VP8QuantMatrix* const q = &dec->dqm_[dec->segment_];
   VP8MBData* const block = dec->mb_data_ + dec->mb_x_;
+  const VP8QuantMatrix* const q = &dec->dqm_[block->segment_];
   int16_t* dst = block->coeffs_;
   VP8MB* const left_mb = dec->mb_info_ - 1;
   uint8_t tnz, lnz;
@@ -570,26 +569,10 @@ static int ParseResiduals(VP8Decoder* const dec,
 // Main loop
 
 int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br) {
-  VP8BitReader* const br = &dec->br_;
   VP8MB* const left = dec->mb_info_ - 1;
   VP8MB* const mb = dec->mb_info_ + dec->mb_x_;
   VP8MBData* const block = dec->mb_data_ + dec->mb_x_;
-  int skip;
-
-  // Note: we don't save segment map (yet), as we don't expect
-  // to decode more than 1 keyframe.
-  if (dec->segment_hdr_.update_map_) {
-    // Hardcoded tree parsing
-    dec->segment_ = !VP8GetBit(br, dec->proba_.segments_[0]) ?
-        VP8GetBit(br, dec->proba_.segments_[1]) :
-        2 + VP8GetBit(br, dec->proba_.segments_[2]);
-  }
-  skip = dec->use_skip_proba_ ? VP8GetBit(br, dec->skip_p_) : 0;
-
-  VP8ParseIntraMode(br, dec);
-  if (br->eof_) {
-    return 0;
-  }
+  int skip = dec->use_skip_proba_ ? block->skip_ : 0;
 
   if (!skip) {
     skip = ParseResiduals(dec, mb, token_br);
@@ -604,7 +587,7 @@ int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br) {
 
   if (dec->filter_type_ > 0) {  // store filter info
     VP8FInfo* const finfo = dec->f_info_ + dec->mb_x_;
-    *finfo = dec->fstrengths_[dec->segment_][block->is_i4x4_];
+    *finfo = dec->fstrengths_[block->segment_][block->is_i4x4_];
     finfo->f_inner_ |= !skip;
   }
 
@@ -624,6 +607,10 @@ static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
     // Parse bitstream for this row.
     VP8BitReader* const token_br =
         &dec->parts_[dec->mb_y_ & (dec->num_parts_ - 1)];
+    if (!VP8ParseIntraModeRow(&dec->br_, dec)) {
+      return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
+                         "Premature end-of-partition0 encountered.");
+    }
     for (; dec->mb_x_ < dec->mb_w_; ++dec->mb_x_) {
       if (!VP8DecodeMB(dec, token_br)) {
         return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
