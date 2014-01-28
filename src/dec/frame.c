@@ -502,7 +502,7 @@ int VP8GetThreadMethod(const WebPDecoderOptions* const options,
   (void)headers;
   (void)width;
   (void)height;
-  assert(!headers->is_lossless);
+  assert(headers == NULL || !headers->is_lossless);
 #if defined(WEBP_USE_THREAD)
   if (width < MIN_WIDTH_FOR_THREADS) return 0;
   // TODO(skal): tune the heuristic further
