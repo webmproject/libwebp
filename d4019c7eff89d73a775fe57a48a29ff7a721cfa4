@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//6jg\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-28T18:34:45Z",
+      "side": 1,
+      "message": "\u0027{\u0027 should be at the same line 22 as the function name",
+      "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//6jY\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-28T18:34:45Z",
+      "side": 1,
+      "message": "these could be \u0027const\u0027:\n\nstatic const int8_t sclip1[ ... ]",
+      "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//6jU\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-28T18:34:45Z",
+      "side": 1,
+      "message": "static const int8_t ...",
+      "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//6jQ\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-28T18:34:45Z",
+      "side": 1,
+      "message": "static const uint8_t clip1 ...",
+      "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//6jM\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-28T18:34:45Z",
+      "side": 1,
+      "message": "static const int8_t* const psclip1 \u003d \u0026sclip1[1020];",
+      "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//6jI\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-28T18:34:45Z",
+      "side": 1,
+      "message": "static const int8_t* const psclip2 \u003d \u0026sclip2[112];",
+      "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//6jE\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-01-28T18:34:45Z",
+      "side": 1,
+      "message": "static const uint8_t* const pclip1 \u003d \u0026clip1[255];",
+      "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
