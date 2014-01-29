@@ -36,6 +36,23 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//6XE\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-29T04:30:28Z",
+      "side": 1,
+      "message": "indent 2 for all the tables.",
+      "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//6jU\u003d",
         "filename": "src/dsp/dec_mips32.c",
         "patchSetId": 3
@@ -115,6 +132,176 @@
       "writtenOn": "2014-01-28T18:34:45Z",
       "side": 1,
       "message": "static const uint8_t* const pclip1 \u003d \u0026clip1[255];",
+      "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//6Xw\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-29T04:30:28Z",
+      "side": 1,
+      "message": "add some whitespace around the operators (-2 * step)",
+      "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//6Xs\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-29T04:30:28Z",
+      "side": 1,
+      "message": "ditto on whitespace",
+      "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//6Xo\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-29T04:30:28Z",
+      "side": 1,
+      "message": "ditto on whitespace",
+      "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//6Xk\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-29T04:30:28Z",
+      "side": 1,
+      "message": "ditto on whitespace here and throughout the rest of this function",
+      "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//6Xg\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-29T04:30:28Z",
+      "side": 1,
+      "message": "whitespace around operators",
+      "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//6Xc\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-29T04:30:28Z",
+      "side": 1,
+      "message": "whitespace around operators",
+      "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//6XY\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-29T04:30:28Z",
+      "side": 1,
+      "message": "whitespace around operators",
+      "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//6XQ\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-29T04:30:28Z",
+      "side": 1,
+      "message": "whitespace around operators",
+      "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//6XU\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-29T04:30:28Z",
+      "side": 1,
+      "message": "multi-line if\u0027s get {}s",
+      "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//6XM\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-29T04:30:28Z",
+      "side": 1,
+      "message": "in all the functions from here to 432 fix the param alignment -- they should be aligned with the ( as elsewhere in this file",
       "revId": "d4019c7eff89d73a775fe57a48a29ff7a721cfa4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
