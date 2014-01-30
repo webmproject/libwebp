@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//6G0\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-30T01:53:45Z",
+      "side": 1,
+      "message": "indent 2",
+      "revId": "d16c69749bcc2249c6dbe310e17813a66d998e1d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//6GY\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-30T01:53:45Z",
+      "side": 1,
+      "message": "we mostly use CamelCase for function names; there might be a few that don\u0027t follow this, but those should not be considered representative",
+      "revId": "d16c69749bcc2249c6dbe310e17813a66d998e1d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//6Gs\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 442,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-01-30T01:53:45Z",
+      "side": 1,
+      "message": "drop this line",
+      "revId": "d16c69749bcc2249c6dbe310e17813a66d998e1d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
