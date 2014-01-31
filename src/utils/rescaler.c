@@ -51,7 +51,7 @@ void WebPRescalerImportRow(WebPRescaler* const wrk,
                            const uint8_t* const src, int channel) {
   const int x_stride = wrk->num_channels;
   const int x_out_max = wrk->dst_width * wrk->num_channels;
-#if !defined (__mips__)
+#if !defined(__mips__)
   int x_in = channel;
   int x_out;
   int accum = 0;
@@ -89,7 +89,7 @@ void WebPRescalerImportRow(WebPRescaler* const wrk,
   for (x_out = channel; x_out < x_out_max; x_out += x_stride) {
     wrk->irow[x_out] += wrk->frow[x_out];
   }
-#else
+#else  // __mips__
   const int fx_scale = wrk->fx_scale;
   const int x_add = wrk->x_add;
   const int x_sub = wrk->x_sub;
@@ -181,7 +181,7 @@ void WebPRescalerImportRow(WebPRescaler* const wrk,
       : "memory", "hi", "lo"
     );
   }
-#endif  // (__mips__)
+#endif  // !__mips__
 }
 
 uint8_t* WebPRescalerExportRow(WebPRescaler* const wrk) {

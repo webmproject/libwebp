@@ -20,8 +20,8 @@ static const int kC1 = 20091 + (1 << 16);
 static const int kC2 = 35468;
 
 static WEBP_INLINE int abs_mips32(int x) {
-   const int sign = x >> 31;
-   return (x ^ sign) - sign;
+  const int sign = x >> 31;
+  return (x ^ sign) - sign;
 }
 
 // clips [-1020, 1020] to [-128, 127]
@@ -439,7 +439,6 @@ static void HFilter16iMIPS32(uint8_t* p, int stride,
     FilterLoop24(p, 1, stride, 16, thresh, ithresh, hev_thresh);
   }
 }
-
 
 //------------------------------------------------------------------------------
 // Simple In-loop filtering (Paragraph 15.2)

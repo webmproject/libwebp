@@ -16,8 +16,6 @@
 
 #if defined(WEBP_USE_MIPS32)
 
-#include <assert.h>
-#include <string.h>
 #include "./yuv.h"
 
 //------------------------------------------------------------------------------
@@ -116,9 +114,9 @@ SAMPLE_FUNC_MIPS(SampleBgraLinePairMIPS,     4, 2, 1, 0, 3)
 
 void WebPInitSamplersMIPS32(void) {
 #if defined(WEBP_USE_MIPS32)
-    WebPSamplers[MODE_RGB]  = SampleRgbLinePairMIPS;
-    WebPSamplers[MODE_RGBA] = SampleRgbaLinePairMIPS;
-    WebPSamplers[MODE_BGR]  = SampleBgrLinePairMIPS;
-    WebPSamplers[MODE_BGRA] = SampleBgraLinePairMIPS;
+  WebPSamplers[MODE_RGB]  = SampleRgbLinePairMIPS;
+  WebPSamplers[MODE_RGBA] = SampleRgbaLinePairMIPS;
+  WebPSamplers[MODE_BGR]  = SampleBgrLinePairMIPS;
+  WebPSamplers[MODE_BGRA] = SampleBgraLinePairMIPS;
 #endif  // WEBP_USE_MIPS32
 }
