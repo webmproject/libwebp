@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//5mQ\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1004178
+      },
+      "writtenOn": "2014-02-03T21:03:25Z",
+      "side": 1,
+      "message": "I\u0027m building with one of the newer Xcodes (on OSX, naturally), which allows for what they term a \"shallow\" analysis phase during builds.\nConfusingly, the issues only seem to turn up during the shallow analyses, not during full analysis runs. I haven\u0027t had time to investigate that, so the project is here if you want to take a squiz: https://github.com/cysp/STWebPDecoder/tree/feature/animation",
+      "parentUuid": "AAAAdn//5nQ\u003d",
+      "revId": "7927bd28afea79c05d2fe9d2d16a2d44f38776f2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//5so\u003d",
         "filename": "src/enc/backward_references.c",
         "patchSetId": 3
@@ -65,6 +83,24 @@
       "writtenOn": "2014-02-03T13:08:23Z",
       "side": 1,
       "message": "indeed",
+      "revId": "7927bd28afea79c05d2fe9d2d16a2d44f38776f2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//5mY\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1004178
+      },
+      "writtenOn": "2014-02-03T21:03:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//5sU\u003d",
       "revId": "7927bd28afea79c05d2fe9d2d16a2d44f38776f2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
