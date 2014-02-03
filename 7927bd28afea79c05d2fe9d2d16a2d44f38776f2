@@ -16,6 +16,41 @@
       "revId": "7927bd28afea79c05d2fe9d2d16a2d44f38776f2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//5sY\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-02-03T13:08:23Z",
+      "side": 1,
+      "message": "thanks, exactly what i was thinking of!",
+      "parentUuid": "AAAAdn//5so\u003d",
+      "revId": "7927bd28afea79c05d2fe9d2d16a2d44f38776f2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//5sU\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-02-03T13:08:23Z",
+      "side": 1,
+      "message": "indeed",
+      "revId": "7927bd28afea79c05d2fe9d2d16a2d44f38776f2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
