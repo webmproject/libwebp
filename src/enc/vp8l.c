@@ -959,7 +959,9 @@ static VP8LEncoder* VP8LEncoderNew(const WebPConfig* const config,
 }
 
 static void VP8LEncoderDelete(VP8LEncoder* enc) {
-  free(enc->argb_);
+  if (enc != NULL) {
+    free(enc->argb_);
+  }
   free(enc);
 }
 
