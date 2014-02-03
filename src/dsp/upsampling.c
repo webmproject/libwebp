@@ -276,38 +276,40 @@ static WEBP_INLINE uint8_t multiply(uint8_t x, uint32_t m) {
   return (x * m) >> 16;
 }
 
-static void ApplyAlphaMultiply4444(uint8_t* rgba4444,
-                                   int w, int h, int stride) {
+static WEBP_INLINE void ApplyAlphaMultiply4444(uint8_t* rgba4444,
+                                               int w, int h, int stride,
+                                               int rg_byte_pos /* 0 or 1 */) {
   while (h-- > 0) {
     int i;
     for (i = 0; i < w; ++i) {
-#ifdef WEBP_SWAP_16BIT_CSP
-      const uint8_t a = (rgba4444[2 * i + 0] & 0x0f);
+      const uint32_t rg = rgba4444[2 * i + rg_byte_pos];
+      const uint32_t ba = rgba4444[2 * i + (rg_byte_pos ^ 1)];
+      const uint8_t a = ba & 0x0f;
       const uint32_t mult = MULTIPLIER(a);
-      const uint8_t r = multiply(dither_hi(rgba4444[2 * i + 1]), mult);
-      const uint8_t g = multiply(dither_lo(rgba4444[2 * i + 1]), mult);
-      const uint8_t b = multiply(dither_hi(rgba4444[2 * i + 0]), mult);
-      rgba4444[2 * i + 1] = (r & 0xf0) | ((g >> 4) & 0x0f);
-      rgba4444[2 * i + 0] = (b & 0xf0) | a;
-#else
-      const uint8_t a = (rgba4444[2 * i + 1] & 0x0f);
-      const uint32_t mult = MULTIPLIER(a);
-      const uint8_t r = multiply(dither_hi(rgba4444[2 * i + 0]), mult);
-      const uint8_t g = multiply(dither_lo(rgba4444[2 * i + 0]), mult);
-      const uint8_t b = multiply(dither_hi(rgba4444[2 * i + 1]), mult);
-      rgba4444[2 * i + 0] = (r & 0xf0) | ((g >> 4) & 0x0f);
-      rgba4444[2 * i + 1] = (b & 0xf0) | a;
-#endif
+      const uint8_t r = multiply(dither_hi(rg), mult);
+      const uint8_t g = multiply(dither_lo(rg), mult);
+      const uint8_t b = multiply(dither_hi(ba), mult);
+      rgba4444[2 * i + rg_byte_pos] = (r & 0xf0) | ((g >> 4) & 0x0f);
+      rgba4444[2 * i + (rg_byte_pos ^ 1)] = (b & 0xf0) | a;
     }
     rgba4444 += stride;
   }
 }
 #undef MULTIPLIER
 
+static void ApplyAlphaMultiply_16b(uint8_t* rgba4444,
+                                   int w, int h, int stride) {
+#ifdef WEBP_SWAP_16BIT_CSP
+  ApplyAlphaMultiply4444(rgba4444, w, h, stride, 1);
+#else
+  ApplyAlphaMultiply4444(rgba4444, w, h, stride, 0);
+#endif
+}
+
 void (*WebPApplyAlphaMultiply)(uint8_t*, int, int, int, int)
     = ApplyAlphaMultiply;
 void (*WebPApplyAlphaMultiply4444)(uint8_t*, int, int, int)
-    = ApplyAlphaMultiply4444;
+    = ApplyAlphaMultiply_16b;
 
 //------------------------------------------------------------------------------
 // Main call
@@ -363,7 +365,7 @@ void WebPInitSamplers(void) {
 
 void WebPInitPremultiply(void) {
   WebPApplyAlphaMultiply = ApplyAlphaMultiply;
-  WebPApplyAlphaMultiply4444 = ApplyAlphaMultiply4444;
+  WebPApplyAlphaMultiply4444 = ApplyAlphaMultiply_16b;
 
 #ifdef FANCY_UPSAMPLING
   WebPUpsamplers[MODE_rgbA]      = UpsampleRgbaLinePair;
