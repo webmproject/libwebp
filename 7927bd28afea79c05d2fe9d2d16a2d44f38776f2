@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//5so\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1004178
+      },
+      "writtenOn": "2014-02-03T09:25:25Z",
+      "side": 1,
+      "message": "AFAIK gerrit won\u0027t be happy if I split into multiple commits.\n\nIs this approximately what you meant? (Modulo a stray `return 0` I just spotted.)",
+      "revId": "7927bd28afea79c05d2fe9d2d16a2d44f38776f2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
