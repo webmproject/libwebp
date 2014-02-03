@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//5tI\u003d",
+        "filename": "src/enc/vp8l.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 962,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-02-03T08:50:26Z",
+      "side": 1,
+      "message": "\"\nif (enc !\u003d NULL) {\n  free(enc-\u003eargb_);\n  free(enc);\n}\n\"\n\ni don\u0027t think this function can ever be called with enc\u003d\u003dNULL right now (there\u0027s only 1 call site actually). But agreed, better safe than sorry...",
+      "revId": "8d1d445f9d744b7b2fbeaad20e99440ec2d9357e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
