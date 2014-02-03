@@ -250,7 +250,11 @@ static int EmitAlphaRGBA4444(const VP8Io* const io, WebPDecParams* const p) {
     int num_rows;
     const int start_y = GetAlphaSourceRow(io, &alpha, &num_rows);
     uint8_t* const base_rgba = buf->rgba + start_y * buf->stride;
+#ifdef WEBP_SWAP_16BIT_CSP
+    uint8_t* alpha_dst = base_rgba;
+#else
     uint8_t* alpha_dst = base_rgba + 1;
+#endif
     uint32_t alpha_mask = 0x0f;
     int i, j;
 
@@ -435,7 +439,11 @@ static int ExportAlpha(WebPDecParams* const p, int y_pos) {
 static int ExportAlphaRGBA4444(WebPDecParams* const p, int y_pos) {
   const WebPRGBABuffer* const buf = &p->output->u.RGBA;
   uint8_t* const base_rgba = buf->rgba + (p->last_y + y_pos) * buf->stride;
+#ifdef WEBP_SWAP_16BIT_CSP
+  uint8_t* alpha_dst = base_rgba;
+#else
   uint8_t* alpha_dst = base_rgba + 1;
+#endif
   int num_lines_out = 0;
   const WEBP_CSP_MODE colorspace = p->output->colorspace;
   const int width = p->scaler_a.dst_width;

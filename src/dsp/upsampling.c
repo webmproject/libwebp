@@ -281,6 +281,15 @@ static void ApplyAlphaMultiply4444(uint8_t* rgba4444,
   while (h-- > 0) {
     int i;
     for (i = 0; i < w; ++i) {
+#ifdef WEBP_SWAP_16BIT_CSP
+      const uint8_t a = (rgba4444[2 * i + 0] & 0x0f);
+      const uint32_t mult = MULTIPLIER(a);
+      const uint8_t r = multiply(dither_hi(rgba4444[2 * i + 1]), mult);
+      const uint8_t g = multiply(dither_lo(rgba4444[2 * i + 1]), mult);
+      const uint8_t b = multiply(dither_hi(rgba4444[2 * i + 0]), mult);
+      rgba4444[2 * i + 1] = (r & 0xf0) | ((g >> 4) & 0x0f);
+      rgba4444[2 * i + 0] = (b & 0xf0) | a;
+#else
       const uint8_t a = (rgba4444[2 * i + 1] & 0x0f);
       const uint32_t mult = MULTIPLIER(a);
       const uint8_t r = multiply(dither_hi(rgba4444[2 * i + 0]), mult);
@@ -288,6 +297,7 @@ static void ApplyAlphaMultiply4444(uint8_t* rgba4444,
       const uint8_t b = multiply(dither_hi(rgba4444[2 * i + 1]), mult);
       rgba4444[2 * i + 0] = (r & 0xf0) | ((g >> 4) & 0x0f);
       rgba4444[2 * i + 1] = (b & 0xf0) | a;
+#endif
     }
     rgba4444 += stride;
   }
