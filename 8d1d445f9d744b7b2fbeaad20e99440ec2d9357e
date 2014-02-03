@@ -33,6 +33,24 @@
       "revId": "8d1d445f9d744b7b2fbeaad20e99440ec2d9357e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//5s4\u003d",
+        "filename": "src/enc/vp8l.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 962,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-02-03T08:54:22Z",
+      "side": 1,
+      "message": "oh, scratch that: this is correct, this function _can_ be called with enc\u003d\u003dNULL.",
+      "parentUuid": "AAAAdn//5tI\u003d",
+      "revId": "8d1d445f9d744b7b2fbeaad20e99440ec2d9357e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
