@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "AAAAdn//5nQ\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-02-03T20:23:44Z",
+      "side": 1,
+      "message": "what versions of clang/scan-build are you using (Xcode\u0027s?) and what\u0027s your configuration look like?\n\nwe run a version of this on Linux and there\u0027s only 1 issue (which is spurious and part of an open bug at llvm); that version and newer r195906 don\u0027t report anything, so maybe the toolchain needs an update.\n\nhttp://build.webmproject.org/jenkins/job/libwebp__static_analysis/",
+      "revId": "7927bd28afea79c05d2fe9d2d16a2d44f38776f2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//5so\u003d",
         "filename": "src/enc/backward_references.c",
         "patchSetId": 3
