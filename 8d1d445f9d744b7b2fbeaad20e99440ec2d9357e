@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "AAAAdn//5tA\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-02-03T08:52:41Z",
+      "side": 1,
+      "message": "This seems overkill, since HashChainInit() will do this work below.\nThe only risk here is:\n  * hash_chain-\u003echain_ is uninitialized \n  * and error occurs during the allocation of cost or cost_model\n  * the error path is taken at 497\n  *  HashChainDelete() is called with hash_chain-\u003echain_ uninitialized.\n\n\u003d\u003e i think it better to just add \"if (hash_chain !\u003d NULL) hash_chain-\u003echain_ \u003d NULL;\" here. Or, better, have a \"HasChain* HashChainNew()\" construction function that\ndoes this altogether cleanly...\n\nActually, this malloc should be merged with HashChainInit(), thinking of it.",
+      "revId": "8d1d445f9d744b7b2fbeaad20e99440ec2d9357e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//5tI\u003d",
         "filename": "src/enc/vp8l.c",
         "patchSetId": 2
