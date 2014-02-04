@@ -113,11 +113,16 @@ static WEBP_INLINE uint64_t GetPixPairHash64(const uint32_t* const argb) {
   return key;
 }
 
-static int HashChainInit(HashChain* const p, int size) {
+static HashChain* HashChainNew(int size) {
   int i;
+  HashChain* const p = (HashChain*)malloc(sizeof(*p));
+  if (p == NULL) {
+    return NULL;
+  }
   p->chain_ = (int*)WebPSafeMalloc((uint64_t)size, sizeof(*p->chain_));
   if (p->chain_ == NULL) {
-    return 0;
+    free(p);
+    return NULL;
   }
   for (i = 0; i < size; ++i) {
     p->chain_[i] = -1;
@@ -125,7 +130,7 @@ static int HashChainInit(HashChain* const p, int size) {
   for (i = 0; i < HASH_SIZE; ++i) {
     p->hash_to_first_index_[i] = -1;
   }
-  return 1;
+  return p;
 }
 
 static void HashChainDelete(HashChain* const p) {
@@ -278,7 +283,7 @@ static int BackwardReferencesHashChain(int xsize, int ysize,
   int cc_init = 0;
   const int use_color_cache = (cache_bits > 0);
   const int pix_count = xsize * ysize;
-  HashChain* const hash_chain = (HashChain*)malloc(sizeof(*hash_chain));
+  HashChain* const hash_chain = HashChainNew(pix_count);
   VP8LColorCache hashers;
   int window_size = WINDOW_SIZE;
   int iter_pos = 1;
@@ -290,7 +295,6 @@ static int BackwardReferencesHashChain(int xsize, int ysize,
     if (!cc_init) goto Error;
   }
 
-  if (!HashChainInit(hash_chain, pix_count)) goto Error;
 
   refs->size = 0;
   GetParamsForHashChainFindCopy(quality, xsize, cache_bits,
@@ -485,7 +489,7 @@ static int BackwardReferencesHashChainDistanceOnly(
   float* const cost =
       (float*)WebPSafeMalloc((uint64_t)pix_count, sizeof(*cost));
   CostModel* cost_model = (CostModel*)malloc(sizeof(*cost_model));
-  HashChain* hash_chain = (HashChain*)malloc(sizeof(*hash_chain));
+  HashChain* hash_chain = HashChainNew(pix_count);
   VP8LColorCache hashers;
   const double mul0 = (recursive_cost_model != 0) ? 1.0 : 0.68;
   const double mul1 = (recursive_cost_model != 0) ? 1.0 : 0.82;
@@ -495,8 +499,6 @@ static int BackwardReferencesHashChainDistanceOnly(
   int iter_limit = -1;
 
   if (cost == NULL || cost_model == NULL || hash_chain == NULL) goto Error;
-
-  if (!HashChainInit(hash_chain, pix_count)) goto Error;
 
   if (use_color_cache) {
     cc_init = VP8LColorCacheInit(&hashers, cache_bits);
@@ -633,12 +635,11 @@ static int BackwardReferencesHashChainFollowChosenPath(
   int window_size = WINDOW_SIZE;
   int iter_pos = 1;
   int iter_limit = -1;
-  HashChain* hash_chain = (HashChain*)malloc(sizeof(*hash_chain));
+  HashChain* hash_chain = HashChainNew(pix_count);
   VP8LColorCache hashers;
 
-  if (hash_chain == NULL || !HashChainInit(hash_chain, pix_count)) {
-    goto Error;
-  }
+  if (hash_chain == NULL) goto Error;
+
   if (use_color_cache) {
     cc_init = VP8LColorCacheInit(&hashers, cache_bits);
     if (!cc_init) goto Error;
