@@ -363,6 +363,9 @@ float VP8LFastLog2Slow(int v) {
 //------------------------------------------------------------------------------
 // Image transforms.
 
+// Mostly used to reduce code size + readability
+static WEBP_INLINE int GetMin(int a, int b) { return (a > b) ? b : a; }
+
 // In-place sum of each component with mod 256.
 static WEBP_INLINE void AddPixelsEq(uint32_t* a, uint32_t b) {
   const uint32_t alpha_and_green = (*a & 0xff00ff00u) + (b & 0xff00ff00u);
@@ -567,10 +570,8 @@ static int GetBestPredictorForTile(int width, int height,
   const int col_start = tile_x << bits;
   const int row_start = tile_y << bits;
   const int tile_size = 1 << bits;
-  const int ymax = (tile_size <= height - row_start) ?
-      tile_size : height - row_start;
-  const int xmax = (tile_size <= width - col_start) ?
-      tile_size : width - col_start;
+  const int ymax = GetMin(tile_size, height - row_start);
+  const int xmax = GetMin(tile_size, width - col_start);
   int histo[4][256];
   float best_diff = MAX_DIFF_COST;
   int best_mode = 0;
@@ -622,10 +623,8 @@ static void CopyTileWithPrediction(int width, int height,
   const int col_start = tile_x << bits;
   const int row_start = tile_y << bits;
   const int tile_size = 1 << bits;
-  const int ymax = (tile_size <= height - row_start) ?
-      tile_size : height - row_start;
-  const int xmax = (tile_size <= width - col_start) ?
-      tile_size : width - col_start;
+  const int ymax = GetMin(tile_size, height - row_start);
+  const int xmax = GetMin(tile_size, width - col_start);
   const PredictorFunc pred_func = kPredictors[mode];
   const uint32_t* current_row = argb_scratch;
 
@@ -899,16 +898,10 @@ static Multipliers GetBestColorTransformForTile(
   int green_to_red;
   int green_to_blue;
   int red_to_blue;
-  int all_x_max = tile_x_offset + max_tile_size;
-  int all_y_max = tile_y_offset + max_tile_size;
+  const int all_x_max = GetMin(tile_x_offset + max_tile_size, xsize);
+  const int all_y_max = GetMin(tile_y_offset + max_tile_size, ysize);
   Multipliers best_tx;
   MultipliersClear(&best_tx);
-  if (all_x_max > xsize) {
-    all_x_max = xsize;
-  }
-  if (all_y_max > ysize) {
-    all_y_max = ysize;
-  }
 
   for (green_to_red = -64; green_to_red <= 64; green_to_red += halfstep) {
     int histo[256] = { 0 };
@@ -985,96 +978,74 @@ static Multipliers GetBestColorTransformForTile(
 }
 
 static void CopyTileWithColorTransform(int xsize, int ysize,
-                                       int tile_x, int tile_y, int bits,
+                                       int tile_x, int tile_y,
+                                       int max_tile_size,
                                        Multipliers color_transform,
-                                       uint32_t* const argb) {
-  int y;
-  int xscan = 1 << bits;
-  int yscan = 1 << bits;
-  tile_x <<= bits;
-  tile_y <<= bits;
-  if (xscan > xsize - tile_x) {
-    xscan = xsize - tile_x;
-  }
-  if (yscan > ysize - tile_y) {
-    yscan = ysize - tile_y;
-  }
-  yscan += tile_y;
-  for (y = tile_y; y < yscan; ++y) {
-    int ix = y * xsize + tile_x;
-    const int end_ix = ix + xscan;
-    for (; ix < end_ix; ++ix) {
-      argb[ix] = TransformColor(&color_transform, argb[ix], 0);
+                                       uint32_t* argb) {
+  const int xscan = GetMin(max_tile_size, xsize - tile_x);
+  int yscan = GetMin(max_tile_size, ysize - tile_y);
+  argb += tile_y * xsize + tile_x;
+  while (yscan-- > 0) {
+    int x;
+    for (x = 0; x < xscan; ++x) {
+      argb[x] = TransformColor(&color_transform, argb[x], 0);
     }
+    argb += xsize;
   }
 }
 
 void VP8LColorSpaceTransform(int width, int height, int bits, int step,
                              uint32_t* const argb, uint32_t* image) {
   const int max_tile_size = 1 << bits;
-  int tile_xsize = VP8LSubSampleSize(width, bits);
-  int tile_ysize = VP8LSubSampleSize(height, bits);
+  const int tile_xsize = VP8LSubSampleSize(width, bits);
+  const int tile_ysize = VP8LSubSampleSize(height, bits);
   int accumulated_red_histo[256] = { 0 };
   int accumulated_blue_histo[256] = { 0 };
-  int tile_y;
-  int tile_x;
-  Multipliers prevX;
-  Multipliers prevY;
-  MultipliersClear(&prevY);
-  MultipliersClear(&prevX);
+  int tile_x, tile_y;
+  Multipliers prev_x, prev_y;
+  MultipliersClear(&prev_y);
+  MultipliersClear(&prev_x);
   for (tile_y = 0; tile_y < tile_ysize; ++tile_y) {
     for (tile_x = 0; tile_x < tile_xsize; ++tile_x) {
-      Multipliers color_transform;
-      int all_x_max;
       int y;
-      const int tile_y_offset = tile_y * max_tile_size;
       const int tile_x_offset = tile_x * max_tile_size;
+      const int tile_y_offset = tile_y * max_tile_size;
+      const int all_x_max = GetMin(tile_x_offset + max_tile_size, width);
+      const int all_y_max = GetMin(tile_y_offset + max_tile_size, height);
+      const int offset = tile_y * tile_xsize + tile_x;
       if (tile_y != 0) {
-        ColorCodeToMultipliers(image[tile_y * tile_xsize + tile_x - 1], &prevX);
-        ColorCodeToMultipliers(image[(tile_y - 1) * tile_xsize + tile_x],
-                               &prevY);
-      } else if (tile_x != 0) {
-        ColorCodeToMultipliers(image[tile_y * tile_xsize + tile_x - 1], &prevX);
+        ColorCodeToMultipliers(image[offset - tile_xsize], &prev_y);
       }
-      color_transform =
-          GetBestColorTransformForTile(tile_x, tile_y, bits,
-                                       prevX, prevY,
-                                       step, width, height,
-                                       &accumulated_red_histo[0],
-                                       &accumulated_blue_histo[0],
-                                       argb);
-      image[tile_y * tile_xsize + tile_x] =
-          MultipliersToColorCode(&color_transform);
-      CopyTileWithColorTransform(width, height, tile_x, tile_y, bits,
-                                 color_transform, argb);
+      prev_x = GetBestColorTransformForTile(tile_x, tile_y, bits,
+                                            prev_x, prev_y,
+                                            step, width, height,
+                                            &accumulated_red_histo[0],
+                                            &accumulated_blue_histo[0],
+                                            argb);
+      image[offset] = MultipliersToColorCode(&prev_x);
+      CopyTileWithColorTransform(width, height,
+                                 tile_x_offset, tile_y_offset, max_tile_size,
+                                 prev_x, argb);
 
       // Gather accumulated histogram data.
-      all_x_max = tile_x_offset + max_tile_size;
-      if (all_x_max > width) {
-        all_x_max = width;
-      }
-      for (y = 0; y < max_tile_size; ++y) {
-        int ix;
-        int all_x;
-        int all_y = tile_y_offset + y;
-        if (all_y >= height) {
-          break;
-        }
-        ix = all_y * width + tile_x_offset;
-        for (all_x = tile_x_offset; all_x < all_x_max; ++all_x, ++ix) {
+      for (y = tile_y_offset; y < all_y_max; ++y) {
+        int ix = y * width + tile_x_offset;
+        const int ix_end = ix + all_x_max - tile_x_offset;
+        for (; ix < ix_end; ++ix) {
+          const uint32_t pix = argb[ix];
           if (ix >= 2 &&
-              argb[ix] == argb[ix - 2] &&
-              argb[ix] == argb[ix - 1]) {
+              pix == argb[ix - 2] &&
+              pix == argb[ix - 1]) {
             continue;  // repeated pixels are handled by backward references
           }
           if (ix >= width + 2 &&
               argb[ix - 2] == argb[ix - width - 2] &&
               argb[ix - 1] == argb[ix - width - 1] &&
-              argb[ix] == argb[ix - width]) {
+              pix == argb[ix - width]) {
             continue;  // repeated pixels are handled by backward references
           }
-          ++accumulated_red_histo[(argb[ix] >> 16) & 0xff];
-          ++accumulated_blue_histo[argb[ix] & 0xff];
+          ++accumulated_red_histo[(pix >> 16) & 0xff];
+          ++accumulated_blue_histo[(pix >> 0) & 0xff];
         }
       }
     }
