@@ -69,6 +69,24 @@
       "revId": "c9aeb086d163f25ce5b790b9e7e08e1007aa46ee",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//4ns\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-02-08T20:52:22Z",
+      "side": 1,
+      "message": "no harm (and fewer lines) in const\u0027ing the saturate results; interleaving didn\u0027t seem to have any effect, but left split for now to avoid packing too much into one line, for readability.\nthis might be ok as a first pass for review, packing is still open as a follow-up.",
+      "parentUuid": "AAAAdn//4n8\u003d",
+      "revId": "c9aeb086d163f25ce5b790b9e7e08e1007aa46ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
