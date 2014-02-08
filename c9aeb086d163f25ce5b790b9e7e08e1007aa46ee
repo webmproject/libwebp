@@ -33,6 +33,24 @@
       "revId": "c9aeb086d163f25ce5b790b9e7e08e1007aa46ee",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//4oQ\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-02-08T19:41:15Z",
+      "side": 1,
+      "message": "there\u0027s plenty of free space floating around, yes. the same might be said for the sse2 implementation...\nI may try that separately after reordering for const testing; at the time I kept the operations mostly separate similar to sse2, but there may be a benefit to interleaving them.",
+      "parentUuid": "AAAAdn//4os\u003d",
+      "revId": "c9aeb086d163f25ce5b790b9e7e08e1007aa46ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
