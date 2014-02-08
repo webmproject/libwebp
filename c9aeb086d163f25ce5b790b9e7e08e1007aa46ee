@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//4ow\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-02-08T06:23:50Z",
+      "side": 1,
+      "message": "does it change something to use \u0027const ...\u0027 variables here and below?",
+      "revId": "c9aeb086d163f25ce5b790b9e7e08e1007aa46ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//4os\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-02-08T06:23:50Z",
+      "side": 1,
+      "message": "seems like you could pack dst0/dst1 and dst2/dst3 together into a single int16x8_t variable. The upper 4x16b bits of dst0..dst3 are unused here, right?",
+      "revId": "c9aeb086d163f25ce5b790b9e7e08e1007aa46ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
