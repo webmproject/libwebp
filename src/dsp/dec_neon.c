@@ -16,6 +16,8 @@
 
 #if defined(WEBP_USE_NEON)
 
+#include <arm_neon.h>
+
 #include "../dec/vp8i.h"
 
 #define QRegs "q0", "q1", "q2", "q3",                                          \
@@ -410,6 +412,55 @@ static void TransformWHT(const int16_t* in, int16_t* out) {
   );
 }
 
+//------------------------------------------------------------------------------
+
+#define MUL(a, b) (((a) * (b)) >> 16)
+static void TransformAC3(const int16_t* in, uint8_t* dst) {
+  static const int kC1 = 20091 + (1 << 16);
+  static const int kC2 = 35468;
+  const int16x8_t A = vdupq_n_s16(in[0] + 4);
+  const int16x8_t c4 = vdupq_n_s16(MUL(in[4], kC2));
+  const int16x8_t d4 = vdupq_n_s16(MUL(in[4], kC1));
+  const int c1 = MUL(in[1], kC2);
+  const int d1 = MUL(in[1], kC1);
+  const int16x8_t CD = {d1, c1, -c1, -d1, 0, 0, 0, 0};
+  const int16x8_t B = vqaddq_s16(A, CD);
+  const int16x8_t m0 = vqaddq_s16(B, d4);
+  const int16x8_t m1 = vqaddq_s16(B, c4);
+  const int16x8_t m2 = vqsubq_s16(B, c4);
+  const int16x8_t m3 = vqsubq_s16(B, d4);
+  // Load the source pixels and convert to 16b.
+  int16x8_t dst0 = vreinterpretq_s16_u16(
+      vmovl_u8(vcreate_u8(*(uint32_t*)(dst + 0 * BPS))));
+  int16x8_t dst1 = vreinterpretq_s16_u16(
+      vmovl_u8(vcreate_u8(*(uint32_t*)(dst + 1 * BPS))));
+  int16x8_t dst2 = vreinterpretq_s16_u16(
+      vmovl_u8(vcreate_u8(*(uint32_t*)(dst + 2 * BPS))));
+  int16x8_t dst3 = vreinterpretq_s16_u16(
+      vmovl_u8(vcreate_u8(*(uint32_t*)(dst + 3 * BPS))));
+
+  // Add the inverse transform.
+  dst0 = vsraq_n_s16(dst0, m0, 3);
+  dst1 = vsraq_n_s16(dst1, m1, 3);
+  dst2 = vsraq_n_s16(dst2, m2, 3);
+  dst3 = vsraq_n_s16(dst3, m3, 3);
+
+  {
+    // Unsigned saturate to 8b.
+    const uint8x8_t dst0_ = vqmovun_s16(dst0);
+    const uint8x8_t dst1_ = vqmovun_s16(dst1);
+    const uint8x8_t dst2_ = vqmovun_s16(dst2);
+    const uint8x8_t dst3_ = vqmovun_s16(dst3);
+
+    // Store the results.
+    *(int*)(dst + 0 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst0_), 0);
+    *(int*)(dst + 1 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst1_), 0);
+    *(int*)(dst + 2 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst2_), 0);
+    *(int*)(dst + 3 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst3_), 0);
+  }
+}
+#undef MUL
+
 #endif   // WEBP_USE_NEON
 
 //------------------------------------------------------------------------------
@@ -420,7 +471,7 @@ extern void VP8DspInitNEON(void);
 void VP8DspInitNEON(void) {
 #if defined(WEBP_USE_NEON)
   VP8Transform = TransformTwo;
-  VP8TransformAC3 = TransformOne;  // no special code here
+  VP8TransformAC3 = TransformAC3;
   VP8TransformDC = TransformDC;
   VP8TransformWHT = TransformWHT;
 
@@ -430,4 +481,3 @@ void VP8DspInitNEON(void) {
   VP8SimpleHFilter16i = SimpleHFilter16iNEON;
 #endif   // WEBP_USE_NEON
 }
-
