@@ -1096,7 +1096,8 @@ int VP8LEncodeImage(const WebPConfig* const config,
 
   width = picture->width;
   height = picture->height;
-  if (!VP8LBitWriterInit(&bw, (width * height) >> 1)) {
+  // Initialize BitWriter with size corresponding to 8bpp.
+  if (!VP8LBitWriterInit(&bw, width * height)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
