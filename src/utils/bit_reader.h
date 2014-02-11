@@ -86,6 +86,12 @@ extern "C" {
 
 #endif
 
+// some endian fix (e.g.: mips-gcc doesn't define __BIG_ENDIAN__)
+#if !defined(__BIG_ENDIAN__) && defined(__BYTE_ORDER__) && \
+    (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#define __BIG_ENDIAN__
+#endif
+
 //------------------------------------------------------------------------------
 // Derived types and constants
 
