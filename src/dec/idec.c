@@ -308,6 +308,7 @@ static VP8StatusCode DecodeWebPHeaders(WebPIDecoder* const idec) {
 
   headers.data = data;
   headers.data_size = curr_size;
+  headers.have_all_data = 0;
   status = WebPParseHeaders(&headers);
   if (status == VP8_STATUS_NOT_ENOUGH_DATA) {
     return VP8_STATUS_SUSPENDED;  // We haven't found a VP8 chunk yet.

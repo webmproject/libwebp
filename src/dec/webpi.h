@@ -54,6 +54,7 @@ void WebPResetDecParams(WebPDecParams* const params);
 typedef struct {
   const uint8_t* data;         // input buffer
   size_t data_size;            // input buffer size
+  int have_all_data;           // true if all data is known to be available
   size_t offset;               // offset to main data chunk (VP8 or VP8L)
   const uint8_t* alpha_data;   // points to alpha chunk (if present)
   size_t alpha_data_size;      // alpha chunk size
