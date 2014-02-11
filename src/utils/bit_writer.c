@@ -194,19 +194,54 @@ void VP8BitWriterWipeOut(VP8BitWriter* const bw) {
 //------------------------------------------------------------------------------
 // VP8LBitWriter
 
+// This is the minimum amount of size the memory buffer is guaranteed to grow
+// when extra space is needed.
+#define MIN_EXTRA_SIZE  (32768ULL)
+
+#define VP8L_WRITER_BYTES ((int)sizeof(vp8l_wtype_t))
+#define VP8L_WRITER_BITS (VP8L_WRITER_BYTES * 8)
+
+//  endian-specific htoleXX() definition
+// TODO(skal): move this to config.h, and collect all the endian-related code
+// in a proper .h file
+#if defined(_WIN32)
+#if !defined(_M_PPC)
+#define htole32(x) (x)
+#define htole16(x) (x)
+#else     // PPC is BIG_ENDIAN
+#include <stdlib.h>
+#define htole32(x) (_byteswap_ulong((unsigned long)(x)))
+#define htole16(x) (_byteswap_ushort((unsigned short)(x)))
+#endif    // _M_PPC
+#elif defined(__OpenBSD__) || defined(__NetBSD__) || defined(__FreeBSD__) || \
+      defined(__DragonFly__)
+#include <sys/endian.h>
+#elif defined(__APPLE__)
+#include <libkern/OSByteOrder.h>
+#define htole32 OSSwapHostToLittleInt32
+#define htole16 OSSwapHostToLittleInt16
+#elif defined(__native_client__) && !defined(__GLIBC__)
+// NaCl without glibc is assumed to be little-endian
+#define htole32(x) (x)
+#define htole16(x) (x)
+#else     // pretty much all linux and/or glibc
+#include <endian.h>
+#endif
+
 // Returns 1 on success.
 static int VP8LBitWriterResize(VP8LBitWriter* const bw, size_t extra_size) {
   uint8_t* allocated_buf;
   size_t allocated_size;
-  const size_t current_size = VP8LBitWriterNumBytes(bw);
+  const size_t max_bytes = bw->end_ - bw->buf_;
+  const size_t current_size = bw->cur_ - bw->buf_;
   const uint64_t size_required_64b = (uint64_t)current_size + extra_size;
   const size_t size_required = (size_t)size_required_64b;
   if (size_required != size_required_64b) {
     bw->error_ = 1;
     return 0;
   }
-  if (bw->max_bytes_ > 0 && size_required <= bw->max_bytes_) return 1;
-  allocated_size = (3 * bw->max_bytes_) >> 1;
+  if (max_bytes > 0 && size_required <= max_bytes) return 1;
+  allocated_size = (3 * max_bytes) >> 1;
   if (allocated_size < size_required) allocated_size = size_required;
   // make allocated size multiple of 1k
   allocated_size = (((allocated_size >> 10) + 1) << 10);
@@ -215,11 +250,13 @@ static int VP8LBitWriterResize(VP8LBitWriter* const bw, size_t extra_size) {
     bw->error_ = 1;
     return 0;
   }
-  memcpy(allocated_buf, bw->buf_, current_size);
+  if (current_size > 0) {
+    memcpy(allocated_buf, bw->buf_, current_size);
+  }
   free(bw->buf_);
   bw->buf_ = allocated_buf;
-  bw->max_bytes_ = allocated_size;
-  memset(allocated_buf + current_size, 0, allocated_size - current_size);
+  bw->cur_ = bw->buf_ + current_size;
+  bw->end_ = bw->buf_ + allocated_size;
   return 1;
 }
 
@@ -236,46 +273,37 @@ void VP8LBitWriterDestroy(VP8LBitWriter* const bw) {
 }
 
 void VP8LWriteBits(VP8LBitWriter* const bw, int n_bits, uint32_t bits) {
-  if (n_bits < 1) return;
-#if !defined(__BIG_ENDIAN__)
-  // Technically, this branch of the code can write up to 25 bits at a time,
-  // but in prefix encoding, the maximum number of bits written is 18 at a time.
-  {
-    uint8_t* const p = &bw->buf_[bw->bit_pos_ >> 3];
-    uint32_t v = *(const uint32_t*)p;
-    v |= bits << (bw->bit_pos_ & 7);
-    *(uint32_t*)p = v;
-    bw->bit_pos_ += n_bits;
-  }
-#else  // BIG_ENDIAN
-  {
-    uint8_t* p = &bw->buf_[bw->bit_pos_ >> 3];
-    const int bits_reserved_in_first_byte = bw->bit_pos_ & 7;
-    const int bits_left_to_write = n_bits - 8 + bits_reserved_in_first_byte;
-    // implicit & 0xff is assumed for uint8_t arithmetic
-    *p++ |= bits << bits_reserved_in_first_byte;
-    bits >>= 8 - bits_reserved_in_first_byte;
-    if (bits_left_to_write >= 1) {
-      *p++ = bits;
-      bits >>= 8;
-      if (bits_left_to_write >= 9) {
-        *p++ = bits;
-        bits >>= 8;
+  if (n_bits <= 0) return;
+  bw->bits_ |= (vp8l_atype_t)bits << bw->used_;
+  bw->used_ += n_bits;
+  if (bw->used_ > VP8L_WRITER_BITS) {
+    if (bw->cur_ + VP8L_WRITER_BYTES > bw->end_) {
+      const uint64_t extra_size = (bw->end_ - bw->buf_) + MIN_EXTRA_SIZE;
+      if (extra_size != (size_t)extra_size ||
+          !VP8LBitWriterResize(bw, (size_t)extra_size)) {
+        bw->cur_ = bw->buf_;
+        bw->error_ = 1;
+        return;
       }
     }
-    assert(n_bits <= 25);
-    *p = bits;
-    bw->bit_pos_ += n_bits;
+    *(vp8l_wtype_t*)bw->cur_ = (vp8l_wtype_t)WSWAP((vp8l_wtype_t)bw->bits_);
+    bw->cur_ += VP8L_WRITER_BYTES;
+    bw->bits_ >>= VP8L_WRITER_BITS;
+    bw->used_ -= VP8L_WRITER_BITS;
   }
-#endif
-  if ((bw->bit_pos_ >> 3) > (bw->max_bytes_ - 8)) {
-    const uint64_t extra_size = 32768ULL + bw->max_bytes_;
-    if (extra_size != (size_t)extra_size ||
-        !VP8LBitWriterResize(bw, (size_t)extra_size)) {
-      bw->bit_pos_ = 0;
-      bw->error_ = 1;
+}
+
+uint8_t* VP8LBitWriterFinish(VP8LBitWriter* const bw) {
+  // flush leftover bits
+  if (VP8LBitWriterResize(bw, (bw->used_ + 7) >> 3)) {
+    while (bw->used_ > 0) {
+      *bw->cur_++ = bw->bits_;   // & 0xff is implied here
+      bw->bits_ >>= 8;
+      bw->used_ -= 8;
     }
+    bw->used_ = 0;
   }
+  return bw->buf_;
 }
 
 //------------------------------------------------------------------------------
