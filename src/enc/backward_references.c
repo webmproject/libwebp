@@ -815,24 +815,27 @@ int VP8LGetBackwardReferences(int width, int height,
   return ok;
 }
 
-// Returns 1 on success.
-static int ComputeCacheHistogram(const uint32_t* const argb,
+// Returns entropy for the given cache bits.
+static double ComputeCacheEntropy(const uint32_t* const argb,
                                  int xsize, int ysize,
                                  const VP8LBackwardRefs* const refs,
-                                 int cache_bits,
-                                 VP8LHistogram* const histo) {
+                                  int cache_bits) {
   int pixel_index = 0;
   int i;
   uint32_t k;
-  VP8LColorCache hashers;
   const int use_color_cache = (cache_bits > 0);
   int cc_init = 0;
+  double entropy;
+  const double kSmallPenaltyForLargeCache = 4.0;
+  VP8LColorCache hashers;
+  VP8LHistogram histo;
 
   if (use_color_cache) {
     cc_init = VP8LColorCacheInit(&hashers, cache_bits);
-    if (!cc_init) return 0;
+    if (!cc_init) return 1e99;
   }
 
+  VP8LHistogramInit(&histo, cache_bits);
   for (i = 0; i < refs->size; ++i) {
     const PixOrCopy* const v = &refs->refs[i];
     if (PixOrCopyIsLiteral(v)) {
@@ -841,12 +844,12 @@ static int ComputeCacheHistogram(const uint32_t* const argb,
         // push pixel as a cache index
         const int ix = VP8LColorCacheGetIndex(&hashers, argb[pixel_index]);
         const PixOrCopy token = PixOrCopyCreateCacheIdx(ix);
-        VP8LHistogramAddSinglePixOrCopy(histo, &token);
+        VP8LHistogramAddSinglePixOrCopy(&histo, &token);
       } else {
-        VP8LHistogramAddSinglePixOrCopy(histo, v);
+        VP8LHistogramAddSinglePixOrCopy(&histo, v);
       }
     } else {
-      VP8LHistogramAddSinglePixOrCopy(histo, v);
+      VP8LHistogramAddSinglePixOrCopy(&histo, v);
     }
     if (use_color_cache) {
       for (k = 0; k < PixOrCopyLength(v); ++k) {
@@ -858,34 +861,38 @@ static int ComputeCacheHistogram(const uint32_t* const argb,
   assert(pixel_index == xsize * ysize);
   (void)xsize;  // xsize is not used in non-debug compilations otherwise.
   (void)ysize;  // ysize is not used in non-debug compilations otherwise.
+  entropy = VP8LHistogramEstimateBits(&histo) +
+      kSmallPenaltyForLargeCache * cache_bits;
   if (cc_init) VP8LColorCacheClear(&hashers);
-  return 1;
+  return entropy;
 }
 
 // Returns how many bits are to be used for a color cache.
 int VP8LCalculateEstimateForCacheSize(const uint32_t* const argb,
-                                      int xsize, int ysize,
+                                      int xsize, int ysize, int quality,
                                       int* const best_cache_bits) {
   int ok = 0;
   int cache_bits;
+  // Number of tries to get optimal cache-bits after finding a local minima.
+  const int max_tries_after_min = 3 + (quality >> 4);
+  int num_tries_after_min = 0;
   double lowest_entropy = 1e99;
   VP8LBackwardRefs refs;
-  static const double kSmallPenaltyForLargeCache = 4.0;
-  static const int quality = 30;
   if (!VP8LBackwardRefsAlloc(&refs, xsize * ysize) ||
       !BackwardReferencesHashChain(xsize, ysize, argb, 0, quality, &refs)) {
     goto Error;
   }
-  for (cache_bits = 0; cache_bits <= MAX_COLOR_CACHE_BITS; ++cache_bits) {
-    double cur_entropy;
-    VP8LHistogram histo;
-    VP8LHistogramInit(&histo, cache_bits);
-    ComputeCacheHistogram(argb, xsize, ysize, &refs, cache_bits, &histo);
-    cur_entropy = VP8LHistogramEstimateBits(&histo) +
-        kSmallPenaltyForLargeCache * cache_bits;
-    if (cache_bits == 0 || cur_entropy < lowest_entropy) {
+  // The entropy is generally lower for higher cache_bits. Start searching from
+  // the highest value and settle for a local minima.
+  for (cache_bits = MAX_COLOR_CACHE_BITS;
+       cache_bits >= 0 && num_tries_after_min < max_tries_after_min;
+       --cache_bits, ++num_tries_after_min) {
+    const double cur_entropy = ComputeCacheEntropy(argb, xsize, ysize,
+                                                   &refs, cache_bits);
+    if (cur_entropy < lowest_entropy) {
       *best_cache_bits = cache_bits;
       lowest_entropy = cur_entropy;
+      num_tries_after_min = 0;
     }
   }
   ok = 1;

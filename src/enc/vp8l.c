@@ -1042,7 +1042,8 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
 
   if (enc->cache_bits_ > 0) {
     if (!VP8LCalculateEstimateForCacheSize(enc->argb_, enc->current_width_,
-                                           height, &enc->cache_bits_)) {
+                                           height, quality,
+                                           &enc->cache_bits_)) {
       err = VP8_ENC_ERROR_INVALID_CONFIGURATION;
       goto Error;
     }

@@ -142,7 +142,7 @@ int VP8LGetBackwardReferences(int width, int height,
 
 // Produce an estimate for a good color cache size for the image.
 int VP8LCalculateEstimateForCacheSize(const uint32_t* const argb,
-                                      int xsize, int ysize,
+                                      int xsize, int ysize, int quality,
                                       int* const best_cache_bits);
 
 #ifdef __cplusplus
