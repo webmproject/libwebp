@@ -297,7 +297,7 @@ uint8_t* VP8LBitWriterFinish(VP8LBitWriter* const bw) {
   // flush leftover bits
   if (VP8LBitWriterResize(bw, (bw->used_ + 7) >> 3)) {
     while (bw->used_ > 0) {
-      *bw->cur_++ = bw->bits_;   // & 0xff is implied here
+      *bw->cur_++ = (uint8_t)bw->bits_;
       bw->bits_ >>= 8;
       bw->used_ -= 8;
     }
