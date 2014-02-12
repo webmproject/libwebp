@@ -817,8 +817,8 @@ int VP8LGetBackwardReferences(int width, int height,
 
 // Returns entropy for the given cache bits.
 static double ComputeCacheEntropy(const uint32_t* const argb,
-                                 int xsize, int ysize,
-                                 const VP8LBackwardRefs* const refs,
+                                  int xsize, int ysize,
+                                  const VP8LBackwardRefs* const refs,
                                   int cache_bits) {
   int pixel_index = 0;
   int i;
