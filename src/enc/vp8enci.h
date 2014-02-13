@@ -166,8 +166,8 @@ typedef int64_t score_t;     // type used for scores, rate, distortion
 #define BIAS(b)  ((b) << (QFIX - 8))
 // Fun fact: this is the _only_ line where we're actually being lossy and
 // discarding bits.
-static WEBP_INLINE int QUANTDIV(int n, int iQ, int B) {
-  return (n * iQ + B) >> QFIX;
+static WEBP_INLINE int QUANTDIV(uint32_t n, uint32_t iQ, uint32_t B) {
+  return (int)((n * iQ + B) >> QFIX);
 }
 
 // size of histogram used by CollectHistogram.
@@ -236,8 +236,8 @@ typedef struct {
 typedef struct VP8Matrix {
   uint16_t q_[16];        // quantizer steps
   uint16_t iq_[16];       // reciprocals, fixed point.
-  uint16_t bias_[16];     // rounding bias
-  uint16_t zthresh_[16];  // value under which a coefficient is zeroed
+  uint32_t bias_[16];     // rounding bias
+  uint32_t zthresh_[16];  // value below which a coefficient is zeroed
   uint16_t sharpen_[16];  // frequency boosters for slight sharpening
 } VP8Matrix;
 

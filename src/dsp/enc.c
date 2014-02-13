@@ -632,16 +632,17 @@ static int QuantizeBlock(int16_t in[16], int16_t out[16],
   for (; n < 16; ++n) {
     const int j = kZigzag[n];
     const int sign = (in[j] < 0);
-    const int coeff = (sign ? -in[j] : in[j]) + mtx->sharpen_[j];
+    const uint32_t coeff = (sign ? -in[j] : in[j]) + mtx->sharpen_[j];
     if (coeff > mtx->zthresh_[j]) {
-      const int Q = mtx->q_[j];
-      const int iQ = mtx->iq_[j];
-      const int B = mtx->bias_[j];
-      out[n] = QUANTDIV(coeff, iQ, B);
-      if (out[n] > MAX_LEVEL) out[n] = MAX_LEVEL;
-      if (sign) out[n] = -out[n];
-      in[j] = out[n] * Q;
-      if (out[n]) last = n;
+      const uint32_t Q = mtx->q_[j];
+      const uint32_t iQ = mtx->iq_[j];
+      const uint32_t B = mtx->bias_[j];
+      int level = QUANTDIV(coeff, iQ, B);
+      if (level > MAX_LEVEL) level = MAX_LEVEL;
+      if (sign) level = -level;
+      in[j] = level * Q;
+      out[n] = level;
+      if (level) last = n;
     } else {
       out[n] = 0;
       in[j] = 0;
@@ -656,17 +657,18 @@ static int QuantizeBlockWHT(int16_t in[16], int16_t out[16],
   for (n = 0; n < 16; ++n) {
     const int j = kZigzag[n];
     const int sign = (in[j] < 0);
-    const int coeff = sign ? -in[j] : in[j];
+    const uint32_t coeff = sign ? -in[j] : in[j];
     assert(mtx->sharpen_[j] == 0);
     if (coeff > mtx->zthresh_[j]) {
-      const int Q = mtx->q_[j];
-      const int iQ = mtx->iq_[j];
-      const int B = mtx->bias_[j];
-      out[n] = QUANTDIV(coeff, iQ, B);
-      if (out[n] > MAX_LEVEL) out[n] = MAX_LEVEL;
-      if (sign) out[n] = -out[n];
-      in[j] = out[n] * Q;
-      if (out[n]) last = n;
+      const uint32_t Q = mtx->q_[j];
+      const uint32_t iQ = mtx->iq_[j];
+      const uint32_t B = mtx->bias_[j];
+      int level = QUANTDIV(coeff, iQ, B);
+      if (level > MAX_LEVEL) level = MAX_LEVEL;
+      if (sign) level = -level;
+      in[j] = level * Q;
+      out[n] = level;
+      if (level) last = n;
     } else {
       out[n] = 0;
       in[j] = 0;

@@ -592,13 +592,13 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
   // traverse trellis.
   for (n = first; n <= last; ++n) {
     const int j  = kZigzag[n];
-    const int Q  = mtx->q_[j];
-    const int iQ = mtx->iq_[j];
-    const int B = BIAS(0x00);     // neutral bias
+    const uint32_t Q  = mtx->q_[j];
+    const uint32_t iQ = mtx->iq_[j];
+    const uint32_t B = BIAS(0x00);     // neutral bias
     // note: it's important to take sign of the _original_ coeff,
     // so we don't have to consider level < 0 afterward.
     const int sign = (in[j] < 0);
-    const int coeff0 = (sign ? -in[j] : in[j]) + mtx->sharpen_[j];
+    const uint32_t coeff0 = (sign ? -in[j] : in[j]) + mtx->sharpen_[j];
     int level0 = QUANTDIV(coeff0, iQ, B);
     if (level0 > MAX_LEVEL) level0 = MAX_LEVEL;
 

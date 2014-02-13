@@ -804,9 +804,11 @@ static int Disto16x16SSE2(const uint8_t* const a, const uint8_t* const b,
 // Quantization
 //
 
-// Simple quantization
-static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
-                             int n, const VP8Matrix* const mtx) {
+#define QFIX2 0
+static WEBP_INLINE int QuantizeBlock(int16_t in[16], int16_t out[16],
+                                     int n, int shift,
+                                     const uint16_t* const sharpen,
+                                     const VP8Matrix* const mtx) {
   const __m128i max_coeff_2047 = _mm_set1_epi16(MAX_LEVEL);
   const __m128i zero = _mm_setzero_si128();
   __m128i coeff0, coeff8;
@@ -818,18 +820,14 @@ static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
   //                  we can use _mm_load_si128 instead of _mm_loadu_si128.
   __m128i in0 = _mm_loadu_si128((__m128i*)&in[0]);
   __m128i in8 = _mm_loadu_si128((__m128i*)&in[8]);
-  const __m128i sharpen0 = _mm_loadu_si128((__m128i*)&mtx->sharpen_[0]);
-  const __m128i sharpen8 = _mm_loadu_si128((__m128i*)&mtx->sharpen_[8]);
   const __m128i iq0 = _mm_loadu_si128((__m128i*)&mtx->iq_[0]);
   const __m128i iq8 = _mm_loadu_si128((__m128i*)&mtx->iq_[8]);
-  const __m128i bias0 = _mm_loadu_si128((__m128i*)&mtx->bias_[0]);
-  const __m128i bias8 = _mm_loadu_si128((__m128i*)&mtx->bias_[8]);
   const __m128i q0 = _mm_loadu_si128((__m128i*)&mtx->q_[0]);
   const __m128i q8 = _mm_loadu_si128((__m128i*)&mtx->q_[8]);
 
-  // sign(in) = in >> 15  (0x0000 if positive, 0xffff if negative)
-  const __m128i sign0 = _mm_srai_epi16(in0, 15);
-  const __m128i sign8 = _mm_srai_epi16(in8, 15);
+  // extract sign(in)  (0x0000 if positive, 0xffff if negative)
+  const __m128i sign0 = _mm_cmpgt_epi16(zero, in0);
+  const __m128i sign8 = _mm_cmpgt_epi16(zero, in8);
 
   // coeff = abs(in) = (in ^ sign) - sign
   coeff0 = _mm_xor_si128(in0, sign0);
@@ -838,36 +836,39 @@ static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
   coeff8 = _mm_sub_epi16(coeff8, sign8);
 
   // coeff = abs(in) + sharpen
-  coeff0 = _mm_add_epi16(coeff0, sharpen0);
-  coeff8 = _mm_add_epi16(coeff8, sharpen8);
+  if (sharpen != NULL) {
+    const __m128i sharpen0 = _mm_loadu_si128((__m128i*)&sharpen[0]);
+    const __m128i sharpen8 = _mm_loadu_si128((__m128i*)&sharpen[8]);
+    coeff0 = _mm_add_epi16(coeff0, sharpen0);
+    coeff8 = _mm_add_epi16(coeff8, sharpen8);
+  }
 
-  // out = (coeff * iQ + B) >> QFIX;
+  // out = (coeff * iQ + B) >> (QFIX + QFIX2 - shift)
   {
     // doing calculations with 32b precision (QFIX=17)
     // out = (coeff * iQ)
-    __m128i coeff_iQ0H = _mm_mulhi_epu16(coeff0, iq0);
-    __m128i coeff_iQ0L = _mm_mullo_epi16(coeff0, iq0);
-    __m128i coeff_iQ8H = _mm_mulhi_epu16(coeff8, iq8);
-    __m128i coeff_iQ8L = _mm_mullo_epi16(coeff8, iq8);
+    const __m128i coeff_iQ0H = _mm_mulhi_epu16(coeff0, iq0);
+    const __m128i coeff_iQ0L = _mm_mullo_epi16(coeff0, iq0);
+    const __m128i coeff_iQ8H = _mm_mulhi_epu16(coeff8, iq8);
+    const __m128i coeff_iQ8L = _mm_mullo_epi16(coeff8, iq8);
     __m128i out_00 = _mm_unpacklo_epi16(coeff_iQ0L, coeff_iQ0H);
     __m128i out_04 = _mm_unpackhi_epi16(coeff_iQ0L, coeff_iQ0H);
     __m128i out_08 = _mm_unpacklo_epi16(coeff_iQ8L, coeff_iQ8H);
     __m128i out_12 = _mm_unpackhi_epi16(coeff_iQ8L, coeff_iQ8H);
-    // expand bias from 16b to 32b
-    __m128i bias_00 = _mm_unpacklo_epi16(bias0, zero);
-    __m128i bias_04 = _mm_unpackhi_epi16(bias0, zero);
-    __m128i bias_08 = _mm_unpacklo_epi16(bias8, zero);
-    __m128i bias_12 = _mm_unpackhi_epi16(bias8, zero);
     // out = (coeff * iQ + B)
+    const __m128i bias_00 = _mm_loadu_si128((__m128i*)&mtx->bias_[0]);
+    const __m128i bias_04 = _mm_loadu_si128((__m128i*)&mtx->bias_[4]);
+    const __m128i bias_08 = _mm_loadu_si128((__m128i*)&mtx->bias_[8]);
+    const __m128i bias_12 = _mm_loadu_si128((__m128i*)&mtx->bias_[12]);
     out_00 = _mm_add_epi32(out_00, bias_00);
     out_04 = _mm_add_epi32(out_04, bias_04);
     out_08 = _mm_add_epi32(out_08, bias_08);
     out_12 = _mm_add_epi32(out_12, bias_12);
-    // out = (coeff * iQ + B) >> QFIX;
-    out_00 = _mm_srai_epi32(out_00, QFIX);
-    out_04 = _mm_srai_epi32(out_04, QFIX);
-    out_08 = _mm_srai_epi32(out_08, QFIX);
-    out_12 = _mm_srai_epi32(out_12, QFIX);
+    // out = QUANTDIV(coeff, iQ, B, QFIX + QFIX2 - shift)
+    out_00 = _mm_srai_epi32(out_00, QFIX + QFIX2 - shift);
+    out_04 = _mm_srai_epi32(out_04, QFIX + QFIX2 - shift);
+    out_08 = _mm_srai_epi32(out_08, QFIX + QFIX2 - shift);
+    out_12 = _mm_srai_epi32(out_12, QFIX + QFIX2 - shift);
 
     // pack result as 16b
     out0 = _mm_packs_epi32(out_00, out_04);
@@ -916,19 +917,18 @@ static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
   }
 
   // detect if all 'out' values are zeroes or not
-  {
-    int32_t tmp[4];
-    _mm_storeu_si128((__m128i*)tmp, packed_out);
-    if (n) {
-      tmp[0] &= ~0xff;
-    }
-    return (tmp[3] || tmp[2] || tmp[1] || tmp[0]);
-  }
+  if (n) packed_out = _mm_srli_si128(packed_out, 1);   // ignore DC for n == 1
+  return (_mm_movemask_epi8(_mm_cmpeq_epi8(packed_out, zero)) != 0xffff);
+}
+
+static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
+                             int n, const VP8Matrix* const mtx) {
+  return QuantizeBlock(in, out, n, 0, &mtx->sharpen_[0], mtx);
 }
 
 static int QuantizeBlockWHTSSE2(int16_t in[16], int16_t out[16],
                                 const VP8Matrix* const mtx) {
-  return QuantizeBlockSSE2(in, out, 0, mtx);
+  return QuantizeBlock(in, out, 0, 0, &mtx->sharpen_[0], mtx);
 }
 
 #endif   // WEBP_USE_SSE2
