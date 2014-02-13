@@ -315,34 +315,38 @@ static void TransformTwo(const int16_t* in, uint8_t* dst, int do_two) {
 }
 
 static void TransformDC(const int16_t* in, uint8_t* dst) {
-  const int DC = (in[0] + 4) >> 3;
-  const int kBPS = BPS;
-  __asm__ volatile (
-    "vdup.16         q1, %[DC]        \n"
+  const int16x8_t DC = vdupq_n_s16((in[0] + 4) >> 3);
+  uint32x2_t dst01 = {0, 0};
+  uint32x2_t dst23 = {0, 0};
 
-    "vld1.32         d0[0], [%[dst]], %[kBPS]    \n"
-    "vld1.32         d1[0], [%[dst]], %[kBPS]    \n"
-    "vld1.32         d0[1], [%[dst]], %[kBPS]    \n"
-    "vld1.32         d1[1], [%[dst]], %[kBPS]    \n"
+  // Load the source pixels.
+  dst01 = vset_lane_u32(*(uint32_t*)(dst + 0 * BPS), dst01, 0);
+  dst23 = vset_lane_u32(*(uint32_t*)(dst + 2 * BPS), dst23, 0);
+  dst01 = vset_lane_u32(*(uint32_t*)(dst + 1 * BPS), dst01, 1);
+  dst23 = vset_lane_u32(*(uint32_t*)(dst + 3 * BPS), dst23, 1);
 
-    "sub         %[dst], %[dst], %[kBPS], lsl #2 \n"
+  {
+    // Convert to 16b.
+    int16x8_t dst01_s16 =
+        vreinterpretq_s16_u16(vmovl_u8(vreinterpret_u8_u32(dst01)));
+    int16x8_t dst23_s16 =
+        vreinterpretq_s16_u16(vmovl_u8(vreinterpret_u8_u32(dst23)));
 
-    // add DC and convert to s16.
-    "vaddw.u8        q2, q1, d0                  \n"
-    "vaddw.u8        q3, q1, d1                  \n"
-    // convert back to u8 with saturation
-    "vqmovun.s16     d0,  q2                     \n"
-    "vqmovun.s16     d1,  q3                     \n"
+    // Add the inverse transform.
+    dst01_s16 = vaddq_s16(dst01_s16, DC);
+    dst23_s16 = vaddq_s16(dst23_s16, DC);
+    {
+      // Unsigned saturate to 8b.
+      const uint8x8_t dst01_u8 = vqmovun_s16(dst01_s16);
+      const uint8x8_t dst23_u8 = vqmovun_s16(dst23_s16);
 
-    "vst1.32         d0[0], [%[dst]], %[kBPS]    \n"
-    "vst1.32         d1[0], [%[dst]], %[kBPS]    \n"
-    "vst1.32         d0[1], [%[dst]], %[kBPS]    \n"
-    "vst1.32         d1[1], [%[dst]]             \n"
-    : [in] "+r"(in), [dst] "+r"(dst)  /* modified registers */
-    : [kBPS] "r"(kBPS),   /* constants */
-      [DC] "r"(DC)
-    : "memory", "q0", "q1", "q2", "q3"  /* clobbered */
-  );
+      // Store the results.
+      *(int*)(dst + 0 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst01_u8), 0);
+      *(int*)(dst + 1 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst01_u8), 1);
+      *(int*)(dst + 2 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst23_u8), 0);
+      *(int*)(dst + 3 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst23_u8), 1);
+    }
+  }
 }
 
 static void TransformWHT(const int16_t* in, int16_t* out) {
