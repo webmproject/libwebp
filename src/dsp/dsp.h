@@ -127,6 +127,13 @@ extern const VP8PredFunc VP8PredLuma16[/* NUM_B_DC_MODES */];
 extern const VP8PredFunc VP8PredChroma8[/* NUM_B_DC_MODES */];
 extern const VP8PredFunc VP8PredLuma4[/* NUM_BMODES */];
 
+// clipping tables (for filtering)
+extern const int8_t* const VP8ksclip1;  // clips [-1020, 1020] to [-128, 127]
+extern const int8_t* const VP8ksclip2;  // clips [-112, 112] to [-16, 15]
+extern const uint8_t* const VP8kclip1;  // clips [-255,511] to [0,255]
+extern const uint8_t* const VP8kabs0;   // abs(x) for x in [-255,255]
+void VP8InitClipTables(void);           // must be called first
+
 // simple filter (only for luma)
 typedef void (*VP8SimpleFilterFunc)(uint8_t* p, int stride, int thresh);
 extern VP8SimpleFilterFunc VP8SimpleVFilter16;
