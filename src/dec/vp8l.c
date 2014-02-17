@@ -420,7 +420,7 @@ static int Export(WebPRescaler* const rescaler, WEBP_CSP_MODE colorspace,
   int num_lines_out = 0;
   while (WebPRescalerHasPendingOutput(rescaler)) {
     uint8_t* const dst = rgba + num_lines_out * rgba_stride;
-    WebPRescalerExportRow(rescaler);
+    WebPRescalerExportRow(rescaler, 0);
     WebPMultARGBRow(src, dst_width, 1);
     VP8LConvertFromBGRA(src, dst_width, colorspace, dst);
     ++num_lines_out;
@@ -537,7 +537,7 @@ static int ExportYUVA(const VP8LDecoder* const dec, int y_pos) {
   const int dst_width = rescaler->dst_width;
   int num_lines_out = 0;
   while (WebPRescalerHasPendingOutput(rescaler)) {
-    WebPRescalerExportRow(rescaler);
+    WebPRescalerExportRow(rescaler, 0);
     WebPMultARGBRow(src, dst_width, 1);
     ConvertToYUVA(src, dst_width, y_pos, dec->output_);
     ++y_pos;
