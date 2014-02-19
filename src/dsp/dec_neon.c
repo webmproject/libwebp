@@ -89,6 +89,21 @@
   "vst2.8   {" #c1"[6], " #c2"[6]}," #p "," #stride " \n"                      \
   "vst2.8   {" #c1"[7], " #c2"[7]}," #p "," #stride " \n"
 
+// Performs unsigned 8b saturation on 'dst01' and 'dst23' storing the result
+// to the corresponding rows of 'dst'.
+static WEBP_INLINE void SaturateAndStore4x4(uint8_t* const dst,
+                                            int16x8_t dst01, int16x8_t dst23) {
+  // Unsigned saturate to 8b.
+  const uint8x8_t dst01_u8 = vqmovun_s16(dst01);
+  const uint8x8_t dst23_u8 = vqmovun_s16(dst23);
+
+  // Store the results.
+  *(int*)(dst + 0 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst01_u8), 0);
+  *(int*)(dst + 1 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst01_u8), 1);
+  *(int*)(dst + 2 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst23_u8), 0);
+  *(int*)(dst + 3 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst23_u8), 1);
+}
+
 //-----------------------------------------------------------------------------
 // Simple In-loop filtering (Paragraph 15.2)
 
@@ -335,17 +350,8 @@ static void TransformDC(const int16_t* in, uint8_t* dst) {
     // Add the inverse transform.
     dst01_s16 = vaddq_s16(dst01_s16, DC);
     dst23_s16 = vaddq_s16(dst23_s16, DC);
-    {
-      // Unsigned saturate to 8b.
-      const uint8x8_t dst01_u8 = vqmovun_s16(dst01_s16);
-      const uint8x8_t dst23_u8 = vqmovun_s16(dst23_s16);
 
-      // Store the results.
-      *(int*)(dst + 0 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst01_u8), 0);
-      *(int*)(dst + 1 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst01_u8), 1);
-      *(int*)(dst + 2 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst23_u8), 0);
-      *(int*)(dst + 3 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst23_u8), 1);
-    }
+    SaturateAndStore4x4(dst, dst01_s16, dst23_s16);
   }
 }
 
