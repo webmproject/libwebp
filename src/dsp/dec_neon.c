@@ -89,6 +89,21 @@
   "vst2.8   {" #c1"[6], " #c2"[6]}," #p "," #stride " \n"                      \
   "vst2.8   {" #c1"[7], " #c2"[7]}," #p "," #stride " \n"
 
+// Performs unsigned 8b saturation on 'dst01' and 'dst23' storing the result
+// to the corresponding rows of 'dst'.
+static WEBP_INLINE void SaturateAndStore4x4(uint8_t* const dst,
+                                            int16x8_t dst01, int16x8_t dst23) {
+  // Unsigned saturate to 8b.
+  const uint8x8_t dst01_u8 = vqmovun_s16(dst01);
+  const uint8x8_t dst23_u8 = vqmovun_s16(dst23);
+
+  // Store the results.
+  *(int*)(dst + 0 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst01_u8), 0);
+  *(int*)(dst + 1 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst01_u8), 1);
+  *(int*)(dst + 2 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst23_u8), 0);
+  *(int*)(dst + 3 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst23_u8), 1);
+}
+
 //-----------------------------------------------------------------------------
 // Simple In-loop filtering (Paragraph 15.2)
 
@@ -315,34 +330,29 @@ static void TransformTwo(const int16_t* in, uint8_t* dst, int do_two) {
 }
 
 static void TransformDC(const int16_t* in, uint8_t* dst) {
-  const int DC = (in[0] + 4) >> 3;
-  const int kBPS = BPS;
-  __asm__ volatile (
-    "vdup.16         q1, %[DC]        \n"
+  const int16x8_t DC = vdupq_n_s16((in[0] + 4) >> 3);
+  uint32x2_t dst01 = {0, 0};
+  uint32x2_t dst23 = {0, 0};
 
-    "vld1.32         d0[0], [%[dst]], %[kBPS]    \n"
-    "vld1.32         d1[0], [%[dst]], %[kBPS]    \n"
-    "vld1.32         d0[1], [%[dst]], %[kBPS]    \n"
-    "vld1.32         d1[1], [%[dst]], %[kBPS]    \n"
+  // Load the source pixels.
+  dst01 = vset_lane_u32(*(uint32_t*)(dst + 0 * BPS), dst01, 0);
+  dst23 = vset_lane_u32(*(uint32_t*)(dst + 2 * BPS), dst23, 0);
+  dst01 = vset_lane_u32(*(uint32_t*)(dst + 1 * BPS), dst01, 1);
+  dst23 = vset_lane_u32(*(uint32_t*)(dst + 3 * BPS), dst23, 1);
 
-    "sub         %[dst], %[dst], %[kBPS], lsl #2 \n"
+  {
+    // Convert to 16b.
+    int16x8_t dst01_s16 =
+        vreinterpretq_s16_u16(vmovl_u8(vreinterpret_u8_u32(dst01)));
+    int16x8_t dst23_s16 =
+        vreinterpretq_s16_u16(vmovl_u8(vreinterpret_u8_u32(dst23)));
 
-    // add DC and convert to s16.
-    "vaddw.u8        q2, q1, d0                  \n"
-    "vaddw.u8        q3, q1, d1                  \n"
-    // convert back to u8 with saturation
-    "vqmovun.s16     d0,  q2                     \n"
-    "vqmovun.s16     d1,  q3                     \n"
+    // Add the inverse transform.
+    dst01_s16 = vaddq_s16(dst01_s16, DC);
+    dst23_s16 = vaddq_s16(dst23_s16, DC);
 
-    "vst1.32         d0[0], [%[dst]], %[kBPS]    \n"
-    "vst1.32         d1[0], [%[dst]], %[kBPS]    \n"
-    "vst1.32         d0[1], [%[dst]], %[kBPS]    \n"
-    "vst1.32         d1[1], [%[dst]]             \n"
-    : [in] "+r"(in), [dst] "+r"(dst)  /* modified registers */
-    : [kBPS] "r"(kBPS),   /* constants */
-      [DC] "r"(DC)
-    : "memory", "q0", "q1", "q2", "q3"  /* clobbered */
-  );
+    SaturateAndStore4x4(dst, dst01_s16, dst23_s16);
+  }
 }
 
 static void TransformWHT(const int16_t* in, int16_t* out) {
@@ -418,45 +428,36 @@ static void TransformWHT(const int16_t* in, int16_t* out) {
 static void TransformAC3(const int16_t* in, uint8_t* dst) {
   static const int kC1 = 20091 + (1 << 16);
   static const int kC2 = 35468;
-  const int16x8_t A = vdupq_n_s16(in[0] + 4);
-  const int16x8_t c4 = vdupq_n_s16(MUL(in[4], kC2));
-  const int16x8_t d4 = vdupq_n_s16(MUL(in[4], kC1));
+  const int16x4_t A = vdup_n_s16(in[0] + 4);
+  const int16x4_t c4 = vdup_n_s16(MUL(in[4], kC2));
+  const int16x4_t d4 = vdup_n_s16(MUL(in[4], kC1));
   const int c1 = MUL(in[1], kC2);
   const int d1 = MUL(in[1], kC1);
-  const int16x8_t CD = {d1, c1, -c1, -d1, 0, 0, 0, 0};
-  const int16x8_t B = vqaddq_s16(A, CD);
-  const int16x8_t m0 = vqaddq_s16(B, d4);
-  const int16x8_t m1 = vqaddq_s16(B, c4);
-  const int16x8_t m2 = vqsubq_s16(B, c4);
-  const int16x8_t m3 = vqsubq_s16(B, d4);
-  // Load the source pixels and convert to 16b.
-  int16x8_t dst0 = vreinterpretq_s16_u16(
-      vmovl_u8(vcreate_u8(*(uint32_t*)(dst + 0 * BPS))));
-  int16x8_t dst1 = vreinterpretq_s16_u16(
-      vmovl_u8(vcreate_u8(*(uint32_t*)(dst + 1 * BPS))));
-  int16x8_t dst2 = vreinterpretq_s16_u16(
-      vmovl_u8(vcreate_u8(*(uint32_t*)(dst + 2 * BPS))));
-  int16x8_t dst3 = vreinterpretq_s16_u16(
-      vmovl_u8(vcreate_u8(*(uint32_t*)(dst + 3 * BPS))));
+  const int16x4_t CD = {d1, c1, -c1, -d1};
+  const int16x4_t B = vqadd_s16(A, CD);
+  const int16x8_t m0_m1 = vcombine_s16(vqadd_s16(B, d4), vqadd_s16(B, c4));
+  const int16x8_t m2_m3 = vcombine_s16(vqsub_s16(B, c4), vqsub_s16(B, d4));
+  uint32x2_t dst01 = {0, 0};
+  uint32x2_t dst23 = {0, 0};
 
-  // Add the inverse transform.
-  dst0 = vsraq_n_s16(dst0, m0, 3);
-  dst1 = vsraq_n_s16(dst1, m1, 3);
-  dst2 = vsraq_n_s16(dst2, m2, 3);
-  dst3 = vsraq_n_s16(dst3, m3, 3);
+  // Load the source pixels.
+  dst01 = vset_lane_u32(*(uint32_t*)(dst + 0 * BPS), dst01, 0);
+  dst23 = vset_lane_u32(*(uint32_t*)(dst + 2 * BPS), dst23, 0);
+  dst01 = vset_lane_u32(*(uint32_t*)(dst + 1 * BPS), dst01, 1);
+  dst23 = vset_lane_u32(*(uint32_t*)(dst + 3 * BPS), dst23, 1);
 
   {
-    // Unsigned saturate to 8b.
-    const uint8x8_t dst0_ = vqmovun_s16(dst0);
-    const uint8x8_t dst1_ = vqmovun_s16(dst1);
-    const uint8x8_t dst2_ = vqmovun_s16(dst2);
-    const uint8x8_t dst3_ = vqmovun_s16(dst3);
+    // Convert to 16b.
+    int16x8_t dst01_s16 =
+        vreinterpretq_s16_u16(vmovl_u8(vreinterpret_u8_u32(dst01)));
+    int16x8_t dst23_s16 =
+        vreinterpretq_s16_u16(vmovl_u8(vreinterpret_u8_u32(dst23)));
 
-    // Store the results.
-    *(int*)(dst + 0 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst0_), 0);
-    *(int*)(dst + 1 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst1_), 0);
-    *(int*)(dst + 2 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst2_), 0);
-    *(int*)(dst + 3 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst3_), 0);
+    // Add the inverse transform.
+    dst01_s16 = vsraq_n_s16(dst01_s16, m0_m1, 3);
+    dst23_s16 = vsraq_n_s16(dst23_s16, m2_m3, 3);
+
+    SaturateAndStore4x4(dst, dst01_s16, dst23_s16);
   }
 }
 #undef MUL
