@@ -29,6 +29,7 @@ COMMON_SOURCES += yuv.h
 
 ENC_SOURCES =
 ENC_SOURCES += enc.c
+ENC_SOURCES += enc_mips32.c
 ENC_SOURCES += enc_neon.c
 ENC_SOURCES += enc_sse2.c
 
