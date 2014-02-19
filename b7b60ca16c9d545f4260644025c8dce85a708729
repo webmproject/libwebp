@@ -16,6 +16,24 @@
       "revId": "b7b60ca16c9d545f4260644025c8dce85a708729",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//2eM\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-02-19T19:50:37Z",
+      "side": 1,
+      "message": "no because the shared code between the transforms will be the saturate and store; the transform itself will vary (vsraq_n_s16 in ac3\u0027s case)",
+      "parentUuid": "AAAAdn//2kU\u003d",
+      "revId": "b7b60ca16c9d545f4260644025c8dce85a708729",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
