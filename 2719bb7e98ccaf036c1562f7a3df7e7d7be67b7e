@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//2kI\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 452,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-02-19T08:32:07Z",
+      "side": 1,
+      "message": "note: these two function calls are a little scary. Maybe there\u0027s room for a little macro or function to hide that.\nLike: \"int16x8_t ConvertU8ToS16(uint32x2_t x)\"",
+      "revId": "2719bb7e98ccaf036c1562f7a3df7e7d7be67b7e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
