@@ -89,6 +89,11 @@
   "vst2.8   {" #c1"[6], " #c2"[6]}," #p "," #stride " \n"                      \
   "vst2.8   {" #c1"[7], " #c2"[7]}," #p "," #stride " \n"
 
+// Treats 'v' as an uint8x8_t and zero extends to an int16x8_t.
+static WEBP_INLINE int16x8_t ConvertU8ToS16(uint32x2_t v) {
+  return vreinterpretq_s16_u16(vmovl_u8(vreinterpret_u8_u32(v)));
+}
+
 // Performs unsigned 8b saturation on 'dst01' and 'dst23' storing the result
 // to the corresponding rows of 'dst'.
 static WEBP_INLINE void SaturateAndStore4x4(uint8_t* const dst,
@@ -342,10 +347,8 @@ static void TransformDC(const int16_t* in, uint8_t* dst) {
 
   {
     // Convert to 16b.
-    int16x8_t dst01_s16 =
-        vreinterpretq_s16_u16(vmovl_u8(vreinterpret_u8_u32(dst01)));
-    int16x8_t dst23_s16 =
-        vreinterpretq_s16_u16(vmovl_u8(vreinterpret_u8_u32(dst23)));
+    int16x8_t dst01_s16 = ConvertU8ToS16(dst01);
+    int16x8_t dst23_s16 = ConvertU8ToS16(dst23);
 
     // Add the inverse transform.
     dst01_s16 = vaddq_s16(dst01_s16, DC);
@@ -448,10 +451,8 @@ static void TransformAC3(const int16_t* in, uint8_t* dst) {
 
   {
     // Convert to 16b.
-    int16x8_t dst01_s16 =
-        vreinterpretq_s16_u16(vmovl_u8(vreinterpret_u8_u32(dst01)));
-    int16x8_t dst23_s16 =
-        vreinterpretq_s16_u16(vmovl_u8(vreinterpret_u8_u32(dst23)));
+    int16x8_t dst01_s16 = ConvertU8ToS16(dst01);
+    int16x8_t dst23_s16 = ConvertU8ToS16(dst23);
 
     // Add the inverse transform.
     dst01_s16 = vsraq_n_s16(dst01_s16, m0_m1, 3);
