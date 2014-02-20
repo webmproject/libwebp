@@ -298,12 +298,12 @@ static WEBP_INLINE int VP8RGBToY(int r, int g, int b, int rounding) {
   return (luma + rounding) >> YUV_FIX;  // no need to clip
 }
 
-static WEBP_INLINE int VP8_RGB_TO_U(int r, int g, int b, int rounding) {
+static WEBP_INLINE int VP8RGBToU(int r, int g, int b, int rounding) {
   const int u = -11058 * r - 21710 * g + 32768 * b;
   return VP8ClipUV(u, rounding);
 }
 
-static WEBP_INLINE int VP8_RGB_TO_V(int r, int g, int b, int rounding) {
+static WEBP_INLINE int VP8RGBToV(int r, int g, int b, int rounding) {
   const int v = 32768 * r - 27439 * g - 5329 * b;
   return VP8ClipUV(v, rounding);
 }
