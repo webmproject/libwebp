@@ -695,9 +695,8 @@ static int ApplyCrossColorFilter(const VP8LEncoder* const enc,
   const int ccolor_transform_bits = enc->transform_bits_;
   const int transform_width = VP8LSubSampleSize(width, ccolor_transform_bits);
   const int transform_height = VP8LSubSampleSize(height, ccolor_transform_bits);
-  const int step = (quality < 25) ? 32 : (quality > 50) ? 8 : 16;
 
-  VP8LColorSpaceTransform(width, height, ccolor_transform_bits, step,
+  VP8LColorSpaceTransform(width, height, ccolor_transform_bits, quality,
                           enc->argb_, enc->transform_data_);
   VP8LWriteBits(bw, 1, TRANSFORM_PRESENT);
   VP8LWriteBits(bw, 2, CROSS_COLOR_TRANSFORM);

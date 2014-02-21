@@ -66,7 +66,7 @@ void VP8LResidualImage(int width, int height, int bits,
                        uint32_t* const argb, uint32_t* const argb_scratch,
                        uint32_t* const image);
 
-void VP8LColorSpaceTransform(int width, int height, int bits, int step,
+void VP8LColorSpaceTransform(int width, int height, int bits, int quality,
                              uint32_t* const argb, uint32_t* image);
 
 //------------------------------------------------------------------------------
