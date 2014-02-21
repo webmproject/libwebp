@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//2IM\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-02-21T07:49:54Z",
+      "side": 1,
+      "message": "can\u0027t you merge the \"dst +\u003d 16;\" on each line here?\nIt will likely be combined into a single NEON instruction\nby the compiler (store-and-advance-pointer), maybe...\n\nthen you wouldn\u0027t need the \u0027out +\u003d 64;\u0027 at line 419 and seq.",
+      "revId": "1c1f46f90d6a7cbd395539f73db6017493b2e3d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//2II\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-02-21T07:49:54Z",
+      "side": 1,
+      "message": "just curious: is the loop better than just unrolling by hand the four  instruction?",
+      "revId": "1c1f46f90d6a7cbd395539f73db6017493b2e3d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
