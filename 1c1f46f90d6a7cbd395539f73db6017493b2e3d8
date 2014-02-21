@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//2Hk\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-02-21T08:36:30Z",
+      "side": 1,
+      "message": "a reasonable suggestion; with gcc 4.6 there\u0027s no binary difference. I didn\u0027t disassemble or try 4.8 yet",
+      "parentUuid": "AAAAdn//2IM\u003d",
+      "revId": "1c1f46f90d6a7cbd395539f73db6017493b2e3d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//2II\u003d",
         "filename": "src/dsp/dec_neon.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2014-02-21T07:49:54Z",
       "side": 1,
       "message": "just curious: is the loop better than just unrolling by hand the four  instruction?",
+      "revId": "1c1f46f90d6a7cbd395539f73db6017493b2e3d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//2Ho\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-02-21T08:36:30Z",
+      "side": 1,
+      "message": "unrolling this seems to be easy enough for the compiler, but making it explicit is ok too.",
+      "parentUuid": "AAAAdn//2II\u003d",
       "revId": "1c1f46f90d6a7cbd395539f73db6017493b2e3d8",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
