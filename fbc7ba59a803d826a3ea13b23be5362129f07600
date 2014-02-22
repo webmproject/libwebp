@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//1/0\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2014-02-22T06:17:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//2BM\u003d",
+      "revId": "fbc7ba59a803d826a3ea13b23be5362129f07600",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//2BI\u003d",
         "filename": "src/dsp/lossless.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2014-02-22T03:21:58Z",
       "side": 1,
       "message": "ditto",
+      "revId": "fbc7ba59a803d826a3ea13b23be5362129f07600",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//1/w\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2014-02-22T06:17:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//2BI\u003d",
       "revId": "fbc7ba59a803d826a3ea13b23be5362129f07600",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//1/s\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 912,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2014-02-22T06:17:44Z",
+      "side": 1,
+      "message": "Fixed the param ordering. Thanks for catching this.",
+      "parentUuid": "AAAAdn//2BE\u003d",
+      "revId": "fbc7ba59a803d826a3ea13b23be5362129f07600",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//2BA\u003d",
         "filename": "src/dsp/lossless.c",
         "patchSetId": 2
@@ -64,6 +118,24 @@
       "writtenOn": "2014-02-22T03:21:58Z",
       "side": 1,
       "message": "ditto",
+      "revId": "fbc7ba59a803d826a3ea13b23be5362129f07600",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//1/o\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 942,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2014-02-22T06:17:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//2BA\u003d",
       "revId": "fbc7ba59a803d826a3ea13b23be5362129f07600",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -104,6 +176,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//1/k\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1021,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2014-02-22T06:17:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//2Ao\u003d",
+      "revId": "fbc7ba59a803d826a3ea13b23be5362129f07600",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//2Ak\u003d",
         "filename": "src/dsp/lossless.c",
         "patchSetId": 2
@@ -115,6 +205,24 @@
       "writtenOn": "2014-02-22T03:21:58Z",
       "side": 1,
       "message": "this should be aligned with the \u0027(\u0027 from above",
+      "revId": "fbc7ba59a803d826a3ea13b23be5362129f07600",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//1/g\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1033,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2014-02-22T06:17:44Z",
+      "side": 1,
+      "message": "The line break indentation is 4 spaces. Changed the structure a bit and aligned the two \u0027(\u0027.",
+      "parentUuid": "AAAAdn//2Ak\u003d",
       "revId": "fbc7ba59a803d826a3ea13b23be5362129f07600",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
