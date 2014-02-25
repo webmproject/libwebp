@@ -18,6 +18,7 @@
 
 #include "./vp8enci.h"
 #include "./vp8li.h"
+#include "./cost.h"
 #include "../utils/utils.h"
 
 // #define PRINT_MEMORY_INFO
@@ -251,7 +252,7 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
   ResetSegmentHeader(enc);
   ResetFilterHeader(enc);
   ResetBoundaryPredictions(enc);
-
+  VP8GetResidualCostInit();
   VP8EncInitAlpha(enc);
 #ifdef WEBP_EXPERIMENTAL_FEATURES
   VP8EncInitLayer(enc);

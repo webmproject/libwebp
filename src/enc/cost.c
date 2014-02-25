@@ -487,4 +487,228 @@ const uint16_t VP8FixedCostsI4[NUM_BMODES][NUM_BMODES][NUM_BMODES] = {
 };
 
 //------------------------------------------------------------------------------
+// Mode costs
 
+static int GetResidualCost(int ctx0, const VP8Residual* const res) {
+  int n = res->first;
+  // should be prob[VP8EncBands[n]], but it's equivalent for n=0 or 1
+  const int p0 = res->prob[n][ctx0][0];
+  const uint16_t* t = res->cost[n][ctx0];
+  // bit_cost(1, p0) is already incorporated in t[] tables, but only if ctx != 0
+  // (as required by the syntax). For ctx0 == 0, we need to add it here or it'll
+  // be missing during the loop.
+  int cost = (ctx0 == 0) ? VP8BitCost(1, p0) : 0;
+
+  if (res->last < 0) {
+    return VP8BitCost(0, p0);
+  }
+  for (; n < res->last; ++n) {
+    const int v = abs(res->coeffs[n]);
+    const int b = VP8EncBands[n + 1];
+    const int ctx = (v >= 2) ? 2 : v;
+    cost += VP8LevelCost(t, v);
+    t = res->cost[b][ctx];
+  }
+  // Last coefficient is always non-zero
+  {
+    const int v = abs(res->coeffs[n]);
+    assert(v != 0);
+    cost += VP8LevelCost(t, v);
+    if (n < 15) {
+      const int b = VP8EncBands[n + 1];
+      const int ctx = (v == 1) ? 1 : 2;
+      const int last_p0 = res->prob[b][ctx][0];
+      cost += VP8BitCost(0, last_p0);
+    }
+  }
+  return cost;
+}
+
+//------------------------------------------------------------------------------
+// init function
+
+#if defined(WEBP_USE_MIPS32)
+extern int VP8GetResidualCostMIPS32(int ctx0, const VP8Residual* const res);
+#endif  // WEBP_USE_MIPS32
+
+// TODO(skal): this, and GetResidualCost(), should probably go somewhere
+// under src/dsp/ at some point.
+VP8GetResidualCostFunc VP8GetResidualCost;
+
+void VP8GetResidualCostInit(void) {
+  if (VP8GetResidualCost == NULL) {
+    VP8GetResidualCost = GetResidualCost;
+    if (VP8GetCPUInfo != NULL) {
+#if defined(WEBP_USE_MIPS32)
+      if (VP8GetCPUInfo(kMIPS32)) {
+        VP8GetResidualCost = VP8GetResidualCostMIPS32;
+      }
+#endif
+    }
+  }
+}
+
+//------------------------------------------------------------------------------
+// helper functions for residuals struct VP8Residual.
+
+void VP8InitResidual(int first, int coeff_type,
+                     VP8Encoder* const enc, VP8Residual* const res) {
+  res->coeff_type = coeff_type;
+  res->prob  = enc->proba_.coeffs_[coeff_type];
+  res->stats = enc->proba_.stats_[coeff_type];
+  res->cost  = enc->proba_.level_cost_[coeff_type];
+  res->first = first;
+}
+
+void VP8SetResidualCoeffs(const int16_t* const coeffs, VP8Residual* const res) {
+  int n;
+  res->last = -1;
+  for (n = 15; n >= res->first; --n) {
+    if (coeffs[n]) {
+      res->last = n;
+      break;
+    }
+  }
+  res->coeffs = coeffs;
+}
+
+//------------------------------------------------------------------------------
+// Mode costs
+
+int VP8GetCostLuma4(VP8EncIterator* const it, const int16_t levels[16]) {
+  const int x = (it->i4_ & 3), y = (it->i4_ >> 2);
+  VP8Residual res;
+  VP8Encoder* const enc = it->enc_;
+  int R = 0;
+  int ctx;
+
+  VP8InitResidual(0, 3, enc, &res);
+  ctx = it->top_nz_[x] + it->left_nz_[y];
+  VP8SetResidualCoeffs(levels, &res);
+  R += VP8GetResidualCost(ctx, &res);
+  return R;
+}
+
+int VP8GetCostLuma16(VP8EncIterator* const it, const VP8ModeScore* const rd) {
+  VP8Residual res;
+  VP8Encoder* const enc = it->enc_;
+  int x, y;
+  int R = 0;
+
+  VP8IteratorNzToBytes(it);   // re-import the non-zero context
+
+  // DC
+  VP8InitResidual(0, 1, enc, &res);
+  VP8SetResidualCoeffs(rd->y_dc_levels, &res);
+  R += VP8GetResidualCost(it->top_nz_[8] + it->left_nz_[8], &res);
+
+  // AC
+  VP8InitResidual(1, 0, enc, &res);
+  for (y = 0; y < 4; ++y) {
+    for (x = 0; x < 4; ++x) {
+      const int ctx = it->top_nz_[x] + it->left_nz_[y];
+      VP8SetResidualCoeffs(rd->y_ac_levels[x + y * 4], &res);
+      R += VP8GetResidualCost(ctx, &res);
+      it->top_nz_[x] = it->left_nz_[y] = (res.last >= 0);
+    }
+  }
+  return R;
+}
+
+int VP8GetCostUV(VP8EncIterator* const it, const VP8ModeScore* const rd) {
+  VP8Residual res;
+  VP8Encoder* const enc = it->enc_;
+  int ch, x, y;
+  int R = 0;
+
+  VP8IteratorNzToBytes(it);  // re-import the non-zero context
+
+  VP8InitResidual(0, 2, enc, &res);
+  for (ch = 0; ch <= 2; ch += 2) {
+    for (y = 0; y < 2; ++y) {
+      for (x = 0; x < 2; ++x) {
+        const int ctx = it->top_nz_[4 + ch + x] + it->left_nz_[4 + ch + y];
+        VP8SetResidualCoeffs(rd->uv_levels[ch * 2 + x + y * 2], &res);
+        R += VP8GetResidualCost(ctx, &res);
+        it->top_nz_[4 + ch + x] = it->left_nz_[4 + ch + y] = (res.last >= 0);
+      }
+    }
+  }
+  return R;
+}
+
+
+//------------------------------------------------------------------------------
+// Recording of token probabilities.
+
+// Record proba context used
+static int Record(int bit, proba_t* const stats) {
+  proba_t p = *stats;
+  if (p >= 0xffff0000u) {               // an overflow is inbound.
+    p = ((p + 1u) >> 1) & 0x7fff7fffu;  // -> divide the stats by 2.
+  }
+  // record bit count (lower 16 bits) and increment total count (upper 16 bits).
+  p += 0x00010000u + bit;
+  *stats = p;
+  return bit;
+}
+
+// We keep the table-free variant around for reference, in case.
+#define USE_LEVEL_CODE_TABLE
+
+// Simulate block coding, but only record statistics.
+// Note: no need to record the fixed probas.
+int VP8RecordCoeffs(int ctx, const VP8Residual* const res) {
+  int n = res->first;
+  // should be stats[VP8EncBands[n]], but it's equivalent for n=0 or 1
+  proba_t* s = res->stats[n][ctx];
+  if (res->last  < 0) {
+    Record(0, s + 0);
+    return 0;
+  }
+  while (n <= res->last) {
+    int v;
+    Record(1, s + 0);  // order of record doesn't matter
+    while ((v = res->coeffs[n++]) == 0) {
+      Record(0, s + 1);
+      s = res->stats[VP8EncBands[n]][0];
+    }
+    Record(1, s + 1);
+    if (!Record(2u < (unsigned int)(v + 1), s + 2)) {  // v = -1 or 1
+      s = res->stats[VP8EncBands[n]][1];
+    } else {
+      v = abs(v);
+#if !defined(USE_LEVEL_CODE_TABLE)
+      if (!Record(v > 4, s + 3)) {
+        if (Record(v != 2, s + 4))
+          Record(v == 4, s + 5);
+      } else if (!Record(v > 10, s + 6)) {
+        Record(v > 6, s + 7);
+      } else if (!Record((v >= 3 + (8 << 2)), s + 8)) {
+        Record((v >= 3 + (8 << 1)), s + 9);
+      } else {
+        Record((v >= 3 + (8 << 3)), s + 10);
+      }
+#else
+      if (v > MAX_VARIABLE_LEVEL) {
+        v = MAX_VARIABLE_LEVEL;
+      }
+
+      {
+        const int bits = VP8LevelCodes[v - 1][1];
+        int pattern = VP8LevelCodes[v - 1][0];
+        int i;
+        for (i = 0; (pattern >>= 1) != 0; ++i) {
+          const int mask = 2 << i;
+          if (pattern & 1) Record(!!(bits & mask), s + 3 + i);
+        }
+      }
+#endif
+      s = res->stats[VP8EncBands[n]][2];
+    }
+  }
+  if (n < 16) Record(0, s + 0);
+  return 1;
+}
+
+//------------------------------------------------------------------------------
