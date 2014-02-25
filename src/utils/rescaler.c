@@ -14,6 +14,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "./rescaler.h"
+#include "../dsp/dsp.h"
 
 //------------------------------------------------------------------------------
 // Implementations of critical functions ImportRow / ExportRow
@@ -243,6 +244,8 @@ static void ExportRowMIPS(WebPRescaler* const wrk, int x_out) {
         : [temp2]"r"(temp2), [yscale]"r"(yscale), [temp8]"r"(temp8)
         : "memory", "hi", "lo"
       );
+      wrk->y_accum += wrk->y_add;
+      wrk->dst += wrk->dst_stride;
     } else {
       ExportRowC(wrk, x_out);
     }
@@ -281,12 +284,14 @@ void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
   if (WebPRescalerImportRow == NULL) {
     WebPRescalerImportRow = ImportRowC;
     WebPRescalerExportRow = ExportRowC;
+    if (VP8GetCPUInfo) {
 #if defined(WEBP_USE_MIPS32)
-    if (VP8GetCPUInfo(kMIPS32)) {
-      WebPRescalerImportRow = ImportRowMIPS;
-      WebPRescalerExportRow = ExportRowMIPS;
-    }
+      if (VP8GetCPUInfo(kMIPS32)) {
+        WebPRescalerImportRow = ImportRowMIPS;
+        WebPRescalerExportRow = ExportRowMIPS;
+      }
 #endif
+    }
   }
 }
 
