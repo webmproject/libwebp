@@ -548,7 +548,7 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
                                 int ctx0, int coeff_type,
                                 const VP8Matrix* const mtx,
                                 int lambda) {
-  ProbaArray* const last_costs = it->enc_->proba_.coeffs_[coeff_type];
+  ProbaArray* const probas = it->enc_->proba_.coeffs_[coeff_type];
   CostArray* const costs = it->enc_->proba_.level_cost_[coeff_type];
   const int first = (coeff_type == 0) ? 1 : 0;
   Node nodes[17][NUM_NODES];
@@ -562,7 +562,7 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
     score_t cost;
     score_t max_error;
     const int thresh = mtx->q_[1] * mtx->q_[1] / 4;
-    const int last_proba = last_costs[VP8EncBands[first]][ctx0][0];
+    const int last_proba = probas[VP8EncBands[first]][ctx0][0];
 
     // compute maximal distortion.
     max_error = 0;
@@ -583,7 +583,7 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
     // initialize source node.
     n = first - 1;
     for (m = -MIN_DELTA; m <= MAX_DELTA; ++m) {
-      NODE(n, m).cost = 0;
+      NODE(n, m).cost = (ctx0 == 0) ? VP8BitCost(1, last_proba) : 0;
       NODE(n, m).error = max_error;
       NODE(n, m).ctx = ctx0;
     }
@@ -608,7 +608,7 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
       int delta_error, new_error;
       score_t cur_score = MAX_COST;
       int level = level0 + m;
-      int last_proba;
+      int last_pos_cost;   // extra cost if last coeff's position is < 15
 
       cur->sign = sign;
       cur->level = level;
@@ -617,7 +617,9 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
         cur->cost = MAX_COST;
         continue;
       }
-      last_proba = last_costs[VP8EncBands[n + 1]][cur->ctx][0];
+      last_pos_cost =
+          (n < 15) ? VP8BitCost(0, probas[VP8EncBands[n + 1]][cur->ctx][0])
+                   : 0;
 
       // Compute delta_error = how much coding this level will
       // subtract as distortion to max_error
@@ -631,20 +633,16 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
         const int prev_ctx = prev->ctx;
         const uint16_t* const tcost = costs[VP8EncBands[n]][prev_ctx];
         const score_t total_error = prev->error - delta_error;
-        score_t cost, base_cost, score;
+        score_t cost, score;
 
         if (prev->cost >= MAX_COST) {   // dead node?
           continue;
         }
 
         // Base cost of both terminal/non-terminal
-        base_cost = prev->cost + VP8LevelCost(tcost, level);
+        cost = prev->cost + VP8LevelCost(tcost, level);
 
         // Examine node assuming it's a non-terminal one.
-        cost = base_cost;
-        if (level && n < 15) {
-          cost += VP8BitCost(1, last_proba);
-        }
         score = RDScoreTrellis(lambda, cost, total_error);
         if (score < cur_score) {
           cur_score = score;
@@ -655,9 +653,7 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
 
         // Now, record best terminal node (and thus best entry in the graph).
         if (level) {
-          cost = base_cost;
-          if (n < 15) cost += VP8BitCost(0, last_proba);
-          score = RDScoreTrellis(lambda, cost, total_error);
+          score = RDScoreTrellis(lambda, cost + last_pos_cost, total_error);
           if (score < best_score) {
             best_score = score;
             best_path[0] = n;   // best eob position
