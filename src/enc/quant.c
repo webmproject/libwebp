@@ -395,7 +395,7 @@ void VP8SetSegmentParams(VP8Encoder* const enc, float quality) {
   dq_uv_ac = clip(dq_uv_ac, MIN_DQ_UV, MAX_DQ_UV);
   // We also boost the dc-uv-quant a little, based on sns-strength, since
   // U/V channels are quite more reactive to high quants (flat DC-blocks
-  // tend to appear, and are displeasant).
+  // tend to appear, and are unpleasant).
   dq_uv_dc = -4 * enc->config_->sns_strength / 100;
   dq_uv_dc = clip(dq_uv_dc, -15, 15);   // 4bit-signed max allowed
 
@@ -522,7 +522,7 @@ typedef struct {
   int sign;        // sign of coeff_i
   score_t cost;    // bit cost
   score_t error;   // distortion = sum of (|coeff_i| - level_i * Q_i)^2
-  int ctx;         // context (only depends on 'level'. Could be spared.)
+  const uint16_t* costs;  // shortcut to cost tables
 } Node;
 
 // If a coefficient was quantized to a value Q (using a neutral bias),
@@ -554,9 +554,8 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
   Node nodes[17][NUM_NODES];
   int best_path[3] = {-1, -1, -1};   // store best-last/best-level/best-previous
   score_t best_score;
-  int best_node;
   int last = first - 1;
-  int n, m, p, nz;
+  int n, m, p;
 
   {
     score_t cost;
@@ -567,7 +566,7 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
     // compute maximal distortion.
     max_error = 0;
     for (n = first; n < 16; ++n) {
-      const int j  = kZigzag[n];
+      const int j = kZigzag[n];
       const int err = in[j] * in[j];
       max_error += kWeightTrellis[j] * err;
       if (err > thresh) last = n;
@@ -585,13 +584,13 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
     for (m = -MIN_DELTA; m <= MAX_DELTA; ++m) {
       NODE(n, m).cost = (ctx0 == 0) ? VP8BitCost(1, last_proba) : 0;
       NODE(n, m).error = max_error;
-      NODE(n, m).ctx = ctx0;
+      NODE(n, m).costs = costs[VP8EncBands[first]][ctx0];
     }
   }
 
   // traverse trellis.
   for (n = first; n <= last; ++n) {
-    const int j  = kZigzag[n];
+    const int j = kZigzag[n];
     const uint32_t Q  = mtx->q_[j];
     const uint32_t iQ = mtx->iq_[j];
     const uint32_t B = BIAS(0x00);     // neutral bias
@@ -608,30 +607,30 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
       int delta_error, new_error;
       score_t cur_score = MAX_COST;
       int level = level0 + m;
+      const int ctx = (level > 2) ? 2 : level;
+      const int band = VP8EncBands[n + 1];
       int last_pos_cost;   // extra cost if last coeff's position is < 15
 
       cur->sign = sign;
       cur->level = level;
-      cur->ctx = (level == 0) ? 0 : (level == 1) ? 1 : 2;
+      cur->costs = costs[band][ctx];
       if (level > MAX_LEVEL || level < 0) {   // node is dead?
         cur->cost = MAX_COST;
         continue;
       }
-      last_pos_cost =
-          (n < 15) ? VP8BitCost(0, probas[VP8EncBands[n + 1]][cur->ctx][0])
-                   : 0;
+      last_pos_cost = (n < 15) ? VP8BitCost(0, probas[band][ctx][0])
+                               : 0;
 
       // Compute delta_error = how much coding this level will
       // subtract as distortion to max_error
       new_error = coeff0 - level * Q;
       delta_error =
-        kWeightTrellis[j] * (coeff0 * coeff0 - new_error * new_error);
+          kWeightTrellis[j] * (coeff0 * coeff0 - new_error * new_error);
 
       // Inspect all possible non-dead predecessors. Retain only the best one.
       for (p = -MIN_DELTA; p <= MAX_DELTA; ++p) {
         const Node* const prev = &NODE(n - 1, p);
-        const int prev_ctx = prev->ctx;
-        const uint16_t* const tcost = costs[VP8EncBands[n]][prev_ctx];
+        const uint16_t* const tcost = prev->costs;
         const score_t total_error = prev->error - delta_error;
         score_t cost, score;
 
@@ -672,23 +671,25 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
     return 0;   // skip!
   }
 
-  // Unwind the best path.
-  // Note: best-prev on terminal node is not necessarily equal to the
-  // best_prev for non-terminal. So we patch best_path[2] in.
-  n = best_path[0];
-  best_node = best_path[1];
-  NODE(n, best_node).prev = best_path[2];   // force best-prev for terminal
-  nz = 0;
+  {
+    // Unwind the best path.
+    // Note: best-prev on terminal node is not necessarily equal to the
+    // best_prev for non-terminal. So we patch best_path[2] in.
+    int nz = 0;
+    int best_node = best_path[1];
+    n = best_path[0];
+    NODE(n, best_node).prev = best_path[2];   // force best-prev for terminal
 
-  for (; n >= first; --n) {
-    const Node* const node = &NODE(n, best_node);
-    const int j = kZigzag[n];
-    out[n] = node->sign ? -node->level : node->level;
-    nz |= (node->level != 0);
-    in[j] = out[n] * mtx->q_[j];
-    best_node = node->prev;
+    for (; n >= first; --n) {
+      const Node* const node = &NODE(n, best_node);
+      const int j = kZigzag[n];
+      out[n] = node->sign ? -node->level : node->level;
+      nz |= node->level;
+      in[j] = out[n] * mtx->q_[j];
+      best_node = node->prev;
+    }
+    return (nz != 0);
   }
-  return nz;
 }
 
 #undef NODE
