@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//0jM\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 583,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2014-02-28T19:36:39Z",
+      "side": 1,
+      "message": "Same arg goes with CombinedShannonEntropy, where VP8LFastSLog2 also returns float. \nWe can re-evaluate all such type-casts (double -\u003e float) in subsequent change. The scope of this change is re-factoring around higher level functions.",
+      "parentUuid": "AAAAdn//0lA\u003d",
+      "revId": "405aee4c730b171a01fa0f194b0d9afbaf623e38",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//0mk\u003d",
         "filename": "src/dsp/lossless.c",
         "patchSetId": 2
@@ -102,6 +120,24 @@
       "side": 1,
       "message": "maybe not need on the accumulated variable, but without a closer look...ok",
       "parentUuid": "AAAAdn//0lw\u003d",
+      "revId": "405aee4c730b171a01fa0f194b0d9afbaf623e38",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//0jI\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2014-02-28T19:36:39Z",
+      "side": 1,
+      "message": "Yes you are right, remove this unnecessary cast.",
+      "parentUuid": "AAAAdn//0k4\u003d",
       "revId": "405aee4c730b171a01fa0f194b0d9afbaf623e38",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
