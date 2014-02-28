@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//0mo\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 583,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-02-28T18:57:12Z",
+      "side": 1,
+      "message": "seems this can be a float given the functions used",
+      "revId": "405aee4c730b171a01fa0f194b0d9afbaf623e38",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//0mk\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-02-28T18:57:12Z",
+      "side": 1,
+      "message": "types appear to agree are the casts needed?",
+      "revId": "405aee4c730b171a01fa0f194b0d9afbaf623e38",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
