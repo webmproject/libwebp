@@ -284,7 +284,7 @@ void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
   if (WebPRescalerImportRow == NULL) {
     WebPRescalerImportRow = ImportRowC;
     WebPRescalerExportRow = ExportRowC;
-    if (VP8GetCPUInfo) {
+    if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_MIPS32)
       if (VP8GetCPUInfo(kMIPS32)) {
         WebPRescalerImportRow = ImportRowMIPS;

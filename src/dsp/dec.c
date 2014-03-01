@@ -715,7 +715,7 @@ void VP8DspInit(void) {
   VP8SimpleHFilter16i = SimpleHFilter16i;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
-  if (VP8GetCPUInfo) {
+  if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_SSE2)
     if (VP8GetCPUInfo(kSSE2)) {
       VP8DspInitSSE2();
