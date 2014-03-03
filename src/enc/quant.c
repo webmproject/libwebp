@@ -636,10 +636,10 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
           // Base cost of both terminal / non-terminal hypothesis
           const score_t cost = VP8LevelCost(prev->costs, level);
           // Examine node assuming it's a non-terminal one.
-          score_t score =
+          const score_t score =
               base_score + prev->score + RDScoreTrellis(lambda, cost, 0);
           if (score < cur->score) {
-            cur->score  = score;
+            cur->score = score;
             cur->prev  = p;
           }
         }
