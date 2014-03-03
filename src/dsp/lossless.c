@@ -884,16 +884,18 @@ static WEBP_INLINE uint8_t TransformColorBlue(uint8_t green_to_blue,
 static WEBP_INLINE int SkipRepeatedPixels(const uint32_t* const argb,
                                           int ix, int xsize) {
   const uint32_t v = argb[ix];
-  if (ix >= xsize + 3) {
-    if (v == argb[ix - xsize] &&
-        argb[ix - 1] == argb[ix - xsize - 1] &&
-        argb[ix - 2] == argb[ix - xsize - 2] &&
-        argb[ix - 3] == argb[ix - xsize - 3]) {
+  if (ix >= 3) {
+    if (v == argb[ix - 3] && v == argb[ix - 2] && v == argb[ix - 1]) {
       return 1;
     }
-    return v == argb[ix - 3] && v == argb[ix - 2] && v == argb[ix - 1];
-  } else if (ix >= 3) {
-    return v == argb[ix - 3] && v == argb[ix - 2] && v == argb[ix - 1];
+    if (ix >= xsize + 3) {
+      if (v == argb[ix - xsize] &&
+          argb[ix - 3] == argb[ix - xsize - 3] &&
+          argb[ix - 2] == argb[ix - xsize - 2] &&
+          argb[ix - 1] == argb[ix - xsize - 1]) {
+        return 1;
+      }
+    }
   }
   return 0;
 }
