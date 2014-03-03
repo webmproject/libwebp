@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//0Lo\u003d",
+        "filename": "src/enc/quant.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 639,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-03-03T22:25:05Z",
+      "side": 1,
+      "message": "const",
+      "revId": "5aeeb087d6455ea157189977c421cf35daf2843b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//0Lg\u003d",
+        "filename": "src/enc/quant.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-03-03T22:25:05Z",
+      "side": 1,
+      "message": "extra whitespace",
+      "revId": "5aeeb087d6455ea157189977c421cf35daf2843b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
