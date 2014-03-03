@@ -186,9 +186,9 @@ static int GetHuffBitLengthsAndCodes(
     const VP8LHistogram* const histo = histogram_image->histograms[i];
     HuffmanTreeCode* const codes = &huffman_codes[5 * i];
     for (k = 0; k < 5; ++k) {
-      const int num_symbols = (k == 0) ? VP8LHistogramNumCodes(histo)
-                            : (k == 4) ? NUM_DISTANCE_CODES
-                            : 256;
+      const int num_symbols =
+          (k == 0) ? VP8LHistogramNumCodes(histo->palette_code_bits_) :
+          (k == 4) ? NUM_DISTANCE_CODES : 256;
       codes[k].num_symbols = num_symbols;
       total_length_size += num_symbols;
     }

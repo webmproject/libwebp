@@ -82,9 +82,9 @@ double VP8LHistogramEstimateBits(const VP8LHistogram* const p);
 // represent the entropy code itself.
 double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p);
 
-static WEBP_INLINE int VP8LHistogramNumCodes(const VP8LHistogram* const p) {
+static WEBP_INLINE int VP8LHistogramNumCodes(int palette_code_bits) {
   return 256 + NUM_LENGTH_CODES +
-      ((p->palette_code_bits_ > 0) ? (1 << p->palette_code_bits_) : 0);
+      ((palette_code_bits > 0) ? (1 << palette_code_bits) : 0);
 }
 
 // Builds the histogram image.

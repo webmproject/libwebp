@@ -436,7 +436,8 @@ static int CostModelBuild(CostModel* const m, int xsize, int ysize,
   }
   VP8LHistogramCreate(&histo, &refs, cache_bits);
   ConvertPopulationCountTableToBitEstimates(
-      VP8LHistogramNumCodes(&histo), histo.literal_, m->literal_);
+      VP8LHistogramNumCodes(histo.palette_code_bits_),
+      histo.literal_, m->literal_);
   ConvertPopulationCountTableToBitEstimates(
       VALUES_IN_BYTE, histo.red_, m->red_);
   ConvertPopulationCountTableToBitEstimates(
