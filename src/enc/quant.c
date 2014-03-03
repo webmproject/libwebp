@@ -517,11 +517,10 @@ static void AddScore(VP8ModeScore* const dst, const VP8ModeScore* const src) {
 // Trellis
 
 typedef struct {
-  int prev;        // best previous
-  int level;       // level
-  int sign;        // sign of coeff_i
-  score_t cost;    // bit cost
-  score_t error;   // distortion = sum of (|coeff_i| - level_i * Q_i)^2
+  int prev;               // best previous node
+  int level;              // level
+  int sign;               // sign of coeff_i
+  score_t score;          // partial RD score
   const uint16_t* costs;  // shortcut to cost tables
 } Node;
 
@@ -582,8 +581,8 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
     // initialize source node.
     n = first - 1;
     for (m = -MIN_DELTA; m <= MAX_DELTA; ++m) {
-      NODE(n, m).cost = (ctx0 == 0) ? VP8BitCost(1, last_proba) : 0;
-      NODE(n, m).error = max_error;
+      const score_t rate = (ctx0 == 0) ? VP8BitCost(1, last_proba) : 0;
+      NODE(n, m).score = RDScoreTrellis(lambda, rate, max_error);
       NODE(n, m).costs = costs[VP8EncBands[first]][ctx0];
     }
   }
@@ -604,61 +603,57 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
     // test all alternate level values around level0.
     for (m = -MIN_DELTA; m <= MAX_DELTA; ++m) {
       Node* const cur = &NODE(n, m);
-      int delta_error, new_error;
-      score_t cur_score = MAX_COST;
       int level = level0 + m;
       const int ctx = (level > 2) ? 2 : level;
       const int band = VP8EncBands[n + 1];
-      int last_pos_cost;   // extra cost if last coeff's position is < 15
+      score_t base_score, last_pos_cost;
 
+      cur->score = MAX_COST;
+      if (level > MAX_LEVEL || level < 0) {   // node is dead?
+        continue;
+      }
       cur->sign = sign;
       cur->level = level;
       cur->costs = costs[band][ctx];
-      if (level > MAX_LEVEL || level < 0) {   // node is dead?
-        cur->cost = MAX_COST;
-        continue;
-      }
-      last_pos_cost = (n < 15) ? VP8BitCost(0, probas[band][ctx][0])
-                               : 0;
 
-      // Compute delta_error = how much coding this level will
-      // subtract as distortion to max_error
-      new_error = coeff0 - level * Q;
-      delta_error =
-          kWeightTrellis[j] * (coeff0 * coeff0 - new_error * new_error);
+      // Compute extra rate cost if last coeff's position is < 15
+      last_pos_cost = (n < 15) ? VP8BitCost(0, probas[band][ctx][0]) : 0;
+
+      {
+        // Compute delta_error = how much coding this level will
+        // subtract to max_error as distortion.
+        // Here, distortion = sum of (|coeff_i| - level_i * Q_i)^2
+        const int new_error = coeff0 - level * Q;
+        const int delta_error =
+            kWeightTrellis[j] * (new_error * new_error - coeff0 * coeff0);
+        base_score = RDScoreTrellis(lambda, 0, delta_error);
+      }
 
       // Inspect all possible non-dead predecessors. Retain only the best one.
       for (p = -MIN_DELTA; p <= MAX_DELTA; ++p) {
         const Node* const prev = &NODE(n - 1, p);
-        const uint16_t* const tcost = prev->costs;
-        const score_t total_error = prev->error - delta_error;
-        score_t cost, score;
-
-        if (prev->cost >= MAX_COST) {   // dead node?
-          continue;
-        }
-
-        // Base cost of both terminal/non-terminal
-        cost = prev->cost + VP8LevelCost(tcost, level);
-
-        // Examine node assuming it's a non-terminal one.
-        score = RDScoreTrellis(lambda, cost, total_error);
-        if (score < cur_score) {
-          cur_score = score;
-          cur->cost  = cost;
-          cur->error = total_error;
-          cur->prev  = p;
-        }
-
-        // Now, record best terminal node (and thus best entry in the graph).
-        if (level) {
-          score = RDScoreTrellis(lambda, cost + last_pos_cost, total_error);
-          if (score < best_score) {
-            best_score = score;
-            best_path[0] = n;   // best eob position
-            best_path[1] = m;   // best level
-            best_path[2] = p;   // best predecessor
+        if (prev->score < MAX_COST) {   // skip dead node
+          // Base cost of both terminal / non-terminal hypothesis
+          const score_t cost = VP8LevelCost(prev->costs, level);
+          // Examine node assuming it's a non-terminal one.
+          score_t score =
+              base_score + prev->score + RDScoreTrellis(lambda, cost, 0);
+          if (score < cur->score) {
+            cur->score  = score;
+            cur->prev  = p;
           }
+        }
+      }
+      // Now, record best terminal node (and thus best entry in the graph).
+      if (cur->level != 0) {
+        const score_t last_pos_score =
+            RDScoreTrellis(lambda, last_pos_cost, 0);
+        const score_t score = cur->score + last_pos_score;
+        if (score < best_score) {
+          best_score = score;
+          best_path[0] = n;                     // best eob position
+          best_path[1] = cur->level - level0;   // best node index ('m')
+          best_path[2] = cur->prev;             // best predecessor
         }
       }
     }
