@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//0DU\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 888,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-03-04T07:14:10Z",
+      "side": 1,
+      "message": "not sure why, it was historically like this...\n\nI see the same speed in both case, so for the sake of coherency i\u0027ve changed it to 3/2/1 everywhere.",
+      "parentUuid": "AAAAdn//0JE\u003d",
+      "revId": "318d380a9ed3a26cc72db348291179b978284942",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//0JM\u003d",
         "filename": "src/dsp/lossless.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2014-03-03T23:48:59Z",
       "side": 1,
       "message": "alignment is off",
+      "revId": "318d380a9ed3a26cc72db348291179b978284942",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//0DQ\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 893,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-03-04T07:14:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//0JM\u003d",
       "revId": "318d380a9ed3a26cc72db348291179b978284942",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
