@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//0Cg\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 583,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-03-04T09:49:38Z",
+      "side": 1,
+      "message": "note: the current use of float/double is the result of a lot of trial-and-error attempts i made at changing double \u003c-\u003e float.\nOther combinations were slower (surprisingly). Must be a combinations of slow-store-of-double-in-memory vs fast-calc-if-double-is-in-a-SSE2-reg, plus code-cache size, plus etc.\n\nSo, caution here...",
+      "parentUuid": "AAAAdn//0jM\u003d",
+      "revId": "405aee4c730b171a01fa0f194b0d9afbaf623e38",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//0mk\u003d",
         "filename": "src/dsp/lossless.c",
         "patchSetId": 2
