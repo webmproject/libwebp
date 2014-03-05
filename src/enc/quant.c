@@ -553,22 +553,22 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
   Node nodes[17][NUM_NODES];
   int best_path[3] = {-1, -1, -1};   // store best-last/best-level/best-previous
   score_t best_score;
-  int last = first - 1;
-  int n, m, p;
+  int n, m, p, last;
 
   {
     score_t cost;
-    score_t max_error;
     const int thresh = mtx->q_[1] * mtx->q_[1] / 4;
     const int last_proba = probas[VP8EncBands[first]][ctx0][0];
 
-    // compute maximal distortion.
-    max_error = 0;
-    for (n = first; n < 16; ++n) {
+    // compute the position of the last interesting coefficient
+    last = first - 1;
+    for (n = 15; n >= first; --n) {
       const int j = kZigzag[n];
       const int err = in[j] * in[j];
-      max_error += kWeightTrellis[j] * err;
-      if (err > thresh) last = n;
+      if (err > thresh) {
+        last = n;
+        break;
+      }
     }
     // we don't need to go inspect up to n = 16 coeffs. We can just go up
     // to last + 1 (inclusive) without losing much.
@@ -576,13 +576,13 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
 
     // compute 'skip' score. This is the max score one can do.
     cost = VP8BitCost(0, last_proba);
-    best_score = RDScoreTrellis(lambda, cost, max_error);
+    best_score = RDScoreTrellis(lambda, cost, 0);
 
     // initialize source node.
     n = first - 1;
     for (m = -MIN_DELTA; m <= MAX_DELTA; ++m) {
       const score_t rate = (ctx0 == 0) ? VP8BitCost(1, last_proba) : 0;
-      NODE(n, m).score = RDScoreTrellis(lambda, rate, max_error);
+      NODE(n, m).score = RDScoreTrellis(lambda, rate, 0);
       NODE(n, m).costs = costs[VP8EncBands[first]][ctx0];
     }
   }
@@ -615,6 +615,7 @@ static int TrellisQuantizeBlock(const VP8EncIterator* const it,
       cur->sign = sign;
       cur->level = level;
       cur->costs = costs[band][ctx];
+      cur->prev = 0;  // default, in case
 
       // Compute extra rate cost if last coeff's position is < 15
       last_pos_cost = (n < 15) ? VP8BitCost(0, probas[band][ctx][0]) : 0;
