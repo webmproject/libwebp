@@ -11,6 +11,7 @@
 //
 // Author(s): Djordje Pesut    (djordje.pesut@imgtec.com)
 //            Jovan Zelincevic (jovan.zelincevic@imgtec.com)
+//            Slobodan Prijic  (slobodan.prijic@imgtec.com)
 
 #include "./dsp.h"
 
@@ -618,6 +619,134 @@ int VP8GetResidualCostMIPS32(int ctx0, const VP8Residual* const res) {
   return cost;
 }
 
+#define GET_SSE_INNER(A, B, C, D)                               \
+  "lbu     %[temp0],    "#A"(%[a])                   \n\t"      \
+  "lbu     %[temp1],    "#A"(%[b])                   \n\t"      \
+  "lbu     %[temp2],    "#B"(%[a])                   \n\t"      \
+  "lbu     %[temp3],    "#B"(%[b])                   \n\t"      \
+  "lbu     %[temp4],    "#C"(%[a])                   \n\t"      \
+  "lbu     %[temp5],    "#C"(%[b])                   \n\t"      \
+  "lbu     %[temp6],    "#D"(%[a])                   \n\t"      \
+  "lbu     %[temp7],    "#D"(%[b])                   \n\t"      \
+  "subu    %[temp0],    %[temp0],     %[temp1]       \n\t"      \
+  "subu    %[temp2],    %[temp2],     %[temp3]       \n\t"      \
+  "subu    %[temp4],    %[temp4],     %[temp5]       \n\t"      \
+  "subu    %[temp6],    %[temp6],     %[temp7]       \n\t"      \
+  "madd    %[temp0],    %[temp0]                     \n\t"      \
+  "madd    %[temp2],    %[temp2]                     \n\t"      \
+  "madd    %[temp4],    %[temp4]                     \n\t"      \
+  "madd    %[temp6],    %[temp6]                     \n\t"
+
+#define GET_SSE(A, B, C, D)               \
+  GET_SSE_INNER(A, A + 1, A + 2, A + 3)   \
+  GET_SSE_INNER(B, B + 1, B + 2, B + 3)   \
+  GET_SSE_INNER(C, C + 1, C + 2, C + 3)   \
+  GET_SSE_INNER(D, D + 1, D + 2, D + 3)
+
+static int SSE16x16MIPS32(const uint8_t* a, const uint8_t* b) {
+  int count;
+  int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
+
+  __asm__ volatile(
+     "mult   $zero,    $zero                            \n\t"
+
+     GET_SSE(  0,   4,   8,  12)
+     GET_SSE( 16,  20,  24,  28)
+     GET_SSE( 32,  36,  40,  44)
+     GET_SSE( 48,  52,  56,  60)
+     GET_SSE( 64,  68,  72,  76)
+     GET_SSE( 80,  84,  88,  92)
+     GET_SSE( 96, 100, 104, 108)
+     GET_SSE(112, 116, 120, 124)
+     GET_SSE(128, 132, 136, 140)
+     GET_SSE(144, 148, 152, 156)
+     GET_SSE(160, 164, 168, 172)
+     GET_SSE(176, 180, 184, 188)
+     GET_SSE(192, 196, 200, 204)
+     GET_SSE(208, 212, 216, 220)
+     GET_SSE(224, 228, 232, 236)
+     GET_SSE(240, 244, 248, 252)
+
+    "mflo    %[count]                                   \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [count]"=&r"(count)
+    : [a]"r"(a), [b]"r"(b)
+    : "memory", "hi" , "lo"
+  );
+  return count;
+}
+
+static int SSE16x8MIPS32(const uint8_t* a, const uint8_t* b) {
+  int count;
+  int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
+
+  __asm__ volatile(
+     "mult   $zero,    $zero                            \n\t"
+
+     GET_SSE(  0,   4,   8,  12)
+     GET_SSE( 16,  20,  24,  28)
+     GET_SSE( 32,  36,  40,  44)
+     GET_SSE( 48,  52,  56,  60)
+     GET_SSE( 64,  68,  72,  76)
+     GET_SSE( 80,  84,  88,  92)
+     GET_SSE( 96, 100, 104, 108)
+     GET_SSE(112, 116, 120, 124)
+
+    "mflo    %[count]                                   \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [count]"=&r"(count)
+    : [a]"r"(a), [b]"r"(b)
+    : "memory", "hi" , "lo"
+  );
+  return count;
+}
+
+static int SSE8x8MIPS32(const uint8_t* a, const uint8_t* b) {
+  int count;
+  int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
+
+  __asm__ volatile(
+     "mult   $zero,    $zero                            \n\t"
+
+     GET_SSE( 0,   4,  16,  20)
+     GET_SSE(32,  36,  48,  52)
+     GET_SSE(64,  68,  80,  84)
+     GET_SSE(96, 100, 112, 116)
+
+    "mflo    %[count]                                   \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [count]"=&r"(count)
+    : [a]"r"(a), [b]"r"(b)
+    : "memory", "hi" , "lo"
+  );
+  return count;
+}
+
+static int SSE4x4MIPS32(const uint8_t* a, const uint8_t* b) {
+  int count;
+  int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
+
+  __asm__ volatile(
+     "mult   $zero,    $zero                            \n\t"
+
+     GET_SSE(0, 16, 32, 48)
+
+    "mflo    %[count]                                   \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [count]"=&r"(count)
+    : [a]"r"(a), [b]"r"(b)
+    : "memory", "hi" , "lo"
+  );
+  return count;
+}
+
+#undef GET_SSE_MIPS32
+#undef GET_SSE_MIPS32_INNER
+
 #endif  // WEBP_USE_MIPS32
 
 //------------------------------------------------------------------------------
@@ -632,5 +761,9 @@ void VP8EncDspInitMIPS32(void) {
   VP8TDisto4x4 = Disto4x4MIPS32;
   VP8TDisto16x16 = Disto16x16MIPS32;
   VP8FTransform = FTransformMIPS32;
+  VP8SSE16x16 = SSE16x16MIPS32;
+  VP8SSE8x8 = SSE8x8MIPS32;
+  VP8SSE16x8 = SSE16x8MIPS32;
+  VP8SSE4x4 = SSE4x4MIPS32;
 #endif  // WEBP_USE_MIPS32
 }
