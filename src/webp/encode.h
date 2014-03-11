@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#define WEBP_ENCODER_ABI_VERSION 0x0202    // MAJOR(8b) + MINOR(8b)
+#define WEBP_ENCODER_ABI_VERSION 0x0203    // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -166,6 +166,14 @@ static WEBP_INLINE int WebPConfigPreset(WebPConfig* config,
   return WebPConfigInitInternal(config, preset, quality,
                                 WEBP_ENCODER_ABI_VERSION);
 }
+
+// Activate the lossless compression mode with the desired efficiency level
+// between 0 (fastest, lowest compression) and 9 (slower, best compression).
+// A good default level is '6', providing a fair tradeoff between compression
+// speed and final compressed size.
+// This function will overwrite several fields from config: 'method', 'quality'
+// and 'lossless'. Returns false in case of parameter error.
+WEBP_EXTERN(int) WebPConfigLosslessPreset(WebPConfig* config, int level);
 
 // Returns true if 'config' is non-NULL and all configuration parameters are
 // within their valid ranges.

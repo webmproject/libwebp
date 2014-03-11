@@ -568,6 +568,8 @@ static void HelpLong(void) {
   printf("                            default, photo, picture,\n");
   printf("                            drawing, icon, text\n");
   printf("     -preset must come first, as it overwrites other parameters.");
+  printf("  -z <int> ............... Activates lossless preset with given "
+         "                           level in [0:fast, ..., 9:slowest]\n");
   printf("\n");
   printf("  -m <int> ............... compression method (0=fast, 6=slowest)\n");
   printf("  -segments <int> ........ number of segments to use (1..4)\n");
@@ -672,6 +674,8 @@ int main(int argc, const char *argv[]) {
   uint32_t background_color = 0xffffffu;
   int crop = 0, crop_x = 0, crop_y = 0, crop_w = 0, crop_h = 0;
   int resize_w = 0, resize_h = 0;
+  int lossless_preset = 6;
+  int use_lossless_preset = -1;  // -1=unset, 0=don't use, 1=use it
   int show_progress = 0;
   int keep_metadata = 0;
   int metadata_written = 0;
@@ -726,8 +730,13 @@ int main(int argc, const char *argv[]) {
       picture.height = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-m") && c < argc - 1) {
       config.method = strtol(argv[++c], NULL, 0);
+      use_lossless_preset = 0;   // disable -z option
     } else if (!strcmp(argv[c], "-q") && c < argc - 1) {
       config.quality = (float)strtod(argv[++c], NULL);
+      use_lossless_preset = 0;   // disable -z option
+    } else if (!strcmp(argv[c], "-z") && c < argc - 1) {
+      lossless_preset = strtol(argv[++c], NULL, 0);
+      if (use_lossless_preset != 0) use_lossless_preset = 1;
     } else if (!strcmp(argv[c], "-alpha_q") && c < argc - 1) {
       config.alpha_quality = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-alpha_method") && c < argc - 1) {
@@ -914,6 +923,13 @@ int main(int argc, const char *argv[]) {
     fprintf(stderr, "No input file specified!\n");
     HelpShort();
     goto Error;
+  }
+
+  if (use_lossless_preset == 1) {
+    if (!WebPConfigLosslessPreset(&config, lossless_preset)) {
+      fprintf(stderr, "Invalid lossless preset (-z %d)\n", lossless_preset);
+      goto Error;
+    }
   }
 
   // Check for unsupported command line options for lossless mode and log

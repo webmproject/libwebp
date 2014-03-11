@@ -138,3 +138,23 @@ int WebPValidateConfig(const WebPConfig* config) {
 
 //------------------------------------------------------------------------------
 
+#define MAX_LEVEL 9
+
+// Mapping between -z level and -m / -q parameter settings.
+static const struct {
+  uint8_t method_;
+  uint8_t quality_;
+} kLosslessPresets[MAX_LEVEL + 1] = {
+  { 0,  0 }, { 1, 20 }, { 2, 25 }, { 3, 30 }, { 3, 50 },
+  { 4, 50 }, { 4, 75 }, { 4, 90 }, { 5, 90 }, { 6, 100 }
+};
+
+int WebPConfigLosslessPreset(WebPConfig* config, int level) {
+  if (config == NULL || level < 0 || level > MAX_LEVEL) return 0;
+  config->lossless = 1;
+  config->method = kLosslessPresets[level].method_;
+  config->quality = kLosslessPresets[level].quality_;
+  return 1;
+}
+
+//------------------------------------------------------------------------------
