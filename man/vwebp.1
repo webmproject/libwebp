@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH VWEBP 1 "January 08, 2014"
+.TH VWEBP 1 "March 7, 2014"
 .SH NAME
 vwebp \- decompress a WebP file and display it in a window
 .SH SYNOPSIS
@@ -39,6 +39,13 @@ Use multi-threading for decoding, if possible.
 .TP
 .B \-info
 Display image information on top of the decoded image.
+.TP
+.BI \-\- " string
+Explicitly specify the input file. This option is useful if the input
+file starts with an '\-' for instance. This option must appear \fBlast\fP.
+Any other options afterward will be ignored. If the input file is "\-",
+the data will be read from \fIstdin\fP instead of a file.
+.TP
 
 .SH KEYBOARD SHORTCUTS
 .TP

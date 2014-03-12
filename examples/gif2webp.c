@@ -501,7 +501,7 @@ int main(int argc, const char *argv[]) {
               if (data == NULL) goto End;  // Loop count sub-block missing.
               if (data[0] != 3 && data[1] != 1) break;   // wrong size/marker
               anim.loop_count = data[2] | (data[3] << 8);
-              if (verbose) printf("Loop count: %d\n", anim.loop_count);
+              if (verbose) fprintf(stderr, "Loop count: %d\n", anim.loop_count);
             } else {  // An extension containing metadata.
               // We only store the first encountered chunk of each type, and
               // only if requested by the user.
@@ -555,7 +555,8 @@ int main(int argc, const char *argv[]) {
                 // Add metadata chunk.
                 err = WebPMuxSetChunk(mux, fourccs[is_icc], &metadata, 1);
                 if (verbose) {
-                  printf("%s size: %d\n", features[is_icc], (int)metadata.size);
+                  fprintf(stderr, "%s size: %d\n",
+                          features[is_icc], (int)metadata.size);
                 }
                 WebPDataClear(&metadata);
                 if (err != WEBP_MUX_OK) {
@@ -621,11 +622,11 @@ int main(int argc, const char *argv[]) {
       goto End;
     }
     if (!quiet) {
-      printf("Saved output file: %s\n", out_file);
+      fprintf(stderr, "Saved output file: %s\n", out_file);
     }
   } else {
     if (!quiet) {
-      printf("Nothing written; use -o flag to save the result.\n");
+      fprintf(stderr, "Nothing written; use -o flag to save the result.\n");
     }
   }
 
