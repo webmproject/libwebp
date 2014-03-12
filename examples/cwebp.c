@@ -310,18 +310,18 @@ static void PrintMapInfo(const WebPPicture* const pic) {
       for (x = 0; x < mb_w; ++x) {
         const int c = pic->extra_info[x + y * mb_w];
         if (type == 1) {   // intra4/intra16
-          printf("%c", "+."[c]);
+          fprintf(stderr, "%c", "+."[c]);
         } else if (type == 2) {    // segments
-          printf("%c", ".-*X"[c]);
+          fprintf(stderr, "%c", ".-*X"[c]);
         } else if (type == 3) {    // quantizers
-          printf("%.2d ", c);
+          fprintf(stderr, "%.2d ", c);
         } else if (type == 6 || type == 7) {
-          printf("%3d ", c);
+          fprintf(stderr, "%3d ", c);
         } else {
-          printf("0x%.2x ", c);
+          fprintf(stderr, "0x%.2x ", c);
         }
       }
-      printf("\n");
+      fprintf(stderr, "\n");
     }
   }
 }
@@ -534,9 +534,8 @@ static int WriteWebPWithMetadata(FILE* const out,
 //------------------------------------------------------------------------------
 
 static int ProgressReport(int percent, const WebPPicture* const picture) {
-  printf("[%s]: %3d %%      \r",
-         (char*)picture->user_data, percent);
-  fflush(stdout);
+  fprintf(stderr, "[%s]: %3d %%      \r",
+          (char*)picture->user_data, percent);
   return 1;  // all ok
 }
 
@@ -975,8 +974,9 @@ int main(int argc, const char *argv[]) {
   }
 
   // Open the output
-  if (out_file) {
-    out = fopen(out_file, "wb");
+  if (out_file != NULL) {
+    const int use_stdout = !strcmp(out_file, "-");
+    out = use_stdout ? stdout : fopen(out_file, "wb");
     if (out == NULL) {
       fprintf(stderr, "Error! Cannot open output file '%s'\n", out_file);
       goto Error;
@@ -1126,7 +1126,7 @@ int main(int argc, const char *argv[]) {
   MetadataFree(&metadata);
   WebPPictureFree(&picture);
   WebPPictureFree(&original_picture);
-  if (out != NULL) {
+  if (out != NULL && out != stdout) {
     fclose(out);
   }
 
