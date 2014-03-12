@@ -19,6 +19,12 @@ The basic options are:
 .BI \-o " string
 Specify the name of the output WebP file. If omitted, \fBcwebp\fP will
 perform compression but only report statistics.
+Using "\-" as output name will direct output to 'stdout'.
+.TP
+.BI \-\- " string
+Explicitly specify the input file. This option is useful if the input
+file starts with an '\-' for instance. This option must appear \fBlast\fP.
+Any other options afterward will be ignored.
 .TP
 .B \-h, \-help
 A short usage summary.
