@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//yok\u003d",
+        "filename": "man/cwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-03-12T20:56:02Z",
+      "side": 1,
+      "message": "\"\\-\"",
+      "revId": "cdf54f926ee0050e38217dc57616ea6be70a2b88",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//yog\u003d",
+        "filename": "man/cwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-03-12T20:56:02Z",
+      "side": 1,
+      "message": "\\-\\- \" string",
+      "revId": "cdf54f926ee0050e38217dc57616ea6be70a2b88",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
