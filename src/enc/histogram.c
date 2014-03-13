@@ -455,7 +455,7 @@ static int GetHistoBinIndex(
   return bin_id;
 }
 
-// Construct the Histogram from backward references.
+// Construct the histograms from backward references.
 static void HistogramBuild(
     int xsize, int histo_bits, const VP8LBackwardRefs* const backward_refs,
     VP8LHistogramSet* const init_histo) {
@@ -499,35 +499,33 @@ static void HistogramAnalyzeBin(
   int i;
   const int histo_size = init_histo->size;
   VP8LHistogram** const histograms = init_histo->histograms;
-  if (bin_map != NULL) {
-    const int bin_depth = init_histo->size + 1;
-    DominantCostRange cost_range;
-    DominantCostRangeInit(&cost_range);
+  const int bin_depth = init_histo->size + 1;
+  DominantCostRange cost_range;
+  DominantCostRangeInit(&cost_range);
 
-    // Analyze the dominant (literal, red and blue) entropy costs.
-    for (i = 0; i < histo_size; ++i) {
-      VP8LHistogram* const histo = histograms[i];
-      UpdateHistogramCost(histo);
-      // Copy histograms from init_histo[] to histo_image[].
-      *histo_image->histograms[i] = *histo;
-      UpdateDominantCostRange(histo, &cost_range);
-    }
+  // Analyze the dominant (literal, red and blue) entropy costs.
+  for (i = 0; i < histo_size; ++i) {
+    VP8LHistogram* const histo = histograms[i];
+    UpdateHistogramCost(histo);
+    // Copy histograms from init_histo[] to histo_image[].
+    *histo_image->histograms[i] = *histo;
+    UpdateDominantCostRange(histo, &cost_range);
+  }
 
-    // bin-hash histograms on three of the dominant (literal, red and blue)
-    // symbol costs.
-    for (i = 0; i < histo_size; ++i) {
-      int num_histos;
-      VP8LHistogram* const histo = histograms[i];
-      const int16_t bin_id = (int16_t)GetHistoBinIndex(histo, &cost_range);
-      const int bin_offset = bin_id * bin_depth;
-      // bin_map[n][0] for every bin 'n' maintains the counter for the number of
-      // histograms in that bin.
-      // Get and increment the num_histos in that bin.
-      num_histos = ++bin_map[bin_offset];
-      assert(bin_offset + num_histos < bin_depth * BIN_SIZE);
-      // Add Histogram i'th index at num_histos (last) position in the bin_map.
-      bin_map[bin_offset + num_histos] = i;
-    }
+  // bin-hash histograms on three of the dominant (literal, red and blue)
+  // symbol costs.
+  for (i = 0; i < histo_size; ++i) {
+    int num_histos;
+    VP8LHistogram* const histo = histograms[i];
+    const int16_t bin_id = (int16_t)GetHistoBinIndex(histo, &cost_range);
+    const int bin_offset = bin_id * bin_depth;
+    // bin_map[n][0] for every bin 'n' maintains the counter for the number of
+    // histograms in that bin.
+    // Get and increment the num_histos in that bin.
+    num_histos = ++bin_map[bin_offset];
+    assert(bin_offset + num_histos < bin_depth * BIN_SIZE);
+    // Add histogram i'th index at num_histos (last) position in the bin_map.
+    bin_map[bin_offset + num_histos] = i;
   }
 }
 
@@ -565,7 +563,6 @@ static void HistogramCombineBin(VP8LHistogramSet* const histo_image,
                                 VP8LHistogram* const histos,
                                 int bin_depth,
                                 int16_t* const bin_map) {
-  int i;
   int bin_id;
   VP8LHistogram* cur_combo = histos;
 
@@ -573,8 +570,9 @@ static void HistogramCombineBin(VP8LHistogramSet* const histo_image,
     const int bin_offset = bin_id * bin_depth;
     const int num_histos = bin_map[bin_offset];
     const int idx1 = bin_map[bin_offset + 1];
-    for (i = 2; i <= num_histos; ++i) {
-      const int idx2 = bin_map[bin_offset + i];
+    int n;
+    for (n = 2; n <= num_histos; ++n) {
+      const int idx2 = bin_map[bin_offset + n];
       const double bit_cost_idx2 = histo_image->histograms[idx2]->bit_cost_;
       if (bit_cost_idx2 > 0.) {
         const double bit_cost_thresh = -bit_cost_idx2 * 0.1;
@@ -742,17 +740,13 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
     if (bin_map == NULL) goto Error;
   }
 
-  // Construct the Histogram from backward references.
+  // Construct the histogram from backward references.
   HistogramBuild(xsize, histo_bits, refs, init_histo);
 
   if (bin_map != NULL) {
-    // Partition Histograms to different entropy bins for three dominant
-    // (literal red and blue) symbol costs and compute the histogram aggregate
-    // bit_cost.
     HistogramAnalyzeBin(init_histo, histo_image, bin_map);
     HistogramCombineBin(histo_image, histos, bin_depth, bin_map);
   } else {
-    // Compute the histogram aggregate bit_cost.
     HistogramAnalyze(init_histo, histo_image);
   }
 
@@ -764,7 +758,7 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
 
   ok = 1;
 
-Error:
+ Error:
   free(bin_map);
   free(init_histo);
   free(histos);

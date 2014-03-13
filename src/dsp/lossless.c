@@ -541,26 +541,25 @@ static const PredictorFunc kPredictors[16] = {
   Predictor0, Predictor0    // <- padding security sentinels
 };
 
-static float PredictionCostSpatial(const int* const counts, int weight_0,
-                                   double exp_val, int n) {
-  const int significant_symbols = n >> 4;
+static float PredictionCostSpatial(const int counts[256], int weight_0,
+                                   double exp_val) {
+  const int significant_symbols = 256 >> 4;
   const double exp_decay_factor = 0.6;
   double bits = weight_0 * counts[0];
   int i;
   for (i = 1; i < significant_symbols; ++i) {
-    bits += exp_val * (counts[i] + counts[n - i]);
+    bits += exp_val * (counts[i] + counts[256 - i]);
     exp_val *= exp_decay_factor;
   }
   return (float)(-0.1 * bits);
 }
 
 // Compute the combined Shanon's entropy for distribution {X} and {X+Y}
-static float CombinedShannonEntropy(const int* const X,
-                                    const int* const Y, int n) {
+static float CombinedShannonEntropy(const int X[256], const int Y[256]) {
   int i;
   double retval = 0.;
   int sumX = 0, sumXY = 0;
-  for (i = 0; i < n; ++i) {
+  for (i = 0; i < 256; ++i) {
     const int x = X[i];
     const int xy = x + Y[i];
     if (x != 0) {
@@ -583,8 +582,8 @@ static float PredictionCostSpatialHistogram(const int accumulated[4][256],
   double retval = 0;
   for (i = 0; i < 4; ++i) {
     const double kExpValue = 0.94;
-    retval += PredictionCostSpatial(tile[i], 1, kExpValue, 256);
-    retval += CombinedShannonEntropy(tile[i], accumulated[i], 256);
+    retval += PredictionCostSpatial(tile[i], 1, kExpValue);
+    retval += CombinedShannonEntropy(tile[i], accumulated[i]);
   }
   return (float)retval;
 }
@@ -766,7 +765,7 @@ static void PredictorInverseTransform(const VP8LTransform* const transform,
       AddPixelsEq(data, pred2);
       // .. the rest:
       while (x < safe_width) {
-      pred_func = kPredictors[((*pred_mode_src++) >> 8) & 0xf];
+        pred_func = kPredictors[((*pred_mode_src++) >> 8) & 0xf];
         for (; t < tile_width; ++t, ++x) {
           const uint32_t pred = pred_func(data[x - 1], data + x - width);
           AddPixelsEq(data + x, pred);
@@ -839,7 +838,7 @@ static WEBP_INLINE void ColorCodeToMultipliers(uint32_t color_code,
   m->red_to_blue_   = (color_code >> 16) & 0xff;
 }
 
-static WEBP_INLINE uint32_t MultipliersToColorCode(Multipliers* const m) {
+static WEBP_INLINE uint32_t MultipliersToColorCode(const Multipliers* const m) {
   return 0xff000000u |
          ((uint32_t)(m->red_to_blue_) << 16) |
          ((uint32_t)(m->green_to_blue_) << 8) |
@@ -852,13 +851,13 @@ static WEBP_INLINE uint32_t TransformColor(const Multipliers* const m,
   const uint32_t red = argb >> 16;
   uint32_t new_red = red;
   uint32_t new_blue = argb;
-    new_red -= ColorTransformDelta(m->green_to_red_, green);
-    new_red &= 0xff;
-    new_blue -= ColorTransformDelta(m->green_to_blue_, green);
-    new_blue -= ColorTransformDelta(m->red_to_blue_, red);
-    new_blue &= 0xff;
+  new_red -= ColorTransformDelta(m->green_to_red_, green);
+  new_red &= 0xff;
+  new_blue -= ColorTransformDelta(m->green_to_blue_, green);
+  new_blue -= ColorTransformDelta(m->red_to_blue_, red);
+  new_blue &= 0xff;
   return (argb & 0xff00ff00u) | (new_red << 16) | (new_blue);
-  }
+}
 
 static WEBP_INLINE uint32_t TransformColorInverse(const Multipliers* const m,
                                                   uint32_t argb) {
@@ -917,8 +916,8 @@ static float PredictionCostCrossColor(const int accumulated[256],
   // Favor low entropy, locally and globally.
   // Favor small absolute values for PredictionCostSpatial
   static const double kExpValue = 2.4;
-  return CombinedShannonEntropy(counts, accumulated, 256) +
-         PredictionCostSpatial(counts, 3, kExpValue, 256);
+  return CombinedShannonEntropy(counts, accumulated) +
+         PredictionCostSpatial(counts, 3, kExpValue);
 }
 
 static float GetPredictionCostCrossColorRed(
@@ -1630,4 +1629,3 @@ void VP8LDspInit(void) {
 }
 
 //------------------------------------------------------------------------------
-
