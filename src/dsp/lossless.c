@@ -749,29 +749,36 @@ static void PredictorInverseTransform(const VP8LTransform* const transform,
 
   {
     int y = y_start;
-    const int mask = (1 << transform->bits_) - 1;
+    const int tile_width = 1 << transform->bits_;
+    const int mask = tile_width - 1;
+    const int safe_width = width & ~mask;
     const int tiles_per_row = VP8LSubSampleSize(width, transform->bits_);
     const uint32_t* pred_mode_base =
         transform->data_ + (y >> transform->bits_) * tiles_per_row;
 
     while (y < y_end) {
-      int x;
       const uint32_t pred2 = Predictor2(data[-1], data - width);
       const uint32_t* pred_mode_src = pred_mode_base;
       PredictorFunc pred_func;
-
+      int x = 1;
+      int t = 1;
       // First pixel follows the T (mode=2) mode.
       AddPixelsEq(data, pred2);
-
       // .. the rest:
+      while (x < safe_width) {
       pred_func = kPredictors[((*pred_mode_src++) >> 8) & 0xf];
-      for (x = 1; x < width; ++x) {
-        uint32_t pred;
-        if ((x & mask) == 0) {    // start of tile. Read predictor function.
-          pred_func = kPredictors[((*pred_mode_src++) >> 8) & 0xf];
+        for (; t < tile_width; ++t, ++x) {
+          const uint32_t pred = pred_func(data[x - 1], data + x - width);
+          AddPixelsEq(data + x, pred);
         }
-        pred = pred_func(data[x - 1], data + x - width);
-        AddPixelsEq(data + x, pred);
+        t = 0;
+      }
+      if (x < width) {
+        pred_func = kPredictors[((*pred_mode_src++) >> 8) & 0xf];
+        for (; x < width; ++x) {
+          const uint32_t pred = pred_func(data[x - 1], data + x - width);
+          AddPixelsEq(data + x, pred);
+        }
       }
       data += width;
       ++y;
@@ -840,25 +847,30 @@ static WEBP_INLINE uint32_t MultipliersToColorCode(Multipliers* const m) {
 }
 
 static WEBP_INLINE uint32_t TransformColor(const Multipliers* const m,
-                                           uint32_t argb, int inverse) {
+                                           uint32_t argb) {
   const uint32_t green = argb >> 8;
   const uint32_t red = argb >> 16;
   uint32_t new_red = red;
   uint32_t new_blue = argb;
-
-  if (inverse) {
-    new_red += ColorTransformDelta(m->green_to_red_, green);
-    new_red &= 0xff;
-    new_blue += ColorTransformDelta(m->green_to_blue_, green);
-    new_blue += ColorTransformDelta(m->red_to_blue_, new_red);
-    new_blue &= 0xff;
-  } else {
     new_red -= ColorTransformDelta(m->green_to_red_, green);
     new_red &= 0xff;
     new_blue -= ColorTransformDelta(m->green_to_blue_, green);
     new_blue -= ColorTransformDelta(m->red_to_blue_, red);
     new_blue &= 0xff;
+  return (argb & 0xff00ff00u) | (new_red << 16) | (new_blue);
   }
+
+static WEBP_INLINE uint32_t TransformColorInverse(const Multipliers* const m,
+                                                  uint32_t argb) {
+  const uint32_t green = argb >> 8;
+  const uint32_t red = argb >> 16;
+  uint32_t new_red = red;
+  uint32_t new_blue = argb;
+  new_red += ColorTransformDelta(m->green_to_red_, green);
+  new_red &= 0xff;
+  new_blue += ColorTransformDelta(m->green_to_blue_, green);
+  new_blue += ColorTransformDelta(m->red_to_blue_, new_red);
+  new_blue &= 0xff;
   return (argb & 0xff00ff00u) | (new_red << 16) | (new_blue);
 }
 
@@ -1097,7 +1109,7 @@ static void CopyTileWithColorTransform(int xsize, int ysize,
   while (yscan-- > 0) {
     int x;
     for (x = 0; x < xscan; ++x) {
-      argb[x] = TransformColor(&color_transform, argb[x], 0);
+      argb[x] = TransformColor(&color_transform, argb[x]);
     }
     argb += xsize;
   }
@@ -1164,7 +1176,9 @@ void VP8LColorSpaceTransform(int width, int height, int bits, int quality,
 static void ColorSpaceInverseTransform(const VP8LTransform* const transform,
                                        int y_start, int y_end, uint32_t* data) {
   const int width = transform->xsize_;
-  const int mask = (1 << transform->bits_) - 1;
+  const int tile_width = 1 << transform->bits_;
+  const int mask = tile_width - 1;
+  const int safe_width = width & ~mask;
   const int tiles_per_row = VP8LSubSampleSize(width, transform->bits_);
   int y = y_start;
   const uint32_t* pred_row =
@@ -1173,11 +1187,19 @@ static void ColorSpaceInverseTransform(const VP8LTransform* const transform,
   while (y < y_end) {
     const uint32_t* pred = pred_row;
     Multipliers m = { 0, 0, 0 };
-    int x;
-
-    for (x = 0; x < width; ++x) {
-      if ((x & mask) == 0) ColorCodeToMultipliers(*pred++, &m);
-      data[x] = TransformColor(&m, data[x], 1);
+    int x = 0;
+    while (x < safe_width) {
+      int t;
+      ColorCodeToMultipliers(*pred++, &m);
+      for (t = 0; t < tile_width; ++t, ++x) {
+        data[x] = TransformColorInverse(&m, data[x]);
+      }
+    }
+    if (x < width) {
+      ColorCodeToMultipliers(*pred++, &m);
+      for (; x < width; ++x) {
+        data[x] = TransformColorInverse(&m, data[x]);
+      }
     }
     data += width;
     ++y;
