@@ -12,7 +12,6 @@
 
 #include <assert.h>
 #include <math.h>
-#include <stdio.h>
 
 #include "./backward_references.h"
 #include "./histogram.h"
@@ -25,6 +24,8 @@
 #define HASH_BITS 18
 #define HASH_SIZE (1 << HASH_BITS)
 #define HASH_MULTIPLIER (0xc6a4a7935bd1e995ULL)
+
+#define MAX_ENTROPY    (1e30f)
 
 // 1M window (4M bytes) minus 120 special codes for short distances.
 #define WINDOW_SIZE ((1 << 20) - 120)
@@ -833,7 +834,7 @@ static double ComputeCacheEntropy(const uint32_t* const argb,
 
   if (use_color_cache) {
     cc_init = VP8LColorCacheInit(&hashers, cache_bits);
-    if (!cc_init) return 1e99;
+    if (!cc_init) return MAX_ENTROPY;
   }
 
   VP8LHistogramInit(&histo, cache_bits);
@@ -873,27 +874,38 @@ int VP8LCalculateEstimateForCacheSize(const uint32_t* const argb,
                                       int xsize, int ysize, int quality,
                                       int* const best_cache_bits) {
   int ok = 0;
-  int cache_bits;
-  // Number of tries to get optimal cache-bits after finding a local minima.
-  const int max_tries_after_min = 3 + (quality >> 4);
-  int num_tries_after_min = 0;
-  double lowest_entropy = 1e99;
+  int eval_low = 1;
+  int eval_high = 1;
+  double entropy_low = MAX_ENTROPY;
+  double entropy_high = MAX_ENTROPY;
+  int cache_bits_low = 0;
+  int cache_bits_high = MAX_COLOR_CACHE_BITS;
   VP8LBackwardRefs refs;
+
   if (!VP8LBackwardRefsAlloc(&refs, xsize * ysize) ||
       !BackwardReferencesHashChain(xsize, ysize, argb, 0, quality, &refs)) {
     goto Error;
   }
-  // The entropy is generally lower for higher cache_bits. Start searching from
-  // the highest value and settle for a local minima.
-  for (cache_bits = MAX_COLOR_CACHE_BITS;
-       cache_bits >= 0 && num_tries_after_min < max_tries_after_min;
-       --cache_bits, ++num_tries_after_min) {
-    const double cur_entropy = ComputeCacheEntropy(argb, xsize, ysize,
-                                                   &refs, cache_bits);
-    if (cur_entropy < lowest_entropy) {
-      *best_cache_bits = cache_bits;
-      lowest_entropy = cur_entropy;
-      num_tries_after_min = 0;
+  // Do a binary search to find the optimal entropy for cache_bits.
+  while (cache_bits_high - cache_bits_low > 1) {
+    if (eval_low) {
+      entropy_low =
+          ComputeCacheEntropy(argb, xsize, ysize, &refs, cache_bits_low);
+      eval_low = 0;
+    }
+    if (eval_high) {
+      entropy_high =
+          ComputeCacheEntropy(argb, xsize, ysize, &refs, cache_bits_high);
+      eval_high = 0;
+    }
+    if (entropy_high < entropy_low) {
+      *best_cache_bits = cache_bits_high;
+      cache_bits_low = (cache_bits_low + cache_bits_high) / 2;
+      eval_low = 1;
+    } else {
+      *best_cache_bits = cache_bits_low;
+      cache_bits_high = (cache_bits_low + cache_bits_high) / 2;
+      eval_high = 1;
     }
   }
   ok = 1;
