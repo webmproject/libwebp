@@ -892,25 +892,6 @@ static WEBP_INLINE uint8_t TransformColorBlue(uint8_t green_to_blue,
   return (new_blue & 0xff);
 }
 
-static WEBP_INLINE int SkipRepeatedPixels(const uint32_t* const argb,
-                                          int ix, int xsize) {
-  const uint32_t v = argb[ix];
-  if (ix >= 3) {
-    if (v == argb[ix - 3] && v == argb[ix - 2] && v == argb[ix - 1]) {
-      return 1;
-    }
-    if (ix >= xsize + 3) {
-      if (v == argb[ix - xsize] &&
-          argb[ix - 3] == argb[ix - xsize - 3] &&
-          argb[ix - 2] == argb[ix - xsize - 2] &&
-          argb[ix - 1] == argb[ix - xsize - 1]) {
-        return 1;
-      }
-    }
-  }
-  return 0;
-}
-
 static float PredictionCostCrossColor(const int accumulated[256],
                                       const int counts[256]) {
   // Favor low entropy, locally and globally.
@@ -931,9 +912,6 @@ static float GetPredictionCostCrossColorRed(
     int ix = all_y * xsize + tile_x_offset;
     int all_x;
     for (all_x = tile_x_offset; all_x < all_x_max; ++all_x, ++ix) {
-      if (SkipRepeatedPixels(argb, ix, xsize)) {
-        continue;
-      }
       ++histo[TransformColorRed(green_to_red, argb[ix])];  // red.
     }
   }
@@ -1001,9 +979,6 @@ static float GetPredictionCostCrossColorBlue(
     int all_x;
     int ix = all_y * xsize + tile_x_offset;
     for (all_x = tile_x_offset; all_x < all_x_max; ++all_x, ++ix) {
-      if (SkipRepeatedPixels(argb, ix, xsize)) {
-        continue;
-      }
       ++histo[TransformColorBlue(green_to_blue, red_to_blue, argb[ix])];
     }
   }
@@ -1039,8 +1014,8 @@ static void GetBestGreenRedToBlue(
   const int step = (quality < 25) ? 32 : (quality > 50) ? 8 : 16;
   const int min_green_to_blue = -32;
   const int max_green_to_blue = 32;
-  const int min_red_to_blue = -16;
-  const int max_red_to_blue = 16;
+  const int min_red_to_blue = -32;
+  const int max_red_to_blue = 32;
   const int num_iters =
       (1 + (max_green_to_blue - min_green_to_blue) / step) *
       (1 + (max_red_to_blue - min_red_to_blue) / step);
