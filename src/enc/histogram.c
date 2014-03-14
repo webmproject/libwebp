@@ -423,9 +423,10 @@ static void UpdateDominantCostRange(
 }
 
 static void UpdateHistogramCost(VP8LHistogram* const h) {
-  const float alpha_cost = PopulationCost(h->alpha_, 256);
-  const float distance_cost = PopulationCost(h->distance_, NUM_DISTANCE_CODES) +
-                              ExtraCost(h->distance_, NUM_DISTANCE_CODES);
+  const double alpha_cost = PopulationCost(h->alpha_, 256);
+  const double distance_cost =
+      PopulationCost(h->distance_, NUM_DISTANCE_CODES) +
+      ExtraCost(h->distance_, NUM_DISTANCE_CODES);
   const int num_codes = VP8LHistogramNumCodes(h->palette_code_bits_);
   h->literal_cost_ = PopulationCost(h->literal_, num_codes) +
                      ExtraCost(h->literal_ + 256, NUM_LENGTH_CODES);
