@@ -130,8 +130,8 @@ typedef enum {   // Rate-distortion optimization levels
 #define ALIGN_CST 15
 #define DO_ALIGN(PTR) ((uintptr_t)((PTR) + ALIGN_CST) & ~ALIGN_CST)
 
-extern const int VP8Scan[16 + 4 + 4];           // in quant.c
-extern const int VP8UVModeOffsets[4];           // in analyze.c
+extern const int VP8Scan[16];           // in quant.c
+extern const int VP8UVModeOffsets[4];   // in analyze.c
 extern const int VP8I16ModeOffsets[4];
 extern const int VP8I4ModeOffsets[NUM_BMODES];
 
