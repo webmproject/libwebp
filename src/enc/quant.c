@@ -454,13 +454,14 @@ void VP8MakeIntra4Preds(const VP8EncIterator* const it) {
 // |UUVV| 20
 // +----+
 
-const int VP8Scan[16 + 4 + 4] = {
-  // Luma
+const int VP8Scan[16] = {  // Luma
   0 +  0 * BPS,  4 +  0 * BPS, 8 +  0 * BPS, 12 +  0 * BPS,
   0 +  4 * BPS,  4 +  4 * BPS, 8 +  4 * BPS, 12 +  4 * BPS,
   0 +  8 * BPS,  4 +  8 * BPS, 8 +  8 * BPS, 12 +  8 * BPS,
   0 + 12 * BPS,  4 + 12 * BPS, 8 + 12 * BPS, 12 + 12 * BPS,
+};
 
+static const int VP8ScanUV[4 + 4] = {
   0 + 0 * BPS,   4 + 0 * BPS, 0 + 4 * BPS,  4 + 4 * BPS,    // U
   8 + 0 * BPS,  12 + 0 * BPS, 8 + 4 * BPS, 12 + 4 * BPS     // V
 };
@@ -542,13 +543,13 @@ static WEBP_INLINE score_t RDScoreTrellis(int lambda, score_t rate,
   return rate * lambda + 256 * distortion;
 }
 
-static int TrellisQuantizeBlock(const VP8EncIterator* const it,
+static int TrellisQuantizeBlock(const VP8Encoder* const enc,
                                 int16_t in[16], int16_t out[16],
                                 int ctx0, int coeff_type,
                                 const VP8Matrix* const mtx,
                                 int lambda) {
-  ProbaArray* const probas = it->enc_->proba_.coeffs_[coeff_type];
-  CostArray* const costs = it->enc_->proba_.level_cost_[coeff_type];
+  const ProbaArray* const probas = enc->proba_.coeffs_[coeff_type];
+  const CostArray* const costs = enc->proba_.level_cost_[coeff_type];
   const int first = (coeff_type == 0) ? 1 : 0;
   Node nodes[17][NUM_NODES];
   int best_path[3] = {-1, -1, -1};   // store best-last/best-level/best-previous
@@ -699,10 +700,10 @@ static int ReconstructIntra16(VP8EncIterator* const it,
                               VP8ModeScore* const rd,
                               uint8_t* const yuv_out,
                               int mode) {
-  VP8Encoder* const enc = it->enc_;
+  const VP8Encoder* const enc = it->enc_;
   const uint8_t* const ref = it->yuv_p_ + VP8I16ModeOffsets[mode];
   const uint8_t* const src = it->yuv_in_ + Y_OFF;
-  VP8SegmentInfo* const dqm = &enc->dqm_[it->mb_->segment_];
+  const VP8SegmentInfo* const dqm = &enc->dqm_[it->mb_->segment_];
   int nz = 0;
   int n;
   int16_t tmp[16][16], dc_tmp[16];
@@ -720,8 +721,8 @@ static int ReconstructIntra16(VP8EncIterator* const it,
       for (x = 0; x < 4; ++x, ++n) {
         const int ctx = it->top_nz_[x] + it->left_nz_[y];
         const int non_zero =
-           TrellisQuantizeBlock(it, tmp[n], rd->y_ac_levels[n], ctx, 0,
-                                &dqm->y1_, dqm->lambda_trellis_i16_);
+            TrellisQuantizeBlock(enc, tmp[n], rd->y_ac_levels[n], ctx, 0,
+                                 &dqm->y1_, dqm->lambda_trellis_i16_);
         it->top_nz_[x] = it->left_nz_[y] = non_zero;
         nz |= non_zero << n;
       }
@@ -756,7 +757,7 @@ static int ReconstructIntra4(VP8EncIterator* const it,
   if (DO_TRELLIS_I4 && it->do_trellis_) {
     const int x = it->i4_ & 3, y = it->i4_ >> 2;
     const int ctx = it->top_nz_[x] + it->left_nz_[y];
-    nz = TrellisQuantizeBlock(it, tmp, levels, ctx, 3, &dqm->y1_,
+    nz = TrellisQuantizeBlock(enc, tmp, levels, ctx, 3, &dqm->y1_,
                               dqm->lambda_trellis_i4_);
   } else {
     nz = VP8EncQuantizeBlock(tmp, levels, 0, &dqm->y1_);
@@ -776,7 +777,7 @@ static int ReconstructUV(VP8EncIterator* const it, VP8ModeScore* const rd,
   int16_t tmp[8][16];
 
   for (n = 0; n < 8; ++n) {
-    VP8FTransform(src + VP8Scan[16 + n], ref + VP8Scan[16 + n], tmp[n]);
+    VP8FTransform(src + VP8ScanUV[n], ref + VP8ScanUV[n], tmp[n]);
   }
   if (DO_TRELLIS_UV && it->do_trellis_) {
     int ch, x, y;
@@ -785,8 +786,8 @@ static int ReconstructUV(VP8EncIterator* const it, VP8ModeScore* const rd,
         for (x = 0; x < 2; ++x, ++n) {
           const int ctx = it->top_nz_[4 + ch + x] + it->left_nz_[4 + ch + y];
           const int non_zero =
-            TrellisQuantizeBlock(it, tmp[n], rd->uv_levels[n], ctx, 2,
-                                 &dqm->uv_, dqm->lambda_trellis_uv_);
+              TrellisQuantizeBlock(enc, tmp[n], rd->uv_levels[n], ctx, 2,
+                                   &dqm->uv_, dqm->lambda_trellis_uv_);
           it->top_nz_[4 + ch + x] = it->left_nz_[4 + ch + y] = non_zero;
           nz |= non_zero << n;
         }
@@ -799,7 +800,7 @@ static int ReconstructUV(VP8EncIterator* const it, VP8ModeScore* const rd,
   }
 
   for (n = 0; n < 8; n += 2) {
-    VP8ITransform(ref + VP8Scan[16 + n], tmp[n], yuv_out + VP8Scan[16 + n], 1);
+    VP8ITransform(ref + VP8ScanUV[n], tmp[n], yuv_out + VP8ScanUV[n], 1);
   }
   return (nz << 16);
 }
@@ -844,8 +845,7 @@ static score_t IsFlat(const int16_t* levels, int num_blocks, score_t thresh) {
 
 static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* const rd) {
   const int kNumBlocks = 16;
-  VP8Encoder* const enc = it->enc_;
-  VP8SegmentInfo* const dqm = &enc->dqm_[it->mb_->segment_];
+  VP8SegmentInfo* const dqm = &it->enc_->dqm_[it->mb_->segment_];
   const int lambda = dqm->lambda_i16_;
   const int tlambda = dqm->tlambda_;
   const uint8_t* const src = it->yuv_in_ + Y_OFF;
@@ -992,8 +992,7 @@ static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
 
 static void PickBestUV(VP8EncIterator* const it, VP8ModeScore* const rd) {
   const int kNumBlocks = 8;
-  const VP8Encoder* const enc = it->enc_;
-  const VP8SegmentInfo* const dqm = &enc->dqm_[it->mb_->segment_];
+  const VP8SegmentInfo* const dqm = &it->enc_->dqm_[it->mb_->segment_];
   const int lambda = dqm->lambda_uv_;
   const uint8_t* const src = it->yuv_in_ + U_OFF;
   uint8_t* const tmp_dst = it->yuv_out2_ + U_OFF;  // scratch buffer
