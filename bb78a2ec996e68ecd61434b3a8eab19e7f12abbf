@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//x2I\u003d",
+        "filename": "src/enc/quant.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 723,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-03-18T01:52:28Z",
+      "side": 1,
+      "message": "looks to be indented one too far now",
+      "revId": "bb78a2ec996e68ecd61434b3a8eab19e7f12abbf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
