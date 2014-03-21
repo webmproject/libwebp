@@ -73,7 +73,7 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
 # prefer arm over thumb mode for performance gains
 LOCAL_ARM_MODE := arm
 
-ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+ifneq ($(findstring armeabi-v7a, $(TARGET_ARCH_ABI)),)
   # Setting LOCAL_ARM_NEON will enable -mfpu=neon which may cause illegal
   # instructions to be generated for armv7a code. Instead target the neon code
   # specifically.
