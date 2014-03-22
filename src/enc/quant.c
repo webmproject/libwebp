@@ -515,15 +515,18 @@ static void AddScore(VP8ModeScore* const dst, const VP8ModeScore* const src) {
 //------------------------------------------------------------------------------
 // Performs trellis-optimized quantization.
 
-// Trellis
-
+// Trellis node
 typedef struct {
-  int prev;               // best previous node
-  int level;              // level
-  int sign;               // sign of coeff_i
+  int8_t prev;            // best previous node
+  int8_t sign;            // sign of coeff_i
+  int16_t level;          // level
+} Node;
+
+// Score state
+typedef struct {
   score_t score;          // partial RD score
   const uint16_t* costs;  // shortcut to cost tables
-} Node;
+} ScoreState;
 
 // If a coefficient was quantized to a value Q (using a neutral bias),
 // we test all alternate possibilities between [Q-MIN_DELTA, Q+MAX_DELTA]
@@ -531,7 +534,8 @@ typedef struct {
 #define MIN_DELTA 0   // how much lower level to try
 #define MAX_DELTA 1   // how much higher
 #define NUM_NODES (MIN_DELTA + 1 + MAX_DELTA)
-#define NODE(n, l) (nodes[(n) + 1][(l) + MIN_DELTA])
+#define NODE(n, l) (nodes[(n)][(l) + MIN_DELTA])
+#define SCORE_STATE(n, l) (score_states[n][(l) + MIN_DELTA])
 
 static WEBP_INLINE void SetRDScore(int lambda, VP8ModeScore* const rd) {
   // TODO: incorporate the "* 256" in the tables?
@@ -551,7 +555,10 @@ static int TrellisQuantizeBlock(const VP8Encoder* const enc,
   const ProbaArray* const probas = enc->proba_.coeffs_[coeff_type];
   const CostArray* const costs = enc->proba_.level_cost_[coeff_type];
   const int first = (coeff_type == 0) ? 1 : 0;
-  Node nodes[17][NUM_NODES];
+  Node nodes[16][NUM_NODES];
+  ScoreState score_states[2][NUM_NODES];
+  ScoreState* ss_cur = &SCORE_STATE(0, MIN_DELTA);
+  ScoreState* ss_prev = &SCORE_STATE(1, MIN_DELTA);
   int best_path[3] = {-1, -1, -1};   // store best-last/best-level/best-previous
   score_t best_score;
   int n, m, p, last;
@@ -580,11 +587,10 @@ static int TrellisQuantizeBlock(const VP8Encoder* const enc,
     best_score = RDScoreTrellis(lambda, cost, 0);
 
     // initialize source node.
-    n = first - 1;
     for (m = -MIN_DELTA; m <= MAX_DELTA; ++m) {
       const score_t rate = (ctx0 == 0) ? VP8BitCost(1, last_proba) : 0;
-      NODE(n, m).score = RDScoreTrellis(lambda, rate, 0);
-      NODE(n, m).costs = costs[VP8EncBands[first]][ctx0];
+      ss_cur[m].score = RDScoreTrellis(lambda, rate, 0);
+      ss_cur[m].costs = costs[VP8EncBands[first]][ctx0];
     }
   }
 
@@ -601,25 +607,34 @@ static int TrellisQuantizeBlock(const VP8Encoder* const enc,
     int level0 = QUANTDIV(coeff0, iQ, B);
     if (level0 > MAX_LEVEL) level0 = MAX_LEVEL;
 
+    {   // Swap current and previous score states
+      ScoreState* const tmp = ss_cur;
+      ss_cur = ss_prev;
+      ss_prev = tmp;
+    }
+
     // test all alternate level values around level0.
     for (m = -MIN_DELTA; m <= MAX_DELTA; ++m) {
       Node* const cur = &NODE(n, m);
       int level = level0 + m;
       const int ctx = (level > 2) ? 2 : level;
       const int band = VP8EncBands[n + 1];
-      score_t base_score, last_pos_cost;
+      score_t base_score, last_pos_score;
+      score_t best_cur_score = MAX_COST;
+      int best_prev = 0;   // default, in case
 
-      cur->score = MAX_COST;
+      ss_cur[m].score = MAX_COST;
+      ss_cur[m].costs = costs[band][ctx];
       if (level > MAX_LEVEL || level < 0) {   // node is dead?
         continue;
       }
-      cur->sign = sign;
-      cur->level = level;
-      cur->costs = costs[band][ctx];
-      cur->prev = 0;  // default, in case
 
       // Compute extra rate cost if last coeff's position is < 15
-      last_pos_cost = (n < 15) ? VP8BitCost(0, probas[band][ctx][0]) : 0;
+      {
+        const score_t last_pos_cost =
+            (n < 15) ? VP8BitCost(0, probas[band][ctx][0]) : 0;
+        last_pos_score = RDScoreTrellis(lambda, last_pos_cost, 0);
+      }
 
       {
         // Compute delta_error = how much coding this level will
@@ -633,29 +648,31 @@ static int TrellisQuantizeBlock(const VP8Encoder* const enc,
 
       // Inspect all possible non-dead predecessors. Retain only the best one.
       for (p = -MIN_DELTA; p <= MAX_DELTA; ++p) {
-        const Node* const prev = &NODE(n - 1, p);
-        if (prev->score < MAX_COST) {   // skip dead node
-          // Base cost of both terminal / non-terminal hypothesis
-          const score_t cost = VP8LevelCost(prev->costs, level);
-          // Examine node assuming it's a non-terminal one.
-          const score_t score =
-              base_score + prev->score + RDScoreTrellis(lambda, cost, 0);
-          if (score < cur->score) {
-            cur->score = score;
-            cur->prev  = p;
-          }
+        // Dead nodes (with ss_prev[p].score >= MAX_COST) are automatically
+        // eliminated since their score can't be better than the current best.
+        const score_t cost = VP8LevelCost(ss_prev[p].costs, level);
+        // Examine node assuming it's a non-terminal one.
+        const score_t score =
+            base_score + ss_prev[p].score + RDScoreTrellis(lambda, cost, 0);
+        if (score < best_cur_score) {
+          best_cur_score = score;
+          best_prev = p;
         }
       }
+      // Store best finding in current node.
+      cur->sign = sign;
+      cur->level = level;
+      cur->prev = best_prev;
+      ss_cur[m].score = best_cur_score;
+
       // Now, record best terminal node (and thus best entry in the graph).
-      if (cur->level != 0) {
-        const score_t last_pos_score =
-            RDScoreTrellis(lambda, last_pos_cost, 0);
-        const score_t score = cur->score + last_pos_score;
+      if (level != 0) {
+        const score_t score = best_cur_score + last_pos_score;
         if (score < best_score) {
           best_score = score;
           best_path[0] = n;                     // best eob position
-          best_path[1] = cur->level - level0;   // best node index ('m')
-          best_path[2] = cur->prev;             // best predecessor
+          best_path[1] = m;                     // best node index
+          best_path[2] = best_prev;             // best predecessor
         }
       }
     }

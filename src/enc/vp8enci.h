@@ -160,6 +160,8 @@ extern const int VP8I4ModeOffsets[NUM_BMODES];
 #define I4TMP (6 * 16 * BPS + 8 * BPS +  8)
 
 typedef int64_t score_t;     // type used for scores, rate, distortion
+// Note that MAX_COST is not the maximum allowed by sizeof(score_t),
+// in order to allow overflowing computations.
 #define MAX_COST ((score_t)0x7fffffffffffffLL)
 
 #define QFIX 17
