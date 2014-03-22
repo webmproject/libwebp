@@ -734,7 +734,7 @@ static int ReconstructIntra16(VP8EncIterator* const it,
   }
 
   // Transform back
-  VP8ITransformWHT(dc_tmp, tmp[0]);
+  VP8TransformWHT(dc_tmp, tmp[0]);
   for (n = 0; n < 16; n += 2) {
     VP8ITransform(ref + VP8Scan[n], tmp[n], yuv_out + VP8Scan[n], 1);
   }

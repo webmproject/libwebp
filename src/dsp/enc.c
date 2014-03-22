@@ -159,33 +159,6 @@ static void FTransform(const uint8_t* src, const uint8_t* ref, int16_t* out) {
   }
 }
 
-static void ITransformWHT(const int16_t* in, int16_t* out) {
-  int tmp[16];
-  int i;
-  for (i = 0; i < 4; ++i) {
-    const int a0 = in[0 + i] + in[12 + i];
-    const int a1 = in[4 + i] + in[ 8 + i];
-    const int a2 = in[4 + i] - in[ 8 + i];
-    const int a3 = in[0 + i] - in[12 + i];
-    tmp[0  + i] = a0 + a1;
-    tmp[8  + i] = a0 - a1;
-    tmp[4  + i] = a3 + a2;
-    tmp[12 + i] = a3 - a2;
-  }
-  for (i = 0; i < 4; ++i) {
-    const int dc = tmp[0 + i * 4] + 3;    // w/ rounder
-    const int a0 = dc             + tmp[3 + i * 4];
-    const int a1 = tmp[1 + i * 4] + tmp[2 + i * 4];
-    const int a2 = tmp[1 + i * 4] - tmp[2 + i * 4];
-    const int a3 = dc             - tmp[3 + i * 4];
-    out[ 0] = (a0 + a1) >> 3;
-    out[16] = (a3 + a2) >> 3;
-    out[32] = (a0 - a1) >> 3;
-    out[48] = (a3 - a2) >> 3;
-    out += 64;
-  }
-}
-
 static void FTransformWHT(const int16_t* in, int16_t* out) {
   // input is 12b signed
   int32_t tmp[16];
@@ -699,7 +672,6 @@ static void Copy4x4(const uint8_t* src, uint8_t* dst) { Copy(src, dst, 4); }
 VP8CHisto VP8CollectHistogram;
 VP8Idct VP8ITransform;
 VP8Fdct VP8FTransform;
-VP8WHT VP8ITransformWHT;
 VP8WHT VP8FTransformWHT;
 VP8Intra4Preds VP8EncPredLuma4;
 VP8IntraPreds VP8EncPredLuma16;
@@ -718,13 +690,13 @@ extern void VP8EncDspInitSSE2(void);
 extern void VP8EncDspInitNEON(void);
 
 void VP8EncDspInit(void) {
+  VP8DspInit();  // common inverse transforms
   InitTables();
 
   // default C implementations
   VP8CollectHistogram = CollectHistogram;
   VP8ITransform = ITransform;
   VP8FTransform = FTransform;
-  VP8ITransformWHT = ITransformWHT;
   VP8FTransformWHT = FTransformWHT;
   VP8EncPredLuma4 = Intra4Preds;
   VP8EncPredLuma16 = Intra16Preds;
