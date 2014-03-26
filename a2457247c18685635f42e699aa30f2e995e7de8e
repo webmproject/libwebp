@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//wvQ\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1567,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-03-26T06:33:46Z",
+      "side": 1,
+      "message": "any simpler with a mix of shuffles?",
+      "revId": "a2457247c18685635f42e699aa30f2e995e7de8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//wvU\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1676,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-03-26T06:33:46Z",
+      "side": 1,
+      "message": "_mm_cvtepi32_pd ?",
+      "revId": "a2457247c18685635f42e699aa30f2e995e7de8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
