@@ -1537,13 +1537,7 @@ static void SubtractGreenFromBlueAndRedSSE2(uint32_t* argb_data, int num_pixs) {
     _mm_storeu_si128((__m128i*)&argb_data[i], out);
   }
   // fallthrough and finish off with plain-C
-  for (; i < num_pixs; ++i) {
-    const uint32_t argb = argb_data[i];
-    const uint32_t green = (argb >> 8) & 0xff;
-    const uint32_t new_r = (((argb >> 16) & 0xff) - green) & 0xff;
-    const uint32_t new_b = ((argb & 0xff) - green) & 0xff;
-    argb_data[i] = (argb & 0xff00ff00) | (new_r << 16) | new_b;
-  }
+  SubtractGreenFromBlueAndRed(argb_data + i, num_pixs - i);
 }
 
 static void AddGreenToBlueAndRedSSE2(uint32_t* data, const uint32_t* data_end) {
@@ -1558,14 +1552,138 @@ static void AddGreenToBlueAndRedSSE2(uint32_t* data, const uint32_t* data_end) {
     _mm_storeu_si128((__m128i*)data, out);
   }
   // fallthrough and finish off with plain-C
-  while (data < data_end) {
-    const uint32_t argb = *data;
-    const uint32_t green = ((argb >> 8) & 0xff);
-    uint32_t red_blue = (argb & 0x00ff00ffu);
-    red_blue += (green << 16) | green;
-    red_blue &= 0x00ff00ffu;
-    *data++ = (argb & 0xff00ff00u) | red_blue;
+  AddGreenToBlueAndRed(data, data_end);
+}
+
+static void ConvertBGRAToRGBASSE2(const uint32_t* src,
+                                  int num_pixels, uint8_t* dst) {
+  const __m128i* in = (const __m128i*)src;
+  __m128i* out = (__m128i*)dst;
+  while (num_pixels >= 8) {
+    const __m128i bgra0 = _mm_loadu_si128(in++);     // bgra0|bgra1|bgra2|bgra3
+    const __m128i bgra4 = _mm_loadu_si128(in++);     // bgra4|bgra5|bgra6|bgra7
+    const __m128i v0l = _mm_unpacklo_epi8(bgra0, bgra4);  // b0b4g0g4r0r4a0a4...
+    const __m128i v0h = _mm_unpackhi_epi8(bgra0, bgra4);  // b2b6g2g6r2r6a2a6...
+    const __m128i v1l = _mm_unpacklo_epi8(v0l, v0h);   // b0b2b4b6g0g2g4g6...
+    const __m128i v1h = _mm_unpackhi_epi8(v0l, v0h);   // b1b3b5b7g1g3g5g7...
+    const __m128i v2l = _mm_unpacklo_epi8(v1l, v1h);   // b0...b7 | g0...g7
+    const __m128i v2h = _mm_unpackhi_epi8(v1l, v1h);   // r0...r7 | a0...a7
+    const __m128i ga0 = _mm_unpackhi_epi64(v2l, v2h);  // g0...g7 | a0...a7
+    const __m128i rb0 = _mm_unpacklo_epi64(v2h, v2l);  // r0...r7 | b0...b7
+    const __m128i rg0 = _mm_unpacklo_epi8(rb0, ga0);   // r0g0r1g1 ... r6g6r7g7
+    const __m128i ba0 = _mm_unpackhi_epi8(rb0, ga0);   // b0a0b1a1 ... b6a6b7a7
+    const __m128i rgba0 = _mm_unpacklo_epi16(rg0, ba0);  // rgba0|rgba1...
+    const __m128i rgba4 = _mm_unpackhi_epi16(rg0, ba0);  // rgba4|rgba5...
+    _mm_storeu_si128(out++, rgba0);
+    _mm_storeu_si128(out++, rgba4);
+    num_pixels -= 8;
   }
+  // left-overs
+  ConvertBGRAToRGBA((const uint32_t*)in, num_pixels, (uint8_t*)out);
+}
+
+static void ConvertBGRAToRGBA4444SSE2(const uint32_t* src,
+                                      int num_pixels, uint8_t* dst) {
+  const __m128i mask_0x0f = _mm_set1_epi8(0x0f);
+  const __m128i mask_0xf0 = _mm_set1_epi8(0xf0);
+  const __m128i* in = (const __m128i*)src;
+  __m128i* out = (__m128i*)dst;
+  while (num_pixels >= 8) {
+    const __m128i bgra0 = _mm_loadu_si128(in++);     // bgra0|bgra1|bgra2|bgra3
+    const __m128i bgra4 = _mm_loadu_si128(in++);     // bgra4|bgra5|bgra6|bgra7
+    const __m128i v0l = _mm_unpacklo_epi8(bgra0, bgra4);  // b0b4g0g4r0r4a0a4...
+    const __m128i v0h = _mm_unpackhi_epi8(bgra0, bgra4);  // b2b6g2g6r2r6a2a6...
+    const __m128i v1l = _mm_unpacklo_epi8(v0l, v0h);    // b0b2b4b6g0g2g4g6...
+    const __m128i v1h = _mm_unpackhi_epi8(v0l, v0h);    // b1b3b5b7g1g3g5g7...
+    const __m128i v2l = _mm_unpacklo_epi8(v1l, v1h);    // b0...b7 | g0...g7
+    const __m128i v2h = _mm_unpackhi_epi8(v1l, v1h);    // r0...r7 | a0...a7
+    const __m128i ga0 = _mm_unpackhi_epi64(v2l, v2h);   // g0...g7 | a0...a7
+    const __m128i rb0 = _mm_unpacklo_epi64(v2h, v2l);   // r0...r7 | b0...b7
+    const __m128i ga1 = _mm_srli_epi16(ga0, 4);         // g0-|g1-|...|a6-|a7-
+    const __m128i rb1 = _mm_and_si128(rb0, mask_0xf0);  // -r0|-r1|...|-b6|-a7
+    const __m128i ga2 = _mm_and_si128(ga1, mask_0x0f);  // g0-|g1-|...|a6-|a7-
+    const __m128i rgba0 = _mm_or_si128(ga2, rb1);       // rg0..rg7 | ba0..ba7
+    const __m128i rgba1 = _mm_srli_si128(rgba0, 8);     // ba0..ba7 | 0
+#ifdef WEBP_SWAP_16BIT_CSP
+    const __m128i rgba = _mm_unpacklo_epi8(rgba1, rgba0);  // barg0...barg7
+#else
+    const __m128i rgba = _mm_unpacklo_epi8(rgba0, rgba1);  // rgba0...rgba7
+#endif
+    _mm_storeu_si128(out++, rgba);
+    num_pixels -= 8;
+  }
+  // left-overs
+  ConvertBGRAToRGBA4444((const uint32_t*)in, num_pixels, (uint8_t*)out);
+}
+
+static void ConvertBGRAToRGB565SSE2(const uint32_t* src,
+                                    int num_pixels, uint8_t* dst) {
+  const __m128i mask_0xe0 = _mm_set1_epi8(0xe0);
+  const __m128i mask_0xf8 = _mm_set1_epi8(0xf8);
+  const __m128i mask_0x07 = _mm_set1_epi8(0x07);
+  const __m128i* in = (const __m128i*)src;
+  __m128i* out = (__m128i*)dst;
+  while (num_pixels >= 8) {
+    const __m128i bgra0 = _mm_loadu_si128(in++);     // bgra0|bgra1|bgra2|bgra3
+    const __m128i bgra4 = _mm_loadu_si128(in++);     // bgra4|bgra5|bgra6|bgra7
+    const __m128i v0l = _mm_unpacklo_epi8(bgra0, bgra4);  // b0b4g0g4r0r4a0a4...
+    const __m128i v0h = _mm_unpackhi_epi8(bgra0, bgra4);  // b2b6g2g6r2r6a2a6...
+    const __m128i v1l = _mm_unpacklo_epi8(v0l, v0h);      // b0b2b4b6g0g2g4g6...
+    const __m128i v1h = _mm_unpackhi_epi8(v0l, v0h);      // b1b3b5b7g1g3g5g7...
+    const __m128i v2l = _mm_unpacklo_epi8(v1l, v1h);      // b0...b7 | g0...g7
+    const __m128i v2h = _mm_unpackhi_epi8(v1l, v1h);      // r0...r7 | a0...a7
+    const __m128i ga0 = _mm_unpackhi_epi64(v2l, v2h);     // g0...g7 | a0...a7
+    const __m128i rb0 = _mm_unpacklo_epi64(v2h, v2l);     // r0...r7 | b0...b7
+    const __m128i rb1 = _mm_and_si128(rb0, mask_0xf8);    // -r0..-r7|-b0..-b7
+    const __m128i g_lo1 = _mm_srli_epi16(ga0, 5);
+    const __m128i g_lo2 = _mm_and_si128(g_lo1, mask_0x07);  // g0-...g7-|xx (3b)
+    const __m128i g_hi1 = _mm_slli_epi16(ga0, 3);
+    const __m128i g_hi2 = _mm_and_si128(g_hi1, mask_0xe0);  // -g0...-g7|xx (3b)
+    const __m128i b0 = _mm_srli_si128(rb1, 8);              // -b0...-b7|0
+    const __m128i rg1 = _mm_or_si128(rb1, g_lo2);           // gr0...gr7|xx
+    const __m128i b1 = _mm_srli_epi16(b0, 3);
+    const __m128i gb1 = _mm_or_si128(b1, g_hi2);            // bg0...bg7|xx
+#ifdef WEBP_SWAP_16BIT_CSP
+    const __m128i rgba = _mm_unpacklo_epi8(gb1, rg1);     // rggb0...rggb7
+#else
+    const __m128i rgba = _mm_unpacklo_epi8(rg1, gb1);     // bgrb0...bgrb7
+#endif
+    _mm_storeu_si128(out++, rgba);
+    num_pixels -= 8;
+  }
+  // left-overs
+  ConvertBGRAToRGB565((const uint32_t*)in, num_pixels, (uint8_t*)out);
+}
+
+static void ConvertBGRAToBGRSSE2(const uint32_t* src,
+                                 int num_pixels, uint8_t* dst) {
+  const __m128i mask_l = _mm_set_epi32(0, 0x00ffffff, 0, 0x00ffffff);
+  const __m128i mask_h = _mm_set_epi32(0x00ffffff, 0, 0x00ffffff, 0);
+  const __m128i* in = (const __m128i*)src;
+  const uint8_t* const end = dst + num_pixels * 3;
+  // the last storel_epi64 below writes 8 bytes starting at offset 18
+  while (dst + 26 <= end) {
+    const __m128i bgra0 = _mm_loadu_si128(in++);     // bgra0|bgra1|bgra2|bgra3
+    const __m128i bgra4 = _mm_loadu_si128(in++);     // bgra4|bgra5|bgra6|bgra7
+    const __m128i a0l = _mm_and_si128(bgra0, mask_l);   // bgr0|0|bgr0|0
+    const __m128i a4l = _mm_and_si128(bgra4, mask_l);   // bgr0|0|bgr0|0
+    const __m128i a0h = _mm_and_si128(bgra0, mask_h);   // 0|bgr0|0|bgr0
+    const __m128i a4h = _mm_and_si128(bgra4, mask_h);   // 0|bgr0|0|bgr0
+    const __m128i b0h = _mm_srli_epi64(a0h, 8);         // 000b|gr00|000b|gr00
+    const __m128i b4h = _mm_srli_epi64(a4h, 8);         // 000b|gr00|000b|gr00
+    const __m128i c0 = _mm_or_si128(a0l, b0h);          // rgbrgb00|rgbrgb00
+    const __m128i c4 = _mm_or_si128(a4l, b4h);          // rgbrgb00|rgbrgb00
+    const __m128i c2 = _mm_srli_si128(c0, 8);
+    const __m128i c6 = _mm_srli_si128(c4, 8);
+    _mm_storel_epi64((__m128i*)(dst +   0), c0);
+    _mm_storel_epi64((__m128i*)(dst +   6), c2);
+    _mm_storel_epi64((__m128i*)(dst +  12), c4);
+    _mm_storel_epi64((__m128i*)(dst +  18), c6);
+    dst += 24;
+    num_pixels -= 8;
+  }
+  // left-overs
+  ConvertBGRAToBGR((const uint32_t*)in, num_pixels, dst);
 }
 
 extern void VP8LDspInitSSE2(void);
@@ -1576,8 +1694,14 @@ void VP8LDspInitSSE2(void) {
   VP8LSelect = SelectSSE2;
   VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRedSSE2;
   VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRedSSE2;
+  VP8LConvertBGRAToRGBAFunc = ConvertBGRAToRGBASSE2;
+  VP8LConvertBGRAToRGBA4444Func = ConvertBGRAToRGBA4444SSE2;
+  VP8LConvertBGRAToRGB565Func = ConvertBGRAToRGB565SSE2;
+  VP8LConvertBGRAToBGRFunc = ConvertBGRAToBGRSSE2;
 }
-#endif
+
+#endif   // WEBP_USE_SSE2
+
 //------------------------------------------------------------------------------
 
 VP8LPredClampedAddSubFunc VP8LClampedAddSubtractFull;
@@ -1586,12 +1710,24 @@ VP8LPredSelectFunc VP8LSelect;
 VP8LSubtractGreenFromBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
 VP8LAddGreenToBlueAndRedFunc VP8LAddGreenToBlueAndRed;
 
+VP8LConvertFunc VP8LConvertBGRAToRGBFunc;
+VP8LConvertFunc VP8LConvertBGRAToRGBAFunc;
+VP8LConvertFunc VP8LConvertBGRAToRGBA4444Func;
+VP8LConvertFunc VP8LConvertBGRAToRGB565Func;
+VP8LConvertFunc VP8LConvertBGRAToBGRFunc;
+
 void VP8LDspInit(void) {
   VP8LClampedAddSubtractFull = ClampedAddSubtractFull;
   VP8LClampedAddSubtractHalf = ClampedAddSubtractHalf;
   VP8LSelect = Select;
   VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRed;
   VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
+
+  VP8LConvertBGRAToRGBFunc = ConvertBGRAToRGB;
+  VP8LConvertBGRAToRGBAFunc = ConvertBGRAToRGBA;
+  VP8LConvertBGRAToRGBA4444Func = ConvertBGRAToRGBA4444;
+  VP8LConvertBGRAToRGB565Func = ConvertBGRAToRGB565;
+  VP8LConvertBGRAToBGRFunc = ConvertBGRAToBGR;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
