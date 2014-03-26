@@ -67,7 +67,6 @@ typedef void (*VP8Fdct)(const uint8_t* src, const uint8_t* ref, int16_t* out);
 typedef void (*VP8WHT)(const int16_t* in, int16_t* out);
 extern VP8Idct VP8ITransform;
 extern VP8Fdct VP8FTransform;
-extern VP8WHT VP8ITransformWHT;
 extern VP8WHT VP8FTransformWHT;
 // Predictions
 // *dst is the destination block. *top and *left can be NULL.
