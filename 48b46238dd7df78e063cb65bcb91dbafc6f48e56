@@ -16,6 +16,24 @@
       "revId": "48b46238dd7df78e063cb65bcb91dbafc6f48e56",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//wsQ\u003d",
+        "filename": "src/enc/quant.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-03-26T18:07:52Z",
+      "side": 1,
+      "message": "the analyzer is concerned about ss_prev; it\u0027d be best if we could silence that so we don\u0027t get a bug report from xcode users",
+      "parentUuid": "AAAAdn//wu4\u003d",
+      "revId": "48b46238dd7df78e063cb65bcb91dbafc6f48e56",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
