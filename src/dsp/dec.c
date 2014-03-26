@@ -115,10 +115,10 @@ static void TransformDC(const int16_t *in, uint8_t* dst) {
 }
 
 static void TransformDCUV(const int16_t* in, uint8_t* dst) {
-  if (in[0 * 16]) TransformDC(in + 0 * 16, dst);
-  if (in[1 * 16]) TransformDC(in + 1 * 16, dst + 4);
-  if (in[2 * 16]) TransformDC(in + 2 * 16, dst + 4 * BPS);
-  if (in[3 * 16]) TransformDC(in + 3 * 16, dst + 4 * BPS + 4);
+  if (in[0 * 16]) VP8TransformDC(in + 0 * 16, dst);
+  if (in[1 * 16]) VP8TransformDC(in + 1 * 16, dst + 4);
+  if (in[2 * 16]) VP8TransformDC(in + 2 * 16, dst + 4 * BPS);
+  if (in[3 * 16]) VP8TransformDC(in + 3 * 16, dst + 4 * BPS + 4);
 }
 
 #undef STORE
