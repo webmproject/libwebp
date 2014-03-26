@@ -34,6 +34,24 @@
       "revId": "48b46238dd7df78e063cb65bcb91dbafc6f48e56",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//wqQ\u003d",
+        "filename": "src/enc/quant.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-03-26T21:48:59Z",
+      "side": 1,
+      "message": "should be ok now, i moved initialization at l630 up",
+      "parentUuid": "AAAAdn//wsQ\u003d",
+      "revId": "48b46238dd7df78e063cb65bcb91dbafc6f48e56",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
