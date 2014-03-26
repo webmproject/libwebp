@@ -16,6 +16,24 @@
       "revId": "9040041a3e5256e03d71c56dc99dbd75434b0819",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//wqw\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1662,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-03-26T21:20:39Z",
+      "side": 1,
+      "message": "done, here and at few other places",
+      "parentUuid": "AAAAdn//wrs\u003d",
+      "revId": "9040041a3e5256e03d71c56dc99dbd75434b0819",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
