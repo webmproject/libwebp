@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//wvE\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1567,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-03-26T07:25:32Z",
+      "side": 1,
+      "message": "problem is we want to mix the two source register (bgra0 and bgra4) together. shuffles only operate on the same register, and often need two instruction on 16b (shuflo / shufhi). So, couldn\u0027t find a clear alternative here.",
+      "parentUuid": "AAAAdn//wvQ\u003d",
+      "revId": "a2457247c18685635f42e699aa30f2e995e7de8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//wvU\u003d",
         "filename": "src/dsp/lossless.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2014-03-26T06:33:46Z",
       "side": 1,
       "message": "_mm_cvtepi32_pd ?",
+      "revId": "a2457247c18685635f42e699aa30f2e995e7de8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//wvA\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1676,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-03-26T07:25:32Z",
+      "side": 1,
+      "message": "_mm_cvtepi32_pd would imply a format conversion (binary -\u003e IEEE754) which is not what we want. We just need to reinterpret the register here. Internally it\u0027s just xmm0, whether the content is double or int. Note that _mm_storel_pd doesn\u0027t care about rounding, denormalization, (or alignment even), which is fortunate.",
+      "parentUuid": "AAAAdn//wvU\u003d",
       "revId": "a2457247c18685635f42e699aa30f2e995e7de8e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
