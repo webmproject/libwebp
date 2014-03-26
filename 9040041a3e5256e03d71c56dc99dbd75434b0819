@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//wrs\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1662,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-03-26T19:17:33Z",
+      "side": 1,
+      "message": "elsewhere I believe const is added to the casts",
+      "revId": "9040041a3e5256e03d71c56dc99dbd75434b0819",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
