@@ -216,8 +216,9 @@ int WebPInitDecBufferInternal(WebPDecBuffer* buffer, int version) {
 
 void WebPFreeDecBuffer(WebPDecBuffer* buffer) {
   if (buffer != NULL) {
-    if (!buffer->is_external_memory)
-      free(buffer->private_memory);
+    if (!buffer->is_external_memory) {
+      WebPSafeFree(buffer->private_memory);
+    }
     buffer->private_memory = NULL;
   }
 }

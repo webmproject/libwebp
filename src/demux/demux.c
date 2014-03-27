@@ -289,7 +289,7 @@ static ParseStatus NewFrame(const MemBuffer* const mem,
   if (actual_size < min_size) return PARSE_ERROR;
   if (MemDataSize(mem) < min_size)  return PARSE_NEED_MORE_DATA;
 
-  *frame = (Frame*)calloc(1, sizeof(**frame));
+  *frame = (Frame*)WebPSafeCalloc(1ULL, sizeof(**frame));
   return (*frame == NULL) ? PARSE_ERROR : PARSE_OK;
 }
 
@@ -317,7 +317,7 @@ static ParseStatus ParseAnimationFrame(
       (bits & 1) ? WEBP_MUX_DISPOSE_BACKGROUND : WEBP_MUX_DISPOSE_NONE;
   frame->blend_method_ = (bits & 2) ? WEBP_MUX_NO_BLEND : WEBP_MUX_BLEND;
   if (frame->width_ * (uint64_t)frame->height_ >= MAX_IMAGE_AREA) {
-    free(frame);
+    WebPSafeFree(frame);
     return PARSE_ERROR;
   }
 
@@ -333,7 +333,7 @@ static ParseStatus ParseAnimationFrame(
     }
   }
 
-  if (!added_frame) free(frame);
+  if (!added_frame) WebPSafeFree(frame);
   return status;
 }
 
@@ -368,7 +368,7 @@ static ParseStatus ParseFragment(WebPDemuxer* const dmux,
     }
   }
 
-  if (!added_fragment) free(frame);
+  if (!added_fragment) WebPSafeFree(frame);
   return status;
 }
 #endif  // WEBP_EXPERIMENTAL_FEATURES
@@ -379,7 +379,7 @@ static ParseStatus ParseFragment(WebPDemuxer* const dmux,
 // Returns true on success, false otherwise.
 static int StoreChunk(WebPDemuxer* const dmux,
                       size_t start_offset, uint32_t size) {
-  Chunk* const chunk = (Chunk*)calloc(1, sizeof(*chunk));
+  Chunk* const chunk = (Chunk*)WebPSafeCalloc(1ULL, sizeof(*chunk));
   if (chunk == NULL) return 0;
 
   chunk->data_.offset_ = start_offset;
@@ -427,7 +427,7 @@ static ParseStatus ParseSingleImage(WebPDemuxer* const dmux) {
   if (SizeIsInvalid(mem, min_size)) return PARSE_ERROR;
   if (MemDataSize(mem) < min_size) return PARSE_NEED_MORE_DATA;
 
-  frame = (Frame*)calloc(1, sizeof(*frame));
+  frame = (Frame*)WebPSafeCalloc(1ULL, sizeof(*frame));
   if (frame == NULL) return PARSE_ERROR;
 
   // For the single image case we allow parsing of a partial frame, but we need
@@ -458,7 +458,7 @@ static ParseStatus ParseSingleImage(WebPDemuxer* const dmux) {
     }
   }
 
-  if (!image_added) free(frame);
+  if (!image_added) WebPSafeFree(frame);
   return status;
 }
 
@@ -729,7 +729,7 @@ WebPDemuxer* WebPDemuxInternal(const WebPData* data, int allow_partial,
   partial = (mem.buf_size_ < mem.riff_end_);
   if (!allow_partial && partial) return NULL;
 
-  dmux = (WebPDemuxer*)calloc(1, sizeof(*dmux));
+  dmux = (WebPDemuxer*)WebPSafeCalloc(1ULL, sizeof(*dmux));
   if (dmux == NULL) return NULL;
   InitDemux(dmux, &mem);
 
@@ -761,14 +761,14 @@ void WebPDemuxDelete(WebPDemuxer* dmux) {
   for (f = dmux->frames_; f != NULL;) {
     Frame* const cur_frame = f;
     f = f->next_;
-    free(cur_frame);
+    WebPSafeFree(cur_frame);
   }
   for (c = dmux->chunks_; c != NULL;) {
     Chunk* const cur_chunk = c;
     c = c->next_;
-    free(cur_chunk);
+    WebPSafeFree(cur_chunk);
   }
-  free(dmux);
+  WebPSafeFree(dmux);
 }
 
 // -----------------------------------------------------------------------------

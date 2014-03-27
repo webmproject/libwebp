@@ -40,6 +40,9 @@ void* WebPSafeMalloc(uint64_t nmemb, size_t size);
 // in order to favor the "calloc(num_foo, sizeof(foo))" pattern.
 void* WebPSafeCalloc(uint64_t nmemb, size_t size);
 
+// Companion deallocation function to the above allocations.
+void WebPSafeFree(void* const ptr);
+
 //------------------------------------------------------------------------------
 // Reading/writing data.
 

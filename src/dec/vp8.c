@@ -18,6 +18,7 @@
 #include "./vp8li.h"
 #include "./webpi.h"
 #include "../utils/bit_reader.h"
+#include "../utils/utils.h"
 
 //------------------------------------------------------------------------------
 
@@ -44,7 +45,7 @@ int VP8InitIoInternal(VP8Io* const io, int version) {
 }
 
 VP8Decoder* VP8New(void) {
-  VP8Decoder* const dec = (VP8Decoder*)calloc(1, sizeof(*dec));
+  VP8Decoder* const dec = (VP8Decoder*)WebPSafeCalloc(1ULL, sizeof(*dec));
   if (dec != NULL) {
     SetOk(dec);
     WebPWorkerInit(&dec->worker_);
@@ -68,7 +69,7 @@ const char* VP8StatusMessage(VP8Decoder* const dec) {
 void VP8Delete(VP8Decoder* const dec) {
   if (dec != NULL) {
     VP8Clear(dec);
-    free(dec);
+    WebPSafeFree(dec);
   }
 }
 
@@ -689,7 +690,7 @@ void VP8Clear(VP8Decoder* const dec) {
   }
   ALPHDelete(dec->alph_dec_);
   dec->alph_dec_ = NULL;
-  free(dec->mem_);
+  WebPSafeFree(dec->mem_);
   dec->mem_ = NULL;
   dec->mem_size_ = 0;
   memset(&dec->br_, 0, sizeof(dec->br_));

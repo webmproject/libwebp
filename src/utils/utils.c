@@ -38,5 +38,8 @@ void* WebPSafeCalloc(uint64_t nmemb, size_t size) {
   return calloc((size_t)nmemb, size);
 }
 
-//------------------------------------------------------------------------------
+void WebPSafeFree(void* const ptr) {
+  free(ptr);
+}
 
+//------------------------------------------------------------------------------

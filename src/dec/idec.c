@@ -188,7 +188,7 @@ static int AppendToMemBuffer(WebPIDecoder* const idec,
         (uint8_t*)WebPSafeMalloc(extra_size, sizeof(*new_buf));
     if (new_buf == NULL) return 0;
     memcpy(new_buf, old_base, current_size);
-    free(mem->buf_);
+    WebPSafeFree(mem->buf_);
     mem->buf_ = new_buf;
     mem->buf_size_ = (size_t)extra_size;
     mem->start_ = new_mem_start;
@@ -230,8 +230,8 @@ static void InitMemBuffer(MemBuffer* const mem) {
 static void ClearMemBuffer(MemBuffer* const mem) {
   assert(mem);
   if (mem->mode_ == MEM_MODE_APPEND) {
-    free(mem->buf_);
-    free((void*)mem->part0_buf_);
+    WebPSafeFree(mem->buf_);
+    WebPSafeFree((void*)mem->part0_buf_);
   }
 }
 
@@ -373,7 +373,7 @@ static int CopyParts0Data(WebPIDecoder* const idec) {
   assert(psize <= mem->part0_size_);  // Format limit: no need for runtime check
   if (mem->mode_ == MEM_MODE_APPEND) {
     // We copy and grab ownership of the partition #0 data.
-    uint8_t* const part0_buf = (uint8_t*)malloc(psize);
+    uint8_t* const part0_buf = (uint8_t*)WebPSafeMalloc(1ULL, psize);
     if (part0_buf == NULL) {
       return 0;
     }
@@ -573,7 +573,7 @@ static VP8StatusCode IDecode(WebPIDecoder* idec) {
 // Public functions
 
 WebPIDecoder* WebPINewDecoder(WebPDecBuffer* output_buffer) {
-  WebPIDecoder* idec = (WebPIDecoder*)calloc(1, sizeof(*idec));
+  WebPIDecoder* idec = (WebPIDecoder*)WebPSafeCalloc(1ULL, sizeof(*idec));
   if (idec == NULL) {
     return NULL;
   }
@@ -632,7 +632,7 @@ void WebPIDelete(WebPIDecoder* idec) {
   }
   ClearMemBuffer(&idec->mem_);
   WebPFreeDecBuffer(&idec->output_);
-  free(idec);
+  WebPSafeFree(idec);
 }
 
 //------------------------------------------------------------------------------

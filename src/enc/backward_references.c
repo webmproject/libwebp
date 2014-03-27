@@ -89,7 +89,7 @@ void VP8LInitBackwardRefs(VP8LBackwardRefs* const refs) {
 
 void VP8LClearBackwardRefs(VP8LBackwardRefs* const refs) {
   if (refs != NULL) {
-    free(refs->refs);
+    WebPSafeFree(refs->refs);
     VP8LInitBackwardRefs(refs);
   }
 }
@@ -116,13 +116,13 @@ static WEBP_INLINE uint64_t GetPixPairHash64(const uint32_t* const argb) {
 
 static HashChain* HashChainNew(int size) {
   int i;
-  HashChain* const p = (HashChain*)malloc(sizeof(*p));
+  HashChain* const p = (HashChain*)WebPSafeMalloc(1ULL, sizeof(*p));
   if (p == NULL) {
     return NULL;
   }
   p->chain_ = (int*)WebPSafeMalloc((uint64_t)size, sizeof(*p->chain_));
   if (p->chain_ == NULL) {
-    free(p);
+    WebPSafeFree(p);
     return NULL;
   }
   for (i = 0; i < size; ++i) {
@@ -136,8 +136,8 @@ static HashChain* HashChainNew(int size) {
 
 static void HashChainDelete(HashChain* const p) {
   if (p != NULL) {
-    free(p->chain_);
-    free(p);
+    WebPSafeFree(p->chain_);
+    WebPSafeFree(p);
   }
 }
 
@@ -490,7 +490,7 @@ static int BackwardReferencesHashChainDistanceOnly(
   const int use_color_cache = (cache_bits > 0);
   float* const cost =
       (float*)WebPSafeMalloc((uint64_t)pix_count, sizeof(*cost));
-  CostModel* cost_model = (CostModel*)malloc(sizeof(*cost_model));
+  CostModel* cost_model = (CostModel*)WebPSafeMalloc(1ULL, sizeof(*cost_model));
   HashChain* hash_chain = HashChainNew(pix_count);
   VP8LColorCache hashers;
   const double mul0 = (recursive_cost_model != 0) ? 1.0 : 0.68;
@@ -597,8 +597,8 @@ static int BackwardReferencesHashChainDistanceOnly(
 Error:
   if (cc_init) VP8LColorCacheClear(&hashers);
   HashChainDelete(hash_chain);
-  free(cost_model);
-  free(cost);
+  WebPSafeFree(cost_model);
+  WebPSafeFree(cost);
   return ok;
 }
 
@@ -724,7 +724,7 @@ static int BackwardReferencesTraceBackwards(int xsize, int ysize,
   }
   ok = 1;
  Error:
-  free(dist_array);
+  WebPSafeFree(dist_array);
   return ok;
 }
 
@@ -768,7 +768,8 @@ int VP8LGetBackwardReferences(int width, int height,
 
   {
     double bit_cost_lz77, bit_cost_rle;
-    VP8LHistogram* const histo = (VP8LHistogram*)malloc(sizeof(*histo));
+    VP8LHistogram* const histo =
+        (VP8LHistogram*)WebPSafeMalloc(1ULL, sizeof(*histo));
     if (histo == NULL) goto Error1;
     // Evaluate lz77 coding
     VP8LHistogramCreate(histo, &refs_lz77, cache_bits);
@@ -778,7 +779,7 @@ int VP8LGetBackwardReferences(int width, int height,
     bit_cost_rle = VP8LHistogramEstimateBits(histo);
     // Decide if LZ77 is useful.
     lz77_is_useful = (bit_cost_lz77 < bit_cost_rle);
-    free(histo);
+    WebPSafeFree(histo);
   }
 
   // Choose appropriate backward reference.

@@ -15,7 +15,9 @@
 #include <assert.h>
 #include <string.h>   // for memcpy()
 #include <stdlib.h>
+
 #include "./bit_writer.h"
+#include "./utils.h"
 
 //------------------------------------------------------------------------------
 // VP8BitWriter
@@ -34,7 +36,7 @@ static int BitWriterResize(VP8BitWriter* const bw, size_t extra_size) {
   new_size = 2 * bw->max_pos_;
   if (new_size < needed_size) new_size = needed_size;
   if (new_size < 1024) new_size = 1024;
-  new_buf = (uint8_t*)malloc(new_size);
+  new_buf = (uint8_t*)WebPSafeMalloc(1ULL, new_size);
   if (new_buf == NULL) {
     bw->error_ = 1;
     return 0;
@@ -43,7 +45,7 @@ static int BitWriterResize(VP8BitWriter* const bw, size_t extra_size) {
     assert(bw->buf_ != NULL);
     memcpy(new_buf, bw->buf_, bw->pos_);
   }
-  free(bw->buf_);
+  WebPSafeFree(bw->buf_);
   bw->buf_ = new_buf;
   bw->max_pos_ = new_size;
   return 1;
@@ -176,7 +178,7 @@ uint8_t* VP8BitWriterFinish(VP8BitWriter* const bw) {
 
 int VP8BitWriterAppend(VP8BitWriter* const bw,
                        const uint8_t* data, size_t size) {
-  assert(data);
+  assert(data != NULL);
   if (bw->nb_bits_ != -8) return 0;   // kFlush() must have been called
   if (!BitWriterResize(bw, size)) return 0;
   memcpy(bw->buf_ + bw->pos_, data, size);
@@ -185,8 +187,8 @@ int VP8BitWriterAppend(VP8BitWriter* const bw,
 }
 
 void VP8BitWriterWipeOut(VP8BitWriter* const bw) {
-  if (bw) {
-    free(bw->buf_);
+  if (bw != NULL) {
+    WebPSafeFree(bw->buf_);
     memset(bw, 0, sizeof(*bw));
   }
 }
@@ -245,7 +247,7 @@ static int VP8LBitWriterResize(VP8LBitWriter* const bw, size_t extra_size) {
   if (allocated_size < size_required) allocated_size = size_required;
   // make allocated size multiple of 1k
   allocated_size = (((allocated_size >> 10) + 1) << 10);
-  allocated_buf = (uint8_t*)malloc(allocated_size);
+  allocated_buf = (uint8_t*)WebPSafeMalloc(1ULL, allocated_size);
   if (allocated_buf == NULL) {
     bw->error_ = 1;
     return 0;
@@ -253,7 +255,7 @@ static int VP8LBitWriterResize(VP8LBitWriter* const bw, size_t extra_size) {
   if (current_size > 0) {
     memcpy(allocated_buf, bw->buf_, current_size);
   }
-  free(bw->buf_);
+  WebPSafeFree(bw->buf_);
   bw->buf_ = allocated_buf;
   bw->cur_ = bw->buf_ + current_size;
   bw->end_ = bw->buf_ + allocated_size;
@@ -267,7 +269,7 @@ int VP8LBitWriterInit(VP8LBitWriter* const bw, size_t expected_size) {
 
 void VP8LBitWriterDestroy(VP8LBitWriter* const bw) {
   if (bw != NULL) {
-    free(bw->buf_);
+    WebPSafeFree(bw->buf_);
     memset(bw, 0, sizeof(*bw));
   }
 }
@@ -307,4 +309,3 @@ uint8_t* VP8LBitWriterFinish(VP8LBitWriter* const bw) {
 }
 
 //------------------------------------------------------------------------------
-

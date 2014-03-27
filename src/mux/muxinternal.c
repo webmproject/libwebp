@@ -165,7 +165,7 @@ WebPMuxError ChunkSetNth(WebPChunk* chunk, WebPChunk** chunk_list,
     return WEBP_MUX_NOT_FOUND;
   }
 
-  new_chunk = (WebPChunk*)malloc(sizeof(*new_chunk));
+  new_chunk = (WebPChunk*)WebPSafeMalloc(1ULL, sizeof(*new_chunk));
   if (new_chunk == NULL) return WEBP_MUX_MEMORY_ERROR;
   *new_chunk = *chunk;
   chunk->owner_ = 0;
@@ -179,7 +179,7 @@ WebPMuxError ChunkSetNth(WebPChunk* chunk, WebPChunk** chunk_list,
 
 WebPChunk* ChunkDelete(WebPChunk* const chunk) {
   WebPChunk* const next = ChunkRelease(chunk);
-  free(chunk);
+  WebPSafeFree(chunk);
   return next;
 }
 
@@ -312,7 +312,7 @@ WebPMuxError MuxImagePush(const WebPMuxImage* wpi, WebPMuxImage** wpi_list) {
     wpi_list = &cur_wpi->next_;
   }
 
-  new_wpi = (WebPMuxImage*)malloc(sizeof(*new_wpi));
+  new_wpi = (WebPMuxImage*)WebPSafeMalloc(1ULL, sizeof(*new_wpi));
   if (new_wpi == NULL) return WEBP_MUX_MEMORY_ERROR;
   *new_wpi = *wpi;
   new_wpi->next_ = NULL;
@@ -331,7 +331,7 @@ WebPMuxError MuxImagePush(const WebPMuxImage* wpi, WebPMuxImage** wpi_list) {
 WebPMuxImage* MuxImageDelete(WebPMuxImage* const wpi) {
   // Delete the components of wpi. If wpi is NULL this is a noop.
   WebPMuxImage* const next = MuxImageRelease(wpi);
-  free(wpi);
+  WebPSafeFree(wpi);
   return next;
 }
 

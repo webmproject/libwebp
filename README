@@ -443,15 +443,20 @@ The encoding flow looks like:
 
   // Set up a byte-output write method. WebPMemoryWriter, for instance.
   WebPMemoryWriter wrt;
+  WebPMemoryWriterInit(&wrt);     // initialize 'wrt'
+
   pic.writer = MyFileWriter;
   pic.custom_ptr = my_opaque_structure_to_make_MyFileWriter_work;
-  // initialize 'wrt' here...
 
   // Compress!
   int ok = WebPEncode(&config, &pic);   // ok = 0 => error occurred!
   WebPPictureFree(&pic);  // must be called independently of the 'ok' result.
 
   // output data should have been handled by the writer at that point.
+  // -> compressed data is the memory buffer described by wrt.mem / wrt.size
+
+  // deallocate the memory used by compressed data
+  WebPMemoryWriterClear(&wrt);
 
 -------------------------------------- END PSEUDO EXAMPLE
 

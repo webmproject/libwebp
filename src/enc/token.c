@@ -22,6 +22,7 @@
 
 #include "./cost.h"
 #include "./vp8enci.h"
+#include "../utils/utils.h"
 
 #if !defined(DISABLE_TOKEN_BUFFER)
 
@@ -51,7 +52,7 @@ void VP8TBufferClear(VP8TBuffer* const b) {
     const VP8Tokens* p = b->pages_;
     while (p != NULL) {
       const VP8Tokens* const next = p->next_;
-      free((void*)p);
+      WebPSafeFree((void*)p);
       p = next;
     }
     VP8TBufferInit(b);
@@ -59,7 +60,8 @@ void VP8TBufferClear(VP8TBuffer* const b) {
 }
 
 static int TBufferNewPage(VP8TBuffer* const b) {
-  VP8Tokens* const page = b->error_ ? NULL : (VP8Tokens*)malloc(sizeof(*page));
+  VP8Tokens* const page =
+      b->error_ ? NULL : (VP8Tokens*)WebPSafeMalloc(1ULL, sizeof(*page));
   if (page == NULL) {
     b->error_ = 1;
     return 0;
@@ -228,7 +230,7 @@ int VP8EmitTokens(VP8TBuffer* const b, VP8BitWriter* const bw,
         VP8PutBit(bw, bit, probas[token & 0x3fffu]);
       }
     }
-    if (final_pass) free((void*)p);
+    if (final_pass) WebPSafeFree((void*)p);
     p = next;
   }
   if (final_pass) b->pages_ = NULL;

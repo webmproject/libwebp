@@ -14,6 +14,7 @@
 #include <stdlib.h>
 
 #include "./vp8enci.h"
+#include "../utils/utils.h"
 
 //------------------------------------------------------------------------------
 
@@ -39,6 +40,5 @@ int VP8EncFinishLayer(VP8Encoder* const enc) {
 }
 
 void VP8EncDeleteLayer(VP8Encoder* enc) {
-  free(enc->layer_data_);
+  WebPSafeFree(enc->layer_data_);
 }
-

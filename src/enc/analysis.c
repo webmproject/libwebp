@@ -63,7 +63,7 @@ static void SmoothSegmentMap(VP8Encoder* const enc) {
       mb->segment_ = tmp[x + y * w];
     }
   }
-  free(tmp);
+  WebPSafeFree(tmp);
 }
 
 //------------------------------------------------------------------------------

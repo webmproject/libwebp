@@ -46,7 +46,7 @@ typedef struct {
 } VP8LHistogram;
 
 // Collection of histograms with fixed capacity, allocated as one
-// big memory chunk. Can be destroyed by simply calling 'free()'.
+// big memory chunk. Can be destroyed by calling WebPSafeFree().
 typedef struct {
   int size;         // number of slots currently in use
   int max_size;     // maximum capacity

@@ -723,7 +723,8 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
   // bin_map[n][num_histo + 1] ... bin_map[n][bin_depth - 1] = un-used indices.
   const int bin_depth = histo_image_raw_size + 1;
   int16_t* bin_map = NULL;
-  VP8LHistogram* const histos = (VP8LHistogram*)malloc(2 * sizeof(*histos));
+  VP8LHistogram* const histos =
+      (VP8LHistogram*)WebPSafeMalloc(2ULL, sizeof(*histos));
   VP8LHistogramSet* const init_histo =
       VP8LAllocateHistogramSet(histo_image_raw_size, cache_bits);
 
@@ -760,8 +761,8 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
   ok = 1;
 
  Error:
-  free(bin_map);
-  free(init_histo);
-  free(histos);
+  WebPSafeFree(bin_map);
+  WebPSafeFree(init_histo);
+  WebPSafeFree(histos);
   return ok;
 }

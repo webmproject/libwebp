@@ -285,7 +285,7 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
     if (ok) {
       ok = HuffmanTreeBuildImplicit(tree, code_lengths, alphabet_size);
     }
-    free(code_lengths);
+    WebPSafeFree(code_lengths);
   }
   ok = ok && !br->error_;
   if (!ok) {
@@ -304,7 +304,7 @@ static void DeleteHtreeGroups(HTreeGroup* htree_groups, int num_htree_groups) {
         HuffmanTreeRelease(&htrees[j]);
       }
     }
-    free(htree_groups);
+    WebPSafeFree(htree_groups);
   }
 }
 
@@ -368,7 +368,7 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
   return 1;
 
  Error:
-  free(huffman_image);
+  WebPSafeFree(huffman_image);
   DeleteHtreeGroups(htree_groups, num_htree_groups);
   return 0;
 }
@@ -933,7 +933,7 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
 // VP8LTransform
 
 static void ClearTransform(VP8LTransform* const transform) {
-  free(transform->data_);
+  WebPSafeFree(transform->data_);
   transform->data_ = NULL;
 }
 
@@ -957,7 +957,7 @@ static int ExpandColorMap(int num_colors, VP8LTransform* const transform) {
     }
     for (; i < 4 * final_num_colors; ++i)
       new_data[i] = 0;  // black tail.
-    free(transform->data_);
+    WebPSafeFree(transform->data_);
     transform->data_ = new_color_map;
   }
   return 1;
@@ -1027,7 +1027,7 @@ static void InitMetadata(VP8LMetadata* const hdr) {
 static void ClearMetadata(VP8LMetadata* const hdr) {
   assert(hdr);
 
-  free(hdr->huffman_image_);
+  WebPSafeFree(hdr->huffman_image_);
   DeleteHtreeGroups(hdr->htree_groups_, hdr->num_htree_groups_);
   VP8LColorCacheClear(&hdr->color_cache_);
   InitMetadata(hdr);
@@ -1037,7 +1037,7 @@ static void ClearMetadata(VP8LMetadata* const hdr) {
 // VP8LDecoder
 
 VP8LDecoder* VP8LNew(void) {
-  VP8LDecoder* const dec = (VP8LDecoder*)calloc(1, sizeof(*dec));
+  VP8LDecoder* const dec = (VP8LDecoder*)WebPSafeCalloc(1ULL, sizeof(*dec));
   if (dec == NULL) return NULL;
   dec->status_ = VP8_STATUS_OK;
   dec->action_ = READ_DIM;
@@ -1053,7 +1053,7 @@ void VP8LClear(VP8LDecoder* const dec) {
   if (dec == NULL) return;
   ClearMetadata(&dec->hdr_);
 
-  free(dec->pixels_);
+  WebPSafeFree(dec->pixels_);
   dec->pixels_ = NULL;
   for (i = 0; i < dec->next_transform_; ++i) {
     ClearTransform(&dec->transforms_[i]);
@@ -1061,7 +1061,7 @@ void VP8LClear(VP8LDecoder* const dec) {
   dec->next_transform_ = 0;
   dec->transforms_seen_ = 0;
 
-  free(dec->rescaler_memory);
+  WebPSafeFree(dec->rescaler_memory);
   dec->rescaler_memory = NULL;
 
   dec->output_ = NULL;   // leave no trace behind
@@ -1070,7 +1070,7 @@ void VP8LClear(VP8LDecoder* const dec) {
 void VP8LDelete(VP8LDecoder* const dec) {
   if (dec != NULL) {
     VP8LClear(dec);
-    free(dec);
+    WebPSafeFree(dec);
   }
 }
 
@@ -1157,7 +1157,7 @@ static int DecodeImageStream(int xsize, int ysize,
  End:
 
   if (!ok) {
-    free(data);
+    WebPSafeFree(data);
     ClearMetadata(hdr);
     // If not enough data (br.eos_) resulted in BIT_STREAM_ERROR, update the
     // status appropriately.

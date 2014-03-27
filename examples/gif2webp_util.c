@@ -469,10 +469,10 @@ static int SetFrame(const WebPConfig* const config, int allow_mixed,
     // TODO(later): Perhaps a rough SSIM/PSNR produced by the encoder should
     // also be a criteria, in addition to sizes.
     if (mem1.size <= mem2.size) {
-      free(mem2.mem);
+      WebPMemoryWriterClear(&mem2);
       GetEncodedData(&mem1, encoded_data);
     } else {
-      free(mem1.mem);
+      WebPMemoryWriterClear(&mem1);
       GetEncodedData(&mem2, encoded_data);
     }
   } else {
@@ -481,8 +481,8 @@ static int SetFrame(const WebPConfig* const config, int allow_mixed,
   return 1;
 
  Err:
-  free(mem1.mem);
-  free(mem2.mem);
+  WebPMemoryWriterClear(&mem1);
+  WebPMemoryWriterClear(&mem2);
   return 0;
 }
 

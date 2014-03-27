@@ -175,7 +175,7 @@ static void WebPPictureGrabSpecs(const WebPPicture* const src,
 // the other YUV(A) buffer.
 static int PictureAllocARGB(WebPPicture* const picture) {
   WebPPicture tmp;
-  free(picture->memory_argb_);
+  WebPSafeFree(picture->memory_argb_);
   PictureResetARGB(picture);
   picture->use_argb = 1;
   WebPPictureGrabSpecs(picture, &tmp);
@@ -191,8 +191,8 @@ static int PictureAllocARGB(WebPPicture* const picture) {
 // Release memory owned by 'picture' (both YUV and ARGB buffers).
 void WebPPictureFree(WebPPicture* picture) {
   if (picture != NULL) {
-    free(picture->memory_);
-    free(picture->memory_argb_);
+    WebPSafeFree(picture->memory_);
+    WebPSafeFree(picture->memory_argb_);
     PictureResetYUVA(picture);
     PictureResetARGB(picture);
   }
@@ -504,7 +504,7 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
     AlphaMultiplyARGB(&tmp, 1);
   }
   WebPPictureFree(pic);
-  free(work);
+  WebPSafeFree(work);
   *pic = tmp;
   return 1;
 }
@@ -538,7 +538,7 @@ int WebPMemoryWrite(const uint8_t* data, size_t data_size,
     if (w->size > 0) {
       memcpy(new_mem, w->mem, w->size);
     }
-    free(w->mem);
+    WebPSafeFree(w->mem);
     w->mem = new_mem;
     // down-cast is ok, thanks to WebPSafeMalloc
     w->max_size = (size_t)next_max_size;
@@ -548,6 +548,15 @@ int WebPMemoryWrite(const uint8_t* data, size_t data_size,
     w->size += data_size;
   }
   return 1;
+}
+
+void WebPMemoryWriterClear(WebPMemoryWriter* writer) {
+  if (writer != NULL) {
+    WebPSafeFree(writer->mem);
+    writer->mem = NULL;
+    writer->size = 0;
+    writer->max_size = 0;
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -1323,7 +1332,7 @@ static size_t Encode(const uint8_t* rgba, int width, int height, int stride,
   ok = import(&pic, rgba, stride) && WebPEncode(&config, &pic);
   WebPPictureFree(&pic);
   if (!ok) {
-    free(wrt.mem);
+    WebPMemoryWriterClear(&wrt);
     *output = NULL;
     return 0;
   }

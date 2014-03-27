@@ -17,6 +17,7 @@
 #include "./webpi.h"
 #include "../dsp/dsp.h"
 #include "../dsp/yuv.h"
+#include "../utils/utils.h"
 
 //------------------------------------------------------------------------------
 // Main YUV<->RGB conversion functions
@@ -324,7 +325,7 @@ static int InitYUVRescaler(const VP8Io* const io, WebPDecParams* const p) {
   if (has_alpha) {
     tmp_size += work_size;
   }
-  p->memory = calloc(1, tmp_size * sizeof(*work));
+  p->memory = WebPSafeCalloc(1ULL, tmp_size * sizeof(*work));
   if (p->memory == NULL) {
     return 0;   // memory error
   }
@@ -492,7 +493,7 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
   const size_t work_size = 2 * out_width;   // scratch memory for one rescaler
   int32_t* work;  // rescalers work area
   uint8_t* tmp;   // tmp storage for scaled YUV444 samples before RGB conversion
-  size_t tmp_size1, tmp_size2;
+  size_t tmp_size1, tmp_size2, total_size;
 
   tmp_size1 = 3 * work_size;
   tmp_size2 = 3 * out_width;
@@ -500,7 +501,8 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
     tmp_size1 += work_size;
     tmp_size2 += out_width;
   }
-  p->memory = calloc(1, tmp_size1 * sizeof(*work) + tmp_size2 * sizeof(*tmp));
+  total_size = tmp_size1 * sizeof(*work) + tmp_size2 * sizeof(*tmp);
+  p->memory = WebPSafeCalloc(1ULL, total_size);
   if (p->memory == NULL) {
     return 0;   // memory error
   }
@@ -564,7 +566,7 @@ static int CustomSetup(VP8Io* io) {
       if (io->fancy_upsampling) {
 #ifdef FANCY_UPSAMPLING
         const int uv_width = (io->mb_w + 1) >> 1;
-        p->memory = malloc(io->mb_w + 2 * uv_width);
+        p->memory = WebPSafeMalloc(1ULL, (size_t)(io->mb_w + 2 * uv_width));
         if (p->memory == NULL) {
           return 0;   // memory error.
         }
@@ -620,7 +622,7 @@ static int CustomPut(const VP8Io* io) {
 
 static void CustomTeardown(const VP8Io* io) {
   WebPDecParams* const p = (WebPDecParams*)io->opaque;
-  free(p->memory);
+  WebPSafeFree(p->memory);
   p->memory = NULL;
 }
 

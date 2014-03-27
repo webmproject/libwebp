@@ -269,7 +269,7 @@ static int DeleteVP8Encoder(VP8Encoder* enc) {
     VP8EncDeleteLayer(enc);
 #endif
     VP8TBufferClear(&enc->tokens_);
-    free(enc);
+    WebPSafeFree(enc);
   }
   return ok;
 }

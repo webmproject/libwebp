@@ -1121,7 +1121,7 @@ int main(int argc, const char *argv[]) {
   return_value = 0;
 
  Error:
-  free(memory_writer.mem);
+  WebPMemoryWriterClear(&memory_writer);
   free(picture.extra_info);
   MetadataFree(&metadata);
   WebPPictureFree(&picture);
