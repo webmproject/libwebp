@@ -1405,17 +1405,17 @@ void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
                          WEBP_CSP_MODE out_colorspace, uint8_t* const rgba) {
   switch (out_colorspace) {
     case MODE_RGB:
-      ConvertBGRAToRGB(in_data, num_pixels, rgba);
+      VP8LConvertBGRAToRGB(in_data, num_pixels, rgba);
       break;
     case MODE_RGBA:
-      ConvertBGRAToRGBA(in_data, num_pixels, rgba);
+      VP8LConvertBGRAToRGBA(in_data, num_pixels, rgba);
       break;
     case MODE_rgbA:
-      ConvertBGRAToRGBA(in_data, num_pixels, rgba);
+      VP8LConvertBGRAToRGBA(in_data, num_pixels, rgba);
       WebPApplyAlphaMultiply(rgba, 0, num_pixels, 1, 0);
       break;
     case MODE_BGR:
-      ConvertBGRAToBGR(in_data, num_pixels, rgba);
+      VP8LConvertBGRAToBGR(in_data, num_pixels, rgba);
       break;
     case MODE_BGRA:
       CopyOrSwap(in_data, num_pixels, rgba, 1);
@@ -1432,14 +1432,14 @@ void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
       WebPApplyAlphaMultiply(rgba, 1, num_pixels, 1, 0);
       break;
     case MODE_RGBA_4444:
-      ConvertBGRAToRGBA4444(in_data, num_pixels, rgba);
+      VP8LConvertBGRAToRGBA4444(in_data, num_pixels, rgba);
       break;
     case MODE_rgbA_4444:
-      ConvertBGRAToRGBA4444(in_data, num_pixels, rgba);
+      VP8LConvertBGRAToRGBA4444(in_data, num_pixels, rgba);
       WebPApplyAlphaMultiply4444(rgba, num_pixels, 1, 0);
       break;
     case MODE_RGB_565:
-      ConvertBGRAToRGB565(in_data, num_pixels, rgba);
+      VP8LConvertBGRAToRGB565(in_data, num_pixels, rgba);
       break;
     default:
       assert(0);          // Code flow should not reach here.
@@ -1694,10 +1694,10 @@ void VP8LDspInitSSE2(void) {
   VP8LSelect = SelectSSE2;
   VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRedSSE2;
   VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRedSSE2;
-  VP8LConvertBGRAToRGBAFunc = ConvertBGRAToRGBASSE2;
-  VP8LConvertBGRAToRGBA4444Func = ConvertBGRAToRGBA4444SSE2;
-  VP8LConvertBGRAToRGB565Func = ConvertBGRAToRGB565SSE2;
-  VP8LConvertBGRAToBGRFunc = ConvertBGRAToBGRSSE2;
+  VP8LConvertBGRAToRGBA = ConvertBGRAToRGBASSE2;
+  VP8LConvertBGRAToRGBA4444 = ConvertBGRAToRGBA4444SSE2;
+  VP8LConvertBGRAToRGB565 = ConvertBGRAToRGB565SSE2;
+  VP8LConvertBGRAToBGR = ConvertBGRAToBGRSSE2;
 }
 
 #endif   // WEBP_USE_SSE2
@@ -1710,11 +1710,11 @@ VP8LPredSelectFunc VP8LSelect;
 VP8LSubtractGreenFromBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
 VP8LAddGreenToBlueAndRedFunc VP8LAddGreenToBlueAndRed;
 
-VP8LConvertFunc VP8LConvertBGRAToRGBFunc;
-VP8LConvertFunc VP8LConvertBGRAToRGBAFunc;
-VP8LConvertFunc VP8LConvertBGRAToRGBA4444Func;
-VP8LConvertFunc VP8LConvertBGRAToRGB565Func;
-VP8LConvertFunc VP8LConvertBGRAToBGRFunc;
+VP8LConvertFunc VP8LConvertBGRAToRGB;
+VP8LConvertFunc VP8LConvertBGRAToRGBA;
+VP8LConvertFunc VP8LConvertBGRAToRGBA4444;
+VP8LConvertFunc VP8LConvertBGRAToRGB565;
+VP8LConvertFunc VP8LConvertBGRAToBGR;
 
 void VP8LDspInit(void) {
   VP8LClampedAddSubtractFull = ClampedAddSubtractFull;
@@ -1723,11 +1723,11 @@ void VP8LDspInit(void) {
   VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRed;
   VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
 
-  VP8LConvertBGRAToRGBFunc = ConvertBGRAToRGB;
-  VP8LConvertBGRAToRGBAFunc = ConvertBGRAToRGBA;
-  VP8LConvertBGRAToRGBA4444Func = ConvertBGRAToRGBA4444;
-  VP8LConvertBGRAToRGB565Func = ConvertBGRAToRGB565;
-  VP8LConvertBGRAToBGRFunc = ConvertBGRAToBGR;
+  VP8LConvertBGRAToRGB = ConvertBGRAToRGB;
+  VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA;
+  VP8LConvertBGRAToRGBA4444 = ConvertBGRAToRGBA4444;
+  VP8LConvertBGRAToRGB565 = ConvertBGRAToRGB565;
+  VP8LConvertBGRAToBGR = ConvertBGRAToBGR;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {

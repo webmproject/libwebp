@@ -41,11 +41,11 @@ extern VP8LAddGreenToBlueAndRedFunc VP8LAddGreenToBlueAndRed;
 
 typedef void (*VP8LConvertFunc)(const uint32_t* src, int num_pixels,
                                 uint8_t* dst);
-extern VP8LConvertFunc VP8LConvertBGRAToRGBFunc;
-extern VP8LConvertFunc VP8LConvertBGRAToRGBAFunc;
-extern VP8LConvertFunc VP8LConvertBGRAToRGBA4444Func;
-extern VP8LConvertFunc VP8LConvertBGRAToRGB565Func;
-extern VP8LConvertFunc VP8LConvertBGRAToBGRFunc;
+extern VP8LConvertFunc VP8LConvertBGRAToRGB;
+extern VP8LConvertFunc VP8LConvertBGRAToRGBA;
+extern VP8LConvertFunc VP8LConvertBGRAToRGBA4444;
+extern VP8LConvertFunc VP8LConvertBGRAToRGB565;
+extern VP8LConvertFunc VP8LConvertBGRAToBGR;
 
 // Must be called before calling any of the above methods.
 void VP8LDspInit(void);
