@@ -1474,6 +1474,8 @@ VP8LConvertFunc VP8LConvertBGRAToRGBA4444;
 VP8LConvertFunc VP8LConvertBGRAToRGB565;
 VP8LConvertFunc VP8LConvertBGRAToBGR;
 
+extern void VP8LDspInitSSE2(void);
+
 void VP8LDspInit(void) {
   memcpy(VP8LPredictors, kPredictorsC, sizeof(VP8LPredictors));
 

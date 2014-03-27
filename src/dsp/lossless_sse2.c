@@ -287,6 +287,8 @@ static void ConvertBGRAToBGR(const uint32_t* src,
 
 //------------------------------------------------------------------------------
 
+extern void VP8LDspInitSSE2(void);
+
 void VP8LDspInitSSE2(void) {
 #if defined(WEBP_USE_SSE2)
   VP8LPredictors[11] = Predictor11;
