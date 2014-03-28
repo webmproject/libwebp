@@ -561,8 +561,8 @@ static void HistogramCompactBins(VP8LHistogramSet* const histo_image) {
 }
 
 static void HistogramCombineBin(VP8LHistogramSet* const histo_image,
-                                VP8LHistogram* const histos,
-                                int bin_depth,
+                                VP8LHistogram* const histos, int bin_depth,
+                                double combine_cost_factor,
                                 int16_t* const bin_map) {
   int bin_id;
   VP8LHistogram* cur_combo = histos;
@@ -576,7 +576,7 @@ static void HistogramCombineBin(VP8LHistogramSet* const histo_image,
       const int idx2 = bin_map[bin_offset + n];
       const double bit_cost_idx2 = histo_image->histograms[idx2]->bit_cost_;
       if (bit_cost_idx2 > 0.) {
-        const double bit_cost_thresh = -bit_cost_idx2 * 0.1;
+        const double bit_cost_thresh = -bit_cost_idx2 * combine_cost_factor;
         const double curr_cost_diff =
             HistogramAddEval(histo_image->histograms[idx1],
                              histo_image->histograms[idx2],
@@ -706,6 +706,15 @@ static void HistogramRemap(const VP8LHistogramSet* const init_histo,
   }
 }
 
+static double GetCombineCostFactor(int histo_size, int quality) {
+  double combine_cost_factor = 0.16;
+  if (histo_size > 256) combine_cost_factor /= 2.;
+  if (histo_size > 512) combine_cost_factor /= 2.;
+  if (histo_size > 1024) combine_cost_factor /= 2.;
+  if (quality <= 50) combine_cost_factor /= 2.;
+  return combine_cost_factor;
+}
+
 int VP8LGetHistoImageSymbols(int xsize, int ysize,
                              const VP8LBackwardRefs* const refs,
                              int quality, int histo_bits, int cache_bits,
@@ -746,8 +755,11 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
   HistogramBuild(xsize, histo_bits, refs, init_histo);
 
   if (bin_map != NULL) {
+    const double combine_cost_factor =
+        GetCombineCostFactor(histo_image_raw_size, quality);
     HistogramAnalyzeBin(init_histo, histo_image, bin_map);
-    HistogramCombineBin(histo_image, histos, bin_depth, bin_map);
+    HistogramCombineBin(histo_image, histos, bin_depth, combine_cost_factor,
+                        bin_map);
   } else {
     HistogramAnalyze(init_histo, histo_image);
   }
