@@ -360,11 +360,11 @@ static void TransformDC(const int16_t* in, uint8_t* dst) {
 
 //------------------------------------------------------------------------------
 
-#define STORE_WHT(dst, col, row01, row23) do {         \
-  *dst = vgetq_lane_s32(row01.val[0], col); out += 16; \
-  *dst = vgetq_lane_s32(row01.val[1], col); out += 16; \
-  *dst = vgetq_lane_s32(row23.val[0], col); out += 16; \
-  *dst = vgetq_lane_s32(row23.val[1], col); out += 16; \
+#define STORE_WHT(dst, col, row01, row23) do {           \
+  *dst = vgetq_lane_s32(row01.val[0], col); (dst) += 16; \
+  *dst = vgetq_lane_s32(row01.val[1], col); (dst) += 16; \
+  *dst = vgetq_lane_s32(row23.val[0], col); (dst) += 16; \
+  *dst = vgetq_lane_s32(row23.val[1], col); (dst) += 16; \
 } while (0)
 
 static void TransformWHT(const int16_t* in, int16_t* out) {
