@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//wQA\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-03-30T21:25:17Z",
+      "side": 1,
+      "message": "indeed, done",
+      "parentUuid": "AAAAdn//wQY\u003d",
+      "revId": "59e6fd7a75e98fcf6d60ef13077acd553b6be52d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//wQU\u003d",
         "filename": "src/dsp/dec_neon.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2014-03-30T20:59:49Z",
       "side": 1,
       "message": "this will be reused in the strong filtering case and both of these do signed ops later. would it be better to get the convert out of the way and send in int8x16_t instead?",
+      "revId": "59e6fd7a75e98fcf6d60ef13077acd553b6be52d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//wP8\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-03-30T21:25:17Z",
+      "side": 1,
+      "message": "done, and removed some extra FlipSign() at call site too",
+      "parentUuid": "AAAAdn//wQU\u003d",
       "revId": "59e6fd7a75e98fcf6d60ef13077acd553b6be52d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//wP4\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-03-30T21:25:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//wQQ\u003d",
+      "revId": "59e6fd7a75e98fcf6d60ef13077acd553b6be52d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//wQM\u003d",
         "filename": "src/dsp/dec_neon.c",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2014-03-30T20:59:49Z",
       "side": 1,
       "message": "just handle the cast in NeedsFilter()?",
+      "revId": "59e6fd7a75e98fcf6d60ef13077acd553b6be52d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//wP0\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-03-30T21:25:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//wQM\u003d",
       "revId": "59e6fd7a75e98fcf6d60ef13077acd553b6be52d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
