@@ -169,28 +169,32 @@ static int8x16_t GetBaseDelta(const int8x16_t p1, const int8x16_t p0,
   return s3;
 }
 
-static void DoFilter2(const uint8x16_t p1, const uint8x16_t p0,
-                      const uint8x16_t q0, const uint8x16_t q1,
-                      uint8x16_t* const op0, uint8x16_t* const oq0,
-                      int thresh) {
-  const uint8x16_t mask = NeedsFilter(p1, p0, q0, q1, thresh);
-  const int8x16_t p1s = FlipSign(p1);
-  const int8x16_t p0s = FlipSign(p0);
-  const int8x16_t q0s = FlipSign(q0);
-  const int8x16_t q1s = FlipSign(q1);
-  const int8x16_t delta0 = GetBaseDelta(p1s, p0s, q0s, q1s);
-  const int8x16_t delta1 = vandq_s8(delta0, vreinterpretq_s8_u8(mask));
-  // DoSimpleFilter:
+static void DoSimpleFilter(const int8x16_t p0s, const int8x16_t q0s,
+                           const int8x16_t delta,
+                           uint8x16_t* const op0, uint8x16_t* const oq0) {
   const int8x16_t kCst3 = vdupq_n_s8(0x03);
   const int8x16_t kCst4 = vdupq_n_s8(0x04);
-  const int8x16_t delta_p3 = vqaddq_s8(delta1, kCst3);
-  const int8x16_t delta_p4 = vqaddq_s8(delta1, kCst4);
+  const int8x16_t delta_p3 = vqaddq_s8(delta, kCst3);
+  const int8x16_t delta_p4 = vqaddq_s8(delta, kCst4);
   const int8x16_t delta3 = vshrq_n_s8(delta_p3, 3);
   const int8x16_t delta4 = vshrq_n_s8(delta_p4, 3);
   const int8x16_t sp0 = vqaddq_s8(p0s, delta3);
   const int8x16_t sq0 = vqsubq_s8(q0s, delta4);
   *op0 = FlipSignBack(sp0);
   *oq0 = FlipSignBack(sq0);
+}
+
+static void DoFilter2(const uint8x16_t p1, const uint8x16_t p0,
+                      const uint8x16_t q0, const uint8x16_t q1,
+                      const uint8x16_t mask,
+                      uint8x16_t* const op0, uint8x16_t* const oq0) {
+  const int8x16_t p1s = FlipSign(p1);
+  const int8x16_t p0s = FlipSign(p0);
+  const int8x16_t q0s = FlipSign(q0);
+  const int8x16_t q1s = FlipSign(q1);
+  const int8x16_t delta0 = GetBaseDelta(p1s, p0s, q0s, q1s);
+  const int8x16_t delta1 = vandq_s8(delta0, vreinterpretq_s8_u8(mask));
+  DoSimpleFilter(p0s, q0s, delta1, op0, oq0);
 }
 #endif    // USE_INTRINSICS
 
@@ -266,7 +270,10 @@ static void SimpleVFilter16NEON(uint8_t* p, int stride, int thresh) {
 static void SimpleVFilter16NEON(uint8_t* p, int stride, int thresh) {
   uint8x16_t p1, p0, q0, q1, op0, oq0;
   Load16x4(p, stride, &p1, &p0, &q0, &q1);
-  DoFilter2(p1, p0, q0, q1, &op0, &oq0, thresh);
+  {
+    const uint8x16_t mask = NeedsFilter(p1, p0, q0, q1, thresh);
+    DoFilter2(p1, p0, q0, q1, mask, &op0, &oq0);
+  }
   Store16x2(op0, oq0, p, stride);
 }
 
@@ -280,7 +287,10 @@ static void SimpleVFilter16NEON(uint8_t* p, int stride, int thresh) {
 static void SimpleHFilter16NEON(uint8_t* p, int stride, int thresh) {
   uint8x16_t p1, p0, q0, q1, oq0, op0;
   Load4x16(p, stride, &p1, &p0, &q0, &q1);
-  DoFilter2(p1, p0, q0, q1, &op0, &oq0, thresh);
+  {
+    const uint8x16_t mask = NeedsFilter(p1, p0, q0, q1, thresh);
+    DoFilter2(p1, p0, q0, q1, mask, &op0, &oq0);
+  }
   Store2x16(op0, oq0, p, stride);
 }
 
@@ -329,6 +339,127 @@ static void SimpleHFilter16iNEON(uint8_t* p, int stride, int thresh) {
     SimpleHFilter16NEON(p, stride, thresh);
   }
 }
+
+//------------------------------------------------------------------------------
+// Complex In-loop filtering (Paragraph 15.3)
+
+#if defined(USE_INTRINSICS)
+static uint8x16_t NeedsHev(const uint8x16_t p1, const uint8x16_t p0,
+                           const uint8x16_t q0, const uint8x16_t q1,
+                           int hev_thresh) {
+  const uint8x16_t hev_thresh_v = vdupq_n_u8((uint8_t)hev_thresh);
+  const uint8x16_t a_p1_p0 = vabdq_u8(p1, p0);  // abs(p1 - p0)
+  const uint8x16_t a_q1_q0 = vabdq_u8(q1, q0);  // abs(q1 - q0)
+  const uint8x16_t mask1 = vcgtq_u8(a_p1_p0, hev_thresh_v);
+  const uint8x16_t mask2 = vcgtq_u8(a_q1_q0, hev_thresh_v);
+  const uint8x16_t mask = vorrq_u8(mask1, mask2);
+  return mask;
+}
+
+static uint8x16_t NeedsFilter2(const uint8x16_t p3, const uint8x16_t p2,
+                               const uint8x16_t p1, const uint8x16_t p0,
+                               const uint8x16_t q0, const uint8x16_t q1,
+                               const uint8x16_t q2, const uint8x16_t q3,
+                               int ithresh) {
+  const uint8x16_t ithresh_v = vdupq_n_u8((uint8_t)ithresh);
+  const uint8x16_t a_p3_p2 = vabdq_u8(p3, p2);  // abs(p3 - p2)
+  const uint8x16_t a_p2_p1 = vabdq_u8(p2, p1);  // abs(p2 - p1)
+  const uint8x16_t a_p1_p0 = vabdq_u8(p1, p0);  // abs(p1 - p0)
+  const uint8x16_t a_q3_q2 = vabdq_u8(q3, q2);  // abs(q3 - q2)
+  const uint8x16_t a_q2_q1 = vabdq_u8(q2, q1);  // abs(q2 - q1)
+  const uint8x16_t a_q1_q0 = vabdq_u8(q1, q0);  // abs(q1 - q0)
+  const uint8x16_t max1 = vmaxq_u8(a_p3_p2, a_p2_p1);
+  const uint8x16_t max2 = vmaxq_u8(a_p1_p0, a_q3_q2);
+  const uint8x16_t max3 = vmaxq_u8(a_q2_q1, a_q1_q0);
+  const uint8x16_t max12 = vmaxq_u8(max1, max2);
+  const uint8x16_t max = vmaxq_u8(max12, max3);
+  const uint8x16_t mask = vcgeq_u8(ithresh_v, max);
+  return mask;
+}
+
+static void DoFilter6(
+    const uint8x16_t p2, const uint8x16_t p1, const uint8x16_t p0,
+    const uint8x16_t q0, const uint8x16_t q1, const uint8x16_t q2,
+    const uint8x16_t mask, const uint8x16_t hev_mask,
+    uint8x16_t* const op2, uint8x16_t* const op1, uint8x16_t* const op0,
+    uint8x16_t* const oq0, uint8x16_t* const oq1, uint8x16_t* const oq2) {
+  const int8x16_t p2s = FlipSign(p2);
+  const int8x16_t p1s = FlipSign(p1);
+  int8x16_t p0s = FlipSign(p0);
+  int8x16_t q0s = FlipSign(q0);
+  const int8x16_t q1s = FlipSign(q1);
+  const int8x16_t q2s = FlipSign(q2);
+  const uint8x16_t simple_lf_mask = vandq_u8(mask, hev_mask);
+  const int8x16_t delta0 = GetBaseDelta(p1s, p0s, q0s, q1s);
+  const int8x16_t simple_lf_delta =
+      vandq_s8(delta0, vreinterpretq_s8_u8(simple_lf_mask));
+  uint8x16_t tmp_p0, tmp_q0;
+
+  // Use the simple loopfilter on pixels with hev.
+  DoSimpleFilter(p0s, q0s, simple_lf_delta, &tmp_p0, &tmp_q0);
+  p0s = FlipSign(tmp_p0);
+  q0s = FlipSign(tmp_q0);
+
+  // Use the complex loopfilter on pixels without hev.
+  {
+    const uint8x16_t not_hev = vmvnq_u8(hev_mask);
+    const uint8x16_t complex_lf_mask = vandq_u8(mask, not_hev);
+    const int8x16_t complex_lf_delta =
+        vandq_s8(delta0, vreinterpretq_s8_u8(complex_lf_mask));
+    const int16x8_t kCst63 = vdupq_n_s16(63);
+    const int8x8_t kCst27 = vdup_n_s8(27);
+    const int8x8_t kCst18 = vdup_n_s8(18);
+    const int8x8_t kCst9 = vdup_n_s8(9);
+    const int8x8_t delta_lo = vget_low_s8(complex_lf_delta);
+    const int8x8_t delta_hi = vget_high_s8(complex_lf_delta);
+    const int16x8_t s1_lo = vmlal_s8(kCst63, kCst27, delta_lo);  // 63 + 27 * a
+    const int16x8_t s1_hi = vmlal_s8(kCst63, kCst27, delta_hi);  // 63 + 27 * a
+    const int16x8_t s2_lo = vmlal_s8(kCst63, kCst18, delta_lo);  // 63 + 18 * a
+    const int16x8_t s2_hi = vmlal_s8(kCst63, kCst18, delta_hi);  // 63 + 18 * a
+    const int16x8_t s3_lo = vmlal_s8(kCst63, kCst9, delta_lo);   // 63 + 9 * a
+    const int16x8_t s3_hi = vmlal_s8(kCst63, kCst9, delta_hi);   // 63 + 9 * a
+    const int8x8_t a1_lo = vqshrn_n_s16(s1_lo, 7);
+    const int8x8_t a1_hi = vqshrn_n_s16(s1_hi, 7);
+    const int8x8_t a2_lo = vqshrn_n_s16(s2_lo, 7);
+    const int8x8_t a2_hi = vqshrn_n_s16(s2_hi, 7);
+    const int8x8_t a3_lo = vqshrn_n_s16(s3_lo, 7);
+    const int8x8_t a3_hi = vqshrn_n_s16(s3_hi, 7);
+    const int8x16_t a1 = vcombine_s8(a1_lo, a1_hi);
+    const int8x16_t a2 = vcombine_s8(a2_lo, a2_hi);
+    const int8x16_t a3 = vcombine_s8(a3_lo, a3_hi);
+
+    *op0 = FlipSignBack(vqaddq_s8(p0s, a1));  // clip(p0 + a1)
+    *oq0 = FlipSignBack(vqsubq_s8(q0s, a1));  // clip(q0 - q1)
+    *oq1 = FlipSignBack(vqsubq_s8(q1s, a2));  // clip(q1 - a2)
+    *op1 = FlipSignBack(vqaddq_s8(p1s, a2));  // clip(p1 + a2)
+    *oq2 = FlipSignBack(vqsubq_s8(q2s, a3));  // clip(q2 - a3)
+    *op2 = FlipSignBack(vqaddq_s8(p2s, a3));  // clip(p2 + a3)
+  }
+}
+
+// on macroblock edges
+static void VFilter16(uint8_t* p, int stride,
+                      int thresh, int ithresh, int hev_thresh) {
+  uint8x16_t p3, p2, p1, p0, q0, q1, q2, q3;
+  Load16x4(p - 2 * stride, stride, &p3, &p2, &p1, &p0);
+  Load16x4(p + 2 * stride, stride, &q0, &q1, &q2, &q3);
+  {
+    const uint8x16_t mask1 = NeedsFilter(p1, p0, q0, q1, thresh);
+    const uint8x16_t mask2 = NeedsFilter2(p3, p2, p1, p0, q0, q1, q2, q3,
+                                          ithresh);
+    const uint8x16_t hev_mask = NeedsHev(p1, p0, q0, q1, hev_thresh);
+    const uint8x16_t mask = vandq_u8(mask1, mask2);
+    uint8x16_t op2, op1, op0, oq0, oq1, oq2;
+
+    DoFilter6(p2, p1, p0, q0, q1, q2, mask, hev_mask,
+              &op2, &op1, &op0, &oq0, &oq1, &oq2);
+    Store16x2(op2, op1, p - 2 * stride, stride);
+    Store16x2(op0, oq0, p + 0 * stride, stride);
+    Store16x2(oq1, oq2, p + 2 * stride, stride);
+  }
+}
+
+#endif  // USE_INTRINSICS
 
 //-----------------------------------------------------------------------------
 // Inverse transforms (Paragraph 14.4)
@@ -634,6 +765,9 @@ void VP8DspInitNEON(void) {
   VP8TransformDC = TransformDC;
   VP8TransformWHT = TransformWHT;
 
+#if defined(USE_INTRINSICS)
+  VP8VFilter16 = VFilter16;
+#endif
   VP8SimpleVFilter16 = SimpleVFilter16NEON;
   VP8SimpleHFilter16 = SimpleHFilter16NEON;
   VP8SimpleVFilter16i = SimpleVFilter16iNEON;
