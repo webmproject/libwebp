@@ -69,6 +69,10 @@ EXTRA_FLAGS += -Wdeclaration-after-statement
 EXTRA_FLAGS += -Wshadow
 # EXTRA_FLAGS += -Wvla
 
+# NEON-specific flags:
+# EXTRA_FLAGS += -march=armv7-a -mfloat-abi=hard -mfpu=neon -mtune=cortex-a8
+# -> seems to make the overall lib slower: -fno-split-wide-types
+
 #### Nothing should normally be changed below this line ####
 
 AR = ar
@@ -105,6 +109,7 @@ DSP_DEC_OBJS = \
     src/dsp/dec_neon.o \
     src/dsp/dec_sse2.o \
     src/dsp/lossless.o \
+    src/dsp/lossless_neon.o \
     src/dsp/lossless_sse2.o \
     src/dsp/upsampling.o \
     src/dsp/upsampling_mips32.o \
