@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//wMY\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-03-31T19:51:48Z",
+      "side": 1,
+      "message": "yes, i intend to have a look at modifying the code to give gcc better hints during reg allocation. But it seems tricky.\nBetter bet is to aim at 4.8 directly and just forget about 4.6.x for now...",
+      "parentUuid": "AAAAdn//wM4\u003d",
+      "revId": "97e5fac389a62b506cfa3f85c9d8ba2699e4d989",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//wMs\u003d",
         "filename": "src/dsp/lossless_neon.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2014-03-31T19:13:49Z",
       "side": 1,
       "message": "this likely won\u0027t play well with visual studio, but we can leave it until we try a build there",
+      "revId": "97e5fac389a62b506cfa3f85c9d8ba2699e4d989",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//wMU\u003d",
+        "filename": "src/dsp/lossless_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-03-31T19:51:48Z",
+      "side": 1,
+      "message": "not that static initializer is the best way to make gcc optimize the lo/hi register reasonably. Initializing through:\n\nconst uint8x16x3_t tmp;\ntmp.val[0] \u003d ...\ntmp.val[1] \u003d ...\n\noften produces sub-optimal code, for some unexplored reasons.",
+      "parentUuid": "AAAAdn//wMs\u003d",
       "revId": "97e5fac389a62b506cfa3f85c9d8ba2699e4d989",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
