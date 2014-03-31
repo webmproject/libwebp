@@ -17,6 +17,7 @@ COMMON_SOURCES += dec_neon.c
 COMMON_SOURCES += dec_sse2.c
 COMMON_SOURCES += dsp.h
 COMMON_SOURCES += lossless.c
+COMMON_SOURCES += lossless_neon.c
 COMMON_SOURCES += lossless_sse2.c
 COMMON_SOURCES += lossless.h
 COMMON_SOURCES += upsampling.c
