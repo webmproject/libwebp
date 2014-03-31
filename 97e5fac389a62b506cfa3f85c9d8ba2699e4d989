@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//wM4\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-03-31T19:13:49Z",
+      "side": 1,
+      "message": "it\u0027s something to note, but 4.8 would be more critical. Android is using this and likely the NDK will switch soon",
+      "revId": "97e5fac389a62b506cfa3f85c9d8ba2699e4d989",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//wMs\u003d",
+        "filename": "src/dsp/lossless_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-03-31T19:13:49Z",
+      "side": 1,
+      "message": "this likely won\u0027t play well with visual studio, but we can leave it until we try a build there",
+      "revId": "97e5fac389a62b506cfa3f85c9d8ba2699e4d989",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
