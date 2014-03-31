@@ -71,6 +71,71 @@
   FLIP_SIGN_BIT2(p0, q0, q10)
 
 #if defined(USE_INTRINSICS)
+
+static WEBP_INLINE uint8x8x4_t Load4x8(const uint8_t* const src, int stride) {
+  uint8x8x4_t out;
+  out = vld4_lane_u8(src + 0 * stride, out, 0);
+  out = vld4_lane_u8(src + 1 * stride, out, 1);
+  out = vld4_lane_u8(src + 2 * stride, out, 2);
+  out = vld4_lane_u8(src + 3 * stride, out, 3);
+  out = vld4_lane_u8(src + 4 * stride, out, 4);
+  out = vld4_lane_u8(src + 5 * stride, out, 5);
+  out = vld4_lane_u8(src + 6 * stride, out, 6);
+  out = vld4_lane_u8(src + 7 * stride, out, 7);
+  return out;
+}
+
+static WEBP_INLINE void Load4x16(const uint8_t* const src, int stride,
+                                 uint8x16_t* const p1, uint8x16_t* const p0,
+                                 uint8x16_t* const q0, uint8x16_t* const q1) {
+  // row0 = p1[0..7]|p0[0..7]|q0[0..7]|q1[0..7]
+  const uint8x8x4_t row0 = Load4x8(src - 2 + 0 * stride, stride);
+  // row8 = p1[8..15]|p0[8..15]|q0[8..15]|q1[8..15]
+  const uint8x8x4_t row8 = Load4x8(src - 2 + 8 * stride, stride);
+  *p1 = vcombine_u8(row0.val[0], row8.val[0]);
+  *p0 = vcombine_u8(row0.val[1], row8.val[1]);
+  *q0 = vcombine_u8(row0.val[2], row8.val[2]);
+  *q1 = vcombine_u8(row0.val[3], row8.val[3]);
+}
+
+static WEBP_INLINE void Load16x4(const uint8_t* const src, int stride,
+                                 uint8x16_t* const p1, uint8x16_t* const p0,
+                                 uint8x16_t* const q0, uint8x16_t* const q1) {
+  *p1 = vld1q_u8(src - 2 * stride);
+  *p0 = vld1q_u8(src - 1 * stride);
+  *q0 = vld1q_u8(src + 0 * stride);
+  *q1 = vld1q_u8(src + 1 * stride);
+}
+
+static WEBP_INLINE void Store2x8(const uint8x8x2_t v,
+                                 uint8_t* const dst, int stride) {
+  vst2_lane_u8(dst + 0 * stride, v, 0);
+  vst2_lane_u8(dst + 1 * stride, v, 1);
+  vst2_lane_u8(dst + 2 * stride, v, 2);
+  vst2_lane_u8(dst + 3 * stride, v, 3);
+  vst2_lane_u8(dst + 4 * stride, v, 4);
+  vst2_lane_u8(dst + 5 * stride, v, 5);
+  vst2_lane_u8(dst + 6 * stride, v, 6);
+  vst2_lane_u8(dst + 7 * stride, v, 7);
+}
+
+static WEBP_INLINE void Store2x16(const uint8x16_t p0, const uint8x16_t q0,
+                                  uint8_t* const dst, int stride) {
+  uint8x8x2_t lo, hi;
+  lo.val[0] = vget_low_u8(p0);
+  lo.val[1] = vget_low_u8(q0);
+  hi.val[0] = vget_high_u8(p0);
+  hi.val[1] = vget_high_u8(q0);
+  Store2x8(lo, dst - 1 + 0 * stride, stride);
+  Store2x8(hi, dst - 1 + 8 * stride, stride);
+}
+
+static WEBP_INLINE void Store16x2(const uint8x16_t p0, const uint8x16_t q0,
+                                  uint8_t* const dst, int stride) {
+  vst1q_u8(dst - stride, p0);
+  vst1q_u8(dst, q0);
+}
+
 static uint8x16_t NeedsFilter(const uint8x16_t p1, const uint8x16_t p0,
                               const uint8x16_t q0, const uint8x16_t q1,
                               int thresh) {
@@ -173,8 +238,9 @@ static WEBP_INLINE void SaturateAndStore4x4(uint8_t* const dst,
 //-----------------------------------------------------------------------------
 // Simple In-loop filtering (Paragraph 15.2)
 
-static void SimpleVFilter16NEON(uint8_t* p, int stride, int thresh) {
 #if !defined(USE_INTRINSICS)
+
+static void SimpleVFilter16NEON(uint8_t* p, int stride, int thresh) {
   __asm__ volatile (
     "sub        %[p], %[p], %[stride], lsl #1  \n"  // p -= 2 * stride
 
@@ -193,17 +259,32 @@ static void SimpleVFilter16NEON(uint8_t* p, int stride, int thresh) {
     : [stride] "r"(stride), [thresh] "r"(thresh)
     : "memory", QRegs
   );
-#else
-  const uint8x16_t p1 = vld1q_u8(p - 2 * stride);
-  const uint8x16_t p0 = vld1q_u8(p - 1 * stride);
-  const uint8x16_t q0 = vld1q_u8(p + 0 * stride);
-  const uint8x16_t q1 = vld1q_u8(p + 1 * stride);
-  uint8x16_t oq0, op0;
-  DoFilter2(p1, p0, q0, q1, &op0, &oq0, thresh);
-  vst1q_u8(p - stride, op0);
-  vst1q_u8(p, oq0);
-#endif
 }
+
+#else
+
+static void SimpleVFilter16NEON(uint8_t* p, int stride, int thresh) {
+  uint8x16_t p1, p0, q0, q1, op0, oq0;
+  Load16x4(p, stride, &p1, &p0, &q0, &q1);
+  DoFilter2(p1, p0, q0, q1, &op0, &oq0, thresh);
+  Store16x2(op0, oq0, p, stride);
+}
+
+#endif    // USE_INTRINSICS
+
+#if 0 // #if defined(USE_INTRINSICS)
+
+// This intrinsics version makes gcc-4.6.3 crash during DoFilter2() compilation
+// (register alloc, probably). So we hard-disable it for now until figuring
+// out what is wrong. But it compiles and works OK in -O1 optimization level.
+static void SimpleHFilter16NEON(uint8_t* p, int stride, int thresh) {
+  uint8x16_t p1, p0, q0, q1, oq0, op0;
+  Load4x16(p, stride, &p1, &p0, &q0, &q1);
+  DoFilter2(p1, p0, q0, q1, &op0, &oq0, thresh);
+  Store2x16(op0, oq0, p, stride);
+}
+
+#else
 
 static void SimpleHFilter16NEON(uint8_t* p, int stride, int thresh) {
   __asm__ volatile (
@@ -230,6 +311,8 @@ static void SimpleHFilter16NEON(uint8_t* p, int stride, int thresh) {
     : "memory", "r4", "r5", "r6", QRegs
   );
 }
+
+#endif    // USE_INTRINSICS
 
 static void SimpleVFilter16iNEON(uint8_t* p, int stride, int thresh) {
   int k;
