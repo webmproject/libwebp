@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//wCM\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1166,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-01T23:15:09Z",
+      "side": 1,
+      "message": "comment no longer applies",
+      "revId": "d4813f0cb270728665f177eb80cf64038fac232d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
