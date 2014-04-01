@@ -32,6 +32,17 @@ typedef void (*VP8LProcessBlueAndRedFunc)(uint32_t* argb_data, int num_pixels);
 extern VP8LProcessBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
 extern VP8LProcessBlueAndRedFunc VP8LAddGreenToBlueAndRed;
 
+typedef struct {
+  // Note: the members are uint8_t, so that any negative values are
+  // automatically converted to "mod 256" values.
+  uint8_t green_to_red_;
+  uint8_t green_to_blue_;
+  uint8_t red_to_blue_;
+} VP8LMultipliers;
+typedef void (*VP8LTransformColorFunc)(const VP8LMultipliers* const m,
+                                       uint32_t* argb_data, int num_pixels);
+extern VP8LTransformColorFunc VP8LTransformColorInverse;
+
 typedef void (*VP8LConvertFunc)(const uint32_t* src, int num_pixels,
                                 uint8_t* dst);
 extern VP8LConvertFunc VP8LConvertBGRAToRGB;
@@ -41,6 +52,9 @@ extern VP8LConvertFunc VP8LConvertBGRAToRGB565;
 extern VP8LConvertFunc VP8LConvertBGRAToBGR;
 
 // Expose some C-only fallback functions
+extern void VP8LTransformColorInverse_C(
+    const VP8LMultipliers* const m, uint32_t* data, int num_pixels);
+
 extern void VP8LConvertBGRAToRGB_C(const uint32_t* src,
                                    int num_pixels, uint8_t* dst);
 extern void VP8LConvertBGRAToRGBA_C(const uint32_t* src,

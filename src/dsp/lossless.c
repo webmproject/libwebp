@@ -807,15 +807,7 @@ void VP8LAddGreenToBlueAndRed_C(uint32_t* data, int num_pixels) {
   }
 }
 
-typedef struct {
-  // Note: the members are uint8_t, so that any negative values are
-  // automatically converted to "mod 256" values.
-  uint8_t green_to_red_;
-  uint8_t green_to_blue_;
-  uint8_t red_to_blue_;
-} Multipliers;
-
-static WEBP_INLINE void MultipliersClear(Multipliers* m) {
+static WEBP_INLINE void MultipliersClear(VP8LMultipliers* const m) {
   m->green_to_red_ = 0;
   m->green_to_blue_ = 0;
   m->red_to_blue_ = 0;
@@ -827,45 +819,55 @@ static WEBP_INLINE uint32_t ColorTransformDelta(int8_t color_pred,
 }
 
 static WEBP_INLINE void ColorCodeToMultipliers(uint32_t color_code,
-                                               Multipliers* const m) {
+                                               VP8LMultipliers* const m) {
   m->green_to_red_  = (color_code >>  0) & 0xff;
   m->green_to_blue_ = (color_code >>  8) & 0xff;
   m->red_to_blue_   = (color_code >> 16) & 0xff;
 }
 
-static WEBP_INLINE uint32_t MultipliersToColorCode(const Multipliers* const m) {
+static WEBP_INLINE uint32_t MultipliersToColorCode(
+    const VP8LMultipliers* const m) {
   return 0xff000000u |
          ((uint32_t)(m->red_to_blue_) << 16) |
          ((uint32_t)(m->green_to_blue_) << 8) |
          m->green_to_red_;
 }
 
-static WEBP_INLINE uint32_t TransformColor(const Multipliers* const m,
-                                           uint32_t argb) {
-  const uint32_t green = argb >> 8;
-  const uint32_t red = argb >> 16;
-  uint32_t new_red = red;
-  uint32_t new_blue = argb;
-  new_red -= ColorTransformDelta(m->green_to_red_, green);
-  new_red &= 0xff;
-  new_blue -= ColorTransformDelta(m->green_to_blue_, green);
-  new_blue -= ColorTransformDelta(m->red_to_blue_, red);
-  new_blue &= 0xff;
-  return (argb & 0xff00ff00u) | (new_red << 16) | (new_blue);
+static WEBP_INLINE void TransformColor(const VP8LMultipliers* const m,
+                                       uint32_t* data,
+                                       int num_pixels) {
+  int i;
+  for (i = 0; i < num_pixels; ++i) {
+    const uint32_t argb = data[i];
+    const uint32_t green = argb >> 8;
+    const uint32_t red = argb >> 16;
+    uint32_t new_red = red;
+    uint32_t new_blue = argb;
+    new_red -= ColorTransformDelta(m->green_to_red_, green);
+    new_red &= 0xff;
+    new_blue -= ColorTransformDelta(m->green_to_blue_, green);
+    new_blue -= ColorTransformDelta(m->red_to_blue_, red);
+    new_blue &= 0xff;
+    data[i] = (argb & 0xff00ff00u) | (new_red << 16) | (new_blue);
+  }
 }
 
-static WEBP_INLINE uint32_t TransformColorInverse(const Multipliers* const m,
-                                                  uint32_t argb) {
-  const uint32_t green = argb >> 8;
-  const uint32_t red = argb >> 16;
-  uint32_t new_red = red;
-  uint32_t new_blue = argb;
-  new_red += ColorTransformDelta(m->green_to_red_, green);
-  new_red &= 0xff;
-  new_blue += ColorTransformDelta(m->green_to_blue_, green);
-  new_blue += ColorTransformDelta(m->red_to_blue_, new_red);
-  new_blue &= 0xff;
-  return (argb & 0xff00ff00u) | (new_red << 16) | (new_blue);
+void VP8LTransformColorInverse_C(const VP8LMultipliers* const m, uint32_t* data,
+                                 int num_pixels) {
+  int i;
+  for (i = 0; i < num_pixels; ++i) {
+    const uint32_t argb = data[i];
+    const uint32_t green = argb >> 8;
+    const uint32_t red = argb >> 16;
+    uint32_t new_red = red;
+    uint32_t new_blue = argb;
+    new_red += ColorTransformDelta(m->green_to_red_, green);
+    new_red &= 0xff;
+    new_blue += ColorTransformDelta(m->green_to_blue_, green);
+    new_blue += ColorTransformDelta(m->red_to_blue_, new_red);
+    new_blue &= 0xff;
+    data[i] = (argb & 0xff00ff00u) | (new_red << 16) | (new_blue);
+  }
 }
 
 static WEBP_INLINE uint8_t TransformColorRed(uint8_t green_to_red,
@@ -898,7 +900,7 @@ static float PredictionCostCrossColor(const int accumulated[256],
 
 static float GetPredictionCostCrossColorRed(
     int tile_x_offset, int tile_y_offset, int all_x_max, int all_y_max,
-    int xsize, Multipliers prev_x, Multipliers prev_y, int green_to_red,
+    int xsize, VP8LMultipliers prev_x, VP8LMultipliers prev_y, int green_to_red,
     const int accumulated_red_histo[256], const uint32_t* const argb) {
   int all_y;
   int histo[256] = { 0 };
@@ -925,9 +927,9 @@ static float GetPredictionCostCrossColorRed(
 
 static void GetBestGreenToRed(
     int tile_x_offset, int tile_y_offset, int all_x_max, int all_y_max,
-    int xsize, Multipliers prev_x, Multipliers prev_y,
+    int xsize, VP8LMultipliers prev_x, VP8LMultipliers prev_y,
     const int accumulated_red_histo[256], const uint32_t* const argb,
-    Multipliers* best_tx) {
+    VP8LMultipliers* const best_tx) {
   int min_green_to_red = -64;
   int max_green_to_red = 64;
   int green_to_red = 0;
@@ -964,8 +966,8 @@ static void GetBestGreenToRed(
 
 static float GetPredictionCostCrossColorBlue(
     int tile_x_offset, int tile_y_offset, int all_x_max, int all_y_max,
-    int xsize, Multipliers prev_x, Multipliers prev_y, int green_to_blue,
-    int red_to_blue, const int accumulated_blue_histo[256],
+    int xsize, VP8LMultipliers prev_x, VP8LMultipliers prev_y,
+    int green_to_blue, int red_to_blue, const int accumulated_blue_histo[256],
     const uint32_t* const argb) {
   int all_y;
   int histo[256] = { 0 };
@@ -1001,9 +1003,9 @@ static float GetPredictionCostCrossColorBlue(
 
 static void GetBestGreenRedToBlue(
     int tile_x_offset, int tile_y_offset, int all_x_max, int all_y_max,
-    int xsize, Multipliers prev_x, Multipliers prev_y, int quality,
+    int xsize, VP8LMultipliers prev_x, VP8LMultipliers prev_y, int quality,
     const int accumulated_blue_histo[256], const uint32_t* const argb,
-    Multipliers* best_tx) {
+    VP8LMultipliers* const best_tx) {
   float best_diff = MAX_DIFF_COST;
   float cur_diff;
   const int step = (quality < 25) ? 32 : (quality > 50) ? 8 : 16;
@@ -1043,10 +1045,10 @@ static void GetBestGreenRedToBlue(
   }
 }
 
-static Multipliers GetBestColorTransformForTile(
+static VP8LMultipliers GetBestColorTransformForTile(
     int tile_x, int tile_y, int bits,
-    Multipliers prev_x,
-    Multipliers prev_y,
+    VP8LMultipliers prev_x,
+    VP8LMultipliers prev_y,
     int quality, int xsize, int ysize,
     const int accumulated_red_histo[256],
     const int accumulated_blue_histo[256],
@@ -1056,7 +1058,7 @@ static Multipliers GetBestColorTransformForTile(
   const int tile_x_offset = tile_x * max_tile_size;
   const int all_x_max = GetMin(tile_x_offset + max_tile_size, xsize);
   const int all_y_max = GetMin(tile_y_offset + max_tile_size, ysize);
-  Multipliers best_tx;
+  VP8LMultipliers best_tx;
   MultipliersClear(&best_tx);
 
   GetBestGreenToRed(tile_x_offset, tile_y_offset, all_x_max, all_y_max, xsize,
@@ -1070,16 +1072,13 @@ static Multipliers GetBestColorTransformForTile(
 static void CopyTileWithColorTransform(int xsize, int ysize,
                                        int tile_x, int tile_y,
                                        int max_tile_size,
-                                       Multipliers color_transform,
+                                       VP8LMultipliers color_transform,
                                        uint32_t* argb) {
   const int xscan = GetMin(max_tile_size, xsize - tile_x);
   int yscan = GetMin(max_tile_size, ysize - tile_y);
   argb += tile_y * xsize + tile_x;
   while (yscan-- > 0) {
-    int x;
-    for (x = 0; x < xscan; ++x) {
-      argb[x] = TransformColor(&color_transform, argb[x]);
-    }
+    TransformColor(&color_transform, argb, xscan);
     argb += xsize;
   }
 }
@@ -1092,7 +1091,7 @@ void VP8LColorSpaceTransform(int width, int height, int bits, int quality,
   int accumulated_red_histo[256] = { 0 };
   int accumulated_blue_histo[256] = { 0 };
   int tile_x, tile_y;
-  Multipliers prev_x, prev_y;
+  VP8LMultipliers prev_x, prev_y;
   MultipliersClear(&prev_y);
   MultipliersClear(&prev_x);
   for (tile_y = 0; tile_y < tile_ysize; ++tile_y) {
@@ -1148,6 +1147,7 @@ static void ColorSpaceInverseTransform(const VP8LTransform* const transform,
   const int tile_width = 1 << transform->bits_;
   const int mask = tile_width - 1;
   const int safe_width = width & ~mask;
+  const int remaining_width = width - safe_width;
   const int tiles_per_row = VP8LSubSampleSize(width, transform->bits_);
   int y = y_start;
   const uint32_t* pred_row =
@@ -1155,22 +1155,19 @@ static void ColorSpaceInverseTransform(const VP8LTransform* const transform,
 
   while (y < y_end) {
     const uint32_t* pred = pred_row;
-    Multipliers m = { 0, 0, 0 };
-    int x = 0;
-    while (x < safe_width) {
-      int t;
+    VP8LMultipliers m = { 0, 0, 0 };
+    const uint32_t* const data_safe_end = data + safe_width;
+    const uint32_t* const data_end = data + width;
+    while (data < data_safe_end) {
       ColorCodeToMultipliers(*pred++, &m);
-      for (t = 0; t < tile_width; ++t, ++x) {
-        data[x] = TransformColorInverse(&m, data[x]);
-      }
+      VP8LTransformColorInverse(&m, data, tile_width);
+      data += tile_width;
     }
-    if (x < width) {
+    if (data < data_end) {  // Left-overs using C-version.
       ColorCodeToMultipliers(*pred++, &m);
-      for (; x < width; ++x) {
-        data[x] = TransformColorInverse(&m, data[x]);
-      }
+      VP8LTransformColorInverse(&m, data, remaining_width);
+      data += remaining_width;
     }
-    data += width;
     ++y;
     if ((y & mask) == 0) pred_row += tiles_per_row;;
   }
@@ -1468,6 +1465,8 @@ VP8LProcessBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
 VP8LProcessBlueAndRedFunc VP8LAddGreenToBlueAndRed;
 VP8LPredictorFunc VP8LPredictors[16];
 
+VP8LTransformColorFunc VP8LTransformColorInverse;
+
 VP8LConvertFunc VP8LConvertBGRAToRGB;
 VP8LConvertFunc VP8LConvertBGRAToRGBA;
 VP8LConvertFunc VP8LConvertBGRAToRGBA4444;
@@ -1482,6 +1481,8 @@ void VP8LDspInit(void) {
 
   VP8LSubtractGreenFromBlueAndRed = VP8LSubtractGreenFromBlueAndRed_C;
   VP8LAddGreenToBlueAndRed = VP8LAddGreenToBlueAndRed_C;
+
+  VP8LTransformColorInverse = VP8LTransformColorInverse_C;
 
   VP8LConvertBGRAToRGB = VP8LConvertBGRAToRGB_C;
   VP8LConvertBGRAToRGBA = VP8LConvertBGRAToRGBA_C;
