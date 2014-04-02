@@ -929,15 +929,24 @@ static int GetHistoBits(int method, int use_palette, int width, int height) {
          (histo_bits > MAX_HUFFMAN_BITS) ? MAX_HUFFMAN_BITS : histo_bits;
 }
 
+static int GetTransformBits(int method, int histo_bits) {
+  const int max_transform_bits = (method < 4) ? 6 : (method > 4) ? 4 : 5;
+  return (histo_bits > max_transform_bits) ? max_transform_bits : histo_bits;
+}
+
+static int GetCacheBits(float quality) {
+  return (quality <= 25.f) ? 0 : 7;
+}
+
 static void FinishEncParams(VP8LEncoder* const enc) {
   const WebPConfig* const config = enc->config_;
   const WebPPicture* const pic = enc->pic_;
   const int method = config->method;
   const float quality = config->quality;
   const int use_palette = enc->use_palette_;
-  enc->transform_bits_ = (method < 4) ? 5 : (method > 4) ? 3 : 4;
   enc->histo_bits_ = GetHistoBits(method, use_palette, pic->width, pic->height);
-  enc->cache_bits_ = (quality <= 25.f) ? 0 : 7;
+  enc->transform_bits_ = GetTransformBits(method, enc->histo_bits_);
+  enc->cache_bits_ = GetCacheBits(quality);
 }
 
 // -----------------------------------------------------------------------------
