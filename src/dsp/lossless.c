@@ -833,9 +833,8 @@ static WEBP_INLINE uint32_t MultipliersToColorCode(
          m->green_to_red_;
 }
 
-static WEBP_INLINE void TransformColor(const VP8LMultipliers* const m,
-                                       uint32_t* data,
-                                       int num_pixels) {
+void VP8LTransformColor_C(const VP8LMultipliers* const m, uint32_t* data,
+                          int num_pixels) {
   int i;
   for (i = 0; i < num_pixels; ++i) {
     const uint32_t argb = data[i];
@@ -1078,7 +1077,7 @@ static void CopyTileWithColorTransform(int xsize, int ysize,
   int yscan = GetMin(max_tile_size, ysize - tile_y);
   argb += tile_y * xsize + tile_x;
   while (yscan-- > 0) {
-    TransformColor(&color_transform, argb, xscan);
+    VP8LTransformColor(&color_transform, argb, xscan);
     argb += xsize;
   }
 }
@@ -1465,6 +1464,7 @@ VP8LProcessBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
 VP8LProcessBlueAndRedFunc VP8LAddGreenToBlueAndRed;
 VP8LPredictorFunc VP8LPredictors[16];
 
+VP8LTransformColorFunc VP8LTransformColor;
 VP8LTransformColorFunc VP8LTransformColorInverse;
 
 VP8LConvertFunc VP8LConvertBGRAToRGB;
@@ -1482,6 +1482,7 @@ void VP8LDspInit(void) {
   VP8LSubtractGreenFromBlueAndRed = VP8LSubtractGreenFromBlueAndRed_C;
   VP8LAddGreenToBlueAndRed = VP8LAddGreenToBlueAndRed_C;
 
+  VP8LTransformColor = VP8LTransformColor_C;
   VP8LTransformColorInverse = VP8LTransformColorInverse_C;
 
   VP8LConvertBGRAToRGB = VP8LConvertBGRAToRGB_C;

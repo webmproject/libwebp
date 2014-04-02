@@ -41,6 +41,7 @@ typedef struct {
 } VP8LMultipliers;
 typedef void (*VP8LTransformColorFunc)(const VP8LMultipliers* const m,
                                        uint32_t* argb_data, int num_pixels);
+extern VP8LTransformColorFunc VP8LTransformColor;
 extern VP8LTransformColorFunc VP8LTransformColorInverse;
 
 typedef void (*VP8LConvertFunc)(const uint32_t* src, int num_pixels,
@@ -52,8 +53,10 @@ extern VP8LConvertFunc VP8LConvertBGRAToRGB565;
 extern VP8LConvertFunc VP8LConvertBGRAToBGR;
 
 // Expose some C-only fallback functions
-extern void VP8LTransformColorInverse_C(
-    const VP8LMultipliers* const m, uint32_t* data, int num_pixels);
+extern void VP8LTransformColor_C(const VP8LMultipliers* const m,
+                                 uint32_t* data, int num_pixels);
+extern void VP8LTransformColorInverse_C(const VP8LMultipliers* const m,
+                                        uint32_t* data, int num_pixels);
 
 extern void VP8LConvertBGRAToRGB_C(const uint32_t* src,
                                    int num_pixels, uint8_t* dst);
