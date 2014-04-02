@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//v/w\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-02T02:50:08Z",
+      "side": 1,
+      "message": "outer",
+      "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//v/k\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-02T02:50:08Z",
+      "side": 1,
+      "message": "this appears faster with gcc 4.8, so might be ok to lose the branch here",
+      "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//v/c\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-02T02:50:08Z",
+      "side": 1,
+      "message": "long lines",
+      "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//v/g\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-02T02:50:08Z",
+      "side": 1,
+      "message": "I tried a full 16x8 transpose with no visible difference under gcc-4.8, this might be ok to start",
+      "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//v/Y\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-02T02:50:08Z",
+      "side": 1,
+      "message": "long line",
+      "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//v/U\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 572,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-02T02:50:08Z",
+      "side": 1,
+      "message": "better to move this one after *oq0",
+      "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//v/Q\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 607,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-02T02:50:08Z",
+      "side": 1,
+      "message": "had this in an earlier patchset, not sure why I dropped it",
+      "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//v/M\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 732,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-02T02:50:08Z",
+      "side": 1,
+      "message": "could go after 738 like [HV]Filter16()",
+      "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//v/I\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 751,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-02T02:50:08Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
