@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//v9k\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-02T06:40:23Z",
+      "side": 1,
+      "message": "well, we need to keep the alternative below for gcc-4.6.\nLet\u0027s refine the #define\u0027s on later patches",
+      "parentUuid": "AAAAdn//v/k\u003d",
+      "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//v/c\u003d",
         "filename": "src/dsp/dec_neon.c",
         "patchSetId": 1
@@ -47,6 +65,24 @@
       "writtenOn": "2014-04-02T02:50:08Z",
       "side": 1,
       "message": "long lines",
+      "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//v9g\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-02T06:40:23Z",
+      "side": 1,
+      "message": "reads better with MACROs now.",
+      "parentUuid": "AAAAdn//v/c\u003d",
       "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//v9c\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-02T06:40:23Z",
+      "side": 1,
+      "message": "ack. removed comment.",
+      "parentUuid": "AAAAdn//v/g\u003d",
+      "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//v/Y\u003d",
         "filename": "src/dsp/dec_neon.c",
         "patchSetId": 1
@@ -81,6 +135,24 @@
       "writtenOn": "2014-04-02T02:50:08Z",
       "side": 1,
       "message": "long line",
+      "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//v9Y\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-02T06:40:23Z",
+      "side": 1,
+      "message": "fixed",
+      "parentUuid": "AAAAdn//v/Y\u003d",
       "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -104,6 +176,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//v9U\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 572,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-02T06:40:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//v/U\u003d",
+      "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//v/Q\u003d",
         "filename": "src/dsp/dec_neon.c",
         "patchSetId": 1
@@ -115,6 +205,24 @@
       "writtenOn": "2014-04-02T02:50:08Z",
       "side": 1,
       "message": "had this in an earlier patchset, not sure why I dropped it",
+      "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//v9Q\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 607,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-02T06:40:23Z",
+      "side": 1,
+      "message": "ack",
+      "parentUuid": "AAAAdn//v/Q\u003d",
       "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -138,6 +246,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//v9M\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 732,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-02T06:40:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//v/M\u003d",
+      "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//v/I\u003d",
         "filename": "src/dsp/dec_neon.c",
         "patchSetId": 1
@@ -149,6 +275,24 @@
       "writtenOn": "2014-04-02T02:50:08Z",
       "side": 1,
       "message": "ditto",
+      "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//v9I\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 751,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-02T06:40:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//v/I\u003d",
       "revId": "3a06884963c9e2394f2af44af723af3281af63fc",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
