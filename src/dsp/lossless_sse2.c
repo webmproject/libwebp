@@ -171,6 +171,45 @@ static WEBP_INLINE __m128i ColorTransformDelta(__m128i color_pred,
   return _mm_srli_epi32(signed_mult, 5);
 }
 
+static WEBP_INLINE void TransformColor(const VP8LMultipliers* const m,
+                                       uint32_t* argb_data,
+                                       int num_pixels) {
+  const __m128i g_to_r = _mm_set1_epi32(m->green_to_red_);       // multipliers
+  const __m128i g_to_b = _mm_set1_epi32(m->green_to_blue_);
+  const __m128i r_to_b = _mm_set1_epi32(m->red_to_blue_);
+
+  int i;
+
+  for (i = 0; i + 4 <= num_pixels; i += 4) {
+    const __m128i in = _mm_loadu_si128((__m128i*)&argb_data[i]);
+    const __m128i alpha_green_mask = _mm_set1_epi32(0xff00ff00);  // masks
+    const __m128i red_mask = _mm_set1_epi32(0x00ff0000);
+    const __m128i green_mask = _mm_set1_epi32(0x0000ff00);
+    const __m128i lower_8bit_mask  = _mm_set1_epi32(0x000000ff);
+    const __m128i ag = _mm_and_si128(in, alpha_green_mask);      // alpha, green
+    const __m128i r = _mm_srli_epi32(_mm_and_si128(in, red_mask), 16);
+    const __m128i g = _mm_srli_epi32(_mm_and_si128(in, green_mask), 8);
+    const __m128i b = in;
+
+    const __m128i r_delta = ColorTransformDelta(g_to_r, g);      // red
+    const __m128i r_new =
+        _mm_and_si128(_mm_sub_epi32(r, r_delta), lower_8bit_mask);
+    const __m128i r_new_shifted = _mm_slli_epi32(r_new, 16);
+
+    const __m128i b_delta_1 = ColorTransformDelta(g_to_b, g);    // blue
+    const __m128i b_delta_2 = ColorTransformDelta(r_to_b, r);
+    const __m128i b_delta = _mm_add_epi32(b_delta_1, b_delta_2);
+    const __m128i b_new =
+        _mm_and_si128(_mm_sub_epi32(b, b_delta), lower_8bit_mask);
+
+    const __m128i out = _mm_or_si128(_mm_or_si128(ag, r_new_shifted), b_new);
+    _mm_storeu_si128((__m128i*)&argb_data[i], out);
+  }
+
+  // Fall-back to C-version for left-overs.
+  VP8LTransformColor_C(m, argb_data + i, num_pixels - i);
+}
+
 static WEBP_INLINE void TransformColorInverse(const VP8LMultipliers* const m,
                                               uint32_t* argb_data,
                                               int num_pixels) {
@@ -359,6 +398,7 @@ void VP8LDspInitSSE2(void) {
   VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRed;
   VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
 
+  VP8LTransformColor = TransformColor;
   VP8LTransformColorInverse = TransformColorInverse;
 
   VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA;
