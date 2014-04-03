@@ -114,12 +114,12 @@ static WEBP_INLINE void Load4x16(const uint8_t* const src, int stride,
 #else
 
 #define LOAD_LANE_32b(VALUE, LANE) do {                              \
-  (VALUE) = vset_lane_u32(*(const uint32_t*)src, (VALUE), (LANE));   \
+  (VALUE) = vld1_lane_u32((const uint32_t*)src, (VALUE), (LANE));    \
   src += stride;                                                     \
 } while (0)
 
 #define LOADQ_LANE_32b(VALUE, LANE) do {                             \
-  (VALUE) = vsetq_lane_u32(*(const uint32_t*)src, (VALUE), (LANE));  \
+  (VALUE) = vld1q_lane_u32((const uint32_t*)src, (VALUE), (LANE));   \
   src += stride;                                                     \
 } while (0)
 
@@ -1142,10 +1142,10 @@ static void TransformDC(const int16_t* in, uint8_t* dst) {
   uint32x2_t dst23 = {0, 0};
 
   // Load the source pixels.
-  dst01 = vset_lane_u32(*(uint32_t*)(dst + 0 * BPS), dst01, 0);
-  dst23 = vset_lane_u32(*(uint32_t*)(dst + 2 * BPS), dst23, 0);
-  dst01 = vset_lane_u32(*(uint32_t*)(dst + 1 * BPS), dst01, 1);
-  dst23 = vset_lane_u32(*(uint32_t*)(dst + 3 * BPS), dst23, 1);
+  dst01 = vld1_lane_u32((uint32_t*)(dst + 0 * BPS), dst01, 0);
+  dst23 = vld1_lane_u32((uint32_t*)(dst + 2 * BPS), dst23, 0);
+  dst01 = vld1_lane_u32((uint32_t*)(dst + 1 * BPS), dst01, 1);
+  dst23 = vld1_lane_u32((uint32_t*)(dst + 3 * BPS), dst23, 1);
 
   {
     // Convert to 16b.
@@ -1248,10 +1248,10 @@ static void TransformAC3(const int16_t* in, uint8_t* dst) {
   uint32x2_t dst23 = {0, 0};
 
   // Load the source pixels.
-  dst01 = vset_lane_u32(*(uint32_t*)(dst + 0 * BPS), dst01, 0);
-  dst23 = vset_lane_u32(*(uint32_t*)(dst + 2 * BPS), dst23, 0);
-  dst01 = vset_lane_u32(*(uint32_t*)(dst + 1 * BPS), dst01, 1);
-  dst23 = vset_lane_u32(*(uint32_t*)(dst + 3 * BPS), dst23, 1);
+  dst01 = vld1_lane_u32((uint32_t*)(dst + 0 * BPS), dst01, 0);
+  dst23 = vld1_lane_u32((uint32_t*)(dst + 2 * BPS), dst23, 0);
+  dst01 = vld1_lane_u32((uint32_t*)(dst + 1 * BPS), dst01, 1);
+  dst23 = vld1_lane_u32((uint32_t*)(dst + 3 * BPS), dst23, 1);
 
   {
     // Convert to 16b.
