@@ -559,17 +559,43 @@ static WEBP_INLINE int16x8_t ConvertU8ToS16(uint32x2_t v) {
 // Performs unsigned 8b saturation on 'dst01' and 'dst23' storing the result
 // to the corresponding rows of 'dst'.
 static WEBP_INLINE void SaturateAndStore4x4(uint8_t* const dst,
-                                            int16x8_t dst01, int16x8_t dst23) {
+                                            const int16x8_t dst01,
+                                            const int16x8_t dst23) {
   // Unsigned saturate to 8b.
   const uint8x8_t dst01_u8 = vqmovun_s16(dst01);
   const uint8x8_t dst23_u8 = vqmovun_s16(dst23);
 
   // Store the results.
-  *(int*)(dst + 0 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst01_u8), 0);
-  *(int*)(dst + 1 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst01_u8), 1);
-  *(int*)(dst + 2 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst23_u8), 0);
-  *(int*)(dst + 3 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst23_u8), 1);
+  *(uint32_t*)(dst + 0 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst01_u8), 0);
+  *(uint32_t*)(dst + 1 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst01_u8), 1);
+  *(uint32_t*)(dst + 2 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst23_u8), 0);
+  *(uint32_t*)(dst + 3 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst23_u8), 1);
 }
+
+static WEBP_INLINE void Add4x4(const int16x8_t row01, const int16x8_t row23,
+                               uint8_t* const dst) {
+  uint32x2_t dst01 = {0, 0};
+  uint32x2_t dst23 = {0, 0};
+
+  // Load the source pixels.
+  dst01 = vld1_lane_u32((uint32_t*)(dst + 0 * BPS), dst01, 0);
+  dst23 = vld1_lane_u32((uint32_t*)(dst + 2 * BPS), dst23, 0);
+  dst01 = vld1_lane_u32((uint32_t*)(dst + 1 * BPS), dst01, 1);
+  dst23 = vld1_lane_u32((uint32_t*)(dst + 3 * BPS), dst23, 1);
+
+  {
+    // Convert to 16b.
+    const int16x8_t dst01_s16 = ConvertU8ToS16(dst01);
+    const int16x8_t dst23_s16 = ConvertU8ToS16(dst23);
+
+    // Descale with rounding.
+    const int16x8_t out01 = vrsraq_n_s16(dst01_s16, row01, 3);
+    const int16x8_t out23 = vrsraq_n_s16(dst23_s16, row23, 3);
+    // Add the inverse transform.
+    SaturateAndStore4x4(dst, out01, out23);
+  }
+}
+
 
 //-----------------------------------------------------------------------------
 // Simple In-loop filtering (Paragraph 15.2)
@@ -980,28 +1006,74 @@ static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
 //-----------------------------------------------------------------------------
 // Inverse transforms (Paragraph 14.4)
 
+// Technically these are unsigned but vqdmulh is only available in signed.
+// vqdmulh returns high half (effectively >> 16) but also doubles the value,
+// changing the >> 16 to >> 15 and requiring an additional >> 1.
+// We use this to our advantage with kC2. The canonical value is 35468.
+// However, the high bit is set so treating it as signed will give incorrect
+// results. We avoid this by down shifting by 1 here to clear the highest bit.
+// Combined with the doubling effect of vqdmulh we get >> 16.
+// This can not be applied to kC1 because the lowest bit is set. Down shifting
+// the constant would reduce precision.
+
+// libwebp uses a trick to avoid some extra addition that libvpx does.
+// Instead of:
+// temp2 = ip[12] + ((ip[12] * cospi8sqrt2minus1) >> 16);
+// libwebp adds 1 << 16 to cospi8sqrt2minus1 (kC1). However, this causes the
+// same issue with kC1 and vqdmulh that we work around by down shifting kC2
+
+static const int16_t kC1 = 20091;
+static const int16_t kC2 = 17734;  // half of kC2, actually. See comment above.
+
+#if defined(USE_INTRINSICS)
+static WEBP_INLINE void Transpose8x2(const int16x8_t in0, const int16x8_t in1,
+                                     int16x8x2_t* const out) {
+  // a0 a1 a2 a3 | b0 b1 b2 b3   => a0 b0 c0 d0 | a1 b1 c1 d1
+  // c0 c1 c2 c3 | d0 d1 d2 d3      a2 b2 c2 d2 | a3 b3 c3 d3
+  const int16x8x2_t tmp0 = vzipq_s16(in0, in1);   // a0 c0 a1 c1 a2 c2 ...
+                                                  // b0 d0 b1 d1 b2 d2 ...
+  *out = vzipq_s16(tmp0.val[0], tmp0.val[1]);
+}
+
+static WEBP_INLINE void TransformPass(int16x8x2_t* const rows) {
+  // {rows} = in0 | in4
+  //          in8 | in12
+  // B1 = in4 | in12
+  const int16x8_t B1 =
+      vcombine_s16(vget_high_s16(rows->val[0]), vget_high_s16(rows->val[1]));
+  // C0 = kC1 * in4 | kC1 * in12
+  // C1 = kC2 * in4 | kC2 * in12
+  const int16x8_t C0 = vsraq_n_s16(B1, vqdmulhq_n_s16(B1, kC1), 1);
+  const int16x8_t C1 = vqdmulhq_n_s16(B1, kC2);
+  const int16x4_t a = vqadd_s16(vget_low_s16(rows->val[0]),
+                                vget_low_s16(rows->val[1]));   // in0 + in8
+  const int16x4_t b = vqsub_s16(vget_low_s16(rows->val[0]),
+                                vget_low_s16(rows->val[1]));   // in0 - in8
+  // c = kC2 * in4 - kC1 * in12
+  // d = kC1 * in4 + kC2 * in12
+  const int16x4_t c = vqsub_s16(vget_low_s16(C1), vget_high_s16(C0));
+  const int16x4_t d = vqadd_s16(vget_low_s16(C0), vget_high_s16(C1));
+  const int16x8_t D0 = vcombine_s16(a, b);      // D0 = a | b
+  const int16x8_t D1 = vcombine_s16(d, c);      // D1 = d | c
+  const int16x8_t E0 = vqaddq_s16(D0, D1);      // a+d | b+c
+  const int16x8_t E_tmp = vqsubq_s16(D0, D1);   // a-d | b-c
+  const int16x8_t E1 = vcombine_s16(vget_high_s16(E_tmp), vget_low_s16(E_tmp));
+  Transpose8x2(E0, E1, rows);
+}
+
+static void TransformOne(const int16_t* in, uint8_t* dst) {
+  int16x8x2_t rows = {{ vld1q_s16(in + 0), vld1q_s16(in + 8) }};
+  TransformPass(&rows);
+  TransformPass(&rows);
+  Add4x4(rows.val[0], rows.val[1], dst);
+}
+
+#else
+
 static void TransformOne(const int16_t* in, uint8_t* dst) {
   const int kBPS = BPS;
-  const int16_t constants[] = {20091, 17734, 0, 0};
-  /* kC1, kC2. Padded because vld1.16 loads 8 bytes
-   * Technically these are unsigned but vqdmulh is only available in signed.
-   * vqdmulh returns high half (effectively >> 16) but also doubles the value,
-   * changing the >> 16 to >> 15 and requiring an additional >> 1.
-   * We use this to our advantage with kC2. The canonical value is 35468.
-   * However, the high bit is set so treating it as signed will give incorrect
-   * results. We avoid this by down shifting by 1 here to clear the highest bit.
-   * Combined with the doubling effect of vqdmulh we get >> 16.
-   * This can not be applied to kC1 because the lowest bit is set. Down shifting
-   * the constant would reduce precision.
-   */
-
-  /* libwebp uses a trick to avoid some extra addition that libvpx does.
-   * Instead of:
-   * temp2 = ip[12] + ((ip[12] * cospi8sqrt2minus1) >> 16);
-   * libwebp adds 1 << 16 to cospi8sqrt2minus1 (kC1). However, this causes the
-   * same issue with kC1 and vqdmulh that we work around by down shifting kC2
-   */
-
+  // kC1, kC2. Padded because vld1.16 loads 8 bytes
+  const int16_t constants[4] = { kC1, kC2, 0, 0 };
   /* Adapted from libvpx: vp8/common/arm/neon/shortidct4x4llm_neon.asm */
   __asm__ volatile (
     "vld1.16         {q1, q2}, [%[in]]           \n"
@@ -1129,6 +1201,8 @@ static void TransformOne(const int16_t* in, uint8_t* dst) {
   );
 }
 
+#endif    // USE_INTRINSICS
+
 static void TransformTwo(const int16_t* in, uint8_t* dst, int do_two) {
   TransformOne(in, dst);
   if (do_two) {
@@ -1137,27 +1211,8 @@ static void TransformTwo(const int16_t* in, uint8_t* dst, int do_two) {
 }
 
 static void TransformDC(const int16_t* in, uint8_t* dst) {
-  const int16x8_t DC = vdupq_n_s16((in[0] + 4) >> 3);
-  uint32x2_t dst01 = {0, 0};
-  uint32x2_t dst23 = {0, 0};
-
-  // Load the source pixels.
-  dst01 = vld1_lane_u32((uint32_t*)(dst + 0 * BPS), dst01, 0);
-  dst23 = vld1_lane_u32((uint32_t*)(dst + 2 * BPS), dst23, 0);
-  dst01 = vld1_lane_u32((uint32_t*)(dst + 1 * BPS), dst01, 1);
-  dst23 = vld1_lane_u32((uint32_t*)(dst + 3 * BPS), dst23, 1);
-
-  {
-    // Convert to 16b.
-    int16x8_t dst01_s16 = ConvertU8ToS16(dst01);
-    int16x8_t dst23_s16 = ConvertU8ToS16(dst23);
-
-    // Add the inverse transform.
-    dst01_s16 = vaddq_s16(dst01_s16, DC);
-    dst23_s16 = vaddq_s16(dst23_s16, DC);
-
-    SaturateAndStore4x4(dst, dst01_s16, dst23_s16);
-  }
+  const int16x8_t DC = vdupq_n_s16(in[0]);
+  Add4x4(DC, DC, dst);
 }
 
 //------------------------------------------------------------------------------
@@ -1233,37 +1288,18 @@ static void TransformWHT(const int16_t* in, int16_t* out) {
 
 #define MUL(a, b) (((a) * (b)) >> 16)
 static void TransformAC3(const int16_t* in, uint8_t* dst) {
-  static const int kC1 = 20091 + (1 << 16);
-  static const int kC2 = 35468;
-  const int16x4_t A = vdup_n_s16(in[0] + 4);
-  const int16x4_t c4 = vdup_n_s16(MUL(in[4], kC2));
-  const int16x4_t d4 = vdup_n_s16(MUL(in[4], kC1));
-  const int c1 = MUL(in[1], kC2);
-  const int d1 = MUL(in[1], kC1);
-  const int16x4_t CD = {d1, c1, -c1, -d1};
+  static const int kC1_full = 20091 + (1 << 16);
+  static const int kC2_full = 35468;
+  const int16x4_t A = vdup_n_s16(in[0]);
+  const int16x4_t c4 = vdup_n_s16(MUL(in[4], kC2_full));
+  const int16x4_t d4 = vdup_n_s16(MUL(in[4], kC1_full));
+  const int c1 = MUL(in[1], kC2_full);
+  const int d1 = MUL(in[1], kC1_full);
+  const int16x4_t CD = { d1, c1, -c1, -d1 };
   const int16x4_t B = vqadd_s16(A, CD);
   const int16x8_t m0_m1 = vcombine_s16(vqadd_s16(B, d4), vqadd_s16(B, c4));
   const int16x8_t m2_m3 = vcombine_s16(vqsub_s16(B, c4), vqsub_s16(B, d4));
-  uint32x2_t dst01 = {0, 0};
-  uint32x2_t dst23 = {0, 0};
-
-  // Load the source pixels.
-  dst01 = vld1_lane_u32((uint32_t*)(dst + 0 * BPS), dst01, 0);
-  dst23 = vld1_lane_u32((uint32_t*)(dst + 2 * BPS), dst23, 0);
-  dst01 = vld1_lane_u32((uint32_t*)(dst + 1 * BPS), dst01, 1);
-  dst23 = vld1_lane_u32((uint32_t*)(dst + 3 * BPS), dst23, 1);
-
-  {
-    // Convert to 16b.
-    int16x8_t dst01_s16 = ConvertU8ToS16(dst01);
-    int16x8_t dst23_s16 = ConvertU8ToS16(dst23);
-
-    // Add the inverse transform.
-    dst01_s16 = vsraq_n_s16(dst01_s16, m0_m1, 3);
-    dst23_s16 = vsraq_n_s16(dst23_s16, m2_m3, 3);
-
-    SaturateAndStore4x4(dst, dst01_s16, dst23_s16);
-  }
+  Add4x4(m0_m1, m2_m3, dst);
 }
 #undef MUL
 
