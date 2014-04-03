@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//vvw\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-03T05:57:20Z",
+      "side": 1,
+      "message": "fair enough; final binary size didn\u0027t change with this nor did runtime with gcc-4.6, so this was more a cosmetic suggestion",
+      "parentUuid": "AAAAdn//vwg\u003d",
+      "revId": "088014e7803a7b302eb6f386426857674f81b557",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//vxU\u003d",
         "filename": "src/dsp/dec_neon.c",
         "patchSetId": 1
