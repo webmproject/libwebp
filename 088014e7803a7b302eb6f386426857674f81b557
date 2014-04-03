@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//vxg\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-03T04:00:35Z",
+      "side": 1,
+      "message": "unused",
+      "revId": "088014e7803a7b302eb6f386426857674f81b557",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//vxY\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-03T04:00:35Z",
+      "side": 1,
+      "message": "could reuse Store8x2x2 -1/+1 here",
+      "revId": "088014e7803a7b302eb6f386426857674f81b557",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//vxU\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-03T04:00:35Z",
+      "side": 1,
+      "message": "indent 4",
+      "revId": "088014e7803a7b302eb6f386426857674f81b557",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//vxA\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 431,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-03T04:00:35Z",
+      "side": 1,
+      "message": "interleaved u/v stores seems to help mildly here and in Store4x8x2",
+      "revId": "088014e7803a7b302eb6f386426857674f81b557",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//vxE\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-03T04:00:35Z",
+      "side": 1,
+      "message": "TODO(later) might be worth a try to transpose rather than do lane selection here",
+      "revId": "088014e7803a7b302eb6f386426857674f81b557",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//vxI\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-03T04:00:35Z",
+      "side": 1,
+      "message": "indent",
+      "revId": "088014e7803a7b302eb6f386426857674f81b557",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
