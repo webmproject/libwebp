@@ -566,10 +566,10 @@ static WEBP_INLINE void SaturateAndStore4x4(uint8_t* const dst,
   const uint8x8_t dst23_u8 = vqmovun_s16(dst23);
 
   // Store the results.
-  *(uint32_t*)(dst + 0 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst01_u8), 0);
-  *(uint32_t*)(dst + 1 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst01_u8), 1);
-  *(uint32_t*)(dst + 2 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst23_u8), 0);
-  *(uint32_t*)(dst + 3 * BPS) = vget_lane_s32(vreinterpret_s32_u8(dst23_u8), 1);
+  vst1_lane_u32((uint32_t*)(dst + 0 * BPS), vreinterpret_u32_u8(dst01_u8), 0);
+  vst1_lane_u32((uint32_t*)(dst + 1 * BPS), vreinterpret_u32_u8(dst01_u8), 1);
+  vst1_lane_u32((uint32_t*)(dst + 2 * BPS), vreinterpret_u32_u8(dst23_u8), 0);
+  vst1_lane_u32((uint32_t*)(dst + 3 * BPS), vreinterpret_u32_u8(dst23_u8), 1);
 }
 
 static WEBP_INLINE void Add4x4(const int16x8_t row01, const int16x8_t row23,
