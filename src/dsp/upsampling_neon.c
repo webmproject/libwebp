@@ -225,10 +225,10 @@ static void FUNC_NAME(const uint8_t *top_y, const uint8_t *bottom_y,    \
 }
 
 // NEON variants of the fancy upsampler.
-NEON_UPSAMPLE_FUNC(UpsampleRgbLinePairNEON,  Rgb,  3)
-NEON_UPSAMPLE_FUNC(UpsampleBgrLinePairNEON,  Bgr,  3)
-NEON_UPSAMPLE_FUNC(UpsampleRgbaLinePairNEON, Rgba, 4)
-NEON_UPSAMPLE_FUNC(UpsampleBgraLinePairNEON, Bgra, 4)
+NEON_UPSAMPLE_FUNC(UpsampleRgbLinePair,  Rgb,  3)
+NEON_UPSAMPLE_FUNC(UpsampleBgrLinePair,  Bgr,  3)
+NEON_UPSAMPLE_FUNC(UpsampleRgbaLinePair, Rgba, 4)
+NEON_UPSAMPLE_FUNC(UpsampleBgraLinePair, Bgra, 4)
 
 #endif  // FANCY_UPSAMPLING
 
@@ -242,17 +242,17 @@ extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
 
 void WebPInitUpsamplersNEON(void) {
 #if defined(WEBP_USE_NEON)
-  WebPUpsamplers[MODE_RGB]  = UpsampleRgbLinePairNEON;
-  WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePairNEON;
-  WebPUpsamplers[MODE_BGR]  = UpsampleBgrLinePairNEON;
-  WebPUpsamplers[MODE_BGRA] = UpsampleBgraLinePairNEON;
+  WebPUpsamplers[MODE_RGB]  = UpsampleRgbLinePair;
+  WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePair;
+  WebPUpsamplers[MODE_BGR]  = UpsampleBgrLinePair;
+  WebPUpsamplers[MODE_BGRA] = UpsampleBgraLinePair;
 #endif   // WEBP_USE_NEON
 }
 
 void WebPInitPremultiplyNEON(void) {
 #if defined(WEBP_USE_NEON)
-  WebPUpsamplers[MODE_rgbA] = UpsampleRgbaLinePairNEON;
-  WebPUpsamplers[MODE_bgrA] = UpsampleBgraLinePairNEON;
+  WebPUpsamplers[MODE_rgbA] = UpsampleRgbaLinePair;
+  WebPUpsamplers[MODE_bgrA] = UpsampleBgraLinePair;
 #endif   // WEBP_USE_NEON
 }
 
