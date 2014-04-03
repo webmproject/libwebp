@@ -76,8 +76,44 @@ static WEBP_INLINE uint32_t Select(uint32_t a, uint32_t b, uint32_t c) {
   return (pa_minus_pb <= 0) ? a : b;
 }
 
-#if 0
-// TODO(skal): optimize these to SSE2 too.
+static WEBP_INLINE __m128i Average2_128i(uint32_t a0, uint32_t a1) {
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i A0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(a0), zero);
+  const __m128i A1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(a1), zero);
+  const __m128i sum = _mm_add_epi16(A1, A0);
+  const __m128i avg = _mm_srli_epi16(sum, 1);
+  return avg;
+}
+
+static WEBP_INLINE uint32_t Average2(uint32_t a0, uint32_t a1) {
+  const __m128i avg = Average2_128i(a0, a1);
+  const __m128i A2 = _mm_packus_epi16(avg, avg);
+  const uint32_t output = _mm_cvtsi128_si32(A2);
+  return output;
+}
+
+static WEBP_INLINE uint32_t Average3(uint32_t a0, uint32_t a1, uint32_t a2) {
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i avg1 = Average2_128i(a0, a2);
+  const __m128i A1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(a1), zero);
+  const __m128i sum = _mm_add_epi16(avg1, A1);
+  const __m128i avg2 = _mm_srli_epi16(sum, 1);
+  const __m128i A2 = _mm_packus_epi16(avg2, avg2);
+  const uint32_t output = _mm_cvtsi128_si32(A2);
+  return output;
+}
+
+static WEBP_INLINE uint32_t Average4(uint32_t a0, uint32_t a1,
+                                     uint32_t a2, uint32_t a3) {
+  const __m128i avg1 = Average2_128i(a0, a1);
+  const __m128i avg2 = Average2_128i(a2, a3);
+  const __m128i sum = _mm_add_epi16(avg2, avg1);
+  const __m128i avg3 = _mm_srli_epi16(sum, 1);
+  const __m128i A0 = _mm_packus_epi16(avg3, avg3);
+  const uint32_t output = _mm_cvtsi128_si32(A0);
+  return output;
+}
+
 static uint32_t Predictor5(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Average3(left, top[0], top[1]);
   return pred;
@@ -104,8 +140,6 @@ static uint32_t Predictor10(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Average4(left, top[-1], top[0], top[1]);
   return pred;
 }
-#endif
-
 static uint32_t Predictor11(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Select(top[0], left, top[-1]);
   return pred;
@@ -473,6 +507,12 @@ extern void VP8LDspInitSSE2(void);
 
 void VP8LDspInitSSE2(void) {
 #if defined(WEBP_USE_SSE2)
+  VP8LPredictors[5] = Predictor5;
+  VP8LPredictors[6] = Predictor6;
+  VP8LPredictors[7] = Predictor7;
+  VP8LPredictors[8] = Predictor8;
+  VP8LPredictors[9] = Predictor9;
+  VP8LPredictors[10] = Predictor10;
   VP8LPredictors[11] = Predictor11;
   VP8LPredictors[12] = Predictor12;
   VP8LPredictors[13] = Predictor13;
