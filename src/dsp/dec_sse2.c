@@ -26,7 +26,7 @@
 //------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
 
-static void TransformSSE2(const int16_t* in, uint8_t* dst, int do_two) {
+static void Transform(const int16_t* in, uint8_t* dst, int do_two) {
   // This implementation makes use of 16-bit fixed point versions of two
   // multiply constants:
   //    K1 = sqrt(2) * cos (pi/8) ~= 85627 / 2^16
@@ -246,7 +246,7 @@ static void TransformSSE2(const int16_t* in, uint8_t* dst, int do_two) {
 
 #if defined(USE_TRANSFORM_AC3)
 #define MUL(a, b) (((a) * (b)) >> 16)
-static void TransformAC3SSE2(const int16_t* in, uint8_t* dst) {
+static void TransformAC3(const int16_t* in, uint8_t* dst) {
   static const int kC1 = 20091 + (1 << 16);
   static const int kC2 = 35468;
   const __m128i A = _mm_set1_epi16(in[0] + 4);
@@ -642,7 +642,7 @@ static WEBP_INLINE void Store16x4(uint8_t* r0, uint8_t* r8, int stride,
 //------------------------------------------------------------------------------
 // Simple In-loop filtering (Paragraph 15.2)
 
-static void SimpleVFilter16SSE2(uint8_t* p, int stride, int thresh) {
+static void SimpleVFilter16(uint8_t* p, int stride, int thresh) {
   // Load
   __m128i p1 = _mm_loadu_si128((__m128i*)&p[-2 * stride]);
   __m128i p0 = _mm_loadu_si128((__m128i*)&p[-stride]);
@@ -656,7 +656,7 @@ static void SimpleVFilter16SSE2(uint8_t* p, int stride, int thresh) {
   _mm_storeu_si128((__m128i*)p, q0);
 }
 
-static void SimpleHFilter16SSE2(uint8_t* p, int stride, int thresh) {
+static void SimpleHFilter16(uint8_t* p, int stride, int thresh) {
   __m128i p1, p0, q0, q1;
 
   p -= 2;  // beginning of p1
@@ -666,19 +666,19 @@ static void SimpleHFilter16SSE2(uint8_t* p, int stride, int thresh) {
   Store16x4(p, p + 8 * stride, stride, &p1, &p0, &q0, &q1);
 }
 
-static void SimpleVFilter16iSSE2(uint8_t* p, int stride, int thresh) {
+static void SimpleVFilter16i(uint8_t* p, int stride, int thresh) {
   int k;
   for (k = 3; k > 0; --k) {
     p += 4 * stride;
-    SimpleVFilter16SSE2(p, stride, thresh);
+    SimpleVFilter16(p, stride, thresh);
   }
 }
 
-static void SimpleHFilter16iSSE2(uint8_t* p, int stride, int thresh) {
+static void SimpleHFilter16i(uint8_t* p, int stride, int thresh) {
   int k;
   for (k = 3; k > 0; --k) {
     p += 4;
-    SimpleHFilter16SSE2(p, stride, thresh);
+    SimpleHFilter16(p, stride, thresh);
   }
 }
 
@@ -732,8 +732,8 @@ static void SimpleHFilter16iSSE2(uint8_t* p, int stride, int thresh) {
 }
 
 // on macroblock edges
-static void VFilter16SSE2(uint8_t* p, int stride,
-                          int thresh, int ithresh, int hev_thresh) {
+static void VFilter16(uint8_t* p, int stride,
+                      int thresh, int ithresh, int hev_thresh) {
   __m128i t1;
   __m128i mask;
   __m128i p2, p1, p0, q0, q1, q2;
@@ -758,8 +758,8 @@ static void VFilter16SSE2(uint8_t* p, int stride,
   _mm_storeu_si128((__m128i*)&p[2 * stride], q2);
 }
 
-static void HFilter16SSE2(uint8_t* p, int stride,
-                          int thresh, int ithresh, int hev_thresh) {
+static void HFilter16(uint8_t* p, int stride,
+                      int thresh, int ithresh, int hev_thresh) {
   __m128i mask;
   __m128i p3, p2, p1, p0, q0, q1, q2, q3;
 
@@ -778,8 +778,8 @@ static void HFilter16SSE2(uint8_t* p, int stride,
 }
 
 // on three inner edges
-static void VFilter16iSSE2(uint8_t* p, int stride,
-                           int thresh, int ithresh, int hev_thresh) {
+static void VFilter16i(uint8_t* p, int stride,
+                       int thresh, int ithresh, int hev_thresh) {
   int k;
   __m128i mask;
   __m128i t1, t2, p1, p0, q0, q1;
@@ -806,8 +806,8 @@ static void VFilter16iSSE2(uint8_t* p, int stride,
   }
 }
 
-static void HFilter16iSSE2(uint8_t* p, int stride,
-                           int thresh, int ithresh, int hev_thresh) {
+static void HFilter16i(uint8_t* p, int stride,
+                       int thresh, int ithresh, int hev_thresh) {
   int k;
   uint8_t* b;
   __m128i mask;
@@ -833,8 +833,8 @@ static void HFilter16iSSE2(uint8_t* p, int stride,
 }
 
 // 8-pixels wide variant, for chroma filtering
-static void VFilter8SSE2(uint8_t* u, uint8_t* v, int stride,
-                         int thresh, int ithresh, int hev_thresh) {
+static void VFilter8(uint8_t* u, uint8_t* v, int stride,
+                     int thresh, int ithresh, int hev_thresh) {
   __m128i mask;
   __m128i t1, p2, p1, p0, q0, q1, q2;
 
@@ -858,8 +858,8 @@ static void VFilter8SSE2(uint8_t* u, uint8_t* v, int stride,
   STOREUV(q2, u, v, 2 * stride);
 }
 
-static void HFilter8SSE2(uint8_t* u, uint8_t* v, int stride,
-                         int thresh, int ithresh, int hev_thresh) {
+static void HFilter8(uint8_t* u, uint8_t* v, int stride,
+                     int thresh, int ithresh, int hev_thresh) {
   __m128i mask;
   __m128i p3, p2, p1, p0, q0, q1, q2, q3;
 
@@ -878,8 +878,8 @@ static void HFilter8SSE2(uint8_t* u, uint8_t* v, int stride,
   Store16x4(u, v, stride, &q0, &q1, &q2, &q3);
 }
 
-static void VFilter8iSSE2(uint8_t* u, uint8_t* v, int stride,
-                          int thresh, int ithresh, int hev_thresh) {
+static void VFilter8i(uint8_t* u, uint8_t* v, int stride,
+                      int thresh, int ithresh, int hev_thresh) {
   __m128i mask;
   __m128i t1, t2, p1, p0, q0, q1;
 
@@ -904,8 +904,8 @@ static void VFilter8iSSE2(uint8_t* u, uint8_t* v, int stride,
   STOREUV(q1, u, v, 1 * stride);
 }
 
-static void HFilter8iSSE2(uint8_t* u, uint8_t* v, int stride,
-                          int thresh, int ithresh, int hev_thresh) {
+static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
+                      int thresh, int ithresh, int hev_thresh) {
   __m128i mask;
   __m128i t1, t2, p1, p0, q0, q1;
   Load16x4(u, v, stride, &t2, &t1, &p1, &p0);   // p3, p2, p1, p0
@@ -933,24 +933,23 @@ extern void VP8DspInitSSE2(void);
 
 void VP8DspInitSSE2(void) {
 #if defined(WEBP_USE_SSE2)
-  VP8Transform = TransformSSE2;
+  VP8Transform = Transform;
 #if defined(USE_TRANSFORM_AC3)
-  VP8TransformAC3 = TransformAC3SSE2;
+  VP8TransformAC3 = TransformAC3;
 #endif
 
-  VP8VFilter16 = VFilter16SSE2;
-  VP8HFilter16 = HFilter16SSE2;
-  VP8VFilter8 = VFilter8SSE2;
-  VP8HFilter8 = HFilter8SSE2;
-  VP8VFilter16i = VFilter16iSSE2;
-  VP8HFilter16i = HFilter16iSSE2;
-  VP8VFilter8i = VFilter8iSSE2;
-  VP8HFilter8i = HFilter8iSSE2;
+  VP8VFilter16 = VFilter16;
+  VP8HFilter16 = HFilter16;
+  VP8VFilter8 = VFilter8;
+  VP8HFilter8 = HFilter8;
+  VP8VFilter16i = VFilter16i;
+  VP8HFilter16i = HFilter16i;
+  VP8VFilter8i = VFilter8i;
+  VP8HFilter8i = HFilter8i;
 
-  VP8SimpleVFilter16 = SimpleVFilter16SSE2;
-  VP8SimpleHFilter16 = SimpleHFilter16SSE2;
-  VP8SimpleVFilter16i = SimpleVFilter16iSSE2;
-  VP8SimpleHFilter16i = SimpleHFilter16iSSE2;
+  VP8SimpleVFilter16 = SimpleVFilter16;
+  VP8SimpleHFilter16 = SimpleHFilter16;
+  VP8SimpleVFilter16i = SimpleVFilter16i;
+  VP8SimpleHFilter16i = SimpleHFilter16i;
 #endif   // WEBP_USE_SSE2
 }
-
