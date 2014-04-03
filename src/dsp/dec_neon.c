@@ -434,10 +434,10 @@ static WEBP_INLINE void Store4x8x2(const uint8x16_t p1, const uint8x16_t p0,
                                    const uint8x16_t q0, const uint8x16_t q1,
                                    uint8_t* const u, uint8_t* const v,
                                    int stride) {
-  const uint8x8x4_t u0 =
-      {{vget_low_u8(p1), vget_low_u8(p0), vget_low_u8(q0), vget_low_u8(q1)}};
-  const uint8x8x4_t v0 =
-      {{vget_high_u8(p1), vget_high_u8(p0), vget_high_u8(q0), vget_high_u8(q1)}};
+  const uint8x8x4_t u0 = {{ vget_low_u8(p1), vget_low_u8(p0),
+                            vget_low_u8(q0), vget_low_u8(q1) }};
+  const uint8x8x4_t v0 = {{ vget_high_u8(p1), vget_high_u8(p0),
+                            vget_high_u8(q0), vget_high_u8(q1) }};
   vst4_lane_u8(u - 2 + 0 * stride, u0, 0);
   vst4_lane_u8(u - 2 + 1 * stride, u0, 1);
   vst4_lane_u8(u - 2 + 2 * stride, u0, 2);
