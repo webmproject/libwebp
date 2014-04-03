@@ -235,6 +235,87 @@ static WEBP_INLINE void Load16x8(const uint8_t* const src, int stride,
   Load16x4(src + 2  * stride, stride, q0, q1, q2, q3);
 }
 
+static WEBP_INLINE void Load8x8x2(const uint8_t* const u,
+                                  const uint8_t* const v,
+                                  int stride,
+                                  uint8x16_t* const p3, uint8x16_t* const p2,
+                                  uint8x16_t* const p1, uint8x16_t* const p0,
+                                  uint8x16_t* const q0, uint8x16_t* const q1,
+                                  uint8x16_t* const q2, uint8x16_t* const q3) {
+  // We pack the 8x8 u-samples in the lower half of the uint8x16_t destination
+  // and the v-samples on the higher half.
+  *p3 = vcombine_u8(vld1_u8(u - 4 * stride), vld1_u8(v - 4 * stride));
+  *p2 = vcombine_u8(vld1_u8(u - 3 * stride), vld1_u8(v - 3 * stride));
+  *p1 = vcombine_u8(vld1_u8(u - 2 * stride), vld1_u8(v - 2 * stride));
+  *p0 = vcombine_u8(vld1_u8(u - 1 * stride), vld1_u8(v - 1 * stride));
+  *q0 = vcombine_u8(vld1_u8(u + 0 * stride), vld1_u8(v + 0 * stride));
+  *q1 = vcombine_u8(vld1_u8(u + 1 * stride), vld1_u8(v + 1 * stride));
+  *q2 = vcombine_u8(vld1_u8(u + 2 * stride), vld1_u8(v + 2 * stride));
+  *q3 = vcombine_u8(vld1_u8(u + 3 * stride), vld1_u8(v + 3 * stride));
+}
+
+#define LOAD_UV_8(ROW) \
+  vcombine_u8(vld1_u8(u - 4 + (ROW) * stride), vld1_u8(v - 4 + (ROW) * stride))
+
+static WEBP_INLINE void Load8x8x2T(const uint8_t* const u,
+                                   const uint8_t* const v,
+                                   int stride,
+                                   uint8x16_t* const p3, uint8x16_t* const p2,
+                                   uint8x16_t* const p1, uint8x16_t* const p0,
+                                   uint8x16_t* const q0, uint8x16_t* const q1,
+                                   uint8x16_t* const q2, uint8x16_t* const q3) {
+  // We pack the 8x8 u-samples in the lower half of the uint8x16_t destination
+  // and the v-samples on the higher half.
+  const uint8x16_t row0 = LOAD_UV_8(0);
+  const uint8x16_t row1 = LOAD_UV_8(1);
+  const uint8x16_t row2 = LOAD_UV_8(2);
+  const uint8x16_t row3 = LOAD_UV_8(3);
+  const uint8x16_t row4 = LOAD_UV_8(4);
+  const uint8x16_t row5 = LOAD_UV_8(5);
+  const uint8x16_t row6 = LOAD_UV_8(6);
+  const uint8x16_t row7 = LOAD_UV_8(7);
+  // Perform two side-by-side 8x8 transposes
+  // u00 u01 u02 u03 u04 u05 u06 u07 | v00 v01 v02 v03 v04 v05 v06 v07
+  // u10 u11 u12 u13 u14 u15 u16 u17 | v10 v11 v12 ...
+  // u20 u21 u22 u23 u24 u25 u26 u27 | v20 v21 ...
+  // u30 u31 u32 u33 u34 u35 u36 u37 | ...
+  // u40 u41 u42 u43 u44 u45 u46 u47 | ...
+  // u50 u51 u52 u53 u54 u55 u56 u57 | ...
+  // u60 u61 u62 u63 u64 u65 u66 u67 | v60 ...
+  // u70 u71 u72 u73 u74 u75 u76 u77 | v70 v71 v72 ...
+  const uint8x16x2_t row01 = vtrnq_u8(row0, row1);  // u00 u10 u02 u12 ...
+                                                    // u01 u11 u03 u13 ...
+  const uint8x16x2_t row23 = vtrnq_u8(row2, row3);  // u20 u30 u22 u32 ...
+                                                    // u21 u31 u23 u33 ...
+  const uint8x16x2_t row45 = vtrnq_u8(row4, row5);  // ...
+  const uint8x16x2_t row67 = vtrnq_u8(row6, row7);  // ...
+  const uint16x8x2_t row02 = vtrnq_u16(vreinterpretq_u16_u8(row01.val[0]),
+                                       vreinterpretq_u16_u8(row23.val[0]));
+  const uint16x8x2_t row13 = vtrnq_u16(vreinterpretq_u16_u8(row01.val[1]),
+                                       vreinterpretq_u16_u8(row23.val[1]));
+  const uint16x8x2_t row46 = vtrnq_u16(vreinterpretq_u16_u8(row45.val[0]),
+                                       vreinterpretq_u16_u8(row67.val[0]));
+  const uint16x8x2_t row57 = vtrnq_u16(vreinterpretq_u16_u8(row45.val[1]),
+                                       vreinterpretq_u16_u8(row67.val[1]));
+  const uint32x4x2_t row04 = vtrnq_u32(vreinterpretq_u32_u16(row02.val[0]),
+                                       vreinterpretq_u32_u16(row46.val[0]));
+  const uint32x4x2_t row26 = vtrnq_u32(vreinterpretq_u32_u16(row02.val[1]),
+                                       vreinterpretq_u32_u16(row46.val[1]));
+  const uint32x4x2_t row15 = vtrnq_u32(vreinterpretq_u32_u16(row13.val[0]),
+                                       vreinterpretq_u32_u16(row57.val[0]));
+  const uint32x4x2_t row37 = vtrnq_u32(vreinterpretq_u32_u16(row13.val[1]),
+                                       vreinterpretq_u32_u16(row57.val[1]));
+  *p3 = vreinterpretq_u8_u32(row04.val[0]);
+  *p2 = vreinterpretq_u8_u32(row15.val[0]);
+  *p1 = vreinterpretq_u8_u32(row26.val[0]);
+  *p0 = vreinterpretq_u8_u32(row37.val[0]);
+  *q0 = vreinterpretq_u8_u32(row04.val[1]);
+  *q1 = vreinterpretq_u8_u32(row15.val[1]);
+  *q2 = vreinterpretq_u8_u32(row26.val[1]);
+  *q3 = vreinterpretq_u8_u32(row37.val[1]);
+}
+#undef LOAD_UV_8
+
 static WEBP_INLINE void Store2x8(const uint8x8x2_t v,
                                  uint8_t* const dst, int stride) {
   vst2_lane_u8(dst + 0 * stride, v, 0);
@@ -292,6 +373,87 @@ static WEBP_INLINE void Store16x4(const uint8x16_t p1, const uint8x16_t p0,
                                   uint8_t* const dst, int stride) {
   Store16x2(p1, p0, dst - stride, stride);
   Store16x2(q0, q1, dst + stride, stride);
+}
+
+static WEBP_INLINE void Store8x2x2(const uint8x16_t p0, const uint8x16_t q0,
+                                   uint8_t* const u, uint8_t* const v,
+                                   int stride) {
+  // p0 and q0 contain the u+v samples packed in low/high halves.
+  vst1_u8(u - stride, vget_low_u8(p0));
+  vst1_u8(u,          vget_low_u8(q0));
+  vst1_u8(v - stride, vget_high_u8(p0));
+  vst1_u8(v,          vget_high_u8(q0));
+}
+
+static WEBP_INLINE void Store8x4x2(const uint8x16_t p1, const uint8x16_t p0,
+                                   const uint8x16_t q0, const uint8x16_t q1,
+                                   uint8_t* const u, uint8_t* const v,
+                                   int stride) {
+  // The p1...q1 registers contain the u+v samples packed in low/high halves.
+  Store8x2x2(p1, p0, u - stride, v - stride, stride);
+  Store8x2x2(q0, q1, u + stride, v + stride, stride);
+}
+
+#define STORE6_LANE(DST, VAL0, VAL1, LANE) do {   \
+  vst3_lane_u8((DST) - 3, (VAL0), (LANE));        \
+  vst3_lane_u8((DST) + 0, (VAL1), (LANE));        \
+  (DST) += stride;                                \
+} while (0)
+
+static WEBP_INLINE void Store6x8x2(const uint8x16_t p2, const uint8x16_t p1,
+                                   const uint8x16_t p0, const uint8x16_t q0,
+                                   const uint8x16_t q1, const uint8x16_t q2,
+                                   uint8_t* u, uint8_t* v,
+                                   int stride) {
+  const uint8x8x3_t u0 = {{vget_low_u8(p2), vget_low_u8(p1), vget_low_u8(p0)}};
+  const uint8x8x3_t u1 = {{vget_low_u8(q0), vget_low_u8(q1), vget_low_u8(q2)}};
+  const uint8x8x3_t v0 =
+      {{vget_high_u8(p2), vget_high_u8(p1), vget_high_u8(p0)}};
+  const uint8x8x3_t v1 =
+      {{vget_high_u8(q0), vget_high_u8(q1), vget_high_u8(q2)}};
+  STORE6_LANE(u, u0, u1, 0);
+  STORE6_LANE(u, u0, u1, 1);
+  STORE6_LANE(u, u0, u1, 2);
+  STORE6_LANE(u, u0, u1, 3);
+  STORE6_LANE(u, u0, u1, 4);
+  STORE6_LANE(u, u0, u1, 5);
+  STORE6_LANE(u, u0, u1, 6);
+  STORE6_LANE(u, u0, u1, 7);
+  STORE6_LANE(v, v0, v1, 0);
+  STORE6_LANE(v, v0, v1, 1);
+  STORE6_LANE(v, v0, v1, 2);
+  STORE6_LANE(v, v0, v1, 3);
+  STORE6_LANE(v, v0, v1, 4);
+  STORE6_LANE(v, v0, v1, 5);
+  STORE6_LANE(v, v0, v1, 6);
+  STORE6_LANE(v, v0, v1, 7);
+}
+#undef STORE6_LANE
+
+static WEBP_INLINE void Store4x8x2(const uint8x16_t p1, const uint8x16_t p0,
+                                   const uint8x16_t q0, const uint8x16_t q1,
+                                   uint8_t* const u, uint8_t* const v,
+                                   int stride) {
+  const uint8x8x4_t u0 =
+      {{vget_low_u8(p1), vget_low_u8(p0), vget_low_u8(q0), vget_low_u8(q1)}};
+  const uint8x8x4_t v0 =
+      {{vget_high_u8(p1), vget_high_u8(p0), vget_high_u8(q0), vget_high_u8(q1)}};
+  vst4_lane_u8(u - 2 + 0 * stride, u0, 0);
+  vst4_lane_u8(u - 2 + 1 * stride, u0, 1);
+  vst4_lane_u8(u - 2 + 2 * stride, u0, 2);
+  vst4_lane_u8(u - 2 + 3 * stride, u0, 3);
+  vst4_lane_u8(u - 2 + 4 * stride, u0, 4);
+  vst4_lane_u8(u - 2 + 5 * stride, u0, 5);
+  vst4_lane_u8(u - 2 + 6 * stride, u0, 6);
+  vst4_lane_u8(u - 2 + 7 * stride, u0, 7);
+  vst4_lane_u8(v - 2 + 0 * stride, v0, 0);
+  vst4_lane_u8(v - 2 + 1 * stride, v0, 1);
+  vst4_lane_u8(v - 2 + 2 * stride, v0, 2);
+  vst4_lane_u8(v - 2 + 3 * stride, v0, 3);
+  vst4_lane_u8(v - 2 + 4 * stride, v0, 4);
+  vst4_lane_u8(v - 2 + 5 * stride, v0, 5);
+  vst4_lane_u8(v - 2 + 6 * stride, v0, 6);
+  vst4_lane_u8(v - 2 + 7 * stride, v0, 7);
 }
 
 //------------------------------------------------------------------------------
@@ -749,6 +911,70 @@ static void HFilter16i(uint8_t* p, int stride,
 }
 #endif
 
+// 8-pixels wide variant, for chroma filtering
+static void VFilter8(uint8_t* u, uint8_t* v, int stride,
+                     int thresh, int ithresh, int hev_thresh) {
+  uint8x16_t p3, p2, p1, p0, q0, q1, q2, q3;
+  Load8x8x2(u, v, stride, &p3, &p2, &p1, &p0, &q0, &q1, &q2, &q3);
+  {
+    const uint8x16_t mask = NeedsFilter2(p3, p2, p1, p0, q0, q1, q2, q3,
+                                         ithresh, thresh);
+    const uint8x16_t hev_mask = NeedsHev(p1, p0, q0, q1, hev_thresh);
+    uint8x16_t op2, op1, op0, oq0, oq1, oq2;
+    DoFilter6(p2, p1, p0, q0, q1, q2, mask, hev_mask,
+              &op2, &op1, &op0, &oq0, &oq1, &oq2);
+    Store8x2x2(op2, op1, u - 2 * stride, v - 2 * stride, stride);
+    Store8x2x2(op0, oq0, u + 0 * stride, v + 0 * stride, stride);
+    Store8x2x2(oq1, oq2, u + 2 * stride, v + 2 * stride, stride);
+  }
+}
+static void VFilter8i(uint8_t* u, uint8_t* v, int stride,
+                      int thresh, int ithresh, int hev_thresh) {
+  uint8x16_t p3, p2, p1, p0, q0, q1, q2, q3;
+  u += 4 * stride;
+  v += 4 * stride;
+  Load8x8x2(u, v, stride, &p3, &p2, &p1, &p0, &q0, &q1, &q2, &q3);
+  {
+    const uint8x16_t mask = NeedsFilter2(p3, p2, p1, p0, q0, q1, q2, q3,
+                                         ithresh, thresh);
+    const uint8x16_t hev_mask = NeedsHev(p1, p0, q0, q1, hev_thresh);
+    uint8x16_t op1, op0, oq0, oq1;
+    DoFilter4(p1, p0, q0, q1, mask, hev_mask, &op1, &op0, &oq0, &oq1);
+    Store8x4x2(op1, op0, oq0, oq1, u, v, stride);
+  }
+}
+
+static void HFilter8(uint8_t* u, uint8_t* v, int stride,
+                     int thresh, int ithresh, int hev_thresh) {
+  uint8x16_t p3, p2, p1, p0, q0, q1, q2, q3;
+  Load8x8x2T(u, v, stride, &p3, &p2, &p1, &p0, &q0, &q1, &q2, &q3);
+  {
+    const uint8x16_t mask = NeedsFilter2(p3, p2, p1, p0, q0, q1, q2, q3,
+                                         ithresh, thresh);
+    const uint8x16_t hev_mask = NeedsHev(p1, p0, q0, q1, hev_thresh);
+    uint8x16_t op2, op1, op0, oq0, oq1, oq2;
+    DoFilter6(p2, p1, p0, q0, q1, q2, mask, hev_mask,
+              &op2, &op1, &op0, &oq0, &oq1, &oq2);
+    Store6x8x2(op2, op1, op0, oq0, oq1, oq2, u, v, stride);
+  }
+}
+
+static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
+                      int thresh, int ithresh, int hev_thresh) {
+  uint8x16_t p3, p2, p1, p0, q0, q1, q2, q3;
+  u += 4;
+  v += 4;
+  Load8x8x2T(u, v, stride, &p3, &p2, &p1, &p0, &q0, &q1, &q2, &q3);
+  {
+    const uint8x16_t mask = NeedsFilter2(p3, p2, p1, p0, q0, q1, q2, q3,
+                                         ithresh, thresh);
+    const uint8x16_t hev_mask = NeedsHev(p1, p0, q0, q1, hev_thresh);
+    uint8x16_t op1, op0, oq0, oq1;
+    DoFilter4(p1, p0, q0, q1, mask, hev_mask, &op1, &op0, &oq0, &oq1);
+    Store4x8x2(op1, op0, oq0, oq1, u, v, stride);
+  }
+}
+
 #endif  // USE_INTRINSICS
 
 //-----------------------------------------------------------------------------
@@ -1062,6 +1288,10 @@ void VP8DspInitNEON(void) {
 #if !defined(WORK_AROUND_GCC)
   VP8HFilter16i = HFilter16i;
 #endif
+  VP8VFilter8 = VFilter8;
+  VP8VFilter8i = VFilter8i;
+  VP8HFilter8 = HFilter8;
+  VP8HFilter8i = HFilter8i;
 #endif
   VP8SimpleVFilter16 = SimpleVFilter16;
   VP8SimpleHFilter16 = SimpleHFilter16;
