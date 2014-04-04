@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//veM\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-04T20:10:20Z",
+      "side": 1,
+      "message": "..disable it...",
+      "revId": "47bbc9c6e9414b40190f61263f47f7059d19c55b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//veI\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-04T20:10:20Z",
+      "side": 1,
+      "message": "...it\u0027s a little...",
+      "revId": "47bbc9c6e9414b40190f61263f47f7059d19c55b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//veU\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-04T20:10:20Z",
+      "side": 1,
+      "message": "once we\u0027re done a common neon.c might be good",
+      "revId": "47bbc9c6e9414b40190f61263f47f7059d19c55b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//veE\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-04T20:10:20Z",
+      "side": 1,
+      "message": "extra",
+      "revId": "47bbc9c6e9414b40190f61263f47f7059d19c55b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//vew\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-04T20:10:20Z",
+      "side": 1,
+      "message": "long lines",
+      "revId": "47bbc9c6e9414b40190f61263f47f7059d19c55b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ve0\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 680,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-04T20:10:20Z",
+      "side": 1,
+      "message": "could be factorized with SSE16x16\u0027s loop; might help if testing unrolling these loops",
+      "revId": "47bbc9c6e9414b40190f61263f47f7059d19c55b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//veA\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 751,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-04T20:10:20Z",
+      "side": 1,
+      "message": "not too much horizontal whitespace elsewhere",
+      "revId": "47bbc9c6e9414b40190f61263f47f7059d19c55b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
