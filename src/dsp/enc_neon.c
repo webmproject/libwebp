@@ -15,18 +15,122 @@
 
 #if defined(WEBP_USE_NEON)
 
+#define USE_INTRINSICS   // use intrinsics when possible
+
+#include <arm_neon.h>
+
 #include "../enc/vp8enci.h"
 
 //------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
 
 // Inverse transform.
-// This code is pretty much the same as TransformOneNEON in the decoder, except
+// This code is pretty much the same as TransformOne in the dec_neon.c, except
 // for subtraction to *ref. See the comments there for algorithmic explanations.
+
+static const int16_t kC1 = 20091;
+static const int16_t kC2 = 17734;  // half of kC2, actually. See comment above.
+
+// This code works but is *slower* than the inlined-asm version below
+// (with gcc-4.6). So we disable it for now. Later, it'll be conditional to
+// USE_INTRINSICS define.
+// With gcc-4.8, it's a little faster speed than inlined-assembly.
+#if 0  // defined(USE_INTRINSICS)
+
+// Treats 'v' as an uint8x8_t and zero extends to an int16x8_t.
+static WEBP_INLINE int16x8_t ConvertU8ToS16(uint32x2_t v) {
+  return vreinterpretq_s16_u16(vmovl_u8(vreinterpret_u8_u32(v)));
+}
+
+// Performs unsigned 8b saturation on 'dst01' and 'dst23' storing the result
+// to the corresponding rows of 'dst'.
+static WEBP_INLINE void SaturateAndStore4x4(uint8_t* const dst,
+                                            const int16x8_t dst01,
+                                            const int16x8_t dst23) {
+  // Unsigned saturate to 8b.
+  const uint8x8_t dst01_u8 = vqmovun_s16(dst01);
+  const uint8x8_t dst23_u8 = vqmovun_s16(dst23);
+
+  // Store the results.
+  vst1_lane_u32((uint32_t*)(dst + 0 * BPS), vreinterpret_u32_u8(dst01_u8), 0);
+  vst1_lane_u32((uint32_t*)(dst + 1 * BPS), vreinterpret_u32_u8(dst01_u8), 1);
+  vst1_lane_u32((uint32_t*)(dst + 2 * BPS), vreinterpret_u32_u8(dst23_u8), 0);
+  vst1_lane_u32((uint32_t*)(dst + 3 * BPS), vreinterpret_u32_u8(dst23_u8), 1);
+}
+
+static WEBP_INLINE void Add4x4(const int16x8_t row01, const int16x8_t row23,
+                               const uint8_t* const ref, uint8_t* const dst) {
+  uint32x2_t dst01 = {0, 0};
+  uint32x2_t dst23 = {0, 0};
+
+  // Load the source pixels.
+  dst01 = vld1_lane_u32((uint32_t*)(ref + 0 * BPS), dst01, 0);
+  dst23 = vld1_lane_u32((uint32_t*)(ref + 2 * BPS), dst23, 0);
+  dst01 = vld1_lane_u32((uint32_t*)(ref + 1 * BPS), dst01, 1);
+  dst23 = vld1_lane_u32((uint32_t*)(ref + 3 * BPS), dst23, 1);
+
+  {
+    // Convert to 16b.
+    const int16x8_t dst01_s16 = ConvertU8ToS16(dst01);
+    const int16x8_t dst23_s16 = ConvertU8ToS16(dst23);
+
+    // Descale with rounding.
+    const int16x8_t out01 = vrsraq_n_s16(dst01_s16, row01, 3);
+    const int16x8_t out23 = vrsraq_n_s16(dst23_s16, row23, 3);
+    // Add the inverse transform.
+    SaturateAndStore4x4(dst, out01, out23);
+  }
+}
+
+static WEBP_INLINE void Transpose8x2(const int16x8_t in0, const int16x8_t in1,
+                                     int16x8x2_t* const out) {
+  // a0 a1 a2 a3 | b0 b1 b2 b3   => a0 b0 c0 d0 | a1 b1 c1 d1
+  // c0 c1 c2 c3 | d0 d1 d2 d3      a2 b2 c2 d2 | a3 b3 c3 d3
+  const int16x8x2_t tmp0 = vzipq_s16(in0, in1);   // a0 c0 a1 c1 a2 c2 ...
+                                                  // b0 d0 b1 d1 b2 d2 ...
+  *out = vzipq_s16(tmp0.val[0], tmp0.val[1]);
+}
+
+static WEBP_INLINE void TransformPass(int16x8x2_t* const rows) {
+  // {rows} = in0 | in4
+  //          in8 | in12
+  // B1 = in4 | in12
+  const int16x8_t B1 =
+      vcombine_s16(vget_high_s16(rows->val[0]), vget_high_s16(rows->val[1]));
+  // C0 = kC1 * in4 | kC1 * in12
+  // C1 = kC2 * in4 | kC2 * in12
+  const int16x8_t C0 = vsraq_n_s16(B1, vqdmulhq_n_s16(B1, kC1), 1);
+  const int16x8_t C1 = vqdmulhq_n_s16(B1, kC2);
+  const int16x4_t a = vqadd_s16(vget_low_s16(rows->val[0]),
+                                vget_low_s16(rows->val[1]));   // in0 + in8
+  const int16x4_t b = vqsub_s16(vget_low_s16(rows->val[0]),
+                                vget_low_s16(rows->val[1]));   // in0 - in8
+  // c = kC2 * in4 - kC1 * in12
+  // d = kC1 * in4 + kC2 * in12
+  const int16x4_t c = vqsub_s16(vget_low_s16(C1), vget_high_s16(C0));
+  const int16x4_t d = vqadd_s16(vget_low_s16(C0), vget_high_s16(C1));
+  const int16x8_t D0 = vcombine_s16(a, b);      // D0 = a | b
+  const int16x8_t D1 = vcombine_s16(d, c);      // D1 = d | c
+  const int16x8_t E0 = vqaddq_s16(D0, D1);      // a+d | b+c
+  const int16x8_t E_tmp = vqsubq_s16(D0, D1);   // a-d | b-c
+  const int16x8_t E1 = vcombine_s16(vget_high_s16(E_tmp), vget_low_s16(E_tmp));
+  Transpose8x2(E0, E1, rows);
+}
+
+static void ITransformOne(const uint8_t* ref,
+                          const int16_t* in, uint8_t* dst) {
+  int16x8x2_t rows = {{ vld1q_s16(in + 0), vld1q_s16(in + 8) }};
+  TransformPass(&rows);
+  TransformPass(&rows);
+  Add4x4(rows.val[0], rows.val[1], ref, dst);
+}
+
+#else
+
 static void ITransformOne(const uint8_t* ref,
                           const int16_t* in, uint8_t* dst) {
   const int kBPS = BPS;
-  const int16_t kC1C2[] = { 20091, 17734, 0, 0 };  // kC1 / (kC2 >> 1) / 0 / 0
+  const int16_t kC1C2[] = { kC1, kC2, 0, 0 };
 
   __asm__ volatile (
     "vld1.16         {q1, q2}, [%[in]]           \n"
@@ -136,6 +240,8 @@ static void ITransformOne(const uint8_t* ref,
     : "memory", "q0", "q1", "q2", "q8", "q9", "q10", "q11"  // clobbered
   );
 }
+
+#endif    // USE_INTRINSICS
 
 static void ITransform(const uint8_t* ref,
                        const int16_t* in, uint8_t* dst, int do_two) {
@@ -542,6 +648,89 @@ static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
   return D;
 }
 
+//------------------------------------------------------------------------------
+
+static WEBP_INLINE void AccumulateSSE16(const uint8_t* const a,
+                                        const uint8_t* const b,
+                                        uint32x4_t* const sum) {
+  const uint8x16_t a0 = vld1q_u8(a);
+  const uint8x16_t b0 = vld1q_u8(b);
+  const uint8x16_t abs_diff = vabdq_u8(a0, b0);
+  const uint16x8_t prod_l = vmull_u8(vget_low_u8(abs_diff),
+                                     vget_low_u8(abs_diff));
+  const uint16x8_t prod_h = vmull_u8(vget_high_u8(abs_diff),
+                                     vget_high_u8(abs_diff));
+  const uint16x8_t prod = vaddq_u16(prod_h, prod_l);
+  *sum = vpadalq_u16(*sum, prod);      // pair-wise multiply and accumulate
+}
+
+// Horizontal sum of all four uint32_t values in 'sum'.
+static int SumToInt(uint32x4_t sum) {
+  const uint64x2_t sum2 = vpaddlq_u32(sum);
+  const uint64_t sum3 = vgetq_lane_u64(sum2, 0) + vgetq_lane_u64(sum2, 1);
+  return (int)sum3;
+}
+
+static int SSE16x16(const uint8_t* a, const uint8_t* b) {
+  uint32x4_t sum = { 0, 0, 0, 0 };
+  int y;
+  for (y = 0; y < 16; ++y) {
+    AccumulateSSE16(a + y * BPS, b + y * BPS, &sum);
+  }
+  return SumToInt(sum);
+}
+
+static int SSE16x8(const uint8_t* a, const uint8_t* b) {
+  uint32x4_t sum = { 0, 0, 0, 0 };
+  int y;
+  for (y = 0; y < 8; ++y) {
+    AccumulateSSE16(a + y * BPS, b + y * BPS, &sum);
+  }
+  return SumToInt(sum);
+}
+
+static int SSE8x8(const uint8_t* a, const uint8_t* b) {
+  uint32x4_t sum = { 0, 0, 0, 0 };
+  int y;
+  for (y = 0; y < 8; ++y) {
+    const uint8x8_t a0 = vld1_u8(a + y * BPS);
+    const uint8x8_t b0 = vld1_u8(b + y * BPS);
+    const uint8x8_t abs_diff = vabd_u8(a0, b0);
+    const uint16x8_t prod = vmull_u8(abs_diff, abs_diff);
+    sum = vpadalq_u16(sum, prod);
+  }
+  return SumToInt(sum);
+}
+
+#define LOAD_LANE_32b(src, VALUE, LANE) \
+    (VALUE) = vld1q_lane_u32((const uint32_t*)(src), (VALUE), (LANE))
+
+static int SSE4x4(const uint8_t* a, const uint8_t* b) {
+  uint32x4_t a0 = { 0, 0, 0, 0 };
+  uint32x4_t b0 = { 0, 0, 0, 0 };
+  // Load all 4x4 pixels into a single uint32x4_t variable.
+  LOAD_LANE_32b(a + 0 * BPS, a0, 0);
+  LOAD_LANE_32b(a + 1 * BPS, a0, 1);
+  LOAD_LANE_32b(a + 2 * BPS, a0, 2);
+  LOAD_LANE_32b(a + 3 * BPS, a0, 3);
+  LOAD_LANE_32b(b + 0 * BPS, b0, 0);
+  LOAD_LANE_32b(b + 1 * BPS, b0, 1);
+  LOAD_LANE_32b(b + 2 * BPS, b0, 2);
+  LOAD_LANE_32b(b + 3 * BPS, b0, 3);
+  {
+    const uint8x16_t abs_diff = vabdq_u8(vreinterpretq_u8_u32(a0),
+                                         vreinterpretq_u8_u32(b0));
+    const uint16x8_t prod_l = vmull_u8(vget_low_u8(abs_diff),
+                                       vget_low_u8(abs_diff));
+    const uint16x8_t prod_h = vmull_u8(vget_high_u8(abs_diff),
+                                       vget_high_u8(abs_diff));
+    const uint32x4_t sum = vpaddlq_u16(vaddq_u16(prod_h, prod_l));
+    return SumToInt(sum);
+  }
+}
+
+#undef LOAD_LANE_32b
+
 #endif   // WEBP_USE_NEON
 
 //------------------------------------------------------------------------------
@@ -558,6 +747,11 @@ void VP8EncDspInitNEON(void) {
 
   VP8TDisto4x4 = Disto4x4;
   VP8TDisto16x16 = Disto16x16;
+#if defined(USE_INTRINSICS)
+  VP8SSE16x16 = SSE16x16;
+  VP8SSE16x8 = SSE16x8;
+  VP8SSE8x8 = SSE8x8;
+  VP8SSE4x4 = SSE4x4;
+#endif
 #endif   // WEBP_USE_NEON
 }
-
