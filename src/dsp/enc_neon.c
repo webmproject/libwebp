@@ -377,69 +377,104 @@ static void FTransform(const uint8_t* src, const uint8_t* ref,
   );
 }
 
-static void FTransformWHT(const int16_t* in, int16_t* out) {
-  const int kStep = 32;
-  __asm__ volatile (
-    // d0 = in[0 * 16] , d1 = in[1 * 16]
-    // d2 = in[2 * 16] , d3 = in[3 * 16]
-    "vld1.16         d0[0], [%[in]], %[kStep]   \n"
-    "vld1.16         d1[0], [%[in]], %[kStep]   \n"
-    "vld1.16         d2[0], [%[in]], %[kStep]   \n"
-    "vld1.16         d3[0], [%[in]], %[kStep]   \n"
-    "vld1.16         d0[1], [%[in]], %[kStep]   \n"
-    "vld1.16         d1[1], [%[in]], %[kStep]   \n"
-    "vld1.16         d2[1], [%[in]], %[kStep]   \n"
-    "vld1.16         d3[1], [%[in]], %[kStep]   \n"
-    "vld1.16         d0[2], [%[in]], %[kStep]   \n"
-    "vld1.16         d1[2], [%[in]], %[kStep]   \n"
-    "vld1.16         d2[2], [%[in]], %[kStep]   \n"
-    "vld1.16         d3[2], [%[in]], %[kStep]   \n"
-    "vld1.16         d0[3], [%[in]], %[kStep]   \n"
-    "vld1.16         d1[3], [%[in]], %[kStep]   \n"
-    "vld1.16         d2[3], [%[in]], %[kStep]   \n"
-    "vld1.16         d3[3], [%[in]], %[kStep]   \n"
+static WEBP_INLINE int32x4x4_t Transpose4x4(const int32x4x4_t rows) {
+  uint64x2x2_t row01, row23;
 
-    "vaddl.s16       q2, d0, d2                 \n" // a0=(in[0*16]+in[2*16])
-    "vaddl.s16       q3, d1, d3                 \n" // a1=(in[1*16]+in[3*16])
-    "vsubl.s16       q4, d1, d3                 \n" // a2=(in[1*16]-in[3*16])
-    "vsubl.s16       q5, d0, d2                 \n" // a3=(in[0*16]-in[2*16])
-
-    "vqadd.s32       q6, q2, q3                 \n" // a0 + a1
-    "vqadd.s32       q7, q5, q4                 \n" // a3 + a2
-    "vqsub.s32       q8, q5, q4                 \n" // a3 - a2
-    "vqsub.s32       q9, q2, q3                 \n" // a0 - a1
-
-    // Transpose
-    // q6 = tmp[0, 1,  2,  3] ; q7 = tmp[ 4,  5,  6,  7]
-    // q8 = tmp[8, 9, 10, 11] ; q9 = tmp[12, 13, 14, 15]
-    "vswp            d13, d16                   \n" // vtrn.64 q0, q2
-    "vswp            d15, d18                   \n" // vtrn.64 q1, q3
-    "vtrn.32         q6, q7                     \n"
-    "vtrn.32         q8, q9                     \n"
-
-    "vqadd.s32       q0, q6, q8                 \n" // a0 = tmp[0] + tmp[8]
-    "vqadd.s32       q1, q7, q9                 \n" // a1 = tmp[4] + tmp[12]
-    "vqsub.s32       q2, q7, q9                 \n" // a2 = tmp[4] - tmp[12]
-    "vqsub.s32       q3, q6, q8                 \n" // a3 = tmp[0] - tmp[8]
-
-    "vqadd.s32       q4, q0, q1                 \n" // b0 = a0 + a1
-    "vqadd.s32       q5, q3, q2                 \n" // b1 = a3 + a2
-    "vqsub.s32       q6, q3, q2                 \n" // b2 = a3 - a2
-    "vqsub.s32       q7, q0, q1                 \n" // b3 = a0 - a1
-
-    "vshrn.s32       d18, q4, #1                \n" // b0 >> 1
-    "vshrn.s32       d19, q5, #1                \n" // b1 >> 1
-    "vshrn.s32       d20, q6, #1                \n" // b2 >> 1
-    "vshrn.s32       d21, q7, #1                \n" // b3 >> 1
-
-    "vst1.16         {q9, q10}, [%[out]]        \n"
-
-    : [in] "+r"(in)
-    : [kStep] "r"(kStep), [out] "r"(out)
-    : "memory", "q0", "q1", "q2", "q3", "q4", "q5",
-      "q6", "q7", "q8", "q9", "q10"       // clobbered
-  ) ;
+  row01.val[0] = vreinterpretq_u64_s32(rows.val[0]);
+  row01.val[1] = vreinterpretq_u64_s32(rows.val[1]);
+  row23.val[0] = vreinterpretq_u64_s32(rows.val[2]);
+  row23.val[1] = vreinterpretq_u64_s32(rows.val[3]);
+  // Transpose 64-bit values (there's no vswp equivalent)
+  {
+    const uint64x1_t row0h = vget_high_u64(row01.val[0]);
+    const uint64x1_t row2l = vget_low_u64(row23.val[0]);
+    const uint64x1_t row1h = vget_high_u64(row01.val[1]);
+    const uint64x1_t row3l = vget_low_u64(row23.val[1]);
+    row01.val[0] = vcombine_u64(vget_low_u64(row01.val[0]), row2l);
+    row23.val[0] = vcombine_u64(row0h, vget_high_u64(row23.val[0]));
+    row01.val[1] = vcombine_u64(vget_low_u64(row01.val[1]), row3l);
+    row23.val[1] = vcombine_u64(row1h, vget_high_u64(row23.val[1]));
+  }
+  {
+    const int32x4x2_t out01 = vtrnq_s32(vreinterpretq_s32_u64(row01.val[0]),
+                                        vreinterpretq_s32_u64(row01.val[1]));
+    const int32x4x2_t out23 = vtrnq_s32(vreinterpretq_s32_u64(row23.val[0]),
+                                        vreinterpretq_s32_u64(row23.val[1]));
+    int32x4x4_t out;
+    out.val[0] = out01.val[0];
+    out.val[1] = out01.val[1];
+    out.val[2] = out23.val[0];
+    out.val[3] = out23.val[1];
+    return out;
+  }
 }
+
+#define LOAD_LANE_16b(VALUE, LANE) do {             \
+  (VALUE) = vld1_lane_s16(src, (VALUE), (LANE));    \
+  src += stride;                                    \
+} while (0)
+
+static void FTransformWHT(const int16_t* src, int16_t* out) {
+  int32x4x4_t tmp0;
+  const int stride = 16;
+  int16x4x4_t in = {{{0}, {0}, {0}, {0}}};
+  LOAD_LANE_16b(in.val[0], 0);
+  LOAD_LANE_16b(in.val[1], 0);
+  LOAD_LANE_16b(in.val[2], 0);
+  LOAD_LANE_16b(in.val[3], 0);
+  LOAD_LANE_16b(in.val[0], 1);
+  LOAD_LANE_16b(in.val[1], 1);
+  LOAD_LANE_16b(in.val[2], 1);
+  LOAD_LANE_16b(in.val[3], 1);
+  LOAD_LANE_16b(in.val[0], 2);
+  LOAD_LANE_16b(in.val[1], 2);
+  LOAD_LANE_16b(in.val[2], 2);
+  LOAD_LANE_16b(in.val[3], 2);
+  LOAD_LANE_16b(in.val[0], 3);
+  LOAD_LANE_16b(in.val[1], 3);
+  LOAD_LANE_16b(in.val[2], 3);
+  LOAD_LANE_16b(in.val[3], 3);
+
+  {
+    // a0 = in[0 * 16] + in[2 * 16]
+    // a1 = in[1 * 16] + in[3 * 16]
+    // a2 = in[1 * 16] - in[3 * 16]
+    // a3 = in[0 * 16] - in[2 * 16]
+    const int32x4_t a0 = vaddl_s16(in.val[0], in.val[2]);
+    const int32x4_t a1 = vaddl_s16(in.val[1], in.val[3]);
+    const int32x4_t a2 = vsubl_s16(in.val[1], in.val[3]);
+    const int32x4_t a3 = vsubl_s16(in.val[0], in.val[2]);
+    tmp0.val[0] = vaddq_s32(a0, a1);
+    tmp0.val[1] = vaddq_s32(a3, a2);
+    tmp0.val[2] = vsubq_s32(a3, a2);
+    tmp0.val[3] = vsubq_s32(a0, a1);
+  }
+  {
+    const int32x4x4_t tmp1 = Transpose4x4(tmp0);
+    // a0 = tmp[0 + i] + tmp[ 8 + i]
+    // a1 = tmp[4 + i] + tmp[12 + i]
+    // a2 = tmp[4 + i] - tmp[12 + i]
+    // a3 = tmp[0 + i] - tmp[ 8 + i]
+    const int32x4_t a0 = vaddq_s32(tmp1.val[0], tmp1.val[2]);
+    const int32x4_t a1 = vaddq_s32(tmp1.val[1], tmp1.val[3]);
+    const int32x4_t a2 = vsubq_s32(tmp1.val[1], tmp1.val[3]);
+    const int32x4_t a3 = vsubq_s32(tmp1.val[0], tmp1.val[2]);
+    const int32x4_t b0 = vhaddq_s32(a0, a1);  // (a0 + a1) >> 1
+    const int32x4_t b1 = vhaddq_s32(a3, a2);  // (a3 + a2) >> 1
+    const int32x4_t b2 = vhsubq_s32(a3, a2);  // (a3 - a2) >> 1
+    const int32x4_t b3 = vhsubq_s32(a0, a1);  // (a0 - a1) >> 1
+    const int16x4_t out0 = vmovn_s32(b0);
+    const int16x4_t out1 = vmovn_s32(b1);
+    const int16x4_t out2 = vmovn_s32(b2);
+    const int16x4_t out3 = vmovn_s32(b3);
+
+    vst1_s16(out +  0, out0);
+    vst1_s16(out +  4, out1);
+    vst1_s16(out +  8, out2);
+    vst1_s16(out + 12, out3);
+  }
+}
+#undef LOAD_LANE_16b
 
 //------------------------------------------------------------------------------
 // Texture distortion
