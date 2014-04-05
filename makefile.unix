@@ -119,6 +119,7 @@ DSP_DEC_OBJS = \
 
 DSP_ENC_OBJS = \
     src/dsp/enc.o \
+    src/dsp/enc_mips32.o \
     src/dsp/enc_neon.o \
     src/dsp/enc_sse2.o \
 

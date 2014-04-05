@@ -688,6 +688,7 @@ VP8BlockCopy VP8Copy4x4;
 
 extern void VP8EncDspInitSSE2(void);
 extern void VP8EncDspInitNEON(void);
+extern void VP8EncDspInitMIPS32(void);
 
 void VP8EncDspInit(void) {
   VP8DspInit();  // common inverse transforms
@@ -720,6 +721,10 @@ void VP8EncDspInit(void) {
 #elif defined(WEBP_USE_NEON)
     if (VP8GetCPUInfo(kNEON)) {
       VP8EncDspInitNEON();
+    }
+#elif defined(WEBP_USE_MIPS32)
+    if (VP8GetCPUInfo(kMIPS32)) {
+      VP8EncDspInitMIPS32();
     }
 #endif
   }
