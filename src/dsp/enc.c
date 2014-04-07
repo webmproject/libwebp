@@ -600,9 +600,10 @@ static const uint8_t kZigzag[16] = {
 
 // Simple quantization
 static int QuantizeBlock(int16_t in[16], int16_t out[16],
-                         int n, const VP8Matrix* const mtx) {
+                         const VP8Matrix* const mtx) {
   int last = -1;
-  for (; n < 16; ++n) {
+  int n;
+  for (n = 0; n < 16; ++n) {
     const int j = kZigzag[n];
     const int sign = (in[j] < 0);
     const uint32_t coeff = (sign ? -in[j] : in[j]) + mtx->sharpen_[j];

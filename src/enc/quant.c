@@ -746,7 +746,8 @@ static int ReconstructIntra16(VP8EncIterator* const it,
     }
   } else {
     for (n = 0; n < 16; ++n) {
-      nz |= VP8EncQuantizeBlock(tmp[n], rd->y_ac_levels[n], 1, &dqm->y1_) << n;
+      tmp[n][0] = 0;  // so that nz is correct below
+      nz |= VP8EncQuantizeBlock(tmp[n], rd->y_ac_levels[n], &dqm->y1_) << n;
     }
   }
 
@@ -777,7 +778,7 @@ static int ReconstructIntra4(VP8EncIterator* const it,
     nz = TrellisQuantizeBlock(enc, tmp, levels, ctx, 3, &dqm->y1_,
                               dqm->lambda_trellis_i4_);
   } else {
-    nz = VP8EncQuantizeBlock(tmp, levels, 0, &dqm->y1_);
+    nz = VP8EncQuantizeBlock(tmp, levels, &dqm->y1_);
   }
   VP8ITransform(ref, tmp, yuv_out, 0);
   return nz;
@@ -812,7 +813,7 @@ static int ReconstructUV(VP8EncIterator* const it, VP8ModeScore* const rd,
     }
   } else {
     for (n = 0; n < 8; ++n) {
-      nz |= VP8EncQuantizeBlock(tmp[n], rd->uv_levels[n], 0, &dqm->uv_) << n;
+      nz |= VP8EncQuantizeBlock(tmp[n], rd->uv_levels[n], &dqm->uv_) << n;
     }
   }
 

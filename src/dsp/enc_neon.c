@@ -17,10 +17,10 @@
 
 #define USE_INTRINSICS   // use intrinsics when possible
 
+#include <assert.h>
 #include <arm_neon.h>
 
 #include "../enc/vp8enci.h"
-
 //------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
 
@@ -766,6 +766,72 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
 
 #undef LOAD_LANE_32b
 
+//------------------------------------------------------------------------------
+
+// Compilation with gcc4.6.3 is problematic for now. Disable this function then.
+#if (__GNUC__ <= 4 && __GNUC_MINOR__ < 8)
+#define SKIP_QUANTIZE
+#endif
+
+#if !defined(SKIP_QUANTIZE)
+
+static int16x8_t Quantize(int16_t* const in,
+                          const VP8Matrix* const mtx, int offset) {
+  const uint16x8_t sharp = vld1q_u16(&mtx->sharpen_[offset]);
+  const uint16x8_t q = vld1q_u16(&mtx->q_[offset]);
+  const uint16x8_t iq = vld1q_u16(&mtx->iq_[offset]);
+  const uint32x4_t bias0 = vld1q_u32(&mtx->bias_[offset + 0]);
+  const uint32x4_t bias1 = vld1q_u32(&mtx->bias_[offset + 4]);
+
+  const int16x8_t a = vld1q_s16(in + offset);                // in
+  const uint16x8_t b = vreinterpretq_u16_s16(vabsq_s16(a));  // coeff = abs(in)
+  const int16x8_t sign = vshrq_n_s16(a, 15);                 // sign
+  const uint16x8_t c = vaddq_u16(b, sharp);                  // + sharpen
+  const uint32x4_t m0 = vmull_u16(vget_low_u16(c), vget_low_u16(iq));
+  const uint32x4_t m1 = vmull_u16(vget_high_u16(c), vget_high_u16(iq));
+  const uint32x4_t m2 = vhaddq_u32(m0, bias0);
+  const uint32x4_t m3 = vhaddq_u32(m1, bias1);     // (coeff * iQ + bias) >> 1
+  const uint16x8_t c0 = vcombine_u16(vshrn_n_u32(m2, 16),
+                                     vshrn_n_u32(m3, 16));   // QFIX=17 = 16+1
+  const uint16x8_t c1 = vminq_u16(c0, vdupq_n_u16(MAX_LEVEL));
+  const int16x8_t c2 = veorq_s16(vreinterpretq_s16_u16(c1), sign);
+  const int16x8_t c3 = vsubq_s16(c2, sign);                  // restore sign
+  const int16x8_t c4 = vmulq_s16(c3, vreinterpretq_s16_u16(q));
+  vst1q_s16(in + offset, c4);
+  assert(QFIX == 17);  // this function can't work as is if QFIX != 16+1
+  return c3;
+}
+
+static const uint8_t kShuffles[4][8] = {
+ { 0,   1,  2,  3,  8,  9, 16, 17 },
+ { 10, 11,  4,  5,  6,  7, 12, 13 },
+ { 18, 19, 24, 25, 26, 27, 20, 21 },
+ { 14, 15, 22, 23, 28, 29, 30, 31 }
+};
+
+static int QuantizeBlock(int16_t in[16], int16_t out[16],
+                         const VP8Matrix* const mtx) {
+  const int16x8_t out0 = Quantize(in, mtx, 0);
+  const int16x8_t out1 = Quantize(in, mtx, 8);
+  const uint8x8x4_t all_out = {{
+      vreinterpret_u8_s16(vget_low_s16(out0)),
+      vreinterpret_u8_s16(vget_high_s16(out0)),
+      vreinterpret_u8_s16(vget_low_s16(out1)),
+      vreinterpret_u8_s16(vget_high_s16(out1)) }};
+  // Zigzag reordering
+  vst1_u8((uint8_t*)(out +  0), vtbl4_u8(all_out, vld1_u8(kShuffles[0])));
+  vst1_u8((uint8_t*)(out +  4), vtbl4_u8(all_out, vld1_u8(kShuffles[1])));
+  vst1_u8((uint8_t*)(out +  8), vtbl4_u8(all_out, vld1_u8(kShuffles[2])));
+  vst1_u8((uint8_t*)(out + 12), vtbl4_u8(all_out, vld1_u8(kShuffles[3])));
+  // test zeros
+  if (*(uint64_t*)(out +  0) != 0) return 1;
+  if (*(uint64_t*)(out +  4) != 0) return 1;
+  if (*(uint64_t*)(out +  8) != 0) return 1;
+  if (*(uint64_t*)(out + 12) != 0) return 1;
+  return 0;
+}
+#endif   // SKIP_QUANTIZE
+
 #endif   // WEBP_USE_NEON
 
 //------------------------------------------------------------------------------
@@ -787,6 +853,9 @@ void VP8EncDspInitNEON(void) {
   VP8SSE16x8 = SSE16x8;
   VP8SSE8x8 = SSE8x8;
   VP8SSE4x4 = SSE4x4;
+#endif
+#if !defined(SKIP_QUANTIZE)
+  VP8EncQuantizeBlock = QuantizeBlock;
 #endif
 #endif   // WEBP_USE_NEON
 }

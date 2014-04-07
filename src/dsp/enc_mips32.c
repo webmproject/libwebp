@@ -186,8 +186,7 @@ static void ITransformMIPS32(const uint8_t* ref, const int16_t* in,
   "sh           %[level],       "#N"(%[pout])                       \n\t"
 
 static int QuantizeBlockMIPS32(int16_t in[16], int16_t out[16],
-                               int n, const VP8Matrix* const mtx) {
-  int last;
+                               const VP8Matrix* const mtx) {
   int temp0, temp1, temp2, temp3, temp4, temp5;
   int sign, coeff, level, i;
   int max_level = MAX_LEVEL;
@@ -201,9 +200,7 @@ static int QuantizeBlockMIPS32(int16_t in[16], int16_t out[16],
   const uint32_t* ppbias    = &mtx->bias_[0];
 
   __asm__ volatile(
-    "bnez         %[n],           1f                               \n\t"
     QUANTIZE_ONE( 0,  0,  0)
-  "1:                                                              \n\t"
     QUANTIZE_ONE( 2,  4,  2)
     QUANTIZE_ONE( 8, 16,  4)
     QUANTIZE_ONE(16, 32,  6)
@@ -225,7 +222,7 @@ static int QuantizeBlockMIPS32(int16_t in[16], int16_t out[16],
       [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
       [sign]"=&r"(sign), [coeff]"=&r"(coeff),
       [level]"=&r"(level)
-    : [n]"r"(n), [pout]"r"(pout), [ppin]"r"(ppin),
+    : [pout]"r"(pout), [ppin]"r"(ppin),
       [ppiq]"r"(ppiq), [max_level]"r"(max_level),
       [ppbias]"r"(ppbias), [ppzthresh]"r"(ppzthresh),
       [ppsharpen]"r"(ppsharpen), [ppq]"r"(ppq)
@@ -233,14 +230,10 @@ static int QuantizeBlockMIPS32(int16_t in[16], int16_t out[16],
   );
 
   // moved out from macro to increase possibility for earlier breaking
-  last = -1;
-  for (i = 15; i >= n; i--) {
-    if (out[i]) {
-      last = i;
-      break;
-    }
+  for (i = 15; i >= 0; i--) {
+    if (out[i]) return 1;
   }
-  return (last >= 0);
+  return 0;
 }
 
 #undef QUANTIZE_ONE

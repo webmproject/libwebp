@@ -88,7 +88,7 @@ extern VP8BlockCopy VP8Copy4x4;
 // Quantization
 struct VP8Matrix;   // forward declaration
 typedef int (*VP8QuantizeBlock)(int16_t in[16], int16_t out[16],
-                                int n, const struct VP8Matrix* const mtx);
+                                const struct VP8Matrix* const mtx);
 extern VP8QuantizeBlock VP8EncQuantizeBlock;
 
 // specific to 2nd transform:

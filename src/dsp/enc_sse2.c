@@ -805,7 +805,7 @@ static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
 
 #define QFIX2 0
 static WEBP_INLINE int DoQuantizeBlock(int16_t in[16], int16_t out[16],
-                                       int n, int shift,
+                                       int shift,
                                        const uint16_t* const sharpen,
                                        const VP8Matrix* const mtx) {
   const __m128i max_coeff_2047 = _mm_set1_epi16(MAX_LEVEL);
@@ -916,18 +916,17 @@ static WEBP_INLINE int DoQuantizeBlock(int16_t in[16], int16_t out[16],
   }
 
   // detect if all 'out' values are zeroes or not
-  if (n) packed_out = _mm_srli_si128(packed_out, 1);   // ignore DC for n == 1
   return (_mm_movemask_epi8(_mm_cmpeq_epi8(packed_out, zero)) != 0xffff);
 }
 
 static int QuantizeBlock(int16_t in[16], int16_t out[16],
-                         int n, const VP8Matrix* const mtx) {
-  return DoQuantizeBlock(in, out, n, 0, &mtx->sharpen_[0], mtx);
+                         const VP8Matrix* const mtx) {
+  return DoQuantizeBlock(in, out, 0, &mtx->sharpen_[0], mtx);
 }
 
 static int QuantizeBlockWHT(int16_t in[16], int16_t out[16],
                             const VP8Matrix* const mtx) {
-  return DoQuantizeBlock(in, out, 0, 0, &mtx->sharpen_[0], mtx);
+  return DoQuantizeBlock(in, out, 0, &mtx->sharpen_[0], mtx);
 }
 
 #endif   // WEBP_USE_SSE2
