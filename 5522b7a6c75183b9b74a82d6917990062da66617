@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//vF0\u003d",
+        "filename": "src/enc/frame.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-08T11:29:38Z",
+      "side": 1,
+      "message": "should be prefixed by VP8 and moved to \u0027cost.c\u0027",
+      "revId": "5522b7a6c75183b9b74a82d6917990062da66617",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//vF4\u003d",
+        "filename": "src/enc/frame.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-08T11:29:38Z",
+      "side": 1,
+      "message": "this name should be prefixed with VP8 and in the mip32-related file (enc_mips32.c), or in \u0027cost.c\u0027 at least",
+      "revId": "5522b7a6c75183b9b74a82d6917990062da66617",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//vF8\u003d",
+        "filename": "src/enc/frame.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-08T11:29:38Z",
+      "side": 1,
+      "message": "this should go in \u0027cost.c\u0027 file with the VP8 prefix on function names",
+      "revId": "5522b7a6c75183b9b74a82d6917990062da66617",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
