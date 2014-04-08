@@ -398,6 +398,112 @@ static int Disto16x16MIPS32(const uint8_t* const a, const uint8_t* const b,
   return D;
 }
 
+// macro for one horizontal pass in FTransform
+// temp0..temp15 holds tmp[0]..tmp[15]
+// A..D - offsets in bytes to load from src and ref buffers
+// TEMP0..TEMP3 - registers for corresponding tmp elements
+#define HORIZONTAL_PASS(A, B, C, D, TEMP0, TEMP1, TEMP2, TEMP3) \
+  "lw     %["#TEMP1"],  0(%[args])                     \n\t"    \
+  "lw     %["#TEMP2"],  4(%[args])                     \n\t"    \
+  "lbu    %[temp16],    "#A"(%["#TEMP1"])              \n\t"    \
+  "lbu    %[temp17],    "#A"(%["#TEMP2"])              \n\t"    \
+  "lbu    %[temp18],    "#B"(%["#TEMP1"])              \n\t"    \
+  "lbu    %[temp19],    "#B"(%["#TEMP2"])              \n\t"    \
+  "subu   %[temp20],    %[temp16],    %[temp17]        \n\t"    \
+  "lbu    %[temp16],    "#C"(%["#TEMP1"])              \n\t"    \
+  "lbu    %[temp17],    "#C"(%["#TEMP2"])              \n\t"    \
+  "subu   %["#TEMP0"],  %[temp18],    %[temp19]        \n\t"    \
+  "lbu    %[temp18],    "#D"(%["#TEMP1"])              \n\t"    \
+  "lbu    %[temp19],    "#D"(%["#TEMP2"])              \n\t"    \
+  "subu   %["#TEMP1"],  %[temp16],    %[temp17]        \n\t"    \
+  "subu   %["#TEMP2"],  %[temp18],    %[temp19]        \n\t"    \
+  "addu   %["#TEMP3"],  %[temp20],    %["#TEMP2"]      \n\t"    \
+  "subu   %["#TEMP2"],  %[temp20],    %["#TEMP2"]      \n\t"    \
+  "addu   %[temp20],    %["#TEMP0"],  %["#TEMP1"]      \n\t"    \
+  "subu   %["#TEMP0"],  %["#TEMP0"],  %["#TEMP1"]      \n\t"    \
+  "mul    %[temp16],    %["#TEMP2"],  %[c5352]         \n\t"    \
+  "mul    %[temp17],    %["#TEMP2"],  %[c2217]         \n\t"    \
+  "mul    %[temp18],    %["#TEMP0"],  %[c5352]         \n\t"    \
+  "mul    %[temp19],    %["#TEMP0"],  %[c2217]         \n\t"    \
+  "addu   %["#TEMP1"],  %["#TEMP3"],  %[temp20]        \n\t"    \
+  "subu   %[temp20],    %["#TEMP3"],  %[temp20]        \n\t"    \
+  "sll    %["#TEMP0"],  %["#TEMP1"],  3                \n\t"    \
+  "sll    %["#TEMP2"],  %[temp20],    3                \n\t"    \
+  "addiu  %[temp16],    %[temp16],    1812             \n\t"    \
+  "addiu  %[temp17],    %[temp17],    937              \n\t"    \
+  "addu   %[temp16],    %[temp16],    %[temp19]        \n\t"    \
+  "subu   %[temp17],    %[temp17],    %[temp18]        \n\t"    \
+  "sra    %["#TEMP1"],  %[temp16],    9                \n\t"    \
+  "sra    %["#TEMP3"],  %[temp17],    9                \n\t"
+
+// macro for one vertical pass in FTransform
+// temp0..temp15 holds tmp[0]..tmp[15]
+// A..D - offsets in bytes to store to out buffer
+// TEMP0, TEMP4, TEMP8 and TEMP12 - registers for corresponding tmp elements
+#define VERTICAL_PASS(A, B, C, D, TEMP0, TEMP4, TEMP8, TEMP12)  \
+  "addu   %[temp16],    %["#TEMP0"],  %["#TEMP12"]     \n\t"    \
+  "subu   %[temp19],    %["#TEMP0"],  %["#TEMP12"]     \n\t"    \
+  "addu   %[temp17],    %["#TEMP4"],  %["#TEMP8"]      \n\t"    \
+  "subu   %[temp18],    %["#TEMP4"],  %["#TEMP8"]      \n\t"    \
+  "mul    %["#TEMP8"],  %[temp19],    %[c2217]         \n\t"    \
+  "mul    %["#TEMP12"], %[temp18],    %[c2217]         \n\t"    \
+  "mul    %["#TEMP4"],  %[temp19],    %[c5352]         \n\t"    \
+  "mul    %[temp18],    %[temp18],    %[c5352]         \n\t"    \
+  "addiu  %[temp16],    %[temp16],    7                \n\t"    \
+  "addu   %["#TEMP0"],  %[temp16],    %[temp17]        \n\t"    \
+  "sra    %["#TEMP0"],  %["#TEMP0"],  4                \n\t"    \
+  "addu   %["#TEMP12"], %["#TEMP12"], %["#TEMP4"]      \n\t"    \
+  "subu   %["#TEMP4"],  %[temp16],    %[temp17]        \n\t"    \
+  "sra    %["#TEMP4"],  %["#TEMP4"],  4                \n\t"    \
+  "addiu  %["#TEMP8"],  %["#TEMP8"],  30000            \n\t"    \
+  "addiu  %["#TEMP12"], %["#TEMP12"], 12000            \n\t"    \
+  "addiu  %["#TEMP8"],  %["#TEMP8"],  21000            \n\t"    \
+  "subu   %["#TEMP8"],  %["#TEMP8"],  %[temp18]        \n\t"    \
+  "sra    %["#TEMP12"], %["#TEMP12"], 16               \n\t"    \
+  "sra    %["#TEMP8"],  %["#TEMP8"],  16               \n\t"    \
+  "addiu  %[temp16],    %["#TEMP12"], 1                \n\t"    \
+  "movn   %["#TEMP12"], %[temp16],    %[temp19]        \n\t"    \
+  "sh     %["#TEMP0"],  "#A"(%[temp20])                \n\t"    \
+  "sh     %["#TEMP4"],  "#C"(%[temp20])                \n\t"    \
+  "sh     %["#TEMP8"],  "#D"(%[temp20])                \n\t"    \
+  "sh     %["#TEMP12"], "#B"(%[temp20])                \n\t"
+
+static void FTransformMIPS32(const uint8_t* src, const uint8_t* ref,
+                             int16_t* out) {
+  int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
+  int temp9, temp10, temp11, temp12, temp13, temp14, temp15, temp16;
+  int temp17, temp18, temp19, temp20;
+  const int c2217 = 2217;
+  const int c5352 = 5352;
+  const int* const args[3] =
+      { (const int*)src, (const int*)ref, (const int*)out };
+
+  __asm__ volatile(
+    HORIZONTAL_PASS( 0,  1,  2,  3, temp0,  temp1,  temp2,  temp3)
+    HORIZONTAL_PASS(16, 17, 18, 19, temp4,  temp5,  temp6,  temp7)
+    HORIZONTAL_PASS(32, 33, 34, 35, temp8,  temp9,  temp10, temp11)
+    HORIZONTAL_PASS(48, 49, 50, 51, temp12, temp13, temp14, temp15)
+    "lw   %[temp20],    8(%[args])                     \n\t"
+    VERTICAL_PASS(0,  8, 16, 24, temp0, temp4, temp8,  temp12)
+    VERTICAL_PASS(2, 10, 18, 26, temp1, temp5, temp9,  temp13)
+    VERTICAL_PASS(4, 12, 20, 28, temp2, temp6, temp10, temp14)
+    VERTICAL_PASS(6, 14, 22, 30, temp3, temp7, temp11, temp15)
+
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
+      [temp9]"=&r"(temp9), [temp10]"=&r"(temp10), [temp11]"=&r"(temp11),
+      [temp12]"=&r"(temp12), [temp13]"=&r"(temp13), [temp14]"=&r"(temp14),
+      [temp15]"=&r"(temp15), [temp16]"=&r"(temp16), [temp17]"=&r"(temp17),
+      [temp18]"=&r"(temp18), [temp19]"=&r"(temp19), [temp20]"=&r"(temp20)
+    : [args]"r"(args), [c2217]"r"(c2217), [c5352]"r"(c5352)
+    : "memory", "hi", "lo"
+  );
+}
+
+#undef VERTICAL_PASS
+#undef HORIZONTAL_PASS
+
 #endif  // WEBP_USE_MIPS32
 
 //------------------------------------------------------------------------------
@@ -411,5 +517,6 @@ void VP8EncDspInitMIPS32(void) {
   VP8EncQuantizeBlock = QuantizeBlockMIPS32;
   VP8TDisto4x4 = Disto4x4MIPS32;
   VP8TDisto16x16 = Disto16x16MIPS32;
+  VP8FTransform = FTransformMIPS32;
 #endif  // WEBP_USE_MIPS32
 }
