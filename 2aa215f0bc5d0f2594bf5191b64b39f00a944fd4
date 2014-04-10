@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//up4\u003d",
+        "filename": "src/dsp/lossless_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-10T05:53:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//urw\u003d",
+      "revId": "2aa215f0bc5d0f2594bf5191b64b39f00a944fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//uro\u003d",
         "filename": "src/dsp/lossless_neon.c",
         "patchSetId": 3
@@ -47,6 +65,24 @@
       "writtenOn": "2014-04-10T04:14:15Z",
       "side": 1,
       "message": "newlines might help",
+      "revId": "2aa215f0bc5d0f2594bf5191b64b39f00a944fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//up0\u003d",
+        "filename": "src/dsp/lossless_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-10T05:53:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//uro\u003d",
       "revId": "2aa215f0bc5d0f2594bf5191b64b39f00a944fd4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//upw\u003d",
+        "filename": "src/dsp/lossless_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-10T05:53:13Z",
+      "side": 1,
+      "message": "yes, it\u0027s to avoid having to use \u0027int16\u0027 type mostly.",
+      "parentUuid": "AAAAdn//urg\u003d",
+      "revId": "2aa215f0bc5d0f2594bf5191b64b39f00a944fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//urc\u003d",
         "filename": "src/dsp/lossless_neon.c",
         "patchSetId": 3
@@ -81,6 +135,24 @@
       "writtenOn": "2014-04-10T04:14:15Z",
       "side": 1,
       "message": "no vhsub due to the saturation I suppose",
+      "revId": "2aa215f0bc5d0f2594bf5191b64b39f00a944fd4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ups\u003d",
+        "filename": "src/dsp/lossless_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-10T05:53:13Z",
+      "side": 1,
+      "message": "yes, the trick is:\n\nx / 2 \u003d (||x|| \u003e\u003e 1) - (||-x|| \u003e\u003e 1)\n\nwhere ||x|| \u003d max(0, x)",
+      "parentUuid": "AAAAdn//urc\u003d",
       "revId": "2aa215f0bc5d0f2594bf5191b64b39f00a944fd4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
