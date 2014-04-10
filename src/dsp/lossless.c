@@ -332,7 +332,7 @@ const uint8_t kPrefixEncodeExtraBitsValue[PREFIX_LOOKUP_IDX_MAX] = {
 #define APPROX_LOG_WITH_CORRECTION_MAX  65536
 #define APPROX_LOG_MAX                   4096
 #define LOG_2_RECIPROCAL 1.44269504088896338700465094007086
-float VP8LFastSLog2Slow(int v) {
+static float FastSLog2Slow(int v) {
   assert(v >= LOG_LOOKUP_IDX_MAX);
   if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
     int log_cnt = 0;
@@ -351,14 +351,14 @@ float VP8LFastSLog2Slow(int v) {
     // The correction factor: log(1 + d) ~ d; for very small d values, so
     // log2(1 + (v % y) / v) ~ LOG_2_RECIPROCAL * (v % y)/v
     // LOG_2_RECIPROCAL ~ 23/16
-    correction = (23 * (orig_v % y)) >> 4;
+    correction = (23 * (orig_v & (y - 1))) >> 4;
     return v_f * (kLog2Table[v] + log_cnt) + correction;
   } else {
     return (float)(LOG_2_RECIPROCAL * v * log((double)v));
   }
 }
 
-float VP8LFastLog2Slow(int v) {
+static float FastLog2Slow(int v) {
   assert(v >= LOG_LOOKUP_IDX_MAX);
   if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
     int log_cnt = 0;
@@ -374,7 +374,7 @@ float VP8LFastLog2Slow(int v) {
     if (orig_v >= APPROX_LOG_MAX) {
       // Since the division is still expensive, add this correction factor only
       // for large values of 'v'.
-      const int correction = (23 * (orig_v % y)) >> 4;
+      const int correction = (23 * (orig_v & (y - 1))) >> 4;
       log_2 += (double)correction / orig_v;
     }
     return (float)log_2;
@@ -1473,8 +1473,12 @@ VP8LConvertFunc VP8LConvertBGRAToRGBA4444;
 VP8LConvertFunc VP8LConvertBGRAToRGB565;
 VP8LConvertFunc VP8LConvertBGRAToBGR;
 
+VP8LFastLog2SlowFunc VP8LFastLog2Slow;
+VP8LFastLog2SlowFunc VP8LFastSLog2Slow;
+
 extern void VP8LDspInitSSE2(void);
 extern void VP8LDspInitNEON(void);
+extern void VP8LDspInitMIPS32(void);
 
 void VP8LDspInit(void) {
   memcpy(VP8LPredictors, kPredictorsC, sizeof(VP8LPredictors));
@@ -1491,6 +1495,9 @@ void VP8LDspInit(void) {
   VP8LConvertBGRAToRGB565 = VP8LConvertBGRAToRGB565_C;
   VP8LConvertBGRAToBGR = VP8LConvertBGRAToBGR_C;
 
+  VP8LFastLog2Slow = FastLog2Slow;
+  VP8LFastSLog2Slow = FastSLog2Slow;
+
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_SSE2)
@@ -1501,6 +1508,11 @@ void VP8LDspInit(void) {
 #if defined(WEBP_USE_NEON)
     if (VP8GetCPUInfo(kNEON)) {
       VP8LDspInitNEON();
+    }
+#endif
+#if defined(WEBP_USE_MIPS32)
+    if (VP8GetCPUInfo(kMIPS32)) {
+      VP8LDspInitMIPS32();
     }
 #endif
   }

@@ -122,8 +122,11 @@ static WEBP_INLINE uint32_t VP8LSubSampleSize(uint32_t size,
 #define LOG_LOOKUP_IDX_MAX 256
 extern const float kLog2Table[LOG_LOOKUP_IDX_MAX];
 extern const float kSLog2Table[LOG_LOOKUP_IDX_MAX];
-float VP8LFastLog2Slow(int v);
-float VP8LFastSLog2Slow(int v);
+typedef float (*VP8LFastLog2SlowFunc)(int v);
+
+extern VP8LFastLog2SlowFunc VP8LFastLog2Slow;
+extern VP8LFastLog2SlowFunc VP8LFastSLog2Slow;
+
 static WEBP_INLINE float VP8LFastLog2(int v) {
   return (v < LOG_LOOKUP_IDX_MAX) ? kLog2Table[v] : VP8LFastLog2Slow(v);
 }
