@@ -21,6 +21,7 @@
 #include <arm_neon.h>
 
 #include "../enc/vp8enci.h"
+
 //------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
 
@@ -251,7 +252,101 @@ static void ITransform(const uint8_t* ref,
   }
 }
 
+// Load all 4x4 pixels into a single uint32x4_t variable.
+static uint8x16_t Load4x4(const uint8_t* src) {
+  uint32x4_t out = { 0, 0, 0, 0 };
+  out = vld1q_lane_u32((const uint32_t*)(src + 0 * BPS), out, 0);
+  out = vld1q_lane_u32((const uint32_t*)(src + 1 * BPS), out, 1);
+  out = vld1q_lane_u32((const uint32_t*)(src + 2 * BPS), out, 2);
+  out = vld1q_lane_u32((const uint32_t*)(src + 3 * BPS), out, 3);
+  return vreinterpretq_u8_u32(out);
+}
+
 // Forward transform.
+
+#if 0  // #ifdef USE_INTRINSICS
+
+static WEBP_INLINE void Transpose4x4_S16(const int16x4_t A, const int16x4_t B,
+                                         const int16x4_t C, const int16x4_t D,
+                                         int16x8_t* const out01,
+                                         int16x8_t* const out32) {
+  const int16x4x2_t AB = vtrn_s16(A, B);
+  const int16x4x2_t CD = vtrn_s16(C, D);
+  const int32x2x2_t tmp02 = vtrn_s32(vreinterpret_s32_s16(AB.val[0]),
+                                     vreinterpret_s32_s16(CD.val[0]));
+  const int32x2x2_t tmp13 = vtrn_s32(vreinterpret_s32_s16(AB.val[1]),
+                                     vreinterpret_s32_s16(CD.val[1]));
+  *out01 = vreinterpretq_s16_s64(
+      vcombine_s64(vreinterpret_s64_s32(tmp02.val[0]),
+                   vreinterpret_s64_s32(tmp13.val[0])));
+  *out32 = vreinterpretq_s16_s64(
+      vcombine_s64(vreinterpret_s64_s32(tmp13.val[1]),
+                   vreinterpret_s64_s32(tmp02.val[1])));
+}
+
+static WEBP_INLINE int16x8_t DiffU8ToS16(const uint8x8_t a,
+                                         const uint8x8_t b) {
+  return vreinterpretq_s16_u16(vsubl_u8(a, b));
+}
+
+static void FTransform(const uint8_t* src, const uint8_t* ref,
+                       int16_t* out) {
+  int16x8_t d0d1, d3d2;   // working 4x4 int16 variables
+  {
+    const uint8x16_t S0 = Load4x4(src);
+    const uint8x16_t R0 = Load4x4(ref);
+    const int16x8_t D0D1 = DiffU8ToS16(vget_low_u8(S0), vget_low_u8(R0));
+    const int16x8_t D2D3 = DiffU8ToS16(vget_high_u8(S0), vget_high_u8(R0));
+    const int16x4_t D0 = vget_low_s16(D0D1);
+    const int16x4_t D1 = vget_high_s16(D0D1);
+    const int16x4_t D2 = vget_low_s16(D2D3);
+    const int16x4_t D3 = vget_high_s16(D2D3);
+    Transpose4x4_S16(D0, D1, D2, D3, &d0d1, &d3d2);
+  }
+  {    // 1rst pass
+    const int32x4_t kCst937 = vdupq_n_s32(937);
+    const int32x4_t kCst1812 = vdupq_n_s32(1812);
+    const int16x8_t a0a1 = vaddq_s16(d0d1, d3d2);   // d0+d3 | d1+d2   (=a0|a1)
+    const int16x8_t a3a2 = vsubq_s16(d0d1, d3d2);   // d0-d3 | d1-d2   (=a3|a2)
+    const int16x8_t a0a1_2 = vshlq_n_s16(a0a1, 3);
+    const int16x4_t tmp0 = vadd_s16(vget_low_s16(a0a1_2),
+                                    vget_high_s16(a0a1_2));
+    const int16x4_t tmp2 = vsub_s16(vget_low_s16(a0a1_2),
+                                    vget_high_s16(a0a1_2));
+    const int32x4_t a3_2217 = vmull_n_s16(vget_low_s16(a3a2), 2217);
+    const int32x4_t a2_2217 = vmull_n_s16(vget_high_s16(a3a2), 2217);
+    const int32x4_t a2_p_a3 = vmlal_n_s16(a2_2217, vget_low_s16(a3a2), 5352);
+    const int32x4_t a3_m_a2 = vmlsl_n_s16(a3_2217, vget_high_s16(a3a2), 5352);
+    const int16x4_t tmp1 = vshrn_n_s32(vaddq_s32(a2_p_a3, kCst1812), 9);
+    const int16x4_t tmp3 = vshrn_n_s32(vaddq_s32(a3_m_a2, kCst937), 9);
+    Transpose4x4_S16(tmp0, tmp1, tmp2, tmp3, &d0d1, &d3d2);
+  }
+  {    // 2nd pass
+    // the (1<<16) addition is for the replacement: a3!=0  <-> 1-(a3==0)
+    const int32x4_t kCst12000 = vdupq_n_s32(12000 + (1 << 16));
+    const int32x4_t kCst51000 = vdupq_n_s32(51000);
+    const int16x8_t a0a1 = vaddq_s16(d0d1, d3d2);   // d0+d3 | d1+d2   (=a0|a1)
+    const int16x8_t a3a2 = vsubq_s16(d0d1, d3d2);   // d0-d3 | d1-d2   (=a3|a2)
+    const int16x4_t a0_k7 = vadd_s16(vget_low_s16(a0a1), vdup_n_s16(7));
+    const int16x4_t out0 = vshr_n_s16(vadd_s16(a0_k7, vget_high_s16(a0a1)), 4);
+    const int16x4_t out2 = vshr_n_s16(vsub_s16(a0_k7, vget_high_s16(a0a1)), 4);
+    const int32x4_t a3_2217 = vmull_n_s16(vget_low_s16(a3a2), 2217);
+    const int32x4_t a2_2217 = vmull_n_s16(vget_high_s16(a3a2), 2217);
+    const int32x4_t a2_p_a3 = vmlal_n_s16(a2_2217, vget_low_s16(a3a2), 5352);
+    const int32x4_t a3_m_a2 = vmlsl_n_s16(a3_2217, vget_high_s16(a3a2), 5352);
+    const int16x4_t tmp1 = vaddhn_s32(a2_p_a3, kCst12000);
+    const int16x4_t out3 = vaddhn_s32(a3_m_a2, kCst51000);
+    const int16x4_t a3_eq_0 =
+        vreinterpret_s16_u16(vceq_s16(vget_low_s16(a3a2), vdup_n_s16(0)));
+    const int16x4_t out1 = vadd_s16(tmp1, a3_eq_0);
+    vst1_s16(out +  0, out0);
+    vst1_s16(out +  4, out1);
+    vst1_s16(out +  8, out2);
+    vst1_s16(out + 12, out3);
+  }
+}
+
+#else
 
 // adapted from vp8/encoder/arm/neon/shortfdct_neon.asm
 static const int16_t kCoeff16[] = {
@@ -376,6 +471,8 @@ static void FTransform(const uint8_t* src, const uint8_t* ref,
       "q10", "q11", "q12", "q13"       // clobbered
   );
 }
+
+#endif
 
 static WEBP_INLINE int32x4x4_t Transpose4x4(const int32x4x4_t rows) {
   uint64x2x2_t row01, row23;
@@ -737,31 +834,16 @@ static int SSE8x8(const uint8_t* a, const uint8_t* b) {
   return SumToInt(sum);
 }
 
-#define LOAD_LANE_32b(src, VALUE, LANE) \
-    (VALUE) = vld1q_lane_u32((const uint32_t*)(src), (VALUE), (LANE))
-
 static int SSE4x4(const uint8_t* a, const uint8_t* b) {
-  uint32x4_t a0 = { 0, 0, 0, 0 };
-  uint32x4_t b0 = { 0, 0, 0, 0 };
-  // Load all 4x4 pixels into a single uint32x4_t variable.
-  LOAD_LANE_32b(a + 0 * BPS, a0, 0);
-  LOAD_LANE_32b(a + 1 * BPS, a0, 1);
-  LOAD_LANE_32b(a + 2 * BPS, a0, 2);
-  LOAD_LANE_32b(a + 3 * BPS, a0, 3);
-  LOAD_LANE_32b(b + 0 * BPS, b0, 0);
-  LOAD_LANE_32b(b + 1 * BPS, b0, 1);
-  LOAD_LANE_32b(b + 2 * BPS, b0, 2);
-  LOAD_LANE_32b(b + 3 * BPS, b0, 3);
-  {
-    const uint8x16_t abs_diff = vabdq_u8(vreinterpretq_u8_u32(a0),
-                                         vreinterpretq_u8_u32(b0));
-    const uint16x8_t prod_l = vmull_u8(vget_low_u8(abs_diff),
-                                       vget_low_u8(abs_diff));
-    const uint16x8_t prod_h = vmull_u8(vget_high_u8(abs_diff),
-                                       vget_high_u8(abs_diff));
-    const uint32x4_t sum = vpaddlq_u16(vaddq_u16(prod_h, prod_l));
-    return SumToInt(sum);
-  }
+  const uint8x16_t a0 = Load4x4(a);
+  const uint8x16_t b0 = Load4x4(b);
+  const uint8x16_t abs_diff = vabdq_u8(a0, b0);
+  const uint16x8_t prod_l = vmull_u8(vget_low_u8(abs_diff),
+                                     vget_low_u8(abs_diff));
+  const uint16x8_t prod_h = vmull_u8(vget_high_u8(abs_diff),
+                                     vget_high_u8(abs_diff));
+  const uint32x4_t sum = vpaddlq_u16(vaddq_u16(prod_h, prod_l));
+  return SumToInt(sum);
 }
 
 #undef LOAD_LANE_32b
