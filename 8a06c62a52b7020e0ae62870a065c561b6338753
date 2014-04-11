@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//uTw\u003d",
+        "filename": "src/enc/histogram.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-11T18:21:31Z",
+      "side": 1,
+      "message": "this code should go to lossless_mips32.c\n(and, i guess, lossless.c for the reference plain-C code)",
+      "revId": "8a06c62a52b7020e0ae62870a065c561b6338753",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//uT0\u003d",
+        "filename": "src/enc/histogram.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-11T18:21:31Z",
+      "side": 1,
+      "message": "the name is strange (Histogram? It\u0027s about Huffman, not histogram)",
+      "revId": "8a06c62a52b7020e0ae62870a065c561b6338753",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//uUA\u003d",
+        "filename": "src/enc/vp8enci.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-11T18:21:31Z",
+      "side": 1,
+      "message": "this function should be merged with VP8LDspInit()",
+      "revId": "8a06c62a52b7020e0ae62870a065c561b6338753",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
