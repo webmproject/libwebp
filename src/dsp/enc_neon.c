@@ -579,6 +579,134 @@ static void FTransformWHT(const int16_t* src, int16_t* out) {
 // We try to match the spectral content (weighted) between source and
 // reconstructed samples.
 
+// This code works but is *slower* than the inlined-asm version below
+// (with gcc-4.6). So we disable it for now. Later, it'll be conditional to
+// USE_INTRINSICS define.
+// With gcc-4.8, it's only slightly slower than the inlined.
+#if 0  // #ifdef USE_INTRINSICS
+
+// Zero extend an uint16x4_t 'v' to an int32x4_t.
+static WEBP_INLINE int32x4_t ConvertU16ToS32(uint16x4_t v) {
+  return vreinterpretq_s32_u32(vmovl_u16(v));
+}
+
+// Does a regular 4x4 transpose followed by an adjustment of the upper columns
+// in the inner rows to restore the source order of differences,
+// i.e., a0 - a1 | a3 - a2.
+static WEBP_INLINE int32x4x4_t DistoTranspose4x4(const int32x4x4_t rows) {
+  int32x4x4_t out = Transpose4x4(rows);
+  // restore source order in the columns containing differences.
+  const int32x2_t r1h = vget_high_s32(out.val[1]);
+  const int32x2_t r2h = vget_high_s32(out.val[2]);
+  out.val[1] = vcombine_s32(vget_low_s32(out.val[1]), r2h);
+  out.val[2] = vcombine_s32(vget_low_s32(out.val[2]), r1h);
+  return out;
+}
+
+static WEBP_INLINE int32x4x4_t DistoHorizontalPass(const uint8x8_t r0r1,
+                                                   const uint8x8_t r2r3) {
+  // a0 = in[0] + in[2] | a1 = in[1] + in[3]
+  const uint16x8_t a0a1 = vaddl_u8(r0r1, r2r3);
+  // a3 = in[0] - in[2] | a2 = in[1] - in[3]
+  const uint16x8_t a3a2 = vsubl_u8(r0r1, r2r3);
+  const int32x4_t tmp0 = vpaddlq_s16(vreinterpretq_s16_u16(a0a1));  // a0 + a1
+  const int32x4_t tmp1 = vpaddlq_s16(vreinterpretq_s16_u16(a3a2));  // a3 + a2
+  // no pairwise subtraction; reorder to perform tmp[2]/tmp[3] calculations.
+  // a0a0 a3a3 a0a0 a3a3 a0a0 a3a3 a0a0 a3a3
+  // a1a1 a2a2 a1a1 a2a2 a1a1 a2a2 a1a1 a2a2
+  const int16x8x2_t transpose =
+      vtrnq_s16(vreinterpretq_s16_u16(a0a1), vreinterpretq_s16_u16(a3a2));
+  // tmp[3] = a0 - a1 | tmp[2] = a3 - a2
+  const int32x4_t tmp32_1 = vsubl_s16(vget_low_s16(transpose.val[0]),
+                                      vget_low_s16(transpose.val[1]));
+  const int32x4_t tmp32_2 = vsubl_s16(vget_high_s16(transpose.val[0]),
+                                      vget_high_s16(transpose.val[1]));
+  // [0]: tmp[3] [1]: tmp[2]
+  const int32x4x2_t split = vtrnq_s32(tmp32_1, tmp32_2);
+  const int32x4x4_t res = { { tmp0, tmp1, split.val[1], split.val[0] } };
+  return res;
+}
+
+static WEBP_INLINE int32x4x4_t DistoVerticalPass(const int32x4x4_t rows) {
+  // a0 = tmp[0 + i] + tmp[8 + i];
+  const int32x4_t a0 = vaddq_s32(rows.val[0], rows.val[1]);
+  // a1 = tmp[4 + i] + tmp[12+ i];
+  const int32x4_t a1 = vaddq_s32(rows.val[2], rows.val[3]);
+  // a2 = tmp[4 + i] - tmp[12+ i];
+  const int32x4_t a2 = vsubq_s32(rows.val[2], rows.val[3]);
+  // a3 = tmp[0 + i] - tmp[8 + i];
+  const int32x4_t a3 = vsubq_s32(rows.val[0], rows.val[1]);
+  const int32x4_t b0 = vqabsq_s32(vaddq_s32(a0, a1));  // abs(a0 + a1)
+  const int32x4_t b1 = vqabsq_s32(vaddq_s32(a3, a2));  // abs(a3 + a2)
+  const int32x4_t b2 = vabdq_s32(a3, a2);              // abs(a3 - a2)
+  const int32x4_t b3 = vabdq_s32(a0, a1);              // abs(a0 - a1)
+  const int32x4x4_t res = { { b0, b1, b2, b3 } };
+  return res;
+}
+
+// Calculate the weighted sum of the rows in 'b'.
+static WEBP_INLINE int64x1_t DistoSum(const int32x4x4_t b,
+                                      const int32x4_t w0, const int32x4_t w1,
+                                      const int32x4_t w2, const int32x4_t w3) {
+  const int32x4_t s0 = vmulq_s32(w0, b.val[0]);
+  const int32x4_t s1 = vmlaq_s32(s0, w1, b.val[1]);
+  const int32x4_t s2 = vmlaq_s32(s1, w2, b.val[2]);
+  const int32x4_t s3 = vmlaq_s32(s2, w3, b.val[3]);
+  const int64x2_t sum1 = vpaddlq_s32(s3);
+  const int64x1_t sum2 = vadd_s64(vget_low_s64(sum1), vget_high_s64(sum1));
+  return sum2;
+}
+
+#define LOAD_LANE_32b(src, VALUE, LANE) \
+    (VALUE) = vld1q_lane_u32((const uint32_t*)(src), (VALUE), (LANE))
+
+// Hadamard transform
+// Returns the weighted sum of the absolute value of transformed coefficients.
+static int Disto4x4(const uint8_t* const a, const uint8_t* const b,
+                    const uint16_t* const w) {
+  uint32x4_t d0d1 = { 0, 0, 0, 0 };
+  uint32x4_t d2d3 = { 0, 0, 0, 0 };
+  LOAD_LANE_32b(a + 0 * BPS, d0d1, 0);  // a00 a01 a02 a03
+  LOAD_LANE_32b(a + 1 * BPS, d0d1, 1);  // a10 a11 a12 a13
+  LOAD_LANE_32b(b + 0 * BPS, d0d1, 2);  // b00 b01 b02 b03
+  LOAD_LANE_32b(b + 1 * BPS, d0d1, 3);  // b10 b11 b12 b13
+  LOAD_LANE_32b(a + 2 * BPS, d2d3, 0);  // a20 a21 a22 a23
+  LOAD_LANE_32b(a + 3 * BPS, d2d3, 1);  // a30 a31 a32 a33
+  LOAD_LANE_32b(b + 2 * BPS, d2d3, 2);  // b20 b21 b22 b23
+  LOAD_LANE_32b(b + 3 * BPS, d2d3, 3);  // b30 b31 b32 b33
+
+  {
+    // a00 a01 a20 a21 a10 a11 a30 a31 b00 b01 b20 b21 b10 b11 b30 b31
+    // a02 a03 a22 a23 a12 a13 a32 a33 b02 b03 b22 b23 b12 b13 b32 b33
+    const uint16x8x2_t tmp =
+        vtrnq_u16(vreinterpretq_u16_u32(d0d1), vreinterpretq_u16_u32(d2d3));
+    const uint8x16_t d0d1u8 = vreinterpretq_u8_u16(tmp.val[0]);
+    const uint8x16_t d2d3u8 = vreinterpretq_u8_u16(tmp.val[1]);
+    const int32x4x4_t hpass_a = DistoHorizontalPass(vget_low_u8(d0d1u8),
+                                                    vget_low_u8(d2d3u8));
+    const int32x4x4_t hpass_b = DistoHorizontalPass(vget_high_u8(d0d1u8),
+                                                    vget_high_u8(d2d3u8));
+    const int32x4x4_t tmp_a = DistoTranspose4x4(hpass_a);
+    const int32x4x4_t tmp_b = DistoTranspose4x4(hpass_b);
+    const int32x4x4_t vpass_a = DistoVerticalPass(tmp_a);
+    const int32x4x4_t vpass_b = DistoVerticalPass(tmp_b);
+    const int32x4_t w0 = ConvertU16ToS32(vld1_u16(w + 0));
+    const int32x4_t w1 = ConvertU16ToS32(vld1_u16(w + 4));
+    const int32x4_t w2 = ConvertU16ToS32(vld1_u16(w + 8));
+    const int32x4_t w3 = ConvertU16ToS32(vld1_u16(w + 12));
+    const int64x1_t sum1 = DistoSum(vpass_a, w0, w1, w2, w3);
+    const int64x1_t sum2 = DistoSum(vpass_b, w0, w1, w2, w3);
+    const int32x2_t diff = vabd_s32(vreinterpret_s32_s64(sum1),
+                                    vreinterpret_s32_s64(sum2));
+    const int32x2_t res = vshr_n_s32(diff, 5);
+    return vget_lane_s32(res, 0);
+  }
+}
+
+#undef LOAD_LANE_32b
+
+#else
+
 // Hadamard transform
 // Returns the weighted sum of the absolute value of transformed coefficients.
 static int Disto4x4(const uint8_t* const a, const uint8_t* const b,
@@ -767,6 +895,8 @@ static int Disto4x4(const uint8_t* const a, const uint8_t* const b,
   return sum;
 }
 
+#endif  // USE_INTRINSICS
+
 static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
                       const uint16_t* const w) {
   int D = 0;
@@ -871,8 +1001,6 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
   prod = vmlal_u8(prod, vget_high_u8(abs_diff), vget_high_u8(abs_diff));
   return SumToInt(vpaddlq_u16(prod));
 }
-
-#undef LOAD_LANE_32b
 
 #endif    // USE_INTRINSICS
 
