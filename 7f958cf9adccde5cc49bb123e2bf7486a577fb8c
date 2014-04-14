@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//t8I\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-14T03:00:31Z",
+      "side": 1,
+      "message": "this move doesn\u0027t look to serve anything",
+      "revId": "7f958cf9adccde5cc49bb123e2bf7486a577fb8c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//t8A\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-14T03:00:31Z",
+      "side": 1,
+      "message": "so this proved better in this case than the earlier LOAD_LANE_32b?",
+      "revId": "7f958cf9adccde5cc49bb123e2bf7486a577fb8c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//t8E\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-14T03:00:31Z",
+      "side": 1,
+      "message": "comment\u0027s a bit redundant here and 327",
+      "revId": "7f958cf9adccde5cc49bb123e2bf7486a577fb8c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//t8M\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-14T03:00:31Z",
+      "side": 1,
+      "message": "gcc 4.8 seems to be doing ok reordering these based on dependencies",
+      "revId": "7f958cf9adccde5cc49bb123e2bf7486a577fb8c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
