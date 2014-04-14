@@ -154,9 +154,7 @@ static WEBP_INLINE uint32_t Average2(const uint32_t* const a,
   const uint8x8_t a1 = vreinterpret_u8_u64(a0);
   const uint8x8_t b1 = vreinterpret_u8_u64(b0);
   const uint8x8_t avg = vhadd_u8(a1, b1);
-  uint32_t ret;
-  vst1_lane_u32(&ret, vreinterpret_u32_u8(avg), 0);
-  return ret;
+  return vget_lane_u32(vreinterpret_u32_u8(avg), 0);
 }
 
 static WEBP_INLINE uint32_t Average3(const uint32_t* const a,
@@ -168,9 +166,7 @@ static WEBP_INLINE uint32_t Average3(const uint32_t* const a,
   const uint8x8_t c1 = vreinterpret_u8_u64(c0);
   const uint8x8_t avg1 = vhadd_u8(a1, c1);
   const uint8x8_t avg2 = vhadd_u8(avg1, b1);
-  uint32_t ret;
-  vst1_lane_u32(&ret, vreinterpret_u32_u8(avg2), 0);
-  return ret;
+  return vget_lane_u32(vreinterpret_u32_u8(avg2), 0);
 }
 
 static WEBP_INLINE uint32_t Average4(const uint32_t* const a,
@@ -185,9 +181,7 @@ static WEBP_INLINE uint32_t Average4(const uint32_t* const a,
   const uint8x8_t avg1 = vhadd_u8(a1, b1);
   const uint8x8_t avg2 = vhadd_u8(c1, d1);
   const uint8x8_t avg3 = vhadd_u8(avg1, avg2);
-  uint32_t ret;
-  vst1_lane_u32(&ret, vreinterpret_u32_u8(avg3), 0);
-  return ret;
+  return vget_lane_u32(vreinterpret_u32_u8(avg3), 0);
 }
 
 static uint32_t Predictor5(uint32_t left, const uint32_t* const top) {
@@ -221,7 +215,7 @@ static uint32_t Predictor10(uint32_t left, const uint32_t* const top) {
 static WEBP_INLINE uint32_t Select(const uint32_t* const c0,
                                    const uint32_t* const c1,
                                    const uint32_t* const c2) {
-  const uint64x1_t C0 = { *c0, 0 }, C1 = { *c1, 0 }, C2 = { *c2, 0 };
+  const uint64x1_t C0 = { *c0 }, C1 = { *c1 }, C2 = { *c2 };
   const uint8x8_t p0 = vreinterpret_u8_u64(C0);
   const uint8x8_t p1 = vreinterpret_u8_u64(C1);
   const uint8x8_t p2 = vreinterpret_u8_u64(C2);
@@ -230,8 +224,7 @@ static WEBP_INLINE uint32_t Select(const uint32_t* const c0,
   const int16x4_t sum_bc = vreinterpret_s16_u16(vpaddl_u8(bc));
   const int16x4_t sum_ac = vreinterpret_s16_u16(vpaddl_u8(ac));
   const int32x2_t diff = vpaddl_s16(vsub_s16(sum_bc, sum_ac));
-  int32_t pa_minus_pb;
-  vst1_lane_s32(&pa_minus_pb, diff, 0);
+  const int32_t pa_minus_pb = vget_lane_s32(diff, 0);
   return (pa_minus_pb <= 0) ? *c0 : *c1;
 }
 
@@ -242,16 +235,14 @@ static uint32_t Predictor11(uint32_t left, const uint32_t* const top) {
 static WEBP_INLINE uint32_t ClampedAddSubtractFull(const uint32_t* const c0,
                                                    const uint32_t* const c1,
                                                    const uint32_t* const c2) {
-  const uint64x1_t C0 = { *c0, 0 }, C1 = { *c1, 0 }, C2 = { *c2, 0 };
+  const uint64x1_t C0 = { *c0 }, C1 = { *c1 }, C2 = { *c2 };
   const uint8x8_t p0 = vreinterpret_u8_u64(C0);
   const uint8x8_t p1 = vreinterpret_u8_u64(C1);
   const uint8x8_t p2 = vreinterpret_u8_u64(C2);
   const uint16x8_t sum0 = vaddl_u8(p0, p1);                // add and widen
   const uint16x8_t sum1 = vqsubq_u16(sum0, vmovl_u8(p2));  // widen and subtract
   const uint8x8_t out = vqmovn_u16(sum1);                  // narrow and clamp
-  uint32_t ret;
-  vst1_lane_u32(&ret, vreinterpret_u32_u8(out), 0);
-  return ret;
+  return vget_lane_u32(vreinterpret_u32_u8(out), 0);
 }
 
 static uint32_t Predictor12(uint32_t left, const uint32_t* const top) {
@@ -261,7 +252,7 @@ static uint32_t Predictor12(uint32_t left, const uint32_t* const top) {
 static WEBP_INLINE uint32_t ClampedAddSubtractHalf(const uint32_t* const c0,
                                                    const uint32_t* const c1,
                                                    const uint32_t* const c2) {
-  const uint64x1_t C0 = { *c0, 0 }, C1 = { *c1, 0 }, C2 = { *c2, 0 };
+  const uint64x1_t C0 = { *c0 }, C1 = { *c1 }, C2 = { *c2 };
   const uint8x8_t p0 = vreinterpret_u8_u64(C0);
   const uint8x8_t p1 = vreinterpret_u8_u64(C1);
   const uint8x8_t p2 = vreinterpret_u8_u64(C2);
@@ -269,9 +260,7 @@ static WEBP_INLINE uint32_t ClampedAddSubtractHalf(const uint32_t* const c0,
   const uint8x8_t ab = vshr_n_u8(vqsub_u8(avg, p2), 1);    // (a-b)>>1 saturated
   const uint8x8_t ba = vshr_n_u8(vqsub_u8(p2, avg), 1);    // (b-a)>>1 saturated
   const uint8x8_t out = vqsub_u8(vqadd_u8(avg, ab), ba);
-  uint32_t ret;
-  vst1_lane_u32(&ret, vreinterpret_u32_u8(out), 0);
-  return ret;
+  return vget_lane_u32(vreinterpret_u32_u8(out), 0);
 }
 
 static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
