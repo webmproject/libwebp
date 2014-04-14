@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//t0o\u003d",
+        "filename": "src/enc/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2014-04-14T22:36:55Z",
+      "side": 1,
+      "message": "if (streak \u003e 3) ++cnts[population[i] !\u003d 0];",
+      "revId": "0fa305799d05e619fd63904115b93117b1cc0a6c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//t0k\u003d",
+        "filename": "src/enc/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2014-04-14T22:36:55Z",
+      "side": 1,
+      "message": "if (streak \u003e 3) ++cnts[population[i] !\u003d 0];",
+      "revId": "0fa305799d05e619fd63904115b93117b1cc0a6c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//t0g\u003d",
+        "filename": "src/enc/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2014-04-14T22:36:55Z",
+      "side": 1,
+      "message": "if (streak \u003e 3) ++cnts[xy !\u003d 0];",
+      "revId": "0fa305799d05e619fd63904115b93117b1cc0a6c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//t0c\u003d",
+        "filename": "src/enc/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2014-04-14T22:36:55Z",
+      "side": 1,
+      "message": "if (streak \u003e 3) ++cnts[xy !\u003d 0];",
+      "revId": "0fa305799d05e619fd63904115b93117b1cc0a6c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
