@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//t6M\u003d",
+        "filename": "src/dsp/lossless_mips32.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-14T16:08:08Z",
+      "side": 1,
+      "message": "this patch introduces quite some code-duplication, esp. related to magic constants like this one.\n\nI think a better approach (or: starting point) would be this yet-unfinished patch:\n https://gerrit.chromium.org/gerrit/69733\nbecause you would only need to re-implement the streak-counting function in the middle.\n\nHowever, this patch is not strictly 1:1 equivalent to the function it replaces, because of rounding error. I still need to evaluate whether this is ok, or if we can do better by changing the constants.",
+      "revId": "5e33a211bf0e9dabf8ad2c44a604a4ae34c7a0cf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
