@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//t7s\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-14T07:57:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//t8I\u003d",
+      "revId": "7f958cf9adccde5cc49bb123e2bf7486a577fb8c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//t8A\u003d",
         "filename": "src/dsp/enc_neon.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2014-04-14T03:00:31Z",
       "side": 1,
       "message": "so this proved better in this case than the earlier LOAD_LANE_32b?",
+      "revId": "7f958cf9adccde5cc49bb123e2bf7486a577fb8c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//t7U\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-14T07:57:52Z",
+      "side": 1,
+      "message": "it\u0027s a wash. The main problem is still the missing post-increment on the vld1.32\nI tried several ways to twist gcc\u0027s arm (ah ah) here, but to no avail.\n\n\n-\u003e i\u0027ve reverted to vld1q_lane_u32 version, so we don\u0027t have the assumption that eight pixels are always accessible.",
+      "parentUuid": "AAAAdn//t8A\u003d",
       "revId": "7f958cf9adccde5cc49bb123e2bf7486a577fb8c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//t7o\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-14T07:57:52Z",
+      "side": 1,
+      "message": "removed",
+      "parentUuid": "AAAAdn//t8E\u003d",
+      "revId": "7f958cf9adccde5cc49bb123e2bf7486a577fb8c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//t8M\u003d",
         "filename": "src/dsp/enc_neon.c",
         "patchSetId": 3
@@ -64,6 +118,24 @@
       "writtenOn": "2014-04-14T03:00:31Z",
       "side": 1,
       "message": "gcc 4.8 seems to be doing ok reordering these based on dependencies",
+      "revId": "7f958cf9adccde5cc49bb123e2bf7486a577fb8c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//t7k\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-14T07:57:52Z",
+      "side": 1,
+      "message": "yes, the \u0027second pass\u0027 part is actually pretty ok. Just the register allocation is sometimes weird.",
+      "parentUuid": "AAAAdn//t8M\u003d",
       "revId": "7f958cf9adccde5cc49bb123e2bf7486a577fb8c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
