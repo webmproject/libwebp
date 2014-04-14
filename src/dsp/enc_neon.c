@@ -788,12 +788,9 @@ static WEBP_INLINE void AccumulateSSE16(const uint8_t* const a,
   const uint8x16_t a0 = vld1q_u8(a);
   const uint8x16_t b0 = vld1q_u8(b);
   const uint8x16_t abs_diff = vabdq_u8(a0, b0);
-  const uint16x8_t prod_l = vmull_u8(vget_low_u8(abs_diff),
-                                     vget_low_u8(abs_diff));
-  const uint16x8_t prod_h = vmull_u8(vget_high_u8(abs_diff),
-                                     vget_high_u8(abs_diff));
-  const uint16x8_t prod = vaddq_u16(prod_h, prod_l);
-  *sum = vpadalq_u16(*sum, prod);      // pair-wise multiply and accumulate
+  uint16x8_t prod = vmull_u8(vget_low_u8(abs_diff), vget_low_u8(abs_diff));
+  prod = vmlal_u8(prod, vget_high_u8(abs_diff), vget_high_u8(abs_diff));
+  *sum = vpadalq_u16(*sum, prod);      // pair-wise add and accumulate
 }
 
 // Horizontal sum of all four uint32_t values in 'sum'.
@@ -838,12 +835,9 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
   const uint8x16_t a0 = Load4x4(a);
   const uint8x16_t b0 = Load4x4(b);
   const uint8x16_t abs_diff = vabdq_u8(a0, b0);
-  const uint16x8_t prod_l = vmull_u8(vget_low_u8(abs_diff),
-                                     vget_low_u8(abs_diff));
-  const uint16x8_t prod_h = vmull_u8(vget_high_u8(abs_diff),
-                                     vget_high_u8(abs_diff));
-  const uint32x4_t sum = vpaddlq_u16(vaddq_u16(prod_h, prod_l));
-  return SumToInt(sum);
+  uint16x8_t prod = vmull_u8(vget_low_u8(abs_diff), vget_low_u8(abs_diff));
+  prod = vmlal_u8(prod, vget_high_u8(abs_diff), vget_high_u8(abs_diff));
+  return SumToInt(vpaddlq_u16(prod));
 }
 
 #undef LOAD_LANE_32b
