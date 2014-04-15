@@ -90,6 +90,13 @@ static WEBP_INLINE int VP8LHistogramNumCodes(int palette_code_bits) {
       ((palette_code_bits > 0) ? (1 << palette_code_bits) : 0);
 }
 
+// Used to finalized the Huffman cost:
+// cnt_z / cnt_nz: counts the number of 0's and non-0's
+// streak_{z,nz}_le3 / streak_{z,nz}_gt3: number of streaks larger than 3
+// or less-or-equal than 3.
+double VP8FinalHuffmanCost(int cnt_z, int streak_z_le3, int streak_z_gt3,
+                           int cnt_nz, int streak_nz_le3, int streak_nz_gt3);
+
 // Builds the histogram image.
 int VP8LGetHistoImageSymbols(int xsize, int ysize,
                              const VP8LBackwardRefs* const refs,
