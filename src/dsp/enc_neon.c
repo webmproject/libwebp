@@ -780,6 +780,39 @@ static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
   return D;
 }
 
+
+#if defined(USE_INTRINSICS)
+
+//------------------------------------------------------------------------------
+
+static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
+                             int start_block, int end_block,
+                             VP8Histogram* const histo) {
+  const uint16x8_t max_coeff_thresh = vdupq_n_u16(MAX_COEFF_THRESH);
+  int j;
+  for (j = start_block; j < end_block; ++j) {
+    int16_t out[16];
+    FTransform(ref + VP8DspScan[j], pred + VP8DspScan[j], out);
+    {
+      int k;
+      const int16x8_t a0 = vld1q_s16(out +  0);
+      const int16x8_t b0 = vld1q_s16(out +  8);
+      const uint16x8_t a1 = vreinterpretq_u16_s16(vabsq_s16(a0));
+      const uint16x8_t b1 = vreinterpretq_u16_s16(vabsq_s16(b0));
+      const uint16x8_t a2 = vshrq_n_u16(a1, 3);
+      const uint16x8_t b2 = vshrq_n_u16(b1, 3);
+      const uint16x8_t a3 = vminq_u16(a2, max_coeff_thresh);
+      const uint16x8_t b3 = vminq_u16(b2, max_coeff_thresh);
+      vst1q_s16(out + 0, vreinterpretq_s16_u16(a3));
+      vst1q_s16(out + 8, vreinterpretq_s16_u16(b3));
+      // Convert coefficients to bin.
+      for (k = 0; k < 16; ++k) {
+        histo->distribution[out[k]]++;
+      }
+    }
+  }
+}
+
 //------------------------------------------------------------------------------
 
 static WEBP_INLINE void AccumulateSSE16(const uint8_t* const a,
@@ -848,6 +881,8 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
 
 #undef LOAD_LANE_32b
 
+#endif    // USE_INTRINSICS
+
 //------------------------------------------------------------------------------
 
 // Compilation with gcc4.6.3 is problematic for now. Disable this function then.
@@ -912,6 +947,7 @@ static int QuantizeBlock(int16_t in[16], int16_t out[16],
   if (*(uint64_t*)(out + 12) != 0) return 1;
   return 0;
 }
+
 #endif   // SKIP_QUANTIZE
 
 #endif   // WEBP_USE_NEON
@@ -931,10 +967,13 @@ void VP8EncDspInitNEON(void) {
   VP8TDisto4x4 = Disto4x4;
   VP8TDisto16x16 = Disto16x16;
 #if defined(USE_INTRINSICS)
+  VP8CollectHistogram = CollectHistogram;
   VP8SSE16x16 = SSE16x16;
   VP8SSE16x8 = SSE16x8;
   VP8SSE8x8 = SSE8x8;
   VP8SSE4x4 = SSE4x4;
+#else
+  (void)Load4x4;    // to avoid a warning
 #endif
 #if !defined(SKIP_QUANTIZE)
   VP8EncQuantizeBlock = QuantizeBlock;
