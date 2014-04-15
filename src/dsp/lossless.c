@@ -1458,6 +1458,24 @@ void VP8LBundleColorMap(const uint8_t* const row, int width,
   }
 }
 
+static double ExtraCost(const int* const population, int length) {
+  int i;
+  double cost = 0.;
+  for (i = 2; i < length - 2; ++i) cost += (i >> 1) * population[i + 2];
+  return cost;
+}
+
+static double ExtraCostCombined(const int* const X, const int* const Y,
+                                int length) {
+  int i;
+  double cost = 0.;
+  for (i = 2; i < length - 2; ++i) {
+    const int xy = X[i + 2] + Y[i + 2];
+    cost += (i >> 1) * xy;
+  }
+  return cost;
+}
+
 //------------------------------------------------------------------------------
 
 VP8LProcessBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
@@ -1475,6 +1493,9 @@ VP8LConvertFunc VP8LConvertBGRAToBGR;
 
 VP8LFastLog2SlowFunc VP8LFastLog2Slow;
 VP8LFastLog2SlowFunc VP8LFastSLog2Slow;
+
+VP8LCostFunc VP8LExtraCost;
+VP8LCostCombinedFunc VP8LExtraCostCombined;
 
 extern void VP8LDspInitSSE2(void);
 extern void VP8LDspInitNEON(void);
@@ -1497,6 +1518,9 @@ void VP8LDspInit(void) {
 
   VP8LFastLog2Slow = FastLog2Slow;
   VP8LFastSLog2Slow = FastSLog2Slow;
+
+  VP8LExtraCost = ExtraCost;
+  VP8LExtraCostCombined = ExtraCostCombined;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {

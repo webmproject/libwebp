@@ -9,7 +9,8 @@
 //
 // MIPS version of lossless functions
 //
-// Author(s):  Jovan Zelincevic (jovan.zelincevic@imgtec.com)
+// Author(s):  Djordje Pesut    (djordje.pesut@imgtec.com)
+//             Jovan Zelincevic (jovan.zelincevic@imgtec.com)
 
 #include "./dsp.h"
 #include "./lossless.h"
@@ -93,6 +94,100 @@ static float FastLog2SlowMIPS32(int v) {
   }
 }
 
+// C version of this function:
+//   int i = 0;
+//   int64_t cost = 0;
+//   int* pop = (int*)&population[4];
+//   const int* LoopEnd = (int*)&population[length];
+//   while (pop != LoopEnd) {
+//     ++i;
+//     cost += i * *pop;
+//     cost += i * *(pop + 1);
+//     pop += 2;
+//   }
+//   return (double)cost;
+static double ExtraCostMIPS32(const int* const population, int length) {
+  int i, temp0, temp1;
+  int* pop = (int*)&population[4];
+  const int* LoopEnd = (int*)&population[length];
+
+  __asm__ volatile(
+    "mult   $zero,    $zero                  \n\t"
+    "xor    %[i],     %[i],       %[i]       \n\t"
+    "beq    %[pop],   %[LoopEnd], 2f         \n\t"
+  "1:                                        \n\t"
+    "lw     %[temp0], 0(%[pop])              \n\t"
+    "lw     %[temp1], 4(%[pop])              \n\t"
+    "addiu  %[i],     %[i],       1          \n\t"
+    "addiu  %[pop],   %[pop],     8          \n\t"
+    "madd   %[i],     %[temp0]               \n\t"
+    "madd   %[i],     %[temp1]               \n\t"
+    "bne    %[pop],   %[LoopEnd], 1b         \n\t"
+  "2:                                        \n\t"
+    "mfhi   %[temp0]                         \n\t"
+    "mflo   %[temp1]                         \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1),
+      [i]"=&r"(i), [pop]"+r"(pop)
+    : [LoopEnd]"r"(LoopEnd)
+    : "memory", "hi", "lo"
+  );
+
+  return (double)((int64_t)temp0 << 32 | temp1);
+}
+
+// C version of this function:
+//   int i = 0;
+//   int64_t cost = 0;
+//   int* pX = (int*)&X[4];
+//   int* pY = (int*)&Y[4];
+//   const int* LoopEnd = (int*)&X[length];
+//   while (pX != LoopEnd) {
+//     const int xy0 = *pX + *pY;
+//     const int xy1 = *(pX + 1) + *(pY + 1);
+//     ++i;
+//     cost += i * xy0;
+//     cost += i * xy1;
+//     pX += 2;
+//     pY += 2;
+//   }
+//   return (double)cost;
+static double ExtraCostCombinedMIPS32(const int* const X, const int* const Y,
+                                      int length) {
+  int i, temp0, temp1, temp2, temp3;
+  int* pX = (int*)&X[4];
+  int* pY = (int*)&Y[4];
+  const int* LoopEnd = (int*)&X[length];
+
+  __asm__ volatile(
+    "mult   $zero,    $zero                  \n\t"
+    "xor    %[i],     %[i],       %[i]       \n\t"
+    "beq    %[pX],    %[LoopEnd], 2f         \n\t"
+  "1:                                        \n\t"
+    "lw     %[temp0], 0(%[pX])               \n\t"
+    "lw     %[temp1], 0(%[pY])               \n\t"
+    "lw     %[temp2], 4(%[pX])               \n\t"
+    "lw     %[temp3], 4(%[pY])               \n\t"
+    "addiu  %[i],     %[i],       1          \n\t"
+    "addu   %[temp0], %[temp0],   %[temp1]   \n\t"
+    "addu   %[temp2], %[temp2],   %[temp3]   \n\t"
+    "addiu  %[pX],    %[pX],      8          \n\t"
+    "addiu  %[pY],    %[pY],      8          \n\t"
+    "madd   %[i],     %[temp0]               \n\t"
+    "madd   %[i],     %[temp2]               \n\t"
+    "bne    %[pX],    %[LoopEnd], 1b         \n\t"
+  "2:                                        \n\t"
+    "mfhi   %[temp0]                         \n\t"
+    "mflo   %[temp1]                         \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1),
+      [temp2]"=&r"(temp2), [temp3]"=&r"(temp3),
+      [i]"=&r"(i), [pX]"+r"(pX), [pY]"+r"(pY)
+    : [LoopEnd]"r"(LoopEnd)
+    : "memory", "hi", "lo"
+  );
+
+  return (double)((int64_t)temp0 << 32 | temp1);
+}
+
 #endif  // WEBP_USE_MIPS32
 
 //------------------------------------------------------------------------------
@@ -104,5 +199,7 @@ void VP8LDspInitMIPS32(void) {
 #if defined(WEBP_USE_MIPS32)
   VP8LFastSLog2Slow = FastSLog2SlowMIPS32;
   VP8LFastLog2Slow = FastLog2SlowMIPS32;
+  VP8LExtraCost = ExtraCostMIPS32;
+  VP8LExtraCostCombined = ExtraCostCombinedMIPS32;
 #endif  // WEBP_USE_MIPS32
 }

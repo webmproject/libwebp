@@ -252,24 +252,6 @@ static double GetCombinedEntropy(const int* const X, const int* const Y,
   return BitsEntropyCombined(X, Y, length) + HuffmanCostCombined(X, Y, length);
 }
 
-static double ExtraCost(const int* const population, int length) {
-  int i;
-  double cost = 0.;
-  for (i = 2; i < length - 2; ++i) cost += (i >> 1) * population[i + 2];
-  return cost;
-}
-
-static double ExtraCostCombined(const int* const X, const int* const Y,
-                                int length) {
-  int i;
-  double cost = 0.;
-  for (i = 2; i < length - 2; ++i) {
-    const int xy = X[i + 2] + Y[i + 2];
-    cost += (i >> 1) * xy;
-  }
-  return cost;
-}
-
 // Estimates the Entropy + Huffman + other block overhead size cost.
 double VP8LHistogramEstimateBits(const VP8LHistogram* const p) {
   return
@@ -278,8 +260,8 @@ double VP8LHistogramEstimateBits(const VP8LHistogram* const p) {
       + PopulationCost(p->blue_, 256)
       + PopulationCost(p->alpha_, 256)
       + PopulationCost(p->distance_, NUM_DISTANCE_CODES)
-      + ExtraCost(p->literal_ + 256, NUM_LENGTH_CODES)
-      + ExtraCost(p->distance_, NUM_DISTANCE_CODES);
+      + VP8LExtraCost(p->literal_ + 256, NUM_LENGTH_CODES)
+      + VP8LExtraCost(p->distance_, NUM_DISTANCE_CODES);
 }
 
 double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p) {
@@ -289,8 +271,8 @@ double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p) {
       + BitsEntropy(p->blue_, 256)
       + BitsEntropy(p->alpha_, 256)
       + BitsEntropy(p->distance_, NUM_DISTANCE_CODES)
-      + ExtraCost(p->literal_ + 256, NUM_LENGTH_CODES)
-      + ExtraCost(p->distance_, NUM_DISTANCE_CODES);
+      + VP8LExtraCost(p->literal_ + 256, NUM_LENGTH_CODES)
+      + VP8LExtraCost(p->distance_, NUM_DISTANCE_CODES);
 }
 
 // -----------------------------------------------------------------------------
@@ -322,8 +304,8 @@ static int GetCombinedHistogramEntropy(const VP8LHistogram* const a,
                                                         b->palette_code_bits_;
   *cost += GetCombinedEntropy(a->literal_, b->literal_,
                               VP8LHistogramNumCodes(palette_code_bits));
-  *cost += ExtraCostCombined(a->literal_ + 256, b->literal_ + 256,
-                             NUM_LENGTH_CODES);
+  *cost += VP8LExtraCostCombined(a->literal_ + 256, b->literal_ + 256,
+                                 NUM_LENGTH_CODES);
   if (*cost > cost_threshold) return 0;
 
   *cost += GetCombinedEntropy(a->red_, b->red_, 256);
@@ -336,7 +318,8 @@ static int GetCombinedHistogramEntropy(const VP8LHistogram* const a,
   if (*cost > cost_threshold) return 0;
 
   *cost += GetCombinedEntropy(a->distance_, b->distance_, NUM_DISTANCE_CODES);
-  *cost += ExtraCostCombined(a->distance_, b->distance_, NUM_DISTANCE_CODES);
+  *cost += VP8LExtraCostCombined(a->distance_, b->distance_,
+                                 NUM_DISTANCE_CODES);
   if (*cost > cost_threshold) return 0;
 
   return 1;
@@ -426,10 +409,10 @@ static void UpdateHistogramCost(VP8LHistogram* const h) {
   const double alpha_cost = PopulationCost(h->alpha_, 256);
   const double distance_cost =
       PopulationCost(h->distance_, NUM_DISTANCE_CODES) +
-      ExtraCost(h->distance_, NUM_DISTANCE_CODES);
+      VP8LExtraCost(h->distance_, NUM_DISTANCE_CODES);
   const int num_codes = VP8LHistogramNumCodes(h->palette_code_bits_);
   h->literal_cost_ = PopulationCost(h->literal_, num_codes) +
-                     ExtraCost(h->literal_ + 256, NUM_LENGTH_CODES);
+                     VP8LExtraCost(h->literal_ + 256, NUM_LENGTH_CODES);
   h->red_cost_ = PopulationCost(h->red_, 256);
   h->blue_cost_ = PopulationCost(h->blue_, 256);
   h->bit_cost_ = h->literal_cost_ + h->red_cost_ + h->blue_cost_ +

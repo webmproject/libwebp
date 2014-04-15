@@ -118,6 +118,7 @@ static WEBP_INLINE uint32_t VP8LSubSampleSize(uint32_t size,
   return (size + (1 << sampling_bits) - 1) >> sampling_bits;
 }
 
+// -----------------------------------------------------------------------------
 // Faster logarithm for integers. Small values use a look-up table.
 #define LOG_LOOKUP_IDX_MAX 256
 extern const float kLog2Table[LOG_LOOKUP_IDX_MAX];
@@ -134,6 +135,17 @@ static WEBP_INLINE float VP8LFastLog2(int v) {
 static WEBP_INLINE float VP8LFastSLog2(int v) {
   return (v < LOG_LOOKUP_IDX_MAX) ? kSLog2Table[v] : VP8LFastSLog2Slow(v);
 }
+
+// -----------------------------------------------------------------------------
+// Huffman-cost related functions.
+
+typedef double (*VP8LCostFunc)(const int* const population, int length);
+typedef double (*VP8LCostCombinedFunc)(const int* const X,
+                                       const int* const Y,
+                                       int length);
+
+extern VP8LCostFunc VP8LExtraCost;
+extern VP8LCostCombinedFunc VP8LExtraCostCombined;
 
 // -----------------------------------------------------------------------------
 // PrefixEncode()
