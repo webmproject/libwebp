@@ -103,10 +103,10 @@ static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \
   }                                                                            \
 }
 
-SAMPLE_FUNC_MIPS(SampleRgbLinePairMIPS,      3, 0, 1, 2, 0)
-SAMPLE_FUNC_MIPS(SampleRgbaLinePairMIPS,     4, 0, 1, 2, 3)
-SAMPLE_FUNC_MIPS(SampleBgrLinePairMIPS,      3, 2, 1, 0, 0)
-SAMPLE_FUNC_MIPS(SampleBgraLinePairMIPS,     4, 2, 1, 0, 3)
+SAMPLE_FUNC_MIPS(SampleRgbLinePair,      3, 0, 1, 2, 0)
+SAMPLE_FUNC_MIPS(SampleRgbaLinePair,     4, 0, 1, 2, 3)
+SAMPLE_FUNC_MIPS(SampleBgrLinePair,      3, 2, 1, 0, 0)
+SAMPLE_FUNC_MIPS(SampleBgraLinePair,     4, 2, 1, 0, 3)
 
 #endif   // WEBP_USE_MIPS32
 
@@ -114,9 +114,9 @@ SAMPLE_FUNC_MIPS(SampleBgraLinePairMIPS,     4, 2, 1, 0, 3)
 
 void WebPInitSamplersMIPS32(void) {
 #if defined(WEBP_USE_MIPS32)
-  WebPSamplers[MODE_RGB]  = SampleRgbLinePairMIPS;
-  WebPSamplers[MODE_RGBA] = SampleRgbaLinePairMIPS;
-  WebPSamplers[MODE_BGR]  = SampleBgrLinePairMIPS;
-  WebPSamplers[MODE_BGRA] = SampleBgraLinePairMIPS;
+  WebPSamplers[MODE_RGB]  = SampleRgbLinePair;
+  WebPSamplers[MODE_RGBA] = SampleRgbaLinePair;
+  WebPSamplers[MODE_BGR]  = SampleBgrLinePair;
+  WebPSamplers[MODE_BGRA] = SampleBgraLinePair;
 #endif  // WEBP_USE_MIPS32
 }

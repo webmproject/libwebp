@@ -111,9 +111,8 @@ static const int kC2 = 35468;
   "sb      %["#TEMP12"],   "#D"(%[temp20])                 \n\t"
 
 // Does one or two inverse transforms.
-static WEBP_INLINE void ITransformOneMIPS32(const uint8_t* ref,
-                                            const int16_t* in,
-                                            uint8_t* dst) {
+static WEBP_INLINE void ITransformOne(const uint8_t* ref, const int16_t* in,
+                                      uint8_t* dst) {
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6;
   int temp7, temp8, temp9, temp10, temp11, temp12, temp13;
   int temp14, temp15, temp16, temp17, temp18, temp19, temp20, temp21;
@@ -144,11 +143,11 @@ static WEBP_INLINE void ITransformOneMIPS32(const uint8_t* ref,
   );
 }
 
-static void ITransformMIPS32(const uint8_t* ref, const int16_t* in,
-                             uint8_t* dst, int do_two) {
-  ITransformOneMIPS32(ref, in, dst);
+static void ITransform(const uint8_t* ref, const int16_t* in,
+                       uint8_t* dst, int do_two) {
+  ITransformOne(ref, in, dst);
   if (do_two) {
-    ITransformOneMIPS32(ref + 4, in + 16, dst + 4);
+    ITransformOne(ref + 4, in + 16, dst + 4);
   }
 }
 
@@ -187,8 +186,8 @@ static void ITransformMIPS32(const uint8_t* ref, const int16_t* in,
   "sh           %[temp5],       "#J"(%[ppin])                       \n\t"   \
   "sh           %[level],       "#N"(%[pout])                       \n\t"
 
-static int QuantizeBlockMIPS32(int16_t in[16], int16_t out[16],
-                               const VP8Matrix* const mtx) {
+static int QuantizeBlock(int16_t in[16], int16_t out[16],
+                         const VP8Matrix* const mtx) {
   int temp0, temp1, temp2, temp3, temp4, temp5;
   int sign, coeff, level, i;
   int max_level = MAX_LEVEL;
@@ -353,8 +352,8 @@ static int QuantizeBlockMIPS32(int16_t in[16], int16_t out[16],
   "msub   %[temp6],  %[temp0]                \n\t"                \
   "msub   %[temp7],  %[temp1]                \n\t"
 
-static int Disto4x4MIPS32(const uint8_t* const a, const uint8_t* const b,
-                          const uint16_t* const w) {
+static int Disto4x4(const uint8_t* const a, const uint8_t* const b,
+                    const uint16_t* const w) {
   int tmp[32];
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
 
@@ -388,13 +387,13 @@ static int Disto4x4MIPS32(const uint8_t* const a, const uint8_t* const b,
 #undef VERTICAL_PASS
 #undef HORIZONTAL_PASS
 
-static int Disto16x16MIPS32(const uint8_t* const a, const uint8_t* const b,
-                            const uint16_t* const w) {
+static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
+                      const uint16_t* const w) {
   int D = 0;
   int x, y;
   for (y = 0; y < 16 * BPS; y += 4 * BPS) {
     for (x = 0; x < 16; x += 4) {
-      D += Disto4x4MIPS32(a + x + y, b + x + y, w);
+      D += Disto4x4(a + x + y, b + x + y, w);
     }
   }
   return D;
@@ -470,8 +469,7 @@ static int Disto16x16MIPS32(const uint8_t* const a, const uint8_t* const b,
   "sh     %["#TEMP8"],  "#D"(%[temp20])                \n\t"    \
   "sh     %["#TEMP12"], "#B"(%[temp20])                \n\t"
 
-static void FTransformMIPS32(const uint8_t* src, const uint8_t* ref,
-                             int16_t* out) {
+static void FTransform(const uint8_t* src, const uint8_t* ref, int16_t* out) {
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
   int temp9, temp10, temp11, temp12, temp13, temp14, temp15, temp16;
   int temp17, temp18, temp19, temp20;
@@ -643,7 +641,7 @@ int VP8GetResidualCostMIPS32(int ctx0, const VP8Residual* const res) {
   GET_SSE_INNER(C, C + 1, C + 2, C + 3)   \
   GET_SSE_INNER(D, D + 1, D + 2, D + 3)
 
-static int SSE16x16MIPS32(const uint8_t* a, const uint8_t* b) {
+static int SSE16x16(const uint8_t* a, const uint8_t* b) {
   int count;
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
 
@@ -677,7 +675,7 @@ static int SSE16x16MIPS32(const uint8_t* a, const uint8_t* b) {
   return count;
 }
 
-static int SSE16x8MIPS32(const uint8_t* a, const uint8_t* b) {
+static int SSE16x8(const uint8_t* a, const uint8_t* b) {
   int count;
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
 
@@ -703,7 +701,7 @@ static int SSE16x8MIPS32(const uint8_t* a, const uint8_t* b) {
   return count;
 }
 
-static int SSE8x8MIPS32(const uint8_t* a, const uint8_t* b) {
+static int SSE8x8(const uint8_t* a, const uint8_t* b) {
   int count;
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
 
@@ -725,7 +723,7 @@ static int SSE8x8MIPS32(const uint8_t* a, const uint8_t* b) {
   return count;
 }
 
-static int SSE4x4MIPS32(const uint8_t* a, const uint8_t* b) {
+static int SSE4x4(const uint8_t* a, const uint8_t* b) {
   int count;
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
 
@@ -756,14 +754,14 @@ extern void VP8EncDspInitMIPS32(void);
 
 void VP8EncDspInitMIPS32(void) {
 #if defined(WEBP_USE_MIPS32)
-  VP8ITransform = ITransformMIPS32;
-  VP8EncQuantizeBlock = QuantizeBlockMIPS32;
-  VP8TDisto4x4 = Disto4x4MIPS32;
-  VP8TDisto16x16 = Disto16x16MIPS32;
-  VP8FTransform = FTransformMIPS32;
-  VP8SSE16x16 = SSE16x16MIPS32;
-  VP8SSE8x8 = SSE8x8MIPS32;
-  VP8SSE16x8 = SSE16x8MIPS32;
-  VP8SSE4x4 = SSE4x4MIPS32;
+  VP8ITransform = ITransform;
+  VP8EncQuantizeBlock = QuantizeBlock;
+  VP8TDisto4x4 = Disto4x4;
+  VP8TDisto16x16 = Disto16x16;
+  VP8FTransform = FTransform;
+  VP8SSE16x16 = SSE16x16;
+  VP8SSE8x8 = SSE8x8;
+  VP8SSE16x8 = SSE16x8;
+  VP8SSE4x4 = SSE4x4;
 #endif  // WEBP_USE_MIPS32
 }

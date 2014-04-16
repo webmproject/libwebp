@@ -117,44 +117,44 @@ static WEBP_INLINE void FilterLoop24(uint8_t* p,
 }
 
 // on macroblock edges
-static void VFilter16MIPS32(uint8_t* p, int stride,
-                            int thresh, int ithresh, int hev_thresh) {
+static void VFilter16(uint8_t* p, int stride,
+                      int thresh, int ithresh, int hev_thresh) {
   FilterLoop26(p, stride, 1, 16, thresh, ithresh, hev_thresh);
 }
 
-static void HFilter16MIPS32(uint8_t* p, int stride,
-                            int thresh, int ithresh, int hev_thresh) {
+static void HFilter16(uint8_t* p, int stride,
+                      int thresh, int ithresh, int hev_thresh) {
   FilterLoop26(p, 1, stride, 16, thresh, ithresh, hev_thresh);
 }
 
 // 8-pixels wide variant, for chroma filtering
-static void VFilter8MIPS32(uint8_t* u, uint8_t* v, int stride,
-                           int thresh, int ithresh, int hev_thresh) {
+static void VFilter8(uint8_t* u, uint8_t* v, int stride,
+                     int thresh, int ithresh, int hev_thresh) {
   FilterLoop26(u, stride, 1, 8, thresh, ithresh, hev_thresh);
   FilterLoop26(v, stride, 1, 8, thresh, ithresh, hev_thresh);
 }
 
-static void HFilter8MIPS32(uint8_t* u, uint8_t* v, int stride,
-                           int thresh, int ithresh, int hev_thresh) {
+static void HFilter8(uint8_t* u, uint8_t* v, int stride,
+                     int thresh, int ithresh, int hev_thresh) {
   FilterLoop26(u, 1, stride, 8, thresh, ithresh, hev_thresh);
   FilterLoop26(v, 1, stride, 8, thresh, ithresh, hev_thresh);
 }
 
-static void VFilter8iMIPS32(uint8_t* u, uint8_t* v, int stride,
-                            int thresh, int ithresh, int hev_thresh) {
+static void VFilter8i(uint8_t* u, uint8_t* v, int stride,
+                      int thresh, int ithresh, int hev_thresh) {
   FilterLoop24(u + 4 * stride, stride, 1, 8, thresh, ithresh, hev_thresh);
   FilterLoop24(v + 4 * stride, stride, 1, 8, thresh, ithresh, hev_thresh);
 }
 
-static void HFilter8iMIPS32(uint8_t* u, uint8_t* v, int stride,
-                            int thresh, int ithresh, int hev_thresh) {
+static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
+                      int thresh, int ithresh, int hev_thresh) {
   FilterLoop24(u + 4, 1, stride, 8, thresh, ithresh, hev_thresh);
   FilterLoop24(v + 4, 1, stride, 8, thresh, ithresh, hev_thresh);
 }
 
 // on three inner edges
-static void VFilter16iMIPS32(uint8_t* p, int stride,
-                             int thresh, int ithresh, int hev_thresh) {
+static void VFilter16i(uint8_t* p, int stride,
+                       int thresh, int ithresh, int hev_thresh) {
   int k;
   for (k = 3; k > 0; --k) {
     p += 4 * stride;
@@ -162,8 +162,8 @@ static void VFilter16iMIPS32(uint8_t* p, int stride,
   }
 }
 
-static void HFilter16iMIPS32(uint8_t* p, int stride,
-                             int thresh, int ithresh, int hev_thresh) {
+static void HFilter16i(uint8_t* p, int stride,
+                       int thresh, int ithresh, int hev_thresh) {
   int k;
   for (k = 3; k > 0; --k) {
     p += 4;
@@ -174,7 +174,7 @@ static void HFilter16iMIPS32(uint8_t* p, int stride,
 //------------------------------------------------------------------------------
 // Simple In-loop filtering (Paragraph 15.2)
 
-static void SimpleVFilter16MIPS32(uint8_t* p, int stride, int thresh) {
+static void SimpleVFilter16(uint8_t* p, int stride, int thresh) {
   int i;
   for (i = 0; i < 16; ++i) {
     if (needs_filter(p + i, stride, thresh)) {
@@ -183,7 +183,7 @@ static void SimpleVFilter16MIPS32(uint8_t* p, int stride, int thresh) {
   }
 }
 
-static void SimpleHFilter16MIPS32(uint8_t* p, int stride, int thresh) {
+static void SimpleHFilter16(uint8_t* p, int stride, int thresh) {
   int i;
   for (i = 0; i < 16; ++i) {
     if (needs_filter(p + i * stride, 1, thresh)) {
@@ -192,23 +192,23 @@ static void SimpleHFilter16MIPS32(uint8_t* p, int stride, int thresh) {
   }
 }
 
-static void SimpleVFilter16iMIPS32(uint8_t* p, int stride, int thresh) {
+static void SimpleVFilter16i(uint8_t* p, int stride, int thresh) {
   int k;
   for (k = 3; k > 0; --k) {
     p += 4 * stride;
-    SimpleVFilter16MIPS32(p, stride, thresh);
+    SimpleVFilter16(p, stride, thresh);
   }
 }
 
-static void SimpleHFilter16iMIPS32(uint8_t* p, int stride, int thresh) {
+static void SimpleHFilter16i(uint8_t* p, int stride, int thresh) {
   int k;
   for (k = 3; k > 0; --k) {
     p += 4;
-    SimpleHFilter16MIPS32(p, stride, thresh);
+    SimpleHFilter16(p, stride, thresh);
   }
 }
 
-static void TransformOneMIPS32(const int16_t* in, uint8_t* dst) {
+static void TransformOne(const int16_t* in, uint8_t* dst) {
   int temp0, temp1, temp2, temp3, temp4;
   int temp5, temp6, temp7, temp8, temp9;
   int temp10, temp11, temp12, temp13, temp14;
@@ -541,10 +541,10 @@ static void TransformOneMIPS32(const int16_t* in, uint8_t* dst) {
   );
 }
 
-static void TransformTwoMIPS32(const int16_t* in, uint8_t* dst, int do_two) {
-  TransformOneMIPS32(in, dst);
+static void TransformTwo(const int16_t* in, uint8_t* dst, int do_two) {
+  TransformOne(in, dst);
   if (do_two) {
-    TransformOneMIPS32(in + 16, dst + 4);
+    TransformOne(in + 16, dst + 4);
   }
 }
 
@@ -559,20 +559,20 @@ void VP8DspInitMIPS32(void) {
 #if defined(WEBP_USE_MIPS32)
   VP8InitClipTables();
 
-  VP8Transform = TransformTwoMIPS32;
+  VP8Transform = TransformTwo;
 
-  VP8VFilter16 = VFilter16MIPS32;
-  VP8HFilter16 = HFilter16MIPS32;
-  VP8VFilter8 = VFilter8MIPS32;
-  VP8HFilter8 = HFilter8MIPS32;
-  VP8VFilter16i = VFilter16iMIPS32;
-  VP8HFilter16i = HFilter16iMIPS32;
-  VP8VFilter8i = VFilter8iMIPS32;
-  VP8HFilter8i = HFilter8iMIPS32;
+  VP8VFilter16 = VFilter16;
+  VP8HFilter16 = HFilter16;
+  VP8VFilter8 = VFilter8;
+  VP8HFilter8 = HFilter8;
+  VP8VFilter16i = VFilter16i;
+  VP8HFilter16i = HFilter16i;
+  VP8VFilter8i = VFilter8i;
+  VP8HFilter8i = HFilter8i;
 
-  VP8SimpleVFilter16 = SimpleVFilter16MIPS32;
-  VP8SimpleHFilter16 = SimpleHFilter16MIPS32;
-  VP8SimpleVFilter16i = SimpleVFilter16iMIPS32;
-  VP8SimpleHFilter16i = SimpleHFilter16iMIPS32;
+  VP8SimpleVFilter16 = SimpleVFilter16;
+  VP8SimpleHFilter16 = SimpleHFilter16;
+  VP8SimpleVFilter16i = SimpleVFilter16i;
+  VP8SimpleHFilter16i = SimpleHFilter16i;
 #endif  // WEBP_USE_MIPS32
 }

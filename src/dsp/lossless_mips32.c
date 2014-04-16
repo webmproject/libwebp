@@ -25,7 +25,7 @@
 #define APPROX_LOG_MAX                   4096
 #define LOG_2_RECIPROCAL 1.44269504088896338700465094007086
 
-static float FastSLog2SlowMIPS32(int v) {
+static float FastSLog2Slow(int v) {
   assert(v >= LOG_LOOKUP_IDX_MAX);
   if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
     int log_cnt, y, correction;
@@ -61,7 +61,7 @@ static float FastSLog2SlowMIPS32(int v) {
   }
 }
 
-static float FastLog2SlowMIPS32(int v) {
+static float FastLog2Slow(int v) {
   assert(v >= LOG_LOOKUP_IDX_MAX);
   if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
     int log_cnt, y;
@@ -106,7 +106,7 @@ static float FastLog2SlowMIPS32(int v) {
 //     pop += 2;
 //   }
 //   return (double)cost;
-static double ExtraCostMIPS32(const int* const population, int length) {
+static double ExtraCost(const int* const population, int length) {
   int i, temp0, temp1;
   int* pop = (int*)&population[4];
   const int* LoopEnd = (int*)&population[length];
@@ -151,8 +151,8 @@ static double ExtraCostMIPS32(const int* const population, int length) {
 //     pY += 2;
 //   }
 //   return (double)cost;
-static double ExtraCostCombinedMIPS32(const int* const X, const int* const Y,
-                                      int length) {
+static double ExtraCostCombined(const int* const X, const int* const Y,
+                                int length) {
   int i, temp0, temp1, temp2, temp3;
   int* pX = (int*)&X[4];
   int* pY = (int*)&Y[4];
@@ -197,9 +197,9 @@ extern void VP8LDspInitMIPS32(void);
 
 void VP8LDspInitMIPS32(void) {
 #if defined(WEBP_USE_MIPS32)
-  VP8LFastSLog2Slow = FastSLog2SlowMIPS32;
-  VP8LFastLog2Slow = FastLog2SlowMIPS32;
-  VP8LExtraCost = ExtraCostMIPS32;
-  VP8LExtraCostCombined = ExtraCostCombinedMIPS32;
+  VP8LFastSLog2Slow = FastSLog2Slow;
+  VP8LFastLog2Slow = FastLog2Slow;
+  VP8LExtraCost = ExtraCost;
+  VP8LExtraCostCombined = ExtraCostCombined;
 #endif  // WEBP_USE_MIPS32
 }
