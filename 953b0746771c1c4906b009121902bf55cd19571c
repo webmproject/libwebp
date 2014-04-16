@@ -16,6 +16,24 @@
       "revId": "953b0746771c1c4906b009121902bf55cd19571c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//tbI\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 881,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-16T07:15:54Z",
+      "side": 1,
+      "message": "-\u003ehttps://gerrit.chromium.org/gerrit/#/c/69786/",
+      "parentUuid": "AAAAdn//tbQ\u003d",
+      "revId": "953b0746771c1c4906b009121902bf55cd19571c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
