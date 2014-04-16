@@ -252,7 +252,7 @@ static void ITransform(const uint8_t* ref,
   }
 }
 
-// Load all 4x4 pixels into a single uint32x4_t variable.
+// Load all 4x4 pixels into a single uint8x16_t variable.
 static uint8x16_t Load4x4(const uint8_t* src) {
   uint32x4_t out = { 0, 0, 0, 0 };
   out = vld1q_lane_u32((const uint32_t*)(src + 0 * BPS), out, 0);
@@ -581,7 +581,6 @@ static void FTransformWHT(const int16_t* src, int16_t* out) {
 
 // Hadamard transform
 // Returns the weighted sum of the absolute value of transformed coefficients.
-// This uses a TTransform helper function in C
 static int Disto4x4(const uint8_t* const a, const uint8_t* const b,
                     const uint16_t* const w) {
   const int kBPS = BPS;
@@ -795,8 +794,8 @@ static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
     FTransform(ref + VP8DspScan[j], pred + VP8DspScan[j], out);
     {
       int k;
-      const int16x8_t a0 = vld1q_s16(out +  0);
-      const int16x8_t b0 = vld1q_s16(out +  8);
+      const int16x8_t a0 = vld1q_s16(out + 0);
+      const int16x8_t b0 = vld1q_s16(out + 8);
       const uint16x8_t a1 = vreinterpretq_u16_s16(vabsq_s16(a0));
       const uint16x8_t b1 = vreinterpretq_u16_s16(vabsq_s16(b0));
       const uint16x8_t a2 = vshrq_n_u16(a1, 3);
@@ -879,7 +878,7 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
 
 //------------------------------------------------------------------------------
 
-// Compilation with gcc4.6.3 is problematic for now. Disable this function then.
+// Compilation with gcc-4.6.x is problematic for now. Disable this function then.
 #if (__GNUC__ <= 4 && __GNUC_MINOR__ < 8)
 #define SKIP_QUANTIZE
 #endif
