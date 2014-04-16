@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//tZo\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1588,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-16T15:10:15Z",
+      "side": 1,
+      "message": "why not just expose HuffmanCost() and HuffmanCostCombined()?\n\n(instead of GetCombinedEntropy and PopulationCost)",
+      "revId": "5e42e58d3a214b8d0f7c8c73e25a7558d6305bdb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//tZw\u003d",
+        "filename": "src/dsp/lossless.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-16T15:10:15Z",
+      "side": 1,
+      "message": "these functions should stay in the .c (non static) and just be declared here.\nThey\u0027d be callable from the mips32 implementation without being inlined.",
+      "revId": "5e42e58d3a214b8d0f7c8c73e25a7558d6305bdb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//tZs\u003d",
+        "filename": "src/dsp/lossless_mips32.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-16T15:10:15Z",
+      "side": 1,
+      "message": "macro name should contain a verb, ideally (STORE_HUFFMAN_COST, e.g.)",
+      "revId": "5e42e58d3a214b8d0f7c8c73e25a7558d6305bdb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
