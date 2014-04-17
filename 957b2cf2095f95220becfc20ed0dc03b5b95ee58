@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "AAAAdn//tMQ\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-17T06:45:43Z",
+      "side": 1,
+      "message": "did you try using initializer list?\n\nconst int32x4x4_t res \u003d { tmp0, tmp1, split.val[1], split.val[0] };\nreturn res;\n\n?",
+      "revId": "957b2cf2095f95220becfc20ed0dc03b5b95ee58",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//tMw\u003d",
         "filename": "src/dsp/enc_neon.c",
         "patchSetId": 1
