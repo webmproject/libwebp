@@ -168,12 +168,13 @@ static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
     lbit_t* p_buf_ = (lbit_t*)br->buf_;
     __asm__ volatile(
       ".set   push                             \n\t"
+      ".set   at                               \n\t"
       ".set   macro                            \n\t"
       "ulw    %[in_bits], 0(%[p_buf_])         \n\t"
       ".set   pop                              \n\t"
       : [in_bits]"=r"(in_bits)
       : [p_buf_]"r"(p_buf_)
-      : "memory"
+      : "memory", "at"
     );
 #else
     const lbit_t in_bits = *(const lbit_t*)br->buf_;
