@@ -139,13 +139,23 @@ static WEBP_INLINE float VP8LFastSLog2(int v) {
 // -----------------------------------------------------------------------------
 // Huffman-cost related functions.
 
-typedef double (*VP8LCostFunc)(const int* const population, int length);
-typedef double (*VP8LCostCombinedFunc)(const int* const X,
-                                       const int* const Y,
-                                       int length);
+typedef double (*VP8LCostFunc)(const int* population, int length);
+typedef double (*VP8LCostCombinedFunc)(const int* X, const int* Y, int length);
 
 extern VP8LCostFunc VP8LExtraCost;
 extern VP8LCostCombinedFunc VP8LExtraCostCombined;
+
+typedef struct {        // small struct to hold counters
+  int counts[2];        // index: 0=zero steak, 1=non-zero streak
+  int streaks[2][2];    // [zero/non-zero][streak<3 / streak>=3]
+} VP8LStreaks;
+
+typedef VP8LStreaks (*VP8LCostCountFunc)(const int* population, int length);
+typedef VP8LStreaks (*VP8LCostCombinedCountFunc)(const int* X, const int* Y,
+                                                 int length);
+
+extern VP8LCostCountFunc VP8LHuffmanCostCount;
+extern VP8LCostCombinedCountFunc VP8LHuffmanCostCombinedCount;
 
 // -----------------------------------------------------------------------------
 // PrefixEncode()

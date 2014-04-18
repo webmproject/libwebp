@@ -180,7 +180,7 @@ static double BitsEntropyCombined(const int* const X, const int* const Y,
   return BitsEntropyRefine(nonzeros, sum, max_val, retval);
 }
 
-static WEBP_INLINE double InitialHuffmanCost(void) {
+static double InitialHuffmanCost(void) {
   // Small bias because Huffman code length is typically not stored in
   // full length.
   static const int kHuffmanCodeOfHuffmanCodeSize = CODE_LENGTH_CODES * 3;
@@ -188,66 +188,29 @@ static WEBP_INLINE double InitialHuffmanCost(void) {
   return kHuffmanCodeOfHuffmanCodeSize - kSmallBias;
 }
 
-double VP8FinalHuffmanCost(int cnt_z, int streak_z_le3, int streak_z_gt3,
-                           int cnt_nz, int streak_nz_le3, int streak_nz_gt3) {
+// Finalize the Huffman cost based on streak numbers and length type (<3 or >=3)
+static double FinalHuffmanCost(const VP8LStreaks* const stats) {
   double retval = InitialHuffmanCost();
-  retval += cnt_z * 1.5625 + 0.234375 * streak_z_gt3;
-  retval += cnt_nz * 2.578125 + 0.703125 * streak_nz_gt3;
-  retval += 1.796875 * streak_z_le3;
-  retval += 3.28125 * streak_nz_le3;
+  retval += stats->counts[0] * 1.5625 + 0.234375 * stats->streaks[0][1];
+  retval += stats->counts[1] * 2.578125 + 0.703125 * stats->streaks[1][1];
+  retval += 1.796875 * stats->streaks[0][0];
+  retval += 3.28125 * stats->streaks[1][0];
   return retval;
 }
 
-// Returns the cost encode the rle-encoded entropy code.
-// The constants in this function are experimental.
+// Trampolines
 static double HuffmanCost(const int* const population, int length) {
-  int cnts[2] = { 0, 0 };
-  int streaks[2][2] = { { 0, 0 }, { 0, 0 } };
-  int streak = 0;
-  int i;
-  for (i = 0; i < length - 1; ++i) {
-    ++streak;
-    if (population[i] == population[i + 1]) {
-      continue;
-    }
-    cnts[population[i] != 0] += (streak > 3);
-    streaks[population[i] != 0][(streak > 3)] += streak;
-    streak = 0;
-  }
-  ++streak;
-  cnts[population[i] != 0] += (streak > 3);
-  streaks[population[i] != 0][(streak > 3)] += streak;
-  return VP8FinalHuffmanCost(cnts[0], streaks[0][0], streaks[0][1],
-                             cnts[1], streaks[1][0], streaks[1][1]);
+  const VP8LStreaks stats = VP8LHuffmanCostCount(population, length);
+  return FinalHuffmanCost(&stats);
 }
 
 static double HuffmanCostCombined(const int* const X, const int* const Y,
                                   int length) {
-  int cnts[2] = { 0, 0 };
-  int streaks[2][2] = { { 0, 0 }, { 0, 0 } };
-  int streak = 0;
-  int i;
-  for (i = 0; i < length - 1; ++i) {
-    const int xy = X[i] + Y[i];
-    const int xy_next = X[i + 1] + Y[i + 1];
-    ++streak;
-    if (xy == xy_next) {
-      continue;
-    }
-    cnts[xy != 0] += (streak > 3);
-    streaks[xy != 0][streak > 3] += streak;
-    streak = 0;
-  }
-  {
-    const int xy = X[i] + Y[i];
-    ++streak;
-    cnts[xy != 0] += (streak > 3);
-    streaks[xy != 0][streak > 3] += streak;
-  }
-  return VP8FinalHuffmanCost(cnts[0], streaks[0][0], streaks[0][1],
-                             cnts[1], streaks[1][0], streaks[1][1]);
+  const VP8LStreaks stats = VP8LHuffmanCostCombinedCount(X, Y, length);
+  return FinalHuffmanCost(&stats);
 }
 
+// Aggregated costs
 static double PopulationCost(const int* const population, int length) {
   return BitsEntropy(population, length) + HuffmanCost(population, length);
 }
