@@ -20,13 +20,13 @@
 #include "../enc/vp8enci.h"
 #include "../enc/cost.h"
 
-static const int kC1 = 20091 + (1 << 16);
-static const int kC2 = 35468;
-
 // TODO(djordje): this fails in optimized builds:
 // error: can't find a register in class 'GR_REGS' while reloading 'asm'
 // error: 'asm' operand has impossible constraints
 #ifdef __OPTIMIZE__
+
+static const int kC1 = 20091 + (1 << 16);
+static const int kC2 = 35468;
 
 // macro for one vertical pass in ITransformOne
 // MUL macro inlined
