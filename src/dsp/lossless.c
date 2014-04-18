@@ -1458,15 +1458,14 @@ void VP8LBundleColorMap(const uint8_t* const row, int width,
   }
 }
 
-static double ExtraCost(const int* const population, int length) {
+static double ExtraCost(const int* population, int length) {
   int i;
   double cost = 0.;
   for (i = 2; i < length - 2; ++i) cost += (i >> 1) * population[i + 2];
   return cost;
 }
 
-static double ExtraCostCombined(const int* const X, const int* const Y,
-                                int length) {
+static double ExtraCostCombined(const int* X, const int* Y, int length) {
   int i;
   double cost = 0.;
   for (i = 2; i < length - 2; ++i) {
@@ -1474,6 +1473,53 @@ static double ExtraCostCombined(const int* const X, const int* const Y,
     cost += (i >> 1) * xy;
   }
   return cost;
+}
+
+// Returns the various RLE counts
+static VP8LStreaks HuffmanCostCount(const int* population, int length) {
+  int i;
+  int streak = 0;
+  VP8LStreaks stats;
+  memset(&stats, 0, sizeof(stats));
+  for (i = 0; i < length - 1; ++i) {
+    ++streak;
+    if (population[i] == population[i + 1]) {
+      continue;
+    }
+    stats.counts[population[i] != 0] += (streak > 3);
+    stats.streaks[population[i] != 0][(streak > 3)] += streak;
+    streak = 0;
+  }
+  ++streak;
+  stats.counts[population[i] != 0] += (streak > 3);
+  stats.streaks[population[i] != 0][(streak > 3)] += streak;
+  return stats;
+}
+
+static VP8LStreaks HuffmanCostCombinedCount(const int* X, const int* Y,
+                                            int length) {
+  int i;
+  int streak = 0;
+  VP8LStreaks stats;
+  memset(&stats, 0, sizeof(stats));
+  for (i = 0; i < length - 1; ++i) {
+    const int xy = X[i] + Y[i];
+    const int xy_next = X[i + 1] + Y[i + 1];
+    ++streak;
+    if (xy == xy_next) {
+      continue;
+    }
+    stats.counts[xy != 0] += (streak > 3);
+    stats.streaks[xy != 0][(streak > 3)] += streak;
+    streak = 0;
+  }
+  {
+    const int xy = X[i] + Y[i];
+    ++streak;
+    stats.counts[xy != 0] += (streak > 3);
+    stats.streaks[xy != 0][(streak > 3)] += streak;
+  }
+  return stats;
 }
 
 //------------------------------------------------------------------------------
@@ -1496,6 +1542,9 @@ VP8LFastLog2SlowFunc VP8LFastSLog2Slow;
 
 VP8LCostFunc VP8LExtraCost;
 VP8LCostCombinedFunc VP8LExtraCostCombined;
+
+VP8LCostCountFunc VP8LHuffmanCostCount;
+VP8LCostCombinedCountFunc VP8LHuffmanCostCombinedCount;
 
 extern void VP8LDspInitSSE2(void);
 extern void VP8LDspInitNEON(void);
@@ -1521,6 +1570,9 @@ void VP8LDspInit(void) {
 
   VP8LExtraCost = ExtraCost;
   VP8LExtraCostCombined = ExtraCostCombined;
+
+  VP8LHuffmanCostCount = HuffmanCostCount;
+  VP8LHuffmanCostCombinedCount = HuffmanCostCombinedCount;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
