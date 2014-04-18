@@ -23,6 +23,11 @@
 static const int kC1 = 20091 + (1 << 16);
 static const int kC2 = 35468;
 
+// TODO(djordje): this fails in optimized builds:
+// error: can't find a register in class 'GR_REGS' while reloading 'asm'
+// error: 'asm' operand has impossible constraints
+#ifdef __OPTIMIZE__
+
 // macro for one vertical pass in ITransformOne
 // MUL macro inlined
 // temp0..temp15 holds tmp[0]..tmp[15]
@@ -153,6 +158,8 @@ static void ITransform(const uint8_t* ref, const int16_t* in,
 
 #undef VERTICAL_PASS
 #undef HORIZONTAL_PASS
+
+#endif  // __OPTIMIZE__
 
 // macro for one pass through for loop in QuantizeBlock
 // QUANTDIV macro inlined
@@ -754,7 +761,9 @@ extern void VP8EncDspInitMIPS32(void);
 
 void VP8EncDspInitMIPS32(void) {
 #if defined(WEBP_USE_MIPS32)
+#ifdef __OPTIMIZE__
   VP8ITransform = ITransform;
+#endif
   VP8EncQuantizeBlock = QuantizeBlock;
   VP8TDisto4x4 = Disto4x4;
   VP8TDisto16x16 = Disto16x16;
