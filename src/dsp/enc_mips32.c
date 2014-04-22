@@ -20,11 +20,6 @@
 #include "../enc/vp8enci.h"
 #include "../enc/cost.h"
 
-// TODO(djordje): this fails in optimized builds:
-// error: can't find a register in class 'GR_REGS' while reloading 'asm'
-// error: 'asm' operand has impossible constraints
-#ifdef __OPTIMIZE__
-
 static const int kC1 = 20091 + (1 << 16);
 static const int kC2 = 35468;
 
@@ -34,26 +29,26 @@ static const int kC2 = 35468;
 // A..D - offsets in bytes to load from in buffer
 // TEMP0..TEMP3 - registers for corresponding tmp elements
 // TEMP4..TEMP5 - temporary registers
-#define VERTICAL_PASS(A, B, C, D, TEMP4, TEMP5, TEMP0, TEMP1, TEMP2, TEMP3) \
+#define VERTICAL_PASS(A, B, C, D, TEMP4, TEMP0, TEMP1, TEMP2, TEMP3)        \
   "lh      %[temp16],      "#A"(%[temp20])                 \n\t"            \
   "lh      %[temp18],      "#B"(%[temp20])                 \n\t"            \
   "lh      %[temp17],      "#C"(%[temp20])                 \n\t"            \
   "lh      %[temp19],      "#D"(%[temp20])                 \n\t"            \
   "addu    %["#TEMP4"],    %[temp16],      %[temp18]       \n\t"            \
-  "subu    %["#TEMP5"],    %[temp16],      %[temp18]       \n\t"            \
-  "mul     %[temp16],      %[temp17],      %[kC2]          \n\t"            \
+  "subu    %[temp16],      %[temp16],      %[temp18]       \n\t"            \
+  "mul     %["#TEMP0"],    %[temp17],      %[kC2]          \n\t"            \
   "mul     %[temp18],      %[temp19],      %[kC1]          \n\t"            \
   "mul     %[temp17],      %[temp17],      %[kC1]          \n\t"            \
   "mul     %[temp19],      %[temp19],      %[kC2]          \n\t"            \
-  "sra     %[temp16],      %[temp16],      16              \n\n"            \
+  "sra     %["#TEMP0"],    %["#TEMP0"],    16              \n\n"            \
   "sra     %[temp18],      %[temp18],      16              \n\n"            \
   "sra     %[temp17],      %[temp17],      16              \n\n"            \
   "sra     %[temp19],      %[temp19],      16              \n\n"            \
-  "subu    %["#TEMP2"],    %[temp16],      %[temp18]       \n\t"            \
+  "subu    %["#TEMP2"],    %["#TEMP0"],    %[temp18]       \n\t"            \
   "addu    %["#TEMP3"],    %[temp17],      %[temp19]       \n\t"            \
   "addu    %["#TEMP0"],    %["#TEMP4"],    %["#TEMP3"]     \n\t"            \
-  "addu    %["#TEMP1"],    %["#TEMP5"],    %["#TEMP2"]     \n\t"            \
-  "subu    %["#TEMP2"],    %["#TEMP5"],    %["#TEMP2"]     \n\t"            \
+  "addu    %["#TEMP1"],    %[temp16],      %["#TEMP2"]     \n\t"            \
+  "subu    %["#TEMP2"],    %[temp16],      %["#TEMP2"]     \n\t"            \
   "subu    %["#TEMP3"],    %["#TEMP4"],    %["#TEMP3"]     \n\t"
 
 // macro for one horizontal pass in ITransformOne
@@ -101,35 +96,36 @@ static const int kC2 = 35468;
   "movn    %["#TEMP4"],    $zero,          %[temp17]       \n\t"            \
   "movn    %["#TEMP8"],    $zero,          %[temp18]       \n\t"            \
   "movn    %["#TEMP12"],   $zero,          %[temp19]       \n\t"            \
-  "slt     %[temp16],      %["#TEMP0"],    %[temp21]       \n\t"            \
-  "slt     %[temp17],      %["#TEMP4"],    %[temp21]       \n\t"            \
-  "slt     %[temp18],      %["#TEMP8"],    %[temp21]       \n\t"            \
-  "slt     %[temp19],      %["#TEMP12"],   %[temp21]       \n\t"            \
-  "lw      %[temp20],      8(%[args])                      \n\t"            \
-  "movz    %["#TEMP0"],    %[temp21],      %[temp16]       \n\t"            \
-  "movz    %["#TEMP4"],    %[temp21],      %[temp17]       \n\t"            \
-  "movz    %["#TEMP8"],    %[temp21],      %[temp18]       \n\t"            \
-  "movz    %["#TEMP12"],   %[temp21],      %[temp19]       \n\t"            \
-  "sb      %["#TEMP0"],    "#A"(%[temp20])                 \n\t"            \
-  "sb      %["#TEMP4"],    "#B"(%[temp20])                 \n\t"            \
-  "sb      %["#TEMP8"],    "#C"(%[temp20])                 \n\t"            \
-  "sb      %["#TEMP12"],   "#D"(%[temp20])                 \n\t"
+  "addiu   %[temp20],      $zero,          255             \n\t"            \
+  "slt     %[temp16],      %["#TEMP0"],    %[temp20]       \n\t"            \
+  "slt     %[temp17],      %["#TEMP4"],    %[temp20]       \n\t"            \
+  "slt     %[temp18],      %["#TEMP8"],    %[temp20]       \n\t"            \
+  "slt     %[temp19],      %["#TEMP12"],   %[temp20]       \n\t"            \
+  "movz    %["#TEMP0"],    %[temp20],      %[temp16]       \n\t"            \
+  "movz    %["#TEMP4"],    %[temp20],      %[temp17]       \n\t"            \
+  "lw      %[temp16],      8(%[args])                      \n\t"            \
+  "movz    %["#TEMP8"],    %[temp20],      %[temp18]       \n\t"            \
+  "movz    %["#TEMP12"],   %[temp20],      %[temp19]       \n\t"            \
+  "sb      %["#TEMP0"],    "#A"(%[temp16])                 \n\t"            \
+  "sb      %["#TEMP4"],    "#B"(%[temp16])                 \n\t"            \
+  "sb      %["#TEMP8"],    "#C"(%[temp16])                 \n\t"            \
+  "sb      %["#TEMP12"],   "#D"(%[temp16])                 \n\t"
 
 // Does one or two inverse transforms.
 static WEBP_INLINE void ITransformOne(const uint8_t* ref, const int16_t* in,
                                       uint8_t* dst) {
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6;
   int temp7, temp8, temp9, temp10, temp11, temp12, temp13;
-  int temp14, temp15, temp16, temp17, temp18, temp19, temp20, temp21;
+  int temp14, temp15, temp16, temp17, temp18, temp19, temp20;
   const int* args[3] = {(const int*)ref, (const int*)in, (const int*)dst};
 
   __asm__ volatile(
     "lw      %[temp20],      4(%[args])                      \n\t"
-    VERTICAL_PASS(0, 16,  8, 24, temp4,  temp5,  temp0,  temp1,  temp2,  temp3)
-    VERTICAL_PASS(2, 18, 10, 26, temp8,  temp9,  temp4,  temp5,  temp6,  temp7)
-    VERTICAL_PASS(4, 20, 12, 28, temp12, temp13, temp8,  temp9,  temp10, temp11)
-    VERTICAL_PASS(6, 22, 14, 30, temp20, temp21, temp12, temp13, temp14, temp15)
-    "addiu   %[temp21],      $zero,          255             \n\t"
+    VERTICAL_PASS(0, 16,  8, 24, temp4,  temp0,  temp1,  temp2,  temp3)
+    VERTICAL_PASS(2, 18, 10, 26, temp8,  temp4,  temp5,  temp6,  temp7)
+    VERTICAL_PASS(4, 20, 12, 28, temp12, temp8,  temp9,  temp10, temp11)
+    VERTICAL_PASS(6, 22, 14, 30, temp20, temp12, temp13, temp14, temp15)
+
     HORIZONTAL_PASS( 0,  1,  2,  3, temp0, temp4, temp8,  temp12)
     HORIZONTAL_PASS(16, 17, 18, 19, temp1, temp5, temp9,  temp13)
     HORIZONTAL_PASS(32, 33, 34, 35, temp2, temp6, temp10, temp14)
@@ -141,8 +137,7 @@ static WEBP_INLINE void ITransformOne(const uint8_t* ref, const int16_t* in,
       [temp9]"=&r"(temp9), [temp10]"=&r"(temp10), [temp11]"=&r"(temp11),
       [temp12]"=&r"(temp12), [temp13]"=&r"(temp13), [temp14]"=&r"(temp14),
       [temp15]"=&r"(temp15), [temp16]"=&r"(temp16), [temp17]"=&r"(temp17),
-      [temp18]"=&r"(temp18), [temp19]"=&r"(temp19), [temp20]"=&r"(temp20),
-      [temp21]"=&r"(temp21)
+      [temp18]"=&r"(temp18), [temp19]"=&r"(temp19), [temp20]"=&r"(temp20)
     : [args]"r"(args), [kC1]"r"(kC1), [kC2]"r"(kC2)
     : "memory", "hi", "lo"
   );
@@ -158,8 +153,6 @@ static void ITransform(const uint8_t* ref, const int16_t* in,
 
 #undef VERTICAL_PASS
 #undef HORIZONTAL_PASS
-
-#endif  // __OPTIMIZE__
 
 // macro for one pass through for loop in QuantizeBlock
 // QUANTDIV macro inlined
@@ -761,9 +754,7 @@ extern void VP8EncDspInitMIPS32(void);
 
 void VP8EncDspInitMIPS32(void) {
 #if defined(WEBP_USE_MIPS32)
-#ifdef __OPTIMIZE__
   VP8ITransform = ITransform;
-#endif
   VP8EncQuantizeBlock = QuantizeBlock;
   VP8TDisto4x4 = Disto4x4;
   VP8TDisto16x16 = Disto16x16;
