@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//sjY\u003d",
+        "filename": "src/dsp/lossless_mips32.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-23T19:42:49Z",
+      "side": 1,
+      "message": "unrelated to this change, but it seems like you\u0027re violating the const contract if you\u0027re writing to these",
+      "revId": "f6057596ad45ef856ba56188f5d29c3f9aa678cb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//sjo\u003d",
+        "filename": "src/dsp/lossless_mips32.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-23T19:42:49Z",
+      "side": 1,
+      "message": "\"+r\" for these?",
+      "revId": "f6057596ad45ef856ba56188f5d29c3f9aa678cb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
