@@ -571,11 +571,6 @@ static void Help(void) {
         );
 }
 
-static const char* const kStatusMessages[] = {
-  "OK", "OUT_OF_MEMORY", "INVALID_PARAM", "BITSTREAM_ERROR",
-  "UNSUPPORTED_FEATURE", "SUSPENDED", "USER_ABORT", "NOT_ENOUGH_DATA"
-};
-
 static const char* const kFormatType[] = {
   "unspecified", "lossy", "lossless"
 };
@@ -671,27 +666,11 @@ int main(int argc, const char *argv[]) {
   }
 
   {
-    Stopwatch stop_watch;
     VP8StatusCode status = VP8_STATUS_OK;
     size_t data_size = 0;
     const uint8_t* data = NULL;
-
-    if (!ExUtilReadFile(in_file, &data, &data_size)) return -1;
-
-    if (verbose) {
-      StopwatchReset(&stop_watch);
-    }
-
-    status = WebPGetFeatures(data, data_size, bitstream);
-    if (status != VP8_STATUS_OK) {
-      goto end;
-    }
-
-    if (bitstream->has_animation) {
-      fprintf(stderr,
-              "Error! Decoding of an animated WebP file is not supported.\n"
-              "       Use webpmux to extract the individual frames or\n"
-              "       vwebp to view this image.\n");
+    if (!ExUtilLoadWebP(in_file, &data, &data_size, bitstream)) {
+      goto End;
     }
 
     switch (format) {
@@ -727,31 +706,12 @@ int main(int argc, const char *argv[]) {
         return -1;
     }
 
-    // Decoding call.
-    if (!incremental) {
-      status = WebPDecode(data, data_size, &config);
-    } else {
-      WebPIDecoder* const idec = WebPIDecode(data, data_size, &config);
-      if (idec == NULL) {
-        fprintf(stderr, "Failed during WebPINewDecoder().\n");
-        status = VP8_STATUS_OUT_OF_MEMORY;
-        goto end;
-      } else {
-        status = WebPIUpdate(idec, data, data_size);
-        WebPIDelete(idec);
-      }
-    }
-
-    if (verbose) {
-      const double decode_time = StopwatchReadAndReset(&stop_watch);
-      fprintf(stderr, "Time to decode picture: %.3fs\n", decode_time);
-    }
- end:
+    status = ExUtilDecodeWebP(data, data_size, incremental, verbose, &config);
+ End:
     free((void*)data);
     ok = (status == VP8_STATUS_OK);
     if (!ok) {
-      fprintf(stderr, "Decoding of %s failed.\n", in_file);
-      fprintf(stderr, "Status: %d (%s)\n", status, kStatusMessages[status]);
+      ExUtilPrintWebPError(in_file, status);
       goto Exit;
     }
   }
