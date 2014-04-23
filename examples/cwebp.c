@@ -28,6 +28,7 @@
 #include "./jpegdec.h"
 #include "./pngdec.h"
 #include "./tiffdec.h"
+#include "./webpdec.h"
 #include "./wicdec.h"
 
 #ifndef WEBP_DLL
@@ -106,26 +107,30 @@ typedef enum {
   PNG_ = 0,
   JPEG_,
   TIFF_,  // 'TIFF' clashes with libtiff
+  WEBP_,
   UNSUPPORTED
 } InputFileFormat;
 
 static InputFileFormat GetImageType(FILE* in_file) {
   InputFileFormat format = UNSUPPORTED;
-  uint32_t magic;
-  uint8_t buf[4];
+  uint32_t magic1, magic2;
+  uint8_t buf[12];
 
-  if ((fread(&buf[0], 4, 1, in_file) != 1) ||
+  if ((fread(&buf[0], 12, 1, in_file) != 1) ||
       (fseek(in_file, 0, SEEK_SET) != 0)) {
     return format;
   }
 
-  magic = ((uint32_t)buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
-  if (magic == 0x89504E47U) {
+  magic1 = ((uint32_t)buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
+  magic2 = ((uint32_t)buf[8] << 24) | (buf[9] << 16) | (buf[10] << 8) | buf[11];
+  if (magic1 == 0x89504E47U) {
     format = PNG_;
-  } else if (magic >= 0xFFD8FF00U && magic <= 0xFFD8FFFFU) {
+  } else if (magic1 >= 0xFFD8FF00U && magic1 <= 0xFFD8FFFFU) {
     format = JPEG_;
-  } else if (magic == 0x49492A00 || magic == 0x4D4D002A) {
+  } else if (magic1 == 0x49492A00 || magic1 == 0x4D4D002A) {
     format = TIFF_;
+  } else if (magic1 == 0x52494646 && magic2 == 0x57454250) {
+    format = WEBP_;
   }
   return format;
 }
@@ -148,6 +153,8 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
       ok = ReadJPEG(in_file, pic, metadata);
     } else if (format == TIFF_) {
       ok = ReadTIFF(filename, pic, keep_alpha, metadata);
+    } else if (format == WEBP_) {
+      ok = ReadWebP(filename, pic, keep_alpha, metadata);
     }
   } else {
     // If image size is specified, infer it as YUV format.
@@ -553,7 +560,7 @@ static void HelpLong(void) {
   printf("Usage:\n");
   printf(" cwebp [-preset <...>] [options] in_file [-o out_file]\n\n");
   printf("If input size (-s) for an image is not specified, "
-         "it is assumed to be a PNG, JPEG or TIFF file.\n");
+         "it is assumed to be a PNG, JPEG, TIFF or WebP file.\n");
 #ifdef HAVE_WINCODEC_H
   printf("Windows builds can take as input any of the files handled by WIC\n");
 #endif
