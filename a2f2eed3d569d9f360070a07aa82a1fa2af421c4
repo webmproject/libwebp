@@ -84,6 +84,24 @@
       "revId": "a2f2eed3d569d9f360070a07aa82a1fa2af421c4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//spw\u003d",
+        "filename": "src/dsp/lossless_mips32.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1004029
+      },
+      "writtenOn": "2014-04-23T10:06:32Z",
+      "side": 1,
+      "message": "no, i made a mistake. it would be better if X is const pointer. sorry",
+      "parentUuid": "AAAAdn//ss0\u003d",
+      "revId": "a2f2eed3d569d9f360070a07aa82a1fa2af421c4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
