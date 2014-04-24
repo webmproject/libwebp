@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//saM\u003d",
+        "filename": "src/dsp/lossless_mips32.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1004029
+      },
+      "writtenOn": "2014-04-24T08:21:56Z",
+      "side": 1,
+      "message": "you are right, they should be const int*, i will change it",
+      "parentUuid": "AAAAdn//shE\u003d",
+      "revId": "f6057596ad45ef856ba56188f5d29c3f9aa678cb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//shs\u003d",
         "filename": "src/dsp/lossless_mips32.c",
         "patchSetId": 2
@@ -118,6 +136,24 @@
       "writtenOn": "2014-04-23T21:37:19Z",
       "side": 1,
       "message": "if \"r\" is OK these could be \u0027const int* const\u0027",
+      "revId": "f6057596ad45ef856ba56188f5d29c3f9aa678cb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//saE\u003d",
+        "filename": "src/dsp/lossless_mips32.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1004029
+      },
+      "writtenOn": "2014-04-24T08:21:56Z",
+      "side": 1,
+      "message": "these could not be \u0027const int* const\u0027 because they should be const pointers only, they aren\u0027t changed as pointers while content of struct addressed by these pointers must be changed.",
+      "parentUuid": "AAAAdn//shY\u003d",
       "revId": "f6057596ad45ef856ba56188f5d29c3f9aa678cb",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
