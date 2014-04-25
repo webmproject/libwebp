@@ -23,6 +23,8 @@
 extern "C" {
 #endif
 
+struct VP8LHashChain;  // Defined in backward_references.h
+
 typedef struct {
   const WebPConfig* config_;    // user configuration and parameters
   const WebPPicture* pic_;      // input picture.
@@ -32,6 +34,11 @@ typedef struct {
                                 // (used for prediction).
   uint32_t* transform_data_;    // Scratch memory for transform data.
   int       current_width_;     // Corresponds to packed image width.
+
+  struct VP8LHashChain* hash_chain_;  // HashChain data for constructing
+                                      // backward references.
+  struct VP8LBackwardRefs* refs_[2];  // Backward Refs array corresponding to
+                                      // LZ77 & RLE coding.
 
   // Encoding parameters derived from quality parameter.
   int histo_bits_;
