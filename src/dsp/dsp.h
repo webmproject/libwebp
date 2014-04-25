@@ -23,6 +23,14 @@ extern "C" {
 //------------------------------------------------------------------------------
 // CPU detection
 
+#if defined(__GNUC__)
+# define LOCAL_GCC_VERSION ((__GNUC__ << 8) | __GNUC_MINOR__)
+# define LOCAL_GCC_PREREQ(maj, min) \
+    (LOCAL_GCC_VERSION >= (((maj) << 8) | (min)))
+#else
+# define LOCAL_GCC_PREREQ(maj, min) 0
+#endif
+
 #if defined(_MSC_VER) && _MSC_VER > 1310 && \
     (defined(_M_X64) || defined(_M_IX86))
 #define WEBP_MSC_SSE2  // Visual C++ SSE2 targets
