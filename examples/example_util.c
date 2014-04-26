@@ -118,6 +118,15 @@ static const char* const kStatusMessages[] = {
   "UNSUPPORTED_FEATURE", "SUSPENDED", "USER_ABORT", "NOT_ENOUGH_DATA"
 };
 
+static void PrintAnimationWarning(const WebPDecoderConfig* const config) {
+  if (config->input.has_animation) {
+    fprintf(stderr,
+            "Error! Decoding of an animated WebP file is not supported.\n"
+            "       Use webpmux to extract the individual frames or\n"
+            "       vwebp to view this image.\n");
+  }
+}
+
 void ExUtilPrintWebPError(const char* const in_file, int status) {
   fprintf(stderr, "Decoding of %s failed.\n", in_file);
   fprintf(stderr, "Status: %d", status);
@@ -149,28 +158,41 @@ int ExUtilLoadWebP(const char* const in_file,
   return 1;
 }
 
+//------------------------------------------------------------------------------
+
 VP8StatusCode ExUtilDecodeWebP(const uint8_t* const data, size_t data_size,
-                               int incremental, int verbose,
-                               WebPDecoderConfig* const config) {
+                               int verbose, WebPDecoderConfig* const config) {
   Stopwatch stop_watch;
   VP8StatusCode status = VP8_STATUS_OK;
-  if (config == NULL) return 0;
+  if (config == NULL) return VP8_STATUS_INVALID_PARAM;
 
-  if (verbose) {
-    StopwatchReset(&stop_watch);
-  }
+  PrintAnimationWarning(config);
 
-  if (config->input.has_animation) {
-    fprintf(stderr,
-            "Error! Decoding of an animated WebP file is not supported.\n"
-            "       Use webpmux to extract the individual frames or\n"
-            "       vwebp to view this image.\n");
-  }
+  StopwatchReset(&stop_watch);
 
   // Decoding call.
-  if (!incremental) {
-    status = WebPDecode(data, data_size, config);
-  } else {
+  status = WebPDecode(data, data_size, config);
+
+  if (verbose) {
+    const double decode_time = StopwatchReadAndReset(&stop_watch);
+    fprintf(stderr, "Time to decode picture: %.3fs\n", decode_time);
+  }
+  return status;
+}
+
+VP8StatusCode ExUtilDecodeWebPIncremental(
+    const uint8_t* const data, size_t data_size,
+    int verbose, WebPDecoderConfig* const config) {
+  Stopwatch stop_watch;
+  VP8StatusCode status = VP8_STATUS_OK;
+  if (config == NULL) return VP8_STATUS_INVALID_PARAM;
+
+  PrintAnimationWarning(config);
+
+  StopwatchReset(&stop_watch);
+
+  // Decoding call.
+  {
     WebPIDecoder* const idec = WebPIDecode(data, data_size, config);
     if (idec == NULL) {
       fprintf(stderr, "Failed during WebPINewDecoder().\n");

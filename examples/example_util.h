@@ -53,16 +53,20 @@ int ExUtilLoadWebP(const char* const in_file,
                    const uint8_t** data, size_t* data_size,
                    struct WebPBitstreamFeatures* bitstream);
 
-// Decodes the WebP contained in 'data'. 'config' is a structure previously
-// initialized by WebPInitDecoderConfig(). 'config->output' should have the
-// desired colorspace selected. If 'incremental' is set to true the WebP
-// incremental decoder will be used. 'verbose' will cause decode timing to be
-// reported.
+// Decodes the WebP contained in 'data'.
+// 'config' is a structure previously initialized by WebPInitDecoderConfig().
+// 'config->output' should have the desired colorspace selected. 'verbose' will
+// cause decode timing to be reported.
 // Returns the decoder status. On success 'config->output' will contain the
 // decoded picture.
 enum VP8StatusCode ExUtilDecodeWebP(const uint8_t* const data, size_t data_size,
-                                    int incremental, int verbose,
+                                    int verbose,
                                     struct WebPDecoderConfig* const config);
+
+// Same as ExUtilDecodeWebP(), but using the incremental decoder.
+enum VP8StatusCode ExUtilDecodeWebPIncremental(
+    const uint8_t* const data, size_t data_size,
+    int verbose, struct WebPDecoderConfig* const config);
 
 #ifdef __cplusplus
 }    // extern "C"
