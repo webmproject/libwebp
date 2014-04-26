@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//sHo\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1529,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-26T15:30:15Z",
+      "side": 1,
+      "message": "this needs a rebase/update after https://gerrit.chromium.org/gerrit/#/c/69891/",
+      "revId": "ca870c84cabc113873ea751f4595554c512ea879",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
