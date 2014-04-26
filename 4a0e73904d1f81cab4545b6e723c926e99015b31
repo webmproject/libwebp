@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//sJg\u003d",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 709,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-26T08:05:48Z",
+      "side": 1,
+      "message": "suggestion for later: could be two separate methods\n ExUtilDecodeIncrementalWebP() / ExUtilDecodeWebP()",
+      "revId": "4a0e73904d1f81cab4545b6e723c926e99015b31",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
