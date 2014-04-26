@@ -15,7 +15,7 @@
 
 #if defined(WEBP_USE_NEON)
 
-#define USE_INTRINSICS   // use intrinsics when possible
+// #define USE_INTRINSICS   // use intrinsics when possible
 
 #include <assert.h>
 #include <arm_neon.h>
@@ -36,7 +36,7 @@ static const int16_t kC2 = 17734;  // half of kC2, actually. See comment above.
 // (with gcc-4.6). So we disable it for now. Later, it'll be conditional to
 // USE_INTRINSICS define.
 // With gcc-4.8, it's a little faster speed than inlined-assembly.
-#if 0  // defined(USE_INTRINSICS)
+#if defined(USE_INTRINSICS)
 
 // Treats 'v' as an uint8x8_t and zero extends to an int16x8_t.
 static WEBP_INLINE int16x8_t ConvertU8ToS16(uint32x2_t v) {
@@ -264,7 +264,7 @@ static uint8x16_t Load4x4(const uint8_t* src) {
 
 // Forward transform.
 
-#if 0  // #ifdef USE_INTRINSICS
+#if defined(USE_INTRINSICS)
 
 static WEBP_INLINE void Transpose4x4_S16(const int16x4_t A, const int16x4_t B,
                                          const int16x4_t C, const int16x4_t D,
@@ -583,7 +583,7 @@ static void FTransformWHT(const int16_t* src, int16_t* out) {
 // (with gcc-4.6). So we disable it for now. Later, it'll be conditional to
 // USE_INTRINSICS define.
 // With gcc-4.8, it's only slightly slower than the inlined.
-#if 0  // #ifdef USE_INTRINSICS
+#if defined(USE_INTRINSICS)
 
 // Zero extend an uint16x4_t 'v' to an int32x4_t.
 static WEBP_INLINE int32x4_t ConvertU16ToS32(uint16x4_t v) {
@@ -909,9 +909,6 @@ static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
   return D;
 }
 
-
-#if defined(USE_INTRINSICS)
-
 //------------------------------------------------------------------------------
 
 static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
@@ -1002,13 +999,11 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
   return SumToInt(vpaddlq_u16(prod));
 }
 
-#endif    // USE_INTRINSICS
-
 //------------------------------------------------------------------------------
 
 // Compilation with gcc-4.6.x is problematic for now. Disable this function
 // in this case.
-#if (__GNUC__ <= 4 && __GNUC_MINOR__ < 8)
+#if !LOCAL_GCC_PREREQ(4,8)
 #define SKIP_QUANTIZE
 #endif
 
@@ -1088,15 +1083,11 @@ void VP8EncDspInitNEON(void) {
 
   VP8TDisto4x4 = Disto4x4;
   VP8TDisto16x16 = Disto16x16;
-#if defined(USE_INTRINSICS)
   VP8CollectHistogram = CollectHistogram;
   VP8SSE16x16 = SSE16x16;
   VP8SSE16x8 = SSE16x8;
   VP8SSE8x8 = SSE8x8;
   VP8SSE4x4 = SSE4x4;
-#else
-  (void)Load4x4;    // to avoid a warning
-#endif
 #if !defined(SKIP_QUANTIZE)
   VP8EncQuantizeBlock = QuantizeBlock;
 #endif
