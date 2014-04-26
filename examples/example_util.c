@@ -15,6 +15,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "webp/decode.h"
+#include "./stopwatch.h"
+
 // -----------------------------------------------------------------------------
 // File I/O
 
@@ -107,3 +110,77 @@ int ExUtilWriteFile(const char* const file_name,
   return ok;
 }
 
+//------------------------------------------------------------------------------
+// WebP decoding
+
+static const char* const kStatusMessages[] = {
+  "OK", "OUT_OF_MEMORY", "INVALID_PARAM", "BITSTREAM_ERROR",
+  "UNSUPPORTED_FEATURE", "SUSPENDED", "USER_ABORT", "NOT_ENOUGH_DATA"
+};
+
+void ExUtilPrintWebPError(const char* const in_file, int status) {
+  fprintf(stderr, "Decoding of %s failed.\n", in_file);
+  fprintf(stderr, "Status: %d", status);
+  if (status >= VP8_STATUS_OK && status <= VP8_STATUS_NOT_ENOUGH_DATA) {
+    fprintf(stderr, "(%s)", kStatusMessages[status]);
+  }
+  fprintf(stderr, "\n");
+}
+
+int ExUtilLoadWebP(const char* const in_file,
+                   const uint8_t** data, size_t* data_size,
+                   WebPBitstreamFeatures* bitstream) {
+  VP8StatusCode status;
+  if (!ExUtilReadFile(in_file, data, data_size)) return 0;
+
+  status = WebPGetFeatures(*data, *data_size, bitstream);
+  if (status != VP8_STATUS_OK) {
+    free((void*)*data);
+    *data = NULL;
+    *data_size = 0;
+    ExUtilPrintWebPError(in_file, status);
+    return 0;
+  }
+  return 1;
+}
+
+VP8StatusCode ExUtilDecodeWebP(const uint8_t* const data, size_t data_size,
+                               int incremental, int verbose,
+                               WebPDecoderConfig* const config) {
+  Stopwatch stop_watch;
+  VP8StatusCode status = VP8_STATUS_OK;
+  if (config == NULL) return 0;
+
+  if (verbose) {
+    StopwatchReset(&stop_watch);
+  }
+
+  if (config->input.has_animation) {
+    fprintf(stderr,
+            "Error! Decoding of an animated WebP file is not supported.\n"
+            "       Use webpmux to extract the individual frames or\n"
+            "       vwebp to view this image.\n");
+  }
+
+  // Decoding call.
+  if (!incremental) {
+    status = WebPDecode(data, data_size, config);
+  } else {
+    WebPIDecoder* const idec = WebPIDecode(data, data_size, config);
+    if (idec == NULL) {
+      fprintf(stderr, "Failed during WebPINewDecoder().\n");
+      return VP8_STATUS_OUT_OF_MEMORY;
+    } else {
+      status = WebPIUpdate(idec, data, data_size);
+      WebPIDelete(idec);
+    }
+  }
+
+  if (verbose) {
+    const double decode_time = StopwatchReadAndReset(&stop_watch);
+    fprintf(stderr, "Time to decode picture: %.3fs\n", decode_time);
+  }
+  return status;
+}
+
+// -----------------------------------------------------------------------------
