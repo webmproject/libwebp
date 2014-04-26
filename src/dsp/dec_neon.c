@@ -553,7 +553,29 @@ static WEBP_INLINE void Add4x4(const int16x8_t row01, const int16x8_t row23,
 //-----------------------------------------------------------------------------
 // Simple In-loop filtering (Paragraph 15.2)
 
-#if !defined(USE_INTRINSICS)
+#if defined(USE_INTRINSICS)
+
+static void SimpleVFilter16(uint8_t* p, int stride, int thresh) {
+  uint8x16_t p1, p0, q0, q1, op0, oq0;
+  Load16x4(p, stride, &p1, &p0, &q0, &q1);
+  {
+    const uint8x16_t mask = NeedsFilter(p1, p0, q0, q1, thresh);
+    DoFilter2(p1, p0, q0, q1, mask, &op0, &oq0);
+  }
+  Store16x2(op0, oq0, p, stride);
+}
+
+static void SimpleHFilter16(uint8_t* p, int stride, int thresh) {
+  uint8x16_t p1, p0, q0, q1, oq0, op0;
+  Load4x16(p, stride, &p1, &p0, &q0, &q1);
+  {
+    const uint8x16_t mask = NeedsFilter(p1, p0, q0, q1, thresh);
+    DoFilter2(p1, p0, q0, q1, mask, &op0, &oq0);
+  }
+  Store2x16(op0, oq0, p, stride);
+}
+
+#else
 
 static void SimpleVFilter16(uint8_t* p, int stride, int thresh) {
   __asm__ volatile (
@@ -600,28 +622,6 @@ static void SimpleHFilter16(uint8_t* p, int stride, int thresh) {
     : [stride] "r"(stride), [thresh] "r"(thresh)
     : "memory", "r4", "r5", "r6", QRegs
   );
-}
-
-#else
-
-static void SimpleVFilter16(uint8_t* p, int stride, int thresh) {
-  uint8x16_t p1, p0, q0, q1, op0, oq0;
-  Load16x4(p, stride, &p1, &p0, &q0, &q1);
-  {
-    const uint8x16_t mask = NeedsFilter(p1, p0, q0, q1, thresh);
-    DoFilter2(p1, p0, q0, q1, mask, &op0, &oq0);
-  }
-  Store16x2(op0, oq0, p, stride);
-}
-
-static void SimpleHFilter16(uint8_t* p, int stride, int thresh) {
-  uint8x16_t p1, p0, q0, q1, oq0, op0;
-  Load4x16(p, stride, &p1, &p0, &q0, &q1);
-  {
-    const uint8x16_t mask = NeedsFilter(p1, p0, q0, q1, thresh);
-    DoFilter2(p1, p0, q0, q1, mask, &op0, &oq0);
-  }
-  Store2x16(op0, oq0, p, stride);
 }
 
 #endif    // USE_INTRINSICS
