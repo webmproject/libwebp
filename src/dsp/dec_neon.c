@@ -113,58 +113,10 @@ static WEBP_INLINE void Load4x16(const uint8_t* const src, int stride,
 
 #else
 
-#define LOAD_LANE_32b(VALUE, LANE) do {                              \
-  (VALUE) = vld1_lane_u32((const uint32_t*)src, (VALUE), (LANE));    \
-  src += stride;                                                     \
-} while (0)
-
 #define LOADQ_LANE_32b(VALUE, LANE) do {                             \
   (VALUE) = vld1q_lane_u32((const uint32_t*)src, (VALUE), (LANE));   \
   src += stride;                                                     \
 } while (0)
-
-static WEBP_INLINE uint8x8x4_t Load4x8(const uint8_t* src, int stride) {
-  uint32x2x4_t in = {{{0}, {0}, {0}, {0}}};
-  LOAD_LANE_32b(in.val[0], 0);  // a0 a1 a2 a3
-  LOAD_LANE_32b(in.val[1], 0);  // b0 b1 b2 b3
-  LOAD_LANE_32b(in.val[2], 0);  // c0 c1 c2 c3
-  LOAD_LANE_32b(in.val[3], 0);  // d0 d1 d2 d3
-  LOAD_LANE_32b(in.val[0], 1);  // e0 e1 e2 e3
-  LOAD_LANE_32b(in.val[1], 1);  // f0 f1 f2 f3
-  LOAD_LANE_32b(in.val[2], 1);  // g0 g1 g2 g3
-  LOAD_LANE_32b(in.val[3], 1);  // h0 h1 h2 h3
-  // out{4} =
-  //   a0 a1 a2 a3 | e0 e1 e2 e3
-  //   b0 b1 b2 b3 | f0 f1 f2 f3
-  //   c0 c1 c2 c3 | g0 g1 g2 g3
-  //   d0 d1 d2 d3 | h0 h1 h2 h3
-
-  // Transpose two 4x4 parts:
-  {
-    const uint8x8x2_t row01 = vtrn_u8(vreinterpret_u8_u32(in.val[0]),
-                                      vreinterpret_u8_u32(in.val[1]));
-    const uint8x8x2_t row23 = vtrn_u8(vreinterpret_u8_u32(in.val[2]),
-                                      vreinterpret_u8_u32(in.val[3]));
-    // row01 = a0 b0 a2 b2 | e0 f0 e2 f2
-    //         a1 b1 a3 b3 | e1 f1 e3 f3
-    // row23 = c0 d0 c2 c2 | g0 h0 g2 h2
-    //         c1 d1 d3 d3 | g1 h1 g3 h3
-    const uint16x4x2_t row02 = vtrn_u16(vreinterpret_u16_u8(row01.val[0]),
-                                        vreinterpret_u16_u8(row23.val[0]));
-    const uint16x4x2_t row13 = vtrn_u16(vreinterpret_u16_u8(row01.val[1]),
-                                        vreinterpret_u16_u8(row23.val[1]));
-    // row02 = a0 b0 c0 d0 | e0 f0 g0 h0
-    //         a2 b2 c2 c2 | e2 f2 g2 h2
-    // row13 = a1 b1 c1 d1 | e1 f1 g1 h1
-    //         a3 b3 d3 d3 | e3 f3 h3 h3
-    uint8x8x4_t out = {{{0}, {0}, {0}, {0}}};
-    out.val[0] = vreinterpret_u8_u16(row02.val[0]);
-    out.val[1] = vreinterpret_u8_u16(row13.val[0]);
-    out.val[2] = vreinterpret_u8_u16(row02.val[1]);
-    out.val[3] = vreinterpret_u8_u16(row13.val[1]);
-    return out;
-  }
-}
 
 static WEBP_INLINE void Load4x16(const uint8_t* src, int stride,
                                  uint8x16_t* const p1, uint8x16_t* const p0,
@@ -203,7 +155,6 @@ static WEBP_INLINE void Load4x16(const uint8_t* src, int stride,
     *q1 = vreinterpretq_u8_u16(row13.val[1]);
   }
 }
-#undef LOAD_LANE_32b
 #undef LOADQ_LANE_32b
 
 #endif    // WORK_AROUND_GCC
