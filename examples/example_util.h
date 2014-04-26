@@ -47,7 +47,7 @@ int ExUtilWriteFile(const char* const file_name,
 void ExUtilPrintWebPError(const char* const in_file, int status);
 
 // Reads a WebP from 'in_file', returning the contents and size in 'data' and
-// 'data_size'. 'bitstream' is populated using WebPGetFeatures().
+// 'data_size'. If not NULL, 'bitstream' is populated using WebPGetFeatures().
 // Returns true on success.
 int ExUtilLoadWebP(const char* const in_file,
                    const uint8_t** data, size_t* data_size,

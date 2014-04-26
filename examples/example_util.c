@@ -131,7 +131,12 @@ int ExUtilLoadWebP(const char* const in_file,
                    const uint8_t** data, size_t* data_size,
                    WebPBitstreamFeatures* bitstream) {
   VP8StatusCode status;
+  WebPBitstreamFeatures local_features;
   if (!ExUtilReadFile(in_file, data, data_size)) return 0;
+
+  if (bitstream == NULL) {
+    bitstream = &local_features;
+  }
 
   status = WebPGetFeatures(*data, *data_size, bitstream);
   if (status != VP8_STATUS_OK) {
