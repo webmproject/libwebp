@@ -18,13 +18,16 @@
 
 // #define USE_INTRINSICS   // use intrinsics when possible
 
+#include "./neon.h"
+
+#include "../dec/vp8i.h"
+
 // if using intrinsics, this flag avoids some functions that make gcc-4.6.3
 // crash ("internal compiler error: in immed_double_const, at emit-rtl.").
 // (probably similar to gcc.gnu.org/bugzilla/show_bug.cgi?id=48183)
+#if !LOCAL_GCC_PREREQ(4,8)
 #define WORK_AROUND_GCC
-
-#include "./neon.h"
-#include "../dec/vp8i.h"
+#endif
 
 #define QRegs "q0", "q1", "q2", "q3",                                          \
               "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15"
