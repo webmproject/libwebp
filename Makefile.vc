@@ -194,6 +194,7 @@ EX_FORMAT_DEC_OBJS = \
     $(DIROBJ)\examples\metadata.obj \
     $(DIROBJ)\examples\pngdec.obj \
     $(DIROBJ)\examples\tiffdec.obj \
+    $(DIROBJ)\examples\webpdec.obj \
     $(DIROBJ)\examples\wicdec.obj \
 
 EX_UTIL_OBJS = \

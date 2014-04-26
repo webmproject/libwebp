@@ -148,6 +148,7 @@ EX_FORMAT_DEC_OBJS = \
     examples/metadata.o \
     examples/pngdec.o \
     examples/tiffdec.o \
+    examples/webpdec.o \
 
 EX_UTIL_OBJS = \
     examples/example_util.o \
@@ -252,7 +253,7 @@ examples/gif2webp: examples/gif2webp.o
 examples/vwebp: examples/vwebp.o
 examples/webpmux: examples/webpmux.o
 
-examples/cwebp: src/libwebp.a
+examples/cwebp: examples/libexample_util.a src/libwebp.a
 examples/cwebp: EXTRA_LIBS += $(CWEBP_LIBS)
 examples/dwebp: examples/libexample_util.a src/libwebpdecoder.a
 examples/dwebp: EXTRA_LIBS += $(DWEBP_LIBS)
