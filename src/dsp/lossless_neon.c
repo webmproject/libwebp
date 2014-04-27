@@ -26,11 +26,7 @@
 //------------------------------------------------------------------------------
 // Colorspace conversion functions
 
-#if defined(__GNUC__)
-#define LOCAL_GCC_VERSION ((__GNUC__ << 8) | __GNUC_MINOR__)
-#endif
-
-#if defined(LOCAL_GCC_VERSION) && (LOCAL_GCC_VERSION >= 0x408)
+#if LOCAL_GCC_PREREQ(4,8)
 // gcc 4.6.0 had some trouble (NDK-r9) with this code. We only use it for
 // gcc-4.8.x at least.
 static void ConvertBGRAToRGBA(const uint32_t* src,
