@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//sE0\u003d",
+        "filename": "examples/example_util.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-27T09:00:06Z",
+      "side": 1,
+      "message": "this is a little too verbose/copy-pasted.",
+      "revId": "e5bce6cac403cabb17a3972cc08a8a2a11f54ca0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
