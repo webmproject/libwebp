@@ -200,9 +200,14 @@ HDRS = \
     src/dec/webpi.h \
     src/dsp/dsp.h \
     src/dsp/lossless.h \
+    src/dsp/neon.h \
     src/dsp/yuv.h \
+    src/enc/backward_references.h \
     src/enc/cost.h \
+    src/enc/histogram.h \
     src/enc/vp8enci.h \
+    src/enc/vp8li.h \
+    src/mux/muxi.h \
     src/utils/alpha_processing.h \
     src/utils/bit_reader.h \
     src/utils/bit_writer.h \
@@ -215,6 +220,7 @@ HDRS = \
     src/utils/random.h \
     src/utils/rescaler.h \
     src/utils/thread.h \
+    src/utils/utils.h \
     src/webp/format_constants.h \
     $(HDRS_INSTALLED) \
 

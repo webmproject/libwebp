@@ -23,8 +23,7 @@
 // (probably similar to gcc.gnu.org/bugzilla/show_bug.cgi?id=48183)
 #define WORK_AROUND_GCC
 
-#include <arm_neon.h>
-
+#include "./neon.h"
 #include "../dec/vp8i.h"
 
 #define QRegs "q0", "q1", "q2", "q3",                                          \
@@ -1168,16 +1167,15 @@ static void TransformDC(const int16_t* in, uint8_t* dst) {
 
 //------------------------------------------------------------------------------
 
-#define STORE_WHT(dst, col, row01, row23) do {           \
-  *dst = vgetq_lane_s32(row01.val[0], col); (dst) += 16; \
-  *dst = vgetq_lane_s32(row01.val[1], col); (dst) += 16; \
-  *dst = vgetq_lane_s32(row23.val[0], col); (dst) += 16; \
-  *dst = vgetq_lane_s32(row23.val[1], col); (dst) += 16; \
+#define STORE_WHT(dst, col, rows) do {                  \
+  *dst = vgetq_lane_s32(rows.val[0], col); (dst) += 16; \
+  *dst = vgetq_lane_s32(rows.val[1], col); (dst) += 16; \
+  *dst = vgetq_lane_s32(rows.val[2], col); (dst) += 16; \
+  *dst = vgetq_lane_s32(rows.val[3], col); (dst) += 16; \
 } while (0)
 
 static void TransformWHT(const int16_t* in, int16_t* out) {
-  int32x4x2_t tmp0;  // tmp[0..7]
-  int32x4x2_t tmp1;  // tmp[8..15]
+  int32x4x4_t tmp;
 
   {
     // Load the source.
@@ -1189,47 +1187,37 @@ static void TransformWHT(const int16_t* in, int16_t* out) {
     const int32x4_t a1 = vaddl_s16(in04_07, in08_11);  // in[4..7] + in[8..11]
     const int32x4_t a2 = vsubl_s16(in04_07, in08_11);  // in[4..7] - in[8..11]
     const int32x4_t a3 = vsubl_s16(in00_03, in12_15);  // in[0..3] - in[12..15]
-    tmp0.val[0] = vaddq_s32(a0, a1);
-    tmp0.val[1] = vaddq_s32(a3, a2);
-    tmp1.val[0] = vsubq_s32(a0, a1);
-    tmp1.val[1] = vsubq_s32(a3, a2);
+    tmp.val[0] = vaddq_s32(a0, a1);
+    tmp.val[1] = vaddq_s32(a3, a2);
+    tmp.val[2] = vsubq_s32(a0, a1);
+    tmp.val[3] = vsubq_s32(a3, a2);
+    // Arrange the temporary results column-wise.
+    tmp = Transpose4x4(tmp);
   }
 
-  tmp0 = vzipq_s32(tmp0.val[0], tmp0.val[1]);  // 0,  4, 1,  5 |  2,  6,  3,  7
-  tmp1 = vzipq_s32(tmp1.val[0], tmp1.val[1]);  // 8, 12, 9, 13 | 10, 14, 11, 15
-
   {
-    // Arrange the temporary results column-wise.
-    const int32x4_t tmp_0_4_8_12 =
-        vcombine_s32(vget_low_s32(tmp0.val[0]), vget_low_s32(tmp1.val[0]));
-    const int32x4_t tmp_2_6_10_14 =
-        vcombine_s32(vget_low_s32(tmp0.val[1]), vget_low_s32(tmp1.val[1]));
-    const int32x4_t tmp_1_5_9_13 =
-        vcombine_s32(vget_high_s32(tmp0.val[0]), vget_high_s32(tmp1.val[0]));
-    const int32x4_t tmp_3_7_11_15 =
-        vcombine_s32(vget_high_s32(tmp0.val[1]), vget_high_s32(tmp1.val[1]));
-    const int32x4_t three = vdupq_n_s32(3);
-    const int32x4_t dc = vaddq_s32(tmp_0_4_8_12, three);  // add rounder
-    const int32x4_t a0 = vaddq_s32(dc, tmp_3_7_11_15);
-    const int32x4_t a1 = vaddq_s32(tmp_1_5_9_13, tmp_2_6_10_14);
-    const int32x4_t a2 = vsubq_s32(tmp_1_5_9_13, tmp_2_6_10_14);
-    const int32x4_t a3 = vsubq_s32(dc, tmp_3_7_11_15);
+    const int32x4_t kCst3 = vdupq_n_s32(3);
+    const int32x4_t dc = vaddq_s32(tmp.val[0], kCst3);  // add rounder
+    const int32x4_t a0 = vaddq_s32(dc, tmp.val[3]);
+    const int32x4_t a1 = vaddq_s32(tmp.val[1], tmp.val[2]);
+    const int32x4_t a2 = vsubq_s32(tmp.val[1], tmp.val[2]);
+    const int32x4_t a3 = vsubq_s32(dc, tmp.val[3]);
 
-    tmp0.val[0] = vaddq_s32(a0, a1);
-    tmp0.val[1] = vaddq_s32(a3, a2);
-    tmp1.val[0] = vsubq_s32(a0, a1);
-    tmp1.val[1] = vsubq_s32(a3, a2);
+    tmp.val[0] = vaddq_s32(a0, a1);
+    tmp.val[1] = vaddq_s32(a3, a2);
+    tmp.val[2] = vsubq_s32(a0, a1);
+    tmp.val[3] = vsubq_s32(a3, a2);
 
     // right shift the results by 3.
-    tmp0.val[0] = vshrq_n_s32(tmp0.val[0], 3);
-    tmp0.val[1] = vshrq_n_s32(tmp0.val[1], 3);
-    tmp1.val[0] = vshrq_n_s32(tmp1.val[0], 3);
-    tmp1.val[1] = vshrq_n_s32(tmp1.val[1], 3);
+    tmp.val[0] = vshrq_n_s32(tmp.val[0], 3);
+    tmp.val[1] = vshrq_n_s32(tmp.val[1], 3);
+    tmp.val[2] = vshrq_n_s32(tmp.val[2], 3);
+    tmp.val[3] = vshrq_n_s32(tmp.val[3], 3);
 
-    STORE_WHT(out, 0, tmp0, tmp1);
-    STORE_WHT(out, 1, tmp0, tmp1);
-    STORE_WHT(out, 2, tmp0, tmp1);
-    STORE_WHT(out, 3, tmp0, tmp1);
+    STORE_WHT(out, 0, tmp);
+    STORE_WHT(out, 1, tmp);
+    STORE_WHT(out, 2, tmp);
+    STORE_WHT(out, 3, tmp);
   }
 }
 
