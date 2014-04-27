@@ -47,9 +47,11 @@ static void HistogramCopy(const VP8LHistogram* const src,
   dst->literal_ = dst_literal;
 }
 
-int VP8LGetHistogramSize(int cache_bits) {
+uint64_t VP8LGetHistogramSize(int cache_bits) {
   const uint64_t literal_size = VP8LHistogramNumCodes(cache_bits);
-  return sizeof(VP8LHistogram) + sizeof(int) * literal_size;
+  const uint64_t total_size = (uint64_t)sizeof(VP8LHistogram)
+                            + literal_size * sizeof(int);
+  return total_size;
 }
 
 void VP8LFreeHistogram(VP8LHistogram* const histo) {
@@ -288,7 +290,7 @@ double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p) {
 static void HistogramAdd(const VP8LHistogram* const in,
                          VP8LHistogram* const out) {
   int i;
-  int literal_size = VP8LHistogramNumCodes(out->palette_code_bits_);
+  const int literal_size = VP8LHistogramNumCodes(in->palette_code_bits_);
   assert(in->palette_code_bits_ == out->palette_code_bits_);
   for (i = 0; i < literal_size; ++i) {
     out->literal_[i] += in->literal_[i];
@@ -350,9 +352,7 @@ static double HistogramAddEval(const VP8LHistogram* const a,
   cost_threshold += sum_cost;
 
   if (GetCombinedHistogramEntropy(a, b, cost_threshold, &cost)) {
-    int literal_size;
-    out->palette_code_bits_ = a->palette_code_bits_;
-    literal_size = VP8LHistogramNumCodes(out->palette_code_bits_);
+    const int literal_size = VP8LHistogramNumCodes(a->palette_code_bits_);
     for (i = 0; i < literal_size; ++i) {
       out->literal_[i] = a->literal_[i] + b->literal_[i];
     }
@@ -365,6 +365,7 @@ static double HistogramAddEval(const VP8LHistogram* const a,
       out->alpha_[i] = a->alpha_[i] + b->alpha_[i];
     }
     out->bit_cost_ = cost;
+    out->palette_code_bits_ = a->palette_code_bits_;
   }
 
   return cost - sum_cost;
