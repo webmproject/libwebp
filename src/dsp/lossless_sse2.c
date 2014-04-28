@@ -383,6 +383,88 @@ static void ConvertBGRAToBGR(const uint32_t* src,
   VP8LConvertBGRAToBGR_C((const uint32_t*)in, num_pixels, dst);
 }
 
+//------------------------------------------------------------------------------
+
+#define LINE_SIZE 16    // 8 or 16
+static void AddVector(const uint32_t* a, const uint32_t* b, uint32_t* out,
+                      int size) {
+  int i;
+  assert(size % LINE_SIZE == 0);
+  for (i = 0; i < size; i += LINE_SIZE) {
+    const __m128i a0 = _mm_loadu_si128((__m128i*)&a[i +  0]);
+    const __m128i a1 = _mm_loadu_si128((__m128i*)&a[i +  4]);
+#if (LINE_SIZE == 16)
+    const __m128i a2 = _mm_loadu_si128((__m128i*)&a[i +  8]);
+    const __m128i a3 = _mm_loadu_si128((__m128i*)&a[i + 12]);
+#endif
+    const __m128i b0 = _mm_loadu_si128((__m128i*)&b[i +  0]);
+    const __m128i b1 = _mm_loadu_si128((__m128i*)&b[i +  4]);
+#if (LINE_SIZE == 16)
+    const __m128i b2 = _mm_loadu_si128((__m128i*)&b[i +  8]);
+    const __m128i b3 = _mm_loadu_si128((__m128i*)&b[i + 12]);
+#endif
+    _mm_storeu_si128((__m128i*)&out[i +  0], _mm_add_epi32(a0, b0));
+    _mm_storeu_si128((__m128i*)&out[i +  4], _mm_add_epi32(a1, b1));
+#if (LINE_SIZE == 16)
+    _mm_storeu_si128((__m128i*)&out[i +  8], _mm_add_epi32(a2, b2));
+    _mm_storeu_si128((__m128i*)&out[i + 12], _mm_add_epi32(a3, b3));
+#endif
+  }
+}
+
+static void AddVectorEq(const uint32_t* a, uint32_t* out, int size) {
+  int i;
+  assert(size % LINE_SIZE == 0);
+  for (i = 0; i < size; i += LINE_SIZE) {
+    const __m128i a0 = _mm_loadu_si128((__m128i*)&a[i +  0]);
+    const __m128i a1 = _mm_loadu_si128((__m128i*)&a[i +  4]);
+#if (LINE_SIZE == 16)
+    const __m128i a2 = _mm_loadu_si128((__m128i*)&a[i +  8]);
+    const __m128i a3 = _mm_loadu_si128((__m128i*)&a[i + 12]);
+#endif
+    const __m128i b0 = _mm_loadu_si128((__m128i*)&out[i +  0]);
+    const __m128i b1 = _mm_loadu_si128((__m128i*)&out[i +  4]);
+#if (LINE_SIZE == 16)
+    const __m128i b2 = _mm_loadu_si128((__m128i*)&out[i +  8]);
+    const __m128i b3 = _mm_loadu_si128((__m128i*)&out[i + 12]);
+#endif
+    _mm_storeu_si128((__m128i*)&out[i +  0], _mm_add_epi32(a0, b0));
+    _mm_storeu_si128((__m128i*)&out[i +  4], _mm_add_epi32(a1, b1));
+#if (LINE_SIZE == 16)
+    _mm_storeu_si128((__m128i*)&out[i +  8], _mm_add_epi32(a2, b2));
+    _mm_storeu_si128((__m128i*)&out[i + 12], _mm_add_epi32(a3, b3));
+#endif
+  }
+}
+#undef LINE_SIZE
+
+// Note we are adding uint32_t's as *signed* int32's (using _mm_add_epi32). But
+// that's ok since the histogram values are less than 1<<28 (max picture size).
+static void HistogramAdd(const VP8LHistogram* const a,
+                         const VP8LHistogram* const b,
+                         VP8LHistogram* const out) {
+  int i;
+  const int literal_size = VP8LHistogramNumCodes(a->palette_code_bits_);
+  assert(a->palette_code_bits_ == b->palette_code_bits_);
+  if (b != out) {
+    AddVector(a->literal_, b->literal_, out->literal_, NUM_LITERAL_CODES);
+    AddVector(a->red_, b->red_, out->red_, NUM_LITERAL_CODES);
+    AddVector(a->blue_, b->blue_, out->blue_, NUM_LITERAL_CODES);
+    AddVector(a->alpha_, b->alpha_, out->alpha_, NUM_LITERAL_CODES);
+  } else {
+    AddVectorEq(a->literal_, out->literal_, NUM_LITERAL_CODES);
+    AddVectorEq(a->red_, out->red_, NUM_LITERAL_CODES);
+    AddVectorEq(a->blue_, out->blue_, NUM_LITERAL_CODES);
+    AddVectorEq(a->alpha_, out->alpha_, NUM_LITERAL_CODES);
+  }
+  for (i = NUM_LITERAL_CODES; i < literal_size; ++i) {
+    out->literal_[i] = a->literal_[i] + b->literal_[i];
+  }
+  for (i = 0; i < NUM_DISTANCE_CODES; ++i) {
+    out->distance_[i] = a->distance_[i] + b->distance_[i];
+  }
+}
+
 #endif   // WEBP_USE_SSE2
 
 //------------------------------------------------------------------------------
@@ -405,6 +487,8 @@ void VP8LDspInitSSE2(void) {
   VP8LConvertBGRAToRGBA4444 = ConvertBGRAToRGBA4444;
   VP8LConvertBGRAToRGB565 = ConvertBGRAToRGB565;
   VP8LConvertBGRAToBGR = ConvertBGRAToBGR;
+
+  VP8LHistogramAdd = HistogramAdd;
 #endif   // WEBP_USE_SSE2
 }
 

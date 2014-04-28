@@ -330,7 +330,7 @@ static void StoreFullHuffmanCode(VP8LBitWriter* const bw,
   VP8LWriteBits(bw, 1, 0);
   num_tokens = VP8LCreateCompressedHuffmanTree(tree, tokens, max_tokens);
   {
-    int histogram[CODE_LENGTH_CODES] = { 0 };
+    uint32_t histogram[CODE_LENGTH_CODES] = { 0 };
     uint8_t buf_rle[CODE_LENGTH_CODES] = { 0 };
     int i;
     for (i = 0; i < num_tokens; ++i) {

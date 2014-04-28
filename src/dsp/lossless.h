@@ -18,6 +18,8 @@
 #include "../webp/types.h"
 #include "../webp/decode.h"
 
+#include "../enc/histogram.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -123,24 +125,25 @@ static WEBP_INLINE uint32_t VP8LSubSampleSize(uint32_t size,
 #define LOG_LOOKUP_IDX_MAX 256
 extern const float kLog2Table[LOG_LOOKUP_IDX_MAX];
 extern const float kSLog2Table[LOG_LOOKUP_IDX_MAX];
-typedef float (*VP8LFastLog2SlowFunc)(int v);
+typedef float (*VP8LFastLog2SlowFunc)(uint32_t v);
 
 extern VP8LFastLog2SlowFunc VP8LFastLog2Slow;
 extern VP8LFastLog2SlowFunc VP8LFastSLog2Slow;
 
-static WEBP_INLINE float VP8LFastLog2(int v) {
+static WEBP_INLINE float VP8LFastLog2(uint32_t v) {
   return (v < LOG_LOOKUP_IDX_MAX) ? kLog2Table[v] : VP8LFastLog2Slow(v);
 }
 // Fast calculation of v * log2(v) for integer input.
-static WEBP_INLINE float VP8LFastSLog2(int v) {
+static WEBP_INLINE float VP8LFastSLog2(uint32_t v) {
   return (v < LOG_LOOKUP_IDX_MAX) ? kSLog2Table[v] : VP8LFastSLog2Slow(v);
 }
 
 // -----------------------------------------------------------------------------
 // Huffman-cost related functions.
 
-typedef double (*VP8LCostFunc)(const int* population, int length);
-typedef double (*VP8LCostCombinedFunc)(const int* X, const int* Y, int length);
+typedef double (*VP8LCostFunc)(const uint32_t* population, int length);
+typedef double (*VP8LCostCombinedFunc)(const uint32_t* X, const uint32_t* Y,
+                                       int length);
 
 extern VP8LCostFunc VP8LExtraCost;
 extern VP8LCostCombinedFunc VP8LExtraCostCombined;
@@ -150,12 +153,18 @@ typedef struct {        // small struct to hold counters
   int streaks[2][2];    // [zero/non-zero][streak<3 / streak>=3]
 } VP8LStreaks;
 
-typedef VP8LStreaks (*VP8LCostCountFunc)(const int* population, int length);
-typedef VP8LStreaks (*VP8LCostCombinedCountFunc)(const int* X, const int* Y,
-                                                 int length);
+typedef VP8LStreaks (*VP8LCostCountFunc)(const uint32_t* population,
+                                         int length);
+typedef VP8LStreaks (*VP8LCostCombinedCountFunc)(const uint32_t* X,
+                                                 const uint32_t* Y, int length);
 
 extern VP8LCostCountFunc VP8LHuffmanCostCount;
 extern VP8LCostCombinedCountFunc VP8LHuffmanCostCombinedCount;
+
+typedef void (*VP8LHistogramAddFunc)(const VP8LHistogram* const a,
+                                     const VP8LHistogram* const b,
+                                     VP8LHistogram* const out);
+extern VP8LHistogramAddFunc VP8LHistogramAdd;
 
 // -----------------------------------------------------------------------------
 // PrefixEncode()

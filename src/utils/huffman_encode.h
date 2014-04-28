@@ -36,7 +36,7 @@ typedef struct {
 // Struct to represent the Huffman tree.
 // TODO(vikasa): Add comment for the fields of the Struct.
 typedef struct {
-  int total_count_;
+  uint32_t total_count_;
   int value_;
   int pool_index_left_;    // Index for the left sub-tree.
   int pool_index_right_;   // Index for the right sub-tree.
@@ -50,7 +50,7 @@ int VP8LCreateCompressedHuffmanTree(const HuffmanTreeCode* const tree,
 // Create an optimized tree, and tokenize it.
 // 'buf_rle' and 'huff_tree' are pre-allocated and the 'tree' is the constructed
 // huffman code tree.
-void VP8LCreateHuffmanTree(int* const histogram, int tree_depth_limit,
+void VP8LCreateHuffmanTree(uint32_t* const histogram, int tree_depth_limit,
                            uint8_t* const buf_rle, HuffmanTree* const huff_tree,
                            HuffmanTreeCode* const tree);
 

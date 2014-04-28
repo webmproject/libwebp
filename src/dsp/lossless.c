@@ -332,14 +332,14 @@ const uint8_t kPrefixEncodeExtraBitsValue[PREFIX_LOOKUP_IDX_MAX] = {
 #define APPROX_LOG_WITH_CORRECTION_MAX  65536
 #define APPROX_LOG_MAX                   4096
 #define LOG_2_RECIPROCAL 1.44269504088896338700465094007086
-static float FastSLog2Slow(int v) {
+static float FastSLog2Slow(uint32_t v) {
   assert(v >= LOG_LOOKUP_IDX_MAX);
   if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
     int log_cnt = 0;
-    int y = 1;
+    uint32_t y = 1;
     int correction = 0;
     const float v_f = (float)v;
-    const int orig_v = v;
+    const uint32_t orig_v = v;
     do {
       ++log_cnt;
       v = v >> 1;
@@ -358,12 +358,12 @@ static float FastSLog2Slow(int v) {
   }
 }
 
-static float FastLog2Slow(int v) {
+static float FastLog2Slow(uint32_t v) {
   assert(v >= LOG_LOOKUP_IDX_MAX);
   if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
     int log_cnt = 0;
-    int y = 1;
-    const int orig_v = v;
+    uint32_t y = 1;
+    const uint32_t orig_v = v;
     double log_2;
     do {
       ++log_cnt;
@@ -1437,6 +1437,7 @@ void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
   }
 }
 
+//------------------------------------------------------------------------------
 // Bundles multiple (1, 2, 4 or 8) pixels into a single pixel.
 void VP8LBundleColorMap(const uint8_t* const row, int width,
                         int xbits, uint32_t* const dst) {
@@ -1458,14 +1459,17 @@ void VP8LBundleColorMap(const uint8_t* const row, int width,
   }
 }
 
-static double ExtraCost(const int* population, int length) {
+//------------------------------------------------------------------------------
+
+static double ExtraCost(const uint32_t* population, int length) {
   int i;
   double cost = 0.;
   for (i = 2; i < length - 2; ++i) cost += (i >> 1) * population[i + 2];
   return cost;
 }
 
-static double ExtraCostCombined(const int* X, const int* Y, int length) {
+static double ExtraCostCombined(const uint32_t* X, const uint32_t* Y,
+                                int length) {
   int i;
   double cost = 0.;
   for (i = 2; i < length - 2; ++i) {
@@ -1476,7 +1480,7 @@ static double ExtraCostCombined(const int* X, const int* Y, int length) {
 }
 
 // Returns the various RLE counts
-static VP8LStreaks HuffmanCostCount(const int* population, int length) {
+static VP8LStreaks HuffmanCostCount(const uint32_t* population, int length) {
   int i;
   int streak = 0;
   VP8LStreaks stats;
@@ -1496,8 +1500,8 @@ static VP8LStreaks HuffmanCostCount(const int* population, int length) {
   return stats;
 }
 
-static VP8LStreaks HuffmanCostCombinedCount(const int* X, const int* Y,
-                                            int length) {
+static VP8LStreaks HuffmanCostCombinedCount(const uint32_t* X,
+                                            const uint32_t* Y, int length) {
   int i;
   int streak = 0;
   VP8LStreaks stats;
@@ -1524,6 +1528,41 @@ static VP8LStreaks HuffmanCostCombinedCount(const int* X, const int* Y,
 
 //------------------------------------------------------------------------------
 
+static void HistogramAdd(const VP8LHistogram* const a,
+                         const VP8LHistogram* const b,
+                         VP8LHistogram* const out) {
+  int i;
+  const int literal_size = VP8LHistogramNumCodes(a->palette_code_bits_);
+  assert(a->palette_code_bits_ == b->palette_code_bits_);
+  if (b != out) {
+    for (i = 0; i < literal_size; ++i) {
+      out->literal_[i] = a->literal_[i] + b->literal_[i];
+    }
+    for (i = 0; i < NUM_DISTANCE_CODES; ++i) {
+      out->distance_[i] = a->distance_[i] + b->distance_[i];
+    }
+    for (i = 0; i < NUM_LITERAL_CODES; ++i) {
+      out->red_[i] = a->red_[i] + b->red_[i];
+      out->blue_[i] = a->blue_[i] + b->blue_[i];
+      out->alpha_[i] = a->alpha_[i] + b->alpha_[i];
+    }
+  } else {
+    for (i = 0; i < literal_size; ++i) {
+      out->literal_[i] += a->literal_[i];
+    }
+    for (i = 0; i < NUM_DISTANCE_CODES; ++i) {
+      out->distance_[i] += a->distance_[i];
+    }
+    for (i = 0; i < NUM_LITERAL_CODES; ++i) {
+      out->red_[i] += a->red_[i];
+      out->blue_[i] += a->blue_[i];
+      out->alpha_[i] += a->alpha_[i];
+    }
+  }
+}
+
+//------------------------------------------------------------------------------
+
 VP8LProcessBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
 VP8LProcessBlueAndRedFunc VP8LAddGreenToBlueAndRed;
 VP8LPredictorFunc VP8LPredictors[16];
@@ -1545,6 +1584,8 @@ VP8LCostCombinedFunc VP8LExtraCostCombined;
 
 VP8LCostCountFunc VP8LHuffmanCostCount;
 VP8LCostCombinedCountFunc VP8LHuffmanCostCombinedCount;
+
+VP8LHistogramAddFunc VP8LHistogramAdd;
 
 extern void VP8LDspInitSSE2(void);
 extern void VP8LDspInitNEON(void);
@@ -1573,6 +1614,8 @@ void VP8LDspInit(void) {
 
   VP8LHuffmanCostCount = HuffmanCostCount;
   VP8LHuffmanCostCombinedCount = HuffmanCostCombinedCount;
+
+  VP8LHistogramAdd = HistogramAdd;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {

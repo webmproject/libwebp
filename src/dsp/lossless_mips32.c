@@ -26,13 +26,13 @@
 #define APPROX_LOG_MAX                   4096
 #define LOG_2_RECIPROCAL 1.44269504088896338700465094007086
 
-static float FastSLog2Slow(int v) {
+static float FastSLog2Slow(uint32_t v) {
   assert(v >= LOG_LOOKUP_IDX_MAX);
   if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
-    int log_cnt, y, correction;
+    uint32_t log_cnt, y, correction;
     const int c24 = 24;
     const float v_f = (float)v;
-    int temp;
+    uint32_t temp;
 
     // Xf = 256 = 2^8
     // log_cnt is index of leading one in upper 24 bits
@@ -62,13 +62,13 @@ static float FastSLog2Slow(int v) {
   }
 }
 
-static float FastLog2Slow(int v) {
+static float FastLog2Slow(uint32_t v) {
   assert(v >= LOG_LOOKUP_IDX_MAX);
   if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
-    int log_cnt, y;
+    uint32_t log_cnt, y;
     const int c24 = 24;
     double log_2;
-    int temp;
+    uint32_t temp;
 
     __asm__ volatile(
       "clz      %[log_cnt], %[v]                      \n\t"
@@ -86,7 +86,7 @@ static float FastLog2Slow(int v) {
       // Since the division is still expensive, add this correction factor only
       // for large values of 'v'.
 
-      const int correction = (23 * (v & (y - 1))) >> 4;
+      const uint32_t correction = (23 * (v & (y - 1))) >> 4;
       log_2 += (double)correction / v;
     }
     return (float)log_2;
@@ -98,8 +98,8 @@ static float FastLog2Slow(int v) {
 // C version of this function:
 //   int i = 0;
 //   int64_t cost = 0;
-//   int* pop = (int*)&population[4];
-//   const int* LoopEnd = (int*)&population[length];
+//   const uint32_t* pop = &population[4];
+//   const uint32_t* LoopEnd = &population[length];
 //   while (pop != LoopEnd) {
 //     ++i;
 //     cost += i * *pop;
@@ -107,10 +107,10 @@ static float FastLog2Slow(int v) {
 //     pop += 2;
 //   }
 //   return (double)cost;
-static double ExtraCost(const int* const population, int length) {
+static double ExtraCost(const uint32_t* const population, int length) {
   int i, temp0, temp1;
-  const int* pop = &population[4];
-  const int* const LoopEnd = &population[length];
+  const uint32_t* pop = &population[4];
+  const uint32_t* const LoopEnd = &population[length];
 
   __asm__ volatile(
     "mult   $zero,    $zero                  \n\t"
@@ -139,12 +139,12 @@ static double ExtraCost(const int* const population, int length) {
 // C version of this function:
 //   int i = 0;
 //   int64_t cost = 0;
-//   int* pX = (int*)&X[4];
-//   int* pY = (int*)&Y[4];
-//   const int* LoopEnd = (int*)&X[length];
+//   const uint32_t* pX = &X[4];
+//   const uint32_t* pY = &Y[4];
+//   const uint32_t* LoopEnd = &X[length];
 //   while (pX != LoopEnd) {
-//     const int xy0 = *pX + *pY;
-//     const int xy1 = *(pX + 1) + *(pY + 1);
+//     const uint32_t xy0 = *pX + *pY;
+//     const uint32_t xy1 = *(pX + 1) + *(pY + 1);
 //     ++i;
 //     cost += i * xy0;
 //     cost += i * xy1;
@@ -152,12 +152,12 @@ static double ExtraCost(const int* const population, int length) {
 //     pY += 2;
 //   }
 //   return (double)cost;
-static double ExtraCostCombined(const int* const X, const int* const Y,
-                                int length) {
+static double ExtraCostCombined(const uint32_t* const X,
+                                const uint32_t* const Y, int length) {
   int i, temp0, temp1, temp2, temp3;
-  const int* pX = &X[4];
-  const int* pY = &Y[4];
-  const int* const LoopEnd = &X[length];
+  const uint32_t* pX = &X[4];
+  const uint32_t* pY = &Y[4];
+  const uint32_t* const LoopEnd = &X[length];
 
   __asm__ volatile(
     "mult   $zero,    $zero                  \n\t"
@@ -217,7 +217,7 @@ static double ExtraCostCombined(const int* const X, const int* const Y,
   );
 
 // Returns the various RLE counts
-static VP8LStreaks HuffmanCostCount(const int* population, int length) {
+static VP8LStreaks HuffmanCostCount(const uint32_t* population, int length) {
   int i;
   int streak = 0;
   VP8LStreaks stats;
@@ -230,19 +230,19 @@ static VP8LStreaks HuffmanCostCount(const int* population, int length) {
     if (population[i] == population[i + 1]) {
       continue;
     }
-    temp0 = population[i] != 0;
+    temp0 = (population[i] != 0);
     HUFFMAN_COST_PASS
     streak = 0;
   }
   ++streak;
-  temp0 = population[i] != 0;
+  temp0 = (population[i] != 0);
   HUFFMAN_COST_PASS
 
   return stats;
 }
 
-static VP8LStreaks HuffmanCostCombinedCount(const int* X, const int* Y,
-                                            int length) {
+static VP8LStreaks HuffmanCostCombinedCount(const uint32_t* X,
+                                            const uint32_t* Y, int length) {
   int i;
   int streak = 0;
   VP8LStreaks stats;
@@ -251,20 +251,20 @@ static VP8LStreaks HuffmanCostCombinedCount(const int* X, const int* Y,
   int temp0, temp1, temp2, temp3;
   memset(&stats, 0, sizeof(stats));
   for (i = 0; i < length - 1; ++i) {
-    const int xy = X[i] + Y[i];
-    const int xy_next = X[i + 1] + Y[i + 1];
+    const uint32_t xy = X[i] + Y[i];
+    const uint32_t xy_next = X[i + 1] + Y[i + 1];
     ++streak;
     if (xy == xy_next) {
       continue;
     }
-    temp0 = xy != 0;
+    temp0 = (xy != 0);
     HUFFMAN_COST_PASS
     streak = 0;
   }
   {
-    const int xy = X[i] + Y[i];
+    const uint32_t xy = X[i] + Y[i];
     ++streak;
-    temp0 = xy != 0;
+    temp0 = (xy != 0);
     HUFFMAN_COST_PASS
   }
 

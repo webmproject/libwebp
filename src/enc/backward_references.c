@@ -405,8 +405,8 @@ static int BackwardReferencesTraceBackwards(
     VP8LBackwardRefs* const refs);
 
 static void ConvertPopulationCountTableToBitEstimates(
-    int num_symbols, const int population_counts[], double output[]) {
-  int sum = 0;
+    int num_symbols, const uint32_t population_counts[], double output[]) {
+  uint32_t sum = 0;
   int nonzeros = 0;
   int i;
   for (i = 0; i < num_symbols; ++i) {

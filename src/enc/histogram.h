@@ -32,12 +32,12 @@ extern "C" {
 typedef struct {
   // literal_ contains green literal, palette-code and
   // copy-length-prefix histogram
-  int* literal_;         // Pointer to the allocated buffer for literal.
-  int red_[256];
-  int blue_[256];
-  int alpha_[256];
+  uint32_t* literal_;         // Pointer to the allocated buffer for literal.
+  uint32_t red_[NUM_LITERAL_CODES];
+  uint32_t blue_[NUM_LITERAL_CODES];
+  uint32_t alpha_[NUM_LITERAL_CODES];
   // Backward reference prefix-code histogram.
-  int distance_[NUM_DISTANCE_CODES];
+  uint32_t distance_[NUM_DISTANCE_CODES];
   int palette_code_bits_;
   double bit_cost_;      // cached value of VP8LHistogramEstimateBits(this)
   double literal_cost_;  // Cached values of dominant entropy costs:
