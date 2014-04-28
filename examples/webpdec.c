@@ -43,7 +43,7 @@ int ReadWebP(const char* const in_file, WebPPicture* const pic,
     const int has_alpha = keep_alpha && bitstream->has_alpha;
     output_buffer->colorspace = has_alpha ? MODE_RGBA : MODE_RGB;
 
-    status = ExUtilDecodeWebP(data, data_size, 0, 0, &config);
+    status = ExUtilDecodeWebP(data, data_size, 0, &config);
     if (status == VP8_STATUS_OK) {
       const uint8_t* const rgba = output_buffer->u.RGBA.rgba;
       const int stride = output_buffer->u.RGBA.stride;

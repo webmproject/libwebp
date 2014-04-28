@@ -706,7 +706,11 @@ int main(int argc, const char *argv[]) {
         return -1;
     }
 
-    status = ExUtilDecodeWebP(data, data_size, incremental, verbose, &config);
+    if (incremental) {
+      status = ExUtilDecodeWebPIncremental(data, data_size, verbose, &config);
+    } else {
+      status = ExUtilDecodeWebP(data, data_size, verbose, &config);
+    }
  End:
     free((void*)data);
     ok = (status == VP8_STATUS_OK);
