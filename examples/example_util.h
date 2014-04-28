@@ -13,14 +13,11 @@
 #ifndef WEBP_EXAMPLES_EXAMPLE_UTIL_H_
 #define WEBP_EXAMPLES_EXAMPLE_UTIL_H_
 
-#include "webp/types.h"
+#include "webp/decode.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-struct WebPDecoderConfig;
-struct WebPBitstreamFeatures;
 
 // Allocates storage for entire file 'file_name' and returns contents and size
 // in 'data' and 'data_size'. Returns 1 on success, 0 otherwise. '*data' should
@@ -51,7 +48,7 @@ void ExUtilPrintWebPError(const char* const in_file, int status);
 // Returns true on success.
 int ExUtilLoadWebP(const char* const in_file,
                    const uint8_t** data, size_t* data_size,
-                   struct WebPBitstreamFeatures* bitstream);
+                   WebPBitstreamFeatures* bitstream);
 
 // Decodes the WebP contained in 'data'.
 // 'config' is a structure previously initialized by WebPInitDecoderConfig().
@@ -59,14 +56,13 @@ int ExUtilLoadWebP(const char* const in_file,
 // cause decode timing to be reported.
 // Returns the decoder status. On success 'config->output' will contain the
 // decoded picture.
-enum VP8StatusCode ExUtilDecodeWebP(const uint8_t* const data, size_t data_size,
-                                    int verbose,
-                                    struct WebPDecoderConfig* const config);
+VP8StatusCode ExUtilDecodeWebP(const uint8_t* const data, size_t data_size,
+                               int verbose, WebPDecoderConfig* const config);
 
 // Same as ExUtilDecodeWebP(), but using the incremental decoder.
-enum VP8StatusCode ExUtilDecodeWebPIncremental(
+VP8StatusCode ExUtilDecodeWebPIncremental(
     const uint8_t* const data, size_t data_size,
-    int verbose, struct WebPDecoderConfig* const config);
+    int verbose, WebPDecoderConfig* const config);
 
 #ifdef __cplusplus
 }    // extern "C"
