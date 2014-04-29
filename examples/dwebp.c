@@ -670,7 +670,7 @@ int main(int argc, const char *argv[]) {
     size_t data_size = 0;
     const uint8_t* data = NULL;
     if (!ExUtilLoadWebP(in_file, &data, &data_size, bitstream)) {
-      goto End;
+      return -1;
     }
 
     switch (format) {
@@ -711,7 +711,7 @@ int main(int argc, const char *argv[]) {
     } else {
       status = ExUtilDecodeWebP(data, data_size, verbose, &config);
     }
- End:
+
     free((void*)data);
     ok = (status == VP8_STATUS_OK);
     if (!ok) {
