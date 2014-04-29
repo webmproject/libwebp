@@ -516,8 +516,7 @@ static int EncodeImageNoHuffman(VP8LBitWriter* const bw,
     }
   }
 
-  tokens = (HuffmanTreeToken*)WebPSafeMalloc((uint64_t)max_tokens,
-                                             sizeof(*tokens));
+  tokens = (HuffmanTreeToken*)WebPSafeMalloc(max_tokens, sizeof(*tokens));
   if (tokens == NULL) goto Error;
 
   // Store Huffman codes.
@@ -561,7 +560,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
   VP8LBackwardRefs* refs = NULL;
   VP8LBackwardRefs* best_refs;
   uint16_t* const histogram_symbols =
-      (uint16_t*)WebPSafeMalloc((uint64_t)histogram_image_xysize,
+      (uint16_t*)WebPSafeMalloc(histogram_image_xysize,
                                 sizeof(*histogram_symbols));
   assert(histogram_bits >= MIN_HUFFMAN_BITS);
   assert(histogram_bits <= MAX_HUFFMAN_BITS);
@@ -618,7 +617,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
     VP8LWriteBits(bw, 1, write_histogram_image);
     if (write_histogram_image) {
       uint32_t* const histogram_argb =
-          (uint32_t*)WebPSafeMalloc((uint64_t)histogram_image_xysize,
+          (uint32_t*)WebPSafeMalloc(histogram_image_xysize,
                                     sizeof(*histogram_argb));
       int max_index = 0;
       uint32_t i;
@@ -656,7 +655,7 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
         max_tokens = codes->num_symbols;
       }
     }
-    tokens = (HuffmanTreeToken*)WebPSafeMalloc((uint64_t)max_tokens,
+    tokens = (HuffmanTreeToken*)WebPSafeMalloc(max_tokens,
                                                sizeof(*tokens));
     if (tokens == NULL) goto Error;
     for (i = 0; i < 5 * histogram_image_size; ++i) {
@@ -844,11 +843,11 @@ static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
   const int tile_size = 1 << enc->transform_bits_;
   const uint64_t image_size = width * height;
   const uint64_t argb_scratch_size = tile_size * width + width;
-  const uint64_t transform_data_size =
-      (uint64_t)VP8LSubSampleSize(width, enc->transform_bits_) *
-      (uint64_t)VP8LSubSampleSize(height, enc->transform_bits_);
+  const int transform_data_size =
+      VP8LSubSampleSize(width, enc->transform_bits_) *
+      VP8LSubSampleSize(height, enc->transform_bits_);
   const uint64_t total_size =
-      image_size + argb_scratch_size + transform_data_size;
+      image_size + argb_scratch_size + (uint64_t)transform_data_size;
   uint32_t* mem = (uint32_t*)WebPSafeMalloc(total_size, sizeof(*mem));
   if (mem == NULL) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
@@ -947,7 +946,7 @@ static WebPEncodingError EncodePalette(VP8LBitWriter* const bw,
   if (err != VP8_ENC_OK) goto Error;
   dst = enc->argb_;
 
-  row = (uint8_t*)WebPSafeMalloc((uint64_t)width, sizeof(*row));
+  row = (uint8_t*)WebPSafeMalloc(width, sizeof(*row));
   if (row == NULL) return VP8_ENC_ERROR_OUT_OF_MEMORY;
 
   ApplyPalette(src, dst, pic->argb_stride, enc->current_width_,
@@ -975,14 +974,13 @@ static WebPEncodingError EncodePalette(VP8LBitWriter* const bw,
 // -----------------------------------------------------------------------------
 
 static int GetHistoBits(int method, int use_palette, int width, int height) {
-  const uint64_t hist_size = VP8LGetHistogramSize(MAX_COLOR_CACHE_BITS);
+  const int hist_size = VP8LGetHistogramSize(MAX_COLOR_CACHE_BITS);
   // Make tile size a function of encoding method (Range: 0 to 6).
   int histo_bits = (use_palette ? 9 : 7) - method;
   while (1) {
-    const uint64_t huff_image_size = VP8LSubSampleSize(width, histo_bits) *
-                                     VP8LSubSampleSize(height, histo_bits) *
-                                     hist_size;
-    if (huff_image_size <= MAX_HUFF_IMAGE_SIZE) break;
+    const int huff_image_size = VP8LSubSampleSize(width, histo_bits) *
+                                VP8LSubSampleSize(height, histo_bits);
+    if ((uint64_t)huff_image_size * hist_size <= MAX_HUFF_IMAGE_SIZE) break;
     ++histo_bits;
   }
   return (histo_bits < MIN_HUFFMAN_BITS) ? MIN_HUFFMAN_BITS :
