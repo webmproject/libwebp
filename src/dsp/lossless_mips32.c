@@ -271,6 +271,131 @@ static VP8LStreaks HuffmanCostCombinedCount(const uint32_t* X,
   return stats;
 }
 
+#define ASM_START                                       \
+  __asm__ volatile(                                     \
+    ".set   push                            \n\t"       \
+    ".set   at                              \n\t"       \
+    ".set   macro                           \n\t"       \
+  "1:                                       \n\t"
+
+// P2 = P0 + P1
+// A..D - offsets
+// E - temp variable to tell macro
+//     if pointer should be incremented
+// literal_ and successive histograms could be unaligned
+// so we must use ulw and usw
+#define ADD_TO_OUT(A, B, C, D, E, P0, P1, P2)           \
+    "ulw    %[temp0], "#A"(%["#P0"])        \n\t"       \
+    "ulw    %[temp1], "#B"(%["#P0"])        \n\t"       \
+    "ulw    %[temp2], "#C"(%["#P0"])        \n\t"       \
+    "ulw    %[temp3], "#D"(%["#P0"])        \n\t"       \
+    "ulw    %[temp4], "#A"(%["#P1"])        \n\t"       \
+    "ulw    %[temp5], "#B"(%["#P1"])        \n\t"       \
+    "ulw    %[temp6], "#C"(%["#P1"])        \n\t"       \
+    "ulw    %[temp7], "#D"(%["#P1"])        \n\t"       \
+    "addu   %[temp4], %[temp4],   %[temp0]  \n\t"       \
+    "addu   %[temp5], %[temp5],   %[temp1]  \n\t"       \
+    "addu   %[temp6], %[temp6],   %[temp2]  \n\t"       \
+    "addu   %[temp7], %[temp7],   %[temp3]  \n\t"       \
+    "addiu  %["#P0"],  %["#P0"],  16        \n\t"       \
+  ".if "#E" == 1                            \n\t"       \
+    "addiu  %["#P1"],  %["#P1"],  16        \n\t"       \
+  ".endif                                   \n\t"       \
+    "usw    %[temp4], "#A"(%["#P2"])        \n\t"       \
+    "usw    %[temp5], "#B"(%["#P2"])        \n\t"       \
+    "usw    %[temp6], "#C"(%["#P2"])        \n\t"       \
+    "usw    %[temp7], "#D"(%["#P2"])        \n\t"       \
+    "addiu  %["#P2"], %["#P2"],   16        \n\t"       \
+    "bne    %["#P0"], %[LoopEnd], 1b        \n\t"       \
+    ".set   pop                             \n\t"       \
+
+#define ASM_END_COMMON_0                                \
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1),         \
+      [temp2]"=&r"(temp2), [temp3]"=&r"(temp3),         \
+      [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),         \
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7),         \
+      [pa]"+r"(pa), [pout]"+r"(pout)
+
+#define ASM_END_COMMON_1                                \
+    : [LoopEnd]"r"(LoopEnd)                             \
+    : "memory", "at"                                    \
+  );
+
+#define ASM_END_0                                       \
+    ASM_END_COMMON_0                                    \
+      , [pb]"+r"(pb)                                    \
+    ASM_END_COMMON_1
+
+#define ASM_END_1                                       \
+    ASM_END_COMMON_0                                    \
+    ASM_END_COMMON_1
+
+#define ADD_VECTOR(A, B, OUT, SIZE, EXTRA_SIZE)  do {   \
+  const uint32_t* pa = (const uint32_t*)(A);            \
+  const uint32_t* pb = (const uint32_t*)(B);            \
+  uint32_t* pout = (uint32_t*)(OUT);                    \
+  const uint32_t* const LoopEnd = pa + (SIZE);          \
+  assert((SIZE) % 4 == 0);                              \
+  ASM_START                                             \
+  ADD_TO_OUT(0, 4, 8, 12, 1, pa, pb, pout)              \
+  ASM_END_0                                             \
+  if ((EXTRA_SIZE) > 0) {                               \
+    const int last = (EXTRA_SIZE);                      \
+    int i;                                              \
+    for (i = 0; i < last; ++i) pout[i] = pa[i] + pb[i]; \
+  }                                                     \
+} while (0)
+
+#define ADD_VECTOR_EQ(A, OUT, SIZE, EXTRA_SIZE)  do {   \
+  const uint32_t* pa = (const uint32_t*)(A);            \
+  uint32_t* pout = (uint32_t*)(OUT);                    \
+  const uint32_t* const LoopEnd = pa + (SIZE);          \
+  assert((SIZE) % 4 == 0);                              \
+  ASM_START                                             \
+  ADD_TO_OUT(0, 4, 8, 12, 0, pa, pout, pout)            \
+  ASM_END_1                                             \
+  if ((EXTRA_SIZE) > 0) {                               \
+    const int last = (EXTRA_SIZE);                      \
+    int i;                                              \
+    for (i = 0; i < last; ++i) pout[i] += pa[i];        \
+  }                                                     \
+} while (0)
+
+static void HistogramAdd(const VP8LHistogram* const a,
+                         const VP8LHistogram* const b,
+                         VP8LHistogram* const out) {
+  uint32_t temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
+  const int extra_cache_size = VP8LHistogramNumCodes(a->palette_code_bits_)
+                             - (NUM_LITERAL_CODES + NUM_LENGTH_CODES);
+  assert(a->palette_code_bits_ == b->palette_code_bits_);
+
+  if (b != out) {
+    ADD_VECTOR(a->literal_, b->literal_, out->literal_,
+               NUM_LITERAL_CODES + NUM_LENGTH_CODES, extra_cache_size);
+    ADD_VECTOR(a->distance_, b->distance_, out->distance_,
+               NUM_DISTANCE_CODES, 0);
+    ADD_VECTOR(a->red_, b->red_, out->red_, NUM_LITERAL_CODES, 0);
+    ADD_VECTOR(a->blue_, b->blue_, out->blue_, NUM_LITERAL_CODES, 0);
+    ADD_VECTOR(a->alpha_, b->alpha_, out->alpha_, NUM_LITERAL_CODES, 0);
+  } else {
+    ADD_VECTOR_EQ(a->literal_, out->literal_,
+                  NUM_LITERAL_CODES + NUM_LENGTH_CODES, extra_cache_size);
+    ADD_VECTOR_EQ(a->distance_, out->distance_, NUM_DISTANCE_CODES, 0);
+    ADD_VECTOR_EQ(a->red_, out->red_, NUM_LITERAL_CODES, 0);
+    ADD_VECTOR_EQ(a->blue_, out->blue_, NUM_LITERAL_CODES, 0);
+    ADD_VECTOR_EQ(a->alpha_, out->alpha_, NUM_LITERAL_CODES, 0);
+  }
+}
+
+#undef ADD_VECTOR_EQ
+#undef ADD_VECTOR
+#undef ASM_END_1
+#undef ASM_END_0
+#undef ASM_END_COMMON_1
+#undef ASM_END_COMMON_0
+#undef ADD_TO_OUT
+#undef ASM_START
+
 #endif  // WEBP_USE_MIPS32
 
 //------------------------------------------------------------------------------
@@ -286,5 +411,6 @@ void VP8LDspInitMIPS32(void) {
   VP8LExtraCostCombined = ExtraCostCombined;
   VP8LHuffmanCostCount = HuffmanCostCount;
   VP8LHuffmanCostCombinedCount = HuffmanCostCombinedCount;
+  VP8LHistogramAdd = HistogramAdd;
 #endif  // WEBP_USE_MIPS32
 }
