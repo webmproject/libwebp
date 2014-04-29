@@ -851,7 +851,7 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
       VP8LFillBitWindow(br);
       blue = ReadSymbol(&htree_group->htrees_[BLUE], br);
       alpha = ReadSymbol(&htree_group->htrees_[ALPHA], br);
-      *src = (alpha << 24) | (red << 16) | (green << 8) | blue;
+      *src = ((uint32_t)alpha << 24) | (red << 16) | (green << 8) | blue;
     AdvanceByOne:
       ++src;
       ++col;
