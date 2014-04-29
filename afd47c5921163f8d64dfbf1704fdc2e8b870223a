@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//r3g\u003d",
+        "filename": "src/dsp/lossless_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1004029
+      },
+      "writtenOn": "2014-04-29T13:43:10Z",
+      "side": 1,
+      "message": "HistogramAdd() and HistogramAddEval() should be optimized both because there could be unaligned memory access and this is very good implementation to do that, so we accept it, although there is a very small slowdown .",
+      "parentUuid": "AAAAdn//r3s\u003d",
+      "revId": "afd47c5921163f8d64dfbf1704fdc2e8b870223a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//r34\u003d",
         "filename": "src/dsp/lossless_mips32.c",
         "patchSetId": 3
