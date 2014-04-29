@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//r3s\u003d",
+        "filename": "src/dsp/lossless_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-29T13:02:50Z",
+      "side": 1,
+      "message": "is this distinction making the code faster on mips32 too? I added it in the C/SSE2 code because it was making the code faster (esp. for C) but this doesn\u0027t necessarily hold for mips32...",
+      "revId": "afd47c5921163f8d64dfbf1704fdc2e8b870223a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//r34\u003d",
+        "filename": "src/dsp/lossless_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-29T13:02:50Z",
+      "side": 1,
+      "message": "it\u0027s probably safer to use \"VP8LHistogramNumCodes(a-\u003epalette_code_bits_) - (NUM_LITERAL_CODES +NUM_LENGTH_CODES)\" instead of hardcoding the shift here.",
+      "revId": "afd47c5921163f8d64dfbf1704fdc2e8b870223a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//r30\u003d",
+        "filename": "src/dsp/lossless_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-29T13:02:50Z",
+      "side": 1,
+      "message": "wouldn\u0027t \"pout[i] \u003d pa[i] + pb[i]\" be easier to read (and faster?)",
+      "revId": "afd47c5921163f8d64dfbf1704fdc2e8b870223a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//r3o\u003d",
+        "filename": "src/dsp/lossless_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-29T13:02:50Z",
+      "side": 1,
+      "message": "an assert would be future-proof here too...",
+      "revId": "afd47c5921163f8d64dfbf1704fdc2e8b870223a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//r38\u003d",
+        "filename": "src/dsp/lossless_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-29T13:02:50Z",
+      "side": 1,
+      "message": "this is quite a strong assumption, that might be broken one day in the future (who knows...). For instance, the compiler _might_ insert some hidden padding bytes between these fields.\n\nCan you use an assert if there\u0027s no reasonable way to process red_[]/blue_[]/alpha_[] separately?",
+      "revId": "afd47c5921163f8d64dfbf1704fdc2e8b870223a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//r3w\u003d",
+        "filename": "src/dsp/lossless_mips32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 394,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-29T13:02:50Z",
+      "side": 1,
+      "message": "same comments above here",
+      "revId": "afd47c5921163f8d64dfbf1704fdc2e8b870223a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
