@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//rwA\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-29T22:28:24Z",
+      "side": 1,
+      "message": "this cast can go",
+      "revId": "08e38ca7783de7327a25528c71ff36b71bc1c0f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//rwE\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-04-29T22:28:24Z",
+      "side": 1,
+      "message": "could just cast minus the ()s around argb[1]",
+      "revId": "08e38ca7783de7327a25528c71ff36b71bc1c0f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
