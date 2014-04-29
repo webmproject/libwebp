@@ -89,8 +89,7 @@ VP8LBackwardRefs* VP8LBackwardRefsNew(int max_size) {
   }
   ClearBackwardRefs(refs);
   refs->max_size = 0;
-  refs->refs = (PixOrCopy*)WebPSafeMalloc((uint64_t)max_size,
-                                         sizeof(*refs->refs));
+  refs->refs = (PixOrCopy*)WebPSafeMalloc(max_size, sizeof(*refs->refs));
   if (refs->refs == NULL) {
     WebPSafeFree(refs);
     return NULL;
@@ -135,7 +134,7 @@ VP8LHashChain* VP8LHashChainNew(int size) {
   if (p == NULL) {
     return NULL;
   }
-  p->chain_ = (int*)WebPSafeMalloc((uint64_t)size, sizeof(*p->chain_));
+  p->chain_ = (int*)WebPSafeMalloc(size, sizeof(*p->chain_));
   if (p->chain_ == NULL) {
     WebPSafeFree(p);
     return NULL;
@@ -505,7 +504,7 @@ static int BackwardReferencesHashChainDistanceOnly(
   const int pix_count = xsize * ysize;
   const int use_color_cache = (cache_bits > 0);
   float* const cost =
-      (float*)WebPSafeMalloc((uint64_t)pix_count, sizeof(*cost));
+      (float*)WebPSafeMalloc(pix_count, sizeof(*cost));
   CostModel* cost_model = (CostModel*)WebPSafeMalloc(1ULL, sizeof(*cost_model));
   VP8LColorCache hashers;
   const double mul0 = (recursive_cost_model != 0) ? 1.0 : 0.68;
@@ -721,7 +720,7 @@ static int BackwardReferencesTraceBackwards(int xsize, int ysize,
   uint32_t* chosen_path = NULL;
   int chosen_path_size = 0;
   uint32_t* dist_array =
-      (uint32_t*)WebPSafeMalloc((uint64_t)dist_array_size, sizeof(*dist_array));
+      (uint32_t*)WebPSafeMalloc(dist_array_size, sizeof(*dist_array));
 
   if (dist_array == NULL) goto Error;
 

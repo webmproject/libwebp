@@ -31,7 +31,7 @@
 static void HistogramClear(VP8LHistogram* const p) {
   uint32_t* const literal = p->literal_;
   const int cache_bits = p->palette_code_bits_;
-  const uint64_t histo_size = VP8LGetHistogramSize(cache_bits);
+  const int histo_size = VP8LGetHistogramSize(cache_bits);
   memset(p, 0, histo_size);
   p->palette_code_bits_ = cache_bits;
   p->literal_ = literal;
@@ -41,17 +41,17 @@ static void HistogramCopy(const VP8LHistogram* const src,
                           VP8LHistogram* const dst) {
   uint32_t* const dst_literal = dst->literal_;
   const int dst_cache_bits = dst->palette_code_bits_;
-  const uint64_t histo_size = VP8LGetHistogramSize(dst_cache_bits);
+  const int histo_size = VP8LGetHistogramSize(dst_cache_bits);
   assert(src->palette_code_bits_ == dst_cache_bits);
   memcpy(dst, src, histo_size);
   dst->literal_ = dst_literal;
 }
 
-uint64_t VP8LGetHistogramSize(int cache_bits) {
-  const uint64_t literal_size = VP8LHistogramNumCodes(cache_bits);
-  const uint64_t total_size = (uint64_t)sizeof(VP8LHistogram)
-                            + literal_size * sizeof(int);
-  return total_size;
+int VP8LGetHistogramSize(int cache_bits) {
+  const int literal_size = VP8LHistogramNumCodes(cache_bits);
+  const size_t total_size = sizeof(VP8LHistogram) + sizeof(int) * literal_size;
+  assert(total_size <= (size_t)0x7fffffff);
+  return (int)total_size;
 }
 
 void VP8LFreeHistogram(VP8LHistogram* const histo) {
@@ -87,7 +87,7 @@ void VP8LHistogramInit(VP8LHistogram* const p, int palette_code_bits) {
 
 VP8LHistogram* VP8LAllocateHistogram(int cache_bits) {
   VP8LHistogram* histo = NULL;
-  const uint64_t total_size = VP8LGetHistogramSize(cache_bits);
+  const int total_size = VP8LGetHistogramSize(cache_bits);
   uint8_t* const memory = (uint8_t*)WebPSafeMalloc(total_size, sizeof(*memory));
   if (memory == NULL) return NULL;
   histo = (VP8LHistogram*)memory;
@@ -100,9 +100,9 @@ VP8LHistogram* VP8LAllocateHistogram(int cache_bits) {
 VP8LHistogramSet* VP8LAllocateHistogramSet(int size, int cache_bits) {
   int i;
   VP8LHistogramSet* set;
-  const uint64_t total_size = sizeof(*set)
-                            + (uint64_t)size * sizeof(*set->histograms)
-                            + (uint64_t)size * VP8LGetHistogramSize(cache_bits);
+  const size_t total_size = sizeof(*set)
+                            + sizeof(*set->histograms) * size
+                            + (size_t)VP8LGetHistogramSize(cache_bits) * size;
   uint8_t* memory = (uint8_t*)WebPSafeMalloc(total_size, sizeof(*memory));
   if (memory == NULL) return NULL;
 
@@ -710,7 +710,7 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
   // Higher qualities (> 90), to preserve the compression gains at those
   // quality settings.
   if (init_histo->size > 2 * BIN_SIZE && quality < 90) {
-    const int bin_map_size = (uint64_t)bin_depth * BIN_SIZE;
+    const int bin_map_size = bin_depth * BIN_SIZE;
     bin_map = (int16_t*)WebPSafeCalloc(bin_map_size, sizeof(*bin_map));
     if (bin_map == NULL) goto Error;
   }

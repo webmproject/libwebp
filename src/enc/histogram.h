@@ -63,7 +63,7 @@ void VP8LHistogramCreate(VP8LHistogram* const p,
                          int palette_code_bits);
 
 // Return the size of the histogram for a given palette_code_bits.
-uint64_t VP8LGetHistogramSize(int palette_code_bits);
+int VP8LGetHistogramSize(int palette_code_bits);
 
 // Set the palette_code_bits and reset the stats.
 void VP8LHistogramInit(VP8LHistogram* const p, int palette_code_bits);
