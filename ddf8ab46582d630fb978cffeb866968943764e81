@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//r3E\u003d",
+        "filename": "src/dsp/lossless_mips32.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-04-29T15:32:36Z",
+      "side": 1,
+      "message": "the repetitive patterns could be factorized into a MACRO.\nLet me update the patch for that...",
+      "revId": "ddf8ab46582d630fb978cffeb866968943764e81",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
