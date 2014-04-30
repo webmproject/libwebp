@@ -187,9 +187,10 @@ static int ReadHuffmanCodeLengths(
   int max_symbol;
   int prev_code_len = DEFAULT_CODE_LENGTH;
   HuffmanTree tree;
+  int huff_codes[NUM_CODE_LENGTH_CODES] = { 0 };
 
-  if (!HuffmanTreeBuildImplicit(&tree, code_length_code_lengths,
-                                NUM_CODE_LENGTH_CODES)) {
+  if (!VP8LHuffmanTreeBuildImplicit(&tree, code_length_code_lengths,
+                                    huff_codes, NUM_CODE_LENGTH_CODES)) {
     dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
     return 0;
   }
@@ -232,11 +233,14 @@ static int ReadHuffmanCodeLengths(
   ok = 1;
 
  End:
-  HuffmanTreeRelease(&tree);
+  VP8LHuffmanTreeFree(&tree);
   return ok;
 }
 
+// 'code_lengths' is pre-allocated temporary buffer, used for creating Huffman
+// tree.
 static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
+                           int* const code_lengths, int* const huff_codes,
                            HuffmanTree* const tree) {
   int ok = 0;
   VP8LBitReader* const br = &dec->br_;
@@ -245,7 +249,6 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
   if (simple_code) {  // Read symbols, codes & code lengths directly.
     int symbols[2];
     int codes[2];
-    int code_lengths[2];
     const int num_symbols = VP8LReadBits(br, 1) + 1;
     const int first_symbol_len_code = VP8LReadBits(br, 1);
     // The first code is either 1 bit or 8 bit code.
@@ -258,10 +261,9 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
       codes[1] = 1;
       code_lengths[1] = num_symbols - 1;
     }
-    ok = HuffmanTreeBuildExplicit(tree, code_lengths, codes, symbols,
-                                  alphabet_size, num_symbols);
+    ok = VP8LHuffmanTreeBuildExplicit(tree, code_lengths, codes, symbols,
+                                      alphabet_size, num_symbols);
   } else {  // Decode Huffman-coded code lengths.
-    int* code_lengths = NULL;
     int i;
     int code_length_code_lengths[NUM_CODE_LENGTH_CODES] = { 0 };
     const int num_codes = VP8LReadBits(br, 4) + 4;
@@ -270,22 +272,15 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
       return 0;
     }
 
-    code_lengths =
-        (int*)WebPSafeCalloc((uint64_t)alphabet_size, sizeof(*code_lengths));
-    if (code_lengths == NULL) {
-      dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
-      return 0;
-    }
+    memset(code_lengths, 0, alphabet_size * sizeof(*code_lengths));
 
     for (i = 0; i < num_codes; ++i) {
       code_length_code_lengths[kCodeLengthCodeOrder[i]] = VP8LReadBits(br, 3);
     }
     ok = ReadHuffmanCodeLengths(dec, code_length_code_lengths, alphabet_size,
                                 code_lengths);
-    if (ok) {
-      ok = HuffmanTreeBuildImplicit(tree, code_lengths, alphabet_size);
-    }
-    WebPSafeFree(code_lengths);
+    ok = ok && VP8LHuffmanTreeBuildImplicit(tree, code_lengths, huff_codes,
+                                            alphabet_size);
   }
   ok = ok && !br->error_;
   if (!ok) {
@@ -293,19 +288,6 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
     return 0;
   }
   return 1;
-}
-
-static void DeleteHtreeGroups(HTreeGroup* htree_groups, int num_htree_groups) {
-  if (htree_groups != NULL) {
-    int i, j;
-    for (i = 0; i < num_htree_groups; ++i) {
-      HuffmanTree* const htrees = htree_groups[i].htrees_;
-      for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
-        HuffmanTreeRelease(&htrees[j]);
-      }
-    }
-    WebPSafeFree(htree_groups);
-  }
 }
 
 static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
@@ -316,6 +298,9 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
   uint32_t* huffman_image = NULL;
   HTreeGroup* htree_groups = NULL;
   int num_htree_groups = 1;
+  int max_alphabet_size = 0;
+  int* code_lengths = NULL;
+  int* huff_codes = NULL;
 
   if (allow_recursion && VP8LReadBits(br, 1)) {
     // use meta Huffman codes.
@@ -341,11 +326,24 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
 
   if (br->error_) goto Error;
 
-  assert(num_htree_groups <= 0x10000);
-  htree_groups =
-      (HTreeGroup*)WebPSafeCalloc((uint64_t)num_htree_groups,
-                                  sizeof(*htree_groups));
-  if (htree_groups == NULL) {
+  // Find maximum alphabet size for the htree group.
+  for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
+    int alphabet_size = kAlphabetSize[j];
+    if (j == 0 && color_cache_bits > 0) {
+      alphabet_size += 1 << color_cache_bits;
+    }
+    if (max_alphabet_size < alphabet_size) {
+      max_alphabet_size = alphabet_size;
+    }
+  }
+
+  htree_groups = VP8LHtreeGroupsNew(num_htree_groups);
+  code_lengths =
+      (int*)WebPSafeCalloc((uint64_t)max_alphabet_size, sizeof(*code_lengths));
+  huff_codes =
+      (int*)WebPSafeMalloc((uint64_t)max_alphabet_size, sizeof(*huff_codes));
+
+  if (htree_groups == NULL || code_lengths == NULL || huff_codes == NULL) {
     dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
     goto Error;
   }
@@ -354,12 +352,18 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
     HuffmanTree* const htrees = htree_groups[i].htrees_;
     for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
       int alphabet_size = kAlphabetSize[j];
+      HuffmanTree* const htree = htrees + j;
       if (j == 0 && color_cache_bits > 0) {
         alphabet_size += 1 << color_cache_bits;
       }
-      if (!ReadHuffmanCode(alphabet_size, dec, htrees + j)) goto Error;
+      if (!ReadHuffmanCode(alphabet_size, dec, code_lengths, huff_codes,
+                           htree)) {
+        goto Error;
+      }
     }
   }
+  WebPSafeFree(huff_codes);
+  WebPSafeFree(code_lengths);
 
   // All OK. Finalize pointers and return.
   hdr->huffman_image_ = huffman_image;
@@ -368,8 +372,10 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
   return 1;
 
  Error:
+  WebPSafeFree(huff_codes);
+  WebPSafeFree(code_lengths);
   WebPSafeFree(huffman_image);
-  DeleteHtreeGroups(htree_groups, num_htree_groups);
+  VP8LHtreeGroupsFree(htree_groups, num_htree_groups);
   return 0;
 }
 
@@ -1028,7 +1034,7 @@ static void ClearMetadata(VP8LMetadata* const hdr) {
   assert(hdr);
 
   WebPSafeFree(hdr->huffman_image_);
-  DeleteHtreeGroups(hdr->htree_groups_, hdr->num_htree_groups_);
+  VP8LHtreeGroupsFree(hdr->htree_groups_, hdr->num_htree_groups_);
   VP8LColorCacheClear(&hdr->color_cache_);
   InitMetadata(hdr);
 }
