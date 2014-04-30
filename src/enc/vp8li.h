@@ -14,6 +14,7 @@
 #ifndef WEBP_ENC_VP8LI_H_
 #define WEBP_ENC_VP8LI_H_
 
+#include "./backward_references.h"
 #include "./histogram.h"
 #include "../utils/bit_writer.h"
 #include "../webp/encode.h"
@@ -22,8 +23,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-struct VP8LHashChain;  // Defined in backward_references.h
 
 typedef struct {
   const WebPConfig* config_;    // user configuration and parameters
@@ -34,11 +33,6 @@ typedef struct {
                                 // (used for prediction).
   uint32_t* transform_data_;    // Scratch memory for transform data.
   int       current_width_;     // Corresponds to packed image width.
-
-  struct VP8LHashChain* hash_chain_;  // HashChain data for constructing
-                                      // backward references.
-  struct VP8LBackwardRefs* refs_[2];  // Backward Refs array corresponding to
-                                      // LZ77 & RLE coding.
 
   // Encoding parameters derived from quality parameter.
   int histo_bits_;
@@ -52,6 +46,12 @@ typedef struct {
   int use_palette_;
   int palette_size_;
   uint32_t palette_[MAX_PALETTE_SIZE];
+
+  // Some 'scratch' (potentially large) objects.
+  struct VP8LBackwardRefs* refs_[2];  // Backward Refs array corresponding to
+                                      // LZ77 & RLE coding.
+  VP8LHashChain hash_chain_;          // HashChain data for constructing
+                                      // backward references.
 } VP8LEncoder;
 
 //------------------------------------------------------------------------------

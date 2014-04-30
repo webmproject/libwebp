@@ -167,8 +167,7 @@ static int AnalyzeAndInit(VP8LEncoder* const enc, WebPImageHint image_hint) {
       }
     }
   }
-  enc->hash_chain_ = VP8LHashChainNew(pix_cnt);
-  if (enc->hash_chain_ == NULL) return 0;
+  if (!VP8LHashChainInit(&enc->hash_chain_, pix_cnt)) return 0;
 
   enc->refs_[0] = VP8LBackwardRefsNew(pix_cnt);
   enc->refs_[1] = VP8LBackwardRefsNew(pix_cnt);
@@ -739,7 +738,8 @@ static int ApplyPredictFilter(const VP8LEncoder* const enc,
   VP8LWriteBits(bw, 2, PREDICTOR_TRANSFORM);
   assert(pred_bits >= 2);
   VP8LWriteBits(bw, 3, pred_bits - 2);
-  if (!EncodeImageNoHuffman(bw, enc->transform_data_, enc->hash_chain_,
+  if (!EncodeImageNoHuffman(bw, enc->transform_data_,
+                            (VP8LHashChain*)&enc->hash_chain_,
                             enc->refs_, transform_width, transform_height,
                             quality)) {
     return 0;
@@ -760,7 +760,8 @@ static int ApplyCrossColorFilter(const VP8LEncoder* const enc,
   VP8LWriteBits(bw, 2, CROSS_COLOR_TRANSFORM);
   assert(ccolor_transform_bits >= 2);
   VP8LWriteBits(bw, 3, ccolor_transform_bits - 2);
-  if (!EncodeImageNoHuffman(bw, enc->transform_data_, enc->hash_chain_,
+  if (!EncodeImageNoHuffman(bw, enc->transform_data_,
+                            (VP8LHashChain*)&enc->hash_chain_,
                             enc->refs_, transform_width, transform_height,
                             quality)) {
     return 0;
@@ -960,7 +961,7 @@ static WebPEncodingError EncodePalette(VP8LBitWriter* const bw,
   for (i = palette_size - 1; i >= 1; --i) {
     palette[i] = VP8LSubPixels(palette[i], palette[i - 1]);
   }
-  if (!EncodeImageNoHuffman(bw, palette, enc->hash_chain_, enc->refs_,
+  if (!EncodeImageNoHuffman(bw, palette, &enc->hash_chain_, enc->refs_,
                             palette_size, 1, quality)) {
     err = VP8_ENC_ERROR_INVALID_CONFIGURATION;
     goto Error;
@@ -1027,7 +1028,7 @@ static VP8LEncoder* VP8LEncoderNew(const WebPConfig* const config,
 
 static void VP8LEncoderDelete(VP8LEncoder* enc) {
   if (enc != NULL) {
-    VP8LHashChainDelete(enc->hash_chain_);
+    VP8LHashChainClear(&enc->hash_chain_);
     VP8LBackwardRefsDelete(enc->refs_[0]);
     VP8LBackwardRefsDelete(enc->refs_[1]);
     WebPSafeFree(enc->argb_);
@@ -1112,7 +1113,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
 
   if (enc->cache_bits_ > 0) {
     if (!VP8LCalculateEstimateForCacheSize(enc->argb_, enc->current_width_,
-                                           height, quality, enc->hash_chain_,
+                                           height, quality, &enc->hash_chain_,
                                            enc->refs_[0], &enc->cache_bits_)) {
       err = VP8_ENC_ERROR_INVALID_CONFIGURATION;
       goto Error;
@@ -1122,7 +1123,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   // ---------------------------------------------------------------------------
   // Encode and write the transformed image.
 
-  if (!EncodeImageInternal(bw, enc->argb_, enc->hash_chain_, enc->refs_,
+  if (!EncodeImageInternal(bw, enc->argb_, &enc->hash_chain_, enc->refs_,
                            enc->current_width_, height, quality,
                            enc->cache_bits_, enc->histo_bits_)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;

@@ -112,12 +112,7 @@ int VP8LBackwardRefsCopy(const VP8LBackwardRefs* const src,
 // -----------------------------------------------------------------------------
 // Hash chains
 
-static WEBP_INLINE uint64_t GetPixPairHash64(const uint32_t* const argb) {
-  uint64_t key = ((uint64_t)(argb[1]) << 32) | argb[0];
-  key = (key * HASH_MULTIPLIER) >> (64 - HASH_BITS);
-  return key;
-}
-
+// initialize as empty
 static void HashChainInit(VP8LHashChain* const p) {
   int i;
   assert(p != NULL);
@@ -129,26 +124,30 @@ static void HashChainInit(VP8LHashChain* const p) {
   }
 }
 
-VP8LHashChain* VP8LHashChainNew(int size) {
-  VP8LHashChain* const p = (VP8LHashChain*)WebPSafeMalloc(1ULL, sizeof(*p));
-  if (p == NULL) {
-    return NULL;
-  }
+int VP8LHashChainInit(VP8LHashChain* const p, int size) {
+  assert(p->size_ == 0);
+  assert(p->chain_ == NULL);
+  assert(size > 0);
   p->chain_ = (int*)WebPSafeMalloc(size, sizeof(*p->chain_));
-  if (p->chain_ == NULL) {
-    WebPSafeFree(p);
-    return NULL;
-  }
+  if (p->chain_ == NULL) return 0;
   p->size_ = size;
   HashChainInit(p);
-  return p;
+  return 1;
 }
 
-void VP8LHashChainDelete(VP8LHashChain* const p) {
-  if (p != NULL) {
-    WebPSafeFree(p->chain_);
-    WebPSafeFree(p);
-  }
+void VP8LHashChainClear(VP8LHashChain* const p) {
+  assert(p != NULL);
+  WebPSafeFree(p->chain_);
+  p->size_ = 0;
+  p->chain_ = NULL;
+}
+
+// -----------------------------------------------------------------------------
+
+static WEBP_INLINE uint64_t GetPixPairHash64(const uint32_t* const argb) {
+  uint64_t key = ((uint64_t)argb[1] << 32) | argb[0];
+  key = (key * HASH_MULTIPLIER) >> (64 - HASH_BITS);
+  return key;
 }
 
 // Insertion of two pixels at a time.
