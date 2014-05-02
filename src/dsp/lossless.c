@@ -432,7 +432,7 @@ static WEBP_INLINE uint32_t ClampedAddSubtractFull(uint32_t c0, uint32_t c1,
                                          (c1 >> 8) & 0xff,
                                          (c2 >> 8) & 0xff);
   const int b = AddSubtractComponentFull(c0 & 0xff, c1 & 0xff, c2 & 0xff);
-  return (a << 24) | (r << 16) | (g << 8) | b;
+  return ((uint32_t)a << 24) | (r << 16) | (g << 8) | b;
 }
 
 static WEBP_INLINE int AddSubtractComponentHalf(int a, int b) {
@@ -446,7 +446,7 @@ static WEBP_INLINE uint32_t ClampedAddSubtractHalf(uint32_t c0, uint32_t c1,
   const int r = AddSubtractComponentHalf((ave >> 16) & 0xff, (c2 >> 16) & 0xff);
   const int g = AddSubtractComponentHalf((ave >> 8) & 0xff, (c2 >> 8) & 0xff);
   const int b = AddSubtractComponentHalf((ave >> 0) & 0xff, (c2 >> 0) & 0xff);
-  return (a << 24) | (r << 16) | (g << 8) | b;
+  return ((uint32_t)a << 24) | (r << 16) | (g << 8) | b;
 }
 
 static WEBP_INLINE int Sub3(int a, int b, int c) {
