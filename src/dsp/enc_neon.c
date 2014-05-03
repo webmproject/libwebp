@@ -967,7 +967,9 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
 
 //------------------------------------------------------------------------------
 
-#if !defined(WORK_AROUND_GCC)
+// Compilation with gcc-4.6.x is problematic for now and vtbl? are unavailable
+// in iOS/arm64 builds. Disable this function in those cases.
+#if !(defined(WORK_AROUND_GCC) || defined(__aarch64__))
 
 static int16x8_t Quantize(int16_t* const in,
                           const VP8Matrix* const mtx, int offset) {
@@ -1025,7 +1027,7 @@ static int QuantizeBlock(int16_t in[16], int16_t out[16],
   return 0;
 }
 
-#endif   // !WORK_AROUND_GCC
+#endif   // !WORK_AROUND_GCC && !__aarch64__
 
 #endif   // WEBP_USE_NEON
 
@@ -1048,7 +1050,7 @@ void VP8EncDspInitNEON(void) {
   VP8SSE16x8 = SSE16x8;
   VP8SSE8x8 = SSE8x8;
   VP8SSE4x4 = SSE4x4;
-#if !defined(WORK_AROUND_GCC)
+#if !(defined(WORK_AROUND_GCC) || defined(__aarch64__))
   VP8EncQuantizeBlock = QuantizeBlock;
 #endif
 #endif   // WEBP_USE_NEON

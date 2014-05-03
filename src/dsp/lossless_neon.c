@@ -23,7 +23,7 @@
 //------------------------------------------------------------------------------
 // Colorspace conversion functions
 
-#if LOCAL_GCC_PREREQ(4,8)
+#if !defined(WORK_AROUND_GCC)
 // gcc 4.6.0 had some trouble (NDK-r9) with this code. We only use it for
 // gcc-4.8.x at least.
 static void ConvertBGRAToRGBA(const uint32_t* src,
@@ -65,7 +65,7 @@ static void ConvertBGRAToRGB(const uint32_t* src,
   VP8LConvertBGRAToRGB_C(src, num_pixels & 15, dst);  // left-overs
 }
 
-#else
+#else  // WORK_AROUND_GCC
 
 // gcc-4.6.0 fallback
 
@@ -135,7 +135,7 @@ static void ConvertBGRAToRGB(const uint32_t* src,
   VP8LConvertBGRAToRGB_C(src, num_pixels & 7, dst);  // left-overs
 }
 
-#endif   // gcc-4.8
+#endif   // !WORK_AROUND_GCC
 
 //------------------------------------------------------------------------------
 
@@ -263,6 +263,9 @@ static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
 
+// vtbl? are unavailable in iOS/arm64 builds.
+#if !defined(__aarch64__)
+
 // 255 = byte will be zero'd
 static const uint8_t kGreenShuffle[8] = { 1, 255, 1, 255, 5, 255, 5, 255  };
 
@@ -294,6 +297,8 @@ static void AddGreenToBlueAndRed(uint32_t* argb_data, int num_pixels) {
   VP8LAddGreenToBlueAndRed_C(argb_data, num_pixels & 3);
 }
 
+#endif   // !__aarch64__
+
 #endif   // USE_INTRINSICS
 
 #endif   // WEBP_USE_NEON
@@ -319,8 +324,10 @@ void VP8LDspInitNEON(void) {
   VP8LPredictors[12] = Predictor12;
   VP8LPredictors[13] = Predictor13;
 
+#if !defined(__aarch64__)
   VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRed;
   VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
+#endif
 #endif
 
 #endif   // WEBP_USE_NEON
