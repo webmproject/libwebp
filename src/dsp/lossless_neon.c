@@ -18,10 +18,7 @@
 #include <arm_neon.h>
 
 #include "./lossless.h"
-
-// Right now, some intrinsics function seem slower, so we disable it.
-// Uncomment the following for testing:
-// #define USE_INTRINSICS
+#include "./neon.h"
 
 //------------------------------------------------------------------------------
 // Colorspace conversion functions

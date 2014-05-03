@@ -16,18 +16,8 @@
 
 #if defined(WEBP_USE_NEON)
 
-// #define USE_INTRINSICS   // use intrinsics when possible
-
 #include "./neon.h"
-
 #include "../dec/vp8i.h"
-
-// if using intrinsics, this flag avoids some functions that make gcc-4.6.3
-// crash ("internal compiler error: in immed_double_const, at emit-rtl.").
-// (probably similar to gcc.gnu.org/bugzilla/show_bug.cgi?id=48183)
-#if !LOCAL_GCC_PREREQ(4,8)
-#define WORK_AROUND_GCC
-#endif
 
 //------------------------------------------------------------------------------
 // NxM Loading functions
@@ -84,7 +74,7 @@ static WEBP_INLINE void Load4x16(const uint8_t* const src, int stride,
   *q1 = vcombine_u8(row0.val[3], row8.val[3]);
 }
 
-#else
+#else  // WORK_AROUND_GCC
 
 #define LOADQ_LANE_32b(VALUE, LANE) do {                             \
   (VALUE) = vld1q_lane_u32((const uint32_t*)src, (VALUE), (LANE));   \

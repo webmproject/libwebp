@@ -15,8 +15,6 @@
 
 #if defined(WEBP_USE_NEON)
 
-// #define USE_INTRINSICS   // use intrinsics when possible
-
 #include <assert.h>
 
 #include "./neon.h"
@@ -969,13 +967,7 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
 
 //------------------------------------------------------------------------------
 
-// Compilation with gcc-4.6.x is problematic for now. Disable this function
-// in this case.
-#if !LOCAL_GCC_PREREQ(4,8)
-#define SKIP_QUANTIZE
-#endif
-
-#if !defined(SKIP_QUANTIZE)
+#if !defined(WORK_AROUND_GCC)
 
 static int16x8_t Quantize(int16_t* const in,
                           const VP8Matrix* const mtx, int offset) {
@@ -1033,7 +1025,7 @@ static int QuantizeBlock(int16_t in[16], int16_t out[16],
   return 0;
 }
 
-#endif   // SKIP_QUANTIZE
+#endif   // !WORK_AROUND_GCC
 
 #endif   // WEBP_USE_NEON
 
@@ -1056,7 +1048,7 @@ void VP8EncDspInitNEON(void) {
   VP8SSE16x8 = SSE16x8;
   VP8SSE8x8 = SSE8x8;
   VP8SSE4x4 = SSE4x4;
-#if !defined(SKIP_QUANTIZE)
+#if !defined(WORK_AROUND_GCC)
   VP8EncQuantizeBlock = QuantizeBlock;
 #endif
 #endif   // WEBP_USE_NEON
