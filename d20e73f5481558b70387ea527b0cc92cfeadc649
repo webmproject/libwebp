@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//rDI\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-05-03T05:36:20Z",
+      "side": 1,
+      "message": "should we collect USE_INTRINSICS definitions somewhere more global, instead of per-file? (dsp.h for instance) \n\n(same for WORK_AROUND_GCC maybe)",
+      "revId": "d20e73f5481558b70387ea527b0cc92cfeadc649",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//rDE\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 977,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-05-03T05:36:20Z",
+      "side": 1,
+      "message": "could be renamed WORK_AROUND_GCC here too, instead of SKIP_QUANTIZE",
+      "revId": "d20e73f5481558b70387ea527b0cc92cfeadc649",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//rDA\u003d",
+        "filename": "src/dsp/lossless_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-05-03T05:36:20Z",
+      "side": 1,
+      "message": "oh? good to know...",
+      "revId": "d20e73f5481558b70387ea527b0cc92cfeadc649",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
