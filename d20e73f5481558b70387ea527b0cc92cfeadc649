@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//q/E\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-03T18:36:52Z",
+      "side": 1,
+      "message": "with the way we\u0027re using them now it makes sense, let\u0027s do that first (neon.h):\n\nhttps://gerrit.chromium.org/gerrit/#/c/70005/",
+      "parentUuid": "AAAAdn//rDI\u003d",
+      "revId": "d20e73f5481558b70387ea527b0cc92cfeadc649",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//rDE\u003d",
         "filename": "src/dsp/enc_neon.c",
         "patchSetId": 1
