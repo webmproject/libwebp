@@ -22,7 +22,7 @@ declare -r OLDPATH=${PATH}
 
 # Add iPhoneOS-V6 to the list of platforms below if you need armv6 support.
 # Note that iPhoneOS-V6 support is not available with the iOS6 SDK.
-declare -r PLATFORMS="iPhoneSimulator iPhoneOS-V7 iPhoneOS-V7s"
+declare -r PLATFORMS="iPhoneSimulator iPhoneOS-V7 iPhoneOS-V7s iPhoneOS-V7-arm64"
 declare -r SRCDIR=$(dirname $0)
 declare -r TOPDIR=$(pwd)
 declare -r BUILDDIR="${TOPDIR}/iosbuild"
@@ -50,7 +50,12 @@ mkdir -p ${TARGETDIR}/Headers/
 [[ -e ${SRCDIR}/configure ]] || (cd ${SRCDIR} && sh autogen.sh)
 
 for PLATFORM in ${PLATFORMS}; do
-  if [[ "${PLATFORM}" == "iPhoneOS-V7s" ]]; then
+  ARCH2=""
+  if [[ "${PLATFORM}" == "iPhoneOS-V7-arm64" ]]; then
+    PLATFORM="iPhoneOS"
+    ARCH="aarch64"
+    ARCH2="arm64"
+  elif [[ "${PLATFORM}" == "iPhoneOS-V7s" ]]; then
     PLATFORM="iPhoneOS"
     ARCH="armv7s"
   elif [[ "${PLATFORM}" == "iPhoneOS-V7" ]]; then
@@ -67,8 +72,8 @@ for PLATFORM in ${PLATFORMS}; do
   mkdir -p "${ROOTDIR}"
 
   SDKROOT="${PLATFORMSROOT}/${PLATFORM}.platform/Developer/SDKs/${PLATFORM}${SDK}.sdk/"
-  CFLAGS="-arch ${ARCH} -pipe -isysroot ${SDKROOT}"
-  LDFLAGS="-arch ${ARCH} -pipe -isysroot ${SDKROOT}"
+  CFLAGS="-arch ${ARCH2:-${ARCH}} -pipe -isysroot ${SDKROOT}"
+  LDFLAGS="-arch ${ARCH2:-${ARCH}} -pipe -isysroot ${SDKROOT}"
 
   if [[ -z "${XCODE}" ]]; then
     echo "XCODE not available"
