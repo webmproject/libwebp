@@ -258,7 +258,12 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
   VP8EncInitLayer(enc);
 #endif
 
-  VP8TBufferInit(&enc->tokens_);
+  // lower quality means smaller output -> we modulate a little the page
+  // size based on quality. This is just a crude 1rst-order prediction.
+  {
+    const float scale = 1.f + config->quality * 5.f / 100.f;  // in [1,6]
+    VP8TBufferInit(&enc->tokens_, (int)(mb_w * mb_h * 4 * scale));
+  }
   return enc;
 }
 
