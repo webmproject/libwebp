@@ -64,9 +64,10 @@ void VP8LFreeHistogramSet(VP8LHistogramSet* const histo) {
 
 void VP8LHistogramStoreRefs(const VP8LBackwardRefs* const refs,
                             VP8LHistogram* const histo) {
-  int i;
-  for (i = 0; i < refs->size; ++i) {
-    VP8LHistogramAddSinglePixOrCopy(histo, &refs->refs[i]);
+  VP8LRefsCursor c = VP8LRefsCursorInit(refs);
+  while (VP8LRefsCursorOk(&c)) {
+    VP8LHistogramAddSinglePixOrCopy(histo, c.cur_pos);
+    VP8LRefsCursorNext(&c);
   }
 }
 
@@ -423,14 +424,14 @@ static int GetHistoBinIndex(
 static void HistogramBuild(
     int xsize, int histo_bits, const VP8LBackwardRefs* const backward_refs,
     VP8LHistogramSet* const init_histo) {
-  int i;
   int x = 0, y = 0;
   const int histo_xsize = VP8LSubSampleSize(xsize, histo_bits);
   VP8LHistogram** const histograms = init_histo->histograms;
+  VP8LRefsCursor c = VP8LRefsCursorInit(backward_refs);
   assert(histo_bits > 0);
   // Construct the Histo from a given backward references.
-  for (i = 0; i < backward_refs->size; ++i) {
-    const PixOrCopy* const v = &backward_refs->refs[i];
+  while (VP8LRefsCursorOk(&c)) {
+    const PixOrCopy* const v = c.cur_pos;
     const int ix = (y >> histo_bits) * histo_xsize + (x >> histo_bits);
     VP8LHistogramAddSinglePixOrCopy(histograms[ix], v);
     x += PixOrCopyLength(v);
@@ -438,6 +439,7 @@ static void HistogramBuild(
       x -= xsize;
       ++y;
     }
+    VP8LRefsCursorNext(&c);
   }
 }
 
