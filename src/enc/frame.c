@@ -716,11 +716,6 @@ int VP8EncLoop(VP8Encoder* const enc) {
     } else {   // reset predictors after a skip
       ResetAfterSkip(&it);
     }
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-    if (enc->use_layer_) {
-      VP8EncCodeLayerBlock(&it);
-    }
-#endif
     StoreSideInfo(&it);
     VP8StoreFilterStats(&it);
     VP8IteratorExport(&it);
@@ -788,11 +783,6 @@ int VP8EncTokenLoop(VP8Encoder* const enc) {
       RecordTokens(&it, &info, &enc->tokens_);
       size_p0 += info.H;
       distortion += info.D;
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-      if (enc->use_layer_) {
-        VP8EncCodeLayerBlock(&it);
-      }
-#endif
       if (is_last_pass) {
         StoreSideInfo(&it);
         VP8StoreFilterStats(&it);

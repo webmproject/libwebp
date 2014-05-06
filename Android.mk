@@ -18,7 +18,6 @@ LOCAL_SRC_FILES := \
     src/dec/frame.c \
     src/dec/idec.c \
     src/dec/io.c \
-    src/dec/layer.c \
     src/dec/quant.c \
     src/dec/tree.c \
     src/dec/vp8.c \
@@ -48,7 +47,6 @@ LOCAL_SRC_FILES := \
     src/enc/frame.c \
     src/enc/histogram.c \
     src/enc/iterator.c \
-    src/enc/layer.c \
     src/enc/picture.c \
     src/enc/quant.c \
     src/enc/syntax.c \

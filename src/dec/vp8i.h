@@ -297,11 +297,6 @@ struct VP8Decoder {
   size_t alpha_data_size_;
   int is_alpha_decoded_;  // true if alpha_data_ is decoded in alpha_plane_
   uint8_t* alpha_plane_;        // output. Persistent, contains the whole data.
-
-  // extensions
-  int layer_colorspace_;
-  const uint8_t* layer_data_;   // compressed layer data (if present)
-  size_t layer_data_size_;
 };
 
 //------------------------------------------------------------------------------
@@ -348,9 +343,6 @@ int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br);
 // in alpha.c
 const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
                                       int row, int num_rows);
-
-// in layer.c
-int VP8DecodeLayer(VP8Decoder* const dec);
 
 //------------------------------------------------------------------------------
 

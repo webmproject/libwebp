@@ -273,10 +273,6 @@ static void PrintExtraInfoLossy(const WebPPicture* const pic, int short_output,
         fprintf(stderr, "             transparency:   %6d (%.1f dB)\n",
                 stats->alpha_data_size, stats->PSNR[4]);
       }
-      if (stats->layer_data_size) {
-        fprintf(stderr, "             enhancement:    %6d\n",
-                stats->layer_data_size);
-      }
       fprintf(stderr, " Residuals bytes  "
                       "|segment 1|segment 2|segment 3"
                       "|segment 4|  total\n");

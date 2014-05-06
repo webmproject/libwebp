@@ -156,7 +156,6 @@ DEC_OBJS = \
     $(DIROBJ)\dec\frame.obj \
     $(DIROBJ)\dec\idec.obj \
     $(DIROBJ)\dec\io.obj \
-    $(DIROBJ)\dec\layer.obj \
     $(DIROBJ)\dec\quant.obj \
     $(DIROBJ)\dec\tree.obj \
     $(DIROBJ)\dec\vp8.obj \
@@ -210,7 +209,6 @@ ENC_OBJS = \
     $(DIROBJ)\enc\frame.obj \
     $(DIROBJ)\enc\histogram.obj \
     $(DIROBJ)\enc\iterator.obj \
-    $(DIROBJ)\enc\layer.obj \
     $(DIROBJ)\enc\picture.obj \
     $(DIROBJ)\enc\quant.obj \
     $(DIROBJ)\enc\syntax.obj \

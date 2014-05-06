@@ -12,7 +12,6 @@ libwebpencode_la_SOURCES += filter.c
 libwebpencode_la_SOURCES += frame.c
 libwebpencode_la_SOURCES += histogram.c
 libwebpencode_la_SOURCES += iterator.c
-libwebpencode_la_SOURCES += layer.c
 libwebpencode_la_SOURCES += picture.c
 libwebpencode_la_SOURCES += quant.c
 libwebpencode_la_SOURCES += syntax.c
