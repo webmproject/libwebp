@@ -34,6 +34,24 @@
       "revId": "2fabafb66444a560ca580312501cadc63fc1586e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//qXU\u003d",
+        "filename": "src/webp/decode.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-08T21:54:11Z",
+      "side": 1,
+      "message": "that\u0027s OK; we\u0027d have to deal with that already, something like:\n\n- branch\n- drop ABI # and protect changes by \u0027\u003e N\u0027 checks\n\npost merge this could then be bumped and the legacy dropped",
+      "parentUuid": "AAAAdn//qYw\u003d",
+      "revId": "2fabafb66444a560ca580312501cadc63fc1586e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
