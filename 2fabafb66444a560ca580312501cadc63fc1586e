@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//qaA\u003d",
+        "filename": "src/webp/decode.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-08T19:26:26Z",
+      "side": 1,
+      "message": "there have been other changes that affect compatibility already, but note something like this could have stripped the internal code and left the public interface alone for the time being. if we wanted to make a compatible release we could revert this portion...",
+      "revId": "2fabafb66444a560ca580312501cadc63fc1586e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
