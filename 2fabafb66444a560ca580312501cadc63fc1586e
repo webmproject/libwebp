@@ -16,6 +16,24 @@
       "revId": "2fabafb66444a560ca580312501cadc63fc1586e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//qYw\u003d",
+        "filename": "src/webp/decode.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-05-08T20:58:24Z",
+      "side": 1,
+      "message": "sgtm, i reverted this change. We can later discard them in a subsequent patch. I still bumped the ABI number up, note.",
+      "parentUuid": "AAAAdn//qaA\u003d",
+      "revId": "2fabafb66444a560ca580312501cadc63fc1586e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
