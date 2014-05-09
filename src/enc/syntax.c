@@ -263,53 +263,14 @@ static int EmitPartitionsSize(const VP8Encoder* const enc,
 
 //------------------------------------------------------------------------------
 
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-
-#define KTRAILER_SIZE 8
-
-static int WriteExtensions(VP8Encoder* const enc) {
-  uint8_t buffer[KTRAILER_SIZE];
-  VP8BitWriter* const bw = &enc->bw_;
-  WebPPicture* const pic = enc->pic_;
-
-  // Layer (bytes 0..3)
-  PutLE24(buffer + 0, enc->layer_data_size_);
-  buffer[3] = enc->pic_->colorspace & WEBP_CSP_UV_MASK;
-  if (enc->layer_data_size_ > 0) {
-    assert(enc->use_layer_);
-    // append layer data to last partition
-    if (!VP8BitWriterAppend(&enc->parts_[enc->num_parts_ - 1],
-                            enc->layer_data_, enc->layer_data_size_)) {
-      return WebPEncodingSetError(pic, VP8_ENC_ERROR_BITSTREAM_OUT_OF_MEMORY);
-    }
-  }
-
-  buffer[KTRAILER_SIZE - 1] = 0x01;  // marker
-  if (!VP8BitWriterAppend(bw, buffer, KTRAILER_SIZE)) {
-    return WebPEncodingSetError(pic, VP8_ENC_ERROR_BITSTREAM_OUT_OF_MEMORY);
-  }
-  return 1;
-}
-
-#endif    /* WEBP_EXPERIMENTAL_FEATURES */
-
-//------------------------------------------------------------------------------
-
 static size_t GeneratePartition0(VP8Encoder* const enc) {
   VP8BitWriter* const bw = &enc->bw_;
   const int mb_size = enc->mb_w_ * enc->mb_h_;
   uint64_t pos1, pos2, pos3;
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  const int need_extensions = enc->use_layer_;
-#endif
 
   pos1 = VP8BitWriterPos(bw);
   VP8BitWriterInit(bw, mb_size * 7 / 8);        // ~7 bits per macroblock
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  VP8PutBitUniform(bw, need_extensions);   // extensions
-#else
   VP8PutBitUniform(bw, 0);   // colorspace
-#endif
   VP8PutBitUniform(bw, 0);   // clamp type
 
   PutSegmentHeader(bw, enc);
@@ -324,19 +285,12 @@ static size_t GeneratePartition0(VP8Encoder* const enc) {
   VP8CodeIntraModes(enc);
   VP8BitWriterFinish(bw);
 
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  if (need_extensions && !WriteExtensions(enc)) {
-    return 0;
-  }
-#endif
-
   pos3 = VP8BitWriterPos(bw);
 
   if (enc->pic_->stats) {
     enc->pic_->stats->header_bytes[0] = (int)((pos2 - pos1 + 7) >> 3);
     enc->pic_->stats->header_bytes[1] = (int)((pos3 - pos2 + 7) >> 3);
     enc->pic_->stats->alpha_data_size = (int)enc->alpha_data_size_;
-    enc->pic_->stats->layer_data_size = (int)enc->layer_data_size_;
   }
   return !bw->error_;
 }

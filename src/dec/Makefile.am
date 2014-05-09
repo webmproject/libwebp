@@ -9,7 +9,6 @@ libwebpdecode_la_SOURCES += decode_vp8.h
 libwebpdecode_la_SOURCES += frame.c
 libwebpdecode_la_SOURCES += idec.c
 libwebpdecode_la_SOURCES += io.c
-libwebpdecode_la_SOURCES += layer.c
 libwebpdecode_la_SOURCES += quant.c
 libwebpdecode_la_SOURCES += tree.c
 libwebpdecode_la_SOURCES += vp8.c

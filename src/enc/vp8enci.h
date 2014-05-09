@@ -426,12 +426,6 @@ struct VP8Encoder {
   uint32_t alpha_data_size_;
   WebPWorker alpha_worker_;
 
-  // enhancement layer
-  int use_layer_;
-  VP8BitWriter layer_bw_;
-  uint8_t* layer_data_;
-  size_t layer_data_size_;
-
   // quantization info (one set of DC/AC dequant factor per segment)
   VP8SegmentInfo dqm_[NUM_MB_SEGMENTS];
   int base_quant_;                 // nominal quantizer value. Only used
@@ -536,12 +530,6 @@ void VP8EncInitAlpha(VP8Encoder* const enc);    // initialize alpha compression
 int VP8EncStartAlpha(VP8Encoder* const enc);    // start alpha coding process
 int VP8EncFinishAlpha(VP8Encoder* const enc);   // finalize compressed data
 int VP8EncDeleteAlpha(VP8Encoder* const enc);   // delete compressed data
-
-  // in layer.c
-void VP8EncInitLayer(VP8Encoder* const enc);     // init everything
-void VP8EncCodeLayerBlock(VP8EncIterator* it);   // code one more macroblock
-int VP8EncFinishLayer(VP8Encoder* const enc);    // finalize coding
-void VP8EncDeleteLayer(VP8Encoder* enc);         // reclaim memory
 
   // in filter.c
 

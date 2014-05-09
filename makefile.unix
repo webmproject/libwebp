@@ -91,7 +91,6 @@ DEC_OBJS = \
     src/dec/frame.o \
     src/dec/idec.o \
     src/dec/io.o \
-    src/dec/layer.o \
     src/dec/quant.o \
     src/dec/tree.o \
     src/dec/vp8.o \
@@ -134,7 +133,6 @@ ENC_OBJS = \
     src/enc/frame.o \
     src/enc/histogram.o \
     src/enc/iterator.o \
-    src/enc/layer.o \
     src/enc/picture.o \
     src/enc/quant.o \
     src/enc/syntax.o \
