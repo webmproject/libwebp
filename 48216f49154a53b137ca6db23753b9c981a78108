@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//qF8\u003d",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-12T21:05:48Z",
+      "side": 1,
+      "message": "__builtin_bswapXX? I tried this quickly with gcc 4.6 to little effect, maybe it\u0027s better elsewhere",
+      "revId": "48216f49154a53b137ca6db23753b9c981a78108",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
