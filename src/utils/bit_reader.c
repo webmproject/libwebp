@@ -35,6 +35,13 @@ void VP8InitBitReader(VP8BitReader* const br,
   br->eof_     = 0;
 }
 
+void VP8RemapBitReader(VP8BitReader* const br, ptrdiff_t offset) {
+  if (br->buf_ != NULL) {
+    br->buf_ += offset;
+    br->buf_end_ += offset;
+  }
+}
+
 const uint8_t kVP8Log2Range[128] = {
      7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4,
   3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,

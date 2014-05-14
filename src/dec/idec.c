@@ -86,13 +86,6 @@ typedef struct {
 //------------------------------------------------------------------------------
 // MemBuffer: incoming data handling
 
-static void RemapBitReader(VP8BitReader* const br, ptrdiff_t offset) {
-  if (br->buf_ != NULL) {
-    br->buf_ += offset;
-    br->buf_end_ += offset;
-  }
-}
-
 static WEBP_INLINE size_t MemDataSize(const MemBuffer* mem) {
   return (mem->end_ - mem->start_);
 }
@@ -129,12 +122,12 @@ static void DoRemap(WebPIDecoder* const idec, ptrdiff_t offset) {
       if (offset != 0) {
         int p;
         for (p = 0; p <= last_part; ++p) {
-          RemapBitReader(dec->parts_ + p, offset);
+          VP8RemapBitReader(dec->parts_ + p, offset);
         }
         // Remap partition #0 data pointer to new offset, but only in MAP
         // mode (in APPEND mode, partition #0 is copied into a fixed memory).
         if (mem->mode_ == MEM_MODE_MAP) {
-          RemapBitReader(&dec->br_, offset);
+          VP8RemapBitReader(&dec->br_, offset);
         }
       }
       assert(last_part >= 0);
