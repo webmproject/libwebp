@@ -12,6 +12,15 @@ endif
 
 include $(CLEAR_VARS)
 
+ifneq ($(findstring armeabi-v7a, $(TARGET_ARCH_ABI)),)
+  # Setting LOCAL_ARM_NEON will enable -mfpu=neon which may cause illegal
+  # instructions to be generated for armv7a code. Instead target the neon code
+  # specifically.
+  NEON := c.neon
+else
+  NEON := c
+endif
+
 LOCAL_SRC_FILES := \
     src/dec/alpha.c \
     src/dec/buffer.c \
@@ -27,15 +36,19 @@ LOCAL_SRC_FILES := \
     src/dsp/dec.c \
     src/dsp/dec_clip_tables.c \
     src/dsp/dec_mips32.c \
+    src/dsp/dec_neon.$(NEON) \
     src/dsp/dec_sse2.c \
     src/dsp/enc.c \
     src/dsp/enc_mips32.c \
+    src/dsp/enc_neon.$(NEON) \
     src/dsp/enc_sse2.c \
     src/dsp/lossless.c \
     src/dsp/lossless_mips32.c \
+    src/dsp/lossless_neon.$(NEON) \
     src/dsp/lossless_sse2.c \
     src/dsp/upsampling.c \
     src/dsp/upsampling_mips32.c \
+    src/dsp/upsampling_neon.$(NEON) \
     src/dsp/upsampling_sse2.c \
     src/dsp/yuv.c \
     src/enc/alpha.c \
@@ -74,15 +87,6 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
 # prefer arm over thumb mode for performance gains
 LOCAL_ARM_MODE := arm
 
-ifneq ($(findstring armeabi-v7a, $(TARGET_ARCH_ABI)),)
-  # Setting LOCAL_ARM_NEON will enable -mfpu=neon which may cause illegal
-  # instructions to be generated for armv7a code. Instead target the neon code
-  # specifically.
-  LOCAL_SRC_FILES += src/dsp/dec_neon.c.neon
-  LOCAL_SRC_FILES += src/dsp/enc_neon.c.neon
-  LOCAL_SRC_FILES += src/dsp/lossless_neon.c.neon
-  LOCAL_SRC_FILES += src/dsp/upsampling_neon.c.neon
-endif
 LOCAL_STATIC_LIBRARIES := cpufeatures
 
 LOCAL_MODULE := webp
