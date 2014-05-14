@@ -16,6 +16,24 @@
       "revId": "002c37612eb70c86722529bba0629866dda7e19a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//pxU\u003d",
+        "filename": "Android.mk",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-14T07:12:18Z",
+      "side": 1,
+      "message": "fine by me",
+      "parentUuid": "AAAAdn//pxs\u003d",
+      "revId": "002c37612eb70c86722529bba0629866dda7e19a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
