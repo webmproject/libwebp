@@ -55,7 +55,7 @@ static int x86CPUInfo(CPUFeature feature) {
   return 0;
 }
 VP8CPUInfo VP8GetCPUInfo = x86CPUInfo;
-#elif defined(WEBP_ANDROID_NEON)
+#elif defined(WEBP_ANDROID_NEON)  // NB: needs to be before generic NEON test.
 static int AndroidCPUInfo(CPUFeature feature) {
   const AndroidCpuFamily cpu_family = android_getCpuFamily();
   const uint64_t cpu_features = android_getCpuFeatures();
@@ -66,7 +66,7 @@ static int AndroidCPUInfo(CPUFeature feature) {
   return 0;
 }
 VP8CPUInfo VP8GetCPUInfo = AndroidCPUInfo;
-#elif defined(__ARM_NEON__)
+#elif defined(WEBP_USE_NEON)
 // define a dummy function to enable turning off NEON at runtime by setting
 // VP8DecGetCPUInfo = NULL
 static int armCPUInfo(CPUFeature feature) {
