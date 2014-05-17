@@ -56,6 +56,7 @@ typedef enum {
   kSSE2,
   kSSE3,
   kAVX,
+  kAVX2,
   kNEON,
   kMIPS32
 } CPUFeature;

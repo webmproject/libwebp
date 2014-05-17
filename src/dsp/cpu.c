@@ -38,6 +38,8 @@ static WEBP_INLINE void GetCPUInfo(int cpu_info[4], int info_type) {
     : "=a"(cpu_info[0]), "=b"(cpu_info[1]), "=c"(cpu_info[2]), "=d"(cpu_info[3])
     : "a"(info_type));
 }
+#elif defined(_MSC_VER) && _MSC_VER >= 1500  // >= VS2008
+#define GetCPUInfo(info, type) __cpuidex(info, type, 0)  // set ecx=0
 #elif defined(WEBP_MSC_SSE2)
 #define GetCPUInfo __cpuid
 #endif
@@ -85,6 +87,12 @@ static int x86CPUInfo(CPUFeature feature) {
     if ((cpu_info[2] & 0x18000000) == 0x18000000) {
       // XMM state and YMM state enabled by the OS.
       return (xgetbv() & 0x6) == 0x6;
+    }
+  }
+  if (feature == kAVX2) {
+    if (x86CPUInfo(kAVX)) {
+      GetCPUInfo(cpu_info, 7);
+      return ((cpu_info[1] & 0x00000020) == 0x00000020);
     }
   }
   return 0;
