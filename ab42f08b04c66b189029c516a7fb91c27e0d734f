@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//ovA\u003d",
+        "filename": "src/dsp/dec_sse2.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-20T06:17:46Z",
+      "side": 1,
+      "message": "could normalize the names with the neon, fwiw",
+      "revId": "ab42f08b04c66b189029c516a7fb91c27e0d734f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ou8\u003d",
+        "filename": "src/dsp/dec_sse2.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-20T06:17:46Z",
+      "side": 1,
+      "message": "single params should be ok on older msvc, the restriction there is \u003e3, but this is ok too",
+      "revId": "ab42f08b04c66b189029c516a7fb91c27e0d734f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ou4\u003d",
+        "filename": "src/dsp/dec_sse2.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-20T06:17:46Z",
+      "side": 1,
+      "message": "\u0027const __m128* const mask\u0027 while you\u0027re at it",
+      "revId": "ab42f08b04c66b189029c516a7fb91c27e0d734f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
