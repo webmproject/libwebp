@@ -55,6 +55,7 @@ extern "C" {
 typedef enum {
   kSSE2,
   kSSE3,
+  kAVX,
   kNEON,
   kMIPS32
 } CPUFeature;
