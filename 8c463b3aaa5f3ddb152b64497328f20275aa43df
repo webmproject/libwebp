@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//ouM\u003d",
+        "filename": "src/dsp/cpu.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-20T06:20:00Z",
+      "side": 1,
+      "message": "good point. done.",
+      "parentUuid": "AAAAdn//ou0\u003d",
+      "revId": "8c463b3aaa5f3ddb152b64497328f20275aa43df",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//ouw\u003d",
         "filename": "src/dsp/cpu.c",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//ouQ\u003d",
+        "filename": "src/dsp/cpu.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-20T06:20:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//ouw\u003d",
+      "revId": "8c463b3aaa5f3ddb152b64497328f20275aa43df",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//ous\u003d",
         "filename": "src/dsp/cpu.c",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2014-05-20T06:13:48Z",
       "side": 1,
       "message": "any chance we could merge the \u0027\u00260x6\u0027 test inside xgetbv(), for readability?",
+      "revId": "8c463b3aaa5f3ddb152b64497328f20275aa43df",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ouY\u003d",
+        "filename": "src/dsp/cpu.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-20T06:20:00Z",
+      "side": 1,
+      "message": "it\u0027ll be 0x7 for avx2...",
+      "parentUuid": "AAAAdn//ous\u003d",
       "revId": "8c463b3aaa5f3ddb152b64497328f20275aa43df",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
