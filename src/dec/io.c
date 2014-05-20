@@ -45,27 +45,12 @@ static int EmitYUV(const VP8Io* const io, WebPDecParams* const p) {
 
 // Point-sampling U/V sampler.
 static int EmitSampledRGB(const VP8Io* const io, WebPDecParams* const p) {
-  WebPDecBuffer* output = p->output;
-  const WebPRGBABuffer* const buf = &output->u.RGBA;
-  uint8_t* dst = buf->rgba + io->mb_y * buf->stride;
-  const uint8_t* y_src = io->y;
-  const uint8_t* u_src = io->u;
-  const uint8_t* v_src = io->v;
-  const WebPSampleLinePairFunc sample = WebPSamplers[output->colorspace];
-  const int mb_w = io->mb_w;
-  const int last = io->mb_h - 1;
-  int j;
-  for (j = 0; j < last; j += 2) {
-    sample(y_src, y_src + io->y_stride, u_src, v_src,
-           dst, dst + buf->stride, mb_w);
-    y_src += 2 * io->y_stride;
-    u_src += io->uv_stride;
-    v_src += io->uv_stride;
-    dst += 2 * buf->stride;
-  }
-  if (j == last) {  // Just do the last line twice
-    sample(y_src, y_src, u_src, v_src, dst, dst, mb_w);
-  }
+  WebPDecBuffer* const output = p->output;
+  WebPRGBABuffer* const buf = &output->u.RGBA;
+  uint8_t* const dst = buf->rgba + io->mb_y * buf->stride;
+  WebPSamplers[output->colorspace](io->y, io->y_stride,
+                                   io->u, io->v, io->uv_stride,
+                                   dst, buf->stride, io->mb_w, io->mb_h);
   return io->mb_h;
 }
 
@@ -637,4 +622,3 @@ void WebPInitCustomIo(WebPDecParams* const params, VP8Io* const io) {
 }
 
 //------------------------------------------------------------------------------
-

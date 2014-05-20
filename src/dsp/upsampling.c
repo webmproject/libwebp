@@ -109,40 +109,59 @@ UPSAMPLE_FUNC(UpsampleRgb565LinePair,  VP8YuvToRgb565,  2)
 //------------------------------------------------------------------------------
 // simple point-sampling
 
+WebPSamplePlaneFunc WebPSamplers[MODE_LAST];
 
-WebPSampleLinePairFunc WebPSamplers[MODE_LAST];
+void WebPSamplerProcessPlane(const uint8_t* y, int y_stride,
+                             const uint8_t* u, const uint8_t* v, int uv_stride,
+                             uint8_t* dst, int dst_stride,
+                             int width, int height, WebPSamplerRowFunc func) {
+  int j;
+  for (j = 0; j < height; ++j) {
+    func(y, u, v, dst, width);
+    y += y_stride;
+    if (j & 1) {
+      u += uv_stride;
+      v += uv_stride;
+    }
+    dst += dst_stride;
+  }
+}
 
+// TODO(skal): maybe some of these per-row functions should be in yuv.h?
 #define SAMPLE_FUNC(FUNC_NAME, FUNC, XSTEP)                                    \
-static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \
-                      const uint8_t* u, const uint8_t* v,                      \
-                      uint8_t* top_dst, uint8_t* bottom_dst, int len) {        \
-  int i;                                                                       \
-  for (i = 0; i < len - 1; i += 2) {                                           \
-    FUNC(top_y[0], u[0], v[0], top_dst);                                       \
-    FUNC(top_y[1], u[0], v[0], top_dst + XSTEP);                               \
-    FUNC(bottom_y[0], u[0], v[0], bottom_dst);                                 \
-    FUNC(bottom_y[1], u[0], v[0], bottom_dst + XSTEP);                         \
-    top_y += 2;                                                                \
-    bottom_y += 2;                                                             \
-    u++;                                                                       \
-    v++;                                                                       \
-    top_dst += 2 * XSTEP;                                                      \
-    bottom_dst += 2 * XSTEP;                                                   \
+static void FUNC_NAME##Row(const uint8_t* y,                                   \
+                           const uint8_t* u, const uint8_t* v,                 \
+                           uint8_t* dst, int len) {                            \
+  const uint8_t* const end = dst + (len & ~1) * XSTEP;                         \
+  while (dst != end) {                                                         \
+    FUNC(y[0], u[0], v[0], dst);                                               \
+    FUNC(y[1], u[0], v[0], dst + XSTEP);                                       \
+    y += 2;                                                                    \
+    ++u;                                                                       \
+    ++v;                                                                       \
+    dst += 2 * XSTEP;                                                          \
   }                                                                            \
-  if (i == len - 1) {    /* last one */                                        \
-    FUNC(top_y[0], u[0], v[0], top_dst);                                       \
-    FUNC(bottom_y[0], u[0], v[0], bottom_dst);                                 \
+  if (len & 1) {                                                               \
+    FUNC(y[0], u[0], v[0], dst);                                               \
   }                                                                            \
+}                                                                              \
+static void FUNC_NAME(const uint8_t* y, int y_stride,                          \
+                      const uint8_t* u, const uint8_t* v, int uv_stride,       \
+                      uint8_t* dst, int dst_stride,                            \
+                      int width, int height) {                                 \
+  WebPSamplerProcessPlane(y, y_stride, u, v, uv_stride,                        \
+                          dst, dst_stride, width, height,                      \
+                          FUNC_NAME##Row);                                     \
 }
 
 // All variants implemented.
-SAMPLE_FUNC(SampleRgbLinePair,      VP8YuvToRgb,  3)
-SAMPLE_FUNC(SampleBgrLinePair,      VP8YuvToBgr,  3)
-SAMPLE_FUNC(SampleRgbaLinePair,     VP8YuvToRgba, 4)
-SAMPLE_FUNC(SampleBgraLinePair,     VP8YuvToBgra, 4)
-SAMPLE_FUNC(SampleArgbLinePair,     VP8YuvToArgb, 4)
-SAMPLE_FUNC(SampleRgba4444LinePair, VP8YuvToRgba4444, 2)
-SAMPLE_FUNC(SampleRgb565LinePair,   VP8YuvToRgb565, 2)
+SAMPLE_FUNC(SampleRgbPlane,      VP8YuvToRgb,  3)
+SAMPLE_FUNC(SampleBgrPlane,      VP8YuvToBgr,  3)
+SAMPLE_FUNC(SampleRgbaPlane,     VP8YuvToRgba, 4)
+SAMPLE_FUNC(SampleBgraPlane,     VP8YuvToBgra, 4)
+SAMPLE_FUNC(SampleArgbPlane,     VP8YuvToArgb, 4)
+SAMPLE_FUNC(SampleRgba4444Plane, VP8YuvToRgba4444, 2)
+SAMPLE_FUNC(SampleRgb565Plane,   VP8YuvToRgb565, 2)
 
 #undef SAMPLE_FUNC
 
@@ -341,17 +360,17 @@ void WebPInitUpsamplers(void) {
 }
 
 void WebPInitSamplers(void) {
-  WebPSamplers[MODE_RGB]       = SampleRgbLinePair;
-  WebPSamplers[MODE_RGBA]      = SampleRgbaLinePair;
-  WebPSamplers[MODE_BGR]       = SampleBgrLinePair;
-  WebPSamplers[MODE_BGRA]      = SampleBgraLinePair;
-  WebPSamplers[MODE_ARGB]      = SampleArgbLinePair;
-  WebPSamplers[MODE_RGBA_4444] = SampleRgba4444LinePair;
-  WebPSamplers[MODE_RGB_565]   = SampleRgb565LinePair;
-  WebPSamplers[MODE_rgbA]      = SampleRgbaLinePair;
-  WebPSamplers[MODE_bgrA]      = SampleBgraLinePair;
-  WebPSamplers[MODE_Argb]      = SampleArgbLinePair;
-  WebPSamplers[MODE_rgbA_4444] = SampleRgba4444LinePair;
+  WebPSamplers[MODE_RGB]       = SampleRgbPlane;
+  WebPSamplers[MODE_RGBA]      = SampleRgbaPlane;
+  WebPSamplers[MODE_BGR]       = SampleBgrPlane;
+  WebPSamplers[MODE_BGRA]      = SampleBgraPlane;
+  WebPSamplers[MODE_ARGB]      = SampleArgbPlane;
+  WebPSamplers[MODE_RGBA_4444] = SampleRgba4444Plane;
+  WebPSamplers[MODE_RGB_565]   = SampleRgb565Plane;
+  WebPSamplers[MODE_rgbA]      = SampleRgbaPlane;
+  WebPSamplers[MODE_bgrA]      = SampleBgraPlane;
+  WebPSamplers[MODE_Argb]      = SampleArgbPlane;
+  WebPSamplers[MODE_rgbA_4444] = SampleRgba4444Plane;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
@@ -387,4 +406,3 @@ void WebPInitPremultiply(void) {
   }
 #endif  // FANCY_UPSAMPLING
 }
-
