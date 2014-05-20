@@ -107,6 +107,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//oto\u003d",
+        "filename": "src/dsp/cpu.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-05-20T06:33:34Z",
+      "side": 1,
+      "message": "oh, ok",
+      "parentUuid": "AAAAdn//ouY\u003d",
+      "revId": "8c463b3aaa5f3ddb152b64497328f20275aa43df",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//ouo\u003d",
         "filename": "src/dsp/dsp.h",
         "patchSetId": 1
@@ -118,6 +136,24 @@
       "writtenOn": "2014-05-20T06:13:48Z",
       "side": 1,
       "message": "kAVX2 ? Does it make sense?",
+      "revId": "8c463b3aaa5f3ddb152b64497328f20275aa43df",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//otk\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-05-20T06:33:34Z",
+      "side": 1,
+      "message": "ignore the comment",
+      "parentUuid": "AAAAdn//ouo\u003d",
       "revId": "8c463b3aaa5f3ddb152b64497328f20275aa43df",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
