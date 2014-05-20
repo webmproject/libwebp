@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//ong\u003d",
+        "filename": "makefile.unix",
+        "patchSetId": 1
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-05-20T20:42:16Z",
+      "side": 1,
+      "message": "not sure we should have this flag added by default...",
+      "revId": "fe30d0614fe3018c13cc331fe54555a2e5eb2d6b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//onc\u003d",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-05-20T20:42:16Z",
+      "side": 1,
+      "message": "we need similar additions in \u0027Android.mk\u0027 and \u0027makefile.vc\u0027 files",
+      "revId": "fe30d0614fe3018c13cc331fe54555a2e5eb2d6b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//onY\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-05-20T20:42:16Z",
+      "side": 1,
+      "message": "missing header",
+      "revId": "fe30d0614fe3018c13cc331fe54555a2e5eb2d6b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//onU\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-05-20T20:42:16Z",
+      "side": 1,
+      "message": "too many \\n\u0027s",
+      "revId": "fe30d0614fe3018c13cc331fe54555a2e5eb2d6b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//onM\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-05-20T20:42:16Z",
+      "side": 1,
+      "message": "comment not needed here",
+      "revId": "fe30d0614fe3018c13cc331fe54555a2e5eb2d6b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//onQ\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-05-20T20:42:16Z",
+      "side": 1,
+      "message": "just remove the commented code",
+      "revId": "fe30d0614fe3018c13cc331fe54555a2e5eb2d6b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//omk\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-05-20T20:42:16Z",
+      "side": 1,
+      "message": "extra \\n",
+      "revId": "fe30d0614fe3018c13cc331fe54555a2e5eb2d6b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//omo\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-05-20T20:42:16Z",
+      "side": 1,
+      "message": "this function will have to be conditionally called from VP8EncDspInit() in enc.c file",
+      "revId": "fe30d0614fe3018c13cc331fe54555a2e5eb2d6b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//oms\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-05-20T20:42:16Z",
+      "side": 1,
+      "message": "this WEBP_USE_AVX2 needs to be conditionally defined in dsp.h",
+      "revId": "fe30d0614fe3018c13cc331fe54555a2e5eb2d6b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
