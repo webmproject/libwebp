@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//odI\u003d",
+        "filename": "src/utils/bit_writer.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-21T06:59:18Z",
+      "side": 1,
+      "message": "this line can go",
+      "revId": "b805821978693b4ed4d7269396cbe09c2fa41736",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
