@@ -40,6 +40,10 @@ extern "C" {
 #define WEBP_USE_SSE2
 #endif
 
+#if defined(__AVX2__)
+#define WEBP_USE_AVX2
+#endif
+
 #if defined(__ANDROID__) && defined(__ARM_ARCH_7A__)
 #define WEBP_ANDROID_NEON  // Android targets that might support NEON
 #endif
