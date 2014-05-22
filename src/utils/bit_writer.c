@@ -202,6 +202,7 @@ void VP8BitWriterWipeOut(VP8BitWriter* const bw) {
 
 #define VP8L_WRITER_BYTES ((int)sizeof(vp8l_wtype_t))
 #define VP8L_WRITER_BITS (VP8L_WRITER_BYTES * 8)
+#define VP8L_WRITER_MAX_BITS (8 * (int)sizeof(vp8l_atype_t))
 
 //  endian-specific htoleXX() definition
 // TODO(skal): move this to config.h, and collect all the endian-related code
@@ -226,6 +227,8 @@ void VP8BitWriterWipeOut(VP8BitWriter* const bw) {
 // NaCl without glibc is assumed to be little-endian
 #define htole32(x) (x)
 #define htole16(x) (x)
+#elif defined(__QNX__)
+#include <net/netbyte.h>
 #else     // pretty much all linux and/or glibc
 #include <endian.h>
 #endif
@@ -275,23 +278,44 @@ void VP8LBitWriterDestroy(VP8LBitWriter* const bw) {
 }
 
 void VP8LWriteBits(VP8LBitWriter* const bw, int n_bits, uint32_t bits) {
-  if (n_bits <= 0) return;
-  bw->bits_ |= (vp8l_atype_t)bits << bw->used_;
-  bw->used_ += n_bits;
-  if (bw->used_ > VP8L_WRITER_BITS) {
-    if (bw->cur_ + VP8L_WRITER_BYTES > bw->end_) {
-      const uint64_t extra_size = (bw->end_ - bw->buf_) + MIN_EXTRA_SIZE;
-      if (extra_size != (size_t)extra_size ||
-          !VP8LBitWriterResize(bw, (size_t)extra_size)) {
-        bw->cur_ = bw->buf_;
-        bw->error_ = 1;
-        return;
+  assert(n_bits <= 32);
+  // That's the max we can handle:
+  assert(bw->used_ + n_bits <= 2 * VP8L_WRITER_MAX_BITS);
+  if (n_bits > 0) {
+    // Local field copy.
+    vp8l_atype_t lbits = bw->bits_;
+    int used = bw->used_;
+    // Special case of overflow handling for 32bit accumulator (2-steps flush).
+    if (VP8L_WRITER_BITS == 16) {
+      if (used + n_bits >= VP8L_WRITER_MAX_BITS) {
+        // Fill up all the VP8L_WRITER_MAX_BITS so it can be flushed out below.
+        const int shift = VP8L_WRITER_MAX_BITS - used;
+        lbits |= (vp8l_atype_t)bits << used;
+        used = VP8L_WRITER_MAX_BITS;
+        n_bits -= shift;
+        bits >>= shift;
+        assert(n_bits <= VP8L_WRITER_MAX_BITS);
       }
     }
-    *(vp8l_wtype_t*)bw->cur_ = (vp8l_wtype_t)WSWAP((vp8l_wtype_t)bw->bits_);
-    bw->cur_ += VP8L_WRITER_BYTES;
-    bw->bits_ >>= VP8L_WRITER_BITS;
-    bw->used_ -= VP8L_WRITER_BITS;
+    // If needed, make some room by flushing some bits out.
+    while (used >= VP8L_WRITER_BITS) {
+      if (bw->cur_ + VP8L_WRITER_BYTES > bw->end_) {
+        const uint64_t extra_size = (bw->end_ - bw->buf_) + MIN_EXTRA_SIZE;
+        if (extra_size != (size_t)extra_size ||
+            !VP8LBitWriterResize(bw, (size_t)extra_size)) {
+          bw->cur_ = bw->buf_;
+          bw->error_ = 1;
+          return;
+        }
+      }
+      *(vp8l_wtype_t*)bw->cur_ = (vp8l_wtype_t)WSWAP((vp8l_wtype_t)lbits);
+      bw->cur_ += VP8L_WRITER_BYTES;
+      lbits >>= VP8L_WRITER_BITS;
+      used -= VP8L_WRITER_BITS;
+    }
+    // Eventually, insert new bits.
+    bw->bits_ = lbits | ((vp8l_atype_t)bits << used);
+    bw->used_ = used + n_bits;
   }
 }
 

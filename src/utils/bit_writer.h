@@ -106,7 +106,8 @@ void VP8LBitWriterDestroy(VP8LBitWriter* const bw);
 
 // This function writes bits into bytes in increasing addresses (little endian),
 // and within a byte least-significant-bit first.
-// The function can write up to 8*sizeof(vp8l_wtype_t) bits in one go.
+// This function can write up to 32 bits in one go, but VP8LBitReader can only
+// read 24 bits max (VP8L_MAX_NUM_BIT_READ).
 // VP8LBitWriter's error_ flag is set in case of  memory allocation error.
 void VP8LWriteBits(VP8LBitWriter* const bw, int n_bits, uint32_t bits);
 
