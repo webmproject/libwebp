@@ -688,6 +688,7 @@ VP8QuantizeBlockWHT VP8EncQuantizeBlockWHT;
 VP8BlockCopy VP8Copy4x4;
 
 extern void VP8EncDspInitSSE2(void);
+extern void VP8EncDspInitAVX2(void);
 extern void VP8EncDspInitNEON(void);
 extern void VP8EncDspInitMIPS32(void);
 
@@ -718,6 +719,12 @@ void VP8EncDspInit(void) {
 #if defined(WEBP_USE_SSE2)
     if (VP8GetCPUInfo(kSSE2)) {
       VP8EncDspInitSSE2();
+    }
+    // TODO(jzern): this should be conditionally included based on a configure
+    // (HAVE_AVX2) define. We can't use WEBP_USE_AVX2/__AVX2__ here as -mavx2
+    // won't be defined for this file.
+    if (VP8GetCPUInfo(kAVX2)) {
+      VP8EncDspInitAVX2();
     }
 #elif defined(WEBP_USE_NEON)
     if (VP8GetCPUInfo(kNEON)) {

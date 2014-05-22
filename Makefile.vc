@@ -184,6 +184,7 @@ DSP_DEC_OBJS = \
 
 DSP_ENC_OBJS = \
     $(DIROBJ)\dsp\enc.obj \
+    $(DIROBJ)\dsp\enc_avx2.obj \
     $(DIROBJ)\dsp\enc_mips32.obj \
     $(DIROBJ)\dsp\enc_neon.obj \
     $(DIROBJ)\dsp\enc_sse2.obj \
