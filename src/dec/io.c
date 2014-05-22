@@ -48,9 +48,10 @@ static int EmitSampledRGB(const VP8Io* const io, WebPDecParams* const p) {
   WebPDecBuffer* const output = p->output;
   WebPRGBABuffer* const buf = &output->u.RGBA;
   uint8_t* const dst = buf->rgba + io->mb_y * buf->stride;
-  WebPSamplers[output->colorspace](io->y, io->y_stride,
-                                   io->u, io->v, io->uv_stride,
-                                   dst, buf->stride, io->mb_w, io->mb_h);
+  WebPSamplerProcessPlane(io->y, io->y_stride,
+                          io->u, io->v, io->uv_stride,
+                          dst, buf->stride, io->mb_w, io->mb_h,
+                          WebPSamplers[output->colorspace]);
   return io->mb_h;
 }
 
@@ -539,7 +540,7 @@ static int CustomSetup(VP8Io* io) {
   if (!WebPIoInitFromOptions(p->options, io, is_alpha ? MODE_YUV : MODE_YUVA)) {
     return 0;
   }
-
+  if (is_alpha && WebPIsPremultipliedMode(colorspace)) WebPInitPremultiply();
   if (io->use_scaling) {
     const int ok = is_rgb ? InitRGBRescaler(io, p) : InitYUVRescaler(io, p);
     if (!ok) {
@@ -568,7 +569,6 @@ static int CustomSetup(VP8Io* io) {
       p->emit = EmitYUV;
     }
     if (is_alpha) {  // need transparency output
-      if (WebPIsPremultipliedMode(colorspace)) WebPInitPremultiply();
       p->emit_alpha =
           (colorspace == MODE_RGBA_4444 || colorspace == MODE_rgbA_4444) ?
               EmitAlphaRGBA4444

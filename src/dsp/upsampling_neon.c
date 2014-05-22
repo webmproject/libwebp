@@ -236,6 +236,9 @@ NEON_UPSAMPLE_FUNC(UpsampleBgraLinePair, Bgra, 4)
 
 //------------------------------------------------------------------------------
 
+extern void WebPInitUpsamplersNEON(void);
+extern void WebPInitPremultiplyNEON(void);
+
 #ifdef FANCY_UPSAMPLING
 
 extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
@@ -262,4 +265,3 @@ void WebPInitPremultiplyNEON(void) {
 void WebPInitPremultiplyNEON(void) {}
 
 #endif  // FANCY_UPSAMPLING
-

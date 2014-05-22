@@ -107,65 +107,6 @@ UPSAMPLE_FUNC(UpsampleRgb565LinePair,  VP8YuvToRgb565,  2)
 #endif  // FANCY_UPSAMPLING
 
 //------------------------------------------------------------------------------
-// simple point-sampling
-
-WebPSamplePlaneFunc WebPSamplers[MODE_LAST];
-
-void WebPSamplerProcessPlane(const uint8_t* y, int y_stride,
-                             const uint8_t* u, const uint8_t* v, int uv_stride,
-                             uint8_t* dst, int dst_stride,
-                             int width, int height, WebPSamplerRowFunc func) {
-  int j;
-  for (j = 0; j < height; ++j) {
-    func(y, u, v, dst, width);
-    y += y_stride;
-    if (j & 1) {
-      u += uv_stride;
-      v += uv_stride;
-    }
-    dst += dst_stride;
-  }
-}
-
-// TODO(skal): maybe some of these per-row functions should be in yuv.h?
-#define SAMPLE_FUNC(FUNC_NAME, FUNC, XSTEP)                                    \
-static void FUNC_NAME##Row(const uint8_t* y,                                   \
-                           const uint8_t* u, const uint8_t* v,                 \
-                           uint8_t* dst, int len) {                            \
-  const uint8_t* const end = dst + (len & ~1) * XSTEP;                         \
-  while (dst != end) {                                                         \
-    FUNC(y[0], u[0], v[0], dst);                                               \
-    FUNC(y[1], u[0], v[0], dst + XSTEP);                                       \
-    y += 2;                                                                    \
-    ++u;                                                                       \
-    ++v;                                                                       \
-    dst += 2 * XSTEP;                                                          \
-  }                                                                            \
-  if (len & 1) {                                                               \
-    FUNC(y[0], u[0], v[0], dst);                                               \
-  }                                                                            \
-}                                                                              \
-static void FUNC_NAME(const uint8_t* y, int y_stride,                          \
-                      const uint8_t* u, const uint8_t* v, int uv_stride,       \
-                      uint8_t* dst, int dst_stride,                            \
-                      int width, int height) {                                 \
-  WebPSamplerProcessPlane(y, y_stride, u, v, uv_stride,                        \
-                          dst, dst_stride, width, height,                      \
-                          FUNC_NAME##Row);                                     \
-}
-
-// All variants implemented.
-SAMPLE_FUNC(SampleRgbPlane,      VP8YuvToRgb,  3)
-SAMPLE_FUNC(SampleBgrPlane,      VP8YuvToBgr,  3)
-SAMPLE_FUNC(SampleRgbaPlane,     VP8YuvToRgba, 4)
-SAMPLE_FUNC(SampleBgraPlane,     VP8YuvToBgra, 4)
-SAMPLE_FUNC(SampleArgbPlane,     VP8YuvToArgb, 4)
-SAMPLE_FUNC(SampleRgba4444Plane, VP8YuvToRgba4444, 2)
-SAMPLE_FUNC(SampleRgb565Plane,   VP8YuvToRgb565, 2)
-
-#undef SAMPLE_FUNC
-
-//------------------------------------------------------------------------------
 
 #if !defined(FANCY_UPSAMPLING)
 #define DUAL_SAMPLE_FUNC(FUNC_NAME, FUNC)                                      \
@@ -325,13 +266,14 @@ static void ApplyAlphaMultiply_16b(uint8_t* rgba4444,
 #endif
 }
 
-void (*WebPApplyAlphaMultiply)(uint8_t*, int, int, int, int)
-    = ApplyAlphaMultiply;
-void (*WebPApplyAlphaMultiply4444)(uint8_t*, int, int, int)
-    = ApplyAlphaMultiply_16b;
+void (*WebPApplyAlphaMultiply)(uint8_t*, int, int, int, int);
+void (*WebPApplyAlphaMultiply4444)(uint8_t*, int, int, int);
 
 //------------------------------------------------------------------------------
-// Main call
+// Main calls
+
+extern void WebPInitUpsamplersSSE2(void);
+extern void WebPInitUpsamplersNEON(void);
 
 void WebPInitUpsamplers(void) {
 #ifdef FANCY_UPSAMPLING
@@ -359,28 +301,10 @@ void WebPInitUpsamplers(void) {
 #endif  // FANCY_UPSAMPLING
 }
 
-void WebPInitSamplers(void) {
-  WebPSamplers[MODE_RGB]       = SampleRgbPlane;
-  WebPSamplers[MODE_RGBA]      = SampleRgbaPlane;
-  WebPSamplers[MODE_BGR]       = SampleBgrPlane;
-  WebPSamplers[MODE_BGRA]      = SampleBgraPlane;
-  WebPSamplers[MODE_ARGB]      = SampleArgbPlane;
-  WebPSamplers[MODE_RGBA_4444] = SampleRgba4444Plane;
-  WebPSamplers[MODE_RGB_565]   = SampleRgb565Plane;
-  WebPSamplers[MODE_rgbA]      = SampleRgbaPlane;
-  WebPSamplers[MODE_bgrA]      = SampleBgraPlane;
-  WebPSamplers[MODE_Argb]      = SampleArgbPlane;
-  WebPSamplers[MODE_rgbA_4444] = SampleRgba4444Plane;
+//------------------------------------------------------------------------------
 
-  // If defined, use CPUInfo() to overwrite some pointers with faster versions.
-  if (VP8GetCPUInfo != NULL) {
-#if defined(WEBP_USE_MIPS32)
-    if (VP8GetCPUInfo(kMIPS32)) {
-      WebPInitSamplersMIPS32();
-    }
-#endif  // WEBP_USE_MIPS32
-  }
-}
+extern void WebPInitPremultiplySSE2(void);
+extern void WebPInitPremultiplyNEON(void);
 
 void WebPInitPremultiply(void) {
   WebPApplyAlphaMultiply = ApplyAlphaMultiply;
@@ -406,3 +330,5 @@ void WebPInitPremultiply(void) {
   }
 #endif  // FANCY_UPSAMPLING
 }
+
+//------------------------------------------------------------------------------

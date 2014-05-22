@@ -21,10 +21,10 @@
 //------------------------------------------------------------------------------
 // simple point-sampling
 
-#define SAMPLE_FUNC_MIPS(FUNC_NAME, XSTEP, R, G, B, A)                         \
-static void FUNC_NAME##Row(const uint8_t* y,                                   \
-                           const uint8_t* u, const uint8_t* v,                 \
-                           uint8_t* dst, int len) {                            \
+#define ROW_FUNC(FUNC_NAME, XSTEP, R, G, B, A)                                 \
+static void FUNC_NAME(const uint8_t* y,                                        \
+                      const uint8_t* u, const uint8_t* v,                      \
+                      uint8_t* dst, int len) {                                 \
   int i, r, g, b;                                                              \
   int temp0, temp1, temp2, temp3, temp4;                                       \
   for (i = 0; i < (len >> 1); i++) {                                           \
@@ -75,30 +75,26 @@ static void FUNC_NAME##Row(const uint8_t* y,                                   \
     dst[B] = b;                                                                \
     if (A) dst[A] = 0xff;                                                      \
   }                                                                            \
-}                                                                              \
-static void FUNC_NAME(const uint8_t* y, int y_stride,                          \
-                      const uint8_t* u, const uint8_t* v, int uv_stride,       \
-                      uint8_t* dst, int dst_stride,                            \
-                      int width, int height) {                                 \
-  WebPSamplerProcessPlane(y, y_stride, u, v, uv_stride,                        \
-                          dst, dst_stride, width, height,                      \
-                          FUNC_NAME##Row);                                     \
 }
 
-SAMPLE_FUNC_MIPS(SampleRgbPlane,      3, 0, 1, 2, 0)
-SAMPLE_FUNC_MIPS(SampleRgbaPlane,     4, 0, 1, 2, 3)
-SAMPLE_FUNC_MIPS(SampleBgrPlane,      3, 2, 1, 0, 0)
-SAMPLE_FUNC_MIPS(SampleBgraPlane,     4, 2, 1, 0, 3)
+ROW_FUNC(YuvToRgbRow,      3, 0, 1, 2, 0)
+ROW_FUNC(YuvToRgbaRow,     4, 0, 1, 2, 3)
+ROW_FUNC(YuvToBgrRow,      3, 2, 1, 0, 0)
+ROW_FUNC(YuvToBgraRow,     4, 2, 1, 0, 3)
+
+#undef ROW_FUNC
 
 #endif   // WEBP_USE_MIPS32
 
 //------------------------------------------------------------------------------
 
+extern void WebPInitSamplersMIPS32(void);
+
 void WebPInitSamplersMIPS32(void) {
 #if defined(WEBP_USE_MIPS32)
-  WebPSamplers[MODE_RGB]  = SampleRgbPlane;
-  WebPSamplers[MODE_RGBA] = SampleRgbaPlane;
-  WebPSamplers[MODE_BGR]  = SampleBgrPlane;
-  WebPSamplers[MODE_BGRA] = SampleBgraPlane;
+  WebPSamplers[MODE_RGB]  = YuvToRgbRow;
+  WebPSamplers[MODE_RGBA] = YuvToRgbaRow;
+  WebPSamplers[MODE_BGR]  = YuvToBgrRow;
+  WebPSamplers[MODE_BGRA] = YuvToBgraRow;
 #endif  // WEBP_USE_MIPS32
 }

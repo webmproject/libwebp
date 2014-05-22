@@ -188,6 +188,9 @@ SSE2_UPSAMPLE_FUNC(UpsampleBgraLinePair, VP8YuvToBgra, 4)
 
 //------------------------------------------------------------------------------
 
+extern void WebPInitUpsamplersSSE2(void);
+extern void WebPInitPremultiplySSE2(void);
+
 #ifdef FANCY_UPSAMPLING
 
 extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
@@ -215,4 +218,3 @@ void WebPInitPremultiplySSE2(void) {
 void WebPInitPremultiplySSE2(void) {}
 
 #endif  // FANCY_UPSAMPLING
-

@@ -191,21 +191,9 @@ typedef void (*WebPUpsampleLinePairFunc)(
 // Fancy upsampling functions to convert YUV to RGB(A) modes
 extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
 
-// Initializes SSE2 version of the fancy upsamplers.
-void WebPInitUpsamplersSSE2(void);
-
-// NEON version
-void WebPInitUpsamplersNEON(void);
-
 #endif    // FANCY_UPSAMPLING
 
-// Point-sampling methods.
-typedef void (*WebPSamplePlaneFunc)(const uint8_t* y, int y_stride,
-                                    const uint8_t* u, const uint8_t* v,
-                                    int uv_stride,
-                                    uint8_t* dst, int dst_stride,
-                                    int width, int height);
-
+// Per-row point-sampling methods.
 typedef void (*WebPSamplerRowFunc)(const uint8_t* y,
                                    const uint8_t* u, const uint8_t* v,
                                    uint8_t* dst, int len);
@@ -215,11 +203,8 @@ void WebPSamplerProcessPlane(const uint8_t* y, int y_stride,
                              uint8_t* dst, int dst_stride,
                              int width, int height, WebPSamplerRowFunc func);
 
-// Sampling functions to convert YUV to RGB(A) modes
-extern WebPSamplePlaneFunc WebPSamplers[/* MODE_LAST */];
-
-// Initializes MIPS version of the samplers.
-void WebPInitSamplersMIPS32(void);
+// Sampling functions to convert rows of YUV to RGB(A)
+extern WebPSamplerRowFunc WebPSamplers[/* MODE_LAST */];
 
 // General function for converting two lines of ARGB or RGBA.
 // 'alpha_is_last' should be true if 0xff000000 is stored in memory as
@@ -233,7 +218,7 @@ typedef void (*WebPYUV444Converter)(const uint8_t* y,
 
 extern const WebPYUV444Converter WebPYUV444Converters[/* MODE_LAST */];
 
-// Main function to be called
+// Main functions to be called
 void WebPInitUpsamplers(void);
 void WebPInitSamplers(void);
 
@@ -251,9 +236,6 @@ extern void (*WebPApplyAlphaMultiply4444)(
 
 // To be called first before using the above.
 void WebPInitPremultiply(void);
-
-void WebPInitPremultiplySSE2(void);   // should not be called directly.
-void WebPInitPremultiplyNEON(void);
 
 //------------------------------------------------------------------------------
 
