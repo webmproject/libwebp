@@ -31,33 +31,36 @@ AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=DIR],
             [pkgconfigdir="$withval"], [pkgconfigdir='${libdir}/pkgconfig'])
 AC_SUBST([pkgconfigdir])
 
-dnl === TEST_AND_ADD_CFLAGS(flag)
-dnl ===   Checks whether $CC supports 'flag' and adds it to AM_CFLAGS
+dnl === TEST_AND_ADD_CFLAGS(var, flag)
+dnl ===   Checks whether $CC supports 'flag' and adds it to 'var'
 dnl ===   on success.
 AC_DEFUN([TEST_AND_ADD_CFLAGS],
          [SAVED_CFLAGS="$CFLAGS"
-          CFLAGS="-Werror $1"
-          AC_MSG_CHECKING([whether $CC supports $1])
+          CFLAGS="-Werror $2"
+          AC_MSG_CHECKING([whether $CC supports $2])
           dnl Note AC_LANG_PROGRAM([]) uses an old-style main definition.
           AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main(void) { return 0; }])],
                             [AC_MSG_RESULT([yes])]
                             dnl Simply append the variable avoiding a
                             dnl compatibility ifdef for AS_VAR_APPEND as this
                             dnl variable shouldn't grow all that large.
-                            [AM_CFLAGS="$AM_CFLAGS $1"],
+                            [$1="${$1} $2"],
                             [AC_MSG_RESULT([no])])
           CFLAGS="$SAVED_CFLAGS"])
-TEST_AND_ADD_CFLAGS([-Wall])
-TEST_AND_ADD_CFLAGS([-Wdeclaration-after-statement])
-TEST_AND_ADD_CFLAGS([-Wextra])
-TEST_AND_ADD_CFLAGS([-Wmissing-declarations])
-TEST_AND_ADD_CFLAGS([-Wmissing-prototypes])
-TEST_AND_ADD_CFLAGS([-Wold-style-definition])
-TEST_AND_ADD_CFLAGS([-Wshadow])
-TEST_AND_ADD_CFLAGS([-Wunused-but-set-variable])
-TEST_AND_ADD_CFLAGS([-Wunused])
-TEST_AND_ADD_CFLAGS([-Wvla])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wall])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wdeclaration-after-statement])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wextra])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wmissing-declarations])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wmissing-prototypes])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wold-style-definition])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wshadow])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wunused-but-set-variable])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wunused])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wvla])
 AC_SUBST([AM_CFLAGS])
+
+TEST_AND_ADD_CFLAGS([AVX2_FLAGS], [-mavx2])
+AC_SUBST([AVX2_FLAGS])
 
 dnl === CLEAR_LIBVARS([var_pfx])
 dnl ===   Clears <var_pfx>_{INCLUDES,LIBS}.
