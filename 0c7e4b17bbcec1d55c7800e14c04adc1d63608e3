@@ -1,0 +1,242 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//oUA\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-22T00:16:12Z",
+      "side": 1,
+      "message": "Quantize",
+      "revId": "0c7e4b17bbcec1d55c7800e14c04adc1d63608e3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//oT8\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-22T00:16:12Z",
+      "side": 1,
+      "message": "processes",
+      "revId": "0c7e4b17bbcec1d55c7800e14c04adc1d63608e3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//oT4\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-22T00:16:12Z",
+      "side": 1,
+      "message": "processes",
+      "revId": "0c7e4b17bbcec1d55c7800e14c04adc1d63608e3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//oT0\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-22T00:16:12Z",
+      "side": 1,
+      "message": "consequence",
+      "revId": "0c7e4b17bbcec1d55c7800e14c04adc1d63608e3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//oUs\u003d",
+        "filename": "Android.mk",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-22T00:16:12Z",
+      "side": 1,
+      "message": "keep these sorted",
+      "revId": "0c7e4b17bbcec1d55c7800e14c04adc1d63608e3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//oUo\u003d",
+        "filename": "Makefile.vc",
+        "patchSetId": 1
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-22T00:16:12Z",
+      "side": 1,
+      "message": "sort",
+      "revId": "0c7e4b17bbcec1d55c7800e14c04adc1d63608e3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//oUk\u003d",
+        "filename": "makefile.unix",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-22T00:16:12Z",
+      "side": 1,
+      "message": "sort",
+      "revId": "0c7e4b17bbcec1d55c7800e14c04adc1d63608e3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//oUg\u003d",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-22T00:16:12Z",
+      "side": 1,
+      "message": "sort",
+      "revId": "0c7e4b17bbcec1d55c7800e14c04adc1d63608e3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//oUc\u003d",
+        "filename": "src/dsp/cpu.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-22T00:16:12Z",
+      "side": 1,
+      "message": "I don\u0027t think we need a MSC define the other checks are sufficient for now",
+      "revId": "0c7e4b17bbcec1d55c7800e14c04adc1d63608e3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//oUY\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-22T00:16:12Z",
+      "side": 1,
+      "message": "drop this, I\u0027ll handle the flagging and builds",
+      "revId": "0c7e4b17bbcec1d55c7800e14c04adc1d63608e3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//oUM\u003d",
+        "filename": "src/dsp/enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 718,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-22T00:16:12Z",
+      "side": 1,
+      "message": "as an initial change prior to QuantizeBlock you could check in a change that adds this block and a stub for VP8EncDspInitAVX2",
+      "revId": "0c7e4b17bbcec1d55c7800e14c04adc1d63608e3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//oUU\u003d",
+        "filename": "src/dsp/enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 722,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-22T00:16:12Z",
+      "side": 1,
+      "message": "this is wrong, you want to check SSE2 then AVX2",
+      "revId": "0c7e4b17bbcec1d55c7800e14c04adc1d63608e3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//oUI\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-22T00:16:12Z",
+      "side": 1,
+      "message": "this comes from dsp.h; try to model this file after enc_*.c",
+      "revId": "0c7e4b17bbcec1d55c7800e14c04adc1d63608e3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//oUE\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-22T00:16:12Z",
+      "side": 1,
+      "message": "not needed",
+      "revId": "0c7e4b17bbcec1d55c7800e14c04adc1d63608e3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
