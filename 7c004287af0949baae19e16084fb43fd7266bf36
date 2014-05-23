@@ -16,6 +16,24 @@
       "revId": "7c004287af0949baae19e16084fb43fd7266bf36",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//oC4\u003d",
+        "filename": "makefile.unix",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-23T04:58:13Z",
+      "side": 1,
+      "message": "(from the commit message)\n\n$ make -f makefile.unix HAVE_AVX2\u003d1\n\nwill work. auto-detection would get a bit messy here I think",
+      "parentUuid": "AAAAdn//oDI\u003d",
+      "revId": "7c004287af0949baae19e16084fb43fd7266bf36",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
