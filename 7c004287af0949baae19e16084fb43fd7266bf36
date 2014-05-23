@@ -34,6 +34,24 @@
       "revId": "7c004287af0949baae19e16084fb43fd7266bf36",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//oCw\u003d",
+        "filename": "makefile.unix",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-05-23T04:59:37Z",
+      "side": 1,
+      "message": "yes, we want to keep this makefile simple (we had some similar discussion about auto-detecting -Wvla flag support i remember)",
+      "parentUuid": "AAAAdn//oC4\u003d",
+      "revId": "7c004287af0949baae19e16084fb43fd7266bf36",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
