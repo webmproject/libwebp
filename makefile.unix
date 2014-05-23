@@ -69,6 +69,11 @@ EXTRA_FLAGS += -Wdeclaration-after-statement
 EXTRA_FLAGS += -Wshadow
 # EXTRA_FLAGS += -Wvla
 
+# AVX2-specific flags:
+ifeq ($(HAVE_AVX2), 1)
+src/dsp/%_avx2.o: EXTRA_FLAGS += -mavx2
+endif
+
 # NEON-specific flags:
 # EXTRA_FLAGS += -march=armv7-a -mfloat-abi=hard -mfpu=neon -mtune=cortex-a8
 # -> seems to make the overall lib slower: -fno-split-wide-types
