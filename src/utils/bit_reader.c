@@ -121,29 +121,38 @@ int32_t VP8GetSignedValue(VP8BitReader* const br, int bits) {
 #define LOG8_WBITS 4  // Number of bytes needed to store WBITS bits.
 
 static const uint32_t kBitMask[VP8L_MAX_NUM_BIT_READ + 1] = {
-  0, 1, 3, 7, 15, 31, 63, 127, 255, 511, 1023, 2047, 4095, 8191, 16383, 32767,
-  65535, 131071, 262143, 524287, 1048575, 2097151, 4194303, 8388607, 16777215
+  0,
+  0x000001, 0x000003, 0x000007, 0x00000f,
+  0x00001f, 0x00003f, 0x00007f, 0x0000ff,
+  0x0001ff, 0x0003ff, 0x0007ff, 0x000fff,
+  0x001fff, 0x003fff, 0x007fff, 0x00ffff,
+  0x01ffff, 0x03ffff, 0x07ffff, 0x0fffff,
+  0x1fffff, 0x3fffff, 0x7fffff, 0xffffff
 };
 
-void VP8LInitBitReader(VP8LBitReader* const br,
-                       const uint8_t* const start,
+void VP8LInitBitReader(VP8LBitReader* const br, const uint8_t* const start,
                        size_t length) {
   size_t i;
+  vp8l_val_t value = 0;
   assert(br != NULL);
   assert(start != NULL);
   assert(length < 0xfffffff8u);   // can't happen with a RIFF chunk.
 
-  br->buf_ = start;
   br->len_ = length;
   br->val_ = 0;
-  br->pos_ = 0;
   br->bit_pos_ = 0;
   br->eos_ = 0;
   br->error_ = 0;
-  for (i = 0; i < sizeof(br->val_) && i < br->len_; ++i) {
-    br->val_ |= ((vp8l_val_t)br->buf_[br->pos_]) << (8 * i);
-    ++br->pos_;
+
+  if (length > sizeof(br->val_)) {
+    length = sizeof(br->val_);
   }
+  for (i = 0; i < length; ++i) {
+    value |= (vp8l_val_t)start[i] << (8 * i);
+  }
+  br->val_ = value;
+  br->pos_ = length;
+  br->buf_ = start;
 }
 
 // Special version that assumes br->pos_ <= br_len_.
