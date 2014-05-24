@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//n0o\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-24T02:44:08Z",
+      "side": 1,
+      "message": "from the GetSigned simplification?",
+      "revId": "7c348805168f3f6847893f099310a0c7656070b3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//n0s\u003d",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-24T02:44:08Z",
+      "side": 1,
+      "message": "the reduction reads a bit odd without taking line 260 into account",
+      "revId": "7c348805168f3f6847893f099310a0c7656070b3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
