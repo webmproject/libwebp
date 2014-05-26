@@ -32,6 +32,7 @@ LOCAL_SRC_FILES := \
     src/dec/vp8.c \
     src/dec/vp8l.c \
     src/dec/webp.c \
+    src/dsp/alpha_processing.c \
     src/dsp/cpu.c \
     src/dsp/dec.c \
     src/dsp/dec_clip_tables.c \
@@ -68,7 +69,6 @@ LOCAL_SRC_FILES := \
     src/enc/tree.c \
     src/enc/vp8l.c \
     src/enc/webpenc.c \
-    src/utils/alpha_processing.c \
     src/utils/bit_reader.c \
     src/utils/bit_writer.c \
     src/utils/color_cache.c \

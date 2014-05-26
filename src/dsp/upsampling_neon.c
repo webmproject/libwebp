@@ -237,7 +237,6 @@ NEON_UPSAMPLE_FUNC(UpsampleBgraLinePair, Bgra, 4)
 //------------------------------------------------------------------------------
 
 extern void WebPInitUpsamplersNEON(void);
-extern void WebPInitPremultiplyNEON(void);
 
 #ifdef FANCY_UPSAMPLING
 
@@ -249,11 +248,6 @@ void WebPInitUpsamplersNEON(void) {
   WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePair;
   WebPUpsamplers[MODE_BGR]  = UpsampleBgrLinePair;
   WebPUpsamplers[MODE_BGRA] = UpsampleBgraLinePair;
-#endif   // WEBP_USE_NEON
-}
-
-void WebPInitPremultiplyNEON(void) {
-#if defined(WEBP_USE_NEON)
   WebPUpsamplers[MODE_rgbA] = UpsampleRgbaLinePair;
   WebPUpsamplers[MODE_bgrA] = UpsampleBgraLinePair;
 #endif   // WEBP_USE_NEON
@@ -262,6 +256,6 @@ void WebPInitPremultiplyNEON(void) {
 #else
 
 // this empty function is to avoid an empty .o
-void WebPInitPremultiplyNEON(void) {}
+void WebPInitUpsamplersNEON(void) {}
 
 #endif  // FANCY_UPSAMPLING

@@ -218,12 +218,14 @@ typedef void (*WebPYUV444Converter)(const uint8_t* y,
 
 extern const WebPYUV444Converter WebPYUV444Converters[/* MODE_LAST */];
 
-// Main functions to be called
+// Must be called before using the WebPUpsamplers[] (and for premultiplied
+// colorspaces like rgbA, rgbA4444, etc)
 void WebPInitUpsamplers(void);
+// Must be called before using WebPSamplers[]
 void WebPInitSamplers(void);
 
 //------------------------------------------------------------------------------
-// Pre-multiply planes with alpha values
+// Utilities for processing transparent channel.
 
 // Apply alpha pre-multiply on an rgba, bgra or argb plane of size w * h.
 // alpha_first should be 0 for argb, 1 for rgba or bgra (where alpha is last).
@@ -234,10 +236,27 @@ extern void (*WebPApplyAlphaMultiply)(
 extern void (*WebPApplyAlphaMultiply4444)(
     uint8_t* rgba4444, int w, int h, int stride);
 
-// To be called first before using the above.
-void WebPInitPremultiply(void);
+// Pre-Multiply operation transforms x into x * A / 255  (where x=Y,R,G or B).
+// Un-Multiply operation transforms x into x * 255 / A.
 
-//------------------------------------------------------------------------------
+// Pre-Multiply or Un-Multiply (if 'inverse' is true) argb values in a row.
+extern void (*WebPMultARGBRow)(uint32_t* const ptr, int width, int inverse);
+
+// Same a WebPMultARGBRow(), but for several rows.
+void WebPMultARGBRows(uint8_t* ptr, int stride, int width, int num_rows,
+                      int inverse);
+
+// Same for a row of single values, with side alpha values.
+extern void (*WebPMultRow)(uint8_t* const ptr, const uint8_t* const alpha,
+                           int width, int inverse);
+
+// Same a WebPMultRow(), but for several 'num_rows' rows.
+void WebPMultRows(uint8_t* ptr, int stride,
+                  const uint8_t* alpha, int alpha_stride,
+                  int width, int num_rows, int inverse);
+
+// To be called first before using the above.
+void WebPInitAlphaProcessing(void);
 
 #ifdef __cplusplus
 }    // extern "C"

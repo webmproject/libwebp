@@ -170,6 +170,7 @@ DEMUX_OBJS = \
     $(DIROBJ)\demux\demux.obj \
 
 DSP_DEC_OBJS = \
+    $(DIROBJ)\dsp\alpha_processing.obj \
     $(DIROBJ)\dsp\cpu.obj \
     $(DIROBJ)\dsp\dec.obj \
     $(DIROBJ)\dsp\dec_clip_tables.obj \
@@ -228,7 +229,6 @@ MUX_OBJS = \
     $(DIROBJ)\mux\muxread.obj \
 
 UTILS_DEC_OBJS = \
-    $(DIROBJ)\utils\alpha_processing.obj \
     $(DIROBJ)\utils\bit_reader.obj \
     $(DIROBJ)\utils\color_cache.obj \
     $(DIROBJ)\utils\filters.obj \

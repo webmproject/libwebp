@@ -106,6 +106,7 @@ DEMUX_OBJS = \
     src/demux/demux.o \
 
 DSP_DEC_OBJS = \
+    src/dsp/alpha_processing.o \
     src/dsp/cpu.o \
     src/dsp/dec.o \
     src/dsp/dec_clip_tables.o \
@@ -166,7 +167,6 @@ MUX_OBJS = \
     src/mux/muxread.o \
 
 UTILS_DEC_OBJS = \
-    src/utils/alpha_processing.o \
     src/utils/bit_reader.o \
     src/utils/color_cache.o \
     src/utils/filters.o \
@@ -213,7 +213,6 @@ HDRS = \
     src/enc/vp8enci.h \
     src/enc/vp8li.h \
     src/mux/muxi.h \
-    src/utils/alpha_processing.h \
     src/utils/bit_reader.h \
     src/utils/bit_writer.h \
     src/utils/color_cache.h \

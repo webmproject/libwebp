@@ -9,6 +9,7 @@ common_HEADERS = ../webp/types.h
 commondir = $(includedir)/webp
 
 COMMON_SOURCES =
+COMMON_SOURCES += alpha_processing.c
 COMMON_SOURCES += cpu.c
 COMMON_SOURCES += dec.c
 COMMON_SOURCES += dec_clip_tables.c

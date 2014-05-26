@@ -184,92 +184,6 @@ const WebPYUV444Converter WebPYUV444Converters[MODE_LAST] = {
 };
 
 //------------------------------------------------------------------------------
-// Premultiplied modes
-
-// non dithered-modes
-
-// (x * a * 32897) >> 23 is bit-wise equivalent to (int)(x * a / 255.)
-// for all 8bit x or a. For bit-wise equivalence to (int)(x * a / 255. + .5),
-// one can use instead: (x * a * 65793 + (1 << 23)) >> 24
-#if 1     // (int)(x * a / 255.)
-#define MULTIPLIER(a)   ((a) * 32897UL)
-#define PREMULTIPLY(x, m) (((x) * (m)) >> 23)
-#else     // (int)(x * a / 255. + .5)
-#define MULTIPLIER(a) ((a) * 65793UL)
-#define PREMULTIPLY(x, m) (((x) * (m) + (1UL << 23)) >> 24)
-#endif
-
-static void ApplyAlphaMultiply(uint8_t* rgba, int alpha_first,
-                               int w, int h, int stride) {
-  while (h-- > 0) {
-    uint8_t* const rgb = rgba + (alpha_first ? 1 : 0);
-    const uint8_t* const alpha = rgba + (alpha_first ? 0 : 3);
-    int i;
-    for (i = 0; i < w; ++i) {
-      const uint32_t a = alpha[4 * i];
-      if (a != 0xff) {
-        const uint32_t mult = MULTIPLIER(a);
-        rgb[4 * i + 0] = PREMULTIPLY(rgb[4 * i + 0], mult);
-        rgb[4 * i + 1] = PREMULTIPLY(rgb[4 * i + 1], mult);
-        rgb[4 * i + 2] = PREMULTIPLY(rgb[4 * i + 2], mult);
-      }
-    }
-    rgba += stride;
-  }
-}
-#undef MULTIPLIER
-#undef PREMULTIPLY
-
-// rgbA4444
-
-#define MULTIPLIER(a)  ((a) * 0x1111)    // 0x1111 ~= (1 << 16) / 15
-
-static WEBP_INLINE uint8_t dither_hi(uint8_t x) {
-  return (x & 0xf0) | (x >> 4);
-}
-
-static WEBP_INLINE uint8_t dither_lo(uint8_t x) {
-  return (x & 0x0f) | (x << 4);
-}
-
-static WEBP_INLINE uint8_t multiply(uint8_t x, uint32_t m) {
-  return (x * m) >> 16;
-}
-
-static WEBP_INLINE void ApplyAlphaMultiply4444(uint8_t* rgba4444,
-                                               int w, int h, int stride,
-                                               int rg_byte_pos /* 0 or 1 */) {
-  while (h-- > 0) {
-    int i;
-    for (i = 0; i < w; ++i) {
-      const uint32_t rg = rgba4444[2 * i + rg_byte_pos];
-      const uint32_t ba = rgba4444[2 * i + (rg_byte_pos ^ 1)];
-      const uint8_t a = ba & 0x0f;
-      const uint32_t mult = MULTIPLIER(a);
-      const uint8_t r = multiply(dither_hi(rg), mult);
-      const uint8_t g = multiply(dither_lo(rg), mult);
-      const uint8_t b = multiply(dither_hi(ba), mult);
-      rgba4444[2 * i + rg_byte_pos] = (r & 0xf0) | ((g >> 4) & 0x0f);
-      rgba4444[2 * i + (rg_byte_pos ^ 1)] = (b & 0xf0) | a;
-    }
-    rgba4444 += stride;
-  }
-}
-#undef MULTIPLIER
-
-static void ApplyAlphaMultiply_16b(uint8_t* rgba4444,
-                                   int w, int h, int stride) {
-#ifdef WEBP_SWAP_16BIT_CSP
-  ApplyAlphaMultiply4444(rgba4444, w, h, stride, 1);
-#else
-  ApplyAlphaMultiply4444(rgba4444, w, h, stride, 0);
-#endif
-}
-
-void (*WebPApplyAlphaMultiply)(uint8_t*, int, int, int, int);
-void (*WebPApplyAlphaMultiply4444)(uint8_t*, int, int, int);
-
-//------------------------------------------------------------------------------
 // Main calls
 
 extern void WebPInitUpsamplersSSE2(void);
@@ -284,6 +198,10 @@ void WebPInitUpsamplers(void) {
   WebPUpsamplers[MODE_ARGB]      = UpsampleArgbLinePair;
   WebPUpsamplers[MODE_RGBA_4444] = UpsampleRgba4444LinePair;
   WebPUpsamplers[MODE_RGB_565]   = UpsampleRgb565LinePair;
+  WebPUpsamplers[MODE_rgbA]      = UpsampleRgbaLinePair;
+  WebPUpsamplers[MODE_bgrA]      = UpsampleBgraLinePair;
+  WebPUpsamplers[MODE_Argb]      = UpsampleArgbLinePair;
+  WebPUpsamplers[MODE_rgbA_4444] = UpsampleRgba4444LinePair;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
@@ -295,36 +213,6 @@ void WebPInitUpsamplers(void) {
 #if defined(WEBP_USE_NEON)
     if (VP8GetCPUInfo(kNEON)) {
       WebPInitUpsamplersNEON();
-    }
-#endif
-  }
-#endif  // FANCY_UPSAMPLING
-}
-
-//------------------------------------------------------------------------------
-
-extern void WebPInitPremultiplySSE2(void);
-extern void WebPInitPremultiplyNEON(void);
-
-void WebPInitPremultiply(void) {
-  WebPApplyAlphaMultiply = ApplyAlphaMultiply;
-  WebPApplyAlphaMultiply4444 = ApplyAlphaMultiply_16b;
-
-#ifdef FANCY_UPSAMPLING
-  WebPUpsamplers[MODE_rgbA]      = UpsampleRgbaLinePair;
-  WebPUpsamplers[MODE_bgrA]      = UpsampleBgraLinePair;
-  WebPUpsamplers[MODE_Argb]      = UpsampleArgbLinePair;
-  WebPUpsamplers[MODE_rgbA_4444] = UpsampleRgba4444LinePair;
-
-  if (VP8GetCPUInfo != NULL) {
-#if defined(WEBP_USE_SSE2)
-    if (VP8GetCPUInfo(kSSE2)) {
-      WebPInitPremultiplySSE2();
-    }
-#endif
-#if defined(WEBP_USE_NEON)
-    if (VP8GetCPUInfo(kNEON)) {
-      WebPInitPremultiplyNEON();
     }
 #endif
   }

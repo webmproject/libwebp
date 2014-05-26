@@ -16,7 +16,6 @@
 #include <math.h>
 
 #include "./vp8enci.h"
-#include "../utils/alpha_processing.h"
 #include "../utils/random.h"
 #include "../utils/rescaler.h"
 #include "../utils/utils.h"
@@ -402,24 +401,15 @@ static void RescalePlane(const uint8_t* src,
 }
 
 static void AlphaMultiplyARGB(WebPPicture* const pic, int inverse) {
-  uint32_t* ptr = pic->argb;
-  int y;
-  for (y = 0; y < pic->height; ++y) {
-    WebPMultARGBRow(ptr, pic->width, inverse);
-    ptr += pic->argb_stride;
-  }
+  assert(pic->argb != NULL);
+  WebPMultARGBRows((uint8_t*)pic->argb, pic->argb_stride * sizeof(*pic->argb),
+                   pic->width, pic->height, inverse);
 }
 
 static void AlphaMultiplyY(WebPPicture* const pic, int inverse) {
-  const uint8_t* ptr_a = pic->a;
-  if (ptr_a != NULL) {
-    uint8_t* ptr_y = pic->y;
-    int y;
-    for (y = 0; y < pic->height; ++y) {
-      WebPMultRow(ptr_y, ptr_a, pic->width, inverse);
-      ptr_y += pic->y_stride;
-      ptr_a += pic->a_stride;
-    }
+  if (pic->a != NULL) {
+    WebPMultRows(pic->y, pic->y_stride, pic->a, pic->a_stride,
+                 pic->width, pic->height, inverse);
   }
 }
 
@@ -455,6 +445,7 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
     }
     // If present, we need to rescale alpha first (for AlphaMultiplyY).
     if (pic->a != NULL) {
+      WebPInitAlphaProcessing();
       RescalePlane(pic->a, prev_width, prev_height, pic->a_stride,
                    tmp.a, width, height, tmp.a_stride, work, 1);
     }
@@ -495,6 +486,7 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
     // In order to correctly interpolate colors, we need to apply the alpha
     // weighting first (black-matting), scale the RGB values, and remove
     // the premultiplication afterward (while preserving the alpha channel).
+    WebPInitAlphaProcessing();
     AlphaMultiplyARGB(pic, 0);
     RescalePlane((const uint8_t*)pic->argb, prev_width, prev_height,
                  pic->argb_stride * 4,
@@ -1367,4 +1359,3 @@ LOSSLESS_ENCODE_FUNC(WebPEncodeLosslessBGRA, WebPPictureImportBGRA)
 #undef LOSSLESS_ENCODE_FUNC
 
 //------------------------------------------------------------------------------
-
