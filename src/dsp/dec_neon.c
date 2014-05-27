@@ -403,8 +403,8 @@ static WEBP_INLINE void SaturateAndStore4x4(uint8_t* const dst,
 
 static WEBP_INLINE void Add4x4(const int16x8_t row01, const int16x8_t row23,
                                uint8_t* const dst) {
-  uint32x2_t dst01 = {0, 0};
-  uint32x2_t dst23 = {0, 0};
+  uint32x2_t dst01 = vcreate_u32(0);
+  uint32x2_t dst23 = vcreate_u32(0);
 
   // Load the source pixels.
   dst01 = vld1_lane_u32((uint32_t*)(dst + 0 * BPS), dst01, 0);
