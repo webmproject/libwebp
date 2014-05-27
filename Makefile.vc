@@ -44,6 +44,10 @@ OUTDIR = ..\obj\
 OUTDIR = $(OBJDIR)
 !ENDIF
 
+!IF "$(HAVE_AVX2)" == "1"
+AVX2_FLAGS = /arch:AVX2
+!ENDIF
+
 ##############################################################
 # Runtime library configuration
 !IF "$(RTLIBCFG)" == "static"
@@ -316,8 +320,14 @@ $(DIROBJ)\$(DLLC): $(DIROBJ)\$(DLLINC)
 	@echo } >> $@
 
 .SUFFIXES: .c .obj .res .exe
+# File-specific flag builds. Note batch rules take precedence over wildcards,
+# so for now name each file individually.
+$(DIROBJ)\dsp\enc_avx2.obj: src\dsp\enc_avx2.c
+	$(CC) $(CFLAGS) $(AVX2_FLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$(DIROBJ)\dsp\ \
+	  src\dsp\$(@B).c
+# Batch rules
 {examples}.c{$(DIROBJ)\examples}.obj::
-	$(CC) $(CFLAGS) /Fd$(DIROBJ)\examples\ /Fo$(DIROBJ)\examples\  $<
+	$(CC) $(CFLAGS) /Fd$(DIROBJ)\examples\ /Fo$(DIROBJ)\examples\ $<
 {src\dec}.c{$(DIROBJ)\dec}.obj::
 	$(CC) $(CFLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$(DIROBJ)\dec\ $<
 {src\demux}.c{$(DIROBJ)\demux}.obj::
