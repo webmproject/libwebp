@@ -94,6 +94,9 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
   } else {
     // If no size specified, try to decode it using WIC.
     ok = ReadPictureWithWIC(filename, pic, keep_alpha, metadata);
+    if (!ok) {
+      ok = ReadWebP(filename, pic, keep_alpha, metadata);
+    }
   }
   if (!ok) {
     fprintf(stderr, "Error! Could not process file %s\n", filename);
