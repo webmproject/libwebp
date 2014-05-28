@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//nfk\u003d",
+        "filename": "examples/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-28T18:51:52Z",
+      "side": 1,
+      "message": "dinfo should probably see the same treatment",
+      "revId": "aa824627bfdd6172b9b621758e4875f4f9b11d13",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//nfg\u003d",
+        "filename": "examples/pngdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-05-28T18:51:52Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "aa824627bfdd6172b9b621758e4875f4f9b11d13",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
