@@ -569,8 +569,8 @@ static void HelpLong(void) {
   printf("  -preset <string> ....... Preset setting, one of:\n");
   printf("                            default, photo, picture,\n");
   printf("                            drawing, icon, text\n");
-  printf("     -preset must come first, as it overwrites other parameters.");
-  printf("  -z <int> ............... Activates lossless preset with given "
+  printf("     -preset must come first, as it overwrites other parameters.\n");
+  printf("  -z <int> ............... Activates lossless preset with given\n"
          "                           level in [0:fast, ..., 9:slowest]\n");
   printf("\n");
   printf("  -m <int> ............... compression method (0=fast, 6=slowest)\n");

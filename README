@@ -141,7 +141,7 @@ Usage:
  cwebp [-preset <...>] [options] in_file [-o out_file]
 
 If input size (-s) for an image is not specified, it is assumed to be a PNG,
-JPEG or TIFF file.
+JPEG, TIFF or WebP file.
 options:
   -h / -help  ............ short help
   -H / -longhelp  ........ long help
@@ -151,6 +151,9 @@ options:
                             default, photo, picture,
                             drawing, icon, text
      -preset must come first, as it overwrites other parameters.
+  -z <int> ............... Activates lossless preset with given
+                           level in [0:fast, ..., 9:slowest]
+
   -m <int> ............... compression method (0=fast, 6=slowest)
   -segments <int> ........ number of segments to use (1..4)
   -size <int> ............ Target size (in bytes)
