@@ -153,7 +153,7 @@ static void TransformWHT(const int16_t* in, int16_t* out) {
   }
 }
 
-void (*VP8TransformWHT)(const int16_t* in, int16_t* out) = TransformWHT;
+void (*VP8TransformWHT)(const int16_t* in, int16_t* out);
 
 //------------------------------------------------------------------------------
 // Intra predictions
@@ -696,6 +696,7 @@ extern void VP8DspInitMIPS32(void);
 void VP8DspInit(void) {
   VP8InitClipTables();
 
+  VP8TransformWHT = TransformWHT;
   VP8Transform = TransformTwo;
   VP8TransformUV = TransformUV;
   VP8TransformDC = TransformDC;
