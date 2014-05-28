@@ -211,30 +211,31 @@ static void my_error_exit(j_common_ptr dinfo) {
 int ReadJPEG(FILE* in_file, WebPPicture* const pic, Metadata* const metadata) {
   int ok = 0;
   int stride, width, height;
-  struct jpeg_decompress_struct dinfo;
+  volatile struct jpeg_decompress_struct dinfo;
   struct my_error_mgr jerr;
-  uint8_t* rgb = NULL;
+  volatile uint8_t* rgb = NULL;
   JSAMPROW buffer[1];
 
+  memset((j_decompress_ptr)&dinfo, 0, sizeof(dinfo));   // for setjmp sanity
   dinfo.err = jpeg_std_error(&jerr.pub);
   jerr.pub.error_exit = my_error_exit;
 
   if (setjmp(jerr.setjmp_buffer)) {
  Error:
     MetadataFree(metadata);
-    jpeg_destroy_decompress(&dinfo);
+    jpeg_destroy_decompress((j_decompress_ptr)&dinfo);
     goto End;
   }
 
-  jpeg_create_decompress(&dinfo);
-  jpeg_stdio_src(&dinfo, in_file);
-  if (metadata != NULL) SaveMetadataMarkers(&dinfo);
-  jpeg_read_header(&dinfo, TRUE);
+  jpeg_create_decompress((j_decompress_ptr)&dinfo);
+  jpeg_stdio_src((j_decompress_ptr)&dinfo, in_file);
+  if (metadata != NULL) SaveMetadataMarkers((j_decompress_ptr)&dinfo);
+  jpeg_read_header((j_decompress_ptr)&dinfo, TRUE);
 
   dinfo.out_color_space = JCS_RGB;
   dinfo.do_fancy_upsampling = TRUE;
 
-  jpeg_start_decompress(&dinfo);
+  jpeg_start_decompress((j_decompress_ptr)&dinfo);
 
   if (dinfo.output_components != 3) {
     goto Error;
@@ -251,31 +252,31 @@ int ReadJPEG(FILE* in_file, WebPPicture* const pic, Metadata* const metadata) {
   buffer[0] = (JSAMPLE*)rgb;
 
   while (dinfo.output_scanline < dinfo.output_height) {
-    if (jpeg_read_scanlines(&dinfo, buffer, 1) != 1) {
+    if (jpeg_read_scanlines((j_decompress_ptr)&dinfo, buffer, 1) != 1) {
       goto End;
     }
     buffer[0] += stride;
   }
 
   if (metadata != NULL) {
-    ok = ExtractMetadataFromJPEG(&dinfo, metadata);
+    ok = ExtractMetadataFromJPEG((j_decompress_ptr)&dinfo, metadata);
     if (!ok) {
       fprintf(stderr, "Error extracting JPEG metadata!\n");
       goto Error;
     }
   }
 
-  jpeg_finish_decompress(&dinfo);
-  jpeg_destroy_decompress(&dinfo);
+  jpeg_finish_decompress((j_decompress_ptr)&dinfo);
+  jpeg_destroy_decompress((j_decompress_ptr)&dinfo);
 
   // WebP conversion.
   pic->width = width;
   pic->height = height;
-  ok = WebPPictureImportRGB(pic, rgb, stride);
+  ok = WebPPictureImportRGB(pic, (const uint8_t*)rgb, stride);
   if (!ok) goto Error;
 
  End:
-  free(rgb);
+  free((void*)rgb);
   return ok;
 }
 #else  // !WEBP_HAVE_JPEG
