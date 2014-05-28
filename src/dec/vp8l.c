@@ -412,7 +412,6 @@ static int AllocateAndInitRescaler(VP8LDecoder* const dec, VP8Io* const io) {
   WebPRescalerInit(dec->rescaler, in_width, in_height, (uint8_t*)scaled_data,
                    out_width, out_height, 0, num_channels,
                    in_width, out_width, in_height, out_height, work);
-  WebPInitAlphaProcessing();  // needed for pre/post multiply with alpha
   return 1;
 }
 
@@ -1372,6 +1371,11 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
 
   if (io->use_scaling && !AllocateAndInitRescaler(dec, io)) goto Err;
 
+  if (io->use_scaling || WebPIsPremultipliedMode(dec->output_->colorspace)) {
+    // need the alpha-multiply functions for premultiplied output or rescaling
+    WebPInitAlphaProcessing();
+  }
+
   // Decode.
   dec->action_ = READ_DATA;
   if (!DecodeImageData(dec, dec->pixels_, dec->width_, dec->height_,
@@ -1391,4 +1395,3 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
 }
 
 //------------------------------------------------------------------------------
-
