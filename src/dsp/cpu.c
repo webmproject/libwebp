@@ -44,7 +44,8 @@ static WEBP_INLINE void GetCPUInfo(int cpu_info[4], int info_type) {
 #define GetCPUInfo __cpuid
 #endif
 
-#if defined(__i386__) || defined(__x86_64__)
+// NaCl has no support for xgetbv or the raw opcode.
+#if !defined(__native_client__) && (defined(__i386__) || defined(__x86_64__))
 static WEBP_INLINE uint64_t xgetbv(void) {
   const uint32_t ecx = 0;
   uint32_t eax, edx;
