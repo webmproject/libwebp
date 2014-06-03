@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//nFc\u003d",
+        "filename": "src/enc/cost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-03T05:19:54Z",
+      "side": 1,
+      "message": "-\u003e patch #70380",
+      "parentUuid": "AAAAdn//nF8\u003d",
+      "revId": "6679f8996f2098d36ea34d9be761aff202929723",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//nF0\u003d",
         "filename": "src/enc/cost.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2014-06-03T04:59:08Z",
       "side": 1,
       "message": "in the end these should probably migrate to dsp; otherwise we\u0027ll have some fragmentation if for instance additional functions in quant.c are done",
+      "revId": "6679f8996f2098d36ea34d9be761aff202929723",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//nFY\u003d",
+        "filename": "src/enc/cost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 584,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-03T05:19:54Z",
+      "side": 1,
+      "message": "yes, there\u0027s a TODO left at line 540 for that...",
+      "parentUuid": "AAAAdn//nF0\u003d",
       "revId": "6679f8996f2098d36ea34d9be761aff202929723",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
