@@ -17,7 +17,7 @@
 #include "./vp8i.h"
 #include "./vp8li.h"
 #include "./webpi.h"
-#include "../utils/bit_reader.h"
+#include "../utils/bit_reader_inl.h"
 #include "../utils/utils.h"
 
 //------------------------------------------------------------------------------
