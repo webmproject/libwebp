@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//nGg\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 11
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-06-03T02:27:26Z",
+      "side": 1,
+      "message": "normally bit_reader-inl.h, no?",
+      "revId": "08cf1e75cbec7fee82136c943486ac908ab0216a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//nGk\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 11
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-06-03T02:27:26Z",
+      "side": 1,
+      "message": "might have been easier to review if this was done first",
+      "revId": "08cf1e75cbec7fee82136c943486ac908ab0216a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//nG4\u003d",
+        "filename": "makefile.unix",
+        "patchSetId": 11
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-06-03T02:27:26Z",
+      "side": 1,
+      "message": "src/dec/tree.o: src/utils/bit_reader_inl.h\n\nwill be enough + drop the command",
+      "revId": "08cf1e75cbec7fee82136c943486ac908ab0216a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//nG0\u003d",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-06-03T02:27:26Z",
+      "side": 1,
+      "message": "note aarch64 ends up here, something to look at with some aarch64 hardware",
+      "revId": "08cf1e75cbec7fee82136c943486ac908ab0216a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//nGw\u003d",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-06-03T02:27:26Z",
+      "side": 1,
+      "message": "this will pack better with range and value swapped with BITS\u003e24; alternatively, restoring the order to the old version should result in the same for now",
+      "revId": "08cf1e75cbec7fee82136c943486ac908ab0216a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//nGs\u003d",
+        "filename": "src/utils/bit_reader_inl.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-06-03T02:27:26Z",
+      "side": 1,
+      "message": "this seems misplaced",
+      "revId": "08cf1e75cbec7fee82136c943486ac908ab0216a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//nGo\u003d",
+        "filename": "src/utils/bit_reader_inl.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-06-03T02:27:26Z",
+      "side": 1,
+      "message": "big difference just for this?",
+      "revId": "08cf1e75cbec7fee82136c943486ac908ab0216a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
