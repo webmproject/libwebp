@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//nFs\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 859,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-03T05:15:29Z",
+      "side": 1,
+      "message": "actually, it\u0027s a little tricky: p3,p2 are not just temporary variables here. During the call to DoFilter4(), they get positioned for next span (where they will be acting p3/p2 for good). It is to avoid a copy at 863. The \u0027real\u0027 code would be:\n\nDoFilter4(p1, p0, q0, q1, mask, hev_mask, \u0026p1, \u0026p0, \u0026q0, \u0026q1);\nStore16x4(p1, p0, q0, q1, p, stride);\np3 \u003d q0;\np2 \u003d q1;\np1 \u003d q2;\np0 \u003d q3;\n\n\n\n-\u003e added a comment",
+      "parentUuid": "AAAAdn//nGY\u003d",
+      "revId": "9446848d658ff65d7039328afd1d6e4df1551e60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//nGU\u003d",
         "filename": "src/dsp/dec_neon.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2014-06-03T02:43:41Z",
       "side": 1,
       "message": "!\u003d 0 might produce better code, may need an unsigned k",
+      "revId": "9446848d658ff65d7039328afd1d6e4df1551e60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//nFo\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 873,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-03T05:15:29Z",
+      "side": 1,
+      "message": "no speed diff observed, but done anyway.",
+      "parentUuid": "AAAAdn//nGU\u003d",
       "revId": "9446848d658ff65d7039328afd1d6e4df1551e60",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
