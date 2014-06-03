@@ -13,6 +13,12 @@
 
 #include "./cost.h"
 
+#if defined(WEBP_USE_SSE2)
+#include <emmintrin.h>
+#endif  // WEBP_USE_SSE2
+
+#include "../utils/utils.h"
+
 //------------------------------------------------------------------------------
 // Boolean-cost cost table
 
@@ -536,15 +542,13 @@ extern int VP8GetResidualCostMIPS32(int ctx0, const VP8Residual* const res);
 VP8GetResidualCostFunc VP8GetResidualCost;
 
 void VP8GetResidualCostInit(void) {
-  if (VP8GetResidualCost == NULL) {
-    VP8GetResidualCost = GetResidualCost;
-    if (VP8GetCPUInfo != NULL) {
+  VP8GetResidualCost = GetResidualCost;
+  if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_MIPS32)
-      if (VP8GetCPUInfo(kMIPS32)) {
-        VP8GetResidualCost = VP8GetResidualCostMIPS32;
-      }
-#endif
+    if (VP8GetCPUInfo(kMIPS32)) {
+      VP8GetResidualCost = VP8GetResidualCostMIPS32;
     }
+#endif
   }
 }
 
@@ -560,7 +564,8 @@ void VP8InitResidual(int first, int coeff_type,
   res->first = first;
 }
 
-void VP8SetResidualCoeffs(const int16_t* const coeffs, VP8Residual* const res) {
+static void SetResidualCoeffs(const int16_t* const coeffs,
+                              VP8Residual* const res) {
   int n;
   res->last = -1;
   for (n = 15; n >= res->first; --n) {
@@ -570,6 +575,27 @@ void VP8SetResidualCoeffs(const int16_t* const coeffs, VP8Residual* const res) {
     }
   }
   res->coeffs = coeffs;
+}
+
+//------------------------------------------------------------------------------
+// init function
+
+#if defined(WEBP_USE_SSE2)
+extern void VP8SetResidualCoeffsSSE2(const int16_t* const coeffs,
+                                     VP8Residual* const res);
+#endif  // WEBP_USE_SSE2
+
+VP8SetResidualCoeffsFunc VP8SetResidualCoeffs;
+
+void VP8SetResidualCoeffsInit(void) {
+  VP8SetResidualCoeffs = SetResidualCoeffs;
+  if (VP8GetCPUInfo != NULL) {
+#if defined(WEBP_USE_SSE2)
+    if (VP8GetCPUInfo(kSSE2)) {
+      VP8SetResidualCoeffs = VP8SetResidualCoeffsSSE2;
+    }
+#endif
+  }
 }
 
 //------------------------------------------------------------------------------

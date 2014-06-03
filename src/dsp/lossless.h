@@ -19,6 +19,7 @@
 #include "../webp/decode.h"
 
 #include "../enc/histogram.h"
+#include "../utils/utils.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -168,41 +169,6 @@ extern VP8LHistogramAddFunc VP8LHistogramAdd;
 
 // -----------------------------------------------------------------------------
 // PrefixEncode()
-
-// use GNU builtins where available.
-#if defined(__GNUC__) && \
-    ((__GNUC__ == 3 && __GNUC_MINOR__ >= 4) || __GNUC__ >= 4)
-static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
-  return 31 ^ __builtin_clz(n);
-}
-#elif defined(_MSC_VER) && _MSC_VER > 1310 && \
-      (defined(_M_X64) || defined(_M_IX86))
-#include <intrin.h>
-#pragma intrinsic(_BitScanReverse)
-
-static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
-  unsigned long first_set_bit;
-  _BitScanReverse(&first_set_bit, n);
-  return first_set_bit;
-}
-#else
-// Returns (int)floor(log2(n)). n must be > 0.
-static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
-  int log = 0;
-  uint32_t value = n;
-  int i;
-
-  for (i = 4; i >= 0; --i) {
-    const int shift = (1 << i);
-    const uint32_t x = value >> shift;
-    if (x != 0) {
-      value = x;
-      log += shift;
-    }
-  }
-  return log;
-}
-#endif
 
 static WEBP_INLINE int VP8LBitsLog2Ceiling(uint32_t n) {
   const int log_floor = BitsLog2Floor(n);

@@ -37,7 +37,13 @@ typedef struct {
 
 void VP8InitResidual(int first, int coeff_type,
                      VP8Encoder* const enc, VP8Residual* const res);
-void VP8SetResidualCoeffs(const int16_t* const coeffs, VP8Residual* const res);
+
+typedef void (*VP8SetResidualCoeffsFunc)(const int16_t* const coeffs,
+                                         VP8Residual* const res);
+extern VP8SetResidualCoeffsFunc VP8SetResidualCoeffs;
+
+extern void VP8SetResidualCoeffsInit(void);  // must be called first
+
 int VP8RecordCoeffs(int ctx, const VP8Residual* const res);
 
 // approximate cost per level:
