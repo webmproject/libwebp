@@ -57,5 +57,4 @@ if BUILD_LIBWEBPDECODER
 
   libwebpdspdecode_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
   libwebpdspdecode_la_LDFLAGS = $(libwebpdsp_la_LDFLAGS)
-  libwebpdspdecode_la_LIBADD = libwebpdsp_avx2.la
 endif
