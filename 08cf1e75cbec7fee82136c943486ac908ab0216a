@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//nEw\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 11
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-03T05:50:23Z",
+      "side": 1,
+      "message": "i\u0027d like to avoid \u0027-\u0027 in the names...",
+      "parentUuid": "AAAAdn//nGg\u003d",
+      "revId": "08cf1e75cbec7fee82136c943486ac908ab0216a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//nGk\u003d",
         "filename": "/COMMIT_MSG",
         "patchSetId": 11
@@ -30,6 +48,24 @@
       "writtenOn": "2014-06-03T02:27:26Z",
       "side": 1,
       "message": "might have been easier to review if this was done first",
+      "revId": "08cf1e75cbec7fee82136c943486ac908ab0216a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//nEs\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 11
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-03T05:50:23Z",
+      "side": 1,
+      "message": "sorry about that. Idea came mid-flight, when i was bored waiting for full lib recompiles each time bit_reader.h was touched...",
+      "parentUuid": "AAAAdn//nGk\u003d",
       "revId": "08cf1e75cbec7fee82136c943486ac908ab0216a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//nE0\u003d",
+        "filename": "makefile.unix",
+        "patchSetId": 11
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-03T05:50:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//nG4\u003d",
+      "revId": "08cf1e75cbec7fee82136c943486ac908ab0216a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//nG0\u003d",
         "filename": "src/utils/bit_reader.h",
         "patchSetId": 11
@@ -64,6 +118,24 @@
       "writtenOn": "2014-06-03T02:27:26Z",
       "side": 1,
       "message": "note aarch64 ends up here, something to look at with some aarch64 hardware",
+      "revId": "08cf1e75cbec7fee82136c943486ac908ab0216a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//nFA\u003d",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-03T05:50:23Z",
+      "side": 1,
+      "message": "indeed, added a note.\n\nNote that the best BITS values are actually 8*sizeof(bit_t) - 8\nsystematically. We could somehow remove the flexibility around BITS if that\u0027s confirmed, and just force it to this value.",
+      "parentUuid": "AAAAdn//nG0\u003d",
       "revId": "08cf1e75cbec7fee82136c943486ac908ab0216a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//nE4\u003d",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-03T05:50:23Z",
+      "side": 1,
+      "message": "actually, i tried several combinations and this one is one of the few that is a little faster.\nThe primary reason for moving these fields first is to keep all the \u0027important\u0027 fields in the same cache-line.\n(now, only eof_ is outside of the cache-line, whereas it was in the middle before, and bits_ was the outlier).\n\n-\u003e added a note",
+      "parentUuid": "AAAAdn//nGw\u003d",
+      "revId": "08cf1e75cbec7fee82136c943486ac908ab0216a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//nGs\u003d",
         "filename": "src/utils/bit_reader_inl.h",
         "patchSetId": 11
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//nFI\u003d",
+        "filename": "src/utils/bit_reader_inl.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-03T05:50:23Z",
+      "side": 1,
+      "message": "indeed, some left-over. Moved to line 129.",
+      "parentUuid": "AAAAdn//nGs\u003d",
+      "revId": "08cf1e75cbec7fee82136c943486ac908ab0216a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//nGo\u003d",
         "filename": "src/utils/bit_reader_inl.h",
         "patchSetId": 11
@@ -115,6 +223,24 @@
       "writtenOn": "2014-06-03T02:27:26Z",
       "side": 1,
       "message": "big difference just for this?",
+      "revId": "08cf1e75cbec7fee82136c943486ac908ab0216a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//nFE\u003d",
+        "filename": "src/utils/bit_reader_inl.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-03T05:50:23Z",
+      "side": 1,
+      "message": "yes, surprisingly.\n\nAlso, for ARM and x86, it\u0027s a big difference to write:\n\n-----------\nconst int bit \u003d (value \u003e split);\nif (value \u003e split) { ... }\n-----------\n\ninstead of\n\n-----------\nconst int bit \u003d (value \u003e split);\nif (bit) { ... }\n-----------\n\nAnd, eventually for x86, it\u0027s even better to\nnot use a \u0027const int bit\u0027, but just \u0027int bit\u0027 like at line 148.\n\nIt\u0027s also a big speed diff to store \u0027range\u0027 at 131 *before* calling\nVP8LoadNewBytes(br), instead of moving line 131 to 136 like expected.\n\n\n\u003d\u003e added few comments about that.",
+      "parentUuid": "AAAAdn//nGo\u003d",
       "revId": "08cf1e75cbec7fee82136c943486ac908ab0216a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
