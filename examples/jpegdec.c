@@ -213,7 +213,7 @@ int ReadJPEG(FILE* in_file, WebPPicture* const pic, Metadata* const metadata) {
   int stride, width, height;
   volatile struct jpeg_decompress_struct dinfo;
   struct my_error_mgr jerr;
-  volatile uint8_t* rgb = NULL;
+  uint8_t* volatile rgb = NULL;
   JSAMPROW buffer[1];
 
   memset((j_decompress_ptr)&dinfo, 0, sizeof(dinfo));   // for setjmp sanity
@@ -272,11 +272,11 @@ int ReadJPEG(FILE* in_file, WebPPicture* const pic, Metadata* const metadata) {
   // WebP conversion.
   pic->width = width;
   pic->height = height;
-  ok = WebPPictureImportRGB(pic, (const uint8_t*)rgb, stride);
+  ok = WebPPictureImportRGB(pic, rgb, stride);
   if (!ok) goto Error;
 
  End:
-  free((void*)rgb);
+  free(rgb);
   return ok;
 }
 #else  // !WEBP_HAVE_JPEG
