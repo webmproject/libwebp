@@ -720,17 +720,18 @@ void VP8EncDspInit(void) {
     if (VP8GetCPUInfo(kSSE2)) {
       VP8EncDspInitSSE2();
     }
-    // TODO(jzern): this should be conditionally included based on a configure
-    // (HAVE_AVX2) define. We can't use WEBP_USE_AVX2/__AVX2__ here as -mavx2
-    // won't be defined for this file.
+#endif
+#if defined(WEBP_USE_AVX2)
     if (VP8GetCPUInfo(kAVX2)) {
       VP8EncDspInitAVX2();
     }
-#elif defined(WEBP_USE_NEON)
+#endif
+#if defined(WEBP_USE_NEON)
     if (VP8GetCPUInfo(kNEON)) {
       VP8EncDspInitNEON();
     }
-#elif defined(WEBP_USE_MIPS32)
+#endif
+#if defined(WEBP_USE_MIPS32)
     if (VP8GetCPUInfo(kMIPS32)) {
       VP8EncDspInitMIPS32();
     }

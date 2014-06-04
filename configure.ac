@@ -60,6 +60,11 @@ TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wvla])
 AC_SUBST([AM_CFLAGS])
 
 TEST_AND_ADD_CFLAGS([AVX2_FLAGS], [-mavx2])
+# Assume the presence of any flag is enough. This could be made more robust
+# with a header and/or compile check if needed.
+AS_IF([test -n "$AVX2_FLAGS"], [
+  AC_DEFINE(WEBP_HAVE_AVX2, [1],
+            [Set to 1 if AVX2 is supported])])
 AC_SUBST([AVX2_FLAGS])
 
 dnl === CLEAR_LIBVARS([var_pfx])
