@@ -200,7 +200,7 @@ int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha,
   int ok = 0;
   png_uint_32 width, height, y;
   int stride;
-  volatile uint8_t* rgb = NULL;
+  uint8_t* volatile rgb = NULL;
 
   png = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
   if (png == NULL) {
@@ -271,8 +271,8 @@ int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha,
   pic->width = width;
   pic->height = height;
   pic->use_argb = 1;
-  ok = has_alpha ? WebPPictureImportRGBA(pic, (const uint8_t*)rgb, stride)
-                 : WebPPictureImportRGB(pic, (const uint8_t*)rgb, stride);
+  ok = has_alpha ? WebPPictureImportRGBA(pic, rgb, stride)
+                 : WebPPictureImportRGB(pic, rgb, stride);
 
   if (!ok) {
     goto Error;
@@ -283,7 +283,7 @@ int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha,
     png_destroy_read_struct((png_structpp)&png,
                             (png_infopp)&info, (png_infopp)&end_info);
   }
-  free((void*)rgb);
+  free(rgb);
   return ok;
 }
 #else  // !WEBP_HAVE_PNG
