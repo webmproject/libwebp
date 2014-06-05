@@ -949,7 +949,7 @@ void VP8SetResidualCoeffsSSE2(const int16_t* const coeffs,
   // are not equal to zero. Finally, mask out least significant bits according
   // to res->first.
   const uint32_t mask =
-      ~((_mm_movemask_epi8(m1) << 16) | _mm_movemask_epi8(m0)) &
+      ~(((uint32_t)_mm_movemask_epi8(m1) << 16) | _mm_movemask_epi8(m0)) &
       -(1U << (res->first << 1));
   // The position of the most significant non-zero bit indicates the position of
   // the last non-zero value. Divide the result by two because __movemask_epi8
