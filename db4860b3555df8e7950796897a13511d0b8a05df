@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//myw\u003d",
+        "filename": "src/dsp/enc_sse2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 952,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-05T08:43:35Z",
+      "side": 1,
+      "message": "note: this line could be split in several ones (in another patch)",
+      "revId": "db4860b3555df8e7950796897a13511d0b8a05df",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
