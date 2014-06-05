@@ -14,6 +14,10 @@
 #ifndef WEBP_DSP_DSP_H_
 #define WEBP_DSP_DSP_H_
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "../webp/types.h"
 
 #ifdef __cplusplus
@@ -40,7 +44,7 @@ extern "C" {
 #define WEBP_USE_SSE2
 #endif
 
-#if defined(__AVX2__)
+#if defined(__AVX2__) || defined(WEBP_HAVE_AVX2)
 #define WEBP_USE_AVX2
 #endif
 
