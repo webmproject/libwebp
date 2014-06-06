@@ -186,6 +186,7 @@ DSP_DEC_OBJS = \
     $(DIROBJ)\dsp\upsampling_neon.obj \
     $(DIROBJ)\dsp\upsampling_sse2.obj \
     $(DIROBJ)\dsp\yuv.obj \
+    $(DIROBJ)\dsp\yuv_sse2.obj \
 
 DSP_ENC_OBJS = \
     $(DIROBJ)\dsp\enc.obj \

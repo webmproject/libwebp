@@ -29,6 +29,7 @@ COMMON_SOURCES += upsampling_neon.c
 COMMON_SOURCES += upsampling_sse2.c
 COMMON_SOURCES += yuv.c
 COMMON_SOURCES += yuv.h
+COMMON_SOURCES += yuv_sse2.c
 COMMON_SOURCES += yuv_tables_sse2.h
 
 ENC_SOURCES =
