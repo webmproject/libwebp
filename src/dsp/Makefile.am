@@ -24,11 +24,11 @@ COMMON_SOURCES += lossless_neon.c
 COMMON_SOURCES += lossless_sse2.c
 COMMON_SOURCES += neon.h
 COMMON_SOURCES += upsampling.c
-COMMON_SOURCES += upsampling_mips32.c
 COMMON_SOURCES += upsampling_neon.c
 COMMON_SOURCES += upsampling_sse2.c
 COMMON_SOURCES += yuv.c
 COMMON_SOURCES += yuv.h
+COMMON_SOURCES += yuv_mips32.c
 COMMON_SOURCES += yuv_sse2.c
 COMMON_SOURCES += yuv_tables_sse2.h
 

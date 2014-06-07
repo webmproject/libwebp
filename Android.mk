@@ -49,10 +49,10 @@ LOCAL_SRC_FILES := \
     src/dsp/lossless_neon.$(NEON) \
     src/dsp/lossless_sse2.c \
     src/dsp/upsampling.c \
-    src/dsp/upsampling_mips32.c \
     src/dsp/upsampling_neon.$(NEON) \
     src/dsp/upsampling_sse2.c \
     src/dsp/yuv.c \
+    src/dsp/yuv_mips32.c \
     src/dsp/yuv_sse2.c \
     src/enc/alpha.c \
     src/enc/analysis.c \
