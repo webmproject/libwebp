@@ -562,7 +562,8 @@ static void SetResidualCoeffs(const int16_t* const coeffs,
                               VP8Residual* const res) {
   int n;
   res->last = -1;
-  for (n = 15; n >= res->first; --n) {
+  assert(res->first == 0 || coeffs[0] == 0);
+  for (n = 15; n >= 0; --n) {
     if (coeffs[n]) {
       res->last = n;
       break;
