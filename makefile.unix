@@ -71,6 +71,7 @@ EXTRA_FLAGS += -Wshadow
 
 # AVX2-specific flags:
 ifeq ($(HAVE_AVX2), 1)
+EXTRA_FLAGS += -DWEBP_HAVE_AVX2
 src/dsp/%_avx2.o: EXTRA_FLAGS += -mavx2
 endif
 
