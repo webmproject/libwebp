@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//mgc\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-10T04:56:04Z",
+      "side": 1,
+      "message": "shouldn\u0027t it be \"../../config.h\" ?\n\n(config.h is generated at top-level directory)",
+      "revId": "fb0198c0ecf35c255ea390e2c412b6ca32b3344b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
