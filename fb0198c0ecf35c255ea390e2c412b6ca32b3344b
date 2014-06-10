@@ -70,6 +70,24 @@
       "revId": "fb0198c0ecf35c255ea390e2c412b6ca32b3344b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//mbs\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-10T18:53:45Z",
+      "side": 1,
+      "message": "any chance we could force the config.h to be always generated as src/webp/config.h?\nThat would be a reasonable location to impose...",
+      "parentUuid": "AAAAdn//me0\u003d",
+      "revId": "fb0198c0ecf35c255ea390e2c412b6ca32b3344b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
