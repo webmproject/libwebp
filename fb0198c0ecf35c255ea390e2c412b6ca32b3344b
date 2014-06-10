@@ -52,6 +52,24 @@
       "revId": "fb0198c0ecf35c255ea390e2c412b6ca32b3344b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//me0\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-06-10T17:40:24Z",
+      "side": 1,
+      "message": "I agree, but on second thought this might be a candidate for \u0027// NOLINT\u0027 given it\u0027s a common construct and having paths reach above src/ level is a bit odd. Not to mention it dictates the tree structure for something auto-generated/user-provided.",
+      "parentUuid": "AAAAdn//mgA\u003d",
+      "revId": "fb0198c0ecf35c255ea390e2c412b6ca32b3344b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
