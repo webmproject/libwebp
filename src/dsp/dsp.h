@@ -40,7 +40,11 @@ extern "C" {
 #define WEBP_MSC_SSE2  // Visual C++ SSE2 targets
 #endif
 
-#if defined(__SSE2__) || defined(WEBP_MSC_SSE2)
+// WEBP_HAVE_* are used to indicate the presence of the instruction set in dsp
+// files without intrinsics, allowing the corresponding Init() to be called.
+// Files containing intrinsics will need to be built targeting the instruction
+// set so should succeed on one of the earlier tests.
+#if defined(__SSE2__) || defined(WEBP_MSC_SSE2) || defined(WEBP_HAVE_SSE2)
 #define WEBP_USE_SSE2
 #endif
 

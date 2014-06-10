@@ -67,6 +67,12 @@ AS_IF([test -n "$AVX2_FLAGS"], [
             [Set to 1 if AVX2 is supported])])
 AC_SUBST([AVX2_FLAGS])
 
+TEST_AND_ADD_CFLAGS([SSE2_FLAGS], [-msse2])
+AS_IF([test -n "$SSE2_FLAGS"], [
+  AC_DEFINE(WEBP_HAVE_SSE2, [1],
+            [Set to 1 if SSE2 is supported])])
+AC_SUBST([SSE2_FLAGS])
+
 dnl === CLEAR_LIBVARS([var_pfx])
 dnl ===   Clears <var_pfx>_{INCLUDES,LIBS}.
 AC_DEFUN([CLEAR_LIBVARS], [$1_INCLUDES=""; $1_LIBS=""])
