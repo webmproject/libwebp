@@ -34,6 +34,24 @@
       "revId": "fb0198c0ecf35c255ea390e2c412b6ca32b3344b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//mgA\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-10T07:28:25Z",
+      "side": 1,
+      "message": "if we rely on using the -I paths, then leaving \u0027config.h\u0027 would make more sense than having \u0027./config.h\u0027. The latter implies you\u0027re really trying to include a specific file and not just one pointed to by -I",
+      "parentUuid": "AAAAdn//mgI\u003d",
+      "revId": "fb0198c0ecf35c255ea390e2c412b6ca32b3344b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
