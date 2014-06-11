@@ -22,6 +22,8 @@ Makefile.in
 examples/[cdv]webp
 examples/gif2webp
 examples/webpmux
+src/webp/config.h*
+src/webp/stamp-h1
 /output
 /doc/output
 *.idb

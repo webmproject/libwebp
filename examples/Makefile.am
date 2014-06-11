@@ -1,4 +1,4 @@
-AM_CPPFLAGS = -I$(top_srcdir)/src
+AM_CPPFLAGS = -I$(top_builddir)/src -I$(top_srcdir)/src
 
 bin_PROGRAMS = dwebp cwebp
 if BUILD_VWEBP
