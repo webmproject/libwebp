@@ -54,8 +54,9 @@ WebPFrameCache* WebPFrameCacheNew(int width, int height,
 void WebPFrameCacheDelete(WebPFrameCache* const cache);
 
 // Given an image described by 'frame', 'info' and 'orig_rect', optimize it for
-// WebP, encode it and add it to 'cache'.
+// WebP, encode it and add it to 'cache'. 'orig_rect' can be NULL.
 // This takes care of frame disposal too, according to 'info->dispose_method'.
+// Returns false in case of error (and sets frame->error_code accordingly).
 int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
                            const WebPConfig* const config,
                            const WebPFrameRect* const orig_rect,
