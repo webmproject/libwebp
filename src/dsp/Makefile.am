@@ -1,4 +1,3 @@
-AM_CPPFLAGS = -I$(top_srcdir)/src
 noinst_LTLIBRARIES = libwebpdsp.la libwebpdsp_avx2.la
 noinst_LTLIBRARIES += libwebpdsp_sse2.la libwebpdspdecode_sse2.la
 

@@ -1,4 +1,3 @@
-AM_CPPFLAGS = -I$(top_srcdir)/src
 noinst_LTLIBRARIES = libwebpdecode.la
 
 libwebpdecode_la_SOURCES =

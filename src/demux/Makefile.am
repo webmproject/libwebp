@@ -1,4 +1,3 @@
-AM_CPPFLAGS = -I$(top_srcdir)/src
 lib_LTLIBRARIES = libwebpdemux.la
 
 libwebpdemux_la_SOURCES =

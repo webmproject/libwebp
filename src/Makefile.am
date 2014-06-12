@@ -8,7 +8,6 @@ if WANT_DEMUX
   SUBDIRS += demux
 endif
 
-AM_CPPFLAGS = -I$(top_srcdir)/src
 lib_LTLIBRARIES = libwebp.la
 
 if BUILD_LIBWEBPDECODER
