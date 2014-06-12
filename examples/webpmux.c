@@ -46,7 +46,7 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "webp/config.h"
 #endif
 
 #include <assert.h>
