@@ -520,7 +520,7 @@ static void DisposeFrame(WebPMuxAnimDispose dispose_method,
 
 int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
                            const WebPConfig* const config,
-                           const WebPFrameRect* const orig_rect,
+                           const WebPFrameRect* const orig_rect_ptr,
                            WebPPicture* const frame,
                            WebPMuxFrameInfo* const info) {
   int ok = 0;
@@ -531,25 +531,28 @@ int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
   const size_t position = cache->count;
   const int allow_mixed = cache->allow_mixed;
   EncodedFrame* const encoded_frame = CacheGetFrame(cache, position);
+  WebPFrameRect orig_rect;
   assert(position < cache->size);
 
   if (frame == NULL || info == NULL) {
     return 0;
   }
 
-  if (orig_rect != NULL) {
-    rect = *orig_rect;
-    // Snap to even offsets (and adjust dimensions if needed).
-    rect.width += (rect.x_offset & 1);
-    rect.height += (rect.y_offset & 1);
-    rect.x_offset &= ~1;
-    rect.y_offset &= ~1;
+  if (orig_rect_ptr == NULL) {
+    orig_rect.width = frame->width;
+    orig_rect.height = frame->height;
+    orig_rect.x_offset = 0;
+    orig_rect.y_offset = 0;
   } else {
-    rect.width = frame->width;
-    rect.height = frame->height;
-    rect.x_offset = 0;
-    rect.y_offset = 0;
+    orig_rect = *orig_rect_ptr;
   }
+
+  // Snap to even offsets (and adjust dimensions if needed).
+  rect = orig_rect;
+  rect.width += (rect.x_offset & 1);
+  rect.height += (rect.y_offset & 1);
+  rect.x_offset &= ~1;
+  rect.y_offset &= ~1;
 
   if (!WebPPictureView(frame, rect.x_offset, rect.y_offset,
                        rect.width, rect.height, &sub_image)) {
@@ -583,7 +586,7 @@ int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
       }
       cache->flush_count = cache->count;
       // Update prev_canvas by blending 'curr' into it.
-      BlendPixels(frame, orig_rect, prev_canvas);
+      BlendPixels(frame, &orig_rect, prev_canvas);
     } else {
       WebPPicture full_image;
       WebPMuxFrameInfo full_image_info;
@@ -630,7 +633,7 @@ int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
     }
   }
 
-  DisposeFrame(info->dispose_method, orig_rect, frame, prev_canvas);
+  DisposeFrame(info->dispose_method, &orig_rect, frame, prev_canvas);
 
   cache->is_first_frame = 0;
   ok = 1;
