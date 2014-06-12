@@ -347,7 +347,7 @@ int VP8ProcessRow(VP8Decoder* const dec, VP8Io* const io) {
   } else {
     WebPWorker* const worker = &dec->worker_;
     // Finish previous job *before* updating context
-    ok &= WebPWorkerSync(worker);
+    ok &= WebPGetWorkerInterface()->Sync(worker);
     assert(worker->status_ == OK);
     if (ok) {   // spawn a new deblocking/output job
       ctx->io_ = *io;
@@ -367,7 +367,8 @@ int VP8ProcessRow(VP8Decoder* const dec, VP8Io* const io) {
         ctx->f_info_ = dec->f_info_;
         dec->f_info_ = tmp;
       }
-      WebPWorkerLaunch(worker);    // (reconstruct)+filter in parallel
+      // (reconstruct)+filter in parallel
+      WebPGetWorkerInterface()->Launch(worker);
       if (++dec->cache_id_ == dec->num_caches_) {
         dec->cache_id_ = 0;
       }
@@ -437,7 +438,7 @@ VP8StatusCode VP8EnterCritical(VP8Decoder* const dec, VP8Io* const io) {
 int VP8ExitCritical(VP8Decoder* const dec, VP8Io* const io) {
   int ok = 1;
   if (dec->mt_method_ > 0) {
-    ok = WebPWorkerSync(&dec->worker_);
+    ok = WebPGetWorkerInterface()->Sync(&dec->worker_);
   }
 
   if (io->teardown != NULL) {
@@ -478,7 +479,7 @@ static int InitThreadContext(VP8Decoder* const dec) {
   dec->cache_id_ = 0;
   if (dec->mt_method_ > 0) {
     WebPWorker* const worker = &dec->worker_;
-    if (!WebPWorkerReset(worker)) {
+    if (!WebPGetWorkerInterface()->Reset(worker)) {
       return VP8SetError(dec, VP8_STATUS_OUT_OF_MEMORY,
                          "thread initialization failed.");
     }

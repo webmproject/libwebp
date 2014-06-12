@@ -48,7 +48,7 @@ VP8Decoder* VP8New(void) {
   VP8Decoder* const dec = (VP8Decoder*)WebPSafeCalloc(1ULL, sizeof(*dec));
   if (dec != NULL) {
     SetOk(dec);
-    WebPWorkerInit(&dec->worker_);
+    WebPGetWorkerInterface()->Init(&dec->worker_);
     dec->ready_ = 0;
     dec->num_parts_ = 1;
   }
@@ -604,7 +604,7 @@ static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
     }
   }
   if (dec->mt_method_ > 0) {
-    if (!WebPWorkerSync(&dec->worker_)) return 0;
+    if (!WebPGetWorkerInterface()->Sync(&dec->worker_)) return 0;
   }
 
   return 1;
@@ -654,9 +654,7 @@ void VP8Clear(VP8Decoder* const dec) {
   if (dec == NULL) {
     return;
   }
-  if (dec->mt_method_ > 0) {
-    WebPWorkerEnd(&dec->worker_);
-  }
+  WebPGetWorkerInterface()->End(&dec->worker_);
   ALPHDelete(dec->alph_dec_);
   dec->alph_dec_ = NULL;
   WebPSafeFree(dec->mem_);

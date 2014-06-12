@@ -420,7 +420,7 @@ static void MergeJobs(const SegmentJob* const src, SegmentJob* const dst) {
 // initialize the job struct with some TODOs
 static void InitSegmentJob(VP8Encoder* const enc, SegmentJob* const job,
                            int start_row, int end_row) {
-  WebPWorkerInit(&job->worker);
+  WebPGetWorkerInterface()->Init(&job->worker);
   job->worker.data1 = job;
   job->worker.data2 = &job->it;
   job->worker.hook = (WebPWorkerHook)DoSegmentsJob;
@@ -453,6 +453,8 @@ int VP8EncAnalyze(VP8Encoder* const enc) {
 #else
     const int do_mt = 0;
 #endif
+    const WebPWorkerInterface* const worker_interface =
+        WebPGetWorkerInterface();
     SegmentJob main_job;
     if (do_mt) {
       SegmentJob side_job;
@@ -462,23 +464,23 @@ int VP8EncAnalyze(VP8Encoder* const enc) {
       InitSegmentJob(enc, &side_job, split_row, last_row);
       // we don't need to call Reset() on main_job.worker, since we're calling
       // WebPWorkerExecute() on it
-      ok &= WebPWorkerReset(&side_job.worker);
+      ok &= worker_interface->Reset(&side_job.worker);
       // launch the two jobs in parallel
       if (ok) {
-        WebPWorkerLaunch(&side_job.worker);
-        WebPWorkerExecute(&main_job.worker);
-        ok &= WebPWorkerSync(&side_job.worker);
-        ok &= WebPWorkerSync(&main_job.worker);
+        worker_interface->Launch(&side_job.worker);
+        worker_interface->Execute(&main_job.worker);
+        ok &= worker_interface->Sync(&side_job.worker);
+        ok &= worker_interface->Sync(&main_job.worker);
       }
-      WebPWorkerEnd(&side_job.worker);
+      worker_interface->End(&side_job.worker);
       if (ok) MergeJobs(&side_job, &main_job);  // merge results together
     } else {
       // Even for single-thread case, we use the generic Worker tools.
       InitSegmentJob(enc, &main_job, 0, last_row);
-      WebPWorkerExecute(&main_job.worker);
-      ok &= WebPWorkerSync(&main_job.worker);
+      worker_interface->Execute(&main_job.worker);
+      ok &= worker_interface->Sync(&main_job.worker);
     }
-    WebPWorkerEnd(&main_job.worker);
+    worker_interface->End(&main_job.worker);
     if (ok) {
       enc->alpha_ = main_job.alpha / total_mb;
       enc->uv_alpha_ = main_job.uv_alpha / total_mb;

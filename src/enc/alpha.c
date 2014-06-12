@@ -362,7 +362,7 @@ void VP8EncInitAlpha(VP8Encoder* const enc) {
   enc->alpha_data_size_ = 0;
   if (enc->thread_level_ > 0) {
     WebPWorker* const worker = &enc->alpha_worker_;
-    WebPWorkerInit(worker);
+    WebPGetWorkerInterface()->Init(worker);
     worker->data1 = enc;
     worker->data2 = NULL;
     worker->hook = (WebPWorkerHook)CompressAlphaJob;
@@ -373,10 +373,11 @@ int VP8EncStartAlpha(VP8Encoder* const enc) {
   if (enc->has_alpha_) {
     if (enc->thread_level_ > 0) {
       WebPWorker* const worker = &enc->alpha_worker_;
-      if (!WebPWorkerReset(worker)) {    // Makes sure worker is good to go.
+      // Makes sure worker is good to go.
+      if (!WebPGetWorkerInterface()->Reset(worker)) {
         return 0;
       }
-      WebPWorkerLaunch(worker);
+      WebPGetWorkerInterface()->Launch(worker);
       return 1;
     } else {
       return CompressAlphaJob(enc, NULL);   // just do the job right away
@@ -389,7 +390,7 @@ int VP8EncFinishAlpha(VP8Encoder* const enc) {
   if (enc->has_alpha_) {
     if (enc->thread_level_ > 0) {
       WebPWorker* const worker = &enc->alpha_worker_;
-      if (!WebPWorkerSync(worker)) return 0;  // error
+      if (!WebPGetWorkerInterface()->Sync(worker)) return 0;  // error
     }
   }
   return WebPReportProgress(enc->pic_, enc->percent_ + 20, &enc->percent_);
@@ -399,8 +400,10 @@ int VP8EncDeleteAlpha(VP8Encoder* const enc) {
   int ok = 1;
   if (enc->thread_level_ > 0) {
     WebPWorker* const worker = &enc->alpha_worker_;
-    ok = WebPWorkerSync(worker);  // finish anything left in flight
-    WebPWorkerEnd(worker);  // still need to end the worker, even if !ok
+    // finish anything left in flight
+    ok = WebPGetWorkerInterface()->Sync(worker);
+    // still need to end the worker, even if !ok
+    WebPGetWorkerInterface()->End(worker);
   }
   WebPSafeFree(enc->alpha_data_);
   enc->alpha_data_ = NULL;
