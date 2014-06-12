@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//mOE\u003d",
+        "filename": "examples/gif2webp_util.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-06-12T07:25:33Z",
+      "side": 1,
+      "message": "deindent",
+      "revId": "92854916ee2523a2dded82e2a033dcfda98feb4a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
