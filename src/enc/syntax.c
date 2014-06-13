@@ -263,13 +263,15 @@ static int EmitPartitionsSize(const VP8Encoder* const enc,
 
 //------------------------------------------------------------------------------
 
-static size_t GeneratePartition0(VP8Encoder* const enc) {
+static int GeneratePartition0(VP8Encoder* const enc) {
   VP8BitWriter* const bw = &enc->bw_;
   const int mb_size = enc->mb_w_ * enc->mb_h_;
   uint64_t pos1, pos2, pos3;
 
   pos1 = VP8BitWriterPos(bw);
-  VP8BitWriterInit(bw, mb_size * 7 / 8);        // ~7 bits per macroblock
+  if (!VP8BitWriterInit(bw, mb_size * 7 / 8)) {        // ~7 bits per macroblock
+    return WebPEncodingSetError(enc->pic_, VP8_ENC_ERROR_OUT_OF_MEMORY);
+  }
   VP8PutBitUniform(bw, 0);   // colorspace
   VP8PutBitUniform(bw, 0);   // clamp type
 
@@ -292,7 +294,10 @@ static size_t GeneratePartition0(VP8Encoder* const enc) {
     enc->pic_->stats->header_bytes[1] = (int)((pos3 - pos2 + 7) >> 3);
     enc->pic_->stats->alpha_data_size = (int)enc->alpha_data_size_;
   }
-  return !bw->error_;
+  if (bw->error_) {
+    return WebPEncodingSetError(enc->pic_, VP8_ENC_ERROR_OUT_OF_MEMORY);
+  }
+  return 1;
 }
 
 void VP8EncFreeBitWriters(VP8Encoder* const enc) {
@@ -314,7 +319,8 @@ int VP8EncWrite(VP8Encoder* const enc) {
   int p;
 
   // Partition #0 with header and partition sizes
-  ok = !!GeneratePartition0(enc);
+  ok = GeneratePartition0(enc);
+  if (!ok) return 0;
 
   // Compute VP8 size
   vp8_size = VP8_FRAME_HEADER_SIZE +

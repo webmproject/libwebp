@@ -225,7 +225,7 @@ int VP8EmitTokens(VP8TBuffer* const b, VP8BitWriter* const bw,
                   const uint8_t* const probas, int final_pass) {
   const VP8Tokens* p = b->pages_;
   (void)final_pass;
-  if (b->error_) return 0;
+  assert(!b->error_);
   while (p != NULL) {
     const VP8Tokens* const next = p->next_;
     const int N = (next == NULL) ? b->left_ : 0;
@@ -251,7 +251,7 @@ int VP8EmitTokens(VP8TBuffer* const b, VP8BitWriter* const bw,
 size_t VP8EstimateTokenSize(VP8TBuffer* const b, const uint8_t* const probas) {
   size_t size = 0;
   const VP8Tokens* p = b->pages_;
-  if (b->error_) return 0;
+  assert(!b->error_);
   while (p != NULL) {
     const VP8Tokens* const next = p->next_;
     const int N = (next == NULL) ? b->left_ : 0;
