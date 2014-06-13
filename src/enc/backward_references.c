@@ -933,7 +933,8 @@ static double ComputeCacheEntropy(const uint32_t* const argb,
   return entropy;
 }
 
-// Returns how many bits are to be used for a color cache.
+// *best_cache_bits will contain how many bits are to be used for a color cache.
+// Returns 0 in case of memory error.
 int VP8LCalculateEstimateForCacheSize(const uint32_t* const argb,
                                       int xsize, int ysize, int quality,
                                       VP8LHashChain* const hash_chain,
