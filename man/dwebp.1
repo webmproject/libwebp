@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DWEBP 1 "March 7, 2014"
+.TH DWEBP 1 "June 13, 2014"
 .SH NAME
 dwebp \- decompress a WebP file to an image file
 .SH SYNOPSIS
@@ -67,6 +67,11 @@ but it will make the decoding faster.
 Specify a dithering \fBstrength\fP between 0 and 100. Dithering is a
 post-processing effect applied to chroma components in lossy compression.
 It helps by smoothing gradients and avoiding banding artifacts.
+.TP
+.BI \-alpha_dither
+If the compressed file contains a transparency plane that was quantized
+during compression, this flag will allow dithering the reconstructed plane
+in order to generate smoother transparency gradients.
 .TP
 .B \-nodither
 Disable all dithering (default).

@@ -108,12 +108,6 @@ static int ALPHDecode(VP8Decoder* const dec, int row, int num_rows) {
     unfilter_func(width, height, width, row, num_rows, output);
   }
 
-  if (alph_dec->pre_processing_ == ALPHA_PREPROCESSED_LEVELS) {
-    if (!DequantizeLevels(output, width, height, row, num_rows)) {
-      return 0;
-    }
-  }
-
   if (row + num_rows == dec->pic_hdr_.height_) {
     dec->is_alpha_decoded_ = 1;
   }
@@ -143,12 +137,22 @@ const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
       dec->alph_dec_ = NULL;
       return NULL;
     }
+    // if we allowed use of alpha dithering, check whether it's needed at all
+    if (dec->alph_dec_->pre_processing_ != ALPHA_PREPROCESSED_LEVELS) {
+      dec->alpha_dithering_ = 0;  // disable dithering
+    } else {
+      num_rows = height;          // decode everything in one pass
+    }
   }
 
   if (!dec->is_alpha_decoded_) {
     int ok = 0;
     assert(dec->alph_dec_ != NULL);
     ok = ALPHDecode(dec, row, num_rows);
+    if (ok && dec->alpha_dithering_ > 0) {
+      ok = WebPDequantizeLevels(dec->alpha_plane_, width, height,
+                                dec->alpha_dithering_);
+    }
     if (!ok || dec->is_alpha_decoded_) {
       ALPHDelete(dec->alph_dec_);
       dec->alph_dec_ = NULL;

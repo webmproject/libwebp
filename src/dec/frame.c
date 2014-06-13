@@ -177,6 +177,13 @@ void VP8InitDithering(const WebPDecoderOptions* const options,
         dec->dither_ = 1;
       }
     }
+    // potentially allow alpha dithering
+    dec->alpha_dithering_ = options->alpha_dithering_strength;
+    if (dec->alpha_dithering_ > 100) {
+      dec->alpha_dithering_ = 100;
+    } else if (dec->alpha_dithering_ < 0) {
+      dec->alpha_dithering_ = 0;
+    }
   }
 }
 
