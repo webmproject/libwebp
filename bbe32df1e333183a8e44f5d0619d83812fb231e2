@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//lvA\u003d",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-06-15T02:46:44Z",
+      "side": 1,
+      "message": "this is the only one with a period; did we strip them from here at one point?",
+      "revId": "bbe32df1e333183a8e44f5d0619d83812fb231e2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
