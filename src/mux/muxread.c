@@ -57,7 +57,7 @@ static WebPMuxError ChunkVerifyAndAssign(WebPChunk* chunk,
   WebPData chunk_data;
 
   // Sanity checks.
-  if (data_size < TAG_SIZE) return WEBP_MUX_NOT_ENOUGH_DATA;
+  if (data_size < CHUNK_HEADER_SIZE) return WEBP_MUX_NOT_ENOUGH_DATA;
   chunk_size = GetLE32(data + TAG_SIZE);
 
   {
