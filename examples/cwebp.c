@@ -558,37 +558,37 @@ static void HelpShort(void) {
 static void HelpLong(void) {
   printf("Usage:\n");
   printf(" cwebp [-preset <...>] [options] in_file [-o out_file]\n\n");
-  printf("If input size (-s) for an image is not specified, "
-         "it is assumed to be a PNG, JPEG, TIFF or WebP file.\n");
+  printf("If input size (-s) for an image is not specified, it is\n"
+         "assumed to be a PNG, JPEG, TIFF or WebP file.\n");
 #ifdef HAVE_WINCODEC_H
-  printf("Windows builds can take as input any of the files handled by WIC\n");
+  printf("Windows builds can take as input any of the files handled by WIC.\n");
 #endif
-  printf("options:\n");
+  printf("\nOptions:\n");
   printf("  -h / -help  ............ short help\n");
   printf("  -H / -longhelp  ........ long help\n");
   printf("  -q <float> ............. quality factor (0:small..100:big)\n");
-  printf("  -alpha_q <int> ......... Transparency-compression quality "
-         "(0..100).\n");
-  printf("  -preset <string> ....... Preset setting, one of:\n");
+  printf("  -alpha_q <int> ......... transparency-compression quality "
+         "(0..100)\n");
+  printf("  -preset <string> ....... preset setting, one of:\n");
   printf("                            default, photo, picture,\n");
   printf("                            drawing, icon, text\n");
-  printf("     -preset must come first, as it overwrites other parameters.\n");
-  printf("  -z <int> ............... Activates lossless preset with given\n"
+  printf("     -preset must come first, as it overwrites other parameters\n");
+  printf("  -z <int> ............... activates lossless preset with given\n"
          "                           level in [0:fast, ..., 9:slowest]\n");
   printf("\n");
   printf("  -m <int> ............... compression method (0=fast, 6=slowest)\n");
   printf("  -segments <int> ........ number of segments to use (1..4)\n");
-  printf("  -size <int> ............ Target size (in bytes)\n");
-  printf("  -psnr <float> .......... Target PSNR (in dB. typically: 42)\n");
+  printf("  -size <int> ............ target size (in bytes)\n");
+  printf("  -psnr <float> .......... target PSNR (in dB. typically: 42)\n");
   printf("\n");
-  printf("  -s <int> <int> ......... Input size (width x height) for YUV\n");
-  printf("  -sns <int> ............. Spatial Noise Shaping (0:off, 100:max)\n");
+  printf("  -s <int> <int> ......... input size (width x height) for YUV\n");
+  printf("  -sns <int> ............. spatial noise shaping (0:off, 100:max)\n");
   printf("  -f <int> ............... filter strength (0=off..100)\n");
   printf("  -sharpness <int> ....... "
          "filter sharpness (0:most .. 7:least sharp)\n");
   printf("  -strong ................ use strong filter instead "
-                                     "of simple (default).\n");
-  printf("  -nostrong .............. use simple filter instead of strong.\n");
+                                     "of simple (default)\n");
+  printf("  -nostrong .............. use simple filter instead of strong\n");
   printf("  -partition_limit <int> . limit quality to fit the 512k limit on\n");
   printf("                           "
          "the first partition (0=no degradation ... 100=full)\n");
@@ -598,25 +598,25 @@ static void HelpLong(void) {
   printf("  -mt .................... use multi-threading if available\n");
   printf("  -low_memory ............ reduce memory usage (slower encoding)\n");
 #ifdef WEBP_EXPERIMENTAL_FEATURES
-  printf("  -444 / -422 / -gray ..... Change colorspace\n");
+  printf("  -444 / -422 / -gray .... change colorspace\n");
 #endif
-  printf("  -map <int> ............. print map of extra info.\n");
-  printf("  -print_psnr ............ prints averaged PSNR distortion.\n");
-  printf("  -print_ssim ............ prints averaged SSIM distortion.\n");
-  printf("  -print_lsim ............ prints local-similarity distortion.\n");
-  printf("  -d <file.pgm> .......... dump the compressed output (PGM file).\n");
-  printf("  -alpha_method <int> .... Transparency-compression method (0..1)\n");
-  printf("  -alpha_filter <string> . predictive filtering for alpha plane.\n");
-  printf("                           One of: none, fast (default) or best.\n");
-  printf("  -alpha_cleanup ......... Clean RGB values in transparent area.\n");
-  printf("  -blend_alpha <hex> ..... Blend colors against background color\n"
+  printf("  -map <int> ............. print map of extra info\n");
+  printf("  -print_psnr ............ prints averaged PSNR distortion\n");
+  printf("  -print_ssim ............ prints averaged SSIM distortion\n");
+  printf("  -print_lsim ............ prints local-similarity distortion\n");
+  printf("  -d <file.pgm> .......... dump the compressed output (PGM file)\n");
+  printf("  -alpha_method <int> .... transparency-compression method (0..1)\n");
+  printf("  -alpha_filter <string> . predictive filtering for alpha plane,\n");
+  printf("                           one of: none, fast (default) or best\n");
+  printf("  -alpha_cleanup ......... clean RGB values in transparent area\n");
+  printf("  -blend_alpha <hex> ..... blend colors against background color\n"
          "                           expressed as RGB values written in\n"
          "                           hexadecimal, e.g. 0xc0e0d0 for red=0xc0\n"
-         "                           green=0xe0 and blue=0xd0.\n");
-  printf("  -noalpha ............... discard any transparency information.\n");
-  printf("  -lossless .............. Encode image losslessly.\n");
-  printf("  -hint <string> ......... Specify image characteristics hint.\n");
-  printf("                           One of: photo, picture or graph\n");
+         "                           green=0xe0 and blue=0xd0\n");
+  printf("  -noalpha ............... discard any transparency information\n");
+  printf("  -lossless .............. encode image losslessly\n");
+  printf("  -hint <string> ......... specify image characteristics hint,\n");
+  printf("                           one of: photo, picture or graph\n");
 
   printf("\n");
   printf("  -metadata <string> ..... comma separated list of metadata to\n");
@@ -627,18 +627,18 @@ static void HelpLong(void) {
 
   printf("\n");
   printf("  -short ................. condense printed message\n");
-  printf("  -quiet ................. don't print anything.\n");
-  printf("  -version ............... print version number and exit.\n");
+  printf("  -quiet ................. don't print anything\n");
+  printf("  -version ............... print version number and exit\n");
 #ifndef WEBP_DLL
-  printf("  -noasm ................. disable all assembly optimizations.\n");
+  printf("  -noasm ................. disable all assembly optimizations\n");
 #endif
   printf("  -v ..................... verbose, e.g. print encoding/decoding "
          "times\n");
   printf("  -progress .............. report encoding progress\n");
   printf("\n");
   printf("Experimental Options:\n");
-  printf("  -jpeg_like ............. Roughly match expected JPEG size.\n");
-  printf("  -af .................... auto-adjust filter strength.\n");
+  printf("  -jpeg_like ............. roughly match expected JPEG size\n");
+  printf("  -af .................... auto-adjust filter strength\n");
   printf("  -pre <int> ............. pre-processing filter\n");
   printf("\n");
 }

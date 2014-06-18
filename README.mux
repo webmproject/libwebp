@@ -33,35 +33,35 @@ Usage: webpmux -get GET_OPTIONS INPUT -o OUTPUT
        webpmux -version
 
 GET_OPTIONS:
- Extract relevant data.
-   icc       Get ICC profile.
-   exif      Get EXIF metadata.
-   xmp       Get XMP metadata.
-   frame n   Get nth frame.
+ Extract relevant data:
+   icc       get ICC profile
+   exif      get EXIF metadata
+   xmp       get XMP metadata
+   frame n   get nth frame
 
 SET_OPTIONS:
- Set color profile/metadata.
-   icc  file.icc     Set ICC profile.
-   exif file.exif    Set EXIF metadata.
-   xmp  file.xmp     Set XMP metadata.
+ Set color profile/metadata:
+   icc  file.icc     set ICC profile
+   exif file.exif    set EXIF metadata
+   xmp  file.xmp     set XMP metadata
    where:    'file.icc' contains the ICC profile to be set,
              'file.exif' contains the EXIF metadata to be set
              'file.xmp' contains the XMP metadata to be set
 
 STRIP_OPTIONS:
- Strip color profile/metadata.
-   icc       Strip ICC profile.
-   exif      Strip EXIF metadata.
-   xmp       Strip XMP metadata.
+ Strip color profile/metadata:
+   icc       strip ICC profile
+   exif      strip EXIF metadata
+   xmp       strip XMP metadata
 
 FRAME_OPTIONS(i):
- Create animation.
+ Create animation:
    file_i +di+[xi+yi[+mi[bi]]]
    where:    'file_i' is the i'th animation frame (WebP format),
-             'di' is the pause duration before next frame.
-             'xi','yi' specify the image offset for this frame.
-             'mi' is the dispose method for this frame (0 or 1).
-             'bi' is the blending method for this frame (+b or -b).
+             'di' is the pause duration before next frame,
+             'xi','yi' specify the image offset for this frame,
+             'mi' is the dispose method for this frame (0 or 1),
+             'bi' is the blending method for this frame (+b or -b)
 
 LOOP_COUNT:
  Number of times to repeat the animation.
@@ -72,7 +72,7 @@ BACKGROUND_COLOR:
   A,R,G,B
   where:    'A', 'R', 'G' and 'B' are integers in the range 0 to 255 specifying
             the Alpha, Red, Green and Blue component values respectively
-            [Default: 255,255,255,255].
+            [Default: 255,255,255,255]
 
 INPUT & OUTPUT are in WebP format.
 
