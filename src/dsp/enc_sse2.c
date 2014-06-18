@@ -445,10 +445,10 @@ static void FTransform(const uint8_t* src, const uint8_t* ref, int16_t* out) {
     // -> f1 = f1 + 1 - (a3 == 0)
     const __m128i g1 = _mm_add_epi16(f1, _mm_cmpeq_epi16(a32, zero));
 
-    _mm_storel_epi64((__m128i*)&out[ 0], d0);
-    _mm_storel_epi64((__m128i*)&out[ 4], g1);
-    _mm_storel_epi64((__m128i*)&out[ 8], d2);
-    _mm_storel_epi64((__m128i*)&out[12], f3);
+    const __m128i d0_g1 = _mm_unpacklo_epi64(d0, g1);
+    const __m128i d2_f3 = _mm_unpacklo_epi64(d2, f3);
+    _mm_storeu_si128((__m128i*)&out[0], d0_g1);
+    _mm_storeu_si128((__m128i*)&out[8], d2_f3);
   }
 }
 
