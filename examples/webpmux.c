@@ -371,6 +371,14 @@ static void PrintHelp(void) {
   printf(" and is assumed to be\nvalid.\n");
 }
 
+static void WarnAboutOddOffset(const WebPMuxFrameInfo* const info) {
+  if ((info->x_offset | info->y_offset) & 1) {
+    fprintf(stderr, "Warning: odd offsets will be snapped to even values"
+            " (%d, %d) -> (%d, %d)\n", info->x_offset, info->y_offset,
+            info->x_offset & ~1, info->y_offset & ~1);
+  }
+}
+
 static int ReadFileToWebPData(const char* const filename,
                               WebPData* const webp_data) {
   const uint8_t* data;
@@ -444,6 +452,9 @@ static int ParseFrameArgs(const char* args, WebPMuxFrameInfo* const info) {
     default:
       return 0;
   }
+
+  WarnAboutOddOffset(info);
+
   // Note: The sanity of the following conversion is checked by
   // WebPMuxPushFrame().
   info->dispose_method = (WebPMuxAnimDispose)dispose_method;
@@ -456,7 +467,10 @@ static int ParseFrameArgs(const char* args, WebPMuxFrameInfo* const info) {
 }
 
 static int ParseFragmentArgs(const char* args, WebPMuxFrameInfo* const info) {
-  return (sscanf(args, "+%d+%d", &info->x_offset, &info->y_offset) == 2);
+  const int ok =
+      (sscanf(args, "+%d+%d", &info->x_offset, &info->y_offset) == 2);
+  if (ok) WarnAboutOddOffset(info);
+  return ok;
 }
 
 static int ParseBgcolorArgs(const char* args, uint32_t* const bgcolor) {
