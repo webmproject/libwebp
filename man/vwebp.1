@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH VWEBP 1 "March 7, 2014"
+.TH VWEBP 1 "June 13, 2014"
 .SH NAME
 vwebp \- decompress a WebP file and display it in a window
 .SH SYNOPSIS
@@ -33,6 +33,10 @@ Disable in-loop filtering.
 Specify a dithering \fBstrength\fP between 0 and 100. Dithering is a
 post-processing effect applied to chroma components in lossy compression.
 It helps by smoothing gradients and avoiding banding artifacts. Default: 50.
+.TP
+.BI \-noalphadither
+By default, quantized transparency planes are dithered during decompression,
+to smooth the gradients. This flag will prevent this dithering.
 .TP
 .B \-mt
 Use multi-threading for decoding, if possible.

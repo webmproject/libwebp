@@ -270,6 +270,7 @@ Use following options to convert into alternate image formats:
   -nofilter .... disable in-loop filtering
   -nodither .... disable dithering
   -dither <d> .. dithering strength (in 0..100)
+  -alpha_dither  use alpha-plane dithering if needed.
   -mt .......... use multi-threading
   -crop <x> <y> <w> <h> ... crop output with the given rectangle
   -scale <w> <h> .......... scale the output (*after* any cropping)
@@ -297,6 +298,7 @@ Options are:
   -nofancy ..... don't use the fancy YUV420 upscaler.
   -nofilter .... disable in-loop filtering.
   -dither <int>  dithering strength (0..100). Default=50.
+  -noalphadither disable alpha plane dithering.
   -mt .......... use multi-threading.
   -info ........ print info.
   -h     ....... this help message.
