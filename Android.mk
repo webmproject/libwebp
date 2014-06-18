@@ -99,18 +99,6 @@ else
   include $(BUILD_STATIC_LIBRARY)
 endif
 
-include $(CLEAR_VARS)
-
-LOCAL_SRC_FILES := \
-    examples/dwebp.c \
-    examples/example_util.c \
-
-LOCAL_CFLAGS := $(WEBP_CFLAGS)
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/src
-LOCAL_STATIC_LIBRARIES := webp
-
-LOCAL_MODULE := dwebp
-
-include $(BUILD_EXECUTABLE)
+include $(LOCAL_PATH)/examples/Android.mk
 
 $(call import-module,android/cpufeatures)
