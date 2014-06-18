@@ -93,7 +93,11 @@ LOCAL_STATIC_LIBRARIES := cpufeatures
 
 LOCAL_MODULE := webp
 
-include $(BUILD_STATIC_LIBRARY)
+ifeq ($(ENABLE_SHARED),1)
+  include $(BUILD_SHARED_LIBRARY)
+else
+  include $(BUILD_STATIC_LIBRARY)
+endif
 
 include $(CLEAR_VARS)
 
