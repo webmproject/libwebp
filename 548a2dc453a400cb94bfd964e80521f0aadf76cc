@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//kjo\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 476,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-06-19T21:18:35Z",
+      "side": 1,
+      "message": "killed your precious horizontal alignment!",
+      "revId": "548a2dc453a400cb94bfd964e80521f0aadf76cc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//kjc\u003d",
+        "filename": "src/dsp/enc_sse2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-06-19T21:18:35Z",
+      "side": 1,
+      "message": "meaningful speedup? I take it using a mask here is worse",
+      "revId": "548a2dc453a400cb94bfd964e80521f0aadf76cc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
