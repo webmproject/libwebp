@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//lPc\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-19T07:09:23Z",
+      "side": 1,
+      "message": "this block should go at line 42 preferably",
+      "revId": "67f4f30cd5b8082dad8d5878ae893e202839b03e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//lPY\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-19T07:09:23Z",
+      "side": 1,
+      "message": "could you prefix with WEBP_ please?\nDECLARE_ALIGNED is probably quite common as a name",
+      "revId": "67f4f30cd5b8082dad8d5878ae893e202839b03e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//lPk\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-19T07:09:23Z",
+      "side": 1,
+      "message": "no need to issue a warning for all the other compilers...",
+      "revId": "67f4f30cd5b8082dad8d5878ae893e202839b03e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//lPg\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-19T07:09:23Z",
+      "side": 1,
+      "message": "could you add a comment about \u0027FWZ\u0027 stands for?",
+      "revId": "67f4f30cd5b8082dad8d5878ae893e202839b03e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//lPU\u003d",
+        "filename": "src/dsp/enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-19T07:09:23Z",
+      "side": 1,
+      "message": "you need to initialize VP8QuantizeBlockFWZ to something here (the default plain-C version)",
+      "revId": "67f4f30cd5b8082dad8d5878ae893e202839b03e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//lPQ\u003d",
+        "filename": "src/dsp/enc_sse2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-19T07:09:23Z",
+      "side": 1,
+      "message": "long line \u003e80 cols",
+      "revId": "67f4f30cd5b8082dad8d5878ae893e202839b03e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//lPM\u003d",
+        "filename": "src/dsp/enc_sse2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 810,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-19T07:09:23Z",
+      "side": 1,
+      "message": "can you pass \u0027__m128i\u0027 directly as argument (instead of pointers)? Will it work with MSVC compiler?",
+      "revId": "67f4f30cd5b8082dad8d5878ae893e202839b03e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//lPI\u003d",
+        "filename": "src/dsp/enc_sse2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 926,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-19T07:09:23Z",
+      "side": 1,
+      "message": "extra line",
+      "revId": "67f4f30cd5b8082dad8d5878ae893e202839b03e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//lPE\u003d",
+        "filename": "src/dsp/enc_sse2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 927,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-19T07:09:23Z",
+      "side": 1,
+      "message": "prefer not reusing variables and using const:\n\nconst __m128i tmp0 \u003d _mm_loadu_si128(...);\nconst __m128i in0 \u003d _mm_and_si128(tmp0, _mm_load_si128(...)...);",
+      "revId": "67f4f30cd5b8082dad8d5878ae893e202839b03e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
