@@ -303,51 +303,51 @@ static void PrintHelp(void) {
 
   printf("\n");
   printf("GET_OPTIONS:\n");
-  printf(" Extract relevant data.\n");
-  printf("   icc       Get ICC profile.\n");
-  printf("   exif      Get EXIF metadata.\n");
-  printf("   xmp       Get XMP metadata.\n");
+  printf(" Extract relevant data:\n");
+  printf("   icc       get ICC profile\n");
+  printf("   exif      get EXIF metadata\n");
+  printf("   xmp       get XMP metadata\n");
 #ifdef WEBP_EXPERIMENTAL_FEATURES
-  printf("   frgm n    Get nth fragment.\n");
+  printf("   frgm n    get nth fragment\n");
 #endif
-  printf("   frame n   Get nth frame.\n");
+  printf("   frame n   get nth frame\n");
 
   printf("\n");
   printf("SET_OPTIONS:\n");
-  printf(" Set color profile/metadata.\n");
-  printf("   icc  file.icc     Set ICC profile.\n");
-  printf("   exif file.exif    Set EXIF metadata.\n");
-  printf("   xmp  file.xmp     Set XMP metadata.\n");
+  printf(" Set color profile/metadata:\n");
+  printf("   icc  file.icc     set ICC profile\n");
+  printf("   exif file.exif    set EXIF metadata\n");
+  printf("   xmp  file.xmp     set XMP metadata\n");
   printf("   where:    'file.icc' contains the ICC profile to be set,\n");
   printf("             'file.exif' contains the EXIF metadata to be set\n");
   printf("             'file.xmp' contains the XMP metadata to be set\n");
 
   printf("\n");
   printf("STRIP_OPTIONS:\n");
-  printf(" Strip color profile/metadata.\n");
-  printf("   icc       Strip ICC profile.\n");
-  printf("   exif      Strip EXIF metadata.\n");
-  printf("   xmp       Strip XMP metadata.\n");
+  printf(" Strip color profile/metadata:\n");
+  printf("   icc       strip ICC profile\n");
+  printf("   exif      strip EXIF metadata\n");
+  printf("   xmp       strip XMP metadata\n");
 
 #ifdef WEBP_EXPERIMENTAL_FEATURES
   printf("\n");
   printf("FRAGMENT_OPTIONS(i):\n");
-  printf(" Create fragmented image.\n");
+  printf(" Create fragmented image:\n");
   printf("   file_i +xi+yi\n");
   printf("   where:    'file_i' is the i'th fragment (WebP format),\n");
-  printf("             'xi','yi' specify the image offset for this fragment."
+  printf("             'xi','yi' specify the image offset for this fragment"
          "\n");
 #endif
 
   printf("\n");
   printf("FRAME_OPTIONS(i):\n");
-  printf(" Create animation.\n");
+  printf(" Create animation:\n");
   printf("   file_i +di+[xi+yi[+mi[bi]]]\n");
   printf("   where:    'file_i' is the i'th animation frame (WebP format),\n");
-  printf("             'di' is the pause duration before next frame.\n");
-  printf("             'xi','yi' specify the image offset for this frame.\n");
-  printf("             'mi' is the dispose method for this frame (0 or 1).\n");
-  printf("             'bi' is the blending method for this frame (+b or -b)."
+  printf("             'di' is the pause duration before next frame,\n");
+  printf("             'xi','yi' specify the image offset for this frame,\n");
+  printf("             'mi' is the dispose method for this frame (0 or 1),\n");
+  printf("             'bi' is the blending method for this frame (+b or -b)"
          "\n");
 
   printf("\n");
@@ -363,7 +363,7 @@ static void PrintHelp(void) {
          "specifying\n");
   printf("            the Alpha, Red, Green and Blue component values "
          "respectively\n");
-  printf("            [Default: 255,255,255,255].\n");
+  printf("            [Default: 255,255,255,255]\n");
 
   printf("\nINPUT & OUTPUT are in WebP format.\n");
 
