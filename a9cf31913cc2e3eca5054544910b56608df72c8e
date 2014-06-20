@@ -34,6 +34,24 @@
       "revId": "a9cf31913cc2e3eca5054544910b56608df72c8e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//kZE\u003d",
+        "filename": "src/utils/thread.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-06-20T06:02:54Z",
+      "side": 1,
+      "message": "a bit excessive, a NULL might be good for a reset though",
+      "parentUuid": "AAAAdn//kZs\u003d",
+      "revId": "a9cf31913cc2e3eca5054544910b56608df72c8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
