@@ -38,7 +38,7 @@ typedef int (*WebPWorkerHook)(void*, void*);
 // Platform-dependent implementation details for the worker.
 typedef struct WebPWorkerImpl WebPWorkerImpl;
 
-// Synchronize object used to launch job in the worker thread
+// Synchronization object used to launch job in the worker thread
 typedef struct {
   WebPWorkerImpl* impl_;
   WebPWorkerStatus status_;
@@ -59,22 +59,22 @@ typedef struct {
   // Makes sure the previous work is finished. Returns true if worker->had_error
   // was not set and no error condition was triggered by the working thread.
   int (*Sync)(WebPWorker* const worker);
-  // Triggers the thread to call hook() with data1 and data2 argument. These
-  // hook/data1/data2 can be changed at any time before calling this function,
-  // but not be changed afterward until the next call to WebPWorkerSync().
+  // Triggers the thread to call hook() with data1 and data2 arguments. These
+  // hook/data1/data2 values can be changed at any time before calling this
+  // function, but not be changed afterward until the next call to Sync().
   void (*Launch)(WebPWorker* const worker);
-  // This function is similar to WebPWorkerLaunch() except that it calls the
+  // This function is similar to Launch() except that it calls the
   // hook directly instead of using a thread. Convenient to bypass the thread
-  // mechanism while still using the WebPWorker structs. WebPWorkerSync() must
+  // mechanism while still using the WebPWorker structs. Sync() must
   // still be called afterward (for error reporting).
   void (*Execute)(WebPWorker* const worker);
   // Kill the thread and terminate the object. To use the object again, one
-  // must call WebPWorkerReset() again.
+  // must call Reset() again.
   void (*End)(WebPWorker* const worker);
 } WebPWorkerInterface;
 
 // Install a new set of threading functions, overriding the defaults. This
-// should be done before any workers are started, i.e. before any encoding or
+// should be done before any workers are started, i.e., before any encoding or
 // decoding takes place. The contents of the interface struct are copied, it
 // is safe to free the corresponding memory after this call. This function is
 // not thread-safe.
