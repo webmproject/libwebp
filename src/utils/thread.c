@@ -290,14 +290,14 @@ static WebPWorkerInterface g_worker_interface = {
   Init, Reset, Sync, Launch, Execute, End
 };
 
-int WebPSetWorkerInterface(const WebPWorkerInterface* const interface) {
-  if (interface == NULL ||
-      interface->Init == NULL || interface->Reset == NULL ||
-      interface->Sync == NULL || interface->Launch == NULL ||
-      interface->Execute == NULL || interface->End == NULL) {
+int WebPSetWorkerInterface(const WebPWorkerInterface* const winterface) {
+  if (winterface == NULL ||
+      winterface->Init == NULL || winterface->Reset == NULL ||
+      winterface->Sync == NULL || winterface->Launch == NULL ||
+      winterface->Execute == NULL || winterface->End == NULL) {
     return 0;
   }
-  g_worker_interface = *interface;
+  g_worker_interface = *winterface;
   return 1;
 }
 
