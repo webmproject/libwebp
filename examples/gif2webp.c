@@ -495,11 +495,12 @@ int main(int argc, const char *argv[]) {
           }
           case APPLICATION_EXT_FUNC_CODE: {
             if (data[0] != 11) break;    // Chunk is too short
-            if (!memcmp(data + 1, "NETSCAPE2.0", 11)) {
+            if (!memcmp(data + 1, "NETSCAPE2.0", 11) ||
+                !memcmp(data + 1, "ANIMEXTS1.0", 11)) {
               // Recognize and parse Netscape2.0 NAB extension for loop count.
               if (DGifGetExtensionNext(gif, &data) == GIF_ERROR) goto End;
               if (data == NULL) goto End;  // Loop count sub-block missing.
-              if (data[0] != 3 && data[1] != 1) break;   // wrong size/marker
+              if (data[0] < 3 || data[1] != 1) break;   // wrong size/marker
               anim.loop_count = data[2] | (data[3] << 8);
               if (verbose) fprintf(stderr, "Loop count: %d\n", anim.loop_count);
             } else {  // An extension containing metadata.
