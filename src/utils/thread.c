@@ -290,9 +290,15 @@ static WebPWorkerInterface g_worker_interface = {
   Init, Reset, Sync, Launch, Execute, End
 };
 
-void WebPSetWorkerInterface(const WebPWorkerInterface* const interface) {
-  assert(interface != NULL);
+int WebPSetWorkerInterface(const WebPWorkerInterface* const interface) {
+  if (interface == NULL ||
+      interface->Init == NULL || interface->Reset == NULL ||
+      interface->Sync == NULL || interface->Launch == NULL ||
+      interface->Execute == NULL || interface->End == NULL) {
+    return 0;
+  }
   g_worker_interface = *interface;
+  return 1;
 }
 
 const WebPWorkerInterface* WebPGetWorkerInterface(void) {
@@ -300,4 +306,3 @@ const WebPWorkerInterface* WebPGetWorkerInterface(void) {
 }
 
 //------------------------------------------------------------------------------
-

@@ -77,8 +77,8 @@ typedef struct {
 // should be done before any workers are started, i.e., before any encoding or
 // decoding takes place. The contents of the interface struct are copied, it
 // is safe to free the corresponding memory after this call. This function is
-// not thread-safe.
-WEBP_EXTERN(void) WebPSetWorkerInterface(
+// not thread-safe. Return false in case of invalid pointer or methods.
+WEBP_EXTERN(int) WebPSetWorkerInterface(
     const WebPWorkerInterface* const interface);
 
 // Retrieve the currently set thread worker interface.
