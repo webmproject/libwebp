@@ -103,12 +103,12 @@ static void Remap(const uint8_t* const src, const GifFileType* const gif,
 static int ReadFrame(GifFileType* const gif, WebPFrameRect* const gif_rect,
                      WebPPicture* const webp_frame) {
   WebPPicture sub_image;
-  const GifImageDesc image_desc = gif->Image;
+  const GifImageDesc* const image_desc = &gif->Image;
   uint32_t* dst = NULL;
   uint8_t* tmp = NULL;
   int ok = 0;
   WebPFrameRect rect = {
-      image_desc.Left, image_desc.Top, image_desc.Width, image_desc.Height
+      image_desc->Left, image_desc->Top, image_desc->Width, image_desc->Height
   };
   *gif_rect = rect;
 
@@ -124,7 +124,7 @@ static int ReadFrame(GifFileType* const gif, WebPFrameRect* const gif_rect,
   tmp = (uint8_t*)malloc(rect.width * sizeof(*tmp));
   if (tmp == NULL) goto End;
 
-  if (image_desc.Interlace) {  // Interlaced image.
+  if (image_desc->Interlace) {  // Interlaced image.
     // We need 4 passes, with the following offsets and jumps.
     const int interlace_offsets[] = { 0, 4, 2, 1 };
     const int interlace_jumps[]   = { 8, 8, 4, 2 };
@@ -404,16 +404,6 @@ int main(int argc, const char *argv[]) {
 #endif
   if (gif == NULL) goto End;
 
-  // Allocate current buffer
-  frame.width = gif->SWidth;
-  frame.height = gif->SHeight;
-  frame.use_argb = 1;
-  if (!WebPPictureAlloc(&frame)) goto End;
-
-  // Initialize cache
-  cache = WebPFrameCacheNew(frame.width, frame.height, kmin, kmax, allow_mixed);
-  if (cache == NULL) goto End;
-
   mux = WebPMuxNew();
   if (mux == NULL) {
     fprintf(stderr, "ERROR: could not create a mux object.\n");
@@ -429,8 +419,47 @@ int main(int argc, const char *argv[]) {
     switch (type) {
       case IMAGE_DESC_RECORD_TYPE: {
         WebPFrameRect gif_rect;
+        GifImageDesc* const image_desc = &gif->Image;
 
         if (!DGifGetImageDesc(gif)) goto End;
+
+        // Fix some broken GIF global headers that report
+        // 0 x 0 screen dimension.
+        if (is_first_frame) {
+          if (verbose) {
+            printf("Canvas screen: %d x %d\n", gif->SWidth, gif->SHeight);
+          }
+          if (gif->SWidth == 0 || gif->SHeight == 0) {
+            image_desc->Left = 0;
+            image_desc->Top = 0;
+            gif->SWidth = image_desc->Width;
+            gif->SHeight = image_desc->Height;
+            if (gif->SWidth <= 0 || gif->SHeight <= 0) {
+              goto End;
+            }
+            if (verbose) {
+              printf("Fixed canvas screen dimension to: %d x %d\n",
+                     gif->SWidth, gif->SHeight);
+            }
+          }
+          // Allocate current buffer
+          frame.width = gif->SWidth;
+          frame.height = gif->SHeight;
+          frame.use_argb = 1;
+          if (!WebPPictureAlloc(&frame)) goto End;
+          WebPUtilClearPic(&frame, NULL);
+
+          // Initialize cache
+          cache = WebPFrameCacheNew(frame.width, frame.height,
+                                    kmin, kmax, allow_mixed);
+          if (cache == NULL) goto End;
+        }
+        // Some even more broken GIF can have sub-rect with zero width/height.
+        if (image_desc->Width == 0 || image_desc->Height == 0) {
+          image_desc->Width = gif->SWidth;
+          image_desc->Height = gif->SHeight;
+        }
+
         if (!ReadFrame(gif, &gif_rect, &frame)) {
           goto End;
         }
@@ -486,7 +515,6 @@ int main(int argc, const char *argv[]) {
                 fprintf(stderr, "GIF decode warning: invalid background color "
                                 "index. Assuming white background.\n");
               }
-              WebPUtilClearPic(&frame, NULL);
             }
             break;
           }
@@ -501,7 +529,9 @@ int main(int argc, const char *argv[]) {
               if (data == NULL) goto End;  // Loop count sub-block missing.
               if (data[0] != 3 && data[1] != 1) break;   // wrong size/marker
               anim.loop_count = data[2] | (data[3] << 8);
-              if (verbose) fprintf(stderr, "Loop count: %d\n", anim.loop_count);
+              if (verbose) {
+                fprintf(stderr, "Loop count: %d\n", anim.loop_count);
+              }
             } else {  // An extension containing metadata.
               // We only store the first encountered chunk of each type, and
               // only if requested by the user.
