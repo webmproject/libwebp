@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//jRU\u003d",
+        "filename": "src/utils/bit_reader_inl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-06-25T06:25:53Z",
+      "side": 1,
+      "message": "good point, done and renamed to something a bit more apt",
+      "parentUuid": "AAAAdn//jRo\u003d",
+      "revId": "f7358ed2a56d2115398491a11ced490e2e909ea6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//jRk\u003d",
         "filename": "src/utils/bit_reader_inl.h",
         "patchSetId": 1
