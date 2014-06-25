@@ -41,6 +41,12 @@ typedef uint8_t lbit_t;
 #define __BIG_ENDIAN__
 #endif
 
+// gcc 4.3 has builtin functions for swap32/swap64
+#if defined(__GNUC__) && \
+           (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))
+#define HAVE_BUILTIN_BSWAP
+#endif
+
 extern const uint8_t kVP8Log2Range[128];
 extern const range_t kVP8NewRange[128];
 
@@ -77,9 +83,7 @@ static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
     br->buf_ += BITS >> 3;
 #if !defined(__BIG_ENDIAN__)
 #if (BITS > 32)
-// gcc 4.3 has builtin functions for swap32/swap64
-#if defined(__GNUC__) && \
-           (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))
+#if defined(HAVE_BUILTIN_BSWAP)
     bits = (bit_t)__builtin_bswap64(in_bits);
 #elif defined(_MSC_VER)
     bits = (bit_t)_byteswap_uint64(in_bits);
@@ -96,7 +100,9 @@ static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
 #endif
     bits >>= 64 - BITS;
 #elif (BITS >= 24)
-#if defined(__i386__) || defined(__x86_64__)
+#if defined(HAVE_BUILTIN_BSWAP)
+    bits = (bit_t)__builtin_bswap32(in_bits);
+#elif defined(__i386__) || defined(__x86_64__)
     {
       lbit_t swapped_in_bits;
       __asm__ volatile("bswap %k0" : "=r"(swapped_in_bits) : "0"(in_bits));
@@ -114,7 +120,7 @@ static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
     bits = (bit_t)(in_bits >> 8) | ((in_bits & 0xff) << 8);
 #else   // BITS == 8
     bits = (bit_t)in_bits;
-#endif
+#endif  // BITS > 32
 #else    // BIG_ENDIAN
     bits = (bit_t)in_bits;
     if (BITS != 8 * sizeof(bit_t)) bits >>= (8 * sizeof(bit_t) - BITS);
