@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//jRo\u003d",
+        "filename": "src/utils/bit_reader_inl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-25T06:17:51Z",
+      "side": 1,
+      "message": "you could move this generic block 80-83 elsewhere in a prominent place where we can later pick it up and move to endian.h",
+      "revId": "f7358ed2a56d2115398491a11ced490e2e909ea6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//jRk\u003d",
+        "filename": "src/utils/bit_reader_inl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-06-25T06:17:51Z",
+      "side": 1,
+      "message": "...this wouldn\u0027t be needed then.",
+      "revId": "f7358ed2a56d2115398491a11ced490e2e909ea6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
