@@ -16,6 +16,24 @@
       "revId": "48216f49154a53b137ca6db23753b9c981a78108",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//jSE\u003d",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-06-25T06:05:58Z",
+      "side": 1,
+      "message": "https://gerrit.chromium.org/gerrit/#/c/70627/",
+      "parentUuid": "AAAAdn//qF8\u003d",
+      "revId": "48216f49154a53b137ca6db23753b9c981a78108",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
