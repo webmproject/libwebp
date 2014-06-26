@@ -805,9 +805,7 @@ static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
 // Quantization
 //
 
-#define QFIX2 0
 static WEBP_INLINE int DoQuantizeBlock(int16_t in[16], int16_t out[16],
-                                       int shift,
                                        const uint16_t* const sharpen,
                                        const VP8Matrix* const mtx) {
   const __m128i max_coeff_2047 = _mm_set1_epi16(MAX_LEVEL);
@@ -844,7 +842,7 @@ static WEBP_INLINE int DoQuantizeBlock(int16_t in[16], int16_t out[16],
     coeff8 = _mm_add_epi16(coeff8, sharpen8);
   }
 
-  // out = (coeff * iQ + B) >> (QFIX + QFIX2 - shift)
+  // out = (coeff * iQ + B) >> QFIX
   {
     // doing calculations with 32b precision (QFIX=17)
     // out = (coeff * iQ)
@@ -865,11 +863,11 @@ static WEBP_INLINE int DoQuantizeBlock(int16_t in[16], int16_t out[16],
     out_04 = _mm_add_epi32(out_04, bias_04);
     out_08 = _mm_add_epi32(out_08, bias_08);
     out_12 = _mm_add_epi32(out_12, bias_12);
-    // out = QUANTDIV(coeff, iQ, B, QFIX + QFIX2 - shift)
-    out_00 = _mm_srai_epi32(out_00, QFIX + QFIX2 - shift);
-    out_04 = _mm_srai_epi32(out_04, QFIX + QFIX2 - shift);
-    out_08 = _mm_srai_epi32(out_08, QFIX + QFIX2 - shift);
-    out_12 = _mm_srai_epi32(out_12, QFIX + QFIX2 - shift);
+    // out = QUANTDIV(coeff, iQ, B, QFIX)
+    out_00 = _mm_srai_epi32(out_00, QFIX);
+    out_04 = _mm_srai_epi32(out_04, QFIX);
+    out_08 = _mm_srai_epi32(out_08, QFIX);
+    out_12 = _mm_srai_epi32(out_12, QFIX);
 
     // pack result as 16b
     out0 = _mm_packs_epi32(out_00, out_04);
@@ -923,12 +921,12 @@ static WEBP_INLINE int DoQuantizeBlock(int16_t in[16], int16_t out[16],
 
 static int QuantizeBlock(int16_t in[16], int16_t out[16],
                          const VP8Matrix* const mtx) {
-  return DoQuantizeBlock(in, out, 0, &mtx->sharpen_[0], mtx);
+  return DoQuantizeBlock(in, out, &mtx->sharpen_[0], mtx);
 }
 
 static int QuantizeBlockWHT(int16_t in[16], int16_t out[16],
                             const VP8Matrix* const mtx) {
-  return DoQuantizeBlock(in, out, 0, &mtx->sharpen_[0], mtx);
+  return DoQuantizeBlock(in, out, NULL, mtx);
 }
 
 // Forward declaration.
