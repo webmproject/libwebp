@@ -70,7 +70,7 @@ static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
     const lbit_t in_bits = *(const lbit_t*)br->buf_;
 #endif
     br->buf_ += BITS >> 3;
-#if !defined(__BIG_ENDIAN__)
+#if !defined(WORDS_BIGENDIAN)
 #if (BITS > 32)
     bits = BSwap64(in_bits);
     bits >>= 64 - BITS;
@@ -83,7 +83,7 @@ static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
 #else   // BITS == 8
     bits = (bit_t)in_bits;
 #endif  // BITS > 32
-#else    // BIG_ENDIAN
+#else    // WORDS_BIGENDIAN
     bits = (bit_t)in_bits;
     if (BITS != 8 * sizeof(bit_t)) bits >>= (8 * sizeof(bit_t) - BITS);
 #endif

@@ -15,6 +15,9 @@ AM_PROG_CC_C_O
 dnl === Enable less verbose output when building.
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+dnl == test endianness
+AC_C_BIGENDIAN
+
 dnl === SET_IF_UNSET(shell_var, value)
 dnl ===   Set the shell variable 'shell_var' to 'value' if it is unset.
 AC_DEFUN([SET_IF_UNSET], [test "${$1+set}" = "set" || $1=$2])

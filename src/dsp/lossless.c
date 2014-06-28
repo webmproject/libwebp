@@ -1360,7 +1360,7 @@ static void CopyOrSwap(const uint32_t* src, int num_pixels, uint8_t* dst,
     while (src < src_end) {
       const uint32_t argb = *src++;
 
-#if !defined(__BIG_ENDIAN__)
+#if !defined(WORDS_BIGENDIAN)
 #if !defined(WEBP_REFERENCE_IMPLEMENTATION)
       *(uint32_t*)dst = BSwap32(argb);
 #else  // WEBP_REFERENCE_IMPLEMENTATION
@@ -1369,7 +1369,7 @@ static void CopyOrSwap(const uint32_t* src, int num_pixels, uint8_t* dst,
       dst[2] = (argb >>  8) & 0xff;
       dst[3] = (argb >>  0) & 0xff;
 #endif
-#else  // __BIG_ENDIAN__
+#else  // WORDS_BIGENDIAN
       dst[0] = (argb >>  0) & 0xff;
       dst[1] = (argb >>  8) & 0xff;
       dst[2] = (argb >> 16) & 0xff;

@@ -97,7 +97,7 @@ int ReadTIFF(const char* const filename,
       pic->width = width;
       pic->height = height;
       // TIFF data is ABGR
-#ifdef __BIG_ENDIAN__
+#ifdef WORDS_BIGENDIAN
       TIFFSwabArrayOfLong(raster, width * height);
 #endif
       pic->use_argb = 1;

@@ -12,12 +12,17 @@
 #ifndef WEBP_UTILS_ENDIAN_INL_H_
 #define WEBP_UTILS_ENDIAN_INL_H_
 
+#ifdef HAVE_CONFIG_H
+#include "../webp/config.h"
+#endif
+
 #include "../webp/types.h"
 
 // some endian fix (e.g.: mips-gcc doesn't define __BIG_ENDIAN__)
-#if !defined(__BIG_ENDIAN__) && defined(__BYTE_ORDER__) && \
-    (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
-#define __BIG_ENDIAN__
+#if !defined(WORDS_BIGENDIAN) && \
+    (defined(__BIG_ENDIAN__) || \
+     (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)))
+#define WORDS_BIGENDIAN
 #endif
 
 //  endian-specific htoleXX() definition
