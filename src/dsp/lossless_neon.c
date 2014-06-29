@@ -96,11 +96,12 @@ static void ConvertBGRAToBGR(const uint32_t* src,
   const uint8x8_t shuffle1 = vld1_u8(kBGRShuffle[1]);
   const uint8x8_t shuffle2 = vld1_u8(kBGRShuffle[2]);
   for (; src < end; src += 8) {
-    const uint8x8x4_t pixels = {{
-        vld1_u8((const uint8_t*)(src + 0)),
-        vld1_u8((const uint8_t*)(src + 2)),
-        vld1_u8((const uint8_t*)(src + 4)),
-        vld1_u8((const uint8_t*)(src + 6)) }};
+    uint8x8x4_t pixels;
+    INIT_VECTOR4(pixels,
+                 vld1_u8((const uint8_t*)(src + 0)),
+                 vld1_u8((const uint8_t*)(src + 2)),
+                 vld1_u8((const uint8_t*)(src + 4)),
+                 vld1_u8((const uint8_t*)(src + 6)));
     vst1_u8(dst +  0, vtbl4_u8(pixels, shuffle0));
     vst1_u8(dst +  8, vtbl4_u8(pixels, shuffle1));
     vst1_u8(dst + 16, vtbl4_u8(pixels, shuffle2));
@@ -122,11 +123,12 @@ static void ConvertBGRAToRGB(const uint32_t* src,
   const uint8x8_t shuffle1 = vld1_u8(kRGBShuffle[1]);
   const uint8x8_t shuffle2 = vld1_u8(kRGBShuffle[2]);
   for (; src < end; src += 8) {
-    const uint8x8x4_t pixels = {{
-        vld1_u8((const uint8_t*)(src + 0)),
-        vld1_u8((const uint8_t*)(src + 2)),
-        vld1_u8((const uint8_t*)(src + 4)),
-        vld1_u8((const uint8_t*)(src + 6)) }};
+    uint8x8x4_t pixels;
+    INIT_VECTOR4(pixels,
+                 vld1_u8((const uint8_t*)(src + 0)),
+                 vld1_u8((const uint8_t*)(src + 2)),
+                 vld1_u8((const uint8_t*)(src + 4)),
+                 vld1_u8((const uint8_t*)(src + 6)));
     vst1_u8(dst +  0, vtbl4_u8(pixels, shuffle0));
     vst1_u8(dst +  8, vtbl4_u8(pixels, shuffle1));
     vst1_u8(dst + 16, vtbl4_u8(pixels, shuffle2));

@@ -479,9 +479,11 @@ static void FTransform(const uint8_t* src, const uint8_t* ref,
 } while (0)
 
 static void FTransformWHT(const int16_t* src, int16_t* out) {
-  int32x4x4_t tmp0;
   const int stride = 16;
-  int16x4x4_t in = {{{0}, {0}, {0}, {0}}};
+  const int16x4_t zero = vdup_n_s16(0);
+  int32x4x4_t tmp0;
+  int16x4x4_t in;
+  INIT_VECTOR4(in, zero, zero, zero, zero);
   LOAD_LANE_16b(in.val[0], 0);
   LOAD_LANE_16b(in.val[1], 0);
   LOAD_LANE_16b(in.val[2], 0);
@@ -1010,11 +1012,12 @@ static int QuantizeBlock(int16_t in[16], int16_t out[16],
                          const VP8Matrix* const mtx) {
   const int16x8_t out0 = Quantize(in, mtx, 0);
   const int16x8_t out1 = Quantize(in, mtx, 8);
-  const uint8x8x4_t all_out = {{
-      vreinterpret_u8_s16(vget_low_s16(out0)),
-      vreinterpret_u8_s16(vget_high_s16(out0)),
-      vreinterpret_u8_s16(vget_low_s16(out1)),
-      vreinterpret_u8_s16(vget_high_s16(out1)) }};
+  uint8x8x4_t all_out;
+  INIT_VECTOR4(all_out,
+               vreinterpret_u8_s16(vget_low_s16(out0)),
+               vreinterpret_u8_s16(vget_high_s16(out0)),
+               vreinterpret_u8_s16(vget_low_s16(out1)),
+               vreinterpret_u8_s16(vget_high_s16(out1)));
   // Zigzag reordering
   vst1_u8((uint8_t*)(out +  0), vtbl4_u8(all_out, vld1_u8(kShuffles[0])));
   vst1_u8((uint8_t*)(out +  4), vtbl4_u8(all_out, vld1_u8(kShuffles[1])));

@@ -106,12 +106,14 @@ static const int16_t kCoeffs[4] = { kYScale, kVToR, kUToG, kVToG };
 } while (0)
 
 #define STORE_Rgba(out, r, g, b) do {                                   \
-  const uint8x8x4_t r_g_b_v255 = {{ r, g, b, v255 }};                   \
+  uint8x8x4_t r_g_b_v255;                                               \
+  INIT_VECTOR4(r_g_b_v255, r, g, b, v255);                              \
   vst4_u8(out, r_g_b_v255);                                             \
 } while (0)
 
 #define STORE_Bgra(out, r, g, b) do {                                   \
-  const uint8x8x4_t b_g_r_v255 = {{ b, g, r, v255 }};                   \
+  uint8x8x4_t b_g_r_v255;                                               \
+  INIT_VECTOR4(b_g_r_v255, b, g, r, v255);                              \
   vst4_u8(out, b_g_r_v255);                                             \
 } while (0)
 
