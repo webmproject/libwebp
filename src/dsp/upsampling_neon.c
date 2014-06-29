@@ -94,12 +94,14 @@ static const int16_t kCoeffs[4] = { kYScale, kVToR, kUToG, kVToG };
 #define v255 vmov_n_u8(255)
 
 #define STORE_Rgb(out, r, g, b) do {                                    \
-  const uint8x8x3_t r_g_b = {{ r, g, b }};                              \
+  uint8x8x3_t r_g_b;                                                    \
+  INIT_VECTOR3(r_g_b, r, g, b);                                         \
   vst3_u8(out, r_g_b);                                                  \
 } while (0)
 
 #define STORE_Bgr(out, r, g, b) do {                                    \
-  const uint8x8x3_t b_g_r = {{ b, g, r }};                              \
+  uint8x8x3_t b_g_r;                                                    \
+  INIT_VECTOR3(b_g_r, b, g, r);                                         \
   vst3_u8(out, b_g_r);                                                  \
 } while (0)
 

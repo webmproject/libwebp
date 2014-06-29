@@ -27,6 +27,12 @@
   v.val[1] = b;                     \
 } while (0)
 
+#define INIT_VECTOR3(v, a, b, c) do {  \
+  v.val[0] = a;                        \
+  v.val[1] = b;                        \
+  v.val[2] = c;                        \
+} while (0)
+
 // if using intrinsics, this flag avoids some functions that make gcc-4.6.3
 // crash ("internal compiler error: in immed_double_const, at emit-rtl.").
 // (probably similar to gcc.gnu.org/bugzilla/show_bug.cgi?id=48183)

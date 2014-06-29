@@ -327,12 +327,11 @@ static WEBP_INLINE void Store6x8x2(const uint8x16_t p2, const uint8x16_t p1,
                                    const uint8x16_t q1, const uint8x16_t q2,
                                    uint8_t* u, uint8_t* v,
                                    int stride) {
-  const uint8x8x3_t u0 = {{vget_low_u8(p2), vget_low_u8(p1), vget_low_u8(p0)}};
-  const uint8x8x3_t u1 = {{vget_low_u8(q0), vget_low_u8(q1), vget_low_u8(q2)}};
-  const uint8x8x3_t v0 =
-      {{vget_high_u8(p2), vget_high_u8(p1), vget_high_u8(p0)}};
-  const uint8x8x3_t v1 =
-      {{vget_high_u8(q0), vget_high_u8(q1), vget_high_u8(q2)}};
+  uint8x8x3_t u0, u1, v0, v1;
+  INIT_VECTOR3(u0, vget_low_u8(p2), vget_low_u8(p1), vget_low_u8(p0));
+  INIT_VECTOR3(u1, vget_low_u8(q0), vget_low_u8(q1), vget_low_u8(q2));
+  INIT_VECTOR3(v0, vget_high_u8(p2), vget_high_u8(p1), vget_high_u8(p0));
+  INIT_VECTOR3(v1, vget_high_u8(q0), vget_high_u8(q1), vget_high_u8(q2));
   STORE6_LANE(u, u0, u1, 0);
   STORE6_LANE(u, u0, u1, 1);
   STORE6_LANE(u, u0, u1, 2);
