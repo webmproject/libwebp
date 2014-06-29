@@ -1014,7 +1014,8 @@ static WEBP_INLINE void TransformPass(int16x8x2_t* const rows) {
 }
 
 static void TransformOne(const int16_t* in, uint8_t* dst) {
-  int16x8x2_t rows = {{ vld1q_s16(in + 0), vld1q_s16(in + 8) }};
+  int16x8x2_t rows;
+  INIT_VECTOR2(rows, vld1q_s16(in + 0), vld1q_s16(in + 8));
   TransformPass(&rows);
   TransformPass(&rows);
   Add4x4(rows.val[0], rows.val[1], dst);

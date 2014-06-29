@@ -19,6 +19,7 @@
 #include <assert.h>
 #include <arm_neon.h>
 #include <string.h>
+#include "./neon.h"
 #include "./yuv.h"
 
 #ifdef FANCY_UPSAMPLING
@@ -61,8 +62,9 @@
   d = vrhadd_u8(d, diag1);                                              \
                                                                         \
   {                                                                     \
-    const uint8x8x2_t a_b = {{ a, b }};                                 \
-    const uint8x8x2_t c_d = {{ c, d }};                                 \
+    uint8x8x2_t a_b, c_d;                                               \
+    INIT_VECTOR2(a_b, a, b);                                            \
+    INIT_VECTOR2(c_d, c, d);                                            \
     vst2_u8(out,      a_b);                                             \
     vst2_u8(out + 32, c_d);                                             \
   }                                                                     \
