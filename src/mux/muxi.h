@@ -65,7 +65,9 @@ struct WebPMux {
   WebPChunk*      anim_;
   WebPChunk*      vp8x_;
 
-  WebPChunk*  unknown_;
+  WebPChunk*      unknown_;
+  int             canvas_width_;
+  int             canvas_height_;
 };
 
 // CHUNK_INDEX enum: used for indexing within 'kChunks' (defined below) only.

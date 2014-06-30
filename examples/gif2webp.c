@@ -442,14 +442,21 @@ int main(int argc, const char *argv[]) {
                      gif->SWidth, gif->SHeight);
             }
           }
-          // Allocate current buffer
+          // Set definitive canvas size.
+          err = WebPMuxSetCanvasSize(mux, gif->SWidth, gif->SHeight);
+          if (err != WEBP_MUX_OK) {
+            fprintf(stderr, "Invalid canvas size %d x %d\n",
+                    gif->SWidth, gif->SHeight);
+            goto End;
+          }
+          // Allocate current buffer.
           frame.width = gif->SWidth;
           frame.height = gif->SHeight;
           frame.use_argb = 1;
           if (!WebPPictureAlloc(&frame)) goto End;
           WebPUtilClearPic(&frame, NULL);
 
-          // Initialize cache
+          // Initialize cache.
           cache = WebPFrameCacheNew(frame.width, frame.height,
                                     kmin, kmax, allow_mixed);
           if (cache == NULL) goto End;

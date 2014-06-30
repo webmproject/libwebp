@@ -20,8 +20,10 @@
 // Life of a mux object.
 
 static void MuxInit(WebPMux* const mux) {
-  if (mux == NULL) return;
+  assert(mux != NULL);
   memset(mux, 0, sizeof(*mux));
+  mux->canvas_width_ = 0;     // just to be explicit
+  mux->canvas_height_ = 0;
 }
 
 WebPMux* WebPNewInternal(int version) {
@@ -29,8 +31,7 @@ WebPMux* WebPNewInternal(int version) {
     return NULL;
   } else {
     WebPMux* const mux = (WebPMux*)WebPSafeMalloc(1ULL, sizeof(WebPMux));
-    // If mux is NULL MuxInit is a noop.
-    MuxInit(mux);
+    if (mux != NULL) MuxInit(mux);
     return mux;
   }
 }
@@ -43,7 +44,7 @@ static void DeleteAllImages(WebPMuxImage** const wpi_list) {
 }
 
 static void MuxRelease(WebPMux* const mux) {
-  if (mux == NULL) return;
+  assert(mux != NULL);
   DeleteAllImages(&mux->images_);
   ChunkListDelete(&mux->vp8x_);
   ChunkListDelete(&mux->iccp_);
@@ -54,9 +55,10 @@ static void MuxRelease(WebPMux* const mux) {
 }
 
 void WebPMuxDelete(WebPMux* mux) {
-  // If mux is NULL MuxRelease is a noop.
-  MuxRelease(mux);
-  WebPSafeFree(mux);
+  if (mux != NULL) {
+    MuxRelease(mux);
+    WebPSafeFree(mux);
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -360,6 +362,32 @@ WebPMuxError WebPMuxSetAnimationParams(WebPMux* mux,
   return MuxSet(mux, kChunks[IDX_ANIM].tag, 1, &anim, 1);
 }
 
+WebPMuxError WebPMuxSetCanvasSize(WebPMux* mux,
+                                  int width, int height) {
+  WebPMuxError err;
+  if (mux == NULL) {
+    return WEBP_MUX_INVALID_ARGUMENT;
+  }
+  if (width < 0 || height < 0 ||
+      width > MAX_CANVAS_SIZE || height > MAX_CANVAS_SIZE) {
+    return WEBP_MUX_INVALID_ARGUMENT;
+  }
+  if (width * (uint64_t)height >= MAX_IMAGE_AREA) {
+    return WEBP_MUX_INVALID_ARGUMENT;
+  }
+  if ((width * height) == 0 && (width | height) != 0) {
+    // one of width / height is zero, but not both -> invalid!
+    return WEBP_MUX_INVALID_ARGUMENT;
+  }
+  // If we already assembled a VP8X chunk, invalidate it.
+  err = MuxDeleteAllNamedData(mux, kChunks[IDX_VP8X].tag);
+  if (err != WEBP_MUX_OK && err != WEBP_MUX_NOT_FOUND) return err;
+
+  mux->canvas_width_ = width;
+  mux->canvas_height_ = height;
+  return WEBP_MUX_OK;
+}
+
 //------------------------------------------------------------------------------
 // Delete API(s).
 
@@ -413,9 +441,10 @@ static WebPMuxError GetImageInfo(const WebPMuxImage* const wpi,
   return WEBP_MUX_OK;
 }
 
-static WebPMuxError GetImageCanvasWidthHeight(
-    const WebPMux* const mux, uint32_t flags,
-    int* const width, int* const height) {
+// Returns the tightest dimension for the canvas considering the image list.
+static WebPMuxError GetAdjustedCanvasSize(const WebPMux* const mux,
+                                          uint32_t flags,
+                                          int* const width, int* const height) {
   WebPMuxImage* wpi = NULL;
   assert(mux != NULL);
   assert(width != NULL && height != NULL);
@@ -513,12 +542,7 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
     flags |= ALPHA_FLAG;  // Some images have an alpha channel.
   }
 
-  if (flags == 0) {
-    // For Simple Image, VP8X chunk should not be added.
-    return WEBP_MUX_OK;
-  }
-
-  err = GetImageCanvasWidthHeight(mux, flags, &width, &height);
+  err = GetAdjustedCanvasSize(mux, flags, &width, &height);
   if (err != WEBP_MUX_OK) return err;
 
   if (width <= 0 || height <= 0) {
@@ -526,6 +550,19 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   }
   if (width > MAX_CANVAS_SIZE || height > MAX_CANVAS_SIZE) {
     return WEBP_MUX_INVALID_ARGUMENT;
+  }
+
+  if (mux->canvas_width_ != 0 || mux->canvas_height_ != 0) {
+    if (width > mux->canvas_width_ || height > mux->canvas_height_) {
+      return WEBP_MUX_INVALID_ARGUMENT;
+    }
+    width = mux->canvas_width_;
+    height = mux->canvas_height_;
+  }
+
+  if (flags == 0) {
+    // For Simple Image, VP8X chunk should not be added.
+    return WEBP_MUX_OK;
   }
 
   if (MuxHasAlpha(images)) {
@@ -603,7 +640,13 @@ WebPMuxError WebPMuxAssemble(WebPMux* mux, WebPData* assembled_data) {
   uint8_t* dst = NULL;
   WebPMuxError err;
 
-  if (mux == NULL || assembled_data == NULL) {
+  if (assembled_data == NULL) {
+    return WEBP_MUX_INVALID_ARGUMENT;
+  }
+  // Clean up returned data, in case something goes wrong.
+  memset(assembled_data, 0, sizeof(*assembled_data));
+
+  if (mux == NULL) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
@@ -649,4 +692,3 @@ WebPMuxError WebPMuxAssemble(WebPMux* mux, WebPData* assembled_data) {
 }
 
 //------------------------------------------------------------------------------
-

@@ -55,7 +55,7 @@
 extern "C" {
 #endif
 
-#define WEBP_MUX_ABI_VERSION 0x0101        // MAJOR(8b) + MINOR(8b)
+#define WEBP_MUX_ABI_VERSION 0x0102        // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -105,6 +105,7 @@ WEBP_EXTERN(WebPMux*) WebPNewInternal(int);
 // Creates an empty mux object.
 // Returns:
 //   A pointer to the newly created empty mux object.
+//   Or NULL in case of memory error.
 static WEBP_INLINE WebPMux* WebPMuxNew(void) {
   return WebPNewInternal(WEBP_MUX_ABI_VERSION);
 }
@@ -309,6 +310,24 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetAnimationParams(
 //------------------------------------------------------------------------------
 // Misc Utilities.
 
+// Sets the canvas size for the mux object. The width and height can be
+// specified explicitly or left as zero (0, 0).
+// * When width and height are specified explicitly, then this frame bound is
+//   enforced during subsequent calls to WebPMuxAssemble() and an error is
+//   reported if any animated frame does not completely fit within the canvas.
+// * When unspecified (0, 0), the constructed canvas will get the frame bounds
+//   from the bounding-box over all frames after calling WebPMuxAssemble().
+// Parameters:
+//   mux - (in) object to which the canvas size is to be set
+//   width - (in) canvas width
+//   height - (in) canvas height
+// Returns:
+//   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL; or
+//                               width or height are invalid or out of bounds
+//   WEBP_MUX_OK - on success.
+WEBP_EXTERN(WebPMuxError) WebPMuxSetCanvasSize(WebPMux* mux,
+                                               int width, int height);
+
 // Gets the canvas size from the mux object.
 // Note: This method assumes that the VP8X chunk, if present, is up-to-date.
 // That is, the mux object hasn't been modified since the last call to
@@ -356,7 +375,8 @@ WEBP_EXTERN(WebPMuxError) WebPMuxNumChunks(const WebPMux* mux,
 // Note: The content of 'assembled_data' will be ignored and overwritten.
 // Also, the content of 'assembled_data' is allocated using malloc(), and NOT
 // owned by the 'mux' object. It MUST be deallocated by the caller by calling
-// WebPDataClear().
+// WebPDataClear(). It's always safe to call WebPDataClear() upon return,
+// even in case of error.
 // Parameters:
 //   mux - (in/out) object whose chunks are to be assembled
 //   assembled_data - (out) assembled WebP data
