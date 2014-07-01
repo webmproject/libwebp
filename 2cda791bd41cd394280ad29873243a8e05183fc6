@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//iAY\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-07-01T07:04:59Z",
+      "side": 1,
+      "message": "could be vdup_n_u8(0) for coherency with l89",
+      "revId": "2cda791bd41cd394280ad29873243a8e05183fc6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//iAU\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-07-01T07:04:59Z",
+      "side": 1,
+      "message": "could be merged with line 282?",
+      "revId": "2cda791bd41cd394280ad29873243a8e05183fc6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//iAQ\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 483,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-07-01T07:04:59Z",
+      "side": 1,
+      "message": "vdup_n_s16(0) ?",
+      "revId": "2cda791bd41cd394280ad29873243a8e05183fc6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
