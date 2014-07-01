@@ -91,7 +91,7 @@ static void Upsample16Pixels(const uint8_t *r1, const uint8_t *r2,
 
 static const int16_t kCoeffs[4] = { kYScale, kVToR, kUToG, kVToG };
 
-#define v255 vmov_n_u8(255)
+#define v255 vdup_n_u8(255)
 
 #define STORE_Rgb(out, r, g, b) do {                                    \
   uint8x8x3_t r_g_b;                                                    \
@@ -196,9 +196,9 @@ static void FUNC_NAME(const uint8_t *top_y, const uint8_t *bottom_y,    \
   const int v_diag = ((top_v[0] + cur_v[0]) >> 1) + 1;                  \
                                                                         \
   const int16x4_t cf16 = vld1_s16(kCoeffs);                             \
-  const int32x2_t cf32 = vmov_n_s32(kUToB);                             \
-  const uint8x8_t u16  = vmov_n_u8(16);                                 \
-  const uint8x8_t u128 = vmov_n_u8(128);                                \
+  const int32x2_t cf32 = vdup_n_s32(kUToB);                             \
+  const uint8x8_t u16  = vdup_n_u8(16);                                 \
+  const uint8x8_t u128 = vdup_n_u8(128);                                \
                                                                         \
   /* Treat the first pixel in regular way */                            \
   assert(top_y != NULL);                                                \
