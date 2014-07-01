@@ -657,8 +657,7 @@ static WEBP_INLINE int LinearToGamma(uint32_t base_value, int shift) {
 static void InitGammaTables(void) {}
 static WEBP_INLINE uint32_t GammaToLinear(uint8_t v) { return v; }
 static WEBP_INLINE int LinearToGamma(uint32_t base_value, int shift) {
-  (void)shift;
-  return v;
+  return (int)(base_value << shift);
 }
 
 #endif    // USE_GAMMA_COMPRESSION
