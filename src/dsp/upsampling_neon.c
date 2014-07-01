@@ -19,6 +19,7 @@
 #include <assert.h>
 #include <arm_neon.h>
 #include <string.h>
+#include "./neon.h"
 #include "./yuv.h"
 
 #ifdef FANCY_UPSAMPLING
@@ -61,8 +62,9 @@
   d = vrhadd_u8(d, diag1);                                              \
                                                                         \
   {                                                                     \
-    const uint8x8x2_t a_b = {{ a, b }};                                 \
-    const uint8x8x2_t c_d = {{ c, d }};                                 \
+    uint8x8x2_t a_b, c_d;                                               \
+    INIT_VECTOR2(a_b, a, b);                                            \
+    INIT_VECTOR2(c_d, c, d);                                            \
     vst2_u8(out,      a_b);                                             \
     vst2_u8(out + 32, c_d);                                             \
   }                                                                     \
@@ -92,22 +94,26 @@ static const int16_t kCoeffs[4] = { kYScale, kVToR, kUToG, kVToG };
 #define v255 vmov_n_u8(255)
 
 #define STORE_Rgb(out, r, g, b) do {                                    \
-  const uint8x8x3_t r_g_b = {{ r, g, b }};                              \
+  uint8x8x3_t r_g_b;                                                    \
+  INIT_VECTOR3(r_g_b, r, g, b);                                         \
   vst3_u8(out, r_g_b);                                                  \
 } while (0)
 
 #define STORE_Bgr(out, r, g, b) do {                                    \
-  const uint8x8x3_t b_g_r = {{ b, g, r }};                              \
+  uint8x8x3_t b_g_r;                                                    \
+  INIT_VECTOR3(b_g_r, b, g, r);                                         \
   vst3_u8(out, b_g_r);                                                  \
 } while (0)
 
 #define STORE_Rgba(out, r, g, b) do {                                   \
-  const uint8x8x4_t r_g_b_v255 = {{ r, g, b, v255 }};                   \
+  uint8x8x4_t r_g_b_v255;                                               \
+  INIT_VECTOR4(r_g_b_v255, r, g, b, v255);                              \
   vst4_u8(out, r_g_b_v255);                                             \
 } while (0)
 
 #define STORE_Bgra(out, r, g, b) do {                                   \
-  const uint8x8x4_t b_g_r_v255 = {{ b, g, r, v255 }};                   \
+  uint8x8x4_t b_g_r_v255;                                               \
+  INIT_VECTOR4(b_g_r_v255, b, g, r, v255);                              \
   vst4_u8(out, b_g_r_v255);                                             \
 } while (0)
 
