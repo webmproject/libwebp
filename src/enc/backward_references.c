@@ -265,10 +265,8 @@ static int HashChainFindCopy(const VP8LHashChain* const p,
     uint64_t val;
     uint32_t curr_length;
     uint32_t distance;
-    const uint64_t* const ptr1 =
-        (const uint64_t*)(argb + pos + best_length - 1);
-    const uint64_t* const ptr2 =
-        (const uint64_t*)(argb_start + best_length - 1);
+    const uint32_t* const ptr1 = (argb + pos + best_length - 1);
+    const uint32_t* const ptr2 = (argb_start + best_length - 1);
 
     if (iter_pos < 0) {
       if (iter_pos < iter_limit || best_val >= 0xff0000) {
@@ -279,7 +277,7 @@ static int HashChainFindCopy(const VP8LHashChain* const p,
 
     // Before 'expensive' linear match, check if the two arrays match at the
     // current best length index and also for the succeeding elements.
-    if (*ptr1 != *ptr2) continue;
+    if (ptr1[0] != ptr2[0] || ptr1[1] != ptr2[1]) continue;
 
     curr_length = FindMatchLength(argb + pos, argb_start, max_len);
     if (curr_length < best_length) continue;
