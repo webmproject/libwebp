@@ -2,6 +2,7 @@ AC_INIT([libwebp], [0.4.0],
         [http://code.google.com/p/webp/issues],,
         [http://developers.google.com/speed/webp])
 AC_CANONICAL_TARGET
+AC_PREREQ([2.60])
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 
 dnl === automake >= 1.12 requires this for 'unusual archivers' support.
