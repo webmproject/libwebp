@@ -166,10 +166,10 @@ static int IsKeyFrame(const WebPPicture* const curr,
 
   // If previous canvas (with previous frame disposed) is all transparent,
   // current frame is a key frame.
-  for (i = 0; i < prev->width; ++i) {
-    for (j = 0; j < prev->height; ++j) {
-      const uint32_t prev_alpha = (prev->argb[j * prev->argb_stride + i]) >> 24;
-      if (prev_alpha != 0) {
+  for (j = 0; j < prev->height; ++j) {
+    const uint32_t* const row = &prev->argb[j * prev->argb_stride];
+    for (i = 0; i < prev->width; ++i) {
+      if (row[i] & 0xff000000u) {   // has alpha?
         is_key_frame = 0;
         break;
       }
