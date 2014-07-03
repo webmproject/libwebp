@@ -33,6 +33,24 @@
       "revId": "4a517e99a3df4712414c8f9638595c6f17e8b29f",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//hVU\u003d",
+        "filename": "src/utils/endian_inl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-07-03T20:00:05Z",
+      "side": 1,
+      "message": "I\u0027ll update it, I was thinking s/config.h/autoconf/ + HToLExx() functions to avoid endian.h and the rest",
+      "parentUuid": "AAAAdn//hV8\u003d",
+      "revId": "4a517e99a3df4712414c8f9638595c6f17e8b29f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
