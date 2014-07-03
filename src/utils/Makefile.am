@@ -13,6 +13,7 @@ COMMON_SOURCES += bit_reader.h
 COMMON_SOURCES += bit_reader_inl.h
 COMMON_SOURCES += color_cache.c
 COMMON_SOURCES += color_cache.h
+COMMON_SOURCES += endian_inl.h
 COMMON_SOURCES += filters.c
 COMMON_SOURCES += filters.h
 COMMON_SOURCES += huffman.c

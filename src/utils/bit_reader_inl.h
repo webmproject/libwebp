@@ -17,6 +17,7 @@
 #define WEBP_UTILS_BIT_READER_INL_H_
 
 #include "./bit_reader.h"
+#include "./endian_inl.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,12 +34,6 @@ typedef uint32_t lbit_t;
 typedef uint16_t lbit_t;
 #else
 typedef uint8_t lbit_t;
-#endif
-
-// some endian fix (e.g.: mips-gcc doesn't define __BIG_ENDIAN__)
-#if !defined(__BIG_ENDIAN__) && defined(__BYTE_ORDER__) && \
-    (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
-#define __BIG_ENDIAN__
 #endif
 
 // gcc 4.3 has builtin functions for swap32/swap64

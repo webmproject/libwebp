@@ -246,10 +246,13 @@ all: ex $(EXTRA_EXAMPLES)
 
 $(EX_FORMAT_DEC_OBJS): %.o: %.h
 
-# special dependencies for tree.c/vp8.c/bit_reader.c <-> bit_reader_inl.h
-src/dec/tree.o: src/utils/bit_reader_inl.h
-src/dec/vp8.o: src/utils/bit_reader_inl.h
-src/utils/bit_reader.o: src/utils/bit_reader_inl.h
+# special dependencies:
+#   tree.c/vp8.c/bit_reader.c <-> bit_reader_inl.h, endian_inl.h
+#   bit_writer.c <-> endian_inl.h
+src/dec/tree.o: src/utils/bit_reader_inl.h src/utils/endian_inl.h
+src/dec/vp8.o: src/utils/bit_reader_inl.h src/utils/endian_inl.h
+src/utils/bit_reader.o: src/utils/bit_reader_inl.h src/utils/endian_inl.h
+src/utils/bit_writer.o: src/utils/endian_inl.h
 
 %.o: %.c $(HDRS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
