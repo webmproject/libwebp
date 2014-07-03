@@ -72,21 +72,7 @@ static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
     br->buf_ += BITS >> 3;
 #if !defined(__BIG_ENDIAN__)
 #if (BITS > 32)
-#if defined(HAVE_BUILTIN_BSWAP)
-    bits = (bit_t)__builtin_bswap64(in_bits);
-#elif defined(_MSC_VER)
-    bits = (bit_t)_byteswap_uint64(in_bits);
-#elif defined(__x86_64__)
-    __asm__ volatile("bswapq %0" : "=r"(bits) : "0"(in_bits));
-#else  // generic code for swapping 64-bit values (suggested by bdb@)
-    bits = (bit_t)in_bits;
-    bits = ((bits & 0xffffffff00000000ull) >> 32) |
-           ((bits & 0x00000000ffffffffull) << 32);
-    bits = ((bits & 0xffff0000ffff0000ull) >> 16) |
-           ((bits & 0x0000ffff0000ffffull) << 16);
-    bits = ((bits & 0xff00ff00ff00ff00ull) >> 8) |
-           ((bits & 0x00ff00ff00ff00ffull) << 8);
-#endif
+    bits = BSwap64(in_bits);
     bits >>= 64 - BITS;
 #elif (BITS >= 24)
     bits = BSwap32(in_bits);
