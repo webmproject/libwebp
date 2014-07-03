@@ -17,8 +17,9 @@
 
 #include <math.h>
 #include <stdlib.h>
-#include "./lossless.h"
 #include "../dec/vp8li.h"
+#include "../utils/endian_inl.h"
+#include "./lossless.h"
 #include "./yuv.h"
 
 #define MAX_DIFF_COST (1e30f)
@@ -1357,22 +1358,11 @@ static void CopyOrSwap(const uint32_t* src, int num_pixels, uint8_t* dst,
   if (is_big_endian() == swap_on_big_endian) {
     const uint32_t* const src_end = src + num_pixels;
     while (src < src_end) {
-      uint32_t argb = *src++;
+      const uint32_t argb = *src++;
 
 #if !defined(__BIG_ENDIAN__)
 #if !defined(WEBP_REFERENCE_IMPLEMENTATION)
-#if defined(__i386__) || defined(__x86_64__)
-      __asm__ volatile("bswap %0" : "=r"(argb) : "0"(argb));
-      *(uint32_t*)dst = argb;
-#elif defined(_MSC_VER)
-      argb = _byteswap_ulong(argb);
-      *(uint32_t*)dst = argb;
-#else
-      dst[0] = (argb >> 24) & 0xff;
-      dst[1] = (argb >> 16) & 0xff;
-      dst[2] = (argb >>  8) & 0xff;
-      dst[3] = (argb >>  0) & 0xff;
-#endif
+      *(uint32_t*)dst = BSwap32(argb);
 #else  // WEBP_REFERENCE_IMPLEMENTATION
       dst[0] = (argb >> 24) & 0xff;
       dst[1] = (argb >> 16) & 0xff;

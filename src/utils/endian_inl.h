@@ -12,6 +12,8 @@
 #ifndef WEBP_UTILS_ENDIAN_INL_H_
 #define WEBP_UTILS_ENDIAN_INL_H_
 
+#include "../webp/types.h"
+
 // some endian fix (e.g.: mips-gcc doesn't define __BIG_ENDIAN__)
 #if !defined(__BIG_ENDIAN__) && defined(__BYTE_ORDER__) && \
     (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
@@ -46,5 +48,26 @@
 #else     // pretty much all linux and/or glibc
 #include <endian.h>
 #endif
+
+// gcc 4.3 has builtin functions for swap32/swap64
+// TODO(jzern): this should have a corresponding autoconf check.
+#if defined(__GNUC__) && \
+           (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))
+#define HAVE_BUILTIN_BSWAP
+#endif
+
+static WEBP_INLINE uint32_t BSwap32(uint32_t x) {
+#if defined(HAVE_BUILTIN_BSWAP)
+  return __builtin_bswap32(x);
+#elif defined(__i386__) || defined(__x86_64__)
+  uint32_t swapped_bytes;
+  __asm__ volatile("bswap %0" : "=r"(swapped_bytes) : "0"(x));
+  return swapped_bytes;
+#elif defined(_MSC_VER)
+  return (uint32_t)_byteswap_ulong(x);
+#else
+  return (x >> 24) | ((x >> 8) & 0xff00) | ((x << 8) & 0xff0000) | (x << 24);
+#endif  // HAVE_BUILTIN_BSWAP
+}
 
 #endif  // WEBP_UTILS_ENDIAN_INL_H_
