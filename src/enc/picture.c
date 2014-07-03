@@ -26,7 +26,6 @@
 #define USE_GAMMA_COMPRESSION
 
 #define HALVE(x) (((x) + 1) >> 1)
-#define IS_YUV_CSP(csp, YUV_CSP) (((csp) & WEBP_CSP_UV_MASK) == (YUV_CSP))
 
 static const union {
   uint32_t argb;
@@ -54,29 +53,17 @@ int WebPPictureAlloc(WebPPicture* picture) {
       const int uv_width = HALVE(width);
       const int uv_height = HALVE(height);
       const int uv_stride = uv_width;
-      int uv0_stride = 0;
       int a_width, a_stride;
-      uint64_t y_size, uv_size, uv0_size, a_size, total_size;
+      uint64_t y_size, uv_size, a_size, total_size;
       uint8_t* mem;
 
       // U/V
       switch (uv_csp) {
         case WEBP_YUV420:
           break;
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-        case WEBP_YUV400:    // for now, we'll just reset the U/V samples
-          break;
-        case WEBP_YUV422:
-          uv0_stride = uv_width;
-          break;
-        case WEBP_YUV444:
-          uv0_stride = width;
-          break;
-#endif
         default:
           return 0;
       }
-      uv0_size = height * uv0_stride;
 
       // alpha
       a_width = has_alpha ? width : 0;
@@ -85,7 +72,7 @@ int WebPPictureAlloc(WebPPicture* picture) {
       uv_size = (uint64_t)uv_stride * uv_height;
       a_size =  (uint64_t)a_stride * height;
 
-      total_size = y_size + a_size + 2 * uv_size + 2 * uv0_size;
+      total_size = y_size + a_size + 2 * uv_size;
 
       // Security and validation checks
       if (width <= 0 || height <= 0 ||         // luma/alpha param error
@@ -102,7 +89,7 @@ int WebPPictureAlloc(WebPPicture* picture) {
       picture->y_stride  = y_stride;
       picture->uv_stride = uv_stride;
       picture->a_stride  = a_stride;
-      picture->uv0_stride = uv0_stride;
+
       // TODO(skal): we could align the y/u/v planes and adjust stride.
       picture->y = mem;
       mem += y_size;
@@ -112,15 +99,9 @@ int WebPPictureAlloc(WebPPicture* picture) {
       picture->v = mem;
       mem += uv_size;
 
-      if (a_size) {
+      if (a_size > 0) {
         picture->a = mem;
         mem += a_size;
-      }
-      if (uv0_size) {
-        picture->u0 = mem;
-        mem += uv0_size;
-        picture->v0 = mem;
-        mem += uv0_size;
       }
       (void)mem;  // makes the static analyzer happy
     } else {
@@ -154,10 +135,8 @@ static void PictureResetARGB(WebPPicture* const picture) {
 static void PictureResetYUVA(WebPPicture* const picture) {
   picture->memory_ = NULL;
   picture->y = picture->u = picture->v = picture->a = NULL;
-  picture->u0 = picture->v0 = NULL;
   picture->y_stride = picture->uv_stride = 0;
   picture->a_stride = 0;
-  picture->uv0_stride = 0;
 }
 
 // Grab the 'specs' (writer, *opaque, width, height...) from 'src' and copy them
@@ -214,11 +193,8 @@ static void CopyPlane(const uint8_t* src, int src_stride,
 static void SnapTopLeftPosition(const WebPPicture* const pic,
                                 int* const left, int* const top) {
   if (!pic->use_argb) {
-    const int is_yuv422 = IS_YUV_CSP(pic->colorspace, WEBP_YUV422);
-    if (IS_YUV_CSP(pic->colorspace, WEBP_YUV420) || is_yuv422) {
-      *left &= ~1;
-      if (!is_yuv422) *top &= ~1;
-    }
+    *left &= ~1;
+    *top &= ~1;
   }
 }
 
@@ -252,18 +228,6 @@ int WebPPictureCopy(const WebPPicture* src, WebPPicture* dst) {
       CopyPlane(src->a, src->a_stride,
                 dst->a, dst->a_stride, dst->width, dst->height);
     }
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-    if (dst->u0 != NULL)  {
-      int uv0_width = src->width;
-      if (IS_YUV_CSP(dst->colorspace, WEBP_YUV422)) {
-        uv0_width = HALVE(uv0_width);
-      }
-      CopyPlane(src->u0, src->uv0_stride,
-                dst->u0, dst->uv0_stride, uv0_width, dst->height);
-      CopyPlane(src->v0, src->uv0_stride,
-                dst->v0, dst->uv0_stride, uv0_width, dst->height);
-    }
-#endif
   } else {
     CopyPlane((const uint8_t*)src->argb, 4 * src->argb_stride,
               (uint8_t*)dst->argb, 4 * dst->argb_stride,
@@ -303,15 +267,6 @@ int WebPPictureView(const WebPPicture* src,
       dst->a = src->a + top * src->a_stride + left;
       dst->a_stride = src->a_stride;
     }
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-    if (src->u0 != NULL) {
-      const int left_pos =
-          IS_YUV_CSP(dst->colorspace, WEBP_YUV422) ? (left >> 1) : left;
-      dst->u0 = src->u0 + top * src->uv0_stride + left_pos;
-      dst->v0 = src->v0 + top * src->uv0_stride + left_pos;
-      dst->uv0_stride = src->uv0_stride;
-    }
-#endif
   } else {
     dst->argb = src->argb + top * src->argb_stride + left;
     dst->argb_stride = src->argb_stride;
@@ -349,20 +304,6 @@ int WebPPictureCrop(WebPPicture* pic,
       CopyPlane(pic->a + a_offset, pic->a_stride,
                 tmp.a, tmp.a_stride, width, height);
     }
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-    if (tmp.u0 != NULL) {
-      int w = width;
-      int left_pos = left;
-      if (IS_YUV_CSP(tmp.colorspace, WEBP_YUV422)) {
-        w = HALVE(w);
-        left_pos = HALVE(left_pos);
-      }
-      CopyPlane(pic->u0 + top * pic->uv0_stride + left_pos, pic->uv0_stride,
-                tmp.u0, tmp.uv0_stride, w, height);
-      CopyPlane(pic->v0 + top * pic->uv0_stride + left_pos, pic->uv0_stride,
-                tmp.v0, tmp.uv0_stride, w, height);
-    }
-#endif
   } else {
     const uint8_t* const src =
         (const uint8_t*)(pic->argb + top * pic->argb_stride + left);
@@ -465,18 +406,6 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
                  HALVE(prev_width), HALVE(prev_height), pic->uv_stride,
                  tmp.v,
                  HALVE(width), HALVE(height), tmp.uv_stride, work, 1);
-
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-    if (tmp.u0 != NULL) {
-      const int s = IS_YUV_CSP(tmp.colorspace, WEBP_YUV422) ? 2 : 1;
-      RescalePlane(
-          pic->u0, (prev_width + s / 2) / s, prev_height, pic->uv0_stride,
-          tmp.u0, (width + s / 2) / s, height, tmp.uv0_stride, work, 1);
-      RescalePlane(
-          pic->v0, (prev_width + s / 2) / s, prev_height, pic->uv0_stride,
-          tmp.v0, (width + s / 2) / s, height, tmp.uv0_stride, work, 1);
-    }
-#endif
   } else {
     work = (int32_t*)WebPSafeMalloc(2ULL * width * 4, sizeof(*work));
     if (work == NULL) {
@@ -687,26 +616,6 @@ static WEBP_INLINE int LinearToGamma(uint32_t base_value, int shift) {
   picture->v[dst] = RGBToV(r, g, b, &rg);                \
 }
 
-#define RGB_TO_UV0(x_in, x_out, y, SUM) {                \
-  const int src = (step * (x_in) + (y) * rgb_stride);    \
-  const int dst = (x_out) + (y) * picture->uv0_stride;   \
-  const int r = SUM(r_ptr + src);                        \
-  const int g = SUM(g_ptr + src);                        \
-  const int b = SUM(b_ptr + src);                        \
-  picture->u0[dst] = RGBToU(r, g, b, &rg);               \
-  picture->v0[dst] = RGBToV(r, g, b, &rg);               \
-}
-
-static void MakeGray(WebPPicture* const picture) {
-  int y;
-  const int uv_width = HALVE(picture->width);
-  const int uv_height = HALVE(picture->height);
-  for (y = 0; y < uv_height; ++y) {
-    memset(picture->u + y * picture->uv_stride, 128, uv_width);
-    memset(picture->v + y * picture->uv_stride, 128, uv_width);
-  }
-}
-
 static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
                               const uint8_t* const g_ptr,
                               const uint8_t* const b_ptr,
@@ -742,45 +651,21 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
   }
 
   // Downsample U/V plane
-  if (uv_csp != WEBP_YUV400) {
-    for (y = 0; y < (height >> 1); ++y) {
-      for (x = 0; x < (width >> 1); ++x) {
-        RGB_TO_UV(x, y, SUM4);
-      }
-      if (width & 1) {
-        RGB_TO_UV(x, y, SUM2V);
-      }
+  for (y = 0; y < (height >> 1); ++y) {
+    for (x = 0; x < (width >> 1); ++x) {
+      RGB_TO_UV(x, y, SUM4);
     }
-    if (height & 1) {
-      for (x = 0; x < (width >> 1); ++x) {
-        RGB_TO_UV(x, y, SUM2H);
-      }
-      if (width & 1) {
-        RGB_TO_UV(x, y, SUM1);
-      }
+    if (width & 1) {
+      RGB_TO_UV(x, y, SUM2V);
     }
-
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-    // Store original U/V samples too
-    if (uv_csp == WEBP_YUV422) {
-      for (y = 0; y < height; ++y) {
-        for (x = 0; x < (width >> 1); ++x) {
-          RGB_TO_UV0(2 * x, x, y, SUM2H);
-        }
-        if (width & 1) {
-          RGB_TO_UV0(2 * x, x, y, SUM1);
-        }
-      }
-    } else if (uv_csp == WEBP_YUV444) {
-      for (y = 0; y < height; ++y) {
-        for (x = 0; x < width; ++x) {
-          RGB_TO_UV0(x, x, y, SUM1);
-        }
-      }
+  }
+  if (height & 1) {
+    for (x = 0; x < (width >> 1); ++x) {
+      RGB_TO_UV(x, y, SUM2H);
     }
-#endif
-  } else {
-    MakeGray(picture);
+    if (width & 1) {
+      RGB_TO_UV(x, y, SUM1);
+    }
   }
 
   if (has_alpha) {

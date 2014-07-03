@@ -597,9 +597,6 @@ static void HelpLong(void) {
   printf("  -resize <w> <h> ........ resize picture (after any cropping)\n");
   printf("  -mt .................... use multi-threading if available\n");
   printf("  -low_memory ............ reduce memory usage (slower encoding)\n");
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  printf("  -444 / -422 / -gray .... change colorspace\n");
-#endif
   printf("  -map <int> ............. print map of extra info\n");
   printf("  -print_psnr ............ prints averaged PSNR distortion\n");
   printf("  -print_ssim ............ prints averaged SSIM distortion\n");
@@ -812,14 +809,6 @@ int main(int argc, const char *argv[]) {
       config.partition_limit = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-map") && c < argc - 1) {
       picture.extra_info_type = strtol(argv[++c], NULL, 0);
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-    } else if (!strcmp(argv[c], "-444")) {
-      picture.colorspace = WEBP_YUV444;
-    } else if (!strcmp(argv[c], "-422")) {
-      picture.colorspace = WEBP_YUV422;
-    } else if (!strcmp(argv[c], "-gray")) {
-      picture.colorspace = WEBP_YUV400;
-#endif
     } else if (!strcmp(argv[c], "-crop") && c < argc - 4) {
       crop = 1;
       crop_x = strtol(argv[++c], NULL, 0);

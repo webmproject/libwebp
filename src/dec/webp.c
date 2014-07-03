@@ -788,9 +788,9 @@ int WebPIoInitFromOptions(const WebPDecoderOptions* const options,
     h = options->crop_height;
     x = options->crop_left;
     y = options->crop_top;
-    if (!WebPIsRGBMode(src_colorspace)) {   // only snap for YUV420 or YUV422
+    if (!WebPIsRGBMode(src_colorspace)) {   // only snap for YUV420
       x &= ~1;
-      y &= ~1;    // TODO(later): only for YUV420, not YUV422.
+      y &= ~1;
     }
     if (x < 0 || y < 0 || w <= 0 || h <= 0 || x + w > W || y + h > H) {
       return 0;  // out of frame boundary error
