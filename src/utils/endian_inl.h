@@ -20,38 +20,17 @@
 
 // some endian fix (e.g.: mips-gcc doesn't define __BIG_ENDIAN__)
 #if !defined(WORDS_BIGENDIAN) && \
-    (defined(__BIG_ENDIAN__) || \
+    (defined(__BIG_ENDIAN__) || defined(_M_PPC) || \
      (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)))
 #define WORDS_BIGENDIAN
 #endif
 
-//  endian-specific htoleXX() definition
-// TODO(skal): add a test for htoleXX() in endian.h and others in autoconf or
-// remove it and replace with a generic implementation.
-#if defined(_WIN32)
-#if !defined(_M_PPC)
-#define htole32(x) (x)
-#define htole16(x) (x)
-#else     // PPC is BIG_ENDIAN
-#include <stdlib.h>
-#define htole32(x) (_byteswap_ulong((unsigned long)(x)))
-#define htole16(x) (_byteswap_ushort((unsigned short)(x)))
-#endif    // _M_PPC
-#elif defined(__OpenBSD__) || defined(__NetBSD__) || defined(__FreeBSD__) || \
-      defined(__DragonFly__)
-#include <sys/endian.h>
-#elif defined(__APPLE__)
-#include <libkern/OSByteOrder.h>
-#define htole32 OSSwapHostToLittleInt32
-#define htole16 OSSwapHostToLittleInt16
-#elif defined(__native_client__) && !defined(__GLIBC__)
-// NaCl without glibc is assumed to be little-endian
-#define htole32(x) (x)
-#define htole16(x) (x)
-#elif defined(__QNX__)
-#include <net/netbyte.h>
-#else     // pretty much all linux and/or glibc
-#include <endian.h>
+#if defined(WORDS_BIGENDIAN)
+#define HToLE32 BSwap32
+#define HToLE16 BSwap16
+#else
+#define HToLE32(x) (x)
+#define HToLE16(x) (x)
 #endif
 
 // gcc 4.3 has builtin functions for swap32/swap64

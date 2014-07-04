@@ -72,11 +72,11 @@ static WEBP_INLINE size_t VP8BitWriterSize(const VP8BitWriter* const bw) {
 #if defined(__x86_64__) || defined(_M_X64)   // 64bit
 typedef uint64_t vp8l_atype_t;   // accumulator type
 typedef uint32_t vp8l_wtype_t;   // writing type
-#define WSWAP htole32
+#define WSWAP HToLE32
 #else
 typedef uint32_t vp8l_atype_t;
 typedef uint16_t vp8l_wtype_t;
-#define WSWAP htole16
+#define WSWAP HToLE16
 #endif
 
 typedef struct {
