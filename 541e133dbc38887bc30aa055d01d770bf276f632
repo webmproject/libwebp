@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//hS8\u003d",
+        "filename": "src/webp/encode.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-07-04T02:05:10Z",
+      "side": 1,
+      "message": "it doesn\u0027t affect binary compatibility and they wouldn\u0027t work with a released copy so this should be ok to delete without deprecating first...",
+      "revId": "541e133dbc38887bc30aa055d01d770bf276f632",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
