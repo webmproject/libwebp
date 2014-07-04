@@ -34,6 +34,24 @@
       "revId": "368efc3a28bc7ca7ee85de2774d0820ef7cf4029",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//hPQ\u003d",
+        "filename": "src/utils/bit_reader.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-07-04T21:36:42Z",
+      "side": 1,
+      "message": "well, if it\u0027s only this file then yes it might seem overkill.\nAt your discretion...\n\n(VP8L_USE_UNALIGNED_LOAD seems ok)",
+      "parentUuid": "AAAAdn//hPY\u003d",
+      "revId": "368efc3a28bc7ca7ee85de2774d0820ef7cf4029",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
