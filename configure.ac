@@ -190,7 +190,7 @@ AS_IF([test "x$enable_gl" != "xno"], [
 
       # find libGL
       GL_SAVED_LIBS="$LIBS"
-      AC_SEARCH_LIBS([glBegin], [GL OpenGL])
+      AC_SEARCH_LIBS([glBegin], [GL OpenGL opengl32])
       LIBS="$GL_SAVED_LIBS"
 
       # A direct link to libGL may not be necessary on e.g., linux.
@@ -369,7 +369,8 @@ AC_ARG_ENABLE([wic],
                               @<:@default=auto@:>@]),,
               [enable_wic=yes])
 
-if test "$target_os" = "mingw32" -a "$enable_wic" = "yes"; then
+if test \( "$target_os" = "mingw32" -o "$target_os" = "mingw64" \) \
+        -a "$enable_wic" = "yes"; then
   AC_CHECK_HEADERS([wincodec.h shlwapi.h windows.h])
   if test "$ac_cv_header_wincodec_h" = "yes"; then
     AC_MSG_CHECKING(for Windows Imaging Component support)
