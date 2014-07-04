@@ -16,6 +16,24 @@
       "revId": "368efc3a28bc7ca7ee85de2774d0820ef7cf4029",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//hPY\u003d",
+        "filename": "src/utils/bit_reader.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-07-04T21:28:42Z",
+      "side": 1,
+      "message": "I thought about that, first I was going to shift it up in this file with W/LBITS. It seems specific to this bit reader, so bit_reader.h could work too.\n\n(VP8L)_USE_UNALIGNED_FILL/LOAD ?",
+      "parentUuid": "AAAAdn//hPg\u003d",
+      "revId": "368efc3a28bc7ca7ee85de2774d0820ef7cf4029",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
