@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//hPg\u003d",
+        "filename": "src/utils/bit_reader.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-07-04T21:20:21Z",
+      "side": 1,
+      "message": "this is a loooong list. Wonder if it could be\nfactorize into one #define in endian_inl.h",
+      "revId": "368efc3a28bc7ca7ee85de2774d0820ef7cf4029",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
