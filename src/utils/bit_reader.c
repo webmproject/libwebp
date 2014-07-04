@@ -11,6 +11,10 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#ifdef HAVE_CONFIG_H
+#include "../webp/config.h"
+#endif
+
 #include "./bit_reader_inl.h"
 
 //------------------------------------------------------------------------------
@@ -172,7 +176,11 @@ static void ShiftBytes(VP8LBitReader* const br) {
 
 void VP8LFillBitWindow(VP8LBitReader* const br) {
   if (br->bit_pos_ >= WBITS) {
-#if (defined(__x86_64__) || defined(_M_X64))
+    // TODO(jzern): 1) this might be of benefit in 32-bit builds too, along with
+    //                 reducing the load size.
+    //              2) given the fixed read size it may be possible to force
+    //                 alignment in this block.
+#if !defined(WEBP_FORCE_ALIGNED) && (defined(__x86_64__) || defined(_M_X64))
     if (br->pos_ + sizeof(br->val_) < br->len_) {
       br->val_ >>= WBITS;
       br->bit_pos_ -= WBITS;
