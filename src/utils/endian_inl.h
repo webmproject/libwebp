@@ -61,6 +61,15 @@
 #define HAVE_BUILTIN_BSWAP
 #endif
 
+static WEBP_INLINE uint16_t BSwap16(uint16_t x) {
+#if defined(_MSC_VER)
+  return _byteswap_ushort(x);
+#else
+  // gcc will recognize a 'rorw $8, ...' here:
+  return (x >> 8) | ((x & 0xff) << 8);
+#endif  // _MSC_VER
+}
+
 static WEBP_INLINE uint32_t BSwap32(uint32_t x) {
 #if defined(HAVE_BUILTIN_BSWAP)
   return __builtin_bswap32(x);

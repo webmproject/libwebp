@@ -89,8 +89,7 @@ static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
     bits = BSwap32(in_bits);
     bits >>= (32 - BITS);
 #elif (BITS == 16)
-    // gcc will recognize a 'rorw $8, ...' here:
-    bits = (bit_t)(in_bits >> 8) | ((in_bits & 0xff) << 8);
+    bits = BSwap16(in_bits);
 #else   // BITS == 8
     bits = (bit_t)in_bits;
 #endif  // BITS > 32
