@@ -16,6 +16,24 @@
       "revId": "541e133dbc38887bc30aa055d01d770bf276f632",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//hSo\u003d",
+        "filename": "src/webp/encode.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-07-04T05:27:52Z",
+      "side": 1,
+      "message": "indeed, removed.\n\nWe could remove the WEBP_CSP_ALPHA_BIT / WEBP_CSP_UV_MASK now that it\u0027s all simpler, but i\u0027ll do that separately...",
+      "parentUuid": "AAAAdn//hS8\u003d",
+      "revId": "541e133dbc38887bc30aa055d01d770bf276f632",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
