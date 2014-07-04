@@ -109,6 +109,13 @@ int32_t VP8GetSignedValue(VP8BitReader* const br, int bits) {
 #define WBITS 32      // Minimum number of bytes needed after VP8LFillBitWindow.
 #define LOG8_WBITS 4  // Number of bytes needed to store WBITS bits.
 
+#if !defined(WEBP_FORCE_ALIGNED) && \
+    (defined(__arm__) || defined(_M_ARM) || defined(__aarch64__) || \
+     defined(__i386__) || defined(_M_IX86) || \
+     defined(__x86_64__) || defined(_M_X64))
+#define VP8L_USE_UNALIGNED_LOAD
+#endif
+
 static const uint32_t kBitMask[VP8L_MAX_NUM_BIT_READ + 1] = {
   0,
   0x000001, 0x000003, 0x000007, 0x00000f,
@@ -176,17 +183,16 @@ static void ShiftBytes(VP8LBitReader* const br) {
 
 void VP8LFillBitWindow(VP8LBitReader* const br) {
   if (br->bit_pos_ >= WBITS) {
-    // TODO(jzern): 1) this might be of benefit in 32-bit builds too, along with
-    //                 reducing the load size.
-    //              2) given the fixed read size it may be possible to force
-    //                 alignment in this block.
-#if !defined(WEBP_FORCE_ALIGNED) && (defined(__x86_64__) || defined(_M_X64))
+    // TODO(jzern): given the fixed read size it may be possible to force
+    //              alignment in this block.
+#if defined(VP8L_USE_UNALIGNED_LOAD)
     if (br->pos_ + sizeof(br->val_) < br->len_) {
       br->val_ >>= WBITS;
       br->bit_pos_ -= WBITS;
       // The expression below needs a little-endian arch to work correctly.
       // This gives a large speedup for decoding speed.
-      br->val_ |= *(const vp8l_val_t*)(br->buf_ + br->pos_) << (LBITS - WBITS);
+      br->val_ |= (vp8l_val_t)*(const uint32_t*)(br->buf_ + br->pos_) <<
+                  (LBITS - WBITS);
       br->pos_ += LOG8_WBITS;
       return;
     }
