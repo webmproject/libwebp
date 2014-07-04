@@ -16,6 +16,14 @@
 #ifndef WEBP_UTILS_BIT_READER_INL_H_
 #define WEBP_UTILS_BIT_READER_INL_H_
 
+#ifdef HAVE_CONFIG_H
+#include "../webp/config.h"
+#endif
+
+#ifdef WEBP_FORCE_ALIGNED
+#include <string.h>  // memcpy
+#endif
+
 #include "./bit_reader.h"
 #include "./endian_inl.h"
 
@@ -52,7 +60,10 @@ static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
   if (br->buf_ + sizeof(lbit_t) <= br->buf_end_) {
     // convert memory type to register type (with some zero'ing!)
     bit_t bits;
-#if defined(__mips__)                          // MIPS
+#if defined(WEBP_FORCE_ALIGNED)
+    lbit_t in_bits;
+    memcpy(&in_bits, br->buf_, sizeof(in_bits));
+#elif defined(__mips__)                        // MIPS
     // This is needed because of un-aligned read.
     lbit_t in_bits;
     lbit_t* p_buf_ = (lbit_t*)br->buf_;

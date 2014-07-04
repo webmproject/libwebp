@@ -411,6 +411,19 @@ if test \( "$target_os" = "mingw32" -o "$target_os" = "mingw64" \) \
   fi
 fi
 
+dnl === If --enable-aligned is defined, define WEBP_FORCE_ALIGNED
+
+AC_MSG_CHECKING(if --enable-aligned option is specified)
+AC_ARG_ENABLE([aligned],
+              AS_HELP_STRING([--enable-aligned],
+                             [Force aligned memory operations in non-dsp code
+                              (may be slower)]))
+if test "$enable_aligned" = "yes"; then
+  AC_DEFINE(WEBP_FORCE_ALIGNED, [1],
+            [Define to 1 to force aligned memory operations])
+fi
+AC_MSG_RESULT(${enable_aligned-no})
+
 dnl === If --enable-swap-16bit-csp is defined, add -DWEBP_SWAP_16BIT_CSP
 
 USE_SWAP_16BIT_CSP=""
