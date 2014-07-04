@@ -112,6 +112,26 @@ AC_DEFUN([LIBCHECK_EPILOGUE],
           CPPFLAGS=$SAVED_CPPFLAGS
           LIBS=$SAVED_LIBS])
 
+dnl === Check for gcc builtins
+
+dnl === CHECK_FOR_BUILTIN([builtin], [param], [define])
+dnl ===   links a C AC_LANG_PROGRAM, with <builtin>(<param>)
+dnl ===   AC_DEFINE'ing <define> if successful.
+AC_DEFUN([CHECK_FOR_BUILTIN],
+         [AC_LANG_PUSH([C])
+          AC_MSG_CHECKING([for $1])
+          AC_LINK_IFELSE([AC_LANG_PROGRAM([], [$1($2)])],
+                         [AC_MSG_RESULT([yes])
+                          AC_DEFINE([$3], [1],
+                                    [Set to 1 if $1 is available])],
+                         [AC_MSG_RESULT([no])]),
+          AC_LANG_POP])
+
+dnl AC_CHECK_FUNC doesn't work with builtin's.
+CHECK_FOR_BUILTIN([__builtin_bswap16], [1u << 15], [HAVE_BUILTIN_BSWAP16])
+CHECK_FOR_BUILTIN([__builtin_bswap32], [1u << 31], [HAVE_BUILTIN_BSWAP32])
+CHECK_FOR_BUILTIN([__builtin_bswap64], [1ull << 63], [HAVE_BUILTIN_BSWAP64])
+
 dnl === Check for pthread support
 AC_ARG_ENABLE([threading],
               AS_HELP_STRING([--disable-threading],
