@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//hOY\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-07-05T04:52:17Z",
+      "side": 0,
+      "message": "figured this would break something...was setting up a nightly OSX/ios build when I noticed.",
+      "revId": "6422e683af68407b5989cefa6dd6828033b61ce2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
