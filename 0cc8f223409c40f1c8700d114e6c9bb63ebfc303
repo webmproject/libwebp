@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//hNs\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-07-05T19:39:39Z",
+      "side": 1,
+      "message": "FOR sounds good here; as for conflicts, with things coming from autoconf it should be low:\n\nhttp://www.gnu.org/software/autoconf/manual/autoconf.html#Macro-Names\n\nbasically:\n‘^AC_’ ‘^_AC_’ ‘ac_’ ‘^_AC[A-Z]’ ‘^conf’.\n(‘^_?\\(m4\\|AS\\)_’) ‘^_?A[HNUM]_’ \n\n^AX_/^ACX_ are used for extensions",
+      "parentUuid": "AAAAdn//hOM\u003d",
+      "revId": "0cc8f223409c40f1c8700d114e6c9bb63ebfc303",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//hOE\u003d",
         "filename": "src/utils/endian_inl.h",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2014-07-05T09:32:06Z",
       "side": 1,
       "message": "these seem generic good candidate for better exposure somewhere higher in the .h hierarchy (no rush, not in this patch though)",
+      "revId": "0cc8f223409c40f1c8700d114e6c9bb63ebfc303",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//hNo\u003d",
+        "filename": "src/utils/endian_inl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-07-05T19:39:39Z",
+      "side": 1,
+      "message": "I had the same thought, there\u0027s similar in neon.h; I didn\u0027t have a good header candidate in mind though",
+      "parentUuid": "AAAAdn//hOE\u003d",
       "revId": "0cc8f223409c40f1c8700d114e6c9bb63ebfc303",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
