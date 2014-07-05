@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "AAAAdn//hOM\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-07-05T09:32:06Z",
+      "side": 1,
+      "message": "what\u0027s the chance of name conflict with other (or future) macro?\nMaybe use less common \u0027CHECK_FOR_BUILTIN\u0027 or something?\n(just asking)",
+      "revId": "0cc8f223409c40f1c8700d114e6c9bb63ebfc303",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//hOE\u003d",
+        "filename": "src/utils/endian_inl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-07-05T09:32:06Z",
+      "side": 1,
+      "message": "these seem generic good candidate for better exposure somewhere higher in the .h hierarchy (no rush, not in this patch though)",
+      "revId": "0cc8f223409c40f1c8700d114e6c9bb63ebfc303",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//hOo\u003d",
         "filename": "src/utils/endian_inl.h",
         "patchSetId": 1
@@ -13,6 +47,24 @@
       "writtenOn": "2014-07-05T00:02:13Z",
       "side": 1,
       "message": "just a guess on clang 3.3, I didn\u0027t have anything older handy",
+      "revId": "0cc8f223409c40f1c8700d114e6c9bb63ebfc303",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//hOI\u003d",
+        "filename": "src/utils/endian_inl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-07-05T09:32:06Z",
+      "side": 1,
+      "message": "sgtm",
+      "parentUuid": "AAAAdn//hOo\u003d",
       "revId": "0cc8f223409c40f1c8700d114e6c9bb63ebfc303",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
