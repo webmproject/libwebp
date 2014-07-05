@@ -63,18 +63,33 @@ TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wunused])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wvla])
 AC_SUBST([AM_CFLAGS])
 
+dnl === Check for machine specific flags
 TEST_AND_ADD_CFLAGS([AVX2_FLAGS], [-mavx2])
-# Assume the presence of any flag is enough. This could be made more robust
-# with a header and/or compile check if needed.
 AS_IF([test -n "$AVX2_FLAGS"], [
-  AC_DEFINE(WEBP_HAVE_AVX2, [1],
-            [Set to 1 if AVX2 is supported])])
+  SAVED_CFLAGS=$CFLAGS
+  CFLAGS="$CFLAGS $AVX2_FLAGS"
+  AC_CHECK_HEADER([immintrin.h],
+                  [AC_DEFINE(WEBP_HAVE_AVX2, [1],
+                   [Set to 1 if AVX2 is supported])],
+                  [AVX2_FLAGS=""],
+                  dnl it's illegal to directly include avx2intrin.h, but it's
+                  dnl included conditionally in immintrin.h, tricky!
+                  [#ifndef __AVX2__
+                   #error avx2 is not enabled
+                   #endif
+                  ])
+  CFLAGS=$SAVED_CFLAGS])
 AC_SUBST([AVX2_FLAGS])
 
 TEST_AND_ADD_CFLAGS([SSE2_FLAGS], [-msse2])
 AS_IF([test -n "$SSE2_FLAGS"], [
-  AC_DEFINE(WEBP_HAVE_SSE2, [1],
-            [Set to 1 if SSE2 is supported])])
+  SAVED_CFLAGS=$CFLAGS
+  CFLAGS="$CFLAGS $SSE2_FLAGS"
+  AC_CHECK_HEADER([emmintrin.h],
+                  [AC_DEFINE(WEBP_HAVE_SSE2, [1],
+                   [Set to 1 if SSE2 is supported])],
+                  [SSE2_FLAGS=""])
+  CFLAGS=$SAVED_CFLAGS])
 AC_SUBST([SSE2_FLAGS])
 
 dnl === CLEAR_LIBVARS([var_pfx])
