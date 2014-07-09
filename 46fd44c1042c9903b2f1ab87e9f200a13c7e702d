@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//g+c\u003d",
+        "filename": "src/utils/thread.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-07-09T03:37:31Z",
+      "side": 1,
+      "message": "reminds me we only have non-threaded build testing by chance with the mingw builds -- they could support win32 threads, so we should have a non-thread build specifically and detect threads for those in autoconf if possible",
+      "revId": "46fd44c1042c9903b2f1ab87e9f200a13c7e702d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
