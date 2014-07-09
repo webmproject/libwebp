@@ -16,6 +16,24 @@
       "revId": "46fd44c1042c9903b2f1ab87e9f200a13c7e702d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//g9w\u003d",
+        "filename": "src/utils/thread.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-07-09T07:55:01Z",
+      "side": 1,
+      "message": "eventually, we should get rid of the WEBP_USE_THREAD if possible, and have instead a no-op default impl_. This would make things more coherent i guess.",
+      "parentUuid": "AAAAdn//g+c\u003d",
+      "revId": "46fd44c1042c9903b2f1ab87e9f200a13c7e702d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
