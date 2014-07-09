@@ -34,6 +34,24 @@
       "revId": "46fd44c1042c9903b2f1ab87e9f200a13c7e702d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//g6E\u003d",
+        "filename": "src/utils/thread.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-07-09T18:03:25Z",
+      "side": 1,
+      "message": "true that would limit the spread of this define. we\u0027d still need it in at least one location to protect the pthread calls, but that should be it.",
+      "parentUuid": "AAAAdn//g9w\u003d",
+      "revId": "46fd44c1042c9903b2f1ab87e9f200a13c7e702d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
