@@ -585,9 +585,9 @@ static WebPMuxError MuxCleanup(WebPMux* const mux) {
   int num_fragments;
   int num_anim_chunks;
 
-  // If we have an image with single fragment or frame, convert it to a
-  // non-animated non-fragmented image (to avoid writing FRGM/ANMF chunk
-  // unnecessarily).
+  // If we have an image with a single fragment or frame, and its rectangle
+  // covers the whole canvas, convert it to a non-animated non-fragmented image
+  // (to avoid writing FRGM/ANMF chunk unnecessarily).
   WebPMuxError err = WebPMuxNumChunks(mux, kChunks[IDX_ANMF].id, &num_frames);
   if (err != WEBP_MUX_OK) return err;
   err = WebPMuxNumChunks(mux, kChunks[IDX_FRGM].id, &num_fragments);
@@ -596,14 +596,18 @@ static WebPMuxError MuxCleanup(WebPMux* const mux) {
     WebPMuxImage* frame_frag;
     err = MuxImageGetNth((const WebPMuxImage**)&mux->images_, 1, &frame_frag);
     assert(err == WEBP_MUX_OK);  // We know that one frame/fragment does exist.
-    if (frame_frag->header_ != NULL) {
+    assert(frame_frag != NULL);
+    if (frame_frag->header_ != NULL &&
+        ((mux->canvas_width_ == 0 && mux->canvas_height_ == 0) ||
+         (frame_frag->width_ == mux->canvas_width_ &&
+          frame_frag->height_ == mux->canvas_height_))) {
       assert(frame_frag->header_->tag_ == kChunks[IDX_ANMF].tag ||
              frame_frag->header_->tag_ == kChunks[IDX_FRGM].tag);
       ChunkDelete(frame_frag->header_);  // Removes ANMF/FRGM chunk.
       frame_frag->header_ = NULL;
+      num_frames = 0;
+      num_fragments = 0;
     }
-    num_frames = 0;
-    num_fragments = 0;
   }
   // Remove ANIM chunk if this is a non-animated image.
   err = WebPMuxNumChunks(mux, kChunks[IDX_ANIM].id, &num_anim_chunks);
