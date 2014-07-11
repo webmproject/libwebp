@@ -1246,7 +1246,11 @@ static void TransformAC3(const int16_t* in, uint8_t* dst) {
   const int16x4_t d4 = vdup_n_s16(MUL(in[4], kC1_full));
   const int c1 = MUL(in[1], kC2_full);
   const int d1 = MUL(in[1], kC1_full);
-  const int16x4_t CD = { d1, c1, -c1, -d1 };
+  const uint64_t cd = (uint64_t)( d1 & 0xffff) <<  0 |
+                      (uint64_t)( c1 & 0xffff) << 16 |
+                      (uint64_t)(-c1 & 0xffff) << 32 |
+                      (uint64_t)(-d1 & 0xffff) << 48;
+  const int16x4_t CD = vcreate_s16(cd);
   const int16x4_t B = vqadd_s16(A, CD);
   const int16x8_t m0_m1 = vcombine_s16(vqadd_s16(B, d4), vqadd_s16(B, c4));
   const int16x8_t m2_m3 = vcombine_s16(vqsub_s16(B, c4), vqsub_s16(B, d4));
