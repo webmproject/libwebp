@@ -64,6 +64,9 @@ LOCAL_SRC_FILES := \
     src/enc/histogram.c \
     src/enc/iterator.c \
     src/enc/picture.c \
+    src/enc/picture_psnr.c \
+    src/enc/picture_tools.c \
+    src/enc/picture_rescale.c \
     src/enc/quant.c \
     src/enc/syntax.c \
     src/enc/token.c \

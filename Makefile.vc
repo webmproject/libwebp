@@ -218,6 +218,9 @@ ENC_OBJS = \
     $(DIROBJ)\enc\histogram.obj \
     $(DIROBJ)\enc\iterator.obj \
     $(DIROBJ)\enc\picture.obj \
+    $(DIROBJ)\enc\picture_psnr.obj \
+    $(DIROBJ)\enc\picture_tools.obj \
+    $(DIROBJ)\enc\picture_rescale.obj \
     $(DIROBJ)\enc\quant.obj \
     $(DIROBJ)\enc\syntax.obj \
     $(DIROBJ)\enc\token.obj \

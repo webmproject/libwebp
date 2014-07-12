@@ -553,6 +553,13 @@ void VP8AdjustFilterStrength(VP8EncIterator* const it);
 // step of 'delta', given a sharpness parameter 'sharpness'.
 int VP8FilterStrengthFromDelta(int sharpness, int delta);
 
+// misc utils for picture_*.c:
+
+// Grab the 'specs' (writer, *opaque, width, height...) from 'src' and copy them
+// into 'dst'. Mark 'dst' as not owning any memory.
+void WebPPictureGrabSpecs(const WebPPicture* const src,
+                          WebPPicture* const dst);
+
 //------------------------------------------------------------------------------
 
 #ifdef __cplusplus
