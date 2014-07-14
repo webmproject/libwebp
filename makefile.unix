@@ -143,6 +143,7 @@ ENC_OBJS = \
     src/enc/histogram.o \
     src/enc/iterator.o \
     src/enc/picture.o \
+    src/enc/picture_csp.o \
     src/enc/picture_psnr.o \
     src/enc/picture_rescale.o \
     src/enc/picture_tools.o \

@@ -20,6 +20,15 @@
 
 #define HALVE(x) (((x) + 1) >> 1)
 
+// Grab the 'specs' (writer, *opaque, width, height...) from 'src' and copy them
+// into 'dst'. Mark 'dst' as not owning any memory.
+static void PictureGrabSpecs(const WebPPicture* const src,
+                             WebPPicture* const dst) {
+  assert(src != NULL && dst != NULL);
+  *dst = *src;
+  WebPPictureResetBuffers(dst);
+}
+
 //------------------------------------------------------------------------------
 // Picture copying
 
@@ -57,7 +66,7 @@ int WebPPictureCopy(const WebPPicture* src, WebPPicture* dst) {
   if (src == NULL || dst == NULL) return 0;
   if (src == dst) return 1;
 
-  WebPPictureGrabSpecs(src, dst);
+  PictureGrabSpecs(src, dst);
   if (!WebPPictureAlloc(dst)) return 0;
 
   if (!src->use_argb) {
@@ -96,7 +105,7 @@ int WebPPictureView(const WebPPicture* src,
   if (!AdjustAndCheckRectangle(src, &left, &top, width, height)) return 0;
 
   if (src != dst) {  // beware of aliasing! We don't want to leak 'memory_'.
-    WebPPictureGrabSpecs(src, dst);
+    PictureGrabSpecs(src, dst);
   }
   dst->width = width;
   dst->height = height;
@@ -127,7 +136,7 @@ int WebPPictureCrop(WebPPicture* pic,
   if (pic == NULL) return 0;
   if (!AdjustAndCheckRectangle(pic, &left, &top, width, height)) return 0;
 
-  WebPPictureGrabSpecs(pic, &tmp);
+  PictureGrabSpecs(pic, &tmp);
   tmp.width = width;
   tmp.height = height;
   if (!WebPPictureAlloc(&tmp)) return 0;
@@ -216,7 +225,7 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
   // Check if the overall dimensions still make sense.
   if (width <= 0 || height <= 0) return 0;
 
-  WebPPictureGrabSpecs(pic, &tmp);
+  PictureGrabSpecs(pic, &tmp);
   tmp.width = width;
   tmp.height = height;
   if (!WebPPictureAlloc(&tmp)) return 0;

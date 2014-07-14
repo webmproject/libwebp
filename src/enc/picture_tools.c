@@ -136,10 +136,10 @@ void WebPBlendAlpha(WebPPicture* pic, uint32_t background_rgb) {
   if (pic == NULL) return;
   if (!pic->use_argb) {
     const int uv_width = (pic->width >> 1);  // omit last pixel during u/v loop
-    const int Y0 = VP8RGBToY(red, green, blue, 1 << (YUV_FIX - 1));
+    const int Y0 = VP8RGBToY(red, green, blue, YUV_HALF);
     // VP8RGBToU/V expects the u/v values summed over four pixels
-    const int U0 = VP8RGBToU(4 * red, 4 * green, 4 * blue, 1 << (YUV_FIX + 1));
-    const int V0 = VP8RGBToV(4 * red, 4 * green, 4 * blue, 1 << (YUV_FIX + 1));
+    const int U0 = VP8RGBToU(4 * red, 4 * green, 4 * blue, 4 * YUV_HALF);
+    const int V0 = VP8RGBToV(4 * red, 4 * green, 4 * blue, 4 * YUV_HALF);
     const int has_alpha = pic->colorspace & WEBP_CSP_ALPHA_BIT;
     if (!has_alpha || pic->a == NULL) return;    // nothing to do
     for (y = 0; y < pic->height; ++y) {
