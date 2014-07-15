@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//gGk\u003d",
+        "filename": "src/enc/picture.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-07-15T06:47:41Z",
+      "side": 1,
+      "message": "losing some references to HALVE in this move. maybe make it more widely available later?",
+      "revId": "01d59302a4309c8466c67770e9cc382428a3d8dd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//gGc\u003d",
+        "filename": "src/enc/picture_csp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-07-15T06:47:41Z",
+      "side": 1,
+      "message": "this change (the move from PictureAllocARGB), will break as the yuva you\u0027re importing from will be free\u0027d here.",
+      "revId": "01d59302a4309c8466c67770e9cc382428a3d8dd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//gGg\u003d",
+        "filename": "src/enc/picture_csp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-07-15T06:47:41Z",
+      "side": 1,
+      "message": "long line",
+      "revId": "01d59302a4309c8466c67770e9cc382428a3d8dd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
