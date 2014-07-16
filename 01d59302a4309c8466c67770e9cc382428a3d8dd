@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//f24\u003d",
+        "filename": "src/enc/picture.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-07-16T13:22:07Z",
+      "side": 1,
+      "message": "they are mostly condensed in picture_rescale.c now. Should be ok.",
+      "parentUuid": "AAAAdn//gGk\u003d",
+      "revId": "01d59302a4309c8466c67770e9cc382428a3d8dd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//gGc\u003d",
         "filename": "src/enc/picture_csp.c",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//f28\u003d",
+        "filename": "src/enc/picture_csp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-07-16T13:22:07Z",
+      "side": 1,
+      "message": "should be ok now. I introduced WebPPictureAlloc{YUVA,ARGB} helpers.",
+      "parentUuid": "AAAAdn//gGc\u003d",
+      "revId": "01d59302a4309c8466c67770e9cc382428a3d8dd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//gGg\u003d",
         "filename": "src/enc/picture_csp.c",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2014-07-15T06:47:41Z",
       "side": 1,
       "message": "long line",
+      "revId": "01d59302a4309c8466c67770e9cc382428a3d8dd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//f3A\u003d",
+        "filename": "src/enc/picture_csp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-07-16T13:22:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//gGg\u003d",
       "revId": "01d59302a4309c8466c67770e9cc382428a3d8dd",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
