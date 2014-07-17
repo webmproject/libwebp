@@ -553,12 +553,21 @@ void VP8AdjustFilterStrength(VP8EncIterator* const it);
 // step of 'delta', given a sharpness parameter 'sharpness'.
 int VP8FilterStrengthFromDelta(int sharpness, int delta);
 
-// misc utils for picture_*.c:
+  // misc utils for picture_*.c:
 
-// Grab the 'specs' (writer, *opaque, width, height...) from 'src' and copy them
-// into 'dst'. Mark 'dst' as not owning any memory.
-void WebPPictureGrabSpecs(const WebPPicture* const src,
-                          WebPPicture* const dst);
+// Remove reference to the ARGB/YUVA buffer (doesn't free anything).
+void WebPPictureResetBuffers(WebPPicture* const picture);
+
+// Allocates ARGB buffer of given dimension (previous one is always free'd).
+// Preserves the YUV(A) buffer. Returns false in case of error (invalid param,
+// out-of-memory).
+int WebPPictureAllocARGB(WebPPicture* const picture, int width, int height);
+
+// Allocates YUVA buffer of given dimension (previous one is always free'd).
+// Uses picture->csp to determine whether an alpha buffer is needed.
+// Preserves the ARGB buffer.
+// Returns false in case of error (invalid param, out-of-memory).
+int WebPPictureAllocYUVA(WebPPicture* const picture, int width, int height);
 
 //------------------------------------------------------------------------------
 

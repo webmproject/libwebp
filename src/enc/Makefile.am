@@ -12,6 +12,7 @@ libwebpencode_la_SOURCES += frame.c
 libwebpencode_la_SOURCES += histogram.c
 libwebpencode_la_SOURCES += iterator.c
 libwebpencode_la_SOURCES += picture.c
+libwebpencode_la_SOURCES += picture_csp.c
 libwebpencode_la_SOURCES += picture_psnr.c
 libwebpencode_la_SOURCES += picture_rescale.c
 libwebpencode_la_SOURCES += picture_tools.c
