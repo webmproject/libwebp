@@ -161,7 +161,11 @@ if test "$enable_threading" = "yes"; then
               CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
               CC="$PTHREAD_CC"
              ],
-             [enable_threading=no])
+             [AC_CHECK_FUNC([_beginthreadex],
+                            [AC_DEFINE([WEBP_USE_THREAD], [1],
+                                       [Undefine this to disable thread
+                                        support.])],
+                            [enable_threading=no])])
 fi
 AC_MSG_NOTICE([checking if threading is enabled... ${enable_threading-no}])
 
