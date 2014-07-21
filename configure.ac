@@ -535,7 +535,7 @@ WebP Configuration Summary
 
 Shared libraries: ${enable_shared}
 Static libraries: ${enable_static}
-Threaded decode: ${enable_threading-no}
+Threading support: ${enable_threading-no}
 libwebp: yes
 libwebpdecoder: ${enable_libwebpdecoder-no}
 libwebpdemux: ${enable_libwebpdemux-no}
