@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//e0Y\u003d",
+        "filename": "src/enc/webpenc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-07-21T18:52:45Z",
+      "side": 0,
+      "message": "probably picking this up from histogram.h, which looks a bit excessive in its includes...",
+      "revId": "6c347bbb0ccf255ba9a36970170c7f3ff913bad4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
