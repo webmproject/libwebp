@@ -34,31 +34,6 @@ int WebPGetEncoderVersion(void) {
 }
 
 //------------------------------------------------------------------------------
-// WebPPicture
-//------------------------------------------------------------------------------
-
-static int DummyWriter(const uint8_t* data, size_t data_size,
-                       const WebPPicture* const picture) {
-  // The following are to prevent 'unused variable' error message.
-  (void)data;
-  (void)data_size;
-  (void)picture;
-  return 1;
-}
-
-int WebPPictureInitInternal(WebPPicture* picture, int version) {
-  if (WEBP_ABI_IS_INCOMPATIBLE(version, WEBP_ENCODER_ABI_VERSION)) {
-    return 0;   // caller/system version mismatch!
-  }
-  if (picture != NULL) {
-    memset(picture, 0, sizeof(*picture));
-    picture->writer = DummyWriter;
-    WebPEncodingSetError(picture, VP8_ENC_OK);
-  }
-  return 1;
-}
-
-//------------------------------------------------------------------------------
 // VP8Encoder
 //------------------------------------------------------------------------------
 
@@ -399,4 +374,3 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
 
   return ok;
 }
-
