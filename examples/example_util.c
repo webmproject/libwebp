@@ -113,7 +113,7 @@ int ExUtilWriteFile(const char* const file_name,
 //------------------------------------------------------------------------------
 // WebP decoding
 
-static const char* const kStatusMessages[] = {
+static const char* const kStatusMessages[VP8_STATUS_NOT_ENOUGH_DATA + 1] = {
   "OK", "OUT_OF_MEMORY", "INVALID_PARAM", "BITSTREAM_ERROR",
   "UNSUPPORTED_FEATURE", "SUSPENDED", "USER_ABORT", "NOT_ENOUGH_DATA"
 };

@@ -643,7 +643,7 @@ static void HelpLong(void) {
 //------------------------------------------------------------------------------
 // Error messages
 
-static const char* const kErrorMessages[] = {
+static const char* const kErrorMessages[VP8_ENC_ERROR_LAST] = {
   "OK",
   "OUT_OF_MEMORY: Out of memory allocating objects",
   "BITSTREAM_OUT_OF_MEMORY: Out of memory re-allocating byte buffer",
