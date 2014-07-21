@@ -119,23 +119,21 @@ static void MapConfigToTools(VP8Encoder* const enc) {
 // Memory scaling with dimensions:
 //  memory (bytes) ~= 2.25 * w + 0.0625 * w * h
 //
-// Typical memory footprint (768x510 picture)
-// Memory used:
-//              encoder: 33919
-//          block cache: 2880
-//                 info: 3072
-//                preds: 24897
-//          top samples: 1623
-//             non-zero: 196
-//             lf-stats: 2048
-//                total: 68635
+// Typical memory footprint (614x440 picture)
+//              encoder: 22111
+//                 info: 4368
+//                preds: 17741
+//          top samples: 1263
+//             non-zero: 175
+//             lf-stats: 0
+//                total: 45658
 // Transient object sizes:
-//       VP8EncIterator: 352
-//         VP8ModeScore: 912
-//       VP8SegmentInfo: 532
-//             VP8Proba: 31032
+//       VP8EncIterator: 3360
+//         VP8ModeScore: 872
+//       VP8SegmentInfo: 732
+//             VP8Proba: 18352
 //              LFStats: 2048
-// Picture size (yuv): 589824
+// Picture size (yuv): 419328
 
 static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
                                   WebPPicture* const picture) {
