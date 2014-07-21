@@ -28,8 +28,8 @@ static const union {
 } test_endian = { 0xff000000u };
 #define ALPHA_IS_LAST (test_endian.bytes[3] == 0xff)
 
-static WEBP_INLINE uint32_t MakeARGB32(int r, int g, int b) {
-  return (0xff000000u | (r << 16) | (g << 8) | b);
+static WEBP_INLINE uint32_t MakeARGB32(int a, int r, int g, int b) {
+  return (((uint32_t)a << 24) | (r << 16) | (g << 8) | b);
 }
 
 //------------------------------------------------------------------------------
@@ -353,14 +353,8 @@ static int Import(WebPPicture* const picture,
     int x;
     for (x = 0; x < width; ++x) {
       const int offset = step * x + y * rgb_stride;
-      if (!import_alpha) {
-        dst[x] = MakeARGB32(r_ptr[offset], g_ptr[offset], b_ptr[offset]);
-      } else {
-        dst[x] = ((uint32_t)a_ptr[offset] << 24) |
-                           (r_ptr[offset] << 16) |
-                           (g_ptr[offset] <<  8) |
-                           (b_ptr[offset]);
-      }
+      dst[x] = MakeARGB32(import_alpha ? a_ptr[offset] : 0xff,
+                          r_ptr[offset], g_ptr[offset], b_ptr[offset]);
     }
   }
   return 1;
