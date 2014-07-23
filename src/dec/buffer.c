@@ -195,10 +195,12 @@ VP8StatusCode WebPAllocateDecBuffer(int w, int h,
   status = AllocateBuffer(out);
   if (status != VP8_STATUS_OK) return status;
 
+#if WEBP_DECODER_ABI_VERSION > 0x0203
   // Use the stride trick if vertical flip is needed.
   if (options != NULL && options->flip) {
     status = WebPFlipBuffer(out);
   }
+#endif
   return status;
 }
 

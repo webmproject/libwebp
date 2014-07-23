@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DWEBP 1 "June 13, 2014"
+.TH DWEBP 1 "July 22, 2014"
 .SH NAME
 dwebp \- decompress a WebP file to an image file
 .SH SYNOPSIS
@@ -67,11 +67,12 @@ but it will make the decoding faster.
 Specify a dithering \fBstrength\fP between 0 and 100. Dithering is a
 post-processing effect applied to chroma components in lossy compression.
 It helps by smoothing gradients and avoiding banding artifacts.
-.TP
-.BI \-alpha_dither
-If the compressed file contains a transparency plane that was quantized
-during compression, this flag will allow dithering the reconstructed plane
-in order to generate smoother transparency gradients.
+.\" TODO(jzern): restore post-v0.4.1
+.\" .TP
+.\" .BI \-alpha_dither
+.\" If the compressed file contains a transparency plane that was quantized
+.\" during compression, this flag will allow dithering the reconstructed plane
+.\" in order to generate smoother transparency gradients.
 .TP
 .B \-nodither
 Disable all dithering (default).
@@ -86,9 +87,10 @@ This cropping area must be fully contained within the source rectangle.
 The top-left corner will be snapped to even coordinates if needed.
 This option is meant to reduce the memory needed for cropping large images.
 Note: the cropping is applied \fIbefore\fP any scaling.
-.TP
-.B \-flip
-Flip decoded image vertically (can be useful for OpenGL textures for instance).
+.\" TODO(jzern): restore post-v0.4.1
+.\" .TP
+.\" .B \-flip
+.\" Flip decoded image vertically (can be useful for OpenGL textures for instance).
 .TP
 .BI \-scale " width height
 Rescale the decoded picture to dimension \fBwidth\fP x \fBheight\fP. This

@@ -400,7 +400,9 @@ int main(int argc, char *argv[]) {
     return -1;
   }
   config->options.dithering_strength = 50;
+#if WEBP_DECODER_ABI_VERSION > 0x0203
   config->options.alpha_dithering_strength = 100;
+#endif
   kParams.use_color_profile = 1;
 
   for (c = 1; c < argc; ++c) {
@@ -413,8 +415,10 @@ int main(int argc, char *argv[]) {
       config->options.no_fancy_upsampling = 1;
     } else if (!strcmp(argv[c], "-nofilter")) {
       config->options.bypass_filtering = 1;
+#if WEBP_DECODER_ABI_VERSION > 0x0203
     } else if (!strcmp(argv[c], "-noalphadither")) {
       config->options.alpha_dithering_strength = 0;
+#endif
     } else if (!strcmp(argv[c], "-dither") && c + 1 < argc) {
       config->options.dithering_strength = strtol(argv[++c], NULL, 0);
     } else if (!strcmp(argv[c], "-info")) {
