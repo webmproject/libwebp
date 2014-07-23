@@ -152,8 +152,6 @@ Options:
                             default, photo, picture,
                             drawing, icon, text
      -preset must come first, as it overwrites other parameters
-  -z <int> ............... activates lossless preset with given
-                           level in [0:fast, ..., 9:slowest]
 
   -m <int> ............... compression method (0=fast, 6=slowest)
   -segments <int> ........ number of segments to use (1..4)
