@@ -690,7 +690,11 @@ int main(int argc, const char *argv[]) {
     DisplayGifError(gif, gif_error);
   }
   if (gif != NULL) {
+#if LOCAL_GIF_PREREQ(5,1)
+    DGifCloseFile(gif, &gif_error);
+#else
     DGifCloseFile(gif);
+#endif
   }
 
   return !ok;
