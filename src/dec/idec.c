@@ -240,15 +240,17 @@ static int CheckMemBufferMode(MemBuffer* const mem, MemBufferMode expected) {
 
 // To be called last.
 static VP8StatusCode FinishDecoding(WebPIDecoder* const idec) {
+#if WEBP_DECODER_ABI_VERSION > 0x0203
   const WebPDecoderOptions* const options = idec->params_.options;
   WebPDecBuffer* const output = idec->params_.output;
 
   idec->state_ = STATE_DONE;
   if (options != NULL && options->flip) {
     return WebPFlipBuffer(output);
-  } else {
-    return VP8_STATUS_OK;
   }
+#endif
+  idec->state_ = STATE_DONE;
+  return VP8_STATUS_OK;
 }
 
 //------------------------------------------------------------------------------

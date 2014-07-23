@@ -177,6 +177,7 @@ void VP8InitDithering(const WebPDecoderOptions* const options,
         dec->dither_ = 1;
       }
     }
+#if WEBP_DECODER_ABI_VERSION > 0x0203
     // potentially allow alpha dithering
     dec->alpha_dithering_ = options->alpha_dithering_strength;
     if (dec->alpha_dithering_ > 100) {
@@ -184,6 +185,7 @@ void VP8InitDithering(const WebPDecoderOptions* const options,
     } else if (dec->alpha_dithering_ < 0) {
       dec->alpha_dithering_ = 0;
     }
+#endif
   }
 }
 

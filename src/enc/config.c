@@ -138,6 +138,7 @@ int WebPValidateConfig(const WebPConfig* config) {
 
 //------------------------------------------------------------------------------
 
+#if WEBP_ENCODER_ABI_VERSION > 0x0202
 #define MAX_LEVEL 9
 
 // Mapping between -z level and -m / -q parameter settings.
@@ -156,5 +157,6 @@ int WebPConfigLosslessPreset(WebPConfig* config, int level) {
   config->quality = kLosslessPresets[level].quality_;
   return 1;
 }
+#endif
 
 //------------------------------------------------------------------------------
