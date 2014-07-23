@@ -28,6 +28,16 @@
 #include "./example_util.h"
 #include "./gif2webp_util.h"
 
+// GIFLIB_MAJOR is only defined in libgif >= 4.2.0.
+#if defined(GIFLIB_MAJOR) && defined(GIFLIB_MINOR)
+# define LOCAL_GIF_VERSION ((GIFLIB_MAJOR << 8) | GIFLIB_MINOR)
+# define LOCAL_GIF_PREREQ(maj, min) \
+    (LOCAL_GIF_VERSION >= (((maj) << 8) | (min)))
+#else
+# define LOCAL_GIF_VERSION 0
+# define LOCAL_GIF_PREREQ(maj, min) 0
+#endif
+
 #define GIF_TRANSPARENT_MASK 0x01
 #define GIF_DISPOSE_MASK     0x07
 #define GIF_DISPOSE_SHIFT    2
@@ -172,11 +182,9 @@ static int GetBackgroundColor(const ColorMapObject* const color_map,
 }
 
 static void DisplayGifError(const GifFileType* const gif, int gif_error) {
-  // GIFLIB_MAJOR is only defined in libgif >= 4.2.0.
   // libgif 4.2.0 has retired PrintGifError() and added GifErrorString().
-#if defined(GIFLIB_MAJOR) && defined(GIFLIB_MINOR) && \
-        ((GIFLIB_MAJOR == 4 && GIFLIB_MINOR >= 2) || GIFLIB_MAJOR > 4)
-#if GIFLIB_MAJOR >= 5
+#if LOCAL_GIF_PREREQ(4,2)
+#if LOCAL_GIF_PREREQ(5,0)
   // Static string actually, hence the const char* cast.
   const char* error_str = (const char*)GifErrorString(
       (gif == NULL) ? gif_error : gif->Error);
@@ -396,8 +404,7 @@ int main(int argc, const char *argv[]) {
   }
 
   // Start the decoder object
-#if defined(GIFLIB_MAJOR) && (GIFLIB_MAJOR >= 5)
-  // There was an API change in version 5.0.0.
+#if LOCAL_GIF_PREREQ(5,0)
   gif = DGifOpenFileName(in_file, &gif_error);
 #else
   gif = DGifOpenFileName(in_file);
