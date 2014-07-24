@@ -223,26 +223,26 @@ enum {
 static void Help(void) {
   printf("Usage:\n");
   printf(" gif2webp [options] gif_file -o webp_file\n");
-  printf("options:\n");
+  printf("Options:\n");
   printf("  -h / -help  ............ this help\n");
-  printf("  -lossy ................. Encode image using lossy compression.\n");
-  printf("  -mixed ................. For each frame in the image, pick lossy\n"
-         "                           or lossless compression heuristically.\n");
+  printf("  -lossy ................. encode image using lossy compression\n");
+  printf("  -mixed ................. for each frame in the image, pick lossy\n"
+         "                           or lossless compression heuristically\n");
   printf("  -q <float> ............. quality factor (0:small..100:big)\n");
   printf("  -m <int> ............... compression method (0=fast, 6=slowest)\n");
-  printf("  -kmin <int> ............ Min distance between key frames\n");
-  printf("  -kmax <int> ............ Max distance between key frames\n");
+  printf("  -kmin <int> ............ min distance between key frames\n");
+  printf("  -kmax <int> ............ max distance between key frames\n");
   printf("  -f <int> ............... filter strength (0=off..100)\n");
   printf("  -metadata <string> ..... comma separated list of metadata to\n");
   printf("                           ");
-  printf("copy from the input to the output if present.\n");
+  printf("copy from the input to the output if present\n");
   printf("                           "
          "Valid values: all, none, icc, xmp (default)\n");
   printf("  -mt .................... use multi-threading if available\n");
   printf("\n");
-  printf("  -version ............... print version number and exit.\n");
-  printf("  -v ..................... verbose.\n");
-  printf("  -quiet ................. don't print anything.\n");
+  printf("  -version ............... print version number and exit\n");
+  printf("  -v ..................... verbose\n");
+  printf("  -quiet ................. don't print anything\n");
   printf("\n");
 }
 
