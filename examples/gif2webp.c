@@ -449,6 +449,7 @@ int main(int argc, const char *argv[]) {
                      gif->SWidth, gif->SHeight);
             }
           }
+#if WEBP_MUX_ABI_VERSION > 0x0101
           // Set definitive canvas size.
           err = WebPMuxSetCanvasSize(mux, gif->SWidth, gif->SHeight);
           if (err != WEBP_MUX_OK) {
@@ -456,6 +457,7 @@ int main(int argc, const char *argv[]) {
                     gif->SWidth, gif->SHeight);
             goto End;
           }
+#endif
           // Allocate current buffer.
           frame.width = gif->SWidth;
           frame.height = gif->SHeight;
