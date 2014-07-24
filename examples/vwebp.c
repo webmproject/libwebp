@@ -377,7 +377,9 @@ static void Help(void) {
          "  -nofancy ..... don't use the fancy YUV420 upscaler\n"
          "  -nofilter .... disable in-loop filtering\n"
          "  -dither <int>  dithering strength (0..100), default=50\n"
+#if WEBP_DECODER_ABI_VERSION > 0x0203
          "  -noalphadither disable alpha plane dithering\n"
+#endif
          "  -mt .......... use multi-threading\n"
          "  -info ........ print info\n"
          "  -h     ....... this help message\n"

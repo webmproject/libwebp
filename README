@@ -294,7 +294,6 @@ Options are:
   -nofancy ..... don't use the fancy YUV420 upscaler
   -nofilter .... disable in-loop filtering
   -dither <int>  dithering strength (0..100), default=50
-  -noalphadither disable alpha plane dithering
   -mt .......... use multi-threading
   -info ........ print info
   -h     ....... this help message
