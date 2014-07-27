@@ -72,7 +72,7 @@ for PLATFORM in ${PLATFORMS}; do
   mkdir -p "${ROOTDIR}"
 
   SDKROOT="${PLATFORMSROOT}/${PLATFORM}.platform/Developer/SDKs/${PLATFORM}${SDK}.sdk/"
-  CFLAGS="-arch ${ARCH2:-${ARCH}} -pipe -isysroot ${SDKROOT}"
+  CFLAGS="-arch ${ARCH2:-${ARCH}} -pipe -isysroot ${SDKROOT} -O3 -DNDEBUG"
   LDFLAGS="-arch ${ARCH2:-${ARCH}} -pipe -isysroot ${SDKROOT}"
 
   if [[ -z "${XCODE}" ]]; then
