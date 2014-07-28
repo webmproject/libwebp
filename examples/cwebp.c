@@ -999,7 +999,7 @@ int main(int argc, const char *argv[]) {
     picture.user_data = (void*)in_file;
   }
 
-  // Compress
+  // Crop & resize.
   if (verbose) {
     StopwatchReset(&stop_watch);
   }
@@ -1016,11 +1016,21 @@ int main(int argc, const char *argv[]) {
       goto Error;
     }
   }
+  if (verbose && (crop != 0 || (resize_w | resize_h) > 0)) {
+    const double preproc_time = StopwatchReadAndReset(&stop_watch);
+    fprintf(stderr, "Time to crop/resize picture: %.3fs\n", preproc_time);
+  }
+
   if (picture.extra_info_type > 0) {
     AllocExtraInfo(&picture);
   }
   if (print_distortion >= 0) {  // Save original picture for later comparison
     WebPPictureCopy(&picture, &original_picture);
+  }
+
+  // Compress.
+  if (verbose) {
+    StopwatchReset(&stop_watch);
   }
   if (!WebPEncode(&config, &picture)) {
     fprintf(stderr, "Error! Cannot encode picture as WebP\n");
