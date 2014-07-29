@@ -1,3 +1,5 @@
+f59c0b4 iosbuild.sh: specify optimization flags
+8d34ea3 update ChangeLog (tag: v0.4.1-rc1)
 dbc3da6 makefile.unix: add vwebp.1 to the dist target
 89a7c83 update ChangeLog
 ffe67ee Merge "update NEWS for the next release" into 0.4.1
