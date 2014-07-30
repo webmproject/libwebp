@@ -521,9 +521,11 @@ static VP8StatusCode DecodeInto(const uint8_t* const data, size_t data_size,
     WebPFreeDecBuffer(params->output);
   }
 
+#if WEBP_DECODER_ABI_VERSION > 0x0203
   if (params->options != NULL && params->options->flip) {
     status = WebPFlipBuffer(params->output);
   }
+#endif
   return status;
 }
 

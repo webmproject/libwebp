@@ -55,7 +55,7 @@
 extern "C" {
 #endif
 
-#define WEBP_MUX_ABI_VERSION 0x0102        // MAJOR(8b) + MINOR(8b)
+#define WEBP_MUX_ABI_VERSION 0x0101        // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -310,6 +310,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetAnimationParams(
 //------------------------------------------------------------------------------
 // Misc Utilities.
 
+#if WEBP_MUX_ABI_VERSION > 0x0101
 // Sets the canvas size for the mux object. The width and height can be
 // specified explicitly or left as zero (0, 0).
 // * When width and height are specified explicitly, then this frame bound is
@@ -327,6 +328,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxGetAnimationParams(
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxSetCanvasSize(WebPMux* mux,
                                                int width, int height);
+#endif
 
 // Gets the canvas size from the mux object.
 // Note: This method assumes that the VP8X chunk, if present, is up-to-date.

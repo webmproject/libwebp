@@ -417,14 +417,9 @@ static void HE8uv(uint8_t *dst) {    // horizontal
 // helper for chroma-DC predictions
 static WEBP_INLINE void Put8x8uv(uint8_t value, uint8_t* dst) {
   int j;
-#ifndef WEBP_REFERENCE_IMPLEMENTATION
-  const uint64_t v = (uint64_t)value * 0x0101010101010101ULL;
   for (j = 0; j < 8; ++j) {
-    *(uint64_t*)(dst + j * BPS) = v;
+    memset(dst + j * BPS, value, 8);
   }
-#else
-  for (j = 0; j < 8; ++j) memset(dst + j * BPS, value, 8);
-#endif
 }
 
 static void DC8uv(uint8_t *dst) {     // DC
