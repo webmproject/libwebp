@@ -1,3 +1,387 @@
+f59c0b4 iosbuild.sh: specify optimization flags
+8d34ea3 update ChangeLog (tag: v0.4.1-rc1)
+dbc3da6 makefile.unix: add vwebp.1 to the dist target
+89a7c83 update ChangeLog
+ffe67ee Merge "update NEWS for the next release" into 0.4.1
+2def1fe gif2webp: dust up the help message
+fb668d7 remove -noalphadither option from README/vwebp.1
+e49f693 update NEWS for the next release
+cd01358 Merge "update AUTHORS" into 0.4.1
+268d01e update AUTHORS
+85213b9 bump version to 0.4.1
+695f80a Merge "restore mux API compatibility" into 0.4.1
+862d296 restore mux API compatibility
+8f6f8c5 remove the !WEBP_REFERENCE_IMPLEMENTATION tweak in Put8x8uv
+d713a69 Merge changes If4debc15,I437a5d5f into 0.4.1
+c2fc52e restore encode API compatibility
+793368e restore decode API compatibility
+b8984f3 gif2webp: fix compile with giflib 5.1.0
+222f9b1 gif2webp: simplify giflib version checking
+d2cc61b Extend MakeARGB32() to accept Alpha channel.
+4595b62 Merge "use explicit size of kErrorMessages[] arrays"
+157de01 Merge "Actuate memory stats for PRINT_MEMORY_INFO"
+fbda2f4 JPEG decoder: delay conversion to YUV to WebPEncode() call
+0b747b1 use explicit size of kErrorMessages[] arrays
+3398d81 Actuate memory stats for PRINT_MEMORY_INFO
+6f3202b Merge "move WebPPictureInit to picture.c"
+6c347bb move WebPPictureInit to picture.c
+fb3acf1 fix configure message for multi-thread
+40b086f configure: check for _beginthreadex
+1549d62 reorder the YUVA->ARGB and ARGB->YUVA functions correctly
+c6461bf Merge "extract colorspace code from picture.c into picture_csp.c"
+736f2a1 extract colorspace code from picture.c into picture_csp.c
+645daa0 Merge "configure: check for -Wformat-security"
+abafed8 configure: check for -Wformat-security
+fbadb48 split monolithic picture.c into picture_{tools,psnr,rescale}.c
+c76f07e dec_neon/TransformAC3: initialize vector w/vcreate
+bb4fc05 gif2webp: Allow single-frame animations
+46fd44c thread: remove harmless race on status_ in End()
+5a1a726 Merge "configure: check for __builtin_bswapXX()"
+6781423 configure: check for __builtin_bswapXX()
+6450c48 configure: fix iOS builds
+6422e68 VP8LFillBitWindow: enable fast path for 32-bit builds
+4f7f52b VP8LFillBitWindow: respect WEBP_FORCE_ALIGNED
+e458bad endian_inl.h: implement htoleXX with BSwapXX
+f2664d1 endian_inl.h: add BSwap16
+6fbf534 Merge "configure: add --enable-aligned"
+dc0f479 configure: add --enable-aligned
+9cc69e2 Merge "configure: support WIC + OpenGL under mingw64"
+257adfb remove experimental YUV444 YUV422 and YUV400 code
+10f4257 configure: support WIC + OpenGL under mingw64
+380cca4 configure.ac: add AC_C_BIGENDIAN
+ee70a90 endian_inl.h: add BSwap64
+47779d4 endian_inl.h: add BSwap32
+d5104b1 utils: add endian_inl.h
+58ab622 Merge "make alpha-detection loop in IsKeyFrame() in good x/y order"
+9d56290 make alpha-detection loop in IsKeyFrame() in good x/y order
+516971b lossless: Remove unaligned read warning
+b8b596f Merge "configure.ac: add an autoconf version prerequisite"
+34b02f8 configure.ac: add an autoconf version prerequisite
+e59f536 neon: normalize vdup_n_* usage
+6ee7160 Merge changes I0da7b3d3,Idad2f278,I4accc305
+abc02f2 Merge "fix (uncompiled) typo"
+bc03670 neon: add INIT_VECTOR4
+6c1c632 neon: add INIT_VECTOR3
+dc7687e neon: add INIT_VECTOR2
+4536e7c add WebPMuxSetCanvasSize() to the mux API
+824eab1 fix (uncompiled) typo
+1f3e5f1 remove unused 'shift' argument and QFIX2 define
+8e86705 Merge "VP8LoadNewBytes: use __builtin_bswap32 if available"
+1b6a263 Merge "Fix handling of weird GIF with canvas dimension 0x0"
+1da3d46 VP8LoadNewBytes: use __builtin_bswap32 if available
+1582e40 Fix handling of weird GIF with canvas dimension 0x0
+b8811da Merge "rename interface -> winterface"
+db8b8b5 Fix logic in the GIF LOOP-detection parsing
+25aaddc rename interface -> winterface
+5584d9d make WebPSetWorkerInterface() check its arguments
+a9ef7ef Merge "cosmetics: update thread.h comments"
+c6af999 Merge "dust up the help message"
+0a8b886 dust up the help message
+a9cf319 cosmetics: update thread.h comments
+27bfeee QuantizeBlock SSE2 Optimization:
+2bc0dc3 Merge "webpmux: warn when odd frame offsets are used"
+3114ebe Merge changes Id8edd3c1,Id418eb96,Ide05e3be
+c072663 webpmux: warn when odd frame offsets are used
+c5c6b40 Merge "add alpha dithering for lossy"
+d514678 examples/Android.mk: add cwebp
+ca0fa7c Android.mk: move dwebp to examples/Android.mk
+73d8fca Android.mk: add ENABLE_SHARED flag
+6e93317 muxread: fix out of bounds read
+8b0f6a4 Makefile.vc: fix CFLAGS assignment w/HAVE_AVX2=1
+bbe32df add alpha dithering for lossy
+7902076 Merge "make error-code reporting consistent upon malloc failure"
+77bf441 make error-code reporting consistent upon malloc failure
+7a93c00 **/Makefile.am: remove unused AM_CPPFLAGS
+24e3080 Add an interface abstraction to the WebP worker thread implementation
+d6cd635 Merge "fix orig_rect==NULL case"
+2bfd1ff fix orig_rect==NULL case
+059e21c Merge "configure: move config.h to src/webp/config.h"
+f05fe00 properly report back encoding error code in WebPFrameCacheAddFrame()
+32b3137 configure: move config.h to src/webp/config.h
+90090d9 Merge changes I7c675e51,I84f7d785
+ae7661b makefiles: define WEBP_HAVE_AVX2 when appropriate
+69fce2e remove the special casing for res->first in VP8SetResidualCoeffs
+6e61a3a configure: test for -msse2
+b9d2efc rename upsampling_mips32.c to yuv_mips32.c
+bdfeeba dsp/yuv: move sse2 functions to yuv_sse2.c
+46b32e8 Merge "configure: set WEBP_HAVE_AVX2 when available"
+88305db Merge "VP8RandomBits2: prevent signed int overflow"
+73fee88 VP8RandomBits2: prevent signed int overflow
+db4860b enc_sse2: prevent signed int overflow
+3fdaf4d Merge "real fix for longjmp warning"
+385e334 real fix for longjmp warning
+230a055 configure: set WEBP_HAVE_AVX2 when available
+a2ac8a4 restore original value_/range_ field order
+5e2ee56 Merge "remove libwebpdspdecode dep on libwebpdsp_avx2"
+61362db remove libwebpdspdecode dep on libwebpdsp_avx2
+42c447a Merge "lossy bit-reader clean-up:"
+479ffd8 Merge "remove unused #include's"
+9754d39 Merge "strong filtering speed-up (~2-3% x86, ~1-2% for NEON)"
+158aff9 remove unused #include's
+09545ee lossy bit-reader clean-up:
+ea8b0a1 strong filtering speed-up (~2-3% x86, ~1-2% for NEON)
+6679f89 Optimize VP8SetResidualCoeffs.
+ac591cf fix for gcc-4.9 warnings about longjmp + local variables
+4dfa86b dsp/cpu: NaCl has no support for xgetbv
+4c39869 Merge "cwebp: fallback to native webp decode in WIC builds"
+33aa497 Merge "cwebp: add some missing newlines in longhelp output"
+c9b340a fix missing WebPInitAlphaProcessing call for premultiplied colorspace output
+57897ba Merge "lossless_neon: use vcreate_*() where appropriate"
+6aa4777 Merge "(enc|dec)_neon: use vcreate_*() where appropriate"
+0d346e4 Always reinit VP8TransformWHT instead of hard-coding
+7d039fc cwebp: fallback to native webp decode in WIC builds
+d471f42 cwebp: add some missing newlines in longhelp output
+bf0e003 lossless_neon: use vcreate_*() where appropriate
+9251c2f (enc|dec)_neon: use vcreate_*() where appropriate
+399b916 lossy decoding: correct alpha-rescaling for YUVA format
+78c12ed Merge "Makefile.vc: add rudimentary avx2 support"
+dc5b122 try to remove the spurious warning for static analysis
+ddfefd6 Makefile.vc: add rudimentary avx2 support
+a891164 Merge "simplify VP8LInitBitReader()"
+fdbcd44 simplify VP8LInitBitReader()
+7c00428 makefile.unix: add rudimentary avx2 support
+515e35c Merge "add stub dsp/enc_avx2.c"
+a05dc14 SSE2: yuv->rgb speed-up for point-sampling
+178e9a6 add stub dsp/enc_avx2.c
+1b99c09 Merge "configure: add a test for -mavx2"
+fe72807 configure: add a test for -mavx2
+e46a247 cpu: fix check for __cpuidex availability
+176fda2 fix the bit-writer for lossless in 32bit mode
+541784c dsp.h: add a check for AVX2 / define WEBP_USE_AVX2
+bdb151e dsp/cpu: add AVX2 detection
+ab9f2f8 Merge "revamp the point-sampling functions by processing a full plane"
+a2f8b28 revamp the point-sampling functions by processing a full plane
+ef07602 use decoder's DSP functions for autofilter
+2b5cb32 Merge "dsp/cpu: add AVX detection"
+df08e67 dsp/cpu: add AVX detection
+e2f405c Merge "clean-up and slight speed-up in-loop filtering SSE2"
+f60957b clean-up and slight speed-up in-loop filtering SSE2
+9fc3ae4 .gitattributes: treat .ppm as binary
+3da924b Merge "dsp/WEBP_USE_NEON: test for __aarch64__"
+c716449 Android.mk: always include *_neon.c in the build
+a577b23 dsp/WEBP_USE_NEON: test for __aarch64__
+54bfffc move RemapBitReader() from idec.c to bit_reader code
+34168ec Merge "remove all unused layer code"
+f1e7717 remove all unused layer code
+b0757db Code cleanup for VP8LGetHistoImageSymbols.
+5fe628d make the token page size be variable instead of fixed 8192
+f948d08 memory debug: allow setting pre-defined malloc failure points
+ca3d746 use block-based allocation for backward refs storage, and free-lists
+1ba61b0 enable NEON intrinsics in aarch64 builds
+b9d2bb6 dsp/neon.h: coalesce intrinsics-related defines
+b5c7525 iosbuild: add support for iOSv7/aarch64
+9383afd Reduce number of memory allocations while decoding lossless.
+888e63e Merge "dsp/lossless: prevent signed int overflow in left shift ops"
+8137f3e Merge "instrument memory allocation routines for debugging"
+2aa1873 instrument memory allocation routines for debugging
+d3bcf72 Don't allocate VP8LHashChain, but treat like automatic object
+bd6b861 dsp/lossless: prevent signed int overflow in left shift ops
+b7f19b8 Merge "dec/vp8l: prevent signed int overflow in left shift ops"
+29059d5 Merge "remove some uint64_t casts and use."
+e69a1df dec/vp8l: prevent signed int overflow in left shift ops
+cf5eb8a remove some uint64_t casts and use.
+38e2db3 MIPS: MIPS32r1: Added optimization for HistogramAdd.
+e0609ad dwebp: fix exit code on webp load failure
+bbd358a Merge "example_util.h: avoid forward declaring enums"
+8955da2 example_util.h: avoid forward declaring enums
+6d6865f Added SSE2 variants for Average2/3/4
+b3a616b make HistogramAdd() a pointer in dsp
+c8bbb63 dec_neon: relocate some inline-asm defines
+4e393bb dec_neon: enable intrinsics-only functions
+ba99a92 dec_neon: use positive tests for USE_INTRINSICS
+69058ff Merge "example_util: add ExUtilDecodeWebPIncremental"
+a7828e8 dec_neon: make WORK_AROUND_GCC conditional on version
+3f3d717 Merge "enc_neon: enable intrinsics-only functions"
+de3cb6c Merge "move LOCAL_GCC_VERSION def to dsp.h"
+1b2fe14 example_util: add ExUtilDecodeWebPIncremental
+ca49e7a Merge "enc_neon: move Transpose4x4 to dsp/neon.h"
+ad900ab Merge "fix warning about size_t -> int conversion"
+4825b43 fix warning about size_t -> int conversion
+42b35e0 enc_neon: enable intrinsics-only functions
+f937e01 move LOCAL_GCC_VERSION def to dsp.h
+5e1a17e enc_neon: move Transpose4x4 to dsp/neon.h
+c7b92a5 dec_neon: (WORK_AROUND_GCC) delete unused Load4x8
+8e5f90b Merge "make ExUtilLoadWebP() accept NULL bitstream param."
+05d4c1b Merge "cwebp: add webpdec"
+ddeb6ac cwebp: add webpdec
+35d7d09 Merge "Reduce memory footprint for encoding WebP lossless."
+0b89610 Reduce memory footprint for encoding WebP lossless.
+f0b65c9 make ExUtilLoadWebP() accept NULL bitstream param.
+9c0a60c Merge "dwebp: move webp decoding to example_util"
+1d62acf MIPS: MIPS32r1: Added optimization for HuffmanCost functions.
+4a0e739 dwebp: move webp decoding to example_util
+c022046 Merge "Bugfix: Incremental decode of lossy-alpha"
+8c7cd72 Bugfix: Incremental decode of lossy-alpha
+7955152 MIPS: fix error with number of registers.
+b1dabe3 Merge "Move the HuffmanCost() function to dsp lib"
+75b1200 Move the HuffmanCost() function to dsp lib
+2772b8b MIPS: fix assembler error revealed by clang's debug build
+6653b60 enc_mips32: fix unused symbol warning in debug
+8dec120 enc_mips32: disable ITransform(One) in debug builds
+98519dd enc_neon: convert Disto4x4 to intrinsics
+fe9317c cosmetics:
+953b074 enc_neon: cosmetics
+a9fc697 Merge "WIP: extract the float-calculation of HuffmanCost from loop"
+3f84b52 Merge "replace some mult-long (vmull_u8) with mult-long-accumulate (vmlal_u8)"
+4ae0533 MIPS: MIPS32r1: Added optimizations for ExtraCost functions.
+b30a04c WIP: extract the float-calculation of HuffmanCost from loop
+a8fe8ce Merge "NEON intrinsics version of CollectHistogram"
+95203d2 NEON intrinsics version of CollectHistogram
+7ca2e74 replace some mult-long (vmull_u8) with mult-long-accumulate (vmlal_u8)
+41c6efb fix lossless_neon.c
+8ff96a0 NEON intrinsics version of FTransform
+0214f4a Merge "MIPS: MIPS32r1: Added optimizations for FastLog2"
+baabf1e MIPS: MIPS32r1: Added optimizations for FastLog2
+3d49871 NEON functions for lossless coding
+3fe0291 MIPS: MIPS32r1: Added optimizations for SSE functions.
+c503b48 Merge "fix the gcc-4.6.0 bug by implementing alternative method"
+abe6f48 fix the gcc-4.6.0 bug by implementing alternative method
+5598bde enc_mips32.c: fix file mode
+2b1b4d5 MIPS: MIPS32r1: Add optimization for GetResidualCost
+f0a1f3c Merge "MIPS: MIPS32r1: Added optimization for FTransform"
+7231f61 MIPS: MIPS32r1: Added optimization for FTransform
+869eaf6  ~30% encoding speedup: use NEON for QuantizeBlock()
+f758af6 enc_neon: convert FTransformWHT to intrinsics
+7dad095 MIPS: MIPS32r1: Added optimization for Disto4x4 (TTransform)
+2298d5f MIPS: MIPS32r1: Added optimization for QuantizeBlock
+e88150c Merge "MIPS: MIPS32r1: Add optimization for ITransform"
+de693f2 lossless_neon: disable VP8LConvert* functions
+4143332 NEON intrinsics for encoding
+0ca2914 MIPS: MIPS32r1: Add optimization for ITransform
+71bca5e dec_neon: use vst_lane instead of vget_lane
+bf06105 Intrinsics NEON version of TransformOne
+19c6f1b Merge "dec_neon: use vld?_lane instead of vset?_lane"
+7a94c0c upsampling_neon: drop NEON suffix from local functions
+d14669c upsampling_sse2: drop SSE2 suffix from local functions
+2ca42a4 enc_sse2: drop SSE2 suffix from local functions
+d038e61 dec_sse2: drop SSE2 suffix from local functions
+fa52d75 dec_neon: use vld?_lane instead of vset?_lane
+c520e77 cosmetic: fix long line
+4b0f2da Merge "add intrinsics NEON code for chroma strong-filtering"
+e351ec0 add intrinsics NEON code for chroma strong-filtering
+aaf734b Merge "Add SSE2 version of forward cross-color transform"
+c90a902 Add SSE2 version of forward cross-color transform
+bc374ff Use histogram_bits to initalize transform_bits.
+2132992 Merge "Add strong filtering intrinsics (inner and outer edges)"
+5fbff3a Add strong filtering intrinsics (inner and outer edges)
+d4813f0 Add SSE2 function for Inverse Cross-color Transform
+2602956 dec_neon: add strong loopfilter intrinsics
+cca7d7e Merge "add intrinsics version of SimpleHFilter16NEON()"
+1a05dfa windows: fix dll builds
+d6c50d8 Merge "add some colorspace conversion functions in NEON"
+4fd7c82 SSE2 variants of Subtract-Green: Rectify loop condition
+97e5fac add some colorspace conversion functions in NEON
+b9a7a45 add intrinsics version of SimpleHFilter16NEON()
+daccbf4 add light filtering NEON intrinsics
+af44460 fix typo in STORE_WHT
+6af6b8e Tune HistogramCombineBin for large images.
+af93bdd use WebPSafe[CM]alloc/WebPSafeFree instead of [cm]alloc/free
+51f406a lossless_sse2: relocate VP8LDspInitSSE2 proto
+0f4f721 separate SSE2 lossless functions into its own file
+514fc25 VP8LConvertFromBGRA: use conversion function pointers
+6d2f352 dsp/dec: TransformDCUV: use VP8TransformDC
+defc8e1 Merge "fix out-of-bound read during alpha-plane decoding"
+fbed364 Merge "dsp: reuse wht transform from dec in encoder"
+d846708 Merge "Add SSE2 version of ARGB -> BGR/RGB/... conversion functions"
+207d03b fix out-of-bound read during alpha-plane decoding
+d1b33ad 2-5% faster trellis with clang/MacOS (and ~2-3% on ARM)
+369c26d Add SSE2 version of ARGB -> BGR/RGB/... conversion functions
+df230f2 dsp: reuse wht transform from dec in encoder
+80e218d Android.mk: fix build with APP_ABI=armeabi-v7a-hard
+59daf08 Merge "cosmetics:"
+5362200 cosmetics:
+3e7f34a AssignSegments: quiet array-bounds warning
+3c2ebf5 Merge "UpdateHistogramCost: avoid implicit double->float"
+cf821c8 UpdateHistogramCost: avoid implicit double->float
+312e638 Extend the search space for GetBestGreenRedToBlue
+1c58526 Fix few nits
+fef2270 Optimize and re-structure VP8LGetHistoImageSymbols
+068b14a Optimize lossless decoding.
+5f0cfa8 Do a binary search to get the optimum cache bits.
+24ca367 Merge "allow 'cwebp -o -' to emit output to stdout"
+e12f874 allow 'cwebp -o -' to emit output to stdout
+2bcad89 allow some more stdin/stout I/O
+84ed4b3 fix cwebp.1 typos after patch #69199
+65b99f1 add a -z option to cwebp, and WebPConfigLosslessPreset() function
+3017661 4-5% faster trellis by removing some unneeded calculations.
+687a58e histogram.c: reindent after b33e8a0
+06d456f Merge "~3-4% faster lossless encoding"
+c60de26 ~3-4% faster lossless encoding
+42eb06f Merge "few cosmetics after patch #69079"
+82af826 few cosmetics after patch #69079
+b33e8a0 Refactor code for HistogramCombine.
+ca1bfff Merge "5-10% encoding speedup with faster trellis (-m 6)"
+5aeeb08 5-10% encoding speedup with faster trellis (-m 6)
+82ae1bf cosmetics: normalize VP8GetCPUInfo checks
+e3dd924 Merge "Refactor GetBestPredictorForTile for future tuning."
+206cc1b Refactor GetBestPredictorForTile for future tuning.
+3cb8406 Merge "speed-up trellis quant (~5-10% overall speed-up)"
+b66f222 Merge "lossy encoding: ~3% speed-up"
+4287d0d speed-up trellis quant (~5-10% overall speed-up)
+390c8b3 lossy encoding: ~3% speed-up
+9a463c4 Merge "dec_neon: convert TransformWHT to intrinsics"
+e8605e9 Merge "dec_neon: add ConvertU8ToS16"
+4aa3e41 MIPS: MIPS32r1: rescaler bugfix
+c16cd99 Speed up lossless encoder.
+9d6b5ff dec_neon: convert TransformWHT to intrinsics
+2ff0aae dec_neon: add ConvertU8ToS16
+77a8f91 fix compilation with USE_YUVj flag
+4acbec1 Merge changes I3b240ffb,Ia9370283,Ia2d28728
+2719bb7 dec_neon: TransformAC3: work on packed vectors
+b7b60ca dec_neon: add SaturateAndStore4x4
+b7685d7 Rescale: let ImportRow / ExportRow be pointer-to-function
+e02f16e dec_neon.c: convert TransformDC to intrinsics
+9cba963 add missing file
+8992ddb use static clipping tables
+0235d5e 1-2% faster quantization in SSE2
+b2fbc36 fix VC12-x64 warning
+6e37cb9 Merge "cosmetics: backward_references.c: reindent after a7d2ee3"
+a42ea97 cosmetics: backward_references.c: reindent after a7d2ee3
+6c32744 Merge "fix missing __BIG_ENDIAN__ definition on some platform"
+a8b6aad fix missing __BIG_ENDIAN__ definition on some platform
+fde2904 Increase initial buffer size for VP8L Bit Writer.
+a7d2ee3 Optimize cache estimate logic.
+7fb6095 Merge "dec_neon.c: add TransformAC3"
+bf182e8 VP8LBitWriter: use a bit-accumulator
+3f40b4a Merge "MIPS: MIPS32r1: clang macro warning resolved"
+1684f4e WebP Decoder: Mark some truncated bitstreams as invalid
+acbedac MIPS: MIPS32r1: clang macro warning resolved
+228e487 dec_neon.c: add TransformAC3
+393f89b Android.mk: avoid gcc-specific flags with clang
+32aeaf1 revamp VP8LColorSpaceTransform() a bit
+0c7cc4c Merge "Don't dereference NULL, ensure HashChain fully initialized"
+391316f Don't dereference NULL, ensure HashChain fully initialized
+926ff40 WEBP_SWAP_16BIT_CSP: remove code dup
+1d1cd3b Fix decode bug for rgbA_4444/RGBA_4444 color-modes.
+939e70e update AUTHORS file
+8934a62 cosmetics: *_mips32.c
+dd438c9 MIPS: MIPS32r1: Optimization of some simple point-sampling functions. PATCH [6/6]
+5352091 Added support for calling sampling functions via pointers.
+d16c697 MIPS: MIPS32r1: Optimization of filter functions. PATCH [5/6]
+04336fc MIPS: MIPS32r1: Optimization of function TransformOne. PATCH [4/6]
+92d8fc7 MIPS: MIPS32r1: Optimization of function WebPRescalerImportRow. PATCH [3/6]
+bbc23ff parse one row of intra modes altogether
+a2f608f Merge "MIPS: MIPS32r1: Optimization of function WebPRescalerExportRow. [2/6]"
+8823085 MIPS: MIPS32r1: Optimization of function WebPRescalerExportRow. [2/6]
+c5a5b02 decode mt+incremental: fix segfault in debug builds
+9882b2f always use fast-analysis for all methods.
+000adac Merge "autoconf: update ax_pthread.m4"
+2d2fc37 update .gitignore
+5bf4255 Merge "Make it possible to avoid automagic dependencies"
+c1cb193 disable NEON for arm64 platform
+73a304e Make it possible to avoid automagic dependencies
+4d493f8 MIPS: MIPS32r1: Decoder bit reader function optimized. PATCH [1/6]
+c741183 make WebPCleanupTransparentArea work with argb picture
+5da1855 add a decoding option to flip image vertically
+00c3c4e Merge "add man/vwebp.1"
+2c6bb42 add man/vwebp.1
+ea59a8e Merge "Merge tag 'v0.4.0'"
+7574bed fix comments related to array sizes
+0b5a90f dwebp.1: fix option formatting
+effcb0f Merge tag 'v0.4.0'
+7c76255 autoconf: update ax_pthread.m4
+fff2a11 make -short work with -print_ssim, -print_psnr, etc.
+68e7901 update ChangeLog (tag: v0.4.0-rc1, tag: v0.4.0, origin/0.4.0, 0.4.0)
 256e433 update NEWS description with new general features
 2962534 Merge "gif2webp: don't use C99 %zu" into 0.4.0
 3b9f9dd gif2webp: don't use C99 %zu
