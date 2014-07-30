@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//dtg\u003d",
+        "filename": "man/dwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-07-30T14:43:05Z",
+      "side": 1,
+      "message": "i guess it\u0027s better in this merge to not mess with the dates...",
+      "revId": "29a9fe222a9dfddbd57fc8b82258373a99dbac3a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
