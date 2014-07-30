@@ -16,6 +16,24 @@
       "revId": "29a9fe222a9dfddbd57fc8b82258373a99dbac3a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//drI\u003d",
+        "filename": "man/dwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-07-30T17:25:52Z",
+      "side": 1,
+      "message": "technically this is restoring the value currently in master (so there\u0027s no difference there) due to the use of revert. I can hand edit them to today\u0027s date to prevent any perceived movement backward",
+      "parentUuid": "AAAAdn//dtg\u003d",
+      "revId": "29a9fe222a9dfddbd57fc8b82258373a99dbac3a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
