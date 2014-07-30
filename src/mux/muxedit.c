@@ -362,6 +362,7 @@ WebPMuxError WebPMuxSetAnimationParams(WebPMux* mux,
   return MuxSet(mux, kChunks[IDX_ANIM].tag, 1, &anim, 1);
 }
 
+#if WEBP_MUX_ABI_VERSION > 0x0101
 WebPMuxError WebPMuxSetCanvasSize(WebPMux* mux,
                                   int width, int height) {
   WebPMuxError err;
@@ -387,6 +388,7 @@ WebPMuxError WebPMuxSetCanvasSize(WebPMux* mux,
   mux->canvas_height_ = height;
   return WEBP_MUX_OK;
 }
+#endif
 
 //------------------------------------------------------------------------------
 // Delete API(s).

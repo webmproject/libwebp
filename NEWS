@@ -1,3 +1,14 @@
+- 7/24/14: version 0.4.1
+  This is a binary compatible release.
+  * AArch64 (arm64) & MIPS support/optimizations
+  * NEON assembly additions:
+    - ~25% faster lossy decode / encode (-m 4)
+    - ~10% faster lossless decode
+    - ~5-10% faster lossless encode (-m 3/4)
+  * dwebp/vwebp can read from stdin
+  * cwebp/gif2webp can write to stdout
+  * cwebp can read webp files; useful if storing sources as webp lossless
+
 - 12/19/13: version 0.4.0
   * improved gif2webp tool
   * numerous fixes, compression improvement and speed-up

@@ -30,7 +30,7 @@ extern "C" {
 // version numbers
 #define ENC_MAJ_VERSION 0
 #define ENC_MIN_VERSION 4
-#define ENC_REV_VERSION 0
+#define ENC_REV_VERSION 1
 
 // intra prediction modes
 enum { B_DC_PRED = 0,   // 4x4 modes
@@ -570,6 +570,10 @@ int WebPPictureAllocARGB(WebPPicture* const picture, int width, int height);
 int WebPPictureAllocYUVA(WebPPicture* const picture, int width, int height);
 
 //------------------------------------------------------------------------------
+
+#if WEBP_ENCODER_ABI_VERSION <= 0x0202
+void WebPMemoryWriterClear(WebPMemoryWriter* writer);
+#endif
 
 #ifdef __cplusplus
 }    // extern "C"

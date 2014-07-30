@@ -306,7 +306,7 @@ dist: all
 	$(INSTALL) -m644 src/demux/libwebpdemux.a $(DESTDIR)/lib
 	$(INSTALL) -m644 src/mux/libwebpmux.a $(DESTDIR)/lib
 	umask 022; \
-	for m in man/[cd]webp.1 man/gif2webp.1 man/webpmux.1; do \
+	for m in man/[cdv]webp.1 man/gif2webp.1 man/webpmux.1; do \
 	  basenam=$$(basename $$m .1); \
 	  $(GROFF) -t -e -man -T utf8 $$m \
 	    | $(COL) -bx >$(DESTDIR)/doc/$${basenam}.txt; \
