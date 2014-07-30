@@ -4,7 +4,7 @@
           \__\__/\____/\_____/__/ ____  ___
                 / _/ /    \    \ /  _ \/ _/
                /  \_/   / /   \ \   __/  \__
-               \____/____/\_____/_____/____/v0.4.0
+               \____/____/\_____/_____/____/v0.4.1
 
 Description:
 ============
@@ -152,8 +152,6 @@ Options:
                             default, photo, picture,
                             drawing, icon, text
      -preset must come first, as it overwrites other parameters
-  -z <int> ............... activates lossless preset with given
-                           level in [0:fast, ..., 9:slowest]
 
   -m <int> ............... compression method (0=fast, 6=slowest)
   -segments <int> ........ number of segments to use (1..4)
@@ -270,11 +268,9 @@ Use following options to convert into alternate image formats:
   -nofilter .... disable in-loop filtering
   -nodither .... disable dithering
   -dither <d> .. dithering strength (in 0..100)
-  -alpha_dither  use alpha-plane dithering if needed
   -mt .......... use multi-threading
   -crop <x> <y> <w> <h> ... crop output with the given rectangle
   -scale <w> <h> .......... scale the output (*after* any cropping)
-  -flip ........ flip the output vertically
   -alpha ....... only save the alpha plane
   -incremental . use incremental decoding (useful for tests)
   -h     ....... this help message
@@ -298,7 +294,6 @@ Options are:
   -nofancy ..... don't use the fancy YUV420 upscaler
   -nofilter .... disable in-loop filtering
   -dither <int>  dithering strength (0..100), default=50
-  -noalphadither disable alpha plane dithering
   -mt .......... use multi-threading
   -info ........ print info
   -h     ....... this help message
@@ -342,24 +337,24 @@ vwebp.
 
 Usage:
  gif2webp [options] gif_file -o webp_file
-options:
+Options:
   -h / -help  ............ this help
-  -lossy ................. Encode image using lossy compression.
-  -mixed ................. For each frame in the image, pick lossy
-                           or lossless compression heuristically.
+  -lossy ................. encode image using lossy compression
+  -mixed ................. for each frame in the image, pick lossy
+                           or lossless compression heuristically
   -q <float> ............. quality factor (0:small..100:big)
   -m <int> ............... compression method (0=fast, 6=slowest)
-  -kmin <int> ............ Min distance between key frames
-  -kmax <int> ............ Max distance between key frames
+  -kmin <int> ............ min distance between key frames
+  -kmax <int> ............ max distance between key frames
   -f <int> ............... filter strength (0=off..100)
   -metadata <string> ..... comma separated list of metadata to
-                           copy from the input to the output if present.
+                           copy from the input to the output if present
                            Valid values: all, none, icc, xmp (default)
   -mt .................... use multi-threading if available
 
-  -version ............... print version number and exit.
-  -v ..................... verbose.
-  -quiet ................. don't print anything.
+  -version ............... print version number and exit
+  -v ..................... verbose
+  -quiet ................. don't print anything
 
 Building:
 ---------
