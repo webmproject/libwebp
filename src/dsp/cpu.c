@@ -118,7 +118,7 @@ static int armCPUInfo(CPUFeature feature) {
   return 1;
 }
 VP8CPUInfo VP8GetCPUInfo = armCPUInfo;
-#elif defined(__mips__)
+#elif defined(WEBP_USE_MIPS32)
 static int mipsCPUInfo(CPUFeature feature) {
   (void)feature;
   return 1;
