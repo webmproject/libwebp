@@ -16,6 +16,24 @@
       "revId": "7cf1162fda0e38cada744338ab50026c8f2b01af",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//dRc\u003d",
+        "filename": "src/utils/bit_reader_inl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-08-02T04:09:24Z",
+      "side": 1,
+      "message": "yes, we already pull in dsp.h for the rescaler",
+      "parentUuid": "AAAAdn//dR0\u003d",
+      "revId": "7cf1162fda0e38cada744338ab50026c8f2b01af",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
