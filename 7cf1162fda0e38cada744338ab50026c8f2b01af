@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//dR0\u003d",
+        "filename": "src/utils/bit_reader_inl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-02T02:48:12Z",
+      "side": 1,
+      "message": "can\u0027t we reuse WEBP_USE_MIPS32 here?",
+      "revId": "7cf1162fda0e38cada744338ab50026c8f2b01af",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
