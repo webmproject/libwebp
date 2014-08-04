@@ -290,9 +290,20 @@ void (*WebPApplyAlphaMultiply4444)(uint8_t*, int, int, int);
 //------------------------------------------------------------------------------
 // Init function
 
+extern void VP8FiltersInitMIPSdspR2(void);
+
 void WebPInitAlphaProcessing(void) {
   WebPMultARGBRow = MultARGBRow;
   WebPMultRow = MultRow;
   WebPApplyAlphaMultiply = ApplyAlphaMultiply;
   WebPApplyAlphaMultiply4444 = ApplyAlphaMultiply_16b;
+
+  // If defined, use CPUInfo() to overwrite some pointers with faster versions.
+  if (VP8GetCPUInfo != NULL) {
+#if defined(WEBP_USE_MIPS_DSP_R2)
+    if (VP8GetCPUInfo(kMIPSdspR2)) {
+      VP8FiltersInitMIPSdspR2();
+    }
+#endif
+  }
 }

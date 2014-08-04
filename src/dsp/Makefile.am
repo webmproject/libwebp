@@ -16,6 +16,7 @@ COMMON_SOURCES += dec_clip_tables.c
 COMMON_SOURCES += dec_mips32.c
 COMMON_SOURCES += dec_neon.c
 COMMON_SOURCES += dsp.h
+COMMON_SOURCES += filters_mips_dsp_r2.c
 COMMON_SOURCES += lossless.c
 COMMON_SOURCES += lossless.h
 COMMON_SOURCES += lossless_mips32.c

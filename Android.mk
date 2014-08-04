@@ -44,6 +44,7 @@ LOCAL_SRC_FILES := \
     src/dsp/enc_mips32.c \
     src/dsp/enc_neon.$(NEON) \
     src/dsp/enc_sse2.c \
+    src/dsp/filters_mips_dsp_r2.c \
     src/dsp/lossless.c \
     src/dsp/lossless_mips32.c \
     src/dsp/lossless_neon.$(NEON) \

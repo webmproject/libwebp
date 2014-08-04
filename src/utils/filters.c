@@ -248,14 +248,14 @@ WEBP_FILTER_TYPE EstimateBestFilter(const uint8_t* data,
 
 //------------------------------------------------------------------------------
 
-const WebPFilterFunc WebPFilters[WEBP_FILTER_LAST] = {
+WebPFilterFunc WebPFilters[WEBP_FILTER_LAST] = {
   NULL,              // WEBP_FILTER_NONE
   HorizontalFilter,  // WEBP_FILTER_HORIZONTAL
   VerticalFilter,    // WEBP_FILTER_VERTICAL
   GradientFilter     // WEBP_FILTER_GRADIENT
 };
 
-const WebPUnfilterFunc WebPUnfilters[WEBP_FILTER_LAST] = {
+WebPUnfilterFunc WebPUnfilters[WEBP_FILTER_LAST] = {
   NULL,                // WEBP_FILTER_NONE
   HorizontalUnfilter,  // WEBP_FILTER_HORIZONTAL
   VerticalUnfilter,    // WEBP_FILTER_VERTICAL

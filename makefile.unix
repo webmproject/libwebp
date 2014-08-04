@@ -114,6 +114,7 @@ DSP_DEC_OBJS = \
     src/dsp/dec_mips32.o \
     src/dsp/dec_neon.o \
     src/dsp/dec_sse2.o \
+    src/dsp/filters_mips_dsp_r2.o \
     src/dsp/lossless.o \
     src/dsp/lossless_mips32.o \
     src/dsp/lossless_neon.o \
