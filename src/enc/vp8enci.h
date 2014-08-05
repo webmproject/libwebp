@@ -569,6 +569,10 @@ int WebPPictureAllocARGB(WebPPicture* const picture, int width, int height);
 // Returns false in case of error (invalid param, out-of-memory).
 int WebPPictureAllocYUVA(WebPPicture* const picture, int width, int height);
 
+  // in near_lossless.c
+// Near lossless preprocessing in RGB color-space.
+int VP8ApplyNearLossless(int xsize, int ysize, uint32_t* argb, int quality);
+
 //------------------------------------------------------------------------------
 
 #ifdef __cplusplus

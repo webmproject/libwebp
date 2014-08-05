@@ -218,6 +218,12 @@ Using this option will discard the alpha channel.
 .B \-lossless
 Encode the image without any loss.
 .TP
+.\" .B \-near_lossless " int
+.\" Use near-lossless image preprocessing. This option adjusts pixel values
+.\" to help compressibility, but has minimal impact on the visual quality.
+.\" It triggers lossless compression mode automatically.
+.\" Range is 0 (no preprocessing, the default) to 100.
+.\" .TP
 .BI \-hint " string
 Specify the hint about input image type. Possible values are:
 \fBphoto\fP, \fBpicture\fP or \fBgraph\fP.

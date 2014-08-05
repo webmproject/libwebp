@@ -142,6 +142,7 @@ ENC_OBJS = \
     src/enc/frame.o \
     src/enc/histogram.o \
     src/enc/iterator.o \
+    src/enc/near_lossless.o \
     src/enc/picture.o \
     src/enc/picture_csp.o \
     src/enc/picture_psnr.o \

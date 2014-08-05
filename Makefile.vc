@@ -217,6 +217,7 @@ ENC_OBJS = \
     $(DIROBJ)\enc\frame.obj \
     $(DIROBJ)\enc\histogram.obj \
     $(DIROBJ)\enc\iterator.obj \
+    $(DIROBJ)\enc\near_lossless.obj \
     $(DIROBJ)\enc\picture.obj \
     $(DIROBJ)\enc\picture_csp.obj \
     $(DIROBJ)\enc\picture_psnr.obj \

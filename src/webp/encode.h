@@ -131,7 +131,10 @@ struct WebPConfig {
   int thread_level;       // If non-zero, try and use multi-threaded encoding.
   int low_memory;         // If set, reduce memory usage (but increase CPU use).
 
-  uint32_t pad[5];        // padding for later use
+  int near_lossless;      // Near lossless encoding [0 = off(default) .. 100].
+                          // This feature is experimental.
+
+  uint32_t pad[4];        // padding for later use
 };
 
 // Enumerate some predefined settings for WebPConfig, depending on the type

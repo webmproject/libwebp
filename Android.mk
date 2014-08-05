@@ -63,6 +63,7 @@ LOCAL_SRC_FILES := \
     src/enc/frame.c \
     src/enc/histogram.c \
     src/enc/iterator.c \
+    src/enc/near_lossless.c \
     src/enc/picture.c \
     src/enc/picture_csp.c \
     src/enc/picture_psnr.c \
