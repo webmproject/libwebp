@@ -42,7 +42,7 @@ typedef void (*VP8SetResidualCoeffsFunc)(const int16_t* const coeffs,
                                          VP8Residual* const res);
 extern VP8SetResidualCoeffsFunc VP8SetResidualCoeffs;
 
-extern void VP8SetResidualCoeffsInit(void);  // must be called first
+void VP8SetResidualCoeffsInit(void);  // must be called first
 
 int VP8RecordCoeffs(int ctx, const VP8Residual* const res);
 
@@ -59,7 +59,7 @@ static WEBP_INLINE int VP8BitCost(int bit, uint8_t proba) {
 typedef int (*VP8GetResidualCostFunc)(int ctx0, const VP8Residual* const res);
 extern VP8GetResidualCostFunc VP8GetResidualCost;
 
-extern void VP8GetResidualCostInit(void);  // must be called first
+void VP8GetResidualCostInit(void);  // must be called first
 
 // Level cost calculations
 extern const uint16_t VP8LevelCodes[MAX_VARIABLE_LEVEL][2];
