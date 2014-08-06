@@ -1,7 +1,7 @@
 AC_INIT([libwebp], [0.4.1],
         [http://code.google.com/p/webp/issues],,
         [http://developers.google.com/speed/webp])
-AC_CANONICAL_TARGET
+AC_CANONICAL_HOST
 AC_PREREQ([2.60])
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 
@@ -409,8 +409,9 @@ AC_ARG_ENABLE([wic],
                               @<:@default=auto@:>@]),,
               [enable_wic=yes])
 
-if test \( "$target_os" = "mingw32" -o "$target_os" = "mingw64" \) \
-        -a "$enable_wic" = "yes"; then
+case $host_os in
+mingw*)
+if test "$enable_wic" = "yes"; then
   AC_CHECK_HEADERS([wincodec.h shlwapi.h windows.h])
   if test "$ac_cv_header_wincodec_h" = "yes"; then
     AC_MSG_CHECKING(for Windows Imaging Component support)
@@ -450,6 +451,7 @@ if test \( "$target_os" = "mingw32" -o "$target_os" = "mingw64" \) \
     AC_MSG_RESULT(${wic_support-no})
   fi
 fi
+esac
 
 dnl === If --enable-aligned is defined, define WEBP_FORCE_ALIGNED
 
