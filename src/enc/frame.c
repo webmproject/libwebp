@@ -508,7 +508,7 @@ static void StoreSideInfo(const VP8EncIterator* const it) {
       }
       case 7: *info = mb->alpha_; break;
       default: *info = 0; break;
-    };
+    }
   }
 #if SEGMENT_VISU  // visualize segments and prediction modes
   SetBlock(it->yuv_out_ + Y_OFF, mb->segment_ * 64, 16);
