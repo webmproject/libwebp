@@ -457,10 +457,10 @@ struct VP8Encoder {
   VP8MBInfo* mb_info_;   // contextual macroblock infos (mb_w_ + 1)
   uint8_t*   preds_;     // predictions modes: (4*mb_w+1) * (4*mb_h+1)
   uint32_t*  nz_;        // non-zero bit context: mb_w+1
-  uint8_t   *y_top_;     // top luma samples.
-  uint8_t   *uv_top_;    // top u/v samples.
+  uint8_t*   y_top_;     // top luma samples.
+  uint8_t*   uv_top_;    // top u/v samples.
                          // U and V are packed into 16 bytes (8 U + 8 V)
-  LFStats   *lf_stats_;  // autofilter stats (if NULL, autofilter is off)
+  LFStats*   lf_stats_;  // autofilter stats (if NULL, autofilter is off)
 };
 
 //------------------------------------------------------------------------------
