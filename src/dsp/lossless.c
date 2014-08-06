@@ -1169,7 +1169,7 @@ static void ColorSpaceInverseTransform(const VP8LTransform* const transform,
       data += remaining_width;
     }
     ++y;
-    if ((y & mask) == 0) pred_row += tiles_per_row;;
+    if ((y & mask) == 0) pred_row += tiles_per_row;
   }
 }
 
