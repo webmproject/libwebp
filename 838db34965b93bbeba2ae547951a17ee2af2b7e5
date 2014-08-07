@@ -34,6 +34,24 @@
       "revId": "838db34965b93bbeba2ae547951a17ee2af2b7e5",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//c1o\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-08-07T06:13:43Z",
+      "side": 1,
+      "message": "Thanks. The autoconf manual has a similar note now, target\u0027s presence was probably a misunderstanding way back: our cross-compiles on jenkins use host+build...",
+      "parentUuid": "AAAAdn//c2I\u003d",
+      "revId": "838db34965b93bbeba2ae547951a17ee2af2b7e5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
