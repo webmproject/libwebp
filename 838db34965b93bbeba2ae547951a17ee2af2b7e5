@@ -16,6 +16,24 @@
       "revId": "838db34965b93bbeba2ae547951a17ee2af2b7e5",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//c2I\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002108
+      },
+      "writtenOn": "2014-08-07T04:20:16Z",
+      "side": 1,
+      "message": "Not really. I was actually trying to fix issue 180 (https://code.google.com/p/webp/issues/detail?id\u003d180), and I just decided to change this first which can\u0027t hurt. If you still haven\u0027t seen the mistake in using target, target is supposed to be the platform the built _compiler_ is targeting at. See https://blog.flameeyes.eu/2008/10/you-dont-want-to-canonicalise-that-and-im-not-referring-to-ubuntu",
+      "parentUuid": "AAAAdn//c2Y\u003d",
+      "revId": "838db34965b93bbeba2ae547951a17ee2af2b7e5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
