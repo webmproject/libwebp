@@ -16,6 +16,24 @@
       "revId": "b7e5a5c451dfead56672703299a44e1e9907becd",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//cgA\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-08-09T01:02:33Z",
+      "side": 1,
+      "message": "on top of that are there intrinsics available that might give us broader coverage?",
+      "parentUuid": "AAAAdn//cko\u003d",
+      "revId": "b7e5a5c451dfead56672703299a44e1e9907becd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
