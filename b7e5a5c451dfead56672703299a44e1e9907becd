@@ -34,6 +34,24 @@
       "revId": "b7e5a5c451dfead56672703299a44e1e9907becd",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ceQ\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1004029
+      },
+      "writtenOn": "2014-08-11T12:43:57Z",
+      "side": 1,
+      "message": "r6 specification is available at http://www.imgtec.com/mips/architectures/mips64.asp. Please refer to section 2.3.6 in Volume I: Introduction to the MIPS64 Architecture v6.01 (mips32r6 is covered there as well)",
+      "parentUuid": "AAAAdn//cko\u003d",
+      "revId": "b7e5a5c451dfead56672703299a44e1e9907becd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
