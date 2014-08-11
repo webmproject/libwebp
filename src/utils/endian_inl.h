@@ -16,6 +16,7 @@
 #include "../webp/config.h"
 #endif
 
+#include "../dsp/dsp.h"
 #include "../webp/types.h"
 
 // some endian fix (e.g.: mips-gcc doesn't define __BIG_ENDIAN__)
@@ -69,7 +70,16 @@ static WEBP_INLINE uint16_t BSwap16(uint16_t x) {
 }
 
 static WEBP_INLINE uint32_t BSwap32(uint32_t x) {
-#if defined(HAVE_BUILTIN_BSWAP32)
+#if defined(WEBP_USE_MIPS32_R2)
+  uint32_t ret;
+  __asm__ volatile (
+    "wsbh   %[ret], %[x]          \n\t"
+    "rotr   %[ret], %[ret],  16   \n\t"
+    : [ret]"=r"(ret)
+    : [x]"r"(x)
+  );
+  return ret;
+#elif defined(HAVE_BUILTIN_BSWAP32)
   return __builtin_bswap32(x);
 #elif defined(__i386__) || defined(__x86_64__)
   uint32_t swapped_bytes;
