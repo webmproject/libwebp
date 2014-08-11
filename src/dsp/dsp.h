@@ -62,6 +62,9 @@ extern "C" {
 
 #if defined(__mips__) && !defined(__mips64) && (__mips_isa_rev < 6)
 #define WEBP_USE_MIPS32
+#if (__mips_isa_rev >= 2)
+#define WEBP_USE_MIPS32_R2
+#endif
 #endif
 
 typedef enum {
