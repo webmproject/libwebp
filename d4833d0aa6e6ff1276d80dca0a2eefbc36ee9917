@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//cUc\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-08-12T02:57:44Z",
+      "side": 1,
+      "message": "might be overly optimistic. also this doesn\u0027t account for distro\u0027s that backport the fix, though it shouldn\u0027t harm anything in practice.",
+      "revId": "d4833d0aa6e6ff1276d80dca0a2eefbc36ee9917",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
