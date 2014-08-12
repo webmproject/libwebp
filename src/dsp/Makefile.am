@@ -26,6 +26,7 @@ COMMON_SOURCES += upsampling_neon.c
 COMMON_SOURCES += yuv.c
 COMMON_SOURCES += yuv.h
 COMMON_SOURCES += yuv_mips32.c
+COMMON_SOURCES += yuv_mips_dsp_r2.c
 
 ENC_SOURCES =
 ENC_SOURCES += enc.c

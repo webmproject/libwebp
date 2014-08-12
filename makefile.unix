@@ -123,6 +123,7 @@ DSP_DEC_OBJS = \
     src/dsp/upsampling_sse2.o \
     src/dsp/yuv.o \
     src/dsp/yuv_mips32.o \
+    src/dsp/yuv_mips_dsp_r2.o \
     src/dsp/yuv_sse2.o \
 
 DSP_ENC_OBJS = \

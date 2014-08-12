@@ -187,6 +187,7 @@ DSP_DEC_OBJS = \
     $(DIROBJ)\dsp\upsampling_sse2.obj \
     $(DIROBJ)\dsp\yuv.obj \
     $(DIROBJ)\dsp\yuv_mips32.obj \
+    $(DIROBJ)\dsp\yuv_mips_dsp_r2.obj \
     $(DIROBJ)\dsp\yuv_sse2.obj \
 
 DSP_ENC_OBJS = \

@@ -118,10 +118,14 @@ static int armCPUInfo(CPUFeature feature) {
   return 1;
 }
 VP8CPUInfo VP8GetCPUInfo = armCPUInfo;
-#elif defined(WEBP_USE_MIPS32)
+#elif defined(WEBP_USE_MIPS32) || defined(WEBP_USE_MIPS_DSP_R2)
 static int mipsCPUInfo(CPUFeature feature) {
-  (void)feature;
-  return 1;
+  if ((feature == kMIPS32) || (feature == kMIPSdspR2)) {
+    return 1;
+  } else {
+    return 0;
+  }
+
 }
 VP8CPUInfo VP8GetCPUInfo = mipsCPUInfo;
 #else

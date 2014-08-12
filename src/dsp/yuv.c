@@ -122,6 +122,7 @@ WebPSamplerRowFunc WebPSamplers[MODE_LAST];
 
 extern void WebPInitSamplersSSE2(void);
 extern void WebPInitSamplersMIPS32(void);
+extern void WebPInitSamplersMIPSdspR2(void);
 
 void WebPInitSamplers(void) {
   WebPSamplers[MODE_RGB]       = YuvToRgbRow;
@@ -148,6 +149,11 @@ void WebPInitSamplers(void) {
       WebPInitSamplersMIPS32();
     }
 #endif  // WEBP_USE_MIPS32
+#if defined(WEBP_USE_MIPS_DSP_R2)
+    if (VP8GetCPUInfo(kMIPSdspR2)) {
+      WebPInitSamplersMIPSdspR2();
+    }
+#endif  // WEBP_USE_MIPS_DSP_R2
   }
 }
 
