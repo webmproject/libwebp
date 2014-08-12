@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//cPc\u003d",
+        "filename": "src/utils/bit_reader_inl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-08-12T22:22:52Z",
+      "side": 0,
+      "message": "WEBP_FORCE_ALIGNED comes from config.h so it\u0027s probably best to leave a reference here so we don\u0027t have to track all include locations",
+      "revId": "98c54107df065ff224bd925e670effc7dc8253e6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
