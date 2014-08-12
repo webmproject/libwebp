@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//cRM\u003d",
+        "filename": "src/dsp/yuv.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-12T15:04:40Z",
+      "side": 1,
+      "message": "don\u0027t you need to modify cpu.c too, and detect kMIPSdsp2 ?\n\n(cpu.c:121 there\u0027s a mipsCPUInfo() function, but it\u0027s for MIPS32).",
+      "revId": "3726dbcdc9364a79f0ce50e3a1c3421e6b438998",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//cRg\u003d",
+        "filename": "src/dsp/yuv_mips_dsp2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-12T15:04:40Z",
+      "side": 1,
+      "message": "what about using \u0027uint32\u0027 instead of \u0027int\u0027, to make it clear these are register variables...",
+      "revId": "3726dbcdc9364a79f0ce50e3a1c3421e6b438998",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//cRo\u003d",
+        "filename": "src/dsp/yuv_mips_dsp2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-12T15:04:40Z",
+      "side": 1,
+      "message": "isn\u0027t it dangerous to load addresses as \u0027int\u0027 ?\n\nWhy not use \u0027uintptr_t\u0027 ?\n\n(also: these should be \u0027const uintptr_t ...\u0027)",
+      "revId": "3726dbcdc9364a79f0ce50e3a1c3421e6b438998",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//cRI\u003d",
+        "filename": "src/dsp/yuv_mips_dsp2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-12T15:04:40Z",
+      "side": 1,
+      "message": "seems like the block 42-53 (or more) could be factorized into a MACRO for clarity.",
+      "revId": "3726dbcdc9364a79f0ce50e3a1c3421e6b438998",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//cRk\u003d",
+        "filename": "src/dsp/yuv_mips_dsp2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-12T15:04:40Z",
+      "side": 1,
+      "message": "tests could be merged:\n\nif (A) dst[A] \u003d dst[A+XSTEP] \u003d 0xff;",
+      "revId": "3726dbcdc9364a79f0ce50e3a1c3421e6b438998",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//cRU\u003d",
+        "filename": "src/dsp/yuv_mips_dsp2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-12T15:04:40Z",
+      "side": 1,
+      "message": "Suggestion:\n\nthere\u0027s some mismatch between the file name / function name (dsp2) and the #define (DSP_R2).\n\nWhat about using dspR2 everywhere for instance?\n\nI\u0027m fine with MIPSdsp2 otherwise.",
+      "revId": "3726dbcdc9364a79f0ce50e3a1c3421e6b438998",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
