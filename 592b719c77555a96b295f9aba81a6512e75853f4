@@ -16,6 +16,41 @@
       "revId": "592b719c77555a96b295f9aba81a6512e75853f4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//cD4\u003d",
+        "filename": "src/dsp/yuv.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-13T15:07:21Z",
+      "side": 1,
+      "message": "on the contrary, CPUInfo is useful to disable assembly optimizations at run time (for testing against the C version, e.g.).\n\nUser must be able to overwrite the default version, even if the default version is minimal like for mips.",
+      "parentUuid": "AAAAdn//cEA\u003d",
+      "revId": "592b719c77555a96b295f9aba81a6512e75853f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//cD0\u003d",
+        "filename": "src/dsp/yuv_mips_dsp_r2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-13T15:07:21Z",
+      "side": 1,
+      "message": "uintptr_t ?",
+      "revId": "592b719c77555a96b295f9aba81a6512e75853f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
