@@ -16,6 +16,24 @@
       "revId": "98c54107df065ff224bd925e670effc7dc8253e6",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//cEU\u003d",
+        "filename": "src/utils/bit_reader_inl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-13T14:23:49Z",
+      "side": 0,
+      "message": "nice catch. that\u0027s tricky indeed. I would have like to have dsp.h being the only source of #defines and #ifdef, getting of local variations, but it\u0027s not that straightforward it seems.",
+      "parentUuid": "AAAAdn//cPc\u003d",
+      "revId": "98c54107df065ff224bd925e670effc7dc8253e6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
