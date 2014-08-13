@@ -87,6 +87,24 @@
       "revId": "592b719c77555a96b295f9aba81a6512e75853f4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//cCc\u003d",
+        "filename": "src/dsp/yuv_mips_dsp_r2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-13T15:24:14Z",
+      "side": 1,
+      "message": "oh indeed, you\u0027re right. I thought these were tables.\nAll correct, then.",
+      "parentUuid": "AAAAdn//cC8\u003d",
+      "revId": "592b719c77555a96b295f9aba81a6512e75853f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
