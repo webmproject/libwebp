@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//cDk\u003d",
+        "filename": "src/dsp/yuv.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1004029
+      },
+      "writtenOn": "2014-08-13T15:14:10Z",
+      "side": 1,
+      "message": "you are right, sorry. will fix it",
+      "parentUuid": "AAAAdn//cD4\u003d",
+      "revId": "592b719c77555a96b295f9aba81a6512e75853f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//cD0\u003d",
         "filename": "src/dsp/yuv_mips_dsp_r2.c",
         "patchSetId": 2
@@ -48,6 +66,24 @@
       "writtenOn": "2014-08-13T15:07:21Z",
       "side": 1,
       "message": "uintptr_t ?",
+      "revId": "592b719c77555a96b295f9aba81a6512e75853f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//cC8\u003d",
+        "filename": "src/dsp/yuv_mips_dsp_r2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1004029
+      },
+      "writtenOn": "2014-08-13T15:14:10Z",
+      "side": 1,
+      "message": "they are integer numbers, so I declare them as const int",
+      "parentUuid": "AAAAdn//cD0\u003d",
       "revId": "592b719c77555a96b295f9aba81a6512e75853f4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
