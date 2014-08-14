@@ -1,0 +1,446 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//bw0\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "DECLARE_ALIGNED is likely a quite common name.\nEven if this header file is not supposed to be visible externally, could you prefix the name with WEBP_ please?\n\n(you can use short variant like WEBP_ALIGNED_DECL() if you wish)",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bxE\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "one shouldn\u0027t print a warning in this case",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bvw\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "this include can go under the WEBP_USE_AVX2 umbrella below (line 16)",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bvs\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "no need to pre-declare this function",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bvE\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "should be static function",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bvA\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "please remove or update the TODO/comment (regarding benchmark speed in particular. This likely doesn\u0027t apply to AVX2)",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bu4\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "unneeded",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bu0\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "static",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//buw\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "trailing whitespaces (at other places too)",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//buk\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "long line",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bug\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "long line, trailing whitespace",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//buo\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "memeory -\u003e memory",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//buc\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "long line",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//buY\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 452,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "unneeded",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//buU\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "static",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//buQ\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "long line, trailing whitespace",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//buM\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 551,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "remove or update",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bvM\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 619,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "unneeded",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bvI\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "should be static",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//buI\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 639,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "remove or update",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//buE\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 680,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "long lines",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bvc\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "trailing whitespaces (and at other places too)",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bvg\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 747,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "not needed",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bvk\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "should be static too",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bvY\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 761,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "the \u0027{\u0027 should be on the same line as the \u0027if\u0027:\n\nif (lane \u003d\u003d 16) {\n  ...\n} else {\n  ...\n}",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//buA\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T22:01:43Z",
+      "side": 1,
+      "message": "you need to set the function pointers to the new (static) functions you defined in this file. This is similar to enc_sse2.c:968 for instance:\n\nVP8SSE4x4 \u003d SSE4x4;\nVP8SSE8x8 \u003d SSE8x8;\n\netc.",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
