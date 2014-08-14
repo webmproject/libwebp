@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//b14\u003d",
+        "filename": "src/dsp/filters_mips_dsp_r2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T13:10:05Z",
+      "side": 1,
+      "message": "\u0027{\u0027 could go at line 37 above.\n\nNote we usually use the \"do { ... } while (0)\" encapsulation for macro blocks.",
+      "revId": "e2962c8490484e661028c979566d65195552273a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//b18\u003d",
+        "filename": "src/dsp/filters_mips_dsp_r2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T13:10:05Z",
+      "side": 1,
+      "message": "const uint8_t* psrc ...",
+      "revId": "e2962c8490484e661028c979566d65195552273a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//b10\u003d",
+        "filename": "src/dsp/filters_mips_dsp_r2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T13:10:05Z",
+      "side": 1,
+      "message": "const uint8_t* ppred \u003d...",
+      "revId": "e2962c8490484e661028c979566d65195552273a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//b2A\u003d",
+        "filename": "src/dsp/filters_mips_dsp_r2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-14T13:10:05Z",
+      "side": 1,
+      "message": "this macro should be moved closer (line ~121) to where it\u0027s used",
+      "revId": "e2962c8490484e661028c979566d65195552273a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
