@@ -441,6 +441,24 @@
       "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//btg\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1108495
+      },
+      "writtenOn": "2014-08-14T22:17:52Z",
+      "side": 1,
+      "message": "Hi Pascal,\n\nThat\u0027s not similar.\nbecause Im not choosing here between using SSE4x4 of sse2 or avx2.\nThose functions are done only for my new version of PickBestIntra4.\nThe pointers are done between the regular PickBestIntra4 to my avx2 PickBestIntra4.",
+      "parentUuid": "AAAAdn//buA\u003d",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
