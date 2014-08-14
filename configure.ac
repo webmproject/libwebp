@@ -62,6 +62,19 @@ TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wshadow])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wunused-but-set-variable])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wunused])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wvla])
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=62040
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61622
+AS_IF([test "$GCC" = "yes" ], [
+       gcc_version=`$CC -dumpversion`
+       gcc_wht_bug=""
+       case "$host_cpu" in
+         aarch64|arm64)
+          case "$gcc_version" in
+            4.9|4.9.0|4.9.1) gcc_wht_bug=yes ;;
+          esac
+       esac
+       AS_IF([test "$gcc_wht_bug" = "yes"], [
+              TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-frename-registers])])])
 AC_SUBST([AM_CFLAGS])
 
 dnl === Check for machine specific flags
