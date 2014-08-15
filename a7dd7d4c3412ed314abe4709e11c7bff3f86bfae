@@ -495,6 +495,24 @@
       "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bms\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-15T17:16:43Z",
+      "side": 1,
+      "message": "It\u0027s not a good long-term idea to have platform-specific API for the dsp functions.\nThey are meant to be at a high-enough level of abstraction, so that they are common to all platforms and we can hide the specifics in the implementation.\nThis way, people with a new platform can quickly understand what they need to re-implement by looking at the other codes (or the C-fallback implementation).\n\nIf you thinkg to need to change the interface, it probably means the current API is not high-level enough to be common, and this should be changed *first*, before implementing the AVX2-specific variation underneath.",
+      "parentUuid": "AAAAdn//bng\u003d",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
