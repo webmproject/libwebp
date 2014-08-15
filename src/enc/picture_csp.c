@@ -138,15 +138,18 @@ static WEBP_INLINE int LinearToGamma(uint32_t base_value, int shift) {
 // RGB -> YUV conversion
 
 static int RGBToY(int r, int g, int b, VP8Random* const rg) {
-  return VP8RGBToY(r, g, b, VP8RandomBits(rg, YUV_FIX));
+  return (rg == NULL) ? VP8RGBToY(r, g, b, YUV_HALF)
+                      : VP8RGBToY(r, g, b, VP8RandomBits(rg, YUV_FIX));
 }
 
 static int RGBToU(int r, int g, int b, VP8Random* const rg) {
-  return VP8RGBToU(r, g, b, VP8RandomBits(rg, YUV_FIX + 2));
+  return (rg == NULL) ? VP8RGBToU(r, g, b, YUV_HALF << 2)
+                      : VP8RGBToU(r, g, b, VP8RandomBits(rg, YUV_FIX + 2));
 }
 
 static int RGBToV(int r, int g, int b, VP8Random* const rg) {
-  return VP8RGBToV(r, g, b, VP8RandomBits(rg, YUV_FIX + 2));
+  return (rg == NULL) ? VP8RGBToV(r, g, b, YUV_HALF << 2)
+                      : VP8RGBToV(r, g, b, VP8RandomBits(rg, YUV_FIX + 2));
 }
 
 //------------------------------------------------------------------------------
@@ -568,21 +571,45 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
     GammaToLinear((ptr)[rgb_stride]) +                     \
     GammaToLinear((ptr)[rgb_stride + step]), 0)            \
 
-#define SUM2H(ptr) \
-    LinearToGamma(GammaToLinear((ptr)[0]) + GammaToLinear((ptr)[step]), 1)
 #define SUM2V(ptr) \
     LinearToGamma(GammaToLinear((ptr)[0]) + GammaToLinear((ptr)[rgb_stride]), 1)
-#define SUM1(ptr)  \
-    LinearToGamma(GammaToLinear((ptr)[0]), 2)
 
-#define RGB_TO_UV(x, y, SUM) {                             \
-  const int src = (2 * (step * (x) + (y) * rgb_stride));   \
-  const int dst = (x) + (y) * picture->uv_stride;          \
-  const int r = SUM(r_ptr + src);                          \
-  const int g = SUM(g_ptr + src);                          \
-  const int b = SUM(b_ptr + src);                          \
-  picture->u[dst] = RGBToU(r, g, b, &rg);                  \
-  picture->v[dst] = RGBToV(r, g, b, &rg);                  \
+static WEBP_INLINE void ConvertRowToY(const uint8_t* const r_ptr,
+                                      const uint8_t* const g_ptr,
+                                      const uint8_t* const b_ptr,
+                                      int step,
+                                      uint8_t* const dst_y,
+                                      int width,
+                                      VP8Random* const rg) {
+  int i, j;
+  for (i = 0, j = 0; i < width; ++i, j += step) {
+    dst_y[i] = RGBToY(r_ptr[j], g_ptr[j], b_ptr[j], rg);
+  }
+}
+
+static WEBP_INLINE void ConvertRowsToUV(const uint8_t* const r_ptr,
+                                        const uint8_t* const g_ptr,
+                                        const uint8_t* const b_ptr,
+                                        int step, int rgb_stride,
+                                        uint8_t* const dst_u,
+                                        uint8_t* const dst_v,
+                                        int width,
+                                        VP8Random* const rg) {
+  int i, j;
+  for (i = 0, j = 0; i < (width >> 1); ++i, j += 2 * step) {
+    const int r = SUM4(r_ptr + j);
+    const int g = SUM4(g_ptr + j);
+    const int b = SUM4(b_ptr + j);
+    dst_u[i] = RGBToU(r, g, b, rg);
+    dst_v[i] = RGBToV(r, g, b, rg);
+  }
+  if (width & 1) {
+    const int r = SUM2V(r_ptr + j);
+    const int g = SUM2V(g_ptr + j);
+    const int b = SUM2V(b_ptr + j);
+    dst_u[i] = RGBToU(r, g, b, rg);
+    dst_v[i] = RGBToV(r, g, b, rg);
+  }
 }
 
 static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
@@ -594,7 +621,7 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
                               float dithering,
                               int use_iterative_conversion,
                               WebPPicture* const picture) {
-  int x, y;
+  int y;
   const int width = picture->width;
   const int height = picture->height;
   const int has_alpha = CheckNonOpaque(a_ptr, width, height, step, rgb_stride);
@@ -612,36 +639,39 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
       return 0;
     }
   } else {
-    VP8Random rg;
-    VP8InitRandom(&rg, dithering);
+    uint8_t* dst_y = picture->y;
+    uint8_t* dst_u = picture->u;
+    uint8_t* dst_v = picture->v;
+
+    VP8Random base_rg;
+    VP8Random* rg = NULL;
+    if (dithering > 0.) {
+      VP8InitRandom(&base_rg, dithering);
+      rg = &base_rg;
+    }
 
     InitGammaTables();
 
-    // Import luma plane
-    for (y = 0; y < height; ++y) {
-      uint8_t* const dst = &picture->y[y * picture->y_stride];
-      for (x = 0; x < width; ++x) {
-        const int offset = step * x + y * rgb_stride;
-        dst[x] = RGBToY(r_ptr[offset], g_ptr[offset], b_ptr[offset], &rg);
-      }
-    }
-
-    // Downsample U/V plane
+    // Downsample Y/U/V planes, two rows at a time
     for (y = 0; y < (height >> 1); ++y) {
-      for (x = 0; x < (width >> 1); ++x) {
-        RGB_TO_UV(x, y, SUM4);
-      }
-      if (width & 1) {
-        RGB_TO_UV(x, y, SUM2V);
-      }
+      const int off1 = (2 * y + 0) * rgb_stride;
+      const int off2 = (2 * y + 1) * rgb_stride;
+      ConvertRowToY(r_ptr + off1, g_ptr + off1, b_ptr + off1, step,
+                    dst_y, width, rg);
+      ConvertRowToY(r_ptr + off2, g_ptr + off2, b_ptr + off2, step,
+                    dst_y + picture->y_stride, width, rg);
+      dst_y += 2 * picture->y_stride;
+      ConvertRowsToUV(r_ptr + off1, g_ptr + off1, b_ptr + off1,
+                      step, rgb_stride, dst_u, dst_v, width, rg);
+      dst_u += picture->uv_stride;
+      dst_v += picture->uv_stride;
     }
-    if (height & 1) {
-      for (x = 0; x < (width >> 1); ++x) {
-        RGB_TO_UV(x, y, SUM2H);
-      }
-      if (width & 1) {
-        RGB_TO_UV(x, y, SUM1);
-      }
+    if (height & 1) {    // extra last row
+      const int off = 2 * y * rgb_stride;
+      ConvertRowToY(r_ptr + off, g_ptr + off, b_ptr + off, step,
+                    dst_y, width, rg);
+      ConvertRowsToUV(r_ptr + off, g_ptr + off, b_ptr + off,
+                      step, 0, dst_u, dst_v, width, rg);
     }
   }
 
@@ -649,6 +679,7 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
     assert(step >= 4);
     assert(picture->a != NULL);
     for (y = 0; y < height; ++y) {
+      int x;
       for (x = 0; x < width; ++x) {
         picture->a[x + y * picture->a_stride] =
             a_ptr[step * x + y * rgb_stride];
