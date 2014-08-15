@@ -328,16 +328,22 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
     VP8Encoder* enc = NULL;
     if (pic->y == NULL || pic->u == NULL || pic->v == NULL) {
       // Make sure we have YUVA samples.
-      float dithering = 0.f;
-      if (config->preprocessing & 2) {
-        const float x = config->quality / 100.f;
-        const float x2 = x * x;
-        // slowly decreasing from max dithering at low quality (q->0)
-        // to 0.5 dithering amplitude at high quality (q->100)
-        dithering = 1.0f + (0.5f - 1.0f) * x2 * x2;
-      }
-      if (!WebPPictureARGBToYUVADithered(pic, WEBP_YUV420, dithering)) {
-        return 0;
+      if (config->preprocessing & 4) {
+        if (!WebPPictureSmartARGBToYUVA(pic)) {
+          return 0;
+        }
+      } else {
+        float dithering = 0.f;
+        if (config->preprocessing & 2) {
+          const float x = config->quality / 100.f;
+          const float x2 = x * x;
+          // slowly decreasing from max dithering at low quality (q->0)
+          // to 0.5 dithering amplitude at high quality (q->100)
+          dithering = 1.0f + (0.5f - 1.0f) * x2 * x2;
+        }
+        if (!WebPPictureARGBToYUVADithered(pic, WEBP_YUV420, dithering)) {
+          return 0;
+        }
       }
     }
 
