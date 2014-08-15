@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//bn8\u003d",
+        "filename": "src/dsp/yuv.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-15T14:59:31Z",
+      "side": 1,
+      "message": "including an alternate .h file to replace some commonly defined function (like VP8Clip8 or VP8YUVTo*) that contain inlined platform-specific assembly if very tricky.\n\nWhat about having all the special code inlined where it\u0027s used (upsampling_mips_dsp_r2.c) ?\nSo that MIPS-specific code doesn\u0027t spill into common headers...",
+      "revId": "d49993e06cf133a40069244b1d8f430295e6ef08",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
