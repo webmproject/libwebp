@@ -184,6 +184,7 @@ DSP_DEC_OBJS = \
     $(DIROBJ)\dsp\lossless_neon.obj \
     $(DIROBJ)\dsp\lossless_sse2.obj \
     $(DIROBJ)\dsp\upsampling.obj \
+    $(DIROBJ)\dsp\upsampling_mips_dsp_r2.obj \
     $(DIROBJ)\dsp\upsampling_neon.obj \
     $(DIROBJ)\dsp\upsampling_sse2.obj \
     $(DIROBJ)\dsp\yuv.obj \

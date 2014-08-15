@@ -231,7 +231,7 @@ typedef void (*WebPYUV444Converter)(const uint8_t* y,
                                     const uint8_t* u, const uint8_t* v,
                                     uint8_t* dst, int len);
 
-extern const WebPYUV444Converter WebPYUV444Converters[/* MODE_LAST */];
+extern WebPYUV444Converter WebPYUV444Converters[/* MODE_LAST */];
 
 // Must be called before using the WebPUpsamplers[] (and for premultiplied
 // colorspaces like rgbA, rgbA4444, etc)
