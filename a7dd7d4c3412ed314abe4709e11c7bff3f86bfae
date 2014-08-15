@@ -549,6 +549,24 @@
       "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//big\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1108495
+      },
+      "writtenOn": "2014-08-15T20:21:50Z",
+      "side": 1,
+      "message": "but my AVX2 function going to run anyway only on haswell machines and above.\nI cannot change PickBestIntra4 to call AVX2 functions the same way it calls SSE2 function because this function handle 32 element and not 16 element(SSE2).\nI dont see how its harder to maintain, you have PickBestIntra4 for SSE2 and PickBestIntra4 for AVX2 both have the same parameters but the implementation is different.",
+      "parentUuid": "AAAAdn//bjo\u003d",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
