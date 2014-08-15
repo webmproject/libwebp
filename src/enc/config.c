@@ -112,7 +112,7 @@ int WebPValidateConfig(const WebPConfig* config) {
     return 0;
   if (config->show_compressed < 0 || config->show_compressed > 1)
     return 0;
-  if (config->preprocessing < 0 || config->preprocessing > 3)
+  if (config->preprocessing < 0 || config->preprocessing > 7)
     return 0;
   if (config->partitions < 0 || config->partitions > 3)
     return 0;
