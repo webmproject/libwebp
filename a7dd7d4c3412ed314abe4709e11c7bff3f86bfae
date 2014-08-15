@@ -513,6 +513,24 @@
       "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bl4\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1108495
+      },
+      "writtenOn": "2014-08-15T17:33:49Z",
+      "side": 1,
+      "message": "There is no need to change the interface because the interface works good for SSE2, MIPS and others.\nI saw an opportunity to optimize PickBestIntra4 inner loop by \nexecuting two iteration in one 256 bit register but this cannot be done with the same prototype functions of the current SSE2 implementations.\nThat\u0027s why I created my own version of those functions (that do not hurt the current SSE2 implementation) that can handle two iterations at a time.\nI also created quant_avx2.c file that contain AVX2 implementation for PickBestIntra4 (I didn\u0027t submit yet)",
+      "parentUuid": "AAAAdn//bms\u003d",
+      "revId": "a7dd7d4c3412ed314abe4709e11c7bff3f86bfae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
