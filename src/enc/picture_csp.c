@@ -208,7 +208,7 @@ static WEBP_INLINE float LinearToGammaF(float value) {
   const float x = v - (float)tab_pos;      // fractional part
   const float v0 = kLinearToGammaTabF[tab_pos + 0];
   const float v1 = kLinearToGammaTabF[tab_pos + 1];
-  const float y = v1 * x + v0 * (1. - x);  // interpolate
+  const float y = v1 * x + v0 * (1.f - x);  // interpolate
   return y;
 }
 
@@ -301,9 +301,9 @@ static WEBP_INLINE void UpdateChroma(const fixed_y_t* src1,
     const float g = ScaleDown(src1[1], src1[4], src2[1], src2[4]);
     const float b = ScaleDown(src1[2], src1[5], src2[2], src2[5]);
     const float W = RGBToGrayF(r, g, b);
-    dst[0] = (fixed_t)FixedYToW(r - W);
-    dst[1] = (fixed_t)FixedYToW(g - W);
-    dst[2] = (fixed_t)FixedYToW(b - W);
+    dst[0] = (fixed_t)FixedYToW((int)(r - W));
+    dst[1] = (fixed_t)FixedYToW((int)(g - W));
+    dst[2] = (fixed_t)FixedYToW((int)(b - W));
     dst += 3;
     src1 += 6;
     src2 += 6;
