@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//bVU\u003d",
+        "filename": "src/dsp/upsampling_mips_dsp_r2.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-18T14:39:46Z",
+      "side": 1,
+      "message": "could be renamed to \"YUV_TO_RGB\", for explicitness",
+      "revId": "5f0f40399c307842a00220f5bc14e4a19eecdc0b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bVc\u003d",
+        "filename": "src/dsp/upsampling_mips_dsp_r2.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-18T14:39:46Z",
+      "side": 1,
+      "message": "note that you don\u0027t need the \u0027Mips\u0027 suffix here, since these functions are static to the .c file",
+      "revId": "5f0f40399c307842a00220f5bc14e4a19eecdc0b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bVQ\u003d",
+        "filename": "src/dsp/upsampling_mips_dsp_r2.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-18T14:39:46Z",
+      "side": 1,
+      "message": "the naming of variable is misleading.\nYou should use r, g, b instead and move some of the t1 - t5 variables to local scope at line 25.\n\nSo that calls would ressemble something like:\n\nint r, g, b;\nYUV_TO_RGB(y, u, v, r, g, b);\n\nwhich is more readable",
+      "revId": "5f0f40399c307842a00220f5bc14e4a19eecdc0b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bVY\u003d",
+        "filename": "src/dsp/upsampling_mips_dsp_r2.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-18T14:39:46Z",
+      "side": 1,
+      "message": "space after \u0027\u003d\u0027 (and you don\u0027t need the ()\u0027s)\n\n(and below too)",
+      "revId": "5f0f40399c307842a00220f5bc14e4a19eecdc0b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
