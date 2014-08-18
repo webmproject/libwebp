@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//bU4\u003d",
+        "filename": "src/dsp/upsampling_mips_dsp_r2.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-18T15:37:32Z",
+      "side": 1,
+      "message": "oh indeed. At least you can remove the VP8 prefix.",
+      "parentUuid": "AAAAdn//bVI\u003d",
+      "revId": "5f0f40399c307842a00220f5bc14e4a19eecdc0b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//bVQ\u003d",
         "filename": "src/dsp/upsampling_mips_dsp_r2.c",
         "patchSetId": 3
@@ -83,6 +101,24 @@
       "side": 1,
       "message": "if I move t1..t5 to local scope then I can not use do {} while (0) for macro. should I move them to local scope and remove do while from macro?",
       "parentUuid": "AAAAdn//bVQ\u003d",
+      "revId": "5f0f40399c307842a00220f5bc14e4a19eecdc0b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//bU8\u003d",
+        "filename": "src/dsp/upsampling_mips_dsp_r2.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-18T15:37:32Z",
+      "side": 1,
+      "message": "on the contrary, the \"do {...} while (0)\" is useful for scoping.\n\n#define YUV_TO_RGB(y,u,v,r,g,b) do { \\\n  int t1, t2, t3,...;\n  ...\n}\n\nand later:\n\nint r,g,b;\nYUV_TO_RGB(y,u,v,r,g,b);\n\nat call site. You still need externally visible r,g,b variables, but the other ones (t1..t5) are local under the \"do{} while(0)\" scope.",
+      "parentUuid": "AAAAdn//bVE\u003d",
       "revId": "5f0f40399c307842a00220f5bc14e4a19eecdc0b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
