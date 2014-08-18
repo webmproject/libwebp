@@ -156,6 +156,7 @@ static int RGBToV(int r, int g, int b, VP8Random* const rg) {
 // Smart RGB->YUV conversion
 
 static const int kNumIterations = 6;
+static const int kMinDimensionIterativeConversion = 4;
 
 // We use a-priori a different precision for storing RGB and Y/W components
 // We could use YFIX=0 and only uint8_t for fixed_y_t, but it produces some
@@ -349,6 +350,9 @@ static void ImportOneRow(const uint8_t* const r_ptr,
     dst[3 * i + 1] = UpLift(g_ptr[off]);
     dst[3 * i + 2] = UpLift(b_ptr[off]);
   }
+  if (pic_width & 1) {  // replicate rightmost pixel
+    memcpy(dst + 3 * pic_width, dst + 3 * (pic_width - 1), 3 * sizeof(*dst));
+  }
 }
 
 static void InterpolateTwoRows(const fixed_y_t* const best_y,
@@ -476,6 +480,8 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
     ok = WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
     goto End;
   }
+  assert(picture->width >= kMinDimensionIterativeConversion);
+  assert(picture->height >= kMinDimensionIterativeConversion);
 
   // Import RGB samples to W/RGB representation.
   for (j = 0; j < picture->height; j += 2) {
@@ -628,6 +634,12 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
 
   picture->colorspace = has_alpha ? WEBP_YUV420A : WEBP_YUV420;
   picture->use_argb = 0;
+
+  // disable smart conversion if source is too small (overkill).
+  if (width < kMinDimensionIterativeConversion ||
+      height < kMinDimensionIterativeConversion) {
+    use_iterative_conversion = 0;
+  }
 
   if (!WebPPictureAllocYUVA(picture, width, height)) {
     return 0;
