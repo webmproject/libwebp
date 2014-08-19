@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//bKc\u003d",
+        "filename": "src/dsp/upsampling_mips_dsp_r2.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-19T12:38:26Z",
+      "side": 1,
+      "message": "note that this code is somewhat complicated and was designed for x86 initially. You might want to later experiment with alternate form more suitable to MIPS, in case.",
+      "revId": "569771549a39c8bbecc509a10853069394367453",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
