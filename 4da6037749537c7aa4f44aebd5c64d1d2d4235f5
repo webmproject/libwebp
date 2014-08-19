@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//bKs\u003d",
+        "filename": "src/dsp/upsampling_mips_dsp_r2.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-19T11:58:07Z",
+      "side": 1,
+      "message": "you might want to re-order and use some \u0027const\u0027:\n\nconst int t1 \u003d kYScale * Y;\nconst int t2 \u003d kVToG * V;\nR\u003d kVToR * V;\nG \u003d kUToG * U;\nB \u003d kUtoB * U;\n...",
+      "revId": "4da6037749537c7aa4f44aebd5c64d1d2d4235f5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
