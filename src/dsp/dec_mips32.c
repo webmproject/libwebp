@@ -52,6 +52,7 @@ static WEBP_INLINE void do_filter6(uint8_t* p, int step) {
   const int p2 = p[-3 * step], p1 = p[-2 * step], p0 = p[-step];
   const int q0 = p[0], q1 = p[step], q2 = p[2 * step];
   const int a = VP8ksclip1[3 * (q0 - p0) + VP8ksclip1[p1 - q1]];
+  // a is in [-128,127], a1 in [-27,27], a2 in [-18,18] and a3 in [-9,9]
   const int a1 = (27 * a + 63) >> 7;  // eq. to ((3 * a + 7) * 9) >> 7
   const int a2 = (18 * a + 63) >> 7;  // eq. to ((2 * a + 7) * 9) >> 7
   const int a3 = (9  * a + 63) >> 7;  // eq. to ((1 * a + 7) * 9) >> 7
@@ -68,9 +69,9 @@ static WEBP_INLINE int hev(const uint8_t* p, int step, int thresh) {
   return (abs_mips32(p1 - p0) > thresh) || (abs_mips32(q1 - q0) > thresh);
 }
 
-static WEBP_INLINE int needs_filter(const uint8_t* p, int step, int thresh) {
+static WEBP_INLINE int needs_filter(const uint8_t* p, int step, int t) {
   const int p1 = p[-2 * step], p0 = p[-step], q0 = p[0], q1 = p[step];
-  return ((2 * abs_mips32(p0 - q0) + (abs_mips32(p1 - q1) >> 1)) <= thresh);
+  return ((4 * abs_mips32(p0 - q0) + abs_mips32(p1 - q1)) <= t);
 }
 
 static WEBP_INLINE int needs_filter2(const uint8_t* p,
@@ -78,7 +79,7 @@ static WEBP_INLINE int needs_filter2(const uint8_t* p,
   const int p3 = p[-4 * step], p2 = p[-3 * step];
   const int p1 = p[-2 * step], p0 = p[-step];
   const int q0 = p[0], q1 = p[step], q2 = p[2 * step], q3 = p[3 * step];
-  if ((2 * abs_mips32(p0 - q0) + (abs_mips32(p1 - q1) >> 1)) > t) {
+  if ((4 * abs_mips32(p0 - q0) + abs_mips32(p1 - q1)) > t) {
     return 0;
   }
   return abs_mips32(p3 - p2) <= it && abs_mips32(p2 - p1) <= it &&
@@ -89,8 +90,9 @@ static WEBP_INLINE int needs_filter2(const uint8_t* p,
 static WEBP_INLINE void FilterLoop26(uint8_t* p,
                                      int hstride, int vstride, int size,
                                      int thresh, int ithresh, int hev_thresh) {
+  const int thresh2 = 2 * thresh + 1;
   while (size-- > 0) {
-    if (needs_filter2(p, hstride, thresh, ithresh)) {
+    if (needs_filter2(p, hstride, thresh2, ithresh)) {
       if (hev(p, hstride, hev_thresh)) {
         do_filter2(p, hstride);
       } else {
@@ -104,8 +106,9 @@ static WEBP_INLINE void FilterLoop26(uint8_t* p,
 static WEBP_INLINE void FilterLoop24(uint8_t* p,
                                      int hstride, int vstride, int size,
                                      int thresh, int ithresh, int hev_thresh) {
+  const int thresh2 = 2 * thresh + 1;
   while (size-- > 0) {
-    if (needs_filter2(p, hstride, thresh, ithresh)) {
+    if (needs_filter2(p, hstride, thresh2, ithresh)) {
       if (hev(p, hstride, hev_thresh)) {
         do_filter2(p, hstride);
       } else {
@@ -176,8 +179,9 @@ static void HFilter16i(uint8_t* p, int stride,
 
 static void SimpleVFilter16(uint8_t* p, int stride, int thresh) {
   int i;
+  const int thresh2 = 2 * thresh + 1;
   for (i = 0; i < 16; ++i) {
-    if (needs_filter(p + i, stride, thresh)) {
+    if (needs_filter(p + i, stride, thresh2)) {
       do_filter2(p + i, stride);
     }
   }
@@ -185,8 +189,9 @@ static void SimpleVFilter16(uint8_t* p, int stride, int thresh) {
 
 static void SimpleHFilter16(uint8_t* p, int stride, int thresh) {
   int i;
+  const int thresh2 = 2 * thresh + 1;
   for (i = 0; i < 16; ++i) {
-    if (needs_filter(p + i * stride, 1, thresh)) {
+    if (needs_filter(p + i * stride, 1, thresh2)) {
       do_filter2(p + i * stride, 1);
     }
   }
