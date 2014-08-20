@@ -970,9 +970,8 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
 
 //------------------------------------------------------------------------------
 
-// Compilation with gcc-4.6.x is problematic for now and vtbl? are unavailable
-// in iOS/arm64 builds. Disable this function in those cases.
-#if !(defined(WORK_AROUND_GCC) || defined(__aarch64__))
+// Compilation with gcc-4.6.x is problematic for now.
+#if !defined(WORK_AROUND_GCC)
 
 static int16x8_t Quantize(int16_t* const in,
                           const VP8Matrix* const mtx, int offset) {
@@ -1012,17 +1011,34 @@ static int QuantizeBlock(int16_t in[16], int16_t out[16],
                          const VP8Matrix* const mtx) {
   const int16x8_t out0 = Quantize(in, mtx, 0);
   const int16x8_t out1 = Quantize(in, mtx, 8);
+  uint8x8x4_t shuffles;
+  // vtbl4_u8 is marked unavailable for iOS arm64, use wider versions there.
+#if defined(__APPLE__) && defined(__aarch64__)
+  uint8x16x2_t all_out;
+  INIT_VECTOR2(all_out, vreinterpretq_u8_s16(out0), vreinterpretq_u8_s16(out1));
+  INIT_VECTOR4(shuffles,
+               vtbl2q_u8(all_out, vld1_u8(kShuffles[0])),
+               vtbl2q_u8(all_out, vld1_u8(kShuffles[1])),
+               vtbl2q_u8(all_out, vld1_u8(kShuffles[2])),
+               vtbl2q_u8(all_out, vld1_u8(kShuffles[3])));
+#else
   uint8x8x4_t all_out;
   INIT_VECTOR4(all_out,
                vreinterpret_u8_s16(vget_low_s16(out0)),
                vreinterpret_u8_s16(vget_high_s16(out0)),
                vreinterpret_u8_s16(vget_low_s16(out1)),
                vreinterpret_u8_s16(vget_high_s16(out1)));
+  INIT_VECTOR4(shuffles,
+               vtbl4_u8(all_out, vld1_u8(kShuffles[0])),
+               vtbl4_u8(all_out, vld1_u8(kShuffles[1])),
+               vtbl4_u8(all_out, vld1_u8(kShuffles[2])),
+               vtbl4_u8(all_out, vld1_u8(kShuffles[3])));
+#endif
   // Zigzag reordering
-  vst1_u8((uint8_t*)(out +  0), vtbl4_u8(all_out, vld1_u8(kShuffles[0])));
-  vst1_u8((uint8_t*)(out +  4), vtbl4_u8(all_out, vld1_u8(kShuffles[1])));
-  vst1_u8((uint8_t*)(out +  8), vtbl4_u8(all_out, vld1_u8(kShuffles[2])));
-  vst1_u8((uint8_t*)(out + 12), vtbl4_u8(all_out, vld1_u8(kShuffles[3])));
+  vst1_u8((uint8_t*)(out +  0), shuffles.val[0]);
+  vst1_u8((uint8_t*)(out +  4), shuffles.val[1]);
+  vst1_u8((uint8_t*)(out +  8), shuffles.val[2]);
+  vst1_u8((uint8_t*)(out + 12), shuffles.val[3]);
   // test zeros
   if (*(uint64_t*)(out +  0) != 0) return 1;
   if (*(uint64_t*)(out +  4) != 0) return 1;
@@ -1031,7 +1047,7 @@ static int QuantizeBlock(int16_t in[16], int16_t out[16],
   return 0;
 }
 
-#endif   // !WORK_AROUND_GCC && !__aarch64__
+#endif   // !WORK_AROUND_GCC
 
 #endif   // WEBP_USE_NEON
 
@@ -1054,7 +1070,7 @@ void VP8EncDspInitNEON(void) {
   VP8SSE16x8 = SSE16x8;
   VP8SSE8x8 = SSE8x8;
   VP8SSE4x4 = SSE4x4;
-#if !(defined(WORK_AROUND_GCC) || defined(__aarch64__))
+#if !defined(WORK_AROUND_GCC)
   VP8EncQuantizeBlock = QuantizeBlock;
 #endif
 #endif   // WEBP_USE_NEON
