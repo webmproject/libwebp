@@ -88,6 +88,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//ay8\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-20T18:27:54Z",
+      "side": 1,
+      "message": "You\u0027re right, let me correct: i meant 4 values (int16_t each), so that\u0027s 8 bytes.\nThen at lines 113-124 you unpack with another 8bytes (but not always, note. Only if do_two \u003d1). This makes a total of 16bytes in a 256bit register. Pretty much what the SSE2 version is doing.\n\nTo take full advantage of AVX2, you should be doing four transforms at a time.",
+      "parentUuid": "AAAAdn//a3Y\u003d",
+      "revId": "43c1ef9852c4c62e446ae0cdbd0972491af30d3e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//a38\u003d",
         "filename": "src/dsp/enc_avx2.c",
         "patchSetId": 2
@@ -117,6 +135,24 @@
       "side": 1,
       "message": "I don\u0027t see where its not being used?\ncan you show me please where I ignore the higher half of the register?",
       "parentUuid": "AAAAdn//a38\u003d",
+      "revId": "43c1ef9852c4c62e446ae0cdbd0972491af30d3e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ayg\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-20T18:27:54Z",
+      "side": 1,
+      "message": "you don\u0027t ignore the upper half, it\u0027s just not filled with useful data so far i can tell.\n\n(and that\u0027s what the comments are suggesting)\n\nDoing four transforms at a time, you could squeeze twice more data in the 256bit registers. Otherwise, the code stays equivalent to the SSE2 (and doesn\u0027t warrant a special AVX2 implementation).",
+      "parentUuid": "AAAAdn//a3U\u003d",
       "revId": "43c1ef9852c4c62e446ae0cdbd0972491af30d3e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
