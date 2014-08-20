@@ -106,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//axw\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1108495
+      },
+      "writtenOn": "2014-08-20T18:48:38Z",
+      "side": 1,
+      "message": "I already thought about having 4 iterations of PickBestIntra4\non a 256 bit register.\nbut the problem is that in the original SSE2 code FTransform function take 4 bytes and expand them to 16 bytes (128 bit register)\nso in my AVX2 implementation I take 8 bytes and expand them to 32 bytes (256 bit register)\nSo In this case if I will do 4 transform at a time I will need two 256 bit register and then the code will be bloat.\nbtw the second parameter of ITransform (in) I actually use all the values inside that array , If you want I can get rid of the do_two because for PickBestIntra4 its always going to be 0",
+      "parentUuid": "AAAAdn//ay8\u003d",
+      "revId": "43c1ef9852c4c62e446ae0cdbd0972491af30d3e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//a38\u003d",
         "filename": "src/dsp/enc_avx2.c",
         "patchSetId": 2
@@ -153,6 +171,24 @@
       "side": 1,
       "message": "you don\u0027t ignore the upper half, it\u0027s just not filled with useful data so far i can tell.\n\n(and that\u0027s what the comments are suggesting)\n\nDoing four transforms at a time, you could squeeze twice more data in the 256bit registers. Otherwise, the code stays equivalent to the SSE2 (and doesn\u0027t warrant a special AVX2 implementation).",
       "parentUuid": "AAAAdn//a3U\u003d",
+      "revId": "43c1ef9852c4c62e446ae0cdbd0972491af30d3e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//axs\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1108495
+      },
+      "writtenOn": "2014-08-20T18:48:38Z",
+      "side": 1,
+      "message": "the same as my first comment.\nthe upper half of the register is the second Transform.",
+      "parentUuid": "AAAAdn//ayg\u003d",
       "revId": "43c1ef9852c4c62e446ae0cdbd0972491af30d3e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
