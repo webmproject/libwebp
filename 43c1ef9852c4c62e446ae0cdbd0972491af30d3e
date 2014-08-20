@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//a4g\u003d",
+        "filename": "makefile.unix",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-20T00:37:40Z",
+      "side": 1,
+      "message": "shouldn\u0027t be changed",
+      "revId": "43c1ef9852c4c62e446ae0cdbd0972491af30d3e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//a4c\u003d",
+        "filename": "makefile.unix",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-20T00:37:40Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "43c1ef9852c4c62e446ae0cdbd0972491af30d3e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//a4M\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-20T00:37:40Z",
+      "side": 1,
+      "message": "trailing whitespace (and below at several locations too)",
+      "revId": "43c1ef9852c4c62e446ae0cdbd0972491af30d3e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//a4A\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-20T00:37:40Z",
+      "side": 1,
+      "message": "what\u0027s the point of loading 256 bytes when only four are actually used?\n\nThe output of in0/in1/in2/in3 is unchanged at line  128 going forward: you only have height int16 active data. Upper half of the m256i registers are still unused.",
+      "revId": "43c1ef9852c4c62e446ae0cdbd0972491af30d3e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//a38\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-20T00:37:40Z",
+      "side": 1,
+      "message": "here too at this point, upper half of the m256i registers are still unused.\n\nThe function should be overall reorganized to take advantage of the full 256 width of the register. Right now, it just look like the m128i registers have been replace by m256i but not more.",
+      "revId": "43c1ef9852c4c62e446ae0cdbd0972491af30d3e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//a3w\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-20T00:37:40Z",
+      "side": 1,
+      "message": "here two, 3/4 of the m256i regs is unused.",
+      "revId": "43c1ef9852c4c62e446ae0cdbd0972491af30d3e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
