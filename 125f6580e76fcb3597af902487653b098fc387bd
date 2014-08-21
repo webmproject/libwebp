@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//apM\u003d",
+        "filename": "src/dsp/alpha_processing.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-21T17:42:08Z",
+      "side": 1,
+      "message": "the function name doesn\u0027t reflect that \u0027base_rgba\u0027 is going to be modified.\n\nCould you rename it to something like \u0027DispatchAlpha\u0027 or \u0027SetAlphaValues\u0027 or similar?",
+      "revId": "125f6580e76fcb3597af902487653b098fc387bd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//apc\u003d",
+        "filename": "src/dsp/alpha_processing.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-21T17:42:08Z",
+      "side": 1,
+      "message": "* for built-in type like \u0027int\u0027, you don\u0027t really need the \u0027const\u0027.\n* maybe rename these to:\n\nint width, int height ?",
+      "revId": "125f6580e76fcb3597af902487653b098fc387bd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//apU\u003d",
+        "filename": "src/dsp/alpha_processing.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-21T17:42:08Z",
+      "side": 1,
+      "message": "now that they are out of context, these parameter names are a little misnomer.\nMaybe it should be:\nint alpha_stride, int dst_stride,",
+      "revId": "125f6580e76fcb3597af902487653b098fc387bd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//apI\u003d",
+        "filename": "src/dsp/alpha_processing.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-21T17:42:08Z",
+      "side": 1,
+      "message": "usually, we order the parameter so that source comes first, and destination last. So the signature should be overall:\n\nuint32_t DispatchAlpha(const uint8_t* alpha, int alpha_stride, int width, int height, uint8_t* dst, int dst_stride)",
+      "revId": "125f6580e76fcb3597af902487653b098fc387bd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//apY\u003d",
+        "filename": "src/dsp/alpha_processing.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-21T17:42:08Z",
+      "side": 1,
+      "message": "you should pass \u0027dst\u0027 directly as a parameter to the function, so that you don\u0027t have to pass \u0027alpha_first\u0027.",
+      "revId": "125f6580e76fcb3597af902487653b098fc387bd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//apE\u003d",
+        "filename": "src/dsp/alpha_processing_mips_dsp_r2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-21T17:42:08Z",
+      "side": 1,
+      "message": "see my comment in the other file regarding signature",
+      "revId": "125f6580e76fcb3597af902487653b098fc387bd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
