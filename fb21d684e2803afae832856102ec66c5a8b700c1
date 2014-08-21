@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//anQ\u003d",
+        "filename": "src/dsp/alpha_processing_mips_dsp_r2.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-21T19:19:16Z",
+      "side": 1,
+      "message": "you don\u0027t need to cast the const away, do you?\n\nconst uint8_t* palpha \u003d alpha; \n\nshould be ok",
+      "revId": "fb21d684e2803afae832856102ec66c5a8b700c1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//anM\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-21T19:19:16Z",
+      "side": 1,
+      "message": "could you add a one-line description of the function, including the returned value please?",
+      "revId": "fb21d684e2803afae832856102ec66c5a8b700c1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//anI\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-21T19:19:16Z",
+      "side": 1,
+      "message": "could you keep the parameter names, for documentation purpose please?",
+      "revId": "fb21d684e2803afae832856102ec66c5a8b700c1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
