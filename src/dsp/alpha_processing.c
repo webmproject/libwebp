@@ -284,25 +284,48 @@ static void ApplyAlphaMultiply_16b(uint8_t* rgba4444,
 #endif
 }
 
+static int DispatchAlpha(const uint8_t* alpha, int alpha_stride,
+                         int width, int height,
+                         uint8_t* dst, int dst_stride) {
+  uint32_t alpha_mask = 0xff;
+  int i, j;
+
+  for (j = 0; j < height; ++j) {
+    for (i = 0; i < width; ++i) {
+      const uint32_t alpha_value = alpha[i];
+      dst[4 * i] = alpha_value;
+      alpha_mask &= alpha_value;
+    }
+    alpha += alpha_stride;
+    dst += dst_stride;
+  }
+
+  return (alpha_mask != 0xff);
+}
+
 void (*WebPApplyAlphaMultiply)(uint8_t*, int, int, int, int);
 void (*WebPApplyAlphaMultiply4444)(uint8_t*, int, int, int);
+int (*WebPDispatchAlpha)(const uint8_t*, int, int, int, uint8_t*, int);
 
 //------------------------------------------------------------------------------
 // Init function
 
 extern void VP8FiltersInitMIPSdspR2(void);
+extern void WebPInitAlphaProcessingMIPSdspR2(void);
 
 void WebPInitAlphaProcessing(void) {
   WebPMultARGBRow = MultARGBRow;
   WebPMultRow = MultRow;
   WebPApplyAlphaMultiply = ApplyAlphaMultiply;
   WebPApplyAlphaMultiply4444 = ApplyAlphaMultiply_16b;
+  WebPDispatchAlpha = DispatchAlpha;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
     if (VP8GetCPUInfo(kMIPSdspR2)) {
       VP8FiltersInitMIPSdspR2();
+      WebPInitAlphaProcessingMIPSdspR2();
     }
 #endif
   }
