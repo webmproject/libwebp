@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//atk\u003d",
+        "filename": "src/dec/io.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-21T14:00:22Z",
+      "side": 1,
+      "message": "spinning-off the while EmitAlphaRGB() seems too-level to me.\nYou\u0027re dragging non-fundamental code (like GetAlphaSourceRow) to implementation variant.\n\nI think you only need to extract the block 182-195 instead a function suitable for dsp implementation (in alpha_processing.c).\nPretty much like what was done with WebPApplyAlphaMultiply() below at 198.",
+      "revId": "918e7841257c0ebc25371ea62d2ce957e193f8e5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//auQ\u003d",
+        "filename": "src/dsp/io.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-21T14:00:22Z",
+      "side": 1,
+      "message": "i don\u0027t think that this function should be inlined in a header.\nIt\u0027s very implementation-detail oriented and not critical\n(called once a row).\nBetter just make it accessible (VP8GetAlphaSourceRow declaration in webpi.h) if it\u0027s needed.",
+      "revId": "918e7841257c0ebc25371ea62d2ce957e193f8e5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//auI\u003d",
+        "filename": "src/dsp/io.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-08-21T14:00:22Z",
+      "side": 1,
+      "message": "we already have alpha_processing.c for dealing with alpha channel functions.\nBetter add this EmitAlphaRGB variants there, and update\nWebPInitAlphaProcessing().\nNo need to create a new file.",
+      "revId": "918e7841257c0ebc25371ea62d2ce957e193f8e5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
