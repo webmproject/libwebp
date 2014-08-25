@@ -237,6 +237,14 @@ static int QuantizeBlock(int16_t in[16], int16_t out[16],
   return 0;
 }
 
+static int Quantize2Blocks(int16_t in[32], int16_t out[32],
+                           const VP8Matrix* const mtx) {
+  int nz;
+  nz  = QuantizeBlock(in + 0 * 16, out + 0 * 16, mtx) << 0;
+  nz |= QuantizeBlock(in + 1 * 16, out + 1 * 16, mtx) << 1;
+  return nz;
+}
+
 #undef QUANTIZE_ONE
 
 // macro for one horizontal pass in Disto4x4 (TTransform)
@@ -756,6 +764,7 @@ void VP8EncDspInitMIPS32(void) {
 #if defined(WEBP_USE_MIPS32)
   VP8ITransform = ITransform;
   VP8EncQuantizeBlock = QuantizeBlock;
+  VP8EncQuantize2Blocks = Quantize2Blocks;
   VP8TDisto4x4 = Disto4x4;
   VP8TDisto16x16 = Disto16x16;
   VP8FTransform = FTransform;

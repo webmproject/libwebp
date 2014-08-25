@@ -625,6 +625,14 @@ static int QuantizeBlock(int16_t in[16], int16_t out[16],
   return (last >= 0);
 }
 
+static int Quantize2Blocks(int16_t in[32], int16_t out[32],
+                           const VP8Matrix* const mtx) {
+  int nz;
+  nz  = VP8EncQuantizeBlock(in + 0 * 16, out + 0 * 16, mtx) << 0;
+  nz |= VP8EncQuantizeBlock(in + 1 * 16, out + 1 * 16, mtx) << 1;
+  return nz;
+}
+
 static int QuantizeBlockWHT(int16_t in[16], int16_t out[16],
                             const VP8Matrix* const mtx) {
   int n, last = -1;
@@ -684,6 +692,7 @@ VP8Metric VP8SSE4x4;
 VP8WMetric VP8TDisto4x4;
 VP8WMetric VP8TDisto16x16;
 VP8QuantizeBlock VP8EncQuantizeBlock;
+VP8Quantize2Blocks VP8EncQuantize2Blocks;
 VP8QuantizeBlockWHT VP8EncQuantizeBlockWHT;
 VP8BlockCopy VP8Copy4x4;
 
@@ -711,6 +720,7 @@ void VP8EncDspInit(void) {
   VP8TDisto4x4 = Disto4x4;
   VP8TDisto16x16 = Disto16x16;
   VP8EncQuantizeBlock = QuantizeBlock;
+  VP8EncQuantize2Blocks = Quantize2Blocks;
   VP8EncQuantizeBlockWHT = QuantizeBlockWHT;
   VP8Copy4x4 = Copy4x4;
 

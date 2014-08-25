@@ -929,6 +929,15 @@ static int QuantizeBlockWHT(int16_t in[16], int16_t out[16],
   return DoQuantizeBlock(in, out, NULL, mtx);
 }
 
+static int Quantize2Blocks(int16_t in[32], int16_t out[32],
+                           const VP8Matrix* const mtx) {
+  int nz;
+  const uint16_t* const sharpen = &mtx->sharpen_[0];
+  nz  = DoQuantizeBlock(in + 0 * 16, out + 0 * 16, sharpen, mtx) << 0;
+  nz |= DoQuantizeBlock(in + 1 * 16, out + 1 * 16, sharpen, mtx) << 1;
+  return nz;
+}
+
 // Forward declaration.
 void VP8SetResidualCoeffsSSE2(const int16_t* const coeffs,
                               VP8Residual* const res);
@@ -967,6 +976,7 @@ void VP8EncDspInitSSE2(void) {
 #if defined(WEBP_USE_SSE2)
   VP8CollectHistogram = CollectHistogram;
   VP8EncQuantizeBlock = QuantizeBlock;
+  VP8EncQuantize2Blocks = Quantize2Blocks;
   VP8EncQuantizeBlockWHT = QuantizeBlockWHT;
   VP8ITransform = ITransform;
   VP8FTransform = FTransform;

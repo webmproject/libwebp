@@ -117,7 +117,12 @@ extern VP8BlockCopy VP8Copy4x4;
 struct VP8Matrix;   // forward declaration
 typedef int (*VP8QuantizeBlock)(int16_t in[16], int16_t out[16],
                                 const struct VP8Matrix* const mtx);
+// Same as VP8QuantizeBlock, but quantizes two consecutive blocks.
+typedef int (*VP8Quantize2Blocks)(int16_t in[32], int16_t out[32],
+                                  const struct VP8Matrix* const mtx);
+
 extern VP8QuantizeBlock VP8EncQuantizeBlock;
+extern VP8Quantize2Blocks VP8EncQuantize2Blocks;
 
 // specific to 2nd transform:
 typedef int (*VP8QuantizeBlockWHT)(int16_t in[16], int16_t out[16],

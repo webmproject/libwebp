@@ -1047,6 +1047,14 @@ static int QuantizeBlock(int16_t in[16], int16_t out[16],
   return 0;
 }
 
+static int Quantize2Blocks(int16_t in[32], int16_t out[32],
+                           const VP8Matrix* const mtx) {
+  int nz;
+  nz  = QuantizeBlock(in + 0 * 16, out + 0 * 16, mtx) << 0;
+  nz |= QuantizeBlock(in + 1 * 16, out + 1 * 16, mtx) << 1;
+  return nz;
+}
+
 #endif   // !WORK_AROUND_GCC
 
 #endif   // WEBP_USE_NEON
@@ -1072,6 +1080,7 @@ void VP8EncDspInitNEON(void) {
   VP8SSE4x4 = SSE4x4;
 #if !defined(WORK_AROUND_GCC)
   VP8EncQuantizeBlock = QuantizeBlock;
+  VP8EncQuantize2Blocks = Quantize2Blocks;
 #endif
 #endif   // WEBP_USE_NEON
 }
