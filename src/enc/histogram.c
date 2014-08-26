@@ -640,12 +640,15 @@ static void HistogramRemap(const VP8LHistogramSet* const orig_histo,
   int i;
   VP8LHistogram** const orig_histograms = orig_histo->histograms;
   VP8LHistogram** const histograms = image_histo->histograms;
-  for (i = 0; i < orig_histo->size; ++i) {
+  const int orig_histo_size = orig_histo->size;
+  const int image_histo_size = image_histo->size;
+  if (image_histo_size > 1) {
+    for (i = 0; i < orig_histo_size; ++i) {
     int best_out = 0;
     double best_bits =
         HistogramAddThresh(histograms[0], orig_histograms[i], MAX_COST);
     int k;
-    for (k = 1; k < image_histo->size; ++k) {
+      for (k = 1; k < image_histo_size; ++k) {
       const double cur_bits =
           HistogramAddThresh(histograms[k], orig_histograms[i], best_bits);
       if (cur_bits < best_bits) {
@@ -655,13 +658,19 @@ static void HistogramRemap(const VP8LHistogramSet* const orig_histo,
     }
     symbols[i] = best_out;
   }
+  } else {
+    assert(image_histo_size == 1);
+    for (i = 0; i < orig_histo_size; ++i) {
+      symbols[i] = 0;
+    }
+  }
 
   // Recompute each out based on raw and symbols.
-  for (i = 0; i < image_histo->size; ++i) {
+  for (i = 0; i < image_histo_size; ++i) {
     HistogramClear(histograms[i]);
   }
 
-  for (i = 0; i < orig_histo->size; ++i) {
+  for (i = 0; i < orig_histo_size; ++i) {
     const int idx = symbols[i];
     VP8LHistogramAdd(orig_histograms[i], histograms[idx], histograms[idx]);
   }
