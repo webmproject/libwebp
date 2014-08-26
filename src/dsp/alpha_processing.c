@@ -312,6 +312,7 @@ int (*WebPDispatchAlpha)(const uint8_t*, int, int, int, uint8_t*, int);
 
 extern void VP8FiltersInitMIPSdspR2(void);
 extern void WebPInitAlphaProcessingMIPSdspR2(void);
+extern void WebPInitAlphaProcessingSSE2(void);
 
 void WebPInitAlphaProcessing(void) {
   WebPMultARGBRow = MultARGBRow;
@@ -322,6 +323,11 @@ void WebPInitAlphaProcessing(void) {
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
+#if defined(WEBP_USE_SSE2)
+    if (VP8GetCPUInfo(kSSE2)) {
+      WebPInitAlphaProcessingSSE2();
+    }
+#endif
 #if defined(WEBP_USE_MIPS_DSP_R2)
     if (VP8GetCPUInfo(kMIPSdspR2)) {
       VP8FiltersInitMIPSdspR2();
