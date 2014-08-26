@@ -746,7 +746,7 @@ static int ReconstructIntra16(VP8EncIterator* const it,
       }
     }
   } else {
-     for (n = 0; n < 16; n += 2) {
+    for (n = 0; n < 16; n += 2) {
       // Zero-out the first coeff, so that: a) nz is correct below, and
       // b) finding 'last' non-zero coeffs in SetResidualCoeffs() is simplified.
       tmp[n][0] = tmp[n + 1][0] = 0;
