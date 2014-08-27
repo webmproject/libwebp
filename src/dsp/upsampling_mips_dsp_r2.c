@@ -213,8 +213,32 @@ UPSAMPLE_FUNC(UpsampleRgb565LinePair,   YuvToRgb565,   2)
 
 #endif  // FANCY_UPSAMPLING
 
+#endif  // WEBP_USE_MIPS_DSP_R2
+
+extern void WebPInitUpsamplersMIPSdspR2(void);
+
+void WebPInitUpsamplersMIPSdspR2(void) {
+#if defined(WEBP_USE_MIPS_DSP_R2)
+#ifdef FANCY_UPSAMPLING
+  WebPUpsamplers[MODE_RGB]       = UpsampleRgbLinePair;
+  WebPUpsamplers[MODE_RGBA]      = UpsampleRgbaLinePair;
+  WebPUpsamplers[MODE_BGR]       = UpsampleBgrLinePair;
+  WebPUpsamplers[MODE_BGRA]      = UpsampleBgraLinePair;
+  WebPUpsamplers[MODE_ARGB]      = UpsampleArgbLinePair;
+  WebPUpsamplers[MODE_RGBA_4444] = UpsampleRgba4444LinePair;
+  WebPUpsamplers[MODE_RGB_565]   = UpsampleRgb565LinePair;
+  WebPUpsamplers[MODE_rgbA]      = UpsampleRgbaLinePair;
+  WebPUpsamplers[MODE_bgrA]      = UpsampleBgraLinePair;
+  WebPUpsamplers[MODE_Argb]      = UpsampleArgbLinePair;
+  WebPUpsamplers[MODE_rgbA_4444] = UpsampleRgba4444LinePair;
+#endif  // FANCY_UPSAMPLING
+#endif  // WEBP_USE_MIPS_DSP_R2
+}
+
 //------------------------------------------------------------------------------
 // YUV444 converter
+
+#if defined(WEBP_USE_MIPS_DSP_R2)
 
 #define YUV444_FUNC(FUNC_NAME, FUNC, XSTEP)                                    \
 static void FUNC_NAME(const uint8_t* y, const uint8_t* u, const uint8_t* v,    \
@@ -235,25 +259,10 @@ YUV444_FUNC(Yuv444ToRgb565,   YuvToRgb565,   2)
 
 #endif  // WEBP_USE_MIPS_DSP_R2
 
-//------------------------------------------------------------------------------
+extern void WebPInitYUV444ConvertersMIPSdspR2(void);
 
-extern void WebPInitUpsamplersMIPSdspR2(void);
-
-void WebPInitUpsamplersMIPSdspR2(void) {
+void WebPInitYUV444ConvertersMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
-#ifdef FANCY_UPSAMPLING
-  WebPUpsamplers[MODE_RGB]       = UpsampleRgbLinePair;
-  WebPUpsamplers[MODE_RGBA]      = UpsampleRgbaLinePair;
-  WebPUpsamplers[MODE_BGR]       = UpsampleBgrLinePair;
-  WebPUpsamplers[MODE_BGRA]      = UpsampleBgraLinePair;
-  WebPUpsamplers[MODE_ARGB]      = UpsampleArgbLinePair;
-  WebPUpsamplers[MODE_RGBA_4444] = UpsampleRgba4444LinePair;
-  WebPUpsamplers[MODE_RGB_565]   = UpsampleRgb565LinePair;
-  WebPUpsamplers[MODE_rgbA]      = UpsampleRgbaLinePair;
-  WebPUpsamplers[MODE_bgrA]      = UpsampleBgraLinePair;
-  WebPUpsamplers[MODE_Argb]      = UpsampleArgbLinePair;
-  WebPUpsamplers[MODE_rgbA_4444] = UpsampleRgba4444LinePair;
-#endif  // FANCY_UPSAMPLING
   WebPYUV444Converters[MODE_RGB]       = Yuv444ToRgb;
   WebPYUV444Converters[MODE_RGBA]      = Yuv444ToRgba;
   WebPYUV444Converters[MODE_BGR]       = Yuv444ToBgr;

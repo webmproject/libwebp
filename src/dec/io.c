@@ -516,6 +516,7 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
                    io->mb_w, 2 * out_width, io->mb_h, 2 * out_height,
                    work + 2 * work_size);
   p->emit = EmitRescaledRGB;
+  WebPInitYUV444Converters();
 
   if (has_alpha) {
     WebPRescalerInit(&p->scaler_a, io->mb_w, io->mb_h,

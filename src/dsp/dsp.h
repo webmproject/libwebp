@@ -243,6 +243,8 @@ extern WebPYUV444Converter WebPYUV444Converters[/* MODE_LAST */];
 void WebPInitUpsamplers(void);
 // Must be called before using WebPSamplers[]
 void WebPInitSamplers(void);
+// Must be called before using WebPYUV444Converters[]
+void WebPInitYUV444Converters(void);
 
 //------------------------------------------------------------------------------
 // Utilities for processing transparent channel.
