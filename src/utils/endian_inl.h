@@ -35,25 +35,13 @@
 #endif
 
 #if !defined(HAVE_CONFIG_H)
-#ifdef __GNUC__
-# define LOCAL_GCC_VERSION ((__GNUC__ << 8) | __GNUC_MINOR__)
-#else
-# define LOCAL_GCC_VERSION 0
-#endif  // __GNUC__
-
-#ifdef __clang__
-# define LOCAL_CLANG_VERSION ((__clang_major__ << 8) | __clang_minor__)
-#else
-# define LOCAL_CLANG_VERSION 0
-#endif  // __clang__
-
 // clang-3.3 and gcc-4.3 have builtin functions for swap32/swap64
-#if LOCAL_GCC_VERSION >= 0x403 || LOCAL_CLANG_VERSION >= 0x303
+#if LOCAL_GCC_PREREQ(4,3) || LOCAL_CLANG_PREREQ(3,3)
 #define HAVE_BUILTIN_BSWAP32
 #define HAVE_BUILTIN_BSWAP64
 #endif
 // clang-3.3 and gcc-4.8 have a builtin function for swap16
-#if LOCAL_GCC_VERSION >= 0x408 || LOCAL_CLANG_VERSION >= 0x303
+#if LOCAL_GCC_PREREQ(4,8) || LOCAL_CLANG_PREREQ(3,3)
 #define HAVE_BUILTIN_BSWAP16
 #endif
 #endif  // !HAVE_CONFIG_H
