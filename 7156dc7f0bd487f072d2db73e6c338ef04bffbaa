@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Zts\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-08-28T19:15:56Z",
+      "side": 1,
+      "message": "Sped or Speed -- present tense is usually better",
+      "revId": "7156dc7f0bd487f072d2db73e6c338ef04bffbaa",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Ztc\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-08-28T19:15:56Z",
+      "side": 1,
+      "message": "enough.cc isn\u0027t visible publicly",
+      "revId": "7156dc7f0bd487f072d2db73e6c338ef04bffbaa",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ZtQ\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 351,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-08-28T19:15:56Z",
+      "side": 1,
+      "message": "sizeof(*huffman_tables)",
+      "revId": "7156dc7f0bd487f072d2db73e6c338ef04bffbaa",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Zs4\u003d",
+        "filename": "src/utils/huffman.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-08-28T19:15:56Z",
+      "side": 1,
+      "message": "these might make more sense aligned and before the variable they referred to",
+      "revId": "7156dc7f0bd487f072d2db73e6c338ef04bffbaa",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
