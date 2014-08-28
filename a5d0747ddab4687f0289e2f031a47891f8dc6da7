@@ -16,6 +16,24 @@
       "revId": "a5d0747ddab4687f0289e2f031a47891f8dc6da7",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Z0k\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-08-28T03:31:49Z",
+      "side": 1,
+      "message": "true, some completions can get broken. done",
+      "parentUuid": "AAAAdn//Z0s\u003d",
+      "revId": "a5d0747ddab4687f0289e2f031a47891f8dc6da7",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
