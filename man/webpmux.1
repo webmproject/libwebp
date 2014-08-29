@@ -1,7 +1,8 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH WEBPMUX 1 "December 17, 2013"
+.TH WEBPMUX 1 "August 28, 2014"
 .SH NAME
-webpmux \- command line tool to create WebP Mux/container file.
+webpmux \- create animated WebP files from non\-animated WebP images, extract
+frames from animated WebP images, and manage XMP/EXIF metadata and ICC profile.
 .SH SYNOPSIS
 .B webpmux \-get
 .I GET_OPTIONS
@@ -45,8 +46,8 @@ This manual page documents the
 .B webpmux
 command.
 .PP
-\fBwebpmux\fP can be used to create a WebP container file
-and extract/strip relevant data from the container file.
+\fBwebpmux\fP can be used to create/extract from animated WebP files, as well as
+to add/extract/strip XMP/EXIF metadata and ICC profile.
 .SH OPTIONS
 .SS GET_OPTIONS (\-get):
 .TP
@@ -60,7 +61,7 @@ Get EXIF metadata.
 Get XMP metadata.
 .TP
 .BI frame " n
-Get nth frame.
+Get nth frame from an animated image. (n = 0 has a special meaning: last frame).
 
 .SS SET_OPTIONS (\-set)
 .TP
@@ -91,12 +92,13 @@ Strip EXIF metadata.
 Strip XMP metadata.
 
 .SS FRAME_OPTIONS (\-frame)
+Create an animated WebP file from multiple (non\-animated) WebP images.
 .TP
 .I file_i +di[+xi+yi[+mi[bi]]]
 Where: 'file_i' is the i'th frame (WebP format), 'xi','yi' specify the image
 offset for this frame, 'di' is the pause duration before next frame, 'mi' is
 the dispose method for this frame (0 for NONE or 1 for BACKGROUND) and 'bi' is
-the blending method for this frame (+b for BLEND or -b for NO_BLEND).
+the blending method for this frame (+b for BLEND or \-b for NO_BLEND).
 Argument 'bi' can be omitted and will default to +b (BLEND).
 Also, 'mi' can be omitted if 'bi' is omitted and will default to 0 (NONE).
 Finally, if 'mi' and 'bi' are omitted then 'xi' and 'yi' can be omitted and will
@@ -130,37 +132,61 @@ Please report all bugs to our issue tracker:
 http://code.google.com/p/webp/issues
 .br
 Patches welcome! See this page to get started:
-http://www.webmproject.org/code/contribute/submitting-patches/
+http://www.webmproject.org/code/contribute/submitting\-patches/
 
 .SH EXAMPLES
+.P
+Add ICC profile:
+.br
 webpmux \-set icc image_profile.icc in.webp \-o icc_container.webp
+.P
+Extract ICC profile:
 .br
 webpmux \-get icc icc_container.webp \-o image_profile.icc
+.P
+Strip ICC profile:
 .br
 webpmux \-strip icc icc_container.webp \-o without_icc.webp
+.P
+Add XMP metadata:
 .br
 webpmux \-set xmp image_metadata.xmp in.webp \-o xmp_container.webp
+.P
+Extract XMP metadata:
 .br
 webpmux \-get xmp xmp_container.webp \-o image_metadata.xmp
+.P
+Strip XMP metadata:
 .br
 webpmux \-strip xmp xmp_container.webp \-o without_xmp.webp
+.P
+Add EXIF metadata:
 .br
 webpmux \-set exif image_metadata.exif in.webp \-o exif_container.webp
+.P
+Extract EXIF metadata:
 .br
 webpmux \-get exif exif_container.webp \-o image_metadata.exif
+.P
+Strip EXIF metadata:
 .br
 webpmux \-strip exif exif_container.webp \-o without_exif.webp
+.P
+Create an animated WebP file from 3 (non\-animated) WebP images:
 .br
-webpmux \-frame anim_1.webp +100 \-frame anim_2.webp +100+50+50
+webpmux \-frame 1.webp +100 \-frame 2.webp +100+50+50
 .br
 .RS 8
-\-frame anim_2.webp +100+50+50+1+b \-loop 10 \-bgcolor 255,255,255,255
+\-frame 3.webp +100+50+50+1+b \-loop 10 \-bgcolor 255,255,255,255
 .br
-.RS 8
 \-o anim_container.webp
 .RE
+.P
+Get the 2nd frame from an animated WebP file:
 .br
 webpmux \-get frame 2 anim_container.webp \-o frame_2.webp
+.P
+Using \-get/\-set/\-strip with input file name starting with '\-':
 .br
 webpmux \-set icc image_profile.icc \-o icc_container.webp \-\- \-\-\-in.webp
 .br
