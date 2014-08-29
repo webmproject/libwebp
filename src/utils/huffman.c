@@ -76,17 +76,16 @@ static WEBP_INLINE int NextTableBitSize(const int* const count,
 }
 
 int VP8LBuildHuffmanTable(HuffmanCode* const root_table, int root_bits,
-                          const int* const code_lengths,
-                          int code_lengths_size) {
-  HuffmanCode* table;  // next available space in table
-  int len;             // current code length
-  int symbol;          // symbol index in original or sorted table
-  int total_size;      // sum of root table size and 2nd level table sizes
-  int* sorted = NULL;  // symbols sorted by code length
+                          const int code_lengths[], int code_lengths_size) {
+  HuffmanCode* table = root_table;  // next available space in table
+  int total_size = 1 << root_bits;  // total size root table + 2nd level table
+  int* sorted = NULL;               // symbols sorted by code length
+  int len;                          // current code length
+  int symbol;                       // symbol index in original or sorted table
+  // number of codes of each length:
   int count[MAX_ALLOWED_CODE_LENGTH + 1] = { 0 };
-                       // number of codes of each length
+  // offsets in sorted table for each length:
   int offset[MAX_ALLOWED_CODE_LENGTH + 1];
-                       // offsets in sorted table for each length
 
   assert(code_lengths_size != 0);
   assert(code_lengths != NULL);
@@ -127,9 +126,6 @@ int VP8LBuildHuffmanTable(HuffmanCode* const root_table, int root_bits,
       sorted[offset[symbol_code_length]++] = symbol;
     }
   }
-
-  table = root_table;
-  total_size = 1 << root_bits;
 
   // Special case code with only one value.
   if (offset[MAX_ALLOWED_CODE_LENGTH] == 1) {

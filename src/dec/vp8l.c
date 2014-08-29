@@ -78,7 +78,8 @@ static const uint8_t kCodeToPlane[CODE_TO_PLANE_CODES] = {
 // respectively. Size of green alphabet depends on color cache size and is equal
 // to 256 (green component values) + 24 (length prefix values)
 // + color_cache_size (between 0 and 2048).
-// All values computed for 8-bit first level lookup with tests/tools/enough.cc.
+// All values computed for 8-bit first level lookup with Mark Adler's tool:
+// http://www.hdfgroup.org/ftp/lib-external/zlib/zlib-1.2.5/examples/enough.c
 #define FIXED_TABLE_SIZE (630 * 3 + 410)
 static const int kTableSize[12] = {
   FIXED_TABLE_SIZE + 654,
@@ -203,15 +204,13 @@ static int ReadHuffmanCodeLengths(
   if (!VP8LBuildHuffmanTable(table, LENGTHS_TABLE_BITS,
                              code_length_code_lengths,
                              NUM_CODE_LENGTH_CODES)) {
-    dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
-    return 0;
+    goto End;
   }
 
   if (VP8LReadBits(br, 1)) {    // use length
     const int length_nbits = 2 + 2 * VP8LReadBits(br, 3);
     max_symbol = 2 + VP8LReadBits(br, length_nbits);
     if (max_symbol > num_symbols) {
-      dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
       goto End;
     }
   } else {
@@ -220,11 +219,11 @@ static int ReadHuffmanCodeLengths(
 
   symbol = 0;
   while (symbol < num_symbols) {
-    const HuffmanCode* p = table;
+    const HuffmanCode* p;
     int code_len;
     if (max_symbol-- == 0) break;
     VP8LFillBitWindow(br);
-    p += VP8LPrefetchBits(br) & LENGTHS_TABLE_MASK;
+    p = &table[VP8LPrefetchBits(br) & LENGTHS_TABLE_MASK];
     VP8LSetBitPos(br, br->bit_pos_ + p->bits);
     code_len = p->value;
     if (code_len < kCodeLengthLiterals) {
@@ -237,7 +236,6 @@ static int ReadHuffmanCodeLengths(
       const int repeat_offset = kCodeLengthRepeatOffsets[slot];
       int repeat = VP8LReadBits(br, extra_bits) + repeat_offset;
       if (symbol + repeat > num_symbols) {
-        dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
         goto End;
       } else {
         const int length = use_prev ? prev_code_len : 0;
@@ -248,6 +246,7 @@ static int ReadHuffmanCodeLengths(
   ok = 1;
 
  End:
+  dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
   return ok;
 }
 
@@ -348,7 +347,7 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
   }
 
   huffman_tables = (HuffmanCode*)WebPSafeMalloc(num_htree_groups * table_size,
-                                                sizeof(HuffmanCode));
+                                                sizeof(*huffman_tables));
   htree_groups = VP8LHtreeGroupsNew(num_htree_groups);
   code_lengths = (int*)WebPSafeCalloc((uint64_t)max_alphabet_size,
                                       sizeof(*code_lengths));
