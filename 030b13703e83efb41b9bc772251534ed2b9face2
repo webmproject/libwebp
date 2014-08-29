@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Zdc\u003d",
+        "filename": "man/webpmux.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-08-29T21:14:47Z",
+      "side": 1,
+      "message": "\u0027-\u0027 should be escaped for compatibility",
+      "revId": "030b13703e83efb41b9bc772251534ed2b9face2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Zdg\u003d",
+        "filename": "man/webpmux.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-08-29T21:14:47Z",
+      "side": 1,
+      "message": "\u0027-\u0027 should be escaped for compatibility",
+      "revId": "030b13703e83efb41b9bc772251534ed2b9face2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ZdY\u003d",
+        "filename": "man/webpmux.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-08-29T21:14:47Z",
+      "side": 1,
+      "message": "\u0027-\u0027 should be escaped for compatibility",
+      "revId": "030b13703e83efb41b9bc772251534ed2b9face2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
