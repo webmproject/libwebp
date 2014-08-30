@@ -46,6 +46,8 @@ int ExUtilReadFromStdin(const uint8_t** data, size_t* data_size) {
   *data = NULL;
   *data_size = 0;
 
+  if (!ExUtilSetBinaryMode(stdin)) return 0;
+
   while (!feof(stdin)) {
     // We double the buffer size each time and read as much as possible.
     const size_t extra_size = (max_size == 0) ? kBlockSize : max_size;
