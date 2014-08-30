@@ -38,11 +38,6 @@
 #include <wincodec.h>
 #endif
 
-#if defined(_WIN32)
-#include <fcntl.h>   // for _O_BINARY
-#include <io.h>      // for _setmode()
-#endif
-
 #include "webp/decode.h"
 #include "./example_util.h"
 #include "./stopwatch.h"
@@ -482,15 +477,8 @@ static int SaveOutput(const WebPDecBuffer* const buffer,
   needs_open_file = (format != PNG);
 #endif
 
-#if defined(_WIN32)
-  if (use_stdout && _setmode(_fileno(stdout), _O_BINARY) == -1) {
-    fprintf(stderr, "Failed to reopen stdout in O_BINARY mode.\n");
-    return -1;
-  }
-#endif
-
   if (needs_open_file) {
-    fout = use_stdout ? stdout : fopen(out_file, "wb");
+    fout = use_stdout ? ExUtilSetBinaryMode(stdout) : fopen(out_file, "wb");
     if (fout == NULL) {
       fprintf(stderr, "Error opening output file %s\n", out_file);
       return 0;
