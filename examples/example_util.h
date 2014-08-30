@@ -13,11 +13,16 @@
 #ifndef WEBP_EXAMPLES_EXAMPLE_UTIL_H_
 #define WEBP_EXAMPLES_EXAMPLE_UTIL_H_
 
+#include <stdio.h>
 #include "webp/decode.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// Reopen file in binary (O_BINARY) mode.
+// Returns 'file' on success, NULL otherwise.
+FILE* ExUtilSetBinaryMode(FILE* file);
 
 // Allocates storage for entire file 'file_name' and returns contents and size
 // in 'data' and 'data_size'. Returns 1 on success, 0 otherwise. '*data' should

@@ -11,6 +11,11 @@
 //
 
 #include "./example_util.h"
+
+#if defined(_WIN32)
+#include <fcntl.h>   // for _O_BINARY
+#include <io.h>      // for _setmode()
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,9 +26,18 @@
 // -----------------------------------------------------------------------------
 // File I/O
 
-static const size_t kBlockSize = 16384;  // default initial size
+FILE* ExUtilSetBinaryMode(FILE* file) {
+#if defined(_WIN32)
+  if (_setmode(_fileno(file), _O_BINARY) == -1) {
+    fprintf(stderr, "Failed to reopen file in O_BINARY mode.\n");
+    return NULL;
+  }
+#endif
+  return file;
+}
 
 int ExUtilReadFromStdin(const uint8_t** data, size_t* data_size) {
+  static const size_t kBlockSize = 16384;  // default initial size
   size_t max_size = 0;
   size_t size = 0;
   uint8_t* input = NULL;
