@@ -22,6 +22,7 @@
 
 #include "webp/encode.h"
 
+#include "./example_util.h"
 #include "./metadata.h"
 #include "./stopwatch.h"
 
@@ -978,7 +979,7 @@ int main(int argc, const char *argv[]) {
   // Open the output
   if (out_file != NULL) {
     const int use_stdout = !strcmp(out_file, "-");
-    out = use_stdout ? stdout : fopen(out_file, "wb");
+    out = use_stdout ? ExUtilSetBinaryMode(stdout) : fopen(out_file, "wb");
     if (out == NULL) {
       fprintf(stderr, "Error! Cannot open output file '%s'\n", out_file);
       goto Error;
