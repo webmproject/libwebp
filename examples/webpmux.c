@@ -402,8 +402,9 @@ static int CreateMux(const char* const filename, WebPMux** mux) {
 
 static int WriteData(const char* filename, const WebPData* const webpdata) {
   int ok = 0;
-  FILE* fout = strcmp(filename, "-") ? fopen(filename, "wb") : stdout;
-  if (!fout) {
+  FILE* fout = strcmp(filename, "-") ? fopen(filename, "wb")
+                                     : ExUtilSetBinaryMode(stdout);
+  if (fout == NULL) {
     fprintf(stderr, "Error opening output WebP file %s!\n", filename);
     return 0;
   }
