@@ -183,6 +183,7 @@ DSP_DEC_OBJS = \
     $(DIROBJ)\dsp\filters_mips_dsp_r2.obj \
     $(DIROBJ)\dsp\lossless.obj \
     $(DIROBJ)\dsp\lossless_mips32.obj \
+    $(DIROBJ)\dsp\lossless_mips_dsp_r2.obj \
     $(DIROBJ)\dsp\lossless_neon.obj \
     $(DIROBJ)\dsp\lossless_sse2.obj \
     $(DIROBJ)\dsp\upsampling.obj \

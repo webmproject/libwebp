@@ -21,6 +21,7 @@ COMMON_SOURCES += filters_mips_dsp_r2.c
 COMMON_SOURCES += lossless.c
 COMMON_SOURCES += lossless.h
 COMMON_SOURCES += lossless_mips32.c
+COMMON_SOURCES += lossless_mips_dsp_r2.c
 COMMON_SOURCES += lossless_neon.c
 COMMON_SOURCES += neon.h
 COMMON_SOURCES += upsampling.c

@@ -1184,9 +1184,21 @@ static void ColorSpaceInverseTransform(const VP8LTransform* const transform,
 
 // Separate out pixels packed together using pixel-bundling.
 // We define two methods for ARGB data (uint32_t) and alpha-only data (uint8_t).
-#define COLOR_INDEX_INVERSE(FUNC_NAME, TYPE, GET_INDEX, GET_VALUE)             \
-void FUNC_NAME(const VP8LTransform* const transform,                           \
-               int y_start, int y_end, const TYPE* src, TYPE* dst) {           \
+#define COLOR_INDEX_INVERSE(FUNC_NAME, F_NAME, STATIC_DECL, TYPE, BIT_SUFFIX,  \
+                            GET_INDEX, GET_VALUE)                              \
+static void F_NAME(const TYPE* src, const uint32_t* const color_map,           \
+                   TYPE* dst, int y_start, int y_end, int width) {             \
+  int y;                                                                       \
+  for (y = y_start; y < y_end; ++y) {                                          \
+    int x;                                                                     \
+    for (x = 0; x < width; ++x) {                                              \
+      *dst++ = GET_VALUE(color_map[GET_INDEX(*src++)]);                        \
+    }                                                                          \
+  }                                                                            \
+}                                                                              \
+STATIC_DECL void FUNC_NAME(const VP8LTransform* const transform,               \
+                           int y_start, int y_end, const TYPE* src,            \
+                           TYPE* dst) {                                        \
   int y;                                                                       \
   const int bits_per_pixel = 8 >> transform->bits_;                            \
   const int width = transform->xsize_;                                         \
@@ -1209,35 +1221,14 @@ void FUNC_NAME(const VP8LTransform* const transform,                           \
       }                                                                        \
     }                                                                          \
   } else {                                                                     \
-    for (y = y_start; y < y_end; ++y) {                                        \
-      int x;                                                                   \
-      for (x = 0; x < width; ++x) {                                            \
-        *dst++ = GET_VALUE(color_map[GET_INDEX(*src++)]);                      \
-      }                                                                        \
-    }                                                                          \
+    VP8LMapColor##BIT_SUFFIX(src, color_map, dst, y_start, y_end, width);      \
   }                                                                            \
 }
 
-static WEBP_INLINE uint32_t GetARGBIndex(uint32_t idx) {
-  return (idx >> 8) & 0xff;
-}
-
-static WEBP_INLINE uint8_t GetAlphaIndex(uint8_t idx) {
-  return idx;
-}
-
-static WEBP_INLINE uint32_t GetARGBValue(uint32_t val) {
-  return val;
-}
-
-static WEBP_INLINE uint8_t GetAlphaValue(uint32_t val) {
-  return (val >> 8) & 0xff;
-}
-
-static COLOR_INDEX_INVERSE(ColorIndexInverseTransform, uint32_t, GetARGBIndex,
-                           GetARGBValue)
-COLOR_INDEX_INVERSE(VP8LColorIndexInverseTransformAlpha, uint8_t, GetAlphaIndex,
-                    GetAlphaValue)
+COLOR_INDEX_INVERSE(ColorIndexInverseTransform, MapARGB, static, uint32_t, 32b,
+                    VP8GetARGBIndex, VP8GetARGBValue)
+COLOR_INDEX_INVERSE(VP8LColorIndexInverseTransformAlpha, MapAlpha, , uint8_t,
+                    8b, VP8GetAlphaIndex, VP8GetAlphaValue)
 
 #undef COLOR_INDEX_INVERSE
 
@@ -1586,9 +1577,13 @@ VP8LCostCombinedCountFunc VP8LHuffmanCostCombinedCount;
 
 VP8LHistogramAddFunc VP8LHistogramAdd;
 
+VP8LMapARGBFunc VP8LMapColor32b;
+VP8LMapAlphaFunc VP8LMapColor8b;
+
 extern void VP8LDspInitSSE2(void);
 extern void VP8LDspInitNEON(void);
 extern void VP8LDspInitMIPS32(void);
+extern void VP8LDspInitMIPSdspR2(void);
 
 void VP8LDspInit(void) {
   memcpy(VP8LPredictors, kPredictorsC, sizeof(VP8LPredictors));
@@ -1616,6 +1611,9 @@ void VP8LDspInit(void) {
 
   VP8LHistogramAdd = HistogramAdd;
 
+  VP8LMapColor32b = MapARGB;
+  VP8LMapColor8b = MapAlpha;
+
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_SSE2)
@@ -1631,6 +1629,11 @@ void VP8LDspInit(void) {
 #if defined(WEBP_USE_MIPS32)
     if (VP8GetCPUInfo(kMIPS32)) {
       VP8LDspInitMIPS32();
+    }
+#endif
+#if defined(WEBP_USE_MIPS_DSP_R2)
+    if (VP8GetCPUInfo(kMIPSdspR2)) {
+      VP8LDspInitMIPSdspR2();
     }
 #endif
   }
