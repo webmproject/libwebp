@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//ZUI\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 761,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-02T16:52:15Z",
+      "side": 1,
+      "message": "security problem: if ilength is less than 3, this can lead to buffer over-run.\nYou need to test ilength too:\n\nwhile (ilength \u003e 0 \u0026\u0026 (uintptr_t)pdata1 \u0026 3) { \n  ...\n}\n\nbut this might have a non-negligible impact on speed, considering that ilength copy size are usually small.",
+      "revId": "fa58516e63bb81bc1e8741f21f26e91aba2bb5f5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//ZVw\u003d",
         "filename": "src/dec/vp8l.c",
         "patchSetId": 4
