@@ -1,0 +1,191 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//ZVM\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 751,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-02T16:29:14Z",
+      "side": 1,
+      "message": "i\u0027d avoid hard-coding \u0027temp1\u0027 here, and use a more generic macro:\n\n#define ROTATE8b(V) do { \\\n  (V) \u003d (((V) \u0026 0xff0000000u) \u003e\u003e 24) | ((V) \u003c\u003c 8); \\\n} while (0)\n\netc.",
+      "revId": "fa58516e63bb81bc1e8741f21f26e91aba2bb5f5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ZVw\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-02T16:29:14Z",
+      "side": 1,
+      "message": "--liength;",
+      "revId": "fa58516e63bb81bc1e8741f21f26e91aba2bb5f5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ZVs\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 766,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-02T16:29:14Z",
+      "side": 1,
+      "message": "\u0027pdata\u0027 could be a local variable.",
+      "revId": "fa58516e63bb81bc1e8741f21f26e91aba2bb5f5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ZVo\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 768,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-02T16:29:14Z",
+      "side": 1,
+      "message": "i wonder is \u0027pdata[i] \u003d temp1;\u0027 is faster\n(esp. on x86).",
+      "revId": "fa58516e63bb81bc1e8741f21f26e91aba2bb5f5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ZVU\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 822,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-02T16:29:14Z",
+      "side": 1,
+      "message": "const int ilength \u003d ...",
+      "revId": "fa58516e63bb81bc1e8741f21f26e91aba2bb5f5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ZVQ\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 824,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-02T16:29:14Z",
+      "side": 1,
+      "message": "const uint8_t* data2 \u003d pdata1 - dist;",
+      "revId": "fa58516e63bb81bc1e8741f21f26e91aba2bb5f5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ZVA\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 828,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-02T16:29:14Z",
+      "side": 1,
+      "message": "is it worth testing is ilength is \u003e 8 (say), before using this complex copy?",
+      "revId": "fa58516e63bb81bc1e8741f21f26e91aba2bb5f5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ZVk\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 831,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-02T16:29:14Z",
+      "side": 1,
+      "message": "\"temp1 \u003d temp0 * 0x01010101u;\" might be faster on x86",
+      "revId": "fa58516e63bb81bc1e8741f21f26e91aba2bb5f5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ZV0\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 836,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-02T16:29:14Z",
+      "side": 1,
+      "message": "\"temp1 \u003d temp0 * 0x00010001u;\" here too",
+      "revId": "fa58516e63bb81bc1e8741f21f26e91aba2bb5f5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ZVg\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 844,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-02T16:29:14Z",
+      "side": 1,
+      "message": "probably worth keeping the original form:\n\n\"for (i \u003d 0; i \u003c length; ++i) pdata1[i] \u003d pdata2[i];\"\n\nesp. on x86.",
+      "revId": "fa58516e63bb81bc1e8741f21f26e91aba2bb5f5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ZVc\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 845,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-02T16:29:14Z",
+      "side": 1,
+      "message": "missing \u0027break;\u0027 for the \u0027default:\u0027 switch case.",
+      "revId": "fa58516e63bb81bc1e8741f21f26e91aba2bb5f5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
