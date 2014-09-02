@@ -39,6 +39,7 @@ LOCAL_SRC_FILES := \
     src/dsp/dec.c \
     src/dsp/dec_clip_tables.c \
     src/dsp/dec_mips32.c \
+    src/dsp/dec_mips_dsp_r2.c \
     src/dsp/dec_neon.$(NEON) \
     src/dsp/dec_sse2.c \
     src/dsp/enc.c \

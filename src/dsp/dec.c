@@ -687,6 +687,7 @@ VP8SimpleFilterFunc VP8SimpleHFilter16i;
 extern void VP8DspInitSSE2(void);
 extern void VP8DspInitNEON(void);
 extern void VP8DspInitMIPS32(void);
+extern void VP8DspInitMIPSdspR2(void);
 
 void VP8DspInit(void) {
   VP8InitClipTables();
@@ -717,13 +718,20 @@ void VP8DspInit(void) {
     if (VP8GetCPUInfo(kSSE2)) {
       VP8DspInitSSE2();
     }
-#elif defined(WEBP_USE_NEON)
+#endif
+#if defined(WEBP_USE_NEON)
     if (VP8GetCPUInfo(kNEON)) {
       VP8DspInitNEON();
     }
-#elif defined(WEBP_USE_MIPS32)
+#endif
+#if defined(WEBP_USE_MIPS32)
     if (VP8GetCPUInfo(kMIPS32)) {
       VP8DspInitMIPS32();
+    }
+#endif
+#if defined(WEBP_USE_MIPS_DSP_R2)
+    if (VP8GetCPUInfo(kMIPSdspR2)) {
+      VP8DspInitMIPSdspR2();
     }
 #endif
   }
