@@ -47,12 +47,11 @@
 
 static int EncodeLossless(const uint8_t* const data, int width, int height,
                           int effort_level,  // in [0..6] range
-                          VP8BitWriter* const bw,
+                          VP8LBitWriter* const bw,
                           WebPAuxStats* const stats) {
   int ok = 0;
   WebPConfig config;
   WebPPicture picture;
-  VP8LBitWriter tmp_bw;
 
   WebPPictureInit(&picture);
   picture.width = width;
@@ -84,16 +83,15 @@ static int EncodeLossless(const uint8_t* const data, int width, int height,
   config.quality = 8.f * effort_level;
   assert(config.quality >= 0 && config.quality <= 100.f);
 
-  ok = VP8LBitWriterInit(&tmp_bw, (width * height) >> 3);
-  ok = ok && (VP8LEncodeStream(&config, &picture, &tmp_bw) == VP8_ENC_OK);
+  ok = (VP8LEncodeStream(&config, &picture, bw) == VP8_ENC_OK);
   WebPPictureFree(&picture);
-  if (ok) {
-    const uint8_t* const buffer = VP8LBitWriterFinish(&tmp_bw);
-    const size_t buffer_size = VP8LBitWriterNumBytes(&tmp_bw);
-    VP8BitWriterAppend(bw, buffer, buffer_size);
+  ok = ok && !bw->error_;
+  if (!ok) {
+    VP8LBitWriterDestroy(bw);
+    return 0;
   }
-  VP8LBitWriterDestroy(&tmp_bw);
-  return ok && !bw->error_;
+  return 1;
+
 }
 
 // -----------------------------------------------------------------------------
@@ -115,8 +113,10 @@ static int EncodeAlphaInternal(const uint8_t* const data, int width, int height,
   const uint8_t* alpha_src;
   WebPFilterFunc filter_func;
   uint8_t header;
-  size_t expected_size;
   const size_t data_size = width * height;
+  const uint8_t* output = NULL;
+  size_t output_size = 0;
+  VP8LBitWriter tmp_bw;
 
   assert((uint64_t)data_size == (uint64_t)width * height);  // as per spec
   assert(filter >= 0 && filter < WEBP_FILTER_LAST);
@@ -124,15 +124,6 @@ static int EncodeAlphaInternal(const uint8_t* const data, int width, int height,
   assert(method <= ALPHA_LOSSLESS_COMPRESSION);
   assert(sizeof(header) == ALPHA_HEADER_LEN);
   // TODO(skal): have a common function and #define's to validate alpha params.
-
-  expected_size =
-      (method == ALPHA_NO_COMPRESSION) ? (ALPHA_HEADER_LEN + data_size)
-                                       : (data_size >> 5);
-  header = method | (filter << 2);
-  if (reduce_levels) header |= ALPHA_PREPROCESSED_LEVELS << 4;
-
-  VP8BitWriterInit(&result->bw, expected_size);
-  VP8BitWriterAppend(&result->bw, &header, ALPHA_HEADER_LEN);
 
   filter_func = WebPFilters[filter];
   if (filter_func != NULL) {
@@ -142,14 +133,42 @@ static int EncodeAlphaInternal(const uint8_t* const data, int width, int height,
     alpha_src = data;
   }
 
-  if (method == ALPHA_NO_COMPRESSION) {
-    ok = VP8BitWriterAppend(&result->bw, alpha_src, width * height);
-    ok = ok && !result->bw.error_;
-  } else {
-    ok = EncodeLossless(alpha_src, width, height, effort_level,
-                        &result->bw, &result->stats);
-    VP8BitWriterFinish(&result->bw);
+  if (method != ALPHA_NO_COMPRESSION) {
+    ok = VP8LBitWriterInit(&tmp_bw, data_size >> 3);
+    ok = ok && EncodeLossless(alpha_src, width, height, effort_level,
+                              &tmp_bw, &result->stats);
+    if (ok) {
+      output = VP8LBitWriterFinish(&tmp_bw);
+      output_size = VP8LBitWriterNumBytes(&tmp_bw);
+      if (output_size > data_size) {
+        // compressed size is larger than source! Revert to uncompressed mode.
+        method = ALPHA_NO_COMPRESSION;
+        VP8LBitWriterDestroy(&tmp_bw);
+      }
+    } else {
+      VP8LBitWriterDestroy(&tmp_bw);
+      return 0;
+    }
   }
+
+  if (method == ALPHA_NO_COMPRESSION) {
+    output = alpha_src;
+    output_size = data_size;
+    ok = 1;
+  }
+
+  // Emit final result.
+  header = method | (filter << 2);
+  if (reduce_levels) header |= ALPHA_PREPROCESSED_LEVELS << 4;
+
+  VP8BitWriterInit(&result->bw, ALPHA_HEADER_LEN + output_size);
+  ok = ok && VP8BitWriterAppend(&result->bw, &header, ALPHA_HEADER_LEN);
+  ok = ok && VP8BitWriterAppend(&result->bw, output, output_size);
+
+  if (method != ALPHA_NO_COMPRESSION) {
+    VP8LBitWriterDestroy(&tmp_bw);
+  }
+  ok = ok && !result->bw.error_;
   result->score = VP8BitWriterSize(&result->bw);
   return ok;
 }
