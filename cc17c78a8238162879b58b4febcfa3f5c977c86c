@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//ZMk\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-03T14:47:59Z",
+      "side": 1,
+      "message": "it\u0027s needed, to cast back pdata (which is uin32_t*) into uint8_t*.",
+      "parentUuid": "AAAAdn//ZM0\u003d",
+      "revId": "cc17c78a8238162879b58b4febcfa3f5c977c86c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//ZMw\u003d",
         "filename": "src/dec/vp8l.c",
         "patchSetId": 7
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//ZMg\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 828,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-03T14:47:59Z",
+      "side": 1,
+      "message": "yes, there\u0027s aliasing, but pdata2 is used as source (right pointer), and never written to. So it should be semantically pointing to \u0027const\u0027 data.",
+      "parentUuid": "AAAAdn//ZMw\u003d",
+      "revId": "cc17c78a8238162879b58b4febcfa3f5c977c86c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//ZMs\u003d",
         "filename": "src/dec/vp8l.c",
         "patchSetId": 7
@@ -47,6 +83,24 @@
       "writtenOn": "2014-09-03T14:19:39Z",
       "side": 1,
       "message": "unnecessary break",
+      "revId": "cc17c78a8238162879b58b4febcfa3f5c977c86c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ZMc\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 844,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-03T14:47:59Z",
+      "side": 1,
+      "message": "best to keep it, since code tend to be moved around (and no explicit fall-through is expected).",
+      "parentUuid": "AAAAdn//ZMs\u003d",
       "revId": "cc17c78a8238162879b58b4febcfa3f5c977c86c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
