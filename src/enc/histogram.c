@@ -644,20 +644,20 @@ static void HistogramRemap(const VP8LHistogramSet* const orig_histo,
   const int image_histo_size = image_histo->size;
   if (image_histo_size > 1) {
     for (i = 0; i < orig_histo_size; ++i) {
-    int best_out = 0;
-    double best_bits =
-        HistogramAddThresh(histograms[0], orig_histograms[i], MAX_COST);
-    int k;
+      int best_out = 0;
+      double best_bits =
+          HistogramAddThresh(histograms[0], orig_histograms[i], MAX_COST);
+      int k;
       for (k = 1; k < image_histo_size; ++k) {
-      const double cur_bits =
-          HistogramAddThresh(histograms[k], orig_histograms[i], best_bits);
-      if (cur_bits < best_bits) {
-        best_bits = cur_bits;
-        best_out = k;
+        const double cur_bits =
+            HistogramAddThresh(histograms[k], orig_histograms[i], best_bits);
+        if (cur_bits < best_bits) {
+          best_bits = cur_bits;
+          best_out = k;
+        }
       }
+      symbols[i] = best_out;
     }
-    symbols[i] = best_out;
-  }
   } else {
     assert(image_histo_size == 1);
     for (i = 0; i < orig_histo_size; ++i) {
