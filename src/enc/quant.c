@@ -843,6 +843,12 @@ static void StoreMaxDelta(VP8SegmentInfo* const dqm, const int16_t DCs[16]) {
   if (max_v > dqm->max_edge_) dqm->max_edge_ = max_v;
 }
 
+static void SwapModeScore(VP8ModeScore** a, VP8ModeScore** b) {
+  VP8ModeScore* const tmp = *a;
+  *a = *b;
+  *b = tmp;
+}
+
 static void SwapPtr(uint8_t** a, uint8_t** b) {
   uint8_t* const tmp = *a;
   *a = *b;
@@ -866,45 +872,46 @@ static score_t IsFlat(const int16_t* levels, int num_blocks, score_t thresh) {
   return 1;
 }
 
-static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* const rd) {
+static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* rd) {
   const int kNumBlocks = 16;
   VP8SegmentInfo* const dqm = &it->enc_->dqm_[it->mb_->segment_];
   const int lambda = dqm->lambda_i16_;
   const int tlambda = dqm->tlambda_;
   const uint8_t* const src = it->yuv_in_ + Y_OFF;
-  VP8ModeScore rd16;
+  VP8ModeScore rd_tmp;
+  VP8ModeScore* rd_cur = &rd_tmp;
+  VP8ModeScore* rd_best = rd;
   int mode;
 
   rd->mode_i16 = -1;
   for (mode = 0; mode < NUM_PRED_MODES; ++mode) {
     uint8_t* const tmp_dst = it->yuv_out2_ + Y_OFF;  // scratch buffer
-    int nz;
+    rd_cur->mode_i16 = mode;
 
     // Reconstruct
-    nz = ReconstructIntra16(it, &rd16, tmp_dst, mode);
+    rd_cur->nz = ReconstructIntra16(it, rd_cur, tmp_dst, mode);
 
     // Measure RD-score
-    rd16.D = VP8SSE16x16(src, tmp_dst);
-    rd16.SD = tlambda ? MULT_8B(tlambda, VP8TDisto16x16(src, tmp_dst, kWeightY))
-            : 0;
-    rd16.H = VP8FixedCostsI16[mode];
-    rd16.R = VP8GetCostLuma16(it, &rd16);
+    rd_cur->D = VP8SSE16x16(src, tmp_dst);
+    rd_cur->SD =
+        tlambda ? MULT_8B(tlambda, VP8TDisto16x16(src, tmp_dst, kWeightY)) : 0;
+    rd_cur->H = VP8FixedCostsI16[mode];
+    rd_cur->R = VP8GetCostLuma16(it, rd_cur);
     if (mode > 0 &&
-        IsFlat(rd16.y_ac_levels[0], kNumBlocks, FLATNESS_LIMIT_I16)) {
+        IsFlat(rd_cur->y_ac_levels[0], kNumBlocks, FLATNESS_LIMIT_I16)) {
       // penalty to avoid flat area to be mispredicted by complex mode
-      rd16.R += FLATNESS_PENALTY * kNumBlocks;
+      rd_cur->R += FLATNESS_PENALTY * kNumBlocks;
     }
 
     // Since we always examine Intra16 first, we can overwrite *rd directly.
-    SetRDScore(lambda, &rd16);
-    if (mode == 0 || rd16.score < rd->score) {
-      CopyScore(rd, &rd16);
-      rd->mode_i16 = mode;
-      rd->nz = nz;
-      memcpy(rd->y_ac_levels, rd16.y_ac_levels, sizeof(rd16.y_ac_levels));
-      memcpy(rd->y_dc_levels, rd16.y_dc_levels, sizeof(rd16.y_dc_levels));
+    SetRDScore(lambda, rd_cur);
+    if (mode == 0 || rd_cur->score < rd_best->score) {
+      SwapModeScore(&rd_cur, &rd_best);
       SwapOut(it);
     }
+  }
+  if (rd_best != rd) {
+    memcpy(rd, rd_best, sizeof(*rd));
   }
   SetRDScore(dqm->lambda_mode_, rd);   // finalize score for mode decision.
   VP8SetIntra16Mode(it, rd->mode_i16);
@@ -973,17 +980,28 @@ static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
           tlambda ? MULT_8B(tlambda, VP8TDisto4x4(src, tmp_dst, kWeightY))
                   : 0;
       rd_tmp.H = mode_costs[mode];
-      rd_tmp.R = VP8GetCostLuma4(it, tmp_levels);
+
+      // Add flatness penalty
       if (mode > 0 && IsFlat(tmp_levels, kNumBlocks, FLATNESS_LIMIT_I4)) {
-        rd_tmp.R += FLATNESS_PENALTY * kNumBlocks;
+        rd_tmp.R = FLATNESS_PENALTY * kNumBlocks;
+      } else {
+        rd_tmp.R = 0;
       }
 
+      // early-out check
       SetRDScore(lambda, &rd_tmp);
+      if (best_mode >= 0 && rd_tmp.score >= rd_i4.score) continue;
+
+      // finish computing score
+      rd_tmp.R += VP8GetCostLuma4(it, tmp_levels);
+      SetRDScore(lambda, &rd_tmp);
+
       if (best_mode < 0 || rd_tmp.score < rd_i4.score) {
         CopyScore(&rd_i4, &rd_tmp);
         best_mode = mode;
         SwapPtr(&tmp_dst, &best_block);
-        memcpy(rd_best.y_ac_levels[it->i4_], tmp_levels, sizeof(tmp_levels));
+        memcpy(rd_best.y_ac_levels[it->i4_], tmp_levels,
+               sizeof(rd_best.y_ac_levels[it->i4_]));
       }
     }
     SetRDScore(dqm->lambda_mode_, &rd_i4);
@@ -1018,8 +1036,9 @@ static void PickBestUV(VP8EncIterator* const it, VP8ModeScore* const rd) {
   const VP8SegmentInfo* const dqm = &it->enc_->dqm_[it->mb_->segment_];
   const int lambda = dqm->lambda_uv_;
   const uint8_t* const src = it->yuv_in_ + U_OFF;
-  uint8_t* const tmp_dst = it->yuv_out2_ + U_OFF;  // scratch buffer
-  uint8_t* const dst0 = it->yuv_out_ + U_OFF;
+  uint8_t* tmp_dst = it->yuv_out2_ + U_OFF;  // scratch buffer
+  uint8_t* dst0 = it->yuv_out_ + U_OFF;
+  uint8_t* dst = dst0;
   VP8ModeScore rd_best;
   int mode;
 
@@ -1045,11 +1064,12 @@ static void PickBestUV(VP8EncIterator* const it, VP8ModeScore* const rd) {
       CopyScore(&rd_best, &rd_uv);
       rd->mode_uv = mode;
       memcpy(rd->uv_levels, rd_uv.uv_levels, sizeof(rd->uv_levels));
-      memcpy(dst0, tmp_dst, UV_SIZE);   //  TODO: SwapUVOut() ?
+      SwapPtr(&dst, &tmp_dst);
     }
   }
   VP8SetIntraUVMode(it, rd->mode_uv);
   AddScore(rd, &rd_best);
+  if (dst != dst0) memcpy(dst0, dst, UV_SIZE);
 }
 
 //------------------------------------------------------------------------------
