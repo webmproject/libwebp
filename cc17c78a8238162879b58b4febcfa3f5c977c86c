@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//ZM0\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1004029
+      },
+      "writtenOn": "2014-09-03T14:19:39Z",
+      "side": 1,
+      "message": "this line (774) is unnecessary",
+      "revId": "cc17c78a8238162879b58b4febcfa3f5c977c86c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ZMw\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 828,
+      "author": {
+        "id": 1004029
+      },
+      "writtenOn": "2014-09-03T14:19:39Z",
+      "side": 1,
+      "message": "\"pdata2\" points to buffer \"data\" which is changed. I think it should be uint8_t* const pdata2.",
+      "revId": "cc17c78a8238162879b58b4febcfa3f5c977c86c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ZMs\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 844,
+      "author": {
+        "id": 1004029
+      },
+      "writtenOn": "2014-09-03T14:19:39Z",
+      "side": 1,
+      "message": "unnecessary break",
+      "revId": "cc17c78a8238162879b58b4febcfa3f5c977c86c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
