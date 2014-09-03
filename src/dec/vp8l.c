@@ -746,37 +746,81 @@ static void ExtractPalettedAlphaRows(VP8LDecoder* const dec, int row) {
 }
 
 // cyclic rotation of pattern word
+static WEBP_INLINE uint32_t Rotate8b(uint32_t V) {
 #if defined(WORDS_BIGENDIAN)
-#define ROTATE8b(V) do {                                                       \
-  (V) = (((V) & 0xff000000u) >> 24) | ((V) << 8);                              \
-} while (0)
+  return ((V & 0xff000000u) >> 24) | (V << 8);
 #else
-#define ROTATE8b(V) do {                                                       \
-  (V) = (((V) & 0xffu) << 24) | ((V) >> 8);                                    \
-} while (0)
+  return ((V & 0xffu) << 24) | (V >> 8);
 #endif
+}
 
 // copy 1, 2 or 4-bytes pattern
-#define COPY_SMALL_PATTERN() do {                                              \
-  int ilength = length;                                                        \
-  uint32_t* pdata;                                                             \
-  int j = 0;                                                                   \
-  while ((uintptr_t)pdata1 & 3) {                                              \
-    *pdata1++ = pdata2[j];                                                     \
-    ROTATE8b(temp1);                                                           \
-    ++j;                                                                       \
-  }                                                                            \
-  ilength -= j;                                                                \
-  pdata = (uint32_t*)pdata1;                                                   \
-  for (i = 0; i < (ilength >> 2); ++i) {                                       \
-    pdata[i] = temp1;                                                          \
-  }                                                                            \
-  pdata1 = (uint8_t*)pdata;                                                    \
-  pdata2 += j;                                                                 \
-  for (i <<= 2; i < ilength; ++i) {                                            \
-    pdata1[i] = pdata2[i];                                                     \
-  }                                                                            \
-} while (0)
+static WEBP_INLINE void CopySmallPattern(const uint8_t* data_src,
+                                         uint8_t* data_dst,
+                                         int length, uint32_t pattern) {
+  int ilength = length;
+  uint32_t* pdata;
+  int j = 0;
+  int i;
+  // align 'data_dst' to 4-bytes boundary. Adjust the pattern along the way.
+  while ((uintptr_t)data_dst & 3) {
+    *data_dst++ = data_src[j];
+    pattern = Rotate8b(pattern);
+    ++j;
+  }
+  ilength -= j;
+  data_src += j;
+  // Copy the pattern 4 bytes at a time.
+  pdata = (uint32_t*)data_dst;
+  for (i = 0; i < (ilength >> 2); ++i) {
+    pdata[i] = pattern;
+  }
+  // Finish with left-overs. 'pattern' is still correctly positioned,
+  // so no Rotate8b() call is needed.
+  data_dst = (uint8_t*)pdata;
+  for (i <<= 2; i < ilength; ++i) {
+    data_dst[i] = data_src[i];
+  }
+}
+
+static WEBP_INLINE void CopyBlock(uint8_t* data_dst, int dist, int length) {
+  const uint8_t* data_src = data_dst - dist;
+  if (length >= 8) {
+    uint32_t pattern;
+    switch (dist) {
+      case 1:
+        pattern = *data_src;
+#if defined(__arm__) || defined(_M_ARM)   // arm doesn't like multiply that much
+        pattern |= pattern << 8;
+        pattern |= pattern << 16;
+#else
+        pattern = 0x01010101u * pattern;
+#endif
+        break;
+      case 2:
+        pattern = *(const uint16_t*)data_src;
+#if defined(__arm__) || defined(_M_ARM)
+        pattern |= pattern << 16;
+#else
+        pattern = 0x00010001u * pattern;
+#endif
+        break;
+      case 4:
+        pattern = *(const uint32_t*)data_src;
+        break;
+      default:
+        goto Copy;
+        break;
+    }
+    CopySmallPattern(data_src, data_dst, length, pattern);
+  } else {
+ Copy:
+    {
+      int i;
+      for (i = 0; i < length; ++i) data_dst[i] = data_src[i];
+    }
+  }
+}
 
 static int DecodeAlphaData(VP8LDecoder* const dec, uint8_t* const data,
                            int width, int height, int last_row) {
@@ -824,41 +868,7 @@ static int DecodeAlphaData(VP8LDecoder* const dec, uint8_t* const data,
       dist_code = GetCopyDistance(dist_symbol, br);
       dist = PlaneCodeToDistance(width, dist_code);
       if (pos >= dist && end - pos >= length) {
-        uint8_t* pdata1 = data + pos;
-        const uint8_t* pdata2 = pdata1 - dist;
-        int i;
-        if (length >= 8) {
-          uint32_t temp1;
-          switch (dist) {
-            case 1:
-              temp1 = pdata1[-1];
-#if defined(__arm__) || defined(_M_ARM)   // arm doesn't like multiply that much
-              temp1 |= temp1 << 8;
-              temp1 |= temp1 << 16;
-#else
-              temp1 = 0x01010101u * temp1;
-#endif
-              break;
-            case 2:
-              temp1 = ((uint16_t*)pdata1)[-1];
-#if defined(__arm__) || defined(_M_ARM)
-              temp1 |= temp1 << 16;
-#else
-              temp1 = 0x00010001u * temp1;
-#endif
-              break;
-            case 4:
-              temp1 = ((uint32_t*)pdata1)[-1];
-              break;
-            default:
-              goto Copy;
-              break;
-          }
-          COPY_SMALL_PATTERN();
-        } else {
- Copy:
-          for (i = 0; i < length; ++i) pdata1[i] = pdata2[i];
-        }
+        CopyBlock(data + pos, dist, length);
       } else {
         ok = 0;
         goto End;
@@ -896,9 +906,6 @@ static int DecodeAlphaData(VP8LDecoder* const dec, uint8_t* const data,
   }
   return ok;
 }
-
-#undef COPY_PATTERN
-#undef ROTATE8b
 
 static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
                            int width, int height, int last_row,
