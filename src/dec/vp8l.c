@@ -758,7 +758,6 @@ static WEBP_INLINE uint32_t Rotate8b(uint32_t V) {
 static WEBP_INLINE void CopySmallPattern(const uint8_t* data_src,
                                          uint8_t* data_dst,
                                          int length, uint32_t pattern) {
-  int ilength = length;
   uint32_t* pdata;
   int j = 0;
   int i;
@@ -768,17 +767,16 @@ static WEBP_INLINE void CopySmallPattern(const uint8_t* data_src,
     pattern = Rotate8b(pattern);
     ++j;
   }
-  ilength -= j;
+  length -= j;
   data_src += j;
   // Copy the pattern 4 bytes at a time.
   pdata = (uint32_t*)data_dst;
-  for (i = 0; i < (ilength >> 2); ++i) {
+  for (i = 0; i < (length >> 2); ++i) {
     pdata[i] = pattern;
   }
   // Finish with left-overs. 'pattern' is still correctly positioned,
   // so no Rotate8b() call is needed.
-  data_dst = (uint8_t*)pdata;
-  for (i <<= 2; i < ilength; ++i) {
+  for (i <<= 2; i < length; ++i) {
     data_dst[i] = data_src[i];
   }
 }
@@ -793,6 +791,8 @@ static WEBP_INLINE void CopyBlock(uint8_t* data_dst, int dist, int length) {
 #if defined(__arm__) || defined(_M_ARM)   // arm doesn't like multiply that much
         pattern |= pattern << 8;
         pattern |= pattern << 16;
+#elif defined(WEBP_USE_MIPS_DSP_R2)
+        __asm__ volatile ("replv.qb %0, %0" : "+r"(pattern));
 #else
         pattern = 0x01010101u * pattern;
 #endif
@@ -801,6 +801,8 @@ static WEBP_INLINE void CopyBlock(uint8_t* data_dst, int dist, int length) {
         pattern = *(const uint16_t*)data_src;
 #if defined(__arm__) || defined(_M_ARM)
         pattern |= pattern << 16;
+#elif defined(WEBP_USE_MIPS_DSP_R2)
+        __asm__ volatile ("replv.ph %0, %0" : "+r"(pattern));
 #else
         pattern = 0x00010001u * pattern;
 #endif
