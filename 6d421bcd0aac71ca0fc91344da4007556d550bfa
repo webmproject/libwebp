@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Y9o\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1189,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-04T13:23:08Z",
+      "side": 1,
+      "message": "since this code is now extracted from COLOR_INDEX_INVERSE(), it shouldn\u0027t be a (arch-dependent) macro, but a real function in dsp/, accessed through pointer-to-function and implemented in dsp/lossless*.c\nInlining is no longer critical (to be verified, speed-wise)",
+      "revId": "6d421bcd0aac71ca0fc91344da4007556d550bfa",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
