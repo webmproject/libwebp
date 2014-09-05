@@ -246,7 +246,7 @@ static int ReadHuffmanCodeLengths(
   ok = 1;
 
  End:
-  dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
+  if (!ok) dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
   return ok;
 }
 
