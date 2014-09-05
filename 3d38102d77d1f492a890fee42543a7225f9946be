@@ -16,6 +16,23 @@
       "revId": "3d38102d77d1f492a890fee42543a7225f9946be",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Ysk\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 854,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-05T18:26:21Z",
+      "side": 1,
+      "message": "this seems wrong with Big-Endian. Fixing with patchset 2.",
+      "revId": "3d38102d77d1f492a890fee42543a7225f9946be",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
