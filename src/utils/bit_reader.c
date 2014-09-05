@@ -154,7 +154,7 @@ void VP8LInitBitReader(VP8LBitReader* const br, const uint8_t* const start,
 // Special version that assumes br->pos_ <= br_len_.
 static int IsEndOfStreamSpecial(const VP8LBitReader* const br) {
   assert(br->pos_ <= br->len_);
-  return br->pos_ == br->len_ && br->bit_pos_ >= LBITS;
+  return br->pos_ == br->len_ && br->bit_pos_ > LBITS;
 }
 
 static int IsEndOfStream(const VP8LBitReader* const br) {
