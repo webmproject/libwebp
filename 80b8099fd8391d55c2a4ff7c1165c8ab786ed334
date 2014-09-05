@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//Ywg\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1117009
+      },
+      "writtenOn": "2014-09-05T08:09:51Z",
+      "side": 0,
+      "message": "OK",
+      "parentUuid": "AAAAdn//YxM\u003d",
+      "revId": "80b8099fd8391d55c2a4ff7c1165c8ab786ed334",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//YxU\u003d",
         "filename": "src/dsp/enc_neon.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2014-09-05T05:55:06Z",
       "side": 0,
       "message": "how was this version compared to the new one? (speed_wise)",
+      "revId": "80b8099fd8391d55c2a4ff7c1165c8ab786ed334",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Ywc\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1117009
+      },
+      "writtenOn": "2014-09-05T08:09:51Z",
+      "side": 0,
+      "message": "the new version is faster than this version  ~8% with gcc4.8 on Cortex A9. In my test, the sequence of speed is the new intrinsic \u003e assembly \u003e old intrinsic",
+      "parentUuid": "AAAAdn//YxU\u003d",
       "revId": "80b8099fd8391d55c2a4ff7c1165c8ab786ed334",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
