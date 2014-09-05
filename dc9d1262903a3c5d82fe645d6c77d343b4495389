@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//YxQ\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 615,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-05T05:55:06Z",
+      "side": 1,
+      "message": "could you split this function in sub-macro or sub-functions (like DistoTranspose8x4() or DistoSum() in the previous function).\nThis version is quite long and hard-to-read compared to the previous Disto4x4()",
+      "revId": "dc9d1262903a3c5d82fe645d6c77d343b4495389",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
