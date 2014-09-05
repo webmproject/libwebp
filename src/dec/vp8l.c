@@ -234,6 +234,7 @@ static int ReadHuffmanCodeLengths(
 
  End:
   VP8LHuffmanTreeFree(&tree);
+  if (!ok) dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
   return ok;
 }
 
