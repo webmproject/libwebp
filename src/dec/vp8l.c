@@ -745,6 +745,9 @@ static void ExtractPalettedAlphaRows(VP8LDecoder* const dec, int row) {
   dec->last_row_ = dec->last_out_row_ = row;
 }
 
+//------------------------------------------------------------------------------
+// Helper functions for fast pattern copy (8b and 32b)
+
 // cyclic rotation of pattern word
 static WEBP_INLINE uint32_t Rotate8b(uint32_t V) {
 #if defined(WORDS_BIGENDIAN)
@@ -755,39 +758,33 @@ static WEBP_INLINE uint32_t Rotate8b(uint32_t V) {
 }
 
 // copy 1, 2 or 4-bytes pattern
-static WEBP_INLINE void CopySmallPattern(const uint8_t* data_src,
-                                         uint8_t* data_dst,
-                                         int length, uint32_t pattern) {
-  uint32_t* pdata;
-  int j = 0;
+static WEBP_INLINE void CopySmallPattern8b(const uint8_t* src, uint8_t* dst,
+                                           int length, uint32_t pattern) {
   int i;
-  // align 'data_dst' to 4-bytes boundary. Adjust the pattern along the way.
-  while ((uintptr_t)data_dst & 3) {
-    *data_dst++ = data_src[j];
+  // align 'dst' to 4-bytes boundary. Adjust the pattern along the way.
+  while ((uintptr_t)dst & 3) {
+    *dst++ = *src++;
     pattern = Rotate8b(pattern);
-    ++j;
+    --length;
   }
-  length -= j;
-  data_src += j;
   // Copy the pattern 4 bytes at a time.
-  pdata = (uint32_t*)data_dst;
   for (i = 0; i < (length >> 2); ++i) {
-    pdata[i] = pattern;
+    ((uint32_t*)dst)[i] = pattern;
   }
   // Finish with left-overs. 'pattern' is still correctly positioned,
   // so no Rotate8b() call is needed.
   for (i <<= 2; i < length; ++i) {
-    data_dst[i] = data_src[i];
+    dst[i] = src[i];
   }
 }
 
-static WEBP_INLINE void CopyBlock(uint8_t* data_dst, int dist, int length) {
-  const uint8_t* data_src = data_dst - dist;
+static WEBP_INLINE void CopyBlock8b(uint8_t* const dst, int dist, int length) {
+  const uint8_t* src = dst - dist;
   if (length >= 8) {
-    uint32_t pattern;
+    uint32_t pattern = 0;
     switch (dist) {
       case 1:
-        pattern = *data_src;
+        pattern = src[0];
 #if defined(__arm__) || defined(_M_ARM)   // arm doesn't like multiply that much
         pattern |= pattern << 8;
         pattern |= pattern << 16;
@@ -798,7 +795,7 @@ static WEBP_INLINE void CopyBlock(uint8_t* data_dst, int dist, int length) {
 #endif
         break;
       case 2:
-        pattern = *(const uint16_t*)data_src;
+        memcpy(&pattern, src, sizeof(uint16_t));
 #if defined(__arm__) || defined(_M_ARM)
         pattern |= pattern << 16;
 #elif defined(WEBP_USE_MIPS_DSP_R2)
@@ -808,21 +805,64 @@ static WEBP_INLINE void CopyBlock(uint8_t* data_dst, int dist, int length) {
 #endif
         break;
       case 4:
-        pattern = *(const uint32_t*)data_src;
+        memcpy(&pattern, src, sizeof(uint32_t));
         break;
       default:
         goto Copy;
         break;
     }
-    CopySmallPattern(data_src, data_dst, length, pattern);
-  } else {
+    CopySmallPattern8b(src, dst, length, pattern);
+    return;
+  }
  Copy:
-    {
-      int i;
-      for (i = 0; i < length; ++i) data_dst[i] = data_src[i];
-    }
+  if (dist >= length) {  // no overlap -> use memcpy()
+    memcpy(dst, src, length * sizeof(*dst));
+  } else {
+    int i;
+    for (i = 0; i < length; ++i) dst[i] = src[i];
   }
 }
+
+// copy pattern of 1 or 2 uint32_t's
+static WEBP_INLINE void CopySmallPattern32b(const uint32_t* src,
+                                            uint32_t* dst,
+                                            int length, uint64_t pattern) {
+  int i;
+  if ((uintptr_t)dst & 4) {           // Align 'dst' to 8-bytes boundary.
+    *dst++ = *src++;
+    pattern = (pattern >> 32) | (pattern << 32);
+    --length;
+  }
+  assert(0 == ((uintptr_t)dst & 7));
+  for (i = 0; i < (length >> 1); ++i) {
+    ((uint64_t*)dst)[i] = pattern;    // Copy the pattern 8 bytes at a time.
+  }
+  if (length & 1) {                   // Finish with left-over.
+    dst[i << 1] = src[i << 1];
+  }
+}
+
+static WEBP_INLINE void CopyBlock32b(uint32_t* const dst,
+                                     int dist, int length) {
+  const uint32_t* const src = dst - dist;
+  if (dist <= 2 && length >= 4 && ((uintptr_t)dst & 3) == 0) {
+    uint64_t pattern;
+    if (dist == 1) {
+      pattern = (uint64_t)src[0];
+      pattern |= pattern << 32;
+    } else {
+      memcpy(&pattern, src, sizeof(pattern));
+    }
+    CopySmallPattern32b(src, dst, length, pattern);
+  } else if (dist >= length) {  // no overlap
+    memcpy(dst, src, length * sizeof(*dst));
+  } else {
+    int i;
+    for (i = 0; i < length; ++i) dst[i] = src[i];
+  }
+}
+
+//------------------------------------------------------------------------------
 
 static int DecodeAlphaData(VP8LDecoder* const dec, uint8_t* const data,
                            int width, int height, int last_row) {
@@ -870,7 +910,7 @@ static int DecodeAlphaData(VP8LDecoder* const dec, uint8_t* const data,
       dist_code = GetCopyDistance(dist_symbol, br);
       dist = PlaneCodeToDistance(width, dist_code);
       if (pos >= dist && end - pos >= length) {
-        CopyBlock(data + pos, dist, length);
+        CopyBlock8b(data + pos, dist, length);
       } else {
         ok = 0;
         goto End;
@@ -976,10 +1016,9 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
         ok = 0;
         goto End;
       } else {
-        int i;
-        for (i = 0; i < length; ++i) src[i] = src[i - dist];
-        src += length;
+        CopyBlock32b(src, dist, length);
       }
+      src += length;
       col += length;
       while (col >= width) {
         col -= width;
