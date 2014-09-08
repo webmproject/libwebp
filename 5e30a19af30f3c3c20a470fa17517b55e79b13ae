@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//YhQ\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1200,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-08T15:03:03Z",
+      "side": 1,
+      "message": "\u0027STATIC\u0027 naming might already be defined on some platform.\nWhat about \u0027STATIC_DECL\u0027 (or similar) instead?",
+      "revId": "5e30a19af30f3c3c20a470fa17517b55e79b13ae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//YhU\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1224,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-08T15:03:03Z",
+      "side": 1,
+      "message": "see the other comment about ##TYPE",
+      "revId": "5e30a19af30f3c3c20a470fa17517b55e79b13ae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Yhc\u003d",
+        "filename": "src/dsp/lossless.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-08T15:03:03Z",
+      "side": 1,
+      "message": "these functions should be prefixed with \u0027VP8\u0027 to avoid symbol-clash problems",
+      "revId": "5e30a19af30f3c3c20a470fa17517b55e79b13ae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//YhY\u003d",
+        "filename": "src/dsp/lossless.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-08T15:03:03Z",
+      "side": 1,
+      "message": "suffixing with _##TYPE is uncommon here around.\nWhat about the more conventional \"VP8LMapColor32b / VP8LMapColor8b\u0027 ?",
+      "revId": "5e30a19af30f3c3c20a470fa17517b55e79b13ae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Yhg\u003d",
+        "filename": "src/dsp/lossless_mips_dsp_r2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-08T15:03:03Z",
+      "side": 1,
+      "message": "these shouldn\u0027t be declared \u0027WEBP_INLINE\u0027 (since you\u0027re taking their addresses).",
+      "revId": "5e30a19af30f3c3c20a470fa17517b55e79b13ae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
