@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//YZE\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 763,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-09T07:19:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//YiI\u003d",
+      "revId": "5e56db2ed3368c836864795ba4b5fdbedf5f04ed",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//YiE\u003d",
         "filename": "src/dec/vp8l.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2014-09-07T08:07:54Z",
       "side": 1,
       "message": "since src is updated in while loop there is no need for \"j\" and it could be \"--length;\" here instead of \"++j;\"",
+      "revId": "5e56db2ed3368c836864795ba4b5fdbedf5f04ed",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//YZI\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 769,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-09T07:19:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//YiE\u003d",
       "revId": "5e56db2ed3368c836864795ba4b5fdbedf5f04ed",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -71,6 +107,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//YZA\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 810,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-09T07:19:00Z",
+      "side": 1,
+      "message": "replaced by memcpy()\u0027s",
+      "parentUuid": "AAAAdn//YiA\u003d",
+      "revId": "5e56db2ed3368c836864795ba4b5fdbedf5f04ed",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//Yh8\u003d",
         "filename": "src/dec/vp8l.c",
         "patchSetId": 3
@@ -88,6 +142,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//YY8\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 833,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-09T07:19:00Z",
+      "side": 1,
+      "message": "because of the test at line 849, we\u0027re already aligned to either multiples of 4-bytes. This \u0027\u00264\u0027 makes sure we\u0027re aligned to 8-bytes, and can use uint64_t copies.",
+      "parentUuid": "AAAAdn//Yh8\u003d",
+      "revId": "5e56db2ed3368c836864795ba4b5fdbedf5f04ed",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//Yh4\u003d",
         "filename": "src/dec/vp8l.c",
         "patchSetId": 3
@@ -99,6 +171,24 @@
       "writtenOn": "2014-09-07T08:07:54Z",
       "side": 1,
       "message": "I am not sure about this \"dst \u0026 3\", I can\u0027t figure it out what is this for. maybe src \u0026 3 or it is assumed that src \u003d \u0026dst[-1] and check alignment of dst for loading from src in line 852",
+      "revId": "5e56db2ed3368c836864795ba4b5fdbedf5f04ed",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//YYw\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 849,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-09T07:19:00Z",
+      "side": 1,
+      "message": "this is make sure we are aligned to 4-bytes boundary (uint32_t) before calling CopySmallPattern32b().",
+      "parentUuid": "AAAAdn//Yh4\u003d",
       "revId": "5e56db2ed3368c836864795ba4b5fdbedf5f04ed",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
