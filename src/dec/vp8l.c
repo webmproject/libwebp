@@ -1486,6 +1486,11 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
   // Sanity checks.
   if (dec == NULL) return 0;
 
+  dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
+  assert(dec->hdr_.huffman_tables_ != NULL);
+  assert(dec->hdr_.htree_groups_ != NULL);
+  assert(dec->hdr_.num_htree_groups_ > 0);
+
   io = dec->io_;
   assert(io != NULL);
   params = (WebPDecParams*)io->opaque;
