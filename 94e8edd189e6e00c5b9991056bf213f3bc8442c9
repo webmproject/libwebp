@@ -50,6 +50,23 @@
       "revId": "94e8edd189e6e00c5b9991056bf213f3bc8442c9",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//X8k\u003d",
+        "filename": "src/enc/quant_avx2.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-10T21:01:51Z",
+      "side": 1,
+      "message": "all these functions (trellis, pick-best-intra4) are too high-level and too complex for dsp/ (would you implement them on an FPGA for instance??)\nAnd they are not really specific to avx2.\n\nAgain: if you want to process two blocks at a time, you must:\n\n* first modify the high-level algorithm (in quant.c, not here) to process two blocks\n* implement the required generic functions VP8SSE4x4x2(), VP8TDisto4x4x2(), etc. for every platform [*]\n* verify there\u0027s no speed regression\n* specialize these functions AVX2\n* verify there\u0027s a speed-up.\n\n\n\n[*] one easy generic way of implementing, e.g., VP8SSE4x4x2() for all platform is by calling two times VP8SSE4x4() (since it\u0027s already pointing to the correct sub-implementation).\n\ne.g.:\nvoid VP8SSE4x4x2(...) {\n  return VP8SSE4x4(a, b) + VP8SSE4x4(a + 4, b + 4);\n}\n\nthis will work as a starting based on *all* platforms, and it can later be specialized for AVX2 independently.",
+      "revId": "94e8edd189e6e00c5b9991056bf213f3bc8442c9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
