@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//X8U\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1108495
+      },
+      "writtenOn": "2014-09-10T21:38:28Z",
+      "side": 1,
+      "message": "but VP8EncQuantInit defines which PickBestIntra4 will be called (c or avx2)\nand PickBestIntra4 is defined in quant.c/avx2 not in enc.c/avx2.",
+      "parentUuid": "AAAAdn//X9o\u003d",
+      "revId": "94e8edd189e6e00c5b9991056bf213f3bc8442c9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//X9k\u003d",
         "filename": "src/dsp/enc.c",
         "patchSetId": 5
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//X8E\u003d",
+        "filename": "src/enc/quant.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1108495
+      },
+      "writtenOn": "2014-09-10T21:38:28Z",
+      "side": 1,
+      "message": "I have that file because those functions are both used in quant.c and quant_avx2.c.\nI wanted to avoid duplication.",
+      "parentUuid": "AAAAdn//X9c\u003d",
+      "revId": "94e8edd189e6e00c5b9991056bf213f3bc8442c9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//X8k\u003d",
         "filename": "src/enc/quant_avx2.c",
         "patchSetId": 5
@@ -64,6 +100,24 @@
       "writtenOn": "2014-09-10T21:01:51Z",
       "side": 1,
       "message": "all these functions (trellis, pick-best-intra4) are too high-level and too complex for dsp/ (would you implement them on an FPGA for instance??)\nAnd they are not really specific to avx2.\n\nAgain: if you want to process two blocks at a time, you must:\n\n* first modify the high-level algorithm (in quant.c, not here) to process two blocks\n* implement the required generic functions VP8SSE4x4x2(), VP8TDisto4x4x2(), etc. for every platform [*]\n* verify there\u0027s no speed regression\n* specialize these functions AVX2\n* verify there\u0027s a speed-up.\n\n\n\n[*] one easy generic way of implementing, e.g., VP8SSE4x4x2() for all platform is by calling two times VP8SSE4x4() (since it\u0027s already pointing to the correct sub-implementation).\n\ne.g.:\nvoid VP8SSE4x4x2(...) {\n  return VP8SSE4x4(a, b) + VP8SSE4x4(a + 4, b + 4);\n}\n\nthis will work as a starting based on *all* platforms, and it can later be specialized for AVX2 independently.",
+      "revId": "94e8edd189e6e00c5b9991056bf213f3bc8442c9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//X7g\u003d",
+        "filename": "src/enc/quant_avx2.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1108495
+      },
+      "writtenOn": "2014-09-10T21:38:28Z",
+      "side": 1,
+      "message": "Hi Pascal,\n\n1. can you explain to me your idea of how to do it in quant.c??\n    do you want it with a different name? and if so how are you going to call PickBestIntra4 from VP8Decimate?\n2. I think I already talked with James about it, I cannot support any other platform except x86 (and I think my solution support every platform just for other platforms it runs the original code).\n3. I checked it with three inputs that there is no regression? do you have more ideas for testing?\n4. what do you mean specialize these functions for AVX2? adding \"_avx2\" to every avx2 function?",
+      "parentUuid": "AAAAdn//X8k\u003d",
       "revId": "94e8edd189e6e00c5b9991056bf213f3bc8442c9",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
