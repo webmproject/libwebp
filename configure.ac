@@ -296,15 +296,12 @@ AC_ARG_ENABLE([png], AS_HELP_STRING([--disable-png],
                                      @<:@default=auto@:>@]))
 AS_IF([test "x$enable_png" != "xno"], [
   CLEAR_LIBVARS([PNG])
-  AC_PATH_PROGS(LIBPNG_CONFIG,
-                [libpng-config libpng15-config libpng14-config libpng12-config])
+  AC_PATH_PROGS([LIBPNG_CONFIG],
+                [libpng-config libpng16-config libpng15-config libpng14-config \
+                 libpng12-config])
   if test -n "$LIBPNG_CONFIG"; then
     PNG_INCLUDES=`$LIBPNG_CONFIG --cflags`
-    PNG_PREFIX=`$LIBPNG_CONFIG --prefix`
-    if test "${PNG_PREFIX}/lib" != "/usr/lib" ; then
-      PNG_LIBS="-L${PNG_PREFIX}/lib"
-    fi
-    PNG_LIBS="$PNG_LIBS `$LIBPNG_CONFIG --libs`"
+    PNG_LIBS="`$LIBPNG_CONFIG --ldflags`"
   fi
 
   WITHLIB_OPTION([png], [PNG])
