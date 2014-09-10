@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//X9o\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-10T20:50:02Z",
+      "side": 1,
+      "message": "should be merged into VP8EncDspInit().\nThere\u0027s hardly a case where you won\u0027t need this one to be called when you called VP8EncDspInit().",
+      "revId": "94e8edd189e6e00c5b9991056bf213f3bc8442c9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//X9k\u003d",
+        "filename": "src/dsp/enc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-10T20:50:02Z",
+      "side": 1,
+      "message": "these should be implemented on all platforms.",
+      "revId": "94e8edd189e6e00c5b9991056bf213f3bc8442c9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//X9c\u003d",
+        "filename": "src/enc/quant.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-10T20:50:02Z",
+      "side": 1,
+      "message": "general comment about this file: this code is too generic to be in a .h\nThe granularity doesn\u0027t seem right.",
+      "revId": "94e8edd189e6e00c5b9991056bf213f3bc8442c9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
