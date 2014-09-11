@@ -134,7 +134,7 @@ static WEBP_INLINE uint32_t GetScale(uint32_t a, int inverse) {
 
 #endif    // USE_TABLES_FOR_ALPHA_MULT
 
-static void MultARGBRow(uint32_t* const ptr, int width, int inverse) {
+void WebPMultARGBRowC(uint32_t* const ptr, int width, int inverse) {
   int x;
   for (x = 0; x < width; ++x) {
     const uint32_t argb = ptr[x];
@@ -154,8 +154,8 @@ static void MultARGBRow(uint32_t* const ptr, int width, int inverse) {
   }
 }
 
-static void MultRow(uint8_t* const ptr, const uint8_t* const alpha,
-                    int width, int inverse) {
+void WebPMultRowC(uint8_t* const ptr, const uint8_t* const alpha,
+                  int width, int inverse) {
   int x;
   for (x = 0; x < width; ++x) {
     const uint32_t a = alpha[x];
@@ -315,8 +315,8 @@ extern void WebPInitAlphaProcessingMIPSdspR2(void);
 extern void WebPInitAlphaProcessingSSE2(void);
 
 void WebPInitAlphaProcessing(void) {
-  WebPMultARGBRow = MultARGBRow;
-  WebPMultRow = MultRow;
+  WebPMultARGBRow = WebPMultARGBRowC;
+  WebPMultRow = WebPMultRowC;
   WebPApplyAlphaMultiply = ApplyAlphaMultiply;
   WebPApplyAlphaMultiply4444 = ApplyAlphaMultiply_16b;
   WebPDispatchAlpha = DispatchAlpha;

@@ -294,6 +294,11 @@ void WebPMultRows(uint8_t* ptr, int stride,
                   const uint8_t* alpha, int alpha_stride,
                   int width, int num_rows, int inverse);
 
+// Plain-C versions, used as fallback by some implementations.
+void WebPMultRowC(uint8_t* const ptr, const uint8_t* const alpha,
+                  int width, int inverse);
+void WebPMultARGBRowC(uint32_t* const ptr, int width, int inverse);
+
 // To be called first before using the above.
 void WebPInitAlphaProcessing(void);
 
