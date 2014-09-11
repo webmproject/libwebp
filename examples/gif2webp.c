@@ -46,7 +46,18 @@
 
 //------------------------------------------------------------------------------
 
-static int transparent_index = -1;  // Index of transparent color in the map.
+static int transparent_index;  // Index of transparent color in the map.
+
+static void ResetFrameInfo(WebPMuxFrameInfo* const info) {
+  WebPDataInit(&info->bitstream);
+  info->x_offset = 0;
+  info->y_offset = 0;
+  info->duration = 0;
+  info->id = WEBP_CHUNK_ANMF;
+  info->dispose_method = WEBP_MUX_DISPOSE_NONE;
+  info->blend_method = WEBP_MUX_BLEND;
+  transparent_index = -1;  // Opaque frame by default.
+}
 
 static void SanitizeKeyFrameIntervals(size_t* const kmin_ptr,
                                       size_t* const kmax_ptr) {
@@ -278,10 +289,7 @@ int main(int argc, const char *argv[]) {
   size_t kmax = 0;
   int allow_mixed = 0;   // If true, each frame can be lossy or lossless.
 
-  memset(&info, 0, sizeof(info));
-  info.id = WEBP_CHUNK_ANMF;
-  info.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
-  info.blend_method = WEBP_MUX_BLEND;
+  ResetFrameInfo(&info);
 
   if (!WebPConfigInit(&config) || !WebPPictureInit(&frame)) {
     fprintf(stderr, "Error! Version mismatch!\n");
@@ -490,6 +498,11 @@ int main(int argc, const char *argv[]) {
           goto End;
         }
         is_first_frame = 0;
+
+        // In GIF, graphic control extensions are optional for a frame, so we
+        // may not get one before reading the next frame. To handle this case,
+        // we reset frame properties to reasonable defaults for the next frame.
+        ResetFrameInfo(&info);
         break;
       }
       case EXTENSION_RECORD_TYPE: {
