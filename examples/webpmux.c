@@ -839,14 +839,16 @@ static int GetFrameFragment(const WebPMux* mux,
   WebPMux* mux_single = NULL;
   long num = 0;
   int ok = 1;
+  int parse_error = 0;
   const WebPChunkId id = is_frame ? WEBP_CHUNK_ANMF : WEBP_CHUNK_FRGM;
   WebPMuxFrameInfo info;
   WebPDataInit(&info.bitstream);
 
-  num = strtol(config->feature_.args_[0].params_, NULL, 10);
+  num = ExUtilGetInt(config->feature_.args_[0].params_, 10, &parse_error);
   if (num < 0) {
     ERROR_GOTO1("ERROR: Frame/Fragment index must be non-negative.\n", ErrGet);
   }
+  if (parse_error) goto ErrGet;
 
   err = WebPMuxGetFrame(mux, num, &info);
   if (err == WEBP_MUX_OK && info.id != id) err = WEBP_MUX_NOT_FOUND;
@@ -934,8 +936,9 @@ static int Process(const WebPMuxConfig* config) {
                 break;
               }
               case SUBTYPE_LOOP: {
-                const long loop_count =
-                    strtol(feature->args_[i].params_, NULL, 10);
+                int parse_error = 0;
+                const int loop_count =
+                    ExUtilGetInt(feature->args_[i].params_, 10, &parse_error);
                 if (loop_count != (int)loop_count) {
                   // Note: This is only a 'necessary' condition for loop_count
                   // to be valid. The 'sufficient' conditioned in checked in
@@ -943,6 +946,7 @@ static int Process(const WebPMuxConfig* config) {
                   ERROR_GOTO1("ERROR: Loop count must be in the range 0 to "
                               "65535.\n", Err2);
                 }
+                if (parse_error) goto Err2;
                 params.loop_count = (int)loop_count;
                 break;
               }
