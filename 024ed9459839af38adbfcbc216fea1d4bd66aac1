@@ -16,6 +16,24 @@
       "revId": "024ed9459839af38adbfcbc216fea1d4bd66aac1",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XtE\u003d",
+        "filename": "examples/example_util.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-09-11T17:58:41Z",
+      "side": 1,
+      "message": "right, that wasn\u0027t well thought out on my part; rushed to push something and drop off.\nbeing tolerant of NULL will be fine. we use it correctly in the examples anyway, but I\u0027d like these to be robust in case someone copies them elsewhere",
+      "parentUuid": "AAAAdn//XwI\u003d",
+      "revId": "024ed9459839af38adbfcbc216fea1d4bd66aac1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
