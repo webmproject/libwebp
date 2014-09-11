@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//XxU\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-11T06:57:21Z",
+      "side": 1,
+      "message": "we try to use (and abuse) \u0027const\u0027 declaration for variables. Like:\n\nconst uint8x8x2_t d2_tmp0 \u003d vtrn_u8((d4_in.val[0]), (d4_in.val[1]));\nconst uint8x8x2_t d2_tmp1 \u003d vtrn_u8((d4_in.val[2]), (d4_in.val[3]));\n\netc.\n\nCould you use that scheme (if it doesn\u0027t make a speed difference)?",
+      "revId": "907aadb23edbeb9e3499a50a161fd7f136ecb1fe",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XxQ\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 581,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-11T06:57:21Z",
+      "side": 1,
+      "message": "same comment about \u0027const ...\u0027\n\n(and at several places below)",
+      "revId": "907aadb23edbeb9e3499a50a161fd7f136ecb1fe",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XxM\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-11T06:57:21Z",
+      "side": 1,
+      "message": "no space after \u0027w\u0027 and before \u0027)\u0027",
+      "revId": "907aadb23edbeb9e3499a50a161fd7f136ecb1fe",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XxI\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 650,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-11T06:57:21Z",
+      "side": 1,
+      "message": "one space after \u0027//\u0027\n\n-\u003e \u0027// sum +\u003d ...\u0027",
+      "revId": "907aadb23edbeb9e3499a50a161fd7f136ecb1fe",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
