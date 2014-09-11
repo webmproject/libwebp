@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//XwI\u003d",
+        "filename": "examples/example_util.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-11T07:45:35Z",
+      "side": 1,
+      "message": "hmm... if error is NULL, i\u0027d just proceed with parsing and not report/print message in case something is wrong.\nOr, just turn this into an assert(error !\u003d NULL);\n\nBut silently returning when error\u003d\u003dNULL seems slippery...",
+      "revId": "024ed9459839af38adbfcbc216fea1d4bd66aac1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
