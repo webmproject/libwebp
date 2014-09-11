@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Xww\u003d",
+        "filename": "examples/example_util.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-11T07:26:56Z",
+      "side": 1,
+      "message": "i\u0027d modify the functions to not do anything if *error is already set to true.\nThis way, only the first offending error will be printed\n(instead of having a cascading chain of bad parsing if, for instance, it\u0027s only one parameter that was  omitted.)",
+      "revId": "b279a426e37326032c05491df9aa4a2509a6f6e4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
