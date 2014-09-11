@@ -210,7 +210,7 @@ static int EmitAlphaRGB(const VP8Io* const io, WebPDecParams* const p) {
     const int has_alpha = WebPDispatchAlpha(alpha, io->width, mb_w,
                                             num_rows, dst, buf->stride);
 
-    // alpha_mask is < 0xff if there's non-trivial alpha to premultiply with.
+    // has_alpha is true if there's non-trivial alpha to premultiply with.
     if (has_alpha && WebPIsPremultipliedMode(colorspace)) {
       WebPApplyAlphaMultiply(base_rgba, alpha_first,
                              mb_w, num_rows, buf->stride);
