@@ -582,6 +582,7 @@ int main(int argc, const char *argv[]) {
   }
 
   for (c = 1; c < argc; ++c) {
+    int parse_error = 0;
     if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
       Help();
       return 0;
@@ -617,17 +618,18 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-nodither")) {
       config.options.dithering_strength = 0;
     } else if (!strcmp(argv[c], "-dither") && c < argc - 1) {
-      config.options.dithering_strength = strtol(argv[++c], NULL, 0);
+      config.options.dithering_strength =
+          ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-crop") && c < argc - 4) {
       config.options.use_cropping = 1;
-      config.options.crop_left   = strtol(argv[++c], NULL, 0);
-      config.options.crop_top    = strtol(argv[++c], NULL, 0);
-      config.options.crop_width  = strtol(argv[++c], NULL, 0);
-      config.options.crop_height = strtol(argv[++c], NULL, 0);
+      config.options.crop_left   = ExUtilGetInt(argv[++c], 0, &parse_error);
+      config.options.crop_top    = ExUtilGetInt(argv[++c], 0, &parse_error);
+      config.options.crop_width  = ExUtilGetInt(argv[++c], 0, &parse_error);
+      config.options.crop_height = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-scale") && c < argc - 2) {
       config.options.use_scaling = 1;
-      config.options.scaled_width  = strtol(argv[++c], NULL, 0);
-      config.options.scaled_height = strtol(argv[++c], NULL, 0);
+      config.options.scaled_width  = ExUtilGetInt(argv[++c], 0, &parse_error);
+      config.options.scaled_height = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-flip")) {
       config.options.flip = 1;
     } else if (!strcmp(argv[c], "-v")) {
@@ -647,6 +649,11 @@ int main(int argc, const char *argv[]) {
       return -1;
     } else {
       in_file = argv[c];
+    }
+
+    if (parse_error) {
+      Help();
+      return -1;
     }
   }
 

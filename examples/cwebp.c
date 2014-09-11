@@ -710,6 +710,7 @@ int main(int argc, const char *argv[]) {
   }
 
   for (c = 1; c < argc; ++c) {
+    int parse_error = 0;
     if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
       HelpShort();
       return 0;
@@ -733,26 +734,27 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-short")) {
       ++short_output;
     } else if (!strcmp(argv[c], "-s") && c < argc - 2) {
-      picture.width = strtol(argv[++c], NULL, 0);
-      picture.height = strtol(argv[++c], NULL, 0);
+      picture.width = ExUtilGetInt(argv[++c], 0, &parse_error);
+      picture.height = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-m") && c < argc - 1) {
-      config.method = strtol(argv[++c], NULL, 0);
+      config.method = ExUtilGetInt(argv[++c], 0, &parse_error);
       use_lossless_preset = 0;   // disable -z option
     } else if (!strcmp(argv[c], "-q") && c < argc - 1) {
-      config.quality = (float)strtod(argv[++c], NULL);
+      config.quality = ExUtilGetFloat(argv[++c], &parse_error);
       use_lossless_preset = 0;   // disable -z option
     } else if (!strcmp(argv[c], "-z") && c < argc - 1) {
-      lossless_preset = strtol(argv[++c], NULL, 0);
+      lossless_preset = ExUtilGetInt(argv[++c], 0, &parse_error);
       if (use_lossless_preset != 0) use_lossless_preset = 1;
     } else if (!strcmp(argv[c], "-alpha_q") && c < argc - 1) {
-      config.alpha_quality = strtol(argv[++c], NULL, 0);
+      config.alpha_quality = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-alpha_method") && c < argc - 1) {
-      config.alpha_compression = strtol(argv[++c], NULL, 0);
+      config.alpha_compression = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-alpha_cleanup")) {
       keep_alpha = keep_alpha ? 2 : 0;
     } else if (!strcmp(argv[c], "-blend_alpha") && c < argc - 1) {
       blend_alpha = 1;
-      background_color = strtol(argv[++c], NULL, 16);  // <- parses '0x' prefix
+      // background color is given in hex with an optional '0x' prefix
+      background_color = ExUtilGetInt(argv[++c], 16, &parse_error);
       background_color = background_color & 0x00ffffffu;
     } else if (!strcmp(argv[c], "-alpha_filter") && c < argc - 1) {
       ++c;
@@ -771,7 +773,7 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-lossless")) {
       config.lossless = 1;
     } else if (!strcmp(argv[c], "-near_lossless") && c < argc - 1) {
-      config.near_lossless = strtol(argv[++c], NULL, 0);
+      config.near_lossless = ExUtilGetInt(argv[++c], 0, &parse_error);
       config.lossless = 1;  // use near-lossless only with lossless
     } else if (!strcmp(argv[c], "-hint") && c < argc - 1) {
       ++c;
@@ -786,13 +788,13 @@ int main(int argc, const char *argv[]) {
         goto Error;
       }
     } else if (!strcmp(argv[c], "-size") && c < argc - 1) {
-      config.target_size = strtol(argv[++c], NULL, 0);
+      config.target_size = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-psnr") && c < argc - 1) {
-      config.target_PSNR = (float)strtod(argv[++c], NULL);
+      config.target_PSNR = ExUtilGetFloat(argv[++c], &parse_error);
     } else if (!strcmp(argv[c], "-sns") && c < argc - 1) {
-      config.sns_strength = strtol(argv[++c], NULL, 0);
+      config.sns_strength = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-f") && c < argc - 1) {
-      config.filter_strength = strtol(argv[++c], NULL, 0);
+      config.filter_strength = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-af")) {
       config.autofilter = 1;
     } else if (!strcmp(argv[c], "-jpeg_like")) {
@@ -806,26 +808,26 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-nostrong")) {
       config.filter_type = 0;
     } else if (!strcmp(argv[c], "-sharpness") && c < argc - 1) {
-      config.filter_sharpness = strtol(argv[++c], NULL, 0);
+      config.filter_sharpness = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-pass") && c < argc - 1) {
-      config.pass = strtol(argv[++c], NULL, 0);
+      config.pass = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-pre") && c < argc - 1) {
-      config.preprocessing = strtol(argv[++c], NULL, 0);
+      config.preprocessing = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-segments") && c < argc - 1) {
-      config.segments = strtol(argv[++c], NULL, 0);
+      config.segments = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-partition_limit") && c < argc - 1) {
-      config.partition_limit = strtol(argv[++c], NULL, 0);
+      config.partition_limit = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-map") && c < argc - 1) {
-      picture.extra_info_type = strtol(argv[++c], NULL, 0);
+      picture.extra_info_type = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-crop") && c < argc - 4) {
       crop = 1;
-      crop_x = strtol(argv[++c], NULL, 0);
-      crop_y = strtol(argv[++c], NULL, 0);
-      crop_w = strtol(argv[++c], NULL, 0);
-      crop_h = strtol(argv[++c], NULL, 0);
+      crop_x = ExUtilGetInt(argv[++c], 0, &parse_error);
+      crop_y = ExUtilGetInt(argv[++c], 0, &parse_error);
+      crop_w = ExUtilGetInt(argv[++c], 0, &parse_error);
+      crop_h = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-resize") && c < argc - 2) {
-      resize_w = strtol(argv[++c], NULL, 0);
-      resize_h = strtol(argv[++c], NULL, 0);
+      resize_w = ExUtilGetInt(argv[++c], 0, &parse_error);
+      resize_h = ExUtilGetInt(argv[++c], 0, &parse_error);
 #ifndef WEBP_DLL
     } else if (!strcmp(argv[c], "-noasm")) {
       VP8GetCPUInfo = NULL;
@@ -919,6 +921,11 @@ int main(int argc, const char *argv[]) {
       return -1;
     } else {
       in_file = argv[c];
+    }
+
+    if (parse_error) {
+      HelpLong();
+      return -1;
     }
   }
   if (in_file == NULL) {

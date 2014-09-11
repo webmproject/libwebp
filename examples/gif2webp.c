@@ -296,6 +296,7 @@ int main(int argc, const char *argv[]) {
   }
 
   for (c = 1; c < argc; ++c) {
+    int parse_error = 0;
     if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
       Help();
       return 0;
@@ -307,17 +308,17 @@ int main(int argc, const char *argv[]) {
       allow_mixed = 1;
       config.lossless = 0;
     } else if (!strcmp(argv[c], "-q") && c < argc - 1) {
-      config.quality = (float)strtod(argv[++c], NULL);
+      config.quality = ExUtilGetFloat(argv[++c], &parse_error);
     } else if (!strcmp(argv[c], "-m") && c < argc - 1) {
-      config.method = strtol(argv[++c], NULL, 0);
+      config.method = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-kmax") && c < argc - 1) {
-      kmax = strtoul(argv[++c], NULL, 0);
+      kmax = ExUtilGetUInt(argv[++c], 0, &parse_error);
       default_kmax = 0;
     } else if (!strcmp(argv[c], "-kmin") && c < argc - 1) {
-      kmin = strtoul(argv[++c], NULL, 0);
+      kmin = ExUtilGetUInt(argv[++c], 0, &parse_error);
       default_kmin = 0;
     } else if (!strcmp(argv[c], "-f") && c < argc - 1) {
-      config.filter_strength = strtol(argv[++c], NULL, 0);
+      config.filter_strength = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-metadata") && c < argc - 1) {
       static const struct {
         const char* option;
@@ -380,6 +381,11 @@ int main(int argc, const char *argv[]) {
       return -1;
     } else {
       in_file = argv[c];
+    }
+
+    if (parse_error) {
+      Help();
+      return -1;
     }
   }
 
