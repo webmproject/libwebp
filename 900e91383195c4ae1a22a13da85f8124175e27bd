@@ -16,6 +16,24 @@
       "revId": "900e91383195c4ae1a22a13da85f8124175e27bd",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XhA\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1117009
+      },
+      "writtenOn": "2014-09-12T07:31:17Z",
+      "side": 1,
+      "message": "for gcc, using too many NEON registers might result in register allocation issue which will reduce the performance significantly.\nso that we\u0027d better declare variables which are really needed.",
+      "parentUuid": "AAAAdn//Xh0\u003d",
+      "revId": "900e91383195c4ae1a22a13da85f8124175e27bd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
