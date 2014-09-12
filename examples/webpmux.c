@@ -488,7 +488,7 @@ static int ParseBgcolorArgs(const char* args, uint32_t* const bgcolor) {
 static void DeleteConfig(WebPMuxConfig* config) {
   if (config != NULL) {
     free(config->feature_.args_);
-    free(config);
+    memset(config, 0, sizeof(*config));
   }
 }
 
@@ -791,33 +791,27 @@ static int ValidateConfig(WebPMuxConfig* config) {
 
 // Create config object from command-line arguments.
 static int InitializeConfig(int argc, const char* argv[],
-                            WebPMuxConfig** config) {
+                            WebPMuxConfig* config) {
   int num_feature_args = 0;
   int ok = 1;
 
   assert(config != NULL);
-  *config = NULL;
+  memset(config, 0, sizeof(*config));
 
   // Validate command-line arguments.
   if (!ValidateCommandLine(argc, argv, &num_feature_args)) {
     ERROR_GOTO1("Exiting due to command-line parsing error.\n", Err1);
   }
 
-  // Allocate memory.
-  *config = (WebPMuxConfig*)calloc(1, sizeof(**config));
-  if (*config == NULL) {
-    ERROR_GOTO1("ERROR: Memory allocation error.\n", Err1);
-  }
-  (*config)->feature_.arg_count_ = num_feature_args;
-  (*config)->feature_.args_ =
-      (FeatureArg*)calloc(num_feature_args, sizeof(FeatureArg));
-  if ((*config)->feature_.args_ == NULL) {
+  config->feature_.arg_count_ = num_feature_args;
+  config->feature_.args_ =
+      (FeatureArg*)calloc(num_feature_args, sizeof(*config->feature_.args_));
+  if (config->feature_.args_ == NULL) {
     ERROR_GOTO1("ERROR: Memory allocation error.\n", Err1);
   }
 
   // Parse command-line.
-  if (!ParseCommandLine(argc, argv, *config) ||
-      !ValidateConfig(*config)) {
+  if (!ParseCommandLine(argc, argv, config) || !ValidateConfig(config)) {
     ERROR_GOTO1("Exiting due to command-line parsing error.\n", Err1);
   }
 
@@ -1075,14 +1069,14 @@ static int Process(const WebPMuxConfig* config) {
 // Main.
 
 int main(int argc, const char* argv[]) {
-  WebPMuxConfig* config;
+  WebPMuxConfig config;
   int ok = InitializeConfig(argc - 1, argv + 1, &config);
   if (ok) {
-    ok = Process(config);
+    ok = Process(&config);
   } else {
     PrintHelp();
   }
-  DeleteConfig(config);
+  DeleteConfig(&config);
   return !ok;
 }
 
