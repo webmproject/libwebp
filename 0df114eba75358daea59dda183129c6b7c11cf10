@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Xkk\u003d",
+        "filename": "src/enc/quant.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-09-12T02:01:56Z",
+      "side": 1,
+      "message": "this won\u0027t build under visual studio, use WEBP_INLINE, make static first and watch the line length (we cap at 80)",
+      "revId": "0df114eba75358daea59dda183129c6b7c11cf10",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
