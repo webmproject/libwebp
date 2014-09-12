@@ -948,7 +948,7 @@ static int Process(const WebPMuxConfig* config) {
                 }
                 ok = !parse_error;
                 if (!ok) goto Err2;
-                params.loop_count = (int)loop_count;
+                params.loop_count = loop_count;
                 break;
               }
               case SUBTYPE_ANMF: {
@@ -1048,8 +1048,8 @@ static int Process(const WebPMuxConfig* config) {
                       ErrorString(err), kDescriptions[feature->type_], Err2);
         }
       } else {
-          ERROR_GOTO1("ERROR: Invalid feature for action 'strip'.\n", Err2);
-          break;
+        ERROR_GOTO1("ERROR: Invalid feature for action 'strip'.\n", Err2);
+        break;
       }
       ok = WriteWebP(mux, config->output_);
       break;
