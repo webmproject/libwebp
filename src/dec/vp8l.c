@@ -1003,10 +1003,10 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
         *src = htree_group->literal_arb | (code << 8);
       } else {
         int red, blue, alpha;
-      red = ReadSymbol(htree_group->htrees[RED], br);
-      VP8LFillBitWindow(br);
-      blue = ReadSymbol(htree_group->htrees[BLUE], br);
-      alpha = ReadSymbol(htree_group->htrees[ALPHA], br);
+        red = ReadSymbol(htree_group->htrees[RED], br);
+        VP8LFillBitWindow(br);
+        blue = ReadSymbol(htree_group->htrees[BLUE], br);
+        alpha = ReadSymbol(htree_group->htrees[ALPHA], br);
         *src = ((uint32_t)alpha << 24) | (red << 16) | (code << 8) | blue;
       }
     AdvanceByOne:
