@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Xh0\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-12T07:21:47Z",
+      "side": 1,
+      "message": "need to harmonize the signature around the \u0027const\u0027-ness.\nIt won\u0027t hurt to add \u0027const\u0027 everywhere on input parameters, like:\n\n \"DistoTranspose4x4U8(const uint8x8x4_t d4_in)\"\n\nhere if possible. Of course, this means not re-using the\ninput parameter \u0027d4_in\u0027 inside the function, but using another\nlocal variable. Would that make a speed-difference?",
+      "revId": "900e91383195c4ae1a22a13da85f8124175e27bd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
