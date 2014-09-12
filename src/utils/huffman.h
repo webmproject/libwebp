@@ -39,6 +39,11 @@ typedef struct {
 typedef struct HTreeGroup HTreeGroup;
 struct HTreeGroup {
   HuffmanCode* htrees[HUFFMAN_CODES_PER_META_CODE];
+  int      is_trivial_literal;  // True, if huffman trees for Red, Blue & Alpha
+                                // Symbols are trivial (have a single code).
+  uint32_t literal_arb;         // If is_trivial_literal is true, this is the
+                                // ARGB value of the pixel, with Green channel
+                                // being set to zero.
 };
 
 // Creates the instance of HTreeGroup with specified number of tree-groups.

@@ -50,6 +50,9 @@ static const uint16_t kAlphabetSize[HUFFMAN_CODES_PER_META_CODE] = {
   NUM_DISTANCE_CODES
 };
 
+static const uint8_t kLiteralMap[HUFFMAN_CODES_PER_META_CODE] = {
+  0, 1, 1, 1, 0
+};
 
 #define NUM_CODE_LENGTH_CODES       19
 static const uint8_t kCodeLengthCodeOrder[NUM_CODE_LENGTH_CODES] = {
@@ -359,8 +362,10 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
 
   next = huffman_tables;
   for (i = 0; i < num_htree_groups; ++i) {
-    HuffmanCode** const htrees = htree_groups[i].htrees;
+    HTreeGroup* const htree_group = &htree_groups[i];
+    HuffmanCode** const htrees = htree_group->htrees;
     int size;
+    int is_trivial_literal = 1;
     for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
       int alphabet_size = kAlphabetSize[j];
       htrees[j] = next;
@@ -368,10 +373,21 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
         alphabet_size += 1 << color_cache_bits;
       }
       size = ReadHuffmanCode(alphabet_size, dec, code_lengths, next);
+      if (is_trivial_literal && kLiteralMap[j] == 1) {
+        is_trivial_literal = (next->bits == 0);
+      }
       next += size;
       if (size == 0) {
         goto Error;
       }
+    }
+    htree_group->is_trivial_literal = is_trivial_literal;
+    if (is_trivial_literal) {
+      const int red = htrees[RED][0].value;
+      const int blue = htrees[BLUE][0].value;
+      const int alpha = htrees[ALPHA][0].value;
+      htree_group->literal_arb =
+          ((uint32_t)alpha << 24) | (red << 16) | blue;
     }
   }
   WebPSafeFree(code_lengths);
@@ -983,13 +999,16 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
     VP8LFillBitWindow(br);
     code = ReadSymbol(htree_group->htrees[GREEN], br);
     if (code < NUM_LITERAL_CODES) {  // Literal
-      int red, green, blue, alpha;
+      if (htree_group->is_trivial_literal) {
+        *src = htree_group->literal_arb | (code << 8);
+      } else {
+        int red, blue, alpha;
       red = ReadSymbol(htree_group->htrees[RED], br);
-      green = code;
       VP8LFillBitWindow(br);
       blue = ReadSymbol(htree_group->htrees[BLUE], br);
       alpha = ReadSymbol(htree_group->htrees[ALPHA], br);
-      *src = ((uint32_t)alpha << 24) | (red << 16) | (green << 8) | blue;
+        *src = ((uint32_t)alpha << 24) | (red << 16) | (code << 8) | blue;
+      }
     AdvanceByOne:
       ++src;
       ++col;
