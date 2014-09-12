@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Xi8\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-09-12T06:11:35Z",
+      "side": 1,
+      "message": "align the function parameters here and on line 584",
+      "revId": "dbb4a6eac2bcc9cc6ecb01c09de4cce86a6a5169",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XjA\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 599,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-09-12T06:11:35Z",
+      "side": 1,
+      "message": "keep the lines at or below 80 cols",
+      "revId": "dbb4a6eac2bcc9cc6ecb01c09de4cce86a6a5169",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XjE\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 649,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-09-12T06:11:35Z",
+      "side": 1,
+      "message": "you can assign these where there declared.",
+      "revId": "dbb4a6eac2bcc9cc6ecb01c09de4cce86a6a5169",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XjI\u003d",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 666,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-09-12T06:11:35Z",
+      "side": 1,
+      "message": "the existing Convert*() do something in addition to the cast, this macro isn\u0027t helping much, just do the cast directly.",
+      "revId": "dbb4a6eac2bcc9cc6ecb01c09de4cce86a6a5169",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
