@@ -939,7 +939,7 @@ static int Process(const WebPMuxConfig* config) {
                 int parse_error = 0;
                 const int loop_count =
                     ExUtilGetInt(feature->args_[i].params_, 10, &parse_error);
-                if (loop_count != (int)loop_count) {
+                if (loop_count < 0 || loop_count > 65535) {
                   // Note: This is only a 'necessary' condition for loop_count
                   // to be valid. The 'sufficient' conditioned in checked in
                   // WebPMuxSetAnimationParams() method called later.
