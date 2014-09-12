@@ -874,7 +874,7 @@ static int GetFrameFragment(const WebPMux* mux,
  ErrGet:
   WebPDataClear(&info.bitstream);
   WebPMuxDelete(mux_single);
-  return ok;
+  return ok && !parse_error;
 }
 
 // Read and process config.
@@ -946,7 +946,8 @@ static int Process(const WebPMuxConfig* config) {
                   ERROR_GOTO1("ERROR: Loop count must be in the range 0 to "
                               "65535.\n", Err2);
                 }
-                if (parse_error) goto Err2;
+                ok = !parse_error;
+                if (!ok) goto Err2;
                 params.loop_count = (int)loop_count;
                 break;
               }
