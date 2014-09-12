@@ -23,6 +23,35 @@
 #include "webp/decode.h"
 #include "./stopwatch.h"
 
+//------------------------------------------------------------------------------
+// String parsing
+
+uint32_t ExUtilGetUInt(const char* const v, int base, int* const error) {
+  char* end = NULL;
+  const uint32_t n = (v != NULL) ? (uint32_t)strtoul(v, &end, base) : 0u;
+  if (end == v && error != NULL && !*error) {
+    *error = 1;
+    fprintf(stderr, "Error! '%s' is not an integer.\n",
+            (v != NULL) ? v : "(null)");
+  }
+  return n;
+}
+
+int ExUtilGetInt(const char* const v, int base, int* const error) {
+  return (int)ExUtilGetUInt(v, base, error);
+}
+
+float ExUtilGetFloat(const char* const v, int* const error) {
+  char* end = NULL;
+  const float f = (v != NULL) ? (float)strtod(v, &end) : 0.f;
+  if (end == v && error != NULL && !*error) {
+    *error = 1;
+    fprintf(stderr, "Error! '%s' is not a floating point number.\n",
+            (v != NULL) ? v : "(null)");
+  }
+  return f;
+}
+
 // -----------------------------------------------------------------------------
 // File I/O
 

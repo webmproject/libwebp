@@ -404,6 +404,7 @@ int main(int argc, char *argv[]) {
   kParams.use_color_profile = 1;
 
   for (c = 1; c < argc; ++c) {
+    int parse_error = 0;
     if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
       Help();
       return 0;
@@ -416,7 +417,8 @@ int main(int argc, char *argv[]) {
     } else if (!strcmp(argv[c], "-noalphadither")) {
       config->options.alpha_dithering_strength = 0;
     } else if (!strcmp(argv[c], "-dither") && c + 1 < argc) {
-      config->options.dithering_strength = strtol(argv[++c], NULL, 0);
+      config->options.dithering_strength =
+          ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-info")) {
       kParams.print_info = 1;
     } else if (!strcmp(argv[c], "-version")) {
@@ -438,6 +440,11 @@ int main(int argc, char *argv[]) {
       return -1;
     } else {
       kParams.file_name = argv[c];
+    }
+
+    if (parse_error) {
+      Help();
+      return -1;
     }
   }
 
