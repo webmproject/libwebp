@@ -1,0 +1,378 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//XSo\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "these are too high-level for a place in dsp.h\nThis is unmaintainable in the long term, to have several\nversions of these very complex algorithms.\n\nPlease change the common implementation instead,\nand implement the new atomic bricks specifically for AVX2\nafterward.",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XSk\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "as said, merge this init with VP8EncDspInit().",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XSs\u003d",
+        "filename": "src/dsp/enc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "All these new functions are not initialized / implemented.\nThis will eventually make *all* platforms (except AVX2) crash.\n\nYou should provide default implementation for all other platforms, along with a specialized one for AVX2.",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XTw\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "filter_4[] and filter_8[] should be declared either on the top of the file (~line 17) or closer to where they are used (~line 76)",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XTI\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "convention: since filter_4 and filter_8 are static const, prefer the names kFilter4 and kFilter8",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XT4\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "extra \\n",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XTo\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "comment doesn\u0027t match function name (ITransform4x2(..., do_two) amounts to four transform in total)",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XTs\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "missing \\n",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XTk\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "extra \\n",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XTg\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "comment doesn\u0027t match _mm256_broadcast_pd() which loads 128bits.",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XTc\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "all these _mm256_castpd_si256(_mm256_broadcast_sd(..))\nand _mm256_castpd_si256(_mm256_broadcast_pd(...))\nshould be hidden in some macros (like LOAD128() / LOAD256(), etc.)\nThis would improve readability.",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XT0\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "indent -\u003d 1",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XTY\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "space after \u0027.\u0027",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XTU\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "sentence doesn\u0027t make sense",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XTM\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 327,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "flt-\u003efilter4 would be a better name",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XTQ\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "here too, some MACRO would be useful",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XTE\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "extra \\n",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XTA\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "extra \\n",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XS8\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 462,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "sentence doesn\u0027t make sense",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XS4\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "use \u0027uint32_t\u0027 instead of \u0027unsigned int\u0027",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XS0\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 745,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "do you really need this function, when only Copy4x4x2() below uses it?",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XSw\u003d",
+        "filename": "src/dsp/enc_avx2.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 754,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-13T12:26:06Z",
+      "side": 1,
+      "message": "there\u0027s nothing particular to AVX2 in this implementation, so it should be moved to enc.c as a plain-C implementation.",
+      "revId": "955336de524f26965e28537ac438688697efdb55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
