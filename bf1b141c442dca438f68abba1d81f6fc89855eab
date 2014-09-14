@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//XQM\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1108495
+      },
+      "writtenOn": "2014-09-14T22:24:00Z",
+      "side": 1,
+      "message": "how to change the common implementation? Can you please explain to me with example?",
+      "revId": "bf1b141c442dca438f68abba1d81f6fc89855eab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//XQI\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1108495
+      },
+      "writtenOn": "2014-09-14T22:24:00Z",
+      "side": 1,
+      "message": "I cant merge with VP8EncDspInit because in VP8EncQuantInit I decided which implementation of \"PickBestIntra4\" I will call (C or AVX2)",
+      "revId": "bf1b141c442dca438f68abba1d81f6fc89855eab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
