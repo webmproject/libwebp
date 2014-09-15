@@ -108,6 +108,7 @@ DEMUX_OBJS = \
 
 DSP_DEC_OBJS = \
     src/dsp/alpha_processing.o \
+    src/dsp/alpha_processing_sse2.o \
     src/dsp/cpu.o \
     src/dsp/dec.o \
     src/dsp/dec_clip_tables.o \

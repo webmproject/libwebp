@@ -172,6 +172,7 @@ DEMUX_OBJS = \
 
 DSP_DEC_OBJS = \
     $(DIROBJ)\dsp\alpha_processing.obj \
+    $(DIROBJ)\dsp\alpha_processing_sse2.obj \
     $(DIROBJ)\dsp\cpu.obj \
     $(DIROBJ)\dsp\dec.obj \
     $(DIROBJ)\dsp\dec_clip_tables.obj \
