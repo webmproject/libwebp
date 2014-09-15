@@ -303,9 +303,28 @@ static int DispatchAlpha(const uint8_t* alpha, int alpha_stride,
   return (alpha_mask != 0xff);
 }
 
+static int ExtractAlpha(const uint8_t* argb, int argb_stride,
+                        int width, int height,
+                        uint8_t* alpha, int alpha_stride) {
+  uint8_t alpha_mask = 0xff;
+  int i, j;
+
+  for (j = 0; j < height; ++j) {
+    for (i = 0; i < width; ++i) {
+      const uint8_t alpha_value = argb[4 * i];
+      alpha[i] = alpha_value;
+      alpha_mask &= alpha_value;
+    }
+    argb += argb_stride;
+    alpha += alpha_stride;
+  }
+  return (alpha_mask == 0xff);
+}
+
 void (*WebPApplyAlphaMultiply)(uint8_t*, int, int, int, int);
 void (*WebPApplyAlphaMultiply4444)(uint8_t*, int, int, int);
 int (*WebPDispatchAlpha)(const uint8_t*, int, int, int, uint8_t*, int);
+int (*WebPExtractAlpha)(const uint8_t*, int, int, int, uint8_t*, int);
 
 //------------------------------------------------------------------------------
 // Init function
@@ -320,6 +339,7 @@ void WebPInitAlphaProcessing(void) {
   WebPApplyAlphaMultiply = ApplyAlphaMultiply;
   WebPApplyAlphaMultiply4444 = ApplyAlphaMultiply_16b;
   WebPDispatchAlpha = DispatchAlpha;
+  WebPExtractAlpha = ExtractAlpha;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
