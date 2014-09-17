@@ -212,6 +212,8 @@ static void PrintFullLosslessInfo(const WebPAuxStats* const stats,
                                   const char* const description) {
   fprintf(stderr, "Lossless-%s compressed size: %d bytes\n",
           description, stats->lossless_size);
+  fprintf(stderr, "  * Header size: %d bytes, image data size: %d\n",
+          stats->lossless_hdr_size, stats->lossless_data_size);
   if (stats->lossless_features) {
     fprintf(stderr, "  * Lossless features used:");
     if (stats->lossless_features & 1) fprintf(stderr, " PREDICTION");

@@ -558,7 +558,10 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
                                              VP8LBackwardRefs refs_array[2],
                                              int width, int height, int quality,
                                              int cache_bits,
-                                             int histogram_bits) {
+                                             int histogram_bits,
+                                             size_t init_byte_position,
+                                             int* const hdr_size,
+                                             int* const data_size) {
   WebPEncodingError err = VP8_ENC_OK;
   const int use_2d_locality = 1;
   const int use_color_cache = (cache_bits > 0);
@@ -579,6 +582,8 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
                                 sizeof(*histogram_symbols));
   assert(histogram_bits >= MIN_HUFFMAN_BITS);
   assert(histogram_bits <= MAX_HUFFMAN_BITS);
+  assert(hdr_size != NULL);
+  assert(data_size != NULL);
 
   VP8LBackwardRefsInit(&refs, refs_array[0].block_size_);
   if (histogram_image == NULL || histogram_symbols == NULL) {
@@ -676,9 +681,12 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
     }
   }
 
+  *hdr_size = (int)(VP8LBitWriterNumBytes(bw) - init_byte_position);
   // Store actual literals.
   err = StoreImageToBitMask(bw, width, histogram_bits, &refs,
                             histogram_symbols, huffman_codes);
+  *data_size =
+        (int)(VP8LBitWriterNumBytes(bw) - init_byte_position - *hdr_size);
 
  Error:
   WebPSafeFree(tokens);
@@ -1053,6 +1061,8 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   const int height = picture->height;
   VP8LEncoder* const enc = VP8LEncoderNew(config, picture);
   const size_t byte_position = VP8LBitWriterNumBytes(bw);
+  int hdr_size = 0;
+  int data_size = 0;
 
   if (enc == NULL) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
@@ -1124,7 +1134,8 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
 
   err = EncodeImageInternal(bw, enc->argb_, &enc->hash_chain_, enc->refs_,
                             enc->current_width_, height, quality,
-                            enc->cache_bits_, enc->histo_bits_);
+                            enc->cache_bits_, enc->histo_bits_,
+                            byte_position, &hdr_size, &data_size);
   if (err != VP8_ENC_OK) goto Error;
 
   if (picture->stats != NULL) {
@@ -1139,6 +1150,8 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
     stats->cache_bits = enc->cache_bits_;
     stats->palette_size = enc->palette_size_;
     stats->lossless_size = (int)(VP8LBitWriterNumBytes(bw) - byte_position);
+    stats->lossless_hdr_size = hdr_size;
+    stats->lossless_data_size = data_size;
   }
 
  Error:
