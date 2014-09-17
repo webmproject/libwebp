@@ -16,6 +16,24 @@
       "revId": "c74b900bbf59691a5ba5fe4b539436f2e4d799a4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Wt8\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2014-09-17T22:16:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//WuM\u003d",
+      "revId": "c74b900bbf59691a5ba5fe4b539436f2e4d799a4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
