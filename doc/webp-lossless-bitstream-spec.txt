@@ -14,6 +14,7 @@ Specification for WebP Lossless Bitstream
 
 _Jyrki Alakuijala, Ph.D., Google, Inc., 2012-06-19_
 
+Paragraphs marked as \[AMENDED\] were amended on 2014-09-16.
 
 Abstract
 --------
@@ -172,8 +173,8 @@ It should be set to 0 when all alpha values are 255 in the picture, and
 int alpha_is_used = ReadBits(1);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The version_number is a 3 bit code that must be discarded by the decoder
-at this time. Complying encoders write a 3-bit value 0.
+The version_number is a 3 bit code that must be set to 0. Any other value
+should be treated as an error. \[AMENDED\]
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int version_number = ReadBits(3);
@@ -330,7 +331,7 @@ uint32 Select(uint32 L, uint32 T, uint32 TL) {
            abs(pGreen - GREEN(T)) + abs(pBlue - BLUE(T));
 
   // Return either left or top, the one closer to the prediction.
-  if (pL <= pT) {
+  if (pL < pT) {     // \[AMENDED\]
     return L;
   } else {
     return T;
@@ -541,6 +542,9 @@ color.
 // Inverse transform
 argb = color_table[GREEN(argb)];
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If the index is equal or larger than color_table_size, the argb color value
+should be set to 0x00000000 (transparent black).  \[AMENDED\]
 
 When the color table is small (equal to or less than 16 colors), several
 pixels are bundled into a single pixel. The pixel bundling packs several
