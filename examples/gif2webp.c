@@ -174,21 +174,22 @@ static int ReadFrame(GifFileType* const gif, WebPFrameRect* const gif_rect,
   return ok;
 }
 
-static int GetBackgroundColor(const ColorMapObject* const color_map,
-                              int bgcolor_idx, uint32_t* const bgcolor) {
+static void GetBackgroundColor(const ColorMapObject* const color_map,
+                               int bgcolor_idx, uint32_t* const bgcolor) {
   if (transparent_index != -1 && bgcolor_idx == transparent_index) {
     *bgcolor = WEBP_UTIL_TRANSPARENT_COLOR;  // Special case.
-    return 1;
   } else if (color_map == NULL || color_map->Colors == NULL
              || bgcolor_idx >= color_map->ColorCount) {
-    return 0;  // Invalid color map or index.
+    *bgcolor = WHITE_COLOR;
+    fprintf(stderr,
+            "GIF decode warning: invalid background color index. Assuming "
+            "white background.\n");
   } else {
     const GifColorType color = color_map->Colors[bgcolor_idx];
     *bgcolor = (0xff        << 24)
              | (color.Red   << 16)
              | (color.Green <<  8)
              | (color.Blue  <<  0);
-    return 1;
   }
 }
 
@@ -483,6 +484,10 @@ int main(int argc, const char *argv[]) {
           cache = WebPFrameCacheNew(frame.width, frame.height,
                                     kmin, kmax, allow_mixed);
           if (cache == NULL) goto End;
+
+          // Background color.
+          GetBackgroundColor(gif->SColorMap, gif->SBackGroundColor,
+                             &anim.bgcolor);
         }
         // Some even more broken GIF can have sub-rect with zero width/height.
         if (image_desc->Width == 0 || image_desc->Height == 0) {
@@ -544,13 +549,6 @@ int main(int argc, const char *argv[]) {
                                  : WEBP_MUX_DISPOSE_NONE;
             }
             transparent_index = (flags & GIF_TRANSPARENT_MASK) ? data[4] : -1;
-            if (is_first_frame) {
-              if (!GetBackgroundColor(gif->SColorMap, gif->SBackGroundColor,
-                                      &anim.bgcolor)) {
-                fprintf(stderr, "GIF decode warning: invalid background color "
-                                "index. Assuming white background.\n");
-              }
-            }
             break;
           }
           case PLAINTEXT_EXT_FUNC_CODE: {
