@@ -455,6 +455,135 @@ static WEBP_INLINE void FilterLoop26(uint8_t* p,
   );
 }
 
+static WEBP_INLINE void FilterLoop24(uint8_t* p,
+                                     int hstride, int vstride, int size,
+                                     int thresh, int ithresh, int hev_thresh) {
+  int p0, q0, p1, q1, p2, q2, p3, q3;
+  int step1, step2, temp1, temp2, temp3, temp4;
+  uint8_t* pTemp0;
+  uint8_t* pTemp1;
+  const int thresh2 = 2 * thresh + 1;
+
+  __asm__ volatile (
+    ".set      push                                   \n\t"
+    ".set      noreorder                              \n\t"
+    "bltz      %[size],    3f                         \n\t"
+    " nop                                             \n\t"
+  "2:                                                 \n\t"
+    "negu      %[step1],   %[hstride]                 \n\t"
+    "lbu       %[q0],      0(%[p])                    \n\t"
+    "lbux      %[p0],      %[step1](%[p])             \n\t"
+    "subu      %[step1],   %[step1],      %[hstride]  \n\t"
+    "lbux      %[q1],      %[hstride](%[p])           \n\t"
+    "subu      %[temp1],   %[p0],         %[q0]       \n\t"
+    "lbux      %[p1],      %[step1](%[p])             \n\t"
+    "addu      %[step2],   %[hstride],    %[hstride]  \n\t"
+    "absq_s.w  %[temp2],   %[temp1]                   \n\t"
+    "subu      %[temp3],   %[p1],         %[q1]       \n\t"
+    "absq_s.w  %[temp4],   %[temp3]                   \n\t"
+    "sll       %[temp2],   %[temp2],      2           \n\t"
+    "addu      %[temp2],   %[temp2],      %[temp4]    \n\t"
+    "subu      %[temp4],   %[temp2],      %[thresh2]  \n\t"
+    "subu      %[step1],   %[step1],      %[hstride]  \n\t"
+    "bgtz      %[temp4],   0f                         \n\t"
+    " lbux     %[p2],      %[step1](%[p])             \n\t"
+    "subu      %[step1],   %[step1],      %[hstride]  \n\t"
+    "lbux      %[q2],      %[step2](%[p])             \n\t"
+    "lbux      %[p3],      %[step1](%[p])             \n\t"
+    "subu      %[temp4],   %[p2],         %[p1]       \n\t"
+    "addu      %[step2],   %[step2],      %[hstride]  \n\t"
+    "subu      %[temp2],   %[p3],         %[p2]       \n\t"
+    "absq_s.w  %[temp4],   %[temp4]                   \n\t"
+    "absq_s.w  %[temp2],   %[temp2]                   \n\t"
+    "lbux      %[q3],      %[step2](%[p])             \n\t"
+    "subu      %[temp4],   %[temp4],      %[ithresh]  \n\t"
+    "negu      %[temp1],   %[temp1]                   \n\t"
+    "bgtz      %[temp4],   0f                         \n\t"
+    " subu     %[temp2],   %[temp2],      %[ithresh]  \n\t"
+    "subu      %[p3],      %[p1],         %[p0]       \n\t"
+    "bgtz      %[temp2],   0f                         \n\t"
+    " absq_s.w %[p3],      %[p3]                      \n\t"
+    "subu      %[temp4],   %[q3],         %[q2]       \n\t"
+    "subu      %[pTemp0],  %[p],          %[hstride]  \n\t"
+    "absq_s.w  %[temp4],   %[temp4]                   \n\t"
+    "subu      %[temp2],   %[p3],         %[ithresh]  \n\t"
+    "sll       %[step1],   %[temp1],      1           \n\t"
+    "bgtz      %[temp2],   0f                         \n\t"
+    " subu     %[temp4],   %[temp4],      %[ithresh]  \n\t"
+    "subu      %[temp2],   %[q2],         %[q1]       \n\t"
+    "bgtz      %[temp4],   0f                         \n\t"
+    " absq_s.w %[temp2],   %[temp2]                   \n\t"
+    "subu      %[q3],      %[q1],         %[q0]       \n\t"
+    "absq_s.w  %[q3],      %[q3]                      \n\t"
+    "subu      %[temp2],   %[temp2],      %[ithresh]  \n\t"
+    "addu      %[temp1],   %[temp1],      %[step1]    \n\t"
+    "bgtz      %[temp2],   0f                         \n\t"
+    " subu     %[temp4],   %[q3],         %[ithresh]  \n\t"
+    "slt       %[p3],      %[hev_thresh], %[p3]       \n\t"
+    "bgtz      %[temp4],   0f                         \n\t"
+    " slt      %[q3],      %[hev_thresh], %[q3]       \n\t"
+    "or        %[q3],      %[q3],         %[p3]       \n\t"
+    "bgtz      %[q3],      1f                         \n\t"
+    " shra_r.w %[temp2],   %[temp1],      3           \n\t"
+    "addiu     %[temp1],   %[temp1],      3           \n\t"
+    "sra       %[temp1],   %[temp1],      3           \n\t"
+    "shll_s.w  %[temp2],   %[temp2],      27          \n\t"
+    "shll_s.w  %[temp1],   %[temp1],      27          \n\t"
+    "addu      %[pTemp1],  %[p],          %[hstride]  \n\t"
+    "sra       %[temp2],   %[temp2],      27          \n\t"
+    "sra       %[temp1],   %[temp1],      27          \n\t"
+    "addiu     %[step1],   %[temp2],      1           \n\t"
+    "sra       %[step1],   %[step1],      1           \n\t"
+    "addu      %[p0],      %[p0],         %[temp1]    \n\t"
+    "addu      %[p1],      %[p1],         %[step1]    \n\t"
+    "subu      %[q0],      %[q0],         %[temp2]    \n\t"
+    "subu      %[q1],      %[q1],         %[step1]    \n\t"
+    "lbux      %[temp2],   %[p0](%[VP8kclip1])        \n\t"
+    "lbux      %[temp3],   %[q0](%[VP8kclip1])        \n\t"
+    "lbux      %[temp4],   %[q1](%[VP8kclip1])        \n\t"
+    "sb        %[temp2],   0(%[pTemp0])               \n\t"
+    "lbux      %[temp1],   %[p1](%[VP8kclip1])        \n\t"
+    "subu      %[pTemp0],  %[pTemp0],    %[hstride]   \n\t"
+    "sb        %[temp3],   0(%[p])                    \n\t"
+    "sb        %[temp4],   0(%[pTemp1])               \n\t"
+    "j         0f                                     \n\t"
+    " sb       %[temp1],   0(%[pTemp0])               \n\t"
+  "1:                                                 \n\t"
+    "shll_s.w  %[temp3],   %[temp3],      24          \n\t"
+    "sra       %[temp3],   %[temp3],      24          \n\t"
+    "addu      %[temp1],   %[temp1],      %[temp3]    \n\t"
+    "shra_r.w  %[temp2],   %[temp1],      3           \n\t"
+    "addiu     %[temp1],   %[temp1],      3           \n\t"
+    "shll_s.w  %[temp2],   %[temp2],      27          \n\t"
+    "sra       %[temp1],   %[temp1],      3           \n\t"
+    "shll_s.w  %[temp1],   %[temp1],      27          \n\t"
+    "sra       %[temp2],   %[temp2],      27          \n\t"
+    "sra       %[temp1],   %[temp1],      27          \n\t"
+    "addu      %[p0],      %[p0],         %[temp1]    \n\t"
+    "subu      %[q0],      %[q0],         %[temp2]    \n\t"
+    "lbux      %[temp1],   %[p0](%[VP8kclip1])        \n\t"
+    "lbux      %[temp2],   %[q0](%[VP8kclip1])        \n\t"
+    "sb        %[temp2],   0(%[p])                    \n\t"
+    "sb        %[temp1],   0(%[pTemp0])               \n\t"
+  "0:                                                 \n\t"
+    "subu      %[size],    %[size],       1           \n\t"
+    "bgtz      %[size],    2b                         \n\t"
+    " addu     %[p],       %[p],          %[vstride]  \n\t"
+  "3:                                                 \n\t"
+    ".set      pop                                    \n\t"
+    : [p0]"=&r"(p0), [q0]"=&r"(q0), [p1]"=&r"(p1), [q1]"=&r"(q1),
+      [p2]"=&r"(p2), [q2]"=&r"(q2), [p3]"=&r"(p3), [q3]"=&r"(q3),
+      [step2]"=&r"(step2), [step1]"=&r"(step1), [temp1]"=&r"(temp1),
+      [temp2]"=&r"(temp2), [temp3]"=&r"(temp3), [temp4]"=&r"(temp4),
+      [pTemp0]"=&r"(pTemp0), [pTemp1]"=&r"(pTemp1), [p]"+&r"(p),
+      [size]"+&r"(size)
+    : [vstride]"r"(vstride), [ithresh]"r"(ithresh),
+      [hev_thresh]"r"(hev_thresh), [hstride]"r"(hstride),
+      [VP8kclip1]"r"(VP8kclip1), [thresh2]"r"(thresh2)
+    : "memory"
+  );
+}
+
 // on macroblock edges
 static void VFilter16(uint8_t* p, int stride,
                       int thresh, int ithresh, int hev_thresh) {
@@ -477,6 +606,37 @@ static void HFilter8(uint8_t* u, uint8_t* v, int stride,
                      int thresh, int ithresh, int hev_thresh) {
   FilterLoop26(u, 1, stride, 8, thresh, ithresh, hev_thresh);
   FilterLoop26(v, 1, stride, 8, thresh, ithresh, hev_thresh);
+}
+
+// on three inner edges
+static void VFilter16i(uint8_t* p, int stride,
+                       int thresh, int ithresh, int hev_thresh) {
+  int k;
+  for (k = 3; k > 0; --k) {
+    p += 4 * stride;
+    FilterLoop24(p, stride, 1, 16, thresh, ithresh, hev_thresh);
+  }
+}
+
+static void HFilter16i(uint8_t* p, int stride,
+                       int thresh, int ithresh, int hev_thresh) {
+  int k;
+  for (k = 3; k > 0; --k) {
+    p += 4;
+    FilterLoop24(p, 1, stride, 16, thresh, ithresh, hev_thresh);
+  }
+}
+
+static void VFilter8i(uint8_t* u, uint8_t* v, int stride,
+                      int thresh, int ithresh, int hev_thresh) {
+  FilterLoop24(u + 4 * stride, stride, 1, 8, thresh, ithresh, hev_thresh);
+  FilterLoop24(v + 4 * stride, stride, 1, 8, thresh, ithresh, hev_thresh);
+}
+
+static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
+                      int thresh, int ithresh, int hev_thresh) {
+  FilterLoop24(u + 4, 1, stride, 8, thresh, ithresh, hev_thresh);
+  FilterLoop24(v + 4, 1, stride, 8, thresh, ithresh, hev_thresh);
 }
 
 #undef OUTPUT_EARLY_CLOBBER_REGS_18
@@ -509,5 +669,9 @@ void VP8DspInitMIPSdspR2(void) {
   VP8HFilter16 = HFilter16;
   VP8VFilter8 = VFilter8;
   VP8HFilter8 = HFilter8;
+  VP8VFilter16i = VFilter16i;
+  VP8HFilter16i = HFilter16i;
+  VP8VFilter8i = VFilter8i;
+  VP8HFilter8i = HFilter8i;
 #endif
 }
