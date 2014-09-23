@@ -291,7 +291,7 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
                                 code_lengths);
   }
 
-  ok = ok && !br->error_;
+  ok = ok && !br->eos_;
   if (!ok) {
     dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
     return 0;
@@ -336,7 +336,7 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
     }
   }
 
-  if (br->error_) goto Error;
+  if (br->eos_) goto Error;
 
   // Find maximum alphabet size for the htree group.
   for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
@@ -948,14 +948,12 @@ static int DecodeAlphaData(VP8LDecoder* const dec, uint8_t* const data,
       goto End;
     }
     assert(br->eos_ == VP8LIsEndOfStream(br));
-    ok = !br->error_;
-    if (!ok) goto End;
   }
   // Process the remaining rows corresponding to last row-block.
   ExtractPalettedAlphaRows(dec, row);
 
  End:
-  if (br->error_ || !ok || (br->eos_ && pos < end)) {
+  if (!ok || (br->eos_ && pos < end)) {
     ok = 0;
     dec->status_ = br->eos_ ? VP8_STATUS_SUSPENDED
                             : VP8_STATUS_BITSTREAM_ERROR;
@@ -1068,14 +1066,12 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
       goto End;
     }
     assert(br->eos_ == VP8LIsEndOfStream(br));
-    ok = !br->error_;
-    if (!ok) goto End;
   }
   // Process the remaining rows corresponding to last row-block.
   if (process_func != NULL) process_func(dec, row);
 
  End:
-  if (br->error_ || !ok || (br->eos_ && src < src_end)) {
+  if (!ok || (br->eos_ && src < src_end)) {
     ok = 0;
     dec->status_ = br->eos_ ? VP8_STATUS_SUSPENDED
                             : VP8_STATUS_BITSTREAM_ERROR;
@@ -1310,17 +1306,17 @@ static int DecodeImageStream(int xsize, int ysize,
   // Use the Huffman trees to decode the LZ77 encoded data.
   ok = DecodeImageData(dec, data, transform_xsize, transform_ysize,
                        transform_ysize, NULL);
-  ok = ok && !br->error_;
+  ok = ok && !br->eos_;
 
  End:
-
   if (!ok) {
     WebPSafeFree(data);
     ClearMetadata(hdr);
-    // If not enough data (br.eos_) resulted in BIT_STREAM_ERROR, update the
-    // status appropriately.
-    if (dec->status_ == VP8_STATUS_BITSTREAM_ERROR && dec->br_.eos_) {
-      dec->status_ = VP8_STATUS_SUSPENDED;
+    // Check status coherency.
+    if (dec->br_.eos_) {
+      assert(dec->status_ == VP8_STATUS_SUSPENDED);
+    } else {
+      assert(dec->status_ == VP8_STATUS_BITSTREAM_ERROR);
     }
   } else {
     if (decoded_data != NULL) {

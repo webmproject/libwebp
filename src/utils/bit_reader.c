@@ -136,7 +136,6 @@ void VP8LInitBitReader(VP8LBitReader* const br, const uint8_t* const start,
   br->val_ = 0;
   br->bit_pos_ = 0;
   br->eos_ = 0;
-  br->error_ = 0;
 
   if (length > sizeof(br->val_)) {
     length = sizeof(br->val_);
@@ -157,8 +156,7 @@ void VP8LBitReaderSetBuffer(VP8LBitReader* const br,
   br->buf_ = buf;
   br->len_ = len;
   // pos_ > len_ should be considered a param error.
-  br->error_ = (br->pos_ > br->len_);
-  br->eos_ = br->error_ || VP8LIsEndOfStream(br);
+  br->eos_ = (br->pos_ > br->len_) || VP8LIsEndOfStream(br);
 }
 
 // If not at EOS, reload up to VP8L_LBITS byte-by-byte
@@ -202,7 +200,7 @@ uint32_t VP8LReadBits(VP8LBitReader* const br, int n_bits) {
     ShiftBytes(br);
     return val;
   } else {
-    br->error_ = 1;
+    br->eos_ = 1;
     return 0;
   }
 }
