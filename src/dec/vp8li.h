@@ -56,7 +56,6 @@ typedef struct {
 typedef struct VP8LDecoder VP8LDecoder;
 struct VP8LDecoder {
   VP8StatusCode    status_;
-  VP8LDecodeState  action_;
   VP8LDecodeState  state_;
   VP8Io           *io_;
 
