@@ -109,5 +109,5 @@ for PLATFORM in ${PLATFORMS}; do
   export PATH=${OLDPATH}
 done
 
-cp -a ${SRCDIR}/src/webp/* ${TARGETDIR}/Headers/
+cp -a ${SRCDIR}/src/webp/*.h ${TARGETDIR}/Headers/
 ${LIPO} -create ${LIBLIST} -output ${TARGETDIR}/WebP
