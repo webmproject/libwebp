@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//V+g\u003d",
+        "filename": "src/dsp/dec_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-23T08:06:35Z",
+      "side": 1,
+      "message": "could you give more meaningful names to these two variables please?\n\nIt\u0027s not clear what they are used for...\n(they\u0027re not initialized here, so i guess they are temporary variables, but...)",
+      "revId": "9318655c40d7ab2ea51bf63fa2e837c1a07ea47b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
