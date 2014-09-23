@@ -499,7 +499,8 @@ static VP8StatusCode DecodeVP8LHeader(WebPIDecoder* const idec) {
 
   // Wait until there's enough data for decoding header.
   if (curr_size < (idec->chunk_size_ >> 3)) {
-    return VP8_STATUS_SUSPENDED;
+    dec->status_ = VP8_STATUS_SUSPENDED;
+    return ErrorStatusLossless(idec, dec->status_);
   }
   if (!VP8LDecodeHeader(dec, io)) {
     return ErrorStatusLossless(idec, dec->status_);

@@ -120,7 +120,7 @@ static int ReadImageInfo(VP8LBitReader* const br,
   *height = VP8LReadBits(br, VP8L_IMAGE_SIZE_BITS) + 1;
   *has_alpha = VP8LReadBits(br, 1);
   if (VP8LReadBits(br, VP8L_VERSION_BITS) != 0) return 0;
-  return 1;
+  return !br->eos_;
 }
 
 int VP8LGetInfo(const uint8_t* data, size_t data_size,
@@ -322,7 +322,6 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
     const int huffman_pixs = huffman_xsize * huffman_ysize;
     if (!DecodeImageStream(huffman_xsize, huffman_ysize, 0, dec,
                            &huffman_image)) {
-      dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
       goto Error;
     }
     hdr->huffman_subsample_bits_ = huffman_precision;
@@ -959,7 +958,6 @@ static int DecodeAlphaData(VP8LDecoder* const dec, uint8_t* const data,
                             : VP8_STATUS_BITSTREAM_ERROR;
   } else {
     dec->last_pixel_ = (int)pos;
-    if (pos == end) dec->state_ = READ_DATA;
   }
   return ok;
 }
@@ -1077,7 +1075,6 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
                             : VP8_STATUS_BITSTREAM_ERROR;
   } else {
     dec->last_pixel_ = (int)(src - data);
-    if (src == src_end) dec->state_ = READ_DATA;
   }
   return ok;
 }
@@ -1173,12 +1170,12 @@ static int ReadTransform(int* const xsize, int const* ysize,
 // VP8LMetadata
 
 static void InitMetadata(VP8LMetadata* const hdr) {
-  assert(hdr);
+  assert(hdr != NULL);
   memset(hdr, 0, sizeof(*hdr));
 }
 
 static void ClearMetadata(VP8LMetadata* const hdr) {
-  assert(hdr);
+  assert(hdr != NULL);
 
   WebPSafeFree(hdr->huffman_image_);
   WebPSafeFree(hdr->huffman_tables_);
@@ -1194,7 +1191,6 @@ VP8LDecoder* VP8LNew(void) {
   VP8LDecoder* const dec = (VP8LDecoder*)WebPSafeCalloc(1ULL, sizeof(*dec));
   if (dec == NULL) return NULL;
   dec->status_ = VP8_STATUS_OK;
-  dec->action_ = READ_DIM;
   dec->state_ = READ_DIM;
 
   VP8LDspInit();  // Init critical function pointers.
@@ -1414,7 +1410,6 @@ int VP8LDecodeAlphaHeader(ALPHDecoder* const alph_dec,
   dec->status_ = VP8_STATUS_OK;
   VP8LInitBitReader(&dec->br_, data, data_size);
 
-  dec->action_ = READ_HDR;
   if (!DecodeImageStream(alph_dec->width_, alph_dec->height_, 1, dec, NULL)) {
     goto Err;
   }
@@ -1435,7 +1430,6 @@ int VP8LDecodeAlphaHeader(ALPHDecoder* const alph_dec,
 
   if (!ok) goto Err;
 
-  dec->action_ = READ_DATA;
   return 1;
 
  Err:
@@ -1447,7 +1441,6 @@ int VP8LDecodeAlphaHeader(ALPHDecoder* const alph_dec,
 int VP8LDecodeAlphaImageStream(ALPHDecoder* const alph_dec, int last_row) {
   VP8LDecoder* const dec = alph_dec->vp8l_dec_;
   assert(dec != NULL);
-  assert(dec->action_ == READ_DATA);
   assert(last_row <= dec->height_);
 
   if (dec->last_pixel_ == dec->width_ * dec->height_) {
@@ -1484,7 +1477,6 @@ int VP8LDecodeHeader(VP8LDecoder* const dec, VP8Io* const io) {
   io->width = width;
   io->height = height;
 
-  dec->action_ = READ_HDR;
   if (!DecodeImageStream(width, height, 1, dec, NULL)) goto Error;
   return 1;
 
@@ -1509,34 +1501,35 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
   assert(io != NULL);
   params = (WebPDecParams*)io->opaque;
   assert(params != NULL);
-  dec->output_ = params->output;
-  assert(dec->output_ != NULL);
 
   // Initialization.
-  if (!WebPIoInitFromOptions(params->options, io, MODE_BGRA)) {
-    dec->status_ = VP8_STATUS_INVALID_PARAM;
-    goto Err;
-  }
+  if (dec->state_ != READ_DATA) {
+    dec->output_ = params->output;
+    assert(dec->output_ != NULL);
 
-  if (!AllocateInternalBuffers32b(dec, io->width)) goto Err;
+    if (!WebPIoInitFromOptions(params->options, io, MODE_BGRA)) {
+      dec->status_ = VP8_STATUS_INVALID_PARAM;
+      goto Err;
+    }
 
-  if (io->use_scaling && !AllocateAndInitRescaler(dec, io)) goto Err;
+    if (!AllocateInternalBuffers32b(dec, io->width)) goto Err;
 
-  if (io->use_scaling || WebPIsPremultipliedMode(dec->output_->colorspace)) {
-    // need the alpha-multiply functions for premultiplied output or rescaling
-    WebPInitAlphaProcessing();
+    if (io->use_scaling && !AllocateAndInitRescaler(dec, io)) goto Err;
+
+    if (io->use_scaling || WebPIsPremultipliedMode(dec->output_->colorspace)) {
+      // need the alpha-multiply functions for premultiplied output or rescaling
+      WebPInitAlphaProcessing();
+    }
+    dec->state_ = READ_DATA;
   }
 
   // Decode.
-  dec->action_ = READ_DATA;
   if (!DecodeImageData(dec, dec->pixels_, dec->width_, dec->height_,
                        dec->height_, ProcessRows)) {
     goto Err;
   }
 
-  // Cleanup.
   params->last_y = dec->last_out_row_;
-  VP8LClear(dec);
   return 1;
 
  Err:
