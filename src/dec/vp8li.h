@@ -78,7 +78,6 @@ struct VP8LDecoder {
                                    // not be transformed, scaled and
                                    // color-converted yet.
   int              last_out_row_;  // last row output so far.
-  int              last_cached_;
 
   VP8LMetadata     hdr_;
 
