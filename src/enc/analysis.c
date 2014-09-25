@@ -141,7 +141,11 @@ static void MergeHistograms(const VP8Histogram* const in,
 
 static void AssignSegments(VP8Encoder* const enc,
                            const int alphas[MAX_ALPHA + 1]) {
-  const int nb = enc->segment_hdr_.num_segments_;
+  // 'num_segments_' is previously validated and <= NUM_MB_SEGMENTS, but an
+  // explicit check is needed to avoid spurious warning about 'n + 1' exceeding
+  // array bounds of 'centers' with some compilers (noticed with gcc-4.9).
+  const int nb = (enc->segment_hdr_.num_segments_ < NUM_MB_SEGMENTS) ?
+                 enc->segment_hdr_.num_segments_ : NUM_MB_SEGMENTS;
   int centers[NUM_MB_SEGMENTS];
   int weighted_average = 0;
   int map[MAX_ALPHA + 1];
