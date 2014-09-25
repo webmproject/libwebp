@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Vnw\u003d",
+        "filename": "iosbuild.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-09-25T06:42:58Z",
+      "side": 1,
+      "message": "I couldn\u0027t find a good way to discover / avoid this. using xcrun -sdk iphonesimulator gcc still seemed to need it",
+      "revId": "9f7d9e6ddaea051bf5f231356591bddde4d9a7ac",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
