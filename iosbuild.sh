@@ -35,8 +35,8 @@ LIBLIST=''
 if [[ -z "${SDK}" ]]; then
   echo "iOS SDK not available"
   exit 1
-elif [[ ${SDK} < 4.0 ]]; then
-  echo "You need iOS SDK version 4.0 or above"
+elif [[ ${SDK} < 6.0 ]]; then
+  echo "You need iOS SDK version 6.0 or above"
   exit 1
 else
   echo "iOS SDK Version ${SDK}"
@@ -78,12 +78,10 @@ for PLATFORM in ${PLATFORMS}; do
   if [[ -z "${XCODE}" ]]; then
     echo "XCODE not available"
     exit 1
-  elif [[ ${SDK} < 5.0.0 ]]; then
-    DEVROOT="${PLATFORMSROOT}/${PLATFORM}.platform/Developer/"
   else
     DEVROOT="${DEVELOPER}/Toolchains/XcodeDefault.xctoolchain"
-    CFLAGS+=" -miphoneos-version-min=5.0"
-    LDFLAGS+=" -miphoneos-version-min=5.0"
+    CFLAGS+=" -miphoneos-version-min=6.0"
+    LDFLAGS+=" -miphoneos-version-min=6.0"
   fi
 
   export CFLAGS
