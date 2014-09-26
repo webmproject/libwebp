@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//VfY\u003d",
+        "filename": "src/enc/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 589,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-26T20:43:09Z",
+      "side": 1,
+      "message": "nice catch!\nluckily, sizeof(*heap) \u003e sizeof(*positions)",
+      "revId": "35ad48b8487d5812ed0f7774032f747d5b5310c9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
