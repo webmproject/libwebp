@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//Vik\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-26T06:51:08Z",
+      "side": 1,
+      "message": "fixed",
+      "parentUuid": "AAAAdn//Vi4\u003d",
+      "revId": "e0a0b814beef4add5cc9fecf4273b0edbfe3f2d4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//Vi0\u003d",
         "filename": "src/utils/color_cache.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2014-09-26T06:41:34Z",
       "side": 1,
       "message": "could be outside the ()s, either way. this is probably clearer than extracting this expression to a const int",
+      "revId": "e0a0b814beef4add5cc9fecf4273b0edbfe3f2d4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Vio\u003d",
+        "filename": "src/utils/color_cache.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-09-26T06:51:08Z",
+      "side": 1,
+      "message": "done, it reads better. This warning is a bit over-doing it, anyway.",
+      "parentUuid": "AAAAdn//Vi0\u003d",
       "revId": "e0a0b814beef4add5cc9fecf4273b0edbfe3f2d4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
