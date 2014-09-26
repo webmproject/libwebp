@@ -586,7 +586,7 @@ static int HistoHeapInit(HistoHeap* const histo_heap, const int max_index) {
   histo_heap->heap = WebPSafeMalloc(max_index * max_index,
                                     sizeof(*histo_heap->heap));
   histo_heap->positions = WebPSafeMalloc(max_index * max_index,
-                                         sizeof(*histo_heap->heap));
+                                         sizeof(*histo_heap->positions));
   return histo_heap->heap != NULL && histo_heap->positions != NULL;
 }
 
