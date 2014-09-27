@@ -965,7 +965,8 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
 
   {
     const float x = quality / 100.f;
-    const int threshold_size = 1 + (x * x * x) * (MAX_HISTO_GREEDY - 1);
+    // cubic ramp between 1 and MAX_HISTO_GREEDY:
+    const int threshold_size = (int)(1 + (x * x * x) * (MAX_HISTO_GREEDY - 1));
     HistogramCombineStochastic(image_histo, histos, quality, threshold_size);
     if ((image_histo->size <= threshold_size) &&
         !HistogramCombineGreedy(image_histo, histos->histograms[0])) {
