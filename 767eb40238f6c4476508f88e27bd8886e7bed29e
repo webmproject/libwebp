@@ -16,6 +16,24 @@
       "revId": "767eb40238f6c4476508f88e27bd8886e7bed29e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Vdc\u003d",
+        "filename": "iosbuild.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-09-27T18:09:06Z",
+      "side": 0,
+      "message": "nope, just pulled it from the loop -\u003e line 21. looking at it, the check could be simplified as we don\u0027t use the value...",
+      "parentUuid": "AAAAdn//Vd4\u003d",
+      "revId": "767eb40238f6c4476508f88e27bd8886e7bed29e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
