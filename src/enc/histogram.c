@@ -29,6 +29,8 @@
 #define BIN_SIZE (NUM_PARTITIONS * NUM_PARTITIONS * NUM_PARTITIONS)
 // Maximum number of histograms allowed in greedy combining algorithm.
 #define MAX_HISTO_GREEDY 100
+// Not a trivial literal symbol.
+#define NON_TRIVIAL_SYM (0xffffffff)
 
 static void HistogramClear(VP8LHistogram* const p) {
   uint32_t* const literal = p->literal_;
@@ -181,15 +183,21 @@ static WEBP_INLINE double BitsEntropyRefine(int nonzeros, int sum, int max_val,
   }
 }
 
-static double BitsEntropy(const uint32_t* const array, int n) {
+// Returns the entropy for the symbols in the input array.
+// Also sets trivial_symbol to the code value, if the array has only one code
+// value. Otherwise, set it to NON_TRIVIAL_SYM.
+static double BitsEntropy(const uint32_t* const array, int n,
+                          uint32_t* const trivial_symbol) {
   double retval = 0.;
   uint32_t sum = 0;
+  uint32_t nonzero_code = NON_TRIVIAL_SYM;
   int nonzeros = 0;
   uint32_t max_val = 0;
   int i;
   for (i = 0; i < n; ++i) {
     if (array[i] != 0) {
       sum += array[i];
+      nonzero_code = i;
       ++nonzeros;
       retval -= VP8LFastSLog2(array[i]);
       if (max_val < array[i]) {
@@ -198,6 +206,9 @@ static double BitsEntropy(const uint32_t* const array, int n) {
     }
   }
   retval += VP8LFastSLog2(sum);
+  if (trivial_symbol != NULL) {
+    *trivial_symbol = (nonzeros == 1) ? nonzero_code : NON_TRIVIAL_SYM;
+  }
   return BitsEntropyRefine(nonzeros, sum, max_val, retval);
 }
 
@@ -254,8 +265,11 @@ static double HuffmanCostCombined(const uint32_t* const X,
 }
 
 // Aggregated costs
-static double PopulationCost(const uint32_t* const population, int length) {
-  return BitsEntropy(population, length) + HuffmanCost(population, length);
+static double PopulationCost(const uint32_t* const population, int length,
+                             uint32_t* const trivial_sym) {
+  return
+      BitsEntropy(population, length, trivial_sym) +
+      HuffmanCost(population, length);
 }
 
 static double GetCombinedEntropy(const uint32_t* const X,
@@ -266,22 +280,24 @@ static double GetCombinedEntropy(const uint32_t* const X,
 // Estimates the Entropy + Huffman + other block overhead size cost.
 double VP8LHistogramEstimateBits(const VP8LHistogram* const p) {
   return
-      PopulationCost(p->literal_, VP8LHistogramNumCodes(p->palette_code_bits_))
-      + PopulationCost(p->red_, NUM_LITERAL_CODES)
-      + PopulationCost(p->blue_, NUM_LITERAL_CODES)
-      + PopulationCost(p->alpha_, NUM_LITERAL_CODES)
-      + PopulationCost(p->distance_, NUM_DISTANCE_CODES)
+      PopulationCost(p->literal_, VP8LHistogramNumCodes(p->palette_code_bits_),
+                     NULL)
+      + PopulationCost(p->red_, NUM_LITERAL_CODES, NULL)
+      + PopulationCost(p->blue_, NUM_LITERAL_CODES, NULL)
+      + PopulationCost(p->alpha_, NUM_LITERAL_CODES, NULL)
+      + PopulationCost(p->distance_, NUM_DISTANCE_CODES, NULL)
       + VP8LExtraCost(p->literal_ + NUM_LITERAL_CODES, NUM_LENGTH_CODES)
       + VP8LExtraCost(p->distance_, NUM_DISTANCE_CODES);
 }
 
 double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p) {
   return
-      BitsEntropy(p->literal_, VP8LHistogramNumCodes(p->palette_code_bits_))
-      + BitsEntropy(p->red_, NUM_LITERAL_CODES)
-      + BitsEntropy(p->blue_, NUM_LITERAL_CODES)
-      + BitsEntropy(p->alpha_, NUM_LITERAL_CODES)
-      + BitsEntropy(p->distance_, NUM_DISTANCE_CODES)
+      BitsEntropy(p->literal_, VP8LHistogramNumCodes(p->palette_code_bits_),
+                  NULL)
+      + BitsEntropy(p->red_, NUM_LITERAL_CODES, NULL)
+      + BitsEntropy(p->blue_, NUM_LITERAL_CODES, NULL)
+      + BitsEntropy(p->alpha_, NUM_LITERAL_CODES, NULL)
+      + BitsEntropy(p->distance_, NUM_DISTANCE_CODES, NULL)
       + VP8LExtraCost(p->literal_ + NUM_LITERAL_CODES, NUM_LENGTH_CODES)
       + VP8LExtraCost(p->distance_, NUM_DISTANCE_CODES);
 }
@@ -337,6 +353,8 @@ static double HistogramAddEval(const VP8LHistogram* const a,
     VP8LHistogramAdd(a, b, out);
     out->bit_cost_ = cost;
     out->palette_code_bits_ = a->palette_code_bits_;
+    out->trivial_symbol_ = (a->trivial_symbol_ == b->trivial_symbol_) ?
+        a->trivial_symbol_ : NON_TRIVIAL_SYM;
   }
 
   return cost - sum_cost;
@@ -388,18 +406,27 @@ static void UpdateDominantCostRange(
 }
 
 static void UpdateHistogramCost(VP8LHistogram* const h) {
-  const double alpha_cost = PopulationCost(h->alpha_, NUM_LITERAL_CODES);
+  uint32_t alpha_sym, red_sym, blue_sym;
+  const double alpha_cost = PopulationCost(h->alpha_, NUM_LITERAL_CODES,
+                                           &alpha_sym);
   const double distance_cost =
-      PopulationCost(h->distance_, NUM_DISTANCE_CODES) +
+      PopulationCost(h->distance_, NUM_DISTANCE_CODES, NULL) +
       VP8LExtraCost(h->distance_, NUM_DISTANCE_CODES);
   const int num_codes = VP8LHistogramNumCodes(h->palette_code_bits_);
-  h->literal_cost_ = PopulationCost(h->literal_, num_codes) +
+  h->literal_cost_ = PopulationCost(h->literal_, num_codes, NULL) +
                      VP8LExtraCost(h->literal_ + NUM_LITERAL_CODES,
                                    NUM_LENGTH_CODES);
-  h->red_cost_ = PopulationCost(h->red_, NUM_LITERAL_CODES);
-  h->blue_cost_ = PopulationCost(h->blue_, NUM_LITERAL_CODES);
+  h->red_cost_ = PopulationCost(h->red_, NUM_LITERAL_CODES, &red_sym);
+  h->blue_cost_ =
+      PopulationCost(h->blue_, NUM_LITERAL_CODES, &blue_sym);
   h->bit_cost_ = h->literal_cost_ + h->red_cost_ + h->blue_cost_ +
                  alpha_cost + distance_cost;
+  if ((alpha_sym | red_sym | blue_sym) == NON_TRIVIAL_SYM) {
+    h->trivial_symbol_ = NON_TRIVIAL_SYM;
+  } else {
+    h->trivial_symbol_ =
+        ((uint32_t)alpha_sym << 24) | (red_sym << 16) | (blue_sym << 0);
+  }
 }
 
 static int GetBinIdForEntropy(double min, double max, double val) {
@@ -535,6 +562,7 @@ static void HistogramCombineEntropyBin(VP8LHistogramSet* const image_histo,
     const int bin_offset = bin_id * bin_depth;
     const int num_histos = bin_map[bin_offset];
     const int idx1 = bin_map[bin_offset + 1];
+    int num_combine_failures = 0;
     int n;
     for (n = 2; n <= num_histos; ++n) {
       const int idx2 = bin_map[bin_offset + n];
@@ -545,8 +573,22 @@ static void HistogramCombineEntropyBin(VP8LHistogramSet* const image_histo,
             HistogramAddEval(histograms[idx1], histograms[idx2],
                              cur_combo, bit_cost_thresh);
         if (curr_cost_diff < bit_cost_thresh) {
-          HistogramCopy(cur_combo, histograms[idx1]);
-          histograms[idx2]->bit_cost_ = 0.;
+          // Try to merge two histograms only if the combo is a trivial one or
+          // the two candidate histograms are already non-trivial.
+          // For some images, 'try_combine' turns out to be false for a lot of
+          // histogram pairs. In that case, we fallback to combining histograms
+          // as usual to avoid increasing the header size.
+          const int try_combine =
+              (cur_combo->trivial_symbol_ != NON_TRIVIAL_SYM) ||
+              ((histograms[idx1]->trivial_symbol_ == NON_TRIVIAL_SYM) &&
+               (histograms[idx2]->trivial_symbol_== NON_TRIVIAL_SYM));
+          const int max_combine_failures = 32;
+          if (try_combine || (num_combine_failures >= max_combine_failures)) {
+            HistogramCopy(cur_combo, histograms[idx1]);
+            histograms[idx2]->bit_cost_ = 0.;
+          } else {
+            ++num_combine_failures;
+          }
         }
       }
     }
