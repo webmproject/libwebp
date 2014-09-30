@@ -47,7 +47,17 @@ rm -rf ${TARGETDIR}
 mkdir -p ${BUILDDIR}
 mkdir -p ${TARGETDIR}/Headers/
 
-[[ -e ${SRCDIR}/configure ]] || (cd ${SRCDIR} && sh autogen.sh)
+if [[ ! -e ${SRCDIR}/configure ]]; then
+  if ! (cd ${SRCDIR} && sh autogen.sh); then
+    cat <<EOT
+Error creating configure script!
+This script requires the autoconf/automake and libtool to build. MacPorts can
+be used to obtain these:
+http://www.macports.org/install.php
+EOT
+    exit 1
+  fi
+fi
 
 for PLATFORM in ${PLATFORMS}; do
   ARCH2=""
