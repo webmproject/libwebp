@@ -39,9 +39,11 @@ typedef struct {
   // Backward reference prefix-code histogram.
   uint32_t distance_[NUM_DISTANCE_CODES];
   int palette_code_bits_;
-  double bit_cost_;      // cached value of VP8LHistogramEstimateBits(this)
-  double literal_cost_;  // Cached values of dominant entropy costs:
-  double red_cost_;      //   literal, red & blue.
+  uint32_t trivial_symbol_;  // True, if histograms for Red, Blue & Alpha
+                             // literal symbols are single valued.
+  double bit_cost_;          // cached value of bit cost.
+  double literal_cost_;      // Cached values of dominant entropy costs:
+  double red_cost_;          // literal, red & blue.
   double blue_cost_;
 } VP8LHistogram;
 
