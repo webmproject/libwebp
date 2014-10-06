@@ -274,6 +274,12 @@ extern int (*WebPDispatchAlpha)(const uint8_t* alpha, int alpha_stride,
                                 int width, int height,
                                 uint8_t* dst, int dst_stride);
 
+// Transfer packed 8b alpha[] values to green channel in dst[], zero'ing the
+// A/R/B values. 'dst_stride' is the stride for dst[] in uint32_t units.
+extern void (*WebPDispatchAlphaToGreen)(const uint8_t* alpha, int alpha_stride,
+                                        int width, int height,
+                                        uint32_t* dst, int dst_stride);
+
 // Extract the alpha values from 32b values in argb[] and pack them into alpha[]
 // (this is the opposite of WebPDispatchAlpha).
 // Returns true if there's only trivial 0xff alpha values.

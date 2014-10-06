@@ -61,18 +61,8 @@ static int EncodeLossless(const uint8_t* const data, int width, int height,
   if (!WebPPictureAlloc(&picture)) return 0;
 
   // Transfer the alpha values to the green channel.
-  {
-    int i, j;
-    uint32_t* dst = picture.argb;
-    const uint8_t* src = data;
-    for (j = 0; j < picture.height; ++j) {
-      for (i = 0; i < picture.width; ++i) {
-        dst[i] = src[i] << 8;  // we leave A/R/B channels zero'd.
-      }
-      src += width;
-      dst += picture.argb_stride;
-    }
-  }
+  WebPDispatchAlphaToGreen(data, width, picture.width, picture.height,
+                           picture.argb, picture.argb_stride);
 
   WebPConfigInit(&config);
   config.lossless = 1;
@@ -376,6 +366,7 @@ static int CompressAlphaJob(VP8Encoder* const enc, void* dummy) {
 }
 
 void VP8EncInitAlpha(VP8Encoder* const enc) {
+  WebPInitAlphaProcessing();
   enc->has_alpha_ = WebPPictureHasTransparency(enc->pic_);
   enc->alpha_data_ = NULL;
   enc->alpha_data_size_ = 0;
@@ -430,4 +421,3 @@ int VP8EncDeleteAlpha(VP8Encoder* const enc) {
   enc->has_alpha_ = 0;
   return ok;
 }
-

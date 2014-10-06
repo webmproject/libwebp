@@ -72,6 +72,32 @@ static int DispatchAlpha(const uint8_t* alpha, int alpha_stride,
   return (alpha_and != 0xff);
 }
 
+static void DispatchAlphaToGreen(const uint8_t* alpha, int alpha_stride,
+                                 int width, int height,
+                                 uint32_t* dst, int dst_stride) {
+  int i, j;
+  const __m128i zero = _mm_setzero_si128();
+  const int limit = width & ~15;
+  for (j = 0; j < height; ++j) {
+    for (i = 0; i < limit; i += 16) {   // process 16 alpha bytes
+      const __m128i a0 = _mm_loadu_si128((__m128i*)&alpha[i]);
+      const __m128i a1 = _mm_unpacklo_epi8(zero, a0);  // note the 'zero' first!
+      const __m128i b1 = _mm_unpackhi_epi8(zero, a0);
+      const __m128i a2_lo = _mm_unpacklo_epi16(a1, zero);
+      const __m128i b2_lo = _mm_unpacklo_epi16(b1, zero);
+      const __m128i a2_hi = _mm_unpackhi_epi16(a1, zero);
+      const __m128i b2_hi = _mm_unpackhi_epi16(b1, zero);
+      _mm_storeu_si128((__m128i*)&dst[i +  0], a2_lo);
+      _mm_storeu_si128((__m128i*)&dst[i +  4], a2_hi);
+      _mm_storeu_si128((__m128i*)&dst[i +  8], b2_lo);
+      _mm_storeu_si128((__m128i*)&dst[i + 12], b2_hi);
+    }
+    for (; i < width; ++i) dst[i] = alpha[i] << 8;
+    alpha += alpha_stride;
+    dst += dst_stride;
+  }
+}
+
 static int ExtractAlpha(const uint8_t* argb, int argb_stride,
                         int width, int height,
                         uint8_t* alpha, int alpha_stride) {
@@ -264,6 +290,7 @@ void WebPInitAlphaProcessingSSE2(void) {
   WebPMultRow = MultRow;
   WebPApplyAlphaMultiply = ApplyAlphaMultiply;
   WebPDispatchAlpha = DispatchAlpha;
+  WebPDispatchAlphaToGreen = DispatchAlphaToGreen;
   WebPExtractAlpha = ExtractAlpha;
 #endif
 }
