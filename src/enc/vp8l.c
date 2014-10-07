@@ -587,9 +587,8 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
 
   VP8LBackwardRefsInit(&refs, refs_array[0].block_size_);
   if (histogram_image == NULL || histogram_symbols == NULL) {
-    VP8LFreeHistogramSet(histogram_image);
-    WebPSafeFree(histogram_symbols);
-    return 0;
+    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+    goto Error;
   }
 
   // 'best_refs' is the reference to the best backward refs and points to one
@@ -599,6 +598,7 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
                                         cache_bits, use_2d_locality,
                                         hash_chain, refs_array);
   if (best_refs == NULL || !VP8LBackwardRefsCopy(best_refs, &refs)) {
+    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
   // Build histogram image and symbols from backward references.
@@ -606,6 +606,7 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
                                 quality, histogram_bits, cache_bits,
                                 histogram_image,
                                 histogram_symbols)) {
+    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
   // Create Huffman bit lengths and codes for each histogram image.
@@ -615,6 +616,7 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
                                                    sizeof(*huffman_codes));
   if (huffman_codes == NULL ||
       !GetHuffBitLengthsAndCodes(histogram_image, huffman_codes)) {
+    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
   // Free combined histograms.
@@ -637,7 +639,10 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
                                     sizeof(*histogram_argb));
       int max_index = 0;
       uint32_t i;
-      if (histogram_argb == NULL) goto Error;
+      if (histogram_argb == NULL) {
+        err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+        goto Error;
+      }
       for (i = 0; i < histogram_image_xysize; ++i) {
         const int symbol_index = histogram_symbols[i] & 0xffff;
         histogram_argb[i] = 0xff000000 | (symbol_index << 8);
@@ -663,7 +668,10 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
     int max_tokens = 0;
     huff_tree = (HuffmanTree*)WebPSafeMalloc(3ULL * CODE_LENGTH_CODES,
                                              sizeof(*huff_tree));
-    if (huff_tree == NULL) goto Error;
+    if (huff_tree == NULL) {
+      err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+      goto Error;
+    }
     // Find maximum number of symbols for the huffman tree-set.
     for (i = 0; i < 5 * histogram_image_size; ++i) {
       HuffmanTreeCode* const codes = &huffman_codes[i];
@@ -673,7 +681,10 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
     }
     tokens = (HuffmanTreeToken*)WebPSafeMalloc(max_tokens,
                                                sizeof(*tokens));
-    if (tokens == NULL) goto Error;
+    if (tokens == NULL) {
+      err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+      goto Error;
+    }
     for (i = 0; i < 5 * histogram_image_size; ++i) {
       HuffmanTreeCode* const codes = &huffman_codes[i];
       StoreHuffmanCode(bw, huff_tree, tokens, codes);
