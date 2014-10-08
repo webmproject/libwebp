@@ -640,7 +640,7 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
       if (histogram_argb == NULL) goto Error;
       for (i = 0; i < histogram_image_xysize; ++i) {
         const int symbol_index = histogram_symbols[i] & 0xffff;
-        histogram_argb[i] = 0xff000000 | (symbol_index << 8);
+        histogram_argb[i] = (symbol_index << 8);
         if (symbol_index >= max_index) {
           max_index = symbol_index + 1;
         }
