@@ -253,7 +253,7 @@ static void ITransform(const uint8_t* ref,
 
 // Load all 4x4 pixels into a single uint8x16_t variable.
 static uint8x16_t Load4x4(const uint8_t* src) {
-  uint32x4_t out = { 0, 0, 0, 0 };
+  uint32x4_t out = vdupq_n_u32(0);
   out = vld1q_lane_u32((const uint32_t*)(src + 0 * BPS), out, 0);
   out = vld1q_lane_u32((const uint32_t*)(src + 1 * BPS), out, 1);
   out = vld1q_lane_u32((const uint32_t*)(src + 2 * BPS), out, 2);
@@ -771,7 +771,7 @@ static int SumToInt(uint32x4_t sum) {
 }
 
 static int SSE16x16(const uint8_t* a, const uint8_t* b) {
-  uint32x4_t sum = { 0, 0, 0, 0 };
+  uint32x4_t sum = vdupq_n_u32(0);
   int y;
   for (y = 0; y < 16; ++y) {
     AccumulateSSE16(a + y * BPS, b + y * BPS, &sum);
@@ -780,7 +780,7 @@ static int SSE16x16(const uint8_t* a, const uint8_t* b) {
 }
 
 static int SSE16x8(const uint8_t* a, const uint8_t* b) {
-  uint32x4_t sum = { 0, 0, 0, 0 };
+  uint32x4_t sum = vdupq_n_u32(0);
   int y;
   for (y = 0; y < 8; ++y) {
     AccumulateSSE16(a + y * BPS, b + y * BPS, &sum);
@@ -789,7 +789,7 @@ static int SSE16x8(const uint8_t* a, const uint8_t* b) {
 }
 
 static int SSE8x8(const uint8_t* a, const uint8_t* b) {
-  uint32x4_t sum = { 0, 0, 0, 0 };
+  uint32x4_t sum = vdupq_n_u32(0);
   int y;
   for (y = 0; y < 8; ++y) {
     const uint8x8_t a0 = vld1_u8(a + y * BPS);
