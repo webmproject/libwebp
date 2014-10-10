@@ -65,13 +65,6 @@ static const int kC2 = 35468;
   "ulw              %["#O2"],  64(%[dst])                     \n\t"            \
   "ulw              %["#O3"],  96(%[dst])                     \n\t"
 
-// O - output
-// I - input (macro doesn't change it)
-#define ADD_SUB_HALVES(O0, O1,                                                 \
-                       I0, I1)                                                 \
-  "addq.ph          %["#O0"],   %["#I0"],  %["#I1"]           \n\t"            \
-  "subq.ph          %["#O1"],   %["#I0"],  %["#I1"]           \n\t"
-
 static void TransformDC(const int16_t* in, uint8_t* dst) {
   int temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10;
 
@@ -517,17 +510,7 @@ static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
   FilterLoop24(v + 4, 1, stride, 8, thresh, ithresh, hev_thresh);
 }
 
-#undef OUTPUT_EARLY_CLOBBER_REGS_18
-#undef OUTPUT_EARLY_CLOBBER_REGS_10
-#undef INSERT_HALF_X2
-#undef SRA_16
-#undef LOAD_IN_X2
-#undef ADD_SUB_HALVES
-#undef MUL_SHIFT_SUM
-#undef PACK_2_HALVES_TO_WORD
 #undef LOAD_DST
-#undef CONVERT_2_BYTES_TO_HALF
-#undef SHIFT_R_SUM_X2
 #undef STORE_SAT_SUM_X2
 #undef MUL
 

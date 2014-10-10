@@ -29,6 +29,14 @@ static const int kC2 = 35468;
   "ulw              %["#O2"],  32(%[ref])                     \n\t"            \
   "ulw              %["#O3"],  48(%[ref])                     \n\t"
 
+// temp0[31..16 | 15..0] = temp0[31..16 | 15..0] + temp8[31..16 | 15..0]
+// temp0[31..16 | 15..0] = temp0[31..16 <<(s) 7 | 15..0 <<(s) 7]
+// temp1..temp7 same as temp0
+// precrqu_s.qb.ph temp0, temp1, temp0:
+//   temp0 = temp1[31..24] | temp1[15..8] | temp0[31..24] | temp0[15..8]
+// store temp0 to dst
+// IO - input/output
+// I - input (macro doesn't change it)
 #define STORE_SAT_SUM_X2(IO0, IO1, IO2, IO3, IO4, IO5, IO6, IO7,               \
                          I0, I1, I2, I3, I4, I5, I6, I7)                       \
   "addq.ph          %["#IO0"],  %["#IO0"],  %["#I0"]          \n\t"            \
@@ -128,19 +136,8 @@ static void ITransform(const uint8_t* ref, const int16_t* in, uint8_t* dst,
   }
 }
 
-#undef OUTPUT_EARLY_CLOBBER_REGS_18
-#undef OUTPUT_EARLY_CLOBBER_REGS_10
-#undef INSERT_HALF_X2
-#undef SRA_16
-#undef LOAD_IN_X2
-#undef ADD_SUB_HALVES
-#undef MUL_SHIFT_SUM
-#undef PACK_2_HALVES_TO_WORD
 #undef LOAD_REF
-#undef CONVERT_2_BYTES_TO_HALF
-#undef SHIFT_R_SUM_X2
 #undef STORE_SAT_SUM_X2
-#undef MUL
 
 #endif  // WEBP_USE_MIPS_DSP_R2
 
@@ -152,5 +149,5 @@ extern WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPSdspR2(void);
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
   VP8ITransform = ITransform;
-#endif  // WEBP_USE_MIPS32
+#endif  // WEBP_USE_MIPS_DSP_R2
 }

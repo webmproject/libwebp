@@ -90,6 +90,40 @@ MAP_COLOR_FUNCS(MapAlpha, uint8_t, VP8GetAlphaIndex, VP8GetAlphaValue)
 
 #undef MAP_COLOR_FUNCS
 
+static WEBP_INLINE uint32_t ClampedAddSubtractHalf(uint32_t c0, uint32_t c1,
+                                                   uint32_t c2) {
+  int tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
+  __asm__ volatile (
+   "adduh.qb         %[tmp5], %[c0],   %[c1]       \n\t"
+   "preceu.ph.qbr    %[tmp3], %[c2]                \n\t"
+   "preceu.ph.qbr    %[tmp1], %[tmp5]              \n\t"
+   "preceu.ph.qbl    %[tmp2], %[tmp5]              \n\t"
+   "preceu.ph.qbl    %[tmp4], %[c2]                \n\t"
+   "subq.ph          %[tmp3], %[tmp1], %[tmp3]     \n\t"
+   "subq.ph          %[tmp4], %[tmp2], %[tmp4]     \n\t"
+   "shrl.ph          %[tmp5], %[tmp3], 15          \n\t"
+   "shrl.ph          %[tmp6], %[tmp4], 15          \n\t"
+   "addq.ph          %[tmp3], %[tmp3], %[tmp5]     \n\t"
+   "addq.ph          %[tmp4], %[tmp6], %[tmp4]     \n\t"
+   "shra.ph          %[tmp3], %[tmp3], 1           \n\t"
+   "shra.ph          %[tmp4], %[tmp4], 1           \n\t"
+   "addq.ph          %[tmp1], %[tmp1], %[tmp3]     \n\t"
+   "addq.ph          %[tmp2], %[tmp2], %[tmp4]     \n\t"
+   "shll_s.ph        %[tmp1], %[tmp1], 7           \n\t"
+   "shll_s.ph        %[tmp2], %[tmp2], 7           \n\t"
+   "precrqu_s.qb.ph  %[tmp1], %[tmp2], %[tmp1]     \n\t"
+   : [tmp1]"=&r"(tmp1), [tmp2]"=&r"(tmp2), [tmp3]"=&r"(tmp3),
+     [tmp4]"=&r"(tmp4), [tmp5]"=&r"(tmp5), [tmp6]"=r"(tmp6)
+   : [c0]"r"(c0), [c1]"r"(c1), [c2]"r"(c2)
+   : "memory"
+  );
+  return tmp1;
+}
+
+static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
+  return ClampedAddSubtractHalf(left, top[0], top[-1]);
+}
+
 #endif  // WEBP_USE_MIPS_DSP_R2
 
 //------------------------------------------------------------------------------
@@ -100,6 +134,7 @@ void VP8LDspInitMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
   VP8LMapColor32b = MapARGB;
   VP8LMapColor8b = MapAlpha;
+  VP8LPredictors[13] = Predictor13;
 #endif  // WEBP_USE_MIPS_DSP_R2
 }
 
