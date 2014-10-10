@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//T+A\u003d",
+        "filename": "src/enc/analysis.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-10-10T13:48:11Z",
+      "side": 1,
+      "message": "\u003c\u003d   -\u003e   \u003c\n\n\n(ah! cryptic comment)",
+      "revId": "e45e95dc04d3b8804106a0999cfe7bf771273df0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//T98\u003d",
+        "filename": "src/enc/analysis.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-10-10T13:48:11Z",
+      "side": 1,
+      "message": "could you add a 1-line comment above about the reason for this apparently useless check?",
+      "revId": "e45e95dc04d3b8804106a0999cfe7bf771273df0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
