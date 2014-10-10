@@ -700,6 +700,7 @@ extern void VP8EncDspInitSSE2(void);
 extern void VP8EncDspInitAVX2(void);
 extern void VP8EncDspInitNEON(void);
 extern void VP8EncDspInitMIPS32(void);
+extern void VP8EncDspInitMIPSdspR2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
   VP8DspInit();  // common inverse transforms
@@ -746,6 +747,10 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
       VP8EncDspInitMIPS32();
     }
 #endif
+#if defined(WEBP_USE_MIPS_DSP_R2)
+    if (VP8GetCPUInfo(kMIPSdspR2)) {
+      VP8EncDspInitMIPSdspR2();
+    }
+#endif
   }
 }
-

@@ -136,6 +136,7 @@ DSP_ENC_OBJS = \
     src/dsp/enc.o \
     src/dsp/enc_avx2.o \
     src/dsp/enc_mips32.o \
+    src/dsp/enc_mips_dsp_r2.o \
     src/dsp/enc_neon.o \
     src/dsp/enc_sse2.o \
 
@@ -218,6 +219,7 @@ HDRS = \
     src/dec/webpi.h \
     src/dsp/dsp.h \
     src/dsp/lossless.h \
+    src/dsp/mips_macro.h \
     src/dsp/neon.h \
     src/dsp/yuv.h \
     src/dsp/yuv_tables_sse2.h \
