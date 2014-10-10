@@ -13,7 +13,6 @@
 //
 
 #include <assert.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "./backward_references.h"
@@ -199,6 +198,9 @@ static int AnalyzeEntropy(const uint32_t* argb,
   uint32_t last_pix = argb[0];    // so we're sure that pix_diff == 0
 
   VP8LHistogramSet* const histo_set = VP8LAllocateHistogramSet(2, 0);
+  assert(nonpredicted_bits != NULL);
+  assert(predicted_bits != NULL);
+
   if (histo_set == NULL) return 0;
 
   for (y = 0; y < height; ++y) {
@@ -227,11 +229,87 @@ static int AnalyzeEntropy(const uint32_t* argb,
   return 1;
 }
 
+// Check if it would be a good idea to subtract green from red and blue. We
+// only evaluate entropy in red/blue components, don't bother to look at others.
+static int AnalyzeSubtractGreen(const uint32_t* const argb,
+                                int width, int height,
+                                double* const entropy_change_ratio) {
+  int i;
+  double bit_cost_before, bit_cost_after;
+  // Allocate histogram with cache_bits = 1.
+  VP8LHistogram* const histo = VP8LAllocateHistogram(1);
+  assert(entropy_change_ratio != NULL);
+
+  if (histo == NULL) return 0;
+  for (i = 0; i < width * height; ++i) {
+    const uint32_t c = argb[i];
+    ++histo->red_[(c >> 16) & 0xff];
+    ++histo->blue_[(c >> 0) & 0xff];
+  }
+  bit_cost_before = VP8LHistogramEstimateBits(histo);
+
+  VP8LHistogramInit(histo, 1);
+  for (i = 0; i < width * height; ++i) {
+    const uint32_t c = argb[i];
+    const int green = (c >> 8) & 0xff;
+    ++histo->red_[((c >> 16) - green) & 0xff];
+    ++histo->blue_[((c >> 0) - green) & 0xff];
+  }
+  bit_cost_after = VP8LHistogramEstimateBits(histo);
+  VP8LFreeHistogram(histo);
+
+  *entropy_change_ratio = bit_cost_after / (bit_cost_before + 1e-6);
+  return 1;
+}
+
+static int GetHistoBits(int method, int use_palette, int width, int height) {
+  const int hist_size = VP8LGetHistogramSize(MAX_COLOR_CACHE_BITS);
+  // Make tile size a function of encoding method (Range: 0 to 6).
+  int histo_bits = (use_palette ? 9 : 7) - method;
+  while (1) {
+    const int huff_image_size = VP8LSubSampleSize(width, histo_bits) *
+                                VP8LSubSampleSize(height, histo_bits);
+    if ((uint64_t)huff_image_size * hist_size <= MAX_HUFF_IMAGE_SIZE) break;
+    ++histo_bits;
+  }
+  return (histo_bits < MIN_HUFFMAN_BITS) ? MIN_HUFFMAN_BITS :
+         (histo_bits > MAX_HUFFMAN_BITS) ? MAX_HUFFMAN_BITS : histo_bits;
+}
+
+static int GetTransformBits(int method, int histo_bits) {
+  const int max_transform_bits = (method < 4) ? 6 : (method > 4) ? 4 : 5;
+  return (histo_bits > max_transform_bits) ? max_transform_bits : histo_bits;
+}
+
+static int GetCacheBits(int use_palette, float quality) {
+  // Color cache is disabled for compression at lower quality or when a palette
+  // is used.
+  return (use_palette || (quality <= 25.f)) ? 0 : 7;
+}
+
+static int EvalSubtractGreenForPalette(int palette_size, float quality) {
+  // Evaluate non-palette encoding (subtract green, prediction transforms etc)
+  // for palette size in the mid-range (17-96) as for larger number of colors,
+  // the benefit from switching to non-palette is not much.
+  // Non-palette transforms are little CPU intensive, hence don't evaluate them
+  // for lower (<= 25) quality.
+  const int min_colors_non_palette = 17;
+  const int max_colors_non_palette = 96;
+  const float min_quality_non_palette = 26.f;
+  return (palette_size >= min_colors_non_palette) &&
+         (palette_size <= max_colors_non_palette) &&
+         (quality >= min_quality_non_palette);
+}
+
 static int AnalyzeAndInit(VP8LEncoder* const enc, WebPImageHint image_hint) {
   const WebPPicture* const pic = enc->pic_;
   const int width = pic->width;
   const int height = pic->height;
   const int pix_cnt = width * height;
+  const WebPConfig* const config = enc->config_;
+  const int method = config->method;
+  const float quality = config->quality;
+  double subtract_green_score = 10.f;
   // we round the block size up, so we're guaranteed to have
   // at max MAX_REFS_BLOCK_PER_IMAGE blocks used:
   int refs_block_size = (pix_cnt - 1) / MAX_REFS_BLOCK_PER_IMAGE + 1;
@@ -240,11 +318,40 @@ static int AnalyzeAndInit(VP8LEncoder* const enc, WebPImageHint image_hint) {
   enc->use_palette_ =
       AnalyzeAndCreatePalette(pic, enc->palette_, &enc->palette_size_);
 
+  // TODO(vikasa): Evaluate and update/remove the handling for hint=GRAPH.
   if (image_hint == WEBP_HINT_GRAPH) {
     if (enc->use_palette_ && enc->palette_size_ < MAX_COLORS_FOR_GRAPH) {
       enc->use_palette_ = 0;
     }
   }
+
+  if (!enc->use_palette_ ||
+      EvalSubtractGreenForPalette(enc->palette_size_, quality)) {
+    if (!AnalyzeSubtractGreen(pic->argb, width, height,
+                              &subtract_green_score)) {
+      return 0;
+    }
+  }
+
+  // Evaluate histogram bits based on the original value of use_palette flag.
+  enc->histo_bits_ = GetHistoBits(method, enc->use_palette_, pic->width,
+                                  pic->height);
+  enc->transform_bits_ = GetTransformBits(method, enc->histo_bits_);
+
+  enc->use_subtract_green_ = 0;
+  if (enc->use_palette_) {
+    // Check if other transforms (subtract green etc) are potentially better.
+    if (subtract_green_score < 0.80f) {
+      enc->use_subtract_green_ = 1;
+      enc->use_palette_ = 0;
+    }
+  } else {
+    // Non-palette case, check if subtract-green optimizes the entropy.
+    if (subtract_green_score < 1.0f) {
+      enc->use_subtract_green_ = 1;
+    }
+  }
+  enc->cache_bits_ = GetCacheBits(enc->use_palette_, quality);
 
   if (!enc->use_palette_) {
     if (image_hint == WEBP_HINT_PHOTO) {
@@ -807,45 +914,12 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
 // -----------------------------------------------------------------------------
 // Transforms
 
-// Check if it would be a good idea to subtract green from red and blue. We
-// only impact entropy in red/blue components, don't bother to look at others.
-static WebPEncodingError EvalAndApplySubtractGreen(VP8LEncoder* const enc,
-                                                   int width, int height,
+static void ApplySubtractGreen(VP8LEncoder* const enc, int width, int height,
                                                    VP8LBitWriter* const bw) {
-  if (!enc->use_palette_) {
-    int i;
-    const uint32_t* const argb = enc->argb_;
-    double bit_cost_before, bit_cost_after;
-    // Allocate histogram with cache_bits = 1.
-    VP8LHistogram* const histo = VP8LAllocateHistogram(1);
-    if (histo == NULL) return VP8_ENC_ERROR_OUT_OF_MEMORY;
-    for (i = 0; i < width * height; ++i) {
-      const uint32_t c = argb[i];
-      ++histo->red_[(c >> 16) & 0xff];
-      ++histo->blue_[(c >> 0) & 0xff];
-    }
-    bit_cost_before = VP8LHistogramEstimateBits(histo);
-
-    VP8LHistogramInit(histo, 1);
-    for (i = 0; i < width * height; ++i) {
-      const uint32_t c = argb[i];
-      const int green = (c >> 8) & 0xff;
-      ++histo->red_[((c >> 16) - green) & 0xff];
-      ++histo->blue_[((c >> 0) - green) & 0xff];
-    }
-    bit_cost_after = VP8LHistogramEstimateBits(histo);
-    VP8LFreeHistogram(histo);
-
-    // Check if subtracting green yields low entropy.
-    enc->use_subtract_green_ = (bit_cost_after < bit_cost_before);
-    if (enc->use_subtract_green_) {
       VP8LWriteBits(bw, 1, TRANSFORM_PRESENT);
       VP8LWriteBits(bw, 2, SUBTRACT_GREEN);
       VP8LSubtractGreenFromBlueAndRed(enc->argb_, width * height);
     }
-  }
-  return VP8_ENC_OK;
-}
 
 static WebPEncodingError ApplyPredictFilter(const VP8LEncoder* const enc,
                                             int width, int height, int quality,
@@ -1101,42 +1175,6 @@ static WebPEncodingError EncodePalette(VP8LBitWriter* const bw,
 }
 
 // -----------------------------------------------------------------------------
-
-static int GetHistoBits(int method, int use_palette, int width, int height) {
-  const int hist_size = VP8LGetHistogramSize(MAX_COLOR_CACHE_BITS);
-  // Make tile size a function of encoding method (Range: 0 to 6).
-  int histo_bits = (use_palette ? 9 : 7) - method;
-  while (1) {
-    const int huff_image_size = VP8LSubSampleSize(width, histo_bits) *
-                                VP8LSubSampleSize(height, histo_bits);
-    if ((uint64_t)huff_image_size * hist_size <= MAX_HUFF_IMAGE_SIZE) break;
-    ++histo_bits;
-  }
-  return (histo_bits < MIN_HUFFMAN_BITS) ? MIN_HUFFMAN_BITS :
-         (histo_bits > MAX_HUFFMAN_BITS) ? MAX_HUFFMAN_BITS : histo_bits;
-}
-
-static int GetTransformBits(int method, int histo_bits) {
-  const int max_transform_bits = (method < 4) ? 6 : (method > 4) ? 4 : 5;
-  return (histo_bits > max_transform_bits) ? max_transform_bits : histo_bits;
-}
-
-static int GetCacheBits(float quality) {
-  return (quality <= 25.f) ? 0 : 7;
-}
-
-static void FinishEncParams(VP8LEncoder* const enc) {
-  const WebPConfig* const config = enc->config_;
-  const WebPPicture* const pic = enc->pic_;
-  const int method = config->method;
-  const float quality = config->quality;
-  const int use_palette = enc->use_palette_;
-  enc->histo_bits_ = GetHistoBits(method, use_palette, pic->width, pic->height);
-  enc->transform_bits_ = GetTransformBits(method, enc->histo_bits_);
-  enc->cache_bits_ = GetCacheBits(quality);
-}
-
-// -----------------------------------------------------------------------------
 // VP8LEncoder
 
 static VP8LEncoder* VP8LEncoderNew(const WebPConfig* const config,
@@ -1192,13 +1230,9 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
     goto Error;
   }
 
-  FinishEncParams(enc);
-
   if (enc->use_palette_) {
     err = EncodePalette(bw, enc);
     if (err != VP8_ENC_OK) goto Error;
-    // Color cache is disabled for palette.
-    enc->cache_bits_ = 0;
   }
 
   // In case image is not packed.
@@ -1217,8 +1251,9 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   // ---------------------------------------------------------------------------
   // Apply transforms and write transform data.
 
-  err = EvalAndApplySubtractGreen(enc, enc->current_width_, height, bw);
-  if (err != VP8_ENC_OK) goto Error;
+  if (enc->use_subtract_green_) {
+    ApplySubtractGreen(enc, enc->current_width_, height, bw);
+  }
 
   if (enc->use_predict_) {
     err = ApplyPredictFilter(enc, enc->current_width_, height, quality, bw);
