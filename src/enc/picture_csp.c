@@ -978,9 +978,11 @@ int WebPPictureARGBToYUVA(WebPPicture* picture, WebPEncCSP colorspace) {
   return PictureARGBToYUVA(picture, colorspace, 0.f, 0);
 }
 
+#if WEBP_ENCODER_ABI_VERSION > 0x0204
 int WebPPictureSmartARGBToYUVA(WebPPicture* picture) {
   return PictureARGBToYUVA(picture, WEBP_YUV420, 0.f, 1);
 }
+#endif
 
 //------------------------------------------------------------------------------
 // call for YUVA -> ARGB conversion

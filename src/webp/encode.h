@@ -462,12 +462,14 @@ WEBP_EXTERN(int) WebPPictureARGBToYUVA(WebPPicture* picture,
 WEBP_EXTERN(int) WebPPictureARGBToYUVADithered(
     WebPPicture* picture, WebPEncCSP colorspace, float dithering);
 
+#if WEBP_ENCODER_ABI_VERSION > 0x0204
 // Performs 'smart' RGBA->YUVA420 downsampling and colorspace conversion.
 // Downsampling is handled with extra care in case of color clipping. This
 // method is roughly 2x slower than WebPPictureARGBToYUVA() but produces better
 // YUV representation.
 // Returns false in case of error.
 WEBP_EXTERN(int) WebPPictureSmartARGBToYUVA(WebPPicture* picture);
+#endif
 
 // Converts picture->yuv to picture->argb and sets picture->use_argb to true.
 // The input format must be YUV_420 or YUV_420A.
