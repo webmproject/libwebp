@@ -1,3 +1,11 @@
+- 10/13/14: version 0.4.2
+  This is a binary compatible release.
+  * Android / gcc build fixes
+  * (Windows) fix reading from stdin and writing to stdout
+  * gif2webp: miscellaneous fixes
+  * fix 'alpha-leak' with lossy compression (issue #220)
+  * the lossless bitstream spec has been amended to reflect the current code
+
 - 7/24/14: version 0.4.1
   This is a binary compatible release.
   * AArch64 (arm64) & MIPS support/optimizations
