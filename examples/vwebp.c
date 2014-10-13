@@ -377,7 +377,7 @@ static void Help(void) {
          "  -nofancy ..... don't use the fancy YUV420 upscaler\n"
          "  -nofilter .... disable in-loop filtering\n"
          "  -dither <int>  dithering strength (0..100), default=50\n"
-#if WEBP_DECODER_ABI_VERSION > 0x0203
+#if WEBP_DECODER_ABI_VERSION > 0x0204
          "  -noalphadither disable alpha plane dithering\n"
 #endif
          "  -mt .......... use multi-threading\n"
@@ -402,7 +402,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
   config->options.dithering_strength = 50;
-#if WEBP_DECODER_ABI_VERSION > 0x0203
+#if WEBP_DECODER_ABI_VERSION > 0x0204
   config->options.alpha_dithering_strength = 100;
 #endif
   kParams.use_color_profile = 1;
@@ -417,7 +417,7 @@ int main(int argc, char *argv[]) {
       config->options.no_fancy_upsampling = 1;
     } else if (!strcmp(argv[c], "-nofilter")) {
       config->options.bypass_filtering = 1;
-#if WEBP_DECODER_ABI_VERSION > 0x0203
+#if WEBP_DECODER_ABI_VERSION > 0x0204
     } else if (!strcmp(argv[c], "-noalphadither")) {
       config->options.alpha_dithering_strength = 0;
 #endif

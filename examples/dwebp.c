@@ -557,7 +557,7 @@ static void Help(void) {
          "  -nofilter .... disable in-loop filtering\n"
          "  -nodither .... disable dithering\n"
          "  -dither <d> .. dithering strength (in 0..100)\n"
-#if WEBP_DECODER_ABI_VERSION > 0x0203
+#if WEBP_DECODER_ABI_VERSION > 0x0204
          "  -alpha_dither  use alpha-plane dithering if needed\n"
 #endif
          "  -mt .......... use multi-threading\n"
@@ -628,7 +628,7 @@ int main(int argc, const char *argv[]) {
       format = YUV;
     } else if (!strcmp(argv[c], "-mt")) {
       config.options.use_threads = 1;
-#if WEBP_DECODER_ABI_VERSION > 0x0203
+#if WEBP_DECODER_ABI_VERSION > 0x0204
     } else if (!strcmp(argv[c], "-alpha_dither")) {
       config.options.alpha_dithering_strength = 100;
 #endif
