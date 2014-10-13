@@ -1126,7 +1126,7 @@ int main(int argc, const char *argv[]) {
   return_value = 0;
 
  Error:
-#if WEBP_ENCODER_ABI_VERSION > 0x0202
+#if WEBP_ENCODER_ABI_VERSION > 0x0203
   WebPMemoryWriterClear(&memory_writer);
 #else
   free(memory_writer.mem);

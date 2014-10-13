@@ -571,7 +571,7 @@ int WebPPictureAllocYUVA(WebPPicture* const picture, int width, int height);
 
 //------------------------------------------------------------------------------
 
-#if WEBP_ENCODER_ABI_VERSION <= 0x0202
+#if WEBP_ENCODER_ABI_VERSION <= 0x0203
 void WebPMemoryWriterClear(WebPMemoryWriter* writer);
 #endif
 

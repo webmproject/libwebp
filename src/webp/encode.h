@@ -231,14 +231,14 @@ struct WebPMemoryWriter {
 // The following must be called first before any use.
 WEBP_EXTERN(void) WebPMemoryWriterInit(WebPMemoryWriter* writer);
 
-#if WEBP_ENCODER_ABI_VERSION > 0x0202
+#if WEBP_ENCODER_ABI_VERSION > 0x0203
 // The following must be called to deallocate writer->mem memory. The 'writer'
 // object itself is not deallocated.
 WEBP_EXTERN(void) WebPMemoryWriterClear(WebPMemoryWriter* writer);
 #endif
 // The custom writer to be used with WebPMemoryWriter as custom_ptr. Upon
 // completion, writer.mem and writer.size will hold the coded data.
-#if WEBP_ENCODER_ABI_VERSION > 0x0202
+#if WEBP_ENCODER_ABI_VERSION > 0x0203
 // writer.mem must be freed by calling WebPMemoryWriterClear.
 #else
 // writer.mem must be freed by calling 'free(writer.mem)'.

@@ -475,7 +475,7 @@ static WebPEncodingError SetFrame(const WebPConfig* const config,
     // TODO(later): Perhaps a rough SSIM/PSNR produced by the encoder should
     // also be a criteria, in addition to sizes.
     if (mem1.size <= mem2.size) {
-#if WEBP_ENCODER_ABI_VERSION > 0x0202
+#if WEBP_ENCODER_ABI_VERSION > 0x0203
       WebPMemoryWriterClear(&mem2);
 #else
       free(mem2.mem);
@@ -483,7 +483,7 @@ static WebPEncodingError SetFrame(const WebPConfig* const config,
 #endif
       GetEncodedData(&mem1, encoded_data);
     } else {
-#if WEBP_ENCODER_ABI_VERSION > 0x0202
+#if WEBP_ENCODER_ABI_VERSION > 0x0203
       WebPMemoryWriterClear(&mem1);
 #else
       free(mem1.mem);
@@ -497,7 +497,7 @@ static WebPEncodingError SetFrame(const WebPConfig* const config,
   return error_code;
 
  Err:
-#if WEBP_ENCODER_ABI_VERSION > 0x0202
+#if WEBP_ENCODER_ABI_VERSION > 0x0203
   WebPMemoryWriterClear(&mem1);
   WebPMemoryWriterClear(&mem2);
 #else
