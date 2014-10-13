@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "July 22, 2014"
+.TH CWEBP 1 "Oct 13, 2014"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -38,6 +38,13 @@ Print the version number (as major.minor.revision) and exit.
 .BI \-q " float
 Specify the compression factor for RGB channels between 0 and 100. The default
 is 75.
+.br
+In case of lossy compression (default), a small factor produces a smaller file
+with lower quality. Best quality is achieved by using a value of 100.
+.br
+In case of lossless compression (specified by the \-lossless option), a small
+factor enables faster compression speed, but produces a larger file. Maximum
+compression is achieved by using a value of 100.
 .\" TODO(jzern): restore post-v0.4.1
 .\" .TP
 .\" .BI \-z " int
@@ -47,13 +54,6 @@ is 75.
 .\" This option is actually a shortcut for some predefined settings for quality
 .\" and method. If options \-q  or \-m are subsequently used, they will invalidate
 .\" the effect of this \-z option.
-.\" .br
-.\" In case of lossy compression (default), a small factor produces a smaller file
-.\" with lower quality. Best quality is achieved by using a value of 100.
-.\" .br
-.\" In case of lossless compression (specified by the \-lossless option), a small
-.\" factor enables faster compression speed, but produces a larger file. Maximum
-.\" compression is achieved by using a value of 100.
 .TP
 .BI \-alpha_q " int
 Specify the compression factor for alpha compression between 0 and 100.
