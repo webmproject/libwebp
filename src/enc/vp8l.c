@@ -915,11 +915,11 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
 // Transforms
 
 static void ApplySubtractGreen(VP8LEncoder* const enc, int width, int height,
-                                                   VP8LBitWriter* const bw) {
-      VP8LWriteBits(bw, 1, TRANSFORM_PRESENT);
-      VP8LWriteBits(bw, 2, SUBTRACT_GREEN);
-      VP8LSubtractGreenFromBlueAndRed(enc->argb_, width * height);
-    }
+                               VP8LBitWriter* const bw) {
+  VP8LWriteBits(bw, 1, TRANSFORM_PRESENT);
+  VP8LWriteBits(bw, 2, SUBTRACT_GREEN);
+  VP8LSubtractGreenFromBlueAndRed(enc->argb_, width * height);
+}
 
 static WebPEncodingError ApplyPredictFilter(const VP8LEncoder* const enc,
                                             int width, int height, int quality,
