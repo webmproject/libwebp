@@ -1,3 +1,57 @@
+eec5f5f enc/vp8enci.h: update version number
+0c1b98d update NEWS
+69b0fc9 update AUTHORS
+857578a bump version to 0.4.2
+9129deb restore encode API compatibility
+f17b95e AssignSegments: quiet -Warray-bounds warning
+9c56c8a enc_neon: initialize vectors w/vdup_n_u32
+a008902 iosbuild: cleanup
+cc6de53 iosbuild: output autoconf req. on failure
+740d765 iosbuild: make iOS 6 the minimum requirement
+403023f iobuild.sh: only install .h files in Headers
+b65727b Premultiply with alpha during U/V downsampling
+8de0deb gif2webp: Background color correction
+f8b7d94 Amend the lossless spec according to issue #205, #206 and #224
+9102a7b Add a WebPExtractAlpha function to dsp
+e407b5d webpmux: simplify InitializeConfig()
+3e70e64 webpmux: fix indent
+be38f1a webpmux: fix exit status on numeric value parse error
+94dadcb webpmux: fix loop_count range check
+40b3a61 examples: warn on invalid numeric parameters
+b7d209a gif2webp: Handle frames with missing  graphic control extension
+bf0eb74 configure: simplify libpng-config invocation
+3740f7d Rectify bug in lossless incremental decoding.
+3ab0a37 make VP8LSetBitPos() set br->eos_ flag
+2e4312b Lossless decoding: fix eos_ flag condition
+e6609ac fix erroneous dec->status_ setting
+5692eae add a fallback to ALPHA_NO_COMPRESSION
+6ecd5bf ExUtilReadFromStdin: (windows) open stdin in bin mode
+4206ac6 webpmux: (windows) open stdout in binary mode
+d40e885 cwebp: (windows) open stdout in binary mode
+4aaf463 example_util: add ExUtilSetBinaryMode
+4c82ff7 webpmux man page: Clarify some title, descriptions and examples
+23d4fb3 dsp/lossless: workaround gcc-4.9 bug on arm
+5af7719 dsp.h: collect gcc/clang version test macros
+90d1124 enc_neon: enable QuantizeBlock for aarch64
+ee78e78 SmartRGBYUV: fix odd-width problem with pixel replication
+c9ac204 fix some MSVC64 warning about float conversion
+f4497a1 cpu: check for _MSC_VER before using msvc inline asm
+e2159fd faster RGB->YUV conversion function (~7% speedup)
+21abaa0 Add smart RGB->YUV conversion option -pre 4
+1a161e2 configure: add work around for gcc-4.9 aarch64 bug
+55b10de MIPS: mips32r2: added optimization for BSwap32
+76d2192 Update PATENTS to reflect s/VP8/WebM/g
+29a9db1 MIPS: detect mips32r6 and disable mips32r1 code
+245c4a6 Correctly use the AC_CANONICAL_* macros
+40aa8b6 cosmetics
+2ddcca5 cosmetics: remove some extraneous 'extern's
+f40dd7c vp8enci.h: cosmetics: fix '*' placement
+4610c9c bit_writer: cosmetics: rename kFlush() -> Flush()
+fc3c175 dsp: detect mips64 & disable mips32 code
+c1a7955 cwebp.1: restore quality description
+57a7e73 correct alpha_dithering_strength ABI check
+6c83157 correct WebPMemoryWriterClear ABI check
+8af2771 update ChangeLog (tag: v0.4.1, 0.4.1)
 f59c0b4 iosbuild.sh: specify optimization flags
 8d34ea3 update ChangeLog (tag: v0.4.1-rc1)
 dbc3da6 makefile.unix: add vwebp.1 to the dist target
@@ -17,7 +71,7 @@ c2fc52e restore encode API compatibility
 793368e restore decode API compatibility
 b8984f3 gif2webp: fix compile with giflib 5.1.0
 222f9b1 gif2webp: simplify giflib version checking
-d2cc61b Extend MakeARGB32() to accept Alpha channel.
+d2cc61b Extend MakeARGB32() to accept Alpha channel. (master)
 4595b62 Merge "use explicit size of kErrorMessages[] arrays"
 157de01 Merge "Actuate memory stats for PRINT_MEMORY_INFO"
 fbda2f4 JPEG decoder: delay conversion to YUV to WebPEncode() call
