@@ -368,11 +368,6 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
     }
     ok &= DeleteVP8Encoder(enc);  // must always be called, even if !ok
   } else {
-    if (config->near_lossless > 0 &&
-        !VP8ApplyNearLossless(pic->width, pic->height,
-                              pic->argb, config->near_lossless)) {
-      return 0;
-    }
     // Make sure we have ARGB samples.
     if (pic->argb == NULL && !WebPPictureYUVAToARGB(pic)) {
       return 0;
