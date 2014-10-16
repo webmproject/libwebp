@@ -1263,9 +1263,9 @@ static void TransformAC3(const int16_t* in, uint8_t* dst) {
 //------------------------------------------------------------------------------
 // Entry point
 
-extern void VP8DspInitNEON(void);
+extern void VP8DspInitNEON(void) WEBP_TSAN_IGNORE_FUNCTION;
 
-void VP8DspInitNEON(void) {
+void VP8DspInitNEON(void) WEBP_TSAN_IGNORE_FUNCTION {
 #if defined(WEBP_USE_NEON)
   VP8Transform = TransformTwo;
   VP8TransformAC3 = TransformAC3;

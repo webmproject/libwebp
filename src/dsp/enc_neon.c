@@ -904,9 +904,9 @@ static int Quantize2Blocks(int16_t in[32], int16_t out[32],
 //------------------------------------------------------------------------------
 // Entry point
 
-extern void VP8EncDspInitNEON(void);
+extern void VP8EncDspInitNEON(void) WEBP_TSAN_IGNORE_FUNCTION;
 
-void VP8EncDspInitNEON(void) {
+void VP8EncDspInitNEON(void) WEBP_TSAN_IGNORE_FUNCTION {
 #if defined(WEBP_USE_NEON)
   VP8ITransform = ITransform;
   VP8FTransform = FTransform;

@@ -80,6 +80,15 @@ extern "C" {
 #endif
 #endif
 
+// This macro prevents thread_sanitizer from reporting known concurrent writes.
+#define WEBP_TSAN_IGNORE_FUNCTION
+#if defined(__has_feature)
+#if __has_feature(thread_sanitizer)
+#undef WEBP_TSAN_IGNORE_FUNCTION
+#define WEBP_TSAN_IGNORE_FUNCTION __attribute__((no_sanitize_thread))
+#endif
+#endif
+
 typedef enum {
   kSSE2,
   kSSE3,
@@ -147,7 +156,8 @@ typedef void (*VP8CHisto)(const uint8_t* ref, const uint8_t* pred,
 extern const int VP8DspScan[16 + 4 + 4];
 extern VP8CHisto VP8CollectHistogram;
 
-void VP8EncDspInit(void);   // must be called before using any of the above
+// must be called before using any of the above
+void VP8EncDspInit(void) WEBP_TSAN_IGNORE_FUNCTION;
 
 //------------------------------------------------------------------------------
 // Decoding
@@ -174,7 +184,8 @@ extern const int8_t* const VP8ksclip1;  // clips [-1020, 1020] to [-128, 127]
 extern const int8_t* const VP8ksclip2;  // clips [-112, 112] to [-16, 15]
 extern const uint8_t* const VP8kclip1;  // clips [-255,511] to [0,255]
 extern const uint8_t* const VP8kabs0;   // abs(x) for x in [-255,255]
-void VP8InitClipTables(void);           // must be called first
+// must be called first
+void VP8InitClipTables(void) WEBP_TSAN_IGNORE_FUNCTION;
 
 // simple filter (only for luma)
 typedef void (*VP8SimpleFilterFunc)(uint8_t* p, int stride, int thresh);
@@ -201,7 +212,7 @@ extern VP8ChromaFilterFunc VP8VFilter8i;  // filtering u and v altogether
 extern VP8ChromaFilterFunc VP8HFilter8i;
 
 // must be called before anything using the above
-void VP8DspInit(void);
+void VP8DspInit(void) WEBP_TSAN_IGNORE_FUNCTION;
 
 //------------------------------------------------------------------------------
 // WebP I/O
@@ -250,11 +261,11 @@ extern WebPYUV444Converter WebPYUV444Converters[/* MODE_LAST */];
 
 // Must be called before using the WebPUpsamplers[] (and for premultiplied
 // colorspaces like rgbA, rgbA4444, etc)
-void WebPInitUpsamplers(void);
+void WebPInitUpsamplers(void) WEBP_TSAN_IGNORE_FUNCTION;
 // Must be called before using WebPSamplers[]
-void WebPInitSamplers(void);
+void WebPInitSamplers(void) WEBP_TSAN_IGNORE_FUNCTION;
 // Must be called before using WebPYUV444Converters[]
-void WebPInitYUV444Converters(void);
+void WebPInitYUV444Converters(void) WEBP_TSAN_IGNORE_FUNCTION;
 
 //------------------------------------------------------------------------------
 // Utilities for processing transparent channel.
@@ -312,7 +323,7 @@ void WebPMultRowC(uint8_t* const ptr, const uint8_t* const alpha,
 void WebPMultARGBRowC(uint32_t* const ptr, int width, int inverse);
 
 // To be called first before using the above.
-void WebPInitAlphaProcessing(void);
+void WebPInitAlphaProcessing(void) WEBP_TSAN_IGNORE_FUNCTION;
 
 #ifdef __cplusplus
 }    // extern "C"

@@ -242,13 +242,13 @@ NEON_UPSAMPLE_FUNC(UpsampleBgraLinePair, Bgra, 4)
 
 //------------------------------------------------------------------------------
 
-extern void WebPInitUpsamplersNEON(void);
+extern void WebPInitUpsamplersNEON(void) WEBP_TSAN_IGNORE_FUNCTION;
 
 #ifdef FANCY_UPSAMPLING
 
 extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
 
-void WebPInitUpsamplersNEON(void) {
+void WebPInitUpsamplersNEON(void) WEBP_TSAN_IGNORE_FUNCTION {
 #if defined(WEBP_USE_NEON)
   WebPUpsamplers[MODE_RGB]  = UpsampleRgbLinePair;
   WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePair;
@@ -262,6 +262,6 @@ void WebPInitUpsamplersNEON(void) {
 #else
 
 // this empty function is to avoid an empty .o
-void WebPInitUpsamplersNEON(void) {}
+void WebPInitUpsamplersNEON(void) WEBP_TSAN_IGNORE_FUNCTION {}
 
 #endif  // FANCY_UPSAMPLING

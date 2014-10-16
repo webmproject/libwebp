@@ -171,9 +171,9 @@ YUV444_FUNC(Yuv444ToRgb565,   VP8YuvToRgb565, 2)
 
 WebPYUV444Converter WebPYUV444Converters[MODE_LAST];
 
-extern void WebPInitYUV444ConvertersMIPSdspR2(void);
+extern void WebPInitYUV444ConvertersMIPSdspR2(void) WEBP_TSAN_IGNORE_FUNCTION;
 
-void WebPInitYUV444Converters(void) {
+void WebPInitYUV444Converters(void) WEBP_TSAN_IGNORE_FUNCTION {
   WebPYUV444Converters[MODE_RGB]       = Yuv444ToRgb;
   WebPYUV444Converters[MODE_RGBA]      = Yuv444ToRgba;
   WebPYUV444Converters[MODE_BGR]       = Yuv444ToBgr;
@@ -198,11 +198,11 @@ void WebPInitYUV444Converters(void) {
 //------------------------------------------------------------------------------
 // Main calls
 
-extern void WebPInitUpsamplersSSE2(void);
-extern void WebPInitUpsamplersNEON(void);
-extern void WebPInitUpsamplersMIPSdspR2(void);
+extern void WebPInitUpsamplersSSE2(void) WEBP_TSAN_IGNORE_FUNCTION;
+extern void WebPInitUpsamplersNEON(void) WEBP_TSAN_IGNORE_FUNCTION;
+extern void WebPInitUpsamplersMIPSdspR2(void) WEBP_TSAN_IGNORE_FUNCTION;
 
-void WebPInitUpsamplers(void) {
+void WebPInitUpsamplers(void) WEBP_TSAN_IGNORE_FUNCTION {
 #ifdef FANCY_UPSAMPLING
   WebPUpsamplers[MODE_RGB]       = UpsampleRgbLinePair;
   WebPUpsamplers[MODE_RGBA]      = UpsampleRgbaLinePair;

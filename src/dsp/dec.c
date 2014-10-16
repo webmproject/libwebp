@@ -689,7 +689,7 @@ extern void VP8DspInitNEON(void);
 extern void VP8DspInitMIPS32(void);
 extern void VP8DspInitMIPSdspR2(void);
 
-void VP8DspInit(void) {
+void VP8DspInit(void) WEBP_TSAN_IGNORE_FUNCTION {
   VP8InitClipTables();
 
   VP8TransformWHT = TransformWHT;

@@ -28,14 +28,14 @@ typedef union {   // handy struct for converting SSE2 registers
 
 #include "./yuv_tables_sse2.h"
 
-void VP8YUVInitSSE2(void) {}
+void VP8YUVInitSSE2(void) WEBP_TSAN_IGNORE_FUNCTION {}
 
 #else
 
 static int done_sse2 = 0;
 static VP8kCstSSE2 VP8kUtoRGBA[256], VP8kVtoRGBA[256], VP8kYtoRGBA[256];
 
-void VP8YUVInitSSE2(void) {
+void VP8YUVInitSSE2(void) WEBP_TSAN_IGNORE_FUNCTION {
   if (!done_sse2) {
     int i;
     for (i = 0; i < 256; ++i) {
@@ -309,9 +309,9 @@ static void YuvToBgrRowSSE2(const uint8_t* y,
 //------------------------------------------------------------------------------
 // Entry point
 
-extern void WebPInitSamplersSSE2(void);
+extern void WebPInitSamplersSSE2(void) WEBP_TSAN_IGNORE_FUNCTION;
 
-void WebPInitSamplersSSE2(void) {
+void WebPInitSamplersSSE2(void) WEBP_TSAN_IGNORE_FUNCTION {
 #if defined(WEBP_USE_SSE2)
   WebPSamplers[MODE_RGB]  = YuvToRgbRowSSE2;
   WebPSamplers[MODE_RGBA] = YuvToRgbaRowSSE2;

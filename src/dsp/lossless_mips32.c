@@ -401,9 +401,9 @@ static void HistogramAdd(const VP8LHistogram* const a,
 //------------------------------------------------------------------------------
 // Entry point
 
-extern void VP8LDspInitMIPS32(void);
+extern void VP8LDspInitMIPS32(void) WEBP_TSAN_IGNORE_FUNCTION;
 
-void VP8LDspInitMIPS32(void) {
+void VP8LDspInitMIPS32(void) WEBP_TSAN_IGNORE_FUNCTION {
 #if defined(WEBP_USE_MIPS32)
   VP8LFastSLog2Slow = FastSLog2Slow;
   VP8LFastLog2Slow = FastLog2Slow;
