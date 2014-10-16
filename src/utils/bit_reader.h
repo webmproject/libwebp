@@ -155,7 +155,7 @@ static WEBP_INLINE void VP8LSetBitPos(VP8LBitReader* const br, int val) {
 }
 
 // Advances the read buffer by 4 bytes to make room for reading next 32 bits.
-// Speed critical, but infrequent part of the code can be non-inligned.
+// Speed critical, but infrequent part of the code can be non-inlined.
 extern void VP8LDoFillBitWindow(VP8LBitReader* const br);
 static WEBP_INLINE void VP8LFillBitWindow(VP8LBitReader* const br) {
   if (br->bit_pos_ >= VP8L_WBITS) VP8LDoFillBitWindow(br);
