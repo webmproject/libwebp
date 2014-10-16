@@ -243,7 +243,19 @@ VP8StatusCode ExUtilDecodeWebPIncremental(
       fprintf(stderr, "Failed during WebPINewDecoder().\n");
       return VP8_STATUS_OUT_OF_MEMORY;
     } else {
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+      size_t size = 0;
+      const size_t incr = 2 + (data_size / 20);
+      while (size < data_size) {
+        size_t next_size = size + (rand() % incr);
+        if (next_size > data_size) next_size = data_size;
+        status = WebPIUpdate(idec, data, next_size);
+        if (status != VP8_STATUS_OK && status != VP8_STATUS_SUSPENDED) break;
+        size = next_size;
+      }
+#else
       status = WebPIUpdate(idec, data, data_size);
+#endif
       WebPIDelete(idec);
     }
   }
