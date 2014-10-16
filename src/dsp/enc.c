@@ -701,7 +701,7 @@ extern void VP8EncDspInitAVX2(void);
 extern void VP8EncDspInitNEON(void);
 extern void VP8EncDspInitMIPS32(void);
 
-void VP8EncDspInit(void) WEBP_TSAN_IGNORE_FUNCTION {
+WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
   VP8DspInit();  // common inverse transforms
   InitTables();
 

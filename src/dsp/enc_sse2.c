@@ -944,9 +944,9 @@ void VP8SetResidualCoeffsSSE2(const int16_t* const coeffs,
 //------------------------------------------------------------------------------
 // Entry point
 
-extern void VP8EncDspInitSSE2(void) WEBP_TSAN_IGNORE_FUNCTION;
+extern WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitSSE2(void);
 
-void VP8EncDspInitSSE2(void) WEBP_TSAN_IGNORE_FUNCTION {
+WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitSSE2(void) {
 #if defined(WEBP_USE_SSE2)
   VP8CollectHistogram = CollectHistogram;
   VP8EncQuantizeBlock = QuantizeBlock;

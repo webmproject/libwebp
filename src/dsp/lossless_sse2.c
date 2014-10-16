@@ -503,9 +503,9 @@ static void HistogramAdd(const VP8LHistogram* const a,
 
 //------------------------------------------------------------------------------
 
-extern void VP8LDspInitSSE2(void) WEBP_TSAN_IGNORE_FUNCTION;
+extern WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitSSE2(void);
 
-void VP8LDspInitSSE2(void) WEBP_TSAN_IGNORE_FUNCTION {
+WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitSSE2(void) {
 #if defined(WEBP_USE_SSE2)
   VP8LPredictors[5] = Predictor5;
   VP8LPredictors[6] = Predictor6;

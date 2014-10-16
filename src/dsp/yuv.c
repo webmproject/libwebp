@@ -26,7 +26,7 @@ int32_t VP8kVToG[256], VP8kUToG[256];
 uint8_t VP8kClip[YUV_RANGE_MAX - YUV_RANGE_MIN];
 uint8_t VP8kClip4Bits[YUV_RANGE_MAX - YUV_RANGE_MIN];
 
-void VP8YUVInit(void) WEBP_TSAN_IGNORE_FUNCTION {
+WEBP_TSAN_IGNORE_FUNCTION void VP8YUVInit(void) {
   int i;
   if (done) {
     return;
@@ -62,7 +62,7 @@ void VP8YUVInit(void) WEBP_TSAN_IGNORE_FUNCTION {
 
 #else
 
-void VP8YUVInit(void) WEBP_TSAN_IGNORE_FUNCTION {}
+WEBP_TSAN_IGNORE_FUNCTION void VP8YUVInit(void) {}
 
 #endif  // WEBP_YUV_USE_TABLE
 
@@ -120,11 +120,11 @@ void WebPSamplerProcessPlane(const uint8_t* y, int y_stride,
 
 WebPSamplerRowFunc WebPSamplers[MODE_LAST];
 
-extern void WebPInitSamplersSSE2(void) WEBP_TSAN_IGNORE_FUNCTION;
-extern void WebPInitSamplersMIPS32(void) WEBP_TSAN_IGNORE_FUNCTION;
-extern void WebPInitSamplersMIPSdspR2(void) WEBP_TSAN_IGNORE_FUNCTION;
+extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersSSE2(void);
+extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersMIPS32(void);
+extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersMIPSdspR2(void);
 
-void WebPInitSamplers(void) WEBP_TSAN_IGNORE_FUNCTION {
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplers(void) {
   WebPSamplers[MODE_RGB]       = YuvToRgbRow;
   WebPSamplers[MODE_RGBA]      = YuvToRgbaRow;
   WebPSamplers[MODE_BGR]       = YuvToBgrRow;

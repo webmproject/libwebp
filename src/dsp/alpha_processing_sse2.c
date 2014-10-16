@@ -282,9 +282,9 @@ static void MultRow(uint8_t* const ptr, const uint8_t* const alpha,
 //------------------------------------------------------------------------------
 // Init function
 
-extern void WebPInitAlphaProcessingSSE2(void) WEBP_TSAN_IGNORE_FUNCTION;
+extern  WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessingSSE2(void);
 
-void WebPInitAlphaProcessingSSE2(void) WEBP_TSAN_IGNORE_FUNCTION {
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessingSSE2(void) {
 #if defined(WEBP_USE_SSE2)
   WebPMultARGBRow = MultARGBRow;
   WebPMultRow = MultRow;

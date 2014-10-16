@@ -215,9 +215,9 @@ UPSAMPLE_FUNC(UpsampleRgb565LinePair,   YuvToRgb565,   2)
 
 #endif  // WEBP_USE_MIPS_DSP_R2
 
-extern void WebPInitUpsamplersMIPSdspR2(void) WEBP_TSAN_IGNORE_FUNCTION;
+extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersMIPSdspR2(void);
 
-void WebPInitUpsamplersMIPSdspR2(void) WEBP_TSAN_IGNORE_FUNCTION {
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
 #ifdef FANCY_UPSAMPLING
   WebPUpsamplers[MODE_RGB]       = UpsampleRgbLinePair;
@@ -259,9 +259,9 @@ YUV444_FUNC(Yuv444ToRgb565,   YuvToRgb565,   2)
 
 #endif  // WEBP_USE_MIPS_DSP_R2
 
-extern void WebPInitYUV444ConvertersMIPSdspR2(void) WEBP_TSAN_IGNORE_FUNCTION;
+extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444ConvertersMIPSdspR2(void);
 
-void WebPInitYUV444ConvertersMIPSdspR2(void) WEBP_TSAN_IGNORE_FUNCTION {
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444ConvertersMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
   WebPYUV444Converters[MODE_RGB]       = Yuv444ToRgb;
   WebPYUV444Converters[MODE_RGBA]      = Yuv444ToRgba;

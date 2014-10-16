@@ -952,9 +952,9 @@ static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
 //------------------------------------------------------------------------------
 // Entry point
 
-extern void VP8DspInitSSE2(void) WEBP_TSAN_IGNORE_FUNCTION;
+extern WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitSSE2(void);
 
-void VP8DspInitSSE2(void) WEBP_TSAN_IGNORE_FUNCTION {
+WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitSSE2(void) {
 #if defined(WEBP_USE_SSE2)
   VP8Transform = Transform;
 #if defined(USE_TRANSFORM_AC3)

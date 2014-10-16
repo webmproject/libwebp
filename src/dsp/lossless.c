@@ -1585,7 +1585,7 @@ extern void VP8LDspInitNEON(void);
 extern void VP8LDspInitMIPS32(void);
 extern void VP8LDspInitMIPSdspR2(void);
 
-void VP8LDspInit(void) WEBP_TSAN_IGNORE_FUNCTION {
+WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
   memcpy(VP8LPredictors, kPredictorsC, sizeof(VP8LPredictors));
 
   VP8LSubtractGreenFromBlueAndRed = VP8LSubtractGreenFromBlueAndRed_C;

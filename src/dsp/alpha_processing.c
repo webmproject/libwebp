@@ -347,7 +347,7 @@ extern void VP8FiltersInitMIPSdspR2(void);
 extern void WebPInitAlphaProcessingMIPSdspR2(void);
 extern void WebPInitAlphaProcessingSSE2(void);
 
-void WebPInitAlphaProcessing(void) WEBP_TSAN_IGNORE_FUNCTION {
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessing(void) {
   WebPMultARGBRow = WebPMultARGBRowC;
   WebPMultRow = WebPMultRowC;
   WebPApplyAlphaMultiply = ApplyAlphaMultiply;

@@ -157,7 +157,7 @@ extern const int VP8DspScan[16 + 4 + 4];
 extern VP8CHisto VP8CollectHistogram;
 
 // must be called before using any of the above
-void VP8EncDspInit(void) WEBP_TSAN_IGNORE_FUNCTION;
+WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void);
 
 //------------------------------------------------------------------------------
 // Decoding
@@ -185,7 +185,7 @@ extern const int8_t* const VP8ksclip2;  // clips [-112, 112] to [-16, 15]
 extern const uint8_t* const VP8kclip1;  // clips [-255,511] to [0,255]
 extern const uint8_t* const VP8kabs0;   // abs(x) for x in [-255,255]
 // must be called first
-void VP8InitClipTables(void) WEBP_TSAN_IGNORE_FUNCTION;
+WEBP_TSAN_IGNORE_FUNCTION void VP8InitClipTables(void);
 
 // simple filter (only for luma)
 typedef void (*VP8SimpleFilterFunc)(uint8_t* p, int stride, int thresh);
@@ -212,7 +212,7 @@ extern VP8ChromaFilterFunc VP8VFilter8i;  // filtering u and v altogether
 extern VP8ChromaFilterFunc VP8HFilter8i;
 
 // must be called before anything using the above
-void VP8DspInit(void) WEBP_TSAN_IGNORE_FUNCTION;
+WEBP_TSAN_IGNORE_FUNCTION void VP8DspInit(void);
 
 //------------------------------------------------------------------------------
 // WebP I/O
@@ -261,11 +261,11 @@ extern WebPYUV444Converter WebPYUV444Converters[/* MODE_LAST */];
 
 // Must be called before using the WebPUpsamplers[] (and for premultiplied
 // colorspaces like rgbA, rgbA4444, etc)
-void WebPInitUpsamplers(void) WEBP_TSAN_IGNORE_FUNCTION;
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplers(void);
 // Must be called before using WebPSamplers[]
-void WebPInitSamplers(void) WEBP_TSAN_IGNORE_FUNCTION;
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplers(void);
 // Must be called before using WebPYUV444Converters[]
-void WebPInitYUV444Converters(void) WEBP_TSAN_IGNORE_FUNCTION;
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444Converters(void);
 
 //------------------------------------------------------------------------------
 // Utilities for processing transparent channel.
@@ -323,7 +323,7 @@ void WebPMultRowC(uint8_t* const ptr, const uint8_t* const alpha,
 void WebPMultARGBRowC(uint32_t* const ptr, int width, int inverse);
 
 // To be called first before using the above.
-void WebPInitAlphaProcessing(void) WEBP_TSAN_IGNORE_FUNCTION;
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessing(void);
 
 #ifdef __cplusplus
 }    // extern "C"
