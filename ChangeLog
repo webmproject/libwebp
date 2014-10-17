@@ -1,3 +1,6 @@
+36cad6a bit_reader.h: cosmetics: fix a typo
+e2ecae6 enc_mips32: workaround gcc-4.9 bug
+243e68d update ChangeLog (tag: v0.4.2-rc2)
 eec5f5f enc/vp8enci.h: update version number
 0c1b98d update NEWS
 69b0fc9 update AUTHORS
@@ -51,7 +54,7 @@ fc3c175 dsp: detect mips64 & disable mips32 code
 c1a7955 cwebp.1: restore quality description
 57a7e73 correct alpha_dithering_strength ABI check
 6c83157 correct WebPMemoryWriterClear ABI check
-8af2771 update ChangeLog (tag: v0.4.1, 0.4.1)
+8af2771 update ChangeLog (tag: v0.4.1, origin/0.4.1, 0.4.1)
 f59c0b4 iosbuild.sh: specify optimization flags
 8d34ea3 update ChangeLog (tag: v0.4.1-rc1)
 dbc3da6 makefile.unix: add vwebp.1 to the dist target
