@@ -826,9 +826,9 @@ VP8LBackwardRefs* VP8LGetBackwardReferences(
         VP8LHistogramCreate(histo, refs_trace, cache_bits);
         bit_cost_trace = VP8LHistogramEstimateBits(histo);
         if (bit_cost_trace < bit_cost_lz77) {
-        best = refs_trace;
+          best = refs_trace;
+        }
       }
-    }
     }
   } else {
     best = refs_rle;
