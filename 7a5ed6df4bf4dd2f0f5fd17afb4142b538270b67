@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//SXU\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-10-21T09:08:38Z",
+      "side": 1,
+      "message": "distance_ptr is an int*",
+      "revId": "7a5ed6df4bf4dd2f0f5fd17afb4142b538270b67",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//SXY\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-10-21T09:08:38Z",
+      "side": 1,
+      "message": "not needed",
+      "revId": "7a5ed6df4bf4dd2f0f5fd17afb4142b538270b67",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
