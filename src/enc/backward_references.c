@@ -245,6 +245,24 @@ static void GetParamsForHashChainFindCopy(int quality, int xsize,
   *iter_limit = (cache_bits > 0) ? iter_neg : iter_neg / 2;
 }
 
+static void HashChainFindOffset(const VP8LHashChain* const p, int base_position,
+                                const uint32_t* const argb, int len,
+                                int window_size, int* const distance_ptr) {
+  const uint32_t* const argb_start = argb + base_position;
+  const int min_pos =
+      (base_position > window_size) ? base_position - window_size : 0;
+  int pos;
+  assert(len <= MAX_LENGTH);
+  for (pos = p->hash_to_first_index_[GetPixPairHash64(argb_start)];
+       pos >= min_pos;
+       pos = p->chain_[pos]) {
+    const int curr_length =
+        FindMatchLength(argb + pos, argb_start, len - 1, len);
+    if (curr_length == len) break;
+  }
+  *distance_ptr = base_position - pos;
+}
+
 static int HashChainFindCopy(const VP8LHashChain* const p,
                              int base_position, int xsize,
                              const uint32_t* const argb, int max_len,
@@ -276,7 +294,7 @@ static int HashChainFindCopy(const VP8LHashChain* const p,
     curr_length = FindMatchLength(argb + pos, argb_start, best_length, max_len);
     if (curr_length < best_length) continue;
 
-    distance = (uint32_t)(base_position - pos);
+    distance = base_position - pos;
     if (best_length < curr_length) {
       best_length = curr_length;
       best_distance = distance;
@@ -688,13 +706,9 @@ static int BackwardReferencesHashChainFollowChosenPath(
   HashChainInit(hash_chain);
   for (ix = 0; ix < chosen_path_size; ++ix, ++size) {
     int offset = 0;
-    int len = 0;
-    int max_len = chosen_path[ix];
-    if (max_len != 1) {
-      HashChainFindCopy(hash_chain, i, xsize, argb, max_len,
-                        window_size, iter_pos, iter_limit,
-                        &offset, &len);
-      assert(len == max_len);
+    const int len = chosen_path[ix];
+    if (len != 1) {
+      HashChainFindOffset(hash_chain, i, argb, len, window_size, &offset);
       BackwardRefsCursorAdd(refs, PixOrCopyCreateCopy(offset, len));
       if (use_color_cache) {
         for (k = 0; k < len; ++k) {
