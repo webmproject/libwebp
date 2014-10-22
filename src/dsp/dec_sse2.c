@@ -947,6 +947,128 @@ static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
   Store16x4(&p1, &p0, &q0, &q1, u, v, stride);
 }
 
+//------------------------------------------------------------------------------
+// 4x4 predictions
+
+#define DST(x, y) dst[(x) + (y) * BPS]
+#define AVG3(a, b, c) (((a) + 2 * (b) + (c) + 2) >> 2)
+
+// We use the following 8b-arithmetic tricks:
+//     (a + 2 * b + c + 2) >> 2 = (AC + b + 1) >> 1
+//   where: AC = (a + c) >> 1 = [(a + c + 1) >> 1] - [(a^c) & 1]
+// and:
+//     (a + 2 * b + c + 2) >> 2 = (AB + BC + 1) >> 1 - (ab|bc)&lsb
+//   where: AC = (a + b + 1) >> 1,   BC = (b + c + 1) >> 1
+//   and ab = a ^ b, bc = b ^ c, lsb = (AC^BC)&1
+
+static void VE4(uint8_t* dst) {    // vertical
+  const __m128i one = _mm_set1_epi8(1);
+  const __m128i ABCDEFG = _mm_loadl_epi64((__m128i*)(dst - BPS - 1));
+  const __m128i BCDEFG_ = _mm_srli_si128(ABCDEFG, 1);
+  const __m128i CDEFG__ = _mm_srli_si128(ABCDEFG, 2);
+  const __m128i a = _mm_avg_epu8(ABCDEFG, CDEFG__);
+  const __m128i lsb = _mm_and_si128(_mm_xor_si128(ABCDEFG, CDEFG__), one);
+  const __m128i b = _mm_subs_epu8(a, lsb);
+  const __m128i avg = _mm_avg_epu8(b, BCDEFG_);
+  const uint32_t vals = _mm_cvtsi128_si32(avg);
+  int i;
+  for (i = 0; i < 4; ++i) {
+    *(uint32_t*)(dst + i * BPS) = vals;
+  }
+}
+
+static void LD4(uint8_t* dst) {   // Down-Left
+  const __m128i one = _mm_set1_epi8(1);
+  const __m128i ABCDEFGH = _mm_loadl_epi64((__m128i*)(dst - BPS));
+  const __m128i BCDEFGH0 = _mm_srli_si128(ABCDEFGH, 1);
+  const __m128i CDEFGH00 = _mm_srli_si128(ABCDEFGH, 2);
+  const __m128i CDEFGHH0 = _mm_insert_epi16(CDEFGH00, dst[-BPS + 7], 3);
+  const __m128i avg1 = _mm_avg_epu8(ABCDEFGH, CDEFGHH0);
+  const __m128i lsb = _mm_and_si128(_mm_xor_si128(ABCDEFGH, CDEFGHH0), one);
+  const __m128i avg2 = _mm_subs_epu8(avg1, lsb);
+  const __m128i abcdefg = _mm_avg_epu8(avg2, BCDEFGH0);
+  *(uint32_t*)(dst + 0 * BPS) = _mm_cvtsi128_si32(               abcdefg    );
+  *(uint32_t*)(dst + 1 * BPS) = _mm_cvtsi128_si32(_mm_srli_si128(abcdefg, 1));
+  *(uint32_t*)(dst + 2 * BPS) = _mm_cvtsi128_si32(_mm_srli_si128(abcdefg, 2));
+  *(uint32_t*)(dst + 3 * BPS) = _mm_cvtsi128_si32(_mm_srli_si128(abcdefg, 3));
+}
+
+static void VR4(uint8_t* dst) {   // Vertical-Right
+  const __m128i one = _mm_set1_epi8(1);
+  const int I = dst[-1 + 0 * BPS];
+  const int J = dst[-1 + 1 * BPS];
+  const int K = dst[-1 + 2 * BPS];
+  const int X = dst[-1 - BPS];
+  const __m128i XABCD = _mm_loadl_epi64((__m128i*)(dst - BPS - 1));
+  const __m128i ABCD0 = _mm_srli_si128(XABCD, 1);
+  const __m128i abcd = _mm_avg_epu8(XABCD, ABCD0);
+  const __m128i _XABCD = _mm_slli_si128(XABCD, 1);
+  const __m128i IXABCD = _mm_insert_epi16(_XABCD, I | (X << 8), 0);
+  const __m128i avg1 = _mm_avg_epu8(IXABCD, ABCD0);
+  const __m128i lsb = _mm_and_si128(_mm_xor_si128(IXABCD, ABCD0), one);
+  const __m128i avg2 = _mm_subs_epu8(avg1, lsb);
+  const __m128i efgh = _mm_avg_epu8(avg2, XABCD);
+  *(uint32_t*)(dst + 0 * BPS) = _mm_cvtsi128_si32(               abcd    );
+  *(uint32_t*)(dst + 1 * BPS) = _mm_cvtsi128_si32(               efgh    );
+  *(uint32_t*)(dst + 2 * BPS) = _mm_cvtsi128_si32(_mm_slli_si128(abcd, 1));
+  *(uint32_t*)(dst + 3 * BPS) = _mm_cvtsi128_si32(_mm_slli_si128(efgh, 1));
+
+  // these two are hard to implement in SSE2, so we keep the C-version:
+  DST(0, 2) = AVG3(J, I, X);
+  DST(0, 3) = AVG3(K, J, I);
+}
+
+static void VL4(uint8_t* dst) {   // Vertical-Left
+  const __m128i one = _mm_set1_epi8(1);
+  const __m128i ABCDEFGH = _mm_loadl_epi64((__m128i*)(dst - BPS));
+  const __m128i BCDEFGH_ = _mm_srli_si128(ABCDEFGH, 1);
+  const __m128i CDEFGH__ = _mm_srli_si128(ABCDEFGH, 2);
+  const __m128i avg1 = _mm_avg_epu8(ABCDEFGH, BCDEFGH_);
+  const __m128i avg2 = _mm_avg_epu8(CDEFGH__, BCDEFGH_);
+  const __m128i avg3 = _mm_avg_epu8(avg1, avg2);
+  const __m128i lsb1 = _mm_and_si128(_mm_xor_si128(avg1, avg2), one);
+  const __m128i ab = _mm_xor_si128(ABCDEFGH, BCDEFGH_);
+  const __m128i bc = _mm_xor_si128(CDEFGH__, BCDEFGH_);
+  const __m128i abbc = _mm_or_si128(ab, bc);
+  const __m128i lsb2 = _mm_and_si128(abbc, lsb1);
+  const __m128i avg4 = _mm_subs_epu8(avg3, lsb2);
+  const uint32_t extra_out = _mm_cvtsi128_si32(_mm_srli_si128(avg4, 4));
+  *(uint32_t*)(dst + 0 * BPS) = _mm_cvtsi128_si32(               avg1    );
+  *(uint32_t*)(dst + 1 * BPS) = _mm_cvtsi128_si32(               avg4    );
+  *(uint32_t*)(dst + 2 * BPS) = _mm_cvtsi128_si32(_mm_srli_si128(avg1, 1));
+  *(uint32_t*)(dst + 3 * BPS) = _mm_cvtsi128_si32(_mm_srli_si128(avg4, 1));
+
+  // these two are hard to get and irregular
+  DST(3, 2) = (extra_out >> 0) & 0xff;
+  DST(3, 3) = (extra_out >> 8) & 0xff;
+}
+
+static void RD4(uint8_t* dst) {   // Down-right
+  const __m128i one = _mm_set1_epi8(1);
+  const __m128i XABCD = _mm_loadl_epi64((__m128i*)(dst - BPS - 1));
+  const __m128i ____XABCD = _mm_slli_si128(XABCD, 4);
+  const uint32_t I = dst[-1 + 0 * BPS];
+  const uint32_t J = dst[-1 + 1 * BPS];
+  const uint32_t K = dst[-1 + 2 * BPS];
+  const uint32_t L = dst[-1 + 3 * BPS];
+  const __m128i LKJI_____ =
+      _mm_cvtsi32_si128(L | (K << 8) | (J << 16) | (I << 24));
+  const __m128i LKJIXABCD = _mm_or_si128(LKJI_____, ____XABCD);
+  const __m128i KJIXABCD_ = _mm_srli_si128(LKJIXABCD, 1);
+  const __m128i JIXABCD__ = _mm_srli_si128(LKJIXABCD, 2);
+  const __m128i avg1 = _mm_avg_epu8(JIXABCD__, LKJIXABCD);
+  const __m128i lsb = _mm_and_si128(_mm_xor_si128(JIXABCD__, LKJIXABCD), one);
+  const __m128i avg2 = _mm_subs_epu8(avg1, lsb);
+  const __m128i abcdefg = _mm_avg_epu8(avg2, KJIXABCD_);
+  *(uint32_t*)(dst + 3 * BPS) = _mm_cvtsi128_si32(               abcdefg    );
+  *(uint32_t*)(dst + 2 * BPS) = _mm_cvtsi128_si32(_mm_srli_si128(abcdefg, 1));
+  *(uint32_t*)(dst + 1 * BPS) = _mm_cvtsi128_si32(_mm_srli_si128(abcdefg, 2));
+  *(uint32_t*)(dst + 0 * BPS) = _mm_cvtsi128_si32(_mm_srli_si128(abcdefg, 3));
+}
+
+#undef DST
+#undef AVG3
+
 #endif   // WEBP_USE_SSE2
 
 //------------------------------------------------------------------------------
@@ -974,5 +1096,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitSSE2(void) {
   VP8SimpleHFilter16 = SimpleHFilter16;
   VP8SimpleVFilter16i = SimpleVFilter16i;
   VP8SimpleHFilter16i = SimpleHFilter16i;
+
+  VP8PredLuma4[2] = VE4;
+  VP8PredLuma4[4] = RD4;
+  VP8PredLuma4[5] = VR4;
+  VP8PredLuma4[6] = LD4;
+  VP8PredLuma4[7] = VL4;
 #endif   // WEBP_USE_SSE2
 }
