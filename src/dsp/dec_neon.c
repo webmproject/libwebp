@@ -389,9 +389,9 @@ static WEBP_INLINE void Store4x8x2(const uint8x16_t p1, const uint8x16_t p0,
 
 #endif  // !WORK_AROUND_GCC
 
-// Treats 'v' as an uint8x8_t and zero extends to an int16x8_t.
-static WEBP_INLINE int16x8_t ConvertU8ToS16(uint32x2_t v) {
-  return vreinterpretq_s16_u16(vmovl_u8(vreinterpret_u8_u32(v)));
+// Zero extend 'v' to an int16x8_t.
+static WEBP_INLINE int16x8_t ConvertU8ToS16(uint8x8_t v) {
+  return vreinterpretq_s16_u16(vmovl_u8(v));
 }
 
 // Performs unsigned 8b saturation on 'dst01' and 'dst23' storing the result
@@ -423,8 +423,8 @@ static WEBP_INLINE void Add4x4(const int16x8_t row01, const int16x8_t row23,
 
   {
     // Convert to 16b.
-    const int16x8_t dst01_s16 = ConvertU8ToS16(dst01);
-    const int16x8_t dst23_s16 = ConvertU8ToS16(dst23);
+    const int16x8_t dst01_s16 = ConvertU8ToS16(vreinterpret_u8_u32(dst01));
+    const int16x8_t dst23_s16 = ConvertU8ToS16(vreinterpret_u8_u32(dst23));
 
     // Descale with rounding.
     const int16x8_t out01 = vrsraq_n_s16(dst01_s16, row01, 3);
@@ -1261,6 +1261,33 @@ static void TransformAC3(const int16_t* in, uint8_t* dst) {
 //------------------------------------------------------------------------------
 // 4x4
 
+static void TM4(uint8_t* dst) {    // TrueMotion
+  const uint8x8_t TL = vdup_n_u8(dst[-BPS - 1]);  // top-left pixel 'A[-1]'
+  const uint8x8_t T = vld1_u8(dst - BPS);  // top row 'A[0..3]'
+  const int16x8_t d = vreinterpretq_s16_u16(vsubl_u8(T, TL));  // A[c] - A[-1]
+  const int16x8_t l0 = ConvertU8ToS16(vld1_u8(dst + 0 * BPS - 1));  // left edge
+  const int16x8_t l1 = ConvertU8ToS16(vld1_u8(dst + 1 * BPS - 1));
+  const int16x8_t l2 = ConvertU8ToS16(vld1_u8(dst + 2 * BPS - 1));
+  const int16x8_t l3 = ConvertU8ToS16(vld1_u8(dst + 3 * BPS - 1));
+  const int16x8_t L0 = vdupq_lane_s16(vget_low_s16(l0), 0);
+  const int16x8_t L1 = vdupq_lane_s16(vget_low_s16(l1), 0);
+  const int16x8_t L2 = vdupq_lane_s16(vget_low_s16(l2), 0);
+  const int16x8_t L3 = vdupq_lane_s16(vget_low_s16(l3), 0);
+  const int16x8_t r0 = vaddq_s16(L0, d);  // L[r] + A[c] - A[-1]
+  const int16x8_t r1 = vaddq_s16(L1, d);
+  const int16x8_t r2 = vaddq_s16(L2, d);
+  const int16x8_t r3 = vaddq_s16(L3, d);
+  // Saturate and store the result.
+  const uint32x2_t r0_u32 = vreinterpret_u32_u8(vqmovun_s16(r0));
+  const uint32x2_t r1_u32 = vreinterpret_u32_u8(vqmovun_s16(r1));
+  const uint32x2_t r2_u32 = vreinterpret_u32_u8(vqmovun_s16(r2));
+  const uint32x2_t r3_u32 = vreinterpret_u32_u8(vqmovun_s16(r3));
+  vst1_lane_u32((uint32_t*)(dst + 0 * BPS), r0_u32, 0);
+  vst1_lane_u32((uint32_t*)(dst + 1 * BPS), r1_u32, 0);
+  vst1_lane_u32((uint32_t*)(dst + 2 * BPS), r2_u32, 0);
+  vst1_lane_u32((uint32_t*)(dst + 3 * BPS), r3_u32, 0);
+}
+
 static void VE4(uint8_t* dst) {    // vertical
   // NB: avoid vld1_u64 here as an alignment hint may be added -> SIGBUS.
   const uint64x1_t A0 = vreinterpret_u64_u8(vld1_u8(dst - BPS - 1));  // top row
@@ -1327,6 +1354,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitNEON(void) {
   VP8SimpleVFilter16i = SimpleVFilter16i;
   VP8SimpleHFilter16i = SimpleHFilter16i;
 
+  VP8PredLuma4[1] = TM4;
   VP8PredLuma4[2] = VE4;
   VP8PredLuma4[6] = LD4;
 #endif   // WEBP_USE_NEON
