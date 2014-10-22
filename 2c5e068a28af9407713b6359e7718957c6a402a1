@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//SGw\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1267,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-10-22T22:56:31Z",
+      "side": 1,
+      "message": "i wonder if some vshr_n_u64(.., 8) would be faster here...",
+      "revId": "2c5e068a28af9407713b6359e7718957c6a402a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//SGY\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1270,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-10-22T22:56:31Z",
+      "side": 1,
+      "message": "these 3 lines could be replaced by a \"b \u003d single vhadd_u8(ABCDEFG, CDEFG__);\" instruction",
+      "revId": "2c5e068a28af9407713b6359e7718957c6a402a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
