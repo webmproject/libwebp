@@ -36,17 +36,17 @@ static void PrintReg(const __m128i r, const char* const name, int size) {
     uint64_t i64[2];
   } tmp;
   tmp.r = r;
-  printf("%s\t: ", name);
+  fprintf(stderr, "%s\t: ", name);
   if (size == 8) {
-    for (n = 0; n < 16; ++n) printf("%.2x ", tmp.i8[n]);
+    for (n = 0; n < 16; ++n) fprintf(stderr, "%.2x ", tmp.i8[n]);
   } else if (size == 16) {
-    for (n = 0; n < 8; ++n) printf("%.4x ", tmp.i16[n]);
+    for (n = 0; n < 8; ++n) fprintf(stderr, "%.4x ", tmp.i16[n]);
   } else if (size == 32) {
-    for (n = 0; n < 4; ++n) printf("%.8x ", tmp.i32[n]);
+    for (n = 0; n < 4; ++n) fprintf(stderr, "%.8x ", tmp.i32[n]);
   } else {
-    for (n = 0; n < 2; ++n) printf("%.16lx ", tmp.i64[n]);
+    for (n = 0; n < 2; ++n) fprintf(stderr, "%.16lx ", tmp.i64[n]);
   }
-  printf("\n");
+  fprintf(stderr, "\n");
 }
 #endif
 
