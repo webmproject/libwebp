@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//SJo\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 458,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-10-22T18:58:36Z",
+      "side": 1,
+      "message": "most of our code associates the \u0027*\u0027 with the type not the variable",
+      "revId": "560c9f1eb5baae2d05edb47df3c4a91e6ed85314",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//SJk\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 564,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-10-22T18:58:36Z",
+      "side": 1,
+      "message": "arithmetic on void*\u0027s is technically undefined;\n\nwhy not cost_model + 1 or cast it to uint8?",
+      "revId": "560c9f1eb5baae2d05edb47df3c4a91e6ed85314",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
