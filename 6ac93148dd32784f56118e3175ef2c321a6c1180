@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//SIY\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-10-22T19:31:24Z",
+      "side": 1,
+      "message": "looks like there\u0027s 2 layers of outer ()s unless I\u0027m misreading. 1 \u003c\u003c cache_bits could have its ()s removed to, either way.",
+      "revId": "6ac93148dd32784f56118e3175ef2c321a6c1180",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
