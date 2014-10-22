@@ -1261,6 +1261,30 @@ static void TransformAC3(const int16_t* in, uint8_t* dst) {
 //------------------------------------------------------------------------------
 // 4x4
 
+static void DC4(uint8_t* dst) {    // DC
+  const uint16x8_t A0 = vmovl_u8(vld1_u8(dst - BPS + 0));
+  const uint16x8_t A1 = vmovl_u8(vld1_u8(dst - BPS + 1));
+  const uint16x8_t A2 = vmovl_u8(vld1_u8(dst - BPS + 2));
+  const uint16x8_t A3 = vmovl_u8(vld1_u8(dst - BPS + 3));
+  const uint16x8_t L0 = vmovl_u8(vld1_u8(dst + 0 * BPS - 1));
+  const uint16x8_t L1 = vmovl_u8(vld1_u8(dst + 1 * BPS - 1));
+  const uint16x8_t L2 = vmovl_u8(vld1_u8(dst + 2 * BPS - 1));
+  const uint16x8_t L3 = vmovl_u8(vld1_u8(dst + 3 * BPS - 1));
+  const uint16x8_t s0 = vaddq_u16(A0, L0);
+  const uint16x8_t s1 = vaddq_u16(A1, L1);
+  const uint16x8_t s2 = vaddq_u16(A2, L2);
+  const uint16x8_t s3 = vaddq_u16(A3, L3);
+  const uint16x8_t s01 = vaddq_u16(s0, s1);
+  const uint16x8_t s23 = vaddq_u16(s2, s3);
+  const uint16x8_t sum = vaddq_u16(s01, s23);
+  const uint8x8_t dc0 = vrshrn_n_u16(sum, 3);  // (sum + 4) >> 3
+  const uint8x8_t dc = vdup_lane_u8(dc0, 0);
+  int i;
+  for (i = 0; i < 4; ++i) {
+    vst1_lane_u32((uint32_t*)(dst + i * BPS), vreinterpret_u32_u8(dc), 0);
+  }
+}
+
 static void TM4(uint8_t* dst) {    // TrueMotion
   const uint8x8_t TL = vdup_n_u8(dst[-BPS - 1]);  // top-left pixel 'A[-1]'
   const uint8x8_t T = vld1_u8(dst - BPS);  // top row 'A[0..3]'
@@ -1354,6 +1378,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitNEON(void) {
   VP8SimpleVFilter16i = SimpleVFilter16i;
   VP8SimpleHFilter16i = SimpleHFilter16i;
 
+  VP8PredLuma4[0] = DC4;
   VP8PredLuma4[1] = TM4;
   VP8PredLuma4[2] = VE4;
   VP8PredLuma4[6] = LD4;
