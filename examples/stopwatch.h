@@ -14,6 +14,8 @@
 #ifndef WEBP_EXAMPLES_STOPWATCH_H_
 #define WEBP_EXAMPLES_STOPWATCH_H_
 
+#include "webp/types.h"
+
 #if defined _WIN32 && !defined __GNUC__
 #include <windows.h>
 
@@ -37,6 +39,7 @@ static WEBP_INLINE double StopwatchReadAndReset(Stopwatch* watch) {
 
 
 #else    /* !_WIN32 */
+#include <string.h>  // memcpy
 #include <sys/time.h>
 
 typedef struct timeval Stopwatch;
