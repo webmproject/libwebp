@@ -34,6 +34,24 @@
       "revId": "fe395f0e4dc6a94c681a030ccaf37cbd9af59c5f",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//SBU\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1285,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-10-23T12:59:49Z",
+      "side": 1,
+      "message": "what about using \"or(and(BCDEFGH0, 0xff \u003c\u003c 48), CDEFGH00)\" ?",
+      "parentUuid": "AAAAdn//SBc\u003d",
+      "revId": "fe395f0e4dc6a94c681a030ccaf37cbd9af59c5f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
