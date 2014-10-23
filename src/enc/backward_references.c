@@ -453,9 +453,9 @@ Error:
 typedef struct {
   double alpha_[VALUES_IN_BYTE];
   double red_[VALUES_IN_BYTE];
-  double literal_[PIX_OR_COPY_CODES_MAX];
   double blue_[VALUES_IN_BYTE];
   double distance_[NUM_DISTANCE_CODES];
+  double* literal_;
 } CostModel;
 
 static int BackwardReferencesTraceBackwards(
@@ -547,7 +547,12 @@ static int BackwardReferencesHashChainDistanceOnly(
   const int use_color_cache = (cache_bits > 0);
   float* const cost =
       (float*)WebPSafeMalloc(pix_count, sizeof(*cost));
-  CostModel* cost_model = (CostModel*)WebPSafeMalloc(1ULL, sizeof(*cost_model));
+  const size_t literal_array_size = sizeof(double) *
+      (NUM_LITERAL_CODES + NUM_LENGTH_CODES +
+       ((cache_bits > 0) ? (1 << cache_bits) : 0));
+  const size_t cost_model_size = sizeof(CostModel) + literal_array_size;
+  CostModel* const cost_model =
+      (CostModel*)WebPSafeMalloc(1ULL, cost_model_size);
   VP8LColorCache hashers;
   const int min_distance_code = 2;  // TODO(vikasa): tune as function of quality
   int window_size = WINDOW_SIZE;
@@ -556,6 +561,7 @@ static int BackwardReferencesHashChainDistanceOnly(
 
   if (cost == NULL || cost_model == NULL) goto Error;
 
+  cost_model->literal_ = (double*)(cost_model + 1);
   if (use_color_cache) {
     cc_init = VP8LColorCacheInit(&hashers, cache_bits);
     if (!cc_init) goto Error;

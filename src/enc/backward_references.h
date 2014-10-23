@@ -26,10 +26,6 @@ extern "C" {
 // Having 9 instead of 11 only removes about 0.25 % of compression density.
 #define MAX_COLOR_CACHE_BITS 9
 
-// Max ever number of codes we'll use:
-#define PIX_OR_COPY_CODES_MAX \
-    (NUM_LITERAL_CODES + NUM_LENGTH_CODES + (1 << MAX_COLOR_CACHE_BITS))
-
 // -----------------------------------------------------------------------------
 // PixOrCopy
 
