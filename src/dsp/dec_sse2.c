@@ -963,13 +963,13 @@ static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
 
 static void VE4(uint8_t* dst) {    // vertical
   const __m128i one = _mm_set1_epi8(1);
-  const __m128i ABCDEFG = _mm_loadl_epi64((__m128i*)(dst - BPS - 1));
-  const __m128i BCDEFG_ = _mm_srli_si128(ABCDEFG, 1);
-  const __m128i CDEFG__ = _mm_srli_si128(ABCDEFG, 2);
-  const __m128i a = _mm_avg_epu8(ABCDEFG, CDEFG__);
-  const __m128i lsb = _mm_and_si128(_mm_xor_si128(ABCDEFG, CDEFG__), one);
+  const __m128i ABCDEFGH = _mm_loadl_epi64((__m128i*)(dst - BPS - 1));
+  const __m128i BCDEFGH0 = _mm_srli_si128(ABCDEFGH, 1);
+  const __m128i CDEFGH00 = _mm_srli_si128(ABCDEFGH, 2);
+  const __m128i a = _mm_avg_epu8(ABCDEFGH, CDEFGH00);
+  const __m128i lsb = _mm_and_si128(_mm_xor_si128(ABCDEFGH, CDEFGH00), one);
   const __m128i b = _mm_subs_epu8(a, lsb);
-  const __m128i avg = _mm_avg_epu8(b, BCDEFG_);
+  const __m128i avg = _mm_avg_epu8(b, BCDEFGH0);
   const uint32_t vals = _mm_cvtsi128_si32(avg);
   int i;
   for (i = 0; i < 4; ++i) {
