@@ -1317,11 +1317,11 @@ static void VE4(uint8_t* dst) {    // vertical
   const uint64x1_t A0 = vreinterpret_u64_u8(vld1_u8(dst - BPS - 1));  // top row
   const uint64x1_t A1 = vshr_n_u64(A0, 8);
   const uint64x1_t A2 = vshr_n_u64(A0, 16);
-  const uint8x8_t ABCDEFG = vreinterpret_u8_u64(A0);
-  const uint8x8_t BCDEFG_ = vreinterpret_u8_u64(A1);
-  const uint8x8_t CDEFG__ = vreinterpret_u8_u64(A2);
-  const uint8x8_t b = vhadd_u8(ABCDEFG, CDEFG__);
-  const uint8x8_t avg = vrhadd_u8(b, BCDEFG_);
+  const uint8x8_t ABCDEFGH = vreinterpret_u8_u64(A0);
+  const uint8x8_t BCDEFGH0 = vreinterpret_u8_u64(A1);
+  const uint8x8_t CDEFGH00 = vreinterpret_u8_u64(A2);
+  const uint8x8_t b = vhadd_u8(ABCDEFGH, CDEFGH00);
+  const uint8x8_t avg = vrhadd_u8(b, BCDEFGH0);
   int i;
   for (i = 0; i < 4; ++i) {
     vst1_lane_u32((uint32_t*)(dst + i * BPS), vreinterpret_u32_u8(avg), 0);
