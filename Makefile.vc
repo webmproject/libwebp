@@ -27,7 +27,7 @@ PLATFORM_LDFLAGS = /SAFESEH
 NOLOGO     = /nologo
 CCNODBG    = cl.exe $(NOLOGO) /O2 /DNDEBUG
 CCDEBUG    = cl.exe $(NOLOGO) /Od /Gm /Zi /D_DEBUG /RTC1
-CFLAGS     = /Isrc $(NOLOGO) /W3 /EHsc /c /GS
+CFLAGS     = /Isrc $(NOLOGO) /W3 /EHsc /c
 CFLAGS     = $(CFLAGS) /DWIN32 /D_CRT_SECURE_NO_WARNINGS /DWIN32_LEAN_AND_MEAN
 CFLAGS     = $(CFLAGS) /DHAVE_WINCODEC_H /DWEBP_USE_THREAD
 LDFLAGS    = /LARGEADDRESSAWARE /MANIFEST /NXCOMPAT /DYNAMICBASE
@@ -54,6 +54,11 @@ AVX2_FLAGS = /arch:AVX2
 !IF "$(RTLIBCFG)" == "static"
 RTLIB  = /MT
 RTLIBD = /MTd
+!ELSE IF "$(RTLIBCFG)" == "legacy"
+RTLIBCFG = static
+RTLIB  = /MT
+RTLIBD = /MTd
+CFLAGS = $(CFLAGS) /GS- /arch:IA32
 !ELSE
 RTLIB   = /MD
 RTLIBD  = /MDd
@@ -139,6 +144,7 @@ CFGSET = TRUE
 !MESSAGE - all                            - build (de)mux-based targets for CFG
 !MESSAGE
 !MESSAGE RTLIBCFG controls the runtime library linkage - 'static' or 'dynamic'.
+!MESSAGE   'legacy' will produce a Windows 2000 compatible library.
 !MESSAGE OBJDIR is the path where you like to build (obj, bins, etc.),
 !MESSAGE   defaults to ..\obj
 
