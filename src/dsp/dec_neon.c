@@ -1258,6 +1258,25 @@ static void TransformAC3(const int16_t* in, uint8_t* dst) {
 }
 #undef MUL
 
+//------------------------------------------------------------------------------
+// 4x4
+
+static void VE4(uint8_t* dst) {    // vertical
+  // NB: avoid vld1_u64 here as an alignment hint may be added -> SIGBUS.
+  const uint64x1_t A0 = vreinterpret_u64_u8(vld1_u8(dst - BPS - 1));  // top row
+  const uint64x1_t A1 = vshr_n_u64(A0, 8);
+  const uint64x1_t A2 = vshr_n_u64(A0, 16);
+  const uint8x8_t ABCDEFG = vreinterpret_u8_u64(A0);
+  const uint8x8_t BCDEFG_ = vreinterpret_u8_u64(A1);
+  const uint8x8_t CDEFG__ = vreinterpret_u8_u64(A2);
+  const uint8x8_t b = vhadd_u8(ABCDEFG, CDEFG__);
+  const uint8x8_t avg = vrhadd_u8(b, BCDEFG_);
+  int i;
+  for (i = 0; i < 4; ++i) {
+    vst1_lane_u32((uint32_t*)(dst + i * BPS), vreinterpret_u32_u8(avg), 0);
+  }
+}
+
 #endif   // WEBP_USE_NEON
 
 //------------------------------------------------------------------------------
@@ -1288,5 +1307,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitNEON(void) {
   VP8SimpleHFilter16 = SimpleHFilter16;
   VP8SimpleVFilter16i = SimpleVFilter16i;
   VP8SimpleHFilter16i = SimpleHFilter16i;
+
+  VP8PredLuma4[2] = VE4;
 #endif   // WEBP_USE_NEON
 }
