@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include "utils/utils.h"
 #include "webp/encode.h"
 #include "./gif2webp_util.h"
 
@@ -293,14 +294,17 @@ struct WebPFrameCache {
 
   WebPFrameRect prev_orig_rect;  // Previous input (e.g. GIF) frame rectangle.
   WebPFrameRect prev_webp_rect;  // Previous WebP frame rectangle.
-  WebPMuxAnimDispose prev_orig_dispose;  // Previous input dispose method.
+  FrameDisposeMethod prev_orig_dispose;  // Previous input dispose method.
   int prev_candidate_undecided;  // True if sub-frame vs keyframe decision
                                  // hasn't been made for the previous frame yet.
 
-  WebPPicture prev_canvas;       // Previous canvas (NOT disposed).
-  WebPPicture curr_canvas;       // Current canvas (NOT disposed).
+  WebPPicture curr_canvas;           // Current canvas (NOT disposed).
+  WebPPicture curr_canvas_tmp;       // Temporary storage for current canvas.
+  WebPPicture prev_canvas;           // Previous canvas (NOT disposed).
   WebPPicture prev_canvas_disposed;  // Previous canvas disposed to background.
-  WebPPicture curr_canvas_tmp;   // Temporary storage for current canvas.
+  WebPPicture prev_to_prev_canvas_disposed;  // Previous to previous canvas
+                                             // (disposed as per its original
+                                             // dispose method).
   int is_first_frame;        // True if no frames have been added to the cache
                              // since WebPFrameCacheNew().
 };
@@ -317,7 +321,7 @@ static void CacheReset(WebPFrameCache* const cache) {
 
 WebPFrameCache* WebPFrameCacheNew(int width, int height,
                                   size_t kmin, size_t kmax, int allow_mixed) {
-  WebPFrameCache* cache = (WebPFrameCache*)malloc(sizeof(*cache));
+  WebPFrameCache* cache = (WebPFrameCache*)WebPSafeCalloc(1, sizeof(*cache));
   if (cache == NULL) return NULL;
   CacheReset(cache);
   // sanity init, so we can call WebPFrameCacheDelete():
@@ -327,22 +331,27 @@ WebPFrameCache* WebPFrameCacheNew(int width, int height,
   cache->is_first_frame = 1;
 
   // Picture buffers.
-  if (!WebPPictureInit(&cache->prev_canvas) ||
-      !WebPPictureInit(&cache->curr_canvas) ||
+  if (!WebPPictureInit(&cache->curr_canvas) ||
+      !WebPPictureInit(&cache->curr_canvas_tmp) ||
+      !WebPPictureInit(&cache->prev_canvas) ||
       !WebPPictureInit(&cache->prev_canvas_disposed) ||
-      !WebPPictureInit(&cache->curr_canvas_tmp)) {
+      !WebPPictureInit(&cache->prev_to_prev_canvas_disposed)) {
     return NULL;
   }
-  cache->prev_canvas.width = width;
-  cache->prev_canvas.height = height;
-  cache->prev_canvas.use_argb = 1;
-  if (!WebPPictureAlloc(&cache->prev_canvas) ||
-      !WebPPictureCopy(&cache->prev_canvas, &cache->curr_canvas) ||
-      !WebPPictureCopy(&cache->prev_canvas, &cache->prev_canvas_disposed) ||
-      !WebPPictureCopy(&cache->prev_canvas, &cache->curr_canvas_tmp)) {
+  cache->curr_canvas.width = width;
+  cache->curr_canvas.height = height;
+  cache->curr_canvas.use_argb = 1;
+  if (!WebPPictureAlloc(&cache->curr_canvas) ||
+      !WebPPictureCopy(&cache->curr_canvas, &cache->curr_canvas_tmp) ||
+      !WebPPictureCopy(&cache->curr_canvas, &cache->prev_canvas) ||
+      !WebPPictureCopy(&cache->curr_canvas, &cache->prev_canvas_disposed) ||
+      !WebPPictureCopy(&cache->curr_canvas,
+                       &cache->prev_to_prev_canvas_disposed)) {
     goto Err;
   }
   WebPUtilClearPic(&cache->prev_canvas, NULL);
+  WebPUtilClearPic(&cache->prev_canvas_disposed, NULL);
+  WebPUtilClearPic(&cache->prev_to_prev_canvas_disposed, NULL);
 
   // Cache data.
   cache->allow_mixed = allow_mixed;
@@ -351,8 +360,8 @@ WebPFrameCache* WebPFrameCacheNew(int width, int height,
   cache->count_since_key_frame = 0;
   assert(kmax > kmin);
   cache->size = kmax - kmin + 1;  // One extra storage for previous frame.
-  cache->encoded_frames =
-      (EncodedFrame*)calloc(cache->size, sizeof(*cache->encoded_frames));
+  cache->encoded_frames = (EncodedFrame*)WebPSafeCalloc(
+      cache->size, sizeof(*cache->encoded_frames));
   if (cache->encoded_frames == NULL) goto Err;
 
   return cache;  // All OK.
@@ -369,13 +378,14 @@ void WebPFrameCacheDelete(WebPFrameCache* const cache) {
       for (i = 0; i < cache->size; ++i) {
         FrameRelease(&cache->encoded_frames[i]);
       }
-      free(cache->encoded_frames);
+      WebPSafeFree(cache->encoded_frames);
     }
-    WebPPictureFree(&cache->prev_canvas);
     WebPPictureFree(&cache->curr_canvas);
-    WebPPictureFree(&cache->prev_canvas_disposed);
     WebPPictureFree(&cache->curr_canvas_tmp);
-    free(cache);
+    WebPPictureFree(&cache->prev_canvas);
+    WebPPictureFree(&cache->prev_canvas_disposed);
+    WebPPictureFree(&cache->prev_to_prev_canvas_disposed);
+    WebPSafeFree(cache);
   }
 }
 
@@ -451,18 +461,23 @@ static int GetColorCount(const WebPPicture* const pic) {
 #undef HASH_SIZE
 #undef HASH_RIGHT_SHIFT
 
-static void DisposeFullFrame(WebPMuxAnimDispose dispose_method,
-                             WebPPicture* const frame) {
-  if (dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
-    WebPUtilClearPic(frame, NULL);
-  }
-}
-
-static void DisposeFrameRectangle(WebPMuxAnimDispose dispose_method,
-                                  const WebPFrameRect* const gif_rect,
-                                  WebPPicture* const frame) {
-  if (dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
-    WebPUtilClearPic(frame, gif_rect);
+static void DisposeFrameRectangle(int dispose_method,
+                                  const WebPFrameRect* const rect,
+                                  const WebPPicture* const prev_canvas,
+                                  WebPPicture* const curr_canvas) {
+  assert(rect != NULL);
+  if (dispose_method == FRAME_DISPOSE_BACKGROUND) {
+    WebPUtilClearPic(curr_canvas, rect);
+  } else if (dispose_method == FRAME_DISPOSE_RESTORE_PREVIOUS) {
+    const int src_stride = prev_canvas->argb_stride;
+    const uint32_t* const src =
+        prev_canvas->argb + rect->x_offset + rect->y_offset * src_stride;
+    const int dst_stride = curr_canvas->argb_stride;
+    uint32_t* const dst =
+        curr_canvas->argb + rect->x_offset + rect->y_offset * dst_stride;
+    assert(prev_canvas != NULL);
+    CopyPlane((uint8_t*)src, 4 * src_stride, (uint8_t*)dst, 4 * dst_stride,
+              4 * rect->width, rect->height);
   }
 }
 
@@ -536,9 +551,8 @@ typedef struct {
 // Generates a candidate encoded frame given a picture and metadata.
 static WebPEncodingError EncodeCandidate(WebPPicture* const sub_frame,
                                          const WebPFrameRect* const rect,
-                                         const WebPMuxFrameInfo* const info,
                                          const WebPConfig* const config,
-                                         int use_blending,
+                                         int use_blending, int duration,
                                          Candidate* const candidate) {
   WebPEncodingError error_code = VP8_ENC_OK;
   assert(candidate != NULL);
@@ -546,11 +560,13 @@ static WebPEncodingError EncodeCandidate(WebPPicture* const sub_frame,
 
   // Set frame rect and info.
   candidate->rect = *rect;
-  candidate->info = *info;
+  candidate->info.id = WEBP_CHUNK_ANMF;
   candidate->info.x_offset = rect->x_offset;
   candidate->info.y_offset = rect->y_offset;
+  candidate->info.dispose_method = WEBP_MUX_DISPOSE_NONE;  // Set later.
   candidate->info.blend_method =
       use_blending ? WEBP_MUX_BLEND : WEBP_MUX_NO_BLEND;
+  candidate->info.duration = duration;
 
   // Encode picture.
   WebPMemoryWriterInit(&candidate->mem);
@@ -612,8 +628,7 @@ enum {
 static WebPEncodingError GenerateCandidates(
     WebPFrameCache* const cache, Candidate candidates[CANDIDATE_COUNT],
     WebPMuxAnimDispose dispose_method, int is_lossless, int is_key_frame,
-    const WebPFrameRect* const rect, WebPPicture* sub_frame,
-    const WebPMuxFrameInfo* const info,
+    const WebPFrameRect* const rect, WebPPicture* sub_frame, int duration,
     const WebPConfig* const config_ll, const WebPConfig* const config_lossy) {
   WebPEncodingError error_code = VP8_ENC_OK;
   const int is_dispose_none = (dispose_method == WEBP_MUX_DISPOSE_NONE);
@@ -622,10 +637,10 @@ static WebPEncodingError GenerateCandidates(
   Candidate* const candidate_lossy = is_dispose_none
                                      ? &candidates[LOSSY_DISP_NONE]
                                      : &candidates[LOSSY_DISP_BG];
-  const WebPPicture* const prev_canvas =
-      is_dispose_none ? &cache->prev_canvas : &cache->prev_canvas_disposed;
   WebPPicture* const curr_canvas = &cache->curr_canvas;
   WebPPicture* const curr_canvas_tmp = &cache->curr_canvas_tmp;
+  const WebPPicture* const prev_canvas =
+      is_dispose_none ? &cache->prev_canvas : &cache->prev_canvas_disposed;
   const int use_blending =
       !is_key_frame &&
       IsBlendingPossible(prev_canvas, curr_canvas, rect);
@@ -648,8 +663,8 @@ static WebPEncodingError GenerateCandidates(
       curr_canvas_saved = 1;
       IncreaseTransparency(prev_canvas, rect, curr_canvas);
     }
-    error_code = EncodeCandidate(sub_frame, rect, info, config_ll, use_blending,
-                                 candidate_ll);
+    error_code = EncodeCandidate(sub_frame, rect, config_ll, use_blending,
+                                 duration, candidate_ll);
     if (error_code != VP8_ENC_OK) return error_code;
     if (use_blending) {
       CopyPixels(curr_canvas_tmp, curr_canvas);  // restore
@@ -666,8 +681,8 @@ static WebPEncodingError GenerateCandidates(
       }
       FlattenSimilarBlocks(prev_canvas, rect, curr_canvas);
     }
-    error_code = EncodeCandidate(sub_frame, rect, info, config_lossy,
-                                 use_blending, candidate_lossy);
+    error_code = EncodeCandidate(sub_frame, rect, config_lossy, use_blending,
+                                 duration, candidate_lossy);
     if (error_code != VP8_ENC_OK) return error_code;
     if (!is_key_frame) {
       CopyPixels(curr_canvas_tmp, curr_canvas);  // restore
@@ -732,16 +747,15 @@ static void PickBestCandidate(WebPFrameCache* const cache,
 // (lossy/lossless), dispose methods, blending methods etc to encode the current
 // frame and outputs the best one in 'encoded_frame'.
 static WebPEncodingError SetFrame(WebPFrameCache* const cache,
-                                  const WebPConfig* const config,
-                                  const WebPMuxFrameInfo* const info,
+                                  const WebPConfig* const config, int duration,
                                   const WebPFrameRect* const orig_rect,
                                   int is_key_frame,
                                   EncodedFrame* const encoded_frame) {
   int i;
   WebPEncodingError error_code = VP8_ENC_OK;
+  WebPPicture* const curr_canvas = &cache->curr_canvas;
   const WebPPicture* const prev_canvas = &cache->prev_canvas;
   WebPPicture* const prev_canvas_disposed = &cache->prev_canvas_disposed;
-  WebPPicture* const curr_canvas = &cache->curr_canvas;
   Candidate candidates[CANDIDATE_COUNT];
   const int is_lossless = config->lossless;
 
@@ -782,7 +796,7 @@ static WebPEncodingError SetFrame(WebPFrameCache* const cache,
     // Change-rectangle assuming previous frame was DISPOSE_BACKGROUND.
     CopyPixels(prev_canvas, prev_canvas_disposed);
     DisposeFrameRectangle(WEBP_MUX_DISPOSE_BACKGROUND, &cache->prev_webp_rect,
-                          prev_canvas_disposed);
+                          NULL, prev_canvas_disposed);
     GetSubRect(prev_canvas_disposed, curr_canvas, orig_rect, is_key_frame,
                &rect_bg, &sub_frame_bg);
 
@@ -795,16 +809,17 @@ static WebPEncodingError SetFrame(WebPFrameCache* const cache,
   if (try_dispose_none) {
     error_code = GenerateCandidates(
         cache, candidates, WEBP_MUX_DISPOSE_NONE, is_lossless, is_key_frame,
-        &rect_none, &sub_frame_none, info, &config_ll, &config_lossy);
+        &rect_none, &sub_frame_none, duration, &config_ll, &config_lossy);
     if (error_code != VP8_ENC_OK) goto Err;
   }
 
   if (try_dispose_bg) {
     assert(!cache->is_first_frame);
     assert(dispose_bg_possible);
-    error_code = GenerateCandidates(
-        cache, candidates, WEBP_MUX_DISPOSE_BACKGROUND, is_lossless,
-        is_key_frame, &rect_bg, &sub_frame_bg, info, &config_ll, &config_lossy);
+    error_code =
+        GenerateCandidates(cache, candidates, WEBP_MUX_DISPOSE_BACKGROUND,
+                           is_lossless, is_key_frame, &rect_bg, &sub_frame_bg,
+                           duration, &config_ll, &config_lossy);
     if (error_code != VP8_ENC_OK) goto Err;
   }
 
@@ -843,19 +858,22 @@ static int64_t KeyFramePenalty(const EncodedFrame* const encoded_frame) {
 int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
                            const WebPConfig* const config,
                            const WebPFrameRect* const orig_rect_ptr,
-                           WebPPicture* const frame,
-                           WebPMuxFrameInfo* const info) {
+                           FrameDisposeMethod orig_dispose_method,
+                           int duration, WebPPicture* const frame) {
   // Initialize.
   int ok = 0;
   WebPEncodingError error_code = VP8_ENC_OK;
-  WebPPicture* const prev_canvas = &cache->prev_canvas;
   WebPPicture* const curr_canvas = &cache->curr_canvas;
+  WebPPicture* const prev_canvas = &cache->prev_canvas;
+  WebPPicture* const prev_to_prev_canvas_disposed =
+      &cache->prev_to_prev_canvas_disposed;
+  WebPPicture* const prev_canvas_disposed = &cache->prev_canvas_disposed;
   const size_t position = cache->count;
   EncodedFrame* const encoded_frame = CacheGetFrame(cache, position);
   WebPFrameRect orig_rect;
   assert(position < cache->size);
 
-  if (frame == NULL || info == NULL) {
+  if (frame == NULL) {
     return 0;
   }
 
@@ -882,7 +900,8 @@ int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
     CopyPixels(frame, curr_canvas);
     // Add this as a key frame.
     // Note: we use original rectangle as-is for the first frame.
-    error_code = SetFrame(cache, config, info, &orig_rect, 1, encoded_frame);
+    error_code =
+        SetFrame(cache, config, duration, &orig_rect, 1, encoded_frame);
     if (error_code != VP8_ENC_OK) {
       goto End;
     }
@@ -892,19 +911,21 @@ int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
     cache->count_since_key_frame = 0;
     cache->prev_candidate_undecided = 0;
   } else {
-    // Store previous canvas.
+    // Store previous to previous and previous canvases.
+    CopyPixels(prev_canvas_disposed, prev_to_prev_canvas_disposed);
     CopyPixels(curr_canvas, prev_canvas);
     // Create curr_canvas:
     // * Start with disposed previous canvas.
     // * Then blend 'frame' onto it.
     DisposeFrameRectangle(cache->prev_orig_dispose, &cache->prev_orig_rect,
-                          curr_canvas);
+                          prev_to_prev_canvas_disposed, curr_canvas);
+    CopyPixels(curr_canvas, prev_canvas_disposed);
     BlendPixels(frame, &orig_rect, curr_canvas);
 
     ++cache->count_since_key_frame;
     if (cache->count_since_key_frame <= cache->kmin) {
       // Add this as a frame rectangle.
-      error_code = SetFrame(cache, config, info, NULL, 0, encoded_frame);
+      error_code = SetFrame(cache, config, duration, NULL, 0, encoded_frame);
       if (error_code != VP8_ENC_OK) {
         goto End;
       }
@@ -912,21 +933,16 @@ int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
       cache->flush_count = cache->count - 1;
       cache->prev_candidate_undecided = 0;
     } else {
-      WebPMuxFrameInfo full_image_info;
       int64_t curr_delta;
 
       // Add frame rectangle to cache.
-      error_code = SetFrame(cache, config, info, NULL, 0, encoded_frame);
+      error_code = SetFrame(cache, config, duration, NULL, 0, encoded_frame);
       if (error_code != VP8_ENC_OK) {
         goto End;
       }
 
       // Add key frame to cache, too.
-      full_image_info = *info;
-      full_image_info.x_offset = 0;
-      full_image_info.y_offset = 0;
-      error_code =
-          SetFrame(cache, config, &full_image_info, NULL, 1, encoded_frame);
+      error_code = SetFrame(cache, config, duration, NULL, 1, encoded_frame);
       if (error_code != VP8_ENC_OK) goto End;
 
       // Analyze size difference of the two variants.
@@ -951,12 +967,18 @@ int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
       }
       cache->prev_candidate_undecided = 1;
     }
+    // Recalculate prev_canvas_disposed (as it might have been modified).
+    CopyPixels(prev_canvas, prev_canvas_disposed);
+    DisposeFrameRectangle(cache->prev_orig_dispose, &cache->prev_orig_rect,
+                          prev_to_prev_canvas_disposed, prev_canvas_disposed);
   }
 
-  DisposeFullFrame(info->dispose_method, frame);
+  // Dispose the 'frame'.
+  DisposeFrameRectangle(orig_dispose_method, &orig_rect, prev_canvas_disposed,
+                        frame);
 
   cache->is_first_frame = 0;
-  cache->prev_orig_dispose = info->dispose_method;
+  cache->prev_orig_dispose = orig_dispose_method;
   cache->prev_orig_rect = orig_rect;
   ok = 1;
 

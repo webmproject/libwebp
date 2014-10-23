@@ -46,18 +46,7 @@
 
 //------------------------------------------------------------------------------
 
-static int transparent_index;  // Index of transparent color in the map.
-
-static void ResetFrameInfo(WebPMuxFrameInfo* const info) {
-  WebPDataInit(&info->bitstream);
-  info->x_offset = 0;
-  info->y_offset = 0;
-  info->duration = 0;
-  info->id = WEBP_CHUNK_ANMF;
-  info->dispose_method = WEBP_MUX_DISPOSE_NONE;
-  info->blend_method = WEBP_MUX_BLEND;
-  transparent_index = -1;  // Opaque frame by default.
-}
+static int transparent_index = -1;  // Opaque frame by default.
 
 static void SanitizeKeyFrameIntervals(size_t* const kmin_ptr,
                                       size_t* const kmax_ptr) {
@@ -270,7 +259,8 @@ int main(int argc, const char *argv[]) {
   GifFileType* gif = NULL;
   WebPConfig config;
   WebPPicture frame;
-  WebPMuxFrameInfo info;
+  int duration = 0;
+  FrameDisposeMethod orig_dispose = FRAME_DISPOSE_NONE;
   WebPMuxAnimParams anim = { WHITE_COLOR, 0 };
   WebPFrameCache* cache = NULL;
 
@@ -289,8 +279,6 @@ int main(int argc, const char *argv[]) {
   size_t kmin = 0;
   size_t kmax = 0;
   int allow_mixed = 0;   // If true, each frame can be lossy or lossless.
-
-  ResetFrameInfo(&info);
 
   if (!WebPConfigInit(&config) || !WebPPictureInit(&frame)) {
     fprintf(stderr, "Error! Version mismatch!\n");
@@ -499,7 +487,8 @@ int main(int argc, const char *argv[]) {
           goto End;
         }
 
-        if (!WebPFrameCacheAddFrame(cache, &config, &gif_rect, &frame, &info)) {
+        if (!WebPFrameCacheAddFrame(cache, &config, &gif_rect, orig_dispose,
+                                    duration, &frame)) {
           fprintf(stderr, "Error! Cannot encode frame as WebP\n");
           fprintf(stderr, "Error code: %d\n", frame.error_code);
         }
@@ -515,7 +504,9 @@ int main(int argc, const char *argv[]) {
         // In GIF, graphic control extensions are optional for a frame, so we
         // may not get one before reading the next frame. To handle this case,
         // we reset frame properties to reasonable defaults for the next frame.
-        ResetFrameInfo(&info);
+        orig_dispose = FRAME_DISPOSE_NONE;
+        duration = 0;
+        transparent_index = -1;  // Opaque frame by default.
         break;
       }
       case EXTENSION_RECORD_TYPE: {
@@ -533,20 +524,19 @@ int main(int argc, const char *argv[]) {
             const int dispose = (flags >> GIF_DISPOSE_SHIFT) & GIF_DISPOSE_MASK;
             const int delay = data[2] | (data[3] << 8);  // In 10 ms units.
             if (data[0] != 4) goto End;
-            info.duration = delay * 10;  // Duration is in 1 ms units for WebP.
-            if (dispose == 3) {
-              static int warning_printed = 0;
-              if (!warning_printed) {
-                fprintf(stderr, "WARNING: GIF_DISPOSE_RESTORE unsupported.\n");
-                warning_printed = 1;
-              }
-              // failsafe. TODO(urvang): emulate the correct behaviour by
-              // recoding the whole frame.
-              info.dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
-            } else {
-              info.dispose_method =
-                  (dispose == 2) ? WEBP_MUX_DISPOSE_BACKGROUND
-                                 : WEBP_MUX_DISPOSE_NONE;
+            duration = delay * 10;  // Duration is in 1 ms units for WebP.
+            switch (dispose) {
+              case 3:
+                orig_dispose = FRAME_DISPOSE_RESTORE_PREVIOUS;
+                break;
+              case 2:
+                orig_dispose = FRAME_DISPOSE_BACKGROUND;
+                break;
+              case 1:
+              case 0:
+              default:
+                orig_dispose = FRAME_DISPOSE_NONE;
+                break;
             }
             transparent_index = (flags & GIF_TRANSPARENT_MASK) ? data[4] : -1;
             break;

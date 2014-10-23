@@ -29,6 +29,13 @@ extern "C" {
 
 struct WebPPicture;
 
+// Includes all disposal methods, even the ones not supported by WebP bitstream.
+typedef enum FrameDisposeMethod {
+  FRAME_DISPOSE_NONE,
+  FRAME_DISPOSE_BACKGROUND,
+  FRAME_DISPOSE_RESTORE_PREVIOUS
+} FrameDisposeMethod;
+
 typedef struct {
   int x_offset, y_offset, width, height;
 } WebPFrameRect;
@@ -53,15 +60,15 @@ WebPFrameCache* WebPFrameCacheNew(int width, int height,
 // Release all the frame data from 'cache' and free 'cache'.
 void WebPFrameCacheDelete(WebPFrameCache* const cache);
 
-// Given an image described by 'frame', 'info' and 'orig_rect', optimize it for
-// WebP, encode it and add it to 'cache'. 'orig_rect' can be NULL.
-// This takes care of frame disposal too, according to 'info->dispose_method'.
+// Given an image described by 'frame', 'rect', 'dispose_method' and 'duration',
+// optimize it for WebP, encode it and add it to 'cache'. 'rect' can be NULL.
+// This takes care of frame disposal too, according to 'dispose_method'.
 // Returns false in case of error (and sets frame->error_code accordingly).
 int WebPFrameCacheAddFrame(WebPFrameCache* const cache,
                            const WebPConfig* const config,
-                           const WebPFrameRect* const orig_rect,
-                           WebPPicture* const frame,
-                           WebPMuxFrameInfo* const info);
+                           const WebPFrameRect* const rect,
+                           FrameDisposeMethod dispose_method, int duration,
+                           WebPPicture* const frame);
 
 // Flush the *ready* frames from cache and add them to 'mux'. If 'verbose' is
 // true, prints the information about these frames.
