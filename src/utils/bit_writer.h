@@ -45,8 +45,8 @@ void VP8BitWriterWipeOut(VP8BitWriter* const bw);
 
 int VP8PutBit(VP8BitWriter* const bw, int bit, int prob);
 int VP8PutBitUniform(VP8BitWriter* const bw, int bit);
-void VP8PutValue(VP8BitWriter* const bw, int value, int nb_bits);
-void VP8PutSignedValue(VP8BitWriter* const bw, int value, int nb_bits);
+void VP8PutBits(VP8BitWriter* const bw, uint32_t value, int nb_bits);
+void VP8PutSignedBits(VP8BitWriter* const bw, int value, int nb_bits);
 
 // Appends some bytes to the internal buffer. Data is copied.
 int VP8BitWriterAppend(VP8BitWriter* const bw,
@@ -97,19 +97,19 @@ static WEBP_INLINE size_t VP8LBitWriterNumBytes(VP8LBitWriter* const bw) {
   return (bw->cur_ - bw->buf_) + ((bw->used_ + 7) >> 3);
 }
 
-uint8_t* VP8LBitWriterFinish(VP8LBitWriter* const bw);
-
-// Returns 0 in case of memory allocation error.
+// Returns false in case of memory allocation error.
 int VP8LBitWriterInit(VP8LBitWriter* const bw, size_t expected_size);
-
-void VP8LBitWriterDestroy(VP8LBitWriter* const bw);
+// Finalize the bitstream coding. Returns a pointer to the internal buffer.
+uint8_t* VP8LBitWriterFinish(VP8LBitWriter* const bw);
+// Release any pending memory and zeroes the object.
+void VP8LBitWriterWipeOut(VP8LBitWriter* const bw);
 
 // This function writes bits into bytes in increasing addresses (little endian),
 // and within a byte least-significant-bit first.
 // This function can write up to 32 bits in one go, but VP8LBitReader can only
 // read 24 bits max (VP8L_MAX_NUM_BIT_READ).
 // VP8LBitWriter's error_ flag is set in case of  memory allocation error.
-void VP8LWriteBits(VP8LBitWriter* const bw, int n_bits, uint32_t bits);
+void VP8LPutBits(VP8LBitWriter* const bw, uint32_t bits, int n_bits);
 
 //------------------------------------------------------------------------------
 

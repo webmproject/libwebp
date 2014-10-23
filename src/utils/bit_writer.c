@@ -140,19 +140,20 @@ int VP8PutBitUniform(VP8BitWriter* const bw, int bit) {
   return bit;
 }
 
-void VP8PutValue(VP8BitWriter* const bw, int value, int nb_bits) {
-  int mask;
-  for (mask = 1 << (nb_bits - 1); mask; mask >>= 1)
+void VP8PutBits(VP8BitWriter* const bw, uint32_t value, int nb_bits) {
+  uint32_t mask;
+  assert(nb_bits > 0 && nb_bits < 32);
+  for (mask = 1u << (nb_bits - 1); mask; mask >>= 1)
     VP8PutBitUniform(bw, value & mask);
 }
 
-void VP8PutSignedValue(VP8BitWriter* const bw, int value, int nb_bits) {
+void VP8PutSignedBits(VP8BitWriter* const bw, int value, int nb_bits) {
   if (!VP8PutBitUniform(bw, value != 0))
     return;
   if (value < 0) {
-    VP8PutValue(bw, ((-value) << 1) | 1, nb_bits + 1);
+    VP8PutBits(bw, ((-value) << 1) | 1, nb_bits + 1);
   } else {
-    VP8PutValue(bw, value << 1, nb_bits + 1);
+    VP8PutBits(bw, value << 1, nb_bits + 1);
   }
 }
 
@@ -171,7 +172,7 @@ int VP8BitWriterInit(VP8BitWriter* const bw, size_t expected_size) {
 }
 
 uint8_t* VP8BitWriterFinish(VP8BitWriter* const bw) {
-  VP8PutValue(bw, 0, 9 - bw->nb_bits_);
+  VP8PutBits(bw, 0, 9 - bw->nb_bits_);
   bw->nb_bits_ = 0;   // pad with zeroes
   Flush(bw);
   return bw->buf_;
@@ -242,14 +243,14 @@ int VP8LBitWriterInit(VP8LBitWriter* const bw, size_t expected_size) {
   return VP8LBitWriterResize(bw, expected_size);
 }
 
-void VP8LBitWriterDestroy(VP8LBitWriter* const bw) {
+void VP8LBitWriterWipeOut(VP8LBitWriter* const bw) {
   if (bw != NULL) {
     WebPSafeFree(bw->buf_);
     memset(bw, 0, sizeof(*bw));
   }
 }
 
-void VP8LWriteBits(VP8LBitWriter* const bw, int n_bits, uint32_t bits) {
+void VP8LPutBits(VP8LBitWriter* const bw, uint32_t bits, int n_bits) {
   assert(n_bits <= 32);
   // That's the max we can handle:
   assert(bw->used_ + n_bits <= 2 * VP8L_WRITER_MAX_BITS);

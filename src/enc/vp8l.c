@@ -470,9 +470,9 @@ static void StoreHuffmanTreeOfHuffmanTreeToBitMask(
       break;
     }
   }
-  VP8LWriteBits(bw, 4, codes_to_store - 4);
+  VP8LPutBits(bw, codes_to_store - 4, 4);
   for (i = 0; i < codes_to_store; ++i) {
-    VP8LWriteBits(bw, 3, code_length_bitdepth[kStorageOrder[i]]);
+    VP8LPutBits(bw, code_length_bitdepth[kStorageOrder[i]], 3);
   }
 }
 
@@ -500,16 +500,16 @@ static void StoreHuffmanTreeToBitMask(
   for (i = 0; i < num_tokens; ++i) {
     const int ix = tokens[i].code;
     const int extra_bits = tokens[i].extra_bits;
-    VP8LWriteBits(bw, huffman_code->code_lengths[ix], huffman_code->codes[ix]);
+    VP8LPutBits(bw, huffman_code->codes[ix], huffman_code->code_lengths[ix]);
     switch (ix) {
       case 16:
-        VP8LWriteBits(bw, 2, extra_bits);
+        VP8LPutBits(bw, extra_bits, 2);
         break;
       case 17:
-        VP8LWriteBits(bw, 3, extra_bits);
+        VP8LPutBits(bw, extra_bits, 3);
         break;
       case 18:
-        VP8LWriteBits(bw, 7, extra_bits);
+        VP8LPutBits(bw, extra_bits, 7);
         break;
     }
   }
@@ -529,7 +529,7 @@ static void StoreFullHuffmanCode(VP8LBitWriter* const bw,
   huffman_code.code_lengths = code_length_bitdepth;
   huffman_code.codes = code_length_bitdepth_symbols;
 
-  VP8LWriteBits(bw, 1, 0);
+  VP8LPutBits(bw, 0, 1);
   num_tokens = VP8LCreateCompressedHuffmanTree(tree, tokens, max_tokens);
   {
     uint32_t histogram[CODE_LENGTH_CODES] = { 0 };
@@ -566,13 +566,13 @@ static void StoreFullHuffmanCode(VP8LBitWriter* const bw,
     }
     write_trimmed_length = (trimmed_length > 1 && trailing_zero_bits > 12);
     length = write_trimmed_length ? trimmed_length : num_tokens;
-    VP8LWriteBits(bw, 1, write_trimmed_length);
+    VP8LPutBits(bw, write_trimmed_length, 1);
     if (write_trimmed_length) {
       const int nbits = VP8LBitsLog2Ceiling(trimmed_length - 1);
       const int nbitpairs = (nbits == 0) ? 1 : (nbits + 1) / 2;
-      VP8LWriteBits(bw, 3, nbitpairs - 1);
+      VP8LPutBits(bw, nbitpairs - 1, 3);
       assert(trimmed_length >= 2);
-      VP8LWriteBits(bw, nbitpairs * 2, trimmed_length - 2);
+      VP8LPutBits(bw, trimmed_length - 2, nbitpairs * 2);
     }
     StoreHuffmanTreeToBitMask(bw, tokens, length, &huffman_code);
   }
@@ -599,19 +599,19 @@ static void StoreHuffmanCode(VP8LBitWriter* const bw,
 
   if (count == 0) {   // emit minimal tree for empty cases
     // bits: small tree marker: 1, count-1: 0, large 8-bit code: 0, code: 0
-    VP8LWriteBits(bw, 4, 0x01);
+    VP8LPutBits(bw, 0x01, 4);
   } else if (count <= 2 && symbols[0] < kMaxSymbol && symbols[1] < kMaxSymbol) {
-    VP8LWriteBits(bw, 1, 1);  // Small tree marker to encode 1 or 2 symbols.
-    VP8LWriteBits(bw, 1, count - 1);
+    VP8LPutBits(bw, 1, 1);  // Small tree marker to encode 1 or 2 symbols.
+    VP8LPutBits(bw, count - 1, 1);
     if (symbols[0] <= 1) {
-      VP8LWriteBits(bw, 1, 0);  // Code bit for small (1 bit) symbol value.
-      VP8LWriteBits(bw, 1, symbols[0]);
+      VP8LPutBits(bw, 0, 1);  // Code bit for small (1 bit) symbol value.
+      VP8LPutBits(bw, symbols[0], 1);
     } else {
-      VP8LWriteBits(bw, 1, 1);
-      VP8LWriteBits(bw, 8, symbols[0]);
+      VP8LPutBits(bw, 1, 1);
+      VP8LPutBits(bw, symbols[0], 8);
     }
     if (count == 2) {
-      VP8LWriteBits(bw, 8, symbols[1]);
+      VP8LPutBits(bw, symbols[1], 8);
     }
   } else {
     StoreFullHuffmanCode(bw, huff_tree, tokens, huffman_code);
@@ -623,7 +623,7 @@ static void WriteHuffmanCode(VP8LBitWriter* const bw,
                              int code_index) {
   const int depth = code->code_lengths[code_index];
   const int symbol = code->codes[code_index];
-  VP8LWriteBits(bw, depth, symbol);
+  VP8LPutBits(bw, symbol, depth);
 }
 
 static WebPEncodingError StoreImageToBitMask(
@@ -659,12 +659,12 @@ static WebPEncodingError StoreImageToBitMask(
 
       VP8LPrefixEncode(v->len, &code, &n_bits, &bits);
       WriteHuffmanCode(bw, codes, 256 + code);
-      VP8LWriteBits(bw, n_bits, bits);
+      VP8LPutBits(bw, bits, n_bits);
 
       distance = PixOrCopyDistance(v);
       VP8LPrefixEncode(distance, &code, &n_bits, &bits);
       WriteHuffmanCode(bw, codes + 4, code);
-      VP8LWriteBits(bw, n_bits, bits);
+      VP8LPutBits(bw, bits, n_bits);
     }
     x += PixOrCopyLength(v);
     while (x >= width) {
@@ -716,7 +716,7 @@ static WebPEncodingError EncodeImageNoHuffman(VP8LBitWriter* const bw,
   }
 
   // No color cache, no Huffman image.
-  VP8LWriteBits(bw, 1, 0);
+  VP8LPutBits(bw, 0, 1);
 
   // Find maximum number of symbols for the huffman tree-set.
   for (i = 0; i < 5; ++i) {
@@ -823,15 +823,15 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   histogram_image = NULL;
 
   // Color Cache parameters.
-  VP8LWriteBits(bw, 1, use_color_cache);
+  VP8LPutBits(bw, use_color_cache, 1);
   if (use_color_cache) {
-    VP8LWriteBits(bw, 4, cache_bits);
+    VP8LPutBits(bw, cache_bits, 4);
   }
 
   // Huffman image + meta huffman.
   {
     const int write_histogram_image = (histogram_image_size > 1);
-    VP8LWriteBits(bw, 1, write_histogram_image);
+    VP8LPutBits(bw, write_histogram_image, 1);
     if (write_histogram_image) {
       uint32_t* const histogram_argb =
           (uint32_t*)WebPSafeMalloc(histogram_image_xysize,
@@ -851,7 +851,7 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
       }
       histogram_image_size = max_index;
 
-      VP8LWriteBits(bw, 3, histogram_bits - 2);
+      VP8LPutBits(bw, histogram_bits - 2, 3);
       err = EncodeImageNoHuffman(bw, histogram_argb, hash_chain, refs_array,
                                  VP8LSubSampleSize(width, histogram_bits),
                                  VP8LSubSampleSize(height, histogram_bits),
@@ -916,8 +916,8 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
 
 static void ApplySubtractGreen(VP8LEncoder* const enc, int width, int height,
                                VP8LBitWriter* const bw) {
-  VP8LWriteBits(bw, 1, TRANSFORM_PRESENT);
-  VP8LWriteBits(bw, 2, SUBTRACT_GREEN);
+  VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
+  VP8LPutBits(bw, SUBTRACT_GREEN, 2);
   VP8LSubtractGreenFromBlueAndRed(enc->argb_, width * height);
 }
 
@@ -930,10 +930,10 @@ static WebPEncodingError ApplyPredictFilter(const VP8LEncoder* const enc,
 
   VP8LResidualImage(width, height, pred_bits, enc->argb_, enc->argb_scratch_,
                     enc->transform_data_);
-  VP8LWriteBits(bw, 1, TRANSFORM_PRESENT);
-  VP8LWriteBits(bw, 2, PREDICTOR_TRANSFORM);
+  VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
+  VP8LPutBits(bw, PREDICTOR_TRANSFORM, 2);
   assert(pred_bits >= 2);
-  VP8LWriteBits(bw, 3, pred_bits - 2);
+  VP8LPutBits(bw, pred_bits - 2, 3);
   return EncodeImageNoHuffman(bw, enc->transform_data_,
                               (VP8LHashChain*)&enc->hash_chain_,
                               (VP8LBackwardRefs*)enc->refs_,  // cast const away
@@ -951,10 +951,10 @@ static WebPEncodingError ApplyCrossColorFilter(const VP8LEncoder* const enc,
 
   VP8LColorSpaceTransform(width, height, ccolor_transform_bits, quality,
                           enc->argb_, enc->transform_data_);
-  VP8LWriteBits(bw, 1, TRANSFORM_PRESENT);
-  VP8LWriteBits(bw, 2, CROSS_COLOR_TRANSFORM);
+  VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
+  VP8LPutBits(bw, CROSS_COLOR_TRANSFORM, 2);
   assert(ccolor_transform_bits >= 2);
-  VP8LWriteBits(bw, 3, ccolor_transform_bits - 2);
+  VP8LPutBits(bw, ccolor_transform_bits - 2, 3);
   return EncodeImageNoHuffman(bw, enc->transform_data_,
                               (VP8LHashChain*)&enc->hash_chain_,
                               (VP8LBackwardRefs*)enc->refs_,  // cast const away
@@ -984,14 +984,14 @@ static int WriteImageSize(const WebPPicture* const pic,
   const int height = pic->height - 1;
   assert(width < WEBP_MAX_DIMENSION && height < WEBP_MAX_DIMENSION);
 
-  VP8LWriteBits(bw, VP8L_IMAGE_SIZE_BITS, width);
-  VP8LWriteBits(bw, VP8L_IMAGE_SIZE_BITS, height);
+  VP8LPutBits(bw, width, VP8L_IMAGE_SIZE_BITS);
+  VP8LPutBits(bw, height, VP8L_IMAGE_SIZE_BITS);
   return !bw->error_;
 }
 
 static int WriteRealAlphaAndVersion(VP8LBitWriter* const bw, int has_alpha) {
-  VP8LWriteBits(bw, 1, has_alpha);
-  VP8LWriteBits(bw, VP8L_VERSION_BITS, VP8L_VERSION);
+  VP8LPutBits(bw, has_alpha, 1);
+  VP8LPutBits(bw, VP8L_VERSION, VP8L_VERSION_BITS);
   return !bw->error_;
 }
 
@@ -1160,10 +1160,10 @@ static WebPEncodingError EncodePalette(VP8LBitWriter* const bw,
                palette, palette_size, width, height, xbits, row);
 
   // Save palette to bitstream.
-  VP8LWriteBits(bw, 1, TRANSFORM_PRESENT);
-  VP8LWriteBits(bw, 2, COLOR_INDEXING_TRANSFORM);
+  VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
+  VP8LPutBits(bw, COLOR_INDEXING_TRANSFORM, 2);
   assert(palette_size >= 1);
-  VP8LWriteBits(bw, 8, palette_size - 1);
+  VP8LPutBits(bw, palette_size - 1, 8);
   for (i = palette_size - 1; i >= 1; --i) {
     palette[i] = VP8LSubPixels(palette[i], palette[i - 1]);
   }
@@ -1304,7 +1304,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
     if (err != VP8_ENC_OK) goto Error;
   }
 
-  VP8LWriteBits(bw, 1, !TRANSFORM_PRESENT);  // No more transforms.
+  VP8LPutBits(bw, !TRANSFORM_PRESENT, 1);  // No more transforms.
 
   // ---------------------------------------------------------------------------
   // Estimate the color cache size.
@@ -1435,7 +1435,7 @@ int VP8LEncodeImage(const WebPConfig* const config,
 
  Error:
   if (bw.error_) err = VP8_ENC_ERROR_OUT_OF_MEMORY;
-  VP8LBitWriterDestroy(&bw);
+  VP8LBitWriterWipeOut(&bw);
   if (err != VP8_ENC_OK) {
     WebPEncodingSetError(picture, err);
     return 0;

@@ -491,14 +491,14 @@ void VP8WriteProbas(VP8BitWriter* const bw, const VP8Proba* const probas) {
           const uint8_t p0 = probas->coeffs_[t][b][c][p];
           const int update = (p0 != VP8CoeffsProba0[t][b][c][p]);
           if (VP8PutBit(bw, update, VP8CoeffsUpdateProba[t][b][c][p])) {
-            VP8PutValue(bw, p0, 8);
+            VP8PutBits(bw, p0, 8);
           }
         }
       }
     }
   }
   if (VP8PutBitUniform(bw, probas->use_skip_proba_)) {
-    VP8PutValue(bw, probas->skip_proba_, 8);
+    VP8PutBits(bw, probas->skip_proba_, 8);
   }
 }
 

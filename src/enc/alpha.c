@@ -77,7 +77,7 @@ static int EncodeLossless(const uint8_t* const data, int width, int height,
   WebPPictureFree(&picture);
   ok = ok && !bw->error_;
   if (!ok) {
-    VP8LBitWriterDestroy(bw);
+    VP8LBitWriterWipeOut(bw);
     return 0;
   }
   return 1;
@@ -133,10 +133,10 @@ static int EncodeAlphaInternal(const uint8_t* const data, int width, int height,
       if (output_size > data_size) {
         // compressed size is larger than source! Revert to uncompressed mode.
         method = ALPHA_NO_COMPRESSION;
-        VP8LBitWriterDestroy(&tmp_bw);
+        VP8LBitWriterWipeOut(&tmp_bw);
       }
     } else {
-      VP8LBitWriterDestroy(&tmp_bw);
+      VP8LBitWriterWipeOut(&tmp_bw);
       return 0;
     }
   }
@@ -156,7 +156,7 @@ static int EncodeAlphaInternal(const uint8_t* const data, int width, int height,
   ok = ok && VP8BitWriterAppend(&result->bw, output, output_size);
 
   if (method != ALPHA_NO_COMPRESSION) {
-    VP8LBitWriterDestroy(&tmp_bw);
+    VP8LBitWriterWipeOut(&tmp_bw);
   }
   ok = ok && !result->bw.error_;
   result->score = VP8BitWriterSize(&result->bw);
