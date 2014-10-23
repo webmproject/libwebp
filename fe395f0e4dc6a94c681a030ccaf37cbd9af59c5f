@@ -70,6 +70,24 @@
       "revId": "fe395f0e4dc6a94c681a030ccaf37cbd9af59c5f",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//SA0\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1285,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-10-23T13:35:13Z",
+      "side": 1,
+      "message": "restoring the shift and using the mask is slower, since you have the additional and/or along with the already slower shifts",
+      "parentUuid": "AAAAdn//SBM\u003d",
+      "revId": "fe395f0e4dc6a94c681a030ccaf37cbd9af59c5f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
