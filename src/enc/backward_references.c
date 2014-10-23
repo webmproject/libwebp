@@ -927,33 +927,44 @@ int VP8LCalculateEstimateForCacheSize(const uint32_t* const argb,
   int eval_high = 1;
   double entropy_low = MAX_ENTROPY;
   double entropy_high = MAX_ENTROPY;
+  const double cost_mul = 5e-4;
   int cache_bits_low = 0;
-  int cache_bits_high = MAX_COLOR_CACHE_BITS;
+  int cache_bits_high = *best_cache_bits;
+
+  assert(cache_bits_high <= MAX_COLOR_CACHE_BITS);
+
+  if (cache_bits_high == 0) {
+    // Local color cache is disabled.
+    return 1;
+  }
 
   if (!BackwardReferencesHashChain(xsize, ysize, argb, 0, quality, hash_chain,
                                    refs)) {
     return 0;
   }
   // Do a binary search to find the optimal entropy for cache_bits.
-  while (cache_bits_high - cache_bits_low > 1) {
+  while (eval_low || eval_high) {
     if (eval_low) {
       entropy_low =
           ComputeCacheEntropy(argb, xsize, ysize, refs, cache_bits_low);
+      entropy_low += entropy_low * cache_bits_low * cost_mul;
       eval_low = 0;
     }
     if (eval_high) {
       entropy_high =
           ComputeCacheEntropy(argb, xsize, ysize, refs, cache_bits_high);
+      entropy_high += entropy_high * cache_bits_high * cost_mul;
       eval_high = 0;
     }
     if (entropy_high < entropy_low) {
+      const int prev_cache_bits_low = cache_bits_low;
       *best_cache_bits = cache_bits_high;
       cache_bits_low = (cache_bits_low + cache_bits_high) / 2;
-      eval_low = 1;
+      if (cache_bits_low != prev_cache_bits_low) eval_low = 1;
     } else {
       *best_cache_bits = cache_bits_low;
       cache_bits_high = (cache_bits_low + cache_bits_high) / 2;
-      eval_high = 1;
+      if (cache_bits_high != cache_bits_low) eval_high = 1;
     }
   }
   return 1;
