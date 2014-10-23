@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//SEI\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1267,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-10-23T09:14:04Z",
+      "side": 1,
+      "message": "I had that setup previously, but I was using a uint64x1_t and to avoid vector casting loading a uint64_t* -\u003e sigbus (due to alignment hint). I could try the load + cast approach",
+      "parentUuid": "AAAAdn//SGw\u003d",
+      "revId": "2c5e068a28af9407713b6359e7718957c6a402a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//SGY\u003d",
         "filename": "src/dsp/dec_neon.c",
         "patchSetId": 1
