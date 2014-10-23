@@ -52,6 +52,24 @@
       "revId": "fe395f0e4dc6a94c681a030ccaf37cbd9af59c5f",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//SBM\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1285,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-10-23T13:31:54Z",
+      "side": 1,
+      "message": "so, yes, actually it won\u0027t work since there\u0027s no shift and hence no zeros brought in.",
+      "parentUuid": "AAAAdn//SBU\u003d",
+      "revId": "fe395f0e4dc6a94c681a030ccaf37cbd9af59c5f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
