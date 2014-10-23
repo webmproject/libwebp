@@ -51,6 +51,24 @@
       "revId": "2c5e068a28af9407713b6359e7718957c6a402a1",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//SDs\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1270,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-10-23T09:23:45Z",
+      "side": 1,
+      "message": "indeed. too much following the sse2 and I had a /vrhadd_u8/ when I made a cleanup pass",
+      "parentUuid": "AAAAdn//SGY\u003d",
+      "revId": "2c5e068a28af9407713b6359e7718957c6a402a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
