@@ -1324,6 +1324,34 @@ static void VE4(uint8_t* dst) {    // vertical
   }
 }
 
+static void RD4(uint8_t* dst) {   // Down-right
+  const uint8x8_t XABCD_u8 = vld1_u8(dst - BPS - 1);
+  const uint64x1_t XABCD = vreinterpret_u64_u8(XABCD_u8);
+  const uint64x1_t ____XABC = vshl_n_u64(XABCD, 32);
+  const uint32_t I = dst[-1 + 0 * BPS];
+  const uint32_t J = dst[-1 + 1 * BPS];
+  const uint32_t K = dst[-1 + 2 * BPS];
+  const uint32_t L = dst[-1 + 3 * BPS];
+  const uint64x1_t LKJI____ = vcreate_u64(L | (K << 8) | (J << 16) | (I << 24));
+  const uint64x1_t LKJIXABC = vorr_u64(LKJI____, ____XABC);
+  const uint8x8_t KJIXABC_ = vreinterpret_u8_u64(vshr_n_u64(LKJIXABC, 8));
+  const uint8x8_t JIXABC__ = vreinterpret_u8_u64(vshr_n_u64(LKJIXABC, 16));
+  const uint8_t D = vget_lane_u8(XABCD_u8, 4);
+  const uint8x8_t JIXABCD_ = vset_lane_u8(D, JIXABC__, 6);
+  const uint8x8_t LKJIXABC_u8 = vreinterpret_u8_u64(LKJIXABC);
+  const uint8x8_t avg1 = vhadd_u8(JIXABCD_, LKJIXABC_u8);
+  const uint8x8_t avg2 = vrhadd_u8(avg1, KJIXABC_);
+  const uint64x1_t avg2_u64 = vreinterpret_u64_u8(avg2);
+  const uint32x2_t r3 = vreinterpret_u32_u8(avg2);
+  const uint32x2_t r2 = vreinterpret_u32_u64(vshr_n_u64(avg2_u64, 8));
+  const uint32x2_t r1 = vreinterpret_u32_u64(vshr_n_u64(avg2_u64, 16));
+  const uint32x2_t r0 = vreinterpret_u32_u64(vshr_n_u64(avg2_u64, 24));
+  vst1_lane_u32((uint32_t*)(dst + 0 * BPS), r0, 0);
+  vst1_lane_u32((uint32_t*)(dst + 1 * BPS), r1, 0);
+  vst1_lane_u32((uint32_t*)(dst + 2 * BPS), r2, 0);
+  vst1_lane_u32((uint32_t*)(dst + 3 * BPS), r3, 0);
+}
+
 static void LD4(uint8_t* dst) {    // Down-left
   // Note using the same shift trick as VE4() is slower here.
   const uint8x8_t ABCDEFGH = vld1_u8(dst - BPS + 0);
@@ -1377,6 +1405,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitNEON(void) {
   VP8PredLuma4[0] = DC4;
   VP8PredLuma4[1] = TM4;
   VP8PredLuma4[2] = VE4;
+  VP8PredLuma4[4] = RD4;
   VP8PredLuma4[6] = LD4;
 #endif   // WEBP_USE_NEON
 }
