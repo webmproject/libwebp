@@ -25,7 +25,8 @@
 #include "../webp/format_constants.h"
 
 #define PALETTE_KEY_RIGHT_SHIFT   22  // Key for 1K buffer.
-#define MAX_HUFF_IMAGE_SIZE       (16 * 1024 * 1024)
+// Maximum number of histogram images (sub-blocks).
+#define MAX_HUFF_IMAGE_SIZE       2600
 #define MAX_COLORS_FOR_GRAPH      64
 
 #define OPTIMIZE_MIN_NUM_COLORS 8
@@ -263,13 +264,12 @@ static int AnalyzeSubtractGreen(const uint32_t* const argb,
 }
 
 static int GetHistoBits(int method, int use_palette, int width, int height) {
-  const int hist_size = VP8LGetHistogramSize(MAX_COLOR_CACHE_BITS);
   // Make tile size a function of encoding method (Range: 0 to 6).
   int histo_bits = (use_palette ? 9 : 7) - method;
   while (1) {
     const int huff_image_size = VP8LSubSampleSize(width, histo_bits) *
                                 VP8LSubSampleSize(height, histo_bits);
-    if ((uint64_t)huff_image_size * hist_size <= MAX_HUFF_IMAGE_SIZE) break;
+    if (huff_image_size <= MAX_HUFF_IMAGE_SIZE) break;
     ++histo_bits;
   }
   return (histo_bits < MIN_HUFFMAN_BITS) ? MIN_HUFFMAN_BITS :
