@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//RuM\u003d",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 3
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-10-27T21:16:27Z",
+      "side": 1,
+      "message": "you need to add the new mips_macro.h file to the list",
+      "revId": "221aa9d294c154c719b3110a1d2cca350d8046fd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//RuU\u003d",
+        "filename": "src/dsp/mips_macro.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-10-27T21:16:27Z",
+      "side": 1,
+      "message": "missing header/license",
+      "revId": "221aa9d294c154c719b3110a1d2cca350d8046fd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//RuQ\u003d",
+        "filename": "src/dsp/mips_macro.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-10-27T21:16:27Z",
+      "side": 1,
+      "message": "since this is a .h, these macro could use a 1-line comment\ndescribing their use.",
+      "revId": "221aa9d294c154c719b3110a1d2cca350d8046fd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
