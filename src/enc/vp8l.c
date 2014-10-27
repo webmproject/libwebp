@@ -284,7 +284,7 @@ static int GetTransformBits(int method, int histo_bits) {
 static int GetCacheBits(int use_palette, float quality) {
   // Color cache is disabled for compression at lower quality or when a palette
   // is used.
-  return (use_palette || (quality <= 25.f)) ? 0 : 7;
+  return (use_palette || (quality <= 25.f)) ? 0 : MAX_COLOR_CACHE_BITS;
 }
 
 static int EvalSubtractGreenForPalette(int palette_size, float quality) {
@@ -1309,13 +1309,11 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   // ---------------------------------------------------------------------------
   // Estimate the color cache size.
 
-  if (enc->cache_bits_ > 0) {
-    if (!VP8LCalculateEstimateForCacheSize(enc->argb_, enc->current_width_,
-                                           height, quality, &enc->hash_chain_,
-                                           &enc->refs_[0], &enc->cache_bits_)) {
-      err = VP8_ENC_ERROR_OUT_OF_MEMORY;
-      goto Error;
-    }
+  if (!VP8LCalculateEstimateForCacheSize(enc->argb_, enc->current_width_,
+                                         height, quality, &enc->hash_chain_,
+                                         &enc->refs_[0], &enc->cache_bits_)) {
+    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+    goto Error;
   }
 
   // ---------------------------------------------------------------------------
