@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Ryw\u003d",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-10-27T14:50:58Z",
+      "side": 1,
+      "message": "looks like you need to update android.mk, makefile.unix and Makefile.vc files too...",
+      "revId": "b52c8526f42e0382d8b09ea640e0b1d605595269",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
