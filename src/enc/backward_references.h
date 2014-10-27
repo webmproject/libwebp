@@ -22,9 +22,8 @@
 extern "C" {
 #endif
 
-// The spec allows 11, we use 9 bits to reduce memory consumption in encoding.
-// Having 9 instead of 11 only removes about 0.25 % of compression density.
-#define MAX_COLOR_CACHE_BITS 9
+// The maximum allowed limit is 11.
+#define MAX_COLOR_CACHE_BITS 10
 
 // -----------------------------------------------------------------------------
 // PixOrCopy
