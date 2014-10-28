@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//RrI\u003d",
+        "filename": "src/dsp/dec_mips_dsp_r2.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-10-28T13:20:24Z",
+      "side": 1,
+      "message": "this should be within the ifdef below in case it picks up anything mips specific",
+      "revId": "508f4b2f1436433f6d61a45ef1de20b011e8be6c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//RrQ\u003d",
+        "filename": "src/dsp/mips_macro.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-10-28T13:20:24Z",
+      "side": 1,
+      "message": "deindent this and the next line",
+      "revId": "508f4b2f1436433f6d61a45ef1de20b011e8be6c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
