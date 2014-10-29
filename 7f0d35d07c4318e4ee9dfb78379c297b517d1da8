@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Rl0\u003d",
+        "filename": "src/dsp/lossless_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-10-29T11:30:36Z",
+      "side": 1,
+      "message": "you might want to harmonize the naming with the ones at 121",
+      "revId": "7f0d35d07c4318e4ee9dfb78379c297b517d1da8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
