@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Rmk\u003d",
+        "filename": "src/dsp/lossless_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-10-29T09:32:50Z",
+      "side": 1,
+      "message": "\"tmp5,tmp6\" -\u003e \"tmp5, tmp6\"   (missing space)",
+      "revId": "8f6faa5af9299ac3f8208830a690cab8decd66bb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Rmg\u003d",
+        "filename": "src/dsp/lossless_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-10-29T09:32:50Z",
+      "side": 1,
+      "message": "not sure you need the \u0027pred\u0027 variable. Could be just:\n\nreturn ClampedAddSubtractHalf(left, top[0], top[-1]);",
+      "revId": "8f6faa5af9299ac3f8208830a690cab8decd66bb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
