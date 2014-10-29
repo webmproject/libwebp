@@ -90,34 +90,63 @@ MAP_COLOR_FUNCS(MapAlpha, uint8_t, VP8GetAlphaIndex, VP8GetAlphaValue)
 
 #undef MAP_COLOR_FUNCS
 
+static WEBP_INLINE uint32_t ClampedAddSubtractFull(uint32_t c0, uint32_t c1,
+                                                   uint32_t c2) {
+  int temp0, temp1, temp2, temp3, temp4, temp5;
+  __asm__ volatile (
+    "preceu.ph.qbr   %[temp1],   %[c0]                 \n\t"
+    "preceu.ph.qbl   %[temp2],   %[c0]                 \n\t"
+    "preceu.ph.qbr   %[temp3],   %[c1]                 \n\t"
+    "preceu.ph.qbl   %[temp4],   %[c1]                 \n\t"
+    "preceu.ph.qbr   %[temp5],   %[c2]                 \n\t"
+    "preceu.ph.qbl   %[temp0],   %[c2]                 \n\t"
+    "subq.ph         %[temp3],   %[temp3],   %[temp5]  \n\t"
+    "subq.ph         %[temp4],   %[temp4],   %[temp0]  \n\t"
+    "addq.ph         %[temp1],   %[temp1],   %[temp3]  \n\t"
+    "addq.ph         %[temp2],   %[temp2],   %[temp4]  \n\t"
+    "shll_s.ph       %[temp1],   %[temp1],   7         \n\t"
+    "shll_s.ph       %[temp2],   %[temp2],   7         \n\t"
+    "precrqu_s.qb.ph %[temp2],   %[temp2],   %[temp1]  \n\t"
+    : [temp0]"=r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5)
+    : [c0]"r"(c0), [c1]"r"(c1), [c2]"r"(c2)
+    : "memory"
+  );
+  return temp2;
+}
+
 static WEBP_INLINE uint32_t ClampedAddSubtractHalf(uint32_t c0, uint32_t c1,
                                                    uint32_t c2) {
-  int tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
+  int temp0, temp1, temp2, temp3, temp4, temp5;
   __asm__ volatile (
-   "adduh.qb         %[tmp5], %[c0],   %[c1]       \n\t"
-   "preceu.ph.qbr    %[tmp3], %[c2]                \n\t"
-   "preceu.ph.qbr    %[tmp1], %[tmp5]              \n\t"
-   "preceu.ph.qbl    %[tmp2], %[tmp5]              \n\t"
-   "preceu.ph.qbl    %[tmp4], %[c2]                \n\t"
-   "subq.ph          %[tmp3], %[tmp1], %[tmp3]     \n\t"
-   "subq.ph          %[tmp4], %[tmp2], %[tmp4]     \n\t"
-   "shrl.ph          %[tmp5], %[tmp3], 15          \n\t"
-   "shrl.ph          %[tmp6], %[tmp4], 15          \n\t"
-   "addq.ph          %[tmp3], %[tmp3], %[tmp5]     \n\t"
-   "addq.ph          %[tmp4], %[tmp6], %[tmp4]     \n\t"
-   "shra.ph          %[tmp3], %[tmp3], 1           \n\t"
-   "shra.ph          %[tmp4], %[tmp4], 1           \n\t"
-   "addq.ph          %[tmp1], %[tmp1], %[tmp3]     \n\t"
-   "addq.ph          %[tmp2], %[tmp2], %[tmp4]     \n\t"
-   "shll_s.ph        %[tmp1], %[tmp1], 7           \n\t"
-   "shll_s.ph        %[tmp2], %[tmp2], 7           \n\t"
-   "precrqu_s.qb.ph  %[tmp1], %[tmp2], %[tmp1]     \n\t"
-   : [tmp1]"=&r"(tmp1), [tmp2]"=&r"(tmp2), [tmp3]"=&r"(tmp3),
-     [tmp4]"=&r"(tmp4), [tmp5]"=&r"(tmp5), [tmp6]"=r"(tmp6)
-   : [c0]"r"(c0), [c1]"r"(c1), [c2]"r"(c2)
-   : "memory"
+    "adduh.qb         %[temp5],   %[c0],      %[c1]       \n\t"
+    "preceu.ph.qbr    %[temp3],   %[c2]                   \n\t"
+    "preceu.ph.qbr    %[temp1],   %[temp5]                \n\t"
+    "preceu.ph.qbl    %[temp2],   %[temp5]                \n\t"
+    "preceu.ph.qbl    %[temp4],   %[c2]                   \n\t"
+    "subq.ph          %[temp3],   %[temp1],   %[temp3]    \n\t"
+    "subq.ph          %[temp4],   %[temp2],   %[temp4]    \n\t"
+    "shrl.ph          %[temp5],   %[temp3],   15          \n\t"
+    "shrl.ph          %[temp0],   %[temp4],   15          \n\t"
+    "addq.ph          %[temp3],   %[temp3],   %[temp5]    \n\t"
+    "addq.ph          %[temp4],   %[temp0],   %[temp4]    \n\t"
+    "shra.ph          %[temp3],   %[temp3],   1           \n\t"
+    "shra.ph          %[temp4],   %[temp4],   1           \n\t"
+    "addq.ph          %[temp1],   %[temp1],   %[temp3]    \n\t"
+    "addq.ph          %[temp2],   %[temp2],   %[temp4]    \n\t"
+    "shll_s.ph        %[temp1],   %[temp1],   7           \n\t"
+    "shll_s.ph        %[temp2],   %[temp2],   7           \n\t"
+    "precrqu_s.qb.ph  %[temp1],   %[temp2],   %[temp1]    \n\t"
+    : [temp0]"=r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=r"(temp4), [temp5]"=&r"(temp5)
+    : [c0]"r"(c0), [c1]"r"(c1), [c2]"r"(c2)
+    : "memory"
   );
-  return tmp1;
+  return temp1;
+}
+
+static uint32_t Predictor12(uint32_t left, const uint32_t* const top) {
+  return ClampedAddSubtractFull(left, top[0], top[-1]);
 }
 
 static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
@@ -134,6 +163,7 @@ void VP8LDspInitMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
   VP8LMapColor32b = MapARGB;
   VP8LMapColor8b = MapAlpha;
+  VP8LPredictors[12] = Predictor12;
   VP8LPredictors[13] = Predictor13;
 #endif  // WEBP_USE_MIPS_DSP_R2
 }
