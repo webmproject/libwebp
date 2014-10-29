@@ -949,10 +949,12 @@ static void HistogramRemap(const VP8LHistogramSet* const orig_histo,
 
 static double GetCombineCostFactor(int histo_size, int quality) {
   double combine_cost_factor = 0.16;
-  if (histo_size > 256) combine_cost_factor /= 2.;
-  if (histo_size > 512) combine_cost_factor /= 2.;
-  if (histo_size > 1024) combine_cost_factor /= 2.;
-  if (quality <= 50) combine_cost_factor /= 2.;
+  if (quality < 90) {
+    if (histo_size > 256) combine_cost_factor /= 2.;
+    if (histo_size > 512) combine_cost_factor /= 2.;
+    if (histo_size > 1024) combine_cost_factor /= 2.;
+    if (quality <= 50) combine_cost_factor /= 2.;
+  }
   return combine_cost_factor;
 }
 
@@ -983,9 +985,8 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
 
   // Don't attempt linear bin-partition heuristic for:
   // histograms of small sizes, as bin_map will be very sparse and;
-  // Higher qualities (> 90), to preserve the compression gains at those
-  // quality settings.
-  if (orig_histo->size > 2 * BIN_SIZE && quality < 90) {
+  // Maximum quality (q==100), to preserve the compression gains at that level.
+  if (orig_histo->size > 2 * BIN_SIZE && quality < 100) {
     const int bin_map_size = bin_depth * BIN_SIZE;
     bin_map = (int16_t*)WebPSafeCalloc(bin_map_size, sizeof(*bin_map));
     if (bin_map == NULL) goto Error;
