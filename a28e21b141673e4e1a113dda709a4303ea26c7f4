@@ -16,6 +16,24 @@
       "revId": "a28e21b141673e4e1a113dda709a4303ea26c7f4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Rko\u003d",
+        "filename": "src/dsp/lossless_mips_dsp_r2.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1004029
+      },
+      "writtenOn": "2014-10-29T15:15:15Z",
+      "side": 1,
+      "message": "yes, temp0 and temp4 are modified after all input registers are used, so they could be \"\u003dr\"",
+      "parentUuid": "AAAAdn//Rlc\u003d",
+      "revId": "a28e21b141673e4e1a113dda709a4303ea26c7f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
