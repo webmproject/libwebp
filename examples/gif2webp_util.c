@@ -287,6 +287,9 @@ struct WebPFrameCache {
                              // transparent pixels in a frame.
   int keyframe;              // Index of selected keyframe relative to 'start'.
 
+  // TODO(urvang): Create a struct WebPAnimationEncodingConfig for these
+  // encoding parameters.
+  int min_size;                  // If true, produce the smallest output.
   size_t kmin;                   // Min distance between key frames.
   size_t kmax;                   // Max distance between key frames.
   size_t count_since_key_frame;  // Frames seen since the last key frame.
@@ -319,7 +322,7 @@ static void CacheReset(WebPFrameCache* const cache) {
   cache->keyframe = KEYFRAME_NONE;
 }
 
-WebPFrameCache* WebPFrameCacheNew(int width, int height,
+WebPFrameCache* WebPFrameCacheNew(int width, int height, int minimize_size,
                                   size_t kmin, size_t kmax, int allow_mixed) {
   WebPFrameCache* cache = (WebPFrameCache*)WebPSafeCalloc(1, sizeof(*cache));
   if (cache == NULL) return NULL;
@@ -354,7 +357,12 @@ WebPFrameCache* WebPFrameCacheNew(int width, int height,
   WebPUtilClearPic(&cache->prev_to_prev_canvas_disposed, NULL);
 
   // Cache data.
+  cache->min_size = minimize_size;
   cache->allow_mixed = allow_mixed;
+  if (cache->min_size) {  // Disable keyframe insertion.
+    kmax = ~0;
+    kmin = kmax - 1;
+  }
   cache->kmin = kmin;
   cache->kmax = kmax;
   cache->count_since_key_frame = 0;
@@ -790,7 +798,10 @@ static WebPEncodingError SetFrame(WebPFrameCache* const cache,
     GetSubRect(prev_canvas_disposed, curr_canvas, orig_rect, is_key_frame,
                &rect_bg, &sub_frame_bg);
 
-    if (RectArea(&rect_bg) < RectArea(&rect_none)) {
+    if (cache->min_size) {  // Try both dispose methods.
+      try_dispose_bg = 1;
+      try_dispose_none = 1;
+    } else if (RectArea(&rect_bg) < RectArea(&rect_none)) {
       try_dispose_bg = 1;  // Pick DISPOSE_BACKGROUND.
       try_dispose_none = 0;
     }

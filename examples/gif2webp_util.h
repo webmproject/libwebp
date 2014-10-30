@@ -51,10 +51,12 @@ typedef struct WebPFrameCache WebPFrameCache;
 
 // Given the minimum distance between key frames 'kmin' and maximum distance
 // between key frames 'kmax', returns an appropriately allocated cache object.
+// If 'minimize_size' is true, optimizes for file size. This also implies that
+// keyframe addition is off.
 // If 'allow_mixed' is true, the subsequent calls to WebPFrameCacheAddFrame()
 // will heuristically pick lossy or lossless compression for each frame.
 // Use WebPFrameCacheDelete() to deallocate the 'cache'.
-WebPFrameCache* WebPFrameCacheNew(int width, int height,
+WebPFrameCache* WebPFrameCacheNew(int width, int height, int minimize_size,
                                   size_t kmin, size_t kmax, int allow_mixed);
 
 // Release all the frame data from 'cache' and free 'cache'.
