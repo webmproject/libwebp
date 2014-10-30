@@ -18,10 +18,11 @@
 
 #ifndef _MSC_VER
 #include <inttypes.h>
-#ifdef __STRICT_ANSI__
-#define WEBP_INLINE
-#else  /* __STRICT_ANSI__ */
+#if defined(__cplusplus) || !defined(__STRICT_ANSI__) || \
+    (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L)
 #define WEBP_INLINE inline
+#else
+#define WEBP_INLINE
 #endif
 #else
 typedef signed   char int8_t;
