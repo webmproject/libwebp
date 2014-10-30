@@ -536,6 +536,33 @@ static WEBP_INLINE double GetDistanceCost(const CostModel* const m,
   return m->distance_[code] + extra_bits;
 }
 
+static void AddSingleLiteral(const uint32_t* const argb,
+                             VP8LHashChain* const hash_chain,
+                             VP8LColorCache* const hashers,
+                             const CostModel* const cost_model,
+                             int idx, int is_last, int use_color_cache,
+                             double prev_cost, float* const cost,
+                             uint32_t* const dist_array) {
+  double cost_val = prev_cost;
+  const uint32_t color = argb[0];
+  if (!is_last) {
+    HashChainInsert(hash_chain, argb, idx);
+  }
+  if (use_color_cache && VP8LColorCacheContains(hashers, color)) {
+    const double mul0 = 0.68;
+    const int ix = VP8LColorCacheGetIndex(hashers, color);
+    cost_val += GetCacheCost(cost_model, ix) * mul0;
+  } else {
+    const double mul1 = 0.82;
+    if (use_color_cache) VP8LColorCacheInsert(hashers, color);
+    cost_val += GetLiteralCost(cost_model, color) * mul1;
+  }
+  if (cost[idx] > cost_val) {
+    cost[idx] = (float)cost_val;
+    dist_array[idx] = 1;  // only one is inserted.
+  }
+}
+
 static int BackwardReferencesHashChainDistanceOnly(
     int xsize, int ysize, const uint32_t* const argb,
     int quality, int cache_bits, VP8LHashChain* const hash_chain,
@@ -554,7 +581,7 @@ static int BackwardReferencesHashChainDistanceOnly(
   CostModel* const cost_model =
       (CostModel*)WebPSafeMalloc(1ULL, cost_model_size);
   VP8LColorCache hashers;
-  const int min_distance_code = 2;  // TODO(vikasa): tune as function of quality
+  const int min_distance_code = 2;
   int window_size = WINDOW_SIZE;
   int iter_pos = 1;
   int iter_limit = -1;
@@ -579,82 +606,75 @@ static int BackwardReferencesHashChainDistanceOnly(
   GetParamsForHashChainFindCopy(quality, xsize, cache_bits,
                                 &window_size, &iter_pos, &iter_limit);
   HashChainInit(hash_chain);
-  for (i = 0; i < pix_count; ++i) {
-    double prev_cost = 0.0;
-    int shortmax;
-    if (i > 0) {
-      prev_cost = cost[i - 1];
-    }
-    for (shortmax = 0; shortmax < 2; ++shortmax) {
-      int offset = 0;
-      int len = 0;
-      if (i < pix_count - 1) {  // FindCopy reads pixels at [i] and [i + 1].
-        int max_len = shortmax ? 2 : pix_count - i;
-        HashChainFindCopy(hash_chain, i, xsize, argb, max_len,
-                          window_size, iter_pos, iter_limit,
-                          &offset, &len);
-      }
-      if (len >= MIN_LENGTH) {
-        const int code = DistanceToPlaneCode(xsize, offset);
-        const double distance_cost =
-            prev_cost + GetDistanceCost(cost_model, code);
-        int k;
-        for (k = 1; k < len; ++k) {
-          const double cost_val = distance_cost + GetLengthCost(cost_model, k);
-          if (cost[i + k] > cost_val) {
-            cost[i + k] = (float)cost_val;
-            dist_array[i + k] = k + 1;
-          }
-        }
-        // This if is for speedup only. It roughly doubles the speed, and
-        // makes compression worse by .1 %.
-        if (len >= 128 && code <= min_distance_code) {
-          // Long copy for short distances, let's skip the middle
-          // lookups for better copies.
-          // 1) insert the hashes.
-          if (use_color_cache) {
-            for (k = 0; k < len; ++k) {
-              VP8LColorCacheInsert(&hashers, argb[i + k]);
-            }
-          }
-          // 2) Add to the hash_chain (but cannot add the last pixel)
-          {
-            const int last = (len + i < pix_count - 1) ? len + i
-                                                       : pix_count - 1;
-            for (k = i; k < last; ++k) {
-              HashChainInsert(hash_chain, &argb[k], k);
-            }
-          }
-          // 3) jump.
-          i += len - 1;  // for loop does ++i, thus -1 here.
-          goto next_symbol;
+  // Add first pixel as literal.
+  AddSingleLiteral(argb + 0, hash_chain, &hashers, cost_model, 0, 0,
+                   use_color_cache, 0.0, cost, dist_array);
+  for (i = 1; i < pix_count - 1; ++i) {
+    int offset = 0;
+    int len = 0;
+    double prev_cost = cost[i - 1];
+    const int max_len = pix_count - i;
+    HashChainFindCopy(hash_chain, i, xsize, argb, max_len, window_size,
+                      iter_pos, iter_limit, &offset, &len);
+    if (len >= MIN_LENGTH) {
+      const int code = DistanceToPlaneCode(xsize, offset);
+      const double distance_cost =
+          prev_cost + GetDistanceCost(cost_model, code);
+      int k;
+      for (k = 1; k < len; ++k) {
+        const double cost_val = distance_cost + GetLengthCost(cost_model, k);
+        if (cost[i + k] > cost_val) {
+          cost[i + k] = (float)cost_val;
+          dist_array[i + k] = k + 1;
         }
       }
-    }
-    if (i < pix_count - 1) {
-      HashChainInsert(hash_chain, &argb[i], i);
-    }
-    {
-      const double mul0 = 0.68;
-      const double mul1 = 0.82;
-      // inserting a literal pixel
-      double cost_val = prev_cost;
-      if (use_color_cache && VP8LColorCacheContains(&hashers, argb[i])) {
-        const int ix = VP8LColorCacheGetIndex(&hashers, argb[i]);
-        cost_val += GetCacheCost(cost_model, ix) * mul0;
-      } else {
-        if (use_color_cache) VP8LColorCacheInsert(&hashers, argb[i]);
-        cost_val += GetLiteralCost(cost_model, argb[i]) * mul1;
+      // This if is for speedup only. It roughly doubles the speed, and
+      // makes compression worse by .1 %.
+      if (len >= 128 && code <= min_distance_code) {
+        // Long copy for short distances, let's skip the middle
+        // lookups for better copies.
+        // 1) insert the hashes.
+        if (use_color_cache) {
+          for (k = 0; k < len; ++k) {
+            VP8LColorCacheInsert(&hashers, argb[i + k]);
+          }
+        }
+        // 2) Add to the hash_chain (but cannot add the last pixel)
+        {
+          const int last = (len + i < pix_count - 1) ? len + i
+                                                     : pix_count - 1;
+          for (k = i; k < last; ++k) {
+            HashChainInsert(hash_chain, &argb[k], k);
+          }
+        }
+        // 3) jump.
+        i += len - 1;  // for loop does ++i, thus -1 here.
+        goto next_symbol;
       }
-      if (cost[i] > cost_val) {
-        cost[i] = (float)cost_val;
-        dist_array[i] = 1;  // only one is inserted.
+      if (len != MIN_LENGTH) {
+        int code_min_length;
+        double cost_total;
+        HashChainFindOffset(hash_chain, i, argb, MIN_LENGTH, window_size,
+                            &offset);
+        code_min_length = DistanceToPlaneCode(xsize, offset);
+        cost_total = prev_cost +
+            GetDistanceCost(cost_model, code_min_length) +
+            GetLengthCost(cost_model, 1);
+        if (cost[i + 1] > cost_total) {
+          cost[i + 1] = (float)cost_total;
+          dist_array[i + 1] = 2;
+        }
       }
     }
+    AddSingleLiteral(argb + i, hash_chain, &hashers, cost_model, i, 0,
+                     use_color_cache, prev_cost, cost, dist_array);
  next_symbol: ;
   }
-  // Last pixel still to do, it can only be a single step if not reached
-  // through cheaper means already.
+  // Handle the last pixel.
+  if (i == (pix_count - 1)) {
+    AddSingleLiteral(argb + i, hash_chain, &hashers, cost_model, i, 1,
+                     use_color_cache, cost[pix_count - 2], cost, dist_array);
+  }
   ok = !refs->error_;
 Error:
   if (cc_init) VP8LColorCacheClear(&hashers);
