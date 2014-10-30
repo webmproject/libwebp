@@ -322,9 +322,13 @@ void VP8FiltersInitMIPSdspR2(void) {
   WebPFilters[WEBP_FILTER_VERTICAL] = VerticalFilter;
   WebPFilters[WEBP_FILTER_GRADIENT] = GradientFilter;
 
-  WebPUnfilters[WEBP_FILTER_HORIZONTAL] = HorizontalUnfilter;
-  WebPUnfilters[WEBP_FILTER_VERTICAL] = VerticalUnfilter;
-  WebPUnfilters[WEBP_FILTER_GRADIENT] = GradientUnfilter;
+  // TODO(djordje.pesut): these 3 filters do not match the C implementation.
+  // WebPUnfilters[WEBP_FILTER_HORIZONTAL] = HorizontalUnfilter;
+  // WebPUnfilters[WEBP_FILTER_VERTICAL] = VerticalUnfilter;
+  // WebPUnfilters[WEBP_FILTER_GRADIENT] = GradientUnfilter;
+  (void)HorizontalUnfilter;
+  (void)VerticalUnfilter;
+  (void)GradientUnfilter;
 #endif  // WEBP_USE_MIPS_DSP_R2
 }
 
