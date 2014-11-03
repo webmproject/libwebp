@@ -33,7 +33,87 @@
   assert(row >= 0 && num_rows > 0 && row + num_rows <= height);                \
   (void)height;  // Silence unused warning.
 
-#define DO_PREDICT_LINE(SRC, PRED, DST, LENGTH, INVERSE) do {                  \
+// if INVERSE
+//   preds == &dst[-1] == &src[-1]
+// else
+//   preds == &src[-1] != &dst[-1]
+#define DO_PREDICT_LINE(SRC, DST, LENGTH, INVERSE) do {                        \
+    const uint8_t* psrc = (uint8_t*)(SRC);                                     \
+    uint8_t* pdst = (uint8_t*)(DST);                                           \
+    const int ilength = (int)(LENGTH);                                         \
+    int temp0, temp1, temp2, temp3, temp4, temp5, temp6;                       \
+    __asm__ volatile (                                                         \
+      ".set      push                                   \n\t"                  \
+      ".set      noreorder                              \n\t"                  \
+      "srl       %[temp0],    %[length],    0x2         \n\t"                  \
+      "beqz      %[temp0],    4f                        \n\t"                  \
+      " andi     %[temp6],    %[length],    0x3         \n\t"                  \
+    ".if "#INVERSE"                                     \n\t"                  \
+      "lbu       %[temp1],    -1(%[src])                \n\t"                  \
+    "1:                                                 \n\t"                  \
+      "lbu       %[temp2],    0(%[src])                 \n\t"                  \
+      "lbu       %[temp3],    1(%[src])                 \n\t"                  \
+      "lbu       %[temp4],    2(%[src])                 \n\t"                  \
+      "lbu       %[temp5],    3(%[src])                 \n\t"                  \
+      "addiu     %[src],      %[src],       4           \n\t"                  \
+      "addiu     %[temp0],    %[temp0],     -1          \n\t"                  \
+      "addu      %[temp2],    %[temp2],     %[temp1]    \n\t"                  \
+      "addu      %[temp3],    %[temp3],     %[temp2]    \n\t"                  \
+      "addu      %[temp4],    %[temp4],     %[temp3]    \n\t"                  \
+      "addu      %[temp1],    %[temp5],     %[temp4]    \n\t"                  \
+      "sb        %[temp2],    -4(%[src])                \n\t"                  \
+      "sb        %[temp3],    -3(%[src])                \n\t"                  \
+      "sb        %[temp4],    -2(%[src])                \n\t"                  \
+      "bnez      %[temp0],    1b                        \n\t"                  \
+      " sb       %[temp1],    -1(%[src])                \n\t"                  \
+    ".else                                              \n\t"                  \
+    "1:                                                 \n\t"                  \
+      "ulw       %[temp1],    -1(%[src])                \n\t"                  \
+      "ulw       %[temp2],    0(%[src])                 \n\t"                  \
+      "addiu     %[src],      %[src],       4           \n\t"                  \
+      "addiu     %[temp0],    %[temp0],     -1          \n\t"                  \
+      "subu.qb   %[temp3],    %[temp2],     %[temp1]    \n\t"                  \
+      "usw       %[temp3],    0(%[dst])                 \n\t"                  \
+      "bnez      %[temp0],    1b                        \n\t"                  \
+      " addiu    %[dst],      %[dst],       4           \n\t"                  \
+    ".endif                                             \n\t"                  \
+    "4:                                                 \n\t"                  \
+      "beqz      %[temp6],    3f                        \n\t"                  \
+      " nop                                             \n\t"                  \
+    "2:                                                 \n\t"                  \
+      "lbu       %[temp1],    -1(%[src])                \n\t"                  \
+      "lbu       %[temp2],    0(%[src])                 \n\t"                  \
+      "addiu     %[src],      %[src],       1           \n\t"                  \
+    ".if "#INVERSE"                                     \n\t"                  \
+      "addu      %[temp3],    %[temp1],     %[temp2]    \n\t"                  \
+      "sb        %[temp3],    -1(%[src])                \n\t"                  \
+    ".else                                              \n\t"                  \
+      "subu      %[temp3],    %[temp1],     %[temp2]    \n\t"                  \
+      "sb        %[temp3],    0(%[dst])                 \n\t"                  \
+    ".endif                                             \n\t"                  \
+      "addiu     %[temp6],    %[temp6],     -1          \n\t"                  \
+      "bnez      %[temp6],    2b                        \n\t"                  \
+      " addiu    %[dst],      %[dst],       1           \n\t"                  \
+    "3:                                                 \n\t"                  \
+      ".set      pop                                    \n\t"                  \
+      : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),         \
+        [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),         \
+        [temp6]"=&r"(temp6), [dst]"+&r"(pdst), [src]"+&r"(psrc)                \
+      : [length]"r"(ilength)                                                   \
+      : "memory"                                                               \
+    );                                                                         \
+  } while (0)
+
+static WEBP_INLINE void PredictLine(const uint8_t* src, uint8_t* dst,
+                                    int length, int inverse) {
+  if (inverse) {
+    DO_PREDICT_LINE(src, dst, length, 1);
+  } else {
+    DO_PREDICT_LINE(src, dst, length, 0);
+  }
+}
+
+#define DO_PREDICT_LINE_VERTICAL(SRC, PRED, DST, LENGTH, INVERSE) do {         \
     const uint8_t* psrc = (uint8_t*)(SRC);                                     \
     const uint8_t* ppred = (uint8_t*)(PRED);                                   \
     uint8_t* pdst = (uint8_t*)(DST);                                           \
@@ -43,7 +123,7 @@
       ".set      push                                   \n\t"                  \
       ".set      noreorder                              \n\t"                  \
       "srl       %[temp0],    %[length],    0x3         \n\t"                  \
-      "beqz      %[temp0],    2f                        \n\t"                  \
+      "beqz      %[temp0],    4f                        \n\t"                  \
       " andi     %[temp7],    %[length],    0x7         \n\t"                  \
     "1:                                                 \n\t"                  \
       "ulw       %[temp1],    0(%[src])                 \n\t"                  \
@@ -64,6 +144,7 @@
       "addiu     %[temp0],    %[temp0],     -1          \n\t"                  \
       "bnez      %[temp0],    1b                        \n\t"                  \
       " addiu    %[dst],      %[dst],       8           \n\t"                  \
+    "4:                                                 \n\t"                  \
       "beqz      %[temp7],    3f                        \n\t"                  \
       " nop                                             \n\t"                  \
     "2:                                                 \n\t"                  \
@@ -84,21 +165,12 @@
       ".set      pop                                    \n\t"                  \
       : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),         \
         [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),         \
-        [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [pred]"+r"(ppred),           \
-        [dst]"+r"(pdst), [src]"+r"(psrc)                                       \
+        [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [pred]"+&r"(ppred),          \
+        [dst]"+&r"(pdst), [src]"+&r"(psrc)                                     \
       : [length]"r"(ilength)                                                   \
       : "memory"                                                               \
     );                                                                         \
   } while (0)
-
-static WEBP_INLINE void PredictLine(const uint8_t* src, const uint8_t* pred,
-                                    uint8_t* dst, int length, int inverse) {
-  if (inverse) {
-    DO_PREDICT_LINE(src, pred, dst, length, 1);
-  } else {
-    DO_PREDICT_LINE(src, pred, dst, length, 0);
-  }
-}
 
 #define PREDICT_LINE_ONE_PASS(SRC, PRED, DST, INVERSE) do {                    \
     int temp1, temp2, temp3;                                                   \
@@ -123,7 +195,7 @@ static WEBP_INLINE void PredictLine(const uint8_t* src, const uint8_t* pred,
 #define FILTER_LINE_BY_LINE(INVERSE) do {                                      \
     while (row < last_row) {                                                   \
       PREDICT_LINE_ONE_PASS(in, preds - stride, out, INVERSE);                 \
-      DO_PREDICT_LINE(in + 1, preds, out + 1, width - 1, INVERSE);             \
+      DO_PREDICT_LINE(in + 1, out + 1, width - 1, INVERSE);                    \
       ++row;                                                                   \
       preds += stride;                                                         \
       in += stride;                                                            \
@@ -146,7 +218,7 @@ static WEBP_INLINE void DoHorizontalFilter(const uint8_t* in,
   if (row == 0) {
     // Leftmost pixel is the same as input for topmost scanline.
     out[0] = in[0];
-    PredictLine(in + 1, preds, out + 1, width - 1, inverse);
+    PredictLine(in + 1, out + 1, width - 1, inverse);
     row = 1;
     preds += stride;
     in += stride;
@@ -178,7 +250,7 @@ static void HorizontalUnfilter(int width, int height, int stride, int row,
 
 #define FILTER_LINE_BY_LINE(INVERSE) do {                                      \
     while (row < last_row) {                                                   \
-      DO_PREDICT_LINE(in, preds, out, width, INVERSE);                         \
+      DO_PREDICT_LINE_VERTICAL(in, preds, out, width, INVERSE);                \
       ++row;                                                                   \
       preds += stride;                                                         \
       in += stride;                                                            \
@@ -202,7 +274,7 @@ static WEBP_INLINE void DoVerticalFilter(const uint8_t* in,
     // Very first top-left pixel is copied.
     out[0] = in[0];
     // Rest of top scan-line is left-predicted.
-    PredictLine(in + 1, preds, out + 1, width - 1, inverse);
+    PredictLine(in + 1, out + 1, width - 1, inverse);
     row = 1;
     in += stride;
     out += stride;
@@ -220,6 +292,7 @@ static WEBP_INLINE void DoVerticalFilter(const uint8_t* in,
 }
 
 #undef FILTER_LINE_BY_LINE
+#undef DO_PREDICT_LINE_VERTICAL
 
 static void VerticalFilter(const uint8_t* data, int width, int height,
                            int stride, uint8_t* filtered_data) {
@@ -279,7 +352,7 @@ static WEBP_INLINE void DoGradientFilter(const uint8_t* in,
   // left prediction for top scan-line
   if (row == 0) {
     out[0] = in[0];
-    PredictLine(in + 1, preds, out + 1, width - 1, inverse);
+    PredictLine(in + 1, out + 1, width - 1, inverse);
     row = 1;
     preds += stride;
     in += stride;
@@ -322,13 +395,9 @@ void VP8FiltersInitMIPSdspR2(void) {
   WebPFilters[WEBP_FILTER_VERTICAL] = VerticalFilter;
   WebPFilters[WEBP_FILTER_GRADIENT] = GradientFilter;
 
-  // TODO(djordje.pesut): these 3 filters do not match the C implementation.
-  // WebPUnfilters[WEBP_FILTER_HORIZONTAL] = HorizontalUnfilter;
-  // WebPUnfilters[WEBP_FILTER_VERTICAL] = VerticalUnfilter;
-  // WebPUnfilters[WEBP_FILTER_GRADIENT] = GradientUnfilter;
-  (void)HorizontalUnfilter;
-  (void)VerticalUnfilter;
-  (void)GradientUnfilter;
+  WebPUnfilters[WEBP_FILTER_HORIZONTAL] = HorizontalUnfilter;
+  WebPUnfilters[WEBP_FILTER_VERTICAL] = VerticalUnfilter;
+  WebPUnfilters[WEBP_FILTER_GRADIENT] = GradientUnfilter;
 #endif  // WEBP_USE_MIPS_DSP_R2
 }
 
