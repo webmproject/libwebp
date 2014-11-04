@@ -243,7 +243,7 @@ static int GetWindowSizeForHashChain(int quality, int xsize) {
 }
 
 static WEBP_INLINE int MaxFindCopyLength(int len) {
-    return (len < MAX_LENGTH) ? len : MAX_LENGTH;
+  return (len < MAX_LENGTH) ? len : MAX_LENGTH;
 }
 
 static void HashChainFindOffset(const VP8LHashChain* const p, int base_position,
@@ -370,10 +370,10 @@ static int BackwardReferencesRle(int xsize, int ysize,
 }
 
 static int BackwardReferencesLz77(int xsize, int ysize,
-                                       const uint32_t* const argb,
-                                       int cache_bits, int quality,
-                                       VP8LHashChain* const hash_chain,
-                                       VP8LBackwardRefs* const refs) {
+                                  const uint32_t* const argb,
+                                  int cache_bits, int quality,
+                                  VP8LHashChain* const hash_chain,
+                                  VP8LBackwardRefs* const refs) {
   int i;
   int ok = 0;
   int cc_init = 0;
@@ -443,7 +443,7 @@ static int BackwardReferencesLz77(int xsize, int ysize,
   }
 
   ok = !refs->error_;
-Error:
+ Error:
   if (cc_init) VP8LColorCacheClear(&hashers);
   return ok;
 }
@@ -674,7 +674,7 @@ static int BackwardReferencesHashChainDistanceOnly(
                                   dist_array);
   }
   ok = !refs->error_;
-Error:
+ Error:
   if (cc_init) VP8LColorCacheClear(&hashers);
   WebPSafeFree(cost_model);
   WebPSafeFree(cost);
@@ -760,7 +760,7 @@ static int BackwardReferencesHashChainFollowChosenPath(
     }
   }
   ok = !refs->error_;
-Error:
+ Error:
   if (cc_init) VP8LColorCacheClear(&hashers);
   return ok;
 }
