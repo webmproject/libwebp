@@ -313,38 +313,6 @@ static int HashChainFindCopy(const VP8LHashChain* const p,
   return (best_length >= MIN_LENGTH);
 }
 
-static WEBP_INLINE void PushBackCopy(VP8LBackwardRefs* const refs, int length) {
-  while (length >= MAX_LENGTH) {
-    BackwardRefsCursorAdd(refs, PixOrCopyCreateCopy(1, MAX_LENGTH));
-    length -= MAX_LENGTH;
-  }
-  if (length > 0) {
-    BackwardRefsCursorAdd(refs, PixOrCopyCreateCopy(1, length));
-  }
-}
-
-static int BackwardReferencesRle(int xsize, int ysize,
-                                 const uint32_t* const argb,
-                                 VP8LBackwardRefs* const refs) {
-  const int pix_count = xsize * ysize;
-  int match_len = 0;
-  int i;
-  ClearBackwardRefs(refs);
-  PushBackCopy(refs, match_len);    // i=0 case
-  BackwardRefsCursorAdd(refs, PixOrCopyCreateLiteral(argb[0]));
-  for (i = 1; i < pix_count; ++i) {
-    if (argb[i] == argb[i - 1]) {
-      ++match_len;
-    } else {
-      PushBackCopy(refs, match_len);
-      match_len = 0;
-      BackwardRefsCursorAdd(refs, PixOrCopyCreateLiteral(argb[i]));
-    }
-  }
-  PushBackCopy(refs, match_len);
-  return !refs->error_;
-}
-
 static void AddSingleLiteral(uint32_t pixel, int use_color_cache,
                              VP8LColorCache* const hashers,
                              VP8LBackwardRefs* const refs) {
@@ -360,7 +328,48 @@ static void AddSingleLiteral(uint32_t pixel, int use_color_cache,
   BackwardRefsCursorAdd(refs, v);
 }
 
-static int BackwardReferencesHashChain(int xsize, int ysize,
+static WEBP_INLINE void PushBackCopy(VP8LBackwardRefs* const refs, int length) {
+  while (length >= MAX_LENGTH) {
+    BackwardRefsCursorAdd(refs, PixOrCopyCreateCopy(1, MAX_LENGTH));
+    length -= MAX_LENGTH;
+  }
+  if (length > 0) {
+    BackwardRefsCursorAdd(refs, PixOrCopyCreateCopy(1, length));
+  }
+}
+
+static int BackwardReferencesRle(int xsize, int ysize,
+                                 const uint32_t* const argb,
+                                 int cache_bits, VP8LBackwardRefs* const refs) {
+  const int pix_count = xsize * ysize;
+  int match_len = 0;
+  int i;
+  int cc_init = 0;
+  const int use_color_cache = (cache_bits > 0);
+  VP8LColorCache hashers;
+
+  if (use_color_cache) {
+    cc_init = VP8LColorCacheInit(&hashers, cache_bits);
+    if (!cc_init) return 0;
+  }
+  ClearBackwardRefs(refs);
+  // Add first pixel as literal.
+  AddSingleLiteral(argb[0], use_color_cache, &hashers, refs);
+  for (i = 1; i < pix_count; ++i) {
+    if (argb[i] == argb[i - 1]) {
+      ++match_len;
+    } else {
+      PushBackCopy(refs, match_len);
+      match_len = 0;
+      AddSingleLiteral(argb[i], use_color_cache, &hashers, refs);
+    }
+  }
+  PushBackCopy(refs, match_len);
+  if (cc_init) VP8LColorCacheClear(&hashers);
+  return !refs->error_;
+}
+
+static int BackwardReferencesLz77(int xsize, int ysize,
                                        const uint32_t* const argb,
                                        int cache_bits, int quality,
                                        VP8LHashChain* const hash_chain,
@@ -813,11 +822,11 @@ VP8LBackwardRefs* VP8LGetBackwardReferences(
   VP8LHistogram* const histo = VP8LAllocateHistogram(cache_bits);
   if (histo == NULL) return NULL;
 
-  if (!BackwardReferencesHashChain(width, height, argb, cache_bits, quality,
-                                   hash_chain, refs_lz77)) {
+  if (!BackwardReferencesLz77(width, height, argb, cache_bits, quality,
+                              hash_chain, refs_lz77)) {
     goto Error;
   }
-  if (!BackwardReferencesRle(width, height, argb, refs_rle)) {
+  if (!BackwardReferencesRle(width, height, argb, cache_bits, refs_rle)) {
     goto Error;
   }
 
@@ -943,8 +952,8 @@ int VP8LCalculateEstimateForCacheSize(const uint32_t* const argb,
     return 1;
   }
 
-  if (!BackwardReferencesHashChain(xsize, ysize, argb, 0, quality, hash_chain,
-                                   refs)) {
+  if (!BackwardReferencesLz77(xsize, ysize, argb, 0, quality, hash_chain,
+                              refs)) {
     return 0;
   }
   // Do a binary search to find the optimal entropy for cache_bits.
