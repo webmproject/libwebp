@@ -671,11 +671,9 @@ static WebPEncodingError GenerateCandidates(
     }
   }
   if (candidate_lossy->evaluate) {
-    if (!is_key_frame) {
-      // For lossy compression of a frame, it's better to:
-      // * Replace transparent pixels of 'curr' with actual RGB values,
-      //   whenever possible, and
-      // * Replace similar blocks of pixels by a transparent block.
+    if (use_blending) {
+      // For lossy compression of a frame, it's better to replace similar blocks
+      // of pixels by a transparent block.
       if (!curr_canvas_saved) {  // save if not already done so.
         CopyPixels(curr_canvas, curr_canvas_tmp);
       }
@@ -684,7 +682,7 @@ static WebPEncodingError GenerateCandidates(
     error_code = EncodeCandidate(sub_frame, rect, config_lossy, use_blending,
                                  duration, candidate_lossy);
     if (error_code != VP8_ENC_OK) return error_code;
-    if (!is_key_frame) {
+    if (use_blending) {
       CopyPixels(curr_canvas_tmp, curr_canvas);  // restore
     }
   }
