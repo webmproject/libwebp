@@ -29,6 +29,15 @@
   "lh               %["#O0"],   "#I0"(%[in])                  \n\t"            \
   "lh               %["#O1"],   "#I1"(%[in])                  \n\t"
 
+// I0 - location
+// I1..I4 - offsets in bytes
+#define LOAD_WITH_OFFSET_X4(O0, O1, O2, O3,                                    \
+                            I0, I1, I2, I3, I4)                                \
+  "ulw    %["#O0"],    "#I1"(%["#I0"])                        \n\t"            \
+  "ulw    %["#O1"],    "#I2"(%["#I0"])                        \n\t"            \
+  "ulw    %["#O2"],    "#I3"(%["#I0"])                        \n\t"            \
+  "ulw    %["#O3"],    "#I4"(%["#I0"])                        \n\t"
+
 // O - output
 // IO - input/output
 // I - input (macro doesn't change it)
@@ -132,6 +141,42 @@
   "preceu.ph.qbl    %["#O5"],   %["#I2"]                      \n\t"            \
   "preceu.ph.qbr    %["#O6"],   %["#I3"]                      \n\t"            \
   "preceu.ph.qbl    %["#O7"],   %["#I3"]                      \n\t"
+
+// temp0[31..16 | 15..0] = temp0[31..16 | 15..0] + temp8[31..16 | 15..0]
+// temp0[31..16 | 15..0] = temp0[31..16 <<(s) 7 | 15..0 <<(s) 7]
+// temp1..temp7 same as temp0
+// precrqu_s.qb.ph temp0, temp1, temp0:
+//   temp0 = temp1[31..24] | temp1[15..8] | temp0[31..24] | temp0[15..8]
+// store temp0 to dst
+// IO - input/output
+// I - input (macro doesn't change it)
+#define STORE_SAT_SUM_X2(IO0, IO1, IO2, IO3, IO4, IO5, IO6, IO7,               \
+                         I0, I1, I2, I3, I4, I5, I6, I7,                       \
+                         I8, I9, I10, I11, I12)                                \
+  "addq.ph          %["#IO0"],  %["#IO0"],  %["#I0"]          \n\t"            \
+  "addq.ph          %["#IO1"],  %["#IO1"],  %["#I1"]          \n\t"            \
+  "addq.ph          %["#IO2"],  %["#IO2"],  %["#I2"]          \n\t"            \
+  "addq.ph          %["#IO3"],  %["#IO3"],  %["#I3"]          \n\t"            \
+  "addq.ph          %["#IO4"],  %["#IO4"],  %["#I4"]          \n\t"            \
+  "addq.ph          %["#IO5"],  %["#IO5"],  %["#I5"]          \n\t"            \
+  "addq.ph          %["#IO6"],  %["#IO6"],  %["#I6"]          \n\t"            \
+  "addq.ph          %["#IO7"],  %["#IO7"],  %["#I7"]          \n\t"            \
+  "shll_s.ph        %["#IO0"],  %["#IO0"],  7                 \n\t"            \
+  "shll_s.ph        %["#IO1"],  %["#IO1"],  7                 \n\t"            \
+  "shll_s.ph        %["#IO2"],  %["#IO2"],  7                 \n\t"            \
+  "shll_s.ph        %["#IO3"],  %["#IO3"],  7                 \n\t"            \
+  "shll_s.ph        %["#IO4"],  %["#IO4"],  7                 \n\t"            \
+  "shll_s.ph        %["#IO5"],  %["#IO5"],  7                 \n\t"            \
+  "shll_s.ph        %["#IO6"],  %["#IO6"],  7                 \n\t"            \
+  "shll_s.ph        %["#IO7"],  %["#IO7"],  7                 \n\t"            \
+  "precrqu_s.qb.ph  %["#IO0"],  %["#IO1"],  %["#IO0"]         \n\t"            \
+  "precrqu_s.qb.ph  %["#IO2"],  %["#IO3"],  %["#IO2"]         \n\t"            \
+  "precrqu_s.qb.ph  %["#IO4"],  %["#IO5"],  %["#IO4"]         \n\t"            \
+  "precrqu_s.qb.ph  %["#IO6"],  %["#IO7"],  %["#IO6"]         \n\t"            \
+  "usw              %["#IO0"],  "#I9"(%["#I8"])               \n\t"            \
+  "usw              %["#IO2"],  "#I10"(%["#I8"])              \n\t"            \
+  "usw              %["#IO4"],  "#I11"(%["#I8"])              \n\t"            \
+  "usw              %["#IO6"],  "#I12"(%["#I8"])              \n\t"
 
 #define OUTPUT_EARLY_CLOBBER_REGS_10()                                         \
   : [temp1]"=&r"(temp1), [temp2]"=&r"(temp2), [temp3]"=&r"(temp3),             \

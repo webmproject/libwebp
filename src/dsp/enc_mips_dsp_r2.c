@@ -23,46 +23,54 @@
 static const int kC1 = 20091 + (1 << 16);
 static const int kC2 = 35468;
 
-#define LOAD_REF(O0, O1, O2, O3)                                               \
-  "ulw              %["#O0"],  0(%[ref])                      \n\t"            \
-  "ulw              %["#O1"],  16(%[ref])                     \n\t"            \
-  "ulw              %["#O2"],  32(%[ref])                     \n\t"            \
-  "ulw              %["#O3"],  48(%[ref])                     \n\t"
-
-// temp0[31..16 | 15..0] = temp0[31..16 | 15..0] + temp8[31..16 | 15..0]
-// temp0[31..16 | 15..0] = temp0[31..16 <<(s) 7 | 15..0 <<(s) 7]
-// temp1..temp7 same as temp0
-// precrqu_s.qb.ph temp0, temp1, temp0:
-//   temp0 = temp1[31..24] | temp1[15..8] | temp0[31..24] | temp0[15..8]
-// store temp0 to dst
-// IO - input/output
+// O - output
 // I - input (macro doesn't change it)
-#define STORE_SAT_SUM_X2(IO0, IO1, IO2, IO3, IO4, IO5, IO6, IO7,               \
-                         I0, I1, I2, I3, I4, I5, I6, I7)                       \
-  "addq.ph          %["#IO0"],  %["#IO0"],  %["#I0"]          \n\t"            \
-  "addq.ph          %["#IO1"],  %["#IO1"],  %["#I1"]          \n\t"            \
-  "addq.ph          %["#IO2"],  %["#IO2"],  %["#I2"]          \n\t"            \
-  "addq.ph          %["#IO3"],  %["#IO3"],  %["#I3"]          \n\t"            \
-  "addq.ph          %["#IO4"],  %["#IO4"],  %["#I4"]          \n\t"            \
-  "addq.ph          %["#IO5"],  %["#IO5"],  %["#I5"]          \n\t"            \
-  "addq.ph          %["#IO6"],  %["#IO6"],  %["#I6"]          \n\t"            \
-  "addq.ph          %["#IO7"],  %["#IO7"],  %["#I7"]          \n\t"            \
-  "shll_s.ph        %["#IO0"],  %["#IO0"],  7                 \n\t"            \
-  "shll_s.ph        %["#IO1"],  %["#IO1"],  7                 \n\t"            \
-  "shll_s.ph        %["#IO2"],  %["#IO2"],  7                 \n\t"            \
-  "shll_s.ph        %["#IO3"],  %["#IO3"],  7                 \n\t"            \
-  "shll_s.ph        %["#IO4"],  %["#IO4"],  7                 \n\t"            \
-  "shll_s.ph        %["#IO5"],  %["#IO5"],  7                 \n\t"            \
-  "shll_s.ph        %["#IO6"],  %["#IO6"],  7                 \n\t"            \
-  "shll_s.ph        %["#IO7"],  %["#IO7"],  7                 \n\t"            \
-  "precrqu_s.qb.ph  %["#IO0"],  %["#IO1"],  %["#IO0"]         \n\t"            \
-  "precrqu_s.qb.ph  %["#IO2"],  %["#IO3"],  %["#IO2"]         \n\t"            \
-  "precrqu_s.qb.ph  %["#IO4"],  %["#IO5"],  %["#IO4"]         \n\t"            \
-  "precrqu_s.qb.ph  %["#IO6"],  %["#IO7"],  %["#IO6"]         \n\t"            \
-  "usw              %["#IO0"],  0(%[dst])                     \n\t"            \
-  "usw              %["#IO2"],  16(%[dst])                    \n\t"            \
-  "usw              %["#IO4"],  32(%[dst])                    \n\t"            \
-  "usw              %["#IO6"],  48(%[dst])                    \n\t"
+#define ADD_SUB_HALVES_X4(O0, O1, O2, O3, O4, O5, O6, O7,                      \
+                          I0, I1, I2, I3, I4, I5, I6, I7)                      \
+  "addq.ph          %["#O0"],   %["#I0"],  %["#I1"]           \n\t"            \
+  "subq.ph          %["#O1"],   %["#I0"],  %["#I1"]           \n\t"            \
+  "addq.ph          %["#O2"],   %["#I2"],  %["#I3"]           \n\t"            \
+  "subq.ph          %["#O3"],   %["#I2"],  %["#I3"]           \n\t"            \
+  "addq.ph          %["#O4"],   %["#I4"],  %["#I5"]           \n\t"            \
+  "subq.ph          %["#O5"],   %["#I4"],  %["#I5"]           \n\t"            \
+  "addq.ph          %["#O6"],   %["#I6"],  %["#I7"]           \n\t"            \
+  "subq.ph          %["#O7"],   %["#I6"],  %["#I7"]           \n\t"
+
+// IO - input/output
+#define ABS_X8(IO0, IO1, IO2, IO3, IO4, IO5, IO6, IO7)                         \
+  "absq_s.ph        %["#IO0"],   %["#IO0"]                    \n\t"            \
+  "absq_s.ph        %["#IO1"],   %["#IO1"]                    \n\t"            \
+  "absq_s.ph        %["#IO2"],   %["#IO2"]                    \n\t"            \
+  "absq_s.ph        %["#IO3"],   %["#IO3"]                    \n\t"            \
+  "absq_s.ph        %["#IO4"],   %["#IO4"]                    \n\t"            \
+  "absq_s.ph        %["#IO5"],   %["#IO5"]                    \n\t"            \
+  "absq_s.ph        %["#IO6"],   %["#IO6"]                    \n\t"            \
+  "absq_s.ph        %["#IO7"],   %["#IO7"]                    \n\t"
+
+// dpa.w.ph $ac0 temp0 ,temp1
+//  $ac += temp0[31..16] * temp1[31..16] + temp0[15..0] * temp1[15..0]
+// dpax.w.ph $ac0 temp0 ,temp1
+//  $ac += temp0[31..16] * temp1[15..0] + temp0[15..0] * temp1[31..16]
+// O - output
+// I - input (macro doesn't change it)
+#define MUL_HALF(O0, I0, I1, I2, I3, I4, I5, I6, I7,                           \
+                 I8, I9, I10, I11, I12, I13, I14, I15)                         \
+    "mult            $ac0,      $zero,     $zero              \n\t"            \
+    "dpa.w.ph        $ac0,      %["#I2"],  %["#I0"]           \n\t"            \
+    "dpax.w.ph       $ac0,      %["#I5"],  %["#I6"]           \n\t"            \
+    "dpa.w.ph        $ac0,      %["#I8"],  %["#I9"]           \n\t"            \
+    "dpax.w.ph       $ac0,      %["#I11"], %["#I4"]           \n\t"            \
+    "dpa.w.ph        $ac0,      %["#I12"], %["#I7"]           \n\t"            \
+    "dpax.w.ph       $ac0,      %["#I13"], %["#I1"]           \n\t"            \
+    "dpa.w.ph        $ac0,      %["#I14"], %["#I3"]           \n\t"            \
+    "dpax.w.ph       $ac0,      %["#I15"], %["#I10"]          \n\t"            \
+    "mflo            %["#O0"],  $ac0                          \n\t"
+
+#define OUTPUT_EARLY_CLOBBER_REGS_17()                                         \
+  OUTPUT_EARLY_CLOBBER_REGS_10(),                                              \
+  [temp11]"=&r"(temp11), [temp12]"=&r"(temp12), [temp13]"=&r"(temp13),         \
+  [temp14]"=&r"(temp14), [temp15]"=&r"(temp15), [temp16]"=&r"(temp16),         \
+  [temp17]"=&r"(temp17)
 
 static WEBP_INLINE void ITransformOne(const uint8_t* ref, const int16_t* in,
                                       uint8_t* dst) {
@@ -116,11 +124,12 @@ static WEBP_INLINE void ITransformOne(const uint8_t* ref, const int16_t* in,
                    temp6)
     PACK_2_HALVES_TO_WORD(temp1, temp2, temp3, temp4, temp9, temp12, temp13,
                           temp16, temp11, temp10, temp15, temp14)
-    LOAD_REF(temp10, temp11, temp14, temp15)
+    LOAD_WITH_OFFSET_X4(temp10, temp11, temp14, temp15, ref, 0, 16, 32, 48)
     CONVERT_2_BYTES_TO_HALF(temp5, temp6, temp7, temp8, temp17, temp18, temp10,
                             temp11, temp10, temp11, temp14, temp15)
     STORE_SAT_SUM_X2(temp5, temp6, temp7, temp8, temp17, temp18, temp10, temp11,
-                     temp9, temp12, temp1, temp2, temp13, temp16, temp3, temp4)
+                     temp9, temp12, temp1, temp2, temp13, temp16, temp3, temp4,
+                     dst, 0, 16, 32, 48)
 
     OUTPUT_EARLY_CLOBBER_REGS_18()
     : [dst]"r"(dst), [in]"r"(in), [kC1]"r"(kC1), [kC2]"r"(kC2), [ref]"r"(ref)
@@ -136,8 +145,71 @@ static void ITransform(const uint8_t* ref, const int16_t* in, uint8_t* dst,
   }
 }
 
-#undef LOAD_REF
-#undef STORE_SAT_SUM_X2
+static int Disto4x4(const uint8_t* const a, const uint8_t* const b,
+                    const uint16_t* const w) {
+  int temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9;
+  int temp10, temp11, temp12, temp13, temp14, temp15, temp16, temp17;
+
+  __asm__ volatile (
+    LOAD_WITH_OFFSET_X4(temp1, temp2, temp3, temp4, a, 0, 16, 32, 48)
+    CONVERT_2_BYTES_TO_HALF(temp5, temp6, temp7, temp8, temp9,temp10, temp11,
+                            temp12, temp1, temp2, temp3, temp4)
+    ADD_SUB_HALVES_X4(temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8,
+                      temp5, temp6, temp7, temp8, temp9, temp10, temp11, temp12)
+    PACK_2_HALVES_TO_WORD(temp9, temp10, temp11, temp12, temp1, temp3, temp5,
+                          temp7, temp2, temp4, temp6, temp8)
+    ADD_SUB_HALVES_X4(temp2, temp4, temp6, temp8, temp9, temp1, temp3, temp10,
+                      temp1, temp9, temp3, temp10, temp5, temp11, temp7, temp12)
+    ADD_SUB_HALVES_X4(temp5, temp11, temp7, temp2, temp9, temp3, temp6, temp12,
+                      temp2, temp9, temp6, temp3, temp4, temp1, temp8, temp10)
+    ADD_SUB_HALVES_X4(temp1, temp4, temp10, temp8, temp7, temp11, temp5, temp2,
+                      temp5, temp7, temp11, temp2, temp9, temp6, temp3, temp12)
+    ABS_X8(temp1, temp4, temp10, temp8, temp7, temp11, temp5, temp2)
+    LOAD_WITH_OFFSET_X4(temp3, temp6, temp9, temp12, w, 0, 4, 8, 12)
+    LOAD_WITH_OFFSET_X4(temp13, temp14, temp15, temp16, w, 16, 20, 24, 28)
+    MUL_HALF(temp17, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8,
+             temp9, temp10, temp11, temp12, temp13, temp14, temp15, temp16)
+    LOAD_WITH_OFFSET_X4(temp1, temp2, temp3, temp4, b, 0, 16, 32, 48)
+    CONVERT_2_BYTES_TO_HALF(temp5,temp6, temp7, temp8, temp9,temp10, temp11,
+                            temp12, temp1, temp2, temp3, temp4)
+    ADD_SUB_HALVES_X4(temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8,
+                      temp5, temp6, temp7, temp8, temp9, temp10, temp11, temp12)
+    PACK_2_HALVES_TO_WORD(temp9, temp10, temp11, temp12, temp1, temp3, temp5,
+                          temp7, temp2, temp4, temp6, temp8)
+    ADD_SUB_HALVES_X4(temp2, temp4, temp6, temp8, temp9, temp1, temp3, temp10,
+                      temp1, temp9, temp3, temp10, temp5, temp11, temp7, temp12)
+    ADD_SUB_HALVES_X4(temp5, temp11, temp7, temp2, temp9, temp3, temp6, temp12,
+                      temp2, temp9, temp6, temp3, temp4, temp1, temp8, temp10)
+    ADD_SUB_HALVES_X4(temp1, temp4, temp10, temp8, temp7, temp11, temp5, temp2,
+                      temp5, temp7, temp11, temp2, temp9, temp6, temp3, temp12)
+    ABS_X8(temp1, temp4, temp10, temp8, temp7, temp11, temp5, temp2)
+    LOAD_WITH_OFFSET_X4(temp3, temp6, temp9, temp12, w, 0, 4, 8, 12)
+    LOAD_WITH_OFFSET_X4(temp13, temp14, temp15, temp16, w, 16, 20, 24, 28)
+    MUL_HALF(temp3, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8,
+             temp9, temp10, temp11, temp12, temp13, temp14, temp15, temp16)
+    OUTPUT_EARLY_CLOBBER_REGS_17()
+    : [a]"r"(a), [b]"r"(b), [w]"r"(w)
+    : "memory", "hi", "lo"
+  );
+  return abs(temp3 - temp17) >> 5;
+}
+
+static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
+                      const uint16_t* const w) {
+  int D = 0;
+  int x, y;
+  for (y = 0; y < 16 * BPS; y += 4 * BPS) {
+    for (x = 0; x < 16; x += 4) {
+      D += Disto4x4(a + x + y, b + x + y, w);
+    }
+  }
+  return D;
+}
+
+#undef OUTPUT_EARLY_CLOBBER_REGS_17
+#undef MUL_HALF
+#undef ABS_X8
+#undef ADD_SUB_HALVES_X4
 
 #endif  // WEBP_USE_MIPS_DSP_R2
 
@@ -149,5 +221,7 @@ extern WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPSdspR2(void);
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
   VP8ITransform = ITransform;
+  VP8TDisto4x4 = Disto4x4;
+  VP8TDisto16x16 = Disto16x16;
 #endif  // WEBP_USE_MIPS_DSP_R2
 }
