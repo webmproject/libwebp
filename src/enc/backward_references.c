@@ -810,32 +810,48 @@ static void BackwardReferences2DLocality(int xsize,
   }
 }
 
+static int CalculateBestCacheSize(const uint32_t* const argb,
+                                  int xsize, int ysize, int quality,
+                                  VP8LHashChain* const hash_chain,
+                                  VP8LBackwardRefs* const refs,
+                                  int* const best_cache_bits);
+
 VP8LBackwardRefs* VP8LGetBackwardReferences(
     int width, int height, const uint32_t* const argb, int quality,
-    int cache_bits, int use_2d_locality, VP8LHashChain* const hash_chain,
+    int* cache_bits, VP8LHashChain* const hash_chain,
     VP8LBackwardRefs refs_array[2]) {
   int lz77_is_useful;
   double bit_cost_lz77, bit_cost_rle;
   VP8LBackwardRefs* best = NULL;
   VP8LBackwardRefs* const refs_lz77 = &refs_array[0];
   VP8LBackwardRefs* const refs_rle = &refs_array[1];
-  VP8LHistogram* const histo = VP8LAllocateHistogram(cache_bits);
-  if (histo == NULL) return NULL;
+  VP8LHistogram* histo = NULL;
 
-  if (!BackwardReferencesLz77(width, height, argb, cache_bits, quality,
+  if (!CalculateBestCacheSize(argb, width, height, quality, hash_chain,
+                              refs_lz77, cache_bits)) {
+    goto Error;
+  }
+
+  // TODO(vikasa): Use the refs_lz77 computed (with cache_bits=0) in the method
+  // 'CalculateBestCacheSize' to regenerate the lz77 references corresponding to
+  // the optimum cache_bits and avoid calling 'BackwardReferencesLz77' here.
+  if (!BackwardReferencesLz77(width, height, argb, *cache_bits, quality,
                               hash_chain, refs_lz77)) {
     goto Error;
   }
-  if (!BackwardReferencesRle(width, height, argb, cache_bits, refs_rle)) {
+  if (!BackwardReferencesRle(width, height, argb, *cache_bits, refs_rle)) {
     goto Error;
   }
 
+  histo = VP8LAllocateHistogram(*cache_bits);
+  if (histo == NULL) goto Error;
+
   {
     // Evaluate LZ77 coding.
-    VP8LHistogramCreate(histo, refs_lz77, cache_bits);
+    VP8LHistogramCreate(histo, refs_lz77, *cache_bits);
     bit_cost_lz77 = VP8LHistogramEstimateBits(histo);
     // Evaluate RLE coding.
-    VP8LHistogramCreate(histo, refs_rle, cache_bits);
+    VP8LHistogramCreate(histo, refs_rle, *cache_bits);
     bit_cost_rle = VP8LHistogramEstimateBits(histo);
     // Decide if LZ77 is useful.
     lz77_is_useful = (bit_cost_lz77 < bit_cost_rle);
@@ -853,11 +869,11 @@ VP8LBackwardRefs* VP8LGetBackwardReferences(
         goto Error;
       }
       if (BackwardReferencesTraceBackwards(width, height, argb, quality,
-                                           cache_bits, hash_chain,
+                                           *cache_bits, hash_chain,
                                            refs_trace)) {
         double bit_cost_trace;
         // Evaluate LZ77 coding.
-        VP8LHistogramCreate(histo, refs_trace, cache_bits);
+        VP8LHistogramCreate(histo, refs_trace, *cache_bits);
         bit_cost_trace = VP8LHistogramEstimateBits(histo);
         if (bit_cost_trace < bit_cost_lz77) {
           best = refs_trace;
@@ -868,7 +884,7 @@ VP8LBackwardRefs* VP8LGetBackwardReferences(
     best = refs_rle;
   }
 
-  if (use_2d_locality) BackwardReferences2DLocality(width, best);
+  BackwardReferences2DLocality(width, best);
 
  Error:
   VP8LFreeHistogram(histo);
@@ -930,30 +946,33 @@ static double ComputeCacheEntropy(const uint32_t* const argb,
   return entropy;
 }
 
-// *best_cache_bits will contain how many bits are to be used for a color cache.
+// Evaluate optimal cache bits for the local color cache.
+// The input *best_cache_bits sets the maximum cache bits to use (passing 0
+// implies disabling the local color cache). The local color cache is also
+// disabled for the lower (<= 25) quality.
 // Returns 0 in case of memory error.
-int VP8LCalculateEstimateForCacheSize(const uint32_t* const argb,
-                                      int xsize, int ysize, int quality,
-                                      VP8LHashChain* const hash_chain,
-                                      VP8LBackwardRefs* const refs,
-                                      int* const best_cache_bits) {
+static int CalculateBestCacheSize(const uint32_t* const argb,
+                                  int xsize, int ysize, int quality,
+                                  VP8LHashChain* const hash_chain,
+                                  VP8LBackwardRefs* const refs,
+                                  int* const best_cache_bits) {
   int eval_low = 1;
   int eval_high = 1;
   double entropy_low = MAX_ENTROPY;
   double entropy_high = MAX_ENTROPY;
   const double cost_mul = 5e-4;
   int cache_bits_low = 0;
-  int cache_bits_high = *best_cache_bits;
+  int cache_bits_high = (quality <= 25) ? 0 : *best_cache_bits;
 
   assert(cache_bits_high <= MAX_COLOR_CACHE_BITS);
 
   if (cache_bits_high == 0) {
+    *best_cache_bits = 0;
     // Local color cache is disabled.
     return 1;
   }
-
-  if (!BackwardReferencesLz77(xsize, ysize, argb, 0, quality, hash_chain,
-                              refs)) {
+  if (!BackwardReferencesLz77(xsize, ysize, argb, cache_bits_low, quality,
+                              hash_chain, refs)) {
     return 0;
   }
   // Do a binary search to find the optimal entropy for cache_bits.
