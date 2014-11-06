@@ -326,7 +326,7 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
 
   if (!config->lossless) {
     VP8Encoder* enc = NULL;
-    if (pic->y == NULL || pic->u == NULL || pic->v == NULL) {
+    if (pic->use_argb || pic->y == NULL || pic->u == NULL || pic->v == NULL) {
       // Make sure we have YUVA samples.
       if (config->preprocessing & 4) {
 #if WEBP_ENCODER_ABI_VERSION > 0x0204
