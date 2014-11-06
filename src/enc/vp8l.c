@@ -281,12 +281,6 @@ static int GetTransformBits(int method, int histo_bits) {
   return (histo_bits > max_transform_bits) ? max_transform_bits : histo_bits;
 }
 
-static int GetCacheBits(int use_palette, float quality) {
-  // Color cache is disabled for compression at lower quality or when a palette
-  // is used.
-  return (use_palette || (quality <= 25.f)) ? 0 : MAX_COLOR_CACHE_BITS;
-}
-
 static int EvalSubtractGreenForPalette(int palette_size, float quality) {
   // Evaluate non-palette encoding (subtract green, prediction transforms etc)
   // for palette size in the mid-range (17-96) as for larger number of colors,
@@ -351,7 +345,6 @@ static int AnalyzeAndInit(VP8LEncoder* const enc, WebPImageHint image_hint) {
       enc->use_subtract_green_ = 1;
     }
   }
-  enc->cache_bits_ = GetCacheBits(enc->use_palette_, quality);
 
   if (!enc->use_palette_) {
     if (image_hint == WEBP_HINT_PHOTO) {
@@ -690,21 +683,28 @@ static WebPEncodingError EncodeImageNoHuffman(VP8LBitWriter* const bw,
   HuffmanTreeToken* tokens = NULL;
   HuffmanTreeCode huffman_codes[5] = { { 0, NULL, NULL } };
   const uint16_t histogram_symbols[1] = { 0 };    // only one tree, one symbol
-  VP8LHistogramSet* const histogram_image = VP8LAllocateHistogramSet(1, 0);
+  int cache_bits = 0;
+  VP8LHistogramSet* histogram_image = NULL;
   HuffmanTree* const huff_tree = (HuffmanTree*)WebPSafeMalloc(
         3ULL * CODE_LENGTH_CODES, sizeof(*huff_tree));
-  if (histogram_image == NULL || huff_tree == NULL) {
+  if (huff_tree == NULL) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
 
   // Calculate backward references from ARGB image.
-  refs = VP8LGetBackwardReferences(width, height, argb, quality, 0, 1,
+  refs = VP8LGetBackwardReferences(width, height, argb, quality, &cache_bits,
                                    hash_chain, refs_array);
   if (refs == NULL) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
+  histogram_image = VP8LAllocateHistogramSet(1, cache_bits);
+  if (histogram_image == NULL) {
+    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+    goto Error;
+  }
+
   // Build histogram image and symbols from backward references.
   VP8LHistogramStoreRefs(refs, histogram_image->histograms[0]);
 
@@ -756,19 +756,16 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
                                              VP8LHashChain* const hash_chain,
                                              VP8LBackwardRefs refs_array[2],
                                              int width, int height, int quality,
-                                             int cache_bits,
+                                             int* cache_bits,
                                              int histogram_bits,
                                              size_t init_byte_position,
                                              int* const hdr_size,
                                              int* const data_size) {
   WebPEncodingError err = VP8_ENC_OK;
-  const int use_2d_locality = 1;
-  const int use_color_cache = (cache_bits > 0);
   const uint32_t histogram_image_xysize =
       VP8LSubSampleSize(width, histogram_bits) *
       VP8LSubSampleSize(height, histogram_bits);
-  VP8LHistogramSet* histogram_image =
-      VP8LAllocateHistogramSet(histogram_image_xysize, cache_bits);
+  VP8LHistogramSet* histogram_image = NULL;
   int histogram_image_size = 0;
   size_t bit_array_size = 0;
   HuffmanTree* huff_tree = NULL;
@@ -785,25 +782,31 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   assert(data_size != NULL);
 
   VP8LBackwardRefsInit(&refs, refs_array[0].block_size_);
-  if (histogram_image == NULL || histogram_symbols == NULL) {
+  if (histogram_symbols == NULL) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
 
+  *cache_bits = MAX_COLOR_CACHE_BITS;
   // 'best_refs' is the reference to the best backward refs and points to one
   // of refs_array[0] or refs_array[1].
   // Calculate backward references from ARGB image.
   best_refs = VP8LGetBackwardReferences(width, height, argb, quality,
-                                        cache_bits, use_2d_locality,
-                                        hash_chain, refs_array);
+                                        cache_bits, hash_chain, refs_array);
   if (best_refs == NULL || !VP8LBackwardRefsCopy(best_refs, &refs)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
+  histogram_image =
+      VP8LAllocateHistogramSet(histogram_image_xysize, *cache_bits);
+  if (histogram_image == NULL) {
+    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+    goto Error;
+  }
+
   // Build histogram image and symbols from backward references.
-  if (!VP8LGetHistoImageSymbols(width, height, &refs,
-                                quality, histogram_bits, cache_bits,
-                                histogram_image,
+  if (!VP8LGetHistoImageSymbols(width, height, &refs, quality, histogram_bits,
+                                *cache_bits, histogram_image,
                                 histogram_symbols)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
@@ -823,9 +826,11 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   histogram_image = NULL;
 
   // Color Cache parameters.
-  VP8LPutBits(bw, use_color_cache, 1);
-  if (use_color_cache) {
-    VP8LPutBits(bw, cache_bits, 4);
+  if (*cache_bits > 0) {
+    VP8LPutBits(bw, 1, 1);
+    VP8LPutBits(bw, *cache_bits, 4);
+  } else {
+    VP8LPutBits(bw, 0, 1);
   }
 
   // Huffman image + meta huffman.
@@ -1307,22 +1312,11 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   VP8LPutBits(bw, !TRANSFORM_PRESENT, 1);  // No more transforms.
 
   // ---------------------------------------------------------------------------
-  // Estimate the color cache size.
-
-  if (!VP8LCalculateEstimateForCacheSize(enc->argb_, enc->current_width_,
-                                         height, quality, &enc->hash_chain_,
-                                         &enc->refs_[0], &enc->cache_bits_)) {
-    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
-    goto Error;
-  }
-
-  // ---------------------------------------------------------------------------
   // Encode and write the transformed image.
-
   err = EncodeImageInternal(bw, enc->argb_, &enc->hash_chain_, enc->refs_,
                             enc->current_width_, height, quality,
-                            enc->cache_bits_, enc->histo_bits_,
-                            byte_position, &hdr_size, &data_size);
+                            &enc->cache_bits_, enc->histo_bits_, byte_position,
+                            &hdr_size, &data_size);
   if (err != VP8_ENC_OK) goto Error;
 
   if (picture->stats != NULL) {
