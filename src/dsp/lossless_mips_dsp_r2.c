@@ -200,6 +200,34 @@ static void SubtractGreenFromBlueAndRed(uint32_t* argb_data,
   );
 }
 
+static WEBP_INLINE uint32_t Select(uint32_t a, uint32_t b, uint32_t c) {
+  int temp0, temp1, temp2, temp3, temp4, temp5;
+  __asm__ volatile (
+    "cmpgdu.lt.qb %[temp1], %[c],     %[b]             \n\t"
+    "pick.qb      %[temp1], %[b],     %[c]             \n\t"
+    "pick.qb      %[temp2], %[c],     %[b]             \n\t"
+    "cmpgdu.lt.qb %[temp4], %[c],     %[a]             \n\t"
+    "pick.qb      %[temp4], %[a],     %[c]             \n\t"
+    "pick.qb      %[temp5], %[c],     %[a]             \n\t"
+    "subu.qb      %[temp3], %[temp1], %[temp2]         \n\t"
+    "subu.qb      %[temp0], %[temp4], %[temp5]         \n\t"
+    "raddu.w.qb   %[temp3], %[temp3]                   \n\t"
+    "raddu.w.qb   %[temp0], %[temp0]                   \n\t"
+    "subu         %[temp3], %[temp3], %[temp0]         \n\t"
+    "slti         %[temp0], %[temp3], 0x1              \n\t"
+    "movz         %[a],     %[b],     %[temp0]         \n\t"
+    : [temp1]"=&r"(temp1), [temp2]"=&r"(temp2), [temp3]"=&r"(temp3),
+      [temp4]"=&r"(temp4), [temp5]"=&r"(temp5), [temp0]"=&r"(temp0),
+      [a]"+&r"(a)
+    : [b]"r"(b), [c]"r"(c)
+  );
+  return a;
+}
+
+static uint32_t Predictor11(uint32_t left, const uint32_t* const top) {
+  return Select(top[0], left, top[-1]);
+}
+
 static uint32_t Predictor12(uint32_t left, const uint32_t* const top) {
   return ClampedAddSubtractFull(left, top[0], top[-1]);
 }
@@ -218,6 +246,7 @@ void VP8LDspInitMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
   VP8LMapColor32b = MapARGB;
   VP8LMapColor8b = MapAlpha;
+  VP8LPredictors[11] = Predictor11;
   VP8LPredictors[12] = Predictor12;
   VP8LPredictors[13] = Predictor13;
   VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRed;
