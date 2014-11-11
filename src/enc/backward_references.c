@@ -814,31 +814,84 @@ static int CalculateBestCacheSize(const uint32_t* const argb,
                                   int xsize, int ysize, int quality,
                                   VP8LHashChain* const hash_chain,
                                   VP8LBackwardRefs* const refs,
+                                  int* const lz77_computed,
                                   int* const best_cache_bits);
+
+// Create the backward references for specified cache_bits from a source
+// backward refs that is created without local color cache.
+static int BackwardRefsWithLocalCache(const uint32_t* const argb,
+                                      int cache_bits,
+                                      const VP8LBackwardRefs* const refs_src,
+                                      VP8LBackwardRefs* const refs_dst) {
+  int pixel_index = 0;
+  VP8LColorCache hashers;
+  VP8LRefsCursor c = VP8LRefsCursorInit(refs_src);
+  if (!VP8LColorCacheInit(&hashers, cache_bits)) return 0;
+
+  ClearBackwardRefs(refs_dst);
+  while (VP8LRefsCursorOk(&c)) {
+    const PixOrCopy* const v_src = c.cur_pos;
+    if (PixOrCopyIsLiteral(v_src)) {
+      const uint32_t argb_literal = v_src->argb_or_distance;
+      if (VP8LColorCacheContains(&hashers, argb_literal)) {
+        const int ix = VP8LColorCacheGetIndex(&hashers, argb_literal);
+        BackwardRefsCursorAdd(refs_dst, PixOrCopyCreateCacheIdx(ix));
+      } else {
+        VP8LColorCacheInsert(&hashers, argb_literal);
+        BackwardRefsCursorAdd(refs_dst, *v_src);
+      }
+      ++pixel_index;
+    } else {
+      // refs_src was created without local cache, so it can not have cache
+      // indexes.
+      int k;
+      assert(PixOrCopyIsCopy(v_src));
+      for (k = 0; k < v_src->len; ++k) {
+        VP8LColorCacheInsert(&hashers, argb[pixel_index++]);
+      }
+      BackwardRefsCursorAdd(refs_dst, *v_src);
+    }
+    VP8LRefsCursorNext(&c);
+  }
+  VP8LColorCacheClear(&hashers);
+  return 1;
+}
 
 VP8LBackwardRefs* VP8LGetBackwardReferences(
     int width, int height, const uint32_t* const argb, int quality,
     int* cache_bits, VP8LHashChain* const hash_chain,
     VP8LBackwardRefs refs_array[2]) {
   int lz77_is_useful;
+  int lz77_computed;
   double bit_cost_lz77, bit_cost_rle;
   VP8LBackwardRefs* best = NULL;
-  VP8LBackwardRefs* const refs_lz77 = &refs_array[0];
-  VP8LBackwardRefs* const refs_rle = &refs_array[1];
+  VP8LBackwardRefs* refs_lz77 = &refs_array[0];
+  VP8LBackwardRefs* refs_rle = &refs_array[1];
   VP8LHistogram* histo = NULL;
 
   if (!CalculateBestCacheSize(argb, width, height, quality, hash_chain,
-                              refs_lz77, cache_bits)) {
+                              refs_lz77, &lz77_computed, cache_bits)) {
     goto Error;
   }
 
-  // TODO(vikasa): Use the refs_lz77 computed (with cache_bits=0) in the method
-  // 'CalculateBestCacheSize' to regenerate the lz77 references corresponding to
-  // the optimum cache_bits and avoid calling 'BackwardReferencesLz77' here.
-  if (!BackwardReferencesLz77(width, height, argb, *cache_bits, quality,
-                              hash_chain, refs_lz77)) {
-    goto Error;
+  if (lz77_computed) {
+    // Transform refs_lz77 for the optimized cache_bits.
+    if (*cache_bits > 0) {
+      if (!BackwardRefsWithLocalCache(argb, *cache_bits, refs_lz77, refs_rle)) {
+        goto Error;
+      }
+      // Swap refs_lz77 and refs_rle.
+      best = refs_lz77;
+      refs_lz77 = refs_rle;
+      refs_rle = best;
+    }
+  } else {
+    if (!BackwardReferencesLz77(width, height, argb, *cache_bits, quality,
+                                hash_chain, refs_lz77)) {
+      goto Error;
+    }
   }
+
   if (!BackwardReferencesRle(width, height, argb, *cache_bits, refs_rle)) {
     goto Error;
   }
@@ -863,7 +916,7 @@ VP8LBackwardRefs* VP8LGetBackwardReferences(
     const int try_lz77_trace_backwards = (quality >= 25);
     best = refs_lz77;   // default guess: lz77 is better
     if (try_lz77_trace_backwards) {
-      VP8LBackwardRefs* const refs_trace = &refs_array[1];
+      VP8LBackwardRefs* const refs_trace = refs_rle;
       if (!VP8LBackwardRefsCopy(refs_lz77, refs_trace)) {
         best = NULL;
         goto Error;
@@ -955,6 +1008,7 @@ static int CalculateBestCacheSize(const uint32_t* const argb,
                                   int xsize, int ysize, int quality,
                                   VP8LHashChain* const hash_chain,
                                   VP8LBackwardRefs* const refs,
+                                  int* const lz77_computed,
                                   int* const best_cache_bits) {
   int eval_low = 1;
   int eval_high = 1;
@@ -966,6 +1020,7 @@ static int CalculateBestCacheSize(const uint32_t* const argb,
 
   assert(cache_bits_high <= MAX_COLOR_CACHE_BITS);
 
+  *lz77_computed = 0;
   if (cache_bits_high == 0) {
     *best_cache_bits = 0;
     // Local color cache is disabled.
@@ -1000,5 +1055,6 @@ static int CalculateBestCacheSize(const uint32_t* const argb,
       if (cache_bits_high != cache_bits_low) eval_high = 1;
     }
   }
+  *lz77_computed = 1;
   return 1;
 }
