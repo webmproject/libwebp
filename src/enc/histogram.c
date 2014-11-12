@@ -435,7 +435,6 @@ static int GetBinIdForEntropy(double min, double max, double val) {
   return (int)(NUM_PARTITIONS * delta / range);
 }
 
-// TODO(vikasa): Evaluate, if there's any correlation between red & blue.
 static int GetHistoBinIndex(
     const VP8LHistogram* const h, const DominantCostRange* const c) {
   const int bin_id =
@@ -524,8 +523,6 @@ static void HistogramAnalyzeEntropyBin(
 // Compact the histogram set by moving the valid one left in the set to the
 // head and moving the ones that have been merged to other histograms towards
 // the end.
-// TODO(vikasa): Evaluate if this method can be avoided by altering the code
-// logic of HistogramCombineEntropyBin main loop.
 static void HistogramCompactBins(VP8LHistogramSet* const image_histo) {
   int start = 0;
   int end = image_histo->size - 1;
