@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//QX4\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 818,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-11-12T22:32:33Z",
+      "side": 1,
+      "message": "at some point, the implementation of this function should be moved here...",
+      "revId": "edb5ab8cf7c5cf864e6c3d6f34a2a8c2948212ac",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//QX0\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-11-12T22:32:33Z",
+      "side": 1,
+      "message": "note: you could in-place replace *v_src\nwith PixOrCopyCreateCacheIdx(ix)\nsince they are the same size.\nThis way, you wouldn\u0027t need *refs_dst array at all.",
+      "revId": "edb5ab8cf7c5cf864e6c3d6f34a2a8c2948212ac",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//QX8\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 865,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-11-12T22:32:33Z",
+      "side": 1,
+      "message": "init to zero is not needed",
+      "revId": "edb5ab8cf7c5cf864e6c3d6f34a2a8c2948212ac",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//QXk\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 883,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-11-12T22:32:33Z",
+      "side": 1,
+      "message": "this is awkward: you lose the reference to lz77 or rle, and it makes the call at 895 somewhat confusing.",
+      "revId": "edb5ab8cf7c5cf864e6c3d6f34a2a8c2948212ac",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
