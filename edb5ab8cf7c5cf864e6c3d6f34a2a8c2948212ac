@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//QXU\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 818,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2014-11-12T22:49:34Z",
+      "side": 1,
+      "message": "Yes will do in subsequent change.\nI avoided the move in previous change as to retain the diffs in that method.",
+      "parentUuid": "AAAAdn//QX4\u003d",
+      "revId": "edb5ab8cf7c5cf864e6c3d6f34a2a8c2948212ac",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//QX0\u003d",
         "filename": "src/enc/backward_references.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2014-11-12T22:32:33Z",
       "side": 1,
       "message": "note: you could in-place replace *v_src\nwith PixOrCopyCreateCacheIdx(ix)\nsince they are the same size.\nThis way, you wouldn\u0027t need *refs_dst array at all.",
+      "revId": "edb5ab8cf7c5cf864e6c3d6f34a2a8c2948212ac",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//QXQ\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2014-11-12T22:49:34Z",
+      "side": 1,
+      "message": "Yes this can be done in-place. Look for my next change.",
+      "parentUuid": "AAAAdn//QX0\u003d",
       "revId": "edb5ab8cf7c5cf864e6c3d6f34a2a8c2948212ac",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//QXM\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 865,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2014-11-12T22:49:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//QX8\u003d",
+      "revId": "edb5ab8cf7c5cf864e6c3d6f34a2a8c2948212ac",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//QXk\u003d",
         "filename": "src/enc/backward_references.c",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2014-11-12T22:32:33Z",
       "side": 1,
       "message": "this is awkward: you lose the reference to lz77 or rle, and it makes the call at 895 somewhat confusing.",
+      "revId": "edb5ab8cf7c5cf864e6c3d6f34a2a8c2948212ac",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//QXI\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 883,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2014-11-12T22:49:34Z",
+      "side": 1,
+      "message": "Not sure I got your comment. Since the method BackwardRefsWithLocalCache requires two refs and converted source ref (refs_lz77) to refs_rle, I am swapping the ref pointers here.\nWhy would call at 895 is confusing. It only takes \u0027refs_rle\u0027 as a parameter and doesn\u0027t care if that\u0027s \u0026refs_array[0] or \u0026refs_array[1].\n\nIrrespective, once I do in-place ref conversion (next change), then this code (swap) is not required.",
+      "parentUuid": "AAAAdn//QXk\u003d",
       "revId": "edb5ab8cf7c5cf864e6c3d6f34a2a8c2948212ac",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
