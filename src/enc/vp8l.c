@@ -27,7 +27,6 @@
 #define PALETTE_KEY_RIGHT_SHIFT   22  // Key for 1K buffer.
 // Maximum number of histogram images (sub-blocks).
 #define MAX_HUFF_IMAGE_SIZE       2600
-#define MAX_COLORS_FOR_GRAPH      64
 
 #define OPTIMIZE_MIN_NUM_COLORS 8
 
@@ -311,13 +310,6 @@ static int AnalyzeAndInit(VP8LEncoder* const enc, WebPImageHint image_hint) {
 
   enc->use_palette_ =
       AnalyzeAndCreatePalette(pic, enc->palette_, &enc->palette_size_);
-
-  // TODO(vikasa): Evaluate and update/remove the handling for hint=GRAPH.
-  if (image_hint == WEBP_HINT_GRAPH) {
-    if (enc->use_palette_ && enc->palette_size_ < MAX_COLORS_FOR_GRAPH) {
-      enc->use_palette_ = 0;
-    }
-  }
 
   if (!enc->use_palette_ ||
       EvalSubtractGreenForPalette(enc->palette_size_, quality)) {
