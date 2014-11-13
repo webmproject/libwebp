@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//QRU\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-11-13T03:36:29Z",
+      "side": 1,
+      "message": "pretty hard to diff this...",
+      "revId": "4dd4762bc61c086c79443eb9b1e7dc1e30413f58",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//QRQ\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-11-13T03:36:29Z",
+      "side": 1,
+      "message": "...given this",
+      "revId": "4dd4762bc61c086c79443eb9b1e7dc1e30413f58",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
