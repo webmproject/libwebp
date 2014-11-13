@@ -817,39 +817,33 @@ static int CalculateBestCacheSize(const uint32_t* const argb,
                                   int* const lz77_computed,
                                   int* const best_cache_bits);
 
-// Create the backward references for specified cache_bits from a source
-// backward refs that is created without local color cache.
+// Update (in-place) backward references for specified cache_bits.
 static int BackwardRefsWithLocalCache(const uint32_t* const argb,
                                       int cache_bits,
-                                      const VP8LBackwardRefs* const refs_src,
-                                      VP8LBackwardRefs* const refs_dst) {
+                                      VP8LBackwardRefs* const refs) {
   int pixel_index = 0;
   VP8LColorCache hashers;
-  VP8LRefsCursor c = VP8LRefsCursorInit(refs_src);
+  VP8LRefsCursor c = VP8LRefsCursorInit(refs);
   if (!VP8LColorCacheInit(&hashers, cache_bits)) return 0;
 
-  ClearBackwardRefs(refs_dst);
   while (VP8LRefsCursorOk(&c)) {
-    const PixOrCopy* const v_src = c.cur_pos;
-    if (PixOrCopyIsLiteral(v_src)) {
-      const uint32_t argb_literal = v_src->argb_or_distance;
+    PixOrCopy* const v = c.cur_pos;
+    if (PixOrCopyIsLiteral(v)) {
+      const uint32_t argb_literal = v->argb_or_distance;
       if (VP8LColorCacheContains(&hashers, argb_literal)) {
         const int ix = VP8LColorCacheGetIndex(&hashers, argb_literal);
-        BackwardRefsCursorAdd(refs_dst, PixOrCopyCreateCacheIdx(ix));
+        *v = PixOrCopyCreateCacheIdx(ix);
       } else {
         VP8LColorCacheInsert(&hashers, argb_literal);
-        BackwardRefsCursorAdd(refs_dst, *v_src);
       }
       ++pixel_index;
     } else {
-      // refs_src was created without local cache, so it can not have cache
-      // indexes.
+      // refs was created without local cache, so it can not have cache indexes.
       int k;
-      assert(PixOrCopyIsCopy(v_src));
-      for (k = 0; k < v_src->len; ++k) {
+      assert(PixOrCopyIsCopy(v));
+      for (k = 0; k < v->len; ++k) {
         VP8LColorCacheInsert(&hashers, argb[pixel_index++]);
       }
-      BackwardRefsCursorAdd(refs_dst, *v_src);
     }
     VP8LRefsCursorNext(&c);
   }
@@ -877,13 +871,9 @@ VP8LBackwardRefs* VP8LGetBackwardReferences(
   if (lz77_computed) {
     // Transform refs_lz77 for the optimized cache_bits.
     if (*cache_bits > 0) {
-      if (!BackwardRefsWithLocalCache(argb, *cache_bits, refs_lz77, refs_rle)) {
+      if (!BackwardRefsWithLocalCache(argb, *cache_bits, refs_lz77)) {
         goto Error;
       }
-      // Swap refs_lz77 and refs_rle.
-      best = refs_lz77;
-      refs_lz77 = refs_rle;
-      refs_rle = best;
     }
   } else {
     if (!BackwardReferencesLz77(width, height, argb, *cache_bits, quality,
