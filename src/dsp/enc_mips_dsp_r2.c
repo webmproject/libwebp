@@ -325,6 +325,274 @@ static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
   return D;
 }
 
+//------------------------------------------------------------------------------
+// Intra predictions
+
+static WEBP_INLINE uint8_t clip_8b(int v) {
+  return (!(v & ~0xff)) ? v : (v < 0) ? 0 : 255;
+}
+
+static uint8_t clip1[255 + 510 + 1];    // clips [-255,510] to [0,255]
+
+static volatile int tables_ok = 0;
+
+static void InitTables(void) {
+  if (!tables_ok) {
+    int i;
+    for (i = -255; i <= 255 + 255; ++i) {
+      clip1[255 + i] = clip_8b(i);
+    }
+    tables_ok = 1;
+  }
+}
+
+#define FILL_PART(J, SIZE)                                          \
+    "usw        %[value],  0+"#J"*"XSTR(BPS)"(%[dst])    \n\t"      \
+    "usw        %[value],  4+"#J"*"XSTR(BPS)"(%[dst])    \n\t"      \
+  ".if "#SIZE" == 16                                     \n\t"      \
+    "usw        %[value],  8+"#J"*"XSTR(BPS)"(%[dst])    \n\t"      \
+    "usw        %[value], 12+"#J"*"XSTR(BPS)"(%[dst])    \n\t"      \
+  ".endif                                                \n\t"
+
+#define FILL_8_OR_16(DST, VALUE, SIZE) do {                         \
+  int value = (VALUE);                                              \
+  __asm__ volatile (                                                \
+    "replv.qb   %[value],  %[value]                      \n\t"      \
+    FILL_PART( 0, SIZE)                                             \
+    FILL_PART( 1, SIZE)                                             \
+    FILL_PART( 2, SIZE)                                             \
+    FILL_PART( 3, SIZE)                                             \
+    FILL_PART( 4, SIZE)                                             \
+    FILL_PART( 5, SIZE)                                             \
+    FILL_PART( 6, SIZE)                                             \
+    FILL_PART( 7, SIZE)                                             \
+  ".if "#SIZE" == 16                                     \n\t"      \
+    FILL_PART( 8, 16)                                               \
+    FILL_PART( 9, 16)                                               \
+    FILL_PART(10, 16)                                               \
+    FILL_PART(11, 16)                                               \
+    FILL_PART(12, 16)                                               \
+    FILL_PART(13, 16)                                               \
+    FILL_PART(14, 16)                                               \
+    FILL_PART(15, 16)                                               \
+  ".endif                                                \n\t"      \
+    : [value]"+&r"(value)                                           \
+    : [dst]"r"((DST))                                               \
+    : "memory"                                                      \
+  );                                                                \
+} while (0)
+
+#define VERTICAL_PRED(DST, TOP, SIZE)                                          \
+static WEBP_INLINE void VerticalPred##SIZE(uint8_t* (DST),                     \
+                                           const uint8_t* (TOP)) {             \
+  int j;                                                                       \
+  if ((TOP)) {                                                                 \
+    for (j = 0; j < (SIZE); ++j) memcpy((DST) + j * BPS, (TOP), (SIZE));       \
+  } else {                                                                     \
+    FILL_8_OR_16((DST), 127, (SIZE));                                          \
+  }                                                                            \
+}
+
+VERTICAL_PRED(dst, top, 8)
+VERTICAL_PRED(dst, top, 16)
+
+#undef VERTICAL_PRED
+
+#define HORIZONTAL_PRED(DST, LEFT, SIZE)                                       \
+static WEBP_INLINE void HorizontalPred##SIZE(uint8_t* (DST),                   \
+                                             const uint8_t* (LEFT)) {          \
+  if (LEFT) {                                                                  \
+    int j;                                                                     \
+    for (j = 0; j < (SIZE); ++j) {                                             \
+      memset((DST) + j * BPS, (LEFT)[j], (SIZE));                              \
+    }                                                                          \
+  } else {                                                                     \
+    FILL_8_OR_16((DST), 129, (SIZE));                                          \
+  }                                                                            \
+}
+
+HORIZONTAL_PRED(dst, left, 8)
+HORIZONTAL_PRED(dst, left, 16)
+
+#undef HORIZONTAL_PRED
+
+#define TRUE_MOTION(DST, LEFT, TOP, SIZE)                                      \
+static WEBP_INLINE void TrueMotion##SIZE(uint8_t* (DST), const uint8_t* (LEFT),\
+                                         const uint8_t* (TOP)) {               \
+  int y;                                                                       \
+  if (LEFT) {                                                                  \
+    if (TOP) {                                                                 \
+      const uint8_t* const clip = clip1 + 255 - (LEFT)[-1];                    \
+      for (y = 0; y < (SIZE); ++y) {                                           \
+        const uint8_t* const clip_table = clip + (LEFT)[y];                    \
+        int x;                                                                 \
+        for (x = 0; x < (SIZE); ++x) {                                         \
+          (DST)[x] = clip_table[(TOP)[x]];                                     \
+        }                                                                      \
+        (DST) += BPS;                                                          \
+      }                                                                        \
+    } else {                                                                   \
+      HorizontalPred##SIZE((DST), (LEFT));                                     \
+    }                                                                          \
+  } else {                                                                     \
+    /* true motion without left samples (hence: with default 129 value)    */  \
+    /* is equivalent to VE prediction where you just copy the top samples. */  \
+    /* Note that if top samples are not available, the default value is    */  \
+    /* then 129, and not 127 as in the VerticalPred case.                  */  \
+    if (TOP) {                                                                 \
+      VerticalPred##SIZE((DST), (TOP));                                        \
+    } else {                                                                   \
+      FILL_8_OR_16((DST), 129, (SIZE));                                        \
+    }                                                                          \
+  }                                                                            \
+}
+
+TRUE_MOTION(dst, left, top, 8)
+TRUE_MOTION(dst, left, top, 16)
+
+#undef TRUE_MOTION
+
+static WEBP_INLINE void DCMode16(uint8_t* dst, const uint8_t* left,
+                                 const uint8_t* top) {
+  int DC, DC1;
+  int temp0, temp1, temp2, temp3;
+
+  __asm__ volatile(
+    "beqz        %[top],   2f                  \n\t"
+    LOAD_WITH_OFFSET_X4(temp0, temp1, temp2, temp3, top,
+                        0, 4, 8, 12,
+                        0, 0, 0, 0,
+                        0)
+    "raddu.w.qb  %[temp0], %[temp0]            \n\t"
+    "raddu.w.qb  %[temp1], %[temp1]            \n\t"
+    "raddu.w.qb  %[temp2], %[temp2]            \n\t"
+    "raddu.w.qb  %[temp3], %[temp3]            \n\t"
+    "addu        %[temp0], %[temp0], %[temp1]  \n\t"
+    "addu        %[temp2], %[temp2], %[temp3]  \n\t"
+    "addu        %[DC],    %[temp0], %[temp2]  \n\t"
+    "move        %[DC1],   %[DC]               \n\t"
+    "beqz        %[left],  1f                  \n\t"
+    LOAD_WITH_OFFSET_X4(temp0, temp1, temp2, temp3, left,
+                        0, 4, 8, 12,
+                        0, 0, 0, 0,
+                        0)
+    "raddu.w.qb  %[temp0], %[temp0]            \n\t"
+    "raddu.w.qb  %[temp1], %[temp1]            \n\t"
+    "raddu.w.qb  %[temp2], %[temp2]            \n\t"
+    "raddu.w.qb  %[temp3], %[temp3]            \n\t"
+    "addu        %[temp0], %[temp0], %[temp1]  \n\t"
+    "addu        %[temp2], %[temp2], %[temp3]  \n\t"
+    "addu        %[DC1],   %[temp0], %[temp2]  \n\t"
+  "1:                                          \n\t"
+    "addu        %[DC],   %[DC],     %[DC1]    \n\t"
+    "j           3f                            \n\t"
+  "2:                                          \n\t"
+    "beqz        %[left],  4f                  \n\t"
+    LOAD_WITH_OFFSET_X4(temp0, temp1, temp2, temp3, left,
+                        0, 4, 8, 12,
+                        0, 0, 0, 0,
+                        0)
+    "raddu.w.qb  %[temp0], %[temp0]            \n\t"
+    "raddu.w.qb  %[temp1], %[temp1]            \n\t"
+    "raddu.w.qb  %[temp2], %[temp2]            \n\t"
+    "raddu.w.qb  %[temp3], %[temp3]            \n\t"
+    "addu        %[temp0], %[temp0], %[temp1]  \n\t"
+    "addu        %[temp2], %[temp2], %[temp3]  \n\t"
+    "addu        %[DC],    %[temp0], %[temp2]  \n\t"
+    "addu        %[DC],    %[DC],    %[DC]     \n\t"
+  "3:                                          \n\t"
+    "shra_r.w    %[DC],    %[DC],    5         \n\t"
+    "j           5f                            \n\t"
+  "4:                                          \n\t"
+    "li          %[DC],    0x80                \n\t"
+  "5:                                          \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [DC]"=&r"(DC),
+      [temp2]"=&r"(temp2), [temp3]"=&r"(temp3), [DC1]"=&r"(DC1)
+    : [left]"r"(left), [top]"r"(top)
+    : "memory"
+  );
+
+  FILL_8_OR_16(dst, DC, 16);
+}
+
+static WEBP_INLINE void DCMode8(uint8_t* dst, const uint8_t* left,
+                                const uint8_t* top) {
+  int DC, DC1;
+  int temp0, temp1, temp2, temp3;
+
+  __asm__ volatile(
+    "beqz        %[top],   2f                  \n\t"
+    "ulw         %[temp0], 0(%[top])           \n\t"
+    "ulw         %[temp1], 4(%[top])           \n\t"
+    "raddu.w.qb  %[temp0], %[temp0]            \n\t"
+    "raddu.w.qb  %[temp1], %[temp1]            \n\t"
+    "addu        %[DC],    %[temp0], %[temp1]  \n\t"
+    "move        %[DC1],   %[DC]               \n\t"
+    "beqz        %[left],  1f                  \n\t"
+    "ulw         %[temp2], 0(%[left])          \n\t"
+    "ulw         %[temp3], 4(%[left])          \n\t"
+    "raddu.w.qb  %[temp2], %[temp2]            \n\t"
+    "raddu.w.qb  %[temp3], %[temp3]            \n\t"
+    "addu        %[DC1],   %[temp2], %[temp3]  \n\t"
+  "1:                                          \n\t"
+    "addu        %[DC],    %[DC],    %[DC1]    \n\t"
+    "j           3f                            \n\t"
+  "2:                                          \n\t"
+    "beqz        %[left],  4f                  \n\t"
+    "ulw         %[temp2], 0(%[left])          \n\t"
+    "ulw         %[temp3], 4(%[left])          \n\t"
+    "raddu.w.qb  %[temp2], %[temp2]            \n\t"
+    "raddu.w.qb  %[temp3], %[temp3]            \n\t"
+    "addu        %[DC],    %[temp2], %[temp3]  \n\t"
+    "addu        %[DC],    %[DC],    %[DC]     \n\t"
+  "3:                                          \n\t"
+    "shra_r.w    %[DC], %[DC], 4               \n\t"
+    "j           5f                            \n\t"
+  "4:                                          \n\t"
+    "li          %[DC], 0x80                   \n\t"
+  "5:                                          \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [DC]"=&r"(DC),
+      [temp2]"=&r"(temp2), [temp3]"=&r"(temp3), [DC1]"=&r"(DC1)
+    : [left]"r"(left), [top]"r"(top)
+    : "memory"
+  );
+
+  FILL_8_OR_16(dst, DC, 8);
+}
+
+//------------------------------------------------------------------------------
+// Chroma 8x8 prediction (paragraph 12.2)
+
+static void IntraChromaPreds(uint8_t* dst, const uint8_t* left,
+                             const uint8_t* top) {
+  // U block
+  DCMode8(C8DC8 + dst, left, top);
+  VerticalPred8(C8VE8 + dst, top);
+  HorizontalPred8(C8HE8 + dst, left);
+  TrueMotion8(C8TM8 + dst, left, top);
+  // V block
+  dst += 8;
+  if (top) top += 8;
+  if (left) left += 16;
+  DCMode8(C8DC8 + dst, left, top);
+  VerticalPred8(C8VE8 + dst, top);
+  HorizontalPred8(C8HE8 + dst, left);
+  TrueMotion8(C8TM8 + dst, left, top);
+}
+
+//------------------------------------------------------------------------------
+// luma 16x16 prediction (paragraph 12.3)
+
+static void Intra16Preds(uint8_t* dst,
+                         const uint8_t* left, const uint8_t* top) {
+  DCMode16(I16DC16 + dst, left, top);
+  VerticalPred16(I16VE16 + dst, top);
+  HorizontalPred16(I16HE16 + dst, left);
+  TrueMotion16(I16TM16 + dst, left, top);
+}
+
+#undef FILL_8_OR_16
+#undef FILL_PART
 #undef OUTPUT_EARLY_CLOBBER_REGS_17
 #undef MUL_HALF
 #undef ABS_X8
@@ -339,9 +607,12 @@ extern WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPSdspR2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
+  InitTables();
   VP8FTransform = FTransform;
   VP8ITransform = ITransform;
   VP8TDisto4x4 = Disto4x4;
   VP8TDisto16x16 = Disto16x16;
+  VP8EncPredLuma16 = Intra16Preds;
+  VP8EncPredChroma8 = IntraChromaPreds;
 #endif  // WEBP_USE_MIPS_DSP_R2
 }
