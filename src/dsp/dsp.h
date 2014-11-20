@@ -337,6 +337,16 @@ void WebPMultARGBRowC(uint32_t* const ptr, int width, int inverse);
 // To be called first before using the above.
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessing(void);
 
+// ARGB making functions.
+extern void (*VP8PackARGB)(const uint8_t* a, const uint8_t* r,
+                           const uint8_t* g, const uint8_t* b, int len,
+                           int step, uint32_t* out);
+extern void (*VP8PackRGB)(const uint8_t* r, const uint8_t* g, const uint8_t* b,
+                          int len, int step, uint32_t* out);
+
+// To be called first before using the above.
+WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspARGBInit(void);
+
 #ifdef __cplusplus
 }    // extern "C"
 #endif

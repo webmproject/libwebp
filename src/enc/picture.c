@@ -15,6 +15,7 @@
 #include <stdlib.h>
 
 #include "./vp8enci.h"
+#include "../dsp/dsp.h"
 #include "../utils/utils.h"
 
 //------------------------------------------------------------------------------
@@ -38,6 +39,7 @@ int WebPPictureInitInternal(WebPPicture* picture, int version) {
     memset(picture, 0, sizeof(*picture));
     picture->writer = DummyWriter;
     WebPEncodingSetError(picture, VP8_ENC_OK);
+    VP8EncDspARGBInit();
   }
   return 1;
 }
