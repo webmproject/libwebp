@@ -545,6 +545,9 @@ static const VP8LPredictorFunc kPredictorsC[16] = {
   Predictor0, Predictor0    // <- padding security sentinels
 };
 
+//------------------------------------------------------------------------------
+// Methods to calculate Entropy (Shannon).
+
 static float PredictionCostSpatial(const int counts[256], int weight_0,
                                    double exp_val) {
   const int significant_symbols = 256 >> 4;
@@ -592,12 +595,166 @@ static float PredictionCostSpatialHistogram(const int accumulated[4][256],
   return (float)retval;
 }
 
+static WEBP_INLINE double BitsEntropyRefine(int nonzeros, int sum, int max_val,
+                                            double retval) {
+  double mix;
+  if (nonzeros < 5) {
+    if (nonzeros <= 1) {
+      return 0;
+    }
+    // Two symbols, they will be 0 and 1 in a Huffman code.
+    // Let's mix in a bit of entropy to favor good clustering when
+    // distributions of these are combined.
+    if (nonzeros == 2) {
+      return 0.99 * sum + 0.01 * retval;
+    }
+    // No matter what the entropy says, we cannot be better than min_limit
+    // with Huffman coding. I am mixing a bit of entropy into the
+    // min_limit since it produces much better (~0.5 %) compression results
+    // perhaps because of better entropy clustering.
+    if (nonzeros == 3) {
+      mix = 0.95;
+    } else {
+      mix = 0.7;  // nonzeros == 4.
+    }
+  } else {
+    mix = 0.627;
+  }
+
+  {
+    double min_limit = 2 * sum - max_val;
+    min_limit = mix * min_limit + (1.0 - mix) * retval;
+    return (retval < min_limit) ? min_limit : retval;
+  }
+}
+
+// Returns the entropy for the symbols in the input array.
+// Also sets trivial_symbol to the code value, if the array has only one code
+// value. Otherwise, set it to VP8L_NON_TRIVIAL_SYM.
+static double BitsEntropy(const uint32_t* const array, int n,
+                          uint32_t* const trivial_symbol) {
+  double retval = 0.;
+  uint32_t sum = 0;
+  uint32_t nonzero_code = VP8L_NON_TRIVIAL_SYM;
+  int nonzeros = 0;
+  uint32_t max_val = 0;
+  int i;
+  for (i = 0; i < n; ++i) {
+    if (array[i] != 0) {
+      sum += array[i];
+      nonzero_code = i;
+      ++nonzeros;
+      retval -= VP8LFastSLog2(array[i]);
+      if (max_val < array[i]) {
+        max_val = array[i];
+      }
+    }
+  }
+  retval += VP8LFastSLog2(sum);
+  if (trivial_symbol != NULL) {
+    *trivial_symbol = (nonzeros == 1) ? nonzero_code : VP8L_NON_TRIVIAL_SYM;
+  }
+  return BitsEntropyRefine(nonzeros, sum, max_val, retval);
+}
+
+static double BitsEntropyCombined(const uint32_t* const X,
+                                  const uint32_t* const Y, int n) {
+  double retval = 0.;
+  int sum = 0;
+  int nonzeros = 0;
+  int max_val = 0;
+  int i;
+  for (i = 0; i < n; ++i) {
+    const int xy = X[i] + Y[i];
+    if (xy != 0) {
+      sum += xy;
+      ++nonzeros;
+      retval -= VP8LFastSLog2(xy);
+      if (max_val < xy) {
+        max_val = xy;
+      }
+    }
+  }
+  retval += VP8LFastSLog2(sum);
+  return BitsEntropyRefine(nonzeros, sum, max_val, retval);
+}
+
+static double InitialHuffmanCost(void) {
+  // Small bias because Huffman code length is typically not stored in
+  // full length.
+  static const int kHuffmanCodeOfHuffmanCodeSize = CODE_LENGTH_CODES * 3;
+  static const double kSmallBias = 9.1;
+  return kHuffmanCodeOfHuffmanCodeSize - kSmallBias;
+}
+
+// Finalize the Huffman cost based on streak numbers and length type (<3 or >=3)
+static double FinalHuffmanCost(const VP8LStreaks* const stats) {
+  double retval = InitialHuffmanCost();
+  retval += stats->counts[0] * 1.5625 + 0.234375 * stats->streaks[0][1];
+  retval += stats->counts[1] * 2.578125 + 0.703125 * stats->streaks[1][1];
+  retval += 1.796875 * stats->streaks[0][0];
+  retval += 3.28125 * stats->streaks[1][0];
+  return retval;
+}
+
+// Trampolines
+static double HuffmanCost(const uint32_t* const population, int length) {
+  const VP8LStreaks stats = VP8LHuffmanCostCount(population, length);
+  return FinalHuffmanCost(&stats);
+}
+
+static double HuffmanCostCombined(const uint32_t* const X,
+                                  const uint32_t* const Y, int length) {
+  const VP8LStreaks stats = VP8LHuffmanCostCombinedCount(X, Y, length);
+  return FinalHuffmanCost(&stats);
+}
+
+// Aggregated costs
+double VP8LPopulationCost(const uint32_t* const population, int length,
+                          uint32_t* const trivial_sym) {
+  return
+      BitsEntropy(population, length, trivial_sym) +
+      HuffmanCost(population, length);
+}
+
+double VP8LGetCombinedEntropy(const uint32_t* const X,
+                              const uint32_t* const Y, int length) {
+  return BitsEntropyCombined(X, Y, length) + HuffmanCostCombined(X, Y, length);
+}
+
+// Estimates the Entropy + Huffman + other block overhead size cost.
+double VP8LHistogramEstimateBits(const VP8LHistogram* const p) {
+  return
+      VP8LPopulationCost(
+          p->literal_, VP8LHistogramNumCodes(p->palette_code_bits_), NULL)
+      + VP8LPopulationCost(p->red_, NUM_LITERAL_CODES, NULL)
+      + VP8LPopulationCost(p->blue_, NUM_LITERAL_CODES, NULL)
+      + VP8LPopulationCost(p->alpha_, NUM_LITERAL_CODES, NULL)
+      + VP8LPopulationCost(p->distance_, NUM_DISTANCE_CODES, NULL)
+      + VP8LExtraCost(p->literal_ + NUM_LITERAL_CODES, NUM_LENGTH_CODES)
+      + VP8LExtraCost(p->distance_, NUM_DISTANCE_CODES);
+}
+
+double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p) {
+  return
+      BitsEntropy(p->literal_, VP8LHistogramNumCodes(p->palette_code_bits_),
+                  NULL)
+      + BitsEntropy(p->red_, NUM_LITERAL_CODES, NULL)
+      + BitsEntropy(p->blue_, NUM_LITERAL_CODES, NULL)
+      + BitsEntropy(p->alpha_, NUM_LITERAL_CODES, NULL)
+      + BitsEntropy(p->distance_, NUM_DISTANCE_CODES, NULL)
+      + VP8LExtraCost(p->literal_ + NUM_LITERAL_CODES, NUM_LENGTH_CODES)
+      + VP8LExtraCost(p->distance_, NUM_DISTANCE_CODES);
+}
+
 static WEBP_INLINE void UpdateHisto(int histo_argb[4][256], uint32_t argb) {
   ++histo_argb[0][argb >> 24];
   ++histo_argb[1][(argb >> 16) & 0xff];
   ++histo_argb[2][(argb >> 8) & 0xff];
   ++histo_argb[3][argb & 0xff];
 }
+
+//------------------------------------------------------------------------------
 
 static int GetBestPredictorForTile(int width, int height,
                                    int tile_x, int tile_y, int bits,

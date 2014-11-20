@@ -93,14 +93,6 @@ VP8LHistogram* VP8LAllocateHistogram(int cache_bits);
 void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const histo,
                                      const PixOrCopy* const v);
 
-// Estimate how many bits the combined entropy of literals and distance
-// approximately maps to.
-double VP8LHistogramEstimateBits(const VP8LHistogram* const p);
-
-// This function estimates the cost in bits excluding the bits needed to
-// represent the entropy code itself.
-double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p);
-
 static WEBP_INLINE int VP8LHistogramNumCodes(int palette_code_bits) {
   return NUM_LITERAL_CODES + NUM_LENGTH_CODES +
       ((palette_code_bits > 0) ? (1 << palette_code_bits) : 0);

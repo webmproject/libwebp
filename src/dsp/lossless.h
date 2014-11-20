@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+
+// Not a trivial literal symbol.
+#define VP8L_NON_TRIVIAL_SYM (0xffffffff)
+
 //------------------------------------------------------------------------------
 // Signatures and generic function-pointers
 
@@ -157,6 +161,23 @@ typedef VP8LStreaks (*VP8LCostCombinedCountFunc)(const uint32_t* X,
 
 extern VP8LCostCountFunc VP8LHuffmanCostCount;
 extern VP8LCostCombinedCountFunc VP8LHuffmanCostCombinedCount;
+
+// Get the symbol entropy for the distribution 'population'.
+// Set 'trivial_sym', if there's only one symbol present in the distribution.
+double VP8LPopulationCost(const uint32_t* const population, int length,
+                          uint32_t* const trivial_sym);
+
+// Get the combined symbol entropy for the distributions 'X' and 'Y'.
+double VP8LGetCombinedEntropy(const uint32_t* const X,
+                              const uint32_t* const Y, int length);
+
+// Estimate how many bits the combined entropy of literals and distance
+// approximately maps to.
+double VP8LHistogramEstimateBits(const VP8LHistogram* const p);
+
+// This function estimates the cost in bits excluding the bits needed to
+// represent the entropy code itself.
+double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p);
 
 typedef void (*VP8LHistogramAddFunc)(const VP8LHistogram* const a,
                                      const VP8LHistogram* const b,
