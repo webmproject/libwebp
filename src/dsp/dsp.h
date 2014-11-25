@@ -176,7 +176,7 @@ extern VP8WHT VP8TransformWHT;
 // assumed accessible when needed.
 typedef void (*VP8PredFunc)(uint8_t* dst);
 extern const VP8PredFunc VP8PredLuma16[/* NUM_B_DC_MODES */];
-extern const VP8PredFunc VP8PredChroma8[/* NUM_B_DC_MODES */];
+extern VP8PredFunc VP8PredChroma8[/* NUM_B_DC_MODES */];
 extern VP8PredFunc VP8PredLuma4[/* NUM_BMODES */];
 
 // clipping tables (for filtering)
