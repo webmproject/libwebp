@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//O3Y\u003d",
+        "filename": "src/enc/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-11-25T23:58:05Z",
+      "side": 0,
+      "message": "same as 298",
+      "revId": "f399d30764488a8aefd1018ae5ce8131149f63e5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
