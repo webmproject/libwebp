@@ -46,7 +46,7 @@ typedef uint8_t lbit_t;
 #endif
 
 extern const uint8_t kVP8Log2Range[128];
-extern const range_t kVP8NewRange[128];
+extern const uint8_t kVP8NewRange[128];
 
 // special case for the tail byte-reading
 void VP8LoadFinalBytes(VP8BitReader* const br);

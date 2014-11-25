@@ -54,7 +54,7 @@ const uint8_t kVP8Log2Range[128] = {
 };
 
 // range = ((range - 1) << kVP8Log2Range[range]) + 1
-const range_t kVP8NewRange[128] = {
+const uint8_t kVP8NewRange[128] = {
   127, 127, 191, 127, 159, 191, 223, 127,
   143, 159, 175, 191, 207, 223, 239, 127,
   135, 143, 151, 159, 167, 175, 183, 191,
