@@ -463,10 +463,7 @@ const VP8PredFunc VP8PredLuma16[NUM_B_DC_MODES] = {
   DC16NoTop, DC16NoLeft, DC16NoTopLeft
 };
 
-const VP8PredFunc VP8PredChroma8[NUM_B_DC_MODES] = {
-  DC8uv, TM8uv, VE8uv, HE8uv,
-  DC8uvNoTop, DC8uvNoLeft, DC8uvNoTopLeft
-};
+VP8PredFunc VP8PredChroma8[NUM_B_DC_MODES];
 
 //------------------------------------------------------------------------------
 // Edge filtering functions
@@ -720,6 +717,14 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInit(void) {
   VP8PredLuma4[7] = VL4;
   VP8PredLuma4[8] = HD4;
   VP8PredLuma4[9] = HU4;
+
+  VP8PredChroma8[0] = DC8uv;
+  VP8PredChroma8[1] = TM8uv;
+  VP8PredChroma8[2] = VE8uv;
+  VP8PredChroma8[3] = HE8uv;
+  VP8PredChroma8[4] = DC8uvNoTop;
+  VP8PredChroma8[5] = DC8uvNoLeft;
+  VP8PredChroma8[6] = DC8uvNoTopLeft;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
