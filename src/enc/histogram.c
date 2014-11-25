@@ -158,7 +158,7 @@ static int GetCombinedHistogramEntropy(const VP8LHistogram* const a,
   const int palette_code_bits = a->palette_code_bits_;
   assert(a->palette_code_bits_ == b->palette_code_bits_);
   *cost += VP8LGetCombinedEntropy(a->literal_, b->literal_,
-                              VP8LHistogramNumCodes(palette_code_bits));
+                                  VP8LHistogramNumCodes(palette_code_bits));
   *cost += VP8LExtraCostCombined(a->literal_ + NUM_LITERAL_CODES,
                                  b->literal_ + NUM_LITERAL_CODES,
                                  NUM_LENGTH_CODES);
@@ -255,7 +255,7 @@ static void UpdateDominantCostRange(
 static void UpdateHistogramCost(VP8LHistogram* const h) {
   uint32_t alpha_sym, red_sym, blue_sym;
   const double alpha_cost = VP8LPopulationCost(h->alpha_, NUM_LITERAL_CODES,
-                                           &alpha_sym);
+                                               &alpha_sym);
   const double distance_cost =
       VP8LPopulationCost(h->distance_, NUM_DISTANCE_CODES, NULL) +
       VP8LExtraCost(h->distance_, NUM_DISTANCE_CODES);
@@ -264,8 +264,7 @@ static void UpdateHistogramCost(VP8LHistogram* const h) {
                      VP8LExtraCost(h->literal_ + NUM_LITERAL_CODES,
                                    NUM_LENGTH_CODES);
   h->red_cost_ = VP8LPopulationCost(h->red_, NUM_LITERAL_CODES, &red_sym);
-  h->blue_cost_ =
-      VP8LPopulationCost(h->blue_, NUM_LITERAL_CODES, &blue_sym);
+  h->blue_cost_ = VP8LPopulationCost(h->blue_, NUM_LITERAL_CODES, &blue_sym);
   h->bit_cost_ = h->literal_cost_ + h->red_cost_ + h->blue_cost_ +
                  alpha_cost + distance_cost;
   if ((alpha_sym | red_sym | blue_sym) == VP8L_NON_TRIVIAL_SYM) {
@@ -304,7 +303,6 @@ static void HistogramBuild(
   VP8LHistogram** const histograms = image_histo->histograms;
   VP8LRefsCursor c = VP8LRefsCursorInit(backward_refs);
   assert(histo_bits > 0);
-  // Construct the Histo from a given backward references.
   while (VP8LRefsCursorOk(&c)) {
     const PixOrCopy* const v = c.cur_pos;
     const int ix = (y >> histo_bits) * histo_xsize + (x >> histo_bits);
@@ -425,7 +423,7 @@ static void HistogramCombineEntropyBin(VP8LHistogramSet* const image_histo,
           const int try_combine =
               (cur_combo->trivial_symbol_ != VP8L_NON_TRIVIAL_SYM) ||
               ((histograms[idx1]->trivial_symbol_ == VP8L_NON_TRIVIAL_SYM) &&
-               (histograms[idx2]->trivial_symbol_== VP8L_NON_TRIVIAL_SYM));
+               (histograms[idx2]->trivial_symbol_ == VP8L_NON_TRIVIAL_SYM));
           const int max_combine_failures = 32;
           if (try_combine || (num_combine_failures >= max_combine_failures)) {
             HistogramCopy(cur_combo, histograms[idx1]);
@@ -816,7 +814,7 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
   // bin_map[n][0] = num_histo; // The number of histograms in that bin.
   // bin_map[n][1] = index of first histogram in that bin;
   // bin_map[n][num_histo] = index of last histogram in that bin;
-  // bin_map[n][num_histo + 1] ... bin_map[n][bin_depth - 1] = un-used indices.
+  // bin_map[n][num_histo + 1] ... bin_map[n][bin_depth - 1] = unused indices.
   const int bin_depth = image_histo_raw_size + 1;
   int16_t* bin_map = NULL;
   VP8LHistogramSet* const histos = VP8LAllocateHistogramSet(2, cache_bits);
