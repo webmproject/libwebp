@@ -16,6 +16,23 @@
       "revId": "a328670b319b56873ce915c227af16526eb35628",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//O60\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1289,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-11-25T19:50:50Z",
+      "side": 1,
+      "message": "this const isn\u0027t all that necessary now, bumping the loop by 4 should do",
+      "revId": "a328670b319b56873ce915c227af16526eb35628",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
