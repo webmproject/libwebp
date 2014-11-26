@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//O04\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1047,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-11-26T19:46:08Z",
+      "side": 1,
+      "message": "you don\u0027t need the \u0027VP8L\u0027 prefix here, since this static function stays local to the file...\n\nYou can actually keep the \"TransformColorBlue\" original name.",
+      "revId": "174648ac36f94f3f9989db747cc493200cee3755",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//O08\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1145,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-11-26T19:46:08Z",
+      "side": 1,
+      "message": "need to assess the speed impact of this change on non-MIPS platform that are using the plain-C version.",
+      "revId": "174648ac36f94f3f9989db747cc493200cee3755",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
