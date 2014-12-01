@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//OwU\u003d",
+        "filename": "src/dsp/lossless_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-01T12:28:44Z",
+      "side": 1,
+      "message": "couldn\u0027t G_to_R and R_to_B be \u0027const\u0027 too?\n(like R_to_B)",
+      "revId": "eeeb522ca86943c520f23306b749c085cd30c475",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//OwQ\u003d",
+        "filename": "src/dsp/lossless_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-01T12:28:44Z",
+      "side": 1,
+      "message": "could probably a \u0027int\u0027 (like num_pixels) instead of \u0027uint32_t\u0027",
+      "revId": "eeeb522ca86943c520f23306b749c085cd30c475",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//OwM\u003d",
+        "filename": "src/dsp/lossless_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-01T12:28:44Z",
+      "side": 1,
+      "message": "is it worth writing this left-over part in assembly?\nMight be more readable to just leave it in plain-C",
+      "revId": "eeeb522ca86943c520f23306b749c085cd30c475",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
