@@ -17,6 +17,7 @@
 
 #if defined(WEBP_USE_MIPS32)
 
+#include "./mips_macro.h"
 #include "../enc/vp8enci.h"
 #include "../enc/cost.h"
 
@@ -59,9 +60,9 @@ static const int kC2 = 35468;
 // MUL and STORE macros inlined
 // a = clip_8b(a) is replaced with: a = max(a, 0); a = min(a, 255)
 // temp0..temp15 holds tmp[0]..tmp[15]
-// A..D - offsets in bytes to load from ref and store to dst buffer
+// A - offset in bytes to load from ref and store to dst buffer
 // TEMP0, TEMP4, TEMP8 and TEMP12 - registers for corresponding tmp elements
-#define HORIZONTAL_PASS(A, B, C, D, TEMP0, TEMP4, TEMP8, TEMP12)            \
+#define HORIZONTAL_PASS(A, TEMP0, TEMP4, TEMP8, TEMP12)                     \
   "addiu   %["#TEMP0"],    %["#TEMP0"],    4               \n\t"            \
   "addu    %[temp16],      %["#TEMP0"],    %["#TEMP8"]     \n\t"            \
   "subu    %[temp17],      %["#TEMP0"],    %["#TEMP8"]     \n\t"            \
@@ -84,10 +85,10 @@ static const int kC2 = 35468;
   "sra     %["#TEMP4"],    %["#TEMP4"],    3               \n\t"            \
   "sra     %["#TEMP8"],    %["#TEMP8"],    3               \n\t"            \
   "sra     %["#TEMP12"],   %["#TEMP12"],   3               \n\t"            \
-  "lbu     %[temp16],      "#A"(%[temp20])                 \n\t"            \
-  "lbu     %[temp17],      "#B"(%[temp20])                 \n\t"            \
-  "lbu     %[temp18],      "#C"(%[temp20])                 \n\t"            \
-  "lbu     %[temp19],      "#D"(%[temp20])                 \n\t"            \
+  "lbu     %[temp16],      0+"XSTR(BPS)"*"#A"(%[temp20])   \n\t"            \
+  "lbu     %[temp17],      1+"XSTR(BPS)"*"#A"(%[temp20])   \n\t"            \
+  "lbu     %[temp18],      2+"XSTR(BPS)"*"#A"(%[temp20])   \n\t"            \
+  "lbu     %[temp19],      3+"XSTR(BPS)"*"#A"(%[temp20])   \n\t"            \
   "addu    %["#TEMP0"],    %[temp16],      %["#TEMP0"]     \n\t"            \
   "addu    %["#TEMP4"],    %[temp17],      %["#TEMP4"]     \n\t"            \
   "addu    %["#TEMP8"],    %[temp18],      %["#TEMP8"]     \n\t"            \
@@ -110,10 +111,10 @@ static const int kC2 = 35468;
   "lw      %[temp16],      8(%[args])                      \n\t"            \
   "movz    %["#TEMP8"],    %[temp20],      %[temp18]       \n\t"            \
   "movz    %["#TEMP12"],   %[temp20],      %[temp19]       \n\t"            \
-  "sb      %["#TEMP0"],    "#A"(%[temp16])                 \n\t"            \
-  "sb      %["#TEMP4"],    "#B"(%[temp16])                 \n\t"            \
-  "sb      %["#TEMP8"],    "#C"(%[temp16])                 \n\t"            \
-  "sb      %["#TEMP12"],   "#D"(%[temp16])                 \n\t"
+  "sb      %["#TEMP0"],    0+"XSTR(BPS)"*"#A"(%[temp16])   \n\t"            \
+  "sb      %["#TEMP4"],    1+"XSTR(BPS)"*"#A"(%[temp16])   \n\t"            \
+  "sb      %["#TEMP8"],    2+"XSTR(BPS)"*"#A"(%[temp16])   \n\t"            \
+  "sb      %["#TEMP12"],   3+"XSTR(BPS)"*"#A"(%[temp16])   \n\t"
 
 // Does one or two inverse transforms.
 static WEBP_INLINE void ITransformOne(const uint8_t* ref, const int16_t* in,
@@ -130,10 +131,10 @@ static WEBP_INLINE void ITransformOne(const uint8_t* ref, const int16_t* in,
     VERTICAL_PASS(4, 20, 12, 28, temp12, temp8,  temp9,  temp10, temp11)
     VERTICAL_PASS(6, 22, 14, 30, temp20, temp12, temp13, temp14, temp15)
 
-    HORIZONTAL_PASS( 0,  1,  2,  3, temp0, temp4, temp8,  temp12)
-    HORIZONTAL_PASS(16, 17, 18, 19, temp1, temp5, temp9,  temp13)
-    HORIZONTAL_PASS(32, 33, 34, 35, temp2, temp6, temp10, temp14)
-    HORIZONTAL_PASS(48, 49, 50, 51, temp3, temp7, temp11, temp15)
+    HORIZONTAL_PASS(0, temp0, temp4, temp8,  temp12)
+    HORIZONTAL_PASS(1, temp1, temp5, temp9,  temp13)
+    HORIZONTAL_PASS(2, temp2, temp6, temp10, temp14)
+    HORIZONTAL_PASS(3, temp3, temp7, temp11, temp15)
 
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
@@ -253,42 +254,42 @@ static int Quantize2Blocks(int16_t in[32], int16_t out[32],
 
 // macro for one horizontal pass in Disto4x4 (TTransform)
 // two calls of function TTransform are merged into single one
-// A..D - offsets in bytes to load from a and b buffers
+// A - offset in bytes to load from a and b buffers
 // E..H - offsets in bytes to store first results to tmp buffer
 // E1..H1 - offsets in bytes to store second results to tmp buffer
-#define HORIZONTAL_PASS(A, B, C, D, E, F, G, H, E1, F1, G1, H1)   \
-  "lbu    %[temp0],  "#A"(%[a])              \n\t"                \
-  "lbu    %[temp1],  "#B"(%[a])              \n\t"                \
-  "lbu    %[temp2],  "#C"(%[a])              \n\t"                \
-  "lbu    %[temp3],  "#D"(%[a])              \n\t"                \
-  "lbu    %[temp4],  "#A"(%[b])              \n\t"                \
-  "lbu    %[temp5],  "#B"(%[b])              \n\t"                \
-  "lbu    %[temp6],  "#C"(%[b])              \n\t"                \
-  "lbu    %[temp7],  "#D"(%[b])              \n\t"                \
-  "addu   %[temp8],  %[temp0],    %[temp2]   \n\t"                \
-  "subu   %[temp0],  %[temp0],    %[temp2]   \n\t"                \
-  "addu   %[temp2],  %[temp1],    %[temp3]   \n\t"                \
-  "subu   %[temp1],  %[temp1],    %[temp3]   \n\t"                \
-  "addu   %[temp3],  %[temp4],    %[temp6]   \n\t"                \
-  "subu   %[temp4],  %[temp4],    %[temp6]   \n\t"                \
-  "addu   %[temp6],  %[temp5],    %[temp7]   \n\t"                \
-  "subu   %[temp5],  %[temp5],    %[temp7]   \n\t"                \
-  "addu   %[temp7],  %[temp8],    %[temp2]   \n\t"                \
-  "subu   %[temp2],  %[temp8],    %[temp2]   \n\t"                \
-  "addu   %[temp8],  %[temp0],    %[temp1]   \n\t"                \
-  "subu   %[temp0],  %[temp0],    %[temp1]   \n\t"                \
-  "addu   %[temp1],  %[temp3],    %[temp6]   \n\t"                \
-  "subu   %[temp3],  %[temp3],    %[temp6]   \n\t"                \
-  "addu   %[temp6],  %[temp4],    %[temp5]   \n\t"                \
-  "subu   %[temp4],  %[temp4],    %[temp5]   \n\t"                \
-  "sw     %[temp7],  "#E"(%[tmp])            \n\t"                \
-  "sw     %[temp2],  "#H"(%[tmp])            \n\t"                \
-  "sw     %[temp8],  "#F"(%[tmp])            \n\t"                \
-  "sw     %[temp0],  "#G"(%[tmp])            \n\t"                \
-  "sw     %[temp1],  "#E1"(%[tmp])           \n\t"                \
-  "sw     %[temp3],  "#H1"(%[tmp])           \n\t"                \
-  "sw     %[temp6],  "#F1"(%[tmp])           \n\t"                \
-  "sw     %[temp4],  "#G1"(%[tmp])           \n\t"
+#define HORIZONTAL_PASS(A, E, F, G, H, E1, F1, G1, H1)              \
+  "lbu    %[temp0],  0+"XSTR(BPS)"*"#A"(%[a])  \n\t"                \
+  "lbu    %[temp1],  1+"XSTR(BPS)"*"#A"(%[a])  \n\t"                \
+  "lbu    %[temp2],  2+"XSTR(BPS)"*"#A"(%[a])  \n\t"                \
+  "lbu    %[temp3],  3+"XSTR(BPS)"*"#A"(%[a])  \n\t"                \
+  "lbu    %[temp4],  0+"XSTR(BPS)"*"#A"(%[b])  \n\t"                \
+  "lbu    %[temp5],  1+"XSTR(BPS)"*"#A"(%[b])  \n\t"                \
+  "lbu    %[temp6],  2+"XSTR(BPS)"*"#A"(%[b])  \n\t"                \
+  "lbu    %[temp7],  3+"XSTR(BPS)"*"#A"(%[b])  \n\t"                \
+  "addu   %[temp8],  %[temp0],    %[temp2]     \n\t"                \
+  "subu   %[temp0],  %[temp0],    %[temp2]     \n\t"                \
+  "addu   %[temp2],  %[temp1],    %[temp3]     \n\t"                \
+  "subu   %[temp1],  %[temp1],    %[temp3]     \n\t"                \
+  "addu   %[temp3],  %[temp4],    %[temp6]     \n\t"                \
+  "subu   %[temp4],  %[temp4],    %[temp6]     \n\t"                \
+  "addu   %[temp6],  %[temp5],    %[temp7]     \n\t"                \
+  "subu   %[temp5],  %[temp5],    %[temp7]     \n\t"                \
+  "addu   %[temp7],  %[temp8],    %[temp2]     \n\t"                \
+  "subu   %[temp2],  %[temp8],    %[temp2]     \n\t"                \
+  "addu   %[temp8],  %[temp0],    %[temp1]     \n\t"                \
+  "subu   %[temp0],  %[temp0],    %[temp1]     \n\t"                \
+  "addu   %[temp1],  %[temp3],    %[temp6]     \n\t"                \
+  "subu   %[temp3],  %[temp3],    %[temp6]     \n\t"                \
+  "addu   %[temp6],  %[temp4],    %[temp5]     \n\t"                \
+  "subu   %[temp4],  %[temp4],    %[temp5]     \n\t"                \
+  "sw     %[temp7],  "#E"(%[tmp])              \n\t"                \
+  "sw     %[temp2],  "#H"(%[tmp])              \n\t"                \
+  "sw     %[temp8],  "#F"(%[tmp])              \n\t"                \
+  "sw     %[temp0],  "#G"(%[tmp])              \n\t"                \
+  "sw     %[temp1],  "#E1"(%[tmp])             \n\t"                \
+  "sw     %[temp3],  "#H1"(%[tmp])             \n\t"                \
+  "sw     %[temp6],  "#F1"(%[tmp])             \n\t"                \
+  "sw     %[temp4],  "#G1"(%[tmp])             \n\t"
 
 // macro for one vertical pass in Disto4x4 (TTransform)
 // two calls of function TTransform are merged into single one
@@ -370,10 +371,10 @@ static int Disto4x4(const uint8_t* const a, const uint8_t* const b,
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
 
   __asm__ volatile(
-    HORIZONTAL_PASS( 0,  1,  2,  3,    0,  4,  8, 12,    64,  68,  72,  76)
-    HORIZONTAL_PASS(16, 17, 18, 19,   16, 20, 24, 28,    80,  84,  88,  92)
-    HORIZONTAL_PASS(32, 33, 34, 35,   32, 36, 40, 44,    96, 100, 104, 108)
-    HORIZONTAL_PASS(48, 49, 50, 51,   48, 52, 56, 60,   112, 116, 120, 124)
+    HORIZONTAL_PASS(0,   0,  4,  8, 12,    64,  68,  72,  76)
+    HORIZONTAL_PASS(1,  16, 20, 24, 28,    80,  84,  88,  92)
+    HORIZONTAL_PASS(2,  32, 36, 40, 44,    96, 100, 104, 108)
+    HORIZONTAL_PASS(3,  48, 52, 56, 60,   112, 116, 120, 124)
     "mthi   $zero                             \n\t"
     "mtlo   $zero                             \n\t"
     VERTICAL_PASS( 0, 16, 32, 48,     64, 80,  96, 112,   0,  8, 16, 24)
@@ -413,41 +414,41 @@ static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
 
 // macro for one horizontal pass in FTransform
 // temp0..temp15 holds tmp[0]..tmp[15]
-// A..D - offsets in bytes to load from src and ref buffers
+// A - offset in bytes to load from src and ref buffers
 // TEMP0..TEMP3 - registers for corresponding tmp elements
-#define HORIZONTAL_PASS(A, B, C, D, TEMP0, TEMP1, TEMP2, TEMP3) \
-  "lw     %["#TEMP1"],  0(%[args])                     \n\t"    \
-  "lw     %["#TEMP2"],  4(%[args])                     \n\t"    \
-  "lbu    %[temp16],    "#A"(%["#TEMP1"])              \n\t"    \
-  "lbu    %[temp17],    "#A"(%["#TEMP2"])              \n\t"    \
-  "lbu    %[temp18],    "#B"(%["#TEMP1"])              \n\t"    \
-  "lbu    %[temp19],    "#B"(%["#TEMP2"])              \n\t"    \
-  "subu   %[temp20],    %[temp16],    %[temp17]        \n\t"    \
-  "lbu    %[temp16],    "#C"(%["#TEMP1"])              \n\t"    \
-  "lbu    %[temp17],    "#C"(%["#TEMP2"])              \n\t"    \
-  "subu   %["#TEMP0"],  %[temp18],    %[temp19]        \n\t"    \
-  "lbu    %[temp18],    "#D"(%["#TEMP1"])              \n\t"    \
-  "lbu    %[temp19],    "#D"(%["#TEMP2"])              \n\t"    \
-  "subu   %["#TEMP1"],  %[temp16],    %[temp17]        \n\t"    \
-  "subu   %["#TEMP2"],  %[temp18],    %[temp19]        \n\t"    \
-  "addu   %["#TEMP3"],  %[temp20],    %["#TEMP2"]      \n\t"    \
-  "subu   %["#TEMP2"],  %[temp20],    %["#TEMP2"]      \n\t"    \
-  "addu   %[temp20],    %["#TEMP0"],  %["#TEMP1"]      \n\t"    \
-  "subu   %["#TEMP0"],  %["#TEMP0"],  %["#TEMP1"]      \n\t"    \
-  "mul    %[temp16],    %["#TEMP2"],  %[c5352]         \n\t"    \
-  "mul    %[temp17],    %["#TEMP2"],  %[c2217]         \n\t"    \
-  "mul    %[temp18],    %["#TEMP0"],  %[c5352]         \n\t"    \
-  "mul    %[temp19],    %["#TEMP0"],  %[c2217]         \n\t"    \
-  "addu   %["#TEMP1"],  %["#TEMP3"],  %[temp20]        \n\t"    \
-  "subu   %[temp20],    %["#TEMP3"],  %[temp20]        \n\t"    \
-  "sll    %["#TEMP0"],  %["#TEMP1"],  3                \n\t"    \
-  "sll    %["#TEMP2"],  %[temp20],    3                \n\t"    \
-  "addiu  %[temp16],    %[temp16],    1812             \n\t"    \
-  "addiu  %[temp17],    %[temp17],    937              \n\t"    \
-  "addu   %[temp16],    %[temp16],    %[temp19]        \n\t"    \
-  "subu   %[temp17],    %[temp17],    %[temp18]        \n\t"    \
-  "sra    %["#TEMP1"],  %[temp16],    9                \n\t"    \
-  "sra    %["#TEMP3"],  %[temp17],    9                \n\t"
+#define HORIZONTAL_PASS(A, TEMP0, TEMP1, TEMP2, TEMP3)            \
+  "lw     %["#TEMP1"],  0(%[args])                       \n\t"    \
+  "lw     %["#TEMP2"],  4(%[args])                       \n\t"    \
+  "lbu    %[temp16],    0+"XSTR(BPS)"*"#A"(%["#TEMP1"])  \n\t"    \
+  "lbu    %[temp17],    0+"XSTR(BPS)"*"#A"(%["#TEMP2"])  \n\t"    \
+  "lbu    %[temp18],    1+"XSTR(BPS)"*"#A"(%["#TEMP1"])  \n\t"    \
+  "lbu    %[temp19],    1+"XSTR(BPS)"*"#A"(%["#TEMP2"])  \n\t"    \
+  "subu   %[temp20],    %[temp16],    %[temp17]          \n\t"    \
+  "lbu    %[temp16],    2+"XSTR(BPS)"*"#A"(%["#TEMP1"])  \n\t"    \
+  "lbu    %[temp17],    2+"XSTR(BPS)"*"#A"(%["#TEMP2"])  \n\t"    \
+  "subu   %["#TEMP0"],  %[temp18],    %[temp19]          \n\t"    \
+  "lbu    %[temp18],    3+"XSTR(BPS)"*"#A"(%["#TEMP1"])  \n\t"    \
+  "lbu    %[temp19],    3+"XSTR(BPS)"*"#A"(%["#TEMP2"])  \n\t"    \
+  "subu   %["#TEMP1"],  %[temp16],    %[temp17]          \n\t"    \
+  "subu   %["#TEMP2"],  %[temp18],    %[temp19]          \n\t"    \
+  "addu   %["#TEMP3"],  %[temp20],    %["#TEMP2"]        \n\t"    \
+  "subu   %["#TEMP2"],  %[temp20],    %["#TEMP2"]        \n\t"    \
+  "addu   %[temp20],    %["#TEMP0"],  %["#TEMP1"]        \n\t"    \
+  "subu   %["#TEMP0"],  %["#TEMP0"],  %["#TEMP1"]        \n\t"    \
+  "mul    %[temp16],    %["#TEMP2"],  %[c5352]           \n\t"    \
+  "mul    %[temp17],    %["#TEMP2"],  %[c2217]           \n\t"    \
+  "mul    %[temp18],    %["#TEMP0"],  %[c5352]           \n\t"    \
+  "mul    %[temp19],    %["#TEMP0"],  %[c2217]           \n\t"    \
+  "addu   %["#TEMP1"],  %["#TEMP3"],  %[temp20]          \n\t"    \
+  "subu   %[temp20],    %["#TEMP3"],  %[temp20]          \n\t"    \
+  "sll    %["#TEMP0"],  %["#TEMP1"],  3                  \n\t"    \
+  "sll    %["#TEMP2"],  %[temp20],    3                  \n\t"    \
+  "addiu  %[temp16],    %[temp16],    1812               \n\t"    \
+  "addiu  %[temp17],    %[temp17],    937                \n\t"    \
+  "addu   %[temp16],    %[temp16],    %[temp19]          \n\t"    \
+  "subu   %[temp17],    %[temp17],    %[temp18]          \n\t"    \
+  "sra    %["#TEMP1"],  %[temp16],    9                  \n\t"    \
+  "sra    %["#TEMP3"],  %[temp17],    9                  \n\t"
 
 // macro for one vertical pass in FTransform
 // temp0..temp15 holds tmp[0]..tmp[15]
@@ -491,10 +492,10 @@ static void FTransform(const uint8_t* src, const uint8_t* ref, int16_t* out) {
       { (const int*)src, (const int*)ref, (const int*)out };
 
   __asm__ volatile(
-    HORIZONTAL_PASS( 0,  1,  2,  3, temp0,  temp1,  temp2,  temp3)
-    HORIZONTAL_PASS(16, 17, 18, 19, temp4,  temp5,  temp6,  temp7)
-    HORIZONTAL_PASS(32, 33, 34, 35, temp8,  temp9,  temp10, temp11)
-    HORIZONTAL_PASS(48, 49, 50, 51, temp12, temp13, temp14, temp15)
+    HORIZONTAL_PASS(0, temp0,  temp1,  temp2,  temp3)
+    HORIZONTAL_PASS(1, temp4,  temp5,  temp6,  temp7)
+    HORIZONTAL_PASS(2, temp8,  temp9,  temp10, temp11)
+    HORIZONTAL_PASS(3, temp12, temp13, temp14, temp15)
     "lw   %[temp20],    8(%[args])                     \n\t"
     VERTICAL_PASS(0,  8, 16, 24, temp0, temp4, temp8,  temp12)
     VERTICAL_PASS(2, 10, 18, 26, temp1, temp5, temp9,  temp13)
@@ -661,22 +662,22 @@ static int SSE16x16(const uint8_t* a, const uint8_t* b) {
   __asm__ volatile(
      "mult   $zero,    $zero                            \n\t"
 
-     GET_SSE(  0,   4,   8,  12)
-     GET_SSE( 16,  20,  24,  28)
-     GET_SSE( 32,  36,  40,  44)
-     GET_SSE( 48,  52,  56,  60)
-     GET_SSE( 64,  68,  72,  76)
-     GET_SSE( 80,  84,  88,  92)
-     GET_SSE( 96, 100, 104, 108)
-     GET_SSE(112, 116, 120, 124)
-     GET_SSE(128, 132, 136, 140)
-     GET_SSE(144, 148, 152, 156)
-     GET_SSE(160, 164, 168, 172)
-     GET_SSE(176, 180, 184, 188)
-     GET_SSE(192, 196, 200, 204)
-     GET_SSE(208, 212, 216, 220)
-     GET_SSE(224, 228, 232, 236)
-     GET_SSE(240, 244, 248, 252)
+     GET_SSE( 0 * BPS, 4 +  0 * BPS, 8 +  0 * BPS, 12 +  0 * BPS)
+     GET_SSE( 1 * BPS, 4 +  1 * BPS, 8 +  1 * BPS, 12 +  1 * BPS)
+     GET_SSE( 2 * BPS, 4 +  2 * BPS, 8 +  2 * BPS, 12 +  2 * BPS)
+     GET_SSE( 3 * BPS, 4 +  3 * BPS, 8 +  3 * BPS, 12 +  3 * BPS)
+     GET_SSE( 4 * BPS, 4 +  4 * BPS, 8 +  4 * BPS, 12 +  4 * BPS)
+     GET_SSE( 5 * BPS, 4 +  5 * BPS, 8 +  5 * BPS, 12 +  5 * BPS)
+     GET_SSE( 6 * BPS, 4 +  6 * BPS, 8 +  6 * BPS, 12 +  6 * BPS)
+     GET_SSE( 7 * BPS, 4 +  7 * BPS, 8 +  7 * BPS, 12 +  7 * BPS)
+     GET_SSE( 8 * BPS, 4 +  8 * BPS, 8 +  8 * BPS, 12 +  8 * BPS)
+     GET_SSE( 9 * BPS, 4 +  9 * BPS, 8 +  9 * BPS, 12 +  9 * BPS)
+     GET_SSE(10 * BPS, 4 + 10 * BPS, 8 + 10 * BPS, 12 + 10 * BPS)
+     GET_SSE(11 * BPS, 4 + 11 * BPS, 8 + 11 * BPS, 12 + 11 * BPS)
+     GET_SSE(12 * BPS, 4 + 12 * BPS, 8 + 12 * BPS, 12 + 12 * BPS)
+     GET_SSE(13 * BPS, 4 + 13 * BPS, 8 + 13 * BPS, 12 + 13 * BPS)
+     GET_SSE(14 * BPS, 4 + 14 * BPS, 8 + 14 * BPS, 12 + 14 * BPS)
+     GET_SSE(15 * BPS, 4 + 15 * BPS, 8 + 15 * BPS, 12 + 15 * BPS)
 
     "mflo    %[count]                                   \n\t"
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
@@ -695,14 +696,14 @@ static int SSE16x8(const uint8_t* a, const uint8_t* b) {
   __asm__ volatile(
      "mult   $zero,    $zero                            \n\t"
 
-     GET_SSE(  0,   4,   8,  12)
-     GET_SSE( 16,  20,  24,  28)
-     GET_SSE( 32,  36,  40,  44)
-     GET_SSE( 48,  52,  56,  60)
-     GET_SSE( 64,  68,  72,  76)
-     GET_SSE( 80,  84,  88,  92)
-     GET_SSE( 96, 100, 104, 108)
-     GET_SSE(112, 116, 120, 124)
+     GET_SSE( 0 * BPS, 4 +  0 * BPS, 8 +  0 * BPS, 12 +  0 * BPS)
+     GET_SSE( 1 * BPS, 4 +  1 * BPS, 8 +  1 * BPS, 12 +  1 * BPS)
+     GET_SSE( 2 * BPS, 4 +  2 * BPS, 8 +  2 * BPS, 12 +  2 * BPS)
+     GET_SSE( 3 * BPS, 4 +  3 * BPS, 8 +  3 * BPS, 12 +  3 * BPS)
+     GET_SSE( 4 * BPS, 4 +  4 * BPS, 8 +  4 * BPS, 12 +  4 * BPS)
+     GET_SSE( 5 * BPS, 4 +  5 * BPS, 8 +  5 * BPS, 12 +  5 * BPS)
+     GET_SSE( 6 * BPS, 4 +  6 * BPS, 8 +  6 * BPS, 12 +  6 * BPS)
+     GET_SSE( 7 * BPS, 4 +  7 * BPS, 8 +  7 * BPS, 12 +  7 * BPS)
 
     "mflo    %[count]                                   \n\t"
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
@@ -721,10 +722,10 @@ static int SSE8x8(const uint8_t* a, const uint8_t* b) {
   __asm__ volatile(
      "mult   $zero,    $zero                            \n\t"
 
-     GET_SSE( 0,   4,  16,  20)
-     GET_SSE(32,  36,  48,  52)
-     GET_SSE(64,  68,  80,  84)
-     GET_SSE(96, 100, 112, 116)
+     GET_SSE(0 * BPS, 4 + 0 * BPS, 1 * BPS, 4 + 1 * BPS)
+     GET_SSE(2 * BPS, 4 + 2 * BPS, 3 * BPS, 4 + 3 * BPS)
+     GET_SSE(4 * BPS, 4 + 4 * BPS, 5 * BPS, 4 + 5 * BPS)
+     GET_SSE(6 * BPS, 4 + 6 * BPS, 7 * BPS, 4 + 7 * BPS)
 
     "mflo    %[count]                                   \n\t"
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
@@ -743,7 +744,7 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
   __asm__ volatile(
      "mult   $zero,    $zero                            \n\t"
 
-     GET_SSE(0, 16, 32, 48)
+     GET_SSE(0 * BPS, 1 * BPS, 2 * BPS, 3 * BPS)
 
     "mflo    %[count]                                   \n\t"
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
@@ -769,26 +770,17 @@ extern WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPS32(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPS32(void) {
 #if defined(WEBP_USE_MIPS32)
-  // TODO(djordje): fix these to use generic BPS instead of hardcoded value 16
-  (void)ITransform;
-  (void)FTransform;
-  (void)Disto4x4;
-  (void)Disto16x16;
-//  VP8ITransform = ITransform;
-//  VP8FTransform = FTransform;
+  VP8ITransform = ITransform;
+  VP8FTransform = FTransform;
   VP8EncQuantizeBlock = QuantizeBlock;
   VP8EncQuantize2Blocks = Quantize2Blocks;
-//  VP8TDisto4x4 = Disto4x4;
-//  VP8TDisto16x16 = Disto16x16;
+  VP8TDisto4x4 = Disto4x4;
+  VP8TDisto16x16 = Disto16x16;
 #if !defined(WORK_AROUND_GCC)
-  (void)SSE16x16;
-  (void)SSE8x8;
-  (void)SSE16x8;
-  (void)SSE4x4;
-//  VP8SSE16x16 = SSE16x16;
-//  VP8SSE8x8 = SSE8x8;
-//  VP8SSE16x8 = SSE16x8;
-//  VP8SSE4x4 = SSE4x4;
+  VP8SSE16x16 = SSE16x16;
+  VP8SSE8x8 = SSE8x8;
+  VP8SSE16x8 = SSE16x8;
+  VP8SSE4x4 = SSE4x4;
 #endif
 #endif  // WEBP_USE_MIPS32
 }

@@ -27,7 +27,10 @@ static void TransformDC(const int16_t* in, uint8_t* dst) {
   int temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10;
 
   __asm__ volatile (
-    LOAD_WITH_OFFSET_X4(temp1, temp2, temp3, temp4, dst, 0, 32, 64, 96)
+    LOAD_WITH_OFFSET_X4(temp1, temp2, temp3, temp4, dst,
+                        0, 0, 0, 0,
+                        0, 1, 2, 3,
+                        BPS)
     "lh               %[temp5],  0(%[in])               \n\t"
     "addiu            %[temp5],  %[temp5],  4           \n\t"
     "ins              %[temp5],  %[temp5],  16, 16      \n\t"
@@ -36,7 +39,7 @@ static void TransformDC(const int16_t* in, uint8_t* dst) {
                             temp3, temp1, temp2, temp3, temp4)
     STORE_SAT_SUM_X2(temp6, temp7, temp8, temp9, temp10, temp1, temp2, temp3,
                      temp5, temp5, temp5, temp5, temp5, temp5, temp5, temp5,
-                     dst, 0, 32, 64, 96)
+                     dst, 0, 1, 2, 3, BPS)
 
     OUTPUT_EARLY_CLOBBER_REGS_10()
     : [in]"r"(in), [dst]"r"(dst)
@@ -61,14 +64,17 @@ static void TransformAC3(const int16_t* in, uint8_t* dst) {
     "replv.ph         %[temp5],   %[c1]                      \n\t"
     SHIFT_R_SUM_X2(temp1, temp6, temp7, temp8, temp2, temp9, temp10, temp4,
                    temp2, temp2, temp3, temp3, temp4, temp5, temp4, temp5)
-    LOAD_WITH_OFFSET_X4(temp3, temp5, temp11, temp12, dst, 0, 32, 64, 96)
+    LOAD_WITH_OFFSET_X4(temp3, temp5, temp11, temp12, dst,
+                        0, 0, 0, 0,
+                        0, 1, 2, 3,
+                        BPS)
     CONVERT_2_BYTES_TO_HALF(temp13, temp14, temp3, temp15, temp5, temp16,
                             temp11, temp17, temp3, temp5, temp11, temp12)
     PACK_2_HALVES_TO_WORD(temp12, temp18, temp7, temp6, temp1, temp8, temp2,
                           temp4, temp7, temp6, temp10, temp9)
     STORE_SAT_SUM_X2(temp13, temp14, temp3, temp15, temp5, temp16, temp11,
                      temp17, temp12, temp18, temp1, temp8, temp2, temp4,
-                     temp7, temp6, dst, 0, 32, 64, 96)
+                     temp7, temp6, dst, 0, 1, 2, 3, BPS)
 
     OUTPUT_EARLY_CLOBBER_REGS_18(),
       [c4]"+&r"(c4)
@@ -128,12 +134,15 @@ static void TransformOne(const int16_t* in, uint8_t* dst) {
                    temp6)
     PACK_2_HALVES_TO_WORD(temp1, temp2, temp3, temp4, temp9, temp12, temp13,
                           temp16, temp11, temp10, temp15, temp14)
-    LOAD_WITH_OFFSET_X4(temp10, temp11, temp14, temp15, dst, 0, 32, 64, 96)
+    LOAD_WITH_OFFSET_X4(temp10, temp11, temp14, temp15, dst,
+                        0, 0, 0, 0,
+                        0, 1, 2, 3,
+                        BPS)
     CONVERT_2_BYTES_TO_HALF(temp5, temp6, temp7, temp8, temp17, temp18, temp10,
                             temp11, temp10, temp11, temp14, temp15)
     STORE_SAT_SUM_X2(temp5, temp6, temp7, temp8, temp17, temp18, temp10, temp11,
                      temp9, temp12, temp1, temp2, temp13, temp16, temp3, temp4,
-                     dst, 0, 32, 64, 96)
+                     dst, 0, 1, 2, 3, BPS)
 
     OUTPUT_EARLY_CLOBBER_REGS_18()
     : [dst]"r"(dst), [in]"r"(in), [kC1]"r"(kC1), [kC2]"r"(kC2)
