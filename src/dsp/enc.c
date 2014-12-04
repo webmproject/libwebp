@@ -207,7 +207,7 @@ static WEBP_INLINE void Fill(uint8_t* dst, int value, int size) {
 static WEBP_INLINE void VerticalPred(uint8_t* dst,
                                      const uint8_t* top, int size) {
   int j;
-  if (top) {
+  if (top != NULL) {
     for (j = 0; j < size; ++j) memcpy(dst + j * BPS, top, size);
   } else {
     Fill(dst, 127, size);
@@ -216,7 +216,7 @@ static WEBP_INLINE void VerticalPred(uint8_t* dst,
 
 static WEBP_INLINE void HorizontalPred(uint8_t* dst,
                                        const uint8_t* left, int size) {
-  if (left) {
+  if (left != NULL) {
     int j;
     for (j = 0; j < size; ++j) {
       memset(dst + j * BPS, left[j], size);
@@ -229,8 +229,8 @@ static WEBP_INLINE void HorizontalPred(uint8_t* dst,
 static WEBP_INLINE void TrueMotion(uint8_t* dst, const uint8_t* left,
                                    const uint8_t* top, int size) {
   int y;
-  if (left) {
-    if (top) {
+  if (left != NULL) {
+    if (top != NULL) {
       const uint8_t* const clip = clip1 + 255 - left[-1];
       for (y = 0; y < size; ++y) {
         const uint8_t* const clip_table = clip + left[y];
@@ -248,7 +248,7 @@ static WEBP_INLINE void TrueMotion(uint8_t* dst, const uint8_t* left,
     // is equivalent to VE prediction where you just copy the top samples.
     // Note that if top samples are not available, the default value is
     // then 129, and not 127 as in the VerticalPred case.
-    if (top) {
+    if (top != NULL) {
       VerticalPred(dst, top, size);
     } else {
       Fill(dst, 129, size);
@@ -261,15 +261,15 @@ static WEBP_INLINE void DCMode(uint8_t* dst, const uint8_t* left,
                                int size, int round, int shift) {
   int DC = 0;
   int j;
-  if (top) {
+  if (top != NULL) {
     for (j = 0; j < size; ++j) DC += top[j];
-    if (left) {   // top and left present
+    if (left != NULL) {   // top and left present
       for (j = 0; j < size; ++j) DC += left[j];
     } else {      // top, but no left
       DC += DC;
     }
     DC = (DC + round) >> shift;
-  } else if (left) {   // left but no top
+  } else if (left != NULL) {   // left but no top
     for (j = 0; j < size; ++j) DC += left[j];
     DC += DC;
     DC = (DC + round) >> shift;
@@ -291,8 +291,8 @@ static void IntraChromaPreds(uint8_t* dst, const uint8_t* left,
   TrueMotion(C8TM8 + dst, left, top, 8);
   // V block
   dst += 8;
-  if (top) top += 8;
-  if (left) left += 16;
+  if (top != NULL) top += 8;
+  if (left != NULL) left += 16;
   DCMode(C8DC8 + dst, left, top, 8, 8, 4);
   VerticalPred(C8VE8 + dst, top, 8);
   HorizontalPred(C8HE8 + dst, left, 8);
