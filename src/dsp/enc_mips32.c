@@ -769,17 +769,26 @@ extern WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPS32(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPS32(void) {
 #if defined(WEBP_USE_MIPS32)
-  VP8ITransform = ITransform;
+  // TODO(djordje): fix these to use generic BPS instead of hardcoded value 16
+  (void)ITransform;
+  (void)FTransform;
+  (void)Disto4x4;
+  (void)Disto16x16;
+//  VP8ITransform = ITransform;
+//  VP8FTransform = FTransform;
   VP8EncQuantizeBlock = QuantizeBlock;
   VP8EncQuantize2Blocks = Quantize2Blocks;
-  VP8TDisto4x4 = Disto4x4;
-  VP8TDisto16x16 = Disto16x16;
-  VP8FTransform = FTransform;
+//  VP8TDisto4x4 = Disto4x4;
+//  VP8TDisto16x16 = Disto16x16;
 #if !defined(WORK_AROUND_GCC)
-  VP8SSE16x16 = SSE16x16;
-  VP8SSE8x8 = SSE8x8;
-  VP8SSE16x8 = SSE16x8;
-  VP8SSE4x4 = SSE4x4;
+  (void)SSE16x16;
+  (void)SSE8x8;
+  (void)SSE16x8;
+  (void)SSE4x4;
+//  VP8SSE16x16 = SSE16x16;
+//  VP8SSE8x8 = SSE8x8;
+//  VP8SSE16x8 = SSE16x8;
+//  VP8SSE4x4 = SSE4x4;
 #endif
 #endif  // WEBP_USE_MIPS32
 }

@@ -444,15 +444,12 @@ void VP8MakeIntra4Preds(const VP8EncIterator* const it) {
 // Quantize
 
 // Layout:
-// +----+
-// |YYYY| 0
-// |YYYY| 4
-// |YYYY| 8
-// |YYYY| 12
-// +----+
-// |UUVV| 16
-// |UUVV| 20
-// +----+
+// +----+----+
+// |YYYY|UUVV| 0
+// |YYYY|UUVV| 4
+// |YYYY|....| 8
+// |YYYY|....| 12
+// +----+----+
 
 const int VP8Scan[16] = {  // Luma
   0 +  0 * BPS,  4 +  0 * BPS, 8 +  0 * BPS, 12 +  0 * BPS,
@@ -1069,7 +1066,12 @@ static void PickBestUV(VP8EncIterator* const it, VP8ModeScore* const rd) {
   }
   VP8SetIntraUVMode(it, rd->mode_uv);
   AddScore(rd, &rd_best);
-  if (dst != dst0) memcpy(dst0, dst, UV_SIZE);
+  if (dst != dst0) {   // copy 16x8 block if needed
+    int i;
+    for (i = 0; i < 8; ++i) {
+      memcpy(dst0 + i * BPS, dst + i * BPS, 2 * 8 * sizeof(*dst0));
+    }
+  }
 }
 
 //------------------------------------------------------------------------------

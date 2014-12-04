@@ -69,64 +69,34 @@ typedef enum {   // Rate-distortion optimization levels
   RD_OPT_TRELLIS_ALL = 3   // trellis-quant for every scoring (much slower)
 } VP8RDLevel;
 
-// YUV-cache parameters. Cache is 16-pixels wide.
-// The original or reconstructed samples can be accessed using VP8Scan[]
+// YUV-cache parameters. Cache is 32-pixels wide.
+// The original or reconstructed samples can be accessed using VP8Scan[].
 // The predicted blocks can be accessed using offsets to yuv_p_ and
-// the arrays VP8*ModeOffsets[];
-//         +----+      YUV Samples area. See VP8Scan[] for accessing the blocks.
-//  Y_OFF  |YYYY| <- original samples  ('yuv_in_')
-//         |YYYY|
-//         |YYYY|
-//         |YYYY|
-//  U_OFF  |UUVV| V_OFF  (=U_OFF + 8)
-//         |UUVV|
-//         +----+
-//  Y_OFF  |YYYY| <- compressed/decoded samples  ('yuv_out_')
-//         |YYYY|    There are two buffers like this ('yuv_out_'/'yuv_out2_')
-//         |YYYY|
-//         |YYYY|
-//  U_OFF  |UUVV| V_OFF
-//         |UUVV|
-//          x2 (for yuv_out2_)
-//         +----+     Prediction area ('yuv_p_', size = PRED_SIZE)
-// I16DC16 |YYYY|  Intra16 predictions (16x16 block each)
-//         |YYYY|
-//         |YYYY|
-//         |YYYY|
-// I16TM16 |YYYY|
-//         |YYYY|
-//         |YYYY|
-//         |YYYY|
-// I16VE16 |YYYY|
-//         |YYYY|
-//         |YYYY|
-//         |YYYY|
-// I16HE16 |YYYY|
-//         |YYYY|
-//         |YYYY|
-//         |YYYY|
-//         +----+  Chroma U/V predictions (16x8 block each)
-// C8DC8   |UUVV|
-//         |UUVV|
-// C8TM8   |UUVV|
-//         |UUVV|
-// C8VE8   |UUVV|
-//         |UUVV|
-// C8HE8   |UUVV|
-//         |UUVV|
-//         +----+  Intra 4x4 predictions (4x4 block each)
-//         |YYYY| I4DC4 I4TM4 I4VE4 I4HE4
-//         |YYYY| I4RD4 I4VR4 I4LD4 I4VL4
-//         |YY..| I4HD4 I4HU4 I4TMP
-//         +----+
-#define BPS       16   // this is the common stride
-#define Y_SIZE   (BPS * 16)
-#define UV_SIZE  (BPS * 8)
-#define YUV_SIZE (Y_SIZE + UV_SIZE)
-#define PRED_SIZE (6 * 16 * BPS + 12 * BPS)
+// the arrays VP8*ModeOffsets[].
+// * YUV Samples area (yuv_in_/yuv_out_/yuv_out2_)
+//   (see VP8Scan[] for accessing the blocks, along with Y_OFF/U_OFF/V_OFF):
+//         +----+----+
+//  Y_OFF  |YYYY|UUVV|
+//  U_OFF  |YYYY|UUVV|
+//  V_OFF  |YYYY|....| <- 25% wasted U/V area
+//         |YYYY|....|
+//         +----+----+
+// * Prediction area ('yuv_p_', size = PRED_SIZE)
+//   Intra16 predictions (16x16 block each, two per row):
+//         |I16DC16|I16TM16|
+//         |I16VE16|I16HE16|
+//   Chroma U/V predictions (16x8 block each, two per row):
+//         |C8DC8|C8TM8|
+//         |C8VE8|C8HE8|
+//   Intra 4x4 predictions (4x4 block each)
+//         |I4DC4 I4TM4 I4VE4 I4HE4|I4RD4 I4VR4 I4LD4 I4VL4|
+//         |I4HD4 I4HU4 I4TMP .....|.......................| <- ~31% wasted
+#define BPS       32   // this is the common stride
+#define YUV_SIZE (BPS * 16)  // 25% lost
+#define PRED_SIZE (32 * BPS + 16 * BPS + 8 * BPS)   // I16+Chroma+I4 preds
 #define Y_OFF    (0)
-#define U_OFF    (Y_SIZE)
-#define V_OFF    (U_OFF + 8)
+#define U_OFF    (16)
+#define V_OFF    (16 + 8)
 #define ALIGN_CST 15
 #define DO_ALIGN(PTR) ((uintptr_t)((PTR) + ALIGN_CST) & ~ALIGN_CST)
 
@@ -138,26 +108,26 @@ extern const int VP8I4ModeOffsets[NUM_BMODES];
 // Layout of prediction blocks
 // intra 16x16
 #define I16DC16 (0 * 16 * BPS)
-#define I16TM16 (1 * 16 * BPS)
-#define I16VE16 (2 * 16 * BPS)
-#define I16HE16 (3 * 16 * BPS)
+#define I16TM16 (I16DC16 + 16)
+#define I16VE16 (1 * 16 * BPS)
+#define I16HE16 (I16VE16 + 16)
 // chroma 8x8, two U/V blocks side by side (hence: 16x8 each)
-#define C8DC8 (4 * 16 * BPS)
-#define C8TM8 (4 * 16 * BPS + 8 * BPS)
-#define C8VE8 (5 * 16 * BPS)
-#define C8HE8 (5 * 16 * BPS + 8 * BPS)
+#define C8DC8 (2 * 16 * BPS)
+#define C8TM8 (C8DC8 + 1 * 16)
+#define C8VE8 (2 * 16 * BPS + 8 * BPS)
+#define C8HE8 (C8VE8 + 1 * 16)
 // intra 4x4
-#define I4DC4 (6 * 16 * BPS +  0)
-#define I4TM4 (6 * 16 * BPS +  4)
-#define I4VE4 (6 * 16 * BPS +  8)
-#define I4HE4 (6 * 16 * BPS + 12)
-#define I4RD4 (6 * 16 * BPS + 4 * BPS +  0)
-#define I4VR4 (6 * 16 * BPS + 4 * BPS +  4)
-#define I4LD4 (6 * 16 * BPS + 4 * BPS +  8)
-#define I4VL4 (6 * 16 * BPS + 4 * BPS + 12)
-#define I4HD4 (6 * 16 * BPS + 8 * BPS +  0)
-#define I4HU4 (6 * 16 * BPS + 8 * BPS +  4)
-#define I4TMP (6 * 16 * BPS + 8 * BPS +  8)
+#define I4DC4 (3 * 16 * BPS +  0)
+#define I4TM4 (I4DC4 +  4)
+#define I4VE4 (I4DC4 +  8)
+#define I4HE4 (I4DC4 + 12)
+#define I4RD4 (I4DC4 + 16)
+#define I4VR4 (I4DC4 + 20)
+#define I4LD4 (I4DC4 + 24)
+#define I4VL4 (I4DC4 + 28)
+#define I4HD4 (3 * 16 * BPS + 4 * BPS)
+#define I4HU4 (I4HD4 + 4)
+#define I4TMP (I4HD4 + 8)
 
 typedef int64_t score_t;     // type used for scores, rate, distortion
 // Note that MAX_COST is not the maximum allowed by sizeof(score_t),
