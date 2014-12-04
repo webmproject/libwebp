@@ -662,16 +662,22 @@ static int QuantizeBlockWHT(int16_t in[16], int16_t out[16],
 //------------------------------------------------------------------------------
 // Block copy
 
-static WEBP_INLINE void Copy(const uint8_t* src, uint8_t* dst, int size) {
+static WEBP_INLINE void Copy(const uint8_t* src, uint8_t* dst, int w, int h) {
   int y;
-  for (y = 0; y < size; ++y) {
-    memcpy(dst, src, size);
+  for (y = 0; y < h; ++y) {
+    memcpy(dst, src, w);
     src += BPS;
     dst += BPS;
   }
 }
 
-static void Copy4x4(const uint8_t* src, uint8_t* dst) { Copy(src, dst, 4); }
+static void Copy4x4(const uint8_t* src, uint8_t* dst) {
+  Copy(src, dst, 4, 4);
+}
+
+static void Copy16x8(const uint8_t* src, uint8_t* dst) {
+  Copy(src, dst, 16, 8);
+}
 
 //------------------------------------------------------------------------------
 // Initialization
@@ -695,6 +701,7 @@ VP8QuantizeBlock VP8EncQuantizeBlock;
 VP8Quantize2Blocks VP8EncQuantize2Blocks;
 VP8QuantizeBlockWHT VP8EncQuantizeBlockWHT;
 VP8BlockCopy VP8Copy4x4;
+VP8BlockCopy VP8Copy16x8;
 
 extern void VP8EncDspInitSSE2(void);
 extern void VP8EncDspInitAVX2(void);
@@ -724,6 +731,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
   VP8EncQuantize2Blocks = Quantize2Blocks;
   VP8EncQuantizeBlockWHT = QuantizeBlockWHT;
   VP8Copy4x4 = Copy4x4;
+  VP8Copy16x8 = Copy16x8;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {

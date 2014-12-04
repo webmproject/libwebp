@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+#define BPS 32   // this is the common stride for enc/dec
+
 //------------------------------------------------------------------------------
 // CPU detection
 
@@ -132,6 +134,7 @@ extern VP8WMetric VP8TDisto4x4, VP8TDisto16x16;
 
 typedef void (*VP8BlockCopy)(const uint8_t* src, uint8_t* dst);
 extern VP8BlockCopy VP8Copy4x4;
+extern VP8BlockCopy VP8Copy16x8;
 // Quantization
 struct VP8Matrix;   // forward declaration
 typedef int (*VP8QuantizeBlock)(int16_t in[16], int16_t out[16],
