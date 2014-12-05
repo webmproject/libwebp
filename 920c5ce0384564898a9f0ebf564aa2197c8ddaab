@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//NLg\u003d",
+        "filename": "src/dsp/dec_mips32.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-05T14:49:16Z",
+      "side": 1,
+      "message": "note sure you need to include this header, since i moved\nthe definition of BPS to dsp.h",
+      "revId": "920c5ce0384564898a9f0ebf564aa2197c8ddaab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//NLc\u003d",
+        "filename": "src/dsp/dec_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-05T14:49:16Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "920c5ce0384564898a9f0ebf564aa2197c8ddaab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//NLY\u003d",
+        "filename": "src/dsp/mips_macro.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-05T14:49:16Z",
+      "side": 1,
+      "message": "ah! that\u0027s the trick i was searching for!",
+      "revId": "920c5ce0384564898a9f0ebf564aa2197c8ddaab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
