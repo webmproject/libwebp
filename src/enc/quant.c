@@ -1067,7 +1067,7 @@ static void PickBestUV(VP8EncIterator* const it, VP8ModeScore* const rd) {
   VP8SetIntraUVMode(it, rd->mode_uv);
   AddScore(rd, &rd_best);
   if (dst != dst0) {   // copy 16x8 block if needed
-    VP8Copy16x8(dst0, dst);
+    VP8Copy16x8(dst, dst0);
   }
 }
 
