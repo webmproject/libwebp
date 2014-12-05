@@ -69,7 +69,7 @@ typedef enum {   // Rate-distortion optimization levels
   RD_OPT_TRELLIS_ALL = 3   // trellis-quant for every scoring (much slower)
 } VP8RDLevel;
 
-// YUV-cache parameters. Cache is 32-pixels wide.
+// YUV-cache parameters. Cache is 32-bytes wide (= one cacheline).
 // The original or reconstructed samples can be accessed using VP8Scan[].
 // The predicted blocks can be accessed using offsets to yuv_p_ and
 // the arrays VP8*ModeOffsets[].
@@ -91,8 +91,7 @@ typedef enum {   // Rate-distortion optimization levels
 //   Intra 4x4 predictions (4x4 block each)
 //         |I4DC4 I4TM4 I4VE4 I4HE4|I4RD4 I4VR4 I4LD4 I4VL4|
 //         |I4HD4 I4HU4 I4TMP .....|.......................| <- ~31% wasted
-#define BPS       32   // this is the common stride
-#define YUV_SIZE (BPS * 16)  // 25% lost
+#define YUV_SIZE (BPS * 16)
 #define PRED_SIZE (32 * BPS + 16 * BPS + 8 * BPS)   // I16+Chroma+I4 preds
 #define Y_OFF    (0)
 #define U_OFF    (16)
