@@ -151,13 +151,22 @@ typedef int (*VP8QuantizeBlockWHT)(int16_t in[16], int16_t out[16],
                                    const struct VP8Matrix* const mtx);
 extern VP8QuantizeBlockWHT VP8EncQuantizeBlockWHT;
 
-// Collect histogram for susceptibility calculation and accumulate in histo[].
-struct VP8Histogram;
+extern const int VP8DspScan[16 + 4 + 4];
+
+// Collect histogram for susceptibility calculation.
+#define MAX_COEFF_THRESH   31   // size of histogram used by CollectHistogram.
+typedef struct {
+  // We only need to store max_value and last_non_zero, not the distribution.
+  int max_value;
+  int last_non_zero;
+} VP8Histogram;
 typedef void (*VP8CHisto)(const uint8_t* ref, const uint8_t* pred,
                           int start_block, int end_block,
-                          struct VP8Histogram* const histo);
-extern const int VP8DspScan[16 + 4 + 4];
+                          VP8Histogram* const histo);
 extern VP8CHisto VP8CollectHistogram;
+// General-purpose util function to help VP8CollectHistogram().
+void VP8LSetHistogramData(const int distribution[MAX_COEFF_THRESH + 1],
+                          VP8Histogram* const histo);
 
 // must be called before using any of the above
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void);

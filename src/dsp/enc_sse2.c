@@ -59,6 +59,7 @@ static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
                              VP8Histogram* const histo) {
   const __m128i max_coeff_thresh = _mm_set1_epi16(MAX_COEFF_THRESH);
   int j;
+  int distribution[MAX_COEFF_THRESH + 1] = { 0 };
   for (j = start_block; j < end_block; ++j) {
     int16_t out[16];
     int k;
@@ -91,9 +92,10 @@ static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
 
     // Convert coefficients to bin.
     for (k = 0; k < 16; ++k) {
-      histo->distribution[out[k]]++;
+      ++distribution[out[k]];
     }
   }
+  VP8LSetHistogramData(distribution, histo);
 }
 
 //------------------------------------------------------------------------------

@@ -141,14 +141,6 @@ static WEBP_INLINE int QUANTDIV(uint32_t n, uint32_t iQ, uint32_t B) {
   return (int)((n * iQ + B) >> QFIX);
 }
 
-// size of histogram used by CollectHistogram.
-#define MAX_COEFF_THRESH   31
-typedef struct VP8Histogram VP8Histogram;
-struct VP8Histogram {
-  // TODO(skal): we only need to store the max_value and last_non_zero actually.
-  int distribution[MAX_COEFF_THRESH + 1];
-};
-
 // Uncomment the following to remove token-buffer code:
 // #define DISABLE_TOKEN_BUFFER
 

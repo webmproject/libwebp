@@ -40,10 +40,27 @@ const int VP8DspScan[16 + 4 + 4] = {
   8 + 0 * BPS,  12 + 0 * BPS, 8 + 4 * BPS, 12 + 4 * BPS     // V
 };
 
+// general-purpose util function
+void VP8LSetHistogramData(const int distribution[MAX_COEFF_THRESH + 1],
+                          VP8Histogram* const histo) {
+  int max_value = 0, last_non_zero = 1;
+  int k;
+  for (k = 0; k <= MAX_COEFF_THRESH; ++k) {
+    const int value = distribution[k];
+    if (value > 0) {
+      if (value > max_value) max_value = value;
+      last_non_zero = k;
+    }
+  }
+  histo->max_value = max_value;
+  histo->last_non_zero = last_non_zero;
+}
+
 static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
                              int start_block, int end_block,
                              VP8Histogram* const histo) {
   int j;
+  int distribution[MAX_COEFF_THRESH + 1] = { 0 };
   for (j = start_block; j < end_block; ++j) {
     int k;
     int16_t out[16];
@@ -54,9 +71,10 @@ static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
     for (k = 0; k < 16; ++k) {
       const int v = abs(out[k]) >> 3;  // TODO(skal): add rounding?
       const int clipped_value = clip_max(v, MAX_COEFF_THRESH);
-      histo->distribution[clipped_value]++;
+      ++distribution[clipped_value];
     }
   }
+  VP8LSetHistogramData(distribution, histo);
 }
 
 //------------------------------------------------------------------------------
