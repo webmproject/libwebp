@@ -727,6 +727,7 @@ static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
                              VP8Histogram* const histo) {
   const uint16x8_t max_coeff_thresh = vdupq_n_u16(MAX_COEFF_THRESH);
   int j;
+  int distribution[MAX_COEFF_THRESH + 1] = { 0 };
   for (j = start_block; j < end_block; ++j) {
     int16_t out[16];
     FTransform(ref + VP8DspScan[j], pred + VP8DspScan[j], out);
@@ -744,10 +745,11 @@ static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
       vst1q_s16(out + 8, vreinterpretq_s16_u16(b3));
       // Convert coefficients to bin.
       for (k = 0; k < 16; ++k) {
-        histo->distribution[out[k]]++;
+        ++distribution[out[k]];
       }
     }
   }
+  VP8LSetHistogramData(distribution, histo);
 }
 
 //------------------------------------------------------------------------------
