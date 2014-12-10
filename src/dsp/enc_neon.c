@@ -1013,7 +1013,8 @@ static int QuantizeBlock(int16_t in[16], int16_t out[16],
   const int16x8_t out1 = Quantize(in, mtx, 8);
   uint8x8x4_t shuffles;
   // vtbl4_u8 is marked unavailable for iOS arm64, use wider versions there.
-#if defined(__APPLE__) && defined(__aarch64__)
+#if defined(__APPLE__) && defined(__aarch64__) && \
+    defined(__apple_build_version__)
   uint8x16x2_t all_out;
   INIT_VECTOR2(all_out, vreinterpretq_u8_s16(out0), vreinterpretq_u8_s16(out1));
   INIT_VECTOR4(shuffles,
