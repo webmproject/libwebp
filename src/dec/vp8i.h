@@ -141,6 +141,7 @@ typedef struct {
   uint8_t segments_[MB_FEATURE_TREE_PROBS];
   // Type: 0:Intra16-AC  1:Intra16-DC   2:Chroma   3:Intra4
   VP8BandProbas bands_[NUM_TYPES][NUM_BANDS];
+  const VP8BandProbas* bands_ptr_[NUM_TYPES][16 + 1];
 } VP8Proba;
 
 // Filter parameters
