@@ -328,24 +328,6 @@ static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
 //------------------------------------------------------------------------------
 // Intra predictions
 
-static WEBP_INLINE uint8_t clip_8b(int v) {
-  return (!(v & ~0xff)) ? v : (v < 0) ? 0 : 255;
-}
-
-static uint8_t clip1[255 + 510 + 1];    // clips [-255,510] to [0,255]
-
-static volatile int tables_ok = 0;
-
-static void InitTables(void) {
-  if (!tables_ok) {
-    int i;
-    for (i = -255; i <= 255 + 255; ++i) {
-      clip1[255 + i] = clip_8b(i);
-    }
-    tables_ok = 1;
-  }
-}
-
 #define FILL_PART(J, SIZE)                                          \
     "usw        %[value],  0+"#J"*"XSTR(BPS)"(%[dst])    \n\t"      \
     "usw        %[value],  4+"#J"*"XSTR(BPS)"(%[dst])    \n\t"      \
@@ -416,21 +398,62 @@ HORIZONTAL_PRED(dst, left, 16)
 
 #undef HORIZONTAL_PRED
 
+#define CLIPPING()                                                             \
+  "preceu.ph.qbl   %[temp2],   %[temp0]                  \n\t"                 \
+  "preceu.ph.qbr   %[temp0],   %[temp0]                  \n\t"                 \
+  "preceu.ph.qbl   %[temp3],   %[temp1]                  \n\t"                 \
+  "preceu.ph.qbr   %[temp1],   %[temp1]                  \n\t"                 \
+  "addu.ph         %[temp2],   %[temp2],   %[leftY_1]    \n\t"                 \
+  "addu.ph         %[temp0],   %[temp0],   %[leftY_1]    \n\t"                 \
+  "addu.ph         %[temp3],   %[temp3],   %[leftY_1]    \n\t"                 \
+  "addu.ph         %[temp1],   %[temp1],   %[leftY_1]    \n\t"                 \
+  "shll_s.ph       %[temp2],   %[temp2],   7             \n\t"                 \
+  "shll_s.ph       %[temp0],   %[temp0],   7             \n\t"                 \
+  "shll_s.ph       %[temp3],   %[temp3],   7             \n\t"                 \
+  "shll_s.ph       %[temp1],   %[temp1],   7             \n\t"                 \
+  "precrqu_s.qb.ph %[temp0],   %[temp2],   %[temp0]      \n\t"                 \
+  "precrqu_s.qb.ph %[temp1],   %[temp3],   %[temp1]      \n\t"
+
+#define CLIP_8B_TO_DST(DST, LEFT, TOP, SIZE) do {                              \
+  int leftY_1 = ((int)(LEFT)[y] << 16) + (LEFT)[y];                            \
+  int temp0, temp1, temp2, temp3;                                              \
+  __asm__ volatile (                                                           \
+    "replv.ph        %[leftY_1], %[leftY_1]              \n\t"                 \
+    "ulw             %[temp0],   0(%[top])               \n\t"                 \
+    "ulw             %[temp1],   4(%[top])               \n\t"                 \
+    "subu.ph         %[leftY_1], %[leftY_1], %[left_1]   \n\t"                 \
+    CLIPPING()                                                                 \
+    "usw             %[temp0],   0(%[dst])               \n\t"                 \
+    "usw             %[temp1],   4(%[dst])               \n\t"                 \
+  ".if "#SIZE" == 16                                     \n\t"                 \
+    "ulw             %[temp0],   8(%[top])               \n\t"                 \
+    "ulw             %[temp1],   12(%[top])              \n\t"                 \
+    CLIPPING()                                                                 \
+    "usw             %[temp0],   8(%[dst])               \n\t"                 \
+    "usw             %[temp1],   12(%[dst])              \n\t"                 \
+  ".endif                                                \n\t"                 \
+    : [leftY_1]"+&r"(leftY_1), [temp0]"=&r"(temp0), [temp1]"=&r"(temp1),       \
+      [temp2]"=&r"(temp2), [temp3]"=&r"(temp3)                                 \
+    : [left_1]"r"(left_1), [top]"r"((TOP)), [dst]"r"((DST))                    \
+    : "memory"                                                                 \
+  );                                                                           \
+} while (0)
+
+#define CLIP_TO_DST(DST, LEFT, TOP, SIZE) do {                                 \
+  int y;                                                                       \
+  const int left_1 = ((int)(LEFT)[-1] << 16) + (LEFT)[-1];                     \
+  for (y = 0; y < (SIZE); ++y) {                                               \
+    CLIP_8B_TO_DST((DST), (LEFT), (TOP), (SIZE));                              \
+    (DST) += BPS;                                                              \
+  }                                                                            \
+} while (0)
+
 #define TRUE_MOTION(DST, LEFT, TOP, SIZE)                                      \
 static WEBP_INLINE void TrueMotion##SIZE(uint8_t* (DST), const uint8_t* (LEFT),\
                                          const uint8_t* (TOP)) {               \
-  int y;                                                                       \
-  if (LEFT) {                                                                  \
-    if (TOP) {                                                                 \
-      const uint8_t* const clip = clip1 + 255 - (LEFT)[-1];                    \
-      for (y = 0; y < (SIZE); ++y) {                                           \
-        const uint8_t* const clip_table = clip + (LEFT)[y];                    \
-        int x;                                                                 \
-        for (x = 0; x < (SIZE); ++x) {                                         \
-          (DST)[x] = clip_table[(TOP)[x]];                                     \
-        }                                                                      \
-        (DST) += BPS;                                                          \
-      }                                                                        \
+  if ((LEFT) != NULL) {                                                        \
+    if ((TOP) != NULL) {                                                       \
+      CLIP_TO_DST((DST), (LEFT), (TOP), (SIZE));                               \
     } else {                                                                   \
       HorizontalPred##SIZE((DST), (LEFT));                                     \
     }                                                                          \
@@ -439,7 +462,7 @@ static WEBP_INLINE void TrueMotion##SIZE(uint8_t* (DST), const uint8_t* (LEFT),\
     /* is equivalent to VE prediction where you just copy the top samples. */  \
     /* Note that if top samples are not available, the default value is    */  \
     /* then 129, and not 127 as in the VerticalPred case.                  */  \
-    if (TOP) {                                                                 \
+    if ((TOP) != NULL) {                                                       \
       VerticalPred##SIZE((DST), (TOP));                                        \
     } else {                                                                   \
       FILL_8_OR_16((DST), 129, (SIZE));                                        \
@@ -451,6 +474,9 @@ TRUE_MOTION(dst, left, top, 8)
 TRUE_MOTION(dst, left, top, 16)
 
 #undef TRUE_MOTION
+#undef CLIP_TO_DST
+#undef CLIP_8B_TO_DST
+#undef CLIPPING
 
 static WEBP_INLINE void DCMode16(uint8_t* dst, const uint8_t* left,
                                  const uint8_t* top) {
@@ -607,7 +633,6 @@ extern WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPSdspR2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
-  InitTables();
   VP8FTransform = FTransform;
   VP8ITransform = ITransform;
   VP8TDisto4x4 = Disto4x4;
