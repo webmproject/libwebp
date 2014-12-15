@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//L+o\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-15T14:55:49Z",
+      "side": 1,
+      "message": "loop_end, temp0 and rest could be declared and initialized simultaneously at lines 274-276",
+      "revId": "4621cef063f0aadce1ae4eaaf145086f1b924116",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//L+k\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-15T14:55:49Z",
+      "side": 1,
+      "message": "why casting the const away?  (cf. line 262)",
+      "revId": "4621cef063f0aadce1ae4eaaf145086f1b924116",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//L+g\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-15T14:55:49Z",
+      "side": 1,
+      "message": "in a subsequent patch, it might be good to move these functions to some dedicated files in under dsp/\nBut the functions probably needs to be refined and abstracted from \u0027wrk\u0027 first. So, no rush...",
+      "revId": "4621cef063f0aadce1ae4eaaf145086f1b924116",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
