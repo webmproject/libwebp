@@ -50,6 +50,24 @@
       "revId": "0de54b6ef943a86bd76837dd3c8deabae22e4435",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//LyY\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1004029
+      },
+      "writtenOn": "2014-12-16T16:19:39Z",
+      "side": 1,
+      "message": "loop_end \u003d frow + (x_out_max - x_out) - rest",
+      "parentUuid": "AAAAdn//Lyo\u003d",
+      "revId": "0de54b6ef943a86bd76837dd3c8deabae22e4435",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
