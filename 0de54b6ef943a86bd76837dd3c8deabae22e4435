@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Lys\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-16T16:03:37Z",
+      "side": 1,
+      "message": "superfluous ()\u0027s",
+      "revId": "0de54b6ef943a86bd76837dd3c8deabae22e4435",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Ly0\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-16T16:03:37Z",
+      "side": 1,
+      "message": "cast to (int32_t*) is not unwarranted",
+      "revId": "0de54b6ef943a86bd76837dd3c8deabae22e4435",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Lyo\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-16T16:03:37Z",
+      "side": 1,
+      "message": "could be moved above 273, so that line 273 becomes:\n\nconst int32_t* const loop_end \u003d frow - rest;",
+      "revId": "0de54b6ef943a86bd76837dd3c8deabae22e4435",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
