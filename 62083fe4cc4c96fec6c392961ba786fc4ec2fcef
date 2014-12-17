@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Lic\u003d",
+        "filename": "src/enc/picture_csp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-17T19:20:41Z",
+      "side": 1,
+      "message": "instead of using the inlined assembly, could we make the compiler find the optimization by itself?\n\nI\u0027m thinking:\n\nconst uint32_t ar \u003d ((uint32_t)a \u003c\u003c 8) | r;\nconst uint32_t gb \u003d ((uint32_t)g \u003c\u003c 8) | b;\nreturn (ar \u003c\u003c 16) | gb;\n\n..for instance",
+      "revId": "62083fe4cc4c96fec6c392961ba786fc4ec2fcef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
