@@ -758,6 +758,7 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
       VP8LSubSampleSize(width, histogram_bits) *
       VP8LSubSampleSize(height, histogram_bits);
   VP8LHistogramSet* histogram_image = NULL;
+  VP8LHistogramSet* tmp_histos = NULL;
   int histogram_image_size = 0;
   size_t bit_array_size = 0;
   HuffmanTree* huff_tree = NULL;
@@ -791,14 +792,15 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   }
   histogram_image =
       VP8LAllocateHistogramSet(histogram_image_xysize, *cache_bits);
-  if (histogram_image == NULL) {
+  tmp_histos = VP8LAllocateHistogramSet(2, *cache_bits);
+  if (histogram_image == NULL || tmp_histos == NULL) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
 
   // Build histogram image and symbols from backward references.
   if (!VP8LGetHistoImageSymbols(width, height, &refs, quality, histogram_bits,
-                                *cache_bits, histogram_image,
+                                *cache_bits, histogram_image, tmp_histos,
                                 histogram_symbols)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
@@ -808,6 +810,8 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   bit_array_size = 5 * histogram_image_size;
   huffman_codes = (HuffmanTreeCode*)WebPSafeCalloc(bit_array_size,
                                                    sizeof(*huffman_codes));
+  // Note: some histogram_image entries may point to tmp_histos[], so the latter
+  // need to outlive the following call to GetHuffBitLengthsAndCodes().
   if (huffman_codes == NULL ||
       !GetHuffBitLengthsAndCodes(histogram_image, huffman_codes)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
@@ -816,6 +820,10 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   // Free combined histograms.
   VP8LFreeHistogramSet(histogram_image);
   histogram_image = NULL;
+
+  // Free scratch histograms.
+  VP8LFreeHistogramSet(tmp_histos);
+  tmp_histos = NULL;
 
   // Color Cache parameters.
   if (*cache_bits > 0) {
@@ -899,6 +907,7 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   WebPSafeFree(tokens);
   WebPSafeFree(huff_tree);
   VP8LFreeHistogramSet(histogram_image);
+  VP8LFreeHistogramSet(tmp_histos);
   VP8LBackwardRefsClear(&refs);
   if (huffman_codes != NULL) {
     WebPSafeFree(huffman_codes->codes);

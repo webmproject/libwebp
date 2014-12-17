@@ -103,6 +103,7 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
                              const VP8LBackwardRefs* const refs,
                              int quality, int histogram_bits, int cache_bits,
                              VP8LHistogramSet* const image_in,
+                             VP8LHistogramSet* const tmp_histos,
                              uint16_t* const histogram_symbols);
 
 #ifdef __cplusplus
