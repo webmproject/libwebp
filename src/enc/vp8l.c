@@ -341,7 +341,7 @@ static int AnalyzeAndInit(VP8LEncoder* const enc, WebPImageHint image_hint) {
   if (!enc->use_palette_) {
     if (image_hint == WEBP_HINT_PHOTO) {
       enc->use_predict_ = 1;
-      enc->use_cross_color_ = 1;
+      enc->use_cross_color_ = (method > 0);
     } else {
       double non_pred_entropy, pred_entropy;
       if (!AnalyzeEntropy(pic->argb, width, height, pic->argb_stride,
@@ -350,7 +350,7 @@ static int AnalyzeAndInit(VP8LEncoder* const enc, WebPImageHint image_hint) {
       }
       if (pred_entropy < 0.95 * non_pred_entropy) {
         enc->use_predict_ = 1;
-        enc->use_cross_color_ = 1;
+        enc->use_cross_color_ = (method > 0);
       }
     }
   }
@@ -919,14 +919,15 @@ static void ApplySubtractGreen(VP8LEncoder* const enc, int width, int height,
 }
 
 static WebPEncodingError ApplyPredictFilter(const VP8LEncoder* const enc,
-                                            int width, int height, int quality,
+                                            int width, int height,
+                                            int quality, int low_effort,
                                             VP8LBitWriter* const bw) {
   const int pred_bits = enc->transform_bits_;
   const int transform_width = VP8LSubSampleSize(width, pred_bits);
   const int transform_height = VP8LSubSampleSize(height, pred_bits);
 
-  VP8LResidualImage(width, height, pred_bits, enc->argb_, enc->argb_scratch_,
-                    enc->transform_data_);
+  VP8LResidualImage(width, height, pred_bits, low_effort, enc->argb_,
+                    enc->argb_scratch_, enc->transform_data_);
   VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
   VP8LPutBits(bw, PREDICTOR_TRANSFORM, 2);
   assert(pred_bits >= 2);
@@ -1207,6 +1208,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
                                    VP8LBitWriter* const bw) {
   WebPEncodingError err = VP8_ENC_OK;
   const int quality = (int)config->quality;
+  const int low_effort = (config->method == 0);
   const int width = picture->width;
   const int height = picture->height;
   VP8LEncoder* const enc = VP8LEncoderNew(config, picture);
@@ -1279,7 +1281,8 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
       }
     }
 #endif  // WEBP_EXPERIMENTAL_FEATURES
-    err = ApplyPredictFilter(enc, enc->current_width_, height, quality, bw);
+    err = ApplyPredictFilter(enc, enc->current_width_, height, quality,
+                             low_effort, bw);
     if (err != VP8_ENC_OK) {
       WebPSafeFree(copy_buffer);
       goto Error;

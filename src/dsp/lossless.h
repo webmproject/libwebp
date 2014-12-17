@@ -98,7 +98,7 @@ void VP8LColorIndexInverseTransformAlpha(
     const struct VP8LTransform* const transform, int y_start, int y_end,
     const uint8_t* src, uint8_t* dst);
 
-void VP8LResidualImage(int width, int height, int bits,
+void VP8LResidualImage(int width, int height, int bits, int low_effort,
                        uint32_t* const argb, uint32_t* const argb_scratch,
                        uint32_t* const image);
 
