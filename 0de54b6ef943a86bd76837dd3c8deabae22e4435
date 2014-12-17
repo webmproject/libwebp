@@ -68,6 +68,24 @@
       "revId": "0de54b6ef943a86bd76837dd3c8deabae22e4435",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Lns\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-17T10:58:17Z",
+      "side": 1,
+      "message": "oh, indeed.",
+      "parentUuid": "AAAAdn//LyY\u003d",
+      "revId": "0de54b6ef943a86bd76837dd3c8deabae22e4435",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
