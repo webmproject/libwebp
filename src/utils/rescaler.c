@@ -255,6 +255,99 @@ static void ExportRowMIPS(WebPRescaler* const wrk, int x_out) {
 
 #if defined(WEBP_USE_MIPS_DSP_R2)
 
+static void ImportRowMIPS_dsp_r2(WebPRescaler* const wrk,
+                                 const uint8_t* const src, int channel) {
+  const int x_stride = wrk->num_channels;
+  const int x_out_max = wrk->dst_width * wrk->num_channels;
+  const int fx_scale = wrk->fx_scale;
+  const int x_add = wrk->x_add;
+  const int x_sub = wrk->x_sub;
+  int* frow = wrk->frow + channel;
+  int* irow = wrk->irow + channel;
+  const uint8_t* src1 = src + channel;
+  int temp1, temp2, temp3;
+  int base, frac, sum;
+  int accum, accum1;
+  const int x_stride1 = x_stride << 2;
+  int loop_c = x_out_max - channel;
+
+  if (!wrk->x_expand) {
+    __asm__ volatile (
+      "li         %[sum],     0                         \n\t"
+      "li         %[accum],   0                         \n\t"
+    "1:                                                 \n\t"
+      "addu       %[accum],   %[accum],   %[x_add]      \n\t"
+      "blez       %[accum],   3f                        \n\t"
+    "2:                                                 \n\t"
+      "lbu        %[temp3],   0(%[src1])                \n\t"
+      "subu       %[accum],   %[accum],   %[x_sub]      \n\t"
+      "addu       %[src1],    %[src1],    %[x_stride]   \n\t"
+      "addu       %[sum],     %[sum],     %[temp3]      \n\t"
+      "bgtz       %[accum],   2b                        \n\t"
+    "3:                                                 \n\t"
+      "lbu        %[base],    0(%[src1])                \n\t"
+      "addu       %[src1],    %[src1],    %[x_stride]   \n\t"
+      "negu       %[accum1],  %[accum]                  \n\t"
+      "mul        %[frac],    %[base],    %[accum1]     \n\t"
+      "addu       %[temp3],   %[sum],     %[base]       \n\t"
+      "mul        %[temp3],   %[temp3],   %[x_sub]      \n\t"
+      "lw         %[base],    0(%[irow])                \n\t"
+      "sll        %[accum1],  %[frac],    1             \n\t"
+      "subu       %[loop_c],  %[loop_c],  %[x_stride]   \n\t"
+      "mulq_rs.w  %[sum],     %[accum1],  %[fx_scale]   \n\t"
+      "subu       %[temp3],   %[temp3],   %[frac]       \n\t"
+      "sw         %[temp3],   0(%[frow])                \n\t"
+      "add        %[base],    %[base],    %[temp3]      \n\t"
+      "sw         %[base],    0(%[irow])                \n\t"
+      "addu       %[irow],    %[irow],    %[x_stride1]  \n\t"
+      "addu       %[frow],    %[frow],    %[x_stride1]  \n\t"
+      "bgtz       %[loop_c],  1b                        \n\t"
+
+      : [accum]"=&r"(accum), [src1]"+&r"(src1), [temp3]"=&r"(temp3),
+        [sum]"=&r"(sum), [base]"=&r"(base), [frac]"=&r"(frac),
+        [frow]"+&r"(frow), [irow]"+&r"(irow), [accum1]"=&r"(accum1),
+        [loop_c]"+&r"(loop_c)
+      : [x_stride]"r"(x_stride), [fx_scale]"r"(fx_scale), [x_sub]"r"(x_sub),
+        [x_add] "r" (x_add), [x_stride1] "r" (x_stride1)
+      : "memory", "hi", "lo"
+    );
+  } else {
+    __asm__ volatile (
+      "lbu    %[temp1],   0(%[src1])                \n\t"
+      "move   %[temp2],   %[temp1]                  \n\t"
+      "li     %[accum],   0                         \n\t"
+    "1:                                             \n\t"
+      "bgez   %[accum],   2f                        \n\t"
+      "move   %[temp2],   %[temp1]                  \n\t"
+      "addu   %[src1],    %[x_stride]               \n\t"
+      "lbu    %[temp1],   0(%[src1])                \n\t"
+      "addu   %[accum],   %[x_add]                  \n\t"
+    "2:                                             \n\t"
+      "subu   %[temp3],   %[temp2],   %[temp1]      \n\t"
+      "mul    %[temp3],   %[temp3],   %[accum]      \n\t"
+      "mul    %[base],    %[temp1],   %[x_add]      \n\t"
+      "subu   %[accum],   %[accum],   %[x_sub]      \n\t"
+      "lw     %[frac],    0(%[irow])                \n\t"
+      "subu   %[loop_c],  %[loop_c],  %[x_stride]   \n\t"
+      "addu   %[temp3],   %[base],    %[temp3]      \n\t"
+      "sw     %[temp3],   0(%[frow])                \n\t"
+      "addu   %[frow],    %[x_stride1]              \n\t"
+      "addu   %[frac],    %[temp3]                  \n\t"
+      "sw     %[frac],    0(%[irow])                \n\t"
+      "addu   %[irow],    %[x_stride1]              \n\t"
+      "bgtz   %[loop_c],  1b                        \n\t"
+
+      : [src1]"+&r"(src1), [accum]"=&r"(accum), [temp1]"=&r"(temp1),
+        [temp2]"=&r"(temp2), [temp3]"=&r"(temp3), [base]"=&r"(base),
+        [frac]"=&r"(frac), [frow]"+&r"(frow), [irow]"+&r"(irow),
+        [loop_c]"+&r"(loop_c)
+      : [x_stride]"r"(x_stride), [x_add]"r"(x_add), [x_sub]"r"(x_sub),
+        [x_stride1]"r"(x_stride1)
+      : "memory", "hi", "lo"
+    );
+  }
+}
+
 static void ExportRowMIPS_dsp_r2(WebPRescaler* const wrk, int x_out) {
   if (wrk->y_accum <= 0) {
     uint8_t* dst = wrk->dst;
@@ -381,6 +474,7 @@ void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
 #endif
 #if defined(WEBP_USE_MIPS_DSP_R2)
       if (VP8GetCPUInfo(kMIPSdspR2)) {
+        WebPRescalerImportRow = ImportRowMIPS_dsp_r2;
         WebPRescalerExportRow = ExportRowMIPS_dsp_r2;
       }
 #endif
