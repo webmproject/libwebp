@@ -758,12 +758,9 @@ static WEBP_INLINE void UpdateHisto(int histo_argb[4][256], uint32_t argb) {
 
 static int GetBestPredictorForTile(int width, int height,
                                    int tile_x, int tile_y, int bits,
-                                   int low_effort,
                                    const int accumulated[4][256],
                                    const uint32_t* const argb_scratch) {
   const int kNumPredModes = 14;
-  const int kPredModePaeth = 11;
-  const int start_mode = low_effort ? kPredModePaeth : 0;
   const int col_start = tile_x << bits;
   const int row_start = tile_y << bits;
   const int tile_size = 1 << bits;
@@ -772,7 +769,7 @@ static int GetBestPredictorForTile(int width, int height,
   float best_diff = MAX_DIFF_COST;
   int best_mode = 0;
   int mode;
-  for (mode = start_mode; mode < kNumPredModes; ++mode) {
+  for (mode = 0; mode < kNumPredModes; ++mode) {
     const uint32_t* current_row = argb_scratch;
     const VP8LPredictorFunc pred_func = VP8LPredictors[mode];
     float cur_diff;
@@ -848,6 +845,7 @@ void VP8LResidualImage(int width, int height, int bits, int low_effort,
   const int max_tile_size = 1 << bits;
   const int tiles_per_row = VP8LSubSampleSize(width, bits);
   const int tiles_per_col = VP8LSubSampleSize(height, bits);
+  const int kPredLowEffort = 11;
   uint32_t* const upper_row = argb_scratch;
   uint32_t* const current_tile_rows = argb_scratch + width;
   int tile_y;
@@ -872,9 +870,11 @@ void VP8LResidualImage(int width, int height, int bits, int low_effort,
       if (all_x_max > width) {
         all_x_max = width;
       }
-      pred = GetBestPredictorForTile(width, height, tile_x, tile_y, bits,
-                                     low_effort, (const int (*)[256])histo,
-                                     argb_scratch);
+      pred = low_effort ? kPredLowEffort :
+                          GetBestPredictorForTile(width, height, tile_x,
+                                                  tile_y, bits,
+                                                  (const int (*)[256])histo,
+                                                  argb_scratch);
       image[tile_y * tiles_per_row + tile_x] = 0xff000000u | (pred << 8);
       CopyTileWithPrediction(width, height, tile_x, tile_y, bits, pred,
                              argb_scratch, argb);
