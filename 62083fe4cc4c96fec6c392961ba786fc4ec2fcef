@@ -16,6 +16,24 @@
       "revId": "62083fe4cc4c96fec6c392961ba786fc4ec2fcef",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Lc8\u003d",
+        "filename": "src/enc/picture_csp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1004029
+      },
+      "writtenOn": "2014-12-18T13:29:04Z",
+      "side": 1,
+      "message": "compiler can not generate this kind of optimization by itself. i looked objdump and both c code generates code with shifts and ors in 6 instructions and handwritten optimization (using specific instructions, ins and precr) has 3 instructions.",
+      "parentUuid": "AAAAdn//Lic\u003d",
+      "revId": "62083fe4cc4c96fec6c392961ba786fc4ec2fcef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
