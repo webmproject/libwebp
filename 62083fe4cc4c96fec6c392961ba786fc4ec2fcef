@@ -34,6 +34,24 @@
       "revId": "62083fe4cc4c96fec6c392961ba786fc4ec2fcef",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Lc0\u003d",
+        "filename": "src/enc/picture_csp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-18T14:43:21Z",
+      "side": 1,
+      "message": "hmm... ok. Too bad.\n\nStill, i think it\u0027s a slippery slope to micro-optimize this sort of stand-alone specific functions/macro.\n\nInstead, what about optimizing the whole 1083-1088 block loop into dsp functions?\n\nCould be:\n\nvoid VP8PackARGB(const uint8_t* a, const uint8_t* r, const uint8_t* g, const uint8_t* b, int len, uint32_t* out);\nvoid VP8PackRGB(const uint8_t* r, const uint8_t* g, const uint8_t* b, int len, uint32_t* out);\n\nthat just do the A/R/G/B or 0xff/R/G/B packing. This way, i could add an SSE2 variant later...",
+      "parentUuid": "AAAAdn//Lc8\u003d",
+      "revId": "62083fe4cc4c96fec6c392961ba786fc4ec2fcef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
