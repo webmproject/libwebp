@@ -748,7 +748,7 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
                                              VP8LHashChain* const hash_chain,
                                              VP8LBackwardRefs refs_array[2],
                                              int width, int height, int quality,
-                                             int* cache_bits,
+                                             int low_effort, int* cache_bits,
                                              int histogram_bits,
                                              size_t init_byte_position,
                                              int* const hdr_size,
@@ -799,9 +799,9 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   }
 
   // Build histogram image and symbols from backward references.
-  if (!VP8LGetHistoImageSymbols(width, height, &refs, quality, histogram_bits,
-                                *cache_bits, histogram_image, tmp_histos,
-                                histogram_symbols)) {
+  if (!VP8LGetHistoImageSymbols(width, height, &refs, quality, low_effort,
+                                histogram_bits, *cache_bits, histogram_image,
+                                tmp_histos, histogram_symbols)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
@@ -1318,7 +1318,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   // ---------------------------------------------------------------------------
   // Encode and write the transformed image.
   err = EncodeImageInternal(bw, enc->argb_, &enc->hash_chain_, enc->refs_,
-                            enc->current_width_, height, quality,
+                            enc->current_width_, height, quality, low_effort,
                             &enc->cache_bits_, enc->histo_bits_, byte_position,
                             &hdr_size, &data_size);
   if (err != VP8_ENC_OK) goto Error;
