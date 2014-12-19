@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//LTk\u003d",
+        "filename": "Android.mk",
+        "patchSetId": 3
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-19T17:04:58Z",
+      "side": 1,
+      "message": "these are erroneous i think",
+      "revId": "fb0d6ae8b9380e6c4f0ca04106637e3e077af7cd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//LT4\u003d",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 970,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-19T17:04:58Z",
+      "side": 1,
+      "message": "the user shouldn\u0027t need to be calling this function him/herself.\n\nIt should be done within the library on the appropriate code path.",
+      "revId": "fb0d6ae8b9380e6c4f0ca04106637e3e077af7cd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//LTs\u003d",
+        "filename": "src/dsp/argb.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-19T17:04:58Z",
+      "side": 1,
+      "message": "you should need to pass the offset. Rather the a/r/g/b pointers should already be adjusted before calling these functions.",
+      "revId": "fb0d6ae8b9380e6c4f0ca04106637e3e077af7cd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//LT0\u003d",
+        "filename": "src/dsp/argb.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-19T17:04:58Z",
+      "side": 1,
+      "message": "this file should be merged with dsp.h, which is the common header for all functions",
+      "revId": "fb0d6ae8b9380e6c4f0ca04106637e3e077af7cd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
