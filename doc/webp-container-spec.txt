@@ -46,25 +46,13 @@ for:
   * **Animation.** An image may have multiple frames with pauses between them,
     making it an animation.
 
-  * **Image Fragmentation.** A single bitstream in WebP has an inherent
-    limitation for width or height of 2^14 pixels, and, when using VP8, a 512
-    KiB limit on the size of the first compressed partition. To support larger
-    images, the format supports images that are composed of multiple fragments,
-    each encoded as a separate bitstream. All fragments logically form a single
-    image: they have common metadata, color profile, etc. Image fragmentation
-    may also improve efficiency for larger images, e.g., grass can be encoded
-    differently than sky.
-
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
 document are to be interpreted as described in [RFC 2119][].
 
 **Note:** Out of the features mentioned above, lossy compression, lossless
 compression, transparency, metadata, color profile and animation are finalized
-and are to be considered stable. On the other hand, image fragmentation is
-experimental as of now, and is open to discussion, feedback and comments.
-The same is indicated using annotation "_status: experimental_" in the relevant
-sections of this document.
+and are to be considered stable.
 
 Terminology &amp; Basics
 ------------------------
@@ -278,10 +266,6 @@ For a _still image_, the _image data_ consists of a single frame, whereas for
 an _animated image_, it consists of multiple frames. More details about frames
 can be found in the [Animation](#animation) section.
 
-Moreover, each frame can be fragmented or non-fragmented, as will be described
-in the [Extended WebP file header](#extended_header) section. More details about
-fragments can be found in the [Fragments](#fragments) section.
-
 All chunks SHOULD be placed in the same order as listed above. If a chunk
 appears in the wrong place, the file is invalid, but readers MAY parse the
 file, ignoring the chunks that come too late.
@@ -302,7 +286,7 @@ Extended WebP file header:
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('VP8X')                      |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |Rsv|I|L|E|X|A|F|                   Reserved                    |
+    |Rsv|I|L|E|X|A|R|                   Reserved                    |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |          Canvas Width Minus One               |             ...
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -335,9 +319,9 @@ Animation (A): 1 bit
 : Set if this is an animated image. Data in 'ANIM' and 'ANMF' chunks should be
 used to control the animation.
 
-Image Fragmentation (F): 1 bit _\[status: experimental\]_
+Reserved (R): 1 bit
 
-: Set if any of the frames in the image are represented by fragments.
+: SHOULD be `0`.
 
 Reserved: 24 bits
 
@@ -506,9 +490,7 @@ Disposal method (D): 1 bit
 
 Frame Data: _Chunk Size_ - `16` bytes
 
-: For a fragmented frame, it consists of multiple [fragment chunks](#fragments).
-
-: For a non-fragmented frame, it consists of:
+: Consists of:
 
   * An optional [alpha subchunk](#alpha) for the frame.
 
@@ -518,49 +500,6 @@ Frame Data: _Chunk Size_ - `16` bytes
 
 **Note**: The 'ANMF' payload, _Frame Data_ above, consists of individual
 _padded_ chunks as described by the [RIFF file format](#riff-file-format).
-
-#### Fragments _\[status: experimental\]_
-
-For images that are represented by fragments, this chunk contains data for
-a single fragment. If the _Image Fragmentation Flag_ is not set, then this chunk
-SHOULD NOT be present.
-
-     0                   1                   2                   3
-     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                      ChunkHeader('FRGM')                      |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                  Fragment X                   |             ...
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    ...       Fragment Y            |         Fragment Data         |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-Fragment X: 24 bits (_uint24_)
-
-: The X coordinate of the upper left corner of the fragment is `Fragment X * 2`
-
-Fragment Y: 24 bits (_uint24_)
-
-: The Y coordinate of the upper left corner of the fragment is `Fragment Y * 2`
-
-Fragment Data: _Chunk Size_ - `6` bytes
-
-: It contains:
-
-  * An optional [alpha subchunk](#alpha) for the fragment.
-  * The [bitstream subchunk](#bitstream-vp8vp8l) for the fragment.
-  * An optional list of [unknown chunks](#unknown-chunks).
-
-Note: The width and height of the fragment is obtained from the bitstream
-subchunk.
-
-The fragments of a frame SHOULD have the following properties:
-
-  * They collectively cover the whole frame.
-
-  * No pair of fragments have any overlapping region on the frame.
-
-  * No portion of any fragment should be located outside of the canvas.
 
 #### Alpha
 
@@ -643,8 +582,8 @@ Alpha bitstream: _Chunk Size_ - `1` bytes
 
 : Encoded alpha bitstream.
 
-This optional chunk contains encoded alpha data for this frame/fragment. A
-frame/fragment containing a 'VP8L' chunk SHOULD NOT contain this chunk.
+This optional chunk contains encoded alpha data for this frame. A
+frame containing a 'VP8L' chunk SHOULD NOT contain this chunk.
 
 **Rationale**: The transparency information is already part of the 'VP8L'
 chunk.
@@ -675,7 +614,7 @@ compression method is '0') or compressed using the lossless format
 
 #### Bitstream (VP8/VP8L)
 
-This chunk contains compressed bitstream data for a single frame/fragment.
+This chunk contains compressed bitstream data for a single frame.
 
 A bitstream chunk may be either (i) a VP8 chunk, using "VP8 " (note the
 significant fourth-character space) as its tag _or_ (ii) a VP8L chunk, using
@@ -762,47 +701,17 @@ A file MAY contain unknown chunks:
 
   * At the end of the file as described in [Extended WebP file
     header](#extended_header) section.
-  * At the end of FRGM and ANMF chunks as described in [Fragments](#fragments)
-    and [Animation](#animation) sections.
+  * At the end of ANMF chunks as described in the
+    [Animation](#animation) section.
 
 Readers SHOULD ignore these chunks. Writers SHOULD preserve them in their
 original order (unless they specifically intend to modify these chunks).
 
-### Assembling the Canvas from fragments/frames
+### Assembling the Canvas from frames
 
-Here we provide an overview of how a reader should assemble a canvas in case
-of a fragmented-image and in case of an animated image. The notation
-_VP8X.field_ means the field in the 'VP8X' chunk with the same description.
-
-Displaying a _fragmented image_ canvas MUST be equivalent to the following
-pseudocode: _\[status: experimental\]_
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-assert VP8X.flags.hasFragments
-canvas ← new black image of size VP8X.canvasWidth x VP8X.canvasHeight.
-frgm_params ← nil
-for chunk in image_data:
-    assert chunk.tag is "FRGM"
-    frgm_params.fragmentX = Fragment X
-    frgm_params.fragmentY = Fragment Y
-    for subchunk in 'Fragment Data':
-        if subchunk.tag == "ALPH":
-            assert alpha subchunks not found in 'Fragment Data' earlier
-            frgm_params.alpha = alpha_data
-        else if subchunk.tag == "VP8 " OR subchunk.tag == "VP8L":
-            assert bitstream subchunks not found in 'Fragment Data' earlier
-            frgm_params.bitstream = bitstream_data
-    frgm_params.fragmentWidth = Width extracted from bitstream subchunk
-    frgm_params.fragmentHeight = Height extracted from bitstream subchunk
-    assert VP8X.canvasWidth >=
-        frgm_params.fragmentX + frgm_params.fragmentWidth
-    assert VP8X.canvasHeight >=
-        frgm_params.fragmentY + frgm_params.fragmentHeight
-    assert fragment has the properties mentioned in "Image Fragments" section.
-    render fragment with frame_params.alpha and frame_params.bitstream on canvas
-    with top-left corner in (frgm_params.fragmentX, frgm_params.fragmentY).
-canvas contains the decoded canvas.
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Here we provide an overview of how a reader should assemble a canvas in the
+case of an animated image. The notation _VP8X.field_ means the field in the
+'VP8X' chunk with the same description.
 
 Displaying an _animated image_ canvas MUST be equivalent to the following
 pseudocode:
@@ -825,20 +734,13 @@ for loop = 0, ..., loop_count - 1
     frame_params.frameDuration = Frame Duration
     assert VP8X.canvasWidth >= frame_params.frameX + frame_params.frameWidth
     assert VP8X.canvasHeight >= frame_params.frameY + frame_params.frameHeight
-    if VP8X.flags.hasFragments and first subchunk in 'Frame Data' is FRGM
-        // Fragmented frame.
-        frame_params.{bitstream,alpha} = canvas decoded from subchunks in
-                                         'Frame Data' as per the pseudocode for
-                                         _fragmented image_ above.
-    else
-        // Non-fragmented frame.
-        for subchunk in 'Frame Data':
-            if subchunk.tag == "ALPH":
-                assert alpha subchunks not found in 'Frame Data' earlier
-                frame_params.alpha = alpha_data
-            else if subchunk.tag == "VP8 " OR subchunk.tag == "VP8L":
-                assert bitstream subchunks not found in 'Frame Data' earlier
-                frame_params.bitstream = bitstream_data
+    for subchunk in 'Frame Data':
+        if subchunk.tag == "ALPH":
+            assert alpha subchunks not found in 'Frame Data' earlier
+            frame_params.alpha = alpha_data
+        else if subchunk.tag == "VP8 " OR subchunk.tag == "VP8L":
+            assert bitstream subchunks not found in 'Frame Data' earlier
+            frame_params.bitstream = bitstream_data
     render frame with frame_params.alpha and frame_params.bitstream on canvas
     with top-left corner in (frame_params.frameX, frame_params.frameY), using
     dispose method dispose_method.
@@ -876,17 +778,6 @@ RIFF/WEBP
 +- ICCP (color profile)
 +- VP8L (lossless bitstream)
 +- XMP  (metadata)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A fragmented image may look as follows:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-RIFF/WEBP
-+- VP8X (descriptions of features used)
-+- FRGM (fragment1 parameters + data)
-+- FRGM (fragment2 parameters + data)
-+- FRGM (fragment3 parameters + data)
-+- FRGM (fragment4 parameters + data)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An animated image with EXIF metadata may look as follows:
