@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "AAAAdn//LMs\u003d",
+        "filename": "doc/webp-container-spec.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-20T23:21:04Z",
+      "side": 1,
+      "message": "i  wonder if we should keep the name \u0027Image Fragmentation\u0027, or just call this bit \u0027reserved\u0027, simply.",
+      "revId": "763b04f8c4d5b17c8ff9e461e2d2345940acb9d0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//LNU\u003d",
         "filename": "doc/webp-container-spec.txt",
         "patchSetId": 1
