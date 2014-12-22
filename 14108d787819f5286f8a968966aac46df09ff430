@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//LG0\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1436,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2014-12-22T23:10:52Z",
+      "side": 1,
+      "message": "hope the compiler factors out \u0027vreinterpret_u32_u8(dc)\u0027 invariant out of the loop...",
+      "revId": "14108d787819f5286f8a968966aac46df09ff430",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
