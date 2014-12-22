@@ -1389,6 +1389,35 @@ static void LD4(uint8_t* dst) {    // Down-left
 //------------------------------------------------------------------------------
 // Chroma
 
+static void DC8uv(uint8_t* dst) {    // DC
+  const uint8x8_t A = vld1_u8(dst - BPS);  // top row
+  const uint16x4_t p0 = vpaddl_u8(A);  // cascading summation of the top
+  const uint16x4_t p1 = vpadd_u16(p0, p0);
+  const uint16x4_t p2 = vpadd_u16(p1, p1);
+  const uint16x8_t L0 = vmovl_u8(vld1_u8(dst + 0 * BPS - 1));
+  const uint16x8_t L1 = vmovl_u8(vld1_u8(dst + 1 * BPS - 1));
+  const uint16x8_t L2 = vmovl_u8(vld1_u8(dst + 2 * BPS - 1));
+  const uint16x8_t L3 = vmovl_u8(vld1_u8(dst + 3 * BPS - 1));
+  const uint16x8_t L4 = vmovl_u8(vld1_u8(dst + 4 * BPS - 1));
+  const uint16x8_t L5 = vmovl_u8(vld1_u8(dst + 5 * BPS - 1));
+  const uint16x8_t L6 = vmovl_u8(vld1_u8(dst + 6 * BPS - 1));
+  const uint16x8_t L7 = vmovl_u8(vld1_u8(dst + 7 * BPS - 1));
+  const uint16x8_t s0 = vaddq_u16(L0, L1);
+  const uint16x8_t s1 = vaddq_u16(L2, L3);
+  const uint16x8_t s2 = vaddq_u16(L4, L5);
+  const uint16x8_t s3 = vaddq_u16(L6, L7);
+  const uint16x8_t s01 = vaddq_u16(s0, s1);
+  const uint16x8_t s23 = vaddq_u16(s2, s3);
+  const uint16x8_t s0123 = vaddq_u16(s01, s23);
+  const uint16x8_t sum = vaddq_u16(s0123, vcombine_u16(p2, p2));
+  const uint8x8_t dc0 = vrshrn_n_u16(sum, 4);  // (sum + 8) >> 4
+  const uint8x8_t dc = vdup_lane_u8(dc0, 0);
+  int i;
+  for (i = 0; i < 8; ++i) {
+    vst1_u32((uint32_t*)(dst + i * BPS), vreinterpret_u32_u8(dc));
+  }
+}
+
 static void TM8uv(uint8_t* dst) { return TrueMotion(dst, 8); }
 
 #endif   // WEBP_USE_NEON
@@ -1428,6 +1457,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitNEON(void) {
   VP8PredLuma4[4] = RD4;
   VP8PredLuma4[6] = LD4;
 
+  VP8PredChroma8[0] = DC8uv;
   VP8PredChroma8[1] = TM8uv;
 #endif   // WEBP_USE_NEON
 }
