@@ -1060,6 +1060,8 @@ static int Import(WebPPicture* const picture,
   }
   if (!WebPPictureAlloc(picture)) return 0;
 
+  VP8EncDspARGBInit();
+
   assert(step >= (import_alpha ? 4 : 3));
   if (import_alpha) {
     for (y = 0; y < height; ++y) {

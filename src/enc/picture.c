@@ -39,7 +39,6 @@ int WebPPictureInitInternal(WebPPicture* picture, int version) {
     memset(picture, 0, sizeof(*picture));
     picture->writer = DummyWriter;
     WebPEncodingSetError(picture, VP8_ENC_OK);
-    VP8EncDspARGBInit();
   }
   return 1;
 }
