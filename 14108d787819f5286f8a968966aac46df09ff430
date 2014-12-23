@@ -34,6 +34,24 @@
       "revId": "14108d787819f5286f8a968966aac46df09ff430",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//LDU\u003d",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1436,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-12-23T19:11:36Z",
+      "side": 1,
+      "message": "the assembly for DC8uv was unchanged between the two, it translates to:\n\n    vdup.8  d16, d16[0]\n    vst1.32 {d16}, [r0]\n    ...",
+      "parentUuid": "AAAAdn//LEs\u003d",
+      "revId": "14108d787819f5286f8a968966aac46df09ff430",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
