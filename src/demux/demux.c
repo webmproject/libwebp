@@ -337,42 +337,6 @@ static ParseStatus ParseAnimationFrame(
   return status;
 }
 
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-// Parse a 'FRGM' chunk and any image bearing chunks that immediately follow.
-// 'fragment_chunk_size' is the previously validated, padded chunk size.
-static ParseStatus ParseFragment(WebPDemuxer* const dmux,
-                                 uint32_t fragment_chunk_size) {
-  const int frame_num = 1;  // All fragments belong to the 1st (and only) frame.
-  const int is_fragmented = !!(dmux->feature_flags_ & FRAGMENTS_FLAG);
-  const uint32_t frgm_payload_size = fragment_chunk_size - FRGM_CHUNK_SIZE;
-  int added_fragment = 0;
-  MemBuffer* const mem = &dmux->mem_;
-  Frame* frame;
-  ParseStatus status =
-      NewFrame(mem, FRGM_CHUNK_SIZE, fragment_chunk_size, &frame);
-  if (status != PARSE_OK) return status;
-
-  frame->is_fragment_ = 1;
-  frame->x_offset_ = 2 * ReadLE24s(mem);
-  frame->y_offset_ = 2 * ReadLE24s(mem);
-
-  // Store a fragment only if the 'fragments' flag is set and there is some
-  // data available.
-  status = StoreFrame(frame_num, frgm_payload_size, mem, frame);
-  if (status != PARSE_ERROR && is_fragmented && frame->frame_num_ > 0) {
-    added_fragment = AddFrame(dmux, frame);
-    if (!added_fragment) {
-      status = PARSE_ERROR;
-    } else {
-      dmux->num_frames_ = 1;
-    }
-  }
-
-  if (!added_fragment) WebPSafeFree(frame);
-  return status;
-}
-#endif  // WEBP_EXPERIMENTAL_FEATURES
-
 // General chunk storage, starting with the header at 'start_offset', allowing
 // the user to request the payload via a fourcc string. 'size' includes the
 // header and the unpadded payload size.
@@ -513,12 +477,6 @@ static ParseStatus ParseVP8XChunks(WebPDemuxer* const dmux) {
         status = ParseAnimationFrame(dmux, chunk_size_padded);
         break;
       }
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-      case MKFOURCC('F', 'R', 'G', 'M'): {
-        status = ParseFragment(dmux, chunk_size_padded);
-        break;
-      }
-#endif
       case MKFOURCC('I', 'C', 'C', 'P'): {
         store_chunk = !!(dmux->feature_flags_ & ICCP_FLAG);
         goto Skip;
@@ -635,9 +593,6 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
   if (dmux->canvas_width_ <= 0 || dmux->canvas_height_ <= 0) return 0;
   if (dmux->loop_count_ < 0) return 0;
   if (dmux->state_ == WEBP_DEMUX_DONE && dmux->frames_ == NULL) return 0;
-#ifndef WEBP_EXPERIMENTAL_FEATURES
-  if (is_fragmented) return 0;
-#endif
 
   while (f != NULL) {
     const int cur_frame_set = f->frame_num_;
@@ -868,7 +823,6 @@ static int SynthesizeFrame(const WebPDemuxer* const dmux,
   iter->complete       = fragment->complete_;
   iter->fragment.bytes = payload;
   iter->fragment.size  = payload_size;
-  // TODO(jzern): adjust offsets for 'FRGM's embedded in 'ANMF's
   return 1;
 }
 
