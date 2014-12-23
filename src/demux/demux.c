@@ -593,6 +593,7 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
   if (dmux->canvas_width_ <= 0 || dmux->canvas_height_ <= 0) return 0;
   if (dmux->loop_count_ < 0) return 0;
   if (dmux->state_ == WEBP_DEMUX_DONE && dmux->frames_ == NULL) return 0;
+  if (is_fragmented) return 0;
 
   while (f != NULL) {
     const int cur_frame_set = f->frame_num_;
