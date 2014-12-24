@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//K/I\u003d",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 2
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-12-24T21:52:52Z",
+      "side": 1,
+      "message": "this would be the more correct place for it as it\u0027s encode-only",
+      "revId": "46f0d7a63bda2d54caef9877c7dbe8fd68d1319d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//K/E\u003d",
+        "filename": "src/dsp/argb_sse2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-12-24T21:52:52Z",
+      "side": 1,
+      "message": "could sort these",
+      "revId": "46f0d7a63bda2d54caef9877c7dbe8fd68d1319d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//K/A\u003d",
+        "filename": "src/dsp/argb_sse2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-12-24T21:52:52Z",
+      "side": 1,
+      "message": "could note the byte order here explicitly",
+      "revId": "46f0d7a63bda2d54caef9877c7dbe8fd68d1319d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//K+8\u003d",
+        "filename": "src/dsp/argb_sse2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-12-24T21:52:52Z",
+      "side": 1,
+      "message": "this is common in other code, so fine, but I wonder if backing off and doing duplicate work here or in NEON might be faster.",
+      "revId": "46f0d7a63bda2d54caef9877c7dbe8fd68d1319d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//K+4\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-12-24T21:52:52Z",
+      "side": 1,
+      "message": "rgba / bgra rather?",
+      "revId": "46f0d7a63bda2d54caef9877c7dbe8fd68d1319d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
