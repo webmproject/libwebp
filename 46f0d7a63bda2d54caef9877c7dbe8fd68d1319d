@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "AAAAdn//K+w\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2014-12-24T21:57:22Z",
+      "side": 1,
+      "message": "Could have been separate.",
+      "revId": "46f0d7a63bda2d54caef9877c7dbe8fd68d1319d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//K/I\u003d",
         "filename": "src/dsp/Makefile.am",
         "patchSetId": 2
