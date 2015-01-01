@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//K5w\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-01-01T20:18:44Z",
+      "side": 1,
+      "message": "sent https://gerrit.chromium.org/gerrit/73360 for that",
+      "parentUuid": "AAAAdn//K+w\u003d",
+      "revId": "46f0d7a63bda2d54caef9877c7dbe8fd68d1319d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//K/I\u003d",
         "filename": "src/dsp/Makefile.am",
         "patchSetId": 2
@@ -98,6 +116,24 @@
       "writtenOn": "2014-12-24T21:52:52Z",
       "side": 1,
       "message": "rgba / bgra rather?",
+      "revId": "46f0d7a63bda2d54caef9877c7dbe8fd68d1319d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//K50\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-01-01T20:18:44Z",
+      "side": 1,
+      "message": "indeed",
+      "parentUuid": "AAAAdn//K+4\u003d",
       "revId": "46f0d7a63bda2d54caef9877c7dbe8fd68d1319d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
