@@ -337,10 +337,11 @@ void WebPMultARGBRowC(uint32_t* const ptr, int width, int inverse);
 // To be called first before using the above.
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessing(void);
 
-// ARGB making functions.
+// ARGB packing function: a/r/g/b input is rgba or bgra order.
 extern void (*VP8PackARGB)(const uint8_t* a, const uint8_t* r,
                            const uint8_t* g, const uint8_t* b, int len,
-                           int step, uint32_t* out);
+                           uint32_t* out);
+// RGB packing function. 'step' can be 3 or 4. r/g/b input is rgb or bgr order.
 extern void (*VP8PackRGB)(const uint8_t* r, const uint8_t* g, const uint8_t* b,
                           int len, int step, uint32_t* out);
 

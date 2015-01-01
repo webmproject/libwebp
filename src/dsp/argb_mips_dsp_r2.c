@@ -16,10 +16,11 @@
 #if defined(WEBP_USE_MIPS_DSP_R2)
 
 static void PackARGB(const uint8_t* a, const uint8_t* r, const uint8_t* g,
-                     const uint8_t* b, int len, int step, uint32_t* out) {
+                     const uint8_t* b, int len, uint32_t* out) {
   int temp0, temp1, temp2, temp3, offset;
   const int rest = len & 1;
   const uint32_t* const loop_end = out + len - rest;
+  const int step = 4;
   __asm__ volatile (
     "xor          %[offset],   %[offset], %[offset]    \n\t"
     "beq          %[loop_end], %[out],    0f           \n\t"
