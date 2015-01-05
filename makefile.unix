@@ -112,6 +112,7 @@ DSP_DEC_OBJS = \
     src/dsp/alpha_processing_sse2.o \
     src/dsp/argb.o \
     src/dsp/argb_mips_dsp_r2.o \
+    src/dsp/argb_sse2.o \
     src/dsp/cpu.o \
     src/dsp/dec.o \
     src/dsp/dec_clip_tables.o \

@@ -11,8 +11,6 @@ commondir = $(includedir)/webp
 COMMON_SOURCES =
 COMMON_SOURCES += alpha_processing.c
 COMMON_SOURCES += alpha_processing_mips_dsp_r2.c
-COMMON_SOURCES += argb.c
-COMMON_SOURCES += argb_mips_dsp_r2.c
 COMMON_SOURCES += cpu.c
 COMMON_SOURCES += dec.c
 COMMON_SOURCES += dec_clip_tables.c
@@ -37,6 +35,8 @@ COMMON_SOURCES += yuv_mips32.c
 COMMON_SOURCES += yuv_mips_dsp_r2.c
 
 ENC_SOURCES =
+ENC_SOURCES += argb.c
+ENC_SOURCES += argb_mips_dsp_r2.c
 ENC_SOURCES += enc.c
 ENC_SOURCES += enc_mips32.c
 ENC_SOURCES += enc_mips_dsp_r2.c
@@ -58,6 +58,7 @@ libwebpdspdecode_sse2_la_CPPFLAGS = $(libwebpdsp_sse2_la_CPPFLAGS)
 libwebpdspdecode_sse2_la_CFLAGS = $(libwebpdsp_sse2_la_CFLAGS)
 
 libwebpdsp_sse2_la_SOURCES =
+libwebpdsp_sse2_la_SOURCES += argb_sse2.c
 libwebpdsp_sse2_la_SOURCES += enc_sse2.c
 libwebpdsp_sse2_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
 libwebpdsp_sse2_la_CFLAGS = $(AM_CFLAGS) $(SSE2_FLAGS)
