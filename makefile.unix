@@ -67,6 +67,8 @@ EXTRA_FLAGS += -Wmissing-prototypes
 EXTRA_FLAGS += -Wmissing-declarations
 EXTRA_FLAGS += -Wdeclaration-after-statement
 EXTRA_FLAGS += -Wshadow
+EXTRA_FLAGS += -Wformat-security -Wformat-nonliteral
+
 # EXTRA_FLAGS += -Wvla
 
 # AVX2-specific flags:
