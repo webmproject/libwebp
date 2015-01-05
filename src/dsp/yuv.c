@@ -124,7 +124,11 @@ extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersSSE2(void);
 extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersMIPS32(void);
 extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersMIPSdspR2(void);
 
+static volatile VP8CPUInfo last_cpuinfo_used = (VP8CPUInfo)&last_cpuinfo_used;
+
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplers(void) {
+  if (last_cpuinfo_used == VP8GetCPUInfo) return;
+
   WebPSamplers[MODE_RGB]       = YuvToRgbRow;
   WebPSamplers[MODE_RGBA]      = YuvToRgbaRow;
   WebPSamplers[MODE_BGR]       = YuvToBgrRow;
@@ -155,6 +159,7 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplers(void) {
     }
 #endif  // WEBP_USE_MIPS_DSP_R2
   }
+  last_cpuinfo_used = VP8GetCPUInfo;
 }
 
 //-----------------------------------------------------------------------------

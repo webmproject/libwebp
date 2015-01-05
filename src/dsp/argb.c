@@ -42,7 +42,11 @@ void (*VP8PackRGB)(const uint8_t*, const uint8_t*, const uint8_t*,
 
 extern void VP8EncDspARGBInitMIPSdspR2(void);
 
+static volatile VP8CPUInfo last_cpuinfo_used = (VP8CPUInfo)&last_cpuinfo_used;
+
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspARGBInit(void) {
+  if (last_cpuinfo_used == VP8GetCPUInfo) return;
+
   VP8PackARGB = PackARGB;
   VP8PackRGB = PackRGB;
 
@@ -54,4 +58,5 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspARGBInit(void) {
     }
 #endif
   }
+  last_cpuinfo_used = VP8GetCPUInfo;
 }

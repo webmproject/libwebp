@@ -347,7 +347,11 @@ extern void VP8FiltersInitMIPSdspR2(void);
 extern void WebPInitAlphaProcessingMIPSdspR2(void);
 extern void WebPInitAlphaProcessingSSE2(void);
 
+static volatile VP8CPUInfo last_cpuinfo_used = (VP8CPUInfo)&last_cpuinfo_used;
+
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessing(void) {
+  if (last_cpuinfo_used == VP8GetCPUInfo) return;
+
   WebPMultARGBRow = WebPMultARGBRowC;
   WebPMultRow = WebPMultRowC;
   WebPApplyAlphaMultiply = ApplyAlphaMultiply;
@@ -370,4 +374,5 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessing(void) {
     }
 #endif
   }
+  last_cpuinfo_used = VP8GetCPUInfo;
 }
