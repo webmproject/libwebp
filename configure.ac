@@ -54,6 +54,7 @@ AC_DEFUN([TEST_AND_ADD_CFLAGS],
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wall])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wdeclaration-after-statement])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wextra])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wformat-nonliteral])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wformat-security])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wmissing-declarations])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wmissing-prototypes])
