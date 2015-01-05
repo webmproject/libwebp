@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//K10\u003d",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 6
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-01-05T13:20:27Z",
+      "side": 1,
+      "message": "had to move argb*.c to ENC_SOURCES, note.",
+      "revId": "ca7f60db5f92f8fcdaf1ea4790c6f59de07c5509",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
