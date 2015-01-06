@@ -59,6 +59,12 @@ extern VP8LConvertFunc VP8LConvertBGRAToRGBA4444;
 extern VP8LConvertFunc VP8LConvertBGRAToRGB565;
 extern VP8LConvertFunc VP8LConvertBGRAToBGR;
 
+typedef void (*VP8LCollectColorBlueTransformsFunc)(
+    int tile_x_offset, int tile_y_offset, int all_x_max, int all_y_max,
+    int xsize, int green_to_blue, int red_to_blue, int* histo,
+    const uint32_t* const argb);
+extern VP8LCollectColorBlueTransformsFunc VP8LCollectColorBlueTransforms;
+
 // Expose some C-only fallback functions
 void VP8LTransformColor_C(const VP8LMultipliers* const m,
                           uint32_t* data, int num_pixels);

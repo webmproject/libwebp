@@ -367,6 +367,63 @@ static void TransformColor(const VP8LMultipliers* const m, uint32_t* data,
   }
 }
 
+static WEBP_INLINE uint8_t TransformColorBlue(uint8_t green_to_blue,
+                                              uint8_t red_to_blue,
+                                              uint32_t argb) {
+  const uint32_t green = argb >> 8;
+  const uint32_t red = argb >> 16;
+  uint8_t new_blue = argb;
+  new_blue -= ColorTransformDelta(green_to_blue, green);
+  new_blue -= ColorTransformDelta(red_to_blue, red);
+  return (new_blue & 0xff);
+}
+
+static void CollectColorBlueTransforms(
+    int tile_x_offset, int tile_y_offset, int all_x_max, int all_y_max,
+    int xsize, int green_to_blue, int red_to_blue, int* histo,
+    const uint32_t* const argb) {
+  const int rtb = (red_to_blue << 16) | (red_to_blue & 0xffff);
+  const int gtb = (green_to_blue << 16) | (green_to_blue & 0xffff);
+  const uint32_t mask = 0xff00ffu;
+  int ix = tile_y_offset * xsize + tile_x_offset;
+  int all_y;
+  for (all_y = tile_y_offset; all_y < all_y_max; ++all_y) {
+    uint32_t* p_argb = (uint32_t*)&argb[ix];
+    const int loop_cnt = all_x_max - tile_x_offset;
+    int all_x;
+    ix += xsize;
+    for (all_x = 0; all_x < (loop_cnt >> 1); ++all_x) {
+      int temp0, temp1, temp2, temp3, temp4, temp5, temp6;
+      __asm__ volatile (
+        "lw           %[temp0],  0(%[p_argb])             \n\t"
+        "lw           %[temp1],  4(%[p_argb])             \n\t"
+        "precr.qb.ph  %[temp2],  %[temp0],  %[temp1]      \n\t"
+        "ins          %[temp1],  %[temp0],  16,    16     \n\t"
+        "shra.ph      %[temp2],  %[temp2],  8             \n\t"
+        "shra.ph      %[temp3],  %[temp1],  8             \n\t"
+        "mul.ph       %[temp5],  %[temp2],  %[rtb]        \n\t"
+        "mul.ph       %[temp6],  %[temp3],  %[gtb]        \n\t"
+        "and          %[temp4],  %[temp1],  %[mask]       \n\t"
+        "addiu        %[p_argb], %[p_argb], 8             \n\t"
+        "shra.ph      %[temp5],  %[temp5],  5             \n\t"
+        "shra.ph      %[temp6],  %[temp6],  5             \n\t"
+        "subu.qb      %[temp2],  %[temp4],  %[temp5]      \n\t"
+        "subu.qb      %[temp2],  %[temp2],  %[temp6]      \n\t"
+        : [p_argb]"+&r"(p_argb), [temp0]"=&r"(temp0), [temp1]"=&r"(temp1),
+          [temp2]"=&r"(temp2), [temp3]"=&r"(temp3), [temp4]"=&r"(temp4),
+          [temp5]"=&r"(temp5), [temp6]"=&r"(temp6)
+        : [rtb]"r"(rtb), [gtb]"r"(gtb), [mask]"r"(mask)
+        : "memory", "hi", "lo"
+      );
+      ++histo[(uint8_t)(temp2 >> 16)];
+      ++histo[(uint8_t)temp2];
+    }
+    if (loop_cnt & 1) {
+      ++histo[TransformColorBlue(green_to_blue, red_to_blue, *p_argb)];
+    }
+  }
+}
+
 #endif  // WEBP_USE_MIPS_DSP_R2
 
 //------------------------------------------------------------------------------
@@ -388,6 +445,7 @@ void VP8LDspInitMIPSdspR2(void) {
   VP8LPredictors[13] = Predictor13;
   VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRed;
   VP8LTransformColor = TransformColor;
+  VP8LCollectColorBlueTransforms = CollectColorBlueTransforms;
 #endif  // WEBP_USE_MIPS_DSP_R2
 }
 

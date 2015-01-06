@@ -1133,14 +1133,11 @@ static void GetBestGreenToRed(
   best_tx->green_to_red_ = green_to_red;
 }
 
-static float GetPredictionCostCrossColorBlue(
+static void CollectColorBlueTransforms(
     int tile_x_offset, int tile_y_offset, int all_x_max, int all_y_max,
-    int xsize, VP8LMultipliers prev_x, VP8LMultipliers prev_y,
-    int green_to_blue, int red_to_blue, const int accumulated_blue_histo[256],
+    int xsize, int green_to_blue, int red_to_blue, int* histo,
     const uint32_t* const argb) {
   int all_y;
-  int histo[256] = { 0 };
-  float cur_diff;
   for (all_y = tile_y_offset; all_y < all_y_max; ++all_y) {
     int all_x;
     int ix = all_y * xsize + tile_x_offset;
@@ -1148,6 +1145,20 @@ static float GetPredictionCostCrossColorBlue(
       ++histo[TransformColorBlue(green_to_blue, red_to_blue, argb[ix])];
     }
   }
+}
+
+static float GetPredictionCostCrossColorBlue(
+    int tile_x_offset, int tile_y_offset, int all_x_max, int all_y_max,
+    int xsize, VP8LMultipliers prev_x, VP8LMultipliers prev_y,
+    int green_to_blue, int red_to_blue, const int accumulated_blue_histo[256],
+    const uint32_t* const argb) {
+  int histo[256] = { 0 };
+  float cur_diff;
+
+  VP8LCollectColorBlueTransforms(tile_x_offset, tile_y_offset, all_x_max,
+                                 all_y_max, xsize, green_to_blue, red_to_blue,
+                                 histo, argb);
+
   cur_diff = PredictionCostCrossColor(accumulated_blue_histo, histo);
   if ((uint8_t)green_to_blue == prev_x.green_to_blue_) {
     cur_diff -= 3;  // favor keeping the areas locally similar
@@ -1726,6 +1737,8 @@ VP8LConvertFunc VP8LConvertBGRAToRGBA4444;
 VP8LConvertFunc VP8LConvertBGRAToRGB565;
 VP8LConvertFunc VP8LConvertBGRAToBGR;
 
+VP8LCollectColorBlueTransformsFunc VP8LCollectColorBlueTransforms;
+
 VP8LFastLog2SlowFunc VP8LFastLog2Slow;
 VP8LFastLog2SlowFunc VP8LFastSLog2Slow;
 
@@ -1764,6 +1777,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
   VP8LConvertBGRAToRGBA4444 = VP8LConvertBGRAToRGBA4444_C;
   VP8LConvertBGRAToRGB565 = VP8LConvertBGRAToRGB565_C;
   VP8LConvertBGRAToBGR = VP8LConvertBGRAToBGR_C;
+
+  VP8LCollectColorBlueTransforms = CollectColorBlueTransforms;
 
   VP8LFastLog2Slow = FastLog2Slow;
   VP8LFastSLog2Slow = FastSLog2Slow;
