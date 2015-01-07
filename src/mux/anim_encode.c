@@ -271,13 +271,6 @@ void WebPAnimEncoderDelete(WebPAnimEncoder* enc) {
 // -----------------------------------------------------------------------------
 // Frame addition.
 
-// Initialize frame options to reasonable defaults.
-static void DefaultFrameOptions(
-    WebPAnimEncoderFrameOptions* const frame_options) {
-  WebPConfigInit(&frame_options->config);
-  frame_options->config.lossless = 1;
-}
-
 // Returns cached frame at the given 'position'.
 static EncodedFrame* GetFrame(const WebPAnimEncoder* const enc,
                               size_t position) {
@@ -798,16 +791,16 @@ static void PickBestCandidate(WebPAnimEncoder* const enc,
 // Depending on the configuration, tries different compressions
 // (lossy/lossless), dispose methods, blending methods etc to encode the current
 // frame and outputs the best one in 'encoded_frame'.
-static WebPEncodingError SetFrame(
-    WebPAnimEncoder* const enc, int duration,
-    const WebPAnimEncoderFrameOptions* const frame_options, int is_key_frame,
-    EncodedFrame* const encoded_frame) {
+static WebPEncodingError SetFrame(WebPAnimEncoder* const enc, int duration,
+                                  const WebPConfig* const config,
+                                  int is_key_frame,
+                                  EncodedFrame* const encoded_frame) {
   int i;
   WebPEncodingError error_code = VP8_ENC_OK;
   const WebPPicture* const curr_canvas = &enc->curr_canvas_copy_;
   const WebPPicture* const prev_canvas = &enc->prev_canvas_;
   Candidate candidates[CANDIDATE_COUNT];
-  const int is_lossless = frame_options->config.lossless;
+  const int is_lossless = config->lossless;
   const int is_first_frame = enc->is_first_frame_;
 
   int try_dispose_none = 1;  // Default.
@@ -826,8 +819,8 @@ static WebPEncodingError SetFrame(
   FrameRect rect_bg;
   WebPPicture sub_frame_bg;
 
-  WebPConfig config_ll = frame_options->config;
-  WebPConfig config_lossy = frame_options->config;
+  WebPConfig config_ll = *config;
+  WebPConfig config_lossy = *config;
   config_ll.lossless = 1;
   config_lossy.lossless = 0;
 
@@ -903,7 +896,7 @@ static int64_t KeyFramePenalty(const EncodedFrame* const encoded_frame) {
 }
 
 static int CacheFrame(WebPAnimEncoder* const enc, int duration,
-                      const WebPAnimEncoderFrameOptions* const frame_options) {
+                      const WebPConfig* const config) {
   int ok = 0;
   WebPEncodingError error_code = VP8_ENC_OK;
   const size_t position = enc->count_;
@@ -913,7 +906,7 @@ static int CacheFrame(WebPAnimEncoder* const enc, int duration,
 
   if (enc->is_first_frame_) {  // Add this as a key-frame.
     error_code =
-        SetFrame(enc, duration, frame_options, 1, encoded_frame);
+        SetFrame(enc, duration, config, 1, encoded_frame);
     if (error_code != VP8_ENC_OK) {
       goto End;
     }
@@ -926,7 +919,7 @@ static int CacheFrame(WebPAnimEncoder* const enc, int duration,
     ++enc->count_since_key_frame_;
     if (enc->count_since_key_frame_ <= enc->options_.kmin) {
       // Add this as a frame rectangle.
-      error_code = SetFrame(enc, duration, frame_options, 0, encoded_frame);
+      error_code = SetFrame(enc, duration, config, 0, encoded_frame);
       if (error_code != VP8_ENC_OK) {
         goto End;
       }
@@ -937,11 +930,11 @@ static int CacheFrame(WebPAnimEncoder* const enc, int duration,
       int64_t curr_delta;
 
       // Add this as a frame rectangle to enc.
-      error_code = SetFrame(enc, duration, frame_options, 0, encoded_frame);
+      error_code = SetFrame(enc, duration, config, 0, encoded_frame);
       if (error_code != VP8_ENC_OK) goto End;
 
       // Add this as a key-frame to enc, too.
-      error_code = SetFrame(enc, duration, frame_options, 1, encoded_frame);
+      error_code = SetFrame(enc, duration, config, 1, encoded_frame);
       if (error_code != VP8_ENC_OK) goto End;
 
       // Analyze size difference of the two variants.
@@ -1040,8 +1033,8 @@ static int FlushFrames(WebPAnimEncoder* const enc) {
 #undef KEYFRAME_NONE
 
 int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int duration,
-                       const WebPAnimEncoderFrameOptions* frame_options) {
-  WebPAnimEncoderFrameOptions options;
+                       const WebPConfig* encoder_config) {
+  WebPConfig config;
   if (enc == NULL || frame == NULL) {
     return 0;
   }
@@ -1054,17 +1047,18 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int duration,
     }
     return 0;
   }
-  if (frame_options != NULL) {
-    options = *frame_options;
+  if (encoder_config != NULL) {
+    config = *encoder_config;
   } else {
-    DefaultFrameOptions(&options);
+    WebPConfigInit(&config);
+    config.lossless = 1;
   }
   assert(enc->curr_canvas_ == NULL);
   enc->curr_canvas_ = frame;  // Store reference.
   assert(enc->curr_canvas_copy_modified_ == 1);
   CopyCurrentCanvas(enc);
 
-  if (!CacheFrame(enc, duration, &options)) {
+  if (!CacheFrame(enc, duration, &config)) {
     return 0;
   }
   if (!FlushFrames(enc)) {
