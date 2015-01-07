@@ -173,10 +173,11 @@ WebPYUV444Converter WebPYUV444Converters[MODE_LAST];
 
 extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444ConvertersMIPSdspR2(void);
 
-static volatile VP8CPUInfo last_cpuinfo_used1 = (VP8CPUInfo)&last_cpuinfo_used1;
+static volatile VP8CPUInfo upsampling_last_cpuinfo_used1 =
+    (VP8CPUInfo)&upsampling_last_cpuinfo_used1;
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444Converters(void) {
-  if (last_cpuinfo_used1 == VP8GetCPUInfo) return;
+  if (upsampling_last_cpuinfo_used1 == VP8GetCPUInfo) return;
 
   WebPYUV444Converters[MODE_RGB]       = Yuv444ToRgb;
   WebPYUV444Converters[MODE_RGBA]      = Yuv444ToRgba;
@@ -197,7 +198,7 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444Converters(void) {
     }
 #endif
   }
-  last_cpuinfo_used1 = VP8GetCPUInfo;
+  upsampling_last_cpuinfo_used1 = VP8GetCPUInfo;
 }
 
 //------------------------------------------------------------------------------
@@ -207,10 +208,11 @@ extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersSSE2(void);
 extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersNEON(void);
 extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersMIPSdspR2(void);
 
-static volatile VP8CPUInfo last_cpuinfo_used2 = (VP8CPUInfo)&last_cpuinfo_used2;
+static volatile VP8CPUInfo upsampling_last_cpuinfo_used2 =
+    (VP8CPUInfo)&upsampling_last_cpuinfo_used2;
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplers(void) {
-  if (last_cpuinfo_used2 == VP8GetCPUInfo) return;
+  if (upsampling_last_cpuinfo_used2 == VP8GetCPUInfo) return;
 
 #ifdef FANCY_UPSAMPLING
   WebPUpsamplers[MODE_RGB]       = UpsampleRgbLinePair;
@@ -244,7 +246,7 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplers(void) {
 #endif
   }
 #endif  // FANCY_UPSAMPLING
-  last_cpuinfo_used2 = VP8GetCPUInfo;
+  upsampling_last_cpuinfo_used2 = VP8GetCPUInfo;
 }
 
 //------------------------------------------------------------------------------

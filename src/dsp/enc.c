@@ -727,10 +727,11 @@ extern void VP8EncDspInitNEON(void);
 extern void VP8EncDspInitMIPS32(void);
 extern void VP8EncDspInitMIPSdspR2(void);
 
-static volatile VP8CPUInfo last_cpuinfo_used = (VP8CPUInfo)&last_cpuinfo_used;
+static volatile VP8CPUInfo enc_last_cpuinfo_used =
+    (VP8CPUInfo)&enc_last_cpuinfo_used;
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
-  if (last_cpuinfo_used == VP8GetCPUInfo) return;
+  if (enc_last_cpuinfo_used == VP8GetCPUInfo) return;
 
   VP8DspInit();  // common inverse transforms
   InitTables();
@@ -783,5 +784,5 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
     }
 #endif
   }
-  last_cpuinfo_used = VP8GetCPUInfo;
+  enc_last_cpuinfo_used = VP8GetCPUInfo;
 }
