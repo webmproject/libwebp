@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 #include "../utils/utils.h"
+#include "../webp/decode.h"
 #include "../webp/format_constants.h"
 #include "../webp/mux.h"
 
@@ -38,7 +39,10 @@ struct WebPAnimEncoder {
   const int canvas_height_;                 // Canvas height.
   const WebPAnimEncoderOptions options_;    // Global encoding options.
 
-  FrameRect prev_webp_rect;           // Previous WebP frame rectangle.
+  FrameRect prev_rect;                // Previous WebP frame rectangle.
+  WebPConfig last_config;             // Cached in case a re-encode is needed.
+  WebPConfig last_config2;            // 2nd cached config; only valid if
+                                      // 'options_.allow_mixed' is true.
 
   WebPPicture* curr_canvas_;          // Only pointer; we don't own memory.
 
@@ -789,7 +793,7 @@ static void PickBestCandidate(WebPAnimEncoder* const enc,
                   : WEBP_MUX_DISPOSE_BACKGROUND;
           SetPreviousDisposeMethod(enc, prev_dispose_method);
         }
-        enc->prev_webp_rect = candidates[i].rect_;  // save for next frame.
+        enc->prev_rect = candidates[i].rect_;  // save for next frame.
       } else {
         WebPMemoryWriterClear(&candidates[i].mem_);
         candidates[i].evaluate_ = 0;
@@ -833,6 +837,8 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc, int duration,
   WebPConfig config_lossy = *config;
   config_ll.lossless = 1;
   config_lossy.lossless = 0;
+  enc->last_config = *config;
+  enc->last_config2 = config->lossless ? config_lossy : config_ll;
 
   if (!WebPPictureInit(&sub_frame_none) || !WebPPictureInit(&sub_frame_bg)) {
     return VP8_ENC_ERROR_INVALID_CONFIGURATION;
@@ -850,7 +856,7 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc, int duration,
     // Change-rectangle assuming previous frame was DISPOSE_BACKGROUND.
     WebPPicture* const prev_canvas_disposed = &enc->prev_canvas_disposed_;
     CopyPixels(prev_canvas, prev_canvas_disposed);
-    DisposeFrameRectangle(WEBP_MUX_DISPOSE_BACKGROUND, &enc->prev_webp_rect,
+    DisposeFrameRectangle(WEBP_MUX_DISPOSE_BACKGROUND, &enc->prev_rect,
                           prev_canvas_disposed);
     GetSubRect(prev_canvas_disposed, curr_canvas, is_key_frame, is_first_frame,
                &rect_bg, &sub_frame_bg);
@@ -1082,10 +1088,105 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int duration,
 // -----------------------------------------------------------------------------
 // Bitstream assembly.
 
-static WebPMuxError OptimizeSingleFrame(WebPMux* const mux) {
-  // TODO(urvang): If only one frame, re-encode it as a full frame.
-  (void)mux;
-  return WEBP_MUX_OK;
+static int DecodeFrameOntoCanvas(const WebPMuxFrameInfo* const frame,
+                                 WebPPicture* const canvas) {
+  const WebPData* const image = &frame->bitstream;
+  WebPPicture sub_image;
+  WebPDecoderConfig config;
+  WebPInitDecoderConfig(&config);
+  WebPUtilClearPic(canvas, NULL);
+  if (WebPGetFeatures(image->bytes, image->size, &config.input) !=
+      VP8_STATUS_OK) {
+    return 0;
+  }
+  if (!WebPPictureView(canvas, frame->x_offset, frame->y_offset,
+                       config.input.width, config.input.height, &sub_image)) {
+    return 0;
+  }
+  config.output.is_external_memory = 1;
+  config.output.colorspace = MODE_BGRA;
+  config.output.u.RGBA.rgba = (uint8_t*)sub_image.argb;
+  config.output.u.RGBA.stride = sub_image.argb_stride * 4;
+  config.output.u.RGBA.size = config.output.u.RGBA.stride * sub_image.height;
+
+  if (WebPDecode(image->bytes, image->size, &config) != VP8_STATUS_OK) {
+    return 0;
+  }
+  return 1;
+}
+
+static int FrameToFullCanvas(WebPAnimEncoder* const enc,
+                             const WebPMuxFrameInfo* const frame,
+                             WebPData* const full_image) {
+  WebPPicture* const canvas_buf = &enc->curr_canvas_copy_;
+  WebPMemoryWriter mem1, mem2;
+  WebPMemoryWriterInit(&mem1);
+  WebPMemoryWriterInit(&mem2);
+
+  if (!DecodeFrameOntoCanvas(frame, canvas_buf)) goto Err;
+  if (!EncodeFrame(&enc->last_config, canvas_buf, &mem1)) goto Err;
+  GetEncodedData(&mem1, full_image);
+
+  if (enc->options_.allow_mixed) {
+    if (!EncodeFrame(&enc->last_config, canvas_buf, &mem2)) goto Err;
+    if (mem2.size < mem1.size) {
+      GetEncodedData(&mem2, full_image);
+      WebPMemoryWriterClear(&mem1);
+    } else {
+      WebPMemoryWriterClear(&mem2);
+    }
+  }
+  return 1;
+
+ Err:
+  WebPMemoryWriterClear(&mem1);
+  WebPMemoryWriterClear(&mem2);
+  return 0;
+}
+
+// Convert a single-frame animation to a non-animated image if appropriate.
+// TODO(urvang): Can we pick one of the two heuristically (based on frame
+// rectangle and/or presence of alpha)?
+static WebPMuxError OptimizeSingleFrame(WebPAnimEncoder* const enc,
+                                        WebPData* const webp_data) {
+  WebPMuxError err = WEBP_MUX_OK;
+  int canvas_width, canvas_height;
+  WebPMuxFrameInfo frame;
+  WebPData full_image;
+  WebPData webp_data2;
+  WebPMux* const mux = WebPMuxCreate(webp_data, 0);
+  if (mux == NULL) return WEBP_MUX_BAD_DATA;
+  assert(enc->frame_count_ == 1);
+  WebPDataInit(&frame.bitstream);
+  WebPDataInit(&full_image);
+  WebPDataInit(&webp_data2);
+
+  err = WebPMuxGetFrame(mux, 1, &frame);
+  if (err != WEBP_MUX_OK) goto End;
+  if (frame.id != WEBP_CHUNK_ANMF) goto End;  // Non-animation: nothing to do.
+  err = WebPMuxGetCanvasSize(mux, &canvas_width, &canvas_height);
+  if (err != WEBP_MUX_OK) goto End;
+  if (!FrameToFullCanvas(enc, &frame, &full_image)) {
+    err = WEBP_MUX_BAD_DATA;
+    goto End;
+  }
+  err = WebPMuxSetImage(mux, &full_image, 1);
+  if (err != WEBP_MUX_OK) goto End;
+  err = WebPMuxAssemble(mux, &webp_data2);
+  if (err != WEBP_MUX_OK) goto End;
+
+  if (webp_data2.size < webp_data->size) {  // Pick 'webp_data2' if smaller.
+    WebPDataClear(webp_data);
+    *webp_data = webp_data2;
+    WebPDataInit(&webp_data2);
+  }
+
+ End:
+  WebPDataClear(&frame.bitstream);
+  WebPDataClear(&full_image);
+  WebPMuxDelete(mux);
+  WebPDataClear(&webp_data2);
+  return err;
 }
 
 int WebPAnimEncoderAssemble(WebPAnimEncoder* enc, WebPData* webp_data) {
@@ -1116,14 +1217,14 @@ int WebPAnimEncoderAssemble(WebPAnimEncoder* enc, WebPData* webp_data) {
   err = WebPMuxSetAnimationParams(mux, &enc->options_.anim_params);
   if (err != WEBP_MUX_OK) goto Err;
 
-  if (enc->frame_count_ == 1) {
-    err = OptimizeSingleFrame(mux);
-    if (err != WEBP_MUX_OK) goto Err;
-  }
-
   // Assemble into a WebP bitstream.
   err = WebPMuxAssemble(mux, webp_data);
   if (err != WEBP_MUX_OK) goto Err;
+
+  if (enc->frame_count_ == 1) {
+    err = OptimizeSingleFrame(enc, webp_data);
+    if (err != WEBP_MUX_OK) goto Err;
+  }
 
   return 1;
 
