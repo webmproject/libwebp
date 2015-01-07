@@ -46,7 +46,6 @@ struct WebPAnimEncoder {
   WebPPicture curr_canvas_mod_;       // Possibly modified current canvas.
   WebPPicture prev_canvas_;           // Previous canvas.
   WebPPicture prev_canvas_disposed_;  // Previous canvas disposed to background.
-  WebPPicture prev_to_prev_canvas_;   // Previous to previous canvas.
 
   // Encoded data.
   EncodedFrame* encoded_frames_;      // Array of encoded frames.
@@ -204,8 +203,7 @@ WebPAnimEncoder* WebPAnimEncoderNewInternal(
   // Canvas buffers.
   if (!WebPPictureInit(&enc->curr_canvas_mod_) ||
       !WebPPictureInit(&enc->prev_canvas_) ||
-      !WebPPictureInit(&enc->prev_canvas_disposed_) ||
-      !WebPPictureInit(&enc->prev_to_prev_canvas_)) {
+      !WebPPictureInit(&enc->prev_canvas_disposed_)) {
     return NULL;
   }
   enc->curr_canvas_mod_.width = width;
@@ -213,12 +211,10 @@ WebPAnimEncoder* WebPAnimEncoderNewInternal(
   enc->curr_canvas_mod_.use_argb = 1;
   if (!WebPPictureAlloc(&enc->curr_canvas_mod_) ||
       !WebPPictureCopy(&enc->curr_canvas_mod_, &enc->prev_canvas_) ||
-      !WebPPictureCopy(&enc->curr_canvas_mod_, &enc->prev_canvas_disposed_) ||
-      !WebPPictureCopy(&enc->curr_canvas_mod_, &enc->prev_to_prev_canvas_)) {
+      !WebPPictureCopy(&enc->curr_canvas_mod_, &enc->prev_canvas_disposed_)) {
     goto Err;
   }
   WebPUtilClearPic(&enc->prev_canvas_, NULL);
-  WebPUtilClearPic(&enc->prev_to_prev_canvas_, NULL);
 
   // Encoded frames.
   ResetCounters(enc);
@@ -256,7 +252,6 @@ void WebPAnimEncoderDelete(WebPAnimEncoder* enc) {
     WebPPictureFree(&enc->curr_canvas_mod_);
     WebPPictureFree(&enc->prev_canvas_);
     WebPPictureFree(&enc->prev_canvas_disposed_);
-    WebPPictureFree(&enc->prev_to_prev_canvas_);
     if (enc->encoded_frames_ != NULL) {
       size_t i;
       for (i = 0; i < enc->size_; ++i) {
@@ -966,7 +961,6 @@ static int CacheFrame(WebPAnimEncoder* const enc, int duration,
   }
 
   // Update previous to previous and previous canvases for next call.
-  CopyPixels(&enc->prev_canvas_, &enc->prev_to_prev_canvas_);
   CopyPixels(enc->curr_canvas_, &enc->prev_canvas_);
   enc->is_first_frame_ = 0;
   ok = 1;
