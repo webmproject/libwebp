@@ -1745,7 +1745,11 @@ extern void VP8LDspInitNEON(void);
 extern void VP8LDspInitMIPS32(void);
 extern void VP8LDspInitMIPSdspR2(void);
 
+static volatile VP8CPUInfo last_cpuinfo_used = (VP8CPUInfo)&last_cpuinfo_used;
+
 WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
+  if (last_cpuinfo_used == VP8GetCPUInfo) return;
+
   memcpy(VP8LPredictors, kPredictorsC, sizeof(VP8LPredictors));
 
   VP8LSubtractGreenFromBlueAndRed = VP8LSubtractGreenFromBlueAndRed_C;
@@ -1797,6 +1801,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
     }
 #endif
   }
+  last_cpuinfo_used = VP8GetCPUInfo;
 }
 
 //------------------------------------------------------------------------------
