@@ -586,6 +586,428 @@ static WEBP_INLINE void DCMode8(uint8_t* dst, const uint8_t* left,
   FILL_8_OR_16(dst, DC, 8);
 }
 
+static void DC4(uint8_t* dst, const uint8_t* top) {
+  int temp0, temp1;
+  __asm__ volatile(
+    "ulw          %[temp0],   0(%[top])               \n\t"
+    "ulw          %[temp1],   -5(%[top])              \n\t"
+    "raddu.w.qb   %[temp0],   %[temp0]                \n\t"
+    "raddu.w.qb   %[temp1],   %[temp1]                \n\t"
+    "addu         %[temp0],   %[temp0],    %[temp1]   \n\t"
+    "addiu        %[temp0],   %[temp0],    4          \n\t"
+    "srl          %[temp0],   %[temp0],    3          \n\t"
+    "replv.qb     %[temp0],   %[temp0]                \n\t"
+    "usw          %[temp0],   0*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw          %[temp0],   1*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw          %[temp0],   2*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw          %[temp0],   3*"XSTR(BPS)"(%[dst])   \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1)
+    : [top]"r"(top), [dst]"r"(dst)
+    : "memory"
+  );
+}
+
+static void TM4(uint8_t* dst, const uint8_t* top) {
+  int a10, a32, temp0, temp1, temp2, temp3, temp4, temp5;
+  const int c35 = 0xff00ff;
+  __asm__ volatile (
+    "lbu              %[temp1],  0(%[top])                     \n\t"
+    "lbu              %[a10],    1(%[top])                     \n\t"
+    "lbu              %[temp2],  2(%[top])                     \n\t"
+    "lbu              %[a32],    3(%[top])                     \n\t"
+    "ulw              %[temp0],  -5(%[top])                    \n\t"
+    "lbu              %[temp4],  -1(%[top])                    \n\t"
+    "append           %[a10],    %[temp1],   16                \n\t"
+    "append           %[a32],    %[temp2],   16                \n\t"
+    "replv.ph         %[temp4],  %[temp4]                      \n\t"
+    "shrl.ph          %[temp1],  %[temp0],   8                 \n\t"
+    "and              %[temp0],  %[temp0],   %[c35]            \n\t"
+    "subu.ph          %[temp1],  %[temp1],   %[temp4]          \n\t"
+    "subu.ph          %[temp0],  %[temp0],   %[temp4]          \n\t"
+    "srl              %[temp2],  %[temp1],   16                \n\t"
+    "srl              %[temp3],  %[temp0],   16                \n\t"
+    "replv.ph         %[temp2],  %[temp2]                      \n\t"
+    "replv.ph         %[temp3],  %[temp3]                      \n\t"
+    "replv.ph         %[temp4],  %[temp1]                      \n\t"
+    "replv.ph         %[temp5],  %[temp0]                      \n\t"
+    "addu.ph          %[temp0],  %[temp3],   %[a10]            \n\t"
+    "addu.ph          %[temp1],  %[temp3],   %[a32]            \n\t"
+    "addu.ph          %[temp3],  %[temp2],   %[a10]            \n\t"
+    "addu.ph          %[temp2],  %[temp2],   %[a32]            \n\t"
+    "shll_s.ph        %[temp0],  %[temp0],   7                 \n\t"
+    "shll_s.ph        %[temp1],  %[temp1],   7                 \n\t"
+    "shll_s.ph        %[temp3],  %[temp3],   7                 \n\t"
+    "shll_s.ph        %[temp2],  %[temp2],   7                 \n\t"
+    "precrqu_s.qb.ph  %[temp0],  %[temp1],   %[temp0]          \n\t"
+    "precrqu_s.qb.ph  %[temp1],  %[temp2],   %[temp3]          \n\t"
+    "addu.ph          %[temp2],  %[temp5],   %[a10]            \n\t"
+    "addu.ph          %[temp3],  %[temp5],   %[a32]            \n\t"
+    "addu.ph          %[temp5],  %[temp4],   %[a10]            \n\t"
+    "addu.ph          %[temp4],  %[temp4],   %[a32]            \n\t"
+    "shll_s.ph        %[temp2],  %[temp2],   7                 \n\t"
+    "shll_s.ph        %[temp3],  %[temp3],   7                 \n\t"
+    "shll_s.ph        %[temp4],  %[temp4],   7                 \n\t"
+    "shll_s.ph        %[temp5],  %[temp5],   7                 \n\t"
+    "precrqu_s.qb.ph  %[temp2],  %[temp3],   %[temp2]          \n\t"
+    "precrqu_s.qb.ph  %[temp3],  %[temp4],   %[temp5]          \n\t"
+    "usw              %[temp1],  0*"XSTR(BPS)"(%[dst])         \n\t"
+    "usw              %[temp0],  1*"XSTR(BPS)"(%[dst])         \n\t"
+    "usw              %[temp3],  2*"XSTR(BPS)"(%[dst])         \n\t"
+    "usw              %[temp2],  3*"XSTR(BPS)"(%[dst])         \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [a10]"=&r"(a10), [a32]"=&r"(a32)
+    : [c35]"r"(c35), [top]"r"(top), [dst]"r"(dst)
+    : "memory"
+  );
+}
+
+static void VE4(uint8_t* dst, const uint8_t* top) {
+  int temp0, temp1, temp2, temp3, temp4, temp5, temp6;
+  __asm__ volatile(
+    "ulw             %[temp0],   -1(%[top])              \n\t"
+    "ulh             %[temp1],   3(%[top])               \n\t"
+    "preceu.ph.qbr   %[temp2],   %[temp0]                \n\t"
+    "preceu.ph.qbl   %[temp3],   %[temp0]                \n\t"
+    "preceu.ph.qbr   %[temp4],   %[temp1]                \n\t"
+    "packrl.ph       %[temp5],   %[temp3],    %[temp2]   \n\t"
+    "packrl.ph       %[temp6],   %[temp4],    %[temp3]   \n\t"
+    "shll.ph         %[temp5],   %[temp5],    1          \n\t"
+    "shll.ph         %[temp6],   %[temp6],    1          \n\t"
+    "addq.ph         %[temp2],   %[temp5],    %[temp2]   \n\t"
+    "addq.ph         %[temp6],   %[temp6],    %[temp4]   \n\t"
+    "addq.ph         %[temp2],   %[temp2],    %[temp3]   \n\t"
+    "addq.ph         %[temp6],   %[temp6],    %[temp3]   \n\t"
+    "shra_r.ph       %[temp2],   %[temp2],    2          \n\t"
+    "shra_r.ph       %[temp6],   %[temp6],    2          \n\t"
+    "precr.qb.ph     %[temp4],   %[temp6],    %[temp2]   \n\t"
+    "usw             %[temp4],   0*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw             %[temp4],   1*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw             %[temp4],   2*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw             %[temp4],   3*"XSTR(BPS)"(%[dst])   \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6)
+    : [top]"r"(top), [dst]"r"(dst)
+    : "memory"
+  );
+}
+
+static void HE4(uint8_t* dst, const uint8_t* top) {
+  int temp0, temp1, temp2, temp3, temp4, temp5, temp6;
+  __asm__ volatile(
+    "ulw             %[temp0],   -4(%[top])              \n\t"
+    "lbu             %[temp1],   -5(%[top])              \n\t"
+    "preceu.ph.qbr   %[temp2],   %[temp0]                \n\t"
+    "preceu.ph.qbl   %[temp3],   %[temp0]                \n\t"
+    "replv.ph        %[temp4],   %[temp1]                \n\t"
+    "packrl.ph       %[temp5],   %[temp3],    %[temp2]   \n\t"
+    "packrl.ph       %[temp6],   %[temp2],    %[temp4]   \n\t"
+    "shll.ph         %[temp5],   %[temp5],    1          \n\t"
+    "shll.ph         %[temp6],   %[temp6],    1          \n\t"
+    "addq.ph         %[temp3],   %[temp3],    %[temp5]   \n\t"
+    "addq.ph         %[temp3],   %[temp3],    %[temp2]   \n\t"
+    "addq.ph         %[temp2],   %[temp2],    %[temp6]   \n\t"
+    "addq.ph         %[temp2],   %[temp2],    %[temp4]   \n\t"
+    "shra_r.ph       %[temp3],   %[temp3],    2          \n\t"
+    "shra_r.ph       %[temp2],   %[temp2],    2          \n\t"
+    "replv.qb        %[temp0],   %[temp3]                \n\t"
+    "replv.qb        %[temp1],   %[temp2]                \n\t"
+    "srl             %[temp3],   %[temp3],    16         \n\t"
+    "srl             %[temp2],   %[temp2],    16         \n\t"
+    "replv.qb        %[temp3],   %[temp3]                \n\t"
+    "replv.qb        %[temp2],   %[temp2]                \n\t"
+    "usw             %[temp3],   0*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw             %[temp0],   1*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw             %[temp2],   2*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw             %[temp1],   3*"XSTR(BPS)"(%[dst])   \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6)
+    : [top]"r"(top), [dst]"r"(dst)
+    : "memory"
+  );
+}
+
+static void RD4(uint8_t* dst, const uint8_t* top) {
+  int temp0, temp1, temp2, temp3, temp4, temp5;
+  int temp6, temp7, temp8, temp9, temp10, temp11;
+  __asm__ volatile(
+    "ulw             %[temp0],    -5(%[top])               \n\t"
+    "ulw             %[temp1],    -1(%[top])               \n\t"
+    "preceu.ph.qbl   %[temp2],    %[temp0]                 \n\t"
+    "preceu.ph.qbr   %[temp3],    %[temp0]                 \n\t"
+    "preceu.ph.qbr   %[temp4],    %[temp1]                 \n\t"
+    "preceu.ph.qbl   %[temp5],    %[temp1]                 \n\t"
+    "packrl.ph       %[temp6],    %[temp2],    %[temp3]    \n\t"
+    "packrl.ph       %[temp7],    %[temp4],    %[temp2]    \n\t"
+    "packrl.ph       %[temp8],    %[temp5],    %[temp4]    \n\t"
+    "shll.ph         %[temp6],    %[temp6],    1           \n\t"
+    "addq.ph         %[temp9],    %[temp2],    %[temp6]    \n\t"
+    "shll.ph         %[temp7],    %[temp7],    1           \n\t"
+    "addq.ph         %[temp9],    %[temp9],    %[temp3]    \n\t"
+    "shll.ph         %[temp8],    %[temp8],    1           \n\t"
+    "shra_r.ph       %[temp9],    %[temp9],    2           \n\t"
+    "addq.ph         %[temp10],   %[temp4],    %[temp7]    \n\t"
+    "addq.ph         %[temp11],   %[temp5],    %[temp8]    \n\t"
+    "addq.ph         %[temp10],   %[temp10],   %[temp2]    \n\t"
+    "addq.ph         %[temp11],   %[temp11],   %[temp4]    \n\t"
+    "shra_r.ph       %[temp10],   %[temp10],   2           \n\t"
+    "shra_r.ph       %[temp11],   %[temp11],   2           \n\t"
+    "lbu             %[temp0],    3(%[top])                \n\t"
+    "lbu             %[temp1],    2(%[top])                \n\t"
+    "lbu             %[temp2],    1(%[top])                \n\t"
+    "sll             %[temp1],    %[temp1],    1           \n\t"
+    "addu            %[temp0],    %[temp0],    %[temp1]    \n\t"
+    "addu            %[temp0],    %[temp0],    %[temp2]    \n\t"
+    "precr.qb.ph     %[temp9],    %[temp10],   %[temp9]    \n\t"
+    "shra_r.w        %[temp0],    %[temp0],    2           \n\t"
+    "precr.qb.ph     %[temp10],   %[temp11],   %[temp10]   \n\t"
+    "usw             %[temp9],    3*"XSTR(BPS)"(%[dst])    \n\t"
+    "usw             %[temp10],   1*"XSTR(BPS)"(%[dst])    \n\t"
+    "prepend         %[temp9],    %[temp11],   8           \n\t"
+    "prepend         %[temp10],   %[temp0],    8           \n\t"
+    "usw             %[temp9],    2*"XSTR(BPS)"(%[dst])    \n\t"
+    "usw             %[temp10],   0*"XSTR(BPS)"(%[dst])    \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
+      [temp9]"=&r"(temp9), [temp10]"=&r"(temp10), [temp11]"=&r"(temp11)
+    : [top]"r"(top), [dst]"r"(dst)
+    : "memory"
+  );
+}
+
+static void VR4(uint8_t* dst, const uint8_t* top) {
+  int temp0, temp1, temp2, temp3, temp4;
+  int temp5, temp6, temp7, temp8, temp9;
+  __asm__ volatile (
+    "ulw              %[temp0],   -4(%[top])              \n\t"
+    "ulw              %[temp1],   0(%[top])               \n\t"
+    "preceu.ph.qbl    %[temp2],   %[temp0]                \n\t"
+    "preceu.ph.qbr    %[temp0],   %[temp0]                \n\t"
+    "preceu.ph.qbla   %[temp3],   %[temp1]                \n\t"
+    "preceu.ph.qbra   %[temp1],   %[temp1]                \n\t"
+    "packrl.ph        %[temp7],   %[temp3],    %[temp2]   \n\t"
+    "addqh_r.ph       %[temp4],   %[temp1],    %[temp3]   \n\t"
+    "move             %[temp6],   %[temp1]                \n\t"
+    "append           %[temp1],   %[temp2],    16         \n\t"
+    "shll.ph          %[temp9],   %[temp6],    1          \n\t"
+    "addqh_r.ph       %[temp5],   %[temp7],    %[temp6]   \n\t"
+    "shll.ph          %[temp8],   %[temp7],    1          \n\t"
+    "addu.ph          %[temp3],   %[temp7],    %[temp3]   \n\t"
+    "addu.ph          %[temp1],   %[temp1],    %[temp6]   \n\t"
+    "packrl.ph        %[temp7],   %[temp2],    %[temp0]   \n\t"
+    "addu.ph          %[temp6],   %[temp0],    %[temp2]   \n\t"
+    "addu.ph          %[temp3],   %[temp3],    %[temp9]   \n\t"
+    "addu.ph          %[temp1],   %[temp1],    %[temp8]   \n\t"
+    "shll.ph          %[temp7],   %[temp7],    1          \n\t"
+    "shra_r.ph        %[temp3],   %[temp3],    2          \n\t"
+    "shra_r.ph        %[temp1],   %[temp1],    2          \n\t"
+    "addu.ph          %[temp6],   %[temp6],    %[temp7]   \n\t"
+    "shra_r.ph        %[temp6],   %[temp6],    2          \n\t"
+    "precrq.ph.w      %[temp8],   %[temp4],    %[temp5]   \n\t"
+    "append           %[temp4],   %[temp5],    16         \n\t"
+    "precrq.ph.w      %[temp2],   %[temp3],    %[temp1]   \n\t"
+    "append           %[temp3],   %[temp1],    16         \n\t"
+    "precr.qb.ph      %[temp8],   %[temp8],    %[temp4]   \n\t"
+    "precr.qb.ph      %[temp3],   %[temp2],    %[temp3]   \n\t"
+    "usw              %[temp8],   0*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw              %[temp3],   1*"XSTR(BPS)"(%[dst])   \n\t"
+    "append           %[temp3],   %[temp6],    8          \n\t"
+    "srl              %[temp6],   %[temp6],    16         \n\t"
+    "append           %[temp8],   %[temp6],    8          \n\t"
+    "usw              %[temp3],   3*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw              %[temp8],   2*"XSTR(BPS)"(%[dst])   \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
+      [temp9]"=&r"(temp9)
+    : [top]"r"(top), [dst]"r"(dst)
+    : "memory"
+  );
+}
+
+static void LD4(uint8_t* dst, const uint8_t* top) {
+  int temp0, temp1, temp2, temp3, temp4, temp5;
+  int temp6, temp7, temp8, temp9, temp10, temp11;
+  __asm__ volatile(
+    "ulw             %[temp0],    0(%[top])               \n\t"
+    "ulw             %[temp1],    4(%[top])               \n\t"
+    "preceu.ph.qbl   %[temp2],    %[temp0]                \n\t"
+    "preceu.ph.qbr   %[temp3],    %[temp0]                \n\t"
+    "preceu.ph.qbr   %[temp4],    %[temp1]                \n\t"
+    "preceu.ph.qbl   %[temp5],    %[temp1]                \n\t"
+    "packrl.ph       %[temp6],    %[temp2],    %[temp3]   \n\t"
+    "packrl.ph       %[temp7],    %[temp4],    %[temp2]   \n\t"
+    "packrl.ph       %[temp8],    %[temp5],    %[temp4]   \n\t"
+    "shll.ph         %[temp6],    %[temp6],    1          \n\t"
+    "addq.ph         %[temp9],    %[temp2],    %[temp6]   \n\t"
+    "shll.ph         %[temp7],    %[temp7],    1          \n\t"
+    "addq.ph         %[temp9],    %[temp9],    %[temp3]   \n\t"
+    "shll.ph         %[temp8],    %[temp8],    1          \n\t"
+    "shra_r.ph       %[temp9],    %[temp9],    2          \n\t"
+    "addq.ph         %[temp10],   %[temp4],    %[temp7]   \n\t"
+    "addq.ph         %[temp11],   %[temp5],    %[temp8]   \n\t"
+    "addq.ph         %[temp10],   %[temp10],   %[temp2]   \n\t"
+    "addq.ph         %[temp11],   %[temp11],   %[temp4]   \n\t"
+    "shra_r.ph       %[temp10],   %[temp10],   2          \n\t"
+    "shra_r.ph       %[temp11],   %[temp11],   2          \n\t"
+    "srl             %[temp1],    %[temp1],    24         \n\t"
+    "sll             %[temp1],    %[temp1],    1          \n\t"
+    "raddu.w.qb      %[temp5],    %[temp5]                \n\t"
+    "precr.qb.ph     %[temp9],    %[temp10],   %[temp9]   \n\t"
+    "precr.qb.ph     %[temp10],   %[temp11],   %[temp10]  \n\t"
+    "addu            %[temp1],    %[temp1],    %[temp5]   \n\t"
+    "shra_r.w        %[temp1],    %[temp1],    2          \n\t"
+    "usw             %[temp9],    0*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw             %[temp10],   2*"XSTR(BPS)"(%[dst])   \n\t"
+    "prepend         %[temp9],    %[temp11],   8          \n\t"
+    "prepend         %[temp10],   %[temp1],    8          \n\t"
+    "usw             %[temp9],    1*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw             %[temp10],   3*"XSTR(BPS)"(%[dst])   \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
+      [temp9]"=&r"(temp9), [temp10]"=&r"(temp10), [temp11]"=&r"(temp11)
+    : [top]"r"(top), [dst]"r"(dst)
+    : "memory"
+  );
+}
+
+static void VL4(uint8_t* dst, const uint8_t* top) {
+  int temp0, temp1, temp2, temp3, temp4;
+  int temp5, temp6, temp7, temp8, temp9;
+  __asm__ volatile (
+    "ulw              %[temp0],   0(%[top])               \n\t"
+    "ulw              %[temp1],   4(%[top])               \n\t"
+    "preceu.ph.qbla   %[temp2],   %[temp0]                \n\t"
+    "preceu.ph.qbra   %[temp0],   %[temp0]                \n\t"
+    "preceu.ph.qbl    %[temp3],   %[temp1]                \n\t"
+    "preceu.ph.qbr    %[temp1],   %[temp1]                \n\t"
+    "addqh_r.ph       %[temp4],   %[temp0],    %[temp2]   \n\t"
+    "packrl.ph        %[temp7],   %[temp1],    %[temp0]   \n\t"
+    "precrq.ph.w      %[temp6],   %[temp1],    %[temp2]   \n\t"
+    "shll.ph          %[temp9],   %[temp2],    1          \n\t"
+    "addqh_r.ph       %[temp5],   %[temp7],    %[temp2]   \n\t"
+    "shll.ph          %[temp8],   %[temp7],    1          \n\t"
+    "addu.ph          %[temp2],   %[temp2],    %[temp6]   \n\t"
+    "addu.ph          %[temp0],   %[temp0],    %[temp7]   \n\t"
+    "packrl.ph        %[temp7],   %[temp3],    %[temp1]   \n\t"
+    "addu.ph          %[temp6],   %[temp1],    %[temp3]   \n\t"
+    "addu.ph          %[temp2],   %[temp2],    %[temp8]   \n\t"
+    "addu.ph          %[temp0],   %[temp0],    %[temp9]   \n\t"
+    "shll.ph          %[temp7],   %[temp7],    1          \n\t"
+    "shra_r.ph        %[temp2],   %[temp2],    2          \n\t"
+    "shra_r.ph        %[temp0],   %[temp0],    2          \n\t"
+    "addu.ph          %[temp6],   %[temp6],    %[temp7]   \n\t"
+    "shra_r.ph        %[temp6],   %[temp6],    2          \n\t"
+    "precrq.ph.w      %[temp8],   %[temp5],    %[temp4]   \n\t"
+    "append           %[temp5],   %[temp4],    16         \n\t"
+    "precrq.ph.w      %[temp3],   %[temp2],    %[temp0]   \n\t"
+    "append           %[temp2],   %[temp0],    16         \n\t"
+    "precr.qb.ph      %[temp8],   %[temp8],    %[temp5]   \n\t"
+    "precr.qb.ph      %[temp3],   %[temp3],    %[temp2]   \n\t"
+    "usw              %[temp8],   0*"XSTR(BPS)"(%[dst])   \n\t"
+    "prepend          %[temp8],   %[temp6],    8          \n\t"
+    "usw              %[temp3],   1*"XSTR(BPS)"(%[dst])   \n\t"
+    "srl              %[temp6],   %[temp6],    16         \n\t"
+    "prepend          %[temp3],   %[temp6],    8          \n\t"
+    "usw              %[temp8],   2*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw              %[temp3],   3*"XSTR(BPS)"(%[dst])   \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
+      [temp9]"=&r"(temp9)
+    : [top]"r"(top), [dst]"r"(dst)
+    : "memory"
+  );
+}
+
+static void HD4(uint8_t* dst, const uint8_t* top) {
+  int temp0, temp1, temp2, temp3, temp4;
+  int temp5, temp6, temp7, temp8, temp9;
+  __asm__ volatile (
+    "ulw              %[temp0],   -5(%[top])              \n\t"
+    "ulw              %[temp1],   -1(%[top])              \n\t"
+    "preceu.ph.qbla   %[temp2],   %[temp0]                \n\t"
+    "preceu.ph.qbra   %[temp0],   %[temp0]                \n\t"
+    "preceu.ph.qbl    %[temp3],   %[temp1]                \n\t"
+    "preceu.ph.qbr    %[temp1],   %[temp1]                \n\t"
+    "addqh_r.ph       %[temp4],   %[temp0],    %[temp2]   \n\t"
+    "packrl.ph        %[temp7],   %[temp1],    %[temp0]   \n\t"
+    "precrq.ph.w      %[temp6],   %[temp1],    %[temp2]   \n\t"
+    "shll.ph          %[temp9],   %[temp2],    1          \n\t"
+    "addqh_r.ph       %[temp5],   %[temp7],    %[temp2]   \n\t"
+    "shll.ph          %[temp8],   %[temp7],    1          \n\t"
+    "addu.ph          %[temp2],   %[temp2],    %[temp6]   \n\t"
+    "addu.ph          %[temp0],   %[temp0],    %[temp7]   \n\t"
+    "packrl.ph        %[temp7],   %[temp3],    %[temp1]   \n\t"
+    "addu.ph          %[temp6],   %[temp1],    %[temp3]   \n\t"
+    "addu.ph          %[temp2],   %[temp2],    %[temp8]   \n\t"
+    "addu.ph          %[temp0],   %[temp0],    %[temp9]   \n\t"
+    "shll.ph          %[temp7],   %[temp7],    1          \n\t"
+    "shra_r.ph        %[temp2],   %[temp2],    2          \n\t"
+    "shra_r.ph        %[temp0],   %[temp0],    2          \n\t"
+    "addu.ph          %[temp6],   %[temp6],    %[temp7]   \n\t"
+    "shra_r.ph        %[temp6],   %[temp6],    2          \n\t"
+    "precrq.ph.w      %[temp1],   %[temp2],    %[temp5]   \n\t"
+    "precrq.ph.w      %[temp3],   %[temp0],    %[temp4]   \n\t"
+    "precr.qb.ph      %[temp7],   %[temp6],    %[temp1]   \n\t"
+    "precr.qb.ph      %[temp6],   %[temp1],    %[temp3]   \n\t"
+    "usw              %[temp7],   0*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw              %[temp6],   1*"XSTR(BPS)"(%[dst])   \n\t"
+    "append           %[temp2],   %[temp5],    16         \n\t"
+    "append           %[temp0],   %[temp4],    16         \n\t"
+    "precr.qb.ph      %[temp5],   %[temp3],    %[temp2]   \n\t"
+    "precr.qb.ph      %[temp4],   %[temp2],    %[temp0]   \n\t"
+    "usw              %[temp5],   2*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw              %[temp4],   3*"XSTR(BPS)"(%[dst])   \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
+      [temp9]"=&r"(temp9)
+    : [top]"r"(top), [dst]"r"(dst)
+    : "memory"
+  );
+}
+
+static void HU4(uint8_t* dst, const uint8_t* top) {
+  int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
+  __asm__ volatile (
+    "ulw             %[temp0],   -5(%[top])              \n\t"
+    "preceu.ph.qbl   %[temp1],   %[temp0]                \n\t"
+    "preceu.ph.qbr   %[temp2],   %[temp0]                \n\t"
+    "packrl.ph       %[temp3],   %[temp1],    %[temp2]   \n\t"
+    "replv.qb        %[temp7],   %[temp2]                \n\t"
+    "addqh_r.ph      %[temp4],   %[temp1],    %[temp3]   \n\t"
+    "addqh_r.ph      %[temp5],   %[temp3],    %[temp2]   \n\t"
+    "shll.ph         %[temp6],   %[temp3],    1          \n\t"
+    "addu.ph         %[temp3],   %[temp2],    %[temp3]   \n\t"
+    "addu.ph         %[temp6],   %[temp1],    %[temp6]   \n\t"
+    "shll.ph         %[temp0],   %[temp2],    1          \n\t"
+    "addu.ph         %[temp6],   %[temp6],    %[temp2]   \n\t"
+    "addu.ph         %[temp0],   %[temp3],    %[temp0]   \n\t"
+    "shra_r.ph       %[temp6],   %[temp6],    2          \n\t"
+    "shra_r.ph       %[temp0],   %[temp0],    2          \n\t"
+    "packrl.ph       %[temp3],   %[temp6],    %[temp5]   \n\t"
+    "precrq.ph.w     %[temp2],   %[temp6],    %[temp4]   \n\t"
+    "append          %[temp0],   %[temp5],    16         \n\t"
+    "precr.qb.ph     %[temp3],   %[temp3],    %[temp2]   \n\t"
+    "usw             %[temp3],   0*"XSTR(BPS)"(%[dst])   \n\t"
+    "precr.qb.ph     %[temp1],   %[temp7],    %[temp0]   \n\t"
+    "usw             %[temp7],   3*"XSTR(BPS)"(%[dst])   \n\t"
+    "packrl.ph       %[temp2],   %[temp1],    %[temp3]   \n\t"
+    "usw             %[temp1],   2*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw             %[temp2],   1*"XSTR(BPS)"(%[dst])   \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7)
+    : [top]"r"(top), [dst]"r"(dst)
+    : "memory"
+  );
+}
+
 //------------------------------------------------------------------------------
 // Chroma 8x8 prediction (paragraph 12.2)
 
@@ -617,6 +1039,21 @@ static void Intra16Preds(uint8_t* dst,
   TrueMotion16(I16TM16 + dst, left, top);
 }
 
+// Left samples are top[-5 .. -2], top_left is top[-1], top are
+// located at top[0..3], and top right is top[4..7]
+static void Intra4Preds(uint8_t* dst, const uint8_t* top) {
+  DC4(I4DC4 + dst, top);
+  TM4(I4TM4 + dst, top);
+  VE4(I4VE4 + dst, top);
+  HE4(I4HE4 + dst, top);
+  RD4(I4RD4 + dst, top);
+  VR4(I4VR4 + dst, top);
+  LD4(I4LD4 + dst, top);
+  VL4(I4VL4 + dst, top);
+  HD4(I4HD4 + dst, top);
+  HU4(I4HU4 + dst, top);
+}
+
 #undef FILL_8_OR_16
 #undef FILL_PART
 #undef OUTPUT_EARLY_CLOBBER_REGS_17
@@ -639,5 +1076,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPSdspR2(void) {
   VP8TDisto16x16 = Disto16x16;
   VP8EncPredLuma16 = Intra16Preds;
   VP8EncPredChroma8 = IntraChromaPreds;
+  VP8EncPredLuma4 = Intra4Preds;
 #endif  // WEBP_USE_MIPS_DSP_R2
 }
