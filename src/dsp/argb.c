@@ -40,6 +40,7 @@ void (*VP8PackRGB)(const uint8_t*, const uint8_t*, const uint8_t*,
                    int, int, uint32_t*);
 
 extern void VP8EncDspARGBInitMIPSdspR2(void);
+extern void VP8EncDspARGBInitSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspARGBInit(void) {
   VP8PackARGB = PackARGB;
@@ -47,6 +48,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspARGBInit(void) {
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
+#if defined(WEBP_USE_SSE2)
+    if (VP8GetCPUInfo(kSSE2)) {
+      VP8EncDspARGBInitSSE2();
+    }
+#endif
 #if defined(WEBP_USE_MIPS_DSP_R2)
     if (VP8GetCPUInfo(kMIPSdspR2)) {
       VP8EncDspARGBInitMIPSdspR2();

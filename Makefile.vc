@@ -182,6 +182,7 @@ DSP_DEC_OBJS = \
     $(DIROBJ)\dsp\alpha_processing_sse2.obj \
     $(DIROBJ)\dsp\argb.obj \
     $(DIROBJ)\dsp\argb_mips_dsp_r2.obj \
+    $(DIROBJ)\dsp\argb_sse2.obj \
     $(DIROBJ)\dsp\cpu.obj \
     $(DIROBJ)\dsp\dec.obj \
     $(DIROBJ)\dsp\dec_clip_tables.obj \
