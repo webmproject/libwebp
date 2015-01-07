@@ -179,6 +179,7 @@ GIF2WEBP_UTIL_OBJS = \
     examples/gif2webp_util.o \
 
 MUX_OBJS = \
+    src/mux/anim_encode.o \
     src/mux/muxedit.o \
     src/mux/muxinternal.o \
     src/mux/muxread.o \

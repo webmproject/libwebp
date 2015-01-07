@@ -7,11 +7,26 @@
 // be found in the AUTHORS file in the root of the source tree.
 // -----------------------------------------------------------------------------
 //
-//  RIFF container manipulation for WebP images.
+//  RIFF container manipulation and encoding for WebP images.
 //
 // Authors: Urvang (urvang@google.com)
 //          Vikas (vikasa@google.com)
 
+#ifndef WEBP_WEBP_MUX_H_
+#define WEBP_WEBP_MUX_H_
+
+#include "./encode.h"
+#include "./mux_types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define WEBP_MUX_ABI_VERSION 0x0103        // MAJOR(8b) + MINOR(8b)
+
+//------------------------------------------------------------------------------
+// Mux API
+//
 // This API allows manipulation of WebP container images containing features
 // like color profile, metadata, animation and fragmented images.
 //
@@ -45,17 +60,6 @@
   WebPMuxDelete(mux);
   free(data);
 */
-
-#ifndef WEBP_WEBP_MUX_H_
-#define WEBP_WEBP_MUX_H_
-
-#include "./mux_types.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define WEBP_MUX_ABI_VERSION 0x0102        // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -387,6 +391,101 @@ WEBP_EXTERN(WebPMuxError) WebPMuxNumChunks(const WebPMux* mux,
 //   WEBP_MUX_OK - on success.
 WEBP_EXTERN(WebPMuxError) WebPMuxAssemble(WebPMux* mux,
                                           WebPData* assembled_data);
+
+//------------------------------------------------------------------------------
+// WebPAnimEncoder API
+//
+// This API allows encoding (possibly) animated WebP images.
+//
+// Code Example:
+/*
+  WebPAnimEncoder* enc = WebPAnimEncoderNew(width, height, enc_options);
+  while(<there are more frames>) {
+    WebPAnimEncoderAdd(enc, frame, duration, frame_options);
+  }
+  WebPAnimEncoderAssemble(enc, webp_data);
+  WebPAnimEncoderDelete(enc);
+  // Write the 'webp_data' to a file, or re-mux it further.
+*/
+
+typedef struct WebPAnimEncoder WebPAnimEncoder;  // Main opaque object.
+
+// Global options.
+typedef struct {
+  WebPMuxAnimParams anim_params;  // Animation parameters.
+  int minimize_size;    // If true, minimize the output size (slow). Implicitly
+                        // disables key-frame insertion.
+  size_t kmin;
+  size_t kmax;          // Minimum and maximum distance between consecutive key
+                        // frames in the output. The library may insert some key
+                        // frames as needed to satisfy this criteria.
+                        // Note that these conditions should hold: kmax > kmin
+                        // and kmin >= kmax / 2 + 1. Also, if kmin == 0, then
+                        // key-frame insertion is disabled.
+  int allow_mixed;      // If true, use mixed compression mode; may choose
+                        // either lossy and lossless for each frame.
+
+  // TODO(urvang): Instead of printing errors to STDERR, we should have an error
+  // string attached to the encoder.
+  int verbose;          // If true, print encoding info.
+  uint32_t padding[4];  // Padding for later use.
+} WebPAnimEncoderOptions;
+
+// Per-frame options.
+typedef struct {
+  WebPConfig config;                    // Core encoding parameters.
+  // TODO(urvang): Add rectangle, dispose and blend method options. After adding
+  // them, we might need to add 'prev_frame_disposed' parameter to
+  // WebPAnimEncoderAdd as well.
+  uint32_t padding[8];                  // Padding for later use.
+} WebPAnimEncoderFrameOptions;
+
+// Internal, version-checked, entry point.
+WEBP_EXTERN(WebPAnimEncoder*) WebPAnimEncoderNewInternal(
+    int, int, const WebPAnimEncoderOptions*, int);
+
+// Creates and initializes a WebPAnimEncoder object.
+// Parameters:
+//   width/height - (in) canvas width and height of the animation.
+//   encoder_options - (in) encoding options; can be passed NULL to pick
+//                     reasonable defaults.
+// Returns:
+//   A pointer to the newly created WebPAnimEncoder object.
+//   Or NULL in case of memory error.
+static WEBP_INLINE WebPAnimEncoder* WebPAnimEncoderNew(
+    int width, int height, const WebPAnimEncoderOptions* enc_options) {
+  return WebPAnimEncoderNewInternal(width, height, enc_options,
+                                    WEBP_MUX_ABI_VERSION);
+}
+
+// Optimize the given frame for WebP, encode it and add it to the
+// WebPAnimEncoder object.
+// Parameters:
+//   enc - (in/out) object to which the frame is to be added.
+//   frame - (in/out) frame data in ARGB or YUVA format.
+//   duration - (in) frame duration
+//   frame_options - (in) frame options; can be passed NULL to pick
+//                   reasonable defaults.
+// Returns:
+//   On error, returns false and frame->error_code is set appropriately.
+//   Otherwise, returns true.
+WEBP_EXTERN(int) WebPAnimEncoderAdd(
+    WebPAnimEncoder* enc, WebPPicture* frame, int duration,
+    const WebPAnimEncoderFrameOptions* frame_options);
+
+// Assemble all frames added so far into a WebP bitstream.
+// Parameters:
+//   enc - (in/out) object from which the frames are to be assembled.
+//   webp_data - (out) generated WebP bitstream.
+// Returns:
+//   True on success.
+WEBP_EXTERN(int) WebPAnimEncoderAssemble(WebPAnimEncoder* enc,
+                                         WebPData* webp_data);
+
+// Deletes the WebPAnimEncoder object.
+// Parameters:
+//   anim_enc - (in/out) object to be deleted
+WEBP_EXTERN(void) WebPAnimEncoderDelete(WebPAnimEncoder* anim_enc);
 
 //------------------------------------------------------------------------------
 
