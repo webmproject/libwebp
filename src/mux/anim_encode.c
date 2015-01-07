@@ -391,12 +391,15 @@ static WEBP_INLINE void SnapToEvenOffsets(FrameRect* const rect) {
 // current frame. The initial guess for 'rect' will be the full canvas.
 static int GetSubRect(const WebPPicture* const prev_canvas,
                       const WebPPicture* const curr_canvas, int is_key_frame,
-                      FrameRect* const rect, WebPPicture* const sub_frame) {
+                      int is_first_frame, FrameRect* const rect,
+                      WebPPicture* const sub_frame) {
   rect->x_offset_ = 0;
   rect->y_offset_ = 0;
   rect->width_ = curr_canvas->width;
   rect->height_ = curr_canvas->height;
-  if (!is_key_frame) {  // Optimize frame rectangle.
+  if (!is_key_frame || is_first_frame) {  // Optimize frame rectangle.
+    // Note: This behaves as expected for first frame, as 'prev_canvas' is
+    // initialized to a fully transparent canvas in the beginning.
     MinimizeChangeRectangle(prev_canvas, curr_canvas, rect);
   }
   SnapToEvenOffsets(rect);
@@ -802,6 +805,7 @@ static WebPEncodingError SetFrame(
   const WebPPicture* const prev_canvas = &enc->prev_canvas_;
   Candidate candidates[CANDIDATE_COUNT];
   const int is_lossless = frame_options->config.lossless;
+  const int is_first_frame = enc->is_first_frame_;
 
   int try_dispose_none = 1;  // Default.
   FrameRect rect_none;
@@ -833,7 +837,7 @@ static WebPEncodingError SetFrame(
   }
 
   // Change-rectangle assuming previous frame was DISPOSE_NONE.
-  GetSubRect(prev_canvas, curr_canvas, is_key_frame,
+  GetSubRect(prev_canvas, curr_canvas, is_key_frame, is_first_frame,
              &rect_none, &sub_frame_none);
 
   if (dispose_bg_possible) {
@@ -842,7 +846,7 @@ static WebPEncodingError SetFrame(
     CopyPixels(prev_canvas, prev_canvas_disposed);
     DisposeFrameRectangle(WEBP_MUX_DISPOSE_BACKGROUND, &enc->prev_webp_rect,
                           prev_canvas_disposed);
-    GetSubRect(prev_canvas_disposed, curr_canvas, is_key_frame,
+    GetSubRect(prev_canvas_disposed, curr_canvas, is_key_frame, is_first_frame,
                &rect_bg, &sub_frame_bg);
 
     if (enc->options_.minimize_size) {  // Try both dispose methods.
