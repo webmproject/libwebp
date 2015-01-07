@@ -43,7 +43,10 @@ struct WebPAnimEncoder {
   WebPPicture* curr_canvas_;          // Only pointer; we don't own memory.
 
   // Canvas buffers.
-  WebPPicture curr_canvas_mod_;       // Possibly modified current canvas.
+  WebPPicture curr_canvas_copy_;      // Possibly modified current canvas.
+  int curr_canvas_copy_modified_;     // True if pixels in 'curr_canvas_copy_'
+                                      // differ from those in 'curr_canvas_'.
+
   WebPPicture prev_canvas_;           // Previous canvas.
   WebPPicture prev_canvas_disposed_;  // Previous canvas disposed to background.
 
@@ -201,20 +204,21 @@ WebPAnimEncoder* WebPAnimEncoderNewInternal(
   }
 
   // Canvas buffers.
-  if (!WebPPictureInit(&enc->curr_canvas_mod_) ||
+  if (!WebPPictureInit(&enc->curr_canvas_copy_) ||
       !WebPPictureInit(&enc->prev_canvas_) ||
       !WebPPictureInit(&enc->prev_canvas_disposed_)) {
     return NULL;
   }
-  enc->curr_canvas_mod_.width = width;
-  enc->curr_canvas_mod_.height = height;
-  enc->curr_canvas_mod_.use_argb = 1;
-  if (!WebPPictureAlloc(&enc->curr_canvas_mod_) ||
-      !WebPPictureCopy(&enc->curr_canvas_mod_, &enc->prev_canvas_) ||
-      !WebPPictureCopy(&enc->curr_canvas_mod_, &enc->prev_canvas_disposed_)) {
+  enc->curr_canvas_copy_.width = width;
+  enc->curr_canvas_copy_.height = height;
+  enc->curr_canvas_copy_.use_argb = 1;
+  if (!WebPPictureAlloc(&enc->curr_canvas_copy_) ||
+      !WebPPictureCopy(&enc->curr_canvas_copy_, &enc->prev_canvas_) ||
+      !WebPPictureCopy(&enc->curr_canvas_copy_, &enc->prev_canvas_disposed_)) {
     goto Err;
   }
   WebPUtilClearPic(&enc->prev_canvas_, NULL);
+  enc->curr_canvas_copy_modified_ = 1;
 
   // Encoded frames.
   ResetCounters(enc);
@@ -249,7 +253,7 @@ static void FrameRelease(EncodedFrame* const encoded_frame) {
 
 void WebPAnimEncoderDelete(WebPAnimEncoder* enc) {
   if (enc != NULL) {;
-    WebPPictureFree(&enc->curr_canvas_mod_);
+    WebPPictureFree(&enc->curr_canvas_copy_);
     WebPPictureFree(&enc->prev_canvas_);
     WebPPictureFree(&enc->prev_canvas_disposed_);
     if (enc->encoded_frames_ != NULL) {
@@ -646,6 +650,13 @@ static WebPEncodingError EncodeCandidate(WebPPicture* const sub_frame,
   return error_code;
 }
 
+static void CopyCurrentCanvas(WebPAnimEncoder* const enc) {
+  if (enc->curr_canvas_copy_modified_) {
+    CopyPixels(enc->curr_canvas_, &enc->curr_canvas_copy_);
+    enc->curr_canvas_copy_modified_ = 0;
+  }
+}
+
 enum {
   LL_DISP_NONE = 0,
   LL_DISP_BG,
@@ -668,16 +679,12 @@ static WebPEncodingError GenerateCandidates(
   Candidate* const candidate_lossy = is_dispose_none
                                      ? &candidates[LOSSY_DISP_NONE]
                                      : &candidates[LOSSY_DISP_BG];
-  const WebPPicture* const curr_canvas_orig = enc->curr_canvas_;
-  WebPPicture* const curr_canvas_mod = &enc->curr_canvas_mod_;
+  WebPPicture* const curr_canvas = &enc->curr_canvas_copy_;
   const WebPPicture* const prev_canvas =
       is_dispose_none ? &enc->prev_canvas_ : &enc->prev_canvas_disposed_;
   const int use_blending =
       !is_key_frame &&
-      IsBlendingPossible(prev_canvas, curr_canvas_orig, rect);
-
-  // True if 'curr_canvas_mod' is different from 'curr_canvas_orig'.
-  int is_curr_canvas_modified = 1;
+      IsBlendingPossible(prev_canvas, curr_canvas, rect);
 
   // Pick candidates to be tried.
   if (!enc->options_.allow_mixed) {
@@ -691,24 +698,20 @@ static WebPEncodingError GenerateCandidates(
 
   // Generate candidates.
   if (candidate_ll->evaluate_) {
-    if (is_curr_canvas_modified) {  // Copy original.
-      CopyPixels(curr_canvas_orig, curr_canvas_mod);
-      is_curr_canvas_modified = 0;
-    }
+    CopyCurrentCanvas(enc);
     if (use_blending) {
-      IncreaseTransparency(prev_canvas, rect, curr_canvas_mod);
-      is_curr_canvas_modified = 1;
+      IncreaseTransparency(prev_canvas, rect, curr_canvas);
+      enc->curr_canvas_copy_modified_ = 1;
     }
     error_code = EncodeCandidate(sub_frame, rect, config_ll, use_blending,
                                  duration, candidate_ll);
     if (error_code != VP8_ENC_OK) return error_code;
   }
   if (candidate_lossy->evaluate_) {
-    if (is_curr_canvas_modified) {  // Copy original.
-      CopyPixels(curr_canvas_orig, curr_canvas_mod);
-    }
+    CopyCurrentCanvas(enc);
     if (use_blending) {
-      FlattenSimilarBlocks(prev_canvas, rect, curr_canvas_mod);
+      FlattenSimilarBlocks(prev_canvas, rect, curr_canvas);
+      enc->curr_canvas_copy_modified_ = 1;
     }
     error_code = EncodeCandidate(sub_frame, rect, config_lossy, use_blending,
                                  duration, candidate_lossy);
@@ -801,7 +804,7 @@ static WebPEncodingError SetFrame(
     EncodedFrame* const encoded_frame) {
   int i;
   WebPEncodingError error_code = VP8_ENC_OK;
-  const WebPPicture* const curr_canvas = enc->curr_canvas_;
+  const WebPPicture* const curr_canvas = &enc->curr_canvas_copy_;
   const WebPPicture* const prev_canvas = &enc->prev_canvas_;
   Candidate candidates[CANDIDATE_COUNT];
   const int is_lossless = frame_options->config.lossless;
@@ -1058,6 +1061,8 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int duration,
   }
   assert(enc->curr_canvas_ == NULL);
   enc->curr_canvas_ = frame;  // Store reference.
+  assert(enc->curr_canvas_copy_modified_ == 1);
+  CopyCurrentCanvas(enc);
 
   if (!CacheFrame(enc, duration, &options)) {
     return 0;
@@ -1066,6 +1071,7 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int duration,
     return 0;
   }
   enc->curr_canvas_ = NULL;
+  enc->curr_canvas_copy_modified_ = 1;
   return 1;
 }
 
