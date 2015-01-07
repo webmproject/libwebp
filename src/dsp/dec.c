@@ -688,10 +688,11 @@ extern void VP8DspInitSSE2(void);
 extern void VP8DspInitNEON(void);
 extern void VP8DspInitMIPS32(void);
 
-static volatile VP8CPUInfo last_cpuinfo_used = (VP8CPUInfo)&last_cpuinfo_used;
+static volatile VP8CPUInfo dec_last_cpuinfo_used =
+    (VP8CPUInfo)&dec_last_cpuinfo_used;
 
 void VP8DspInit(void) {
-  if (last_cpuinfo_used == VP8GetCPUInfo) return;
+  if (dec_last_cpuinfo_used == VP8GetCPUInfo) return;
 
   VP8InitClipTables();
 
@@ -731,5 +732,5 @@ void VP8DspInit(void) {
     }
 #endif
   }
-  last_cpuinfo_used = VP8GetCPUInfo;
+  dec_last_cpuinfo_used = VP8GetCPUInfo;
 }
