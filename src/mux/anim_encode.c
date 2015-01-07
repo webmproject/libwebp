@@ -1068,7 +1068,7 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int duration,
 // -----------------------------------------------------------------------------
 // Bitstream assembly.
 
-static WebPMuxError ConvertSingleFrameToFullFrame(WebPMux* const mux) {
+static WebPMuxError OptimizeSingleFrame(WebPMux* const mux) {
   // TODO(urvang): If only one frame, re-encode it as a full frame.
   (void)mux;
   return WEBP_MUX_OK;
@@ -1099,11 +1099,11 @@ int WebPAnimEncoderAssemble(WebPAnimEncoder* enc, WebPData* webp_data) {
   err = WebPMuxSetCanvasSize(mux, enc->canvas_width_, enc->canvas_height_);
   if (err != WEBP_MUX_OK) goto Err;
 
+  err = WebPMuxSetAnimationParams(mux, &enc->options_.anim_params);
+  if (err != WEBP_MUX_OK) goto Err;
+
   if (enc->frame_count_ == 1) {
-    err = ConvertSingleFrameToFullFrame(mux);
-    if (err != WEBP_MUX_OK) goto Err;
-  } else {
-    err = WebPMuxSetAnimationParams(mux, &enc->options_.anim_params);
+    err = OptimizeSingleFrame(mux);
     if (err != WEBP_MUX_OK) goto Err;
   }
 
