@@ -401,7 +401,7 @@ WEBP_EXTERN(WebPMuxError) WebPMuxAssemble(WebPMux* mux,
 /*
   WebPAnimEncoder* enc = WebPAnimEncoderNew(width, height, enc_options);
   while(<there are more frames>) {
-    WebPAnimEncoderAdd(enc, frame, duration, frame_options);
+    WebPAnimEncoderAdd(enc, frame, duration, config);
   }
   WebPAnimEncoderAssemble(enc, webp_data);
   WebPAnimEncoderDelete(enc);
@@ -431,15 +431,6 @@ typedef struct {
   uint32_t padding[4];  // Padding for later use.
 } WebPAnimEncoderOptions;
 
-// Per-frame options.
-typedef struct {
-  WebPConfig config;                    // Core encoding parameters.
-  // TODO(urvang): Add rectangle, dispose and blend method options. After adding
-  // them, we might need to add 'prev_frame_disposed' parameter to
-  // WebPAnimEncoderAdd as well.
-  uint32_t padding[8];                  // Padding for later use.
-} WebPAnimEncoderFrameOptions;
-
 // Internal, version-checked, entry point.
 WEBP_EXTERN(WebPAnimEncoder*) WebPAnimEncoderNewInternal(
     int, int, const WebPAnimEncoderOptions*, int);
@@ -464,14 +455,14 @@ static WEBP_INLINE WebPAnimEncoder* WebPAnimEncoderNew(
 //   enc - (in/out) object to which the frame is to be added.
 //   frame - (in/out) frame data in ARGB or YUVA format.
 //   duration - (in) frame duration
-//   frame_options - (in) frame options; can be passed NULL to pick
-//                   reasonable defaults.
+//   config - (in) encoding options; can be passed NULL to pick
+//            reasonable defaults.
 // Returns:
 //   On error, returns false and frame->error_code is set appropriately.
 //   Otherwise, returns true.
 WEBP_EXTERN(int) WebPAnimEncoderAdd(
     WebPAnimEncoder* enc, WebPPicture* frame, int duration,
-    const WebPAnimEncoderFrameOptions* frame_options);
+    const WebPConfig* config);
 
 // Assemble all frames added so far into a WebP bitstream.
 // Parameters:
