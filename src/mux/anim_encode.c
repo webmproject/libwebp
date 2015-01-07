@@ -150,6 +150,16 @@ static void DefaultEncoderOptions(WebPAnimEncoderOptions* const enc_options) {
   enc_options->verbose = 0;
 }
 
+int WebPAnimEncoderOptionsInitInternal(WebPAnimEncoderOptions* enc_options,
+                                       int abi_version) {
+  if (enc_options == NULL ||
+      WEBP_ABI_IS_INCOMPATIBLE(abi_version, WEBP_MUX_ABI_VERSION)) {
+    return 0;
+  }
+  DefaultEncoderOptions(enc_options);
+  return 1;
+}
+
 #define TRANSPARENT_COLOR   0x00ffffff
 
 static void ClearRectangle(WebPPicture* const picture,

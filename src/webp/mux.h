@@ -399,9 +399,11 @@ WEBP_EXTERN(WebPMuxError) WebPMuxAssemble(WebPMux* mux,
 //
 // Code Example:
 /*
-  WebPAnimEncoder* enc = WebPAnimEncoderNew(width, height, enc_options);
+  WebPAnimEncoderOptions enc_options;
+  WebPAnimEncoderOptionsInit(&enc_options);
+  WebPAnimEncoder* enc = WebPAnimEncoderNew(width, height, &enc_options);
   while(<there are more frames>) {
-    WebPAnimEncoderAdd(enc, frame, duration, config);
+    WebPAnimEncoderAdd(enc, frame, duration, &config);
   }
   WebPAnimEncoderAssemble(enc, webp_data);
   WebPAnimEncoderDelete(enc);
@@ -430,6 +432,19 @@ typedef struct {
   int verbose;          // If true, print encoding info.
   uint32_t padding[4];  // Padding for later use.
 } WebPAnimEncoderOptions;
+
+// Internal, version-checked, entry point.
+WEBP_EXTERN(int) WebPAnimEncoderOptionsInitInternal(
+    WebPAnimEncoderOptions*, int);
+
+// Should always be called, to initialize a fresh WebPAnimEncoderOptions
+// structure before modification. Returns false in case of version mismatch.
+// WebPAnimEncoderOptionsInit() must have succeeded before using the 'options'
+// object.
+static WEBP_INLINE int WebPAnimEncoderOptionsInit(
+    WebPAnimEncoderOptions* enc_options) {
+  return WebPAnimEncoderOptionsInitInternal(enc_options, WEBP_MUX_ABI_VERSION);
+}
 
 // Internal, version-checked, entry point.
 WEBP_EXTERN(WebPAnimEncoder*) WebPAnimEncoderNewInternal(
