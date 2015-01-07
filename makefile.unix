@@ -112,9 +112,6 @@ DSP_DEC_OBJS = \
     src/dsp/alpha_processing.o \
     src/dsp/alpha_processing_mips_dsp_r2.o \
     src/dsp/alpha_processing_sse2.o \
-    src/dsp/argb.o \
-    src/dsp/argb_mips_dsp_r2.o \
-    src/dsp/argb_sse2.o \
     src/dsp/cpu.o \
     src/dsp/dec.o \
     src/dsp/dec_clip_tables.o \
@@ -138,6 +135,9 @@ DSP_DEC_OBJS = \
     src/dsp/yuv_sse2.o \
 
 DSP_ENC_OBJS = \
+    src/dsp/argb.o \
+    src/dsp/argb_mips_dsp_r2.o \
+    src/dsp/argb_sse2.o \
     src/dsp/enc.o \
     src/dsp/enc_avx2.o \
     src/dsp/enc_mips32.o \

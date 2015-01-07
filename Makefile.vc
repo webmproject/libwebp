@@ -180,9 +180,6 @@ DSP_DEC_OBJS = \
     $(DIROBJ)\dsp\alpha_processing.obj \
     $(DIROBJ)\dsp\alpha_processing_mips_dsp_r2.obj \
     $(DIROBJ)\dsp\alpha_processing_sse2.obj \
-    $(DIROBJ)\dsp\argb.obj \
-    $(DIROBJ)\dsp\argb_mips_dsp_r2.obj \
-    $(DIROBJ)\dsp\argb_sse2.obj \
     $(DIROBJ)\dsp\cpu.obj \
     $(DIROBJ)\dsp\dec.obj \
     $(DIROBJ)\dsp\dec_clip_tables.obj \
@@ -206,6 +203,9 @@ DSP_DEC_OBJS = \
     $(DIROBJ)\dsp\yuv_sse2.obj \
 
 DSP_ENC_OBJS = \
+    $(DIROBJ)\dsp\argb.obj \
+    $(DIROBJ)\dsp\argb_mips_dsp_r2.obj \
+    $(DIROBJ)\dsp\argb_sse2.obj \
     $(DIROBJ)\dsp\enc.obj \
     $(DIROBJ)\dsp\enc_avx2.obj \
     $(DIROBJ)\dsp\enc_mips32.obj \
