@@ -14,6 +14,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef HAVE_CONFIG_H
@@ -26,7 +27,6 @@
 #include "webp/encode.h"
 #include "webp/mux.h"
 #include "./example_util.h"
-#include "./gif2webp_util.h"
 
 // GIFLIB_MAJOR is only defined in libgif >= 4.2.0.
 #if defined(GIFLIB_MAJOR) && defined(GIFLIB_MINOR)
@@ -42,55 +42,99 @@
 #define GIF_DISPOSE_MASK     0x07
 #define GIF_DISPOSE_SHIFT    2
 #define WHITE_COLOR          0xffffffff
+#define TRANSPARENT_COLOR    0x00ffffff
 #define MAX_CACHE_SIZE       30
+
+typedef enum GIFDisposeMethod {
+  GIF_DISPOSE_NONE,
+  GIF_DISPOSE_BACKGROUND,
+  GIF_DISPOSE_RESTORE_PREVIOUS
+} GIFDisposeMethod;
+
+typedef struct {
+  int x_offset, y_offset, width, height;
+} GIFFrameRect;
 
 //------------------------------------------------------------------------------
 
 static int transparent_index = -1;  // Opaque frame by default.
 
-static void SanitizeKeyFrameIntervals(size_t* const kmin_ptr,
-                                      size_t* const kmax_ptr) {
-  size_t kmin = *kmin_ptr;
-  size_t kmax = *kmax_ptr;
-  int print_warning = 1;
+static void ClearRectangle(WebPPicture* const picture,
+                           int left, int top, int width, int height) {
+  int j;
+  for (j = top; j < top + height; ++j) {
+    uint32_t* const dst = picture->argb + j * picture->argb_stride;
+    int i;
+    for (i = left; i < left + width; ++i) {
+      dst[i] = TRANSPARENT_COLOR;
+    }
+  }
+}
 
-  if (kmin == 0) {  // Disable keyframe insertion.
-    kmax = ~0;
-    kmin = kmax - 1;
-    print_warning = 0;
+static void ClearPic(WebPPicture* const pic, const GIFFrameRect* const rect) {
+  if (rect != NULL) {
+    ClearRectangle(pic, rect->x_offset, rect->y_offset,
+                   rect->width, rect->height);
+  } else {
+    ClearRectangle(pic, 0, 0, pic->width, pic->height);
   }
-  if (kmax == 0) {
-    kmax = ~0;
-    print_warning = 0;
-  }
+}
 
-  if (kmin >= kmax) {
-    kmin = kmax - 1;
-    if (print_warning) {
-      fprintf(stderr,
-              "WARNING: Setting kmin = %d, so that kmin < kmax.\n", (int)kmin);
-    }
-  } else if (kmin < (kmax / 2 + 1)) {
-    // This ensures that cache.keyframe + kmin >= kmax is always true. So, we
-    // can flush all the frames in the ‘count_since_key_frame == kmax’ case.
-    kmin = (kmax / 2 + 1);
-    if (print_warning) {
-      fprintf(stderr,
-              "WARNING: Setting kmin = %d, so that kmin >= kmax / 2 + 1.\n",
-              (int)kmin);
+// TODO: Also used in picture.c. Move to a common location?
+// Copy width x height pixels from 'src' to 'dst' honoring the strides.
+static void CopyPlane(const uint8_t* src, int src_stride,
+                      uint8_t* dst, int dst_stride, int width, int height) {
+  while (height-- > 0) {
+    memcpy(dst, src, width);
+    src += src_stride;
+    dst += dst_stride;
+  }
+}
+
+// Copy pixels from 'src' to 'dst' honoring strides. 'src' and 'dst' are assumed
+// to be already allocated.
+static void CopyPixels(const WebPPicture* const src, WebPPicture* const dst) {
+  assert(src->width == dst->width && src->height == dst->height);
+  CopyPlane((uint8_t*)src->argb, 4 * src->argb_stride, (uint8_t*)dst->argb,
+            4 * dst->argb_stride, 4 * src->width, src->height);
+}
+
+// Given 'src' picture and its frame rectangle 'rect', blend it into 'dst'.
+static void BlendPixels(const WebPPicture* const src,
+                        const GIFFrameRect* const rect,
+                        WebPPicture* const dst) {
+  int j;
+  assert(src->width == dst->width && src->height == dst->height);
+  for (j = rect->y_offset; j < rect->y_offset + rect->height; ++j) {
+    int i;
+    for (i = rect->x_offset; i < rect->x_offset + rect->width; ++i) {
+      const uint32_t src_pixel = src->argb[j * src->argb_stride + i];
+      const int src_alpha = src_pixel >> 24;
+      if (src_alpha != 0) {
+        dst->argb[j * dst->argb_stride + i] = src_pixel;
+      }
     }
   }
-  // Limit the max number of frames that are allocated.
-  if (kmax - kmin > MAX_CACHE_SIZE) {
-    kmin = kmax - MAX_CACHE_SIZE;
-    if (print_warning) {
-      fprintf(stderr,
-              "WARNING: Setting kmin = %d, so that kmax - kmin <= 30.\n",
-              (int)kmin);
-    }
+}
+
+static void DisposeFrameRectangle(GIFDisposeMethod dispose_method,
+                                  const GIFFrameRect* const rect,
+                                  const WebPPicture* const prev_canvas,
+                                  WebPPicture* const curr_canvas) {
+  assert(rect != NULL);
+  if (dispose_method == GIF_DISPOSE_BACKGROUND) {
+    ClearPic(curr_canvas, rect);
+  } else if (dispose_method == GIF_DISPOSE_RESTORE_PREVIOUS) {
+    const int src_stride = prev_canvas->argb_stride;
+    const uint32_t* const src =
+        prev_canvas->argb + rect->x_offset + rect->y_offset * src_stride;
+    const int dst_stride = curr_canvas->argb_stride;
+    uint32_t* const dst =
+        curr_canvas->argb + rect->x_offset + rect->y_offset * dst_stride;
+    assert(prev_canvas != NULL);
+    CopyPlane((uint8_t*)src, 4 * src_stride, (uint8_t*)dst, 4 * dst_stride,
+              4 * rect->width, rect->height);
   }
-  *kmin_ptr = kmin;
-  *kmax_ptr = kmax;
 }
 
 static void Remap(const uint8_t* const src, const GifFileType* const gif,
@@ -104,20 +148,20 @@ static void Remap(const uint8_t* const src, const GifFileType* const gif,
 
   for (i = 0; i < len; ++i) {
     const GifColorType c = colors[src[i]];
-    dst[i] = (src[i] == transparent_index) ? WEBP_UTIL_TRANSPARENT_COLOR
+    dst[i] = (src[i] == transparent_index) ? TRANSPARENT_COLOR
            : c.Blue | (c.Green << 8) | (c.Red << 16) | (0xff << 24);
   }
 }
 
 // Read the GIF image frame.
-static int ReadFrame(GifFileType* const gif, WebPFrameRect* const gif_rect,
+static int ReadFrame(GifFileType* const gif, GIFFrameRect* const gif_rect,
                      WebPPicture* const webp_frame) {
   WebPPicture sub_image;
   const GifImageDesc* const image_desc = &gif->Image;
   uint32_t* dst = NULL;
   uint8_t* tmp = NULL;
   int ok = 0;
-  WebPFrameRect rect = {
+  GIFFrameRect rect = {
       image_desc->Left, image_desc->Top, image_desc->Width, image_desc->Height
   };
   *gif_rect = rect;
@@ -166,7 +210,7 @@ static int ReadFrame(GifFileType* const gif, WebPFrameRect* const gif_rect,
 static void GetBackgroundColor(const ColorMapObject* const color_map,
                                int bgcolor_idx, uint32_t* const bgcolor) {
   if (transparent_index != -1 && bgcolor_idx == transparent_index) {
-    *bgcolor = WEBP_UTIL_TRANSPARENT_COLOR;  // Special case.
+    *bgcolor = TRANSPARENT_COLOR;  // Special case.
   } else if (color_map == NULL || color_map->Colors == NULL
              || bgcolor_idx >= color_map->ColorCount) {
     *bgcolor = WHITE_COLOR;
@@ -261,35 +305,48 @@ int main(int argc, const char *argv[]) {
   const char *in_file = NULL, *out_file = NULL;
   FILE* out = NULL;
   GifFileType* gif = NULL;
-  WebPConfig config;
-  WebPPicture frame;
   int duration = 0;
-  FrameDisposeMethod orig_dispose = FRAME_DISPOSE_NONE;
-  WebPMuxAnimParams anim = { WHITE_COLOR, 0 };
-  WebPFrameCache* cache = NULL;
+  GIFDisposeMethod orig_dispose = GIF_DISPOSE_NONE;
+
+  WebPPicture frame;                // Frame rectangle only (not disposed).
+  WebPPicture curr_canvas;          // Not disposed.
+  WebPPicture prev_canvas;          // Disposed.
+  WebPPicture prev_to_prev_canvas;  // Disposed.
+
+  WebPAnimEncoder* enc = NULL;
+  WebPAnimEncoderOptions enc_options;
+  WebPConfig config;
 
   int is_first_frame = 1;     // Whether we are processing the first frame.
   int done;
   int c;
   int quiet = 0;
-  WebPMux* mux = NULL;
-  WebPData webp_data = { NULL, 0 };
-  int keep_metadata = METADATA_XMP;  // ICC not output by default.
-  int stored_icc = 0;  // Whether we have already stored an ICC profile.
-  int stored_xmp = 0;
+  WebPData webp_data;
 
-  int minimize_size = 0;
+  int keep_metadata = METADATA_XMP;  // ICC not output by default.
+  WebPData icc_data;
+  int stored_icc = 0;         // Whether we have already stored an ICC profile.
+  WebPData xmp_data;
+  int stored_xmp = 0;         // Whether we have already stored an XMP profile.
+  int loop_count = 0;
+  int stored_loop_count = 0;  // Whether we have found an explicit loop count.
+  WebPMux* mux = NULL;
+
   int default_kmin = 1;  // Whether to use default kmin value.
   int default_kmax = 1;
-  size_t kmin = 0;
-  size_t kmax = 0;
-  int allow_mixed = 0;   // If true, each frame can be lossy or lossless.
 
-  if (!WebPConfigInit(&config) || !WebPPictureInit(&frame)) {
+  if (!WebPConfigInit(&config) || !WebPAnimEncoderOptionsInit(&enc_options) ||
+      !WebPPictureInit(&frame) || !WebPPictureInit(&curr_canvas) ||
+      !WebPPictureInit(&prev_canvas) ||
+      !WebPPictureInit(&prev_to_prev_canvas)) {
     fprintf(stderr, "Error! Version mismatch!\n");
     return -1;
   }
   config.lossless = 1;  // Use lossless compression by default.
+
+  WebPDataInit(&webp_data);
+  WebPDataInit(&icc_data);
+  WebPDataInit(&xmp_data);
 
   if (argc == 1) {
     Help();
@@ -306,19 +363,19 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-lossy")) {
       config.lossless = 0;
     } else if (!strcmp(argv[c], "-mixed")) {
-      allow_mixed = 1;
+      enc_options.allow_mixed = 1;
       config.lossless = 0;
     } else if (!strcmp(argv[c], "-q") && c < argc - 1) {
       config.quality = ExUtilGetFloat(argv[++c], &parse_error);
     } else if (!strcmp(argv[c], "-m") && c < argc - 1) {
       config.method = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-min_size")) {
-      minimize_size = 1;
+      enc_options.minimize_size = 1;
     } else if (!strcmp(argv[c], "-kmax") && c < argc - 1) {
-      kmax = ExUtilGetUInt(argv[++c], 0, &parse_error);
+      enc_options.kmax = ExUtilGetUInt(argv[++c], 0, &parse_error);
       default_kmax = 0;
     } else if (!strcmp(argv[c], "-kmin") && c < argc - 1) {
-      kmin = ExUtilGetUInt(argv[++c], 0, &parse_error);
+      enc_options.kmin = ExUtilGetUInt(argv[++c], 0, &parse_error);
       default_kmin = 0;
     } else if (!strcmp(argv[c], "-f") && c < argc - 1) {
       config.filter_strength = ExUtilGetInt(argv[++c], 0, &parse_error);
@@ -375,6 +432,7 @@ int main(int argc, const char *argv[]) {
       quiet = 1;
     } else if (!strcmp(argv[c], "-v")) {
       verbose = 1;
+      enc_options.verbose = 1;
     } else if (!strcmp(argv[c], "--")) {
       if (c < argc - 1) in_file = argv[++c];
       break;
@@ -394,12 +452,11 @@ int main(int argc, const char *argv[]) {
 
   // Appropriate default kmin, kmax values for lossy and lossless.
   if (default_kmin) {
-    kmin = config.lossless ? 9 : 3;
+    enc_options.kmin = config.lossless ? 9 : 3;
   }
   if (default_kmax) {
-    kmax = config.lossless ? 17 : 5;
+    enc_options.kmax = config.lossless ? 17 : 5;
   }
-  SanitizeKeyFrameIntervals(&kmin, &kmax);
 
   if (!WebPValidateConfig(&config)) {
     fprintf(stderr, "Error! Invalid configuration.\n");
@@ -420,12 +477,6 @@ int main(int argc, const char *argv[]) {
 #endif
   if (gif == NULL) goto End;
 
-  mux = WebPMuxNew();
-  if (mux == NULL) {
-    fprintf(stderr, "ERROR: could not create a mux object.\n");
-    goto End;
-  }
-
   // Loop over GIF images
   done = 0;
   do {
@@ -434,17 +485,17 @@ int main(int argc, const char *argv[]) {
 
     switch (type) {
       case IMAGE_DESC_RECORD_TYPE: {
-        WebPFrameRect gif_rect;
+        GIFFrameRect gif_rect;
         GifImageDesc* const image_desc = &gif->Image;
 
         if (!DGifGetImageDesc(gif)) goto End;
 
-        // Fix some broken GIF global headers that report
-        // 0 x 0 screen dimension.
         if (is_first_frame) {
           if (verbose) {
             printf("Canvas screen: %d x %d\n", gif->SWidth, gif->SHeight);
           }
+          // Fix some broken GIF global headers that report
+          // 0 x 0 screen dimension.
           if (gif->SWidth == 0 || gif->SHeight == 0) {
             image_desc->Left = 0;
             image_desc->Top = 0;
@@ -458,29 +509,27 @@ int main(int argc, const char *argv[]) {
                      gif->SWidth, gif->SHeight);
             }
           }
-          // Set definitive canvas size.
-          err = WebPMuxSetCanvasSize(mux, gif->SWidth, gif->SHeight);
-          if (err != WEBP_MUX_OK) {
-            fprintf(stderr, "Invalid canvas size %d x %d\n",
-                    gif->SWidth, gif->SHeight);
-            goto End;
-          }
           // Allocate current buffer.
           frame.width = gif->SWidth;
           frame.height = gif->SHeight;
           frame.use_argb = 1;
           if (!WebPPictureAlloc(&frame)) goto End;
-          WebPUtilClearPic(&frame, NULL);
-
-          // Initialize cache.
-          cache = WebPFrameCacheNew(frame.width, frame.height, minimize_size,
-                                    kmin, kmax, allow_mixed);
-          if (cache == NULL) goto End;
+          ClearPic(&frame, NULL);
+          WebPPictureCopy(&frame, &curr_canvas);
+          WebPPictureCopy(&frame, &prev_canvas);
+          WebPPictureCopy(&frame, &prev_to_prev_canvas);
 
           // Background color.
           GetBackgroundColor(gif->SColorMap, gif->SBackGroundColor,
-                             &anim.bgcolor);
+                             &enc_options.anim_params.bgcolor);
+
+          // Initialize encoder.
+          enc = WebPAnimEncoderNew(curr_canvas.width, curr_canvas.height,
+                                   &enc_options);
+          if (enc == NULL) goto End;
+          is_first_frame = 0;
         }
+
         // Some even more broken GIF can have sub-rect with zero width/height.
         if (image_desc->Width == 0 || image_desc->Height == 0) {
           image_desc->Width = gif->SWidth;
@@ -490,25 +539,25 @@ int main(int argc, const char *argv[]) {
         if (!ReadFrame(gif, &gif_rect, &frame)) {
           goto End;
         }
+        // Blend frame rectangle with previous canvas to compose full canvas.
+        // Note that 'curr_canvas' is same as 'prev_canvas' at this point.
+        BlendPixels(&frame, &gif_rect, &curr_canvas);
 
-        if (!WebPFrameCacheAddFrame(cache, &config, &gif_rect, orig_dispose,
-                                    duration, &frame)) {
+        if (!WebPAnimEncoderAdd(enc, &curr_canvas, duration, &config)) {
           fprintf(stderr, "Error! Cannot encode frame as WebP\n");
-          fprintf(stderr, "Error code: %d\n", frame.error_code);
+          fprintf(stderr, "Error code: %d\n", curr_canvas.error_code);
         }
 
-        err = WebPFrameCacheFlush(cache, verbose, mux);
-        if (err != WEBP_MUX_OK) {
-          fprintf(stderr, "ERROR (%s): Could not add animation frame.\n",
-                  ErrorString(err));
-          goto End;
-        }
-        is_first_frame = 0;
+        // Update canvases.
+        CopyPixels(&prev_canvas, &prev_to_prev_canvas);
+        DisposeFrameRectangle(orig_dispose, &gif_rect, &prev_canvas,
+                              &curr_canvas);
+        CopyPixels(&curr_canvas, &prev_canvas);
 
         // In GIF, graphic control extensions are optional for a frame, so we
         // may not get one before reading the next frame. To handle this case,
         // we reset frame properties to reasonable defaults for the next frame.
-        orig_dispose = FRAME_DISPOSE_NONE;
+        orig_dispose = GIF_DISPOSE_NONE;
         duration = 0;
         transparent_index = -1;  // Opaque frame by default.
         break;
@@ -531,15 +580,15 @@ int main(int argc, const char *argv[]) {
             duration = delay * 10;  // Duration is in 1 ms units for WebP.
             switch (dispose) {
               case 3:
-                orig_dispose = FRAME_DISPOSE_RESTORE_PREVIOUS;
+                orig_dispose = GIF_DISPOSE_RESTORE_PREVIOUS;
                 break;
               case 2:
-                orig_dispose = FRAME_DISPOSE_BACKGROUND;
+                orig_dispose = GIF_DISPOSE_BACKGROUND;
                 break;
               case 1:
               case 0:
               default:
-                orig_dispose = FRAME_DISPOSE_NONE;
+                orig_dispose = GIF_DISPOSE_NONE;
                 break;
             }
             transparent_index = (flags & GIF_TRANSPARENT_MASK) ? data[4] : -1;
@@ -556,10 +605,11 @@ int main(int argc, const char *argv[]) {
               if (DGifGetExtensionNext(gif, &data) == GIF_ERROR) goto End;
               if (data == NULL) goto End;  // Loop count sub-block missing.
               if (data[0] < 3 || data[1] != 1) break;   // wrong size/marker
-              anim.loop_count = data[2] | (data[3] << 8);
+              loop_count = data[2] | (data[3] << 8);
               if (verbose) {
-                fprintf(stderr, "Loop count: %d\n", anim.loop_count);
+                fprintf(stderr, "Loop count: %d\n", loop_count);
               }
+              stored_loop_count = (loop_count != 0);
             } else {  // An extension containing metadata.
               // We only store the first encountered chunk of each type, and
               // only if requested by the user.
@@ -570,9 +620,7 @@ int main(int argc, const char *argv[]) {
                                  !stored_icc &&
                                  !memcmp(data + 1, "ICCRGBG1012", 11);
               if (is_xmp || is_icc) {
-                const char* const fourccs[2] = { "XMP " , "ICCP" };
-                const char* const features[2] = { "XMP" , "ICC" };
-                WebPData metadata = { NULL, 0 };
+                WebPData* const metadata = is_xmp ? &xmp_data : &icc_data;
                 // Construct metadata from sub-blocks.
                 // Usual case (including ICC profile): In each sub-block, the
                 // first byte specifies its size in bytes (0 to 255) and the
@@ -581,46 +629,33 @@ int main(int argc, const char *argv[]) {
                 // is also part of the XMP payload. XMP in GIF also has a 257
                 // byte padding data. See the XMP specification for details.
                 while (1) {
-                  WebPData prev_metadata = metadata;
                   WebPData subblock;
+                  const uint8_t* tmp;
                   if (DGifGetExtensionNext(gif, &data) == GIF_ERROR) {
-                    WebPDataClear(&metadata);
                     goto End;
                   }
                   if (data == NULL) break;  // Finished.
                   subblock.size = is_xmp ? data[0] + 1 : data[0];
                   assert(subblock.size > 0);
                   subblock.bytes = is_xmp ? data : data + 1;
-                  metadata.bytes =
-                      (uint8_t*)realloc((void*)metadata.bytes,
-                                        prev_metadata.size + subblock.size);
-                  if (metadata.bytes == NULL) {
-                    WebPDataClear(&prev_metadata);
+                  // Note: We store returned value in 'tmp' first, to avoid
+                  // leaking old memory in metadata->bytes on error.
+                  tmp = (uint8_t*)realloc((void*)metadata->bytes,
+                                          metadata->size + subblock.size);
+                  if (tmp == NULL) {
                     goto End;
                   }
-                  metadata.size += subblock.size;
-                  memcpy((void*)(metadata.bytes + prev_metadata.size),
+                  memcpy((void*)(tmp + metadata->size),
                          subblock.bytes, subblock.size);
+                  metadata->bytes = tmp;
+                  metadata->size += subblock.size;
                 }
                 if (is_xmp) {
                   // XMP padding data is 0x01, 0xff, 0xfe ... 0x01, 0x00.
                   const size_t xmp_pading_size = 257;
-                  if (metadata.size > xmp_pading_size) {
-                    metadata.size -= xmp_pading_size;
+                  if (metadata->size > xmp_pading_size) {
+                    metadata->size -= xmp_pading_size;
                   }
-                }
-
-                // Add metadata chunk.
-                err = WebPMuxSetChunk(mux, fourccs[is_icc], &metadata, 1);
-                if (verbose) {
-                  fprintf(stderr, "%s size: %d\n",
-                          features[is_icc], (int)metadata.size);
-                }
-                WebPDataClear(&metadata);
-                if (err != WEBP_MUX_OK) {
-                  fprintf(stderr, "ERROR (%s): Could not set %s chunk.\n",
-                          ErrorString(err), features[is_icc]);
-                  goto End;
                 }
                 if (is_icc) {
                   stored_icc = 1;
@@ -653,27 +688,70 @@ int main(int argc, const char *argv[]) {
     }
   } while (!done);
 
-  // Flush any pending frames.
-  err = WebPFrameCacheFlushAll(cache, verbose, mux);
-  if (err != WEBP_MUX_OK) {
-    fprintf(stderr, "ERROR (%s): Could not add animation frame.\n",
-            ErrorString(err));
+  if (!WebPAnimEncoderAssemble(enc, &webp_data)) {
+    // TODO(urvang): Print actual error code.
+    fprintf(stderr, "ERROR assembling the WebP file.\n");
     goto End;
   }
 
-  // Finish muxing
-  err = WebPMuxSetAnimationParams(mux, &anim);
-  if (err != WEBP_MUX_OK) {
-    fprintf(stderr, "ERROR (%s): Could not set animation parameters.\n",
-            ErrorString(err));
-    goto End;
+  if (stored_loop_count || stored_icc || stored_xmp) {
+    // Re-mux to add loop count and/or metadata as needed.
+    mux = WebPMuxCreate(&webp_data, 1);
+    if (mux == NULL) {
+      fprintf(stderr, "ERROR: Could not re-mux to add loop count/metadata.\n");
+      goto End;
+    }
+    WebPDataClear(&webp_data);
+
+    if (stored_loop_count) {  // Update loop count.
+      WebPMuxAnimParams new_params;
+      err = WebPMuxGetAnimationParams(mux, &new_params);
+      if (err != WEBP_MUX_OK) {
+        fprintf(stderr, "ERROR (%s): Could not fetch loop count.\n",
+                ErrorString(err));
+        goto End;
+      }
+      new_params.loop_count = loop_count;
+      err = WebPMuxSetAnimationParams(mux, &new_params);
+      if (err != WEBP_MUX_OK) {
+        fprintf(stderr, "ERROR (%s): Could not update loop count.\n",
+                ErrorString(err));
+        goto End;
+      }
+    }
+
+    if (stored_icc) {   // Add ICCP chunk.
+      err = WebPMuxSetChunk(mux, "ICCP", &icc_data, 1);
+      if (verbose) {
+        fprintf(stderr, "ICC size: %d\n", (int)icc_data.size);
+      }
+      if (err != WEBP_MUX_OK) {
+        fprintf(stderr, "ERROR (%s): Could not set ICC chunk.\n",
+                ErrorString(err));
+        goto End;
+      }
+    }
+
+    if (stored_xmp) {   // Add XMP chunk.
+      err = WebPMuxSetChunk(mux, "XMP ", &xmp_data, 1);
+      if (verbose) {
+        fprintf(stderr, "XMP size: %d\n", (int)xmp_data.size);
+      }
+      if (err != WEBP_MUX_OK) {
+        fprintf(stderr, "ERROR (%s): Could not set XMP chunk.\n",
+                ErrorString(err));
+        goto End;
+      }
+    }
+
+    err = WebPMuxAssemble(mux, &webp_data);
+    if (err != WEBP_MUX_OK) {
+      fprintf(stderr, "ERROR (%s): Could not assemble when re-muxing to add "
+              "loop count/metadata.\n", ErrorString(err));
+      goto End;
+    }
   }
 
-  err = WebPMuxAssemble(mux, &webp_data);
-  if (err != WEBP_MUX_OK) {
-    fprintf(stderr, "ERROR (%s) assembling the WebP file.\n", ErrorString(err));
-    goto End;
-  }
   if (out_file != NULL) {
     if (!ExUtilWriteFile(out_file, webp_data.bytes, webp_data.size)) {
       fprintf(stderr, "Error writing output file: %s\n", out_file);
@@ -693,10 +771,15 @@ int main(int argc, const char *argv[]) {
   gif_error = GIF_OK;
 
  End:
-  WebPDataClear(&webp_data);
+  WebPDataClear(&icc_data);
+  WebPDataClear(&xmp_data);
   WebPMuxDelete(mux);
+  WebPDataClear(&webp_data);
   WebPPictureFree(&frame);
-  WebPFrameCacheDelete(cache);
+  WebPPictureFree(&curr_canvas);
+  WebPPictureFree(&prev_canvas);
+  WebPPictureFree(&prev_to_prev_canvas);
+  WebPAnimEncoderDelete(enc);
   if (out != NULL && out_file != NULL) fclose(out);
 
   if (gif_error != GIF_OK) {
