@@ -224,6 +224,50 @@ static WEBP_INLINE uint32_t Select(uint32_t a, uint32_t b, uint32_t c) {
   return a;
 }
 
+static WEBP_INLINE uint32_t Average2(uint32_t a0, uint32_t a1) {
+  __asm__ volatile (
+    "adduh.qb    %[a0], %[a0], %[a1]       \n\t"
+    : [a0]"+r"(a0)
+    : [a1]"r"(a1)
+  );
+  return a0;
+}
+
+static WEBP_INLINE uint32_t Average3(uint32_t a0, uint32_t a1, uint32_t a2) {
+  return Average2(Average2(a0, a2), a1);
+}
+
+static WEBP_INLINE uint32_t Average4(uint32_t a0, uint32_t a1,
+                                     uint32_t a2, uint32_t a3) {
+  return Average2(Average2(a0, a1), Average2(a2, a3));
+}
+
+static uint32_t Predictor5(uint32_t left, const uint32_t* const top) {
+  return Average3(left, top[0], top[1]);
+}
+
+static uint32_t Predictor6(uint32_t left, const uint32_t* const top) {
+  return Average2(left, top[-1]);
+}
+
+static uint32_t Predictor7(uint32_t left, const uint32_t* const top) {
+  return Average2(left, top[0]);
+}
+
+static uint32_t Predictor8(uint32_t left, const uint32_t* const top) {
+  (void)left;
+  return Average2(top[-1], top[0]);
+}
+
+static uint32_t Predictor9(uint32_t left, const uint32_t* const top) {
+  (void)left;
+  return Average2(top[0], top[1]);
+}
+
+static uint32_t Predictor10(uint32_t left, const uint32_t* const top) {
+  return Average4(left, top[-1], top[0], top[1]);
+}
+
 static uint32_t Predictor11(uint32_t left, const uint32_t* const top) {
   return Select(top[0], left, top[-1]);
 }
@@ -333,6 +377,12 @@ void VP8LDspInitMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
   VP8LMapColor32b = MapARGB;
   VP8LMapColor8b = MapAlpha;
+  VP8LPredictors[5] = Predictor5;
+  VP8LPredictors[6] = Predictor6;
+  VP8LPredictors[7] = Predictor7;
+  VP8LPredictors[8] = Predictor8;
+  VP8LPredictors[9] = Predictor9;
+  VP8LPredictors[10] = Predictor10;
   VP8LPredictors[11] = Predictor11;
   VP8LPredictors[12] = Predictor12;
   VP8LPredictors[13] = Predictor13;
