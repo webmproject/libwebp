@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//KSU\u003d",
+        "filename": "src/dsp/enc_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-01-08T13:31:02Z",
+      "side": 1,
+      "message": "looks like this #define could go into mips_macro.h\n(and factored out of enc_mips32.c).\n\nCan wait for a separate patch, though",
+      "revId": "012d2c60faa8594f41fd4ebdfc59b814a550b443",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
