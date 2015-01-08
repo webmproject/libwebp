@@ -21,10 +21,6 @@
 #include "../enc/vp8enci.h"
 #include "../enc/cost.h"
 
-#if defined(__GNUC__) && defined(__ANDROID__) && LOCAL_GCC_VERSION == 0x409
-#define WORK_AROUND_GCC
-#endif
-
 static const int kC1 = 20091 + (1 << 16);
 static const int kC2 = 35468;
 
@@ -630,6 +626,8 @@ int VP8GetResidualCostMIPS32(int ctx0, const VP8Residual* const res) {
   return cost;
 }
 
+#if !defined(WORK_AROUND_GCC)
+
 #define GET_SSE_INNER(A, B, C, D)                               \
   "lbu     %[temp0],    "#A"(%[a])                   \n\t"      \
   "lbu     %[temp1],    "#A"(%[b])                   \n\t"      \
@@ -654,7 +652,6 @@ int VP8GetResidualCostMIPS32(int ctx0, const VP8Residual* const res) {
   GET_SSE_INNER(C, C + 1, C + 2, C + 3)   \
   GET_SSE_INNER(D, D + 1, D + 2, D + 3)
 
-#if !defined(WORK_AROUND_GCC)
 static int SSE16x16(const uint8_t* a, const uint8_t* b) {
   int count;
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
@@ -684,7 +681,7 @@ static int SSE16x16(const uint8_t* a, const uint8_t* b) {
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
       [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [count]"=&r"(count)
     : [a]"r"(a), [b]"r"(b)
-    : "memory", "hi" , "lo"
+    : "memory", "hi", "lo"
   );
   return count;
 }
@@ -710,7 +707,7 @@ static int SSE16x8(const uint8_t* a, const uint8_t* b) {
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
       [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [count]"=&r"(count)
     : [a]"r"(a), [b]"r"(b)
-    : "memory", "hi" , "lo"
+    : "memory", "hi", "lo"
   );
   return count;
 }
@@ -732,7 +729,7 @@ static int SSE8x8(const uint8_t* a, const uint8_t* b) {
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
       [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [count]"=&r"(count)
     : [a]"r"(a), [b]"r"(b)
-    : "memory", "hi" , "lo"
+    : "memory", "hi", "lo"
   );
   return count;
 }
@@ -751,15 +748,15 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
       [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [count]"=&r"(count)
     : [a]"r"(a), [b]"r"(b)
-    : "memory", "hi" , "lo"
+    : "memory", "hi", "lo"
   );
   return count;
 }
 
-#endif  // WORK_AROUND_GCC
+#undef GET_SSE
+#undef GET_SSE_INNER
 
-#undef GET_SSE_MIPS32
-#undef GET_SSE_MIPS32_INNER
+#endif  // !WORK_AROUND_GCC
 
 #endif  // WEBP_USE_MIPS32
 

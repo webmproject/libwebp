@@ -20,10 +20,6 @@
 #include "../enc/cost.h"
 #include "../enc/vp8enci.h"
 
-#if defined(__GNUC__) && defined(__ANDROID__) && LOCAL_GCC_VERSION == 0x409
-#define WORK_AROUND_GCC
-#endif
-
 static const int kC1 = 20091 + (1 << 16);
 static const int kC2 = 35468;
 
@@ -1169,7 +1165,7 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
 #undef GET_SSE
 #undef GET_SSE_INNER
 
-#endif  // WORK_AROUND_GCC
+#endif  // !WORK_AROUND_GCC
 
 #undef FILL_8_OR_16
 #undef FILL_PART
