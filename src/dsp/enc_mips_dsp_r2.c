@@ -20,6 +20,10 @@
 #include "../enc/cost.h"
 #include "../enc/vp8enci.h"
 
+#if defined(__GNUC__) && defined(__ANDROID__) && LOCAL_GCC_VERSION == 0x409
+#define WORK_AROUND_GCC
+#endif
+
 static const int kC1 = 20091 + (1 << 16);
 static const int kC2 = 35468;
 
@@ -1054,6 +1058,119 @@ static void Intra4Preds(uint8_t* dst, const uint8_t* top) {
   HU4(I4HU4 + dst, top);
 }
 
+//------------------------------------------------------------------------------
+// Metric
+
+#if !defined(WORK_AROUND_GCC)
+
+#define GET_SSE_INNER(A)                                                  \
+  "lw               %[temp0],    "#A"(%[a])                    \n\t"      \
+  "lw               %[temp1],    "#A"(%[b])                    \n\t"      \
+  "preceu.ph.qbr    %[temp2],    %[temp0]                      \n\t"      \
+  "preceu.ph.qbl    %[temp0],    %[temp0]                      \n\t"      \
+  "preceu.ph.qbr    %[temp3],    %[temp1]                      \n\t"      \
+  "preceu.ph.qbl    %[temp1],    %[temp1]                      \n\t"      \
+  "subq.ph          %[temp2],    %[temp2],    %[temp3]         \n\t"      \
+  "subq.ph          %[temp0],    %[temp0],    %[temp1]         \n\t"      \
+  "dpa.w.ph         $ac0,        %[temp2],    %[temp2]         \n\t"      \
+  "dpa.w.ph         $ac0,        %[temp0],    %[temp0]         \n\t"
+
+#define GET_SSE(A, B, C, D)               \
+  GET_SSE_INNER(A)                        \
+  GET_SSE_INNER(B)                        \
+  GET_SSE_INNER(C)                        \
+  GET_SSE_INNER(D)
+
+static int SSE16x16(const uint8_t* a, const uint8_t* b) {
+  int count;
+  int temp0, temp1, temp2, temp3;
+  __asm__ volatile (
+    "mult   $zero,    $zero                            \n\t"
+    GET_SSE( 0 * BPS, 4 +  0 * BPS, 8 +  0 * BPS, 12 +  0 * BPS)
+    GET_SSE( 1 * BPS, 4 +  1 * BPS, 8 +  1 * BPS, 12 +  1 * BPS)
+    GET_SSE( 2 * BPS, 4 +  2 * BPS, 8 +  2 * BPS, 12 +  2 * BPS)
+    GET_SSE( 3 * BPS, 4 +  3 * BPS, 8 +  3 * BPS, 12 +  3 * BPS)
+    GET_SSE( 4 * BPS, 4 +  4 * BPS, 8 +  4 * BPS, 12 +  4 * BPS)
+    GET_SSE( 5 * BPS, 4 +  5 * BPS, 8 +  5 * BPS, 12 +  5 * BPS)
+    GET_SSE( 6 * BPS, 4 +  6 * BPS, 8 +  6 * BPS, 12 +  6 * BPS)
+    GET_SSE( 7 * BPS, 4 +  7 * BPS, 8 +  7 * BPS, 12 +  7 * BPS)
+    GET_SSE( 8 * BPS, 4 +  8 * BPS, 8 +  8 * BPS, 12 +  8 * BPS)
+    GET_SSE( 9 * BPS, 4 +  9 * BPS, 8 +  9 * BPS, 12 +  9 * BPS)
+    GET_SSE(10 * BPS, 4 + 10 * BPS, 8 + 10 * BPS, 12 + 10 * BPS)
+    GET_SSE(11 * BPS, 4 + 11 * BPS, 8 + 11 * BPS, 12 + 11 * BPS)
+    GET_SSE(12 * BPS, 4 + 12 * BPS, 8 + 12 * BPS, 12 + 12 * BPS)
+    GET_SSE(13 * BPS, 4 + 13 * BPS, 8 + 13 * BPS, 12 + 13 * BPS)
+    GET_SSE(14 * BPS, 4 + 14 * BPS, 8 + 14 * BPS, 12 + 14 * BPS)
+    GET_SSE(15 * BPS, 4 + 15 * BPS, 8 + 15 * BPS, 12 + 15 * BPS)
+    "mflo   %[count]                                   \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [count]"=&r"(count)
+    : [a]"r"(a), [b]"r"(b)
+    : "memory", "hi", "lo"
+  );
+  return count;
+}
+
+static int SSE16x8(const uint8_t* a, const uint8_t* b) {
+  int count;
+  int temp0, temp1, temp2, temp3;
+  __asm__ volatile (
+    "mult   $zero,    $zero                            \n\t"
+    GET_SSE( 0 * BPS, 4 +  0 * BPS, 8 +  0 * BPS, 12 +  0 * BPS)
+    GET_SSE( 1 * BPS, 4 +  1 * BPS, 8 +  1 * BPS, 12 +  1 * BPS)
+    GET_SSE( 2 * BPS, 4 +  2 * BPS, 8 +  2 * BPS, 12 +  2 * BPS)
+    GET_SSE( 3 * BPS, 4 +  3 * BPS, 8 +  3 * BPS, 12 +  3 * BPS)
+    GET_SSE( 4 * BPS, 4 +  4 * BPS, 8 +  4 * BPS, 12 +  4 * BPS)
+    GET_SSE( 5 * BPS, 4 +  5 * BPS, 8 +  5 * BPS, 12 +  5 * BPS)
+    GET_SSE( 6 * BPS, 4 +  6 * BPS, 8 +  6 * BPS, 12 +  6 * BPS)
+    GET_SSE( 7 * BPS, 4 +  7 * BPS, 8 +  7 * BPS, 12 +  7 * BPS)
+    "mflo   %[count]                                   \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [count]"=&r"(count)
+    : [a]"r"(a), [b]"r"(b)
+    : "memory", "hi", "lo"
+  );
+  return count;
+}
+
+static int SSE8x8(const uint8_t* a, const uint8_t* b) {
+  int count;
+  int temp0, temp1, temp2, temp3;
+  __asm__ volatile (
+    "mult   $zero,    $zero                            \n\t"
+    GET_SSE(0 * BPS, 4 + 0 * BPS, 1 * BPS, 4 + 1 * BPS)
+    GET_SSE(2 * BPS, 4 + 2 * BPS, 3 * BPS, 4 + 3 * BPS)
+    GET_SSE(4 * BPS, 4 + 4 * BPS, 5 * BPS, 4 + 5 * BPS)
+    GET_SSE(6 * BPS, 4 + 6 * BPS, 7 * BPS, 4 + 7 * BPS)
+    "mflo   %[count]                                   \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [count]"=&r"(count)
+    : [a]"r"(a), [b]"r"(b)
+    : "memory", "hi", "lo"
+  );
+  return count;
+}
+
+static int SSE4x4(const uint8_t* a, const uint8_t* b) {
+  int count;
+  int temp0, temp1, temp2, temp3;
+  __asm__ volatile (
+    "mult   $zero,    $zero                            \n\t"
+    GET_SSE(0 * BPS, 1 * BPS, 2 * BPS, 3 * BPS)
+    "mflo   %[count]                                   \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [count]"=&r"(count)
+    : [a]"r"(a), [b]"r"(b)
+    : "memory", "hi", "lo"
+  );
+  return count;
+}
+
+#undef GET_SSE
+#undef GET_SSE_INNER
+
+#endif  // WORK_AROUND_GCC
+
 #undef FILL_8_OR_16
 #undef FILL_PART
 #undef OUTPUT_EARLY_CLOBBER_REGS_17
@@ -1077,5 +1194,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPSdspR2(void) {
   VP8EncPredLuma16 = Intra16Preds;
   VP8EncPredChroma8 = IntraChromaPreds;
   VP8EncPredLuma4 = Intra4Preds;
+#if !defined(WORK_AROUND_GCC)
+  VP8SSE16x16 = SSE16x16;
+  VP8SSE8x8 = SSE8x8;
+  VP8SSE16x8 = SSE16x8;
+  VP8SSE4x4 = SSE4x4;
+#endif
 #endif  // WEBP_USE_MIPS_DSP_R2
 }
