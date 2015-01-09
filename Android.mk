@@ -57,6 +57,9 @@ LOCAL_SRC_FILES := \
     src/dsp/lossless_mips_dsp_r2.c \
     src/dsp/lossless_neon.$(NEON) \
     src/dsp/lossless_sse2.c \
+    src/dsp/rescaler.c \
+    src/dsp/rescaler_mips32.c \
+    src/dsp/rescaler_mips_dsp_r2.c \
     src/dsp/upsampling.c \
     src/dsp/upsampling_mips_dsp_r2.c \
     src/dsp/upsampling_neon.$(NEON) \

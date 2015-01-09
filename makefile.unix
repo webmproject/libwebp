@@ -125,6 +125,9 @@ DSP_DEC_OBJS = \
     src/dsp/lossless_mips_dsp_r2.o \
     src/dsp/lossless_neon.o \
     src/dsp/lossless_sse2.o \
+    src/dsp/rescaler.o \
+    src/dsp/rescaler_mips32.o \
+    src/dsp/rescaler_mips_dsp_r2.o \
     src/dsp/upsampling.o \
     src/dsp/upsampling_mips_dsp_r2.o \
     src/dsp/upsampling_neon.o \
