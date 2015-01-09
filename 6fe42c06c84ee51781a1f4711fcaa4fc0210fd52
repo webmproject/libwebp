@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//KLw\u003d",
+        "filename": "Makefile.vc",
+        "patchSetId": 1
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-01-09T14:38:35Z",
+      "side": 1,
+      "message": "this two files shouldn\u0027t be declared in both DSP_ENC_OBJS and DSP_DEC_OBJS.\nI guess DSP_DEC_OBJS is probably enough, since this code is used for both encoding and decoding",
+      "revId": "6fe42c06c84ee51781a1f4711fcaa4fc0210fd52",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//KLs\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-01-09T14:38:35Z",
+      "side": 1,
+      "message": "this function (and the C versions ImportRowC and ExportRowC) should be moved to their own dsp/rescaler.c file, for coherency.",
+      "revId": "6fe42c06c84ee51781a1f4711fcaa4fc0210fd52",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//KLo\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-01-09T14:38:35Z",
+      "side": 1,
+      "message": "(these can stay in this file)",
+      "revId": "6fe42c06c84ee51781a1f4711fcaa4fc0210fd52",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
