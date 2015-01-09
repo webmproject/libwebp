@@ -182,9 +182,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
   printf("Canvas size: %d x %d\n", width, height);
 
   err = WebPMuxGetFeatures(mux, &flag);
-#ifndef WEBP_EXPERIMENTAL_FEATURES
   if (flag & FRAGMENTS_FLAG) err = WEBP_MUX_INVALID_ARGUMENT;
-#endif
   RETURN_IF_ERROR("Failed to retrieve features\n");
 
   if (flag == 0) {
@@ -291,9 +289,6 @@ static void PrintHelp(void) {
   printf("Usage: webpmux -get GET_OPTIONS INPUT -o OUTPUT\n");
   printf("       webpmux -set SET_OPTIONS INPUT -o OUTPUT\n");
   printf("       webpmux -strip STRIP_OPTIONS INPUT -o OUTPUT\n");
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  printf("       webpmux -frgm FRAGMENT_OPTIONS [-frgm...] -o OUTPUT\n");
-#endif
   printf("       webpmux -frame FRAME_OPTIONS [-frame...] [-loop LOOP_COUNT]"
          "\n");
   printf("               [-bgcolor BACKGROUND_COLOR] -o OUTPUT\n");
@@ -307,9 +302,6 @@ static void PrintHelp(void) {
   printf("   icc       get ICC profile\n");
   printf("   exif      get EXIF metadata\n");
   printf("   xmp       get XMP metadata\n");
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  printf("   frgm n    get nth fragment\n");
-#endif
   printf("   frame n   get nth frame\n");
 
   printf("\n");
@@ -328,16 +320,6 @@ static void PrintHelp(void) {
   printf("   icc       strip ICC profile\n");
   printf("   exif      strip EXIF metadata\n");
   printf("   xmp       strip XMP metadata\n");
-
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  printf("\n");
-  printf("FRAGMENT_OPTIONS(i):\n");
-  printf(" Create fragmented image:\n");
-  printf("   file_i +xi+yi\n");
-  printf("   where:    'file_i' is the i'th fragment (WebP format),\n");
-  printf("             'xi','yi' specify the image offset for this fragment"
-         "\n");
-#endif
 
   printf("\n");
   printf("FRAME_OPTIONS(i):\n");
@@ -650,24 +632,6 @@ static int ParseCommandLine(int argc, const char* argv[],
         arg->params_ = argv[i + 1];
         ++feature_arg_index;
         i += 2;
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-      } else if (!strcmp(argv[i], "-frgm")) {
-        CHECK_NUM_ARGS_LESS(3, ErrParse);
-        if (ACTION_IS_NIL || config->action_type_ == ACTION_SET) {
-          config->action_type_ = ACTION_SET;
-        } else {
-          ERROR_GOTO1("ERROR: Multiple actions specified.\n", ErrParse);
-        }
-        if (FEATURETYPE_IS_NIL || feature->type_ == FEATURE_FRGM) {
-          feature->type_ = FEATURE_FRGM;
-        } else {
-          ERROR_GOTO1("ERROR: Multiple features specified.\n", ErrParse);
-        }
-        arg->filename_ = argv[i + 1];
-        arg->params_ = argv[i + 2];
-        ++feature_arg_index;
-        i += 3;
-#endif
       } else if (!strcmp(argv[i], "-o")) {
         CHECK_NUM_ARGS_LESS(2, ErrParse);
         config->output_ = argv[i + 1];
@@ -727,13 +691,8 @@ static int ParseCommandLine(int argc, const char* argv[],
         } else {
           ++i;
         }
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-      } else if ((!strcmp(argv[i], "frame") ||
-                  !strcmp(argv[i], "frgm")) &&
-#else
       } else if (!strcmp(argv[i], "frame") &&
-#endif
-                  (config->action_type_ == ACTION_GET)) {
+                 (config->action_type_ == ACTION_GET)) {
         CHECK_NUM_ARGS_LESS(2, ErrParse);
         feature->type_ = (!strcmp(argv[i], "frame")) ? FEATURE_ANMF :
             FEATURE_FRGM;
