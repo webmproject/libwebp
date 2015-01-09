@@ -278,11 +278,9 @@ WebPMuxError WebPMuxPushFrame(WebPMux* mux, const WebPMuxFrameInfo* frame,
   if (!(is_frame || (frame->id == WEBP_CHUNK_FRGM))) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
-#ifndef WEBP_EXPERIMENTAL_FEATURES
-  if (frame->id == WEBP_CHUNK_FRGM) {     // disabled for now.
+  if (frame->id == WEBP_CHUNK_FRGM) {     // Dead experiment.
     return WEBP_MUX_INVALID_ARGUMENT;
   }
-#endif
 
   if (bitstream->bytes == NULL || bitstream->size > MAX_CHUNK_PAYLOAD) {
     return WEBP_MUX_INVALID_ARGUMENT;
