@@ -357,30 +357,33 @@ static VP8StatusCode DecodeVP8FrameHeader(WebPIDecoder* const idec) {
 }
 
 // Partition #0
-static int CopyParts0Data(WebPIDecoder* const idec) {
+static VP8StatusCode CopyParts0Data(WebPIDecoder* const idec) {
   VP8Decoder* const dec = (VP8Decoder*)idec->dec_;
   VP8BitReader* const br = &dec->br_;
-  const size_t psize = br->buf_end_ - br->buf_;
+  const size_t part_size = br->buf_end_ - br->buf_;
   MemBuffer* const mem = &idec->mem_;
   assert(!idec->is_lossless_);
   assert(mem->part0_buf_ == NULL);
-  assert(psize > 0);
-  assert(psize <= mem->part0_size_);  // Format limit: no need for runtime check
+  // the following is a format limitation, no need for runtime check:
+  assert(part_size <= mem->part0_size_);
+  if (part_size == 0) {   // can't have zero-size partition #0
+    return VP8_STATUS_BITSTREAM_ERROR;
+  }
   if (mem->mode_ == MEM_MODE_APPEND) {
     // We copy and grab ownership of the partition #0 data.
-    uint8_t* const part0_buf = (uint8_t*)WebPSafeMalloc(1ULL, psize);
+    uint8_t* const part0_buf = (uint8_t*)WebPSafeMalloc(1ULL, part_size);
     if (part0_buf == NULL) {
-      return 0;
+      return VP8_STATUS_OUT_OF_MEMORY;
     }
-    memcpy(part0_buf, br->buf_, psize);
+    memcpy(part0_buf, br->buf_, part_size);
     mem->part0_buf_ = part0_buf;
     br->buf_ = part0_buf;
-    br->buf_end_ = part0_buf + psize;
+    br->buf_end_ = part0_buf + part_size;
   } else {
     // Else: just keep pointers to the partition #0's data in dec_->br_.
   }
-  mem->start_ += psize;
-  return 1;
+  mem->start_ += part_size;
+  return VP8_STATUS_OK;
 }
 
 static VP8StatusCode DecodePartition0(WebPIDecoder* const idec) {
@@ -414,8 +417,10 @@ static VP8StatusCode DecodePartition0(WebPIDecoder* const idec) {
   dec->mt_method_ = VP8GetThreadMethod(params->options, NULL,
                                        io->width, io->height);
   VP8InitDithering(params->options, dec);
-  if (!CopyParts0Data(idec)) {
-    return IDecError(idec, VP8_STATUS_OUT_OF_MEMORY);
+
+  dec->status_ = CopyParts0Data(idec);
+  if (dec->status_ != VP8_STATUS_OK) {
+    return IDecError(idec, dec->status_);
   }
 
   // Finish setting up the decoding parameters. Will call io->setup().
