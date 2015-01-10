@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//KH0\u003d",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-01-10T13:41:45Z",
+      "side": 0,
+      "message": "i think this block and function needs to stay here, in utils/rescaler.c since it contains too much inits of WebPRescaler\u0027s peculiarity. I\u0027ll do that in a subsequent patch...",
+      "revId": "ac79ed19ef4522d2ba9ce7b3b385d130164dfb93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
