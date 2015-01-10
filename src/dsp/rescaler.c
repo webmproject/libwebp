@@ -15,12 +15,8 @@
 //------------------------------------------------------------------------------
 // Implementations of critical functions ImportRow / ExportRow
 
-void (*WebPRescalerImportRow)(WebPRescaler* const wrk,
-                              const uint8_t* const src, int channel) = NULL;
-void (*WebPRescalerExportRow)(WebPRescaler* const wrk, int x_out) = NULL;
-
-#define RFIX 30
-#define MULT_FIX(x, y) (((int64_t)(x) * (y) + (1 << (RFIX - 1))) >> RFIX)
+#define ROUNDER (1 << (WEBP_RESCALER_RFIX - 1))
+#define MULT_FIX(x, y) (((int64_t)(x) * (y) + ROUNDER) >> WEBP_RESCALER_RFIX)
 
 static void ImportRowC(WebPRescaler* const wrk,
                        const uint8_t* const src, int channel) {
@@ -83,54 +79,37 @@ static void ExportRowC(WebPRescaler* const wrk, int x_out) {
   }
 }
 
+#undef MULT_FIX
+#undef ROUNDER
+
 //------------------------------------------------------------------------------
+
+void (*WebPRescalerImportRow)(struct WebPRescaler* const wrk,
+                              const uint8_t* const src, int channel);
+void (*WebPRescalerExportRow)(struct WebPRescaler* const wrk, int x_out);
 
 extern void WebPRescalerDspInitMIPS32(void);
 extern void WebPRescalerDspInitMIPSdspR2(void);
 
-void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
-                      uint8_t* const dst, int dst_width, int dst_height,
-                      int dst_stride, int num_channels, int x_add, int x_sub,
-                      int y_add, int y_sub, int32_t* const work) {
-  wrk->x_expand = (src_width < dst_width);
-  wrk->src_width = src_width;
-  wrk->src_height = src_height;
-  wrk->dst_width = dst_width;
-  wrk->dst_height = dst_height;
-  wrk->dst = dst;
-  wrk->dst_stride = dst_stride;
-  wrk->num_channels = num_channels;
-  // for 'x_expand', we use bilinear interpolation
-  wrk->x_add = wrk->x_expand ? (x_sub - 1) : x_add - x_sub;
-  wrk->x_sub = wrk->x_expand ? (x_add - 1) : x_sub;
-  wrk->y_accum = y_add;
-  wrk->y_add = y_add;
-  wrk->y_sub = y_sub;
-  wrk->fx_scale = (1 << RFIX) / x_sub;
-  wrk->fy_scale = (1 << RFIX) / y_sub;
-  wrk->fxy_scale = wrk->x_expand ?
-      ((int64_t)dst_height << RFIX) / (x_sub * src_height) :
-      ((int64_t)dst_height << RFIX) / (x_add * src_height);
-  wrk->irow = work;
-  wrk->frow = work + num_channels * dst_width;
+static volatile VP8CPUInfo rescaler_last_cpuinfo_used =
+    (VP8CPUInfo)&rescaler_last_cpuinfo_used;
 
-  if (WebPRescalerImportRow == NULL) {
-    WebPRescalerImportRow = ImportRowC;
-    WebPRescalerExportRow = ExportRowC;
-    if (VP8GetCPUInfo != NULL) {
+WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInit(void) {
+  if (rescaler_last_cpuinfo_used == VP8GetCPUInfo) return;
+
+  WebPRescalerImportRow = ImportRowC;
+  WebPRescalerExportRow = ExportRowC;
+  if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_MIPS32)
-      if (VP8GetCPUInfo(kMIPS32)) {
-        WebPRescalerDspInitMIPS32();
-      }
+    if (VP8GetCPUInfo(kMIPS32)) {
+      WebPRescalerDspInitMIPS32();
+    }
 #endif
 #if defined(WEBP_USE_MIPS_DSP_R2)
-      if (VP8GetCPUInfo(kMIPSdspR2)) {
-        WebPRescalerDspInitMIPSdspR2();
-      }
-#endif
+    if (VP8GetCPUInfo(kMIPSdspR2)) {
+      WebPRescalerDspInitMIPSdspR2();
     }
+#endif
   }
+  rescaler_last_cpuinfo_used = VP8GetCPUInfo;
 }
-
-#undef MULT_FIX
-#undef RFIX

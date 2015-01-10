@@ -285,6 +285,22 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplers(void);
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444Converters(void);
 
 //------------------------------------------------------------------------------
+// Rescaler
+
+struct WebPRescaler;
+
+// Import a row of data and save its contribution in the rescaler.
+// 'channel' denotes the channel number to be imported.
+extern void (*WebPRescalerImportRow)(struct WebPRescaler* const wrk,
+                                     const uint8_t* const src, int channel);
+
+// Export one row (starting at x_out position) from rescaler.
+extern void (*WebPRescalerExportRow)(struct WebPRescaler* const wrk, int x_out);
+
+// Must be called first before using the above.
+WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInit(void);
+
+//------------------------------------------------------------------------------
 // Utilities for processing transparent channel.
 
 // Apply alpha pre-multiply on an rgba, bgra or argb plane of size w * h.
