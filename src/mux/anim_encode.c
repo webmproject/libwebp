@@ -59,7 +59,7 @@ struct WebPAnimEncoder {
   size_t size_;             // Number of allocated frames.
   size_t start_;            // Frame start index.
   size_t count_;            // Number of valid frames.
-  int flush_count_;         // If >0, 'flush_count' frames starting from
+  size_t flush_count_;      // If >0, 'flush_count' frames starting from
                             // 'start' are ready to be added to mux.
 
   // key-frame related.
@@ -962,7 +962,7 @@ static int CacheFrame(WebPAnimEncoder* const enc, int duration,
           old_keyframe->is_key_frame_ = 0;
         }
         encoded_frame->is_key_frame_ = 1;
-        enc->keyframe_ = position;
+        enc->keyframe_ = (int)position;
         enc->best_delta_ = curr_delta;
         enc->flush_count_ = enc->count_ - 1;  // We can flush previous frames.
       } else {
