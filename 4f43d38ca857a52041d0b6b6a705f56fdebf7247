@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//KIM\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-01-10T10:13:21Z",
+      "side": 1,
+      "message": "maybe we should turn this one into \"WEBP_USE_INTRINSICS\" for coherency?",
+      "revId": "4f43d38ca857a52041d0b6b6a705f56fdebf7247",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
