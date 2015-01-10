@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//KIY\u003d",
+        "filename": "src/mux/anim_encode.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 965,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-01-10T10:12:20Z",
+      "side": 1,
+      "message": "indeed, turning keyframe_ into a size_t instead of \u0027int\u0027 is tricky, because of KEYFRAME_NONE. So let\u0027s go with the (int) cast.",
+      "revId": "f79c163bbf94a37f9ba878894f94c9d5e589d12e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
