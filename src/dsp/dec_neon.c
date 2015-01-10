@@ -1321,7 +1321,7 @@ static WEBP_INLINE void TrueMotion(uint8_t* dst, int size) {
   }
 }
 
-static void TM4(uint8_t* dst) { return TrueMotion(dst, 4); }
+static void TM4(uint8_t* dst) { TrueMotion(dst, 4); }
 
 static void VE4(uint8_t* dst) {    // vertical
   // NB: avoid vld1_u64 here as an alignment hint may be added -> SIGBUS.
@@ -1438,11 +1438,11 @@ static WEBP_INLINE void DC8(uint8_t* dst, int do_top, int do_left) {
   }
 }
 
-static void DC8uv(uint8_t* dst) { return DC8(dst, 1, 1); }
-static void DC8uvNoTop(uint8_t* dst) { return DC8(dst, 0, 1); }
-static void DC8uvNoLeft(uint8_t* dst) { return DC8(dst, 1, 0); }
+static void DC8uv(uint8_t* dst) { DC8(dst, 1, 1); }
+static void DC8uvNoTop(uint8_t* dst) { DC8(dst, 0, 1); }
+static void DC8uvNoLeft(uint8_t* dst) { DC8(dst, 1, 0); }
 
-static void TM8uv(uint8_t* dst) { return TrueMotion(dst, 8); }
+static void TM8uv(uint8_t* dst) { TrueMotion(dst, 8); }
 
 #endif   // WEBP_USE_NEON
 
