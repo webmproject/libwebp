@@ -72,6 +72,11 @@ extern "C" {
 #define WEBP_USE_NEON
 #endif
 
+#if defined(_MSC_VER) && _MSC_VER >= 1700 && defined(_M_ARM)
+#define WEBP_USE_NEON
+#define USE_INTRINSICS
+#endif
+
 #if defined(__mips__) && !defined(__mips64) && (__mips_isa_rev < 6)
 #define WEBP_USE_MIPS32
 #if (__mips_isa_rev >= 2)

@@ -11,6 +11,8 @@ LIBWEBPDEMUX_BASENAME = libwebpdemux
 ARCH = x86
 !ELSE IF ! [ cl 2>&1 | find "x64" > NUL ]
 ARCH = x64
+!ELSE IF ! [ cl 2>&1 | find "ARM" > NUL ]
+ARCH = ARM
 !ELSE
 !ERROR Unable to auto-detect toolchain architecture! \
 If cl.exe is in your PATH rerun nmake with ARCH=<arch>.
@@ -29,13 +31,18 @@ CCNODBG    = cl.exe $(NOLOGO) /O2 /DNDEBUG
 CCDEBUG    = cl.exe $(NOLOGO) /Od /Gm /Zi /D_DEBUG /RTC1
 CFLAGS     = /Isrc $(NOLOGO) /W3 /EHsc /c
 CFLAGS     = $(CFLAGS) /DWIN32 /D_CRT_SECURE_NO_WARNINGS /DWIN32_LEAN_AND_MEAN
-CFLAGS     = $(CFLAGS) /DHAVE_WINCODEC_H /DWEBP_USE_THREAD
 LDFLAGS    = /LARGEADDRESSAWARE /MANIFEST /NXCOMPAT /DYNAMICBASE
 LDFLAGS    = $(LDFLAGS) $(PLATFORM_LDFLAGS)
 LNKDLL     = link.exe /DLL $(NOLOGO)
 LNKEXE     = link.exe $(NOLOGO)
 LNKLIB     = lib.exe $(NOLOGO)
 MT         = mt.exe $(NOLOGO)
+
+!IF "$(ARCH)" == "ARM"
+CFLAGS = $(CFLAGS) /DWINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP
+!ELSE
+CFLAGS = $(CFLAGS) /DHAVE_WINCODEC_H /DWEBP_USE_THREAD
+!ENDIF
 
 CFGSET     = FALSE
 !IF "$(OBJDIR)" == ""
@@ -277,6 +284,10 @@ LIBWEBPMUX_OBJS = $(MUX_OBJS) $(LIBWEBPMUX_OBJS)
 LIBWEBPDEMUX_OBJS = $(DEMUX_OBJS) $(LIBWEBPDEMUX_OBJS)
 
 OUT_LIBS = $(LIBWEBPDECODER) $(LIBWEBP)
+!IF "$(ARCH)" == "ARM"
+ex: $(OUT_LIBS)
+all: ex
+!ELSE
 OUT_EXAMPLES = $(DIRBIN)\cwebp.exe $(DIRBIN)\dwebp.exe
 EXTRA_EXAMPLES = $(DIRBIN)\vwebp.exe $(DIRBIN)\webpmux.exe
 
@@ -296,6 +307,7 @@ $(DIRBIN)\webpmux.exe: $(DIROBJ)\examples\webpmux.obj $(LIBWEBPMUX)
 $(DIRBIN)\webpmux.exe: $(EX_UTIL_OBJS) $(LIBWEBP)
 $(OUT_EXAMPLES): $(EX_UTIL_OBJS) $(LIBWEBP)
 $(EX_UTIL_OBJS) $(EX_FORMAT_DEC_OBJS): $(OUTPUT_DIRS)
+!ENDIF  # ARCH == ARM
 
 experimental:
 	$(MAKE) /f Makefile.vc \
