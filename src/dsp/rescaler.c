@@ -18,8 +18,8 @@
 #define ROUNDER (1 << (WEBP_RESCALER_RFIX - 1))
 #define MULT_FIX(x, y) (((int64_t)(x) * (y) + ROUNDER) >> WEBP_RESCALER_RFIX)
 
-static void ImportRowC(WebPRescaler* const wrk,
-                       const uint8_t* const src, int channel) {
+static void RescalerImportRowC(WebPRescaler* const wrk,
+                               const uint8_t* const src, int channel) {
   const int x_stride = wrk->num_channels;
   const int x_out_max = wrk->dst_width * wrk->num_channels;
   int x_in = channel;
@@ -61,7 +61,7 @@ static void ImportRowC(WebPRescaler* const wrk,
   }
 }
 
-static void ExportRowC(WebPRescaler* const wrk, int x_out) {
+void WebPRescalerExportRowC(WebPRescaler* const wrk, int x_out) {
   if (wrk->y_accum <= 0) {
     uint8_t* const dst = wrk->dst;
     int32_t* const irow = wrk->irow;
@@ -97,8 +97,8 @@ static volatile VP8CPUInfo rescaler_last_cpuinfo_used =
 WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInit(void) {
   if (rescaler_last_cpuinfo_used == VP8GetCPUInfo) return;
 
-  WebPRescalerImportRow = ImportRowC;
-  WebPRescalerExportRow = ExportRowC;
+  WebPRescalerImportRow = RescalerImportRowC;
+  WebPRescalerExportRow = WebPRescalerExportRowC;
   if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_MIPS32)
     if (VP8GetCPUInfo(kMIPS32)) {

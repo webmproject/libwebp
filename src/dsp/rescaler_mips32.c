@@ -114,9 +114,6 @@ static void ImportRow(WebPRescaler* const wrk,
   }
 }
 
-#define RFIX 30
-#define MULT_FIX(x, y) (((int64_t)(x) * (y) + (1 << (RFIX - 1))) >> RFIX)
-
 static void ExportRow(WebPRescaler* const wrk, int x_out) {
   if (wrk->y_accum <= 0) {
     uint8_t* const dst = wrk->dst;
@@ -172,21 +169,13 @@ static void ExportRow(WebPRescaler* const wrk, int x_out) {
         : [temp2]"r"(temp2), [yscale]"r"(yscale), [temp8]"r"(temp8)
         : "memory", "hi", "lo"
       );
+      wrk->y_accum += wrk->y_add;
+      wrk->dst += wrk->dst_stride;
     } else {
-      for (; x_out < x_out_max; ++x_out) {
-        const int frac = (int)MULT_FIX(frow[x_out], yscale);
-        const int v = (int)MULT_FIX(irow[x_out] - frac, wrk->fxy_scale);
-        dst[x_out] = (!(v & ~0xff)) ? v : (v < 0) ? 0 : 255;
-        irow[x_out] = frac;   // new fractional start
-      }
+      WebPRescalerExportRowC(wrk, x_out);
     }
-    wrk->y_accum += wrk->y_add;
-    wrk->dst += wrk->dst_stride;
   }
 }
-
-#undef MULT_FIX
-#undef RFIX
 
 #endif  // WEBP_USE_MIPS32
 

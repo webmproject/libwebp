@@ -110,19 +110,16 @@ static void ImportRow(WebPRescaler* const wrk,
   }
 }
 
-#define RFIX 30
-#define MULT_FIX(x, y) (((int64_t)(x) * (y) + (1 << (RFIX - 1))) >> RFIX)
-
 static void ExportRow(WebPRescaler* const wrk, int x_out) {
   if (wrk->y_accum <= 0) {
-    uint8_t* dst = wrk->dst;
-    int32_t* irow = wrk->irow;
-    const int32_t* frow = wrk->frow;
-    const int yscale = wrk->fy_scale * (-wrk->y_accum);
-    const int x_out_max = wrk->dst_width * wrk->num_channels;
     // if wrk->fxy_scale can fit into 32 bits use optimized code,
     // otherwise use C code
     if ((wrk->fxy_scale >> 32) == 0) {
+      uint8_t* dst = wrk->dst;
+      int32_t* irow = wrk->irow;
+      const int32_t* frow = wrk->frow;
+      const int yscale = wrk->fy_scale * (-wrk->y_accum);
+      const int x_out_max = wrk->dst_width * wrk->num_channels;
       int temp0, temp1, temp3, temp4, temp5, temp6, temp7;
       const int temp2 = (int)wrk->fxy_scale;
       const int rest = (x_out_max - x_out) & 1;
@@ -190,21 +187,13 @@ static void ExportRow(WebPRescaler* const wrk, int x_out) {
           [rest]"r"(rest)
         : "memory", "hi", "lo"
       );
+      wrk->y_accum += wrk->y_add;
+      wrk->dst += wrk->dst_stride;
     } else {
-      for (; x_out < x_out_max; ++x_out) {
-        const int frac = (int)MULT_FIX(frow[x_out], yscale);
-        const int v = (int)MULT_FIX(irow[x_out] - frac, wrk->fxy_scale);
-        dst[x_out] = (!(v & ~0xff)) ? v : (v < 0) ? 0 : 255;
-        irow[x_out] = frac;   // new fractional start
-      }
+      WebPRescalerExportRowC(wrk, x_out);
     }
-    wrk->y_accum += wrk->y_add;
-    wrk->dst += wrk->dst_stride;
   }
 }
-
-#undef MULT_FIX
-#undef RFIX
 
 #endif  // WEBP_USE_MIPS_DSP_R2
 

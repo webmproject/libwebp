@@ -297,6 +297,9 @@ extern void (*WebPRescalerImportRow)(struct WebPRescaler* const wrk,
 // Export one row (starting at x_out position) from rescaler.
 extern void (*WebPRescalerExportRow)(struct WebPRescaler* const wrk, int x_out);
 
+// Plain-C implementation, as fall-back.
+extern void WebPRescalerExportRowC(struct WebPRescaler* const wrk, int x_out);
+
 // Must be called first before using the above.
 WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInit(void);
 
