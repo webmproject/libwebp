@@ -142,6 +142,7 @@ CFGSET = TRUE
 !MESSAGE .                                  features enabled.
 !MESSAGE - (empty)                        - build libwebp-based targets for CFG
 !MESSAGE - all                            - build (de)mux-based targets for CFG
+!MESSAGE - gif2webp                       - requires libgif & >= VS2013
 !MESSAGE
 !MESSAGE RTLIBCFG controls the runtime library linkage - 'static' or 'dynamic'.
 !MESSAGE   'legacy' will produce a Windows 2000 compatible library.
@@ -281,8 +282,14 @@ EXTRA_EXAMPLES = $(DIRBIN)\vwebp.exe $(DIRBIN)\webpmux.exe
 
 ex: $(OUT_LIBS) $(OUT_EXAMPLES)
 all: ex $(EXTRA_EXAMPLES)
+# NB: gif2webp.exe is excluded from 'all' as libgif requires C99 support which
+# is only available from VS2013 onward.
+gif2webp: $(DIRBIN)\gif2webp.exe
+
 $(DIRBIN)\cwebp.exe: $(DIROBJ)\examples\cwebp.obj $(EX_FORMAT_DEC_OBJS)
 $(DIRBIN)\dwebp.exe: $(DIROBJ)\examples\dwebp.obj
+$(DIRBIN)\gif2webp.exe: $(DIROBJ)\examples\gif2webp.obj $(EX_UTIL_OBJS)
+$(DIRBIN)\gif2webp.exe: $(LIBWEBPMUX) $(LIBWEBP)
 $(DIRBIN)\vwebp.exe: $(DIROBJ)\examples\vwebp.obj
 $(DIRBIN)\vwebp.exe: $(EX_UTIL_OBJS) $(LIBWEBPDEMUX) $(LIBWEBP)
 $(DIRBIN)\webpmux.exe: $(DIROBJ)\examples\webpmux.obj $(LIBWEBPMUX)
@@ -350,6 +357,9 @@ $(DIROBJ)\$(DLLC): $(DIROBJ)\$(DLLINC)
 $(DIROBJ)\dsp\enc_avx2.obj: src\dsp\enc_avx2.c
 	$(CC) $(CFLAGS) $(AVX2_FLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$(DIROBJ)\dsp\ \
 	  src\dsp\$(@B).c
+$(DIROBJ)\examples\gif2webp.obj: examples\gif2webp.c
+	$(CC) $(CFLAGS) /DWEBP_HAVE_GIF /Fd$(LIBWEBP_PDBNAME) \
+	  /Fo$(DIROBJ)\examples\ examples\$(@B).c
 # Batch rules
 {examples}.c{$(DIROBJ)\examples}.obj::
 	$(CC) $(CFLAGS) /Fd$(DIROBJ)\examples\ /Fo$(DIROBJ)\examples\ $<
