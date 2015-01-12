@@ -16,6 +16,24 @@
       "revId": "f79c163bbf94a37f9ba878894f94c9d5e589d12e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//KFU\u003d",
+        "filename": "src/mux/anim_encode.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 965,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-01-12T20:21:08Z",
+      "side": 1,
+      "message": "if anything I think going in the opposite direction might work for some of the variables",
+      "parentUuid": "AAAAdn//KIY\u003d",
+      "revId": "f79c163bbf94a37f9ba878894f94c9d5e589d12e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
