@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//KEM\u003d",
+        "filename": "src/dsp/rescaler.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-01-12T22:00:28Z",
+      "side": 1,
+      "message": "note this is duplicated in mips dsp code and is now a bit out of sync",
+      "revId": "ab66becaae01038c2081993da2f4cfd589ddf3f6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
