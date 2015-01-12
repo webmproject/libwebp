@@ -401,8 +401,12 @@ WEBP_EXTERN(WebPMuxError) WebPMuxAssemble(WebPMux* mux,
 /*
   WebPAnimEncoderOptions enc_options;
   WebPAnimEncoderOptionsInit(&enc_options);
+  // Tune 'enc_options' as needed.
   WebPAnimEncoder* enc = WebPAnimEncoderNew(width, height, &enc_options);
   while(<there are more frames>) {
+    WebPConfig config;
+    WebPConfigInit(&config);
+    // Tune 'config' as needed.
     WebPAnimEncoderAdd(enc, frame, duration, &config);
   }
   WebPAnimEncoderAssemble(enc, webp_data);
