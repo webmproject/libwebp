@@ -20,8 +20,11 @@ extern "C" {
 
 #include "../webp/types.h"
 
+#define WEBP_RESCALER_RFIX 30   // fixed-point precision for multiplies
+
 // Structure used for on-the-fly rescaling
-typedef struct {
+typedef struct WebPRescaler WebPRescaler;
+struct WebPRescaler {
   int x_expand;               // true if we're expanding in the x direction
   int num_channels;           // bytes to jump between pixels
   int fy_scale, fx_scale;     // fixed-point scaling factor
@@ -35,7 +38,7 @@ typedef struct {
   uint8_t* dst;
   int dst_stride;
   int32_t* irow, *frow;       // work buffer
-} WebPRescaler;
+};
 
 // Initialize a rescaler given scratch area 'work' and dimensions of src & dst.
 void WebPRescalerInit(WebPRescaler* const rescaler,
@@ -56,13 +59,6 @@ int WebPRescaleNeededLines(const WebPRescaler* const rescaler,
 // be exported. Returns the actual number of lines that were imported.
 int WebPRescalerImport(WebPRescaler* const rescaler, int num_rows,
                        const uint8_t* src, int src_stride);
-
-// Import a row of data and save its contribution in the rescaler.
-// 'channel' denotes the channel number to be imported.
-extern void (*WebPRescalerImportRow)(WebPRescaler* const wrk,
-                                     const uint8_t* const src, int channel);
-// Export one row (starting at x_out position) from rescaler.
-extern void (*WebPRescalerExportRow)(WebPRescaler* const wrk, int x_out);
 
 // Return true if there is pending output rows ready.
 static WEBP_INLINE
