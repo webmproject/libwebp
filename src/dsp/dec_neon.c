@@ -494,7 +494,7 @@ static void ApplyFilter2(const int8x16_t p0s, const int8x16_t q0s,
   *oq0 = FlipSignBack(sq0);
 }
 
-#if defined(USE_INTRINSICS)
+#if defined(WEBP_USE_INTRINSICS)
 
 static void DoFilter2(const uint8x16_t p1, const uint8x16_t p0,
                       const uint8x16_t q0, const uint8x16_t q1,
@@ -626,7 +626,7 @@ static void SimpleHFilter16(uint8_t* p, int stride, int thresh) {
   );
 }
 
-#endif    // USE_INTRINSICS
+#endif    // WEBP_USE_INTRINSICS
 
 static void SimpleVFilter16i(uint8_t* p, int stride, int thresh) {
   uint32_t k;
@@ -986,7 +986,7 @@ static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
 static const int16_t kC1 = 20091;
 static const int16_t kC2 = 17734;  // half of kC2, actually. See comment above.
 
-#if defined(USE_INTRINSICS)
+#if defined(WEBP_USE_INTRINSICS)
 static WEBP_INLINE void Transpose8x2(const int16x8_t in0, const int16x8_t in1,
                                      int16x8x2_t* const out) {
   // a0 a1 a2 a3 | b0 b1 b2 b3   => a0 b0 c0 d0 | a1 b1 c1 d1
@@ -1163,7 +1163,7 @@ static void TransformOne(const int16_t* in, uint8_t* dst) {
   );
 }
 
-#endif    // USE_INTRINSICS
+#endif    // WEBP_USE_INTRINSICS
 
 static void TransformTwo(const int16_t* in, uint8_t* dst, int do_two) {
   TransformOne(in, dst);

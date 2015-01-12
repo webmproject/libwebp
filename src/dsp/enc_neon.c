@@ -32,9 +32,9 @@ static const int16_t kC2 = 17734;  // half of kC2, actually. See comment above.
 
 // This code works but is *slower* than the inlined-asm version below
 // (with gcc-4.6). So we disable it for now. Later, it'll be conditional to
-// USE_INTRINSICS define.
+// WEBP_USE_INTRINSICS define.
 // With gcc-4.8, it's a little faster speed than inlined-assembly.
-#if defined(USE_INTRINSICS)
+#if defined(WEBP_USE_INTRINSICS)
 
 // Treats 'v' as an uint8x8_t and zero extends to an int16x8_t.
 static WEBP_INLINE int16x8_t ConvertU8ToS16(uint32x2_t v) {
@@ -241,7 +241,7 @@ static void ITransformOne(const uint8_t* ref,
   );
 }
 
-#endif    // USE_INTRINSICS
+#endif    // WEBP_USE_INTRINSICS
 
 static void ITransform(const uint8_t* ref,
                        const int16_t* in, uint8_t* dst, int do_two) {
@@ -263,7 +263,7 @@ static uint8x16_t Load4x4(const uint8_t* src) {
 
 // Forward transform.
 
-#if defined(USE_INTRINSICS)
+#if defined(WEBP_USE_INTRINSICS)
 
 static WEBP_INLINE void Transpose4x4_S16(const int16x4_t A, const int16x4_t B,
                                          const int16x4_t C, const int16x4_t D,

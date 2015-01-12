@@ -141,7 +141,7 @@ static void ConvertBGRAToRGB(const uint32_t* src,
 
 //------------------------------------------------------------------------------
 
-#ifdef USE_INTRINSICS
+#ifdef WEBP_USE_INTRINSICS
 
 static WEBP_INLINE uint32_t Average2(const uint32_t* const a,
                                      const uint32_t* const b) {
@@ -295,7 +295,7 @@ static void AddGreenToBlueAndRed(uint32_t* argb_data, int num_pixels) {
 
 #endif   // !__aarch64__
 
-#endif   // USE_INTRINSICS
+#endif   // WEBP_USE_INTRINSICS
 
 #endif   // WEBP_USE_NEON
 
@@ -309,7 +309,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitNEON(void) {
   VP8LConvertBGRAToBGR = ConvertBGRAToBGR;
   VP8LConvertBGRAToRGB = ConvertBGRAToRGB;
 
-#ifdef USE_INTRINSICS
+#ifdef WEBP_USE_INTRINSICS
   VP8LPredictors[5] = Predictor5;
   VP8LPredictors[6] = Predictor6;
   VP8LPredictors[7] = Predictor7;
