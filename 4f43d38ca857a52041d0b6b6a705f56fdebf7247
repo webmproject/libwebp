@@ -16,6 +16,24 @@
       "revId": "4f43d38ca857a52041d0b6b6a705f56fdebf7247",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//KFI\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-01-12T22:28:10Z",
+      "side": 1,
+      "message": "I agree.\n\nhttps://gerrit.chromium.org/gerrit/#/c/73463/",
+      "parentUuid": "AAAAdn//KIM\u003d",
+      "revId": "4f43d38ca857a52041d0b6b6a705f56fdebf7247",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
