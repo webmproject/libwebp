@@ -29,14 +29,14 @@ static WEBP_INLINE void GetCPUInfo(int cpu_info[4], int info_type) {
     "cpuid\n"
     "xchg %%edi, %%ebx\n"
     : "=a"(cpu_info[0]), "=D"(cpu_info[1]), "=c"(cpu_info[2]), "=d"(cpu_info[3])
-    : "a"(info_type));
+    : "a"(info_type), "c"(0));
 }
 #elif defined(__i386__) || defined(__x86_64__)
 static WEBP_INLINE void GetCPUInfo(int cpu_info[4], int info_type) {
   __asm__ volatile (
     "cpuid\n"
     : "=a"(cpu_info[0]), "=b"(cpu_info[1]), "=c"(cpu_info[2]), "=d"(cpu_info[3])
-    : "a"(info_type));
+    : "a"(info_type), "c"(0));
 }
 #elif defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 150030729  // >= VS2008 SP1
 #define GetCPUInfo(info, type) __cpuidex(info, type, 0)  // set ecx=0
