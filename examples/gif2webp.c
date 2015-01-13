@@ -27,225 +27,11 @@
 #include "webp/encode.h"
 #include "webp/mux.h"
 #include "./example_util.h"
-
-// GIFLIB_MAJOR is only defined in libgif >= 4.2.0.
-#if defined(GIFLIB_MAJOR) && defined(GIFLIB_MINOR)
-# define LOCAL_GIF_VERSION ((GIFLIB_MAJOR << 8) | GIFLIB_MINOR)
-# define LOCAL_GIF_PREREQ(maj, min) \
-    (LOCAL_GIF_VERSION >= (((maj) << 8) | (min)))
-#else
-# define LOCAL_GIF_VERSION 0
-# define LOCAL_GIF_PREREQ(maj, min) 0
-#endif
-
-#define GIF_TRANSPARENT_MASK 0x01
-#define GIF_DISPOSE_MASK     0x07
-#define GIF_DISPOSE_SHIFT    2
-#define WHITE_COLOR          0xffffffff
-#define TRANSPARENT_COLOR    0x00ffffff
-#define MAX_CACHE_SIZE       30
-
-typedef enum GIFDisposeMethod {
-  GIF_DISPOSE_NONE,
-  GIF_DISPOSE_BACKGROUND,
-  GIF_DISPOSE_RESTORE_PREVIOUS
-} GIFDisposeMethod;
-
-typedef struct {
-  int x_offset, y_offset, width, height;
-} GIFFrameRect;
+#include "./gifdec.h"
 
 //------------------------------------------------------------------------------
 
-static int transparent_index = -1;  // Opaque frame by default.
-
-static void ClearRectangle(WebPPicture* const picture,
-                           int left, int top, int width, int height) {
-  int j;
-  for (j = top; j < top + height; ++j) {
-    uint32_t* const dst = picture->argb + j * picture->argb_stride;
-    int i;
-    for (i = left; i < left + width; ++i) {
-      dst[i] = TRANSPARENT_COLOR;
-    }
-  }
-}
-
-static void ClearPic(WebPPicture* const pic, const GIFFrameRect* const rect) {
-  if (rect != NULL) {
-    ClearRectangle(pic, rect->x_offset, rect->y_offset,
-                   rect->width, rect->height);
-  } else {
-    ClearRectangle(pic, 0, 0, pic->width, pic->height);
-  }
-}
-
-// TODO: Also used in picture.c. Move to a common location?
-// Copy width x height pixels from 'src' to 'dst' honoring the strides.
-static void CopyPlane(const uint8_t* src, int src_stride,
-                      uint8_t* dst, int dst_stride, int width, int height) {
-  while (height-- > 0) {
-    memcpy(dst, src, width);
-    src += src_stride;
-    dst += dst_stride;
-  }
-}
-
-// Copy pixels from 'src' to 'dst' honoring strides. 'src' and 'dst' are assumed
-// to be already allocated.
-static void CopyPixels(const WebPPicture* const src, WebPPicture* const dst) {
-  assert(src->width == dst->width && src->height == dst->height);
-  CopyPlane((uint8_t*)src->argb, 4 * src->argb_stride, (uint8_t*)dst->argb,
-            4 * dst->argb_stride, 4 * src->width, src->height);
-}
-
-// Given 'src' picture and its frame rectangle 'rect', blend it into 'dst'.
-static void BlendPixels(const WebPPicture* const src,
-                        const GIFFrameRect* const rect,
-                        WebPPicture* const dst) {
-  int j;
-  assert(src->width == dst->width && src->height == dst->height);
-  for (j = rect->y_offset; j < rect->y_offset + rect->height; ++j) {
-    int i;
-    for (i = rect->x_offset; i < rect->x_offset + rect->width; ++i) {
-      const uint32_t src_pixel = src->argb[j * src->argb_stride + i];
-      const int src_alpha = src_pixel >> 24;
-      if (src_alpha != 0) {
-        dst->argb[j * dst->argb_stride + i] = src_pixel;
-      }
-    }
-  }
-}
-
-static void DisposeFrameRectangle(GIFDisposeMethod dispose_method,
-                                  const GIFFrameRect* const rect,
-                                  const WebPPicture* const prev_canvas,
-                                  WebPPicture* const curr_canvas) {
-  assert(rect != NULL);
-  if (dispose_method == GIF_DISPOSE_BACKGROUND) {
-    ClearPic(curr_canvas, rect);
-  } else if (dispose_method == GIF_DISPOSE_RESTORE_PREVIOUS) {
-    const int src_stride = prev_canvas->argb_stride;
-    const uint32_t* const src =
-        prev_canvas->argb + rect->x_offset + rect->y_offset * src_stride;
-    const int dst_stride = curr_canvas->argb_stride;
-    uint32_t* const dst =
-        curr_canvas->argb + rect->x_offset + rect->y_offset * dst_stride;
-    assert(prev_canvas != NULL);
-    CopyPlane((uint8_t*)src, 4 * src_stride, (uint8_t*)dst, 4 * dst_stride,
-              4 * rect->width, rect->height);
-  }
-}
-
-static void Remap(const uint8_t* const src, const GifFileType* const gif,
-                  uint32_t* dst, int len) {
-  int i;
-  const GifColorType* colors;
-  const ColorMapObject* const cmap =
-      gif->Image.ColorMap ? gif->Image.ColorMap : gif->SColorMap;
-  if (cmap == NULL) return;
-  colors = cmap->Colors;
-
-  for (i = 0; i < len; ++i) {
-    const GifColorType c = colors[src[i]];
-    dst[i] = (src[i] == transparent_index) ? TRANSPARENT_COLOR
-           : c.Blue | (c.Green << 8) | (c.Red << 16) | (0xff << 24);
-  }
-}
-
-// Read the GIF image frame.
-static int ReadFrame(GifFileType* const gif, GIFFrameRect* const gif_rect,
-                     WebPPicture* const webp_frame) {
-  WebPPicture sub_image;
-  const GifImageDesc* const image_desc = &gif->Image;
-  uint32_t* dst = NULL;
-  uint8_t* tmp = NULL;
-  int ok = 0;
-  GIFFrameRect rect = {
-      image_desc->Left, image_desc->Top, image_desc->Width, image_desc->Height
-  };
-  *gif_rect = rect;
-
-  // Use a view for the sub-picture:
-  if (!WebPPictureView(webp_frame, rect.x_offset, rect.y_offset,
-                       rect.width, rect.height, &sub_image)) {
-    fprintf(stderr, "Sub-image %dx%d at position %d,%d is invalid!\n",
-            rect.width, rect.height, rect.x_offset, rect.y_offset);
-    return 0;
-  }
-  dst = sub_image.argb;
-
-  tmp = (uint8_t*)malloc(rect.width * sizeof(*tmp));
-  if (tmp == NULL) goto End;
-
-  if (image_desc->Interlace) {  // Interlaced image.
-    // We need 4 passes, with the following offsets and jumps.
-    const int interlace_offsets[] = { 0, 4, 2, 1 };
-    const int interlace_jumps[]   = { 8, 8, 4, 2 };
-    int pass;
-    for (pass = 0; pass < 4; ++pass) {
-      int y;
-      for (y = interlace_offsets[pass]; y < rect.height;
-           y += interlace_jumps[pass]) {
-        if (DGifGetLine(gif, tmp, rect.width) == GIF_ERROR) goto End;
-        Remap(tmp, gif, dst + y * sub_image.argb_stride, rect.width);
-      }
-    }
-  } else {  // Non-interlaced image.
-    int y;
-    for (y = 0; y < rect.height; ++y) {
-      if (DGifGetLine(gif, tmp, rect.width) == GIF_ERROR) goto End;
-      Remap(tmp, gif, dst + y * sub_image.argb_stride, rect.width);
-    }
-  }
-  ok = 1;
-
- End:
-  if (!ok) webp_frame->error_code = sub_image.error_code;
-  WebPPictureFree(&sub_image);
-  free(tmp);
-  return ok;
-}
-
-static void GetBackgroundColor(const ColorMapObject* const color_map,
-                               int bgcolor_idx, uint32_t* const bgcolor) {
-  if (transparent_index != -1 && bgcolor_idx == transparent_index) {
-    *bgcolor = TRANSPARENT_COLOR;  // Special case.
-  } else if (color_map == NULL || color_map->Colors == NULL
-             || bgcolor_idx >= color_map->ColorCount) {
-    *bgcolor = WHITE_COLOR;
-    fprintf(stderr,
-            "GIF decode warning: invalid background color index. Assuming "
-            "white background.\n");
-  } else {
-    const GifColorType color = color_map->Colors[bgcolor_idx];
-    *bgcolor = (0xff        << 24)
-             | (color.Red   << 16)
-             | (color.Green <<  8)
-             | (color.Blue  <<  0);
-  }
-}
-
-static void DisplayGifError(const GifFileType* const gif, int gif_error) {
-  // libgif 4.2.0 has retired PrintGifError() and added GifErrorString().
-#if LOCAL_GIF_PREREQ(4,2)
-#if LOCAL_GIF_PREREQ(5,0)
-  // Static string actually, hence the const char* cast.
-  const char* error_str = (const char*)GifErrorString(
-      (gif == NULL) ? gif_error : gif->Error);
-#else
-  const char* error_str = (const char*)GifErrorString();
-  (void)gif;
-#endif
-  if (error_str == NULL) error_str = "Unknown error";
-  fprintf(stderr, "GIFLib Error %d: %s\n", gif_error, error_str);
-#else
-  (void)gif;
-  fprintf(stderr, "GIFLib Error %d: ", gif_error);
-  PrintGifError();
-  fprintf(stderr, "\n");
-#endif
-}
+static int transparent_index = GIF_INDEX_INVALID;  // Opaque by default.
 
 static const char* const kErrorMessages[-WEBP_MUX_NOT_ENOUGH_DATA + 1] = {
   "WEBP_MUX_NOT_FOUND", "WEBP_MUX_INVALID_ARGUMENT", "WEBP_MUX_BAD_DATA",
@@ -514,14 +300,15 @@ int main(int argc, const char *argv[]) {
           frame.height = gif->SHeight;
           frame.use_argb = 1;
           if (!WebPPictureAlloc(&frame)) goto End;
-          ClearPic(&frame, NULL);
+          GIFClearPic(&frame, NULL);
           WebPPictureCopy(&frame, &curr_canvas);
           WebPPictureCopy(&frame, &prev_canvas);
           WebPPictureCopy(&frame, &prev_to_prev_canvas);
 
           // Background color.
-          GetBackgroundColor(gif->SColorMap, gif->SBackGroundColor,
-                             &enc_options.anim_params.bgcolor);
+          GIFGetBackgroundColor(gif->SColorMap, gif->SBackGroundColor,
+                                transparent_index,
+                                &enc_options.anim_params.bgcolor);
 
           // Initialize encoder.
           enc = WebPAnimEncoderNew(curr_canvas.width, curr_canvas.height,
@@ -536,12 +323,12 @@ int main(int argc, const char *argv[]) {
           image_desc->Height = gif->SHeight;
         }
 
-        if (!ReadFrame(gif, &gif_rect, &frame)) {
+        if (!GIFReadFrame(gif, transparent_index, &gif_rect, &frame)) {
           goto End;
         }
         // Blend frame rectangle with previous canvas to compose full canvas.
         // Note that 'curr_canvas' is same as 'prev_canvas' at this point.
-        BlendPixels(&frame, &gif_rect, &curr_canvas);
+        GIFBlendFrames(&frame, &gif_rect, &curr_canvas);
 
         if (!WebPAnimEncoderAdd(enc, &curr_canvas, duration, &config)) {
           fprintf(stderr, "Error! Cannot encode frame as WebP\n");
@@ -549,17 +336,16 @@ int main(int argc, const char *argv[]) {
         }
 
         // Update canvases.
-        CopyPixels(&prev_canvas, &prev_to_prev_canvas);
-        DisposeFrameRectangle(orig_dispose, &gif_rect, &prev_canvas,
-                              &curr_canvas);
-        CopyPixels(&curr_canvas, &prev_canvas);
+        GIFCopyPixels(&prev_canvas, &prev_to_prev_canvas);
+        GIFDisposeFrame(orig_dispose, &gif_rect, &prev_canvas, &curr_canvas);
+        GIFCopyPixels(&curr_canvas, &prev_canvas);
 
         // In GIF, graphic control extensions are optional for a frame, so we
         // may not get one before reading the next frame. To handle this case,
         // we reset frame properties to reasonable defaults for the next frame.
         orig_dispose = GIF_DISPOSE_NONE;
         duration = 0;
-        transparent_index = -1;  // Opaque frame by default.
+        transparent_index = GIF_INDEX_INVALID;
         break;
       }
       case EXTENSION_RECORD_TYPE: {
@@ -573,25 +359,10 @@ int main(int argc, const char *argv[]) {
             break;  // Do nothing for now.
           }
           case GRAPHICS_EXT_FUNC_CODE: {
-            const int flags = data[1];
-            const int dispose = (flags >> GIF_DISPOSE_SHIFT) & GIF_DISPOSE_MASK;
-            const int delay = data[2] | (data[3] << 8);  // In 10 ms units.
-            if (data[0] != 4) goto End;
-            duration = delay * 10;  // Duration is in 1 ms units for WebP.
-            switch (dispose) {
-              case 3:
-                orig_dispose = GIF_DISPOSE_RESTORE_PREVIOUS;
-                break;
-              case 2:
-                orig_dispose = GIF_DISPOSE_BACKGROUND;
-                break;
-              case 1:
-              case 0:
-              default:
-                orig_dispose = GIF_DISPOSE_NONE;
-                break;
+            if (!GIFReadGraphicsExtension(data, &duration, &orig_dispose,
+                                          &transparent_index)) {
+              goto End;
             }
-            transparent_index = (flags & GIF_TRANSPARENT_MASK) ? data[4] : -1;
             break;
           }
           case PLAINTEXT_EXT_FUNC_CODE: {
@@ -601,11 +372,9 @@ int main(int argc, const char *argv[]) {
             if (data[0] != 11) break;    // Chunk is too short
             if (!memcmp(data + 1, "NETSCAPE2.0", 11) ||
                 !memcmp(data + 1, "ANIMEXTS1.0", 11)) {
-              // Recognize and parse Netscape2.0 NAB extension for loop count.
-              if (DGifGetExtensionNext(gif, &data) == GIF_ERROR) goto End;
-              if (data == NULL) goto End;  // Loop count sub-block missing.
-              if (data[0] < 3 || data[1] != 1) break;   // wrong size/marker
-              loop_count = data[2] | (data[3] << 8);
+              if (!GIFReadLoopCount(gif, &data, &loop_count)) {
+                goto End;
+              }
               if (verbose) {
                 fprintf(stderr, "Loop count: %d\n", loop_count);
               }
@@ -620,42 +389,9 @@ int main(int argc, const char *argv[]) {
                                  !stored_icc &&
                                  !memcmp(data + 1, "ICCRGBG1012", 11);
               if (is_xmp || is_icc) {
-                WebPData* const metadata = is_xmp ? &xmp_data : &icc_data;
-                // Construct metadata from sub-blocks.
-                // Usual case (including ICC profile): In each sub-block, the
-                // first byte specifies its size in bytes (0 to 255) and the
-                // rest of the bytes contain the data.
-                // Special case for XMP data: In each sub-block, the first byte
-                // is also part of the XMP payload. XMP in GIF also has a 257
-                // byte padding data. See the XMP specification for details.
-                while (1) {
-                  WebPData subblock;
-                  const uint8_t* tmp;
-                  if (DGifGetExtensionNext(gif, &data) == GIF_ERROR) {
-                    goto End;
-                  }
-                  if (data == NULL) break;  // Finished.
-                  subblock.size = is_xmp ? data[0] + 1 : data[0];
-                  assert(subblock.size > 0);
-                  subblock.bytes = is_xmp ? data : data + 1;
-                  // Note: We store returned value in 'tmp' first, to avoid
-                  // leaking old memory in metadata->bytes on error.
-                  tmp = (uint8_t*)realloc((void*)metadata->bytes,
-                                          metadata->size + subblock.size);
-                  if (tmp == NULL) {
-                    goto End;
-                  }
-                  memcpy((void*)(tmp + metadata->size),
-                         subblock.bytes, subblock.size);
-                  metadata->bytes = tmp;
-                  metadata->size += subblock.size;
-                }
-                if (is_xmp) {
-                  // XMP padding data is 0x01, 0xff, 0xfe ... 0x01, 0x00.
-                  const size_t xmp_pading_size = 257;
-                  if (metadata->size > xmp_pading_size) {
-                    metadata->size -= xmp_pading_size;
-                  }
+                if (!GIFReadMetadata(gif, &data,
+                                     is_xmp ? &xmp_data : &icc_data)) {
+                  goto End;
                 }
                 if (is_icc) {
                   stored_icc = 1;
@@ -783,7 +519,7 @@ int main(int argc, const char *argv[]) {
   if (out != NULL && out_file != NULL) fclose(out);
 
   if (gif_error != GIF_OK) {
-    DisplayGifError(gif, gif_error);
+    GIFDisplayError(gif, gif_error);
   }
   if (gif != NULL) {
 #if LOCAL_GIF_PREREQ(5,1)

@@ -232,6 +232,9 @@ EX_FORMAT_DEC_OBJS = \
     $(DIROBJ)\examples\webpdec.obj \
     $(DIROBJ)\examples\wicdec.obj \
 
+EX_GIF_DEC_OBJS = \
+    $(DIROBJ)\examples\gifdec.obj \
+
 EX_UTIL_OBJS = \
     $(DIROBJ)\examples\example_util.obj \
 
@@ -302,8 +305,8 @@ gif2webp: $(DIRBIN)\gif2webp.exe
 
 $(DIRBIN)\cwebp.exe: $(DIROBJ)\examples\cwebp.obj $(EX_FORMAT_DEC_OBJS)
 $(DIRBIN)\dwebp.exe: $(DIROBJ)\examples\dwebp.obj
-$(DIRBIN)\gif2webp.exe: $(DIROBJ)\examples\gif2webp.obj $(EX_UTIL_OBJS)
-$(DIRBIN)\gif2webp.exe: $(LIBWEBPMUX) $(LIBWEBP)
+$(DIRBIN)\gif2webp.exe: $(DIROBJ)\examples\gif2webp.obj $(EX_GIF_DEC_OBJS)
+$(DIRBIN)\gif2webp.exe: $(EX_UTIL_OBJS) $(LIBWEBPMUX) $(LIBWEBP)
 $(DIRBIN)\vwebp.exe: $(DIROBJ)\examples\vwebp.obj
 $(DIRBIN)\vwebp.exe: $(EX_UTIL_OBJS) $(LIBWEBPDEMUX) $(LIBWEBP)
 $(DIRBIN)\webpmux.exe: $(DIROBJ)\examples\webpmux.obj $(LIBWEBPMUX)
