@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//J5Q\u003d",
+        "filename": "examples/Android.mk",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-01-14T01:08:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//J5g\u003d",
+      "revId": "c2fe2ca88c09dc4520c562ccb12f00b1f56463ca",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//J5c\u003d",
         "filename": "examples/gifdec.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2015-01-14T00:58:10Z",
       "side": 1,
       "message": "not needed outside the ifdef",
+      "revId": "c2fe2ca88c09dc4520c562ccb12f00b1f56463ca",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//J5I\u003d",
+        "filename": "examples/gifdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-01-14T01:08:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//J5c\u003d",
       "revId": "c2fe2ca88c09dc4520c562ccb12f00b1f56463ca",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
