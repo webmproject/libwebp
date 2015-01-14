@@ -65,6 +65,11 @@ typedef void (*VP8LCollectColorBlueTransformsFunc)(
     const uint32_t* const argb);
 extern VP8LCollectColorBlueTransformsFunc VP8LCollectColorBlueTransforms;
 
+typedef void (*VP8LCollectColorRedTransformsFunc)(
+    int tile_x_offset, int tile_y_offset, int all_x_max, int all_y_max,
+    int xsize, int green_to_red, int* histo, const uint32_t* const argb);
+extern VP8LCollectColorRedTransformsFunc VP8LCollectColorRedTransforms;
+
 // Expose some C-only fallback functions
 void VP8LTransformColor_C(const VP8LMultipliers* const m,
                           uint32_t* data, int num_pixels);
