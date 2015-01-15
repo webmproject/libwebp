@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//JlA\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1245,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-01-15T23:02:35Z",
+      "side": 1,
+      "message": "long line",
+      "revId": "4bcbbe95f32a6ba6685484f22927145158b96848",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//JlE\u003d",
+        "filename": "src/dsp/lossless.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1252,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-01-15T23:02:35Z",
+      "side": 1,
+      "message": "long line",
+      "revId": "4bcbbe95f32a6ba6685484f22927145158b96848",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
