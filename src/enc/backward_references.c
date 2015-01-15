@@ -1017,8 +1017,9 @@ VP8LBackwardRefs* VP8LGetBackwardReferences(
 
   // Choose appropriate backward reference.
   if (lz77_is_useful) {
-    // TraceBackwards is costly. Don't execute it at lower quality.
-    const int try_lz77_trace_backwards = (quality >= 25);
+    // TraceBackwards is costly. Don't execute it at lower quality or low effort
+    // compression setting.
+    const int try_lz77_trace_backwards = (quality >= 25) && !low_effort;
     best = refs_lz77;   // default guess: lz77 is better
     if (try_lz77_trace_backwards) {
       VP8LBackwardRefs* const refs_trace = refs_rle;
