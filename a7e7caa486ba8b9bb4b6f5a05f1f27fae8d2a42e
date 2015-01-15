@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Jro\u003d",
+        "filename": "src/dsp/lossless_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 442,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-01-15T15:39:39Z",
+      "side": 1,
+      "message": "const uint32_t* p_argb \u003d argb + ix;\n\nshould be enough",
+      "revId": "a7e7caa486ba8b9bb4b6f5a05f1f27fae8d2a42e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
