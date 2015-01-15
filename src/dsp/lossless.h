@@ -60,14 +60,15 @@ extern VP8LConvertFunc VP8LConvertBGRAToRGB565;
 extern VP8LConvertFunc VP8LConvertBGRAToBGR;
 
 typedef void (*VP8LCollectColorBlueTransformsFunc)(
-    int tile_x_offset, int tile_y_offset, int all_x_max, int all_y_max,
-    int xsize, int green_to_blue, int red_to_blue, int* histo,
-    const uint32_t* const argb);
+    const uint32_t* argb, int stride,
+    int tile_width, int tile_height,
+    int green_to_blue, int red_to_blue, int histo[]);
 extern VP8LCollectColorBlueTransformsFunc VP8LCollectColorBlueTransforms;
 
 typedef void (*VP8LCollectColorRedTransformsFunc)(
-    int tile_x_offset, int tile_y_offset, int all_x_max, int all_y_max,
-    int xsize, int green_to_red, int* histo, const uint32_t* const argb);
+    const uint32_t* argb, int stride,
+    int tile_width, int tile_height,
+    int green_to_red, int histo[]);
 extern VP8LCollectColorRedTransformsFunc VP8LCollectColorRedTransforms;
 
 // Expose some C-only fallback functions
