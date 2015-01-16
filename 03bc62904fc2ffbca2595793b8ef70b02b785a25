@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Jfw\u003d",
+        "filename": "src/dsp/alpha_processing_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-01-16T14:48:13Z",
+      "side": 1,
+      "message": "shouldn\u0027t these constants/masks be all uint32_t\u0027s ?",
+      "revId": "03bc62904fc2ffbca2595793b8ef70b02b785a25",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Jfs\u003d",
+        "filename": "src/dsp/alpha_processing_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-01-16T14:48:13Z",
+      "side": 1,
+      "message": "const uint32_t argb \u003d ptr[x];",
+      "revId": "03bc62904fc2ffbca2595793b8ef70b02b785a25",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
