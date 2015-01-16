@@ -244,10 +244,10 @@ static int WritePPM(FILE* fout, const WebPDecBuffer* const buffer, int alpha) {
   uint32_t y;
 
   if (alpha) {
-    fprintf(fout, "P7\nWIDTH %d\nHEIGHT %d\nDEPTH 4\nMAXVAL 255\n"
+    fprintf(fout, "P7\nWIDTH %u\nHEIGHT %u\nDEPTH 4\nMAXVAL 255\n"
                   "TUPLTYPE RGB_ALPHA\nENDHDR\n", width, height);
   } else {
-    fprintf(fout, "P6\n%d %d\n255\n", width, height);
+    fprintf(fout, "P6\n%u %u\n255\n", width, height);
   }
   for (y = 0; y < height; ++y) {
     if (fwrite(rgb + y * stride, width, bytes_per_px, fout) != bytes_per_px) {
@@ -404,7 +404,7 @@ static int WriteAlphaPlane(FILE* fout, const WebPDecBuffer* const buffer) {
   const int a_stride = buffer->u.YUVA.a_stride;
   uint32_t y;
   assert(a != NULL);
-  fprintf(fout, "P5\n%d %d\n255\n", width, height);
+  fprintf(fout, "P5\n%u %u\n255\n", width, height);
   for (y = 0; y < height; ++y) {
     if (fwrite(a + y * a_stride, width, 1, fout) != 1) {
       return 0;
