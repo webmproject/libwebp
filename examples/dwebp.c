@@ -22,6 +22,7 @@
 
 #ifdef WEBP_HAVE_PNG
 #include <png.h>
+#include <setjmp.h>   // note: this must be included *after* png.h
 #endif
 
 #ifdef HAVE_WINCODEC_H
