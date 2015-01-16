@@ -1174,6 +1174,153 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
 #undef ABS_X8
 #undef ADD_SUB_HALVES_X4
 
+//------------------------------------------------------------------------------
+// Quantization
+//
+
+// macro for one pass through for loop in QuantizeBlock reading 2 values at time
+// QUANTDIV macro inlined
+// J - offset in bytes (kZigzag[n] * 2)
+// K - offset in bytes (kZigzag[n] * 4)
+// N - offset in bytes (n * 2)
+// N1 - offset in bytes ((n + 1) * 2)
+#define QUANTIZE_ONE(J, K, N, N1)                                         \
+  "ulw         %[temp1],     "#J"(%[ppin])                   \n\t"        \
+  "ulw         %[temp2],     "#J"(%[ppsharpen])              \n\t"        \
+  "lhu         %[temp3],     "#K"(%[ppzthresh])              \n\t"        \
+  "lhu         %[temp6],     "#K"+4(%[ppzthresh])            \n\t"        \
+  "absq_s.ph   %[temp4],     %[temp1]                        \n\t"        \
+  "ins         %[temp3],     %[temp6],         16,       16  \n\t"        \
+  "addu.ph     %[coeff],     %[temp4],         %[temp2]      \n\t"        \
+  "shra.ph     %[sign],      %[temp1],         15            \n\t"        \
+  "li          %[level],     0x10001                         \n\t"        \
+  "cmp.lt.ph   %[temp3],     %[coeff]                        \n\t"        \
+  "lhu         %[temp1],     "#J"(%[ppiq])                   \n\t"        \
+  "pick.ph     %[temp5],     %[level],         $0            \n\t"        \
+  "lw          %[temp2],     "#K"(%[ppbias])                 \n\t"        \
+  "beqz        %[temp5],     0f                              \n\t"        \
+  "lhu         %[temp3],     "#J"(%[ppq])                    \n\t"        \
+  "beq         %[temp5],     %[level],         1f            \n\t"        \
+  "andi        %[temp5],     %[temp5],         0x1           \n\t"        \
+  "andi        %[temp4],     %[coeff],         0xffff        \n\t"        \
+  "beqz        %[temp5],     2f                              \n\t"        \
+  "mul         %[level],     %[temp4],         %[temp1]      \n\t"        \
+  "sh          $0,           "#J"+2(%[ppin])                 \n\t"        \
+  "sh          $0,           "#N1"(%[pout])                  \n\t"        \
+  "addu        %[level],     %[level],         %[temp2]      \n\t"        \
+  "sra         %[level],     %[level],         17            \n\t"        \
+  "slt         %[temp4],     %[max_level],     %[level]      \n\t"        \
+  "movn        %[level],     %[max_level],     %[temp4]      \n\t"        \
+  "andi        %[temp6],     %[sign],          0xffff        \n\t"        \
+  "xor         %[level],     %[level],         %[temp6]      \n\t"        \
+  "subu        %[level],     %[level],         %[temp6]      \n\t"        \
+  "mul         %[temp5],     %[level],         %[temp3]      \n\t"        \
+  "or          %[ret],       %[ret],           %[level]      \n\t"        \
+  "sh          %[level],     "#N"(%[pout])                   \n\t"        \
+  "sh          %[temp5],     "#J"(%[ppin])                   \n\t"        \
+  "j           3f                                            \n\t"        \
+"2:                                                          \n\t"        \
+  "lhu         %[temp1],     "#J"+2(%[ppiq])                 \n\t"        \
+  "srl         %[temp5],     %[coeff],         16            \n\t"        \
+  "mul         %[level],     %[temp5],         %[temp1]      \n\t"        \
+  "lw          %[temp2],     "#K"+4(%[ppbias])               \n\t"        \
+  "lhu         %[temp3],     "#J"+2(%[ppq])                  \n\t"        \
+  "addu        %[level],     %[level],         %[temp2]      \n\t"        \
+  "sra         %[level],     %[level],         17            \n\t"        \
+  "srl         %[temp6],     %[sign],          16            \n\t"        \
+  "slt         %[temp4],     %[max_level],     %[level]      \n\t"        \
+  "movn        %[level],     %[max_level],     %[temp4]      \n\t"        \
+  "xor         %[level],     %[level],         %[temp6]      \n\t"        \
+  "subu        %[level],     %[level],         %[temp6]      \n\t"        \
+  "mul         %[temp5],     %[level],         %[temp3]      \n\t"        \
+  "sh          $0,           "#J"(%[ppin])                   \n\t"        \
+  "sh          $0,           "#N"(%[pout])                   \n\t"        \
+  "or          %[ret],       %[ret],           %[level]      \n\t"        \
+  "sh          %[temp5],     "#J"+2(%[ppin])                 \n\t"        \
+  "sh          %[level],     "#N1"(%[pout])                  \n\t"        \
+  "j           3f                                            \n\t"        \
+"1:                                                          \n\t"        \
+  "lhu         %[temp1],     "#J"(%[ppiq])                   \n\t"        \
+  "lw          %[temp2],     "#K"(%[ppbias])                 \n\t"        \
+  "ulw         %[temp3],     "#J"(%[ppq])                    \n\t"        \
+  "andi        %[temp5],     %[coeff],         0xffff        \n\t"        \
+  "srl         %[temp0],     %[coeff],         16            \n\t"        \
+  "lhu         %[temp6],     "#J"+2(%[ppiq])                 \n\t"        \
+  "lw          %[coeff],     "#K"+4(%[ppbias])               \n\t"        \
+  "mul         %[level],     %[temp5],         %[temp1]      \n\t"        \
+  "mul         %[temp4],     %[temp0],         %[temp6]      \n\t"        \
+  "addu        %[level],     %[level],         %[temp2]      \n\t"        \
+  "addu        %[temp4],     %[temp4],         %[coeff]      \n\t"        \
+  "precrq.ph.w %[level],     %[temp4],         %[level]      \n\t"        \
+  "shra.ph     %[level],     %[level],         1             \n\t"        \
+  "cmp.lt.ph   %[max_level1],%[level]                        \n\t"        \
+  "pick.ph     %[level],     %[max_level],     %[level]      \n\t"        \
+  "xor         %[level],     %[level],         %[sign]       \n\t"        \
+  "subu.ph     %[level],     %[level],         %[sign]       \n\t"        \
+  "mul.ph      %[temp3],     %[level],         %[temp3]      \n\t"        \
+  "or          %[ret],       %[ret],           %[level]      \n\t"        \
+  "sh          %[level],     "#N"(%[pout])                   \n\t"        \
+  "srl         %[level],     %[level],         16            \n\t"        \
+  "sh          %[level],     "#N1"(%[pout])                  \n\t"        \
+  "usw         %[temp3],     "#J"(%[ppin])                   \n\t"        \
+  "j           3f                                            \n\t"        \
+"0:                                                          \n\t"        \
+  "sh          $0,           "#N"(%[pout])                   \n\t"        \
+  "sh          $0,           "#N1"(%[pout])                  \n\t"        \
+  "usw         $0,           "#J"(%[ppin])                   \n\t"        \
+"3:                                                          \n\t"
+
+static int QuantizeBlock(int16_t in[16], int16_t out[16],
+                         const VP8Matrix* const mtx) {
+  int temp0, temp1, temp2, temp3, temp4, temp5,temp6;
+  int sign, coeff, level;
+  int max_level = MAX_LEVEL;
+  int max_level1 = max_level << 16 | max_level;
+  int ret = 0;
+
+  int16_t* ppin             = &in[0];
+  int16_t* pout             = &out[0];
+  const uint16_t* ppsharpen = &mtx->sharpen_[0];
+  const uint32_t* ppzthresh = &mtx->zthresh_[0];
+  const uint16_t* ppq       = &mtx->q_[0];
+  const uint16_t* ppiq      = &mtx->iq_[0];
+  const uint32_t* ppbias    = &mtx->bias_[0];
+
+  __asm__ volatile (
+    QUANTIZE_ONE( 0,  0,  0,  2)
+    QUANTIZE_ONE( 4,  8, 10, 12)
+    QUANTIZE_ONE( 8, 16,  4,  8)
+    QUANTIZE_ONE(12, 24, 14, 24)
+    QUANTIZE_ONE(16, 32,  6, 16)
+    QUANTIZE_ONE(20, 40, 22, 26)
+    QUANTIZE_ONE(24, 48, 18, 20)
+    QUANTIZE_ONE(28, 56, 28, 30)
+
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1),
+      [temp2]"=&r"(temp2), [temp3]"=&r"(temp3),
+      [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [sign]"=&r"(sign), [coeff]"=&r"(coeff),
+      [level]"=&r"(level), [temp6]"=&r"(temp6), [ret]"+&r"(ret)
+    : [ppin]"r"(ppin), [pout]"r"(pout), [max_level1]"r"(max_level1),
+      [ppiq]"r"(ppiq), [max_level]"r"(max_level),
+      [ppbias]"r"(ppbias), [ppzthresh]"r"(ppzthresh),
+      [ppsharpen]"r"(ppsharpen), [ppq]"r"(ppq)
+    : "memory", "hi", "lo"
+  );
+
+  return (ret != 0);
+}
+
+static int Quantize2Blocks(int16_t in[32], int16_t out[32],
+                           const VP8Matrix* const mtx) {
+  int nz;
+  nz  = QuantizeBlock(in + 0 * 16, out + 0 * 16, mtx) << 0;
+  nz |= QuantizeBlock(in + 1 * 16, out + 1 * 16, mtx) << 1;
+  return nz;
+}
+
+#undef QUANTIZE_ONE
+
 #endif  // WEBP_USE_MIPS_DSP_R2
 
 //------------------------------------------------------------------------------
@@ -1196,5 +1343,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPSdspR2(void) {
   VP8SSE16x8 = SSE16x8;
   VP8SSE4x4 = SSE4x4;
 #endif
+  VP8EncQuantizeBlock = QuantizeBlock;
+  VP8EncQuantize2Blocks = Quantize2Blocks;
 #endif  // WEBP_USE_MIPS_DSP_R2
 }
