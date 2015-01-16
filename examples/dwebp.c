@@ -193,8 +193,8 @@ static int WritePNG(FILE* out_file, const WebPDecBuffer* const buffer) {
   uint8_t* const rgb = buffer->u.RGBA.rgba;
   const int stride = buffer->u.RGBA.stride;
   const int has_alpha = (buffer->colorspace == MODE_RGBA);
-  png_structp png;
-  png_infop info;
+  volatile png_structp png;
+  volatile png_infop info;
   png_uint_32 y;
 
   png = png_create_write_struct(PNG_LIBPNG_VER_STRING,
@@ -204,11 +204,11 @@ static int WritePNG(FILE* out_file, const WebPDecBuffer* const buffer) {
   }
   info = png_create_info_struct(png);
   if (info == NULL) {
-    png_destroy_write_struct(&png, NULL);
+    png_destroy_write_struct((png_structpp)&png, NULL);
     return 0;
   }
   if (setjmp(png_jmpbuf(png))) {
-    png_destroy_write_struct(&png, &info);
+    png_destroy_write_struct((png_structpp)&png, (png_infopp)&info);
     return 0;
   }
   png_init_io(png, out_file);
@@ -222,7 +222,7 @@ static int WritePNG(FILE* out_file, const WebPDecBuffer* const buffer) {
     png_write_rows(png, &row, 1);
   }
   png_write_end(png, info);
-  png_destroy_write_struct(&png, &info);
+  png_destroy_write_struct((png_structpp)&png, (png_infopp)&info);
   return 1;
 }
 #else    // !HAVE_WINCODEC_H && !WEBP_HAVE_PNG
