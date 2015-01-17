@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//JWk\u003d",
+        "filename": "examples/wicdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-01-17T12:29:59Z",
+      "side": 1,
+      "message": "what about \"assert(!SUCCEEDED(hr) || (num_color_contexts \u003c\u003d count));\" ?\n\nthe \"if (cond) assert(x);\" construct scares me in opt mode, when the assert() disappears...",
+      "revId": "94c1fff5f6ea5d9fcc790186e3bba4e21f06c975",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
