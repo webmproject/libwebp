@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//JYc\u003d",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-01-17T02:57:42Z",
+      "side": 1,
+      "message": "actually these should likely be \u0027png_structp volatile\u0027 as the typedef is for a struct* (similar to what is done with \u0027rgb\u0027 elsewhere).",
+      "revId": "85833b1b44cea0905110c94f5dc7ab34be79af59",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
