@@ -15,6 +15,7 @@
 #include "webp/config.h"
 #endif
 
+#include <assert.h>
 #include <stdio.h>
 
 #ifdef HAVE_WINCODEC_H
@@ -109,6 +110,7 @@ static HRESULT ExtractICCP(IWICImagingFactory* const factory,
     IFS(IWICBitmapFrameDecode_GetColorContexts(frame,
                                                count, color_contexts,
                                                &num_color_contexts));
+    assert(FAILED(hr) || num_color_contexts <= count);
     for (i = 0; SUCCEEDED(hr) && i < num_color_contexts; ++i) {
       WICColorContextType type;
       IFS(IWICColorContext_GetType(color_contexts[i], &type));
@@ -116,7 +118,7 @@ static HRESULT ExtractICCP(IWICImagingFactory* const factory,
         UINT size;
         IFS(IWICColorContext_GetProfileBytes(color_contexts[i],
                                              0, NULL, &size));
-        if (size > 0) {
+        if (SUCCEEDED(hr) && size > 0) {
           iccp->bytes = (uint8_t*)malloc(size);
           if (iccp->bytes == NULL) {
             hr = E_OUTOFMEMORY;
@@ -261,7 +263,7 @@ int ReadPictureWithWIC(const char* const filename,
   IFS(IWICBitmapFrameDecode_GetPixelFormat(frame, &src_pixel_format));
   IFS(IWICBitmapDecoder_GetContainerFormat(decoder, &src_container_format));
 
-  if (keep_alpha) {
+  if (SUCCEEDED(hr) && keep_alpha) {
     const GUID** guid;
     for (guid = kAlphaContainers; *guid != NULL; ++guid) {
       if (IsEqualGUID(MAKE_REFGUID(src_container_format),
