@@ -38,7 +38,9 @@ static WEBP_INLINE void GetCPUInfo(int cpu_info[4], int info_type) {
     : "=a"(cpu_info[0]), "=b"(cpu_info[1]), "=c"(cpu_info[2]), "=d"(cpu_info[3])
     : "a"(info_type), "c"(0));
 }
-#elif defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 150030729  // >= VS2008 SP1
+#elif (defined(_M_X64) || defined(_M_IX86)) && \
+      defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 150030729  // >= VS2008 SP1
+#include <intrin.h>
 #define GetCPUInfo(info, type) __cpuidex(info, type, 0)  // set ecx=0
 #elif defined(WEBP_MSC_SSE2)
 #define GetCPUInfo __cpuid
