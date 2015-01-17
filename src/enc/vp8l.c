@@ -1081,6 +1081,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
     int y;
     err = AllocateTransformBuffer(enc, width, height);
     if (err != VP8_ENC_OK) goto Error;
+    assert(enc->argb_ != NULL);
     for (y = 0; y < height; ++y) {
       memcpy(enc->argb_ + y * width,
              picture->argb + y * picture->argb_stride,
