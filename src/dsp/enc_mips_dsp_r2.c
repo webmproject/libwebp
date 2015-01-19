@@ -1321,6 +1321,66 @@ static int Quantize2Blocks(int16_t in[32], int16_t out[32],
 
 #undef QUANTIZE_ONE
 
+// macro for one horizontal pass in FTransformWHT
+// temp0..temp7 holds tmp[0]..tmp[15]
+// A, B, C, D - offset in bytes to load from in buffer
+// TEMP0, TEMP1 - registers for corresponding tmp elements
+#define HORIZONTAL_PASS_WHT(A, B, C, D, TEMP0, TEMP1)                          \
+  "lh              %["#TEMP0"],  "#A"(%[in])                \n\t"              \
+  "lh              %["#TEMP1"],  "#B"(%[in])                \n\t"              \
+  "lh              %[temp8],     "#C"(%[in])                \n\t"              \
+  "lh              %[temp9],     "#D"(%[in])                \n\t"              \
+  "ins             %["#TEMP1"],  %["#TEMP0"],  16,  16      \n\t"              \
+  "ins             %[temp9],     %[temp8],     16,  16      \n\t"              \
+  "subq.ph         %[temp8],     %["#TEMP1"],  %[temp9]     \n\t"              \
+  "addq.ph         %[temp9],     %["#TEMP1"],  %[temp9]     \n\t"              \
+  "precrq.ph.w     %["#TEMP0"],  %[temp8],     %[temp9]     \n\t"              \
+  "append          %[temp8],     %[temp9],     16           \n\t"              \
+  "subq.ph         %["#TEMP1"],  %["#TEMP0"],  %[temp8]     \n\t"              \
+  "addq.ph         %["#TEMP0"],  %["#TEMP0"],  %[temp8]     \n\t"              \
+  "rotr            %["#TEMP1"],  %["#TEMP1"],  16           \n\t"
+
+// macro for one vertical pass in FTransformWHT
+// temp0..temp7 holds tmp[0]..tmp[15]
+// A, B, C, D - offsets in bytes to store to out buffer
+// TEMP0, TEMP2, TEMP4 and TEMP6 - registers for corresponding tmp elements
+#define VERTICAL_PASS_WHT(A, B, C, D, TEMP0, TEMP2, TEMP4, TEMP6)              \
+  "addq.ph         %[temp8],     %["#TEMP0"],  %["#TEMP4"]  \n\t"              \
+  "addq.ph         %[temp9],     %["#TEMP2"],  %["#TEMP6"]  \n\t"              \
+  "subq.ph         %["#TEMP2"],  %["#TEMP2"],  %["#TEMP6"]  \n\t"              \
+  "subq.ph         %["#TEMP6"],  %["#TEMP0"],  %["#TEMP4"]  \n\t"              \
+  "addqh.ph        %["#TEMP0"],  %[temp8],     %[temp9]     \n\t"              \
+  "subqh.ph        %["#TEMP4"],  %["#TEMP6"],  %["#TEMP2"]  \n\t"              \
+  "addqh.ph        %["#TEMP2"],  %["#TEMP2"],  %["#TEMP6"]  \n\t"              \
+  "subqh.ph        %["#TEMP6"],  %[temp8],     %[temp9]     \n\t"              \
+  "usw             %["#TEMP0"],  "#A"(%[out])               \n\t"              \
+  "usw             %["#TEMP2"],  "#B"(%[out])               \n\t"              \
+  "usw             %["#TEMP4"],  "#C"(%[out])               \n\t"              \
+  "usw             %["#TEMP6"],  "#D"(%[out])               \n\t"
+
+static void FTransformWHT(const int16_t* in, int16_t* out) {
+  int temp0, temp1, temp2, temp3, temp4;
+  int temp5, temp6, temp7, temp8, temp9;
+
+  __asm__ volatile (
+    HORIZONTAL_PASS_WHT(  0,  32,  64,  96, temp0, temp1)
+    HORIZONTAL_PASS_WHT(128, 160, 192, 224, temp2, temp3)
+    HORIZONTAL_PASS_WHT(256, 288, 320, 352, temp4, temp5)
+    HORIZONTAL_PASS_WHT(384, 416, 448, 480, temp6, temp7)
+    VERTICAL_PASS_WHT(0,  8, 16, 24, temp0, temp2, temp4, temp6)
+    VERTICAL_PASS_WHT(4, 12, 20, 28, temp1, temp3, temp5, temp7)
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
+      [temp9]"=&r"(temp9)
+    : [in]"r"(in), [out]"r"(out)
+    : "memory"
+  );
+}
+
+#undef VERTICAL_PASS_WHT
+#undef HORIZONTAL_PASS_WHT
+
 #endif  // WEBP_USE_MIPS_DSP_R2
 
 //------------------------------------------------------------------------------
@@ -1345,5 +1405,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPSdspR2(void) {
 #endif
   VP8EncQuantizeBlock = QuantizeBlock;
   VP8EncQuantize2Blocks = Quantize2Blocks;
+  VP8FTransformWHT = FTransformWHT;
 #endif  // WEBP_USE_MIPS_DSP_R2
 }
