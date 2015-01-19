@@ -718,7 +718,6 @@ static int BackwardReferencesHashChainFollowChosenPath(
   int ix;
   int i = 0;
   int ok = 0;
-  int size = 0;
   int cc_init = 0;
   const int window_size = GetWindowSizeForHashChain(quality, xsize);
   VP8LColorCache hashers;
@@ -730,7 +729,7 @@ static int BackwardReferencesHashChainFollowChosenPath(
 
   ClearBackwardRefs(refs);
   HashChainReset(hash_chain);
-  for (ix = 0; ix < chosen_path_size; ++ix, ++size) {
+  for (ix = 0; ix < chosen_path_size; ++ix) {
     int offset = 0;
     const int len = chosen_path[ix];
     if (len != 1) {
