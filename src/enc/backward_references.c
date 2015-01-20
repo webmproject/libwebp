@@ -547,7 +547,7 @@ static void AddSingleLiteralWithCostModel(
     const uint32_t* const argb, VP8LHashChain* const hash_chain,
     VP8LColorCache* const hashers, const CostModel* const cost_model, int idx,
     int is_last, int use_color_cache, double prev_cost, float* const cost,
-    uint32_t* const dist_array) {
+    uint16_t* const dist_array) {
   double cost_val = prev_cost;
   const uint32_t color = argb[0];
   if (!is_last) {
@@ -571,7 +571,7 @@ static void AddSingleLiteralWithCostModel(
 static int BackwardReferencesHashChainDistanceOnly(
     int xsize, int ysize, const uint32_t* const argb,
     int quality, int cache_bits, VP8LHashChain* const hash_chain,
-    VP8LBackwardRefs* const refs, uint32_t* const dist_array) {
+    VP8LBackwardRefs* const refs, uint16_t* const dist_array) {
   int i;
   int ok = 0;
   int cc_init = 0;
@@ -691,12 +691,12 @@ static int BackwardReferencesHashChainDistanceOnly(
 // We pack the path at the end of *dist_array and return
 // a pointer to this part of the array. Example:
 // dist_array = [1x2xx3x2] => packed [1x2x1232], chosen_path = [1232]
-static void TraceBackwards(uint32_t* const dist_array,
+static void TraceBackwards(uint16_t* const dist_array,
                            int dist_array_size,
-                           uint32_t** const chosen_path,
+                           uint16_t** const chosen_path,
                            int* const chosen_path_size) {
-  uint32_t* path = dist_array + dist_array_size;
-  uint32_t* cur = dist_array + dist_array_size - 1;
+  uint16_t* path = dist_array + dist_array_size;
+  uint16_t* cur = dist_array + dist_array_size - 1;
   while (cur >= dist_array) {
     const int k = *cur;
     --path;
@@ -710,7 +710,7 @@ static void TraceBackwards(uint32_t* const dist_array,
 static int BackwardReferencesHashChainFollowChosenPath(
     int xsize, int ysize, const uint32_t* const argb,
     int quality, int cache_bits,
-    const uint32_t* const chosen_path, int chosen_path_size,
+    const uint16_t* const chosen_path, int chosen_path_size,
     VP8LHashChain* const hash_chain,
     VP8LBackwardRefs* const refs) {
   const int pix_count = xsize * ysize;
@@ -780,10 +780,10 @@ static int BackwardReferencesTraceBackwards(int xsize, int ysize,
                                             VP8LBackwardRefs* const refs) {
   int ok = 0;
   const int dist_array_size = xsize * ysize;
-  uint32_t* chosen_path = NULL;
+  uint16_t* chosen_path = NULL;
   int chosen_path_size = 0;
-  uint32_t* dist_array =
-      (uint32_t*)WebPSafeMalloc(dist_array_size, sizeof(*dist_array));
+  uint16_t* dist_array =
+      (uint16_t*)WebPSafeMalloc(dist_array_size, sizeof(*dist_array));
 
   if (dist_array == NULL) goto Error;
 
