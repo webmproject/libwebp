@@ -184,7 +184,7 @@ int VP8LBackwardRefsCopy(const VP8LBackwardRefs* const src,
 // Hash chains
 
 // initialize as empty
-static void HashChainInit(VP8LHashChain* const p) {
+static void HashChainReset(VP8LHashChain* const p) {
   int i;
   assert(p != NULL);
   for (i = 0; i < p->size_; ++i) {
@@ -202,7 +202,7 @@ int VP8LHashChainInit(VP8LHashChain* const p, int size) {
   p->chain_ = (int*)WebPSafeMalloc(size, sizeof(*p->chain_));
   if (p->chain_ == NULL) return 0;
   p->size_ = size;
-  HashChainInit(p);
+  HashChainReset(p);
   return 1;
 }
 
@@ -396,7 +396,7 @@ static int BackwardReferencesLz77(int xsize, int ysize,
     if (!cc_init) goto Error;
   }
   ClearBackwardRefs(refs);
-  HashChainInit(hash_chain);
+  HashChainReset(hash_chain);
   for (i = 0; i < pix_count - 2; ) {
     // Alternative#1: Code the pixels starting at 'i' using backward reference.
     int offset = 0;
@@ -608,7 +608,7 @@ static int BackwardReferencesHashChainDistanceOnly(
   // We loop one pixel at a time, but store all currently best points to
   // non-processed locations from this point.
   dist_array[0] = 0;
-  HashChainInit(hash_chain);
+  HashChainReset(hash_chain);
   // Add first pixel as literal.
   AddSingleLiteralWithCostModel(argb + 0, hash_chain, &hashers, cost_model, 0,
                                 0, use_color_cache, 0.0, cost, dist_array);
@@ -729,7 +729,7 @@ static int BackwardReferencesHashChainFollowChosenPath(
   }
 
   ClearBackwardRefs(refs);
-  HashChainInit(hash_chain);
+  HashChainReset(hash_chain);
   for (ix = 0; ix < chosen_path_size; ++ix, ++size) {
     int offset = 0;
     const int len = chosen_path[ix];
