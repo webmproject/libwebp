@@ -1223,7 +1223,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   const int height = picture->height;
   VP8LEncoder* const enc = VP8LEncoderNew(config, picture);
   const size_t byte_position = VP8LBitWriterNumBytes(bw);
-  const int use_near_lossless = !enc->use_palette_ && config->near_lossless;
+  int use_near_lossless = 0;
   int hdr_size = 0;
   int data_size = 0;
 
@@ -1241,6 +1241,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   }
 
   // If no prediction transform just apply near-lossless preprocessing.
+  use_near_lossless = !enc->use_palette_ && config->near_lossless;
   if (!enc->use_predict_ && use_near_lossless &&
       !VP8ApplyNearLossless(width, height, picture->argb,
                             config->near_lossless)) {
