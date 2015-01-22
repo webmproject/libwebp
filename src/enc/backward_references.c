@@ -184,7 +184,7 @@ int VP8LBackwardRefsCopy(const VP8LBackwardRefs* const src,
 // Hash chains
 
 // initialize as empty
-static void HashChainInit(VP8LHashChain* const p) {
+static void HashChainReset(VP8LHashChain* const p) {
   int i;
   assert(p != NULL);
   for (i = 0; i < p->size_; ++i) {
@@ -202,7 +202,7 @@ int VP8LHashChainInit(VP8LHashChain* const p, int size) {
   p->chain_ = (int*)WebPSafeMalloc(size, sizeof(*p->chain_));
   if (p->chain_ == NULL) return 0;
   p->size_ = size;
-  HashChainInit(p);
+  HashChainReset(p);
   return 1;
 }
 
@@ -396,7 +396,7 @@ static int BackwardReferencesLz77(int xsize, int ysize,
     if (!cc_init) goto Error;
   }
   ClearBackwardRefs(refs);
-  HashChainInit(hash_chain);
+  HashChainReset(hash_chain);
   for (i = 0; i < pix_count - 2; ) {
     // Alternative#1: Code the pixels starting at 'i' using backward reference.
     int offset = 0;
@@ -547,7 +547,7 @@ static void AddSingleLiteralWithCostModel(
     const uint32_t* const argb, VP8LHashChain* const hash_chain,
     VP8LColorCache* const hashers, const CostModel* const cost_model, int idx,
     int is_last, int use_color_cache, double prev_cost, float* const cost,
-    uint32_t* const dist_array) {
+    uint16_t* const dist_array) {
   double cost_val = prev_cost;
   const uint32_t color = argb[0];
   if (!is_last) {
@@ -571,7 +571,7 @@ static void AddSingleLiteralWithCostModel(
 static int BackwardReferencesHashChainDistanceOnly(
     int xsize, int ysize, const uint32_t* const argb,
     int quality, int cache_bits, VP8LHashChain* const hash_chain,
-    VP8LBackwardRefs* const refs, uint32_t* const dist_array) {
+    VP8LBackwardRefs* const refs, uint16_t* const dist_array) {
   int i;
   int ok = 0;
   int cc_init = 0;
@@ -608,7 +608,7 @@ static int BackwardReferencesHashChainDistanceOnly(
   // We loop one pixel at a time, but store all currently best points to
   // non-processed locations from this point.
   dist_array[0] = 0;
-  HashChainInit(hash_chain);
+  HashChainReset(hash_chain);
   // Add first pixel as literal.
   AddSingleLiteralWithCostModel(argb + 0, hash_chain, &hashers, cost_model, 0,
                                 0, use_color_cache, 0.0, cost, dist_array);
@@ -691,12 +691,12 @@ static int BackwardReferencesHashChainDistanceOnly(
 // We pack the path at the end of *dist_array and return
 // a pointer to this part of the array. Example:
 // dist_array = [1x2xx3x2] => packed [1x2x1232], chosen_path = [1232]
-static void TraceBackwards(uint32_t* const dist_array,
+static void TraceBackwards(uint16_t* const dist_array,
                            int dist_array_size,
-                           uint32_t** const chosen_path,
+                           uint16_t** const chosen_path,
                            int* const chosen_path_size) {
-  uint32_t* path = dist_array + dist_array_size;
-  uint32_t* cur = dist_array + dist_array_size - 1;
+  uint16_t* path = dist_array + dist_array_size;
+  uint16_t* cur = dist_array + dist_array_size - 1;
   while (cur >= dist_array) {
     const int k = *cur;
     --path;
@@ -710,7 +710,7 @@ static void TraceBackwards(uint32_t* const dist_array,
 static int BackwardReferencesHashChainFollowChosenPath(
     int xsize, int ysize, const uint32_t* const argb,
     int quality, int cache_bits,
-    const uint32_t* const chosen_path, int chosen_path_size,
+    const uint16_t* const chosen_path, int chosen_path_size,
     VP8LHashChain* const hash_chain,
     VP8LBackwardRefs* const refs) {
   const int pix_count = xsize * ysize;
@@ -729,7 +729,7 @@ static int BackwardReferencesHashChainFollowChosenPath(
   }
 
   ClearBackwardRefs(refs);
-  HashChainInit(hash_chain);
+  HashChainReset(hash_chain);
   for (ix = 0; ix < chosen_path_size; ++ix, ++size) {
     int offset = 0;
     const int len = chosen_path[ix];
@@ -780,10 +780,10 @@ static int BackwardReferencesTraceBackwards(int xsize, int ysize,
                                             VP8LBackwardRefs* const refs) {
   int ok = 0;
   const int dist_array_size = xsize * ysize;
-  uint32_t* chosen_path = NULL;
+  uint16_t* chosen_path = NULL;
   int chosen_path_size = 0;
-  uint32_t* dist_array =
-      (uint32_t*)WebPSafeMalloc(dist_array_size, sizeof(*dist_array));
+  uint16_t* dist_array =
+      (uint16_t*)WebPSafeMalloc(dist_array_size, sizeof(*dist_array));
 
   if (dist_array == NULL) goto Error;
 
