@@ -165,7 +165,7 @@ static const int kMinDimensionIterativeConversion = 4;
 
 typedef int16_t fixed_t;      // signed type with extra TFIX precision for UV
 typedef uint16_t fixed_y_t;   // unsigned type with extra YFIX precision for W
-#define TFIX 6   // fixed-point precision of RGB
+#define TFIX 2   // fixed-point precision of RGB
 #define YFIX 2   // fixed point precision for Y/W
 
 #define THALF ((1 << TFIX) >> 1)
@@ -203,14 +203,14 @@ static WEBP_INLINE float GammaToLinearF(int v) {
   return kGammaToLinearTabF[v];
 }
 
-static WEBP_INLINE float LinearToGammaF(float value) {
+static WEBP_INLINE int LinearToGammaF(float value) {
   const float v = value * kGammaTabSize;
   const int tab_pos = (int)v;
   const float x = v - (float)tab_pos;      // fractional part
   const float v0 = kLinearToGammaTabF[tab_pos + 0];
   const float v1 = kLinearToGammaTabF[tab_pos + 1];
   const float y = v1 * x + v0 * (1.f - x);  // interpolate
-  return y;
+  return (int)(y + .5);
 }
 
 #else
@@ -220,8 +220,8 @@ static WEBP_INLINE float GammaToLinearF(int v) {
   const float norm = 1.f / MAX_Y_T;
   return norm * v;
 }
-static WEBP_INLINE float LinearToGammaF(float value) {
-  return MAX_Y_T * value;
+static WEBP_INLINE int LinearToGammaF(float value) {
+  return (int)(MAX_Y_T * value + .5);
 }
 
 #endif    // USE_GAMMA_COMPRESSION
@@ -229,25 +229,8 @@ static WEBP_INLINE float LinearToGammaF(float value) {
 //------------------------------------------------------------------------------
 
 // precision: YFIX -> TFIX
-static WEBP_INLINE int FixedYToW(int v) {
-#if TFIX == YFIX
-  return v;
-#elif TFIX >= YFIX
-  return v << (TFIX - YFIX);
-#else
-  return v >> (YFIX - TFIX);
-#endif
-}
-
-static WEBP_INLINE int FixedWToY(int v) {
-#if TFIX == YFIX
-  return v;
-#elif YFIX >= TFIX
-  return v << (YFIX - TFIX);
-#else
-  return v >> (TFIX - YFIX);
-#endif
-}
+static WEBP_INLINE int FixedYToW(int v) { return v; }
+static WEBP_INLINE int FixedWToY(int v) { return v; }
 
 static uint8_t clip_8b(fixed_t v) {
   return (!(v & ~0xff)) ? (uint8_t)v : (v < 0) ? 0u : 255u;
@@ -275,7 +258,7 @@ static float RGBToGrayF(float r, float g, float b) {
   return 0.299f * r + 0.587f * g + 0.114f * b;
 }
 
-static float ScaleDown(int a, int b, int c, int d) {
+static int ScaleDown(int a, int b, int c, int d) {
   const float A = GammaToLinearF(a);
   const float B = GammaToLinearF(b);
   const float C = GammaToLinearF(c);
@@ -289,7 +272,7 @@ static WEBP_INLINE void UpdateW(const fixed_y_t* src, fixed_y_t* dst, int len) {
     const float G = GammaToLinearF(src[1]);
     const float B = GammaToLinearF(src[2]);
     const float Y = RGBToGrayF(R, G, B);
-    *dst++ = (fixed_y_t)(LinearToGammaF(Y) + .5);
+    *dst++ = (fixed_y_t)LinearToGammaF(Y);
     src += 3;
   }
 }
@@ -298,13 +281,13 @@ static WEBP_INLINE void UpdateChroma(const fixed_y_t* src1,
                                      const fixed_y_t* src2,
                                      fixed_t* dst, fixed_y_t* tmp, int len) {
   while (len--> 0) {
-    const float r = ScaleDown(src1[0], src1[3], src2[0], src2[3]);
-    const float g = ScaleDown(src1[1], src1[4], src2[1], src2[4]);
-    const float b = ScaleDown(src1[2], src1[5], src2[2], src2[5]);
-    const float W = RGBToGrayF(r, g, b);
-    dst[0] = (fixed_t)FixedYToW((int)(r - W));
-    dst[1] = (fixed_t)FixedYToW((int)(g - W));
-    dst[2] = (fixed_t)FixedYToW((int)(b - W));
+    const int r = ScaleDown(src1[0], src1[3], src2[0], src2[3]);
+    const int g = ScaleDown(src1[1], src1[4], src2[1], src2[4]);
+    const int b = ScaleDown(src1[2], src1[5], src2[2], src2[5]);
+    const int W = RGBToGray(r, g, b);
+    dst[0] = (fixed_t)FixedYToW(r - W);
+    dst[1] = (fixed_t)FixedYToW(g - W);
+    dst[2] = (fixed_t)FixedYToW(b - W);
     dst += 3;
     src1 += 6;
     src2 += 6;
