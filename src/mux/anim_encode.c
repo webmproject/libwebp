@@ -122,14 +122,17 @@ static void SanitizeEncoderOptions(WebPAnimEncoderOptions* const enc_options) {
       fprintf(stderr, "WARNING: Setting kmin = %d, so that kmin < kmax.\n",
               (int)enc_options->kmin);
     }
-  } else if (enc_options->kmin < (enc_options->kmax / 2 + 1)) {
-    // This ensures that enc.keyframe + kmin >= kmax is always true. So, we
-    // can flush all the frames in the 'count_since_key_frame == kmax' case.
-    enc_options->kmin = (enc_options->kmax / 2 + 1);
-    if (print_warning) {
-      fprintf(stderr,
-              "WARNING: Setting kmin = %d, so that kmin >= kmax / 2 + 1.\n",
-              (int)enc_options->kmin);
+  } else {
+    const size_t kmin_limit = enc_options->kmax / 2 + 1;
+    if (enc_options->kmin < kmin_limit && kmin_limit < enc_options->kmax) {
+      // This ensures that enc.keyframe + kmin >= kmax is always true. So, we
+      // can flush all the frames in the 'count_since_key_frame == kmax' case.
+      enc_options->kmin = kmin_limit;
+      if (print_warning) {
+        fprintf(stderr,
+                "WARNING: Setting kmin = %d, so that kmin >= kmax / 2 + 1.\n",
+                (int)enc_options->kmin);
+      }
     }
   }
   // Limit the max number of frames that are allocated.
@@ -141,6 +144,7 @@ static void SanitizeEncoderOptions(WebPAnimEncoderOptions* const enc_options) {
               (int)enc_options->kmin, MAX_CACHED_FRAMES);
     }
   }
+  assert(enc_options->kmin <= enc_options->kmax);
 }
 
 #undef MAX_CACHED_FRAMES
