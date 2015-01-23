@@ -900,7 +900,7 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
           process_func(dec, row);
         }
       }
-      if (src < src_last) {
+      if (src < src_end) {
         if (col & mask) htree_group = GetHtreeGroupForPos(hdr, col, row);
         if (color_cache != NULL) {
           while (last_cached < src) {
