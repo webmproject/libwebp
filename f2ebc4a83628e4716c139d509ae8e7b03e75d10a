@@ -16,6 +16,24 @@
       "revId": "f2ebc4a83628e4716c139d509ae8e7b03e75d10a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Ix4\u003d",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1076,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-01-26T23:08:57Z",
+      "side": 0,
+      "message": "As discussed offline, I actually understand that part. But the time needed to check the if condition on every iteration of the while loop is costlier than extra work on the last cache update.\nI\u0027ve verified that by testing the speed before/after as well.",
+      "parentUuid": "AAAAdn//I4g\u003d",
+      "revId": "f2ebc4a83628e4716c139d509ae8e7b03e75d10a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
