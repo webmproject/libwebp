@@ -58,23 +58,6 @@ static int FindClosestDiscretized(int a, int bits, int min, int max) {
   return best_val;
 }
 
-// Discretizes value (actual - predicted) in the way that actual pixel value
-// stays within error bounds.
-static WEBP_INLINE uint32_t DiscretizedResidual(uint32_t actual,
-                                                uint32_t predicted,
-                                                int limit_bits) {
-  const uint32_t res = (actual - predicted) & 0xff;
-  uint32_t min, max;
-  if (actual < predicted) {
-    min = 256 - predicted;
-    max = 255;
-  } else {
-    min = 0;
-    max = 255 - predicted;
-  }
-  return FindClosestDiscretized(res, limit_bits, min, max);
-}
-
 // Applies FindClosestDiscretized to all channels of pixel.
 static uint32_t ClosestDiscretizedArgb(uint32_t a, int bits,
                                        uint32_t min, uint32_t max) {
@@ -139,7 +122,7 @@ static int QualityToLimitBits(int quality) {
 }
 #endif  // WEBP_EXPERIMENTAL_FEATURES
 
-// TODO(akramarz): optimize memory to O(xsize)
+// TODO(vikasa): optimize memory to O(xsize)
 int VP8ApplyNearLossless(int xsize, int ysize, uint32_t* argb, int quality) {
 #ifndef WEBP_EXPERIMENTAL_FEATURES
   (void)xsize;
@@ -166,94 +149,3 @@ int VP8ApplyNearLossless(int xsize, int ysize, uint32_t* argb, int quality) {
 #endif  // WEBP_EXPERIMENTAL_FEATURES
   return 1;
 }
-
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-
-// In-place sum of each component with mod 256.
-// This probably should go somewhere else (lossless.h?). This is just copy-paste
-// from lossless.c.
-static WEBP_INLINE void AddPixelsEq(uint32_t* a, uint32_t b) {
-  const uint32_t alpha_and_green = (*a & 0xff00ff00u) + (b & 0xff00ff00u);
-  const uint32_t red_and_blue = (*a & 0x00ff00ffu) + (b & 0x00ff00ffu);
-  *a = (alpha_and_green & 0xff00ff00u) | (red_and_blue & 0x00ff00ffu);
-}
-
-void VP8ApplyNearLosslessPredict(int xsize, int ysize, int pred_bits,
-                                 const uint32_t* argb_orig,
-                                 uint32_t* argb, uint32_t* argb_scratch,
-                                 const uint32_t* const transform_data,
-                                 int quality, int subtract_green) {
-  const int tiles_per_row = VP8LSubSampleSize(xsize, pred_bits);
-  uint32_t* const upper_row = argb_scratch;
-  const int limit_bits = QualityToLimitBits(quality);
-
-  int y;
-  for (y = 0; y < ysize; ++y) {
-    int x;
-    uint32_t curr_pix = 0, prev_pix = 0;
-    for (x = 0; x < xsize; ++x) {
-      const int tile_idx = (y >> pred_bits) * tiles_per_row + (x >> pred_bits);
-      const int pred = (transform_data[tile_idx] >> 8) & 0xf;
-      const VP8LPredictorFunc pred_func = VP8LPredictors[pred];
-      uint32_t predict, rb_shift = 0, delta_g = 0;
-      if (y == 0) {
-        predict = (x == 0) ? ARGB_BLACK : prev_pix;  // Left.
-      } else if (x == 0) {
-        predict = upper_row[x];  // Top.
-      } else {
-        predict = pred_func(prev_pix, upper_row + x);
-      }
-
-      // Discretize all residuals keeping the original pixel values in error
-      // bounds.
-      curr_pix = argb_orig[x];
-      {
-        const uint32_t a = curr_pix >> 24;
-        const uint32_t a_pred = predict >> 24;
-        const uint32_t a_res = DiscretizedResidual(a, a_pred, limit_bits);
-        curr_pix = (curr_pix & 0x00ffffff) | a_res << 24;
-      }
-
-      {
-        const uint32_t g = (curr_pix >> 8) & 0xff;
-        const uint32_t g_pred = (predict >> 8) & 0xff;
-        const uint32_t g_res = DiscretizedResidual(g, g_pred, limit_bits);
-        // In case subtract-green transform is used, we need to shift
-        // red and blue later.
-        if (subtract_green) {
-          delta_g = (g_pred + g_res - g) & 0xff;
-          rb_shift = g;
-        }
-        curr_pix = (curr_pix & 0xffff00ff) | (g_res << 8);
-      }
-
-      {
-        const uint32_t r = ((curr_pix >> 16) + rb_shift) & 0xff;
-        const uint32_t r_pred = ((predict >> 16) + rb_shift + delta_g) & 0xff;
-        const uint32_t r_res = DiscretizedResidual(r, r_pred, limit_bits);
-        curr_pix = (curr_pix & 0xff00ffff) | (r_res << 16);
-      }
-
-      {
-        const uint32_t b = (curr_pix + rb_shift) & 0xff;
-        const uint32_t b_pred = (predict + rb_shift + delta_g) & 0xff;
-        const uint32_t b_res = DiscretizedResidual(b, b_pred, limit_bits);
-        curr_pix = (curr_pix & 0xffffff00) | b_res;
-      }
-
-      // Change pixel value.
-      argb[x] = curr_pix;
-      curr_pix = predict;
-      AddPixelsEq(&curr_pix, argb[x]);
-      // Copy previous pixel to upper row.
-      if(x > 0) {
-        upper_row[x - 1] = prev_pix;
-      }
-      prev_pix = curr_pix;
-    }
-    argb += xsize;
-    argb_orig += xsize;
-    upper_row[xsize - 1] = curr_pix;
-  }
-}
-#endif  // WEBP_EXPERIMENTAL_FEATURES

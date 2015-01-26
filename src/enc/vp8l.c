@@ -1240,12 +1240,14 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
     goto Error;
   }
 
-  // If no prediction transform just apply near-lossless preprocessing.
+  // Apply near-lossless preprocessing.
   use_near_lossless = !enc->use_palette_ && config->near_lossless;
-  if (!enc->use_predict_ && use_near_lossless &&
-      !VP8ApplyNearLossless(width, height, picture->argb,
-                            config->near_lossless)) {
-    goto Error;
+  if (use_near_lossless) {
+    if (!VP8ApplyNearLossless(width, height, picture->argb,
+                              config->near_lossless)) {
+      err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+      goto Error;
+    }
   }
 
   if (enc->use_palette_) {
@@ -1275,40 +1277,9 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   }
 
   if (enc->use_predict_) {
-    uint32_t* copy_buffer = NULL;
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-    if (use_near_lossless) {
-      // Copy image to temporary buffer.
-      int y;
-      copy_buffer = WebPSafeMalloc(height * enc->current_width_,
-                                   sizeof(*copy_buffer));
-      if (copy_buffer == NULL) {
-        err = VP8_ENC_ERROR_OUT_OF_MEMORY;
-        goto Error;
-      }
-      for (y = 0; y < height; ++y) {
-        memcpy(copy_buffer + y * enc->current_width_,
-               enc->argb_ + y * enc->current_width_,
-               enc->current_width_ * sizeof(*enc->argb_));
-      }
-    }
-#endif  // WEBP_EXPERIMENTAL_FEATURES
     err = ApplyPredictFilter(enc, enc->current_width_, height, quality,
                              low_effort, bw);
-    if (err != VP8_ENC_OK) {
-      WebPSafeFree(copy_buffer);
-      goto Error;
-    }
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-    if (use_near_lossless) {
-      VP8ApplyNearLosslessPredict(enc->current_width_, height,
-                                  enc->transform_bits_, copy_buffer, enc->argb_,
-                                  enc->argb_scratch_, enc->transform_data_,
-                                  config->near_lossless,
-                                  enc->use_subtract_green_);
-      WebPSafeFree(copy_buffer);
-    }
-#endif  // WEBP_EXPERIMENTAL_FEATURES
+    if (err != VP8_ENC_OK) goto Error;
   }
 
   if (enc->use_cross_color_) {
