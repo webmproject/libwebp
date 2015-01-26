@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//Iw0\u003d",
+        "filename": "src/enc/near_lossless.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2015-01-26T23:32:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//IxY\u003d",
+      "revId": "fb963501db57fe129e2f9252def04f30298007e8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//IxI\u003d",
         "filename": "src/enc/near_lossless.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2015-01-26T23:22:11Z",
       "side": 1,
       "message": "just a comment, no action necessary now: this is restricting small square images which are more likely, but might miss other low resolution combinations...",
+      "revId": "fb963501db57fe129e2f9252def04f30298007e8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Iww\u003d",
+        "filename": "src/enc/near_lossless.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1000922
+      },
+      "writtenOn": "2015-01-26T23:32:17Z",
+      "side": 1,
+      "message": "Yes you are right that this change will miss other (skew) cases like 1024x16, but that doesn\u0027t necessarily fit the definition of icon images.\n\nI haven\u0027t done any analysis for such skew images as to whether near_lossless help in those cases or not, but for small icon images, near_lossless gains are pretty low.",
+      "parentUuid": "AAAAdn//IxI\u003d",
       "revId": "fb963501db57fe129e2f9252def04f30298007e8",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
