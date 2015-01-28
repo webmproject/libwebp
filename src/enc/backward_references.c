@@ -965,9 +965,23 @@ static int BackwardRefsWithLocalCache(const uint32_t* const argb,
   return 1;
 }
 
-VP8LBackwardRefs* VP8LGetBackwardReferences(
+static VP8LBackwardRefs* GetBackwardReferencesLowEffort(
     int width, int height, const uint32_t* const argb, int quality,
-    int low_effort, int* cache_bits, VP8LHashChain* const hash_chain,
+    int* const cache_bits, VP8LHashChain* const hash_chain,
+    VP8LBackwardRefs refs_array[2]) {
+  VP8LBackwardRefs* refs_lz77 = &refs_array[0];
+  *cache_bits = 0;
+  if (!BackwardReferencesLz77(width, height, argb, 0, quality,
+                              1 /* Low effort. */, hash_chain, refs_lz77)) {
+    return NULL;
+  }
+  BackwardReferences2DLocality(width, refs_lz77);
+  return refs_lz77;
+}
+
+static VP8LBackwardRefs* GetBackwardReferences(
+    int width, int height, const uint32_t* const argb, int quality,
+    int* const cache_bits, VP8LHashChain* const hash_chain,
     VP8LBackwardRefs refs_array[2]) {
   int lz77_is_useful;
   int lz77_computed;
@@ -991,7 +1005,7 @@ VP8LBackwardRefs* VP8LGetBackwardReferences(
     }
   } else {
     if (!BackwardReferencesLz77(width, height, argb, *cache_bits, quality,
-                                low_effort, hash_chain, refs_lz77)) {
+                                0 /* Low effort. */, hash_chain, refs_lz77)) {
       goto Error;
     }
   }
@@ -1016,9 +1030,8 @@ VP8LBackwardRefs* VP8LGetBackwardReferences(
 
   // Choose appropriate backward reference.
   if (lz77_is_useful) {
-    // TraceBackwards is costly. Don't execute it at lower quality or low effort
-    // compression setting.
-    const int try_lz77_trace_backwards = (quality >= 25) && !low_effort;
+    // TraceBackwards is costly. Don't execute it at lower quality.
+    const int try_lz77_trace_backwards = (quality >= 25);
     best = refs_lz77;   // default guess: lz77 is better
     if (try_lz77_trace_backwards) {
       VP8LBackwardRefs* const refs_trace = refs_rle;
@@ -1047,4 +1060,17 @@ VP8LBackwardRefs* VP8LGetBackwardReferences(
  Error:
   VP8LFreeHistogram(histo);
   return best;
+}
+
+VP8LBackwardRefs* VP8LGetBackwardReferences(
+    int width, int height, const uint32_t* const argb, int quality,
+    int low_effort, int* const cache_bits, VP8LHashChain* const hash_chain,
+    VP8LBackwardRefs refs_array[2]) {
+  if (low_effort) {
+    return GetBackwardReferencesLowEffort(width, height, argb, quality,
+                                          cache_bits, hash_chain, refs_array);
+  } else {
+    return GetBackwardReferences(width, height, argb, quality, cache_bits,
+                                 hash_chain, refs_array);
+  }
 }

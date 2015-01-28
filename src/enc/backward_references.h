@@ -192,7 +192,7 @@ static WEBP_INLINE void VP8LRefsCursorNext(VP8LRefsCursor* const c) {
 // refs[0] or refs[1].
 VP8LBackwardRefs* VP8LGetBackwardReferences(
     int width, int height, const uint32_t* const argb, int quality,
-    int low_effort, int* cache_bits, VP8LHashChain* const hash_chain,
+    int low_effort, int* const cache_bits, VP8LHashChain* const hash_chain,
     VP8LBackwardRefs refs[2]);
 
 #ifdef __cplusplus
