@@ -64,9 +64,10 @@ int VP8LEncodeImage(const WebPConfig* const config,
                     const WebPPicture* const picture);
 
 // Encodes the main image stream using the supplied bit writer.
+// If 'use_cache' is false, disables the use of color cache.
 WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
                                    const WebPPicture* const picture,
-                                   VP8LBitWriter* const bw);
+                                   VP8LBitWriter* const bw, int use_cache);
 
 //------------------------------------------------------------------------------
 
