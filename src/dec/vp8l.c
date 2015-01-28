@@ -1073,12 +1073,13 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
           process_func(dec, row);
         }
       }
-      if (src < src_end) {
-        if (col & mask) htree_group = GetHtreeGroupForPos(hdr, col, row);
-        if (color_cache != NULL) {
-          while (last_cached < src) {
-            VP8LColorCacheInsert(color_cache, *last_cached++);
-          }
+      // Because of the check done above (before 'src' was incremented by
+      // 'length'), the following holds true.
+      assert(src <= src_end);
+      if (col & mask) htree_group = GetHtreeGroupForPos(hdr, col, row);
+      if (color_cache != NULL) {
+        while (last_cached < src) {
+          VP8LColorCacheInsert(color_cache, *last_cached++);
         }
       }
     } else if (code < color_cache_limit) {  // Color cache
