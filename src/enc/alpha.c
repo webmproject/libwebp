@@ -15,6 +15,7 @@
 #include <stdlib.h>
 
 #include "./vp8enci.h"
+#include "../dsp/dsp.h"
 #include "../utils/filters.h"
 #include "../utils/quant_levels.h"
 #include "../utils/utils.h"
@@ -208,8 +209,9 @@ static uint32_t GetFilterMap(const uint8_t* alpha, int width, int height,
     const int kMaxColorsForFilterNone = 192;
     const int num_colors = GetNumColors(alpha, width, height, width);
     // For low number of colors, NONE yields better compression.
-    filter = (num_colors <= kMinColorsForFilterNone) ? WEBP_FILTER_NONE :
-             EstimateBestFilter(alpha, width, height, width);
+    filter = (num_colors <= kMinColorsForFilterNone)
+        ? WEBP_FILTER_NONE
+        : WebPEstimateBestFilter(alpha, width, height, width);
     bit_map |= 1 << filter;
     // For large number of colors, try FILTER_NONE in addition to the best
     // filter as well.
@@ -240,6 +242,7 @@ static int ApplyFiltersAndEncode(const uint8_t* alpha, int width, int height,
   uint32_t try_map =
       GetFilterMap(alpha, width, height, filter, effort_level);
   InitFilterTrial(&best);
+
   if (try_map != FILTER_TRY_NONE) {
     uint8_t* filtered_alpha =  (uint8_t*)WebPSafeMalloc(1ULL, data_size);
     if (filtered_alpha == NULL) return 0;
@@ -326,6 +329,7 @@ static int EncodeAlpha(VP8Encoder* const enc,
   }
 
   if (ok) {
+    VP8FiltersInit();
     ok = ApplyFiltersAndEncode(quant_alpha, width, height, data_size, method,
                                filter, reduce_levels, effort_level, output,
                                output_size, pic->stats);

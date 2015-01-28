@@ -343,7 +343,6 @@ int (*WebPExtractAlpha)(const uint8_t*, int, int, int, uint8_t*, int);
 //------------------------------------------------------------------------------
 // Init function
 
-extern void VP8FiltersInitMIPSdspR2(void);
 extern void WebPInitAlphaProcessingMIPSdspR2(void);
 extern void WebPInitAlphaProcessingSSE2(void);
 
@@ -370,7 +369,6 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessing(void) {
 #endif
 #if defined(WEBP_USE_MIPS_DSP_R2)
     if (VP8GetCPUInfo(kMIPSdspR2)) {
-      VP8FiltersInitMIPSdspR2();
       WebPInitAlphaProcessingMIPSdspR2();
     }
 #endif

@@ -373,6 +373,39 @@ extern void (*VP8PackRGB)(const uint8_t* r, const uint8_t* g, const uint8_t* b,
 // To be called first before using the above.
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspARGBInit(void);
 
+//------------------------------------------------------------------------------
+// Filter functions
+
+typedef enum {     // Filter types.
+  WEBP_FILTER_NONE = 0,
+  WEBP_FILTER_HORIZONTAL,
+  WEBP_FILTER_VERTICAL,
+  WEBP_FILTER_GRADIENT,
+  WEBP_FILTER_LAST = WEBP_FILTER_GRADIENT + 1,  // end marker
+  WEBP_FILTER_BEST,    // meta-types
+  WEBP_FILTER_FAST
+} WEBP_FILTER_TYPE;
+
+typedef void (*WebPFilterFunc)(const uint8_t* in, int width, int height,
+                               int stride, uint8_t* out);
+typedef void (*WebPUnfilterFunc)(int width, int height, int stride,
+                                 int row, int num_rows, uint8_t* data);
+
+// Filter the given data using the given predictor.
+// 'in' corresponds to a 2-dimensional pixel array of size (stride * height)
+// in raster order.
+// 'stride' is number of bytes per scan line (with possible padding).
+// 'out' should be pre-allocated.
+extern WebPFilterFunc WebPFilters[WEBP_FILTER_LAST];
+
+// In-place reconstruct the original data from the given filtered data.
+// The reconstruction will be done for 'num_rows' rows starting from 'row'
+// (assuming rows upto 'row - 1' are already reconstructed).
+extern WebPUnfilterFunc WebPUnfilters[WEBP_FILTER_LAST];
+
+// To be called first before using the above.
+WEBP_TSAN_IGNORE_FUNCTION void VP8FiltersInit(void);
+
 #ifdef __cplusplus
 }    // extern "C"
 #endif
