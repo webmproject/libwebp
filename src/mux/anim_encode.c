@@ -975,6 +975,8 @@ static int CacheFrame(WebPAnimEncoder* const enc, int duration,
       if (enc->count_since_key_frame_ == enc->options_.kmax) {
         enc->flush_count_ = enc->count_ - 1;
         enc->count_since_key_frame_ = 0;
+        enc->keyframe_ = KEYFRAME_NONE;
+        enc->best_delta_ = DELTA_INFINITY;
       }
       enc->prev_candidate_undecided_ = 1;
     }
@@ -1001,20 +1003,10 @@ static int CacheFrame(WebPAnimEncoder* const enc, int duration,
 
 static int FlushFrames(WebPAnimEncoder* const enc) {
   while (enc->flush_count_ > 0) {
-    WebPMuxFrameInfo* info;
     WebPMuxError err;
     EncodedFrame* const curr = GetFrame(enc, 0);
-    // Pick frame or full canvas.
-    if (curr->is_key_frame_) {
-      info = &curr->key_frame_;
-      if (enc->keyframe_ == 0) {
-        enc->keyframe_ = KEYFRAME_NONE;
-        enc->best_delta_ = DELTA_INFINITY;
-      }
-    } else {
-      info = &curr->sub_frame_;
-    }
-    // Add to mux.
+    const WebPMuxFrameInfo* const info =
+        curr->is_key_frame_ ? &curr->key_frame_ : &curr->sub_frame_;
     assert(enc->mux_ != NULL);
     err = WebPMuxPushFrame(enc->mux_, info, 1);
     if (err != WEBP_MUX_OK) {
