@@ -305,7 +305,9 @@ static int AnalyzeAndInit(VP8LEncoder* const enc, WebPImageHint image_hint) {
   const int method = config->method;
   const int low_effort = (config->method == 0);
   const float quality = config->quality;
-  double subtract_green_score = 10.f;
+  double subtract_green_score = 10.0;
+  const double subtract_green_threshold_palette = 0.80;
+  const double subtract_green_threshold_non_palette = 1.0;
   // we round the block size up, so we're guaranteed to have
   // at max MAX_REFS_BLOCK_PER_IMAGE blocks used:
   int refs_block_size = (pix_cnt - 1) / MAX_REFS_BLOCK_PER_IMAGE + 1;
@@ -316,9 +318,16 @@ static int AnalyzeAndInit(VP8LEncoder* const enc, WebPImageHint image_hint) {
 
   if (!enc->use_palette_ ||
       EvalSubtractGreenForPalette(enc->palette_size_, quality)) {
-    if (!AnalyzeSubtractGreen(pic->argb, width, height,
-                              &subtract_green_score)) {
-      return 0;
+    if (low_effort) {
+      // For low effort compression, avoid calling (costly) method
+      // AnalyzeSubtractGreen and enable the subtract-green transform
+      // for non-palette images.
+      subtract_green_score = subtract_green_threshold_non_palette * 0.99;
+    } else {
+      if (!AnalyzeSubtractGreen(pic->argb, width, height,
+                                &subtract_green_score)) {
+        return 0;
+      }
     }
   }
 
@@ -330,13 +339,13 @@ static int AnalyzeAndInit(VP8LEncoder* const enc, WebPImageHint image_hint) {
   enc->use_subtract_green_ = 0;
   if (enc->use_palette_) {
     // Check if other transforms (subtract green etc) are potentially better.
-    if (subtract_green_score < 0.80f) {
+    if (subtract_green_score < subtract_green_threshold_palette) {
       enc->use_subtract_green_ = 1;
       enc->use_palette_ = 0;
     }
   } else {
     // Non-palette case, check if subtract-green optimizes the entropy.
-    if (subtract_green_score < 1.0f) {
+    if (subtract_green_score < subtract_green_threshold_non_palette) {
       enc->use_subtract_green_ = 1;
     }
   }
