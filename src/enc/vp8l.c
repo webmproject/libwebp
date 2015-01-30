@@ -193,40 +193,41 @@ static int AnalyzeEntropy(const uint32_t* argb,
                           int width, int height, int argb_stride,
                           double* const nonpredicted_bits,
                           double* const predicted_bits) {
-  int x, y;
-  const uint32_t* last_line = NULL;
-  uint32_t last_pix = argb[0];    // so we're sure that pix_diff == 0
-
+  // Allocate histogram set with cache_bits = 0.
   VP8LHistogramSet* const histo_set = VP8LAllocateHistogramSet(2, 0);
   assert(nonpredicted_bits != NULL);
   assert(predicted_bits != NULL);
 
-  if (histo_set == NULL) return 0;
-
-  for (y = 0; y < height; ++y) {
-    for (x = 0; x < width; ++x) {
-      const uint32_t pix = argb[x];
-      const uint32_t pix_diff = VP8LSubPixels(pix, last_pix);
-      if (pix_diff == 0) continue;
-      if (last_line != NULL && pix == last_line[x]) {
-        continue;
+  if (histo_set != NULL) {
+    int x, y;
+    const uint32_t* prev_row = argb;
+    const uint32_t* curr_row = argb + argb_stride;
+    VP8LHistogram* const histo_non_pred = histo_set->histograms[0];
+    VP8LHistogram* const histo_pred = histo_set->histograms[1];
+    for (y = 1; y < height; ++y) {
+      uint32_t prev_pix = curr_row[0];
+      for (x = 1; x < width; ++x) {
+        const uint32_t pix = curr_row[x];
+        const uint32_t pix_diff = VP8LSubPixels(pix, prev_pix);
+        if ((pix_diff == 0) || (pix == prev_row[x])) continue;
+        prev_pix = pix;
+        {
+          const PixOrCopy pix_token = PixOrCopyCreateLiteral(pix);
+          const PixOrCopy pix_diff_token = PixOrCopyCreateLiteral(pix_diff);
+          VP8LHistogramAddSinglePixOrCopy(histo_non_pred, &pix_token);
+          VP8LHistogramAddSinglePixOrCopy(histo_pred, &pix_diff_token);
+        }
       }
-      last_pix = pix;
-      {
-        const PixOrCopy pix_token = PixOrCopyCreateLiteral(pix);
-        const PixOrCopy pix_diff_token = PixOrCopyCreateLiteral(pix_diff);
-        VP8LHistogramAddSinglePixOrCopy(histo_set->histograms[0], &pix_token);
-        VP8LHistogramAddSinglePixOrCopy(histo_set->histograms[1],
-                                        &pix_diff_token);
-      }
+      prev_row = curr_row;
+      curr_row += argb_stride;
     }
-    last_line = argb;
-    argb += argb_stride;
+    *nonpredicted_bits = VP8LHistogramEstimateBitsBulk(histo_non_pred);
+    *predicted_bits = VP8LHistogramEstimateBitsBulk(histo_pred);
+    VP8LFreeHistogramSet(histo_set);
+    return 1;
+  } else {
+    return 0;
   }
-  *nonpredicted_bits = VP8LHistogramEstimateBitsBulk(histo_set->histograms[0]);
-  *predicted_bits = VP8LHistogramEstimateBitsBulk(histo_set->histograms[1]);
-  VP8LFreeHistogramSet(histo_set);
-  return 1;
 }
 
 // Check if it would be a good idea to subtract green from red and blue. We
@@ -234,32 +235,33 @@ static int AnalyzeEntropy(const uint32_t* argb,
 static int AnalyzeSubtractGreen(const uint32_t* const argb,
                                 int width, int height,
                                 double* const entropy_change_ratio) {
-  int i;
-  double bit_cost_before, bit_cost_after;
-  // Allocate histogram with cache_bits = 1.
-  VP8LHistogram* const histo = VP8LAllocateHistogram(1);
+  // Allocate histogram set with cache_bits = 1.
+  VP8LHistogramSet* const histo_set = VP8LAllocateHistogramSet(2, 1);
   assert(entropy_change_ratio != NULL);
 
-  if (histo == NULL) return 0;
-  for (i = 0; i < width * height; ++i) {
-    const uint32_t c = argb[i];
-    ++histo->red_[(c >> 16) & 0xff];
-    ++histo->blue_[(c >> 0) & 0xff];
+  if (histo_set != NULL) {
+    int i;
+    double bit_cost, bit_cost_subgreen;
+    VP8LHistogram* const histo = histo_set->histograms[0];
+    VP8LHistogram* const histo_subgreen = histo_set->histograms[1];
+    for (i = 0; i < width * height; ++i) {
+      const uint32_t c = argb[i];
+      const int green = (c >> 8) & 0xff;
+      const int red = (c >> 16) & 0xff;
+      const int blue = (c >> 0) & 0xff;
+      ++histo->red_[red];
+      ++histo->blue_[blue];
+      ++histo_subgreen->red_[(red - green) & 0xff];
+      ++histo_subgreen->blue_[(blue - green) & 0xff];
+    }
+    bit_cost= VP8LHistogramEstimateBits(histo);
+    bit_cost_subgreen = VP8LHistogramEstimateBits(histo_subgreen);
+    VP8LFreeHistogramSet(histo_set);
+    *entropy_change_ratio = bit_cost_subgreen / (bit_cost + 1e-6);
+    return 1;
+  } else {
+    return 0;
   }
-  bit_cost_before = VP8LHistogramEstimateBits(histo);
-
-  VP8LHistogramInit(histo, 1);
-  for (i = 0; i < width * height; ++i) {
-    const uint32_t c = argb[i];
-    const int green = (c >> 8) & 0xff;
-    ++histo->red_[((c >> 16) - green) & 0xff];
-    ++histo->blue_[((c >> 0) - green) & 0xff];
-  }
-  bit_cost_after = VP8LHistogramEstimateBits(histo);
-  VP8LFreeHistogram(histo);
-
-  *entropy_change_ratio = bit_cost_after / (bit_cost_before + 1e-6);
-  return 1;
 }
 
 static int GetHistoBits(int method, int use_palette, int width, int height) {
@@ -301,6 +303,7 @@ static int AnalyzeAndInit(VP8LEncoder* const enc, WebPImageHint image_hint) {
   const int pix_cnt = width * height;
   const WebPConfig* const config = enc->config_;
   const int method = config->method;
+  const int low_effort = (config->method == 0);
   const float quality = config->quality;
   double subtract_green_score = 10.f;
   // we round the block size up, so we're guaranteed to have
@@ -341,7 +344,7 @@ static int AnalyzeAndInit(VP8LEncoder* const enc, WebPImageHint image_hint) {
   if (!enc->use_palette_) {
     if (image_hint == WEBP_HINT_PHOTO) {
       enc->use_predict_ = 1;
-      enc->use_cross_color_ = (method > 0);
+      enc->use_cross_color_ = !low_effort;
     } else {
       double non_pred_entropy, pred_entropy;
       if (!AnalyzeEntropy(pic->argb, width, height, pic->argb_stride,
@@ -350,7 +353,7 @@ static int AnalyzeAndInit(VP8LEncoder* const enc, WebPImageHint image_hint) {
       }
       if (pred_entropy < 0.95 * non_pred_entropy) {
         enc->use_predict_ = 1;
-        enc->use_cross_color_ = (method > 0);
+        enc->use_cross_color_ = !low_effort;
       }
     }
   }
