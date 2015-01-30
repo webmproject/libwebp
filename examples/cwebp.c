@@ -615,10 +615,8 @@ static void HelpLong(void) {
          "                           green=0xe0 and blue=0xd0\n");
   printf("  -noalpha ............... discard any transparency information\n");
   printf("  -lossless .............. encode image losslessly\n");
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  printf("  -near_lossless ......... use near-lossless image\n"
+  printf("  -near_lossless <int> ... use near-lossless image\n"
          "                           preprocessing (0=off..100)\n");
-#endif
   printf("  -hint <string> ......... specify image characteristics hint,\n");
   printf("                           one of: photo, picture or graph\n");
 

@@ -20,8 +20,6 @@
 #include "../utils/utils.h"
 #include "./vp8enci.h"
 
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-
 #define MIN_DIM_FOR_NEAR_LOSSLESS 64
 #define MAX_LIMIT_BITS             5
 
@@ -131,15 +129,8 @@ static int QualityToLimitBits(int quality) {
   //                 13..100 -> 4..1
   return MAX_LIMIT_BITS - (quality + 12) / 25;
 }
-#endif  // WEBP_EXPERIMENTAL_FEATURES
 
 int VP8ApplyNearLossless(int xsize, int ysize, uint32_t* argb, int quality) {
-#ifndef WEBP_EXPERIMENTAL_FEATURES
-  (void)xsize;
-  (void)ysize;
-  (void)argb;
-  (void)quality;
-#else
   int i;
   uint32_t* const copy_buffer =
       (uint32_t*)WebPSafeMalloc(xsize * 3, sizeof(*copy_buffer));
@@ -160,6 +151,5 @@ int VP8ApplyNearLossless(int xsize, int ysize, uint32_t* argb, int quality) {
     NearLossless(xsize, ysize, argb, i, copy_buffer);
   }
   WebPSafeFree(copy_buffer);
-#endif  // WEBP_EXPERIMENTAL_FEATURES
   return 1;
 }
