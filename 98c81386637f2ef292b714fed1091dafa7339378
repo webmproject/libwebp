@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//IZo\u003d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-01-30T08:02:51Z",
+      "side": 1,
+      "message": "hmm... this seems to go the opposite way compared to what cwebp.1 man page is saying about -near_lossless (0 \u003d no preprocessing, 100 \u003d max preprocessing).\n\nThere\u0027s probably room for clarification in the man (in a follow-up page).",
+      "revId": "98c81386637f2ef292b714fed1091dafa7339378",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
