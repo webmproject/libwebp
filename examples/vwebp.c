@@ -42,8 +42,6 @@
 #define snprintf _snprintf
 #endif
 
-static void Help(void);
-
 // Unfortunate global variables. Gathered into a struct for comfort.
 static struct {
   int has_animation;
