@@ -97,7 +97,7 @@ static int IsSmooth(const uint32_t* const prev_row,
 
 // Adjusts pixel values of image with given maximum error.
 static void NearLossless(int xsize, int ysize, uint32_t* argb,
-                        int limit_bits, uint32_t* copy_buffer) {
+                         int limit_bits, uint32_t* copy_buffer) {
   int x, y;
   const int limit = 1 << limit_bits;
   uint32_t* prev_row = copy_buffer;
