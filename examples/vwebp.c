@@ -181,6 +181,7 @@ static void decode_callback(int what) {
         if (WebPDemuxGetFrame(kParams.dmux, 1, curr)) {
           --kParams.loop_count;
           kParams.done = (kParams.loop_count == 0);
+          if (kParams.done) return;
         } else {
           kParams.decoding_error = 1;
           kParams.done = 1;
