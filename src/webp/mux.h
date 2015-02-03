@@ -427,7 +427,8 @@ typedef struct {
                         // frames as needed to satisfy this criteria.
                         // Note that these conditions should hold: kmax > kmin
                         // and kmin >= kmax / 2 + 1. Also, if kmin == 0, then
-                        // key-frame insertion is disabled.
+                        // key-frame insertion is disabled; and if kmax == 0,
+                        // then all frames will be key-frames.
   int allow_mixed;      // If true, use mixed compression mode; may choose
                         // either lossy and lossless for each frame.
 

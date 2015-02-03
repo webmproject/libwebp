@@ -111,9 +111,9 @@ static void SanitizeEncoderOptions(WebPAnimEncoderOptions* const enc_options) {
     DisableKeyframes(enc_options);
     print_warning = 0;
   }
-  if (enc_options->kmax == 0) {
-    enc_options->kmax = ~0;
-    print_warning = 0;
+  if (enc_options->kmax == 0) {  // All frames will be key-frames.
+    enc_options->kmin = 0;
+    return;
   }
 
   if (enc_options->kmin >= enc_options->kmax) {
@@ -144,7 +144,7 @@ static void SanitizeEncoderOptions(WebPAnimEncoderOptions* const enc_options) {
               (int)enc_options->kmin, MAX_CACHED_FRAMES);
     }
   }
-  assert(enc_options->kmin <= enc_options->kmax);
+  assert(enc_options->kmin < enc_options->kmax);
 }
 
 #undef MAX_CACHED_FRAMES
@@ -242,6 +242,9 @@ WebPAnimEncoder* WebPAnimEncoderNewInternal(
   ResetCounters(enc);
   // Note: one extra storage is for the previous frame.
   enc->size_ = enc->options_.kmax - enc->options_.kmin + 1;
+  // We need space for at least 2 frames. But when kmin, kmax are both zero,
+  // enc->size_ will be 1. So we handle that special case below.
+  if (enc->size_ < 2) enc->size_ = 2;
   enc->encoded_frames_ =
       (EncodedFrame*)WebPSafeCalloc(enc->size_, sizeof(*enc->encoded_frames_));
   if (enc->encoded_frames_ == NULL) goto Err;
@@ -972,7 +975,9 @@ static int CacheFrame(WebPAnimEncoder* const enc, int duration,
       } else {
         encoded_frame->is_key_frame_ = 0;
       }
-      if (enc->count_since_key_frame_ == enc->options_.kmax) {
+      // Note: We need '>=' below because when kmin and kmax are both zero,
+      // count_since_key_frame will always be > kmax.
+      if (enc->count_since_key_frame_ >= enc->options_.kmax) {
         enc->flush_count_ = enc->count_ - 1;
         enc->count_since_key_frame_ = 0;
         enc->keyframe_ = KEYFRAME_NONE;
