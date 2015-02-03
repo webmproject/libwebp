@@ -158,10 +158,10 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-min_size")) {
       enc_options.minimize_size = 1;
     } else if (!strcmp(argv[c], "-kmax") && c < argc - 1) {
-      enc_options.kmax = ExUtilGetUInt(argv[++c], 0, &parse_error);
+      enc_options.kmax = ExUtilGetInt(argv[++c], 0, &parse_error);
       default_kmax = 0;
     } else if (!strcmp(argv[c], "-kmin") && c < argc - 1) {
-      enc_options.kmin = ExUtilGetUInt(argv[++c], 0, &parse_error);
+      enc_options.kmin = ExUtilGetInt(argv[++c], 0, &parse_error);
       default_kmin = 0;
     } else if (!strcmp(argv[c], "-f") && c < argc - 1) {
       config.filter_strength = ExUtilGetInt(argv[++c], 0, &parse_error);

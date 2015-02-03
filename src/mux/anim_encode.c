@@ -11,6 +11,7 @@
 //
 
 #include <assert.h>
+#include <limits.h>
 #include <stdio.h>
 
 #include "../utils/utils.h"
@@ -67,7 +68,7 @@ struct WebPAnimEncoder {
                             // Can be negative in certain cases due to
                             // transparent pixels in a frame.
   int keyframe_;            // Index of selected key-frame relative to 'start_'.
-  size_t count_since_key_frame_;  // Frames seen since the last key-frame.
+  int count_since_key_frame_;     // Frames seen since the last key-frame.
   int prev_candidate_undecided_;  // True if it's not yet decided if previous
                                   // frame would be a sub-frame or a key-frame.
 
@@ -94,7 +95,7 @@ static void ResetCounters(WebPAnimEncoder* const enc) {
 }
 
 static void DisableKeyframes(WebPAnimEncoderOptions* const enc_options) {
-  enc_options->kmax = ~0;
+  enc_options->kmax = INT_MAX;
   enc_options->kmin = enc_options->kmax - 1;
 }
 
@@ -107,12 +108,13 @@ static void SanitizeEncoderOptions(WebPAnimEncoderOptions* const enc_options) {
     DisableKeyframes(enc_options);
   }
 
-  if (enc_options->kmin == 0) {
+  if (enc_options->kmin <= 0) {
     DisableKeyframes(enc_options);
     print_warning = 0;
   }
-  if (enc_options->kmax == 0) {  // All frames will be key-frames.
+  if (enc_options->kmax <= 0) {  // All frames will be key-frames.
     enc_options->kmin = 0;
+    enc_options->kmax = 0;
     return;
   }
 
@@ -120,10 +122,10 @@ static void SanitizeEncoderOptions(WebPAnimEncoderOptions* const enc_options) {
     enc_options->kmin = enc_options->kmax - 1;
     if (print_warning) {
       fprintf(stderr, "WARNING: Setting kmin = %d, so that kmin < kmax.\n",
-              (int)enc_options->kmin);
+              enc_options->kmin);
     }
   } else {
-    const size_t kmin_limit = enc_options->kmax / 2 + 1;
+    const int kmin_limit = enc_options->kmax / 2 + 1;
     if (enc_options->kmin < kmin_limit && kmin_limit < enc_options->kmax) {
       // This ensures that enc.keyframe + kmin >= kmax is always true. So, we
       // can flush all the frames in the 'count_since_key_frame == kmax' case.
@@ -131,7 +133,7 @@ static void SanitizeEncoderOptions(WebPAnimEncoderOptions* const enc_options) {
       if (print_warning) {
         fprintf(stderr,
                 "WARNING: Setting kmin = %d, so that kmin >= kmax / 2 + 1.\n",
-                (int)enc_options->kmin);
+                enc_options->kmin);
       }
     }
   }
@@ -141,7 +143,7 @@ static void SanitizeEncoderOptions(WebPAnimEncoderOptions* const enc_options) {
     if (print_warning) {
       fprintf(stderr,
               "WARNING: Setting kmin = %d, so that kmax - kmin <= %d.\n",
-              (int)enc_options->kmin, MAX_CACHED_FRAMES);
+              enc_options->kmin, MAX_CACHED_FRAMES);
     }
   }
   assert(enc_options->kmin < enc_options->kmax);

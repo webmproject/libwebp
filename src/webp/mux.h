@@ -421,8 +421,8 @@ typedef struct {
   WebPMuxAnimParams anim_params;  // Animation parameters.
   int minimize_size;    // If true, minimize the output size (slow). Implicitly
                         // disables key-frame insertion.
-  size_t kmin;
-  size_t kmax;          // Minimum and maximum distance between consecutive key
+  int kmin;
+  int kmax;             // Minimum and maximum distance between consecutive key
                         // frames in the output. The library may insert some key
                         // frames as needed to satisfy this criteria.
                         // Note that these conditions should hold: kmax > kmin
