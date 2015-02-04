@@ -1381,6 +1381,105 @@ static void FTransformWHT(const int16_t* in, int16_t* out) {
 #undef VERTICAL_PASS_WHT
 #undef HORIZONTAL_PASS_WHT
 
+// macro for converting coefficients to bin
+// convert 8 coeffs at time
+// A, B, C, D - offsets in bytes to load from out buffer
+#define CONVERT_COEFFS_TO_BIN(A, B, C, D)                                      \
+  "ulw        %[temp0],  "#A"(%[out])                  \n\t"                   \
+  "ulw        %[temp1],  "#B"(%[out])                  \n\t"                   \
+  "ulw        %[temp2],  "#C"(%[out])                  \n\t"                   \
+  "ulw        %[temp3],  "#D"(%[out])                  \n\t"                   \
+  "absq_s.ph  %[temp0],  %[temp0]                      \n\t"                   \
+  "absq_s.ph  %[temp1],  %[temp1]                      \n\t"                   \
+  "absq_s.ph  %[temp2],  %[temp2]                      \n\t"                   \
+  "absq_s.ph  %[temp3],  %[temp3]                      \n\t"                   \
+  /* TODO(skal): add rounding ? shra_r.ph : shra.ph */                         \
+  /*             for following 4 instructions       */                         \
+  "shra.ph    %[temp0],  %[temp0],    3                \n\t"                   \
+  "shra.ph    %[temp1],  %[temp1],    3                \n\t"                   \
+  "shra.ph    %[temp2],  %[temp2],    3                \n\t"                   \
+  "shra.ph    %[temp3],  %[temp3],    3                \n\t"                   \
+  "shll_s.ph  %[temp0],  %[temp0],    10               \n\t"                   \
+  "shll_s.ph  %[temp1],  %[temp1],    10               \n\t"                   \
+  "shll_s.ph  %[temp2],  %[temp2],    10               \n\t"                   \
+  "shll_s.ph  %[temp3],  %[temp3],    10               \n\t"                   \
+  "shrl.ph    %[temp0],  %[temp0],    10               \n\t"                   \
+  "shrl.ph    %[temp1],  %[temp1],    10               \n\t"                   \
+  "shrl.ph    %[temp2],  %[temp2],    10               \n\t"                   \
+  "shrl.ph    %[temp3],  %[temp3],    10               \n\t"                   \
+  "shll.ph    %[temp0],  %[temp0],    2                \n\t"                   \
+  "shll.ph    %[temp1],  %[temp1],    2                \n\t"                   \
+  "shll.ph    %[temp2],  %[temp2],    2                \n\t"                   \
+  "shll.ph    %[temp3],  %[temp3],    2                \n\t"                   \
+  "ext        %[temp4],  %[temp0],    0,       16      \n\t"                   \
+  "ext        %[temp0],  %[temp0],    16,      16      \n\t"                   \
+  "addu       %[temp4],  %[temp4],    %[dist]          \n\t"                   \
+  "addu       %[temp0],  %[temp0],    %[dist]          \n\t"                   \
+  "ext        %[temp5],  %[temp1],    0,       16      \n\t"                   \
+  "lw         %[temp8],  0(%[temp4])                   \n\t"                   \
+  "ext        %[temp1],  %[temp1],    16,      16      \n\t"                   \
+  "addu       %[temp5],  %[temp5],    %[dist]          \n\t"                   \
+  "addiu      %[temp8],  %[temp8],    1                \n\t"                   \
+  "sw         %[temp8],  0(%[temp4])                   \n\t"                   \
+  "lw         %[temp8],  0(%[temp0])                   \n\t"                   \
+  "addu       %[temp1],  %[temp1],    %[dist]          \n\t"                   \
+  "ext        %[temp6],  %[temp2],    0,       16      \n\t"                   \
+  "addiu      %[temp8],  %[temp8],    1                \n\t"                   \
+  "sw         %[temp8],  0(%[temp0])                   \n\t"                   \
+  "lw         %[temp8],  0(%[temp5])                   \n\t"                   \
+  "ext        %[temp2],  %[temp2],    16,      16      \n\t"                   \
+  "addu       %[temp6],  %[temp6],    %[dist]          \n\t"                   \
+  "addiu      %[temp8],  %[temp8],    1                \n\t"                   \
+  "sw         %[temp8],  0(%[temp5])                   \n\t"                   \
+  "lw         %[temp8],  0(%[temp1])                   \n\t"                   \
+  "addu       %[temp2],  %[temp2],    %[dist]          \n\t"                   \
+  "ext        %[temp7],  %[temp3],    0,       16      \n\t"                   \
+  "addiu      %[temp8],  %[temp8],    1                \n\t"                   \
+  "sw         %[temp8],  0(%[temp1])                   \n\t"                   \
+  "lw         %[temp8],  0(%[temp6])                   \n\t"                   \
+  "ext        %[temp3],  %[temp3],    16,      16      \n\t"                   \
+  "addu       %[temp7],  %[temp7],    %[dist]          \n\t"                   \
+  "addiu      %[temp8],  %[temp8],    1                \n\t"                   \
+  "sw         %[temp8],  0(%[temp6])                   \n\t"                   \
+  "lw         %[temp8],  0(%[temp2])                   \n\t"                   \
+  "addu       %[temp3],  %[temp3],    %[dist]          \n\t"                   \
+  "addiu      %[temp8],  %[temp8],    1                \n\t"                   \
+  "sw         %[temp8],  0(%[temp2])                   \n\t"                   \
+  "lw         %[temp8],  0(%[temp7])                   \n\t"                   \
+  "addiu      %[temp8],  %[temp8],    1                \n\t"                   \
+  "sw         %[temp8],  0(%[temp7])                   \n\t"                   \
+  "lw         %[temp8],  0(%[temp3])                   \n\t"                   \
+  "addiu      %[temp8],  %[temp8],    1                \n\t"                   \
+  "sw         %[temp8],  0(%[temp3])                   \n\t"
+
+static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
+                             int start_block, int end_block,
+                             VP8Histogram* const histo) {
+  int j;
+  int distribution[MAX_COEFF_THRESH + 1] = { 0 };
+  const int max_coeff = (MAX_COEFF_THRESH << 16) + MAX_COEFF_THRESH;
+  for (j = start_block; j < end_block; ++j) {
+    int16_t out[16];
+    int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
+
+    VP8FTransform(ref + VP8DspScan[j], pred + VP8DspScan[j], out);
+
+    // Convert coefficients to bin.
+    __asm__ volatile (
+      CONVERT_COEFFS_TO_BIN( 0,  4,  8, 12)
+      CONVERT_COEFFS_TO_BIN(16, 20, 24, 28)
+      : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+        [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+        [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8)
+      : [dist]"r"(distribution), [out]"r"(out), [max_coeff]"r"(max_coeff)
+      : "memory"
+    );
+  }
+  VP8LSetHistogramData(distribution, histo);
+}
+
+#undef CONVERT_COEFFS_TO_BIN
+
 #endif  // WEBP_USE_MIPS_DSP_R2
 
 //------------------------------------------------------------------------------
@@ -1406,5 +1505,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPSdspR2(void) {
   VP8EncQuantizeBlock = QuantizeBlock;
   VP8EncQuantize2Blocks = Quantize2Blocks;
   VP8FTransformWHT = FTransformWHT;
+  VP8CollectHistogram = CollectHistogram;
 #endif  // WEBP_USE_MIPS_DSP_R2
 }
