@@ -1069,6 +1069,166 @@ static void RD4(uint8_t* dst) {   // Down-right
 #undef DST
 #undef AVG3
 
+//------------------------------------------------------------------------------
+// Luma 16x16
+
+static WEBP_INLINE void TrueMotion(uint8_t* dst, int size) {
+  const uint8_t* top = dst - BPS;
+  const __m128i zero = _mm_setzero_si128();
+  int y;
+  if (size == 4) {
+    const __m128i top_values = _mm_cvtsi32_si128(*(int*)top);
+    const __m128i top_base = _mm_unpacklo_epi8(top_values, zero);
+    for (y = 0; y < 4; ++y, dst += BPS) {
+      const int val = dst[-1] - top[-1];
+      const __m128i base = _mm_set1_epi16(val);
+      const __m128i out = _mm_packus_epi16(_mm_add_epi16(base, top_base), zero);
+      *(int*)dst = _mm_cvtsi128_si32(out);
+    }
+  } else if (size == 8) {
+    const __m128i top_values = _mm_loadl_epi64((const __m128i*)top);
+    const __m128i top_base = _mm_unpacklo_epi8(top_values, zero);
+    for (y = 0; y < 8; ++y, dst += BPS) {
+      const int val = dst[-1] - top[-1];
+      const __m128i base = _mm_set1_epi16(val);
+      const __m128i out = _mm_packus_epi16(_mm_add_epi16(base, top_base), zero);
+      _mm_storel_epi64((__m128i*)dst, out);
+    }
+  } else {
+    const __m128i top_values = _mm_loadu_si128((const __m128i*)top);
+    const __m128i top_base_0 = _mm_unpacklo_epi8(top_values, zero);
+    const __m128i top_base_1 = _mm_unpackhi_epi8(top_values, zero);
+    for (y = 0; y < 16; ++y, dst += BPS) {
+      const int val = dst[-1] - top[-1];
+      const __m128i base = _mm_set1_epi16(val);
+      const __m128i out_0 = _mm_add_epi16(base, top_base_0);
+      const __m128i out_1 = _mm_add_epi16(base, top_base_1);
+      const __m128i out = _mm_packus_epi16(out_0, out_1);
+      _mm_storeu_si128((__m128i*)dst, out);
+    }
+  }
+}
+
+static void TM4(uint8_t* dst)   { TrueMotion(dst, 4); }
+static void TM8uv(uint8_t* dst) { TrueMotion(dst, 8); }
+static void TM16(uint8_t* dst)  { TrueMotion(dst, 16); }
+
+static void VE16(uint8_t* dst) {
+  const __m128i top = _mm_loadu_si128((const __m128i*)(dst - BPS));
+  int j;
+  for (j = 0; j < 16; ++j) {
+    _mm_storeu_si128((__m128i*)(dst + j * BPS), top);
+  }
+}
+
+static void HE16(uint8_t* dst) {     // horizontal
+  int j;
+  for (j = 16; j > 0; --j) {
+    const __m128i values = _mm_set1_epi8(dst[-1]);
+    _mm_storeu_si128((__m128i*)dst, values);
+    dst += BPS;
+  }
+}
+
+static WEBP_INLINE void Put16(uint8_t v, uint8_t* dst) {
+  int j;
+  const __m128i values = _mm_set1_epi8(v);
+  for (j = 0; j < 16; ++j) {
+    _mm_storeu_si128((__m128i*)(dst + j * BPS), values);
+  }
+}
+
+static void DC16(uint8_t* dst) {    // DC
+  int DC = 16;
+  int j;
+  for (j = 0; j < 16; ++j) {
+    DC += dst[-1 + j * BPS] + dst[j - BPS];
+  }
+  Put16(DC >> 5, dst);
+}
+
+static void DC16NoTop(uint8_t* dst) {   // DC with top samples not available
+  int DC = 8;
+  int j;
+  for (j = 0; j < 16; ++j) {
+    DC += dst[-1 + j * BPS];
+  }
+  Put16(DC >> 4, dst);
+}
+
+static void DC16NoLeft(uint8_t* dst) {  // DC with left samples not available
+  int DC = 8;
+  int i;
+  for (i = 0; i < 16; ++i) {
+    DC += dst[i - BPS];
+  }
+  Put16(DC >> 4, dst);
+}
+
+static void DC16NoTopLeft(uint8_t* dst) {  // DC with no top and left samples
+  Put16(0x80, dst);
+}
+
+//------------------------------------------------------------------------------
+// Chroma
+
+static void VE8uv(uint8_t* dst) {    // vertical
+  int j;
+  const __m128i top = _mm_loadl_epi64((const __m128i*)(dst - BPS));
+  for (j = 0; j < 8; ++j) {
+    _mm_storel_epi64((__m128i*)(dst + j * BPS), top);
+  }
+}
+
+static void HE8uv(uint8_t* dst) {    // horizontal
+  int j;
+  for (j = 0; j < 8; ++j) {
+    const __m128i values = _mm_set1_epi8(dst[-1]);
+    _mm_storel_epi64((__m128i*)dst, values);
+    dst += BPS;
+  }
+}
+
+// helper for chroma-DC predictions
+static WEBP_INLINE void Put8x8uv(uint8_t v, uint8_t* dst) {
+  int j;
+  const __m128i values = _mm_set1_epi8(v);
+  for (j = 0; j < 8; ++j) {
+    _mm_storel_epi64((__m128i*)(dst + j * BPS), values);
+  }
+}
+
+static void DC8uv(uint8_t* dst) {     // DC
+  int dc0 = 8;
+  int i;
+  for (i = 0; i < 8; ++i) {
+    dc0 += dst[i - BPS] + dst[-1 + i * BPS];
+  }
+  Put8x8uv(dc0 >> 4, dst);
+}
+
+static void DC8uvNoLeft(uint8_t* dst) {   // DC with no left samples
+  int dc0 = 4;
+  int i;
+  for (i = 0; i < 8; ++i) {
+    dc0 += dst[i - BPS];
+  }
+  Put8x8uv(dc0 >> 3, dst);
+}
+
+static void DC8uvNoTop(uint8_t* dst) {  // DC with no top samples
+  int dc0 = 4;
+  int i;
+  for (i = 0; i < 8; ++i) {
+    dc0 += dst[-1 + i * BPS];
+  }
+  Put8x8uv(dc0 >> 3, dst);
+}
+
+static void DC8uvNoTopLeft(uint8_t* dst) {    // DC with nothing
+  Put8x8uv(0x80, dst);
+}
+
 #endif   // WEBP_USE_SSE2
 
 //------------------------------------------------------------------------------
@@ -1097,10 +1257,28 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitSSE2(void) {
   VP8SimpleVFilter16i = SimpleVFilter16i;
   VP8SimpleHFilter16i = SimpleHFilter16i;
 
+  VP8PredLuma4[1] = TM4;
   VP8PredLuma4[2] = VE4;
   VP8PredLuma4[4] = RD4;
   VP8PredLuma4[5] = VR4;
   VP8PredLuma4[6] = LD4;
   VP8PredLuma4[7] = VL4;
+
+  VP8PredLuma16[0] = DC16;
+  VP8PredLuma16[1] = TM16;
+  VP8PredLuma16[2] = VE16;
+  VP8PredLuma16[3] = HE16;
+  VP8PredLuma16[4] = DC16NoTop;
+  VP8PredLuma16[5] = DC16NoLeft;
+  VP8PredLuma16[6] = DC16NoTopLeft;
+
+  VP8PredChroma8[0] = DC8uv;
+  VP8PredChroma8[1] = TM8uv;
+  VP8PredChroma8[2] = VE8uv;
+  VP8PredChroma8[3] = HE8uv;
+  VP8PredChroma8[4] = DC8uvNoTop;
+  VP8PredChroma8[5] = DC8uvNoLeft;
+  VP8PredChroma8[6] = DC8uvNoTopLeft;
+
 #endif   // WEBP_USE_SSE2
 }
