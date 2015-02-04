@@ -7,7 +7,7 @@
 // be found in the AUTHORS file in the root of the source tree.
 // -----------------------------------------------------------------------------
 //
-// Speed-critical decoding functions.
+// Speed-critical decoding functions, default plain-C implementations.
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
@@ -233,6 +233,8 @@ static void DC16NoTopLeft(uint8_t* dst) {  // DC with no top and left samples
   Put16(0x80, dst);
 }
 
+VP8PredFunc VP8PredLuma16[NUM_B_DC_MODES];
+
 //------------------------------------------------------------------------------
 // 4x4
 
@@ -396,6 +398,8 @@ static void HD4(uint8_t* dst) {  // Horizontal-Down
 #undef AVG3
 #undef AVG2
 
+VP8PredFunc VP8PredLuma4[NUM_BMODES];
+
 //------------------------------------------------------------------------------
 // Chroma
 
@@ -452,16 +456,6 @@ static void DC8uvNoTop(uint8_t* dst) {  // DC with no top samples
 static void DC8uvNoTopLeft(uint8_t* dst) {    // DC with nothing
   Put8x8uv(0x80, dst);
 }
-
-//------------------------------------------------------------------------------
-// default C implementations
-
-VP8PredFunc VP8PredLuma4[NUM_BMODES];
-
-const VP8PredFunc VP8PredLuma16[NUM_B_DC_MODES] = {
-  DC16, TM16, VE16, HE16,
-  DC16NoTop, DC16NoLeft, DC16NoTopLeft
-};
 
 VP8PredFunc VP8PredChroma8[NUM_B_DC_MODES];
 
@@ -722,6 +716,14 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInit(void) {
   VP8PredLuma4[7] = VL4;
   VP8PredLuma4[8] = HD4;
   VP8PredLuma4[9] = HU4;
+
+  VP8PredLuma16[0] = DC16;
+  VP8PredLuma16[1] = TM16;
+  VP8PredLuma16[2] = VE16;
+  VP8PredLuma16[3] = HE16;
+  VP8PredLuma16[4] = DC16NoTop;
+  VP8PredLuma16[5] = DC16NoLeft;
+  VP8PredLuma16[6] = DC16NoTopLeft;
 
   VP8PredChroma8[0] = DC8uv;
   VP8PredChroma8[1] = TM8uv;
