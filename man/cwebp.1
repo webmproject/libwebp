@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "July 30, 2014"
+.TH CWEBP 1 "Feb 4, 2015"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -222,7 +222,7 @@ Encode the image without any loss.
 Use near-lossless image preprocessing. This option adjusts pixel values
 to help compressibility, but has minimal impact on the visual quality.
 It triggers lossless compression mode automatically.
-Range is 0 (no preprocessing, the default) to 100.
+Range is 0 (maximum preprocessing) to 100 (no preprocessing, the default).
 .TP
 .BI \-hint " string
 Specify the hint about input image type. Possible values are:

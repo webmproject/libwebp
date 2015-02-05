@@ -1254,7 +1254,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   }
 
   // Apply near-lossless preprocessing.
-  use_near_lossless = !enc->use_palette_ && config->near_lossless;
+  use_near_lossless = !enc->use_palette_ && (config->near_lossless < 100);
   if (use_near_lossless) {
     if (!VP8ApplyNearLossless(width, height, picture->argb,
                               config->near_lossless)) {

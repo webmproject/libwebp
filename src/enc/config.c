@@ -47,7 +47,7 @@ int WebPConfigInitInternal(WebPConfig* config,
   config->emulate_jpeg_size = 0;
   config->thread_level = 0;
   config->low_memory = 0;
-  config->near_lossless = 0;
+  config->near_lossless = 100;
 
   // TODO(skal): tune.
   switch (preset) {

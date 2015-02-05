@@ -125,9 +125,14 @@ static void NearLossless(int xsize, int ysize, uint32_t* argb,
 }
 
 static int QualityToLimitBits(int quality) {
-  // quality mapping 0..12 -> 5
-  //                 13..100 -> 4..1
-  return MAX_LIMIT_BITS - (quality + 12) / 25;
+  // quality mapping:
+  //  0..19 -> 5
+  //  0..39 -> 4
+  //  0..59 -> 3
+  //  0..79 -> 2
+  //  0..99 -> 1
+  //  100   -> 0
+  return MAX_LIMIT_BITS - quality / 20;
 }
 
 int VP8ApplyNearLossless(int xsize, int ysize, uint32_t* argb, int quality) {
