@@ -60,10 +60,10 @@
 // Loads 17 pixels each from rows r1 and r2 and generates 32 pixels.
 #define UPSAMPLE_32PIXELS(r1, r2, out) {                                       \
   const __m128i one = _mm_set1_epi8(1);                                        \
-  const __m128i a = _mm_loadu_si128((__m128i*)&(r1)[0]);                       \
-  const __m128i b = _mm_loadu_si128((__m128i*)&(r1)[1]);                       \
-  const __m128i c = _mm_loadu_si128((__m128i*)&(r2)[0]);                       \
-  const __m128i d = _mm_loadu_si128((__m128i*)&(r2)[1]);                       \
+  const __m128i a = _mm_loadu_si128((const __m128i*)&(r1)[0]);                 \
+  const __m128i b = _mm_loadu_si128((const __m128i*)&(r1)[1]);                 \
+  const __m128i c = _mm_loadu_si128((const __m128i*)&(r2)[0]);                 \
+  const __m128i d = _mm_loadu_si128((const __m128i*)&(r2)[1]);                 \
                                                                                \
   const __m128i s = _mm_avg_epu8(a, d);        /* s = (a + d + 1) / 2 */       \
   const __m128i t = _mm_avg_epu8(b, c);        /* t = (b + c + 1) / 2 */       \
