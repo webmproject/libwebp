@@ -52,19 +52,19 @@ static void Transform(const int16_t* in, uint8_t* dst, int do_two) {
   // vectors will just contain random value we'll never use nor store.
   __m128i in0, in1, in2, in3;
   {
-    in0 = _mm_loadl_epi64((__m128i*)&in[0]);
-    in1 = _mm_loadl_epi64((__m128i*)&in[4]);
-    in2 = _mm_loadl_epi64((__m128i*)&in[8]);
-    in3 = _mm_loadl_epi64((__m128i*)&in[12]);
+    in0 = _mm_loadl_epi64((const __m128i*)&in[0]);
+    in1 = _mm_loadl_epi64((const __m128i*)&in[4]);
+    in2 = _mm_loadl_epi64((const __m128i*)&in[8]);
+    in3 = _mm_loadl_epi64((const __m128i*)&in[12]);
     // a00 a10 a20 a30   x x x x
     // a01 a11 a21 a31   x x x x
     // a02 a12 a22 a32   x x x x
     // a03 a13 a23 a33   x x x x
     if (do_two) {
-      const __m128i inB0 = _mm_loadl_epi64((__m128i*)&in[16]);
-      const __m128i inB1 = _mm_loadl_epi64((__m128i*)&in[20]);
-      const __m128i inB2 = _mm_loadl_epi64((__m128i*)&in[24]);
-      const __m128i inB3 = _mm_loadl_epi64((__m128i*)&in[28]);
+      const __m128i inB0 = _mm_loadl_epi64((const __m128i*)&in[16]);
+      const __m128i inB1 = _mm_loadl_epi64((const __m128i*)&in[20]);
+      const __m128i inB2 = _mm_loadl_epi64((const __m128i*)&in[24]);
+      const __m128i inB3 = _mm_loadl_epi64((const __m128i*)&in[28]);
       in0 = _mm_unpacklo_epi64(in0, inB0);
       in1 = _mm_unpacklo_epi64(in1, inB1);
       in2 = _mm_unpacklo_epi64(in2, inB2);
@@ -528,10 +528,10 @@ static WEBP_INLINE void Load8x4(const uint8_t* const b, int stride,
   __m128i t1, t2;
 
   // Load 0th, 1st, 4th and 5th rows
-  __m128i r0 =  _mm_cvtsi32_si128(*((int*)&b[0 * stride]));  // 03 02 01 00
-  __m128i r1 =  _mm_cvtsi32_si128(*((int*)&b[1 * stride]));  // 13 12 11 10
-  __m128i r4 =  _mm_cvtsi32_si128(*((int*)&b[4 * stride]));  // 43 42 41 40
-  __m128i r5 =  _mm_cvtsi32_si128(*((int*)&b[5 * stride]));  // 53 52 51 50
+  __m128i r0 =  _mm_cvtsi32_si128(*(const int*)&b[0 * stride]);  // 03 02 01 00
+  __m128i r1 =  _mm_cvtsi32_si128(*(const int*)&b[1 * stride]);  // 13 12 11 10
+  __m128i r4 =  _mm_cvtsi32_si128(*(const int*)&b[4 * stride]);  // 43 42 41 40
+  __m128i r5 =  _mm_cvtsi32_si128(*(const int*)&b[5 * stride]);  // 53 52 51 50
 
   r0 = _mm_unpacklo_epi32(r0, r4);               // 43 42 41 40 03 02 01 00
   r1 = _mm_unpacklo_epi32(r1, r5);               // 53 52 51 50 13 12 11 10
@@ -540,10 +540,10 @@ static WEBP_INLINE void Load8x4(const uint8_t* const b, int stride,
   t1 = _mm_unpacklo_epi8(r0, r1);
 
   // Load 2nd, 3rd, 6th and 7th rows
-  r0 =  _mm_cvtsi32_si128(*((int*)&b[2 * stride]));          // 23 22 21 22
-  r1 =  _mm_cvtsi32_si128(*((int*)&b[3 * stride]));          // 33 32 31 30
-  r4 =  _mm_cvtsi32_si128(*((int*)&b[6 * stride]));          // 63 62 61 60
-  r5 =  _mm_cvtsi32_si128(*((int*)&b[7 * stride]));          // 73 72 71 70
+  r0 =  _mm_cvtsi32_si128(*(const int*)&b[2 * stride]);          // 23 22 21 22
+  r1 =  _mm_cvtsi32_si128(*(const int*)&b[3 * stride]);          // 33 32 31 30
+  r4 =  _mm_cvtsi32_si128(*(const int*)&b[6 * stride]);          // 63 62 61 60
+  r5 =  _mm_cvtsi32_si128(*(const int*)&b[7 * stride]);          // 73 72 71 70
 
   r0 = _mm_unpacklo_epi32(r0, r4);               // 63 62 61 60 23 22 21 20
   r1 = _mm_unpacklo_epi32(r1, r5);               // 73 72 71 70 33 32 31 30
@@ -1077,7 +1077,7 @@ static WEBP_INLINE void TrueMotion(uint8_t* dst, int size) {
   const __m128i zero = _mm_setzero_si128();
   int y;
   if (size == 4) {
-    const __m128i top_values = _mm_cvtsi32_si128(*(int*)top);
+    const __m128i top_values = _mm_cvtsi32_si128(*(const int*)top);
     const __m128i top_base = _mm_unpacklo_epi8(top_values, zero);
     for (y = 0; y < 4; ++y, dst += BPS) {
       const int val = dst[-1] - top[-1];
