@@ -39,7 +39,7 @@ static int DispatchAlpha(const uint8_t* alpha, int alpha_stride,
     __m128i* out = (__m128i*)dst;
     for (i = 0; i < limit; i += 8) {
       // load 8 alpha bytes
-      const __m128i a0 = _mm_loadl_epi64((__m128i*)&alpha[i]);
+      const __m128i a0 = _mm_loadl_epi64((const __m128i*)&alpha[i]);
       const __m128i a1 = _mm_unpacklo_epi8(a0, zero);
       const __m128i a2_lo = _mm_unpacklo_epi16(a1, zero);
       const __m128i a2_hi = _mm_unpackhi_epi16(a1, zero);
@@ -80,7 +80,7 @@ static void DispatchAlphaToGreen(const uint8_t* alpha, int alpha_stride,
   const int limit = width & ~15;
   for (j = 0; j < height; ++j) {
     for (i = 0; i < limit; i += 16) {   // process 16 alpha bytes
-      const __m128i a0 = _mm_loadu_si128((__m128i*)&alpha[i]);
+      const __m128i a0 = _mm_loadu_si128((const __m128i*)&alpha[i]);
       const __m128i a1 = _mm_unpacklo_epi8(zero, a0);  // note the 'zero' first!
       const __m128i b1 = _mm_unpackhi_epi8(zero, a0);
       const __m128i a2_lo = _mm_unpacklo_epi16(a1, zero);
@@ -261,7 +261,7 @@ static void MultRow(uint8_t* const ptr, const uint8_t* const alpha,
     for (x = 0; x < w2; x += kSpan) {
       const __m128i v0 = _mm_loadl_epi64((__m128i*)&ptr[x]);
       const __m128i v1 = _mm_unpacklo_epi8(v0, zero);
-      const __m128i alpha0 = _mm_loadl_epi64((__m128i*)&alpha[x]);
+      const __m128i alpha0 = _mm_loadl_epi64((const __m128i*)&alpha[x]);
       const __m128i alpha1 = _mm_unpacklo_epi8(alpha0, zero);
       const __m128i alpha2 = _mm_unpacklo_epi8(alpha0, alpha0);
       const __m128i v2 = _mm_mulhi_epu16(v1, alpha2);
