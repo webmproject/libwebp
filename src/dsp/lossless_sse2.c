@@ -425,17 +425,17 @@ static void AddVector(const uint32_t* a, const uint32_t* b, uint32_t* out,
   int i;
   assert(size % LINE_SIZE == 0);
   for (i = 0; i < size; i += LINE_SIZE) {
-    const __m128i a0 = _mm_loadu_si128((__m128i*)&a[i +  0]);
-    const __m128i a1 = _mm_loadu_si128((__m128i*)&a[i +  4]);
+    const __m128i a0 = _mm_loadu_si128((const __m128i*)&a[i +  0]);
+    const __m128i a1 = _mm_loadu_si128((const __m128i*)&a[i +  4]);
 #if (LINE_SIZE == 16)
-    const __m128i a2 = _mm_loadu_si128((__m128i*)&a[i +  8]);
-    const __m128i a3 = _mm_loadu_si128((__m128i*)&a[i + 12]);
+    const __m128i a2 = _mm_loadu_si128((const __m128i*)&a[i +  8]);
+    const __m128i a3 = _mm_loadu_si128((const __m128i*)&a[i + 12]);
 #endif
-    const __m128i b0 = _mm_loadu_si128((__m128i*)&b[i +  0]);
-    const __m128i b1 = _mm_loadu_si128((__m128i*)&b[i +  4]);
+    const __m128i b0 = _mm_loadu_si128((const __m128i*)&b[i +  0]);
+    const __m128i b1 = _mm_loadu_si128((const __m128i*)&b[i +  4]);
 #if (LINE_SIZE == 16)
-    const __m128i b2 = _mm_loadu_si128((__m128i*)&b[i +  8]);
-    const __m128i b3 = _mm_loadu_si128((__m128i*)&b[i + 12]);
+    const __m128i b2 = _mm_loadu_si128((const __m128i*)&b[i +  8]);
+    const __m128i b3 = _mm_loadu_si128((const __m128i*)&b[i + 12]);
 #endif
     _mm_storeu_si128((__m128i*)&out[i +  0], _mm_add_epi32(a0, b0));
     _mm_storeu_si128((__m128i*)&out[i +  4], _mm_add_epi32(a1, b1));
@@ -450,17 +450,17 @@ static void AddVectorEq(const uint32_t* a, uint32_t* out, int size) {
   int i;
   assert(size % LINE_SIZE == 0);
   for (i = 0; i < size; i += LINE_SIZE) {
-    const __m128i a0 = _mm_loadu_si128((__m128i*)&a[i +  0]);
-    const __m128i a1 = _mm_loadu_si128((__m128i*)&a[i +  4]);
+    const __m128i a0 = _mm_loadu_si128((const __m128i*)&a[i +  0]);
+    const __m128i a1 = _mm_loadu_si128((const __m128i*)&a[i +  4]);
 #if (LINE_SIZE == 16)
-    const __m128i a2 = _mm_loadu_si128((__m128i*)&a[i +  8]);
-    const __m128i a3 = _mm_loadu_si128((__m128i*)&a[i + 12]);
+    const __m128i a2 = _mm_loadu_si128((const __m128i*)&a[i +  8]);
+    const __m128i a3 = _mm_loadu_si128((const __m128i*)&a[i + 12]);
 #endif
-    const __m128i b0 = _mm_loadu_si128((__m128i*)&out[i +  0]);
-    const __m128i b1 = _mm_loadu_si128((__m128i*)&out[i +  4]);
+    const __m128i b0 = _mm_loadu_si128((const __m128i*)&out[i +  0]);
+    const __m128i b1 = _mm_loadu_si128((const __m128i*)&out[i +  4]);
 #if (LINE_SIZE == 16)
-    const __m128i b2 = _mm_loadu_si128((__m128i*)&out[i +  8]);
-    const __m128i b3 = _mm_loadu_si128((__m128i*)&out[i + 12]);
+    const __m128i b2 = _mm_loadu_si128((const __m128i*)&out[i +  8]);
+    const __m128i b3 = _mm_loadu_si128((const __m128i*)&out[i + 12]);
 #endif
     _mm_storeu_si128((__m128i*)&out[i +  0], _mm_add_epi32(a0, b0));
     _mm_storeu_si128((__m128i*)&out[i +  4], _mm_add_epi32(a1, b1));
