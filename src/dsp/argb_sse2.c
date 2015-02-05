@@ -32,7 +32,7 @@ static void PackARGB(const uint8_t* a, const uint8_t* r, const uint8_t* g,
     assert(b == r + 2);
     assert(a == r + 3);
     for (; i < len_max; i += 4) {
-      const __m128i A = _mm_loadu_si128((__m128i*)(r + 4 * i));
+      const __m128i A = _mm_loadu_si128((const __m128i*)(r + 4 * i));
       const __m128i B = _mm_and_si128(A, red_blue_mask);     // R 0 B 0
       const __m128i C = _mm_andnot_si128(red_blue_mask, A);  // 0 G 0 A
       const __m128i D = _mm_shufflelo_epi16(B, _MM_SHUFFLE(2, 3, 0, 1));
