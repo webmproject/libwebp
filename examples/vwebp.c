@@ -80,6 +80,16 @@ static void ClearParams(void) {
   kParams.dmux = NULL;
 }
 
+// Sets the previous frame to the dimensions of the canvas and has it dispose
+// to background to cause the canvas to be cleared.
+static void ClearPreviousFrame(void) {
+  WebPIterator* const prev = &kParams.prev_frame;
+  prev->width = kParams.canvas_width;
+  prev->height = kParams.canvas_height;
+  prev->x_offset = prev->y_offset = 0;
+  prev->dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
+}
+
 // -----------------------------------------------------------------------------
 // Color profile handling
 static int ApplyColorProfile(const WebPData* const profile,
@@ -180,6 +190,7 @@ static void decode_callback(int what) {
           --kParams.loop_count;
           kParams.done = (kParams.loop_count == 0);
           if (kParams.done) return;
+          ClearPreviousFrame();
         } else {
           kParams.decoding_error = 1;
           kParams.done = 1;
@@ -392,7 +403,6 @@ int main(int argc, char *argv[]) {
   int c;
   WebPDecoderConfig* const config = &kParams.config;
   WebPIterator* const curr = &kParams.curr_frame;
-  WebPIterator* const prev = &kParams.prev_frame;
 
   if (!WebPInitDecoderConfig(config)) {
     fprintf(stderr, "Library version mismatch!\n");
@@ -479,10 +489,7 @@ int main(int argc, char *argv[]) {
     printf("Canvas: %d x %d\n", kParams.canvas_width, kParams.canvas_height);
   }
 
-  prev->width = kParams.canvas_width;
-  prev->height = kParams.canvas_height;
-  prev->x_offset = prev->y_offset = 0;
-  prev->dispose_method = WEBP_MUX_DISPOSE_BACKGROUND;
+  ClearPreviousFrame();
 
   memset(&kParams.iccp, 0, sizeof(kParams.iccp));
   kParams.has_color_profile =
