@@ -224,7 +224,6 @@ void VP8TokenToStats(const VP8TBuffer* const b, proba_t* const stats) {
 int VP8EmitTokens(VP8TBuffer* const b, VP8BitWriter* const bw,
                   const uint8_t* const probas, int final_pass) {
   const VP8Tokens* p = b->pages_;
-  (void)final_pass;
   assert(!b->error_);
   while (p != NULL) {
     const VP8Tokens* const next = p->next_;
