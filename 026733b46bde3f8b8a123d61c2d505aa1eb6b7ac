@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//HuI\u003d",
+        "filename": "src/enc/cost.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-02-06T15:08:05Z",
+      "side": 1,
+      "message": "this block (56-60) should go into dsp.h\n\nAlso: VP8EncDspCostInit() seems like a more coherent name, compared to the other ones in dsp.h",
+      "revId": "026733b46bde3f8b8a123d61c2d505aa1eb6b7ac",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
