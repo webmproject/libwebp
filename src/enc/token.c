@@ -53,10 +53,10 @@ void VP8TBufferInit(VP8TBuffer* const b, int page_size) {
 
 void VP8TBufferClear(VP8TBuffer* const b) {
   if (b != NULL) {
-    const VP8Tokens* p = b->pages_;
+    VP8Tokens* p = b->pages_;
     while (p != NULL) {
-      const VP8Tokens* const next = p->next_;
-      WebPSafeFree((void*)p);
+      VP8Tokens* const next = p->next_;
+      WebPSafeFree(p);
       p = next;
     }
     VP8TBufferInit(b, b->page_size_);
