@@ -487,66 +487,6 @@ const uint16_t VP8FixedCostsI4[NUM_BMODES][NUM_BMODES][NUM_BMODES] = {
 };
 
 //------------------------------------------------------------------------------
-// Mode costs
-
-static int GetResidualCost(int ctx0, const VP8Residual* const res) {
-  int n = res->first;
-  // should be prob[VP8EncBands[n]], but it's equivalent for n=0 or 1
-  const int p0 = res->prob[n][ctx0][0];
-  const uint16_t* t = res->cost[n][ctx0];
-  // bit_cost(1, p0) is already incorporated in t[] tables, but only if ctx != 0
-  // (as required by the syntax). For ctx0 == 0, we need to add it here or it'll
-  // be missing during the loop.
-  int cost = (ctx0 == 0) ? VP8BitCost(1, p0) : 0;
-
-  if (res->last < 0) {
-    return VP8BitCost(0, p0);
-  }
-  for (; n < res->last; ++n) {
-    const int v = abs(res->coeffs[n]);
-    const int b = VP8EncBands[n + 1];
-    const int ctx = (v >= 2) ? 2 : v;
-    cost += VP8LevelCost(t, v);
-    t = res->cost[b][ctx];
-  }
-  // Last coefficient is always non-zero
-  {
-    const int v = abs(res->coeffs[n]);
-    assert(v != 0);
-    cost += VP8LevelCost(t, v);
-    if (n < 15) {
-      const int b = VP8EncBands[n + 1];
-      const int ctx = (v == 1) ? 1 : 2;
-      const int last_p0 = res->prob[b][ctx][0];
-      cost += VP8BitCost(0, last_p0);
-    }
-  }
-  return cost;
-}
-
-//------------------------------------------------------------------------------
-// init function
-
-#if defined(WEBP_USE_MIPS32)
-extern int VP8GetResidualCostMIPS32(int ctx0, const VP8Residual* const res);
-#endif  // WEBP_USE_MIPS32
-
-// TODO(skal): this, and GetResidualCost(), should probably go somewhere
-// under src/dsp/ at some point.
-VP8GetResidualCostFunc VP8GetResidualCost;
-
-void VP8GetResidualCostInit(void) {
-  VP8GetResidualCost = GetResidualCost;
-  if (VP8GetCPUInfo != NULL) {
-#if defined(WEBP_USE_MIPS32)
-    if (VP8GetCPUInfo(kMIPS32)) {
-      VP8GetResidualCost = VP8GetResidualCostMIPS32;
-    }
-#endif
-  }
-}
-
-//------------------------------------------------------------------------------
 // helper functions for residuals struct VP8Residual.
 
 void VP8InitResidual(int first, int coeff_type,
@@ -556,41 +496,6 @@ void VP8InitResidual(int first, int coeff_type,
   res->stats = enc->proba_.stats_[coeff_type];
   res->cost  = enc->proba_.level_cost_[coeff_type];
   res->first = first;
-}
-
-static void SetResidualCoeffs(const int16_t* const coeffs,
-                              VP8Residual* const res) {
-  int n;
-  res->last = -1;
-  assert(res->first == 0 || coeffs[0] == 0);
-  for (n = 15; n >= 0; --n) {
-    if (coeffs[n]) {
-      res->last = n;
-      break;
-    }
-  }
-  res->coeffs = coeffs;
-}
-
-//------------------------------------------------------------------------------
-// init function
-
-#if defined(WEBP_USE_SSE2)
-extern void VP8SetResidualCoeffsSSE2(const int16_t* const coeffs,
-                                     VP8Residual* const res);
-#endif  // WEBP_USE_SSE2
-
-VP8SetResidualCoeffsFunc VP8SetResidualCoeffs;
-
-void VP8SetResidualCoeffsInit(void) {
-  VP8SetResidualCoeffs = SetResidualCoeffs;
-  if (VP8GetCPUInfo != NULL) {
-#if defined(WEBP_USE_SSE2)
-    if (VP8GetCPUInfo(kSSE2)) {
-      VP8SetResidualCoeffs = VP8SetResidualCoeffsSSE2;
-    }
-#endif
-  }
 }
 
 //------------------------------------------------------------------------------

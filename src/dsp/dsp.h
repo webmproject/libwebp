@@ -177,6 +177,21 @@ void VP8LSetHistogramData(const int distribution[MAX_COEFF_THRESH + 1],
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void);
 
 //------------------------------------------------------------------------------
+// cost functions (encoding)
+
+struct VP8Residual;
+typedef void (*VP8SetResidualCoeffsFunc)(const int16_t* const coeffs,
+                                         struct VP8Residual* const res);
+extern VP8SetResidualCoeffsFunc VP8SetResidualCoeffs;
+
+// Cost calculation function.
+typedef int (*VP8GetResidualCostFunc)(int ctx0,
+                                      const struct VP8Residual* const res);
+extern VP8GetResidualCostFunc VP8GetResidualCost;
+
+void VP8EncDspCostInit(void);  // must be called first
+
+//------------------------------------------------------------------------------
 // Decoding
 
 typedef void (*VP8DecIdct)(const int16_t* coeffs, uint8_t* dst);

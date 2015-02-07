@@ -24,7 +24,8 @@ extern "C" {
 
 // On-the-fly info about the current set of residuals. Handy to avoid
 // passing zillions of params.
-typedef struct {
+typedef struct VP8Residual VP8Residual;
+struct VP8Residual {
   int first;
   int last;
   const int16_t* coeffs;
@@ -33,16 +34,10 @@ typedef struct {
   ProbaArray* prob;
   StatsArray* stats;
   CostArray*  cost;
-} VP8Residual;
+};
 
 void VP8InitResidual(int first, int coeff_type,
                      VP8Encoder* const enc, VP8Residual* const res);
-
-typedef void (*VP8SetResidualCoeffsFunc)(const int16_t* const coeffs,
-                                         VP8Residual* const res);
-extern VP8SetResidualCoeffsFunc VP8SetResidualCoeffs;
-
-void VP8SetResidualCoeffsInit(void);  // must be called first
 
 int VP8RecordCoeffs(int ctx, const VP8Residual* const res);
 
@@ -54,12 +49,6 @@ extern const uint16_t VP8EntropyCost[256];        // 8bit fixed-point log(p)
 static WEBP_INLINE int VP8BitCost(int bit, uint8_t proba) {
   return !bit ? VP8EntropyCost[proba] : VP8EntropyCost[255 - proba];
 }
-
-// Cost calculation function.
-typedef int (*VP8GetResidualCostFunc)(int ctx0, const VP8Residual* const res);
-extern VP8GetResidualCostFunc VP8GetResidualCost;
-
-void VP8GetResidualCostInit(void);  // must be called first
 
 // Level cost calculations
 extern const uint16_t VP8LevelCodes[MAX_VARIABLE_LEVEL][2];
