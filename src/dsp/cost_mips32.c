@@ -125,6 +125,47 @@ static int GetResidualCost(int ctx0, const VP8Residual* const res) {
   return cost;
 }
 
+static void SetResidualCoeffs(const int16_t* const coeffs,
+                              VP8Residual* const res) {
+  const int16_t* p_coeffs = (int16_t*)coeffs;
+  int temp0, temp1, temp2, n, n1;
+  assert(res->first == 0 || coeffs[0] == 0);
+
+  __asm__ volatile (
+    ".set     push                                      \n\t"
+    ".set     noreorder                                 \n\t"
+    "addiu    %[p_coeffs],   %[p_coeffs],    28         \n\t"
+    "li       %[n],          15                         \n\t"
+    "li       %[temp2],      -1                         \n\t"
+  "0:                                                   \n\t"
+    "ulw      %[temp0],      0(%[p_coeffs])             \n\t"
+    "beqz     %[temp0],      1f                         \n\t"
+#if defined(WORDS_BIGENDIAN)
+    " sll     %[temp1],      %[temp0],       16         \n\t"
+#else
+    " srl     %[temp1],      %[temp0],       16         \n\t"
+#endif
+    "addiu    %[n1],         %[n],           -1         \n\t"
+    "movz     %[temp0],      %[n1],          %[temp1]   \n\t"
+    "movn     %[temp0],      %[n],           %[temp1]   \n\t"
+    "j        2f                                        \n\t"
+    " addiu   %[temp2],      %[temp0],       0          \n\t"
+  "1:                                                   \n\t"
+    "addiu    %[n],          %[n],           -2         \n\t"
+    "bgtz     %[n],          0b                         \n\t"
+    " addiu   %[p_coeffs],   %[p_coeffs],    -4         \n\t"
+  "2:                                                   \n\t"
+    ".set     pop                                       \n\t"
+    : [p_coeffs]"+&r"(p_coeffs), [temp0]"=&r"(temp0),
+      [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [n]"=&r"(n), [n1]"=&r"(n1)
+    :
+    : "memory"
+  );
+  res->last = temp2;
+  res->coeffs = coeffs;
+}
+
 #endif  // WEBP_USE_MIPS32
 
 //------------------------------------------------------------------------------
@@ -135,6 +176,7 @@ extern WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspCostInitMIPS32(void);
 void VP8EncDspCostInitMIPS32(void) {
 #if defined(WEBP_USE_MIPS32)
   VP8GetResidualCost = GetResidualCost;
+  VP8SetResidualCoeffs = SetResidualCoeffs;
 #endif  // WEBP_USE_MIPS32
 }
 
