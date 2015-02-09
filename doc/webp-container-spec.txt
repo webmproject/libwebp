@@ -67,7 +67,7 @@ Below are additional terms used throughout this document:
 _Reader/Writer_
 
 : Code that reads WebP files is referred to as a _reader_, while code that
-writes them is referred to as a _writer_.
+  writes them is referred to as a _writer_.
 
 _uint16_
 
@@ -89,10 +89,12 @@ _FourCC_
 _1-based_
 
 : An unsigned integer field storing values offset by `-1`. e.g., Such a field
-would store value _25_ as _24_.
+  would store value _25_ as _24_.
 
-RIFF file format
+
+RIFF File Format
 ----------------
+
 The WebP file format is based on the RIFF (resource interchange file format)
 document format.
 
@@ -132,7 +134,8 @@ _ChunkHeader('ABCD')_
 chunks that apply to any RIFF file format, while FourCCs specific to a file
 format are all lowercase. WebP does not follow this convention.
 
-WebP file header
+
+WebP File Header
 ----------------
 
      0                   1                   2                   3
@@ -152,8 +155,8 @@ WebP file header
 File Size: 32 bits (_uint32_)
 
 : The size of the file in bytes starting at offset 8. The maximum value of
-this field is 2^32 minus 10 bytes and thus the size of the whole file is at
-most 4GiB minus 2 bytes.
+  this field is 2^32 minus 10 bytes and thus the size of the whole file is at
+  most 4GiB minus 2 bytes.
 
 'WEBP': 32 bits
 
@@ -165,7 +168,8 @@ the 'WEBP' FourCC. The file SHOULD NOT contain anything after it. As the size
 of any chunk is even, the size given by the RIFF header is also even. The
 contents of individual chunks will be described in the following sections.
 
-Simple file format (lossy)
+
+Simple File Format (Lossy)
 --------------------------
 
 This layout SHOULD be used if the image requires _lossy_ encoding and does not
@@ -203,7 +207,8 @@ width and height. That is assumed to be the width and height of the canvas.
 The VP8 specification describes how to decode the image into Y'CbCr
 format. To convert to RGB, Rec. 601 SHOULD be used.
 
-Simple file format (lossless)
+
+Simple File Format (Lossless)
 -----------------------------
 
 **Note:** Older readers may not support files using the lossless format.
@@ -241,7 +246,8 @@ The current specification of the VP8L bitstream can be found at
 contains the VP8L image width and height. That is assumed to be the width
 and height of the canvas.
 
-Extended file format
+
+Extended File Format
 --------------------
 
 **Note:** Older readers may not support files using the extended format.
@@ -304,7 +310,7 @@ ICC profile (I): 1 bit
 Alpha (L): 1 bit
 
 : Set if any of the frames of the image contain transparency information
-("alpha").
+  ("alpha").
 
 EXIF metadata (E): 1 bit
 
@@ -317,7 +323,7 @@ XMP metadata (X): 1 bit
 Animation (A): 1 bit
 
 : Set if this is an animated image. Data in 'ANIM' and 'ANMF' chunks should be
-used to control the animation.
+  used to control the animation.
 
 Reserved (R): 1 bit
 
@@ -366,9 +372,9 @@ animation.
 Background Color: 32 bits (_uint32_)
 
 : The default background color of the canvas in \[Blue, Green, Red, Alpha\]
-byte order. This color MAY be used to fill the unused space on the canvas around
-the frames, as well as the transparent pixels of the first frame. Background
-color is also used when disposal method is `1`.
+  byte order. This color MAY be used to fill the unused space on the canvas
+  around the frames, as well as the transparent pixels of the first frame.
+  Background color is also used when disposal method is `1`.
 
 **Note**:
 
@@ -388,7 +394,6 @@ Loop Count: 16 bits (_uint16_)
 This chunk MUST appear if the _Animation_ flag in the VP8X chunk is set.
 If the _Animation_ flag is not set and this chunk is present, it
 SHOULD be ignored.
-
 
 ANMF chunk:
 
@@ -432,8 +437,8 @@ Frame Height Minus One: 24 bits (_uint24_)
 Frame Duration: 24 bits (_uint24_)
 
 : The time to wait before displaying the next frame, in 1 millisecond units.
-In particular, frame duration of 0 is useful when one wants to update multiple
-areas of the canvas at once during the animation.
+  In particular, frame duration of 0 is useful when one wants to update
+  multiple areas of the canvas at once during the animation.
 
 Reserved: 6 bits
 
@@ -441,28 +446,28 @@ Reserved: 6 bits
 
 Blending method (B): 1 bit
 
-: Indicates how transparent pixels of _the current frame_ are to be blended with
-corresponding pixels of the previous canvas:
+: Indicates how transparent pixels of _the current frame_ are to be blended
+  with corresponding pixels of the previous canvas:
 
-  * `0`: Use alpha blending. After disposing of the previous frame, render the
-    current frame on the canvas using [alpha-blending](#alpha-blending). If the
-    current frame does not have an alpha channel, assume alpha value of 255,
-    effectively replacing the rectangle.
+    * `0`: Use alpha blending. After disposing of the previous frame, render the
+      current frame on the canvas using [alpha-blending](#alpha-blending). If
+      the current frame does not have an alpha channel, assume alpha value of
+      255, effectively replacing the rectangle.
 
-  * `1`: Do not blend. After disposing of the previous frame, render the
-    current frame on the canvas by overwriting the rectangle covered by the
-    current frame.
+    * `1`: Do not blend. After disposing of the previous frame, render the
+      current frame on the canvas by overwriting the rectangle covered by the
+      current frame.
 
 Disposal method (D): 1 bit
 
-: Indicates how _the current frame_ is to be treated after it has been displayed
-(before rendering the next frame) on the canvas:
+: Indicates how _the current frame_ is to be treated after it has been
+  displayed (before rendering the next frame) on the canvas:
 
-  * `0`: Do not dispose. Leave the canvas as is.
+    * `0`: Do not dispose. Leave the canvas as is.
 
-  * `1`: Dispose to background color. Fill the _rectangle_ on the canvas covered
-    by the _current frame_ with background color specified in the
-    [ANIM chunk](#anim_chunk).
+    * `1`: Dispose to background color. Fill the _rectangle_ on the canvas
+      covered by the _current frame_ with background color specified in the
+      [ANIM chunk](#anim_chunk).
 
 **Notes**:
 
@@ -521,20 +526,20 @@ Reserved (Rsv): 2 bits
 Pre-processing (P): 2 bits
 
 : These INFORMATIVE bits are used to signal the pre-processing that has
-been performed during compression. The decoder can use this information to
-e.g. dither the values or smooth the gradients prior to display.
+  been performed during compression. The decoder can use this information to
+  e.g. dither the values or smooth the gradients prior to display.
 
-  * `0`: no pre-processing
-  * `1`: level reduction
+    * `0`: no pre-processing
+    * `1`: level reduction
 
 Filtering method (F): 2 bits
 
 : The filtering method used:
 
-  * `0`: None.
-  * `1`: Horizontal filter.
-  * `2`: Vertical filter.
-  * `3`: Gradient filter.
+    * `0`: None.
+    * `1`: Horizontal filter.
+    * `2`: Vertical filter.
+    * `3`: Gradient filter.
 
 For each pixel, filtering is performed using the following calculations.
 Assume the alpha values surrounding the current `X` position are labeled as:
@@ -578,15 +583,15 @@ Compression method (C): 2 bits
 
 : The compression method used:
 
-  * `0`: No compression.
-  * `1`: Compressed using the WebP lossless format.
+    * `0`: No compression.
+    * `1`: Compressed using the WebP lossless format.
 
 Alpha bitstream: _Chunk Size_ - `1` bytes
 
 : Encoded alpha bitstream.
 
-This optional chunk contains encoded alpha data for this frame. A
-frame containing a 'VP8L' chunk SHOULD NOT contain this chunk.
+This optional chunk contains encoded alpha data for this frame. A frame
+containing a 'VP8L' chunk SHOULD NOT contain this chunk.
 
 **Rationale**: The transparency information is already part of the 'VP8L'
 chunk.
@@ -624,8 +629,8 @@ significant fourth-character space) as its tag _or_ (ii) a VP8L chunk, using
 "VP8L" as its tag.
 
 The formats of VP8 and VP8L chunks are as described in sections
-[Simple file format (lossy)](#simple-file-format-lossy)
-and [Simple file format (lossless)](#simple-file-format-lossless) respectively.
+[Simple File Format (Lossy)](#simple-file-format-lossy)
+and [Simple File Format (Lossless)](#simple-file-format-lossless) respectively.
 
 #### Color profile
 
@@ -672,7 +677,6 @@ EXIF chunk:
 EXIF Metadata: _Chunk Size_ bytes
 
 : image metadata in EXIF format.
-
 
 XMP chunk:
 
@@ -755,7 +759,8 @@ for loop = 0..loop_count - 1
         Show the contents of the canvas for frame_params.frameDuration * 1ms.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Example file layouts
+
+Example File Layouts
 --------------------
 
 A lossy encoded image with alpha may look as follows:
