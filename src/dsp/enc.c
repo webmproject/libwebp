@@ -86,7 +86,7 @@ static uint8_t clip1[255 + 510 + 1];    // clips [-255,510] to [0,255]
 // and make sure it's set to true _last_ (so as to be thread-safe)
 static volatile int tables_ok = 0;
 
-static void InitTables(void) {
+static WEBP_TSAN_IGNORE_FUNCTION void InitTables(void) {
   if (!tables_ok) {
     int i;
     for (i = -255; i <= 255 + 255; ++i) {
