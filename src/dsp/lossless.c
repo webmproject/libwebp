@@ -537,14 +537,6 @@ static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
   return pred;
 }
 
-static const VP8LPredictorFunc kPredictorsC[16] = {
-  Predictor0, Predictor1, Predictor2, Predictor3,
-  Predictor4, Predictor5, Predictor6, Predictor7,
-  Predictor8, Predictor9, Predictor10, Predictor11,
-  Predictor12, Predictor13,
-  Predictor0, Predictor0    // <- padding security sentinels
-};
-
 //------------------------------------------------------------------------------
 // Methods to calculate Entropy (Shannon).
 
@@ -1771,7 +1763,22 @@ static volatile VP8CPUInfo lossless_last_cpuinfo_used =
 WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
   if (lossless_last_cpuinfo_used == VP8GetCPUInfo) return;
 
-  memcpy(VP8LPredictors, kPredictorsC, sizeof(VP8LPredictors));
+  VP8LPredictors[0] = Predictor0;
+  VP8LPredictors[1] = Predictor1;
+  VP8LPredictors[2] = Predictor2;
+  VP8LPredictors[3] = Predictor3;
+  VP8LPredictors[4] = Predictor4;
+  VP8LPredictors[5] = Predictor5;
+  VP8LPredictors[6] = Predictor6;
+  VP8LPredictors[7] = Predictor7;
+  VP8LPredictors[8] = Predictor8;
+  VP8LPredictors[9] = Predictor9;
+  VP8LPredictors[10] = Predictor10;
+  VP8LPredictors[11] = Predictor11;
+  VP8LPredictors[12] = Predictor12;
+  VP8LPredictors[13] = Predictor13;
+  VP8LPredictors[14] = Predictor0;     // <- padding security sentinels
+  VP8LPredictors[15] = Predictor0;
 
   VP8LSubtractGreenFromBlueAndRed = VP8LSubtractGreenFromBlueAndRed_C;
   VP8LAddGreenToBlueAndRed = VP8LAddGreenToBlueAndRed_C;
