@@ -843,7 +843,7 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
   if (has_alpha) {
     WebPInitAlphaProcessing();
     assert(step == 4);
-#if defined(USE_INVERSE_ALPHA_TABLE)
+#if defined(USE_GAMMA_COMPRESSION) && defined(USE_INVERSE_ALPHA_TABLE)
     assert(kAlphaFix + kGammaFix <= 31);
 #endif
   }
