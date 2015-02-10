@@ -467,9 +467,9 @@ static void CollectColorRedTransforms(const uint32_t* argb, int stride,
 
 //------------------------------------------------------------------------------
 
-extern void VP8LDspInitMIPSdspR2(void);
+extern WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPSdspR2(void);
 
-void VP8LDspInitMIPSdspR2(void) {
+WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
   VP8LMapColor32b = MapARGB;
   VP8LMapColor8b = MapAlpha;
