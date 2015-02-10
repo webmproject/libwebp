@@ -78,7 +78,12 @@ extern void VP8SetResidualCoeffsSSE2(const int16_t* const coeffs,
                                      VP8Residual* const res);
 #endif  // WEBP_USE_SSE2
 
-void VP8EncDspCostInit(void) {
+static volatile VP8CPUInfo cost_last_cpuinfo_used =
+    (VP8CPUInfo)&cost_last_cpuinfo_used;
+
+WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspCostInit(void) {
+  if (cost_last_cpuinfo_used == VP8GetCPUInfo) return;
+
   VP8GetResidualCost = GetResidualCost;
   VP8SetResidualCoeffs = SetResidualCoeffs;
 
@@ -100,6 +105,8 @@ void VP8EncDspCostInit(void) {
     }
 #endif
   }
+
+  cost_last_cpuinfo_used = VP8GetCPUInfo;
 }
 
 //------------------------------------------------------------------------------
