@@ -389,7 +389,7 @@ static void GradientUnfilter(int width, int height, int stride, int row,
 
 extern void VP8FiltersInitMIPSdspR2(void);
 
-void VP8FiltersInitMIPSdspR2(void) {
+WEBP_TSAN_IGNORE_FUNCTION void VP8FiltersInitMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
   WebPFilters[WEBP_FILTER_HORIZONTAL] = HorizontalFilter;
   WebPFilters[WEBP_FILTER_VERTICAL] = VerticalFilter;

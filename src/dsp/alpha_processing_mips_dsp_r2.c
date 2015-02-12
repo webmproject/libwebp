@@ -131,7 +131,7 @@ static void MultARGBRow(uint32_t* const ptr, int width, int inverse) {
 
 extern void WebPInitAlphaProcessingMIPSdspR2(void);
 
-void WebPInitAlphaProcessingMIPSdspR2(void) {
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessingMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
   WebPDispatchAlpha = DispatchAlpha;
   WebPMultARGBRow = MultARGBRow;
