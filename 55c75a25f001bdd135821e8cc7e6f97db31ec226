@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//G+w\u003d",
+        "filename": "src/dsp/alpha_processing_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-02-12T22:38:31Z",
+      "side": 1,
+      "message": "what do you think about the annotations here? we\u0027ve got a bit of a mix. afaict it\u0027s only needed with the declaration, I can verify with gcc implementation",
+      "revId": "55c75a25f001bdd135821e8cc7e6f97db31ec226",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
