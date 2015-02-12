@@ -463,6 +463,61 @@ static void CollectColorRedTransforms(const uint32_t* argb, int stride,
   }
 }
 
+// Add green to blue and red channels (i.e. perform the inverse transform of
+// 'subtract green').
+static void AddGreenToBlueAndRed(uint32_t* data, int num_pixels) {
+  uint32_t temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
+  uint32_t* const p_loop1_end = data + (num_pixels & ~3);
+  uint32_t* const p_loop2_end = data + num_pixels;
+  __asm__ volatile (
+    ".set       push                                          \n\t"
+    ".set       noreorder                                     \n\t"
+    "beq        %[data],         %[p_loop1_end],     3f       \n\t"
+    " nop                                                     \n\t"
+  "0:                                                         \n\t"
+    "lw         %[temp0],        0(%[data])                   \n\t"
+    "lw         %[temp1],        4(%[data])                   \n\t"
+    "lw         %[temp2],        8(%[data])                   \n\t"
+    "lw         %[temp3],        12(%[data])                  \n\t"
+    "ext        %[temp4],        %[temp0],           8,    8  \n\t"
+    "ext        %[temp5],        %[temp1],           8,    8  \n\t"
+    "ext        %[temp6],        %[temp2],           8,    8  \n\t"
+    "ext        %[temp7],        %[temp3],           8,    8  \n\t"
+    "addiu      %[data],         %[data],            16       \n\t"
+    "replv.ph   %[temp4],        %[temp4]                     \n\t"
+    "replv.ph   %[temp5],        %[temp5]                     \n\t"
+    "replv.ph   %[temp6],        %[temp6]                     \n\t"
+    "replv.ph   %[temp7],        %[temp7]                     \n\t"
+    "addu.qb    %[temp0],        %[temp0],           %[temp4] \n\t"
+    "addu.qb    %[temp1],        %[temp1],           %[temp5] \n\t"
+    "addu.qb    %[temp2],        %[temp2],           %[temp6] \n\t"
+    "addu.qb    %[temp3],        %[temp3],           %[temp7] \n\t"
+    "sw         %[temp0],        -16(%[data])                 \n\t"
+    "sw         %[temp1],        -12(%[data])                 \n\t"
+    "sw         %[temp2],        -8(%[data])                  \n\t"
+    "bne        %[data],         %[p_loop1_end],     0b       \n\t"
+    " sw        %[temp3],        -4(%[data])                  \n\t"
+  "3:                                                         \n\t"
+    "beq        %[data],         %[p_loop2_end],     2f       \n\t"
+    " nop                                                     \n\t"
+  "1:                                                         \n\t"
+    "lw         %[temp0],        0(%[data])                   \n\t"
+    "addiu      %[data],         %[data],            4        \n\t"
+    "ext        %[temp4],        %[temp0],           8,    8  \n\t"
+    "replv.ph   %[temp4],        %[temp4]                     \n\t"
+    "addu.qb    %[temp0],        %[temp0],           %[temp4] \n\t"
+    "bne        %[data],         %[p_loop2_end],     1b       \n\t"
+    " sw        %[temp0],        -4(%[data])                  \n\t"
+  "2:                                                         \n\t"
+    ".set       pop                                           \n\t"
+    : [data]"+&r"(data), [temp0]"=&r"(temp0), [temp1]"=&r"(temp1),
+      [temp2]"=&r"(temp2), [temp3]"=&r"(temp3), [temp4]"=&r"(temp4),
+      [temp5]"=&r"(temp5), [temp6]"=&r"(temp6), [temp7]"=&r"(temp7)
+    : [p_loop1_end]"r"(p_loop1_end), [p_loop2_end]"r"(p_loop2_end)
+    : "memory"
+  );
+}
+
 #endif  // WEBP_USE_MIPS_DSP_R2
 
 //------------------------------------------------------------------------------
@@ -486,6 +541,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPSdspR2(void) {
   VP8LTransformColor = TransformColor;
   VP8LCollectColorBlueTransforms = CollectColorBlueTransforms;
   VP8LCollectColorRedTransforms = CollectColorRedTransforms;
+  VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
 #endif  // WEBP_USE_MIPS_DSP_R2
 }
 
