@@ -82,11 +82,6 @@ static float ComputeNextQ(PassStats* const s) {
 //------------------------------------------------------------------------------
 // Tables for level coding
 
-const uint8_t VP8EncBands[16 + 1] = {
-  0, 1, 2, 3, 6, 4, 5, 6, 6, 6, 6, 6, 6, 6, 6, 7,
-  0  // sentinel
-};
-
 const uint8_t VP8Cat3[] = { 173, 148, 140 };
 const uint8_t VP8Cat4[] = { 176, 155, 140, 135 };
 const uint8_t VP8Cat5[] = { 180, 157, 141, 134, 130 };

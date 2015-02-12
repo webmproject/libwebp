@@ -179,6 +179,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void);
 //------------------------------------------------------------------------------
 // cost functions (encoding)
 
+extern const uint16_t VP8EntropyCost[256];        // 8bit fixed-point log(p)
+// approximate cost per level:
+extern const uint16_t VP8LevelFixedCosts[2047 /*MAX_LEVEL*/ + 1];
+extern const uint8_t VP8EncBands[16 + 1];
+
 struct VP8Residual;
 typedef void (*VP8SetResidualCoeffsFunc)(const int16_t* const coeffs,
                                          struct VP8Residual* const res);

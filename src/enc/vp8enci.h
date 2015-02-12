@@ -447,7 +447,6 @@ int VP8EncWrite(VP8Encoder* const enc);
 void VP8EncFreeBitWriters(VP8Encoder* const enc);
 
   // in frame.c
-extern const uint8_t VP8EncBands[16 + 1];
 extern const uint8_t VP8Cat3[];
 extern const uint8_t VP8Cat4[];
 extern const uint8_t VP8Cat5[];

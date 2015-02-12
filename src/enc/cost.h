@@ -41,10 +41,6 @@ void VP8InitResidual(int first, int coeff_type,
 
 int VP8RecordCoeffs(int ctx, const VP8Residual* const res);
 
-// approximate cost per level:
-extern const uint16_t VP8LevelFixedCosts[MAX_LEVEL + 1];
-extern const uint16_t VP8EntropyCost[256];        // 8bit fixed-point log(p)
-
 // Cost of coding one event with probability 'proba'.
 static WEBP_INLINE int VP8BitCost(int bit, uint8_t proba) {
   return !bit ? VP8EntropyCost[proba] : VP8EntropyCost[255 - proba];
