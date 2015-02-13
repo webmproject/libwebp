@@ -271,7 +271,16 @@ static int ApplyFiltersAndEncode(const uint8_t* alpha, int width, int height,
                              reduce_levels, effort_level, NULL, &best);
   }
   if (ok) {
-    if (stats != NULL) *stats = best.stats;
+    if (stats != NULL) {
+      stats->lossless_features = best.stats.lossless_features;
+      stats->histogram_bits = best.stats.histogram_bits;
+      stats->transform_bits = best.stats.transform_bits;
+      stats->cache_bits = best.stats.cache_bits;
+      stats->palette_size = best.stats.palette_size;
+      stats->lossless_size = best.stats.lossless_size;
+      stats->lossless_hdr_size = best.stats.lossless_hdr_size;
+      stats->lossless_data_size = best.stats.lossless_data_size;
+    }
     *output_size = VP8BitWriterSize(&best.bw);
     *output = VP8BitWriterBuf(&best.bw);
   } else {
