@@ -88,7 +88,7 @@ ROW_FUNC(YuvToBgraRow,     4, 2, 1, 0, 3)
 
 //------------------------------------------------------------------------------
 
-extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersMIPS32(void);
+extern void WebPInitSamplersMIPS32(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersMIPS32(void) {
 #if defined(WEBP_USE_MIPS32)

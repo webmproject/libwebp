@@ -327,7 +327,7 @@ static void AddGreenToBlueAndRed(uint32_t* argb_data, int num_pixels) {
 
 //------------------------------------------------------------------------------
 
-extern WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitNEON(void);
+extern void VP8LDspInitNEON(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitNEON(void) {
 #if defined(WEBP_USE_NEON)

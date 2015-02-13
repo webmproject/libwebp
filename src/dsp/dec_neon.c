@@ -1449,7 +1449,7 @@ static void TM8uv(uint8_t* dst) { TrueMotion(dst, 8); }
 //------------------------------------------------------------------------------
 // Entry point
 
-extern WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitNEON(void);
+extern void VP8DspInitNEON(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitNEON(void) {
 #if defined(WEBP_USE_NEON)

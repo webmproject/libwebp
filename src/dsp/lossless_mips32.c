@@ -401,7 +401,7 @@ static void HistogramAdd(const VP8LHistogram* const a,
 //------------------------------------------------------------------------------
 // Entry point
 
-extern WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPS32(void);
+extern void VP8LDspInitMIPS32(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPS32(void) {
 #if defined(WEBP_USE_MIPS32)

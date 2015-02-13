@@ -946,7 +946,7 @@ void VP8SetResidualCoeffsSSE2(const int16_t* const coeffs,
 //------------------------------------------------------------------------------
 // Entry point
 
-extern WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitSSE2(void);
+extern void VP8EncDspInitSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitSSE2(void) {
 #if defined(WEBP_USE_SSE2)

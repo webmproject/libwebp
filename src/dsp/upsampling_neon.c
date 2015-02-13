@@ -242,7 +242,7 @@ NEON_UPSAMPLE_FUNC(UpsampleBgraLinePair, Bgra, 4)
 
 //------------------------------------------------------------------------------
 
-extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersNEON(void);
+extern void WebPInitUpsamplersNEON(void);
 
 #ifdef FANCY_UPSAMPLING
 

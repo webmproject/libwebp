@@ -309,7 +309,7 @@ static void YuvToBgrRowSSE2(const uint8_t* y,
 //------------------------------------------------------------------------------
 // Entry point
 
-extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersSSE2(void);
+extern void WebPInitSamplersSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersSSE2(void) {
 #if defined(WEBP_USE_SSE2)

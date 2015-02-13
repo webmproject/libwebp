@@ -560,7 +560,7 @@ static void TransformTwo(const int16_t* in, uint8_t* dst, int do_two) {
 //------------------------------------------------------------------------------
 // Entry point
 
-extern WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMIPS32(void);
+extern void VP8DspInitMIPS32(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMIPS32(void) {
 #if defined(WEBP_USE_MIPS32)

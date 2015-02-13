@@ -503,7 +503,7 @@ static void HistogramAdd(const VP8LHistogram* const a,
 
 //------------------------------------------------------------------------------
 
-extern WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitSSE2(void);
+extern void VP8LDspInitSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitSSE2(void) {
 #if defined(WEBP_USE_SSE2)

@@ -119,7 +119,7 @@ ROW_FUNC(YuvToBgraRow,     4, 2, 1, 0, 3)
 
 //------------------------------------------------------------------------------
 
-extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersMIPSdspR2(void);
+extern void WebPInitSamplersMIPSdspR2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)

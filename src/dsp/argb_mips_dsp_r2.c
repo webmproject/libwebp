@@ -98,7 +98,7 @@ static void PackRGB(const uint8_t* r, const uint8_t* g, const uint8_t* b,
 //------------------------------------------------------------------------------
 // Entry point
 
-extern WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspARGBInitMIPSdspR2(void);
+extern void VP8EncDspARGBInitMIPSdspR2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspARGBInitMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
