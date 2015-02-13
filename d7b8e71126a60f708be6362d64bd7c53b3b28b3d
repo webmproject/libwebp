@@ -16,6 +16,24 @@
       "revId": "d7b8e71126a60f708be6362d64bd7c53b3b28b3d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//G70\u003d",
+        "filename": "src/dsp/dec_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1004029
+      },
+      "writtenOn": "2015-02-13T11:27:00Z",
+      "side": 1,
+      "message": "for simple filters is used same part with saturating shift left and back by 23 and test-suite revealed that bug. i will try to find bitstream but i can not promise anything",
+      "parentUuid": "AAAAdn//G78\u003d",
+      "revId": "d7b8e71126a60f708be6362d64bd7c53b3b28b3d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
