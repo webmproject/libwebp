@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//G78\u003d",
+        "filename": "src/dsp/dec_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-02-13T11:14:46Z",
+      "side": 1,
+      "message": "hmm... strange (and annoying) that this bug wasn\u0027t unveiled by our test-suite. Probably means that this case is not covered enough.\n\nWould you by chance have a bitstream you could contribute to the test-suite to cover this case? That would be very helpful for regression-testing and coverage...",
+      "revId": "d7b8e71126a60f708be6362d64bd7c53b3b28b3d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
