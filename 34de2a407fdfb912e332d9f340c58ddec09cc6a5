@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//G8k\u003d",
+        "filename": "src/dsp/lossless_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-02-13T07:50:26Z",
+      "side": 1,
+      "message": "you can avoid the function call in 50% of the time with:\n\nif (num_pixels \u0026 1) VP8LTransformColorInverse_C(m, data, 1);",
+      "revId": "34de2a407fdfb912e332d9f340c58ddec09cc6a5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
