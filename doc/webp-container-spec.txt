@@ -50,6 +50,9 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
 document are to be interpreted as described in [RFC 2119][].
 
+Bit numbering in chunk diagrams starts at `0` for the most significant bit
+('MSB 0') as described in [RFC 1166][].
+
 **Note:** Out of the features mentioned above, lossy compression, lossless
 compression, transparency, metadata, color profile and animation are finalized
 and are to be considered stable.
@@ -809,4 +812,5 @@ RIFF/WEBP
 [webpllspec]: https://gerrit.chromium.org/gerrit/gitweb?p=webm/libwebp.git;a=blob;f=doc/webp-lossless-bitstream-spec.txt;hb=master
 [iccspec]: http://www.color.org/icc_specs2.xalter
 [metadata]: http://www.metadataworkinggroup.org/pdf/mwg_guidance.pdf
+[rfc 1166]: http://tools.ietf.org/html/rfc1166
 [rfc 2119]: http://tools.ietf.org/html/rfc2119
