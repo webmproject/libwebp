@@ -174,7 +174,7 @@ void VP8LSetHistogramData(const int distribution[MAX_COEFF_THRESH + 1],
                           VP8Histogram* const histo);
 
 // must be called before using any of the above
-WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void);
+void VP8EncDspInit(void);
 
 //------------------------------------------------------------------------------
 // cost functions (encoding)
@@ -195,7 +195,7 @@ typedef int (*VP8GetResidualCostFunc)(int ctx0,
 extern VP8GetResidualCostFunc VP8GetResidualCost;
 
 // must be called before anything using the above
-WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspCostInit(void);
+void VP8EncDspCostInit(void);
 
 //------------------------------------------------------------------------------
 // Decoding
@@ -223,7 +223,7 @@ extern const int8_t* const VP8ksclip2;  // clips [-112, 112] to [-16, 15]
 extern const uint8_t* const VP8kclip1;  // clips [-255,511] to [0,255]
 extern const uint8_t* const VP8kabs0;   // abs(x) for x in [-255,255]
 // must be called first
-WEBP_TSAN_IGNORE_FUNCTION void VP8InitClipTables(void);
+void VP8InitClipTables(void);
 
 // simple filter (only for luma)
 typedef void (*VP8SimpleFilterFunc)(uint8_t* p, int stride, int thresh);
@@ -250,7 +250,7 @@ extern VP8ChromaFilterFunc VP8VFilter8i;  // filtering u and v altogether
 extern VP8ChromaFilterFunc VP8HFilter8i;
 
 // must be called before anything using the above
-WEBP_TSAN_IGNORE_FUNCTION void VP8DspInit(void);
+void VP8DspInit(void);
 
 //------------------------------------------------------------------------------
 // WebP I/O
@@ -299,11 +299,11 @@ extern WebPYUV444Converter WebPYUV444Converters[/* MODE_LAST */];
 
 // Must be called before using the WebPUpsamplers[] (and for premultiplied
 // colorspaces like rgbA, rgbA4444, etc)
-WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplers(void);
+void WebPInitUpsamplers(void);
 // Must be called before using WebPSamplers[]
-WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplers(void);
+void WebPInitSamplers(void);
 // Must be called before using WebPYUV444Converters[]
-WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444Converters(void);
+void WebPInitYUV444Converters(void);
 
 //------------------------------------------------------------------------------
 // Rescaler
@@ -322,7 +322,7 @@ extern void (*WebPRescalerExportRow)(struct WebPRescaler* const wrk, int x_out);
 extern void WebPRescalerExportRowC(struct WebPRescaler* const wrk, int x_out);
 
 // Must be called first before using the above.
-WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInit(void);
+void WebPRescalerDspInit(void);
 
 //------------------------------------------------------------------------------
 // Utilities for processing transparent channel.
@@ -380,7 +380,7 @@ void WebPMultRowC(uint8_t* const ptr, const uint8_t* const alpha,
 void WebPMultARGBRowC(uint32_t* const ptr, int width, int inverse);
 
 // To be called first before using the above.
-WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessing(void);
+void WebPInitAlphaProcessing(void);
 
 // ARGB packing function: a/r/g/b input is rgba or bgra order.
 extern void (*VP8PackARGB)(const uint8_t* a, const uint8_t* r,
@@ -392,7 +392,7 @@ extern void (*VP8PackRGB)(const uint8_t* r, const uint8_t* g, const uint8_t* b,
                           int len, int step, uint32_t* out);
 
 // To be called first before using the above.
-WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspARGBInit(void);
+void VP8EncDspARGBInit(void);
 
 //------------------------------------------------------------------------------
 // Filter functions
@@ -425,7 +425,7 @@ extern WebPFilterFunc WebPFilters[WEBP_FILTER_LAST];
 extern WebPUnfilterFunc WebPUnfilters[WEBP_FILTER_LAST];
 
 // To be called first before using the above.
-WEBP_TSAN_IGNORE_FUNCTION void VP8FiltersInit(void);
+void VP8FiltersInit(void);
 
 #ifdef __cplusplus
 }    // extern "C"

@@ -486,7 +486,7 @@ static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
 //------------------------------------------------------------------------------
 // Entry point
 
-extern WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMIPSdspR2(void);
+extern void VP8DspInitMIPSdspR2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)

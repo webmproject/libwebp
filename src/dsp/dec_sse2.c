@@ -1234,7 +1234,7 @@ static void DC8uvNoTopLeft(uint8_t* dst) {    // DC with nothing
 //------------------------------------------------------------------------------
 // Entry point
 
-extern WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitSSE2(void);
+extern void VP8DspInitSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitSSE2(void) {
 #if defined(WEBP_USE_SSE2)

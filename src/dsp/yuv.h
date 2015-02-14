@@ -238,7 +238,7 @@ static WEBP_INLINE void VP8YuvToRgba(uint8_t y, uint8_t u, uint8_t v,
 }
 
 // Must be called before everything, to initialize the tables.
-WEBP_TSAN_IGNORE_FUNCTION void VP8YUVInit(void);
+void VP8YUVInit(void);
 
 //-----------------------------------------------------------------------------
 // SSE2 extra functions (mostly for upsampling_sse2.c)

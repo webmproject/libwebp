@@ -120,9 +120,9 @@ void WebPSamplerProcessPlane(const uint8_t* y, int y_stride,
 
 WebPSamplerRowFunc WebPSamplers[MODE_LAST];
 
-extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersSSE2(void);
-extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersMIPS32(void);
-extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersMIPSdspR2(void);
+extern void WebPInitSamplersSSE2(void);
+extern void WebPInitSamplersMIPS32(void);
+extern void WebPInitSamplersMIPSdspR2(void);
 
 static volatile VP8CPUInfo yuv_last_cpuinfo_used =
     (VP8CPUInfo)&yuv_last_cpuinfo_used;

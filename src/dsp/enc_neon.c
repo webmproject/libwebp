@@ -907,7 +907,7 @@ static int Quantize2Blocks(int16_t in[32], int16_t out[32],
 //------------------------------------------------------------------------------
 // Entry point
 
-extern WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitNEON(void);
+extern void VP8EncDspInitNEON(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitNEON(void) {
 #if defined(WEBP_USE_NEON)

@@ -171,9 +171,9 @@ static void SetResidualCoeffs(const int16_t* const coeffs,
 //------------------------------------------------------------------------------
 // Entry point
 
-extern WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspCostInitMIPS32(void);
+extern void VP8EncDspCostInitMIPS32(void);
 
-void WEBP_TSAN_IGNORE_FUNCTION VP8EncDspCostInitMIPS32(void) {
+WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspCostInitMIPS32(void) {
 #if defined(WEBP_USE_MIPS32)
   VP8GetResidualCost = GetResidualCost;
   VP8SetResidualCoeffs = SetResidualCoeffs;

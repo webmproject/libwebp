@@ -589,7 +589,7 @@ static void TransformColorInverse(const VP8LMultipliers* const m,
 
 //------------------------------------------------------------------------------
 
-extern WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPSdspR2(void);
+extern void VP8LDspInitMIPSdspR2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)

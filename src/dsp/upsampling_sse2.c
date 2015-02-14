@@ -188,7 +188,7 @@ SSE2_UPSAMPLE_FUNC(UpsampleBgraLinePair, VP8YuvToBgra, 4)
 
 //------------------------------------------------------------------------------
 
-extern WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersSSE2(void);
+extern void WebPInitUpsamplersSSE2(void);
 
 #ifdef FANCY_UPSAMPLING
 

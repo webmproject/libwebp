@@ -182,7 +182,7 @@ static void ExportRow(WebPRescaler* const wrk, int x_out) {
 //------------------------------------------------------------------------------
 // Entry point
 
-extern WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInitMIPS32(void);
+extern void WebPRescalerDspInitMIPS32(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInitMIPS32(void) {
 #if defined(WEBP_USE_MIPS32)

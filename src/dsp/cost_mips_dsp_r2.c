@@ -101,9 +101,9 @@ static int GetResidualCost(int ctx0, const VP8Residual* const res) {
 //------------------------------------------------------------------------------
 // Entry point
 
-extern WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspCostInitMIPSdspR2(void);
+extern void VP8EncDspCostInitMIPSdspR2(void);
 
-void WEBP_TSAN_IGNORE_FUNCTION VP8EncDspCostInitMIPSdspR2(void) {
+WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspCostInitMIPSdspR2(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
   VP8GetResidualCost = GetResidualCost;
 #endif  // WEBP_USE_MIPS_DSP_R2
