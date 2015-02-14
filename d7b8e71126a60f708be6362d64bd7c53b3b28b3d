@@ -34,6 +34,24 @@
       "revId": "d7b8e71126a60f708be6362d64bd7c53b3b28b3d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//G1k\u003d",
+        "filename": "src/dsp/dec_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-02-14T04:35:35Z",
+      "side": 1,
+      "message": "this change seems to expose the error which is fixed by this commit:\n\nhttps://gerrit.chromium.org/gerrit/#/c/73790/",
+      "parentUuid": "AAAAdn//G70\u003d",
+      "revId": "d7b8e71126a60f708be6362d64bd7c53b3b28b3d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
