@@ -195,7 +195,7 @@ static WEBP_INLINE void FilterLoop26(uint8_t* p,
     "bgtz      %[temp3],  3f                             \n\t"
     " subu     %[temp4],  %[temp11],      %[temp8]       \n\t"
     "absq_s.w  %[temp4],  %[temp4]                       \n\t"
-    "shll_s.w  %[temp2],  %[temp2],       23             \n\t"
+    "shll_s.w  %[temp2],  %[temp2],       24             \n\t"
     "subu      %[temp4],  %[temp4],       %[ithresh]     \n\t"
     "bgtz      %[temp4],  3f                             \n\t"
     " subu     %[temp3],  %[temp8],       %[temp9]       \n\t"
@@ -214,7 +214,7 @@ static WEBP_INLINE void FilterLoop26(uint8_t* p,
     "bgtz      %[temp3],  3f                             \n\t"
     " subu     %[temp3],  %[temp13],      %[temp12]      \n\t"
     "absq_s.w  %[temp3],  %[temp3]                       \n\t"
-    "sra       %[temp4],  %[temp2],       23             \n\t"
+    "sra       %[temp4],  %[temp2],       24             \n\t"
     "subu      %[temp3],  %[temp3],       %[ithresh]     \n\t"
     "bgtz      %[temp3],  3f                             \n\t"
     " subu     %[temp15], %[temp12],      %[temp7]       \n\t"
@@ -243,10 +243,10 @@ static WEBP_INLINE void FilterLoop26(uint8_t* p,
     "j         3f                                        \n\t"
     " sb       %[temp1],  0(%[p])                        \n\t"
   "4:                                                    \n\t"
-    "shll_s.w  %[temp5],  %[temp5],       23             \n\t"
+    "shll_s.w  %[temp5],  %[temp5],       24             \n\t"
     "subu      %[temp14], %[p],           %[hstride]     \n\t"
     "subu      %[temp11], %[temp14],      %[hstride]     \n\t"
-    "sra       %[temp6],  %[temp5],       23             \n\t"
+    "sra       %[temp6],  %[temp5],       24             \n\t"
     "sll       %[temp1],  %[temp6],       3              \n\t"
     "subu      %[temp15], %[temp11],      %[hstride]     \n\t"
     "addu      %[temp2],  %[temp6],       %[temp1]       \n\t"
@@ -481,6 +481,137 @@ static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
 
 #undef MUL
 
+//------------------------------------------------------------------------------
+// Simple In-loop filtering (Paragraph 15.2)
+
+static void SimpleVFilter16(uint8_t* p, int stride, int thresh) {
+  int i;
+  const int thresh2 = 2 * thresh + 1;
+  int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
+  uint8_t* p1 = p - stride;
+  __asm__ volatile (
+    ".set      push                                      \n\t"
+    ".set      noreorder                                 \n\t"
+    "li        %[i],        16                           \n\t"
+  "0:                                                    \n\t"
+    "negu      %[temp4],    %[stride]                    \n\t"
+    "sll       %[temp5],    %[temp4],       1            \n\t"
+    "lbu       %[temp2],    0(%[p])                      \n\t"
+    "lbux      %[temp3],    %[stride](%[p])              \n\t"
+    "lbux      %[temp1],    %[temp4](%[p])               \n\t"
+    "lbux      %[temp0],    %[temp5](%[p])               \n\t"
+    "subu      %[temp7],    %[temp1],       %[temp2]     \n\t"
+    "subu      %[temp6],    %[temp0],       %[temp3]     \n\t"
+    "absq_s.w  %[temp4],    %[temp7]                     \n\t"
+    "absq_s.w  %[temp5],    %[temp6]                     \n\t"
+    "sll       %[temp4],    %[temp4],       2            \n\t"
+    "subu      %[temp5],    %[temp5],       %[thresh2]   \n\t"
+    "addu      %[temp5],    %[temp4],       %[temp5]     \n\t"
+    "negu      %[temp8],    %[temp7]                     \n\t"
+    "bgtz      %[temp5],    1f                           \n\t"
+    " addiu    %[i],        %[i],           -1           \n\t"
+    "sll       %[temp4],    %[temp8],       1            \n\t"
+    "shll_s.w  %[temp5],    %[temp6],       24           \n\t"
+    "addu      %[temp3],    %[temp4],       %[temp8]     \n\t"
+    "sra       %[temp5],    %[temp5],       24           \n\t"
+    "addu      %[temp3],    %[temp3],       %[temp5]     \n\t"
+    "addiu     %[temp7],    %[temp3],       3            \n\t"
+    "sra       %[temp7],    %[temp7],       3            \n\t"
+    "shra_r.w  %[temp8],    %[temp3],       3            \n\t"
+    "shll_s.w  %[temp0],    %[temp7],       27           \n\t"
+    "shll_s.w  %[temp4],    %[temp8],       27           \n\t"
+    "sra       %[temp0],    %[temp0],       27           \n\t"
+    "sra       %[temp4],    %[temp4],       27           \n\t"
+    "addu      %[temp7],    %[temp1],       %[temp0]     \n\t"
+    "subu      %[temp2],    %[temp2],       %[temp4]     \n\t"
+    "lbux      %[temp3],    %[temp7](%[VP8kclip1])       \n\t"
+    "lbux      %[temp4],    %[temp2](%[VP8kclip1])       \n\t"
+    "sb        %[temp3],    0(%[p1])                     \n\t"
+    "sb        %[temp4],    0(%[p])                      \n\t"
+  "1:                                                    \n\t"
+    "addiu     %[p1],       %[p1],          1            \n\t"
+    "bgtz      %[i],        0b                           \n\t"
+    " addiu    %[p],        %[p],           1            \n\t"
+    " .set     pop                                       \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
+      [p]"+&r"(p), [i]"=&r"(i), [p1]"+&r"(p1)
+    : [stride]"r"(stride), [VP8kclip1]"r"(VP8kclip1), [thresh2]"r"(thresh2)
+    : "memory"
+  );
+}
+
+static void SimpleHFilter16(uint8_t* p, int stride, int thresh) {
+  int i;
+  const int thresh2 = 2 * thresh + 1;
+  int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
+  __asm__ volatile (
+    ".set      push                                     \n\t"
+    ".set      noreorder                                \n\t"
+    "li        %[i],       16                           \n\t"
+  "0:                                                   \n\t"
+    "lbu       %[temp0],   -2(%[p])                     \n\t"
+    "lbu       %[temp1],   -1(%[p])                     \n\t"
+    "lbu       %[temp2],    0(%[p])                     \n\t"
+    "lbu       %[temp3],    1(%[p])                     \n\t"
+    "subu      %[temp7],    %[temp1],       %[temp2]    \n\t"
+    "subu      %[temp6],    %[temp0],       %[temp3]    \n\t"
+    "absq_s.w  %[temp4],    %[temp7]                    \n\t"
+    "absq_s.w  %[temp5],    %[temp6]                    \n\t"
+    "sll       %[temp4],    %[temp4],       2           \n\t"
+    "addu      %[temp5],    %[temp4],       %[temp5]    \n\t"
+    "subu      %[temp5],    %[temp5],       %[thresh2]  \n\t"
+    "negu      %[temp8],    %[temp7]                    \n\t"
+    "bgtz      %[temp5],    1f                          \n\t"
+    " addiu    %[i],        %[i],           -1          \n\t"
+    "sll       %[temp4],    %[temp8],       1           \n\t"
+    "shll_s.w  %[temp5],    %[temp6],       24          \n\t"
+    "addu      %[temp3],    %[temp4],       %[temp8]    \n\t"
+    "sra       %[temp5],    %[temp5],       24          \n\t"
+    "addu      %[temp3],    %[temp3],       %[temp5]    \n\t"
+    "addiu     %[temp7],    %[temp3],       3           \n\t"
+    "sra       %[temp7],    %[temp7],       3           \n\t"
+    "shra_r.w  %[temp8],    %[temp3],       3           \n\t"
+    "shll_s.w  %[temp0],    %[temp7],       27          \n\t"
+    "shll_s.w  %[temp4],    %[temp8],       27          \n\t"
+    "sra       %[temp0],    %[temp0],       27          \n\t"
+    "sra       %[temp4],    %[temp4],       27          \n\t"
+    "addu      %[temp7],    %[temp1],       %[temp0]    \n\t"
+    "subu      %[temp2],    %[temp2],       %[temp4]    \n\t"
+    "lbux      %[temp3],    %[temp7](%[VP8kclip1])      \n\t"
+    "lbux      %[temp4],    %[temp2](%[VP8kclip1])      \n\t"
+    "sb        %[temp3],    -1(%[p])                    \n\t"
+    "sb        %[temp4],    0(%[p])                     \n\t"
+  "1:                                                   \n\t"
+    "bgtz      %[i],        0b                          \n\t"
+    " addu     %[p],        %[p],           %[stride]   \n\t"
+    ".set      pop                                      \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
+      [p]"+&r"(p), [i]"=&r"(i)
+    : [stride]"r"(stride), [VP8kclip1]"r"(VP8kclip1), [thresh2]"r"(thresh2)
+    : "memory"
+  );
+}
+
+static void SimpleVFilter16i(uint8_t* p, int stride, int thresh) {
+  int k;
+  for (k = 3; k > 0; --k) {
+    p += 4 * stride;
+    SimpleVFilter16(p, stride, thresh);
+  }
+}
+
+static void SimpleHFilter16i(uint8_t* p, int stride, int thresh) {
+  int k;
+  for (k = 3; k > 0; --k) {
+    p += 4;
+    SimpleHFilter16(p, stride, thresh);
+  }
+}
+
 #endif  // WEBP_USE_MIPS_DSP_R2
 
 //------------------------------------------------------------------------------
@@ -501,5 +632,9 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMIPSdspR2(void) {
   VP8HFilter16i = HFilter16i;
   VP8VFilter8i = VFilter8i;
   VP8HFilter8i = HFilter8i;
+  VP8SimpleVFilter16 = SimpleVFilter16;
+  VP8SimpleHFilter16 = SimpleHFilter16;
+  VP8SimpleVFilter16i = SimpleVFilter16i;
+  VP8SimpleHFilter16i = SimpleHFilter16i;
 #endif
 }
