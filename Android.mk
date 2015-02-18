@@ -41,6 +41,7 @@ LOCAL_SRC_FILES := \
     src/dsp/cost.c \
     src/dsp/cost_mips32.c \
     src/dsp/cost_mips_dsp_r2.c \
+    src/dsp/cost_sse2.c \
     src/dsp/cpu.c \
     src/dsp/dec.c \
     src/dsp/dec_clip_tables.c \
