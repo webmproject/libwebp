@@ -671,6 +671,102 @@ static void DC4(uint8_t* dst) {   // DC
   );
 }
 
+static void RD4(uint8_t* dst) {   // Down-right
+  int temp0, temp1, temp2, temp3, temp4;
+  int temp5, temp6, temp7, temp8;
+  __asm__ volatile (
+    "lbu            %[temp0],   -1+0*"XSTR(BPS)"(%[dst])       \n\t"
+    "lbu            %[temp1],   -1+1*"XSTR(BPS)"(%[dst])       \n\t"
+    "lbu            %[temp2],   -1+2*"XSTR(BPS)"(%[dst])       \n\t"
+    "lbu            %[temp3],   -1+3*"XSTR(BPS)"(%[dst])       \n\t"
+    "ulw            %[temp7],   -1-"XSTR(BPS)"(%[dst])         \n\t"
+    "ins            %[temp1],   %[temp0], 16, 16               \n\t"
+    "preceu.ph.qbr  %[temp5],   %[temp7]                       \n\t"
+    "ins            %[temp2],   %[temp1], 16, 16               \n\t"
+    "preceu.ph.qbl  %[temp4],   %[temp7]                       \n\t"
+    "ins            %[temp3],   %[temp2], 16, 16               \n\t"
+    "shll.ph        %[temp2],   %[temp2], 1                    \n\t"
+    "addq.ph        %[temp3],   %[temp3], %[temp1]             \n\t"
+    "packrl.ph      %[temp6],   %[temp5], %[temp1]             \n\t"
+    "addq.ph        %[temp3],   %[temp3], %[temp2]             \n\t"
+    "addq.ph        %[temp1],   %[temp1], %[temp5]             \n\t"
+    "shll.ph        %[temp6],   %[temp6], 1                    \n\t"
+    "addq.ph        %[temp1],   %[temp1], %[temp6]             \n\t"
+    "packrl.ph      %[temp0],   %[temp4], %[temp5]             \n\t"
+    "addq.ph        %[temp8],   %[temp5], %[temp4]             \n\t"
+    "shra_r.ph      %[temp3],   %[temp3], 2                    \n\t"
+    "shll.ph        %[temp0],   %[temp0], 1                    \n\t"
+    "shra_r.ph      %[temp1],   %[temp1], 2                    \n\t"
+    "addq.ph        %[temp8],   %[temp0], %[temp8]             \n\t"
+    "lbu            %[temp5],   3-"XSTR(BPS)"(%[dst])          \n\t"
+    "precrq.ph.w    %[temp7],   %[temp7], %[temp7]             \n\t"
+    "shra_r.ph      %[temp8],   %[temp8], 2                    \n\t"
+    "ins            %[temp7],   %[temp5], 0,  8                \n\t"
+    "precr.qb.ph    %[temp2],   %[temp1], %[temp3]             \n\t"
+    "raddu.w.qb     %[temp4],   %[temp7]                       \n\t"
+    "precr.qb.ph    %[temp6],   %[temp8], %[temp1]             \n\t"
+    "shra_r.w       %[temp4],   %[temp4], 2                    \n\t"
+    "usw            %[temp2],   3*"XSTR(BPS)"(%[dst])          \n\t"
+    "usw            %[temp6],   1*"XSTR(BPS)"(%[dst])          \n\t"
+    "prepend        %[temp2],   %[temp8], 8                    \n\t"
+    "prepend        %[temp6],   %[temp4], 8                    \n\t"
+    "usw            %[temp2],   2*"XSTR(BPS)"(%[dst])          \n\t"
+    "usw            %[temp6],   0*"XSTR(BPS)"(%[dst])          \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8)
+    : [dst]"r"(dst)
+    : "memory"
+  );
+}
+
+static void LD4(uint8_t* dst) {   // Down-Left
+  int temp0, temp1, temp2, temp3, temp4;
+  int temp5, temp6, temp7, temp8, temp9;
+  __asm__ volatile (
+    "ulw             %[temp0],    1*"XSTR(-BPS)"(%[dst])       \n\t"
+    "ulw             %[temp1],    4+1*"XSTR(-BPS)"(%[dst])     \n\t"
+    "preceu.ph.qbl   %[temp2],    %[temp0]                     \n\t"
+    "preceu.ph.qbr   %[temp3],    %[temp0]                     \n\t"
+    "preceu.ph.qbr   %[temp4],    %[temp1]                     \n\t"
+    "preceu.ph.qbl   %[temp5],    %[temp1]                     \n\t"
+    "packrl.ph       %[temp6],    %[temp2],    %[temp3]        \n\t"
+    "packrl.ph       %[temp7],    %[temp4],    %[temp2]        \n\t"
+    "packrl.ph       %[temp8],    %[temp5],    %[temp4]        \n\t"
+    "shll.ph         %[temp6],    %[temp6],    1               \n\t"
+    "addq.ph         %[temp9],    %[temp2],    %[temp6]        \n\t"
+    "shll.ph         %[temp7],    %[temp7],    1               \n\t"
+    "addq.ph         %[temp9],    %[temp9],    %[temp3]        \n\t"
+    "shll.ph         %[temp8],    %[temp8],    1               \n\t"
+    "shra_r.ph       %[temp9],    %[temp9],    2               \n\t"
+    "addq.ph         %[temp3],    %[temp4],    %[temp7]        \n\t"
+    "addq.ph         %[temp0],    %[temp5],    %[temp8]        \n\t"
+    "addq.ph         %[temp3],    %[temp3],    %[temp2]        \n\t"
+    "addq.ph         %[temp0],    %[temp0],    %[temp4]        \n\t"
+    "shra_r.ph       %[temp3],    %[temp3],    2               \n\t"
+    "shra_r.ph       %[temp0],    %[temp0],    2               \n\t"
+    "srl             %[temp1],    %[temp1],    24              \n\t"
+    "sll             %[temp1],    %[temp1],    1               \n\t"
+    "raddu.w.qb      %[temp5],    %[temp5]                     \n\t"
+    "precr.qb.ph     %[temp9],    %[temp3],    %[temp9]        \n\t"
+    "precr.qb.ph     %[temp3],    %[temp0],    %[temp3]        \n\t"
+    "addu            %[temp1],    %[temp1],    %[temp5]        \n\t"
+    "shra_r.w        %[temp1],    %[temp1],    2               \n\t"
+    "usw             %[temp9],    0*"XSTR(BPS)"(%[dst])        \n\t"
+    "usw             %[temp3],    2*"XSTR(BPS)"(%[dst])        \n\t"
+    "prepend         %[temp9],    %[temp0],    8               \n\t"
+    "prepend         %[temp3],    %[temp1],    8               \n\t"
+    "usw             %[temp9],    1*"XSTR(BPS)"(%[dst])        \n\t"
+    "usw             %[temp3],    3*"XSTR(BPS)"(%[dst])        \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
+      [temp9]"=&r"(temp9)
+    : [dst]"r"(dst)
+    : "memory"
+  );
+}
+
 #endif  // WEBP_USE_MIPS_DSP_R2
 
 //------------------------------------------------------------------------------
@@ -697,5 +793,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMIPSdspR2(void) {
   VP8SimpleHFilter16i = SimpleHFilter16i;
   VP8PredLuma4[0] = DC4;
   VP8PredLuma4[2] = VE4;
+  VP8PredLuma4[4] = RD4;
+  VP8PredLuma4[6] = LD4;
 #endif
 }
