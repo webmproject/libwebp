@@ -542,6 +542,17 @@ static void SimpleVFilter16(uint8_t* p, int stride, int thresh) {
   );
 }
 
+// TEMP0 = SRC[A + A1 * BPS]
+// TEMP1 = SRC[B + B1 * BPS]
+// TEMP2 = SRC[C + C1 * BPS]
+// TEMP3 = SRC[D + D1 * BPS]
+#define LOAD_4_BYTES(TEMP0, TEMP1, TEMP2, TEMP3,                               \
+                     A, A1, B, B1, C, C1, D, D1, SRC)                          \
+  "lbu          %["#TEMP0"],   "#A"+"#A1"*"XSTR(BPS)"(%["#SRC"])     \n\t"     \
+  "lbu          %["#TEMP1"],   "#B"+"#B1"*"XSTR(BPS)"(%["#SRC"])     \n\t"     \
+  "lbu          %["#TEMP2"],   "#C"+"#C1"*"XSTR(BPS)"(%["#SRC"])     \n\t"     \
+  "lbu          %["#TEMP3"],   "#D"+"#D1"*"XSTR(BPS)"(%["#SRC"])     \n\t"     \
+
 static void SimpleHFilter16(uint8_t* p, int stride, int thresh) {
   int i;
   const int thresh2 = 2 * thresh + 1;
@@ -551,10 +562,7 @@ static void SimpleHFilter16(uint8_t* p, int stride, int thresh) {
     ".set      noreorder                                \n\t"
     "li        %[i],       16                           \n\t"
   "0:                                                   \n\t"
-    "lbu       %[temp0],   -2(%[p])                     \n\t"
-    "lbu       %[temp1],   -1(%[p])                     \n\t"
-    "lbu       %[temp2],    0(%[p])                     \n\t"
-    "lbu       %[temp3],    1(%[p])                     \n\t"
+    LOAD_4_BYTES(temp0, temp1, temp2, temp3, -2, 0, -1, 0, 0, 0, 1, 0, p)
     "subu      %[temp7],    %[temp1],       %[temp2]    \n\t"
     "subu      %[temp6],    %[temp0],       %[temp3]    \n\t"
     "absq_s.w  %[temp4],    %[temp7]                    \n\t"
@@ -612,6 +620,12 @@ static void SimpleHFilter16i(uint8_t* p, int stride, int thresh) {
   }
 }
 
+// DST[A * BPS]     = TEMP0
+// DST[B + C * BPS] = TEMP1
+#define STORE_8_BYTES(TEMP0, TEMP1, A, B, C, DST)                              \
+  "usw          %["#TEMP0"],   "#A"*"XSTR(BPS)"(%["#DST"])         \n\t"       \
+  "usw          %["#TEMP1"],   "#B"+"#C"*"XSTR(BPS)"(%["#DST"])    \n\t"
+
 static void VE4(uint8_t* dst) {    // vertical
   const uint8_t* top = dst - BPS;
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6;
@@ -632,10 +646,8 @@ static void VE4(uint8_t* dst) {    // vertical
     "shra_r.ph       %[temp2],   %[temp2],    2          \n\t"
     "shra_r.ph       %[temp6],   %[temp6],    2          \n\t"
     "precr.qb.ph     %[temp4],   %[temp6],    %[temp2]   \n\t"
-    "usw             %[temp4],   0*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw             %[temp4],   1*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw             %[temp4],   2*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw             %[temp4],   3*"XSTR(BPS)"(%[dst])   \n\t"
+    STORE_8_BYTES(temp4, temp4, 0, 0, 1, dst)
+    STORE_8_BYTES(temp4, temp4, 2, 0, 3, dst)
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
       [temp6]"=&r"(temp6)
@@ -648,10 +660,7 @@ static void DC4(uint8_t* dst) {   // DC
   int temp0, temp1, temp2, temp3, temp4;
   __asm__ volatile (
     "ulw          %[temp0],   -1*"XSTR(BPS)"(%[dst])   \n\t"
-    "lbu          %[temp1],   -1+0*"XSTR(BPS)"(%[dst]) \n\t"
-    "lbu          %[temp2],   -1+1*"XSTR(BPS)"(%[dst]) \n\t"
-    "lbu          %[temp3],   -1+2*"XSTR(BPS)"(%[dst]) \n\t"
-    "lbu          %[temp4],   -1+3*"XSTR(BPS)"(%[dst]) \n\t"
+    LOAD_4_BYTES(temp1, temp2, temp3, temp4, -1, 0, -1, 1, -1, 2, -1, 3, dst)
     "ins          %[temp1],   %[temp2],    8,     8    \n\t"
     "ins          %[temp1],   %[temp3],    16,    8    \n\t"
     "ins          %[temp1],   %[temp4],    24,    8    \n\t"
@@ -660,10 +669,8 @@ static void DC4(uint8_t* dst) {   // DC
     "addu         %[temp0],   %[temp0],    %[temp1]    \n\t"
     "shra_r.w     %[temp0],   %[temp0],    3           \n\t"
     "replv.qb     %[temp0],   %[temp0]                 \n\t"
-    "usw          %[temp0],   0*"XSTR(BPS)"(%[dst])    \n\t"
-    "usw          %[temp0],   1*"XSTR(BPS)"(%[dst])    \n\t"
-    "usw          %[temp0],   2*"XSTR(BPS)"(%[dst])    \n\t"
-    "usw          %[temp0],   3*"XSTR(BPS)"(%[dst])    \n\t"
+    STORE_8_BYTES(temp0, temp0, 0, 0, 1, dst)
+    STORE_8_BYTES(temp0, temp0, 2, 0, 3, dst)
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4)
     : [dst]"r"(dst)
@@ -675,10 +682,7 @@ static void RD4(uint8_t* dst) {   // Down-right
   int temp0, temp1, temp2, temp3, temp4;
   int temp5, temp6, temp7, temp8;
   __asm__ volatile (
-    "lbu            %[temp0],   -1+0*"XSTR(BPS)"(%[dst])       \n\t"
-    "lbu            %[temp1],   -1+1*"XSTR(BPS)"(%[dst])       \n\t"
-    "lbu            %[temp2],   -1+2*"XSTR(BPS)"(%[dst])       \n\t"
-    "lbu            %[temp3],   -1+3*"XSTR(BPS)"(%[dst])       \n\t"
+    LOAD_4_BYTES(temp0, temp1, temp2, temp3, -1, 0, -1, 1, -1, 2, -1, 3, dst)
     "ulw            %[temp7],   -1-"XSTR(BPS)"(%[dst])         \n\t"
     "ins            %[temp1],   %[temp0], 16, 16               \n\t"
     "preceu.ph.qbr  %[temp5],   %[temp7]                       \n\t"
@@ -706,12 +710,10 @@ static void RD4(uint8_t* dst) {   // Down-right
     "raddu.w.qb     %[temp4],   %[temp7]                       \n\t"
     "precr.qb.ph    %[temp6],   %[temp8], %[temp1]             \n\t"
     "shra_r.w       %[temp4],   %[temp4], 2                    \n\t"
-    "usw            %[temp2],   3*"XSTR(BPS)"(%[dst])          \n\t"
-    "usw            %[temp6],   1*"XSTR(BPS)"(%[dst])          \n\t"
+    STORE_8_BYTES(temp2, temp6, 3, 0, 1, dst)
     "prepend        %[temp2],   %[temp8], 8                    \n\t"
     "prepend        %[temp6],   %[temp4], 8                    \n\t"
-    "usw            %[temp2],   2*"XSTR(BPS)"(%[dst])          \n\t"
-    "usw            %[temp6],   0*"XSTR(BPS)"(%[dst])          \n\t"
+    STORE_8_BYTES(temp2, temp6, 2, 0, 0, dst)
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
       [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8)
@@ -720,12 +722,17 @@ static void RD4(uint8_t* dst) {   // Down-right
   );
 }
 
+// TEMP0 = SRC[A * BPS]
+// TEMP1 = SRC[B + C * BPS]
+#define LOAD_8_BYTES(TEMP0, TEMP1, A, B, C, SRC)                               \
+  "ulw          %["#TEMP0"],   "#A"*"XSTR(BPS)"(%["#SRC"])         \n\t"       \
+  "ulw          %["#TEMP1"],   "#B"+"#C"*"XSTR(BPS)"(%["#SRC"])    \n\t"
+
 static void LD4(uint8_t* dst) {   // Down-Left
   int temp0, temp1, temp2, temp3, temp4;
   int temp5, temp6, temp7, temp8, temp9;
   __asm__ volatile (
-    "ulw             %[temp0],    1*"XSTR(-BPS)"(%[dst])       \n\t"
-    "ulw             %[temp1],    4+1*"XSTR(-BPS)"(%[dst])     \n\t"
+    LOAD_8_BYTES(temp0, temp1, -1, 4, -1, dst)
     "preceu.ph.qbl   %[temp2],    %[temp0]                     \n\t"
     "preceu.ph.qbr   %[temp3],    %[temp0]                     \n\t"
     "preceu.ph.qbr   %[temp4],    %[temp1]                     \n\t"
@@ -752,12 +759,10 @@ static void LD4(uint8_t* dst) {   // Down-Left
     "precr.qb.ph     %[temp3],    %[temp0],    %[temp3]        \n\t"
     "addu            %[temp1],    %[temp1],    %[temp5]        \n\t"
     "shra_r.w        %[temp1],    %[temp1],    2               \n\t"
-    "usw             %[temp9],    0*"XSTR(BPS)"(%[dst])        \n\t"
-    "usw             %[temp3],    2*"XSTR(BPS)"(%[dst])        \n\t"
+    STORE_8_BYTES(temp9, temp3, 0, 0, 2, dst)
     "prepend         %[temp9],    %[temp0],    8               \n\t"
     "prepend         %[temp3],    %[temp1],    8               \n\t"
-    "usw             %[temp9],    1*"XSTR(BPS)"(%[dst])        \n\t"
-    "usw             %[temp3],    3*"XSTR(BPS)"(%[dst])        \n\t"
+    STORE_8_BYTES(temp9, temp3, 1, 0, 3, dst)
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
       [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
@@ -766,6 +771,104 @@ static void LD4(uint8_t* dst) {   // Down-Left
     : "memory"
   );
 }
+
+//------------------------------------------------------------------------------
+// Chroma
+
+static void DC8uv(uint8_t* dst) {     // DC
+  int temp0, temp1, temp2, temp3, temp4;
+  int temp5, temp6, temp7, temp8, temp9;
+  __asm__ volatile (
+    LOAD_8_BYTES(temp0, temp1, -1, 4, -1, dst)
+    LOAD_4_BYTES(temp2, temp3, temp4, temp5, -1, 0, -1, 1, -1, 2, -1, 3, dst)
+    LOAD_4_BYTES(temp6, temp7, temp8, temp9, -1, 4, -1, 5, -1, 6, -1, 7, dst)
+    "raddu.w.qb   %[temp0],   %[temp0]                   \n\t"
+    "raddu.w.qb   %[temp1],   %[temp1]                   \n\t"
+    "addu         %[temp2],   %[temp2],    %[temp3]      \n\t"
+    "addu         %[temp4],   %[temp4],    %[temp5]      \n\t"
+    "addu         %[temp6],   %[temp6],    %[temp7]      \n\t"
+    "addu         %[temp8],   %[temp8],    %[temp9]      \n\t"
+    "addu         %[temp0],   %[temp0],    %[temp1]      \n\t"
+    "addu         %[temp2],   %[temp2],    %[temp4]      \n\t"
+    "addu         %[temp6],   %[temp6],    %[temp8]      \n\t"
+    "addu         %[temp0],   %[temp0],    %[temp2]      \n\t"
+    "addu         %[temp0],   %[temp0],    %[temp6]      \n\t"
+    "shra_r.w     %[temp0],   %[temp0],    4             \n\t"
+    "replv.qb     %[temp0],   %[temp0]                   \n\t"
+    STORE_8_BYTES(temp0, temp0, 0, 4, 0, dst)
+    STORE_8_BYTES(temp0, temp0, 1, 4, 1, dst)
+    STORE_8_BYTES(temp0, temp0, 2, 4, 2, dst)
+    STORE_8_BYTES(temp0, temp0, 3, 4, 3, dst)
+    STORE_8_BYTES(temp0, temp0, 4, 4, 4, dst)
+    STORE_8_BYTES(temp0, temp0, 5, 4, 5, dst)
+    STORE_8_BYTES(temp0, temp0, 6, 4, 6, dst)
+    STORE_8_BYTES(temp0, temp0, 7, 4, 7, dst)
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
+      [temp9]"=&r"(temp9)
+    : [dst]"r"(dst)
+    : "memory"
+  );
+}
+
+static void DC8uvNoLeft(uint8_t* dst) {   // DC with no left samples
+  int temp0, temp1;
+  __asm__ volatile (
+    LOAD_8_BYTES(temp0, temp1, -1, 4, -1, dst)
+    "raddu.w.qb   %[temp0],   %[temp0]                   \n\t"
+    "raddu.w.qb   %[temp1],   %[temp1]                   \n\t"
+    "addu         %[temp0],   %[temp0],    %[temp1]      \n\t"
+    "shra_r.w     %[temp0],   %[temp0],    3             \n\t"
+    "replv.qb     %[temp0],   %[temp0]                   \n\t"
+    STORE_8_BYTES(temp0, temp0, 0, 4, 0, dst)
+    STORE_8_BYTES(temp0, temp0, 1, 4, 1, dst)
+    STORE_8_BYTES(temp0, temp0, 2, 4, 2, dst)
+    STORE_8_BYTES(temp0, temp0, 3, 4, 3, dst)
+    STORE_8_BYTES(temp0, temp0, 4, 4, 4, dst)
+    STORE_8_BYTES(temp0, temp0, 5, 4, 5, dst)
+    STORE_8_BYTES(temp0, temp0, 6, 4, 6, dst)
+    STORE_8_BYTES(temp0, temp0, 7, 4, 7, dst)
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1)
+    : [dst]"r"(dst)
+    : "memory"
+  );
+}
+
+static void DC8uvNoTop(uint8_t* dst) {  // DC with no top samples
+  int temp0, temp1, temp2, temp3, temp4;
+  int temp5, temp6, temp7, temp8;
+  __asm__ volatile (
+    LOAD_4_BYTES(temp2, temp3, temp4, temp5, -1, 0, -1, 1, -1, 2, -1, 3, dst)
+    LOAD_4_BYTES(temp6, temp7, temp8, temp1, -1, 4, -1, 5, -1, 6, -1, 7, dst)
+    "addu         %[temp2],   %[temp2],    %[temp3]      \n\t"
+    "addu         %[temp4],   %[temp4],    %[temp5]      \n\t"
+    "addu         %[temp6],   %[temp6],    %[temp7]      \n\t"
+    "addu         %[temp8],   %[temp8],    %[temp1]      \n\t"
+    "addu         %[temp2],   %[temp2],    %[temp4]      \n\t"
+    "addu         %[temp6],   %[temp6],    %[temp8]      \n\t"
+    "addu         %[temp0],   %[temp6],    %[temp2]      \n\t"
+    "shra_r.w     %[temp0],   %[temp0],    3             \n\t"
+    "replv.qb     %[temp0],   %[temp0]                   \n\t"
+    STORE_8_BYTES(temp0, temp0, 0, 4, 0, dst)
+    STORE_8_BYTES(temp0, temp0, 1, 4, 1, dst)
+    STORE_8_BYTES(temp0, temp0, 2, 4, 2, dst)
+    STORE_8_BYTES(temp0, temp0, 3, 4, 3, dst)
+    STORE_8_BYTES(temp0, temp0, 4, 4, 4, dst)
+    STORE_8_BYTES(temp0, temp0, 5, 4, 5, dst)
+    STORE_8_BYTES(temp0, temp0, 6, 4, 6, dst)
+    STORE_8_BYTES(temp0, temp0, 7, 4, 7, dst)
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8)
+    : [dst]"r"(dst)
+    : "memory"
+  );
+}
+
+#undef LOAD_8_BYTES
+#undef STORE_8_BYTES
+#undef LOAD_4_BYTES
 
 #endif  // WEBP_USE_MIPS_DSP_R2
 
@@ -779,6 +882,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMIPSdspR2(void) {
   VP8TransformDC = TransformDC;
   VP8TransformAC3 = TransformAC3;
   VP8Transform = TransformTwo;
+
   VP8VFilter16 = VFilter16;
   VP8HFilter16 = HFilter16;
   VP8VFilter8 = VFilter8;
@@ -791,9 +895,14 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMIPSdspR2(void) {
   VP8SimpleHFilter16 = SimpleHFilter16;
   VP8SimpleVFilter16i = SimpleVFilter16i;
   VP8SimpleHFilter16i = SimpleHFilter16i;
+
   VP8PredLuma4[0] = DC4;
   VP8PredLuma4[2] = VE4;
   VP8PredLuma4[4] = RD4;
   VP8PredLuma4[6] = LD4;
+
+  VP8PredChroma8[0] = DC8uv;
+  VP8PredChroma8[4] = DC8uvNoTop;
+  VP8PredChroma8[5] = DC8uvNoLeft;
 #endif
 }
