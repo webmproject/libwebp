@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Gwc\u003d",
+        "filename": "src/dsp/dec_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 879,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-02-18T15:54:47Z",
+      "side": 1,
+      "message": "these two lines could be macros, note. They are pretty common among all functions here around. But maybe XSTR(BPS) is causing troubles?",
+      "revId": "8e26398ed24315ddc6cf6c88467a04b01e225091",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
