@@ -259,9 +259,10 @@ static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
 
-// vtbl?_u8 are marked unavailable for iOS arm64, use wider versions there.
+// vtbl?_u8 are marked unavailable for iOS arm64 with Xcode < 6.3, use
+// non-standard versions there.
 #if defined(__APPLE__) && defined(__aarch64__) && \
-    defined(__apple_build_version__)
+    defined(__apple_build_version__) && (__apple_build_version__< 6020037)
 #define USE_VTBLQ
 #endif
 
