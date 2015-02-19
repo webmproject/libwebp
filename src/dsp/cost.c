@@ -323,7 +323,8 @@ static int GetResidualCost(int ctx0, const VP8Residual* const res) {
   int n = res->first;
   // should be prob[VP8EncBands[n]], but it's equivalent for n=0 or 1
   const int p0 = res->prob[n][ctx0][0];
-  const uint16_t* t = res->cost[n][ctx0];
+  CostArrayPtr const costs = res->costs;
+  const uint16_t* t = costs[n][ctx0];
   // bit_cost(1, p0) is already incorporated in t[] tables, but only if ctx != 0
   // (as required by the syntax). For ctx0 == 0, we need to add it here or it'll
   // be missing during the loop.
@@ -334,10 +335,9 @@ static int GetResidualCost(int ctx0, const VP8Residual* const res) {
   }
   for (; n < res->last; ++n) {
     const int v = abs(res->coeffs[n]);
-    const int b = VP8EncBands[n + 1];
     const int ctx = (v >= 2) ? 2 : v;
     cost += VP8LevelCost(t, v);
-    t = res->cost[b][ctx];
+    t = costs[n + 1][ctx];
   }
   // Last coefficient is always non-zero
   {

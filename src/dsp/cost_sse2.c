@@ -51,7 +51,8 @@ static int GetResidualCostSSE2(int ctx0, const VP8Residual* const res) {
   int n = res->first;
   // should be prob[VP8EncBands[n]], but it's equivalent for n=0 or 1
   const int p0 = res->prob[n][ctx0][0];
-  const uint16_t* t = res->cost[n][ctx0];
+  CostArrayPtr const costs = res->costs;
+  const uint16_t* t = costs[n][ctx0];
   // bit_cost(1, p0) is already incorporated in t[] tables, but only if ctx != 0
   // (as required by the syntax). For ctx0 == 0, we need to add it here or it'll
   // be missing during the loop.
@@ -87,9 +88,8 @@ static int GetResidualCostSSE2(int ctx0, const VP8Residual* const res) {
     const int ctx = ctxs[n];
     const int level = levels[n];
     const int flevel = abs_levels[n];   // full level
-    const int b = VP8EncBands[n + 1];
     cost += VP8LevelFixedCosts[flevel] + t[level];  // simplified VP8LevelCost()
-    t = res->cost[b][ctx];
+    t = costs[n + 1][ctx];
   }
   // Last coefficient is always non-zero
   {

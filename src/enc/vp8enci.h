@@ -151,6 +151,8 @@ typedef uint32_t proba_t;   // 16b + 16b
 typedef uint8_t ProbaArray[NUM_CTX][NUM_PROBAS];
 typedef proba_t StatsArray[NUM_CTX][NUM_PROBAS];
 typedef uint16_t CostArray[NUM_CTX][MAX_VARIABLE_LEVEL + 1];
+typedef const uint16_t* (*CostArrayPtr)[NUM_CTX];   // for easy casting
+typedef const uint16_t* CostArrayMap[16][NUM_CTX];
 typedef double LFStats[NUM_MB_SEGMENTS][MAX_LF_LEVELS];  // filter stats
 
 typedef struct VP8Encoder VP8Encoder;
@@ -170,6 +172,7 @@ typedef struct {
   ProbaArray coeffs_[NUM_TYPES][NUM_BANDS];      // 1056 bytes
   StatsArray stats_[NUM_TYPES][NUM_BANDS];       // 4224 bytes
   CostArray level_cost_[NUM_TYPES][NUM_BANDS];   // 13056 bytes
+  CostArrayMap remapped_costs_[NUM_TYPES];       // 1536 bytes
   int dirty_;               // if true, need to call VP8CalculateLevelCosts()
   int use_skip_proba_;      // Note: we always use skip_proba for now.
   int nb_skip_;             // number of skipped blocks

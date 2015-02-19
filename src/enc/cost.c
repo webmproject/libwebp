@@ -63,6 +63,7 @@ void VP8CalculateLevelCosts(VP8Proba* const proba) {
   if (!proba->dirty_) return;  // nothing to do.
 
   for (ctype = 0; ctype < NUM_TYPES; ++ctype) {
+    int n;
     for (band = 0; band < NUM_BANDS; ++band) {
       for (ctx = 0; ctx < NUM_CTX; ++ctx) {
         const uint8_t* const p = proba->coeffs_[ctype][band][ctx];
@@ -76,6 +77,12 @@ void VP8CalculateLevelCosts(VP8Proba* const proba) {
         }
         // Starting at level 67 and up, the variable part of the cost is
         // actually constant.
+      }
+    }
+    for (n = 0; n < 16; ++n) {    // replicate bands. We don't need to sentinel.
+      for (ctx = 0; ctx < NUM_CTX; ++ctx) {
+        proba->remapped_costs_[ctype][n][ctx] =
+            proba->level_cost_[ctype][VP8EncBands[n]][ctx];
       }
     }
   }
@@ -202,6 +209,7 @@ void VP8InitResidual(int first, int coeff_type,
   res->prob  = enc->proba_.coeffs_[coeff_type];
   res->stats = enc->proba_.stats_[coeff_type];
   res->cost  = enc->proba_.level_cost_[coeff_type];
+  res->costs = enc->proba_.remapped_costs_[coeff_type];
   res->first = first;
 }
 

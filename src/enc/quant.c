@@ -550,7 +550,8 @@ static int TrellisQuantizeBlock(const VP8Encoder* const enc,
                                 const VP8Matrix* const mtx,
                                 int lambda) {
   const ProbaArray* const probas = enc->proba_.coeffs_[coeff_type];
-  const CostArray* const costs = enc->proba_.level_cost_[coeff_type];
+  CostArrayPtr const costs =
+      (CostArrayPtr)enc->proba_.remapped_costs_[coeff_type];
   const int first = (coeff_type == 0) ? 1 : 0;
   Node nodes[16][NUM_NODES];
   ScoreState score_states[2][NUM_NODES];
@@ -587,7 +588,7 @@ static int TrellisQuantizeBlock(const VP8Encoder* const enc,
     for (m = -MIN_DELTA; m <= MAX_DELTA; ++m) {
       const score_t rate = (ctx0 == 0) ? VP8BitCost(1, last_proba) : 0;
       ss_cur[m].score = RDScoreTrellis(lambda, rate, 0);
-      ss_cur[m].costs = costs[VP8EncBands[first]][ctx0];
+      ss_cur[m].costs = costs[first][ctx0];
     }
   }
 
@@ -621,7 +622,7 @@ static int TrellisQuantizeBlock(const VP8Encoder* const enc,
       int best_prev = 0;   // default, in case
 
       ss_cur[m].score = MAX_COST;
-      ss_cur[m].costs = costs[band][ctx];
+      ss_cur[m].costs = costs[n + 1][ctx];
       if (level > MAX_LEVEL || level < 0) {   // node is dead?
         continue;
       }

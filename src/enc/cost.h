@@ -31,9 +31,10 @@ struct VP8Residual {
   const int16_t* coeffs;
 
   int coeff_type;
-  ProbaArray* prob;
-  StatsArray* stats;
-  CostArray*  cost;
+  ProbaArray*   prob;
+  StatsArray*   stats;
+  CostArray*    cost;    // TODO(skal): remove in favor of *costs
+  CostArrayPtr  costs;
 };
 
 void VP8InitResidual(int first, int coeff_type,
