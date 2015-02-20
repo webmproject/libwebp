@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//GjI\u003d",
+        "filename": "src/dsp/cost_mips32.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-02-20T13:20:00Z",
+      "side": 1,
+      "message": "this cast is strange/dangerous: res-\u003ecoeffs is a pointer",
+      "revId": "4fcc360d8ae1e5aa3731efa35b965120108c7315",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//GjE\u003d",
+        "filename": "src/dsp/cost_mips32.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-02-20T13:20:00Z",
+      "side": 1,
+      "message": "cast to (int) not needed, since res-\u003elast is already an int",
+      "revId": "4fcc360d8ae1e5aa3731efa35b965120108c7315",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//GjA\u003d",
+        "filename": "src/dsp/cost_mips32.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-02-20T13:20:00Z",
+      "side": 1,
+      "message": "why switch to uint8_t, when costs[n][] are uint16_t?\nThis is confusing and dangerous",
+      "revId": "4fcc360d8ae1e5aa3731efa35b965120108c7315",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Gi8\u003d",
+        "filename": "src/dsp/cost_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-02-20T13:20:00Z",
+      "side": 1,
+      "message": "same comments as in cost_mips32.c",
+      "revId": "4fcc360d8ae1e5aa3731efa35b965120108c7315",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
