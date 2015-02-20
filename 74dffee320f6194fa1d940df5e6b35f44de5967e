@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Gic\u003d",
+        "filename": "src/dsp/cost_mips32.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-02-20T16:13:55Z",
+      "side": 1,
+      "message": "for clarity i\u0027d use:\n\nconst size_t inc_p_costs \u003d NUM_CTX * sizeof(*p_costs);\n\n(moved at line 36)",
+      "revId": "74dffee320f6194fa1d940df5e6b35f44de5967e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//GiY\u003d",
+        "filename": "src/dsp/cost_mips_dsp_r2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-02-20T16:13:55Z",
+      "side": 1,
+      "message": "(same comment)",
+      "revId": "74dffee320f6194fa1d940df5e6b35f44de5967e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
