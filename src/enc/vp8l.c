@@ -628,17 +628,25 @@ static WebPEncodingError StoreImageToBitMask(
     VP8LBackwardRefs* const refs,
     const uint16_t* histogram_symbols,
     const HuffmanTreeCode* const huffman_codes) {
+  const int histo_xsize = histo_bits ? VP8LSubSampleSize(width, histo_bits) : 1;
+  const int tile_mask = (histo_bits == 0) ? 0 : -(1 << histo_bits);
   // x and y trace the position in the image.
   int x = 0;
   int y = 0;
-  const int histo_xsize = histo_bits ? VP8LSubSampleSize(width, histo_bits) : 1;
+  int tile_x = x & tile_mask;
+  int tile_y = y & tile_mask;
+  int histogram_ix = histogram_symbols[0];
+  const HuffmanTreeCode* codes = huffman_codes + 5 * histogram_ix;
   VP8LRefsCursor c = VP8LRefsCursorInit(refs);
   while (VP8LRefsCursorOk(&c)) {
     const PixOrCopy* const v = c.cur_pos;
-    const int histogram_ix = histogram_symbols[histo_bits ?
-                                               (y >> histo_bits) * histo_xsize +
-                                               (x >> histo_bits) : 0];
-    const HuffmanTreeCode* const codes = huffman_codes + 5 * histogram_ix;
+    if ((tile_x != (x & tile_mask)) || (tile_y != (y & tile_mask))) {
+      tile_x = x & tile_mask;
+      tile_y = y & tile_mask;
+      histogram_ix = histogram_symbols[(y >> histo_bits) * histo_xsize +
+                                       (x >> histo_bits)];
+      codes = huffman_codes + 5 * histogram_ix;
+    }
     if (PixOrCopyIsCacheIdx(v)) {
       const int code = PixOrCopyCacheIdx(v);
       const int literal_ix = 256 + NUM_LENGTH_CODES + code;
