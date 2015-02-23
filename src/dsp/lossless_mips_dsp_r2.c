@@ -585,6 +585,108 @@ static void TransformColorInverse(const VP8LMultipliers* const m,
   if (num_pixels & 1) VP8LTransformColorInverse_C(m, data, 1);
 }
 
+static void ConvertBGRAToRGB(const uint32_t* src,
+                             int num_pixels, uint8_t* dst) {
+  int temp0, temp1, temp2, temp3;
+  uint32_t* const p_loop1_end = (uint32_t*)src + (num_pixels & ~3);
+  uint32_t* const p_loop2_end = (uint32_t*)src + num_pixels;
+  __asm__ volatile (
+    ".set       push                                       \n\t"
+    ".set       noreorder                                  \n\t"
+    "beq        %[src],      %[p_loop1_end],    3f         \n\t"
+    " nop                                                  \n\t"
+  "0:                                                      \n\t"
+    "lw         %[temp3],    12(%[src])                    \n\t"
+    "lw         %[temp2],    8(%[src])                     \n\t"
+    "lw         %[temp1],    4(%[src])                     \n\t"
+    "lw         %[temp0],    0(%[src])                     \n\t"
+    "ins        %[temp3],    %[temp2],          24,   8    \n\t"
+    "sll        %[temp2],    %[temp2],          8          \n\t"
+    "rotr       %[temp3],    %[temp3],          16         \n\t"
+    "ins        %[temp2],    %[temp1],          0,    16   \n\t"
+    "sll        %[temp1],    %[temp1],          8          \n\t"
+    "wsbh       %[temp3],    %[temp3]                      \n\t"
+    "balign     %[temp0],    %[temp1],          1          \n\t"
+    "wsbh       %[temp2],    %[temp2]                      \n\t"
+    "wsbh       %[temp0],    %[temp0]                      \n\t"
+    "usw        %[temp3],    8(%[dst])                     \n\t"
+    "rotr       %[temp0],    %[temp0],          16         \n\t"
+    "usw        %[temp2],    4(%[dst])                     \n\t"
+    "addiu      %[src],      %[src],            16         \n\t"
+    "usw        %[temp0],    0(%[dst])                     \n\t"
+    "bne        %[src],      %[p_loop1_end],    0b         \n\t"
+    " addiu     %[dst],      %[dst],            12         \n\t"
+  "3:                                                      \n\t"
+    "beq        %[src],      %[p_loop2_end],    2f         \n\t"
+    " nop                                                  \n\t"
+  "1:                                                      \n\t"
+    "lw         %[temp0],    0(%[src])                     \n\t"
+    "addiu      %[src],      %[src],            4          \n\t"
+    "wsbh       %[temp1],    %[temp0]                      \n\t"
+    "addiu      %[dst],      %[dst],            3          \n\t"
+    "ush        %[temp1],    -2(%[dst])                    \n\t"
+    "sra        %[temp0],    %[temp0],          16         \n\t"
+    "bne        %[src],      %[p_loop2_end],    1b         \n\t"
+    " sb        %[temp0],    -3(%[dst])                    \n\t"
+  "2:                                                      \n\t"
+    ".set       pop                                        \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [dst]"+&r"(dst), [src]"+&r"(src)
+    : [p_loop1_end]"r"(p_loop1_end), [p_loop2_end]"r"(p_loop2_end)
+    : "memory"
+  );
+}
+
+static void ConvertBGRAToRGBA(const uint32_t* src,
+                              int num_pixels, uint8_t* dst) {
+  int temp0, temp1, temp2, temp3;
+  uint32_t* const p_loop1_end = (uint32_t*)src + (num_pixels & ~3);
+  uint32_t* const p_loop2_end = (uint32_t*)src + num_pixels;
+  __asm__ volatile (
+    ".set       push                                       \n\t"
+    ".set       noreorder                                  \n\t"
+    "beq        %[src],      %[p_loop1_end],    3f         \n\t"
+    " nop                                                  \n\t"
+  "0:                                                      \n\t"
+    "lw         %[temp0],    0(%[src])                     \n\t"
+    "lw         %[temp1],    4(%[src])                     \n\t"
+    "lw         %[temp2],    8(%[src])                     \n\t"
+    "lw         %[temp3],    12(%[src])                    \n\t"
+    "wsbh       %[temp0],    %[temp0]                      \n\t"
+    "wsbh       %[temp1],    %[temp1]                      \n\t"
+    "wsbh       %[temp2],    %[temp2]                      \n\t"
+    "wsbh       %[temp3],    %[temp3]                      \n\t"
+    "addiu      %[src],      %[src],            16         \n\t"
+    "balign     %[temp0],    %[temp0],          1          \n\t"
+    "balign     %[temp1],    %[temp1],          1          \n\t"
+    "balign     %[temp2],    %[temp2],          1          \n\t"
+    "balign     %[temp3],    %[temp3],          1          \n\t"
+    "usw        %[temp0],    0(%[dst])                     \n\t"
+    "usw        %[temp1],    4(%[dst])                     \n\t"
+    "usw        %[temp2],    8(%[dst])                     \n\t"
+    "usw        %[temp3],    12(%[dst])                    \n\t"
+    "bne        %[src],      %[p_loop1_end],    0b         \n\t"
+    " addiu     %[dst],      %[dst],            16         \n\t"
+  "3:                                                      \n\t"
+    "beq        %[src],      %[p_loop2_end],    2f         \n\t"
+    " nop                                                  \n\t"
+  "1:                                                      \n\t"
+    "lw         %[temp0],    0(%[src])                     \n\t"
+    "wsbh       %[temp0],    %[temp0]                      \n\t"
+    "addiu      %[src],      %[src],            4          \n\t"
+    "balign     %[temp0],    %[temp0],          1          \n\t"
+    "usw        %[temp0],    0(%[dst])                     \n\t"
+    "bne        %[src],      %[p_loop2_end],    1b         \n\t"
+    " addiu     %[dst],      %[dst],            4          \n\t"
+  "2:                                                      \n\t"
+    ".set       pop                                        \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [dst]"+&r"(dst), [src]"+&r"(src)
+    : [p_loop1_end]"r"(p_loop1_end), [p_loop2_end]"r"(p_loop2_end)
+    : "memory"
+  );
+}
+
 #endif  // WEBP_USE_MIPS_DSP_R2
 
 //------------------------------------------------------------------------------
@@ -610,6 +712,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPSdspR2(void) {
   VP8LCollectColorRedTransforms = CollectColorRedTransforms;
   VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
   VP8LTransformColorInverse = TransformColorInverse;
+  VP8LConvertBGRAToRGB = ConvertBGRAToRGB;
+  VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA;
 #endif  // WEBP_USE_MIPS_DSP_R2
 }
 
