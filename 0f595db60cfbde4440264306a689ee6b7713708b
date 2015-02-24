@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//GX8\u003d",
+        "filename": "src/dsp/lossless_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 591,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-02-24T01:51:30Z",
+      "side": 1,
+      "message": "these could remain const uint32_t* and avoid the cast I think",
+      "revId": "0f595db60cfbde4440264306a689ee6b7713708b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
