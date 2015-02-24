@@ -588,8 +588,8 @@ static void TransformColorInverse(const VP8LMultipliers* const m,
 static void ConvertBGRAToRGB(const uint32_t* src,
                              int num_pixels, uint8_t* dst) {
   int temp0, temp1, temp2, temp3;
-  uint32_t* const p_loop1_end = (uint32_t*)src + (num_pixels & ~3);
-  uint32_t* const p_loop2_end = (uint32_t*)src + num_pixels;
+  const uint32_t* const p_loop1_end = src + (num_pixels & ~3);
+  const uint32_t* const p_loop2_end = src + num_pixels;
   __asm__ volatile (
     ".set       push                                       \n\t"
     ".set       noreorder                                  \n\t"
@@ -640,8 +640,8 @@ static void ConvertBGRAToRGB(const uint32_t* src,
 static void ConvertBGRAToRGBA(const uint32_t* src,
                               int num_pixels, uint8_t* dst) {
   int temp0, temp1, temp2, temp3;
-  uint32_t* const p_loop1_end = (uint32_t*)src + (num_pixels & ~3);
-  uint32_t* const p_loop2_end = (uint32_t*)src + num_pixels;
+  const uint32_t* const p_loop1_end = src + (num_pixels & ~3);
+  const uint32_t* const p_loop2_end = src + num_pixels;
   __asm__ volatile (
     ".set       push                                       \n\t"
     ".set       noreorder                                  \n\t"
@@ -687,6 +687,204 @@ static void ConvertBGRAToRGBA(const uint32_t* src,
   );
 }
 
+static void ConvertBGRAToRGBA4444(const uint32_t* src,
+                                  int num_pixels, uint8_t* dst) {
+  int temp0, temp1, temp2, temp3, temp4, temp5;
+  const uint32_t* const p_loop1_end = src + (num_pixels & ~3);
+  const uint32_t* const p_loop2_end = src + num_pixels;
+  __asm__ volatile (
+    ".set           push                                       \n\t"
+    ".set           noreorder                                  \n\t"
+    "beq            %[src],      %[p_loop1_end],    3f         \n\t"
+    " nop                                                      \n\t"
+  "0:                                                          \n\t"
+    "lw             %[temp0],    0(%[src])                     \n\t"
+    "lw             %[temp1],    4(%[src])                     \n\t"
+    "lw             %[temp2],    8(%[src])                     \n\t"
+    "lw             %[temp3],    12(%[src])                    \n\t"
+    "ext            %[temp4],    %[temp0],          28,   4    \n\t"
+    "ext            %[temp5],    %[temp0],          12,   4    \n\t"
+    "ins            %[temp0],    %[temp4],          0,    4    \n\t"
+    "ext            %[temp4],    %[temp1],          28,   4    \n\t"
+    "ins            %[temp0],    %[temp5],          16,   4    \n\t"
+    "ext            %[temp5],    %[temp1],          12,   4    \n\t"
+    "ins            %[temp1],    %[temp4],          0,    4    \n\t"
+    "ext            %[temp4],    %[temp2],          28,   4    \n\t"
+    "ins            %[temp1],    %[temp5],          16,   4    \n\t"
+    "ext            %[temp5],    %[temp2],          12,   4    \n\t"
+    "ins            %[temp2],    %[temp4],          0,    4    \n\t"
+    "ext            %[temp4],    %[temp3],          28,   4    \n\t"
+    "ins            %[temp2],    %[temp5],          16,   4    \n\t"
+    "ext            %[temp5],    %[temp3],          12,   4    \n\t"
+    "ins            %[temp3],    %[temp4],          0,    4    \n\t"
+    "precr.qb.ph    %[temp1],    %[temp1],          %[temp0]   \n\t"
+    "ins            %[temp3],    %[temp5],          16,   4    \n\t"
+    "addiu          %[src],      %[src],            16         \n\t"
+    "precr.qb.ph    %[temp3],    %[temp3],          %[temp2]   \n\t"
+#ifdef WEBP_SWAP_16BIT_CSP
+    "usw            %[temp1],    0(%[dst])                     \n\t"
+    "usw            %[temp3],    4(%[dst])                     \n\t"
+#else
+    "wsbh           %[temp1],    %[temp1]                      \n\t"
+    "wsbh           %[temp3],    %[temp3]                      \n\t"
+    "usw            %[temp1],    0(%[dst])                     \n\t"
+    "usw            %[temp3],    4(%[dst])                     \n\t"
+#endif
+    "bne            %[src],      %[p_loop1_end],    0b         \n\t"
+    " addiu         %[dst],      %[dst],            8          \n\t"
+  "3:                                                          \n\t"
+    "beq            %[src],      %[p_loop2_end],    2f         \n\t"
+    " nop                                                      \n\t"
+  "1:                                                          \n\t"
+    "lw             %[temp0],    0(%[src])                     \n\t"
+    "ext            %[temp4],    %[temp0],          28,   4    \n\t"
+    "ext            %[temp5],    %[temp0],          12,   4    \n\t"
+    "ins            %[temp0],    %[temp4],          0,    4    \n\t"
+    "ins            %[temp0],    %[temp5],          16,   4    \n\t"
+    "addiu          %[src],      %[src],            4          \n\t"
+    "precr.qb.ph    %[temp0],    %[temp0],          %[temp0]   \n\t"
+#ifdef WEBP_SWAP_16BIT_CSP
+    "ush            %[temp0],    0(%[dst])                     \n\t"
+#else
+    "wsbh           %[temp0],    %[temp0]                      \n\t"
+    "ush            %[temp0],    0(%[dst])                     \n\t"
+#endif
+    "bne            %[src],      %[p_loop2_end],    1b         \n\t"
+    " addiu         %[dst],      %[dst],            2          \n\t"
+  "2:                                                          \n\t"
+    ".set           pop                                        \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [dst]"+&r"(dst), [src]"+&r"(src)
+    : [p_loop1_end]"r"(p_loop1_end), [p_loop2_end]"r"(p_loop2_end)
+    : "memory"
+  );
+}
+
+static void ConvertBGRAToRGB565(const uint32_t* src,
+                                int num_pixels, uint8_t* dst) {
+  int temp0, temp1, temp2, temp3, temp4, temp5;
+  const uint32_t* const p_loop1_end = src + (num_pixels & ~3);
+  const uint32_t* const p_loop2_end = src + num_pixels;
+  __asm__ volatile (
+    ".set           push                                       \n\t"
+    ".set           noreorder                                  \n\t"
+    "beq            %[src],      %[p_loop1_end],    3f         \n\t"
+    " nop                                                      \n\t"
+  "0:                                                          \n\t"
+    "lw             %[temp0],    0(%[src])                     \n\t"
+    "lw             %[temp1],    4(%[src])                     \n\t"
+    "lw             %[temp2],    8(%[src])                     \n\t"
+    "lw             %[temp3],    12(%[src])                    \n\t"
+    "ext            %[temp4],    %[temp0],          8,    16   \n\t"
+    "ext            %[temp5],    %[temp0],          5,    11   \n\t"
+    "ext            %[temp0],    %[temp0],          3,    5    \n\t"
+    "ins            %[temp4],    %[temp5],          0,    11   \n\t"
+    "ext            %[temp5],    %[temp1],          5,    11   \n\t"
+    "ins            %[temp4],    %[temp0],          0,    5    \n\t"
+    "ext            %[temp0],    %[temp1],          8,    16   \n\t"
+    "ext            %[temp1],    %[temp1],          3,    5    \n\t"
+    "ins            %[temp0],    %[temp5],          0,    11   \n\t"
+    "ext            %[temp5],    %[temp2],          5,    11   \n\t"
+    "ins            %[temp0],    %[temp1],          0,    5    \n\t"
+    "ext            %[temp1],    %[temp2],          8,    16   \n\t"
+    "ext            %[temp2],    %[temp2],          3,    5    \n\t"
+    "ins            %[temp1],    %[temp5],          0,    11   \n\t"
+    "ext            %[temp5],    %[temp3],          5,    11   \n\t"
+    "ins            %[temp1],    %[temp2],          0,    5    \n\t"
+    "ext            %[temp2],    %[temp3],          8,    16   \n\t"
+    "ext            %[temp3],    %[temp3],          3,    5    \n\t"
+    "ins            %[temp2],    %[temp5],          0,    11   \n\t"
+    "append         %[temp0],    %[temp4],          16         \n\t"
+    "ins            %[temp2],    %[temp3],          0,    5    \n\t"
+    "addiu          %[src],      %[src],            16         \n\t"
+    "append         %[temp2],    %[temp1],          16         \n\t"
+#ifdef WEBP_SWAP_16BIT_CSP
+    "usw            %[temp0],    0(%[dst])                     \n\t"
+    "usw            %[temp2],    4(%[dst])                     \n\t"
+#else
+    "wsbh           %[temp0],    %[temp0]                      \n\t"
+    "wsbh           %[temp2],    %[temp2]                      \n\t"
+    "usw            %[temp0],    0(%[dst])                     \n\t"
+    "usw            %[temp2],    4(%[dst])                     \n\t"
+#endif
+    "bne            %[src],      %[p_loop1_end],    0b         \n\t"
+    " addiu         %[dst],      %[dst],            8          \n\t"
+  "3:                                                          \n\t"
+    "beq            %[src],      %[p_loop2_end],    2f         \n\t"
+    " nop                                                      \n\t"
+  "1:                                                          \n\t"
+    "lw             %[temp0],    0(%[src])                     \n\t"
+    "ext            %[temp4],    %[temp0],          8,    16   \n\t"
+    "ext            %[temp5],    %[temp0],          5,    11   \n\t"
+    "ext            %[temp0],    %[temp0],          3,    5    \n\t"
+    "ins            %[temp4],    %[temp5],          0,    11   \n\t"
+    "addiu          %[src],      %[src],            4          \n\t"
+    "ins            %[temp4],    %[temp0],          0,    5    \n\t"
+#ifdef WEBP_SWAP_16BIT_CSP
+    "ush            %[temp4],    0(%[dst])                     \n\t"
+#else
+    "wsbh           %[temp4],    %[temp4]                      \n\t"
+    "ush            %[temp4],    0(%[dst])                     \n\t"
+#endif
+    "bne            %[src],      %[p_loop2_end],    1b         \n\t"
+    " addiu         %[dst],      %[dst],            2          \n\t"
+  "2:                                                          \n\t"
+    ".set           pop                                        \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
+      [dst]"+&r"(dst), [src]"+&r"(src)
+    : [p_loop1_end]"r"(p_loop1_end), [p_loop2_end]"r"(p_loop2_end)
+    : "memory"
+  );
+}
+
+static void ConvertBGRAToBGR(const uint32_t* src,
+                             int num_pixels, uint8_t* dst) {
+  int temp0, temp1, temp2, temp3;
+  const uint32_t* const p_loop1_end = src + (num_pixels & ~3);
+  const uint32_t* const p_loop2_end = src + num_pixels;
+  __asm__ volatile (
+    ".set       push                                         \n\t"
+    ".set       noreorder                                    \n\t"
+    "beq        %[src],      %[p_loop1_end],    3f           \n\t"
+    " nop                                                    \n\t"
+  "0:                                                        \n\t"
+    "lw         %[temp0],    0(%[src])                       \n\t"
+    "lw         %[temp1],    4(%[src])                       \n\t"
+    "lw         %[temp2],    8(%[src])                       \n\t"
+    "lw         %[temp3],    12(%[src])                      \n\t"
+    "ins        %[temp0],    %[temp1],          24,    8     \n\t"
+    "sra        %[temp1],    %[temp1],          8            \n\t"
+    "ins        %[temp1],    %[temp2],          16,    16    \n\t"
+    "sll        %[temp2],    %[temp2],          8            \n\t"
+    "balign     %[temp3],    %[temp2],          1            \n\t"
+    "addiu      %[src],      %[src],            16           \n\t"
+    "usw        %[temp0],    0(%[dst])                       \n\t"
+    "usw        %[temp1],    4(%[dst])                       \n\t"
+    "usw        %[temp3],    8(%[dst])                       \n\t"
+    "bne        %[src],      %[p_loop1_end],    0b           \n\t"
+    " addiu     %[dst],      %[dst],            12           \n\t"
+  "3:                                                        \n\t"
+    "beq        %[src],      %[p_loop2_end],    2f           \n\t"
+    " nop                                                    \n\t"
+  "1:                                                        \n\t"
+    "lw         %[temp0],    0(%[src])                       \n\t"
+    "addiu      %[src],      %[src],            4            \n\t"
+    "addiu      %[dst],      %[dst],            3            \n\t"
+    "ush        %[temp0],    -3(%[dst])                      \n\t"
+    "sra        %[temp0],    %[temp0],          16           \n\t"
+    "bne        %[src],      %[p_loop2_end],    1b           \n\t"
+    " sb        %[temp0],    -1(%[dst])                      \n\t"
+  "2:                                                        \n\t"
+    ".set       pop                                          \n\t"
+    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
+      [temp3]"=&r"(temp3), [dst]"+&r"(dst), [src]"+&r"(src)
+    : [p_loop1_end]"r"(p_loop1_end), [p_loop2_end]"r"(p_loop2_end)
+    : "memory"
+  );
+}
+
 #endif  // WEBP_USE_MIPS_DSP_R2
 
 //------------------------------------------------------------------------------
@@ -714,6 +912,9 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPSdspR2(void) {
   VP8LTransformColorInverse = TransformColorInverse;
   VP8LConvertBGRAToRGB = ConvertBGRAToRGB;
   VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA;
+  VP8LConvertBGRAToRGBA4444 = ConvertBGRAToRGBA4444;
+  VP8LConvertBGRAToRGB565 = ConvertBGRAToRGB565;
+  VP8LConvertBGRAToBGR = ConvertBGRAToBGR;
 #endif  // WEBP_USE_MIPS_DSP_R2
 }
 
