@@ -31,6 +31,9 @@ dec_srcs := \
     src/dec/vp8l.c \
     src/dec/webp.c \
 
+demux_srcs := \
+    src/demux/demux.c \
+
 dsp_dec_srcs := \
     src/dsp/alpha_processing.c \
     src/dsp/alpha_processing_sse2.c \
@@ -151,6 +154,29 @@ LOCAL_MODULE := webp
 ifeq ($(ENABLE_SHARED),1)
   include $(BUILD_SHARED_LIBRARY)
 else
+  include $(BUILD_STATIC_LIBRARY)
+endif
+
+################################################################################
+# libwebpdemux
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := $(demux_srcs)
+
+LOCAL_CFLAGS := $(WEBP_CFLAGS)
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
+
+# prefer arm over thumb mode for performance gains
+LOCAL_ARM_MODE := arm
+
+LOCAL_MODULE := webpdemux
+
+ifeq ($(ENABLE_SHARED),1)
+  LOCAL_SHARED_LIBRARIES := webp
+  include $(BUILD_SHARED_LIBRARY)
+else
+  LOCAL_STATIC_LIBRARIES := webp
   include $(BUILD_STATIC_LIBRARY)
 endif
 
