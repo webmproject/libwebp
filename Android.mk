@@ -10,8 +10,6 @@ ifeq ($(APP_OPTIM),release)
   endif
 endif
 
-include $(CLEAR_VARS)
-
 ifneq ($(findstring armeabi-v7a, $(TARGET_ARCH_ABI)),)
   # Setting LOCAL_ARM_NEON will enable -mfpu=neon which may cause illegal
   # instructions to be generated for armv7a code. Instead target the neon code
@@ -21,7 +19,7 @@ else
   NEON := c
 endif
 
-LOCAL_SRC_FILES := \
+dec_srcs := \
     src/dec/alpha.c \
     src/dec/buffer.c \
     src/dec/frame.c \
@@ -32,6 +30,8 @@ LOCAL_SRC_FILES := \
     src/dec/vp8.c \
     src/dec/vp8l.c \
     src/dec/webp.c \
+
+dsp_dec_srcs := \
     src/dsp/alpha_processing.c \
     src/dsp/alpha_processing_sse2.c \
     src/dsp/cpu.c \
@@ -40,11 +40,6 @@ LOCAL_SRC_FILES := \
     src/dsp/dec_mips32.c \
     src/dsp/dec_neon.$(NEON) \
     src/dsp/dec_sse2.c \
-    src/dsp/enc.c \
-    src/dsp/enc_avx2.c \
-    src/dsp/enc_mips32.c \
-    src/dsp/enc_neon.$(NEON) \
-    src/dsp/enc_sse2.c \
     src/dsp/lossless.c \
     src/dsp/lossless_mips32.c \
     src/dsp/lossless_neon.$(NEON) \
@@ -55,6 +50,15 @@ LOCAL_SRC_FILES := \
     src/dsp/yuv.c \
     src/dsp/yuv_mips32.c \
     src/dsp/yuv_sse2.c \
+
+dsp_enc_srcs := \
+    src/dsp/enc.c \
+    src/dsp/enc_avx2.c \
+    src/dsp/enc_mips32.c \
+    src/dsp/enc_neon.$(NEON) \
+    src/dsp/enc_sse2.c \
+
+enc_srcs := \
     src/enc/alpha.c \
     src/enc/analysis.c \
     src/enc/backward_references.c \
@@ -75,18 +79,33 @@ LOCAL_SRC_FILES := \
     src/enc/tree.c \
     src/enc/vp8l.c \
     src/enc/webpenc.c \
+
+utils_dec_srcs := \
     src/utils/bit_reader.c \
-    src/utils/bit_writer.c \
     src/utils/color_cache.c \
     src/utils/filters.c \
     src/utils/huffman.c \
-    src/utils/huffman_encode.c \
-    src/utils/quant_levels.c \
     src/utils/quant_levels_dec.c \
     src/utils/random.c \
     src/utils/rescaler.c \
     src/utils/thread.c \
     src/utils/utils.c \
+
+utils_enc_srcs := \
+    src/utils/bit_writer.c \
+    src/utils/huffman_encode.c \
+    src/utils/quant_levels.c \
+
+################################################################################
+# libwebp
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := \
+    $(dec_srcs) \
+    $(dsp_dec_srcs) $(dsp_enc_srcs) \
+    $(enc_srcs) \
+    $(utils_dec_srcs) $(utils_enc_srcs) \
 
 LOCAL_CFLAGS := $(WEBP_CFLAGS)
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
@@ -103,6 +122,8 @@ ifeq ($(ENABLE_SHARED),1)
 else
   include $(BUILD_STATIC_LIBRARY)
 endif
+
+################################################################################
 
 include $(LOCAL_PATH)/examples/Android.mk
 
