@@ -117,15 +117,14 @@ utils_enc_srcs := \
     src/utils/quant_levels.c \
 
 ################################################################################
-# libwebp
+# libwebpdecoder
 
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := \
     $(dec_srcs) \
-    $(dsp_dec_srcs) $(dsp_enc_srcs) \
-    $(enc_srcs) \
-    $(utils_dec_srcs) $(utils_enc_srcs) \
+    $(dsp_dec_srcs) \
+    $(utils_dec_srcs) \
 
 LOCAL_CFLAGS := $(WEBP_CFLAGS)
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
@@ -134,6 +133,38 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
 LOCAL_ARM_MODE := arm
 
 LOCAL_STATIC_LIBRARIES := cpufeatures
+
+LOCAL_MODULE := webpdecoder_static
+
+include $(BUILD_STATIC_LIBRARY)
+
+ifeq ($(ENABLE_SHARED),1)
+include $(CLEAR_VARS)
+
+LOCAL_WHOLE_STATIC_LIBRARIES := webpdecoder_static
+
+LOCAL_MODULE := webpdecoder
+
+include $(BUILD_SHARED_LIBRARY)
+endif  # ENABLE_SHARED=1
+
+################################################################################
+# libwebp
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := \
+    $(dsp_enc_srcs) \
+    $(enc_srcs) \
+    $(utils_enc_srcs) \
+
+LOCAL_CFLAGS := $(WEBP_CFLAGS)
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
+
+# prefer arm over thumb mode for performance gains
+LOCAL_ARM_MODE := arm
+
+LOCAL_WHOLE_STATIC_LIBRARIES := webpdecoder_static
 
 LOCAL_MODULE := webp
 
