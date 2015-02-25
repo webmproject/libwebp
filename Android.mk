@@ -83,6 +83,11 @@ enc_srcs := \
     src/enc/vp8l.c \
     src/enc/webpenc.c \
 
+mux_srcs := \
+    src/mux/muxedit.c \
+    src/mux/muxinternal.c \
+    src/mux/muxread.c \
+
 utils_dec_srcs := \
     src/utils/bit_reader.c \
     src/utils/color_cache.c \
@@ -171,6 +176,29 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
 LOCAL_ARM_MODE := arm
 
 LOCAL_MODULE := webpdemux
+
+ifeq ($(ENABLE_SHARED),1)
+  LOCAL_SHARED_LIBRARIES := webp
+  include $(BUILD_SHARED_LIBRARY)
+else
+  LOCAL_STATIC_LIBRARIES := webp
+  include $(BUILD_STATIC_LIBRARY)
+endif
+
+################################################################################
+# libwebpmux
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := $(mux_srcs)
+
+LOCAL_CFLAGS := $(WEBP_CFLAGS)
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
+
+# prefer arm over thumb mode for performance gains
+LOCAL_ARM_MODE := arm
+
+LOCAL_MODULE := webpmux
 
 ifeq ($(ENABLE_SHARED),1)
   LOCAL_SHARED_LIBRARIES := webp
