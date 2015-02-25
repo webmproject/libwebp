@@ -870,6 +870,86 @@ static void DC8uvNoTop(uint8_t* dst) {  // DC with no top samples
 #undef STORE_8_BYTES
 #undef LOAD_4_BYTES
 
+#define CLIPPING(SIZE)                                                         \
+  "preceu.ph.qbl   %[temp2],   %[temp0]                  \n\t"                 \
+  "preceu.ph.qbr   %[temp0],   %[temp0]                  \n\t"                 \
+".if "#SIZE" == 8                                        \n\t"                 \
+  "preceu.ph.qbl   %[temp3],   %[temp1]                  \n\t"                 \
+  "preceu.ph.qbr   %[temp1],   %[temp1]                  \n\t"                 \
+".endif                                                  \n\t"                 \
+  "addu.ph         %[temp2],   %[temp2],   %[dst_1]      \n\t"                 \
+  "addu.ph         %[temp0],   %[temp0],   %[dst_1]      \n\t"                 \
+".if "#SIZE" == 8                                        \n\t"                 \
+  "addu.ph         %[temp3],   %[temp3],   %[dst_1]      \n\t"                 \
+  "addu.ph         %[temp1],   %[temp1],   %[dst_1]      \n\t"                 \
+".endif                                                  \n\t"                 \
+  "shll_s.ph       %[temp2],   %[temp2],   7             \n\t"                 \
+  "shll_s.ph       %[temp0],   %[temp0],   7             \n\t"                 \
+".if "#SIZE" == 8                                        \n\t"                 \
+  "shll_s.ph       %[temp3],   %[temp3],   7             \n\t"                 \
+  "shll_s.ph       %[temp1],   %[temp1],   7             \n\t"                 \
+".endif                                                  \n\t"                 \
+  "precrqu_s.qb.ph %[temp0],   %[temp2],   %[temp0]      \n\t"                 \
+".if "#SIZE" == 8                                        \n\t"                 \
+  "precrqu_s.qb.ph %[temp1],   %[temp3],   %[temp1]      \n\t"                 \
+".endif                                                  \n\t"
+
+
+#define CLIP_8B_TO_DST(DST, TOP, SIZE) do {                                    \
+  int dst_1 = ((int)(DST)[-1] << 16) + (DST)[-1];                              \
+  int temp0, temp1, temp2, temp3;                                              \
+  __asm__ volatile (                                                           \
+  ".if "#SIZE" < 8                                       \n\t"                 \
+    "ulw             %[temp0],   0(%[top])               \n\t"                 \
+    "subu.ph         %[dst_1],   %[dst_1],    %[top_1]   \n\t"                 \
+    CLIPPING(4)                                                                \
+    "usw             %[temp0],   0(%[dst])               \n\t"                 \
+  ".else                                                 \n\t"                 \
+    "ulw             %[temp0],   0(%[top])               \n\t"                 \
+    "ulw             %[temp1],   4(%[top])               \n\t"                 \
+    "subu.ph         %[dst_1],   %[dst_1],    %[top_1]   \n\t"                 \
+    CLIPPING(8)                                                                \
+    "usw             %[temp0],   0(%[dst])               \n\t"                 \
+    "usw             %[temp1],   4(%[dst])               \n\t"                 \
+  ".if "#SIZE" == 16                                     \n\t"                 \
+    "ulw             %[temp0],   8(%[top])               \n\t"                 \
+    "ulw             %[temp1],   12(%[top])              \n\t"                 \
+    CLIPPING(8)                                                                \
+    "usw             %[temp0],   8(%[dst])               \n\t"                 \
+    "usw             %[temp1],   12(%[dst])              \n\t"                 \
+  ".endif                                                \n\t"                 \
+  ".endif                                                \n\t"                 \
+    : [dst_1]"+&r"(dst_1), [temp0]"=&r"(temp0), [temp1]"=&r"(temp1),           \
+      [temp2]"=&r"(temp2), [temp3]"=&r"(temp3)                                 \
+    : [top_1]"r"(top_1), [top]"r"((TOP)), [dst]"r"((DST))                      \
+    : "memory"                                                                 \
+  );                                                                           \
+} while (0)
+
+#define CLIP_TO_DST(DST, SIZE) do {                                            \
+  int y;                                                                       \
+  const uint8_t* top = (DST) - BPS;                                            \
+  const int top_1 = ((int)top[-1] << 16) + top[-1];                            \
+  for (y = 0; y < (SIZE); ++y) {                                               \
+    CLIP_8B_TO_DST((DST), top, (SIZE));                                        \
+    (DST) += BPS;                                                              \
+  }                                                                            \
+} while (0)
+
+#define TRUE_MOTION(DST, SIZE)                                                 \
+static void TrueMotion##SIZE(uint8_t* (DST)) {                                 \
+  CLIP_TO_DST((DST), (SIZE));                                                  \
+}
+
+TRUE_MOTION(dst, 4)
+TRUE_MOTION(dst, 8)
+TRUE_MOTION(dst, 16)
+
+#undef TRUE_MOTION
+#undef CLIP_TO_DST
+#undef CLIP_8B_TO_DST
+#undef CLIPPING
+
 #endif  // WEBP_USE_MIPS_DSP_R2
 
 //------------------------------------------------------------------------------
@@ -897,12 +977,16 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMIPSdspR2(void) {
   VP8SimpleHFilter16i = SimpleHFilter16i;
 
   VP8PredLuma4[0] = DC4;
+  VP8PredLuma4[1] = TrueMotion4;
   VP8PredLuma4[2] = VE4;
   VP8PredLuma4[4] = RD4;
   VP8PredLuma4[6] = LD4;
 
   VP8PredChroma8[0] = DC8uv;
+  VP8PredChroma8[1] = TrueMotion8;
   VP8PredChroma8[4] = DC8uvNoTop;
   VP8PredChroma8[5] = DC8uvNoLeft;
+
+  VP8PredLuma16[1] = TrueMotion16;
 #endif
 }
