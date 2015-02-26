@@ -419,7 +419,9 @@ WEBP_EXTERN(int) WebPPictureView(const WebPPicture* src,
 WEBP_EXTERN(int) WebPPictureIsView(const WebPPicture* picture);
 
 // Rescale a picture to new dimension width x height.
-// Now gamma correction is applied.
+// If either 'width' or 'height' (but not both) is 0 the corresponding
+// dimension will be calculated preserving the aspect ratio.
+// No gamma correction is applied.
 // Returns false in case of error (invalid parameter or insufficient memory).
 WEBP_EXTERN(int) WebPPictureRescale(WebPPicture* pic, int width, int height);
 
