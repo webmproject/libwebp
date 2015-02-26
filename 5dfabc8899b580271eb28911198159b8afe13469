@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//GD8\u003d",
+        "filename": "src/dsp/dec_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 931,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-02-26T00:26:59Z",
+      "side": 1,
+      "message": "should be (DST) strictly speaking",
+      "revId": "5dfabc8899b580271eb28911198159b8afe13469",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//GD4\u003d",
+        "filename": "src/dsp/dec_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 948,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-02-26T00:26:59Z",
+      "side": 1,
+      "message": "given you aren\u0027t passing the size, but coding it in the name here, you could do away with this level of wrapping.",
+      "revId": "5dfabc8899b580271eb28911198159b8afe13469",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
