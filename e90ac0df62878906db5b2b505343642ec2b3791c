@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//GDw\u003d",
+        "filename": "examples/Android.mk",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-02-26T00:37:47Z",
+      "side": 1,
+      "message": "should be at line 3 to include CLEAR_VARS",
+      "revId": "e90ac0df62878906db5b2b505343642ec2b3791c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
