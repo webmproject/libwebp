@@ -345,7 +345,8 @@ int VP8EmitTokens(VP8TBuffer* const b, VP8BitWriter* const bw,
                   const uint8_t* const probas, int final_pass);
 
 // record the coding of coefficients without knowing the probabilities yet
-int VP8RecordCoeffTokens(int ctx, int coeff_type, int first, int last,
+int VP8RecordCoeffTokens(const int ctx, const int coeff_type,
+                         int first, int last,
                          const int16_t* const coeffs,
                          VP8TBuffer* const tokens);
 
