@@ -1,3 +1,45 @@
+569fe57 update NEWS
+bd852f5 bump version to 0.4.3
+2d58b64 WebPPictureRescale: add a note about 0 width/height
+a0d8ca5 examples/Android.mk: add webpmux_example target
+34b1d29 Android.mk: add webpmux target
+7561988 Android.mk: add webpdemux target
+a987576 Android.mk: add webpdecoder{,_static} targets
+a6d4859 Android.mk: split source lists per-directory
+77544d5 fix iOS arm64 build with Xcode 6.3
+6dea157 doc/webp-container-spec: note MSB order for chunk diagrams
+f7cd57b doc/webp-container-spec: cosmetics
+1d6b250 vwebp: clear canvas at the beginning of each loop
+f97b3f8 webp-container-spec: clarify background clear on loop
+4ba83c1 vwebp: remove unnecessary static Help() prototype
+d34e8e3 vwebp/animation: display last frame on end-of-loop
+bbbc524 dec/vp8: clear 'dither_' on skipped blocks
+0339fa2 lossless_neon: enable subtract green for aarch64
+5a0c220 Regression fix for lossless decoding
+6e3a31d wicdec: (msvs) quiet some /analyze warnings
+b49a578 dwebp/WritePNG: mark png variables volatile
+0a4391a dwebp: include setjmp.h w/WEBP_HAVE_PNG
+90f1ec5 dwebp: correct sign in format strings
+b61ce86 VP8LEncodeStream: add an assert
+df1081b dsp/cpu: (msvs) add include for __cpuidex
+39aa055 dsp/cpu: (msvs) avoid immintrin.h on _M_ARM
+f814f42 dsp/cpu: add include for _xgetbv() w/MSVS
+8508ab9 cpu: fix AVX2 detection for gcc/clang targets
+5769623 fix handling of zero-sized partition #0 corner case
+b2e71a9 make the 'last_cpuinfo_used' variable names unique
+1273e84 add -Wformat-nonliteral and -Wformat-security
+3ae78eb multi-thread fix: lock each entry points with a static var
+5c1eeda webp-container-spec: remove references to fragments
+c5ceea4 enc_neon: fix building with non-Xcode clang (iOS)
+d0859d6 iosbuild: add x64_64 simulator support
+046732c WebPEncode: Support encoding same pic twice (even if modified)
+4426f50 webp/types.h: use inline for clang++/-std=c++11
+e297fc7 gif2webp: Use the default hint instead of WEBP_HINT_GRAPH.
+855fe43 Makefile.vc: add a 'legacy' RTLIBCFG option
+b7eb6d5 gif2webp: Support GIF_DISPOSE_RESTORE_PREVIOUS
+5691bdd gif2webp: Handle frames with odd offsets + disposal to background.
+8301da1 stopwatch.h: fix includes
+6a2209a update ChangeLog (tag: v0.4.2, origin/0.4.2, 0.4.2)
 36cad6a bit_reader.h: cosmetics: fix a typo
 e2ecae6 enc_mips32: workaround gcc-4.9 bug
 243e68d update ChangeLog (tag: v0.4.2-rc2)
@@ -74,7 +116,7 @@ c2fc52e restore encode API compatibility
 793368e restore decode API compatibility
 b8984f3 gif2webp: fix compile with giflib 5.1.0
 222f9b1 gif2webp: simplify giflib version checking
-d2cc61b Extend MakeARGB32() to accept Alpha channel. (master)
+d2cc61b Extend MakeARGB32() to accept Alpha channel.
 4595b62 Merge "use explicit size of kErrorMessages[] arrays"
 157de01 Merge "Actuate memory stats for PRINT_MEMORY_INFO"
 fbda2f4 JPEG decoder: delay conversion to YUV to WebPEncode() call
