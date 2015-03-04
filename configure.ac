@@ -1,4 +1,4 @@
-AC_INIT([libwebp], [0.4.2],
+AC_INIT([libwebp], [0.4.3],
         [http://code.google.com/p/webp/issues],,
         [http://developers.google.com/speed/webp])
 AC_CANONICAL_HOST
