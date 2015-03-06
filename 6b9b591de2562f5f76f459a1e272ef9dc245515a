@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//FAM\u003d",
+        "filename": "src/extras/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-06T07:52:19Z",
+      "side": 1,
+      "message": "libwebpgoodies / libwebp-extras / libwebp-goodies ...",
+      "revId": "6b9b591de2562f5f76f459a1e272ef9dc245515a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
