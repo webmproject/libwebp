@@ -19,6 +19,41 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//E/8\u003d",
+        "filename": "src/extras/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-03-06T07:59:09Z",
+      "side": 1,
+      "message": "libwebp-extras would be more readable, but less coherent with the other namings (libwebpdecode, etc...). So, ok for libwebpextras...",
+      "parentUuid": "AAAAdn//FAM\u003d",
+      "revId": "6b9b591de2562f5f76f459a1e272ef9dc245515a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//E/4\u003d",
+        "filename": "src/extras/extras.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-03-06T07:59:09Z",
+      "side": 1,
+      "message": "note that this file is missing from the patch...",
+      "revId": "6b9b591de2562f5f76f459a1e272ef9dc245515a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//FAE\u003d",
         "filename": "src/extras/libwebpextras.pc.in",
         "patchSetId": 1
