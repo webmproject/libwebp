@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//E1o\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-07T02:27:03Z",
+      "side": 1,
+      "message": "do you mean inline assembly / intrinsics aren\u0027t supported yet or that we\u0027ll have to make changes to our code?",
+      "revId": "5b8d9d9f1e1a609a2ed8432482a1949247507534",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
