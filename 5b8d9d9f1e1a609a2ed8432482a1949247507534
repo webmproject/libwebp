@@ -16,6 +16,24 @@
       "revId": "5b8d9d9f1e1a609a2ed8432482a1949247507534",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ExU\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1002666
+      },
+      "writtenOn": "2015-03-08T17:06:54Z",
+      "side": 1,
+      "message": "Actually there are two issues.  Firstly, the assembly code would need to be ported in order to work in the NaCl sandbox.  Secondly, if I enable building with intrinsics, the generated code triggers a compiler bug in nacl-nacl-gcc: \nhttps://code.google.com/p/nativeclient/issues/detail?id\u003d3205.\n\nPerhaps I\u0027ll actually make two changes here, and add more comments.",
+      "parentUuid": "AAAAdn//E1o\u003d",
+      "revId": "5b8d9d9f1e1a609a2ed8432482a1949247507534",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
