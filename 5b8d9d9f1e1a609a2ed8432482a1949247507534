@@ -52,6 +52,24 @@
       "revId": "5b8d9d9f1e1a609a2ed8432482a1949247507534",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Ee8\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-10T23:18:49Z",
+      "side": 1,
+      "message": "updated the comment and added the bug to the commit message.",
+      "parentUuid": "AAAAdn//ExU\u003d",
+      "revId": "5b8d9d9f1e1a609a2ed8432482a1949247507534",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
