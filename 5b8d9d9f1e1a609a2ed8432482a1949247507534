@@ -34,6 +34,24 @@
       "revId": "5b8d9d9f1e1a609a2ed8432482a1949247507534",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//EhY\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-10T20:00:53Z",
+      "side": 1,
+      "message": "Thanks for the detail. Note the inline assembly can be skipped entirely if WEBP_USE_INTRINSICS is set (we do this for aarch64/msvs).\n\nAs for the check I imagine when it\u0027s fixed we can detect the compiler version and conditionally enable it, unless you\u0027re only concerned with the tip of tree.",
+      "parentUuid": "AAAAdn//ExU\u003d",
+      "revId": "5b8d9d9f1e1a609a2ed8432482a1949247507534",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
