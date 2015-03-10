@@ -1058,14 +1058,25 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int duration,
     return 0;
   }
   if (frame->width != enc->canvas_width_ ||
-      frame->height != enc->canvas_height_ || !frame->use_argb ||
-      duration < 0) {
+      frame->height != enc->canvas_height_ || duration < 0) {
     frame->error_code = VP8_ENC_ERROR_INVALID_CONFIGURATION;
     if (enc->options_.verbose) {
       fprintf(stderr, "ERROR adding frame: Invalid input.\n");
     }
     return 0;
   }
+
+  if (!frame->use_argb) {  // Convert frame from YUV(A) to ARGB.
+    if (enc->options_.verbose) {
+      fprintf(stderr, "WARNING: Converting frame from YUV(A) to ARGB format; "
+              "this incurs a small loss.\n");
+    }
+    if (!WebPPictureYUVAToARGB(frame)) {
+      fprintf(stderr, "ERROR converting frame from YUV(A) to ARGB\n");
+      return 0;
+    }
+  }
+
   if (encoder_config != NULL) {
     config = *encoder_config;
   } else {

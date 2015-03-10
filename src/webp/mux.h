@@ -473,7 +473,8 @@ static WEBP_INLINE WebPAnimEncoder* WebPAnimEncoderNew(
 // WebPAnimEncoder object.
 // Parameters:
 //   enc - (in/out) object to which the frame is to be added.
-//   frame - (in/out) frame data in ARGB or YUVA format.
+//   frame - (in/out) frame data in ARGB or YUV(A) format. If it is in YUV(A)
+//           format, it will be converted to ARGB, which incurs a small loss.
 //   duration - (in) frame duration
 //   config - (in) encoding options; can be passed NULL to pick
 //            reasonable defaults.
