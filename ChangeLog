@@ -1,3 +1,5 @@
+a661e50 Disable NEON code on Native Client
+fcd94e9 update ChangeLog (tag: v0.4.3-rc1)
 569fe57 update NEWS
 bd852f5 bump version to 0.4.3
 2d58b64 WebPPictureRescale: add a note about 0 width/height
