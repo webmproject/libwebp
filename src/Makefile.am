@@ -1,11 +1,14 @@
-# The mux and demux libraries depend on libwebp, thus the '.' to force the
-# build order so it's available to them.
+# The mux, demux and extras libraries depend on libwebp, thus the '.' to force
+# the build order so it's available to them.
 SUBDIRS = dec enc dsp utils .
 if WANT_MUX
   SUBDIRS += mux
 endif
 if WANT_DEMUX
   SUBDIRS += demux
+endif
+if WANT_EXTRAS
+  SUBDIRS += extras
 endif
 
 lib_LTLIBRARIES = libwebp.la
