@@ -102,6 +102,7 @@ extern "C" {
 typedef enum {
   kSSE2,
   kSSE3,
+  kSSE4_1,
   kAVX,
   kAVX2,
   kNEON,
