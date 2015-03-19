@@ -674,6 +674,7 @@ VP8SimpleFilterFunc VP8SimpleVFilter16i;
 VP8SimpleFilterFunc VP8SimpleHFilter16i;
 
 extern void VP8DspInitSSE2(void);
+extern void VP8DspInitSSE41(void);
 extern void VP8DspInitNEON(void);
 extern void VP8DspInitMIPS32(void);
 extern void VP8DspInitMIPSdspR2(void);
@@ -738,6 +739,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInit(void) {
 #if defined(WEBP_USE_SSE2)
     if (VP8GetCPUInfo(kSSE2)) {
       VP8DspInitSSE2();
+#if defined(WEBP_USE_SSE41)
+      if (VP8GetCPUInfo(kSSE4_1)) {
+        VP8DspInitSSE41();
+      }
+#endif
     }
 #endif
 #if defined(WEBP_USE_NEON)
