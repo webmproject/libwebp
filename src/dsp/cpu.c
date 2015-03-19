@@ -87,6 +87,9 @@ static int x86CPUInfo(CPUFeature feature) {
   if (feature == kSSE3) {
     return 0 != (cpu_info[2] & 0x00000001);
   }
+  if (feature == kSSE4_1) {
+    return 0 != (cpu_info[2] & 0x00080000);
+  }
   if (feature == kAVX) {
     // bits 27 (OSXSAVE) & 28 (256-bit AVX)
     if ((cpu_info[2] & 0x18000000) == 0x18000000) {
