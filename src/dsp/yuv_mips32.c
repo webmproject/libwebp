@@ -84,17 +84,21 @@ ROW_FUNC(YuvToBgraRow,     4, 2, 1, 0, 3)
 
 #undef ROW_FUNC
 
-#endif   // WEBP_USE_MIPS32
-
 //------------------------------------------------------------------------------
+// Entry point
 
 extern void WebPInitSamplersMIPS32(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersMIPS32(void) {
-#if defined(WEBP_USE_MIPS32)
   WebPSamplers[MODE_RGB]  = YuvToRgbRow;
   WebPSamplers[MODE_RGBA] = YuvToRgbaRow;
   WebPSamplers[MODE_BGR]  = YuvToBgrRow;
   WebPSamplers[MODE_BGRA] = YuvToBgraRow;
-#endif  // WEBP_USE_MIPS32
 }
+
+#else  // !WEBP_USE_MIPS32
+
+extern void WebPInitSamplersMIPS32(void);
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersMIPS32(void) {}
+
+#endif  // WEBP_USE_MIPS32

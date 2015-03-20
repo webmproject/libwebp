@@ -304,19 +304,22 @@ static void YuvToBgrRowSSE2(const uint8_t* y,
   }
 }
 
-#endif  // WEBP_USE_SSE2
-
 //------------------------------------------------------------------------------
 // Entry point
 
 extern void WebPInitSamplersSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersSSE2(void) {
-#if defined(WEBP_USE_SSE2)
   WebPSamplers[MODE_RGB]  = YuvToRgbRowSSE2;
   WebPSamplers[MODE_RGBA] = YuvToRgbaRowSSE2;
   WebPSamplers[MODE_BGR]  = YuvToBgrRowSSE2;
   WebPSamplers[MODE_BGRA] = YuvToBgraRowSSE2;
   WebPSamplers[MODE_ARGB] = YuvToArgbRowSSE2;
-#endif  // WEBP_USE_SSE2
 }
+
+#else  // !WEBP_USE_SSE2
+
+extern void WebPInitSamplersSSE2(void);
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersSSE2(void) {}
+
+#endif  // WEBP_USE_SSE2
