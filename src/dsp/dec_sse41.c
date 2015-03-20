@@ -28,11 +28,19 @@ static void HE16(uint8_t* dst) {     // horizontal
     dst += BPS;
   }
 }
-#endif   // WEBP_USE_SSE41
+
+//------------------------------------------------------------------------------
+// Entry point
 
 extern void VP8DspInitSSE41(void);
+
 WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitSSE41(void) {
-#if defined(WEBP_USE_SSE41)
   VP8PredLuma16[3] = HE16;
-#endif   // WEBP_USE_SSE41
 }
+
+#else  // !WEBP_USE_SSE41
+
+extern void VP8DspInitSSE41(void);
+WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitSSE41(void) {}
+
+#endif  // WEBP_USE_SSE41

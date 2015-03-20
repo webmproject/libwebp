@@ -1229,15 +1229,12 @@ static void DC8uvNoTopLeft(uint8_t* dst) {    // DC with nothing
   Put8x8uv(0x80, dst);
 }
 
-#endif   // WEBP_USE_SSE2
-
 //------------------------------------------------------------------------------
 // Entry point
 
 extern void VP8DspInitSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitSSE2(void) {
-#if defined(WEBP_USE_SSE2)
   VP8Transform = Transform;
 #if defined(USE_TRANSFORM_AC3)
   VP8TransformAC3 = TransformAC3;
@@ -1279,6 +1276,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitSSE2(void) {
   VP8PredChroma8[4] = DC8uvNoTop;
   VP8PredChroma8[5] = DC8uvNoLeft;
   VP8PredChroma8[6] = DC8uvNoTopLeft;
-
-#endif   // WEBP_USE_SSE2
 }
+
+#else  // !WEBP_USE_SSE2
+
+extern void VP8DspInitSSE2(void);
+WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitSSE2(void) {}
+
+#endif  // WEBP_USE_SSE2

@@ -555,15 +555,12 @@ static void TransformTwo(const int16_t* in, uint8_t* dst, int do_two) {
   }
 }
 
-#endif  // WEBP_USE_MIPS32
-
 //------------------------------------------------------------------------------
 // Entry point
 
 extern void VP8DspInitMIPS32(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMIPS32(void) {
-#if defined(WEBP_USE_MIPS32)
   VP8InitClipTables();
 
   VP8Transform = TransformTwo;
@@ -581,5 +578,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMIPS32(void) {
   VP8SimpleHFilter16 = SimpleHFilter16;
   VP8SimpleVFilter16i = SimpleVFilter16i;
   VP8SimpleHFilter16i = SimpleHFilter16i;
-#endif  // WEBP_USE_MIPS32
 }
+
+#else  // !WEBP_USE_MIPS32
+
+extern void VP8DspInitMIPS32(void);
+WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMIPS32(void) {}
+
+#endif  // WEBP_USE_MIPS32

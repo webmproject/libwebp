@@ -950,15 +950,12 @@ TRUE_MOTION(dst, 16)
 #undef CLIP_8B_TO_DST
 #undef CLIPPING
 
-#endif  // WEBP_USE_MIPS_DSP_R2
-
 //------------------------------------------------------------------------------
 // Entry point
 
 extern void VP8DspInitMIPSdspR2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMIPSdspR2(void) {
-#if defined(WEBP_USE_MIPS_DSP_R2)
   VP8TransformDC = TransformDC;
   VP8TransformAC3 = TransformAC3;
   VP8Transform = TransformTwo;
@@ -988,5 +985,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMIPSdspR2(void) {
   VP8PredChroma8[5] = DC8uvNoLeft;
 
   VP8PredLuma16[1] = TrueMotion16;
-#endif
 }
+
+#else  // !WEBP_USE_MIPS_DSP_R2
+
+extern void VP8DspInitMIPSdspR2(void);
+WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMIPSdspR2(void) {}
+
+#endif  // WEBP_USE_MIPS_DSP_R2

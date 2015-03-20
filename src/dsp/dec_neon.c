@@ -1444,15 +1444,12 @@ static void DC8uvNoLeft(uint8_t* dst) { DC8(dst, 1, 0); }
 
 static void TM8uv(uint8_t* dst) { TrueMotion(dst, 8); }
 
-#endif   // WEBP_USE_NEON
-
 //------------------------------------------------------------------------------
 // Entry point
 
 extern void VP8DspInitNEON(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitNEON(void) {
-#if defined(WEBP_USE_NEON)
   VP8Transform = TransformTwo;
   VP8TransformAC3 = TransformAC3;
   VP8TransformDC = TransformDC;
@@ -1485,5 +1482,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitNEON(void) {
   VP8PredChroma8[1] = TM8uv;
   VP8PredChroma8[4] = DC8uvNoTop;
   VP8PredChroma8[5] = DC8uvNoLeft;
-#endif   // WEBP_USE_NEON
 }
+
+#else  // !WEBP_USE_NEON
+
+extern void VP8DspInitNEON(void);
+WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitNEON(void) {}
+
+#endif  // WEBP_USE_NEON
