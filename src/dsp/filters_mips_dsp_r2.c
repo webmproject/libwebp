@@ -383,14 +383,12 @@ static void GradientUnfilter(int width, int height, int stride, int row,
 #undef DO_PREDICT_LINE
 #undef SANITY_CHECK
 
-#endif  // WEBP_USE_MIPS_DSP_R2
-
 //------------------------------------------------------------------------------
+// Entry point
 
 extern void VP8FiltersInitMIPSdspR2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8FiltersInitMIPSdspR2(void) {
-#if defined(WEBP_USE_MIPS_DSP_R2)
   WebPFilters[WEBP_FILTER_HORIZONTAL] = HorizontalFilter;
   WebPFilters[WEBP_FILTER_VERTICAL] = VerticalFilter;
   WebPFilters[WEBP_FILTER_GRADIENT] = GradientFilter;
@@ -398,7 +396,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8FiltersInitMIPSdspR2(void) {
   WebPUnfilters[WEBP_FILTER_HORIZONTAL] = HorizontalUnfilter;
   WebPUnfilters[WEBP_FILTER_VERTICAL] = VerticalUnfilter;
   WebPUnfilters[WEBP_FILTER_GRADIENT] = GradientUnfilter;
-#endif  // WEBP_USE_MIPS_DSP_R2
 }
 
-//------------------------------------------------------------------------------
+#else  // !WEBP_USE_MIPS_DSP_R2
+
+extern void VP8FiltersInitMIPSdspR2(void);
+WEBP_TSAN_IGNORE_FUNCTION void VP8FiltersInitMIPSdspR2(void) {}
+
+#endif  // WEBP_USE_MIPS_DSP_R2
