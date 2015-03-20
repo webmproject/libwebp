@@ -396,15 +396,12 @@ static void HistogramAdd(const VP8LHistogram* const a,
 #undef ADD_TO_OUT
 #undef ASM_START
 
-#endif  // WEBP_USE_MIPS32
-
 //------------------------------------------------------------------------------
 // Entry point
 
 extern void VP8LDspInitMIPS32(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPS32(void) {
-#if defined(WEBP_USE_MIPS32)
   VP8LFastSLog2Slow = FastSLog2Slow;
   VP8LFastLog2Slow = FastLog2Slow;
   VP8LExtraCost = ExtraCost;
@@ -412,5 +409,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPS32(void) {
   VP8LHuffmanCostCount = HuffmanCostCount;
   VP8LHuffmanCostCombinedCount = HuffmanCostCombinedCount;
   VP8LHistogramAdd = HistogramAdd;
-#endif  // WEBP_USE_MIPS32
 }
+
+#else  // !WEBP_USE_MIPS32
+
+extern void VP8LDspInitMIPS32(void);
+WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPS32(void) {}
+
+#endif  // WEBP_USE_MIPS32

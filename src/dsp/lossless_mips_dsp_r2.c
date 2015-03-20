@@ -885,14 +885,12 @@ static void ConvertBGRAToBGR(const uint32_t* src,
   );
 }
 
-#endif  // WEBP_USE_MIPS_DSP_R2
-
 //------------------------------------------------------------------------------
+// Entry point
 
 extern void VP8LDspInitMIPSdspR2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPSdspR2(void) {
-#if defined(WEBP_USE_MIPS_DSP_R2)
   VP8LMapColor32b = MapARGB;
   VP8LMapColor8b = MapAlpha;
   VP8LPredictors[5] = Predictor5;
@@ -915,7 +913,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPSdspR2(void) {
   VP8LConvertBGRAToRGBA4444 = ConvertBGRAToRGBA4444;
   VP8LConvertBGRAToRGB565 = ConvertBGRAToRGB565;
   VP8LConvertBGRAToBGR = ConvertBGRAToBGR;
-#endif  // WEBP_USE_MIPS_DSP_R2
 }
 
-//------------------------------------------------------------------------------
+#else  // !WEBP_USE_MIPS_DSP_R2
+
+extern void VP8LDspInitMIPSdspR2(void);
+WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPSdspR2(void) {}
+
+#endif  // WEBP_USE_MIPS_DSP_R2

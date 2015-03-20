@@ -13,9 +13,8 @@
 
 #include "./dsp.h"
 
-#include <assert.h>
-
 #if defined(WEBP_USE_SSE2)
+#include <assert.h>
 #include <emmintrin.h>
 #include "./lossless.h"
 
@@ -499,14 +498,12 @@ static void HistogramAdd(const VP8LHistogram* const a,
   }
 }
 
-#endif   // WEBP_USE_SSE2
-
 //------------------------------------------------------------------------------
+// Entry point
 
 extern void VP8LDspInitSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitSSE2(void) {
-#if defined(WEBP_USE_SSE2)
   VP8LPredictors[5] = Predictor5;
   VP8LPredictors[6] = Predictor6;
   VP8LPredictors[7] = Predictor7;
@@ -529,7 +526,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitSSE2(void) {
   VP8LConvertBGRAToBGR = ConvertBGRAToBGR;
 
   VP8LHistogramAdd = HistogramAdd;
-#endif   // WEBP_USE_SSE2
 }
 
-//------------------------------------------------------------------------------
+#else  // !WEBP_USE_SSE2
+
+extern void VP8LDspInitSSE2(void);
+WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitSSE2(void) {}
+
+#endif  // WEBP_USE_SSE2

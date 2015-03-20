@@ -324,14 +324,12 @@ static void AddGreenToBlueAndRed(uint32_t* argb_data, int num_pixels) {
 
 #endif   // WEBP_USE_INTRINSICS
 
-#endif   // WEBP_USE_NEON
-
 //------------------------------------------------------------------------------
+// Entry point
 
 extern void VP8LDspInitNEON(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitNEON(void) {
-#if defined(WEBP_USE_NEON)
   VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA;
   VP8LConvertBGRAToBGR = ConvertBGRAToBGR;
   VP8LConvertBGRAToRGB = ConvertBGRAToRGB;
@@ -350,8 +348,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitNEON(void) {
   VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRed;
   VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
 #endif
-
-#endif   // WEBP_USE_NEON
 }
 
-//------------------------------------------------------------------------------
+#else  // !WEBP_USE_NEON
+
+extern void VP8LDspInitNEON(void);
+WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitNEON(void) {}
+
+#endif  // WEBP_USE_NEON
