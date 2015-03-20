@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//DJ8\u003d",
+        "filename": "src/dsp/lossless_sse2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 534,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-03-20T07:12:36Z",
+      "side": 1,
+      "message": "all these could be in a DUMMY_DSP_INIT_FUNCTION(VP8LDspInitSSE2) macro (in a later patch. no rush.).",
+      "revId": "54957fe83cde2a1d8f31d65f69a59f3ad8e6e3ae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
