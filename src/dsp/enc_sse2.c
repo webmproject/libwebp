@@ -914,15 +914,12 @@ static int Quantize2Blocks(int16_t in[32], int16_t out[32],
   return nz;
 }
 
-#endif   // WEBP_USE_SSE2
-
 //------------------------------------------------------------------------------
 // Entry point
 
 extern void VP8EncDspInitSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitSSE2(void) {
-#if defined(WEBP_USE_SSE2)
   VP8CollectHistogram = CollectHistogram;
   VP8EncQuantizeBlock = QuantizeBlock;
   VP8EncQuantize2Blocks = Quantize2Blocks;
@@ -936,5 +933,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitSSE2(void) {
   VP8SSE4x4 = SSE4x4;
   VP8TDisto4x4 = Disto4x4;
   VP8TDisto16x16 = Disto16x16;
-#endif   // WEBP_USE_SSE2
 }
+
+#else  // !WEBP_USE_SSE2
+
+extern void VP8EncDspInitSSE2(void);
+WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitSSE2(void) {}
+
+#endif  // WEBP_USE_SSE2

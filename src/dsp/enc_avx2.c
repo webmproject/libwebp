@@ -20,5 +20,5 @@
 
 extern void VP8EncDspInitAVX2(void);
 
-void VP8EncDspInitAVX2(void) {
+WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitAVX2(void) {
 }

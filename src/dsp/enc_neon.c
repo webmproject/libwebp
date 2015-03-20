@@ -903,15 +903,12 @@ static int Quantize2Blocks(int16_t in[32], int16_t out[32],
 
 #endif   // !WORK_AROUND_GCC
 
-#endif   // WEBP_USE_NEON
-
 //------------------------------------------------------------------------------
 // Entry point
 
 extern void VP8EncDspInitNEON(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitNEON(void) {
-#if defined(WEBP_USE_NEON)
   VP8ITransform = ITransform;
   VP8FTransform = FTransform;
 
@@ -928,5 +925,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitNEON(void) {
   VP8EncQuantizeBlock = QuantizeBlock;
   VP8EncQuantize2Blocks = Quantize2Blocks;
 #endif
-#endif   // WEBP_USE_NEON
 }
+
+#else  // !WEBP_USE_NEON
+
+extern void VP8EncDspInitNEON(void);
+WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitNEON(void) {}
+
+#endif  // WEBP_USE_NEON

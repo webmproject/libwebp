@@ -645,15 +645,12 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
 
 #endif  // !WORK_AROUND_GCC
 
-#endif  // WEBP_USE_MIPS32
-
 //------------------------------------------------------------------------------
 // Entry point
 
 extern void VP8EncDspInitMIPS32(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPS32(void) {
-#if defined(WEBP_USE_MIPS32)
   VP8ITransform = ITransform;
   VP8FTransform = FTransform;
   VP8EncQuantizeBlock = QuantizeBlock;
@@ -666,5 +663,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPS32(void) {
   VP8SSE16x8 = SSE16x8;
   VP8SSE4x4 = SSE4x4;
 #endif
-#endif  // WEBP_USE_MIPS32
 }
+
+#else  // !WEBP_USE_MIPS32
+
+extern void VP8EncDspInitMIPS32(void);
+WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPS32(void) {}
+
+#endif  // WEBP_USE_MIPS32

@@ -1480,15 +1480,12 @@ static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
 
 #undef CONVERT_COEFFS_TO_BIN
 
-#endif  // WEBP_USE_MIPS_DSP_R2
-
 //------------------------------------------------------------------------------
 // Entry point
 
 extern void VP8EncDspInitMIPSdspR2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPSdspR2(void) {
-#if defined(WEBP_USE_MIPS_DSP_R2)
   VP8FTransform = FTransform;
   VP8ITransform = ITransform;
   VP8TDisto4x4 = Disto4x4;
@@ -1506,5 +1503,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPSdspR2(void) {
   VP8EncQuantize2Blocks = Quantize2Blocks;
   VP8FTransformWHT = FTransformWHT;
   VP8CollectHistogram = CollectHistogram;
-#endif  // WEBP_USE_MIPS_DSP_R2
 }
+
+#else  // !WEBP_USE_MIPS_DSP_R2
+
+extern void VP8EncDspInitMIPSdspR2(void);
+WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPSdspR2(void) {}
+
+#endif  // WEBP_USE_MIPS_DSP_R2
