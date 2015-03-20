@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//DRg\u003d",
+        "filename": "Android.mk",
+        "patchSetId": 3
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-20T02:44:58Z",
+      "side": 1,
+      "message": "ndk doesn\u0027t define any cpu features for x86-64 so may be OK with the __SSE4_1__ check",
+      "revId": "422cedc416ca0e9beffa7289b5078008cda027c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//DRo\u003d",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 3
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-20T02:44:58Z",
+      "side": 1,
+      "message": "you\u0027re missing a reference to CPP/CFLAGS + libwebpdspdecode_sse41.la in noinst_LTLIBRARIES",
+      "revId": "422cedc416ca0e9beffa7289b5078008cda027c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//DRc\u003d",
+        "filename": "src/dsp/dec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 743,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-20T02:44:58Z",
+      "side": 1,
+      "message": "intel isn\u0027t really clear if SSE4.1 implies SSE2, SSSE3, etc.",
+      "revId": "422cedc416ca0e9beffa7289b5078008cda027c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//DRk\u003d",
+        "filename": "src/dsp/dec_sse41.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-20T02:44:58Z",
+      "side": 1,
+      "message": "per-intel this should be smmintrin.h; msdn seems to want intrin.h, but we\u0027ll see...",
+      "revId": "422cedc416ca0e9beffa7289b5078008cda027c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
