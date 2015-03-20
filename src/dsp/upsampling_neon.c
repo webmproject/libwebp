@@ -236,32 +236,27 @@ NEON_UPSAMPLE_FUNC(UpsampleBgrLinePair,  Bgr,  3)
 NEON_UPSAMPLE_FUNC(UpsampleRgbaLinePair, Rgba, 4)
 NEON_UPSAMPLE_FUNC(UpsampleBgraLinePair, Bgra, 4)
 
-#endif  // FANCY_UPSAMPLING
-
-#endif   // WEBP_USE_NEON
-
 //------------------------------------------------------------------------------
-
-extern void WebPInitUpsamplersNEON(void);
-
-#ifdef FANCY_UPSAMPLING
+// Entry point
 
 extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
 
+extern void WebPInitUpsamplersNEON(void);
+
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersNEON(void) {
-#if defined(WEBP_USE_NEON)
   WebPUpsamplers[MODE_RGB]  = UpsampleRgbLinePair;
   WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePair;
   WebPUpsamplers[MODE_BGR]  = UpsampleBgrLinePair;
   WebPUpsamplers[MODE_BGRA] = UpsampleBgraLinePair;
   WebPUpsamplers[MODE_rgbA] = UpsampleRgbaLinePair;
   WebPUpsamplers[MODE_bgrA] = UpsampleBgraLinePair;
-#endif   // WEBP_USE_NEON
 }
 
-#else
-
-// this empty function is to avoid an empty .o
-WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersNEON(void) {}
-
 #endif  // FANCY_UPSAMPLING
+
+#endif  // WEBP_USE_NEON
+
+#if !(defined(FANCY_UPSAMPLING) && defined(WEBP_USE_NEON))
+extern void WebPInitUpsamplersNEON(void);
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersNEON(void) {}
+#endif

@@ -182,20 +182,14 @@ SSE2_UPSAMPLE_FUNC(UpsampleBgraLinePair, VP8YuvToBgra, 4)
 #undef CONVERT2RGB_32
 #undef SSE2_UPSAMPLE_FUNC
 
-#endif  // FANCY_UPSAMPLING
-
-#endif   // WEBP_USE_SSE2
-
 //------------------------------------------------------------------------------
-
-extern void WebPInitUpsamplersSSE2(void);
-
-#ifdef FANCY_UPSAMPLING
+// Entry point
 
 extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
 
+extern void WebPInitUpsamplersSSE2(void);
+
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersSSE2(void) {
-#if defined(WEBP_USE_SSE2)
   VP8YUVInitSSE2();
   WebPUpsamplers[MODE_RGB]  = UpsampleRgbLinePair;
   WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePair;
@@ -203,12 +197,13 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersSSE2(void) {
   WebPUpsamplers[MODE_BGRA] = UpsampleBgraLinePair;
   WebPUpsamplers[MODE_rgbA] = UpsampleRgbaLinePair;
   WebPUpsamplers[MODE_bgrA] = UpsampleBgraLinePair;
-#endif   // WEBP_USE_SSE2
 }
 
-#else
-
-// this empty function is to avoid an empty .o
-WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersSSE2(void) {}
-
 #endif  // FANCY_UPSAMPLING
+
+#endif  // WEBP_USE_SSE2
+
+#if !(defined(FANCY_UPSAMPLING) && defined(WEBP_USE_SSE2))
+extern void WebPInitUpsamplersSSE2(void);
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersSSE2(void) {}
+#endif
