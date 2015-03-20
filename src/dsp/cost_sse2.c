@@ -106,7 +106,6 @@ static int GetResidualCostSSE2(int ctx0, const VP8Residual* const res) {
   }
   return cost;
 }
-#endif   // WEBP_USE_SSE2
 
 //------------------------------------------------------------------------------
 // Entry point
@@ -114,8 +113,13 @@ static int GetResidualCostSSE2(int ctx0, const VP8Residual* const res) {
 extern void VP8EncDspCostInitSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspCostInitSSE2(void) {
-#if defined(WEBP_USE_SSE2)
   VP8SetResidualCoeffs = SetResidualCoeffsSSE2;
   VP8GetResidualCost = GetResidualCostSSE2;
-#endif   // WEBP_USE_SSE2
 }
+
+#else  // !WEBP_USE_SSE2
+
+extern void VP8EncDspCostInitSSE2(void);
+WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspCostInitSSE2(void) {}
+
+#endif  // WEBP_USE_SSE2
