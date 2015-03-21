@@ -71,6 +71,12 @@ EXTRA_FLAGS += -Wformat-security -Wformat-nonliteral
 
 # EXTRA_FLAGS += -Wvla
 
+# SSE4.1-specific flags:
+ifeq ($(HAVE_SSE41), 1)
+EXTRA_FLAGS += -DWEBP_HAVE_SSE41
+src/dsp/%_sse41.o: EXTRA_FLAGS += -msse4.1
+endif
+
 # AVX2-specific flags:
 ifeq ($(HAVE_AVX2), 1)
 EXTRA_FLAGS += -DWEBP_HAVE_AVX2
