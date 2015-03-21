@@ -1,4 +1,4 @@
-// Copyright 2014 Google Inc. All Rights Reserved.
+// Copyright 2015 Google Inc. All Rights Reserved.
 //
 // Use of this source code is governed by a BSD-style license
 // that can be found in the COPYING file in the root of the source
@@ -399,9 +399,9 @@ static void HistogramAdd(const VP8LHistogram* const a,
 //------------------------------------------------------------------------------
 // Entry point
 
-extern void VP8LDspInitMIPS32(void);
+extern void VP8LEncDspInitMIPS32(void);
 
-WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPS32(void) {
+WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInitMIPS32(void) {
   VP8LFastSLog2Slow = FastSLog2Slow;
   VP8LFastLog2Slow = FastLog2Slow;
   VP8LExtraCost = ExtraCost;
@@ -413,7 +413,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPS32(void) {
 
 #else  // !WEBP_USE_MIPS32
 
-extern void VP8LDspInitMIPS32(void);
-WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPS32(void) {}
+extern void VP8LEncDspInitMIPS32(void);
+WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInitMIPS32(void) {}
 
 #endif  // WEBP_USE_MIPS32

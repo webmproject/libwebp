@@ -53,7 +53,6 @@ dsp_dec_srcs := \
     src/dsp/filters_mips_dsp_r2.c \
     src/dsp/filters_sse2.c \
     src/dsp/lossless.c \
-    src/dsp/lossless_mips32.c \
     src/dsp/lossless_mips_dsp_r2.c \
     src/dsp/lossless_neon.$(NEON) \
     src/dsp/lossless_sse2.c \
@@ -80,6 +79,11 @@ dsp_enc_srcs := \
     src/dsp/enc_mips_dsp_r2.c \
     src/dsp/enc_neon.$(NEON) \
     src/dsp/enc_sse2.c \
+    src/dsp/lossless_enc.c \
+    src/dsp/lossless_enc_mips32.c \
+    src/dsp/lossless_enc_mips_dsp_r2.c \
+    src/dsp/lossless_enc_neon.$(NEON) \
+    src/dsp/lossless_enc_sse2.c \
 
 enc_srcs := \
     src/enc/alpha.c \

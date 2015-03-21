@@ -288,22 +288,6 @@ static WEBP_INLINE uint8x16_t DoGreenShuffle(const uint8x16_t argb,
 }
 #endif  // USE_VTBLQ
 
-static void SubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixels) {
-  const uint32_t* const end = argb_data + (num_pixels & ~3);
-#ifdef USE_VTBLQ
-  const uint8x16_t shuffle = vld1q_u8(kGreenShuffle);
-#else
-  const uint8x8_t shuffle = vld1_u8(kGreenShuffle);
-#endif
-  for (; argb_data < end; argb_data += 4) {
-    const uint8x16_t argb = vld1q_u8((uint8_t*)argb_data);
-    const uint8x16_t greens = DoGreenShuffle(argb, shuffle);
-    vst1q_u8((uint8_t*)argb_data, vsubq_u8(argb, greens));
-  }
-  // fallthrough and finish off with plain-C
-  VP8LSubtractGreenFromBlueAndRed_C(argb_data, num_pixels & 3);
-}
-
 static void AddGreenToBlueAndRed(uint32_t* argb_data, int num_pixels) {
   const uint32_t* const end = argb_data + (num_pixels & ~3);
 #ifdef USE_VTBLQ
@@ -345,7 +329,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitNEON(void) {
   VP8LPredictors[12] = Predictor12;
   VP8LPredictors[13] = Predictor13;
 
-  VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRed;
   VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
 #endif
 }

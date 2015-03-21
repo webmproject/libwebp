@@ -89,6 +89,7 @@ void VP8LAddGreenToBlueAndRed_C(uint32_t* data, int num_pixels);
 
 // Must be called before calling any of the above methods.
 void VP8LDspInit(void);
+void VP8LEncDspInit(void);
 
 //------------------------------------------------------------------------------
 // Image transforms.
