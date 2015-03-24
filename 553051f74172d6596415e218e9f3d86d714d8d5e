@@ -16,6 +16,24 @@
       "revId": "553051f74172d6596415e218e9f3d86d714d8d5e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Crk\u003d",
+        "filename": "src/dsp/lossless.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-24T06:36:02Z",
+      "side": 1,
+      "message": "yes I had a TODO locally, but looking at it I thought the diff might be large given some dec dsp are below. I can make a pass on this change to see what it ends up looking like",
+      "parentUuid": "AAAAdn//Crs\u003d",
+      "revId": "553051f74172d6596415e218e9f3d86d714d8d5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
