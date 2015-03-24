@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Crs\u003d",
+        "filename": "src/dsp/lossless.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-03-24T06:31:47Z",
+      "side": 1,
+      "message": "this one (and others) could be moved closer to VP8LEncDspInit() declaration, so we know which functions are for decoding and which are for encoding.",
+      "revId": "553051f74172d6596415e218e9f3d86d714d8d5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
