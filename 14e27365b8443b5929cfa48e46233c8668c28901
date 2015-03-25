@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//Caw\u003d",
+        "filename": "src/dsp/enc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 724,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-25T22:46:49Z",
+      "side": 1,
+      "message": "could swap this with sse2 for logical ordering",
+      "revId": "14e27365b8443b5929cfa48e46233c8668c28901",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//CbE\u003d",
+        "filename": "src/dsp/enc_sse41.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-25T22:46:49Z",
+      "side": 1,
+      "message": "no abs() yet",
+      "revId": "14e27365b8443b5929cfa48e46233c8668c28901",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Cas\u003d",
+        "filename": "src/dsp/enc_sse41.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-25T22:46:49Z",
+      "side": 1,
+      "message": "I don\u0027t think this is needed yet",
+      "revId": "14e27365b8443b5929cfa48e46233c8668c28901",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Cao\u003d",
+        "filename": "src/dsp/enc_sse41.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-25T22:46:49Z",
+      "side": 1,
+      "message": "or this one",
+      "revId": "14e27365b8443b5929cfa48e46233c8668c28901",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//CaI\u003d",
+        "filename": "src/dsp/enc_sse41.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-25T22:46:49Z",
+      "side": 1,
+      "message": "swapping this with line 198 keeps the order consistent with enc_sse2",
+      "revId": "14e27365b8443b5929cfa48e46233c8668c28901",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//CaU\u003d",
+        "filename": "src/dsp/enc_sse41.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-25T22:46:49Z",
+      "side": 1,
+      "message": "instead of pshuflo/...",
+      "revId": "14e27365b8443b5929cfa48e46233c8668c28901",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//CaQ\u003d",
+        "filename": "src/dsp/enc_sse41.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-25T22:46:49Z",
+      "side": 1,
+      "message": "#undef PSHUFB_CST",
+      "revId": "14e27365b8443b5929cfa48e46233c8668c28901",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
