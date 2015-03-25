@@ -25,18 +25,16 @@
 extern "C" {
 #endif
 
-
 // Not a trivial literal symbol.
 #define VP8L_NON_TRIVIAL_SYM (0xffffffff)
 
 //------------------------------------------------------------------------------
-// Signatures and generic function-pointers
+// Decoding
 
 typedef uint32_t (*VP8LPredictorFunc)(uint32_t left, const uint32_t* const top);
 extern VP8LPredictorFunc VP8LPredictors[16];
 
 typedef void (*VP8LProcessBlueAndRedFunc)(uint32_t* argb_data, int num_pixels);
-extern VP8LProcessBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
 extern VP8LProcessBlueAndRedFunc VP8LAddGreenToBlueAndRed;
 
 typedef struct {
@@ -48,9 +46,19 @@ typedef struct {
 } VP8LMultipliers;
 typedef void (*VP8LTransformColorFunc)(const VP8LMultipliers* const m,
                                        uint32_t* argb_data, int num_pixels);
-extern VP8LTransformColorFunc VP8LTransformColor;
 extern VP8LTransformColorFunc VP8LTransformColorInverse;
 
+struct VP8LTransform;  // Defined in dec/vp8li.h.
+
+// Performs inverse transform of data given transform information, start and end
+// rows. Transform will be applied to rows [row_start, row_end[.
+// The *in and *out pointers refer to source and destination data respectively
+// corresponding to the intermediate row (row_start).
+void VP8LInverseTransform(const struct VP8LTransform* const transform,
+                          int row_start, int row_end,
+                          const uint32_t* const in, uint32_t* const out);
+
+// Color space conversion.
 typedef void (*VP8LConvertFunc)(const uint32_t* src, int num_pixels,
                                 uint8_t* dst);
 extern VP8LConvertFunc VP8LConvertBGRAToRGB;
@@ -59,6 +67,67 @@ extern VP8LConvertFunc VP8LConvertBGRAToRGBA4444;
 extern VP8LConvertFunc VP8LConvertBGRAToRGB565;
 extern VP8LConvertFunc VP8LConvertBGRAToBGR;
 
+// Converts from BGRA to other color spaces.
+void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
+                         WEBP_CSP_MODE out_colorspace, uint8_t* const rgba);
+
+// color mapping related functions.
+static WEBP_INLINE uint32_t VP8GetARGBIndex(uint32_t idx) {
+  return (idx >> 8) & 0xff;
+}
+
+static WEBP_INLINE uint8_t VP8GetAlphaIndex(uint8_t idx) {
+  return idx;
+}
+
+static WEBP_INLINE uint32_t VP8GetARGBValue(uint32_t val) {
+  return val;
+}
+
+static WEBP_INLINE uint8_t VP8GetAlphaValue(uint32_t val) {
+  return (val >> 8) & 0xff;
+}
+
+typedef void (*VP8LMapARGBFunc)(const uint32_t* src,
+                                const uint32_t* const color_map,
+                                uint32_t* dst, int y_start,
+                                int y_end, int width);
+typedef void (*VP8LMapAlphaFunc)(const uint8_t* src,
+                                 const uint32_t* const color_map,
+                                 uint8_t* dst, int y_start,
+                                 int y_end, int width);
+
+extern VP8LMapARGBFunc VP8LMapColor32b;
+extern VP8LMapAlphaFunc VP8LMapColor8b;
+
+// Similar to the static method ColorIndexInverseTransform() that is part of
+// lossless.c, but used only for alpha decoding. It takes uint8_t (rather than
+// uint32_t) arguments for 'src' and 'dst'.
+void VP8LColorIndexInverseTransformAlpha(
+    const struct VP8LTransform* const transform, int y_start, int y_end,
+    const uint8_t* src, uint8_t* dst);
+
+// Expose some C-only fallback functions
+void VP8LTransformColorInverse_C(const VP8LMultipliers* const m,
+                                 uint32_t* data, int num_pixels);
+
+void VP8LConvertBGRAToRGB_C(const uint32_t* src, int num_pixels, uint8_t* dst);
+void VP8LConvertBGRAToRGBA_C(const uint32_t* src, int num_pixels, uint8_t* dst);
+void VP8LConvertBGRAToRGBA4444_C(const uint32_t* src,
+                                 int num_pixels, uint8_t* dst);
+void VP8LConvertBGRAToRGB565_C(const uint32_t* src,
+                               int num_pixels, uint8_t* dst);
+void VP8LConvertBGRAToBGR_C(const uint32_t* src, int num_pixels, uint8_t* dst);
+void VP8LAddGreenToBlueAndRed_C(uint32_t* data, int num_pixels);
+
+// Must be called before calling any of the above methods.
+void VP8LDspInit(void);
+
+//------------------------------------------------------------------------------
+// Encoding
+
+extern VP8LProcessBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
+extern VP8LTransformColorFunc VP8LTransformColor;
 typedef void (*VP8LCollectColorBlueTransformsFunc)(
     const uint32_t* argb, int stride,
     int tile_width, int tile_height,
@@ -74,42 +143,10 @@ extern VP8LCollectColorRedTransformsFunc VP8LCollectColorRedTransforms;
 // Expose some C-only fallback functions
 void VP8LTransformColor_C(const VP8LMultipliers* const m,
                           uint32_t* data, int num_pixels);
-void VP8LTransformColorInverse_C(const VP8LMultipliers* const m,
-                                 uint32_t* data, int num_pixels);
-
-void VP8LConvertBGRAToRGB_C(const uint32_t* src, int num_pixels, uint8_t* dst);
-void VP8LConvertBGRAToRGBA_C(const uint32_t* src, int num_pixels, uint8_t* dst);
-void VP8LConvertBGRAToRGBA4444_C(const uint32_t* src,
-                                 int num_pixels, uint8_t* dst);
-void VP8LConvertBGRAToRGB565_C(const uint32_t* src,
-                               int num_pixels, uint8_t* dst);
-void VP8LConvertBGRAToBGR_C(const uint32_t* src, int num_pixels, uint8_t* dst);
 void VP8LSubtractGreenFromBlueAndRed_C(uint32_t* argb_data, int num_pixels);
-void VP8LAddGreenToBlueAndRed_C(uint32_t* data, int num_pixels);
-
-// Must be called before calling any of the above methods.
-void VP8LDspInit(void);
-void VP8LEncDspInit(void);
 
 //------------------------------------------------------------------------------
 // Image transforms.
-
-struct VP8LTransform;  // Defined in dec/vp8li.h.
-
-// Performs inverse transform of data given transform information, start and end
-// rows. Transform will be applied to rows [row_start, row_end[.
-// The *in and *out pointers refer to source and destination data respectively
-// corresponding to the intermediate row (row_start).
-void VP8LInverseTransform(const struct VP8LTransform* const transform,
-                          int row_start, int row_end,
-                          const uint32_t* const in, uint32_t* const out);
-
-// Similar to the static method ColorIndexInverseTransform() that is part of
-// lossless.c, but used only for alpha decoding. It takes uint8_t (rather than
-// uint32_t) arguments for 'src' and 'dst'.
-void VP8LColorIndexInverseTransformAlpha(
-    const struct VP8LTransform* const transform, int y_start, int y_end,
-    const uint8_t* src, uint8_t* dst);
 
 void VP8LResidualImage(int width, int height, int bits, int low_effort,
                        uint32_t* const argb, uint32_t* const argb_scratch,
@@ -117,13 +154,6 @@ void VP8LResidualImage(int width, int height, int bits, int low_effort,
 
 void VP8LColorSpaceTransform(int width, int height, int bits, int quality,
                              uint32_t* const argb, uint32_t* image);
-
-//------------------------------------------------------------------------------
-// Color space conversion.
-
-// Converts from BGRA to other color spaces.
-void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
-                         WEBP_CSP_MODE out_colorspace, uint8_t* const rgba);
 
 //------------------------------------------------------------------------------
 // Misc methods.
@@ -196,37 +226,6 @@ typedef void (*VP8LHistogramAddFunc)(const VP8LHistogram* const a,
                                      const VP8LHistogram* const b,
                                      VP8LHistogram* const out);
 extern VP8LHistogramAddFunc VP8LHistogramAdd;
-
-// -----------------------------------------------------------------------------
-// color mapping related functions.
-
-static WEBP_INLINE uint32_t VP8GetARGBIndex(uint32_t idx) {
-  return (idx >> 8) & 0xff;
-}
-
-static WEBP_INLINE uint8_t VP8GetAlphaIndex(uint8_t idx) {
-  return idx;
-}
-
-static WEBP_INLINE uint32_t VP8GetARGBValue(uint32_t val) {
-  return val;
-}
-
-static WEBP_INLINE uint8_t VP8GetAlphaValue(uint32_t val) {
-  return (val >> 8) & 0xff;
-}
-
-typedef void (*VP8LMapARGBFunc)(const uint32_t* src,
-                                const uint32_t* const color_map,
-                                uint32_t* dst, int y_start,
-                                int y_end, int width);
-typedef void (*VP8LMapAlphaFunc)(const uint8_t* src,
-                                 const uint32_t* const color_map,
-                                 uint8_t* dst, int y_start,
-                                 int y_end, int width);
-
-extern VP8LMapARGBFunc VP8LMapColor32b;
-extern VP8LMapAlphaFunc VP8LMapColor8b;
 
 // -----------------------------------------------------------------------------
 // PrefixEncode()
@@ -304,6 +303,9 @@ static WEBP_INLINE uint32_t VP8LSubPixels(uint32_t a, uint32_t b) {
 
 void VP8LBundleColorMap(const uint8_t* const row, int width,
                         int xbits, uint32_t* const dst);
+
+// Must be called before calling any of the above methods.
+void VP8LEncDspInit(void);
 
 //------------------------------------------------------------------------------
 
