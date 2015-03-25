@@ -558,11 +558,9 @@ void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
 
 //------------------------------------------------------------------------------
 
-VP8LProcessBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
 VP8LProcessBlueAndRedFunc VP8LAddGreenToBlueAndRed;
 VP8LPredictorFunc VP8LPredictors[16];
 
-VP8LTransformColorFunc VP8LTransformColor;
 VP8LTransformColorFunc VP8LTransformColorInverse;
 
 VP8LConvertFunc VP8LConvertBGRAToRGB;
@@ -570,20 +568,6 @@ VP8LConvertFunc VP8LConvertBGRAToRGBA;
 VP8LConvertFunc VP8LConvertBGRAToRGBA4444;
 VP8LConvertFunc VP8LConvertBGRAToRGB565;
 VP8LConvertFunc VP8LConvertBGRAToBGR;
-
-VP8LCollectColorBlueTransformsFunc VP8LCollectColorBlueTransforms;
-VP8LCollectColorRedTransformsFunc VP8LCollectColorRedTransforms;
-
-VP8LFastLog2SlowFunc VP8LFastLog2Slow;
-VP8LFastLog2SlowFunc VP8LFastSLog2Slow;
-
-VP8LCostFunc VP8LExtraCost;
-VP8LCostCombinedFunc VP8LExtraCostCombined;
-
-VP8LCostCountFunc VP8LHuffmanCostCount;
-VP8LCostCombinedCountFunc VP8LHuffmanCostCombinedCount;
-
-VP8LHistogramAddFunc VP8LHistogramAdd;
 
 VP8LMapARGBFunc VP8LMapColor32b;
 VP8LMapAlphaFunc VP8LMapColor8b;

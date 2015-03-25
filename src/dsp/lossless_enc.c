@@ -1205,17 +1205,8 @@ static void HistogramAdd(const VP8LHistogram* const a,
 //------------------------------------------------------------------------------
 
 VP8LProcessBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
-VP8LProcessBlueAndRedFunc VP8LAddGreenToBlueAndRed;
-VP8LPredictorFunc VP8LPredictors[16];
 
 VP8LTransformColorFunc VP8LTransformColor;
-VP8LTransformColorFunc VP8LTransformColorInverse;
-
-VP8LConvertFunc VP8LConvertBGRAToRGB;
-VP8LConvertFunc VP8LConvertBGRAToRGBA;
-VP8LConvertFunc VP8LConvertBGRAToRGBA4444;
-VP8LConvertFunc VP8LConvertBGRAToRGB565;
-VP8LConvertFunc VP8LConvertBGRAToBGR;
 
 VP8LCollectColorBlueTransformsFunc VP8LCollectColorBlueTransforms;
 VP8LCollectColorRedTransformsFunc VP8LCollectColorRedTransforms;
@@ -1230,9 +1221,6 @@ VP8LCostCountFunc VP8LHuffmanCostCount;
 VP8LCostCombinedCountFunc VP8LHuffmanCostCombinedCount;
 
 VP8LHistogramAddFunc VP8LHistogramAdd;
-
-VP8LMapARGBFunc VP8LMapColor32b;
-VP8LMapAlphaFunc VP8LMapColor8b;
 
 extern void VP8LEncDspInitSSE2(void);
 extern void VP8LEncDspInitNEON(void);
