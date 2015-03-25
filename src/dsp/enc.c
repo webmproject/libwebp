@@ -722,6 +722,7 @@ VP8BlockCopy VP8Copy4x4;
 VP8BlockCopy VP8Copy16x8;
 
 extern void VP8EncDspInitSSE2(void);
+extern void VP8EncDspInitSSE41(void);
 extern void VP8EncDspInitAVX2(void);
 extern void VP8EncDspInitNEON(void);
 extern void VP8EncDspInitMIPS32(void);
@@ -761,6 +762,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
 #if defined(WEBP_USE_SSE2)
     if (VP8GetCPUInfo(kSSE2)) {
       VP8EncDspInitSSE2();
+#if defined(WEBP_USE_SSE41)
+      if (VP8GetCPUInfo(kSSE4_1)) {
+        VP8EncDspInitSSE41();
+      }
+#endif
     }
 #endif
 #if defined(WEBP_USE_AVX2)
