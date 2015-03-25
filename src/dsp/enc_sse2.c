@@ -51,54 +51,6 @@ static void PrintReg(const __m128i r, const char* const name, int size) {
 #endif
 
 //------------------------------------------------------------------------------
-// Compute susceptibility based on DCT-coeff histograms:
-// the higher, the "easier" the macroblock is to compress.
-
-static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
-                             int start_block, int end_block,
-                             VP8Histogram* const histo) {
-  const __m128i max_coeff_thresh = _mm_set1_epi16(MAX_COEFF_THRESH);
-  int j;
-  int distribution[MAX_COEFF_THRESH + 1] = { 0 };
-  for (j = start_block; j < end_block; ++j) {
-    int16_t out[16];
-    int k;
-
-    VP8FTransform(ref + VP8DspScan[j], pred + VP8DspScan[j], out);
-
-    // Convert coefficients to bin (within out[]).
-    {
-      // Load.
-      const __m128i out0 = _mm_loadu_si128((__m128i*)&out[0]);
-      const __m128i out1 = _mm_loadu_si128((__m128i*)&out[8]);
-      // sign(out) = out >> 15  (0x0000 if positive, 0xffff if negative)
-      const __m128i sign0 = _mm_srai_epi16(out0, 15);
-      const __m128i sign1 = _mm_srai_epi16(out1, 15);
-      // abs(out) = (out ^ sign) - sign
-      const __m128i xor0 = _mm_xor_si128(out0, sign0);
-      const __m128i xor1 = _mm_xor_si128(out1, sign1);
-      const __m128i abs0 = _mm_sub_epi16(xor0, sign0);
-      const __m128i abs1 = _mm_sub_epi16(xor1, sign1);
-      // v = abs(out) >> 3
-      const __m128i v0 = _mm_srai_epi16(abs0, 3);
-      const __m128i v1 = _mm_srai_epi16(abs1, 3);
-      // bin = min(v, MAX_COEFF_THRESH)
-      const __m128i bin0 = _mm_min_epi16(v0, max_coeff_thresh);
-      const __m128i bin1 = _mm_min_epi16(v1, max_coeff_thresh);
-      // Store.
-      _mm_storeu_si128((__m128i*)&out[0], bin0);
-      _mm_storeu_si128((__m128i*)&out[8], bin1);
-    }
-
-    // Convert coefficients to bin.
-    for (k = 0; k < 16; ++k) {
-      ++distribution[out[k]];
-    }
-  }
-  VP8SetHistogramData(distribution, histo);
-}
-
-//------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
 
 // Does one or two inverse transforms.
@@ -485,6 +437,54 @@ static void FTransformWHT(const int16_t* in, int16_t* out) {
     _mm_storeu_si128((__m128i*)&out[0], out0);
     _mm_storeu_si128((__m128i*)&out[8], out1);
   }
+}
+
+//------------------------------------------------------------------------------
+// Compute susceptibility based on DCT-coeff histograms:
+// the higher, the "easier" the macroblock is to compress.
+
+static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
+                             int start_block, int end_block,
+                             VP8Histogram* const histo) {
+  const __m128i max_coeff_thresh = _mm_set1_epi16(MAX_COEFF_THRESH);
+  int j;
+  int distribution[MAX_COEFF_THRESH + 1] = { 0 };
+  for (j = start_block; j < end_block; ++j) {
+    int16_t out[16];
+    int k;
+
+    FTransform(ref + VP8DspScan[j], pred + VP8DspScan[j], out);
+
+    // Convert coefficients to bin (within out[]).
+    {
+      // Load.
+      const __m128i out0 = _mm_loadu_si128((__m128i*)&out[0]);
+      const __m128i out1 = _mm_loadu_si128((__m128i*)&out[8]);
+      // sign(out) = out >> 15  (0x0000 if positive, 0xffff if negative)
+      const __m128i sign0 = _mm_srai_epi16(out0, 15);
+      const __m128i sign1 = _mm_srai_epi16(out1, 15);
+      // abs(out) = (out ^ sign) - sign
+      const __m128i xor0 = _mm_xor_si128(out0, sign0);
+      const __m128i xor1 = _mm_xor_si128(out1, sign1);
+      const __m128i abs0 = _mm_sub_epi16(xor0, sign0);
+      const __m128i abs1 = _mm_sub_epi16(xor1, sign1);
+      // v = abs(out) >> 3
+      const __m128i v0 = _mm_srai_epi16(abs0, 3);
+      const __m128i v1 = _mm_srai_epi16(abs1, 3);
+      // bin = min(v, MAX_COEFF_THRESH)
+      const __m128i bin0 = _mm_min_epi16(v0, max_coeff_thresh);
+      const __m128i bin1 = _mm_min_epi16(v1, max_coeff_thresh);
+      // Store.
+      _mm_storeu_si128((__m128i*)&out[0], bin0);
+      _mm_storeu_si128((__m128i*)&out[8], bin1);
+    }
+
+    // Convert coefficients to bin.
+    for (k = 0; k < 16; ++k) {
+      ++distribution[out[k]];
+    }
+  }
+  VP8SetHistogramData(distribution, histo);
 }
 
 //------------------------------------------------------------------------------
