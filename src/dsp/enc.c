@@ -41,8 +41,8 @@ const int VP8DspScan[16 + 4 + 4] = {
 };
 
 // general-purpose util function
-void VP8LSetHistogramData(const int distribution[MAX_COEFF_THRESH + 1],
-                          VP8Histogram* const histo) {
+void VP8SetHistogramData(const int distribution[MAX_COEFF_THRESH + 1],
+                         VP8Histogram* const histo) {
   int max_value = 0, last_non_zero = 1;
   int k;
   for (k = 0; k <= MAX_COEFF_THRESH; ++k) {
@@ -74,7 +74,7 @@ static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
       ++distribution[clipped_value];
     }
   }
-  VP8LSetHistogramData(distribution, histo);
+  VP8SetHistogramData(distribution, histo);
 }
 
 //------------------------------------------------------------------------------

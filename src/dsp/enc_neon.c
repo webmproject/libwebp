@@ -749,7 +749,7 @@ static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
       }
     }
   }
-  VP8LSetHistogramData(distribution, histo);
+  VP8SetHistogramData(distribution, histo);
 }
 
 //------------------------------------------------------------------------------

@@ -183,8 +183,8 @@ typedef void (*VP8CHisto)(const uint8_t* ref, const uint8_t* pred,
                           VP8Histogram* const histo);
 extern VP8CHisto VP8CollectHistogram;
 // General-purpose util function to help VP8CollectHistogram().
-void VP8LSetHistogramData(const int distribution[MAX_COEFF_THRESH + 1],
-                          VP8Histogram* const histo);
+void VP8SetHistogramData(const int distribution[MAX_COEFF_THRESH + 1],
+                         VP8Histogram* const histo);
 
 // must be called before using any of the above
 void VP8EncDspInit(void);
