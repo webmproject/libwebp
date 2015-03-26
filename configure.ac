@@ -80,44 +80,63 @@ AS_IF([test "$GCC" = "yes" ], [
 AC_SUBST([AM_CFLAGS])
 
 dnl === Check for machine specific flags
-TEST_AND_ADD_CFLAGS([AVX2_FLAGS], [-mavx2])
-AS_IF([test -n "$AVX2_FLAGS"], [
-  SAVED_CFLAGS=$CFLAGS
-  CFLAGS="$CFLAGS $AVX2_FLAGS"
-  AC_CHECK_HEADER([immintrin.h],
-                  [AC_DEFINE(WEBP_HAVE_AVX2, [1],
-                   [Set to 1 if AVX2 is supported])],
-                  [AVX2_FLAGS=""],
-                  dnl it's illegal to directly include avx2intrin.h, but it's
-                  dnl included conditionally in immintrin.h, tricky!
-                  [#ifndef __AVX2__
-                   #error avx2 is not enabled
-                   #endif
-                  ])
-  CFLAGS=$SAVED_CFLAGS])
-AC_SUBST([AVX2_FLAGS])
+AC_ARG_ENABLE([avx2],
+              AS_HELP_STRING([--disable-avx2],
+                             [Disable detection of AVX2 support
+                              @<:@default=auto@:>@]))
 
-TEST_AND_ADD_CFLAGS([SSE41_FLAGS], [-msse4.1])
-AS_IF([test -n "$SSE41_FLAGS"], [
-  SAVED_CFLAGS=$CFLAGS
-  CFLAGS="$CFLAGS $SSE41_FLAGS"
-  AC_CHECK_HEADER([smmintrin.h],
-                  [AC_DEFINE(WEBP_HAVE_SSE41, [1],
-                   [Set to 1 if SSE4.1 is supported])],
-                  [SSE41_FLAGS=""])
-  CFLAGS=$SAVED_CFLAGS])
-AC_SUBST([SSE41_FLAGS])
+AS_IF([test "x$enable_avx2" != "xno" -a "x$enable_sse4_1" != "xno" \
+         -a "x$enable_sse2" != "xno"], [
+  TEST_AND_ADD_CFLAGS([AVX2_FLAGS], [-mavx2])
+  AS_IF([test -n "$AVX2_FLAGS"], [
+    SAVED_CFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $AVX2_FLAGS"
+    AC_CHECK_HEADER([immintrin.h],
+                    [AC_DEFINE(WEBP_HAVE_AVX2, [1],
+                     [Set to 1 if AVX2 is supported])],
+                    [AVX2_FLAGS=""],
+                    dnl it's illegal to directly include avx2intrin.h, but it's
+                    dnl included conditionally in immintrin.h, tricky!
+                    [#ifndef __AVX2__
+                     #error avx2 is not enabled
+                     #endif
+                    ])
+    CFLAGS=$SAVED_CFLAGS])
+  AC_SUBST([AVX2_FLAGS])])
 
-TEST_AND_ADD_CFLAGS([SSE2_FLAGS], [-msse2])
-AS_IF([test -n "$SSE2_FLAGS"], [
-  SAVED_CFLAGS=$CFLAGS
-  CFLAGS="$CFLAGS $SSE2_FLAGS"
-  AC_CHECK_HEADER([emmintrin.h],
-                  [AC_DEFINE(WEBP_HAVE_SSE2, [1],
-                   [Set to 1 if SSE2 is supported])],
-                  [SSE2_FLAGS=""])
-  CFLAGS=$SAVED_CFLAGS])
-AC_SUBST([SSE2_FLAGS])
+AC_ARG_ENABLE([sse4.1],
+              AS_HELP_STRING([--disable-sse4.1],
+                             [Disable detection of SSE4.1 support
+                              @<:@default=auto@:>@]))
+
+AS_IF([test "x$enable_sse4_1" != "xno" -a "x$enable_sse2" != "xno"], [
+  TEST_AND_ADD_CFLAGS([SSE41_FLAGS], [-msse4.1])
+  AS_IF([test -n "$SSE41_FLAGS"], [
+    SAVED_CFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $SSE41_FLAGS"
+    AC_CHECK_HEADER([smmintrin.h],
+                    [AC_DEFINE(WEBP_HAVE_SSE41, [1],
+                     [Set to 1 if SSE4.1 is supported])],
+                    [SSE41_FLAGS=""])
+    CFLAGS=$SAVED_CFLAGS])
+  AC_SUBST([SSE41_FLAGS])])
+
+AC_ARG_ENABLE([sse2],
+              AS_HELP_STRING([--disable-sse2],
+                             [Disable detection of SSE2 support
+                              @<:@default=auto@:>@]))
+
+AS_IF([test "x$enable_sse2" != "xno"], [
+  TEST_AND_ADD_CFLAGS([SSE2_FLAGS], [-msse2])
+  AS_IF([test -n "$SSE2_FLAGS"], [
+    SAVED_CFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $SSE2_FLAGS"
+    AC_CHECK_HEADER([emmintrin.h],
+                    [AC_DEFINE(WEBP_HAVE_SSE2, [1],
+                     [Set to 1 if SSE2 is supported])],
+                    [SSE2_FLAGS=""])
+    CFLAGS=$SAVED_CFLAGS])
+  AC_SUBST([SSE2_FLAGS])])
 
 dnl === CLEAR_LIBVARS([var_pfx])
 dnl ===   Clears <var_pfx>_{INCLUDES,LIBS}.
