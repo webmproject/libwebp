@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//CYg\u003d",
+        "filename": "src/dsp/enc_sse41.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-26T03:30:45Z",
+      "side": 1,
+      "message": "fewer instructions here instead of the movdqu+add sum[4]; doesn\u0027t make any real difference",
+      "revId": "907dd5b2ca5ebaf5b913279d369c8019856fa4ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
