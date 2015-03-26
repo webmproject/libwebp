@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "AAAAdn//CYI\u003d",
+        "filename": "src/dsp/enc_sse41.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-03-26T05:56:43Z",
+      "side": 1,
+      "message": "i wonder if _mm_hsubs_epi16 / _mm_hadds_epi16 (horizontal add/sub) could be useful to pre-transpose here...",
+      "revId": "907dd5b2ca5ebaf5b913279d369c8019856fa4ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//CYE\u003d",
+        "filename": "src/dsp/enc_sse41.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-03-26T05:56:43Z",
+      "side": 1,
+      "message": "comment can probably be removed",
+      "revId": "907dd5b2ca5ebaf5b913279d369c8019856fa4ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//CYg\u003d",
         "filename": "src/dsp/enc_sse41.c",
         "patchSetId": 1
