@@ -34,6 +34,24 @@
       "revId": "5576115ab1822291988a4b3099e26525b726e4d3",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//CSI\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 2
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-26T23:09:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//CSg\u003d",
+      "revId": "5576115ab1822291988a4b3099e26525b726e4d3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
