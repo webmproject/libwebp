@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//CS8\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 2
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-03-26T22:43:04Z",
+      "side": 1,
+      "message": "i wonder if we should disable sse4.1 when sse2 is disabled...",
+      "revId": "5576115ab1822291988a4b3099e26525b726e4d3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
