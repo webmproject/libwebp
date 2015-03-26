@@ -16,6 +16,24 @@
       "revId": "5576115ab1822291988a4b3099e26525b726e4d3",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//CSg\u003d",
+        "filename": "configure.ac",
+        "patchSetId": 2
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-03-26T22:49:23Z",
+      "side": 1,
+      "message": "there aren\u0027t many practical uses, outside of testing / determining coverage. ffmpeg disables higher order asm for instance.",
+      "parentUuid": "AAAAdn//CS8\u003d",
+      "revId": "5576115ab1822291988a4b3099e26525b726e4d3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
