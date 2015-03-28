@@ -330,10 +330,9 @@ static WEBP_INLINE void GetNotHEV(const __m128i* const p1,
   const __m128i t_2 = MM_ABS(*q1, *q0);
 
   const __m128i h = _mm_set1_epi8(hev_thresh);
-  const __m128i t_3 = _mm_subs_epu8(t_1, h);  // abs(p1 - p0) - hev_tresh
-  const __m128i t_4 = _mm_subs_epu8(t_2, h);  // abs(q1 - q0) - hev_tresh
+  const __m128i t_max = _mm_max_epu8(t_1, t_2);
 
-  *not_hev = _mm_or_si128(t_3, t_4);
+  *not_hev = _mm_subs_epu8(t_max, h);
   *not_hev = _mm_cmpeq_epi8(*not_hev, zero);  // not_hev <= t1 && not_hev <= t2
 }
 
