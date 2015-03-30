@@ -49,7 +49,7 @@ static WEBP_INLINE int VP8BitCost(int bit, uint8_t proba) {
 
 // Level cost calculations
 extern const uint16_t VP8LevelCodes[MAX_VARIABLE_LEVEL][2];
-void VP8CalculateLevelCosts(VP8Proba* const proba);
+void VP8CalculateLevelCosts(VP8EncProba* const proba);
 static WEBP_INLINE int VP8LevelCost(const uint16_t* const table, int level) {
   return VP8LevelFixedCosts[level]
        + table[(level > MAX_VARIABLE_LEVEL) ? MAX_VARIABLE_LEVEL : level];

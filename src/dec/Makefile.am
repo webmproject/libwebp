@@ -4,6 +4,7 @@ libwebpdecode_la_SOURCES =
 libwebpdecode_la_SOURCES += alpha.c
 libwebpdecode_la_SOURCES += alphai.h
 libwebpdecode_la_SOURCES += buffer.c
+libwebpdecode_la_SOURCES += common.h
 libwebpdecode_la_SOURCES += decode_vp8.h
 libwebpdecode_la_SOURCES += frame.c
 libwebpdecode_la_SOURCES += idec.c

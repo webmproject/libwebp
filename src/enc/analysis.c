@@ -249,7 +249,7 @@ static int MBAnalyzeBestIntra16Mode(VP8EncIterator* const it) {
     int alpha;
 
     InitHistogram(&histo);
-    VP8CollectHistogram(it->yuv_in_ + Y_OFF,
+    VP8CollectHistogram(it->yuv_in_ + Y_OFF_ENC,
                         it->yuv_p_ + VP8I16ModeOffsets[mode],
                         0, 16, &histo);
     alpha = GetAlpha(&histo);
@@ -276,7 +276,7 @@ static int MBAnalyzeBestIntra4Mode(VP8EncIterator* const it,
     int mode;
     int best_mode_alpha = DEFAULT_ALPHA;
     VP8Histogram histos[2];
-    const uint8_t* const src = it->yuv_in_ + Y_OFF + VP8Scan[it->i4_];
+    const uint8_t* const src = it->yuv_in_ + Y_OFF_ENC + VP8Scan[it->i4_];
 
     VP8MakeIntra4Preds(it);
     for (mode = 0; mode < max_mode; ++mode) {
@@ -295,7 +295,7 @@ static int MBAnalyzeBestIntra4Mode(VP8EncIterator* const it,
     // accumulate best histogram
     MergeHistograms(&histos[cur_histo ^ 1], &total_histo);
     // Note: we reuse the original samples for predictors
-  } while (VP8IteratorRotateI4(it, it->yuv_in_ + Y_OFF));
+  } while (VP8IteratorRotateI4(it, it->yuv_in_ + Y_OFF_ENC));
 
   i4_alpha = GetAlpha(&total_histo);
   if (IS_BETTER_ALPHA(i4_alpha, best_alpha)) {
@@ -316,7 +316,7 @@ static int MBAnalyzeBestUVMode(VP8EncIterator* const it) {
     VP8Histogram histo;
     int alpha;
     InitHistogram(&histo);
-    VP8CollectHistogram(it->yuv_in_ + U_OFF,
+    VP8CollectHistogram(it->yuv_in_ + U_OFF_ENC,
                         it->yuv_p_ + VP8UVModeOffsets[mode],
                         16, 16 + 4 + 4, &histo);
     alpha = GetAlpha(&histo);

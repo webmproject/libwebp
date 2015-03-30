@@ -15,10 +15,11 @@
 #define WEBP_ENC_VP8ENCI_H_
 
 #include <string.h>     // for memcpy()
-#include "../webp/encode.h"
+#include "../dec/common.h"
 #include "../dsp/dsp.h"
 #include "../utils/bit_writer.h"
 #include "../utils/thread.h"
+#include "../webp/encode.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,32 +33,7 @@ extern "C" {
 #define ENC_MIN_VERSION 4
 #define ENC_REV_VERSION 3
 
-// intra prediction modes
-enum { B_DC_PRED = 0,   // 4x4 modes
-       B_TM_PRED = 1,
-       B_VE_PRED = 2,
-       B_HE_PRED = 3,
-       B_RD_PRED = 4,
-       B_VR_PRED = 5,
-       B_LD_PRED = 6,
-       B_VL_PRED = 7,
-       B_HD_PRED = 8,
-       B_HU_PRED = 9,
-       NUM_BMODES = B_HU_PRED + 1 - B_DC_PRED,  // = 10
-
-       // Luma16 or UV modes
-       DC_PRED = B_DC_PRED, V_PRED = B_VE_PRED,
-       H_PRED = B_HE_PRED, TM_PRED = B_TM_PRED,
-       NUM_PRED_MODES = 4
-     };
-
-enum { NUM_MB_SEGMENTS = 4,
-       MAX_NUM_PARTITIONS = 8,
-       NUM_TYPES = 4,   // 0: i16-AC,  1: i16-DC,  2:chroma-AC,  3:i4-AC
-       NUM_BANDS = 8,
-       NUM_CTX = 3,
-       NUM_PROBAS = 11,
-       MAX_LF_LEVELS = 64,       // Maximum loop filter level
+enum { MAX_LF_LEVELS = 64,       // Maximum loop filter level
        MAX_VARIABLE_LEVEL = 67,  // last (inclusive) level with variable cost
        MAX_LEVEL = 2047          // max level (note: max codable is 2047 + 67)
      };
@@ -74,14 +50,14 @@ typedef enum {   // Rate-distortion optimization levels
 // The predicted blocks can be accessed using offsets to yuv_p_ and
 // the arrays VP8*ModeOffsets[].
 // * YUV Samples area (yuv_in_/yuv_out_/yuv_out2_)
-//   (see VP8Scan[] for accessing the blocks, along with Y_OFF/U_OFF/V_OFF):
-//         +----+----+
-//  Y_OFF  |YYYY|UUVV|
-//  U_OFF  |YYYY|UUVV|
-//  V_OFF  |YYYY|....| <- 25% wasted U/V area
-//         |YYYY|....|
-//         +----+----+
-// * Prediction area ('yuv_p_', size = PRED_SIZE)
+//   (see VP8Scan[] for accessing the blocks, along with Y_OFF_ENC/U_OFF_ENC/V_OFF_ENC):
+//             +----+----+
+//  Y_OFF_ENC  |YYYY|UUVV|
+//  U_OFF_ENC  |YYYY|UUVV|
+//  V_OFF_ENC  |YYYY|....| <- 25% wasted U/V area
+//             |YYYY|....|
+//             +----+----+
+// * Prediction area ('yuv_p_', size = PRED_SIZE_ENC)
 //   Intra16 predictions (16x16 block each, two per row):
 //         |I16DC16|I16TM16|
 //         |I16VE16|I16HE16|
@@ -91,11 +67,12 @@ typedef enum {   // Rate-distortion optimization levels
 //   Intra 4x4 predictions (4x4 block each)
 //         |I4DC4 I4TM4 I4VE4 I4HE4|I4RD4 I4VR4 I4LD4 I4VL4|
 //         |I4HD4 I4HU4 I4TMP .....|.......................| <- ~31% wasted
-#define YUV_SIZE (BPS * 16)
-#define PRED_SIZE (32 * BPS + 16 * BPS + 8 * BPS)   // I16+Chroma+I4 preds
-#define Y_OFF    (0)
-#define U_OFF    (16)
-#define V_OFF    (16 + 8)
+#define YUV_SIZE_ENC (BPS * 16)
+#define PRED_SIZE_ENC (32 * BPS + 16 * BPS + 8 * BPS)   // I16+Chroma+I4 preds
+#define Y_OFF_ENC    (0)
+#define U_OFF_ENC    (16)
+#define V_OFF_ENC    (16 + 8)
+
 #define ALIGN_CST 15
 #define DO_ALIGN(PTR) ((uintptr_t)((PTR) + ALIGN_CST) & ~ALIGN_CST)
 
@@ -163,7 +140,7 @@ typedef struct {
   int update_map_;        // whether to update the segment map or not.
                           // must be 0 if there's only 1 segment.
   int size_;              // bit-cost for transmitting the segment map
-} VP8SegmentHeader;
+} VP8EncSegmentHeader;
 
 // Struct collecting all frame-persistent probabilities.
 typedef struct {
@@ -176,7 +153,7 @@ typedef struct {
   int dirty_;               // if true, need to call VP8CalculateLevelCosts()
   int use_skip_proba_;      // Note: we always use skip_proba for now.
   int nb_skip_;             // number of skipped blocks
-} VP8Proba;
+} VP8EncProba;
 
 // Filter parameters. Not actually used in the code (we don't perform
 // the in-loop filtering), but filled from user's config
@@ -185,7 +162,7 @@ typedef struct {
   int level_;              // base filter level [0..63]
   int sharpness_;          // [0..7]
   int i4x4_lf_delta_;      // delta filter level for i4x4 relative to i16x16
-} VP8FilterHeader;
+} VP8EncFilterHeader;
 
 //------------------------------------------------------------------------------
 // Informations about the macroblocks.
@@ -271,9 +248,10 @@ typedef struct {
   uint8_t* y_top_;     // top luma samples at position 'x_'
   uint8_t* uv_top_;    // top u/v samples at position 'x_', packed as 16 bytes
 
-  // memory for storing y/u/v_left_ and yuv_in_/out_*
-  uint8_t yuv_left_mem_[17 + 16 + 16 + 8 + ALIGN_CST];     // memory for *_left_
-  uint8_t yuv_mem_[3 * YUV_SIZE + PRED_SIZE + ALIGN_CST];  // memory for yuv_*
+  // memory for storing y/u/v_left_
+  uint8_t yuv_left_mem_[17 + 16 + 16 + 8 + ALIGN_CST];
+  // memory for yuv_*
+  uint8_t yuv_mem_[3 * YUV_SIZE_ENC + PRED_SIZE_ENC + ALIGN_CST];
 } VP8EncIterator;
 
   // in iterator.c
@@ -366,8 +344,8 @@ struct VP8Encoder {
   WebPPicture* pic_;            // input / output picture
 
   // headers
-  VP8FilterHeader   filter_hdr_;     // filtering information
-  VP8SegmentHeader  segment_hdr_;    // segment information
+  VP8EncFilterHeader   filter_hdr_;     // filtering information
+  VP8EncSegmentHeader  segment_hdr_;    // segment information
 
   int profile_;                      // VP8's profile, deduced from Config.
 
@@ -403,12 +381,12 @@ struct VP8Encoder {
   int dq_uv_dc_, dq_uv_ac_;
 
   // probabilities and statistics
-  VP8Proba proba_;
-  uint64_t sse_[4];        // sum of Y/U/V/A squared errors for all macroblocks
-  uint64_t sse_count_;     // pixel count for the sse_[] stats
-  int      coded_size_;
-  int      residual_bytes_[3][4];
-  int      block_count_[3];
+  VP8EncProba proba_;
+  uint64_t    sse_[4];      // sum of Y/U/V/A squared errors for all macroblocks
+  uint64_t    sse_count_;   // pixel count for the sse_[] stats
+  int         coded_size_;
+  int         residual_bytes_[3][4];
+  int         block_count_[3];
 
   // quality/speed settings
   int method_;               // 0=fastest, 6=best/slowest.
@@ -438,7 +416,7 @@ extern const uint8_t
 // Reset the token probabilities to their initial (default) values
 void VP8DefaultProbas(VP8Encoder* const enc);
 // Write the token probabilities
-void VP8WriteProbas(VP8BitWriter* const bw, const VP8Proba* const probas);
+void VP8WriteProbas(VP8BitWriter* const bw, const VP8EncProba* const probas);
 // Writes the partition #0 modes (that is: all intra modes)
 void VP8CodeIntraModes(VP8Encoder* const enc);
 

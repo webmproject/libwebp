@@ -240,6 +240,7 @@ HDRS_INSTALLED = \
 
 HDRS = \
     src/dec/alphai.h \
+    src/dec/common.h \
     src/dec/decode_vp8.h \
     src/dec/vp8i.h \
     src/dec/vp8li.h \

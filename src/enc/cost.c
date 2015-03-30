@@ -57,7 +57,7 @@ static int VariableLevelCost(int level, const uint8_t probas[NUM_PROBAS]) {
 //------------------------------------------------------------------------------
 // Pre-calc level costs once for all
 
-void VP8CalculateLevelCosts(VP8Proba* const proba) {
+void VP8CalculateLevelCosts(VP8EncProba* const proba) {
   int ctype, band, ctx;
 
   if (!proba->dirty_) return;  // nothing to do.

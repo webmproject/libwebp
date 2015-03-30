@@ -15,6 +15,7 @@
 #define WEBP_DEC_VP8I_H_
 
 #include <string.h>     // for memcpy()
+#include "./common.h"
 #include "./vp8li.h"
 #include "../utils/bit_reader.h"
 #include "../utils/random.h"
@@ -32,42 +33,6 @@ extern "C" {
 #define DEC_MAJ_VERSION 0
 #define DEC_MIN_VERSION 4
 #define DEC_REV_VERSION 3
-
-// intra prediction modes
-enum { B_DC_PRED = 0,   // 4x4 modes
-       B_TM_PRED,
-       B_VE_PRED,
-       B_HE_PRED,
-       B_RD_PRED,
-       B_VR_PRED,
-       B_LD_PRED,
-       B_VL_PRED,
-       B_HD_PRED,
-       B_HU_PRED,
-       NUM_BMODES = B_HU_PRED + 1 - B_DC_PRED,  // = 10
-
-       // Luma16 or UV modes
-       DC_PRED = B_DC_PRED, V_PRED = B_VE_PRED,
-       H_PRED = B_HE_PRED, TM_PRED = B_TM_PRED,
-       B_PRED = NUM_BMODES,   // refined I4x4 mode
-
-       // special modes
-       B_DC_PRED_NOTOP = 4,
-       B_DC_PRED_NOLEFT = 5,
-       B_DC_PRED_NOTOPLEFT = 6,
-       NUM_B_DC_MODES = 7 };
-
-enum { MB_FEATURE_TREE_PROBS = 3,
-       NUM_MB_SEGMENTS = 4,
-       NUM_REF_LF_DELTAS = 4,
-       NUM_MODE_LF_DELTAS = 4,    // I4x4, ZERO, *, SPLIT
-       MAX_NUM_PARTITIONS = 8,
-       // Probabilities
-       NUM_TYPES = 4,
-       NUM_BANDS = 8,
-       NUM_CTX = 3,
-       NUM_PROBAS = 11,
-       NUM_MV_PROBAS = 19 };
 
 // YUV-cache parameters. Cache is 32-bytes wide (= one cacheline).
 // Constraints are: We need to store one 16x16 block of luma samples (y),
@@ -127,7 +92,6 @@ typedef struct {
   int8_t quantizer_[NUM_MB_SEGMENTS];        // quantization changes
   int8_t filter_strength_[NUM_MB_SEGMENTS];  // filter strength for segments
 } VP8SegmentHeader;
-
 
 // probas associated to one of the contexts
 typedef uint8_t VP8ProbaArray[NUM_PROBAS];

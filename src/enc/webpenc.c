@@ -38,14 +38,14 @@ int WebPGetEncoderVersion(void) {
 //------------------------------------------------------------------------------
 
 static void ResetSegmentHeader(VP8Encoder* const enc) {
-  VP8SegmentHeader* const hdr = &enc->segment_hdr_;
+  VP8EncSegmentHeader* const hdr = &enc->segment_hdr_;
   hdr->num_segments_ = enc->config_->segments;
   hdr->update_map_  = (hdr->num_segments_ > 1);
   hdr->size_ = 0;
 }
 
 static void ResetFilterHeader(VP8Encoder* const enc) {
-  VP8FilterHeader* const hdr = &enc->filter_hdr_;
+  VP8EncFilterHeader* const hdr = &enc->filter_hdr_;
   hdr->simple_ = 1;
   hdr->level_ = 0;
   hdr->sharpness_ = 0;
@@ -131,7 +131,7 @@ static void MapConfigToTools(VP8Encoder* const enc) {
 //       VP8EncIterator: 3360
 //         VP8ModeScore: 872
 //       VP8SegmentInfo: 732
-//             VP8Proba: 18352
+//          VP8EncProba: 18352
 //              LFStats: 2048
 // Picture size (yuv): 419328
 
@@ -177,10 +177,10 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
          "      VP8EncIterator: %ld\n"
          "        VP8ModeScore: %ld\n"
          "      VP8SegmentInfo: %ld\n"
-         "            VP8Proba: %ld\n"
+         "         VP8EncProba: %ld\n"
          "             LFStats: %ld\n",
          sizeof(VP8EncIterator), sizeof(VP8ModeScore),
-         sizeof(VP8SegmentInfo), sizeof(VP8Proba),
+         sizeof(VP8SegmentInfo), sizeof(VP8EncProba),
          sizeof(LFStats));
   printf("Picture size (yuv): %ld\n",
          mb_w * mb_h * 384 * sizeof(uint8_t));

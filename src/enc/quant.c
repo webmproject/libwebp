@@ -717,7 +717,7 @@ static int ReconstructIntra16(VP8EncIterator* const it,
                               int mode) {
   const VP8Encoder* const enc = it->enc_;
   const uint8_t* const ref = it->yuv_p_ + VP8I16ModeOffsets[mode];
-  const uint8_t* const src = it->yuv_in_ + Y_OFF;
+  const uint8_t* const src = it->yuv_in_ + Y_OFF_ENC;
   const VP8SegmentInfo* const dqm = &enc->dqm_[it->mb_->segment_];
   int nz = 0;
   int n;
@@ -791,7 +791,7 @@ static int ReconstructUV(VP8EncIterator* const it, VP8ModeScore* const rd,
                          uint8_t* const yuv_out, int mode) {
   const VP8Encoder* const enc = it->enc_;
   const uint8_t* const ref = it->yuv_p_ + VP8UVModeOffsets[mode];
-  const uint8_t* const src = it->yuv_in_ + U_OFF;
+  const uint8_t* const src = it->yuv_in_ + U_OFF_ENC;
   const VP8SegmentInfo* const dqm = &enc->dqm_[it->mb_->segment_];
   int nz = 0;
   int n;
@@ -875,7 +875,7 @@ static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* rd) {
   VP8SegmentInfo* const dqm = &it->enc_->dqm_[it->mb_->segment_];
   const int lambda = dqm->lambda_i16_;
   const int tlambda = dqm->tlambda_;
-  const uint8_t* const src = it->yuv_in_ + Y_OFF;
+  const uint8_t* const src = it->yuv_in_ + Y_OFF_ENC;
   VP8ModeScore rd_tmp;
   VP8ModeScore* rd_cur = &rd_tmp;
   VP8ModeScore* rd_best = rd;
@@ -883,7 +883,7 @@ static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* rd) {
 
   rd->mode_i16 = -1;
   for (mode = 0; mode < NUM_PRED_MODES; ++mode) {
-    uint8_t* const tmp_dst = it->yuv_out2_ + Y_OFF;  // scratch buffer
+    uint8_t* const tmp_dst = it->yuv_out2_ + Y_OFF_ENC;  // scratch buffer
     rd_cur->mode_i16 = mode;
 
     // Reconstruct
@@ -939,8 +939,8 @@ static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
   const VP8SegmentInfo* const dqm = &enc->dqm_[it->mb_->segment_];
   const int lambda = dqm->lambda_i4_;
   const int tlambda = dqm->tlambda_;
-  const uint8_t* const src0 = it->yuv_in_ + Y_OFF;
-  uint8_t* const best_blocks = it->yuv_out2_ + Y_OFF;
+  const uint8_t* const src0 = it->yuv_in_ + Y_OFF_ENC;
+  uint8_t* const best_blocks = it->yuv_out2_ + Y_OFF_ENC;
   int total_header_bits = 0;
   VP8ModeScore rd_best;
 
@@ -1033,9 +1033,9 @@ static void PickBestUV(VP8EncIterator* const it, VP8ModeScore* const rd) {
   const int kNumBlocks = 8;
   const VP8SegmentInfo* const dqm = &it->enc_->dqm_[it->mb_->segment_];
   const int lambda = dqm->lambda_uv_;
-  const uint8_t* const src = it->yuv_in_ + U_OFF;
-  uint8_t* tmp_dst = it->yuv_out2_ + U_OFF;  // scratch buffer
-  uint8_t* dst0 = it->yuv_out_ + U_OFF;
+  const uint8_t* const src = it->yuv_in_ + U_OFF_ENC;
+  uint8_t* tmp_dst = it->yuv_out2_ + U_OFF_ENC;  // scratch buffer
+  uint8_t* dst0 = it->yuv_out_ + U_OFF_ENC;
   uint8_t* dst = dst0;
   VP8ModeScore rd_best;
   int mode;
@@ -1081,21 +1081,21 @@ static void SimpleQuantize(VP8EncIterator* const it, VP8ModeScore* const rd) {
   int nz = 0;
 
   if (is_i16) {
-    nz = ReconstructIntra16(it, rd, it->yuv_out_ + Y_OFF, it->preds_[0]);
+    nz = ReconstructIntra16(it, rd, it->yuv_out_ + Y_OFF_ENC, it->preds_[0]);
   } else {
     VP8IteratorStartI4(it);
     do {
       const int mode =
           it->preds_[(it->i4_ & 3) + (it->i4_ >> 2) * enc->preds_w_];
-      const uint8_t* const src = it->yuv_in_ + Y_OFF + VP8Scan[it->i4_];
-      uint8_t* const dst = it->yuv_out_ + Y_OFF + VP8Scan[it->i4_];
+      const uint8_t* const src = it->yuv_in_ + Y_OFF_ENC + VP8Scan[it->i4_];
+      uint8_t* const dst = it->yuv_out_ + Y_OFF_ENC + VP8Scan[it->i4_];
       VP8MakeIntra4Preds(it);
       nz |= ReconstructIntra4(it, rd->y_ac_levels[it->i4_],
                               src, dst, mode) << it->i4_;
-    } while (VP8IteratorRotateI4(it, it->yuv_out_ + Y_OFF));
+    } while (VP8IteratorRotateI4(it, it->yuv_out_ + Y_OFF_ENC));
   }
 
-  nz |= ReconstructUV(it, rd, it->yuv_out_ + U_OFF, it->mb_->uv_mode_);
+  nz |= ReconstructUV(it, rd, it->yuv_out_ + U_OFF_ENC, it->mb_->uv_mode_);
   rd->nz = nz;
 }
 
@@ -1109,7 +1109,7 @@ static void DistoRefine(VP8EncIterator* const it, int try_both_i4_i16) {
     int best_mode = -1;
     for (mode = 0; mode < NUM_PRED_MODES; ++mode) {
       const uint8_t* const ref = it->yuv_p_ + VP8I16ModeOffsets[mode];
-      const uint8_t* const src = it->yuv_in_ + Y_OFF;
+      const uint8_t* const src = it->yuv_in_ + Y_OFF_ENC;
       const score_t score = VP8SSE16x16(src, ref);
       if (score < best_score) {
         best_mode = mode;
@@ -1129,7 +1129,7 @@ static void DistoRefine(VP8EncIterator* const it, int try_both_i4_i16) {
       int mode;
       int best_sub_mode = -1;
       score_t best_sub_score = MAX_COST;
-      const uint8_t* const src = it->yuv_in_ + Y_OFF + VP8Scan[it->i4_];
+      const uint8_t* const src = it->yuv_in_ + Y_OFF_ENC + VP8Scan[it->i4_];
 
       // TODO(skal): we don't really need the prediction pixels here,
       // but just the distortion against 'src'.
@@ -1145,7 +1145,7 @@ static void DistoRefine(VP8EncIterator* const it, int try_both_i4_i16) {
       modes_i4[it->i4_] = best_sub_mode;
       score_i4 += best_sub_score;
       if (score_i4 >= best_score) break;
-    } while (VP8IteratorRotateI4(it, it->yuv_in_ + Y_OFF));
+    } while (VP8IteratorRotateI4(it, it->yuv_in_ + Y_OFF_ENC));
     if (score_i4 < best_score) {
       VP8SetIntra4Mode(it, modes_i4);
     }

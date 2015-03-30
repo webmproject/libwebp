@@ -186,8 +186,8 @@ static int PutWebPHeaders(const VP8Encoder* const enc, size_t size0,
 // Segmentation header
 static void PutSegmentHeader(VP8BitWriter* const bw,
                              const VP8Encoder* const enc) {
-  const VP8SegmentHeader* const hdr = &enc->segment_hdr_;
-  const VP8Proba* const proba = &enc->proba_;
+  const VP8EncSegmentHeader* const hdr = &enc->segment_hdr_;
+  const VP8EncProba* const proba = &enc->proba_;
   if (VP8PutBitUniform(bw, (hdr->num_segments_ > 1))) {
     // We always 'update' the quant and filter strength values
     const int update_data = 1;
@@ -215,7 +215,7 @@ static void PutSegmentHeader(VP8BitWriter* const bw,
 
 // Filtering parameters header
 static void PutFilterHeader(VP8BitWriter* const bw,
-                            const VP8FilterHeader* const hdr) {
+                            const VP8EncFilterHeader* const hdr) {
   const int use_lf_delta = (hdr->i4x4_lf_delta_ != 0);
   VP8PutBitUniform(bw, hdr->simple_);
   VP8PutBits(bw, hdr->level_, 6);
