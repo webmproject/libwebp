@@ -56,32 +56,6 @@ static int EmitSampledRGB(const VP8Io* const io, WebPDecParams* const p) {
 }
 
 //------------------------------------------------------------------------------
-// YUV444 -> RGB conversion
-
-#if 0   // TODO(skal): this is for future rescaling.
-static int EmitRGB(const VP8Io* const io, WebPDecParams* const p) {
-  WebPDecBuffer* output = p->output;
-  const WebPRGBABuffer* const buf = &output->u.RGBA;
-  uint8_t* dst = buf->rgba + io->mb_y * buf->stride;
-  const uint8_t* y_src = io->y;
-  const uint8_t* u_src = io->u;
-  const uint8_t* v_src = io->v;
-  const WebPYUV444Converter convert = WebPYUV444Converters[output->colorspace];
-  const int mb_w = io->mb_w;
-  const int last = io->mb_h;
-  int j;
-  for (j = 0; j < last; ++j) {
-    convert(y_src, u_src, v_src, dst, mb_w);
-    y_src += io->y_stride;
-    u_src += io->uv_stride;
-    v_src += io->uv_stride;
-    dst += buf->stride;
-  }
-  return io->mb_h;
-}
-#endif
-
-//------------------------------------------------------------------------------
 // Fancy upsampling
 
 #ifdef FANCY_UPSAMPLING
