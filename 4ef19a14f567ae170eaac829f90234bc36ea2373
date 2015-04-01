@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//B0s\u003d",
+        "filename": "src/enc/vp8enci.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-04-01T05:18:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "AAAAdn//B6Y\u003d",
+      "revId": "4ef19a14f567ae170eaac829f90234bc36ea2373",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//B6U\u003d",
         "filename": "src/enc/vp8enci.h",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2015-03-31T21:47:45Z",
       "side": 1,
       "message": "this horizontal whitespace mix could be normalized in a future commit",
+      "revId": "4ef19a14f567ae170eaac829f90234bc36ea2373",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//B0k\u003d",
+        "filename": "src/enc/vp8enci.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-04-01T05:18:33Z",
+      "side": 1,
+      "message": "reverted",
+      "parentUuid": "AAAAdn//B6U\u003d",
       "revId": "4ef19a14f567ae170eaac829f90234bc36ea2373",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
