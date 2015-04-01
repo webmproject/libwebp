@@ -34,6 +34,24 @@
       "revId": "aee7f814405291014e425207c1128e4f2573c089",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//Bpw\u003d",
+        "filename": "src/dec/frame.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-04-01T22:31:15Z",
+      "side": 0,
+      "message": "I misunderstood. you just wanted this line gone; rebase works there too, just use edit on the previous commit rather than squash (make the change and --amend it) then finish the rebase",
+      "parentUuid": "AAAAdn//BuQ\u003d",
+      "revId": "aee7f814405291014e425207c1128e4f2573c089",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
