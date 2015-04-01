@@ -16,6 +16,24 @@
       "revId": "aee7f814405291014e425207c1128e4f2573c089",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//BuQ\u003d",
+        "filename": "src/dec/frame.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-04-01T18:42:50Z",
+      "side": 0,
+      "message": "to combine the two you can use rebase to squash them; then just select the earlier change-id in the commit message.\ntry \u0027git rebase -i origin/master\u0027 and follow the editing instructions",
+      "parentUuid": "AAAAdn//B0E\u003d",
+      "revId": "aee7f814405291014e425207c1128e4f2573c089",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
