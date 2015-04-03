@@ -136,7 +136,6 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessingMIPSdspR2(void) {
 
 #else  // !WEBP_USE_MIPS_DSP_R2
 
-extern void WebPInitAlphaProcessingMIPSdspR2(void);
-WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessingMIPSdspR2(void) {}
+WEBP_DSP_INIT_STUB(WebPInitAlphaProcessingMIPSdspR2)
 
 #endif  // WEBP_USE_MIPS_DSP_R2

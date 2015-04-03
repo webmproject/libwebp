@@ -420,7 +420,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitSSE41(void) {
 
 #else  // !WEBP_USE_SSE41
 
-extern void VP8EncDspInitSSE41(void);
-WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitSSE41(void) {}
+WEBP_DSP_INIT_STUB(VP8EncDspInitSSE41)
 
 #endif  // WEBP_USE_SSE41

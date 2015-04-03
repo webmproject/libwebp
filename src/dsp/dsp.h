@@ -123,6 +123,15 @@ typedef int (*VP8CPUInfo)(CPUFeature feature);
 WEBP_EXTERN(VP8CPUInfo) VP8GetCPUInfo;
 
 //------------------------------------------------------------------------------
+// Init stub generator
+
+// Defines an init function stub to ensure each module exposes a symbol,
+// avoiding a compiler warning.
+#define WEBP_DSP_INIT_STUB(func) \
+  extern void func(void); \
+  WEBP_TSAN_IGNORE_FUNCTION void func(void) {}
+
+//------------------------------------------------------------------------------
 // Encoding
 
 // Transforms

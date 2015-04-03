@@ -273,12 +273,10 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444ConvertersMIPSdspR2(void) {
 
 #else  // !WEBP_USE_MIPS_DSP_R2
 
-extern void WebPInitYUV444ConvertersMIPSdspR2(void);
-WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444ConvertersMIPSdspR2(void) {}
+WEBP_DSP_INIT_STUB(WebPInitYUV444ConvertersMIPSdspR2)
 
 #endif  // WEBP_USE_MIPS_DSP_R2
 
 #if !(defined(FANCY_UPSAMPLING) && defined(WEBP_USE_MIPS_DSP_R2))
-extern void WebPInitUpsamplersMIPSdspR2(void);
-WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersMIPSdspR2(void) {}
+WEBP_DSP_INIT_STUB(WebPInitUpsamplersMIPSdspR2)
 #endif

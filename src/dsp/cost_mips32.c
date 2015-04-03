@@ -149,7 +149,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspCostInitMIPS32(void) {
 
 #else  // !WEBP_USE_MIPS32
 
-extern void VP8EncDspCostInitMIPS32(void);
-WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspCostInitMIPS32(void) {}
+WEBP_DSP_INIT_STUB(VP8EncDspCostInitMIPS32)
 
 #endif  // WEBP_USE_MIPS32

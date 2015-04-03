@@ -119,7 +119,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspCostInitSSE2(void) {
 
 #else  // !WEBP_USE_SSE2
 
-extern void VP8EncDspCostInitSSE2(void);
-WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspCostInitSSE2(void) {}
+WEBP_DSP_INIT_STUB(VP8EncDspCostInitSSE2)
 
 #endif  // WEBP_USE_SSE2

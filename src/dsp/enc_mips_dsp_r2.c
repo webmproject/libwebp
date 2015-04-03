@@ -1507,7 +1507,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPSdspR2(void) {
 
 #else  // !WEBP_USE_MIPS_DSP_R2
 
-extern void VP8EncDspInitMIPSdspR2(void);
-WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMIPSdspR2(void) {}
+WEBP_DSP_INIT_STUB(VP8EncDspInitMIPSdspR2)
 
 #endif  // WEBP_USE_MIPS_DSP_R2

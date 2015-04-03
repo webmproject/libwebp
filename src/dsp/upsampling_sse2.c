@@ -204,6 +204,5 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersSSE2(void) {
 #endif  // WEBP_USE_SSE2
 
 #if !(defined(FANCY_UPSAMPLING) && defined(WEBP_USE_SSE2))
-extern void WebPInitUpsamplersSSE2(void);
-WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersSSE2(void) {}
+WEBP_DSP_INIT_STUB(WebPInitUpsamplersSSE2)
 #endif

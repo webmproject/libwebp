@@ -189,7 +189,6 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInitMIPS32(void) {
 
 #else  // !WEBP_USE_MIPS32
 
-extern void WebPRescalerDspInitMIPS32(void);
-WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInitMIPS32(void) {}
+WEBP_DSP_INIT_STUB(WebPRescalerDspInitMIPS32)
 
 #endif  // WEBP_USE_MIPS32

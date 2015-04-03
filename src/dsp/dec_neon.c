@@ -1486,7 +1486,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitNEON(void) {
 
 #else  // !WEBP_USE_NEON
 
-extern void VP8DspInitNEON(void);
-WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitNEON(void) {}
+WEBP_DSP_INIT_STUB(VP8DspInitNEON)
 
 #endif  // WEBP_USE_NEON
