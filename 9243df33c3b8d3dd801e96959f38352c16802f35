@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//BcM\u003d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-04-03T06:32:05Z",
+      "side": 1,
+      "message": "WEBP_TSAN_IGNORE_FUNCTION isn\u0027t strictly necessary here and now that it isn\u0027t in the same file doesn\u0027t do much for symmetry",
+      "revId": "9243df33c3b8d3dd801e96959f38352c16802f35",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
