@@ -50,7 +50,8 @@ typedef enum {   // Rate-distortion optimization levels
 // The predicted blocks can be accessed using offsets to yuv_p_ and
 // the arrays VP8*ModeOffsets[].
 // * YUV Samples area (yuv_in_/yuv_out_/yuv_out2_)
-//   (see VP8Scan[] for accessing the blocks, along with Y_OFF_ENC/U_OFF_ENC/V_OFF_ENC):
+//   (see VP8Scan[] for accessing the blocks, along with
+//   Y_OFF_ENC/U_OFF_ENC/V_OFF_ENC):
 //             +----+----+
 //  Y_OFF_ENC  |YYYY|UUVV|
 //  U_OFF_ENC  |YYYY|UUVV|
