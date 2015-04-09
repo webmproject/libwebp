@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//A3c\u003d",
+        "filename": "src/dsp/dec_sse2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1146,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-04-09T06:13:09Z",
+      "side": 1,
+      "message": "used _mm_shuffle_epi32 for now. when a laptop with low-end hardware presents itself we can revisit (likely micro-opt) of mov/shuffle/unpack",
+      "parentUuid": "AAAAdn//A4Q\u003d",
+      "revId": "8b021df1099679ee4ab5675c6f5f47014b64d3f2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//A5E\u003d",
         "filename": "src/dsp/dec_sse2.c",
         "patchSetId": 1
