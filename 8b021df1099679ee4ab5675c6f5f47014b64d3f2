@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "AAAAdn//A4Q\u003d",
+        "filename": "src/dsp/dec_sse2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1146,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-04-09T05:47:56Z",
+      "side": 1,
+      "message": "another option is movhlps which on some lower-end hardware can have multiple ports where punpck has only one. here though there\u0027s only a single use so movhlps might not make any difference (it didn\u0027t on modern h/w). I\u0027ll try the shuffle though\n\nfrom:\n\nhttp://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-optimization-manual.pdf\n\n\"\"\"\nThe performance considerations of Example 6-3 and Example 6-4 often depends on the characteristics of\neach microarchitecture. For example, in Intel Core microarchitecture, executing a SHUFPS tend to be\nslower than a PUNPCKxxx instruction. In Enhanced Intel Core microarchitecture, SHUFPS and\nPUNPCKxxx instruction all executes with 1 cycle throughput due to the 128-bit shuffle execution unit.\nThen the next important consideration is that there is only one port that can execute PUNPCKxxx vs.\nMOVLHPS/MOVHLPS can execute on multiple ports. The performance of both techniques improves on\nIntel Core microarchitecture over previous microarchitectures due to 3 ports for executing SIMD instructions.\nBoth techniques improves further on Enhanced Intel Core microarchitecture due to the 128-bit\nshuffle unit.\n\"\"\"",
+      "parentUuid": "AAAAdn//A48\u003d",
+      "revId": "8b021df1099679ee4ab5675c6f5f47014b64d3f2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "AAAAdn//A5E\u003d",
         "filename": "src/dsp/dec_sse2.c",
         "patchSetId": 1
