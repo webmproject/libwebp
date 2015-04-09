@@ -1139,12 +1139,20 @@ static WEBP_INLINE void Put16(uint8_t v, uint8_t* dst) {
 }
 
 static void DC16(uint8_t* dst) {    // DC
-  int DC = 16;
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i top = _mm_loadu_si128((const __m128i*)(dst - BPS));
+  const __m128i sad8x2 = _mm_sad_epu8(top, zero);
+  // sum the two sads: sad8x2[0:1] + sad8x2[8:9]
+  const __m128i sum = _mm_add_epi16(sad8x2, _mm_shuffle_epi32(sad8x2, 2));
+  int left = 0;
   int j;
   for (j = 0; j < 16; ++j) {
-    DC += dst[-1 + j * BPS] + dst[j - BPS];
+    left += dst[-1 + j * BPS];
   }
-  Put16(DC >> 5, dst);
+  {
+    const int DC = _mm_cvtsi128_si32(sum) + left + 16;
+    Put16(DC >> 5, dst);
+  }
 }
 
 static void DC16NoTop(uint8_t* dst) {   // DC with top samples not available
@@ -1157,11 +1165,12 @@ static void DC16NoTop(uint8_t* dst) {   // DC with top samples not available
 }
 
 static void DC16NoLeft(uint8_t* dst) {  // DC with left samples not available
-  int DC = 8;
-  int i;
-  for (i = 0; i < 16; ++i) {
-    DC += dst[i - BPS];
-  }
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i top = _mm_loadu_si128((const __m128i*)(dst - BPS));
+  const __m128i sad8x2 = _mm_sad_epu8(top, zero);
+  // sum the two sads: sad8x2[0:1] + sad8x2[8:9]
+  const __m128i sum = _mm_add_epi16(sad8x2, _mm_shuffle_epi32(sad8x2, 2));
+  const int DC = _mm_cvtsi128_si32(sum) + 8;
   Put16(DC >> 4, dst);
 }
 
