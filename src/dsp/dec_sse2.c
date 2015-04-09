@@ -1208,21 +1208,26 @@ static WEBP_INLINE void Put8x8uv(uint8_t v, uint8_t* dst) {
 }
 
 static void DC8uv(uint8_t* dst) {     // DC
-  int dc0 = 8;
-  int i;
-  for (i = 0; i < 8; ++i) {
-    dc0 += dst[i - BPS] + dst[-1 + i * BPS];
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i top = _mm_loadl_epi64((const __m128i*)(dst - BPS));
+  const __m128i sum = _mm_sad_epu8(top, zero);
+  int left = 0;
+  int j;
+  for (j = 0; j < 8; ++j) {
+    left += dst[-1 + j * BPS];
   }
-  Put8x8uv(dc0 >> 4, dst);
+  {
+    const int DC = _mm_cvtsi128_si32(sum) + left + 8;
+    Put8x8uv(DC >> 4, dst);
+  }
 }
 
 static void DC8uvNoLeft(uint8_t* dst) {   // DC with no left samples
-  int dc0 = 4;
-  int i;
-  for (i = 0; i < 8; ++i) {
-    dc0 += dst[i - BPS];
-  }
-  Put8x8uv(dc0 >> 3, dst);
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i top = _mm_loadl_epi64((const __m128i*)(dst - BPS));
+  const __m128i sum = _mm_sad_epu8(top, zero);
+  const int DC = _mm_cvtsi128_si32(sum) + 4;
+  Put8x8uv(DC >> 3, dst);
 }
 
 static void DC8uvNoTop(uint8_t* dst) {  // DC with no top samples
