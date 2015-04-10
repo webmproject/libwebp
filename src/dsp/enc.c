@@ -213,8 +213,6 @@ static void FTransformWHT(const int16_t* in, int16_t* out) {
 //------------------------------------------------------------------------------
 // Intra predictions
 
-#define DST(x, y) dst[(x) + (y) * BPS]
-
 static WEBP_INLINE void Fill(uint8_t* dst, int value, int size) {
   int j;
   for (j = 0; j < size; ++j) {
@@ -331,6 +329,7 @@ static void Intra16Preds(uint8_t* dst,
 //------------------------------------------------------------------------------
 // luma 4x4 prediction
 
+#define DST(x, y) dst[(x) + (y) * BPS]
 #define AVG3(a, b, c) (((a) + 2 * (b) + (c) + 2) >> 2)
 #define AVG2(a, b) (((a) + (b) + 1) >> 1)
 
