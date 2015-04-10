@@ -490,6 +490,15 @@ static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
 //------------------------------------------------------------------------------
 // Intra predictions
 
+// helper for chroma-DC predictions
+static WEBP_INLINE void Put8x8uv(uint8_t v, uint8_t* dst) {
+  int j;
+  const __m128i values = _mm_set1_epi8(v);
+  for (j = 0; j < 8; ++j) {
+    _mm_storel_epi64((__m128i*)(dst + j * BPS), values);
+  }
+}
+
 static WEBP_INLINE void Put16(uint8_t v, uint8_t* dst) {
   int j;
   const __m128i values = _mm_set1_epi8(v);
@@ -502,9 +511,17 @@ static WEBP_INLINE void Fill(uint8_t* dst, int value, int size) {
   if (size == 4) {
     // TODO
   } else if (size == 8) {
-    // TODO
+    Put8x8uv(value, dst);
   } else {
     Put16(value, dst);
+  }
+}
+
+static WEBP_INLINE void VE8uv(uint8_t* dst, const uint8_t* top) {
+  int j;
+  const __m128i top_values = _mm_loadl_epi64((const __m128i*)top);
+  for (j = 0; j < 8; ++j) {
+    _mm_storel_epi64((__m128i*)(dst + j * BPS), top_values);
   }
 }
 
@@ -520,12 +537,21 @@ static WEBP_INLINE void VerticalPred(uint8_t* dst,
                                      const uint8_t* top, int size) {
   if (top != NULL) {
     if (size == 8) {
-      // TODO
+      VE8uv(dst, top);
     } else {
       VE16(dst, top);
     }
   } else {
     Fill(dst, 127, size);
+  }
+}
+
+static WEBP_INLINE void HE8uv(uint8_t* dst, const uint8_t* left) {
+  int j;
+  for (j = 0; j < 8; ++j) {
+    const __m128i values = _mm_set1_epi8(left[j]);
+    _mm_storel_epi64((__m128i*)dst, values);
+    dst += BPS;
   }
 }
 
@@ -542,7 +568,7 @@ static WEBP_INLINE void HorizontalPred(uint8_t* dst,
                                        const uint8_t* left, int size) {
   if (left != NULL) {
     if (size == 8) {
-      // TODO
+      HE8uv(dst, left);
     } else {
       HE16(dst, left);
     }
@@ -556,7 +582,14 @@ static WEBP_INLINE void TM(uint8_t* dst, const uint8_t* left,
   const __m128i zero = _mm_setzero_si128();
   int y;
   if (size == 8) {
-    // TODO
+    const __m128i top_values = _mm_loadl_epi64((const __m128i*)top);
+    const __m128i top_base = _mm_unpacklo_epi8(top_values, zero);
+    for (y = 0; y < 8; ++y, dst += BPS) {
+      const int val = left[y] - left[-1];
+      const __m128i base = _mm_set1_epi16(val);
+      const __m128i out = _mm_packus_epi16(_mm_add_epi16(base, top_base), zero);
+      _mm_storel_epi64((__m128i*)dst, out);
+    }
   } else {
     const __m128i top_values = _mm_load_si128((const __m128i*)top);
     const __m128i top_base_0 = _mm_unpacklo_epi8(top_values, zero);
@@ -590,6 +623,49 @@ static WEBP_INLINE void TrueMotion(uint8_t* dst, const uint8_t* left,
     } else {
       Fill(dst, 129, size);
     }
+  }
+}
+
+static WEBP_INLINE void DC8uv(uint8_t* dst, const uint8_t* left,
+                              const uint8_t* top) {
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i top_values = _mm_loadl_epi64((const __m128i*)top);
+  const __m128i left_values = _mm_loadl_epi64((const __m128i*)left);
+  const __m128i sum_top = _mm_sad_epu8(top_values, zero);
+  const __m128i sum_left = _mm_sad_epu8(left_values, zero);
+  const int DC = _mm_cvtsi128_si32(sum_top) + _mm_cvtsi128_si32(sum_left) + 8;
+  Put8x8uv(DC >> 4, dst);
+}
+
+static WEBP_INLINE void DC8uvNoLeft(uint8_t* dst, const uint8_t* top) {
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i top_values = _mm_loadl_epi64((const __m128i*)top);
+  const __m128i sum = _mm_sad_epu8(top_values, zero);
+  const int DC = _mm_cvtsi128_si32(sum) + 4;
+  Put8x8uv(DC >> 3, dst);
+}
+
+static WEBP_INLINE void DC8uvNoTop(uint8_t* dst, const uint8_t* left) {
+  // 'left' is contiguous so we can reuse the top summation.
+  DC8uvNoLeft(dst, left);
+}
+
+static WEBP_INLINE void DC8uvNoTopLeft(uint8_t* dst) {
+  Put8x8uv(0x80, dst);
+}
+
+static WEBP_INLINE void DC8uvMode(uint8_t* dst, const uint8_t* left,
+                                  const uint8_t* top) {
+  if (top != NULL) {
+    if (left != NULL) {  // top and left present
+      DC8uv(dst, left, top);
+    } else {  // top, but no left
+      DC8uvNoLeft(dst, top);
+    }
+  } else if (left != NULL) {  // left but no top
+    DC8uvNoTop(dst, left);
+  } else {  // no top, no left, nothing.
+    DC8uvNoTopLeft(dst);
   }
 }
 
@@ -641,6 +717,26 @@ static WEBP_INLINE void DC16Mode(uint8_t* dst, const uint8_t* left,
   } else {  // no top, no left, nothing.
     DC16NoTopLeft(dst);
   }
+}
+
+//------------------------------------------------------------------------------
+// Chroma 8x8 prediction (paragraph 12.2)
+
+static void IntraChromaPreds(uint8_t* dst, const uint8_t* left,
+                             const uint8_t* top) {
+  // U block
+  DC8uvMode(C8DC8 + dst, left, top);
+  VerticalPred(C8VE8 + dst, top, 8);
+  HorizontalPred(C8HE8 + dst, left, 8);
+  TrueMotion(C8TM8 + dst, left, top, 8);
+  // V block
+  dst += 8;
+  if (top != NULL) top += 8;
+  if (left != NULL) left += 16;
+  DC8uvMode(C8DC8 + dst, left, top);
+  VerticalPred(C8VE8 + dst, top, 8);
+  HorizontalPred(C8HE8 + dst, left, 8);
+  TrueMotion(C8TM8 + dst, left, top, 8);
 }
 
 //------------------------------------------------------------------------------
@@ -1089,6 +1185,7 @@ extern void VP8EncDspInitSSE2(void);
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitSSE2(void) {
   VP8CollectHistogram = CollectHistogram;
   VP8EncPredLuma16 = Intra16Preds;
+  VP8EncPredChroma8 = IntraChromaPreds;
   VP8EncQuantizeBlock = QuantizeBlock;
   VP8EncQuantize2Blocks = Quantize2Blocks;
   VP8EncQuantizeBlockWHT = QuantizeBlockWHT;
