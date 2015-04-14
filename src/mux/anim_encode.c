@@ -40,9 +40,9 @@ struct WebPAnimEncoder {
   const int canvas_height_;                 // Canvas height.
   const WebPAnimEncoderOptions options_;    // Global encoding options.
 
-  FrameRect prev_rect;                // Previous WebP frame rectangle.
-  WebPConfig last_config;             // Cached in case a re-encode is needed.
-  WebPConfig last_config2;            // 2nd cached config; only valid if
+  FrameRect prev_rect_;               // Previous WebP frame rectangle.
+  WebPConfig last_config_;            // Cached in case a re-encode is needed.
+  WebPConfig last_config2_;           // 2nd cached config; only valid if
                                       // 'options_.allow_mixed' is true.
 
   WebPPicture* curr_canvas_;          // Only pointer; we don't own memory.
@@ -819,7 +819,7 @@ static void PickBestCandidate(WebPAnimEncoder* const enc,
                   : WEBP_MUX_DISPOSE_BACKGROUND;
           SetPreviousDisposeMethod(enc, prev_dispose_method);
         }
-        enc->prev_rect = candidates[i].rect_;  // save for next frame.
+        enc->prev_rect_ = candidates[i].rect_;  // save for next frame.
       } else {
         WebPMemoryWriterClear(&candidates[i].mem_);
         candidates[i].evaluate_ = 0;
@@ -863,8 +863,8 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
   WebPConfig config_lossy = *config;
   config_ll.lossless = 1;
   config_lossy.lossless = 0;
-  enc->last_config = *config;
-  enc->last_config2 = config->lossless ? config_lossy : config_ll;
+  enc->last_config_ = *config;
+  enc->last_config2_ = config->lossless ? config_lossy : config_ll;
 
   if (!WebPPictureInit(&sub_frame_none) || !WebPPictureInit(&sub_frame_bg)) {
     return VP8_ENC_ERROR_INVALID_CONFIGURATION;
@@ -882,7 +882,7 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
     // Change-rectangle assuming previous frame was DISPOSE_BACKGROUND.
     WebPPicture* const prev_canvas_disposed = &enc->prev_canvas_disposed_;
     CopyPixels(prev_canvas, prev_canvas_disposed);
-    DisposeFrameRectangle(WEBP_MUX_DISPOSE_BACKGROUND, &enc->prev_rect,
+    DisposeFrameRectangle(WEBP_MUX_DISPOSE_BACKGROUND, &enc->prev_rect_,
                           prev_canvas_disposed);
     GetSubRect(prev_canvas_disposed, curr_canvas, is_key_frame, is_first_frame,
                &rect_bg, &sub_frame_bg);
@@ -1180,11 +1180,11 @@ static int FrameToFullCanvas(WebPAnimEncoder* const enc,
   WebPMemoryWriterInit(&mem2);
 
   if (!DecodeFrameOntoCanvas(frame, canvas_buf)) goto Err;
-  if (!EncodeFrame(&enc->last_config, canvas_buf, &mem1)) goto Err;
+  if (!EncodeFrame(&enc->last_config_, canvas_buf, &mem1)) goto Err;
   GetEncodedData(&mem1, full_image);
 
   if (enc->options_.allow_mixed) {
-    if (!EncodeFrame(&enc->last_config, canvas_buf, &mem2)) goto Err;
+    if (!EncodeFrame(&enc->last_config_, canvas_buf, &mem2)) goto Err;
     if (mem2.size < mem1.size) {
       GetEncodedData(&mem2, full_image);
       WebPMemoryWriterClear(&mem1);
