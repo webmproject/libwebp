@@ -91,7 +91,8 @@ int main(int argc, const char *argv[]) {
   const char *in_file = NULL, *out_file = NULL;
   FILE* out = NULL;
   GifFileType* gif = NULL;
-  int duration = 0;
+  int frame_duration = 0;
+  int frame_timestamp = 0;
   GIFDisposeMethod orig_dispose = GIF_DISPOSE_NONE;
 
   WebPPicture frame;                // Frame rectangle only (not disposed).
@@ -330,7 +331,7 @@ int main(int argc, const char *argv[]) {
         // Note that 'curr_canvas' is same as 'prev_canvas' at this point.
         GIFBlendFrames(&frame, &gif_rect, &curr_canvas);
 
-        if (!WebPAnimEncoderAdd(enc, &curr_canvas, duration, &config)) {
+        if (!WebPAnimEncoderAdd(enc, &curr_canvas, frame_timestamp, &config)) {
           fprintf(stderr, "Error! Cannot encode frame as WebP\n");
           fprintf(stderr, "Error code: %d\n", curr_canvas.error_code);
         }
@@ -340,11 +341,14 @@ int main(int argc, const char *argv[]) {
         GIFDisposeFrame(orig_dispose, &gif_rect, &prev_canvas, &curr_canvas);
         GIFCopyPixels(&curr_canvas, &prev_canvas);
 
+        // Update timestamp (for next frame).
+        frame_timestamp += frame_duration;
+
         // In GIF, graphic control extensions are optional for a frame, so we
         // may not get one before reading the next frame. To handle this case,
         // we reset frame properties to reasonable defaults for the next frame.
         orig_dispose = GIF_DISPOSE_NONE;
-        duration = 0;
+        frame_duration = 0;
         transparent_index = GIF_INDEX_INVALID;
         break;
       }
@@ -359,7 +363,7 @@ int main(int argc, const char *argv[]) {
             break;  // Do nothing for now.
           }
           case GRAPHICS_EXT_FUNC_CODE: {
-            if (!GIFReadGraphicsExtension(data, &duration, &orig_dispose,
+            if (!GIFReadGraphicsExtension(data, &frame_duration, &orig_dispose,
                                           &transparent_index)) {
               goto End;
             }
@@ -423,6 +427,11 @@ int main(int argc, const char *argv[]) {
       }
     }
   } while (!done);
+
+  // Last NULL frame.
+  if (!WebPAnimEncoderAdd(enc, NULL, frame_timestamp, NULL)) {
+    fprintf(stderr, "Error flushing WebP muxer.\n");
+  }
 
   if (!WebPAnimEncoderAssemble(enc, &webp_data)) {
     // TODO(urvang): Print actual error code.

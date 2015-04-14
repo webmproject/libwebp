@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-#define WEBP_MUX_ABI_VERSION 0x0104        // MAJOR(8b) + MINOR(8b)
+#define WEBP_MUX_ABI_VERSION 0x0105        // MAJOR(8b) + MINOR(8b)
 
 //------------------------------------------------------------------------------
 // Mux API
@@ -407,8 +407,9 @@ WEBP_EXTERN(WebPMuxError) WebPMuxAssemble(WebPMux* mux,
     WebPConfig config;
     WebPConfigInit(&config);
     // Tune 'config' as needed.
-    WebPAnimEncoderAdd(enc, frame, duration, &config);
+    WebPAnimEncoderAdd(enc, frame, timestamp_ms, &config);
   }
+  WebPAnimEncoderAdd(enc, NULL, timestamp_ms, NULL);
   WebPAnimEncoderAssemble(enc, webp_data);
   WebPAnimEncoderDelete(enc);
   // Write the 'webp_data' to a file, or re-mux it further.
@@ -471,21 +472,30 @@ static WEBP_INLINE WebPAnimEncoder* WebPAnimEncoderNew(
 
 // Optimize the given frame for WebP, encode it and add it to the
 // WebPAnimEncoder object.
+// The last call to 'WebPAnimEncoderAdd' should be with frame = NULL, which
+// indicates that no more frames are to be added. This call is also used to
+// determine the duration of the last frame.
 // Parameters:
 //   enc - (in/out) object to which the frame is to be added.
 //   frame - (in/out) frame data in ARGB or YUV(A) format. If it is in YUV(A)
 //           format, it will be converted to ARGB, which incurs a small loss.
-//   duration - (in) frame duration
+//   timestamp_ms - (in) timestamp of this frame in milliseconds.
+//                       Duration of a frame would be calculated as
+//                       "timestamp of next frame - timestamp of this frame".
+//                       Hence, timestamps should be in non-decreasing order.
 //   config - (in) encoding options; can be passed NULL to pick
 //            reasonable defaults.
 // Returns:
 //   On error, returns false and frame->error_code is set appropriately.
 //   Otherwise, returns true.
 WEBP_EXTERN(int) WebPAnimEncoderAdd(
-    WebPAnimEncoder* enc, WebPPicture* frame, int duration,
+    WebPAnimEncoder* enc, WebPPicture* frame, int timestamp_ms,
     const WebPConfig* config);
 
 // Assemble all frames added so far into a WebP bitstream.
+// This call should be preceded by  a call to 'WebPAnimEncoderAdd' with
+// frame = NULL; if not, the duration of the last frame will be internally
+// estimated.
 // Parameters:
 //   enc - (in/out) object from which the frames are to be assembled.
 //   webp_data - (out) generated WebP bitstream.
