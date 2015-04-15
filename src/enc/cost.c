@@ -208,7 +208,6 @@ void VP8InitResidual(int first, int coeff_type,
   res->coeff_type = coeff_type;
   res->prob  = enc->proba_.coeffs_[coeff_type];
   res->stats = enc->proba_.stats_[coeff_type];
-  res->cost  = enc->proba_.level_cost_[coeff_type];
   res->costs = enc->proba_.remapped_costs_[coeff_type];
   res->first = first;
 }

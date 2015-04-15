@@ -33,7 +33,6 @@ struct VP8Residual {
   int coeff_type;
   ProbaArray*   prob;
   StatsArray*   stats;
-  CostArray*    cost;    // TODO(skal): remove in favor of *costs
   CostArrayPtr  costs;
 };
 
