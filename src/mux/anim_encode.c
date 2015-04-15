@@ -1086,8 +1086,8 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int timestamp,
         fprintf(stderr,
                 "ERROR adding frame: timestamps must be non-decreasing.\n");
       }
-    return 0;
-  }
+      return 0;
+    }
     SetPreviousDuration(enc, (int)prev_frame_duration);
   } else {
     enc->first_timestamp_ = timestamp;
