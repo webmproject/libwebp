@@ -1248,7 +1248,7 @@ static WebPMuxError OptimizeSingleFrame(WebPAnimEncoder* const enc,
 int WebPAnimEncoderAssemble(WebPAnimEncoder* enc, WebPData* webp_data) {
   WebPMux* mux;
   WebPMuxError err;
-  int total_frames;  // Muxed frames + cached (but not yet muxed) frames.
+  size_t total_frames;  // Muxed frames + cached (but not yet muxed) frames.
 
   if (enc == NULL) {
     return 0;
@@ -1270,8 +1270,8 @@ int WebPAnimEncoderAssemble(WebPAnimEncoder* enc, WebPData* webp_data) {
 
   if (!enc->got_null_frame_ && total_frames > 1 && enc->count_ > 0) {
     // set duration of the last frame to be avg of durations of previous frames.
-    const int average_duration =
-        (enc->prev_timestamp_ - enc->first_timestamp_) / (total_frames - 1);
+    const double delta_time = enc->prev_timestamp_ - enc->first_timestamp_;
+    const int average_duration = (int)(delta_time / (total_frames - 1));
     SetPreviousDuration(enc, average_duration);
   }
 
