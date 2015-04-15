@@ -2,8 +2,8 @@
 # system, for simple local building of the libraries and tools.
 # It will not install the libraries system-wide, but just create the 'cwebp'
 # and 'dwebp' tools in the examples/ directory, along with the static
-# libraries 'src/libwebp.a', 'src/libwebpdecoder.a', 'src/mux/libwebpmux.a' and
-# 'src/demux/libwebpdemux.a'.
+# libraries 'src/libwebp.a', 'src/libwebpdecoder.a', 'src/mux/libwebpmux.a',
+# 'src/demux/libwebpdemux.a' and 'src/libwebpextras.a'.
 #
 # To build the library and examples, use:
 #    make -f makefile.unix
@@ -224,11 +224,15 @@ UTILS_ENC_OBJS = \
     src/utils/huffman_encode.o \
     src/utils/quant_levels.o \
 
+EXTRA_OBJS = \
+    src/extras/extras.o \
+
 LIBWEBPDECODER_OBJS = $(DEC_OBJS) $(DSP_DEC_OBJS) $(UTILS_DEC_OBJS)
 LIBWEBP_OBJS = $(LIBWEBPDECODER_OBJS) $(ENC_OBJS) $(DSP_ENC_OBJS) \
                $(UTILS_ENC_OBJS)
 LIBWEBPMUX_OBJS = $(MUX_OBJS)
 LIBWEBPDEMUX_OBJS = $(DEMUX_OBJS)
+LIBWEBPEXTRA_OBJS = $(EXTRA_OBJS)
 
 HDRS_INSTALLED = \
     src/webp/decode.h \
@@ -275,6 +279,7 @@ HDRS = \
     $(HDRS_INSTALLED) \
 
 OUT_LIBS = examples/libexample_util.a src/libwebpdecoder.a src/libwebp.a
+EXTRA_LIB = src/libwebpextras.a
 OUT_EXAMPLES = examples/cwebp examples/dwebp
 EXTRA_EXAMPLES = examples/gif2webp examples/vwebp examples/webpmux
 
@@ -287,6 +292,7 @@ endif
 
 ex: $(OUT_EXAMPLES)
 all: ex $(EXTRA_EXAMPLES)
+extras: $(EXTRA_LIB)
 
 $(EX_FORMAT_DEC_OBJS): %.o: %.h
 
@@ -307,6 +313,7 @@ src/libwebpdecoder.a: $(LIBWEBPDECODER_OBJS)
 src/libwebp.a: $(LIBWEBP_OBJS)
 src/mux/libwebpmux.a: $(LIBWEBPMUX_OBJS)
 src/demux/libwebpdemux.a: $(LIBWEBPDEMUX_OBJS)
+src/libwebpextras.a: $(LIBWEBPEXTRA_OBJS)
 
 %.a:
 	$(AR) $(ARFLAGS) $@ $^
