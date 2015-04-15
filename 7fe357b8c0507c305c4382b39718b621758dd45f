@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//AXc\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-04-15T22:13:50Z",
+      "side": 1,
+      "message": "return could be uint32 now; it\u0027s only used as a lookup table index",
+      "revId": "7fe357b8c0507c305c4382b39718b621758dd45f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
