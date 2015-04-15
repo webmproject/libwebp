@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "AAAAdn//AZU\u003d",
+        "filename": "src/mux/anim_encode.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1274,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-04-15T18:51:19Z",
+      "side": 1,
+      "message": "double shouldn\u0027t make a difference with no rounding, but this does simplify the type choice going from size_t (some of those could probably just be uint32 or even int)",
+      "revId": "e25448235a73589888a3f178344382e3d68ea9ed",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
