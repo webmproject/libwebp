@@ -216,7 +216,7 @@ void VP8LHashChainClear(VP8LHashChain* const p) {
 #define HASH_MULTIPLIER_HI (0xc6a4a793U)
 #define HASH_MULTIPLIER_LO (0x5bd1e996U)
 
-static WEBP_INLINE uint64_t GetPixPairHash64(const uint32_t* const argb) {
+static WEBP_INLINE uint32_t GetPixPairHash64(const uint32_t* const argb) {
   uint32_t key;
   key  = argb[1] * HASH_MULTIPLIER_HI;
   key += argb[0] * HASH_MULTIPLIER_LO;
@@ -227,7 +227,7 @@ static WEBP_INLINE uint64_t GetPixPairHash64(const uint32_t* const argb) {
 // Insertion of two pixels at a time.
 static void HashChainInsert(VP8LHashChain* const p,
                             const uint32_t* const argb, int pos) {
-  const uint64_t hash_code = GetPixPairHash64(argb);
+  const uint32_t hash_code = GetPixPairHash64(argb);
   p->chain_[pos] = p->hash_to_first_index_[hash_code];
   p->hash_to_first_index_[hash_code] = pos;
 }
