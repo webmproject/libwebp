@@ -39,7 +39,7 @@ static int CheckMode(int mb_x, int mb_y, int mode) {
   return mode;
 }
 
-static void Copy32b(uint8_t* dst, uint8_t* src) {
+static void Copy32b(uint8_t* const dst, const uint8_t* const src) {
   memcpy(dst, src, 4);
 }
 
@@ -80,6 +80,28 @@ static void ReconstructRow(const VP8Decoder* const dec,
   uint8_t* const y_dst = dec->yuv_b_ + Y_OFF;
   uint8_t* const u_dst = dec->yuv_b_ + U_OFF;
   uint8_t* const v_dst = dec->yuv_b_ + V_OFF;
+
+  // Initialize left-most block.
+  for (j = 0; j < 16; ++j) {
+    y_dst[j * BPS - 1] = 129;
+  }
+  for (j = 0; j < 8; ++j) {
+    u_dst[j * BPS - 1] = 129;
+    v_dst[j * BPS - 1] = 129;
+  }
+
+  // Init top-left sample on left column too.
+  if (mb_y > 0) {
+    y_dst[-1 - BPS] = u_dst[-1 - BPS] = v_dst[-1 - BPS] = 129;
+  } else {
+    // we only need to do this init once at block (0,0).
+    // Afterward, it remains valid for the whole topmost row.
+    memset(y_dst - BPS - 1, 127, 16 + 4 + 1);
+    memset(u_dst - BPS - 1, 127, 8 + 1);
+    memset(v_dst - BPS - 1, 127, 8 + 1);
+  }
+
+  // Reconstruct one row.
   for (mb_x = 0; mb_x < dec->mb_w_; ++mb_x) {
     const VP8MBData* const block = ctx->mb_data_ + mb_x;
 
@@ -93,18 +115,6 @@ static void ReconstructRow(const VP8Decoder* const dec,
         Copy32b(&u_dst[j * BPS - 4], &u_dst[j * BPS + 4]);
         Copy32b(&v_dst[j * BPS - 4], &v_dst[j * BPS + 4]);
       }
-    } else {
-      for (j = 0; j < 16; ++j) {
-        y_dst[j * BPS - 1] = 129;
-      }
-      for (j = 0; j < 8; ++j) {
-        u_dst[j * BPS - 1] = 129;
-        v_dst[j * BPS - 1] = 129;
-      }
-      // Init top-left sample on left column too
-      if (mb_y > 0) {
-        y_dst[-1 - BPS] = u_dst[-1 - BPS] = v_dst[-1 - BPS] = 129;
-      }
     }
     {
       // bring top samples into the cache
@@ -117,12 +127,6 @@ static void ReconstructRow(const VP8Decoder* const dec,
         memcpy(y_dst - BPS, top_yuv[0].y, 16);
         memcpy(u_dst - BPS, top_yuv[0].u, 8);
         memcpy(v_dst - BPS, top_yuv[0].v, 8);
-      } else if (mb_x == 0) {
-        // we only need to do this init once at block (0,0).
-        // Afterward, it remains valid for the whole topmost row.
-        memset(y_dst - BPS - 1, 127, 16 + 4 + 1);
-        memset(u_dst - BPS - 1, 127, 8 + 1);
-        memset(v_dst - BPS - 1, 127, 8 + 1);
       }
 
       // predict and add residuals
@@ -146,8 +150,7 @@ static void ReconstructRow(const VP8Decoder* const dec,
           DoTransform(bits, coeffs + n * 16, dst);
         }
       } else {    // 16x16
-        const int pred_func = CheckMode(mb_x, mb_y,
-                                        block->imodes_[0]);
+        const int pred_func = CheckMode(mb_x, mb_y, block->imodes_[0]);
         VP8PredLuma16[pred_func](y_dst);
         if (bits != 0) {
           for (n = 0; n < 16; ++n, bits <<= 2) {
