@@ -16,6 +16,24 @@
       "revId": "f0b2617d584cb3ced001f5b9300b04712eec114c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//AJU\u003d",
+        "filename": "src/dec/frame.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-04-16T21:32:24Z",
+      "side": 1,
+      "message": "removed",
+      "parentUuid": "AAAAdn//AMs\u003d",
+      "revId": "f0b2617d584cb3ced001f5b9300b04712eec114c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
