@@ -16,6 +16,24 @@
       "revId": "7fe357b8c0507c305c4382b39718b621758dd45f",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//ARs\u003d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-04-16T06:04:36Z",
+      "side": 1,
+      "message": "indeed, i\u0027ll take care of it in a subsequent patch...",
+      "parentUuid": "AAAAdn//AXc\u003d",
+      "revId": "7fe357b8c0507c305c4382b39718b621758dd45f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
