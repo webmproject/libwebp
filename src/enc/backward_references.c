@@ -21,8 +21,6 @@
 
 #define VALUES_IN_BYTE 256
 
-#define HASH_MULTIPLIER (0xc6a4a7935bd1e995ULL)
-
 #define MIN_BLOCK_SIZE 256  // minimum block size for backward references
 
 #define MAX_ENTROPY    (1e30f)
@@ -215,9 +213,14 @@ void VP8LHashChainClear(VP8LHashChain* const p) {
 
 // -----------------------------------------------------------------------------
 
+#define HASH_MULTIPLIER_HI (0xc6a4a793U)
+#define HASH_MULTIPLIER_LO (0x5bd1e996U)
+
 static WEBP_INLINE uint64_t GetPixPairHash64(const uint32_t* const argb) {
-  uint64_t key = ((uint64_t)argb[1] << 32) | argb[0];
-  key = (key * HASH_MULTIPLIER) >> (64 - HASH_BITS);
+  uint32_t key;
+  key  = argb[1] * HASH_MULTIPLIER_HI;
+  key += argb[0] * HASH_MULTIPLIER_LO;
+  key = key >> (32 - HASH_BITS);
   return key;
 }
 
