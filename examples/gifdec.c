@@ -9,10 +9,6 @@
 //
 // GIF decode.
 
-#ifdef HAVE_CONFIG_H
-#include "webp/config.h"
-#endif
-
 #include "./gifdec.h"
 
 #include <stdio.h>
