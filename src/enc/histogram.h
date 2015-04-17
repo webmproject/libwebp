@@ -14,10 +14,6 @@
 #ifndef WEBP_ENC_HISTOGRAM_H_
 #define WEBP_ENC_HISTOGRAM_H_
 
-#include <assert.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 
 #include "./backward_references.h"
