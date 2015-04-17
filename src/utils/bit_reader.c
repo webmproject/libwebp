@@ -83,6 +83,8 @@ void VP8LoadFinalBytes(VP8BitReader* const br) {
     br->value_ <<= 8;
     br->bits_ += 8;
     br->eof_ = 1;
+  } else {
+    br->bits_ = 0;  // This is to avoid undefined behaviour with shifts.
   }
 }
 
@@ -159,6 +161,11 @@ void VP8LBitReaderSetBuffer(VP8LBitReader* const br,
   br->eos_ = (br->pos_ > br->len_) || VP8LIsEndOfStream(br);
 }
 
+static void VP8LSetEndOfStream(VP8LBitReader* const br) {
+  br->eos_ = 1;
+  br->bit_pos_ = 0;  // To avoid undefined behaviour with shifts.
+}
+
 // If not at EOS, reload up to VP8L_LBITS byte-by-byte
 static void ShiftBytes(VP8LBitReader* const br) {
   while (br->bit_pos_ >= 8 && br->pos_ < br->len_) {
@@ -167,7 +174,9 @@ static void ShiftBytes(VP8LBitReader* const br) {
     ++br->pos_;
     br->bit_pos_ -= 8;
   }
-  br->eos_ = VP8LIsEndOfStream(br);
+  if (VP8LIsEndOfStream(br)) {
+    VP8LSetEndOfStream(br);
+  }
 }
 
 void VP8LDoFillBitWindow(VP8LBitReader* const br) {
@@ -193,14 +202,13 @@ uint32_t VP8LReadBits(VP8LBitReader* const br, int n_bits) {
   assert(n_bits >= 0);
   // Flag an error if end_of_stream or n_bits is more than allowed limit.
   if (!br->eos_ && n_bits <= VP8L_MAX_NUM_BIT_READ) {
-    const uint32_t val =
-        (uint32_t)(br->val_ >> br->bit_pos_) & kBitMask[n_bits];
+    const uint32_t val = VP8LPrefetchBits(br) & kBitMask[n_bits];
     const int new_bits = br->bit_pos_ + n_bits;
     br->bit_pos_ = new_bits;
     ShiftBytes(br);
     return val;
   } else {
-    br->eos_ = 1;
+    VP8LSetEndOfStream(br);
     return 0;
   }
 }

@@ -107,7 +107,7 @@ int32_t VP8GetSignedValue(VP8BitReader* const br, int num_bits);
 // maximum number of bits (inclusive) the bit-reader can handle:
 #define VP8L_MAX_NUM_BIT_READ 24
 
-#define VP8L_LBITS 64  // Number of bits prefetched.
+#define VP8L_LBITS 64  // Number of bits prefetched (= bit-size of vp8l_val_t).
 #define VP8L_WBITS 32  // Minimum number of bytes ready after VP8LFillBitWindow.
 
 typedef uint64_t vp8l_val_t;  // right now, this bit-reader can only use 64bit.
@@ -137,14 +137,14 @@ uint32_t VP8LReadBits(VP8LBitReader* const br, int n_bits);
 
 // Return the prefetched bits, so they can be looked up.
 static WEBP_INLINE uint32_t VP8LPrefetchBits(VP8LBitReader* const br) {
-  return (uint32_t)(br->val_ >> br->bit_pos_);
+  return (uint32_t)(br->val_ >> (br->bit_pos_ & (VP8L_LBITS - 1)));
 }
 
 // Returns true if there was an attempt at reading bit past the end of
 // the buffer. Doesn't set br->eos_ flag.
 static WEBP_INLINE int VP8LIsEndOfStream(const VP8LBitReader* const br) {
   assert(br->pos_ <= br->len_);
-  return (br->pos_ == br->len_) && (br->bit_pos_ > VP8L_LBITS);
+  return br->eos_ || ((br->pos_ == br->len_) && (br->bit_pos_ > VP8L_LBITS));
 }
 
 // For jumping over a number of bits in the bit stream when accessed with
