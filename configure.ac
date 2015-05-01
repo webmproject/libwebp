@@ -11,6 +11,7 @@ m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 AC_PROG_LIBTOOL
 AM_PROG_CC_C_O
+AC_PROG_CXX
 
 dnl === Enable less verbose output when building.
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -36,34 +37,42 @@ AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=DIR],
             [pkgconfigdir="$withval"], [pkgconfigdir='${libdir}/pkgconfig'])
 AC_SUBST([pkgconfigdir])
 
-dnl === TEST_AND_ADD_CFLAGS(var, flag)
-dnl ===   Checks whether $CC supports 'flag' and adds it to 'var'
-dnl ===   on success.
-AC_DEFUN([TEST_AND_ADD_CFLAGS],
-         [SAVED_CFLAGS="$CFLAGS"
-          CFLAGS="-Werror $2"
-          AC_MSG_CHECKING([whether $CC supports $2])
+dnl === TEST_AND_ADD_FLAGS(var, compiler, flag)
+dnl ===   Checks whether $CC (or $CXX if compiler is 'CXX') supports 'flag' and
+dnl ===   adds it to 'var' on success.
+AC_DEFUN([TEST_AND_ADD_FLAGS],
+         [AS_IF([test "$2" = "CXX"],
+                [SAVED_FLAGS="$CXXFLAGS"
+                 CXXFLAGS="-Werror $3"
+                 AC_MSG_CHECKING([whether $CXX supports $3])
+                 AC_LANG_PUSH([C++])],
+                [SAVED_FLAGS="$CFLAGS"
+                 CFLAGS="-Werror $3"
+                 AC_MSG_CHECKING([whether $CC supports $3])])
           dnl Note AC_LANG_PROGRAM([]) uses an old-style main definition.
           AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main(void) { return 0; }])],
                             [AC_MSG_RESULT([yes])]
                             dnl Simply append the variable avoiding a
                             dnl compatibility ifdef for AS_VAR_APPEND as this
                             dnl variable shouldn't grow all that large.
-                            [$1="${$1} $2"],
+                            [$1="${$1} $3"],
                             [AC_MSG_RESULT([no])])
-          CFLAGS="$SAVED_CFLAGS"])
-TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wall])
-TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wdeclaration-after-statement])
-TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wextra])
-TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wformat-nonliteral])
-TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wformat-security])
-TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wmissing-declarations])
-TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wmissing-prototypes])
-TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wold-style-definition])
-TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wshadow])
-TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wunused-but-set-variable])
-TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wunused])
-TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wvla])
+          AS_IF([test "$2" = "CXX"],
+                [AC_LANG_POP([C++])
+                 CXXFLAGS="$SAVED_FLAGS"],
+                [CFLAGS="$SAVED_FLAGS"])])
+TEST_AND_ADD_FLAGS([AM_CFLAGS], [C], [-Wall])
+TEST_AND_ADD_FLAGS([AM_CFLAGS], [C], [-Wdeclaration-after-statement])
+TEST_AND_ADD_FLAGS([AM_CFLAGS], [C], [-Wextra])
+TEST_AND_ADD_FLAGS([AM_CFLAGS], [C], [-Wformat-nonliteral])
+TEST_AND_ADD_FLAGS([AM_CFLAGS], [C], [-Wformat-security])
+TEST_AND_ADD_FLAGS([AM_CFLAGS], [C], [-Wmissing-declarations])
+TEST_AND_ADD_FLAGS([AM_CFLAGS], [C], [-Wmissing-prototypes])
+TEST_AND_ADD_FLAGS([AM_CFLAGS], [C], [-Wold-style-definition])
+TEST_AND_ADD_FLAGS([AM_CFLAGS], [C], [-Wshadow])
+TEST_AND_ADD_FLAGS([AM_CFLAGS], [C], [-Wunused-but-set-variable])
+TEST_AND_ADD_FLAGS([AM_CFLAGS], [C], [-Wunused])
+TEST_AND_ADD_FLAGS([AM_CFLAGS], [C], [-Wvla])
 # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=62040
 # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61622
 AS_IF([test "$GCC" = "yes" ], [
@@ -76,7 +85,7 @@ AS_IF([test "$GCC" = "yes" ], [
           esac
        esac
        AS_IF([test "$gcc_wht_bug" = "yes"], [
-              TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-frename-registers])])])
+              TEST_AND_ADD_FLAGS([AM_CFLAGS], [C], [-frename-registers])])])
 AC_SUBST([AM_CFLAGS])
 
 dnl === Check for machine specific flags
@@ -87,7 +96,7 @@ AC_ARG_ENABLE([avx2],
 
 AS_IF([test "x$enable_avx2" != "xno" -a "x$enable_sse4_1" != "xno" \
          -a "x$enable_sse2" != "xno"], [
-  TEST_AND_ADD_CFLAGS([AVX2_FLAGS], [-mavx2])
+  TEST_AND_ADD_FLAGS([AVX2_FLAGS], [C], [-mavx2])
   AS_IF([test -n "$AVX2_FLAGS"], [
     SAVED_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $AVX2_FLAGS"
@@ -110,7 +119,7 @@ AC_ARG_ENABLE([sse4.1],
                               @<:@default=auto@:>@]))
 
 AS_IF([test "x$enable_sse4_1" != "xno" -a "x$enable_sse2" != "xno"], [
-  TEST_AND_ADD_CFLAGS([SSE41_FLAGS], [-msse4.1])
+  TEST_AND_ADD_FLAGS([SSE41_FLAGS], [C], [-msse4.1])
   AS_IF([test -n "$SSE41_FLAGS"], [
     SAVED_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $SSE41_FLAGS"
@@ -127,7 +136,7 @@ AC_ARG_ENABLE([sse2],
                               @<:@default=auto@:>@]))
 
 AS_IF([test "x$enable_sse2" != "xno"], [
-  TEST_AND_ADD_CFLAGS([SSE2_FLAGS], [-msse2])
+  TEST_AND_ADD_FLAGS([SSE2_FLAGS], [C], [-msse2])
   AS_IF([test -n "$SSE2_FLAGS"], [
     SAVED_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $SSE2_FLAGS"
@@ -437,10 +446,37 @@ AS_IF([test "x$enable_gif" != "xno"], [
   LIBCHECK_EPILOGUE([GIF])
 
   if test "$gif_support" = "yes" -a \
+          "$enable_libwebpdemux" = "yes"; then
+    dnl === Enable C++ compiler for .cc sources, if available.
+    AC_LANG_PUSH([C++])
+    AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM([#include <iostream>],
+                       [std::cout << "a";])],
+      [cxx_support=yes],
+      [AC_MSG_WARN([C++ compiler absent: compilation of C++ sources disabled.])
+       cxx_support=no])
+    AC_LANG_POP([C++])
+    if test "$cxx_support" = "yes"; then
+      build_animdiff=yes
+      TEST_AND_ADD_FLAGS([AM_CXXFLAGS], [CXX], [-Wall])
+      TEST_AND_ADD_FLAGS([AM_CXXFLAGS], [CXX], [-Wextra])
+      TEST_AND_ADD_FLAGS([AM_CXXFLAGS], [CXX], [-Wformat-nonliteral])
+      TEST_AND_ADD_FLAGS([AM_CXXFLAGS], [CXX], [-Wformat-security])
+      TEST_AND_ADD_FLAGS([AM_CXXFLAGS], [CXX], [-Wmissing-declarations])
+      TEST_AND_ADD_FLAGS([AM_CXXFLAGS], [CXX], [-Wshadow])
+      TEST_AND_ADD_FLAGS([AM_CXXFLAGS], [CXX], [-Wunused-but-set-variable])
+      TEST_AND_ADD_FLAGS([AM_CXXFLAGS], [CXX], [-Wunused])
+      TEST_AND_ADD_FLAGS([AM_CXXFLAGS], [CXX], [-Wvla])
+      AC_SUBST([AM_CXXFLAGS])
+    fi
+  fi
+
+  if test "$gif_support" = "yes" -a \
           "$enable_libwebpmux" = "yes"; then
     build_gif2webp=yes
   fi
 ])
+AM_CONDITIONAL([BUILD_ANIMDIFF], [test "${build_animdiff}" = "yes"])
 AM_CONDITIONAL([BUILD_GIF2WEBP], [test "${build_gif2webp}" = "yes"])
 
 dnl === check for WIC support ===
@@ -609,6 +645,7 @@ dwebp : yes
   PNG  : ${png_support-no}
   WIC  : ${wic_support-no}
 GIF support : ${gif_support-no}
+anim_diff   : ${build_animdiff-no}
 gif2webp    : ${build_gif2webp-no}
 webpmux     : ${enable_libwebpmux-no}
 vwebp       : ${build_vwebp-no}

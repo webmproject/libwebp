@@ -16,6 +16,15 @@ noinst_LTLIBRARIES = libexampleutil.la
 
 libexampleutil_la_SOURCES = example_util.c example_util.h stopwatch.h
 
+if BUILD_ANIMDIFF
+  noinst_PROGRAMS = anim_diff
+endif
+
+anim_diff_SOURCES = anim_diff.cc anim_util.cc anim_util.h
+anim_diff_CPPFLAGS = $(AM_CPPFLAGS) $(GIF_INCLUDES)
+anim_diff_LDADD  = ../src/demux/libwebpdemux.la
+anim_diff_LDADD += $(GIF_LIBS)
+
 dwebp_SOURCES = dwebp.c stopwatch.h
 dwebp_CPPFLAGS  = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
 dwebp_CPPFLAGS += $(JPEG_INCLUDES) $(PNG_INCLUDES)
@@ -46,9 +55,11 @@ vwebp_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE) $(GL_INCLUDES)
 vwebp_LDADD = libexampleutil.la ../src/demux/libwebpdemux.la $(GL_LIBS)
 
 if BUILD_LIBWEBPDECODER
+  anim_diff_LDADD += ../src/libwebpdecoder.la
   dwebp_LDADD += ../src/libwebpdecoder.la
   vwebp_LDADD += ../src/libwebpdecoder.la
 else
+  anim_diff_LDADD += ../src/libwebp.la
   dwebp_LDADD += ../src/libwebp.la
   vwebp_LDADD += ../src/libwebp.la
 endif

@@ -371,6 +371,24 @@ or using autoconf:
 $ ./configure --enable-everything
 $ make
 
+Comparison of animated images:
+==============================
+Test utility anim_diff under examples/ can be used to compare two animated
+images (each can be GIF or WebP).
+
+Usage:
+ anim_diff <image1> <image2> [-dump_frames <folder>] [-min_psnr <float>]
+
+Building:
+---------
+With the libgif development files and a C++ compiler installed, anim_diff can
+be built using makefile.unix:
+$ make -f makefile.unix examples/anim_diff
+
+or using autoconf:
+$ ./configure --enable-everything
+$ make
+
 Encoding API:
 =============
 

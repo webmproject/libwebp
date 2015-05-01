@@ -62,14 +62,19 @@ EXTRA_FLAGS += -DWEBP_USE_THREAD
 EXTRA_LIBS += -lpthread
 
 # Extra flags to emulate C89 strictness with the full ANSI
-EXTRA_FLAGS += -Wextra -Wold-style-definition
-EXTRA_FLAGS += -Wmissing-prototypes
-EXTRA_FLAGS += -Wmissing-declarations
-EXTRA_FLAGS += -Wdeclaration-after-statement
-EXTRA_FLAGS += -Wshadow
-EXTRA_FLAGS += -Wformat-security -Wformat-nonliteral
+EXTRA_C89_FLAGS = -Wextra -Wold-style-definition
+EXTRA_C89_FLAGS += -Wmissing-prototypes
+EXTRA_C89_FLAGS += -Wmissing-declarations
+EXTRA_C89_FLAGS += -Wdeclaration-after-statement
+EXTRA_C89_FLAGS += -Wshadow
+EXTRA_C89_FLAGS += -Wformat-security -Wformat-nonliteral
+# EXTRA_C89_FLAGS += -Wvla
 
-# EXTRA_FLAGS += -Wvla
+EXTRA_CXX_FLAGS = -Wextra
+EXTRA_CXX_FLAGS += -Wmissing-declarations
+EXTRA_CXX_FLAGS += -Wshadow
+EXTRA_CXX_FLAGS += -Wformat-security -Wformat-nonliteral
+# EXTRA_CXX_FLAGS += -Wvla
 
 # SSE4.1-specific flags:
 ifeq ($(HAVE_SSE41), 1)
@@ -91,13 +96,19 @@ endif
 
 AR = ar
 ARFLAGS = r
-CC = gcc
 CPPFLAGS = -Isrc/ -Wall
-CFLAGS = -O3 -DNDEBUG $(EXTRA_FLAGS)
+COMMONFLAGS = -O3 -DNDEBUG $(EXTRA_FLAGS)
+CC = gcc
+CFLAGS = $(COMMONFLAGS) $(EXTRA_C89_FLAGS)
+CXX = g++
+CXXFLAGS = $(COMMONFLAGS) $(EXTRA_CXX_FLAGS)
 INSTALL = install
 GROFF = /usr/bin/groff
 COL = /usr/bin/col
 LDFLAGS = $(EXTRA_LIBS) $(EXTRA_FLAGS) -lm
+
+ANIM_UTIL_OBJS = \
+    examples/anim_util.o \
 
 DEC_OBJS = \
     src/dec/alpha.o \
@@ -282,16 +293,17 @@ OUT_LIBS = examples/libexample_util.a src/libwebpdecoder.a src/libwebp.a
 EXTRA_LIB = src/libwebpextras.a
 OUT_EXAMPLES = examples/cwebp examples/dwebp
 EXTRA_EXAMPLES = examples/gif2webp examples/vwebp examples/webpmux
+EXTRA_CXX_EXAMPLES = examples/anim_diff
 
 OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES)
 ifeq ($(MAKECMDGOALS),clean)
-  OUTPUT += $(EXTRA_EXAMPLES)
+  OUTPUT += $(EXTRA_EXAMPLES) $(EXTRA_CXX_EXAMPLES)
   OUTPUT += src/demux/libwebpdemux.a src/mux/libwebpmux.a $(EXTRA_LIB)
-  OUTPUT += examples/libgifdec.a
+  OUTPUT += examples/libgifdec.a examples/libanim_util.a
 endif
 
 ex: $(OUT_EXAMPLES)
-all: ex $(EXTRA_EXAMPLES)
+all: ex $(EXTRA_EXAMPLES) $(EXTRA_CXX_EXAMPLES)
 extras: $(EXTRA_LIB)
 
 $(EX_FORMAT_DEC_OBJS): %.o: %.h
@@ -307,6 +319,10 @@ src/utils/bit_writer.o: src/utils/endian_inl.h
 %.o: %.c $(HDRS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
+%.o: %.cc $(HDRS)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+
+examples/libanim_util.a: $(ANIM_UTIL_OBJS)
 examples/libexample_util.a: $(EX_UTIL_OBJS)
 examples/libgifdec.a: $(GIFDEC_OBJS)
 src/libwebpdecoder.a: $(LIBWEBPDECODER_OBJS)
@@ -318,12 +334,17 @@ src/libwebpextras.a: $(LIBWEBPEXTRA_OBJS)
 %.a:
 	$(AR) $(ARFLAGS) $@ $^
 
+examples/anim_diff: examples/anim_diff.o $(ANIM_UTIL_OBJS) $(GIFDEC_OBJS)
 examples/cwebp: examples/cwebp.o $(EX_FORMAT_DEC_OBJS)
 examples/dwebp: examples/dwebp.o
 examples/gif2webp: examples/gif2webp.o $(GIFDEC_OBJS)
 examples/vwebp: examples/vwebp.o
 examples/webpmux: examples/webpmux.o
 
+examples/anim_diff: examples/libanim_util.a examples/libgifdec.a
+examples/anim_diff: src/demux/libwebpdemux.a src/libwebp.a
+examples/anim_diff: EXTRA_LIBS += $(GIF_LIBS)
+examples/anim_diff: EXTRA_FLAGS += -DWEBP_HAVE_GIF
 examples/cwebp: examples/libexample_util.a src/libwebp.a
 examples/cwebp: EXTRA_LIBS += $(CWEBP_LIBS)
 examples/dwebp: examples/libexample_util.a src/libwebpdecoder.a
@@ -341,6 +362,9 @@ examples/webpmux: src/libwebpdecoder.a
 
 $(OUT_EXAMPLES) $(EXTRA_EXAMPLES):
 	$(CC) -o $@ $^ $(LDFLAGS)
+
+$(EXTRA_CXX_EXAMPLES):
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
 dist: DESTDIR := dist
 dist: OUT_EXAMPLES += $(EXTRA_EXAMPLES)
