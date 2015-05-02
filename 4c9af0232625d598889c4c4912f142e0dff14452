@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f06142bc_96ba7d4b",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1435,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-05-02T03:31:11Z",
+      "side": 1,
+      "message": "this looks a bit odd for the notopleft case, but it gets taken care of correctly with gcc-4.8, no other differences:\n\n00000ee0 \u003cDC8uvNoTopLeft\u003e:\n     ee0: ffc0 0e10   vmov.i8 d16, #128 ; 0x80\n     ee4: f100 01a0   add.w r1, r0, #160  ; 0xa0\n     ee8: b4f0        push  {r4, r5, r6, r7}\n     eea: f100 02c0   add.w r2, r0, #192  ; 0xc0\n     eee: f100 0720   add.w r7, r0, #32\n     ef2: f100 0640   add.w r6, r0, #64 ; 0x40\n     ef6: f100 0560   add.w r5, r0, #96 ; 0x60\n     efa: f100 0480   add.w r4, r0, #128  ; 0x80\n     efe: f100 03e0   add.w r3, r0, #224  ; 0xe0\n     f02: f940 078f   vst1.32 {d16}, [r0]\n     f06: f947 078f   vst1.32 {d16}, [r7]\n     f0a: f946 078f   vst1.32 {d16}, [r6]\n     f0e: f945 078f   vst1.32 {d16}, [r5]\n     f12: f944 078f   vst1.32 {d16}, [r4]\n     f16: f941 078f   vst1.32 {d16}, [r1]\n     f1a: f942 078f   vst1.32 {d16}, [r2]\n     f1e: f943 078f   vst1.32 {d16}, [r3]\n     f22: bcf0        pop {r4, r5, r6, r7}\n     f24: 4770        bx  lr\n     f26: bf00        nop",
+      "revId": "4c9af0232625d598889c4c4912f142e0dff14452",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
