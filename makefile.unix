@@ -286,7 +286,7 @@ EXTRA_EXAMPLES = examples/gif2webp examples/vwebp examples/webpmux
 OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES)
 ifeq ($(MAKECMDGOALS),clean)
   OUTPUT += $(EXTRA_EXAMPLES)
-  OUTPUT += src/demux/libwebpdemux.a src/mux/libwebpmux.a
+  OUTPUT += src/demux/libwebpdemux.a src/mux/libwebpmux.a $(EXTRA_LIB)
   OUTPUT += examples/libgifdec.a
 endif
 
@@ -368,6 +368,7 @@ clean:
               src/demux/*.o src/demux/*~ \
               src/dsp/*.o src/dsp/*~ \
               src/enc/*.o src/enc/*~ \
+              src/extras/*.o src/extras/*~ \
               src/mux/*.o src/mux/*~ \
               src/utils/*.o src/utils/*~ \
               src/webp/*~ man/*~ doc/*~ swig/*~ \
