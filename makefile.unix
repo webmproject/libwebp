@@ -373,19 +373,5 @@ clean:
               src/utils/*.o src/utils/*~ \
               src/webp/*~ man/*~ doc/*~ swig/*~ \
 
-superclean: clean
-	$(RM) -r .git *.log *.cache *~
-	$(RM) -r .deps */.deps */*/.deps
-	$(RM) -r .libs */.libs */*/.libs
-	$(RM) */*.lo */*/*.lo
-	$(RM) */*.la */*/*.la
-	$(RM) Makefile */Makefile */*/Makefile
-	$(RM) Makefile.in */Makefile.in */*/Makefile.in
-	$(RM) config.log autom4te.cache libtool config.h stamp-h1
-	$(RM) aclocal.m4 compile
-	$(RM) config.guess config.h.in config.sub config.status
-	$(RM) configure depcomp install-sh ltmain.sh missing src/libwebp.pc
-	$(RM) m4/*
-
-.PHONY: all clean dist ex superclean
+.PHONY: all clean dist ex
 .SUFFIXES:
