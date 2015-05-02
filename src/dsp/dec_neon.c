@@ -1425,8 +1425,10 @@ static WEBP_INLINE void DC8(uint8_t* dst, int do_top, int do_left) {
     dc0 = vrshrn_n_u16(sum, 4);
   } else if (do_top) {
     dc0 = vrshrn_n_u16(sum_top, 3);
-  } else {
+  } else if (do_left) {
     dc0 = vrshrn_n_u16(sum_left, 3);
+  } else {
+    dc0 = vdup_n_u8(0x80);
   }
 
   {
@@ -1441,6 +1443,7 @@ static WEBP_INLINE void DC8(uint8_t* dst, int do_top, int do_left) {
 static void DC8uv(uint8_t* dst) { DC8(dst, 1, 1); }
 static void DC8uvNoTop(uint8_t* dst) { DC8(dst, 0, 1); }
 static void DC8uvNoLeft(uint8_t* dst) { DC8(dst, 1, 0); }
+static void DC8uvNoTopLeft(uint8_t* dst) { DC8(dst, 0, 0); }
 
 static void TM8uv(uint8_t* dst) { TrueMotion(dst, 8); }
 
@@ -1482,6 +1485,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitNEON(void) {
   VP8PredChroma8[1] = TM8uv;
   VP8PredChroma8[4] = DC8uvNoTop;
   VP8PredChroma8[5] = DC8uvNoLeft;
+  VP8PredChroma8[6] = DC8uvNoTopLeft;
 }
 
 #else  // !WEBP_USE_NEON
