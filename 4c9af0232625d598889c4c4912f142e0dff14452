@@ -16,6 +16,24 @@
       "revId": "4c9af0232625d598889c4c4912f142e0dff14452",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "105416e3_50ee4c04",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1435,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-05-02T06:22:15Z",
+      "side": 1,
+      "message": "good inlining of the whole function indeed.",
+      "parentUuid": "f06142bc_96ba7d4b",
+      "revId": "4c9af0232625d598889c4c4912f142e0dff14452",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
