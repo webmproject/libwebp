@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0d407d41_79eb1ba9",
+        "filename": "configure.ac",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-05-06T20:08:45Z",
+      "side": 1,
+      "message": "For some strange reason, adding push and pop for C results in Autoconf generating an error:\nconfigure.ac:66: error: AC_LANG_POP(C++): unexpected current language: C\n\nI double checked tat I wrote the syntax correctly; not sure why autoconf thinks there is a mismatch.\n\nSo, leaving as it is.",
+      "parentUuid": "cd24a5a6_45661429",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8d1e2d58_ee0183c0",
         "filename": "configure.ac",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2015-05-06T03:15:35Z",
       "side": 1,
       "message": "old-style-cast?",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d36f5df_35491a42",
+        "filename": "configure.ac",
+        "patchSetId": 3
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-05-06T20:08:45Z",
+      "side": 1,
+      "message": "Added here and in makefile.unix.\nAlso, corrected a couple of warnings caught by this.\nThanks!",
+      "parentUuid": "8d1e2d58_ee0183c0",
       "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "2d39c1d0_746686db",
+        "filename": "examples/anim_diff.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-05-06T20:08:45Z",
+      "side": 1,
+      "message": "Done (here and other files)",
+      "parentUuid": "6d19f971_a81a5fed",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cd24a5a6_c58a24ea",
         "filename": "examples/anim_diff.cc",
         "patchSetId": 3
@@ -64,6 +118,24 @@
       "writtenOn": "2015-05-06T03:15:35Z",
       "side": 1,
       "message": "help goes to stdout in the other tools",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d36f5df_b53cea90",
+        "filename": "examples/anim_diff.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-05-06T20:08:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cd24a5a6_c58a24ea",
       "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "4d36f5df_75c8c227",
+        "filename": "examples/anim_diff.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-05-06T20:08:45Z",
+      "side": 1,
+      "message": "Added explicitly.",
+      "parentUuid": "6d19f971_280f6fb7",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cd24a5a6_45705488",
         "filename": "examples/anim_util.cc",
         "patchSetId": 3
@@ -98,6 +188,24 @@
       "writtenOn": "2015-05-06T03:15:35Z",
       "side": 1,
       "message": "add a copyright",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d39c1d0_d45652e6",
+        "filename": "examples/anim_util.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-05-06T20:08:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cd24a5a6_45705488",
       "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "0d407d41_19ff6f79",
+        "filename": "examples/anim_util.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-05-06T20:08:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cd24a5a6_25755878",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6d19f971_682e8711",
         "filename": "examples/anim_util.cc",
         "patchSetId": 3
@@ -132,6 +258,24 @@
       "writtenOn": "2015-05-06T03:15:35Z",
       "side": 1,
       "message": "...the full canvas",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d407d41_f9038b0f",
+        "filename": "examples/anim_util.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-05-06T20:08:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6d19f971_682e8711",
       "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "4d36f5df_b5e50aa9",
+        "filename": "examples/anim_util.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-05-06T20:08:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8d1e2d58_09ccb9b6",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8d1e2d58_29e09510",
         "filename": "examples/anim_util.cc",
         "patchSetId": 3
@@ -166,6 +328,24 @@
       "writtenOn": "2015-05-06T03:15:35Z",
       "side": 1,
       "message": "fix alignment",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d407d41_591e1763",
+        "filename": "examples/anim_util.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-05-06T20:08:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8d1e2d58_29e09510",
       "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -189,6 +369,24 @@
     },
     {
       "key": {
+        "uuid": "4d36f5df_75f1e265",
+        "filename": "examples/anim_util.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-05-06T20:08:45Z",
+      "side": 1,
+      "message": "clang formatted",
+      "parentUuid": "cd24a5a6_e55640e6",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8d1e2d58_2919b5ae",
         "filename": "examples/anim_util.cc",
         "patchSetId": 3
@@ -200,6 +398,24 @@
       "writtenOn": "2015-05-06T03:15:35Z",
       "side": 1,
       "message": "visual studio might warn for this given blend_r will be promoted to an int; you can leave it for now, since there isn\u0027t a build solution for this yet",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d39c1d0_b463cec2",
+        "filename": "examples/anim_util.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-05-06T20:08:45Z",
+      "side": 1,
+      "message": "Alright, let\u0027s take care of it if needed when I add it to Makefile.vc",
+      "parentUuid": "8d1e2d58_2919b5ae",
       "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -223,6 +439,24 @@
     },
     {
       "key": {
+        "uuid": "4d36f5df_95e2069d",
+        "filename": "examples/anim_util.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 786,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-05-06T20:08:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6d19f971_08ef1332",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6d19f971_8829e309",
         "filename": "examples/anim_util.h",
         "patchSetId": 3
@@ -234,6 +468,24 @@
       "writtenOn": "2015-05-06T03:15:35Z",
       "side": 1,
       "message": "add a copyright",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d39c1d0_546b829f",
+        "filename": "examples/anim_util.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-05-06T20:08:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6d19f971_8829e309",
       "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -257,6 +509,24 @@
     },
     {
       "key": {
+        "uuid": "2d39c1d0_1475fa77",
+        "filename": "examples/anim_util.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-05-06T20:08:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cd24a5a6_656b50a0",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8d1e2d58_4e59978e",
         "filename": "examples/anim_util.h",
         "patchSetId": 3
@@ -268,6 +538,24 @@
       "writtenOn": "2015-05-06T03:15:35Z",
       "side": 1,
       "message": "could be struct NNN given it\u0027s c++ here",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d407d41_79f0bbaa",
+        "filename": "examples/anim_util.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-05-06T20:08:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8d1e2d58_4e59978e",
       "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
