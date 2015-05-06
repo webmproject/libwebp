@@ -1,0 +1,276 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd24a5a6_45661429",
+        "filename": "configure.ac",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-05-06T03:15:35Z",
+      "side": 1,
+      "message": "I probably forgot it when I first added this, but you could balance this with a AC_LANG_PUSH([C]) (and pop later).",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d1e2d58_ee0183c0",
+        "filename": "configure.ac",
+        "patchSetId": 3
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-05-06T03:15:35Z",
+      "side": 1,
+      "message": "old-style-cast?",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d19f971_a81a5fed",
+        "filename": "examples/anim_diff.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-05-06T03:15:35Z",
+      "side": 1,
+      "message": "add a copyright",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd24a5a6_c58a24ea",
+        "filename": "examples/anim_diff.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-05-06T03:15:35Z",
+      "side": 1,
+      "message": "help goes to stdout in the other tools",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d19f971_280f6fb7",
+        "filename": "examples/anim_diff.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-05-06T03:15:35Z",
+      "side": 1,
+      "message": "you must be transitively picking up string.h",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd24a5a6_45705488",
+        "filename": "examples/anim_util.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-05-06T03:15:35Z",
+      "side": 1,
+      "message": "add a copyright",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd24a5a6_25755878",
+        "filename": "examples/anim_util.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-05-06T03:15:35Z",
+      "side": 1,
+      "message": "this could go in the \u0027other\u0027 include bucket, below the sys c/c++ includes",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d19f971_682e8711",
+        "filename": "examples/anim_util.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-05-06T03:15:35Z",
+      "side": 1,
+      "message": "...the full canvas",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d1e2d58_09ccb9b6",
+        "filename": "examples/anim_util.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-05-06T03:15:35Z",
+      "side": 1,
+      "message": "must be picking up string.h from somewhere again...",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d1e2d58_29e09510",
+        "filename": "examples/anim_util.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-05-06T03:15:35Z",
+      "side": 1,
+      "message": "fix alignment",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd24a5a6_e55640e6",
+        "filename": "examples/anim_util.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-05-06T03:15:35Z",
+      "side": 1,
+      "message": "indent looks off here",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d1e2d58_2919b5ae",
+        "filename": "examples/anim_util.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-05-06T03:15:35Z",
+      "side": 1,
+      "message": "visual studio might warn for this given blend_r will be promoted to an int; you can leave it for now, since there isn\u0027t a build solution for this yet",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d19f971_08ef1332",
+        "filename": "examples/anim_util.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 786,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-05-06T03:15:35Z",
+      "side": 1,
+      "message": "fix alignment",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d19f971_8829e309",
+        "filename": "examples/anim_util.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-05-06T03:15:35Z",
+      "side": 1,
+      "message": "add a copyright",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd24a5a6_656b50a0",
+        "filename": "examples/anim_util.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-05-06T03:15:35Z",
+      "side": 1,
+      "message": "needed? maybe just webp/types at this level",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d1e2d58_4e59978e",
+        "filename": "examples/anim_util.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-05-06T03:15:35Z",
+      "side": 1,
+      "message": "could be struct NNN given it\u0027s c++ here",
+      "revId": "4a39fd068744b97c167df0a9649cd851d10033a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
