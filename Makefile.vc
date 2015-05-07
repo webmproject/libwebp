@@ -150,6 +150,7 @@ CFGSET = TRUE
 !MESSAGE - (empty)                        - build libwebp-based targets for CFG
 !MESSAGE - all                            - build (de)mux-based targets for CFG
 !MESSAGE - gif2webp                       - requires libgif & >= VS2013
+!MESSAGE - anim_diff                      - requires libgif & >= VS2013
 !MESSAGE
 !MESSAGE RTLIBCFG controls the runtime library linkage - 'static' or 'dynamic'.
 !MESSAGE   'legacy' will produce a Windows 2000 compatible library.
@@ -236,6 +237,9 @@ DSP_ENC_OBJS = \
     $(DIROBJ)\dsp\lossless_enc_neon.obj \
     $(DIROBJ)\dsp\lossless_enc_sse2.obj \
 
+EX_ANIM_UTIL_OBJS = \
+    $(DIROBJ)\examples\anim_util.obj \
+
 EX_FORMAT_DEC_OBJS = \
     $(DIROBJ)\examples\jpegdec.obj \
     $(DIROBJ)\examples\metadata.obj \
@@ -311,10 +315,13 @@ EXTRA_EXAMPLES = $(DIRBIN)\vwebp.exe $(DIRBIN)\webpmux.exe
 
 ex: $(OUT_LIBS) $(OUT_EXAMPLES)
 all: ex $(EXTRA_EXAMPLES)
-# NB: gif2webp.exe is excluded from 'all' as libgif requires C99 support which
-# is only available from VS2013 onward.
+# NB: gif2webp.exe and anim_diff.exe are excluded from 'all' as libgif requires
+# C99 support which is only available from VS2013 onward.
 gif2webp: $(DIRBIN)\gif2webp.exe
+anim_diff: $(DIRBIN)\anim_diff.exe
 
+$(DIRBIN)\anim_diff.exe: $(DIROBJ)\examples\anim_diff.obj $(EX_ANIM_UTIL_OBJS)
+$(DIRBIN)\anim_diff.exe: $(EX_GIF_DEC_OBJS) $(LIBWEBPDEMUX) $(LIBWEBP)
 $(DIRBIN)\cwebp.exe: $(DIROBJ)\examples\cwebp.obj $(EX_FORMAT_DEC_OBJS)
 $(DIRBIN)\dwebp.exe: $(DIROBJ)\examples\dwebp.obj
 $(DIRBIN)\gif2webp.exe: $(DIROBJ)\examples\gif2webp.obj $(EX_GIF_DEC_OBJS)
@@ -381,12 +388,18 @@ $(DIROBJ)\$(DLLC): $(DIROBJ)\$(DLLINC)
 	@echo   free(ptr); >> $@
 	@echo } >> $@
 
-.SUFFIXES: .c .obj .res .exe
+.SUFFIXES: .c .cc .obj .res .exe
 # File-specific flag builds. Note batch rules take precedence over wildcards,
 # so for now name each file individually.
 $(DIROBJ)\dsp\enc_avx2.obj: src\dsp\enc_avx2.c
 	$(CC) $(CFLAGS) $(AVX2_FLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$(DIROBJ)\dsp\ \
 	  src\dsp\$(@B).c
+$(DIROBJ)\examples\anim_diff.obj: examples\anim_diff.cc
+	$(CC) $(CFLAGS) /DWEBP_HAVE_GIF /Fd$(LIBWEBP_PDBNAME) \
+	  /Fo$(DIROBJ)\examples\ examples\$(@B).cc
+$(DIROBJ)\examples\anim_util.obj: examples\anim_util.cc
+	$(CC) $(CFLAGS) /DWEBP_HAVE_GIF /Fd$(LIBWEBP_PDBNAME) \
+	  /Fo$(DIROBJ)\examples\ examples\$(@B).cc
 $(DIROBJ)\examples\gif2webp.obj: examples\gif2webp.c
 	$(CC) $(CFLAGS) /DWEBP_HAVE_GIF /Fd$(LIBWEBP_PDBNAME) \
 	  /Fo$(DIROBJ)\examples\ examples\$(@B).c
