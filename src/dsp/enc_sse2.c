@@ -488,6 +488,479 @@ static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
 }
 
 //------------------------------------------------------------------------------
+// Intra predictions
+
+// helper for chroma-DC predictions
+static WEBP_INLINE void Put8x8uv(uint8_t v, uint8_t* dst) {
+  int j;
+  const __m128i values = _mm_set1_epi8(v);
+  for (j = 0; j < 8; ++j) {
+    _mm_storel_epi64((__m128i*)(dst + j * BPS), values);
+  }
+}
+
+static WEBP_INLINE void Put16(uint8_t v, uint8_t* dst) {
+  int j;
+  const __m128i values = _mm_set1_epi8(v);
+  for (j = 0; j < 16; ++j) {
+    _mm_store_si128((__m128i*)(dst + j * BPS), values);
+  }
+}
+
+static WEBP_INLINE void Fill(uint8_t* dst, int value, int size) {
+  if (size == 4) {
+    int j;
+    for (j = 0; j < 4; ++j) {
+      memset(dst + j * BPS, value, 4);
+    }
+  } else if (size == 8) {
+    Put8x8uv(value, dst);
+  } else {
+    Put16(value, dst);
+  }
+}
+
+static WEBP_INLINE void VE8uv(uint8_t* dst, const uint8_t* top) {
+  int j;
+  const __m128i top_values = _mm_loadl_epi64((const __m128i*)top);
+  for (j = 0; j < 8; ++j) {
+    _mm_storel_epi64((__m128i*)(dst + j * BPS), top_values);
+  }
+}
+
+static WEBP_INLINE void VE16(uint8_t* dst, const uint8_t* top) {
+  const __m128i top_values = _mm_load_si128((const __m128i*)top);
+  int j;
+  for (j = 0; j < 16; ++j) {
+    _mm_store_si128((__m128i*)(dst + j * BPS), top_values);
+  }
+}
+
+static WEBP_INLINE void VerticalPred(uint8_t* dst,
+                                     const uint8_t* top, int size) {
+  if (top != NULL) {
+    if (size == 8) {
+      VE8uv(dst, top);
+    } else {
+      VE16(dst, top);
+    }
+  } else {
+    Fill(dst, 127, size);
+  }
+}
+
+static WEBP_INLINE void HE8uv(uint8_t* dst, const uint8_t* left) {
+  int j;
+  for (j = 0; j < 8; ++j) {
+    const __m128i values = _mm_set1_epi8(left[j]);
+    _mm_storel_epi64((__m128i*)dst, values);
+    dst += BPS;
+  }
+}
+
+static WEBP_INLINE void HE16(uint8_t* dst, const uint8_t* left) {
+  int j;
+  for (j = 0; j < 16; ++j) {
+    const __m128i values = _mm_set1_epi8(left[j]);
+    _mm_store_si128((__m128i*)dst, values);
+    dst += BPS;
+  }
+}
+
+static WEBP_INLINE void HorizontalPred(uint8_t* dst,
+                                       const uint8_t* left, int size) {
+  if (left != NULL) {
+    if (size == 8) {
+      HE8uv(dst, left);
+    } else {
+      HE16(dst, left);
+    }
+  } else {
+    Fill(dst, 129, size);
+  }
+}
+
+static WEBP_INLINE void TM(uint8_t* dst, const uint8_t* left,
+                           const uint8_t* top, int size) {
+  const __m128i zero = _mm_setzero_si128();
+  int y;
+  if (size == 8) {
+    const __m128i top_values = _mm_loadl_epi64((const __m128i*)top);
+    const __m128i top_base = _mm_unpacklo_epi8(top_values, zero);
+    for (y = 0; y < 8; ++y, dst += BPS) {
+      const int val = left[y] - left[-1];
+      const __m128i base = _mm_set1_epi16(val);
+      const __m128i out = _mm_packus_epi16(_mm_add_epi16(base, top_base), zero);
+      _mm_storel_epi64((__m128i*)dst, out);
+    }
+  } else {
+    const __m128i top_values = _mm_load_si128((const __m128i*)top);
+    const __m128i top_base_0 = _mm_unpacklo_epi8(top_values, zero);
+    const __m128i top_base_1 = _mm_unpackhi_epi8(top_values, zero);
+    for (y = 0; y < 16; ++y, dst += BPS) {
+      const int val = left[y] - left[-1];
+      const __m128i base = _mm_set1_epi16(val);
+      const __m128i out_0 = _mm_add_epi16(base, top_base_0);
+      const __m128i out_1 = _mm_add_epi16(base, top_base_1);
+      const __m128i out = _mm_packus_epi16(out_0, out_1);
+      _mm_store_si128((__m128i*)dst, out);
+    }
+  }
+}
+
+static WEBP_INLINE void TrueMotion(uint8_t* dst, const uint8_t* left,
+                                   const uint8_t* top, int size) {
+  if (left != NULL) {
+    if (top != NULL) {
+      TM(dst, left, top, size);
+    } else {
+      HorizontalPred(dst, left, size);
+    }
+  } else {
+    // true motion without left samples (hence: with default 129 value)
+    // is equivalent to VE prediction where you just copy the top samples.
+    // Note that if top samples are not available, the default value is
+    // then 129, and not 127 as in the VerticalPred case.
+    if (top != NULL) {
+      VerticalPred(dst, top, size);
+    } else {
+      Fill(dst, 129, size);
+    }
+  }
+}
+
+static WEBP_INLINE void DC8uv(uint8_t* dst, const uint8_t* left,
+                              const uint8_t* top) {
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i top_values = _mm_loadl_epi64((const __m128i*)top);
+  const __m128i left_values = _mm_loadl_epi64((const __m128i*)left);
+  const __m128i sum_top = _mm_sad_epu8(top_values, zero);
+  const __m128i sum_left = _mm_sad_epu8(left_values, zero);
+  const int DC = _mm_cvtsi128_si32(sum_top) + _mm_cvtsi128_si32(sum_left) + 8;
+  Put8x8uv(DC >> 4, dst);
+}
+
+static WEBP_INLINE void DC8uvNoLeft(uint8_t* dst, const uint8_t* top) {
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i top_values = _mm_loadl_epi64((const __m128i*)top);
+  const __m128i sum = _mm_sad_epu8(top_values, zero);
+  const int DC = _mm_cvtsi128_si32(sum) + 4;
+  Put8x8uv(DC >> 3, dst);
+}
+
+static WEBP_INLINE void DC8uvNoTop(uint8_t* dst, const uint8_t* left) {
+  // 'left' is contiguous so we can reuse the top summation.
+  DC8uvNoLeft(dst, left);
+}
+
+static WEBP_INLINE void DC8uvNoTopLeft(uint8_t* dst) {
+  Put8x8uv(0x80, dst);
+}
+
+static WEBP_INLINE void DC8uvMode(uint8_t* dst, const uint8_t* left,
+                                  const uint8_t* top) {
+  if (top != NULL) {
+    if (left != NULL) {  // top and left present
+      DC8uv(dst, left, top);
+    } else {  // top, but no left
+      DC8uvNoLeft(dst, top);
+    }
+  } else if (left != NULL) {  // left but no top
+    DC8uvNoTop(dst, left);
+  } else {  // no top, no left, nothing.
+    DC8uvNoTopLeft(dst);
+  }
+}
+
+static WEBP_INLINE void DC16(uint8_t* dst, const uint8_t* left,
+                             const uint8_t* top) {
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i top_row = _mm_load_si128((const __m128i*)top);
+  const __m128i left_row = _mm_load_si128((const __m128i*)left);
+  const __m128i sad8x2 = _mm_sad_epu8(top_row, zero);
+  // sum the two sads: sad8x2[0:1] + sad8x2[8:9]
+  const __m128i sum_top = _mm_add_epi16(sad8x2, _mm_shuffle_epi32(sad8x2, 2));
+  const __m128i sad8x2_left = _mm_sad_epu8(left_row, zero);
+  // sum the two sads: sad8x2[0:1] + sad8x2[8:9]
+  const __m128i sum_left =
+      _mm_add_epi16(sad8x2_left, _mm_shuffle_epi32(sad8x2_left, 2));
+  const int DC = _mm_cvtsi128_si32(sum_top) + _mm_cvtsi128_si32(sum_left) + 16;
+  Put16(DC >> 5, dst);
+}
+
+static WEBP_INLINE void DC16NoLeft(uint8_t* dst, const uint8_t* top) {
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i top_row = _mm_load_si128((const __m128i*)top);
+  const __m128i sad8x2 = _mm_sad_epu8(top_row, zero);
+  // sum the two sads: sad8x2[0:1] + sad8x2[8:9]
+  const __m128i sum = _mm_add_epi16(sad8x2, _mm_shuffle_epi32(sad8x2, 2));
+  const int DC = _mm_cvtsi128_si32(sum) + 8;
+  Put16(DC >> 4, dst);
+}
+
+static WEBP_INLINE void DC16NoTop(uint8_t* dst, const uint8_t* left) {
+  // 'left' is contiguous so we can reuse the top summation.
+  DC16NoLeft(dst, left);
+}
+
+static WEBP_INLINE void DC16NoTopLeft(uint8_t* dst) {
+  Put16(0x80, dst);
+}
+
+static WEBP_INLINE void DC16Mode(uint8_t* dst, const uint8_t* left,
+                                 const uint8_t* top) {
+  if (top != NULL) {
+    if (left != NULL) {  // top and left present
+      DC16(dst, left, top);
+    } else {  // top, but no left
+      DC16NoLeft(dst, top);
+    }
+  } else if (left != NULL) {  // left but no top
+    DC16NoTop(dst, left);
+  } else {  // no top, no left, nothing.
+    DC16NoTopLeft(dst);
+  }
+}
+
+//------------------------------------------------------------------------------
+// 4x4 predictions
+
+#define DST(x, y) dst[(x) + (y) * BPS]
+#define AVG3(a, b, c) (((a) + 2 * (b) + (c) + 2) >> 2)
+#define AVG2(a, b) (((a) + (b) + 1) >> 1)
+
+// We use the following 8b-arithmetic tricks:
+//     (a + 2 * b + c + 2) >> 2 = (AC + b + 1) >> 1
+//   where: AC = (a + c) >> 1 = [(a + c + 1) >> 1] - [(a^c) & 1]
+// and:
+//     (a + 2 * b + c + 2) >> 2 = (AB + BC + 1) >> 1 - (ab|bc)&lsb
+//   where: AC = (a + b + 1) >> 1,   BC = (b + c + 1) >> 1
+//   and ab = a ^ b, bc = b ^ c, lsb = (AC^BC)&1
+
+static WEBP_INLINE void VE4(uint8_t* dst, const uint8_t* top) {  // vertical
+  const __m128i one = _mm_set1_epi8(1);
+  const __m128i ABCDEFGH = _mm_loadl_epi64((__m128i*)(top - 1));
+  const __m128i BCDEFGH0 = _mm_srli_si128(ABCDEFGH, 1);
+  const __m128i CDEFGH00 = _mm_srli_si128(ABCDEFGH, 2);
+  const __m128i a = _mm_avg_epu8(ABCDEFGH, CDEFGH00);
+  const __m128i lsb = _mm_and_si128(_mm_xor_si128(ABCDEFGH, CDEFGH00), one);
+  const __m128i b = _mm_subs_epu8(a, lsb);
+  const __m128i avg = _mm_avg_epu8(b, BCDEFGH0);
+  const uint32_t vals = _mm_cvtsi128_si32(avg);
+  int i;
+  for (i = 0; i < 4; ++i) {
+    *(uint32_t*)(dst + i * BPS) = vals;
+  }
+}
+
+static WEBP_INLINE void HE4(uint8_t* dst, const uint8_t* top) {  // horizontal
+  const int X = top[-1];
+  const int I = top[-2];
+  const int J = top[-3];
+  const int K = top[-4];
+  const int L = top[-5];
+  *(uint32_t*)(dst + 0 * BPS) = 0x01010101U * AVG3(X, I, J);
+  *(uint32_t*)(dst + 1 * BPS) = 0x01010101U * AVG3(I, J, K);
+  *(uint32_t*)(dst + 2 * BPS) = 0x01010101U * AVG3(J, K, L);
+  *(uint32_t*)(dst + 3 * BPS) = 0x01010101U * AVG3(K, L, L);
+}
+
+static WEBP_INLINE void DC4(uint8_t* dst, const uint8_t* top) {
+  uint32_t dc = 4;
+  int i;
+  for (i = 0; i < 4; ++i) dc += top[i] + top[-5 + i];
+  Fill(dst, dc >> 3, 4);
+}
+
+static WEBP_INLINE void LD4(uint8_t* dst, const uint8_t* top) {  // Down-Left
+  const __m128i one = _mm_set1_epi8(1);
+  const __m128i ABCDEFGH = _mm_loadl_epi64((const __m128i*)top);
+  const __m128i BCDEFGH0 = _mm_srli_si128(ABCDEFGH, 1);
+  const __m128i CDEFGH00 = _mm_srli_si128(ABCDEFGH, 2);
+  const __m128i CDEFGHH0 = _mm_insert_epi16(CDEFGH00, top[7], 3);
+  const __m128i avg1 = _mm_avg_epu8(ABCDEFGH, CDEFGHH0);
+  const __m128i lsb = _mm_and_si128(_mm_xor_si128(ABCDEFGH, CDEFGHH0), one);
+  const __m128i avg2 = _mm_subs_epu8(avg1, lsb);
+  const __m128i abcdefg = _mm_avg_epu8(avg2, BCDEFGH0);
+  *(uint32_t*)(dst + 0 * BPS) = _mm_cvtsi128_si32(               abcdefg    );
+  *(uint32_t*)(dst + 1 * BPS) = _mm_cvtsi128_si32(_mm_srli_si128(abcdefg, 1));
+  *(uint32_t*)(dst + 2 * BPS) = _mm_cvtsi128_si32(_mm_srli_si128(abcdefg, 2));
+  *(uint32_t*)(dst + 3 * BPS) = _mm_cvtsi128_si32(_mm_srli_si128(abcdefg, 3));
+}
+
+static WEBP_INLINE void VR4(uint8_t* dst,
+                            const uint8_t* top) {  // Vertical-Right
+  const __m128i one = _mm_set1_epi8(1);
+  const int I = top[-2];
+  const int J = top[-3];
+  const int K = top[-4];
+  const int X = top[-1];
+  const __m128i XABCD = _mm_loadl_epi64((const __m128i*)(top - 1));
+  const __m128i ABCD0 = _mm_srli_si128(XABCD, 1);
+  const __m128i abcd = _mm_avg_epu8(XABCD, ABCD0);
+  const __m128i _XABCD = _mm_slli_si128(XABCD, 1);
+  const __m128i IXABCD = _mm_insert_epi16(_XABCD, I | (X << 8), 0);
+  const __m128i avg1 = _mm_avg_epu8(IXABCD, ABCD0);
+  const __m128i lsb = _mm_and_si128(_mm_xor_si128(IXABCD, ABCD0), one);
+  const __m128i avg2 = _mm_subs_epu8(avg1, lsb);
+  const __m128i efgh = _mm_avg_epu8(avg2, XABCD);
+  *(uint32_t*)(dst + 0 * BPS) = _mm_cvtsi128_si32(               abcd    );
+  *(uint32_t*)(dst + 1 * BPS) = _mm_cvtsi128_si32(               efgh    );
+  *(uint32_t*)(dst + 2 * BPS) = _mm_cvtsi128_si32(_mm_slli_si128(abcd, 1));
+  *(uint32_t*)(dst + 3 * BPS) = _mm_cvtsi128_si32(_mm_slli_si128(efgh, 1));
+
+  // these two are hard to implement in SSE2, so we keep the C-version:
+  DST(0, 2) = AVG3(J, I, X);
+  DST(0, 3) = AVG3(K, J, I);
+}
+
+static WEBP_INLINE void VL4(uint8_t* dst,
+                            const uint8_t* top) {  // Vertical-Left
+  const __m128i one = _mm_set1_epi8(1);
+  const __m128i ABCDEFGH = _mm_loadl_epi64((const __m128i*)top);
+  const __m128i BCDEFGH_ = _mm_srli_si128(ABCDEFGH, 1);
+  const __m128i CDEFGH__ = _mm_srli_si128(ABCDEFGH, 2);
+  const __m128i avg1 = _mm_avg_epu8(ABCDEFGH, BCDEFGH_);
+  const __m128i avg2 = _mm_avg_epu8(CDEFGH__, BCDEFGH_);
+  const __m128i avg3 = _mm_avg_epu8(avg1, avg2);
+  const __m128i lsb1 = _mm_and_si128(_mm_xor_si128(avg1, avg2), one);
+  const __m128i ab = _mm_xor_si128(ABCDEFGH, BCDEFGH_);
+  const __m128i bc = _mm_xor_si128(CDEFGH__, BCDEFGH_);
+  const __m128i abbc = _mm_or_si128(ab, bc);
+  const __m128i lsb2 = _mm_and_si128(abbc, lsb1);
+  const __m128i avg4 = _mm_subs_epu8(avg3, lsb2);
+  const uint32_t extra_out = _mm_cvtsi128_si32(_mm_srli_si128(avg4, 4));
+  *(uint32_t*)(dst + 0 * BPS) = _mm_cvtsi128_si32(               avg1    );
+  *(uint32_t*)(dst + 1 * BPS) = _mm_cvtsi128_si32(               avg4    );
+  *(uint32_t*)(dst + 2 * BPS) = _mm_cvtsi128_si32(_mm_srli_si128(avg1, 1));
+  *(uint32_t*)(dst + 3 * BPS) = _mm_cvtsi128_si32(_mm_srli_si128(avg4, 1));
+
+  // these two are hard to get and irregular
+  DST(3, 2) = (extra_out >> 0) & 0xff;
+  DST(3, 3) = (extra_out >> 8) & 0xff;
+}
+
+static WEBP_INLINE void RD4(uint8_t* dst, const uint8_t* top) {  // Down-right
+  const __m128i one = _mm_set1_epi8(1);
+  const __m128i LKJIXABC = _mm_loadl_epi64((const __m128i*)(top - 5));
+  const __m128i LKJIXABCD = _mm_insert_epi16(LKJIXABC, top[3], 4);
+  const __m128i KJIXABCD_ = _mm_srli_si128(LKJIXABCD, 1);
+  const __m128i JIXABCD__ = _mm_srli_si128(LKJIXABCD, 2);
+  const __m128i avg1 = _mm_avg_epu8(JIXABCD__, LKJIXABCD);
+  const __m128i lsb = _mm_and_si128(_mm_xor_si128(JIXABCD__, LKJIXABCD), one);
+  const __m128i avg2 = _mm_subs_epu8(avg1, lsb);
+  const __m128i abcdefg = _mm_avg_epu8(avg2, KJIXABCD_);
+  *(uint32_t*)(dst + 3 * BPS) = _mm_cvtsi128_si32(               abcdefg    );
+  *(uint32_t*)(dst + 2 * BPS) = _mm_cvtsi128_si32(_mm_srli_si128(abcdefg, 1));
+  *(uint32_t*)(dst + 1 * BPS) = _mm_cvtsi128_si32(_mm_srli_si128(abcdefg, 2));
+  *(uint32_t*)(dst + 0 * BPS) = _mm_cvtsi128_si32(_mm_srli_si128(abcdefg, 3));
+}
+
+static WEBP_INLINE void HU4(uint8_t* dst, const uint8_t* top) {
+  const int I = top[-2];
+  const int J = top[-3];
+  const int K = top[-4];
+  const int L = top[-5];
+  DST(0, 0) =             AVG2(I, J);
+  DST(2, 0) = DST(0, 1) = AVG2(J, K);
+  DST(2, 1) = DST(0, 2) = AVG2(K, L);
+  DST(1, 0) =             AVG3(I, J, K);
+  DST(3, 0) = DST(1, 1) = AVG3(J, K, L);
+  DST(3, 1) = DST(1, 2) = AVG3(K, L, L);
+  DST(3, 2) = DST(2, 2) =
+  DST(0, 3) = DST(1, 3) = DST(2, 3) = DST(3, 3) = L;
+}
+
+static WEBP_INLINE void HD4(uint8_t* dst, const uint8_t* top) {
+  const int X = top[-1];
+  const int I = top[-2];
+  const int J = top[-3];
+  const int K = top[-4];
+  const int L = top[-5];
+  const int A = top[0];
+  const int B = top[1];
+  const int C = top[2];
+
+  DST(0, 0) = DST(2, 1) = AVG2(I, X);
+  DST(0, 1) = DST(2, 2) = AVG2(J, I);
+  DST(0, 2) = DST(2, 3) = AVG2(K, J);
+  DST(0, 3)             = AVG2(L, K);
+
+  DST(3, 0)             = AVG3(A, B, C);
+  DST(2, 0)             = AVG3(X, A, B);
+  DST(1, 0) = DST(3, 1) = AVG3(I, X, A);
+  DST(1, 1) = DST(3, 2) = AVG3(J, I, X);
+  DST(1, 2) = DST(3, 3) = AVG3(K, J, I);
+  DST(1, 3)             = AVG3(L, K, J);
+}
+
+static WEBP_INLINE void TM4(uint8_t* dst, const uint8_t* top) {
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i top_values = _mm_cvtsi32_si128(*(const int*)top);
+  const __m128i top_base = _mm_unpacklo_epi8(top_values, zero);
+  int y;
+  for (y = 0; y < 4; ++y, dst += BPS) {
+    const int val = top[-2 - y] - top[-1];
+    const __m128i base = _mm_set1_epi16(val);
+    const __m128i out = _mm_packus_epi16(_mm_add_epi16(base, top_base), zero);
+    *(int*)dst = _mm_cvtsi128_si32(out);
+  }
+}
+
+#undef DST
+#undef AVG3
+#undef AVG2
+
+//------------------------------------------------------------------------------
+// luma 4x4 prediction
+
+// Left samples are top[-5 .. -2], top_left is top[-1], top are
+// located at top[0..3], and top right is top[4..7]
+static void Intra4Preds(uint8_t* dst, const uint8_t* top) {
+  DC4(I4DC4 + dst, top);
+  TM4(I4TM4 + dst, top);
+  VE4(I4VE4 + dst, top);
+  HE4(I4HE4 + dst, top);
+  RD4(I4RD4 + dst, top);
+  VR4(I4VR4 + dst, top);
+  LD4(I4LD4 + dst, top);
+  VL4(I4VL4 + dst, top);
+  HD4(I4HD4 + dst, top);
+  HU4(I4HU4 + dst, top);
+}
+
+//------------------------------------------------------------------------------
+// Chroma 8x8 prediction (paragraph 12.2)
+
+static void IntraChromaPreds(uint8_t* dst, const uint8_t* left,
+                             const uint8_t* top) {
+  // U block
+  DC8uvMode(C8DC8 + dst, left, top);
+  VerticalPred(C8VE8 + dst, top, 8);
+  HorizontalPred(C8HE8 + dst, left, 8);
+  TrueMotion(C8TM8 + dst, left, top, 8);
+  // V block
+  dst += 8;
+  if (top != NULL) top += 8;
+  if (left != NULL) left += 16;
+  DC8uvMode(C8DC8 + dst, left, top);
+  VerticalPred(C8VE8 + dst, top, 8);
+  HorizontalPred(C8HE8 + dst, left, 8);
+  TrueMotion(C8TM8 + dst, left, top, 8);
+}
+
+//------------------------------------------------------------------------------
+// luma 16x16 prediction (paragraph 12.3)
+
+static void Intra16Preds(uint8_t* dst,
+                         const uint8_t* left, const uint8_t* top) {
+  DC16Mode(I16DC16 + dst, left, top);
+  VerticalPred(I16VE16 + dst, top, 16);
+  HorizontalPred(I16HE16 + dst, left, 16);
+  TrueMotion(I16TM16 + dst, left, top, 16);
+}
+
+//------------------------------------------------------------------------------
 // Metric
 
 static WEBP_INLINE __m128i SubtractAndAccumulate(const __m128i a,
@@ -921,6 +1394,9 @@ extern void VP8EncDspInitSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitSSE2(void) {
   VP8CollectHistogram = CollectHistogram;
+  VP8EncPredLuma16 = Intra16Preds;
+  VP8EncPredChroma8 = IntraChromaPreds;
+  VP8EncPredLuma4 = Intra4Preds;
   VP8EncQuantizeBlock = QuantizeBlock;
   VP8EncQuantize2Blocks = Quantize2Blocks;
   VP8EncQuantizeBlockWHT = QuantizeBlockWHT;
