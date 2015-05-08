@@ -1448,6 +1448,70 @@ static void DC8uvNoTopLeft(uint8_t* dst) { DC8(dst, 0, 0); }
 static void TM8uv(uint8_t* dst) { TrueMotion(dst, 8); }
 
 //------------------------------------------------------------------------------
+// 16x16
+static WEBP_INLINE void DC16(uint8_t* dst, int do_top, int do_left) {
+  uint16x8_t sum_top;
+  uint16x8_t sum_left;
+  uint8x8_t dc0;
+
+  if (do_top) {
+    const uint8x16_t A = vld1q_u8(dst - BPS);  // top row
+    const uint16x8_t p0 = vpaddlq_u8(A);  // cascading summation of the top
+    const uint16x4_t p1 = vadd_u16(vget_low_u16(p0), vget_high_u16(p0));
+    const uint16x4_t p2 = vpadd_u16(p1, p1);
+    const uint16x4_t p3 = vpadd_u16(p2, p2);
+    sum_top = vcombine_u16(p3, p3);
+  }
+
+  if (do_left) {
+    int i;
+    sum_left = vdupq_n_u16(0);
+    for (i = 0; i < 16; i += 8) {
+      const uint16x8_t L0 = vmovl_u8(vld1_u8(dst + (i + 0) * BPS - 1));
+      const uint16x8_t L1 = vmovl_u8(vld1_u8(dst + (i + 1) * BPS - 1));
+      const uint16x8_t L2 = vmovl_u8(vld1_u8(dst + (i + 2) * BPS - 1));
+      const uint16x8_t L3 = vmovl_u8(vld1_u8(dst + (i + 3) * BPS - 1));
+      const uint16x8_t L4 = vmovl_u8(vld1_u8(dst + (i + 4) * BPS - 1));
+      const uint16x8_t L5 = vmovl_u8(vld1_u8(dst + (i + 5) * BPS - 1));
+      const uint16x8_t L6 = vmovl_u8(vld1_u8(dst + (i + 6) * BPS - 1));
+      const uint16x8_t L7 = vmovl_u8(vld1_u8(dst + (i + 7) * BPS - 1));
+      const uint16x8_t s0 = vaddq_u16(L0, L1);
+      const uint16x8_t s1 = vaddq_u16(L2, L3);
+      const uint16x8_t s2 = vaddq_u16(L4, L5);
+      const uint16x8_t s3 = vaddq_u16(L6, L7);
+      const uint16x8_t s01 = vaddq_u16(s0, s1);
+      const uint16x8_t s23 = vaddq_u16(s2, s3);
+      const uint16x8_t sum = vaddq_u16(s01, s23);
+      sum_left = vaddq_u16(sum_left, sum);
+    }
+  }
+
+  if (do_top && do_left) {
+    const uint16x8_t sum = vaddq_u16(sum_left, sum_top);
+    dc0 = vrshrn_n_u16(sum, 5);
+  } else if (do_top) {
+    dc0 = vrshrn_n_u16(sum_top, 4);
+  } else if (do_left) {
+    dc0 = vrshrn_n_u16(sum_left, 4);
+  } else {
+    dc0 = vdup_n_u8(0x80);
+  }
+
+  {
+    const uint8x16_t dc = vdupq_lane_u8(dc0, 0);
+    int i;
+    for (i = 0; i < 16; ++i) {
+      vst1q_u8(dst + i * BPS, dc);
+    }
+  }
+}
+
+static void DC16TopLeft(uint8_t* dst) { DC16(dst, 1, 1); }
+static void DC16NoTop(uint8_t* dst) { DC16(dst, 0, 1); }
+static void DC16NoLeft(uint8_t* dst) { DC16(dst, 1, 0); }
+static void DC16NoTopLeft(uint8_t* dst) { DC16(dst, 0, 0); }
+
+//------------------------------------------------------------------------------
 // Entry point
 
 extern void VP8DspInitNEON(void);
@@ -1480,6 +1544,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitNEON(void) {
   VP8PredLuma4[2] = VE4;
   VP8PredLuma4[4] = RD4;
   VP8PredLuma4[6] = LD4;
+
+  VP8PredLuma16[0] = DC16TopLeft;
+  VP8PredLuma16[4] = DC16NoTop;
+  VP8PredLuma16[5] = DC16NoLeft;
+  VP8PredLuma16[6] = DC16NoTopLeft;
 
   VP8PredChroma8[0] = DC8uv;
   VP8PredChroma8[1] = TM8uv;
