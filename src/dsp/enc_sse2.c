@@ -446,6 +446,7 @@ static void FTransformWHT(const int16_t* in, int16_t* out) {
 static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
                              int start_block, int end_block,
                              VP8Histogram* const histo) {
+  const __m128i zero = _mm_setzero_si128();
   const __m128i max_coeff_thresh = _mm_set1_epi16(MAX_COEFF_THRESH);
   int j;
   int distribution[MAX_COEFF_THRESH + 1] = { 0 };
@@ -460,14 +461,10 @@ static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
       // Load.
       const __m128i out0 = _mm_loadu_si128((__m128i*)&out[0]);
       const __m128i out1 = _mm_loadu_si128((__m128i*)&out[8]);
-      // sign(out) = out >> 15  (0x0000 if positive, 0xffff if negative)
-      const __m128i sign0 = _mm_srai_epi16(out0, 15);
-      const __m128i sign1 = _mm_srai_epi16(out1, 15);
-      // abs(out) = (out ^ sign) - sign
-      const __m128i xor0 = _mm_xor_si128(out0, sign0);
-      const __m128i xor1 = _mm_xor_si128(out1, sign1);
-      const __m128i abs0 = _mm_sub_epi16(xor0, sign0);
-      const __m128i abs1 = _mm_sub_epi16(xor1, sign1);
+      const __m128i d0 = _mm_sub_epi16(zero, out0);
+      const __m128i d1 = _mm_sub_epi16(zero, out1);
+      const __m128i abs0 = _mm_max_epi16(out0, d0);   // abs(v), 16b
+      const __m128i abs1 = _mm_max_epi16(out1, d1);
       // v = abs(out) >> 3
       const __m128i v0 = _mm_srai_epi16(abs0, 3);
       const __m128i v1 = _mm_srai_epi16(abs1, 3);
