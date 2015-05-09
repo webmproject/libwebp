@@ -1197,21 +1197,14 @@ static int TTransform(const uint8_t* inA, const uint8_t* inB,
     __m128i B_b2 = _mm_unpackhi_epi64(b2, b3);
 
     {
-      // sign(b) = b >> 15  (0x0000 if positive, 0xffff if negative)
-      const __m128i sign_A_b0 = _mm_srai_epi16(A_b0, 15);
-      const __m128i sign_A_b2 = _mm_srai_epi16(A_b2, 15);
-      const __m128i sign_B_b0 = _mm_srai_epi16(B_b0, 15);
-      const __m128i sign_B_b2 = _mm_srai_epi16(B_b2, 15);
-
-      // b = abs(b) = (b ^ sign) - sign
-      A_b0 = _mm_xor_si128(A_b0, sign_A_b0);
-      A_b2 = _mm_xor_si128(A_b2, sign_A_b2);
-      B_b0 = _mm_xor_si128(B_b0, sign_B_b0);
-      B_b2 = _mm_xor_si128(B_b2, sign_B_b2);
-      A_b0 = _mm_sub_epi16(A_b0, sign_A_b0);
-      A_b2 = _mm_sub_epi16(A_b2, sign_A_b2);
-      B_b0 = _mm_sub_epi16(B_b0, sign_B_b0);
-      B_b2 = _mm_sub_epi16(B_b2, sign_B_b2);
+      const __m128i d0 = _mm_sub_epi16(zero, A_b0);
+      const __m128i d1 = _mm_sub_epi16(zero, A_b2);
+      const __m128i d2 = _mm_sub_epi16(zero, B_b0);
+      const __m128i d3 = _mm_sub_epi16(zero, B_b2);
+      A_b0 = _mm_max_epi16(A_b0, d0);   // abs(v), 16b
+      A_b2 = _mm_max_epi16(A_b2, d1);
+      B_b0 = _mm_max_epi16(B_b0, d2);
+      B_b2 = _mm_max_epi16(B_b2, d3);
     }
 
     // weighted sums
