@@ -73,7 +73,8 @@ extern "C" {
 #define WEBP_USE_NEON
 #endif
 
-#if defined(__mips__) && !defined(__mips64) && (__mips_isa_rev < 6)
+#if defined(__mips__) && !defined(__mips64) && \
+    defined(__mips_isa_rev) && (__mips_isa_rev >= 1) && (__mips_isa_rev < 6)
 #define WEBP_USE_MIPS32
 #if (__mips_isa_rev >= 2)
 #define WEBP_USE_MIPS32_R2
