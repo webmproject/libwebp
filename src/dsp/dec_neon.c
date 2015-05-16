@@ -1241,7 +1241,7 @@ static void TransformWHT(const int16_t* in, int16_t* out) {
 static void TransformAC3(const int16_t* in, uint8_t* dst) {
   static const int kC1_full = 20091 + (1 << 16);
   static const int kC2_full = 35468;
-  const int16x4_t A = vdup_n_s16(in[0]);
+  const int16x4_t A = vld1_dup_s16(in);
   const int16x4_t c4 = vdup_n_s16(MUL(in[4], kC2_full));
   const int16x4_t d4 = vdup_n_s16(MUL(in[4], kC1_full));
   const int c1 = MUL(in[1], kC2_full);
@@ -1283,7 +1283,7 @@ static void DC4(uint8_t* dst) {    // DC
 
 // TrueMotion (4x4 + 8x8)
 static WEBP_INLINE void TrueMotion(uint8_t* dst, int size) {
-  const uint8x8_t TL = vdup_n_u8(dst[-BPS - 1]);  // top-left pixel 'A[-1]'
+  const uint8x8_t TL = vld1_dup_u8(dst - BPS - 1);  // top-left pixel 'A[-1]'
   const uint8x8_t T = vld1_u8(dst - BPS);  // top row 'A[0..3]'
   const int16x8_t d = vreinterpretq_s16_u16(vsubl_u8(T, TL));  // A[c] - A[-1]
   int y;
@@ -1508,7 +1508,7 @@ static void DC16NoLeft(uint8_t* dst) { DC16(dst, 1, 0); }
 static void DC16NoTopLeft(uint8_t* dst) { DC16(dst, 0, 0); }
 
 static void TM16(uint8_t* dst) {
-  const uint8x8_t TL = vdup_n_u8(dst[-BPS - 1]);  // top-left pixel 'A[-1]'
+  const uint8x8_t TL = vld1_dup_u8(dst - BPS - 1);  // top-left pixel 'A[-1]'
   const uint8x16_t T = vld1q_u8(dst - BPS);  // top row 'A[0..15]'
   // A[c] - A[-1]
   const int16x8_t d_lo = vreinterpretq_s16_u16(vsubl_u8(vget_low_u8(T), TL));
