@@ -1507,6 +1507,40 @@ static void DC16NoTop(uint8_t* dst) { DC16(dst, 0, 1); }
 static void DC16NoLeft(uint8_t* dst) { DC16(dst, 1, 0); }
 static void DC16NoTopLeft(uint8_t* dst) { DC16(dst, 0, 0); }
 
+static void TM16(uint8_t* dst) {
+  const uint8x8_t TL = vdup_n_u8(dst[-BPS - 1]);  // top-left pixel 'A[-1]'
+  const uint8x16_t T = vld1q_u8(dst - BPS);  // top row 'A[0..15]'
+  // A[c] - A[-1]
+  const int16x8_t d_lo = vreinterpretq_s16_u16(vsubl_u8(vget_low_u8(T), TL));
+  const int16x8_t d_hi = vreinterpretq_s16_u16(vsubl_u8(vget_high_u8(T), TL));
+  int y;
+  for (y = 0; y < 16; y += 4) {
+    // left edge
+    const int16x8_t L0 = ConvertU8ToS16(vld1_dup_u8(dst + 0 * BPS - 1));
+    const int16x8_t L1 = ConvertU8ToS16(vld1_dup_u8(dst + 1 * BPS - 1));
+    const int16x8_t L2 = ConvertU8ToS16(vld1_dup_u8(dst + 2 * BPS - 1));
+    const int16x8_t L3 = ConvertU8ToS16(vld1_dup_u8(dst + 3 * BPS - 1));
+    const int16x8_t r0_lo = vaddq_s16(L0, d_lo);  // L[r] + A[c] - A[-1]
+    const int16x8_t r1_lo = vaddq_s16(L1, d_lo);
+    const int16x8_t r2_lo = vaddq_s16(L2, d_lo);
+    const int16x8_t r3_lo = vaddq_s16(L3, d_lo);
+    const int16x8_t r0_hi = vaddq_s16(L0, d_hi);
+    const int16x8_t r1_hi = vaddq_s16(L1, d_hi);
+    const int16x8_t r2_hi = vaddq_s16(L2, d_hi);
+    const int16x8_t r3_hi = vaddq_s16(L3, d_hi);
+    // Saturate and store the result.
+    const uint8x16_t row0 = vcombine_u8(vqmovun_s16(r0_lo), vqmovun_s16(r0_hi));
+    const uint8x16_t row1 = vcombine_u8(vqmovun_s16(r1_lo), vqmovun_s16(r1_hi));
+    const uint8x16_t row2 = vcombine_u8(vqmovun_s16(r2_lo), vqmovun_s16(r2_hi));
+    const uint8x16_t row3 = vcombine_u8(vqmovun_s16(r3_lo), vqmovun_s16(r3_hi));
+    vst1q_u8(dst + 0 * BPS, row0);
+    vst1q_u8(dst + 1 * BPS, row1);
+    vst1q_u8(dst + 2 * BPS, row2);
+    vst1q_u8(dst + 3 * BPS, row3);
+    dst += 4 * BPS;
+  }
+}
+
 //------------------------------------------------------------------------------
 // Entry point
 
@@ -1542,6 +1576,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitNEON(void) {
   VP8PredLuma4[6] = LD4;
 
   VP8PredLuma16[0] = DC16TopLeft;
+  VP8PredLuma16[1] = TM16;
   VP8PredLuma16[4] = DC16NoTop;
   VP8PredLuma16[5] = DC16NoLeft;
   VP8PredLuma16[6] = DC16NoTopLeft;
