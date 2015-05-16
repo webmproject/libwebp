@@ -1289,14 +1289,10 @@ static WEBP_INLINE void TrueMotion(uint8_t* dst, int size) {
   int y;
   for (y = 0; y < size; y += 4) {
     // left edge
-    const int16x8_t l0 = ConvertU8ToS16(vld1_u8(dst + 0 * BPS - 1));
-    const int16x8_t l1 = ConvertU8ToS16(vld1_u8(dst + 1 * BPS - 1));
-    const int16x8_t l2 = ConvertU8ToS16(vld1_u8(dst + 2 * BPS - 1));
-    const int16x8_t l3 = ConvertU8ToS16(vld1_u8(dst + 3 * BPS - 1));
-    const int16x8_t L0 = vdupq_lane_s16(vget_low_s16(l0), 0);
-    const int16x8_t L1 = vdupq_lane_s16(vget_low_s16(l1), 0);
-    const int16x8_t L2 = vdupq_lane_s16(vget_low_s16(l2), 0);
-    const int16x8_t L3 = vdupq_lane_s16(vget_low_s16(l3), 0);
+    const int16x8_t L0 = ConvertU8ToS16(vld1_dup_u8(dst + 0 * BPS - 1));
+    const int16x8_t L1 = ConvertU8ToS16(vld1_dup_u8(dst + 1 * BPS - 1));
+    const int16x8_t L2 = ConvertU8ToS16(vld1_dup_u8(dst + 2 * BPS - 1));
+    const int16x8_t L3 = ConvertU8ToS16(vld1_dup_u8(dst + 3 * BPS - 1));
     const int16x8_t r0 = vaddq_s16(L0, d);  // L[r] + A[c] - A[-1]
     const int16x8_t r1 = vaddq_s16(L1, d);
     const int16x8_t r2 = vaddq_s16(L2, d);
