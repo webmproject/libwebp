@@ -177,6 +177,11 @@ static void FTransform(const uint8_t* src, const uint8_t* ref, int16_t* out) {
   }
 }
 
+static void FTransform2(const uint8_t* src, const uint8_t* ref, int16_t* out) {
+  VP8FTransform(src, ref, out);
+  VP8FTransform(src + 4, ref + 4, out + 16);
+}
+
 static void FTransformWHT(const int16_t* in, int16_t* out) {
   // input is 12b signed
   int32_t tmp[16];
@@ -704,6 +709,7 @@ static void Copy16x8(const uint8_t* src, uint8_t* dst) {
 VP8CHisto VP8CollectHistogram;
 VP8Idct VP8ITransform;
 VP8Fdct VP8FTransform;
+VP8Fdct VP8FTransform2;
 VP8WHT VP8FTransformWHT;
 VP8Intra4Preds VP8EncPredLuma4;
 VP8IntraPreds VP8EncPredLuma16;
@@ -740,6 +746,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
   VP8CollectHistogram = CollectHistogram;
   VP8ITransform = ITransform;
   VP8FTransform = FTransform;
+  VP8FTransform2 = FTransform2;
   VP8FTransformWHT = FTransformWHT;
   VP8EncPredLuma4 = Intra4Preds;
   VP8EncPredLuma16 = Intra16Preds;

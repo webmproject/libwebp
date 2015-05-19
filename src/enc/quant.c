@@ -723,8 +723,8 @@ static int ReconstructIntra16(VP8EncIterator* const it,
   int n;
   int16_t tmp[16][16], dc_tmp[16];
 
-  for (n = 0; n < 16; ++n) {
-    VP8FTransform(src + VP8Scan[n], ref + VP8Scan[n], tmp[n]);
+  for (n = 0; n < 16; n += 2) {
+    VP8FTransform2(src + VP8Scan[n], ref + VP8Scan[n], tmp[n]);
   }
   VP8FTransformWHT(tmp[0], dc_tmp);
   nz |= VP8EncQuantizeBlockWHT(dc_tmp, rd->y_dc_levels, &dqm->y2_) << 24;
@@ -797,8 +797,8 @@ static int ReconstructUV(VP8EncIterator* const it, VP8ModeScore* const rd,
   int n;
   int16_t tmp[8][16];
 
-  for (n = 0; n < 8; ++n) {
-    VP8FTransform(src + VP8ScanUV[n], ref + VP8ScanUV[n], tmp[n]);
+  for (n = 0; n < 8; n += 2) {
+    VP8FTransform2(src + VP8ScanUV[n], ref + VP8ScanUV[n], tmp[n]);
   }
   if (DO_TRELLIS_UV && it->do_trellis_) {
     int ch, x, y;
