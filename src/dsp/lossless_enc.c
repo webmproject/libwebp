@@ -935,49 +935,55 @@ static float GetPredictionCostCrossColorBlue(
   return cur_diff;
 }
 
+#define kGreenRedToBlueNumAxis 8
+#define kGreenRedToBlueMaxIters 7
 static void GetBestGreenRedToBlue(
     const uint32_t* argb, int stride, int tile_width, int tile_height,
     VP8LMultipliers prev_x, VP8LMultipliers prev_y, int quality,
     const int accumulated_blue_histo[256],
     VP8LMultipliers* const best_tx) {
-  float best_diff = MAX_DIFF_COST;
-  float cur_diff;
-  const int step = (quality < 25) ? 32 : (quality > 50) ? 8 : 16;
-  const int min_green_to_blue = -32;
-  const int max_green_to_blue = 32;
-  const int min_red_to_blue = -32;
-  const int max_red_to_blue = 32;
-  const int num_iters =
-      (1 + (max_green_to_blue - min_green_to_blue) / step) *
-      (1 + (max_red_to_blue - min_red_to_blue) / step);
-  // Number of tries to get optimal green_to_blue & red_to_blue color transforms
-  // after finding a local minima.
-  const int max_tries_after_min = 4 + (num_iters >> 2);
-  int num_tries_after_min = 0;
-  int green_to_blue;
-  for (green_to_blue = min_green_to_blue;
-       green_to_blue <= max_green_to_blue &&
-       num_tries_after_min < max_tries_after_min;
-       green_to_blue += step) {
-    int red_to_blue;
-    for (red_to_blue = min_red_to_blue;
-         red_to_blue <= max_red_to_blue &&
-         num_tries_after_min < max_tries_after_min;
-         red_to_blue += step) {
-      cur_diff = GetPredictionCostCrossColorBlue(
+  const int8_t offset[kGreenRedToBlueNumAxis][2] =
+      {{0, -1}, {0, 1}, {-1, 0}, {1, 0}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+  const int8_t delta_lut[kGreenRedToBlueMaxIters] = { 16, 16, 8, 4, 2, 2, 2 };
+  const int iters =
+      (quality < 25) ? 1 : (quality > 50) ? kGreenRedToBlueMaxIters : 4;
+  int green_to_blue_best = 0;
+  int red_to_blue_best = 0;
+  int iter;
+  // Initial value at origin:
+  float best_diff = GetPredictionCostCrossColorBlue(
+      argb, stride, tile_width, tile_height, prev_x, prev_y,
+      green_to_blue_best, red_to_blue_best, accumulated_blue_histo);
+  for (iter = 0; iter < iters; ++iter) {
+    const int delta = delta_lut[iter];
+    int axis;
+    for (axis = 0; axis < kGreenRedToBlueNumAxis; ++axis) {
+      const int green_to_blue_cur =
+          offset[axis][0] * delta + green_to_blue_best;
+      const int red_to_blue_cur = offset[axis][1] * delta + red_to_blue_best;
+      const float cur_diff = GetPredictionCostCrossColorBlue(
           argb, stride, tile_width, tile_height, prev_x, prev_y,
-          green_to_blue, red_to_blue, accumulated_blue_histo);
+          green_to_blue_cur, red_to_blue_cur, accumulated_blue_histo);
       if (cur_diff < best_diff) {
         best_diff = cur_diff;
-        best_tx->green_to_blue_ = green_to_blue;
-        best_tx->red_to_blue_ = red_to_blue;
-        num_tries_after_min = 0;
-      } else {
-        ++num_tries_after_min;
+        green_to_blue_best = green_to_blue_cur;
+        red_to_blue_best = red_to_blue_cur;
+      }
+      if (quality < 25 && iter == 4) {
+        // Only axis aligned diffs for lower quality.
+        break;  // next iter.
       }
     }
+    if (delta == 2 && green_to_blue_best == 0 && red_to_blue_best == 0) {
+      // Further iterations would not help.
+      break;  // out of iter-loop.
+    }
   }
+  best_tx->green_to_blue_ = green_to_blue_best;
+  best_tx->red_to_blue_ = red_to_blue_best;
 }
+#undef kGreenRedToBlueMaxIters
+#undef kGreenRedToBlueNumAxis
 
 static VP8LMultipliers GetBestColorTransformForTile(
     int tile_x, int tile_y, int bits,
