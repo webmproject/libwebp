@@ -1385,6 +1385,15 @@ static void LD4(uint8_t* dst) {    // Down-left
 //------------------------------------------------------------------------------
 // Chroma
 
+static void HE8uv(uint8_t* dst) {    // horizontal
+  int j;
+  for (j = 0; j < 8; ++j) {
+    const uint8x8_t left = vld1_dup_u8(dst - 1);
+    vst1_u8(dst, left);
+    dst += BPS;
+  }
+}
+
 static WEBP_INLINE void DC8(uint8_t* dst, int do_top, int do_left) {
   uint16x8_t sum_top;
   uint16x8_t sum_left;
@@ -1445,6 +1454,16 @@ static void TM8uv(uint8_t* dst) { TrueMotion(dst, 8); }
 
 //------------------------------------------------------------------------------
 // 16x16
+
+static void HE16(uint8_t* dst) {     // horizontal
+  int j;
+  for (j = 0; j < 16; ++j) {
+    const uint8x16_t left = vld1q_dup_u8(dst - 1);
+    vst1q_u8(dst, left);
+    dst += BPS;
+  }
+}
+
 static WEBP_INLINE void DC16(uint8_t* dst, int do_top, int do_left) {
   uint16x8_t sum_top;
   uint16x8_t sum_left;
@@ -1577,12 +1596,14 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitNEON(void) {
 
   VP8PredLuma16[0] = DC16TopLeft;
   VP8PredLuma16[1] = TM16;
+  VP8PredLuma16[3] = HE16;
   VP8PredLuma16[4] = DC16NoTop;
   VP8PredLuma16[5] = DC16NoLeft;
   VP8PredLuma16[6] = DC16NoTopLeft;
 
   VP8PredChroma8[0] = DC8uv;
   VP8PredChroma8[1] = TM8uv;
+  VP8PredChroma8[3] = HE8uv;
   VP8PredChroma8[4] = DC8uvNoTop;
   VP8PredChroma8[5] = DC8uvNoLeft;
   VP8PredChroma8[6] = DC8uvNoTopLeft;
