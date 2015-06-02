@@ -854,40 +854,32 @@ static float GetPredictionCostCrossColorRed(
 
 static void GetBestGreenToRed(
     const uint32_t* argb, int stride, int tile_width, int tile_height,
-    VP8LMultipliers prev_x, VP8LMultipliers prev_y,
+    VP8LMultipliers prev_x, VP8LMultipliers prev_y, int quality,
     const int accumulated_red_histo[256], VP8LMultipliers* const best_tx) {
-  int min_green_to_red = -64;
-  int max_green_to_red = 64;
-  int green_to_red = 0;
-  int eval_min = 1;
-  int eval_max = 1;
-  float cur_diff_min = MAX_DIFF_COST;
-  float cur_diff_max = MAX_DIFF_COST;
-  // Do a binary search to find the optimal green_to_red color transform.
-  while (max_green_to_red - min_green_to_red > 2) {
-    if (eval_min) {
-      cur_diff_min = GetPredictionCostCrossColorRed(
-          argb, stride, tile_width, tile_height,
-          prev_x, prev_y, min_green_to_red, accumulated_red_histo);
-      eval_min = 0;
-    }
-    if (eval_max) {
-      cur_diff_max = GetPredictionCostCrossColorRed(
-          argb, stride, tile_width, tile_height,
-          prev_x, prev_y, max_green_to_red, accumulated_red_histo);
-      eval_max = 0;
-    }
-    if (cur_diff_min < cur_diff_max) {
-      green_to_red = min_green_to_red;
-      max_green_to_red = (max_green_to_red + min_green_to_red) / 2;
-      eval_max = 1;
-    } else {
-      green_to_red = max_green_to_red;
-      min_green_to_red = (max_green_to_red + min_green_to_red) / 2;
-      eval_min = 1;
+  const int kMaxIters = 4 + ((7 * quality) >> 8);  // in range [4..6]
+  int green_to_red_best = 0;
+  int iter, offset;
+  float best_diff = GetPredictionCostCrossColorRed(
+      argb, stride, tile_width, tile_height, prev_x, prev_y,
+      green_to_red_best, accumulated_red_histo);
+  for (iter = 0; iter < kMaxIters; ++iter) {
+    // ColorTransformDelta is a 3.5 bit fixed point, so 32 is equal to
+    // one in color computation. Having initial delta here as 1 is sufficient
+    // to explore the range of (-2, 2).
+    const int delta = 32 >> iter;
+    // Try a negative and a positive delta from the best known value.
+    for (offset = -delta; offset <= delta; offset += 2 * delta) {
+      const int green_to_red_cur = offset + green_to_red_best;
+      const float cur_diff = GetPredictionCostCrossColorRed(
+          argb, stride, tile_width, tile_height, prev_x, prev_y,
+          green_to_red_cur, accumulated_red_histo);
+      if (cur_diff < best_diff) {
+        best_diff = cur_diff;
+        green_to_red_best = green_to_red_cur;
+      }
     }
   }
-  best_tx->green_to_red_ = green_to_red;
+  best_tx->green_to_red_ = green_to_red_best;
 }
 
 static void CollectColorBlueTransforms(const uint32_t* argb, int stride,
@@ -1000,7 +992,7 @@ static VP8LMultipliers GetBestColorTransformForTile(
   MultipliersClear(&best_tx);
 
   GetBestGreenToRed(tile_argb, xsize, tile_width, tile_height,
-                    prev_x, prev_y, accumulated_red_histo, &best_tx);
+                    prev_x, prev_y, quality, accumulated_red_histo, &best_tx);
   GetBestGreenRedToBlue(tile_argb, xsize, tile_width, tile_height,
                         prev_x, prev_y, quality, accumulated_blue_histo,
                         &best_tx);
