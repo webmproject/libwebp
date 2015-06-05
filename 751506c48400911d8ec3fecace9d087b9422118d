@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99e914d2_97091337",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-06-05T21:42:39Z",
+      "side": 1,
+      "message": "I didn\u0027t check the asm, but for the simple loopfilter we don\u0027t employ inline quite that much",
+      "revId": "751506c48400911d8ec3fecace9d087b9422118d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
