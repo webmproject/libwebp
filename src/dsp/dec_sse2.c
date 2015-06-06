@@ -520,47 +520,31 @@ static WEBP_INLINE void DoFilter6(__m128i* const p2, __m128i* const p1,
 }
 
 // reads 8 rows across a vertical edge.
-//
-// TODO(somnath): Investigate _mm_shuffle* also see if it can be broken into
-// two Load4x4() to avoid code duplication.
 static WEBP_INLINE void Load8x4(const uint8_t* const b, int stride,
                                 __m128i* const p, __m128i* const q) {
-  __m128i t1, t2;
+  // A0 = 63 62 61 60 23 22 21 20 43 42 41 40 03 02 01 00
+  // A1 = 73 72 71 70 33 32 31 30 53 52 51 50 13 12 11 10
+  const __m128i A0 = _mm_set_epi32(
+      *(const int*)&b[6 * stride], *(const int*)&b[2 * stride],
+      *(const int*)&b[4 * stride], *(const int*)&b[0 * stride]);
+  const __m128i A1 = _mm_set_epi32(
+      *(const int*)&b[7 * stride], *(const int*)&b[3 * stride],
+      *(const int*)&b[5 * stride], *(const int*)&b[1 * stride]);
 
-  // Load 0th, 1st, 4th and 5th rows
-  __m128i r0 =  _mm_cvtsi32_si128(*(const int*)&b[0 * stride]);  // 03 02 01 00
-  __m128i r1 =  _mm_cvtsi32_si128(*(const int*)&b[1 * stride]);  // 13 12 11 10
-  __m128i r4 =  _mm_cvtsi32_si128(*(const int*)&b[4 * stride]);  // 43 42 41 40
-  __m128i r5 =  _mm_cvtsi32_si128(*(const int*)&b[5 * stride]);  // 53 52 51 50
+  // B0 = 53 43 52 42 51 41 50 40 13 03 12 02 11 01 10 00
+  // B1 = 73 63 72 62 71 61 70 60 33 23 32 22 31 21 30 20
+  const __m128i B0 = _mm_unpacklo_epi8(A0, A1);
+  const __m128i B1 = _mm_unpackhi_epi8(A0, A1);
 
-  r0 = _mm_unpacklo_epi32(r0, r4);               // 43 42 41 40 03 02 01 00
-  r1 = _mm_unpacklo_epi32(r1, r5);               // 53 52 51 50 13 12 11 10
-
-  // t1 = 53 43 52 42 51 41 50 40 13 03 12 02 11 01 10 00
-  t1 = _mm_unpacklo_epi8(r0, r1);
-
-  // Load 2nd, 3rd, 6th and 7th rows
-  r0 =  _mm_cvtsi32_si128(*(const int*)&b[2 * stride]);          // 23 22 21 22
-  r1 =  _mm_cvtsi32_si128(*(const int*)&b[3 * stride]);          // 33 32 31 30
-  r4 =  _mm_cvtsi32_si128(*(const int*)&b[6 * stride]);          // 63 62 61 60
-  r5 =  _mm_cvtsi32_si128(*(const int*)&b[7 * stride]);          // 73 72 71 70
-
-  r0 = _mm_unpacklo_epi32(r0, r4);               // 63 62 61 60 23 22 21 20
-  r1 = _mm_unpacklo_epi32(r1, r5);               // 73 72 71 70 33 32 31 30
-
-  // t2 = 73 63 72 62 71 61 70 60 33 23 32 22 31 21 30 20
-  t2 = _mm_unpacklo_epi8(r0, r1);
-
-  // t1 = 33 23 13 03 32 22 12 02 31 21 11 01 30 20 10 00
-  // t2 = 73 63 53 43 72 62 52 42 71 61 51 41 70 60 50 40
-  r0 = t1;
-  t1 = _mm_unpacklo_epi16(t1, t2);
-  t2 = _mm_unpackhi_epi16(r0, t2);
+  // C0 = 33 23 13 03 32 22 12 02 31 21 11 01 30 20 10 00
+  // C1 = 73 63 53 43 72 62 52 42 71 61 51 41 70 60 50 40
+  const __m128i C0 = _mm_unpacklo_epi16(B0, B1);
+  const __m128i C1 = _mm_unpackhi_epi16(B0, B1);
 
   // *p = 71 61 51 41 31 21 11 01 70 60 50 40 30 20 10 00
   // *q = 73 63 53 43 33 23 13 03 72 62 52 42 32 22 12 02
-  *p = _mm_unpacklo_epi32(t1, t2);
-  *q = _mm_unpackhi_epi32(t1, t2);
+  *p = _mm_unpacklo_epi32(C0, C1);
+  *q = _mm_unpackhi_epi32(C0, C1);
 }
 
 static WEBP_INLINE void Load16x4(const uint8_t* const r0,
@@ -568,7 +552,6 @@ static WEBP_INLINE void Load16x4(const uint8_t* const r0,
                                  int stride,
                                  __m128i* const p1, __m128i* const p0,
                                  __m128i* const q0, __m128i* const q1) {
-  __m128i t1, t2;
   // Assume the pixels around the edge (|) are numbered as follows
   //                00 01 | 02 03
   //                10 11 | 12 13
@@ -587,16 +570,18 @@ static WEBP_INLINE void Load16x4(const uint8_t* const r0,
   Load8x4(r0, stride, p1, q0);
   Load8x4(r8, stride, p0, q1);
 
-  t1 = *p1;
-  t2 = *q0;
-  // p1 = f0 e0 d0 c0 b0 a0 90 80 70 60 50 40 30 20 10 00
-  // p0 = f1 e1 d1 c1 b1 a1 91 81 71 61 51 41 31 21 11 01
-  // q0 = f2 e2 d2 c2 b2 a2 92 82 72 62 52 42 32 22 12 02
-  // q1 = f3 e3 d3 c3 b3 a3 93 83 73 63 53 43 33 23 13 03
-  *p1 = _mm_unpacklo_epi64(t1, *p0);
-  *p0 = _mm_unpackhi_epi64(t1, *p0);
-  *q0 = _mm_unpacklo_epi64(t2, *q1);
-  *q1 = _mm_unpackhi_epi64(t2, *q1);
+  {
+    // p1 = f0 e0 d0 c0 b0 a0 90 80 70 60 50 40 30 20 10 00
+    // p0 = f1 e1 d1 c1 b1 a1 91 81 71 61 51 41 31 21 11 01
+    // q0 = f2 e2 d2 c2 b2 a2 92 82 72 62 52 42 32 22 12 02
+    // q1 = f3 e3 d3 c3 b3 a3 93 83 73 63 53 43 33 23 13 03
+    const __m128i t1 = *p1;
+    const __m128i t2 = *q0;
+    *p1 = _mm_unpacklo_epi64(t1, *p0);
+    *p0 = _mm_unpackhi_epi64(t1, *p0);
+    *q0 = _mm_unpacklo_epi64(t2, *q1);
+    *q1 = _mm_unpackhi_epi64(t2, *q1);
+  }
 }
 
 static WEBP_INLINE void Store4x4(__m128i* const x, uint8_t* dst, int stride) {
