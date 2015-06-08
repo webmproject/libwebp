@@ -189,12 +189,24 @@ static int AnalyzeAndCreatePalette(const WebPPicture* const pic,
   return 1;
 }
 
+static void AddSinglePixSubtractGreen(VP8LHistogram* const histo,
+                                      const PixOrCopy* const v) {
+  int green = PixOrCopyLiteral(v, 1);
+  ++histo->alpha_[PixOrCopyLiteral(v, 3)];
+  ++histo->red_[(PixOrCopyLiteral(v, 2) - green) & 0xff];
+  ++histo->literal_[green];
+  ++histo->blue_[(PixOrCopyLiteral(v, 0) - green) & 0xff];
+}
+
 static int AnalyzeEntropy(const uint32_t* argb,
                           int width, int height, int argb_stride,
                           double* const nonpredicted_bits,
-                          double* const predicted_bits) {
+                          double* const predicted_bits,
+                          double* const predicted_sub_green_bits,
+                          double* const nonpredicted_sub_green_bits,
+                          double* const palette_bits) {
   // Allocate histogram set with cache_bits = 0.
-  VP8LHistogramSet* const histo_set = VP8LAllocateHistogramSet(2, 0);
+  VP8LHistogramSet* const histo_set = VP8LAllocateHistogramSet(5, 0);
   assert(nonpredicted_bits != NULL);
   assert(predicted_bits != NULL);
 
@@ -204,6 +216,9 @@ static int AnalyzeEntropy(const uint32_t* argb,
     const uint32_t* curr_row = argb + argb_stride;
     VP8LHistogram* const histo_non_pred = histo_set->histograms[0];
     VP8LHistogram* const histo_pred = histo_set->histograms[1];
+    VP8LHistogram* const histo_pred_subgreen = histo_set->histograms[2];
+    VP8LHistogram* const histo_subgreen = histo_set->histograms[3];
+    VP8LHistogram* const histo_palette = histo_set->histograms[4];
     for (y = 1; y < height; ++y) {
       uint32_t prev_pix = curr_row[0];
       for (x = 1; x < width; ++x) {
@@ -216,6 +231,13 @@ static int AnalyzeEntropy(const uint32_t* argb,
           const PixOrCopy pix_diff_token = PixOrCopyCreateLiteral(pix_diff);
           VP8LHistogramAddSinglePixOrCopy(histo_non_pred, &pix_token);
           VP8LHistogramAddSinglePixOrCopy(histo_pred, &pix_diff_token);
+          AddSinglePixSubtractGreen(histo_subgreen, &pix_token);
+          AddSinglePixSubtractGreen(histo_pred_subgreen, &pix_diff_token);
+        }
+        {
+          // Approximate the palette by the entropy of the multiplicative hash.
+          const int hash = ((pix + (pix >> 19)) * 0x39c5fba7) >> 24;
+          ++histo_palette->red_[hash & 0xff];
         }
       }
       prev_row = curr_row;
@@ -223,41 +245,12 @@ static int AnalyzeEntropy(const uint32_t* argb,
     }
     *nonpredicted_bits = VP8LHistogramEstimateBitsBulk(histo_non_pred);
     *predicted_bits = VP8LHistogramEstimateBitsBulk(histo_pred);
+    *predicted_sub_green_bits =
+        VP8LHistogramEstimateBitsBulk(histo_pred_subgreen);
+    *nonpredicted_sub_green_bits =
+        VP8LHistogramEstimateBitsBulk(histo_subgreen);
+    *palette_bits = VP8LHistogramEstimateBitsBulk(histo_palette);
     VP8LFreeHistogramSet(histo_set);
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
-// Check if it would be a good idea to subtract green from red and blue. We
-// only evaluate entropy in red/blue components, don't bother to look at others.
-static int AnalyzeSubtractGreen(const uint32_t* const argb,
-                                int width, int height,
-                                double* const entropy_change_ratio) {
-  // Allocate histogram set with cache_bits = 1.
-  VP8LHistogramSet* const histo_set = VP8LAllocateHistogramSet(2, 1);
-  assert(entropy_change_ratio != NULL);
-
-  if (histo_set != NULL) {
-    int i;
-    double bit_cost, bit_cost_subgreen;
-    VP8LHistogram* const histo = histo_set->histograms[0];
-    VP8LHistogram* const histo_subgreen = histo_set->histograms[1];
-    for (i = 0; i < width * height; ++i) {
-      const uint32_t c = argb[i];
-      const int green = (c >> 8) & 0xff;
-      const int red = (c >> 16) & 0xff;
-      const int blue = (c >> 0) & 0xff;
-      ++histo->red_[red];
-      ++histo->blue_[blue];
-      ++histo_subgreen->red_[(red - green) & 0xff];
-      ++histo_subgreen->blue_[(blue - green) & 0xff];
-    }
-    bit_cost= VP8LHistogramEstimateBits(histo);
-    bit_cost_subgreen = VP8LHistogramEstimateBits(histo_subgreen);
-    VP8LFreeHistogramSet(histo_set);
-    *entropy_change_ratio = bit_cost_subgreen / (bit_cost + 1e-6);
     return 1;
   } else {
     return 0;
@@ -282,21 +275,7 @@ static int GetTransformBits(int method, int histo_bits) {
   return (histo_bits > max_transform_bits) ? max_transform_bits : histo_bits;
 }
 
-static int EvalSubtractGreenForPalette(int palette_size, float quality) {
-  // Evaluate non-palette encoding (subtract green, prediction transforms etc)
-  // for palette size in the mid-range (17-96) as for larger number of colors,
-  // the benefit from switching to non-palette is not much.
-  // Non-palette transforms are little CPU intensive, hence don't evaluate them
-  // for lower (<= 25) quality.
-  const int min_colors_non_palette = 17;
-  const int max_colors_non_palette = 96;
-  const float min_quality_non_palette = 26.f;
-  return (palette_size >= min_colors_non_palette) &&
-         (palette_size <= max_colors_non_palette) &&
-         (quality >= min_quality_non_palette);
-}
-
-static int AnalyzeAndInit(VP8LEncoder* const enc, WebPImageHint image_hint) {
+static int AnalyzeAndInit(VP8LEncoder* const enc) {
   const WebPPicture* const pic = enc->pic_;
   const int width = pic->width;
   const int height = pic->height;
@@ -304,68 +283,77 @@ static int AnalyzeAndInit(VP8LEncoder* const enc, WebPImageHint image_hint) {
   const WebPConfig* const config = enc->config_;
   const int method = config->method;
   const int low_effort = (config->method == 0);
-  const float quality = config->quality;
-  double subtract_green_score = 10.0;
-  const double subtract_green_threshold_palette = 0.80;
-  const double subtract_green_threshold_non_palette = 1.0;
   // we round the block size up, so we're guaranteed to have
   // at max MAX_REFS_BLOCK_PER_IMAGE blocks used:
   int refs_block_size = (pix_cnt - 1) / MAX_REFS_BLOCK_PER_IMAGE + 1;
+  double non_pred_entropy = 0.;
+  double non_pred_subtract_green_entropy = 0.;
+  double pred_entropy = 0.;
+  double pred_subtract_green_entropy = 0.;
+  double palette_entropy = 0.;
   assert(pic != NULL && pic->argb != NULL);
 
+  enc->use_cross_color_ = 0;
+  enc->use_predict_ = 0;
+  enc->use_subtract_green_ = 0;
   enc->use_palette_ =
       AnalyzeAndCreatePalette(pic, enc->palette_, &enc->palette_size_);
 
-  if (!enc->use_palette_ ||
-      EvalSubtractGreenForPalette(enc->palette_size_, quality)) {
-    if (low_effort) {
-      // For low effort compression, avoid calling (costly) method
-      // AnalyzeSubtractGreen and enable the subtract-green transform
-      // for non-palette images.
-      subtract_green_score = subtract_green_threshold_non_palette * 0.99;
-    } else {
-      if (!AnalyzeSubtractGreen(pic->argb, width, height,
-                                &subtract_green_score)) {
-        return 0;
+  if (low_effort) {
+    // AnalyzeEntropy is somewhat slow.
+    enc->use_predict_ = !enc->use_palette_;
+    enc->use_subtract_green_ = !enc->use_palette_;
+    enc->use_cross_color_ = 0;
+  } else {
+    if (!AnalyzeEntropy(pic->argb, width, height, pic->argb_stride,
+                        &non_pred_entropy, &pred_entropy,
+                        &pred_subtract_green_entropy,
+                        &non_pred_subtract_green_entropy,
+                        &palette_entropy)) {
+      return 0;
+    }
+    palette_entropy -= 10.;  // Small bias in favor of using the palette.
+
+    if (enc->use_palette_) {
+      // Check if avoiding the palette coding likely improves compression.
+      if (palette_entropy >= non_pred_entropy ||
+          palette_entropy >= non_pred_subtract_green_entropy ||
+          palette_entropy >= pred_entropy ||
+          palette_entropy >= pred_subtract_green_entropy) {
+        enc->use_palette_ = 0;
+      }
+    }
+    // TODO(jyrki): make this more clear.
+    if (!enc->use_palette_) {
+      // Choose the smallest of four options.
+      if (non_pred_entropy < non_pred_subtract_green_entropy &&
+          non_pred_entropy < pred_entropy &&
+          non_pred_entropy < pred_subtract_green_entropy) {
+        enc->use_subtract_green_ = 0;
+        enc->use_predict_ = 0;
+        enc->use_cross_color_ = 0;
+      } else if (pred_entropy < non_pred_subtract_green_entropy &&
+                 pred_entropy < pred_subtract_green_entropy) {
+        enc->use_subtract_green_ = 0;
+        enc->use_predict_ = 1;
+        enc->use_cross_color_ = 1;
+      } else if (non_pred_subtract_green_entropy <
+                 pred_subtract_green_entropy) {
+        enc->use_subtract_green_ = 1;
+        enc->use_predict_ = 0;
+        enc->use_cross_color_ = 0;
+      } else {
+        enc->use_subtract_green_ = 1;
+        enc->use_predict_ = 1;
+        enc->use_cross_color_ = 1;
       }
     }
   }
-
   // Evaluate histogram bits based on the original value of use_palette flag.
   enc->histo_bits_ = GetHistoBits(method, enc->use_palette_, pic->width,
                                   pic->height);
   enc->transform_bits_ = GetTransformBits(method, enc->histo_bits_);
 
-  enc->use_subtract_green_ = 0;
-  if (enc->use_palette_) {
-    // Check if other transforms (subtract green etc) are potentially better.
-    if (subtract_green_score < subtract_green_threshold_palette) {
-      enc->use_subtract_green_ = 1;
-      enc->use_palette_ = 0;
-    }
-  } else {
-    // Non-palette case, check if subtract-green optimizes the entropy.
-    if (subtract_green_score < subtract_green_threshold_non_palette) {
-      enc->use_subtract_green_ = 1;
-    }
-  }
-
-  if (!enc->use_palette_) {
-    if (image_hint == WEBP_HINT_PHOTO) {
-      enc->use_predict_ = 1;
-      enc->use_cross_color_ = !low_effort;
-    } else {
-      double non_pred_entropy, pred_entropy;
-      if (!AnalyzeEntropy(pic->argb, width, height, pic->argb_stride,
-                          &non_pred_entropy, &pred_entropy)) {
-        return 0;
-      }
-      if (pred_entropy < 0.95 * non_pred_entropy) {
-        enc->use_predict_ = 1;
-        enc->use_cross_color_ = !low_effort;
-      }
-    }
-  }
   if (!VP8LHashChainInit(&enc->hash_chain_, pix_cnt)) return 0;
 
   // palette-friendly input typically uses less literals
@@ -1256,7 +1244,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   // ---------------------------------------------------------------------------
   // Analyze image (entropy, num_palettes etc)
 
-  if (!AnalyzeAndInit(enc, config->image_hint)) {
+  if (!AnalyzeAndInit(enc)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
