@@ -368,7 +368,15 @@ static int BackwardReferencesRle(int xsize, int ysize,
     if (argb[i] == argb[i - 1]) {
       ++match_len;
     } else {
-      PushBackCopy(refs, match_len);
+      const int kMinLength = 4;
+      if (match_len >= kMinLength) {
+        PushBackCopy(refs, match_len);
+      } else {
+        int k;
+        for(k = match_len; k >= 1; --k) {
+          AddSingleLiteral(argb[i - k], use_color_cache, &hashers, refs);
+        }
+      }
       match_len = 0;
       AddSingleLiteral(argb[i], use_color_cache, &hashers, refs);
     }
