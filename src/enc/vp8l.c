@@ -198,27 +198,26 @@ static void AddSinglePixSubtractGreen(VP8LHistogram* const histo,
   ++histo->blue_[(PixOrCopyLiteral(v, 0) - green) & 0xff];
 }
 
+// These five modes are evaluated and their respective entropy is computed.
+typedef enum {
+  kDirect = 0,
+  kSpatial = 1,
+  kSubGreen = 2,
+  kSpatialSubGreen = 3,
+  kPalette = 4,
+  kNumEntropyIx = 5,
+} EntropyIx;
+
 static int AnalyzeEntropy(const uint32_t* argb,
                           int width, int height, int argb_stride,
-                          double* const nonpredicted_bits,
-                          double* const predicted_bits,
-                          double* const predicted_sub_green_bits,
-                          double* const nonpredicted_sub_green_bits,
-                          double* const palette_bits) {
+                          double entropy[kNumEntropyIx]) {
   // Allocate histogram set with cache_bits = 0.
   VP8LHistogramSet* const histo_set = VP8LAllocateHistogramSet(5, 0);
-  assert(nonpredicted_bits != NULL);
-  assert(predicted_bits != NULL);
-
   if (histo_set != NULL) {
-    int x, y;
+    int i, x, y;
     const uint32_t* prev_row = argb;
     const uint32_t* curr_row = argb + argb_stride;
-    VP8LHistogram* const histo_non_pred = histo_set->histograms[0];
-    VP8LHistogram* const histo_pred = histo_set->histograms[1];
-    VP8LHistogram* const histo_pred_subgreen = histo_set->histograms[2];
-    VP8LHistogram* const histo_subgreen = histo_set->histograms[3];
-    VP8LHistogram* const histo_palette = histo_set->histograms[4];
+    VP8LHistogram* const * const histo = &histo_set->histograms[0];
     for (y = 1; y < height; ++y) {
       uint32_t prev_pix = curr_row[0];
       for (x = 1; x < width; ++x) {
@@ -229,27 +228,23 @@ static int AnalyzeEntropy(const uint32_t* argb,
         {
           const PixOrCopy pix_token = PixOrCopyCreateLiteral(pix);
           const PixOrCopy pix_diff_token = PixOrCopyCreateLiteral(pix_diff);
-          VP8LHistogramAddSinglePixOrCopy(histo_non_pred, &pix_token);
-          VP8LHistogramAddSinglePixOrCopy(histo_pred, &pix_diff_token);
-          AddSinglePixSubtractGreen(histo_subgreen, &pix_token);
-          AddSinglePixSubtractGreen(histo_pred_subgreen, &pix_diff_token);
+          VP8LHistogramAddSinglePixOrCopy(histo[kDirect], &pix_token);
+          VP8LHistogramAddSinglePixOrCopy(histo[kSpatial], &pix_diff_token);
+          AddSinglePixSubtractGreen(histo[kSubGreen], &pix_token);
+          AddSinglePixSubtractGreen(histo[kSpatialSubGreen], &pix_diff_token);
         }
         {
           // Approximate the palette by the entropy of the multiplicative hash.
           const int hash = ((pix + (pix >> 19)) * 0x39c5fba7) >> 24;
-          ++histo_palette->red_[hash & 0xff];
+          ++histo[kPalette]->red_[hash & 0xff];
         }
       }
       prev_row = curr_row;
       curr_row += argb_stride;
     }
-    *nonpredicted_bits = VP8LHistogramEstimateBitsBulk(histo_non_pred);
-    *predicted_bits = VP8LHistogramEstimateBitsBulk(histo_pred);
-    *predicted_sub_green_bits =
-        VP8LHistogramEstimateBitsBulk(histo_pred_subgreen);
-    *nonpredicted_sub_green_bits =
-        VP8LHistogramEstimateBitsBulk(histo_subgreen);
-    *palette_bits = VP8LHistogramEstimateBitsBulk(histo_palette);
+    for (i = 0; i < kNumEntropyIx; ++i) {
+      entropy[i] = VP8LHistogramEstimateBitsBulk(histo[i]);
+    }
     VP8LFreeHistogramSet(histo_set);
     return 1;
   } else {
@@ -286,11 +281,6 @@ static int AnalyzeAndInit(VP8LEncoder* const enc) {
   // we round the block size up, so we're guaranteed to have
   // at max MAX_REFS_BLOCK_PER_IMAGE blocks used:
   int refs_block_size = (pix_cnt - 1) / MAX_REFS_BLOCK_PER_IMAGE + 1;
-  double non_pred_entropy = 0.;
-  double non_pred_subtract_green_entropy = 0.;
-  double pred_entropy = 0.;
-  double pred_subtract_green_entropy = 0.;
-  double palette_entropy = 0.;
   assert(pic != NULL && pic->argb != NULL);
 
   enc->use_cross_color_ = 0;
@@ -305,49 +295,26 @@ static int AnalyzeAndInit(VP8LEncoder* const enc) {
     enc->use_subtract_green_ = !enc->use_palette_;
     enc->use_cross_color_ = 0;
   } else {
+    double entropy[kNumEntropyIx];
+    EntropyIx min_entropy_ix = kDirect;
+    EntropyIx i = kDirect;
+    EntropyIx last_mode_to_analyze;
     if (!AnalyzeEntropy(pic->argb, width, height, pic->argb_stride,
-                        &non_pred_entropy, &pred_entropy,
-                        &pred_subtract_green_entropy,
-                        &non_pred_subtract_green_entropy,
-                        &palette_entropy)) {
+                        &entropy[0])) {
       return 0;
     }
-    palette_entropy -= 10.;  // Small bias in favor of using the palette.
-
-    if (enc->use_palette_) {
-      // Check if avoiding the palette coding likely improves compression.
-      if (palette_entropy >= non_pred_entropy ||
-          palette_entropy >= non_pred_subtract_green_entropy ||
-          palette_entropy >= pred_entropy ||
-          palette_entropy >= pred_subtract_green_entropy) {
-        enc->use_palette_ = 0;
+    entropy[kPalette] -= 10.;  // Small bias in favor of using the palette.
+    last_mode_to_analyze = enc->use_palette_ ? kPalette : kSpatialSubGreen;
+    for (i = 1; i <= last_mode_to_analyze; ++i) {
+      if (entropy[min_entropy_ix] > entropy[i]) {
+        min_entropy_ix = i;
       }
     }
-    // TODO(jyrki): make this more clear.
-    if (!enc->use_palette_) {
-      // Choose the smallest of four options.
-      if (non_pred_entropy < non_pred_subtract_green_entropy &&
-          non_pred_entropy < pred_entropy &&
-          non_pred_entropy < pred_subtract_green_entropy) {
-        enc->use_subtract_green_ = 0;
-        enc->use_predict_ = 0;
-        enc->use_cross_color_ = 0;
-      } else if (pred_entropy < non_pred_subtract_green_entropy &&
-                 pred_entropy < pred_subtract_green_entropy) {
-        enc->use_subtract_green_ = 0;
-        enc->use_predict_ = 1;
-        enc->use_cross_color_ = 1;
-      } else if (non_pred_subtract_green_entropy <
-                 pred_subtract_green_entropy) {
-        enc->use_subtract_green_ = 1;
-        enc->use_predict_ = 0;
-        enc->use_cross_color_ = 0;
-      } else {
-        enc->use_subtract_green_ = 1;
-        enc->use_predict_ = 1;
-        enc->use_cross_color_ = 1;
-      }
-    }
+    enc->use_palette_ = (min_entropy_ix == kPalette);
+    enc->use_subtract_green_ =
+        (min_entropy_ix == kSubGreen) || (min_entropy_ix == kSpatialSubGreen);
+    enc->use_cross_color_ = enc->use_predict_ =
+        (min_entropy_ix == kSpatial) || (min_entropy_ix == kSpatialSubGreen);
   }
   // Evaluate histogram bits based on the original value of use_palette flag.
   enc->histo_bits_ = GetHistoBits(method, enc->use_palette_, pic->width,
