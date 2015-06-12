@@ -301,11 +301,10 @@ static void TransformAC3(const int16_t* in, uint8_t* dst) {
 // Shift each byte of "x" by 3 bits while preserving by the sign bit.
 static WEBP_INLINE void SignedShift8b(__m128i* const x) {
   const __m128i zero = _mm_setzero_si128();
-  const __m128i signs = _mm_cmpgt_epi8(zero, *x);
-  const __m128i lo_0 = _mm_unpacklo_epi8(*x, signs);  // s8 -> s16 sign extend
-  const __m128i hi_0 = _mm_unpackhi_epi8(*x, signs);
-  const __m128i lo_1 = _mm_srai_epi16(lo_0, 3);
-  const __m128i hi_1 = _mm_srai_epi16(hi_0, 3);
+  const __m128i lo_0 = _mm_unpacklo_epi8(zero, *x);
+  const __m128i hi_0 = _mm_unpackhi_epi8(zero, *x);
+  const __m128i lo_1 = _mm_srai_epi16(lo_0, 3 + 8);
+  const __m128i hi_1 = _mm_srai_epi16(hi_0, 3 + 8);
   *x = _mm_packs_epi16(lo_1, hi_1);
 }
 
