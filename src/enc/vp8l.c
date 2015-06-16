@@ -289,6 +289,12 @@ static int AnalyzeAndInit(VP8LEncoder* const enc) {
   enc->use_palette_ =
       AnalyzeAndCreatePalette(pic, enc->palette_, &enc->palette_size_);
 
+  // TODO(jyrki): replace the decision to be based on an actual estimate
+  // of entropy, or even spatial variance of entropy.
+  enc->histo_bits_ = GetHistoBits(method, enc->use_palette_,
+                                  pic->width, pic->height);
+  enc->transform_bits_ = GetTransformBits(method, enc->histo_bits_);
+
   if (low_effort) {
     // AnalyzeEntropy is somewhat slow.
     enc->use_predict_ = !enc->use_palette_;
@@ -316,10 +322,6 @@ static int AnalyzeAndInit(VP8LEncoder* const enc) {
     enc->use_cross_color_ = enc->use_predict_ =
         (min_entropy_ix == kSpatial) || (min_entropy_ix == kSpatialSubGreen);
   }
-  // Evaluate histogram bits based on the original value of use_palette flag.
-  enc->histo_bits_ = GetHistoBits(method, enc->use_palette_, pic->width,
-                                  pic->height);
-  enc->transform_bits_ = GetTransformBits(method, enc->histo_bits_);
 
   if (!VP8LHashChainInit(&enc->hash_chain_, pix_cnt)) return 0;
 
