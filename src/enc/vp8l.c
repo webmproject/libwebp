@@ -210,7 +210,9 @@ typedef enum {
 
 static int AnalyzeEntropy(const uint32_t* argb,
                           int width, int height, int argb_stride,
-                          double entropy[kNumEntropyIx]) {
+                          int use_palette,
+                          EntropyIx* const min_entropy_ix,
+                          int* const red_and_blue_always_zero) {
   // Allocate histogram set with cache_bits = 0.
   VP8LHistogramSet* const histo_set = VP8LAllocateHistogramSet(5, 0);
   if (histo_set != NULL) {
@@ -242,8 +244,29 @@ static int AnalyzeEntropy(const uint32_t* argb,
       prev_row = curr_row;
       curr_row += argb_stride;
     }
-    for (i = 0; i < kNumEntropyIx; ++i) {
-      entropy[i] = VP8LHistogramEstimateBitsBulk(histo[i]);
+    {
+      double entropy[kNumEntropyIx];
+      EntropyIx k;
+      EntropyIx last_mode_to_analyze =
+          use_palette ? kPalette : kSpatialSubGreen;
+      *min_entropy_ix = kDirect;
+      for (k = kDirect; k <= last_mode_to_analyze; ++k) {
+        entropy[k] = VP8LHistogramEstimateBitsBulk(histo[k]);
+        if (k == kDirect || entropy[*min_entropy_ix] >= entropy[k]) {
+          *min_entropy_ix = k;
+        }
+      }
+      *red_and_blue_always_zero = 1;
+      // Let's check if the histogram of the chosen entropy mode has
+      // non-zero red and blue values. If all are zero, we can later skip
+      // the cross color optimization.
+      for (i = 1; i < 256; ++i) {
+        if ((histo[*min_entropy_ix]->red_[i] |
+             histo[*min_entropy_ix]->blue_[i]) != 0) {
+          *red_and_blue_always_zero = 0;
+          break;
+        }
+      }
     }
     VP8LFreeHistogramSet(histo_set);
     return 1;
@@ -301,26 +324,19 @@ static int AnalyzeAndInit(VP8LEncoder* const enc) {
     enc->use_subtract_green_ = !enc->use_palette_;
     enc->use_cross_color_ = 0;
   } else {
-    double entropy[kNumEntropyIx];
-    EntropyIx min_entropy_ix = kDirect;
-    EntropyIx i = kDirect;
-    EntropyIx last_mode_to_analyze;
+    int red_and_blue_always_zero;
+    EntropyIx min_entropy_ix;
     if (!AnalyzeEntropy(pic->argb, width, height, pic->argb_stride,
-                        &entropy[0])) {
+                        enc->use_palette_, &min_entropy_ix,
+                        &red_and_blue_always_zero)) {
       return 0;
-    }
-    entropy[kPalette] -= 10.;  // Small bias in favor of using the palette.
-    last_mode_to_analyze = enc->use_palette_ ? kPalette : kSpatialSubGreen;
-    for (i = 1; i <= last_mode_to_analyze; ++i) {
-      if (entropy[min_entropy_ix] > entropy[i]) {
-        min_entropy_ix = i;
-      }
     }
     enc->use_palette_ = (min_entropy_ix == kPalette);
     enc->use_subtract_green_ =
         (min_entropy_ix == kSubGreen) || (min_entropy_ix == kSpatialSubGreen);
-    enc->use_cross_color_ = enc->use_predict_ =
+    enc->use_predict_ =
         (min_entropy_ix == kSpatial) || (min_entropy_ix == kSpatialSubGreen);
+    enc->use_cross_color_ = red_and_blue_always_zero ? 0 : enc->use_predict_;
   }
 
   if (!VP8LHashChainInit(&enc->hash_chain_, pix_cnt)) return 0;
