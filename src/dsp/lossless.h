@@ -221,6 +221,9 @@ double VP8LPopulationCost(const uint32_t* const population, int length,
 double VP8LGetCombinedEntropy(const uint32_t* const X,
                               const uint32_t* const Y, int length);
 
+double VP8LBitsEntropy(const uint32_t* const array, int n,
+                       uint32_t* const trivial_symbol);
+
 // Estimate how many bits the combined entropy of literals and distance
 // approximately maps to.
 double VP8LHistogramEstimateBits(const VP8LHistogram* const p);

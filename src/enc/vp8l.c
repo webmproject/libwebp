@@ -189,15 +189,6 @@ static int AnalyzeAndCreatePalette(const WebPPicture* const pic,
   return 1;
 }
 
-static void AddSinglePixSubtractGreen(VP8LHistogram* const histo,
-                                      const PixOrCopy* const v) {
-  int green = PixOrCopyLiteral(v, 1);
-  ++histo->alpha_[PixOrCopyLiteral(v, 3)];
-  ++histo->red_[(PixOrCopyLiteral(v, 2) - green) & 0xff];
-  ++histo->literal_[green];
-  ++histo->blue_[(PixOrCopyLiteral(v, 0) - green) & 0xff];
-}
-
 // These five modes are evaluated and their respective entropy is computed.
 typedef enum {
   kDirect = 0,
@@ -205,8 +196,39 @@ typedef enum {
   kSubGreen = 2,
   kSpatialSubGreen = 3,
   kPalette = 4,
-  kNumEntropyIx = 5,
+  kNumEntropyIx = 5
 } EntropyIx;
+
+typedef enum {
+  kHistoAlpha = 0,
+  kHistoAlphaPred,
+  kHistoGreen,
+  kHistoGreenPred,
+  kHistoRed,
+  kHistoRedPred,
+  kHistoBlue,
+  kHistoBluePred,
+  kHistoRedSubGreen,
+  kHistoRedPredSubGreen,
+  kHistoBlueSubGreen,
+  kHistoBluePredSubGreen,
+  kHistoPalette,
+  kHistoTotal  // Must be last.
+} HistoIx;
+
+static void AddSingleSubGreen(uint32_t p, uint32_t* r, uint32_t* b) {
+  const uint32_t green = (p >> 8) & 0xff;
+  ++r[((p >> 16) - green) & 0xff];
+  ++b[(p - green) & 0xff];
+}
+
+static void AddSingle(uint32_t p,
+                      uint32_t* a, uint32_t* r, uint32_t* g, uint32_t* b) {
+  ++a[p >> 24];
+  ++r[(p >> 16) & 0xff];
+  ++g[(p >> 8) & 0xff];
+  ++b[(p & 0xff)];
+}
 
 static int AnalyzeEntropy(const uint32_t* argb,
                           int width, int height, int argb_stride,
@@ -214,12 +236,12 @@ static int AnalyzeEntropy(const uint32_t* argb,
                           EntropyIx* const min_entropy_ix,
                           int* const red_and_blue_always_zero) {
   // Allocate histogram set with cache_bits = 0.
-  VP8LHistogramSet* const histo_set = VP8LAllocateHistogramSet(5, 0);
-  if (histo_set != NULL) {
+  uint32_t* const histo =
+      (uint32_t*)WebPSafeCalloc(kHistoTotal, sizeof(*histo) * 256);
+  if (histo != NULL) {
     int i, x, y;
     const uint32_t* prev_row = argb;
     const uint32_t* curr_row = argb + argb_stride;
-    VP8LHistogram* const * const histo = &histo_set->histograms[0];
     for (y = 1; y < height; ++y) {
       uint32_t prev_pix = curr_row[0];
       for (x = 1; x < width; ++x) {
@@ -227,32 +249,62 @@ static int AnalyzeEntropy(const uint32_t* argb,
         const uint32_t pix_diff = VP8LSubPixels(pix, prev_pix);
         if ((pix_diff == 0) || (pix == prev_row[x])) continue;
         prev_pix = pix;
-        {
-          const PixOrCopy pix_token = PixOrCopyCreateLiteral(pix);
-          const PixOrCopy pix_diff_token = PixOrCopyCreateLiteral(pix_diff);
-          VP8LHistogramAddSinglePixOrCopy(histo[kDirect], &pix_token);
-          VP8LHistogramAddSinglePixOrCopy(histo[kSpatial], &pix_diff_token);
-          AddSinglePixSubtractGreen(histo[kSubGreen], &pix_token);
-          AddSinglePixSubtractGreen(histo[kSpatialSubGreen], &pix_diff_token);
-        }
+        AddSingle(pix,
+                  &histo[kHistoAlpha * 256],
+                  &histo[kHistoRed * 256],
+                  &histo[kHistoGreen * 256],
+                  &histo[kHistoBlue * 256]);
+        AddSingle(pix_diff,
+                  &histo[kHistoAlphaPred * 256],
+                  &histo[kHistoRedPred * 256],
+                  &histo[kHistoGreenPred * 256],
+                  &histo[kHistoBluePred * 256]);
+        AddSingleSubGreen(pix,
+                          &histo[kHistoRedSubGreen * 256],
+                          &histo[kHistoBlueSubGreen * 256]);
+        AddSingleSubGreen(pix_diff,
+                          &histo[kHistoRedPredSubGreen * 256],
+                          &histo[kHistoBluePredSubGreen * 256]);
         {
           // Approximate the palette by the entropy of the multiplicative hash.
           const int hash = ((pix + (pix >> 19)) * 0x39c5fba7) >> 24;
-          ++histo[kPalette]->red_[hash & 0xff];
+          ++histo[kHistoPalette * 256 + (hash & 0xff)];
         }
       }
       prev_row = curr_row;
       curr_row += argb_stride;
     }
     {
+      double entropy_comp[kHistoTotal];
       double entropy[kNumEntropyIx];
       EntropyIx k;
       EntropyIx last_mode_to_analyze =
           use_palette ? kPalette : kSpatialSubGreen;
+      int j;
+      for (j = 0; j < kHistoTotal; ++j) {
+        entropy_comp[j] = VP8LBitsEntropy(&histo[j * 256], 256, NULL);
+      }
+      entropy[kDirect] = entropy_comp[kHistoAlpha] +
+          entropy_comp[kHistoRed] +
+          entropy_comp[kHistoGreen] +
+          entropy_comp[kHistoBlue];
+      entropy[kSpatial] = entropy_comp[kHistoAlphaPred] +
+          entropy_comp[kHistoRedPred] +
+          entropy_comp[kHistoGreenPred] +
+          entropy_comp[kHistoBluePred];
+      entropy[kSubGreen] = entropy_comp[kHistoAlpha] +
+          entropy_comp[kHistoRedSubGreen] +
+          entropy_comp[kHistoGreen] +
+          entropy_comp[kHistoBlueSubGreen];
+      entropy[kSpatialSubGreen] = entropy_comp[kHistoAlphaPred] +
+          entropy_comp[kHistoRedPredSubGreen] +
+          entropy_comp[kHistoGreenPred] +
+          entropy_comp[kHistoBluePredSubGreen];
+      entropy[kPalette] = entropy_comp[kHistoPalette];
+
       *min_entropy_ix = kDirect;
-      for (k = kDirect; k <= last_mode_to_analyze; ++k) {
-        entropy[k] = VP8LHistogramEstimateBitsBulk(histo[k]);
-        if (k == kDirect || entropy[*min_entropy_ix] >= entropy[k]) {
+      for (k = kDirect + 1; k <= last_mode_to_analyze; ++k) {
+        if (entropy[*min_entropy_ix] >= entropy[k]) {
           *min_entropy_ix = k;
         }
       }
@@ -260,15 +312,27 @@ static int AnalyzeEntropy(const uint32_t* argb,
       // Let's check if the histogram of the chosen entropy mode has
       // non-zero red and blue values. If all are zero, we can later skip
       // the cross color optimization.
-      for (i = 1; i < 256; ++i) {
-        if ((histo[*min_entropy_ix]->red_[i] |
-             histo[*min_entropy_ix]->blue_[i]) != 0) {
-          *red_and_blue_always_zero = 0;
-          break;
+      {
+        static const uint8_t kHistoPairs[5][2] = {
+          { kHistoRed, kHistoBlue },
+          { kHistoRedPred, kHistoBluePred },
+          { kHistoRedSubGreen, kHistoBlueSubGreen },
+          { kHistoRedPredSubGreen, kHistoBluePredSubGreen },
+          { kHistoRed, kHistoBlue }
+        };
+        const uint32_t* const red_histo =
+            &histo[256 * kHistoPairs[*min_entropy_ix][0]];
+        const uint32_t* const blue_histo =
+            &histo[256 * kHistoPairs[*min_entropy_ix][1]];
+        for (i = 1; i < 256; ++i) {
+          if ((red_histo[i] | blue_histo[i]) != 0) {
+            *red_and_blue_always_zero = 0;
+            break;
+          }
         }
       }
     }
-    VP8LFreeHistogramSet(histo_set);
+    free(histo);
     return 1;
   } else {
     return 0;
