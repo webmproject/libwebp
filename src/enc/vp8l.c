@@ -217,7 +217,7 @@ typedef enum {
 } HistoIx;
 
 static void AddSingleSubGreen(uint32_t p, uint32_t* r, uint32_t* b) {
-  const uint32_t green = (p >> 8) & 0xff;
+  const uint32_t green = p >> 8;  // The upper bits are masked away later.
   ++r[((p >> 16) - green) & 0xff];
   ++b[(p - green) & 0xff];
 }
@@ -281,6 +281,16 @@ static int AnalyzeEntropy(const uint32_t* argb,
       EntropyIx last_mode_to_analyze =
           use_palette ? kPalette : kSpatialSubGreen;
       int j;
+      // Let's add one zero to the predicted histograms. The zeros are removed
+      // too efficiently by the pix_diff == 0 comparison, at least one of the
+      // zeros is likely to exist.
+      ++histo[kHistoRedPredSubGreen * 256];
+      ++histo[kHistoBluePredSubGreen * 256];
+      ++histo[kHistoRedPred * 256];
+      ++histo[kHistoGreenPred * 256];
+      ++histo[kHistoBluePred * 256];
+      ++histo[kHistoAlphaPred * 256];
+
       for (j = 0; j < kHistoTotal; ++j) {
         entropy_comp[j] = VP8LBitsEntropy(&histo[j * 256], 256, NULL);
       }
@@ -300,11 +310,12 @@ static int AnalyzeEntropy(const uint32_t* argb,
           entropy_comp[kHistoRedPredSubGreen] +
           entropy_comp[kHistoGreenPred] +
           entropy_comp[kHistoBluePredSubGreen];
-      entropy[kPalette] = entropy_comp[kHistoPalette];
+      // Palette mode seems more efficient in a breakeven case. Bias with 1.0.
+      entropy[kPalette] = entropy_comp[kHistoPalette] - 1.0;
 
       *min_entropy_ix = kDirect;
       for (k = kDirect + 1; k <= last_mode_to_analyze; ++k) {
-        if (entropy[*min_entropy_ix] >= entropy[k]) {
+        if (entropy[*min_entropy_ix] > entropy[k]) {
           *min_entropy_ix = k;
         }
       }
