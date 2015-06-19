@@ -38,6 +38,7 @@ dsp_dec_srcs := \
     src/dsp/alpha_processing.c \
     src/dsp/alpha_processing_mips_dsp_r2.c \
     src/dsp/alpha_processing_sse2.c \
+    src/dsp/alpha_processing_sse41.c \
     src/dsp/argb.c \
     src/dsp/argb_mips_dsp_r2.c \
     src/dsp/argb_sse2.c \
