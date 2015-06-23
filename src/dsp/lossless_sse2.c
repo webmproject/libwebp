@@ -179,33 +179,30 @@ static WEBP_INLINE void TransformColorInverse(const VP8LMultipliers* const m,
                                               int num_pixels) {
   // sign-extended multiplying constants, pre-shifted by 5.
 #define CST(X)  (((int16_t)(m->X << 8)) >> 5)   // sign-extend
-  const __m128i mults_r = _mm_set_epi16(
-      0, CST(green_to_red_), 0, CST(green_to_red_),
-      0, CST(green_to_red_), 0, CST(green_to_red_));
-  const __m128i mults_b1 = _mm_set_epi16(
-      0, CST(green_to_blue_), 0, CST(green_to_blue_),
-      0, CST(green_to_blue_), 0, CST(green_to_blue_));
+  const __m128i mults_rb = _mm_set_epi16(
+      CST(green_to_red_), CST(green_to_blue_),
+      CST(green_to_red_), CST(green_to_blue_),
+      CST(green_to_red_), CST(green_to_blue_),
+      CST(green_to_red_), CST(green_to_blue_));
   const __m128i mults_b2 = _mm_set_epi16(
       CST(red_to_blue_), 0, CST(red_to_blue_), 0,
       CST(red_to_blue_), 0, CST(red_to_blue_), 0);
 #undef CST
   const __m128i mask_ag = _mm_set1_epi32(0xff00ff00);  // alpha-green masks
-  const __m128i mask_b = _mm_set1_epi32(0x000000ff);   // blue mask
-  const __m128i mask_r = _mm_set1_epi32(0x00ff0000);   // red mask
   int i;
   for (i = 0; i + 4 <= num_pixels; i += 4) {
     const __m128i in = _mm_loadu_si128((__m128i*)&argb_data[i]); // argb
     const __m128i A = _mm_and_si128(in, mask_ag);     // a   0   g   0
-    const __m128i C = _mm_mulhi_epi16(A, mults_r);    // 0   0   x dr1
-    const __m128i D = _mm_mulhi_epi16(A, mults_b1);   // 0   0   x db1
-    const __m128i E = _mm_and_si128(_mm_slli_epi32(C, 16), mask_r);  // 0 dr 0 0
-    const __m128i F = _mm_and_si128(D, mask_b);       // 0  0  0 db1
-    const __m128i G = _mm_add_epi8(in, E);            // a  r' g   b
-    const __m128i H = _mm_slli_epi16(G, 8);           // r' 0  b   0
-    const __m128i I = _mm_mulhi_epi16(H, mults_b2);   // x db2 0 0
-    const __m128i J = _mm_and_si128(_mm_srli_epi32(I, 16), mask_b);   // db2
-    const __m128i K = _mm_add_epi8(G, F);
-    const __m128i out = _mm_add_epi8(K, J);
+    const __m128i B = _mm_shufflelo_epi16(A, _MM_SHUFFLE(2, 2, 0, 0));
+    const __m128i C = _mm_shufflehi_epi16(B, _MM_SHUFFLE(2, 2, 0, 0));  // g0g0
+    const __m128i D = _mm_mulhi_epi16(C, mults_rb);    // x dr  x db1
+    const __m128i E = _mm_add_epi8(in, D);             // x r'  x   b'
+    const __m128i F = _mm_slli_epi16(E, 8);            // r' 0   b' 0
+    const __m128i G = _mm_mulhi_epi16(F, mults_b2);    // x db2  0  0
+    const __m128i H = _mm_srli_epi32(G, 8);            // 0  x db2  0
+    const __m128i I = _mm_add_epi8(H, F);              // r' x  b'' 0
+    const __m128i J = _mm_srli_epi16(I, 8);            // 0  r'  0  b''
+    const __m128i out = _mm_or_si128(J, A);
     _mm_storeu_si128((__m128i*)&argb_data[i], out);
   }
   // Fall-back to C-version for left-overs.
