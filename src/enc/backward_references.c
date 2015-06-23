@@ -399,6 +399,7 @@ static int BackwardReferencesLz77(int xsize, int ysize,
   VP8LColorCache hashers;
   int iter_max, len_for_unit_dist;
   const int window_size = GetWindowSizeForHashChain(quality, xsize);
+  int min_matches = 32;
   GetParamsForHashChainFindCopy(quality, low_effort, &iter_max,
                                 &len_for_unit_dist);
 
@@ -415,10 +416,11 @@ static int BackwardReferencesLz77(int xsize, int ysize,
     const int max_len = MaxFindCopyLength(pix_count - i);
     HashChainFindCopy(hash_chain, i, xsize, argb, max_len, window_size,
                       iter_max, len_for_unit_dist, &offset, &len);
-    if (len >= MIN_LENGTH) {
+    if (len > MIN_LENGTH || (len == MIN_LENGTH && offset <= 512)) {
       int offset2 = 0;
       int len2 = 0;
       int k;
+      min_matches = 8;
       HashChainInsert(hash_chain, &argb[i], i);
       if ((len < (max_len >> 2)) && !low_effort) {
         // Evaluate Alternative#2: Insert the pixel at 'i' as literal, and code
@@ -451,12 +453,17 @@ static int BackwardReferencesLz77(int xsize, int ysize,
       AddSingleLiteral(argb[i], use_color_cache, &hashers, refs);
       HashChainInsert(hash_chain, &argb[i], i);
       ++i;
+      --min_matches;
+      if (min_matches <= 0) {
+        AddSingleLiteral(argb[i], use_color_cache, &hashers, refs);
+        HashChainInsert(hash_chain, &argb[i], i);
+        ++i;
+      }
     }
   }
   while (i < pix_count) {
-    // Handle the last (two) pixel(s).
+    // Handle the last pixel(s).
     AddSingleLiteral(argb[i], use_color_cache, &hashers, refs);
-    if (i < (pix_count - 1)) HashChainInsert(hash_chain, &argb[i], i);
     ++i;
   }
 
