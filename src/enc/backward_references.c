@@ -281,34 +281,32 @@ static int HashChainFindCopy(const VP8LHashChain* const p,
                              int* const distance_ptr,
                              int* const length_ptr) {
   const uint32_t* const argb_start = argb + base_position;
-  int iter = 0;
+  int iter = iter_max;
   int best_length = 1;
-  const int length_max = 256;
   int best_distance = 0;
   const int min_pos =
       (base_position > window_size) ? base_position - window_size : 0;
   int pos;
+  int length_max = 256;
+  if (max_len < length_max) {
+    length_max = max_len;
+  }
   assert(xsize > 0);
   for (pos = p->hash_to_first_index_[GetPixPairHash64(argb_start)];
        pos >= min_pos;
        pos = p->chain_[pos]) {
     int curr_length;
     int distance;
-    if (iter > 8) {
-      if (iter > iter_max || best_length >= length_max) {
-        break;
-      }
+    if (--iter < 0) {
+      break;
     }
-    ++iter;
 
     curr_length = FindMatchLength(argb + pos, argb_start, best_length, max_len);
-    if (curr_length < best_length) continue;
-
-    distance = base_position - pos;
     if (best_length < curr_length) {
+      distance = base_position - pos;
       best_length = curr_length;
       best_distance = distance;
-      if (curr_length >= max_len) {
+      if (curr_length >= length_max) {
         break;
       }
       if ((distance == 1 || distance == xsize) &&
