@@ -40,56 +40,33 @@ static void SubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixels) {
 //------------------------------------------------------------------------------
 // Color Transform
 
-static WEBP_INLINE __m128i ColorTransformDelta(__m128i color_pred,
-                                               __m128i color) {
-  // We simulate signed 8-bit multiplication as:
-  // * Left shift the two (8-bit) numbers by 8 bits,
-  // * Perform a 16-bit signed multiplication and retain the higher 16-bits.
-  const __m128i color_pred_shifted = _mm_slli_epi32(color_pred, 8);
-  const __m128i color_shifted = _mm_slli_epi32(color, 8);
-  // Note: This performs multiplication on 8 packed 16-bit numbers, 4 of which
-  // happen to be zeroes.
-  const __m128i signed_mult =
-      _mm_mulhi_epi16(color_pred_shifted, color_shifted);
-  return _mm_srli_epi32(signed_mult, 5);
-}
-
 static WEBP_INLINE void TransformColor(const VP8LMultipliers* const m,
                                        uint32_t* argb_data,
                                        int num_pixels) {
-  const __m128i g_to_r = _mm_set1_epi32(m->green_to_red_);       // multipliers
-  const __m128i g_to_b = _mm_set1_epi32(m->green_to_blue_);
-  const __m128i r_to_b = _mm_set1_epi32(m->red_to_blue_);
-
+  // Used to collect the two parts of the delta (horizontal add) with madd.
+  const __m128i kCstAdd = _mm_set1_epi16(1);
+  // sign-extended multiplying constants, pre-shifted by 5.
+#define CST(X)  (((int16_t)(m->X << 8)) >> 5)   // sign-extend
+  const __m128i mults = _mm_set_epi16(
+      CST(green_to_red_), 0, CST(red_to_blue_), CST(green_to_blue_),
+      CST(green_to_red_), 0, CST(red_to_blue_), CST(green_to_blue_));
+#undef CST
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i mask = _mm_set1_epi32(0xff);
   int i;
-
-  for (i = 0; i + 4 <= num_pixels; i += 4) {
-    const __m128i in = _mm_loadu_si128((__m128i*)&argb_data[i]);
-    const __m128i alpha_green_mask = _mm_set1_epi32(0xff00ff00);  // masks
-    const __m128i red_mask = _mm_set1_epi32(0x00ff0000);
-    const __m128i green_mask = _mm_set1_epi32(0x0000ff00);
-    const __m128i lower_8bit_mask  = _mm_set1_epi32(0x000000ff);
-    const __m128i ag = _mm_and_si128(in, alpha_green_mask);      // alpha, green
-    const __m128i r = _mm_srli_epi32(_mm_and_si128(in, red_mask), 16);
-    const __m128i g = _mm_srli_epi32(_mm_and_si128(in, green_mask), 8);
-    const __m128i b = in;
-
-    const __m128i r_delta = ColorTransformDelta(g_to_r, g);      // red
-    const __m128i r_new =
-        _mm_and_si128(_mm_sub_epi32(r, r_delta), lower_8bit_mask);
-    const __m128i r_new_shifted = _mm_slli_epi32(r_new, 16);
-
-    const __m128i b_delta_1 = ColorTransformDelta(g_to_b, g);    // blue
-    const __m128i b_delta_2 = ColorTransformDelta(r_to_b, r);
-    const __m128i b_delta = _mm_add_epi32(b_delta_1, b_delta_2);
-    const __m128i b_new =
-        _mm_and_si128(_mm_sub_epi32(b, b_delta), lower_8bit_mask);
-
-    const __m128i out = _mm_or_si128(_mm_or_si128(ag, r_new_shifted), b_new);
-    _mm_storeu_si128((__m128i*)&argb_data[i], out);
+  for (i = 0; i + 2 <= num_pixels; i += 2) {
+    const __m128i in = _mm_loadl_epi64((__m128i*)&argb_data[i]); // argb
+    const __m128i A = _mm_unpacklo_epi8(zero, in);
+    const __m128i B = _mm_shufflelo_epi16(A, _MM_SHUFFLE(1, 0, 2, 1));  // gxrg
+    const __m128i C = _mm_shufflehi_epi16(B, _MM_SHUFFLE(1, 0, 2, 1));
+    const __m128i D = _mm_mulhi_epi16(C, mults);       // dr | 0 | db1 | db2
+    const __m128i E = _mm_madd_epi16(D, kCstAdd);      // 0  | dr | 0 | db
+    const __m128i F = _mm_and_si128(E, mask);
+    const __m128i G = _mm_packus_epi16(F, zero);       // dr | 0 | db | 0
+    const __m128i out = _mm_sub_epi8(in, G);
+    _mm_storel_epi64((__m128i*)&argb_data[i], out);
   }
-
-  // Fall-back to C-version for left-overs.
+  // fallthrough and finish off with plain-C
   VP8LTransformColor_C(m, argb_data + i, num_pixels - i);
 }
 

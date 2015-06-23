@@ -174,55 +174,40 @@ static void AddGreenToBlueAndRed(uint32_t* argb_data, int num_pixels) {
 //------------------------------------------------------------------------------
 // Color Transform
 
-static WEBP_INLINE __m128i ColorTransformDelta(__m128i color_pred,
-                                               __m128i color) {
-  // We simulate signed 8-bit multiplication as:
-  // * Left shift the two (8-bit) numbers by 8 bits,
-  // * Perform a 16-bit signed multiplication and retain the higher 16-bits.
-  const __m128i color_pred_shifted = _mm_slli_epi32(color_pred, 8);
-  const __m128i color_shifted = _mm_slli_epi32(color, 8);
-  // Note: This performs multiplication on 8 packed 16-bit numbers, 4 of which
-  // happen to be zeroes.
-  const __m128i signed_mult =
-      _mm_mulhi_epi16(color_pred_shifted, color_shifted);
-  return _mm_srli_epi32(signed_mult, 5);
-}
-
 static WEBP_INLINE void TransformColorInverse(const VP8LMultipliers* const m,
                                               uint32_t* argb_data,
                                               int num_pixels) {
-  const __m128i g_to_r = _mm_set1_epi32(m->green_to_red_);       // multipliers
-  const __m128i g_to_b = _mm_set1_epi32(m->green_to_blue_);
-  const __m128i r_to_b = _mm_set1_epi32(m->red_to_blue_);
-
+  // sign-extended multiplying constants, pre-shifted by 5.
+#define CST(X)  (((int16_t)(m->X << 8)) >> 5)   // sign-extend
+  const __m128i mults_r = _mm_set_epi16(
+      0, CST(green_to_red_), 0, CST(green_to_red_),
+      0, CST(green_to_red_), 0, CST(green_to_red_));
+  const __m128i mults_b1 = _mm_set_epi16(
+      0, CST(green_to_blue_), 0, CST(green_to_blue_),
+      0, CST(green_to_blue_), 0, CST(green_to_blue_));
+  const __m128i mults_b2 = _mm_set_epi16(
+      CST(red_to_blue_), 0, CST(red_to_blue_), 0,
+      CST(red_to_blue_), 0, CST(red_to_blue_), 0);
+#undef CST
+  const __m128i mask_ag = _mm_set1_epi32(0xff00ff00);  // alpha-green masks
+  const __m128i mask_b = _mm_set1_epi32(0x000000ff);   // blue mask
+  const __m128i mask_r = _mm_set1_epi32(0x00ff0000);   // red mask
   int i;
-
   for (i = 0; i + 4 <= num_pixels; i += 4) {
-    const __m128i in = _mm_loadu_si128((__m128i*)&argb_data[i]);
-    const __m128i alpha_green_mask = _mm_set1_epi32(0xff00ff00);  // masks
-    const __m128i red_mask = _mm_set1_epi32(0x00ff0000);
-    const __m128i green_mask = _mm_set1_epi32(0x0000ff00);
-    const __m128i lower_8bit_mask  = _mm_set1_epi32(0x000000ff);
-    const __m128i ag = _mm_and_si128(in, alpha_green_mask);      // alpha, green
-    const __m128i r = _mm_srli_epi32(_mm_and_si128(in, red_mask), 16);
-    const __m128i g = _mm_srli_epi32(_mm_and_si128(in, green_mask), 8);
-    const __m128i b = in;
-
-    const __m128i r_delta = ColorTransformDelta(g_to_r, g);      // red
-    const __m128i r_new =
-        _mm_and_si128(_mm_add_epi32(r, r_delta), lower_8bit_mask);
-    const __m128i r_new_shifted = _mm_slli_epi32(r_new, 16);
-
-    const __m128i b_delta_1 = ColorTransformDelta(g_to_b, g);    // blue
-    const __m128i b_delta_2 = ColorTransformDelta(r_to_b, r_new);
-    const __m128i b_delta = _mm_add_epi32(b_delta_1, b_delta_2);
-    const __m128i b_new =
-        _mm_and_si128(_mm_add_epi32(b, b_delta), lower_8bit_mask);
-
-    const __m128i out = _mm_or_si128(_mm_or_si128(ag, r_new_shifted), b_new);
+    const __m128i in = _mm_loadu_si128((__m128i*)&argb_data[i]); // argb
+    const __m128i A = _mm_and_si128(in, mask_ag);     // a   0   g   0
+    const __m128i C = _mm_mulhi_epi16(A, mults_r);    // 0   0   x dr1
+    const __m128i D = _mm_mulhi_epi16(A, mults_b1);   // 0   0   x db1
+    const __m128i E = _mm_and_si128(_mm_slli_epi32(C, 16), mask_r);  // 0 dr 0 0
+    const __m128i F = _mm_and_si128(D, mask_b);       // 0  0  0 db1
+    const __m128i G = _mm_add_epi8(in, E);            // a  r' g   b
+    const __m128i H = _mm_slli_epi16(G, 8);           // r' 0  b   0
+    const __m128i I = _mm_mulhi_epi16(H, mults_b2);   // x db2 0 0
+    const __m128i J = _mm_and_si128(_mm_srli_epi32(I, 16), mask_b);   // db2
+    const __m128i K = _mm_add_epi8(G, F);
+    const __m128i out = _mm_add_epi8(K, J);
     _mm_storeu_si128((__m128i*)&argb_data[i], out);
   }
-
   // Fall-back to C-version for left-overs.
   VP8LTransformColorInverse_C(m, argb_data + i, num_pixels - i);
 }
