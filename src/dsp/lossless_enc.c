@@ -1143,24 +1143,18 @@ static VP8LStreaks HuffmanCostCombinedCount(const uint32_t* X,
                                             const uint32_t* Y, int length) {
   int i;
   int streak = 0;
+  uint32_t xy_prev = 0xffffffff;
   VP8LStreaks stats;
   memset(&stats, 0, sizeof(stats));
-  for (i = 0; i < length - 1; ++i) {
-    const int xy = X[i] + Y[i];
-    const int xy_next = X[i + 1] + Y[i + 1];
+  for (i = 0; i < length; ++i) {
+    const uint32_t xy = X[i] + Y[i];
     ++streak;
-    if (xy == xy_next) {
-      continue;
-    }
+    if (xy != xy_prev) {
     stats.counts[xy != 0] += (streak > 3);
     stats.streaks[xy != 0][(streak > 3)] += streak;
     streak = 0;
+      xy_prev = xy;
   }
-  {
-    const int xy = X[i] + Y[i];
-    ++streak;
-    stats.counts[xy != 0] += (streak > 3);
-    stats.streaks[xy != 0][(streak > 3)] += streak;
   }
   return stats;
 }
