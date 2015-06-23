@@ -86,6 +86,7 @@ libwebpdsp_sse2_la_LIBADD = libwebpdspdecode_sse2.la
 
 libwebpdsp_sse41_la_SOURCES =
 libwebpdsp_sse41_la_SOURCES += enc_sse41.c
+libwebpdsp_sse41_la_SOURCES += lossless_enc_sse41.c
 libwebpdsp_sse41_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
 libwebpdsp_sse41_la_CFLAGS = $(AM_CFLAGS) $(SSE41_FLAGS)
 libwebpdsp_sse41_la_LIBADD = libwebpdspdecode_sse41.la

@@ -86,6 +86,7 @@ dsp_enc_srcs := \
     src/dsp/lossless_enc_mips_dsp_r2.c \
     src/dsp/lossless_enc_neon.$(NEON) \
     src/dsp/lossless_enc_sse2.c \
+    src/dsp/lossless_enc_sse41.c \
 
 enc_srcs := \
     src/enc/alpha.c \

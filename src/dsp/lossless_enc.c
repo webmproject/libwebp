@@ -1221,6 +1221,7 @@ VP8LCostCombinedCountFunc VP8LHuffmanCostCombinedCount;
 VP8LHistogramAddFunc VP8LHistogramAdd;
 
 extern void VP8LEncDspInitSSE2(void);
+extern void VP8LEncDspInitSSE41(void);
 extern void VP8LEncDspInitNEON(void);
 extern void VP8LEncDspInitMIPS32(void);
 extern void VP8LEncDspInitMIPSdspR2(void);
@@ -1256,6 +1257,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInit(void) {
 #if defined(WEBP_USE_SSE2)
     if (VP8GetCPUInfo(kSSE2)) {
       VP8LEncDspInitSSE2();
+#if defined(WEBP_USE_SSE41)
+      if (VP8GetCPUInfo(kSSE4_1)) {
+        VP8LEncDspInitSSE41();
+      }
+#endif
     }
 #endif
 #if defined(WEBP_USE_NEON)
