@@ -18,19 +18,20 @@
 #include <emmintrin.h>
 #include "./lossless.h"
 
+// For sign-extended multiplying constants, pre-shifted by 5:
+#define CST_5b(X)  (((int16_t)(X << 8)) >> 5)
+
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
 
 static void SubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixels) {
-  const __m128i mask = _mm_set1_epi32(0x0000ff00);
   int i;
   for (i = 0; i + 4 <= num_pixels; i += 4) {
-    const __m128i in = _mm_loadu_si128((__m128i*)&argb_data[i]);
-    const __m128i in_00g0 = _mm_and_si128(in, mask);     // 00g0|00g0|...
-    const __m128i in_0g00 = _mm_slli_epi32(in_00g0, 8);  // 0g00|0g00|...
-    const __m128i in_000g = _mm_srli_epi32(in_00g0, 8);  // 000g|000g|...
-    const __m128i in_0g0g = _mm_or_si128(in_0g00, in_000g);
-    const __m128i out = _mm_sub_epi8(in, in_0g0g);
+    const __m128i in = _mm_loadu_si128((__m128i*)&argb_data[i]); // argb
+    const __m128i A = _mm_srli_epi16(in, 8);     // 0 a 0 g
+    const __m128i B = _mm_shufflelo_epi16(A, _MM_SHUFFLE(2, 2, 0, 0));
+    const __m128i C = _mm_shufflehi_epi16(B, _MM_SHUFFLE(2, 2, 0, 0));  // 0g0g
+    const __m128i out = _mm_sub_epi8(in, C);
     _mm_storeu_si128((__m128i*)&argb_data[i], out);
   }
   // fallthrough and finish off with plain-C
@@ -42,17 +43,14 @@ static void SubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixels) {
 
 static WEBP_INLINE void TransformColor(const VP8LMultipliers* const m,
                                        uint32_t* argb_data, int num_pixels) {
-  // sign-extended multiplying constants, pre-shifted by 5.
-#define CST(X)  (((int16_t)(m->X << 8)) >> 5)   // sign-extend
   const __m128i mults_rb = _mm_set_epi16(
-      CST(green_to_red_), CST(green_to_blue_),
-      CST(green_to_red_), CST(green_to_blue_),
-      CST(green_to_red_), CST(green_to_blue_),
-      CST(green_to_red_), CST(green_to_blue_));
+      CST_5b(m->green_to_red_), CST_5b(m->green_to_blue_),
+      CST_5b(m->green_to_red_), CST_5b(m->green_to_blue_),
+      CST_5b(m->green_to_red_), CST_5b(m->green_to_blue_),
+      CST_5b(m->green_to_red_), CST_5b(m->green_to_blue_));
   const __m128i mults_b2 = _mm_set_epi16(
-      CST(red_to_blue_), 0, CST(red_to_blue_), 0,
-      CST(red_to_blue_), 0, CST(red_to_blue_), 0);
-#undef CST
+      CST_5b(m->red_to_blue_), 0, CST_5b(m->red_to_blue_), 0,
+      CST_5b(m->red_to_blue_), 0, CST_5b(m->red_to_blue_), 0);
   const __m128i mask_ag = _mm_set1_epi32(0xff00ff00);  // alpha-green masks
   const __m128i mask_rb = _mm_set1_epi32(0x00ff00ff);  // red-blue masks
   int i;
@@ -73,6 +71,102 @@ static WEBP_INLINE void TransformColor(const VP8LMultipliers* const m,
   // fallthrough and finish off with plain-C
   VP8LTransformColor_C(m, argb_data + i, num_pixels - i);
 }
+
+//------------------------------------------------------------------------------
+#define SPAN 8
+static void CollectColorBlueTransforms(const uint32_t* argb, int stride,
+                                       int tile_width, int tile_height,
+                                       int green_to_blue, int red_to_blue,
+                                       int histo[]) {
+  const __m128i mults_r = _mm_set_epi16(
+      CST_5b(red_to_blue), 0, CST_5b(red_to_blue), 0,
+      CST_5b(red_to_blue), 0, CST_5b(red_to_blue), 0);
+  const __m128i mults_g = _mm_set_epi16(
+      0, CST_5b(green_to_blue), 0, CST_5b(green_to_blue),
+      0, CST_5b(green_to_blue), 0, CST_5b(green_to_blue));
+  const __m128i mask_g = _mm_set1_epi32(0x00ff00);  // green mask
+  const __m128i mask_b = _mm_set1_epi32(0x0000ff);  // blue mask
+  int y;
+  for (y = 0; y < tile_height; ++y) {
+    const uint32_t* const src = argb + y * stride;
+    int i, x;
+    for (x = 0; x + SPAN <= tile_width; x += SPAN) {
+      uint16_t values[SPAN];
+      const __m128i in0 = _mm_loadu_si128((__m128i*)&src[x +        0]);
+      const __m128i in1 = _mm_loadu_si128((__m128i*)&src[x + SPAN / 2]);
+      const __m128i A0 = _mm_slli_epi16(in0, 8);        // r 0  | b 0
+      const __m128i A1 = _mm_slli_epi16(in1, 8);
+      const __m128i B0 = _mm_and_si128(in0, mask_g);    // 0 0  | g 0
+      const __m128i B1 = _mm_and_si128(in1, mask_g);
+      const __m128i C0 = _mm_mulhi_epi16(A0, mults_r);  // x db | 0 0
+      const __m128i C1 = _mm_mulhi_epi16(A1, mults_r);
+      const __m128i D0 = _mm_mulhi_epi16(B0, mults_g);  // 0 0  | x db
+      const __m128i D1 = _mm_mulhi_epi16(B1, mults_g);
+      const __m128i E0 = _mm_sub_epi8(in0, D0);         // x x  | x b'
+      const __m128i E1 = _mm_sub_epi8(in1, D1);
+      const __m128i F0 = _mm_srli_epi32(C0, 16);        // 0 0  | x db
+      const __m128i F1 = _mm_srli_epi32(C1, 16);
+      const __m128i G0 = _mm_sub_epi8(E0, F0);          // 0 0  | x b'
+      const __m128i G1 = _mm_sub_epi8(E1, F1);
+      const __m128i H0 = _mm_and_si128(G0, mask_b);     // 0 0  | 0 b
+      const __m128i H1 = _mm_and_si128(G1, mask_b);
+      const __m128i I = _mm_packs_epi32(H0, H1);        // 0 b' | 0 b'
+      _mm_storeu_si128((__m128i*)values, I);
+      for (i = 0; i < SPAN; ++i) ++histo[values[i]];
+    }
+  }
+  {
+    const int left_over = tile_width & (SPAN - 1);
+    if (left_over > 0) {
+      VP8LCollectColorBlueTransforms_C(argb + tile_width - left_over, stride,
+                                       left_over, tile_height,
+                                       green_to_blue, red_to_blue, histo);
+    }
+  }
+}
+
+static void CollectColorRedTransforms(const uint32_t* argb, int stride,
+                                      int tile_width, int tile_height,
+                                      int green_to_red, int histo[]) {
+  const __m128i mults_g = _mm_set_epi16(
+      0, CST_5b(green_to_red), 0, CST_5b(green_to_red),
+      0, CST_5b(green_to_red), 0, CST_5b(green_to_red));
+  const __m128i mask_g = _mm_set1_epi32(0x00ff00);  // green mask
+  const __m128i mask = _mm_set1_epi32(0xff);
+
+  int y;
+  for (y = 0; y < tile_height; ++y) {
+    const uint32_t* const src = argb + y * stride;
+    int i, x;
+    for (x = 0; x + SPAN <= tile_width; x += SPAN) {
+      uint16_t values[SPAN];
+      const __m128i in0 = _mm_loadu_si128((__m128i*)&src[x +        0]);
+      const __m128i in1 = _mm_loadu_si128((__m128i*)&src[x + SPAN / 2]);
+      const __m128i A0 = _mm_and_si128(in0, mask_g);    // 0 0  | g 0
+      const __m128i A1 = _mm_and_si128(in1, mask_g);
+      const __m128i B0 = _mm_srli_epi32(in0, 16);       // 0 0  | x r
+      const __m128i B1 = _mm_srli_epi32(in1, 16);
+      const __m128i C0 = _mm_mulhi_epi16(A0, mults_g);  // 0 0  | x dr
+      const __m128i C1 = _mm_mulhi_epi16(A1, mults_g);
+      const __m128i E0 = _mm_sub_epi8(B0, C0);          // x x  | x r'
+      const __m128i E1 = _mm_sub_epi8(B1, C1);
+      const __m128i F0 = _mm_and_si128(E0, mask);       // 0 0  | 0 r'
+      const __m128i F1 = _mm_and_si128(E1, mask);
+      const __m128i I = _mm_packs_epi32(F0, F1);
+      _mm_storeu_si128((__m128i*)values, I);
+      for (i = 0; i < SPAN; ++i) ++histo[values[i]];
+    }
+  }
+  {
+    const int left_over = tile_width & (SPAN - 1);
+    if (left_over > 0) {
+      VP8LCollectColorRedTransforms_C(argb + tile_width - left_over, stride,
+                                      left_over, tile_height,
+                                      green_to_red, histo);
+    }
+  }
+}
+#undef SPAN
 
 //------------------------------------------------------------------------------
 
@@ -164,6 +258,8 @@ extern void VP8LEncDspInitSSE2(void);
 WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInitSSE2(void) {
   VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRed;
   VP8LTransformColor = TransformColor;
+  VP8LCollectColorBlueTransforms = CollectColorBlueTransforms;
+  VP8LCollectColorRedTransforms = CollectColorRedTransforms;
   VP8LHistogramAdd = HistogramAdd;
 }
 

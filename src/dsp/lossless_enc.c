@@ -817,9 +817,9 @@ static float PredictionCostCrossColor(const int accumulated[256],
          PredictionCostSpatial(counts, 3, kExpValue);
 }
 
-static void CollectColorRedTransforms(const uint32_t* argb, int stride,
-                                      int tile_width, int tile_height,
-                                      int green_to_red, int histo[]) {
+void VP8LCollectColorRedTransforms_C(const uint32_t* argb, int stride,
+                                     int tile_width, int tile_height,
+                                     int green_to_red, int histo[]) {
   while (tile_height-- > 0) {
     int x;
     for (x = 0; x < tile_width; ++x) {
@@ -882,10 +882,10 @@ static void GetBestGreenToRed(
   best_tx->green_to_red_ = green_to_red_best;
 }
 
-static void CollectColorBlueTransforms(const uint32_t* argb, int stride,
-                                       int tile_width, int tile_height,
-                                       int green_to_blue, int red_to_blue,
-                                       int histo[]) {
+void VP8LCollectColorBlueTransforms_C(const uint32_t* argb, int stride,
+                                      int tile_width, int tile_height,
+                                      int green_to_blue, int red_to_blue,
+                                      int histo[]) {
   while (tile_height-- > 0) {
     int x;
     for (x = 0; x < tile_width; ++x) {
@@ -1232,8 +1232,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInit(void) {
 
   VP8LTransformColor = VP8LTransformColor_C;
 
-  VP8LCollectColorBlueTransforms = CollectColorBlueTransforms;
-  VP8LCollectColorRedTransforms = CollectColorRedTransforms;
+  VP8LCollectColorBlueTransforms = VP8LCollectColorBlueTransforms_C;
+  VP8LCollectColorRedTransforms = VP8LCollectColorRedTransforms_C;
 
   VP8LFastLog2Slow = FastLog2Slow;
   VP8LFastSLog2Slow = FastSLog2Slow;

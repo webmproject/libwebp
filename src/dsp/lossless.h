@@ -144,6 +144,13 @@ extern VP8LCollectColorRedTransformsFunc VP8LCollectColorRedTransforms;
 void VP8LTransformColor_C(const VP8LMultipliers* const m,
                           uint32_t* data, int num_pixels);
 void VP8LSubtractGreenFromBlueAndRed_C(uint32_t* argb_data, int num_pixels);
+void VP8LCollectColorRedTransforms_C(const uint32_t* argb, int stride,
+                                     int tile_width, int tile_height,
+                                     int green_to_red, int histo[]);
+void VP8LCollectColorBlueTransforms_C(const uint32_t* argb, int stride,
+                                      int tile_width, int tile_height,
+                                      int green_to_blue, int red_to_blue,
+                                      int histo[]);
 
 //------------------------------------------------------------------------------
 // Image transforms.
