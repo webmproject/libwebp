@@ -320,9 +320,9 @@ static int HashChainFindCopy(const VP8LHashChain* const p,
   return (best_length >= MIN_LENGTH);
 }
 
-static void AddSingleLiteral(uint32_t pixel, int use_color_cache,
-                             VP8LColorCache* const hashers,
-                             VP8LBackwardRefs* const refs) {
+static WEBP_INLINE void AddSingleLiteral(uint32_t pixel, int use_color_cache,
+                                         VP8LColorCache* const hashers,
+                                         VP8LBackwardRefs* const refs) {
   PixOrCopy v;
   if (use_color_cache && VP8LColorCacheContains(hashers, pixel)) {
     // push pixel as a PixOrCopyCreateCacheIdx pixel
