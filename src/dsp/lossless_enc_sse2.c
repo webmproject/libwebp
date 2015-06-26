@@ -41,8 +41,8 @@ static void SubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixels) {
 //------------------------------------------------------------------------------
 // Color Transform
 
-static WEBP_INLINE void TransformColor(const VP8LMultipliers* const m,
-                                       uint32_t* argb_data, int num_pixels) {
+static void TransformColor(const VP8LMultipliers* const m,
+                           uint32_t* argb_data, int num_pixels) {
   const __m128i mults_rb = _mm_set_epi16(
       CST_5b(m->green_to_red_), CST_5b(m->green_to_blue_),
       CST_5b(m->green_to_red_), CST_5b(m->green_to_blue_),

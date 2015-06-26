@@ -172,9 +172,8 @@ static void AddGreenToBlueAndRed(uint32_t* argb_data, int num_pixels) {
 //------------------------------------------------------------------------------
 // Color Transform
 
-static WEBP_INLINE void TransformColorInverse(const VP8LMultipliers* const m,
-                                              uint32_t* argb_data,
-                                              int num_pixels) {
+static void TransformColorInverse(const VP8LMultipliers* const m,
+                                  uint32_t* argb_data, int num_pixels) {
   // sign-extended multiplying constants, pre-shifted by 5.
 #define CST(X)  (((int16_t)(m->X << 8)) >> 5)   // sign-extend
   const __m128i mults_rb = _mm_set_epi16(
