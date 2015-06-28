@@ -331,8 +331,8 @@ static WEBP_INLINE void GetNotHEV(const __m128i* const p1,
   const __m128i h = _mm_set1_epi8(hev_thresh);
   const __m128i t_max = _mm_max_epu8(t_1, t_2);
 
-  *not_hev = _mm_subs_epu8(t_max, h);
-  *not_hev = _mm_cmpeq_epi8(*not_hev, zero);  // not_hev <= t1 && not_hev <= t2
+  const __m128i t_max_h = _mm_subs_epu8(t_max, h);
+  *not_hev = _mm_cmpeq_epi8(t_max_h, zero);  // not_hev <= t1 && not_hev <= t2
 }
 
 // input pixels are int8_t
@@ -426,9 +426,11 @@ static WEBP_INLINE void DoFilter2(__m128i* const p1, __m128i* const p0,
 static WEBP_INLINE void DoFilter4(__m128i* const p1, __m128i* const p0,
                                   __m128i* const q0, __m128i* const q1,
                                   const __m128i* const mask, int hev_thresh) {
-  const __m128i sign_bit = _mm_set1_epi8(0x80);
-  const __m128i k64 = _mm_set1_epi8(0x40);
   const __m128i zero = _mm_setzero_si128();
+  const __m128i sign_bit = _mm_set1_epi8(0x80);
+  const __m128i k64 = _mm_set1_epi8(64);
+  const __m128i k3 = _mm_set1_epi8(3);
+  const __m128i k4 = _mm_set1_epi8(4);
   __m128i not_hev;
   __m128i t1, t2, t3;
 
@@ -446,10 +448,8 @@ static WEBP_INLINE void DoFilter4(__m128i* const p1, __m128i* const p0,
   t1 = _mm_adds_epi8(t1, t2);          // hev(p1 - q1) + 3 * (q0 - p0)
   t1 = _mm_and_si128(t1, *mask);       // mask filter values we don't care about
 
-  t2 = _mm_set1_epi8(3);
-  t3 = _mm_set1_epi8(4);
-  t2 = _mm_adds_epi8(t1, t2);        // 3 * (q0 - p0) + (p1 - q1) + 3
-  t3 = _mm_adds_epi8(t1, t3);        // 3 * (q0 - p0) + (p1 - q1) + 4
+  t2 = _mm_adds_epi8(t1, k3);        // 3 * (q0 - p0) + hev(p1 - q1) + 3
+  t3 = _mm_adds_epi8(t1, k4);        // 3 * (q0 - p0) + hev(p1 - q1) + 4
   SignedShift8b(&t2);                // (3 * (q0 - p0) + hev(p1 - q1) + 3) >> 3
   SignedShift8b(&t3);                // (3 * (q0 - p0) + hev(p1 - q1) + 4) >> 3
   *p0 = _mm_adds_epi8(*p0, t2);      // p0 += t2
