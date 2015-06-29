@@ -663,12 +663,23 @@ static void StoreHuffmanCode(VP8LBitWriter* const bw,
   }
 }
 
-static void WriteHuffmanCode(VP8LBitWriter* const bw,
+static WEBP_INLINE void WriteHuffmanCode(VP8LBitWriter* const bw,
                              const HuffmanTreeCode* const code,
                              int code_index) {
   const int depth = code->code_lengths[code_index];
   const int symbol = code->codes[code_index];
   VP8LPutBits(bw, symbol, depth);
+}
+
+static WEBP_INLINE void WriteHuffmanCodeWithExtraBits(
+    VP8LBitWriter* const bw,
+    const HuffmanTreeCode* const code,
+    int code_index,
+    int bits,
+    int n_bits) {
+  const int depth = code->code_lengths[code_index];
+  const int symbol = code->codes[code_index];
+  VP8LPutBits(bw, (bits << depth) | symbol, depth + n_bits);
 }
 
 static WebPEncodingError StoreImageToBitMask(
@@ -695,26 +706,29 @@ static WebPEncodingError StoreImageToBitMask(
                                        (x >> histo_bits)];
       codes = huffman_codes + 5 * histogram_ix;
     }
-    if (PixOrCopyIsCacheIdx(v)) {
-      const int code = PixOrCopyCacheIdx(v);
-      const int literal_ix = 256 + NUM_LENGTH_CODES + code;
-      WriteHuffmanCode(bw, codes, literal_ix);
-    } else if (PixOrCopyIsLiteral(v)) {
+    if (PixOrCopyIsLiteral(v)) {
       static const int order[] = { 1, 2, 0, 3 };
       int k;
       for (k = 0; k < 4; ++k) {
         const int code = PixOrCopyLiteral(v, order[k]);
         WriteHuffmanCode(bw, codes + k, code);
       }
+    } else if (PixOrCopyIsCacheIdx(v)) {
+      const int code = PixOrCopyCacheIdx(v);
+      const int literal_ix = 256 + NUM_LENGTH_CODES + code;
+      WriteHuffmanCode(bw, codes, literal_ix);
     } else {
       int bits, n_bits;
-      int code, distance;
+      int code;
 
+      const int distance = PixOrCopyDistance(v);
       VP8LPrefixEncode(v->len, &code, &n_bits, &bits);
-      WriteHuffmanCode(bw, codes, 256 + code);
-      VP8LPutBits(bw, bits, n_bits);
+      WriteHuffmanCodeWithExtraBits(bw, codes, 256 + code, bits, n_bits);
 
-      distance = PixOrCopyDistance(v);
+      // Don't write the distance with the extra bits code since
+      // the distance can be up to 18 bits of extra bits, and the prefix
+      // 15 bits, totaling to 33, and our PutBits only supports up to 32 bits.
+      // TODO(jyrki): optimize this further.
       VP8LPrefixEncode(distance, &code, &n_bits, &bits);
       WriteHuffmanCode(bw, codes + 4, code);
       VP8LPutBits(bw, bits, n_bits);
