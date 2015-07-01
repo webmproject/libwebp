@@ -22,6 +22,47 @@
       "revId": "18ca42287facad94cb949ff293e89de916bfdf1a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33c4c97c_887eff8d",
+        "filename": "src/dsp/enc_sse2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 481,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-07-01T00:17:10Z",
+      "side": 1,
+      "message": "should be OK given what you\u0027re storing to; there\u0027s other code like this.",
+      "parentUuid": "b388b937_6d0cd546",
+      "range": {
+        "startLine": 481,
+        "startChar": 0,
+        "endLine": 481,
+        "endChar": 36
+      },
+      "revId": "18ca42287facad94cb949ff293e89de916bfdf1a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "339be98e_9511745c",
+        "filename": "src/dsp/enc_sse2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-07-01T00:17:10Z",
+      "side": 1,
+      "message": "this scope isn\u0027t strictly necessary",
+      "revId": "18ca42287facad94cb949ff293e89de916bfdf1a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
