@@ -335,52 +335,47 @@ static WEBP_INLINE void AddSingleLiteral(uint32_t pixel, int use_color_cache,
   BackwardRefsCursorAdd(refs, v);
 }
 
-static WEBP_INLINE void PushBackCopy(VP8LBackwardRefs* const refs, int length) {
-  while (length >= MAX_LENGTH) {
-    BackwardRefsCursorAdd(refs, PixOrCopyCreateCopy(1, MAX_LENGTH));
-    length -= MAX_LENGTH;
-  }
-  if (length > 0) {
-    BackwardRefsCursorAdd(refs, PixOrCopyCreateCopy(1, length));
-  }
-}
-
 static int BackwardReferencesRle(int xsize, int ysize,
                                  const uint32_t* const argb,
                                  int cache_bits, VP8LBackwardRefs* const refs) {
   const int pix_count = xsize * ysize;
-  int match_len = 0;
-  int i;
-  int cc_init = 0;
+  int i, k;
   const int use_color_cache = (cache_bits > 0);
   VP8LColorCache hashers;
 
-  if (use_color_cache) {
-    cc_init = VP8LColorCacheInit(&hashers, cache_bits);
-    if (!cc_init) return 0;
+  if (use_color_cache && !VP8LColorCacheInit(&hashers, cache_bits)) {
+    return 0;
   }
   ClearBackwardRefs(refs);
   // Add first pixel as literal.
   AddSingleLiteral(argb[0], use_color_cache, &hashers, refs);
-  for (i = 1; i < pix_count; ++i) {
-    if (argb[i] == argb[i - 1]) {
-      ++match_len;
-    } else {
-      const int kMinLength = 4;
-      if (match_len >= kMinLength) {
-        PushBackCopy(refs, match_len);
-      } else {
-        int k;
-        for(k = match_len; k >= 1; --k) {
-          AddSingleLiteral(argb[i - k], use_color_cache, &hashers, refs);
+  i = 1;
+  while (i < pix_count) {
+    const int max_len = MaxFindCopyLength(pix_count - i);
+    const int kMinLength = 4;
+    const int rle_len = FindMatchLength(argb + i, argb + i - 1, 0, max_len);
+    const int prev_row_len = (i < xsize) ? 0 :
+        FindMatchLength(argb + i, argb + i - xsize, 0, max_len);
+    if (rle_len >= prev_row_len && rle_len >= kMinLength) {
+      BackwardRefsCursorAdd(refs, PixOrCopyCreateCopy(1, rle_len));
+      // We don't need to update the color cache here since it is always the
+      // same pixel being copied, and that does not change the color cache
+      // state.
+      i += rle_len;
+    } else if (prev_row_len >= kMinLength) {
+      BackwardRefsCursorAdd(refs, PixOrCopyCreateCopy(xsize, prev_row_len));
+      if (use_color_cache) {
+        for (k = 0; k < prev_row_len; ++k) {
+          VP8LColorCacheInsert(&hashers, argb[i + k]);
         }
       }
-      match_len = 0;
+      i += prev_row_len;
+    } else {
       AddSingleLiteral(argb[i], use_color_cache, &hashers, refs);
+      i++;
     }
   }
-  PushBackCopy(refs, match_len);
-  if (cc_init) VP8LColorCacheClear(&hashers);
+  if (use_color_cache) VP8LColorCacheClear(&hashers);
   return !refs->error_;
 }
 
