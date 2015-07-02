@@ -256,6 +256,8 @@ static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
   return ClampedAddSubtractHalf(&left, top + 0, top - 1);
 }
 
+#endif   // WEBP_USE_INTRINSICS
+
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
 
@@ -306,8 +308,6 @@ static void AddGreenToBlueAndRed(uint32_t* argb_data, int num_pixels) {
 
 #undef USE_VTBLQ
 
-#endif   // WEBP_USE_INTRINSICS
-
 //------------------------------------------------------------------------------
 // Entry point
 
@@ -328,9 +328,9 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitNEON(void) {
   VP8LPredictors[11] = Predictor11;
   VP8LPredictors[12] = Predictor12;
   VP8LPredictors[13] = Predictor13;
+#endif
 
   VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
-#endif
 }
 
 #else  // !WEBP_USE_NEON
