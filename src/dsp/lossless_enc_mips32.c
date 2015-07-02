@@ -259,7 +259,7 @@ static VP8LStreaks HuffmanCostCombinedCount(const uint32_t* X,
       HUFFMAN_COST_PASS
       streak = 0;
       xy_prev = xy;
-  }
+    }
   }
   return stats;
 }

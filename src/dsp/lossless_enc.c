@@ -1150,11 +1150,11 @@ static VP8LStreaks HuffmanCostCombinedCount(const uint32_t* X,
     const uint32_t xy = X[i] + Y[i];
     ++streak;
     if (xy != xy_prev) {
-    stats.counts[xy != 0] += (streak > 3);
-    stats.streaks[xy != 0][(streak > 3)] += streak;
-    streak = 0;
+      stats.counts[xy != 0] += (streak > 3);
+      stats.streaks[xy != 0][(streak > 3)] += streak;
+      streak = 0;
       xy_prev = xy;
-  }
+    }
   }
   return stats;
 }
