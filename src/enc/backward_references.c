@@ -828,12 +828,9 @@ static void BackwardReferences2DLocality(int xsize,
 }
 
 // Returns entropy for the given cache bits.
-static double ComputeCacheEntropy(const uint32_t* const argb,
-                                  int xsize, int ysize,
+static double ComputeCacheEntropy(const uint32_t* argb,
                                   const VP8LBackwardRefs* const refs,
                                   int cache_bits) {
-  int pixel_index = 0;
-  uint32_t k;
   const int use_color_cache = (cache_bits > 0);
   int cc_init = 0;
   double entropy = MAX_ENTROPY;
@@ -847,33 +844,40 @@ static double ComputeCacheEntropy(const uint32_t* const argb,
     cc_init = VP8LColorCacheInit(&hashers, cache_bits);
     if (!cc_init) goto Error;
   }
-
-  while (VP8LRefsCursorOk(&c)) {
-    const PixOrCopy* const v = c.cur_pos;
-    if (PixOrCopyIsLiteral(v)) {
-      if (use_color_cache &&
-          VP8LColorCacheContains(&hashers, argb[pixel_index])) {
-        // push pixel as a cache index
-        const int ix = VP8LColorCacheGetIndex(&hashers, argb[pixel_index]);
-        const PixOrCopy token = PixOrCopyCreateCacheIdx(ix);
-        VP8LHistogramAddSinglePixOrCopy(histo, &token);
+  if (!use_color_cache) {
+    while (VP8LRefsCursorOk(&c)) {
+      VP8LHistogramAddSinglePixOrCopy(histo, c.cur_pos);
+      VP8LRefsCursorNext(&c);
+    }
+  } else {
+    while (VP8LRefsCursorOk(&c)) {
+      const PixOrCopy* const v = c.cur_pos;
+      if (PixOrCopyIsLiteral(v)) {
+        const uint32_t pix = *argb++;
+        const uint32_t key = VP8LColorCacheGetIndex(&hashers, pix);
+        if (VP8LColorCacheLookup(&hashers, key) == pix) {
+          ++histo->literal_[NUM_LITERAL_CODES + NUM_LENGTH_CODES + key];
+        } else {
+          VP8LColorCacheSet(&hashers, key, pix);
+          ++histo->blue_[pix & 0xff];
+          ++histo->literal_[(pix >> 8) & 0xff];
+          ++histo->red_[(pix >> 16) & 0xff];
+          ++histo->alpha_[pix >> 24];
+        }
       } else {
-        VP8LHistogramAddSinglePixOrCopy(histo, v);
+        int len = PixOrCopyLength(v);
+        int code, extra_bits;
+        VP8LPrefixEncodeBits(len, &code, &extra_bits);
+        ++histo->literal_[NUM_LITERAL_CODES + code];
+        VP8LPrefixEncodeBits(PixOrCopyDistance(v), &code, &extra_bits);
+        ++histo->distance_[code];
+        do {
+          VP8LColorCacheInsert(&hashers, *argb++);
+        } while(--len != 0);
       }
-    } else {
-      VP8LHistogramAddSinglePixOrCopy(histo, v);
+      VP8LRefsCursorNext(&c);
     }
-    if (use_color_cache) {
-      for (k = 0; k < PixOrCopyLength(v); ++k) {
-        VP8LColorCacheInsert(&hashers, argb[pixel_index + k]);
-      }
-    }
-    pixel_index += PixOrCopyLength(v);
-    VP8LRefsCursorNext(&c);
   }
-  assert(pixel_index == xsize * ysize);
-  (void)xsize;  // xsize is not used in non-debug compilations otherwise.
-  (void)ysize;  // ysize is not used in non-debug compilations otherwise.
   entropy = VP8LHistogramEstimateBits(histo) +
       kSmallPenaltyForLargeCache * cache_bits;
  Error:
@@ -916,14 +920,12 @@ static int CalculateBestCacheSize(const uint32_t* const argb,
   // Do a binary search to find the optimal entropy for cache_bits.
   while (eval_low || eval_high) {
     if (eval_low) {
-      entropy_low =
-          ComputeCacheEntropy(argb, xsize, ysize, refs, cache_bits_low);
+      entropy_low = ComputeCacheEntropy(argb, refs, cache_bits_low);
       entropy_low += entropy_low * cache_bits_low * cost_mul;
       eval_low = 0;
     }
     if (eval_high) {
-      entropy_high =
-          ComputeCacheEntropy(argb, xsize, ysize, refs, cache_bits_high);
+      entropy_high = ComputeCacheEntropy(argb, refs, cache_bits_high);
       entropy_high += entropy_high * cache_bits_high * cost_mul;
       eval_high = 0;
     }
