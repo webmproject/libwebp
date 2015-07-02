@@ -1025,38 +1025,37 @@ static void Intra16Preds(uint8_t* dst,
 //------------------------------------------------------------------------------
 // Metric
 
-static WEBP_INLINE __m128i SubtractAndAccumulate(const __m128i a,
-                                                 const __m128i b) {
+static WEBP_INLINE void SubtractAndAccumulate(const __m128i a, const __m128i b,
+                                              __m128i* const sum) {
+  // take abs(a-b) in 8b
+  const __m128i a_b = _mm_subs_epu8(a, b);
+  const __m128i b_a = _mm_subs_epu8(b, a);
+  const __m128i abs_a_b = _mm_or_si128(a_b, b_a);
+  // zero-extend to 16b
   const __m128i zero = _mm_setzero_si128();
-  // convert to 16b
-  const __m128i A0 = _mm_unpacklo_epi8(a, zero);
-  const __m128i B0 = _mm_unpacklo_epi8(b, zero);
-  const __m128i A1 = _mm_unpackhi_epi8(a, zero);
-  const __m128i B1 = _mm_unpackhi_epi8(b, zero);
-  // subtract
-  const __m128i C0 = _mm_subs_epi16(A0, B0);
-  const __m128i C1 = _mm_subs_epi16(A1, B1);
+  const __m128i C0 = _mm_unpacklo_epi8(abs_a_b, zero);
+  const __m128i C1 = _mm_unpackhi_epi8(abs_a_b, zero);
   // multiply with self
-  const __m128i D0 = _mm_madd_epi16(C0, C0);
-  const __m128i D1 = _mm_madd_epi16(C1, C1);
-  // accumulate
-  const __m128i sum = _mm_add_epi32(D0, D1);
-  return sum;
+  const __m128i sum1 = _mm_madd_epi16(C0, C0);
+  const __m128i sum2 = _mm_madd_epi16(C1, C1);
+  *sum = _mm_add_epi32(sum1, sum2);
 }
 
-static int SSE_16xN(const uint8_t* a, const uint8_t* b, int num_pairs) {
+static WEBP_INLINE int SSE_16xN(const uint8_t* a, const uint8_t* b,
+                                int num_pairs) {
   __m128i sum = _mm_setzero_si128();
   int32_t tmp[4];
+  int i;
 
-  while (num_pairs-- > 0) {
+  for (i = 0; i < num_pairs; ++i) {
     const __m128i a0 = _mm_loadu_si128((const __m128i*)&a[BPS * 0]);
-    const __m128i a1 = _mm_loadu_si128((const __m128i*)&a[BPS * 1]);
     const __m128i b0 = _mm_loadu_si128((const __m128i*)&b[BPS * 0]);
+    const __m128i a1 = _mm_loadu_si128((const __m128i*)&a[BPS * 1]);
     const __m128i b1 = _mm_loadu_si128((const __m128i*)&b[BPS * 1]);
-    const __m128i sum1 = SubtractAndAccumulate(a0, b0);
-    const __m128i sum2 = SubtractAndAccumulate(a1, b1);
-    const __m128i sum12 = _mm_add_epi32(sum1, sum2);
-    sum = _mm_add_epi32(sum, sum12);
+    __m128i sum1, sum2;
+    SubtractAndAccumulate(a0, b0, &sum1);
+    SubtractAndAccumulate(a1, b1, &sum2);
+    sum = _mm_add_epi32(sum, _mm_add_epi32(sum1, sum2));
     a += 2 * BPS;
     b += 2 * BPS;
   }

@@ -61,54 +61,6 @@ static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
 }
 
 //------------------------------------------------------------------------------
-// Metric
-
-static WEBP_INLINE __m128i SubtractAndAccumulate(const __m128i a,
-                                                 const __m128i b) {
-  // take abs(a-b) in 8b
-  const __m128i a_b = _mm_subs_epu8(a, b);
-  const __m128i b_a = _mm_subs_epu8(b, a);
-  const __m128i abs_a_b = _mm_or_si128(a_b, b_a);
-  // zero-extend to 16b
-  const __m128i C0 = _mm_cvtepu8_epi16(abs_a_b);
-  const __m128i C1 = _mm_cvtepu8_epi16(_mm_srli_si128(abs_a_b, 8));
-  // multiply with self
-  const __m128i D0 = _mm_madd_epi16(C0, C0);
-  const __m128i D1 = _mm_madd_epi16(C1, C1);
-  // accumulate
-  const __m128i sum = _mm_add_epi32(D0, D1);
-  return sum;
-}
-
-static int SSE_16xN(const uint8_t* a, const uint8_t* b, int num_pairs) {
-  __m128i sum = _mm_setzero_si128();
-  int32_t tmp[4];
-
-  while (num_pairs-- > 0) {
-    const __m128i a0 = _mm_loadu_si128((const __m128i*)&a[BPS * 0]);
-    const __m128i a1 = _mm_loadu_si128((const __m128i*)&a[BPS * 1]);
-    const __m128i b0 = _mm_loadu_si128((const __m128i*)&b[BPS * 0]);
-    const __m128i b1 = _mm_loadu_si128((const __m128i*)&b[BPS * 1]);
-    const __m128i sum1 = SubtractAndAccumulate(a0, b0);
-    const __m128i sum2 = SubtractAndAccumulate(a1, b1);
-    const __m128i sum12 = _mm_add_epi32(sum1, sum2);
-    sum = _mm_add_epi32(sum, sum12);
-    a += 2 * BPS;
-    b += 2 * BPS;
-  }
-  _mm_storeu_si128((__m128i*)tmp, sum);
-  return (tmp[3] + tmp[2] + tmp[1] + tmp[0]);
-}
-
-static int SSE16x16(const uint8_t* a, const uint8_t* b) {
-  return SSE_16xN(a, b, 8);
-}
-
-static int SSE16x8(const uint8_t* a, const uint8_t* b) {
-  return SSE_16xN(a, b, 4);
-}
-
-//------------------------------------------------------------------------------
 // Texture distortion
 //
 // We try to match the spectral content (weighted) between source and
@@ -412,8 +364,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitSSE41(void) {
   VP8EncQuantizeBlock = QuantizeBlock;
   VP8EncQuantize2Blocks = Quantize2Blocks;
   VP8EncQuantizeBlockWHT = QuantizeBlockWHT;
-  VP8SSE16x16 = SSE16x16;
-  VP8SSE16x8 = SSE16x8;
   VP8TDisto4x4 = Disto4x4;
   VP8TDisto16x16 = Disto16x16;
 }
