@@ -232,14 +232,10 @@ static void HashChainInsert(VP8LHashChain* const p,
   p->hash_to_first_index_[hash_code] = pos;
 }
 
-static void GetParamsForHashChainFindCopy(
-    int quality, int low_effort, int* iter_max, int* len_for_unit_dist) {
-  *iter_max = 8 + (quality * quality) / 40;
-  *len_for_unit_dist = 32 + (96 * quality) / 100;
-  if (low_effort) {
-    *iter_max -= 2;
-    *len_for_unit_dist /= 4;
-  }
+// Returns the maximum number of hash chain lookups to do for a
+// given compression quality. Return value in range [6, 86].
+static int GetMaxItersForQuality(int quality, int low_effort) {
+  return (low_effort ? 6 : 8) + (quality * quality) / 128;
 }
 
 static int GetWindowSizeForHashChain(int quality, int xsize) {
@@ -274,15 +270,14 @@ static void HashChainFindOffset(const VP8LHashChain* const p, int base_position,
 }
 
 static int HashChainFindCopy(const VP8LHashChain* const p,
-                             int base_position, int xsize,
+                             int base_position,
                              const uint32_t* const argb, int max_len,
                              int window_size, int iter_max,
-                             int len_for_unit_dist,
                              int* const distance_ptr,
                              int* const length_ptr) {
   const uint32_t* const argb_start = argb + base_position;
   int iter = iter_max;
-  int best_length = 1;
+  int best_length = 0;
   int best_distance = 0;
   const int min_pos =
       (base_position > window_size) ? base_position - window_size : 0;
@@ -291,7 +286,6 @@ static int HashChainFindCopy(const VP8LHashChain* const p,
   if (max_len < length_max) {
     length_max = max_len;
   }
-  assert(xsize > 0);
   for (pos = p->hash_to_first_index_[GetPixPairHash64(argb_start)];
        pos >= min_pos;
        pos = p->chain_[pos]) {
@@ -307,10 +301,6 @@ static int HashChainFindCopy(const VP8LHashChain* const p,
       best_length = curr_length;
       best_distance = distance;
       if (curr_length >= length_max) {
-        break;
-      }
-      if ((distance == 1 || distance == xsize) &&
-          best_length >= len_for_unit_dist) {
         break;
       }
     }
@@ -390,11 +380,9 @@ static int BackwardReferencesLz77(int xsize, int ysize,
   const int use_color_cache = (cache_bits > 0);
   const int pix_count = xsize * ysize;
   VP8LColorCache hashers;
-  int iter_max, len_for_unit_dist;
+  int iter_max = GetMaxItersForQuality(quality, low_effort);
   const int window_size = GetWindowSizeForHashChain(quality, xsize);
   int min_matches = 32;
-  GetParamsForHashChainFindCopy(quality, low_effort, &iter_max,
-                                &len_for_unit_dist);
 
   if (use_color_cache) {
     cc_init = VP8LColorCacheInit(&hashers, cache_bits);
@@ -407,8 +395,8 @@ static int BackwardReferencesLz77(int xsize, int ysize,
     int offset = 0;
     int len = 0;
     const int max_len = MaxFindCopyLength(pix_count - i);
-    HashChainFindCopy(hash_chain, i, xsize, argb, max_len, window_size,
-                      iter_max, len_for_unit_dist, &offset, &len);
+    HashChainFindCopy(hash_chain, i, argb, max_len, window_size,
+                      iter_max, &offset, &len);
     if (len > MIN_LENGTH || (len == MIN_LENGTH && offset <= 512)) {
       int offset2 = 0;
       int len2 = 0;
@@ -418,8 +406,8 @@ static int BackwardReferencesLz77(int xsize, int ysize,
       if ((len < (max_len >> 2)) && !low_effort) {
         // Evaluate Alternative#2: Insert the pixel at 'i' as literal, and code
         // the pixels starting at 'i + 1' using backward reference.
-        HashChainFindCopy(hash_chain, i + 1, xsize, argb, max_len - 1,
-                          window_size, iter_max, len_for_unit_dist, &offset2,
+        HashChainFindCopy(hash_chain, i + 1, argb, max_len - 1,
+                          window_size, iter_max, &offset2,
                           &len2);
         if (len2 > len + 1) {
           AddSingleLiteral(argb[i], use_color_cache, &hashers, refs);
@@ -597,10 +585,10 @@ static int BackwardReferencesHashChainDistanceOnly(
   CostModel* const cost_model =
       (CostModel*)WebPSafeMalloc(1ULL, cost_model_size);
   VP8LColorCache hashers;
-  const int min_distance_code = 2;
-  int iter_max, len_for_unit_dist;
+  const int skip_length = 32 + quality;
+  const int skip_min_distance_code = 2;
+  int iter_max = GetMaxItersForQuality(quality, 0);
   const int window_size = GetWindowSizeForHashChain(quality, xsize);
-  GetParamsForHashChainFindCopy(quality, 0, &iter_max, &len_for_unit_dist);
 
   if (cost == NULL || cost_model == NULL) goto Error;
 
@@ -628,8 +616,8 @@ static int BackwardReferencesHashChainDistanceOnly(
     int len = 0;
     double prev_cost = cost[i - 1];
     const int max_len = MaxFindCopyLength(pix_count - i);
-    HashChainFindCopy(hash_chain, i, xsize, argb, max_len, window_size,
-                      iter_max, len_for_unit_dist, &offset, &len);
+    HashChainFindCopy(hash_chain, i, argb, max_len, window_size,
+                      iter_max, &offset, &len);
     if (len >= MIN_LENGTH) {
       const int code = DistanceToPlaneCode(xsize, offset);
       const double distance_cost =
@@ -644,7 +632,7 @@ static int BackwardReferencesHashChainDistanceOnly(
       }
       // This if is for speedup only. It roughly doubles the speed, and
       // makes compression worse by .1 %.
-      if (len >= len_for_unit_dist && code <= min_distance_code) {
+      if (len >= skip_length && code <= skip_min_distance_code) {
         // Long copy for short distances, let's skip the middle
         // lookups for better copies.
         // 1) insert the hashes.
