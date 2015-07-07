@@ -40,8 +40,10 @@ bool ReadAnimatedImage(const char filename[], AnimatedImage* const image,
                        bool dump_frames, const char dump_folder[]);
 
 // Given two RGBA buffers, calculate max pixel difference and PSNR.
+// If 'premultiply' is true, R/G/B values will be pre-multiplied by the
+// transparency before comparison.
 void GetDiffAndPSNR(const uint8_t rgba1[], const uint8_t rgba2[],
-                    uint32_t width, uint32_t height, int* const max_diff,
-                    double* const psnr);
+                    uint32_t width, uint32_t height, bool premultiply,
+                    int* const max_diff, double* const psnr);
 
 #endif  // WEBP_EXAMPLES_ANIM_UTIL_H_

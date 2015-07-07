@@ -815,20 +815,41 @@ bool ReadAnimatedImage(const char filename[], AnimatedImage* const image,
   }
 }
 
+static void Accumulate(double v1, double v2, double* const max_diff,
+                       double* const sse) {
+  const double diff = fabs(v1 - v2);
+  if (diff > *max_diff) *max_diff = diff;
+  *sse += diff * diff;
+}
+
 void GetDiffAndPSNR(const uint8_t rgba1[], const uint8_t rgba2[],
-                    uint32_t width, uint32_t height, int* const max_diff,
-                    double* const psnr) {
+                    uint32_t width, uint32_t height, bool premultiply,
+                    int* const max_diff, double* const psnr) {
   const uint32_t stride = width * kNumChannels;
-  *max_diff = 0;
+  const int kAlphaChannel = kNumChannels - 1;
+  double f_max_diff = 0.;
   double sse = 0.;
   for (uint32_t y = 0; y < height; ++y) {
-    for (uint32_t x = 0; x < stride; ++x) {
+    for (uint32_t x = 0; x < stride; x += kNumChannels) {
       const size_t offset = y * stride + x;
-      const int diff = abs(rgba1[offset] - rgba2[offset]);
-      if (diff > *max_diff) *max_diff = diff;
-      sse += diff * diff;
+      const int alpha1 = rgba1[offset + kAlphaChannel];
+      const int alpha2 = rgba2[offset + kAlphaChannel];
+      Accumulate(alpha1, alpha2, &f_max_diff, &sse);
+      if (!premultiply) {
+        for (int k = 0; k < kAlphaChannel; ++k) {
+          Accumulate(rgba1[offset + k], rgba2[offset + k], &f_max_diff, &sse);
+        }
+      } else {
+        // premultiply R/G/B channels with alpha value
+        for (int k = 0; k < kAlphaChannel; ++k) {
+          Accumulate(rgba1[offset + k] * alpha1 / 255.,
+                     rgba2[offset + k] * alpha2 / 255.,
+                     &f_max_diff, &sse);
+        }
+      }
     }
   }
+  *max_diff = static_cast<int>(f_max_diff);
   if (*max_diff == 0) {
     *psnr = 99.;  // PSNR when images are identical.
   } else {

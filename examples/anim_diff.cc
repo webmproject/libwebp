@@ -37,6 +37,7 @@ bool CompareValues(T a, T b, const std::string& output_str) {
 // is OK for other aspects like offsets, dispose/blend method to vary.
 bool CompareAnimatedImagePair(const AnimatedImage& img1,
                               const AnimatedImage& img2,
+                              bool premultiply,
                               double min_psnr) {
   bool ok = true;
   ok = CompareValues(img1.canvas_width, img2.canvas_width,
@@ -68,7 +69,7 @@ bool CompareAnimatedImagePair(const AnimatedImage& img1,
     int max_diff;
     double psnr;
     GetDiffAndPSNR(rgba1, rgba2, img1.canvas_width, img1.canvas_height,
-                   &max_diff, &psnr);
+                   premultiply, &max_diff, &psnr);
     if (min_psnr > 0.) {
       if (psnr < min_psnr) {
         fprintf(stderr, "Frame #%zu, psnr = %.2lf (min_psnr = %f)\n", i,
@@ -87,7 +88,7 @@ bool CompareAnimatedImagePair(const AnimatedImage& img1,
 
 void Help() {
   printf("\nUsage: anim_diff <image1> <image2> [-dump_frames <folder>] "
-         "[-min_psnr <float>]\n");
+         "[-min_psnr <float>][-raw_comparison]\n");
 }
 
 }  // namespace
@@ -98,6 +99,7 @@ int main(int argc, const char* argv[]) {
   double min_psnr = 0.;
   bool got_input1 = false;
   bool got_input2 = false;
+  bool premultiply = true;
   const char* files[2];
 
   if (argc < 3) {
@@ -127,6 +129,8 @@ int main(int argc, const char* argv[]) {
       } else {
         parse_error = true;
       }
+    } else if (!strcmp(argv[c], "-raw_comparison")) {
+      premultiply = false;
     } else {
       if (!got_input1) {
         files[0] = argv[c];
@@ -161,7 +165,8 @@ int main(int argc, const char* argv[]) {
     }
   }
 
-  if (!CompareAnimatedImagePair(images[0], images[1], min_psnr)) {
+  if (!CompareAnimatedImagePair(images[0], images[1],
+                                premultiply, min_psnr)) {
     fprintf(stderr, "\nFiles %s and %s differ.\n", files[0], files[1]);
     return -3;
   }
