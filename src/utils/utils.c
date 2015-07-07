@@ -12,6 +12,7 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include <stdlib.h>
+#include "../webp/decode.h"
 #include "./utils.h"
 
 // If PRINT_MEM_INFO is defined, extra info (like total memory used, number of
@@ -205,6 +206,11 @@ void WebPSafeFree(void* const ptr) {
     Increment(&num_free_calls);
     SubMem(ptr);
   }
+  free(ptr);
+}
+
+// Public API function.
+void WebPFree(void* ptr) {
   free(ptr);
 }
 
