@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d829ca86_f1ea829b",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 876,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-07-08T07:06:37Z",
+      "side": 1,
+      "message": "missing space after \"while\". Will fix later in another patch...",
+      "range": {
+        "startLine": 876,
+        "startChar": 26,
+        "endLine": 876,
+        "endChar": 28
+      },
+      "revId": "83b33cc30048a6bc9f2822f52ea866579c3fbdeb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
