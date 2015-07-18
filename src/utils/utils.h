@@ -90,7 +90,7 @@ static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
 #pragma intrinsic(_BitScanReverse)
 
 static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
-  uint32_t first_set_bit;
+  unsigned long first_set_bit;
   _BitScanReverse(&first_set_bit, n);
   return first_set_bit;
 }
