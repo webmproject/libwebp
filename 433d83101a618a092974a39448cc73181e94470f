@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d83d4aa0_8e525be2",
+        "filename": "src/utils/bit_writer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-07-20T20:16:00Z",
+      "side": 1,
+      "message": "this more correctly belongs within VP8LPutBitsInternal(), but to avoid indenting that unnecessarily and to please the static analysis, it\u0027s here. Really this should be revisited as there\u0027s some redundant checks now that it\u0027s a 16-bit only function.\nAdditionally rather than rely on the compiler this could all be handled by the preproc",
+      "revId": "433d83101a618a092974a39448cc73181e94470f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
