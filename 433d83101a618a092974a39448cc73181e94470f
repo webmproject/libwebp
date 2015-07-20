@@ -16,6 +16,24 @@
       "revId": "433d83101a618a092974a39448cc73181e94470f",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78429e31_114dac8f",
+        "filename": "src/utils/bit_writer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-07-20T23:20:33Z",
+      "side": 1,
+      "message": "actually the old code had this structure, it\u0027s just a matter of rearranging the asserts. still this function could use another look, I\u0027m curious about the performance on arm based on the placement of the n_bits check",
+      "parentUuid": "d83d4aa0_8e525be2",
+      "revId": "433d83101a618a092974a39448cc73181e94470f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
