@@ -473,8 +473,8 @@ static WEBP_INLINE double BitsEntropyRefine(int nonzeros, int sum, int max_val,
 // Returns the entropy for the symbols in the input array.
 // Also sets trivial_symbol to the code value, if the array has only one code
 // value. Otherwise, set it to VP8L_NON_TRIVIAL_SYM.
-static double BitsEntropy(const uint32_t* const array, int n,
-                          uint32_t* const trivial_symbol) {
+double VP8LBitsEntropy(const uint32_t* const array, int n,
+                       uint32_t* const trivial_symbol) {
   double retval = 0.;
   uint32_t sum = 0;
   uint32_t nonzero_code = VP8L_NON_TRIVIAL_SYM;
@@ -555,7 +555,7 @@ static double HuffmanCostCombined(const uint32_t* const X,
 double VP8LPopulationCost(const uint32_t* const population, int length,
                           uint32_t* const trivial_sym) {
   return
-      BitsEntropy(population, length, trivial_sym) +
+      VP8LBitsEntropy(population, length, trivial_sym) +
       HuffmanCost(population, length);
 }
 
@@ -579,12 +579,12 @@ double VP8LHistogramEstimateBits(const VP8LHistogram* const p) {
 
 double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p) {
   return
-      BitsEntropy(p->literal_, VP8LHistogramNumCodes(p->palette_code_bits_),
+      VP8LBitsEntropy(p->literal_, VP8LHistogramNumCodes(p->palette_code_bits_),
                   NULL)
-      + BitsEntropy(p->red_, NUM_LITERAL_CODES, NULL)
-      + BitsEntropy(p->blue_, NUM_LITERAL_CODES, NULL)
-      + BitsEntropy(p->alpha_, NUM_LITERAL_CODES, NULL)
-      + BitsEntropy(p->distance_, NUM_DISTANCE_CODES, NULL)
+      + VP8LBitsEntropy(p->red_, NUM_LITERAL_CODES, NULL)
+      + VP8LBitsEntropy(p->blue_, NUM_LITERAL_CODES, NULL)
+      + VP8LBitsEntropy(p->alpha_, NUM_LITERAL_CODES, NULL)
+      + VP8LBitsEntropy(p->distance_, NUM_DISTANCE_CODES, NULL)
       + VP8LExtraCost(p->literal_ + NUM_LITERAL_CODES, NUM_LENGTH_CODES)
       + VP8LExtraCost(p->distance_, NUM_DISTANCE_CODES);
 }

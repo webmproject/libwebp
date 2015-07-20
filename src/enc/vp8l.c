@@ -189,21 +189,59 @@ static int AnalyzeAndCreatePalette(const WebPPicture* const pic,
   return 1;
 }
 
+// These five modes are evaluated and their respective entropy is computed.
+typedef enum {
+  kDirect = 0,
+  kSpatial = 1,
+  kSubGreen = 2,
+  kSpatialSubGreen = 3,
+  kPalette = 4,
+  kNumEntropyIx = 5
+} EntropyIx;
+
+typedef enum {
+  kHistoAlpha = 0,
+  kHistoAlphaPred,
+  kHistoGreen,
+  kHistoGreenPred,
+  kHistoRed,
+  kHistoRedPred,
+  kHistoBlue,
+  kHistoBluePred,
+  kHistoRedSubGreen,
+  kHistoRedPredSubGreen,
+  kHistoBlueSubGreen,
+  kHistoBluePredSubGreen,
+  kHistoPalette,
+  kHistoTotal  // Must be last.
+} HistoIx;
+
+static void AddSingleSubGreen(uint32_t p, uint32_t* r, uint32_t* b) {
+  const uint32_t green = p >> 8;  // The upper bits are masked away later.
+  ++r[((p >> 16) - green) & 0xff];
+  ++b[(p - green) & 0xff];
+}
+
+static void AddSingle(uint32_t p,
+                      uint32_t* a, uint32_t* r, uint32_t* g, uint32_t* b) {
+  ++a[p >> 24];
+  ++r[(p >> 16) & 0xff];
+  ++g[(p >> 8) & 0xff];
+  ++b[(p & 0xff)];
+}
+
 static int AnalyzeEntropy(const uint32_t* argb,
                           int width, int height, int argb_stride,
-                          double* const nonpredicted_bits,
-                          double* const predicted_bits) {
+                          int use_palette,
+                          EntropyIx* const min_entropy_ix,
+                          int* const red_and_blue_always_zero) {
   // Allocate histogram set with cache_bits = 0.
-  VP8LHistogramSet* const histo_set = VP8LAllocateHistogramSet(2, 0);
-  assert(nonpredicted_bits != NULL);
-  assert(predicted_bits != NULL);
-
-  if (histo_set != NULL) {
-    int x, y;
+  uint32_t* const histo =
+      (uint32_t*)WebPSafeCalloc(kHistoTotal, sizeof(*histo) * 256);
+  if (histo != NULL) {
+    int i, x, y;
     const uint32_t* prev_row = argb;
     const uint32_t* curr_row = argb + argb_stride;
-    VP8LHistogram* const histo_non_pred = histo_set->histograms[0];
-    VP8LHistogram* const histo_pred = histo_set->histograms[1];
     for (y = 1; y < height; ++y) {
       uint32_t prev_pix = curr_row[0];
       for (x = 1; x < width; ++x) {
@@ -211,53 +249,101 @@ static int AnalyzeEntropy(const uint32_t* argb,
         const uint32_t pix_diff = VP8LSubPixels(pix, prev_pix);
         if ((pix_diff == 0) || (pix == prev_row[x])) continue;
         prev_pix = pix;
+        AddSingle(pix,
+                  &histo[kHistoAlpha * 256],
+                  &histo[kHistoRed * 256],
+                  &histo[kHistoGreen * 256],
+                  &histo[kHistoBlue * 256]);
+        AddSingle(pix_diff,
+                  &histo[kHistoAlphaPred * 256],
+                  &histo[kHistoRedPred * 256],
+                  &histo[kHistoGreenPred * 256],
+                  &histo[kHistoBluePred * 256]);
+        AddSingleSubGreen(pix,
+                          &histo[kHistoRedSubGreen * 256],
+                          &histo[kHistoBlueSubGreen * 256]);
+        AddSingleSubGreen(pix_diff,
+                          &histo[kHistoRedPredSubGreen * 256],
+                          &histo[kHistoBluePredSubGreen * 256]);
         {
-          const PixOrCopy pix_token = PixOrCopyCreateLiteral(pix);
-          const PixOrCopy pix_diff_token = PixOrCopyCreateLiteral(pix_diff);
-          VP8LHistogramAddSinglePixOrCopy(histo_non_pred, &pix_token);
-          VP8LHistogramAddSinglePixOrCopy(histo_pred, &pix_diff_token);
+          // Approximate the palette by the entropy of the multiplicative hash.
+          const int hash = ((pix + (pix >> 19)) * 0x39c5fba7) >> 24;
+          ++histo[kHistoPalette * 256 + (hash & 0xff)];
         }
       }
       prev_row = curr_row;
       curr_row += argb_stride;
     }
-    *nonpredicted_bits = VP8LHistogramEstimateBitsBulk(histo_non_pred);
-    *predicted_bits = VP8LHistogramEstimateBitsBulk(histo_pred);
-    VP8LFreeHistogramSet(histo_set);
-    return 1;
-  } else {
-    return 0;
-  }
-}
+    {
+      double entropy_comp[kHistoTotal];
+      double entropy[kNumEntropyIx];
+      EntropyIx k;
+      EntropyIx last_mode_to_analyze =
+          use_palette ? kPalette : kSpatialSubGreen;
+      int j;
+      // Let's add one zero to the predicted histograms. The zeros are removed
+      // too efficiently by the pix_diff == 0 comparison, at least one of the
+      // zeros is likely to exist.
+      ++histo[kHistoRedPredSubGreen * 256];
+      ++histo[kHistoBluePredSubGreen * 256];
+      ++histo[kHistoRedPred * 256];
+      ++histo[kHistoGreenPred * 256];
+      ++histo[kHistoBluePred * 256];
+      ++histo[kHistoAlphaPred * 256];
 
-// Check if it would be a good idea to subtract green from red and blue. We
-// only evaluate entropy in red/blue components, don't bother to look at others.
-static int AnalyzeSubtractGreen(const uint32_t* const argb,
-                                int width, int height,
-                                double* const entropy_change_ratio) {
-  // Allocate histogram set with cache_bits = 1.
-  VP8LHistogramSet* const histo_set = VP8LAllocateHistogramSet(2, 1);
-  assert(entropy_change_ratio != NULL);
+      for (j = 0; j < kHistoTotal; ++j) {
+        entropy_comp[j] = VP8LBitsEntropy(&histo[j * 256], 256, NULL);
+      }
+      entropy[kDirect] = entropy_comp[kHistoAlpha] +
+          entropy_comp[kHistoRed] +
+          entropy_comp[kHistoGreen] +
+          entropy_comp[kHistoBlue];
+      entropy[kSpatial] = entropy_comp[kHistoAlphaPred] +
+          entropy_comp[kHistoRedPred] +
+          entropy_comp[kHistoGreenPred] +
+          entropy_comp[kHistoBluePred];
+      entropy[kSubGreen] = entropy_comp[kHistoAlpha] +
+          entropy_comp[kHistoRedSubGreen] +
+          entropy_comp[kHistoGreen] +
+          entropy_comp[kHistoBlueSubGreen];
+      entropy[kSpatialSubGreen] = entropy_comp[kHistoAlphaPred] +
+          entropy_comp[kHistoRedPredSubGreen] +
+          entropy_comp[kHistoGreenPred] +
+          entropy_comp[kHistoBluePredSubGreen];
+      // Palette mode seems more efficient in a breakeven case. Bias with 1.0.
+      entropy[kPalette] = entropy_comp[kHistoPalette] - 1.0;
 
-  if (histo_set != NULL) {
-    int i;
-    double bit_cost, bit_cost_subgreen;
-    VP8LHistogram* const histo = histo_set->histograms[0];
-    VP8LHistogram* const histo_subgreen = histo_set->histograms[1];
-    for (i = 0; i < width * height; ++i) {
-      const uint32_t c = argb[i];
-      const int green = (c >> 8) & 0xff;
-      const int red = (c >> 16) & 0xff;
-      const int blue = (c >> 0) & 0xff;
-      ++histo->red_[red];
-      ++histo->blue_[blue];
-      ++histo_subgreen->red_[(red - green) & 0xff];
-      ++histo_subgreen->blue_[(blue - green) & 0xff];
+      *min_entropy_ix = kDirect;
+      for (k = kDirect + 1; k <= last_mode_to_analyze; ++k) {
+        if (entropy[*min_entropy_ix] > entropy[k]) {
+          *min_entropy_ix = k;
+        }
+      }
+      *red_and_blue_always_zero = 1;
+      // Let's check if the histogram of the chosen entropy mode has
+      // non-zero red and blue values. If all are zero, we can later skip
+      // the cross color optimization.
+      {
+        static const uint8_t kHistoPairs[5][2] = {
+          { kHistoRed, kHistoBlue },
+          { kHistoRedPred, kHistoBluePred },
+          { kHistoRedSubGreen, kHistoBlueSubGreen },
+          { kHistoRedPredSubGreen, kHistoBluePredSubGreen },
+          { kHistoRed, kHistoBlue }
+        };
+        const uint32_t* const red_histo =
+            &histo[256 * kHistoPairs[*min_entropy_ix][0]];
+        const uint32_t* const blue_histo =
+            &histo[256 * kHistoPairs[*min_entropy_ix][1]];
+        for (i = 1; i < 256; ++i) {
+          if ((red_histo[i] | blue_histo[i]) != 0) {
+            *red_and_blue_always_zero = 0;
+            break;
+          }
+        }
+      }
     }
-    bit_cost= VP8LHistogramEstimateBits(histo);
-    bit_cost_subgreen = VP8LHistogramEstimateBits(histo_subgreen);
-    VP8LFreeHistogramSet(histo_set);
-    *entropy_change_ratio = bit_cost_subgreen / (bit_cost + 1e-6);
+    free(histo);
     return 1;
   } else {
     return 0;
@@ -282,21 +368,7 @@ static int GetTransformBits(int method, int histo_bits) {
   return (histo_bits > max_transform_bits) ? max_transform_bits : histo_bits;
 }
 
-static int EvalSubtractGreenForPalette(int palette_size, float quality) {
-  // Evaluate non-palette encoding (subtract green, prediction transforms etc)
-  // for palette size in the mid-range (17-96) as for larger number of colors,
-  // the benefit from switching to non-palette is not much.
-  // Non-palette transforms are little CPU intensive, hence don't evaluate them
-  // for lower (<= 25) quality.
-  const int min_colors_non_palette = 17;
-  const int max_colors_non_palette = 96;
-  const float min_quality_non_palette = 26.f;
-  return (palette_size >= min_colors_non_palette) &&
-         (palette_size <= max_colors_non_palette) &&
-         (quality >= min_quality_non_palette);
-}
-
-static int AnalyzeAndInit(VP8LEncoder* const enc, WebPImageHint image_hint) {
+static int AnalyzeAndInit(VP8LEncoder* const enc) {
   const WebPPicture* const pic = enc->pic_;
   const int width = pic->width;
   const int height = pic->height;
@@ -304,68 +376,44 @@ static int AnalyzeAndInit(VP8LEncoder* const enc, WebPImageHint image_hint) {
   const WebPConfig* const config = enc->config_;
   const int method = config->method;
   const int low_effort = (config->method == 0);
-  const float quality = config->quality;
-  double subtract_green_score = 10.0;
-  const double subtract_green_threshold_palette = 0.80;
-  const double subtract_green_threshold_non_palette = 1.0;
   // we round the block size up, so we're guaranteed to have
   // at max MAX_REFS_BLOCK_PER_IMAGE blocks used:
   int refs_block_size = (pix_cnt - 1) / MAX_REFS_BLOCK_PER_IMAGE + 1;
   assert(pic != NULL && pic->argb != NULL);
 
+  enc->use_cross_color_ = 0;
+  enc->use_predict_ = 0;
+  enc->use_subtract_green_ = 0;
   enc->use_palette_ =
       AnalyzeAndCreatePalette(pic, enc->palette_, &enc->palette_size_);
 
-  if (!enc->use_palette_ ||
-      EvalSubtractGreenForPalette(enc->palette_size_, quality)) {
-    if (low_effort) {
-      // For low effort compression, avoid calling (costly) method
-      // AnalyzeSubtractGreen and enable the subtract-green transform
-      // for non-palette images.
-      subtract_green_score = subtract_green_threshold_non_palette * 0.99;
-    } else {
-      if (!AnalyzeSubtractGreen(pic->argb, width, height,
-                                &subtract_green_score)) {
-        return 0;
-      }
-    }
-  }
-
-  // Evaluate histogram bits based on the original value of use_palette flag.
-  enc->histo_bits_ = GetHistoBits(method, enc->use_palette_, pic->width,
-                                  pic->height);
+  // TODO(jyrki): replace the decision to be based on an actual estimate
+  // of entropy, or even spatial variance of entropy.
+  enc->histo_bits_ = GetHistoBits(method, enc->use_palette_,
+                                  pic->width, pic->height);
   enc->transform_bits_ = GetTransformBits(method, enc->histo_bits_);
 
-  enc->use_subtract_green_ = 0;
-  if (enc->use_palette_) {
-    // Check if other transforms (subtract green etc) are potentially better.
-    if (subtract_green_score < subtract_green_threshold_palette) {
-      enc->use_subtract_green_ = 1;
-      enc->use_palette_ = 0;
-    }
+  if (low_effort) {
+    // AnalyzeEntropy is somewhat slow.
+    enc->use_predict_ = !enc->use_palette_;
+    enc->use_subtract_green_ = !enc->use_palette_;
+    enc->use_cross_color_ = 0;
   } else {
-    // Non-palette case, check if subtract-green optimizes the entropy.
-    if (subtract_green_score < subtract_green_threshold_non_palette) {
-      enc->use_subtract_green_ = 1;
+    int red_and_blue_always_zero;
+    EntropyIx min_entropy_ix;
+    if (!AnalyzeEntropy(pic->argb, width, height, pic->argb_stride,
+                        enc->use_palette_, &min_entropy_ix,
+                        &red_and_blue_always_zero)) {
+      return 0;
     }
+    enc->use_palette_ = (min_entropy_ix == kPalette);
+    enc->use_subtract_green_ =
+        (min_entropy_ix == kSubGreen) || (min_entropy_ix == kSpatialSubGreen);
+    enc->use_predict_ =
+        (min_entropy_ix == kSpatial) || (min_entropy_ix == kSpatialSubGreen);
+    enc->use_cross_color_ = red_and_blue_always_zero ? 0 : enc->use_predict_;
   }
 
-  if (!enc->use_palette_) {
-    if (image_hint == WEBP_HINT_PHOTO) {
-      enc->use_predict_ = 1;
-      enc->use_cross_color_ = !low_effort;
-    } else {
-      double non_pred_entropy, pred_entropy;
-      if (!AnalyzeEntropy(pic->argb, width, height, pic->argb_stride,
-                          &non_pred_entropy, &pred_entropy)) {
-        return 0;
-      }
-      if (pred_entropy < 0.95 * non_pred_entropy) {
-        enc->use_predict_ = 1;
-        enc->use_cross_color_ = !low_effort;
-      }
-    }
-  }
   if (!VP8LHashChainInit(&enc->hash_chain_, pix_cnt)) return 0;
 
   // palette-friendly input typically uses less literals
@@ -615,12 +663,23 @@ static void StoreHuffmanCode(VP8LBitWriter* const bw,
   }
 }
 
-static void WriteHuffmanCode(VP8LBitWriter* const bw,
+static WEBP_INLINE void WriteHuffmanCode(VP8LBitWriter* const bw,
                              const HuffmanTreeCode* const code,
                              int code_index) {
   const int depth = code->code_lengths[code_index];
   const int symbol = code->codes[code_index];
   VP8LPutBits(bw, symbol, depth);
+}
+
+static WEBP_INLINE void WriteHuffmanCodeWithExtraBits(
+    VP8LBitWriter* const bw,
+    const HuffmanTreeCode* const code,
+    int code_index,
+    int bits,
+    int n_bits) {
+  const int depth = code->code_lengths[code_index];
+  const int symbol = code->codes[code_index];
+  VP8LPutBits(bw, (bits << depth) | symbol, depth + n_bits);
 }
 
 static WebPEncodingError StoreImageToBitMask(
@@ -647,26 +706,29 @@ static WebPEncodingError StoreImageToBitMask(
                                        (x >> histo_bits)];
       codes = huffman_codes + 5 * histogram_ix;
     }
-    if (PixOrCopyIsCacheIdx(v)) {
-      const int code = PixOrCopyCacheIdx(v);
-      const int literal_ix = 256 + NUM_LENGTH_CODES + code;
-      WriteHuffmanCode(bw, codes, literal_ix);
-    } else if (PixOrCopyIsLiteral(v)) {
+    if (PixOrCopyIsLiteral(v)) {
       static const int order[] = { 1, 2, 0, 3 };
       int k;
       for (k = 0; k < 4; ++k) {
         const int code = PixOrCopyLiteral(v, order[k]);
         WriteHuffmanCode(bw, codes + k, code);
       }
+    } else if (PixOrCopyIsCacheIdx(v)) {
+      const int code = PixOrCopyCacheIdx(v);
+      const int literal_ix = 256 + NUM_LENGTH_CODES + code;
+      WriteHuffmanCode(bw, codes, literal_ix);
     } else {
       int bits, n_bits;
-      int code, distance;
+      int code;
 
+      const int distance = PixOrCopyDistance(v);
       VP8LPrefixEncode(v->len, &code, &n_bits, &bits);
-      WriteHuffmanCode(bw, codes, 256 + code);
-      VP8LPutBits(bw, bits, n_bits);
+      WriteHuffmanCodeWithExtraBits(bw, codes, 256 + code, bits, n_bits);
 
-      distance = PixOrCopyDistance(v);
+      // Don't write the distance with the extra bits code since
+      // the distance can be up to 18 bits of extra bits, and the prefix
+      // 15 bits, totaling to 33, and our PutBits only supports up to 32 bits.
+      // TODO(jyrki): optimize this further.
       VP8LPrefixEncode(distance, &code, &n_bits, &bits);
       WriteHuffmanCode(bw, codes + 4, code);
       VP8LPutBits(bw, bits, n_bits);
@@ -1256,7 +1318,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   // ---------------------------------------------------------------------------
   // Analyze image (entropy, num_palettes etc)
 
-  if (!AnalyzeAndInit(enc, config->image_hint)) {
+  if (!AnalyzeAndInit(enc)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }

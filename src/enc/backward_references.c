@@ -281,34 +281,32 @@ static int HashChainFindCopy(const VP8LHashChain* const p,
                              int* const distance_ptr,
                              int* const length_ptr) {
   const uint32_t* const argb_start = argb + base_position;
-  int iter = 0;
+  int iter = iter_max;
   int best_length = 1;
-  const int length_max = 256;
   int best_distance = 0;
   const int min_pos =
       (base_position > window_size) ? base_position - window_size : 0;
   int pos;
+  int length_max = 256;
+  if (max_len < length_max) {
+    length_max = max_len;
+  }
   assert(xsize > 0);
   for (pos = p->hash_to_first_index_[GetPixPairHash64(argb_start)];
        pos >= min_pos;
        pos = p->chain_[pos]) {
     int curr_length;
     int distance;
-    if (iter > 8) {
-      if (iter > iter_max || best_length >= length_max) {
-        break;
-      }
+    if (--iter < 0) {
+      break;
     }
-    ++iter;
 
     curr_length = FindMatchLength(argb + pos, argb_start, best_length, max_len);
-    if (curr_length < best_length) continue;
-
-    distance = base_position - pos;
     if (best_length < curr_length) {
+      distance = base_position - pos;
       best_length = curr_length;
       best_distance = distance;
-      if (curr_length >= max_len) {
+      if (curr_length >= length_max) {
         break;
       }
       if ((distance == 1 || distance == xsize) &&
@@ -322,9 +320,9 @@ static int HashChainFindCopy(const VP8LHashChain* const p,
   return (best_length >= MIN_LENGTH);
 }
 
-static void AddSingleLiteral(uint32_t pixel, int use_color_cache,
-                             VP8LColorCache* const hashers,
-                             VP8LBackwardRefs* const refs) {
+static WEBP_INLINE void AddSingleLiteral(uint32_t pixel, int use_color_cache,
+                                         VP8LColorCache* const hashers,
+                                         VP8LBackwardRefs* const refs) {
   PixOrCopy v;
   if (use_color_cache && VP8LColorCacheContains(hashers, pixel)) {
     // push pixel as a PixOrCopyCreateCacheIdx pixel
@@ -368,7 +366,15 @@ static int BackwardReferencesRle(int xsize, int ysize,
     if (argb[i] == argb[i - 1]) {
       ++match_len;
     } else {
-      PushBackCopy(refs, match_len);
+      const int kMinLength = 4;
+      if (match_len >= kMinLength) {
+        PushBackCopy(refs, match_len);
+      } else {
+        int k;
+        for(k = match_len; k >= 1; --k) {
+          AddSingleLiteral(argb[i - k], use_color_cache, &hashers, refs);
+        }
+      }
       match_len = 0;
       AddSingleLiteral(argb[i], use_color_cache, &hashers, refs);
     }
@@ -391,6 +397,7 @@ static int BackwardReferencesLz77(int xsize, int ysize,
   VP8LColorCache hashers;
   int iter_max, len_for_unit_dist;
   const int window_size = GetWindowSizeForHashChain(quality, xsize);
+  int min_matches = 32;
   GetParamsForHashChainFindCopy(quality, low_effort, &iter_max,
                                 &len_for_unit_dist);
 
@@ -407,10 +414,11 @@ static int BackwardReferencesLz77(int xsize, int ysize,
     const int max_len = MaxFindCopyLength(pix_count - i);
     HashChainFindCopy(hash_chain, i, xsize, argb, max_len, window_size,
                       iter_max, len_for_unit_dist, &offset, &len);
-    if (len >= MIN_LENGTH) {
+    if (len > MIN_LENGTH || (len == MIN_LENGTH && offset <= 512)) {
       int offset2 = 0;
       int len2 = 0;
       int k;
+      min_matches = 8;
       HashChainInsert(hash_chain, &argb[i], i);
       if ((len < (max_len >> 2)) && !low_effort) {
         // Evaluate Alternative#2: Insert the pixel at 'i' as literal, and code
@@ -443,12 +451,17 @@ static int BackwardReferencesLz77(int xsize, int ysize,
       AddSingleLiteral(argb[i], use_color_cache, &hashers, refs);
       HashChainInsert(hash_chain, &argb[i], i);
       ++i;
+      --min_matches;
+      if (min_matches <= 0) {
+        AddSingleLiteral(argb[i], use_color_cache, &hashers, refs);
+        HashChainInsert(hash_chain, &argb[i], i);
+        ++i;
+      }
     }
   }
   while (i < pix_count) {
-    // Handle the last (two) pixel(s).
+    // Handle the last pixel(s).
     AddSingleLiteral(argb[i], use_color_cache, &hashers, refs);
-    if (i < (pix_count - 1)) HashChainInsert(hash_chain, &argb[i], i);
     ++i;
   }
 
