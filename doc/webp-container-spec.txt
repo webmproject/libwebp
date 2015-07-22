@@ -271,9 +271,15 @@ An extended format file consists of:
 
   * An optional list of [unknown chunks](#unknown-chunks). _\[status: experimental\]_
 
-For a _still image_, the _image data_ consists of a single frame, whereas for
-an _animated image_, it consists of multiple frames. More details about frames
-can be found in the [Animation](#animation) section.
+For a _still image_, the _image data_ consists of a single frame, which is made
+up of:
+
+  * An optional [alpha subchunk](#alpha).
+
+  * A [bitstream subchunk](#bitstream-vp8vp8l).
+
+For an _animated image_, the _image data_ consists of multiple frames. More
+details about frames can be found in the [Animation](#animation) section.
 
 All chunks SHOULD be placed in the same order as listed above. If a chunk
 appears in the wrong place, the file is invalid, but readers MAY parse the
