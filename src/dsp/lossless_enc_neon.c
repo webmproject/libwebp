@@ -20,8 +20,6 @@
 #include "./lossless.h"
 #include "./neon.h"
 
-#ifdef WEBP_USE_INTRINSICS
-
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
 
@@ -72,17 +70,13 @@ static void SubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixels) {
 
 #undef USE_VTBLQ
 
-#endif   // WEBP_USE_INTRINSICS
-
 //------------------------------------------------------------------------------
 // Entry point
 
 extern void VP8LEncDspInitNEON(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInitNEON(void) {
-#ifdef WEBP_USE_INTRINSICS
   VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRed;
-#endif
 }
 
 #else  // !WEBP_USE_NEON
