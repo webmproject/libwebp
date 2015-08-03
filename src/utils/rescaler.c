@@ -31,7 +31,7 @@ void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
   wrk->dst_stride = dst_stride;
   wrk->num_channels = num_channels;
   // for 'x_expand', we use bilinear interpolation
-  wrk->x_add = wrk->x_expand ? (x_sub - 1) : x_add - x_sub;
+  wrk->x_add = wrk->x_expand ? (x_sub - 1) : x_add;
   wrk->x_sub = wrk->x_expand ? (x_add - 1) : x_sub;
   wrk->y_accum = y_add;
   wrk->y_add = y_add;

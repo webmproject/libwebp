@@ -28,16 +28,17 @@ static void RescalerImportRowC(WebPRescaler* const wrk,
   if (!wrk->x_expand) {
     int sum = 0;
     for (x_out = channel; x_out < x_out_max; x_out += x_stride) {
+      uint32_t base = 0;
       accum += wrk->x_add;
-      for (; accum > 0; accum -= wrk->x_sub) {
-        sum += src[x_in];
+      while (accum > 0) {
+        accum -= wrk->x_sub;
+        base = src[x_in];
+        sum += base;
         x_in += x_stride;
       }
       {        // Emit next horizontal pixel.
-        const int32_t base = src[x_in];
         const int32_t frac = base * (-accum);
-        x_in += x_stride;
-        wrk->frow[x_out] = (sum + base) * wrk->x_sub - frac;
+        wrk->frow[x_out] = sum * wrk->x_sub - frac;
         // fresh fractional start for next pixel
         sum = (int)MULT_FIX(frac, wrk->fx_scale);
       }

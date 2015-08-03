@@ -22,7 +22,7 @@ static void ImportRow(WebPRescaler* const wrk,
   const int x_stride = wrk->num_channels;
   const int x_out_max = wrk->dst_width * wrk->num_channels;
   const int fx_scale = wrk->fx_scale;
-  const int x_add = wrk->x_add;
+  const int x_add = wrk->x_add - wrk->x_sub;
   const int x_sub = wrk->x_sub;
   int* frow = wrk->frow + channel;
   int* irow = wrk->irow + channel;
