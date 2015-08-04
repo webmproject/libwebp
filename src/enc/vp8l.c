@@ -28,93 +28,90 @@
 // Maximum number of histogram images (sub-blocks).
 #define MAX_HUFF_IMAGE_SIZE       2600
 
-#define OPTIMIZE_MIN_NUM_COLORS 8
+// Palette reordering for smaller sum of deltas (and for smaller storage).
 
-// -----------------------------------------------------------------------------
-// Palette optimization
-
-static int CompareColors(const void* p1, const void* p2) {
+static int PaletteCompareColorsForQsort(const void* p1, const void* p2) {
   const uint32_t a = *(const uint32_t*)p1;
   const uint32_t b = *(const uint32_t*)p2;
   assert(a != b);
   return (a < b) ? -1 : 1;
 }
-static WEBP_INLINE int Distance(int a, int b) {
-  return abs(a - b);
+
+static WEBP_INLINE uint32_t PaletteComponentDistance(uint32_t v) {
+  return (v <= 128) ? v : (256 - v);
 }
 
-static int ColorDistance(uint32_t col1, uint32_t col2) {
-  int score = 0;
-  // we favor grouping green channel in the palette
-  score += Distance((col1 >>  0) & 0xff, (col2 >>  0) & 0xff) * 5;
-  score += Distance((col1 >>  8) & 0xff, (col2 >>  8) & 0xff) * 8;
-  score += Distance((col1 >> 16) & 0xff, (col2 >> 16) & 0xff) * 5;
-  score += Distance((col1 >> 24) & 0xff, (col2 >> 24) & 0xff) * 1;
+// Computes a value that is related to the entropy created by the
+// palette entry diff.
+//
+// Note that the last & 0xff is a no-operation in the next statement, but
+// removed by most compilers and is here only for regularity of the code.
+static WEBP_INLINE uint32_t PaletteColorDistance(uint32_t col1, uint32_t col2) {
+  const uint32_t diff = VP8LSubPixels(col1, col2);
+  const int kMoreWeightForRGBThanForAlpha = 9;
+  uint32_t score;
+  score =  PaletteComponentDistance((diff >>  0) & 0xff);
+  score += PaletteComponentDistance((diff >>  8) & 0xff);
+  score += PaletteComponentDistance((diff >> 16) & 0xff);
+  score *= kMoreWeightForRGBThanForAlpha;
+  score += PaletteComponentDistance((diff >> 24) & 0xff);
   return score;
 }
 
-static void SwapColor(uint32_t* const col1, uint32_t* const col2) {
-  if (col1 != col2) {
-    const uint32_t tmp = *col1;
-    *col1 = *col2;
-    *col2 = tmp;
-  }
+static WEBP_INLINE void SwapColor(uint32_t* const col1, uint32_t* const col2) {
+  const uint32_t tmp = *col1;
+  *col1 = *col2;
+  *col2 = tmp;
 }
 
-static int ShouldRestoreSortedPalette(int score_new, int score_orig) {
-  if ((score_orig > 200) && (score_new + 100 > score_orig)) {
-    return 1;  // improvement not big enough
-  }
-  // if drop is less 20%, it's not enough
-  if ((score_new + 100) > (score_orig + 100) * 80 / 100) {
-    return 1;
-  }
-  if (score_orig > 500) {  // if original palette was dispersed and...
-                           // improvement is not clear?
-    if (score_new > 300) return 1;
-  }
-  return 0;  // keep the new one
-}
-
-static void OptimizePalette(uint32_t palette[], int num_colors) {
-  uint32_t palette_orig[MAX_PALETTE_SIZE];
-  int score_orig = 0, score_new = 0;
-  int i;
-
-  // Compute original dispersion.
-  assert(num_colors > 1 && num_colors <= MAX_PALETTE_SIZE);
-  for (i = 1; i < num_colors; ++i) {
-    score_orig += ColorDistance(palette[i], palette[i - 1]);
-  }
-  score_orig /= (num_colors - 1);
-  // if score is already quite good, bail out at once.
-  if (score_orig < 100) return;
-
-  memcpy(palette_orig, palette, num_colors * sizeof(palette_orig[0]));
-
-  // palette[0] contains the lowest ordered color already. Keep it.
-  // Reorder subsequent palette colors by shortest distance to previous.
-  for (i = 1; i < num_colors; ++i) {
-    int j;
-    int best_col = -1;
-    int best_score = 0;
-    const uint32_t prev_color = palette[i - 1];
-    for (j = i; j < num_colors; ++j) {
-      const int score = ColorDistance(palette[j], prev_color);
-      if (best_col < 0 || score < best_score) {
-        best_col = j;
-        best_score = score;
+static void GreedyMinimizeDeltas(uint32_t palette[], int num_colors) {
+  // Find greedily always the closest color of the predicted color to minimize
+  // deltas in the palette. This reduces storage needs since the
+  // palette is stored with delta encoding.
+  uint32_t predict = 0x00000000;
+  int i, k;
+  for (i = 0; i < num_colors; ++i) {
+    int best_ix = i;
+    uint32_t best_score = ~0U;
+    for (k = i; k < num_colors; ++k) {
+      const uint32_t cur_score = PaletteColorDistance(palette[k], predict);
+      if (best_score > cur_score) {
+        best_score = cur_score;
+        best_ix = k;
       }
     }
-    score_new += best_score;
-    SwapColor(&palette[best_col], &palette[i]);
+    SwapColor(&palette[best_ix], &palette[i]);
+    predict = palette[i];
   }
-  // dispersion is typically in range ~[100-1000]
-  score_new /= (num_colors - 1);
+}
 
-  if (ShouldRestoreSortedPalette(score_new, score_orig)) {
-    memcpy(palette, palette_orig, num_colors * sizeof(palette[0]));
+// The palette has been sorted by alpha. This function checks if the other
+// components of the palette have a monotonic development with regards to
+// position in the palette. If all have monotonic development, there is
+// no benefit to re-organize them greedily. A monotonic development
+// would be spotted in green-only situations (like lossy alpha) or gray-scale
+// images.
+static int PaletteHasNonMonotonousDeltas(uint32_t palette[], int num_colors) {
+  uint32_t predict = 0x000000;
+  int i;
+  uint8_t sign_found = 0x00;
+  for (i = 0; i < num_colors; ++i) {
+    const uint32_t diff = VP8LSubPixels(palette[i], predict);
+    const uint8_t rd = (diff >> 16) & 0xff;
+    const uint8_t gd = (diff >>  8) & 0xff;
+    const uint8_t bd = (diff >>  0) & 0xff;
+    if (rd != 0x00) {
+      sign_found |= (rd < 0x80) ? 1 : 2;
+    }
+    if (gd != 0x00) {
+      sign_found |= (gd < 0x80) ? 8 : 16;
+    }
+    if (bd != 0x00) {
+      sign_found |= (bd < 0x80) ? 64 : 128;
+    }
+    predict = palette[i];
   }
+  return (sign_found & (sign_found << 1)) != 0;  // two consequent signs.
 }
 
 // -----------------------------------------------------------------------------
@@ -123,6 +120,7 @@ static void OptimizePalette(uint32_t palette[], int num_colors) {
 // If number of colors in the image is less than or equal to MAX_PALETTE_SIZE,
 // creates a palette and returns true, else returns false.
 static int AnalyzeAndCreatePalette(const WebPPicture* const pic,
+                                   int low_effort,
                                    uint32_t palette[MAX_PALETTE_SIZE],
                                    int* const palette_size) {
   int i, x, y, key;
@@ -133,7 +131,6 @@ static int AnalyzeAndCreatePalette(const WebPPicture* const pic,
   const uint32_t* argb = pic->argb;
   const int width = pic->width;
   const int height = pic->height;
-  uint32_t all_color_bits;
   uint32_t last_pix = ~argb[0];   // so we're sure that last_pix != argb[0]
 
   for (y = 0; y < height; ++y) {
@@ -168,23 +165,16 @@ static int AnalyzeAndCreatePalette(const WebPPicture* const pic,
 
   // TODO(skal): could we reuse in_use[] to speed up EncodePalette()?
   num_colors = 0;
-  all_color_bits = 0x00000000;
   for (i = 0; i < (int)(sizeof(in_use) / sizeof(in_use[0])); ++i) {
     if (in_use[i]) {
       palette[num_colors] = colors[i];
-      all_color_bits |= colors[i];
       ++num_colors;
     }
   }
-
   *palette_size = num_colors;
-  qsort(palette, num_colors, sizeof(*palette), CompareColors);
-  // OptimizePalette() is not useful for single-channel (like alpha, e.g.).
-  if (num_colors > OPTIMIZE_MIN_NUM_COLORS &&
-      (all_color_bits & ~0x000000ffu) != 0 &&   // all red?
-      (all_color_bits & ~0x0000ff00u) != 0 &&   // all green/alpha?
-      (all_color_bits & ~0x00ff0000u) != 0) {   // all blue?
-    OptimizePalette(palette, num_colors);
+  qsort(palette, num_colors, sizeof(*palette), PaletteCompareColorsForQsort);
+  if (!low_effort && PaletteHasNonMonotonousDeltas(palette, num_colors)) {
+    GreedyMinimizeDeltas(palette, num_colors);
   }
   return 1;
 }
@@ -385,7 +375,8 @@ static int AnalyzeAndInit(VP8LEncoder* const enc) {
   enc->use_predict_ = 0;
   enc->use_subtract_green_ = 0;
   enc->use_palette_ =
-      AnalyzeAndCreatePalette(pic, enc->palette_, &enc->palette_size_);
+      AnalyzeAndCreatePalette(pic, low_effort,
+                              enc->palette_, &enc->palette_size_);
 
   // TODO(jyrki): replace the decision to be based on an actual estimate
   // of entropy, or even spatial variance of entropy.
