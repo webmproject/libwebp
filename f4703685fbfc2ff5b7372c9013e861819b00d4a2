@@ -16,6 +16,24 @@
       "revId": "f4703685fbfc2ff5b7372c9013e861819b00d4a2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aafcbcc5_c4b61e28",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1002029
+      },
+      "writtenOn": "2015-08-05T23:27:01Z",
+      "side": 1,
+      "message": "hmm... you\u0027re right, i think this test is unneeded. Will cross-check...",
+      "parentUuid": "2abb6cf3_fbc78b3d",
+      "revId": "f4703685fbfc2ff5b7372c9013e861819b00d4a2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
