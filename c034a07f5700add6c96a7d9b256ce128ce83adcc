@@ -22,6 +22,30 @@
       "revId": "c034a07f5700add6c96a7d9b256ce128ce83adcc",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aae91cd1_2615774a",
+        "filename": "src/dsp/lossless_enc_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-08-05T07:16:51Z",
+      "side": 1,
+      "message": "oops leftover from the copy from sse2 and before I changed it to allow vqdmulh to be used",
+      "parentUuid": "ed8faeab_12203c56",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 90,
+        "endChar": 13
+      },
+      "revId": "c034a07f5700add6c96a7d9b256ce128ce83adcc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
