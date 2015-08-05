@@ -300,24 +300,18 @@ static int InitYUVRescaler(const VP8Io* const io, WebPDecParams* const p) {
   work = (int32_t*)p->memory;
   WebPRescalerInit(&p->scaler_y, io->mb_w, io->mb_h,
                    buf->y, out_width, out_height, buf->y_stride, 1,
-                   io->mb_w, out_width, io->mb_h, out_height,
                    work);
   WebPRescalerInit(&p->scaler_u, uv_in_width, uv_in_height,
                    buf->u, uv_out_width, uv_out_height, buf->u_stride, 1,
-                   uv_in_width, uv_out_width,
-                   uv_in_height, uv_out_height,
                    work + work_size);
   WebPRescalerInit(&p->scaler_v, uv_in_width, uv_in_height,
                    buf->v, uv_out_width, uv_out_height, buf->v_stride, 1,
-                   uv_in_width, uv_out_width,
-                   uv_in_height, uv_out_height,
                    work + work_size + uv_work_size);
   p->emit = EmitRescaledYUV;
 
   if (has_alpha) {
     WebPRescalerInit(&p->scaler_a, io->mb_w, io->mb_h,
                      buf->a, out_width, out_height, buf->a_stride, 1,
-                     io->mb_w, out_width, io->mb_h, out_height,
                      work + work_size + 2 * uv_work_size);
     p->emit_alpha = EmitRescaledAlphaYUV;
     WebPInitAlphaProcessing();
@@ -479,15 +473,12 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
   tmp = (uint8_t*)(work + tmp_size1);
   WebPRescalerInit(&p->scaler_y, io->mb_w, io->mb_h,
                    tmp + 0 * out_width, out_width, out_height, 0, 1,
-                   io->mb_w, out_width, io->mb_h, out_height,
                    work + 0 * work_size);
   WebPRescalerInit(&p->scaler_u, uv_in_width, uv_in_height,
                    tmp + 1 * out_width, out_width, out_height, 0, 1,
-                   io->mb_w, 2 * out_width, io->mb_h, 2 * out_height,
                    work + 1 * work_size);
   WebPRescalerInit(&p->scaler_v, uv_in_width, uv_in_height,
                    tmp + 2 * out_width, out_width, out_height, 0, 1,
-                   io->mb_w, 2 * out_width, io->mb_h, 2 * out_height,
                    work + 2 * work_size);
   p->emit = EmitRescaledRGB;
   WebPInitYUV444Converters();
@@ -495,7 +486,6 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
   if (has_alpha) {
     WebPRescalerInit(&p->scaler_a, io->mb_w, io->mb_h,
                      tmp + 3 * out_width, out_width, out_height, 0, 1,
-                     io->mb_w, out_width, io->mb_h, out_height,
                      work + 3 * work_size);
     p->emit_alpha = EmitRescaledAlphaRGB;
     if (p->output->colorspace == MODE_RGBA_4444 ||

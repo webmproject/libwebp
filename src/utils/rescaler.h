@@ -46,8 +46,6 @@ void WebPRescalerInit(WebPRescaler* const rescaler,
                       uint8_t* const dst,
                       int dst_width, int dst_height, int dst_stride,
                       int num_channels,
-                      int x_add, int x_sub,
-                      int y_add, int y_sub,
                       int32_t* const work);
 
 // Returns the number of input lines needed next to produce one output line,

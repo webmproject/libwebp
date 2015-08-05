@@ -181,10 +181,7 @@ static void RescalePlane(const uint8_t* src,
   int y = 0;
   WebPRescalerInit(&rescaler, src_width, src_height,
                    dst, dst_width, dst_height, dst_stride,
-                   num_channels,
-                   src_width, dst_width,
-                   src_height, dst_height,
-                   work);
+                   num_channels, work);
   memset(work, 0, 2 * dst_width * num_channels * sizeof(*work));
   while (y < src_height) {
     y += WebPRescalerImport(&rescaler, src_height - y,

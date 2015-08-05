@@ -9,6 +9,8 @@
 //
 // Rescaling functions
 
+#include <assert.h>
+
 #include "./dsp.h"
 #include "../utils/rescaler.h"
 
@@ -24,14 +26,15 @@ static void RescalerImportRowC(WebPRescaler* const wrk,
   const int x_out_max = wrk->dst_width * wrk->num_channels;
   int x_in = channel;
   int x_out;
-  int accum = 0;
   if (!wrk->x_expand) {
-    int sum = 0;
+    uint32_t sum = 0;
+    int accum = 0;
     for (x_out = channel; x_out < x_out_max; x_out += x_stride) {
       uint32_t base = 0;
       accum += wrk->x_add;
       while (accum > 0) {
         accum -= wrk->x_sub;
+        assert(x_in < wrk->src_width * x_stride);
         base = src[x_in];
         sum += base;
         x_in += x_stride;
@@ -43,18 +46,27 @@ static void RescalerImportRowC(WebPRescaler* const wrk,
         sum = (int)MULT_FIX(frac, wrk->fx_scale);
       }
     }
+    assert(accum == 0);
   } else {        // simple bilinear interpolation
-    int left = src[channel], right = src[channel];
-    for (x_out = channel; x_out < x_out_max; x_out += x_stride) {
+    int accum = wrk->x_add;
+    int left = src[x_in];
+    int right = (wrk->src_width > 1) ? src[x_in + x_stride] : left;
+    x_in += x_stride;
+    x_out = channel;
+    while (1) {
+      wrk->frow[x_out] = right * wrk->x_add + (left - right) * accum;
+      x_out += x_stride;
+      if (x_out >= x_out_max) break;
+      accum -= wrk->x_sub;
       if (accum < 0) {
         left = right;
         x_in += x_stride;
+        assert(x_in < wrk->src_width * x_stride);
         right = src[x_in];
         accum += wrk->x_add;
       }
-      wrk->frow[x_out] = right * wrk->x_add + (left - right) * accum;
-      accum -= wrk->x_sub;
     }
+    assert(wrk->x_sub == 0 /* <- special case for src_width=1 */ || accum == 0);
   }
   // Accumulate the contribution of the new row.
   for (x_out = channel; x_out < x_out_max; x_out += x_stride) {
