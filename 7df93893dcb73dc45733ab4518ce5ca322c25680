@@ -34,6 +34,24 @@
       "revId": "7df93893dcb73dc45733ab4518ce5ca322c25680",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2abb6cf3_3281a09c",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-08-06T19:20:27Z",
+      "side": 1,
+      "message": "ah missed that, sgtm",
+      "parentUuid": "ea307480_76c3707f",
+      "revId": "7df93893dcb73dc45733ab4518ce5ca322c25680",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
