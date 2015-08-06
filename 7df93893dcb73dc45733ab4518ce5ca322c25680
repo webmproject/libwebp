@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a0c20ee_b9addff3",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-08-06T07:17:45Z",
+      "side": 1,
+      "message": "this is just cast back to uint8 at on the next line, the back and forth is probably unnecessary",
+      "revId": "7df93893dcb73dc45733ab4518ce5ca322c25680",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
