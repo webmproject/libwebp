@@ -187,6 +187,65 @@ static void AddGreenToBlueAndRed(uint32_t* argb_data, int num_pixels) {
   VP8LAddGreenToBlueAndRed_C(argb_data, num_pixels & 3);
 }
 
+//------------------------------------------------------------------------------
+// Color Transform
+
+static void TransformColorInverse(const VP8LMultipliers* const m,
+                                  uint32_t* argb_data, int num_pixels) {
+  // sign-extended multiplying constants, pre-shifted by 6.
+#define CST(X)  (((int16_t)(m->X << 8)) >> 6)
+  const int16_t rb[8] = {
+    CST(green_to_blue_), CST(green_to_red_),
+    CST(green_to_blue_), CST(green_to_red_),
+    CST(green_to_blue_), CST(green_to_red_),
+    CST(green_to_blue_), CST(green_to_red_)
+  };
+  const int16x8_t mults_rb = vld1q_s16(rb);
+  const int16_t b2[8] = {
+    0, CST(red_to_blue_), 0, CST(red_to_blue_),
+    0, CST(red_to_blue_), 0, CST(red_to_blue_),
+  };
+  const int16x8_t mults_b2 = vld1q_s16(b2);
+#undef CST
+#ifdef USE_VTBLQ
+  static const uint8_t kg0g0[16] = {
+    255, 1, 255, 1, 255, 5, 255, 5, 255, 9, 255, 9, 255, 13, 255, 13
+  };
+  const uint8x16_t shuffle = vld1q_u8(kg0g0);
+#else
+  static const uint8_t k0g0g[8] = { 255, 1, 255, 1, 255, 5, 255, 5 };
+  const uint8x8_t shuffle = vld1_u8(k0g0g);
+#endif
+  const uint32x4_t mask_ag = vdupq_n_u32(0xff00ff00u);
+  int i;
+  for (i = 0; i + 4 <= num_pixels; i += 4) {
+    const uint8x16_t in = vld1q_u8((uint8_t*)(argb_data + i));
+    const uint32x4_t a0g0 = vandq_u32(vreinterpretq_u32_u8(in), mask_ag);
+    // 0 g 0 g
+    const uint8x16_t greens = DoGreenShuffle(in, shuffle);
+    // x dr  x db1
+    const int16x8_t A = vqdmulhq_s16(vreinterpretq_s16_u8(greens), mults_rb);
+    // x r'  x   b'
+    const int8x16_t B = vaddq_s8(vreinterpretq_s8_u8(in),
+                                 vreinterpretq_s8_s16(A));
+    // r' 0   b' 0
+    const int16x8_t C = vshlq_n_s16(vreinterpretq_s16_s8(B), 8);
+    // x db2  0  0
+    const int16x8_t D = vqdmulhq_s16(C, mults_b2);
+    // 0  x db2  0
+    const uint32x4_t E = vshrq_n_u32(vreinterpretq_u32_s16(D), 8);
+    // r' x  b'' 0
+    const int8x16_t F = vaddq_s8(vreinterpretq_s8_u32(E),
+                                 vreinterpretq_s8_s16(C));
+    // 0  r'  0  b''
+    const uint16x8_t G = vshrq_n_u16(vreinterpretq_u16_s8(F), 8);
+    const uint32x4_t out = vorrq_u32(vreinterpretq_u32_u16(G), a0g0);
+    vst1q_u32(argb_data + i, out);
+  }
+  // Fall-back to C-version for left-overs.
+  VP8LTransformColorInverse_C(m, argb_data + i, num_pixels - i);
+}
+
 #undef USE_VTBLQ
 
 //------------------------------------------------------------------------------
@@ -200,6 +259,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitNEON(void) {
   VP8LConvertBGRAToRGB = ConvertBGRAToRGB;
 
   VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
+  VP8LTransformColorInverse = TransformColorInverse;
 }
 
 #else  // !WEBP_USE_NEON
