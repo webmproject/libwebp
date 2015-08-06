@@ -16,6 +16,24 @@
       "revId": "7df93893dcb73dc45733ab4518ce5ca322c25680",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea307480_76c3707f",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-08-06T07:26:25Z",
+      "side": 1,
+      "message": "yes, but the uint32_t type is used for sizeof() at line 428. So better keep it.",
+      "parentUuid": "4a0c20ee_b9addff3",
+      "revId": "7df93893dcb73dc45733ab4518ce5ca322c25680",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
