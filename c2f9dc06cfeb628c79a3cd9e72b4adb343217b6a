@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47e97bf9_ab82c5db",
+        "filename": "src/utils/bit_writer.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-08-11T03:38:28Z",
+      "side": 1,
+      "message": "the other option is:\n    if (VP8L_WRITER_BITS \u003d\u003d (16)) {\n\nwhich might be clang specific and without explanation looks weird",
+      "revId": "c2f9dc06cfeb628c79a3cd9e72b4adb343217b6a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
