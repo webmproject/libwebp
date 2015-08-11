@@ -16,6 +16,23 @@
       "revId": "c2f9dc06cfeb628c79a3cd9e72b4adb343217b6a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7cf2b9d_e4348466",
+        "filename": "src/utils/bit_writer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-08-11T04:13:31Z",
+      "side": 1,
+      "message": "sounds good. This code should probably go into the .c, but then it makes it hard to understand the purpose.\nBetter leave it here...",
+      "revId": "c2f9dc06cfeb628c79a3cd9e72b4adb343217b6a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
