@@ -202,10 +202,6 @@ void VP8BitWriterWipeOut(VP8BitWriter* const bw) {
 // when extra space is needed.
 #define MIN_EXTRA_SIZE  (32768ULL)
 
-#define VP8L_WRITER_BYTES ((int)sizeof(vp8l_wtype_t))
-#define VP8L_WRITER_BITS (VP8L_WRITER_BYTES * 8)
-#define VP8L_WRITER_MAX_BITS (8 * (int)sizeof(vp8l_atype_t))
-
 // Returns 1 on success.
 static int VP8LBitWriterResize(VP8LBitWriter* const bw, size_t extra_size) {
   uint8_t* allocated_buf;
@@ -275,17 +271,17 @@ void VP8LPutBitsInternal(VP8LBitWriter* const bw, uint32_t bits, int n_bits) {
     vp8l_atype_t lbits = bw->bits_;
     int used = bw->used_;
     // Special case of overflow handling for 32bit accumulator (2-steps flush).
-    if (VP8L_WRITER_BITS == 16) {
-      if (used + n_bits >= VP8L_WRITER_MAX_BITS) {
-        // Fill up all the VP8L_WRITER_MAX_BITS so it can be flushed out below.
-        const int shift = VP8L_WRITER_MAX_BITS - used;
-        lbits |= (vp8l_atype_t)bits << used;
-        used = VP8L_WRITER_MAX_BITS;
-        n_bits -= shift;
-        bits >>= shift;
-        assert(n_bits <= VP8L_WRITER_MAX_BITS);
-      }
+#if VP8L_WRITER_BITS == 16
+    if (used + n_bits >= VP8L_WRITER_MAX_BITS) {
+      // Fill up all the VP8L_WRITER_MAX_BITS so it can be flushed out below.
+      const int shift = VP8L_WRITER_MAX_BITS - used;
+      lbits |= (vp8l_atype_t)bits << used;
+      used = VP8L_WRITER_MAX_BITS;
+      n_bits -= shift;
+      bits >>= shift;
+      assert(n_bits <= VP8L_WRITER_MAX_BITS);
     }
+#endif
     // If needed, make some room by flushing some bits out.
     while (used >= VP8L_WRITER_BITS) {
       if (bw->cur_ + VP8L_WRITER_BYTES > bw->end_) {
