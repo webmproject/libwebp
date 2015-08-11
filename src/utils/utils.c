@@ -48,7 +48,6 @@
 #if defined(PRINT_MEM_INFO)
 
 #include <stdio.h>
-#include <stdlib.h>  // for abort()
 
 static int num_malloc_calls = 0;
 static int num_calloc_calls = 0;
