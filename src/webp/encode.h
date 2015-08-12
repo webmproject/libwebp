@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#define WEBP_ENCODER_ABI_VERSION 0x0207    // MAJOR(8b) + MINOR(8b)
+#define WEBP_ENCODER_ABI_VERSION 0x0208    // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -379,8 +379,8 @@ WEBP_EXTERN(void) WebPPictureFree(WebPPicture* picture);
 // Returns false in case of memory allocation error.
 WEBP_EXTERN(int) WebPPictureCopy(const WebPPicture* src, WebPPicture* dst);
 
-// Compute PSNR, SSIM or LSIM distortion metric between two pictures.
-// Result is in dB, stores in result[] in the Y/U/V/Alpha/All order.
+// Compute PSNR, SSIM or LSIM distortion metric between two pictures. Results
+// are in dB, stored in result[] in the Y/U/V/Alpha/All or B/G/R/A/All order.
 // Returns false in case of error (src and ref don't have same dimension, ...)
 // Warning: this function is rather CPU-intensive.
 WEBP_EXTERN(int) WebPPictureDistortion(
