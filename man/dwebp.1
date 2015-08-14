@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DWEBP 1 "June 13, 2014"
+.TH DWEBP 1 "August 13, 2015"
 .SH NAME
 dwebp \- decompress a WebP file to an image file
 .SH SYNOPSIS
@@ -90,11 +90,13 @@ Note: the cropping is applied \fIbefore\fP any scaling.
 .B \-flip
 Flip decoded image vertically (can be useful for OpenGL textures for instance).
 .TP
-.BI \-scale " width height
+\fB\-resize\fR, \fB\-scale\fI width height\fR
 Rescale the decoded picture to dimension \fBwidth\fP x \fBheight\fP. This
 option is mostly intended to reducing the memory needed to decode large images,
-when only a small version is needed (thumbnail, preview, etc.).  Note: scaling
+when only a small version is needed (thumbnail, preview, etc.). Note: scaling
 is applied \fIafter\fP cropping.
+If either (but not both) of the \fBwidth\fP or \fBheight\fP parameters is 0,
+the value will be calculated preserving the aspect-ratio.
 .TP
 .B \-v
 Print extra information (decoding time in particular).

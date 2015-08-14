@@ -549,7 +549,7 @@ static void Help(void) {
          "  -alpha_dither  use alpha-plane dithering if needed\n"
          "  -mt .......... use multi-threading\n"
          "  -crop <x> <y> <w> <h> ... crop output with the given rectangle\n"
-         "  -scale <w> <h> .......... scale the output (*after* any cropping)\n"
+         "  -resize <w> <h> ......... scale the output (*after* any cropping)\n"
          "  -flip ........ flip the output vertically\n"
          "  -alpha ....... only save the alpha plane\n"
          "  -incremental . use incremental decoding (useful for tests)\n"
@@ -627,7 +627,8 @@ int main(int argc, const char *argv[]) {
       config.options.crop_top    = ExUtilGetInt(argv[++c], 0, &parse_error);
       config.options.crop_width  = ExUtilGetInt(argv[++c], 0, &parse_error);
       config.options.crop_height = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-scale") && c < argc - 2) {
+    } else if ((!strcmp(argv[c], "-scale") || !strcmp(argv[c], "-resize")) &&
+               c < argc - 2) {  // '-scale' is left for compatibility
       config.options.use_scaling = 1;
       config.options.scaled_width  = ExUtilGetInt(argv[++c], 0, &parse_error);
       config.options.scaled_height = ExUtilGetInt(argv[++c], 0, &parse_error);
