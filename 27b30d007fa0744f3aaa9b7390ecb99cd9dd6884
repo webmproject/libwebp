@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "243ac5f6_e6129a5f",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-08-14T04:11:37Z",
+      "side": 1,
+      "message": "could you add a comment specifying that this (now undocumented) option is for compatibility reason, please?",
+      "range": {
+        "startLine": 630,
+        "startChar": 42,
+        "endLine": 630,
+        "endChar": 43
+      },
+      "revId": "27b30d007fa0744f3aaa9b7390ecb99cd9dd6884",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
