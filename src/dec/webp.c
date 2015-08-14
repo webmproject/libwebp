@@ -806,11 +806,13 @@ int WebPIoInitFromOptions(const WebPDecoderOptions* const options,
   // Scaling
   io->use_scaling = (options != NULL) && (options->use_scaling > 0);
   if (io->use_scaling) {
-    if (options->scaled_width <= 0 || options->scaled_height <= 0) {
+    int scaled_width = options->scaled_width;
+    int scaled_height = options->scaled_height;
+    if (!WebPRescalerGetScaledDimensions(w, h, &scaled_width, &scaled_height)) {
       return 0;
     }
-    io->scaled_width = options->scaled_width;
-    io->scaled_height = options->scaled_height;
+    io->scaled_width = scaled_width;
+    io->scaled_height = scaled_height;
   }
 
   // Filter
