@@ -48,6 +48,14 @@ void WebPRescalerInit(WebPRescaler* const rescaler,
                       int num_channels,
                       int32_t* const work);
 
+// If either 'scaled_width' or 'scaled_height' (but not both) is 0 the value
+// will be calculated preserving the aspect ratio, otherwise the values are
+// left unmodified. Returns true on success, false if either value is 0 after
+// performing the scaling calculation.
+int WebPRescalerGetScaledDimensions(int src_width, int src_height,
+                                    int* const scaled_width,
+                                    int* const scaled_height);
+
 // Returns the number of input lines needed next to produce one output line,
 // considering that the maximum available input lines are 'max_num_lines'.
 int WebPRescaleNeededLines(const WebPRescaler* const rescaler,

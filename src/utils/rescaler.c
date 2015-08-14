@@ -50,6 +50,34 @@ void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
   WebPRescalerDspInit();
 }
 
+int WebPRescalerGetScaledDimensions(int src_width, int src_height,
+                                    int* const scaled_width,
+                                    int* const scaled_height) {
+  assert(scaled_width != NULL);
+  assert(scaled_height != NULL);
+  {
+    int width = *scaled_width;
+    int height = *scaled_height;
+
+    // if width is unspecified, scale original proportionally to height ratio.
+    if (width == 0) {
+      width = (src_width * height + src_height / 2) / src_height;
+    }
+    // if height is unspecified, scale original proportionally to width ratio.
+    if (height == 0) {
+      height = (src_height * width + src_width / 2) / src_width;
+    }
+    // Check if the overall dimensions still make sense.
+    if (width <= 0 || height <= 0) {
+      return 0;
+    }
+
+    *scaled_width = width;
+    *scaled_height = height;
+    return 1;
+  }
+}
+
 //------------------------------------------------------------------------------
 // all-in-one calls
 
