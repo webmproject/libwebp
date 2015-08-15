@@ -13,6 +13,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../dsp/dsp.h"
 #include "./rescaler.h"
 
@@ -46,6 +47,7 @@ void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
       ((int64_t)dst_height << WEBP_RESCALER_RFIX) / (wrk->x_add * src_height);
   wrk->irow = work;
   wrk->frow = work + num_channels * dst_width;
+  memset(work, 0, 2 * dst_width * num_channels * sizeof(*work));
 
   WebPRescalerDspInit();
 }

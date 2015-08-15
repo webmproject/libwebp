@@ -293,7 +293,7 @@ static int InitYUVRescaler(const VP8Io* const io, WebPDecParams* const p) {
   if (has_alpha) {
     tmp_size += work_size * sizeof(*work);
   }
-  p->memory = WebPSafeCalloc(1ULL, tmp_size);
+  p->memory = WebPSafeMalloc(1ULL, tmp_size);
   if (p->memory == NULL) {
     return 0;   // memory error
   }
@@ -465,7 +465,7 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
     tmp_size2 += out_width;
   }
   total_size = tmp_size1 * sizeof(*work) + tmp_size2 * sizeof(*tmp);
-  p->memory = WebPSafeCalloc(1ULL, total_size);
+  p->memory = WebPSafeMalloc(1ULL, total_size);
   if (p->memory == NULL) {
     return 0;   // memory error
   }
