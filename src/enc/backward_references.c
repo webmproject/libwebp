@@ -314,12 +314,15 @@ static WEBP_INLINE void AddSingleLiteral(uint32_t pixel, int use_color_cache,
                                          VP8LColorCache* const hashers,
                                          VP8LBackwardRefs* const refs) {
   PixOrCopy v;
-  if (use_color_cache && VP8LColorCacheContains(hashers, pixel)) {
-    // push pixel as a PixOrCopyCreateCacheIdx pixel
-    const int ix = VP8LColorCacheGetIndex(hashers, pixel);
-    v = PixOrCopyCreateCacheIdx(ix);
+  if (use_color_cache) {
+    const uint32_t key = VP8LColorCacheGetIndex(hashers, pixel);
+    if (VP8LColorCacheLookup(hashers, key) == pixel) {
+      v = PixOrCopyCreateCacheIdx(key);
+    } else {
+      v = PixOrCopyCreateLiteral(pixel);
+      VP8LColorCacheSet(hashers, key, pixel);
+    }
   } else {
-    if (use_color_cache) VP8LColorCacheInsert(hashers, pixel);
     v = PixOrCopyCreateLiteral(pixel);
   }
   BackwardRefsCursorAdd(refs, v);
@@ -423,9 +426,12 @@ static int BackwardReferencesLz77(int xsize, int ysize,
         }
       }
       // Add to the hash_chain (but cannot add the last pixel).
-      {
+      if (offset >= 3 && offset != xsize) {
         const int last = (len < pix_count - 1 - i) ? len : pix_count - 1 - i;
-        for (k = 1; k < last; ++k) {
+        for (k = 2; k < last - 8; k += 2) {
+          HashChainInsert(hash_chain, &argb[i + k], i + k);
+        }
+        for (; k < last; ++k) {
           HashChainInsert(hash_chain, &argb[i + k], i + k);
         }
       }
