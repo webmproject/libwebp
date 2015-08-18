@@ -378,22 +378,17 @@ static int ExportAlpha(WebPDecParams* const p, int y_pos) {
   uint8_t* dst = base_rgba + (alpha_first ? 0 : 3);
   int num_lines_out = 0;
   const int is_premult_alpha = WebPIsPremultipliedMode(colorspace);
-  uint32_t alpha_mask = 0xff;
+  uint32_t non_opaque = 0;
   const int width = p->scaler_a.dst_width;
 
   while (WebPRescalerHasPendingOutput(&p->scaler_a)) {
-    int i;
     assert(p->last_y + y_pos + num_lines_out < p->output->height);
     WebPRescalerExportRow(&p->scaler_a, 0);
-    for (i = 0; i < width; ++i) {
-      const uint32_t alpha_value = p->scaler_a.dst[i];
-      dst[4 * i] = alpha_value;
-      alpha_mask &= alpha_value;
-    }
+    non_opaque |= WebPDispatchAlpha(p->scaler_a.dst, 0, width, 1, dst, 0);
     dst += buf->stride;
     ++num_lines_out;
   }
-  if (is_premult_alpha && alpha_mask != 0xff) {
+  if (is_premult_alpha && non_opaque) {
     WebPApplyAlphaMultiply(base_rgba, alpha_first,
                            width, num_lines_out, buf->stride);
   }
