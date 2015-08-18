@@ -279,6 +279,7 @@ Use following options to convert into alternate image formats:
   -incremental . use incremental decoding (useful for tests)
   -h     ....... this help message
   -v     ....... verbose (e.g. print encoding/decoding times)
+  -quiet ....... quiet mode, don't print anything
   -noasm ....... disable all assembly optimizations
 
 Visualization tool:

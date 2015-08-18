@@ -555,6 +555,7 @@ static void Help(void) {
          "  -incremental . use incremental decoding (useful for tests)\n"
          "  -h     ....... this help message\n"
          "  -v     ....... verbose (e.g. print encoding/decoding times)\n"
+         "  -quiet ....... quiet mode, don't print anything\n"
 #ifndef WEBP_DLL
          "  -noasm ....... disable all assembly optimizations\n"
 #endif
@@ -569,6 +570,7 @@ int main(int argc, const char *argv[]) {
   int ok = 0;
   const char *in_file = NULL;
   const char *out_file = NULL;
+  int quiet = 0;
 
   WebPDecoderConfig config;
   WebPDecBuffer* const output_buffer = &config.output;
@@ -603,6 +605,8 @@ int main(int argc, const char *argv[]) {
       format = BMP;
     } else if (!strcmp(argv[c], "-tiff")) {
       format = TIFF;
+    } else if (!strcmp(argv[c], "-quiet")) {
+      quiet = 1;
     } else if (!strcmp(argv[c], "-version")) {
       const int version = WebPGetDecoderVersion();
       printf("%d.%d.%d\n",
@@ -665,6 +669,8 @@ int main(int argc, const char *argv[]) {
     return -1;
   }
 
+  if (quiet) verbose = 0;
+
   {
     VP8StatusCode status = VP8_STATUS_OK;
     size_t data_size = 0;
@@ -721,20 +727,24 @@ int main(int argc, const char *argv[]) {
   }
 
   if (out_file != NULL) {
-    fprintf(stderr, "Decoded %s. Dimensions: %d x %d %s. Format: %s. "
-                    "Now saving...\n",
-            in_file, output_buffer->width, output_buffer->height,
-            bitstream->has_alpha ? " (with alpha)" : "",
-            kFormatType[bitstream->format]);
+    if (!quiet) {
+      fprintf(stderr, "Decoded %s. Dimensions: %d x %d %s. Format: %s. "
+                      "Now saving...\n",
+              in_file, output_buffer->width, output_buffer->height,
+              bitstream->has_alpha ? " (with alpha)" : "",
+              kFormatType[bitstream->format]);
+    }
     ok = SaveOutput(output_buffer, format, out_file);
   } else {
-    fprintf(stderr, "File %s can be decoded "
-                    "(dimensions: %d x %d %s. Format: %s).\n",
-            in_file, output_buffer->width, output_buffer->height,
-            bitstream->has_alpha ? " (with alpha)" : "",
-            kFormatType[bitstream->format]);
-    fprintf(stderr, "Nothing written; "
-                    "use -o flag to save the result as e.g. PNG.\n");
+    if (!quiet) {
+      fprintf(stderr, "File %s can be decoded "
+                      "(dimensions: %d x %d %s. Format: %s).\n",
+              in_file, output_buffer->width, output_buffer->height,
+              bitstream->has_alpha ? " (with alpha)" : "",
+              kFormatType[bitstream->format]);
+      fprintf(stderr, "Nothing written; "
+                      "use -o flag to save the result as e.g. PNG.\n");
+    }
   }
  Exit:
   WebPFreeDecBuffer(output_buffer);
