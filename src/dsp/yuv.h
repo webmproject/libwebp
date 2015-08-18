@@ -249,7 +249,6 @@ void VP8YUVInit(void);
 // to the binary size. Otherwise, they are initialized at run-time (small cost).
 #define WEBP_YUV_USE_SSE2_TABLES
 
-#if defined(FANCY_UPSAMPLING)
 // Process 32 pixels and store the result (24b or 32b per pixel) in *dst.
 void VP8YuvToRgba32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
                     uint8_t* dst);
@@ -259,7 +258,6 @@ void VP8YuvToBgra32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
                     uint8_t* dst);
 void VP8YuvToBgr32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
                    uint8_t* dst);
-#endif  // FANCY_UPSAMPLING
 
 // Must be called to initialize tables before using the functions.
 void VP8YUVInitSSE2(void);

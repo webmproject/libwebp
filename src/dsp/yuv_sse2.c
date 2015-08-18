@@ -125,8 +125,6 @@ static WEBP_INLINE void YuvToBgrSSE2(uint8_t y, uint8_t u, uint8_t v,
 //-----------------------------------------------------------------------------
 // Convert spans of 32 pixels to various RGB formats for the fancy upsampler.
 
-#ifdef FANCY_UPSAMPLING
-
 void VP8YuvToRgba32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
                     uint8_t* dst) {
   int n;
@@ -185,8 +183,6 @@ void VP8YuvToBgr32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
   YuvToBgrSSE2(y[n + 1], u[n + 1], v[n + 1], tmp + 3);
   memcpy(dst + n * 3, tmp, 2 * 3);
 }
-
-#endif  // FANCY_UPSAMPLING
 
 //-----------------------------------------------------------------------------
 // Arbitrary-length row conversion functions

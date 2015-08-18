@@ -201,6 +201,41 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersSSE2(void) {
 
 #endif  // FANCY_UPSAMPLING
 
+//------------------------------------------------------------------------------
+
+extern WebPYUV444Converter WebPYUV444Converters[/* MODE_LAST */];
+extern void WebPInitYUV444ConvertersSSE2(void);
+
+#define YUV444_FUNC(FUNC_NAME, CALL, XSTEP) \
+extern void WebP##FUNC_NAME##C(const uint8_t* y, const uint8_t* u,             \
+                               const uint8_t* v, uint8_t* dst, int len);       \
+static void FUNC_NAME(const uint8_t* y, const uint8_t* u, const uint8_t* v,    \
+                      uint8_t* dst, int len) {                                 \
+  int i;                                                                       \
+  const int max_len = len & ~31;                                               \
+  for (i = 0; i < max_len; i += 32) CALL(y + i, u + i, v + i, dst + i * XSTEP);\
+  if (i < len) {  /* C-fallback */                                             \
+    WebP##FUNC_NAME##C(y + i, u + i, v + i, dst + i * XSTEP, len - i);         \
+  }                                                                            \
+}
+
+YUV444_FUNC(Yuv444ToRgba, VP8YuvToRgba32, 4);
+YUV444_FUNC(Yuv444ToBgra, VP8YuvToBgra32, 4);
+YUV444_FUNC(Yuv444ToRgb, VP8YuvToRgb32, 3);
+YUV444_FUNC(Yuv444ToBgr, VP8YuvToBgr32, 3);
+
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444ConvertersSSE2(void) {
+  VP8YUVInitSSE2();
+  WebPYUV444Converters[MODE_RGBA] = Yuv444ToRgba;
+  WebPYUV444Converters[MODE_BGRA] = Yuv444ToBgra;
+  WebPYUV444Converters[MODE_RGB]  = Yuv444ToRgb;
+  WebPYUV444Converters[MODE_BGR]  = Yuv444ToBgr;
+}
+
+#else
+
+WEBP_DSP_INIT_STUB(WebPInitYUV444ConvertersSSE2)
+
 #endif  // WEBP_USE_SSE2
 
 #if !(defined(FANCY_UPSAMPLING) && defined(WEBP_USE_SSE2))
