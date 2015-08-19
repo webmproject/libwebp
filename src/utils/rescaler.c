@@ -26,6 +26,7 @@ void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
   const int x_add = src_width, x_sub = dst_width;
   const int y_add = src_height, y_sub = dst_height;
   wrk->x_expand = (src_width < dst_width);
+  wrk->y_expand = (src_height < dst_height);
   wrk->src_width = src_width;
   wrk->src_height = src_height;
   wrk->dst_width = dst_width;
@@ -33,18 +34,23 @@ void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
   wrk->dst = dst;
   wrk->dst_stride = dst_stride;
   wrk->num_channels = num_channels;
+
   // for 'x_expand', we use bilinear interpolation
   wrk->x_add = wrk->x_expand ? (x_sub - 1) : x_add;
   wrk->x_sub = wrk->x_expand ? (x_add - 1) : x_sub;
-  wrk->y_accum = y_add;
-  wrk->y_add = y_add;
-  wrk->y_sub = y_sub;
   if (!wrk->x_expand) {  // fx_scale is not used otherwise
     wrk->fx_scale = (1 << WEBP_RESCALER_RFIX) / wrk->x_sub;
   }
+
+  // vertical scaling parameters
+  wrk->y_accum = y_add;
+  wrk->y_add = y_add;
+  wrk->y_sub = y_sub;
   wrk->fy_scale = (1 << WEBP_RESCALER_RFIX) / wrk->y_sub;
+
   wrk->fxy_scale =
-      ((int64_t)dst_height << WEBP_RESCALER_RFIX) / (wrk->x_add * src_height);
+      ((int64_t)dst_height << WEBP_RESCALER_RFIX) / (wrk->x_add * wrk->y_add);
+
   wrk->irow = work;
   wrk->frow = work + num_channels * dst_width;
   memset(work, 0, 2 * dst_width * num_channels * sizeof(*work));
@@ -91,7 +97,7 @@ int WebPRescaleNeededLines(const WebPRescaler* const wrk, int max_num_lines) {
 int WebPRescalerImport(WebPRescaler* const wrk, int num_lines,
                        const uint8_t* src, int src_stride) {
   int total_imported = 0;
-  while (total_imported < num_lines && wrk->y_accum > 0) {
+  while (total_imported < num_lines && !WebPRescalerHasPendingOutput(wrk)) {
     int channel;
     for (channel = 0; channel < wrk->num_channels; ++channel) {
       WebPRescalerImportRow(wrk, src, channel);

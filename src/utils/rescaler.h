@@ -26,13 +26,13 @@ extern "C" {
 typedef struct WebPRescaler WebPRescaler;
 struct WebPRescaler {
   int x_expand;               // true if we're expanding in the x direction
+  int y_expand;               // true if we're expanding in the y direction
   int num_channels;           // bytes to jump between pixels
   int fy_scale, fx_scale;     // fixed-point scaling factor
   int64_t fxy_scale;          // ''
-  // we need hpel-precise add/sub increments, for the downsampled U/V planes.
   int y_accum;                // vertical accumulator
-  int y_add, y_sub;           // vertical increments (add ~= src, sub ~= dst)
-  int x_add, x_sub;           // horizontal increments (add ~= src, sub ~= dst)
+  int y_add, y_sub;           // vertical increments
+  int x_add, x_sub;           // horizontal increments
   int src_width, src_height;  // source dimensions
   int dst_width, dst_height;  // destination dimensions
   uint8_t* dst;
