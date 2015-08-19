@@ -960,7 +960,7 @@ static int DecodeAlphaData(VP8LDecoder* const dec, uint8_t* const data,
     dec->status_ = br->eos_ ? VP8_STATUS_SUSPENDED
                             : VP8_STATUS_BITSTREAM_ERROR;
   } else {
-    dec->last_pixel_ = (int)pos;
+    dec->last_pixel_ = pos;
   }
   return ok;
 }
