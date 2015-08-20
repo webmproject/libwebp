@@ -13,7 +13,7 @@
 
 #include "./dsp.h"
 
-#if defined(__ANDROID__)
+#if defined(WEBP_ANDROID_NEON)
 #include <cpu-features.h>
 #endif
 

@@ -15,6 +15,7 @@ ifneq ($(findstring armeabi-v7a, $(TARGET_ARCH_ABI)),)
   # instructions to be generated for armv7a code. Instead target the neon code
   # specifically.
   NEON := c.neon
+  USE_CPUFEATURES := yes
 else
   NEON := c
 endif
@@ -149,7 +150,9 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
 # prefer arm over thumb mode for performance gains
 LOCAL_ARM_MODE := arm
 
-LOCAL_STATIC_LIBRARIES := cpufeatures
+ifeq ($(USE_CPUFEATURES),yes)
+  LOCAL_STATIC_LIBRARIES := cpufeatures
+endif
 
 LOCAL_MODULE := webpdecoder_static
 
@@ -241,4 +244,6 @@ endif
 
 include $(LOCAL_PATH)/examples/Android.mk
 
-$(call import-module,android/cpufeatures)
+ifeq ($(USE_CPUFEATURES),yes)
+  $(call import-module,android/cpufeatures)
+endif
