@@ -503,11 +503,13 @@ int main(int argc, const char *argv[]) {
       goto End;
     }
     if (!quiet) {
-      fprintf(stderr, "Saved output file: %s\n", out_file);
+      fprintf(stderr, "Saved output file (%d bytes): %s\n",
+              (int)webp_data.size, out_file);
     }
   } else {
     if (!quiet) {
-      fprintf(stderr, "Nothing written; use -o flag to save the result.\n");
+      fprintf(stderr, "Nothing written; use -o flag to save the result "
+                      "(%d bytes).\n", (int)webp_data.size);
     }
   }
 
