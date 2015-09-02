@@ -1,3 +1,7 @@
+- Next version:
+  * New WebPAnimEncoder API for creating animations
+  * New WebPAnimDecoder API for decoding animations
+
 - 3/3/15: version 0.4.3
   This is a binary compatible release.
   * Android / gcc / iOS / MSVS build fixes and improvements

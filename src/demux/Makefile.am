@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libwebpdemux.la
 
 libwebpdemux_la_SOURCES =
-libwebpdemux_la_SOURCES += demux.c
+libwebpdemux_la_SOURCES += anim_decode.c demux.c
 
 libwebpdemuxinclude_HEADERS =
 libwebpdemuxinclude_HEADERS += ../webp/demux.h

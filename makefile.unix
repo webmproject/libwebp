@@ -123,6 +123,7 @@ DEC_OBJS = \
     src/dec/webp.o \
 
 DEMUX_OBJS = \
+    src/demux/anim_decode.o \
     src/demux/demux.o \
 
 DSP_DEC_OBJS = \

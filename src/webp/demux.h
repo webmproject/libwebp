@@ -54,7 +54,7 @@
 extern "C" {
 #endif
 
-#define WEBP_DEMUX_ABI_VERSION 0x0101    // MAJOR(8b) + MINOR(8b)
+#define WEBP_DEMUX_ABI_VERSION 0x0102    // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -63,6 +63,7 @@ extern "C" {
 typedef struct WebPDemuxer WebPDemuxer;
 typedef struct WebPIterator WebPIterator;
 typedef struct WebPChunkIterator WebPChunkIterator;
+typedef struct WebPAnimInfo WebPAnimInfo;
 
 //------------------------------------------------------------------------------
 
@@ -216,6 +217,98 @@ WEBP_EXTERN(int) WebPDemuxPrevChunk(WebPChunkIterator* iter);
 WEBP_EXTERN(void) WebPDemuxReleaseChunkIterator(WebPChunkIterator* iter);
 
 //------------------------------------------------------------------------------
+// WebPAnimDecoder API
+//
+// This API allows decoding (possibly) animated WebP images.
+//
+// Code Example:
+/*
+  WebPAnimDecoder* dec = WebPAnimDecoderNew(webp_data);
+  WebPAnimInfo anim_info;
+  WebPAnimDecoderGetInfo(dec, &anim_info);
+  for (uint32_t i = 0; i < anim_info.loop_count; ++i) {
+    while (WebPAnimDecoderHasMoreFrames(dec)) {
+      uint8_t* frame_rgba;
+      int timestamp;
+      WebPAnimDecoderGetNext(dec, &frame_rgba, &timestamp);
+      // ... (Render 'frame_rgba' based on 'timestamp').
+    }
+    WebPAnimDecoderReset(dec);
+  }
+  WebPAnimDecoderDelete(dec);
+*/
+
+typedef struct WebPAnimDecoder WebPAnimDecoder;  // Main opaque object.
+
+// Internal, version-checked, entry point.
+WEBP_EXTERN(WebPAnimDecoder*) WebPAnimDecoderNewInternal(const WebPData*, int);
+
+// Creates and initializes a WebPAnimDecoder object.
+// Parameters:
+//   webp_data - (in) WebP bitstream. This should remain unchanged during the
+//                    lifetime of the output WebPAnimDecoder object.
+// Returns:
+//   A pointer to the newly created WebPAnimDecoder object, or NULL in case of
+//   parsing/memory error.
+static WEBP_INLINE WebPAnimDecoder* WebPAnimDecoderNew(
+    const WebPData* webp_data) {
+  return WebPAnimDecoderNewInternal(webp_data, WEBP_DEMUX_ABI_VERSION);
+}
+
+// Global information about the animation..
+struct WebPAnimInfo {
+  uint32_t canvas_width;
+  uint32_t canvas_height;
+  uint32_t loop_count;
+  uint32_t bgcolor;
+  uint32_t frame_count;
+  uint32_t pad[4];   // padding for later use
+};
+
+// Get global information about the animation.
+// Parameters:
+//   dec - (in) decoder instance to get information from.
+//   info - (out) global information fetched from the animation.
+// Returns:
+//   True on success.
+WEBP_EXTERN(int) WebPAnimDecoderGetInfo(const WebPAnimDecoder* dec,
+                                        WebPAnimInfo* info);
+
+// Fetch the next frame from 'dec' in RGBA format. This will be a fully
+// reconstructed canvas of size 'canvas_width * 4 * canvas_height', and not just
+// the frame sub-rectangle.
+// The returned 'rgba' buffer is valid only until the next call to
+// WebPAnimDecoderGetNext(), WebPAnimDecoderReset() or WebPAnimDecoderDelete().
+// Parameters:
+//   dec - (in/out) decoder instance from which the next frame is to be fetched.
+//   rgba - (out) decoded frame in RGBA format.
+//   timestamp - (out) timestamp of the frame in milliseconds.
+// Returns:
+//   False if any of the arguments are NULL, or if there is a parsing or
+//   decoding error, or if there are no more frames. Otherwise, returns true.
+WEBP_EXTERN(int) WebPAnimDecoderGetNext(WebPAnimDecoder* dec,
+                                        uint8_t** rgba, int* timestamp);
+
+// Check if there are more frames left to decode.
+// Parameters:
+//   dec - (in) decoder instance to be checked.
+// Returns:
+//   True if 'dec' is not NULL and some frames are yet to be decoded.
+//   Otherwise, returns false.
+WEBP_EXTERN(int) WebPAnimDecoderHasMoreFrames(const WebPAnimDecoder* dec);
+
+// Resets the WebPAnimDecoder object, so that next call to
+// WebPAnimDecoderGetNext() will restart decoding from 1st frame. This would be
+// helpful when all frames need to be decoded multiple times (e.g.
+// info.loop_count times) without destroying and recreating the 'dec' object.
+// Parameters:
+//   dec - (in/out) decoder instance to be reset
+WEBP_EXTERN(void) WebPAnimDecoderReset(WebPAnimDecoder* dec);
+
+// Deletes the WebPAnimDecoder object.
+// Parameters:
+//   dec - (in/out) decoder instance to be deleted
+WEBP_EXTERN(void) WebPAnimDecoderDelete(WebPAnimDecoder* dec);
 
 #ifdef __cplusplus
 }    // extern "C"

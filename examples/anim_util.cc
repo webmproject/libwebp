@@ -149,237 +149,74 @@ static bool IsWebP(const std::string& file_str) {
                      file_str.length(), NULL, NULL) != 0;
 }
 
-// Returns true if the current frame is a key-frame.
-static bool IsKeyFrameWebP(const WebPIterator& curr, const WebPIterator& prev,
-                           const DecodedFrame* const prev_frame,
-                           int canvas_width, int canvas_height) {
-  if (prev_frame == NULL) {
-    return true;
-  } else if ((!curr.has_alpha || curr.blend_method == WEBP_MUX_NO_BLEND) &&
-             IsFullFrame(curr.width, curr.height,
-                         canvas_width, canvas_height)) {
-    return true;
-  } else {
-    return (prev.dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) &&
-           (IsFullFrame(prev.width, prev.height, canvas_width, canvas_height) ||
-            prev_frame->is_key_frame);
-  }
-}
-
-// Blend a single channel of 'src' over 'dst', given their alpha channel values.
-static uint8_t BlendChannelWebP(uint32_t src, uint8_t src_a, uint32_t dst,
-                                uint8_t dst_a, uint32_t scale, int shift) {
-  const uint8_t src_channel = (src >> shift) & 0xff;
-  const uint8_t dst_channel = (dst >> shift) & 0xff;
-  const uint32_t blend_unscaled = src_channel * src_a + dst_channel * dst_a;
-  assert(blend_unscaled < (1ULL << 32) / scale);
-  return (blend_unscaled * scale) >> 24;
-}
-
-// Blend 'src' over 'dst' assuming they are NOT pre-multiplied by alpha.
-static uint32_t BlendPixelWebP(uint32_t src, uint32_t dst) {
-  const uint8_t src_a = (src >> 24) & 0xff;
-
-  if (src_a == 0) {
-    return dst;
-  } else {
-    const uint8_t dst_a = (dst >> 24) & 0xff;
-    // This is the approximate integer arithmetic for the actual formula:
-    // dst_factor_a = (dst_a * (255 - src_a)) / 255.
-    const uint8_t dst_factor_a = (dst_a * (256 - src_a)) >> 8;
-    assert(src_a + dst_factor_a < 256);
-    const uint8_t blend_a = src_a + dst_factor_a;
-    const uint32_t scale = (1UL << 24) / blend_a;
-
-    const uint8_t blend_r =
-        BlendChannelWebP(src, src_a, dst, dst_factor_a, scale, 0);
-    const uint8_t blend_g =
-        BlendChannelWebP(src, src_a, dst, dst_factor_a, scale, 8);
-    const uint8_t blend_b =
-        BlendChannelWebP(src, src_a, dst, dst_factor_a, scale, 16);
-
-    return (blend_r << 0) | (blend_g << 8) | (blend_b << 16) | (blend_a << 24);
-  }
-}
-
-// Returns two ranges (<left, width> pairs) at row 'canvas_y', that belong to
-// 'src' but not 'dst'. A point range is empty if the corresponding width is 0.
-static void FindBlendRangeAtRowWebP(const WebPIterator* const src,
-                                    const WebPIterator* const dst, int canvas_y,
-                                    int* const left1, int* const width1,
-                                    int* const left2, int* const width2) {
-  const int src_max_x = src->x_offset + src->width;
-  const int dst_max_x = dst->x_offset + dst->width;
-  const int dst_max_y = dst->y_offset + dst->height;
-  assert(canvas_y >= src->y_offset && canvas_y < (src->y_offset + src->height));
-  *left1 = -1;
-  *width1 = 0;
-  *left2 = -1;
-  *width2 = 0;
-
-  if (canvas_y < dst->y_offset || canvas_y >= dst_max_y ||
-      src->x_offset >= dst_max_x || src_max_x <= dst->x_offset) {
-    *left1 = src->x_offset;
-    *width1 = src->width;
-    return;
-  }
-
-  if (src->x_offset < dst->x_offset) {
-    *left1 = src->x_offset;
-    *width1 = dst->x_offset - src->x_offset;
-  }
-
-  if (src_max_x > dst_max_x) {
-    *left2 = dst_max_x;
-    *width2 = src_max_x - dst_max_x;
-  }
-}
-
-// Blend 'num_pixels' in 'src' over 'dst'.
-static void BlendPixelRowWebP(uint32_t* const src, const uint32_t* const dst,
-                              int num_pixels) {
-  for (int i = 0; i < num_pixels; ++i) {
-    uint32_t* const src_pixel_ptr = &src[i];
-    const uint8_t src_alpha = (*src_pixel_ptr >> 24) & 0xff;
-    if (src_alpha != 0xff) {
-      const uint32_t dst_pixel = dst[i];
-      *src_pixel_ptr = BlendPixelWebP(*src_pixel_ptr, dst_pixel);
-    }
-  }
-}
-
 // Read animated WebP bitstream 'file_str' into 'AnimatedImage' struct.
 static bool ReadAnimatedWebP(const char filename[], const std::string& file_str,
                              AnimatedImage* const image, bool dump_frames,
                              const char dump_folder[]) {
-  bool ok = true;
+  bool ok = false;
+  bool dump_ok = true;
+  uint32_t frame_index = 0;
+  int prev_frame_timestamp = 0;
+
   const WebPData webp_data = {
     reinterpret_cast<const uint8_t*>(file_str.data()), file_str.size()
   };
-  WebPDemuxer* const demux = WebPDemux(&webp_data);
-  if (demux == NULL) return false;
+
+  WebPAnimDecoder* dec = WebPAnimDecoderNew(&webp_data);
+  if (dec == NULL) {
+    fprintf(stderr, "Error parsing image: %s\n", filename);
+    goto End;
+  }
+
+  WebPAnimInfo anim_info;
+  if (!WebPAnimDecoderGetInfo(dec, &anim_info)) {
+    fprintf(stderr, "Error getting global info about the animation\n");
+    goto End;
+  }
 
   // Animation properties.
-  image->canvas_width = WebPDemuxGetI(demux, WEBP_FF_CANVAS_WIDTH);
-  image->canvas_height = WebPDemuxGetI(demux, WEBP_FF_CANVAS_HEIGHT);
-  image->loop_count = WebPDemuxGetI(demux, WEBP_FF_LOOP_COUNT);
-  image->bgcolor = WebPDemuxGetI(demux, WEBP_FF_BACKGROUND_COLOR);
-
-  const uint32_t frame_count = WebPDemuxGetI(demux, WEBP_FF_FRAME_COUNT);
-  const uint32_t canvas_width = image->canvas_width;
-  const uint32_t canvas_height = image->canvas_height;
+  image->canvas_width = anim_info.canvas_width;
+  image->canvas_height = anim_info.canvas_height;
+  image->loop_count = anim_info.loop_count;
+  image->bgcolor = anim_info.bgcolor;
 
   // Allocate frames.
-  AllocateFrames(image, frame_count);
+  AllocateFrames(image, anim_info.frame_count);
 
-  // Decode and reconstruct frames.
-  WebPIterator prev_iter = WebPIterator();
-  WebPIterator curr_iter = WebPIterator();
-
-  for (uint32_t i = 0; i < frame_count; ++i) {
-    prev_iter = curr_iter;
-
-    // Get frame.
-    if (!WebPDemuxGetFrame(demux, i + 1, &curr_iter)) {
-      fprintf(stderr, "Error retrieving frame #%u\n", i);
-      return false;
+  // Decode frames.
+  while (WebPAnimDecoderHasMoreFrames(dec)) {
+    uint8_t* frame_rgba;
+    int timestamp;
+    if (!WebPAnimDecoderGetNext(dec, &frame_rgba, &timestamp)) {
+      fprintf(stderr, "Error decoding frame #%u\n", frame_index);
+      goto End;
     }
-
-    DecodedFrame* const prev_frame = (i > 0) ? &image->frames[i - 1] : NULL;
-    uint8_t* const prev_rgba =
-        (prev_frame != NULL) ? prev_frame->rgba.data() : NULL;
-    DecodedFrame* const curr_frame = &image->frames[i];
+    DecodedFrame* const curr_frame = &image->frames[frame_index];
     uint8_t* const curr_rgba = curr_frame->rgba.data();
-
-    curr_frame->duration = curr_iter.duration;
-    curr_frame->is_key_frame = IsKeyFrameWebP(curr_iter, prev_iter, prev_frame,
-                                              canvas_width, canvas_height);
-
-    // TODO(urvang): The logic of decoding and reconstructing the next animated
-    // frame given the previous one should be a single library call (ideally a
-    // user-facing API), which takes care of frame disposal, blending etc.
-
-    // Initialize.
-    if (curr_frame->is_key_frame) {
-      ZeroFillCanvas(curr_rgba, canvas_width, canvas_height);
-    } else {
-      CopyCanvas(prev_rgba, curr_rgba, canvas_width, canvas_height);
-      if (prev_iter.dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
-        ZeroFillFrameRect(curr_rgba, canvas_width * kNumChannels,
-                          prev_iter.x_offset, prev_iter.y_offset,
-                          prev_iter.width, prev_iter.height);
-      }
-    }
-
-    // Decode.
-    const uint8_t* input = curr_iter.fragment.bytes;
-    const size_t input_size = curr_iter.fragment.size;
-    const size_t output_offset =
-        (curr_iter.y_offset * canvas_width + curr_iter.x_offset) * kNumChannels;
-    uint8_t* output = curr_rgba + output_offset;
-    const int output_stride = kNumChannels * canvas_width;
-    const size_t output_size = output_stride * curr_iter.height;
-
-    if (WebPDecodeRGBAInto(input, input_size, output, output_size,
-                           output_stride) == NULL) {
-      ok = false;
-      break;
-    }
-
-    // During the decoding of current frame, we may have set some pixels to be
-    // transparent (i.e. alpha < 255). However, the value of each of these
-    // pixels should have been determined by blending it against the value of
-    // that pixel in the previous frame if blending method of is WEBP_MUX_BLEND.
-    if (i > 0 && curr_iter.blend_method == WEBP_MUX_BLEND &&
-        !curr_frame->is_key_frame) {
-      if (prev_iter.dispose_method == WEBP_MUX_DISPOSE_NONE) {
-        // Blend transparent pixels with pixels in previous canvas.
-        for (int y = 0; y < curr_iter.height; ++y) {
-          const size_t offset =
-              (curr_iter.y_offset + y) * canvas_width + curr_iter.x_offset;
-          BlendPixelRowWebP(reinterpret_cast<uint32_t*>(curr_rgba) + offset,
-                            reinterpret_cast<uint32_t*>(prev_rgba) + offset,
-                            curr_iter.width);
-        }
-      } else {
-        assert(prev_iter.dispose_method == WEBP_MUX_DISPOSE_BACKGROUND);
-        // We need to blend a transparent pixel with its value just after
-        // initialization. That is, blend it with:
-        // * Fully transparent pixel if it belongs to prevRect <-- No-op.
-        // * The pixel in the previous canvas otherwise <-- Need alpha-blending.
-        for (int y = 0; y < curr_iter.height; ++y) {
-          const int canvas_y = curr_iter.y_offset + y;
-          int left1, width1, left2, width2;
-          FindBlendRangeAtRowWebP(&curr_iter, &prev_iter, canvas_y, &left1,
-                                  &width1, &left2, &width2);
-          if (width1 > 0) {
-            const size_t offset1 = canvas_y * canvas_width + left1;
-            BlendPixelRowWebP(reinterpret_cast<uint32_t*>(curr_rgba) + offset1,
-                              reinterpret_cast<uint32_t*>(prev_rgba) + offset1,
-                              width1);
-          }
-          if (width2 > 0) {
-            const size_t offset2 = canvas_y * canvas_width + left2;
-            BlendPixelRowWebP(reinterpret_cast<uint32_t*>(curr_rgba) + offset2,
-                              reinterpret_cast<uint32_t*>(prev_rgba) + offset2,
-                              width2);
-          }
-        }
-      }
-    }
+    curr_frame->duration = timestamp - prev_frame_timestamp;
+    curr_frame->is_key_frame = false;  // Unused.
+    memcpy(curr_rgba, frame_rgba,
+           image->canvas_width * kNumChannels * image->canvas_height);
 
     // Needed only because we may want to compare with GIF later.
     CleanupTransparentPixels(reinterpret_cast<uint32_t*>(curr_rgba),
-                             canvas_width, canvas_height);
+                             image->canvas_width, image->canvas_height);
 
-    if (dump_frames) {
-      ok = ok && DumpFrame(filename, dump_folder, i, curr_rgba,
-                           canvas_width, canvas_height);
+    if (dump_frames && dump_ok) {
+      dump_ok = DumpFrame(filename, dump_folder, frame_index, curr_rgba,
+                          image->canvas_width, image->canvas_height);
+      if (!dump_ok) {  // Print error once, but continue decode loop.
+        fprintf(stderr, "Error dumping frames to %s\n", dump_folder);
+      }
     }
+
+    ++frame_index;
+    prev_frame_timestamp = timestamp;
   }
-  WebPDemuxReleaseIterator(&prev_iter);
-  WebPDemuxReleaseIterator(&curr_iter);
-  WebPDemuxDelete(demux);
+  ok = dump_ok;
+
+ End:
+  WebPAnimDecoderDelete(dec);
   return ok;
 }
 

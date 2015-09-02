@@ -181,6 +181,7 @@ DEC_OBJS = \
     $(DIROBJ)\dec\webp.obj \
 
 DEMUX_OBJS = \
+    $(DIROBJ)\demux\anim_decode.obj \
     $(DIROBJ)\demux\demux.obj \
 
 DSP_DEC_OBJS = \

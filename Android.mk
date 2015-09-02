@@ -33,6 +33,7 @@ dec_srcs := \
     src/dec/webp.c \
 
 demux_srcs := \
+    src/demux/anim_decode.c \
     src/demux/demux.c \
 
 dsp_dec_srcs := \
