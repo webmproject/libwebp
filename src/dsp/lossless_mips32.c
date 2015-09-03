@@ -285,28 +285,28 @@ static VP8LStreaks HuffmanCostCombinedCount(const uint32_t* X,
 // literal_ and successive histograms could be unaligned
 // so we must use ulw and usw
 #define ADD_TO_OUT(A, B, C, D, E, P0, P1, P2)           \
-    "ulw    %[temp0], "#A"(%["#P0"])        \n\t"       \
-    "ulw    %[temp1], "#B"(%["#P0"])        \n\t"       \
-    "ulw    %[temp2], "#C"(%["#P0"])        \n\t"       \
-    "ulw    %[temp3], "#D"(%["#P0"])        \n\t"       \
-    "ulw    %[temp4], "#A"(%["#P1"])        \n\t"       \
-    "ulw    %[temp5], "#B"(%["#P1"])        \n\t"       \
-    "ulw    %[temp6], "#C"(%["#P1"])        \n\t"       \
-    "ulw    %[temp7], "#D"(%["#P1"])        \n\t"       \
+    "ulw    %[temp0], " #A "(%[" #P0 "])    \n\t"       \
+    "ulw    %[temp1], " #B "(%[" #P0 "])    \n\t"       \
+    "ulw    %[temp2], " #C "(%[" #P0 "])    \n\t"       \
+    "ulw    %[temp3], " #D "(%[" #P0 "])    \n\t"       \
+    "ulw    %[temp4], " #A "(%[" #P1 "])    \n\t"       \
+    "ulw    %[temp5], " #B "(%[" #P1 "])    \n\t"       \
+    "ulw    %[temp6], " #C "(%[" #P1 "])    \n\t"       \
+    "ulw    %[temp7], " #D "(%[" #P1 "])    \n\t"       \
     "addu   %[temp4], %[temp4],   %[temp0]  \n\t"       \
     "addu   %[temp5], %[temp5],   %[temp1]  \n\t"       \
     "addu   %[temp6], %[temp6],   %[temp2]  \n\t"       \
     "addu   %[temp7], %[temp7],   %[temp3]  \n\t"       \
-    "addiu  %["#P0"],  %["#P0"],  16        \n\t"       \
-  ".if "#E" == 1                            \n\t"       \
-    "addiu  %["#P1"],  %["#P1"],  16        \n\t"       \
+    "addiu  %[" #P0 "],  %[" #P0 "],  16    \n\t"       \
+  ".if " #E " == 1                          \n\t"       \
+    "addiu  %[" #P1 "],  %[" #P1 "],  16    \n\t"       \
   ".endif                                   \n\t"       \
-    "usw    %[temp4], "#A"(%["#P2"])        \n\t"       \
-    "usw    %[temp5], "#B"(%["#P2"])        \n\t"       \
-    "usw    %[temp6], "#C"(%["#P2"])        \n\t"       \
-    "usw    %[temp7], "#D"(%["#P2"])        \n\t"       \
-    "addiu  %["#P2"], %["#P2"],   16        \n\t"       \
-    "bne    %["#P0"], %[LoopEnd], 1b        \n\t"       \
+    "usw    %[temp4], " #A "(%[" #P2 "])    \n\t"       \
+    "usw    %[temp5], " #B "(%[" #P2 "])    \n\t"       \
+    "usw    %[temp6], " #C "(%[" #P2 "])    \n\t"       \
+    "usw    %[temp7], " #D "(%[" #P2 "])    \n\t"       \
+    "addiu  %[" #P2 "], %[" #P2 "],   16    \n\t"       \
+    "bne    %[" #P0 "], %[LoopEnd], 1b      \n\t"       \
     ".set   pop                             \n\t"       \
 
 #define ASM_END_COMMON_0                                \
