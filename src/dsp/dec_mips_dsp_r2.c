@@ -548,10 +548,10 @@ static void SimpleVFilter16(uint8_t* p, int stride, int thresh) {
 // TEMP3 = SRC[D + D1 * BPS]
 #define LOAD_4_BYTES(TEMP0, TEMP1, TEMP2, TEMP3,                               \
                      A, A1, B, B1, C, C1, D, D1, SRC)                          \
-  "lbu          %["#TEMP0"],   "#A"+"#A1"*"XSTR(BPS)"(%["#SRC"])     \n\t"     \
-  "lbu          %["#TEMP1"],   "#B"+"#B1"*"XSTR(BPS)"(%["#SRC"])     \n\t"     \
-  "lbu          %["#TEMP2"],   "#C"+"#C1"*"XSTR(BPS)"(%["#SRC"])     \n\t"     \
-  "lbu          %["#TEMP3"],   "#D"+"#D1"*"XSTR(BPS)"(%["#SRC"])     \n\t"     \
+  "lbu      %[" #TEMP0 "],   " #A "+" #A1 "*"XSTR(BPS)"(%[" #SRC "]) \n\t"     \
+  "lbu      %[" #TEMP1 "],   " #B "+" #B1 "*"XSTR(BPS)"(%[" #SRC "]) \n\t"     \
+  "lbu      %[" #TEMP2 "],   " #C "+" #C1 "*"XSTR(BPS)"(%[" #SRC "]) \n\t"     \
+  "lbu      %[" #TEMP3 "],   " #D "+" #D1 "*"XSTR(BPS)"(%[" #SRC "]) \n\t"     \
 
 static void SimpleHFilter16(uint8_t* p, int stride, int thresh) {
   int i;
@@ -623,8 +623,8 @@ static void SimpleHFilter16i(uint8_t* p, int stride, int thresh) {
 // DST[A * BPS]     = TEMP0
 // DST[B + C * BPS] = TEMP1
 #define STORE_8_BYTES(TEMP0, TEMP1, A, B, C, DST)                              \
-  "usw          %["#TEMP0"],   "#A"*"XSTR(BPS)"(%["#DST"])         \n\t"       \
-  "usw          %["#TEMP1"],   "#B"+"#C"*"XSTR(BPS)"(%["#DST"])    \n\t"
+  "usw    %[" #TEMP0 "],   " #A "*"XSTR(BPS)"(%[" #DST "])         \n\t"       \
+  "usw    %[" #TEMP1 "],   " #B "+" #C "*"XSTR(BPS)"(%[" #DST "])  \n\t"
 
 static void VE4(uint8_t* dst) {    // vertical
   const uint8_t* top = dst - BPS;
@@ -725,8 +725,8 @@ static void RD4(uint8_t* dst) {   // Down-right
 // TEMP0 = SRC[A * BPS]
 // TEMP1 = SRC[B + C * BPS]
 #define LOAD_8_BYTES(TEMP0, TEMP1, A, B, C, SRC)                               \
-  "ulw          %["#TEMP0"],   "#A"*"XSTR(BPS)"(%["#SRC"])         \n\t"       \
-  "ulw          %["#TEMP1"],   "#B"+"#C"*"XSTR(BPS)"(%["#SRC"])    \n\t"
+  "ulw    %[" #TEMP0 "],   " #A "*"XSTR(BPS)"(%[" #SRC "])         \n\t"       \
+  "ulw    %[" #TEMP1 "],   " #B "+" #C "*"XSTR(BPS)"(%[" #SRC "])  \n\t"
 
 static void LD4(uint8_t* dst) {   // Down-Left
   int temp0, temp1, temp2, temp3, temp4;
@@ -873,24 +873,24 @@ static void DC8uvNoTop(uint8_t* dst) {  // DC with no top samples
 #define CLIPPING(SIZE)                                                         \
   "preceu.ph.qbl   %[temp2],   %[temp0]                  \n\t"                 \
   "preceu.ph.qbr   %[temp0],   %[temp0]                  \n\t"                 \
-".if "#SIZE" == 8                                        \n\t"                 \
+".if " #SIZE " == 8                                      \n\t"                 \
   "preceu.ph.qbl   %[temp3],   %[temp1]                  \n\t"                 \
   "preceu.ph.qbr   %[temp1],   %[temp1]                  \n\t"                 \
 ".endif                                                  \n\t"                 \
   "addu.ph         %[temp2],   %[temp2],   %[dst_1]      \n\t"                 \
   "addu.ph         %[temp0],   %[temp0],   %[dst_1]      \n\t"                 \
-".if "#SIZE" == 8                                        \n\t"                 \
+".if " #SIZE " == 8                                      \n\t"                 \
   "addu.ph         %[temp3],   %[temp3],   %[dst_1]      \n\t"                 \
   "addu.ph         %[temp1],   %[temp1],   %[dst_1]      \n\t"                 \
 ".endif                                                  \n\t"                 \
   "shll_s.ph       %[temp2],   %[temp2],   7             \n\t"                 \
   "shll_s.ph       %[temp0],   %[temp0],   7             \n\t"                 \
-".if "#SIZE" == 8                                        \n\t"                 \
+".if " #SIZE " == 8                                      \n\t"                 \
   "shll_s.ph       %[temp3],   %[temp3],   7             \n\t"                 \
   "shll_s.ph       %[temp1],   %[temp1],   7             \n\t"                 \
 ".endif                                                  \n\t"                 \
   "precrqu_s.qb.ph %[temp0],   %[temp2],   %[temp0]      \n\t"                 \
-".if "#SIZE" == 8                                        \n\t"                 \
+".if " #SIZE " == 8                                      \n\t"                 \
   "precrqu_s.qb.ph %[temp1],   %[temp3],   %[temp1]      \n\t"                 \
 ".endif                                                  \n\t"
 
@@ -899,7 +899,7 @@ static void DC8uvNoTop(uint8_t* dst) {  // DC with no top samples
   int dst_1 = ((int)(DST)[-1] << 16) + (DST)[-1];                              \
   int temp0, temp1, temp2, temp3;                                              \
   __asm__ volatile (                                                           \
-  ".if "#SIZE" < 8                                       \n\t"                 \
+  ".if " #SIZE " < 8                                     \n\t"                 \
     "ulw             %[temp0],   0(%[top])               \n\t"                 \
     "subu.ph         %[dst_1],   %[dst_1],    %[top_1]   \n\t"                 \
     CLIPPING(4)                                                                \
@@ -911,7 +911,7 @@ static void DC8uvNoTop(uint8_t* dst) {  // DC with no top samples
     CLIPPING(8)                                                                \
     "usw             %[temp0],   0(%[dst])               \n\t"                 \
     "usw             %[temp1],   4(%[dst])               \n\t"                 \
-  ".if "#SIZE" == 16                                     \n\t"                 \
+  ".if " #SIZE " == 16                                   \n\t"                 \
     "ulw             %[temp0],   8(%[top])               \n\t"                 \
     "ulw             %[temp1],   12(%[top])              \n\t"                 \
     CLIPPING(8)                                                                \

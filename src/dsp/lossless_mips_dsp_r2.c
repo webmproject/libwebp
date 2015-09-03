@@ -29,14 +29,14 @@ static void FUNC_NAME(const TYPE* src,                                         \
     for (x = 0; x < (width >> 2); ++x) {                                       \
       int tmp1, tmp2, tmp3, tmp4;                                              \
       __asm__ volatile (                                                       \
-      ".ifc        "#TYPE",  uint8_t                    \n\t"                  \
+      ".ifc        " #TYPE ",  uint8_t                  \n\t"                  \
         "lbu       %[tmp1],  0(%[src])                  \n\t"                  \
         "lbu       %[tmp2],  1(%[src])                  \n\t"                  \
         "lbu       %[tmp3],  2(%[src])                  \n\t"                  \
         "lbu       %[tmp4],  3(%[src])                  \n\t"                  \
         "addiu     %[src],   %[src],      4             \n\t"                  \
       ".endif                                           \n\t"                  \
-      ".ifc        "#TYPE",  uint32_t                   \n\t"                  \
+      ".ifc        " #TYPE ",  uint32_t                 \n\t"                  \
         "lw        %[tmp1],  0(%[src])                  \n\t"                  \
         "lw        %[tmp2],  4(%[src])                  \n\t"                  \
         "lw        %[tmp3],  8(%[src])                  \n\t"                  \
@@ -55,7 +55,7 @@ static void FUNC_NAME(const TYPE* src,                                         \
         "lwx       %[tmp2],  %[tmp2](%[color_map])      \n\t"                  \
         "lwx       %[tmp3],  %[tmp3](%[color_map])      \n\t"                  \
         "lwx       %[tmp4],  %[tmp4](%[color_map])      \n\t"                  \
-      ".ifc        "#TYPE",  uint8_t                    \n\t"                  \
+      ".ifc        " #TYPE ",  uint8_t                  \n\t"                  \
         "ext       %[tmp1],  %[tmp1],     8,        8   \n\t"                  \
         "ext       %[tmp2],  %[tmp2],     8,        8   \n\t"                  \
         "ext       %[tmp3],  %[tmp3],     8,        8   \n\t"                  \
@@ -66,7 +66,7 @@ static void FUNC_NAME(const TYPE* src,                                         \
         "sb        %[tmp4],  3(%[dst])                  \n\t"                  \
         "addiu     %[dst],   %[dst],      4             \n\t"                  \
       ".endif                                           \n\t"                  \
-      ".ifc        "#TYPE",  uint32_t                   \n\t"                  \
+      ".ifc        " #TYPE ",  uint32_t                 \n\t"                  \
         "sw        %[tmp1],  0(%[dst])                  \n\t"                  \
         "sw        %[tmp2],  4(%[dst])                  \n\t"                  \
         "sw        %[tmp3],  8(%[dst])                  \n\t"                  \

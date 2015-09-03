@@ -31,26 +31,26 @@ static const int kC2 = 35468;
 // TEMP0..TEMP3 - registers for corresponding tmp elements
 // TEMP4..TEMP5 - temporary registers
 #define VERTICAL_PASS(A, B, C, D, TEMP4, TEMP0, TEMP1, TEMP2, TEMP3)        \
-  "lh      %[temp16],      "#A"(%[temp20])                 \n\t"            \
-  "lh      %[temp18],      "#B"(%[temp20])                 \n\t"            \
-  "lh      %[temp17],      "#C"(%[temp20])                 \n\t"            \
-  "lh      %[temp19],      "#D"(%[temp20])                 \n\t"            \
-  "addu    %["#TEMP4"],    %[temp16],      %[temp18]       \n\t"            \
-  "subu    %[temp16],      %[temp16],      %[temp18]       \n\t"            \
-  "mul     %["#TEMP0"],    %[temp17],      %[kC2]          \n\t"            \
-  "mul     %[temp18],      %[temp19],      %[kC1]          \n\t"            \
-  "mul     %[temp17],      %[temp17],      %[kC1]          \n\t"            \
-  "mul     %[temp19],      %[temp19],      %[kC2]          \n\t"            \
-  "sra     %["#TEMP0"],    %["#TEMP0"],    16              \n\n"            \
-  "sra     %[temp18],      %[temp18],      16              \n\n"            \
-  "sra     %[temp17],      %[temp17],      16              \n\n"            \
-  "sra     %[temp19],      %[temp19],      16              \n\n"            \
-  "subu    %["#TEMP2"],    %["#TEMP0"],    %[temp18]       \n\t"            \
-  "addu    %["#TEMP3"],    %[temp17],      %[temp19]       \n\t"            \
-  "addu    %["#TEMP0"],    %["#TEMP4"],    %["#TEMP3"]     \n\t"            \
-  "addu    %["#TEMP1"],    %[temp16],      %["#TEMP2"]     \n\t"            \
-  "subu    %["#TEMP2"],    %[temp16],      %["#TEMP2"]     \n\t"            \
-  "subu    %["#TEMP3"],    %["#TEMP4"],    %["#TEMP3"]     \n\t"
+  "lh      %[temp16],      " #A "(%[temp20])                 \n\t"          \
+  "lh      %[temp18],      " #B "(%[temp20])                 \n\t"          \
+  "lh      %[temp17],      " #C "(%[temp20])                 \n\t"          \
+  "lh      %[temp19],      " #D "(%[temp20])                 \n\t"          \
+  "addu    %[" #TEMP4 "],    %[temp16],      %[temp18]       \n\t"          \
+  "subu    %[temp16],      %[temp16],      %[temp18]         \n\t"          \
+  "mul     %[" #TEMP0 "],    %[temp17],      %[kC2]          \n\t"          \
+  "mul     %[temp18],      %[temp19],      %[kC1]            \n\t"          \
+  "mul     %[temp17],      %[temp17],      %[kC1]            \n\t"          \
+  "mul     %[temp19],      %[temp19],      %[kC2]            \n\t"          \
+  "sra     %[" #TEMP0 "],    %[" #TEMP0 "],    16            \n\n"          \
+  "sra     %[temp18],      %[temp18],      16                \n\n"          \
+  "sra     %[temp17],      %[temp17],      16                \n\n"          \
+  "sra     %[temp19],      %[temp19],      16                \n\n"          \
+  "subu    %[" #TEMP2 "],    %[" #TEMP0 "],    %[temp18]     \n\t"          \
+  "addu    %[" #TEMP3 "],    %[temp17],      %[temp19]       \n\t"          \
+  "addu    %[" #TEMP0 "],    %[" #TEMP4 "],    %[" #TEMP3 "] \n\t"          \
+  "addu    %[" #TEMP1 "],    %[temp16],      %[" #TEMP2 "]   \n\t"          \
+  "subu    %[" #TEMP2 "],    %[temp16],      %[" #TEMP2 "]   \n\t"          \
+  "subu    %[" #TEMP3 "],    %[" #TEMP4 "],    %[" #TEMP3 "] \n\t"
 
 // macro for one horizontal pass in ITransformOne
 // MUL and STORE macros inlined
@@ -58,59 +58,59 @@ static const int kC2 = 35468;
 // temp0..temp15 holds tmp[0]..tmp[15]
 // A - offset in bytes to load from ref and store to dst buffer
 // TEMP0, TEMP4, TEMP8 and TEMP12 - registers for corresponding tmp elements
-#define HORIZONTAL_PASS(A, TEMP0, TEMP4, TEMP8, TEMP12)                     \
-  "addiu   %["#TEMP0"],    %["#TEMP0"],    4               \n\t"            \
-  "addu    %[temp16],      %["#TEMP0"],    %["#TEMP8"]     \n\t"            \
-  "subu    %[temp17],      %["#TEMP0"],    %["#TEMP8"]     \n\t"            \
-  "mul     %["#TEMP0"],    %["#TEMP4"],    %[kC2]          \n\t"            \
-  "mul     %["#TEMP8"],    %["#TEMP12"],   %[kC1]          \n\t"            \
-  "mul     %["#TEMP4"],    %["#TEMP4"],    %[kC1]          \n\t"            \
-  "mul     %["#TEMP12"],   %["#TEMP12"],   %[kC2]          \n\t"            \
-  "sra     %["#TEMP0"],    %["#TEMP0"],    16              \n\t"            \
-  "sra     %["#TEMP8"],    %["#TEMP8"],    16              \n\t"            \
-  "sra     %["#TEMP4"],    %["#TEMP4"],    16              \n\t"            \
-  "sra     %["#TEMP12"],   %["#TEMP12"],   16              \n\t"            \
-  "subu    %[temp18],      %["#TEMP0"],    %["#TEMP8"]     \n\t"            \
-  "addu    %[temp19],      %["#TEMP4"],    %["#TEMP12"]    \n\t"            \
-  "addu    %["#TEMP0"],    %[temp16],      %[temp19]       \n\t"            \
-  "addu    %["#TEMP4"],    %[temp17],      %[temp18]       \n\t"            \
-  "subu    %["#TEMP8"],    %[temp17],      %[temp18]       \n\t"            \
-  "subu    %["#TEMP12"],   %[temp16],      %[temp19]       \n\t"            \
-  "lw      %[temp20],      0(%[args])                      \n\t"            \
-  "sra     %["#TEMP0"],    %["#TEMP0"],    3               \n\t"            \
-  "sra     %["#TEMP4"],    %["#TEMP4"],    3               \n\t"            \
-  "sra     %["#TEMP8"],    %["#TEMP8"],    3               \n\t"            \
-  "sra     %["#TEMP12"],   %["#TEMP12"],   3               \n\t"            \
-  "lbu     %[temp16],      0+"XSTR(BPS)"*"#A"(%[temp20])   \n\t"            \
-  "lbu     %[temp17],      1+"XSTR(BPS)"*"#A"(%[temp20])   \n\t"            \
-  "lbu     %[temp18],      2+"XSTR(BPS)"*"#A"(%[temp20])   \n\t"            \
-  "lbu     %[temp19],      3+"XSTR(BPS)"*"#A"(%[temp20])   \n\t"            \
-  "addu    %["#TEMP0"],    %[temp16],      %["#TEMP0"]     \n\t"            \
-  "addu    %["#TEMP4"],    %[temp17],      %["#TEMP4"]     \n\t"            \
-  "addu    %["#TEMP8"],    %[temp18],      %["#TEMP8"]     \n\t"            \
-  "addu    %["#TEMP12"],   %[temp19],      %["#TEMP12"]    \n\t"            \
-  "slt     %[temp16],      %["#TEMP0"],    $zero           \n\t"            \
-  "slt     %[temp17],      %["#TEMP4"],    $zero           \n\t"            \
-  "slt     %[temp18],      %["#TEMP8"],    $zero           \n\t"            \
-  "slt     %[temp19],      %["#TEMP12"],   $zero           \n\t"            \
-  "movn    %["#TEMP0"],    $zero,          %[temp16]       \n\t"            \
-  "movn    %["#TEMP4"],    $zero,          %[temp17]       \n\t"            \
-  "movn    %["#TEMP8"],    $zero,          %[temp18]       \n\t"            \
-  "movn    %["#TEMP12"],   $zero,          %[temp19]       \n\t"            \
-  "addiu   %[temp20],      $zero,          255             \n\t"            \
-  "slt     %[temp16],      %["#TEMP0"],    %[temp20]       \n\t"            \
-  "slt     %[temp17],      %["#TEMP4"],    %[temp20]       \n\t"            \
-  "slt     %[temp18],      %["#TEMP8"],    %[temp20]       \n\t"            \
-  "slt     %[temp19],      %["#TEMP12"],   %[temp20]       \n\t"            \
-  "movz    %["#TEMP0"],    %[temp20],      %[temp16]       \n\t"            \
-  "movz    %["#TEMP4"],    %[temp20],      %[temp17]       \n\t"            \
-  "lw      %[temp16],      8(%[args])                      \n\t"            \
-  "movz    %["#TEMP8"],    %[temp20],      %[temp18]       \n\t"            \
-  "movz    %["#TEMP12"],   %[temp20],      %[temp19]       \n\t"            \
-  "sb      %["#TEMP0"],    0+"XSTR(BPS)"*"#A"(%[temp16])   \n\t"            \
-  "sb      %["#TEMP4"],    1+"XSTR(BPS)"*"#A"(%[temp16])   \n\t"            \
-  "sb      %["#TEMP8"],    2+"XSTR(BPS)"*"#A"(%[temp16])   \n\t"            \
-  "sb      %["#TEMP12"],   3+"XSTR(BPS)"*"#A"(%[temp16])   \n\t"
+#define HORIZONTAL_PASS(A, TEMP0, TEMP4, TEMP8, TEMP12)                       \
+  "addiu   %[" #TEMP0 "],    %[" #TEMP0 "],    4             \n\t"            \
+  "addu    %[temp16],      %[" #TEMP0 "],    %[" #TEMP8 "]   \n\t"            \
+  "subu    %[temp17],      %[" #TEMP0 "],    %[" #TEMP8 "]   \n\t"            \
+  "mul     %[" #TEMP0 "],    %[" #TEMP4 "],    %[kC2]        \n\t"            \
+  "mul     %[" #TEMP8 "],    %[" #TEMP12 "],   %[kC1]        \n\t"            \
+  "mul     %[" #TEMP4 "],    %[" #TEMP4 "],    %[kC1]        \n\t"            \
+  "mul     %[" #TEMP12 "],   %[" #TEMP12 "],   %[kC2]        \n\t"            \
+  "sra     %[" #TEMP0 "],    %[" #TEMP0 "],    16            \n\t"            \
+  "sra     %[" #TEMP8 "],    %[" #TEMP8 "],    16            \n\t"            \
+  "sra     %[" #TEMP4 "],    %[" #TEMP4 "],    16            \n\t"            \
+  "sra     %[" #TEMP12 "],   %[" #TEMP12 "],   16            \n\t"            \
+  "subu    %[temp18],      %[" #TEMP0 "],    %[" #TEMP8 "]   \n\t"            \
+  "addu    %[temp19],      %[" #TEMP4 "],    %[" #TEMP12 "]  \n\t"            \
+  "addu    %[" #TEMP0 "],    %[temp16],      %[temp19]       \n\t"            \
+  "addu    %[" #TEMP4 "],    %[temp17],      %[temp18]       \n\t"            \
+  "subu    %[" #TEMP8 "],    %[temp17],      %[temp18]       \n\t"            \
+  "subu    %[" #TEMP12 "],   %[temp16],      %[temp19]       \n\t"            \
+  "lw      %[temp20],      0(%[args])                        \n\t"            \
+  "sra     %[" #TEMP0 "],    %[" #TEMP0 "],    3             \n\t"            \
+  "sra     %[" #TEMP4 "],    %[" #TEMP4 "],    3             \n\t"            \
+  "sra     %[" #TEMP8 "],    %[" #TEMP8 "],    3             \n\t"            \
+  "sra     %[" #TEMP12 "],   %[" #TEMP12 "],   3             \n\t"            \
+  "lbu     %[temp16],      0+"XSTR(BPS)"*" #A "(%[temp20])   \n\t"            \
+  "lbu     %[temp17],      1+"XSTR(BPS)"*" #A "(%[temp20])   \n\t"            \
+  "lbu     %[temp18],      2+"XSTR(BPS)"*" #A "(%[temp20])   \n\t"            \
+  "lbu     %[temp19],      3+"XSTR(BPS)"*" #A "(%[temp20])   \n\t"            \
+  "addu    %[" #TEMP0 "],    %[temp16],      %[" #TEMP0 "]   \n\t"            \
+  "addu    %[" #TEMP4 "],    %[temp17],      %[" #TEMP4 "]   \n\t"            \
+  "addu    %[" #TEMP8 "],    %[temp18],      %[" #TEMP8 "]   \n\t"            \
+  "addu    %[" #TEMP12 "],   %[temp19],      %[" #TEMP12 "]  \n\t"            \
+  "slt     %[temp16],      %[" #TEMP0 "],    $zero           \n\t"            \
+  "slt     %[temp17],      %[" #TEMP4 "],    $zero           \n\t"            \
+  "slt     %[temp18],      %[" #TEMP8 "],    $zero           \n\t"            \
+  "slt     %[temp19],      %[" #TEMP12 "],   $zero           \n\t"            \
+  "movn    %[" #TEMP0 "],    $zero,          %[temp16]       \n\t"            \
+  "movn    %[" #TEMP4 "],    $zero,          %[temp17]       \n\t"            \
+  "movn    %[" #TEMP8 "],    $zero,          %[temp18]       \n\t"            \
+  "movn    %[" #TEMP12 "],   $zero,          %[temp19]       \n\t"            \
+  "addiu   %[temp20],      $zero,          255               \n\t"            \
+  "slt     %[temp16],      %[" #TEMP0 "],    %[temp20]       \n\t"            \
+  "slt     %[temp17],      %[" #TEMP4 "],    %[temp20]       \n\t"            \
+  "slt     %[temp18],      %[" #TEMP8 "],    %[temp20]       \n\t"            \
+  "slt     %[temp19],      %[" #TEMP12 "],   %[temp20]       \n\t"            \
+  "movz    %[" #TEMP0 "],    %[temp20],      %[temp16]       \n\t"            \
+  "movz    %[" #TEMP4 "],    %[temp20],      %[temp17]       \n\t"            \
+  "lw      %[temp16],      8(%[args])                        \n\t"            \
+  "movz    %[" #TEMP8 "],    %[temp20],      %[temp18]       \n\t"            \
+  "movz    %[" #TEMP12 "],   %[temp20],      %[temp19]       \n\t"            \
+  "sb      %[" #TEMP0 "],    0+"XSTR(BPS)"*" #A "(%[temp16]) \n\t"            \
+  "sb      %[" #TEMP4 "],    1+"XSTR(BPS)"*" #A "(%[temp16]) \n\t"            \
+  "sb      %[" #TEMP8 "],    2+"XSTR(BPS)"*" #A "(%[temp16]) \n\t"            \
+  "sb      %[" #TEMP12 "],   3+"XSTR(BPS)"*" #A "(%[temp16]) \n\t"
 
 // Does one or two inverse transforms.
 static WEBP_INLINE void ITransformOne(const uint8_t* ref, const int16_t* in,
@@ -161,9 +161,9 @@ static void ITransform(const uint8_t* ref, const int16_t* in,
 // K - offset in bytes (kZigzag[n] * 4)
 // N - offset in bytes (n * 2)
 #define QUANTIZE_ONE(J, K, N)                                               \
-  "lh           %[temp0],       "#J"(%[ppin])                       \n\t"   \
-  "lhu          %[temp1],       "#J"(%[ppsharpen])                  \n\t"   \
-  "lw           %[temp2],       "#K"(%[ppzthresh])                  \n\t"   \
+  "lh           %[temp0],       " #J "(%[ppin])                     \n\t"   \
+  "lhu          %[temp1],       " #J "(%[ppsharpen])                \n\t"   \
+  "lw           %[temp2],       " #K "(%[ppzthresh])                \n\t"   \
   "sra          %[sign],        %[temp0],           15              \n\t"   \
   "xor          %[coeff],       %[temp0],           %[sign]         \n\t"   \
   "subu         %[coeff],       %[coeff],           %[sign]         \n\t"   \
@@ -172,9 +172,9 @@ static void ITransform(const uint8_t* ref, const int16_t* in,
   "addiu        %[temp5],       $zero,              0               \n\t"   \
   "addiu        %[level],       $zero,              0               \n\t"   \
   "beqz         %[temp4],       2f                                  \n\t"   \
-  "lhu          %[temp1],       "#J"(%[ppiq])                       \n\t"   \
-  "lw           %[temp2],       "#K"(%[ppbias])                     \n\t"   \
-  "lhu          %[temp3],       "#J"(%[ppq])                        \n\t"   \
+  "lhu          %[temp1],       " #J "(%[ppiq])                     \n\t"   \
+  "lw           %[temp2],       " #K "(%[ppbias])                   \n\t"   \
+  "lhu          %[temp3],       " #J "(%[ppq])                      \n\t"   \
   "mul          %[level],       %[coeff],           %[temp1]        \n\t"   \
   "addu         %[level],       %[level],           %[temp2]        \n\t"   \
   "sra          %[level],       %[level],           17              \n\t"   \
@@ -184,8 +184,8 @@ static void ITransform(const uint8_t* ref, const int16_t* in,
   "subu         %[level],       %[level],           %[sign]         \n\t"   \
   "mul          %[temp5],       %[level],           %[temp3]        \n\t"   \
 "2:                                                                 \n\t"   \
-  "sh           %[temp5],       "#J"(%[ppin])                       \n\t"   \
-  "sh           %[level],       "#N"(%[pout])                       \n\t"
+  "sh           %[temp5],       " #J "(%[ppin])                     \n\t"   \
+  "sh           %[level],       " #N "(%[pout])                     \n\t"
 
 static int QuantizeBlock(int16_t in[16], int16_t out[16],
                          const VP8Matrix* const mtx) {
@@ -253,39 +253,39 @@ static int Quantize2Blocks(int16_t in[32], int16_t out[32],
 // A - offset in bytes to load from a and b buffers
 // E..H - offsets in bytes to store first results to tmp buffer
 // E1..H1 - offsets in bytes to store second results to tmp buffer
-#define HORIZONTAL_PASS(A, E, F, G, H, E1, F1, G1, H1)              \
-  "lbu    %[temp0],  0+"XSTR(BPS)"*"#A"(%[a])  \n\t"                \
-  "lbu    %[temp1],  1+"XSTR(BPS)"*"#A"(%[a])  \n\t"                \
-  "lbu    %[temp2],  2+"XSTR(BPS)"*"#A"(%[a])  \n\t"                \
-  "lbu    %[temp3],  3+"XSTR(BPS)"*"#A"(%[a])  \n\t"                \
-  "lbu    %[temp4],  0+"XSTR(BPS)"*"#A"(%[b])  \n\t"                \
-  "lbu    %[temp5],  1+"XSTR(BPS)"*"#A"(%[b])  \n\t"                \
-  "lbu    %[temp6],  2+"XSTR(BPS)"*"#A"(%[b])  \n\t"                \
-  "lbu    %[temp7],  3+"XSTR(BPS)"*"#A"(%[b])  \n\t"                \
-  "addu   %[temp8],  %[temp0],    %[temp2]     \n\t"                \
-  "subu   %[temp0],  %[temp0],    %[temp2]     \n\t"                \
-  "addu   %[temp2],  %[temp1],    %[temp3]     \n\t"                \
-  "subu   %[temp1],  %[temp1],    %[temp3]     \n\t"                \
-  "addu   %[temp3],  %[temp4],    %[temp6]     \n\t"                \
-  "subu   %[temp4],  %[temp4],    %[temp6]     \n\t"                \
-  "addu   %[temp6],  %[temp5],    %[temp7]     \n\t"                \
-  "subu   %[temp5],  %[temp5],    %[temp7]     \n\t"                \
-  "addu   %[temp7],  %[temp8],    %[temp2]     \n\t"                \
-  "subu   %[temp2],  %[temp8],    %[temp2]     \n\t"                \
-  "addu   %[temp8],  %[temp0],    %[temp1]     \n\t"                \
-  "subu   %[temp0],  %[temp0],    %[temp1]     \n\t"                \
-  "addu   %[temp1],  %[temp3],    %[temp6]     \n\t"                \
-  "subu   %[temp3],  %[temp3],    %[temp6]     \n\t"                \
-  "addu   %[temp6],  %[temp4],    %[temp5]     \n\t"                \
-  "subu   %[temp4],  %[temp4],    %[temp5]     \n\t"                \
-  "sw     %[temp7],  "#E"(%[tmp])              \n\t"                \
-  "sw     %[temp2],  "#H"(%[tmp])              \n\t"                \
-  "sw     %[temp8],  "#F"(%[tmp])              \n\t"                \
-  "sw     %[temp0],  "#G"(%[tmp])              \n\t"                \
-  "sw     %[temp1],  "#E1"(%[tmp])             \n\t"                \
-  "sw     %[temp3],  "#H1"(%[tmp])             \n\t"                \
-  "sw     %[temp6],  "#F1"(%[tmp])             \n\t"                \
-  "sw     %[temp4],  "#G1"(%[tmp])             \n\t"
+#define HORIZONTAL_PASS(A, E, F, G, H, E1, F1, G1, H1)                \
+  "lbu    %[temp0],  0+"XSTR(BPS)"*" #A "(%[a])  \n\t"                \
+  "lbu    %[temp1],  1+"XSTR(BPS)"*" #A "(%[a])  \n\t"                \
+  "lbu    %[temp2],  2+"XSTR(BPS)"*" #A "(%[a])  \n\t"                \
+  "lbu    %[temp3],  3+"XSTR(BPS)"*" #A "(%[a])  \n\t"                \
+  "lbu    %[temp4],  0+"XSTR(BPS)"*" #A "(%[b])  \n\t"                \
+  "lbu    %[temp5],  1+"XSTR(BPS)"*" #A "(%[b])  \n\t"                \
+  "lbu    %[temp6],  2+"XSTR(BPS)"*" #A "(%[b])  \n\t"                \
+  "lbu    %[temp7],  3+"XSTR(BPS)"*" #A "(%[b])  \n\t"                \
+  "addu   %[temp8],  %[temp0],    %[temp2]       \n\t"                \
+  "subu   %[temp0],  %[temp0],    %[temp2]       \n\t"                \
+  "addu   %[temp2],  %[temp1],    %[temp3]       \n\t"                \
+  "subu   %[temp1],  %[temp1],    %[temp3]       \n\t"                \
+  "addu   %[temp3],  %[temp4],    %[temp6]       \n\t"                \
+  "subu   %[temp4],  %[temp4],    %[temp6]       \n\t"                \
+  "addu   %[temp6],  %[temp5],    %[temp7]       \n\t"                \
+  "subu   %[temp5],  %[temp5],    %[temp7]       \n\t"                \
+  "addu   %[temp7],  %[temp8],    %[temp2]       \n\t"                \
+  "subu   %[temp2],  %[temp8],    %[temp2]       \n\t"                \
+  "addu   %[temp8],  %[temp0],    %[temp1]       \n\t"                \
+  "subu   %[temp0],  %[temp0],    %[temp1]       \n\t"                \
+  "addu   %[temp1],  %[temp3],    %[temp6]       \n\t"                \
+  "subu   %[temp3],  %[temp3],    %[temp6]       \n\t"                \
+  "addu   %[temp6],  %[temp4],    %[temp5]       \n\t"                \
+  "subu   %[temp4],  %[temp4],    %[temp5]       \n\t"                \
+  "sw     %[temp7],  " #E "(%[tmp])              \n\t"                \
+  "sw     %[temp2],  " #H "(%[tmp])              \n\t"                \
+  "sw     %[temp8],  " #F "(%[tmp])              \n\t"                \
+  "sw     %[temp0],  " #G "(%[tmp])              \n\t"                \
+  "sw     %[temp1],  " #E1 "(%[tmp])             \n\t"                \
+  "sw     %[temp3],  " #H1 "(%[tmp])             \n\t"                \
+  "sw     %[temp6],  " #F1 "(%[tmp])             \n\t"                \
+  "sw     %[temp4],  " #G1 "(%[tmp])             \n\t"
 
 // macro for one vertical pass in Disto4x4 (TTransform)
 // two calls of function TTransform are merged into single one
@@ -300,10 +300,10 @@ static int Quantize2Blocks(int16_t in[32], int16_t out[32],
 // A1..D1 - offsets in bytes to load second results from tmp buffer
 // E..H - offsets in bytes to load from w buffer
 #define VERTICAL_PASS(A, B, C, D, A1, B1, C1, D1, E, F, G, H)     \
-  "lw     %[temp0],  "#A1"(%[tmp])           \n\t"                \
-  "lw     %[temp1],  "#C1"(%[tmp])           \n\t"                \
-  "lw     %[temp2],  "#B1"(%[tmp])           \n\t"                \
-  "lw     %[temp3],  "#D1"(%[tmp])           \n\t"                \
+  "lw     %[temp0],  " #A1 "(%[tmp])         \n\t"                \
+  "lw     %[temp1],  " #C1 "(%[tmp])         \n\t"                \
+  "lw     %[temp2],  " #B1 "(%[tmp])         \n\t"                \
+  "lw     %[temp3],  " #D1 "(%[tmp])         \n\t"                \
   "addu   %[temp8],  %[temp0],    %[temp1]   \n\t"                \
   "subu   %[temp0],  %[temp0],    %[temp1]   \n\t"                \
   "addu   %[temp1],  %[temp2],    %[temp3]   \n\t"                \
@@ -324,18 +324,18 @@ static int Quantize2Blocks(int16_t in[32], int16_t out[32],
   "subu   %[temp1],  %[temp1],    %[temp5]   \n\t"                \
   "subu   %[temp0],  %[temp0],    %[temp6]   \n\t"                \
   "subu   %[temp8],  %[temp8],    %[temp7]   \n\t"                \
-  "lhu    %[temp4],  "#E"(%[w])              \n\t"                \
-  "lhu    %[temp5],  "#F"(%[w])              \n\t"                \
-  "lhu    %[temp6],  "#G"(%[w])              \n\t"                \
-  "lhu    %[temp7],  "#H"(%[w])              \n\t"                \
+  "lhu    %[temp4],  " #E "(%[w])            \n\t"                \
+  "lhu    %[temp5],  " #F "(%[w])            \n\t"                \
+  "lhu    %[temp6],  " #G "(%[w])            \n\t"                \
+  "lhu    %[temp7],  " #H "(%[w])            \n\t"                \
   "madd   %[temp4],  %[temp3]                \n\t"                \
   "madd   %[temp5],  %[temp1]                \n\t"                \
   "madd   %[temp6],  %[temp0]                \n\t"                \
   "madd   %[temp7],  %[temp8]                \n\t"                \
-  "lw     %[temp0],  "#A"(%[tmp])            \n\t"                \
-  "lw     %[temp1],  "#C"(%[tmp])            \n\t"                \
-  "lw     %[temp2],  "#B"(%[tmp])            \n\t"                \
-  "lw     %[temp3],  "#D"(%[tmp])            \n\t"                \
+  "lw     %[temp0],  " #A "(%[tmp])          \n\t"                \
+  "lw     %[temp1],  " #C "(%[tmp])          \n\t"                \
+  "lw     %[temp2],  " #B "(%[tmp])          \n\t"                \
+  "lw     %[temp3],  " #D "(%[tmp])          \n\t"                \
   "addu   %[temp8],  %[temp0],    %[temp1]   \n\t"                \
   "subu   %[temp0],  %[temp0],    %[temp1]   \n\t"                \
   "addu   %[temp1],  %[temp2],    %[temp3]   \n\t"                \
@@ -412,71 +412,71 @@ static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
 // temp0..temp15 holds tmp[0]..tmp[15]
 // A - offset in bytes to load from src and ref buffers
 // TEMP0..TEMP3 - registers for corresponding tmp elements
-#define HORIZONTAL_PASS(A, TEMP0, TEMP1, TEMP2, TEMP3)            \
-  "lw     %["#TEMP1"],  0(%[args])                       \n\t"    \
-  "lw     %["#TEMP2"],  4(%[args])                       \n\t"    \
-  "lbu    %[temp16],    0+"XSTR(BPS)"*"#A"(%["#TEMP1"])  \n\t"    \
-  "lbu    %[temp17],    0+"XSTR(BPS)"*"#A"(%["#TEMP2"])  \n\t"    \
-  "lbu    %[temp18],    1+"XSTR(BPS)"*"#A"(%["#TEMP1"])  \n\t"    \
-  "lbu    %[temp19],    1+"XSTR(BPS)"*"#A"(%["#TEMP2"])  \n\t"    \
-  "subu   %[temp20],    %[temp16],    %[temp17]          \n\t"    \
-  "lbu    %[temp16],    2+"XSTR(BPS)"*"#A"(%["#TEMP1"])  \n\t"    \
-  "lbu    %[temp17],    2+"XSTR(BPS)"*"#A"(%["#TEMP2"])  \n\t"    \
-  "subu   %["#TEMP0"],  %[temp18],    %[temp19]          \n\t"    \
-  "lbu    %[temp18],    3+"XSTR(BPS)"*"#A"(%["#TEMP1"])  \n\t"    \
-  "lbu    %[temp19],    3+"XSTR(BPS)"*"#A"(%["#TEMP2"])  \n\t"    \
-  "subu   %["#TEMP1"],  %[temp16],    %[temp17]          \n\t"    \
-  "subu   %["#TEMP2"],  %[temp18],    %[temp19]          \n\t"    \
-  "addu   %["#TEMP3"],  %[temp20],    %["#TEMP2"]        \n\t"    \
-  "subu   %["#TEMP2"],  %[temp20],    %["#TEMP2"]        \n\t"    \
-  "addu   %[temp20],    %["#TEMP0"],  %["#TEMP1"]        \n\t"    \
-  "subu   %["#TEMP0"],  %["#TEMP0"],  %["#TEMP1"]        \n\t"    \
-  "mul    %[temp16],    %["#TEMP2"],  %[c5352]           \n\t"    \
-  "mul    %[temp17],    %["#TEMP2"],  %[c2217]           \n\t"    \
-  "mul    %[temp18],    %["#TEMP0"],  %[c5352]           \n\t"    \
-  "mul    %[temp19],    %["#TEMP0"],  %[c2217]           \n\t"    \
-  "addu   %["#TEMP1"],  %["#TEMP3"],  %[temp20]          \n\t"    \
-  "subu   %[temp20],    %["#TEMP3"],  %[temp20]          \n\t"    \
-  "sll    %["#TEMP0"],  %["#TEMP1"],  3                  \n\t"    \
-  "sll    %["#TEMP2"],  %[temp20],    3                  \n\t"    \
-  "addiu  %[temp16],    %[temp16],    1812               \n\t"    \
-  "addiu  %[temp17],    %[temp17],    937                \n\t"    \
-  "addu   %[temp16],    %[temp16],    %[temp19]          \n\t"    \
-  "subu   %[temp17],    %[temp17],    %[temp18]          \n\t"    \
-  "sra    %["#TEMP1"],  %[temp16],    9                  \n\t"    \
-  "sra    %["#TEMP3"],  %[temp17],    9                  \n\t"
+#define HORIZONTAL_PASS(A, TEMP0, TEMP1, TEMP2, TEMP3)                \
+  "lw     %[" #TEMP1 "],  0(%[args])                         \n\t"    \
+  "lw     %[" #TEMP2 "],  4(%[args])                         \n\t"    \
+  "lbu    %[temp16],    0+"XSTR(BPS)"*" #A "(%[" #TEMP1 "])  \n\t"    \
+  "lbu    %[temp17],    0+"XSTR(BPS)"*" #A "(%[" #TEMP2 "])  \n\t"    \
+  "lbu    %[temp18],    1+"XSTR(BPS)"*" #A "(%[" #TEMP1 "])  \n\t"    \
+  "lbu    %[temp19],    1+"XSTR(BPS)"*" #A "(%[" #TEMP2 "])  \n\t"    \
+  "subu   %[temp20],    %[temp16],    %[temp17]              \n\t"    \
+  "lbu    %[temp16],    2+"XSTR(BPS)"*" #A "(%[" #TEMP1 "])  \n\t"    \
+  "lbu    %[temp17],    2+"XSTR(BPS)"*" #A "(%[" #TEMP2 "])  \n\t"    \
+  "subu   %[" #TEMP0 "],  %[temp18],    %[temp19]            \n\t"    \
+  "lbu    %[temp18],    3+"XSTR(BPS)"*" #A "(%[" #TEMP1 "])  \n\t"    \
+  "lbu    %[temp19],    3+"XSTR(BPS)"*" #A "(%[" #TEMP2 "])  \n\t"    \
+  "subu   %[" #TEMP1 "],  %[temp16],    %[temp17]            \n\t"    \
+  "subu   %[" #TEMP2 "],  %[temp18],    %[temp19]            \n\t"    \
+  "addu   %[" #TEMP3 "],  %[temp20],    %[" #TEMP2 "]        \n\t"    \
+  "subu   %[" #TEMP2 "],  %[temp20],    %[" #TEMP2 "]        \n\t"    \
+  "addu   %[temp20],    %[" #TEMP0 "],  %[" #TEMP1 "]        \n\t"    \
+  "subu   %[" #TEMP0 "],  %[" #TEMP0 "],  %[" #TEMP1 "]      \n\t"    \
+  "mul    %[temp16],    %[" #TEMP2 "],  %[c5352]             \n\t"    \
+  "mul    %[temp17],    %[" #TEMP2 "],  %[c2217]             \n\t"    \
+  "mul    %[temp18],    %[" #TEMP0 "],  %[c5352]             \n\t"    \
+  "mul    %[temp19],    %[" #TEMP0 "],  %[c2217]             \n\t"    \
+  "addu   %[" #TEMP1 "],  %[" #TEMP3 "],  %[temp20]          \n\t"    \
+  "subu   %[temp20],    %[" #TEMP3 "],  %[temp20]            \n\t"    \
+  "sll    %[" #TEMP0 "],  %[" #TEMP1 "],  3                  \n\t"    \
+  "sll    %[" #TEMP2 "],  %[temp20],    3                    \n\t"    \
+  "addiu  %[temp16],    %[temp16],    1812                   \n\t"    \
+  "addiu  %[temp17],    %[temp17],    937                    \n\t"    \
+  "addu   %[temp16],    %[temp16],    %[temp19]              \n\t"    \
+  "subu   %[temp17],    %[temp17],    %[temp18]              \n\t"    \
+  "sra    %[" #TEMP1 "],  %[temp16],    9                    \n\t"    \
+  "sra    %[" #TEMP3 "],  %[temp17],    9                    \n\t"
 
 // macro for one vertical pass in FTransform
 // temp0..temp15 holds tmp[0]..tmp[15]
 // A..D - offsets in bytes to store to out buffer
 // TEMP0, TEMP4, TEMP8 and TEMP12 - registers for corresponding tmp elements
-#define VERTICAL_PASS(A, B, C, D, TEMP0, TEMP4, TEMP8, TEMP12)  \
-  "addu   %[temp16],    %["#TEMP0"],  %["#TEMP12"]     \n\t"    \
-  "subu   %[temp19],    %["#TEMP0"],  %["#TEMP12"]     \n\t"    \
-  "addu   %[temp17],    %["#TEMP4"],  %["#TEMP8"]      \n\t"    \
-  "subu   %[temp18],    %["#TEMP4"],  %["#TEMP8"]      \n\t"    \
-  "mul    %["#TEMP8"],  %[temp19],    %[c2217]         \n\t"    \
-  "mul    %["#TEMP12"], %[temp18],    %[c2217]         \n\t"    \
-  "mul    %["#TEMP4"],  %[temp19],    %[c5352]         \n\t"    \
-  "mul    %[temp18],    %[temp18],    %[c5352]         \n\t"    \
-  "addiu  %[temp16],    %[temp16],    7                \n\t"    \
-  "addu   %["#TEMP0"],  %[temp16],    %[temp17]        \n\t"    \
-  "sra    %["#TEMP0"],  %["#TEMP0"],  4                \n\t"    \
-  "addu   %["#TEMP12"], %["#TEMP12"], %["#TEMP4"]      \n\t"    \
-  "subu   %["#TEMP4"],  %[temp16],    %[temp17]        \n\t"    \
-  "sra    %["#TEMP4"],  %["#TEMP4"],  4                \n\t"    \
-  "addiu  %["#TEMP8"],  %["#TEMP8"],  30000            \n\t"    \
-  "addiu  %["#TEMP12"], %["#TEMP12"], 12000            \n\t"    \
-  "addiu  %["#TEMP8"],  %["#TEMP8"],  21000            \n\t"    \
-  "subu   %["#TEMP8"],  %["#TEMP8"],  %[temp18]        \n\t"    \
-  "sra    %["#TEMP12"], %["#TEMP12"], 16               \n\t"    \
-  "sra    %["#TEMP8"],  %["#TEMP8"],  16               \n\t"    \
-  "addiu  %[temp16],    %["#TEMP12"], 1                \n\t"    \
-  "movn   %["#TEMP12"], %[temp16],    %[temp19]        \n\t"    \
-  "sh     %["#TEMP0"],  "#A"(%[temp20])                \n\t"    \
-  "sh     %["#TEMP4"],  "#C"(%[temp20])                \n\t"    \
-  "sh     %["#TEMP8"],  "#D"(%[temp20])                \n\t"    \
-  "sh     %["#TEMP12"], "#B"(%[temp20])                \n\t"
+#define VERTICAL_PASS(A, B, C, D, TEMP0, TEMP4, TEMP8, TEMP12)    \
+  "addu   %[temp16],    %[" #TEMP0 "],  %[" #TEMP12 "]   \n\t"    \
+  "subu   %[temp19],    %[" #TEMP0 "],  %[" #TEMP12 "]   \n\t"    \
+  "addu   %[temp17],    %[" #TEMP4 "],  %[" #TEMP8 "]    \n\t"    \
+  "subu   %[temp18],    %[" #TEMP4 "],  %[" #TEMP8 "]    \n\t"    \
+  "mul    %[" #TEMP8 "],  %[temp19],    %[c2217]         \n\t"    \
+  "mul    %[" #TEMP12 "], %[temp18],    %[c2217]         \n\t"    \
+  "mul    %[" #TEMP4 "],  %[temp19],    %[c5352]         \n\t"    \
+  "mul    %[temp18],    %[temp18],    %[c5352]           \n\t"    \
+  "addiu  %[temp16],    %[temp16],    7                  \n\t"    \
+  "addu   %[" #TEMP0 "],  %[temp16],    %[temp17]        \n\t"    \
+  "sra    %[" #TEMP0 "],  %[" #TEMP0 "],  4              \n\t"    \
+  "addu   %[" #TEMP12 "], %[" #TEMP12 "], %[" #TEMP4 "]  \n\t"    \
+  "subu   %[" #TEMP4 "],  %[temp16],    %[temp17]        \n\t"    \
+  "sra    %[" #TEMP4 "],  %[" #TEMP4 "],  4              \n\t"    \
+  "addiu  %[" #TEMP8 "],  %[" #TEMP8 "],  30000          \n\t"    \
+  "addiu  %[" #TEMP12 "], %[" #TEMP12 "], 12000          \n\t"    \
+  "addiu  %[" #TEMP8 "],  %[" #TEMP8 "],  21000          \n\t"    \
+  "subu   %[" #TEMP8 "],  %[" #TEMP8 "],  %[temp18]      \n\t"    \
+  "sra    %[" #TEMP12 "], %[" #TEMP12 "], 16             \n\t"    \
+  "sra    %[" #TEMP8 "],  %[" #TEMP8 "],  16             \n\t"    \
+  "addiu  %[temp16],    %[" #TEMP12 "], 1                \n\t"    \
+  "movn   %[" #TEMP12 "], %[temp16],    %[temp19]        \n\t"    \
+  "sh     %[" #TEMP0 "],  " #A "(%[temp20])              \n\t"    \
+  "sh     %[" #TEMP4 "],  " #C "(%[temp20])              \n\t"    \
+  "sh     %[" #TEMP8 "],  " #D "(%[temp20])              \n\t"    \
+  "sh     %[" #TEMP12 "], " #B "(%[temp20])              \n\t"
 
 static void FTransform(const uint8_t* src, const uint8_t* ref, int16_t* out) {
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
@@ -516,14 +516,14 @@ static void FTransform(const uint8_t* src, const uint8_t* ref, int16_t* out) {
 #if !defined(WORK_AROUND_GCC)
 
 #define GET_SSE_INNER(A, B, C, D)                               \
-  "lbu     %[temp0],    "#A"(%[a])                   \n\t"      \
-  "lbu     %[temp1],    "#A"(%[b])                   \n\t"      \
-  "lbu     %[temp2],    "#B"(%[a])                   \n\t"      \
-  "lbu     %[temp3],    "#B"(%[b])                   \n\t"      \
-  "lbu     %[temp4],    "#C"(%[a])                   \n\t"      \
-  "lbu     %[temp5],    "#C"(%[b])                   \n\t"      \
-  "lbu     %[temp6],    "#D"(%[a])                   \n\t"      \
-  "lbu     %[temp7],    "#D"(%[b])                   \n\t"      \
+  "lbu     %[temp0],    " #A "(%[a])                 \n\t"      \
+  "lbu     %[temp1],    " #A "(%[b])                 \n\t"      \
+  "lbu     %[temp2],    " #B "(%[a])                 \n\t"      \
+  "lbu     %[temp3],    " #B "(%[b])                 \n\t"      \
+  "lbu     %[temp4],    " #C "(%[a])                 \n\t"      \
+  "lbu     %[temp5],    " #C "(%[b])                 \n\t"      \
+  "lbu     %[temp6],    " #D "(%[a])                 \n\t"      \
+  "lbu     %[temp7],    " #D "(%[b])                 \n\t"      \
   "subu    %[temp0],    %[temp0],     %[temp1]       \n\t"      \
   "subu    %[temp2],    %[temp2],     %[temp3]       \n\t"      \
   "subu    %[temp4],    %[temp4],     %[temp5]       \n\t"      \

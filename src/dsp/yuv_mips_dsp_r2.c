@@ -39,12 +39,12 @@
   "addu             %[temp5],   %[temp0],       %[temp1]        \n\t"          \
   "subu             %[temp6],   %[temp0],       %[temp2]        \n\t"          \
   "addu             %[temp7],   %[temp0],       %[temp4]        \n\t"          \
-".if "#K"                                                       \n\t"          \
+".if " #K "                                                     \n\t"          \
   "lbu              %[temp0],   1(%[y])                         \n\t"          \
 ".endif                                                         \n\t"          \
   "shll_s.w         %[temp5],   %[temp5],       9               \n\t"          \
   "shll_s.w         %[temp6],   %[temp6],       9               \n\t"          \
-".if "#K"                                                       \n\t"          \
+".if " #K "                                                     \n\t"          \
   "mul              %[temp0],   %[t_con_5],     %[temp0]        \n\t"          \
 ".endif                                                         \n\t"          \
   "shll_s.w         %[temp7],   %[temp7],       9               \n\t"          \
@@ -54,9 +54,9 @@
   "srl              %[temp5],   %[temp5],       24              \n\t"          \
   "srl              %[temp6],   %[temp6],       24              \n\t"          \
   "srl              %[temp7],   %[temp7],       24              \n\t"          \
-  "sb               %[temp5],   "#R"(%[dst])                    \n\t"          \
-  "sb               %[temp6],   "#G"(%[dst])                    \n\t"          \
-  "sb               %[temp7],   "#B"(%[dst])                    \n\t"          \
+  "sb               %[temp5],   " #R "(%[dst])                  \n\t"          \
+  "sb               %[temp6],   " #G "(%[dst])                  \n\t"          \
+  "sb               %[temp7],   " #B "(%[dst])                  \n\t"          \
 
 #define ASM_CLOBBER_LIST()                                                     \
   : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),             \

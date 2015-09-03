@@ -34,15 +34,15 @@
     G = G - t2 + kGCst;                                                        \
     B = B + kBCst;                                                             \
     __asm__ volatile (                                                         \
-      "shll_s.w         %["#R"],      %["#R"],        9              \n\t"     \
-      "shll_s.w         %["#G"],      %["#G"],        9              \n\t"     \
-      "shll_s.w         %["#B"],      %["#B"],        9              \n\t"     \
-      "precrqu_s.qb.ph  %["#R"],      %["#R"],        $zero          \n\t"     \
-      "precrqu_s.qb.ph  %["#G"],      %["#G"],        $zero          \n\t"     \
-      "precrqu_s.qb.ph  %["#B"],      %["#B"],        $zero          \n\t"     \
-      "srl              %["#R"],      %["#R"],        24             \n\t"     \
-      "srl              %["#G"],      %["#G"],        24             \n\t"     \
-      "srl              %["#B"],      %["#B"],        24             \n\t"     \
+      "shll_s.w         %[" #R "],      %[" #R "],        9          \n\t"     \
+      "shll_s.w         %[" #G "],      %[" #G "],        9          \n\t"     \
+      "shll_s.w         %[" #B "],      %[" #B "],        9          \n\t"     \
+      "precrqu_s.qb.ph  %[" #R "],      %[" #R "],        $zero      \n\t"     \
+      "precrqu_s.qb.ph  %[" #G "],      %[" #G "],        $zero      \n\t"     \
+      "precrqu_s.qb.ph  %[" #B "],      %[" #B "],        $zero      \n\t"     \
+      "srl              %[" #R "],      %[" #R "],        24         \n\t"     \
+      "srl              %[" #G "],      %[" #G "],        24         \n\t"     \
+      "srl              %[" #B "],      %[" #B "],        24         \n\t"     \
       : [R]"+r"(R), [G]"+r"(G), [B]"+r"(B)                                     \
       :                                                                        \
     );                                                                         \

@@ -48,7 +48,7 @@
       "srl       %[temp0],    %[length],    0x2         \n\t"                  \
       "beqz      %[temp0],    4f                        \n\t"                  \
       " andi     %[temp6],    %[length],    0x3         \n\t"                  \
-    ".if "#INVERSE"                                     \n\t"                  \
+    ".if " #INVERSE "                                   \n\t"                  \
       "lbu       %[temp1],    -1(%[src])                \n\t"                  \
     "1:                                                 \n\t"                  \
       "lbu       %[temp2],    0(%[src])                 \n\t"                  \
@@ -84,7 +84,7 @@
       "lbu       %[temp1],    -1(%[src])                \n\t"                  \
       "lbu       %[temp2],    0(%[src])                 \n\t"                  \
       "addiu     %[src],      %[src],       1           \n\t"                  \
-    ".if "#INVERSE"                                     \n\t"                  \
+    ".if " #INVERSE "                                   \n\t"                  \
       "addu      %[temp3],    %[temp1],     %[temp2]    \n\t"                  \
       "sb        %[temp3],    -1(%[src])                \n\t"                  \
     ".else                                              \n\t"                  \
@@ -131,7 +131,7 @@ static WEBP_INLINE void PredictLine(const uint8_t* src, uint8_t* dst,
       "ulw       %[temp3],    4(%[src])                 \n\t"                  \
       "ulw       %[temp4],    4(%[pred])                \n\t"                  \
       "addiu     %[src],      %[src],       8           \n\t"                  \
-    ".if "#INVERSE"                                     \n\t"                  \
+    ".if " #INVERSE "                                   \n\t"                  \
       "addu.qb   %[temp5],    %[temp1],     %[temp2]    \n\t"                  \
       "addu.qb   %[temp6],    %[temp3],     %[temp4]    \n\t"                  \
     ".else                                              \n\t"                  \
@@ -152,7 +152,7 @@ static WEBP_INLINE void PredictLine(const uint8_t* src, uint8_t* dst,
       "lbu       %[temp2],    0(%[pred])                \n\t"                  \
       "addiu     %[src],      %[src],       1           \n\t"                  \
       "addiu     %[pred],     %[pred],      1           \n\t"                  \
-    ".if "#INVERSE"                                     \n\t"                  \
+    ".if " #INVERSE "                                   \n\t"                  \
       "addu      %[temp3],    %[temp1],     %[temp2]    \n\t"                  \
     ".else                                              \n\t"                  \
       "subu      %[temp3],    %[temp1],     %[temp2]    \n\t"                  \
@@ -177,7 +177,7 @@ static WEBP_INLINE void PredictLine(const uint8_t* src, uint8_t* dst,
     __asm__ volatile (                                                         \
       "lbu       %[temp1],   0(%[src])               \n\t"                     \
       "lbu       %[temp2],   0(%[pred])              \n\t"                     \
-    ".if "#INVERSE"                                  \n\t"                     \
+    ".if " #INVERSE "                                \n\t"                     \
       "addu      %[temp3],   %[temp1],   %[temp2]    \n\t"                     \
     ".else                                           \n\t"                     \
       "subu      %[temp3],   %[temp1],   %[temp2]    \n\t"                     \
