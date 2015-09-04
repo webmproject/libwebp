@@ -79,8 +79,8 @@ static const int kC2 = 35468;
 #define HORIZONTAL_PASS(A, TEMP0, TEMP1, TEMP2, TEMP3)                         \
   "lw              %[" #TEMP0 "],   0(%[args])                          \n\t"  \
   "lw              %[" #TEMP1 "],   4(%[args])                          \n\t"  \
-  "lw              %[" #TEMP2 "],   "XSTR(BPS)"*" #A "(%[" #TEMP0 "])   \n\t"  \
-  "lw              %[" #TEMP3 "],   "XSTR(BPS)"*" #A "(%[" #TEMP1 "])   \n\t"  \
+  "lw              %[" #TEMP2 "],   " XSTR(BPS) "*" #A "(%[" #TEMP0 "]) \n\t"  \
+  "lw              %[" #TEMP3 "],   " XSTR(BPS) "*" #A "(%[" #TEMP1 "]) \n\t"  \
   "preceu.ph.qbl   %[" #TEMP0 "],   %[" #TEMP2 "]                       \n\t"  \
   "preceu.ph.qbl   %[" #TEMP1 "],   %[" #TEMP3 "]                       \n\t"  \
   "preceu.ph.qbr   %[" #TEMP2 "],   %[" #TEMP2 "]                       \n\t"  \
@@ -328,13 +328,13 @@ static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
 //------------------------------------------------------------------------------
 // Intra predictions
 
-#define FILL_PART(J, SIZE)                                          \
-    "usw        %[value],  0+" #J "*"XSTR(BPS)"(%[dst])  \n\t"      \
-    "usw        %[value],  4+" #J "*"XSTR(BPS)"(%[dst])  \n\t"      \
-  ".if " #SIZE " == 16                                   \n\t"      \
-    "usw        %[value],  8+" #J "*"XSTR(BPS)"(%[dst])  \n\t"      \
-    "usw        %[value], 12+" #J "*"XSTR(BPS)"(%[dst])  \n\t"      \
-  ".endif                                                \n\t"
+#define FILL_PART(J, SIZE)                                            \
+    "usw        %[value],  0+" #J "*" XSTR(BPS) "(%[dst])  \n\t"      \
+    "usw        %[value],  4+" #J "*" XSTR(BPS) "(%[dst])  \n\t"      \
+  ".if " #SIZE " == 16                                     \n\t"      \
+    "usw        %[value],  8+" #J "*" XSTR(BPS) "(%[dst])  \n\t"      \
+    "usw        %[value], 12+" #J "*" XSTR(BPS) "(%[dst])  \n\t"      \
+  ".endif                                                  \n\t"
 
 #define FILL_8_OR_16(DST, VALUE, SIZE) do {                         \
   int value = (VALUE);                                              \
@@ -597,10 +597,10 @@ static void DC4(uint8_t* dst, const uint8_t* top) {
     "addiu        %[temp0],   %[temp0],    4          \n\t"
     "srl          %[temp0],   %[temp0],    3          \n\t"
     "replv.qb     %[temp0],   %[temp0]                \n\t"
-    "usw          %[temp0],   0*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw          %[temp0],   1*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw          %[temp0],   2*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw          %[temp0],   3*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw          %[temp0],   0*" XSTR(BPS) "(%[dst]) \n\t"
+    "usw          %[temp0],   1*" XSTR(BPS) "(%[dst]) \n\t"
+    "usw          %[temp0],   2*" XSTR(BPS) "(%[dst]) \n\t"
+    "usw          %[temp0],   3*" XSTR(BPS) "(%[dst]) \n\t"
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1)
     : [top]"r"(top), [dst]"r"(dst)
     : "memory"
@@ -650,10 +650,10 @@ static void TM4(uint8_t* dst, const uint8_t* top) {
     "shll_s.ph        %[temp5],  %[temp5],   7                 \n\t"
     "precrqu_s.qb.ph  %[temp2],  %[temp3],   %[temp2]          \n\t"
     "precrqu_s.qb.ph  %[temp3],  %[temp4],   %[temp5]          \n\t"
-    "usw              %[temp1],  0*"XSTR(BPS)"(%[dst])         \n\t"
-    "usw              %[temp0],  1*"XSTR(BPS)"(%[dst])         \n\t"
-    "usw              %[temp3],  2*"XSTR(BPS)"(%[dst])         \n\t"
-    "usw              %[temp2],  3*"XSTR(BPS)"(%[dst])         \n\t"
+    "usw              %[temp1],  0*" XSTR(BPS) "(%[dst])       \n\t"
+    "usw              %[temp0],  1*" XSTR(BPS) "(%[dst])       \n\t"
+    "usw              %[temp3],  2*" XSTR(BPS) "(%[dst])       \n\t"
+    "usw              %[temp2],  3*" XSTR(BPS) "(%[dst])       \n\t"
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
       [a10]"=&r"(a10), [a32]"=&r"(a32)
@@ -681,10 +681,10 @@ static void VE4(uint8_t* dst, const uint8_t* top) {
     "shra_r.ph       %[temp2],   %[temp2],    2          \n\t"
     "shra_r.ph       %[temp6],   %[temp6],    2          \n\t"
     "precr.qb.ph     %[temp4],   %[temp6],    %[temp2]   \n\t"
-    "usw             %[temp4],   0*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw             %[temp4],   1*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw             %[temp4],   2*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw             %[temp4],   3*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw             %[temp4],   0*" XSTR(BPS) "(%[dst]) \n\t"
+    "usw             %[temp4],   1*" XSTR(BPS) "(%[dst]) \n\t"
+    "usw             %[temp4],   2*" XSTR(BPS) "(%[dst]) \n\t"
+    "usw             %[temp4],   3*" XSTR(BPS) "(%[dst]) \n\t"
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
       [temp6]"=&r"(temp6)
@@ -717,10 +717,10 @@ static void HE4(uint8_t* dst, const uint8_t* top) {
     "srl             %[temp2],   %[temp2],    16         \n\t"
     "replv.qb        %[temp3],   %[temp3]                \n\t"
     "replv.qb        %[temp2],   %[temp2]                \n\t"
-    "usw             %[temp3],   0*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw             %[temp0],   1*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw             %[temp2],   2*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw             %[temp1],   3*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw             %[temp3],   0*" XSTR(BPS) "(%[dst]) \n\t"
+    "usw             %[temp0],   1*" XSTR(BPS) "(%[dst]) \n\t"
+    "usw             %[temp2],   2*" XSTR(BPS) "(%[dst]) \n\t"
+    "usw             %[temp1],   3*" XSTR(BPS) "(%[dst]) \n\t"
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
       [temp6]"=&r"(temp6)
@@ -763,12 +763,12 @@ static void RD4(uint8_t* dst, const uint8_t* top) {
     "precr.qb.ph     %[temp9],    %[temp10],   %[temp9]    \n\t"
     "shra_r.w        %[temp0],    %[temp0],    2           \n\t"
     "precr.qb.ph     %[temp10],   %[temp11],   %[temp10]   \n\t"
-    "usw             %[temp9],    3*"XSTR(BPS)"(%[dst])    \n\t"
-    "usw             %[temp10],   1*"XSTR(BPS)"(%[dst])    \n\t"
+    "usw             %[temp9],    3*" XSTR(BPS) "(%[dst])  \n\t"
+    "usw             %[temp10],   1*" XSTR(BPS) "(%[dst])  \n\t"
     "prepend         %[temp9],    %[temp11],   8           \n\t"
     "prepend         %[temp10],   %[temp0],    8           \n\t"
-    "usw             %[temp9],    2*"XSTR(BPS)"(%[dst])    \n\t"
-    "usw             %[temp10],   0*"XSTR(BPS)"(%[dst])    \n\t"
+    "usw             %[temp9],    2*" XSTR(BPS) "(%[dst])  \n\t"
+    "usw             %[temp10],   0*" XSTR(BPS) "(%[dst])  \n\t"
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
       [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
@@ -812,13 +812,13 @@ static void VR4(uint8_t* dst, const uint8_t* top) {
     "append           %[temp3],   %[temp1],    16         \n\t"
     "precr.qb.ph      %[temp8],   %[temp8],    %[temp4]   \n\t"
     "precr.qb.ph      %[temp3],   %[temp2],    %[temp3]   \n\t"
-    "usw              %[temp8],   0*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw              %[temp3],   1*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw              %[temp8],   0*" XSTR(BPS) "(%[dst]) \n\t"
+    "usw              %[temp3],   1*" XSTR(BPS) "(%[dst]) \n\t"
     "append           %[temp3],   %[temp6],    8          \n\t"
     "srl              %[temp6],   %[temp6],    16         \n\t"
     "append           %[temp8],   %[temp6],    8          \n\t"
-    "usw              %[temp3],   3*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw              %[temp8],   2*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw              %[temp3],   3*" XSTR(BPS) "(%[dst]) \n\t"
+    "usw              %[temp8],   2*" XSTR(BPS) "(%[dst]) \n\t"
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
       [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
@@ -860,12 +860,12 @@ static void LD4(uint8_t* dst, const uint8_t* top) {
     "precr.qb.ph     %[temp10],   %[temp11],   %[temp10]  \n\t"
     "addu            %[temp1],    %[temp1],    %[temp5]   \n\t"
     "shra_r.w        %[temp1],    %[temp1],    2          \n\t"
-    "usw             %[temp9],    0*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw             %[temp10],   2*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw             %[temp9],    0*" XSTR(BPS) "(%[dst]) \n\t"
+    "usw             %[temp10],   2*" XSTR(BPS) "(%[dst]) \n\t"
     "prepend         %[temp9],    %[temp11],   8          \n\t"
     "prepend         %[temp10],   %[temp1],    8          \n\t"
-    "usw             %[temp9],    1*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw             %[temp10],   3*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw             %[temp9],    1*" XSTR(BPS) "(%[dst]) \n\t"
+    "usw             %[temp10],   3*" XSTR(BPS) "(%[dst]) \n\t"
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
       [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
@@ -908,13 +908,13 @@ static void VL4(uint8_t* dst, const uint8_t* top) {
     "append           %[temp2],   %[temp0],    16         \n\t"
     "precr.qb.ph      %[temp8],   %[temp8],    %[temp5]   \n\t"
     "precr.qb.ph      %[temp3],   %[temp3],    %[temp2]   \n\t"
-    "usw              %[temp8],   0*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw              %[temp8],   0*" XSTR(BPS) "(%[dst]) \n\t"
     "prepend          %[temp8],   %[temp6],    8          \n\t"
-    "usw              %[temp3],   1*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw              %[temp3],   1*" XSTR(BPS) "(%[dst]) \n\t"
     "srl              %[temp6],   %[temp6],    16         \n\t"
     "prepend          %[temp3],   %[temp6],    8          \n\t"
-    "usw              %[temp8],   2*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw              %[temp3],   3*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw              %[temp8],   2*" XSTR(BPS) "(%[dst]) \n\t"
+    "usw              %[temp3],   3*" XSTR(BPS) "(%[dst]) \n\t"
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
       [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
@@ -955,14 +955,14 @@ static void HD4(uint8_t* dst, const uint8_t* top) {
     "precrq.ph.w      %[temp3],   %[temp0],    %[temp4]   \n\t"
     "precr.qb.ph      %[temp7],   %[temp6],    %[temp1]   \n\t"
     "precr.qb.ph      %[temp6],   %[temp1],    %[temp3]   \n\t"
-    "usw              %[temp7],   0*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw              %[temp6],   1*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw              %[temp7],   0*" XSTR(BPS) "(%[dst]) \n\t"
+    "usw              %[temp6],   1*" XSTR(BPS) "(%[dst]) \n\t"
     "append           %[temp2],   %[temp5],    16         \n\t"
     "append           %[temp0],   %[temp4],    16         \n\t"
     "precr.qb.ph      %[temp5],   %[temp3],    %[temp2]   \n\t"
     "precr.qb.ph      %[temp4],   %[temp2],    %[temp0]   \n\t"
-    "usw              %[temp5],   2*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw              %[temp4],   3*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw              %[temp5],   2*" XSTR(BPS) "(%[dst]) \n\t"
+    "usw              %[temp4],   3*" XSTR(BPS) "(%[dst]) \n\t"
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
       [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
@@ -994,12 +994,12 @@ static void HU4(uint8_t* dst, const uint8_t* top) {
     "precrq.ph.w     %[temp2],   %[temp6],    %[temp4]   \n\t"
     "append          %[temp0],   %[temp5],    16         \n\t"
     "precr.qb.ph     %[temp3],   %[temp3],    %[temp2]   \n\t"
-    "usw             %[temp3],   0*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw             %[temp3],   0*" XSTR(BPS) "(%[dst]) \n\t"
     "precr.qb.ph     %[temp1],   %[temp7],    %[temp0]   \n\t"
-    "usw             %[temp7],   3*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw             %[temp7],   3*" XSTR(BPS) "(%[dst]) \n\t"
     "packrl.ph       %[temp2],   %[temp1],    %[temp3]   \n\t"
-    "usw             %[temp1],   2*"XSTR(BPS)"(%[dst])   \n\t"
-    "usw             %[temp2],   1*"XSTR(BPS)"(%[dst])   \n\t"
+    "usw             %[temp1],   2*" XSTR(BPS) "(%[dst]) \n\t"
+    "usw             %[temp2],   1*" XSTR(BPS) "(%[dst]) \n\t"
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
       [temp6]"=&r"(temp6), [temp7]"=&r"(temp7)

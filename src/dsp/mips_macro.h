@@ -40,10 +40,10 @@
 // I1..I9 - offsets in bytes
 #define LOAD_WITH_OFFSET_X4(O0, O1, O2, O3,                                    \
                             I0, I1, I2, I3, I4, I5, I6, I7, I8, I9)            \
-  "ulw    %[" #O0 "],    " #I1 "+"XSTR(I9)"*" #I5 "(%[" #I0 "])       \n\t"    \
-  "ulw    %[" #O1 "],    " #I2 "+"XSTR(I9)"*" #I6 "(%[" #I0 "])       \n\t"    \
-  "ulw    %[" #O2 "],    " #I3 "+"XSTR(I9)"*" #I7 "(%[" #I0 "])       \n\t"    \
-  "ulw    %[" #O3 "],    " #I4 "+"XSTR(I9)"*" #I8 "(%[" #I0 "])       \n\t"
+  "ulw    %[" #O0 "],    " #I1 "+" XSTR(I9) "*" #I5 "(%[" #I0 "])       \n\t"  \
+  "ulw    %[" #O1 "],    " #I2 "+" XSTR(I9) "*" #I6 "(%[" #I0 "])       \n\t"  \
+  "ulw    %[" #O2 "],    " #I3 "+" XSTR(I9) "*" #I7 "(%[" #I0 "])       \n\t"  \
+  "ulw    %[" #O3 "],    " #I4 "+" XSTR(I9) "*" #I8 "(%[" #I0 "])       \n\t"
 
 // O - output
 // IO - input/output
@@ -180,10 +180,10 @@
   "precrqu_s.qb.ph  %[" #IO2 "],  %[" #IO3 "],  %[" #IO2 "]         \n\t"      \
   "precrqu_s.qb.ph  %[" #IO4 "],  %[" #IO5 "],  %[" #IO4 "]         \n\t"      \
   "precrqu_s.qb.ph  %[" #IO6 "],  %[" #IO7 "],  %[" #IO6 "]         \n\t"      \
-  "usw              %[" #IO0 "],  "XSTR(I13)"*" #I9 "(%[" #I8 "])   \n\t"      \
-  "usw              %[" #IO2 "],  "XSTR(I13)"*" #I10 "(%[" #I8 "])  \n\t"      \
-  "usw              %[" #IO4 "],  "XSTR(I13)"*" #I11 "(%[" #I8 "])  \n\t"      \
-  "usw              %[" #IO6 "],  "XSTR(I13)"*" #I12 "(%[" #I8 "])  \n\t"
+  "usw              %[" #IO0 "],  " XSTR(I13) "*" #I9 "(%[" #I8 "])   \n\t"    \
+  "usw              %[" #IO2 "],  " XSTR(I13) "*" #I10 "(%[" #I8 "])  \n\t"    \
+  "usw              %[" #IO4 "],  " XSTR(I13) "*" #I11 "(%[" #I8 "])  \n\t"    \
+  "usw              %[" #IO6 "],  " XSTR(I13) "*" #I12 "(%[" #I8 "])  \n\t"
 
 #define OUTPUT_EARLY_CLOBBER_REGS_10()                                         \
   : [temp1]"=&r"(temp1), [temp2]"=&r"(temp2), [temp3]"=&r"(temp3),             \

@@ -548,10 +548,10 @@ static void SimpleVFilter16(uint8_t* p, int stride, int thresh) {
 // TEMP3 = SRC[D + D1 * BPS]
 #define LOAD_4_BYTES(TEMP0, TEMP1, TEMP2, TEMP3,                               \
                      A, A1, B, B1, C, C1, D, D1, SRC)                          \
-  "lbu      %[" #TEMP0 "],   " #A "+" #A1 "*"XSTR(BPS)"(%[" #SRC "]) \n\t"     \
-  "lbu      %[" #TEMP1 "],   " #B "+" #B1 "*"XSTR(BPS)"(%[" #SRC "]) \n\t"     \
-  "lbu      %[" #TEMP2 "],   " #C "+" #C1 "*"XSTR(BPS)"(%[" #SRC "]) \n\t"     \
-  "lbu      %[" #TEMP3 "],   " #D "+" #D1 "*"XSTR(BPS)"(%[" #SRC "]) \n\t"     \
+  "lbu      %[" #TEMP0 "],   " #A "+" #A1 "*" XSTR(BPS) "(%[" #SRC "]) \n\t"   \
+  "lbu      %[" #TEMP1 "],   " #B "+" #B1 "*" XSTR(BPS) "(%[" #SRC "]) \n\t"   \
+  "lbu      %[" #TEMP2 "],   " #C "+" #C1 "*" XSTR(BPS) "(%[" #SRC "]) \n\t"   \
+  "lbu      %[" #TEMP3 "],   " #D "+" #D1 "*" XSTR(BPS) "(%[" #SRC "]) \n\t"   \
 
 static void SimpleHFilter16(uint8_t* p, int stride, int thresh) {
   int i;
@@ -623,8 +623,8 @@ static void SimpleHFilter16i(uint8_t* p, int stride, int thresh) {
 // DST[A * BPS]     = TEMP0
 // DST[B + C * BPS] = TEMP1
 #define STORE_8_BYTES(TEMP0, TEMP1, A, B, C, DST)                              \
-  "usw    %[" #TEMP0 "],   " #A "*"XSTR(BPS)"(%[" #DST "])         \n\t"       \
-  "usw    %[" #TEMP1 "],   " #B "+" #C "*"XSTR(BPS)"(%[" #DST "])  \n\t"
+  "usw    %[" #TEMP0 "],   " #A "*" XSTR(BPS) "(%[" #DST "])         \n\t"     \
+  "usw    %[" #TEMP1 "],   " #B "+" #C "*" XSTR(BPS) "(%[" #DST "])  \n\t"
 
 static void VE4(uint8_t* dst) {    // vertical
   const uint8_t* top = dst - BPS;
@@ -659,7 +659,7 @@ static void VE4(uint8_t* dst) {    // vertical
 static void DC4(uint8_t* dst) {   // DC
   int temp0, temp1, temp2, temp3, temp4;
   __asm__ volatile (
-    "ulw          %[temp0],   -1*"XSTR(BPS)"(%[dst])   \n\t"
+    "ulw          %[temp0],   -1*" XSTR(BPS) "(%[dst]) \n\t"
     LOAD_4_BYTES(temp1, temp2, temp3, temp4, -1, 0, -1, 1, -1, 2, -1, 3, dst)
     "ins          %[temp1],   %[temp2],    8,     8    \n\t"
     "ins          %[temp1],   %[temp3],    16,    8    \n\t"
@@ -683,7 +683,7 @@ static void RD4(uint8_t* dst) {   // Down-right
   int temp5, temp6, temp7, temp8;
   __asm__ volatile (
     LOAD_4_BYTES(temp0, temp1, temp2, temp3, -1, 0, -1, 1, -1, 2, -1, 3, dst)
-    "ulw            %[temp7],   -1-"XSTR(BPS)"(%[dst])         \n\t"
+    "ulw            %[temp7],   -1-" XSTR(BPS) "(%[dst])       \n\t"
     "ins            %[temp1],   %[temp0], 16, 16               \n\t"
     "preceu.ph.qbr  %[temp5],   %[temp7]                       \n\t"
     "ins            %[temp2],   %[temp1], 16, 16               \n\t"
@@ -702,7 +702,7 @@ static void RD4(uint8_t* dst) {   // Down-right
     "shll.ph        %[temp0],   %[temp0], 1                    \n\t"
     "shra_r.ph      %[temp1],   %[temp1], 2                    \n\t"
     "addq.ph        %[temp8],   %[temp0], %[temp8]             \n\t"
-    "lbu            %[temp5],   3-"XSTR(BPS)"(%[dst])          \n\t"
+    "lbu            %[temp5],   3-" XSTR(BPS) "(%[dst])        \n\t"
     "precrq.ph.w    %[temp7],   %[temp7], %[temp7]             \n\t"
     "shra_r.ph      %[temp8],   %[temp8], 2                    \n\t"
     "ins            %[temp7],   %[temp5], 0,  8                \n\t"
@@ -725,8 +725,8 @@ static void RD4(uint8_t* dst) {   // Down-right
 // TEMP0 = SRC[A * BPS]
 // TEMP1 = SRC[B + C * BPS]
 #define LOAD_8_BYTES(TEMP0, TEMP1, A, B, C, SRC)                               \
-  "ulw    %[" #TEMP0 "],   " #A "*"XSTR(BPS)"(%[" #SRC "])         \n\t"       \
-  "ulw    %[" #TEMP1 "],   " #B "+" #C "*"XSTR(BPS)"(%[" #SRC "])  \n\t"
+  "ulw    %[" #TEMP0 "],   " #A "*" XSTR(BPS) "(%[" #SRC "])         \n\t"     \
+  "ulw    %[" #TEMP1 "],   " #B "+" #C "*" XSTR(BPS) "(%[" #SRC "])  \n\t"
 
 static void LD4(uint8_t* dst) {   // Down-Left
   int temp0, temp1, temp2, temp3, temp4;
