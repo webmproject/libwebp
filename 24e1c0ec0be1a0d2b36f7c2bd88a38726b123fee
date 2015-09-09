@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e4e8aef8_d77ff43e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-09-09T06:58:21Z",
+      "side": 1,
+      "message": "newline here, otherwise the summary will join the next line",
+      "revId": "24e1c0ec0be1a0d2b36f7c2bd88a38726b123fee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
