@@ -97,6 +97,7 @@ enc_srcs := \
     src/enc/backward_references.c \
     src/enc/config.c \
     src/enc/cost.c \
+    src/enc/delta_palettization.c \
     src/enc/filter.c \
     src/enc/frame.c \
     src/enc/histogram.c \

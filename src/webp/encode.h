@@ -137,7 +137,12 @@ struct WebPConfig {
   int near_lossless;      // Near lossless encoding [0 = off(default) .. 100].
                           // This feature is experimental.
 
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+  int delta_palettization;
+  uint32_t pad[3];        // padding for later use
+#else
   uint32_t pad[4];        // padding for later use
+#endif  // WEBP_EXPERIMENTAL_FEATURES
 };
 
 // Enumerate some predefined settings for WebPConfig, depending on the type

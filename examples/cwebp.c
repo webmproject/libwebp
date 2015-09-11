@@ -617,6 +617,9 @@ static void HelpLong(void) {
   printf("  -lossless .............. encode image losslessly\n");
   printf("  -near_lossless <int> ... use near-lossless image\n"
          "                           preprocessing (0..100=off)\n");
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+  printf("  -delta_palettization ... use delta palettization\n");
+#endif  // WEBP_EXPERIMENTAL_FEATURES
   printf("  -hint <string> ......... specify image characteristics hint,\n");
   printf("                           one of: photo, picture or graph\n");
 
@@ -775,6 +778,11 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-near_lossless") && c < argc - 1) {
       config.near_lossless = ExUtilGetInt(argv[++c], 0, &parse_error);
       config.lossless = 1;  // use near-lossless only with lossless
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+    } else if (!strcmp(argv[c], "-delta_palettization")) {
+      config.delta_palettization = 1;
+      config.lossless = 1;  // use delta-palettization only with lossless
+#endif  // WEBP_EXPERIMENTAL_FEATURES
     } else if (!strcmp(argv[c], "-hint") && c < argc - 1) {
       ++c;
       if (!strcmp(argv[c], "photo")) {

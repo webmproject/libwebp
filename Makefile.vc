@@ -262,6 +262,7 @@ ENC_OBJS = \
     $(DIROBJ)\enc\backward_references.obj \
     $(DIROBJ)\enc\config.obj \
     $(DIROBJ)\enc\cost.obj \
+    $(DIROBJ)\enc\delta_palettization.obj \
     $(DIROBJ)\enc\filter.obj \
     $(DIROBJ)\enc\frame.obj \
     $(DIROBJ)\enc\histogram.obj \
