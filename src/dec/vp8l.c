@@ -421,7 +421,7 @@ static int AllocateAndInitRescaler(VP8LDecoder* const dec, VP8Io* const io) {
   const int out_height = io->scaled_height;
   const uint64_t work_size = 2 * num_channels * (uint64_t)out_width;
   int32_t* work;        // Rescaler work area.
-  const uint64_t scaled_data_size = num_channels * (uint64_t)out_width;
+  const uint64_t scaled_data_size = (uint64_t)out_width;
   uint32_t* scaled_data;  // Temporary storage for scaled BGRA data.
   const uint64_t memory_size = sizeof(*dec->rescaler) +
                                work_size * sizeof(*work) +
