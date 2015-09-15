@@ -814,7 +814,7 @@ static void InitIo(VP8Decoder* const dec, VP8Io* io) {
   io->a = NULL;
 }
 
-int VP8InitFrame(VP8Decoder* const dec, VP8Io* io) {
+int VP8InitFrame(VP8Decoder* const dec, VP8Io* const io) {
   if (!InitThreadContext(dec)) return 0;  // call first. Sets dec->num_caches_.
   if (!AllocateMemory(dec)) return 0;
   InitIo(dec, io);

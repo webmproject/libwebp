@@ -280,7 +280,7 @@ int VP8ParseIntraModeRow(VP8BitReader* const br, VP8Decoder* const dec);
 void VP8ParseQuant(VP8Decoder* const dec);
 
 // in frame.c
-int VP8InitFrame(VP8Decoder* const dec, VP8Io* io);
+int VP8InitFrame(VP8Decoder* const dec, VP8Io* const io);
 // Call io->setup() and finish setting up scan parameters.
 // After this call returns, one must always call VP8ExitCritical() with the
 // same parameters. Both functions should be used in pair. Returns VP8_STATUS_OK
