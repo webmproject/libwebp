@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "69ec97ce_2dde2dd1",
+        "filename": "src/enc/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-09-17T19:55:06Z",
+      "side": 1,
+      "message": "would make sense to factor out some of that, the size multiply too",
+      "parentUuid": "694d7785_a5fb9e3d",
+      "range": {
+        "startLine": 118,
+        "startChar": 38,
+        "endLine": 118,
+        "endChar": 58
+      },
+      "revId": "7ed5eddc0d1e8529247308539b16a04a0eab8566",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "494c338b_248c52fb",
         "filename": "src/enc/histogram.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2015-09-17T08:36:53Z",
       "side": 1,
       "message": "wonder if we should do something about this one too...",
+      "range": {
+        "startLine": 132,
+        "startChar": 15,
+        "endLine": 132,
+        "endChar": 16
+      },
+      "revId": "7ed5eddc0d1e8529247308539b16a04a0eab8566",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "891aabb2_a68b6611",
+        "filename": "src/enc/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-09-17T19:55:06Z",
+      "side": 1,
+      "message": "well if the size of the struct is below the natural alignment of the elements (int\u0027s) then there will be other problems I think",
+      "parentUuid": "494c338b_248c52fb",
       "range": {
         "startLine": 132,
         "startChar": 15,
