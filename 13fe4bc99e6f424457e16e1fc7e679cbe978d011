@@ -70,6 +70,30 @@
       "revId": "13fe4bc99e6f424457e16e1fc7e679cbe978d011",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9a3c3b1_dfe48717",
+        "filename": "src/webp/decode.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-09-18T23:11:52Z",
+      "side": 1,
+      "message": "I reverted this line. I think this is a bug-fix and if we want to provide a way to detect such things at build time we should add some compile time constants here instead.",
+      "parentUuid": "69c3b75a_4a9d1f5a",
+      "range": {
+        "startLine": 23,
+        "startChar": 8,
+        "endLine": 23,
+        "endChar": 32
+      },
+      "revId": "13fe4bc99e6f424457e16e1fc7e679cbe978d011",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
