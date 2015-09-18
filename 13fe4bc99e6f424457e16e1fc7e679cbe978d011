@@ -46,6 +46,30 @@
       "revId": "13fe4bc99e6f424457e16e1fc7e679cbe978d011",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69c3b75a_4a9d1f5a",
+        "filename": "src/webp/decode.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-09-18T19:41:17Z",
+      "side": 1,
+      "message": "skia\u0027s using DEPS and isn\u0027t relying on a specific release btw:\n\nhttps://codereview.chromium.org/1280073002/",
+      "parentUuid": "c9a3c3b1_7668282b",
+      "range": {
+        "startLine": 23,
+        "startChar": 8,
+        "endLine": 23,
+        "endChar": 32
+      },
+      "revId": "13fe4bc99e6f424457e16e1fc7e679cbe978d011",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
