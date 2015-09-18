@@ -175,7 +175,7 @@ static void RescalePlane(const uint8_t* src,
                          int src_width, int src_height, int src_stride,
                          uint8_t* dst,
                          int dst_width, int dst_height, int dst_stride,
-                         int32_t* const work,
+                         rescaler_t* const work,
                          int num_channels) {
   WebPRescaler rescaler;
   int y = 0;
@@ -205,7 +205,7 @@ static void AlphaMultiplyY(WebPPicture* const pic, int inverse) {
 int WebPPictureRescale(WebPPicture* pic, int width, int height) {
   WebPPicture tmp;
   int prev_width, prev_height;
-  int32_t* work;
+  rescaler_t* work;
 
   if (pic == NULL) return 0;
   prev_width = pic->width;
@@ -221,7 +221,7 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
   if (!WebPPictureAlloc(&tmp)) return 0;
 
   if (!pic->use_argb) {
-    work = (int32_t*)WebPSafeMalloc(2ULL * width, sizeof(*work));
+    work = (rescaler_t*)WebPSafeMalloc(2ULL * width, sizeof(*work));
     if (work == NULL) {
       WebPPictureFree(&tmp);
       return 0;
@@ -249,7 +249,7 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
                  tmp.v,
                  HALVE(width), HALVE(height), tmp.uv_stride, work, 1);
   } else {
-    work = (int32_t*)WebPSafeMalloc(2ULL * width * 4, sizeof(*work));
+    work = (rescaler_t*)WebPSafeMalloc(2ULL * width * 4, sizeof(*work));
     if (work == NULL) {
       WebPPictureFree(&tmp);
       return 0;

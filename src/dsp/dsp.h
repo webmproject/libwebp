@@ -335,15 +335,35 @@ void WebPInitYUV444Converters(void);
 struct WebPRescaler;
 
 // Import a row of data and save its contribution in the rescaler.
-// 'channel' denotes the channel number to be imported.
-extern void (*WebPRescalerImportRow)(struct WebPRescaler* const wrk,
-                                     const uint8_t* const src, int channel);
+// 'channel' denotes the channel number to be imported. 'Expand' corresponds to
+// the wrk->x_expand case. Otherwise, 'Shrink' is to be used.
+typedef void (*WebPRescalerImportRowFunc)(struct WebPRescaler* const wrk,
+                                          const uint8_t* const src,
+                                          int channel);
+
+extern WebPRescalerImportRowFunc WebPRescalerImportRowExpand;
+extern WebPRescalerImportRowFunc WebPRescalerImportRowShrink;
 
 // Export one row (starting at x_out position) from rescaler.
-extern void (*WebPRescalerExportRow)(struct WebPRescaler* const wrk, int x_out);
+// 'Expand' corresponds to the wrk->y_expand case.
+// Otherwise 'Shrink' is to be used
+typedef void (*WebPRescalerExportRowFunc)(struct WebPRescaler* const wrk);
+extern WebPRescalerExportRowFunc WebPRescalerExportRowExpand;
+extern WebPRescalerExportRowFunc WebPRescalerExportRowShrink;
 
 // Plain-C implementation, as fall-back.
-extern void WebPRescalerExportRowC(struct WebPRescaler* const wrk, int x_out);
+extern void WebPRescalerImportRowExpandC(struct WebPRescaler* const wrk,
+                                         const uint8_t* const src, int channel);
+extern void WebPRescalerImportRowShrinkC(struct WebPRescaler* const wrk,
+                                         const uint8_t* const src, int channel);
+extern void WebPRescalerExportRowExpandC(struct WebPRescaler* const wrk);
+extern void WebPRescalerExportRowShrinkC(struct WebPRescaler* const wrk);
+
+// Main entry calls:
+extern void WebPRescalerImportRow(struct WebPRescaler* const wrk,
+                                  const uint8_t* const src, int channel);
+// Export one row (starting at x_out position) from rescaler.
+extern void WebPRescalerExportRow(struct WebPRescaler* const wrk);
 
 // Must be called first before using the above.
 void WebPRescalerDspInit(void);

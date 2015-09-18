@@ -22,7 +22,7 @@
 void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
                       uint8_t* const dst,
                       int dst_width, int dst_height, int dst_stride,
-                      int num_channels, int32_t* const work) {
+                      int num_channels, rescaler_t* const work) {
   const int x_add = src_width, x_sub = dst_width;
   const int y_add = src_height, y_sub = dst_height;
   wrk->x_expand = (src_width < dst_width);
@@ -31,6 +31,8 @@ void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
   wrk->src_height = src_height;
   wrk->dst_width = dst_width;
   wrk->dst_height = dst_height;
+  wrk->src_y = 0;
+  wrk->dst_y = 0;
   wrk->dst = dst;
   wrk->dst_stride = dst_stride;
   wrk->num_channels = num_channels;
@@ -39,18 +41,20 @@ void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
   wrk->x_add = wrk->x_expand ? (x_sub - 1) : x_add;
   wrk->x_sub = wrk->x_expand ? (x_add - 1) : x_sub;
   if (!wrk->x_expand) {  // fx_scale is not used otherwise
-    wrk->fx_scale = (1 << WEBP_RESCALER_RFIX) / wrk->x_sub;
+    wrk->fx_scale = WEBP_RESCALER_ONE / wrk->x_sub;
   }
-
   // vertical scaling parameters
-  wrk->y_accum = y_add;
-  wrk->y_add = y_add;
-  wrk->y_sub = y_sub;
-  wrk->fy_scale = (1 << WEBP_RESCALER_RFIX) / wrk->y_sub;
-
-  wrk->fxy_scale =
-      ((int64_t)dst_height << WEBP_RESCALER_RFIX) / (wrk->x_add * wrk->y_add);
-
+  wrk->y_add = wrk->y_expand ? y_add - 1 : y_add;
+  wrk->y_sub = wrk->y_expand ? y_sub - 1: y_sub;
+  wrk->y_accum = wrk->y_expand ? wrk->y_sub : wrk->y_add;
+  if (!wrk->y_expand) {
+    wrk->fy_scale = WEBP_RESCALER_ONE / wrk->y_sub;
+    wrk->fxy_scale = ((uint64_t)dst_height << WEBP_RESCALER_RFIX)
+                   / (wrk->x_add * wrk->y_add);
+  } else {
+    wrk->fy_scale = WEBP_RESCALER_ONE / wrk->x_add;
+    wrk->fxy_scale = WEBP_RESCALER_ONE / (wrk->x_add * wrk->y_sub);
+  }
   wrk->irow = work;
   wrk->frow = work + num_channels * dst_width;
   memset(work, 0, 2 * dst_width * num_channels * sizeof(*work));
@@ -98,10 +102,21 @@ int WebPRescalerImport(WebPRescaler* const wrk, int num_lines,
                        const uint8_t* src, int src_stride) {
   int total_imported = 0;
   while (total_imported < num_lines && !WebPRescalerHasPendingOutput(wrk)) {
-    int channel;
+    int x, channel;
+    if (wrk->y_expand) {
+      rescaler_t* const tmp = wrk->irow;
+      wrk->irow = wrk->frow;
+      wrk->frow = tmp;
+    }
     for (channel = 0; channel < wrk->num_channels; ++channel) {
       WebPRescalerImportRow(wrk, src, channel);
     }
+    if (!wrk->y_expand) {     // Accumulate the contribution of the new row.
+      for (x = 0; x < wrk->num_channels * wrk->dst_width; ++x) {
+        wrk->irow[x] += wrk->frow[x];
+      }
+    }
+    ++wrk->src_y;
     src += src_stride;
     ++total_imported;
     wrk->y_accum -= wrk->y_sub;
@@ -112,7 +127,7 @@ int WebPRescalerImport(WebPRescaler* const wrk, int num_lines,
 int WebPRescalerExport(WebPRescaler* const rescaler) {
   int total_exported = 0;
   while (WebPRescalerHasPendingOutput(rescaler)) {
-    WebPRescalerExportRow(rescaler, 0);
+    WebPRescalerExportRow(rescaler);
     ++total_exported;
   }
   return total_exported;

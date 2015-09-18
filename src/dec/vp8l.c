@@ -420,7 +420,7 @@ static int AllocateAndInitRescaler(VP8LDecoder* const dec, VP8Io* const io) {
   const int in_height = io->mb_h;
   const int out_height = io->scaled_height;
   const uint64_t work_size = 2 * num_channels * (uint64_t)out_width;
-  int32_t* work;        // Rescaler work area.
+  rescaler_t* work;        // Rescaler work area.
   const uint64_t scaled_data_size = (uint64_t)out_width;
   uint32_t* scaled_data;  // Temporary storage for scaled BGRA data.
   const uint64_t memory_size = sizeof(*dec->rescaler) +
@@ -436,7 +436,7 @@ static int AllocateAndInitRescaler(VP8LDecoder* const dec, VP8Io* const io) {
 
   dec->rescaler = (WebPRescaler*)memory;
   memory += sizeof(*dec->rescaler);
-  work = (int32_t*)memory;
+  work = (rescaler_t*)memory;
   memory += work_size * sizeof(*work);
   scaled_data = (uint32_t*)memory;
 
@@ -456,7 +456,7 @@ static int Export(WebPRescaler* const rescaler, WEBP_CSP_MODE colorspace,
   int num_lines_out = 0;
   while (WebPRescalerHasPendingOutput(rescaler)) {
     uint8_t* const dst = rgba + num_lines_out * rgba_stride;
-    WebPRescalerExportRow(rescaler, 0);
+    WebPRescalerExportRow(rescaler);
     WebPMultARGBRow(src, dst_width, 1);
     VP8LConvertFromBGRA(src, dst_width, colorspace, dst);
     ++num_lines_out;
@@ -574,7 +574,7 @@ static int ExportYUVA(const VP8LDecoder* const dec, int y_pos) {
   const int dst_width = rescaler->dst_width;
   int num_lines_out = 0;
   while (WebPRescalerHasPendingOutput(rescaler)) {
-    WebPRescalerExportRow(rescaler, 0);
+    WebPRescalerExportRow(rescaler);
     WebPMultARGBRow(src, dst_width, 1);
     ConvertToYUVA(src, dst_width, y_pos, dec->output_);
     ++y_pos;
