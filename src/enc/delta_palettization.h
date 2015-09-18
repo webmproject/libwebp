@@ -5,7 +5,11 @@
 
 #include "../webp/types.h"
 
-#define DELTA_PALETTE_SIZE (256 - 10)
+// Format allows palette up to 256 entries, but more palette entries produce
+// bigger entropy. In the future it will probably be useful to add more entries
+// that are far from the origin of the palette or choose remaining entries
+// dynamically.
+#define DELTA_PALETTE_SIZE 226
 
 extern const uint32_t kDeltaPalette[DELTA_PALETTE_SIZE];
 
