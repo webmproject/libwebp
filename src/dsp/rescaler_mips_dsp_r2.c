@@ -18,112 +18,118 @@
 #include <assert.h>
 #include "../utils/rescaler.h"
 
-static void ImportRowShrink(WebPRescaler* const wrk,
-                            const uint8_t* const src, int channel) {
+static void ImportRowShrink(WebPRescaler* const wrk, const uint8_t* src) {
   const int x_stride = wrk->num_channels;
   const int x_out_max = wrk->dst_width * wrk->num_channels;
   const int fx_scale = wrk->fx_scale;
   const int x_add = wrk->x_add;
   const int x_sub = wrk->x_sub;
-  int* frow = wrk->frow + channel;
-  const uint8_t* src1 = src + channel;
-  int temp3;
-  int base, frac, sum;
-  int accum, accum1;
   const int x_stride1 = x_stride << 2;
-  int loop_c = x_out_max - channel;
-
+  int channel;
   assert(!wrk->x_expand);
   assert(!WebPRescalerInputDone(wrk));
-  __asm__ volatile (
-      "li         %[sum],     0                         \n\t"
-      "li         %[accum],   0                         \n\t"
-    "1:                                                 \n\t"
-      "addu       %[accum],   %[accum],   %[x_add]      \n\t"
-      "li         %[base],    0                         \n\t"
-      "blez       %[accum],   3f                        \n\t"
-    "2:                                                 \n\t"
-      "lbu        %[base],    0(%[src1])                \n\t"
-      "subu       %[accum],   %[accum],   %[x_sub]      \n\t"
-      "addu       %[src1],    %[src1],    %[x_stride]   \n\t"
-      "addu       %[sum],     %[sum],     %[base]       \n\t"
-      "bgtz       %[accum],   2b                        \n\t"
-    "3:                                                 \n\t"
-      "negu       %[accum1],  %[accum]                  \n\t"
-      "mul        %[frac],    %[base],    %[accum1]     \n\t"
-      "mul        %[temp3],   %[sum],     %[x_sub]      \n\t"
-      "sll        %[accum1],  %[frac],    1             \n\t"
-      "subu       %[loop_c],  %[loop_c],  %[x_stride]   \n\t"
-      "mulq_rs.w  %[sum],     %[accum1],  %[fx_scale]   \n\t"
-      "subu       %[temp3],   %[temp3],   %[frac]       \n\t"
-      "sw         %[temp3],   0(%[frow])                \n\t"
-      "addu       %[frow],    %[frow],    %[x_stride1]  \n\t"
-      "bgtz       %[loop_c],  1b                        \n\t"
-    : [accum]"=&r"(accum), [src1]"+&r"(src1), [temp3]"=&r"(temp3),
-      [sum]"=&r"(sum), [base]"=&r"(base), [frac]"=&r"(frac),
-      [frow]"+&r"(frow), [accum1]"=&r"(accum1),
-      [loop_c]"+&r"(loop_c)
-    : [x_stride]"r"(x_stride), [fx_scale]"r"(fx_scale), [x_sub]"r"(x_sub),
-      [x_add] "r" (x_add), [x_stride1] "r" (x_stride1)
-    : "memory", "hi", "lo"
-  );
+
+  for (channel = 0; channel < x_stride; ++channel) {
+    int* frow = wrk->frow + channel;
+    const uint8_t* src1 = src + channel;
+    int temp3;
+    int base, frac, sum;
+    int accum, accum1;
+    int loop_c = x_out_max;
+
+    __asm__ volatile (
+        "li         %[sum],     0                         \n\t"
+        "li         %[accum],   0                         \n\t"
+      "1:                                                 \n\t"
+        "addu       %[accum],   %[accum],   %[x_add]      \n\t"
+        "li         %[base],    0                         \n\t"
+        "blez       %[accum],   3f                        \n\t"
+      "2:                                                 \n\t"
+        "lbu        %[base],    0(%[src1])                \n\t"
+        "subu       %[accum],   %[accum],   %[x_sub]      \n\t"
+        "addu       %[src1],    %[src1],    %[x_stride]   \n\t"
+        "addu       %[sum],     %[sum],     %[base]       \n\t"
+        "bgtz       %[accum],   2b                        \n\t"
+      "3:                                                 \n\t"
+        "negu       %[accum1],  %[accum]                  \n\t"
+        "mul        %[frac],    %[base],    %[accum1]     \n\t"
+        "mul        %[temp3],   %[sum],     %[x_sub]      \n\t"
+        "sll        %[accum1],  %[frac],    1             \n\t"
+        "subu       %[loop_c],  %[loop_c],  %[x_stride]   \n\t"
+        "mulq_rs.w  %[sum],     %[accum1],  %[fx_scale]   \n\t"
+        "subu       %[temp3],   %[temp3],   %[frac]       \n\t"
+        "sw         %[temp3],   0(%[frow])                \n\t"
+        "addu       %[frow],    %[frow],    %[x_stride1]  \n\t"
+        "bgtz       %[loop_c],  1b                        \n\t"
+      : [accum]"=&r"(accum), [src1]"+&r"(src1), [temp3]"=&r"(temp3),
+        [sum]"=&r"(sum), [base]"=&r"(base), [frac]"=&r"(frac),
+        [frow]"+&r"(frow), [accum1]"=&r"(accum1),
+        [loop_c]"+&r"(loop_c)
+      : [x_stride]"r"(x_stride), [fx_scale]"r"(fx_scale), [x_sub]"r"(x_sub),
+        [x_add] "r" (x_add), [x_stride1] "r" (x_stride1)
+      : "memory", "hi", "lo"
+    );
+  }
 }
 
-static void ImportRowExpand(WebPRescaler* const wrk,
-                            const uint8_t* const src, int channel) {
+static void ImportRowExpand(WebPRescaler* const wrk, const uint8_t* src) {
   const int x_stride = wrk->num_channels;
   const int x_out_max = wrk->dst_width * wrk->num_channels;
   const int x_add = wrk->x_add;
   const int x_sub = wrk->x_sub;
   const int src_width = wrk->src_width;
-  int* frow = wrk->frow + channel;
-  const uint8_t* src1 = src + channel;
-  int temp1, temp2, temp3, temp4;
-  int frac;
-  int accum;
   const int x_stride1 = x_stride << 2;
-  int x_out = channel;
-
+  int channel;
   assert(wrk->x_expand);
   assert(!WebPRescalerInputDone(wrk));
-  __asm__ volatile (
-    "addiu  %[temp3],   %[src_width], -1            \n\t"
-    "lbu    %[temp2],   0(%[src1])                  \n\t"
-    "addu   %[src1],    %[src1],      %[x_stride]   \n\t"
-    "bgtz   %[temp3],   0f                          \n\t"
-    "addiu  %[temp1],   %[temp2],     0             \n\t"
-    "b      3f                                      \n\t"
-  "0:                                               \n\t"
-    "lbu    %[temp1],   0(%[src1])                  \n\t"
-  "3:                                               \n\t"
-    "addiu  %[accum],   %[x_add],     0             \n\t"
-  "1:                                               \n\t"
-    "subu   %[temp3],   %[temp2],     %[temp1]      \n\t"
-    "mul    %[temp3],   %[temp3],     %[accum]      \n\t"
-    "mul    %[temp4],   %[temp1],     %[x_add]      \n\t"
-    "addu   %[temp3],   %[temp4],     %[temp3]      \n\t"
-    "sw     %[temp3],   0(%[frow])                  \n\t"
-    "addu   %[frow],    %[frow],      %[x_stride1]  \n\t"
-    "addu   %[x_out],   %[x_out],     %[x_stride]   \n\t"
-    "subu   %[temp3],   %[x_out],     %[x_out_max]  \n\t"
-    "bgez   %[temp3],   2f                          \n\t"
-    "subu   %[accum],   %[accum],     %[x_sub]      \n\t"
-    "bgez   %[accum],   4f                          \n\t"
-    "addiu  %[temp2],   %[temp1],     0             \n\t"
-    "addu   %[src1],    %[src1],      %[x_stride]   \n\t"
-    "lbu    %[temp1],   0(%[src1])                  \n\t"
-    "addu   %[accum],   %[accum],     %[x_add]      \n\t"
-  "4:                                               \n\t"
-    "b      1b                                      \n\t"
-  "2:                                               \n\t"
-    : [src1] "+r" (src1), [accum] "=&r" (accum), [temp1] "=&r" (temp1),
-      [temp2] "=&r" (temp2), [temp3] "=&r" (temp3), [temp4] "=&r" (temp4),
-      [x_out] "+r" (x_out), [frac] "=&r" (frac), [frow] "+r" (frow)
-    : [x_stride] "r" (x_stride), [x_add] "r" (x_add), [x_sub] "r" (x_sub),
-      [x_stride1] "r" (x_stride1), [src_width] "r" (src_width),
-      [x_out_max] "r" (x_out_max)
-    : "memory", "hi", "lo"
-  );
+
+  for (channel = 0; channel < x_stride; ++channel) {
+    int* frow = wrk->frow + channel;
+    const uint8_t* src1 = src + channel;
+    int temp1, temp2, temp3, temp4;
+    int frac;
+    int accum;
+    int x_out = channel;
+
+    __asm__ volatile (
+      "addiu  %[temp3],   %[src_width], -1            \n\t"
+      "lbu    %[temp2],   0(%[src1])                  \n\t"
+      "addu   %[src1],    %[src1],      %[x_stride]   \n\t"
+      "bgtz   %[temp3],   0f                          \n\t"
+      "addiu  %[temp1],   %[temp2],     0             \n\t"
+      "b      3f                                      \n\t"
+    "0:                                               \n\t"
+      "lbu    %[temp1],   0(%[src1])                  \n\t"
+    "3:                                               \n\t"
+      "addiu  %[accum],   %[x_add],     0             \n\t"
+    "1:                                               \n\t"
+      "subu   %[temp3],   %[temp2],     %[temp1]      \n\t"
+      "mul    %[temp3],   %[temp3],     %[accum]      \n\t"
+      "mul    %[temp4],   %[temp1],     %[x_add]      \n\t"
+      "addu   %[temp3],   %[temp4],     %[temp3]      \n\t"
+      "sw     %[temp3],   0(%[frow])                  \n\t"
+      "addu   %[frow],    %[frow],      %[x_stride1]  \n\t"
+      "addu   %[x_out],   %[x_out],     %[x_stride]   \n\t"
+      "subu   %[temp3],   %[x_out],     %[x_out_max]  \n\t"
+      "bgez   %[temp3],   2f                          \n\t"
+      "subu   %[accum],   %[accum],     %[x_sub]      \n\t"
+      "bgez   %[accum],   4f                          \n\t"
+      "addiu  %[temp2],   %[temp1],     0             \n\t"
+      "addu   %[src1],    %[src1],      %[x_stride]   \n\t"
+      "lbu    %[temp1],   0(%[src1])                  \n\t"
+      "addu   %[accum],   %[accum],     %[x_add]      \n\t"
+    "4:                                               \n\t"
+      "b      1b                                      \n\t"
+    "2:                                               \n\t"
+      : [src1] "+r" (src1), [accum] "=&r" (accum), [temp1] "=&r" (temp1),
+        [temp2] "=&r" (temp2), [temp3] "=&r" (temp3), [temp4] "=&r" (temp4),
+        [x_out] "+r" (x_out), [frac] "=&r" (frac), [frow] "+r" (frow)
+      : [x_stride] "r" (x_stride), [x_add] "r" (x_add), [x_sub] "r" (x_sub),
+        [x_stride1] "r" (x_stride1), [src_width] "r" (src_width),
+        [x_out_max] "r" (x_out_max)
+      : "memory", "hi", "lo"
+    );
+  }
 }
 
 static void ExportRowShrink(WebPRescaler* const wrk) {

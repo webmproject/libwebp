@@ -23,66 +23,69 @@
 //------------------------------------------------------------------------------
 // Row import
 
-void WebPRescalerImportRowExpandC(WebPRescaler* const wrk,
-                                  const uint8_t* const src, int channel) {
+void WebPRescalerImportRowExpandC(WebPRescaler* wrk, const uint8_t* src) {
   const int x_stride = wrk->num_channels;
   const int x_out_max = wrk->dst_width * wrk->num_channels;
-  int x_in = channel;
-  int x_out;
-  // simple bilinear interpolation
-  int accum = wrk->x_add;
-  int left = src[x_in];
-  int right = (wrk->src_width > 1) ? src[x_in + x_stride] : left;
-  x_in += x_stride;
-  x_out = channel;
-
+  int channel;
   assert(!WebPRescalerInputDone(wrk));
   assert(wrk->x_expand);
-  while (1) {
-    wrk->frow[x_out] = right * wrk->x_add + (left - right) * accum;
-    x_out += x_stride;
-    if (x_out >= x_out_max) break;
-    accum -= wrk->x_sub;
-    if (accum < 0) {
-      left = right;
-      x_in += x_stride;
-      assert(x_in < wrk->src_width * x_stride);
-      right = src[x_in];
-      accum += wrk->x_add;
+  for (channel = 0; channel < x_stride; ++channel) {
+    int x_in = channel;
+    int x_out = channel;
+    // simple bilinear interpolation
+    int accum = wrk->x_add;
+    int left = src[x_in];
+    int right = (wrk->src_width > 1) ? src[x_in + x_stride] : left;
+    x_in += x_stride;
+    while (1) {
+      wrk->frow[x_out] = right * wrk->x_add + (left - right) * accum;
+      x_out += x_stride;
+      if (x_out >= x_out_max) break;
+      accum -= wrk->x_sub;
+      if (accum < 0) {
+        left = right;
+        x_in += x_stride;
+        assert(x_in < wrk->src_width * x_stride);
+        right = src[x_in];
+        accum += wrk->x_add;
+      }
     }
+    assert(wrk->x_sub == 0 /* <- special case for src_width=1 */ || accum == 0);
   }
-  assert(wrk->x_sub == 0 /* <- special case for src_width=1 */ || accum == 0);
 }
 
 void WebPRescalerImportRowShrinkC(WebPRescaler* const wrk,
-                                  const uint8_t* const src, int channel) {
+                                  const uint8_t* src) {
   const int x_stride = wrk->num_channels;
   const int x_out_max = wrk->dst_width * wrk->num_channels;
-  int x_in = channel;
-  int x_out;
-  uint32_t sum = 0;
-  int accum = 0;
-
+  int channel;
   assert(!WebPRescalerInputDone(wrk));
   assert(!wrk->x_expand);
-  for (x_out = channel; x_out < x_out_max; x_out += x_stride) {
-    uint32_t base = 0;
-    accum += wrk->x_add;
-    while (accum > 0) {
-      accum -= wrk->x_sub;
-      assert(x_in < wrk->src_width * x_stride);
-      base = src[x_in];
-      sum += base;
-      x_in += x_stride;
+  for (channel = 0; channel < x_stride; ++channel) {
+    int x_in = channel;
+    int x_out = channel;
+    uint32_t sum = 0;
+    int accum = 0;
+    while (x_out < x_out_max) {
+      uint32_t base = 0;
+      accum += wrk->x_add;
+      while (accum > 0) {
+        accum -= wrk->x_sub;
+        assert(x_in < wrk->src_width * x_stride);
+        base = src[x_in];
+        sum += base;
+        x_in += x_stride;
+      }
+      {        // Emit next horizontal pixel.
+        const rescaler_t frac = base * (-accum);
+        wrk->frow[x_out] = sum * wrk->x_sub - frac;
+        // fresh fractional start for next pixel
+        sum = (int)MULT_FIX(frac, wrk->fx_scale);
+      }
+      x_out += x_stride;
     }
-    {        // Emit next horizontal pixel.
-      const rescaler_t frac = base * (-accum);
-      wrk->frow[x_out] = sum * wrk->x_sub - frac;
-      // fresh fractional start for next pixel
-      sum = (int)MULT_FIX(frac, wrk->fx_scale);
-    }
+    assert(accum == 0);
   }
-  assert(accum == 0);
 }
 
 //------------------------------------------------------------------------------
@@ -145,13 +148,12 @@ void WebPRescalerExportRowShrinkC(WebPRescaler* const wrk) {
 //------------------------------------------------------------------------------
 // Main entry calls
 
-void WebPRescalerImportRow(WebPRescaler* const wrk,
-                           const uint8_t* const src, int channel) {
+void WebPRescalerImportRow(WebPRescaler* const wrk, const uint8_t* const src) {
   assert(!WebPRescalerInputDone(wrk));
   if (!wrk->x_expand) {
-    WebPRescalerImportRowShrink(wrk, src, channel);
+    WebPRescalerImportRowShrink(wrk, src);
   } else {
-    WebPRescalerImportRowExpand(wrk, src, channel);
+    WebPRescalerImportRowExpand(wrk, src);
   }
 }
 

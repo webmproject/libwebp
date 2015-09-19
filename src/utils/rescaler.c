@@ -102,16 +102,14 @@ int WebPRescalerImport(WebPRescaler* const wrk, int num_lines,
                        const uint8_t* src, int src_stride) {
   int total_imported = 0;
   while (total_imported < num_lines && !WebPRescalerHasPendingOutput(wrk)) {
-    int x, channel;
     if (wrk->y_expand) {
       rescaler_t* const tmp = wrk->irow;
       wrk->irow = wrk->frow;
       wrk->frow = tmp;
     }
-    for (channel = 0; channel < wrk->num_channels; ++channel) {
-      WebPRescalerImportRow(wrk, src, channel);
-    }
+    WebPRescalerImportRow(wrk, src);
     if (!wrk->y_expand) {     // Accumulate the contribution of the new row.
+      int x;
       for (x = 0; x < wrk->num_channels * wrk->dst_width; ++x) {
         wrk->irow[x] += wrk->frow[x];
       }
