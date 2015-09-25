@@ -49,7 +49,7 @@ void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
   wrk->y_accum = wrk->y_expand ? wrk->y_sub : wrk->y_add;
   if (!wrk->y_expand) {
     // note the very special case where x_add = y_add = 1 cannot be represented.
-    // We special-case fxy_scale = 0 in this case, in ExportRowShrink
+    // We special-case fxy_scale = 0 in this case, in WebPRescalerExportRow().
     wrk->fxy_scale = WEBP_RESCALER_FRAC(dst_height, wrk->x_add * wrk->y_add);
     wrk->fy_scale = WEBP_RESCALER_FRAC(1, wrk->y_sub);
   } else {

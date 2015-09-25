@@ -187,7 +187,7 @@ static void RescalerExportRowShrinkSSE2(WebPRescaler* const wrk) {
       dst[x_out] = v;
       irow[x_out] = frac;   // new fractional start
     }
-  } else if (wrk->fxy_scale) {
+  } else {
     const uint32_t scale = wrk->fxy_scale;
     const __m128i mult = _mm_set_epi32(0, scale, 0, scale);
     const __m128i zero = _mm_setzero_si128();
@@ -202,11 +202,6 @@ static void RescalerExportRowShrinkSSE2(WebPRescaler* const wrk) {
       const int v = (int)MULT_FIX(irow[x_out], scale);
       assert(v >= 0 && v <= 255);
       dst[x_out] = v;
-      irow[x_out] = 0;
-    }
-  } else {  // very special case for src = 1x1
-    for (x_out = 0; x_out < x_out_max; ++x_out) {
-      dst[x_out] = irow[x_out];
       irow[x_out] = 0;
     }
   }

@@ -140,16 +140,11 @@ void WebPRescalerExportRowShrinkC(WebPRescaler* const wrk) {
       dst[x_out] = v;
       irow[x_out] = frac;   // new fractional start
     }
-  } else if (wrk->fxy_scale) {
+  } else {
     for (x_out = 0; x_out < x_out_max; ++x_out) {
       const int v = (int)MULT_FIX(irow[x_out], wrk->fxy_scale);
       assert(v >= 0 && v <= 255);
       dst[x_out] = v;
-      irow[x_out] = 0;
-    }
-  } else {  // very special case for src = dst = 1x1
-    for (x_out = 0; x_out < x_out_max; ++x_out) {
-      dst[x_out] = irow[x_out];
       irow[x_out] = 0;
     }
   }
@@ -175,8 +170,16 @@ void WebPRescalerExportRow(WebPRescaler* const wrk) {
     assert(!WebPRescalerOutputDone(wrk));
     if (wrk->y_expand) {
       WebPRescalerExportRowExpand(wrk);
-    } else {
+    } else if (wrk->fxy_scale) {
       WebPRescalerExportRowShrink(wrk);
+    } else {  // very special case for src = dst = 1x1
+      int i;
+      assert(wrk->src_width == 1 && wrk->dst_width <= 2);
+      assert(wrk->src_height == 1 && wrk->dst_height == 1);
+      for (i = 0; i < wrk->num_channels * wrk->dst_width; ++i) {
+        wrk->dst[i] = wrk->irow[i];
+        wrk->irow[i] = 0;
+      }
     }
     wrk->y_accum += wrk->y_add;
     wrk->dst += wrk->dst_stride;
