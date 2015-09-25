@@ -105,7 +105,7 @@ static void RescalerExportRowExpandSSE2(WebPRescaler* const wrk) {
     }
   } else {
     const uint32_t B = WEBP_RESCALER_FRAC(-wrk->y_accum, wrk->y_sub);
-    const uint32_t A = WEBP_RESCALER_ONE - B;
+    const uint32_t A = (uint32_t)(WEBP_RESCALER_ONE - B);
     const __m128i mA = _mm_set_epi64x(A, A);
     const __m128i mB = _mm_set_epi64x(B, B);
     const __m128i rounder = _mm_set_epi64x(ROUNDER, ROUNDER);

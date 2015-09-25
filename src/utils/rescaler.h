@@ -22,7 +22,8 @@ extern "C" {
 
 #define WEBP_RESCALER_RFIX 32   // fixed-point precision for multiplies
 #define WEBP_RESCALER_ONE (1ull << WEBP_RESCALER_RFIX)
-#define WEBP_RESCALER_FRAC(x, y) (((uint64_t)(x) << WEBP_RESCALER_RFIX) / (y))
+#define WEBP_RESCALER_FRAC(x, y) \
+    ((uint32_t)(((uint64_t)(x) << WEBP_RESCALER_RFIX) / (y)))
 
 // Structure used for on-the-fly rescaling
 typedef uint32_t rescaler_t;   // type for side-buffer

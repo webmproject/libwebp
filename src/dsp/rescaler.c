@@ -110,7 +110,7 @@ void WebPRescalerExportRowExpandC(WebPRescaler* const wrk) {
     }
   } else {
     const uint32_t B = WEBP_RESCALER_FRAC(-wrk->y_accum, wrk->y_sub);
-    const uint32_t A = WEBP_RESCALER_ONE - B;
+    const uint32_t A = (uint32_t)(WEBP_RESCALER_ONE - B);
     for (x_out = 0; x_out < x_out_max; ++x_out) {
       const uint64_t I = (uint64_t)A * frow[x_out]
                        + (uint64_t)B * irow[x_out];
