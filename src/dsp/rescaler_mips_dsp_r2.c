@@ -30,7 +30,7 @@ static void ImportRowShrink(WebPRescaler* const wrk, const uint8_t* src) {
   assert(!WebPRescalerInputDone(wrk));
 
   for (channel = 0; channel < x_stride; ++channel) {
-    int* frow = wrk->frow + channel;
+    rescaler_t* frow = wrk->frow + channel;
     const uint8_t* src1 = src + channel;
     int temp3;
     int base, frac, sum;
@@ -84,7 +84,7 @@ static void ImportRowExpand(WebPRescaler* const wrk, const uint8_t* src) {
   assert(!WebPRescalerInputDone(wrk));
 
   for (channel = 0; channel < x_stride; ++channel) {
-    int* frow = wrk->frow + channel;
+    rescaler_t* frow = wrk->frow + channel;
     const uint8_t* src1 = src + channel;
     int temp1, temp2, temp3, temp4;
     int frac;
@@ -133,17 +133,15 @@ static void ImportRowExpand(WebPRescaler* const wrk, const uint8_t* src) {
 }
 
 static void ExportRowShrink(WebPRescaler* const wrk) {
+  uint8_t* dst = wrk->dst;
+  rescaler_t* irow = wrk->irow;
+  const int x_out_max = wrk->dst_width * wrk->num_channels;
   assert(!WebPRescalerOutputDone(wrk));
   assert(wrk->y_accum <= 0);
   assert(!wrk->y_expand);
-  // if wrk->fxy_scale can fit into 32 bits use optimized code,
-  // otherwise use C code
-  if ((wrk->fxy_scale >> 32) == 0) {
-    uint8_t* dst = wrk->dst;
-    rescaler_t* irow = wrk->irow;
+  if (wrk->fxy_scale) {
     const rescaler_t* frow = wrk->frow;
     const int yscale = wrk->fy_scale * (-wrk->y_accum);
-    const int x_out_max = wrk->dst_width * wrk->num_channels;
 
     int temp0, temp1, temp3, temp4, temp5, temp6, temp7;
     const int temp2 = (int)wrk->fxy_scale;
@@ -212,8 +210,12 @@ static void ExportRowShrink(WebPRescaler* const wrk) {
         [rest]"r"(rest)
       : "memory", "hi", "lo"
     );
-  } else {
-    WebPRescalerExportRowShrinkC(wrk);
+  } else {  // very special case for src = dst = 1x1
+    int x_out;
+    for (x_out = 0; x_out < x_out_max; ++x_out) {
+      dst[x_out] = irow[x_out];
+      irow[x_out] = 0;
+    }
   }
 }
 
@@ -225,9 +227,17 @@ static void ExportRowShrink(WebPRescaler* const wrk) {
 extern void WebPRescalerDspInitMIPSdspR2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInitMIPSdspR2(void) {
+#if 0
+  // The assembly code is currently out-of-sync wrt the C-implementation.
+  // Disabled for now.
   WebPRescalerImportRowExpand = ImportRowExpand;
   WebPRescalerImportRowShrink = ImportRowShrink;
   WebPRescalerExportRowShrink = ExportRowShrink;
+#else
+  (void)ImportRowExpand;
+  (void)ImportRowShrink;
+  (void)ExportRowShrink;
+#endif
 }
 
 #else  // !WEBP_USE_MIPS_DSP_R2

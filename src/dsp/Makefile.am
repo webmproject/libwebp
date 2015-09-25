@@ -69,6 +69,7 @@ libwebpdspdecode_sse2_la_SOURCES += alpha_processing_sse2.c
 libwebpdspdecode_sse2_la_SOURCES += dec_sse2.c
 libwebpdspdecode_sse2_la_SOURCES += filters_sse2.c
 libwebpdspdecode_sse2_la_SOURCES += lossless_sse2.c
+libwebpdspdecode_sse2_la_SOURCES += rescaler_sse2.c
 libwebpdspdecode_sse2_la_SOURCES += upsampling_sse2.c
 libwebpdspdecode_sse2_la_SOURCES += yuv_sse2.c
 libwebpdspdecode_sse2_la_SOURCES += yuv_tables_sse2.h

@@ -41,19 +41,20 @@ void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
   wrk->x_add = wrk->x_expand ? (x_sub - 1) : x_add;
   wrk->x_sub = wrk->x_expand ? (x_add - 1) : x_sub;
   if (!wrk->x_expand) {  // fx_scale is not used otherwise
-    wrk->fx_scale = WEBP_RESCALER_ONE / wrk->x_sub;
+    wrk->fx_scale = WEBP_RESCALER_FRAC(1, wrk->x_sub);
   }
   // vertical scaling parameters
   wrk->y_add = wrk->y_expand ? y_add - 1 : y_add;
-  wrk->y_sub = wrk->y_expand ? y_sub - 1: y_sub;
+  wrk->y_sub = wrk->y_expand ? y_sub - 1 : y_sub;
   wrk->y_accum = wrk->y_expand ? wrk->y_sub : wrk->y_add;
   if (!wrk->y_expand) {
-    wrk->fy_scale = WEBP_RESCALER_ONE / wrk->y_sub;
-    wrk->fxy_scale = ((uint64_t)dst_height << WEBP_RESCALER_RFIX)
-                   / (wrk->x_add * wrk->y_add);
+    // note the very special case where x_add = y_add = 1 cannot be represented.
+    // We special-case fxy_scale = 0 in this case, in ExportRowShrink
+    wrk->fxy_scale = WEBP_RESCALER_FRAC(dst_height, wrk->x_add * wrk->y_add);
+    wrk->fy_scale = WEBP_RESCALER_FRAC(1, wrk->y_sub);
   } else {
-    wrk->fy_scale = WEBP_RESCALER_ONE / wrk->x_add;
-    wrk->fxy_scale = WEBP_RESCALER_ONE / (wrk->x_add * wrk->y_sub);
+    wrk->fy_scale = WEBP_RESCALER_FRAC(1, wrk->x_add);
+    // wrk->fxy_scale is unused here.
   }
   wrk->irow = work;
   wrk->frow = work + num_channels * dst_width;

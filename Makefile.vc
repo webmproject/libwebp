@@ -207,6 +207,7 @@ DSP_DEC_OBJS = \
     $(DIROBJ)\dsp\rescaler.obj \
     $(DIROBJ)\dsp\rescaler_mips32.obj \
     $(DIROBJ)\dsp\rescaler_mips_dsp_r2.obj \
+    $(DIROBJ)\dsp\rescaler_sse2.obj \
     $(DIROBJ)\dsp\upsampling.obj \
     $(DIROBJ)\dsp\upsampling_mips_dsp_r2.obj \
     $(DIROBJ)\dsp\upsampling_neon.obj \
