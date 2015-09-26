@@ -54,8 +54,7 @@ void WebPRescalerImportRowExpandC(WebPRescaler* const wrk, const uint8_t* src) {
   }
 }
 
-void WebPRescalerImportRowShrinkC(WebPRescaler* const wrk,
-                                  const uint8_t* src) {
+void WebPRescalerImportRowShrinkC(WebPRescaler* const wrk, const uint8_t* src) {
   const int x_stride = wrk->num_channels;
   const int x_out_max = wrk->dst_width * wrk->num_channels;
   int channel;
