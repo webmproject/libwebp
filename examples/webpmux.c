@@ -186,7 +186,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
   RETURN_IF_ERROR("Failed to retrieve features\n");
 
   if (flag == 0) {
-    fprintf(stderr, "No features present.\n");
+    printf("No features present.\n");
     return err;
   }
 
