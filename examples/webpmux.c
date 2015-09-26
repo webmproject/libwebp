@@ -790,7 +790,7 @@ static int GetFrameFragment(const WebPMux* mux,
                             const WebPMuxConfig* config, int is_frame) {
   WebPMuxError err = WEBP_MUX_OK;
   WebPMux* mux_single = NULL;
-  long num = 0;
+  int num = 0;
   int ok = 1;
   int parse_error = 0;
   const WebPChunkId id = is_frame ? WEBP_CHUNK_ANMF : WEBP_CHUNK_FRGM;
@@ -806,7 +806,7 @@ static int GetFrameFragment(const WebPMux* mux,
   err = WebPMuxGetFrame(mux, num, &info);
   if (err == WEBP_MUX_OK && info.id != id) err = WEBP_MUX_NOT_FOUND;
   if (err != WEBP_MUX_OK) {
-    ERROR_GOTO3("ERROR (%s): Could not get frame %ld.\n",
+    ERROR_GOTO3("ERROR (%s): Could not get frame %d.\n",
                 ErrorString(err), num, ErrGet);
   }
 
