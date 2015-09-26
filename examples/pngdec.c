@@ -131,8 +131,8 @@ static int ExtractMetadataFromPNG(png_structp png,
   for (p = 0; p < 2; ++p)  {
     png_infop const info = (p == 0) ? head_info : end_info;
     png_textp text = NULL;
-    const int num = png_get_text(png, info, &text, NULL);
-    int i;
+    const png_uint_32 num = png_get_text(png, info, &text, NULL);
+    png_uint_32 i;
     // Look for EXIF / XMP metadata.
     for (i = 0; i < num; ++i, ++text) {
       int j;
@@ -199,7 +199,7 @@ int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha,
   int p;
   int ok = 0;
   png_uint_32 width, height, y;
-  int stride;
+  png_uint_32 stride;
   uint8_t* volatile rgb = NULL;
 
   png = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
@@ -268,11 +268,11 @@ int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha,
     goto Error;
   }
 
-  pic->width = width;
-  pic->height = height;
+  pic->width = (int)width;
+  pic->height = (int)height;
   pic->use_argb = 1;
-  ok = has_alpha ? WebPPictureImportRGBA(pic, rgb, stride)
-                 : WebPPictureImportRGB(pic, rgb, stride);
+  ok = has_alpha ? WebPPictureImportRGBA(pic, rgb, (int)stride)
+                 : WebPPictureImportRGB(pic, rgb, (int)stride);
 
   if (!ok) {
     goto Error;
