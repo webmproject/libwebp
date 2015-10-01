@@ -13,6 +13,7 @@
 //
 // example: anim_diff foo.gif bar.webp
 
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>  // for 'strtod'.
 #include <string.h>  // for 'strcmp'.
@@ -23,6 +24,31 @@
 #include "./anim_util.h"
 
 namespace {
+
+// Return true if 'a + b' will overflow.
+bool AdditionWillOverflow(int a, int b) {
+  return (b > 0) && (a > INT_MAX - b);
+}
+
+// Minimize number of frames by combining successive frames that have exact same
+// ARGB data into a single longer duration frame.
+void MinimizeAnimationFrames(AnimatedImage* const img) {
+  for (size_t i = 1; i < img->frames.size(); ++i) {
+    DecodedFrame* const frame1 = &img->frames[i - 1];
+    DecodedFrame* const frame2 = &img->frames[i];
+    // If merging frames will result in integer overflow for 'duration',
+    // skip merging.
+    if (AdditionWillOverflow(frame1->duration, frame2->duration)) continue;
+    const uint8_t* rgba1 = frame1->rgba.data();
+    const uint8_t* rgba2 = frame2->rgba.data();
+    if (!memcmp(rgba1, rgba2, img->canvas_width * 4 * img->canvas_height)) {
+      // Merge 'i+1'th frame into 'i'th frame.
+      frame1->duration += frame2->duration;
+      img->frames.erase(img->frames.begin() + i);
+      --i;
+    }
+  }
+}
 
 template<typename T>
 bool CompareValues(T a, T b, const std::string& output_str) {
@@ -163,6 +189,7 @@ int main(int argc, const char* argv[]) {
       fprintf(stderr, "Error decoding file: %s\n Aborting.\n", files[i]);
       return -2;
     }
+    MinimizeAnimationFrames(&images[i]);
   }
 
   if (!CompareAnimatedImagePair(images[0], images[1],
