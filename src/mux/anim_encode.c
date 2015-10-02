@@ -356,7 +356,7 @@ static void MinimizeChangeRectangle(const WebPPicture* const src,
       break;
     }
   }
-  if (rect->width_ == 0) goto NO_CHANGE;
+  if (rect->width_ == 0) goto NoChange;
 
   // Right boundary.
   for (i = rect->x_offset_ + rect->width_ - 1; i >= rect->x_offset_; --i) {
@@ -371,7 +371,7 @@ static void MinimizeChangeRectangle(const WebPPicture* const src,
       break;
     }
   }
-  if (rect->width_ == 0) goto NO_CHANGE;
+  if (rect->width_ == 0) goto NoChange;
 
   // Top boundary.
   for (j = rect->y_offset_; j < rect->y_offset_ + rect->height_; ++j) {
@@ -386,7 +386,7 @@ static void MinimizeChangeRectangle(const WebPPicture* const src,
       break;
     }
   }
-  if (rect->height_ == 0) goto NO_CHANGE;
+  if (rect->height_ == 0) goto NoChange;
 
   // Bottom boundary.
   for (j = rect->y_offset_ + rect->height_ - 1; j >= rect->y_offset_; --j) {
@@ -400,10 +400,10 @@ static void MinimizeChangeRectangle(const WebPPicture* const src,
       break;
     }
   }
-  if (rect->height_ == 0) goto NO_CHANGE;
+  if (rect->height_ == 0) goto NoChange;
 
   if (IsEmptyRect(rect)) {
- NO_CHANGE:
+ NoChange:
     rect->x_offset_ = 0;
     rect->y_offset_ = 0;
     rect->width_ = 0;
