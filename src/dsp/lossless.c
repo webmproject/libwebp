@@ -634,3 +634,103 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
 }
 
 //------------------------------------------------------------------------------
+
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+// Delta palettization functions.
+static WEBP_INLINE int Square(int x) {
+  return x * x;
+}
+
+static WEBP_INLINE uint32_t Intensity(uint32_t a) {
+  return
+      30 * ((a >> 16) & 0xff) +
+      59 * ((a >>  8) & 0xff) +
+      11 * ((a >>  0) & 0xff);
+}
+
+static uint32_t CalcDist(uint32_t predicted_value, uint32_t actual_value,
+                         uint32_t palette_entry) {
+  int i;
+  uint32_t distance = 0;
+  AddPixelsEq(&predicted_value, palette_entry);
+  for (i = 0; i < 32; i += 8) {
+    const int32_t av = (actual_value >> i) & 0xff;
+    const int32_t pv = (predicted_value >> i) & 0xff;
+    distance += Square(pv - av);
+  }
+  // We sum square of intensity difference with factor 10, but because Intensity
+  // returns 100 times real intensity we need to multiply differences of colors
+  // by 1000.
+  distance *= 1000u;
+  distance += Square(Intensity(predicted_value)
+                     - Intensity(actual_value));
+  return distance;
+}
+
+static uint32_t Predict(int x, int y, uint32_t* image) {
+  const uint32_t t = y == 0 ? ARGB_BLACK : image[x];
+  const uint32_t l = x == 0 ? ARGB_BLACK : image[x - 1];
+  const uint32_t p =
+      (((((t >> 24) & 0xff) + ((l >> 24) & 0xff)) / 2) << 24) +
+      (((((t >> 16) & 0xff) + ((l >> 16) & 0xff)) / 2) << 16) +
+      (((((t >>  8) & 0xff) + ((l >>  8) & 0xff)) / 2) <<  8) +
+      (((((t >>  0) & 0xff) + ((l >>  0) & 0xff)) / 2) <<  0);
+  if (x == 0 && y == 0) return ARGB_BLACK;
+  if (x == 0) return t;
+  if (y == 0) return l;
+  return p;
+}
+
+static WEBP_INLINE int AddSubtractComponentFullWithCoefficient(
+    int a, int b, int c) {
+  return Clip255(a + ((b - c) >> 2));
+}
+
+static WEBP_INLINE uint32_t ClampedAddSubtractFullWithCoefficient(
+    uint32_t c0, uint32_t c1, uint32_t c2) {
+  const int a = AddSubtractComponentFullWithCoefficient(
+      c0 >> 24, c1 >> 24, c2 >> 24);
+  const int r = AddSubtractComponentFullWithCoefficient((c0 >> 16) & 0xff,
+                                                       (c1 >> 16) & 0xff,
+                                                       (c2 >> 16) & 0xff);
+  const int g = AddSubtractComponentFullWithCoefficient((c0 >> 8) & 0xff,
+                                                       (c1 >> 8) & 0xff,
+                                                       (c2 >> 8) & 0xff);
+  const int b = AddSubtractComponentFullWithCoefficient(
+      c0 & 0xff, c1 & 0xff, c2 & 0xff);
+  return ((uint32_t)a << 24) | (r << 16) | (g << 8) | b;
+}
+
+int FindBestPaletteEntry(int x, int y, const uint32_t* palette,
+                         int palette_size, uint32_t* src,
+                         int src_stride, uint32_t* new_image) {
+  int i;
+  const uint32_t predicted_value = Predict(x, y, new_image);
+  int idx = 0;
+  uint32_t best_distance = CalcDist(predicted_value, src[x], palette[0]);
+  for (i = 1; i < palette_size; ++i) {
+    const uint32_t distance = CalcDist(predicted_value, src[x], palette[i]);
+    if (distance < best_distance) {
+      best_distance = distance;
+      idx = i;
+    }
+  }
+
+  {
+    uint32_t new_value = predicted_value;
+    AddPixelsEq(&new_value, palette[idx]);
+    if (x > 0) {
+      src[x - 1] = ClampedAddSubtractFullWithCoefficient(
+          src[x - 1], new_value, src[x]);
+    }
+    if (y > 0) {
+      src[x - src_stride] =
+          ClampedAddSubtractFullWithCoefficient(
+              src[x - src_stride], new_value, src[x]);
+    }
+    new_image[x] = new_value;
+  }
+  return idx;
+}
+
+#endif // WEBP_EXPERIMENTAL_FEATURES

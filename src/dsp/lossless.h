@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+#include "../enc/delta_palettization.h"
+#endif  // WEBP_EXPERIMENTAL_FEATURES
+
 // Not a trivial literal symbol.
 #define VP8L_NON_TRIVIAL_SYM (0xffffffff)
 

@@ -48,6 +48,9 @@ int WebPConfigInitInternal(WebPConfig* config,
   config->thread_level = 0;
   config->low_memory = 0;
   config->near_lossless = 100;
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+  config->delta_palettization = 0;
+#endif // WEBP_EXPERIMENTAL_FEATURES
 
   // TODO(skal): tune.
   switch (preset) {
@@ -136,6 +139,10 @@ int WebPValidateConfig(const WebPConfig* config) {
     return 0;
   if (config->low_memory < 0 || config->low_memory > 1)
     return 0;
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+  if (config->delta_palettization < 0 || config->delta_palettization > 1)
+    return 0;
+#endif  // WEBP_EXPERIMENTAL_FEATURES
   return 1;
 }
 

@@ -187,6 +187,7 @@ ENC_OBJS = \
     src/enc/backward_references.o \
     src/enc/config.o \
     src/enc/cost.o \
+    src/enc/delta_palettization.o \
     src/enc/filter.o \
     src/enc/frame.o \
     src/enc/histogram.o \
@@ -272,6 +273,7 @@ HDRS = \
     src/dsp/yuv_tables_sse2.h \
     src/enc/backward_references.h \
     src/enc/cost.h \
+    src/enc/delta_palettization.h \
     src/enc/histogram.h \
     src/enc/vp8enci.h \
     src/enc/vp8li.h \
