@@ -1,0 +1,180 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eb66c411_4ca09f9a",
+        "filename": "src/dsp/rescaler_neon.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-05T23:15:27Z",
+      "side": 1,
+      "message": "swap this and the next",
+      "revId": "46bae86c77a1d515651788b5170f8e92a470f2ba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b7078c2_62a24cf0",
+        "filename": "src/dsp/rescaler_neon.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-05T23:15:27Z",
+      "side": 1,
+      "message": "needed?",
+      "range": {
+        "startLine": 20,
+        "startChar": 10,
+        "endLine": 20,
+        "endChar": 16
+      },
+      "revId": "46bae86c77a1d515651788b5170f8e92a470f2ba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b9c302a_8f90e51b",
+        "filename": "src/dsp/rescaler_neon.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-05T23:15:27Z",
+      "side": 1,
+      "message": "could join this and the next line",
+      "revId": "46bae86c77a1d515651788b5170f8e92a470f2ba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb6900e6_fd827fc4",
+        "filename": "src/dsp/rescaler_neon.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-05T23:15:27Z",
+      "side": 1,
+      "message": "did you try any combination of vmlal_n / vmlal_lane here?",
+      "revId": "46bae86c77a1d515651788b5170f8e92a470f2ba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b6d3ced_00b26a73",
+        "filename": "src/dsp/rescaler_neon.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-05T23:15:27Z",
+      "side": 1,
+      "message": "given it\u0027s in a loop, I wonder if on average loading fy_scale to a vector will do better (and avoid the unneeded doubling). is the rounding form needed here?",
+      "revId": "46bae86c77a1d515651788b5170f8e92a470f2ba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ba1f45d_c20806f6",
+        "filename": "src/dsp/rescaler_neon.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-05T23:15:27Z",
+      "side": 1,
+      "message": "do you need the saturate here?",
+      "revId": "46bae86c77a1d515651788b5170f8e92a470f2ba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab976c01_a795c8af",
+        "filename": "src/dsp/rescaler_neon.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-05T23:15:27Z",
+      "side": 1,
+      "message": "can vmlsl be used here?",
+      "revId": "46bae86c77a1d515651788b5170f8e92a470f2ba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ba1f45d_a2561ae9",
+        "filename": "src/dsp/rescaler_neon.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-05T23:15:27Z",
+      "side": 1,
+      "message": "this and the (void)s seem out of date",
+      "revId": "46bae86c77a1d515651788b5170f8e92a470f2ba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab976c01_c739f476",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-05T23:15:27Z",
+      "side": 1,
+      "message": "could be a separate change",
+      "revId": "46bae86c77a1d515651788b5170f8e92a470f2ba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab976c01_a73ce867",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-05T23:15:27Z",
+      "side": 1,
+      "message": "indent",
+      "revId": "46bae86c77a1d515651788b5170f8e92a470f2ba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
