@@ -70,8 +70,15 @@ static WEBP_INLINE void ProcessRow(const __m128i* const A0,
   const __m128i C3 = _mm_add_epi64(B3, rounder);
   const __m128i D0 = _mm_srli_epi64(C0, WEBP_RESCALER_RFIX);
   const __m128i D1 = _mm_srli_epi64(C1, WEBP_RESCALER_RFIX);
+#if (WEBP_RESCALER_FIX < 32)
+  const __m128i D2 =
+      _mm_and_si128(_mm_slli_epi64(C2, 32 - WEBP_RESCALER_RFIX), mask);
+  const __m128i D3 =
+      _mm_and_si128(_mm_slli_epi64(C3, 32 - WEBP_RESCALER_RFIX), mask);
+#else
   const __m128i D2 = _mm_and_si128(C2, mask);
   const __m128i D3 = _mm_and_si128(C3, mask);
+#endif
   const __m128i E0 = _mm_or_si128(D0, D2);
   const __m128i E1 = _mm_or_si128(D1, D3);
   const __m128i F = _mm_packs_epi32(E0, E1);

@@ -8,6 +8,8 @@
 // -----------------------------------------------------------------------------
 //
 // Rescaling functions
+//
+// Author: Skal (pascal.massimino@gmail.com)
 
 #include <assert.h>
 
@@ -197,6 +199,7 @@ WebPRescalerExportRowFunc WebPRescalerExportRowShrink;
 extern void WebPRescalerDspInitSSE2(void);
 extern void WebPRescalerDspInitMIPS32(void);
 extern void WebPRescalerDspInitMIPSdspR2(void);
+extern void WebPRescalerDspInitNEON(void);
 
 static volatile VP8CPUInfo rescaler_last_cpuinfo_used =
     (VP8CPUInfo)&rescaler_last_cpuinfo_used;
@@ -213,6 +216,11 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInit(void) {
 #if defined(WEBP_USE_SSE2)
     if (VP8GetCPUInfo(kSSE2)) {
       WebPRescalerDspInitSSE2();
+    }
+#endif
+#if defined(WEBP_USE_NEON)
+    if (VP8GetCPUInfo(kNEON)) {
+      WebPRescalerDspInitNEON();
     }
 #endif
 #if defined(WEBP_USE_MIPS32)
