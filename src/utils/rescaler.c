@@ -48,9 +48,16 @@ void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
   wrk->y_sub = wrk->y_expand ? y_sub - 1 : y_sub;
   wrk->y_accum = wrk->y_expand ? wrk->y_sub : wrk->y_add;
   if (!wrk->y_expand) {
-    // note the very special case where x_add = y_add = 1 cannot be represented.
-    // We special-case fxy_scale = 0 in this case, in WebPRescalerExportRow().
-    wrk->fxy_scale = WEBP_RESCALER_FRAC(dst_height, wrk->x_add * wrk->y_add);
+    // this is WEBP_RESCALER_FRAC(dst_height, x_add * y_add) without the cast.
+    const uint64_t ratio =
+        (uint64_t)dst_height * WEBP_RESCALER_ONE / (wrk->x_add * wrk->y_add);
+    if (ratio != (uint32_t)ratio) {
+      // We can't represent the ratio with the current fixed-point precision.
+      // => We special-case fxy_scale = 0, in WebPRescalerExportRow().
+      wrk->fxy_scale = 0;
+    } else {
+      wrk->fxy_scale = (uint32_t)ratio;
+    }
     wrk->fy_scale = WEBP_RESCALER_FRAC(1, wrk->y_sub);
   } else {
     wrk->fy_scale = WEBP_RESCALER_FRAC(1, wrk->x_add);
