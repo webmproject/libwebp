@@ -161,6 +161,24 @@
     },
     {
       "key": {
+        "uuid": "957f26e6_2d3c99f6",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-10-06T07:16:45Z",
+      "side": 1,
+      "message": "actually, this test is wrong. Should be \"\u003c\u003d 1\". Will send a separate patch.-\u003e  https://chromium-review.googlesource.com/303604",
+      "parentUuid": "ab976c01_c739f476",
+      "revId": "46bae86c77a1d515651788b5170f8e92a470f2ba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ab976c01_a73ce867",
         "filename": "src/utils/rescaler.c",
         "patchSetId": 5
