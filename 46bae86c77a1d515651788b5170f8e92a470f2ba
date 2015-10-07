@@ -136,6 +136,24 @@
     },
     {
       "key": {
+        "uuid": "70700519_64030a55",
+        "filename": "src/dsp/rescaler_neon.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-10-07T10:08:31Z",
+      "side": 1,
+      "message": "good idea! works better with vmlal_n_u32",
+      "parentUuid": "cb6900e6_fd827fc4",
+      "revId": "46bae86c77a1d515651788b5170f8e92a470f2ba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2b6d3ced_00b26a73",
         "filename": "src/dsp/rescaler_neon.c",
         "patchSetId": 5
@@ -147,6 +165,24 @@
       "writtenOn": "2015-10-05T23:15:27Z",
       "side": 1,
       "message": "given it\u0027s in a loop, I wonder if on average loading fy_scale to a vector will do better (and avoid the unneeded doubling). is the rounding form needed here?",
+      "revId": "46bae86c77a1d515651788b5170f8e92a470f2ba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "109d0970_d1f1e4c7",
+        "filename": "src/dsp/rescaler_neon.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-10-07T10:08:31Z",
+      "side": 1,
+      "message": "rounding is needed yes, to match the MULT_FIX_C version.\n\n-\u003e switched to some fy_scale vector. Speed seems equivalent, but it\u0027s cleaner.",
+      "parentUuid": "2b6d3ced_00b26a73",
       "revId": "46bae86c77a1d515651788b5170f8e92a470f2ba",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -199,6 +235,24 @@
       "writtenOn": "2015-10-05T23:15:27Z",
       "side": 1,
       "message": "can vmlsl be used here?",
+      "revId": "46bae86c77a1d515651788b5170f8e92a470f2ba",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90ec99cf_2d42ad7b",
+        "filename": "src/dsp/rescaler_neon.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-10-07T10:08:31Z",
+      "side": 1,
+      "message": "we\u0027d miss the descale + rounding",
+      "parentUuid": "ab976c01_a795c8af",
       "revId": "46bae86c77a1d515651788b5170f8e92a470f2ba",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
