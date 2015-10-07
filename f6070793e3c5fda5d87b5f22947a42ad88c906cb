@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b0435d80_672a00b5",
+        "filename": "src/utils/rescaler.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-07T07:21:48Z",
+      "side": 1,
+      "message": "casting back up isn\u0027t necessary",
+      "revId": "f6070793e3c5fda5d87b5f22947a42ad88c906cb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
