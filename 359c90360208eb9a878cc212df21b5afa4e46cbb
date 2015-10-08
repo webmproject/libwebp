@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "70700519_e41e1a29",
+        "filename": "src/dsp/rescaler_neon.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-10-08T04:19:59Z",
+      "side": 1,
+      "message": "extra \\n",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 0
+      },
+      "revId": "359c90360208eb9a878cc212df21b5afa4e46cbb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70700519_c4211e6e",
+        "filename": "src/dsp/rescaler_neon.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-10-08T04:19:59Z",
+      "side": 1,
+      "message": "extra \\n",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 74,
+        "endChar": 0
+      },
+      "revId": "359c90360208eb9a878cc212df21b5afa4e46cbb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
