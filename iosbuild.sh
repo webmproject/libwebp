@@ -41,6 +41,8 @@ LIBLIST=''
 if [[ -z "${SDK}" ]]; then
   echo "iOS SDK not available"
   exit 1
+elif [[ ${SDK%%.*} -gt 8 ]]; then
+  EXTRA_CFLAGS="-fembed-bitcode"
 elif [[ ${SDK} < 6.0 ]]; then
   echo "You need iOS SDK version 6.0 or above"
   exit 1
@@ -94,7 +96,7 @@ for PLATFORM in ${PLATFORMS}; do
   SDKROOT="${PLATFORMSROOT}/"
   SDKROOT+="${PLATFORM}.platform/Developer/SDKs/${PLATFORM}${SDK}.sdk/"
   CFLAGS="-arch ${ARCH2:-${ARCH}} -pipe -isysroot ${SDKROOT} -O3 -DNDEBUG"
-  CFLAGS+=" -miphoneos-version-min=6.0"
+  CFLAGS+=" -miphoneos-version-min=6.0 ${EXTRA_CFLAGS}"
 
   set -x
   export PATH="${DEVROOT}/usr/bin:${OLDPATH}"
