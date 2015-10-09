@@ -73,6 +73,12 @@ WEBP_DEFINE_GUID(GUID_WICPixelFormat32bppBGRA_,
 WEBP_DEFINE_GUID(GUID_WICPixelFormat32bppRGBA_,
                  0xf5c7ad2d, 0x6a8d, 0x43dd,
                  0xa7, 0xa8, 0xa2, 0x99, 0x35, 0x26, 0x1a, 0xe9);
+WEBP_DEFINE_GUID(GUID_WICPixelFormat64bppBGRA_,
+                 0x1562ff7c, 0xd352, 0x46f9,
+                 0x97, 0x9e, 0x42, 0x97, 0x6b, 0x79, 0x22, 0x46);
+WEBP_DEFINE_GUID(GUID_WICPixelFormat64bppRGBA_,
+                 0x6fddc324, 0x4e03, 0x4bfe,
+                 0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x16);
 
 static HRESULT OpenInputStream(const char* filename, IStream** stream) {
   HRESULT hr = S_OK;
@@ -196,7 +202,11 @@ static int HasAlpha(IWICImagingFactory* const factory,
     has_alpha = IsEqualGUID(MAKE_REFGUID(pixel_format),
                             MAKE_REFGUID(GUID_WICPixelFormat32bppRGBA_)) ||
                 IsEqualGUID(MAKE_REFGUID(pixel_format),
-                            MAKE_REFGUID(GUID_WICPixelFormat32bppBGRA_));
+                            MAKE_REFGUID(GUID_WICPixelFormat32bppBGRA_)) ||
+                IsEqualGUID(MAKE_REFGUID(pixel_format),
+                            MAKE_REFGUID(GUID_WICPixelFormat64bppRGBA_)) ||
+                IsEqualGUID(MAKE_REFGUID(pixel_format),
+                            MAKE_REFGUID(GUID_WICPixelFormat64bppBGRA_));
   }
   return has_alpha;
 }
