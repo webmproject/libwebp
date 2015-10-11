@@ -37,11 +37,9 @@ static void RescalerImportRowShrinkSSE2(WebPRescaler* const wrk,
   rescaler_t* frow = wrk->frow;
   const rescaler_t* const frow_end = wrk->frow + 4 * wrk->dst_width;
 
-  if (wrk->num_channels != 4) {
-    return WebPRescalerImportRowShrinkC(wrk, src);
-  }
-  if (wrk->x_add > (x_sub << 7)) {
-    return WebPRescalerImportRowShrinkC(wrk, src);
+  if (wrk->num_channels != 4 || wrk->x_add > (x_sub << 7)) {
+    WebPRescalerImportRowShrinkC(wrk, src);
+    return;
   }
   assert(!WebPRescalerInputDone(wrk));
   assert(!wrk->x_expand);
