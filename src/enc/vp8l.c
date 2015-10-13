@@ -1046,42 +1046,6 @@ static WebPEncodingError ApplyCrossColorFilter(const VP8LEncoder* const enc,
                               quality);
 }
 
-
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-
-static WebPEncodingError ApplyDeltaPalette(uint32_t* src, uint32_t* dst,
-                                           uint32_t src_stride,
-                                           uint32_t dst_stride,
-                                           const uint32_t* palette,
-                                           int palette_size,
-                                           int width, int height,
-                                           int xbits, uint8_t* row,
-                                           int num_passes) {
-  int x, y;
-  WebPEncodingError err = VP8_ENC_OK;
-  uint32_t* new_image = (uint32_t*)WebPSafeMalloc(width, sizeof(*new_image));
-  if (new_image == NULL) return VP8_ENC_ERROR_OUT_OF_MEMORY;
-
-  while (num_passes--) {
-    uint32_t* cur_src = src;
-    uint32_t* cur_dst = dst;
-    for (y = 0; y < height; ++y) {
-      for (x = 0; x < width; ++x) {
-        row[x] = FindBestPaletteEntry(x, y, palette, palette_size, cur_src,
-                                      src_stride, new_image);
-      }
-      VP8LBundleColorMap(row, width, xbits, cur_dst);
-      cur_src += src_stride;
-      cur_dst += dst_stride;
-    }
-  }
-
-  WebPSafeFree(new_image);
-  return err;
-}
-
-#endif // WEBP_EXPERIMENTAL_FEATURES
-
 // -----------------------------------------------------------------------------
 
 static WebPEncodingError WriteRiffHeader(const WebPPicture* const pic,
@@ -1151,15 +1115,21 @@ static WebPEncodingError WriteImage(const WebPPicture* const pic,
 
 // Allocates the memory for argb (W x H) buffer, 2 rows of context for
 // prediction and transform data.
+// Flags influencing the memory allocated:
+//  enc->transform_bits_
+//  enc->use_predict_, enc->use_cross_color_
 static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
                                                  int width, int height) {
   WebPEncodingError err = VP8_ENC_OK;
+  if (enc->argb_ == NULL) {
   const int tile_size = 1 << enc->transform_bits_;
   const uint64_t image_size = width * height;
-  const uint64_t argb_scratch_size = tile_size * width + width;
+    const uint64_t argb_scratch_size =
+        enc->use_predict_ ? tile_size * width + width : 0;
   const int transform_data_size =
+        (enc->use_predict_ || enc->use_cross_color_) ?
       VP8LSubSampleSize(width, enc->transform_bits_) *
-      VP8LSubSampleSize(height, enc->transform_bits_);
+            VP8LSubSampleSize(height, enc->transform_bits_) : 0;
   const uint64_t total_size =
       image_size + argb_scratch_size + (uint64_t)transform_data_size;
   uint32_t* mem = (uint32_t*)WebPSafeMalloc(total_size, sizeof(*mem));
@@ -1167,16 +1137,41 @@ static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
+    // TODO(skal): align
   enc->argb_ = mem;
   mem += image_size;
   enc->argb_scratch_ = mem;
   mem += argb_scratch_size;
   enc->transform_data_ = mem;
   enc->current_width_ = width;
-
+  }
  Error:
   return err;
 }
+
+static void ClearTransformBuffer(VP8LEncoder* const enc) {
+  WebPSafeFree(enc->argb_);
+  enc->argb_ = NULL;
+}
+
+static WebPEncodingError MakeInputImageCopy(VP8LEncoder* const enc) {
+  WebPEncodingError err = VP8_ENC_OK;
+  const WebPPicture* const picture = enc->pic_;
+  const int width = picture->width;
+  const int height = picture->height;
+  int y;
+  err = AllocateTransformBuffer(enc, width, height);
+  if (err != VP8_ENC_OK) return err;
+  for (y = 0; y < height; ++y) {
+    memcpy(enc->argb_ + y * width,
+           picture->argb + y * picture->argb_stride,
+           width * sizeof(*enc->argb_));
+  }
+  assert(enc->current_width_ == width);
+  return VP8_ENC_OK;
+}
+
+// -----------------------------------------------------------------------------
 
 static void MapToPalette(const uint32_t palette[], int num_colors,
                          uint32_t* const last_pix, int* const last_idx,
@@ -1202,12 +1197,21 @@ static void MapToPalette(const uint32_t palette[], int num_colors,
   *last_pix = prev_pix;
 }
 
-static void ApplyPalette(uint32_t* src, uint32_t* dst,
-                         uint32_t src_stride, uint32_t dst_stride,
+// Remap argb values in src[] to packed palettes entries in dst[]
+// using 'row' as a temporary buffer of size 'width'.
+// We assume that all src[] values have a corresponding entry in the palette.
+// Note: src[] can be the same as dst[]
+static WebPEncodingError ApplyPalette(const uint32_t* src, uint32_t src_stride,
+                                      uint32_t* dst, uint32_t dst_stride,
                          const uint32_t* palette, int palette_size,
-                         int width, int height, int xbits, uint8_t* row) {
+                                      int width, int height, int xbits) {
+  // TODO(skal): this tmp buffer is not needed if VP8LBundleColorMap() can be
+  // made to work in-place.
+  uint8_t* const tmp_row = (uint8_t*)WebPSafeMalloc(width, sizeof(*tmp_row));
   int i, x, y;
   int use_LUT = 1;
+
+  if (tmp_row == NULL) return VP8_ENC_ERROR_OUT_OF_MEMORY;
   for (i = 0; i < palette_size; ++i) {
     if ((palette[i] & 0xffff00ffu) != 0) {
       use_LUT = 0;
@@ -1224,9 +1228,9 @@ static void ApplyPalette(uint32_t* src, uint32_t* dst,
     for (y = 0; y < height; ++y) {
       for (x = 0; x < width; ++x) {
         const int color = (src[x] >> 8) & 0xff;
-        row[x] = inv_palette[color];
+        tmp_row[x] = inv_palette[color];
       }
-      VP8LBundleColorMap(row, width, xbits, dst);
+      VP8LBundleColorMap(tmp_row, width, xbits, dst);
       src += src_stride;
       dst += dst_stride;
     }
@@ -1236,35 +1240,28 @@ static void ApplyPalette(uint32_t* src, uint32_t* dst,
     int last_idx = 0;
     for (y = 0; y < height; ++y) {
       MapToPalette(palette, palette_size, &last_pix, &last_idx,
-                   src, row, width);
-      VP8LBundleColorMap(row, width, xbits, dst);
+                   src, tmp_row, width);
+      VP8LBundleColorMap(tmp_row, width, xbits, dst);
       src += src_stride;
       dst += dst_stride;
     }
   }
+  WebPSafeFree(tmp_row);
+  return VP8_ENC_OK;
 }
 
 // Note: Expects "enc->palette_" to be set properly.
-// Also, "enc->palette_" will be modified after this call and should not be used
-// later.
-static WebPEncodingError EncodePalette(VP8LBitWriter* const bw,
-                                       VP8LEncoder* const enc,
-                                       int use_delta_palette) {
+static WebPEncodingError MapImageFromPalette(VP8LEncoder* const enc,
+                                             int in_place) {
   WebPEncodingError err = VP8_ENC_OK;
-  int i;
   const WebPPicture* const pic = enc->pic_;
-  uint32_t* src = pic->argb;
-  uint32_t* dst;
   const int width = pic->width;
   const int height = pic->height;
-  uint32_t* const palette = enc->palette_;
+  const uint32_t* const palette = enc->palette_;
+  const uint32_t* src = in_place ? enc->argb_ : pic->argb;
+  const int src_stride = in_place ? enc->current_width_ : pic->argb_stride;
   const int palette_size = enc->palette_size_;
-  uint8_t* row = NULL;
   int xbits;
-
-#ifndef WEBP_EXPERIMENTAL_FEATURES
-  (void)use_delta_palette;
-#endif  // WEBP_EXPERIMENTAL_FEATURES
 
   // Replace each input pixel by corresponding palette index.
   // This is done line by line.
@@ -1275,54 +1272,45 @@ static WebPEncodingError EncodePalette(VP8LBitWriter* const bw,
   }
 
   err = AllocateTransformBuffer(enc, VP8LSubSampleSize(width, xbits), height);
-  if (err != VP8_ENC_OK) goto Error;
-  dst = enc->argb_;
+  if (err != VP8_ENC_OK) return err;
 
-  row = (uint8_t*)WebPSafeMalloc(width, sizeof(*row));
-  if (row == NULL) return VP8_ENC_ERROR_OUT_OF_MEMORY;
+  err = ApplyPalette(src, src_stride,
+                     enc->argb_, enc->current_width_,
+                     palette, palette_size, width, height, xbits);
+  return err;
+}
 
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  if (use_delta_palette) {
-    ApplyDeltaPalette(src, dst, pic->argb_stride, enc->current_width_,
-                      palette, palette_size, width, height, xbits, row, 2);
-  } else {
-#endif  // WEBP_EXPERIMENTAL_FEATURES
-    ApplyPalette(src, dst, pic->argb_stride, enc->current_width_,
-                 palette, palette_size, width, height, xbits, row);
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  }
-#endif  // WEBP_EXPERIMENTAL_FEATURES
-
-  // Save palette to bitstream.
+// Save palette_[] to bitstream.
+static WebPEncodingError EncodePalette(VP8LBitWriter* const bw,
+                                       VP8LEncoder* const enc) {
+  int i;
+  uint32_t tmp_palette[MAX_PALETTE_SIZE];
+  const int palette_size = enc->palette_size_;
+  const uint32_t* const palette = enc->palette_;
   VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
   VP8LPutBits(bw, COLOR_INDEXING_TRANSFORM, 2);
-  assert(palette_size >= 1);
+  assert(palette_size >= 1 && palette_size <= MAX_PALETTE_SIZE);
   VP8LPutBits(bw, palette_size - 1, 8);
   for (i = palette_size - 1; i >= 1; --i) {
-    palette[i] = VP8LSubPixels(palette[i], palette[i - 1]);
+    tmp_palette[i] = VP8LSubPixels(palette[i], palette[i - 1]);
   }
-  err = EncodeImageNoHuffman(bw, palette, &enc->hash_chain_, enc->refs_,
+  tmp_palette[0] = palette[0];
+  return EncodeImageNoHuffman(bw, tmp_palette, &enc->hash_chain_, enc->refs_,
                              palette_size, 1, 20 /* quality */);
- Error:
-  WebPSafeFree(row);
-  return err;
 }
 
 #ifdef WEBP_EXPERIMENTAL_FEATURES
 
-static WebPEncodingError EncodeDeltaPalettizedImage(VP8LBitWriter* const bw,
-                                                    VP8LEncoder* const enc,
-                                                    int quality) {
+static WebPEncodingError EncodeDeltaPalettePredictorImage(
+    VP8LBitWriter* const bw, VP8LEncoder* const enc, int quality) {
   const WebPPicture* const pic = enc->pic_;
-  uint32_t* src = pic->argb;
   const int width = pic->width;
   const int height = pic->height;
-  uint8_t* row = NULL;
 
   const int pred_bits = 5;
   const int transform_width = VP8LSubSampleSize(width, pred_bits);
   const int transform_height = VP8LSubSampleSize(height, pred_bits);
-  const int pred = 7;
+  const int pred = 7;   // default is Predictor7 (Top/Left Average)
   const int tiles_per_row = VP8LSubSampleSize(width, pred_bits);
   const int tiles_per_col = VP8LSubSampleSize(height, pred_bits);
   uint32_t* predictors;
@@ -1331,10 +1319,7 @@ static WebPEncodingError EncodeDeltaPalettizedImage(VP8LBitWriter* const bw,
 
   predictors = (uint32_t*)WebPSafeMalloc(tiles_per_col * tiles_per_row,
                                          sizeof(*predictors));
-  if (predictors == NULL) {
-    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
-    goto Error;
-  }
+  if (predictors == NULL) return VP8_ENC_ERROR_OUT_OF_MEMORY;
 
   for (tile_y = 0; tile_y < tiles_per_col; ++tile_y) {
     for (tile_x = 0; tile_x < tiles_per_row; ++tile_x) {
@@ -1349,15 +1334,6 @@ static WebPEncodingError EncodeDeltaPalettizedImage(VP8LBitWriter* const bw,
                              (VP8LBackwardRefs*)enc->refs_,  // cast const away
                              transform_width, transform_height,
                              quality);
-  if (err != VP8_ENC_OK) goto Error;
-
-  memcpy(enc->palette_, kDeltaPalette, sizeof(kDeltaPalette));
-  enc->palette_[DELTA_PALETTE_SIZE - 1] = src[0] - 0xff000000u;
-  enc->palette_size_ = DELTA_PALETTE_SIZE;
-  EncodePalette(bw, enc, 1);
-
- Error:
-  WebPSafeFree(row);
   WebPSafeFree(predictors);
   return err;
 }
@@ -1387,7 +1363,7 @@ static void VP8LEncoderDelete(VP8LEncoder* enc) {
     VP8LHashChainClear(&enc->hash_chain_);
     VP8LBackwardRefsClear(&enc->refs_[0]);
     VP8LBackwardRefsClear(&enc->refs_[1]);
-    WebPSafeFree(enc->argb_);
+    ClearTransformBuffer(enc);
     WebPSafeFree(enc);
   }
 }
@@ -1408,6 +1384,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   int use_near_lossless = 0;
   int hdr_size = 0;
   int data_size = 0;
+  int use_delta_palettization = 0;
 
   if (enc == NULL) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
@@ -1438,26 +1415,32 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
     enc->use_cross_color_ = 0;
     enc->use_subtract_green_ = 0;
     enc->use_palette_ = 1;
-    EncodeDeltaPalettizedImage(bw, enc, quality);
-  } else {
-#endif  // WEBP_EXPERIMENTAL_FEATURES
+    err = MakeInputImageCopy(enc);
+    if (err != VP8_ENC_OK) goto Error;
+    err = WebPSearchOptimalDeltaPalette(enc);
+    if (err != VP8_ENC_OK) goto Error;
     if (enc->use_palette_) {
-      err = EncodePalette(bw, enc, 0);
-      if (err != VP8_ENC_OK) goto Error;
-    }
-
-    // In case image is not packed.
-    if (enc->argb_ == NULL) {
-      int y;
       err = AllocateTransformBuffer(enc, width, height);
       if (err != VP8_ENC_OK) goto Error;
-      assert(enc->argb_ != NULL);
-      for (y = 0; y < height; ++y) {
-        memcpy(enc->argb_ + y * width,
-               picture->argb + y * picture->argb_stride,
-               width * sizeof(*enc->argb_));
-      }
-      enc->current_width_ = width;
+      err = EncodeDeltaPalettePredictorImage(bw, enc, quality);
+      if (err != VP8_ENC_OK) goto Error;
+      use_delta_palettization = 1;
+    }
+  }
+#endif  // WEBP_EXPERIMENTAL_FEATURES
+
+  // Encode palette
+  if (enc->use_palette_) {
+    err = EncodePalette(bw, enc);
+    if (err != VP8_ENC_OK) goto Error;
+    err = MapImageFromPalette(enc, use_delta_palettization);
+    if (err != VP8_ENC_OK) goto Error;
+  }
+  if (!use_delta_palettization) {
+    // In case image is not packed.
+    if (enc->argb_ == NULL) {
+      err = MakeInputImageCopy(enc);
+      if (err != VP8_ENC_OK) goto Error;
     }
 
     // -------------------------------------------------------------------------
@@ -1478,9 +1461,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
                                   height, quality, bw);
       if (err != VP8_ENC_OK) goto Error;
     }
-#ifdef WEBP_EXPERIMENTAL_FEATURES
   }
-#endif // WEBP_EXPERIMENTAL_FEATURES
 
   VP8LPutBits(bw, !TRANSFORM_PRESENT, 1);  // No more transforms.
 
