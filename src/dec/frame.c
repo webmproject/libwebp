@@ -15,9 +15,6 @@
 #include "./vp8i.h"
 #include "../utils/utils.h"
 
-#define ALIGN_CST (32 - 1)
-#define DO_ALIGN(PTR) ((uintptr_t)((PTR) + ALIGN_CST) & ~ALIGN_CST)
-
 //------------------------------------------------------------------------------
 // Main reconstruction function.
 
@@ -724,7 +721,7 @@ static int AllocateMemory(VP8Decoder* const dec) {
   const uint64_t needed = (uint64_t)intra_pred_mode_size
                         + top_size + mb_info_size + f_info_size
                         + yuv_size + mb_data_size
-                        + cache_size + alpha_size + ALIGN_CST;
+                        + cache_size + alpha_size + WEBP_ALIGN_CST;
   uint8_t* mem;
 
   if (needed != (size_t)needed) return 0;  // check for overflow
@@ -761,8 +758,8 @@ static int AllocateMemory(VP8Decoder* const dec) {
     dec->thread_ctx_.f_info_ += mb_w;
   }
 
-  mem = (uint8_t*)DO_ALIGN(mem);
-  assert((yuv_size & ALIGN_CST) == 0);
+  mem = (uint8_t*)WEBP_ALIGN(mem);
+  assert((yuv_size & WEBP_ALIGN_CST) == 0);
   dec->yuv_b_ = (uint8_t*)mem;
   mem += yuv_size;
 

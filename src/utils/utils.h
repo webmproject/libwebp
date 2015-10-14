@@ -46,7 +46,7 @@ WEBP_EXTERN(void) WebPSafeFree(void* const ptr);
 //------------------------------------------------------------------------------
 // Alignment
 
-#define WEBP_ALIGN_CST 15
+#define WEBP_ALIGN_CST 31
 #define WEBP_ALIGN(PTR) ((uintptr_t)((PTR) + WEBP_ALIGN_CST) & ~WEBP_ALIGN_CST)
 
 //------------------------------------------------------------------------------
