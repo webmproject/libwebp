@@ -70,13 +70,13 @@ void VP8IteratorInit(VP8Encoder* const enc, VP8EncIterator* const it) {
   it->enc_ = enc;
   it->y_stride_  = enc->pic_->y_stride;
   it->uv_stride_ = enc->pic_->uv_stride;
-  it->yuv_in_   = (uint8_t*)DO_ALIGN(it->yuv_mem_);
+  it->yuv_in_   = (uint8_t*)WEBP_ALIGN(it->yuv_mem_);
   it->yuv_out_  = it->yuv_in_ + YUV_SIZE_ENC;
   it->yuv_out2_ = it->yuv_out_ + YUV_SIZE_ENC;
   it->yuv_p_    = it->yuv_out2_ + YUV_SIZE_ENC;
   it->lf_stats_ = enc->lf_stats_;
   it->percent0_ = enc->percent_;
-  it->y_left_ = (uint8_t*)DO_ALIGN(it->yuv_left_mem_ + 1);
+  it->y_left_ = (uint8_t*)WEBP_ALIGN(it->yuv_left_mem_ + 1);
   it->u_left_ = it->y_left_ + 16 + 16;
   it->v_left_ = it->u_left_ + 16;
   VP8IteratorReset(it);

@@ -19,6 +19,7 @@
 #include "../dsp/dsp.h"
 #include "../utils/bit_writer.h"
 #include "../utils/thread.h"
+#include "../utils/utils.h"
 #include "../webp/encode.h"
 
 #ifdef WEBP_EXPERIMENTAL_FEATURES
@@ -77,9 +78,6 @@ typedef enum {   // Rate-distortion optimization levels
 #define Y_OFF_ENC    (0)
 #define U_OFF_ENC    (16)
 #define V_OFF_ENC    (16 + 8)
-
-#define ALIGN_CST 15
-#define DO_ALIGN(PTR) ((uintptr_t)((PTR) + ALIGN_CST) & ~ALIGN_CST)
 
 extern const int VP8Scan[16];           // in quant.c
 extern const int VP8UVModeOffsets[4];   // in analyze.c
@@ -254,9 +252,9 @@ typedef struct {
   uint8_t* uv_top_;    // top u/v samples at position 'x_', packed as 16 bytes
 
   // memory for storing y/u/v_left_
-  uint8_t yuv_left_mem_[17 + 16 + 16 + 8 + ALIGN_CST];
+  uint8_t yuv_left_mem_[17 + 16 + 16 + 8 + WEBP_ALIGN_CST];
   // memory for yuv_*
-  uint8_t yuv_mem_[3 * YUV_SIZE_ENC + PRED_SIZE_ENC + ALIGN_CST];
+  uint8_t yuv_mem_[3 * YUV_SIZE_ENC + PRED_SIZE_ENC + WEBP_ALIGN_CST];
 } VP8EncIterator;
 
   // in iterator.c

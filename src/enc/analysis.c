@@ -405,8 +405,8 @@ typedef struct {
 static int DoSegmentsJob(SegmentJob* const job, VP8EncIterator* const it) {
   int ok = 1;
   if (!VP8IteratorIsDone(it)) {
-    uint8_t tmp[32 + ALIGN_CST];
-    uint8_t* const scratch = (uint8_t*)DO_ALIGN(tmp);
+    uint8_t tmp[32 + WEBP_ALIGN_CST];
+    uint8_t* const scratch = (uint8_t*)WEBP_ALIGN(tmp);
     do {
       // Let's pretend we have perfect lossless reconstruction.
       VP8IteratorImport(it, scratch);

@@ -20,9 +20,6 @@
 #include "../dsp/lossless.h"
 #include "../utils/utils.h"
 
-#define ALIGN_CST 15
-#define DO_ALIGN(PTR) ((uintptr_t)((PTR) + ALIGN_CST) & ~ALIGN_CST)
-
 #define MAX_COST 1.e38
 
 // Number of partitions for the three dominant (literal, red and blue) symbol
@@ -115,7 +112,8 @@ VP8LHistogramSet* VP8LAllocateHistogramSet(int size, int cache_bits) {
   VP8LHistogramSet* set;
   const int histo_size = VP8LGetHistogramSize(cache_bits);
   const size_t total_size =
-      sizeof(*set) + size * (sizeof(*set->histograms) + histo_size + ALIGN_CST);
+      sizeof(*set) + size * (sizeof(*set->histograms) +
+      histo_size + WEBP_ALIGN_CST);
   uint8_t* memory = (uint8_t*)WebPSafeMalloc(total_size, sizeof(*memory));
   if (memory == NULL) return NULL;
 
@@ -126,7 +124,7 @@ VP8LHistogramSet* VP8LAllocateHistogramSet(int size, int cache_bits) {
   set->max_size = size;
   set->size = size;
   for (i = 0; i < size; ++i) {
-    memory = (uint8_t*)DO_ALIGN(memory);
+    memory = (uint8_t*)WEBP_ALIGN(memory);
     set->histograms[i] = (VP8LHistogram*)memory;
     // literal_ won't necessary be aligned.
     set->histograms[i]->literal_ = (uint32_t*)(memory + sizeof(VP8LHistogram));

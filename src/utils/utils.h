@@ -44,6 +44,12 @@ WEBP_EXTERN(void*) WebPSafeCalloc(uint64_t nmemb, size_t size);
 WEBP_EXTERN(void) WebPSafeFree(void* const ptr);
 
 //------------------------------------------------------------------------------
+// Alignment
+
+#define WEBP_ALIGN_CST 15
+#define WEBP_ALIGN(PTR) ((uintptr_t)((PTR) + WEBP_ALIGN_CST) & ~WEBP_ALIGN_CST)
+
+//------------------------------------------------------------------------------
 // Reading/writing data.
 
 // Read 16, 24 or 32 bits stored in little-endian order.
