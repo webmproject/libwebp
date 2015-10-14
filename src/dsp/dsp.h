@@ -38,14 +38,9 @@ extern "C" {
 # define LOCAL_GCC_PREREQ(maj, min) 0
 #endif
 
-#ifdef __clang__
-# define LOCAL_CLANG_VERSION ((__clang_major__ << 8) | __clang_minor__)
-# define LOCAL_CLANG_PREREQ(maj, min) \
-    (LOCAL_CLANG_VERSION >= (((maj) << 8) | (min)))
-#else
-# define LOCAL_CLANG_VERSION 0
-# define LOCAL_CLANG_PREREQ(maj, min) 0
-#endif  // __clang__
+#ifndef __has_builtin
+# define __has_builtin(x) 0
+#endif
 
 #if defined(_MSC_VER) && _MSC_VER > 1310 && \
     (defined(_M_X64) || defined(_M_IX86))
