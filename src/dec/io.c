@@ -322,37 +322,31 @@ static int InitYUVRescaler(const VP8Io* const io, WebPDecParams* const p) {
   const size_t work_size = 2 * out_width;   // scratch memory for luma rescaler
   const size_t uv_work_size = 2 * uv_out_width;  // and for each u/v ones
   size_t tmp_size;
-  int32_t* work;
+  rescaler_t* work;
 
   tmp_size = (work_size + 2 * uv_work_size) * sizeof(*work);
   if (has_alpha) {
     tmp_size += work_size * sizeof(*work);
   }
-  p->memory = WebPSafeCalloc(1ULL, tmp_size);
+  p->memory = WebPSafeMalloc(1ULL, tmp_size);
   if (p->memory == NULL) {
     return 0;   // memory error
   }
-  work = (int32_t*)p->memory;
+  work = (rescaler_t*)p->memory;
   WebPRescalerInit(&p->scaler_y, io->mb_w, io->mb_h,
                    buf->y, out_width, out_height, buf->y_stride, 1,
-                   io->mb_w, out_width, io->mb_h, out_height,
                    work);
   WebPRescalerInit(&p->scaler_u, uv_in_width, uv_in_height,
                    buf->u, uv_out_width, uv_out_height, buf->u_stride, 1,
-                   uv_in_width, uv_out_width,
-                   uv_in_height, uv_out_height,
                    work + work_size);
   WebPRescalerInit(&p->scaler_v, uv_in_width, uv_in_height,
                    buf->v, uv_out_width, uv_out_height, buf->v_stride, 1,
-                   uv_in_width, uv_out_width,
-                   uv_in_height, uv_out_height,
                    work + work_size + uv_work_size);
   p->emit = EmitRescaledYUV;
 
   if (has_alpha) {
     WebPRescalerInit(&p->scaler_a, io->mb_w, io->mb_h,
                      buf->a, out_width, out_height, buf->a_stride, 1,
-                     io->mb_w, out_width, io->mb_h, out_height,
                      work + work_size + 2 * uv_work_size);
     p->emit_alpha = EmitRescaledAlphaYUV;
     WebPInitAlphaProcessing();
@@ -375,9 +369,9 @@ static int ExportRGB(WebPDecParams* const p, int y_pos) {
          WebPRescalerHasPendingOutput(&p->scaler_u)) {
     assert(p->last_y + y_pos + num_lines_out < p->output->height);
     assert(p->scaler_u.y_accum == p->scaler_v.y_accum);
-    WebPRescalerExportRow(&p->scaler_y, 0);
-    WebPRescalerExportRow(&p->scaler_u, 0);
-    WebPRescalerExportRow(&p->scaler_v, 0);
+    WebPRescalerExportRow(&p->scaler_y);
+    WebPRescalerExportRow(&p->scaler_u);
+    WebPRescalerExportRow(&p->scaler_v);
     convert(p->scaler_y.dst, p->scaler_u.dst, p->scaler_v.dst,
             dst, p->scaler_y.dst_width);
     dst += buf->stride;
@@ -425,7 +419,7 @@ static int ExportAlpha(WebPDecParams* const p, int y_pos) {
   while (WebPRescalerHasPendingOutput(&p->scaler_a)) {
     int i;
     assert(p->last_y + y_pos + num_lines_out < p->output->height);
-    WebPRescalerExportRow(&p->scaler_a, 0);
+    WebPRescalerExportRow(&p->scaler_a);
     for (i = 0; i < width; ++i) {
       const uint32_t alpha_value = p->scaler_a.dst[i];
       dst[4 * i] = alpha_value;
@@ -458,7 +452,7 @@ static int ExportAlphaRGBA4444(WebPDecParams* const p, int y_pos) {
   while (WebPRescalerHasPendingOutput(&p->scaler_a)) {
     int i;
     assert(p->last_y + y_pos + num_lines_out < p->output->height);
-    WebPRescalerExportRow(&p->scaler_a, 0);
+    WebPRescalerExportRow(&p->scaler_a);
     for (i = 0; i < width; ++i) {
       // Fill in the alpha value (converted to 4 bits).
       const uint32_t alpha_value = p->scaler_a.dst[i] >> 4;
@@ -495,7 +489,7 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
   const int uv_in_width  = (io->mb_w + 1) >> 1;
   const int uv_in_height = (io->mb_h + 1) >> 1;
   const size_t work_size = 2 * out_width;   // scratch memory for one rescaler
-  int32_t* work;  // rescalers work area
+  rescaler_t* work;  // rescalers work area
   uint8_t* tmp;   // tmp storage for scaled YUV444 samples before RGB conversion
   size_t tmp_size1, tmp_size2, total_size;
 
@@ -506,30 +500,26 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
     tmp_size2 += out_width;
   }
   total_size = tmp_size1 * sizeof(*work) + tmp_size2 * sizeof(*tmp);
-  p->memory = WebPSafeCalloc(1ULL, total_size);
+  p->memory = WebPSafeMalloc(1ULL, total_size);
   if (p->memory == NULL) {
     return 0;   // memory error
   }
-  work = (int32_t*)p->memory;
+  work = (rescaler_t*)p->memory;
   tmp = (uint8_t*)(work + tmp_size1);
   WebPRescalerInit(&p->scaler_y, io->mb_w, io->mb_h,
                    tmp + 0 * out_width, out_width, out_height, 0, 1,
-                   io->mb_w, out_width, io->mb_h, out_height,
                    work + 0 * work_size);
   WebPRescalerInit(&p->scaler_u, uv_in_width, uv_in_height,
                    tmp + 1 * out_width, out_width, out_height, 0, 1,
-                   io->mb_w, 2 * out_width, io->mb_h, 2 * out_height,
                    work + 1 * work_size);
   WebPRescalerInit(&p->scaler_v, uv_in_width, uv_in_height,
                    tmp + 2 * out_width, out_width, out_height, 0, 1,
-                   io->mb_w, 2 * out_width, io->mb_h, 2 * out_height,
                    work + 2 * work_size);
   p->emit = EmitRescaledRGB;
 
   if (has_alpha) {
     WebPRescalerInit(&p->scaler_a, io->mb_w, io->mb_h,
                      tmp + 3 * out_width, out_width, out_height, 0, 1,
-                     io->mb_w, out_width, io->mb_h, out_height,
                      work + 3 * work_size);
     p->emit_alpha = EmitRescaledAlphaRGB;
     if (p->output->colorspace == MODE_RGBA_4444 ||

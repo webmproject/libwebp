@@ -21,20 +21,23 @@ extern "C" {
 #include "../webp/types.h"
 
 // Structure used for on-the-fly rescaling
+typedef uint32_t rescaler_t;   // type for side-buffer
 typedef struct {
   int x_expand;               // true if we're expanding in the x direction
+  int y_expand;               // true if we're expanding in the y direction
   int num_channels;           // bytes to jump between pixels
-  int fy_scale, fx_scale;     // fixed-point scaling factor
-  int64_t fxy_scale;          // ''
-  // we need hpel-precise add/sub increments, for the downsampled U/V planes.
+  uint32_t fx_scale;          // fixed-point scaling factors
+  uint32_t fy_scale;          // ''
+  uint32_t fxy_scale;         // ''
   int y_accum;                // vertical accumulator
-  int y_add, y_sub;           // vertical increments (add ~= src, sub ~= dst)
-  int x_add, x_sub;           // horizontal increments (add ~= src, sub ~= dst)
+  int y_add, y_sub;           // vertical increments
+  int x_add, x_sub;           // horizontal increments
   int src_width, src_height;  // source dimensions
   int dst_width, dst_height;  // destination dimensions
+  int src_y, dst_y;           // row counters for input and output
   uint8_t* dst;
   int dst_stride;
-  int32_t* irow, *frow;       // work buffer
+  rescaler_t* irow, *frow;    // work buffer
 } WebPRescaler;
 
 // Initialize a rescaler given scratch area 'work' and dimensions of src & dst.
@@ -43,9 +46,7 @@ void WebPRescalerInit(WebPRescaler* const rescaler,
                       uint8_t* const dst,
                       int dst_width, int dst_height, int dst_stride,
                       int num_channels,
-                      int x_add, int x_sub,
-                      int y_add, int y_sub,
-                      int32_t* const work);
+                      rescaler_t* const work);
 
 // Returns the number of input lines needed next to produce one output line,
 // considering that the maximum available input lines are 'max_num_lines'.
@@ -57,21 +58,29 @@ int WebPRescaleNeededLines(const WebPRescaler* const rescaler,
 int WebPRescalerImport(WebPRescaler* const rescaler, int num_rows,
                        const uint8_t* src, int src_stride);
 
-// Import a row of data and save its contribution in the rescaler.
-// 'channel' denotes the channel number to be imported.
-extern void (*WebPRescalerImportRow)(WebPRescaler* const wrk,
-                                     const uint8_t* const src, int channel);
-// Export one row (starting at x_out position) from rescaler.
-extern void (*WebPRescalerExportRow)(WebPRescaler* const wrk, int x_out);
-
-// Return true if there is pending output rows ready.
-static WEBP_INLINE
-int WebPRescalerHasPendingOutput(const WebPRescaler* const rescaler) {
-  return (rescaler->y_accum <= 0);
-}
-
 // Export as many rows as possible. Return the numbers of rows written.
 int WebPRescalerExport(WebPRescaler* const rescaler);
+void WebPRescalerImportRow(WebPRescaler* const wrk,
+                           const uint8_t* src);
+// Export one row (starting at x_out position) from rescaler.
+void WebPRescalerExportRow(WebPRescaler* const wrk);
+
+// Return true if input is finished
+static WEBP_INLINE
+int WebPRescalerInputDone(const WebPRescaler* const rescaler) {
+  return (rescaler->src_y >= rescaler->src_height);
+}
+// Return true if output is finished
+static WEBP_INLINE
+int WebPRescalerOutputDone(const WebPRescaler* const rescaler) {
+  return (rescaler->dst_y >= rescaler->dst_height);
+}
+
+// Return true if there are pending output rows ready.
+static WEBP_INLINE
+int WebPRescalerHasPendingOutput(const WebPRescaler* const rescaler) {
+  return !WebPRescalerOutputDone(rescaler) && (rescaler->y_accum <= 0);
+}
 
 //------------------------------------------------------------------------------
 
