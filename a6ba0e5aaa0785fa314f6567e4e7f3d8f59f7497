@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df39c202_9bab1cf4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-15T00:47:26Z",
+      "side": 1,
+      "message": "can you mention this improves the fallback support for xcode XXX and add a reference to the libvpx please?",
+      "revId": "a6ba0e5aaa0785fa314f6567e4e7f3d8f59f7497",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
