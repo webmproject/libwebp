@@ -1,3 +1,10 @@
+- 10/15/15: version 0.4.4
+  This is a binary compatible release.
+  * rescaling out-of-bounds read fix (issue #254)
+  * various build fixes and improvements (issues #253, #259, #262, #267, #268)
+  * container documentation update
+  * gif2webp transparency fix (issue #245)
+
 - 3/3/15: version 0.4.3
   This is a binary compatible release.
   * Android / gcc / iOS / MSVS build fixes and improvements
