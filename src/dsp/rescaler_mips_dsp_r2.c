@@ -18,201 +18,284 @@
 #include <assert.h>
 #include "../utils/rescaler.h"
 
-static void ImportRowShrink(WebPRescaler* const wrk, const uint8_t* src) {
-  const int x_stride = wrk->num_channels;
-  const int x_out_max = wrk->dst_width * wrk->num_channels;
-  const int fx_scale = wrk->fx_scale;
-  const int x_add = wrk->x_add;
-  const int x_sub = wrk->x_sub;
-  const int x_stride1 = x_stride << 2;
-  int channel;
-  assert(!wrk->x_expand);
-  assert(!WebPRescalerInputDone(wrk));
+#define ROUNDER (WEBP_RESCALER_ONE >> 1)
+#define MULT_FIX(x, y) (((uint64_t)(x) * (y) + ROUNDER) >> WEBP_RESCALER_RFIX)
 
-  for (channel = 0; channel < x_stride; ++channel) {
-    rescaler_t* frow = wrk->frow + channel;
-    const uint8_t* src1 = src + channel;
-    int temp3;
-    int base, frac, sum;
-    int accum, accum1;
-    int loop_c = x_out_max;
-
-    __asm__ volatile (
-      "li         %[sum],     0                         \n\t"
-      "li         %[accum],   0                         \n\t"
-    "1:                                                 \n\t"
-      "addu       %[accum],   %[accum],   %[x_add]      \n\t"
-      "li         %[base],    0                         \n\t"
-      "blez       %[accum],   3f                        \n\t"
-    "2:                                                 \n\t"
-      "lbu        %[base],    0(%[src1])                \n\t"
-      "subu       %[accum],   %[accum],   %[x_sub]      \n\t"
-      "addu       %[src1],    %[src1],    %[x_stride]   \n\t"
-      "addu       %[sum],     %[sum],     %[base]       \n\t"
-      "bgtz       %[accum],   2b                        \n\t"
-    "3:                                                 \n\t"
-      "negu       %[accum1],  %[accum]                  \n\t"
-      "mul        %[frac],    %[base],    %[accum1]     \n\t"
-      "mul        %[temp3],   %[sum],     %[x_sub]      \n\t"
-      "sll        %[accum1],  %[frac],    1             \n\t"
-      "subu       %[loop_c],  %[loop_c],  %[x_stride]   \n\t"
-      "mulq_rs.w  %[sum],     %[accum1],  %[fx_scale]   \n\t"
-      "subu       %[temp3],   %[temp3],   %[frac]       \n\t"
-      "sw         %[temp3],   0(%[frow])                \n\t"
-      "addu       %[frow],    %[frow],    %[x_stride1]  \n\t"
-      "bgtz       %[loop_c],  1b                        \n\t"
-      : [accum]"=&r"(accum), [src1]"+&r"(src1), [temp3]"=&r"(temp3),
-        [sum]"=&r"(sum), [base]"=&r"(base), [frac]"=&r"(frac),
-        [frow]"+&r"(frow), [accum1]"=&r"(accum1),
-        [loop_c]"+&r"(loop_c)
-      : [x_stride]"r"(x_stride), [fx_scale]"r"(fx_scale), [x_sub]"r"(x_sub),
-        [x_add] "r" (x_add), [x_stride1] "r" (x_stride1)
-      : "memory", "hi", "lo"
-    );
-  }
-}
-
-static void ImportRowExpand(WebPRescaler* const wrk, const uint8_t* src) {
-  const int x_stride = wrk->num_channels;
-  const int x_out_max = wrk->dst_width * wrk->num_channels;
-  const int x_add = wrk->x_add;
-  const int x_sub = wrk->x_sub;
-  const int src_width = wrk->src_width;
-  const int x_stride1 = x_stride << 2;
-  int channel;
-  assert(wrk->x_expand);
-  assert(!WebPRescalerInputDone(wrk));
-
-  for (channel = 0; channel < x_stride; ++channel) {
-    rescaler_t* frow = wrk->frow + channel;
-    const uint8_t* src1 = src + channel;
-    int temp1, temp2, temp3, temp4;
-    int frac;
-    int accum;
-    int x_out = channel;
-
-    __asm__ volatile (
-      "addiu  %[temp3],   %[src_width], -1            \n\t"
-      "lbu    %[temp2],   0(%[src1])                  \n\t"
-      "addu   %[src1],    %[src1],      %[x_stride]   \n\t"
-      "bgtz   %[temp3],   0f                          \n\t"
-      "addiu  %[temp1],   %[temp2],     0             \n\t"
-      "b      3f                                      \n\t"
-    "0:                                               \n\t"
-      "lbu    %[temp1],   0(%[src1])                  \n\t"
-    "3:                                               \n\t"
-      "addiu  %[accum],   %[x_add],     0             \n\t"
-    "1:                                               \n\t"
-      "subu   %[temp3],   %[temp2],     %[temp1]      \n\t"
-      "mul    %[temp3],   %[temp3],     %[accum]      \n\t"
-      "mul    %[temp4],   %[temp1],     %[x_add]      \n\t"
-      "addu   %[temp3],   %[temp4],     %[temp3]      \n\t"
-      "sw     %[temp3],   0(%[frow])                  \n\t"
-      "addu   %[frow],    %[frow],      %[x_stride1]  \n\t"
-      "addu   %[x_out],   %[x_out],     %[x_stride]   \n\t"
-      "subu   %[temp3],   %[x_out],     %[x_out_max]  \n\t"
-      "bgez   %[temp3],   2f                          \n\t"
-      "subu   %[accum],   %[accum],     %[x_sub]      \n\t"
-      "bgez   %[accum],   4f                          \n\t"
-      "addiu  %[temp2],   %[temp1],     0             \n\t"
-      "addu   %[src1],    %[src1],      %[x_stride]   \n\t"
-      "lbu    %[temp1],   0(%[src1])                  \n\t"
-      "addu   %[accum],   %[accum],     %[x_add]      \n\t"
-    "4:                                               \n\t"
-      "b      1b                                      \n\t"
-    "2:                                               \n\t"
-      : [src1] "+r" (src1), [accum] "=&r" (accum), [temp1] "=&r" (temp1),
-        [temp2] "=&r" (temp2), [temp3] "=&r" (temp3), [temp4] "=&r" (temp4),
-        [x_out] "+r" (x_out), [frac] "=&r" (frac), [frow] "+r" (frow)
-      : [x_stride] "r" (x_stride), [x_add] "r" (x_add), [x_sub] "r" (x_sub),
-        [x_stride1] "r" (x_stride1), [src_width] "r" (src_width),
-        [x_out_max] "r" (x_out_max)
-      : "memory", "hi", "lo"
-    );
-  }
-}
+//------------------------------------------------------------------------------
+// Row export
 
 static void ExportRowShrink(WebPRescaler* const wrk) {
+  int i;
+  const int x_out_max = wrk->dst_width * wrk->num_channels;
+  uint8_t* dst = wrk->dst;
+  rescaler_t* irow = wrk->irow;
+  const rescaler_t* frow = wrk->frow;
+  const int yscale = wrk->fy_scale * (-wrk->y_accum);
+  int temp0, temp1, temp2, temp3, temp4, temp5, loop_end;
+  const int temp7 = (int)wrk->fxy_scale;
+  const int temp6 = (x_out_max & ~0x3) << 2;
+  assert(!WebPRescalerOutputDone(wrk));
+  assert(wrk->y_accum <= 0);
+  assert(!wrk->y_expand);
+  assert(wrk->fxy_scale != 0);
+  if (yscale) {
+    if (x_out_max >= 4) {
+      int temp8, temp9, temp10, temp11;
+      __asm__ volatile (
+        "li       %[temp3],    0x10000                    \n\t"
+        "li       %[temp4],    0x8000                     \n\t"
+        "addu     %[loop_end], %[frow],     %[temp6]      \n\t"
+      "1:                                                 \n\t"
+        "lw       %[temp0],    0(%[frow])                 \n\t"
+        "lw       %[temp1],    4(%[frow])                 \n\t"
+        "lw       %[temp2],    8(%[frow])                 \n\t"
+        "lw       %[temp5],    12(%[frow])                \n\t"
+        "mult     $ac0,        %[temp3],    %[temp4]      \n\t"
+        "maddu    $ac0,        %[temp0],    %[yscale]     \n\t"
+        "mult     $ac1,        %[temp3],    %[temp4]      \n\t"
+        "maddu    $ac1,        %[temp1],    %[yscale]     \n\t"
+        "mult     $ac2,        %[temp3],    %[temp4]      \n\t"
+        "maddu    $ac2,        %[temp2],    %[yscale]     \n\t"
+        "mult     $ac3,        %[temp3],    %[temp4]      \n\t"
+        "maddu    $ac3,        %[temp5],    %[yscale]     \n\t"
+        "addiu    %[frow],     %[frow],     16            \n\t"
+        "mfhi     %[temp0],    $ac0                       \n\t"
+        "mfhi     %[temp1],    $ac1                       \n\t"
+        "mfhi     %[temp2],    $ac2                       \n\t"
+        "mfhi     %[temp5],    $ac3                       \n\t"
+        "lw       %[temp8],    0(%[irow])                 \n\t"
+        "lw       %[temp9],    4(%[irow])                 \n\t"
+        "lw       %[temp10],   8(%[irow])                 \n\t"
+        "lw       %[temp11],   12(%[irow])                \n\t"
+        "addiu    %[dst],      %[dst],      4             \n\t"
+        "addiu    %[irow],     %[irow],     16            \n\t"
+        "subu     %[temp8],    %[temp8],    %[temp0]      \n\t"
+        "subu     %[temp9],    %[temp9],    %[temp1]      \n\t"
+        "subu     %[temp10],   %[temp10],   %[temp2]      \n\t"
+        "subu     %[temp11],   %[temp11],   %[temp5]      \n\t"
+        "mult     $ac0,        %[temp3],    %[temp4]      \n\t"
+        "maddu    $ac0,        %[temp8],    %[temp7]      \n\t"
+        "mult     $ac1,        %[temp3],    %[temp4]      \n\t"
+        "maddu    $ac1,        %[temp9],    %[temp7]      \n\t"
+        "mult     $ac2,        %[temp3],    %[temp4]      \n\t"
+        "maddu    $ac2,        %[temp10],   %[temp7]      \n\t"
+        "mult     $ac3,        %[temp3],    %[temp4]      \n\t"
+        "maddu    $ac3,        %[temp11],   %[temp7]      \n\t"
+        "mfhi     %[temp8],    $ac0                       \n\t"
+        "mfhi     %[temp9],    $ac1                       \n\t"
+        "mfhi     %[temp10],   $ac2                       \n\t"
+        "mfhi     %[temp11],   $ac3                       \n\t"
+        "sw       %[temp0],    -16(%[irow])               \n\t"
+        "sw       %[temp1],    -12(%[irow])               \n\t"
+        "sw       %[temp2],    -8(%[irow])                \n\t"
+        "sw       %[temp5],    -4(%[irow])                \n\t"
+        "sb       %[temp8],    -4(%[dst])                 \n\t"
+        "sb       %[temp9],    -3(%[dst])                 \n\t"
+        "sb       %[temp10],   -2(%[dst])                 \n\t"
+        "sb       %[temp11],   -1(%[dst])                 \n\t"
+        "bne      %[frow],     %[loop_end], 1b            \n\t"
+        : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp3]"=&r"(temp3),
+          [temp4]"=&r"(temp4), [temp5]"=&r"(temp5), [frow]"+r"(frow),
+          [irow]"+r"(irow), [dst]"+r"(dst), [loop_end]"=&r"(loop_end),
+          [temp8]"=&r"(temp8), [temp9]"=&r"(temp9), [temp10]"=&r"(temp10),
+          [temp11]"=&r"(temp11), [temp2]"=&r"(temp2)
+        : [temp7]"r"(temp7), [yscale]"r"(yscale), [temp6]"r"(temp6)
+        : "memory", "hi", "lo", "$ac1hi", "$ac1lo",
+          "$ac2hi", "$ac2lo", "$ac3hi", "$ac3lo"
+      );
+    }
+    for (i = 0; i < (x_out_max & 0x3); ++i) {
+      const uint32_t frac = (uint32_t)MULT_FIX(*frow++, yscale);
+      const int v = (int)MULT_FIX(*irow - frac, wrk->fxy_scale);
+      assert(v >= 0 && v <= 255);
+      *dst++ = v;
+      *irow++ = frac;   // new fractional start
+    }
+  } else {
+    if (x_out_max >= 4) {
+      __asm__ volatile (
+        "li       %[temp3],    0x10000                    \n\t"
+        "li       %[temp4],    0x8000                     \n\t"
+        "addu     %[loop_end], %[irow],     %[temp6]      \n\t"
+      "1:                                                 \n\t"
+        "lw       %[temp0],    0(%[irow])                 \n\t"
+        "lw       %[temp1],    4(%[irow])                 \n\t"
+        "lw       %[temp2],    8(%[irow])                 \n\t"
+        "lw       %[temp5],    12(%[irow])                \n\t"
+        "addiu    %[dst],      %[dst],      4             \n\t"
+        "addiu    %[irow],     %[irow],     16            \n\t"
+        "mult     $ac0,        %[temp3],    %[temp4]      \n\t"
+        "maddu    $ac0,        %[temp0],    %[temp7]      \n\t"
+        "mult     $ac1,        %[temp3],    %[temp4]      \n\t"
+        "maddu    $ac1,        %[temp1],    %[temp7]      \n\t"
+        "mult     $ac2,        %[temp3],    %[temp4]      \n\t"
+        "maddu    $ac2,        %[temp2],    %[temp7]      \n\t"
+        "mult     $ac3,        %[temp3],    %[temp4]      \n\t"
+        "maddu    $ac3,        %[temp5],    %[temp7]      \n\t"
+        "mfhi     %[temp0],    $ac0                       \n\t"
+        "mfhi     %[temp1],    $ac1                       \n\t"
+        "mfhi     %[temp2],    $ac2                       \n\t"
+        "mfhi     %[temp5],    $ac3                       \n\t"
+        "sw       $zero,       -16(%[irow])               \n\t"
+        "sw       $zero,       -12(%[irow])               \n\t"
+        "sw       $zero,       -8(%[irow])                \n\t"
+        "sw       $zero,       -4(%[irow])                \n\t"
+        "sb       %[temp0],    -4(%[dst])                 \n\t"
+        "sb       %[temp1],    -3(%[dst])                 \n\t"
+        "sb       %[temp2],    -2(%[dst])                 \n\t"
+        "sb       %[temp5],    -1(%[dst])                 \n\t"
+        "bne      %[irow],     %[loop_end], 1b            \n\t"
+        : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp3]"=&r"(temp3),
+          [temp4]"=&r"(temp4), [temp5]"=&r"(temp5), [irow]"+r"(irow),
+          [dst]"+r"(dst), [loop_end]"=&r"(loop_end), [temp2]"=&r"(temp2)
+        : [temp7]"r"(temp7), [temp6]"r"(temp6)
+        : "memory", "hi", "lo", "$ac1hi", "$ac1lo",
+          "$ac2hi", "$ac2lo", "$ac3hi", "$ac3lo"
+      );
+    }
+    for (i = 0; i < (x_out_max & 0x3); ++i) {
+      const int v = (int)MULT_FIX(*irow, wrk->fxy_scale);
+      assert(v >= 0 && v <= 255);
+      *dst++ = v;
+      *irow++ = 0;
+    }
+  }
+}
+
+static void ExportRowExpand(WebPRescaler* const wrk) {
+  int i;
   uint8_t* dst = wrk->dst;
   rescaler_t* irow = wrk->irow;
   const int x_out_max = wrk->dst_width * wrk->num_channels;
   const rescaler_t* frow = wrk->frow;
-  const int yscale = wrk->fy_scale * (-wrk->y_accum);
-
-  int temp0, temp1, temp3, temp4, temp5, temp6, temp7;
-  const int temp2 = (int)wrk->fxy_scale;
-  const int rest = x_out_max & 1;
-  const rescaler_t* const loop_end = frow + x_out_max - rest;
-
+  int temp0, temp1, temp2, temp3, temp4, temp5, loop_end;
+  const int temp6 = (x_out_max & ~0x3) << 2;
+  const int temp7 = (int)wrk->fy_scale;
   assert(!WebPRescalerOutputDone(wrk));
   assert(wrk->y_accum <= 0);
-  assert(!wrk->y_expand);
-  assert(wrk->fxy_scale);
-  __asm__ volatile (
-    ".set             push                                    \n\t"
-    ".set             noreorder                               \n\t"
-    "beq              %[frow],   %[loop_end],   1f            \n\t"
-    " nop                                                     \n\t"
-  "0:                                                         \n\t"
-    "lw               %[temp0],    0(%[frow])                 \n\t"
-    "lw               %[temp1],    0(%[irow])                 \n\t"
-    "lw               %[temp3],    4(%[frow])                 \n\t"
-    "lw               %[temp4],    4(%[irow])                 \n\t"
-    "sll              %[temp0],    %[temp0],      1           \n\t"
-    "sll              %[temp3],    %[temp3],      1           \n\t"
-    "mulq_rs.w        %[temp5],    %[temp0],      %[yscale]   \n\t"
-    "mulq_rs.w        %[temp6],    %[temp3],      %[yscale]   \n\t"
-    "addiu            %[frow],     %[frow],       8           \n\t"
-    "addiu            %[dst],      %[dst],        2           \n\t"
-    "addiu            %[irow],     %[irow],       8           \n\t"
-    "subu             %[temp1],    %[temp1],      %[temp5]    \n\t"
-    "subu             %[temp4],    %[temp4],      %[temp6]    \n\t"
-    "sll              %[temp1],    %[temp1],      1           \n\t"
-    "sll              %[temp4],    %[temp4],      1           \n\t"
-    "mulq_rs.w        %[temp0],    %[temp1],      %[temp2]    \n\t"
-    "mulq_rs.w        %[temp3],    %[temp4],      %[temp2]    \n\t"
-    "sw               %[temp5],    -8(%[irow])                \n\t"
-    "sw               %[temp6],    -4(%[irow])                \n\t"
-    "shll_s.ph        %[temp0],    %[temp0],      7           \n\t"
-    "shll_s.ph        %[temp3],    %[temp3],      7           \n\t"
-    "precrqu_s.qb.ph  %[temp0],    %[temp0],      %[temp3]    \n\t"
-    "sb               %[temp0],    -1(%[dst])                 \n\t"
-    "srl              %[temp0],    %[temp0],      16          \n\t"
-    "bne              %[frow],     %[loop_end],   0b          \n\t"
-    " sb              %[temp0],    -2(%[dst])                 \n\t"
-  "1:                                                         \n\t"
-    "beqz             %[rest],     3f                         \n\t"
-    " nop                                                     \n\t"
-    "addiu            %[temp6],    $zero,         -256        \n\t"
-    "addiu            %[temp7],    $zero,         255         \n\t"
-    "lw               %[temp0],    0(%[frow])                 \n\t"
-    "sll              %[temp0],    %[temp0],      1           \n\t"
-    "mulq_rs.w        %[temp1],    %[temp0],      %[yscale]   \n\t"
-    "lw               %[temp0],    0(%[irow])                 \n\t"
-    "subu             %[temp0],    %[temp0],      %[temp1]    \n\t"
-    "sll              %[temp0],    %[temp0],      1           \n\t"
-    "mulq_rs.w        %[temp5],    %[temp0],      %[temp2]    \n\t"
-    "sw               %[temp1],    0(%[irow])                 \n\t"
-    "and              %[temp0],    %[temp5],      %[temp6]    \n\t"
-    "beqz             %[temp0],    2f                         \n\t"
-    " slti            %[temp1],    %[temp5],      0           \n\t"
-    "xor              %[temp5],    %[temp5],      %[temp5]    \n\t"
-    "movz             %[temp5],    %[temp7],      %[temp1]    \n\t"
-  "2:                                                         \n\t"
-    "sb               %[temp5],    0(%[dst])                  \n\t"
-  "3:                                                         \n\t"
-    ".set             pop                                     \n\t"
-    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp3]"=&r"(temp3),
-      [temp4]"=&r"(temp4), [temp5]"=&r"(temp5), [temp6]"=&r"(temp6),
-      [temp7]"=&r"(temp7), [frow]"+&r"(frow), [irow]"+&r"(irow),
-      [dst]"+&r"(dst)
-    : [temp2]"r"(temp2), [yscale]"r"(yscale), [loop_end]"r"(loop_end),
-      [rest]"r"(rest)
-    : "memory", "hi", "lo"
-  );
+  assert(wrk->y_expand);
+  assert(wrk->y_sub != 0);
+  if (wrk->y_accum == 0) {
+    if (x_out_max >= 4) {
+      __asm__ volatile (
+        "li       %[temp4],    0x10000                    \n\t"
+        "li       %[temp5],    0x8000                     \n\t"
+        "addu     %[loop_end], %[frow],     %[temp6]      \n\t"
+      "1:                                                 \n\t"
+        "lw       %[temp0],    0(%[frow])                 \n\t"
+        "lw       %[temp1],    4(%[frow])                 \n\t"
+        "lw       %[temp2],    8(%[frow])                 \n\t"
+        "lw       %[temp3],    12(%[frow])                \n\t"
+        "addiu    %[dst],      %[dst],      4             \n\t"
+        "addiu    %[frow],     %[frow],     16            \n\t"
+        "mult     $ac0,        %[temp4],    %[temp5]      \n\t"
+        "maddu    $ac0,        %[temp0],    %[temp7]      \n\t"
+        "mult     $ac1,        %[temp4],    %[temp5]      \n\t"
+        "maddu    $ac1,        %[temp1],    %[temp7]      \n\t"
+        "mult     $ac2,        %[temp4],    %[temp5]      \n\t"
+        "maddu    $ac2,        %[temp2],    %[temp7]      \n\t"
+        "mult     $ac3,        %[temp4],    %[temp5]      \n\t"
+        "maddu    $ac3,        %[temp3],    %[temp7]      \n\t"
+        "mfhi     %[temp0],    $ac0                       \n\t"
+        "mfhi     %[temp1],    $ac1                       \n\t"
+        "mfhi     %[temp2],    $ac2                       \n\t"
+        "mfhi     %[temp3],    $ac3                       \n\t"
+        "sb       %[temp0],    -4(%[dst])                 \n\t"
+        "sb       %[temp1],    -3(%[dst])                 \n\t"
+        "sb       %[temp2],    -2(%[dst])                 \n\t"
+        "sb       %[temp3],    -1(%[dst])                 \n\t"
+        "bne      %[frow],     %[loop_end], 1b            \n\t"
+        : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp3]"=&r"(temp3),
+          [temp4]"=&r"(temp4), [temp5]"=&r"(temp5), [frow]"+r"(frow),
+          [dst]"+r"(dst), [loop_end]"=&r"(loop_end), [temp2]"=&r"(temp2)
+        : [temp7]"r"(temp7), [temp6]"r"(temp6)
+        : "memory", "hi", "lo", "$ac1hi", "$ac1lo",
+          "$ac2hi", "$ac2lo", "$ac3hi", "$ac3lo"
+      );
+    }
+    for (i = 0; i < (x_out_max & 0x3); ++i) {
+      const uint32_t J = *frow++;
+      const int v = (int)MULT_FIX(J, wrk->fy_scale);
+      assert(v >= 0 && v <= 255);
+      *dst++ = v;
+    }
+  } else {
+    const uint32_t B = WEBP_RESCALER_FRAC(-wrk->y_accum, wrk->y_sub);
+    const uint32_t A = (uint32_t)(WEBP_RESCALER_ONE - B);
+    if (x_out_max >= 4) {
+      int temp8, temp9, temp10, temp11;
+      __asm__ volatile (
+        "li       %[temp8],    0x10000                    \n\t"
+        "li       %[temp9],    0x8000                     \n\t"
+        "addu     %[loop_end], %[frow],     %[temp6]      \n\t"
+      "1:                                                 \n\t"
+        "lw       %[temp0],    0(%[frow])                 \n\t"
+        "lw       %[temp1],    4(%[frow])                 \n\t"
+        "lw       %[temp2],    8(%[frow])                 \n\t"
+        "lw       %[temp3],    12(%[frow])                \n\t"
+        "lw       %[temp4],    0(%[irow])                 \n\t"
+        "lw       %[temp5],    4(%[irow])                 \n\t"
+        "lw       %[temp10],   8(%[irow])                 \n\t"
+        "lw       %[temp11],   12(%[irow])                \n\t"
+        "addiu    %[dst],      %[dst],      4             \n\t"
+        "mult     $ac0,        %[temp8],    %[temp9]      \n\t"
+        "maddu    $ac0,        %[A],        %[temp0]      \n\t"
+        "maddu    $ac0,        %[B],        %[temp4]      \n\t"
+        "mult     $ac1,        %[temp8],    %[temp9]      \n\t"
+        "maddu    $ac1,        %[A],        %[temp1]      \n\t"
+        "maddu    $ac1,        %[B],        %[temp5]      \n\t"
+        "mult     $ac2,        %[temp8],    %[temp9]      \n\t"
+        "maddu    $ac2,        %[A],        %[temp2]      \n\t"
+        "maddu    $ac2,        %[B],        %[temp10]     \n\t"
+        "mult     $ac3,        %[temp8],    %[temp9]      \n\t"
+        "maddu    $ac3,        %[A],        %[temp3]      \n\t"
+        "maddu    $ac3,        %[B],        %[temp11]     \n\t"
+        "addiu    %[frow],     %[frow],     16            \n\t"
+        "addiu    %[irow],     %[irow],     16            \n\t"
+        "mfhi     %[temp0],    $ac0                       \n\t"
+        "mfhi     %[temp1],    $ac1                       \n\t"
+        "mfhi     %[temp2],    $ac2                       \n\t"
+        "mfhi     %[temp3],    $ac3                       \n\t"
+        "mult     $ac0,        %[temp8],    %[temp9]      \n\t"
+        "maddu    $ac0,        %[temp0],    %[temp7]      \n\t"
+        "mult     $ac1,        %[temp8],    %[temp9]      \n\t"
+        "maddu    $ac1,        %[temp1],    %[temp7]      \n\t"
+        "mult     $ac2,        %[temp8],    %[temp9]      \n\t"
+        "maddu    $ac2,        %[temp2],    %[temp7]      \n\t"
+        "mult     $ac3,        %[temp8],    %[temp9]      \n\t"
+        "maddu    $ac3,        %[temp3],    %[temp7]      \n\t"
+        "mfhi     %[temp0],    $ac0                       \n\t"
+        "mfhi     %[temp1],    $ac1                       \n\t"
+        "mfhi     %[temp2],    $ac2                       \n\t"
+        "mfhi     %[temp3],    $ac3                       \n\t"
+        "sb       %[temp0],    -4(%[dst])                 \n\t"
+        "sb       %[temp1],    -3(%[dst])                 \n\t"
+        "sb       %[temp2],    -2(%[dst])                 \n\t"
+        "sb       %[temp3],    -1(%[dst])                 \n\t"
+        "bne      %[frow],     %[loop_end], 1b            \n\t"
+        : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp3]"=&r"(temp3),
+          [temp4]"=&r"(temp4), [temp5]"=&r"(temp5), [frow]"+r"(frow),
+          [irow]"+r"(irow), [dst]"+r"(dst), [loop_end]"=&r"(loop_end),
+          [temp8]"=&r"(temp8), [temp9]"=&r"(temp9), [temp10]"=&r"(temp10),
+          [temp11]"=&r"(temp11), [temp2]"=&r"(temp2)
+        : [temp7]"r"(temp7), [temp6]"r"(temp6), [A]"r"(A), [B]"r"(B)
+        : "memory", "hi", "lo", "$ac1hi", "$ac1lo",
+          "$ac2hi", "$ac2lo", "$ac3hi", "$ac3lo"
+      );
+    }
+    for (i = 0; i < (x_out_max & 0x3); ++i) {
+      const uint64_t I = (uint64_t)A * *frow++
+                       + (uint64_t)B * *irow++;
+      const uint32_t J = (uint32_t)((I + ROUNDER) >> WEBP_RESCALER_RFIX);
+      const int v = (int)MULT_FIX(J, wrk->fy_scale);
+      assert(v >= 0 && v <= 255);
+      *dst++ = v;
+    }
+  }
 }
 
-// no ExportRowExpand yet.
+#undef MULT_FIX
+#undef ROUNDER
 
 //------------------------------------------------------------------------------
 // Entry point
@@ -220,17 +303,8 @@ static void ExportRowShrink(WebPRescaler* const wrk) {
 extern void WebPRescalerDspInitMIPSdspR2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInitMIPSdspR2(void) {
-#if 0
-  // The assembly code is currently out-of-sync wrt the C-implementation.
-  // Disabled for now.
-  WebPRescalerImportRowExpand = ImportRowExpand;
-  WebPRescalerImportRowShrink = ImportRowShrink;
+  WebPRescalerExportRowExpand = ExportRowExpand;
   WebPRescalerExportRowShrink = ExportRowShrink;
-#else
-  (void)ImportRowExpand;
-  (void)ImportRowShrink;
-  (void)ExportRowShrink;
-#endif
 }
 
 #else  // !WEBP_USE_MIPS_DSP_R2
