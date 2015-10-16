@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99ae8a64_0d887222",
+        "filename": "src/enc/vp8l.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1126,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-16T06:13:01Z",
+      "side": 1,
+      "message": "actually the offset in WEBP_ALIGN() isn\u0027t scaled so WEBP_ALIGN_CST should be used.",
+      "revId": "9dbc5d59c5f8b478c2bd04d0850801229bd9bdc2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
