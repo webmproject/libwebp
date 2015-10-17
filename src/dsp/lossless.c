@@ -35,7 +35,7 @@ static WEBP_INLINE void AddPixelsEq(uint32_t* a, uint32_t b) {
 }
 
 static WEBP_INLINE uint32_t Average2(uint32_t a0, uint32_t a1) {
-  return (((a0 ^ a1) & 0xfefefefeL) >> 1) + (a0 & a1);
+  return (((a0 ^ a1) & 0xfefefefeu) >> 1) + (a0 & a1);
 }
 
 static WEBP_INLINE uint32_t Average3(uint32_t a0, uint32_t a1, uint32_t a2) {
