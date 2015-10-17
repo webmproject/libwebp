@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99d92a72_c2a0529c",
+        "filename": "src/enc/vp8l.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1132,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-17T00:07:48Z",
+      "side": 1,
+      "message": "looks indented 1 too many, the following might work too:\n\n    const int transform_data_size \u003d\n        (enc-\u003euse_predict_ || enc-\u003euse_cross_color_)\n            ? VP8LSubSampleSize(width, enc-\u003etransform_bits_) *\n                  VP8LSubSampleSize(height, enc-\u003etransform_bits_)\n            : 0;",
+      "revId": "610a9270f8b04581f42637b4e39068a254f3f521",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
