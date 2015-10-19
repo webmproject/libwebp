@@ -1205,7 +1205,7 @@ static void MapToPalette(const uint32_t palette[], int num_colors,
 // Note: src[] can be the same as dst[]
 static WebPEncodingError ApplyPalette(const uint32_t* src, uint32_t src_stride,
                                       uint32_t* dst, uint32_t dst_stride,
-                         const uint32_t* palette, int palette_size,
+                                      const uint32_t* palette, int palette_size,
                                       int width, int height, int xbits) {
   // TODO(skal): this tmp buffer is not needed if VP8LBundleColorMap() can be
   // made to work in-place.
@@ -1298,7 +1298,7 @@ static WebPEncodingError EncodePalette(VP8LBitWriter* const bw,
   }
   tmp_palette[0] = palette[0];
   return EncodeImageNoHuffman(bw, tmp_palette, &enc->hash_chain_, enc->refs_,
-                             palette_size, 1, 20 /* quality */);
+                              palette_size, 1, 20 /* quality */);
 }
 
 #ifdef WEBP_EXPERIMENTAL_FEATURES
