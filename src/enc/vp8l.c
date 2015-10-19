@@ -1122,28 +1122,30 @@ static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
                                                  int width, int height) {
   WebPEncodingError err = VP8_ENC_OK;
   if (enc->argb_ == NULL) {
-  const int tile_size = 1 << enc->transform_bits_;
-  const uint64_t image_size = width * height;
+    const int tile_size = 1 << enc->transform_bits_;
+    const uint64_t image_size = width * height;
     const uint64_t argb_scratch_size =
         enc->use_predict_ ? tile_size * width + width : 0;
-  const int transform_data_size =
-        (enc->use_predict_ || enc->use_cross_color_) ?
-      VP8LSubSampleSize(width, enc->transform_bits_) *
-            VP8LSubSampleSize(height, enc->transform_bits_) : 0;
-  const uint64_t total_size =
-      image_size + argb_scratch_size + (uint64_t)transform_data_size;
-  uint32_t* mem = (uint32_t*)WebPSafeMalloc(total_size, sizeof(*mem));
-  if (mem == NULL) {
-    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
-    goto Error;
-  }
-    // TODO(skal): align
-  enc->argb_ = mem;
-  mem += image_size;
-  enc->argb_scratch_ = mem;
-  mem += argb_scratch_size;
-  enc->transform_data_ = mem;
-  enc->current_width_ = width;
+    const int transform_data_size =
+        (enc->use_predict_ || enc->use_cross_color_)
+            ? VP8LSubSampleSize(width, enc->transform_bits_) *
+              VP8LSubSampleSize(height, enc->transform_bits_)
+            : 0;
+    const uint64_t total_size =
+        image_size + WEBP_ALIGN_CST +
+        argb_scratch_size + WEBP_ALIGN_CST +
+        (uint64_t)transform_data_size;
+    uint32_t* mem = (uint32_t*)WebPSafeMalloc(total_size, sizeof(*mem));
+    if (mem == NULL) {
+      err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+      goto Error;
+    }
+    enc->argb_ = mem;
+    mem = (uint32_t*)WEBP_ALIGN(mem + image_size);
+    enc->argb_scratch_ = mem;
+    mem = (uint32_t*)WEBP_ALIGN(mem + argb_scratch_size);
+    enc->transform_data_ = mem;
+    enc->current_width_ = width;
   }
  Error:
   return err;
