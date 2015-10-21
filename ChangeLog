@@ -1,3 +1,24 @@
+46e18c0 vwebp: fix incorrect clipping w/NO_BLEND
+fcfde90 update issue tracker url
+8c3fb33 update AUTHORS
+808d4a6 update NEWS
+6286404 bump version to 0.4.4
+b8b314a doc/webp-container-spec: update repo browser link
+c3953e3 fix typo: constitutes -> constitute
+cd377e2 Use __has_builtin to check clang support
+e2e8980 wicdec: fix alpha detection w/64bpp BGRA/RGBA
+5c3fe77 iosbuild: fix linking with Xcode 7 / iOS SDK 9
+f9f5498 VP8LAllocateHistogramSet: align histogram[] entries
+3026db2 Loosen the buffer size checks for Y/U/V/A too.
+d089362 loosen the padding check on buffer size
+53d22c5 dec_neon: add whitespace around stringizing operator
+8bcc4d4 dsp/mips: add whitespace around stringizing operator
+d49c44f Container spec: clarify ordering of ALPH chunk.
+382de22 msvc: fix pointer type warning in BitsLog2Floor
+84ecd9d FlattenSimilarBlocks should only be tried when blending is possible.
+f55ebbb backport rescaler fix
+2ff633c fix mips2 build target
+326b5fb update ChangeLog (tag: v0.4.3, origin/0.4.3, 0.4.3)
 a661e50 Disable NEON code on Native Client
 fcd94e9 update ChangeLog (tag: v0.4.3-rc1)
 569fe57 update NEWS
