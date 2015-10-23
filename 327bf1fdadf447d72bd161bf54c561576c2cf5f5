@@ -16,6 +16,24 @@
       "revId": "327bf1fdadf447d72bd161bf54c561576c2cf5f5",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36e4cdf6_fbba4ff2",
+        "filename": "examples/vwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-10-23T17:58:48Z",
+      "side": 1,
+      "message": "Having a local var for width \u0026 height would be clearer. That way we would have locally picked all of window_x, window_y, window_w and window_h.",
+      "parentUuid": "b6699de6_e03e5882",
+      "revId": "327bf1fdadf447d72bd161bf54c561576c2cf5f5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
