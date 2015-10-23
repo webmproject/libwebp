@@ -308,19 +308,24 @@ static void HandleDisplay(void) {
     //              they will be incorrect if the window is resized.
     // glScissor() takes window coordinates (0,0 at bottom left).
     int window_x, window_y;
+    int frame_w, frame_h;
     if (prev->dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
       // Clear the previous frame rectangle.
       window_x = prev->x_offset;
       window_y = kParams.canvas_height - prev->y_offset - prev->height;
+      frame_w = prev->width;
+      frame_h = prev->height;
     } else {  // curr->blend_method == WEBP_MUX_NO_BLEND.
       // We simulate no-blending behavior by first clearing the current frame
       // rectangle (to a checker-board) and then alpha-blending against it.
       window_x = curr->x_offset;
       window_y = kParams.canvas_height - curr->y_offset - curr->height;
+      frame_w = curr->width;
+      frame_h = curr->height;
     }
     glEnable(GL_SCISSOR_TEST);
     // Only update the requested area, not the whole canvas.
-    glScissor(window_x, window_y, prev->width, prev->height);
+    glScissor(window_x, window_y, frame_w, frame_h);
 
     glClear(GL_COLOR_BUFFER_BIT);  // use clear color
     DrawCheckerBoard();
