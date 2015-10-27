@@ -517,17 +517,24 @@ static WEBP_INLINE void DoFilter6(__m128i* const p2, __m128i* const p1,
   }
 }
 
+// memcpy() is the safe way of moving potentially unaligned 32b memory.
+static WEBP_INLINE uint32_t MemToUint32(const uint8_t* const ptr) {
+  uint32_t A;
+  memcpy(&A, (const int*)ptr, sizeof(A));
+  return A;
+}
+
 // reads 8 rows across a vertical edge.
 static WEBP_INLINE void Load8x4(const uint8_t* const b, int stride,
                                 __m128i* const p, __m128i* const q) {
   // A0 = 63 62 61 60 23 22 21 20 43 42 41 40 03 02 01 00
   // A1 = 73 72 71 70 33 32 31 30 53 52 51 50 13 12 11 10
   const __m128i A0 = _mm_set_epi32(
-      *(const int*)&b[6 * stride], *(const int*)&b[2 * stride],
-      *(const int*)&b[4 * stride], *(const int*)&b[0 * stride]);
+      MemToUint32(&b[6 * stride]), MemToUint32(&b[2 * stride]),
+      MemToUint32(&b[4 * stride]), MemToUint32(&b[0 * stride]));
   const __m128i A1 = _mm_set_epi32(
-      *(const int*)&b[7 * stride], *(const int*)&b[3 * stride],
-      *(const int*)&b[5 * stride], *(const int*)&b[1 * stride]);
+      MemToUint32(&b[7 * stride]), MemToUint32(&b[3 * stride]),
+      MemToUint32(&b[5 * stride]), MemToUint32(&b[1 * stride]));
 
   // B0 = 53 43 52 42 51 41 50 40 13 03 12 02 11 01 10 00
   // B1 = 73 63 72 62 71 61 70 60 33 23 32 22 31 21 30 20
@@ -1060,7 +1067,7 @@ static WEBP_INLINE void TrueMotion(uint8_t* dst, int size) {
   const __m128i zero = _mm_setzero_si128();
   int y;
   if (size == 4) {
-    const __m128i top_values = _mm_cvtsi32_si128(*(const int*)top);
+    const __m128i top_values = _mm_cvtsi32_si128(MemToUint32(top));
     const __m128i top_base = _mm_unpacklo_epi8(top_values, zero);
     for (y = 0; y < 4; ++y, dst += BPS) {
       const int val = dst[-1] - top[-1];
