@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6b19df3_3a9bdd72",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1520,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-10-27T10:40:31Z",
+      "side": 1,
+      "message": "maybe testing \"...a !\u003d NULL\" is too much fine-grained. We could just call WebPInitAlphaProcessing() always.",
+      "range": {
+        "startLine": 1520,
+        "startChar": 42,
+        "endLine": 1520,
+        "endChar": 65
+      },
+      "revId": "ab4e62f8bc92f215243814aaa510dab42682f370",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6b19df3_5aa0919a",
+        "filename": "src/dsp/yuv.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-10-27T10:40:31Z",
+      "side": 1,
+      "message": "just a placeholder for now.",
+      "range": {
+        "startLine": 232,
+        "startChar": 27,
+        "endLine": 232,
+        "endChar": 29
+      },
+      "revId": "ab4e62f8bc92f215243814aaa510dab42682f370",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
