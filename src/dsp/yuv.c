@@ -216,6 +216,27 @@ static void ConvertARGBToUV(const uint32_t* argb, uint8_t* u, uint8_t* v,
   }
 }
 
+//-----------------------------------------------------------------------------
+
+static void ConvertRGB24ToY(const uint8_t* rgb, uint8_t* y, int width) {
+  int i;
+  for (i = 0; i < width; ++i, rgb += 3) {
+    y[i] = VP8RGBToY(rgb[0], rgb[1], rgb[2], YUV_HALF);
+  }
+}
+
+static void ConvertBGR24ToY(const uint8_t* bgr, uint8_t* y, int width) {
+  int i;
+  for (i = 0; i < width; ++i, bgr += 3) {
+    y[i] = VP8RGBToY(bgr[2], bgr[1], bgr[0], YUV_HALF);
+  }
+}
+
+//-----------------------------------------------------------------------------
+
+void (*WebPConvertRGB24ToY)(const uint8_t* rgb, uint8_t* y, int width);
+void (*WebPConvertBGR24ToY)(const uint8_t* bgr, uint8_t* y, int width);
+
 void (*WebPConvertARGBToY)(const uint32_t* argb, uint8_t* y, int width);
 void (*WebPConvertARGBToUV)(const uint32_t* argb, uint8_t* u, uint8_t* v,
                             int src_width, int do_store);
@@ -227,6 +248,9 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUV(void) {
 
   WebPConvertARGBToY = ConvertARGBToY;
   WebPConvertARGBToUV = ConvertARGBToUV;
+
+  WebPConvertRGB24ToY = ConvertRGB24ToY;
+  WebPConvertBGR24ToY = ConvertBGR24ToY;
 
   if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_SSE2)

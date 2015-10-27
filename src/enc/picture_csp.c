@@ -885,6 +885,7 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
                        picture->a, picture->a_stride);
     }
   } else {
+    int use_dsp = (step == 3);  // use special function in this case
     uint8_t* dst_y = picture->y;
     uint8_t* dst_u = picture->u;
     uint8_t* dst_v = picture->v;
@@ -895,7 +896,9 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
     if (dithering > 0.) {
       VP8InitRandom(&base_rg, dithering);
       rg = &base_rg;
+      use_dsp = 0;   // can't use dsp in this case
     }
+    if (use_dsp) WebPInitConvertARGBToYUV();
 
     InitGammaTables();
 
@@ -904,10 +907,20 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
       int rows_have_alpha = has_alpha;
       const int off1 = (2 * y + 0) * rgb_stride;
       const int off2 = (2 * y + 1) * rgb_stride;
-      ConvertRowToY(r_ptr + off1, g_ptr + off1, b_ptr + off1, step,
-                    dst_y, width, rg);
-      ConvertRowToY(r_ptr + off2, g_ptr + off2, b_ptr + off2, step,
-                    dst_y + picture->y_stride, width, rg);
+      if (use_dsp) {
+        if (r_ptr < b_ptr) {
+          WebPConvertRGB24ToY(r_ptr + off1, dst_y, width);
+          WebPConvertRGB24ToY(r_ptr + off2, dst_y + picture->y_stride, width);
+        } else {
+          WebPConvertBGR24ToY(b_ptr + off1, dst_y, width);
+          WebPConvertBGR24ToY(b_ptr + off2, dst_y + picture->y_stride, width);
+        }
+      } else {
+        ConvertRowToY(r_ptr + off1, g_ptr + off1, b_ptr + off1, step,
+                      dst_y, width, rg);
+        ConvertRowToY(r_ptr + off2, g_ptr + off2, b_ptr + off2, step,
+                      dst_y + picture->y_stride, width, rg);
+      }
       dst_y += 2 * picture->y_stride;
       if (has_alpha) {
         rows_have_alpha &= !WebPExtractAlpha(a_ptr + off1, rgb_stride,
@@ -929,8 +942,16 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
     if (height & 1) {    // extra last row
       const int off = 2 * y * rgb_stride;
       int row_has_alpha = has_alpha;
-      ConvertRowToY(r_ptr + off, g_ptr + off, b_ptr + off, step,
-                    dst_y, width, rg);
+      if (use_dsp) {
+        if (r_ptr < b_ptr) {
+          WebPConvertRGB24ToY(r_ptr + off, dst_y, width);
+        } else {
+          WebPConvertBGR24ToY(b_ptr + off, dst_y, width);
+        }
+      } else {
+        ConvertRowToY(r_ptr + off, g_ptr + off, b_ptr + off, step,
+                      dst_y, width, rg);
+      }
       if (row_has_alpha) {
         row_has_alpha &= !WebPExtractAlpha(a_ptr + off, 0, width, 1, dst_a, 0);
       }

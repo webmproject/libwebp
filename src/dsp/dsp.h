@@ -325,7 +325,7 @@ void WebPInitSamplers(void);
 void WebPInitYUV444Converters(void);
 
 //------------------------------------------------------------------------------
-// ARGB -> YUV converters (for lossless decoding)
+// ARGB -> YUV converters
 
 // Convert ARGB samples to luma Y.
 extern void (*WebPConvertARGBToY)(const uint32_t* argb, uint8_t* y, int width);
@@ -334,7 +334,12 @@ extern void (*WebPConvertARGBToY)(const uint32_t* argb, uint8_t* y, int width);
 // the U/V one.
 extern void (*WebPConvertARGBToUV)(const uint32_t* argb, uint8_t* u, uint8_t* v,
                                    int src_width, int do_store);
-// Must be called before using WebPConvertARGBToXXX
+
+// Convert RGB or BGR to Y
+extern void (*WebPConvertRGB24ToY)(const uint8_t* rgb, uint8_t* y, int width);
+extern void (*WebPConvertBGR24ToY)(const uint8_t* bgr, uint8_t* y, int width);
+
+// Must be called before using the above.
 void WebPInitConvertARGBToYUV(void);
 
 //------------------------------------------------------------------------------
