@@ -41,6 +41,8 @@ int ReadWebP(const char* const in_file, WebPPicture* const pic,
 
   if (ExUtilLoadWebP(in_file, &data, &data_size, bitstream)) {
     const int has_alpha = keep_alpha && bitstream->has_alpha;
+    // TODO(skal): use MODE_YUV(A), depending on the expected
+    // input pic->use_argb. This would save some conversion steps.
     output_buffer->colorspace = has_alpha ? MODE_RGBA : MODE_RGB;
 
     status = ExUtilDecodeWebP(data, data_size, 0, &config);
@@ -49,7 +51,6 @@ int ReadWebP(const char* const in_file, WebPPicture* const pic,
       const int stride = output_buffer->u.RGBA.stride;
       pic->width = output_buffer->width;
       pic->height = output_buffer->height;
-      pic->use_argb = 1;
       ok = has_alpha ? WebPPictureImportRGBA(pic, rgba, stride)
                      : WebPPictureImportRGB(pic, rgba, stride);
     }

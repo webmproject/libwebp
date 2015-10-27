@@ -23,7 +23,7 @@ struct Metadata;
 struct WebPPicture;
 
 // Reads a JPEG from 'in_file', returning the decoded output in 'pic'.
-// The output is RGB.
+// The output is RGB or YUV depending on pic->use_argb value.
 // Returns true on success.
 int ReadJPEG(FILE* in_file, struct WebPPicture* const pic,
              struct Metadata* const metadata);

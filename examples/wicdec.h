@@ -21,7 +21,7 @@ struct WebPPicture;
 
 // Reads an image from 'filename', returning the decoded output in 'pic'.
 // If 'keep_alpha' is true and the image has an alpha channel, the output is
-// RGBA otherwise it will be RGB.
+// RGBA otherwise it will be RGB. pic->use_argb is always forced to true.
 // Returns true on success.
 int ReadPictureWithWIC(const char* const filename,
                        struct WebPPicture* const pic, int keep_alpha,

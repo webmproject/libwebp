@@ -320,7 +320,7 @@ int ReadPictureWithWIC(const char* const filename,
     int ok;
     pic->width = width;
     pic->height = height;
-    pic->use_argb = 1;
+    pic->use_argb = 1;    // For WIC, we always force to argb
     ok = importer->import(pic, rgb, stride);
     if (!ok) hr = E_FAIL;
   }

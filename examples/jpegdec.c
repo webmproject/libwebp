@@ -272,7 +272,6 @@ int ReadJPEG(FILE* in_file, WebPPicture* const pic, Metadata* const metadata) {
   // WebP conversion.
   pic->width = width;
   pic->height = height;
-  pic->use_argb = 1;      // store raw RGB samples
   ok = WebPPictureImportRGB(pic, rgb, stride);
   if (!ok) goto Error;
 

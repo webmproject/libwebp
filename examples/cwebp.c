@@ -967,7 +967,11 @@ int main(int argc, const char *argv[]) {
     goto Error;
   }
 
-  // Read the input
+  // Read the input. We need to decide if we prefer ARGB or YUVA
+  // samples, depending on the expected compression mode (this saves
+  // some conversion steps).
+  picture.use_argb = (config.lossless || config.preprocessing > 0 ||
+                      crop || (resize_w | resize_h) > 0);
   if (verbose) {
     StopwatchReset(&stop_watch);
   }
