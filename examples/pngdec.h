@@ -22,8 +22,9 @@ struct Metadata;
 struct WebPPicture;
 
 // Reads a PNG from 'in_file', returning the decoded output in 'pic'.
+// Output is RGBA or YUVA, depending on pic->use_argb value.
 // If 'keep_alpha' is true and the PNG has an alpha channel, the output is RGBA
-// otherwise it will be RGB.
+// or YUVA. Otherwise, alpha channel is dropped and output is RGB or YUV.
 // Returns true on success.
 int ReadPNG(FILE* in_file, struct WebPPicture* const pic, int keep_alpha,
             struct Metadata* const metadata);

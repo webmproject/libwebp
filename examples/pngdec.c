@@ -270,7 +270,6 @@ int ReadPNG(FILE* in_file, WebPPicture* const pic, int keep_alpha,
 
   pic->width = (int)width;
   pic->height = (int)height;
-  pic->use_argb = 1;
   ok = has_alpha ? WebPPictureImportRGBA(pic, rgb, (int)stride)
                  : WebPPictureImportRGB(pic, rgb, (int)stride);
 

@@ -20,8 +20,9 @@ struct Metadata;
 struct WebPPicture;
 
 // Reads a TIFF from 'filename', returning the decoded output in 'pic'.
+// Output is RGBA or YUVA, depending on pic->use_argb value.
 // If 'keep_alpha' is true and the TIFF has an alpha channel, the output is RGBA
-// otherwise it will be RGB.
+// or YUVA. Otherwise, alpha channel is dropped and output is RGB or YUV.
 // Returns true on success.
 int ReadTIFF(const char* const filename,
              struct WebPPicture* const pic, int keep_alpha,
