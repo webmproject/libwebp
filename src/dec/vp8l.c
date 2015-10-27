@@ -19,6 +19,7 @@
 #include "../dsp/dsp.h"
 #include "../dsp/lossless.h"
 #include "../dsp/yuv.h"
+#include "../utils/endian_inl.h"
 #include "../utils/huffman.h"
 #include "../utils/utils.h"
 
@@ -504,67 +505,29 @@ static int EmitRows(WEBP_CSP_MODE colorspace,
 //------------------------------------------------------------------------------
 // Export to YUVA
 
-// TODO(skal): should be in yuv.c
 static void ConvertToYUVA(const uint32_t* const src, int width, int y_pos,
                           const WebPDecBuffer* const output) {
   const WebPYUVABuffer* const buf = &output->u.YUVA;
+
   // first, the luma plane
-  {
-    int i;
-    uint8_t* const y = buf->y + y_pos * buf->y_stride;
-    for (i = 0; i < width; ++i) {
-      const uint32_t p = src[i];
-      y[i] = VP8RGBToY((p >> 16) & 0xff, (p >> 8) & 0xff, (p >> 0) & 0xff,
-                       YUV_HALF);
-    }
-  }
+  WebPConvertARGBToY(src, buf->y + y_pos * buf->y_stride, width);
 
   // then U/V planes
   {
     uint8_t* const u = buf->u + (y_pos >> 1) * buf->u_stride;
     uint8_t* const v = buf->v + (y_pos >> 1) * buf->v_stride;
-    const int uv_width = width >> 1;
-    int i;
-    for (i = 0; i < uv_width; ++i) {
-      const uint32_t v0 = src[2 * i + 0];
-      const uint32_t v1 = src[2 * i + 1];
-      // VP8RGBToU/V expects four accumulated pixels. Hence we need to
-      // scale r/g/b value by a factor 2. We just shift v0/v1 one bit less.
-      const int r = ((v0 >> 15) & 0x1fe) + ((v1 >> 15) & 0x1fe);
-      const int g = ((v0 >>  7) & 0x1fe) + ((v1 >>  7) & 0x1fe);
-      const int b = ((v0 <<  1) & 0x1fe) + ((v1 <<  1) & 0x1fe);
-      if (!(y_pos & 1)) {  // even lines: store values
-        u[i] = VP8RGBToU(r, g, b, YUV_HALF << 2);
-        v[i] = VP8RGBToV(r, g, b, YUV_HALF << 2);
-      } else {             // odd lines: average with previous values
-        const int tmp_u = VP8RGBToU(r, g, b, YUV_HALF << 2);
-        const int tmp_v = VP8RGBToV(r, g, b, YUV_HALF << 2);
-        // Approximated average-of-four. But it's an acceptable diff.
-        u[i] = (u[i] + tmp_u + 1) >> 1;
-        v[i] = (v[i] + tmp_v + 1) >> 1;
-      }
-    }
-    if (width & 1) {       // last pixel
-      const uint32_t v0 = src[2 * i + 0];
-      const int r = (v0 >> 14) & 0x3fc;
-      const int g = (v0 >>  6) & 0x3fc;
-      const int b = (v0 <<  2) & 0x3fc;
-      if (!(y_pos & 1)) {  // even lines
-        u[i] = VP8RGBToU(r, g, b, YUV_HALF << 2);
-        v[i] = VP8RGBToV(r, g, b, YUV_HALF << 2);
-      } else {             // odd lines (note: we could just skip this)
-        const int tmp_u = VP8RGBToU(r, g, b, YUV_HALF << 2);
-        const int tmp_v = VP8RGBToV(r, g, b, YUV_HALF << 2);
-        u[i] = (u[i] + tmp_u + 1) >> 1;
-        v[i] = (v[i] + tmp_v + 1) >> 1;
-      }
-    }
+    // even lines: store values
+    // odd lines: average with previous values
+    WebPConvertARGBToUV(src, u, v, width, !(y_pos & 1));
   }
   // Lastly, store alpha if needed.
   if (buf->a != NULL) {
-    int i;
     uint8_t* const a = buf->a + y_pos * buf->a_stride;
-    for (i = 0; i < width; ++i) a[i] = (src[i] >> 24);
+#if defined(WORDS_BIGENDIAN)
+    WebPExtractAlpha((uint8_t*)src + 0, 0, width, 1, a, 0);
+#else
+    WebPExtractAlpha((uint8_t*)src + 3, 0, width, 1, a, 0);
+#endif
   }
 }
 
@@ -713,7 +676,7 @@ static void ProcessRows(VP8LDecoder* const dec, int row) {
       // Nothing to output (this time).
     } else {
       const WebPDecBuffer* const output = dec->output_;
-      if (output->colorspace < MODE_YUV) {  // convert to RGBA
+      if (WebPIsRGBMode(output->colorspace)) {  // convert to RGBA
         const WebPRGBABuffer* const buf = &output->u.RGBA;
         uint8_t* const rgba = buf->rgba + dec->last_out_row_ * buf->stride;
         const int num_rows_out = io->use_scaling ?
@@ -1551,6 +1514,10 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
     if (io->use_scaling || WebPIsPremultipliedMode(dec->output_->colorspace)) {
       // need the alpha-multiply functions for premultiplied output or rescaling
       WebPInitAlphaProcessing();
+    }
+    if (!WebPIsRGBMode(dec->output_->colorspace)) {
+      WebPInitConvertARGBToYUV();
+      if (dec->output_->u.YUVA.a != NULL) WebPInitAlphaProcessing();
     }
     if (dec->incremental_) {
       if (dec->hdr_.color_cache_size_ > 0 &&
