@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "d63d314e_c6a3b6ed",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-28T01:48:23Z",
+      "side": 1,
+      "message": "could be 2 lines up",
+      "revId": "ab4e62f8bc92f215243814aaa510dab42682f370",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b6b19df3_3a9bdd72",
         "filename": "src/dec/vp8l.c",
         "patchSetId": 1
@@ -13,6 +30,30 @@
       "writtenOn": "2015-10-27T10:40:31Z",
       "side": 1,
       "message": "maybe testing \"...a !\u003d NULL\" is too much fine-grained. We could just call WebPInitAlphaProcessing() always.",
+      "range": {
+        "startLine": 1520,
+        "startChar": 42,
+        "endLine": 1520,
+        "endChar": 65
+      },
+      "revId": "ab4e62f8bc92f215243814aaa510dab42682f370",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b640bdd4_4589de63",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1520,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-28T01:48:23Z",
+      "side": 1,
+      "message": "there\u0027s already some conditional check at 1514, so I don\u0027t think this is too excessive.",
+      "parentUuid": "b6b19df3_3a9bdd72",
       "range": {
         "startLine": 1520,
         "startChar": 42,
