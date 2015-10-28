@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "964739ec_41d79448",
+        "filename": "src/enc/picture_csp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 912,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-28T01:56:49Z",
+      "side": 1,
+      "message": "not sure if it\u0027s all that much less readable minus the whitespace",
+      "revId": "321c9040608f66e9d4f3652c03bd9335a29260d1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76fd65bf_4b3eb9f2",
+        "filename": "src/enc/picture_csp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 919,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-28T01:56:49Z",
+      "side": 1,
+      "message": "all this seems like it could be broken out, we also have ARGBToY on top of these local conversion functions",
+      "revId": "321c9040608f66e9d4f3652c03bd9335a29260d1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
