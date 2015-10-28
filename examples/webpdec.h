@@ -21,7 +21,7 @@ struct WebPPicture;
 
 // Reads a WebP from 'in_file', returning the decoded output in 'pic'.
 // Output is RGBA or YUVA, depending on pic->use_argb value.
-// If 'keep_alpha' is true and the TIFF has an alpha channel, the output is RGBA
+// If 'keep_alpha' is true and the WebP has an alpha channel, the output is RGBA
 // or YUVA. Otherwise, alpha channel is dropped and output is RGB or YUV.
 // Returns true on success.
 int ReadWebP(const char* const in_file, struct WebPPicture* const pic,
