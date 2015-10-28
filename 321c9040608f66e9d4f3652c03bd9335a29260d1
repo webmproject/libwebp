@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f684f55e_71dab84b",
+        "filename": "src/enc/picture_csp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 912,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-10-28T09:02:56Z",
+      "side": 1,
+      "message": "ok, removed the spaces",
+      "parentUuid": "964739ec_41d79448",
+      "revId": "321c9040608f66e9d4f3652c03bd9335a29260d1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "76fd65bf_4b3eb9f2",
         "filename": "src/enc/picture_csp.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2015-10-28T01:56:49Z",
       "side": 1,
       "message": "all this seems like it could be broken out, we also have ARGBToY on top of these local conversion functions",
+      "revId": "321c9040608f66e9d4f3652c03bd9335a29260d1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "762ba517_95c2c466",
+        "filename": "src/enc/picture_csp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 919,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-10-28T09:02:56Z",
+      "side": 1,
+      "message": "yes, the plan is to move ConvertRowToY() to dsp/ next, and maybe consolidate into a single function. The oddity here is \u0027rg\u0027 and whether we should drag that into dsp/ too",
+      "parentUuid": "76fd65bf_4b3eb9f2",
       "revId": "321c9040608f66e9d4f3652c03bd9335a29260d1",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
