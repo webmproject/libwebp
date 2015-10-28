@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "769c85d8_f6d916e1",
+        "filename": "src/dsp/dec_sse2.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-28T22:34:39Z",
+      "side": 1,
+      "message": "also spelled memcpy(); I was thinking a mention of unaligned + not being strictly necessary on this platform",
+      "revId": "a599e4526a51b55c483a9bb7871841bef3daf05d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
