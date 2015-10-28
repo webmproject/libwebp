@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56fce1c4_cdf641be",
+        "filename": "src/dsp/dec_sse2.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-10-28T01:50:46Z",
+      "side": 1,
+      "message": "maybe a note around the reasoning for this and MemToUint32 would match the style",
+      "revId": "00a6b4163529a3f19b28db8b853fa0c8d64b7304",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
