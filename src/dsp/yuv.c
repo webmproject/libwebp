@@ -174,6 +174,7 @@ static void ConvertARGBToY(const uint32_t* argb, uint8_t* y, int width) {
                      YUV_HALF);
   }
 }
+
 static void ConvertARGBToUV(const uint32_t* argb, uint8_t* u, uint8_t* v,
                             int src_width, int do_store) {
   // No rounding. Last pixel is dealt with separately.
