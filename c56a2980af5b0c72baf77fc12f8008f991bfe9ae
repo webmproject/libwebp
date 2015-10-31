@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "166509c4_7d59531a",
+        "filename": "src/dsp/yuv_sse2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-10-31T19:19:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "36204e91_1e64ec24",
+      "revId": "c56a2980af5b0c72baf77fc12f8008f991bfe9ae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "562a227b_3dc69b1d",
         "filename": "src/dsp/yuv_sse2.c",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "968f39ad_1e6bed1d",
+        "filename": "src/dsp/yuv_sse2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-10-31T19:19:02Z",
+      "side": 1,
+      "message": "removed everywhere possible",
+      "parentUuid": "562a227b_3dc69b1d",
+      "revId": "c56a2980af5b0c72baf77fc12f8008f991bfe9ae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "96401a44_24d20a52",
         "filename": "src/dsp/yuv_sse2.c",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2015-10-31T19:00:47Z",
       "side": 1,
       "message": "in these cases it might be easy enough to back up and recalc some values, but this is OK",
+      "revId": "c56a2980af5b0c72baf77fc12f8008f991bfe9ae",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "768ac5a0_bdc03f89",
+        "filename": "src/dsp/yuv_sse2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-10-31T19:19:02Z",
+      "side": 1,
+      "message": "but then you still have to take into account the corner case where width \u003c 16. \u003d\u003e troubles.",
+      "parentUuid": "96401a44_24d20a52",
       "revId": "c56a2980af5b0c72baf77fc12f8008f991bfe9ae",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
