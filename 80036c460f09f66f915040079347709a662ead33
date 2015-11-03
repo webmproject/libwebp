@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "760e462a_60cd83b0",
+        "filename": "man/cwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-11-03T07:16:48Z",
+      "side": 1,
+      "message": "this doesn\u0027t need to stay here either really; it could go lossy-only or move to the advanced section",
+      "revId": "80036c460f09f66f915040079347709a662ead33",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f66795cb_9c8b89f4",
         "filename": "man/cwebp.1",
         "patchSetId": 1
