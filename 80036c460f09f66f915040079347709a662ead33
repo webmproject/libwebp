@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f66795cb_9c8b89f4",
+        "filename": "man/cwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-11-03T07:05:38Z",
+      "side": 1,
+      "message": "+ \"These options report extra informations.\"\n\n?",
+      "range": {
+        "startLine": 185,
+        "startChar": 4,
+        "endLine": 185,
+        "endChar": 11
+      },
+      "revId": "80036c460f09f66f915040079347709a662ead33",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "968f39ad_e16ea0bd",
+        "filename": "man/cwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-11-03T07:05:38Z",
+      "side": 1,
+      "message": "shouldn\u0027t -resize and -crop options be more prominently displayed higher in the file?",
+      "range": {
+        "startLine": 217,
+        "startChar": 6,
+        "endLine": 217,
+        "endChar": 12
+      },
+      "revId": "80036c460f09f66f915040079347709a662ead33",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
