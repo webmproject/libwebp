@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "October 19, 2015"
+.TH CWEBP 1 "November 02, 2015"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -35,6 +35,15 @@ A summary of all the possible options.
 .B \-version
 Print the version number (as major.minor.revision) and exit.
 .TP
+.B \-lossless
+Encode the image without any loss.
+.TP
+.BI \-near_lossless " int
+Use near-lossless image preprocessing. This option adjusts pixel values
+to help compressibility, but has minimal impact on the visual quality.
+It triggers lossless compression mode automatically.
+Range is 0 (maximum preprocessing) to 100 (no preprocessing, the default).
+.TP
 .BI \-q " float
 Specify the compression factor for RGB channels between 0 and 100. The default
 is 75.
@@ -59,13 +68,6 @@ Specify the compression factor for alpha compression between 0 and 100.
 Lossless compression of alpha is achieved using a value of 100, while the lower
 values result in a lossy compression. The default is 100.
 .TP
-.BI \-f " int
-Specify the strength of the deblocking filter, between 0 (no filtering)
-and 100 (maximum filtering). A value of 0 will turn off any filtering.
-Higher value will increase the strength of the filtering process applied
-after decoding the picture. The higher the value the smoother the picture will
-appear. Typical values are usually in the range of 20 to 50.
-.TP
 .BI \-preset " string
 Specify a set of pre-defined parameters to suit a particular type of
 source material. Possible values are:  \fBdefault\fP, \fBphoto\fP,
@@ -73,13 +75,6 @@ source material. Possible values are:  \fBdefault\fP, \fBphoto\fP,
 \fB\-preset\fP overwrites the other parameters' values (except the
 \fB\-q\fP one), this option should preferably appear first in the
 order of the arguments.
-.TP
-.BI \-sns " int
-Specify the amplitude of the spatial noise shaping. Spatial noise shaping
-(or \fBsns\fP for short) refers to a general collection of built-in algorithms
-used to decide which area of the picture should use relatively less bits,
-and where else to better transfer these bits. The possible range goes from
-0 (algorithm is off) to 100 (the maximal effect). The default value is 80.
 .TP
 .BI \-m " int
 Specify the compression method to use. This parameter controls the
@@ -90,11 +85,15 @@ additional encoding possibilities and decide on the quality gain.
 Lower value can result in faster processing time at the expense of
 larger file size and lower compression quality.
 .TP
-.B \-jpeg_like
-Change the internal parameter mapping to better match the expected size
-of JPEG compression. This flag will generally produce an output file of
-similar size to its JPEG equivalent (for the same \fB\-q\fP setting), but
-with less visual distortion.
+.BI \-resize " width height
+Resize the source to a rectangle with size \fBwidth\fP x \fBheight\fP.
+If either (but not both) of the \fBwidth\fP or \fBheight\fP parameters is 0,
+the value will be calculated preserving the aspect-ratio.
+.TP
+.BI \-crop " x_position y_position width height
+Crop the source to a rectangle with top-left corner at coordinates
+(\fBx_position\fP, \fBy_position\fP) and size \fBwidth\fP x \fBheight\fP.
+This cropping area must be fully contained within the source rectangle.
 .TP
 .B \-mt
 Use multi-threading for encoding, if possible. This option is only effective
@@ -108,13 +107,46 @@ different in size and distortion. This flag is only effective for methods
 some side effects on the bitstream: it forces certain bitstream features
 like number of partitions (forced to 1). Note that a more detailed report
 of bitstream size is printed by \fBcwebp\fP when using this option.
+
+.SS LOSSY OPTIONS
+These options are only effective when doing lossy encoding (the default, with
+or without alpha).
+
+.TP
+.BI \-size " int
+Specify a target size (in bytes) to try and reach for the compressed output.
+Compressor will make several pass of partial encoding in order to get as
+close as possible to this target.
+.TP
+.BI \-psnr " float
+Specify a target PSNR (in dB) to try and reach for the compressed output.
+Compressor will make several pass of partial encoding in order to get as
+close as possible to this target.
+.TP
+.BI \-pass " int
+Set a maximum number of passes to use during the dichotomy used by
+options \fB\-size\fP or \fB\-psnr\fP. Maximum value is 10.
 .TP
 .B \-af
 Turns auto-filter on. This algorithm will spend additional time optimizing
 the filtering strength to reach a well-balanced quality.
+.TP
+.B \-jpeg_like
+Change the internal parameter mapping to better match the expected size
+of JPEG compression. This flag will generally produce an output file of
+similar size to its JPEG equivalent (for the same \fB\-q\fP setting), but
+with less visual distortion.
 
-.SH ADDITIONAL OPTIONS
-More advanced options are:
+.TP
+Advanced options:
+
+.TP
+.BI \-f " int
+Specify the strength of the deblocking filter, between 0 (no filtering)
+and 100 (maximum filtering). A value of 0 will turn off any filtering.
+Higher value will increase the strength of the filtering process applied
+after decoding the picture. The higher the value the smoother the picture will
+appear. Typical values are usually in the range of 20 to 50.
 .TP
 .BI \-sharpness " int
 Specify the sharpness of the filtering (if used).
@@ -127,6 +159,13 @@ Use strong filtering (if filtering is being used thanks to the
 .B \-nostrong
 Disable strong filtering (if filtering is being used thanks to the
 \fB\-f\fP option) and use simple filtering instead.
+.TP
+.BI \-sns " int
+Specify the amplitude of the spatial noise shaping. Spatial noise shaping
+(or \fBsns\fP for short) refers to a general collection of built-in algorithms
+used to decide which area of the picture should use relatively less bits,
+and where else to better transfer these bits. The possible range goes from
+0 (algorithm is off) to 100 (the maximal effect). The default value is 80.
 .TP
 .BI \-segments " int
 Change the number of partitions to use during the segmentation of the
@@ -152,39 +191,44 @@ useful in case the 512k limit is reached and the following message is displayed:
 If using \fB-partition_limit\fP is not enough to meet the 512k constraint, one
 should use less segments in order to save more header bits per macroblock.
 See the \fB-segments\fP option.
+
+.SS LOGGING OPTIONS
+These options control the level of output:
 .TP
-.BI \-size " int
-Specify a target size (in bytes) to try and reach for the compressed output.
-Compressor will make several pass of partial encoding in order to get as
-close as possible to this target.
+.B \-v
+Print extra information (encoding time in particular).
 .TP
-.BI \-psnr " float
-Specify a target PSNR (in dB) to try and reach for the compressed output.
-Compressor will make several pass of partial encoding in order to get as
-close as possible to this target.
+.B \-print_psnr
+Compute and report average PSNR (Peak-Signal-To-Noise ratio).
 .TP
-.BI \-pass " int
-Set a maximum number of passes to use during the dichotomy used by
-options \fB\-size\fP or \fB\-psnr\fP. Maximum value is 10.
+.B \-print_ssim
+Compute and report average SSIM (structural similarity
+metric, see http://en.wikipedia.org/wiki/SSIM for additional details).
 .TP
-.BI \-resize " width height
-Resize the source to a rectangle with size \fBwidth\fP x \fBheight\fP.
-If either (but not both) of the \fBwidth\fP or \fBheight\fP parameters is 0,
-the value will be calculated preserving the aspect-ratio.
+.B \-print_lsim
+Compute and report local similarity metric (sum of lowest error amongst the
+collocated pixel neighbors).
 .TP
-.BI \-crop " x_position y_position width height
-Crop the source to a rectangle with top-left corner at coordinates
-(\fBx_position\fP, \fBy_position\fP) and size \fBwidth\fP x \fBheight\fP.
-This cropping area must be fully contained within the source rectangle.
+.B \-progress
+Report encoding progress in percent.
+.TP
+.B \-quiet
+Do not print anything.
+.TP
+.B \-short
+Only print brief information (output file size and PSNR) for testing purpose.
+.TP
+.BI \-map " int
+Output additional ASCII-map of encoding information. Possible map values
+range from 1 to 6. This is only meant to help debugging.
+
+.SS ADDITIONAL OPTIONS
+More advanced options are:
 .TP
 .BI \-s " width height
 Specify that the input file actually consists of raw Y'CbCr samples following
 the ITU-R BT.601 recommendation, in 4:2:0 linear format.
 The luma plane has size \fBwidth\fP x \fBheight\fP.
-.TP
-.BI \-map " int
-Output additional ASCII-map of encoding information. Possible map values
-range from 1 to 6. This is only meant to help debugging.
 .TP
 .BI \-pre " int
 Specify some pre-processing steps. Using a value of '2' will trigger
@@ -215,15 +259,6 @@ afterward reset to the opaque value 255.
 .B \-noalpha
 Using this option will discard the alpha channel.
 .TP
-.B \-lossless
-Encode the image without any loss.
-.TP
-.BI \-near_lossless " int
-Use near-lossless image preprocessing. This option adjusts pixel values
-to help compressibility, but has minimal impact on the visual quality.
-It triggers lossless compression mode automatically.
-Range is 0 (maximum preprocessing) to 100 (no preprocessing, the default).
-.TP
 .BI \-hint " string
 Specify the hint about input image type. Possible values are:
 \fBphoto\fP, \fBpicture\fP or \fBgraph\fP.
@@ -238,29 +273,6 @@ Note: each input format may not support all combinations.
 .TP
 .B \-noasm
 Disable all assembly optimizations.
-.TP
-.B \-v
-Print extra information (encoding time in particular).
-.TP
-.B \-print_psnr
-Compute and report average PSNR (Peak-Signal-To-Noise ratio).
-.TP
-.B \-print_ssim
-Compute and report average SSIM (structural similarity
-metric, see http://en.wikipedia.org/wiki/SSIM for additional details).
-.TP
-.B \-print_lsim
-Compute and report local similarity metric (sum of lowest error amongst the
-collocated pixel neighbors).
-.TP
-.B \-progress
-Report encoding progress in percent.
-.TP
-.B \-quiet
-Do not print anything.
-.TP
-.B \-short
-Only print brief information (output file size and PSNR) for testing purpose.
 
 .SH BUGS
 Please report all bugs to our issue tracker:
