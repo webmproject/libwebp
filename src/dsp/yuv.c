@@ -164,7 +164,7 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplers(void) {
 }
 
 //-----------------------------------------------------------------------------
-// ARGB -> YUV converters (for lossless decoding)
+// ARGB -> YUV converters
 
 static void ConvertARGBToY(const uint32_t* argb, uint8_t* y, int width) {
   int i;
@@ -175,8 +175,8 @@ static void ConvertARGBToY(const uint32_t* argb, uint8_t* y, int width) {
   }
 }
 
-static void ConvertARGBToUV(const uint32_t* argb, uint8_t* u, uint8_t* v,
-                            int src_width, int do_store) {
+void WebPConvertARGBToUV_C(const uint32_t* argb, uint8_t* u, uint8_t* v,
+                           int src_width, int do_store) {
   // No rounding. Last pixel is dealt with separately.
   const int uv_width = src_width >> 1;
   int i;
@@ -232,29 +232,47 @@ static void ConvertBGR24ToY(const uint8_t* bgr, uint8_t* y, int width) {
   }
 }
 
+void WebPConvertRGBA32ToUV_C(const uint16_t* rgb,
+                             uint8_t* u, uint8_t* v, int width) {
+  int i;
+  for (i = 0; i < width; i += 1, rgb += 4) {
+    const int r = rgb[0], g = rgb[1], b = rgb[2];
+    u[i] = VP8RGBToU(r, g, b, YUV_HALF << 2);
+    v[i] = VP8RGBToV(r, g, b, YUV_HALF << 2);
+  }
+}
+
 //-----------------------------------------------------------------------------
 
 void (*WebPConvertRGB24ToY)(const uint8_t* rgb, uint8_t* y, int width);
 void (*WebPConvertBGR24ToY)(const uint8_t* bgr, uint8_t* y, int width);
+void (*WebPConvertRGBA32ToUV)(const uint16_t* rgb,
+                              uint8_t* u, uint8_t* v, int width);
 
 void (*WebPConvertARGBToY)(const uint32_t* argb, uint8_t* y, int width);
 void (*WebPConvertARGBToUV)(const uint32_t* argb, uint8_t* u, uint8_t* v,
                             int src_width, int do_store);
+
 static volatile VP8CPUInfo rgba_to_yuv_last_cpuinfo_used =
     (VP8CPUInfo)&rgba_to_yuv_last_cpuinfo_used;
+
+extern void WebPInitConvertARGBToYUVSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUV(void) {
   if (rgba_to_yuv_last_cpuinfo_used == VP8GetCPUInfo) return;
 
   WebPConvertARGBToY = ConvertARGBToY;
-  WebPConvertARGBToUV = ConvertARGBToUV;
+  WebPConvertARGBToUV = WebPConvertARGBToUV_C;
 
   WebPConvertRGB24ToY = ConvertRGB24ToY;
   WebPConvertBGR24ToY = ConvertBGR24ToY;
 
+  WebPConvertRGBA32ToUV = WebPConvertRGBA32ToUV_C;
+
   if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_SSE2)
     if (VP8GetCPUInfo(kSSE2)) {
+      WebPInitConvertARGBToYUVSSE2();
     }
 #endif  // WEBP_USE_SSE2
   }

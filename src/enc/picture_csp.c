@@ -768,23 +768,20 @@ static WEBP_INLINE void ConvertRowToY(const uint8_t* const r_ptr,
                                       int width,
                                       VP8Random* const rg) {
   int i, j;
-  for (i = 0, j = 0; i < width; ++i, j += step) {
+  for (i = 0, j = 0; i < width; i += 1, j += step) {
     dst_y[i] = RGBToY(r_ptr[j], g_ptr[j], b_ptr[j], rg);
   }
 }
 
-static WEBP_INLINE void ConvertRowsToUVWithAlpha(const uint8_t* const r_ptr,
-                                                 const uint8_t* const g_ptr,
-                                                 const uint8_t* const b_ptr,
-                                                 const uint8_t* const a_ptr,
-                                                 int rgb_stride,
-                                                 uint8_t* const dst_u,
-                                                 uint8_t* const dst_v,
-                                                 int width,
-                                                 VP8Random* const rg) {
+static WEBP_INLINE void AccumulateRGBA(const uint8_t* const r_ptr,
+                                       const uint8_t* const g_ptr,
+                                       const uint8_t* const b_ptr,
+                                       const uint8_t* const a_ptr,
+                                       int rgb_stride,
+                                       uint16_t* dst, int width) {
   int i, j;
-  // we loop over 2x2 blocks and produce one U/V value for each.
-  for (i = 0, j = 0; i < (width >> 1); ++i, j += 2 * sizeof(uint32_t)) {
+  // we loop over 2x2 blocks and produce one R/G/B/A value for each.
+  for (i = 0, j = 0; i < (width >> 1); i += 1, j += 2 * 4, dst += 4) {
     const uint32_t a = SUM4ALPHA(a_ptr + j);
     int r, g, b;
     if (a == 4 * 0xff || a == 0) {
@@ -796,8 +793,10 @@ static WEBP_INLINE void ConvertRowsToUVWithAlpha(const uint8_t* const r_ptr,
       g = LinearToGammaWeighted(g_ptr + j, a_ptr + j, a, 4, rgb_stride);
       b = LinearToGammaWeighted(b_ptr + j, a_ptr + j, a, 4, rgb_stride);
     }
-    dst_u[i] = RGBToU(r, g, b, rg);
-    dst_v[i] = RGBToV(r, g, b, rg);
+    dst[0] = r;
+    dst[1] = g;
+    dst[2] = b;
+    dst[3] = a;
   }
   if (width & 1) {
     const uint32_t a = 2u * SUM2ALPHA(a_ptr + j);
@@ -811,31 +810,39 @@ static WEBP_INLINE void ConvertRowsToUVWithAlpha(const uint8_t* const r_ptr,
       g = LinearToGammaWeighted(g_ptr + j, a_ptr + j, a, 0, rgb_stride);
       b = LinearToGammaWeighted(b_ptr + j, a_ptr + j, a, 0, rgb_stride);
     }
-    dst_u[i] = RGBToU(r, g, b, rg);
-    dst_v[i] = RGBToV(r, g, b, rg);
+    dst[0] = r;
+    dst[1] = g;
+    dst[2] = b;
+    dst[3] = a;
   }
 }
 
-static WEBP_INLINE void ConvertRowsToUV(const uint8_t* const r_ptr,
-                                        const uint8_t* const g_ptr,
-                                        const uint8_t* const b_ptr,
-                                        int step, int rgb_stride,
+static WEBP_INLINE void AccumulateRGB(const uint8_t* const r_ptr,
+                                      const uint8_t* const g_ptr,
+                                      const uint8_t* const b_ptr,
+                                      int step, int rgb_stride,
+                                      uint16_t* dst, int width) {
+  int i, j;
+  for (i = 0, j = 0; i < (width >> 1); i += 1, j += 2 * step, dst += 4) {
+    dst[0] = SUM4(r_ptr + j, step);
+    dst[1] = SUM4(g_ptr + j, step);
+    dst[2] = SUM4(b_ptr + j, step);
+  }
+  if (width & 1) {
+    dst[0] = SUM2(r_ptr + j);
+    dst[1] = SUM2(g_ptr + j);
+    dst[2] = SUM2(b_ptr + j);
+  }
+}
+
+static WEBP_INLINE void ConvertRowsToUV(const uint16_t* rgb,
                                         uint8_t* const dst_u,
                                         uint8_t* const dst_v,
                                         int width,
                                         VP8Random* const rg) {
-  int i, j;
-  for (i = 0, j = 0; i < (width >> 1); ++i, j += 2 * step) {
-    const int r = SUM4(r_ptr + j, step);
-    const int g = SUM4(g_ptr + j, step);
-    const int b = SUM4(b_ptr + j, step);
-    dst_u[i] = RGBToU(r, g, b, rg);
-    dst_v[i] = RGBToV(r, g, b, rg);
-  }
-  if (width & 1) {
-    const int r = SUM2(r_ptr + j);
-    const int g = SUM2(g_ptr + j);
-    const int b = SUM2(b_ptr + j);
+  int i;
+  for (i = 0; i < width; i += 1, rgb += 4) {
+    const int r = rgb[0], g = rgb[1], b = rgb[2];
     dst_u[i] = RGBToU(r, g, b, rg);
     dst_v[i] = RGBToV(r, g, b, rg);
   }
@@ -854,6 +861,7 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
   const int width = picture->width;
   const int height = picture->height;
   const int has_alpha = CheckNonOpaque(a_ptr, width, height, step, rgb_stride);
+  const int is_rgb = (r_ptr < b_ptr);  // otherwise it's bgr
 
   picture->colorspace = has_alpha ? WEBP_YUV420A : WEBP_YUV420;
   picture->use_argb = 0;
@@ -885,7 +893,11 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
                        picture->a, picture->a_stride);
     }
   } else {
+    const int uv_width = (width + 1) >> 1;
     int use_dsp = (step == 3);  // use special function in this case
+    // temporary storage for accumulated R/G/B values during conversion to U/V
+    uint16_t* const tmp_rgb =
+        (uint16_t*)WebPSafeMalloc(4 * uv_width, sizeof(*tmp_rgb));
     uint8_t* dst_y = picture->y;
     uint8_t* dst_u = picture->u;
     uint8_t* dst_v = picture->v;
@@ -898,9 +910,10 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
       rg = &base_rg;
       use_dsp = 0;   // can't use dsp in this case
     }
-    if (use_dsp) WebPInitConvertARGBToYUV();
-
+    WebPInitConvertARGBToYUV();
     InitGammaTables();
+
+    if (tmp_rgb == NULL) return 0;  // malloc error
 
     // Downsample Y/U/V planes, two rows at a time
     for (y = 0; y < (height >> 1); ++y) {
@@ -908,7 +921,7 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
       const int off1 = (2 * y + 0) * rgb_stride;
       const int off2 = (2 * y + 1) * rgb_stride;
       if (use_dsp) {
-        if (r_ptr < b_ptr) {
+        if (is_rgb) {
           WebPConvertRGB24ToY(r_ptr + off1, dst_y, width);
           WebPConvertRGB24ToY(r_ptr + off2, dst_y + picture->y_stride, width);
         } else {
@@ -928,13 +941,19 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
                                              dst_a, picture->a_stride);
         dst_a += 2 * picture->a_stride;
       }
+      // Collect averaged R/G/B(/A)
       if (!rows_have_alpha) {
-        ConvertRowsToUV(r_ptr + off1, g_ptr + off1, b_ptr + off1,
-                        step, rgb_stride, dst_u, dst_v, width, rg);
+        AccumulateRGB(r_ptr + off1, g_ptr + off1, b_ptr + off1,
+                      step, rgb_stride, tmp_rgb, width);
       } else {
-        ConvertRowsToUVWithAlpha(r_ptr + off1, g_ptr + off1, b_ptr + off1,
-                                 a_ptr + off1, rgb_stride,
-                                 dst_u, dst_v, width, rg);
+        AccumulateRGBA(r_ptr + off1, g_ptr + off1, b_ptr + off1, a_ptr + off1,
+                       rgb_stride, tmp_rgb, width);
+      }
+      // Convert to U/V
+      if (rg == NULL) {
+        WebPConvertRGBA32ToUV(tmp_rgb, dst_u, dst_v, uv_width);
+      } else {
+        ConvertRowsToUV(tmp_rgb, dst_u, dst_v, uv_width, rg);
       }
       dst_u += picture->uv_stride;
       dst_v += picture->uv_stride;
@@ -955,15 +974,22 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
       if (row_has_alpha) {
         row_has_alpha &= !WebPExtractAlpha(a_ptr + off, 0, width, 1, dst_a, 0);
       }
+      // Collect averaged R/G/B(/A)
       if (!row_has_alpha) {
-        ConvertRowsToUV(r_ptr + off, g_ptr + off, b_ptr + off,
-                        step, 0, dst_u, dst_v, width, rg);
+        // Collect averaged R/G/B
+        AccumulateRGB(r_ptr + off, g_ptr + off, b_ptr + off,
+                      step, /* rgb_stride = */ 0, tmp_rgb, width);
       } else {
-        ConvertRowsToUVWithAlpha(r_ptr + off, g_ptr + off, b_ptr + off,
-                                 a_ptr + off, 0,
-                                 dst_u, dst_v, width, rg);
+        AccumulateRGBA(r_ptr + off, g_ptr + off, b_ptr + off, a_ptr + off,
+                       /* rgb_stride = */ 0, tmp_rgb, width);
+      }
+      if (rg == NULL) {
+        WebPConvertRGBA32ToUV(tmp_rgb, dst_u, dst_v, uv_width);
+      } else {
+        ConvertRowsToUV(tmp_rgb, dst_u, dst_v, uv_width, rg);
       }
     }
+    WebPSafeFree(tmp_rgb);
   }
   return 1;
 }
