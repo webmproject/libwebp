@@ -325,6 +325,7 @@ gif2webp: $(DIRBIN)\gif2webp.exe
 anim_diff: $(DIRBIN)\anim_diff.exe
 
 $(DIRBIN)\anim_diff.exe: $(DIROBJ)\examples\anim_diff.obj $(EX_ANIM_UTIL_OBJS)
+$(DIRBIN)\anim_diff.exe: $(EX_UTIL_OBJS)
 $(DIRBIN)\anim_diff.exe: $(EX_GIF_DEC_OBJS) $(LIBWEBPDEMUX) $(LIBWEBP)
 $(DIRBIN)\cwebp.exe: $(DIROBJ)\examples\cwebp.obj $(EX_FORMAT_DEC_OBJS)
 $(DIRBIN)\dwebp.exe: $(DIROBJ)\examples\dwebp.obj
@@ -382,18 +383,18 @@ $(DIROBJ)\$(DLLINC):
 	@echo #define WEBP_EXTERN(type) __declspec(dllexport) type >> $@
 	@echo #endif  /* WEBP_DLL_H_ */ >> $@
 
-.SUFFIXES: .c .cc .obj .res .exe
+.SUFFIXES: .c .obj .res .exe
 # File-specific flag builds. Note batch rules take precedence over wildcards,
 # so for now name each file individually.
 $(DIROBJ)\dsp\enc_avx2.obj: src\dsp\enc_avx2.c
 	$(CC) $(CFLAGS) $(AVX2_FLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$(DIROBJ)\dsp\ \
 	  src\dsp\$(@B).c
-$(DIROBJ)\examples\anim_diff.obj: examples\anim_diff.cc
+$(DIROBJ)\examples\anim_diff.obj: examples\anim_diff.c
 	$(CC) $(CFLAGS) /DWEBP_HAVE_GIF /Fd$(LIBWEBP_PDBNAME) \
-	  /Fo$(DIROBJ)\examples\ examples\$(@B).cc
-$(DIROBJ)\examples\anim_util.obj: examples\anim_util.cc
+	  /Fo$(DIROBJ)\examples\ examples\$(@B).c
+$(DIROBJ)\examples\anim_util.obj: examples\anim_util.c
 	$(CC) $(CFLAGS) /DWEBP_HAVE_GIF /Fd$(LIBWEBP_PDBNAME) \
-	  /Fo$(DIROBJ)\examples\ examples\$(@B).cc
+	  /Fo$(DIROBJ)\examples\ examples\$(@B).c
 $(DIROBJ)\examples\gif2webp.obj: examples\gif2webp.c
 	$(CC) $(CFLAGS) /DWEBP_HAVE_GIF /Fd$(LIBWEBP_PDBNAME) \
 	  /Fo$(DIROBJ)\examples\ examples\$(@B).c

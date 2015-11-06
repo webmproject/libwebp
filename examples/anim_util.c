@@ -16,20 +16,17 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <fstream>
-#include <sstream>   // for 'ostringstream'.
-
 #ifdef WEBP_HAVE_GIF
 #include <gif_lib.h>
 #endif
 #include "webp/format_constants.h"
 #include "webp/decode.h"
 #include "webp/demux.h"
+#include "./example_util.h"
 
-using std::ifstream;
-using std::ios;
-using std::ofstream;
-using std::ostringstream;
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define snprintf _snprintf
+#endif
 
 static const int kNumChannels = 4;
 
@@ -37,17 +34,43 @@ static const int kNumChannels = 4;
 // Common utilities.
 
 // Returns true if the frame covers the full canvas.
-static bool IsFullFrame(int width, int height,
-                        int canvas_width, int canvas_height) {
+static int IsFullFrame(int width, int height,
+                       int canvas_width, int canvas_height) {
   return (width == canvas_width && height == canvas_height);
 }
 
-static void AllocateFrames(AnimatedImage* const image, uint32_t frame_count) {
-  image->frames.resize(frame_count);
-  for (size_t i = 0; i < image->frames.size(); ++i) {
-    const size_t rgba_size =
-        image->canvas_width * kNumChannels * image->canvas_height;
-    image->frames[i].rgba.resize(rgba_size);
+static int AllocateFrames(AnimatedImage* const image, uint32_t num_frames) {
+  uint32_t i;
+  const size_t rgba_size =
+      image->canvas_width * kNumChannels * image->canvas_height;
+  uint8_t* const mem = (uint8_t*)malloc(num_frames * rgba_size * sizeof(*mem));
+  DecodedFrame* const frames =
+      (DecodedFrame*)malloc(num_frames * sizeof(*frames));
+
+  if (mem == NULL || frames == NULL) {
+    free(mem);
+    free(frames);
+    return 0;
+  }
+  free(image->raw_mem);
+  image->num_frames = num_frames;
+  image->frames = frames;
+  for (i = 0; i < num_frames; ++i) {
+    frames[i].rgba = mem + i * rgba_size;
+    frames[i].duration = 0;
+    frames[i].is_key_frame = 0;
+  }
+  image->raw_mem = mem;
+  return 1;
+}
+
+void ClearAnimatedImage(AnimatedImage* const image) {
+  if (image != NULL) {
+    free(image->raw_mem);
+    free(image->frames);
+    image->num_frames = 0;
+    image->frames = NULL;
+    image->raw_mem = NULL;
   }
 }
 
@@ -60,9 +83,10 @@ static void ZeroFillCanvas(uint8_t* rgba,
 // Clear given frame rectangle to transparent.
 static void ZeroFillFrameRect(uint8_t* rgba, int rgba_stride, int x_offset,
                               int y_offset, int width, int height) {
+  int j;
   assert(width * kNumChannels <= rgba_stride);
   rgba += y_offset * rgba_stride + x_offset * kNumChannels;
-  for (int j = 0; j < height; ++j) {
+  for (j = 0; j < height; ++j) {
     memset(rgba, 0, width * kNumChannels);
     rgba += rgba_stride;
   }
@@ -79,12 +103,13 @@ static void CopyCanvas(const uint8_t* src, uint8_t* dst,
 static void CopyFrameRectangle(const uint8_t* src, uint8_t* dst, int stride,
                                int x_offset, int y_offset,
                                int width, int height) {
+  int j;
   const int width_in_bytes = width * kNumChannels;
-  assert(width_in_bytes <= stride);
   const size_t offset = y_offset * stride + x_offset * kNumChannels;
+  assert(width_in_bytes <= stride);
   src += offset;
   dst += offset;
-  for (int j = 0; j < height; ++j) {
+  for (j = 0; j < height; ++j) {
     memcpy(dst, src, width_in_bytes);
     src += stride;
     dst += stride;
@@ -104,71 +129,84 @@ static void CleanupTransparentPixels(uint32_t* rgba,
   }
 }
 
-// Dump frame to a PAM file.
-// Returns true on success.
-static bool DumpFrame(const char filename[], const char dump_folder[],
-                      uint32_t frame_num, const uint8_t rgba[],
-                      int canvas_width, int canvas_height) {
-  const std::string filename_str = filename;
-  const size_t slash_idx = filename_str.find_last_of("/\\");
-  const std::string base_name = (slash_idx != std::string::npos)
-                                    ? filename_str.substr(slash_idx + 1)
-                                    : filename_str;
-  ostringstream dump_file;
-  dump_file << dump_folder << "/" << base_name << "_frame_" << frame_num
-            << ".pam";
+// Dump frame to a PAM file. Returns true on success.
+static int DumpFrame(const char filename[], const char dump_folder[],
+                     uint32_t frame_num, const uint8_t rgba[],
+                     int canvas_width, int canvas_height) {
+  int ok = 0;
+  size_t max_len;
+  int y;
+  const char* base_name = NULL;
+  char* file_name = NULL;
+  FILE* f = NULL;
 
-  ofstream fout(dump_file.str().c_str(), ios::binary | ios::out);
-  if (!fout.good()) {
-    fprintf(stderr, "Error opening file for writing: %s\n",
-            dump_file.str().c_str());
-    return false;
+  base_name = strrchr(filename, '/');
+  base_name = (base_name == NULL) ? filename : base_name + 1;
+  max_len = strlen(dump_folder) + 1 + strlen(base_name)
+          + strlen("_frame_") + strlen(".pam") + 8;
+  file_name = (char*)malloc(max_len * sizeof(*file_name));
+  if (file_name == NULL) goto End;
+
+  if (snprintf(file_name, max_len, "%s/%s_frame_%d.pam",
+               dump_folder, base_name, frame_num) < 0) {
+    fprintf(stderr, "Error while generating file name\n");
+    goto End;
   }
 
-  fout << "P7\nWIDTH " << canvas_width << "\nHEIGHT " << canvas_height
-       << "\nDEPTH 4\nMAXVAL 255\nTUPLTYPE RGB_ALPHA\nENDHDR\n";
-  for (int y = 0; y < canvas_height; ++y) {
-    fout.write(
-        reinterpret_cast<const char*>(rgba) + y * canvas_width * kNumChannels,
-        canvas_width * kNumChannels);
-    if (!fout.good()) {
-      fprintf(stderr, "Error writing to file: %s\n", dump_file.str().c_str());
-      return 0;
+  f = fopen(file_name, "wb");
+  if (f == NULL) {
+    fprintf(stderr, "Error opening file for writing: %s\n", file_name);
+    ok = 0;
+    goto End;
+  }
+  if (fprintf(f, "P7\nWIDTH %d\nHEIGHT %d\n"
+              "DEPTH 4\nMAXVAL 255\nTUPLTYPE RGB_ALPHA\nENDHDR\n",
+              canvas_width, canvas_height) < 0) {
+    fprintf(stderr, "Write error for file %s\n", file_name);
+    goto End;
+  }
+  for (y = 0; y < canvas_height; ++y) {
+    if (fwrite((const char*)(rgba) + y * canvas_width * kNumChannels,
+               canvas_width * kNumChannels, 1, f) != 1) {
+      fprintf(stderr, "Error writing to file: %s\n", file_name);
+      goto End;
     }
   }
-  fout.close();
-  return true;
+  ok = 1;
+ End:
+  if (f != NULL) fclose(f);
+  free(file_name);
+  return ok;
 }
 
 // -----------------------------------------------------------------------------
 // WebP Decoding.
 
 // Returns true if this is a valid WebP bitstream.
-static bool IsWebP(const std::string& file_str) {
-  return WebPGetInfo(reinterpret_cast<const uint8_t*>(file_str.c_str()),
-                     file_str.length(), NULL, NULL) != 0;
+static int IsWebP(const WebPData* const webp_data) {
+  return (WebPGetInfo(webp_data->bytes, webp_data->size, NULL, NULL) != 0);
 }
 
 // Read animated WebP bitstream 'file_str' into 'AnimatedImage' struct.
-static bool ReadAnimatedWebP(const char filename[], const std::string& file_str,
-                             AnimatedImage* const image, bool dump_frames,
-                             const char dump_folder[]) {
-  bool ok = false;
-  bool dump_ok = true;
+static int ReadAnimatedWebP(const char filename[],
+                            const WebPData* const webp_data,
+                            AnimatedImage* const image, int dump_frames,
+                            const char dump_folder[]) {
+  int ok = 0;
+  int dump_ok = 1;
   uint32_t frame_index = 0;
   int prev_frame_timestamp = 0;
+  WebPAnimDecoder* dec;
+  WebPAnimInfo anim_info;
 
-  const WebPData webp_data = {
-    reinterpret_cast<const uint8_t*>(file_str.data()), file_str.size()
-  };
+  memset(image, 0, sizeof(*image));
 
-  WebPAnimDecoder* dec = WebPAnimDecoderNew(&webp_data);
+  dec = WebPAnimDecoderNew(webp_data);
   if (dec == NULL) {
     fprintf(stderr, "Error parsing image: %s\n", filename);
     goto End;
   }
 
-  WebPAnimInfo anim_info;
   if (!WebPAnimDecoderGetInfo(dec, &anim_info)) {
     fprintf(stderr, "Error getting global info about the animation\n");
     goto End;
@@ -181,25 +219,28 @@ static bool ReadAnimatedWebP(const char filename[], const std::string& file_str,
   image->bgcolor = anim_info.bgcolor;
 
   // Allocate frames.
-  AllocateFrames(image, anim_info.frame_count);
+  if (!AllocateFrames(image, anim_info.frame_count)) return 0;
 
   // Decode frames.
   while (WebPAnimDecoderHasMoreFrames(dec)) {
+    DecodedFrame* curr_frame;
+    uint8_t* curr_rgba;
     uint8_t* frame_rgba;
     int timestamp;
+
     if (!WebPAnimDecoderGetNext(dec, &frame_rgba, &timestamp)) {
       fprintf(stderr, "Error decoding frame #%u\n", frame_index);
       goto End;
     }
-    DecodedFrame* const curr_frame = &image->frames[frame_index];
-    uint8_t* const curr_rgba = curr_frame->rgba.data();
+    curr_frame = &image->frames[frame_index];
+    curr_rgba = curr_frame->rgba;
     curr_frame->duration = timestamp - prev_frame_timestamp;
-    curr_frame->is_key_frame = false;  // Unused.
+    curr_frame->is_key_frame = 0;  // Unused.
     memcpy(curr_rgba, frame_rgba,
            image->canvas_width * kNumChannels * image->canvas_height);
 
     // Needed only because we may want to compare with GIF later.
-    CleanupTransparentPixels(reinterpret_cast<uint32_t*>(curr_rgba),
+    CleanupTransparentPixels((uint32_t*)curr_rgba,
                              image->canvas_width, image->canvas_height);
 
     if (dump_frames && dump_ok) {
@@ -224,12 +265,11 @@ static bool ReadAnimatedWebP(const char filename[], const std::string& file_str,
 // GIF Decoding.
 
 // Returns true if this is a valid GIF bitstream.
-static bool IsGIF(const std::string& file_str) {
-  const char* const cstr = file_str.c_str();
-  return file_str.length() > GIF_STAMP_LEN &&
-         (!memcmp(GIF_STAMP, cstr, GIF_STAMP_LEN) ||
-          !memcmp(GIF87_STAMP, cstr, GIF_STAMP_LEN) ||
-          !memcmp(GIF89_STAMP, cstr, GIF_STAMP_LEN));
+static int IsGIF(const WebPData* const data) {
+  return data->size > GIF_STAMP_LEN &&
+         (!memcmp(GIF_STAMP, data->bytes, GIF_STAMP_LEN) ||
+          !memcmp(GIF87_STAMP, data->bytes, GIF_STAMP_LEN) ||
+          !memcmp(GIF89_STAMP, data->bytes, GIF_STAMP_LEN));
 }
 
 #ifdef WEBP_HAVE_GIF
@@ -247,13 +287,13 @@ static bool IsGIF(const std::string& file_str) {
 #if !LOCAL_GIF_PREREQ(5, 0)
 
 // Added in v5.0
-typedef struct GraphicsControlBlock {
+typedef struct {
   int DisposalMode;
 #define DISPOSAL_UNSPECIFIED      0       // No disposal specified
 #define DISPOSE_DO_NOT            1       // Leave image in place
 #define DISPOSE_BACKGROUND        2       // Set area to background color
 #define DISPOSE_PREVIOUS          3       // Restore to previous content
-  bool UserInputFlag;      // User confirmation required before disposal
+  int UserInputFlag;       // User confirmation required before disposal
   int DelayTime;           // Pre-display delay in 0.01sec units
   int TransparentColor;    // Palette index for transparency, -1 if none
 #define NO_TRANSPARENT_COLOR     -1
@@ -269,7 +309,7 @@ static int DGifExtensionToGCB(const size_t GifExtensionLength,
   gcb->UserInputFlag = (GifExtension[0] & 0x02) != 0;
   gcb->DelayTime = GifExtension[1] | (GifExtension[2] << 8);
   if (GifExtension[0] & 0x01) {
-    gcb->TransparentColor = static_cast<int>(GifExtension[3]);
+    gcb->TransparentColor = (int)GifExtension[3];
   } else {
     gcb->TransparentColor = NO_TRANSPARENT_COLOR;
   }
@@ -283,7 +323,7 @@ static int DGifSavedExtensionToGCB(GifFileType* GifFile, int ImageIndex,
     return GIF_ERROR;
   }
   gcb->DisposalMode = DISPOSAL_UNSPECIFIED;
-  gcb->UserInputFlag = false;
+  gcb->UserInputFlag = 0;
   gcb->DelayTime = 0;
   gcb->TransparentColor = NO_TRANSPARENT_COLOR;
 
@@ -291,7 +331,7 @@ static int DGifSavedExtensionToGCB(GifFileType* GifFile, int ImageIndex,
     ExtensionBlock* ep = &GifFile->SavedImages[ImageIndex].ExtensionBlocks[i];
     if (ep->Function == GRAPHICS_EXT_FUNC_CODE) {
       return DGifExtensionToGCB(
-          ep->ByteCount, reinterpret_cast<const GifByteType*>(ep->Bytes), gcb);
+          ep->ByteCount, (const GifByteType*)ep->Bytes, gcb);
     }
   }
   return GIF_ERROR;
@@ -313,11 +353,10 @@ static void GIFDisplayError(const GifFileType* const gif, int gif_error) {
   // libgif 4.2.0 has retired PrintGifError() and added GifErrorString().
 #if LOCAL_GIF_PREREQ(4, 2)
 #if LOCAL_GIF_PREREQ(5, 0)
-  // Static string actually, hence the const char* cast.
-  const char* error_str = (const char*)GifErrorString(
-      (gif == NULL) ? gif_error : gif->Error);
+  const char* error_str =
+      GifErrorString((gif == NULL) ? gif_error : gif->Error);
 #else
-  const char* error_str = (const char*)GifErrorString();
+  const char* error_str = GifErrorString();
   (void)gif;
 #endif
   if (error_str == NULL) error_str = "Unknown error";
@@ -330,22 +369,23 @@ static void GIFDisplayError(const GifFileType* const gif, int gif_error) {
 #endif
 }
 
-static bool IsKeyFrameGIF(const GifImageDesc& prev_desc, int prev_dispose,
-                          const DecodedFrame* const prev_frame,
-                          int canvas_width, int canvas_height) {
-  if (prev_frame == NULL) return true;
+static int IsKeyFrameGIF(const GifImageDesc* prev_desc, int prev_dispose,
+                         const DecodedFrame* const prev_frame,
+                         int canvas_width, int canvas_height) {
+  if (prev_frame == NULL) return 1;
   if (prev_dispose == DISPOSE_BACKGROUND) {
-    if (IsFullFrame(prev_desc.Width, prev_desc.Height,
+    if (IsFullFrame(prev_desc->Width, prev_desc->Height,
                     canvas_width, canvas_height)) {
-      return true;
+      return 1;
     }
-    if (prev_frame->is_key_frame) return true;
+    if (prev_frame->is_key_frame) return 1;
   }
-  return false;
+  return 0;
 }
 
 static int GetTransparentIndexGIF(GifFileType* gif) {
-  GraphicsControlBlock first_gcb = GraphicsControlBlock();
+  GraphicsControlBlock first_gcb;
+  memset(&first_gcb, 0, sizeof(first_gcb));
   DGifSavedExtensionToGCB(gif, 0, &first_gcb);
   return first_gcb.TransparentColor;
 }
@@ -370,13 +410,15 @@ static uint32_t GetBackgroundColorGIF(GifFileType* gif) {
 
 // Find appropriate app extension and get loop count from the next extension.
 static uint32_t GetLoopCountGIF(const GifFileType* const gif) {
-  for (int i = 0; i < gif->ImageCount; ++i) {
+  int i;
+  for (i = 0; i < gif->ImageCount; ++i) {
     const SavedImage* const image = &gif->SavedImages[i];
-    for (int j = 0; (j + 1) < image->ExtensionBlockCount; ++j) {
+    int j;
+    for (j = 0; (j + 1) < image->ExtensionBlockCount; ++j) {
       const ExtensionBlock* const eb1 = image->ExtensionBlocks + j;
       const ExtensionBlock* const eb2 = image->ExtensionBlocks + j + 1;
-      const char* const signature = reinterpret_cast<const char*>(eb1->Bytes);
-      const bool signature_is_ok =
+      const char* const signature = (const char*)eb1->Bytes;
+      const int signature_is_ok =
           (eb1->Function == APPLICATION_EXT_FUNC_CODE) &&
           (eb1->ByteCount == 11) &&
           (!memcmp(signature, "NETSCAPE2.0", 11) ||
@@ -384,8 +426,8 @@ static uint32_t GetLoopCountGIF(const GifFileType* const gif) {
       if (signature_is_ok &&
           eb2->Function == CONTINUE_EXT_FUNC_CODE && eb2->ByteCount >= 3 &&
           eb2->Bytes[0] == 1) {
-        return (static_cast<uint32_t>(eb2->Bytes[2]) << 8) +
-               (static_cast<uint32_t>(eb2->Bytes[1]) << 0);
+        return ((uint32_t)(eb2->Bytes[2]) << 8) +
+               ((uint32_t)(eb2->Bytes[1]) << 0);
       }
     }
   }
@@ -394,18 +436,19 @@ static uint32_t GetLoopCountGIF(const GifFileType* const gif) {
 
 // Get duration of 'n'th frame in milliseconds.
 static int GetFrameDurationGIF(GifFileType* gif, int n) {
-  GraphicsControlBlock gcb = GraphicsControlBlock();
+  GraphicsControlBlock gcb;
+  memset(&gcb, 0, sizeof(gcb));
   DGifSavedExtensionToGCB(gif, n, &gcb);
   return gcb.DelayTime * 10;
 }
 
 // Returns true if frame 'target' completely covers 'covered'.
-static bool CoversFrameGIF(const GifImageDesc& target,
-                           const GifImageDesc& covered) {
-  return target.Left <= covered.Left &&
-         covered.Left + covered.Width <= target.Left + target.Width &&
-         target.Top <= covered.Top &&
-         covered.Top + covered.Height <= target.Top + target.Height;
+static int CoversFrameGIF(const GifImageDesc* const target,
+                          const GifImageDesc* const covered) {
+  return target->Left <= covered->Left &&
+         covered->Left + covered->Width <= target->Left + target->Width &&
+         target->Top <= covered->Top &&
+         covered->Top + covered->Height <= target->Top + target->Height;
 }
 
 static void RemapPixelsGIF(const uint8_t* const src,
@@ -425,65 +468,72 @@ static void RemapPixelsGIF(const uint8_t* const src,
   }
 }
 
-static bool ReadFrameGIF(const SavedImage* const gif_image,
-                         const ColorMapObject* cmap, int transparent_color,
-                         int out_stride, uint8_t* const dst) {
-  const GifImageDesc& image_desc = gif_image->ImageDesc;
-  if (image_desc.ColorMap) {
-      cmap = image_desc.ColorMap;
-  }
+static int ReadFrameGIF(const SavedImage* const gif_image,
+                        const ColorMapObject* cmap, int transparent_color,
+                        int out_stride, uint8_t* const dst) {
+  const GifImageDesc* image_desc = &gif_image->ImageDesc;
+  const uint8_t* in;
+  uint8_t* out;
+  int j;
+
+  if (image_desc->ColorMap) cmap = image_desc->ColorMap;
 
   if (cmap == NULL || cmap->ColorCount != (1 << cmap->BitsPerPixel)) {
-      fprintf(stderr, "Potentially corrupt color map.\n");
-      return false;
+    fprintf(stderr, "Potentially corrupt color map.\n");
+    return 0;
   }
 
-  const uint8_t* in = reinterpret_cast<uint8_t*>(gif_image->RasterBits);
-  uint8_t* out =
-      dst + image_desc.Top * out_stride + image_desc.Left * kNumChannels;
+  in = (const uint8_t*)gif_image->RasterBits;
+  out = dst + image_desc->Top * out_stride + image_desc->Left * kNumChannels;
 
-  for (int j = 0; j < image_desc.Height; ++j) {
-      RemapPixelsGIF(in, cmap, transparent_color, image_desc.Width, out);
-      in += image_desc.Width;
-      out += out_stride;
+  for (j = 0; j < image_desc->Height; ++j) {
+    RemapPixelsGIF(in, cmap, transparent_color, image_desc->Width, out);
+    in += image_desc->Width;
+    out += out_stride;
   }
-  return true;
+  return 1;
 }
 
 // Read animated GIF bitstream from 'filename' into 'AnimatedImage' struct.
-static bool ReadAnimatedGIF(const char filename[], AnimatedImage* const image,
-                            bool dump_frames, const char dump_folder[]) {
-  GifFileType* gif = DGifOpenFileName(filename, NULL);
+static int ReadAnimatedGIF(const char filename[], AnimatedImage* const image,
+                           int dump_frames, const char dump_folder[]) {
+  uint32_t frame_count;
+  uint32_t canvas_width, canvas_height;
+  uint32_t i;
+  int gif_error;
+  GifFileType* gif;
+
+  gif = DGifOpenFileName(filename, NULL);
   if (gif == NULL) {
     fprintf(stderr, "Could not read file: %s.\n", filename);
-    return false;
+    return 0;
   }
 
-  const int gif_error = DGifSlurp(gif);
+  gif_error = DGifSlurp(gif);
   if (gif_error != GIF_OK) {
     fprintf(stderr, "Could not parse image: %s.\n", filename);
     GIFDisplayError(gif, gif_error);
     DGifCloseFile(gif, NULL);
-    return false;
+    return 0;
   }
 
   // Animation properties.
-  image->canvas_width = static_cast<uint32_t>(gif->SWidth);
-  image->canvas_height = static_cast<uint32_t>(gif->SHeight);
+  image->canvas_width = (uint32_t)gif->SWidth;
+  image->canvas_height = (uint32_t)gif->SHeight;
   if (image->canvas_width > MAX_CANVAS_SIZE ||
       image->canvas_height > MAX_CANVAS_SIZE) {
     fprintf(stderr, "Invalid canvas dimension: %d x %d\n",
             image->canvas_width, image->canvas_height);
     DGifCloseFile(gif, NULL);
-    return false;
+    return 0;
   }
   image->loop_count = GetLoopCountGIF(gif);
   image->bgcolor = GetBackgroundColorGIF(gif);
 
-  const uint32_t frame_count = static_cast<uint32_t>(gif->ImageCount);
+  frame_count = (uint32_t)gif->ImageCount;
   if (frame_count == 0) {
     DGifCloseFile(gif, NULL);
-    return false;
+    return 0;
   }
 
   if (image->canvas_width == 0 || image->canvas_height == 0) {
@@ -494,33 +544,38 @@ static bool ReadAnimatedGIF(const char filename[], AnimatedImage* const image,
     if (image->canvas_width == 0 || image->canvas_height == 0) {
       fprintf(stderr, "Invalid canvas size in GIF.\n");
       DGifCloseFile(gif, NULL);
-      return false;
+      return 0;
     }
   }
   // Allocate frames.
   AllocateFrames(image, frame_count);
 
-  const uint32_t canvas_width = image->canvas_width;
-  const uint32_t canvas_height = image->canvas_height;
+  canvas_width = image->canvas_width;
+  canvas_height = image->canvas_height;
 
   // Decode and reconstruct frames.
-  for (uint32_t i = 0; i < frame_count; ++i) {
+  for (i = 0; i < frame_count; ++i) {
     const int canvas_width_in_bytes = canvas_width * kNumChannels;
     const SavedImage* const curr_gif_image = &gif->SavedImages[i];
-    GraphicsControlBlock curr_gcb = GraphicsControlBlock();
+    GraphicsControlBlock curr_gcb;
+    DecodedFrame* curr_frame;
+    uint8_t* curr_rgba;
+
+    memset(&curr_gcb, 0, sizeof(curr_gcb));
     DGifSavedExtensionToGCB(gif, i, &curr_gcb);
 
-    DecodedFrame* const curr_frame = &image->frames[i];
-    uint8_t* const curr_rgba = curr_frame->rgba.data();
+    curr_frame = &image->frames[i];
+    curr_rgba = curr_frame->rgba;
     curr_frame->duration = GetFrameDurationGIF(gif, i);
 
     if (i == 0) {  // Initialize as transparent.
-      curr_frame->is_key_frame = true;
+      curr_frame->is_key_frame = 1;
       ZeroFillCanvas(curr_rgba, canvas_width, canvas_height);
     } else {
       DecodedFrame* const prev_frame = &image->frames[i - 1];
-      const GifImageDesc& prev_desc = gif->SavedImages[i - 1].ImageDesc;
-      GraphicsControlBlock prev_gcb = GraphicsControlBlock();
+      const GifImageDesc* const prev_desc = &gif->SavedImages[i - 1].ImageDesc;
+      GraphicsControlBlock prev_gcb;
+      memset(&prev_gcb, 0, sizeof(prev_gcb));
       DGifSavedExtensionToGCB(gif, i - 1, &prev_gcb);
 
       curr_frame->is_key_frame =
@@ -530,32 +585,35 @@ static bool ReadAnimatedGIF(const char filename[], AnimatedImage* const image,
       if (curr_frame->is_key_frame) {  // Initialize as transparent.
         ZeroFillCanvas(curr_rgba, canvas_width, canvas_height);
       } else {
+        int prev_frame_disposed, curr_frame_opaque;
+        int prev_frame_completely_covered;
         // Initialize with previous canvas.
-        uint8_t* const prev_rgba = image->frames[i - 1].rgba.data();
+        uint8_t* const prev_rgba = image->frames[i - 1].rgba;
         CopyCanvas(prev_rgba, curr_rgba, canvas_width, canvas_height);
 
         // Dispose previous frame rectangle.
-        bool prev_frame_disposed =
+        prev_frame_disposed =
             (prev_gcb.DisposalMode == DISPOSE_BACKGROUND ||
              prev_gcb.DisposalMode == DISPOSE_PREVIOUS);
-        bool curr_frame_opaque =
+        curr_frame_opaque =
             (curr_gcb.TransparentColor == NO_TRANSPARENT_COLOR);
-        bool prev_frame_completely_covered =
+        prev_frame_completely_covered =
             curr_frame_opaque &&
-            CoversFrameGIF(curr_gif_image->ImageDesc, prev_desc);
+            CoversFrameGIF(&curr_gif_image->ImageDesc, prev_desc);
 
         if (prev_frame_disposed && !prev_frame_completely_covered) {
           switch (prev_gcb.DisposalMode) {
             case DISPOSE_BACKGROUND: {
               ZeroFillFrameRect(curr_rgba, canvas_width_in_bytes,
-                                prev_desc.Left, prev_desc.Top,
-                                prev_desc.Width, prev_desc.Height);
+                                prev_desc->Left, prev_desc->Top,
+                                prev_desc->Width, prev_desc->Height);
               break;
             }
             case DISPOSE_PREVIOUS: {
               int src_frame_num = i - 2;
               while (src_frame_num >= 0) {
-                GraphicsControlBlock src_frame_gcb = GraphicsControlBlock();
+                GraphicsControlBlock src_frame_gcb;
+                memset(&src_frame_gcb, 0, sizeof(src_frame_gcb));
                 DGifSavedExtensionToGCB(gif, src_frame_num, &src_frame_gcb);
                 if (src_frame_gcb.DisposalMode != DISPOSE_PREVIOUS) break;
                 --src_frame_num;
@@ -564,17 +622,17 @@ static bool ReadAnimatedGIF(const char filename[], AnimatedImage* const image,
                 // Restore pixels inside previous frame rectangle to
                 // corresponding pixels in source canvas.
                 uint8_t* const src_frame_rgba =
-                    image->frames[src_frame_num].rgba.data();
+                    image->frames[src_frame_num].rgba;
                 CopyFrameRectangle(src_frame_rgba, curr_rgba,
                                    canvas_width_in_bytes,
-                                   prev_desc.Left, prev_desc.Top,
-                                   prev_desc.Width, prev_desc.Height);
+                                   prev_desc->Left, prev_desc->Top,
+                                   prev_desc->Width, prev_desc->Height);
               } else {
                 // Source canvas doesn't exist. So clear previous frame
                 // rectangle to background.
                 ZeroFillFrameRect(curr_rgba, canvas_width_in_bytes,
-                                  prev_desc.Left, prev_desc.Top,
-                                  prev_desc.Width, prev_desc.Height);
+                                  prev_desc->Left, prev_desc->Top,
+                                  prev_desc->Width, prev_desc->Height);
               }
               break;
             }
@@ -589,67 +647,65 @@ static bool ReadAnimatedGIF(const char filename[], AnimatedImage* const image,
     if (!ReadFrameGIF(curr_gif_image, gif->SColorMap, curr_gcb.TransparentColor,
                       canvas_width_in_bytes, curr_rgba)) {
       DGifCloseFile(gif, NULL);
-      return false;
+      return 0;
     }
 
     if (dump_frames) {
       if (!DumpFrame(filename, dump_folder, i, curr_rgba,
                      canvas_width, canvas_height)) {
         DGifCloseFile(gif, NULL);
-        return false;
+        return 0;
       }
     }
   }
   DGifCloseFile(gif, NULL);
-  return true;
+  return 1;
 }
 
 #else
 
-static bool ReadAnimatedGIF(const char filename[], AnimatedImage* const image,
-                            bool dump_frames, const char dump_folder[]) {
+static int ReadAnimatedGIF(const char filename[], AnimatedImage* const image,
+                           int dump_frames, const char dump_folder[]) {
   (void)filename;
   (void)image;
   (void)dump_frames;
   (void)dump_folder;
   fprintf(stderr, "GIF support not compiled. Please install the libgif-dev "
           "package before building.\n");
-  return false;
+  return 0;
 }
 
 #endif  // WEBP_HAVE_GIF
 
 // -----------------------------------------------------------------------------
 
-static bool ReadFile(const char filename[], std::string* filestr) {
-  ifstream fin(filename, ios::binary);
-  if (!fin.good()) return false;
-  ostringstream strout;
-  strout << fin.rdbuf();
-  *filestr = strout.str();
-  fin.close();
-  return true;
-}
+int ReadAnimatedImage(const char filename[], AnimatedImage* const image,
+                      int dump_frames, const char dump_folder[]) {
+  int ok = 0;
+  WebPData webp_data;
 
-bool ReadAnimatedImage(const char filename[], AnimatedImage* const image,
-                       bool dump_frames, const char dump_folder[]) {
-  std::string file_str;
-  if (!ReadFile(filename, &file_str)) {
+  WebPDataInit(&webp_data);
+  memset(image, 0, sizeof(*image));
+
+  if (!ExUtilReadFile(filename, &webp_data.bytes, &webp_data.size)) {
     fprintf(stderr, "Error reading file: %s\n", filename);
-    return false;
+    return 0;
   }
 
-  if (IsWebP(file_str)) {
-    return ReadAnimatedWebP(filename, file_str, image, dump_frames,
-                            dump_folder);
-  } else if (IsGIF(file_str)) {
-    return ReadAnimatedGIF(filename, image, dump_frames, dump_folder);
+  if (IsWebP(&webp_data)) {
+    ok = ReadAnimatedWebP(filename, &webp_data, image, dump_frames,
+                          dump_folder);
+  } else if (IsGIF(&webp_data)) {
+    ok = ReadAnimatedGIF(filename, image, dump_frames, dump_folder);
   } else {
     fprintf(stderr,
             "Unknown file type: %s. Supported file types are WebP and GIF\n",
             filename);
-    return false;
+    ok = 0;
   }
+  if (!ok) ClearAnimatedImage(image);
+  WebPDataClear(&webp_data);
+  return ok;
 }
 
 static void Accumulate(double v1, double v2, double* const max_diff,
@@ -660,25 +716,27 @@ static void Accumulate(double v1, double v2, double* const max_diff,
 }
 
 void GetDiffAndPSNR(const uint8_t rgba1[], const uint8_t rgba2[],
-                    uint32_t width, uint32_t height, bool premultiply,
+                    uint32_t width, uint32_t height, int premultiply,
                     int* const max_diff, double* const psnr) {
   const uint32_t stride = width * kNumChannels;
   const int kAlphaChannel = kNumChannels - 1;
   double f_max_diff = 0.;
   double sse = 0.;
-  for (uint32_t y = 0; y < height; ++y) {
-    for (uint32_t x = 0; x < stride; x += kNumChannels) {
+  uint32_t x, y;
+  for (y = 0; y < height; ++y) {
+    for (x = 0; x < stride; x += kNumChannels) {
+      int k;
       const size_t offset = y * stride + x;
       const int alpha1 = rgba1[offset + kAlphaChannel];
       const int alpha2 = rgba2[offset + kAlphaChannel];
       Accumulate(alpha1, alpha2, &f_max_diff, &sse);
       if (!premultiply) {
-        for (int k = 0; k < kAlphaChannel; ++k) {
+        for (k = 0; k < kAlphaChannel; ++k) {
           Accumulate(rgba1[offset + k], rgba2[offset + k], &f_max_diff, &sse);
         }
       } else {
         // premultiply R/G/B channels with alpha value
-        for (int k = 0; k < kAlphaChannel; ++k) {
+        for (k = 0; k < kAlphaChannel; ++k) {
           Accumulate(rgba1[offset + k] * alpha1 / 255.,
                      rgba2[offset + k] * alpha2 / 255.,
                      &f_max_diff, &sse);
@@ -686,11 +744,11 @@ void GetDiffAndPSNR(const uint8_t rgba1[], const uint8_t rgba2[],
       }
     }
   }
-  *max_diff = static_cast<int>(f_max_diff);
+  *max_diff = (int)f_max_diff;
   if (*max_diff == 0) {
     *psnr = 99.;  // PSNR when images are identical.
   } else {
     sse /= stride * height;
-    *psnr = 10. * log10(255. * 255. / sse);
+    *psnr = 4.3429448 * log(255. * 255. / sse);
   }
 }

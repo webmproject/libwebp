@@ -20,10 +20,11 @@ if BUILD_ANIMDIFF
   noinst_PROGRAMS = anim_diff
 endif
 
-anim_diff_SOURCES = anim_diff.cc anim_util.cc anim_util.h
+anim_diff_SOURCES = anim_diff.c anim_util.c anim_util.h
 anim_diff_CPPFLAGS = $(AM_CPPFLAGS) $(GIF_INCLUDES)
 anim_diff_LDADD  = ../src/demux/libwebpdemux.la
-anim_diff_LDADD += $(GIF_LIBS)
+anim_diff_LDADD += libexampleutil.la
+anim_diff_LDADD += $(GIF_LIBS) -lm
 
 dwebp_SOURCES = dwebp.c stopwatch.h
 dwebp_CPPFLAGS  = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
