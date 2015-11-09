@@ -15,7 +15,6 @@
 #ifndef WEBP_WEBP_MUX_H_
 #define WEBP_WEBP_MUX_H_
 
-#include "./encode.h"
 #include "./mux_types.h"
 
 #ifdef __cplusplus
@@ -68,6 +67,7 @@ extern "C" {
 typedef struct WebPMux WebPMux;   // main opaque object.
 typedef struct WebPMuxFrameInfo WebPMuxFrameInfo;
 typedef struct WebPMuxAnimParams WebPMuxAnimParams;
+typedef struct WebPAnimEncoderOptions WebPAnimEncoderOptions;
 
 // Error codes
 typedef enum WebPMuxError {
@@ -417,8 +417,12 @@ WEBP_EXTERN(WebPMuxError) WebPMuxAssemble(WebPMux* mux,
 
 typedef struct WebPAnimEncoder WebPAnimEncoder;  // Main opaque object.
 
+// Forward declarations. Defined in encode.h.
+struct WebPPicture;
+struct WebPConfig;
+
 // Global options.
-typedef struct {
+struct WebPAnimEncoderOptions {
   WebPMuxAnimParams anim_params;  // Animation parameters.
   int minimize_size;    // If true, minimize the output size (slow). Implicitly
                         // disables key-frame insertion.
@@ -437,7 +441,7 @@ typedef struct {
   // string attached to the encoder.
   int verbose;          // If true, print encoding info.
   uint32_t padding[4];  // Padding for later use.
-} WebPAnimEncoderOptions;
+};
 
 // Internal, version-checked, entry point.
 WEBP_EXTERN(int) WebPAnimEncoderOptionsInitInternal(
@@ -489,8 +493,8 @@ static WEBP_INLINE WebPAnimEncoder* WebPAnimEncoderNew(
 //   On error, returns false and frame->error_code is set appropriately.
 //   Otherwise, returns true.
 WEBP_EXTERN(int) WebPAnimEncoderAdd(
-    WebPAnimEncoder* enc, WebPPicture* frame, int timestamp_ms,
-    const WebPConfig* config);
+    WebPAnimEncoder* enc, struct WebPPicture* frame, int timestamp_ms,
+    const struct WebPConfig* config);
 
 // Assemble all frames added so far into a WebP bitstream.
 // This call should be preceded by  a call to 'WebPAnimEncoderAdd' with
