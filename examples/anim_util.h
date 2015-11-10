@@ -16,34 +16,48 @@
 #include "webp/config.h"
 #endif
 
-#include <vector>
-
 #include "webp/types.h"
 
-struct DecodedFrame {
-  std::vector<uint8_t> rgba;  // Decoded and reconstructed full frame.
-  int duration;          // Frame duration in milliseconds.
-  bool is_key_frame;     // True if this frame is a key-frame.
-};
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-struct AnimatedImage {
+typedef struct {
+  uint8_t* rgba;         // Decoded and reconstructed full frame.
+  int duration;          // Frame duration in milliseconds.
+  int is_key_frame;      // True if this frame is a key-frame.
+} DecodedFrame;
+
+typedef struct {
   uint32_t canvas_width;
   uint32_t canvas_height;
   uint32_t bgcolor;
   uint32_t loop_count;
-  std::vector<DecodedFrame> frames;
-};
+  DecodedFrame* frames;
+  uint32_t num_frames;
+  void* raw_mem;
+} AnimatedImage;
+
+// Deallocate everything in 'image' (but not the object itself).
+void ClearAnimatedImage(AnimatedImage* const image);
 
 // Read animated image file into 'AnimatedImage' struct.
 // If 'dump_frames' is true, dump frames to 'dump_folder'.
-bool ReadAnimatedImage(const char filename[], AnimatedImage* const image,
-                       bool dump_frames, const char dump_folder[]);
+// Previous content of 'image' is obliterated.
+// Upon successful return, content of 'image' must be deleted by
+// calling 'ClearAnimatedImage'.
+int ReadAnimatedImage(const char filename[], AnimatedImage* const image,
+                      int dump_frames, const char dump_folder[]);
 
 // Given two RGBA buffers, calculate max pixel difference and PSNR.
 // If 'premultiply' is true, R/G/B values will be pre-multiplied by the
 // transparency before comparison.
 void GetDiffAndPSNR(const uint8_t rgba1[], const uint8_t rgba2[],
-                    uint32_t width, uint32_t height, bool premultiply,
+                    uint32_t width, uint32_t height, int premultiply,
                     int* const max_diff, double* const psnr);
+
+#ifdef __cplusplus
+}    // extern "C"
+#endif
 
 #endif  // WEBP_EXAMPLES_ANIM_UTIL_H_
