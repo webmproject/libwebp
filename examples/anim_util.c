@@ -201,7 +201,7 @@ static int ReadAnimatedWebP(const char filename[],
 
   memset(image, 0, sizeof(*image));
 
-  dec = WebPAnimDecoderNew(webp_data);
+  dec = WebPAnimDecoderNew(webp_data, NULL);
   if (dec == NULL) {
     fprintf(stderr, "Error parsing image: %s\n", filename);
     goto End;

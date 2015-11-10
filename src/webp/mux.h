@@ -449,8 +449,8 @@ WEBP_EXTERN(int) WebPAnimEncoderOptionsInitInternal(
 
 // Should always be called, to initialize a fresh WebPAnimEncoderOptions
 // structure before modification. Returns false in case of version mismatch.
-// WebPAnimEncoderOptionsInit() must have succeeded before using the 'options'
-// object.
+// WebPAnimEncoderOptionsInit() must have succeeded before using the
+// 'enc_options' object.
 static WEBP_INLINE int WebPAnimEncoderOptionsInit(
     WebPAnimEncoderOptions* enc_options) {
   return WebPAnimEncoderOptionsInitInternal(enc_options, WEBP_MUX_ABI_VERSION);
@@ -463,7 +463,7 @@ WEBP_EXTERN(WebPAnimEncoder*) WebPAnimEncoderNewInternal(
 // Creates and initializes a WebPAnimEncoder object.
 // Parameters:
 //   width/height - (in) canvas width and height of the animation.
-//   encoder_options - (in) encoding options; can be passed NULL to pick
+//   enc_options - (in) encoding options; can be passed NULL to pick
 //                     reasonable defaults.
 // Returns:
 //   A pointer to the newly created WebPAnimEncoder object.

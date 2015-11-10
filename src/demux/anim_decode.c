@@ -23,8 +23,18 @@
 
 #define NUM_CHANNELS 4
 
+typedef void (*BlendRowFunc)(uint32_t* const, const uint32_t* const, int);
+static void BlendPixelRowNonPremult(uint32_t* const src,
+                                    const uint32_t* const dst, int num_pixels);
+static void BlendPixelRowPremult(uint32_t* const src, const uint32_t* const dst,
+                                 int num_pixels);
+
 struct WebPAnimDecoder {
   WebPDemuxer* demux_;             // Demuxer created from given WebP bitstream.
+  WebPDecoderConfig config_;       // Decoder config.
+  // Note: we use a pointer to a function blending multiple pixels at a time to
+  // allow possible inlining of per-pixel blending function.
+  BlendRowFunc blend_func_;        // Pointer to the chose blend row function.
   WebPAnimInfo info_;              // Global info about the animation.
   uint8_t* curr_frame_;            // Current canvas (not disposed).
   uint8_t* prev_frame_disposed_;   // Previous canvas (properly disposed).
@@ -35,8 +45,45 @@ struct WebPAnimDecoder {
                                    // (starting from 1).
 };
 
-WebPAnimDecoder* WebPAnimDecoderNewInternal(const WebPData* webp_data,
+static void DefaultDecoderOptions(WebPAnimDecoderOptions* const dec_options) {
+  dec_options->color_mode = MODE_RGBA;
+}
+
+int WebPAnimDecoderOptionsInitInternal(WebPAnimDecoderOptions* dec_options,
                                             int abi_version) {
+  if (dec_options == NULL ||
+      WEBP_ABI_IS_INCOMPATIBLE(abi_version, WEBP_DEMUX_ABI_VERSION)) {
+    return 0;
+  }
+  DefaultDecoderOptions(dec_options);
+  return 1;
+}
+
+static int ApplyDecoderOptions(const WebPAnimDecoderOptions* const dec_options,
+                               WebPAnimDecoder* const dec) {
+  WEBP_CSP_MODE mode;
+  WebPDecoderConfig* config = &dec->config_;
+  assert(dec_options != NULL);
+
+  mode = dec_options->color_mode;
+  if (mode != MODE_RGBA && mode != MODE_BGRA &&
+      mode != MODE_rgbA && mode != MODE_bgrA) {
+    return 0;
+  }
+  dec->blend_func_ = (mode == MODE_RGBA || mode == MODE_BGRA)
+                         ? &BlendPixelRowNonPremult
+                         : &BlendPixelRowPremult;
+  WebPInitDecoderConfig(config);
+  config->output.colorspace = mode;
+  config->output.is_external_memory = 1;
+  // Note: config->output.u.RGBA is set at the time of decoding each frame.
+  return 1;
+}
+
+WebPAnimDecoder* WebPAnimDecoderNewInternal(
+    const WebPData* webp_data, const WebPAnimDecoderOptions* dec_options,
+    int abi_version) {
+  WebPAnimDecoderOptions options;
   WebPAnimDecoder* dec = NULL;
   if (webp_data == NULL ||
       WEBP_ABI_IS_INCOMPATIBLE(abi_version, WEBP_DEMUX_ABI_VERSION)) {
@@ -46,6 +93,13 @@ WebPAnimDecoder* WebPAnimDecoderNewInternal(const WebPData* webp_data,
   // Note: calloc() so that the pointer members are initialized to NULL.
   dec = (WebPAnimDecoder*)WebPSafeCalloc(1ULL, sizeof(*dec));
   if (dec == NULL) goto Error;
+
+  if (dec_options != NULL) {
+    options = *dec_options;
+  } else {
+    DefaultDecoderOptions(&options);
+  }
+  if (!ApplyDecoderOptions(&options, dec)) goto Error;
 
   dec->demux_ = WebPDemux(webp_data);
   if (dec->demux_ == NULL) goto Error;
@@ -88,20 +142,20 @@ static int IsFullFrame(int width, int height, int canvas_width,
 }
 
 // Clear the canvas to transparent.
-static void ZeroFillCanvas(uint8_t* rgba, uint32_t canvas_width,
+static void ZeroFillCanvas(uint8_t* buf, uint32_t canvas_width,
                            uint32_t canvas_height) {
-  memset(rgba, 0, canvas_width * NUM_CHANNELS * canvas_height);
+  memset(buf, 0, canvas_width * NUM_CHANNELS * canvas_height);
 }
 
 // Clear given frame rectangle to transparent.
-static void ZeroFillFrameRect(uint8_t* rgba, int rgba_stride, int x_offset,
+static void ZeroFillFrameRect(uint8_t* buf, int buf_stride, int x_offset,
                               int y_offset, int width, int height) {
   int j;
-  assert(width * NUM_CHANNELS <= rgba_stride);
-  rgba += y_offset * rgba_stride + x_offset * NUM_CHANNELS;
+  assert(width * NUM_CHANNELS <= buf_stride);
+  buf += y_offset * buf_stride + x_offset * NUM_CHANNELS;
   for (j = 0; j < height; ++j) {
-    memset(rgba, 0, width * NUM_CHANNELS);
-    rgba += rgba_stride;
+    memset(buf, 0, width * NUM_CHANNELS);
+    buf += buf_stride;
   }
 }
 
@@ -133,8 +187,10 @@ static int IsKeyFrame(const WebPIterator* const curr,
 
 
 // Blend a single channel of 'src' over 'dst', given their alpha channel values.
-static uint8_t BlendChannel(uint32_t src, uint8_t src_a, uint32_t dst,
-                            uint8_t dst_a, uint32_t scale, int shift) {
+// 'src' and 'dst' are assumed to be NOT pre-multiplied by alpha.
+static uint8_t BlendChannelNonPremult(uint32_t src, uint8_t src_a,
+                                      uint32_t dst, uint8_t dst_a,
+                                      uint32_t scale, int shift) {
   const uint8_t src_channel = (src >> shift) & 0xff;
   const uint8_t dst_channel = (dst >> shift) & 0xff;
   const uint32_t blend_unscaled = src_channel * src_a + dst_channel * dst_a;
@@ -143,7 +199,7 @@ static uint8_t BlendChannel(uint32_t src, uint8_t src_a, uint32_t dst,
 }
 
 // Blend 'src' over 'dst' assuming they are NOT pre-multiplied by alpha.
-static uint32_t BlendPixel(uint32_t src, uint32_t dst) {
+static uint32_t BlendPixelNonPremult(uint32_t src, uint32_t dst) {
   const uint8_t src_a = (src >> 24) & 0xff;
 
   if (src_a == 0) {
@@ -157,17 +213,57 @@ static uint32_t BlendPixel(uint32_t src, uint32_t dst) {
     const uint32_t scale = (1UL << 24) / blend_a;
 
     const uint8_t blend_r =
-        BlendChannel(src, src_a, dst, dst_factor_a, scale, 0);
+        BlendChannelNonPremult(src, src_a, dst, dst_factor_a, scale, 0);
     const uint8_t blend_g =
-        BlendChannel(src, src_a, dst, dst_factor_a, scale, 8);
+        BlendChannelNonPremult(src, src_a, dst, dst_factor_a, scale, 8);
     const uint8_t blend_b =
-        BlendChannel(src, src_a, dst, dst_factor_a, scale, 16);
+        BlendChannelNonPremult(src, src_a, dst, dst_factor_a, scale, 16);
     assert(src_a + dst_factor_a < 256);
 
     return (blend_r << 0) |
            (blend_g << 8) |
            (blend_b << 16) |
            ((uint32_t)blend_a << 24);
+  }
+}
+
+// Blend 'num_pixels' in 'src' over 'dst' assuming they are NOT pre-multiplied
+// by alpha.
+static void BlendPixelRowNonPremult(uint32_t* const src,
+                                    const uint32_t* const dst, int num_pixels) {
+  int i;
+  for (i = 0; i < num_pixels; ++i) {
+    const uint8_t src_alpha = (src[i] >> 24) & 0xff;
+    if (src_alpha != 0xff) {
+      src[i] = BlendPixelNonPremult(src[i], dst[i]);
+    }
+  }
+}
+
+// Individually multiply each channel in 'pix' by 'scale'.
+static WEBP_INLINE uint32_t ChannelwiseMultiply(uint32_t pix, uint32_t scale) {
+  uint32_t mask = 0x00FF00FF;
+  uint32_t rb = ((pix & mask) * scale) >> 8;
+  uint32_t ag = ((pix >> 8) & mask) * scale;
+  return (rb & mask) | (ag & ~mask);
+}
+
+// Blend 'src' over 'dst' assuming they are pre-multiplied by alpha.
+static uint32_t BlendPixelPremult(uint32_t src, uint32_t dst) {
+  const uint8_t src_a = (src >> 24) & 0xff;
+  return src + ChannelwiseMultiply(dst, 256 - src_a);
+}
+
+// Blend 'num_pixels' in 'src' over 'dst' assuming they are pre-multiplied by
+// alpha.
+static void BlendPixelRowPremult(uint32_t* const src, const uint32_t* const dst,
+                                 int num_pixels) {
+  int i;
+  for (i = 0; i < num_pixels; ++i) {
+    const uint8_t src_alpha = (src[i] >> 24) & 0xff;
+    if (src_alpha != 0xff) {
+      src[i] = BlendPixelPremult(src[i], dst[i]);
+    }
   }
 }
 
@@ -204,33 +300,21 @@ static void FindBlendRangeAtRow(const WebPIterator* const src,
   }
 }
 
-// Blend 'num_pixels' in 'src' over 'dst'.
-static void BlendPixelRow(uint32_t* const src, const uint32_t* const dst,
-                          int num_pixels) {
-  int i;
-  for (i = 0; i < num_pixels; ++i) {
-    uint32_t* const src_pixel_ptr = &src[i];
-    const uint8_t src_alpha = (*src_pixel_ptr >> 24) & 0xff;
-    if (src_alpha != 0xff) {
-      const uint32_t dst_pixel = dst[i];
-      *src_pixel_ptr = BlendPixel(*src_pixel_ptr, dst_pixel);
-    }
-  }
-}
-
 int WebPAnimDecoderGetNext(WebPAnimDecoder* dec,
-                           uint8_t** rgba_ptr, int* timestamp_ptr) {
+                           uint8_t** buf_ptr, int* timestamp_ptr) {
   WebPIterator iter;
   uint32_t width;
   uint32_t height;
   int is_key_frame;
   int timestamp;
+  BlendRowFunc blend_row;
 
-  if (dec == NULL || rgba_ptr == NULL || timestamp_ptr == NULL) return 0;
+  if (dec == NULL || buf_ptr == NULL || timestamp_ptr == NULL) return 0;
   if (!WebPAnimDecoderHasMoreFrames(dec)) return 0;
 
   width = dec->info_.canvas_width;
   height = dec->info_.canvas_height;
+  blend_row = dec->blend_func_;
 
   // Get compressed frame.
   if (!WebPDemuxGetFrame(dec->demux_, dec->next_frame_, &iter)) {
@@ -249,16 +333,17 @@ int WebPAnimDecoderGetNext(WebPAnimDecoder* dec,
 
   // Decode.
   {
-    const uint8_t* input = iter.fragment.bytes;
-    const size_t input_size = iter.fragment.size;
-    const size_t output_offset =
+    const uint8_t* in = iter.fragment.bytes;
+    const size_t in_size = iter.fragment.size;
+    const size_t out_offset =
         (iter.y_offset * width + iter.x_offset) * NUM_CHANNELS;
-    uint8_t* output = dec->curr_frame_ + output_offset;
-    const int output_stride = NUM_CHANNELS * width;
-    const size_t output_size = output_stride * iter.height;
+    WebPDecoderConfig* const config = &dec->config_;
+    WebPRGBABuffer* const buf = &config->output.u.RGBA;
+    buf->stride = NUM_CHANNELS * width;
+    buf->size = buf->stride * iter.height;
+    buf->rgba = dec->curr_frame_ + out_offset;
 
-    if (WebPDecodeRGBAInto(input, input_size, output, output_size,
-                           output_stride) == NULL) {
+    if (WebPDecode(in, in_size, config) != VP8_STATUS_OK) {
       goto Error;
     }
   }
@@ -275,9 +360,8 @@ int WebPAnimDecoderGetNext(WebPAnimDecoder* dec,
       for (y = 0; y < iter.height; ++y) {
         const size_t offset =
             (iter.y_offset + y) * width + iter.x_offset;
-        BlendPixelRow((uint32_t*)dec->curr_frame_ + offset,
-                      (uint32_t*)dec->prev_frame_disposed_ + offset,
-                      iter.width);
+        blend_row((uint32_t*)dec->curr_frame_ + offset,
+                  (uint32_t*)dec->prev_frame_disposed_ + offset, iter.width);
       }
     } else {
       int y;
@@ -293,12 +377,12 @@ int WebPAnimDecoderGetNext(WebPAnimDecoder* dec,
                             &left2, &width2);
         if (width1 > 0) {
           const size_t offset1 = canvas_y * width + left1;
-          BlendPixelRow((uint32_t*)dec->curr_frame_ + offset1,
+          blend_row((uint32_t*)dec->curr_frame_ + offset1,
                         (uint32_t*)dec->prev_frame_disposed_ + offset1, width1);
         }
         if (width2 > 0) {
           const size_t offset2 = canvas_y * width + left2;
-          BlendPixelRow((uint32_t*)dec->curr_frame_ + offset2,
+          blend_row((uint32_t*)dec->curr_frame_ + offset2,
                         (uint32_t*)dec->prev_frame_disposed_ + offset2, width2);
         }
       }
@@ -318,7 +402,7 @@ int WebPAnimDecoderGetNext(WebPAnimDecoder* dec,
   ++dec->next_frame_;
 
   // All OK, fill in the values.
-  *rgba_ptr = dec->curr_frame_;
+  *buf_ptr = dec->curr_frame_;
   *timestamp_ptr = timestamp;
   return 1;
 

@@ -48,13 +48,14 @@
 #ifndef WEBP_WEBP_DEMUX_H_
 #define WEBP_WEBP_DEMUX_H_
 
+#include "./decode.h"     // for WEBP_CSP_MODE
 #include "./mux_types.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define WEBP_DEMUX_ABI_VERSION 0x0102    // MAJOR(8b) + MINOR(8b)
+#define WEBP_DEMUX_ABI_VERSION 0x0103    // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -64,6 +65,7 @@ typedef struct WebPDemuxer WebPDemuxer;
 typedef struct WebPIterator WebPIterator;
 typedef struct WebPChunkIterator WebPChunkIterator;
 typedef struct WebPAnimInfo WebPAnimInfo;
+typedef struct WebPAnimDecoderOptions WebPAnimDecoderOptions;
 
 //------------------------------------------------------------------------------
 
@@ -223,15 +225,19 @@ WEBP_EXTERN(void) WebPDemuxReleaseChunkIterator(WebPChunkIterator* iter);
 //
 // Code Example:
 /*
-  WebPAnimDecoder* dec = WebPAnimDecoderNew(webp_data);
+  WebPAnimDecoderOptions dec_options;
+  WebPAnimDecoderOptionsInit(&dec_options);
+  // Tune 'dec_options' as needed.
+  WebPAnimDecoder* dec = WebPAnimDecoderNew(webp_data, &dec_options);
   WebPAnimInfo anim_info;
   WebPAnimDecoderGetInfo(dec, &anim_info);
   for (uint32_t i = 0; i < anim_info.loop_count; ++i) {
     while (WebPAnimDecoderHasMoreFrames(dec)) {
-      uint8_t* frame_rgba;
+      uint8_t* buf;
       int timestamp;
-      WebPAnimDecoderGetNext(dec, &frame_rgba, &timestamp);
-      // ... (Render 'frame_rgba' based on 'timestamp').
+      WebPAnimDecoderGetNext(dec, &buf, &timestamp);
+      // ... (Render 'buf' based on 'timestamp').
+      // ... (Do NOT free 'buf', as it is owned by 'dec').
     }
     WebPAnimDecoderReset(dec);
   }
@@ -240,19 +246,46 @@ WEBP_EXTERN(void) WebPDemuxReleaseChunkIterator(WebPChunkIterator* iter);
 
 typedef struct WebPAnimDecoder WebPAnimDecoder;  // Main opaque object.
 
+// Global options.
+struct WebPAnimDecoderOptions {
+  // Output colorspace. Only the following modes are supported:
+  // MODE_RGBA, MODE_BGRA, MODE_rgbA and MODE_bgrA.
+  WEBP_CSP_MODE color_mode;
+  uint32_t padding[8];  // Padding for later use.
+};
+
 // Internal, version-checked, entry point.
-WEBP_EXTERN(WebPAnimDecoder*) WebPAnimDecoderNewInternal(const WebPData*, int);
+WEBP_EXTERN(int) WebPAnimDecoderOptionsInitInternal(
+    WebPAnimDecoderOptions*, int);
+
+// Should always be called, to initialize a fresh WebPAnimDecoderOptions
+// structure before modification. Returns false in case of version mismatch.
+// WebPAnimDecoderOptionsInit() must have succeeded before using the
+// 'dec_options' object.
+static WEBP_INLINE int WebPAnimDecoderOptionsInit(
+    WebPAnimDecoderOptions* dec_options) {
+  return WebPAnimDecoderOptionsInitInternal(dec_options,
+                                            WEBP_DEMUX_ABI_VERSION);
+}
+
+// Internal, version-checked, entry point.
+WEBP_EXTERN(WebPAnimDecoder*) WebPAnimDecoderNewInternal(
+    const WebPData*, const WebPAnimDecoderOptions*, int);
 
 // Creates and initializes a WebPAnimDecoder object.
 // Parameters:
 //   webp_data - (in) WebP bitstream. This should remain unchanged during the
 //                    lifetime of the output WebPAnimDecoder object.
+//   dec_options - (in) decoding options. Can be passed NULL to choose
+//                      reasonable defaults (in particular, color mode MODE_RGBA
+//                      will be picked).
 // Returns:
 //   A pointer to the newly created WebPAnimDecoder object, or NULL in case of
-//   parsing/memory error.
+//   parsing error, invalid option or memory error.
 static WEBP_INLINE WebPAnimDecoder* WebPAnimDecoderNew(
-    const WebPData* webp_data) {
-  return WebPAnimDecoderNewInternal(webp_data, WEBP_DEMUX_ABI_VERSION);
+    const WebPData* webp_data, const WebPAnimDecoderOptions* dec_options) {
+  return WebPAnimDecoderNewInternal(webp_data, dec_options,
+                                    WEBP_DEMUX_ABI_VERSION);
 }
 
 // Global information about the animation..
@@ -274,20 +307,20 @@ struct WebPAnimInfo {
 WEBP_EXTERN(int) WebPAnimDecoderGetInfo(const WebPAnimDecoder* dec,
                                         WebPAnimInfo* info);
 
-// Fetch the next frame from 'dec' in RGBA format. This will be a fully
-// reconstructed canvas of size 'canvas_width * 4 * canvas_height', and not just
-// the frame sub-rectangle.
-// The returned 'rgba' buffer is valid only until the next call to
+// Fetch the next frame from 'dec' based on options supplied to
+// WebPAnimDecoderNew(). This will be a fully reconstructed canvas of size
+// 'canvas_width * 4 * canvas_height', and not just the frame sub-rectangle. The
+// returned buffer 'buf' is valid only until the next call to
 // WebPAnimDecoderGetNext(), WebPAnimDecoderReset() or WebPAnimDecoderDelete().
 // Parameters:
 //   dec - (in/out) decoder instance from which the next frame is to be fetched.
-//   rgba - (out) decoded frame in RGBA format.
+//   buf - (out) decoded frame.
 //   timestamp - (out) timestamp of the frame in milliseconds.
 // Returns:
 //   False if any of the arguments are NULL, or if there is a parsing or
 //   decoding error, or if there are no more frames. Otherwise, returns true.
 WEBP_EXTERN(int) WebPAnimDecoderGetNext(WebPAnimDecoder* dec,
-                                        uint8_t** rgba, int* timestamp);
+                                        uint8_t** buf, int* timestamp);
 
 // Check if there are more frames left to decode.
 // Parameters:
