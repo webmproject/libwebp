@@ -20,6 +20,12 @@
 #include "../webp/format_constants.h"
 #include "../webp/mux.h"
 
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define snprintf _snprintf
+#endif
+
+#define ERROR_STR_MAX_LENGTH 100
+
 //------------------------------------------------------------------------------
 // Internal structs.
 
@@ -86,6 +92,7 @@ struct WebPAnimEncoder {
                             // different from 'in_frame_count_' due to merging.
 
   WebPMux* mux_;        // Muxer to assemble the WebP bitstream.
+  char error_str_[ERROR_STR_MAX_LENGTH];  // Error string. Empty if no error.
 };
 
 // -----------------------------------------------------------------------------
@@ -166,7 +173,6 @@ static void DefaultEncoderOptions(WebPAnimEncoderOptions* const enc_options) {
   enc_options->minimize_size = 0;
   DisableKeyframes(enc_options);
   enc_options->allow_mixed = 0;
-  enc_options->verbose = 0;
 }
 
 int WebPAnimEncoderOptionsInitInternal(WebPAnimEncoderOptions* enc_options,
@@ -203,6 +209,24 @@ static void WebPUtilClearPic(WebPPicture* const picture,
   }
 }
 
+static void MarkNoError(WebPAnimEncoder* const enc) {
+  enc->error_str_[0] = '\0';  // Empty string.
+}
+
+static void MarkError(WebPAnimEncoder* const enc, const char* str) {
+  if (snprintf(enc->error_str_, ERROR_STR_MAX_LENGTH, "%s.", str) < 0) {
+    assert(0);  // FIX ME!
+  }
+}
+
+static void MarkError2(WebPAnimEncoder* const enc,
+                       const char* str, int error_code) {
+  if (snprintf(enc->error_str_, ERROR_STR_MAX_LENGTH, "%s: %d.", str,
+               error_code) < 0) {
+    assert(0);  // FIX ME!
+  }
+}
+
 WebPAnimEncoder* WebPAnimEncoderNewInternal(
     int width, int height, const WebPAnimEncoderOptions* enc_options,
     int abi_version) {
@@ -221,6 +245,7 @@ WebPAnimEncoder* WebPAnimEncoderNewInternal(
   // sanity inits, so we can call WebPAnimEncoderDelete():
   enc->encoded_frames_ = NULL;
   enc->mux_ = NULL;
+  MarkNoError(enc);
 
   // Dimensions and options.
   *(int*)&enc->canvas_width_ = width;
@@ -236,7 +261,7 @@ WebPAnimEncoder* WebPAnimEncoderNewInternal(
   if (!WebPPictureInit(&enc->curr_canvas_copy_) ||
       !WebPPictureInit(&enc->prev_canvas_) ||
       !WebPPictureInit(&enc->prev_canvas_disposed_)) {
-    return NULL;
+    goto Err;
   }
   enc->curr_canvas_copy_.width = width;
   enc->curr_canvas_copy_.height = height;
@@ -287,7 +312,7 @@ static void FrameRelease(EncodedFrame* const encoded_frame) {
 }
 
 void WebPAnimEncoderDelete(WebPAnimEncoder* enc) {
-  if (enc != NULL) {;
+  if (enc != NULL) {
     WebPPictureFree(&enc->curr_canvas_copy_);
     WebPPictureFree(&enc->prev_canvas_);
     WebPPictureFree(&enc->prev_canvas_disposed_);
@@ -1106,9 +1131,8 @@ static int CacheFrame(WebPAnimEncoder* const enc,
     // We reset some counters, as the frame addition failed/was skipped.
     --enc->count_;
     if (!enc->is_first_frame_) --enc->count_since_key_frame_;
-    if (!ok && enc->options_.verbose) {
-      fprintf(stderr, "ERROR adding frame. WebPEncodingError: %d.\n",
-              error_code);
+    if (!ok) {
+      MarkError2(enc, "ERROR adding frame. WebPEncodingError", error_code);
     }
   }
   enc->curr_canvas_->error_code = error_code;   // report error_code
@@ -1125,13 +1149,11 @@ static int FlushFrames(WebPAnimEncoder* const enc) {
     assert(enc->mux_ != NULL);
     err = WebPMuxPushFrame(enc->mux_, info, 1);
     if (err != WEBP_MUX_OK) {
-      if (enc->options_.verbose) {
-        fprintf(stderr, "ERROR adding frame. WebPMuxError: %d.\n", err);
-      }
+      MarkError2(enc, "ERROR adding frame. WebPMuxError", err);
       return 0;
     }
     if (enc->options_.verbose) {
-      fprintf(stderr, "Added frame. offset:%d,%d dispose:%d blend:%d\n",
+      fprintf(stderr, "INFO: Added frame. offset:%d,%d dispose:%d blend:%d\n",
               info->x_offset, info->y_offset, info->dispose_method,
               info->blend_method);
     }
@@ -1165,6 +1187,7 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int timestamp,
   if (enc == NULL) {
     return 0;
   }
+  MarkNoError(enc);
 
   if (!enc->is_first_frame_) {
     // Make sure timestamps are non-decreasing (integer wrap-around is OK).
@@ -1174,10 +1197,7 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int timestamp,
       if (frame != NULL) {
         frame->error_code = VP8_ENC_ERROR_INVALID_CONFIGURATION;
       }
-      if (enc->options_.verbose) {
-        fprintf(stderr,
-                "ERROR adding frame: timestamps must be non-decreasing.\n");
-      }
+      MarkError(enc, "ERROR adding frame: timestamps must be non-decreasing");
       return 0;
     }
     if (!IncreasePreviousDuration(enc, (int)prev_frame_duration)) {
@@ -1196,9 +1216,7 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int timestamp,
   if (frame->width != enc->canvas_width_ ||
       frame->height != enc->canvas_height_) {
     frame->error_code = VP8_ENC_ERROR_INVALID_CONFIGURATION;
-    if (enc->options_.verbose) {
-      fprintf(stderr, "ERROR adding frame: Invalid frame dimensions.\n");
-    }
+    MarkError(enc, "ERROR adding frame: Invalid frame dimensions");
     return 0;
   }
 
@@ -1208,7 +1226,7 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int timestamp,
               "this incurs a small loss.\n");
     }
     if (!WebPPictureYUVAToARGB(frame)) {
-      fprintf(stderr, "ERROR converting frame from YUV(A) to ARGB\n");
+      MarkError(enc, "ERROR converting frame from YUV(A) to ARGB");
       return 0;
     }
   }
@@ -1348,17 +1366,15 @@ int WebPAnimEncoderAssemble(WebPAnimEncoder* enc, WebPData* webp_data) {
   if (enc == NULL) {
     return 0;
   }
+  MarkNoError(enc);
+
   if (webp_data == NULL) {
-    if (enc->options_.verbose) {
-      fprintf(stderr, "ERROR assembling: NULL input\n");
-    }
+    MarkError(enc, "ERROR assembling: NULL input");
     return 0;
   }
 
   if (enc->in_frame_count_ == 0) {
-    if (enc->options_.verbose) {
-      fprintf(stderr, "ERROR: No frames to assemble\n");
-    }
+    MarkError(enc, "ERROR: No frames to assemble");
     return 0;
   }
 
@@ -1393,14 +1409,16 @@ int WebPAnimEncoderAssemble(WebPAnimEncoder* enc, WebPData* webp_data) {
     err = OptimizeSingleFrame(enc, webp_data);
     if (err != WEBP_MUX_OK) goto Err;
   }
-
   return 1;
 
  Err:
-  if (enc->options_.verbose) {
-    fprintf(stderr, "ERROR assembling WebP: %d\n", err);
-  }
+  MarkError2(enc, "ERROR assembling WebP", err);
   return 0;
+}
+
+const char* WebPAnimEncoderGetError(WebPAnimEncoder* enc) {
+  if (enc == NULL) return NULL;
+  return enc->error_str_;
 }
 
 // -----------------------------------------------------------------------------

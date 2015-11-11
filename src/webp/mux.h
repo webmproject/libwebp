@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-#define WEBP_MUX_ABI_VERSION 0x0105        // MAJOR(8b) + MINOR(8b)
+#define WEBP_MUX_ABI_VERSION 0x0106        // MAJOR(8b) + MINOR(8b)
 
 //------------------------------------------------------------------------------
 // Mux API
@@ -436,10 +436,8 @@ struct WebPAnimEncoderOptions {
                         // then all frames will be key-frames.
   int allow_mixed;      // If true, use mixed compression mode; may choose
                         // either lossy and lossless for each frame.
+  int verbose;          // If true, print info and warning messages to stderr.
 
-  // TODO(urvang): Instead of printing errors to STDERR, we should have an error
-  // string attached to the encoder.
-  int verbose;          // If true, print encoding info.
   uint32_t padding[4];  // Padding for later use.
 };
 
@@ -508,10 +506,20 @@ WEBP_EXTERN(int) WebPAnimEncoderAdd(
 WEBP_EXTERN(int) WebPAnimEncoderAssemble(WebPAnimEncoder* enc,
                                          WebPData* webp_data);
 
+// Get error string corresponding to the most recent call using 'enc'. The
+// returned string is owned by 'enc' and is valid only until the next call to
+// WebPAnimEncoderAdd() or WebPAnimEncoderAssemble() or WebPAnimEncoderDelete().
+// Parameters:
+//   enc - (in/out) object from which the error string is to be fetched.
+// Returns:
+//   NULL if 'enc' is NULL. Otherwise, returns the error string if the last call
+//   to 'enc' had an error, or an empty string if the last call was a success.
+WEBP_EXTERN(const char*) WebPAnimEncoderGetError(WebPAnimEncoder* enc);
+
 // Deletes the WebPAnimEncoder object.
 // Parameters:
-//   anim_enc - (in/out) object to be deleted
-WEBP_EXTERN(void) WebPAnimEncoderDelete(WebPAnimEncoder* anim_enc);
+//   enc - (in/out) object to be deleted
+WEBP_EXTERN(void) WebPAnimEncoderDelete(WebPAnimEncoder* enc);
 
 //------------------------------------------------------------------------------
 

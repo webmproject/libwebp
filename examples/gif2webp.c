@@ -314,7 +314,12 @@ int main(int argc, const char *argv[]) {
           // Initialize encoder.
           enc = WebPAnimEncoderNew(curr_canvas.width, curr_canvas.height,
                                    &enc_options);
-          if (enc == NULL) goto End;
+          if (enc == NULL) {
+            fprintf(stderr,
+                    "Error! Could not create encoder object. Possibly due to "
+                    "a memory error.\n");
+            goto End;
+          }
           is_first_frame = 0;
         }
 
@@ -332,8 +337,7 @@ int main(int argc, const char *argv[]) {
         GIFBlendFrames(&frame, &gif_rect, &curr_canvas);
 
         if (!WebPAnimEncoderAdd(enc, &curr_canvas, frame_timestamp, &config)) {
-          fprintf(stderr, "Error! Cannot encode frame as WebP\n");
-          fprintf(stderr, "Error code: %d\n", curr_canvas.error_code);
+          fprintf(stderr, "%s\n", WebPAnimEncoderGetError(enc));
         }
 
         // Update canvases.
@@ -431,11 +435,11 @@ int main(int argc, const char *argv[]) {
   // Last NULL frame.
   if (!WebPAnimEncoderAdd(enc, NULL, frame_timestamp, NULL)) {
     fprintf(stderr, "Error flushing WebP muxer.\n");
+    fprintf(stderr, "%s\n", WebPAnimEncoderGetError(enc));
   }
 
   if (!WebPAnimEncoderAssemble(enc, &webp_data)) {
-    // TODO(urvang): Print actual error code.
-    fprintf(stderr, "ERROR assembling the WebP file.\n");
+    fprintf(stderr, "%s\n", WebPAnimEncoderGetError(enc));
     goto End;
   }
 
