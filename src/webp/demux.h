@@ -55,7 +55,7 @@
 extern "C" {
 #endif
 
-#define WEBP_DEMUX_ABI_VERSION 0x0103    // MAJOR(8b) + MINOR(8b)
+#define WEBP_DEMUX_ABI_VERSION 0x0104    // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -251,7 +251,8 @@ struct WebPAnimDecoderOptions {
   // Output colorspace. Only the following modes are supported:
   // MODE_RGBA, MODE_BGRA, MODE_rgbA and MODE_bgrA.
   WEBP_CSP_MODE color_mode;
-  uint32_t padding[8];  // Padding for later use.
+  int use_threads;           // If true, use multi-threaded decoding.
+  uint32_t padding[7];       // Padding for later use.
 };
 
 // Internal, version-checked, entry point.

@@ -47,6 +47,7 @@ struct WebPAnimDecoder {
 
 static void DefaultDecoderOptions(WebPAnimDecoderOptions* const dec_options) {
   dec_options->color_mode = MODE_RGBA;
+  dec_options->use_threads = 0;
 }
 
 int WebPAnimDecoderOptionsInitInternal(WebPAnimDecoderOptions* dec_options,
@@ -76,6 +77,7 @@ static int ApplyDecoderOptions(const WebPAnimDecoderOptions* const dec_options,
   WebPInitDecoderConfig(config);
   config->output.colorspace = mode;
   config->output.is_external_memory = 1;
+  config->options.use_threads = dec_options->use_threads;
   // Note: config->output.u.RGBA is set at the time of decoding each frame.
   return 1;
 }
