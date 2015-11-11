@@ -55,7 +55,7 @@
 extern "C" {
 #endif
 
-#define WEBP_DEMUX_ABI_VERSION 0x0104    // MAJOR(8b) + MINOR(8b)
+#define WEBP_DEMUX_ABI_VERSION 0x0105    // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -241,6 +241,8 @@ WEBP_EXTERN(void) WebPDemuxReleaseChunkIterator(WebPChunkIterator* iter);
     }
     WebPAnimDecoderReset(dec);
   }
+  const WebPDemuxer* demuxer = WebPAnimDecoderGetDemuxer(dec);
+  // ... (Do something using 'demuxer'; e.g. get EXIF/XMP/ICC data).
   WebPAnimDecoderDelete(dec);
 */
 
@@ -338,6 +340,17 @@ WEBP_EXTERN(int) WebPAnimDecoderHasMoreFrames(const WebPAnimDecoder* dec);
 // Parameters:
 //   dec - (in/out) decoder instance to be reset
 WEBP_EXTERN(void) WebPAnimDecoderReset(WebPAnimDecoder* dec);
+
+// Grab the internal demuxer object.
+// Getting the demuxer object can be useful if one wants to use operations only
+// available through demuxer; e.g. to get XMP/EXIF/ICC metadata. The returned
+// demuxer object is owned by 'dec' and is valid only until the next call to
+// WebPAnimDecoderDelete().
+//
+// Parameters:
+//   dec - (in) decoder instance from which the demuxer object is to be fetched.
+WEBP_EXTERN(const WebPDemuxer*) WebPAnimDecoderGetDemuxer(
+    const WebPAnimDecoder* dec);
 
 // Deletes the WebPAnimDecoder object.
 // Parameters:

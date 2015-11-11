@@ -427,6 +427,11 @@ void WebPAnimDecoderReset(WebPAnimDecoder* dec) {
   }
 }
 
+const WebPDemuxer* WebPAnimDecoderGetDemuxer(const WebPAnimDecoder* dec) {
+  if (dec == NULL) return NULL;
+  return dec->demux_;
+}
+
 void WebPAnimDecoderDelete(WebPAnimDecoder* dec) {
   if (dec != NULL) {
     WebPDemuxDelete(dec->demux_);
