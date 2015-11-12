@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#define WEBP_DECODER_ABI_VERSION 0x0206    // MAJOR(8b) + MINOR(8b)
+#define WEBP_DECODER_ABI_VERSION 0x0207    // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -409,12 +409,7 @@ struct WebPBitstreamFeatures {
   int has_animation;  // True if the bitstream is an animation.
   int format;         // 0 = undefined (/mixed), 1 = lossy, 2 = lossless
 
-  // Unused for now:
-  int no_incremental_decoding;  // if true, using incremental decoding is not
-                                // recommended.
-  int rotate;                   // TODO(later)
-  int uv_sampling;              // should be 0 for now. TODO(later)
-  uint32_t pad[2];              // padding for later use
+  uint32_t pad[5];    // padding for later use
 };
 
 // Internal, version-checked, entry point
@@ -448,10 +443,7 @@ struct WebPDecoderOptions {
   int flip;                           // flip output vertically
   int alpha_dithering_strength;       // alpha dithering strength in [0..100]
 
-  // Unused for now:
-  int force_rotation;                 // forced rotation (to be applied _last_)
-  int no_enhancement;                 // if true, discard enhancement layer
-  uint32_t pad[3];                    // padding for later use
+  uint32_t pad[5];                    // padding for later use
 };
 
 // Main object storing the configuration for advanced decoding.
