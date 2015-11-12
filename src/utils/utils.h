@@ -119,6 +119,21 @@ static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
 #endif
 
 //------------------------------------------------------------------------------
+// Pixel copying.
+
+struct WebPPicture;
+
+// Copy width x height pixels from 'src' to 'dst' honoring the strides.
+WEBP_EXTERN(void) WebPCopyPlane(const uint8_t* src, int src_stride,
+                                uint8_t* dst, int dst_stride,
+                                int width, int height);
+
+// Copy ARGB pixels from 'src' to 'dst' honoring strides. 'src' and 'dst' are
+// assumed to be already allocated and using ARGB data.
+WEBP_EXTERN(void) WebPCopyPixels(const struct WebPPicture* const src,
+                                 struct WebPPicture* const dst);
+
+//------------------------------------------------------------------------------
 
 #ifdef __cplusplus
 }    // extern "C"

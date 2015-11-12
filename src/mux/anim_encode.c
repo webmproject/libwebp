@@ -477,26 +477,6 @@ static int GetSubRect(const WebPPicture* const prev_canvas,
                          rect->width_, rect->height_, sub_frame);
 }
 
-// TODO: Also used in picture.c. Move to a common location?
-// Copy width x height pixels from 'src' to 'dst' honoring the strides.
-static void CopyPlane(const uint8_t* src, int src_stride,
-                      uint8_t* dst, int dst_stride, int width, int height) {
-  while (height-- > 0) {
-    memcpy(dst, src, width);
-    src += src_stride;
-    dst += dst_stride;
-  }
-}
-
-// Copy pixels from 'src' to 'dst' honoring strides. 'src' and 'dst' are assumed
-// to be already allocated.
-static void CopyPixels(const WebPPicture* const src, WebPPicture* const dst) {
-  assert(src->width == dst->width && src->height == dst->height);
-  assert(src->use_argb && dst->use_argb);
-  CopyPlane((uint8_t*)src->argb, 4 * src->argb_stride, (uint8_t*)dst->argb,
-            4 * dst->argb_stride, 4 * src->width, src->height);
-}
-
 static void DisposeFrameRectangle(int dispose_method,
                                   const FrameRect* const rect,
                                   WebPPicture* const curr_canvas) {
@@ -717,7 +697,7 @@ static WebPEncodingError EncodeCandidate(WebPPicture* const sub_frame,
 
 static void CopyCurrentCanvas(WebPAnimEncoder* const enc) {
   if (enc->curr_canvas_copy_modified_) {
-    CopyPixels(enc->curr_canvas_, &enc->curr_canvas_copy_);
+    WebPCopyPixels(enc->curr_canvas_, &enc->curr_canvas_copy_);
     enc->curr_canvas_copy_modified_ = 0;
   }
 }
@@ -988,7 +968,7 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
   if (dispose_bg_possible) {
     // Change-rectangle assuming previous frame was DISPOSE_BACKGROUND.
     WebPPicture* const prev_canvas_disposed = &enc->prev_canvas_disposed_;
-    CopyPixels(prev_canvas, prev_canvas_disposed);
+    WebPCopyPixels(prev_canvas, prev_canvas_disposed);
     DisposeFrameRectangle(WEBP_MUX_DISPOSE_BACKGROUND, &enc->prev_rect_,
                           prev_canvas_disposed);
     // Even if there is exact pixel match between 'disposed previous canvas' and
@@ -1118,7 +1098,7 @@ static int CacheFrame(WebPAnimEncoder* const enc,
   }
 
   // Update previous to previous and previous canvases for next call.
-  CopyPixels(enc->curr_canvas_, &enc->prev_canvas_);
+  WebPCopyPixels(enc->curr_canvas_, &enc->prev_canvas_);
   enc->is_first_frame_ = 0;
 
  Skip:

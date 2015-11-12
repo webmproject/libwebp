@@ -30,16 +30,6 @@ static void PictureGrabSpecs(const WebPPicture* const src,
 }
 
 //------------------------------------------------------------------------------
-// Picture copying
-
-static void CopyPlane(const uint8_t* src, int src_stride,
-                      uint8_t* dst, int dst_stride, int width, int height) {
-  while (height-- > 0) {
-    memcpy(dst, src, width);
-    src += src_stride;
-    dst += dst_stride;
-  }
-}
 
 // Adjust top-left corner to chroma sample position.
 static void SnapTopLeftPosition(const WebPPicture* const pic,
@@ -70,20 +60,20 @@ int WebPPictureCopy(const WebPPicture* src, WebPPicture* dst) {
   if (!WebPPictureAlloc(dst)) return 0;
 
   if (!src->use_argb) {
-    CopyPlane(src->y, src->y_stride,
-              dst->y, dst->y_stride, dst->width, dst->height);
-    CopyPlane(src->u, src->uv_stride,
-              dst->u, dst->uv_stride, HALVE(dst->width), HALVE(dst->height));
-    CopyPlane(src->v, src->uv_stride,
-              dst->v, dst->uv_stride, HALVE(dst->width), HALVE(dst->height));
+    WebPCopyPlane(src->y, src->y_stride,
+                  dst->y, dst->y_stride, dst->width, dst->height);
+    WebPCopyPlane(src->u, src->uv_stride, dst->u, dst->uv_stride,
+                  HALVE(dst->width), HALVE(dst->height));
+    WebPCopyPlane(src->v, src->uv_stride, dst->v, dst->uv_stride,
+                  HALVE(dst->width), HALVE(dst->height));
     if (dst->a != NULL)  {
-      CopyPlane(src->a, src->a_stride,
-                dst->a, dst->a_stride, dst->width, dst->height);
+      WebPCopyPlane(src->a, src->a_stride,
+                    dst->a, dst->a_stride, dst->width, dst->height);
     }
   } else {
-    CopyPlane((const uint8_t*)src->argb, 4 * src->argb_stride,
-              (uint8_t*)dst->argb, 4 * dst->argb_stride,
-              4 * dst->width, dst->height);
+    WebPCopyPlane((const uint8_t*)src->argb, 4 * src->argb_stride,
+                  (uint8_t*)dst->argb, 4 * dst->argb_stride,
+                  4 * dst->width, dst->height);
   }
   return 1;
 }
@@ -144,24 +134,23 @@ int WebPPictureCrop(WebPPicture* pic,
   if (!pic->use_argb) {
     const int y_offset = top * pic->y_stride + left;
     const int uv_offset = (top / 2) * pic->uv_stride + left / 2;
-    CopyPlane(pic->y + y_offset, pic->y_stride,
-              tmp.y, tmp.y_stride, width, height);
-    CopyPlane(pic->u + uv_offset, pic->uv_stride,
-              tmp.u, tmp.uv_stride, HALVE(width), HALVE(height));
-    CopyPlane(pic->v + uv_offset, pic->uv_stride,
-              tmp.v, tmp.uv_stride, HALVE(width), HALVE(height));
+    WebPCopyPlane(pic->y + y_offset, pic->y_stride,
+                  tmp.y, tmp.y_stride, width, height);
+    WebPCopyPlane(pic->u + uv_offset, pic->uv_stride,
+                  tmp.u, tmp.uv_stride, HALVE(width), HALVE(height));
+    WebPCopyPlane(pic->v + uv_offset, pic->uv_stride,
+                  tmp.v, tmp.uv_stride, HALVE(width), HALVE(height));
 
     if (tmp.a != NULL) {
       const int a_offset = top * pic->a_stride + left;
-      CopyPlane(pic->a + a_offset, pic->a_stride,
-                tmp.a, tmp.a_stride, width, height);
+      WebPCopyPlane(pic->a + a_offset, pic->a_stride,
+                    tmp.a, tmp.a_stride, width, height);
     }
   } else {
     const uint8_t* const src =
         (const uint8_t*)(pic->argb + top * pic->argb_stride + left);
-    CopyPlane(src, pic->argb_stride * 4,
-              (uint8_t*)tmp.argb, tmp.argb_stride * 4,
-              width * 4, height);
+    WebPCopyPlane(src, pic->argb_stride * 4, (uint8_t*)tmp.argb,
+                  tmp.argb_stride * 4, width * 4, height);
   }
   WebPPictureFree(pic);
   *pic = tmp;

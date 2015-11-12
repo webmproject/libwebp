@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "utils/utils.h"
 #include "webp/mux_types.h"
 #include "webp/encode.h"
 
@@ -228,21 +229,8 @@ void GIFClearPic(WebPPicture* const pic, const GIFFrameRect* const rect) {
   }
 }
 
-// TODO: Also used in picture.c. Move to a common location?
-// Copy width x height pixels from 'src' to 'dst' honoring the strides.
-static void CopyPlane(const uint8_t* src, int src_stride,
-                      uint8_t* dst, int dst_stride, int width, int height) {
-  while (height-- > 0) {
-    memcpy(dst, src, width);
-    src += src_stride;
-    dst += dst_stride;
-  }
-}
-
 void GIFCopyPixels(const WebPPicture* const src, WebPPicture* const dst) {
-  assert(src->width == dst->width && src->height == dst->height);
-  CopyPlane((uint8_t*)src->argb, 4 * src->argb_stride, (uint8_t*)dst->argb,
-            4 * dst->argb_stride, 4 * src->width, src->height);
+  WebPCopyPixels(src, dst);
 }
 
 void GIFDisposeFrame(GIFDisposeMethod dispose, const GIFFrameRect* const rect,
@@ -259,8 +247,8 @@ void GIFDisposeFrame(GIFDisposeMethod dispose, const GIFFrameRect* const rect,
     uint32_t* const dst =
         curr_canvas->argb + rect->x_offset + rect->y_offset * dst_stride;
     assert(prev_canvas != NULL);
-    CopyPlane((uint8_t*)src, 4 * src_stride, (uint8_t*)dst, 4 * dst_stride,
-              4 * rect->width, rect->height);
+    WebPCopyPlane((uint8_t*)src, 4 * src_stride, (uint8_t*)dst, 4 * dst_stride,
+                  4 * rect->width, rect->height);
   }
 }
 
