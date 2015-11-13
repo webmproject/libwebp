@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5b532b27_c9bd9584",
+        "filename": "src/utils/utils.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-11-13T07:13:18Z",
+      "side": 1,
+      "message": "OK I can see the merit to that given they are internal. we can take the approach that they shouldn\u0027t be used externally and if they are used improperly (like stdlib) they\u0027ll crash.\n\nmaybe for these and others we should adopt another prefix, we expose a few others that don\u0027t appear in public headers with VP8[L] for instance",
+      "parentUuid": "169a6aee_1f584708",
+      "range": {
+        "startLine": 222,
+        "startChar": 21,
+        "endLine": 222,
+        "endChar": 24
+      },
+      "revId": "9f68ccc6b11be0bb14889cf011d2923980800ae9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36220e8b_a82b9329",
         "filename": "src/utils/utils.c",
         "patchSetId": 4
