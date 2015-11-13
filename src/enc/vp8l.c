@@ -823,8 +823,7 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
                                              VP8LHashChain* const hash_chain,
                                              VP8LBackwardRefs refs_array[2],
                                              int width, int height, int quality,
-                                             int low_effort,
-                                             int use_cache, int* cache_bits,
+                                             int low_effort, int* cache_bits,
                                              int histogram_bits,
                                              size_t init_byte_position,
                                              int* const hdr_size,
@@ -856,7 +855,7 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
     goto Error;
   }
 
-  *cache_bits = use_cache ? MAX_COLOR_CACHE_BITS : 0;
+  *cache_bits = MAX_COLOR_CACHE_BITS;
   // 'best_refs' is the reference to the best backward refs and points to one
   // of refs_array[0] or refs_array[1].
   // Calculate backward references from ARGB image.
@@ -1375,7 +1374,7 @@ static void VP8LEncoderDelete(VP8LEncoder* enc) {
 
 WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
                                    const WebPPicture* const picture,
-                                   VP8LBitWriter* const bw, int use_cache) {
+                                   VP8LBitWriter* const bw) {
   WebPEncodingError err = VP8_ENC_OK;
   const int quality = (int)config->quality;
   const int low_effort = (config->method == 0);
@@ -1471,8 +1470,8 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   // Encode and write the transformed image.
   err = EncodeImageInternal(bw, enc->argb_, &enc->hash_chain_, enc->refs_,
                             enc->current_width_, height, quality, low_effort,
-                            use_cache, &enc->cache_bits_, enc->histo_bits_,
-                            byte_position, &hdr_size, &data_size);
+                            &enc->cache_bits_, enc->histo_bits_, byte_position,
+                            &hdr_size, &data_size);
   if (err != VP8_ENC_OK) goto Error;
 
   if (picture->stats != NULL) {
@@ -1557,7 +1556,7 @@ int VP8LEncodeImage(const WebPConfig* const config,
   if (!WebPReportProgress(picture, 5, &percent)) goto UserAbort;
 
   // Encode main image stream.
-  err = VP8LEncodeStream(config, picture, &bw, 1 /*use_cache*/);
+  err = VP8LEncodeStream(config, picture, &bw);
   if (err != VP8_ENC_OK) goto Error;
 
   // TODO(skal): have a fine-grained progress report in VP8LEncodeStream().
