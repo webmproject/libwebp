@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "76d4867d_8da6b329",
+        "filename": "src/utils/utils.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-11-13T19:38:18Z",
+      "side": 1,
+      "message": "OK I\u0027ll restore this to Urvang\u0027s original change and then follow with a rename for some of these semi-private functions",
+      "parentUuid": "5b532b27_c9bd9584",
+      "range": {
+        "startLine": 222,
+        "startChar": 21,
+        "endLine": 222,
+        "endChar": 24
+      },
+      "revId": "9f68ccc6b11be0bb14889cf011d2923980800ae9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36220e8b_a82b9329",
         "filename": "src/utils/utils.c",
         "patchSetId": 4
