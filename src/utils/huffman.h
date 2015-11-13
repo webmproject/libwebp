@@ -35,7 +35,24 @@ typedef struct {
   uint16_t value;   // symbol value or table offset
 } HuffmanCode;
 
+// long version for holding 32b values
+typedef struct {
+  int bits;         // number of bits used for this symbol,
+                    // or an impossible value if not a literal code.
+  uint32_t value;   // 32b packed ARGB value if literal,
+                    // or non-literal symbol otherwise
+} HuffmanCode32;
+
+#define HUFFMAN_PACKED_BITS 6
+#define HUFFMAN_PACKED_TABLE_SIZE (1u << HUFFMAN_PACKED_BITS)
+
 // Huffman table group.
+// Includes special handling for the following cases:
+//  - is_trivial_literal: one common literal base for RED/BLUE/ALPHA (not GREEN)
+//  - is_trivial_code: only 1 code (no bit is read from bitstream)
+//  - use_packed_table: few enough literal symbols, so all the bit codes
+//    can fit into a small look-up table packed_table[]
+// The common literal base, if applicable, is stored in 'literal_arb'.
 typedef struct HTreeGroup HTreeGroup;
 struct HTreeGroup {
   HuffmanCode* htrees[HUFFMAN_CODES_PER_META_CODE];
@@ -44,6 +61,10 @@ struct HTreeGroup {
   uint32_t literal_arb;         // If is_trivial_literal is true, this is the
                                 // ARGB value of the pixel, with Green channel
                                 // being set to zero.
+  int is_trivial_code;          // true if is_trivial_literal with only one code
+  int use_packed_table;         // use packed table below for short literal code
+  // table mapping input bits to a packed values, or escape case to literal code
+  HuffmanCode32 packed_table[HUFFMAN_PACKED_TABLE_SIZE];
 };
 
 // Creates the instance of HTreeGroup with specified number of tree-groups.

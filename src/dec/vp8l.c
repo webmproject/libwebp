@@ -195,6 +195,55 @@ static WEBP_INLINE int ReadSymbol(const HuffmanCode* table,
   return table->value;
 }
 
+// Reads packed symbol depending on GREEN channel
+#define BITS_SPECIAL_MARKER 0x100  // something large enough (and a bit-mask)
+#define PACKED_NON_LITERAL_CODE 0  // must be < NUM_LITERAL_CODES
+static WEBP_INLINE int ReadPackedSymbols(const HTreeGroup* group,
+                                         VP8LBitReader* const br,
+                                         uint32_t* const dst) {
+  const uint32_t val = VP8LPrefetchBits(br) & (HUFFMAN_PACKED_TABLE_SIZE - 1);
+  const HuffmanCode32 code = group->packed_table[val];
+  assert(group->use_packed_table);
+  if (code.bits < BITS_SPECIAL_MARKER) {
+    VP8LSetBitPos(br, br->bit_pos_ + code.bits);
+    *dst = code.value;
+    return PACKED_NON_LITERAL_CODE;
+  } else {
+    VP8LSetBitPos(br, br->bit_pos_ + code.bits - BITS_SPECIAL_MARKER);
+    assert(code.value >= NUM_LITERAL_CODES);
+    return code.value;
+  }
+}
+
+static int AccumulateHCode(HuffmanCode hcode, int shift,
+                           HuffmanCode32* const huff) {
+  huff->bits += hcode.bits;
+  huff->value |= (uint32_t)hcode.value << shift;
+  assert(huff->bits <= HUFFMAN_TABLE_BITS);
+  return hcode.bits;
+}
+
+static void BuildPackedTable(HTreeGroup* const htree_group) {
+  uint32_t code;
+  for (code = 0; code < HUFFMAN_PACKED_TABLE_SIZE; ++code) {
+    uint32_t bits = code;
+    HuffmanCode32* const huff = &htree_group->packed_table[bits];
+    HuffmanCode hcode = htree_group->htrees[GREEN][bits];
+    if (hcode.value >= NUM_LITERAL_CODES) {
+      huff->bits = hcode.bits + BITS_SPECIAL_MARKER;
+      huff->value = hcode.value;
+    } else {
+      huff->bits = 0;
+      huff->value = 0;
+      bits >>= AccumulateHCode(hcode, 8, huff);
+      bits >>= AccumulateHCode(htree_group->htrees[RED][bits], 16, huff);
+      bits >>= AccumulateHCode(htree_group->htrees[BLUE][bits], 0, huff);
+      bits >>= AccumulateHCode(htree_group->htrees[ALPHA][bits], 24, huff);
+      (void)bits;
+    }
+  }
+}
+
 static int ReadHuffmanCodeLengths(
     VP8LDecoder* const dec, const int* const code_length_code_lengths,
     int num_symbols, int* const code_lengths) {
@@ -369,7 +418,9 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
     HTreeGroup* const htree_group = &htree_groups[i];
     HuffmanCode** const htrees = htree_group->htrees;
     int size;
+    int total_size = 0;
     int is_trivial_literal = 1;
+    int max_bits = 0;
     for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
       int alphabet_size = kAlphabetSize[j];
       htrees[j] = next;
@@ -380,19 +431,38 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
       if (is_trivial_literal && kLiteralMap[j] == 1) {
         is_trivial_literal = (next->bits == 0);
       }
+      total_size += next->bits;
       next += size;
       if (size == 0) {
         goto Error;
       }
+      if (j <= ALPHA) {
+        int local_max_bits = code_lengths[0];
+        int k;
+        for (k = 1; k < alphabet_size; ++k) {
+          if (code_lengths[k] > local_max_bits) {
+            local_max_bits = code_lengths[k];
+          }
+        }
+        max_bits += local_max_bits;
+      }
     }
     htree_group->is_trivial_literal = is_trivial_literal;
+    htree_group->is_trivial_code = 0;
     if (is_trivial_literal) {
       const int red = htrees[RED][0].value;
       const int blue = htrees[BLUE][0].value;
       const int alpha = htrees[ALPHA][0].value;
       htree_group->literal_arb =
           ((uint32_t)alpha << 24) | (red << 16) | blue;
+      if (total_size == 0 && htrees[GREEN][0].value < NUM_LITERAL_CODES) {
+        htree_group->is_trivial_code = 1;
+        htree_group->literal_arb |= htrees[GREEN][0].value << 8;
+      }
     }
+    htree_group->use_packed_table = !htree_group->is_trivial_code &&
+                                    (max_bits < HUFFMAN_PACKED_BITS);
+    if (htree_group->use_packed_table) BuildPackedTable(htree_group);
   }
   WebPSafeFree(code_lengths);
 
@@ -979,11 +1049,18 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
     // Only update when changing tile. Note we could use this test:
     // if "((((prev_col ^ col) | prev_row ^ row)) > mask)" -> tile changed
     // but that's actually slower and needs storing the previous col/row.
-    if ((col & mask) == 0) {
-      htree_group = GetHtreeGroupForPos(hdr, col, row);
+    if ((col & mask) == 0) htree_group = GetHtreeGroupForPos(hdr, col, row);
+    if (htree_group->is_trivial_code) {
+      *src = htree_group->literal_arb;
+      goto AdvanceByOne;
     }
     VP8LFillBitWindow(br);
-    code = ReadSymbol(htree_group->htrees[GREEN], br);
+    if (htree_group->use_packed_table) {
+      code = ReadPackedSymbols(htree_group, br, src);
+      if (code == PACKED_NON_LITERAL_CODE) goto AdvanceByOne;
+    } else {
+      code = ReadSymbol(htree_group->htrees[GREEN], br);
+    }
     if (br->eos_) break;  // early out
     if (code < NUM_LITERAL_CODES) {  // Literal
       if (htree_group->is_trivial_literal) {
