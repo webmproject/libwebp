@@ -16,6 +16,24 @@
       "revId": "f047b68ae9a10eb71ba7f837928457652093a9fa",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b3453db_3baea359",
+        "filename": "src/utils/utils.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-11-13T02:15:33Z",
+      "side": 1,
+      "message": "As discussed offline, an actual return value is a stretch for these mostly internal methods; so just returning early for these cases instead.",
+      "parentUuid": "5b25eb9e_909eac77",
+      "revId": "f047b68ae9a10eb71ba7f837928457652093a9fa",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
