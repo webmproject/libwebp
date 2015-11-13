@@ -19,6 +19,7 @@
 /stamp-h1
 Makefile
 Makefile.in
+examples/anim_diff
 examples/[cdv]webp
 examples/gif2webp
 examples/webpmux
