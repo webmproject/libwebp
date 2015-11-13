@@ -48,33 +48,43 @@ extern void* VP8GetCPUInfo;   // opaque forward declaration.
 
 static int verbose = 0;
 
-static int ReadYUV(FILE* in_file, WebPPicture* const pic) {
+static int ReadYUV(const char filename[], WebPPicture* const pic) {
   const int use_argb = pic->use_argb;
   const int uv_width = (pic->width + 1) / 2;
   const int uv_height = (pic->height + 1) / 2;
-  int y;
+  const int uv_plane_size = uv_width * uv_height;
+  const uint8_t* data = NULL;
+  size_t data_size = 0;
+  const size_t expected_data_size =
+      pic->width * pic->height + 2 * uv_plane_size;
   int ok = 0;
 
   pic->use_argb = 0;
-  if (!WebPPictureAlloc(pic)) return ok;
 
-  for (y = 0; y < pic->height; ++y) {
-    if (fread(pic->y + y * pic->y_stride, pic->width, 1, in_file) != 1) {
-      goto End;
-    }
+  ok = ExUtilReadFile(filename, &data, &data_size);
+  if (!ok) goto End;
+
+  if (data_size != expected_data_size) {
+    fprintf(stderr,
+            "file '%s' doesn't have the expected size (%d instead of %d)\n",
+            filename, (int)data_size, (int)expected_data_size);
+    ok = 0;
+    goto End;
   }
-  for (y = 0; y < uv_height; ++y) {
-    if (fread(pic->u + y * pic->uv_stride, uv_width, 1, in_file) != 1)
-      goto End;
-  }
-  for (y = 0; y < uv_height; ++y) {
-    if (fread(pic->v + y * pic->uv_stride, uv_width, 1, in_file) != 1)
-      goto End;
-  }
+  pic->y_stride = pic->width;
+  pic->uv_stride = uv_width;
+  pic->y = (uint8_t*)data;
+  pic->u = pic->y + pic->height * pic->y_stride;
+  pic->v = pic->u + uv_plane_size;
+  // Grab ownership 'data'
+  pic->memory_ = (void*)data;
+  data = NULL;
   ok = 1;
+
   if (use_argb) ok = WebPPictureYUVAToARGB(pic);
 
  End:
+  free((void*)data);
   return ok;
 }
 
@@ -84,14 +94,7 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
                        int keep_alpha, Metadata* const metadata) {
   int ok;
   if (pic->width != 0 && pic->height != 0) {
-    // If image size is specified, infer it as YUV format.
-    FILE* in_file = fopen(filename, "rb");
-    if (in_file == NULL) {
-      fprintf(stderr, "Error! Cannot open input file '%s'\n", filename);
-      return 0;
-    }
-    ok = ReadYUV(in_file, pic);
-    fclose(in_file);
+    ok = ReadYUV(filename, pic);
   } else {
     // If no size specified, try to decode it using WIC.
     ok = ReadPictureWithWIC(filename, pic, keep_alpha, metadata);
@@ -142,15 +145,15 @@ static InputFileFormat GetImageType(FILE* in_file) {
 static int ReadPicture(const char* const filename, WebPPicture* const pic,
                        int keep_alpha, Metadata* const metadata) {
   int ok = 0;
-  FILE* in_file = fopen(filename, "rb");
-  if (in_file == NULL) {
-    fprintf(stderr, "Error! Cannot open input file '%s'\n", filename);
-    return ok;
-  }
-
   if (pic->width == 0 || pic->height == 0) {
+    InputFileFormat format;
     // If no size specified, try to decode it as PNG/JPEG (as appropriate).
-    const InputFileFormat format = GetImageType(in_file);
+    FILE* in_file = fopen(filename, "rb");
+    if (in_file == NULL) {
+      fprintf(stderr, "Error! Cannot open input file '%s'\n", filename);
+      return ok;
+    }
+    format = GetImageType(in_file);
     if (format == PNG_) {
       ok = ReadPNG(in_file, pic, keep_alpha, metadata);
     } else if (format == JPEG_) {
@@ -160,15 +163,15 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
     } else if (format == WEBP_) {
       ok = ReadWebP(filename, pic, keep_alpha, metadata);
     }
+    fclose(in_file);
   } else {
     // If image size is specified, infer it as YUV format.
-    ok = ReadYUV(in_file, pic);
+    ok = ReadYUV(filename, pic);
   }
   if (!ok) {
     fprintf(stderr, "Error! Could not process file %s\n", filename);
   }
 
-  fclose(in_file);
   return ok;
 }
 
@@ -739,6 +742,13 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-s") && c < argc - 2) {
       picture.width = ExUtilGetInt(argv[++c], 0, &parse_error);
       picture.height = ExUtilGetInt(argv[++c], 0, &parse_error);
+      if (picture.width > WEBP_MAX_DIMENSION || picture.width < 0 ||
+          picture.height > WEBP_MAX_DIMENSION ||  picture.height < 0) {
+        fprintf(stderr,
+                "Specified dimension (%d x %d) is out of range.\n",
+                picture.width, picture.height);
+        goto Error;
+      }
     } else if (!strcmp(argv[c], "-m") && c < argc - 1) {
       config.method = ExUtilGetInt(argv[++c], 0, &parse_error);
       use_lossless_preset = 0;   // disable -z option
