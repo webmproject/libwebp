@@ -247,9 +247,9 @@ mode will just try to form an a priori guess without testing all modes.
 Specify the algorithm used for alpha compression: 0 or 1. Algorithm 0 denotes
 no compression, 1 uses WebP lossless format for compression. The default is 1.
 .TP
-.B \-alpha_cleanup
-Modify unseen RGB values under fully transparent area, to help compressibility.
-The default is off.
+.B \-exact
+Preserve RGB values in transparent area. The default is off, to help
+compressibility.
 .TP
 .BI \-blend_alpha " int
 This option blends the alpha channel (if present) with the source using the

@@ -181,7 +181,7 @@ Options:
   -alpha_method <int> .... transparency-compression method (0..1)
   -alpha_filter <string> . predictive filtering for alpha plane,
                            one of: none, fast (default) or best
-  -alpha_cleanup ......... clean RGB values in transparent area
+  -exact ................. preserve RGB values in transparent area
   -blend_alpha <hex> ..... blend colors against background color
                            expressed as RGB values written in
                            hexadecimal, e.g. 0xc0e0d0 for red=0xc0
