@@ -20,17 +20,26 @@
 //------------------------------------------------------------------------------
 // VP8BitReader
 
+void VP8BitReaderSetBuffer(VP8BitReader* const br,
+                           const uint8_t* const start,
+                           size_t size) {
+  br->buf_     = start;
+  br->buf_end_ = start + size;
+  br->buf_max_ =
+      (size >= sizeof(lbit_t)) ? start + size - sizeof(lbit_t) + 1
+                               : start;
+}
+
 void VP8InitBitReader(VP8BitReader* const br,
-                      const uint8_t* const start, const uint8_t* const end) {
+                      const uint8_t* const start, size_t size) {
   assert(br != NULL);
   assert(start != NULL);
-  assert(start <= end);
+  assert(size < (1u << 31));   // limit ensured by format and upstream checks
   br->range_   = 255 - 1;
-  br->buf_     = start;
-  br->buf_end_ = end;
   br->value_   = 0;
   br->bits_    = -8;   // to load the very first 8bits
   br->eof_     = 0;
+  VP8BitReaderSetBuffer(br, start, size);
   VP8LoadNewBytes(br);
 }
 
@@ -38,6 +47,7 @@ void VP8RemapBitReader(VP8BitReader* const br, ptrdiff_t offset) {
   if (br->buf_ != NULL) {
     br->buf_ += offset;
     br->buf_end_ += offset;
+    br->buf_max_ += offset;
   }
 }
 

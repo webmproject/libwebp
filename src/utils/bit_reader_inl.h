@@ -58,7 +58,7 @@ void VP8LoadFinalBytes(VP8BitReader* const br);
 static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
   assert(br != NULL && br->buf_ != NULL);
   // Read 'BITS' bits at a time if possible.
-  if (br->buf_ + sizeof(lbit_t) <= br->buf_end_) {
+  if (br->buf_ < br->buf_max_) {
     // convert memory type to register type (with some zero'ing!)
     bit_t bits;
 #if defined(WEBP_FORCE_ALIGNED)

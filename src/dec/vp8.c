@@ -190,25 +190,27 @@ static VP8StatusCode ParsePartitions(VP8Decoder* const dec,
   const uint8_t* sz = buf;
   const uint8_t* buf_end = buf + size;
   const uint8_t* part_start;
-  int last_part;
-  int p;
+  size_t size_left = size;
+  size_t last_part;
+  size_t p;
 
   dec->num_parts_ = 1 << VP8GetValue(br, 2);
   last_part = dec->num_parts_ - 1;
-  part_start = buf + last_part * 3;
-  if (buf_end < part_start) {
+  if (size < 3 * last_part) {
     // we can't even read the sizes with sz[]! That's a failure.
     return VP8_STATUS_NOT_ENOUGH_DATA;
   }
+  part_start = buf + last_part * 3;
+  size_left -= last_part * 3;
   for (p = 0; p < last_part; ++p) {
-    const uint32_t psize = sz[0] | (sz[1] << 8) | (sz[2] << 16);
-    const uint8_t* part_end = part_start + psize;
-    if (part_end > buf_end) part_end = buf_end;
-    VP8InitBitReader(dec->parts_ + p, part_start, part_end);
-    part_start = part_end;
+    size_t psize = sz[0] | (sz[1] << 8) | (sz[2] << 16);
+    if (psize > size_left) psize = size_left;
+    VP8InitBitReader(dec->parts_ + p, part_start, psize);
+    part_start += psize;
+    size_left -= psize;
     sz += 3;
   }
-  VP8InitBitReader(dec->parts_ + last_part, part_start, buf_end);
+  VP8InitBitReader(dec->parts_ + last_part, part_start, size_left);
   return (part_start < buf_end) ? VP8_STATUS_OK :
            VP8_STATUS_SUSPENDED;   // Init is ok, but there's not enough data
 }
@@ -325,7 +327,7 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
   }
 
   br = &dec->br_;
-  VP8InitBitReader(br, buf, buf + frm_hdr->partition_length_);
+  VP8InitBitReader(br, buf, frm_hdr->partition_length_);
   buf += frm_hdr->partition_length_;
   buf_size -= frm_hdr->partition_length_;
 
