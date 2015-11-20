@@ -44,6 +44,7 @@
 #include "./stopwatch.h"
 
 static int verbose = 0;
+static int quiet = 0;
 #ifndef WEBP_DLL
 #ifdef __cplusplus
 extern "C" {
@@ -509,10 +510,12 @@ static int SaveOutput(const WebPDecBuffer* const buffer,
     fclose(fout);
   }
   if (ok) {
-    if (use_stdout) {
-      fprintf(stderr, "Saved to stdout\n");
-    } else {
-      fprintf(stderr, "Saved file %s\n", out_file);
+    if (!quiet) {
+      if (use_stdout) {
+        fprintf(stderr, "Saved to stdout\n");
+      } else {
+        fprintf(stderr, "Saved file %s\n", out_file);
+      }
     }
     if (verbose) {
       const double write_time = StopwatchReadAndReset(&stop_watch);
@@ -570,7 +573,6 @@ int main(int argc, const char *argv[]) {
   int ok = 0;
   const char *in_file = NULL;
   const char *out_file = NULL;
-  int quiet = 0;
 
   WebPDecoderConfig config;
   WebPDecBuffer* const output_buffer = &config.output;
