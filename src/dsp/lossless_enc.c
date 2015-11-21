@@ -692,7 +692,7 @@ void VP8LResidualImage(int width, int height, int bits, int low_effort,
   uint32_t* const current_tile_rows = argb_scratch + width;
   int tile_y;
   int histo[4][256];
-  memset(histo, 0, sizeof(histo));
+  if (!low_effort) memset(histo, 0, sizeof(histo));
   for (tile_y = 0; tile_y < tiles_per_col; ++tile_y) {
     const int tile_y_offset = tile_y * max_tile_size;
     const int this_tile_height =
@@ -720,14 +720,16 @@ void VP8LResidualImage(int width, int height, int bits, int low_effort,
       image[tile_y * tiles_per_row + tile_x] = 0xff000000u | (pred << 8);
       CopyTileWithPrediction(width, height, tile_x, tile_y, bits, pred,
                              argb_scratch, argb);
-      for (y = 0; y < max_tile_size; ++y) {
-        int all_x;
-        int all_y = tile_y_offset + y;
-        if (all_y >= height) {
-          break;
-        }
-        for (all_x = tile_x_offset; all_x < all_x_max; ++all_x) {
-          UpdateHisto(histo, argb[all_y * width + all_x]);
+      if (!low_effort) {
+        for (y = 0; y < max_tile_size; ++y) {
+          int all_x;
+          int all_y = tile_y_offset + y;
+          if (all_y >= height) {
+            break;
+          }
+          for (all_x = tile_x_offset; all_x < all_x_max; ++all_x) {
+            UpdateHisto(histo, argb[all_y * width + all_x]);
+          }
         }
       }
     }
