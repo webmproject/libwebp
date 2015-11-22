@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#define WEBP_ENCODER_ABI_VERSION 0x0208    // MAJOR(8b) + MINOR(8b)
+#define WEBP_ENCODER_ABI_VERSION 0x0209    // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -136,12 +136,16 @@ struct WebPConfig {
 
   int near_lossless;      // Near lossless encoding [0 = off(default) .. 100].
                           // This feature is experimental.
+  int exact;              // if non-zero, preserve the exact RGB values under
+                          // transparent area. Otherwise, discard this invisible
+                          // RGB information for better compression. The default
+                          // value is 0.
 
 #ifdef WEBP_EXPERIMENTAL_FEATURES
   int delta_palettization;
-  uint32_t pad[3];        // padding for later use
+  uint32_t pad[2];        // padding for later use
 #else
-  uint32_t pad[4];        // padding for later use
+  uint32_t pad[3];        // padding for later use
 #endif  // WEBP_EXPERIMENTAL_FEATURES
 };
 

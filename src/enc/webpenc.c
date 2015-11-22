@@ -321,6 +321,10 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
   if (pic->width > WEBP_MAX_DIMENSION || pic->height > WEBP_MAX_DIMENSION)
     return WebPEncodingSetError(pic, VP8_ENC_ERROR_BAD_DIMENSION);
 
+  if (!config->exact) {
+    WebPCleanupTransparentArea(pic);
+  }
+
   if (pic->stats != NULL) memset(pic->stats, 0, sizeof(*pic->stats));
 
   if (!config->lossless) {

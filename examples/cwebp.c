@@ -611,7 +611,8 @@ static void HelpLong(void) {
   printf("  -alpha_method <int> .... transparency-compression method (0..1)\n");
   printf("  -alpha_filter <string> . predictive filtering for alpha plane,\n");
   printf("                           one of: none, fast (default) or best\n");
-  printf("  -alpha_cleanup ......... clean RGB values in transparent area\n");
+  printf("  -exact ................. preserve RGB values in transparent area"
+         "\n");
   printf("  -blend_alpha <hex> ..... blend colors against background color\n"
          "                           expressed as RGB values written in\n"
          "                           hexadecimal, e.g. 0xc0e0d0 for red=0xc0\n"
@@ -763,7 +764,10 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-alpha_method") && c < argc - 1) {
       config.alpha_compression = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-alpha_cleanup")) {
-      keep_alpha = keep_alpha ? 2 : 0;
+      // This flag is obsolete, does opposite of -exact.
+      config.exact = 0;
+    } else if (!strcmp(argv[c], "-exact")) {
+      config.exact = 1;
     } else if (!strcmp(argv[c], "-blend_alpha") && c < argc - 1) {
       blend_alpha = 1;
       // background color is given in hex with an optional '0x' prefix
@@ -994,10 +998,6 @@ int main(int argc, const char *argv[]) {
 
   if (blend_alpha) {
     WebPBlendAlpha(&picture, background_color);
-  }
-
-  if (keep_alpha == 2) {
-    WebPCleanupTransparentArea(&picture);
   }
 
   if (verbose) {
