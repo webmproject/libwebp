@@ -536,6 +536,7 @@ static int CustomSetup(VP8Io* io) {
     }
   } else {
     if (is_rgb) {
+      WebPInitSamplers();
       p->emit = EmitSampledRGB;   // default
       if (io->fancy_upsampling) {
 #ifdef FANCY_UPSAMPLING
@@ -550,8 +551,6 @@ static int CustomSetup(VP8Io* io) {
         p->emit = EmitFancyRGB;
         WebPInitUpsamplers();
 #endif
-      } else {
-        WebPInitSamplers();
       }
     } else {
       p->emit = EmitYUV;
