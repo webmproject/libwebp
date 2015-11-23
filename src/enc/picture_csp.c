@@ -158,19 +158,15 @@ static int RGBToV(int r, int g, int b, VP8Random* const rg) {
 static const int kNumIterations = 6;
 static const int kMinDimensionIterativeConversion = 4;
 
-// We use a-priori a different precision for storing RGB and Y/W components
-// We could use YFIX=0 and only uint8_t for fixed_y_t, but it produces some
+// We could use SFIX=0 and only uint8_t for fixed_y_t, but it produces some
 // banding sometimes. Better use extra precision.
-// TODO(skal): cleanup once TFIX/YFIX values are fixed.
+#define SFIX 2                // fixed-point precision of RGB and Y/W
+typedef int16_t fixed_t;      // signed type with extra SFIX precision for UV
+typedef uint16_t fixed_y_t;   // unsigned type with extra SFIX precision for W
 
-typedef int16_t fixed_t;      // signed type with extra TFIX precision for UV
-typedef uint16_t fixed_y_t;   // unsigned type with extra YFIX precision for W
-#define TFIX 2   // fixed-point precision of RGB
-#define YFIX 2   // fixed point precision for Y/W
-
-#define THALF ((1 << TFIX) >> 1)
-#define MAX_Y_T ((256 << YFIX) - 1)
-#define TROUNDER (1 << (YUV_FIX + TFIX - 1))
+#define SHALF (1 << SFIX >> 1)
+#define MAX_Y_T ((256 << SFIX) - 1)
+#define SROUNDER (1 << (YUV_FIX + SFIX - 1))
 
 #if defined(USE_GAMMA_COMPRESSION)
 
@@ -228,23 +224,12 @@ static WEBP_INLINE int LinearToGammaF(float value) {
 
 //------------------------------------------------------------------------------
 
-// precision: YFIX -> TFIX
-static WEBP_INLINE int FixedYToW(int v) { return v; }
-static WEBP_INLINE int FixedWToY(int v) { return v; }
-
 static uint8_t clip_8b(fixed_t v) {
   return (!(v & ~0xff)) ? (uint8_t)v : (v < 0) ? 0u : 255u;
 }
 
 static fixed_y_t clip_y(int y) {
   return (!(y & ~MAX_Y_T)) ? (fixed_y_t)y : (y < 0) ? 0 : MAX_Y_T;
-}
-
-// precision: TFIX -> YFIX
-static fixed_y_t clip_fixed_t(fixed_t v) {
-  const int y = FixedWToY(v);
-  const fixed_y_t w = clip_y(y);
-  return w;
 }
 
 //------------------------------------------------------------------------------
@@ -289,9 +274,9 @@ static int UpdateChroma(const fixed_y_t* src1,
     const int r_avg = (src1[0] + src1[3] + src2[0] + src2[3] + 2) >> 2;
     const int g_avg = (src1[1] + src1[4] + src2[1] + src2[4] + 2) >> 2;
     const int b_avg = (src1[2] + src1[5] + src2[2] + src2[5] + 2) >> 2;
-    dst[0] = (fixed_t)FixedYToW(r - W);
-    dst[1] = (fixed_t)FixedYToW(g - W);
-    dst[2] = (fixed_t)FixedYToW(b - W);
+    dst[0] = (fixed_t)(r - W);
+    dst[1] = (fixed_t)(g - W);
+    dst[2] = (fixed_t)(b - W);
     dst += 3;
     src1 += 6;
     src2 += 6;
@@ -321,9 +306,8 @@ static WEBP_INLINE int Filter2(int A, int B) { return (A * 3 + B + 2) >> 2; }
 
 //------------------------------------------------------------------------------
 
-// 8bit -> YFIX
-static WEBP_INLINE fixed_y_t UpLift(uint8_t a) {
-  return ((fixed_y_t)a << YFIX) | (1 << (YFIX - 1));
+static WEBP_INLINE fixed_y_t UpLift(uint8_t a) {  // 8bit -> SFIX
+  return ((fixed_y_t)a << SFIX) | SHALF;
 }
 
 static void ImportOneRow(const uint8_t* const r_ptr,
@@ -353,50 +337,48 @@ static void InterpolateTwoRows(const fixed_y_t* const best_y,
                                fixed_y_t* const out2) {
   int i, k;
   {  // special boundary case for i==0
-    const int W0 = FixedYToW(best_y[0]);
-    const int W1 = FixedYToW(best_y[w]);
+    const int W0 = best_y[0];
+    const int W1 = best_y[w];
     for (k = 0; k <= 2; ++k) {
-      out1[k] = clip_fixed_t(Filter2(cur_uv[k], prev_uv[k]) + W0);
-      out2[k] = clip_fixed_t(Filter2(cur_uv[k], next_uv[k]) + W1);
+      out1[k] = clip_y(Filter2(cur_uv[k], prev_uv[k]) + W0);
+      out2[k] = clip_y(Filter2(cur_uv[k], next_uv[k]) + W1);
     }
   }
   for (i = 1; i < w - 1; ++i) {
-    const int W0 = FixedYToW(best_y[i + 0]);
-    const int W1 = FixedYToW(best_y[i + w]);
+    const int W0 = best_y[i + 0];
+    const int W1 = best_y[i + w];
     const int off = 3 * (i >> 1);
     for (k = 0; k <= 2; ++k) {
       const int tmp0 = Filter(cur_uv + off + k, prev_uv + off + k, i & 1);
       const int tmp1 = Filter(cur_uv + off + k, next_uv + off + k, i & 1);
-      out1[3 * i + k] = clip_fixed_t(tmp0 + W0);
-      out2[3 * i + k] = clip_fixed_t(tmp1 + W1);
+      out1[3 * i + k] = clip_y(tmp0 + W0);
+      out2[3 * i + k] = clip_y(tmp1 + W1);
     }
   }
   {  // special boundary case for i == w - 1
-    const int W0 = FixedYToW(best_y[i + 0]);
-    const int W1 = FixedYToW(best_y[i + w]);
+    const int W0 = best_y[i + 0];
+    const int W1 = best_y[i + w];
     const int off = 3 * (i >> 1);
     for (k = 0; k <= 2; ++k) {
-      out1[3 * i + k] =
-          clip_fixed_t(Filter2(cur_uv[off + k], prev_uv[off + k]) + W0);
-      out2[3 * i + k] =
-          clip_fixed_t(Filter2(cur_uv[off + k], next_uv[off + k]) + W1);
+      out1[3 * i + k] = clip_y(Filter2(cur_uv[off + k], prev_uv[off + k]) + W0);
+      out2[3 * i + k] = clip_y(Filter2(cur_uv[off + k], next_uv[off + k]) + W1);
     }
   }
 }
 
 static WEBP_INLINE uint8_t ConvertRGBToY(int r, int g, int b) {
-  const int luma = 16839 * r + 33059 * g + 6420 * b + TROUNDER;
-  return clip_8b(16 + (luma >> (YUV_FIX + TFIX)));
+  const int luma = 16839 * r + 33059 * g + 6420 * b + SROUNDER;
+  return clip_8b(16 + (luma >> (YUV_FIX + SFIX)));
 }
 
 static WEBP_INLINE uint8_t ConvertRGBToU(int r, int g, int b) {
-  const int u =  -9719 * r - 19081 * g + 28800 * b + TROUNDER;
-  return clip_8b(128 + (u >> (YUV_FIX + TFIX)));
+  const int u =  -9719 * r - 19081 * g + 28800 * b + SROUNDER;
+  return clip_8b(128 + (u >> (YUV_FIX + SFIX)));
 }
 
 static WEBP_INLINE uint8_t ConvertRGBToV(int r, int g, int b) {
-  const int v = +28800 * r - 24116 * g -  4684 * b + TROUNDER;
-  return clip_8b(128 + (v >> (YUV_FIX + TFIX)));
+  const int v = +28800 * r - 24116 * g -  4684 * b + SROUNDER;
+  return clip_8b(128 + (v >> (YUV_FIX + SFIX)));
 }
 
 static int ConvertWRGBToYUV(const fixed_y_t* const best_y,
@@ -411,7 +393,7 @@ static int ConvertWRGBToYUV(const fixed_y_t* const best_y,
     for (i = 0; i < picture->width; ++i) {
       const int off = 3 * ((i >> 1) + (j >> 1) * uv_w);
       const int off2 = i + j * picture->y_stride;
-      const int W = FixedYToW(best_y[i + j * w]);
+      const int W = best_y[i + j * w];
       const int r = best_uv[off + 0] + W;
       const int g = best_uv[off + 1] + W;
       const int b = best_uv[off + 2] + W;
