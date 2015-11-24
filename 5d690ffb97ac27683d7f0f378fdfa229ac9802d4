@@ -22,6 +22,30 @@
       "revId": "5d690ffb97ac27683d7f0f378fdfa229ac9802d4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb2a67bd_be088d6e",
+        "filename": "src/utils/thread.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-11-24T06:47:07Z",
+      "side": 1,
+      "message": "OK these are short so either way.\nnote:\n\n$ git grep \u0027#\\s\\+define\u0027 |grep -v swig",
+      "parentUuid": "bbb8a7d5_79d1e74c",
+      "range": {
+        "startLine": 39,
+        "startChar": 2,
+        "endLine": 39,
+        "endChar": 8
+      },
+      "revId": "5d690ffb97ac27683d7f0f378fdfa229ac9802d4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
