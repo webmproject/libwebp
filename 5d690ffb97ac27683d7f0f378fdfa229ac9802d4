@@ -70,6 +70,30 @@
       "revId": "5d690ffb97ac27683d7f0f378fdfa229ac9802d4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5bc96b78_d9bbd7e4",
+        "filename": "src/utils/thread.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-11-24T07:04:35Z",
+      "side": 1,
+      "message": "yeah, it\u0027s mostly about coherency, so that the code base stays uniformly searchable...",
+      "parentUuid": "3bed97ca_62e5dccb",
+      "range": {
+        "startLine": 39,
+        "startChar": 2,
+        "endLine": 39,
+        "endChar": 8
+      },
+      "revId": "5d690ffb97ac27683d7f0f378fdfa229ac9802d4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
