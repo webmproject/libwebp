@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b153384_becb69c9",
+        "filename": "src/utils/thread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-11-24T07:02:07Z",
+      "side": 1,
+      "message": "changed the #define style here too",
+      "revId": "26280345e08b6c9c25025f81b8ea3c27cae2535b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
