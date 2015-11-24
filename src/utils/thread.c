@@ -23,11 +23,17 @@
 #include <windows.h>
 typedef HANDLE pthread_t;
 typedef CRITICAL_SECTION pthread_mutex_t;
+
+#if _WIN32_WINNT >= 0x0600  // Windows Vista / Server 2008 or greater
+#define USE_WINDOWS_CONDITION_VARIABLE
+typedef CONDITION_VARIABLE pthread_cond_t;
+#else
 typedef struct {
   HANDLE waiting_sem_;
   HANDLE received_sem_;
   HANDLE signal_event_;
 } pthread_cond_t;
+#endif  // _WIN32_WINNT >= 0x600
 
 #else  // !_WIN32
 
@@ -97,14 +103,21 @@ static int pthread_mutex_destroy(pthread_mutex_t* const mutex) {
 // Condition
 static int pthread_cond_destroy(pthread_cond_t* const condition) {
   int ok = 1;
+#ifdef USE_WINDOWS_CONDITION_VARIABLE
+  (void)condition;
+#else
   ok &= (CloseHandle(condition->waiting_sem_) != 0);
   ok &= (CloseHandle(condition->received_sem_) != 0);
   ok &= (CloseHandle(condition->signal_event_) != 0);
+#endif
   return !ok;
 }
 
 static int pthread_cond_init(pthread_cond_t* const condition, void* cond_attr) {
   (void)cond_attr;
+#ifdef USE_WINDOWS_CONDITION_VARIABLE
+  InitializeConditionVariable(condition);
+#else
   condition->waiting_sem_ = CreateSemaphore(NULL, 0, 1, NULL);
   condition->received_sem_ = CreateSemaphore(NULL, 0, 1, NULL);
   condition->signal_event_ = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -114,11 +127,15 @@ static int pthread_cond_init(pthread_cond_t* const condition, void* cond_attr) {
     pthread_cond_destroy(condition);
     return 1;
   }
+#endif
   return 0;
 }
 
 static int pthread_cond_signal(pthread_cond_t* const condition) {
   int ok = 1;
+#ifdef USE_WINDOWS_CONDITION_VARIABLE
+  WakeConditionVariable(condition);
+#else
   if (WaitForSingleObject(condition->waiting_sem_, 0) == WAIT_OBJECT_0) {
     // a thread is waiting in pthread_cond_wait: allow it to be notified
     ok = SetEvent(condition->signal_event_);
@@ -127,12 +144,16 @@ static int pthread_cond_signal(pthread_cond_t* const condition) {
     ok &= (WaitForSingleObject(condition->received_sem_, INFINITE) !=
            WAIT_OBJECT_0);
   }
+#endif
   return !ok;
 }
 
 static int pthread_cond_wait(pthread_cond_t* const condition,
                              pthread_mutex_t* const mutex) {
   int ok;
+#ifdef USE_WINDOWS_CONDITION_VARIABLE
+  ok = SleepConditionVariableCS(condition, mutex, INFINITE);
+#else
   // note that there is a consumer available so the signal isn't dropped in
   // pthread_cond_signal
   if (!ReleaseSemaphore(condition->waiting_sem_, 1, NULL))
@@ -143,6 +164,7 @@ static int pthread_cond_wait(pthread_cond_t* const condition,
         WAIT_OBJECT_0);
   ok &= ReleaseSemaphore(condition->received_sem_, 1, NULL);
   pthread_mutex_lock(mutex);
+#endif
   return !ok;
 }
 
