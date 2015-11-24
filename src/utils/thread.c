@@ -58,6 +58,11 @@ struct WebPWorkerImpl {
 #define THREADFN unsigned int __stdcall
 #define THREAD_RETURN(val) (unsigned int)((DWORD_PTR)val)
 
+#if _WIN32_WINNT >= 0x0501  // Windows XP or greater
+#define WaitForSingleObject(obj, timeout) \
+  WaitForSingleObjectEx(obj, timeout, FALSE /*bAlertable*/)
+#endif
+
 static int pthread_create(pthread_t* const thread, const void* attr,
                           unsigned int (__stdcall *start)(void*), void* arg) {
   (void)attr;
