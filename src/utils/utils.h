@@ -62,7 +62,7 @@ static WEBP_INLINE int GetLE24(const uint8_t* const data) {
 }
 
 static WEBP_INLINE uint32_t GetLE32(const uint8_t* const data) {
-  return (uint32_t)GetLE16(data) | (GetLE16(data + 2) << 16);
+  return GetLE16(data) | ((uint32_t)GetLE16(data + 2) << 16);
 }
 
 // Store 16, 24 or 32 bits in little-endian order.
