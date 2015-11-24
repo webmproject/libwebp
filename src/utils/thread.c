@@ -81,7 +81,11 @@ static int pthread_join(pthread_t thread, void** value_ptr) {
 // Mutex
 static int pthread_mutex_init(pthread_mutex_t* const mutex, void* mutexattr) {
   (void)mutexattr;
+#if _WIN32_WINNT >= 0x0600  // Windows Vista / Server 2008 or greater
+  InitializeCriticalSectionEx(mutex, 0 /*dwSpinCount*/, 0 /*Flags*/);
+#else
   InitializeCriticalSection(mutex);
+#endif
   return 0;
 }
 
