@@ -1123,8 +1123,10 @@ static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
   if (enc->argb_ == NULL) {
     const int tile_size = 1 << enc->transform_bits_;
     const uint64_t image_size = width * height;
+    // Ensure enough size for tiles, as well as for two scanlines and two
+    // extra pixels for CopyImageWithPrediction.
     const uint64_t argb_scratch_size =
-        enc->use_predict_ ? tile_size * width + width : 0;
+        enc->use_predict_ ? tile_size * width + width + 2 : 0;
     const int transform_data_size =
         (enc->use_predict_ || enc->use_cross_color_)
             ? VP8LSubSampleSize(width, enc->transform_bits_) *
