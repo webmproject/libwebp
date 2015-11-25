@@ -34,9 +34,8 @@ static WEBP_INLINE uint8_t clip_8b(int v) {
   STORE(3, y, DC - (d));            \
 } while (0)
 
-static const int kC1 = 20091 + (1 << 16);
-static const int kC2 = 35468;
-#define MUL(a, b) (((a) * (b)) >> 16)
+#define MUL1(a) ((((a) * 20091) >> 16) + (a))
+#define MUL2(a) (((a) * 35468) >> 16)
 
 static void TransformOne(const int16_t* in, uint8_t* dst) {
   int C[4 * 4], *tmp;
@@ -45,8 +44,8 @@ static void TransformOne(const int16_t* in, uint8_t* dst) {
   for (i = 0; i < 4; ++i) {    // vertical pass
     const int a = in[0] + in[8];    // [-4096, 4094]
     const int b = in[0] - in[8];    // [-4095, 4095]
-    const int c = MUL(in[4], kC2) - MUL(in[12], kC1);   // [-3783, 3783]
-    const int d = MUL(in[4], kC1) + MUL(in[12], kC2);   // [-3785, 3781]
+    const int c = MUL2(in[4]) - MUL1(in[12]);   // [-3783, 3783]
+    const int d = MUL1(in[4]) + MUL2(in[12]);   // [-3785, 3781]
     tmp[0] = a + d;   // [-7881, 7875]
     tmp[1] = b + c;   // [-7878, 7878]
     tmp[2] = b - c;   // [-7878, 7878]
@@ -55,7 +54,7 @@ static void TransformOne(const int16_t* in, uint8_t* dst) {
     in++;
   }
   // Each pass is expanding the dynamic range by ~3.85 (upper bound).
-  // The exact value is (2. + (kC1 + kC2) / 65536).
+  // The exact value is (2. + (20091 + 35468) / 65536).
   // After the second pass, maximum interval is [-3794, 3794], assuming
   // an input in [-2048, 2047] interval. We then need to add a dst value
   // in the [0, 255] range.
@@ -66,8 +65,8 @@ static void TransformOne(const int16_t* in, uint8_t* dst) {
     const int dc = tmp[0] + 4;
     const int a =  dc +  tmp[8];
     const int b =  dc -  tmp[8];
-    const int c = MUL(tmp[4], kC2) - MUL(tmp[12], kC1);
-    const int d = MUL(tmp[4], kC1) + MUL(tmp[12], kC2);
+    const int c = MUL2(tmp[4]) - MUL1(tmp[12]);
+    const int d = MUL1(tmp[4]) + MUL2(tmp[12]);
     STORE(0, 0, a + d);
     STORE(1, 0, b + c);
     STORE(2, 0, b - c);
@@ -80,16 +79,17 @@ static void TransformOne(const int16_t* in, uint8_t* dst) {
 // Simplified transform when only in[0], in[1] and in[4] are non-zero
 static void TransformAC3(const int16_t* in, uint8_t* dst) {
   const int a = in[0] + 4;
-  const int c4 = MUL(in[4], kC2);
-  const int d4 = MUL(in[4], kC1);
-  const int c1 = MUL(in[1], kC2);
-  const int d1 = MUL(in[1], kC1);
+  const int c4 = MUL2(in[4]);
+  const int d4 = MUL1(in[4]);
+  const int c1 = MUL2(in[1]);
+  const int d1 = MUL1(in[1]);
   STORE2(0, a + d4, d1, c1);
   STORE2(1, a + c4, d1, c1);
   STORE2(2, a - c4, d1, c1);
   STORE2(3, a - d4, d1, c1);
 }
-#undef MUL
+#undef MUL1
+#undef MUL2
 #undef STORE2
 
 static void TransformTwo(const int16_t* in, uint8_t* dst, int do_two) {
