@@ -77,6 +77,28 @@ AS_IF([test "$GCC" = "yes" ], [
        esac
        AS_IF([test "$gcc_wht_bug" = "yes"], [
               TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-frename-registers])])])
+# Use -flax-vector-conversions, if available, when building intrinsics with
+# older versions of gcc. The flag appeared in 4.3.x, but if backported, and
+# -fno-lax-vector-conversions is set, errors may occur with the intrinsics
+# files along with the older system includes, e.g., emmintrin.h.
+# Originally observed with cc (GCC) 4.2.1 20070831 patched [FreeBSD] (9.3).
+# https://bugs.chromium.org/p/webp/issues/detail?id=274
+AS_IF([test "$GCC" = "yes" ], [
+       case "$host_cpu" in
+         amd64|i?86|x86_64)
+           AC_COMPILE_IFELSE(
+             dnl only check for -flax-vector-conversions with older gcc, skip
+             dnl clang as it reports itself as 4.2.1, but the flag isn't needed.
+             [AC_LANG_SOURCE([#if !defined(__clang__) && defined(__GNUC__) && \
+                                  ((__GNUC__ << 8) | __GNUC_MINOR__) < 0x403
+                              #error old gcc
+                              #endif
+                              int main(void) { return 0; }
+                             ])],,
+              [TEST_AND_ADD_CFLAGS([INTRINSICS_CFLAGS],
+                                   [-flax-vector-conversions])])
+           ;;
+       esac])
 AC_SUBST([AM_CFLAGS])
 
 dnl === Check for machine specific flags
@@ -87,6 +109,7 @@ AC_ARG_ENABLE([avx2],
 
 AS_IF([test "x$enable_avx2" != "xno" -a "x$enable_sse4_1" != "xno" \
          -a "x$enable_sse2" != "xno"], [
+  AVX2_CFLAGS="$INTRINSICS_CFLAGS $AVX2_FLAGS"
   TEST_AND_ADD_CFLAGS([AVX2_FLAGS], [-mavx2])
   AS_IF([test -n "$AVX2_FLAGS"], [
     SAVED_CFLAGS=$CFLAGS
@@ -110,6 +133,7 @@ AC_ARG_ENABLE([sse4.1],
                               @<:@default=auto@:>@]))
 
 AS_IF([test "x$enable_sse4_1" != "xno" -a "x$enable_sse2" != "xno"], [
+  SSE41_FLAGS="$INTRINSICS_CFLAGS $SSE41_FLAGS"
   TEST_AND_ADD_CFLAGS([SSE41_FLAGS], [-msse4.1])
   AS_IF([test -n "$SSE41_FLAGS"], [
     SAVED_CFLAGS=$CFLAGS
@@ -127,6 +151,7 @@ AC_ARG_ENABLE([sse2],
                               @<:@default=auto@:>@]))
 
 AS_IF([test "x$enable_sse2" != "xno"], [
+  SSE2_FLAGS="$INTRINSICS_CFLAGS $SSE2_FLAGS"
   TEST_AND_ADD_CFLAGS([SSE2_FLAGS], [-msse2])
   AS_IF([test -n "$SSE2_FLAGS"], [
     SAVED_CFLAGS=$CFLAGS
