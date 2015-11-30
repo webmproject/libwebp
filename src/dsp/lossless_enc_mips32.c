@@ -400,7 +400,13 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInitMIPS32(void) {
   VP8LExtraCost = ExtraCost;
   VP8LExtraCostCombined = ExtraCostCombined;
   VP8LHuffmanCostCount = HuffmanCostCount;
+// TODO(mips team): rewrite VP8LGetCombinedEntropy (which used to use
+// HuffmanCostCombinedCount) with MIPS optimizations
+#if 0
   VP8LHuffmanCostCombinedCount = HuffmanCostCombinedCount;
+#else
+ (void)HuffmanCostCombinedCount;
+#endif
   VP8LHistogramAdd = HistogramAdd;
 }
 

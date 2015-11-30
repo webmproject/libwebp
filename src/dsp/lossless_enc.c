@@ -499,28 +499,6 @@ double VP8LBitsEntropy(const uint32_t* const array, int n,
   return BitsEntropyRefine(nonzeros, sum, max_val, retval);
 }
 
-static double BitsEntropyCombined(const uint32_t* const X,
-                                  const uint32_t* const Y, int n) {
-  double retval = 0.;
-  int sum = 0;
-  int nonzeros = 0;
-  int max_val = 0;
-  int i;
-  for (i = 0; i < n; ++i) {
-    const int xy = X[i] + Y[i];
-    if (xy != 0) {
-      sum += xy;
-      ++nonzeros;
-      retval -= VP8LFastSLog2(xy);
-      if (max_val < xy) {
-        max_val = xy;
-      }
-    }
-  }
-  retval += VP8LFastSLog2(sum);
-  return BitsEntropyRefine(nonzeros, sum, max_val, retval);
-}
-
 static double InitialHuffmanCost(void) {
   // Small bias because Huffman code length is typically not stored in
   // full length.
@@ -545,12 +523,6 @@ static double HuffmanCost(const uint32_t* const population, int length) {
   return FinalHuffmanCost(&stats);
 }
 
-static double HuffmanCostCombined(const uint32_t* const X,
-                                  const uint32_t* const Y, int length) {
-  const VP8LStreaks stats = VP8LHuffmanCostCombinedCount(X, Y, length);
-  return FinalHuffmanCost(&stats);
-}
-
 // Aggregated costs
 double VP8LPopulationCost(const uint32_t* const population, int length,
                           uint32_t* const trivial_sym) {
@@ -561,7 +533,77 @@ double VP8LPopulationCost(const uint32_t* const population, int length,
 
 double VP8LGetCombinedEntropy(const uint32_t* const X,
                               const uint32_t* const Y, int length) {
-  return BitsEntropyCombined(X, Y, length) + HuffmanCostCombined(X, Y, length);
+  double bits_entropy_combined;
+  double huffman_cost_combined;
+  int i;
+
+  // Bit entropy variables.
+  double retval = 0.;
+  int sum = 0;
+  int nonzeros = 0;
+  uint32_t max_val = 0;
+  int i_prev;
+  uint32_t xy;
+
+  // Huffman cost variables.
+  int streak = 0;
+  uint32_t xy_prev;
+  VP8LStreaks stats;
+  memset(&stats, 0, sizeof(stats));
+
+  // Treat the first value for the huffman cost: this is keeping the original
+  // behavior, even though there is no first streak.
+  // TODO(vrabaud): study proper behavior
+  xy = X[0] + Y[0];
+  ++stats.streaks[xy != 0][0];
+  xy_prev = xy;
+  i_prev = 0;
+
+  for (i = 1; i < length; ++i) {
+    xy = X[i] + Y[i];
+
+    // Process data by streaks for both bit entropy and huffman cost.
+    if (xy != xy_prev) {
+      streak = i - i_prev;
+
+      // Gather info for the bit entropy.
+      if (xy_prev != 0) {
+        sum += xy_prev * streak;
+        nonzeros += streak;
+        retval -= VP8LFastSLog2(xy_prev) * streak;
+        if (max_val < xy_prev) {
+          max_val = xy_prev;
+        }
+      }
+
+      // Gather info for the huffman cost.
+      stats.counts[xy != 0] += (streak > 3);
+      stats.streaks[xy != 0][(streak > 3)] += streak;
+
+      xy_prev = xy;
+      i_prev = i;
+    }
+  }
+
+  // Finish off the last streak for bit entropy.
+  if (xy != 0) {
+    streak = i - i_prev;
+    sum += xy * streak;
+    nonzeros += streak;
+    retval -= VP8LFastSLog2(xy) * streak;
+    if (max_val < xy) {
+      max_val = xy;
+    }
+  }
+  // Huffman cost is not updated with the last streak to keep original behavior.
+  // TODO(vrabaud): study proper behavior
+
+  retval += VP8LFastSLog2(sum);
+  bits_entropy_combined = BitsEntropyRefine(nonzeros, sum, max_val, retval);
+
+  huffman_cost_combined = FinalHuffmanCost(&stats);
+
+  return bits_entropy_combined + huffman_cost_combined;
 }
 
 // Estimates the Entropy + Huffman + other block overhead size cost.
@@ -1144,26 +1186,6 @@ static VP8LStreaks HuffmanCostCount(const uint32_t* population, int length) {
   return stats;
 }
 
-static VP8LStreaks HuffmanCostCombinedCount(const uint32_t* X,
-                                            const uint32_t* Y, int length) {
-  int i;
-  int streak = 0;
-  uint32_t xy_prev = 0xffffffff;
-  VP8LStreaks stats;
-  memset(&stats, 0, sizeof(stats));
-  for (i = 0; i < length; ++i) {
-    const uint32_t xy = X[i] + Y[i];
-    ++streak;
-    if (xy != xy_prev) {
-      stats.counts[xy != 0] += (streak > 3);
-      stats.streaks[xy != 0][(streak > 3)] += streak;
-      streak = 0;
-      xy_prev = xy;
-    }
-  }
-  return stats;
-}
-
 //------------------------------------------------------------------------------
 
 static void HistogramAdd(const VP8LHistogram* const a,
@@ -1215,7 +1237,6 @@ VP8LCostFunc VP8LExtraCost;
 VP8LCostCombinedFunc VP8LExtraCostCombined;
 
 VP8LCostCountFunc VP8LHuffmanCostCount;
-VP8LCostCombinedCountFunc VP8LHuffmanCostCombinedCount;
 
 VP8LHistogramAddFunc VP8LHistogramAdd;
 
@@ -1247,7 +1268,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInit(void) {
   VP8LExtraCostCombined = ExtraCostCombined;
 
   VP8LHuffmanCostCount = HuffmanCostCount;
-  VP8LHuffmanCostCombinedCount = HuffmanCostCombinedCount;
 
   VP8LHistogramAdd = HistogramAdd;
 
