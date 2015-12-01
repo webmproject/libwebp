@@ -56,12 +56,12 @@ static int DistanceToPlaneCode(int xsize, int dist) {
   return dist + 120;
 }
 
-// TODO(vikasa): Evaluate loading (and comparing) 32/64 bits for the inner while
-// loop.
 static WEBP_INLINE int FindMatchLength(const uint32_t* const array1,
                                        const uint32_t* const array2,
                                        int best_len_match,
                                        int max_limit) {
+#if !defined(__x86_64__)
+  // TODO(vrabaud): Compare on other architectures.
   int match_len = 0;
   // Before 'expensive' linear match, check if the two arrays match at the
   // current best length index.
@@ -70,6 +70,32 @@ static WEBP_INLINE int FindMatchLength(const uint32_t* const array1,
     ++match_len;
   }
   return match_len;
+#else
+  const uint32_t* array1_32 = array1;
+  const uint32_t* array2_32 = array2;
+  // max value is aligned to (uint64_t*) array1
+  const uint32_t* const array1_32_max = array1 + (max_limit & ~1);
+
+  // Before 'expensive' linear match, check if the two arrays match at the
+  // current best length index.
+  if (array1[best_len_match] != array2[best_len_match]) return 0;
+
+  // TODO(vrabaud): add __predict_true on bound checking?
+  while (array1_32 < array1_32_max) {
+    if (*(uint64_t*)array1_32 == *(uint64_t*)array2_32) {
+      array1_32 += 2;
+      array2_32 += 2;
+    } else {
+      // if the uint32_t pointed to are the same, then the following ones have
+      // to be different
+      return (array1_32 - array1) + (*array1_32 == *array2_32);
+    }
+  }
+
+  // Deal with the potential last uint32_t.
+  if ((max_limit & 1) && (*array1_32 != *array2_32)) return max_limit - 1;
+  return max_limit;
+#endif
 }
 
 // -----------------------------------------------------------------------------
