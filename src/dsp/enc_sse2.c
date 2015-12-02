@@ -51,6 +51,16 @@ static void PrintReg(const __m128i r, const char* const name, int size) {
 #endif
 
 //------------------------------------------------------------------------------
+// util for unaligned loads.
+
+// memcpy() is the safe way of moving potentially unaligned 32b memory.
+static WEBP_INLINE uint32_t MemToUint32(const uint8_t* const ptr) {
+  uint32_t A;
+  memcpy(&A, (const int*)ptr, sizeof(A));
+  return A;
+}
+
+//------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
 
 // Does one or two inverse transforms.
@@ -237,10 +247,10 @@ static void ITransform(const uint8_t* ref, const int16_t* in, uint8_t* dst,
       ref3 = _mm_loadl_epi64((const __m128i*)&ref[3 * BPS]);
     } else {
       // Load four bytes/pixels per line.
-      ref0 = _mm_cvtsi32_si128(*(const int*)&ref[0 * BPS]);
-      ref1 = _mm_cvtsi32_si128(*(const int*)&ref[1 * BPS]);
-      ref2 = _mm_cvtsi32_si128(*(const int*)&ref[2 * BPS]);
-      ref3 = _mm_cvtsi32_si128(*(const int*)&ref[3 * BPS]);
+      ref0 = _mm_cvtsi32_si128(MemToUint32(&ref[0 * BPS]));
+      ref1 = _mm_cvtsi32_si128(MemToUint32(&ref[1 * BPS]));
+      ref2 = _mm_cvtsi32_si128(MemToUint32(&ref[2 * BPS]));
+      ref3 = _mm_cvtsi32_si128(MemToUint32(&ref[3 * BPS]));
     }
     // Convert to 16b.
     ref0 = _mm_unpacklo_epi8(ref0, zero);
@@ -958,7 +968,7 @@ static WEBP_INLINE void HD4(uint8_t* dst, const uint8_t* top) {
 
 static WEBP_INLINE void TM4(uint8_t* dst, const uint8_t* top) {
   const __m128i zero = _mm_setzero_si128();
-  const __m128i top_values = _mm_cvtsi32_si128(*(const int*)top);
+  const __m128i top_values = _mm_cvtsi32_si128(MemToUint32(top));
   const __m128i top_base = _mm_unpacklo_epi8(top_values, zero);
   int y;
   for (y = 0; y < 4; ++y, dst += BPS) {
