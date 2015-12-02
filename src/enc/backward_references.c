@@ -88,7 +88,7 @@ static WEBP_INLINE int FindMatchLength(const uint32_t* const array1,
     } else {
       // if the uint32_t pointed to are the same, then the following ones have
       // to be different
-      return (array1_32 - array1) + (*array1_32 == *array2_32);
+      return (int)((array1_32 - array1) + (*array1_32 == *array2_32));
     }
   }
 
