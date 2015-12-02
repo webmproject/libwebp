@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b17f3fd_dd1b5ffc",
+        "filename": "configure.ac",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-12-02T07:44:56Z",
+      "side": 1,
+      "message": "4.2.1 will pick up modern versions of clang, which is a bit unfortunate. I don\u0027t think there was any issue with that specifically so adding a test on top of $GCC might be enough",
+      "revId": "da39b4f1a6b0eaaa64d04b41685a4a92e5640187",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
