@@ -261,10 +261,10 @@ static void HE4(uint8_t* dst) {    // horizontal
   const int C = dst[-1 + BPS];
   const int D = dst[-1 + 2 * BPS];
   const int E = dst[-1 + 3 * BPS];
-  *(uint32_t*)(dst + 0 * BPS) = 0x01010101U * AVG3(A, B, C);
-  *(uint32_t*)(dst + 1 * BPS) = 0x01010101U * AVG3(B, C, D);
-  *(uint32_t*)(dst + 2 * BPS) = 0x01010101U * AVG3(C, D, E);
-  *(uint32_t*)(dst + 3 * BPS) = 0x01010101U * AVG3(D, E, E);
+  WebPUint32ToMem(dst + 0 * BPS, 0x01010101U * AVG3(A, B, C));
+  WebPUint32ToMem(dst + 1 * BPS, 0x01010101U * AVG3(B, C, D));
+  WebPUint32ToMem(dst + 2 * BPS, 0x01010101U * AVG3(C, D, E));
+  WebPUint32ToMem(dst + 3 * BPS, 0x01010101U * AVG3(D, E, E));
 }
 
 static void DC4(uint8_t* dst) {   // DC

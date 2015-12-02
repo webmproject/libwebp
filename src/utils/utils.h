@@ -15,6 +15,10 @@
 #ifndef WEBP_UTILS_UTILS_H_
 #define WEBP_UTILS_UTILS_H_
 
+#ifdef HAVE_CONFIG_H
+#include "../webp/config.h"
+#endif
+
 #include <assert.h>
 
 #include "../webp/types.h"
@@ -48,6 +52,26 @@ WEBP_EXTERN(void) WebPSafeFree(void* const ptr);
 
 #define WEBP_ALIGN_CST 31
 #define WEBP_ALIGN(PTR) ((uintptr_t)((PTR) + WEBP_ALIGN_CST) & ~WEBP_ALIGN_CST)
+
+#if defined(WEBP_FORCE_ALIGNED)
+#include <string.h>
+// memcpy() is the safe way of moving potentially unaligned 32b memory.
+static WEBP_INLINE uint32_t WebPMemToUint32(const uint8_t* const ptr) {
+  uint32_t A;
+  memcpy(&A, (const int*)ptr, sizeof(A));
+  return A;
+}
+static WEBP_INLINE void WebPUint32ToMem(uint8_t* const ptr, uint32_t val) {
+  memcpy(ptr, &val, sizeof(val));
+}
+#else
+static WEBP_INLINE uint32_t WebPMemToUint32(const uint8_t* const ptr) {
+  return *(const uint32_t*)ptr;
+}
+static WEBP_INLINE void WebPUint32ToMem(uint8_t* const ptr, uint32_t val) {
+  *(uint32_t*)ptr = val;
+}
+#endif
 
 //------------------------------------------------------------------------------
 // Reading/writing data.

@@ -199,7 +199,7 @@ void VP8LDoFillBitWindow(VP8LBitReader* const br) {
     br->bit_pos_ -= VP8L_WBITS;
     // The expression below needs a little-endian arch to work correctly.
     // This gives a large speedup for decoding speed.
-    br->val_ |= (vp8l_val_t)*(const uint32_t*)(br->buf_ + br->pos_) <<
+    br->val_ |= (vp8l_val_t)WebPMemToUint32(br->buf_ + br->pos_) <<
                 (VP8L_LBITS - VP8L_WBITS);
     br->pos_ += VP8L_LOG8_WBITS;
     return;

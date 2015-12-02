@@ -33,8 +33,8 @@
 // Palette reordering for smaller sum of deltas (and for smaller storage).
 
 static int PaletteCompareColorsForQsort(const void* p1, const void* p2) {
-  const uint32_t a = *(const uint32_t*)p1;
-  const uint32_t b = *(const uint32_t*)p2;
+  const uint32_t a = WebPMemToUint32(p1);
+  const uint32_t b = WebPMemToUint32(p2);
   assert(a != b);
   return (a < b) ? -1 : 1;
 }
