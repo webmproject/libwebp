@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ba24b12_7dd5030e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-12-02T04:21:12Z",
+      "side": 1,
+      "message": "remember to put a newline here otherwise the lines are joined; I think there should be a warning printed by gerrit when you upload things like this",
+      "revId": "a141178255d90abbdb04215628e1c8bf9aff1b28",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
