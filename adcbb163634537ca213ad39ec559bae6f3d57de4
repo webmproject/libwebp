@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb421f2f_eb02f197",
+        "filename": "src/dsp/lossless_enc_mips32.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-12-03T12:58:47Z",
+      "side": 1,
+      "message": "that\u0027s a *lot* of code copy-pasted from lossless_enc.c\n\nWould it be possible to factorize these, please?",
+      "range": {
+        "startLine": 244,
+        "startChar": 26,
+        "endLine": 244,
+        "endChar": 43
+      },
+      "revId": "adcbb163634537ca213ad39ec559bae6f3d57de4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
