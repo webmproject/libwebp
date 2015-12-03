@@ -51,7 +51,7 @@ static void DefaultDecoderOptions(WebPAnimDecoderOptions* const dec_options) {
 }
 
 int WebPAnimDecoderOptionsInitInternal(WebPAnimDecoderOptions* dec_options,
-                                            int abi_version) {
+                                       int abi_version) {
   if (dec_options == NULL ||
       WEBP_ABI_IS_INCOMPATIBLE(abi_version, WEBP_DEMUX_ABI_VERSION)) {
     return 0;
