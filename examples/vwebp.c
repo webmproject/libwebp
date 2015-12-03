@@ -526,6 +526,12 @@ int main(int argc, char *argv[]) {
   WebPDemuxGetFrame(kParams.dmux, 0, curr);
   if (kParams.loop_count) ++kParams.loop_count;
 
+#if defined(__unix__) || defined(__CYGWIN__)
+  // Work around GLUT compositor bug.
+  // https://bugs.launchpad.net/ubuntu/+source/freeglut/+bug/369891
+  setenv("XLIB_SKIP_ARGB_VISUALS", "1", 1);
+#endif
+
   // Start display (and timer)
   glutInit(&argc, argv);
 #ifdef FREEGLUT
