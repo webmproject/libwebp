@@ -622,7 +622,7 @@ double VP8LHistogramEstimateBits(const VP8LHistogram* const p) {
 double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p) {
   return
       VP8LBitsEntropy(p->literal_, VP8LHistogramNumCodes(p->palette_code_bits_),
-                  NULL)
+                      NULL)
       + VP8LBitsEntropy(p->red_, NUM_LITERAL_CODES, NULL)
       + VP8LBitsEntropy(p->blue_, NUM_LITERAL_CODES, NULL)
       + VP8LBitsEntropy(p->alpha_, NUM_LITERAL_CODES, NULL)
