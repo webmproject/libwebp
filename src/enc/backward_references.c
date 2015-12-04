@@ -16,6 +16,7 @@
 #include "./backward_references.h"
 #include "./histogram.h"
 #include "../dsp/lossless.h"
+#include "../dsp/dsp.h"
 #include "../utils/color_cache.h"
 #include "../utils/utils.h"
 
@@ -56,46 +57,32 @@ static int DistanceToPlaneCode(int xsize, int dist) {
   return dist + 120;
 }
 
+// Returns the exact index where array1 and array2 are different if this
+// index is strictly superior to best_len_match. Otherwise, it returns 0.
+// If no two elements are the same, it returns max_limit.
 static WEBP_INLINE int FindMatchLength(const uint32_t* const array1,
                                        const uint32_t* const array2,
                                        int best_len_match,
                                        int max_limit) {
-#if !defined(__x86_64__)
-  // TODO(vrabaud): Compare on other architectures.
-  int match_len = 0;
+  int match_len;
+
   // Before 'expensive' linear match, check if the two arrays match at the
   // current best length index.
   if (array1[best_len_match] != array2[best_len_match]) return 0;
+
+#if defined(WEBP_USE_SSE2)
+  // Check if anything is different up to best_len_match excluded.
+  // memcmp seems to be slower on ARM so it is disabled for now.
+  if (memcmp(array1, array2, best_len_match * sizeof(*array1))) return 0;
+  match_len = best_len_match + 1;
+#else
+  match_len = 0;
+#endif
+
   while (match_len < max_limit && array1[match_len] == array2[match_len]) {
     ++match_len;
   }
   return match_len;
-#else
-  const uint32_t* array1_32 = array1;
-  const uint32_t* array2_32 = array2;
-  // max value is aligned to (uint64_t*) array1
-  const uint32_t* const array1_32_max = array1 + (max_limit & ~1);
-
-  // Before 'expensive' linear match, check if the two arrays match at the
-  // current best length index.
-  if (array1[best_len_match] != array2[best_len_match]) return 0;
-
-  // TODO(vrabaud): add __predict_true on bound checking?
-  while (array1_32 < array1_32_max) {
-    if (*(uint64_t*)array1_32 == *(uint64_t*)array2_32) {
-      array1_32 += 2;
-      array2_32 += 2;
-    } else {
-      // if the uint32_t pointed to are the same, then the following ones have
-      // to be different
-      return (int)((array1_32 - array1) + (*array1_32 == *array2_32));
-    }
-  }
-
-  // Deal with the potential last uint32_t.
-  if ((max_limit & 1) && (*array1_32 != *array2_32)) return max_limit - 1;
-  return max_limit;
-#endif
 }
 
 // -----------------------------------------------------------------------------
