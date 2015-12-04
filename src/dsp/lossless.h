@@ -161,7 +161,7 @@ void VP8LCollectColorBlueTransforms_C(const uint32_t* argb, int stride,
 
 void VP8LResidualImage(int width, int height, int bits, int low_effort,
                        uint32_t* const argb, uint32_t* const argb_scratch,
-                       uint32_t* const image);
+                       uint32_t* const image, int exact);
 
 void VP8LColorSpaceTransform(int width, int height, int bits, int quality,
                              uint32_t* const argb, uint32_t* image);
