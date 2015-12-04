@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "80f5303f_c20a24ff",
+        "filename": "README",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-12-04T06:48:54Z",
+      "side": 1,
+      "message": "debian, or Debian?",
+      "range": {
+        "startLine": 58,
+        "startChar": 5,
+        "endLine": 58,
+        "endChar": 11
+      },
+      "revId": "273364b7bc3152d5d129b71673552d891379914d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
