@@ -53,6 +53,12 @@ Please refer to makefile.unix for additional details and customizations.
 
 Using autoconf tools:
 ---------------------
+Prerequisites:
+A compiler (e.g., gcc), make, autoconf, automake, libtool.
+On a Debian-like system the following should install everything you need for a
+minimal build:
+$ sudo apt-get install gcc make autoconf automake libtool
+
 When building from git sources, you will need to run autogen.sh to generate the
 configure script.
 
