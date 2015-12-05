@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00486077_0c285663",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-12-05T04:02:03Z",
+      "side": 1,
+      "message": "this really could go either way as the numbers are a bit noisy. note I tried v0.4.1 with Xcode 5.x on the ipad and the numbers where slightly better for 32-bit which lead to my earlier comments.\n\n    ipad (jailbroken iOS 7, Xcode 7)\n    \u003d\u003d\u003e /tmp/bins/dwebp.24 \u003c\u003d\u003d\n    Time to decode picture: 0.991s\n    Time to decode picture: 0.988s\n    Time to decode picture: 0.987s\n    Time to decode picture: 0.986s\n    Time to decode picture: 0.987s\n    \u003d\u003d\u003e /tmp/bins/dwebp.56 \u003c\u003d\u003d\n    Time to decode picture: 0.997s\n    Time to decode picture: 0.985s\n    Time to decode picture: 0.984s\n    Time to decode picture: 0.988s\n    Time to decode picture: 0.983s\n    \n    N5X (r10e + 4.9)\n    \u003d\u003d\u003e dwebp.24 \u003c\u003d\u003d\n    Time to decode picture: 1.430s\n    Time to decode picture: 1.419s\n    Time to decode picture: 1.426s\n    Time to decode picture: 1.418s\n    Time to decode picture: 1.437s\n    \u003d\u003d\u003e dwebp.56 \u003c\u003d\u003d\n    Time to decode picture: 1.407s\n    Time to decode picture: 1.426s\n    Time to decode picture: 1.408s\n    Time to decode picture: 1.428s\n    Time to decode picture: 1.428s\n    \n    Samsung Galaxy S6 (r10e + 4.9)\n    \u003d\u003d\u003e dwebp.24 \u003c\u003d\u003d\n    Time to decode picture: 1.235s\n    Time to decode picture: 1.085s\n    Time to decode picture: 1.080s\n    Time to decode picture: 1.075s\n    Time to decode picture: 1.074s\n    \u003d\u003d\u003e dwebp.56 \u003c\u003d\u003d\n    Time to decode picture: 1.070s\n    Time to decode picture: 1.067s\n    Time to decode picture: 1.070s\n    Time to decode picture: 1.065s\n    Time to decode picture: 1.067s",
+      "revId": "464ed10fa95cc764938073a2d1fe29e2be153300",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
