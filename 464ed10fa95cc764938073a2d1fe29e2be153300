@@ -16,6 +16,24 @@
       "revId": "464ed10fa95cc764938073a2d1fe29e2be153300",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0feec6e_12a26cbf",
+        "filename": "src/utils/bit_reader.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-12-05T06:32:38Z",
+      "side": 1,
+      "message": "sgtm, thanks for testing!",
+      "parentUuid": "00486077_0c285663",
+      "revId": "464ed10fa95cc764938073a2d1fe29e2be153300",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
