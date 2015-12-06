@@ -155,9 +155,9 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
     }
     format = GetImageType(in_file);
     if (format == PNG_) {
-      ok = ReadPNG(in_file, pic, keep_alpha, metadata);
+      ok = ReadPNG(filename, pic, keep_alpha, metadata);
     } else if (format == JPEG_) {
-      ok = ReadJPEG(in_file, pic, metadata);
+      ok = ReadJPEG(filename, pic, metadata);
     } else if (format == TIFF_) {
       ok = ReadTIFF(filename, pic, keep_alpha, metadata);
     } else if (format == WEBP_) {

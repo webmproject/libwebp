@@ -22,10 +22,11 @@ extern "C" {
 struct Metadata;
 struct WebPPicture;
 
-// Reads a JPEG from 'in_file', returning the decoded output in 'pic'.
+// Reads a JPEG from 'filename', returning the decoded output in 'pic'.
+// If 'filename' is equal '-', input is read from stdin.
 // The output is RGB or YUV depending on pic->use_argb value.
 // Returns true on success.
-int ReadJPEG(FILE* in_file, struct WebPPicture* const pic,
+int ReadJPEG(const char* const filename, struct WebPPicture* const pic,
              struct Metadata* const metadata);
 
 #ifdef __cplusplus

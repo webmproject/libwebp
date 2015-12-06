@@ -21,13 +21,14 @@ extern "C" {
 struct Metadata;
 struct WebPPicture;
 
-// Reads a PNG from 'in_file', returning the decoded output in 'pic'.
+// Reads a PNG from 'filename', returning the decoded output in 'pic'.
+// If 'filename' is equal '-', input is read from stdin.
 // Output is RGBA or YUVA, depending on pic->use_argb value.
 // If 'keep_alpha' is true and the PNG has an alpha channel, the output is RGBA
 // or YUVA. Otherwise, alpha channel is dropped and output is RGB or YUV.
 // Returns true on success.
-int ReadPNG(FILE* in_file, struct WebPPicture* const pic, int keep_alpha,
-            struct Metadata* const metadata);
+int ReadPNG(const char* const filename, struct WebPPicture* const pic,
+            int keep_alpha, struct Metadata* const metadata);
 
 #ifdef __cplusplus
 }    // extern "C"
