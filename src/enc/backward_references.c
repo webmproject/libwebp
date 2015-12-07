@@ -196,14 +196,11 @@ int VP8LBackwardRefsCopy(const VP8LBackwardRefs* const src,
 
 // initialize as empty
 static void HashChainReset(VP8LHashChain* const p) {
-  int i;
   assert(p != NULL);
-  for (i = 0; i < p->size_; ++i) {
-    p->chain_[i] = -1;
-  }
-  for (i = 0; i < HASH_SIZE; ++i) {
-    p->hash_to_first_index_[i] = -1;
-  }
+  // Set the int32_t arrays to -1.
+  memset(p->chain_, 0xff, p->size_ * sizeof(*p->chain_));
+  memset(p->hash_to_first_index_, 0xff,
+         HASH_SIZE * sizeof(*p->hash_to_first_index_));
 }
 
 int VP8LHashChainInit(VP8LHashChain* const p, int size) {
