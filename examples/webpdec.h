@@ -12,6 +12,8 @@
 #ifndef WEBP_EXAMPLES_WEBPDEC_H_
 #define WEBP_EXAMPLES_WEBPDEC_H_
 
+#include "webp/types.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,7 +26,8 @@ struct WebPPicture;
 // If 'keep_alpha' is true and the WebP has an alpha channel, the output is RGBA
 // or YUVA. Otherwise, alpha channel is dropped and output is RGB or YUV.
 // Returns true on success.
-int ReadWebP(const char* const in_file, struct WebPPicture* const pic,
+int ReadWebP(const uint8_t* const data, size_t data_size,
+             struct WebPPicture* const pic,
              int keep_alpha, struct Metadata* const metadata);
 
 #ifdef __cplusplus

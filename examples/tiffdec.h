@@ -12,6 +12,8 @@
 #ifndef WEBP_EXAMPLES_TIFFDEC_H_
 #define WEBP_EXAMPLES_TIFFDEC_H_
 
+#include "webp/types.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -19,12 +21,12 @@ extern "C" {
 struct Metadata;
 struct WebPPicture;
 
-// Reads a TIFF from 'filename', returning the decoded output in 'pic'.
+// Reads a TIFF from 'data', returning the decoded output in 'pic'.
 // Output is RGBA or YUVA, depending on pic->use_argb value.
 // If 'keep_alpha' is true and the TIFF has an alpha channel, the output is RGBA
 // or YUVA. Otherwise, alpha channel is dropped and output is RGB or YUV.
 // Returns true on success.
-int ReadTIFF(const char* const filename,
+int ReadTIFF(const uint8_t* const data, size_t data_size,
              struct WebPPicture* const pic, int keep_alpha,
              struct Metadata* const metadata);
 

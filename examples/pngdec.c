@@ -203,7 +203,8 @@ static void ReadFunc(png_structp png_ptr, png_bytep data, png_size_t length) {
   ctx->offset += length;
 }
 
-int ReadPNG(const char* const filename, struct WebPPicture* const pic,
+int ReadPNG(const uint8_t* const data, size_t data_size,
+            struct WebPPicture* const pic,
             int keep_alpha, struct Metadata* const metadata) {
   volatile png_structp png = NULL;
   volatile png_infop info = NULL;
@@ -218,8 +219,8 @@ int ReadPNG(const char* const filename, struct WebPPicture* const pic,
   png_uint_32 stride;
   uint8_t* volatile rgb = NULL;
 
-  ok = ExUtilReadFile(filename, &context.data, &context.data_size);
-  if (!ok) goto End;
+  context.data = data;
+  context.data_size = data_size;
 
   png = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
   if (png == NULL) goto End;
@@ -299,14 +300,15 @@ int ReadPNG(const char* const filename, struct WebPPicture* const pic,
     png_destroy_read_struct((png_structpp)&png,
                             (png_infopp)&info, (png_infopp)&end_info);
   }
-  free((void*)context.data);
   free(rgb);
   return ok;
 }
 #else  // !WEBP_HAVE_PNG
-int ReadPNG(const char* const filename, struct WebPPicture* const pic,
+int ReadPNG(const uint8_t* const data, size_t data_size,
+            struct WebPPicture* const pic,
             int keep_alpha, struct Metadata* const metadata) {
-  (void)filename;
+  (void)data;
+  (void)data_size;
   (void)pic;
   (void)keep_alpha;
   (void)metadata;

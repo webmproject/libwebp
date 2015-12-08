@@ -16,6 +16,7 @@
 #endif
 
 #include <stdio.h>
+#include <string.h>
 
 #ifdef WEBP_HAVE_TIFF
 #include <tiffio.h>
@@ -63,17 +64,71 @@ static int ExtractMetadataFromTIFF(TIFF* const tif, Metadata* const metadata) {
   return 1;
 }
 
-int ReadTIFF(const char* const filename,
+// Ad-hoc structure to supply read-from-memory functionalities.
+typedef struct {
+  const uint8_t* data;
+  toff_t size;
+  toff_t pos;
+} MyData;
+
+static int MyClose(thandle_t opaque) {
+  (void)opaque;
+  return 0;
+}
+
+static toff_t MySize(thandle_t opaque) {
+  const MyData* const my_data = (MyData*)opaque;
+  return my_data->size;
+}
+
+static toff_t MySeek(thandle_t opaque, toff_t offset, int whence) {
+  MyData* const my_data = (MyData*)opaque;
+  offset += (whence == SEEK_CUR) ? my_data->pos
+          : (whence == SEEK_SET) ? 0
+          : my_data->size;
+  if (offset > my_data->size) return (toff_t)-1;
+  my_data->pos = offset;
+  return offset;
+}
+
+static int MyMapFile(thandle_t opaque, void** base, toff_t* size) {
+  (void)opaque;
+  (void)base;
+  (void)size;
+  return 0;
+}
+static void MyUnmapFile(thandle_t opaque, void* base, toff_t size) {
+  (void)opaque;
+  (void)base;
+  (void)size;
+}
+
+static tsize_t MyRead(thandle_t opaque, void* dst, tsize_t size) {
+  MyData* const my_data = (MyData*)opaque;
+  if (my_data->pos + size > my_data->size) {
+    size = my_data->size - my_data->pos;
+  }
+  if (size > 0) {
+    memcpy(dst, my_data->data + my_data->pos, size);
+    my_data->pos += size;
+  }
+  return size;
+}
+
+int ReadTIFF(const uint8_t* const data, size_t data_size,
              WebPPicture* const pic, int keep_alpha,
              Metadata* const metadata) {
-  TIFF* const tif = TIFFOpen(filename, "r");
+  MyData my_data = { data, (toff_t)data_size, 0 };
+  TIFF* const tif = TIFFClientOpen("Memory", "r", &my_data,
+                                   MyRead, MyRead, MySeek, MyClose,
+                                   MySize, MyMapFile, MyUnmapFile);
   uint32 width, height;
   uint32* raster;
   int ok = 0;
   tdir_t dircount;
 
   if (tif == NULL) {
-    fprintf(stderr, "Error! Cannot open TIFF file '%s'\n", filename);
+    fprintf(stderr, "Error! Cannot parse TIFF file\n");
     return 0;
   }
 
@@ -87,7 +142,7 @@ int ReadTIFF(const char* const filename,
   if (!(TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &width) &&
         TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &height))) {
     fprintf(stderr, "Error! Cannot retrieve TIFF image dimensions.\n");
-    return 0;
+    goto End;
   }
   raster = (uint32*)_TIFFmalloc(width * height * sizeof(*raster));
   if (raster != NULL) {
@@ -119,15 +174,16 @@ int ReadTIFF(const char* const filename,
       }
     }
   }
-
+ End:
   TIFFClose(tif);
   return ok;
 }
 #else  // !WEBP_HAVE_TIFF
-int ReadTIFF(const char* const filename,
+int ReadTIFF(const uint8_t* const data, size_t data_size,
              struct WebPPicture* const pic, int keep_alpha,
              struct Metadata* const metadata) {
-  (void)filename;
+  (void)data;
+  (void)data_size;
   (void)pic;
   (void)keep_alpha;
   (void)metadata;

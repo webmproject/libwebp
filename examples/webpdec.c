@@ -19,11 +19,10 @@
 #include "./example_util.h"
 #include "./metadata.h"
 
-int ReadWebP(const char* const in_file, WebPPicture* const pic,
+int ReadWebP(const uint8_t* const data, size_t data_size,
+             WebPPicture* const pic,
              int keep_alpha, Metadata* const metadata) {
   int ok = 0;
-  size_t data_size = 0;
-  const uint8_t* data = NULL;
   VP8StatusCode status = VP8_STATUS_OK;
   WebPDecoderConfig config;
   WebPDecBuffer* const output_buffer = &config.output;
@@ -39,7 +38,12 @@ int ReadWebP(const char* const in_file, WebPPicture* const pic,
     return 0;
   }
 
-  if (ExUtilLoadWebP(in_file, &data, &data_size, bitstream)) {
+  status = WebPGetFeatures(data, data_size, bitstream);
+  if (status != VP8_STATUS_OK) {
+    ExUtilPrintWebPError("input data", status);
+    return 0;
+  }
+  {
     const int has_alpha = keep_alpha && bitstream->has_alpha;
     // TODO(skal): use MODE_YUV(A), depending on the expected
     // input pic->use_argb. This would save some conversion steps.
@@ -57,10 +61,9 @@ int ReadWebP(const char* const in_file, WebPPicture* const pic,
   }
 
   if (status != VP8_STATUS_OK) {
-    ExUtilPrintWebPError(in_file, status);
+    ExUtilPrintWebPError("input data", status);
   }
 
-  free((void*)data);
   WebPFreeDecBuffer(output_buffer);
   return ok;
 }
