@@ -25,6 +25,7 @@
 #define MAX_DIFF_COST (1e30f)
 
 static const int kPredLowEffort = 11;
+static const uint32_t kMaskAlpha = 0xff000000;
 
 // lookup table for small values of log2(int)
 const float kLog2Table[LOG_LOOKUP_IDX_MAX] = {
@@ -659,7 +660,8 @@ static WEBP_INLINE uint32_t Predict(VP8LPredictorFunc pred_func,
 static int GetBestPredictorForTile(int width, int height,
                                    int tile_x, int tile_y, int bits,
                                    int accumulated[4][256],
-                                   const uint32_t* const argb_scratch) {
+                                   const uint32_t* const argb_scratch,
+                                   int exact) {
   const int kNumPredModes = 14;
   const int col_start = tile_x << bits;
   const int row_start = tile_y << bits;
@@ -691,7 +693,11 @@ static int GetBestPredictorForTile(int width, int height,
         const int col = col_start + x;
         const uint32_t predict =
             Predict(pred_func, col, row, current_row, upper_row);
-        UpdateHisto(histo_argb, VP8LSubPixels(current_row[col], predict));
+        uint32_t residual = VP8LSubPixels(current_row[col], predict);
+        if (!exact && (current_row[col] & kMaskAlpha) == 0) {
+          residual &= kMaskAlpha;  // See CopyTileWithPrediction.
+        }
+        UpdateHisto(histo_argb, residual);
       }
     }
     cur_diff = PredictionCostSpatialHistogram(
@@ -717,7 +723,8 @@ static int GetBestPredictorForTile(int width, int height,
 static void CopyImageWithPrediction(int width, int height,
                                     int bits, uint32_t* const modes,
                                     uint32_t* const argb_scratch,
-                                    uint32_t* const argb, int low_effort) {
+                                    uint32_t* const argb,
+                                    int low_effort, int exact) {
   const int tiles_per_row = VP8LSubSampleSize(width, bits);
   const int mask = (1 << bits) - 1;
   // The row size is one pixel longer to allow the top right pixel to point to
@@ -744,14 +751,25 @@ static void CopyImageWithPrediction(int width, int height,
       }
     } else {
       for (x = 0; x < width; ++x) {
-        uint32_t predict;
+        uint32_t predict, residual;
         if ((x & mask) == 0) {
           const int mode =
               (modes[(y >> bits) * tiles_per_row + (x >> bits)] >> 8) & 0xff;
           pred_func = VP8LPredictors[mode];
         }
         predict = Predict(pred_func, x, y, current_row, upper_row);
-        argb[y * width + x] = VP8LSubPixels(current_row[x], predict);
+        residual = VP8LSubPixels(current_row[x], predict);
+        if (!exact && (current_row[x] & kMaskAlpha) == 0) {
+          // If alpha is 0, cleanup RGB. We can choose the RGB values of the
+          // residual for best compression. The prediction of alpha itself can
+          // be non-zero and must be kept though. We choose RGB of the residual
+          // to be 0.
+          residual &= kMaskAlpha;
+          // Update input image so that next predictions use correct RGB value.
+          current_row[x] = predict & ~kMaskAlpha;
+          if (x == 0 && y != 0) upper_row[width] = current_row[x];
+        }
+        argb[y * width + x] = residual;
       }
     }
   }
@@ -759,7 +777,7 @@ static void CopyImageWithPrediction(int width, int height,
 
 void VP8LResidualImage(int width, int height, int bits, int low_effort,
                        uint32_t* const argb, uint32_t* const argb_scratch,
-                       uint32_t* const image) {
+                       uint32_t* const image, int exact) {
   const int max_tile_size = 1 << bits;
   const int tiles_per_row = VP8LSubSampleSize(width, bits);
   const int tiles_per_col = VP8LSubSampleSize(height, bits);
@@ -787,15 +805,14 @@ void VP8LResidualImage(int width, int height, int bits, int low_effort,
              this_tile_height * width * sizeof(*current_tile_rows));
       for (tile_x = 0; tile_x < tiles_per_row; ++tile_x) {
         const int pred = GetBestPredictorForTile(width, height, tile_x, tile_y,
-                                                 bits, (int (*)[256])histo,
-                                                 argb_scratch);
+            bits, (int (*)[256])histo, argb_scratch, exact);
         image[tile_y * tiles_per_row + tile_x] = ARGB_BLACK | (pred << 8);
       }
     }
   }
 
   CopyImageWithPrediction(width, height, bits,
-                          image, argb_scratch, argb, low_effort);
+                          image, argb_scratch, argb, low_effort, exact);
 }
 
 void VP8LSubtractGreenFromBlueAndRed_C(uint32_t* argb_data, int num_pixels) {

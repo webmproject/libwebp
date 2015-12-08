@@ -1012,7 +1012,8 @@ static WebPEncodingError ApplyPredictFilter(const VP8LEncoder* const enc,
   const int transform_height = VP8LSubSampleSize(height, pred_bits);
 
   VP8LResidualImage(width, height, pred_bits, low_effort, enc->argb_,
-                    enc->argb_scratch_, enc->transform_data_);
+                    enc->argb_scratch_, enc->transform_data_,
+                    enc->config_->exact);
   VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
   VP8LPutBits(bw, PREDICTOR_TRANSFORM, 2);
   assert(pred_bits >= 2);

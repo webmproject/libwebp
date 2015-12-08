@@ -67,6 +67,11 @@ static int EncodeLossless(const uint8_t* const data, int width, int height,
 
   WebPConfigInit(&config);
   config.lossless = 1;
+  // Enable exact, or it would alter RGB values of transparent alpha, which is
+  // normally OK but not here since we are not encoding the input image but  an
+  // internal encoding-related image containing necessary exact information in
+  // RGB channels.
+  config.exact = 1;
   config.method = effort_level;  // impact is very small
   // Set a low default quality for encoding alpha. Ensure that Alpha quality at
   // lower methods (3 and below) is less than the threshold for triggering
