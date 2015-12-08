@@ -48,63 +48,62 @@ extern void* VP8GetCPUInfo;   // opaque forward declaration.
 
 static int verbose = 0;
 
-static int ReadYUV(const char filename[], WebPPicture* const pic) {
+static int ReadYUV(const uint8_t* const data, size_t data_size,
+                   WebPPicture* const pic) {
+  int y;
   const int use_argb = pic->use_argb;
   const int uv_width = (pic->width + 1) / 2;
   const int uv_height = (pic->height + 1) / 2;
   const int uv_plane_size = uv_width * uv_height;
-  const uint8_t* data = NULL;
-  size_t data_size = 0;
   const size_t expected_data_size =
       pic->width * pic->height + 2 * uv_plane_size;
-  int ok = 0;
-
-  pic->use_argb = 0;
-
-  ok = ExUtilReadFile(filename, &data, &data_size);
-  if (!ok) goto End;
 
   if (data_size != expected_data_size) {
     fprintf(stderr,
-            "file '%s' doesn't have the expected size (%d instead of %d)\n",
-            filename, (int)data_size, (int)expected_data_size);
-    ok = 0;
-    goto End;
+            "input data doesn't have the expected size (%d instead of %d)\n",
+            (int)data_size, (int)expected_data_size);
+    return 0;
   }
-  pic->y_stride = pic->width;
-  pic->uv_stride = uv_width;
-  pic->y = (uint8_t*)data;
-  pic->u = pic->y + pic->height * pic->y_stride;
-  pic->v = pic->u + uv_plane_size;
-  // Grab ownership 'data'
-  pic->memory_ = (void*)data;
-  data = NULL;
-  ok = 1;
 
-  if (use_argb) ok = WebPPictureYUVAToARGB(pic);
+  pic->use_argb = 0;
+  if (!WebPPictureAlloc(pic)) return 0;
 
- End:
-  free((void*)data);
-  return ok;
+  for (y = 0; y < pic->height; ++y) {
+    memcpy(pic->y + y * pic->y_stride, data + y * pic->width,
+           pic->width * sizeof(*pic->y));
+  }
+  for (y = 0; y < uv_height; ++y) {
+    const uint8_t* const uv_data = data + pic->height * pic->y_stride;
+    memcpy(pic->u + y * pic->uv_stride, uv_data + y * uv_width,
+           uv_width * sizeof(*uv_data));
+    memcpy(pic->v + y * pic->uv_stride, uv_data + y * uv_width + uv_plane_size,
+           uv_width * sizeof(*uv_data));
+  }
+  return use_argb ? WebPPictureYUVAToARGB(pic) : 1;
 }
 
 #ifdef HAVE_WINCODEC_H
 
 static int ReadPicture(const char* const filename, WebPPicture* const pic,
                        int keep_alpha, Metadata* const metadata) {
-  int ok;
+  int ok = 0;
+  const uint8_t* data = NULL;
+  size_t data_size = 0;
   if (pic->width != 0 && pic->height != 0) {
-    ok = ReadYUV(filename, pic);
+    ok = ExUtilReadFile(filename, &data, &data_size);
+    ok = ok && ReadYUV(data, data_size, pic);
   } else {
     // If no size specified, try to decode it using WIC.
     ok = ReadPictureWithWIC(filename, pic, keep_alpha, metadata);
     if (!ok) {
-      ok = ReadWebP(filename, pic, keep_alpha, metadata);
+      ok = ExUtilReadFile(filename, &data, &data_size);
+      ok = ok && ReadWebP(data, data_size, pic, keep_alpha, metadata);
     }
   }
   if (!ok) {
     fprintf(stderr, "Error! Could not process file %s\n", filename);
   }
+  free((void*)data);
   return ok;
 }
 
@@ -118,18 +117,14 @@ typedef enum {
   UNSUPPORTED
 } InputFileFormat;
 
-static InputFileFormat GetImageType(FILE* in_file) {
+static uint32_t GetBE32(const uint8_t buf[]) {
+  return ((uint32_t)buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
+}
+
+static InputFileFormat GuessImageType(const uint8_t buf[12]) {
   InputFileFormat format = UNSUPPORTED;
-  uint32_t magic1, magic2;
-  uint8_t buf[12];
-
-  if ((fread(&buf[0], 12, 1, in_file) != 1) ||
-      (fseek(in_file, 0, SEEK_SET) != 0)) {
-    return format;
-  }
-
-  magic1 = ((uint32_t)buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
-  magic2 = ((uint32_t)buf[8] << 24) | (buf[9] << 16) | (buf[10] << 8) | buf[11];
+  const uint32_t magic1 = GetBE32(buf + 0);
+  const uint32_t magic2 = GetBE32(buf + 8);
   if (magic1 == 0x89504E47U) {
     format = PNG_;
   } else if (magic1 >= 0xFFD8FF00U && magic1 <= 0xFFD8FFFFU) {
@@ -144,34 +139,36 @@ static InputFileFormat GetImageType(FILE* in_file) {
 
 static int ReadPicture(const char* const filename, WebPPicture* const pic,
                        int keep_alpha, Metadata* const metadata) {
+  const uint8_t* data = NULL;
+  size_t data_size = 0;
   int ok = 0;
+
+  ok = ExUtilReadFile(filename, &data, &data_size);
+  if (!ok) goto End;
+
   if (pic->width == 0 || pic->height == 0) {
-    InputFileFormat format;
-    // If no size specified, try to decode it as PNG/JPEG (as appropriate).
-    FILE* in_file = fopen(filename, "rb");
-    if (in_file == NULL) {
-      fprintf(stderr, "Error! Cannot open input file '%s'\n", filename);
-      return ok;
-    }
-    format = GetImageType(in_file);
+    ok = 0;
+    if (data_size >= 12) {
+      const InputFileFormat format = GuessImageType(data);
     if (format == PNG_) {
-      ok = ReadPNG(filename, pic, keep_alpha, metadata);
+        ok = ReadPNG(data, data_size, pic, keep_alpha, metadata);
     } else if (format == JPEG_) {
-      ok = ReadJPEG(filename, pic, metadata);
+        ok = ReadJPEG(data, data_size, pic, metadata);
     } else if (format == TIFF_) {
-      ok = ReadTIFF(filename, pic, keep_alpha, metadata);
+        ok = ReadTIFF(data, data_size, pic, keep_alpha, metadata);
     } else if (format == WEBP_) {
-      ok = ReadWebP(filename, pic, keep_alpha, metadata);
+        ok = ReadWebP(data, data_size, pic, keep_alpha, metadata);
+      }
     }
-    fclose(in_file);
   } else {
     // If image size is specified, infer it as YUV format.
-    ok = ReadYUV(filename, pic);
+    ok = ReadYUV(data, data_size, pic);
   }
+ End:
   if (!ok) {
     fprintf(stderr, "Error! Could not process file %s\n", filename);
   }
-
+  free((void*)data);
   return ok;
 }
 

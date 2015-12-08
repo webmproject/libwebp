@@ -254,8 +254,8 @@ static void ContextSetup(volatile struct jpeg_decompress_struct* const cinfo,
   ctx->pub.next_input_byte = NULL;
 }
 
-int ReadJPEG(const char* const filename, WebPPicture* const pic,
-             Metadata* const metadata) {
+int ReadJPEG(const uint8_t* const data, size_t data_size,
+             WebPPicture* const pic, Metadata* const metadata) {
   volatile int ok = 0;
   int stride, width, height;
   volatile struct jpeg_decompress_struct dinfo;
@@ -265,9 +265,8 @@ int ReadJPEG(const char* const filename, WebPPicture* const pic,
   JPEGReadContext ctx;
 
   memset(&ctx, 0, sizeof(ctx));
-
-  ok = ExUtilReadFile(filename, &ctx.data, &ctx.data_size);
-  if (!ok) goto End;
+  ctx.data = data;
+  ctx.data_size = data_size;
 
   memset((j_decompress_ptr)&dinfo, 0, sizeof(dinfo));   // for setjmp sanity
   dinfo.err = jpeg_std_error(&jerr.pub);
@@ -330,14 +329,14 @@ int ReadJPEG(const char* const filename, WebPPicture* const pic,
 
  End:
   free(rgb);
-  free((void*)ctx.data);
   return ok;
 }
 #else  // !WEBP_HAVE_JPEG
-int ReadJPEG(const char* const filename,
+int ReadJPEG(const uint8_t* const data, size_t data_size,
              struct WebPPicture* const pic,
              struct Metadata* const metadata) {
-  (void)filename;
+  (void)data;
+  (void)data_size;
   (void)pic;
   (void)metadata;
   fprintf(stderr, "JPEG support not compiled. Please install the libjpeg "
