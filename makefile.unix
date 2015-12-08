@@ -262,7 +262,6 @@ HDRS = \
     src/dsp/mips_macro.h \
     src/dsp/neon.h \
     src/dsp/yuv.h \
-    src/dsp/yuv_tables_sse2.h \
     src/enc/backward_references.h \
     src/enc/cost.h \
     src/enc/delta_palettization.h \

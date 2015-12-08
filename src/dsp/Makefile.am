@@ -73,7 +73,6 @@ libwebpdspdecode_sse2_la_SOURCES += lossless_sse2.c
 libwebpdspdecode_sse2_la_SOURCES += rescaler_sse2.c
 libwebpdspdecode_sse2_la_SOURCES += upsampling_sse2.c
 libwebpdspdecode_sse2_la_SOURCES += yuv_sse2.c
-libwebpdspdecode_sse2_la_SOURCES += yuv_tables_sse2.h
 libwebpdspdecode_sse2_la_CPPFLAGS = $(libwebpdsp_sse2_la_CPPFLAGS)
 libwebpdspdecode_sse2_la_CFLAGS = $(libwebpdsp_sse2_la_CFLAGS)
 

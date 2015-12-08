@@ -14,7 +14,9 @@
 
 #include "./dsp.h"
 
-#if defined(WEBP_USE_MIPS_DSP_R2)
+// Code is disabled for now, in favor of the plain-C version
+// TODO(djordje.pesut): adapt the code to reflect the C-version.
+#if 0 // defined(WEBP_USE_MIPS_DSP_R2)
 
 #include <assert.h>
 #include "./yuv.h"
@@ -277,6 +279,6 @@ WEBP_DSP_INIT_STUB(WebPInitYUV444ConvertersMIPSdspR2)
 
 #endif  // WEBP_USE_MIPS_DSP_R2
 
-#if !(defined(FANCY_UPSAMPLING) && defined(WEBP_USE_MIPS_DSP_R2))
+#if 1  // !(defined(FANCY_UPSAMPLING) && defined(WEBP_USE_MIPS_DSP_R2))
 WEBP_DSP_INIT_STUB(WebPInitUpsamplersMIPSdspR2)
 #endif
