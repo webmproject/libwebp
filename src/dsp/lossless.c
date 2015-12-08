@@ -490,7 +490,7 @@ static void CopyOrSwap(const uint32_t* src, int num_pixels, uint8_t* dst,
 
 #if !defined(WORDS_BIGENDIAN)
 #if !defined(WEBP_REFERENCE_IMPLEMENTATION)
-      *(uint32_t*)dst = BSwap32(argb);
+      WebPUint32ToMem(dst, BSwap32(argb));
 #else  // WEBP_REFERENCE_IMPLEMENTATION
       dst[0] = (argb >> 24) & 0xff;
       dst[1] = (argb >> 16) & 0xff;
