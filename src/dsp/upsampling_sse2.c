@@ -190,7 +190,6 @@ extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
 extern void WebPInitUpsamplersSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersSSE2(void) {
-  VP8YUVInitSSE2();
   WebPUpsamplers[MODE_RGB]  = UpsampleRgbLinePair;
   WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePair;
   WebPUpsamplers[MODE_BGR]  = UpsampleBgrLinePair;
@@ -225,7 +224,6 @@ YUV444_FUNC(Yuv444ToRgb, VP8YuvToRgb32, 3);
 YUV444_FUNC(Yuv444ToBgr, VP8YuvToBgr32, 3);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444ConvertersSSE2(void) {
-  VP8YUVInitSSE2();
   WebPYUV444Converters[MODE_RGBA] = Yuv444ToRgba;
   WebPYUV444Converters[MODE_BGRA] = Yuv444ToBgra;
   WebPYUV444Converters[MODE_RGB]  = Yuv444ToRgb;

@@ -14,7 +14,8 @@
 
 #include "./dsp.h"
 
-#if defined(WEBP_USE_MIPS32)
+// Code is disabled for now, in favor of the plain-C version
+#if 0  // defined(WEBP_USE_MIPS32)
 
 #include "./yuv.h"
 
