@@ -478,26 +478,31 @@ typedef struct {
 } HistogramPair;
 
 typedef struct {
-  HistogramPair* heap;
-  int* positions;
+  HistogramPair* queue;
   int size;
-  int max_index;
-} HistoHeap;
+  int max_size;
+} HistoQueue;
 
-static int HistoHeapInit(HistoHeap* const histo_heap, const int max_index) {
-  histo_heap->size = 0;
-  histo_heap->max_index = max_index;
-  histo_heap->heap = WebPSafeMalloc(max_index * max_index,
-                                    sizeof(*histo_heap->heap));
-  histo_heap->positions = WebPSafeMalloc(max_index * max_index,
-                                         sizeof(*histo_heap->positions));
-  return histo_heap->heap != NULL && histo_heap->positions != NULL;
+static int HistoQueueInit(HistoQueue* const histo_queue, const int max_index) {
+  histo_queue->size = 0;
+  // max_index^2 for the queue size is safe. If you look at
+  // HistogramCombineGreedy, and imagine that UpdateQueueFront always pushes
+  // data to the queue, you insert at most:
+  // - max_index*(max_index-1)/2 (the first two for loops)
+  // - max_index - 1 in the last for loop at the first iteration of the while
+  //   loop, max_index - 2 at the second iteration ... therefore
+  //   max_index*(max_index-1)/2 overall too
+  histo_queue->max_size = max_index * max_index;
+  // We allocate max_size + 1 because the last element at index "size" is
+  // used as temporary data (and it could be up to max_size).
+  histo_queue->queue = WebPSafeMalloc(histo_queue->max_size + 1,
+                                      sizeof(*histo_queue->queue));
+  return histo_queue->queue != NULL;
 }
 
-static void HistoHeapClear(HistoHeap* const histo_heap) {
-  assert(histo_heap != NULL);
-  WebPSafeFree(histo_heap->heap);
-  WebPSafeFree(histo_heap->positions);
+static void HistoQueueClear(HistoQueue* const histo_queue) {
+  assert(histo_queue != NULL);
+  WebPSafeFree(histo_queue->queue);
 }
 
 static void SwapHistogramPairs(HistogramPair *p1,
@@ -507,59 +512,23 @@ static void SwapHistogramPairs(HistogramPair *p1,
   *p2 = tmp;
 }
 
-// Given a valid min-heap in range [0, heap_size-1) this function places value
-// heap[heap_size-1] into right location within heap and sets its position in
-// positions array.
-static void HeapPush(HistoHeap* const histo_heap) {
-  HistogramPair* const heap = histo_heap->heap - 1;
-  int* const positions = histo_heap->positions;
-  const int max_index = histo_heap->max_index;
-  int v;
-  ++histo_heap->size;
-  v = histo_heap->size;
-  while (v > 1 && heap[v].cost_diff < heap[v >> 1].cost_diff) {
-    SwapHistogramPairs(&heap[v], &heap[v >> 1]);
-    // Change position of moved pair in heap.
-    if (heap[v].idx1 >= 0) {
-      const int pos = heap[v].idx1 * max_index + heap[v].idx2;
-      assert(pos >= 0 && pos < max_index * max_index);
-      positions[pos] = v;
-    }
-    v >>= 1;
-  }
-  positions[heap[v].idx1 * max_index + heap[v].idx2] = v;
-}
+// Given a valid priority queue in range [0, queue_size) this function checks
+// whether histo_queue[queue_size] should be accepted and swaps it with the
+// front if it is smaller. Otherwise, it leaves it as is.
+static void UpdateQueueFront(HistoQueue* const histo_queue) {
+  if (histo_queue->queue[histo_queue->size].cost_diff >= 0) return;
 
-// Given a valid min-heap in range [0, heap_size) this function shortens heap
-// range by one and places element with the lowest value to (heap_size-1).
-static void HeapPop(HistoHeap* const histo_heap) {
-  HistogramPair* const heap = histo_heap->heap - 1;
-  int* const positions = histo_heap->positions;
-  const int heap_size = histo_heap->size;
-  const int max_index = histo_heap->max_index;
-  int v = 1;
-  if (heap[v].idx1 >= 0) {
-    positions[heap[v].idx1 * max_index + heap[v].idx2] = -1;
+  if (histo_queue->queue[histo_queue->size].cost_diff <
+      histo_queue->queue[0].cost_diff) {
+    SwapHistogramPairs(histo_queue->queue,
+                       histo_queue->queue + histo_queue->size);
   }
-  SwapHistogramPairs(&heap[v], &heap[heap_size]);
-  while ((v << 1) < heap_size) {
-    int son = (heap[v << 1].cost_diff < heap[v].cost_diff) ? (v << 1) : v;
-    if (((v << 1) + 1) < heap_size &&
-        heap[(v << 1) + 1].cost_diff < heap[son].cost_diff) {
-      son = (v << 1) + 1;
-    }
-    if (son == v) break;
-    SwapHistogramPairs(&heap[v], &heap[son]);
-    // Change position of moved pair in heap.
-    if (heap[v].idx1 >= 0) {
-      positions[heap[v].idx1 * max_index + heap[v].idx2] = v;
-    }
-    v = son;
-  }
-  if (heap[v].idx1 >= 0) {
-    positions[heap[v].idx1 * max_index + heap[v].idx2] = v;
-  }
-  --histo_heap->size;
+  ++histo_queue->size;
+
+  // We cannot add more elements than the capacity.
+  // The allocation adds an extra element to the official capacity so that
+  // histo_queue->queue[histo_queue->max_size] is read/written within bound.
+  assert(histo_queue->size <= histo_queue->max_size);
 }
 
 // -----------------------------------------------------------------------------
@@ -579,41 +548,6 @@ static void PreparePair(VP8LHistogram** histograms, int idx1, int idx2,
   pair->cost_combo = histos->bit_cost_;
 }
 
-#define POSITION_INVALID (-1)
-
-// Invalidates pairs intersecting (idx1, idx2) in heap.
-static void InvalidatePairs(int idx1, int idx2,
-                            const HistoHeap* const histo_heap) {
-  HistogramPair* const heap = histo_heap->heap - 1;
-  int* const positions = histo_heap->positions;
-  const int max_index = histo_heap->max_index;
-  int i;
-  for (i = 0; i < idx1; ++i) {
-    const int pos = positions[i * max_index + idx1];
-    if (pos >= 0) {
-      heap[pos].idx1 = POSITION_INVALID;
-    }
-  }
-  for (i = idx1 + 1; i < max_index; ++i) {
-    const int pos = positions[idx1 * max_index + i];
-    if (pos >= 0) {
-      heap[pos].idx1 = POSITION_INVALID;
-    }
-  }
-  for (i = 0; i < idx2; ++i) {
-    const int pos = positions[i * max_index + idx2];
-    if (pos >= 0) {
-      heap[pos].idx1 = POSITION_INVALID;
-    }
-  }
-  for (i = idx2 + 1; i < max_index; ++i) {
-    const int pos = positions[idx2 * max_index + i];
-    if (pos >= 0) {
-      heap[pos].idx1 = POSITION_INVALID;
-    }
-  }
-}
-
 // Combines histograms by continuously choosing the one with the highest cost
 // reduction.
 static int HistogramCombineGreedy(VP8LHistogramSet* const image_histo,
@@ -624,10 +558,10 @@ static int HistogramCombineGreedy(VP8LHistogramSet* const image_histo,
   VP8LHistogram** const histograms = image_histo->histograms;
   // Indexes of remaining histograms.
   int* const clusters = WebPSafeMalloc(image_histo_size, sizeof(*clusters));
-  // Heap of histogram pairs.
-  HistoHeap histo_heap;
+  // Priority queue of histogram pairs.
+  HistoQueue histo_queue;
 
-  if (!HistoHeapInit(&histo_heap, image_histo_size) || clusters == NULL) {
+  if (!HistoQueueInit(&histo_queue, image_histo_size) || clusters == NULL) {
     goto End;
   }
 
@@ -636,19 +570,18 @@ static int HistogramCombineGreedy(VP8LHistogramSet* const image_histo,
     clusters[i] = i;
     for (j = i + 1; j < image_histo_size; ++j) {
       // Initialize positions array.
-      histo_heap.positions[i * histo_heap.max_index + j] = POSITION_INVALID;
-      PreparePair(histograms, i, j, &histo_heap.heap[histo_heap.size], histos);
-      if (histo_heap.heap[histo_heap.size].cost_diff < 0) {
-        HeapPush(&histo_heap);
-      }
+      PreparePair(histograms, i, j, &histo_queue.queue[histo_queue.size],
+                  histos);
+      UpdateQueueFront(&histo_queue);
     }
   }
 
-  while (image_histo_size > 1 && histo_heap.size > 0) {
-    const int idx1 = histo_heap.heap[0].idx1;
-    const int idx2 = histo_heap.heap[0].idx2;
+  while (image_histo_size > 1 && histo_queue.size > 0) {
+    HistogramPair* copy_to;
+    const int idx1 = histo_queue.queue[0].idx1;
+    const int idx2 = histo_queue.queue[0].idx2;
     VP8LHistogramAdd(histograms[idx2], histograms[idx1], histograms[idx1]);
-    histograms[idx1]->bit_cost_ = histo_heap.heap[0].cost_combo;
+    histograms[idx1]->bit_cost_ = histo_queue.queue[0].cost_combo;
     // Remove merged histogram.
     for (i = 0; i + 1 < image_histo_size; ++i) {
       if (clusters[i] >= idx2) {
@@ -657,22 +590,31 @@ static int HistogramCombineGreedy(VP8LHistogramSet* const image_histo,
     }
     --image_histo_size;
 
-    // Invalidate pairs intersecting the just combined best pair.
-    InvalidatePairs(idx1, idx2, &histo_heap);
-
-    // Pop invalid pairs from the top of the heap.
-    while (histo_heap.size > 0 && histo_heap.heap[0].idx1 < 0) {
-      HeapPop(&histo_heap);
+    // Remove pairs intersecting the just combined best pair. This will
+    // therefore pop the head of the queue.
+    copy_to = histo_queue.queue;
+    for (i = 0; i < histo_queue.size; ++i) {
+      HistogramPair* const p = histo_queue.queue + i;
+      if (p->idx1 == idx1 || p->idx2 == idx1 ||
+          p->idx1 == idx2 || p->idx2 == idx2) {
+        // Do not copy the invalid pair.
+        continue;
+      }
+      if (p->cost_diff < histo_queue.queue[0].cost_diff) {
+        // Replace the top of the queue if we found better.
+        SwapHistogramPairs(histo_queue.queue, p);
+      }
+      SwapHistogramPairs(copy_to, p);
+      ++copy_to;
     }
+    histo_queue.size = (int)(copy_to - histo_queue.queue);
 
-    // Push new pairs formed with combined histogram to the heap.
+    // Push new pairs formed with combined histogram to the queue.
     for (i = 0; i < image_histo_size; ++i) {
       if (clusters[i] != idx1) {
         PreparePair(histograms, idx1, clusters[i],
-                    &histo_heap.heap[histo_heap.size], histos);
-        if (histo_heap.heap[histo_heap.size].cost_diff < 0) {
-          HeapPush(&histo_heap);
-        }
+                    &histo_queue.queue[histo_queue.size], histos);
+        UpdateQueueFront(&histo_queue);
       }
     }
   }
@@ -688,7 +630,7 @@ static int HistogramCombineGreedy(VP8LHistogramSet* const image_histo,
 
  End:
   WebPSafeFree(clusters);
-  HistoHeapClear(&histo_heap);
+  HistoQueueClear(&histo_queue);
   return ok;
 }
 
