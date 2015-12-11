@@ -18,10 +18,14 @@
 
 // The 3-coeff sparse transform in SSE2 is not really faster than the plain-C
 // one it seems => disable it by default. Uncomment the following to enable:
-// #define USE_TRANSFORM_AC3
+#if !defined(USE_TRANSFORM_AC3)
+#define USE_TRANSFORM_AC3 0   // ALTERNATE_CODE
+#endif
 
 #include <emmintrin.h>
-#include "../dec/vp8i.h"
+#include "./common_sse2.h"
+#include "src/dec/vp8i_dec.h"
+#include "src/utils/utils.h"
 
 //------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
@@ -102,34 +106,7 @@ static void Transform(const int16_t* in, uint8_t* dst, int do_two) {
     const __m128i tmp3 = _mm_sub_epi16(a, d);
 
     // Transpose the two 4x4.
-    // a00 a01 a02 a03   b00 b01 b02 b03
-    // a10 a11 a12 a13   b10 b11 b12 b13
-    // a20 a21 a22 a23   b20 b21 b22 b23
-    // a30 a31 a32 a33   b30 b31 b32 b33
-    const __m128i transpose0_0 = _mm_unpacklo_epi16(tmp0, tmp1);
-    const __m128i transpose0_1 = _mm_unpacklo_epi16(tmp2, tmp3);
-    const __m128i transpose0_2 = _mm_unpackhi_epi16(tmp0, tmp1);
-    const __m128i transpose0_3 = _mm_unpackhi_epi16(tmp2, tmp3);
-    // a00 a10 a01 a11   a02 a12 a03 a13
-    // a20 a30 a21 a31   a22 a32 a23 a33
-    // b00 b10 b01 b11   b02 b12 b03 b13
-    // b20 b30 b21 b31   b22 b32 b23 b33
-    const __m128i transpose1_0 = _mm_unpacklo_epi32(transpose0_0, transpose0_1);
-    const __m128i transpose1_1 = _mm_unpacklo_epi32(transpose0_2, transpose0_3);
-    const __m128i transpose1_2 = _mm_unpackhi_epi32(transpose0_0, transpose0_1);
-    const __m128i transpose1_3 = _mm_unpackhi_epi32(transpose0_2, transpose0_3);
-    // a00 a10 a20 a30 a01 a11 a21 a31
-    // b00 b10 b20 b30 b01 b11 b21 b31
-    // a02 a12 a22 a32 a03 a13 a23 a33
-    // b02 b12 a22 b32 b03 b13 b23 b33
-    T0 = _mm_unpacklo_epi64(transpose1_0, transpose1_1);
-    T1 = _mm_unpackhi_epi64(transpose1_0, transpose1_1);
-    T2 = _mm_unpacklo_epi64(transpose1_2, transpose1_3);
-    T3 = _mm_unpackhi_epi64(transpose1_2, transpose1_3);
-    // a00 a10 a20 a30   b00 b10 b20 b30
-    // a01 a11 a21 a31   b01 b11 b21 b31
-    // a02 a12 a22 a32   b02 b12 b22 b32
-    // a03 a13 a23 a33   b03 b13 b23 b33
+    VP8Transpose_2_4x4_16b(&tmp0, &tmp1, &tmp2, &tmp3, &T0, &T1, &T2, &T3);
   }
 
   // Horizontal pass and subsequent transpose.
@@ -164,34 +141,8 @@ static void Transform(const int16_t* in, uint8_t* dst, int do_two) {
     const __m128i shifted3 = _mm_srai_epi16(tmp3, 3);
 
     // Transpose the two 4x4.
-    // a00 a01 a02 a03   b00 b01 b02 b03
-    // a10 a11 a12 a13   b10 b11 b12 b13
-    // a20 a21 a22 a23   b20 b21 b22 b23
-    // a30 a31 a32 a33   b30 b31 b32 b33
-    const __m128i transpose0_0 = _mm_unpacklo_epi16(shifted0, shifted1);
-    const __m128i transpose0_1 = _mm_unpacklo_epi16(shifted2, shifted3);
-    const __m128i transpose0_2 = _mm_unpackhi_epi16(shifted0, shifted1);
-    const __m128i transpose0_3 = _mm_unpackhi_epi16(shifted2, shifted3);
-    // a00 a10 a01 a11   a02 a12 a03 a13
-    // a20 a30 a21 a31   a22 a32 a23 a33
-    // b00 b10 b01 b11   b02 b12 b03 b13
-    // b20 b30 b21 b31   b22 b32 b23 b33
-    const __m128i transpose1_0 = _mm_unpacklo_epi32(transpose0_0, transpose0_1);
-    const __m128i transpose1_1 = _mm_unpacklo_epi32(transpose0_2, transpose0_3);
-    const __m128i transpose1_2 = _mm_unpackhi_epi32(transpose0_0, transpose0_1);
-    const __m128i transpose1_3 = _mm_unpackhi_epi32(transpose0_2, transpose0_3);
-    // a00 a10 a20 a30 a01 a11 a21 a31
-    // b00 b10 b20 b30 b01 b11 b21 b31
-    // a02 a12 a22 a32 a03 a13 a23 a33
-    // b02 b12 a22 b32 b03 b13 b23 b33
-    T0 = _mm_unpacklo_epi64(transpose1_0, transpose1_1);
-    T1 = _mm_unpackhi_epi64(transpose1_0, transpose1_1);
-    T2 = _mm_unpacklo_epi64(transpose1_2, transpose1_3);
-    T3 = _mm_unpackhi_epi64(transpose1_2, transpose1_3);
-    // a00 a10 a20 a30   b00 b10 b20 b30
-    // a01 a11 a21 a31   b01 b11 b21 b31
-    // a02 a12 a22 a32   b02 b12 b22 b32
-    // a03 a13 a23 a33   b03 b13 b23 b33
+    VP8Transpose_2_4x4_16b(&shifted0, &shifted1, &shifted2, &shifted3, &T0, &T1,
+                           &T2, &T3);
   }
 
   // Add inverse transform to 'dst' and store.
@@ -244,7 +195,7 @@ static void Transform(const int16_t* in, uint8_t* dst, int do_two) {
   }
 }
 
-#if defined(USE_TRANSFORM_AC3)
+#if (USE_TRANSFORM_AC3 == 1)
 #define MUL(a, b) (((a) * (b)) >> 16)
 static void TransformAC3(const int16_t* in, uint8_t* dst) {
   static const int kC1 = 20091 + (1 << 16);
@@ -309,8 +260,8 @@ static WEBP_INLINE void SignedShift8b(__m128i* const x) {
 }
 
 #define FLIP_SIGN_BIT2(a, b) {                                                 \
-  a = _mm_xor_si128(a, sign_bit);                                              \
-  b = _mm_xor_si128(b, sign_bit);                                              \
+  (a) = _mm_xor_si128(a, sign_bit);                                            \
+  (b) = _mm_xor_si128(b, sign_bit);                                            \
 }
 
 #define FLIP_SIGN_BIT4(a, b, c, d) {                                           \
@@ -679,41 +630,41 @@ static void SimpleHFilter16i(uint8_t* p, int stride, int thresh) {
 // Complex In-loop filtering (Paragraph 15.3)
 
 #define MAX_DIFF1(p3, p2, p1, p0, m) do {                                      \
-  m = MM_ABS(p1, p0);                                                          \
-  m = _mm_max_epu8(m, MM_ABS(p3, p2));                                         \
-  m = _mm_max_epu8(m, MM_ABS(p2, p1));                                         \
+  (m) = MM_ABS(p1, p0);                                                        \
+  (m) = _mm_max_epu8(m, MM_ABS(p3, p2));                                       \
+  (m) = _mm_max_epu8(m, MM_ABS(p2, p1));                                       \
 } while (0)
 
 #define MAX_DIFF2(p3, p2, p1, p0, m) do {                                      \
-  m = _mm_max_epu8(m, MM_ABS(p1, p0));                                         \
-  m = _mm_max_epu8(m, MM_ABS(p3, p2));                                         \
-  m = _mm_max_epu8(m, MM_ABS(p2, p1));                                         \
+  (m) = _mm_max_epu8(m, MM_ABS(p1, p0));                                       \
+  (m) = _mm_max_epu8(m, MM_ABS(p3, p2));                                       \
+  (m) = _mm_max_epu8(m, MM_ABS(p2, p1));                                       \
 } while (0)
 
 #define LOAD_H_EDGES4(p, stride, e1, e2, e3, e4) {                             \
-  e1 = _mm_loadu_si128((__m128i*)&(p)[0 * stride]);                            \
-  e2 = _mm_loadu_si128((__m128i*)&(p)[1 * stride]);                            \
-  e3 = _mm_loadu_si128((__m128i*)&(p)[2 * stride]);                            \
-  e4 = _mm_loadu_si128((__m128i*)&(p)[3 * stride]);                            \
+  (e1) = _mm_loadu_si128((__m128i*)&(p)[0 * (stride)]);                        \
+  (e2) = _mm_loadu_si128((__m128i*)&(p)[1 * (stride)]);                        \
+  (e3) = _mm_loadu_si128((__m128i*)&(p)[2 * (stride)]);                        \
+  (e4) = _mm_loadu_si128((__m128i*)&(p)[3 * (stride)]);                        \
 }
 
 #define LOADUV_H_EDGE(p, u, v, stride) do {                                    \
   const __m128i U = _mm_loadl_epi64((__m128i*)&(u)[(stride)]);                 \
   const __m128i V = _mm_loadl_epi64((__m128i*)&(v)[(stride)]);                 \
-  p = _mm_unpacklo_epi64(U, V);                                                \
+  (p) = _mm_unpacklo_epi64(U, V);                                              \
 } while (0)
 
 #define LOADUV_H_EDGES4(u, v, stride, e1, e2, e3, e4) {                        \
-  LOADUV_H_EDGE(e1, u, v, 0 * stride);                                         \
-  LOADUV_H_EDGE(e2, u, v, 1 * stride);                                         \
-  LOADUV_H_EDGE(e3, u, v, 2 * stride);                                         \
-  LOADUV_H_EDGE(e4, u, v, 3 * stride);                                         \
+  LOADUV_H_EDGE(e1, u, v, 0 * (stride));                                       \
+  LOADUV_H_EDGE(e2, u, v, 1 * (stride));                                       \
+  LOADUV_H_EDGE(e3, u, v, 2 * (stride));                                       \
+  LOADUV_H_EDGE(e4, u, v, 3 * (stride));                                       \
 }
 
 #define STOREUV(p, u, v, stride) {                                             \
-  _mm_storel_epi64((__m128i*)&u[(stride)], p);                                 \
-  p = _mm_srli_si128(p, 8);                                                    \
-  _mm_storel_epi64((__m128i*)&v[(stride)], p);                                 \
+  _mm_storel_epi64((__m128i*)&(u)[(stride)], p);                               \
+  (p) = _mm_srli_si128(p, 8);                                                  \
+  _mm_storel_epi64((__m128i*)&(v)[(stride)], p);                               \
 }
 
 static WEBP_INLINE void ComplexMask(const __m128i* const p1,
@@ -763,10 +714,10 @@ static void HFilter16(uint8_t* p, int stride,
   __m128i p3, p2, p1, p0, q0, q1, q2, q3;
 
   uint8_t* const b = p - 4;
-  Load16x4(b, b + 8 * stride, stride, &p3, &p2, &p1, &p0);  // p3, p2, p1, p0
+  Load16x4(b, b + 8 * stride, stride, &p3, &p2, &p1, &p0);
   MAX_DIFF1(p3, p2, p1, p0, mask);
 
-  Load16x4(p, p + 8 * stride, stride, &q0, &q1, &q2, &q3);  // q0, q1, q2, q3
+  Load16x4(p, p + 8 * stride, stride, &q0, &q1, &q2, &q3);
   MAX_DIFF2(q3, q2, q1, q0, mask);
 
   ComplexMask(&p1, &p0, &q0, &q1, thresh, ithresh, &mask);
@@ -871,10 +822,10 @@ static void HFilter8(uint8_t* u, uint8_t* v, int stride,
 
   uint8_t* const tu = u - 4;
   uint8_t* const tv = v - 4;
-  Load16x4(tu, tv, stride, &p3, &p2, &p1, &p0);  // p3, p2, p1, p0
+  Load16x4(tu, tv, stride, &p3, &p2, &p1, &p0);
   MAX_DIFF1(p3, p2, p1, p0, mask);
 
-  Load16x4(u, v, stride, &q0, &q1, &q2, &q3);    // q0, q1, q2, q3
+  Load16x4(u, v, stride, &q0, &q1, &q2, &q3);
   MAX_DIFF2(q3, q2, q1, q0, mask);
 
   ComplexMask(&p1, &p0, &q0, &q1, thresh, ithresh, &mask);
@@ -1233,8 +1184,8 @@ extern void VP8DspInitSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitSSE2(void) {
   VP8Transform = Transform;
-#if defined(USE_TRANSFORM_AC3)
-  VP8TransformAC3 = TransformAC3;
+#if (USE_TRANSFORM_AC3 == 1)
+  VP8TransformAC3 = TransformAC3_SSE2;
 #endif
 
   VP8VFilter16 = VFilter16;

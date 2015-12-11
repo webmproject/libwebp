@@ -22,7 +22,7 @@
 #include "webp/format_constants.h"
 #include "webp/decode.h"
 #include "webp/demux.h"
-#include "./example_util.h"
+#include "../imageio/imageio_util.h"
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
@@ -39,13 +39,24 @@ static int IsFullFrame(int width, int height,
   return (width == canvas_width && height == canvas_height);
 }
 
+static int CheckSizeForOverflow(uint64_t size) {
+  return (size == (size_t)size);
+}
+
 static int AllocateFrames(AnimatedImage* const image, uint32_t num_frames) {
   uint32_t i;
-  const size_t rgba_size =
-      image->canvas_width * kNumChannels * image->canvas_height;
-  uint8_t* const mem = (uint8_t*)malloc(num_frames * rgba_size * sizeof(*mem));
-  DecodedFrame* const frames =
-      (DecodedFrame*)malloc(num_frames * sizeof(*frames));
+  uint8_t* mem = NULL;
+  DecodedFrame* frames = NULL;
+  const uint64_t rgba_size =
+      (uint64_t)image->canvas_width * kNumChannels * image->canvas_height;
+  const uint64_t total_size = (uint64_t)num_frames * rgba_size * sizeof(*mem);
+  const uint64_t total_frame_size = (uint64_t)num_frames * sizeof(*frames);
+  if (!CheckSizeForOverflow(total_size) ||
+      !CheckSizeForOverflow(total_frame_size)) {
+    return 0;
+  }
+  mem = (uint8_t*)malloc((size_t)total_size);
+  frames = (DecodedFrame*)malloc((size_t)total_frame_size);
 
   if (mem == NULL || frames == NULL) {
     free(mem);
@@ -139,6 +150,9 @@ static int DumpFrame(const char filename[], const char dump_folder[],
   const char* base_name = NULL;
   char* file_name = NULL;
   FILE* f = NULL;
+  const char* row;
+
+  if (dump_folder == NULL) dump_folder = ".";
 
   base_name = strrchr(filename, '/');
   base_name = (base_name == NULL) ? filename : base_name + 1;
@@ -165,12 +179,13 @@ static int DumpFrame(const char filename[], const char dump_folder[],
     fprintf(stderr, "Write error for file %s\n", file_name);
     goto End;
   }
+  row = (const char*)rgba;
   for (y = 0; y < canvas_height; ++y) {
-    if (fwrite((const char*)(rgba) + y * canvas_width * kNumChannels,
-               canvas_width * kNumChannels, 1, f) != 1) {
+    if (fwrite(row, canvas_width * kNumChannels, 1, f) != 1) {
       fprintf(stderr, "Error writing to file: %s\n", file_name);
       goto End;
     }
+    row += canvas_width * kNumChannels;
   }
   ok = 1;
  End:
@@ -187,7 +202,7 @@ static int IsWebP(const WebPData* const webp_data) {
   return (WebPGetInfo(webp_data->bytes, webp_data->size, NULL, NULL) != 0);
 }
 
-// Read animated WebP bitstream 'file_str' into 'AnimatedImage' struct.
+// Read animated WebP bitstream 'webp_data' into 'AnimatedImage' struct.
 static int ReadAnimatedWebP(const char filename[],
                             const WebPData* const webp_data,
                             AnimatedImage* const image, int dump_frames,
@@ -232,6 +247,7 @@ static int ReadAnimatedWebP(const char filename[],
       fprintf(stderr, "Error decoding frame #%u\n", frame_index);
       goto End;
     }
+    assert(frame_index < anim_info.frame_count);
     curr_frame = &image->frames[frame_index];
     curr_rgba = curr_frame->rgba;
     curr_frame->duration = timestamp - prev_frame_timestamp;
@@ -264,6 +280,8 @@ static int ReadAnimatedWebP(const char filename[],
 // -----------------------------------------------------------------------------
 // GIF Decoding.
 
+#ifdef WEBP_HAVE_GIF
+
 // Returns true if this is a valid GIF bitstream.
 static int IsGIF(const WebPData* const data) {
   return data->size > GIF_STAMP_LEN &&
@@ -271,8 +289,6 @@ static int IsGIF(const WebPData* const data) {
           !memcmp(GIF87_STAMP, data->bytes, GIF_STAMP_LEN) ||
           !memcmp(GIF89_STAMP, data->bytes, GIF_STAMP_LEN));
 }
-
-#ifdef WEBP_HAVE_GIF
 
 // GIFLIB_MAJOR is only defined in libgif >= 4.2.0.
 #if defined(GIFLIB_MAJOR) && defined(GIFLIB_MINOR)
@@ -395,7 +411,7 @@ static uint32_t GetBackgroundColorGIF(GifFileType* gif) {
   const ColorMapObject* const color_map = gif->SColorMap;
   if (transparent_index != NO_TRANSPARENT_COLOR &&
       gif->SBackGroundColor == transparent_index) {
-    return 0x00ffffff;  // Special case: transparent white.
+    return 0x00000000;  // Special case: transparent black.
   } else if (color_map == NULL || color_map->Colors == NULL
              || gif->SBackGroundColor >= color_map->ColorCount) {
     return 0xffffffff;  // Invalid: assume white.
@@ -409,6 +425,11 @@ static uint32_t GetBackgroundColorGIF(GifFileType* gif) {
 }
 
 // Find appropriate app extension and get loop count from the next extension.
+// We use Chrome's interpretation of the 'loop_count' semantics:
+//   if not present -> loop once
+//   if present and loop_count == 0, return 0 ('infinite').
+//   if present and loop_count != 0, it's the number of *extra* loops
+//     so we need to return loop_count + 1 as total loop number.
 static uint32_t GetLoopCountGIF(const GifFileType* const gif) {
   int i;
   for (i = 0; i < gif->ImageCount; ++i) {
@@ -426,12 +447,13 @@ static uint32_t GetLoopCountGIF(const GifFileType* const gif) {
       if (signature_is_ok &&
           eb2->Function == CONTINUE_EXT_FUNC_CODE && eb2->ByteCount >= 3 &&
           eb2->Bytes[0] == 1) {
-        return ((uint32_t)(eb2->Bytes[2]) << 8) +
-               ((uint32_t)(eb2->Bytes[1]) << 0);
+        const uint32_t extra_loop = ((uint32_t)(eb2->Bytes[2]) << 8) +
+                                    ((uint32_t)(eb2->Bytes[1]) << 0);
+        return (extra_loop > 0) ? extra_loop + 1 : 0;
       }
     }
   }
-  return 0;  // Default.
+  return 1;  // Default.
 }
 
 // Get duration of 'n'th frame in milliseconds.
@@ -664,6 +686,11 @@ static int ReadAnimatedGIF(const char filename[], AnimatedImage* const image,
 
 #else
 
+static int IsGIF(const WebPData* const data) {
+  (void)data;
+  return 0;
+}
+
 static int ReadAnimatedGIF(const char filename[], AnimatedImage* const image,
                            int dump_frames, const char dump_folder[]) {
   (void)filename;
@@ -687,7 +714,7 @@ int ReadAnimatedImage(const char filename[], AnimatedImage* const image,
   WebPDataInit(&webp_data);
   memset(image, 0, sizeof(*image));
 
-  if (!ExUtilReadFile(filename, &webp_data.bytes, &webp_data.size)) {
+  if (!ImgIoUtilReadFile(filename, &webp_data.bytes, &webp_data.size)) {
     fprintf(stderr, "Error reading file: %s\n", filename);
     return 0;
   }
@@ -726,7 +753,7 @@ void GetDiffAndPSNR(const uint8_t rgba1[], const uint8_t rgba2[],
   for (y = 0; y < height; ++y) {
     for (x = 0; x < stride; x += kNumChannels) {
       int k;
-      const size_t offset = y * stride + x;
+      const size_t offset = (size_t)y * stride + x;
       const int alpha1 = rgba1[offset + kAlphaChannel];
       const int alpha2 = rgba2[offset + kAlphaChannel];
       Accumulate(alpha1, alpha2, &f_max_diff, &sse);

@@ -1,4 +1,4 @@
-AC_INIT([libwebp], [0.4.4],
+AC_INIT([libwebp], [0.6.0],
         [https://bugs.chromium.org/p/webp],,
         [http://developers.google.com/speed/webp])
 AC_CANONICAL_HOST
@@ -10,6 +10,7 @@ dnl === it must occur before LT_INIT (AC_PROG_LIBTOOL).
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 AC_PROG_LIBTOOL
+AC_PROG_SED
 AM_PROG_CC_C_O
 
 dnl === Enable less verbose output when building.
@@ -30,6 +31,18 @@ AC_ARG_ENABLE([everything],
                SET_IF_UNSET([enable_libwebpdemux], [$enableval])
                SET_IF_UNSET([enable_libwebpextras], [$enableval])
                SET_IF_UNSET([enable_libwebpmux], [$enableval])])
+
+dnl === If --enable-asserts is not defined, define NDEBUG
+
+AC_MSG_CHECKING(whether asserts are enabled)
+AC_ARG_ENABLE([asserts],
+              AS_HELP_STRING([--enable-asserts],
+                             [Enable assert checks]))
+if test "x${enable_asserts-no}" = "xno"; then
+  AM_CPPFLAGS="${AM_CPPFLAGS} -DNDEBUG"
+fi
+AC_MSG_RESULT(${enable_asserts-no})
+AC_SUBST([AM_CPPFLAGS])
 
 AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=DIR],
             [Path to the pkgconfig directory @<:@LIBDIR/pkgconfig@:>@]),
@@ -52,16 +65,21 @@ AC_DEFUN([TEST_AND_ADD_CFLAGS],
                             [$1="${$1} $2"],
                             [AC_MSG_RESULT([no])])
           CFLAGS="$SAVED_CFLAGS"])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-fvisibility=hidden])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wall])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wconstant-conversion])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wdeclaration-after-statement])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wextra])
-TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wformat-nonliteral])
-TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wformat-security])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wfloat-conversion])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wformat -Wformat-nonliteral])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wformat -Wformat-security])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wmissing-declarations])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wmissing-prototypes])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wold-style-definition])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wparentheses-equality])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wshadow])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wshorten-64-to-32])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wundef])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wunreachable-code])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wunused-but-set-variable])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wunused])
@@ -165,6 +183,75 @@ AS_IF([test "x$enable_sse2" != "xno"], [
     CFLAGS=$SAVED_CFLAGS])
   AC_SUBST([SSE2_FLAGS])])
 
+AC_ARG_ENABLE([neon],
+              AS_HELP_STRING([--disable-neon],
+                             [Disable detection of NEON support
+                              @<:@default=auto@:>@]))
+
+AC_ARG_ENABLE([neon_rtcd],
+              AS_HELP_STRING([--disable-neon-rtcd],
+                             [Disable runtime detection of NEON support via
+                              /proc/cpuinfo on Linux hosts
+                              @<:@default=auto@:>@]))
+# For ARM(7) hosts:
+# Both NEON flags unset and NEON support detected = build all modules with NEON
+# NEON detected with the use of -mfpu=neon = build only NEON modules with NEON
+AS_IF([test "x$enable_neon" != "xno"], [
+  case "$host_cpu" in
+    arm|armv7*)
+      # Test for NEON support without flags before falling back to -mfpu=neon
+      for flag in '' '-mfpu=neon'; do
+        LOCAL_NEON_FLAGS="$INTRINSICS_CFLAGS $NEON_FLAGS"
+        TEST_AND_ADD_CFLAGS([LOCAL_NEON_FLAGS], [$flag])
+        SAVED_CFLAGS=$CFLAGS
+        CFLAGS="$CFLAGS $LOCAL_NEON_FLAGS"
+
+        dnl Note AC_LANG_PROGRAM([]) uses an old-style main definition.
+        AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+          #include <arm_neon.h>
+          int main(void) {
+            int8x8_t v = vdup_n_s8(0);
+            (void)v;
+            return 0;
+          }])],
+          [NEON_FLAGS="$(echo $LOCAL_NEON_FLAGS | $SED 's/^ *//')"
+           AS_IF([test -n "$NEON_FLAGS"], [
+             AS_IF([test "${host_os%%-*}" = "linux" -o \
+                         "x$enable_neon_rtcd" = "xno"], [
+               CFLAGS=$SAVED_CFLAGS
+               AC_DEFINE(WEBP_HAVE_NEON, [1], [Set to 1 if NEON is supported])
+               break
+             ],[
+               AC_MSG_WARN(m4_normalize([NEON runtime cpu-detection is
+                                         unavailable for ${host_os%%-*}. Force
+                                         with CFLAGS=-mfpu=neon or
+                                         --disable-neon-rtcd.]))
+               enable_neon_rtcd=no
+               NEON_FLAGS=""
+             ])
+           ],[
+             CFLAGS=$SAVED_CFLAGS
+             AC_DEFINE(WEBP_HAVE_NEON, [1], [Set to 1 if NEON is supported])
+             break
+           ])])
+        CFLAGS=$SAVED_CFLAGS
+      done
+
+      AS_IF([test -n "$NEON_FLAGS"], [
+        # If NEON is available and rtcd is disabled apply NEON_FLAGS globally.
+        AS_IF([test "x$enable_neon_rtcd" = "xno"], [
+          AM_CFLAGS="$AM_CFLAGS $NEON_FLAGS"
+          NEON_FLAGS=""],
+          [AC_DEFINE(WEBP_HAVE_NEON_RTCD, [1],
+                     [Set to 1 if runtime detection of NEON is enabled])])])
+
+      case "$host_os" in
+        *android*) AC_CHECK_HEADERS([cpu-features.h]) ;;
+      esac
+      ;;
+  esac
+  AC_SUBST([NEON_FLAGS])])
+
 dnl === CLEAR_LIBVARS([var_pfx])
 dnl ===   Clears <var_pfx>_{INCLUDES,LIBS}.
 AC_DEFUN([CLEAR_LIBVARS], [$1_INCLUDES=""; $1_LIBS=""])
@@ -208,7 +295,7 @@ dnl ===   AC_DEFINE'ing <define> if successful.
 AC_DEFUN([CHECK_FOR_BUILTIN],
          [AC_LANG_PUSH([C])
           AC_MSG_CHECKING([for $1])
-          AC_LINK_IFELSE([AC_LANG_PROGRAM([], [$1($2)])],
+          AC_LINK_IFELSE([AC_LANG_PROGRAM([], [(void)$1($2)])],
                          [AC_MSG_RESULT([yes])
                           AC_DEFINE([$3], [1],
                                     [Set to 1 if $1 is available])],
@@ -348,6 +435,44 @@ AS_IF([test "x$enable_gl" != "xno"], [
 ])
 AM_CONDITIONAL([BUILD_VWEBP], [test "$build_vwebp" = "yes"])
 
+dnl === check for SDL support ===
+
+AC_ARG_ENABLE([sdl],
+              AS_HELP_STRING([--disable-sdl],
+                             [Disable detection of SDL support
+                              @<:@default=auto@:>@]))
+AS_IF([test "x$enable_sdl" != "xno"], [
+  CLEAR_LIBVARS([SDL])
+  WITHLIB_OPTION([sdl], [SDL])
+
+  sdl_header="no"
+  LIBCHECK_PROLOGUE([SDL])
+  AC_CHECK_HEADER([SDL/SDL.h], [sdl_header="SDL_SDL.h"],
+                  [AC_CHECK_HEADER([SDL.h], [sdl_header="SDL.h"],
+                  [AC_MSG_WARN(SDL library not available - no sdl.h)])])
+  if test x"$sdl_header" != "xno"; then
+    AC_CHECK_LIB(SDL, SDL_Init,
+                 [SDL_LIBS="-lSDL"
+                  SDL_INCLUDES="-DWEBP_HAVE_SDL"
+                  AC_DEFINE(WEBP_HAVE_SDL, [1],
+                            [Set to 1 if SDL library is installed])
+                  sdl_support=yes
+                 ],
+                 AC_MSG_WARN(Optional SDL library not found),
+                 [$MATH_LIBS])
+    if test x"$sdl_header" = "xSDL.h"; then
+      SDL_INCLUDES="$SDL_INCLUDES -DWEBP_HAVE_JUST_SDL_H"
+    fi
+  fi
+  LIBCHECK_EPILOGUE([SDL])
+
+  if test "$sdl_support" = "yes"; then
+    build_vwebp_sdl=yes
+  fi
+])
+
+AM_CONDITIONAL([BUILD_VWEBP_SDL], [test "$build_vwebp_sdl" = "yes"])
+
 dnl === check for PNG support ===
 
 AC_ARG_ENABLE([png], AS_HELP_STRING([--disable-png],
@@ -465,7 +590,7 @@ AS_IF([test "x$enable_gif" != "xno"], [
 
   if test "$gif_support" = "yes" -a \
           "$enable_libwebpdemux" = "yes"; then
-    build_animdiff=yes
+    build_anim_diff=yes
   fi
 
   if test "$gif_support" = "yes" -a \
@@ -473,8 +598,18 @@ AS_IF([test "x$enable_gif" != "xno"], [
     build_gif2webp=yes
   fi
 ])
-AM_CONDITIONAL([BUILD_ANIMDIFF], [test "${build_animdiff}" = "yes"])
+AM_CONDITIONAL([BUILD_ANIMDIFF], [test "${build_anim_diff}" = "yes"])
 AM_CONDITIONAL([BUILD_GIF2WEBP], [test "${build_gif2webp}" = "yes"])
+
+if test "$enable_libwebpmux" = "yes"; then
+  build_img2webp=yes
+fi
+AM_CONDITIONAL([BUILD_IMG2WEBP], [test "${build_img2webp}" = "yes"])
+
+if test "$enable_libwebpmux" = "yes"; then
+  build_webpinfo=yes
+fi
+AM_CONDITIONAL([BUILD_WEBPINFO], [test "${build_webpinfo}" = "yes"])
 
 dnl === check for WIC support ===
 
@@ -528,20 +663,7 @@ if test "$enable_wic" = "yes"; then
 fi
 esac
 
-dnl === If --enable-aligned is defined, define WEBP_FORCE_ALIGNED
-
-AC_MSG_CHECKING(if --enable-aligned option is specified)
-AC_ARG_ENABLE([aligned],
-              AS_HELP_STRING([--enable-aligned],
-                             [Force aligned memory operations in non-dsp code
-                              (may be slower)]))
-if test "$enable_aligned" = "yes"; then
-  AC_DEFINE(WEBP_FORCE_ALIGNED, [1],
-            [Define to 1 to force aligned memory operations])
-fi
-AC_MSG_RESULT(${enable_aligned-no})
-
-dnl === If --enable-swap-16bit-csp is defined, add -DWEBP_SWAP_16BIT_CSP
+dnl === If --enable-swap-16bit-csp is defined, add -DWEBP_SWAP_16BIT_CSP=1
 
 USE_SWAP_16BIT_CSP=""
 AC_MSG_CHECKING(if --enable-swap-16bit-csp option is specified)
@@ -549,7 +671,7 @@ AC_ARG_ENABLE([swap-16bit-csp],
               AS_HELP_STRING([--enable-swap-16bit-csp],
                              [Enable byte swap for 16 bit colorspaces]))
 if test "$enable_swap_16bit_csp" = "yes"; then
-  USE_SWAP_16BIT_CSP="-DWEBP_SWAP_16BIT_CSP"
+  USE_SWAP_16BIT_CSP="-DWEBP_SWAP_16BIT_CSP=1"
 fi
 AC_MSG_RESULT(${enable_swap_16bit_csp-no})
 AC_SUBST(USE_SWAP_16BIT_CSP)
@@ -566,6 +688,21 @@ if test "$enable_experimental" = "yes"; then
 fi
 AC_MSG_RESULT(${enable_experimental-no})
 AC_SUBST(USE_EXPERIMENTAL_CODE)
+
+dnl === If --disable-near-lossless is defined, add -DWEBP_NEAR_LOSSLESS=0
+
+AC_DEFINE(WEBP_NEAR_LOSSLESS, [1], [Enable near lossless encoding])
+AC_MSG_CHECKING(if --disable-near-lossless option is specified)
+AC_ARG_ENABLE([near_lossless],
+              AS_HELP_STRING([--disable-near-lossless],
+                             [Disable near lossless encoding]),
+              [], [enable_near_lossless=yes])
+if test "$enable_near_lossless" = "no"; then
+  AC_DEFINE(WEBP_NEAR_LOSSLESS, [0], [Enable near lossless encoding])
+  AC_MSG_RESULT([yes])
+else
+  AC_MSG_RESULT([no])
+fi
 
 dnl === Check whether libwebpmux should be built
 AC_MSG_CHECKING(whether libwebpmux is to be built)
@@ -604,13 +741,12 @@ dnl =========================
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([src/webp/config.h])
 AC_CONFIG_FILES([Makefile src/Makefile man/Makefile \
-                 examples/Makefile src/dec/Makefile \
-                 src/enc/Makefile src/dsp/Makefile \
+                 examples/Makefile extras/Makefile imageio/Makefile \
+                 src/dec/Makefile src/enc/Makefile src/dsp/Makefile \
                  src/demux/Makefile src/mux/Makefile \
-                 src/utils/Makefile src/extras/Makefile \
+                 src/utils/Makefile \
                  src/libwebp.pc src/libwebpdecoder.pc \
-                 src/demux/libwebpdemux.pc src/mux/libwebpmux.pc \
-                 src/extras/libwebpextras.pc])
+                 src/demux/libwebpdemux.pc src/mux/libwebpmux.pc])
 
 
 AC_OUTPUT
@@ -642,8 +778,12 @@ dwebp : yes
   PNG  : ${png_support-no}
   WIC  : ${wic_support-no}
 GIF support : ${gif_support-no}
-anim_diff   : ${build_animdiff-no}
+anim_diff   : ${build_anim_diff-no}
 gif2webp    : ${build_gif2webp-no}
+img2webp    : ${build_img2webp-no}
 webpmux     : ${enable_libwebpmux-no}
 vwebp       : ${build_vwebp-no}
+webpinfo    : ${build_webpinfo-no}
+SDL support : ${sdl_support-no}
+vwebp_sdl   : ${build_vwebp_sdl-no}
 ])

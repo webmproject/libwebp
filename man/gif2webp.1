@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH GIF2WEBP 1 "October 19, 2015"
+.TH GIF2WEBP 1 "September 20, 2017"
 .SH NAME
 gif2webp \- Convert a GIF image to WebP
 .SH SYNOPSIS
@@ -68,8 +68,9 @@ Specify the minimum and maximum distance between consecutive key frames
 some key frames into the output animation as needed so that this criteria is
 satisfied.
 .br
-A 'kmin' value of 0 will turn off insertion of key frames. A 'kmax' value of 0
-will result in all frames being key frames.
+A 'kmax' value of 0 will turn off insertion of key frames. A 'kmax' value of 1
+will result in all frames being key frames. 'kmin' value is not taken into
+account in both these special cases.
 Typical values are in the range 3 to 30. Default values are kmin = 9,
 kmax = 17 for lossless compression and kmin = 3, kmax = 5 for lossy compression.
 .br
@@ -107,8 +108,10 @@ the value the smoother the picture will appear. Typical values are usually in
 the range of 20 to 50.
 .TP
 .B \-mt
-Use multi-threading for encoding, if possible. This option is only effective
-when using lossy compression.
+Use multi-threading for encoding, if possible.
+.B \-loop_compatibility
+If enabled, handle the loop information in a compatible fashion for Chrome
+version prior to M62 (inclusive) and Firefox.
 .TP
 .B \-v
 Print extra information.
@@ -117,7 +120,7 @@ Print extra information.
 Do not print anything.
 
 .SH BUGS
-Please report all bugs to our issue tracker:
+Please report all bugs to the issue tracker:
 https://bugs.chromium.org/p/webp
 .br
 Patches welcome! See this page to get started:
@@ -135,9 +138,10 @@ gif2webp \-lossy \-f 50 picture.gif \-o picture.webp
 gif2webp \-q 70 \-o picture.webp \-\- \-\-\-picture.gif
 
 .SH AUTHORS
-\fBgif2webp\fP was written by the WebP team.
+\fBgif2webp\fP is a part of libwebp and was written by the WebP team.
 .br
-The latest source tree is available at http://www.webmproject.org/code
+The latest source tree is available at
+https://chromium.googlesource.com/webm/libwebp
 .PP
 This manual page was written by Urvang Joshi <urvang@google.com>, for the
 Debian project (and may be used by others).

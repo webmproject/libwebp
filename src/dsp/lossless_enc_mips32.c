@@ -14,6 +14,7 @@
 
 #include "./dsp.h"
 #include "./lossless.h"
+#include "./lossless_common.h"
 
 #if defined(WEBP_USE_MIPS32)
 
@@ -22,11 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define APPROX_LOG_WITH_CORRECTION_MAX  65536
-#define APPROX_LOG_MAX                   4096
-#define LOG_2_RECIPROCAL 1.44269504088896338700465094007086
-
-static float FastSLog2Slow(uint32_t v) {
+static float FastSLog2Slow_MIPS32(uint32_t v) {
   assert(v >= LOG_LOOKUP_IDX_MAX);
   if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
     uint32_t log_cnt, y, correction;
@@ -62,7 +59,7 @@ static float FastSLog2Slow(uint32_t v) {
   }
 }
 
-static float FastLog2Slow(uint32_t v) {
+static float FastLog2Slow_MIPS32(uint32_t v) {
   assert(v >= LOG_LOOKUP_IDX_MAX);
   if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
     uint32_t log_cnt, y;
@@ -107,7 +104,7 @@ static float FastLog2Slow(uint32_t v) {
 //     pop += 2;
 //   }
 //   return (double)cost;
-static double ExtraCost(const uint32_t* const population, int length) {
+static double ExtraCost_MIPS32(const uint32_t* const population, int length) {
   int i, temp0, temp1;
   const uint32_t* pop = &population[4];
   const uint32_t* const LoopEnd = &population[length];
@@ -152,8 +149,8 @@ static double ExtraCost(const uint32_t* const population, int length) {
 //     pY += 2;
 //   }
 //   return (double)cost;
-static double ExtraCostCombined(const uint32_t* const X,
-                                const uint32_t* const Y, int length) {
+static double ExtraCostCombined_MIPS32(const uint32_t* const X,
+                                       const uint32_t* const Y, int length) {
   int i, temp0, temp1, temp2, temp3;
   const uint32_t* pX = &X[4];
   const uint32_t* pY = &Y[4];
@@ -217,51 +214,75 @@ static double ExtraCostCombined(const uint32_t* const X,
   );
 
 // Returns the various RLE counts
-static VP8LStreaks HuffmanCostCount(const uint32_t* population, int length) {
-  int i;
-  int streak = 0;
-  VP8LStreaks stats;
-  int* const pstreaks = &stats.streaks[0][0];
-  int* const pcnts = &stats.counts[0];
+static WEBP_INLINE void GetEntropyUnrefinedHelper(
+    uint32_t val, int i, uint32_t* const val_prev, int* const i_prev,
+    VP8LBitEntropy* const bit_entropy, VP8LStreaks* const stats) {
+  int* const pstreaks = &stats->streaks[0][0];
+  int* const pcnts = &stats->counts[0];
   int temp0, temp1, temp2, temp3;
-  memset(&stats, 0, sizeof(stats));
-  for (i = 0; i < length - 1; ++i) {
-    ++streak;
-    if (population[i] == population[i + 1]) {
-      continue;
+  const int streak = i - *i_prev;
+
+  // Gather info for the bit entropy.
+  if (*val_prev != 0) {
+    bit_entropy->sum += (*val_prev) * streak;
+    bit_entropy->nonzeros += streak;
+    bit_entropy->nonzero_code = *i_prev;
+    bit_entropy->entropy -= VP8LFastSLog2(*val_prev) * streak;
+    if (bit_entropy->max_val < *val_prev) {
+      bit_entropy->max_val = *val_prev;
     }
-    temp0 = (population[i] != 0);
-    HUFFMAN_COST_PASS
-    streak = 0;
   }
-  ++streak;
-  temp0 = (population[i] != 0);
+
+  // Gather info for the Huffman cost.
+  temp0 = (*val_prev != 0);
   HUFFMAN_COST_PASS
 
-  return stats;
+  *val_prev = val;
+  *i_prev = i;
 }
 
-static VP8LStreaks HuffmanCostCombinedCount(const uint32_t* X,
-                                            const uint32_t* Y, int length) {
+static void GetEntropyUnrefined_MIPS32(const uint32_t X[], int length,
+                                       VP8LBitEntropy* const bit_entropy,
+                                       VP8LStreaks* const stats) {
   int i;
-  int streak = 0;
-  uint32_t xy_prev = 0xffffffff;
-  VP8LStreaks stats;
-  int* const pstreaks = &stats.streaks[0][0];
-  int* const pcnts = &stats.counts[0];
-  int temp0, temp1, temp2, temp3;
-  memset(&stats, 0, sizeof(stats));
-  for (i = 0; i < length; ++i) {
-    const uint32_t xy = X[i] + Y[i];
-    ++streak;
-    if (xy != xy_prev) {
-      temp0 = (xy != 0);
-      HUFFMAN_COST_PASS
-      streak = 0;
-      xy_prev = xy;
+  int i_prev = 0;
+  uint32_t x_prev = X[0];
+
+  memset(stats, 0, sizeof(*stats));
+  VP8LBitEntropyInit(bit_entropy);
+
+  for (i = 1; i < length; ++i) {
+    const uint32_t x = X[i];
+    if (x != x_prev) {
+      GetEntropyUnrefinedHelper(x, i, &x_prev, &i_prev, bit_entropy, stats);
     }
   }
-  return stats;
+  GetEntropyUnrefinedHelper(0, i, &x_prev, &i_prev, bit_entropy, stats);
+
+  bit_entropy->entropy += VP8LFastSLog2(bit_entropy->sum);
+}
+
+static void GetCombinedEntropyUnrefined_MIPS32(const uint32_t X[],
+                                               const uint32_t Y[],
+                                               int length,
+                                               VP8LBitEntropy* const entropy,
+                                               VP8LStreaks* const stats) {
+  int i = 1;
+  int i_prev = 0;
+  uint32_t xy_prev = X[0] + Y[0];
+
+  memset(stats, 0, sizeof(*stats));
+  VP8LBitEntropyInit(entropy);
+
+  for (i = 1; i < length; ++i) {
+    const uint32_t xy = X[i] + Y[i];
+    if (xy != xy_prev) {
+      GetEntropyUnrefinedHelper(xy, i, &xy_prev, &i_prev, entropy, stats);
+    }
+  }
+  GetEntropyUnrefinedHelper(0, i, &xy_prev, &i_prev, entropy, stats);
+
+  entropy->entropy += VP8LFastSLog2(entropy->sum);
 }
 
 #define ASM_START                                       \
@@ -354,9 +375,9 @@ static VP8LStreaks HuffmanCostCombinedCount(const uint32_t* X,
   }                                                     \
 } while (0)
 
-static void HistogramAdd(const VP8LHistogram* const a,
-                         const VP8LHistogram* const b,
-                         VP8LHistogram* const out) {
+static void HistogramAdd_MIPS32(const VP8LHistogram* const a,
+                                const VP8LHistogram* const b,
+                                VP8LHistogram* const out) {
   uint32_t temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
   const int extra_cache_size = VP8LHistogramNumCodes(a->palette_code_bits_)
                              - (NUM_LITERAL_CODES + NUM_LENGTH_CODES);
@@ -395,19 +416,13 @@ static void HistogramAdd(const VP8LHistogram* const a,
 extern void VP8LEncDspInitMIPS32(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInitMIPS32(void) {
-  VP8LFastSLog2Slow = FastSLog2Slow;
-  VP8LFastLog2Slow = FastLog2Slow;
-  VP8LExtraCost = ExtraCost;
-  VP8LExtraCostCombined = ExtraCostCombined;
-  VP8LHuffmanCostCount = HuffmanCostCount;
-// TODO(mips team): rewrite VP8LGetCombinedEntropy (which used to use
-// HuffmanCostCombinedCount) with MIPS optimizations
-#if 0
-  VP8LHuffmanCostCombinedCount = HuffmanCostCombinedCount;
-#else
- (void)HuffmanCostCombinedCount;
-#endif
-  VP8LHistogramAdd = HistogramAdd;
+  VP8LFastSLog2Slow = FastSLog2Slow_MIPS32;
+  VP8LFastLog2Slow = FastLog2Slow_MIPS32;
+  VP8LExtraCost = ExtraCost_MIPS32;
+  VP8LExtraCostCombined = ExtraCostCombined_MIPS32;
+  VP8LGetEntropyUnrefined = GetEntropyUnrefined_MIPS32;
+  VP8LGetCombinedEntropyUnrefined = GetCombinedEntropyUnrefined_MIPS32;
+  VP8LHistogramAdd = HistogramAdd_MIPS32;
 }
 
 #else  // !WEBP_USE_MIPS32

@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "November 03, 2015"
+.TH CWEBP 1 "January 20, 2017"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -36,7 +36,9 @@ A summary of all the possible options.
 Print the version number (as major.minor.revision) and exit.
 .TP
 .B \-lossless
-Encode the image without any loss.
+Encode the image without any loss. For images with fully transparent area,
+the invisible pixel values (R/G/B or Y/U/V) will be preserved only if the
+\-exact option is used.
 .TP
 .BI \-near_lossless " int
 Use near\-lossless image preprocessing. This option adjusts pixel values
@@ -96,8 +98,7 @@ Crop the source to a rectangle with top\-left corner at coordinates
 This cropping area must be fully contained within the source rectangle.
 .TP
 .B \-mt
-Use multi\-threading for encoding, if possible. This option is only effective
-when using lossy compression on a source with a transparency channel.
+Use multi\-threading for encoding, if possible.
 .TP
 .B \-low_memory
 Reduce memory usage of lossy encoding by saving four times the compressed
@@ -115,17 +116,21 @@ or without alpha).
 .TP
 .BI \-size " int
 Specify a target size (in bytes) to try and reach for the compressed output.
-Compressor will make several pass of partial encoding in order to get as
-close as possible to this target.
+The compressor will make several passes of partial encoding in order to get as
+close as possible to this target. If both \fB\-size\fP and \fB\-psnr\fP
+are used, \fB\-size\fP value will prevail.
 .TP
 .BI \-psnr " float
 Specify a target PSNR (in dB) to try and reach for the compressed output.
-Compressor will make several pass of partial encoding in order to get as
-close as possible to this target.
+The compressor will make several passes of partial encoding in order to get as
+close as possible to this target. If both \fB\-size\fP and \fB\-psnr\fP
+are used, \fB\-size\fP value will prevail.
 .TP
 .BI \-pass " int
 Set a maximum number of passes to use during the dichotomy used by
 options \fB\-size\fP or \fB\-psnr\fP. Maximum value is 10, default is 1.
+If options \fB\-size\fP or \fB\-psnr\fP were used, but \fB\-pass\fP wasn't
+specified, a default value of '6' passes will be used.
 .TP
 .B \-af
 Turns auto\-filter on. This algorithm will spend additional time optimizing
@@ -160,12 +165,16 @@ Use strong filtering (if filtering is being used thanks to the
 Disable strong filtering (if filtering is being used thanks to the
 \fB\-f\fP option) and use simple filtering instead.
 .TP
+.B \-sharp_yuv
+Use more accurate and sharper RGB->YUV conversion if needed. Note that this
+process is slower than the default 'fast' RGB->YUV conversion.
+.TP
 .BI \-sns " int
 Specify the amplitude of the spatial noise shaping. Spatial noise shaping
 (or \fBsns\fP for short) refers to a general collection of built\-in algorithms
 used to decide which area of the picture should use relatively less bits,
 and where else to better transfer these bits. The possible range goes from
-0 (algorithm is off) to 100 (the maximal effect). The default value is 80.
+0 (algorithm is off) to 100 (the maximal effect). The default value is 50.
 .TP
 .BI \-segments " int
 Change the number of partitions to use during the segmentation of the
@@ -216,7 +225,7 @@ Report encoding progress in percent.
 Do not print anything.
 .TP
 .B \-short
-Only print brief information (output file size and PSNR) for testing purpose.
+Only print brief information (output file size and PSNR) for testing purposes.
 .TP
 .BI \-map " int
 Output additional ASCII\-map of encoding information. Possible map values
@@ -275,7 +284,7 @@ Note: each input format may not support all combinations.
 Disable all assembly optimizations.
 
 .SH BUGS
-Please report all bugs to our issue tracker:
+Please report all bugs to the issue tracker:
 https://bugs.chromium.org/p/webp
 .br
 Patches welcome! See this page to get started:
@@ -291,9 +300,10 @@ cwebp \-sns 70 \-f 50 \-size 60000 picture.png \-o picture.webp
 cwebp \-o picture.webp \-\- \-\-\-picture.png
 
 .SH AUTHORS
-\fBcwebp\fP was written by the WebP team.
+\fBcwebp\fP is a part of libwebp and was written by the WebP team.
 .br
-The latest source tree is available at http://www.webmproject.org/code
+The latest source tree is available at
+https://chromium.googlesource.com/webm/libwebp
 .PP
 This manual page was written by Pascal Massimino <pascal.massimino@gmail.com>,
 for the Debian project (and may be used by others).

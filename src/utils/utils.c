@@ -13,8 +13,10 @@
 
 #include <stdlib.h>
 #include <string.h>  // for memcpy()
-#include "../webp/decode.h"
-#include "../webp/encode.h"
+#include "src/webp/decode.h"
+#include "src/webp/encode.h"
+#include "src/webp/format_constants.h"  // for MAX_PALETTE_SIZE
+#include "./color_cache_utils.h"
 #include "./utils.h"
 
 // If PRINT_MEM_INFO is defined, extra info (like total memory used, number of
@@ -24,7 +26,7 @@
 //    http://valgrind.org/docs/manual/ms-manual.html
 // Here is an example command line:
 /*    valgrind --tool=massif --massif-out-file=massif.out \
-               --stacks=yes --alloc-fn=WebPSafeAlloc --alloc-fn=WebPSafeCalloc
+               --stacks=yes --alloc-fn=WebPSafeMalloc --alloc-fn=WebPSafeCalloc
       ms_print massif.out
 */
 // In addition:
@@ -174,8 +176,12 @@ static int CheckSizeArgumentsOverflow(uint64_t nmemb, size_t size) {
   }
 #endif
 #if defined(MALLOC_LIMIT)
-  if (mem_limit > 0 && total_mem + total_size >= mem_limit) {
-    return 0;   // fake fail!
+  if (mem_limit > 0) {
+    const uint64_t new_total_mem = (uint64_t)total_mem + total_size;
+    if (new_total_mem != (size_t)new_total_mem ||
+        new_total_mem > mem_limit) {
+      return 0;   // fake fail!
+    }
   }
 #endif
 
@@ -235,5 +241,90 @@ void WebPCopyPixels(const WebPPicture* const src, WebPPicture* const dst) {
   WebPCopyPlane((uint8_t*)src->argb, 4 * src->argb_stride, (uint8_t*)dst->argb,
                 4 * dst->argb_stride, 4 * src->width, src->height);
 }
+
+//------------------------------------------------------------------------------
+
+#define COLOR_HASH_SIZE         (MAX_PALETTE_SIZE * 4)
+#define COLOR_HASH_RIGHT_SHIFT  22  // 32 - log2(COLOR_HASH_SIZE).
+
+int WebPGetColorPalette(const WebPPicture* const pic, uint32_t* const palette) {
+  int i;
+  int x, y;
+  int num_colors = 0;
+  uint8_t in_use[COLOR_HASH_SIZE] = { 0 };
+  uint32_t colors[COLOR_HASH_SIZE];
+  const uint32_t* argb = pic->argb;
+  const int width = pic->width;
+  const int height = pic->height;
+  uint32_t last_pix = ~argb[0];   // so we're sure that last_pix != argb[0]
+  assert(pic != NULL);
+  assert(pic->use_argb);
+
+  for (y = 0; y < height; ++y) {
+    for (x = 0; x < width; ++x) {
+      int key;
+      if (argb[x] == last_pix) {
+        continue;
+      }
+      last_pix = argb[x];
+      key = VP8LHashPix(last_pix, COLOR_HASH_RIGHT_SHIFT);
+      while (1) {
+        if (!in_use[key]) {
+          colors[key] = last_pix;
+          in_use[key] = 1;
+          ++num_colors;
+          if (num_colors > MAX_PALETTE_SIZE) {
+            return MAX_PALETTE_SIZE + 1;  // Exact count not needed.
+          }
+          break;
+        } else if (colors[key] == last_pix) {
+          break;  // The color is already there.
+        } else {
+          // Some other color sits here, so do linear conflict resolution.
+          ++key;
+          key &= (COLOR_HASH_SIZE - 1);  // Key mask.
+        }
+      }
+    }
+    argb += pic->argb_stride;
+  }
+
+  if (palette != NULL) {  // Fill the colors into palette.
+    num_colors = 0;
+    for (i = 0; i < COLOR_HASH_SIZE; ++i) {
+      if (in_use[i]) {
+        palette[num_colors] = colors[i];
+        ++num_colors;
+      }
+    }
+  }
+  return num_colors;
+}
+
+#undef COLOR_HASH_SIZE
+#undef COLOR_HASH_RIGHT_SHIFT
+
+//------------------------------------------------------------------------------
+
+#if defined(WEBP_NEED_LOG_TABLE_8BIT)
+const uint8_t WebPLogTable8bit[256] = {   // 31 ^ clz(i)
+  0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,
+  4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+  5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7
+};
+#endif
 
 //------------------------------------------------------------------------------

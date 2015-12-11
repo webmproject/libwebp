@@ -18,7 +18,7 @@
 #include <arm_neon.h>
 #include <assert.h>
 #include "./neon.h"
-#include "../utils/rescaler.h"
+#include "src/utils/rescaler_utils.h"
 
 #define ROUNDER (WEBP_RESCALER_ONE >> 1)
 #define MULT_FIX_C(x, y) (((uint64_t)(x) * (y) + ROUNDER) >> WEBP_RESCALER_RFIX)
@@ -56,7 +56,7 @@ static uint32x4_t Interpolate(const rescaler_t* const frow,
   return E;
 }
 
-static void RescalerExportRowExpand(WebPRescaler* const wrk) {
+static void RescalerExportRowExpand_NEON(WebPRescaler* const wrk) {
   int x_out;
   uint8_t* const dst = wrk->dst;
   rescaler_t* const irow = wrk->irow;
@@ -112,7 +112,7 @@ static void RescalerExportRowExpand(WebPRescaler* const wrk) {
   }
 }
 
-static void RescalerExportRowShrink(WebPRescaler* const wrk) {
+static void RescalerExportRowShrink_NEON(WebPRescaler* const wrk) {
   int x_out;
   uint8_t* const dst = wrk->dst;
   rescaler_t* const irow = wrk->irow;
@@ -175,8 +175,8 @@ static void RescalerExportRowShrink(WebPRescaler* const wrk) {
 extern void WebPRescalerDspInitNEON(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInitNEON(void) {
-  WebPRescalerExportRowExpand = RescalerExportRowExpand;
-  WebPRescalerExportRowShrink = RescalerExportRowShrink;
+  WebPRescalerExportRowExpand = RescalerExportRowExpand_NEON;
+  WebPRescalerExportRowShrink = RescalerExportRowShrink_NEON;
 }
 
 #else     // !WEBP_USE_NEON

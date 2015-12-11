@@ -14,47 +14,20 @@
 #include "./dsp.h"
 
 #if defined(WEBP_USE_SSE2)
+#include <assert.h>
 #include <stdlib.h>  // for abs()
 #include <emmintrin.h>
 
-#include "../enc/cost.h"
-#include "../enc/vp8enci.h"
-
-//------------------------------------------------------------------------------
-// Quite useful macro for debugging. Left here for convenience.
-
-#if 0
-#include <stdio.h>
-static void PrintReg(const __m128i r, const char* const name, int size) {
-  int n;
-  union {
-    __m128i r;
-    uint8_t i8[16];
-    uint16_t i16[8];
-    uint32_t i32[4];
-    uint64_t i64[2];
-  } tmp;
-  tmp.r = r;
-  fprintf(stderr, "%s\t: ", name);
-  if (size == 8) {
-    for (n = 0; n < 16; ++n) fprintf(stderr, "%.2x ", tmp.i8[n]);
-  } else if (size == 16) {
-    for (n = 0; n < 8; ++n) fprintf(stderr, "%.4x ", tmp.i16[n]);
-  } else if (size == 32) {
-    for (n = 0; n < 4; ++n) fprintf(stderr, "%.8x ", tmp.i32[n]);
-  } else {
-    for (n = 0; n < 2; ++n) fprintf(stderr, "%.16lx ", tmp.i64[n]);
-  }
-  fprintf(stderr, "\n");
-}
-#endif
+#include "./common_sse2.h"
+#include "src/enc/cost_enc.h"
+#include "src/enc/vp8i_enc.h"
 
 //------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
 
 // Does one or two inverse transforms.
-static void ITransform(const uint8_t* ref, const int16_t* in, uint8_t* dst,
-                       int do_two) {
+static void ITransform_SSE2(const uint8_t* ref, const int16_t* in, uint8_t* dst,
+                            int do_two) {
   // This implementation makes use of 16-bit fixed point versions of two
   // multiply constants:
   //    K1 = sqrt(2) * cos (pi/8) ~= 85627 / 2^16
@@ -131,34 +104,7 @@ static void ITransform(const uint8_t* ref, const int16_t* in, uint8_t* dst,
     const __m128i tmp3 = _mm_sub_epi16(a, d);
 
     // Transpose the two 4x4.
-    // a00 a01 a02 a03   b00 b01 b02 b03
-    // a10 a11 a12 a13   b10 b11 b12 b13
-    // a20 a21 a22 a23   b20 b21 b22 b23
-    // a30 a31 a32 a33   b30 b31 b32 b33
-    const __m128i transpose0_0 = _mm_unpacklo_epi16(tmp0, tmp1);
-    const __m128i transpose0_1 = _mm_unpacklo_epi16(tmp2, tmp3);
-    const __m128i transpose0_2 = _mm_unpackhi_epi16(tmp0, tmp1);
-    const __m128i transpose0_3 = _mm_unpackhi_epi16(tmp2, tmp3);
-    // a00 a10 a01 a11   a02 a12 a03 a13
-    // a20 a30 a21 a31   a22 a32 a23 a33
-    // b00 b10 b01 b11   b02 b12 b03 b13
-    // b20 b30 b21 b31   b22 b32 b23 b33
-    const __m128i transpose1_0 = _mm_unpacklo_epi32(transpose0_0, transpose0_1);
-    const __m128i transpose1_1 = _mm_unpacklo_epi32(transpose0_2, transpose0_3);
-    const __m128i transpose1_2 = _mm_unpackhi_epi32(transpose0_0, transpose0_1);
-    const __m128i transpose1_3 = _mm_unpackhi_epi32(transpose0_2, transpose0_3);
-    // a00 a10 a20 a30 a01 a11 a21 a31
-    // b00 b10 b20 b30 b01 b11 b21 b31
-    // a02 a12 a22 a32 a03 a13 a23 a33
-    // b02 b12 a22 b32 b03 b13 b23 b33
-    T0 = _mm_unpacklo_epi64(transpose1_0, transpose1_1);
-    T1 = _mm_unpackhi_epi64(transpose1_0, transpose1_1);
-    T2 = _mm_unpacklo_epi64(transpose1_2, transpose1_3);
-    T3 = _mm_unpackhi_epi64(transpose1_2, transpose1_3);
-    // a00 a10 a20 a30   b00 b10 b20 b30
-    // a01 a11 a21 a31   b01 b11 b21 b31
-    // a02 a12 a22 a32   b02 b12 b22 b32
-    // a03 a13 a23 a33   b03 b13 b23 b33
+    VP8Transpose_2_4x4_16b(&tmp0, &tmp1, &tmp2, &tmp3, &T0, &T1, &T2, &T3);
   }
 
   // Horizontal pass and subsequent transpose.
@@ -193,34 +139,8 @@ static void ITransform(const uint8_t* ref, const int16_t* in, uint8_t* dst,
     const __m128i shifted3 = _mm_srai_epi16(tmp3, 3);
 
     // Transpose the two 4x4.
-    // a00 a01 a02 a03   b00 b01 b02 b03
-    // a10 a11 a12 a13   b10 b11 b12 b13
-    // a20 a21 a22 a23   b20 b21 b22 b23
-    // a30 a31 a32 a33   b30 b31 b32 b33
-    const __m128i transpose0_0 = _mm_unpacklo_epi16(shifted0, shifted1);
-    const __m128i transpose0_1 = _mm_unpacklo_epi16(shifted2, shifted3);
-    const __m128i transpose0_2 = _mm_unpackhi_epi16(shifted0, shifted1);
-    const __m128i transpose0_3 = _mm_unpackhi_epi16(shifted2, shifted3);
-    // a00 a10 a01 a11   a02 a12 a03 a13
-    // a20 a30 a21 a31   a22 a32 a23 a33
-    // b00 b10 b01 b11   b02 b12 b03 b13
-    // b20 b30 b21 b31   b22 b32 b23 b33
-    const __m128i transpose1_0 = _mm_unpacklo_epi32(transpose0_0, transpose0_1);
-    const __m128i transpose1_1 = _mm_unpacklo_epi32(transpose0_2, transpose0_3);
-    const __m128i transpose1_2 = _mm_unpackhi_epi32(transpose0_0, transpose0_1);
-    const __m128i transpose1_3 = _mm_unpackhi_epi32(transpose0_2, transpose0_3);
-    // a00 a10 a20 a30 a01 a11 a21 a31
-    // b00 b10 b20 b30 b01 b11 b21 b31
-    // a02 a12 a22 a32 a03 a13 a23 a33
-    // b02 b12 a22 b32 b03 b13 b23 b33
-    T0 = _mm_unpacklo_epi64(transpose1_0, transpose1_1);
-    T1 = _mm_unpackhi_epi64(transpose1_0, transpose1_1);
-    T2 = _mm_unpacklo_epi64(transpose1_2, transpose1_3);
-    T3 = _mm_unpackhi_epi64(transpose1_2, transpose1_3);
-    // a00 a10 a20 a30   b00 b10 b20 b30
-    // a01 a11 a21 a31   b01 b11 b21 b31
-    // a02 a12 a22 a32   b02 b12 b22 b32
-    // a03 a13 a23 a33   b03 b13 b23 b33
+    VP8Transpose_2_4x4_16b(&shifted0, &shifted1, &shifted2, &shifted3, &T0, &T1,
+                           &T2, &T3);
   }
 
   // Add inverse transform to 'ref' and store.
@@ -273,10 +193,10 @@ static void ITransform(const uint8_t* ref, const int16_t* in, uint8_t* dst,
   }
 }
 
-static void FTransformPass1(const __m128i* const in01,
-                            const __m128i* const in23,
-                            __m128i* const out01,
-                            __m128i* const out32) {
+static void FTransformPass1_SSE2(const __m128i* const in01,
+                                 const __m128i* const in23,
+                                 __m128i* const out01,
+                                 __m128i* const out32) {
   const __m128i k937 = _mm_set1_epi32(937);
   const __m128i k1812 = _mm_set1_epi32(1812);
 
@@ -319,8 +239,9 @@ static void FTransformPass1(const __m128i* const in01,
   *out32 = _mm_shuffle_epi32(v23, _MM_SHUFFLE(1, 0, 3, 2));  // 3 2 3 2 3 2..
 }
 
-static void FTransformPass2(const __m128i* const v01, const __m128i* const v32,
-                            int16_t* out) {
+static void FTransformPass2_SSE2(const __m128i* const v01,
+                                 const __m128i* const v32,
+                                 int16_t* out) {
   const __m128i zero = _mm_setzero_si128();
   const __m128i seven = _mm_set1_epi16(7);
   const __m128i k5352_2217 = _mm_set_epi16(5352,  2217, 5352,  2217,
@@ -331,25 +252,11 @@ static void FTransformPass2(const __m128i* const v01, const __m128i* const v32,
   const __m128i k51000 = _mm_set1_epi32(51000);
 
   // Same operations are done on the (0,3) and (1,2) pairs.
-  // a0 = v0 + v3
-  // a1 = v1 + v2
   // a3 = v0 - v3
   // a2 = v1 - v2
-  const __m128i a01 = _mm_add_epi16(*v01, *v32);
   const __m128i a32 = _mm_sub_epi16(*v01, *v32);
-  const __m128i a11 = _mm_unpackhi_epi64(a01, a01);
   const __m128i a22 = _mm_unpackhi_epi64(a32, a32);
-  const __m128i a01_plus_7 = _mm_add_epi16(a01, seven);
 
-  // d0 = (a0 + a1 + 7) >> 4;
-  // d2 = (a0 - a1 + 7) >> 4;
-  const __m128i c0 = _mm_add_epi16(a01_plus_7, a11);
-  const __m128i c2 = _mm_sub_epi16(a01_plus_7, a11);
-  const __m128i d0 = _mm_srai_epi16(c0, 4);
-  const __m128i d2 = _mm_srai_epi16(c2, 4);
-
-  // f1 = ((b3 * 5352 + b2 * 2217 + 12000) >> 16)
-  // f3 = ((b3 * 2217 - b2 * 5352 + 51000) >> 16)
   const __m128i b23 = _mm_unpacklo_epi16(a22, a32);
   const __m128i c1 = _mm_madd_epi16(b23, k5352_2217);
   const __m128i c3 = _mm_madd_epi16(b23, k2217_5352);
@@ -357,13 +264,27 @@ static void FTransformPass2(const __m128i* const v01, const __m128i* const v32,
   const __m128i d3 = _mm_add_epi32(c3, k51000);
   const __m128i e1 = _mm_srai_epi32(d1, 16);
   const __m128i e3 = _mm_srai_epi32(d3, 16);
+  // f1 = ((b3 * 5352 + b2 * 2217 + 12000) >> 16)
+  // f3 = ((b3 * 2217 - b2 * 5352 + 51000) >> 16)
   const __m128i f1 = _mm_packs_epi32(e1, e1);
   const __m128i f3 = _mm_packs_epi32(e3, e3);
-  // f1 = f1 + (a3 != 0);
+  // g1 = f1 + (a3 != 0);
   // The compare will return (0xffff, 0) for (==0, !=0). To turn that into the
   // desired (0, 1), we add one earlier through k12000_plus_one.
-  // -> f1 = f1 + 1 - (a3 == 0)
+  // -> g1 = f1 + 1 - (a3 == 0)
   const __m128i g1 = _mm_add_epi16(f1, _mm_cmpeq_epi16(a32, zero));
+
+  // a0 = v0 + v3
+  // a1 = v1 + v2
+  const __m128i a01 = _mm_add_epi16(*v01, *v32);
+  const __m128i a01_plus_7 = _mm_add_epi16(a01, seven);
+  const __m128i a11 = _mm_unpackhi_epi64(a01, a01);
+  const __m128i c0 = _mm_add_epi16(a01_plus_7, a11);
+  const __m128i c2 = _mm_sub_epi16(a01_plus_7, a11);
+  // d0 = (a0 + a1 + 7) >> 4;
+  // d2 = (a0 - a1 + 7) >> 4;
+  const __m128i d0 = _mm_srai_epi16(c0, 4);
+  const __m128i d2 = _mm_srai_epi16(c2, 4);
 
   const __m128i d0_g1 = _mm_unpacklo_epi64(d0, g1);
   const __m128i d2_f3 = _mm_unpacklo_epi64(d2, f3);
@@ -371,50 +292,52 @@ static void FTransformPass2(const __m128i* const v01, const __m128i* const v32,
   _mm_storeu_si128((__m128i*)&out[8], d2_f3);
 }
 
-static void FTransform(const uint8_t* src, const uint8_t* ref, int16_t* out) {
+static void FTransform_SSE2(const uint8_t* src, const uint8_t* ref,
+                            int16_t* out) {
   const __m128i zero = _mm_setzero_si128();
-
-  // Load src and convert to 16b.
+  // Load src.
   const __m128i src0 = _mm_loadl_epi64((const __m128i*)&src[0 * BPS]);
   const __m128i src1 = _mm_loadl_epi64((const __m128i*)&src[1 * BPS]);
   const __m128i src2 = _mm_loadl_epi64((const __m128i*)&src[2 * BPS]);
   const __m128i src3 = _mm_loadl_epi64((const __m128i*)&src[3 * BPS]);
-  const __m128i src_0 = _mm_unpacklo_epi8(src0, zero);
-  const __m128i src_1 = _mm_unpacklo_epi8(src1, zero);
-  const __m128i src_2 = _mm_unpacklo_epi8(src2, zero);
-  const __m128i src_3 = _mm_unpacklo_epi8(src3, zero);
-  // Load ref and convert to 16b.
+  // 00 01 02 03 *
+  // 10 11 12 13 *
+  // 20 21 22 23 *
+  // 30 31 32 33 *
+  // Shuffle.
+  const __m128i src_0 = _mm_unpacklo_epi16(src0, src1);
+  const __m128i src_1 = _mm_unpacklo_epi16(src2, src3);
+  // 00 01 10 11 02 03 12 13 * * ...
+  // 20 21 30 31 22 22 32 33 * * ...
+
+  // Load ref.
   const __m128i ref0 = _mm_loadl_epi64((const __m128i*)&ref[0 * BPS]);
   const __m128i ref1 = _mm_loadl_epi64((const __m128i*)&ref[1 * BPS]);
   const __m128i ref2 = _mm_loadl_epi64((const __m128i*)&ref[2 * BPS]);
   const __m128i ref3 = _mm_loadl_epi64((const __m128i*)&ref[3 * BPS]);
-  const __m128i ref_0 = _mm_unpacklo_epi8(ref0, zero);
-  const __m128i ref_1 = _mm_unpacklo_epi8(ref1, zero);
-  const __m128i ref_2 = _mm_unpacklo_epi8(ref2, zero);
-  const __m128i ref_3 = _mm_unpacklo_epi8(ref3, zero);
-  // Compute difference. -> 00 01 02 03 00 00 00 00
-  const __m128i diff0 = _mm_sub_epi16(src_0, ref_0);
-  const __m128i diff1 = _mm_sub_epi16(src_1, ref_1);
-  const __m128i diff2 = _mm_sub_epi16(src_2, ref_2);
-  const __m128i diff3 = _mm_sub_epi16(src_3, ref_3);
+  const __m128i ref_0 = _mm_unpacklo_epi16(ref0, ref1);
+  const __m128i ref_1 = _mm_unpacklo_epi16(ref2, ref3);
 
-  // Unpack and shuffle
-  // 00 01 02 03   0 0 0 0
-  // 10 11 12 13   0 0 0 0
-  // 20 21 22 23   0 0 0 0
-  // 30 31 32 33   0 0 0 0
-  const __m128i shuf01 = _mm_unpacklo_epi32(diff0, diff1);
-  const __m128i shuf23 = _mm_unpacklo_epi32(diff2, diff3);
+  // Convert both to 16 bit.
+  const __m128i src_0_16b = _mm_unpacklo_epi8(src_0, zero);
+  const __m128i src_1_16b = _mm_unpacklo_epi8(src_1, zero);
+  const __m128i ref_0_16b = _mm_unpacklo_epi8(ref_0, zero);
+  const __m128i ref_1_16b = _mm_unpacklo_epi8(ref_1, zero);
+
+  // Compute the difference.
+  const __m128i row01 = _mm_sub_epi16(src_0_16b, ref_0_16b);
+  const __m128i row23 = _mm_sub_epi16(src_1_16b, ref_1_16b);
   __m128i v01, v32;
 
   // First pass
-  FTransformPass1(&shuf01, &shuf23, &v01, &v32);
+  FTransformPass1_SSE2(&row01, &row23, &v01, &v32);
 
   // Second pass
-  FTransformPass2(&v01, &v32, out);
+  FTransformPass2_SSE2(&v01, &v32, out);
 }
 
-static void FTransform2(const uint8_t* src, const uint8_t* ref, int16_t* out) {
+static void FTransform2_SSE2(const uint8_t* src, const uint8_t* ref,
+                             int16_t* out) {
   const __m128i zero = _mm_setzero_si128();
 
   // Load src and convert to 16b.
@@ -454,17 +377,16 @@ static void FTransform2(const uint8_t* src, const uint8_t* ref, int16_t* out) {
   __m128i v01h, v32h;
 
   // First pass
-  FTransformPass1(&shuf01l, &shuf23l, &v01l, &v32l);
-  FTransformPass1(&shuf01h, &shuf23h, &v01h, &v32h);
+  FTransformPass1_SSE2(&shuf01l, &shuf23l, &v01l, &v32l);
+  FTransformPass1_SSE2(&shuf01h, &shuf23h, &v01h, &v32h);
 
   // Second pass
-  FTransformPass2(&v01l, &v32l, out + 0);
-  FTransformPass2(&v01h, &v32h, out + 16);
+  FTransformPass2_SSE2(&v01l, &v32l, out + 0);
+  FTransformPass2_SSE2(&v01h, &v32h, out + 16);
 }
 
-static void FTransformWHTRow(const int16_t* const in, __m128i* const out) {
-  const __m128i kMult1 = _mm_set_epi16(0, 0, 0, 0, 1, 1, 1, 1);
-  const __m128i kMult2 = _mm_set_epi16(0, 0, 0, 0, -1, 1, -1, 1);
+static void FTransformWHTRow_SSE2(const int16_t* const in, __m128i* const out) {
+  const __m128i kMult = _mm_set_epi16(-1, 1, -1, 1, 1, 1, 1, 1);
   const __m128i src0 = _mm_loadl_epi64((__m128i*)&in[0 * 16]);
   const __m128i src1 = _mm_loadl_epi64((__m128i*)&in[1 * 16]);
   const __m128i src2 = _mm_loadl_epi64((__m128i*)&in[2 * 16]);
@@ -473,33 +395,38 @@ static void FTransformWHTRow(const int16_t* const in, __m128i* const out) {
   const __m128i A23 = _mm_unpacklo_epi16(src2, src3);  // A2 A3 | ...
   const __m128i B0 = _mm_adds_epi16(A01, A23);    // a0 | a1 | ...
   const __m128i B1 = _mm_subs_epi16(A01, A23);    // a3 | a2 | ...
-  const __m128i C0 = _mm_unpacklo_epi32(B0, B1);  // a0 | a1 | a3 | a2
-  const __m128i C1 = _mm_unpacklo_epi32(B1, B0);  // a3 | a2 | a0 | a1
-  const __m128i D0 = _mm_madd_epi16(C0, kMult1);  // out0, out1
-  const __m128i D1 = _mm_madd_epi16(C1, kMult2);  // out2, out3
-  *out = _mm_unpacklo_epi64(D0, D1);
+  const __m128i C0 = _mm_unpacklo_epi32(B0, B1);  // a0 | a1 | a3 | a2 | ...
+  const __m128i C1 = _mm_unpacklo_epi32(B1, B0);  // a3 | a2 | a0 | a1 | ...
+  const __m128i D = _mm_unpacklo_epi64(C0, C1);   // a0 a1 a3 a2 a3 a2 a0 a1
+  *out = _mm_madd_epi16(D, kMult);
 }
 
-static void FTransformWHT(const int16_t* in, int16_t* out) {
+static void FTransformWHT_SSE2(const int16_t* in, int16_t* out) {
+  // Input is 12b signed.
   __m128i row0, row1, row2, row3;
-  FTransformWHTRow(in + 0 * 64, &row0);
-  FTransformWHTRow(in + 1 * 64, &row1);
-  FTransformWHTRow(in + 2 * 64, &row2);
-  FTransformWHTRow(in + 3 * 64, &row3);
+  // Rows are 14b signed.
+  FTransformWHTRow_SSE2(in + 0 * 64, &row0);
+  FTransformWHTRow_SSE2(in + 1 * 64, &row1);
+  FTransformWHTRow_SSE2(in + 2 * 64, &row2);
+  FTransformWHTRow_SSE2(in + 3 * 64, &row3);
 
   {
+    // The a* are 15b signed.
     const __m128i a0 = _mm_add_epi32(row0, row2);
     const __m128i a1 = _mm_add_epi32(row1, row3);
     const __m128i a2 = _mm_sub_epi32(row1, row3);
     const __m128i a3 = _mm_sub_epi32(row0, row2);
-    const __m128i b0 = _mm_srai_epi32(_mm_add_epi32(a0, a1), 1);
-    const __m128i b1 = _mm_srai_epi32(_mm_add_epi32(a3, a2), 1);
-    const __m128i b2 = _mm_srai_epi32(_mm_sub_epi32(a3, a2), 1);
-    const __m128i b3 = _mm_srai_epi32(_mm_sub_epi32(a0, a1), 1);
-    const __m128i out0 = _mm_packs_epi32(b0, b1);
-    const __m128i out1 = _mm_packs_epi32(b2, b3);
-    _mm_storeu_si128((__m128i*)&out[0], out0);
-    _mm_storeu_si128((__m128i*)&out[8], out1);
+    const __m128i a0a3 = _mm_packs_epi32(a0, a3);
+    const __m128i a1a2 = _mm_packs_epi32(a1, a2);
+
+    // The b* are 16b signed.
+    const __m128i b0b1 = _mm_add_epi16(a0a3, a1a2);
+    const __m128i b3b2 = _mm_sub_epi16(a0a3, a1a2);
+    const __m128i tmp_b2b3 = _mm_unpackhi_epi64(b3b2, b3b2);
+    const __m128i b2b3 = _mm_unpacklo_epi64(tmp_b2b3, b3b2);
+
+    _mm_storeu_si128((__m128i*)&out[0], _mm_srai_epi16(b0b1, 1));
+    _mm_storeu_si128((__m128i*)&out[8], _mm_srai_epi16(b2b3, 1));
   }
 }
 
@@ -507,9 +434,9 @@ static void FTransformWHT(const int16_t* in, int16_t* out) {
 // Compute susceptibility based on DCT-coeff histograms:
 // the higher, the "easier" the macroblock is to compress.
 
-static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
-                             int start_block, int end_block,
-                             VP8Histogram* const histo) {
+static void CollectHistogram_SSE2(const uint8_t* ref, const uint8_t* pred,
+                                  int start_block, int end_block,
+                                  VP8Histogram* const histo) {
   const __m128i zero = _mm_setzero_si128();
   const __m128i max_coeff_thresh = _mm_set1_epi16(MAX_COEFF_THRESH);
   int j;
@@ -518,7 +445,7 @@ static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
     int16_t out[16];
     int k;
 
-    FTransform(ref + VP8DspScan[j], pred + VP8DspScan[j], out);
+    FTransform_SSE2(ref + VP8DspScan[j], pred + VP8DspScan[j], out);
 
     // Convert coefficients to bin (within out[]).
     {
@@ -692,12 +619,10 @@ static WEBP_INLINE void TrueMotion(uint8_t* dst, const uint8_t* left,
 
 static WEBP_INLINE void DC8uv(uint8_t* dst, const uint8_t* left,
                               const uint8_t* top) {
-  const __m128i zero = _mm_setzero_si128();
   const __m128i top_values = _mm_loadl_epi64((const __m128i*)top);
   const __m128i left_values = _mm_loadl_epi64((const __m128i*)left);
-  const __m128i sum_top = _mm_sad_epu8(top_values, zero);
-  const __m128i sum_left = _mm_sad_epu8(left_values, zero);
-  const int DC = _mm_cvtsi128_si32(sum_top) + _mm_cvtsi128_si32(sum_left) + 8;
+  const __m128i combined = _mm_unpacklo_epi64(top_values, left_values);
+  const int DC = VP8HorizontalAdd8b(&combined) + 8;
   Put8x8uv(DC >> 4, dst);
 }
 
@@ -735,27 +660,16 @@ static WEBP_INLINE void DC8uvMode(uint8_t* dst, const uint8_t* left,
 
 static WEBP_INLINE void DC16(uint8_t* dst, const uint8_t* left,
                              const uint8_t* top) {
-  const __m128i zero = _mm_setzero_si128();
   const __m128i top_row = _mm_load_si128((const __m128i*)top);
   const __m128i left_row = _mm_load_si128((const __m128i*)left);
-  const __m128i sad8x2 = _mm_sad_epu8(top_row, zero);
-  // sum the two sads: sad8x2[0:1] + sad8x2[8:9]
-  const __m128i sum_top = _mm_add_epi16(sad8x2, _mm_shuffle_epi32(sad8x2, 2));
-  const __m128i sad8x2_left = _mm_sad_epu8(left_row, zero);
-  // sum the two sads: sad8x2[0:1] + sad8x2[8:9]
-  const __m128i sum_left =
-      _mm_add_epi16(sad8x2_left, _mm_shuffle_epi32(sad8x2_left, 2));
-  const int DC = _mm_cvtsi128_si32(sum_top) + _mm_cvtsi128_si32(sum_left) + 16;
+  const int DC =
+      VP8HorizontalAdd8b(&top_row) + VP8HorizontalAdd8b(&left_row) + 16;
   Put16(DC >> 5, dst);
 }
 
 static WEBP_INLINE void DC16NoLeft(uint8_t* dst, const uint8_t* top) {
-  const __m128i zero = _mm_setzero_si128();
   const __m128i top_row = _mm_load_si128((const __m128i*)top);
-  const __m128i sad8x2 = _mm_sad_epu8(top_row, zero);
-  // sum the two sads: sad8x2[0:1] + sad8x2[8:9]
-  const __m128i sum = _mm_add_epi16(sad8x2, _mm_shuffle_epi32(sad8x2, 2));
-  const int DC = _mm_cvtsi128_si32(sum) + 8;
+  const int DC = VP8HorizontalAdd8b(&top_row) + 8;
   Put16(DC >> 4, dst);
 }
 
@@ -977,7 +891,7 @@ static WEBP_INLINE void TM4(uint8_t* dst, const uint8_t* top) {
 
 // Left samples are top[-5 .. -2], top_left is top[-1], top are
 // located at top[0..3], and top right is top[4..7]
-static void Intra4Preds(uint8_t* dst, const uint8_t* top) {
+static void Intra4Preds_SSE2(uint8_t* dst, const uint8_t* top) {
   DC4(I4DC4 + dst, top);
   TM4(I4TM4 + dst, top);
   VE4(I4VE4 + dst, top);
@@ -993,8 +907,8 @@ static void Intra4Preds(uint8_t* dst, const uint8_t* top) {
 //------------------------------------------------------------------------------
 // Chroma 8x8 prediction (paragraph 12.2)
 
-static void IntraChromaPreds(uint8_t* dst, const uint8_t* left,
-                             const uint8_t* top) {
+static void IntraChromaPreds_SSE2(uint8_t* dst, const uint8_t* left,
+                                  const uint8_t* top) {
   // U block
   DC8uvMode(C8DC8 + dst, left, top);
   VerticalPred(C8VE8 + dst, top, 8);
@@ -1013,8 +927,8 @@ static void IntraChromaPreds(uint8_t* dst, const uint8_t* left,
 //------------------------------------------------------------------------------
 // luma 16x16 prediction (paragraph 12.3)
 
-static void Intra16Preds(uint8_t* dst,
-                         const uint8_t* left, const uint8_t* top) {
+static void Intra16Preds_SSE2(uint8_t* dst,
+                              const uint8_t* left, const uint8_t* top) {
   DC16Mode(I16DC16 + dst, left, top);
   VerticalPred(I16VE16 + dst, top, 16);
   HorizontalPred(I16HE16 + dst, left, 16);
@@ -1062,18 +976,18 @@ static WEBP_INLINE int SSE_16xN(const uint8_t* a, const uint8_t* b,
   return (tmp[3] + tmp[2] + tmp[1] + tmp[0]);
 }
 
-static int SSE16x16(const uint8_t* a, const uint8_t* b) {
+static int SSE16x16_SSE2(const uint8_t* a, const uint8_t* b) {
   return SSE_16xN(a, b, 8);
 }
 
-static int SSE16x8(const uint8_t* a, const uint8_t* b) {
+static int SSE16x8_SSE2(const uint8_t* a, const uint8_t* b) {
   return SSE_16xN(a, b, 4);
 }
 
 #define LOAD_8x16b(ptr) \
   _mm_unpacklo_epi8(_mm_loadl_epi64((const __m128i*)(ptr)), zero)
 
-static int SSE8x8(const uint8_t* a, const uint8_t* b) {
+static int SSE8x8_SSE2(const uint8_t* a, const uint8_t* b) {
   const __m128i zero = _mm_setzero_si128();
   int num_pairs = 4;
   __m128i sum = zero;
@@ -1100,7 +1014,7 @@ static int SSE8x8(const uint8_t* a, const uint8_t* b) {
 }
 #undef LOAD_8x16b
 
-static int SSE4x4(const uint8_t* a, const uint8_t* b) {
+static int SSE4x4_SSE2(const uint8_t* a, const uint8_t* b) {
   const __m128i zero = _mm_setzero_si128();
 
   // Load values. Note that we read 8 pixels instead of 4,
@@ -1136,21 +1050,52 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
 }
 
 //------------------------------------------------------------------------------
+
+static void Mean16x4_SSE2(const uint8_t* ref, uint32_t dc[4]) {
+  const __m128i mask = _mm_set1_epi16(0x00ff);
+  const __m128i a0 = _mm_loadu_si128((const __m128i*)&ref[BPS * 0]);
+  const __m128i a1 = _mm_loadu_si128((const __m128i*)&ref[BPS * 1]);
+  const __m128i a2 = _mm_loadu_si128((const __m128i*)&ref[BPS * 2]);
+  const __m128i a3 = _mm_loadu_si128((const __m128i*)&ref[BPS * 3]);
+  const __m128i b0 = _mm_srli_epi16(a0, 8);     // hi byte
+  const __m128i b1 = _mm_srli_epi16(a1, 8);
+  const __m128i b2 = _mm_srli_epi16(a2, 8);
+  const __m128i b3 = _mm_srli_epi16(a3, 8);
+  const __m128i c0 = _mm_and_si128(a0, mask);   // lo byte
+  const __m128i c1 = _mm_and_si128(a1, mask);
+  const __m128i c2 = _mm_and_si128(a2, mask);
+  const __m128i c3 = _mm_and_si128(a3, mask);
+  const __m128i d0 = _mm_add_epi32(b0, c0);
+  const __m128i d1 = _mm_add_epi32(b1, c1);
+  const __m128i d2 = _mm_add_epi32(b2, c2);
+  const __m128i d3 = _mm_add_epi32(b3, c3);
+  const __m128i e0 = _mm_add_epi32(d0, d1);
+  const __m128i e1 = _mm_add_epi32(d2, d3);
+  const __m128i f0 = _mm_add_epi32(e0, e1);
+  uint16_t tmp[8];
+  _mm_storeu_si128((__m128i*)tmp, f0);
+  dc[0] = tmp[0] + tmp[1];
+  dc[1] = tmp[2] + tmp[3];
+  dc[2] = tmp[4] + tmp[5];
+  dc[3] = tmp[6] + tmp[7];
+}
+
+//------------------------------------------------------------------------------
 // Texture distortion
 //
 // We try to match the spectral content (weighted) between source and
 // reconstructed samples.
 
 // Hadamard transform
-// Returns the difference between the weighted sum of the absolute value of
-// transformed coefficients.
-static int TTransform(const uint8_t* inA, const uint8_t* inB,
-                      const uint16_t* const w) {
+// Returns the weighted sum of the absolute value of transformed coefficients.
+// w[] contains a row-major 4 by 4 symmetric matrix.
+static int TTransform_SSE2(const uint8_t* inA, const uint8_t* inB,
+                           const uint16_t* const w) {
   int32_t sum[4];
   __m128i tmp_0, tmp_1, tmp_2, tmp_3;
   const __m128i zero = _mm_setzero_si128();
 
-  // Load, combine and transpose inputs.
+  // Load and combine inputs.
   {
     const __m128i inA_0 = _mm_loadl_epi64((const __m128i*)&inA[BPS * 0]);
     const __m128i inA_1 = _mm_loadl_epi64((const __m128i*)&inA[BPS * 1]);
@@ -1162,37 +1107,22 @@ static int TTransform(const uint8_t* inA, const uint8_t* inB,
     const __m128i inB_3 = _mm_loadl_epi64((const __m128i*)&inB[BPS * 3]);
 
     // Combine inA and inB (we'll do two transforms in parallel).
-    const __m128i inAB_0 = _mm_unpacklo_epi8(inA_0, inB_0);
-    const __m128i inAB_1 = _mm_unpacklo_epi8(inA_1, inB_1);
-    const __m128i inAB_2 = _mm_unpacklo_epi8(inA_2, inB_2);
-    const __m128i inAB_3 = _mm_unpacklo_epi8(inA_3, inB_3);
-    // a00 b00 a01 b01 a02 b03 a03 b03   0 0 0 0 0 0 0 0
-    // a10 b10 a11 b11 a12 b12 a13 b13   0 0 0 0 0 0 0 0
-    // a20 b20 a21 b21 a22 b22 a23 b23   0 0 0 0 0 0 0 0
-    // a30 b30 a31 b31 a32 b32 a33 b33   0 0 0 0 0 0 0 0
-
-    // Transpose the two 4x4, discarding the filling zeroes.
-    const __m128i transpose0_0 = _mm_unpacklo_epi8(inAB_0, inAB_2);
-    const __m128i transpose0_1 = _mm_unpacklo_epi8(inAB_1, inAB_3);
-    // a00 a20  b00 b20  a01 a21  b01 b21  a02 a22  b02 b22  a03 a23  b03 b23
-    // a10 a30  b10 b30  a11 a31  b11 b31  a12 a32  b12 b32  a13 a33  b13 b33
-    const __m128i transpose1_0 = _mm_unpacklo_epi8(transpose0_0, transpose0_1);
-    const __m128i transpose1_1 = _mm_unpackhi_epi8(transpose0_0, transpose0_1);
-    // a00 a10 a20 a30  b00 b10 b20 b30  a01 a11 a21 a31  b01 b11 b21 b31
-    // a02 a12 a22 a32  b02 b12 b22 b32  a03 a13 a23 a33  b03 b13 b23 b33
-
-    // Convert to 16b.
-    tmp_0 = _mm_unpacklo_epi8(transpose1_0, zero);
-    tmp_1 = _mm_unpackhi_epi8(transpose1_0, zero);
-    tmp_2 = _mm_unpacklo_epi8(transpose1_1, zero);
-    tmp_3 = _mm_unpackhi_epi8(transpose1_1, zero);
-    // a00 a10 a20 a30   b00 b10 b20 b30
-    // a01 a11 a21 a31   b01 b11 b21 b31
-    // a02 a12 a22 a32   b02 b12 b22 b32
-    // a03 a13 a23 a33   b03 b13 b23 b33
+    const __m128i inAB_0 = _mm_unpacklo_epi32(inA_0, inB_0);
+    const __m128i inAB_1 = _mm_unpacklo_epi32(inA_1, inB_1);
+    const __m128i inAB_2 = _mm_unpacklo_epi32(inA_2, inB_2);
+    const __m128i inAB_3 = _mm_unpacklo_epi32(inA_3, inB_3);
+    tmp_0 = _mm_unpacklo_epi8(inAB_0, zero);
+    tmp_1 = _mm_unpacklo_epi8(inAB_1, zero);
+    tmp_2 = _mm_unpacklo_epi8(inAB_2, zero);
+    tmp_3 = _mm_unpacklo_epi8(inAB_3, zero);
+    // a00 a01 a02 a03   b00 b01 b02 b03
+    // a10 a11 a12 a13   b10 b11 b12 b13
+    // a20 a21 a22 a23   b20 b21 b22 b23
+    // a30 a31 a32 a33   b30 b31 b32 b33
   }
 
-  // Horizontal pass and subsequent transpose.
+  // Vertical pass first to avoid a transpose (vertical and horizontal passes
+  // are commutative because w/kWeightY is symmetric) and subsequent transpose.
   {
     // Calculate a and b (two 4x4 at once).
     const __m128i a0 = _mm_add_epi16(tmp_0, tmp_2);
@@ -1209,37 +1139,12 @@ static int TTransform(const uint8_t* inA, const uint8_t* inB,
     // a30 a31 a32 a33   b30 b31 b32 b33
 
     // Transpose the two 4x4.
-    const __m128i transpose0_0 = _mm_unpacklo_epi16(b0, b1);
-    const __m128i transpose0_1 = _mm_unpacklo_epi16(b2, b3);
-    const __m128i transpose0_2 = _mm_unpackhi_epi16(b0, b1);
-    const __m128i transpose0_3 = _mm_unpackhi_epi16(b2, b3);
-    // a00 a10 a01 a11   a02 a12 a03 a13
-    // a20 a30 a21 a31   a22 a32 a23 a33
-    // b00 b10 b01 b11   b02 b12 b03 b13
-    // b20 b30 b21 b31   b22 b32 b23 b33
-    const __m128i transpose1_0 = _mm_unpacklo_epi32(transpose0_0, transpose0_1);
-    const __m128i transpose1_1 = _mm_unpacklo_epi32(transpose0_2, transpose0_3);
-    const __m128i transpose1_2 = _mm_unpackhi_epi32(transpose0_0, transpose0_1);
-    const __m128i transpose1_3 = _mm_unpackhi_epi32(transpose0_2, transpose0_3);
-    // a00 a10 a20 a30 a01 a11 a21 a31
-    // b00 b10 b20 b30 b01 b11 b21 b31
-    // a02 a12 a22 a32 a03 a13 a23 a33
-    // b02 b12 a22 b32 b03 b13 b23 b33
-    tmp_0 = _mm_unpacklo_epi64(transpose1_0, transpose1_1);
-    tmp_1 = _mm_unpackhi_epi64(transpose1_0, transpose1_1);
-    tmp_2 = _mm_unpacklo_epi64(transpose1_2, transpose1_3);
-    tmp_3 = _mm_unpackhi_epi64(transpose1_2, transpose1_3);
-    // a00 a10 a20 a30   b00 b10 b20 b30
-    // a01 a11 a21 a31   b01 b11 b21 b31
-    // a02 a12 a22 a32   b02 b12 b22 b32
-    // a03 a13 a23 a33   b03 b13 b23 b33
+    VP8Transpose_2_4x4_16b(&b0, &b1, &b2, &b3, &tmp_0, &tmp_1, &tmp_2, &tmp_3);
   }
 
-  // Vertical pass and difference of weighted sums.
+  // Horizontal pass and difference of weighted sums.
   {
     // Load all inputs.
-    // TODO(cduvivier): Make variable declarations and allocations aligned so
-    //                  we can use _mm_load_si128 instead of _mm_loadu_si128.
     const __m128i w_0 = _mm_loadu_si128((const __m128i*)&w[0]);
     const __m128i w_8 = _mm_loadu_si128((const __m128i*)&w[8]);
 
@@ -1285,19 +1190,19 @@ static int TTransform(const uint8_t* inA, const uint8_t* inB,
   return sum[0] + sum[1] + sum[2] + sum[3];
 }
 
-static int Disto4x4(const uint8_t* const a, const uint8_t* const b,
-                    const uint16_t* const w) {
-  const int diff_sum = TTransform(a, b, w);
+static int Disto4x4_SSE2(const uint8_t* const a, const uint8_t* const b,
+                         const uint16_t* const w) {
+  const int diff_sum = TTransform_SSE2(a, b, w);
   return abs(diff_sum) >> 5;
 }
 
-static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
-                      const uint16_t* const w) {
+static int Disto16x16_SSE2(const uint8_t* const a, const uint8_t* const b,
+                           const uint16_t* const w) {
   int D = 0;
   int x, y;
   for (y = 0; y < 16 * BPS; y += 4 * BPS) {
     for (x = 0; x < 16; x += 4) {
-      D += Disto4x4(a + x + y, b + x + y, w);
+      D += Disto4x4_SSE2(a + x + y, b + x + y, w);
     }
   }
   return D;
@@ -1317,8 +1222,6 @@ static WEBP_INLINE int DoQuantizeBlock(int16_t in[16], int16_t out[16],
   __m128i packed_out;
 
   // Load all inputs.
-  // TODO(cduvivier): Make variable declarations and allocations aligned so that
-  //                  we can use _mm_load_si128 instead of _mm_loadu_si128.
   __m128i in0 = _mm_loadu_si128((__m128i*)&in[0]);
   __m128i in8 = _mm_loadu_si128((__m128i*)&in[8]);
   const __m128i iq0 = _mm_loadu_si128((const __m128i*)&mtx->iq_[0]);
@@ -1446,23 +1349,24 @@ static int Quantize2Blocks(int16_t in[32], int16_t out[32],
 extern void VP8EncDspInitSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitSSE2(void) {
-  VP8CollectHistogram = CollectHistogram;
-  VP8EncPredLuma16 = Intra16Preds;
-  VP8EncPredChroma8 = IntraChromaPreds;
-  VP8EncPredLuma4 = Intra4Preds;
+  VP8CollectHistogram = CollectHistogram_SSE2;
+  VP8EncPredLuma16 = Intra16Preds_SSE2;
+  VP8EncPredChroma8 = IntraChromaPreds_SSE2;
+  VP8EncPredLuma4 = Intra4Preds_SSE2;
   VP8EncQuantizeBlock = QuantizeBlock;
   VP8EncQuantize2Blocks = Quantize2Blocks;
   VP8EncQuantizeBlockWHT = QuantizeBlockWHT;
-  VP8ITransform = ITransform;
-  VP8FTransform = FTransform;
-  VP8FTransform2 = FTransform2;
-  VP8FTransformWHT = FTransformWHT;
-  VP8SSE16x16 = SSE16x16;
-  VP8SSE16x8 = SSE16x8;
-  VP8SSE8x8 = SSE8x8;
-  VP8SSE4x4 = SSE4x4;
-  VP8TDisto4x4 = Disto4x4;
-  VP8TDisto16x16 = Disto16x16;
+  VP8ITransform = ITransform_SSE2;
+  VP8FTransform = FTransform_SSE2;
+  VP8FTransform2 = FTransform2_SSE2;
+  VP8FTransformWHT = FTransformWHT_SSE2;
+  VP8SSE16x16 = SSE16x16_SSE2;
+  VP8SSE16x8 = SSE16x8_SSE2;
+  VP8SSE8x8 = SSE8x8_SSE2;
+  VP8SSE4x4 = SSE4x4_SSE2;
+  VP8TDisto4x4 = Disto4x4_SSE2;
+  VP8TDisto16x16 = Disto16x16_SSE2;
+  VP8Mean16x4 = Mean16x4_SSE2;
 }
 
 #else  // !WEBP_USE_SSE2

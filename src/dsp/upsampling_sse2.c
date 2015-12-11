@@ -83,8 +83,8 @@
   GET_M(ad, s, diag2);                  /* diag2 = (3a + b + c + 3d) / 8 */    \
                                                                                \
   /* pack the alternate pixels */                                              \
-  PACK_AND_STORE(a, b, diag1, diag2, out +      0);  /* store top */           \
-  PACK_AND_STORE(c, d, diag2, diag1, out + 2 * 32);  /* store bottom */        \
+  PACK_AND_STORE(a, b, diag1, diag2, (out) +      0);  /* store top */         \
+  PACK_AND_STORE(c, d, diag2, diag1, (out) + 2 * 32);  /* store bottom */      \
 }
 
 // Turn the macro into a function for reducing code-size when non-critical
@@ -108,23 +108,23 @@ static void Upsample32Pixels(const uint8_t r1[], const uint8_t r2[],
                     top_dst, bottom_dst, cur_x, num_pixels) {                  \
   int n;                                                                       \
   for (n = 0; n < (num_pixels); ++n) {                                         \
-    FUNC(top_y[(cur_x) + n], r_u[n], r_v[n],                                   \
-         top_dst + ((cur_x) + n) * XSTEP);                                     \
+    FUNC((top_y)[(cur_x) + n], r_u[n], r_v[n],                                 \
+         (top_dst) + ((cur_x) + n) * (XSTEP));                                 \
   }                                                                            \
-  if (bottom_y != NULL) {                                                      \
+  if ((bottom_y) != NULL) {                                                    \
     for (n = 0; n < (num_pixels); ++n) {                                       \
-      FUNC(bottom_y[(cur_x) + n], r_u[64 + n], r_v[64 + n],                    \
-           bottom_dst + ((cur_x) + n) * XSTEP);                                \
+      FUNC((bottom_y)[(cur_x) + n], r_u[64 + n], r_v[64 + n],                  \
+           (bottom_dst) + ((cur_x) + n) * (XSTEP));                            \
     }                                                                          \
   }                                                                            \
 }
 
 #define CONVERT2RGB_32(FUNC, XSTEP, top_y, bottom_y,                           \
                        top_dst, bottom_dst, cur_x) do {                        \
-  FUNC##32(top_y + (cur_x), r_u, r_v, top_dst + (cur_x) * XSTEP);              \
-  if (bottom_y != NULL) {                                                      \
-    FUNC##32(bottom_y + (cur_x), r_u + 64, r_v + 64,                           \
-             bottom_dst + (cur_x) * XSTEP);                                    \
+  FUNC##32_SSE2((top_y) + (cur_x), r_u, r_v, (top_dst) + (cur_x) * (XSTEP));   \
+  if ((bottom_y) != NULL) {                                                    \
+    FUNC##32_SSE2((bottom_y) + (cur_x), r_u + 64, r_v + 64,                    \
+                  (bottom_dst) + (cur_x) * (XSTEP));                           \
   }                                                                            \
 } while (0)
 
@@ -173,6 +173,9 @@ SSE2_UPSAMPLE_FUNC(UpsampleRgbLinePair,  VP8YuvToRgb,  3)
 SSE2_UPSAMPLE_FUNC(UpsampleBgrLinePair,  VP8YuvToBgr,  3)
 SSE2_UPSAMPLE_FUNC(UpsampleRgbaLinePair, VP8YuvToRgba, 4)
 SSE2_UPSAMPLE_FUNC(UpsampleBgraLinePair, VP8YuvToBgra, 4)
+SSE2_UPSAMPLE_FUNC(UpsampleArgbLinePair, VP8YuvToArgb, 4)
+SSE2_UPSAMPLE_FUNC(UpsampleRgba4444LinePair, VP8YuvToRgba4444, 2)
+SSE2_UPSAMPLE_FUNC(UpsampleRgb565LinePair, VP8YuvToRgb565, 2)
 
 #undef GET_M
 #undef PACK_AND_STORE
@@ -194,8 +197,13 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersSSE2(void) {
   WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePair;
   WebPUpsamplers[MODE_BGR]  = UpsampleBgrLinePair;
   WebPUpsamplers[MODE_BGRA] = UpsampleBgraLinePair;
+  WebPUpsamplers[MODE_ARGB] = UpsampleArgbLinePair;
   WebPUpsamplers[MODE_rgbA] = UpsampleRgbaLinePair;
   WebPUpsamplers[MODE_bgrA] = UpsampleBgraLinePair;
+  WebPUpsamplers[MODE_Argb] = UpsampleArgbLinePair;
+  WebPUpsamplers[MODE_RGB_565] = UpsampleRgb565LinePair;
+  WebPUpsamplers[MODE_RGBA_4444] = UpsampleRgba4444LinePair;
+  WebPUpsamplers[MODE_rgbA_4444] = UpsampleRgba4444LinePair;
 }
 
 #endif  // FANCY_UPSAMPLING
@@ -205,29 +213,42 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersSSE2(void) {
 extern WebPYUV444Converter WebPYUV444Converters[/* MODE_LAST */];
 extern void WebPInitYUV444ConvertersSSE2(void);
 
-#define YUV444_FUNC(FUNC_NAME, CALL, XSTEP) \
-extern void WebP##FUNC_NAME##C(const uint8_t* y, const uint8_t* u,             \
-                               const uint8_t* v, uint8_t* dst, int len);       \
+#define YUV444_FUNC(FUNC_NAME, CALL, CALL_C, XSTEP)                            \
+extern void CALL_C(const uint8_t* y, const uint8_t* u, const uint8_t* v,       \
+                   uint8_t* dst, int len);                                     \
 static void FUNC_NAME(const uint8_t* y, const uint8_t* u, const uint8_t* v,    \
                       uint8_t* dst, int len) {                                 \
   int i;                                                                       \
   const int max_len = len & ~31;                                               \
-  for (i = 0; i < max_len; i += 32) CALL(y + i, u + i, v + i, dst + i * XSTEP);\
+  for (i = 0; i < max_len; i += 32) {                                          \
+    CALL(y + i, u + i, v + i, dst + i * (XSTEP));                              \
+  }                                                                            \
   if (i < len) {  /* C-fallback */                                             \
-    WebP##FUNC_NAME##C(y + i, u + i, v + i, dst + i * XSTEP, len - i);         \
+    CALL_C(y + i, u + i, v + i, dst + i * (XSTEP), len - i);                   \
   }                                                                            \
 }
 
-YUV444_FUNC(Yuv444ToRgba, VP8YuvToRgba32, 4);
-YUV444_FUNC(Yuv444ToBgra, VP8YuvToBgra32, 4);
-YUV444_FUNC(Yuv444ToRgb, VP8YuvToRgb32, 3);
-YUV444_FUNC(Yuv444ToBgr, VP8YuvToBgr32, 3);
+YUV444_FUNC(Yuv444ToRgba_SSE2, VP8YuvToRgba32_SSE2, WebPYuv444ToRgba_C, 4);
+YUV444_FUNC(Yuv444ToBgra_SSE2, VP8YuvToBgra32_SSE2, WebPYuv444ToBgra_C, 4);
+YUV444_FUNC(Yuv444ToRgb_SSE2, VP8YuvToRgb32_SSE2, WebPYuv444ToRgb_C, 3);
+YUV444_FUNC(Yuv444ToBgr_SSE2, VP8YuvToBgr32_SSE2, WebPYuv444ToBgr_C, 3);
+YUV444_FUNC(Yuv444ToArgb_SSE2, VP8YuvToArgb32_SSE2, WebPYuv444ToArgb_C, 4)
+YUV444_FUNC(Yuv444ToRgba4444_SSE2, VP8YuvToRgba444432_SSE2, \
+            WebPYuv444ToRgba4444_C, 2)
+YUV444_FUNC(Yuv444ToRgb565_SSE2, VP8YuvToRgb56532_SSE2, WebPYuv444ToRgb565_C, 2)
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444ConvertersSSE2(void) {
-  WebPYUV444Converters[MODE_RGBA] = Yuv444ToRgba;
-  WebPYUV444Converters[MODE_BGRA] = Yuv444ToBgra;
-  WebPYUV444Converters[MODE_RGB]  = Yuv444ToRgb;
-  WebPYUV444Converters[MODE_BGR]  = Yuv444ToBgr;
+  WebPYUV444Converters[MODE_RGBA]      = Yuv444ToRgba_SSE2;
+  WebPYUV444Converters[MODE_BGRA]      = Yuv444ToBgra_SSE2;
+  WebPYUV444Converters[MODE_RGB]       = Yuv444ToRgb_SSE2;
+  WebPYUV444Converters[MODE_BGR]       = Yuv444ToBgr_SSE2;
+  WebPYUV444Converters[MODE_ARGB]      = Yuv444ToArgb_SSE2;
+  WebPYUV444Converters[MODE_RGBA_4444] = Yuv444ToRgba4444_SSE2;
+  WebPYUV444Converters[MODE_RGB_565]   = Yuv444ToRgb565_SSE2;
+  WebPYUV444Converters[MODE_rgbA]      = Yuv444ToRgba_SSE2;
+  WebPYUV444Converters[MODE_bgrA]      = Yuv444ToBgra_SSE2;
+  WebPYUV444Converters[MODE_Argb]      = Yuv444ToArgb_SSE2;
+  WebPYUV444Converters[MODE_rgbA_4444] = Yuv444ToRgba4444_SSE2;
 }
 
 #else

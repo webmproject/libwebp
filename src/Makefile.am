@@ -1,4 +1,4 @@
-# The mux, demux and extras libraries depend on libwebp, thus the '.' to force
+# The mux and demux libraries depend on libwebp, thus the '.' to force
 # the build order so it's available to them.
 SUBDIRS = dec enc dsp utils .
 if WANT_MUX
@@ -6,9 +6,6 @@ if WANT_MUX
 endif
 if WANT_DEMUX
   SUBDIRS += demux
-endif
-if WANT_EXTRAS
-  SUBDIRS += extras
 endif
 
 lib_LTLIBRARIES = libwebp.la
@@ -25,6 +22,7 @@ commondir = $(includedir)/webp
 libwebp_la_SOURCES =
 libwebpinclude_HEADERS =
 libwebpinclude_HEADERS += webp/encode.h
+
 noinst_HEADERS =
 noinst_HEADERS += webp/format_constants.h
 
@@ -38,7 +36,7 @@ libwebp_la_LIBADD += utils/libwebputils.la
 # other than the ones listed on the command line, i.e., after linking, it will
 # not have unresolved symbols. Some platforms (Windows among them) require all
 # symbols in shared libraries to be resolved at library creation.
-libwebp_la_LDFLAGS = -no-undefined -version-info 5:4:0
+libwebp_la_LDFLAGS = -no-undefined -version-info 7:0:0
 libwebpincludedir = $(includedir)/webp
 pkgconfig_DATA = libwebp.pc
 
@@ -50,7 +48,7 @@ if BUILD_LIBWEBPDECODER
   libwebpdecoder_la_LIBADD += dsp/libwebpdspdecode.la
   libwebpdecoder_la_LIBADD += utils/libwebputilsdecode.la
 
-  libwebpdecoder_la_LDFLAGS = -no-undefined -version-info 1:4:0
+  libwebpdecoder_la_LDFLAGS = -no-undefined -version-info 3:0:0
   pkgconfig_DATA += libwebpdecoder.pc
 endif
 

@@ -17,6 +17,7 @@
 #if defined(WEBP_USE_MIPS_DSP_R2)
 
 #include "./lossless.h"
+#include "./lossless_common.h"
 
 #define MAP_COLOR_FUNCS(FUNC_NAME, TYPE, GET_INDEX, GET_VALUE)                 \
 static void FUNC_NAME(const TYPE* src,                                         \
@@ -85,8 +86,8 @@ static void FUNC_NAME(const TYPE* src,                                         \
   }                                                                            \
 }
 
-MAP_COLOR_FUNCS(MapARGB, uint32_t, VP8GetARGBIndex, VP8GetARGBValue)
-MAP_COLOR_FUNCS(MapAlpha, uint8_t, VP8GetAlphaIndex, VP8GetAlphaValue)
+MAP_COLOR_FUNCS(MapARGB_MIPSdspR2, uint32_t, VP8GetARGBIndex, VP8GetARGBValue)
+MAP_COLOR_FUNCS(MapAlpha_MIPSdspR2, uint8_t, VP8GetAlphaIndex, VP8GetAlphaValue)
 
 #undef MAP_COLOR_FUNCS
 
@@ -187,65 +188,71 @@ static WEBP_INLINE uint32_t Average4(uint32_t a0, uint32_t a1,
   return Average2(Average2(a0, a1), Average2(a2, a3));
 }
 
-static uint32_t Predictor5(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor5_MIPSdspR2(uint32_t left, const uint32_t* const top) {
   return Average3(left, top[0], top[1]);
 }
 
-static uint32_t Predictor6(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor6_MIPSdspR2(uint32_t left, const uint32_t* const top) {
   return Average2(left, top[-1]);
 }
 
-static uint32_t Predictor7(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor7_MIPSdspR2(uint32_t left, const uint32_t* const top) {
   return Average2(left, top[0]);
 }
 
-static uint32_t Predictor8(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor8_MIPSdspR2(uint32_t left, const uint32_t* const top) {
   (void)left;
   return Average2(top[-1], top[0]);
 }
 
-static uint32_t Predictor9(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor9_MIPSdspR2(uint32_t left, const uint32_t* const top) {
   (void)left;
   return Average2(top[0], top[1]);
 }
 
-static uint32_t Predictor10(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor10_MIPSdspR2(uint32_t left,
+                                      const uint32_t* const top) {
   return Average4(left, top[-1], top[0], top[1]);
 }
 
-static uint32_t Predictor11(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor11_MIPSdspR2(uint32_t left,
+                                      const uint32_t* const top) {
   return Select(top[0], left, top[-1]);
 }
 
-static uint32_t Predictor12(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor12_MIPSdspR2(uint32_t left,
+                                      const uint32_t* const top) {
   return ClampedAddSubtractFull(left, top[0], top[-1]);
 }
 
-static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor13_MIPSdspR2(uint32_t left,
+                                      const uint32_t* const top) {
   return ClampedAddSubtractHalf(left, top[0], top[-1]);
 }
 
 // Add green to blue and red channels (i.e. perform the inverse transform of
 // 'subtract green').
-static void AddGreenToBlueAndRed(uint32_t* data, int num_pixels) {
+static void AddGreenToBlueAndRed_MIPSdspR2(const uint32_t* src, int num_pixels,
+                                           uint32_t* dst) {
   uint32_t temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
-  uint32_t* const p_loop1_end = data + (num_pixels & ~3);
-  uint32_t* const p_loop2_end = data + num_pixels;
+  const uint32_t* const p_loop1_end = src + (num_pixels & ~3);
+  const uint32_t* const p_loop2_end = src + num_pixels;
   __asm__ volatile (
     ".set       push                                          \n\t"
     ".set       noreorder                                     \n\t"
-    "beq        %[data],         %[p_loop1_end],     3f       \n\t"
+    "beq        %[src],          %[p_loop1_end],     3f       \n\t"
     " nop                                                     \n\t"
   "0:                                                         \n\t"
-    "lw         %[temp0],        0(%[data])                   \n\t"
-    "lw         %[temp1],        4(%[data])                   \n\t"
-    "lw         %[temp2],        8(%[data])                   \n\t"
-    "lw         %[temp3],        12(%[data])                  \n\t"
+    "lw         %[temp0],        0(%[src])                    \n\t"
+    "lw         %[temp1],        4(%[src])                    \n\t"
+    "lw         %[temp2],        8(%[src])                    \n\t"
+    "lw         %[temp3],        12(%[src])                   \n\t"
     "ext        %[temp4],        %[temp0],           8,    8  \n\t"
     "ext        %[temp5],        %[temp1],           8,    8  \n\t"
     "ext        %[temp6],        %[temp2],           8,    8  \n\t"
     "ext        %[temp7],        %[temp3],           8,    8  \n\t"
-    "addiu      %[data],         %[data],            16       \n\t"
+    "addiu      %[src],          %[src],             16       \n\t"
+    "addiu      %[dst],          %[dst],             16       \n\t"
     "replv.ph   %[temp4],        %[temp4]                     \n\t"
     "replv.ph   %[temp5],        %[temp5]                     \n\t"
     "replv.ph   %[temp6],        %[temp6]                     \n\t"
@@ -254,44 +261,47 @@ static void AddGreenToBlueAndRed(uint32_t* data, int num_pixels) {
     "addu.qb    %[temp1],        %[temp1],           %[temp5] \n\t"
     "addu.qb    %[temp2],        %[temp2],           %[temp6] \n\t"
     "addu.qb    %[temp3],        %[temp3],           %[temp7] \n\t"
-    "sw         %[temp0],        -16(%[data])                 \n\t"
-    "sw         %[temp1],        -12(%[data])                 \n\t"
-    "sw         %[temp2],        -8(%[data])                  \n\t"
-    "bne        %[data],         %[p_loop1_end],     0b       \n\t"
-    " sw        %[temp3],        -4(%[data])                  \n\t"
+    "sw         %[temp0],        -16(%[dst])                  \n\t"
+    "sw         %[temp1],        -12(%[dst])                  \n\t"
+    "sw         %[temp2],        -8(%[dst])                   \n\t"
+    "bne        %[src],          %[p_loop1_end],     0b       \n\t"
+    " sw        %[temp3],        -4(%[dst])                   \n\t"
   "3:                                                         \n\t"
-    "beq        %[data],         %[p_loop2_end],     2f       \n\t"
+    "beq        %[src],          %[p_loop2_end],     2f       \n\t"
     " nop                                                     \n\t"
   "1:                                                         \n\t"
-    "lw         %[temp0],        0(%[data])                   \n\t"
-    "addiu      %[data],         %[data],            4        \n\t"
+    "lw         %[temp0],        0(%[src])                    \n\t"
+    "addiu      %[src],          %[src],             4        \n\t"
+    "addiu      %[dst],          %[dst],             4        \n\t"
     "ext        %[temp4],        %[temp0],           8,    8  \n\t"
     "replv.ph   %[temp4],        %[temp4]                     \n\t"
     "addu.qb    %[temp0],        %[temp0],           %[temp4] \n\t"
-    "bne        %[data],         %[p_loop2_end],     1b       \n\t"
-    " sw        %[temp0],        -4(%[data])                  \n\t"
+    "bne        %[src],          %[p_loop2_end],     1b       \n\t"
+    " sw        %[temp0],        -4(%[dst])                   \n\t"
   "2:                                                         \n\t"
     ".set       pop                                           \n\t"
-    : [data]"+&r"(data), [temp0]"=&r"(temp0), [temp1]"=&r"(temp1),
-      [temp2]"=&r"(temp2), [temp3]"=&r"(temp3), [temp4]"=&r"(temp4),
-      [temp5]"=&r"(temp5), [temp6]"=&r"(temp6), [temp7]"=&r"(temp7)
+    : [dst]"+&r"(dst), [src]"+&r"(src), [temp0]"=&r"(temp0),
+      [temp1]"=&r"(temp1), [temp2]"=&r"(temp2), [temp3]"=&r"(temp3),
+      [temp4]"=&r"(temp4), [temp5]"=&r"(temp5), [temp6]"=&r"(temp6),
+      [temp7]"=&r"(temp7)
     : [p_loop1_end]"r"(p_loop1_end), [p_loop2_end]"r"(p_loop2_end)
     : "memory"
   );
 }
 
-static void TransformColorInverse(const VP8LMultipliers* const m,
-                                  uint32_t* data, int num_pixels) {
+static void TransformColorInverse_MIPSdspR2(const VP8LMultipliers* const m,
+                                            const uint32_t* src, int num_pixels,
+                                            uint32_t* dst) {
   int temp0, temp1, temp2, temp3, temp4, temp5;
   uint32_t argb, argb1, new_red;
   const uint32_t G_to_R = m->green_to_red_;
   const uint32_t G_to_B = m->green_to_blue_;
   const uint32_t R_to_B = m->red_to_blue_;
-  uint32_t* const p_loop_end = data + (num_pixels & ~1);
+  const uint32_t* const p_loop_end = src + (num_pixels & ~1);
   __asm__ volatile (
     ".set            push                                    \n\t"
     ".set            noreorder                               \n\t"
-    "beq             %[data],      %[p_loop_end],  1f        \n\t"
+    "beq             %[src],       %[p_loop_end],  1f        \n\t"
     " nop                                                    \n\t"
     "replv.ph        %[temp0],     %[G_to_R]                 \n\t"
     "replv.ph        %[temp1],     %[G_to_B]                 \n\t"
@@ -303,9 +313,12 @@ static void TransformColorInverse(const VP8LMultipliers* const m,
     "shra.ph         %[temp1],     %[temp1],       8         \n\t"
     "shra.ph         %[temp2],     %[temp2],       8         \n\t"
   "0:                                                        \n\t"
-    "lw              %[argb],      0(%[data])                \n\t"
-    "lw              %[argb1],     4(%[data])                \n\t"
-    "addiu           %[data],      %[data],        8         \n\t"
+    "lw              %[argb],      0(%[src])                 \n\t"
+    "lw              %[argb1],     4(%[src])                 \n\t"
+    "sw              %[argb],      0(%[dst])                 \n\t"
+    "sw              %[argb1],     4(%[dst])                 \n\t"
+    "addiu           %[src],       %[src],         8         \n\t"
+    "addiu           %[dst],       %[dst],         8         \n\t"
     "precrq.qb.ph    %[temp3],     %[argb],        %[argb1]  \n\t"
     "preceu.ph.qbra  %[temp3],     %[temp3]                  \n\t"
     "shll.ph         %[temp3],     %[temp3],       8         \n\t"
@@ -322,33 +335,33 @@ static void TransformColorInverse(const VP8LMultipliers* const m,
     "shll.ph         %[temp4],     %[temp5],       8         \n\t"
     "shra.ph         %[temp4],     %[temp4],       8         \n\t"
     "mul.ph          %[temp4],     %[temp4],       %[temp2]  \n\t"
-    "sb              %[temp5],     -2(%[data])               \n\t"
+    "sb              %[temp5],     -2(%[dst])                \n\t"
     "sra             %[temp5],     %[temp5],       16        \n\t"
     "shra.ph         %[temp4],     %[temp4],       5         \n\t"
     "addu.ph         %[argb1],     %[argb1],       %[temp4]  \n\t"
     "preceu.ph.qbra  %[temp3],     %[argb1]                  \n\t"
-    "sb              %[temp5],     -6(%[data])               \n\t"
-    "sb              %[temp3],     -4(%[data])               \n\t"
+    "sb              %[temp5],     -6(%[dst])                \n\t"
+    "sb              %[temp3],     -4(%[dst])                \n\t"
     "sra             %[temp3],     %[temp3],       16        \n\t"
-    "bne             %[data],      %[p_loop_end],  0b        \n\t"
-    " sb             %[temp3],     -8(%[data])               \n\t"
+    "bne             %[src],       %[p_loop_end],  0b        \n\t"
+    " sb             %[temp3],     -8(%[dst])                \n\t"
   "1:                                                        \n\t"
     ".set            pop                                     \n\t"
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
       [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
       [new_red]"=&r"(new_red), [argb]"=&r"(argb),
-      [argb1]"=&r"(argb1), [data]"+&r"(data)
+      [argb1]"=&r"(argb1), [dst]"+&r"(dst), [src]"+&r"(src)
     : [G_to_R]"r"(G_to_R), [R_to_B]"r"(R_to_B),
       [G_to_B]"r"(G_to_B), [p_loop_end]"r"(p_loop_end)
     : "memory", "hi", "lo"
   );
 
   // Fall-back to C-version for left-overs.
-  if (num_pixels & 1) VP8LTransformColorInverse_C(m, data, 1);
+  if (num_pixels & 1) VP8LTransformColorInverse_C(m, src, 1, dst);
 }
 
-static void ConvertBGRAToRGB(const uint32_t* src,
-                             int num_pixels, uint8_t* dst) {
+static void ConvertBGRAToRGB_MIPSdspR2(const uint32_t* src,
+                                       int num_pixels, uint8_t* dst) {
   int temp0, temp1, temp2, temp3;
   const uint32_t* const p_loop1_end = src + (num_pixels & ~3);
   const uint32_t* const p_loop2_end = src + num_pixels;
@@ -399,8 +412,8 @@ static void ConvertBGRAToRGB(const uint32_t* src,
   );
 }
 
-static void ConvertBGRAToRGBA(const uint32_t* src,
-                              int num_pixels, uint8_t* dst) {
+static void ConvertBGRAToRGBA_MIPSdspR2(const uint32_t* src,
+                                        int num_pixels, uint8_t* dst) {
   int temp0, temp1, temp2, temp3;
   const uint32_t* const p_loop1_end = src + (num_pixels & ~3);
   const uint32_t* const p_loop2_end = src + num_pixels;
@@ -449,8 +462,8 @@ static void ConvertBGRAToRGBA(const uint32_t* src,
   );
 }
 
-static void ConvertBGRAToRGBA4444(const uint32_t* src,
-                                  int num_pixels, uint8_t* dst) {
+static void ConvertBGRAToRGBA4444_MIPSdspR2(const uint32_t* src,
+                                            int num_pixels, uint8_t* dst) {
   int temp0, temp1, temp2, temp3, temp4, temp5;
   const uint32_t* const p_loop1_end = src + (num_pixels & ~3);
   const uint32_t* const p_loop2_end = src + num_pixels;
@@ -483,7 +496,7 @@ static void ConvertBGRAToRGBA4444(const uint32_t* src,
     "ins            %[temp3],    %[temp5],          16,   4    \n\t"
     "addiu          %[src],      %[src],            16         \n\t"
     "precr.qb.ph    %[temp3],    %[temp3],          %[temp2]   \n\t"
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     "usw            %[temp1],    0(%[dst])                     \n\t"
     "usw            %[temp3],    4(%[dst])                     \n\t"
 #else
@@ -505,7 +518,7 @@ static void ConvertBGRAToRGBA4444(const uint32_t* src,
     "ins            %[temp0],    %[temp5],          16,   4    \n\t"
     "addiu          %[src],      %[src],            4          \n\t"
     "precr.qb.ph    %[temp0],    %[temp0],          %[temp0]   \n\t"
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     "ush            %[temp0],    0(%[dst])                     \n\t"
 #else
     "wsbh           %[temp0],    %[temp0]                      \n\t"
@@ -523,8 +536,8 @@ static void ConvertBGRAToRGBA4444(const uint32_t* src,
   );
 }
 
-static void ConvertBGRAToRGB565(const uint32_t* src,
-                                int num_pixels, uint8_t* dst) {
+static void ConvertBGRAToRGB565_MIPSdspR2(const uint32_t* src,
+                                          int num_pixels, uint8_t* dst) {
   int temp0, temp1, temp2, temp3, temp4, temp5;
   const uint32_t* const p_loop1_end = src + (num_pixels & ~3);
   const uint32_t* const p_loop2_end = src + num_pixels;
@@ -561,7 +574,7 @@ static void ConvertBGRAToRGB565(const uint32_t* src,
     "ins            %[temp2],    %[temp3],          0,    5    \n\t"
     "addiu          %[src],      %[src],            16         \n\t"
     "append         %[temp2],    %[temp1],          16         \n\t"
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     "usw            %[temp0],    0(%[dst])                     \n\t"
     "usw            %[temp2],    4(%[dst])                     \n\t"
 #else
@@ -583,7 +596,7 @@ static void ConvertBGRAToRGB565(const uint32_t* src,
     "ins            %[temp4],    %[temp5],          0,    11   \n\t"
     "addiu          %[src],      %[src],            4          \n\t"
     "ins            %[temp4],    %[temp0],          0,    5    \n\t"
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     "ush            %[temp4],    0(%[dst])                     \n\t"
 #else
     "wsbh           %[temp4],    %[temp4]                      \n\t"
@@ -601,8 +614,8 @@ static void ConvertBGRAToRGB565(const uint32_t* src,
   );
 }
 
-static void ConvertBGRAToBGR(const uint32_t* src,
-                             int num_pixels, uint8_t* dst) {
+static void ConvertBGRAToBGR_MIPSdspR2(const uint32_t* src,
+                                       int num_pixels, uint8_t* dst) {
   int temp0, temp1, temp2, temp3;
   const uint32_t* const p_loop1_end = src + (num_pixels & ~3);
   const uint32_t* const p_loop2_end = src + num_pixels;
@@ -653,24 +666,27 @@ static void ConvertBGRAToBGR(const uint32_t* src,
 extern void VP8LDspInitMIPSdspR2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitMIPSdspR2(void) {
-  VP8LMapColor32b = MapARGB;
-  VP8LMapColor8b = MapAlpha;
-  VP8LPredictors[5] = Predictor5;
-  VP8LPredictors[6] = Predictor6;
-  VP8LPredictors[7] = Predictor7;
-  VP8LPredictors[8] = Predictor8;
-  VP8LPredictors[9] = Predictor9;
-  VP8LPredictors[10] = Predictor10;
-  VP8LPredictors[11] = Predictor11;
-  VP8LPredictors[12] = Predictor12;
-  VP8LPredictors[13] = Predictor13;
-  VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
-  VP8LTransformColorInverse = TransformColorInverse;
-  VP8LConvertBGRAToRGB = ConvertBGRAToRGB;
-  VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA;
-  VP8LConvertBGRAToRGBA4444 = ConvertBGRAToRGBA4444;
-  VP8LConvertBGRAToRGB565 = ConvertBGRAToRGB565;
-  VP8LConvertBGRAToBGR = ConvertBGRAToBGR;
+  VP8LMapColor32b = MapARGB_MIPSdspR2;
+  VP8LMapColor8b = MapAlpha_MIPSdspR2;
+
+  VP8LPredictors[5] = Predictor5_MIPSdspR2;
+  VP8LPredictors[6] = Predictor6_MIPSdspR2;
+  VP8LPredictors[7] = Predictor7_MIPSdspR2;
+  VP8LPredictors[8] = Predictor8_MIPSdspR2;
+  VP8LPredictors[9] = Predictor9_MIPSdspR2;
+  VP8LPredictors[10] = Predictor10_MIPSdspR2;
+  VP8LPredictors[11] = Predictor11_MIPSdspR2;
+  VP8LPredictors[12] = Predictor12_MIPSdspR2;
+  VP8LPredictors[13] = Predictor13_MIPSdspR2;
+
+  VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed_MIPSdspR2;
+  VP8LTransformColorInverse = TransformColorInverse_MIPSdspR2;
+
+  VP8LConvertBGRAToRGB = ConvertBGRAToRGB_MIPSdspR2;
+  VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA_MIPSdspR2;
+  VP8LConvertBGRAToRGBA4444 = ConvertBGRAToRGBA4444_MIPSdspR2;
+  VP8LConvertBGRAToRGB565 = ConvertBGRAToRGB565_MIPSdspR2;
+  VP8LConvertBGRAToBGR = ConvertBGRAToBGR_MIPSdspR2;
 }
 
 #else  // !WEBP_USE_MIPS_DSP_R2

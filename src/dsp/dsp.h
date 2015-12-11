@@ -14,8 +14,11 @@
 #ifndef WEBP_DSP_DSP_H_
 #define WEBP_DSP_DSP_H_
 
-#include "../webp/types.h"
-#include "../utils/utils.h"
+#ifdef HAVE_CONFIG_H
+#include "src/webp/config.h"
+#endif
+
+#include "src/webp/types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,9 +38,21 @@ extern "C" {
 # define LOCAL_GCC_PREREQ(maj, min) 0
 #endif
 
+#if defined(__clang__)
+# define LOCAL_CLANG_VERSION ((__clang_major__ << 8) | __clang_minor__)
+# define LOCAL_CLANG_PREREQ(maj, min) \
+    (LOCAL_CLANG_VERSION >= (((maj) << 8) | (min)))
+#else
+# define LOCAL_CLANG_VERSION 0
+# define LOCAL_CLANG_PREREQ(maj, min) 0
+#endif
+
 #ifndef __has_builtin
 # define __has_builtin(x) 0
 #endif
+
+// for now, none of the optimizations below are available in emscripten
+#if !defined(EMSCRIPTEN)
 
 #if defined(_MSC_VER) && _MSC_VER > 1310 && \
     (defined(_M_X64) || defined(_M_IX86))
@@ -65,14 +80,17 @@ extern "C" {
 #define WEBP_USE_AVX2
 #endif
 
-#if defined(__ANDROID__) && defined(__ARM_ARCH_7A__)
-#define WEBP_ANDROID_NEON  // Android targets that might support NEON
-#endif
-
 // The intrinsics currently cause compiler errors with arm-nacl-gcc and the
 // inline assembly would need to be modified for use with Native Client.
-#if (defined(__ARM_NEON__) || defined(WEBP_ANDROID_NEON) || \
-     defined(__aarch64__)) && !defined(__native_client__)
+#if (defined(__ARM_NEON__) || \
+     defined(__aarch64__) || defined(WEBP_HAVE_NEON)) && \
+    !defined(__native_client__)
+#define WEBP_USE_NEON
+#endif
+
+#if !defined(WEBP_USE_NEON) && defined(__ANDROID__) && \
+    defined(__ARM_ARCH_7A__) && defined(HAVE_CPU_FEATURES_H)
+#define WEBP_ANDROID_NEON  // Android targets that may have NEON
 #define WEBP_USE_NEON
 #endif
 
@@ -86,11 +104,17 @@ extern "C" {
 #define WEBP_USE_MIPS32
 #if (__mips_isa_rev >= 2)
 #define WEBP_USE_MIPS32_R2
-#if defined(__mips_dspr2) || (__mips_dsp_rev >= 2)
+#if defined(__mips_dspr2) || (defined(__mips_dsp_rev) && __mips_dsp_rev >= 2)
 #define WEBP_USE_MIPS_DSP_R2
 #endif
 #endif
 #endif
+
+#if defined(__mips_msa) && defined(__mips_isa_rev) && (__mips_isa_rev >= 5)
+#define WEBP_USE_MSA
+#endif
+
+#endif  /* EMSCRIPTEN */
 
 // This macro prevents thread_sanitizer from reporting known concurrent writes.
 #define WEBP_TSAN_IGNORE_FUNCTION
@@ -101,19 +125,46 @@ extern "C" {
 #endif
 #endif
 
+#define WEBP_UBSAN_IGNORE_UNDEF
+#define WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW
+#if defined(__clang__) && defined(__has_attribute)
+#if __has_attribute(no_sanitize)
+// This macro prevents the undefined behavior sanitizer from reporting
+// failures. This is only meant to silence unaligned loads on platforms that
+// are known to support them.
+#undef WEBP_UBSAN_IGNORE_UNDEF
+#define WEBP_UBSAN_IGNORE_UNDEF \
+  __attribute__((no_sanitize("undefined")))
+
+// This macro prevents the undefined behavior sanitizer from reporting
+// failures related to unsigned integer overflows. This is only meant to
+// silence cases where this well defined behavior is expected.
+#undef WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW
+#define WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW \
+  __attribute__((no_sanitize("unsigned-integer-overflow")))
+#endif
+#endif
+
+// Regularize the definition of WEBP_SWAP_16BIT_CSP (backward compatibility)
+#if !defined(WEBP_SWAP_16BIT_CSP)
+#define WEBP_SWAP_16BIT_CSP 0
+#endif
+
 typedef enum {
   kSSE2,
   kSSE3,
+  kSlowSSSE3,  // special feature for slow SSSE3 architectures
   kSSE4_1,
   kAVX,
   kAVX2,
   kNEON,
   kMIPS32,
-  kMIPSdspR2
+  kMIPSdspR2,
+  kMSA
 } CPUFeature;
 // returns true if the CPU supports the feature.
 typedef int (*VP8CPUInfo)(CPUFeature feature);
-WEBP_EXTERN(VP8CPUInfo) VP8GetCPUInfo;
+WEBP_EXTERN VP8CPUInfo VP8GetCPUInfo;
 
 //------------------------------------------------------------------------------
 // Init stub generator
@@ -151,7 +202,14 @@ typedef int (*VP8Metric)(const uint8_t* pix, const uint8_t* ref);
 extern VP8Metric VP8SSE16x16, VP8SSE16x8, VP8SSE8x8, VP8SSE4x4;
 typedef int (*VP8WMetric)(const uint8_t* pix, const uint8_t* ref,
                           const uint16_t* const weights);
+// The weights for VP8TDisto4x4 and VP8TDisto16x16 contain a row-major
+// 4 by 4 symmetric matrix.
 extern VP8WMetric VP8TDisto4x4, VP8TDisto16x16;
+
+// Compute the average (DC) of four 4x4 blocks.
+// Each sub-4x4 block #i sum is stored in dc[i].
+typedef void (*VP8MeanMetric)(const uint8_t* ref, uint32_t dc[4]);
+extern VP8MeanMetric VP8Mean16x4;
 
 typedef void (*VP8BlockCopy)(const uint8_t* src, uint8_t* dst);
 extern VP8BlockCopy VP8Copy4x4;
@@ -214,6 +272,42 @@ extern VP8GetResidualCostFunc VP8GetResidualCost;
 void VP8EncDspCostInit(void);
 
 //------------------------------------------------------------------------------
+// SSIM / PSNR utils
+
+// struct for accumulating statistical moments
+typedef struct {
+  uint32_t w;              // sum(w_i) : sum of weights
+  uint32_t xm, ym;         // sum(w_i * x_i), sum(w_i * y_i)
+  uint32_t xxm, xym, yym;  // sum(w_i * x_i * x_i), etc.
+} VP8DistoStats;
+
+// Compute the final SSIM value
+// The non-clipped version assumes stats->w = (2 * VP8_SSIM_KERNEL + 1)^2.
+double VP8SSIMFromStats(const VP8DistoStats* const stats);
+double VP8SSIMFromStatsClipped(const VP8DistoStats* const stats);
+
+#define VP8_SSIM_KERNEL 3   // total size of the kernel: 2 * VP8_SSIM_KERNEL + 1
+typedef double (*VP8SSIMGetClippedFunc)(const uint8_t* src1, int stride1,
+                                        const uint8_t* src2, int stride2,
+                                        int xo, int yo,  // center position
+                                        int W, int H);   // plane dimension
+
+// This version is called with the guarantee that you can load 8 bytes and
+// 8 rows at offset src1 and src2
+typedef double (*VP8SSIMGetFunc)(const uint8_t* src1, int stride1,
+                                 const uint8_t* src2, int stride2);
+
+extern VP8SSIMGetFunc VP8SSIMGet;         // unclipped / unchecked
+extern VP8SSIMGetClippedFunc VP8SSIMGetClipped;   // with clipping
+
+typedef uint32_t (*VP8AccumulateSSEFunc)(const uint8_t* src1,
+                                         const uint8_t* src2, int len);
+extern VP8AccumulateSSEFunc VP8AccumulateSSE;
+
+// must be called before using any of the above directly
+void VP8SSIMDspInit(void);
+
+//------------------------------------------------------------------------------
 // Decoding
 
 typedef void (*VP8DecIdct)(const int16_t* coeffs, uint8_t* dst);
@@ -264,6 +358,15 @@ extern VP8LumaFilterFunc VP8VFilter16i;   // filtering 3 inner edges altogether
 extern VP8LumaFilterFunc VP8HFilter16i;
 extern VP8ChromaFilterFunc VP8VFilter8i;  // filtering u and v altogether
 extern VP8ChromaFilterFunc VP8HFilter8i;
+
+// Dithering. Combines dithering values (centered around 128) with dst[],
+// according to: dst[] = clip(dst[] + (((dither[]-128) + 8) >> 4)
+#define VP8_DITHER_DESCALE 4
+#define VP8_DITHER_DESCALE_ROUNDER (1 << (VP8_DITHER_DESCALE - 1))
+#define VP8_DITHER_AMP_BITS 7
+#define VP8_DITHER_AMP_CENTER (1 << VP8_DITHER_AMP_BITS)
+extern void (*VP8DitherCombine8x8)(const uint8_t* dither, uint8_t* dst,
+                                   int dst_stride);
 
 // must be called before anything using the above
 void VP8DspInit(void);
@@ -346,6 +449,15 @@ extern void WebPConvertARGBToUV_C(const uint32_t* argb, uint8_t* u, uint8_t* v,
 extern void WebPConvertRGBA32ToUV_C(const uint16_t* rgb,
                                     uint8_t* u, uint8_t* v, int width);
 
+// utilities for accurate RGB->YUV conversion
+extern uint64_t (*WebPSharpYUVUpdateY)(const uint16_t* src, const uint16_t* ref,
+                                       uint16_t* dst, int len);
+extern void (*WebPSharpYUVUpdateRGB)(const int16_t* src, const int16_t* ref,
+                                     int16_t* dst, int len);
+extern void (*WebPSharpYUVFilterRow)(const int16_t* A, const int16_t* B,
+                                     int len,
+                                     const uint16_t* best_y, uint16_t* out);
+
 // Must be called before using the above.
 void WebPInitConvertARGBToYUV(void);
 
@@ -371,12 +483,12 @@ extern WebPRescalerExportRowFunc WebPRescalerExportRowExpand;
 extern WebPRescalerExportRowFunc WebPRescalerExportRowShrink;
 
 // Plain-C implementation, as fall-back.
-extern void WebPRescalerImportRowExpandC(struct WebPRescaler* const wrk,
-                                         const uint8_t* src);
-extern void WebPRescalerImportRowShrinkC(struct WebPRescaler* const wrk,
-                                         const uint8_t* src);
-extern void WebPRescalerExportRowExpandC(struct WebPRescaler* const wrk);
-extern void WebPRescalerExportRowShrinkC(struct WebPRescaler* const wrk);
+extern void WebPRescalerImportRowExpand_C(struct WebPRescaler* const wrk,
+                                          const uint8_t* src);
+extern void WebPRescalerImportRowShrink_C(struct WebPRescaler* const wrk,
+                                          const uint8_t* src);
+extern void WebPRescalerExportRowExpand_C(struct WebPRescaler* const wrk);
+extern void WebPRescalerExportRowShrink_C(struct WebPRescaler* const wrk);
 
 // Main entry calls:
 extern void WebPRescalerImportRow(struct WebPRescaler* const wrk,
@@ -418,6 +530,10 @@ extern int (*WebPExtractAlpha)(const uint8_t* argb, int argb_stride,
                                int width, int height,
                                uint8_t* alpha, int alpha_stride);
 
+// Extract the green values from 32b values in argb[] and pack them into alpha[]
+// (this is the opposite of WebPDispatchAlphaToGreen).
+extern void (*WebPExtractGreen)(const uint32_t* argb, uint8_t* alpha, int size);
+
 // Pre-Multiply operation transforms x into x * A / 255  (where x=Y,R,G or B).
 // Un-Multiply operation transforms x into x * 255 / A.
 
@@ -438,24 +554,16 @@ void WebPMultRows(uint8_t* ptr, int stride,
                   int width, int num_rows, int inverse);
 
 // Plain-C versions, used as fallback by some implementations.
-void WebPMultRowC(uint8_t* const ptr, const uint8_t* const alpha,
-                  int width, int inverse);
-void WebPMultARGBRowC(uint32_t* const ptr, int width, int inverse);
+void WebPMultRow_C(uint8_t* const ptr, const uint8_t* const alpha,
+                   int width, int inverse);
+void WebPMultARGBRow_C(uint32_t* const ptr, int width, int inverse);
+
+// RGB packing function. 'step' can be 3 or 4. r/g/b input is rgb or bgr order.
+extern void (*WebPPackRGB)(const uint8_t* r, const uint8_t* g, const uint8_t* b,
+                           int len, int step, uint32_t* out);
 
 // To be called first before using the above.
 void WebPInitAlphaProcessing(void);
-
-// ARGB packing function: a/r/g/b input is rgba or bgra order.
-extern void (*VP8PackARGB)(const uint8_t* a, const uint8_t* r,
-                           const uint8_t* g, const uint8_t* b, int len,
-                           uint32_t* out);
-
-// RGB packing function. 'step' can be 3 or 4. r/g/b input is rgb or bgr order.
-extern void (*VP8PackRGB)(const uint8_t* r, const uint8_t* g, const uint8_t* b,
-                          int len, int step, uint32_t* out);
-
-// To be called first before using the above.
-void VP8EncDspARGBInit(void);
 
 //------------------------------------------------------------------------------
 // Filter functions
@@ -472,8 +580,10 @@ typedef enum {     // Filter types.
 
 typedef void (*WebPFilterFunc)(const uint8_t* in, int width, int height,
                                int stride, uint8_t* out);
-typedef void (*WebPUnfilterFunc)(int width, int height, int stride,
-                                 int row, int num_rows, uint8_t* data);
+// In-place un-filtering.
+// Warning! 'prev_line' pointer can be equal to 'cur_line' or 'preds'.
+typedef void (*WebPUnfilterFunc)(const uint8_t* prev_line, const uint8_t* preds,
+                                 uint8_t* cur_line, int width);
 
 // Filter the given data using the given predictor.
 // 'in' corresponds to a 2-dimensional pixel array of size (stride * height)

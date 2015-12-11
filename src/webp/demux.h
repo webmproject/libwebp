@@ -55,7 +55,7 @@
 extern "C" {
 #endif
 
-#define WEBP_DEMUX_ABI_VERSION 0x0105    // MAJOR(8b) + MINOR(8b)
+#define WEBP_DEMUX_ABI_VERSION 0x0107    // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -71,7 +71,7 @@ typedef struct WebPAnimDecoderOptions WebPAnimDecoderOptions;
 
 // Returns the version number of the demux library, packed in hexadecimal using
 // 8bits for each of major/minor/revision. E.g: v2.5.7 is 0x020507.
-WEBP_EXTERN(int) WebPGetDemuxVersion(void);
+WEBP_EXTERN int WebPGetDemuxVersion(void);
 
 //------------------------------------------------------------------------------
 // Life of a Demux object
@@ -85,10 +85,11 @@ typedef enum WebPDemuxState {
 } WebPDemuxState;
 
 // Internal, version-checked, entry point
-WEBP_EXTERN(WebPDemuxer*) WebPDemuxInternal(
+WEBP_EXTERN WebPDemuxer* WebPDemuxInternal(
     const WebPData*, int, WebPDemuxState*, int);
 
-// Parses the full WebP file given by 'data'.
+// Parses the full WebP file given by 'data'. For single images the WebP file
+// header alone or the file header and the chunk header may be absent.
 // Returns a WebPDemuxer object on successful parse, NULL otherwise.
 static WEBP_INLINE WebPDemuxer* WebPDemux(const WebPData* data) {
   return WebPDemuxInternal(data, 0, NULL, WEBP_DEMUX_ABI_VERSION);
@@ -108,7 +109,7 @@ static WEBP_INLINE WebPDemuxer* WebPDemuxPartial(
 }
 
 // Frees memory associated with 'dmux'.
-WEBP_EXTERN(void) WebPDemuxDelete(WebPDemuxer* dmux);
+WEBP_EXTERN void WebPDemuxDelete(WebPDemuxer* dmux);
 
 //------------------------------------------------------------------------------
 // Data/information extraction.
@@ -128,7 +129,7 @@ typedef enum WebPFormatFeature {
 // Get the 'feature' value from the 'dmux'.
 // NOTE: values are only valid if WebPDemux() was used or WebPDemuxPartial()
 // returned a state > WEBP_DEMUX_PARSING_HEADER.
-WEBP_EXTERN(uint32_t) WebPDemuxGetI(
+WEBP_EXTERN uint32_t WebPDemuxGetI(
     const WebPDemuxer* dmux, WebPFormatFeature feature);
 
 //------------------------------------------------------------------------------
@@ -137,17 +138,15 @@ WEBP_EXTERN(uint32_t) WebPDemuxGetI(
 struct WebPIterator {
   int frame_num;
   int num_frames;          // equivalent to WEBP_FF_FRAME_COUNT.
-  int fragment_num;
-  int num_fragments;
   int x_offset, y_offset;  // offset relative to the canvas.
-  int width, height;       // dimensions of this frame or fragment.
+  int width, height;       // dimensions of this frame.
   int duration;            // display duration in milliseconds.
   WebPMuxAnimDispose dispose_method;  // dispose method for the frame.
   int complete;   // true if 'fragment' contains a full frame. partial images
                   // may still be decoded with the WebP incremental decoder.
-  WebPData fragment;  // The frame or fragment given by 'frame_num' and
-                      // 'fragment_num'.
-  int has_alpha;      // True if the frame or fragment contains transparency.
+  WebPData fragment;  // The frame given by 'frame_num'. Note for historical
+                      // reasons this is called a fragment.
+  int has_alpha;      // True if the frame contains transparency.
   WebPMuxAnimBlend blend_method;  // Blend operation for the frame.
 
   uint32_t pad[2];         // padding for later use.
@@ -155,30 +154,25 @@ struct WebPIterator {
 };
 
 // Retrieves frame 'frame_number' from 'dmux'.
-// 'iter->fragment' points to the first fragment on return from this function.
-// Individual fragments may be extracted using WebPDemuxSelectFragment().
+// 'iter->fragment' points to the frame on return from this function.
 // Setting 'frame_number' equal to 0 will return the last frame of the image.
 // Returns false if 'dmux' is NULL or frame 'frame_number' is not present.
 // Call WebPDemuxReleaseIterator() when use of the iterator is complete.
 // NOTE: 'dmux' must persist for the lifetime of 'iter'.
-WEBP_EXTERN(int) WebPDemuxGetFrame(
+WEBP_EXTERN int WebPDemuxGetFrame(
     const WebPDemuxer* dmux, int frame_number, WebPIterator* iter);
 
 // Sets 'iter->fragment' to point to the next ('iter->frame_num' + 1) or
 // previous ('iter->frame_num' - 1) frame. These functions do not loop.
 // Returns true on success, false otherwise.
-WEBP_EXTERN(int) WebPDemuxNextFrame(WebPIterator* iter);
-WEBP_EXTERN(int) WebPDemuxPrevFrame(WebPIterator* iter);
-
-// Sets 'iter->fragment' to reflect fragment number 'fragment_num'.
-// Returns true if fragment 'fragment_num' is present, false otherwise.
-WEBP_EXTERN(int) WebPDemuxSelectFragment(WebPIterator* iter, int fragment_num);
+WEBP_EXTERN int WebPDemuxNextFrame(WebPIterator* iter);
+WEBP_EXTERN int WebPDemuxPrevFrame(WebPIterator* iter);
 
 // Releases any memory associated with 'iter'.
 // Must be called before any subsequent calls to WebPDemuxGetChunk() on the same
 // iter. Also, must be called before destroying the associated WebPDemuxer with
 // WebPDemuxDelete().
-WEBP_EXTERN(void) WebPDemuxReleaseIterator(WebPIterator* iter);
+WEBP_EXTERN void WebPDemuxReleaseIterator(WebPIterator* iter);
 
 //------------------------------------------------------------------------------
 // Chunk iteration.
@@ -203,20 +197,20 @@ struct WebPChunkIterator {
 // payloads are accessed through WebPDemuxGetFrame() and related functions.
 // Call WebPDemuxReleaseChunkIterator() when use of the iterator is complete.
 // NOTE: 'dmux' must persist for the lifetime of the iterator.
-WEBP_EXTERN(int) WebPDemuxGetChunk(const WebPDemuxer* dmux,
-                                   const char fourcc[4], int chunk_number,
-                                   WebPChunkIterator* iter);
+WEBP_EXTERN int WebPDemuxGetChunk(const WebPDemuxer* dmux,
+                                  const char fourcc[4], int chunk_number,
+                                  WebPChunkIterator* iter);
 
 // Sets 'iter->chunk' to point to the next ('iter->chunk_num' + 1) or previous
 // ('iter->chunk_num' - 1) chunk. These functions do not loop.
 // Returns true on success, false otherwise.
-WEBP_EXTERN(int) WebPDemuxNextChunk(WebPChunkIterator* iter);
-WEBP_EXTERN(int) WebPDemuxPrevChunk(WebPChunkIterator* iter);
+WEBP_EXTERN int WebPDemuxNextChunk(WebPChunkIterator* iter);
+WEBP_EXTERN int WebPDemuxPrevChunk(WebPChunkIterator* iter);
 
 // Releases any memory associated with 'iter'.
 // Must be called before destroying the associated WebPDemuxer with
 // WebPDemuxDelete().
-WEBP_EXTERN(void) WebPDemuxReleaseChunkIterator(WebPChunkIterator* iter);
+WEBP_EXTERN void WebPDemuxReleaseChunkIterator(WebPChunkIterator* iter);
 
 //------------------------------------------------------------------------------
 // WebPAnimDecoder API
@@ -258,7 +252,7 @@ struct WebPAnimDecoderOptions {
 };
 
 // Internal, version-checked, entry point.
-WEBP_EXTERN(int) WebPAnimDecoderOptionsInitInternal(
+WEBP_EXTERN int WebPAnimDecoderOptionsInitInternal(
     WebPAnimDecoderOptions*, int);
 
 // Should always be called, to initialize a fresh WebPAnimDecoderOptions
@@ -272,7 +266,7 @@ static WEBP_INLINE int WebPAnimDecoderOptionsInit(
 }
 
 // Internal, version-checked, entry point.
-WEBP_EXTERN(WebPAnimDecoder*) WebPAnimDecoderNewInternal(
+WEBP_EXTERN WebPAnimDecoder* WebPAnimDecoderNewInternal(
     const WebPData*, const WebPAnimDecoderOptions*, int);
 
 // Creates and initializes a WebPAnimDecoder object.
@@ -307,8 +301,8 @@ struct WebPAnimInfo {
 //   info - (out) global information fetched from the animation.
 // Returns:
 //   True on success.
-WEBP_EXTERN(int) WebPAnimDecoderGetInfo(const WebPAnimDecoder* dec,
-                                        WebPAnimInfo* info);
+WEBP_EXTERN int WebPAnimDecoderGetInfo(const WebPAnimDecoder* dec,
+                                       WebPAnimInfo* info);
 
 // Fetch the next frame from 'dec' based on options supplied to
 // WebPAnimDecoderNew(). This will be a fully reconstructed canvas of size
@@ -322,8 +316,8 @@ WEBP_EXTERN(int) WebPAnimDecoderGetInfo(const WebPAnimDecoder* dec,
 // Returns:
 //   False if any of the arguments are NULL, or if there is a parsing or
 //   decoding error, or if there are no more frames. Otherwise, returns true.
-WEBP_EXTERN(int) WebPAnimDecoderGetNext(WebPAnimDecoder* dec,
-                                        uint8_t** buf, int* timestamp);
+WEBP_EXTERN int WebPAnimDecoderGetNext(WebPAnimDecoder* dec,
+                                       uint8_t** buf, int* timestamp);
 
 // Check if there are more frames left to decode.
 // Parameters:
@@ -331,7 +325,7 @@ WEBP_EXTERN(int) WebPAnimDecoderGetNext(WebPAnimDecoder* dec,
 // Returns:
 //   True if 'dec' is not NULL and some frames are yet to be decoded.
 //   Otherwise, returns false.
-WEBP_EXTERN(int) WebPAnimDecoderHasMoreFrames(const WebPAnimDecoder* dec);
+WEBP_EXTERN int WebPAnimDecoderHasMoreFrames(const WebPAnimDecoder* dec);
 
 // Resets the WebPAnimDecoder object, so that next call to
 // WebPAnimDecoderGetNext() will restart decoding from 1st frame. This would be
@@ -339,7 +333,7 @@ WEBP_EXTERN(int) WebPAnimDecoderHasMoreFrames(const WebPAnimDecoder* dec);
 // info.loop_count times) without destroying and recreating the 'dec' object.
 // Parameters:
 //   dec - (in/out) decoder instance to be reset
-WEBP_EXTERN(void) WebPAnimDecoderReset(WebPAnimDecoder* dec);
+WEBP_EXTERN void WebPAnimDecoderReset(WebPAnimDecoder* dec);
 
 // Grab the internal demuxer object.
 // Getting the demuxer object can be useful if one wants to use operations only
@@ -349,13 +343,13 @@ WEBP_EXTERN(void) WebPAnimDecoderReset(WebPAnimDecoder* dec);
 //
 // Parameters:
 //   dec - (in) decoder instance from which the demuxer object is to be fetched.
-WEBP_EXTERN(const WebPDemuxer*) WebPAnimDecoderGetDemuxer(
+WEBP_EXTERN const WebPDemuxer* WebPAnimDecoderGetDemuxer(
     const WebPAnimDecoder* dec);
 
 // Deletes the WebPAnimDecoder object.
 // Parameters:
 //   dec - (in/out) decoder instance to be deleted
-WEBP_EXTERN(void) WebPAnimDecoderDelete(WebPAnimDecoder* dec);
+WEBP_EXTERN void WebPAnimDecoderDelete(WebPAnimDecoder* dec);
 
 #ifdef __cplusplus
 }    // extern "C"

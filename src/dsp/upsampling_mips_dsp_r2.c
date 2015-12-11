@@ -14,31 +14,27 @@
 
 #include "./dsp.h"
 
-// Code is disabled for now, in favor of the plain-C version
-// TODO(djordje.pesut): adapt the code to reflect the C-version.
-#if 0 // defined(WEBP_USE_MIPS_DSP_R2)
+#if defined(WEBP_USE_MIPS_DSP_R2)
 
 #include <assert.h>
 #include "./yuv.h"
 
-#if !defined(WEBP_YUV_USE_TABLE)
-
 #define YUV_TO_RGB(Y, U, V, R, G, B) do {                                      \
-    const int t1 = kYScale * Y;                                                \
-    const int t2 = kVToG * V;                                                  \
-    R = kVToR * V;                                                             \
-    G = kUToG * U;                                                             \
-    B = kUToB * U;                                                             \
+    const int t1 = MultHi(Y, 19077);                                           \
+    const int t2 = MultHi(V, 13320);                                           \
+    R = MultHi(V, 26149);                                                      \
+    G = MultHi(U, 6419);                                                       \
+    B = MultHi(U, 33050);                                                      \
     R = t1 + R;                                                                \
     G = t1 - G;                                                                \
     B = t1 + B;                                                                \
-    R = R + kRCst;                                                             \
-    G = G - t2 + kGCst;                                                        \
-    B = B + kBCst;                                                             \
+    R = R - 14234;                                                             \
+    G = G - t2 + 8708;                                                         \
+    B = B - 17685;                                                             \
     __asm__ volatile (                                                         \
-      "shll_s.w         %[" #R "],      %[" #R "],        9          \n\t"     \
-      "shll_s.w         %[" #G "],      %[" #G "],        9          \n\t"     \
-      "shll_s.w         %[" #B "],      %[" #B "],        9          \n\t"     \
+      "shll_s.w         %[" #R "],      %[" #R "],        17         \n\t"     \
+      "shll_s.w         %[" #G "],      %[" #G "],        17         \n\t"     \
+      "shll_s.w         %[" #B "],      %[" #B "],        17         \n\t"     \
       "precrqu_s.qb.ph  %[" #R "],      %[" #R "],        $zero      \n\t"     \
       "precrqu_s.qb.ph  %[" #G "],      %[" #G "],        $zero      \n\t"     \
       "precrqu_s.qb.ph  %[" #B "],      %[" #B "],        $zero      \n\t"     \
@@ -70,7 +66,7 @@ static WEBP_INLINE void YuvToRgb565(int y, int u, int v, uint8_t* const rgb) {
   {
     const int rg = (r & 0xf8) | (g >> 5);
     const int gb = ((g << 3) & 0xe0) | (b >> 3);
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     rgb[0] = gb;
     rgb[1] = rg;
 #else
@@ -86,7 +82,7 @@ static WEBP_INLINE void YuvToRgba4444(int y, int u, int v,
   {
     const int rg = (r & 0xf0) | (g >> 4);
     const int ba = (b & 0xf0) | 0x0f;     // overwrite the lower 4 bits
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     argb[0] = ba;
     argb[1] = rg;
 #else
@@ -95,7 +91,6 @@ static WEBP_INLINE void YuvToRgba4444(int y, int u, int v,
 #endif
    }
 }
-#endif  // WEBP_YUV_USE_TABLE
 
 //-----------------------------------------------------------------------------
 // Alpha handling variants
@@ -279,6 +274,6 @@ WEBP_DSP_INIT_STUB(WebPInitYUV444ConvertersMIPSdspR2)
 
 #endif  // WEBP_USE_MIPS_DSP_R2
 
-#if 1  // !(defined(FANCY_UPSAMPLING) && defined(WEBP_USE_MIPS_DSP_R2))
+#if !(defined(FANCY_UPSAMPLING) && defined(WEBP_USE_MIPS_DSP_R2))
 WEBP_DSP_INIT_STUB(WebPInitUpsamplersMIPSdspR2)
 #endif
