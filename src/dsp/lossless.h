@@ -199,9 +199,12 @@ static WEBP_INLINE float VP8LFastSLog2(uint32_t v) {
 typedef double (*VP8LCostFunc)(const uint32_t* population, int length);
 typedef double (*VP8LCostCombinedFunc)(const uint32_t* X, const uint32_t* Y,
                                        int length);
+typedef float (*VP8LCombinedShannonEntropyFunc)(const int X[256],
+                                                const int Y[256]);
 
 extern VP8LCostFunc VP8LExtraCost;
 extern VP8LCostCombinedFunc VP8LExtraCostCombined;
+extern VP8LCombinedShannonEntropyFunc VP8LCombinedShannonEntropy;
 
 typedef struct {        // small struct to hold counters
   int counts[2];        // index: 0=zero steak, 1=non-zero streak

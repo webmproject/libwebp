@@ -413,15 +413,15 @@ static float CombinedShannonEntropy(const int X[256], const int Y[256]) {
   int sumX = 0, sumXY = 0;
   for (i = 0; i < 256; ++i) {
     const int x = X[i];
-    const int xy = x + Y[i];
     if (x != 0) {
+      const int xy = x + Y[i];
       sumX += x;
       retval -= VP8LFastSLog2(x);
       sumXY += xy;
       retval -= VP8LFastSLog2(xy);
-    } else if (xy != 0) {
-      sumXY += xy;
-      retval -= VP8LFastSLog2(xy);
+    } else if (Y[i] != 0) {
+      sumXY += Y[i];
+      retval -= VP8LFastSLog2(Y[i]);
     }
   }
   retval += VP8LFastSLog2(sumX) + VP8LFastSLog2(sumXY);
@@ -435,7 +435,7 @@ static float PredictionCostSpatialHistogram(const int accumulated[4][256],
   for (i = 0; i < 4; ++i) {
     const double kExpValue = 0.94;
     retval += PredictionCostSpatial(tile[i], 1, kExpValue);
-    retval += CombinedShannonEntropy(tile[i], accumulated[i]);
+    retval += VP8LCombinedShannonEntropy(tile[i], accumulated[i]);
   }
   return (float)retval;
 }
@@ -894,7 +894,7 @@ static float PredictionCostCrossColor(const int accumulated[256],
   // Favor low entropy, locally and globally.
   // Favor small absolute values for PredictionCostSpatial
   static const double kExpValue = 2.4;
-  return CombinedShannonEntropy(counts, accumulated) +
+  return VP8LCombinedShannonEntropy(counts, accumulated) +
          PredictionCostSpatial(counts, 3, kExpValue);
 }
 
@@ -1269,6 +1269,7 @@ VP8LFastLog2SlowFunc VP8LFastSLog2Slow;
 
 VP8LCostFunc VP8LExtraCost;
 VP8LCostCombinedFunc VP8LExtraCostCombined;
+VP8LCombinedShannonEntropyFunc VP8LCombinedShannonEntropy;
 
 VP8LCostCountFunc VP8LHuffmanCostCount;
 
@@ -1300,6 +1301,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInit(void) {
 
   VP8LExtraCost = ExtraCost;
   VP8LExtraCostCombined = ExtraCostCombined;
+  VP8LCombinedShannonEntropy = CombinedShannonEntropy;
 
   VP8LHuffmanCostCount = HuffmanCostCount;
 
