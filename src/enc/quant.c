@@ -1100,22 +1100,22 @@ static void SimpleQuantize(VP8EncIterator* const it, VP8ModeScore* const rd) {
 }
 
 // Refine intra16/intra4 sub-modes based on distortion only (not rate).
-static void RefineUsingDistortion(VP8EncIterator* const it, int try_both_modes,
+static void RefineUsingDistortion(VP8EncIterator* const it,
+                                  int try_both_modes, int refine_uv_mode,
                                   VP8ModeScore* const rd) {
-
   score_t best_score = MAX_COST;
   score_t score_i4 = (score_t)I4_PENALTY;
   int16_t tmp_levels[16][16];
   uint8_t modes_i4[16];
   int nz = 0;
-    int mode;
+  int mode;
   int is_i16 = try_both_modes || (it->mb_->type_ == 1);
 
   if (is_i16) {   // First, evaluate Intra16 distortion
     int best_mode = -1;
+    const uint8_t* const src = it->yuv_in_ + Y_OFF_ENC;
     for (mode = 0; mode < NUM_PRED_MODES; ++mode) {
       const uint8_t* const ref = it->yuv_p_ + VP8I16ModeOffsets[mode];
-      const uint8_t* const src = it->yuv_in_ + Y_OFF_ENC;
       const score_t score = VP8SSE16x16(src, ref);
       if (score < best_score) {
         best_mode = mode;
@@ -1158,7 +1158,7 @@ static void RefineUsingDistortion(VP8EncIterator* const it, int try_both_modes,
                                 src, tmp_dst, best_i4_mode) << it->i4_;
       }
     } while (VP8IteratorRotateI4(it, it->yuv_out2_ + Y_OFF_ENC));
-    }
+  }
 
   // Final reconstruction, depending on which mode is selected.
   if (!is_i16) {
@@ -1169,8 +1169,24 @@ static void RefineUsingDistortion(VP8EncIterator* const it, int try_both_modes,
   } else {
     nz = ReconstructIntra16(it, rd, it->yuv_out_ + Y_OFF_ENC, it->preds_[0]);
   }
+
   // ... and UV!
+  if (refine_uv_mode) {
+    int best_mode = -1;
+    score_t best_uv_score = MAX_COST;
+    const uint8_t* const src = it->yuv_in_ + U_OFF_ENC;
+    for (mode = 0; mode < NUM_PRED_MODES; ++mode) {
+      const uint8_t* const ref = it->yuv_p_ + VP8UVModeOffsets[mode];
+      const score_t score = VP8SSE16x8(src, ref);
+      if (score < best_uv_score) {
+        best_mode = mode;
+        best_uv_score = score;
+      }
+    }
+    VP8SetIntraUVMode(it, best_mode);
+  }
   nz |= ReconstructUV(it, rd, it->yuv_out_ + U_OFF_ENC, it->mb_->uv_mode_);
+
   rd->nz = nz;
   rd->score = best_score;
 }
@@ -1206,7 +1222,7 @@ int VP8Decimate(VP8EncIterator* const it, VP8ModeScore* const rd,
     // For method >= 2, pick the best intra4/intra16 based on SSE (~tad slower).
     // For method <= 1, we don't re-examine the decision but just go ahead with
     // quantization/reconstruction.
-    RefineUsingDistortion(it, (method >= 2), rd);
+    RefineUsingDistortion(it, (method >= 2), (method >= 1), rd);
   }
   is_skipped = (rd->nz == 0);
   VP8SetSkip(it, is_skipped);
