@@ -125,18 +125,20 @@ static WEBP_INLINE void PackAndStore3(const __m128i* const R,
 }
 
 // Converts 32 samples in src[3][32] to interleaved RGB24 in dst[]
+#define MK_UINT32(A, B, C, D) \
+    ((A) <<  0) | ((B) <<  8) | ((C) << 16) | ((uint32_t)(D) << 24)
 static WEBP_INLINE void PlanarTo24b(const uint8_t* src, uint8_t* dst) {
 #if 1
   // This code is faster than the version below (left there for reference).
   // It's also endian-dependent but we're only targeting x86.
   const uint8_t* const end = src + 32;
   for (; src < end; src += 4, dst += 12) {
-    const uint32_t A = (src[0 + 0 * 32] <<  0) | (src[0 + 1 * 32] <<  8)
-                     | (src[0 + 2 * 32] << 16) | (src[1 + 0 * 32] << 24);
-    const uint32_t B = (src[1 + 1 * 32] <<  0) | (src[1 + 2 * 32] <<  8)
-                     | (src[2 + 0 * 32] << 16) | (src[2 + 1 * 32] << 24);
-    const uint32_t C = (src[2 + 2 * 32] <<  0) | (src[3 + 0 * 32] <<  8)
-                     | (src[3 + 1 * 32] << 16) | (src[3 + 2 * 32] << 24);
+    const uint32_t A = MK_UINT32(src[0 + 0 * 32], src[0 + 1 * 32],
+                                 src[0 + 2 * 32], src[1 + 0 * 32]);
+    const uint32_t B = MK_UINT32(src[1 + 1 * 32], src[1 + 2 * 32],
+                                 src[2 + 0 * 32], src[2 + 1 * 32]);
+    const uint32_t C = MK_UINT32(src[2 + 2 * 32], src[3 + 0 * 32],
+                                 src[3 + 1 * 32], src[3 + 2 * 32]);
     *(uint32_t*)(dst + 0) = A;
     *(uint32_t*)(dst + 4) = B;
     *(uint32_t*)(dst + 8) = C;
@@ -150,6 +152,7 @@ static WEBP_INLINE void PlanarTo24b(const uint8_t* src, uint8_t* dst) {
     }
 #endif
 }
+#undef MK_UINT32
 
 void VP8YuvToRgba32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
                     uint8_t* dst) {
