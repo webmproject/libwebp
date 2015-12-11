@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65c68e32_2e99a75a",
+        "filename": "src/dsp/lossless.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-12-11T12:22:47Z",
+      "side": 1,
+      "message": "these functions are absolutely not speed critical and shouldn\u0027t be here, used with all the #ifdefery \n\nActually, they shouldn\u0027t be in dsp/ at all, since it\u0027s more codec logic than pure processing.\n\nLet me try to re-write this patch and do some clean-up. We dragged too much code on dsp/ i fear, time to ramp down...",
+      "range": {
+        "startLine": 212,
+        "startChar": 26,
+        "endLine": 212,
+        "endChar": 43
+      },
+      "revId": "c04edcd8e9404a79cddb7cf3e9caa5897be89eb6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
