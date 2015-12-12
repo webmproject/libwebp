@@ -150,13 +150,13 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
     ok = 0;
     if (data_size >= 12) {
       const InputFileFormat format = GuessImageType(data);
-    if (format == PNG_) {
+      if (format == PNG_) {
         ok = ReadPNG(data, data_size, pic, keep_alpha, metadata);
-    } else if (format == JPEG_) {
+      } else if (format == JPEG_) {
         ok = ReadJPEG(data, data_size, pic, metadata);
-    } else if (format == TIFF_) {
+      } else if (format == TIFF_) {
         ok = ReadTIFF(data, data_size, pic, keep_alpha, metadata);
-    } else if (format == WEBP_) {
+      } else if (format == WEBP_) {
         ok = ReadWebP(data, data_size, pic, keep_alpha, metadata);
       }
     }
@@ -854,7 +854,7 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-version")) {
       const int version = WebPGetEncoderVersion();
       printf("%d.%d.%d\n",
-        (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
+             (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
       return 0;
     } else if (!strcmp(argv[c], "-progress")) {
       show_progress = 1;
