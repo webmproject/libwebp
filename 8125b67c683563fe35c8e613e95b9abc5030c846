@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45db4a39_2321eee4",
+        "filename": "man/cwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-12-12T01:05:32Z",
+      "side": 1,
+      "message": "as noted this is a catch-all, we could point at the (slightly less stable -- we\u0027ve moved 2 times before) chromium.googlesource location.",
+      "revId": "8125b67c683563fe35c8e613e95b9abc5030c846",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
