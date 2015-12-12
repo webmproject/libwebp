@@ -16,6 +16,24 @@
       "revId": "8125b67c683563fe35c8e613e95b9abc5030c846",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65e04ee1_21ee48e5",
+        "filename": "man/cwebp.1",
+        "patchSetId": 1
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-12-12T01:07:32Z",
+      "side": 1,
+      "message": "Yup, I definitely prefer using the direct chromium.googlesource location.",
+      "parentUuid": "45db4a39_2321eee4",
+      "revId": "8125b67c683563fe35c8e613e95b9abc5030c846",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
