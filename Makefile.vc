@@ -398,6 +398,9 @@ $(DIROBJ)\examples\anim_util.obj: examples\anim_util.c
 $(DIROBJ)\examples\gif2webp.obj: examples\gif2webp.c
 	$(CC) $(CFLAGS) /DWEBP_HAVE_GIF /Fd$(LIBWEBP_PDBNAME) \
 	  /Fo$(DIROBJ)\examples\ examples\$(@B).c
+$(DIROBJ)\examples\gifdec.obj: examples\gifdec.c
+	$(CC) $(CFLAGS) /DWEBP_HAVE_GIF /Fd$(LIBWEBP_PDBNAME) \
+	  /Fo$(DIROBJ)\examples\ examples\$(@B).c
 # Batch rules
 {examples}.c{$(DIROBJ)\examples}.obj::
 	$(CC) $(CFLAGS) /Fd$(DIROBJ)\examples\ /Fo$(DIROBJ)\examples\ $<
