@@ -18,15 +18,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "utils/utils.h"
-#include "webp/mux_types.h"
 #include "webp/encode.h"
+#include "webp/mux_types.h"
 
 #define GIF_TRANSPARENT_COLOR 0x00ffffff
 #define GIF_WHITE_COLOR       0xffffffff
 #define GIF_TRANSPARENT_MASK  0x01
 #define GIF_DISPOSE_MASK      0x07
 #define GIF_DISPOSE_SHIFT     2
+
+// from utils/utils.h
+extern void WebPCopyPlane(const uint8_t* src, int src_stride,
+                          uint8_t* dst, int dst_stride,
+                          int width, int height);
+extern void WebPCopyPixels(const WebPPicture* const src,
+                           WebPPicture* const dst);
 
 void GIFGetBackgroundColor(const ColorMapObject* const color_map,
                            int bgcolor_index, int transparent_index,
