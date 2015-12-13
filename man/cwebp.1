@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "December 11, 2015"
+.TH CWEBP 1 "December 14, 2015"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -36,7 +36,9 @@ A summary of all the possible options.
 Print the version number (as major.minor.revision) and exit.
 .TP
 .B \-lossless
-Encode the image without any loss.
+Encode the image without any loss. For images with fully transparent area,
+the invisible pixel values (R/G/B or Y/U/V) will be preserved only if the
+\-exact option is used.
 .TP
 .BI \-near_lossless " int
 Use near\-lossless image preprocessing. This option adjusts pixel values
