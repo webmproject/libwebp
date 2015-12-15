@@ -859,17 +859,6 @@ int WebPDemuxPrevFrame(WebPIterator* iter) {
   return SetFrame(iter->frame_num - 1, iter);
 }
 
-int WebPDemuxSelectFragment(WebPIterator* iter, int fragment_num) {
-  if (iter != NULL && iter->private_ != NULL && fragment_num > 0) {
-    const WebPDemuxer* const dmux = (WebPDemuxer*)iter->private_;
-    const Frame* const frame = GetFrame(dmux, iter->frame_num);
-    if (frame == NULL) return 0;
-
-    return SynthesizeFrame(dmux, frame, fragment_num, iter);
-  }
-  return 0;
-}
-
 void WebPDemuxReleaseIterator(WebPIterator* iter) {
   (void)iter;
 }

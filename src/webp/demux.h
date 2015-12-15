@@ -55,7 +55,7 @@
 extern "C" {
 #endif
 
-#define WEBP_DEMUX_ABI_VERSION 0x0105    // MAJOR(8b) + MINOR(8b)
+#define WEBP_DEMUX_ABI_VERSION 0x0106    // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -155,8 +155,7 @@ struct WebPIterator {
 };
 
 // Retrieves frame 'frame_number' from 'dmux'.
-// 'iter->fragment' points to the first fragment on return from this function.
-// Individual fragments may be extracted using WebPDemuxSelectFragment().
+// 'iter->fragment' points to the frame on return from this function.
 // Setting 'frame_number' equal to 0 will return the last frame of the image.
 // Returns false if 'dmux' is NULL or frame 'frame_number' is not present.
 // Call WebPDemuxReleaseIterator() when use of the iterator is complete.
@@ -169,10 +168,6 @@ WEBP_EXTERN(int) WebPDemuxGetFrame(
 // Returns true on success, false otherwise.
 WEBP_EXTERN(int) WebPDemuxNextFrame(WebPIterator* iter);
 WEBP_EXTERN(int) WebPDemuxPrevFrame(WebPIterator* iter);
-
-// Sets 'iter->fragment' to reflect fragment number 'fragment_num'.
-// Returns true if fragment 'fragment_num' is present, false otherwise.
-WEBP_EXTERN(int) WebPDemuxSelectFragment(WebPIterator* iter, int fragment_num);
 
 // Releases any memory associated with 'iter'.
 // Must be called before any subsequent calls to WebPDemuxGetChunk() on the same
