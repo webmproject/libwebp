@@ -88,7 +88,8 @@ typedef enum WebPDemuxState {
 WEBP_EXTERN(WebPDemuxer*) WebPDemuxInternal(
     const WebPData*, int, WebPDemuxState*, int);
 
-// Parses the full WebP file given by 'data'.
+// Parses the full WebP file given by 'data'. For single images the WebP file
+// header alone or the file header and the chunk header may be absent.
 // Returns a WebPDemuxer object on successful parse, NULL otherwise.
 static WEBP_INLINE WebPDemuxer* WebPDemux(const WebPData* data) {
   return WebPDemuxInternal(data, 0, NULL, WEBP_DEMUX_ABI_VERSION);
