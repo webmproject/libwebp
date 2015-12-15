@@ -55,7 +55,7 @@
 extern "C" {
 #endif
 
-#define WEBP_DEMUX_ABI_VERSION 0x0106    // MAJOR(8b) + MINOR(8b)
+#define WEBP_DEMUX_ABI_VERSION 0x0107    // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -137,17 +137,15 @@ WEBP_EXTERN(uint32_t) WebPDemuxGetI(
 struct WebPIterator {
   int frame_num;
   int num_frames;          // equivalent to WEBP_FF_FRAME_COUNT.
-  int fragment_num;
-  int num_fragments;
   int x_offset, y_offset;  // offset relative to the canvas.
-  int width, height;       // dimensions of this frame or fragment.
+  int width, height;       // dimensions of this frame.
   int duration;            // display duration in milliseconds.
   WebPMuxAnimDispose dispose_method;  // dispose method for the frame.
   int complete;   // true if 'fragment' contains a full frame. partial images
                   // may still be decoded with the WebP incremental decoder.
-  WebPData fragment;  // The frame or fragment given by 'frame_num' and
-                      // 'fragment_num'.
-  int has_alpha;      // True if the frame or fragment contains transparency.
+  WebPData fragment;  // The frame given by 'frame_num'. Note for historical
+                      // reasons this is called a fragment.
+  int has_alpha;      // True if the frame contains transparency.
   WebPMuxAnimBlend blend_method;  // Blend operation for the frame.
 
   uint32_t pad[2];         // padding for later use.

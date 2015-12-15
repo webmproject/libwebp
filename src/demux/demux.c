@@ -757,6 +757,7 @@ static const Frame* GetFrame(const WebPDemuxer* const dmux, int frame_num) {
 }
 
 // Returns fragment 'fragment_num' and the total count.
+// TODO(jzern): this function is no longer necessary.
 static const Frame* GetFragment(
     const Frame* const frame_set, int fragment_num, int* const count) {
   const int this_frame = frame_set->frame_num_;
@@ -811,8 +812,6 @@ static int SynthesizeFrame(const WebPDemuxer* const dmux,
 
   iter->frame_num      = first_frame->frame_num_;
   iter->num_frames     = dmux->num_frames_;
-  iter->fragment_num   = fragment_num;
-  iter->num_fragments  = num_fragments;
   iter->x_offset       = fragment->x_offset_;
   iter->y_offset       = fragment->y_offset_;
   iter->width          = fragment->width_;
