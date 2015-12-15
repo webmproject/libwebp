@@ -52,6 +52,7 @@ AC_DEFUN([TEST_AND_ADD_CFLAGS],
                             [$1="${$1} $2"],
                             [AC_MSG_RESULT([no])])
           CFLAGS="$SAVED_CFLAGS"])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-fvisibility=hidden])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wall])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wdeclaration-after-statement])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wextra])
