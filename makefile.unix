@@ -61,6 +61,9 @@ endif
 EXTRA_FLAGS += -DWEBP_USE_THREAD
 EXTRA_LIBS += -lpthread
 
+# Control symbol visibility. Comment out if your compiler doesn't support it.
+EXTRA_FLAGS += -fvisibility=hidden
+
 # Extra flags to emulate C89 strictness with the full ANSI
 EXTRA_FLAGS += -Wextra -Wold-style-definition
 EXTRA_FLAGS += -Wmissing-prototypes
