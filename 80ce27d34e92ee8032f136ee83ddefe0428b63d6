@@ -16,6 +16,24 @@
       "revId": "80ce27d34e92ee8032f136ee83ddefe0428b63d6",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5b8863e_50646cf5",
+        "filename": "src/dsp/yuv_sse2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-12-16T22:36:06Z",
+      "side": 1,
+      "message": "like that:\n\n    src\\dsp\\yuv_sse2.c(116) : error C2719: \u0027in\u0027: formal parameter with __declspec(align(\u002716\u0027)) won\u0027t be aligned\n    src\\dsp\\yuv_sse2.c(116) : error C2719: \u0027out\u0027: formal parameter with __declspec(align(\u002716\u0027)) won\u0027t be aligned\n    src\\dsp\\yuv_sse2.c(135) : error C2719: \u0027in\u0027: formal parameter with __declspec(align(\u002716\u0027)) won\u0027t be aligned\n    src\\dsp\\yuv_sse2.c(393) : error C2719: \u0027in\u0027: formal parameter with __declspec(align(\u002716\u0027)) won\u0027t be aligned\n    src\\dsp\\yuv_sse2.c(393) : error C2719: \u0027out\u0027: formal parameter with __declspec(align(\u002716\u0027)) won\u0027t be aligned\n    src\\dsp\\yuv_sse2.c(406) : error C2719: \u0027out\u0027: formal parameter with __declspec(align(\u002716\u0027)) won\u0027t be aligned",
+      "parentUuid": "459d0ad3_6d5555cc",
+      "revId": "80ce27d34e92ee8032f136ee83ddefe0428b63d6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
