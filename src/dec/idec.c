@@ -792,7 +792,6 @@ const WebPDecBuffer* WebPIDecodedArea(const WebPIDecoder* idec,
   const WebPDecBuffer* const src = GetOutputBuffer(idec);
   if (left != NULL) *left = 0;
   if (top != NULL) *top = 0;
-  // TODO(skal): later include handling of rotations.
   if (src) {
     if (width != NULL) *width = src->width;
     if (height != NULL) *height = idec->params_.last_y;
