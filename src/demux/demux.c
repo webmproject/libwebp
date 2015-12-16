@@ -563,8 +563,6 @@ static int IsValidSimpleFormat(const WebPDemuxer* const dmux) {
 
 // If 'exact' is true, check that the image resolution matches the canvas.
 // If 'exact' is false, check that the x/y offsets do not exceed the canvas.
-// TODO(jzern): this is insufficient in the fragmented image case if the
-// expectation is that the fragments completely cover the canvas.
 static int CheckFrameBounds(const Frame* const frame, int exact,
                             int canvas_width, int canvas_height) {
   if (exact) {
