@@ -41,6 +41,8 @@
 
 #define MULT_8B(a, b) (((a) * (b) + 128) >> 8)
 
+#define RD_DISTO_MULT      256  // distortion multiplier (equivalent of lambda)
+
 // #define DEBUG_BLOCK
 
 //------------------------------------------------------------------------------
@@ -535,13 +537,12 @@ typedef struct {
 #define SCORE_STATE(n, l) (score_states[n][(l) + MIN_DELTA])
 
 static WEBP_INLINE void SetRDScore(int lambda, VP8ModeScore* const rd) {
-  // TODO: incorporate the "* 256" in the tables?
-  rd->score = (rd->R + rd->H) * lambda + 256 * (rd->D + rd->SD);
+  rd->score = (rd->R + rd->H) * lambda + RD_DISTO_MULT * (rd->D + rd->SD);
 }
 
 static WEBP_INLINE score_t RDScoreTrellis(int lambda, score_t rate,
                                           score_t distortion) {
-  return rate * lambda + 256 * distortion;
+  return rate * lambda + RD_DISTO_MULT * distortion;
 }
 
 static int TrellisQuantizeBlock(const VP8Encoder* const enc,
@@ -1050,7 +1051,7 @@ static void PickBestUV(VP8EncIterator* const it, VP8ModeScore* const rd) {
 
     // Compute RD-score
     rd_uv.D  = VP8SSE16x8(src, tmp_dst);
-    rd_uv.SD = 0;    // TODO: should we call TDisto? it tends to flatten areas.
+    rd_uv.SD = 0;    // not calling TDisto here: it tends to flatten areas.
     rd_uv.H  = VP8FixedCostsUV[mode];
     rd_uv.R  = VP8GetCostUV(it, &rd_uv);
     if (mode > 0 && IsFlat(rd_uv.uv_levels[0], kNumBlocks, FLATNESS_LIMIT_UV)) {
