@@ -240,8 +240,6 @@ static WEBP_INLINE int DoQuantizeBlock(int16_t in[16], int16_t out[16],
   __m128i packed_out;
 
   // Load all inputs.
-  // TODO(cduvivier): Make variable declarations and allocations aligned so that
-  //                  we can use _mm_load_si128 instead of _mm_loadu_si128.
   __m128i in0 = _mm_loadu_si128((__m128i*)&in[0]);
   __m128i in8 = _mm_loadu_si128((__m128i*)&in[8]);
   const __m128i iq0 = _mm_loadu_si128((const __m128i*)&mtx->iq_[0]);
