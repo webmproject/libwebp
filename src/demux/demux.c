@@ -47,7 +47,6 @@ typedef struct Frame {
   int duration_;
   WebPMuxAnimDispose dispose_method_;
   WebPMuxAnimBlend blend_method_;
-  int is_fragment_;  // this is a frame fragment (and not a full frame).
   int frame_num_;  // the referent frame number for use in assembling fragments.
   int complete_;   // img_components_ contains a full image.
   ChunkData img_components_[2];  // 0=VP8{,L} 1=ALPH
@@ -597,16 +596,13 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
 
   while (f != NULL) {
     const int cur_frame_set = f->frame_num_;
-    int frame_count = 0, fragment_count = 0;
+    int frame_count = 0;
 
-    // Check frame properties and if the image is composed of fragments that
-    // each fragment came from a fragment.
+    // Check frame properties.
     for (; f != NULL && f->frame_num_ == cur_frame_set; f = f->next_) {
       const ChunkData* const image = f->img_components_;
       const ChunkData* const alpha = f->img_components_ + 1;
 
-      if (is_fragmented && !f->is_fragment_) return 0;
-      if (!is_fragmented && f->is_fragment_) return 0;
       if (!is_animation && f->frame_num_ > 1) return 0;
 
       if (f->complete_) {
@@ -631,16 +627,13 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
       }
 
       if (f->width_ > 0 && f->height_ > 0 &&
-          !CheckFrameBounds(f, !(is_animation || is_fragmented),
+          !CheckFrameBounds(f, !is_animation,
                             dmux->canvas_width_, dmux->canvas_height_)) {
         return 0;
       }
 
-      fragment_count += f->is_fragment_;
       ++frame_count;
     }
-    if (!is_fragmented && frame_count > 1) return 0;
-    if (fragment_count > 0 && frame_count != fragment_count) return 0;
   }
   return 1;
 }
