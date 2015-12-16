@@ -16,7 +16,6 @@
 #if defined(WEBP_USE_SSE2)
 
 #include <emmintrin.h>
-#include <string.h>   // for memcpy
 
 //-----------------------------------------------------------------------------
 // Convert spans of 32 pixels to various RGB formats for the fancy upsampler.
@@ -149,7 +148,7 @@ static WEBP_INLINE void PlanarTo24b(const uint8_t* src, uint8_t* dst) {
     *dst++ = src[0 * 32 + n];
     *dst++ = src[1 * 32 + n];
     *dst++ = src[2 * 32 + n];
-    }
+  }
 #endif
 }
 #undef MK_UINT32
