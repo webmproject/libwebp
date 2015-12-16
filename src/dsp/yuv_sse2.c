@@ -113,7 +113,8 @@ static WEBP_INLINE void PackAndStore4(const __m128i* const R,
 // Function used several times in PlanarTo24b.
 // It samples the in buffer as follows: one every two unsigned char is stored
 // at the beginning of the buffer, while the other half is stored at the end.
-static WEBP_INLINE void PlanarTo24bHelper(const __m128i in[6], __m128i out[6]) {
+static WEBP_INLINE void PlanarTo24bHelper(const __m128i* const in /*in[6]*/,
+                                          __m128i* const out /*out[6]*/) {
   const __m128i v_mask = _mm_set1_epi16(0x00ff);
 
   // Take one every two upper 8b values.
@@ -132,7 +133,7 @@ static WEBP_INLINE void PlanarTo24bHelper(const __m128i in[6], __m128i out[6]) {
 // Pack the planar buffers
 // rrrr... rrrr... gggg... gggg... bbbb... bbbb....
 // triplet by triplet in the output buffer rgb as rgbrgbrgbrgb ...
-static WEBP_INLINE void PlanarTo24b(__m128i in[6], uint8_t* rgb) {
+static WEBP_INLINE void PlanarTo24b(__m128i* const in /*in[6]*/, uint8_t* rgb) {
   // The input is 6 registers of sixteen 8b but for the sake of explanation,
   // let's take 6 registers of four 8b values.
   // To pack, we will keep taking one every two 8b integer and move it
@@ -389,8 +390,8 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersSSE2(void) {
 
 // Function that inserts a value of the second half of the in buffer in between
 // every two char of the first half.
-static WEBP_INLINE void RGB24PackedToPlanarHelper(const __m128i in[6],
-                                                  __m128i out[6]) {
+static WEBP_INLINE void RGB24PackedToPlanarHelper(
+    const __m128i* const in /*in[6]*/, __m128i* const out /*out[6]*/) {
   out[0] = _mm_unpacklo_epi8(in[0], in[3]);
   out[1] = _mm_unpackhi_epi8(in[0], in[3]);
   out[2] = _mm_unpacklo_epi8(in[1], in[4]);
@@ -403,7 +404,7 @@ static WEBP_INLINE void RGB24PackedToPlanarHelper(const __m128i in[6],
 // rrrr... rrrr... gggg... gggg... bbbb... bbbb....
 // Similar to PlanarTo24bHelper(), but in reverse order.
 static WEBP_INLINE void RGB24PackedToPlanar(const uint8_t* const rgb,
-                                            __m128i out[6]) {
+                                            __m128i* const out /*out[6]*/) {
   __m128i tmp[6];
   tmp[0] = _mm_loadu_si128((const __m128i*)(rgb +  0));
   tmp[1] = _mm_loadu_si128((const __m128i*)(rgb + 16));
