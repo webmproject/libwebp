@@ -229,7 +229,7 @@ void VP8StoreFilterStats(VP8EncIterator* const it) {
   int d;
   VP8Encoder* const enc = it->enc_;
   const int s = it->mb_->segment_;
-  const int level0 = enc->dqm_[s].fstrength_;  // TODO: ref_lf_delta[]
+  const int level0 = enc->dqm_[s].fstrength_;
 
   // explore +/-quant range of values around level0
   const int delta_min = -enc->dqm_[s].quant_;
