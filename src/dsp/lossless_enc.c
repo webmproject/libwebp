@@ -440,125 +440,56 @@ static float PredictionCostSpatialHistogram(const int accumulated[4][256],
   return (float)retval;
 }
 
-static WEBP_INLINE double BitsEntropyRefine(int nonzeros, int sum, int max_val,
-                                            double retval) {
-  double mix;
-  if (nonzeros < 5) {
-    if (nonzeros <= 1) {
-      return 0;
-    }
-    // Two symbols, they will be 0 and 1 in a Huffman code.
-    // Let's mix in a bit of entropy to favor good clustering when
-    // distributions of these are combined.
-    if (nonzeros == 2) {
-      return 0.99 * sum + 0.01 * retval;
-    }
-    // No matter what the entropy says, we cannot be better than min_limit
-    // with Huffman coding. I am mixing a bit of entropy into the
-    // min_limit since it produces much better (~0.5 %) compression results
-    // perhaps because of better entropy clustering.
-    if (nonzeros == 3) {
-      mix = 0.95;
-    } else {
-      mix = 0.7;  // nonzeros == 4.
-    }
-  } else {
-    mix = 0.627;
-  }
-
-  {
-    double min_limit = 2 * sum - max_val;
-    min_limit = mix * min_limit + (1.0 - mix) * retval;
-    return (retval < min_limit) ? min_limit : retval;
-  }
+void VP8LBitEntropyInit(VP8LBitEntropy* const entropy) {
+  entropy->entropy = 0.;
+  entropy->sum = 0;
+  entropy->nonzeros = 0;
+  entropy->max_val = 0;
+  entropy->nonzero_code = VP8L_NON_TRIVIAL_SYM;
 }
 
-// Returns the entropy for the symbols in the input array.
-// Also sets trivial_symbol to the code value, if the array has only one code
-// value. Otherwise, set it to VP8L_NON_TRIVIAL_SYM.
-double VP8LBitsEntropy(const uint32_t* const array, int n,
-                       uint32_t* const trivial_symbol) {
-  double retval = 0.;
-  uint32_t sum = 0;
-  uint32_t nonzero_code = VP8L_NON_TRIVIAL_SYM;
-  int nonzeros = 0;
-  uint32_t max_val = 0;
+void VP8LBitsEntropyUnrefined(const uint32_t* const array, int n,
+                              VP8LBitEntropy* entropy) {
   int i;
+
+  VP8LBitEntropyInit(entropy);
+
   for (i = 0; i < n; ++i) {
     if (array[i] != 0) {
-      sum += array[i];
-      nonzero_code = i;
-      ++nonzeros;
-      retval -= VP8LFastSLog2(array[i]);
-      if (max_val < array[i]) {
-        max_val = array[i];
+      entropy->sum += array[i];
+      entropy->nonzero_code = i;
+      ++entropy->nonzeros;
+      entropy->entropy -= VP8LFastSLog2(array[i]);
+      if (entropy->max_val < array[i]) {
+        entropy->max_val = array[i];
       }
     }
   }
-  retval += VP8LFastSLog2(sum);
-  if (trivial_symbol != NULL) {
-    *trivial_symbol = (nonzeros == 1) ? nonzero_code : VP8L_NON_TRIVIAL_SYM;
-  }
-  return BitsEntropyRefine(nonzeros, sum, max_val, retval);
+  entropy->entropy += VP8LFastSLog2(entropy->sum);
 }
 
-static double InitialHuffmanCost(void) {
-  // Small bias because Huffman code length is typically not stored in
-  // full length.
-  static const int kHuffmanCodeOfHuffmanCodeSize = CODE_LENGTH_CODES * 3;
-  static const double kSmallBias = 9.1;
-  return kHuffmanCodeOfHuffmanCodeSize - kSmallBias;
-}
-
-// Finalize the Huffman cost based on streak numbers and length type (<3 or >=3)
-static double FinalHuffmanCost(const VP8LStreaks* const stats) {
-  double retval = InitialHuffmanCost();
-  retval += stats->counts[0] * 1.5625 + 0.234375 * stats->streaks[0][1];
-  retval += stats->counts[1] * 2.578125 + 0.703125 * stats->streaks[1][1];
-  retval += 1.796875 * stats->streaks[0][0];
-  retval += 3.28125 * stats->streaks[1][0];
-  return retval;
-}
-
-// Trampolines
-static double HuffmanCost(const uint32_t* const population, int length) {
-  const VP8LStreaks stats = VP8LHuffmanCostCount(population, length);
-  return FinalHuffmanCost(&stats);
-}
-
-// Aggregated costs
-double VP8LPopulationCost(const uint32_t* const population, int length,
-                          uint32_t* const trivial_sym) {
-  return
-      VP8LBitsEntropy(population, length, trivial_sym) +
-      HuffmanCost(population, length);
-}
-
-double VP8LGetCombinedEntropy(const uint32_t* const X,
-                              const uint32_t* const Y, int length) {
-  double bits_entropy_combined;
-  double huffman_cost_combined;
+void VP8LGetCombinedEntropyUnrefined(const uint32_t* const X,
+                                     const uint32_t* const Y, int length,
+                                     VP8LBitEntropy* bit_entropy,
+                                     VP8LStreaks* stats) {
   int i;
 
   // Bit entropy variables.
-  double retval = 0.;
-  int sum = 0;
-  int nonzeros = 0;
-  uint32_t max_val = 0;
   int i_prev;
   uint32_t xy;
 
   // Huffman cost variables.
   int streak = 0;
   uint32_t xy_prev;
-  VP8LStreaks stats;
-  memset(&stats, 0, sizeof(stats));
+  memset(stats, 0, sizeof(*stats));
+
+  VP8LBitEntropyInit(bit_entropy);
 
   // Treat the first value for the huffman cost: this is keeping the original
   // behavior, even though there is no first streak.
   // TODO(vrabaud): study proper behavior
   xy = X[0] + Y[0];
-  ++stats.streaks[xy != 0][0];
+  ++stats->streaks[xy != 0][0];
   xy_prev = xy;
   i_prev = 0;
 
@@ -571,17 +502,17 @@ double VP8LGetCombinedEntropy(const uint32_t* const X,
 
       // Gather info for the bit entropy.
       if (xy_prev != 0) {
-        sum += xy_prev * streak;
-        nonzeros += streak;
-        retval -= VP8LFastSLog2(xy_prev) * streak;
-        if (max_val < xy_prev) {
-          max_val = xy_prev;
+        bit_entropy->sum += xy_prev * streak;
+        bit_entropy->nonzeros += streak;
+        bit_entropy->entropy -= VP8LFastSLog2(xy_prev) * streak;
+        if (bit_entropy->max_val < xy_prev) {
+          bit_entropy->max_val = xy_prev;
         }
       }
 
       // Gather info for the huffman cost.
-      stats.counts[xy != 0] += (streak > 3);
-      stats.streaks[xy != 0][(streak > 3)] += streak;
+      stats->counts[xy != 0] += (streak > 3);
+      stats->streaks[xy != 0][(streak > 3)] += streak;
 
       xy_prev = xy;
       i_prev = i;
@@ -591,47 +522,17 @@ double VP8LGetCombinedEntropy(const uint32_t* const X,
   // Finish off the last streak for bit entropy.
   if (xy != 0) {
     streak = i - i_prev;
-    sum += xy * streak;
-    nonzeros += streak;
-    retval -= VP8LFastSLog2(xy) * streak;
-    if (max_val < xy) {
-      max_val = xy;
+    bit_entropy->sum += xy * streak;
+    bit_entropy->nonzeros += streak;
+    bit_entropy->entropy -= VP8LFastSLog2(xy) * streak;
+    if (bit_entropy->max_val < xy) {
+      bit_entropy->max_val = xy;
     }
   }
   // Huffman cost is not updated with the last streak to keep original behavior.
   // TODO(vrabaud): study proper behavior
 
-  retval += VP8LFastSLog2(sum);
-  bits_entropy_combined = BitsEntropyRefine(nonzeros, sum, max_val, retval);
-
-  huffman_cost_combined = FinalHuffmanCost(&stats);
-
-  return bits_entropy_combined + huffman_cost_combined;
-}
-
-// Estimates the Entropy + Huffman + other block overhead size cost.
-double VP8LHistogramEstimateBits(const VP8LHistogram* const p) {
-  return
-      VP8LPopulationCost(
-          p->literal_, VP8LHistogramNumCodes(p->palette_code_bits_), NULL)
-      + VP8LPopulationCost(p->red_, NUM_LITERAL_CODES, NULL)
-      + VP8LPopulationCost(p->blue_, NUM_LITERAL_CODES, NULL)
-      + VP8LPopulationCost(p->alpha_, NUM_LITERAL_CODES, NULL)
-      + VP8LPopulationCost(p->distance_, NUM_DISTANCE_CODES, NULL)
-      + VP8LExtraCost(p->literal_ + NUM_LITERAL_CODES, NUM_LENGTH_CODES)
-      + VP8LExtraCost(p->distance_, NUM_DISTANCE_CODES);
-}
-
-double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p) {
-  return
-      VP8LBitsEntropy(p->literal_, VP8LHistogramNumCodes(p->palette_code_bits_),
-                      NULL)
-      + VP8LBitsEntropy(p->red_, NUM_LITERAL_CODES, NULL)
-      + VP8LBitsEntropy(p->blue_, NUM_LITERAL_CODES, NULL)
-      + VP8LBitsEntropy(p->alpha_, NUM_LITERAL_CODES, NULL)
-      + VP8LBitsEntropy(p->distance_, NUM_DISTANCE_CODES, NULL)
-      + VP8LExtraCost(p->literal_ + NUM_LITERAL_CODES, NUM_LENGTH_CODES)
-      + VP8LExtraCost(p->distance_, NUM_DISTANCE_CODES);
+  bit_entropy->entropy += VP8LFastSLog2(bit_entropy->sum);
 }
 
 static WEBP_INLINE void UpdateHisto(int histo_argb[4][256], uint32_t argb) {

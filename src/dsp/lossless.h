@@ -29,9 +29,6 @@ extern "C" {
 #include "../enc/delta_palettization.h"
 #endif  // WEBP_EXPERIMENTAL_FEATURES
 
-// Not a trivial literal symbol.
-#define VP8L_NON_TRIVIAL_SYM (0xffffffff)
-
 //------------------------------------------------------------------------------
 // Decoding
 
@@ -219,25 +216,24 @@ typedef VP8LStreaks (*VP8LCostCombinedCountFunc)(const uint32_t* X,
 extern VP8LCostCountFunc VP8LHuffmanCostCount;
 extern VP8LCostCombinedCountFunc VP8LHuffmanCostCombinedCount;
 
-// Get the symbol entropy for the distribution 'population'.
-// Set 'trivial_sym', if there's only one symbol present in the distribution.
-double VP8LPopulationCost(const uint32_t* const population, int length,
-                          uint32_t* const trivial_sym);
+typedef struct {            // small struct to hold bit entropy results
+  double entropy;           // entropy
+  uint32_t sum;             // sum of the population
+  int nonzeros;             // number of non-zero elements in the population
+  uint32_t max_val;         // maximum value in the population
+  uint32_t nonzero_code;    // index of the last non-zero in the population
+} VP8LBitEntropy;
+
+void VP8LBitEntropyInit(VP8LBitEntropy* const entropy);
 
 // Get the combined symbol entropy for the distributions 'X' and 'Y'.
-double VP8LGetCombinedEntropy(const uint32_t* const X,
-                              const uint32_t* const Y, int length);
+void VP8LGetCombinedEntropyUnrefined(const uint32_t* const X,
+                                     const uint32_t* const Y, int length,
+                                     VP8LBitEntropy* bit_entropy,
+                                     VP8LStreaks* stats);
 
-double VP8LBitsEntropy(const uint32_t* const array, int n,
-                       uint32_t* const trivial_symbol);
-
-// Estimate how many bits the combined entropy of literals and distance
-// approximately maps to.
-double VP8LHistogramEstimateBits(const VP8LHistogram* const p);
-
-// This function estimates the cost in bits excluding the bits needed to
-// represent the entropy code itself.
-double VP8LHistogramEstimateBitsBulk(const VP8LHistogram* const p);
+void VP8LBitsEntropyUnrefined(const uint32_t* const array, int n,
+                              VP8LBitEntropy* entropy);
 
 typedef void (*VP8LHistogramAddFunc)(const VP8LHistogram* const a,
                                      const VP8LHistogram* const b,

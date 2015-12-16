@@ -16,6 +16,7 @@
 #include <stdlib.h>
 
 #include "./backward_references.h"
+#include "./histogram.h"
 #include "./vp8enci.h"
 #include "./vp8li.h"
 #include "../dsp/lossless.h"
