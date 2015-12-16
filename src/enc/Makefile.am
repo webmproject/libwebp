@@ -37,5 +37,5 @@ noinst_HEADERS =
 noinst_HEADERS += ../webp/format_constants.h
 
 libwebpencode_la_LDFLAGS = -lm
-libwebpencode_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE)
+libwebpencode_la_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
 libwebpencodeincludedir = $(includedir)/webp

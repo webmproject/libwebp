@@ -31,6 +31,18 @@ AC_ARG_ENABLE([everything],
                SET_IF_UNSET([enable_libwebpextras], [$enableval])
                SET_IF_UNSET([enable_libwebpmux], [$enableval])])
 
+dnl === If --enable-asserts is not defined, define NDEBUG
+
+AC_MSG_CHECKING(whether asserts are enabled)
+AC_ARG_ENABLE([asserts],
+              AS_HELP_STRING([--enable-asserts],
+                             [Enable assert checks]))
+if test "x${enable_asserts-no}" = "xno"; then
+  AM_CPPFLAGS="${AM_CPPFLAGS} -DNDEBUG"
+fi
+AC_MSG_RESULT(${enable_asserts-no})
+AC_SUBST([AM_CPPFLAGS])
+
 AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=DIR],
             [Path to the pkgconfig directory @<:@LIBDIR/pkgconfig@:>@]),
             [pkgconfigdir="$withval"], [pkgconfigdir='${libdir}/pkgconfig'])

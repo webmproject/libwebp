@@ -24,5 +24,5 @@ libwebpdecodeinclude_HEADERS += ../webp/types.h
 noinst_HEADERS =
 noinst_HEADERS += ../webp/format_constants.h
 
-libwebpdecode_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE)
+libwebpdecode_la_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
 libwebpdecodeincludedir = $(includedir)/webp
