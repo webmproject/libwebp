@@ -47,7 +47,7 @@ typedef struct Frame {
   int duration_;
   WebPMuxAnimDispose dispose_method_;
   WebPMuxAnimBlend blend_method_;
-  int frame_num_;  // the referent frame number for use in assembling fragments.
+  int frame_num_;
   int complete_;   // img_components_ contains a full image.
   ChunkData img_components_[2];  // 0=VP8{,L} 1=ALPH
   struct Frame* next_;
@@ -737,30 +737,12 @@ uint32_t WebPDemuxGetI(const WebPDemuxer* dmux, WebPFormatFeature feature) {
 // -----------------------------------------------------------------------------
 // Frame iteration
 
-// Find the first 'frame_num' frame. There may be multiple such frames in a
-// fragmented frame.
 static const Frame* GetFrame(const WebPDemuxer* const dmux, int frame_num) {
   const Frame* f;
   for (f = dmux->frames_; f != NULL; f = f->next_) {
     if (frame_num == f->frame_num_) break;
   }
   return f;
-}
-
-// Returns fragment 'fragment_num' and the total count.
-// TODO(jzern): this function is no longer necessary.
-static const Frame* GetFragment(
-    const Frame* const frame_set, int fragment_num, int* const count) {
-  const int this_frame = frame_set->frame_num_;
-  const Frame* f = frame_set;
-  const Frame* fragment = NULL;
-  int total;
-
-  for (total = 0; f != NULL && f->frame_num_ == this_frame; f = f->next_) {
-    if (++total == fragment_num) fragment = f;
-  }
-  *count = total;
-  return fragment;
 }
 
 static const uint8_t* GetFramePayload(const uint8_t* const mem_buf,
@@ -789,29 +771,25 @@ static const uint8_t* GetFramePayload(const uint8_t* const mem_buf,
 
 // Create a whole 'frame' from VP8 (+ alpha) or lossless.
 static int SynthesizeFrame(const WebPDemuxer* const dmux,
-                           const Frame* const first_frame,
-                           int fragment_num, WebPIterator* const iter) {
+                           const Frame* const frame,
+                           WebPIterator* const iter) {
   const uint8_t* const mem_buf = dmux->mem_.buf_;
-  int num_fragments;
   size_t payload_size = 0;
-  const Frame* const fragment =
-      GetFragment(first_frame, fragment_num, &num_fragments);
-  const uint8_t* const payload =
-      GetFramePayload(mem_buf, fragment, &payload_size);
+  const uint8_t* const payload = GetFramePayload(mem_buf, frame, &payload_size);
   if (payload == NULL) return 0;
-  assert(first_frame != NULL);
+  assert(frame != NULL);
 
-  iter->frame_num      = first_frame->frame_num_;
+  iter->frame_num      = frame->frame_num_;
   iter->num_frames     = dmux->num_frames_;
-  iter->x_offset       = fragment->x_offset_;
-  iter->y_offset       = fragment->y_offset_;
-  iter->width          = fragment->width_;
-  iter->height         = fragment->height_;
-  iter->has_alpha      = fragment->has_alpha_;
-  iter->duration       = fragment->duration_;
-  iter->dispose_method = fragment->dispose_method_;
-  iter->blend_method   = fragment->blend_method_;
-  iter->complete       = fragment->complete_;
+  iter->x_offset       = frame->x_offset_;
+  iter->y_offset       = frame->y_offset_;
+  iter->width          = frame->width_;
+  iter->height         = frame->height_;
+  iter->has_alpha      = frame->has_alpha_;
+  iter->duration       = frame->duration_;
+  iter->dispose_method = frame->dispose_method_;
+  iter->blend_method   = frame->blend_method_;
+  iter->complete       = frame->complete_;
   iter->fragment.bytes = payload;
   iter->fragment.size  = payload_size;
   return 1;
@@ -827,7 +805,7 @@ static int SetFrame(int frame_num, WebPIterator* const iter) {
   frame = GetFrame(dmux, frame_num);
   if (frame == NULL) return 0;
 
-  return SynthesizeFrame(dmux, frame, 1, iter);
+  return SynthesizeFrame(dmux, frame, iter);
 }
 
 int WebPDemuxGetFrame(const WebPDemuxer* dmux, int frame, WebPIterator* iter) {
