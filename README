@@ -15,7 +15,8 @@ as well as the command line tools 'cwebp' and 'dwebp'.
 
 See http://developers.google.com/speed/webp
 
-Latest sources are available from http://www.webmproject.org/code/
+The latest source tree is available at
+https://chromium.googlesource.com/webm/libwebp
 
 It is released under the same license as the WebM project.
 See http://www.webmproject.org/license/software/ or the
@@ -194,6 +195,8 @@ Options:
                            green=0xe0 and blue=0xd0
   -noalpha ............... discard any transparency information
   -lossless .............. encode image losslessly
+  -near_lossless <int> ... use near-lossless image
+                           preprocessing (0..100=off)
   -hint <string> ......... specify image characteristics hint,
                            one of: photo, picture or graph
 
@@ -356,6 +359,10 @@ Options:
                            or lossless compression heuristically
   -q <float> ............. quality factor (0:small..100:big)
   -m <int> ............... compression method (0=fast, 6=slowest)
+  -min_size .............. minimize output size (default:off)
+                           lossless compression by default; can be
+                           combined with -q, -m, -lossy or -mixed
+                           options
   -kmin <int> ............ min distance between key frames
   -kmax <int> ............ max distance between key frames
   -f <int> ............... filter strength (0=off..100)
@@ -383,8 +390,13 @@ Comparison of animated images:
 Test utility anim_diff under examples/ can be used to compare two animated
 images (each can be GIF or WebP).
 
-Usage:
- anim_diff <image1> <image2> [-dump_frames <folder>] [-min_psnr <float>]
+Usage: anim_diff <image1> <image2> [options]
+
+Options:
+  -dump_frames <folder> dump decoded frames in PAM format
+  -min_psnr <float> ... minimum per-frame PSNR
+  -raw_comparison ..... if this flag is not used, RGB is
+                        premultiplied before comparison
 
 Building:
 ---------
