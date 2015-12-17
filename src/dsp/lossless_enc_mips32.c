@@ -22,10 +22,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define APPROX_LOG_WITH_CORRECTION_MAX  65536
-#define APPROX_LOG_MAX                   4096
-#define LOG_2_RECIPROCAL 1.44269504088896338700465094007086
-
 static float FastSLog2Slow(uint32_t v) {
   assert(v >= LOG_LOOKUP_IDX_MAX);
   if (v < APPROX_LOG_WITH_CORRECTION_MAX) {

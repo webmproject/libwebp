@@ -174,6 +174,14 @@ static WEBP_INLINE uint32_t VP8LSubSampleSize(uint32_t size,
 
 // -----------------------------------------------------------------------------
 // Faster logarithm for integers. Small values use a look-up table.
+
+// The threshold till approximate version of log_2 can be used.
+// Practically, we can get rid of the call to log() as the two values match to
+// very high degree (the ratio of these two is 0.99999x).
+// Keeping a high threshold for now.
+#define APPROX_LOG_WITH_CORRECTION_MAX  65536
+#define APPROX_LOG_MAX                   4096
+#define LOG_2_RECIPROCAL 1.44269504088896338700465094007086
 #define LOG_LOOKUP_IDX_MAX 256
 extern const float kLog2Table[LOG_LOOKUP_IDX_MAX];
 extern const float kSLog2Table[LOG_LOOKUP_IDX_MAX];

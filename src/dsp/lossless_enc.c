@@ -329,13 +329,6 @@ const uint8_t kPrefixEncodeExtraBitsValue[PREFIX_LOOKUP_IDX_MAX] = {
   112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126
 };
 
-// The threshold till approximate version of log_2 can be used.
-// Practically, we can get rid of the call to log() as the two values match to
-// very high degree (the ratio of these two is 0.99999x).
-// Keeping a high threshold for now.
-#define APPROX_LOG_WITH_CORRECTION_MAX  65536
-#define APPROX_LOG_MAX                   4096
-#define LOG_2_RECIPROCAL 1.44269504088896338700465094007086
 static float FastSLog2Slow(uint32_t v) {
   assert(v >= LOG_LOOKUP_IDX_MAX);
   if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
