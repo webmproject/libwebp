@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a50326be_98c9f581",
+        "filename": "examples/anim_diff.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-12-17T04:14:15Z",
+      "side": 1,
+      "message": "s/psnr/PSNR",
+      "range": {
+        "startLine": 125,
+        "startChar": 52,
+        "endLine": 125,
+        "endChar": 56
+      },
+      "revId": "3877acafa76c7aef6a58507acf13ef192d2b2a8d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
