@@ -38,7 +38,7 @@ libwebp_la_LIBADD += utils/libwebputils.la
 # other than the ones listed on the command line, i.e., after linking, it will
 # not have unresolved symbols. Some platforms (Windows among them) require all
 # symbols in shared libraries to be resolved at library creation.
-libwebp_la_LDFLAGS = -no-undefined -version-info 5:4:0
+libwebp_la_LDFLAGS = -no-undefined -version-info 6:0:0
 libwebpincludedir = $(includedir)/webp
 pkgconfig_DATA = libwebp.pc
 
@@ -50,7 +50,7 @@ if BUILD_LIBWEBPDECODER
   libwebpdecoder_la_LIBADD += dsp/libwebpdspdecode.la
   libwebpdecoder_la_LIBADD += utils/libwebputilsdecode.la
 
-  libwebpdecoder_la_LDFLAGS = -no-undefined -version-info 1:4:0
+  libwebpdecoder_la_LDFLAGS = -no-undefined -version-info 2:0:0
   pkgconfig_DATA += libwebpdecoder.pc
 endif
 
