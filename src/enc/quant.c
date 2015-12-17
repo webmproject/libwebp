@@ -56,15 +56,37 @@ static void PrintBlockInfo(const VP8EncIterator* const it,
                            const VP8ModeScore* const rd) {
   int i, j;
   const int is_i16 = (it->mb_->type_ == 1);
+  const uint8_t* const y_in = it->yuv_in_ + Y_OFF_ENC;
+  const uint8_t* const y_out = it->yuv_out_ + Y_OFF_ENC;
+  const uint8_t* const uv_in = it->yuv_in_ + U_OFF_ENC;
+  const uint8_t* const uv_out = it->yuv_out_ + U_OFF_ENC;
   printf("SOURCE / OUTPUT / ABS DELTA\n");
-  for (j = 0; j < 24; ++j) {
-    if (j == 16) printf("\n");   // newline before the U/V block
-    for (i = 0; i < 16; ++i) printf("%3d ", it->yuv_in_[i + j * BPS]);
+  for (j = 0; j < 16; ++j) {
+    for (i = 0; i < 16; ++i) printf("%3d ", y_in[i + j * BPS]);
     printf("     ");
-    for (i = 0; i < 16; ++i) printf("%3d ", it->yuv_out_[i + j * BPS]);
+    for (i = 0; i < 16; ++i) printf("%3d ", y_out[i + j * BPS]);
     printf("     ");
     for (i = 0; i < 16; ++i) {
-      printf("%1d ", abs(it->yuv_out_[i + j * BPS] - it->yuv_in_[i + j * BPS]));
+      printf("%1d ", abs(y_in[i + j * BPS] - y_out[i + j * BPS]));
+    }
+    printf("\n");
+  }
+  printf("\n");   // newline before the U/V block
+  for (j = 0; j < 8; ++j) {
+    for (i = 0; i < 8; ++i) printf("%3d ", uv_in[i + j * BPS]);
+    printf(" ");
+    for (i = 8; i < 16; ++i) printf("%3d ", uv_in[i + j * BPS]);
+    printf("    ");
+    for (i = 0; i < 8; ++i) printf("%3d ", uv_out[i + j * BPS]);
+    printf(" ");
+    for (i = 8; i < 16; ++i) printf("%3d ", uv_out[i + j * BPS]);
+    printf("   ");
+    for (i = 0; i < 8; ++i) {
+      printf("%1d ", abs(uv_out[i + j * BPS] - uv_in[i + j * BPS]));
+    }
+    printf(" ");
+    for (i = 8; i < 16; ++i) {
+      printf("%1d ", abs(uv_out[i + j * BPS] - uv_in[i + j * BPS]));
     }
     printf("\n");
   }
