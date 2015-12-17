@@ -119,8 +119,12 @@ static int CompareAnimatedImagePair(const AnimatedImage* const img1,
 }
 
 static void Help(void) {
-  printf("\nUsage: anim_diff <image1> <image2> [-dump_frames <folder>] "
-         "[-min_psnr <float>][-raw_comparison]\n");
+  printf("Usage: anim_diff <image1> <image2> [options]\n");
+  printf("\nOptions:\n");
+  printf("  -dump_frames <folder> dump decoded frames in PAM format\n");
+  printf("  -min_psnr <float> ... minimum per-frame PSNR\n");
+  printf("  -raw_comparison ..... if this flag is not used, RGB is\n");
+  printf("                        premultiplied before comparison\n");
 }
 
 int main(int argc, const char* argv[]) {
