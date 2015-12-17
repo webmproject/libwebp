@@ -514,6 +514,10 @@ int WebPPictureAllocARGB(WebPPicture* const picture, int width, int height);
 // Returns false in case of error (invalid param, out-of-memory).
 int WebPPictureAllocYUVA(WebPPicture* const picture, int width, int height);
 
+// Clean-up the RGB samples under fully transparent area, to help lossless
+// compressibility (no guarantee, though). Assumes that pic->use_argb is true.
+void WebPCleanupTransparentAreaLossless(WebPPicture* const pic);
+
   // in near_lossless.c
 // Near lossless preprocessing in RGB color-space.
 int VP8ApplyNearLossless(int xsize, int ysize, uint32_t* argb, int quality);

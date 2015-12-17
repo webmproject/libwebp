@@ -324,14 +324,15 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
   if (pic->width > WEBP_MAX_DIMENSION || pic->height > WEBP_MAX_DIMENSION)
     return WebPEncodingSetError(pic, VP8_ENC_ERROR_BAD_DIMENSION);
 
-  if (!config->exact) {
-    WebPCleanupTransparentArea(pic);
-  }
-
   if (pic->stats != NULL) memset(pic->stats, 0, sizeof(*pic->stats));
 
   if (!config->lossless) {
     VP8Encoder* enc = NULL;
+
+    if (!config->exact) {
+      WebPCleanupTransparentArea(pic);
+    }
+
     if (pic->use_argb || pic->y == NULL || pic->u == NULL || pic->v == NULL) {
       // Make sure we have YUVA samples.
       if (config->preprocessing & 4) {
@@ -377,6 +378,10 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
     // Make sure we have ARGB samples.
     if (pic->argb == NULL && !WebPPictureYUVAToARGB(pic)) {
       return 0;
+    }
+
+    if (!config->exact) {
+      WebPCleanupTransparentAreaLossless(pic);
     }
 
     ok = VP8LEncodeImage(config, pic);  // Sets pic->error in case of problem.
