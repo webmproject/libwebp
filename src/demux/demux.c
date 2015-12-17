@@ -192,6 +192,19 @@ static int AddFrame(WebPDemuxer* const dmux, Frame* const frame) {
   return 1;
 }
 
+static void SetFrameInfo(size_t start_offset, size_t size,
+                         int frame_num, int complete,
+                         const WebPBitstreamFeatures* const features,
+                         Frame* const frame) {
+  frame->img_components_[0].offset_ = start_offset;
+  frame->img_components_[0].size_ = size;
+  frame->width_ = features->width;
+  frame->height_ = features->height;
+  frame->has_alpha_ |= features->has_alpha;
+  frame->frame_num_ = frame_num;
+  frame->complete_ = complete;
+}
+
 // Store image bearing chunks to 'frame'.
 static ParseStatus StoreFrame(int frame_num, uint32_t min_size,
                               MemBuffer* const mem, Frame* const frame) {
@@ -247,13 +260,8 @@ static ParseStatus StoreFrame(int frame_num, uint32_t min_size,
             return PARSE_ERROR;
           }
           ++image_chunks;
-          frame->img_components_[0].offset_ = chunk_start_offset;
-          frame->img_components_[0].size_ = chunk_size;
-          frame->width_ = features.width;
-          frame->height_ = features.height;
-          frame->has_alpha_ |= features.has_alpha;
-          frame->frame_num_ = frame_num;
-          frame->complete_ = (status == PARSE_OK);
+          SetFrameInfo(chunk_start_offset, chunk_size, frame_num,
+                       status == PARSE_OK, &features, frame);
           Skip(mem, payload_available);
         } else {
           goto Done;
@@ -650,6 +658,41 @@ static void InitDemux(WebPDemuxer* const dmux, const MemBuffer* const mem) {
   dmux->mem_ = *mem;
 }
 
+static ParseStatus CreateRawImageDemuxer(MemBuffer* const mem,
+                                         WebPDemuxer** demuxer) {
+  WebPBitstreamFeatures features;
+  const VP8StatusCode status =
+      WebPGetFeatures(mem->buf_, mem->buf_size_, &features);
+  *demuxer = NULL;
+  if (status != VP8_STATUS_OK) {
+    return (status == VP8_STATUS_NOT_ENOUGH_DATA) ? PARSE_NEED_MORE_DATA
+                                                  : PARSE_ERROR;
+  }
+
+  {
+    WebPDemuxer* const dmux = (WebPDemuxer*)WebPSafeCalloc(1ULL, sizeof(*dmux));
+    Frame* const frame = (Frame*)WebPSafeCalloc(1ULL, sizeof(*frame));
+    if (dmux == NULL || frame == NULL) goto Error;
+    InitDemux(dmux, mem);
+    SetFrameInfo(0, mem->buf_size_, 1 /*frame_num*/, 1 /*complete*/, &features,
+                 frame);
+    if (!AddFrame(dmux, frame)) goto Error;
+    dmux->state_ = WEBP_DEMUX_DONE;
+    dmux->canvas_width_ = frame->width_;
+    dmux->canvas_height_ = frame->height_;
+    dmux->feature_flags_ |= frame->has_alpha_ ? ALPHA_FLAG : 0;
+    dmux->num_frames_ = 1;
+    assert(IsValidSimpleFormat(dmux));
+    *demuxer = dmux;
+    return PARSE_OK;
+
+ Error:
+    WebPSafeFree(dmux);
+    WebPSafeFree(frame);
+    return PARSE_ERROR;
+  }
+}
+
 WebPDemuxer* WebPDemuxInternal(const WebPData* data, int allow_partial,
                                WebPDemuxState* state, int version) {
   const ChunkParser* parser;
@@ -666,6 +709,15 @@ WebPDemuxer* WebPDemuxInternal(const WebPData* data, int allow_partial,
   if (!InitMemBuffer(&mem, data->bytes, data->size)) return NULL;
   status = ReadHeader(&mem);
   if (status != PARSE_OK) {
+    // If parsing of the webp file header fails attempt to handle a raw
+    // VP8/VP8L frame. Note 'allow_partial' is ignored in this case.
+    if (status == PARSE_ERROR) {
+      status = CreateRawImageDemuxer(&mem, &dmux);
+      if (status == PARSE_OK) {
+        if (state != NULL) *state = WEBP_DEMUX_DONE;
+        return dmux;
+      }
+    }
     if (state != NULL) {
       *state = (status == PARSE_NEED_MORE_DATA) ? WEBP_DEMUX_PARSING_HEADER
                                                 : WEBP_DEMUX_PARSE_ERROR;
