@@ -221,18 +221,19 @@ static double FinalHuffmanCost(const VP8LStreaks* const stats) {
   return retval;
 }
 
-// Trampolines
-static double HuffmanCost(const uint32_t* const population, int length) {
-  const VP8LStreaks stats = VP8LHuffmanCostCount(population, length);
-  return FinalHuffmanCost(&stats);
-}
-
 // Get the symbol entropy for the distribution 'population'.
 // Set 'trivial_sym', if there's only one symbol present in the distribution.
 static double PopulationCost(const uint32_t* const population, int length,
                              uint32_t* const trivial_sym) {
-  return VP8LBitsEntropy(population, length, trivial_sym) +
-         HuffmanCost(population, length);
+  VP8LBitEntropy bit_entropy;
+  VP8LStreaks stats;
+  VP8LGetEntropyUnrefined(population, length, &bit_entropy, &stats);
+  if (trivial_sym != NULL) {
+    *trivial_sym = (bit_entropy.nonzeros == 1) ? bit_entropy.nonzero_code
+                                               : VP8L_NON_TRIVIAL_SYM;
+  }
+
+  return BitsEntropyRefine(&bit_entropy) + FinalHuffmanCost(&stats);
 }
 
 static WEBP_INLINE double GetCombinedEntropy(const uint32_t* const X,
@@ -363,8 +364,8 @@ static void UpdateDominantCostRange(
 
 static void UpdateHistogramCost(VP8LHistogram* const h) {
   uint32_t alpha_sym, red_sym, blue_sym;
-  const double alpha_cost = PopulationCost(h->alpha_, NUM_LITERAL_CODES,
-                                           &alpha_sym);
+  const double alpha_cost =
+      PopulationCost(h->alpha_, NUM_LITERAL_CODES, &alpha_sym);
   const double distance_cost =
       PopulationCost(h->distance_, NUM_DISTANCE_CODES, NULL) +
       VP8LExtraCost(h->distance_, NUM_DISTANCE_CODES);

@@ -449,7 +449,7 @@ void VP8LBitEntropyInit(VP8LBitEntropy* const entropy) {
 }
 
 void VP8LBitsEntropyUnrefined(const uint32_t* const array, int n,
-                              VP8LBitEntropy* entropy) {
+                              VP8LBitEntropy* const entropy) {
   int i;
 
   VP8LBitEntropyInit(entropy);
@@ -468,69 +468,70 @@ void VP8LBitsEntropyUnrefined(const uint32_t* const array, int n,
   entropy->entropy += VP8LFastSLog2(entropy->sum);
 }
 
-void VP8LGetCombinedEntropyUnrefined(const uint32_t* const X,
-                                     const uint32_t* const Y, int length,
-                                     VP8LBitEntropy* bit_entropy,
-                                     VP8LStreaks* stats) {
+static WEBP_INLINE void GetEntropyUnrefinedHelper(
+    uint32_t val, int i, uint32_t* const val_prev, int* const i_prev,
+    VP8LBitEntropy* const bit_entropy, VP8LStreaks* const stats) {
+  const int streak = i - *i_prev;
+
+  // Gather info for the bit entropy.
+  if (*val_prev != 0) {
+    bit_entropy->sum += (*val_prev) * streak;
+    bit_entropy->nonzeros += streak;
+    bit_entropy->nonzero_code = *i_prev;
+    bit_entropy->entropy -= VP8LFastSLog2(*val_prev) * streak;
+    if (bit_entropy->max_val < *val_prev) {
+      bit_entropy->max_val = *val_prev;
+    }
+  }
+
+  // Gather info for the Huffman cost.
+  stats->counts[*val_prev != 0] += (streak > 3);
+  stats->streaks[*val_prev != 0][(streak > 3)] += streak;
+
+  *val_prev = val;
+  *i_prev = i;
+}
+
+void VP8LGetEntropyUnrefined(const uint32_t* const X, int length,
+                             VP8LBitEntropy* const bit_entropy,
+                             VP8LStreaks* const stats) {
   int i;
+  int i_prev = 0;
+  uint32_t x_prev = X[0];
 
-  // Bit entropy variables.
-  int i_prev;
-  uint32_t xy;
-
-  // Huffman cost variables.
-  int streak = 0;
-  uint32_t xy_prev;
   memset(stats, 0, sizeof(*stats));
-
   VP8LBitEntropyInit(bit_entropy);
 
-  // Treat the first value for the huffman cost: this is keeping the original
-  // behavior, even though there is no first streak.
-  // TODO(vrabaud): study proper behavior
-  xy = X[0] + Y[0];
-  ++stats->streaks[xy != 0][0];
-  xy_prev = xy;
-  i_prev = 0;
+  for (i = 1; i < length; ++i) {
+    const uint32_t x = X[i];
+    if (x != x_prev) {
+      VP8LGetEntropyUnrefinedHelper(x, i, &x_prev, &i_prev, bit_entropy, stats);
+    }
+  }
+  VP8LGetEntropyUnrefinedHelper(0, i, &x_prev, &i_prev, bit_entropy, stats);
+
+  bit_entropy->entropy += VP8LFastSLog2(bit_entropy->sum);
+}
+
+void VP8LGetCombinedEntropyUnrefined(const uint32_t* const X,
+                                     const uint32_t* const Y, int length,
+                                     VP8LBitEntropy* const bit_entropy,
+                                     VP8LStreaks* const stats) {
+  int i = 1;
+  int i_prev = 0;
+  uint32_t xy_prev = X[0] + Y[0];
+
+  memset(stats, 0, sizeof(*stats));
+  VP8LBitEntropyInit(bit_entropy);
 
   for (i = 1; i < length; ++i) {
-    xy = X[i] + Y[i];
-
-    // Process data by streaks for both bit entropy and huffman cost.
+    const uint32_t xy = X[i] + Y[i];
     if (xy != xy_prev) {
-      streak = i - i_prev;
-
-      // Gather info for the bit entropy.
-      if (xy_prev != 0) {
-        bit_entropy->sum += xy_prev * streak;
-        bit_entropy->nonzeros += streak;
-        bit_entropy->entropy -= VP8LFastSLog2(xy_prev) * streak;
-        if (bit_entropy->max_val < xy_prev) {
-          bit_entropy->max_val = xy_prev;
-        }
-      }
-
-      // Gather info for the huffman cost.
-      stats->counts[xy != 0] += (streak > 3);
-      stats->streaks[xy != 0][(streak > 3)] += streak;
-
-      xy_prev = xy;
-      i_prev = i;
+      VP8LGetEntropyUnrefinedHelper(xy, i, &xy_prev, &i_prev, bit_entropy,
+                                    stats);
     }
   }
-
-  // Finish off the last streak for bit entropy.
-  if (xy != 0) {
-    streak = i - i_prev;
-    bit_entropy->sum += xy * streak;
-    bit_entropy->nonzeros += streak;
-    bit_entropy->entropy -= VP8LFastSLog2(xy) * streak;
-    if (bit_entropy->max_val < xy) {
-      bit_entropy->max_val = xy;
-    }
-  }
-  // Huffman cost is not updated with the last streak to keep original behavior.
-  // TODO(vrabaud): study proper behavior
+  VP8LGetEntropyUnrefinedHelper(0, i, &xy_prev, &i_prev, bit_entropy, stats);
 
   bit_entropy->entropy += VP8LFastSLog2(bit_entropy->sum);
 }
@@ -1100,27 +1101,6 @@ static double ExtraCostCombined(const uint32_t* X, const uint32_t* Y,
   return cost;
 }
 
-// Returns the various RLE counts
-static VP8LStreaks HuffmanCostCount(const uint32_t* population, int length) {
-  int i;
-  int streak = 0;
-  VP8LStreaks stats;
-  memset(&stats, 0, sizeof(stats));
-  for (i = 0; i < length - 1; ++i) {
-    ++streak;
-    if (population[i] == population[i + 1]) {
-      continue;
-    }
-    stats.counts[population[i] != 0] += (streak > 3);
-    stats.streaks[population[i] != 0][(streak > 3)] += streak;
-    streak = 0;
-  }
-  ++streak;
-  stats.counts[population[i] != 0] += (streak > 3);
-  stats.streaks[population[i] != 0][(streak > 3)] += streak;
-  return stats;
-}
-
 //------------------------------------------------------------------------------
 
 static void HistogramAdd(const VP8LHistogram* const a,
@@ -1172,7 +1152,7 @@ VP8LCostFunc VP8LExtraCost;
 VP8LCostCombinedFunc VP8LExtraCostCombined;
 VP8LCombinedShannonEntropyFunc VP8LCombinedShannonEntropy;
 
-VP8LCostCountFunc VP8LHuffmanCostCount;
+GetEntropyUnrefinedHelperFunc VP8LGetEntropyUnrefinedHelper;
 
 VP8LHistogramAddFunc VP8LHistogramAdd;
 
@@ -1204,7 +1184,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInit(void) {
   VP8LExtraCostCombined = ExtraCostCombined;
   VP8LCombinedShannonEntropy = CombinedShannonEntropy;
 
-  VP8LHuffmanCostCount = HuffmanCostCount;
+  VP8LGetEntropyUnrefinedHelper = GetEntropyUnrefinedHelper;
 
   VP8LHistogramAdd = HistogramAdd;
 
