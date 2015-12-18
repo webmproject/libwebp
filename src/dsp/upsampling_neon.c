@@ -93,6 +93,7 @@ static void Upsample16Pixels(const uint8_t *r1, const uint8_t *r2,
 static const int16_t kCoeffs1[4] = { 19077, 26149, 6419, 13320 };
 
 #define v255 vdup_n_u8(255)
+#define v_0x0f vdup_n_u8(15)
 
 #define STORE_Rgb(out, r, g, b) do {                                    \
   uint8x8x3_t r_g_b;                                                    \
@@ -116,6 +117,38 @@ static const int16_t kCoeffs1[4] = { 19077, 26149, 6419, 13320 };
   uint8x8x4_t b_g_r_v255;                                               \
   INIT_VECTOR4(b_g_r_v255, b, g, r, v255);                              \
   vst4_u8(out, b_g_r_v255);                                             \
+} while (0)
+
+#define STORE_Argb(out, r, g, b) do {                                   \
+  uint8x8x4_t v255_r_g_b;                                               \
+  INIT_VECTOR4(v255_r_g_b, v255, r, g, b);                              \
+  vst4_u8(out, v255_r_g_b);                                             \
+} while (0)
+
+#if !defined(WEBP_SWAP_16BIT_CSP)
+#define ZIP_U8(lo, hi) vzip_u8((lo), (hi))
+#else
+#define ZIP_U8(lo, hi) vzip_u8((hi), (lo))
+#endif
+
+#define STORE_Rgba4444(out, r, g, b) do {                               \
+  const uint8x8_t r1 = vshl_n_u8(vshr_n_u8(r, 4), 4);  /* 4bits */      \
+  const uint8x8_t g1 = vshr_n_u8(g, 4);                                 \
+  const uint8x8_t ba = vorr_u8(b, v_0x0f);                              \
+  const uint8x8_t rg = vorr_u8(r1, g1);                                 \
+  const uint8x8x2_t rgba4444 = ZIP_U8(rg, ba);                          \
+  vst1q_u8(out, vcombine_u8(rgba4444.val[0], rgba4444.val[1]));         \
+} while (0)
+
+#define STORE_Rgb565(out, r, g, b) do {                                 \
+  const uint8x8_t r1 = vshl_n_u8(vshr_n_u8(r, 3), 3);  /* 5bits */      \
+  const uint8x8_t g1 = vshr_n_u8(g, 5);                /* upper 3bits */\
+  const uint8x8_t g2 = vshl_n_u8(vshr_n_u8(g, 2), 5);  /* lower 3bits */\
+  const uint8x8_t b1 = vshr_n_u8(b, 3);                /* 5bits */      \
+  const uint8x8_t rg = vorr_u8(r1, g1);                                 \
+  const uint8x8_t gb = vorr_u8(g2, b1);                                 \
+  const uint8x8x2_t rgb565 = ZIP_U8(rg, gb);                            \
+  vst1q_u8(out, vcombine_u8(rgb565.val[0], rgb565.val[1]));             \
 } while (0)
 
 #define CONVERT8(FMT, XSTEP, N, src_y, src_uv, out, cur_x) do {         \
@@ -233,6 +266,9 @@ NEON_UPSAMPLE_FUNC(UpsampleRgbLinePair,  Rgb,  3)
 NEON_UPSAMPLE_FUNC(UpsampleBgrLinePair,  Bgr,  3)
 NEON_UPSAMPLE_FUNC(UpsampleRgbaLinePair, Rgba, 4)
 NEON_UPSAMPLE_FUNC(UpsampleBgraLinePair, Bgra, 4)
+NEON_UPSAMPLE_FUNC(UpsampleArgbLinePair, Argb, 4)
+NEON_UPSAMPLE_FUNC(UpsampleRgba4444LinePair, Rgba4444, 2)
+NEON_UPSAMPLE_FUNC(UpsampleRgb565LinePair, Rgb565, 2)
 
 //------------------------------------------------------------------------------
 // Entry point
@@ -246,8 +282,13 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersNEON(void) {
   WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePair;
   WebPUpsamplers[MODE_BGR]  = UpsampleBgrLinePair;
   WebPUpsamplers[MODE_BGRA] = UpsampleBgraLinePair;
+  WebPUpsamplers[MODE_ARGB] = UpsampleArgbLinePair;
   WebPUpsamplers[MODE_rgbA] = UpsampleRgbaLinePair;
   WebPUpsamplers[MODE_bgrA] = UpsampleBgraLinePair;
+  WebPUpsamplers[MODE_Argb] = UpsampleArgbLinePair;
+  WebPUpsamplers[MODE_RGB_565] = UpsampleRgb565LinePair;
+  WebPUpsamplers[MODE_RGBA_4444] = UpsampleRgba4444LinePair;
+  WebPUpsamplers[MODE_rgbA_4444] = UpsampleRgba4444LinePair;
 }
 
 #endif  // FANCY_UPSAMPLING
