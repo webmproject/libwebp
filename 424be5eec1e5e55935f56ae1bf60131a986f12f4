@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a50326be_18cb25cd",
+        "filename": "NEWS",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2015-12-18T05:51:41Z",
+      "side": 1,
+      "message": "we should prominently mention that the output pixels changed after the YUV-\u003eRGB speedup",
+      "range": {
+        "startLine": 3,
+        "startChar": 12,
+        "endLine": 3,
+        "endChar": 13
+      },
+      "revId": "424be5eec1e5e55935f56ae1bf60131a986f12f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
