@@ -22,6 +22,30 @@
       "revId": "424be5eec1e5e55935f56ae1bf60131a986f12f4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a5c6f37_6d3fd106",
+        "filename": "NEWS",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2015-12-18T06:52:46Z",
+      "side": 1,
+      "message": "good point, somehow forgot about that while I was scanning the history",
+      "parentUuid": "a50326be_18cb25cd",
+      "range": {
+        "startLine": 3,
+        "startChar": 12,
+        "endLine": 3,
+        "endChar": 13
+      },
+      "revId": "424be5eec1e5e55935f56ae1bf60131a986f12f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
