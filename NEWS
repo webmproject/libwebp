@@ -1,6 +1,25 @@
-- Next version:
+- 12/17/2015: version 0.5.0
+  * miscellaneous bug & build fixes (issues #234, #258, #274, #275, #278)
+  * encoder & decoder speed-ups on x86/ARM/MIPS for lossy & lossless
+    - note! YUV->RGB conversion was sped-up, but the results will be slightly
+      different from previous releases
+  * various lossless encoder improvements
+  * gif2webp improvements, -min_size option added
+  * tools fully support input from stdin and output to stdout (issue #168)
   * New WebPAnimEncoder API for creating animations
   * New WebPAnimDecoder API for decoding animations
+  * other API changes:
+    - libwebp:
+      WebPPictureSmartARGBToYUVA() (-pre 4 in cwebp)
+      WebPConfig::exact (-exact in cwebp; -alpha_cleanup is now the default)
+      WebPConfig::near_lossless (-near_lossless in cwebp)
+      WebPFree() (free'ing webp allocated memory in other languages)
+      WebPConfigLosslessPreset()
+      WebPMemoryWriterClear()
+    - libwebpdemux: removed experimental fragment related fields and functions
+    - libwebpmux: WebPMuxSetCanvasSize()
+  * new libwebpextras library with some uncommon import functions:
+    WebPImportGray/WebPImportRGB565/WebPImportRGB4444
 
 - 10/15/15: version 0.4.4
   This is a binary compatible release.
@@ -100,7 +119,8 @@
 - 9/19/11: version 0.1.3
   * Advanced decoding APIs.
   * On-the-fly cropping and rescaling of images.
-  * SSE2 instructions for decoding performance optimizations on x86 based platforms.
+  * SSE2 instructions for decoding performance optimizations on x86 based
+    platforms.
   * Support Multi-threaded decoding.
   * 40% improvement in Decoding performance.
   * Add support for RGB565, RGBA4444 & ARGB image colorspace.
