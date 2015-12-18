@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6a2adb7b_f7d5d214",
+        "filename": "NEWS",
+        "patchSetId": 4
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2015-12-18T20:42:29Z",
+      "side": 1,
+      "message": "Do we want to stress that \"decoded pixels\" will be slightly different?",
+      "range": {
+        "startLine": 4,
+        "startChar": 36,
+        "endLine": 4,
+        "endChar": 40
+      },
+      "revId": "4c7f565ff0c5303e7b58c74d36a05841cfed6284",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
