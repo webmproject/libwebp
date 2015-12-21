@@ -84,6 +84,30 @@ be installed independently using a minor modification in the corresponding
 Makefile.am configure files (see comments there). See './configure --help' for
 more options.
 
+CMake:
+------
+The support for CMake is minimal: it only helps you compile libwebp, cwebp and
+dwebp.
+
+Prerequisites:
+A compiler (e.g., gcc with autotools) and CMake.
+On a Debian-like system the following should install everything you need for a
+minimal build:
+$ sudo apt-get install build-essential cmake
+
+When building from git sources, you will need to run cmake to generate the
+configure script.
+
+mkdir build && cd build && cmake ../
+make
+make install
+
+If you also want cwebp or dwebp, you will need to enable them through CMake:
+
+cmake -DWEBP_BUILD_CWEBP=ON -DWEBP_BUILD_DWEBP=ON ../
+
+or through your favorite interface (like ccmake or cmake-qt-gui).
+
 SWIG bindings:
 --------------
 

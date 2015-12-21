@@ -31,3 +31,6 @@ src/webp/stamp-h1
 *.pdb
 /iosbuild
 /WebP.framework
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
