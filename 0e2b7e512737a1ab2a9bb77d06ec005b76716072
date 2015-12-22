@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "aaaf738e_7873a1ed",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2015-12-22T15:24:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ea27abf2_ea6b67bf",
+      "revId": "0e2b7e512737a1ab2a9bb77d06ec005b76716072",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aa2133e4_087b6759",
         "filename": "CMakeLists.txt",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2015-12-22T05:40:05Z",
       "side": 1,
       "message": "you might want \u0027int main(void)\u0027 to avoid any issues",
+      "revId": "0e2b7e512737a1ab2a9bb77d06ec005b76716072",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aaaf738e_98679526",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2015-12-22T15:24:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "aa2133e4_087b6759",
       "revId": "0e2b7e512737a1ab2a9bb77d06ec005b76716072",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "6ac9fb78_562074d7",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2015-12-22T15:24:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eafecb6e_72e77861",
+      "revId": "0e2b7e512737a1ab2a9bb77d06ec005b76716072",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8a0b8f60_cf331dc8",
         "filename": "CMakeLists.txt",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2015-12-22T05:40:05Z",
       "side": 1,
       "message": "this is only needed for vwebp you could skip it for now if you wanted",
+      "revId": "0e2b7e512737a1ab2a9bb77d06ec005b76716072",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ac3835c_b40aa038",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2015-12-22T15:24:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8a0b8f60_cf331dc8",
       "revId": "0e2b7e512737a1ab2a9bb77d06ec005b76716072",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "2ac3835c_d4071c2f",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2015-12-22T15:24:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "aa2133e4_a8897b98",
+      "revId": "0e2b7e512737a1ab2a9bb77d06ec005b76716072",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ca2ae7be_49d6014b",
         "filename": "CMakeLists.txt",
         "patchSetId": 1
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "6ac9fb78_b6362822",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2015-12-22T15:24:12Z",
+      "side": 1,
+      "message": "I cleaned it for later expansion: GLUT is a bit tricky as the official FindGLUT.cmake only looks for GL/hlut.h (and we are also compatible with GLUT/glut.h and GL/glut.h).",
+      "parentUuid": "ca2ae7be_49d6014b",
+      "revId": "0e2b7e512737a1ab2a9bb77d06ec005b76716072",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0af79f9a_cb3f95ad",
         "filename": "CMakeLists.txt",
         "patchSetId": 1
@@ -115,6 +223,24 @@
       "writtenOn": "2015-12-22T05:40:05Z",
       "side": 1,
       "message": "WebP",
+      "revId": "0e2b7e512737a1ab2a9bb77d06ec005b76716072",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea9a4b77_728678d1",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2015-12-22T15:24:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0af79f9a_cb3f95ad",
       "revId": "0e2b7e512737a1ab2a9bb77d06ec005b76716072",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
