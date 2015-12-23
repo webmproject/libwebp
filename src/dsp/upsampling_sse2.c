@@ -173,6 +173,9 @@ SSE2_UPSAMPLE_FUNC(UpsampleRgbLinePair,  VP8YuvToRgb,  3)
 SSE2_UPSAMPLE_FUNC(UpsampleBgrLinePair,  VP8YuvToBgr,  3)
 SSE2_UPSAMPLE_FUNC(UpsampleRgbaLinePair, VP8YuvToRgba, 4)
 SSE2_UPSAMPLE_FUNC(UpsampleBgraLinePair, VP8YuvToBgra, 4)
+SSE2_UPSAMPLE_FUNC(UpsampleArgbLinePair, VP8YuvToArgb, 4)
+SSE2_UPSAMPLE_FUNC(UpsampleRgba4444LinePair, VP8YuvToRgba4444, 2)
+SSE2_UPSAMPLE_FUNC(UpsampleRgb565LinePair, VP8YuvToRgb565, 2)
 
 #undef GET_M
 #undef PACK_AND_STORE
@@ -194,8 +197,13 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersSSE2(void) {
   WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePair;
   WebPUpsamplers[MODE_BGR]  = UpsampleBgrLinePair;
   WebPUpsamplers[MODE_BGRA] = UpsampleBgraLinePair;
+  WebPUpsamplers[MODE_ARGB] = UpsampleArgbLinePair;
   WebPUpsamplers[MODE_rgbA] = UpsampleRgbaLinePair;
   WebPUpsamplers[MODE_bgrA] = UpsampleBgraLinePair;
+  WebPUpsamplers[MODE_Argb] = UpsampleArgbLinePair;
+  WebPUpsamplers[MODE_RGB_565] = UpsampleRgb565LinePair;
+  WebPUpsamplers[MODE_RGBA_4444] = UpsampleRgba4444LinePair;
+  WebPUpsamplers[MODE_rgbA_4444] = UpsampleRgba4444LinePair;
 }
 
 #endif  // FANCY_UPSAMPLING

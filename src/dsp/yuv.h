@@ -174,6 +174,12 @@ void VP8YuvToBgra32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
                     uint8_t* dst);
 void VP8YuvToBgr32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
                    uint8_t* dst);
+void VP8YuvToArgb32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
+                    uint8_t* dst);
+void VP8YuvToRgba444432(const uint8_t* y, const uint8_t* u, const uint8_t* v,
+                        uint8_t* dst);
+void VP8YuvToRgb56532(const uint8_t* y, const uint8_t* u, const uint8_t* v,
+                      uint8_t* dst);
 
 #endif    // WEBP_USE_SSE2
 
