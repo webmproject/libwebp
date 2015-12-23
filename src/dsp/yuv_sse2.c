@@ -110,6 +110,50 @@ static WEBP_INLINE void PackAndStore4(const __m128i* const R,
   _mm_storeu_si128((__m128i*)(dst + 16), RGBA_hi);
 }
 
+// Pack R/G/B/A results into 16b output.
+static WEBP_INLINE void PackAndStore4444(const __m128i* const R,
+                                         const __m128i* const G,
+                                         const __m128i* const B,
+                                         const __m128i* const A,
+                                         uint8_t* const dst) {
+#if !defined(WEBP_SWAP_16BIT_CSP)
+  const __m128i rg0 = _mm_packus_epi16(*R, *G);
+  const __m128i ba0 = _mm_packus_epi16(*B, *A);
+#else
+  const __m128i rg0 = _mm_packus_epi16(*B, *A);
+  const __m128i ba0 = _mm_packus_epi16(*R, *G);
+#endif
+  const __m128i mask_0xf0 = _mm_set1_epi8(0xf0);
+  const __m128i rb1 = _mm_unpacklo_epi8(rg0, ba0);  // rbrbrbrbrb...
+  const __m128i ga1 = _mm_unpackhi_epi8(rg0, ba0);  // gagagagaga...
+  const __m128i rb2 = _mm_and_si128(rb1, mask_0xf0);
+  const __m128i ga2 = _mm_srli_epi16(_mm_and_si128(ga1, mask_0xf0), 4);
+  const __m128i rgba4444 = _mm_or_si128(rb2, ga2);
+  _mm_storeu_si128((__m128i*)dst, rgba4444);
+}
+
+// Pack R/G/B results into 16b output.
+static WEBP_INLINE void PackAndStore565(const __m128i* const R,
+                                        const __m128i* const G,
+                                        const __m128i* const B,
+                                        uint8_t* const dst) {
+  const __m128i r0 = _mm_packus_epi16(*R, *R);
+  const __m128i g0 = _mm_packus_epi16(*G, *G);
+  const __m128i b0 = _mm_packus_epi16(*B, *B);
+  const __m128i r1 = _mm_and_si128(r0, _mm_set1_epi8(0xf8));
+  const __m128i b1 = _mm_and_si128(_mm_srli_epi16(b0, 3), _mm_set1_epi8(0x1f));
+  const __m128i g1 = _mm_srli_epi16(_mm_and_si128(g0, _mm_set1_epi8(0xe0)), 5);
+  const __m128i g2 = _mm_slli_epi16(_mm_and_si128(g0, _mm_set1_epi8(0x1c)), 3);
+  const __m128i rg = _mm_or_si128(r1, g1);
+  const __m128i gb = _mm_or_si128(g2, b1);
+#if !defined(WEBP_SWAP_16BIT_CSP)
+  const __m128i rgb565 = _mm_unpacklo_epi8(rg, gb);
+#else
+  const __m128i rgb565 = _mm_unpacklo_epi8(gb, rg);
+#endif
+  _mm_storeu_si128((__m128i*)dst, rgb565);
+}
+
 // Function used several times in PlanarTo24b.
 // It samples the in buffer as follows: one every two unsigned char is stored
 // at the beginning of the buffer, while the other half is stored at the end.
@@ -182,6 +226,38 @@ void VP8YuvToBgra32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
     __m128i R, G, B;
     YUV444ToRGB(y + n, u + n, v + n, &R, &G, &B);
     PackAndStore4(&B, &G, &R, &kAlpha, dst);
+  }
+}
+
+void VP8YuvToArgb32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
+                    uint8_t* dst) {
+  const __m128i kAlpha = _mm_set1_epi16(255);
+  int n;
+  for (n = 0; n < 32; n += 8, dst += 32) {
+    __m128i R, G, B;
+    YUV444ToRGB(y + n, u + n, v + n, &R, &G, &B);
+    PackAndStore4(&kAlpha, &R, &G, &B, dst);
+  }
+}
+
+void VP8YuvToRgba444432(const uint8_t* y, const uint8_t* u, const uint8_t* v,
+                        uint8_t* dst) {
+  const __m128i kAlpha = _mm_set1_epi16(255);
+  int n;
+  for (n = 0; n < 32; n += 8, dst += 16) {
+    __m128i R, G, B;
+    YUV444ToRGB(y + n, u + n, v + n, &R, &G, &B);
+    PackAndStore4444(&R, &G, &B, &kAlpha, dst);
+  }
+}
+
+void VP8YuvToRgb56532(const uint8_t* y, const uint8_t* u, const uint8_t* v,
+                      uint8_t* dst) {
+  int n;
+  for (n = 0; n < 32; n += 8, dst += 16) {
+    __m128i R, G, B;
+    YUV444ToRGB(y + n, u + n, v + n, &R, &G, &B);
+    PackAndStore565(&R, &G, &B, dst);
   }
 }
 
