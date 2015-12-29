@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ca01073f_65f96e6d",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1142770
+      },
+      "writtenOn": "2015-12-29T01:16:49Z",
+      "side": 1,
+      "message": "Bug / test?  Looks like it\u0027s resetting this variable each time.",
+      "revId": "85875a84114e396a2137a6d3a06edb4667980802",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2afc637c_c0bbee8b",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1142770
+      },
+      "writtenOn": "2015-12-29T01:16:49Z",
+      "side": 1,
+      "message": "Not sure how this works, wouldn\u0027t this expand as e.g\n\n${PNG_LIBRARIES}\n${PNG_INCLUDE_DIRS}\n\nare PNG_LIBRARIES PNG_INCLUDE_DIRS expected to be defined somewhere e.g by the user of this module?  Should they be namespaced variables e.g WEBP_PNG_LIBRARIES in that case?",
+      "revId": "85875a84114e396a2137a6d3a06edb4667980802",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0af79f9a_74fbdedf",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1142770
+      },
+      "writtenOn": "2015-12-29T01:16:49Z",
+      "side": 1,
+      "message": "nit: If you\u0027re going to parse project metadata (e.g PACKAGE_VERSION etc.) from configure.ac would it make sense to also parse the list of source files during the configuration step?",
+      "revId": "85875a84114e396a2137a6d3a06edb4667980802",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0af79f9a_f4050e99",
+        "filename": "README",
+        "patchSetId": 2
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1142770
+      },
+      "writtenOn": "2015-12-29T01:16:49Z",
+      "side": 1,
+      "message": "Verify with MSVC 2015 and XCode ?\n\ne.g\n\nhttp://google.github.io/fplbase/fplbase_guide_windows.html\nhttp://google.github.io/fplbase/fplbase_guide_osx.html\n\nWe\u0027re using webp as a component of fplbase, as I mentioned before - to kick off this patch :) - it would be great to purge the cmake file we have for webp from the project.\n\nhttps://github.com/google/fplbase/tree/master/cmake/webp",
+      "revId": "85875a84114e396a2137a6d3a06edb4667980802",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
