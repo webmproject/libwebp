@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "aa7db3ee_4897ff2e",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2015-12-29T14:52:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ca01073f_65f96e6d",
+      "revId": "85875a84114e396a2137a6d3a06edb4667980802",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2afc637c_c0bbee8b",
         "filename": "CMakeLists.txt",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "6a773b0f_66b06eb1",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2015-12-29T14:52:09Z",
+      "side": 1,
+      "message": "Those are indeed defined by the find_package step and are defined by CMake as PNG_LIBRARIES, JPEG_LIBRARIES ...",
+      "parentUuid": "2afc637c_c0bbee8b",
+      "revId": "85875a84114e396a2137a6d3a06edb4667980802",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0af79f9a_74fbdedf",
         "filename": "CMakeLists.txt",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2015-12-29T01:16:49Z",
       "side": 1,
       "message": "nit: If you\u0027re going to parse project metadata (e.g PACKAGE_VERSION etc.) from configure.ac would it make sense to also parse the list of source files during the configuration step?",
+      "revId": "85875a84114e396a2137a6d3a06edb4667980802",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a727721_8539e216",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2015-12-29T14:52:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0af79f9a_74fbdedf",
       "revId": "85875a84114e396a2137a6d3a06edb4667980802",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
