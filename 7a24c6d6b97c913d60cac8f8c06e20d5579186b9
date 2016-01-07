@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a54ffaf_e680201f",
+        "filename": "src/dsp/lossless.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-01-07T17:19:30Z",
+      "side": 1,
+      "message": "indentation seems funny",
+      "range": {
+        "startLine": 266,
+        "startChar": 0,
+        "endLine": 266,
+        "endChar": 34
+      },
+      "revId": "7a24c6d6b97c913d60cac8f8c06e20d5579186b9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
