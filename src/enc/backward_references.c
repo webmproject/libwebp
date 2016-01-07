@@ -57,32 +57,19 @@ static int DistanceToPlaneCode(int xsize, int dist) {
   return dist + 120;
 }
 
-// Returns the exact index where array1 and array2 are different if this
-// index is strictly superior to best_len_match. Otherwise, it returns 0.
+// Returns the exact index where array1 and array2 are different. For an index
+// inferior or equal to best_len_match, the return value just has to be strictly
+// inferior to best_len_match. The current behavior is to return 0 if this index
+// is best_len_match, and the index itself otherwise.
 // If no two elements are the same, it returns max_limit.
 static WEBP_INLINE int FindMatchLength(const uint32_t* const array1,
                                        const uint32_t* const array2,
-                                       int best_len_match,
-                                       int max_limit) {
-  int match_len;
-
+                                       int best_len_match, int max_limit) {
   // Before 'expensive' linear match, check if the two arrays match at the
   // current best length index.
   if (array1[best_len_match] != array2[best_len_match]) return 0;
 
-#if defined(WEBP_USE_SSE2)
-  // Check if anything is different up to best_len_match excluded.
-  // memcmp seems to be slower on ARM so it is disabled for now.
-  if (memcmp(array1, array2, best_len_match * sizeof(*array1))) return 0;
-  match_len = best_len_match + 1;
-#else
-  match_len = 0;
-#endif
-
-  while (match_len < max_limit && array1[match_len] == array2[match_len]) {
-    ++match_len;
-  }
-  return match_len;
+  return VP8LVectorMismatch(array1, array2, max_limit);
 }
 
 // -----------------------------------------------------------------------------

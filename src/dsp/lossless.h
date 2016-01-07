@@ -262,6 +262,11 @@ extern VP8LHistogramAddFunc VP8LHistogramAdd;
 // -----------------------------------------------------------------------------
 // PrefixEncode()
 
+typedef int (*VP8LVectorMismatchFunc)(const uint32_t* const array1,
+                                      const uint32_t* const array2, int length);
+// Returns the first index where array1 and array2 are different.
+extern VP8LVectorMismatchFunc VP8LVectorMismatch;
+
 static WEBP_INLINE int VP8LBitsLog2Ceiling(uint32_t n) {
   const int log_floor = BitsLog2Floor(n);
   if (n == (n & ~(n - 1)))  // zero or a power of two.

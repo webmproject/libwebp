@@ -1053,6 +1053,17 @@ void VP8LColorSpaceTransform(int width, int height, int bits, int quality,
 }
 
 //------------------------------------------------------------------------------
+
+static int VectorMismatch(const uint32_t* const array1,
+                          const uint32_t* const array2, int length) {
+  int match_len = 0;
+
+  while (match_len < length && array1[match_len] == array2[match_len]) {
+    ++match_len;
+  }
+  return match_len;
+}
+
 // Bundles multiple (1, 2, 4 or 8) pixels into a single pixel.
 void VP8LBundleColorMap(const uint8_t* const row, int width,
                         int xbits, uint32_t* const dst) {
@@ -1149,6 +1160,8 @@ GetEntropyUnrefinedHelperFunc VP8LGetEntropyUnrefinedHelper;
 
 VP8LHistogramAddFunc VP8LHistogramAdd;
 
+VP8LVectorMismatchFunc VP8LVectorMismatch;
+
 extern void VP8LEncDspInitSSE2(void);
 extern void VP8LEncDspInitSSE41(void);
 extern void VP8LEncDspInitNEON(void);
@@ -1180,6 +1193,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInit(void) {
   VP8LGetEntropyUnrefinedHelper = GetEntropyUnrefinedHelper;
 
   VP8LHistogramAdd = HistogramAdd;
+
+  VP8LVectorMismatch = VectorMismatch;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
