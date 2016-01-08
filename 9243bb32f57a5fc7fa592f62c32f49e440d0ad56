@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa1773d7_f8ea065b",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 4
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-01-08T07:05:33Z",
+      "side": 1,
+      "message": "couldn\u0027t you leave SHARED optional to allow BUILD_SHARED_LIBS to be able to select shared vs. static?",
+      "revId": "9243bb32f57a5fc7fa592f62c32f49e440d0ad56",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
