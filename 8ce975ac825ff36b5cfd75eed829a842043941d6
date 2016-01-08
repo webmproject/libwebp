@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a41cfd9_81afd19e",
+        "filename": "src/dsp/lossless_enc_sse2.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-01-08T03:52:32Z",
+      "side": 1,
+      "message": "this and below might be the only locations where we\u0027re comparing the immediate first",
+      "revId": "8ce975ac825ff36b5cfd75eed829a842043941d6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
