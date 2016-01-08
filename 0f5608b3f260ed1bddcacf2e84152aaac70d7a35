@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa5f73f8_7bb31bb2",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 6
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-01-08T20:50:56Z",
+      "side": 1,
+      "message": "is that hard to do? I think include order would save a autoconf build, but it might be better to match that",
+      "revId": "0f5608b3f260ed1bddcacf2e84152aaac70d7a35",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
