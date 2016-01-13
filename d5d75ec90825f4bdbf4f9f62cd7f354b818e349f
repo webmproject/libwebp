@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "676db610_1de6f401",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 8
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-01-13T01:30:39Z",
+      "side": 1,
+      "message": "there\u0027s no /arch:SSE41 for msvc, it doesn\u0027t need anything to be able to build those intrinsics; note this differs from clang-cl which still requires -msse4.1\n\nhttps://msdn.microsoft.com/en-us/library/jj620900.aspx",
+      "revId": "d5d75ec90825f4bdbf4f9f62cd7f354b818e349f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
