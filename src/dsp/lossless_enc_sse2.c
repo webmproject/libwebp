@@ -330,7 +330,7 @@ static int VectorMismatch(const uint32_t* const array1,
                           const uint32_t* const array2, int length) {
   int match_len;
 
-  if (12 <= length) {
+  if (length >= 12) {
     __m128i A0 = _mm_loadu_si128((const __m128i*)&array1[0]);
     __m128i A1 = _mm_loadu_si128((const __m128i*)&array2[0]);
     match_len = 0;
@@ -356,12 +356,12 @@ static int VectorMismatch(const uint32_t* const array1,
   } else {
     match_len = 0;
     // Unroll the potential first two loops.
-    if (4 <= length &&
+    if (length >= 4 &&
         _mm_movemask_epi8(_mm_cmpeq_epi32(
             _mm_loadu_si128((const __m128i*)&array1[0]),
             _mm_loadu_si128((const __m128i*)&array2[0]))) == 0xffff) {
       match_len = 4;
-      if (8 <= length &&
+      if (length >= 8 &&
           _mm_movemask_epi8(_mm_cmpeq_epi32(
               _mm_loadu_si128((const __m128i*)&array1[4]),
               _mm_loadu_si128((const __m128i*)&array2[4]))) == 0xffff)
