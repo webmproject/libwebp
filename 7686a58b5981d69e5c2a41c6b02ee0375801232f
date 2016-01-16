@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c75ca266_1b042d9b",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 12
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-01-16T04:27:56Z",
+      "side": 1,
+      "message": "specific",
+      "revId": "7686a58b5981d69e5c2a41c6b02ee0375801232f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07623a24_eb6d2746",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 12
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-01-16T04:27:56Z",
+      "side": 1,
+      "message": "you can match this main() and formatting to the bswap blocks",
+      "revId": "7686a58b5981d69e5c2a41c6b02ee0375801232f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
