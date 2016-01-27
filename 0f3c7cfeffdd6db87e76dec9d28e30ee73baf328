@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f4b5d6da_573303e5",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 14
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-01-27T23:59:29Z",
+      "side": 1,
+      "message": "int main(void) {",
+      "revId": "0f3c7cfeffdd6db87e76dec9d28e30ee73baf328",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4a43ebb_90ee693d",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 14
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-01-27T23:59:29Z",
+      "side": 1,
+      "message": "only one return needed",
+      "revId": "0f3c7cfeffdd6db87e76dec9d28e30ee73baf328",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4b8d2d6_7b99d25f",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 14
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-01-27T23:59:29Z",
+      "side": 1,
+      "message": "I didn\u0027t check exactly what happened here, does /arch:AVX2 get applied to the sse4 files?",
+      "revId": "0f3c7cfeffdd6db87e76dec9d28e30ee73baf328",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
