@@ -24,7 +24,7 @@ endif()
 include(CheckCSourceCompiles)
 check_c_source_compiles("
     int main(void) {
-      __builtin_bswap16(0);
+      (void)__builtin_bswap16(0);
       return 0;
     }
   "
@@ -32,7 +32,7 @@ check_c_source_compiles("
 )
 check_c_source_compiles("
     int main(void) {
-      __builtin_bswap32(0);
+      (void)__builtin_bswap32(0);
       return 0;
     }
   "
@@ -40,7 +40,7 @@ check_c_source_compiles("
 )
 check_c_source_compiles("
     int main(void) {
-      __builtin_bswap64(0);
+      (void)__builtin_bswap64(0);
       return 0;
     }
   "
