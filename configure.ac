@@ -221,7 +221,7 @@ dnl ===   AC_DEFINE'ing <define> if successful.
 AC_DEFUN([CHECK_FOR_BUILTIN],
          [AC_LANG_PUSH([C])
           AC_MSG_CHECKING([for $1])
-          AC_LINK_IFELSE([AC_LANG_PROGRAM([], [$1($2)])],
+          AC_LINK_IFELSE([AC_LANG_PROGRAM([], [(void)$1($2)])],
                          [AC_MSG_RESULT([yes])
                           AC_DEFINE([$3], [1],
                                     [Set to 1 if $1 is available])],
