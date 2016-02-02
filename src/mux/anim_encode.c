@@ -173,6 +173,7 @@ static void DefaultEncoderOptions(WebPAnimEncoderOptions* const enc_options) {
   enc_options->minimize_size = 0;
   DisableKeyframes(enc_options);
   enc_options->allow_mixed = 0;
+  enc_options->verbose = 0;
 }
 
 int WebPAnimEncoderOptionsInitInternal(WebPAnimEncoderOptions* enc_options,
