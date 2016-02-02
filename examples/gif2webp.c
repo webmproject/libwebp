@@ -217,6 +217,7 @@ int main(int argc, const char *argv[]) {
       return 0;
     } else if (!strcmp(argv[c], "-quiet")) {
       quiet = 1;
+      enc_options.verbose = 0;
     } else if (!strcmp(argv[c], "-v")) {
       verbose = 1;
       enc_options.verbose = 1;
