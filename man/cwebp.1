@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "December 14, 2015"
+.TH CWEBP 1 "February 11, 2016"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -118,16 +118,20 @@ or without alpha).
 .BI \-size " int
 Specify a target size (in bytes) to try and reach for the compressed output.
 Compressor will make several pass of partial encoding in order to get as
-close as possible to this target.
+close as possible to this target. If both \fB\-size\fP and \fB\-psnr\fP
+as used, \fB\-size\fP value will prevail.
 .TP
 .BI \-psnr " float
 Specify a target PSNR (in dB) to try and reach for the compressed output.
 Compressor will make several pass of partial encoding in order to get as
-close as possible to this target.
+close as possible to this target. If both \fB\-size\fP and \fB\-psnr\fP
+as used, \fB\-size\fP value will prevail.
 .TP
 .BI \-pass " int
 Set a maximum number of passes to use during the dichotomy used by
 options \fB\-size\fP or \fB\-psnr\fP. Maximum value is 10, default is 1.
+If options \fB\-size\fP or \fB\-psnr\fP were used, but \fB\-pass\fP wasn't
+specified, a default value of '6' passes will be used.
 .TP
 .B \-af
 Turns auto\-filter on. This algorithm will spend additional time optimizing
