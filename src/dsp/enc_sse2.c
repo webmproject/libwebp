@@ -17,37 +17,9 @@
 #include <stdlib.h>  // for abs()
 #include <emmintrin.h>
 
+#include "./common_sse2.h"
 #include "../enc/cost.h"
 #include "../enc/vp8enci.h"
-
-//------------------------------------------------------------------------------
-// Quite useful macro for debugging. Left here for convenience.
-
-#if 0
-#include <stdio.h>
-static void PrintReg(const __m128i r, const char* const name, int size) {
-  int n;
-  union {
-    __m128i r;
-    uint8_t i8[16];
-    uint16_t i16[8];
-    uint32_t i32[4];
-    uint64_t i64[2];
-  } tmp;
-  tmp.r = r;
-  fprintf(stderr, "%s\t: ", name);
-  if (size == 8) {
-    for (n = 0; n < 16; ++n) fprintf(stderr, "%.2x ", tmp.i8[n]);
-  } else if (size == 16) {
-    for (n = 0; n < 8; ++n) fprintf(stderr, "%.4x ", tmp.i16[n]);
-  } else if (size == 32) {
-    for (n = 0; n < 4; ++n) fprintf(stderr, "%.8x ", tmp.i32[n]);
-  } else {
-    for (n = 0; n < 2; ++n) fprintf(stderr, "%.16lx ", tmp.i64[n]);
-  }
-  fprintf(stderr, "\n");
-}
-#endif
 
 //------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
@@ -131,34 +103,7 @@ static void ITransform(const uint8_t* ref, const int16_t* in, uint8_t* dst,
     const __m128i tmp3 = _mm_sub_epi16(a, d);
 
     // Transpose the two 4x4.
-    // a00 a01 a02 a03   b00 b01 b02 b03
-    // a10 a11 a12 a13   b10 b11 b12 b13
-    // a20 a21 a22 a23   b20 b21 b22 b23
-    // a30 a31 a32 a33   b30 b31 b32 b33
-    const __m128i transpose0_0 = _mm_unpacklo_epi16(tmp0, tmp1);
-    const __m128i transpose0_1 = _mm_unpacklo_epi16(tmp2, tmp3);
-    const __m128i transpose0_2 = _mm_unpackhi_epi16(tmp0, tmp1);
-    const __m128i transpose0_3 = _mm_unpackhi_epi16(tmp2, tmp3);
-    // a00 a10 a01 a11   a02 a12 a03 a13
-    // a20 a30 a21 a31   a22 a32 a23 a33
-    // b00 b10 b01 b11   b02 b12 b03 b13
-    // b20 b30 b21 b31   b22 b32 b23 b33
-    const __m128i transpose1_0 = _mm_unpacklo_epi32(transpose0_0, transpose0_1);
-    const __m128i transpose1_1 = _mm_unpacklo_epi32(transpose0_2, transpose0_3);
-    const __m128i transpose1_2 = _mm_unpackhi_epi32(transpose0_0, transpose0_1);
-    const __m128i transpose1_3 = _mm_unpackhi_epi32(transpose0_2, transpose0_3);
-    // a00 a10 a20 a30 a01 a11 a21 a31
-    // b00 b10 b20 b30 b01 b11 b21 b31
-    // a02 a12 a22 a32 a03 a13 a23 a33
-    // b02 b12 a22 b32 b03 b13 b23 b33
-    T0 = _mm_unpacklo_epi64(transpose1_0, transpose1_1);
-    T1 = _mm_unpackhi_epi64(transpose1_0, transpose1_1);
-    T2 = _mm_unpacklo_epi64(transpose1_2, transpose1_3);
-    T3 = _mm_unpackhi_epi64(transpose1_2, transpose1_3);
-    // a00 a10 a20 a30   b00 b10 b20 b30
-    // a01 a11 a21 a31   b01 b11 b21 b31
-    // a02 a12 a22 a32   b02 b12 b22 b32
-    // a03 a13 a23 a33   b03 b13 b23 b33
+    VP8Transpose_2_4x4_16b(&tmp0, &tmp1, &tmp2, &tmp3, &T0, &T1, &T2, &T3);
   }
 
   // Horizontal pass and subsequent transpose.
@@ -193,34 +138,8 @@ static void ITransform(const uint8_t* ref, const int16_t* in, uint8_t* dst,
     const __m128i shifted3 = _mm_srai_epi16(tmp3, 3);
 
     // Transpose the two 4x4.
-    // a00 a01 a02 a03   b00 b01 b02 b03
-    // a10 a11 a12 a13   b10 b11 b12 b13
-    // a20 a21 a22 a23   b20 b21 b22 b23
-    // a30 a31 a32 a33   b30 b31 b32 b33
-    const __m128i transpose0_0 = _mm_unpacklo_epi16(shifted0, shifted1);
-    const __m128i transpose0_1 = _mm_unpacklo_epi16(shifted2, shifted3);
-    const __m128i transpose0_2 = _mm_unpackhi_epi16(shifted0, shifted1);
-    const __m128i transpose0_3 = _mm_unpackhi_epi16(shifted2, shifted3);
-    // a00 a10 a01 a11   a02 a12 a03 a13
-    // a20 a30 a21 a31   a22 a32 a23 a33
-    // b00 b10 b01 b11   b02 b12 b03 b13
-    // b20 b30 b21 b31   b22 b32 b23 b33
-    const __m128i transpose1_0 = _mm_unpacklo_epi32(transpose0_0, transpose0_1);
-    const __m128i transpose1_1 = _mm_unpacklo_epi32(transpose0_2, transpose0_3);
-    const __m128i transpose1_2 = _mm_unpackhi_epi32(transpose0_0, transpose0_1);
-    const __m128i transpose1_3 = _mm_unpackhi_epi32(transpose0_2, transpose0_3);
-    // a00 a10 a20 a30 a01 a11 a21 a31
-    // b00 b10 b20 b30 b01 b11 b21 b31
-    // a02 a12 a22 a32 a03 a13 a23 a33
-    // b02 b12 a22 b32 b03 b13 b23 b33
-    T0 = _mm_unpacklo_epi64(transpose1_0, transpose1_1);
-    T1 = _mm_unpackhi_epi64(transpose1_0, transpose1_1);
-    T2 = _mm_unpacklo_epi64(transpose1_2, transpose1_3);
-    T3 = _mm_unpackhi_epi64(transpose1_2, transpose1_3);
-    // a00 a10 a20 a30   b00 b10 b20 b30
-    // a01 a11 a21 a31   b01 b11 b21 b31
-    // a02 a12 a22 a32   b02 b12 b22 b32
-    // a03 a13 a23 a33   b03 b13 b23 b33
+    VP8Transpose_2_4x4_16b(&shifted0, &shifted1, &shifted2, &shifted3, &T0, &T1,
+                        &T2, &T3);
   }
 
   // Add inverse transform to 'ref' and store.
@@ -692,12 +611,10 @@ static WEBP_INLINE void TrueMotion(uint8_t* dst, const uint8_t* left,
 
 static WEBP_INLINE void DC8uv(uint8_t* dst, const uint8_t* left,
                               const uint8_t* top) {
-  const __m128i zero = _mm_setzero_si128();
   const __m128i top_values = _mm_loadl_epi64((const __m128i*)top);
   const __m128i left_values = _mm_loadl_epi64((const __m128i*)left);
-  const __m128i sum_top = _mm_sad_epu8(top_values, zero);
-  const __m128i sum_left = _mm_sad_epu8(left_values, zero);
-  const int DC = _mm_cvtsi128_si32(sum_top) + _mm_cvtsi128_si32(sum_left) + 8;
+  const __m128i combined = _mm_unpacklo_epi64(top_values, left_values);
+  const int DC = VP8HorizontalAdd8b(&combined) + 8;
   Put8x8uv(DC >> 4, dst);
 }
 
@@ -735,27 +652,16 @@ static WEBP_INLINE void DC8uvMode(uint8_t* dst, const uint8_t* left,
 
 static WEBP_INLINE void DC16(uint8_t* dst, const uint8_t* left,
                              const uint8_t* top) {
-  const __m128i zero = _mm_setzero_si128();
   const __m128i top_row = _mm_load_si128((const __m128i*)top);
   const __m128i left_row = _mm_load_si128((const __m128i*)left);
-  const __m128i sad8x2 = _mm_sad_epu8(top_row, zero);
-  // sum the two sads: sad8x2[0:1] + sad8x2[8:9]
-  const __m128i sum_top = _mm_add_epi16(sad8x2, _mm_shuffle_epi32(sad8x2, 2));
-  const __m128i sad8x2_left = _mm_sad_epu8(left_row, zero);
-  // sum the two sads: sad8x2[0:1] + sad8x2[8:9]
-  const __m128i sum_left =
-      _mm_add_epi16(sad8x2_left, _mm_shuffle_epi32(sad8x2_left, 2));
-  const int DC = _mm_cvtsi128_si32(sum_top) + _mm_cvtsi128_si32(sum_left) + 16;
+  const int DC =
+      VP8HorizontalAdd8b(&top_row) + VP8HorizontalAdd8b(&left_row) + 16;
   Put16(DC >> 5, dst);
 }
 
 static WEBP_INLINE void DC16NoLeft(uint8_t* dst, const uint8_t* top) {
-  const __m128i zero = _mm_setzero_si128();
   const __m128i top_row = _mm_load_si128((const __m128i*)top);
-  const __m128i sad8x2 = _mm_sad_epu8(top_row, zero);
-  // sum the two sads: sad8x2[0:1] + sad8x2[8:9]
-  const __m128i sum = _mm_add_epi16(sad8x2, _mm_shuffle_epi32(sad8x2, 2));
-  const int DC = _mm_cvtsi128_si32(sum) + 8;
+  const int DC = VP8HorizontalAdd8b(&top_row) + 8;
   Put16(DC >> 4, dst);
 }
 
@@ -1209,30 +1115,7 @@ static int TTransform(const uint8_t* inA, const uint8_t* inB,
     // a30 a31 a32 a33   b30 b31 b32 b33
 
     // Transpose the two 4x4.
-    const __m128i transpose0_0 = _mm_unpacklo_epi16(b0, b1);
-    const __m128i transpose0_1 = _mm_unpacklo_epi16(b2, b3);
-    const __m128i transpose0_2 = _mm_unpackhi_epi16(b0, b1);
-    const __m128i transpose0_3 = _mm_unpackhi_epi16(b2, b3);
-    // a00 a10 a01 a11   a02 a12 a03 a13
-    // a20 a30 a21 a31   a22 a32 a23 a33
-    // b00 b10 b01 b11   b02 b12 b03 b13
-    // b20 b30 b21 b31   b22 b32 b23 b33
-    const __m128i transpose1_0 = _mm_unpacklo_epi32(transpose0_0, transpose0_1);
-    const __m128i transpose1_1 = _mm_unpacklo_epi32(transpose0_2, transpose0_3);
-    const __m128i transpose1_2 = _mm_unpackhi_epi32(transpose0_0, transpose0_1);
-    const __m128i transpose1_3 = _mm_unpackhi_epi32(transpose0_2, transpose0_3);
-    // a00 a10 a20 a30 a01 a11 a21 a31
-    // b00 b10 b20 b30 b01 b11 b21 b31
-    // a02 a12 a22 a32 a03 a13 a23 a33
-    // b02 b12 a22 b32 b03 b13 b23 b33
-    tmp_0 = _mm_unpacklo_epi64(transpose1_0, transpose1_1);
-    tmp_1 = _mm_unpackhi_epi64(transpose1_0, transpose1_1);
-    tmp_2 = _mm_unpacklo_epi64(transpose1_2, transpose1_3);
-    tmp_3 = _mm_unpackhi_epi64(transpose1_2, transpose1_3);
-    // a00 a10 a20 a30   b00 b10 b20 b30
-    // a01 a11 a21 a31   b01 b11 b21 b31
-    // a02 a12 a22 a32   b02 b12 b22 b32
-    // a03 a13 a23 a33   b03 b13 b23 b33
+    VP8Transpose_2_4x4_16b(&b0, &b1, &b2, &b3, &tmp_0, &tmp_1, &tmp_2, &tmp_3);
   }
 
   // Vertical pass and difference of weighted sums.

@@ -17,6 +17,7 @@
 #include <smmintrin.h>
 #include <stdlib.h>  // for abs()
 
+#include "./common_sse2.h"
 #include "../enc/vp8enci.h"
 
 //------------------------------------------------------------------------------
@@ -132,30 +133,7 @@ static int TTransform(const uint8_t* inA, const uint8_t* inB,
     // a30 a31 a32 a33   b30 b31 b32 b33
 
     // Transpose the two 4x4.
-    const __m128i transpose0_0 = _mm_unpacklo_epi16(b0, b1);
-    const __m128i transpose0_1 = _mm_unpacklo_epi16(b2, b3);
-    const __m128i transpose0_2 = _mm_unpackhi_epi16(b0, b1);
-    const __m128i transpose0_3 = _mm_unpackhi_epi16(b2, b3);
-    // a00 a10 a01 a11   a02 a12 a03 a13
-    // a20 a30 a21 a31   a22 a32 a23 a33
-    // b00 b10 b01 b11   b02 b12 b03 b13
-    // b20 b30 b21 b31   b22 b32 b23 b33
-    const __m128i transpose1_0 = _mm_unpacklo_epi32(transpose0_0, transpose0_1);
-    const __m128i transpose1_1 = _mm_unpacklo_epi32(transpose0_2, transpose0_3);
-    const __m128i transpose1_2 = _mm_unpackhi_epi32(transpose0_0, transpose0_1);
-    const __m128i transpose1_3 = _mm_unpackhi_epi32(transpose0_2, transpose0_3);
-    // a00 a10 a20 a30 a01 a11 a21 a31
-    // b00 b10 b20 b30 b01 b11 b21 b31
-    // a02 a12 a22 a32 a03 a13 a23 a33
-    // b02 b12 a22 b32 b03 b13 b23 b33
-    tmp_0 = _mm_unpacklo_epi64(transpose1_0, transpose1_1);
-    tmp_1 = _mm_unpackhi_epi64(transpose1_0, transpose1_1);
-    tmp_2 = _mm_unpacklo_epi64(transpose1_2, transpose1_3);
-    tmp_3 = _mm_unpackhi_epi64(transpose1_2, transpose1_3);
-    // a00 a10 a20 a30   b00 b10 b20 b30
-    // a01 a11 a21 a31   b01 b11 b21 b31
-    // a02 a12 a22 a32   b02 b12 b22 b32
-    // a03 a13 a23 a33   b03 b13 b23 b33
+    VP8Transpose_2_4x4_16b(&b0, &b1, &b2, &b3, &tmp_0, &tmp_1, &tmp_2, &tmp_3);
   }
 
   // Vertical pass and difference of weighted sums.
