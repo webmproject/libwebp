@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d8c6c87_b61810bb",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-02-16T22:31:11Z",
+      "side": 1,
+      "message": "as measured by what?",
+      "revId": "bf2b4f114f2358682fbea05a8066729dc2cb6f81",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d76744b_14c0fc62",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 4
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-02-16T22:31:11Z",
+      "side": 1,
+      "message": "makefile.unix has a list too; that never got converted to normal deps file creation mostly for simplicity",
+      "revId": "bf2b4f114f2358682fbea05a8066729dc2cb6f81",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
