@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd7f7c1f_330507f4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-02-16T20:21:39Z",
+      "side": 1,
+      "message": "you need a blank line after this otherwise the two will be joined as the subject",
+      "revId": "e2134e62a22f43a41dbe6e6f0afd4b97fa3210f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd255844_36965602",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-02-16T20:21:39Z",
+      "side": 1,
+      "message": "so previously we were dropping other cflags otherwise I would have expected a compile issue if e.g., -msse4.1 wasn\u0027t present",
+      "revId": "e2134e62a22f43a41dbe6e6f0afd4b97fa3210f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
