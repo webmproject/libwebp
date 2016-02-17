@@ -33,6 +33,24 @@
       "revId": "e2134e62a22f43a41dbe6e6f0afd4b97fa3210f8",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3de034e0_f2aa7048",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2016-02-17T08:10:20Z",
+      "side": 1,
+      "message": "The flags would actually become something like \"-pthread;-mno-sse4.1\" which is invalid syntax compared to \"-pthread -mno-sse4.1\". I guess we had not tested a configuration with SSE4 not present. I was thinking about adding options to choose intrinsics, what do you think ?",
+      "parentUuid": "dd255844_36965602",
+      "revId": "e2134e62a22f43a41dbe6e6f0afd4b97fa3210f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
