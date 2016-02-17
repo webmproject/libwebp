@@ -68,13 +68,13 @@ static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
 // reconstructed samples.
 
 // Hadamard transform
-// Returns the difference between the weighted sum of the absolute value of
-// transformed coefficients.
+// Returns the weighted sum of the absolute value of transformed coefficients.
+// w[] contains a row-major 4 by 4 symmetric matrix.
 static int TTransform(const uint8_t* inA, const uint8_t* inB,
                       const uint16_t* const w) {
   __m128i tmp_0, tmp_1, tmp_2, tmp_3;
 
-  // Load, combine and transpose inputs.
+  // Load and combine inputs.
   {
     const __m128i inA_0 = _mm_loadl_epi64((const __m128i*)&inA[BPS * 0]);
     const __m128i inA_1 = _mm_loadl_epi64((const __m128i*)&inA[BPS * 1]);
@@ -86,37 +86,22 @@ static int TTransform(const uint8_t* inA, const uint8_t* inB,
     const __m128i inB_3 = _mm_loadl_epi64((const __m128i*)&inB[BPS * 3]);
 
     // Combine inA and inB (we'll do two transforms in parallel).
-    const __m128i inAB_0 = _mm_unpacklo_epi8(inA_0, inB_0);
-    const __m128i inAB_1 = _mm_unpacklo_epi8(inA_1, inB_1);
-    const __m128i inAB_2 = _mm_unpacklo_epi8(inA_2, inB_2);
-    const __m128i inAB_3 = _mm_unpacklo_epi8(inA_3, inB_3);
-    // a00 b00 a01 b01 a02 b03 a03 b03   0 0 0 0 0 0 0 0
-    // a10 b10 a11 b11 a12 b12 a13 b13   0 0 0 0 0 0 0 0
-    // a20 b20 a21 b21 a22 b22 a23 b23   0 0 0 0 0 0 0 0
-    // a30 b30 a31 b31 a32 b32 a33 b33   0 0 0 0 0 0 0 0
-
-    // Transpose the two 4x4, discarding the filling zeroes.
-    const __m128i transpose0_0 = _mm_unpacklo_epi8(inAB_0, inAB_2);
-    const __m128i transpose0_1 = _mm_unpacklo_epi8(inAB_1, inAB_3);
-    // a00 a20  b00 b20  a01 a21  b01 b21  a02 a22  b02 b22  a03 a23  b03 b23
-    // a10 a30  b10 b30  a11 a31  b11 b31  a12 a32  b12 b32  a13 a33  b13 b33
-    const __m128i transpose1_0 = _mm_unpacklo_epi8(transpose0_0, transpose0_1);
-    const __m128i transpose1_1 = _mm_unpackhi_epi8(transpose0_0, transpose0_1);
-    // a00 a10 a20 a30  b00 b10 b20 b30  a01 a11 a21 a31  b01 b11 b21 b31
-    // a02 a12 a22 a32  b02 b12 b22 b32  a03 a13 a23 a33  b03 b13 b23 b33
-
-    // Convert to 16b.
-    tmp_0 = _mm_cvtepu8_epi16(transpose1_0);
-    tmp_1 = _mm_cvtepu8_epi16(_mm_srli_si128(transpose1_0, 8));
-    tmp_2 = _mm_cvtepu8_epi16(transpose1_1);
-    tmp_3 = _mm_cvtepu8_epi16(_mm_srli_si128(transpose1_1, 8));
-    // a00 a10 a20 a30   b00 b10 b20 b30
-    // a01 a11 a21 a31   b01 b11 b21 b31
-    // a02 a12 a22 a32   b02 b12 b22 b32
-    // a03 a13 a23 a33   b03 b13 b23 b33
+    const __m128i inAB_0 = _mm_unpacklo_epi32(inA_0, inB_0);
+    const __m128i inAB_1 = _mm_unpacklo_epi32(inA_1, inB_1);
+    const __m128i inAB_2 = _mm_unpacklo_epi32(inA_2, inB_2);
+    const __m128i inAB_3 = _mm_unpacklo_epi32(inA_3, inB_3);
+    tmp_0 = _mm_cvtepu8_epi16(inAB_0);
+    tmp_1 = _mm_cvtepu8_epi16(inAB_1);
+    tmp_2 = _mm_cvtepu8_epi16(inAB_2);
+    tmp_3 = _mm_cvtepu8_epi16(inAB_3);
+    // a00 a01 a02 a03   b00 b01 b02 b03
+    // a10 a11 a12 a13   b10 b11 b12 b13
+    // a20 a21 a22 a23   b20 b21 b22 b23
+    // a30 a31 a32 a33   b30 b31 b32 b33
   }
 
-  // Horizontal pass and subsequent transpose.
+  // Vertical pass first to avoid a transpose (vertical and horizontal passes
+  // are commutative because w/kWeightY is symmetric) and subsequent transpose.
   {
     // Calculate a and b (two 4x4 at once).
     const __m128i a0 = _mm_add_epi16(tmp_0, tmp_2);
@@ -136,7 +121,7 @@ static int TTransform(const uint8_t* inA, const uint8_t* inB,
     VP8Transpose_2_4x4_16b(&b0, &b1, &b2, &b3, &tmp_0, &tmp_1, &tmp_2, &tmp_3);
   }
 
-  // Vertical pass and difference of weighted sums.
+  // Horizontal pass and difference of weighted sums.
   {
     // Load all inputs.
     const __m128i w_0 = _mm_loadu_si128((const __m128i*)&w[0]);
