@@ -22,10 +22,6 @@
 #include "../utils/utils.h"
 #include "../webp/encode.h"
 
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-#include "./vp8li.h"
-#endif  // WEBP_EXPERIMENTAL_FEATURES
-
 #ifdef __cplusplus
 extern "C" {
 #endif
