@@ -292,42 +292,42 @@ static void FTransformPass2(const __m128i* const v01, const __m128i* const v32,
 
 static void FTransform(const uint8_t* src, const uint8_t* ref, int16_t* out) {
   const __m128i zero = _mm_setzero_si128();
-
-  // Load src and convert to 16b.
+  // Load src.
   const __m128i src0 = _mm_loadl_epi64((const __m128i*)&src[0 * BPS]);
   const __m128i src1 = _mm_loadl_epi64((const __m128i*)&src[1 * BPS]);
   const __m128i src2 = _mm_loadl_epi64((const __m128i*)&src[2 * BPS]);
   const __m128i src3 = _mm_loadl_epi64((const __m128i*)&src[3 * BPS]);
-  const __m128i src_0 = _mm_unpacklo_epi8(src0, zero);
-  const __m128i src_1 = _mm_unpacklo_epi8(src1, zero);
-  const __m128i src_2 = _mm_unpacklo_epi8(src2, zero);
-  const __m128i src_3 = _mm_unpacklo_epi8(src3, zero);
-  // Load ref and convert to 16b.
+  // 00 01 02 03 *
+  // 10 11 12 13 *
+  // 20 21 22 23 *
+  // 30 31 32 33 *
+  // Shuffle.
+  const __m128i src_0 = _mm_unpacklo_epi16(src0, src1);
+  const __m128i src_1 = _mm_unpacklo_epi16(src2, src3);
+  // 00 01 10 11 02 03 12 13 * * ...
+  // 20 21 30 31 22 22 32 33 * * ...
+
+  // Load ref.
   const __m128i ref0 = _mm_loadl_epi64((const __m128i*)&ref[0 * BPS]);
   const __m128i ref1 = _mm_loadl_epi64((const __m128i*)&ref[1 * BPS]);
   const __m128i ref2 = _mm_loadl_epi64((const __m128i*)&ref[2 * BPS]);
   const __m128i ref3 = _mm_loadl_epi64((const __m128i*)&ref[3 * BPS]);
-  const __m128i ref_0 = _mm_unpacklo_epi8(ref0, zero);
-  const __m128i ref_1 = _mm_unpacklo_epi8(ref1, zero);
-  const __m128i ref_2 = _mm_unpacklo_epi8(ref2, zero);
-  const __m128i ref_3 = _mm_unpacklo_epi8(ref3, zero);
-  // Compute difference. -> 00 01 02 03 00 00 00 00
-  const __m128i diff0 = _mm_sub_epi16(src_0, ref_0);
-  const __m128i diff1 = _mm_sub_epi16(src_1, ref_1);
-  const __m128i diff2 = _mm_sub_epi16(src_2, ref_2);
-  const __m128i diff3 = _mm_sub_epi16(src_3, ref_3);
+  const __m128i ref_0 = _mm_unpacklo_epi16(ref0, ref1);
+  const __m128i ref_1 = _mm_unpacklo_epi16(ref2, ref3);
 
-  // Unpack and shuffle
-  // 00 01 02 03   0 0 0 0
-  // 10 11 12 13   0 0 0 0
-  // 20 21 22 23   0 0 0 0
-  // 30 31 32 33   0 0 0 0
-  const __m128i shuf01 = _mm_unpacklo_epi32(diff0, diff1);
-  const __m128i shuf23 = _mm_unpacklo_epi32(diff2, diff3);
+  // Convert both to 16 bit.
+  const __m128i src_0_16b = _mm_unpacklo_epi8(src_0, zero);
+  const __m128i src_1_16b = _mm_unpacklo_epi8(src_1, zero);
+  const __m128i ref_0_16b = _mm_unpacklo_epi8(ref_0, zero);
+  const __m128i ref_1_16b = _mm_unpacklo_epi8(ref_1, zero);
+
+  // Compute the difference.
+  const __m128i row01 = _mm_sub_epi16(src_0_16b, ref_0_16b);
+  const __m128i row23 = _mm_sub_epi16(src_1_16b, ref_1_16b);
   __m128i v01, v32;
 
   // First pass
-  FTransformPass1(&shuf01, &shuf23, &v01, &v32);
+  FTransformPass1(&row01, &row23, &v01, &v32);
 
   // Second pass
   FTransformPass2(&v01, &v32, out);
