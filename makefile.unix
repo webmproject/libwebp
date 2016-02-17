@@ -260,6 +260,7 @@ HDRS = \
     src/dec/vp8i.h \
     src/dec/vp8li.h \
     src/dec/webpi.h \
+    src/dsp/common_sse2.h \
     src/dsp/dsp.h \
     src/dsp/lossless.h \
     src/dsp/mips_macro.h \
