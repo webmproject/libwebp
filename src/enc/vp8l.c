@@ -1114,6 +1114,12 @@ static WebPEncodingError WriteImage(const WebPPicture* const pic,
 
 // -----------------------------------------------------------------------------
 
+static void ClearTransformBuffer(VP8LEncoder* const enc) {
+  WebPSafeFree(enc->transform_mem_);
+  enc->transform_mem_ = NULL;
+  enc->transform_mem_size_ = 0;
+}
+
 // Allocates the memory for argb (W x H) buffer, 2 rows of context for
 // prediction and transform data.
 // Flags influencing the memory allocated:
@@ -1122,7 +1128,6 @@ static WebPEncodingError WriteImage(const WebPPicture* const pic,
 static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
                                                  int width, int height) {
   WebPEncodingError err = VP8_ENC_OK;
-  if (enc->argb_ == NULL) {
     const int tile_size = 1 << enc->transform_bits_;
     const uint64_t image_size = width * height;
     // Ensure enough size for tiles, as well as for two scanlines and two
@@ -1134,29 +1139,30 @@ static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
             ? VP8LSubSampleSize(width, enc->transform_bits_) *
               VP8LSubSampleSize(height, enc->transform_bits_)
             : 0;
-    const uint64_t total_size =
+  const uint64_t mem_size =
         image_size + WEBP_ALIGN_CST +
         argb_scratch_size + WEBP_ALIGN_CST +
         (uint64_t)transform_data_size;
-    uint32_t* mem = (uint32_t*)WebPSafeMalloc(total_size, sizeof(*mem));
+  uint32_t* mem = enc->transform_mem_;
+  if (mem == NULL || mem_size > enc->transform_mem_size_) {
+    ClearTransformBuffer(enc);
+    mem = (uint32_t*)WebPSafeMalloc(mem_size, sizeof(*mem));
     if (mem == NULL) {
       err = VP8_ENC_ERROR_OUT_OF_MEMORY;
       goto Error;
     }
+    enc->transform_mem_ = mem;
+    enc->transform_mem_size_ = (size_t)mem_size;
+  }
     enc->argb_ = mem;
     mem = (uint32_t*)WEBP_ALIGN(mem + image_size);
     enc->argb_scratch_ = mem;
     mem = (uint32_t*)WEBP_ALIGN(mem + argb_scratch_size);
     enc->transform_data_ = mem;
+
     enc->current_width_ = width;
-  }
  Error:
   return err;
-}
-
-static void ClearTransformBuffer(VP8LEncoder* const enc) {
-  WebPSafeFree(enc->argb_);
-  enc->argb_ = NULL;
 }
 
 static WebPEncodingError MakeInputImageCopy(VP8LEncoder* const enc) {

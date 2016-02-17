@@ -32,6 +32,9 @@ typedef struct {
   uint32_t* argb_scratch_;      // Scratch memory for argb rows
                                 // (used for prediction).
   uint32_t* transform_data_;    // Scratch memory for transform data.
+  uint32_t* transform_mem_;       // Currently allocated memory.
+  size_t    transform_mem_size_;  // Currently allocated memory size.
+
   int       current_width_;     // Corresponds to packed image width.
 
   // Encoding parameters derived from quality parameter.
