@@ -382,8 +382,7 @@ static void FTransform2(const uint8_t* src, const uint8_t* ref, int16_t* out) {
 }
 
 static void FTransformWHTRow(const int16_t* const in, __m128i* const out) {
-  const __m128i kMult1 = _mm_set_epi16(0, 0, 0, 0, 1, 1, 1, 1);
-  const __m128i kMult2 = _mm_set_epi16(0, 0, 0, 0, -1, 1, -1, 1);
+  const __m128i kMult = _mm_set_epi16(-1, 1, -1, 1, 1, 1, 1, 1);
   const __m128i src0 = _mm_loadl_epi64((__m128i*)&in[0 * 16]);
   const __m128i src1 = _mm_loadl_epi64((__m128i*)&in[1 * 16]);
   const __m128i src2 = _mm_loadl_epi64((__m128i*)&in[2 * 16]);
@@ -392,33 +391,38 @@ static void FTransformWHTRow(const int16_t* const in, __m128i* const out) {
   const __m128i A23 = _mm_unpacklo_epi16(src2, src3);  // A2 A3 | ...
   const __m128i B0 = _mm_adds_epi16(A01, A23);    // a0 | a1 | ...
   const __m128i B1 = _mm_subs_epi16(A01, A23);    // a3 | a2 | ...
-  const __m128i C0 = _mm_unpacklo_epi32(B0, B1);  // a0 | a1 | a3 | a2
-  const __m128i C1 = _mm_unpacklo_epi32(B1, B0);  // a3 | a2 | a0 | a1
-  const __m128i D0 = _mm_madd_epi16(C0, kMult1);  // out0, out1
-  const __m128i D1 = _mm_madd_epi16(C1, kMult2);  // out2, out3
-  *out = _mm_unpacklo_epi64(D0, D1);
+  const __m128i C0 = _mm_unpacklo_epi32(B0, B1);  // a0 | a1 | a3 | a2 | ...
+  const __m128i C1 = _mm_unpacklo_epi32(B1, B0);  // a3 | a2 | a0 | a1 | ...
+  const __m128i D = _mm_unpacklo_epi64(C0, C1);   // a0 a1 a3 a2 a3 a2 a0 a1
+  *out = _mm_madd_epi16(D, kMult);
 }
 
 static void FTransformWHT(const int16_t* in, int16_t* out) {
+  // Input is 12b signed.
   __m128i row0, row1, row2, row3;
+  // Rows are 14b signed.
   FTransformWHTRow(in + 0 * 64, &row0);
   FTransformWHTRow(in + 1 * 64, &row1);
   FTransformWHTRow(in + 2 * 64, &row2);
   FTransformWHTRow(in + 3 * 64, &row3);
 
   {
+    // The a* are 15b signed.
     const __m128i a0 = _mm_add_epi32(row0, row2);
     const __m128i a1 = _mm_add_epi32(row1, row3);
     const __m128i a2 = _mm_sub_epi32(row1, row3);
     const __m128i a3 = _mm_sub_epi32(row0, row2);
-    const __m128i b0 = _mm_srai_epi32(_mm_add_epi32(a0, a1), 1);
-    const __m128i b1 = _mm_srai_epi32(_mm_add_epi32(a3, a2), 1);
-    const __m128i b2 = _mm_srai_epi32(_mm_sub_epi32(a3, a2), 1);
-    const __m128i b3 = _mm_srai_epi32(_mm_sub_epi32(a0, a1), 1);
-    const __m128i out0 = _mm_packs_epi32(b0, b1);
-    const __m128i out1 = _mm_packs_epi32(b2, b3);
-    _mm_storeu_si128((__m128i*)&out[0], out0);
-    _mm_storeu_si128((__m128i*)&out[8], out1);
+    const __m128i a0a3 = _mm_packs_epi32(a0, a3);
+    const __m128i a1a2 = _mm_packs_epi32(a1, a2);
+
+    // The b* are 16b signed.
+    const __m128i b0b1 = _mm_add_epi16(a0a3, a1a2);
+    const __m128i b3b2 = _mm_sub_epi16(a0a3, a1a2);
+    const __m128i tmp_b2b3 = _mm_unpackhi_epi64(b3b2, b3b2);
+    const __m128i b2b3 = _mm_unpacklo_epi64(tmp_b2b3, b3b2);
+
+    _mm_storeu_si128((__m128i*)&out[0], _mm_srai_epi16(b0b1, 1));
+    _mm_storeu_si128((__m128i*)&out[8], _mm_srai_epi16(b2b3, 1));
   }
 }
 
