@@ -559,6 +559,7 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
 
 // Hadamard transform
 // Returns the weighted sum of the absolute value of transformed coefficients.
+// w[] contains a row-major 4 by 4 symmetric matrix.
 static int TTransform(const uint8_t* in, const uint16_t* w) {
   int sum = 0;
   int tmp[16];

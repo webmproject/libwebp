@@ -151,6 +151,8 @@ typedef int (*VP8Metric)(const uint8_t* pix, const uint8_t* ref);
 extern VP8Metric VP8SSE16x16, VP8SSE16x8, VP8SSE8x8, VP8SSE4x4;
 typedef int (*VP8WMetric)(const uint8_t* pix, const uint8_t* ref,
                           const uint16_t* const weights);
+// The weights for VP8TDisto4x4 and VP8TDisto16x16 contain a row-major
+// 4 by 4 symmetric matrix.
 extern VP8WMetric VP8TDisto4x4, VP8TDisto16x16;
 
 typedef void (*VP8BlockCopy)(const uint8_t* src, uint8_t* dst);
