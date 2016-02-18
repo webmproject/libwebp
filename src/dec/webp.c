@@ -513,9 +513,9 @@ static VP8StatusCode DecodeInto(const uint8_t* const data, size_t data_size,
   if (status != VP8_STATUS_OK) {
     WebPFreeDecBuffer(params->output);
   } else {
-  if (params->options != NULL && params->options->flip) {
-    status = WebPFlipBuffer(params->output);
-  }
+    if (params->options != NULL && params->options->flip) {
+      status = WebPFlipBuffer(params->output);
+    }
   }
   return status;
 }
