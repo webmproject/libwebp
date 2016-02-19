@@ -72,17 +72,22 @@ static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
 // w[] contains a row-major 4 by 4 symmetric matrix.
 static int TTransform(const uint8_t* inA, const uint8_t* inB,
                       const uint16_t* const w) {
+  int32_t sum[4];
   __m128i tmp_0, tmp_1, tmp_2, tmp_3;
 
   // Load and combine inputs.
   {
-    const __m128i inA_0 = _mm_loadl_epi64((const __m128i*)&inA[BPS * 0]);
-    const __m128i inA_1 = _mm_loadl_epi64((const __m128i*)&inA[BPS * 1]);
-    const __m128i inA_2 = _mm_loadl_epi64((const __m128i*)&inA[BPS * 2]);
+    const __m128i inA_0 = _mm_loadu_si128((const __m128i*)&inA[BPS * 0]);
+    const __m128i inA_1 = _mm_loadu_si128((const __m128i*)&inA[BPS * 1]);
+    const __m128i inA_2 = _mm_loadu_si128((const __m128i*)&inA[BPS * 2]);
+    // In SSE4.1, with gcc 4.8 at least (maybe other versions),
+    // _mm_loadu_si128 is faster than _mm_loadl_epi64. But for the last lump
+    // of inA and inB, _mm_loadl_epi64 is still used not to have an out of
+    // bound read.
     const __m128i inA_3 = _mm_loadl_epi64((const __m128i*)&inA[BPS * 3]);
-    const __m128i inB_0 = _mm_loadl_epi64((const __m128i*)&inB[BPS * 0]);
-    const __m128i inB_1 = _mm_loadl_epi64((const __m128i*)&inB[BPS * 1]);
-    const __m128i inB_2 = _mm_loadl_epi64((const __m128i*)&inB[BPS * 2]);
+    const __m128i inB_0 = _mm_loadu_si128((const __m128i*)&inB[BPS * 0]);
+    const __m128i inB_1 = _mm_loadu_si128((const __m128i*)&inB[BPS * 1]);
+    const __m128i inB_2 = _mm_loadu_si128((const __m128i*)&inB[BPS * 2]);
     const __m128i inB_3 = _mm_loadl_epi64((const __m128i*)&inB[BPS * 3]);
 
     // Combine inA and inB (we'll do two transforms in parallel).
@@ -158,11 +163,9 @@ static int TTransform(const uint8_t* inA, const uint8_t* inB,
 
     // difference of weighted sums
     A_b2 = _mm_sub_epi32(A_b0, B_b0);
-    // cascading summation of the differences
-    B_b0 = _mm_hadd_epi32(A_b2, A_b2);
-    B_b2 = _mm_hadd_epi32(B_b0, B_b0);
-    return _mm_cvtsi128_si32(B_b2);
+    _mm_storeu_si128((__m128i*)&sum[0], A_b2);
   }
+  return sum[0] + sum[1] + sum[2] + sum[3];
 }
 
 static int Disto4x4(const uint8_t* const a, const uint8_t* const b,
