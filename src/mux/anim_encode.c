@@ -699,6 +699,8 @@ static WebPEncodingError EncodeCandidate(WebPPicture* const sub_frame,
 static void CopyCurrentCanvas(WebPAnimEncoder* const enc) {
   if (enc->curr_canvas_copy_modified_) {
     WebPCopyPixels(enc->curr_canvas_, &enc->curr_canvas_copy_);
+    enc->curr_canvas_copy_.progress_hook = enc->curr_canvas_->progress_hook;
+    enc->curr_canvas_copy_.user_data = enc->curr_canvas_->user_data;
     enc->curr_canvas_copy_modified_ = 0;
   }
 }
@@ -1164,6 +1166,7 @@ static int FlushFrames(WebPAnimEncoder* const enc) {
 int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int timestamp,
                        const WebPConfig* encoder_config) {
   WebPConfig config;
+  int ok;
 
   if (enc == NULL) {
     return 0;
@@ -1223,17 +1226,14 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int timestamp,
   assert(enc->curr_canvas_copy_modified_ == 1);
   CopyCurrentCanvas(enc);
 
-  if (!CacheFrame(enc, &config)) {
-    return 0;
-  }
+  ok = CacheFrame(enc, &config) && FlushFrames(enc);
 
-  if (!FlushFrames(enc)) {
-    return 0;
-  }
   enc->curr_canvas_ = NULL;
   enc->curr_canvas_copy_modified_ = 1;
-  enc->prev_timestamp_ = timestamp;
-  return 1;
+  if (ok) {
+    enc->prev_timestamp_ = timestamp;
+  }
+  return ok;
 }
 
 // -----------------------------------------------------------------------------
