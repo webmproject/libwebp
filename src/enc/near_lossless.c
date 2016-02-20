@@ -126,12 +126,12 @@ static void NearLossless(int xsize, int ysize, uint32_t* argb,
 
 static int QualityToLimitBits(int quality) {
   // quality mapping:
-  //  0..19 -> 5
-  //  0..39 -> 4
-  //  0..59 -> 3
-  //  0..79 -> 2
-  //  0..99 -> 1
-  //  100   -> 0
+  //   0..19 -> 5
+  //  20..39 -> 4
+  //  40..59 -> 3
+  //  60..79 -> 2
+  //  80..99 -> 1
+  //  100    -> 0
   return MAX_LIMIT_BITS - quality / 20;
 }
 
