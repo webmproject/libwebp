@@ -1128,21 +1128,21 @@ static void ClearTransformBuffer(VP8LEncoder* const enc) {
 static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
                                                  int width, int height) {
   WebPEncodingError err = VP8_ENC_OK;
-    const int tile_size = 1 << enc->transform_bits_;
-    const uint64_t image_size = width * height;
-    // Ensure enough size for tiles, as well as for two scanlines and two
-    // extra pixels for CopyImageWithPrediction.
-    const uint64_t argb_scratch_size =
-        enc->use_predict_ ? tile_size * width + width + 2 : 0;
-    const int transform_data_size =
-        (enc->use_predict_ || enc->use_cross_color_)
-            ? VP8LSubSampleSize(width, enc->transform_bits_) *
-              VP8LSubSampleSize(height, enc->transform_bits_)
-            : 0;
+  const int tile_size = 1 << enc->transform_bits_;
+  const uint64_t image_size = width * height;
+  // Ensure enough size for tiles, as well as for two scanlines and two
+  // extra pixels for CopyImageWithPrediction.
+  const uint64_t argb_scratch_size =
+      enc->use_predict_ ? tile_size * width + width + 2 : 0;
+  const int transform_data_size =
+      (enc->use_predict_ || enc->use_cross_color_)
+          ? VP8LSubSampleSize(width, enc->transform_bits_) *
+            VP8LSubSampleSize(height, enc->transform_bits_)
+          : 0;
   const uint64_t mem_size =
-        image_size + WEBP_ALIGN_CST +
-        argb_scratch_size + WEBP_ALIGN_CST +
-        (uint64_t)transform_data_size;
+      image_size + WEBP_ALIGN_CST +
+      argb_scratch_size + WEBP_ALIGN_CST +
+      (uint64_t)transform_data_size;
   uint32_t* mem = enc->transform_mem_;
   if (mem == NULL || mem_size > enc->transform_mem_size_) {
     ClearTransformBuffer(enc);
@@ -1154,13 +1154,13 @@ static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
     enc->transform_mem_ = mem;
     enc->transform_mem_size_ = (size_t)mem_size;
   }
-    enc->argb_ = mem;
-    mem = (uint32_t*)WEBP_ALIGN(mem + image_size);
-    enc->argb_scratch_ = mem;
-    mem = (uint32_t*)WEBP_ALIGN(mem + argb_scratch_size);
-    enc->transform_data_ = mem;
+  enc->argb_ = mem;
+  mem = (uint32_t*)WEBP_ALIGN(mem + image_size);
+  enc->argb_scratch_ = mem;
+  mem = (uint32_t*)WEBP_ALIGN(mem + argb_scratch_size);
+  enc->transform_data_ = mem;
 
-    enc->current_width_ = width;
+  enc->current_width_ = width;
  Error:
   return err;
 }
