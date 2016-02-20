@@ -16,6 +16,24 @@
       "revId": "62e12c49aabf50cf18cc82b066cc40e4acdbda7d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82bb7df1_6c186397",
+        "filename": "src/mux/anim_encode.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1169,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-02-20T03:52:26Z",
+      "side": 1,
+      "message": "fixed",
+      "parentUuid": "02e4ed24_4c201f82",
+      "revId": "62e12c49aabf50cf18cc82b066cc40e4acdbda7d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
