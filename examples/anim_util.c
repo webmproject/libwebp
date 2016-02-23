@@ -232,6 +232,7 @@ static int ReadAnimatedWebP(const char filename[],
       fprintf(stderr, "Error decoding frame #%u\n", frame_index);
       goto End;
     }
+    assert(frame_index < anim_info.frame_count);
     curr_frame = &image->frames[frame_index];
     curr_rgba = curr_frame->rgba;
     curr_frame->duration = timestamp - prev_frame_timestamp;
