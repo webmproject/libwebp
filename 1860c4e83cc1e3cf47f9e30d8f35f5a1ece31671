@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "22ef3134_2a814827",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-03-03T18:36:41Z",
+      "side": 1,
+      "message": "unlikely. I was just working with the old formatting from DistoVerticalPass. I\u0027ll double check though",
+      "parentUuid": "a2b16159_949a4a8a",
+      "range": {
+        "startLine": 592,
+        "startChar": 13,
+        "endLine": 592,
+        "endChar": 14
+      },
+      "revId": "1860c4e83cc1e3cf47f9e30d8f35f5a1ece31671",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c2d7357d_2ad33f27",
         "filename": "src/dsp/enc_neon.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2016-03-03T09:24:53Z",
       "side": 1,
       "message": "just remove the line",
+      "range": {
+        "startLine": 682,
+        "startChar": 13,
+        "endLine": 682,
+        "endChar": 24
+      },
+      "revId": "1860c4e83cc1e3cf47f9e30d8f35f5a1ece31671",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22ef3134_0a860c3e",
+        "filename": "src/dsp/enc_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 682,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-03-03T18:36:41Z",
+      "side": 1,
+      "message": "missed that one...",
+      "parentUuid": "c2d7357d_2ad33f27",
       "range": {
         "startLine": 682,
         "startChar": 13,
