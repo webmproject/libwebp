@@ -16,6 +16,23 @@
       "revId": "d974d2bb9012b8b936d9acc3534fff70cbc78e21",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "977021c5_f914d762",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 648,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-03-07T19:30:14Z",
+      "side": 1,
+      "message": "maybe one -pixel_format to gather these",
+      "revId": "d974d2bb9012b8b936d9acc3534fff70cbc78e21",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
