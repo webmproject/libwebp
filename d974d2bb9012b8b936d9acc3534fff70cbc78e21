@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "57430950_ef674193",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-03-07T20:47:46Z",
+      "side": 1,
+      "message": "no, that\u0027s just raw dumping without any other mean than doing regtests with.",
+      "parentUuid": "778e4df1_e03e62bf",
+      "revId": "d974d2bb9012b8b936d9acc3534fff70cbc78e21",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "977021c5_f914d762",
         "filename": "examples/dwebp.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2016-03-07T19:30:14Z",
       "side": 1,
       "message": "maybe one -pixel_format to gather these",
+      "revId": "d974d2bb9012b8b936d9acc3534fff70cbc78e21",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4227c598_a9eab953",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 648,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-03-07T20:47:46Z",
+      "side": 1,
+      "message": "good idea, will do on the other patch",
+      "parentUuid": "977021c5_f914d762",
       "revId": "d974d2bb9012b8b936d9acc3534fff70cbc78e21",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
