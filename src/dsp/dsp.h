@@ -238,8 +238,8 @@ typedef void (*VP8SSIMAccumulateFunc)(const uint8_t* src1, int stride1,
                                       const uint8_t* src2, int stride2,
                                       VP8DistoStats* const stats);
 
-VP8SSIMAccumulateFunc VP8SSIMAccumulate;          // unclipped / unchecked
-VP8SSIMAccumulateClippedFunc VP8SSIMAccumulateClipped;   // with clipping
+extern VP8SSIMAccumulateFunc VP8SSIMAccumulate;         // unclipped / unchecked
+extern VP8SSIMAccumulateClippedFunc VP8SSIMAccumulateClipped;   // with clipping
 
 // must be called before using any of the above directly
 void VP8SSIMDspInit(void);
