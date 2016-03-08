@@ -473,17 +473,12 @@ int VP8EncFinishAlpha(VP8Encoder* const enc);   // finalize compressed data
 int VP8EncDeleteAlpha(VP8Encoder* const enc);   // delete compressed data
 
   // in filter.c
-
-// SSIM utils
-typedef struct {
-  double w, xm, ym, xxm, xym, yym;
-} DistoStats;
-void VP8SSIMAddStats(const DistoStats* const src, DistoStats* const dst);
+void VP8SSIMAddStats(const VP8DistoStats* const src, VP8DistoStats* const dst);
 void VP8SSIMAccumulatePlane(const uint8_t* src1, int stride1,
                             const uint8_t* src2, int stride2,
-                            int W, int H, DistoStats* const stats);
-double VP8SSIMGet(const DistoStats* const stats);
-double VP8SSIMGetSquaredError(const DistoStats* const stats);
+                            int W, int H, VP8DistoStats* const stats);
+double VP8SSIMGet(const VP8DistoStats* const stats);
+double VP8SSIMGetSquaredError(const VP8DistoStats* const stats);
 
 // autofilter
 void VP8InitFilter(VP8EncIterator* const it);

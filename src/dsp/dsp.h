@@ -216,6 +216,35 @@ extern VP8GetResidualCostFunc VP8GetResidualCost;
 void VP8EncDspCostInit(void);
 
 //------------------------------------------------------------------------------
+// SSIM utils
+
+// struct for accumulating statistical moments
+typedef struct {
+  double w;              // sum(w_i) : sum of weights
+  double xm, ym;         // sum(w_i * x_i), sum(w_i * y_i)
+  double xxm, xym, yym;  // sum(w_i * x_i * x_i), etc.
+} VP8DistoStats;
+
+#define VP8_SSIM_KERNEL 3   // total size of the kernel: 2 * VP8_SSIM_KERNEL + 1
+typedef void (*VP8SSIMAccumulateClippedFunc)(const uint8_t* src1, int stride1,
+                                             const uint8_t* src2, int stride2,
+                                             int xo, int yo,  // center position
+                                             int W, int H,    // plane dimension
+                                             VP8DistoStats* const stats);
+
+// This version is called with the guarantee that you can load 8 bytes and
+// 8 rows at offset src1 and src2
+typedef void (*VP8SSIMAccumulateFunc)(const uint8_t* src1, int stride1,
+                                      const uint8_t* src2, int stride2,
+                                      VP8DistoStats* const stats);
+
+VP8SSIMAccumulateFunc VP8SSIMAccumulate;          // unclipped / unchecked
+VP8SSIMAccumulateClippedFunc VP8SSIMAccumulateClipped;   // with clipping
+
+// must be called before using any of the above directly
+void VP8SSIMDspInit(void);
+
+//------------------------------------------------------------------------------
 // Decoding
 
 typedef void (*VP8DecIdct)(const int16_t* coeffs, uint8_t* dst);
