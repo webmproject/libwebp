@@ -677,7 +677,8 @@ static int Disto4x4(const uint8_t* const a, const uint8_t* const b,
 
   {
     // Vertical pass first to avoid a transpose (vertical and horizontal passes
-    // are commutative because w/kWeightY is symmetric) and subsequent transpose.
+    // are commutative because w/kWeightY is symmetric) and subsequent
+    // transpose.
     const int16x8x4_t q4_v = DistoVerticalPass(d4_in);
     const int16x4x4_t d4_w = DistoLoadW(w);
     // horizontal pass
