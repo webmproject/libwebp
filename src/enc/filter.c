@@ -202,15 +202,15 @@ static double GetMBSSIM(const uint8_t* yuv1, const uint8_t* yuv2) {
   for (y = VP8_SSIM_KERNEL; y < 16 - VP8_SSIM_KERNEL; y++) {
     for (x = VP8_SSIM_KERNEL; x < 16 - VP8_SSIM_KERNEL; x++) {
       VP8SSIMAccumulateClipped(yuv1 + Y_OFF_ENC, BPS, yuv2 + Y_OFF_ENC, BPS,
-                        x, y, 16, 16, &s);
+                               x, y, 16, 16, &s);
     }
   }
   for (x = 1; x < 7; x++) {
     for (y = 1; y < 7; y++) {
       VP8SSIMAccumulateClipped(yuv1 + U_OFF_ENC, BPS, yuv2 + U_OFF_ENC, BPS,
-                        x, y, 8, 8, &s);
+                               x, y, 8, 8, &s);
       VP8SSIMAccumulateClipped(yuv1 + V_OFF_ENC, BPS, yuv2 + V_OFF_ENC, BPS,
-                        x, y, 8, 8, &s);
+                               x, y, 8, 8, &s);
     }
   }
   return VP8SSIMGet(&s);
