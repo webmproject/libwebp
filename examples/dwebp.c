@@ -67,8 +67,13 @@ typedef enum {
   PGM,
   BMP,
   TIFF,
-  YUV,
-  ALPHA_PLANE_ONLY  // this is for experimenting only
+  RAW_YUV,
+  ALPHA_PLANE_ONLY,  // this is for experimenting only
+  // forced colorspace output (for testing, mostly)
+  RGB, RGBA, BGR, BGRA, ARGB,
+  RGBA_4444, RGB_565,
+  rgbA, bgrA, Argb, rgbA_4444,
+  YUV, YUVA
 } OutputFileFormat;
 
 #ifdef HAVE_WINCODEC_H
@@ -175,7 +180,7 @@ static int WritePNG(const char* out_file_name, int use_stdout,
   const uint32_t height = buffer->height;
   uint8_t* const rgb = buffer->u.RGBA.rgba;
   const int stride = buffer->u.RGBA.stride;
-  const int has_alpha = (buffer->colorspace == MODE_BGRA);
+  const int has_alpha = WebPIsAlphaMode(buffer->colorspace);
 
   return SUCCEEDED(WriteUsingWIC(out_file_name, use_stdout,
                                  MAKE_REFGUID(GUID_ContainerFormatPng),
@@ -193,7 +198,7 @@ static int WritePNG(FILE* out_file, const WebPDecBuffer* const buffer) {
   const uint32_t height = buffer->height;
   uint8_t* const rgb = buffer->u.RGBA.rgba;
   const int stride = buffer->u.RGBA.stride;
-  const int has_alpha = (buffer->colorspace == MODE_RGBA);
+  const int has_alpha = WebPIsAlphaMode(buffer->colorspace);
   volatile png_structp png;
   volatile png_infop info;
   png_uint_32 y;
@@ -259,6 +264,24 @@ static int WritePPM(FILE* fout, const WebPDecBuffer* const buffer, int alpha) {
   return 1;
 }
 
+// Save 16b mode (RGBA4444, RGB565, ...) for debugging purpose.
+static int Write16bAsPGM(FILE* fout, const WebPDecBuffer* const buffer) {
+  const uint32_t width = buffer->width;
+  const uint32_t height = buffer->height;
+  const uint8_t* const rgba = buffer->u.RGBA.rgba;
+  const int stride = buffer->u.RGBA.stride;
+  const uint32_t bytes_per_px = 2;
+  uint32_t y;
+
+  fprintf(fout, "P5\n%u %u\n255\n", width * bytes_per_px, height);
+  for (y = 0; y < height; ++y) {
+    if (fwrite(rgba + y * stride, width, bytes_per_px, fout) != bytes_per_px) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
 static void PutLE16(uint8_t* const dst, uint32_t value) {
   dst[0] = (value >> 0) & 0xff;
   dst[1] = (value >> 8) & 0xff;
@@ -271,7 +294,7 @@ static void PutLE32(uint8_t* const dst, uint32_t value) {
 
 #define BMP_HEADER_SIZE 54
 static int WriteBMP(FILE* fout, const WebPDecBuffer* const buffer) {
-  const int has_alpha = (buffer->colorspace != MODE_BGR);
+  const int has_alpha = WebPIsAlphaMode(buffer->colorspace);
   const uint32_t width = buffer->width;
   const uint32_t height = buffer->height;
   const uint8_t* const rgba = buffer->u.RGBA.rgba;
@@ -332,7 +355,7 @@ static int WriteBMP(FILE* fout, const WebPDecBuffer* const buffer) {
 #define TIFF_HEADER_SIZE (EXTRA_DATA_OFFSET + EXTRA_DATA_SIZE)
 
 static int WriteTIFF(FILE* fout, const WebPDecBuffer* const buffer) {
-  const int has_alpha = (buffer->colorspace != MODE_RGB);
+  const int has_alpha = WebPIsAlphaMode(buffer->colorspace);
   const uint32_t width = buffer->width;
   const uint32_t height = buffer->height;
   const uint8_t* const rgba = buffer->u.RGBA.rgba;
@@ -418,7 +441,7 @@ static int WriteAlphaPlane(FILE* fout, const WebPDecBuffer* const buffer) {
 // format=PGM: save a grayscale PGM file using the IMC4 layout
 // (http://www.fourcc.org/yuv.php#IMC4). This is a very convenient format for
 // viewing the samples, esp. for odd dimensions.
-// format=YUV: just save the Y/U/V/A planes sequentially without header.
+// format=RAW_YUV: just save the Y/U/V/A planes sequentially without header.
 static int WritePGMOrYUV(FILE* fout, const WebPDecBuffer* const buffer,
                          OutputFileFormat format) {
   const int width = buffer->width;
@@ -426,7 +449,7 @@ static int WritePGMOrYUV(FILE* fout, const WebPDecBuffer* const buffer,
   const WebPYUVABuffer* const yuv = &buffer->u.YUVA;
   int ok = 1;
   int y;
-  const int pad = (format == YUV) ? 0 : 1;
+  const int pad = (format == RAW_YUV) ? 0 : 1;
   const int uv_width = (width + 1) / 2;
   const int uv_height = (height + 1) / 2;
   const int out_stride = (width + pad) & ~pad;
@@ -487,7 +510,9 @@ static int SaveOutput(const WebPDecBuffer* const buffer,
     }
   }
 
-  if (format == PNG) {
+  if (format == PNG ||
+      format == RGBA || format == BGRA || format == ARGB ||
+      format == rgbA || format == bgrA || format == Argb) {
 #ifdef HAVE_WINCODEC_H
     ok &= WritePNG(out_file, use_stdout, buffer);
 #else
@@ -495,14 +520,17 @@ static int SaveOutput(const WebPDecBuffer* const buffer,
 #endif
   } else if (format == PAM) {
     ok &= WritePPM(fout, buffer, 1);
-  } else if (format == PPM) {
+  } else if (format == PPM || format == RGB || format == BGR) {
     ok &= WritePPM(fout, buffer, 0);
+  } else if (format == RGBA_4444 || format == RGB_565 || format == rgbA_4444) {
+    ok &= Write16bAsPGM(fout, buffer);
   } else if (format == BMP) {
     ok &= WriteBMP(fout, buffer);
   } else if (format == TIFF) {
     ok &= WriteTIFF(fout, buffer);
-  } else if (format == PGM || format == YUV) {
-    ok &= WritePGMOrYUV(fout, buffer, format);
+  } else if (format == PGM || format == RAW_YUV ||
+             format == YUV || format == YUVA) {
+    ok &= WritePGMOrYUV(fout, buffer, format == RAW_YUV ? RAW_YUV : PGM);
   } else if (format == ALPHA_PLANE_ONLY) {
     ok &= WriteAlphaPlane(fout, buffer);
   }
@@ -569,6 +597,70 @@ static const char* const kFormatType[] = {
   "unspecified", "lossy", "lossless"
 };
 
+static uint8_t* AllocateExternalBuffer(WebPDecoderConfig* config,
+                                       OutputFileFormat format,
+                                       int use_external_memory) {
+  uint8_t* external_buffer = NULL;
+  WebPDecBuffer* const output_buffer = &config->output;
+  int w = config->input.width;
+  int h = config->input.height;
+  if (config->options.use_scaling) {
+    w = config->options.scaled_width;
+    h = config->options.scaled_height;
+  } else if (config->options.use_cropping) {
+    w = config->options.crop_width;
+    h = config->options.crop_height;
+  }
+  if (format >= RGB && format <= rgbA_4444) {
+    const int bpp = (format == RGB || format == BGR) ? 3
+                  : (format == RGBA_4444 || format == rgbA_4444 ||
+                     format == RGB_565) ? 2
+                  : 4;
+    uint32_t stride = bpp * w + 7;   // <- just for exercising
+    external_buffer = (uint8_t*)malloc(stride * h);
+    if (external_buffer == NULL) return NULL;
+    output_buffer->u.RGBA.stride = stride;
+    output_buffer->u.RGBA.size = stride * h;
+    output_buffer->u.RGBA.rgba = external_buffer;
+  } else {    // YUV and YUVA
+    const int has_alpha = WebPIsAlphaMode(output_buffer->colorspace);
+    uint8_t* tmp;
+    uint32_t stride = w + 3;
+    uint32_t uv_stride = (w + 1) / 2 + 13;
+    uint32_t total_size = stride * h * (has_alpha ? 2 : 1)
+                        + 2 * uv_stride * (h + 1) / 2;
+    assert(format >= YUV && format <= YUVA);
+    external_buffer = (uint8_t*)malloc(total_size);
+    if (external_buffer == NULL) return NULL;
+    tmp = external_buffer;
+    output_buffer->u.YUVA.y = tmp;
+    output_buffer->u.YUVA.y_stride = stride;
+    output_buffer->u.YUVA.y_size = stride * h;
+    tmp += output_buffer->u.YUVA.y_size;
+    if (has_alpha) {
+      output_buffer->u.YUVA.a = tmp;
+      output_buffer->u.YUVA.a_stride = stride;
+      output_buffer->u.YUVA.a_size = stride * h;
+      tmp += output_buffer->u.YUVA.a_size;
+    } else {
+      output_buffer->u.YUVA.a = NULL;
+      output_buffer->u.YUVA.a_stride = 0;
+    }
+    output_buffer->u.YUVA.u = tmp;
+    output_buffer->u.YUVA.u_stride = uv_stride;
+    output_buffer->u.YUVA.u_size = uv_stride * (h + 1) / 2;
+    tmp += output_buffer->u.YUVA.u_size;
+
+    output_buffer->u.YUVA.v = tmp;
+    output_buffer->u.YUVA.v_stride = uv_stride;
+    output_buffer->u.YUVA.v_size = uv_stride * (h + 1) / 2;
+    tmp += output_buffer->u.YUVA.v_size;
+    assert(tmp <= external_buffer + total_size);
+  }
+  output_buffer->is_external_memory = use_external_memory;
+  return external_buffer;
+}
+
 int main(int argc, const char *argv[]) {
   int ok = 0;
   const char *in_file = NULL;
@@ -578,6 +670,10 @@ int main(int argc, const char *argv[]) {
   WebPDecBuffer* const output_buffer = &config.output;
   WebPBitstreamFeatures* const bitstream = &config.input;
   OutputFileFormat format = PNG;
+  uint8_t* external_buffer = NULL;
+  int use_external_memory = 0;
+  const uint8_t* data = NULL;
+
   int incremental = 0;
   int c;
 
@@ -617,7 +713,32 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-pgm")) {
       format = PGM;
     } else if (!strcmp(argv[c], "-yuv")) {
-      format = YUV;
+      format = RAW_YUV;
+    } else if (!strcmp(argv[c], "-pixel_format") && c < argc - 1) {
+      const char* const fmt = argv[++c];
+      if      (!strcmp(fmt, "RGB"))  format = RGB;
+      else if (!strcmp(fmt, "RGBA")) format = RGBA;
+      else if (!strcmp(fmt, "BGR"))  format = BGR;
+      else if (!strcmp(fmt, "BGRA")) format = BGRA;
+      else if (!strcmp(fmt, "ARGB")) format = ARGB;
+      else if (!strcmp(fmt, "RGBA_4444")) format = RGBA_4444;
+      else if (!strcmp(fmt, "RGB_565")) format = RGB_565;
+      else if (!strcmp(fmt, "rgbA")) format = rgbA;
+      else if (!strcmp(fmt, "bgrA")) format = bgrA;
+      else if (!strcmp(fmt, "Argb")) format = Argb;
+      else if (!strcmp(fmt, "rgbA_4444")) format = rgbA_4444;
+      else if (!strcmp(fmt, "YUV"))  format = YUV;
+      else if (!strcmp(fmt, "YUVA")) format = YUVA;
+      else {
+        fprintf(stderr, "Can't parse pixel_format %s\n", fmt);
+        parse_error = 1;
+      }
+    } else if (!strcmp(argv[c], "-external_memory") && c < argc - 1) {
+      use_external_memory = ExUtilGetInt(argv[++c], 0, &parse_error);
+      parse_error |= (use_external_memory > 2 || use_external_memory < 0);
+      if (parse_error) {
+        fprintf(stderr, "Can't parse 'external_memory' value %s\n", argv[c]);
+      }
     } else if (!strcmp(argv[c], "-mt")) {
       config.options.use_threads = 1;
     } else if (!strcmp(argv[c], "-alpha_dither")) {
@@ -676,7 +797,6 @@ int main(int argc, const char *argv[]) {
   {
     VP8StatusCode status = VP8_STATUS_OK;
     size_t data_size = 0;
-    const uint8_t* data = NULL;
     if (!ExUtilLoadWebP(in_file, &data, &data_size, bitstream)) {
       return -1;
     }
@@ -703,15 +823,33 @@ int main(int argc, const char *argv[]) {
             bitstream->has_alpha ? MODE_rgbA : MODE_RGB;
         break;
       case PGM:
-      case YUV:
+      case RAW_YUV:
         output_buffer->colorspace = bitstream->has_alpha ? MODE_YUVA : MODE_YUV;
         break;
       case ALPHA_PLANE_ONLY:
         output_buffer->colorspace = MODE_YUVA;
         break;
-      default:
-        free((void*)data);
-        return -1;
+      // forced modes:
+      case RGB: output_buffer->colorspace = MODE_RGB; break;
+      case RGBA: output_buffer->colorspace = MODE_RGBA; break;
+      case BGR: output_buffer->colorspace = MODE_BGR; break;
+      case BGRA: output_buffer->colorspace = MODE_BGRA; break;
+      case ARGB: output_buffer->colorspace = MODE_ARGB; break;
+      case RGBA_4444: output_buffer->colorspace = MODE_RGBA_4444; break;
+      case RGB_565: output_buffer->colorspace = MODE_RGB_565; break;
+      case rgbA: output_buffer->colorspace = MODE_rgbA; break;
+      case bgrA: output_buffer->colorspace = MODE_bgrA; break;
+      case Argb: output_buffer->colorspace = MODE_Argb; break;
+      case rgbA_4444: output_buffer->colorspace = MODE_rgbA_4444; break;
+      case YUV: output_buffer->colorspace = MODE_YUV; break;
+      case YUVA: output_buffer->colorspace = MODE_YUVA; break;
+      default: goto Exit;
+    }
+
+    if (use_external_memory > 0 && format >= RGB) {
+      external_buffer = AllocateExternalBuffer(&config, format,
+                                               use_external_memory);
+      if (external_buffer == NULL) goto Exit;
     }
 
     if (incremental) {
@@ -720,7 +858,6 @@ int main(int argc, const char *argv[]) {
       status = ExUtilDecodeWebP(data, data_size, verbose, &config);
     }
 
-    free((void*)data);
     ok = (status == VP8_STATUS_OK);
     if (!ok) {
       ExUtilPrintWebPError(in_file, status);
@@ -750,6 +887,8 @@ int main(int argc, const char *argv[]) {
   }
  Exit:
   WebPFreeDecBuffer(output_buffer);
+  free((void*)external_buffer);
+  free((void*)data);
   return ok ? 0 : -1;
 }
 

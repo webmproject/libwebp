@@ -514,6 +514,8 @@ static VP8StatusCode DecodeInto(const uint8_t* const data, size_t data_size,
     WebPFreeDecBuffer(params->output);
   } else {
     if (params->options != NULL && params->options->flip) {
+      // This restores the original stride values if options->flip was used
+      // during the call to WebPAllocateDecBuffer above.
       status = WebPFlipBuffer(params->output);
     }
   }
@@ -758,9 +760,24 @@ VP8StatusCode WebPDecode(const uint8_t* data, size_t data_size,
   }
 
   WebPResetDecParams(&params);
-  params.output = &config->output;
   params.options = &config->options;
-  status = DecodeInto(data, data_size, &params);
+  params.output = &config->output;
+  if (WebPAvoidSlowMemory(params.output, &config->input)) {
+    // decoding to slow memory: use a temporary in-mem buffer to decode into.
+    WebPDecBuffer in_mem_buffer;
+    WebPInitDecBuffer(&in_mem_buffer);
+    in_mem_buffer.colorspace = config->output.colorspace;
+    in_mem_buffer.width = config->input.width;
+    in_mem_buffer.height = config->input.height;
+    params.output = &in_mem_buffer;
+    status = DecodeInto(data, data_size, &params);
+    if (status == VP8_STATUS_OK) {  // do the slow-copy
+      status = WebPCopyDecBufferPixels(&in_mem_buffer, &config->output);
+    }
+    WebPFreeDecBuffer(&in_mem_buffer);
+  } else {
+    status = DecodeInto(data, data_size, &params);
+  }
 
   return status;
 }
@@ -826,4 +843,3 @@ int WebPIoInitFromOptions(const WebPDecoderOptions* const options,
 }
 
 //------------------------------------------------------------------------------
-
