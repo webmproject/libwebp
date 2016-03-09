@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "37da1565_91a97ebc",
+        "filename": "src/dec/webp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 773,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-03-09T07:39:53Z",
+      "side": 1,
+      "message": "indent is off",
+      "revId": "e35dfd0dc668421c94e12a0e9af47d75eea0290f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
