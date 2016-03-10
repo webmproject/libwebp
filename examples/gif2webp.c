@@ -98,7 +98,6 @@ int main(int argc, const char *argv[]) {
   WebPPicture frame;                // Frame rectangle only (not disposed).
   WebPPicture curr_canvas;          // Not disposed.
   WebPPicture prev_canvas;          // Disposed.
-  WebPPicture prev_to_prev_canvas;  // Disposed.
 
   WebPAnimEncoder* enc = NULL;
   WebPAnimEncoderOptions enc_options;
@@ -124,8 +123,7 @@ int main(int argc, const char *argv[]) {
 
   if (!WebPConfigInit(&config) || !WebPAnimEncoderOptionsInit(&enc_options) ||
       !WebPPictureInit(&frame) || !WebPPictureInit(&curr_canvas) ||
-      !WebPPictureInit(&prev_canvas) ||
-      !WebPPictureInit(&prev_to_prev_canvas)) {
+      !WebPPictureInit(&prev_canvas)) {
     fprintf(stderr, "Error! Version mismatch!\n");
     return -1;
   }
@@ -305,7 +303,6 @@ int main(int argc, const char *argv[]) {
           GIFClearPic(&frame, NULL);
           WebPPictureCopy(&frame, &curr_canvas);
           WebPPictureCopy(&frame, &prev_canvas);
-          WebPPictureCopy(&frame, &prev_to_prev_canvas);
 
           // Background color.
           GIFGetBackgroundColor(gif->SColorMap, gif->SBackGroundColor,
@@ -342,7 +339,6 @@ int main(int argc, const char *argv[]) {
         }
 
         // Update canvases.
-        GIFCopyPixels(&prev_canvas, &prev_to_prev_canvas);
         GIFDisposeFrame(orig_dispose, &gif_rect, &prev_canvas, &curr_canvas);
         GIFCopyPixels(&curr_canvas, &prev_canvas);
 
@@ -530,7 +526,6 @@ int main(int argc, const char *argv[]) {
   WebPPictureFree(&frame);
   WebPPictureFree(&curr_canvas);
   WebPPictureFree(&prev_canvas);
-  WebPPictureFree(&prev_to_prev_canvas);
   WebPAnimEncoderDelete(enc);
   if (out != NULL && out_file != NULL) fclose(out);
 
