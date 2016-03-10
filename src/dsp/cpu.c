@@ -77,7 +77,17 @@ static int armCPUInfo(CPUFeature feature) {
 }
 VP8CPUInfo VP8GetCPUInfo = armCPUInfo;
 #else
+#if defined(WEBP_EMSCRIPTEN)
+static int emCPUInfo(CPUFeature feature) {
+  if (feature == kSSE2) {
+    return 1;
+  }
+  return 0;
+}
+VP8CPUInfo VP8GetCPUInfo = emCPUInfo;
+#else
 VP8CPUInfo VP8GetCPUInfo = NULL;
+#endif
 #endif
 
 #if defined(__cplusplus) || defined(c_plusplus)

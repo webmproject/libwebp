@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Javascript WebP decoding demo</title>
+  <link rel="stylesheet" type="text/css"
+        href="//developers.google.com/_static/css/screen.css">
+  <link rel="shortcut icon"
+        href="//developers.google.com/_static/images/favicon.ico">
+  <script type="text/javascript">
+    var Module = {
+      noInitialRun : true
+    };
+  </script>
+  <script type="text/javascript" src="./libwebpdecoder.js"></script>
+  <script type="text/javascript" src="./util.js"></script>
+</head>
+
+<body>
+  <p>
+    <strong>WebP in Javascript demo</strong> -
+  </p>
+  <p>
+    Auto-generated using
+    <a href="https://github.com/kripken/emscripten/wiki">Emscripten</a>.
+  </p>
+  <p id="image_buttons">
+    <input type="button" value="1.webp" name="./images/1.webp"
+           onclick="loadfile(this.name)">
+    <input type="button" value="2.webp" name="./images/2.webp"
+           onclick="loadfile(this.name)">
+    <input type="button" value="3_webp_a.webp"  name="./images/3_webp_a.webp"
+           onclick="loadfile(this.name)">
+    <input type="button" value="3_webp_ll.webp" name="./images/3_webp_ll.webp"
+           onclick="loadfile(this.name)">
+    <input type="button" value="4_webp_a.webp"  name="./images/4_webp_a.webp"
+           onclick="loadfile(this.name)">
+    <input type="button" value="4_webp_ll.webp" name="./images/4_webp_ll.webp"
+           onclick="loadfile(this.name)">
+  </p>
+  <canvas id="output_canvas">Your browser does not support canvas</canvas>
+  <p id="dl_progress"></p>
+  <p id="timing">Timing: N/A</p>
+</body>
+</html>

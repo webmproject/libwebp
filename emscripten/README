@@ -1,0 +1,33 @@
+Prerequisites:
+==============
+See https://github.com/kripken/emscripten/wiki/Tutorial to setup emscripten.
+
+Building:
+=========
+
+$ make -f makefile.em
+
+This will produce libwebpdecoder.js.
+
+An alternate path to emscripten can be passed on the command line:
+
+$ make -f makefile.em EMSCRIPTEN=/my/path/to/emscripten
+
+Running:
+========
+
+1) Start a webserver in the root of your git tree.
+  $ python -m SimpleHTTPServer 8080
+
+2) Open the demo page.
+  http://localhost:8080/emscripten/emscripten.html
+
+3) Select an image button to decode one of the files from emscripten/images/.
+
+Known Issues:
+=============
+* Compatibility hasn't been thoroughly investigated.
+  Appears to work with: FireFox 18.0.2, Chrome 25 and
+                        Opera 12.14 (only with < -O2 or UNALIGNED_MEMORY=1)
+* The first decode is much slower.
+* Repeated decodes without a reload may result in a memory error.

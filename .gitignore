@@ -23,3 +23,5 @@ examples/[cd]webp
 *.pdb
 /iosbuild
 /WebP.framework
+*.bc
+libwebpdecoder.js
