@@ -196,6 +196,9 @@ typedef struct {
   int lambda_i16_, lambda_i4_, lambda_uv_;
   int lambda_mode_, lambda_trellis_, tlambda_;
   int lambda_trellis_i16_, lambda_trellis_i4_, lambda_trellis_uv_;
+
+  // lambda values for distortion-based evaluation
+  score_t i4_penalty_;   // penalty for using Intra4
 } VP8SegmentInfo;
 
 // Handy transient struct to accumulate score and info during RD-optimization
@@ -391,6 +394,7 @@ struct VP8Encoder {
   int method_;               // 0=fastest, 6=best/slowest.
   VP8RDLevel rd_opt_level_;  // Deduced from method_.
   int max_i4_header_bits_;   // partition #0 safeness factor
+  int mb_header_limit_;      // rough limit for header bits per MB
   int thread_level_;         // derived from config->thread_level
   int do_search_;            // derived from config->target_XXX
   int use_tokens_;           // if true, use token buffer
