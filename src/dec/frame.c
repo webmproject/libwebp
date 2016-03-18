@@ -462,7 +462,7 @@ static int FinishRow(VP8Decoder* const dec, VP8Io* const io) {
     if (dec->alpha_data_ != NULL && y_start < y_end) {
       // TODO(skal): testing presence of alpha with dec->alpha_data_ is not a
       // good idea.
-      io->a = VP8DecompressAlphaRows(dec, y_start, y_end - y_start);
+      io->a = VP8DecompressAlphaRows(dec, io, y_start, y_end - y_start);
       if (io->a == NULL) {
         return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
                            "Could not decode alpha data.");

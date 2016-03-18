@@ -306,6 +306,7 @@ int VP8DecodeMB(VP8Decoder* const dec, VP8BitReader* const token_br);
 
 // in alpha.c
 const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
+                                      const VP8Io* const io,
                                       int row, int num_rows);
 
 //------------------------------------------------------------------------------

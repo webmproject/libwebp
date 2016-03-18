@@ -44,6 +44,7 @@ static const uint8_t kOrderedDither[DSIZE][DSIZE] = {
 
 typedef struct {
   int width_, height_;  // dimension
+  int stride_;          // stride in bytes
   int row_;             // current input row being processed
   uint8_t* src_;        // input pointer
   uint8_t* dst_;        // output pointer
@@ -99,7 +100,7 @@ static void VFilter(SmoothParams* const p) {
   // We replicate edges, as it's somewhat easier as a boundary condition.
   // That's why we don't update the 'src' pointer on top/bottom area:
   if (p->row_ >= 0 && p->row_ < p->height_ - 1) {
-    p->src_ += p->width_;
+    p->src_ += p->stride_;
   }
 }
 
@@ -149,7 +150,7 @@ static void ApplyFilter(SmoothParams* const p) {
 #endif
     }
   }
-  p->dst_ += w;  // advance output pointer
+  p->dst_ += p->stride_;  // advance output pointer
 }
 
 //------------------------------------------------------------------------------
@@ -208,7 +209,7 @@ static void CountLevels(const uint8_t* const data, int size,
 }
 
 // Initialize all params.
-static int InitParams(uint8_t* const data, int width, int height,
+static int InitParams(uint8_t* const data, int width, int height, int stride,
                       int radius, SmoothParams* const p) {
   const int R = 2 * radius + 1;  // total size of the kernel
 
@@ -233,6 +234,7 @@ static int InitParams(uint8_t* const data, int width, int height,
 
   p->width_ = width;
   p->height_ = height;
+  p->stride_ = stride;
   p->src_ = data;
   p->dst_ = data;
   p->radius_ = radius;
@@ -253,7 +255,7 @@ static void CleanupParams(SmoothParams* const p) {
   WebPSafeFree(p->mem_);
 }
 
-int WebPDequantizeLevels(uint8_t* const data, int width, int height,
+int WebPDequantizeLevels(uint8_t* const data, int width, int height, int stride,
                          int strength) {
   const int radius = 4 * strength / 100;
   if (strength < 0 || strength > 100) return 0;
@@ -261,7 +263,7 @@ int WebPDequantizeLevels(uint8_t* const data, int width, int height,
   if (radius > 0) {
     SmoothParams p;
     memset(&p, 0, sizeof(p));
-    if (!InitParams(data, width, height, radius, &p)) return 0;
+    if (!InitParams(data, width, height, stride, radius, &p)) return 0;
     if (p.num_levels_ > 2) {
       for (; p.row_ < p.height_; ++p.row_) {
         VFilter(&p);  // accumulate average of input

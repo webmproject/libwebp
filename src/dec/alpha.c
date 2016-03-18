@@ -120,16 +120,18 @@ static int ALPHDecode(VP8Decoder* const dec, int row, int num_rows) {
 // Main entry point.
 
 const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
+                                      const VP8Io* const io,
                                       int row, int num_rows) {
   const int width = dec->pic_hdr_.width_;
   const int height = dec->pic_hdr_.height_;
+
+  assert(dec != NULL && io != NULL);
 
   if (row < 0 || num_rows <= 0 || row + num_rows > height) {
     return NULL;    // sanity check.
   }
 
-  if (row == 0) {
-    // Initialize decoding.
+  if (dec->alph_dec_ == NULL) {    // Initialize decoder.
     assert(dec->alpha_plane_ != NULL);
     dec->alph_dec_ = ALPHNew();
     if (dec->alph_dec_ == NULL) return NULL;
@@ -147,12 +149,17 @@ const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
     }
   }
 
+  if (io->use_cropping) {
+    if (row + num_rows > io->crop_bottom) {
+      num_rows = io->crop_bottom - row;
+    }
+  }
+
   if (!dec->is_alpha_decoded_) {
-    int ok = 0;
+    int ok = ALPHDecode(dec, row, num_rows);
     assert(dec->alph_dec_ != NULL);
-    ok = ALPHDecode(dec, row, num_rows);
     if (ok && dec->alpha_dithering_ > 0) {
-      ok = WebPDequantizeLevels(dec->alpha_plane_, width, height,
+      ok = WebPDequantizeLevels(dec->alpha_plane_, width, height, width,
                                 dec->alpha_dithering_);
     }
     if (!ok || dec->is_alpha_decoded_) {
@@ -161,7 +168,6 @@ const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
     }
     if (!ok) return NULL;  // Error.
   }
-
   // Return a pointer to the current decoded row.
   return dec->alpha_plane_ + row * width;
 }
