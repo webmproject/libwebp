@@ -459,15 +459,6 @@ static int FinishRow(VP8Decoder* const dec, VP8Io* const io) {
       y_end = io->crop_bottom;    // make sure we don't overflow on last row.
     }
     io->a = NULL;
-    if (dec->alpha_data_ != NULL && y_start < y_end) {
-      // TODO(skal): testing presence of alpha with dec->alpha_data_ is not a
-      // good idea.
-      io->a = VP8DecompressAlphaRows(dec, io, y_start, y_end - y_start);
-      if (io->a == NULL) {
-        return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
-                           "Could not decode alpha data.");
-      }
-    }
     if (y_start < io->crop_top) {
       const int delta_y = io->crop_top - y_start;
       y_start = io->crop_top;
@@ -480,6 +471,15 @@ static int FinishRow(VP8Decoder* const dec, VP8Io* const io) {
       }
     }
     if (y_start < y_end) {
+      if (dec->alpha_data_ != NULL) {
+        // TODO(skal): testing presence of alpha with dec->alpha_data_ is not a
+        // good idea.
+        io->a = VP8DecompressAlphaRows(dec, io, y_start, y_end - y_start);
+        if (io->a == NULL) {
+          return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
+                             "Could not decode alpha data.");
+        }
+      }
       io->y += io->crop_left;
       io->u += io->crop_left >> 1;
       io->v += io->crop_left >> 1;
@@ -715,13 +715,10 @@ static int AllocateMemory(VP8Decoder* const dec) {
   const size_t cache_height = (16 * num_caches
                             + kFilterExtraRows[dec->filter_type_]) * 3 / 2;
   const size_t cache_size = top_size * cache_height;
-  // alpha_size is the only one that scales as width x height.
-  const uint64_t alpha_size = (dec->alpha_data_ != NULL) ?
-      (uint64_t)dec->pic_hdr_.width_ * dec->pic_hdr_.height_ : 0ULL;
   const uint64_t needed = (uint64_t)intra_pred_mode_size
                         + top_size + mb_info_size + f_info_size
                         + yuv_size + mb_data_size
-                        + cache_size + alpha_size + WEBP_ALIGN_CST;
+                        + cache_size + WEBP_ALIGN_CST;
   uint8_t* mem;
 
   if (needed != (size_t)needed) return 0;  // check for overflow
@@ -785,9 +782,6 @@ static int AllocateMemory(VP8Decoder* const dec) {
   }
   mem += cache_size;
 
-  // alpha plane
-  dec->alpha_plane_ = alpha_size ? (uint8_t*)mem : NULL;
-  mem += alpha_size;
   assert(mem <= (uint8_t*)dec->mem_ + dec->mem_size_);
 
   // note: left/top-info is initialized once for all.
