@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "51acf9b4_be01f959",
+        "filename": "src/dec/alpha.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-03-26T07:10:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "11a9a15f_84ec460a",
+      "revId": "b5566e088229685e1beef2f8b54bc1d8ee555533",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "11a9a15f_44b64e22",
         "filename": "src/dec/alpha.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2016-03-25T21:56:04Z",
       "side": 1,
       "message": "could be 1 line",
+      "revId": "b5566e088229685e1beef2f8b54bc1d8ee555533",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51acf9b4_fe366137",
+        "filename": "src/dec/alpha.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-03-26T07:10:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "11a9a15f_44b64e22",
       "revId": "b5566e088229685e1beef2f8b54bc1d8ee555533",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "51acf9b4_9e063d6e",
+        "filename": "src/dec/alpha.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-03-26T07:10:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "11a9a15f_64bb4a09",
+      "revId": "b5566e088229685e1beef2f8b54bc1d8ee555533",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "11a9a15f_64a26ad3",
         "filename": "src/dec/alpha.c",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2016-03-25T21:56:04Z",
       "side": 1,
       "message": "this whole block needs to be reindented",
+      "revId": "b5566e088229685e1beef2f8b54bc1d8ee555533",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51acf9b4_7efc9184",
+        "filename": "src/dec/alpha.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-03-26T07:10:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "11a9a15f_64a26ad3",
       "revId": "b5566e088229685e1beef2f8b54bc1d8ee555533",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "51acf9b4_5ef9d592",
+        "filename": "src/dec/alpha.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-03-26T07:10:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "11a9a15f_04a7f6e1",
+      "revId": "b5566e088229685e1beef2f8b54bc1d8ee555533",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "11a9a15f_849a069a",
         "filename": "src/dec/alphai.h",
         "patchSetId": 1
@@ -98,6 +188,24 @@
       "writtenOn": "2016-03-25T21:56:04Z",
       "side": 1,
       "message": "alignment is off",
+      "revId": "b5566e088229685e1beef2f8b54bc1d8ee555533",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51acf9b4_3ef609a3",
+        "filename": "src/dec/alphai.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-03-26T07:10:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "11a9a15f_849a069a",
       "revId": "b5566e088229685e1beef2f8b54bc1d8ee555533",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "51acf9b4_1ef34db3",
+        "filename": "src/dec/frame.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-03-26T07:10:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "11a9a15f_a4970271",
+      "revId": "b5566e088229685e1beef2f8b54bc1d8ee555533",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "11a9a15f_44840e3a",
         "filename": "src/dec/vp8i.h",
         "patchSetId": 1
@@ -132,6 +258,47 @@
       "writtenOn": "2016-03-25T21:56:04Z",
       "side": 1,
       "message": "allocated",
+      "revId": "b5566e088229685e1beef2f8b54bc1d8ee555533",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1b08d0b_7ba7ffce",
+        "filename": "src/dec/vp8i.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-03-26T07:10:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "11a9a15f_44840e3a",
+      "revId": "b5566e088229685e1beef2f8b54bc1d8ee555533",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1b08d0b_5ba443c8",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 793,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-03-26T07:10:06Z",
+      "side": 1,
+      "message": "so, this is basically the equivalent of the test \"if (row \u003c last_row \u0026\u0026 ...\" we find in DecodeImageData(), pushed one level down.\nI wonder if we should have the same incorporated in process_func() (and remove the \u0027if (row \u003c last_row ...\" tests, then.\n\nOr, if, conversely, we should remove this test from here, and add \"if (row \u003c last_row ...\" tests in DecodeAlphaData().",
+      "range": {
+        "startLine": 793,
+        "startChar": 10,
+        "endLine": 793,
+        "endChar": 11
+      },
       "revId": "b5566e088229685e1beef2f8b54bc1d8ee555533",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -155,6 +322,24 @@
     },
     {
       "key": {
+        "uuid": "91bbd1f1_d8972d66",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1088,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-03-26T07:10:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "11a9a15f_4793b07c",
+      "revId": "b5566e088229685e1beef2f8b54bc1d8ee555533",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "11a9a15f_24831231",
         "filename": "src/dec/vp8l.c",
         "patchSetId": 1
@@ -166,6 +351,24 @@
       "writtenOn": "2016-03-25T21:56:04Z",
       "side": 1,
       "message": "indent",
+      "revId": "b5566e088229685e1beef2f8b54bc1d8ee555533",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91bbd1f1_b89c798b",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1090,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-03-26T07:10:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "11a9a15f_24831231",
       "revId": "b5566e088229685e1beef2f8b54bc1d8ee555533",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
