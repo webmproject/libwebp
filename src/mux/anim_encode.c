@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include <limits.h>
+#include <math.h>    // for pow()
 #include <stdio.h>
 #include <stdlib.h>  // for abs()
 
@@ -400,6 +401,12 @@ static int IsEmptyRect(const FrameRect* const rect) {
   return (rect->width_ == 0) || (rect->height_ == 0);
 }
 
+static int QualityToMaxDiff(float quality) {
+  const double val = pow(quality / 100., 0.5);
+  const double max_diff = 31 * (1 - val) + 1 * val;
+  return (int)(max_diff + 0.5);
+}
+
 // Assumes that an initial valid guess of change rectangle 'rect' is passed.
 static void MinimizeChangeRectangle(const WebPPicture* const src,
                                     const WebPPicture* const dst,
@@ -408,10 +415,8 @@ static void MinimizeChangeRectangle(const WebPPicture* const src,
   int i, j;
   const ComparePixelsFunc compare_pixels =
       is_lossless ? ComparePixelsLossless : ComparePixelsLossy;
-  // TODO(urvang): For lossy, pick max_allowed_diff based on quality.
-  const int max_allowed_diff_lossy = 0;
+  const int max_allowed_diff_lossy = QualityToMaxDiff(quality);
   const int max_allowed_diff = is_lossless ? 0 : max_allowed_diff_lossy;
-  (void)quality;
 
   // Sanity checks.
   assert(src->width == dst->width && src->height == dst->height);
@@ -1335,6 +1340,10 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int timestamp,
   }
 
   if (encoder_config != NULL) {
+    if (!WebPValidateConfig(encoder_config)) {
+      MarkError(enc, "ERROR adding frame: Invalid WebPConfig");
+      return 0;
+    }
     config = *encoder_config;
   } else {
     WebPConfigInit(&config);
