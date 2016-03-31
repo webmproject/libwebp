@@ -179,17 +179,20 @@ static void InitCorrectionLUT(int16_t* const lut, int min_dist) {
   lut[0] = 0;
 }
 
-static void CountLevels(const uint8_t* const data, int size,
-                        SmoothParams* const p) {
-  int i, last_level;
+static void CountLevels(SmoothParams* const p) {
+  int i, j, last_level;
   uint8_t used_levels[256] = { 0 };
+  const uint8_t* data = p->src_;
   p->min_ = 255;
   p->max_ = 0;
-  for (i = 0; i < size; ++i) {
-    const int v = data[i];
-    if (v < p->min_) p->min_ = v;
-    if (v > p->max_) p->max_ = v;
-    used_levels[v] = 1;
+  for (j = 0; j < p->height_; ++j) {
+    for (i = 0; i < p->width_; ++i) {
+      const int v = data[i];
+      if (v < p->min_) p->min_ = v;
+      if (v > p->max_) p->max_ = v;
+      used_levels[v] = 1;
+    }
+    data += p->stride_;
   }
   // Compute the mininum distance between two non-zero levels.
   p->min_level_dist_ = p->max_ - p->min_;
@@ -242,7 +245,7 @@ static int InitParams(uint8_t* const data, int width, int height, int stride,
   p->row_ = -radius;
 
   // analyze the input distribution so we can best-fit the threshold
-  CountLevels(data, width * height, p);
+  CountLevels(p);
 
   // correction table
   p->correction_ = ((int16_t*)mem) + LUT_SIZE;
