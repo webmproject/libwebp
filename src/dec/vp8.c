@@ -306,12 +306,17 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
     // Setup default output area (can be later modified during io->setup())
     io->width = pic_hdr->width_;
     io->height = pic_hdr->height_;
-    io->use_scaling  = 0;
+    // IMPORTANT! use some sane dimensions in crop_* and scaled_* fields.
+    // So they be used interchangeably without always testing 'use_cropping'.
     io->use_cropping = 0;
     io->crop_top  = 0;
     io->crop_left = 0;
     io->crop_right  = io->width;
     io->crop_bottom = io->height;
+    io->use_scaling  = 0;
+    io->scaled_width = io->width;
+    io->scaled_height = io->height;
+
     io->mb_w = io->width;   // sanity check
     io->mb_h = io->height;  // ditto
 
@@ -649,8 +654,7 @@ void VP8Clear(VP8Decoder* const dec) {
     return;
   }
   WebPGetWorkerInterface()->End(&dec->worker_);
-  ALPHDelete(dec->alph_dec_);
-  dec->alph_dec_ = NULL;
+  WebPDeallocateAlphaMemory(dec);
   WebPSafeFree(dec->mem_);
   dec->mem_ = NULL;
   dec->mem_size_ = 0;
