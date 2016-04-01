@@ -131,30 +131,31 @@ const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
     return NULL;    // sanity check.
   }
 
-  if (dec->alph_dec_ == NULL) {    // Initialize decoder.
-    assert(dec->alpha_plane_ != NULL);
-    dec->alph_dec_ = ALPHNew();
-    if (dec->alph_dec_ == NULL) return NULL;
-    if (!ALPHInit(dec->alph_dec_, dec->alpha_data_, dec->alpha_data_size_,
-                  io->width, io->height, dec->alpha_plane_)) {
-      ALPHDelete(dec->alph_dec_);
-      dec->alph_dec_ = NULL;
-      return NULL;
-    }
-    // if we allowed use of alpha dithering, check whether it's needed at all
-    if (dec->alph_dec_->pre_processing_ != ALPHA_PREPROCESSED_LEVELS) {
-      dec->alpha_dithering_ = 0;  // disable dithering
-    } else {
-      num_rows = height;          // decode everything in one pass
-    }
-  }
-
-  if (row + num_rows > height) {
-    num_rows = height - row;
-  }
-
   if (!dec->is_alpha_decoded_) {
-    int ok = ALPHDecode(dec, row, num_rows);
+    int ok;
+    if (dec->alph_dec_ == NULL) {    // Initialize decoder.
+      assert(dec->alpha_plane_ != NULL);
+      dec->alph_dec_ = ALPHNew();
+      if (dec->alph_dec_ == NULL) return NULL;
+      if (!ALPHInit(dec->alph_dec_, dec->alpha_data_, dec->alpha_data_size_,
+                    io->width, io->height, dec->alpha_plane_)) {
+        ALPHDelete(dec->alph_dec_);
+        dec->alph_dec_ = NULL;
+        return NULL;
+      }
+      // if we allowed use of alpha dithering, check whether it's needed at all
+      if (dec->alph_dec_->pre_processing_ != ALPHA_PREPROCESSED_LEVELS) {
+        dec->alpha_dithering_ = 0;  // disable dithering
+      } else {
+        num_rows = height;          // decode everything in one pass
+      }
+    }
+
+    if (row + num_rows > height) {
+      num_rows = height - row;
+    }
+
+    ok = ALPHDecode(dec, row, num_rows);
     assert(dec->alph_dec_ != NULL);
     if (!ok || dec->is_alpha_decoded_) {
       ALPHDelete(dec->alph_dec_);
