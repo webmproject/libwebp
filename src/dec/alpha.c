@@ -23,12 +23,14 @@
 //------------------------------------------------------------------------------
 // ALPHDecoder object.
 
-ALPHDecoder* ALPHNew(void) {
+// Allocates a new alpha decoder instance.
+static ALPHDecoder* ALPHNew(void) {
   ALPHDecoder* const dec = (ALPHDecoder*)WebPSafeCalloc(1ULL, sizeof(*dec));
   return dec;
 }
 
-void ALPHDelete(ALPHDecoder* const dec) {
+// Clears and deallocates an alpha decoder instance.
+static void ALPHDelete(ALPHDecoder* const dec) {
   if (dec != NULL) {
     VP8LDelete(dec->vp8l_dec_);
     dec->vp8l_dec_ = NULL;
@@ -43,18 +45,20 @@ void ALPHDelete(ALPHDecoder* const dec) {
 // header for alpha data stored using lossless compression.
 // Returns false in case of error in alpha header (data too short, invalid
 // compression method or filter, error in lossless header data etc).
-static int ALPHInit(ALPHDecoder* const dec, const uint8_t* data,
-                    size_t data_size, int width, int height, uint8_t* output) {
+static int ALPHInit(ALPHDecoder* const dec,
+                    const uint8_t* data, size_t data_size,
+                    const VP8Io* const src_io, uint8_t* output) {
   int ok = 0;
   const uint8_t* const alpha_data = data + ALPHA_HEADER_LEN;
   const size_t alpha_data_size = data_size - ALPHA_HEADER_LEN;
   int rsrv;
+  VP8Io* const io = &dec->io_;
 
-  assert(width > 0 && height > 0);
-  assert(data != NULL && output != NULL);
+  assert(data != NULL && output != NULL && src_io != NULL);
 
-  dec->width_ = width;
-  dec->height_ = height;
+  dec->width_ = src_io->width;
+  dec->height_ = src_io->height;
+  assert(dec->width_ > 0 && dec->height_ > 0);
 
   if (data_size <= ALPHA_HEADER_LEN) {
     return 0;
@@ -77,9 +81,22 @@ static int ALPHInit(ALPHDecoder* const dec, const uint8_t* data,
     ok = (alpha_data_size >= alpha_decoded_size);
   } else {
     assert(dec->method_ == ALPHA_LOSSLESS_COMPRESSION);
-    ok = VP8LDecodeAlphaHeader(dec, alpha_data, alpha_data_size, output);
+    ok = VP8LDecodeAlphaHeader(dec, alpha_data, alpha_data_size);
   }
   VP8FiltersInit();
+
+  // Copy the necessary parameters from src_io to io
+  VP8InitIo(io);
+  WebPInitCustomIo(NULL, io);
+  io->opaque = output;      // output plane
+  io->width = src_io->width;
+  io->height = src_io->height;
+
+  io->use_cropping = src_io->use_cropping;
+  io->crop_left = src_io->crop_left;
+  io->crop_right = src_io->crop_right;
+  io->crop_top = src_io->crop_top;
+  io->crop_bottom = src_io->crop_bottom;
   return ok;
 }
 
@@ -89,8 +106,8 @@ static int ALPHInit(ALPHDecoder* const dec, const uint8_t* data,
 // Returns false in case of bitstream error.
 static int ALPHDecode(VP8Decoder* const dec, int row, int num_rows) {
   ALPHDecoder* const alph_dec = dec->alph_dec_;
-  const int width = alph_dec->width_;
-  const int height = alph_dec->height_;
+  const int width = alph_dec->io_.width;
+  const int last_row = alph_dec->io_.crop_bottom;
   WebPUnfilterFunc unfilter_func = WebPUnfilters[alph_dec->filter_];
   uint8_t* const output = dec->alpha_plane_;
   if (alph_dec->method_ == ALPHA_NO_COMPRESSION) {
@@ -106,14 +123,44 @@ static int ALPHDecode(VP8Decoder* const dec, int row, int num_rows) {
     }
   }
 
+  assert(row >= alph_dec->last_row_);
+  assert(row + num_rows <= last_row);
   if (unfilter_func != NULL) {
-    unfilter_func(width, height, width, row, num_rows, output);
+    unfilter_func(width, last_row, width,
+                  alph_dec->last_row_, row + num_rows - alph_dec->last_row_,
+                  output);
   }
+  alph_dec->last_row_ = row + num_rows;
 
-  if (row + num_rows == dec->pic_hdr_.height_) {
+  if (row + num_rows == last_row) {
     dec->is_alpha_decoded_ = 1;
   }
   return 1;
+}
+
+static int AllocateAlphaPlane(VP8Decoder* const dec, const VP8Io* const io) {
+  uint64_t alpha_size;
+  const int stride = io->width;
+  int height = io->height;
+  if (io->use_cropping) {
+    height = io->crop_bottom;
+  }
+  alpha_size = (uint64_t)stride * height;
+  assert(dec->alpha_plane_mem_ == NULL);
+  dec->alpha_plane_mem_ =
+      (uint8_t*)WebPSafeMalloc(alpha_size, sizeof(*dec->alpha_plane_));
+  if (dec->alpha_plane_mem_ == NULL) return 0;
+  dec->alpha_plane_ = dec->alpha_plane_mem_;
+  return 1;
+}
+
+void WebPDeallocateAlphaMemory(VP8Decoder* const dec) {
+  assert(dec != NULL);
+  WebPSafeFree(dec->alpha_plane_mem_);
+  dec->alpha_plane_mem_ = NULL;
+  dec->alpha_plane_ = NULL;
+  ALPHDelete(dec->alph_dec_);
+  dec->alph_dec_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -132,41 +179,45 @@ const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
   }
 
   if (!dec->is_alpha_decoded_) {
-    int ok;
     if (dec->alph_dec_ == NULL) {    // Initialize decoder.
-      assert(dec->alpha_plane_ != NULL);
       dec->alph_dec_ = ALPHNew();
       if (dec->alph_dec_ == NULL) return NULL;
+      if (!AllocateAlphaPlane(dec, io)) goto Error;
       if (!ALPHInit(dec->alph_dec_, dec->alpha_data_, dec->alpha_data_size_,
-                    io->width, io->height, dec->alpha_plane_)) {
-        ALPHDelete(dec->alph_dec_);
-        dec->alph_dec_ = NULL;
+                    io, dec->alpha_plane_)) {
+ Error:
+        WebPDeallocateAlphaMemory(dec);
         return NULL;
       }
       // if we allowed use of alpha dithering, check whether it's needed at all
       if (dec->alph_dec_->pre_processing_ != ALPHA_PREPROCESSED_LEVELS) {
-        dec->alpha_dithering_ = 0;  // disable dithering
+        dec->alpha_dithering_ = 0;   // disable dithering
       } else {
-        num_rows = height;          // decode everything in one pass
+        num_rows = height - row;     // decode everything in one pass
       }
     }
 
-    if (row + num_rows > height) {
-      num_rows = height - row;
-    }
-
-    ok = ALPHDecode(dec, row, num_rows);
     assert(dec->alph_dec_ != NULL);
-    if (!ok || dec->is_alpha_decoded_) {
+    assert(row + num_rows <= height);
+    if (!ALPHDecode(dec, row, num_rows)) goto Error;
+
+    if (dec->is_alpha_decoded_) {   // finished?
       ALPHDelete(dec->alph_dec_);
       dec->alph_dec_ = NULL;
+      if (dec->alpha_dithering_ > 0) {
+        uint8_t* const src = dec->alpha_plane_
+                           + io->crop_top * width
+                           + io->crop_left;
+        if (!WebPDequantizeLevels(src,
+                                  width - io->crop_left,
+                                  height - io->crop_top, width,
+                                  dec->alpha_dithering_)) {
+          goto Error;
+        }
+      }
     }
-    if (ok && dec->is_alpha_decoded_ && dec->alpha_dithering_ > 0) {
-      ok = WebPDequantizeLevels(dec->alpha_plane_, width, height, width,
-                                dec->alpha_dithering_);
-    }
-    if (!ok) return NULL;  // Error.
   }
+
   // Return a pointer to the current decoded row.
   return dec->alpha_plane_ + row * width;
 }
