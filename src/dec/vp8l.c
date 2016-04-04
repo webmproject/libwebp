@@ -1492,11 +1492,11 @@ int VP8LDecodeAlphaHeader(ALPHDecoder* const alph_dec,
   if (dec->next_transform_ == 1 &&
       dec->transforms_[0].type_ == COLOR_INDEXING_TRANSFORM &&
       Is8bOptimizable(&dec->hdr_)) {
-    alph_dec->use_8b_decode = 1;
+    alph_dec->use_8b_decode_ = 1;
     ok = AllocateInternalBuffers8b(dec);
   } else {
     // Allocate internal buffers (note that dec->width_ may have changed here).
-    alph_dec->use_8b_decode = 0;
+    alph_dec->use_8b_decode_ = 0;
     ok = AllocateInternalBuffers32b(dec, alph_dec->width_);
   }
 
@@ -1520,7 +1520,7 @@ int VP8LDecodeAlphaImageStream(ALPHDecoder* const alph_dec, int last_row) {
   }
 
   // Decode (with special row processing).
-  return alph_dec->use_8b_decode ?
+  return alph_dec->use_8b_decode_ ?
       DecodeAlphaData(dec, (uint8_t*)dec->pixels_, dec->width_, dec->height_,
                       last_row) :
       DecodeImageData(dec, dec->pixels_, dec->width_, dec->height_,
