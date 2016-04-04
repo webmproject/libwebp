@@ -13,6 +13,7 @@
 //
 // example: anim_diff foo.gif bar.webp
 
+#include <assert.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>  // for 'strtod'.
@@ -29,20 +30,67 @@ static int AdditionWillOverflow(int a, int b) {
   return (b > 0) && (a > INT_MAX - b);
 }
 
-// Minimize number of frames by combining successive frames that have exact same
-// ARGB data into a single longer duration frame.
-static void MinimizeAnimationFrames(AnimatedImage* const img) {
+static int FramesAreEqual(const uint8_t* const rgba1,
+                          const uint8_t* const rgba2, int width, int height) {
+  const int stride = width * 4;  // Always true for 'DecodedFrame.rgba'.
+  return !memcmp(rgba1, rgba2, stride * height);
+}
+
+static WEBP_INLINE int PixelsAreSimilar(uint32_t src, uint32_t dst,
+                                        int max_allowed_diff) {
+  const int src_a = (src >> 24) & 0xff;
+  const int src_r = (src >> 16) & 0xff;
+  const int src_g = (src >> 8) & 0xff;
+  const int src_b = (src >> 0) & 0xff;
+  const int dst_a = (dst >> 24) & 0xff;
+  const int dst_r = (dst >> 16) & 0xff;
+  const int dst_g = (dst >> 8) & 0xff;
+  const int dst_b = (dst >> 0) & 0xff;
+
+  return (abs(src_r * src_a - dst_r * dst_a) <= (max_allowed_diff * 255)) &&
+         (abs(src_g * src_a - dst_g * dst_a) <= (max_allowed_diff * 255)) &&
+         (abs(src_b * src_a - dst_b * dst_a) <= (max_allowed_diff * 255)) &&
+         (abs(src_a - dst_a) <= max_allowed_diff);
+}
+
+static int FramesAreSimilar(const uint8_t* const rgba1,
+                            const uint8_t* const rgba2,
+                            int width, int height, int max_allowed_diff) {
+  int i, j;
+  assert(max_allowed_diff > 0);
+  for (j = 0; j < height; ++j) {
+    for (i = 0; i < width; ++i) {
+      const int stride = width * 4;
+      const size_t offset = j * stride + i;
+      if (!PixelsAreSimilar(rgba1[offset], rgba2[offset], max_allowed_diff)) {
+        return 0;
+      }
+    }
+  }
+  return 1;
+}
+
+// Minimize number of frames by combining successive frames that have at max
+// 'max_diff' difference per channel between corresponding pixels.
+static void MinimizeAnimationFrames(AnimatedImage* const img, int max_diff) {
   uint32_t i;
   for (i = 1; i < img->num_frames; ++i) {
     DecodedFrame* const frame1 = &img->frames[i - 1];
     DecodedFrame* const frame2 = &img->frames[i];
     const uint8_t* const rgba1 = frame1->rgba;
     const uint8_t* const rgba2 = frame2->rgba;
+    int should_merge_frames = 0;
     // If merging frames will result in integer overflow for 'duration',
     // skip merging.
     if (AdditionWillOverflow(frame1->duration, frame2->duration)) continue;
-    if (!memcmp(rgba1, rgba2, img->canvas_width * 4 * img->canvas_height)) {
-      // Merge 'i+1'th frame into 'i'th frame.
+    if (max_diff > 0) {
+      should_merge_frames = FramesAreSimilar(rgba1, rgba2, img->canvas_width,
+                                             img->canvas_height, max_diff);
+    } else {
+      should_merge_frames =
+          FramesAreEqual(rgba1, rgba2, img->canvas_width, img->canvas_height);
+    }
+    if (should_merge_frames) {  // Merge 'i+1'th frame into 'i'th frame.
       frame1->duration += frame2->duration;
       if (i + 1 < img->num_frames) {
         memmove(&img->frames[i], &img->frames[i + 1],
@@ -125,6 +173,11 @@ static void Help(void) {
   printf("  -min_psnr <float> ... minimum per-frame PSNR\n");
   printf("  -raw_comparison ..... if this flag is not used, RGB is\n");
   printf("                        premultiplied before comparison\n");
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+  printf("  -max_diff <int> ..... maximum allowed difference per channel "
+         "                        between corresponding pixels in subsequent"
+         "                        frames\n");
+#endif
 }
 
 int main(int argc, const char* argv[]) {
@@ -135,6 +188,7 @@ int main(int argc, const char* argv[]) {
   int got_input1 = 0;
   int got_input2 = 0;
   int premultiply = 1;
+  int max_diff = 0;
   int i, c;
   const char* files[2] = { NULL, NULL };
   AnimatedImage images[2];
@@ -168,6 +222,21 @@ int main(int argc, const char* argv[]) {
       }
     } else if (!strcmp(argv[c], "-raw_comparison")) {
       premultiply = 0;
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+    } else if (!strcmp(argv[c], "-max_diff")) {
+      if (c < argc - 1) {
+        const char* const v = argv[++c];
+        char* end = NULL;
+        const int n = (int)strtol(v, &end, 10);
+        if (end == v) {
+          parse_error = 1;
+          fprintf(stderr, "Error! '%s' is not an integer.\n", v);
+        }
+        max_diff = n;
+      } else {
+        parse_error = 1;
+      }
+#endif
     } else {
       if (!got_input1) {
         files[0] = argv[c];
@@ -201,7 +270,7 @@ int main(int argc, const char* argv[]) {
       return_code = -2;
       goto End;
     } else {
-      MinimizeAnimationFrames(&images[i]);
+      MinimizeAnimationFrames(&images[i], max_diff);
     }
   }
 
