@@ -596,9 +596,9 @@ static uint32_t RectArea(const FrameRect* const rect) {
   return (uint32_t)rect->width_ * rect->height_;
 }
 
-static int IsBlendingPossible(const WebPPicture* const src,
-                              const WebPPicture* const dst,
-                              const FrameRect* const rect) {
+static int IsLosslessBlendingPossible(const WebPPicture* const src,
+                                      const WebPPicture* const dst,
+                                      const FrameRect* const rect) {
   int i, j;
   assert(src->width == dst->width && src->height == dst->height);
   assert(rect->x_offset_ + rect->width_ <= dst->width);
@@ -609,6 +609,31 @@ static int IsBlendingPossible(const WebPPicture* const src,
       const uint32_t dst_pixel = dst->argb[j * dst->argb_stride + i];
       const uint32_t dst_alpha = dst_pixel >> 24;
       if (dst_alpha != 0xff && src_pixel != dst_pixel) {
+        // In this case, if we use blending, we can't attain the desired
+        // 'dst_pixel' value for this pixel. So, blending is not possible.
+        return 0;
+      }
+    }
+  }
+  return 1;
+}
+
+static int IsLossyBlendingPossible(const WebPPicture* const src,
+                                   const WebPPicture* const dst,
+                                   const FrameRect* const rect,
+                                   float quality) {
+  const int max_allowed_diff_lossy = QualityToMaxDiff(quality);
+  int i, j;
+  assert(src->width == dst->width && src->height == dst->height);
+  assert(rect->x_offset_ + rect->width_ <= dst->width);
+  assert(rect->y_offset_ + rect->height_ <= dst->height);
+  for (j = rect->y_offset_; j < rect->y_offset_ + rect->height_; ++j) {
+    for (i = rect->x_offset_; i < rect->x_offset_ + rect->width_; ++i) {
+      const uint32_t src_pixel = src->argb[j * src->argb_stride + i];
+      const uint32_t dst_pixel = dst->argb[j * dst->argb_stride + i];
+      const uint32_t dst_alpha = dst_pixel >> 24;
+      if (dst_alpha != 0xff &&
+          !PixelsAreSimilar(src_pixel, dst_pixel, max_allowed_diff_lossy)) {
         // In this case, if we use blending, we can't attain the desired
         // 'dst_pixel' value for this pixel. So, blending is not possible.
         return 0;
@@ -696,9 +721,12 @@ static void IncreaseTransparency(const WebPPicture* const src,
 
 // Replace similar blocks of pixels by a 'see-through' transparent block
 // with uniform average color.
+// Assumes lossy compression is being used.
 static void FlattenSimilarBlocks(const WebPPicture* const src,
                                  const FrameRect* const rect,
-                                 WebPPicture* const dst) {
+                                 WebPPicture* const dst,
+                                 float quality) {
+  const int max_allowed_diff_lossy = QualityToMaxDiff(quality);
   int i, j;
   const int block_size = 8;
   const int y_start = (rect->y_offset_ + block_size) & ~(block_size - 1);
@@ -721,11 +749,12 @@ static void FlattenSimilarBlocks(const WebPPicture* const src,
           const uint32_t src_pixel = psrc[x + y * src->argb_stride];
           const int alpha = src_pixel >> 24;
           if (alpha == 0xff &&
-              src_pixel == pdst[x + y * dst->argb_stride]) {
-              ++cnt;
-              avg_r += (src_pixel >> 16) & 0xff;
-              avg_g += (src_pixel >>  8) & 0xff;
-              avg_b += (src_pixel >>  0) & 0xff;
+              PixelsAreSimilar(src_pixel, pdst[x + y * dst->argb_stride],
+                               max_allowed_diff_lossy)) {
+            ++cnt;
+            avg_r += (src_pixel >> 16) & 0xff;
+            avg_g += (src_pixel >> 8) & 0xff;
+            avg_b += (src_pixel >> 0) & 0xff;
           }
         }
       }
@@ -844,10 +873,11 @@ static WebPEncodingError GenerateCandidates(
       is_dispose_none ? &enc->prev_canvas_ : &enc->prev_canvas_disposed_;
   const int use_blending_ll =
       !is_key_frame &&
-      IsBlendingPossible(prev_canvas, curr_canvas, &params->rect_ll_);
+      IsLosslessBlendingPossible(prev_canvas, curr_canvas, &params->rect_ll_);
   const int use_blending_lossy =
       !is_key_frame &&
-      IsBlendingPossible(prev_canvas, curr_canvas, &params->rect_lossy_);
+      IsLossyBlendingPossible(prev_canvas, curr_canvas, &params->rect_lossy_,
+                              config_lossy->quality);
 
   // Pick candidates to be tried.
   if (!enc->options_.allow_mixed) {
@@ -873,7 +903,8 @@ static WebPEncodingError GenerateCandidates(
   if (candidate_lossy->evaluate_) {
     CopyCurrentCanvas(enc);
     if (use_blending_lossy) {
-      FlattenSimilarBlocks(prev_canvas, &params->rect_lossy_, curr_canvas);
+      FlattenSimilarBlocks(prev_canvas, &params->rect_lossy_, curr_canvas,
+                           config_lossy->quality);
       enc->curr_canvas_copy_modified_ = 1;
     }
     error_code =
