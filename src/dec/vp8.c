@@ -303,15 +303,22 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
 
     dec->mb_w_ = (pic_hdr->width_ + 15) >> 4;
     dec->mb_h_ = (pic_hdr->height_ + 15) >> 4;
+
     // Setup default output area (can be later modified during io->setup())
     io->width = pic_hdr->width_;
     io->height = pic_hdr->height_;
-    io->use_scaling  = 0;
+    // IMPORTANT! use some sane dimensions in crop_* and scaled_* fields.
+    // So they can be used interchangeably without always testing for
+    // 'use_cropping'.
     io->use_cropping = 0;
     io->crop_top  = 0;
     io->crop_left = 0;
     io->crop_right  = io->width;
     io->crop_bottom = io->height;
+    io->use_scaling  = 0;
+    io->scaled_width = io->width;
+    io->scaled_height = io->height;
+
     io->mb_w = io->width;   // sanity check
     io->mb_h = io->height;  // ditto
 
