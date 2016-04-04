@@ -40,11 +40,8 @@ struct ALPHDecoder {
 //------------------------------------------------------------------------------
 // internal functions. Not public.
 
-// Allocates a new alpha decoder instance.
-ALPHDecoder* ALPHNew(void);
-
-// Clears and deallocates an alpha decoder instance.
-void ALPHDelete(ALPHDecoder* const dec);
+// Deallocate memory associated to dec->alpha_plane_ decoding
+void WebPDeallocateAlphaMemory(VP8Decoder* const dec);
 
 //------------------------------------------------------------------------------
 

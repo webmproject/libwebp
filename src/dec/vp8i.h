@@ -258,9 +258,10 @@ struct VP8Decoder {
   struct ALPHDecoder* alph_dec_;  // alpha-plane decoder object
   const uint8_t* alpha_data_;     // compressed alpha data (if present)
   size_t alpha_data_size_;
-  int is_alpha_decoded_;  // true if alpha_data_ is decoded in alpha_plane_
-  uint8_t* alpha_plane_;  // output. Persistent, contains the whole data.
-  int alpha_dithering_;   // derived from decoding options (0=off, 100=full).
+  int is_alpha_decoded_;      // true if alpha_data_ is decoded in alpha_plane_
+  uint8_t* alpha_plane_mem_;  // memory allocated for alpha_plane_
+  uint8_t* alpha_plane_;      // output. Persistent, contains the whole data.
+  int alpha_dithering_;       // derived from decoding options (0=off, 100=full)
 };
 
 //------------------------------------------------------------------------------

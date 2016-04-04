@@ -656,8 +656,7 @@ void VP8Clear(VP8Decoder* const dec) {
     return;
   }
   WebPGetWorkerInterface()->End(&dec->worker_);
-  ALPHDelete(dec->alph_dec_);
-  dec->alph_dec_ = NULL;
+  WebPDeallocateAlphaMemory(dec);
   WebPSafeFree(dec->mem_);
   dec->mem_ = NULL;
   dec->mem_size_ = 0;
@@ -666,4 +665,3 @@ void VP8Clear(VP8Decoder* const dec) {
 }
 
 //------------------------------------------------------------------------------
-
