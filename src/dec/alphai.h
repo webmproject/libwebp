@@ -28,13 +28,14 @@ struct ALPHDecoder {
   int width_;
   int height_;
   int method_;
-  WEBP_FILTER_TYPE filter_;
+  WebPUnfilterFunc unfilter_func_;
   int pre_processing_;
   struct VP8LDecoder* vp8l_dec_;
   VP8Io io_;
   int use_8b_decode_;  // Although alpha channel requires only 1 byte per
                        // pixel, sometimes VP8LDecoder may need to allocate
                        // 4 bytes per pixel internally during decode.
+  uint8_t* output_;
 };
 
 //------------------------------------------------------------------------------

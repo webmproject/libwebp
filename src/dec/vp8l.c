@@ -717,15 +717,23 @@ static void ApplyInverseTransforms(VP8LDecoder* const dec, int num_rows,
 // Special method for paletted alpha data.
 static void ApplyInverseTransformsAlpha(VP8LDecoder* const dec, int num_rows,
                                         const uint8_t* const rows) {
+  const ALPHDecoder* const alph_dec = (const ALPHDecoder*)dec->io_->opaque;
+  const int width = dec->io_->width;
+  uint8_t* const output = alph_dec->output_;
   const int start_row = dec->last_row_;
   const int end_row = start_row + num_rows;
   const uint8_t* rows_in = rows;
-  uint8_t* rows_out = (uint8_t*)dec->io_->opaque + dec->io_->width * start_row;
+  uint8_t* rows_out = output +  width * start_row;
   VP8LTransform* const transform = &dec->transforms_[0];
   assert(dec->next_transform_ == 1);
   assert(transform->type_ == COLOR_INDEXING_TRANSFORM);
   VP8LColorIndexInverseTransformAlpha(transform, start_row, end_row, rows_in,
                                       rows_out);
+  if (alph_dec->unfilter_func_ != NULL) {
+    alph_dec->unfilter_func_(width, dec->io_->height, width,
+                             start_row, num_rows, output);
+  }
+
 }
 
 // Processes (transforms, scales & color-converts) the rows decoded after the
@@ -1441,25 +1449,29 @@ static int AllocateInternalBuffers8b(VP8LDecoder* const dec) {
 static void ExtractAlphaRows(VP8LDecoder* const dec, int row) {
   const int num_rows = row - dec->last_row_;
   const uint32_t* const in = dec->pixels_ + dec->width_ * dec->last_row_;
-
   if (num_rows <= 0) return;  // Nothing to be done.
   ApplyInverseTransforms(dec, num_rows, in);
 
   // Extract alpha (which is stored in the green plane).
   {
+    const ALPHDecoder* const alph_dec = (const ALPHDecoder*)dec->io_->opaque;
+    uint8_t* const output = alph_dec->output_;
     const int width = dec->io_->width;      // the final width (!= dec->width_)
     const int cache_pixs = width * num_rows;
-    uint8_t* const dst = (uint8_t*)dec->io_->opaque + width * dec->last_row_;
+    uint8_t* const dst = output + width * dec->last_row_;
     const uint32_t* const src = dec->argb_cache_;
     int i;
     for (i = 0; i < cache_pixs; ++i) dst[i] = (src[i] >> 8) & 0xff;
+    if (alph_dec->unfilter_func_ != NULL) {
+      alph_dec->unfilter_func_(width, dec->io_->height, width,
+                               dec->last_row_, num_rows, output);
+    }
   }
   dec->last_row_ = dec->last_out_row_ = row;
 }
 
 int VP8LDecodeAlphaHeader(ALPHDecoder* const alph_dec,
-                          const uint8_t* const data, size_t data_size,
-                          uint8_t* const output) {
+                          const uint8_t* const data, size_t data_size) {
   int ok = 0;
   VP8LDecoder* dec;
   VP8Io* io;
@@ -1475,7 +1487,7 @@ int VP8LDecodeAlphaHeader(ALPHDecoder* const alph_dec,
 
   VP8InitIo(io);
   WebPInitCustomIo(NULL, io);  // Just a sanity Init. io won't be used.
-  io->opaque = output;
+  io->opaque = alph_dec;
   io->width = alph_dec->width_;
   io->height = alph_dec->height_;
 
