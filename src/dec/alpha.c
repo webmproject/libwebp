@@ -129,7 +129,7 @@ static int ALPHDecode(VP8Decoder* const dec, int row, int num_rows) {
     unfilter_func(width, height, width, row, num_rows, output);
   }
 
-  if (row + num_rows == dec->pic_hdr_.height_) {
+  if (row + num_rows >= alph_dec->io_.crop_bottom) {
     dec->is_alpha_decoded_ = 1;
   }
   return 1;
@@ -167,7 +167,7 @@ const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
 
   assert(dec != NULL && io != NULL);
 
-  if (row < 0 || num_rows <= 0 || row + num_rows > io->height) {
+  if (row < 0 || num_rows <= 0 || row + num_rows > height) {
     return NULL;    // sanity check.
   }
 
@@ -182,22 +182,26 @@ const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
       }
       // if we allowed use of alpha dithering, check whether it's needed at all
       if (dec->alph_dec_->pre_processing_ != ALPHA_PREPROCESSED_LEVELS) {
-        dec->alpha_dithering_ = 0;       // disable dithering
+        dec->alpha_dithering_ = 0;   // disable dithering
       } else {
-        num_rows = io->height - row;     // decode everything in one pass
+        num_rows = height - row;     // decode everything in one pass
       }
     }
 
     assert(dec->alph_dec_ != NULL);
-    assert(row + num_rows <= io->height);
+    assert(row + num_rows <= height);
     if (!ALPHDecode(dec, row, num_rows)) goto Error;
 
     if (dec->is_alpha_decoded_) {   // finished?
       ALPHDelete(dec->alph_dec_);
       dec->alph_dec_ = NULL;
       if (dec->alpha_dithering_ > 0) {
-        if (!WebPDequantizeLevels(dec->alpha_plane_, width, height, width,
-                                  dec->alpha_dithering_)) {
+        uint8_t* const alpha = dec->alpha_plane_ + io->crop_top * width
+                             + io->crop_left;
+        if (!WebPDequantizeLevels(alpha,
+                                  io->crop_right - io->crop_left,
+                                  io->crop_bottom - io->crop_top,
+                                  width, dec->alpha_dithering_)) {
           goto Error;
         }
       }
