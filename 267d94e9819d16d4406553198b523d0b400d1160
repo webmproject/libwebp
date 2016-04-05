@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ec48060_db810bee",
+        "filename": "src/dec/alpha.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-04-05T20:23:05Z",
+      "side": 1,
+      "message": "i wonder if it\u0027s a good idea to steal the function pointer here, even if we called VP8FiltersInit();\n\nWhat is CPUInfo is changed later on? Should we only preserve \u0027filter\u0027 and not the func?",
+      "range": {
+        "startLine": 81,
+        "startChar": 24,
+        "endLine": 81,
+        "endChar": 37
+      },
+      "revId": "267d94e9819d16d4406553198b523d0b400d1160",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
