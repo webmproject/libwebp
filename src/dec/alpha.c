@@ -52,6 +52,7 @@ static int ALPHInit(ALPHDecoder* const dec, const uint8_t* data,
   const uint8_t* const alpha_data = data + ALPHA_HEADER_LEN;
   const size_t alpha_data_size = data_size - ALPHA_HEADER_LEN;
   int rsrv;
+  int filter;
   VP8Io* const io = &dec->io_;
 
   assert(data != NULL && output != NULL && src_io != NULL);
@@ -65,30 +66,25 @@ static int ALPHInit(ALPHDecoder* const dec, const uint8_t* data,
   }
 
   dec->method_ = (data[0] >> 0) & 0x03;
-  dec->filter_ = (data[0] >> 2) & 0x03;
+  filter = (data[0] >> 2) & 0x03;
   dec->pre_processing_ = (data[0] >> 4) & 0x03;
   rsrv = (data[0] >> 6) & 0x03;
   if (dec->method_ < ALPHA_NO_COMPRESSION ||
       dec->method_ > ALPHA_LOSSLESS_COMPRESSION ||
-      dec->filter_ >= WEBP_FILTER_LAST ||
+      filter >= WEBP_FILTER_LAST ||
       dec->pre_processing_ > ALPHA_PREPROCESSED_LEVELS ||
       rsrv != 0) {
     return 0;
   }
 
-  if (dec->method_ == ALPHA_NO_COMPRESSION) {
-    const size_t alpha_decoded_size = dec->width_ * dec->height_;
-    ok = (alpha_data_size >= alpha_decoded_size);
-  } else {
-    assert(dec->method_ == ALPHA_LOSSLESS_COMPRESSION);
-    ok = VP8LDecodeAlphaHeader(dec, alpha_data, alpha_data_size, output);
-  }
   VP8FiltersInit();
+  dec->unfilter_func_ = WebPUnfilters[filter];
+  dec->output_ = output;
 
   // Copy the necessary parameters from src_io to io
   VP8InitIo(io);
   WebPInitCustomIo(NULL, io);
-  io->opaque = output;      // output plane
+  io->opaque = dec;
   io->width = src_io->width;
   io->height = src_io->height;
 
@@ -98,6 +94,14 @@ static int ALPHInit(ALPHDecoder* const dec, const uint8_t* data,
   io->crop_top = src_io->crop_top;
   io->crop_bottom = src_io->crop_bottom;
   // No need to copy the scaling parameters.
+
+  if (dec->method_ == ALPHA_NO_COMPRESSION) {
+    const size_t alpha_decoded_size = dec->width_ * dec->height_;
+    ok = (alpha_data_size >= alpha_decoded_size);
+  } else {
+    assert(dec->method_ == ALPHA_LOSSLESS_COMPRESSION);
+    ok = VP8LDecodeAlphaHeader(dec, alpha_data, alpha_data_size);
+  }
 
   return ok;
 }
@@ -110,7 +114,6 @@ static int ALPHDecode(VP8Decoder* const dec, int row, int num_rows) {
   ALPHDecoder* const alph_dec = dec->alph_dec_;
   const int width = alph_dec->width_;
   const int height = alph_dec->height_;
-  WebPUnfilterFunc unfilter_func = WebPUnfilters[alph_dec->filter_];
   uint8_t* const output = dec->alpha_plane_;
   if (alph_dec->method_ == ALPHA_NO_COMPRESSION) {
     const size_t offset = row * width;
@@ -118,15 +121,14 @@ static int ALPHDecode(VP8Decoder* const dec, int row, int num_rows) {
     assert(dec->alpha_data_size_ >= ALPHA_HEADER_LEN + offset + num_pixels);
     memcpy(dec->alpha_plane_ + offset,
            dec->alpha_data_ + ALPHA_HEADER_LEN + offset, num_pixels);
+    if (alph_dec->unfilter_func_ != NULL) {
+      alph_dec->unfilter_func_(width, height, width, row, num_rows, output);
+    }
   } else {  // alph_dec->method_ == ALPHA_LOSSLESS_COMPRESSION
     assert(alph_dec->vp8l_dec_ != NULL);
     if (!VP8LDecodeAlphaImageStream(alph_dec, row + num_rows)) {
       return 0;
     }
-  }
-
-  if (unfilter_func != NULL) {
-    unfilter_func(width, height, width, row, num_rows, output);
   }
 
   if (row + num_rows >= alph_dec->io_.crop_bottom) {
