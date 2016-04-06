@@ -113,7 +113,7 @@ static int ALPHInit(ALPHDecoder* const dec, const uint8_t* data,
 static int ALPHDecode(VP8Decoder* const dec, int row, int num_rows) {
   ALPHDecoder* const alph_dec = dec->alph_dec_;
   const int width = alph_dec->width_;
-  const int height = alph_dec->height_;
+  const int height = alph_dec->io_.crop_bottom;
   uint8_t* const output = dec->alpha_plane_;
   if (alph_dec->method_ == ALPHA_NO_COMPRESSION) {
     const size_t offset = row * width;
@@ -131,7 +131,7 @@ static int ALPHDecode(VP8Decoder* const dec, int row, int num_rows) {
     }
   }
 
-  if (row + num_rows >= alph_dec->io_.crop_bottom) {
+  if (row + num_rows >= height) {
     dec->is_alpha_decoded_ = 1;
   }
   return 1;
@@ -139,12 +139,14 @@ static int ALPHDecode(VP8Decoder* const dec, int row, int num_rows) {
 
 static int AllocateAlphaPlane(VP8Decoder* const dec, const VP8Io* const io) {
   const int stride = io->width;
-  const int height = io->height;
+  const int height = io->crop_bottom;
   const uint64_t alpha_size = (uint64_t)stride * height;
   assert(dec->alpha_plane_mem_ == NULL);
   dec->alpha_plane_mem_ =
       (uint8_t*)WebPSafeMalloc(alpha_size, sizeof(*dec->alpha_plane_));
-  if (dec->alpha_plane_mem_ == NULL) return 0;
+  if (dec->alpha_plane_mem_ == NULL) {
+    return 0;
+  }
   dec->alpha_plane_ = dec->alpha_plane_mem_;
   return 1;
 }
