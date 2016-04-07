@@ -52,11 +52,12 @@ static int ALPHInit(ALPHDecoder* const dec, const uint8_t* data,
   const uint8_t* const alpha_data = data + ALPHA_HEADER_LEN;
   const size_t alpha_data_size = data_size - ALPHA_HEADER_LEN;
   int rsrv;
-  int filter;
   VP8Io* const io = &dec->io_;
 
   assert(data != NULL && output != NULL && src_io != NULL);
 
+  VP8FiltersInit();
+  dec->output_ = output;
   dec->width_ = src_io->width;
   dec->height_ = src_io->height;
   assert(dec->width_ > 0 && dec->height_ > 0);
@@ -66,20 +67,16 @@ static int ALPHInit(ALPHDecoder* const dec, const uint8_t* data,
   }
 
   dec->method_ = (data[0] >> 0) & 0x03;
-  filter = (data[0] >> 2) & 0x03;
+  dec->filter_ = (data[0] >> 2) & 0x03;
   dec->pre_processing_ = (data[0] >> 4) & 0x03;
   rsrv = (data[0] >> 6) & 0x03;
   if (dec->method_ < ALPHA_NO_COMPRESSION ||
       dec->method_ > ALPHA_LOSSLESS_COMPRESSION ||
-      filter >= WEBP_FILTER_LAST ||
+      dec->filter_ >= WEBP_FILTER_LAST ||
       dec->pre_processing_ > ALPHA_PREPROCESSED_LEVELS ||
       rsrv != 0) {
     return 0;
   }
-
-  VP8FiltersInit();
-  dec->unfilter_func_ = WebPUnfilters[filter];
-  dec->output_ = output;
 
   // Copy the necessary parameters from src_io to io
   VP8InitIo(io);
@@ -121,8 +118,9 @@ static int ALPHDecode(VP8Decoder* const dec, int row, int num_rows) {
     assert(dec->alpha_data_size_ >= ALPHA_HEADER_LEN + offset + num_pixels);
     memcpy(dec->alpha_plane_ + offset,
            dec->alpha_data_ + ALPHA_HEADER_LEN + offset, num_pixels);
-    if (alph_dec->unfilter_func_ != NULL) {
-      alph_dec->unfilter_func_(width, height, width, row, num_rows, output);
+    if (WebPUnfilters[alph_dec->filter_] != NULL) {
+      WebPUnfilters[alph_dec->filter_](width, height, width,
+                                       row, num_rows, output);
     }
   } else {  // alph_dec->method_ == ALPHA_LOSSLESS_COMPRESSION
     assert(alph_dec->vp8l_dec_ != NULL);

@@ -28,7 +28,7 @@ struct ALPHDecoder {
   int width_;
   int height_;
   int method_;
-  WebPUnfilterFunc unfilter_func_;
+  WEBP_FILTER_TYPE filter_;
   int pre_processing_;
   struct VP8LDecoder* vp8l_dec_;
   VP8Io io_;
