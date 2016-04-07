@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e72c020_d320f777",
+        "filename": "examples/anim_diff.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-04-07T00:32:28Z",
+      "side": 1,
+      "message": "this could use the functions from example_util.h, same for strtod",
+      "revId": "47dd07080f4c090d67ffe7223f148c8ba9bef155",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
