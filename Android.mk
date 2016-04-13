@@ -123,6 +123,7 @@ mux_srcs := \
     src/mux/muxread.c \
 
 utils_dec_srcs := \
+    src/utils/ans.c \
     src/utils/bit_reader.c \
     src/utils/color_cache.c \
     src/utils/filters.c \
