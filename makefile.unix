@@ -52,7 +52,7 @@ endif
 # EXTRA_FLAGS += -m32
 
 # Extra flags to enable experimental features and code
-# EXTRA_FLAGS += -DWEBP_EXPERIMENTAL_FEATURES
+EXTRA_FLAGS += -DWEBP_EXPERIMENTAL_FEATURES
 
 # Extra flags to enable byte swap for 16 bit colorspaces.
 # EXTRA_FLAGS += -DWEBP_SWAP_16BIT_CSP
@@ -220,6 +220,7 @@ MUX_OBJS = \
     src/mux/muxread.o \
 
 UTILS_DEC_OBJS = \
+    src/utils/ans.o \
     src/utils/bit_reader.o \
     src/utils/color_cache.o \
     src/utils/filters.o \
@@ -273,6 +274,7 @@ HDRS = \
     src/enc/vp8enci.h \
     src/enc/vp8li.h \
     src/mux/muxi.h \
+    src/utils/ans.h \
     src/utils/bit_reader.h \
     src/utils/bit_reader_inl.h \
     src/utils/bit_writer.h \
