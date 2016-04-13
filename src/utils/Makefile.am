@@ -8,6 +8,8 @@ common_HEADERS = ../webp/types.h
 commondir = $(includedir)/webp
 
 COMMON_SOURCES =
+COMMON_SOURCES += ans.c
+COMMON_SOURCES += ans.h
 COMMON_SOURCES += bit_reader.c
 COMMON_SOURCES += bit_reader.h
 COMMON_SOURCES += bit_reader_inl.h
