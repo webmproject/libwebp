@@ -240,11 +240,6 @@ static void HorizontalFilter(const uint8_t* data, int width, int height,
   DoHorizontalFilter(data, width, height, stride, 0, height, 0, filtered_data);
 }
 
-static void HorizontalUnfilter(int width, int height, int stride, int row,
-                               int num_rows, uint8_t* data) {
-  DoHorizontalFilter(data, width, height, stride, row, num_rows, 1, data);
-}
-
 //------------------------------------------------------------------------------
 // Vertical filter.
 
@@ -297,11 +292,6 @@ static WEBP_INLINE void DoVerticalFilter(const uint8_t* in,
 static void VerticalFilter(const uint8_t* data, int width, int height,
                            int stride, uint8_t* filtered_data) {
   DoVerticalFilter(data, width, height, stride, 0, height, 0, filtered_data);
-}
-
-static void VerticalUnfilter(int width, int height, int stride, int row,
-                             int num_rows, uint8_t* data) {
-  DoVerticalFilter(data, width, height, stride, row, num_rows, 1, data);
 }
 
 //------------------------------------------------------------------------------
@@ -374,9 +364,37 @@ static void GradientFilter(const uint8_t* data, int width, int height,
   DoGradientFilter(data, width, height, stride, 0, height, 0, filtered_data);
 }
 
-static void GradientUnfilter(int width, int height, int stride, int row,
-                             int num_rows, uint8_t* data) {
-  DoGradientFilter(data, width, height, stride, row, num_rows, 1, data);
+//------------------------------------------------------------------------------
+
+static void HorizontalUnfilter(const uint8_t* prev, const uint8_t* in,
+                               uint8_t* out, int width) {
+  out[0] = in[0] + (prev == NULL) ? 0 : prev[0];
+  PredictLine(in + 1, out + 1, width - 1, 1);
+}
+
+static void VerticalUnfilter(const uint8_t* prev, const uint8_t* in,
+                             uint8_t* out, int width) {
+  if (prev == NULL) {
+    HorizontalUnfilter(NULL, deltas, out, width);
+  } else {
+    DO_PREDICT_LINE_VERTICAL(in, prev, dst, width, INVERSE);                \
+  }
+}
+
+static void GradientUnfilter(const uint8_t* prev, const uint8_t* in,
+                             uint8_t* out, int width) {
+  if (prev == NULL) {
+    HorizontalUnfilter(NULL, deltas, out, width);
+  } else {
+    uint8_t top = prev[0], top_left = top, left = top;
+    int i;
+    for (i = 0; i < width; ++i) {
+      top = prev[i];  // need to read this first, in case prev==dst
+      left = in[i] + GradientPredictor(left, top, top_left);
+      top_left = top;
+      dst[i] = left;
+    }
+  }
 }
 
 #undef PREDICT_LINE_ONE_PASS
@@ -389,13 +407,13 @@ static void GradientUnfilter(int width, int height, int stride, int row,
 extern void VP8FiltersInitMIPSdspR2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8FiltersInitMIPSdspR2(void) {
-  WebPFilters[WEBP_FILTER_HORIZONTAL] = HorizontalFilter;
-  WebPFilters[WEBP_FILTER_VERTICAL] = VerticalFilter;
-  WebPFilters[WEBP_FILTER_GRADIENT] = GradientFilter;
-
   WebPUnfilters[WEBP_FILTER_HORIZONTAL] = HorizontalUnfilter;
   WebPUnfilters[WEBP_FILTER_VERTICAL] = VerticalUnfilter;
   WebPUnfilters[WEBP_FILTER_GRADIENT] = GradientUnfilter;
+
+  WebPFilters[WEBP_FILTER_HORIZONTAL] = HorizontalFilter;
+  WebPFilters[WEBP_FILTER_VERTICAL] = VerticalFilter;
+  WebPFilters[WEBP_FILTER_GRADIENT] = GradientFilter;
 }
 
 #else  // !WEBP_USE_MIPS_DSP_R2
