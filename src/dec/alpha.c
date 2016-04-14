@@ -111,17 +111,29 @@ static int ALPHDecode(VP8Decoder* const dec, int row, int num_rows) {
   ALPHDecoder* const alph_dec = dec->alph_dec_;
   const int width = alph_dec->width_;
   const int height = alph_dec->io_.crop_bottom;
-  uint8_t* const output = dec->alpha_plane_;
   if (alph_dec->method_ == ALPHA_NO_COMPRESSION) {
-    const size_t offset = row * width;
-    const size_t num_pixels = num_rows * width;
-    assert(dec->alpha_data_size_ >= ALPHA_HEADER_LEN + offset + num_pixels);
-    memcpy(dec->alpha_plane_ + offset,
-           dec->alpha_data_ + ALPHA_HEADER_LEN + offset, num_pixels);
-    if (WebPUnfilters[alph_dec->filter_] != NULL) {
-      WebPUnfilters[alph_dec->filter_](width, height, width,
-                                       row, num_rows, output);
+    int y;
+    const uint8_t* prev_line = dec->alpha_prev_line_;
+    const uint8_t* deltas = dec->alpha_data_ + ALPHA_HEADER_LEN + row * width;
+    uint8_t* dst = dec->alpha_plane_ + row * width;
+    assert(deltas <= &dec->alpha_data_[dec->alpha_data_size_]);
+    if (alph_dec->filter_ != WEBP_FILTER_NONE) {
+      assert(WebPUnfilters[alph_dec->filter_] != NULL);
+      for (y = 0; y < num_rows; ++y) {
+        WebPUnfilters[alph_dec->filter_](prev_line, deltas, dst, width);
+        prev_line = dst;
+        dst += width;
+        deltas += width;
+      }
+    } else {
+      for (y = 0; y < num_rows; ++y) {
+        memcpy(dst, deltas, width * sizeof(*dst));
+        prev_line = dst;
+        dst += width;
+        deltas += width;
+      }
     }
+    dec->alpha_prev_line_ = prev_line;
   } else {  // alph_dec->method_ == ALPHA_LOSSLESS_COMPRESSION
     assert(alph_dec->vp8l_dec_ != NULL);
     if (!VP8LDecodeAlphaImageStream(alph_dec, row + num_rows)) {
@@ -146,6 +158,7 @@ static int AllocateAlphaPlane(VP8Decoder* const dec, const VP8Io* const io) {
     return 0;
   }
   dec->alpha_plane_ = dec->alpha_plane_mem_;
+  dec->alpha_prev_line_ = NULL;
   return 1;
 }
 
