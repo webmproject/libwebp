@@ -51,8 +51,10 @@ struct WebPAnimEncoder {
 
   FrameRect prev_rect_;               // Previous WebP frame rectangle.
   WebPConfig last_config_;            // Cached in case a re-encode is needed.
-  WebPConfig last_config2_;           // 2nd cached config; only valid if
-                                      // 'options_.allow_mixed' is true.
+  WebPConfig last_config_reversed_;   // If 'last_config_' uses lossless, then
+                                      // this config uses lossy and vice versa;
+                                      // only valid if 'options_.allow_mixed'
+                                      // is true.
 
   WebPPicture* curr_canvas_;          // Only pointer; we don't own memory.
 
@@ -1095,7 +1097,7 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
   config_ll.lossless = 1;
   config_lossy.lossless = 0;
   enc->last_config_ = *config;
-  enc->last_config2_ = config->lossless ? config_lossy : config_ll;
+  enc->last_config_reversed_ = config->lossless ? config_lossy : config_ll;
   *frame_skipped = 0;
 
   if (!SubFrameParamsInit(&dispose_none_params, 1, empty_rect_allowed_none) ||
@@ -1445,7 +1447,7 @@ static int FrameToFullCanvas(WebPAnimEncoder* const enc,
   GetEncodedData(&mem1, full_image);
 
   if (enc->options_.allow_mixed) {
-    if (!EncodeFrame(&enc->last_config_, canvas_buf, &mem2)) goto Err;
+    if (!EncodeFrame(&enc->last_config_reversed_, canvas_buf, &mem2)) goto Err;
     if (mem2.size < mem1.size) {
       GetEncodedData(&mem2, full_image);
       WebPMemoryWriterClear(&mem1);
