@@ -1,6 +1,7 @@
 noinst_LTLIBRARIES = libwebpdsp.la libwebpdsp_avx2.la
 noinst_LTLIBRARIES += libwebpdsp_sse2.la libwebpdspdecode_sse2.la
 noinst_LTLIBRARIES += libwebpdsp_sse41.la libwebpdspdecode_sse41.la
+noinst_LTLIBRARIES += libwebpdsp_neon.la libwebpdspdecode_neon.la
 
 if BUILD_LIBWEBPDECODER
   noinst_LTLIBRARIES += libwebpdspdecode.la
@@ -18,23 +19,18 @@ COMMON_SOURCES += dec.c
 COMMON_SOURCES += dec_clip_tables.c
 COMMON_SOURCES += dec_mips32.c
 COMMON_SOURCES += dec_mips_dsp_r2.c
-COMMON_SOURCES += dec_neon.c
 COMMON_SOURCES += dsp.h
 COMMON_SOURCES += filters.c
 COMMON_SOURCES += filters_mips_dsp_r2.c
 COMMON_SOURCES += lossless.c
 COMMON_SOURCES += lossless.h
 COMMON_SOURCES += lossless_mips_dsp_r2.c
-COMMON_SOURCES += lossless_neon.c
 COMMON_SOURCES += mips_macro.h
-COMMON_SOURCES += neon.h
 COMMON_SOURCES += rescaler.c
 COMMON_SOURCES += rescaler_mips32.c
 COMMON_SOURCES += rescaler_mips_dsp_r2.c
-COMMON_SOURCES += rescaler_neon.c
 COMMON_SOURCES += upsampling.c
 COMMON_SOURCES += upsampling_mips_dsp_r2.c
-COMMON_SOURCES += upsampling_neon.c
 COMMON_SOURCES += yuv.c
 COMMON_SOURCES += yuv.h
 COMMON_SOURCES += yuv_mips32.c
@@ -49,11 +45,9 @@ ENC_SOURCES += cost_mips_dsp_r2.c
 ENC_SOURCES += enc.c
 ENC_SOURCES += enc_mips32.c
 ENC_SOURCES += enc_mips_dsp_r2.c
-ENC_SOURCES += enc_neon.c
 ENC_SOURCES += lossless_enc.c
 ENC_SOURCES += lossless_enc_mips32.c
 ENC_SOURCES += lossless_enc_mips_dsp_r2.c
-ENC_SOURCES += lossless_enc_neon.c
 
 libwebpdsp_avx2_la_SOURCES =
 libwebpdsp_avx2_la_SOURCES += enc_avx2.c
@@ -77,6 +71,15 @@ libwebpdspdecode_sse2_la_SOURCES += yuv_sse2.c
 libwebpdspdecode_sse2_la_CPPFLAGS = $(libwebpdsp_sse2_la_CPPFLAGS)
 libwebpdspdecode_sse2_la_CFLAGS = $(libwebpdsp_sse2_la_CFLAGS)
 
+libwebpdspdecode_neon_la_SOURCES =
+libwebpdspdecode_neon_la_SOURCES += dec_neon.c
+libwebpdspdecode_neon_la_SOURCES += lossless_neon.c
+libwebpdspdecode_neon_la_SOURCES += neon.h
+libwebpdspdecode_neon_la_SOURCES += rescaler_neon.c
+libwebpdspdecode_neon_la_SOURCES += upsampling_neon.c
+libwebpdspdecode_neon_la_CPPFLAGS = $(libwebpdsp_neon_la_CPPFLAGS)
+libwebpdspdecode_neon_la_CFLAGS = $(libwebpdsp_neon_la_CFLAGS)
+
 libwebpdsp_sse2_la_SOURCES =
 libwebpdsp_sse2_la_SOURCES += argb_sse2.c
 libwebpdsp_sse2_la_SOURCES += cost_sse2.c
@@ -93,6 +96,13 @@ libwebpdsp_sse41_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
 libwebpdsp_sse41_la_CFLAGS = $(AM_CFLAGS) $(SSE41_FLAGS)
 libwebpdsp_sse41_la_LIBADD = libwebpdspdecode_sse41.la
 
+libwebpdsp_neon_la_SOURCES =
+libwebpdsp_neon_la_SOURCES += enc_neon.c
+libwebpdsp_neon_la_SOURCES += lossless_enc_neon.c
+libwebpdsp_neon_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
+libwebpdsp_neon_la_CFLAGS = $(AM_CFLAGS) $(NEON_FLAGS)
+libwebpdsp_neon_la_LIBADD = libwebpdspdecode_neon.la
+
 libwebpdsp_la_SOURCES = $(COMMON_SOURCES) $(ENC_SOURCES)
 
 noinst_HEADERS =
@@ -106,6 +116,7 @@ libwebpdsp_la_LDFLAGS = -lm
 libwebpdsp_la_LIBADD =
 libwebpdsp_la_LIBADD += libwebpdsp_avx2.la libwebpdsp_sse2.la
 libwebpdsp_la_LIBADD += libwebpdsp_sse41.la
+libwebpdsp_la_LIBADD += libwebpdsp_neon.la
 
 if BUILD_LIBWEBPDECODER
   libwebpdspdecode_la_SOURCES = $(COMMON_SOURCES)
@@ -115,4 +126,5 @@ if BUILD_LIBWEBPDECODER
   libwebpdspdecode_la_LIBADD =
   libwebpdspdecode_la_LIBADD += libwebpdspdecode_sse2.la
   libwebpdspdecode_la_LIBADD += libwebpdspdecode_sse41.la
+  libwebpdspdecode_la_LIBADD += libwebpdspdecode_neon.la
 endif
