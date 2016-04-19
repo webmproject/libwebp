@@ -873,10 +873,14 @@ static WebPEncodingError GenerateCandidates(
   WebPPicture* const curr_canvas = &enc->curr_canvas_copy_;
   const WebPPicture* const prev_canvas =
       is_dispose_none ? &enc->prev_canvas_ : &enc->prev_canvas_disposed_;
-  const int use_blending_ll =
+  int use_blending_ll;
+  int use_blending_lossy;
+
+  CopyCurrentCanvas(enc);
+  use_blending_ll =
       !is_key_frame &&
       IsLosslessBlendingPossible(prev_canvas, curr_canvas, &params->rect_ll_);
-  const int use_blending_lossy =
+  use_blending_lossy =
       !is_key_frame &&
       IsLossyBlendingPossible(prev_canvas, curr_canvas, &params->rect_lossy_,
                               config_lossy->quality);
