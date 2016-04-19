@@ -13,6 +13,11 @@
 
 #include "./dsp.h"
 
+#if defined(WEBP_HAVE_NEON_RTCD)
+#include <stdio.h>
+#include <string.h>
+#endif
+
 #if defined(WEBP_ANDROID_NEON)
 #include <cpu-features.h>
 #endif
@@ -142,8 +147,27 @@ VP8CPUInfo VP8GetCPUInfo = AndroidCPUInfo;
 // define a dummy function to enable turning off NEON at runtime by setting
 // VP8DecGetCPUInfo = NULL
 static int armCPUInfo(CPUFeature feature) {
+#if defined(__linux__) && defined(WEBP_HAVE_NEON_RTCD)
+  int has_neon = 0;
+  if (feature == kNEON) {
+    char line[200];
+    FILE* cpuinfo = fopen("/proc/cpuinfo", "r");
+    if (cpuinfo == NULL) return 0;
+    while (fgets(line, sizeof(line), cpuinfo)) {
+      if (!strncmp(line, "Features", 8)) {
+        if (strstr(line, " neon ")) {
+          has_neon = 1;
+          break;
+        }
+      }
+    }
+    fclose(cpuinfo);
+  }
+  return has_neon;
+#else
   (void)feature;
   return 1;
+#endif
 }
 VP8CPUInfo VP8GetCPUInfo = armCPUInfo;
 #elif defined(WEBP_USE_MIPS32) || defined(WEBP_USE_MIPS_DSP_R2)
