@@ -503,8 +503,10 @@ typedef enum {     // Filter types.
 
 typedef void (*WebPFilterFunc)(const uint8_t* in, int width, int height,
                                int stride, uint8_t* out);
-typedef void (*WebPUnfilterFunc)(int width, int height, int stride,
-                                 int row, int num_rows, uint8_t* data);
+// In-place un-filtering.
+// Warning! 'prev_line' pointer can be equal to 'cur_line' or 'preds'.
+typedef void (*WebPUnfilterFunc)(const uint8_t* prev_line, const uint8_t* preds,
+                                 uint8_t* cur_line, int width);
 
 // Filter the given data using the given predictor.
 // 'in' corresponds to a 2-dimensional pixel array of size (stride * height)

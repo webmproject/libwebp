@@ -771,35 +771,46 @@ static int Is8bOptimizable(const VP8LMetadata* const hdr) {
   return 1;
 }
 
-static void ExtractPalettedAlphaRows(VP8LDecoder* const dec, int row) {
+static void AlphaApplyFilter(ALPHDecoder* const alph_dec,
+                             int first_row, int last_row,
+                             uint8_t* out, int stride) {
+  if (alph_dec->filter_ != WEBP_FILTER_NONE) {
+    int y;
+    const uint8_t* prev_line = alph_dec->prev_line_;
+    assert(WebPUnfilters[alph_dec->filter_] != NULL);
+    for (y = first_row; y < last_row; ++y) {
+      WebPUnfilters[alph_dec->filter_](prev_line, out, out, stride);
+      prev_line = out;
+      out += stride;
+    }
+    alph_dec->prev_line_ = prev_line;
+  }
+}
+
+static void ExtractPalettedAlphaRows(VP8LDecoder* const dec, int last_row) {
   // For vertical and gradient filtering, we need to decode the part above the
   // crop_top row, in order to have the correct spatial predictors.
-  const ALPHDecoder* const alph_dec = (const ALPHDecoder*)dec->io_->opaque;
+  ALPHDecoder* const alph_dec = (ALPHDecoder*)dec->io_->opaque;
   const int top_row =
       (alph_dec->filter_ == WEBP_FILTER_NONE ||
        alph_dec->filter_ == WEBP_FILTER_HORIZONTAL) ? dec->io_->crop_top
                                                     : dec->last_row_;
   const int first_row = (dec->last_row_ < top_row) ? top_row : dec->last_row_;
-  assert(row <= dec->io_->crop_bottom);
-  if (row > first_row) {
+  assert(last_row <= dec->io_->crop_bottom);
+  if (last_row > first_row) {
     // Special method for paletted alpha data. We only process the cropped area.
     const int width = dec->io_->width;
-    uint8_t* const out = alph_dec->output_ + width * first_row;
+    uint8_t* out = alph_dec->output_ + width * first_row;
     const uint8_t* const in =
       (uint8_t*)dec->pixels_ + dec->width_ * first_row;
     VP8LTransform* const transform = &dec->transforms_[0];
     assert(dec->next_transform_ == 1);
     assert(transform->type_ == COLOR_INDEXING_TRANSFORM);
-    VP8LColorIndexInverseTransformAlpha(transform, first_row, row,
+    VP8LColorIndexInverseTransformAlpha(transform, first_row, last_row,
                                         in, out);
-    if (alph_dec->filter_ != WEBP_FILTER_NONE) {
-      assert(WebPUnfilters[alph_dec->filter_] != NULL);
-      WebPUnfilters[alph_dec->filter_](width, dec->io_->height, width,
-                                       first_row, row - first_row,
-                                       alph_dec->output_);
-    }
+    AlphaApplyFilter(alph_dec, first_row, last_row, out, width);
   }
-  dec->last_row_ = dec->last_out_row_ = row;
+  dec->last_row_ = dec->last_out_row_ = last_row;
 }
 
 //------------------------------------------------------------------------------
@@ -1452,29 +1463,25 @@ static int AllocateInternalBuffers8b(VP8LDecoder* const dec) {
 //------------------------------------------------------------------------------
 
 // Special row-processing that only stores the alpha data.
-static void ExtractAlphaRows(VP8LDecoder* const dec, int row) {
-  const int num_rows = row - dec->last_row_;
+static void ExtractAlphaRows(VP8LDecoder* const dec, int last_row) {
+  const int num_rows = last_row - dec->last_row_;
   const uint32_t* const in = dec->pixels_ + dec->width_ * dec->last_row_;
 
-  assert(row <= dec->io_->crop_bottom);
+  assert(last_row <= dec->io_->crop_bottom);
   if (num_rows > 0) {
     // Extract alpha (which is stored in the green plane).
-    const ALPHDecoder* const alph_dec = (const ALPHDecoder*)dec->io_->opaque;
+    ALPHDecoder* const alph_dec = (ALPHDecoder*)dec->io_->opaque;
     uint8_t* const output = alph_dec->output_;
     const int width = dec->io_->width;      // the final width (!= dec->width_)
     const int cache_pixs = width * num_rows;
-    uint8_t* const dst = output + width * dec->last_row_;
+    uint8_t* dst = output + width * dec->last_row_;
     const uint32_t* const src = dec->argb_cache_;
     int i;
     ApplyInverseTransforms(dec, num_rows, in);
     for (i = 0; i < cache_pixs; ++i) dst[i] = (src[i] >> 8) & 0xff;
-    if (alph_dec->filter_ != WEBP_FILTER_NONE) {
-      assert(WebPUnfilters[alph_dec->filter_] != NULL);
-      WebPUnfilters[alph_dec->filter_](width, dec->io_->height, width,
-                                       dec->last_row_, num_rows, output);
-    }
+    AlphaApplyFilter(alph_dec, dec->last_row_, last_row, dst, width);
   }
-  dec->last_row_ = dec->last_out_row_ = row;
+  dec->last_row_ = dec->last_out_row_ = last_row;
 }
 
 int VP8LDecodeAlphaHeader(ALPHDecoder* const alph_dec,
