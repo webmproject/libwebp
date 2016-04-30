@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e85181a9_9caf458d",
+        "filename": "src/enc/quant.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-04-30T07:19:35Z",
+      "side": 1,
+      "message": "what about moving this test at line 363?",
+      "range": {
+        "startLine": 392,
+        "startChar": 9,
+        "endLine": 392,
+        "endChar": 21
+      },
+      "revId": "ef109bd88a1aa64d0ed719c338884cace0967dd1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
