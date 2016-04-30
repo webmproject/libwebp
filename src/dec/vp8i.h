@@ -209,8 +209,8 @@ struct VP8Decoder {
   int tl_mb_x_, tl_mb_y_;  // top-left MB that must be in-loop filtered
   int br_mb_x_, br_mb_y_;  // last bottom-right MB that must be decoded
 
-  // number of partitions.
-  int num_parts_;
+  // number of partitions minus one.
+  uint32_t num_parts_minus_one_;
   // per-partition boolean decoders.
   VP8BitReader parts_[MAX_NUM_PARTITIONS];
 

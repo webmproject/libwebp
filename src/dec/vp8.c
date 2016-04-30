@@ -50,7 +50,7 @@ VP8Decoder* VP8New(void) {
     SetOk(dec);
     WebPGetWorkerInterface()->Init(&dec->worker_);
     dec->ready_ = 0;
-    dec->num_parts_ = 1;
+    dec->num_parts_minus_one_ = 0;
   }
   return dec;
 }
@@ -194,8 +194,8 @@ static VP8StatusCode ParsePartitions(VP8Decoder* const dec,
   size_t last_part;
   size_t p;
 
-  dec->num_parts_ = 1 << VP8GetValue(br, 2);
-  last_part = dec->num_parts_ - 1;
+  dec->num_parts_minus_one_ = (1 << VP8GetValue(br, 2)) - 1;
+  last_part = dec->num_parts_minus_one_;
   if (size < 3 * last_part) {
     // we can't even read the sizes with sz[]! That's a failure.
     return VP8_STATUS_NOT_ENOUGH_DATA;
@@ -586,7 +586,7 @@ static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
   for (dec->mb_y_ = 0; dec->mb_y_ < dec->br_mb_y_; ++dec->mb_y_) {
     // Parse bitstream for this row.
     VP8BitReader* const token_br =
-        &dec->parts_[dec->mb_y_ & (dec->num_parts_ - 1)];
+        &dec->parts_[dec->mb_y_ & dec->num_parts_minus_one_];
     if (!VP8ParseIntraModeRow(&dec->br_, dec)) {
       return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA,
                          "Premature end-of-partition0 encountered.");
