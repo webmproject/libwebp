@@ -132,9 +132,9 @@ static void DoRemap(WebPIDecoder* const idec, ptrdiff_t offset) {
           VP8RemapBitReader(&dec->br_, offset);
         }
       }
+      assert(last_part >= 0);
       {
         const uint8_t* const last_start = dec->parts_[last_part].buf_;
-        assert(last_part >= 0);
         VP8BitReaderSetBuffer(&dec->parts_[last_part], last_start,
                               mem->buf_ + mem->end_ - last_start);
       }
