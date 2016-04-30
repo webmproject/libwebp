@@ -360,7 +360,12 @@ static int SegmentsAreEquivalent(const VP8SegmentInfo* const S1,
 
 static void SimplifySegments(VP8Encoder* const enc) {
   int map[NUM_MB_SEGMENTS] = { 0, 1, 2, 3 };
-  const int num_segments = enc->segment_hdr_.num_segments_;
+  // 'num_segments_' is previously validated and <= NUM_MB_SEGMENTS, but an
+  // explicit check is needed to avoid a spurious warning about 'i' exceeding
+  // array bounds of 'dqm_' with some compilers (noticed with gcc-4.9).
+  const int num_segments = (enc->segment_hdr_.num_segments_ < NUM_MB_SEGMENTS)
+                               ? enc->segment_hdr_.num_segments_
+                               : NUM_MB_SEGMENTS;
   int num_final_segments = 1;
   int s1, s2;
   for (s1 = 1; s1 < num_segments; ++s1) {    // find similar segments
