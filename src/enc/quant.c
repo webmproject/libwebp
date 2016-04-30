@@ -363,6 +363,8 @@ static void SimplifySegments(VP8Encoder* const enc) {
   const int num_segments = enc->segment_hdr_.num_segments_;
   int num_final_segments = 1;
   int s1, s2;
+  assert(num_segments >= 1);
+  assert(num_segments <= NUM_MB_SEGMENTS);
   for (s1 = 1; s1 < num_segments; ++s1) {    // find similar segments
     const VP8SegmentInfo* const S1 = &enc->dqm_[s1];
     int found = 0;
@@ -383,11 +385,16 @@ static void SimplifySegments(VP8Encoder* const enc) {
     }
   }
   if (num_final_segments < num_segments) {  // Remap
+    // 'num_segments' is previously validated and <= NUM_MB_SEGMENTS, but an
+    // explicit check is needed to avoid spurious warning about 'i' exceeding
+    // array bounds of 'dqm_' with some compilers (noticed with gcc-4.9).
+    const int nb =
+        (num_segments < NUM_MB_SEGMENTS) ? num_segments : NUM_MB_SEGMENTS;
     int i = enc->mb_w_ * enc->mb_h_;
     while (i-- > 0) enc->mb_info_[i].segment_ = map[enc->mb_info_[i].segment_];
     enc->segment_hdr_.num_segments_ = num_final_segments;
     // Replicate the trailing segment infos (it's mostly cosmetics)
-    for (i = num_final_segments; i < num_segments; ++i) {
+    for (i = num_final_segments; i < nb; ++i) {
       enc->dqm_[i] = enc->dqm_[num_final_segments - 1];
     }
   }
