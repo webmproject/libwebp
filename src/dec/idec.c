@@ -120,9 +120,9 @@ static void DoRemap(WebPIDecoder* const idec, ptrdiff_t offset) {
   if (idec->dec_ != NULL) {
     if (!idec->is_lossless_) {
       VP8Decoder* const dec = (VP8Decoder*)idec->dec_;
-      const int last_part = dec->num_parts_ - 1;
+      const uint32_t last_part = dec->num_parts_minus_one_;
       if (offset != 0) {
-        int p;
+        uint32_t p;
         for (p = 0; p <= last_part; ++p) {
           VP8RemapBitReader(dec->parts_ + p, offset);
         }
@@ -134,7 +134,6 @@ static void DoRemap(WebPIDecoder* const idec, ptrdiff_t offset) {
       }
       {
         const uint8_t* const last_start = dec->parts_[last_part].buf_;
-        assert(last_part >= 0);
         VP8BitReaderSetBuffer(&dec->parts_[last_part], last_start,
                               mem->buf_ + mem->end_ - last_start);
       }
@@ -465,19 +464,20 @@ static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
     }
     for (; dec->mb_x_ < dec->mb_w_; ++dec->mb_x_) {
       VP8BitReader* const token_br =
-          &dec->parts_[dec->mb_y_ & (dec->num_parts_ - 1)];
+          &dec->parts_[dec->mb_y_ & dec->num_parts_minus_one_];
       MBContext context;
       SaveContext(dec, token_br, &context);
       if (!VP8DecodeMB(dec, token_br)) {
         // We shouldn't fail when MAX_MB data was available
-        if (dec->num_parts_ == 1 && MemDataSize(&idec->mem_) > MAX_MB_SIZE) {
+        if (dec->num_parts_minus_one_ == 0 &&
+            MemDataSize(&idec->mem_) > MAX_MB_SIZE) {
           return IDecError(idec, VP8_STATUS_BITSTREAM_ERROR);
         }
         RestoreContext(&context, dec, token_br);
         return VP8_STATUS_SUSPENDED;
       }
       // Release buffer only if there is only one partition
-      if (dec->num_parts_ == 1) {
+      if (dec->num_parts_minus_one_ == 0) {
         idec->mem_.start_ = token_br->buf_ - idec->mem_.buf_;
         assert(idec->mem_.start_ <= idec->mem_.end_);
       }
