@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "28039992_7addc17f",
+        "filename": "src/dec/idec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-04-30T02:36:45Z",
+      "side": 1,
+      "message": "this array-bounds is pretty fragile with optimization level / asserts; technically it could come out with asserts disabled, but unlike the other cases doesn\u0027t currently. we could proactively add a test too.",
+      "revId": "f24a112ee204f6b83eb43176bcece0e3be03f356",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
