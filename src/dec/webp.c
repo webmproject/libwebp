@@ -415,7 +415,8 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
 }
 
 VP8StatusCode WebPParseHeaders(WebPHeaderStructure* const headers) {
-  VP8StatusCode status;
+  // status is marked volatile as a workaround for a clang-3.8 (aarch64) bug
+  volatile VP8StatusCode status;
   int has_animation = 0;
   assert(headers != NULL);
   // fill out headers, ignore width/height/has_alpha.
