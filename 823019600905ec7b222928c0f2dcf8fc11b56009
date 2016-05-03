@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ed4c338d_e4a19aa7",
+        "filename": "src/dec/webp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-05-03T04:52:58Z",
+      "side": 1,
+      "message": "mentioning \"b/...\" is a bit odd. Maybe mention \".. workaround a clang-3.8 bug\"?",
+      "range": {
+        "startLine": 418,
+        "startChar": 51,
+        "endLine": 418,
+        "endChar": 52
+      },
+      "revId": "823019600905ec7b222928c0f2dcf8fc11b56009",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
