@@ -33,18 +33,37 @@
   assert(row >= 0 && num_rows > 0 && row + num_rows <= height);                \
   (void)height;  // Silence unused warning.
 
-//   preds == &src[-1] != &dst[-1]
-#define DO_PREDICT_LINE(SRC, DST, LENGTH) do {                                 \
-    const uint8_t* psrc = (const uint8_t*)(SRC);                               \
+#define DO_PREDICT_LINE(SRC, DST, LENGTH, INVERSE) do {                        \
+    const uint8_t* psrc = (uint8_t*)(SRC);                                     \
     uint8_t* pdst = (uint8_t*)(DST);                                           \
     const int ilength = (int)(LENGTH);                                         \
     int temp0, temp1, temp2, temp3, temp4, temp5, temp6;                       \
     __asm__ volatile (                                                         \
       ".set      push                                   \n\t"                  \
       ".set      noreorder                              \n\t"                  \
-      "srl       %[temp0],    %[length],    0x2         \n\t"                  \
+      "srl       %[temp0],    %[length],    2           \n\t"                  \
       "beqz      %[temp0],    4f                        \n\t"                  \
-      " andi     %[temp6],    %[length],    0x3         \n\t"                  \
+      " andi     %[temp6],    %[length],    3           \n\t"                  \
+    ".if " #INVERSE "                                   \n\t"                  \
+    "1:                                                 \n\t"                  \
+      "lbu       %[temp1],    -1(%[dst])                \n\t"                  \
+      "lbu       %[temp2],    0(%[src])                 \n\t"                  \
+      "lbu       %[temp3],    1(%[src])                 \n\t"                  \
+      "lbu       %[temp4],    2(%[src])                 \n\t"                  \
+      "lbu       %[temp5],    3(%[src])                 \n\t"                  \
+      "addu      %[temp1],    %[temp1],     %[temp2]    \n\t"                  \
+      "addu      %[temp2],    %[temp1],     %[temp3]    \n\t"                  \
+      "addu      %[temp3],    %[temp2],     %[temp4]    \n\t"                  \
+      "addu      %[temp4],    %[temp3],     %[temp5]    \n\t"                  \
+      "sb        %[temp1],    0(%[dst])                 \n\t"                  \
+      "sb        %[temp2],    1(%[dst])                 \n\t"                  \
+      "sb        %[temp3],    2(%[dst])                 \n\t"                  \
+      "sb        %[temp4],    3(%[dst])                 \n\t"                  \
+      "addiu     %[src],      %[src],       4           \n\t"                  \
+      "addiu     %[temp0],    %[temp0],     -1          \n\t"                  \
+      "bnez      %[temp0],    1b                        \n\t"                  \
+      " addiu    %[dst],      %[dst],       4           \n\t"                  \
+    ".else                                              \n\t"                  \
     "1:                                                 \n\t"                  \
       "ulw       %[temp1],    -1(%[src])                \n\t"                  \
       "ulw       %[temp2],    0(%[src])                 \n\t"                  \
@@ -54,14 +73,20 @@
       "usw       %[temp3],    0(%[dst])                 \n\t"                  \
       "bnez      %[temp0],    1b                        \n\t"                  \
       " addiu    %[dst],      %[dst],       4           \n\t"                  \
+    ".endif                                             \n\t"                  \
     "4:                                                 \n\t"                  \
       "beqz      %[temp6],    3f                        \n\t"                  \
       " nop                                             \n\t"                  \
     "2:                                                 \n\t"                  \
-      "lbu       %[temp1],    -1(%[src])                \n\t"                  \
       "lbu       %[temp2],    0(%[src])                 \n\t"                  \
-      "addiu     %[src],      %[src],       1           \n\t"                  \
+    ".if " #INVERSE "                                   \n\t"                  \
+      "lbu       %[temp1],    -1(%[dst])                \n\t"                  \
+      "addu      %[temp3],    %[temp1],     %[temp2]    \n\t"                  \
+    ".else                                              \n\t"                  \
+      "lbu       %[temp1],    -1(%[src])                \n\t"                  \
       "subu      %[temp3],    %[temp1],     %[temp2]    \n\t"                  \
+    ".endif                                             \n\t"                  \
+      "addiu     %[src],      %[src],       1           \n\t"                  \
       "sb        %[temp3],    0(%[dst])                 \n\t"                  \
       "addiu     %[temp6],    %[temp6],     -1          \n\t"                  \
       "bnez      %[temp6],    2b                        \n\t"                  \
@@ -78,7 +103,7 @@
 
 static WEBP_INLINE void PredictLine(const uint8_t* src, uint8_t* dst,
                                     int length) {
-  DO_PREDICT_LINE(src, dst, length);
+  DO_PREDICT_LINE(src, dst, length, 0);
 }
 
 #define DO_PREDICT_LINE_VERTICAL(SRC, PRED, DST, LENGTH, INVERSE) do {         \
@@ -159,7 +184,7 @@ static WEBP_INLINE void PredictLine(const uint8_t* src, uint8_t* dst,
 #define FILTER_LINE_BY_LINE do {                                               \
     while (row < last_row) {                                                   \
       PREDICT_LINE_ONE_PASS(in, preds - stride, out);                          \
-      DO_PREDICT_LINE(in + 1, out + 1, width - 1);                             \
+      DO_PREDICT_LINE(in + 1, out + 1, width - 1, 0);                          \
       ++row;                                                                   \
       preds += stride;                                                         \
       in += stride;                                                            \
@@ -314,9 +339,8 @@ static void GradientFilter(const uint8_t* data, int width, int height,
 
 static void HorizontalUnfilter(const uint8_t* prev, const uint8_t* in,
                                uint8_t* out, int width) {
-  int i;
-  out[0] = in[0] + (prev == NULL ? 0 : prev[0]);
-  for (i = 1; i < width; ++i) out[i] = in[i] + out[i - 1];
+ out[0] = in[0] + (prev == NULL ? 0 : prev[0]);
+ DO_PREDICT_LINE(in + 1, out + 1, width - 1, 1);
 }
 
 static void VerticalUnfilter(const uint8_t* prev, const uint8_t* in,
