@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d89873a_27190678",
+        "filename": "configure.ac",
+        "patchSetId": 3
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-05-05T07:00:44Z",
+      "side": 1,
+      "message": "one behavior change not mentioned is that for os targets where we detect neon we\u0027ll build the modules and always report neon being available at runtime. it might be safest to work $host_os in here, maybe just do case \"$host_cpu:$host_os\"",
+      "revId": "a41996697d3a4f0afb105c4313829ef62b25b3e0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
