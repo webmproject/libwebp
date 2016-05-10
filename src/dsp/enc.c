@@ -637,7 +637,7 @@ static int QuantizeBlock(int16_t in[16], int16_t out[16],
       int level = QUANTDIV(coeff, iQ, B);
       if (level > MAX_LEVEL) level = MAX_LEVEL;
       if (sign) level = -level;
-      in[j] = level * Q;
+      in[j] = level * (int)Q;
       out[n] = level;
       if (level) last = n;
     } else {
@@ -671,7 +671,7 @@ static int QuantizeBlockWHT(int16_t in[16], int16_t out[16],
       int level = QUANTDIV(coeff, iQ, B);
       if (level > MAX_LEVEL) level = MAX_LEVEL;
       if (sign) level = -level;
-      in[j] = level * Q;
+      in[j] = level * (int)Q;
       out[n] = level;
       if (level) last = n;
     } else {
