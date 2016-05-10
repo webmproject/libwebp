@@ -101,6 +101,19 @@ extern "C" {
 #endif
 #endif
 
+// This macro prevents the undefined behavior sanitizer from reporting
+// failures. This is only meant to silence unaligned loads on platforms that
+// are known to support them.
+#define WEBP_UBSAN_IGNORE_UNDEF
+#if !defined(WEBP_FORCE_ALIGNED) && defined(__clang__) && \
+    defined(__has_attribute)
+#if __has_attribute(no_sanitize)
+#undef WEBP_UBSAN_IGNORE_UNDEF
+#define WEBP_UBSAN_IGNORE_UNDEF \
+  __attribute__((no_sanitize("undefined")))
+#endif
+#endif
+
 typedef enum {
   kSSE2,
   kSSE3,
