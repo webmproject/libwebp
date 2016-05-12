@@ -23,6 +23,7 @@
 #include <emmintrin.h>
 #include "./common_sse2.h"
 #include "../dec/vp8i.h"
+#include "../utils/utils.h"
 
 //------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)

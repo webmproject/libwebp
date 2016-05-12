@@ -16,6 +16,7 @@
 #endif
 
 #include "./bit_reader_inl.h"
+#include "../utils/utils.h"
 
 //------------------------------------------------------------------------------
 // VP8BitReader
