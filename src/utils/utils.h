@@ -21,6 +21,7 @@
 
 #include <assert.h>
 
+#include "../dsp/dsp.h"
 #include "../webp/types.h"
 
 #ifdef __cplusplus
@@ -65,10 +66,12 @@ static WEBP_INLINE void WebPUint32ToMem(uint8_t* const ptr, uint32_t val) {
   memcpy(ptr, &val, sizeof(val));
 }
 #else
-static WEBP_INLINE uint32_t WebPMemToUint32(const uint8_t* const ptr) {
+static WEBP_UBSAN_IGNORE_UNDEF WEBP_INLINE
+uint32_t WebPMemToUint32(const uint8_t* const ptr) {
   return *(const uint32_t*)ptr;
 }
-static WEBP_INLINE void WebPUint32ToMem(uint8_t* const ptr, uint32_t val) {
+static WEBP_UBSAN_IGNORE_UNDEF WEBP_INLINE
+void WebPUint32ToMem(uint8_t* const ptr, uint32_t val) {
   *(uint32_t*)ptr = val;
 }
 #endif
