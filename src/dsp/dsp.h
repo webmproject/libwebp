@@ -120,8 +120,8 @@ extern "C" {
 // This macro prevents the undefined behavior sanitizer from reporting
 // failures related to unsigned integer overflows. This is only meant to
 // silence cases where this well defined behavior is expected.
-#undef WEBP_UBSAN_IGNORE_UNDEF
-#define WEBP_UBSAN_IGNORE_UNDEF \
+#undef WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW
+#define WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW \
   __attribute__((no_sanitize("unsigned-integer-overflow")))
 #endif
 #endif
