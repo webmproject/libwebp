@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d7c9c29d_53e1c40e",
+        "filename": "src/dsp/lossless_enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 681,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-05-18T21:00:35Z",
+      "side": 1,
+      "message": "was discussed to keep the case for all, in the other review",
+      "parentUuid": "f7e3261d_8c9a876e",
+      "revId": "a7336d2a53a43b9c6fa4287a80817db0dbb45338",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f7e3261d_acae6390",
         "filename": "src/dsp/lossless_enc.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2016-05-18T19:45:54Z",
       "side": 1,
       "message": "trailing whitespace. we don\u0027t do a git diff --check here, I guess we could",
+      "revId": "a7336d2a53a43b9c6fa4287a80817db0dbb45338",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7c9c29d_f3b8d0f7",
+        "filename": "src/dsp/lossless_enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 844,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-05-18T21:00:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f7e3261d_acae6390",
       "revId": "a7336d2a53a43b9c6fa4287a80817db0dbb45338",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
