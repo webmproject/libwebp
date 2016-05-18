@@ -1,0 +1,95 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "77081664_dad1120c",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 666,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-05-18T19:33:16Z",
+      "side": 1,
+      "message": "const",
+      "revId": "50b1607ffa1d5a74891972adab3771f50347c149",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77081664_1adc3a1f",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 761,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-05-18T19:33:16Z",
+      "side": 1,
+      "message": "...pixel \u0027i\u0027... (for consistency)",
+      "revId": "50b1607ffa1d5a74891972adab3771f50347c149",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77081664_fad8562c",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 775,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-05-18T19:33:16Z",
+      "side": 1,
+      "message": "here too \u0027start\u0027 / \u0027end\u0027",
+      "revId": "50b1607ffa1d5a74891972adab3771f50347c149",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77081664_7a37463d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 960,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-05-18T19:33:16Z",
+      "side": 1,
+      "message": "than",
+      "range": {
+        "startLine": 960,
+        "startChar": 27,
+        "endLine": 960,
+        "endChar": 31
+      },
+      "revId": "50b1607ffa1d5a74891972adab3771f50347c149",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1716fa8f_9ae0390d",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1107,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-05-18T19:33:16Z",
+      "side": 1,
+      "message": "const",
+      "revId": "50b1607ffa1d5a74891972adab3771f50347c149",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
