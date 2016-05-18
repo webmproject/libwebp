@@ -1008,6 +1008,7 @@ static void ApplySubtractGreen(VP8LEncoder* const enc, int width, int height,
 static WebPEncodingError ApplyPredictFilter(const VP8LEncoder* const enc,
                                             int width, int height,
                                             int quality, int low_effort,
+                                            int used_subtract_green,
                                             VP8LBitWriter* const bw) {
   const int pred_bits = enc->transform_bits_;
   const int transform_width = VP8LSubSampleSize(width, pred_bits);
@@ -1015,7 +1016,8 @@ static WebPEncodingError ApplyPredictFilter(const VP8LEncoder* const enc,
 
   VP8LResidualImage(width, height, pred_bits, low_effort, enc->argb_,
                     enc->argb_scratch_, enc->transform_data_,
-                    enc->config_->exact);
+                    enc->config_->near_lossless, enc->config_->exact,
+                    used_subtract_green);
   VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
   VP8LPutBits(bw, PREDICTOR_TRANSFORM, 2);
   assert(pred_bits >= 2);
@@ -1129,21 +1131,26 @@ static void ClearTransformBuffer(VP8LEncoder* const enc) {
 static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
                                                  int width, int height) {
   WebPEncodingError err = VP8_ENC_OK;
-  const int tile_size = 1 << enc->transform_bits_;
   const uint64_t image_size = width * height;
-  // Ensure enough size for tiles, as well as for two scanlines and two
-  // extra pixels for CopyImageWithPrediction.
+  // VP8LResidualImage needs room for 2 scanlines of uint32 pixels with an extra
+  // pixel in each, plus 2 regular scanlines of bytes.
+  // TODO(skal): Clean up by using arithmetic in bytes instead of words.
   const uint64_t argb_scratch_size =
-      enc->use_predict_ ? tile_size * width + width + 2 : 0;
-  const int transform_data_size =
+      enc->use_predict_
+          ? (width + 1) * 2 +
+            (width * 2 + sizeof(uint32_t) - 1) / sizeof(uint32_t)
+          : 0;
+  const uint64_t transform_data_size =
       (enc->use_predict_ || enc->use_cross_color_)
           ? VP8LSubSampleSize(width, enc->transform_bits_) *
-            VP8LSubSampleSize(height, enc->transform_bits_)
+                VP8LSubSampleSize(height, enc->transform_bits_)
           : 0;
+  const uint64_t max_alignment_in_words =
+      (WEBP_ALIGN_CST + sizeof(uint32_t) - 1) / sizeof(uint32_t);
   const uint64_t mem_size =
-      image_size + WEBP_ALIGN_CST +
-      argb_scratch_size + WEBP_ALIGN_CST +
-      (uint64_t)transform_data_size;
+      image_size + max_alignment_in_words +
+      argb_scratch_size + max_alignment_in_words +
+      transform_data_size;
   uint32_t* mem = enc->transform_mem_;
   if (mem == NULL || mem_size > enc->transform_mem_size_) {
     ClearTransformBuffer(enc);
@@ -1412,7 +1419,8 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   }
 
   // Apply near-lossless preprocessing.
-  use_near_lossless = !enc->use_palette_ && (config->near_lossless < 100);
+  use_near_lossless =
+      (config->near_lossless < 100) && !enc->use_palette_ && !enc->use_predict_;
   if (use_near_lossless) {
     if (!VP8ApplyNearLossless(width, height, picture->argb,
                               config->near_lossless)) {
@@ -1464,7 +1472,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
 
     if (enc->use_predict_) {
       err = ApplyPredictFilter(enc, enc->current_width_, height, quality,
-                               low_effort, bw);
+                               low_effort, enc->use_subtract_green_, bw);
       if (err != VP8_ENC_OK) goto Error;
     }
 

@@ -158,7 +158,8 @@ void VP8LCollectColorBlueTransforms_C(const uint32_t* argb, int stride,
 
 void VP8LResidualImage(int width, int height, int bits, int low_effort,
                        uint32_t* const argb, uint32_t* const argb_scratch,
-                       uint32_t* const image, int exact);
+                       uint32_t* const image, int near_lossless, int exact,
+                       int used_subtract_green);
 
 void VP8LColorSpaceTransform(int width, int height, int bits, int quality,
                              uint32_t* const argb, uint32_t* image);
@@ -170,6 +171,17 @@ void VP8LColorSpaceTransform(int width, int height, int bits, int quality,
 static WEBP_INLINE uint32_t VP8LSubSampleSize(uint32_t size,
                                               uint32_t sampling_bits) {
   return (size + (1 << sampling_bits) - 1) >> sampling_bits;
+}
+
+// Converts near lossless quality into max number of bits shaved off.
+static WEBP_INLINE int VP8LNearLosslessBits(int near_lossless_quality) {
+  //    100 -> 0
+  // 80..99 -> 1
+  // 60..79 -> 2
+  // 40..59 -> 3
+  // 20..39 -> 4
+  //  0..19 -> 5
+  return 5 - near_lossless_quality / 20;
 }
 
 // -----------------------------------------------------------------------------
@@ -336,7 +348,7 @@ static WEBP_INLINE uint32_t VP8LAddPixels(uint32_t a, uint32_t b) {
   return (alpha_and_green & 0xff00ff00u) | (red_and_blue & 0x00ff00ffu);
 }
 
-// Difference of each component with mod 256.
+// Difference of each component, mod 256.
 static WEBP_INLINE uint32_t VP8LSubPixels(uint32_t a, uint32_t b) {
   const uint32_t alpha_and_green =
       0x00ff00ffu + (a & 0xff00ff00u) - (b & 0xff00ff00u);
