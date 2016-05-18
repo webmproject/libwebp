@@ -161,6 +161,19 @@ WEBP_EXTERN(void) WebPCopyPixels(const struct WebPPicture* const src,
                                  struct WebPPicture* const dst);
 
 //------------------------------------------------------------------------------
+// Unique colors.
+
+// Returns count of unique colors in 'pic', assuming pic->use_argb is true.
+// If the unique color count is more than MAX_COLOR_COUNT, returns
+// MAX_COLOR_COUNT+1.
+// If 'palette' is not NULL and number of unique colors is less than or equal to
+// MAX_COLOR_COUNT, also outputs the actual unique colors into 'palette'.
+// Note: 'palette' is assumed to be an array already allocated with at least
+// MAX_COLOR_COUNT elements.
+WEBP_EXTERN(int) WebPGetColorPalette(const struct WebPPicture* const pic,
+                                     uint32_t* const palette);
+
+//------------------------------------------------------------------------------
 
 #ifdef __cplusplus
 }    // extern "C"

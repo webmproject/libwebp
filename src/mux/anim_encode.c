@@ -645,61 +645,6 @@ static int IsLossyBlendingPossible(const WebPPicture* const src,
   return 1;
 }
 
-#define MIN_COLORS_LOSSY     31  // Don't try lossy below this threshold.
-#define MAX_COLORS_LOSSLESS 194  // Don't try lossless above this threshold.
-#define MAX_COLOR_COUNT     256  // Power of 2 greater than MAX_COLORS_LOSSLESS.
-#define HASH_SIZE (MAX_COLOR_COUNT * 4)
-#define HASH_RIGHT_SHIFT     22  // 32 - log2(HASH_SIZE).
-
-// TODO(urvang): Also used in enc/vp8l.c. Move to utils.
-// If the number of colors in the 'pic' is at least MAX_COLOR_COUNT, return
-// MAX_COLOR_COUNT. Otherwise, return the exact number of colors in the 'pic'.
-static int GetColorCount(const WebPPicture* const pic) {
-  int x, y;
-  int num_colors = 0;
-  uint8_t in_use[HASH_SIZE] = { 0 };
-  uint32_t colors[HASH_SIZE];
-  static const uint32_t kHashMul = 0x1e35a7bd;
-  const uint32_t* argb = pic->argb;
-  const int width = pic->width;
-  const int height = pic->height;
-  uint32_t last_pix = ~argb[0];   // so we're sure that last_pix != argb[0]
-
-  for (y = 0; y < height; ++y) {
-    for (x = 0; x < width; ++x) {
-      int key;
-      if (argb[x] == last_pix) {
-        continue;
-      }
-      last_pix = argb[x];
-      key = (kHashMul * last_pix) >> HASH_RIGHT_SHIFT;
-      while (1) {
-        if (!in_use[key]) {
-          colors[key] = last_pix;
-          in_use[key] = 1;
-          ++num_colors;
-          if (num_colors >= MAX_COLOR_COUNT) {
-            return MAX_COLOR_COUNT;  // Exact count not needed.
-          }
-          break;
-        } else if (colors[key] == last_pix) {
-          break;  // The color is already there.
-        } else {
-          // Some other color sits here, so do linear conflict resolution.
-          ++key;
-          key &= (HASH_SIZE - 1);  // Key mask.
-        }
-      }
-    }
-    argb += pic->argb_stride;
-  }
-  return num_colors;
-}
-
-#undef MAX_COLOR_COUNT
-#undef HASH_SIZE
-#undef HASH_RIGHT_SHIFT
-
 // For pixels in 'rect', replace those pixels in 'dst' that are same as 'src' by
 // transparent pixels.
 static void IncreaseTransparency(const WebPPicture* const src,
@@ -856,6 +801,9 @@ enum {
   CANDIDATE_COUNT
 };
 
+#define MIN_COLORS_LOSSY     31  // Don't try lossy below this threshold.
+#define MAX_COLORS_LOSSLESS 194  // Don't try lossless above this threshold.
+
 // Generates candidates for a given dispose method given pre-filled sub-frame
 // 'params'.
 static WebPEncodingError GenerateCandidates(
@@ -890,7 +838,7 @@ static WebPEncodingError GenerateCandidates(
     candidate_ll->evaluate_ = is_lossless;
     candidate_lossy->evaluate_ = !is_lossless;
   } else {  // Use a heuristic for trying lossless and/or lossy compression.
-    const int num_colors = GetColorCount(&params->sub_frame_ll_);
+    const int num_colors = WebPGetColorPalette(&params->sub_frame_ll_, NULL);
     candidate_ll->evaluate_ = (num_colors < MAX_COLORS_LOSSLESS);
     candidate_lossy->evaluate_ = (num_colors >= MIN_COLORS_LOSSY);
   }
