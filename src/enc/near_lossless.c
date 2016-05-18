@@ -97,22 +97,11 @@ static void NearLossless(int xsize, int ysize, uint32_t* argb,
   }
 }
 
-static int QualityToLimitBits(int quality) {
-  // quality mapping:
-  //   0..19 -> 5
-  //  20..39 -> 4
-  //  40..59 -> 3
-  //  60..79 -> 2
-  //  80..99 -> 1
-  //  100    -> 0
-  return MAX_LIMIT_BITS - quality / 20;
-}
-
 int VP8ApplyNearLossless(int xsize, int ysize, uint32_t* argb, int quality) {
   int i;
   uint32_t* const copy_buffer =
       (uint32_t*)WebPSafeMalloc(xsize * 3, sizeof(*copy_buffer));
-  const int limit_bits = QualityToLimitBits(quality);
+  const int limit_bits = VP8LNearLosslessBits(quality);
   assert(argb != NULL);
   assert(limit_bits >= 0);
   assert(limit_bits <= MAX_LIMIT_BITS);
