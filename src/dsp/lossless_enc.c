@@ -1274,6 +1274,15 @@ static int VectorMismatch(const uint32_t* const array1,
   return match_len;
 }
 
+// Find the index of an integer in an array, knowing it is there for sure.
+static int FindUIntInArray(const uint32_t arr[], size_t length, uint32_t val) {
+  size_t i = 0;
+  for (; i < length; ++i) {
+    if (arr[i] == val) break;
+  }
+  return i;
+}
+
 // Bundles multiple (1, 2, 4 or 8) pixels into a single pixel.
 void VP8LBundleColorMap(const uint8_t* const row, int width,
                         int xbits, uint32_t* const dst) {
@@ -1372,6 +1381,8 @@ VP8LHistogramAddFunc VP8LHistogramAdd;
 
 VP8LVectorMismatchFunc VP8LVectorMismatch;
 
+VP8LFindUIntInArrayFunc VP8LFindUIntInArray;
+
 extern void VP8LEncDspInitSSE2(void);
 extern void VP8LEncDspInitSSE41(void);
 extern void VP8LEncDspInitNEON(void);
@@ -1405,6 +1416,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInit(void) {
   VP8LHistogramAdd = HistogramAdd;
 
   VP8LVectorMismatch = VectorMismatch;
+
+  VP8LFindUIntInArray = FindUIntInArray;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {

@@ -1201,14 +1201,8 @@ static void MapToPalette(const uint32_t palette[], int num_colors,
   for (x = 0; x < width; ++x) {
     const uint32_t pix = src[x];
     if (pix != prev_pix) {
-      int i;
-      for (i = 0; i < num_colors; ++i) {
-        if (pix == palette[i]) {
-          prev_idx = i;
-          prev_pix = pix;
-          break;
-        }
-      }
+      prev_idx = VP8LFindUIntInArray(palette, num_colors, pix);
+      prev_pix = pix;
     }
     dst[x] = prev_idx;
   }

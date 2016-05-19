@@ -357,6 +357,11 @@ static WEBP_INLINE uint32_t VP8LSubPixels(uint32_t a, uint32_t b) {
   return (alpha_and_green & 0xff00ff00u) | (red_and_blue & 0x00ff00ffu);
 }
 
+typedef int (*VP8LFindUIntInArrayFunc)(const uint32_t arr[], size_t length,
+                                       uint32_t val);
+
+extern VP8LFindUIntInArrayFunc VP8LFindUIntInArray;
+
 void VP8LBundleColorMap(const uint8_t* const row, int width,
                         int xbits, uint32_t* const dst);
 

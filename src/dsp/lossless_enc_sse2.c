@@ -375,6 +375,21 @@ static int VectorMismatch(const uint32_t* const array1,
   return match_len;
 }
 
+// val is always in the array.
+static int FindUIntInArray(const uint32_t arr[], size_t length, uint32_t val) {
+  size_t i = 0;
+  const __m128i pix128 = _mm_set1_epi32(val);
+  for (; i + 4 < length; i += 4) {
+    const __m128i vals = _mm_loadu_si128((const __m128i*)&arr[i]);
+    if (_mm_movemask_epi8(_mm_cmpeq_epi32(vals, pix128)) != 0x0000) break;
+  }
+  for (; i < length; ++i) {
+    if (val == arr[i]) break;
+  }
+  assert(i < length);
+  return i;
+}
+
 //------------------------------------------------------------------------------
 // Entry point
 
@@ -388,6 +403,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInitSSE2(void) {
   VP8LHistogramAdd = HistogramAdd;
   VP8LCombinedShannonEntropy = CombinedShannonEntropy;
   VP8LVectorMismatch = VectorMismatch;
+  VP8LFindUIntInArray = FindUIntInArray;
 }
 
 #else  // !WEBP_USE_SSE2
