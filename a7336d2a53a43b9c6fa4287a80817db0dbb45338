@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "f7e3261d_40c33e4c",
+        "filename": "src/dsp/lossless_enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 681,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-05-19T00:32:07Z",
+      "side": 1,
+      "message": "OK. MKFOURCC at least differs",
+      "parentUuid": "d7c9c29d_53e1c40e",
+      "revId": "a7336d2a53a43b9c6fa4287a80817db0dbb45338",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f7e3261d_acae6390",
         "filename": "src/dsp/lossless_enc.c",
         "patchSetId": 1
