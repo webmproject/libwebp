@@ -190,7 +190,8 @@ int WebPAnimEncoderOptionsInitInternal(WebPAnimEncoderOptions* enc_options,
   return 1;
 }
 
-#define TRANSPARENT_COLOR   0x00ffffff
+// This starting value is more fit to WebPCleanupTransparentAreaLossless().
+#define TRANSPARENT_COLOR   0x00000000
 
 static void ClearRectangle(WebPPicture* const picture,
                            int left, int top, int width, int height) {
@@ -865,6 +866,7 @@ static WebPEncodingError GenerateCandidates(
         EncodeCandidate(&params->sub_frame_lossy_, &params->rect_lossy_,
                         config_lossy, use_blending_lossy, candidate_lossy);
     if (error_code != VP8_ENC_OK) return error_code;
+    enc->curr_canvas_copy_modified_ = 1;
   }
   return error_code;
 }
