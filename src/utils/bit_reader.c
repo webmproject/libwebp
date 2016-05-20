@@ -192,8 +192,6 @@ static void ShiftBytes(VP8LBitReader* const br) {
 
 void VP8LDoFillBitWindow(VP8LBitReader* const br) {
   assert(br->bit_pos_ >= VP8L_WBITS);
-  // TODO(jzern): given the fixed read size it may be possible to force
-  //              alignment in this block.
 #if defined(VP8L_USE_UNALIGNED_LOAD)
   if (br->pos_ + sizeof(br->val_) < br->len_) {
     br->val_ >>= VP8L_WBITS;
