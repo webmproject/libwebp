@@ -120,10 +120,9 @@ int32_t VP8GetSignedValue(VP8BitReader* const br, int bits) {
 
 #define VP8L_LOG8_WBITS 4  // Number of bytes needed to store VP8L_WBITS bits.
 
-#if !defined(WORDS_BIGENDIAN) && \
-    (defined(__arm__) || defined(_M_ARM) || defined(__aarch64__) || \
-     defined(__i386__) || defined(_M_IX86) || \
-     defined(__x86_64__) || defined(_M_X64))
+#if defined(__arm__) || defined(_M_ARM) || defined(__aarch64__) || \
+    defined(__i386__) || defined(_M_IX86) || \
+    defined(__x86_64__) || defined(_M_X64)
 #define VP8L_USE_FAST_LOAD
 #endif
 
@@ -196,9 +195,7 @@ void VP8LDoFillBitWindow(VP8LBitReader* const br) {
   if (br->pos_ + sizeof(br->val_) < br->len_) {
     br->val_ >>= VP8L_WBITS;
     br->bit_pos_ -= VP8L_WBITS;
-    // The expression below needs a little-endian arch to work correctly.
-    // This gives a large speedup for decoding speed.
-    br->val_ |= (vp8l_val_t)WebPMemToUint32(br->buf_ + br->pos_) <<
+    br->val_ |= (vp8l_val_t)HToLE32(WebPMemToUint32(br->buf_ + br->pos_)) <<
                 (VP8L_LBITS - VP8L_WBITS);
     br->pos_ += VP8L_LOG8_WBITS;
     return;
