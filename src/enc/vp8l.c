@@ -126,8 +126,54 @@ static int AnalyzeAndCreatePalette(const WebPPicture* const pic,
                                    int low_effort,
                                    uint32_t palette[MAX_PALETTE_SIZE],
                                    int* const palette_size) {
-  const int num_colors = WebPGetColorPalette(pic, palette);
-  if (num_colors > MAX_PALETTE_SIZE) return 0;
+  int i, x, y, key;
+  int num_colors = 0;
+  uint8_t in_use[MAX_PALETTE_SIZE * 4] = { 0 };
+  uint32_t colors[MAX_PALETTE_SIZE * 4];
+  static const uint32_t kHashMul = 0x1e35a7bd;
+  const uint32_t* argb = pic->argb;
+  const int width = pic->width;
+  const int height = pic->height;
+  uint32_t last_pix = ~argb[0];   // so we're sure that last_pix != argb[0]
+
+  for (y = 0; y < height; ++y) {
+    for (x = 0; x < width; ++x) {
+      if (argb[x] == last_pix) {
+        continue;
+      }
+      last_pix = argb[x];
+      key = (kHashMul * last_pix) >> PALETTE_KEY_RIGHT_SHIFT;
+      while (1) {
+        if (!in_use[key]) {
+          colors[key] = last_pix;
+          in_use[key] = 1;
+          ++num_colors;
+          if (num_colors > MAX_PALETTE_SIZE) {
+            return 0;
+          }
+          break;
+        } else if (colors[key] == last_pix) {
+          // The color is already there.
+          break;
+        } else {
+          // Some other color sits there.
+          // Do linear conflict resolution.
+          ++key;
+          key &= (MAX_PALETTE_SIZE * 4 - 1);  // key mask for 1K buffer.
+        }
+      }
+    }
+    argb += pic->argb_stride;
+  }
+
+  // TODO(skal): could we reuse in_use[] to speed up EncodePalette()?
+  num_colors = 0;
+  for (i = 0; i < (int)(sizeof(in_use) / sizeof(in_use[0])); ++i) {
+    if (in_use[i]) {
+      palette[num_colors] = colors[i];
+      ++num_colors;
+    }
+  }
   *palette_size = num_colors;
   qsort(palette, num_colors, sizeof(*palette), PaletteCompareColorsForQsort);
   if (!low_effort && PaletteHasNonMonotonousDeltas(palette, num_colors)) {
