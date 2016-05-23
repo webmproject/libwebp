@@ -703,21 +703,25 @@ static int GetColorCount(const WebPPicture* const pic) {
 
 // For pixels in 'rect', replace those pixels in 'dst' that are same as 'src' by
 // transparent pixels.
-static void IncreaseTransparency(const WebPPicture* const src,
-                                 const FrameRect* const rect,
-                                 WebPPicture* const dst) {
+// Returns true if at least one pixel gets modified.
+static int IncreaseTransparency(const WebPPicture* const src,
+                                const FrameRect* const rect,
+                                WebPPicture* const dst) {
   int i, j;
+  int modified = 0;
   assert(src != NULL && dst != NULL && rect != NULL);
   assert(src->width == dst->width && src->height == dst->height);
   for (j = rect->y_offset_; j < rect->y_offset_ + rect->height_; ++j) {
     const uint32_t* const psrc = src->argb + j * src->argb_stride;
     uint32_t* const pdst = dst->argb + j * dst->argb_stride;
     for (i = rect->x_offset_; i < rect->x_offset_ + rect->width_; ++i) {
-      if (psrc[i] == pdst[i]) {
+      if (psrc[i] == pdst[i] && pdst[i] != TRANSPARENT_COLOR) {
         pdst[i] = TRANSPARENT_COLOR;
+        modified = 1;
       }
     }
   }
+  return modified;
 }
 
 #undef TRANSPARENT_COLOR
@@ -725,12 +729,13 @@ static void IncreaseTransparency(const WebPPicture* const src,
 // Replace similar blocks of pixels by a 'see-through' transparent block
 // with uniform average color.
 // Assumes lossy compression is being used.
-static void FlattenSimilarBlocks(const WebPPicture* const src,
-                                 const FrameRect* const rect,
-                                 WebPPicture* const dst,
-                                 float quality) {
+// Returns true if at least one pixel gets modified.
+static int FlattenSimilarBlocks(const WebPPicture* const src,
+                                const FrameRect* const rect,
+                                WebPPicture* const dst, float quality) {
   const int max_allowed_diff_lossy = QualityToMaxDiff(quality);
   int i, j;
+  int modified = 0;
   const int block_size = 8;
   const int y_start = (rect->y_offset_ + block_size) & ~(block_size - 1);
   const int y_end = (rect->y_offset_ + rect->height_) & ~(block_size - 1);
@@ -773,9 +778,11 @@ static void FlattenSimilarBlocks(const WebPPicture* const src,
             pdst[x + y * dst->argb_stride] = color;
           }
         }
+        modified = 1;
       }
     }
   }
+  return modified;
 }
 
 static int EncodeFrame(const WebPConfig* const config, WebPPicture* const pic,
@@ -900,8 +907,8 @@ static WebPEncodingError GenerateCandidates(
   if (candidate_ll->evaluate_) {
     CopyCurrentCanvas(enc);
     if (use_blending_ll) {
-      IncreaseTransparency(prev_canvas, &params->rect_ll_, curr_canvas);
-      enc->curr_canvas_copy_modified_ = 1;
+      enc->curr_canvas_copy_modified_ =
+          IncreaseTransparency(prev_canvas, &params->rect_ll_, curr_canvas);
     }
     error_code = EncodeCandidate(&params->sub_frame_ll_, &params->rect_ll_,
                                  config_ll, use_blending_ll, candidate_ll);
@@ -910,9 +917,9 @@ static WebPEncodingError GenerateCandidates(
   if (candidate_lossy->evaluate_) {
     CopyCurrentCanvas(enc);
     if (use_blending_lossy) {
-      FlattenSimilarBlocks(prev_canvas, &params->rect_lossy_, curr_canvas,
-                           config_lossy->quality);
-      enc->curr_canvas_copy_modified_ = 1;
+      enc->curr_canvas_copy_modified_ =
+          FlattenSimilarBlocks(prev_canvas, &params->rect_lossy_, curr_canvas,
+                               config_lossy->quality);
     }
     error_code =
         EncodeCandidate(&params->sub_frame_lossy_, &params->rect_lossy_,
