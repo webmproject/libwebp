@@ -1192,8 +1192,35 @@ static WebPEncodingError MakeInputImageCopy(VP8LEncoder* const enc) {
 
 // -----------------------------------------------------------------------------
 
-static void MapToPalette(const uint32_t palette[], int num_colors,
+static int SearchColor(const uint32_t sorted[], uint32_t color, int hi) {
+  int low = 0;
+  if (sorted[low] == color) return low;  // loop invariant: sorted[low] != color
+  while (1) {
+    const int mid = (low + hi) >> 1;
+    if (sorted[mid] == color) {
+      return mid;
+    } else if (sorted[mid] < color) {
+      low = mid;
+    } else {
+      hi = mid;
+    }
+  }
+}
+
+// Sort palette in increasing order and prepare an inverse mapping array.
+static void PrepareMapToPalette(const uint32_t palette[], int num_colors,
+                                uint32_t sorted[], int idx_map[]) {
+  int i;
+  memcpy(sorted, palette, num_colors * sizeof(*sorted));
+  qsort(sorted, num_colors, sizeof(*sorted), PaletteCompareColorsForQsort);
+  for (i = 0; i < num_colors; ++i) {
+    idx_map[SearchColor(sorted, palette[i], num_colors)] = i;
+  }
+}
+
+static void MapToPalette(const uint32_t sorted_palette[], int num_colors,
                          uint32_t* const last_pix, int* const last_idx,
+                         const int idx_map[],
                          const uint32_t* src, uint8_t* dst, int width) {
   int x;
   int prev_idx = *last_idx;
@@ -1201,14 +1228,8 @@ static void MapToPalette(const uint32_t palette[], int num_colors,
   for (x = 0; x < width; ++x) {
     const uint32_t pix = src[x];
     if (pix != prev_pix) {
-      int i;
-      for (i = 0; i < num_colors; ++i) {
-        if (pix == palette[i]) {
-          prev_idx = i;
-          prev_pix = pix;
-          break;
-        }
-      }
+      prev_idx = idx_map[SearchColor(sorted_palette, pix, num_colors)];
+      prev_pix = pix;
     }
     dst[x] = prev_idx;
   }
@@ -1255,11 +1276,16 @@ static WebPEncodingError ApplyPalette(const uint32_t* src, uint32_t src_stride,
     }
   } else {
     // Use 1 pixel cache for ARGB pixels.
-    uint32_t last_pix = palette[0];
-    int last_idx = 0;
+    uint32_t last_pix;
+    int last_idx;
+    uint32_t sorted[MAX_PALETTE_SIZE];
+    int idx_map[MAX_PALETTE_SIZE];
+    PrepareMapToPalette(palette, palette_size, sorted, idx_map);
+    last_pix = palette[0];
+    last_idx = 0;
     for (y = 0; y < height; ++y) {
-      MapToPalette(palette, palette_size, &last_pix, &last_idx,
-                   src, tmp_row, width);
+      MapToPalette(sorted, palette_size, &last_pix, &last_idx,
+                   idx_map, src, tmp_row, width);
       VP8LBundleColorMap(tmp_row, width, xbits, dst);
       src += src_stride;
       dst += dst_stride;
