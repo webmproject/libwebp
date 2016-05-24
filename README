@@ -108,6 +108,22 @@ cmake -DWEBP_BUILD_CWEBP=ON -DWEBP_BUILD_DWEBP=ON ../
 
 or through your favorite interface (like ccmake or cmake-qt-gui).
 
+Gradle:
+-------
+The support for Gradle is minimal: it only helps you compile libwebp, cwebp and
+dwebp and webpmux_example.
+
+Prerequisites:
+A compiler (e.g., gcc with autotools) and gradle.
+On a Debian-like system the following should install everything you need for a
+minimal build:
+$ sudo apt-get install build-essential gradle
+
+When building from git sources, you will need to run the Gradle wrapper with the
+appropriate target, e.g. :
+
+./gradlew buildAllExecutables
+
 SWIG bindings:
 --------------
 
