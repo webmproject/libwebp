@@ -115,8 +115,6 @@ static WEBP_INLINE uint32_t PixOrCopyDistance(const PixOrCopy* const p) {
 
 typedef struct VP8LHashChain VP8LHashChain;
 struct VP8LHashChain {
-  // Stores the most recently added position with the given hash value.
-  int32_t hash_to_first_index_[HASH_SIZE];
   // chain_[pos] stores the previous position with the same hash value
   // for every pixel in the image.
   int32_t* chain_;
@@ -127,6 +125,9 @@ struct VP8LHashChain {
 
 // Must be called first, to set size.
 int VP8LHashChainInit(VP8LHashChain* const p, int size);
+// Pre-compute the best matches for argb.
+int VP8LHashChainFill(VP8LHashChain* const p,
+                      const uint32_t* const argb, int xsize, int ysize);
 void VP8LHashChainClear(VP8LHashChain* const p);  // release memory
 
 // -----------------------------------------------------------------------------
@@ -192,8 +193,8 @@ static WEBP_INLINE void VP8LRefsCursorNext(VP8LRefsCursor* const c) {
 // refs[0] or refs[1].
 VP8LBackwardRefs* VP8LGetBackwardReferences(
     int width, int height, const uint32_t* const argb, int quality,
-    int low_effort, int* const cache_bits, VP8LHashChain* const hash_chain,
-    VP8LBackwardRefs refs[2]);
+    int low_effort, int* const cache_bits,
+    const VP8LHashChain* const hash_chain, VP8LBackwardRefs refs[2]);
 
 #ifdef __cplusplus
 }

@@ -761,6 +761,10 @@ static WebPEncodingError EncodeImageNoHuffman(VP8LBitWriter* const bw,
   }
 
   // Calculate backward references from ARGB image.
+  if (VP8LHashChainFill(hash_chain, argb, width, height) == 0) {
+    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+    goto Error;
+  }
   refs = VP8LGetBackwardReferences(width, height, argb, quality, 0, &cache_bits,
                                    hash_chain, refs_array);
   if (refs == NULL) {
@@ -861,6 +865,10 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   // 'best_refs' is the reference to the best backward refs and points to one
   // of refs_array[0] or refs_array[1].
   // Calculate backward references from ARGB image.
+  if (VP8LHashChainFill(hash_chain, argb, width, height) == 0) {
+    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+    goto Error;
+  }
   best_refs = VP8LGetBackwardReferences(width, height, argb, quality,
                                         low_effort, cache_bits, hash_chain,
                                         refs_array);
