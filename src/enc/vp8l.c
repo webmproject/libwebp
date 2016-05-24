@@ -408,7 +408,7 @@ static int AnalyzeAndInit(VP8LEncoder* const enc) {
     enc->use_cross_color_ = red_and_blue_always_zero ? 0 : enc->use_predict_;
   }
 
-  if (!VP8LHashChainInit(&enc->hash_chain_, pix_cnt)) return 0;
+  if (!VP8LHashChainInit(&enc->hash_chain_, pic->argb, pix_cnt)) return 0;
 
   // palette-friendly input typically uses less literals
   //  -> reduce block size a bit
@@ -738,12 +738,10 @@ static WebPEncodingError StoreImageToBitMask(
 }
 
 // Special case of EncodeImageInternal() for cache-bits=0, histo_bits=31
-static WebPEncodingError EncodeImageNoHuffman(VP8LBitWriter* const bw,
-                                              const uint32_t* const argb,
-                                              VP8LHashChain* const hash_chain,
-                                              VP8LBackwardRefs refs_array[2],
-                                              int width, int height,
-                                              int quality) {
+static WebPEncodingError EncodeImageNoHuffman(
+    VP8LBitWriter* const bw, const uint32_t* const argb,
+    const VP8LHashChain* const hash_chain, VP8LBackwardRefs refs_array[2],
+    int width, int height, int quality) {
   int i;
   int max_tokens = 0;
   WebPEncodingError err = VP8_ENC_OK;
@@ -819,17 +817,12 @@ static WebPEncodingError EncodeImageNoHuffman(VP8LBitWriter* const bw,
   return err;
 }
 
-static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
-                                             const uint32_t* const argb,
-                                             VP8LHashChain* const hash_chain,
-                                             VP8LBackwardRefs refs_array[2],
-                                             int width, int height, int quality,
-                                             int low_effort,
-                                             int use_cache, int* cache_bits,
-                                             int histogram_bits,
-                                             size_t init_byte_position,
-                                             int* const hdr_size,
-                                             int* const data_size) {
+static WebPEncodingError EncodeImageInternal(
+    VP8LBitWriter* const bw, const uint32_t* const argb,
+    const VP8LHashChain* const hash_chain, VP8LBackwardRefs refs_array[2],
+    int width, int height, int quality, int low_effort, int use_cache,
+    int* cache_bits, int histogram_bits, size_t init_byte_position,
+    int* const hdr_size, int* const data_size) {
   WebPEncodingError err = VP8_ENC_OK;
   const uint32_t histogram_image_xysize =
       VP8LSubSampleSize(width, histogram_bits) *
