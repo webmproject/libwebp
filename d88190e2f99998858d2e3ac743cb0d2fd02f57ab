@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bcf6f39b_f151a056",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-05-24T20:04:08Z",
+      "side": 1,
+      "message": "this should be after the alloc check",
+      "revId": "d88190e2f99998858d2e3ac743cb0d2fd02f57ab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bcf6f39b_51d234e6",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-05-24T20:04:08Z",
+      "side": 1,
+      "message": "VP8LHashChainClear is called on failure, correct? I\u0027m wonder about p-\u003echain_\u0027s allocation",
+      "revId": "d88190e2f99998858d2e3ac743cb0d2fd02f57ab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
