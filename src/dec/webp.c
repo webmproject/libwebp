@@ -827,7 +827,7 @@ int WebPIoInitFromOptions(const WebPDecoderOptions* const options,
   }
 
   // Filter
-  io->bypass_filtering = options && options->bypass_filtering;
+  io->bypass_filtering = (options != NULL) && options->bypass_filtering;
 
   // Fancy upsampler
 #ifdef FANCY_UPSAMPLING
