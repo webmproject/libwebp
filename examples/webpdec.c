@@ -45,18 +45,42 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
   }
   {
     const int has_alpha = keep_alpha && bitstream->has_alpha;
-    // TODO(skal): use MODE_YUV(A), depending on the expected
-    // input pic->use_argb. This would save some conversion steps.
-    output_buffer->colorspace = has_alpha ? MODE_RGBA : MODE_RGB;
+    if (pic->use_argb) {
+      output_buffer->colorspace = has_alpha ? MODE_RGBA : MODE_RGB;
+    } else {
+      output_buffer->colorspace = has_alpha ? MODE_YUVA : MODE_YUV;
+    }
 
     status = ExUtilDecodeWebP(data, data_size, 0, &config);
     if (status == VP8_STATUS_OK) {
-      const uint8_t* const rgba = output_buffer->u.RGBA.rgba;
-      const int stride = output_buffer->u.RGBA.stride;
       pic->width = output_buffer->width;
       pic->height = output_buffer->height;
-      ok = has_alpha ? WebPPictureImportRGBA(pic, rgba, stride)
-                     : WebPPictureImportRGB(pic, rgba, stride);
+      if (pic->use_argb) {
+        const uint8_t* const rgba = output_buffer->u.RGBA.rgba;
+        const int stride = output_buffer->u.RGBA.stride;
+        ok = has_alpha ? WebPPictureImportRGBA(pic, rgba, stride)
+                       : WebPPictureImportRGB(pic, rgba, stride);
+      } else {
+        pic->colorspace = has_alpha ? WEBP_YUV420A : WEBP_YUV420;
+        ok = WebPPictureAlloc(pic);
+        if (!ok) {
+          status = VP8_STATUS_OUT_OF_MEMORY;
+        } else {
+          const WebPYUVABuffer* const yuva = &output_buffer->u.YUVA;
+          const int uv_width = (pic->width + 1) >> 1;
+          const int uv_height = (pic->height + 1) >> 1;
+          ExUtilCopyPlane(yuva->y, yuva->y_stride,
+                          pic->y, pic->y_stride, pic->width, pic->height);
+          ExUtilCopyPlane(yuva->u, yuva->u_stride,
+                          pic->u, pic->uv_stride, uv_width, uv_height);
+          ExUtilCopyPlane(yuva->v, yuva->v_stride,
+                          pic->v, pic->uv_stride, uv_width, uv_height);
+          if (has_alpha) {
+            ExUtilCopyPlane(yuva->a, yuva->a_stride,
+                            pic->a, pic->a_stride, pic->width, pic->height);
+          }
+        }
+      }
     }
   }
 

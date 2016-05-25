@@ -50,13 +50,12 @@ static int verbose = 0;
 
 static int ReadYUV(const uint8_t* const data, size_t data_size,
                    WebPPicture* const pic) {
-  int y;
   const int use_argb = pic->use_argb;
   const int uv_width = (pic->width + 1) / 2;
   const int uv_height = (pic->height + 1) / 2;
+  const int y_plane_size = pic->width * pic->height;
   const int uv_plane_size = uv_width * uv_height;
-  const size_t expected_data_size =
-      pic->width * pic->height + 2 * uv_plane_size;
+  const size_t expected_data_size = y_plane_size + 2 * uv_plane_size;
 
   if (data_size != expected_data_size) {
     fprintf(stderr,
@@ -67,18 +66,12 @@ static int ReadYUV(const uint8_t* const data, size_t data_size,
 
   pic->use_argb = 0;
   if (!WebPPictureAlloc(pic)) return 0;
-
-  for (y = 0; y < pic->height; ++y) {
-    memcpy(pic->y + y * pic->y_stride, data + y * pic->width,
-           pic->width * sizeof(*pic->y));
-  }
-  for (y = 0; y < uv_height; ++y) {
-    const uint8_t* const uv_data = data + pic->height * pic->y_stride;
-    memcpy(pic->u + y * pic->uv_stride, uv_data + y * uv_width,
-           uv_width * sizeof(*uv_data));
-    memcpy(pic->v + y * pic->uv_stride, uv_data + y * uv_width + uv_plane_size,
-           uv_width * sizeof(*uv_data));
-  }
+  ExUtilCopyPlane(data, pic->width, pic->y, pic->y_stride,
+                  pic->width, pic->height);
+  ExUtilCopyPlane(data + y_plane_size, uv_width,
+                  pic->u, pic->uv_stride, uv_width, uv_height);
+  ExUtilCopyPlane(data + y_plane_size + uv_plane_size, uv_width,
+                  pic->v, pic->uv_stride, uv_width, uv_height);
   return use_argb ? WebPPictureYUVAToARGB(pic) : 1;
 }
 
