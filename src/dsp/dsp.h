@@ -321,6 +321,15 @@ extern VP8LumaFilterFunc VP8HFilter16i;
 extern VP8ChromaFilterFunc VP8VFilter8i;  // filtering u and v altogether
 extern VP8ChromaFilterFunc VP8HFilter8i;
 
+// Dithering. Combines dithering values (centered around 128) with dst[],
+// according to: dst[] = clip(dst[] + (((dither[]-128) + 8) >> 4)
+#define VP8_DITHER_DESCALE 4
+#define VP8_DITHER_DESCALE_ROUNDER (1 << (VP8_DITHER_DESCALE - 1))
+#define VP8_DITHER_AMP_BITS 7
+#define VP8_DITHER_AMP_CENTER (1 << VP8_DITHER_AMP_BITS)
+extern void (*VP8DitherCombine8x8)(const uint8_t* dither, uint8_t* dst,
+                                   int dst_stride);
+
 // must be called before anything using the above
 void VP8DspInit(void);
 
