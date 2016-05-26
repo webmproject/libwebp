@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3cbe83e3_1aa6b9b7",
+        "filename": "examples/webpdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-05-26T05:49:57Z",
+      "side": 1,
+      "message": "oops, leftover",
+      "parentUuid": "3c8f637e_ef8fa134",
+      "revId": "95d7793ca8637ff5122b8edae5746e4efc6486db",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3c8f637e_8f94d54a",
         "filename": "examples/webpdec.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2016-05-25T19:09:37Z",
       "side": 1,
       "message": "dead",
+      "revId": "95d7793ca8637ff5122b8edae5746e4efc6486db",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cbe83e3_fab1c5f0",
+        "filename": "examples/webpdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-05-26T05:49:57Z",
+      "side": 1,
+      "message": "done. That was the point of the patch!",
+      "parentUuid": "3c8f637e_8f94d54a",
       "revId": "95d7793ca8637ff5122b8edae5746e4efc6486db",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
