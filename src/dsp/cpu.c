@@ -170,9 +170,10 @@ static int armCPUInfo(CPUFeature feature) {
 #endif
 }
 VP8CPUInfo VP8GetCPUInfo = armCPUInfo;
-#elif defined(WEBP_USE_MIPS32) || defined(WEBP_USE_MIPS_DSP_R2)
+#elif defined(WEBP_USE_MIPS32) || defined(WEBP_USE_MIPS_DSP_R2) || \
+      defined(WEBP_USE_MSA)
 static int mipsCPUInfo(CPUFeature feature) {
-  if ((feature == kMIPS32) || (feature == kMIPSdspR2)) {
+  if ((feature == kMIPS32) || (feature == kMIPSdspR2) || (feature == kMSA)) {
     return 1;
   } else {
     return 0;
