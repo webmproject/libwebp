@@ -655,6 +655,23 @@ static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
 
 //------------------------------------------------------------------------------
 
+static void DitherCombine8x8(const uint8_t* dither, uint8_t* dst,
+                             int dst_stride) {
+  int i, j;
+  for (j = 0; j < 8; ++j) {
+    for (i = 0; i < 8; ++i) {
+      const int delta0 = dither[i] - VP8_DITHER_AMP_CENTER;
+      const int delta1 =
+          (delta0 + VP8_DITHER_DESCALE_ROUNDER) >> VP8_DITHER_DESCALE;
+      dst[i] = clip_8b((int)dst[i] + delta1);
+    }
+    dst += dst_stride;
+    dither += 8;
+  }
+}
+
+//------------------------------------------------------------------------------
+
 VP8DecIdct2 VP8Transform;
 VP8DecIdct VP8TransformAC3;
 VP8DecIdct VP8TransformUV;
@@ -673,6 +690,9 @@ VP8SimpleFilterFunc VP8SimpleVFilter16;
 VP8SimpleFilterFunc VP8SimpleHFilter16;
 VP8SimpleFilterFunc VP8SimpleVFilter16i;
 VP8SimpleFilterFunc VP8SimpleHFilter16i;
+
+void (*VP8DitherCombine8x8)(const uint8_t* dither, uint8_t* dst,
+                            int dst_stride);
 
 extern void VP8DspInitSSE2(void);
 extern void VP8DspInitSSE41(void);
@@ -734,6 +754,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInit(void) {
   VP8PredChroma8[4] = DC8uvNoTop;
   VP8PredChroma8[5] = DC8uvNoLeft;
   VP8PredChroma8[6] = DC8uvNoTopLeft;
+
+  VP8DitherCombine8x8 = DitherCombine8x8;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
