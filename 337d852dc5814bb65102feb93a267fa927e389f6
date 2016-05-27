@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c0f6fb1_524ad6b9",
+        "filename": "README",
+        "patchSetId": 1
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-05-27T17:53:12Z",
+      "side": 1,
+      "message": "put this after the autoconf section in its entirety. we could probably due with some reorganization in this file and added documentation for platforms like this",
+      "revId": "337d852dc5814bb65102feb93a267fa927e389f6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c0f6fb1_d2fec675",
+        "filename": "README",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-05-27T17:53:12Z",
+      "side": 1,
+      "message": "instead setting host\u003dgcc_prefix should be enough; that\u0027s what\u0027s done in mips32r5el-linux-gnu which uses the mti toolchain for non-msa builds\n\nhttps://build.webmproject.org/jenkins/job/libwebp__compile/",
+      "revId": "337d852dc5814bb65102feb93a267fa927e389f6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c0f6fb1_f238aa2c",
+        "filename": "README",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-05-27T17:53:12Z",
+      "side": 1,
+      "message": "instead of exporting put this on the command line as parameters, that has the benefit of adding the values to config.log and makes this a simpler 1 line copy and paste",
+      "revId": "337d852dc5814bb65102feb93a267fa927e389f6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c0f6fb1_3200825d",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-05-27T17:53:12Z",
+      "side": 1,
+      "message": "like on line 89 add a defined(__mips_isa_rev) before checking its value",
+      "revId": "337d852dc5814bb65102feb93a267fa927e389f6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
