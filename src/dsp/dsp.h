@@ -96,6 +96,10 @@ extern "C" {
 #endif
 #endif
 
+#if defined(__mips_msa) && defined(__mips_isa_rev) && (__mips_isa_rev >= 5)
+#define WEBP_USE_MSA
+#endif
+
 // This macro prevents thread_sanitizer from reporting known concurrent writes.
 #define WEBP_TSAN_IGNORE_FUNCTION
 #if defined(__has_feature)
@@ -134,7 +138,8 @@ typedef enum {
   kAVX2,
   kNEON,
   kMIPS32,
-  kMIPSdspR2
+  kMIPSdspR2,
+  kMSA
 } CPUFeature;
 // returns true if the CPU supports the feature.
 typedef int (*VP8CPUInfo)(CPUFeature feature);

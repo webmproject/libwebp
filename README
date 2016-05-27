@@ -84,6 +84,33 @@ be installed independently using a minor modification in the corresponding
 Makefile.am configure files (see comments there). See './configure --help' for
 more options.
 
+Building for MIPS Linux:
+------------------------
+MIPS Linux toolchain stable available releases can be found at:
+https://community.imgtec.com/developers/mips/tools/codescape-mips-sdk/available-releases/
+
+# Add toolchain to PATH
+export PATH=$PATH:/path/to/toolchain/bin
+
+# 32-bit build for mips32r5 (p5600)
+HOST=mips-mti-linux-gnu
+MIPS_CFLAGS="-O3 -mips32r5 -mabi=32 -mtune=p5600 -mmsa -mfp64 \
+  -msched-weight -mload-store-pairs -fPIE"
+MIPS_LDFLAGS="-mips32r5 -mabi=32 -mmsa -mfp64 -pie"
+
+# 64-bit build for mips64r6 (i6400)
+HOST=mips-img-linux-gnu
+MIPS_CFLAGS="-O3 -mips64r6 -mabi=64 -mtune=i6400 -mmsa -mfp64 \
+  -msched-weight -mload-store-pairs -fPIE"
+MIPS_LDFLAGS="-mips64r6 -mabi=64 -mmsa -mfp64 -pie"
+
+./configure --host=${HOST} --build=`config.guess` \
+  CC="${HOST}-gcc -EL" \
+  CFLAGS="$MIPS_CFLAGS" \
+  LDFLAGS="$MIPS_LDFLAGS"
+make
+make install
+
 CMake:
 ------
 The support for CMake is minimal: it only helps you compile libwebp, cwebp and
