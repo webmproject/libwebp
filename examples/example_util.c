@@ -268,3 +268,14 @@ VP8StatusCode ExUtilDecodeWebPIncremental(
 }
 
 // -----------------------------------------------------------------------------
+
+void ExUtilCopyPlane(const uint8_t* src, int src_stride,
+                     uint8_t* dst, int dst_stride, int width, int height) {
+  while (height-- > 0) {
+    memcpy(dst, src, width * sizeof(*dst));
+    src += src_stride;
+    dst += dst_stride;
+  }
+}
+
+// -----------------------------------------------------------------------------

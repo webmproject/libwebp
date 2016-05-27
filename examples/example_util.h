@@ -54,6 +54,12 @@ int ExUtilWriteFile(const char* const file_name,
                     const uint8_t* data, size_t data_size);
 
 //------------------------------------------------------------------------------
+
+// Copy width x height pixels from 'src' to 'dst' honoring the strides.
+void ExUtilCopyPlane(const uint8_t* src, int src_stride,
+                     uint8_t* dst, int dst_stride, int width, int height);
+
+//------------------------------------------------------------------------------
 // WebP decoding
 
 // Prints an informative error message regarding decode failure of 'in_file'.
