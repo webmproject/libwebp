@@ -201,6 +201,7 @@ ENC_OBJS = \
     src/enc/webpenc.o \
 
 EX_FORMAT_DEC_OBJS = \
+    examples/image_dec.o \
     examples/jpegdec.o \
     examples/metadata.o \
     examples/pngdec.o \
@@ -321,6 +322,7 @@ src/utils/bit_writer.o: src/utils/endian_inl.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 examples/libanim_util.a: $(ANIM_UTIL_OBJS)
+examples/libexample_dec.a: $(EX_FORMAT_DEC_OBJS)
 examples/libexample_util.a: $(EX_UTIL_OBJS)
 examples/libgifdec.a: $(GIFDEC_OBJS)
 src/libwebpdecoder.a: $(LIBWEBPDECODER_OBJS)
@@ -333,7 +335,7 @@ src/libwebpextras.a: $(LIBWEBPEXTRA_OBJS)
 	$(AR) $(ARFLAGS) $@ $^
 
 examples/anim_diff: examples/anim_diff.o $(ANIM_UTIL_OBJS) $(GIFDEC_OBJS)
-examples/cwebp: examples/cwebp.o $(EX_FORMAT_DEC_OBJS)
+examples/cwebp: examples/cwebp.o
 examples/dwebp: examples/dwebp.o
 examples/gif2webp: examples/gif2webp.o $(GIFDEC_OBJS)
 examples/vwebp: examples/vwebp.o
@@ -344,7 +346,8 @@ examples/anim_diff: src/demux/libwebpdemux.a examples/libexample_util.a
 examples/anim_diff: src/libwebp.a
 examples/anim_diff: EXTRA_LIBS += $(GIF_LIBS)
 examples/anim_diff: EXTRA_FLAGS += -DWEBP_HAVE_GIF
-examples/cwebp: examples/libexample_util.a src/libwebp.a
+examples/cwebp: examples/libexample_util.a examples/libexample_dec.a
+examples/cwebp: src/libwebp.a
 examples/cwebp: EXTRA_LIBS += $(CWEBP_LIBS)
 examples/dwebp: examples/libexample_util.a src/libwebpdecoder.a
 examples/dwebp: EXTRA_LIBS += $(DWEBP_LIBS)

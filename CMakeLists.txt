@@ -287,6 +287,28 @@ if(WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP)
   target_link_libraries(exampleutil webp ${WEBP_DEP_LIBRARIES})
 endif()
 
+if(WEBP_BUILD_CWEBP)
+  # Image-decoding utility library.
+  set(exampledec_SRCS
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/image_dec.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/image_dec.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/jpegdec.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/jpegdec.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/metadata.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/metadata.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/pngdec.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/pngdec.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/tiffdec.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/tiffdec.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/webpdec.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/webpdec.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/wicdec.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/wicdec.h)
+  add_library(exampledec ${exampledec_SRCS})
+  target_link_libraries(exampledec webp ${WEBP_DEP_LIBRARIES}
+    ${WEBP_DEP_IMG_LIBRARIES})
+endif()
+
 if(WEBP_BUILD_DWEBP)
   # dwebp
   include_directories(${WEBP_DEP_IMG_INCLUDE_DIRS})
@@ -304,20 +326,8 @@ if(WEBP_BUILD_CWEBP)
   include_directories(${WEBP_DEP_IMG_INCLUDE_DIRS})
   add_executable(cwebp
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/cwebp.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/examples/metadata.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/examples/metadata.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/examples/stopwatch.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/examples/jpegdec.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/examples/jpegdec.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/examples/pngdec.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/examples/pngdec.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/examples/tiffdec.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/examples/tiffdec.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/examples/webpdec.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/examples/webpdec.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/examples/wicdec.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/examples/wicdec.h)
-  target_link_libraries(cwebp webp exampleutil ${WEBP_DEP_LIBRARIES}
-    ${WEBP_DEP_IMG_LIBRARIES}
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/stopwatch.h)
+  target_link_libraries(cwebp exampledec webp exampleutil
+    ${WEBP_DEP_LIBRARIES} ${WEBP_DEP_IMG_LIBRARIES}
   )
 endif()

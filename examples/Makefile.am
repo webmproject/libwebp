@@ -12,9 +12,19 @@ if BUILD_GIF2WEBP
   bin_PROGRAMS += gif2webp
 endif
 
-noinst_LTLIBRARIES = libexampleutil.la
+noinst_LTLIBRARIES = libexampleutil.la libexampledec.la
 
 libexampleutil_la_SOURCES = example_util.c example_util.h stopwatch.h
+
+libexampledec_la_SOURCES  = image_dec.c image_dec.h
+libexampledec_la_SOURCES += jpegdec.c jpegdec.h
+libexampledec_la_SOURCES += metadata.c metadata.h
+libexampledec_la_SOURCES += pngdec.c pngdec.h
+libexampledec_la_SOURCES += tiffdec.c tiffdec.h
+libexampledec_la_SOURCES += webpdec.c webpdec.h
+libexampledec_la_SOURCES += wicdec.c wicdec.h
+libexampledec_la_CPPFLAGS = $(JPEG_INCLUDES) $(PNG_INCLUDES) $(TIFF_INCLUDES)
+libexampledec_la_CPPFLAGS += $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
 
 if BUILD_ANIMDIFF
   noinst_PROGRAMS = anim_diff
@@ -31,15 +41,9 @@ dwebp_CPPFLAGS  = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
 dwebp_CPPFLAGS += $(JPEG_INCLUDES) $(PNG_INCLUDES)
 dwebp_LDADD = libexampleutil.la $(PNG_LIBS) $(JPEG_LIBS)
 
-cwebp_SOURCES  = cwebp.c metadata.c metadata.h stopwatch.h
-cwebp_SOURCES += jpegdec.c jpegdec.h
-cwebp_SOURCES += pngdec.c pngdec.h
-cwebp_SOURCES += tiffdec.c tiffdec.h
-cwebp_SOURCES += webpdec.c webpdec.h
-cwebp_SOURCES += wicdec.c wicdec.h
+cwebp_SOURCES  = cwebp.c stopwatch.h
 cwebp_CPPFLAGS  = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
-cwebp_CPPFLAGS += $(JPEG_INCLUDES) $(PNG_INCLUDES) $(TIFF_INCLUDES)
-cwebp_LDADD  = libexampleutil.la ../src/libwebp.la
+cwebp_LDADD  = libexampleutil.la libexampledec.la ../src/libwebp.la
 cwebp_LDADD += $(JPEG_LIBS) $(PNG_LIBS) $(TIFF_LIBS)
 
 gif2webp_SOURCES = gif2webp.c gifdec.c gifdec.h
