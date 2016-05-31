@@ -244,6 +244,7 @@ EX_ANIM_UTIL_OBJS = \
     $(DIROBJ)\examples\anim_util.obj \
 
 EX_FORMAT_DEC_OBJS = \
+    $(DIROBJ)\examples\image_dec.obj \
     $(DIROBJ)\examples\jpegdec.obj \
     $(DIROBJ)\examples\metadata.obj \
     $(DIROBJ)\examples\pngdec.obj \
