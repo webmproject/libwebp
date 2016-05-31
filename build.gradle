@@ -241,10 +241,31 @@ model {
       }
     }
 
+    example_dec(NativeLibrarySpec) {
+      binaries {
+        all {
+          lib library: "webp", linkage: "static"
+        }
+      }
+      sources {
+        c {
+          source {
+            srcDir "./examples"
+            include "image_dec.c"
+            include "jpegdec.c"
+            include "metadata.c"
+            include "pngdec.c"
+            include "tiffdec.c"
+            include "webpdec.c"
+          }
+        }
+      }
+    }
     cwebp(NativeExecutableSpec) {
       binaries {
         all {
           lib library: "example_util", linkage: "static"
+          lib library: "example_dec", linkage: "static"
           lib library: "webp", linkage: "static"
         }
       }
@@ -253,11 +274,6 @@ model {
           source {
             srcDir "./examples"
             include "cwebp.c"
-            include "jpegdec.c"
-            include "metadata.c"
-            include "pngdec.c"
-            include "tiffdec.c"
-            include "webpdec.c"
           }
         }
       }

@@ -50,7 +50,7 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
     } else {
       output_buffer->colorspace = has_alpha ? MODE_YUVA : MODE_YUV;
     }
-
+  
     status = ExUtilDecodeWebP(data, data_size, 0, &config);
     if (status == VP8_STATUS_OK) {
       pic->width = output_buffer->width;
