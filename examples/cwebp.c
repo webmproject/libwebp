@@ -23,14 +23,9 @@
 #include "webp/encode.h"
 
 #include "./example_util.h"
-#include "./metadata.h"
 #include "./stopwatch.h"
 
-#include "./jpegdec.h"
-#include "./pngdec.h"
-#include "./tiffdec.h"
-#include "./webpdec.h"
-#include "./wicdec.h"
+#include "./image_dec.h"
 
 #ifndef WEBP_DLL
 #ifdef __cplusplus
@@ -102,34 +97,6 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
 
 #else  // !HAVE_WINCODEC_H
 
-typedef enum {
-  PNG_ = 0,
-  JPEG_,
-  TIFF_,  // 'TIFF' clashes with libtiff
-  WEBP_,
-  UNSUPPORTED
-} InputFileFormat;
-
-static uint32_t GetBE32(const uint8_t buf[]) {
-  return ((uint32_t)buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
-}
-
-static InputFileFormat GuessImageType(const uint8_t buf[12]) {
-  InputFileFormat format = UNSUPPORTED;
-  const uint32_t magic1 = GetBE32(buf + 0);
-  const uint32_t magic2 = GetBE32(buf + 8);
-  if (magic1 == 0x89504E47U) {
-    format = PNG_;
-  } else if (magic1 >= 0xFFD8FF00U && magic1 <= 0xFFD8FFFFU) {
-    format = JPEG_;
-  } else if (magic1 == 0x49492A00 || magic1 == 0x4D4D002A) {
-    format = TIFF_;
-  } else if (magic1 == 0x52494646 && magic2 == 0x57454250) {
-    format = WEBP_;
-  }
-  return format;
-}
-
 static int ReadPicture(const char* const filename, WebPPicture* const pic,
                        int keep_alpha, Metadata* const metadata) {
   const uint8_t* data = NULL;
@@ -142,14 +109,14 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
   if (pic->width == 0 || pic->height == 0) {
     ok = 0;
     if (data_size >= 12) {
-      const InputFileFormat format = GuessImageType(data);
-      if (format == PNG_) {
+      const WebPInputFileFormat format = WebPGuessImageType(data);
+      if (format == WEBP_PNG_) {
         ok = ReadPNG(data, data_size, pic, keep_alpha, metadata);
-      } else if (format == JPEG_) {
+      } else if (format == WEBP_JPEG_) {
         ok = ReadJPEG(data, data_size, pic, metadata);
-      } else if (format == TIFF_) {
+      } else if (format == WEBP_TIFF_) {
         ok = ReadTIFF(data, data_size, pic, keep_alpha, metadata);
-      } else if (format == WEBP_) {
+      } else if (format == WEBP_WEBP_) {
         ok = ReadWebP(data, data_size, pic, keep_alpha, metadata);
       }
     }
