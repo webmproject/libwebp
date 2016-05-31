@@ -250,6 +250,7 @@ EX_FORMAT_DEC_OBJS = \
     $(DIROBJ)\examples\tiffdec.obj \
     $(DIROBJ)\examples\webpdec.obj \
     $(DIROBJ)\examples\wicdec.obj \
+    $(DIROBJ)\examples\image_dec.obj \
 
 EX_GIF_DEC_OBJS = \
     $(DIROBJ)\examples\gifdec.obj \
