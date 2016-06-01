@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9936a1dd_5b228fa3",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-06-01T19:03:05Z",
+      "side": 1,
+      "message": "ideally only reader !\u003d NULL would be necessary (which is true now). that would make the check a little simpler for a user to grok",
+      "revId": "04eab929f77b4088e703c7f3dbbce01ed808e239",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9936a1dd_5bff2f0c",
+        "filename": "examples/image_dec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-06-01T19:03:05Z",
+      "side": 1,
+      "message": "could join this and the line above",
+      "revId": "04eab929f77b4088e703c7f3dbbce01ed808e239",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9936a1dd_1b09a71e",
+        "filename": "examples/image_dec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-06-01T19:03:05Z",
+      "side": 1,
+      "message": "...returns a...",
+      "revId": "04eab929f77b4088e703c7f3dbbce01ed808e239",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
