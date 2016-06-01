@@ -90,10 +90,10 @@ int WebPPictureAllocARGB(WebPPicture* const picture, int width, int height) {
 int WebPPictureAllocYUVA(WebPPicture* const picture, int width, int height) {
   const WebPEncCSP uv_csp = picture->colorspace & WEBP_CSP_UV_MASK;
   const int has_alpha = picture->colorspace & WEBP_CSP_ALPHA_BIT;
-  const int y_stride = width;
+  const int y_stride = WEBP_ALIGN(width);
   const int uv_width = (width + 1) >> 1;
   const int uv_height = (height + 1) >> 1;
-  const int uv_stride = uv_width;
+  const int uv_stride = WEBP_ALIGN(uv_width);
   int a_width, a_stride;
   uint64_t y_size, uv_size, a_size, total_size;
   uint8_t* mem;
@@ -109,10 +109,10 @@ int WebPPictureAllocYUVA(WebPPicture* const picture, int width, int height) {
 
   // alpha
   a_width = has_alpha ? width : 0;
-  a_stride = a_width;
-  y_size = (uint64_t)y_stride * height;
+  a_stride = WEBP_ALIGN(a_width);
+  y_size = (uint64_t)y_stride * height + WEBP_ALIGN_CST;
   uv_size = (uint64_t)uv_stride * uv_height;
-  a_size =  (uint64_t)a_stride * height;
+  a_size = has_alpha ? (uint64_t)a_stride * height : 0;
 
   total_size = y_size + a_size + 2 * uv_size;
 
@@ -134,6 +134,7 @@ int WebPPictureAllocYUVA(WebPPicture* const picture, int width, int height) {
   picture->a_stride  = a_stride;
 
   // TODO(skal): we could align the y/u/v planes and adjust stride.
+  mem = (uint8_t*)WEBP_ALIGN(mem);
   picture->y = mem;
   mem += y_size;
 
@@ -143,10 +144,11 @@ int WebPPictureAllocYUVA(WebPPicture* const picture, int width, int height) {
   mem += uv_size;
 
   if (a_size > 0) {
-    picture->a = mem;
+    picture->a = (uint8_t*)WEBP_ALIGN(mem);
     mem += a_size;
   }
   (void)mem;  // makes the static analyzer happy
+  assert(mem <= picture->memory_ + total_size);
   return 1;
 }
 
