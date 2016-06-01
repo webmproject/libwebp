@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d9a1f95f_3c00f15a",
+        "filename": "build.gradle",
+        "patchSetId": 6
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-01T04:05:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "19c63131_4eec3336",
+      "revId": "6a72d079e39cfcc89d156950bab27a8fb896aa31",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19c63131_0ecf0bc6",
         "filename": "examples/Makefile.am",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2016-05-31T23:11:38Z",
       "side": 1,
       "message": "these can probably be dropped now",
+      "revId": "6a72d079e39cfcc89d156950bab27a8fb896aa31",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9a1f95f_dcf46d97",
+        "filename": "examples/Makefile.am",
+        "patchSetId": 6
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-01T04:05:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "19c63131_0ecf0bc6",
       "revId": "6a72d079e39cfcc89d156950bab27a8fb896aa31",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "d9a1f95f_fcf129a4",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-01T04:05:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "19c63131_eec5dfa2",
+      "revId": "6a72d079e39cfcc89d156950bab27a8fb896aa31",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19c63131_6e37af9d",
         "filename": "examples/cwebp.c",
         "patchSetId": 6
@@ -64,6 +118,24 @@
       "writtenOn": "2016-05-31T23:11:38Z",
       "side": 1,
       "message": "trailing \u0027_\u0027 can go now I guess. it was only \u0027TIFF\u0027 causing the issue",
+      "revId": "6a72d079e39cfcc89d156950bab27a8fb896aa31",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9a1f95f_9ceee5bf",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-01T04:05:04Z",
+      "side": 1,
+      "message": "replaced with _FORMAT\n\nI was afraid about WEBP_PNG/WEBP_JPEG/etc. being too short and generic, with potential name clashes.",
+      "parentUuid": "19c63131_6e37af9d",
       "revId": "6a72d079e39cfcc89d156950bab27a8fb896aa31",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "d9a1f95f_bceba1ae",
+        "filename": "examples/image_dec.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-01T04:05:04Z",
+      "side": 1,
+      "message": "-\u003e went the generic way and used *data/data_size, with checks",
+      "parentUuid": "19c63131_2e5a07e6",
+      "revId": "6a72d079e39cfcc89d156950bab27a8fb896aa31",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19c63131_ee6b9f6f",
         "filename": "makefile.unix",
         "patchSetId": 6
@@ -98,6 +188,24 @@
       "writtenOn": "2016-05-31T23:11:38Z",
       "side": 1,
       "message": "long line",
+      "revId": "6a72d079e39cfcc89d156950bab27a8fb896aa31",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9a1f95f_5c2e1de8",
+        "filename": "makefile.unix",
+        "patchSetId": 6
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-01T04:05:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "19c63131_ee6b9f6f",
       "revId": "6a72d079e39cfcc89d156950bab27a8fb896aa31",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
