@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "19539128_2670d6c9",
+        "filename": "README",
+        "patchSetId": 2
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-01T12:56:28Z",
+      "side": 1,
+      "message": "Will mention URL\u0027s of both stable release and early release(beta). Mostly URL\u0027s will not change but only contents will be updated.",
+      "parentUuid": "d9a1f95f_1c389528",
+      "range": {
+        "startLine": 90,
+        "startChar": 25,
+        "endLine": 90,
+        "endChar": 28
+      },
+      "revId": "b77f91419511931aa6e50872f3f7a74d25b36b88",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19c63131_d76436d5",
         "filename": "README",
         "patchSetId": 2
@@ -36,6 +60,24 @@
       "writtenOn": "2016-06-01T03:12:41Z",
       "side": 1,
       "message": "--host\u003d${HOST} --build `config.guess`\n\nshould be enough. ideally CFLAGS and LDFLAGS would be given as parameters to embed them in config.log\n\n$ ./configure --host\u003d${HOST} --build\u003d`config.guess` \\\n  CFLAGS\u003d\"$mips_cflags\" \\\n  LDFLAGS\u003d\"$mips_ldflags\"",
+      "revId": "b77f91419511931aa6e50872f3f7a74d25b36b88",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d933b9f3_ec83cbbd",
+        "filename": "README",
+        "patchSetId": 2
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-01T12:56:28Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "19c63131_d76436d5",
       "revId": "b77f91419511931aa6e50872f3f7a74d25b36b88",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "d9a1f95f_fca92931",
+        "filename": "src/dsp/cpu.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-01T12:56:28Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "19c63131_f76132c2",
+      "revId": "b77f91419511931aa6e50872f3f7a74d25b36b88",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d9a1f95f_3c3d5119",
         "filename": "src/dsp/dsp.h",
         "patchSetId": 2
@@ -70,6 +130,30 @@
       "writtenOn": "2016-06-01T04:16:12Z",
       "side": 1,
       "message": "\u0027MSA\u0027 might be a tad short. What about \"kMIPSmsa\" ? (or similar)",
+      "range": {
+        "startLine": 142,
+        "startChar": 2,
+        "endLine": 142,
+        "endChar": 6
+      },
+      "revId": "b77f91419511931aa6e50872f3f7a74d25b36b88",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9a1f95f_dc622df7",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-01T12:56:28Z",
+      "side": 1,
+      "message": "Here MSA stands for MIPS SIMD Architecture. Hence mipsMSA would have duplication of word \u0027mips\u0027. \nThough MSA sounds short, I am sure going forward it would be popular word in developers community like NEON and AVX.",
+      "parentUuid": "d9a1f95f_3c3d5119",
       "range": {
         "startLine": 142,
         "startChar": 2,
