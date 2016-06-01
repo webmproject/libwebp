@@ -122,7 +122,6 @@ static int EncodeAlphaInternal(const uint8_t* const data, int width, int height,
   assert(method >= ALPHA_NO_COMPRESSION);
   assert(method <= ALPHA_LOSSLESS_COMPRESSION);
   assert(sizeof(header) == ALPHA_HEADER_LEN);
-  // TODO(skal): have a common function and #define's to validate alpha params.
 
   filter_func = WebPFilters[filter];
   if (filter_func != NULL) {

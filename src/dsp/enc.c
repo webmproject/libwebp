@@ -69,7 +69,7 @@ static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
 
     // Convert coefficients to bin.
     for (k = 0; k < 16; ++k) {
-      const int v = abs(out[k]) >> 3;  // TODO(skal): add rounding?
+      const int v = abs(out[k]) >> 3;
       const int clipped_value = clip_max(v, MAX_COEFF_THRESH);
       ++distribution[clipped_value];
     }
