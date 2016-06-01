@@ -105,19 +105,8 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
   if (!ok) goto End;
 
   if (pic->width == 0 || pic->height == 0) {
-    ok = 0;
-    if (data_size >= 12) {
-      const WebPInputFileFormat format = WebPGuessImageType(data, data_size);
-      if (format == WEBP_PNG_FORMAT) {
-        ok = ReadPNG(data, data_size, pic, keep_alpha, metadata);
-      } else if (format == WEBP_JPEG_FORMAT) {
-        ok = ReadJPEG(data, data_size, pic, metadata);
-      } else if (format == WEBP_TIFF_FORMAT) {
-        ok = ReadTIFF(data, data_size, pic, keep_alpha, metadata);
-      } else if (format == WEBP_WEBP_FORMAT) {
-        ok = ReadWebP(data, data_size, pic, keep_alpha, metadata);
-      }
-    }
+    WebPImageReader reader = WebPGuessImageReader(data, data_size);
+    ok = (reader != NULL) && reader(data, data_size, pic, keep_alpha, metadata);
   } else {
     // If image size is specified, infer it as YUV format.
     ok = ReadYUV(data, data_size, pic);
