@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "19c63131_d76436d5",
+        "filename": "README",
+        "patchSetId": 2
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-06-01T03:12:41Z",
+      "side": 1,
+      "message": "--host\u003d${HOST} --build `config.guess`\n\nshould be enough. ideally CFLAGS and LDFLAGS would be given as parameters to embed them in config.log\n\n$ ./configure --host\u003d${HOST} --build\u003d`config.guess` \\\n  CFLAGS\u003d\"$mips_cflags\" \\\n  LDFLAGS\u003d\"$mips_ldflags\"",
+      "revId": "b77f91419511931aa6e50872f3f7a74d25b36b88",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19c63131_f76132c2",
+        "filename": "src/dsp/cpu.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-06-01T03:12:41Z",
+      "side": 1,
+      "message": "break this line",
+      "revId": "b77f91419511931aa6e50872f3f7a74d25b36b88",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
