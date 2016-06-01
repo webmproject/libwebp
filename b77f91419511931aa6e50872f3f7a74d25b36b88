@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "d9a1f95f_1c389528",
+        "filename": "README",
+        "patchSetId": 2
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-01T04:16:12Z",
+      "side": 1,
+      "message": "what is the expected lifetime of this URL?\nIt sounds likely to move (\"early-access...\"), which means we\u0027d have to update README if it does...",
+      "range": {
+        "startLine": 90,
+        "startChar": 25,
+        "endLine": 90,
+        "endChar": 28
+      },
+      "revId": "b77f91419511931aa6e50872f3f7a74d25b36b88",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19c63131_d76436d5",
         "filename": "README",
         "patchSetId": 2
@@ -30,6 +53,29 @@
       "writtenOn": "2016-06-01T03:12:41Z",
       "side": 1,
       "message": "break this line",
+      "revId": "b77f91419511931aa6e50872f3f7a74d25b36b88",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9a1f95f_3c3d5119",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-01T04:16:12Z",
+      "side": 1,
+      "message": "\u0027MSA\u0027 might be a tad short. What about \"kMIPSmsa\" ? (or similar)",
+      "range": {
+        "startLine": 142,
+        "startChar": 2,
+        "endLine": 142,
+        "endChar": 6
+      },
       "revId": "b77f91419511931aa6e50872f3f7a74d25b36b88",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
