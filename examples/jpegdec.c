@@ -255,7 +255,8 @@ static void ContextSetup(volatile struct jpeg_decompress_struct* const cinfo,
 }
 
 int ReadJPEG(const uint8_t* const data, size_t data_size,
-             WebPPicture* const pic, Metadata* const metadata) {
+             WebPPicture* const pic, int keep_alpha,
+             Metadata* const metadata) {
   volatile int ok = 0;
   int stride, width, height;
   volatile struct jpeg_decompress_struct dinfo;
@@ -264,6 +265,7 @@ int ReadJPEG(const uint8_t* const data, size_t data_size,
   JSAMPROW buffer[1];
   JPEGReadContext ctx;
 
+  (void)keep_alpha;
   memset(&ctx, 0, sizeof(ctx));
   ctx.data = data;
   ctx.data_size = data_size;
