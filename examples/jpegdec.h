@@ -25,8 +25,11 @@ struct WebPPicture;
 // Reads a JPEG from 'data', returning the decoded output in 'pic'.
 // The output is RGB or YUV depending on pic->use_argb value.
 // Returns true on success.
+// 'keep_alpha' has no effect, but is kept for coherence with other signatures
+// for image readers.
 int ReadJPEG(const uint8_t* const data, size_t data_size,
-             struct WebPPicture* const pic, struct Metadata* const metadata);
+             struct WebPPicture* const pic, int keep_alpha,
+             struct Metadata* const metadata);
 
 #ifdef __cplusplus
 }    // extern "C"

@@ -44,6 +44,16 @@ typedef enum {
 WebPInputFileFormat WebPGuessImageType(const uint8_t* const data,
                                        size_t data_size);
 
+// Signature for common image-reading functions (ReadPNG, ReadJPEG, ...)
+typedef int (*WebPImageReader)(const uint8_t* const data, size_t data_size,
+                               struct WebPPicture* const pic,
+                               int keep_alpha, struct Metadata* const metadata);
+
+// This function is similar to WebPGuessImageType(), but returns a
+// suitable reader function. Or NULL if the image can't be guessed.
+WebPImageReader WebPGuessImageReader(const uint8_t* const data,
+                                     size_t data_size);
+
 #ifdef __cplusplus
 }    // extern "C"
 #endif
