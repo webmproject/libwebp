@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46dfe6f2_4f650d0b",
+        "filename": "README",
+        "patchSetId": 4
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-06-03T07:00:40Z",
+      "side": 1,
+      "message": "these don\u0027t need an export given their use; they\u0027re simply shell variables at this point",
+      "revId": "20efe5bc1c0a6b701d83ef85f5e21fa1ce14a480",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
