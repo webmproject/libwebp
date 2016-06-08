@@ -1021,10 +1021,13 @@ static WebPEncodingError ApplyPredictFilter(const VP8LEncoder* const enc,
   const int pred_bits = enc->transform_bits_;
   const int transform_width = VP8LSubSampleSize(width, pred_bits);
   const int transform_height = VP8LSubSampleSize(height, pred_bits);
+  // we disable near-lossless quantization if palette is used.
+  const int near_lossless_strength = enc->use_palette_ ? 100
+                                   : enc->config_->near_lossless;
 
   VP8LResidualImage(width, height, pred_bits, low_effort, enc->argb_,
                     enc->argb_scratch_, enc->transform_data_,
-                    enc->config_->near_lossless, enc->config_->exact,
+                    near_lossless_strength, enc->config_->exact,
                     used_subtract_green);
   VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
   VP8LPutBits(bw, PREDICTOR_TRANSFORM, 2);
