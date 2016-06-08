@@ -39,8 +39,8 @@
 //   This can be used to emulate environment with very limited memory.
 //   Example: export MALLOC_LIMIT=64000000 && ./examples/dwebp picture.webp
 
-// #define PRINT_MEM_INFO
-// #define PRINT_MEM_TRAFFIC
+ #define PRINT_MEM_INFO
+ #define PRINT_MEM_TRAFFIC
 // #define MALLOC_FAIL_AT
 // #define MALLOC_LIMIT
 
