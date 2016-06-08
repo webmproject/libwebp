@@ -619,6 +619,8 @@ typedef struct {
   double cost_cache_[MAX_LENGTH];  // Contains the GetLengthCost(cost_model, k).
   float* costs_;
   uint16_t* dist_array_;
+  CostInterval spare_;    // most of the time, we only will be using a single
+  int spare_used_;        // interval. => We re-use this one first if possible.
 } CostManager;
 
 static int IsCostCacheIntervalWritable(int start, int end) {
@@ -642,7 +644,11 @@ static void CostManagerClear(CostManager* const manager) {
     CostInterval* interval = manager->head_;
     while (interval != NULL) {
       CostInterval* const next = interval->next_;
-      WebPSafeFree(interval);
+      if (manager->spare_used_ && interval == &manager->spare_) {
+        manager->spare_used_ = 0;
+      } else {
+        WebPSafeFree(interval);
+      }
       interval = next;
     }
   }
@@ -663,6 +669,7 @@ static int CostManagerInit(CostManager* const manager,
   manager->head_ = NULL;
   manager->count_ = 0;
   manager->dist_array_ = dist_array;
+  manager->spare_used_ = 0;
 
   // Fill in the cost_cache_.
   manager->cache_intervals_size_ = 1;
@@ -793,8 +800,11 @@ static WEBP_INLINE void PopInterval(CostManager* const manager,
   if (interval == NULL) return;
 
   ConnectIntervals(manager, interval->previous_, next);
-
-  WebPSafeFree(interval);
+  if (interval == &manager->spare_) {
+    manager->spare_used_ = 0;
+  } else {
+    WebPSafeFree(interval);
+  }
   --manager->count_;
   assert(manager->count_ >= 0);
 }
@@ -857,12 +867,16 @@ static WEBP_INLINE void InsertInterval(CostManager* const manager,
     UpdateCostPerInterval(manager, start, end, index, distance_cost);
     return;
   }
-
-  interval_new = (CostInterval*)WebPSafeMalloc(1, sizeof(*interval_new));
-  if (interval_new == NULL) {
-    // Write down the interval if we cannot create it.
-    UpdateCostPerInterval(manager, start, end, index, distance_cost);
-    return;
+  if (!manager->spare_used_) {
+    interval_new = &manager->spare_;
+    manager->spare_used_ = 1;
+  } else {
+    interval_new = (CostInterval*)WebPSafeMalloc(1, sizeof(*interval_new));
+    if (interval_new == NULL) {
+      // Write down the interval if we cannot create it.
+      UpdateCostPerInterval(manager, start, end, index, distance_cost);
+      return;
+    }
   }
 
   interval_new->distance_cost_ = distance_cost;
