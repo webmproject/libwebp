@@ -761,7 +761,7 @@ static WebPEncodingError EncodeImageNoHuffman(VP8LBitWriter* const bw,
   }
 
   // Calculate backward references from ARGB image.
-  if (VP8LHashChainFill(hash_chain, argb, width, height) == 0) {
+  if (VP8LHashChainFill(hash_chain, quality, argb, width, height) == 0) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
@@ -865,7 +865,7 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   // 'best_refs' is the reference to the best backward refs and points to one
   // of refs_array[0] or refs_array[1].
   // Calculate backward references from ARGB image.
-  if (VP8LHashChainFill(hash_chain, argb, width, height) == 0) {
+  if (VP8LHashChainFill(hash_chain, quality, argb, width, height) == 0) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
