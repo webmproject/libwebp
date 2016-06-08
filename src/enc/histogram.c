@@ -386,29 +386,27 @@ static void UpdateHistogramCost(VP8LHistogram* const h) {
 }
 
 static int GetBinIdForEntropy(double min, double max, double val) {
-  const double range = max - min + 1e-6;
-  const double delta = val - min;
-  return (int)(NUM_PARTITIONS * delta / range);
+  const double range = max - min;
+  if (range > 0.) {
+    const double delta = val - min;
+    return (int)((NUM_PARTITIONS - 1e-6) * delta / range);
+  } else {
+    return 0;
+  }
 }
 
-static int GetHistoBinIndexLowEffort(
-    const VP8LHistogram* const h, const DominantCostRange* const c) {
-  const int bin_id = GetBinIdForEntropy(c->literal_min_, c->literal_max_,
-                                        h->literal_cost_);
+static int GetHistoBinIndex(const VP8LHistogram* const h,
+                            const DominantCostRange* const c, int low_effort) {
+  int bin_id = GetBinIdForEntropy(c->literal_min_, c->literal_max_,
+                                  h->literal_cost_);
   assert(bin_id < NUM_PARTITIONS);
-  return bin_id;
-}
-
-static int GetHistoBinIndex(
-    const VP8LHistogram* const h, const DominantCostRange* const c) {
-  const int bin_id =
-      GetBinIdForEntropy(c->blue_min_, c->blue_max_, h->blue_cost_) +
-      NUM_PARTITIONS * GetBinIdForEntropy(c->red_min_, c->red_max_,
-                                          h->red_cost_) +
-      NUM_PARTITIONS * NUM_PARTITIONS * GetBinIdForEntropy(c->literal_min_,
-                                                           c->literal_max_,
-                                                           h->literal_cost_);
-  assert(bin_id < BIN_SIZE);
+  if (!low_effort) {
+    bin_id = bin_id * NUM_PARTITIONS
+           + GetBinIdForEntropy(c->red_min_, c->red_max_, h->red_cost_);
+    bin_id = bin_id * NUM_PARTITIONS
+           + GetBinIdForEntropy(c->blue_min_, c->blue_max_, h->blue_cost_);
+    assert(bin_id < BIN_SIZE);
+  }
   return bin_id;
 }
 
@@ -469,16 +467,13 @@ static void HistogramAnalyzeEntropyBin(VP8LHistogramSet* const image_histo,
   // bin-hash histograms on three of the dominant (literal, red and blue)
   // symbol costs.
   for (i = 0; i < histo_size; ++i) {
-    int num_histos;
-    VP8LHistogram* const histo = histograms[i];
-    const int16_t bin_id = low_effort ?
-        (int16_t)GetHistoBinIndexLowEffort(histo, &cost_range) :
-        (int16_t)GetHistoBinIndex(histo, &cost_range);
+    const VP8LHistogram* const histo = histograms[i];
+    const int bin_id = GetHistoBinIndex(histo, &cost_range, low_effort);
     const int bin_offset = bin_id * bin_depth;
     // bin_map[n][0] for every bin 'n' maintains the counter for the number of
     // histograms in that bin.
     // Get and increment the num_histos in that bin.
-    num_histos = ++bin_map[bin_offset];
+    const int num_histos = ++bin_map[bin_offset];
     assert(bin_offset + num_histos < bin_depth * BIN_SIZE);
     // Add histogram i'th index at num_histos (last) position in the bin_map.
     bin_map[bin_offset + num_histos] = i;
