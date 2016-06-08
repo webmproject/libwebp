@@ -611,6 +611,7 @@ typedef struct {
 // It caches the different CostCacheInterval, caches the different
 // GetLengthCost(cost_model, k) in cost_cache_ and the CostInterval's (whose
 // count_ is limited by COST_CACHE_INTERVAL_SIZE_MAX).
+#define COST_MANAGER_MAX_FREE_LIST 10
 typedef struct {
   CostInterval* head_;
   int count_;  // The number of stored intervals.
@@ -619,8 +620,9 @@ typedef struct {
   double cost_cache_[MAX_LENGTH];  // Contains the GetLengthCost(cost_model, k).
   float* costs_;
   uint16_t* dist_array_;
-  CostInterval spare_;    // most of the time, we only will be using a single
-  int spare_used_;        // interval. => We re-use this one first if possible.
+  // Most of the time, we only need few intervals -> use a free-list
+  CostInterval intervals_[COST_MANAGER_MAX_FREE_LIST];
+  CostInterval* free_intervals_;
 } CostManager;
 
 static int IsCostCacheIntervalWritable(int start, int end) {
@@ -631,6 +633,26 @@ static int IsCostCacheIntervalWritable(int start, int end) {
   // which intervals start getting much bigger).
   // This value is empirical.
   return (end - start + 1 < 100);
+}
+
+static void CostIntervalAddToFreeList(CostManager* const manager,
+                                      CostInterval* const interval) {
+  interval->next_ = manager->free_intervals_;
+  manager->free_intervals_ = interval;
+}
+
+static int CostIntervalIsInFreeList(const CostManager* const manager,
+                                    const CostInterval* const interval) {
+  return (interval >= &manager->intervals_[0] &&
+          interval <= &manager->intervals_[COST_MANAGER_MAX_FREE_LIST - 1]);
+}
+
+static void CostManagerInitFreeList(CostManager* const manager) {
+  int i;
+  manager->free_intervals_ = NULL;
+  for (i = 0; i < COST_MANAGER_MAX_FREE_LIST; ++i) {
+    CostIntervalAddToFreeList(manager, &manager->intervals_[i]);
+  }
 }
 
 static void CostManagerClear(CostManager* const manager) {
@@ -644,17 +666,16 @@ static void CostManagerClear(CostManager* const manager) {
     CostInterval* interval = manager->head_;
     while (interval != NULL) {
       CostInterval* const next = interval->next_;
-      if (manager->spare_used_ && interval == &manager->spare_) {
-        manager->spare_used_ = 0;
-      } else {
+      if (!CostIntervalIsInFreeList(manager, interval)) {
         WebPSafeFree(interval);
-      }
+      }  // else: do nothing
       interval = next;
     }
   }
 
   // Reset pointers, count_ and cache_intervals_size_.
   memset(manager, 0, sizeof(*manager));
+  CostManagerInitFreeList(manager);
 }
 
 static int CostManagerInit(CostManager* const manager,
@@ -669,7 +690,7 @@ static int CostManagerInit(CostManager* const manager,
   manager->head_ = NULL;
   manager->count_ = 0;
   manager->dist_array_ = dist_array;
-  manager->spare_used_ = 0;
+  CostManagerInitFreeList(manager);
 
   // Fill in the cost_cache_.
   manager->cache_intervals_size_ = 1;
@@ -800,8 +821,8 @@ static WEBP_INLINE void PopInterval(CostManager* const manager,
   if (interval == NULL) return;
 
   ConnectIntervals(manager, interval->previous_, next);
-  if (interval == &manager->spare_) {
-    manager->spare_used_ = 0;
+  if (CostIntervalIsInFreeList(manager, interval)) {
+    CostIntervalAddToFreeList(manager, interval);
   } else {
     WebPSafeFree(interval);
   }
@@ -867,9 +888,9 @@ static WEBP_INLINE void InsertInterval(CostManager* const manager,
     UpdateCostPerInterval(manager, start, end, index, distance_cost);
     return;
   }
-  if (!manager->spare_used_) {
-    interval_new = &manager->spare_;
-    manager->spare_used_ = 1;
+  interval_new = manager->free_intervals_;
+  if (interval_new != NULL) {
+    manager->free_intervals_ = interval_new->next_;
   } else {
     interval_new = (CostInterval*)WebPSafeMalloc(1, sizeof(*interval_new));
     if (interval_new == NULL) {
