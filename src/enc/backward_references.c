@@ -27,11 +27,19 @@
 #define MAX_ENTROPY    (1e30f)
 
 // 1M window (4M bytes) minus 120 special codes for short distances.
-#define WINDOW_SIZE ((1 << 20) - 120)
+#define WINDOW_SIZE_BITS 20
+#define WINDOW_SIZE ((1 << WINDOW_SIZE_BITS) - 120)
 
 // Bounds for the match length.
 #define MIN_LENGTH 2
-#define MAX_LENGTH 4096
+// If you change this, you need MAX_LENGTH_BITS + WINDOW_SIZE_BITS <= 32 as it
+// is used in VP8LHashChain.
+#define MAX_LENGTH_BITS 12
+// We want the max value to be attainable and stored in MAX_LENGTH_BITS bits.
+#define MAX_LENGTH ((1 << MAX_LENGTH_BITS) - 1)
+#if MAX_LENGTH_BITS + WINDOW_SIZE_BITS > 32
+#error "MAX_LENGTH_BITS + WINDOW_SIZE_BITS > 32"
+#endif
 
 // -----------------------------------------------------------------------------
 
@@ -183,10 +191,11 @@ int VP8LBackwardRefsCopy(const VP8LBackwardRefs* const src,
 
 int VP8LHashChainInit(VP8LHashChain* const p, int size) {
   assert(p->size_ == 0);
-  assert(p->chain_ == NULL);
+  assert(p->offset_length_ == NULL);
   assert(size > 0);
-  p->chain_ = (int32_t*)WebPSafeMalloc(size, sizeof(*p->chain_));
-  if (p->chain_ == NULL) return 0;
+  p->offset_length_ =
+      (uint32_t*)WebPSafeMalloc(size, sizeof(*p->offset_length_));
+  if (p->offset_length_ == NULL) return 0;
   p->size_ = size;
 
   return 1;
@@ -194,9 +203,10 @@ int VP8LHashChainInit(VP8LHashChain* const p, int size) {
 
 void VP8LHashChainClear(VP8LHashChain* const p) {
   assert(p != NULL);
-  WebPSafeFree(p->chain_);
+  WebPSafeFree(p->offset_length_);
+
   p->size_ = 0;
-  p->chain_ = NULL;
+  p->offset_length_ = NULL;
 }
 
 // -----------------------------------------------------------------------------
@@ -213,9 +223,9 @@ static WEBP_INLINE uint32_t GetPixPairHash64(const uint32_t* const argb) {
 }
 
 // Returns the maximum number of hash chain lookups to do for a
-// given compression quality. Return value in range [6, 86].
-static int GetMaxItersForQuality(int quality, int low_effort) {
-  return (low_effort ? 6 : 8) + (quality * quality) / 128;
+// given compression quality. Return value in range [8, 86].
+static int GetMaxItersForQuality(int quality) {
+  return 8 + (quality * quality) / 128;
 }
 
 static int GetWindowSizeForHashChain(int quality, int xsize) {
@@ -231,13 +241,18 @@ static WEBP_INLINE int MaxFindCopyLength(int len) {
   return (len < MAX_LENGTH) ? len : MAX_LENGTH;
 }
 
-int VP8LHashChainFill(VP8LHashChain* const p,
+int VP8LHashChainFill(VP8LHashChain* const p, int quality,
                       const uint32_t* const argb, int xsize, int ysize) {
   const int size = xsize * ysize;
+  const int iter_max = GetMaxItersForQuality(quality);
+  const uint32_t window_size = GetWindowSizeForHashChain(quality, xsize);
   int pos;
+  uint32_t base_position;
   int32_t* hash_to_first_index;
+  // Temporarily use the p->offset_length_ as a hash chain.
+  int32_t* chain = (int32_t*)p->offset_length_;
   assert(p->size_ != 0);
-  assert(p->chain_ != NULL);
+  assert(p->offset_length_ != NULL);
 
   hash_to_first_index =
       (int32_t*)WebPSafeMalloc(HASH_SIZE, sizeof(*hash_to_first_index));
@@ -248,71 +263,93 @@ int VP8LHashChainFill(VP8LHashChain* const p,
   // Fill the chain linking pixels with the same hash.
   for (pos = 0; pos < size - 1; ++pos) {
     const uint32_t hash_code = GetPixPairHash64(argb + pos);
-    p->chain_[pos] = hash_to_first_index[hash_code];
+    chain[pos] = hash_to_first_index[hash_code];
     hash_to_first_index[hash_code] = pos;
   }
   WebPSafeFree(hash_to_first_index);
 
-  return 1;
-}
+  // Find the best match interval at each pixel, defined by an offset to the
+  // pixel and a length. The right-most pixel cannot match anything to the right
+  // (hence a best length of 0) and the left-most pixel nothing to the left
+  // (hence an offset of 0).
+  p->offset_length_[0] = p->offset_length_[size - 1] = 0;
+  for (base_position = size - 2 < 0 ? 0 : size - 2; base_position > 0;) {
+    const int max_len = MaxFindCopyLength(size - 1 - base_position);
+    const uint32_t* const argb_start = argb + base_position;
+    int iter = iter_max;
+    int best_length = 0;
+    uint32_t best_distance = 0;
+    const int min_pos =
+        (base_position > window_size) ? base_position - window_size : 0;
+    const int length_max = (max_len < 256) ? max_len : 256;
+    uint32_t max_base_position;
 
-static void HashChainFindOffset(const VP8LHashChain* const p, int base_position,
-                                const uint32_t* const argb, int len,
-                                int window_size, int* const distance_ptr) {
-  const uint32_t* const argb_start = argb + base_position;
-  const int min_pos =
-      (base_position > window_size) ? base_position - window_size : 0;
-  int pos;
-  assert(len <= MAX_LENGTH);
-  for (pos = p->chain_[base_position];
-       pos >= min_pos;
-       pos = p->chain_[pos]) {
-    const int curr_length =
-        FindMatchLength(argb + pos, argb_start, len - 1, len);
-    if (curr_length == len) break;
-  }
-  *distance_ptr = base_position - pos;
-}
-
-static int HashChainFindCopy(const VP8LHashChain* const p,
-                             int base_position,
-                             const uint32_t* const argb, int max_len,
-                             int window_size, int iter_max,
-                             int* const distance_ptr,
-                             int* const length_ptr) {
-  const uint32_t* const argb_start = argb + base_position;
-  int iter = iter_max;
-  int best_length = 0;
-  int best_distance = 0;
-  const int min_pos =
-      (base_position > window_size) ? base_position - window_size : 0;
-  int pos;
-  int length_max = 256;
-  if (max_len < length_max) {
-    length_max = max_len;
-  }
-  for (pos = p->chain_[base_position];
-       pos >= min_pos;
-       pos = p->chain_[pos]) {
-    int curr_length;
-    int distance;
-    if (--iter < 0) {
-      break;
-    }
-
-    curr_length = FindMatchLength(argb + pos, argb_start, best_length, max_len);
-    if (best_length < curr_length) {
-      distance = base_position - pos;
-      best_length = curr_length;
-      best_distance = distance;
-      if (curr_length >= length_max) {
+    for (pos = chain[base_position]; pos >= min_pos; pos = chain[pos]) {
+      int curr_length;
+      if (--iter < 0) {
         break;
+      }
+      assert(base_position > (uint32_t)pos);
+
+      curr_length =
+          FindMatchLength(argb + pos, argb_start, best_length, max_len);
+      if (best_length < curr_length) {
+        best_length = curr_length;
+        best_distance = base_position - pos;
+        if (curr_length >= length_max) {
+          break;
+        }
+      }
+    }
+    // We have the best match but in case the two intervals continue matching
+    // to the left, we have the best matches for the left-extended pixels.
+    max_base_position = base_position;
+    while (1) {
+      assert(best_length <= MAX_LENGTH);
+      assert(best_distance <= WINDOW_SIZE);
+      p->offset_length_[base_position] =
+          (best_distance << MAX_LENGTH_BITS) | (uint32_t)best_length;
+      --base_position;
+      // Stop if we don't have a match or if we are out of bounds.
+      if (best_distance == 0 || base_position == 0) break;
+      // Stop if we cannot extend the matching intervals to the left.
+      if (base_position < best_distance ||
+          argb[base_position - best_distance] != argb[base_position]) {
+        break;
+      }
+      // Stop if we are matching at its limit because there could be a closer
+      // matching interval with the same maximum length. Then again, if the
+      // matching interval is as close as possible (best_distance == 1), we will
+      // never find anything better so let's continue.
+      if (best_length == MAX_LENGTH && best_distance != 1 &&
+          base_position + MAX_LENGTH < max_base_position) {
+        break;
+      }
+      if (best_length < MAX_LENGTH) {
+        ++best_length;
+        max_base_position = base_position;
       }
     }
   }
-  *distance_ptr = best_distance;
-  *length_ptr = best_length;
-  return (best_length >= MIN_LENGTH);
+  return 1;
+}
+
+static WEBP_INLINE int HashChainFindOffset(const VP8LHashChain* const p,
+                                           const int base_position) {
+  return p->offset_length_[base_position] >> MAX_LENGTH_BITS;
+}
+
+static WEBP_INLINE int HashChainFindLength(const VP8LHashChain* const p,
+                                           const int base_position) {
+  return p->offset_length_[base_position] & ((1U << MAX_LENGTH_BITS) - 1);
+}
+
+static WEBP_INLINE void HashChainFindCopy(const VP8LHashChain* const p,
+                                          int base_position,
+                                          int* const offset_ptr,
+                                          int* const length_ptr) {
+  *offset_ptr = HashChainFindOffset(p, base_position);
+  *length_ptr = HashChainFindLength(p, base_position);
 }
 
 static WEBP_INLINE void AddSingleLiteral(uint32_t pixel, int use_color_cache,
@@ -379,70 +416,63 @@ static int BackwardReferencesRle(int xsize, int ysize,
 
 static int BackwardReferencesLz77(int xsize, int ysize,
                                   const uint32_t* const argb, int cache_bits,
-                                  int quality, int low_effort,
                                   const VP8LHashChain* const hash_chain,
                                   VP8LBackwardRefs* const refs) {
   int i;
+  int i_last_check = -1;
   int ok = 0;
   int cc_init = 0;
   const int use_color_cache = (cache_bits > 0);
   const int pix_count = xsize * ysize;
   VP8LColorCache hashers;
-  int iter_max = GetMaxItersForQuality(quality, low_effort);
-  const int window_size = GetWindowSizeForHashChain(quality, xsize);
-  int min_matches = 32;
 
   if (use_color_cache) {
     cc_init = VP8LColorCacheInit(&hashers, cache_bits);
     if (!cc_init) goto Error;
   }
   ClearBackwardRefs(refs);
-  for (i = 0; i < pix_count - 2; ) {
+  for (i = 0; i < pix_count;) {
     // Alternative#1: Code the pixels starting at 'i' using backward reference.
     int offset = 0;
     int len = 0;
-    const int max_len = MaxFindCopyLength(pix_count - i);
-    HashChainFindCopy(hash_chain, i, argb, max_len, window_size,
-                      iter_max, &offset, &len);
-    if (len > MIN_LENGTH || (len == MIN_LENGTH && offset <= 512)) {
-      int offset2 = 0;
-      int len2 = 0;
-      int k;
-      min_matches = 8;
-      if ((len < (max_len >> 2)) && !low_effort) {
-        // Evaluate Alternative#2: Insert the pixel at 'i' as literal, and code
-        // the pixels starting at 'i + 1' using backward reference.
-        HashChainFindCopy(hash_chain, i + 1, argb, max_len - 1,
-                          window_size, iter_max, &offset2,
-                          &len2);
-        if (len2 > len + 1) {
-          AddSingleLiteral(argb[i], use_color_cache, &hashers, refs);
-          i++;  // Backward reference to be done for next pixel.
-          len = len2;
-          offset = offset2;
+    int j;
+    HashChainFindCopy(hash_chain, i, &offset, &len);
+    // MIN_LENGTH+1 is empirically better than MIN_LENGTH.
+    if (len > MIN_LENGTH + 1) {
+      const int len_ini = len;
+      int max_reach = 0;
+      assert(i + len < pix_count);
+      // Only start from what we have not checked already.
+      i_last_check = (i > i_last_check) ? i : i_last_check;
+      // We know the best match for the current pixel but we try to find the
+      // best matches for the current pixel AND the next one combined.
+      // The naive method would use the intervals:
+      // [i,i+len) + [i+len, length of best match at i+len)
+      // while we check if we can use:
+      // [i,j) (where j<=i+len) + [j, length of best match at j)
+      for (j = i_last_check + 1; j <= i + len_ini; ++j) {
+        const int len_j = HashChainFindLength(hash_chain, j);
+        const int reach =
+            j + (len_j > MIN_LENGTH + 1 ? len_j : 1);  // 1 for single literal.
+        if (reach > max_reach) {
+          len = j - i;
+          max_reach = reach;
         }
       }
+    } else {
+      len = 1;
+    }
+    // Go with literal or backward reference.
+    assert(len > 0);
+    if (len == 1) {
+      AddSingleLiteral(argb[i], use_color_cache, &hashers, refs);
+    } else {
       BackwardRefsCursorAdd(refs, PixOrCopyCreateCopy(offset, len));
       if (use_color_cache) {
-        for (k = 0; k < len; ++k) {
-          VP8LColorCacheInsert(&hashers, argb[i + k]);
-        }
-      }
-      i += len;
-    } else {
-      AddSingleLiteral(argb[i], use_color_cache, &hashers, refs);
-      ++i;
-      --min_matches;
-      if (min_matches <= 0) {
-        AddSingleLiteral(argb[i], use_color_cache, &hashers, refs);
-        ++i;
+        for (j = i; j < i + len; ++j) VP8LColorCacheInsert(&hashers, argb[j]);
       }
     }
-  }
-  while (i < pix_count) {
-    // Handle the last pixel(s).
-    AddSingleLiteral(argb[i], use_color_cache, &hashers, refs);
-    ++i;
+    i += len;
   }
 
   ok = !refs->error_;
@@ -1045,8 +1075,6 @@ static int BackwardReferencesHashChainDistanceOnly(
   VP8LColorCache hashers;
   const int skip_length = 32 + quality;
   const int skip_min_distance_code = 2;
-  int iter_max = GetMaxItersForQuality(quality, 0);
-  const int window_size = GetWindowSizeForHashChain(quality, xsize);
   CostManager* cost_manager =
       (CostManager*)WebPSafeMalloc(1ULL, sizeof(*cost_manager));
 
@@ -1076,9 +1104,7 @@ static int BackwardReferencesHashChainDistanceOnly(
     int offset = 0;
     int len = 0;
     double prev_cost = cost_manager->costs_[i - 1];
-    const int max_len = MaxFindCopyLength(pix_count - i);
-    HashChainFindCopy(hash_chain, i, argb, max_len, window_size,
-                      iter_max, &offset, &len);
+    HashChainFindCopy(hash_chain, i, &offset, &len);
     if (len >= MIN_LENGTH) {
       const int code = DistanceToPlaneCode(xsize, offset);
       const double distance_cost =
@@ -1110,8 +1136,7 @@ static int BackwardReferencesHashChainDistanceOnly(
       if (len != MIN_LENGTH) {
         int code_min_length;
         double cost_total;
-        HashChainFindOffset(hash_chain, i, argb, MIN_LENGTH, window_size,
-                            &offset);
+        offset = HashChainFindOffset(hash_chain, i);
         code_min_length = DistanceToPlaneCode(xsize, offset);
         cost_total = prev_cost +
             GetDistanceCost(cost_model, code_min_length) +
@@ -1167,17 +1192,14 @@ static void TraceBackwards(uint16_t* const dist_array,
 }
 
 static int BackwardReferencesHashChainFollowChosenPath(
-    int xsize, const uint32_t* const argb,
-    int quality, int cache_bits,
+    const uint32_t* const argb, int cache_bits,
     const uint16_t* const chosen_path, int chosen_path_size,
-    const VP8LHashChain* const hash_chain,
-    VP8LBackwardRefs* const refs) {
+    const VP8LHashChain* const hash_chain, VP8LBackwardRefs* const refs) {
   const int use_color_cache = (cache_bits > 0);
   int ix;
   int i = 0;
   int ok = 0;
   int cc_init = 0;
-  const int window_size = GetWindowSizeForHashChain(quality, xsize);
   VP8LColorCache hashers;
 
   if (use_color_cache) {
@@ -1187,11 +1209,10 @@ static int BackwardReferencesHashChainFollowChosenPath(
 
   ClearBackwardRefs(refs);
   for (ix = 0; ix < chosen_path_size; ++ix) {
-    int offset = 0;
     const int len = chosen_path[ix];
     if (len != 1) {
       int k;
-      HashChainFindOffset(hash_chain, i, argb, len, window_size, &offset);
+      const int offset = HashChainFindOffset(hash_chain, i);
       BackwardRefsCursorAdd(refs, PixOrCopyCreateCopy(offset, len));
       if (use_color_cache) {
         for (k = 0; k < len; ++k) {
@@ -1240,8 +1261,7 @@ static int BackwardReferencesTraceBackwards(
   }
   TraceBackwards(dist_array, dist_array_size, &chosen_path, &chosen_path_size);
   if (!BackwardReferencesHashChainFollowChosenPath(
-      xsize, argb, quality, cache_bits, chosen_path, chosen_path_size,
-      hash_chain, refs)) {
+          argb, cache_bits, chosen_path, chosen_path_size, hash_chain, refs)) {
     goto Error;
   }
   ok = 1;
@@ -1349,8 +1369,8 @@ static int CalculateBestCacheSize(const uint32_t* const argb,
     // Local color cache is disabled.
     return 1;
   }
-  if (!BackwardReferencesLz77(xsize, ysize, argb, cache_bits_low, quality, 0,
-                              hash_chain, refs)) {
+  if (!BackwardReferencesLz77(xsize, ysize, argb, cache_bits_low, hash_chain,
+                              refs)) {
     return 0;
   }
   // Do a binary search to find the optimal entropy for cache_bits.
@@ -1415,13 +1435,12 @@ static int BackwardRefsWithLocalCache(const uint32_t* const argb,
 }
 
 static VP8LBackwardRefs* GetBackwardReferencesLowEffort(
-    int width, int height, const uint32_t* const argb, int quality,
+    int width, int height, const uint32_t* const argb,
     int* const cache_bits, const VP8LHashChain* const hash_chain,
     VP8LBackwardRefs refs_array[2]) {
   VP8LBackwardRefs* refs_lz77 = &refs_array[0];
   *cache_bits = 0;
-  if (!BackwardReferencesLz77(width, height, argb, 0, quality,
-                              1 /* Low effort. */, hash_chain, refs_lz77)) {
+  if (!BackwardReferencesLz77(width, height, argb, 0, hash_chain, refs_lz77)) {
     return NULL;
   }
   BackwardReferences2DLocality(width, refs_lz77);
@@ -1453,8 +1472,8 @@ static VP8LBackwardRefs* GetBackwardReferences(
       }
     }
   } else {
-    if (!BackwardReferencesLz77(width, height, argb, *cache_bits, quality,
-                                0 /* Low effort. */, hash_chain, refs_lz77)) {
+    if (!BackwardReferencesLz77(width, height, argb, *cache_bits, hash_chain,
+                                refs_lz77)) {
       goto Error;
     }
   }
@@ -1516,8 +1535,8 @@ VP8LBackwardRefs* VP8LGetBackwardReferences(
     int low_effort, int* const cache_bits,
     const VP8LHashChain* const hash_chain, VP8LBackwardRefs refs_array[2]) {
   if (low_effort) {
-    return GetBackwardReferencesLowEffort(width, height, argb, quality,
-                                          cache_bits, hash_chain, refs_array);
+    return GetBackwardReferencesLowEffort(width, height, argb, cache_bits,
+                                          hash_chain, refs_array);
   } else {
     return GetBackwardReferences(width, height, argb, quality, cache_bits,
                                  hash_chain, refs_array);
