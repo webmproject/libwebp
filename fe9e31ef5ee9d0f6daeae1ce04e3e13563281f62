@@ -16,6 +16,24 @@
       "revId": "fe9e31ef5ee9d0f6daeae1ce04e3e13563281f62",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3160c00_b45840ef",
+        "filename": "src/enc/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 836,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-08T19:26:52Z",
+      "side": 1,
+      "message": "yes, i just left the initial code. I *think* gcc optimizes that by itself (not sure though)",
+      "parentUuid": "83dab0a7_8cdb6789",
+      "revId": "fe9e31ef5ee9d0f6daeae1ce04e3e13563281f62",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
