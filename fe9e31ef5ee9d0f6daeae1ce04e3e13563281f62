@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "83dab0a7_8cdb6789",
+        "filename": "src/enc/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 836,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-06-08T19:17:48Z",
+      "side": 1,
+      "message": "could be a memset",
+      "revId": "fe9e31ef5ee9d0f6daeae1ce04e3e13563281f62",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
