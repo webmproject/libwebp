@@ -619,8 +619,10 @@ typedef struct {
   double cost_cache_[MAX_LENGTH];  // Contains the GetLengthCost(cost_model, k).
   float* costs_;
   uint16_t* dist_array_;
-  CostInterval spare_;    // most of the time, we only will be using a single
-  int spare_used_;        // interval. => We re-use this one first if possible.
+  // Pointer to intervals that have already been malloc-ed.
+  // cache_intervals_size_ limits the number of mallocs to
+  // COST_CACHE_INTERVAL_SIZE_MAX.
+  CostInterval* free_intervals_;
 } CostManager;
 
 static int IsCostCacheIntervalWritable(int start, int end) {
@@ -644,11 +646,14 @@ static void CostManagerClear(CostManager* const manager) {
     CostInterval* interval = manager->head_;
     while (interval != NULL) {
       CostInterval* const next = interval->next_;
-      if (manager->spare_used_ && interval == &manager->spare_) {
-        manager->spare_used_ = 0;
-      } else {
-        WebPSafeFree(interval);
-      }
+      WebPSafeFree(interval);
+      interval = next;
+    }
+    // Free the malloc-ed intervals.
+    interval = manager->free_intervals_;
+    while (interval != NULL) {
+      CostInterval* const next = interval->next_;
+      WebPSafeFree(interval);
       interval = next;
     }
   }
@@ -667,9 +672,9 @@ static int CostManagerInit(CostManager* const manager,
   const double min_cost_diff = 0.1;
 
   manager->head_ = NULL;
+  manager->free_intervals_ = NULL;
   manager->count_ = 0;
   manager->dist_array_ = dist_array;
-  manager->spare_used_ = 0;
 
   // Fill in the cost_cache_.
   manager->cache_intervals_size_ = 1;
@@ -800,13 +805,11 @@ static WEBP_INLINE void PopInterval(CostManager* const manager,
   if (interval == NULL) return;
 
   ConnectIntervals(manager, interval->previous_, next);
-  if (interval == &manager->spare_) {
-    manager->spare_used_ = 0;
-  } else {
-    WebPSafeFree(interval);
-  }
   --manager->count_;
   assert(manager->count_ >= 0);
+  // Store the allocated interval to save a malloc.
+  interval->next_ = manager->free_intervals_;
+  manager->free_intervals_ = interval;
 }
 
 // Update the cost at index i by going over all the stored intervals that
@@ -867,9 +870,9 @@ static WEBP_INLINE void InsertInterval(CostManager* const manager,
     UpdateCostPerInterval(manager, start, end, index, distance_cost);
     return;
   }
-  if (!manager->spare_used_) {
-    interval_new = &manager->spare_;
-    manager->spare_used_ = 1;
+  interval_new = manager->free_intervals_;
+  if (interval_new != NULL) {
+    manager->free_intervals_ = interval_new->next_;
   } else {
     interval_new = (CostInterval*)WebPSafeMalloc(1, sizeof(*interval_new));
     if (interval_new == NULL) {
