@@ -845,6 +845,9 @@ static WebPEncodingError GenerateCandidates(
   if (!enc->options_.allow_mixed) {
     candidate_ll->evaluate_ = is_lossless;
     candidate_lossy->evaluate_ = !is_lossless;
+  } else if (enc->options_.minimize_size) {
+    candidate_ll->evaluate_ = 1;
+    candidate_lossy->evaluate_ = 1;
   } else {  // Use a heuristic for trying lossless and/or lossy compression.
     const int num_colors = WebPGetColorPalette(&params->sub_frame_ll_, NULL);
     candidate_ll->evaluate_ = (num_colors < MAX_COLORS_LOSSLESS);
