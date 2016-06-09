@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "833630c6_72a6e9bc",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-06-09T19:11:07Z",
+      "side": 1,
+      "message": "add a new line here, otherwise subsequent lines will be joined in the subject",
+      "revId": "284ec140ada0bb476d10d2b262ab74bd10dbb2a9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "af75d8ba_73e6a053",
         "filename": "src/dsp/Makefile.am",
         "patchSetId": 1
