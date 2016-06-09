@@ -89,6 +89,14 @@ endif
 # EXTRA_FLAGS += -march=armv7-a -mfloat-abi=hard -mfpu=neon -mtune=cortex-a8
 # -> seems to make the overall lib slower: -fno-split-wide-types
 
+# MIPS (MSA) 32-bit build specific flags for mips32r5 (p5600):
+# EXTRA_FLAGS += -mips32r5 -mabi=32 -mtune=p5600 -mmsa -mfp64
+# EXTRA_FLAGS += -msched-weight -mload-store-pairs
+
+# MIPS (MSA) 64-bit build specific flags for mips64r6 (i6400):
+# EXTRA_FLAGS += -mips64r6 -mabi=64 -mtune=i6400 -mmsa -mfp64
+# EXTRA_FLAGS += -msched-weight -mload-store-pairs
+
 #### Nothing should normally be changed below this line ####
 
 AR = ar
