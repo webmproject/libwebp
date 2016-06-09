@@ -38,11 +38,19 @@ model {
       architecture "x86_64"
     }
     mips32r2
+    mips32r5
+    mips64r6
   }
   toolChains {
     gcc(Gcc) {
       target("mips32r2") {
         cCompiler.args "-mips32r2"
+      }
+      target("mips32r5") {
+        cCompiler.args "-mips32r5"
+      }
+      target("mips64r6") {
+        cCompiler.args "-mips64r6"
       }
     }
   }
@@ -111,6 +119,7 @@ model {
             include "dec_clip_tables.c"
             include "dec_mips32.c"
             include "dec_mips_dsp_r2.c"
+            include "dec_msa.c"
             include "dec_neon.$NEON"
             include "dec_sse2.c"
             include "dec_sse41.c"
