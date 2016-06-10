@@ -1150,7 +1150,9 @@ static int BackwardReferencesHashChainDistanceOnly(
     if (!cc_init) goto Error;
   }
 
-  if (!CostModelBuild(cost_model, cache_bits, refs)) goto Error;
+  if (!CostModelBuild(cost_model, cache_bits, refs)) {
+    goto Error;
+  }
 
   if (!CostManagerInit(cost_manager, dist_array, pix_count, cost_model)) {
     goto Error;
@@ -1165,8 +1167,7 @@ static int BackwardReferencesHashChainDistanceOnly(
                                 dist_array);
 
   for (i = 1; i < pix_count - 1; ++i) {
-    int offset = 0;
-    int len = 0;
+    int offset = 0, len = 0;
     double prev_cost = cost_manager->costs_[i - 1];
     HashChainFindCopy(hash_chain, i, &offset, &len);
     if (len >= MIN_LENGTH) {
@@ -1178,19 +1179,17 @@ static int BackwardReferencesHashChainDistanceOnly(
       PushInterval(cost_manager, distance_cost, i, len);
 
       // The cost to get to pixel i+k is:
-      // prev_cost + best weight of path going from i to l.
-      // For the last cost, if the path were composed composed of several
-      // segments (like [i,j), [j,k), [k,l) ), its cost would be:
-      // offset cost + manager->cost_cache_[j-i] +
-      // offset cost + manager->cost_cache_[k-j] +
-      // offset cost + manager->cost_cache_[l-j]
+      //   prev_cost + best weight of path going from i to l.
+      // For the last cost, if the path were composed of several segments
+      // (like [i,j), [j,k), [k,l) ), its cost would be:
+      //   offset cost + manager->cost_cache_[j-i] +
+      //   offset cost + manager->cost_cache_[k-j] +
+      //   offset cost + manager->cost_cache_[l-j]
       // As the offset_cost is close to the values in cost_cache_ (both are the
       // cost to store a number, whether it's an offset or a length), the best
-      // path are therefore the ones involving one hop.
+      // paths are therefore the ones involving one hop.
       for (; i + 1 < pix_count - 1; ++i) {
-        int offset_next;
-        int len_next;
-        int diff;
+        int offset_next, len_next, diff;
 
         prev_cost = cost_manager->costs_[i - 1];
         distance_cost = prev_cost + offset_cost;
@@ -1206,7 +1205,7 @@ static int BackwardReferencesHashChainDistanceOnly(
           if (diff >= len) diff = len - 1;
           // The best path going to pixel i is the one starting in a pixel
           // within diff hence at the pixel:
-          // i - manager->cost_cache_min_dist_[diff].
+          //     i - manager->cost_cache_min_dist_[diff].
           UpdateCost(cost_manager, i, -diff, distance_cost);
         }
         len = len_next;
