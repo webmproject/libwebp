@@ -199,6 +199,30 @@
       "revId": "284ec140ada0bb476d10d2b262ab74bd10dbb2a9",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af75d8ba_d6b7629b",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-10T11:59:32Z",
+      "side": 1,
+      "message": "We prefer to have macros. Is there any coding restriction about macro length under WebP? The same macro is accepted under libvpx and tested for gcc as well as clang build.",
+      "parentUuid": "af75d8ba_36ac9657",
+      "range": {
+        "startLine": 69,
+        "startChar": 4,
+        "endLine": 69,
+        "endChar": 9
+      },
+      "revId": "284ec140ada0bb476d10d2b262ab74bd10dbb2a9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
