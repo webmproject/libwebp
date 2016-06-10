@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "af75d8ba_73aea0b4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-10T08:01:39Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "833630c6_72a6e9bc",
+      "revId": "284ec140ada0bb476d10d2b262ab74bd10dbb2a9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "af75d8ba_73e6a053",
         "filename": "src/dsp/Makefile.am",
         "patchSetId": 1
@@ -30,6 +48,30 @@
       "writtenOn": "2016-06-09T16:09:28Z",
       "side": 1,
       "message": "similar build rules should be added to \u0027makefile.unix\u0027 too, no?\n\nAnd \u0027build.gradle\u0027, \u0027Makefile.vc\u0027 and \u0027Android.km\u0027 too, i guess. We already have mips32 and mips_dsp_r2 there.",
+      "range": {
+        "startLine": 85,
+        "startChar": 35,
+        "endLine": 85,
+        "endChar": 42
+      },
+      "revId": "284ec140ada0bb476d10d2b262ab74bd10dbb2a9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af75d8ba_33b828f5",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-10T08:01:39Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "af75d8ba_73e6a053",
       "range": {
         "startLine": 85,
         "startChar": 35,
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "af75d8ba_53904463",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-10T08:01:39Z",
+      "side": 1,
+      "message": "yes",
+      "parentUuid": "af75d8ba_f3d15063",
+      "range": {
+        "startLine": 83,
+        "startChar": 4,
+        "endLine": 83,
+        "endChar": 5
+      },
+      "revId": "284ec140ada0bb476d10d2b262ab74bd10dbb2a9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "af75d8ba_93dedc72",
         "filename": "src/dsp/msa_macro.h",
         "patchSetId": 1
@@ -76,6 +142,30 @@
       "writtenOn": "2016-06-09T16:09:28Z",
       "side": 1,
       "message": "not sure why \u0027val_m\u0027 is left there, alone, at the end of the block.",
+      "range": {
+        "startLine": 69,
+        "startChar": 4,
+        "endLine": 69,
+        "endChar": 9
+      },
+      "revId": "284ec140ada0bb476d10d2b262ab74bd10dbb2a9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af75d8ba_d39c5487",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-10T08:01:39Z",
+      "side": 1,
+      "message": "It is value returning macro. Here halfword is loaded in val_m which is returned.",
+      "parentUuid": "af75d8ba_93dedc72",
       "range": {
         "startLine": 69,
         "startChar": 4,
