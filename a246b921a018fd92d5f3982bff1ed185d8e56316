@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "afca3837_8b0a0dc4",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1182,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-06-10T07:08:17Z",
+      "side": 1,
+      "message": "s/composed//",
+      "revId": "a246b921a018fd92d5f3982bff1ed185d8e56316",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "afca3837_ab07c9ba",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1189,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-06-10T07:08:17Z",
+      "side": 1,
+      "message": "paths",
+      "revId": "a246b921a018fd92d5f3982bff1ed185d8e56316",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "afca3837_0b2e1d3a",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1191,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-06-10T07:08:17Z",
+      "side": 1,
+      "message": "these 3 could be joined",
+      "revId": "a246b921a018fd92d5f3982bff1ed185d8e56316",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
