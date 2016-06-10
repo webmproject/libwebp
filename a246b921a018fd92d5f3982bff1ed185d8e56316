@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "af75d8ba_76a20e67",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1182,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-10T11:18:05Z",
+      "side": 1,
+      "message": "all (and more) fixed in patch 351430",
+      "parentUuid": "afca3837_8b0a0dc4",
+      "revId": "a246b921a018fd92d5f3982bff1ed185d8e56316",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "afca3837_ab07c9ba",
         "filename": "src/enc/backward_references.c",
         "patchSetId": 1
