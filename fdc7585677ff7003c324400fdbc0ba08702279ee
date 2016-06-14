@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b461b121_53950449",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-14T07:36:10Z",
+      "side": 1,
+      "message": "i\u0027m worried that these name are two generic and may conflict with others.\n\nWhat about an MSA_ prefix?",
+      "range": {
+        "startLine": 20,
+        "startChar": 8,
+        "endLine": 20,
+        "endChar": 17
+      },
+      "revId": "fdc7585677ff7003c324400fdbc0ba08702279ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4cf0546_2c58d36f",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-14T07:36:10Z",
+      "side": 1,
+      "message": "do you really need the \"...\" and __VA_ARGS__ ?\nFor readability, you could just repeat the RTYPE, psrc args:\n\n#define LD_UB(RTYPE, psrc) LD_B(v16u8, RTYPE, psrc)\netc.",
+      "range": {
+        "startLine": 36,
+        "startChar": 8,
+        "endLine": 36,
+        "endChar": 13
+      },
+      "revId": "fdc7585677ff7003c324400fdbc0ba08702279ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14819dc8_16f71c99",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-14T07:36:10Z",
+      "side": 1,
+      "message": "uint8_t* const pblk_4x4_m \u003d ....",
+      "range": {
+        "startLine": 332,
+        "startChar": 11,
+        "endLine": 332,
+        "endChar": 21
+      },
+      "revId": "fdc7585677ff7003c324400fdbc0ba08702279ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5467950e_f8961154",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-14T07:36:10Z",
+      "side": 1,
+      "message": "const uint32_t out0_m \u003d ...\n...",
+      "range": {
+        "startLine": 334,
+        "startChar": 2,
+        "endLine": 334,
+        "endChar": 8
+      },
+      "revId": "fdc7585677ff7003c324400fdbc0ba08702279ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b461b121_b399f885",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-14T07:36:10Z",
+      "side": 1,
+      "message": "const v8i16 max_m \u003d ...",
+      "revId": "fdc7585677ff7003c324400fdbc0ba08702279ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
