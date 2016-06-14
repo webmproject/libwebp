@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b461b121_13754ce8",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-14T12:21:51Z",
+      "side": 1,
+      "message": "These were redundant so removed.",
+      "parentUuid": "b461b121_53950449",
+      "range": {
+        "startLine": 20,
+        "startChar": 8,
+        "endLine": 20,
+        "endChar": 17
+      },
+      "revId": "fdc7585677ff7003c324400fdbc0ba08702279ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d4cf0546_2c58d36f",
         "filename": "src/dsp/msa_macro.h",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2016-06-14T07:36:10Z",
       "side": 1,
       "message": "do you really need the \"...\" and __VA_ARGS__ ?\nFor readability, you could just repeat the RTYPE, psrc args:\n\n#define LD_UB(RTYPE, psrc) LD_B(v16u8, RTYPE, psrc)\netc.",
+      "range": {
+        "startLine": 36,
+        "startChar": 8,
+        "endLine": 36,
+        "endChar": 13
+      },
+      "revId": "fdc7585677ff7003c324400fdbc0ba08702279ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4c08917_2d58cd6f",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-14T12:21:51Z",
+      "side": 1,
+      "message": "We used \"...\" and __VA_ARGS__ to reduce the line length of type variations. Replacing it with arguments will exceed 80 column limit for macros with more number of arguments and will be somewhat messy.\n\nFor e.g.\nBelow variation has 6 arguments.\n#define ILVR_D2_UB(...) ILVR_D2(v16u8, __VA_ARGS__)\n\nAfter the change it will look like, \n#define ILVR_D2_UB(in0, in1, in2, in3, out0, out1)  \\\n        ILVR_D2(v16u8, in0, in1, in2, in3, out0, out1)",
+      "parentUuid": "d4cf0546_2c58d36f",
       "range": {
         "startLine": 36,
         "startChar": 8,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "b4ca9137_abb909de",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-14T12:21:51Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "14819dc8_16f71c99",
+      "range": {
+        "startLine": 332,
+        "startChar": 11,
+        "endLine": 332,
+        "endChar": 21
+      },
+      "revId": "fdc7585677ff7003c324400fdbc0ba08702279ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5467950e_f8961154",
         "filename": "src/dsp/msa_macro.h",
         "patchSetId": 2
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "747019c4_99bcbbcf",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-14T12:21:51Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "5467950e_f8961154",
+      "range": {
+        "startLine": 334,
+        "startChar": 2,
+        "endLine": 334,
+        "endChar": 8
+      },
+      "revId": "fdc7585677ff7003c324400fdbc0ba08702279ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b461b121_b399f885",
         "filename": "src/dsp/msa_macro.h",
         "patchSetId": 2
@@ -105,6 +201,24 @@
       "writtenOn": "2016-06-14T07:36:10Z",
       "side": 1,
       "message": "const v8i16 max_m \u003d ...",
+      "revId": "fdc7585677ff7003c324400fdbc0ba08702279ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4c08917_2de3ede1",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-14T12:21:51Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "b461b121_b399f885",
       "revId": "fdc7585677ff7003c324400fdbc0ba08702279ee",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
