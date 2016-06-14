@@ -442,8 +442,7 @@ static int BackwardReferencesLz77(int xsize, int ysize,
     int len = 0;
     int j;
     HashChainFindCopy(hash_chain, i, &offset, &len);
-    // MIN_LENGTH+1 is empirically better than MIN_LENGTH.
-    if (len > MIN_LENGTH + 1) {
+    if (len > MIN_LENGTH) {
       const int len_ini = len;
       int max_reach = 0;
       assert(i + len < pix_count);
