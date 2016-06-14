@@ -245,6 +245,7 @@ int VP8LHashChainFill(VP8LHashChain* const p, int quality,
                       const uint32_t* const argb, int xsize, int ysize) {
   const int size = xsize * ysize;
   const int iter_max = GetMaxItersForQuality(quality);
+  const int iter_min = iter_max - quality / 10;
   const uint32_t window_size = GetWindowSizeForHashChain(quality, xsize);
   int pos;
   uint32_t base_position;
@@ -296,7 +297,11 @@ int VP8LHashChainFill(VP8LHashChain* const p, int quality,
       if (best_length < curr_length) {
         best_length = curr_length;
         best_distance = base_position - pos;
-        if (curr_length >= length_max) {
+        // Stop if we have reached the maximum length. Otherwise, make sure
+        // we have executed a minimum number of iterations depending on the
+        // quality.
+        if ((best_length == MAX_LENGTH) ||
+            (curr_length >= length_max && iter < iter_min)) {
           break;
         }
       }
