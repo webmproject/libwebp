@@ -223,6 +223,30 @@
       "revId": "284ec140ada0bb476d10d2b262ab74bd10dbb2a9",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3491410e_3fe307e2",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-14T07:36:10Z",
+      "side": 1,
+      "message": "more than macro length, it\u0027s more general readability and future maintenance.\nThese macro only differ by 1 line, the instruction in \u0027asm volatile\u0027.\nThey could be condensed as:\n\n#define LOAD_PROTO(NAME, TYPE, INST) \\\nstatic WEBP_INLINE TYPE NAME(const void* const psrc) { \\\n  const uint8_t* const psrc_m \u003d (const uint8_t*)psrc;           \\\n  TYPE ret;   \\\n  asm volatile ( \\\n    #INSTR ## \"%[ret], %[psrc_m]   \\n\\t\" \\\n    : [ret] \"\u003dr\" (ret) \\\n    : [psrc_m] \"m\" (*psrc));  \\\n    return ret;  \\\n}\n\nLOAD_PROTO(LH, uint16_t, lh)\nLOAD_PROTO(LW, uint32_t, lw)\nLOAD_PROTO(LD, uint64_t, ld)\netc...\n\nMuch more readable and maintainable.",
+      "parentUuid": "af75d8ba_d6b7629b",
+      "range": {
+        "startLine": 69,
+        "startChar": 4,
+        "endLine": 69,
+        "endChar": 9
+      },
+      "revId": "284ec140ada0bb476d10d2b262ab74bd10dbb2a9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
