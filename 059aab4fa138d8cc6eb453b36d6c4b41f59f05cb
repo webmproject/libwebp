@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "749d796f_b7bff0c2",
+        "filename": "src/enc/backward_references.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1161,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-06-14T21:59:40Z",
+      "side": 1,
+      "message": "that\u0027s an implicit double -\u003e int conversion",
+      "revId": "059aab4fa138d8cc6eb453b36d6c4b41f59f05cb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
