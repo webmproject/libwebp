@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "747019c4_59af0397",
+        "filename": "src/utils/utils.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-14T05:30:57Z",
+      "side": 1,
+      "message": "note that MAX_COLOR_COUNT in defined in the .cc only, not any .h\n\nShould it be MAX_PALETTE_SIZE instead?",
+      "range": {
+        "startLine": 167,
+        "startChar": 42,
+        "endLine": 167,
+        "endChar": 57
+      },
+      "revId": "3259571e7d1cf220ffe1bcd034190cb6531de58b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
