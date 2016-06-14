@@ -1162,7 +1162,7 @@ static int BackwardReferencesHashChainDistanceOnly(
       if (offset_cost == 0.) {
         j_max = 1;
       } else {
-        j_max = ceil(cost_manager->min_cost_cache_ / offset_cost);
+        j_max = (int)ceil(cost_manager->min_cost_cache_ / offset_cost);
       }
 
       // With the values we currently use for the model, offset_cost is
