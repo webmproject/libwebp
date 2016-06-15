@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "947cad58_c22522b7",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 4
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-15T14:27:00Z",
+      "side": 1,
+      "message": "hope it\u0027s ok to have a lib with no source / symbols in it.\n\nJames, what do you think?",
+      "range": {
+        "startLine": 113,
+        "startChar": 26,
+        "endLine": 113,
+        "endChar": 27
+      },
+      "revId": "02fb2c32e5556b66b86aa05889fe219e7bbd5be1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
