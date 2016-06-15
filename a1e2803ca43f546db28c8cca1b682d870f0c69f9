@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "947cad58_02954a49",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-15T08:02:18Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "5467950e_f807f144",
+      "range": {
+        "startLine": 56,
+        "startChar": 36,
+        "endLine": 56,
+        "endChar": 37
+      },
+      "revId": "a1e2803ca43f546db28c8cca1b682d870f0c69f9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5467950e_d80a2d4e",
         "filename": "src/dsp/msa_macro.h",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2016-06-14T13:23:04Z",
       "side": 1,
       "message": "const uint8_t* const psrc_m \u003d (const uint8_t*)psrc;",
+      "range": {
+        "startLine": 57,
+        "startChar": 2,
+        "endLine": 57,
+        "endChar": 9
+      },
+      "revId": "a1e2803ca43f546db28c8cca1b682d870f0c69f9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "947cad58_a2857e1c",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-15T08:02:18Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "5467950e_d80a2d4e",
       "range": {
         "startLine": 57,
         "startChar": 2,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "947cad58_e28f8636",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-15T08:02:18Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "f4c08917_ed8c05f3",
+      "range": {
+        "startLine": 84,
+        "startChar": 6,
+        "endLine": 84,
+        "endChar": 13
+      },
+      "revId": "a1e2803ca43f546db28c8cca1b682d870f0c69f9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "14443d87_fedd0177",
         "filename": "src/dsp/msa_macro.h",
         "patchSetId": 3
@@ -82,6 +154,30 @@
       "writtenOn": "2016-06-14T13:23:04Z",
       "side": 1,
       "message": "is the initialization to 0 needed?\nThese variables could be const:\n\nconst uint32_t val0_m \u003d LW(psrc_ld_m);\nconst uint32_t val1_m \u003d LW(psrc_ld_m + 4);\nuint32_t out_m \u003d ((uint64_t)val1_m) \u003c\u003c 32;\n...",
+      "range": {
+        "startLine": 86,
+        "startChar": 22,
+        "endLine": 86,
+        "endChar": 23
+      },
+      "revId": "a1e2803ca43f546db28c8cca1b682d870f0c69f9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1490bdc9_9e853d1d",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-15T08:02:18Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "14443d87_fedd0177",
       "range": {
         "startLine": 86,
         "startChar": 22,
@@ -111,6 +207,24 @@
     },
     {
       "key": {
+        "uuid": "947cad58_229a4e79",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-15T08:02:18Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "3491410e_bfdab77b",
+      "revId": "a1e2803ca43f546db28c8cca1b682d870f0c69f9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f4c08917_cd8fc9e5",
         "filename": "src/dsp/msa_macro.h",
         "patchSetId": 3
@@ -122,6 +236,30 @@
       "writtenOn": "2016-06-14T13:23:04Z",
       "side": 1,
       "message": "the outter cast to uint64_t seems unnecessary.",
+      "range": {
+        "startLine": 91,
+        "startChar": 15,
+        "endLine": 91,
+        "endChar": 23
+      },
+      "revId": "a1e2803ca43f546db28c8cca1b682d870f0c69f9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "947cad58_42975250",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-15T08:02:18Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "f4c08917_cd8fc9e5",
       "range": {
         "startLine": 91,
         "startChar": 15,
@@ -157,6 +295,30 @@
     },
     {
       "key": {
+        "uuid": "947cad58_62a456bd",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-15T08:02:18Z",
+      "side": 1,
+      "message": "removed code duplication",
+      "parentUuid": "d4cf0546_8c130753",
+      "range": {
+        "startLine": 105,
+        "startChar": 12,
+        "endLine": 105,
+        "endChar": 14
+      },
+      "revId": "a1e2803ca43f546db28c8cca1b682d870f0c69f9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f4c08917_4dc519fa",
         "filename": "src/dsp/msa_macro.h",
         "patchSetId": 3
@@ -168,6 +330,30 @@
       "writtenOn": "2016-06-14T13:23:04Z",
       "side": 1,
       "message": "uint8_t* const pdst_sd_m \u003d ...",
+      "range": {
+        "startLine": 121,
+        "startChar": 26,
+        "endLine": 121,
+        "endChar": 33
+      },
+      "revId": "a1e2803ca43f546db28c8cca1b682d870f0c69f9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "947cad58_c28a8229",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-15T08:02:18Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "f4c08917_4dc519fa",
       "range": {
         "startLine": 121,
         "startChar": 26,
@@ -203,6 +389,30 @@
     },
     {
       "key": {
+        "uuid": "947cad58_82a15aae",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-15T08:02:18Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "747019c4_f97a97a2",
+      "range": {
+        "startLine": 139,
+        "startChar": 19,
+        "endLine": 139,
+        "endChar": 26
+      },
+      "revId": "a1e2803ca43f546db28c8cca1b682d870f0c69f9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "747019c4_9987dbbd",
         "filename": "src/dsp/msa_macro.h",
         "patchSetId": 3
@@ -214,6 +424,30 @@
       "writtenOn": "2016-06-14T13:23:04Z",
       "side": 1,
       "message": "ditto",
+      "range": {
+        "startLine": 157,
+        "startChar": 26,
+        "endLine": 157,
+        "endChar": 29
+      },
+      "revId": "a1e2803ca43f546db28c8cca1b682d870f0c69f9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "947cad58_a2ae5e98",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-15T08:02:18Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "747019c4_9987dbbd",
       "range": {
         "startLine": 157,
         "startChar": 26,
