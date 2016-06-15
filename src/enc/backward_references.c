@@ -835,6 +835,7 @@ static WEBP_INLINE void UpdateCost(CostManager* const manager, int i, int index,
                                    double distance_cost) {
   int k = i - index;
   double cost_tmp;
+  assert(k >= 0 && k < MAX_LENGTH);
   cost_tmp = distance_cost + manager->cost_cache_[k];
 
   if (manager->costs_[i] > cost_tmp) {
@@ -1163,6 +1164,7 @@ static int BackwardReferencesHashChainDistanceOnly(
         j_max = 1;
       } else {
         j_max = (int)ceil(cost_manager->min_cost_cache_ / offset_cost);
+        assert(j_max >= 1);
       }
 
       // With the values we currently use for the model, offset_cost is
