@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f45969e9_6e3083e4",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-06-16T05:33:50Z",
+      "side": 1,
+      "message": "? seems we\u0027re building with gcc with this enabled...is it more a version prerequisite of clang || gcc \u003e 4.x?",
+      "revId": "577096f940ca06a827221017336433abb10583c9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
