@@ -1240,7 +1240,7 @@ static int BackwardReferencesHashChainDistanceOnly(
         }
         goto next_symbol;
       }
-      if (len != MIN_LENGTH) {
+      if (len > MIN_LENGTH) {
         int code_min_length;
         double cost_total;
         offset = HashChainFindOffset(hash_chain, i);
