@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94658dc6_ddd7bfc9",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 8
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-16T08:27:33Z",
+      "side": 1,
+      "message": "these two should be removed too, it\u0027s no point leaving them there hanging.",
+      "range": {
+        "startLine": 113,
+        "startChar": 0,
+        "endLine": 113,
+        "endChar": 26
+      },
+      "revId": "0e00aafce9307796340bae1e8f80f58e39b19d16",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
