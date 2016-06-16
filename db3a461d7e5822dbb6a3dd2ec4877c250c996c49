@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "743659c9_69cfe55b",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-16T08:27:33Z",
+      "side": 1,
+      "message": "as James said, this should rather be something like:\n\n#if defined(__clang__)\n#define CLANG_BUILD\n#endif\n\n(and then we can expand further for some gcc versions, etc.)",
+      "range": {
+        "startLine": 20,
+        "startChar": 8,
+        "endLine": 20,
+        "endChar": 19
+      },
+      "revId": "db3a461d7e5822dbb6a3dd2ec4877c250c996c49",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
