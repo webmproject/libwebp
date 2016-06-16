@@ -16,6 +16,24 @@
       "revId": "577096f940ca06a827221017336433abb10583c9",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "743659c9_69a1a5ab",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-16T06:22:29Z",
+      "side": 1,
+      "message": "It is defined for clang build only. For now it looks redundant as only gcc build is supported. So i will remove this for cleaner code.",
+      "parentUuid": "f45969e9_6e3083e4",
+      "revId": "577096f940ca06a827221017336433abb10583c9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
