@@ -22,6 +22,30 @@
       "revId": "02fb2c32e5556b66b86aa05889fe219e7bbd5be1",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f45969e9_ee2313a1",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 4
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-06-16T05:27:48Z",
+      "side": 1,
+      "message": "\u003e hope it\u0027s ok to have a lib with no source / symbols in it.\n \u003e \n \u003e James, what do you think?\n\nnot the safest thing to do:\n\n\"Be careful when selecting library components conditionally. Because building an empty library is not portable, you should ensure that any library always contains at least one object.\"\n\nhttps://www.gnu.org/software/automake/manual/automake.html#A-Library",
+      "parentUuid": "947cad58_c22522b7",
+      "range": {
+        "startLine": 113,
+        "startChar": 26,
+        "endLine": 113,
+        "endChar": 27
+      },
+      "revId": "02fb2c32e5556b66b86aa05889fe219e7bbd5be1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
