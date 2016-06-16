@@ -46,6 +46,30 @@
       "revId": "02fb2c32e5556b66b86aa05889fe219e7bbd5be1",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "743659c9_a9b39d03",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 4
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-16T06:22:29Z",
+      "side": 1,
+      "message": "ok. For now i will remove libwebpdsp_msa dependencies as there are no encoder msa sources added.",
+      "parentUuid": "f45969e9_ee2313a1",
+      "range": {
+        "startLine": 113,
+        "startChar": 26,
+        "endLine": 113,
+        "endChar": 27
+      },
+      "revId": "02fb2c32e5556b66b86aa05889fe219e7bbd5be1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
