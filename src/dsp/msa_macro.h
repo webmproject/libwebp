@@ -23,10 +23,12 @@
 
 #ifdef CLANG_BUILD
   #define ADDVI_H(a, b)  __msa_addvi_h((v8i16)a, b)
+  #define SRAI_B(a, b)  __msa_srai_b((v16i8)a, b)
   #define SRAI_H(a, b)  __msa_srai_h((v8i16)a, b)
   #define SRAI_W(a, b)  __msa_srai_w((v4i32)a, b)
 #else
   #define ADDVI_H(a, b)  (a + b)
+  #define SRAI_B(a, b)  (a >> b)
   #define SRAI_H(a, b)  (a >> b)
   #define SRAI_W(a, b)  (a >> b)
 #endif
@@ -183,6 +185,14 @@
 #define LD_UB4(...) LD_B4(v16u8, __VA_ARGS__)
 #define LD_SB4(...) LD_B4(v16i8, __VA_ARGS__)
 
+#define LD_B8(RTYPE, psrc, stride,                                  \
+              out0, out1, out2, out3, out4, out5, out6, out7) {     \
+  LD_B4(RTYPE, psrc, stride, out0, out1, out2, out3);               \
+  LD_B4(RTYPE, psrc + 4 * stride, stride, out4, out5, out6, out7);  \
+}
+#define LD_UB8(...) LD_B8(v16u8, __VA_ARGS__)
+#define LD_SB8(...) LD_B8(v16i8, __VA_ARGS__)
+
 /* Description : Load vectors with 8 halfword elements with stride
  * Arguments   : Inputs  - psrc, stride
  *               Outputs - out0, out1
@@ -195,6 +205,25 @@
 }
 #define LD_UH2(...) LD_H2(v8u16, __VA_ARGS__)
 #define LD_SH2(...) LD_H2(v8i16, __VA_ARGS__)
+
+/* Description : Store vectors of 16 byte elements with stride
+ * Arguments   : Inputs - in0, in1, pdst, stride
+ * Details     : Store 16 byte elements from 'in0' to (pdst)
+ *               Store 16 byte elements from 'in1' to (pdst + stride)
+ */
+#define ST_B2(RTYPE, in0, in1, pdst, stride) {  \
+  ST_B(RTYPE, in0, pdst);                       \
+  ST_B(RTYPE, in1, pdst + stride);              \
+}
+#define ST_UB2(...) ST_B2(v16u8, __VA_ARGS__)
+#define ST_SB2(...) ST_B2(v16i8, __VA_ARGS__)
+
+#define ST_B4(RTYPE, in0, in1, in2, in3, pdst, stride) {  \
+  ST_B2(RTYPE, in0, in1, pdst, stride);                   \
+  ST_B2(RTYPE, in2, in3, pdst + 2 * stride, stride);      \
+}
+#define ST_UB4(...) ST_B4(v16u8, __VA_ARGS__)
+#define ST_SB4(...) ST_B4(v16i8, __VA_ARGS__)
 
 /* Description : Store 4x4 byte block to destination memory from input vector
  * Arguments   : Inputs - in0, in1, pdst, stride
@@ -214,6 +243,12 @@
   const uint32_t out2_m = __msa_copy_s_w((v4i32)in1, idx2);         \
   const uint32_t out3_m = __msa_copy_s_w((v4i32)in1, idx3);         \
   SW4(out0_m, out1_m, out2_m, out3_m, pblk_4x4_m, stride);          \
+}
+
+#define ST4x8_UB(in0, in1, pdst, stride) {                        \
+  uint8_t* const pblk_4x8 = (uint8_t*)pdst;                       \
+  ST4x4_UB(in0, in0, 0, 1, 2, 3, pblk_4x8, stride);               \
+  ST4x4_UB(in1, in1, 0, 1, 2, 3, pblk_4x8 + 4 * stride, stride);  \
 }
 
 /* Description : Immediate number of elements to slide
@@ -299,6 +334,121 @@
 #define INSERT_W4_SB(...) INSERT_W4(v16i8, __VA_ARGS__)
 #define INSERT_W4_SW(...) INSERT_W4(v4i32, __VA_ARGS__)
 
+/* Description : Interleave even byte elements from vectors
+ * Arguments   : Inputs  - in0, in1, in2, in3
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Even byte elements of 'in0' and 'in1' are interleaved
+ *               and written to 'out0'
+ */
+#define ILVEV_B2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
+  out0 = (RTYPE)__msa_ilvev_b((v16i8)in1, (v16i8)in0);     \
+  out1 = (RTYPE)__msa_ilvev_b((v16i8)in3, (v16i8)in2);     \
+}
+#define ILVEV_B2_UB(...) ILVEV_B2(v16u8, __VA_ARGS__)
+#define ILVEV_B2_SB(...) ILVEV_B2(v16i8, __VA_ARGS__)
+#define ILVEV_B2_UH(...) ILVEV_B2(v8u16, __VA_ARGS__)
+#define ILVEV_B2_SH(...) ILVEV_B2(v8i16, __VA_ARGS__)
+#define ILVEV_B2_SD(...) ILVEV_B2(v2i64, __VA_ARGS__)
+
+/* Description : Interleave odd byte elements from vectors
+ * Arguments   : Inputs  - in0, in1, in2, in3
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Odd byte elements of 'in0' and 'in1' are interleaved
+ *               and written to 'out0'
+ */
+#define ILVOD_B2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
+  out0 = (RTYPE)__msa_ilvod_b((v16i8)in1, (v16i8)in0);     \
+  out1 = (RTYPE)__msa_ilvod_b((v16i8)in3, (v16i8)in2);     \
+}
+#define ILVOD_B2_UB(...) ILVOD_B2(v16u8, __VA_ARGS__)
+#define ILVOD_B2_SB(...) ILVOD_B2(v16i8, __VA_ARGS__)
+#define ILVOD_B2_UH(...) ILVOD_B2(v8u16, __VA_ARGS__)
+#define ILVOD_B2_SH(...) ILVOD_B2(v8i16, __VA_ARGS__)
+#define ILVOD_B2_SD(...) ILVOD_B2(v2i64, __VA_ARGS__)
+
+/* Description : Interleave even halfword elements from vectors
+ * Arguments   : Inputs  - in0, in1, in2, in3
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Even halfword elements of 'in0' and 'in1' are interleaved
+ *               and written to 'out0'
+ */
+#define ILVEV_H2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
+  out0 = (RTYPE)__msa_ilvev_h((v8i16)in1, (v8i16)in0);     \
+  out1 = (RTYPE)__msa_ilvev_h((v8i16)in3, (v8i16)in2);     \
+}
+#define ILVEV_H2_UB(...) ILVEV_H2(v16u8, __VA_ARGS__)
+#define ILVEV_H2_UH(...) ILVEV_H2(v8u16, __VA_ARGS__)
+#define ILVEV_H2_SH(...) ILVEV_H2(v8i16, __VA_ARGS__)
+#define ILVEV_H2_SW(...) ILVEV_H2(v4i32, __VA_ARGS__)
+
+/* Description : Interleave odd halfword elements from vectors
+ * Arguments   : Inputs  - in0, in1, in2, in3
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Odd halfword elements of 'in0' and 'in1' are interleaved
+ *               and written to 'out0'
+ */
+#define ILVOD_H2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
+  out0 = (RTYPE)__msa_ilvod_h((v8i16)in1, (v8i16)in0);     \
+  out1 = (RTYPE)__msa_ilvod_h((v8i16)in3, (v8i16)in2);     \
+}
+#define ILVOD_H2_UB(...) ILVOD_H2(v16u8, __VA_ARGS__)
+#define ILVOD_H2_UH(...) ILVOD_H2(v8u16, __VA_ARGS__)
+#define ILVOD_H2_SH(...) ILVOD_H2(v8i16, __VA_ARGS__)
+#define ILVOD_H2_SW(...) ILVOD_H2(v4i32, __VA_ARGS__)
+
+/* Description : Interleave even-odd word elements from vectors
+ * Arguments   : Inputs  - in0, in1, in2, in3
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Even word elements of 'in0' and 'in1' are interleaved
+ *               and written to 'out0'
+ *               Odd word elements of 'in2' and 'in3' are interleaved
+ *               and written to 'out1'
+ */
+#define ILVEVOD_W2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
+  out0 = (RTYPE)__msa_ilvev_w((v4i32)in1, (v4i32)in0);       \
+  out1 = (RTYPE)__msa_ilvod_w((v4i32)in3, (v4i32)in2);       \
+}
+#define ILVEVOD_W2_UB(...) ILVEVOD_W2(v16u8, __VA_ARGS__)
+#define ILVEVOD_W2_UH(...) ILVEVOD_W2(v8u16, __VA_ARGS__)
+#define ILVEVOD_W2_SH(...) ILVEVOD_W2(v8i16, __VA_ARGS__)
+#define ILVEVOD_W2_SW(...) ILVEVOD_W2(v4i32, __VA_ARGS__)
+
+/* Description : Interleave even double word elements from vectors
+ * Arguments   : Inputs  - in0, in1, in2, in3
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Even double word elements of 'in0' and 'in1' are interleaved
+ *               and written to 'out0'
+ */
+#define ILVEV_D2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
+  out0 = (RTYPE)__msa_ilvev_d((v2i64)in1, (v2i64)in0);     \
+  out1 = (RTYPE)__msa_ilvev_d((v2i64)in3, (v2i64)in2);     \
+}
+#define ILVEV_D2_UB(...) ILVEV_D2(v16u8, __VA_ARGS__)
+#define ILVEV_D2_SB(...) ILVEV_D2(v16i8, __VA_ARGS__)
+#define ILVEV_D2_SW(...) ILVEV_D2(v4i32, __VA_ARGS__)
+
+/* Description : Interleave left half of byte elements from vectors
+ * Arguments   : Inputs  - in0, in1, in2, in3
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Left half of byte elements of 'in0' and 'in1' are interleaved
+ *               and written to 'out0'.
+ */
+#define ILVL_B2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
+  out0 = (RTYPE)__msa_ilvl_b((v16i8)in0, (v16i8)in1);     \
+  out1 = (RTYPE)__msa_ilvl_b((v16i8)in2, (v16i8)in3);     \
+}
+#define ILVL_B2_UB(...) ILVL_B2(v16u8, __VA_ARGS__)
+#define ILVL_B2_SB(...) ILVL_B2(v16i8, __VA_ARGS__)
+#define ILVL_B2_UH(...) ILVL_B2(v8u16, __VA_ARGS__)
+#define ILVL_B2_SH(...) ILVL_B2(v8i16, __VA_ARGS__)
+
 /* Description : Interleave right half of byte elements from vectors
  * Arguments   : Inputs  - in0, in1, in2, in3
  *               Outputs - out0, out1
@@ -365,6 +515,23 @@
 #define ILVR_D2_UB(...) ILVR_D2(v16u8, __VA_ARGS__)
 #define ILVR_D2_SB(...) ILVR_D2(v16i8, __VA_ARGS__)
 #define ILVR_D2_SH(...) ILVR_D2(v8i16, __VA_ARGS__)
+
+/* Description : Interleave both left and right half of input vectors
+ * Arguments   : Inputs  - in0, in1
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Right half of byte elements from 'in0' and 'in1' are
+ *               interleaved and written to 'out0'
+ */
+#define ILVRL_B2(RTYPE, in0, in1, out0, out1) {        \
+  out0 = (RTYPE)__msa_ilvr_b((v16i8)in0, (v16i8)in1);  \
+  out1 = (RTYPE)__msa_ilvl_b((v16i8)in0, (v16i8)in1);  \
+}
+#define ILVRL_B2_UB(...) ILVRL_B2(v16u8, __VA_ARGS__)
+#define ILVRL_B2_SB(...) ILVRL_B2(v16i8, __VA_ARGS__)
+#define ILVRL_B2_UH(...) ILVRL_B2(v8u16, __VA_ARGS__)
+#define ILVRL_B2_SH(...) ILVRL_B2(v8i16, __VA_ARGS__)
+#define ILVRL_B2_SW(...) ILVRL_B2(v4i32, __VA_ARGS__)
 
 #define ILVRL_H2(RTYPE, in0, in1, out0, out1) {        \
   out0 = (RTYPE)__msa_ilvr_h((v8i16)in0, (v8i16)in1);  \
@@ -512,6 +679,36 @@
   out1 = in1 + in2;                                                \
   out2 = in1 - in2;                                                \
   out3 = in0 - in3;                                                \
+}
+
+/* Description : Transpose 16x8 block into 8x16 with byte elements in vectors
+ * Arguments   : Inputs  - in0, in1, in2, in3, in4, in5, in6, in7,
+ *                         in8, in9, in10, in11, in12, in13, in14, in15
+ *               Outputs - out0, out1, out2, out3, out4, out5, out6, out7
+ *               Return Type - unsigned byte
+ */
+#define TRANSPOSE16x8_UB_UB(in0, in1, in2, in3, in4, in5, in6, in7,        \
+                            in8, in9, in10, in11, in12, in13, in14, in15,  \
+                            out0, out1, out2, out3, out4, out5,            \
+                            out6, out7) {                                  \
+  v8i16 tmp0_m, tmp1_m, tmp4_m, tmp5_m, tmp6_m, tmp7_m;                    \
+  v4i32 tmp2_m, tmp3_m;                                                    \
+  ILVEV_D2_UB(in0, in8, in1, in9, out7, out6);                             \
+  ILVEV_D2_UB(in2, in10, in3, in11, out5, out4);                           \
+  ILVEV_D2_UB(in4, in12, in5, in13, out3, out2);                           \
+  ILVEV_D2_UB(in6, in14, in7, in15, out1, out0);                           \
+  ILVEV_B2_SH(out7, out6, out5, out4, tmp0_m, tmp1_m);                     \
+  ILVOD_B2_SH(out7, out6, out5, out4, tmp4_m, tmp5_m);                     \
+  ILVEV_B2_UB(out3, out2, out1, out0, out5, out7);                         \
+  ILVOD_B2_SH(out3, out2, out1, out0, tmp6_m, tmp7_m);                     \
+  ILVEV_H2_SW(tmp0_m, tmp1_m, out5, out7, tmp2_m, tmp3_m);                 \
+  ILVEVOD_W2_UB(tmp2_m, tmp3_m, tmp2_m, tmp3_m, out0, out4);               \
+  ILVOD_H2_SW(tmp0_m, tmp1_m, out5, out7, tmp2_m, tmp3_m);                 \
+  ILVEVOD_W2_UB(tmp2_m, tmp3_m, tmp2_m, tmp3_m, out2, out6);               \
+  ILVEV_H2_SW(tmp4_m, tmp5_m, tmp6_m, tmp7_m, tmp2_m, tmp3_m);             \
+  ILVEVOD_W2_UB(tmp2_m, tmp3_m, tmp2_m, tmp3_m, out1, out5);               \
+  ILVOD_H2_SW(tmp4_m, tmp5_m, tmp6_m, tmp7_m, tmp2_m, tmp3_m);             \
+  ILVEVOD_W2_UB(tmp2_m, tmp3_m, tmp2_m, tmp3_m, out3, out7);               \
 }
 
 /* Description : Transpose 4x4 block with word elements in vectors
