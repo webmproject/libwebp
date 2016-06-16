@@ -464,7 +464,7 @@ static int BackwardReferencesLz77(int xsize, int ysize,
         }
       }
     } else {
-      len = 1;
+      len = (len == 0) ? 1 : len;
     }
     // Go with literal or backward reference.
     assert(len > 0);
