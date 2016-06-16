@@ -22,6 +22,30 @@
       "revId": "3dc28d7643dba8abc1fc4b056179d7bf6229bae9",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "740c99ee_b6bde1cb",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-06-16T17:41:31Z",
+      "side": 1,
+      "message": "\u003e could also be added to makefile.unix, i guess\n\nthis one needs detection unfortunately (clang-3.7:yes, gcc-4.8: no, gcc-4.9+: seems yes)",
+      "parentUuid": "545f95f9_580addc5",
+      "range": {
+        "startLine": 71,
+        "startChar": 35,
+        "endLine": 71,
+        "endChar": 41
+      },
+      "revId": "3dc28d7643dba8abc1fc4b056179d7bf6229bae9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
