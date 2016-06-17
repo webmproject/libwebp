@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "49b53cab_a844bb89",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-17T10:14:42Z",
+      "side": 1,
+      "message": "It returns v16i8 not v8i16.",
+      "parentUuid": "c9cf6c46_0c2b97e4",
+      "range": {
+        "startLine": 632,
+        "startChar": 18,
+        "endLine": 632,
+        "endChar": 31
+      },
+      "revId": "be9c24f20206548cc51a7e36ac2367253c597c08",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "09c6e430_8e3e9b1c",
         "filename": "src/dsp/msa_macro.h",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "49b53cab_48cdff3b",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 650,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-17T10:14:42Z",
+      "side": 1,
+      "message": "will remove duplicated lines",
+      "parentUuid": "09c6e430_8e3e9b1c",
+      "range": {
+        "startLine": 650,
+        "startChar": 18,
+        "endLine": 650,
+        "endChar": 31
+      },
+      "revId": "be9c24f20206548cc51a7e36ac2367253c597c08",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a9ca3837_cb1b35c2",
         "filename": "src/dsp/msa_macro.h",
         "patchSetId": 3
@@ -59,6 +107,30 @@
       "writtenOn": "2016-06-17T10:05:10Z",
       "side": 1,
       "message": "same here",
+      "range": {
+        "startLine": 652,
+        "startChar": 12,
+        "endLine": 652,
+        "endChar": 17
+      },
+      "revId": "be9c24f20206548cc51a7e36ac2367253c597c08",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49b53cab_68d243db",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 652,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-17T10:14:42Z",
+      "side": 1,
+      "message": "will remove duplicated lines",
+      "parentUuid": "a9ca3837_cb1b35c2",
       "range": {
         "startLine": 652,
         "startChar": 12,
