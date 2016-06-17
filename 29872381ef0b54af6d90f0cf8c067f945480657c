@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2991e80d_df077b47",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-06-17T05:55:32Z",
+      "side": 1,
+      "message": "we tend to split things on logical boundaries to make the changes more digestible, easier to review and bisect against should an issue come up in the future. break this on 8/16 and simple vs. complex boundaries.",
+      "revId": "29872381ef0b54af6d90f0cf8c067f945480657c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
