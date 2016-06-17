@@ -239,8 +239,7 @@ void WebPCopyPixels(const WebPPicture* const src, WebPPicture* const dst) {
 
 //------------------------------------------------------------------------------
 
-#define MAX_COLOR_COUNT         MAX_PALETTE_SIZE
-#define COLOR_HASH_SIZE         (MAX_COLOR_COUNT * 4)
+#define COLOR_HASH_SIZE         (MAX_PALETTE_SIZE * 4)
 #define COLOR_HASH_RIGHT_SHIFT  22  // 32 - log2(COLOR_HASH_SIZE).
 
 int WebPGetColorPalette(const WebPPicture* const pic, uint32_t* const palette) {
@@ -270,8 +269,8 @@ int WebPGetColorPalette(const WebPPicture* const pic, uint32_t* const palette) {
           colors[key] = last_pix;
           in_use[key] = 1;
           ++num_colors;
-          if (num_colors > MAX_COLOR_COUNT) {
-            return MAX_COLOR_COUNT + 1;  // Exact count not needed.
+          if (num_colors > MAX_PALETTE_SIZE) {
+            return MAX_PALETTE_SIZE + 1;  // Exact count not needed.
           }
           break;
         } else if (colors[key] == last_pix) {
@@ -298,7 +297,6 @@ int WebPGetColorPalette(const WebPPicture* const pic, uint32_t* const palette) {
   return num_colors;
 }
 
-#undef MAX_COLOR_COUNT
 #undef COLOR_HASH_SIZE
 #undef COLOR_HASH_RIGHT_SHIFT
 
