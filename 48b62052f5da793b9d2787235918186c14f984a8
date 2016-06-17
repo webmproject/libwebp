@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "49b53cab_686ec3ee",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-17T13:12:23Z",
+      "side": 1,
+      "message": "why not use __msa_subs_s_b() ?",
+      "range": {
+        "startLine": 175,
+        "startChar": 14,
+        "endLine": 175,
+        "endChar": 18
+      },
+      "revId": "48b62052f5da793b9d2787235918186c14f984a8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49b53cab_2878cbaa",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-17T13:12:23Z",
+      "side": 1,
+      "message": "by add two times q0_sub_p0 to itself with saturation, you could avoid going 16b arithmetic and having to interleave left/right and recombine.\n\nv16i8 tmp \u003d __msa_adds_s_b(q0_sub_p0, q0_sub_p0);\ntmp \u003d __msa_adds_s_b(q0_sub_p0, tmp);\ntmp *\u003d cnst3b;\n\nno?",
+      "range": {
+        "startLine": 229,
+        "startChar": 17,
+        "endLine": 229,
+        "endChar": 23
+      },
+      "revId": "48b62052f5da793b9d2787235918186c14f984a8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
