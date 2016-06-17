@@ -1055,7 +1055,7 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
   const int mask = hdr->huffman_mask_;
   const HTreeGroup* htree_group =
       (src < src_last) ? GetHtreeGroupForPos(hdr, col, row) : NULL;
-  assert(src < src_end);
+  assert(dec->last_row_ < last_row);
   assert(src_last <= src_end);
 
   while (src < src_last) {
