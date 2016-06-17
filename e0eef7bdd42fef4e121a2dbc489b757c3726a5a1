@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "89bbb49f_aab6efe9",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-17T08:07:45Z",
+      "side": 1,
+      "message": "for this kind of macros, we like to use the safer syntax :\n\ndo {\n   ...\n   ...\n} while (0)\n\ninstead of just:\n{\n ...\n}",
+      "range": {
+        "startLine": 160,
+        "startChar": 40,
+        "endLine": 160,
+        "endChar": 41
+      },
+      "revId": "e0eef7bdd42fef4e121a2dbc489b757c3726a5a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9c0b017_4dfe7975",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-17T08:07:45Z",
+      "side": 1,
+      "message": "it\u0027s confusing to use q0_sub_p0_l to store both a v16i8 and a v8i16 value.\nWould be more readable to use a properly typed temporary variable (and avoid few casts while at it).\n\nIn SSE2 code, we use a lot (i mean, a lot) of const temporary variables for that. Pretty much all lines are \u0027const __m128i tmp_xxx \u003d ....\u0027 till the very end). Could use that construct here too...",
+      "range": {
+        "startLine": 182,
+        "startChar": 38,
+        "endLine": 182,
+        "endChar": 49
+      },
+      "revId": "e0eef7bdd42fef4e121a2dbc489b757c3726a5a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49b53cab_88b9b7de",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-17T08:07:45Z",
+      "side": 1,
+      "message": "the cast shouldn\u0027t be necessary.\n\nAlso, use ()\u0027s around tests, for clarity.",
+      "range": {
+        "startLine": 319,
+        "startChar": 31,
+        "endLine": 319,
+        "endChar": 39
+      },
+      "revId": "e0eef7bdd42fef4e121a2dbc489b757c3726a5a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9ca3837_4bfe6575",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-17T08:07:45Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 330,
+        "startChar": 22,
+        "endLine": 330,
+        "endChar": 23
+      },
+      "revId": "e0eef7bdd42fef4e121a2dbc489b757c3726a5a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49b53cab_a8b6fbe9",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-17T08:07:45Z",
+      "side": 1,
+      "message": "declaration could be merged at line 350",
+      "range": {
+        "startLine": 343,
+        "startChar": 2,
+        "endLine": 343,
+        "endChar": 9
+      },
+      "revId": "e0eef7bdd42fef4e121a2dbc489b757c3726a5a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6933e020_61e676f3",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-17T08:07:45Z",
+      "side": 1,
+      "message": "probably clearer to use \u0027src - 4 * stride\u0027 and let the compiler deduce the \"\u003c\u003c 2\" by itself.",
+      "range": {
+        "startLine": 350,
+        "startChar": 24,
+        "endLine": 350,
+        "endChar": 26
+      },
+      "revId": "e0eef7bdd42fef4e121a2dbc489b757c3726a5a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9cf6c46_ecc72b46",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-17T08:07:45Z",
+      "side": 1,
+      "message": "the cast on out6/out7 shouldn\u0027t be necessary.\nActually, they are potentially hiding a bug when you pass out[0-7] with the wrong type.\nAlso the cast to v16u8 shouldn\u0027t be needed if tmp0_m is of the proper type (as it should)",
+      "range": {
+        "startLine": 632,
+        "startChar": 43,
+        "endLine": 632,
+        "endChar": 44
+      },
+      "revId": "e0eef7bdd42fef4e121a2dbc489b757c3726a5a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
