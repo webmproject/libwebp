@@ -450,33 +450,23 @@ static void HistogramCopyAndAnalyze(
 // Partition histograms to different entropy bins for three dominant (literal,
 // red and blue) symbol costs and compute the histogram aggregate bit_cost.
 static void HistogramAnalyzeEntropyBin(VP8LHistogramSet* const image_histo,
-                                       int16_t* const bin_map, int low_effort) {
+                                       uint16_t* const bin_map,
+                                       int low_effort) {
   int i;
   VP8LHistogram** const histograms = image_histo->histograms;
   const int histo_size = image_histo->size;
-  const int bin_depth = histo_size + 1;
   DominantCostRange cost_range;
   DominantCostRangeInit(&cost_range);
 
   // Analyze the dominant (literal, red and blue) entropy costs.
   for (i = 0; i < histo_size; ++i) {
-    VP8LHistogram* const histo = histograms[i];
-    UpdateDominantCostRange(histo, &cost_range);
+    UpdateDominantCostRange(histograms[i], &cost_range);
   }
 
   // bin-hash histograms on three of the dominant (literal, red and blue)
-  // symbol costs.
+  // symbol costs and store the resulting bin_id for each histogram.
   for (i = 0; i < histo_size; ++i) {
-    const VP8LHistogram* const histo = histograms[i];
-    const int bin_id = GetHistoBinIndex(histo, &cost_range, low_effort);
-    const int bin_offset = bin_id * bin_depth;
-    // bin_map[n][0] for every bin 'n' maintains the counter for the number of
-    // histograms in that bin.
-    // Get and increment the num_histos in that bin.
-    const int num_histos = ++bin_map[bin_offset];
-    assert(bin_offset + num_histos < bin_depth * BIN_SIZE);
-    // Add histogram i'th index at num_histos (last) position in the bin_map.
-    bin_map[bin_offset + num_histos] = i;
+    bin_map[i] = GetHistoBinIndex(histograms[i], &cost_range, low_effort);
   }
 }
 
@@ -500,19 +490,21 @@ static void HistogramCompactBins(VP8LHistogramSet* const image_histo) {
 static VP8LHistogram* HistogramCombineEntropyBin(
     VP8LHistogramSet* const image_histo,
     VP8LHistogram* cur_combo,
-    int16_t* const bin_map, int bin_depth, int num_bins,
+    uint16_t* const bin_map, int bin_map_size, int num_bins,
     double combine_cost_factor, int low_effort) {
-  int bin_id;
   VP8LHistogram** const histograms = image_histo->histograms;
+  int bin_id;
 
   for (bin_id = 0; bin_id < num_bins; ++bin_id) {
-    const int bin_offset = bin_id * bin_depth;
-    const int num_histos = bin_map[bin_offset];
-    const int idx1 = bin_map[bin_offset + 1];
     int num_combine_failures = 0;
-    int n;
-    for (n = 2; n <= num_histos; ++n) {
-      const int idx2 = bin_map[bin_offset + n];
+    int idx1, idx2;
+    for (idx1 = 0; idx1 < bin_map_size; ++idx1) {
+      if (bin_map[idx1] == bin_id) break;
+    }
+    if (idx1 == bin_map_size) continue;   // no histo with this bin_id
+    for (idx2 = idx1 + 1; idx2 < bin_map_size; ++idx2) {
+      if (bin_map[idx2] != bin_id) continue;
+      // try to merge #idx2 into #idx1 (both share the same bin_id)
       if (low_effort) {
         // Merge all histograms with the same bin index, irrespective of cost of
         // the merged histograms.
@@ -870,29 +862,16 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
   const int image_histo_raw_size = histo_xsize * histo_ysize;
   const int entropy_combine_num_bins = low_effort ? NUM_PARTITIONS : BIN_SIZE;
 
-  // The bin_map for every bin follows following semantics:
-  // bin_map[n][0] = num_histo; // The number of histograms in that bin.
-  // bin_map[n][1] = index of first histogram in that bin;
-  // bin_map[n][num_histo] = index of last histogram in that bin;
-  // bin_map[n][num_histo + 1] ... bin_map[n][bin_depth - 1] = unused indices.
-  const int bin_depth = image_histo_raw_size + 1;
-  int16_t* bin_map = NULL;
   VP8LHistogramSet* const orig_histo =
       VP8LAllocateHistogramSet(image_histo_raw_size, cache_bits);
   VP8LHistogram* cur_combo;
+  // Don't attempt linear bin-partition heuristic for
+  // histograms of small sizes (as bin_map will be very sparse) and
+  // maximum quality q==100 (to preserve the compression gains at that level).
   const int entropy_combine =
       (orig_histo->size > entropy_combine_num_bins * 2) && (quality < 100);
 
   if (orig_histo == NULL) goto Error;
-
-  // Don't attempt linear bin-partition heuristic for:
-  // histograms of small sizes, as bin_map will be very sparse and;
-  // Maximum quality (q==100), to preserve the compression gains at that level.
-  if (entropy_combine) {
-    const int bin_map_size = bin_depth * entropy_combine_num_bins;
-    bin_map = (int16_t*)WebPSafeCalloc(bin_map_size, sizeof(*bin_map));
-    if (bin_map == NULL) goto Error;
-  }
 
   // Construct the histograms from backward references.
   HistogramBuild(xsize, histo_bits, refs, orig_histo);
@@ -901,13 +880,20 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
 
   cur_combo = tmp_histos->histograms[1];  // pick up working slot
   if (entropy_combine) {
+    const int bin_map_size = orig_histo->size;
     const double combine_cost_factor =
         GetCombineCostFactor(image_histo_raw_size, quality);
+    uint16_t* const bin_map =
+        (uint16_t*)WebPSafeCalloc(bin_map_size, sizeof(*bin_map));
+    if (bin_map == NULL) goto Error;
+
     HistogramAnalyzeEntropyBin(orig_histo, bin_map, low_effort);
     // Collapse histograms with similar entropy.
-    cur_combo = HistogramCombineEntropyBin(image_histo, cur_combo, bin_map,
-                                           bin_depth, entropy_combine_num_bins,
+    cur_combo = HistogramCombineEntropyBin(image_histo, cur_combo,
+                                           bin_map, bin_map_size,
+                                           entropy_combine_num_bins,
                                            combine_cost_factor, low_effort);
+    WebPSafeFree(bin_map);
   }
 
   // Don't combine the histograms using stochastic and greedy heuristics for
@@ -931,7 +917,6 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
   ok = 1;
 
  Error:
-  WebPSafeFree(bin_map);
   VP8LFreeHistogramSet(orig_histo);
   return ok;
 }
