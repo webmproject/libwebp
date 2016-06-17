@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "6933e020_01168a98",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-17T11:52:49Z",
+      "side": 1,
+      "message": "hmm... these type change and casts are confusing. It seems to me there should be no signed type (i8,i16,i32...) used for transposing, but all should be unsigned (u8, u16, u32...).\nThis should help clarifying what\u0027s happening and avoiding some casts.\n\nI have the feeling these should be inlined functions, not macros. This would help with typing.",
+      "parentUuid": "49b53cab_a844bb89",
+      "range": {
+        "startLine": 632,
+        "startChar": 18,
+        "endLine": 632,
+        "endChar": 31
+      },
+      "revId": "be9c24f20206548cc51a7e36ac2367253c597c08",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "09c6e430_8e3e9b1c",
         "filename": "src/dsp/msa_macro.h",
         "patchSetId": 3
