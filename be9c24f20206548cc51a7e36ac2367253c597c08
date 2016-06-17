@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "49b53cab_88b3f7ab",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-17T12:30:03Z",
+      "side": 1,
+      "message": "I have modified this code for more readability and to avoid any confusion. Please let me know if this looks ok.",
+      "parentUuid": "6933e020_01168a98",
+      "range": {
+        "startLine": 632,
+        "startChar": 18,
+        "endLine": 632,
+        "endChar": 31
+      },
+      "revId": "be9c24f20206548cc51a7e36ac2367253c597c08",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "09c6e430_8e3e9b1c",
         "filename": "src/dsp/msa_macro.h",
         "patchSetId": 3
