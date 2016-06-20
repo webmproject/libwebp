@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "6920402e_f9b0d7f6",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-20T16:18:38Z",
+      "side": 1,
+      "message": "but it *can* wrap-around, right? We should prevent this...",
+      "parentUuid": "49b53cab_483bbfe3",
+      "range": {
+        "startLine": 175,
+        "startChar": 14,
+        "endLine": 175,
+        "endChar": 18
+      },
+      "revId": "48b62052f5da793b9d2787235918186c14f984a8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "49b53cab_2878cbaa",
         "filename": "src/dsp/dec_msa.c",
         "patchSetId": 5
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "We need to do operation saturate(filt +\u003d q0_sub_p0 * 3) where filt is signed and intermediate saturate of q0_sub_p0 could be different than expected output.",
       "parentUuid": "49b53cab_2878cbaa",
+      "range": {
+        "startLine": 229,
+        "startChar": 17,
+        "endLine": 229,
+        "endChar": 23
+      },
+      "revId": "48b62052f5da793b9d2787235918186c14f984a8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6920402e_99a51bb8",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-20T16:18:38Z",
+      "side": 1,
+      "message": "yes, you need to do the adds saturated, but the final result q0_sub_p0 is not important once it\u0027s larger than the final threshold. You don\u0027t need to exact value in this end, if they are too large.\n\nSee src/dsp/dec_sse2.c:378: in the function DoFilter4(), all computations are done a 8b signed.",
+      "parentUuid": "49b53cab_c82ecfa1",
       "range": {
         "startLine": 229,
         "startChar": 17,
