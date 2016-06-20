@@ -881,11 +881,10 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
   cur_combo = tmp_histos->histograms[1];  // pick up working slot
   if (entropy_combine) {
     const int bin_map_size = orig_histo->size;
+    // reuse histogram_symbols storage. By definition, it's guaranteed to be ok.
+    uint16_t* const bin_map = histogram_symbols;
     const double combine_cost_factor =
         GetCombineCostFactor(image_histo_raw_size, quality);
-    uint16_t* const bin_map =
-        (uint16_t*)WebPSafeCalloc(bin_map_size, sizeof(*bin_map));
-    if (bin_map == NULL) goto Error;
 
     HistogramAnalyzeEntropyBin(orig_histo, bin_map, low_effort);
     // Collapse histograms with similar entropy.
@@ -893,7 +892,6 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
                                            bin_map, bin_map_size,
                                            entropy_combine_num_bins,
                                            combine_cost_factor, low_effort);
-    WebPSafeFree(bin_map);
   }
 
   // Don't combine the histograms using stochastic and greedy heuristics for
