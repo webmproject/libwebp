@@ -653,6 +653,7 @@ typedef struct {
   size_t cache_intervals_size_;
   double cost_cache_[MAX_LENGTH];  // Contains the GetLengthCost(cost_model, k).
   double min_cost_cache_;          // The minimum value in cost_cache_[1:].
+  double max_cost_cache_;          // The maximum value in cost_cache_[1:].
   float* costs_;
   uint16_t* dist_array_;
   // Most of the time, we only need few intervals -> use a free-list, to avoid
@@ -662,6 +663,10 @@ typedef struct {
   // These are regularly malloc'd remains. This list can't grow larger than than
   // size COST_CACHE_INTERVAL_SIZE_MAX - COST_MANAGER_MAX_FREE_LIST, note.
   CostInterval* recycled_intervals_;
+  // Buffer used in BackwardReferencesHashChainDistanceOnly to store the ends
+  // of the intervals that can have impacted the cost at a pixel.
+  int* interval_ends_;
+  int interval_ends_size_;
 } CostManager;
 
 static int IsCostCacheIntervalWritable(int start, int end) {
@@ -710,6 +715,7 @@ static void CostManagerClear(CostManager* const manager) {
 
   WebPSafeFree(manager->costs_);
   WebPSafeFree(manager->cache_intervals_);
+  WebPSafeFree(manager->interval_ends_);
 
   // Clear the interval lists.
   DeleteIntervalList(manager, manager->head_);
@@ -731,6 +737,9 @@ static int CostManagerInit(CostManager* const manager,
   // Empirically, differences between intervals is usually of more than 1.
   const double min_cost_diff = 0.1;
 
+  manager->costs_ = NULL;
+  manager->cache_intervals_ = NULL;
+  manager->interval_ends_ = NULL;
   manager->head_ = NULL;
   manager->recycled_intervals_ = NULL;
   manager->count_ = 0;
@@ -750,8 +759,11 @@ static int CostManagerInit(CostManager* const manager,
     // Compute the minimum of cost_cache_.
     if (i == 1) {
       manager->min_cost_cache_ = manager->cost_cache_[1];
+      manager->max_cost_cache_ = manager->cost_cache_[1];
     } else if (manager->cost_cache_[i] < manager->min_cost_cache_) {
       manager->min_cost_cache_ = manager->cost_cache_[i];
+    } else if (manager->cost_cache_[i] > manager->max_cost_cache_) {
+      manager->max_cost_cache_ = manager->cost_cache_[i];
     }
   }
 
@@ -823,8 +835,56 @@ static int CostManagerInit(CostManager* const manager,
     CostManagerClear(manager);
     return 0;
   }
-  // Set the initial costs_ high for every pixel as we wil lkeep the minimum.
+  // Set the initial costs_ high for every pixel as we will keep the minimum.
   for (i = 0; i < pix_count; ++i) manager->costs_[i] = 1e38f;
+
+  // The cost at pixel is influenced by the cost intervals from previous pixels.
+  // Let us take the specific case where the offset is the same (which actually
+  // happens a lot in case of uniform regions).
+  // pixel i contributes to j>i a cost of: offset cost + cost_cache_[j-i]
+  // pixel i+1 contributes to j>i a cost of: 2*offset cost + cost_cache_[j-i-1]
+  // pixel i+2 contributes to j>i a cost of: 3*offset cost + cost_cache_[j-i-2]
+  // and so on.
+  // A pixel i influences the following length(j) < MAX_LENGTH pixels. What is
+  // the value of j such that pixel i + j cannot influence any of those pixels?
+  // This value is such that:
+  //               max of cost_cache_ < j*offset cost + min of cost_cache_
+  // (pixel i + j 's cost cannot beat the worst cost given by pixel i).
+  // This value will be used to optimize the cost computation in
+  // BackwardReferencesHashChainDistanceOnly.
+  {
+    // The offset cost is computed in GetDistanceCost and has a minimum value of
+    // the minimum in cost_model->distance_. The case where the offset cost is 0
+    // will be dealt with differently later so we are only interested in the
+    // minimum non-zero offset cost.
+    double offset_cost_min = 0.;
+    int size;
+    for (i = 0; i < NUM_DISTANCE_CODES; ++i) {
+      if (cost_model->distance_[i] != 0) {
+        if (offset_cost_min == 0.) {
+          offset_cost_min = cost_model->distance_[i];
+        } else if (cost_model->distance_[i] < offset_cost_min) {
+          offset_cost_min = cost_model->distance_[i];
+        }
+      }
+    }
+    // In case all the cost_model->distance_ is 0, the next non-zero cost we
+    // can have is from the extra bit in GetDistanceCost, hence 1.
+    if (offset_cost_min < 1.) offset_cost_min = 1.;
+
+    size = 1 + (int)ceil((manager->max_cost_cache_ - manager->min_cost_cache_) /
+                         offset_cost_min);
+    // Empirically, we usually end up with a value below 100.
+    if (size > MAX_LENGTH) size = MAX_LENGTH;
+
+    manager->interval_ends_ =
+        (int*)WebPSafeMalloc(size, sizeof(*manager->interval_ends_));
+    if (manager->interval_ends_ == NULL) {
+      CostManagerClear(manager);
+      return 0;
+    }
+    manager->interval_ends_size_ = size;
+  }
 
   return 1;
 }
@@ -1158,52 +1218,55 @@ static int BackwardReferencesHashChainDistanceOnly(
       const int code = DistanceToPlaneCode(xsize, offset);
       const double offset_cost = GetDistanceCost(cost_model, code);
       const int first_i = i;
-      int j_max;
+      int j_max = 0, interval_ends_index = 0;
+      const int is_offset_zero = (offset_cost == 0.);
 
-      if (offset_cost == 0.) {
-        j_max = 1;
-      } else {
-        j_max = (int)ceil(cost_manager->min_cost_cache_ / offset_cost);
-        assert(j_max >= 1);
-      }
+      if (!is_offset_zero) {
+        j_max = (int)ceil(
+            (cost_manager->max_cost_cache_ - cost_manager->min_cost_cache_) /
+            offset_cost);
+        if (j_max < 1) {
+          j_max = 1;
+        } else if (j_max > cost_manager->interval_ends_size_ - 1) {
+          // This could only happen in the case of MAX_LENGTH.
+          j_max = cost_manager->interval_ends_size_ - 1;
+        }
+      }  // else j_max is unused anyway.
 
-      // With the values we currently use for the model, offset_cost is
-      // between 10 and 20 and j_max ends up at 2 or 3.
-      if (j_max > MAX_LENGTH - 1) j_max = MAX_LENGTH - 1;
-
-      // The cost to get to pixel i+k is:
-      //   prev_cost + best weight of path going from i to l.
-      // For the last cost, if the path were composed of several segments
-      // (like [i,j), [j,k), [k,l) ), its cost would be:
-      //   offset cost + manager->cost_cache_[j-i] +
-      //   offset cost + manager->cost_cache_[k-j] +
-      //   offset cost + manager->cost_cache_[l-j]
-      // As the offset_cost is close to the values in cost_cache_ (both are the
-      // cost to store a number, whether it's an offset or a length), the best
-      // paths are therefore the ones involving one hop.
+      // Instead of considering all contributions from a pixel i by calling:
+      //         PushInterval(cost_manager, prev_cost + offset_cost, i, len);
+      // we optimize these contributions in case offset_cost stays the same for
+      // consecutive pixels. This describes a set of pixels similar to a
+      // previous set (e.g. constant color regions).
       for (; i < pix_count - 1; ++i) {
         int offset_next, len_next;
-        double distance_cost;
-
         prev_cost = cost_manager->costs_[i - 1];
-        distance_cost = prev_cost + offset_cost;
 
-        if (len != MAX_LENGTH || i == first_i) {
-          PushInterval(cost_manager, distance_cost, i, len);
+        if (is_offset_zero) {
+          // No optimization can be made so we just push all of the
+          // contributions from i.
+          PushInterval(cost_manager, prev_cost, i, len);
         } else {
-          int j;
-          // The pixel at i + MAX_LENGTH - 1 is influenced by all the pixels
-          // before at i + MAX_LENGTH - j. Then again, the distance cost
-          // provided by those is increased by offset_cost*j. Therefore, only
-          // the pixels providing a length cost inferior to offset_cost*j can be
-          // considered.
-          // As we know this cost is at least cost_manager->min_cost_cache_:
-          // therefore only the first j_max pixels from i influence
-          // i + MAX_LENGTH - 1.
-          // Reciprocally, pixel i only influences the last j_max pixels.
-          for (j = 1; j <= j_max; ++j) {
-            UpdateCost(cost_manager, i + MAX_LENGTH - j, i, distance_cost);
+          // j_max is chosen as the smallest j such that:
+          //       max of cost_cache_ < j*offset cost + min of cost_cache_
+          // Therefore, the pixel influenced by i-j_max, cannot be influenced
+          // by i. Only the costs after the end of what i contributed need to be
+          // updated. cost_manager->interval_ends_ is a circular buffer that
+          // stores those ends.
+          const double distance_cost = prev_cost + offset_cost;
+          int j = cost_manager->interval_ends_[interval_ends_index];
+          if (i - first_i <= j_max ||
+              !IsCostCacheIntervalWritable(j, i + len)) {
+            PushInterval(cost_manager, distance_cost, i, len);
+          } else {
+            for (; j < i + len; ++j) {
+              UpdateCost(cost_manager, j, i, distance_cost);
+            }
           }
+          // Store the new end in the circular buffer.
+          assert(interval_ends_index < cost_manager->interval_ends_size_);
+          cost_manager->interval_ends_[interval_ends_index] = i + len;
+          if (++interval_ends_index > j_max) interval_ends_index = 0;
         }
 
         // Check whether i is the last pixel to consider, as it is handled
