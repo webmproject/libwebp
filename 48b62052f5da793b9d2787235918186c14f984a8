@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "4e3aa2f7_00a206b3",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-22T05:41:56Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "6920402e_f9b0d7f6",
+      "range": {
+        "startLine": 175,
+        "startChar": 14,
+        "endLine": 175,
+        "endChar": 18
+      },
+      "revId": "48b62052f5da793b9d2787235918186c14f984a8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "49b53cab_2878cbaa",
         "filename": "src/dsp/dec_msa.c",
         "patchSetId": 5
@@ -132,6 +156,30 @@
       "side": 1,
       "message": "yes, you need to do the adds saturated, but the final result q0_sub_p0 is not important once it\u0027s larger than the final threshold. You don\u0027t need to exact value in this end, if they are too large.\n\nSee src/dsp/dec_sse2.c:378: in the function DoFilter4(), all computations are done a 8b signed.",
       "parentUuid": "49b53cab_c82ecfa1",
+      "range": {
+        "startLine": 229,
+        "startChar": 17,
+        "endLine": 229,
+        "endChar": 23
+      },
+      "revId": "48b62052f5da793b9d2787235918186c14f984a8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4eb542ab_e894f34b",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-22T05:41:56Z",
+      "side": 1,
+      "message": "yes..for filter4() we can do 8 bit arithmatic.",
+      "parentUuid": "6920402e_99a51bb8",
       "range": {
         "startLine": 229,
         "startChar": 17,
