@@ -164,6 +164,24 @@
   SW(in3, ptmp);                                 \
 }
 
+/* Description : Store 4 double words with stride
+ * Arguments   : Inputs - in0, in1, in2, in3, pdst, stride
+ * Details     : Store double word from 'in0' to (pdst)
+ *               Store double word from 'in1' to (pdst + stride)
+ *               Store double word from 'in2' to (pdst + 2 * stride)
+ *               Store double word from 'in3' to (pdst + 3 * stride)
+ */
+#define SD4(in0, in1, in2, in3, pdst, stride) {  \
+  uint8_t* ptmp = (uint8_t*)pdst;                \
+  SD(in0, ptmp);                                 \
+  ptmp += stride;                                \
+  SD(in1, ptmp);                                 \
+  ptmp += stride;                                \
+  SD(in2, ptmp);                                 \
+  ptmp += stride;                                \
+  SD(in3, ptmp);                                 \
+}
+
 /* Description : Load vectors with 16 byte elements with stride
  * Arguments   : Inputs  - psrc, stride
  *               Outputs - out0, out1
@@ -448,6 +466,7 @@
 #define ILVL_B2_SB(...) ILVL_B2(v16i8, __VA_ARGS__)
 #define ILVL_B2_UH(...) ILVL_B2(v8u16, __VA_ARGS__)
 #define ILVL_B2_SH(...) ILVL_B2(v8i16, __VA_ARGS__)
+#define ILVL_B2_SW(...) ILVL_B2(v4i32, __VA_ARGS__)
 
 /* Description : Interleave right half of byte elements from vectors
  * Arguments   : Inputs  - in0, in1, in2, in3
@@ -515,6 +534,14 @@
 #define ILVR_D2_UB(...) ILVR_D2(v16u8, __VA_ARGS__)
 #define ILVR_D2_SB(...) ILVR_D2(v16i8, __VA_ARGS__)
 #define ILVR_D2_SH(...) ILVR_D2(v8i16, __VA_ARGS__)
+
+#define ILVR_D4(RTYPE, in0, in1, in2, in3, in4, in5, in6, in7,  \
+                out0, out1, out2, out3) {                       \
+  ILVR_D2(RTYPE, in0, in1, in2, in3, out0, out1);               \
+  ILVR_D2(RTYPE, in4, in5, in6, in7, out2, out3);               \
+}
+#define ILVR_D4_SB(...) ILVR_D4(v16i8, __VA_ARGS__)
+#define ILVR_D4_UB(...) ILVR_D4(v16u8, __VA_ARGS__)
 
 /* Description : Interleave both left and right half of input vectors
  * Arguments   : Inputs  - in0, in1

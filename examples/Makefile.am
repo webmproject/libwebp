@@ -40,11 +40,13 @@ dwebp_SOURCES = dwebp.c stopwatch.h
 dwebp_CPPFLAGS  = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
 dwebp_CPPFLAGS += $(JPEG_INCLUDES) $(PNG_INCLUDES)
 dwebp_LDADD = libexampleutil.la $(PNG_LIBS) $(JPEG_LIBS)
+dwebp_LDFLAGS = -all-static
 
 cwebp_SOURCES  = cwebp.c stopwatch.h
 cwebp_CPPFLAGS  = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
 cwebp_LDADD  = libexampleutil.la libexampledec.la ../src/libwebp.la
 cwebp_LDADD += $(JPEG_LIBS) $(PNG_LIBS) $(TIFF_LIBS)
+cwebp_LDFLAGS = -all-static
 
 gif2webp_SOURCES = gif2webp.c gifdec.c gifdec.h
 gif2webp_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE) $(GIF_INCLUDES)
