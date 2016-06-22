@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2eb80ea6_07a7f6c0",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-22T06:38:55Z",
+      "side": 1,
+      "message": "note that you could factorize some operations and only perform one multiply:\n\ntmp0 \u003d filt_r * cnst9h;\ntmp1 \u003d tmp0 + cnst63;\nu_r \u003d SRAI_H(tmp1, 7);\n  ... update q2/p2\ntmp1 \u003d tmp1 + tmp0;\nu_r \u003d SRAI_H(tmp1, 7);\n  ... update q1/p1\ntmp1 \u003d tmp1 + tmp0;\nu_r \u003d SRAI_H(tmp1, 7);\n ... update p0/q0",
+      "range": {
+        "startLine": 260,
+        "startChar": 2,
+        "endLine": 260,
+        "endChar": 5
+      },
+      "revId": "8e4b179f4e4f25b908123990d4d53961d49e0694",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
