@@ -39,8 +39,8 @@ typedef struct WebPDecoderConfig WebPDecoderConfig;
 WEBP_EXTERN(int) WebPGetDecoderVersion(void);
 
 // Retrieve basic header information: width, height.
-// This function will also validate the header and return 0 in
-// case of formatting error.
+// This function will also validate the header, returning true on success,
+// false otherwise. '*width' and '*height' are only valid on successful return.
 // Pointers 'width' and 'height' can be passed NULL if deemed irrelevant.
 WEBP_EXTERN(int) WebPGetInfo(const uint8_t* data, size_t data_size,
                              int* width, int* height);
