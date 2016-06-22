@@ -289,12 +289,23 @@ static void TransformAC3(const int16_t* in, uint8_t* dst) {
   mask_out = __msa_xori_b(mask_out, 0xff);                       \
 } while (0)
 
-#define ST6x1_UB(in0, in0_idx, in1, in1_idx, pdst, stride) {    \
+#define ST6x1_UB(in0, in0_idx, in1, in1_idx, pdst, stride) do { \
   const uint16_t tmp0_h = __msa_copy_s_h((v8i16)in1, in1_idx);  \
   const uint32_t tmp0_w = __msa_copy_s_w((v4i32)in0, in0_idx);  \
   SW(tmp0_w, pdst);                                             \
   SH(tmp0_h, pdst + stride);                                    \
-}
+} while (0)
+
+#define ST6x4_UB(in0, start_in0_idx, in1, start_in1_idx, pdst, stride) do { \
+  uint8_t* ptmp1 = (uint8_t*)pdst;                                          \
+  ST6x1_UB(in0, start_in0_idx, in1, start_in1_idx, ptmp1, 4);               \
+  ptmp1 += stride;                                                          \
+  ST6x1_UB(in0, start_in0_idx + 1, in1, start_in1_idx + 1, ptmp1, 4);       \
+  ptmp1 += stride;                                                          \
+  ST6x1_UB(in0, start_in0_idx + 2, in1, start_in1_idx + 2, ptmp1, 4);       \
+  ptmp1 += stride;                                                          \
+  ST6x1_UB(in0, start_in0_idx + 3, in1, start_in1_idx + 3, ptmp1, 4);       \
+} while (0)
 
 static void VFilter16(uint8_t *src, int stride,
                       int b_limit_in, int limit_in, int thresh_in) {
@@ -393,8 +404,8 @@ static void VFilterHorEdge16i(uint8_t *src, int stride,
 
 static void VFilter16i(uint8_t *src_y, int stride,
                        int b_limit, int limit, int thresh) {
-  VFilterHorEdge16i(src_y + 4 * stride, stride, b_limit, limit, thresh);
-  VFilterHorEdge16i(src_y + 8 * stride, stride, b_limit, limit, thresh);
+  VFilterHorEdge16i(src_y +  4 * stride, stride, b_limit, limit, thresh);
+  VFilterHorEdge16i(src_y +  8 * stride, stride, b_limit, limit, thresh);
   VFilterHorEdge16i(src_y + 12 * stride, stride, b_limit, limit, thresh);
 }
 
@@ -430,9 +441,155 @@ static void HFilterVertEdge16i(uint8_t *src, int stride,
 
 static void HFilter16i(uint8_t *src_y, int stride,
                        int b_limit, int limit, int thresh) {
-  HFilterVertEdge16i(src_y + 4, stride, b_limit, limit, thresh);
-  HFilterVertEdge16i(src_y + 8, stride, b_limit, limit, thresh);
+  HFilterVertEdge16i(src_y +  4, stride, b_limit, limit, thresh);
+  HFilterVertEdge16i(src_y +  8, stride, b_limit, limit, thresh);
   HFilterVertEdge16i(src_y + 12, stride, b_limit, limit, thresh);
+}
+
+// 8-pixels wide variants, for chroma filtering
+static void VFilter8(uint8_t* src_u, uint8_t* src_v, int stride,
+                     int b_limit_in, int limit_in, int thresh_in) {
+  uint8_t* ptmp_src_u = src_u - 4 * stride;
+  uint8_t* ptmp_src_v = src_v - 4 * stride;
+  uint64_t p2_d, p1_d, p0_d, q0_d, q1_d, q2_d;
+  v16u8 p3, p2, p1, p0, q3, q2, q1, q0, mask, hev;
+  v16u8 p3_u, p2_u, p1_u, p0_u, q3_u, q2_u, q1_u, q0_u;
+  v16u8 p3_v, p2_v, p1_v, p0_v, q3_v, q2_v, q1_v, q0_v;
+  const v16u8 b_limit = (v16u8)__msa_fill_b(b_limit_in);
+  const v16u8 limit = (v16u8)__msa_fill_b(limit_in);
+  const v16u8 thresh = (v16u8)__msa_fill_b(thresh_in);
+
+  LD_UB8(ptmp_src_u, stride, p3_u, p2_u, p1_u, p0_u, q0_u, q1_u, q2_u, q3_u);
+  LD_UB8(ptmp_src_v, stride, p3_v, p2_v, p1_v, p0_v, q0_v, q1_v, q2_v, q3_v);
+  ILVR_D4_UB(p3_v, p3_u, p2_v, p2_u, p1_v, p1_u, p0_v, p0_u, p3, p2, p1, p0);
+  ILVR_D4_UB(q0_v, q0_u, q1_v, q1_u, q2_v, q2_u, q3_v, q3_u, q0, q1, q2, q3);
+  LPF_MASK_HEV(p3, p2, p1, p0, q0, q1, q2, q3, limit, b_limit, thresh,
+               hev, mask);
+  LPF_MBFILTER(p2, p1, p0, q0, q1, q2, mask, hev);
+  p2_d = __msa_copy_s_d((v2i64)p2, 0);
+  p1_d = __msa_copy_s_d((v2i64)p1, 0);
+  p0_d = __msa_copy_s_d((v2i64)p0, 0);
+  q0_d = __msa_copy_s_d((v2i64)q0, 0);
+  q1_d = __msa_copy_s_d((v2i64)q1, 0);
+  q2_d = __msa_copy_s_d((v2i64)q2, 0);
+  ptmp_src_u += stride;
+  SD4(p2_d, p1_d, p0_d, q0_d, ptmp_src_u, stride);
+  ptmp_src_u += (4 * stride);
+  SD(q1_d, ptmp_src_u);
+  ptmp_src_u += stride;
+  SD(q2_d, ptmp_src_u);
+  p2_d = __msa_copy_s_d((v2i64)p2, 1);
+  p1_d = __msa_copy_s_d((v2i64)p1, 1);
+  p0_d = __msa_copy_s_d((v2i64)p0, 1);
+  q0_d = __msa_copy_s_d((v2i64)q0, 1);
+  q1_d = __msa_copy_s_d((v2i64)q1, 1);
+  q2_d = __msa_copy_s_d((v2i64)q2, 1);
+  ptmp_src_v += stride;
+  SD4(p2_d, p1_d, p0_d, q0_d, ptmp_src_v, stride);
+  ptmp_src_v += (4 * stride);
+  SD(q1_d, ptmp_src_v);
+  ptmp_src_v += stride;
+  SD(q2_d, ptmp_src_v);
+}
+
+static void HFilter8(uint8_t* src_u, uint8_t* src_v, int stride,
+                     int b_limit_in, int limit_in, int thresh_in) {
+  uint8_t* ptmp_src_u = src_u - 4;
+  uint8_t* ptmp_src_v = src_v - 4;
+  v16u8 p3, p2, p1, p0, q3, q2, q1, q0, mask, hev;
+  v16u8 row0, row1, row2, row3, row4, row5, row6, row7, row8;
+  v16u8 row9, row10, row11, row12, row13, row14, row15;
+  v8i16 tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+  const v16u8 b_limit = (v16u8)__msa_fill_b(b_limit_in);
+  const v16u8 limit = (v16u8)__msa_fill_b(limit_in);
+  const v16u8 thresh = (v16u8)__msa_fill_b(thresh_in);
+
+  LD_UB8(ptmp_src_u, stride, row0, row1, row2, row3, row4, row5, row6, row7);
+  LD_UB8(ptmp_src_v, stride,
+         row8, row9, row10, row11, row12, row13, row14, row15);
+  TRANSPOSE16x8_UB_UB(row0, row1, row2, row3, row4, row5, row6, row7,
+                      row8, row9, row10, row11, row12, row13, row14, row15,
+                      p3, p2, p1, p0, q0, q1, q2, q3);
+  LPF_MASK_HEV(p3, p2, p1, p0, q0, q1, q2, q3, limit, b_limit, thresh,
+               hev, mask);
+  LPF_MBFILTER(p2, p1, p0, q0, q1, q2, mask, hev);
+  ILVR_B2_SH(p1, p2, q0, p0, tmp0, tmp1);
+  ILVRL_H2_SH(tmp1, tmp0, tmp3, tmp4);
+  ILVL_B2_SH(p1, p2, q0, p0, tmp0, tmp1);
+  ILVRL_H2_SH(tmp1, tmp0, tmp6, tmp7);
+  ILVRL_B2_SH(q2, q1, tmp2, tmp5);
+  ptmp_src_u += 1;
+  ST6x4_UB(tmp3, 0, tmp2, 0, ptmp_src_u, stride);
+  ptmp_src_u += 4 * stride;
+  ST6x4_UB(tmp4, 0, tmp2, 4, ptmp_src_u, stride);
+  ptmp_src_v += 1;
+  ST6x4_UB(tmp6, 0, tmp5, 0, ptmp_src_v, stride);
+  ptmp_src_v += 4 * stride;
+  ST6x4_UB(tmp7, 0, tmp5, 4, ptmp_src_v, stride);
+}
+
+static void VFilter8i(uint8_t* src_u, uint8_t* src_v, int stride,
+                      int b_limit_in, int limit_in, int thresh_in) {
+  uint64_t p1_d, p0_d, q0_d, q1_d;
+  v16u8 p3, p2, p1, p0, q3, q2, q1, q0, mask, hev;
+  v16u8 p3_u, p2_u, p1_u, p0_u, q3_u, q2_u, q1_u, q0_u;
+  v16u8 p3_v, p2_v, p1_v, p0_v, q3_v, q2_v, q1_v, q0_v;
+  const v16u8 thresh = (v16u8)__msa_fill_b(thresh_in);
+  const v16u8 limit = (v16u8)__msa_fill_b(limit_in);
+  const v16u8 b_limit = (v16u8)__msa_fill_b(b_limit_in);
+
+  LD_UB8(src_u, stride, p3_u, p2_u, p1_u, p0_u, q0_u, q1_u, q2_u, q3_u);
+  src_u += (5 * stride);
+  LD_UB8(src_v, stride, p3_v, p2_v, p1_v, p0_v, q0_v, q1_v, q2_v, q3_v);
+  src_v += (5 * stride);
+  ILVR_D4_UB(p3_v, p3_u, p2_v, p2_u, p1_v, p1_u, p0_v, p0_u, p3, p2, p1, p0);
+  ILVR_D4_UB(q0_v, q0_u, q1_v, q1_u, q2_v, q2_u, q3_v, q3_u, q0, q1, q2, q3);
+  LPF_MASK_HEV(p3, p2, p1, p0, q0, q1, q2, q3, limit, b_limit, thresh,
+               hev, mask);
+  LPF_FILTER4_4W(p1, p0, q0, q1, mask, hev);
+  p1_d = __msa_copy_s_d((v2i64)p1, 0);
+  p0_d = __msa_copy_s_d((v2i64)p0, 0);
+  q0_d = __msa_copy_s_d((v2i64)q0, 0);
+  q1_d = __msa_copy_s_d((v2i64)q1, 0);
+  SD4(q1_d, q0_d, p0_d, p1_d, src_u, -stride);
+  p1_d = __msa_copy_s_d((v2i64)p1, 1);
+  p0_d = __msa_copy_s_d((v2i64)p0, 1);
+  q0_d = __msa_copy_s_d((v2i64)q0, 1);
+  q1_d = __msa_copy_s_d((v2i64)q1, 1);
+  SD4(q1_d, q0_d, p0_d, p1_d, src_v, -stride);
+}
+
+static void HFilter8i(uint8_t* src_u, uint8_t* src_v, int stride,
+                      int b_limit_in, int limit_in, int thresh_in) {
+  v16u8 p3, p2, p1, p0, q3, q2, q1, q0, mask, hev;
+  v16u8 row0, row1, row2, row3, row4, row5, row6, row7, row8;
+  v16u8 row9, row10, row11, row12, row13, row14, row15;
+  v4i32 tmp0, tmp1, tmp2, tmp3, tmp4, tmp5;
+  const v16u8 thresh = (v16u8)__msa_fill_b(thresh_in);
+  const v16u8 limit = (v16u8)__msa_fill_b(limit_in);
+  const v16u8 b_limit = (v16u8)__msa_fill_b(b_limit_in);
+
+  LD_UB8(src_u, stride, row0, row1, row2, row3, row4, row5, row6, row7);
+  LD_UB8(src_v, stride,
+         row8, row9, row10, row11, row12, row13, row14, row15);
+  TRANSPOSE16x8_UB_UB(row0, row1, row2, row3, row4, row5, row6, row7,
+                      row8, row9, row10, row11, row12, row13, row14, row15,
+                      p3, p2, p1, p0, q0, q1, q2, q3);
+  LPF_MASK_HEV(p3, p2, p1, p0, q0, q1, q2, q3, limit, b_limit, thresh,
+               hev, mask);
+  LPF_FILTER4_4W(p1, p0, q0, q1, mask, hev);
+  ILVR_B2_SW(p0, p1, q1, q0, tmp0, tmp1);
+  ILVRL_H2_SW(tmp1, tmp0, tmp2, tmp3);
+  ILVL_B2_SW(p0, p1, q1, q0, tmp0, tmp1);
+  ILVRL_H2_SW(tmp1, tmp0, tmp4, tmp5);
+  src_u += 2;
+  ST4x4_UB(tmp2, tmp2, 0, 1, 2, 3, src_u, stride);
+  src_u += 4 * stride;
+  ST4x4_UB(tmp3, tmp3, 0, 1, 2, 3, src_u, stride);
+  src_v += 2;
+  ST4x4_UB(tmp4, tmp4, 0, 1, 2, 3, src_v, stride);
+  src_v += 4 * stride;
+  ST4x4_UB(tmp5, tmp5, 0, 1, 2, 3, src_v, stride);
 }
 
 //------------------------------------------------------------------------------
@@ -446,10 +603,14 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMSA(void) {
   VP8TransformDC = TransformDC;
   VP8TransformAC3 = TransformAC3;
 
-  VP8VFilter16 = VFilter16;
-  VP8HFilter16 = HFilter16;
+  VP8VFilter16  = VFilter16;
+  VP8HFilter16  = HFilter16;
   VP8VFilter16i = VFilter16i;
   VP8HFilter16i = HFilter16i;
+  VP8VFilter8  = VFilter8;
+  VP8HFilter8  = HFilter8;
+  VP8VFilter8i = VFilter8i;
+  VP8HFilter8i = HFilter8i;
 }
 
 #else  // !WEBP_USE_MSA
