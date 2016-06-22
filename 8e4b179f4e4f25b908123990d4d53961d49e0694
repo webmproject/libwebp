@@ -22,6 +22,30 @@
       "revId": "8e4b179f4e4f25b908123990d4d53961d49e0694",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e5cc664_19256b10",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-22T08:41:34Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "2eb80ea6_07a7f6c0",
+      "range": {
+        "startLine": 260,
+        "startChar": 2,
+        "endLine": 260,
+        "endChar": 5
+      },
+      "revId": "8e4b179f4e4f25b908123990d4d53961d49e0694",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
