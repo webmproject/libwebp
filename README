@@ -341,7 +341,7 @@ Use following options to convert into alternate image formats:
   -yuv ......... save the raw YUV samples in flat layout
 
  Other options are:
-  -version  .... print version number and exit
+  -version ..... print version number and exit
   -nofancy ..... don't use the fancy YUV420 upscaler
   -nofilter .... disable in-loop filtering
   -nodither .... disable dithering
@@ -353,8 +353,8 @@ Use following options to convert into alternate image formats:
   -flip ........ flip the output vertically
   -alpha ....... only save the alpha plane
   -incremental . use incremental decoding (useful for tests)
-  -h     ....... this help message
-  -v     ....... verbose (e.g. print encoding/decoding times)
+  -h ........... this help message
+  -v ........... verbose (e.g. print encoding/decoding times)
   -quiet ....... quiet mode, don't print anything
   -noasm ....... disable all assembly optimizations
 
