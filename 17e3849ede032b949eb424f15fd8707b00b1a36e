@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e4da659_719fd863",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-23T06:46:12Z",
+      "side": 1,
+      "message": "what\u0027s the difference between this and using __msa_srai_h (or SRAI_H)?",
+      "range": {
+        "startLine": 319,
+        "startChar": 9,
+        "endLine": 319,
+        "endChar": 10
+      },
+      "revId": "17e3849ede032b949eb424f15fd8707b00b1a36e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce205285_a4b102fc",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 639,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-23T06:46:12Z",
+      "side": 1,
+      "message": "uint8_t* ptemp_src \u003d ...",
+      "range": {
+        "startLine": 639,
+        "startChar": 11,
+        "endLine": 639,
+        "endChar": 20
+      },
+      "revId": "17e3849ede032b949eb424f15fd8707b00b1a36e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
