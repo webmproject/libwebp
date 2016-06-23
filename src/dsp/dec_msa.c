@@ -671,6 +671,108 @@ static void SimpleHFilter16i(uint8_t* src_y, int stride, int b_limit_in) {
 }
 
 //------------------------------------------------------------------------------
+// Intra predictions
+//------------------------------------------------------------------------------
+
+// 4x4
+
+static void DC4(uint8_t* dst) {   // DC
+  uint32_t dc = 4;
+  int i;
+  for (i = 0; i < 4; ++i) dc += dst[i - BPS] + dst[-1 + i * BPS];
+  dc >>= 3;
+  dc = dc | (dc << 8) | (dc << 16) | (dc << 24);
+  SW4(dc, dc, dc, dc, dst, BPS);
+}
+
+static void TM4(uint8_t* dst) {
+  const uint8_t* const ptemp = dst - BPS - 1;
+  v8i16 T, d, r0, r1, r2, r3;
+  const v16i8 zero = { 0 };
+  const v8i16 TL = (v8i16)__msa_fill_h(ptemp[0 * BPS]);
+  const v8i16 L0 = (v8i16)__msa_fill_h(ptemp[1 * BPS]);
+  const v8i16 L1 = (v8i16)__msa_fill_h(ptemp[2 * BPS]);
+  const v8i16 L2 = (v8i16)__msa_fill_h(ptemp[3 * BPS]);
+  const v8i16 L3 = (v8i16)__msa_fill_h(ptemp[4 * BPS]);
+  const v16u8 T1 = LD_UB(ptemp + 1);
+
+  T  = (v8i16)__msa_ilvr_b(zero, (v16i8)T1);
+  d = T - TL;
+  ADD4(d, L0, d, L1, d, L2, d, L3, r0, r1, r2, r3);
+  CLIP_SH4_0_255(r0, r1, r2, r3);
+  PCKEV_ST4x4_UB(r0, r1, r2, r3, dst, BPS);
+}
+
+static void VE4(uint8_t* dst) {    // vertical
+  const uint8_t* const ptop = dst - BPS - 1;
+  const uint32_t val0 = LW(ptop + 0);
+  const uint32_t val1 = LW(ptop + 4);
+  uint32_t out;
+  v16u8 A, B, C, AC, B2, R;
+
+  INSERT_W2_UB(val0, val1, A);
+  B = SLDI_UB(A, A, 1);
+  C = SLDI_UB(A, A, 2);
+  AC = __msa_ave_u_b(A, C);
+  B2 = __msa_ave_u_b(B, B);
+  R = __msa_aver_u_b(AC, B2);
+  out = __msa_copy_s_w((v4i32)R, 0);
+  SW4(out, out, out, out, dst, BPS);
+}
+
+static void RD4(uint8_t* dst) {   // Down-right
+  const uint8_t* const ptop = dst - 1 - BPS;
+  uint32_t val0 = LW(ptop + 0);
+  uint32_t val1 = LW(ptop + 4);
+  uint32_t val2, val3;
+  v16u8 A, B, C, AC, B2, R, A1;
+
+  INSERT_W2_UB(val0, val1, A1);
+  A = SLDI_UB(A1, A1, 12);
+  A = (v16u8)__msa_insert_b((v16i8)A, 3, ptop[1 * BPS]);
+  A = (v16u8)__msa_insert_b((v16i8)A, 2, ptop[2 * BPS]);
+  A = (v16u8)__msa_insert_b((v16i8)A, 1, ptop[3 * BPS]);
+  A = (v16u8)__msa_insert_b((v16i8)A, 0, ptop[4 * BPS]);
+  B = SLDI_UB(A, A, 1);
+  C = SLDI_UB(A, A, 2);
+  AC = __msa_ave_u_b(A, C);
+  B2 = __msa_ave_u_b(B, B);
+  R = __msa_aver_u_b(AC, B2);
+  val3 = __msa_copy_s_w((v4i32)R, 0);
+  R = SLDI_UB(R, R, 1);
+  val2 = __msa_copy_s_w((v4i32)R, 0);
+  R = SLDI_UB(R, R, 1);
+  val1 = __msa_copy_s_w((v4i32)R, 0);
+  R = SLDI_UB(R, R, 1);
+  val0 = __msa_copy_s_w((v4i32)R, 0);
+  SW4(val0, val1, val2, val3, dst, BPS);
+}
+
+static void LD4(uint8_t* dst) {   // Down-Left
+  const uint8_t* const ptop = dst - BPS;
+  uint32_t val0 = LW(ptop + 0);
+  uint32_t val1 = LW(ptop + 4);
+  uint32_t val2, val3;
+  v16u8 A, B, C, AC, B2, R;
+
+  INSERT_W2_UB(val0, val1, A);
+  B = SLDI_UB(A, A, 1);
+  C = SLDI_UB(A, A, 2);
+  C = (v16u8)__msa_insert_b((v16i8)C, 6, ptop[7]);
+  AC = __msa_ave_u_b(A, C);
+  B2 = __msa_ave_u_b(B, B);
+  R = __msa_aver_u_b(AC, B2);
+  val0 = __msa_copy_s_w((v4i32)R, 0);
+  R = SLDI_UB(R, R, 1);
+  val1 = __msa_copy_s_w((v4i32)R, 0);
+  R = SLDI_UB(R, R, 1);
+  val2 = __msa_copy_s_w((v4i32)R, 0);
+  R = SLDI_UB(R, R, 1);
+  val3 = __msa_copy_s_w((v4i32)R, 0);
+  SW4(val0, val1, val2, val3, dst, BPS);
+}
+
+//------------------------------------------------------------------------------
 // Entry point
 
 extern void VP8DspInitMSA(void);
@@ -693,6 +795,12 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMSA(void) {
   VP8SimpleHFilter16  = SimpleHFilter16;
   VP8SimpleVFilter16i = SimpleVFilter16i;
   VP8SimpleHFilter16i = SimpleHFilter16i;
+
+  VP8PredLuma4[0] = DC4;
+  VP8PredLuma4[1] = TM4;
+  VP8PredLuma4[2] = VE4;
+  VP8PredLuma4[4] = RD4;
+  VP8PredLuma4[6] = LD4;
 }
 
 #else  // !WEBP_USE_MSA

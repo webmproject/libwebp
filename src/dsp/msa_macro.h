@@ -337,6 +337,10 @@
   CLIP_SH_0_255(in0);               \
   CLIP_SH_0_255(in1);               \
 }
+#define CLIP_SH4_0_255(in0, in1, in2, in3) {  \
+  CLIP_SH2_0_255(in0, in1);                   \
+  CLIP_SH2_0_255(in2, in3);                   \
+}
 
 /* Description : Clips all signed word elements of input vector
  *               between 0 & 255
@@ -857,6 +861,17 @@
   CLIP_SH2_0_255(res0_m, res1_m);                               \
   PCKEV_B2_SB(res0_m, res0_m, res1_m, res1_m, dst0_m, dst1_m);  \
   ST4x4_UB(dst0_m, dst1_m, 0, 1, 0, 1, pdst, stride);           \
+}
+
+/* Description : Pack even byte elements, extract 0 & 2 index words from pair
+ *               of results and store 4 words in destination memory as per
+ *               stride
+ * Arguments   : Inputs - in0, in1, in2, in3, pdst, stride
+ */
+#define PCKEV_ST4x4_UB(in0, in1, in2, in3, pdst, stride) {  \
+  v16i8 tmp0_m, tmp1_m;                                     \
+  PCKEV_B2_SB(in1, in0, in3, in2, tmp0_m, tmp1_m);          \
+  ST4x4_UB(tmp0_m, tmp1_m, 0, 2, 0, 2, pdst, stride);       \
 }
 
 #endif  /* WEBP_DSP_MSA_MACRO_H_ */
