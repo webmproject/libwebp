@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "ae94fec1_fbe48feb",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-23T07:49:20Z",
+      "side": 1,
+      "message": "yes, i was more asking about the difference between using \"__msa_srai_xxx\" and just \"\u003e\u003e\". Apparently, CLANG_BUILD flag will take care of that, so we should just use SRAI_XXX always...",
+      "parentUuid": "ae94fec1_3b951746",
+      "range": {
+        "startLine": 319,
+        "startChar": 9,
+        "endLine": 319,
+        "endChar": 10
+      },
+      "revId": "17e3849ede032b949eb424f15fd8707b00b1a36e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ce205285_a4b102fc",
         "filename": "src/dsp/dec_msa.c",
         "patchSetId": 1
