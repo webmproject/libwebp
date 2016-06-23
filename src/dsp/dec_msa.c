@@ -307,6 +307,35 @@ static void TransformAC3(const int16_t* in, uint8_t* dst) {
   ST6x1_UB(in0, start_in0_idx + 3, in1, start_in1_idx + 3, ptmp1, 4);       \
 } while (0)
 
+#define LPF_SIMPLE_FILT(p1_in, p0_in, q0_in, q1_in, mask) do {       \
+    v16i8 p1_m, p0_m, q0_m, q1_m, filt, filt1, filt2;                \
+    const v16i8 cnst4b = __msa_ldi_b(4);                             \
+    const v16i8 cnst3b =  __msa_ldi_b(3);                            \
+                                                                     \
+    FLIP_SIGN4(p1_in, p0_in, q0_in, q1_in, p1_m, p0_m, q0_m, q1_m);  \
+    filt = __msa_subs_s_b(p1_m, q1_m);                               \
+    FILT_VAL(q0_m, p0_m, mask, filt);                                \
+    filt1 = __msa_adds_s_b(filt, cnst4b);                            \
+    filt1 = SRAI_B(filt1, 3);                                        \
+    filt2 = __msa_adds_s_b(filt, cnst3b);                            \
+    filt2 = SRAI_B(filt2, 3);                                        \
+    q0_m = __msa_subs_s_b(q0_m, filt1);                              \
+    p0_m = __msa_adds_s_b(p0_m, filt2);                              \
+    q0_in = __msa_xori_b((v16u8)q0_m, 0x80);                         \
+    p0_in = __msa_xori_b((v16u8)p0_m, 0x80);                         \
+} while (0)
+
+#define LPF_SIMPLE_MASK(p1, p0, q0, q1, b_limit, mask) do {    \
+    v16u8 p1_a_sub_q1, p0_a_sub_q0;                            \
+                                                               \
+    p0_a_sub_q0 = __msa_asub_u_b(p0, q0);                      \
+    p1_a_sub_q1 = __msa_asub_u_b(p1, q1);                      \
+    p1_a_sub_q1 = (v16u8)__msa_srli_b((v16i8)p1_a_sub_q1, 1);  \
+    p0_a_sub_q0 = __msa_adds_u_b(p0_a_sub_q0, p0_a_sub_q0);    \
+    mask = __msa_adds_u_b(p0_a_sub_q0, p1_a_sub_q1);           \
+    mask = (mask <= b_limit);                                  \
+} while (0)
+
 static void VFilter16(uint8_t *src, int stride,
                       int b_limit_in, int limit_in, int thresh_in) {
   uint8_t *ptemp = src - 4 * stride;
@@ -592,6 +621,55 @@ static void HFilter8i(uint8_t* src_u, uint8_t* src_v, int stride,
   ST4x4_UB(tmp5, tmp5, 0, 1, 2, 3, src_v, stride);
 }
 
+static void SimpleVFilter16(uint8_t* src, int stride, int b_limit_in) {
+  v16u8 p1, p0, q1, q0, mask;
+  const v16u8 b_limit = (v16u8)__msa_fill_b(b_limit_in);
+
+  LD_UB4(src - 2 * stride, stride, p1, p0, q0, q1);
+  LPF_SIMPLE_MASK(p1, p0, q0, q1, b_limit, mask);
+  LPF_SIMPLE_FILT(p1, p0, q0, q1, mask);
+  ST_UB2(p0, q0, src - stride, stride);
+}
+
+static void SimpleHFilter16(uint8_t* src, int stride, int b_limit_in) {
+  v16u8 p1, p0, q1, q0, mask, row0, row1, row2, row3, row4, row5, row6, row7;
+  v16u8 row8, row9, row10, row11, row12, row13, row14, row15;
+  v8i16 tmp0, tmp1;
+  const v16u8 b_limit = (v16u8)__msa_fill_b(b_limit_in);
+  uint8_t* ptemp_src = src - 2;
+
+  LD_UB8(ptemp_src, stride, row0, row1, row2, row3, row4, row5, row6, row7);
+  LD_UB8(ptemp_src + 8 * stride, stride,
+         row8, row9, row10, row11, row12, row13, row14, row15);
+  TRANSPOSE16x4_UB_UB(row0, row1, row2, row3, row4, row5, row6, row7,
+                      row8, row9, row10, row11, row12, row13, row14, row15,
+                      p1, p0, q0, q1);
+  LPF_SIMPLE_MASK(p1, p0, q0, q1, b_limit, mask);
+  LPF_SIMPLE_FILT(p1, p0, q0, q1, mask);
+  ILVRL_B2_SH(q0, p0, tmp1, tmp0);
+  ptemp_src += 1;
+  ST2x4_UB(tmp1, 0, ptemp_src, stride);
+  ptemp_src += 4 * stride;
+  ST2x4_UB(tmp1, 4, ptemp_src, stride);
+  ptemp_src += 4 * stride;
+  ST2x4_UB(tmp0, 0, ptemp_src, stride);
+  ptemp_src += 4 * stride;
+  ST2x4_UB(tmp0, 4, ptemp_src, stride);
+  ptemp_src += 4 * stride;
+}
+
+static void SimpleVFilter16i(uint8_t* src_y, int stride, int b_limit_in) {
+  SimpleVFilter16(src_y +  4 * stride, stride, b_limit_in);
+  SimpleVFilter16(src_y +  8 * stride, stride, b_limit_in);
+  SimpleVFilter16(src_y + 12 * stride, stride, b_limit_in);
+}
+
+static void SimpleHFilter16i(uint8_t* src_y, int stride, int b_limit_in) {
+  SimpleHFilter16(src_y +  4, stride, b_limit_in);
+  SimpleHFilter16(src_y +  8, stride, b_limit_in);
+  SimpleHFilter16(src_y + 12, stride, b_limit_in);
+}
+
 //------------------------------------------------------------------------------
 // Entry point
 
@@ -611,6 +689,10 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMSA(void) {
   VP8HFilter8  = HFilter8;
   VP8VFilter8i = VFilter8i;
   VP8HFilter8i = HFilter8i;
+  VP8SimpleVFilter16  = SimpleVFilter16;
+  VP8SimpleHFilter16  = SimpleHFilter16;
+  VP8SimpleVFilter16i = SimpleVFilter16i;
+  VP8SimpleHFilter16i = SimpleHFilter16i;
 }
 
 #else  // !WEBP_USE_MSA

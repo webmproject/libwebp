@@ -243,6 +243,32 @@
 #define ST_UB4(...) ST_B4(v16u8, __VA_ARGS__)
 #define ST_SB4(...) ST_B4(v16i8, __VA_ARGS__)
 
+/* Description : Store 2x4 byte block to destination memory from input vector
+ * Arguments   : Inputs - in, stidx, pdst, stride
+ * Details     : Index 'stidx' halfword element from 'in' vector is copied to
+ *               the GP register and stored to (pdst)
+ *               Index 'stidx+1' halfword element from 'in' vector is copied to
+ *               the GP register and stored to (pdst + stride)
+ *               Index 'stidx+2' halfword element from 'in' vector is copied to
+ *               the GP register and stored to (pdst + 2 * stride)
+ *               Index 'stidx+3' halfword element from 'in' vector is copied to
+ *               the GP register and stored to (pdst + 3 * stride)
+ */
+#define ST2x4_UB(in, stidx, pdst, stride) {                      \
+  uint8_t* pblk_2x4_m = (uint8_t*)pdst;                          \
+  const uint16_t out0_m = __msa_copy_s_h((v8i16)in, stidx);      \
+  const uint16_t out1_m = __msa_copy_s_h((v8i16)in, stidx + 1);  \
+  const uint16_t out2_m = __msa_copy_s_h((v8i16)in, stidx + 2);  \
+  const uint16_t out3_m = __msa_copy_s_h((v8i16)in, stidx + 3);  \
+  SH(out0_m, pblk_2x4_m);                                        \
+  pblk_2x4_m += stride;                                          \
+  SH(out1_m, pblk_2x4_m);                                        \
+  pblk_2x4_m += stride;                                          \
+  SH(out2_m, pblk_2x4_m);                                        \
+  pblk_2x4_m += stride;                                          \
+  SH(out3_m, pblk_2x4_m);                                        \
+}
+
 /* Description : Store 4x4 byte block to destination memory from input vector
  * Arguments   : Inputs - in0, in1, pdst, stride
  * Details     : 'Idx0' word element from input vector 'in0' is copied to the
@@ -418,6 +444,22 @@
 #define ILVOD_H2_SH(...) ILVOD_H2(v8i16, __VA_ARGS__)
 #define ILVOD_H2_SW(...) ILVOD_H2(v4i32, __VA_ARGS__)
 
+/* Description : Interleave even word elements from vectors
+ * Arguments   : Inputs  - in0, in1, in2, in3
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Even word elements of 'in0' and 'in1' are interleaved
+ *               and written to 'out0'
+ */
+#define ILVEV_W2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
+  out0 = (RTYPE)__msa_ilvev_w((v4i32)in1, (v4i32)in0);     \
+  out1 = (RTYPE)__msa_ilvev_w((v4i32)in3, (v4i32)in2);     \
+}
+#define ILVEV_W2_UB(...) ILVEV_W2(v16u8, __VA_ARGS__)
+#define ILVEV_W2_SB(...) ILVEV_W2(v16i8, __VA_ARGS__)
+#define ILVEV_W2_UH(...) ILVEV_W2(v8u16, __VA_ARGS__)
+#define ILVEV_W2_SD(...) ILVEV_W2(v2i64, __VA_ARGS__)
+
 /* Description : Interleave even-odd word elements from vectors
  * Arguments   : Inputs  - in0, in1, in2, in3
  *               Outputs - out0, out1
@@ -436,6 +478,24 @@
 #define ILVEVOD_W2_SH(...) ILVEVOD_W2(v8i16, __VA_ARGS__)
 #define ILVEVOD_W2_SW(...) ILVEVOD_W2(v4i32, __VA_ARGS__)
 
+/* Description : Interleave even-odd half-word elements from vectors
+ * Arguments   : Inputs  - in0, in1, in2, in3
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Even half-word elements of 'in0' and 'in1' are interleaved
+ *               and written to 'out0'
+ *               Odd half-word elements of 'in2' and 'in3' are interleaved
+ *               and written to 'out1'
+ */
+#define ILVEVOD_H2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
+  out0 = (RTYPE)__msa_ilvev_h((v8i16)in1, (v8i16)in0);       \
+  out1 = (RTYPE)__msa_ilvod_h((v8i16)in3, (v8i16)in2);       \
+}
+#define ILVEVOD_H2_UB(...) ILVEVOD_H2(v16u8, __VA_ARGS__)
+#define ILVEVOD_H2_UH(...) ILVEVOD_H2(v8u16, __VA_ARGS__)
+#define ILVEVOD_H2_SH(...) ILVEVOD_H2(v8i16, __VA_ARGS__)
+#define ILVEVOD_H2_SW(...) ILVEVOD_H2(v4i32, __VA_ARGS__)
+
 /* Description : Interleave even double word elements from vectors
  * Arguments   : Inputs  - in0, in1, in2, in3
  *               Outputs - out0, out1
@@ -450,6 +510,7 @@
 #define ILVEV_D2_UB(...) ILVEV_D2(v16u8, __VA_ARGS__)
 #define ILVEV_D2_SB(...) ILVEV_D2(v16i8, __VA_ARGS__)
 #define ILVEV_D2_SW(...) ILVEV_D2(v4i32, __VA_ARGS__)
+#define ILVEV_D2_SD(...) ILVEV_D2(v2i64, __VA_ARGS__)
 
 /* Description : Interleave left half of byte elements from vectors
  * Arguments   : Inputs  - in0, in1, in2, in3
@@ -706,6 +767,28 @@
   out1 = in1 + in2;                                                \
   out2 = in1 - in2;                                                \
   out3 = in0 - in3;                                                \
+}
+
+/* Description : Transpose 16x4 block into 4x16 with byte elements in vectors
+ * Arguments   : Inputs  - in0, in1, in2, in3, in4, in5, in6, in7,
+ *                         in8, in9, in10, in11, in12, in13, in14, in15
+ *               Outputs - out0, out1, out2, out3
+ *               Return Type - unsigned byte
+ */
+#define TRANSPOSE16x4_UB_UB(in0, in1, in2, in3, in4, in5, in6, in7,        \
+                            in8, in9, in10, in11, in12, in13, in14, in15,  \
+                            out0, out1, out2, out3) {                      \
+  v2i64 tmp0_m, tmp1_m, tmp2_m, tmp3_m, tmp4_m, tmp5_m;                    \
+  ILVEV_W2_SD(in0, in4, in8, in12, tmp2_m, tmp3_m);                        \
+  ILVEV_W2_SD(in1, in5, in9, in13, tmp0_m, tmp1_m);                        \
+  ILVEV_D2_UB(tmp2_m, tmp3_m, tmp0_m, tmp1_m, out1, out3);                 \
+  ILVEV_W2_SD(in2, in6, in10, in14, tmp4_m, tmp5_m);                       \
+  ILVEV_W2_SD(in3, in7, in11, in15, tmp0_m, tmp1_m);                       \
+  ILVEV_D2_SD(tmp4_m, tmp5_m, tmp0_m, tmp1_m, tmp2_m, tmp3_m);             \
+  ILVEV_B2_SD(out1, out3, tmp2_m, tmp3_m, tmp0_m, tmp1_m);                 \
+  ILVEVOD_H2_UB(tmp0_m, tmp1_m, tmp0_m, tmp1_m, out0, out2);               \
+  ILVOD_B2_SD(out1, out3, tmp2_m, tmp3_m, tmp0_m, tmp1_m);                 \
+  ILVEVOD_H2_UB(tmp0_m, tmp1_m, tmp0_m, tmp1_m, out1, out3);               \
 }
 
 /* Description : Transpose 16x8 block into 8x16 with byte elements in vectors
