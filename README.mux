@@ -198,7 +198,7 @@ For a detailed AnimEncoder API reference, please refer to the header file
 Bugs:
 =====
 
-Please report all bugs to our issue tracker:
+Please report all bugs to the issue tracker:
     https://bugs.chromium.org/p/webp
 Patches welcome! See this page to get started:
     http://www.webmproject.org/code/contribute/submitting-patches/

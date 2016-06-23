@@ -704,7 +704,7 @@ an otherwise too-large picture. Some CPU can be saved too, incidentally.
 Bugs:
 =====
 
-Please report all bugs to our issue tracker:
+Please report all bugs to the issue tracker:
     https://bugs.chromium.org/p/webp
 Patches welcome! See this page to get started:
     http://www.webmproject.org/code/contribute/submitting-patches/
