@@ -772,6 +772,99 @@ static void LD4(uint8_t* dst) {   // Down-Left
   SW4(val0, val1, val2, val3, dst, BPS);
 }
 
+// 16x16
+
+static void DC16(uint8_t* dst) {   // DC
+  uint32_t dc = 16;
+  int i;
+  const v16u8 rtop = LD_UB(dst - BPS);
+  const v8u16 dctop = __msa_hadd_u_h(rtop, rtop);
+  v16u8 out;
+
+  for (i = 0; i < 16; ++i) {
+    dc += dst[-1 + i * BPS];
+  }
+  dc += HADD_UH_U32(dctop);
+  out = (v16u8)__msa_fill_b(dc >> 5);
+  ST_UB8(out, out, out, out, out, out, out, out, dst, BPS);
+  ST_UB8(out, out, out, out, out, out, out, out, dst + 8 * BPS, BPS);
+}
+
+static void TM16(uint8_t* dst) {
+  int j;
+  v8i16 d1, d2;
+  const v16i8 zero = { 0 };
+  const v8i16 TL = (v8i16)__msa_fill_h(dst[-1 - BPS]);
+  const v16i8 T = LD_SB(dst - BPS);
+
+  ILVRL_B2_SH(zero, T, d1, d2);
+  SUB2(d1, TL, d2, TL, d1, d2);
+  for (j = 0; j < 16; j += 4) {
+    v16i8 t0, t1, t2, t3;
+    v8i16 r0, r1, r2, r3, r4, r5, r6, r7;
+    const v8i16 L0 = (v8i16)__msa_fill_h(dst[-1 + 0 * BPS]);
+    const v8i16 L1 = (v8i16)__msa_fill_h(dst[-1 + 1 * BPS]);
+    const v8i16 L2 = (v8i16)__msa_fill_h(dst[-1 + 2 * BPS]);
+    const v8i16 L3 = (v8i16)__msa_fill_h(dst[-1 + 3 * BPS]);
+    ADD4(d1, L0, d1, L1, d1, L2, d1, L3, r0, r1, r2, r3);
+    ADD4(d2, L0, d2, L1, d2, L2, d2, L3, r4, r5, r6, r7);
+    CLIP_SH4_0_255(r0, r1, r2, r3);
+    CLIP_SH4_0_255(r4, r5, r6, r7);
+    PCKEV_B4_SB(r4, r0, r5, r1, r6, r2, r7, r3, t0, t1, t2, t3);
+    ST_SB4(t0, t1, t2, t3, dst, BPS);
+    dst += 4 * BPS;
+  }
+}
+
+static void VE16(uint8_t* dst) {   // vertical
+  const v16u8 rtop = LD_UB(dst - BPS);
+  ST_UB8(rtop, rtop, rtop, rtop, rtop, rtop, rtop, rtop, dst, BPS);
+  ST_UB8(rtop, rtop, rtop, rtop, rtop, rtop, rtop, rtop, dst + 8 * BPS, BPS);
+}
+
+static void HE16(uint8_t* dst) {   // horizontal
+  int j;
+  for (j = 16; j > 0; j -= 4) {
+    const v16u8 L0 = (v16u8)__msa_fill_b(dst[-1 + 0 * BPS]);
+    const v16u8 L1 = (v16u8)__msa_fill_b(dst[-1 + 1 * BPS]);
+    const v16u8 L2 = (v16u8)__msa_fill_b(dst[-1 + 2 * BPS]);
+    const v16u8 L3 = (v16u8)__msa_fill_b(dst[-1 + 3 * BPS]);
+    ST_UB4(L0, L1, L2, L3, dst, BPS);
+    dst += 4 * BPS;
+  }
+}
+
+static void DC16NoTop(uint8_t* dst) {   // DC with top samples not available
+  int j;
+  uint32_t dc = 8;
+  v16u8 out;
+
+  for (j = 0; j < 16; ++j) {
+    dc += dst[-1 + j * BPS];
+  }
+  out = (v16u8)__msa_fill_b(dc >> 4);
+  ST_UB8(out, out, out, out, out, out, out, out, dst, BPS);
+  ST_UB8(out, out, out, out, out, out, out, out, dst + 8 * BPS, BPS);
+}
+
+static void DC16NoLeft(uint8_t* dst) {   // DC with left samples not available
+  uint32_t dc = 8;
+  const v16u8 rtop = LD_UB(dst - BPS);
+  const v8u16 dctop = __msa_hadd_u_h(rtop, rtop);
+  v16u8 out;
+
+  dc += HADD_UH_U32(dctop);
+  out = (v16u8)__msa_fill_b(dc >> 4);
+  ST_UB8(out, out, out, out, out, out, out, out, dst, BPS);
+  ST_UB8(out, out, out, out, out, out, out, out, dst + 8 * BPS, BPS);
+}
+
+static void DC16NoTopLeft(uint8_t* dst) {   // DC with nothing
+  const v16u8 out = (v16u8)__msa_fill_b(0x80);
+  ST_UB8(out, out, out, out, out, out, out, out, dst, BPS);
+  ST_UB8(out, out, out, out, out, out, out, out, dst + 8 * BPS, BPS);
+}
+
 //------------------------------------------------------------------------------
 // Entry point
 
@@ -801,6 +894,13 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMSA(void) {
   VP8PredLuma4[2] = VE4;
   VP8PredLuma4[4] = RD4;
   VP8PredLuma4[6] = LD4;
+  VP8PredLuma16[0] = DC16;
+  VP8PredLuma16[1] = TM16;
+  VP8PredLuma16[2] = VE16;
+  VP8PredLuma16[3] = HE16;
+  VP8PredLuma16[4] = DC16NoTop;
+  VP8PredLuma16[5] = DC16NoLeft;
+  VP8PredLuma16[6] = DC16NoTopLeft;
 }
 
 #else  // !WEBP_USE_MSA

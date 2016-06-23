@@ -243,6 +243,13 @@
 #define ST_UB4(...) ST_B4(v16u8, __VA_ARGS__)
 #define ST_SB4(...) ST_B4(v16i8, __VA_ARGS__)
 
+#define ST_B8(RTYPE, in0, in1, in2, in3, in4, in5, in6, in7,    \
+              pdst, stride) {                                   \
+  ST_B4(RTYPE, in0, in1, in2, in3, pdst, stride);               \
+  ST_B4(RTYPE, in4, in5, in6, in7, pdst + 4 * stride, stride);  \
+}
+#define ST_UB8(...) ST_B8(v16u8, __VA_ARGS__)
+
 /* Description : Store 2x4 byte block to destination memory from input vector
  * Arguments   : Inputs - in, stidx, pdst, stride
  * Details     : Index 'stidx' halfword element from 'in' vector is copied to
@@ -358,6 +365,25 @@
   CLIP_SW_0_255(in2);                         \
   CLIP_SW_0_255(in3);                         \
 }
+
+/* Description : Horizontal addition of 8 unsigned halfword elements
+ * Arguments   : Input  - in       (unsigned halfword vector)
+ *               Output - sum_m    (u32 sum)
+ *               Return Type - unsigned word
+ * Details     : 8 unsigned halfword elements of input vector are added
+ *               together and the resulting integer sum is returned
+ */
+static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
+  uint32_t sum_m;
+  v2u64 res0_m, res1_m;
+  const v4u32 res_m = __msa_hadd_u_w(in, in);
+  res0_m = __msa_hadd_u_d(res_m, res_m);
+  res1_m = (v2u64)__msa_splati_d((v2i64)res0_m, 1);
+  res0_m = res0_m + res1_m;
+  sum_m = __msa_copy_s_w((v4i32)res0_m, 0);
+  return sum_m;
+}
+#define HADD_UH_U32(in) func_hadd_uh_u32(in)
 
 /* Description : Set element n input vector to GPR value
  * Arguments   : Inputs - in0, in1, in2, in3
@@ -660,6 +686,16 @@
 #define PCKEV_B2_SH(...) PCKEV_B2(v8i16, __VA_ARGS__)
 #define PCKEV_B2_SW(...) PCKEV_B2(v4i32, __VA_ARGS__)
 
+#define PCKEV_B4(RTYPE, in0, in1, in2, in3, in4, in5, in6, in7,  \
+                 out0, out1, out2, out3) {                       \
+  PCKEV_B2(RTYPE, in0, in1, in2, in3, out0, out1);               \
+  PCKEV_B2(RTYPE, in4, in5, in6, in7, out2, out3);               \
+}
+#define PCKEV_B4_SB(...) PCKEV_B4(v16i8, __VA_ARGS__)
+#define PCKEV_B4_UB(...) PCKEV_B4(v16u8, __VA_ARGS__)
+#define PCKEV_B4_SH(...) PCKEV_B4(v8i16, __VA_ARGS__)
+#define PCKEV_B4_SW(...) PCKEV_B4(v4i32, __VA_ARGS__)
+
 /* Description : Arithmetic immediate shift right all elements of word vector
  * Arguments   : Inputs  - in0, in1, shift
  *               Outputs - in place operation
@@ -743,6 +779,17 @@
              out0, out1, out2, out3) {                \
   ADD2(in0, in1, in2, in3, out0, out1);               \
   ADD2(in4, in5, in6, in7, out2, out3);               \
+}
+
+/* Description : Subtraction of 2 pairs of vectors
+ * Arguments   : Inputs  - in0, in1, in2, in3
+ *               Outputs - out0, out1
+ * Details     : Each element in 'in1' is subtracted from 'in0' and result is
+ *               written to 'out0'.
+ */
+#define SUB2(in0, in1, in2, in3, out0, out1) {  \
+  out0 = in0 - in1;                             \
+  out1 = in2 - in3;                             \
 }
 
 /* Description : Sign extend halfword elements from input vector and return
