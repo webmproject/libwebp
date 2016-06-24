@@ -865,6 +865,108 @@ static void DC16NoTopLeft(uint8_t* dst) {   // DC with nothing
   ST_UB8(out, out, out, out, out, out, out, out, dst + 8 * BPS, BPS);
 }
 
+// Chroma
+
+#define STORE8x8(out, dst) do {                 \
+  SD4(out, out, out, out, dst + 0 * BPS, BPS);  \
+  SD4(out, out, out, out, dst + 4 * BPS, BPS);  \
+} while (0)
+
+static void DC8uv(uint8_t* dst) {   // DC
+  uint32_t dc = 8;
+  int i;
+  uint64_t out;
+  const v16u8 rtop = LD_UB(dst - BPS);
+  const v8u16 temp0 = __msa_hadd_u_h(rtop, rtop);
+  const v4u32 temp1 = __msa_hadd_u_w(temp0, temp0);
+  const v2u64 temp2 = __msa_hadd_u_d(temp1, temp1);
+  v16u8 dctemp;
+
+  for (i = 0; i < 8; ++i) {
+    dc += dst[-1 + i * BPS];
+  }
+  dc += __msa_copy_s_w((v4i32)temp2, 0);
+  dctemp = (v16u8)__msa_fill_b(dc >> 4);
+  out = __msa_copy_s_d((v2i64)dctemp, 0);
+  STORE8x8(out, dst);
+}
+
+static void TM8uv(uint8_t* dst) {
+  int j;
+  const v16i8 T1 = LD_SB(dst - BPS);
+  const v16i8 zero = { 0 };
+  const v8i16 T  = (v8i16)__msa_ilvr_b(zero, T1);
+  const v8i16 TL = (v8i16)__msa_fill_h(dst[-1 - BPS]);
+  const v8i16 d = T - TL;
+
+  for (j = 0; j < 8; j += 4) {
+    v16i8 t0, t1;
+    v8i16 r0 = (v8i16)__msa_fill_h(dst[-1 + 0 * BPS]);
+    v8i16 r1 = (v8i16)__msa_fill_h(dst[-1 + 1 * BPS]);
+    v8i16 r2 = (v8i16)__msa_fill_h(dst[-1 + 2 * BPS]);
+    v8i16 r3 = (v8i16)__msa_fill_h(dst[-1 + 3 * BPS]);
+    ADD4(d, r0, d, r1, d, r2, d, r3, r0, r1, r2, r3);
+    CLIP_SH4_0_255(r0, r1, r2, r3);
+    PCKEV_B2_SB(r1, r0, r3, r2, t0, t1);
+    ST4x4_UB(t0, t1, 0, 2, 0, 2, dst, BPS);
+    ST4x4_UB(t0, t1, 1, 3, 1, 3, dst + 4, BPS);
+    dst += 4 * BPS;
+  }
+}
+
+static void VE8uv(uint8_t* dst) {   // vertical
+  const v16u8 rtop = LD_UB(dst - BPS);
+  const uint64_t out = __msa_copy_s_d((v2i64)rtop, 0);
+  STORE8x8(out, dst);
+}
+
+static void HE8uv(uint8_t* dst) {   // horizontal
+  int j;
+  for (j = 0; j < 8; j += 4) {
+    const v16u8 L0 = (v16u8)__msa_fill_b(dst[-1 + 0 * BPS]);
+    const v16u8 L1 = (v16u8)__msa_fill_b(dst[-1 + 1 * BPS]);
+    const v16u8 L2 = (v16u8)__msa_fill_b(dst[-1 + 2 * BPS]);
+    const v16u8 L3 = (v16u8)__msa_fill_b(dst[-1 + 3 * BPS]);
+    const uint64_t out0 = __msa_copy_s_d((v2i64)L0, 0);
+    const uint64_t out1 = __msa_copy_s_d((v2i64)L1, 0);
+    const uint64_t out2 = __msa_copy_s_d((v2i64)L2, 0);
+    const uint64_t out3 = __msa_copy_s_d((v2i64)L3, 0);
+    SD4(out0, out1, out2, out3, dst, BPS);
+    dst += 4 * BPS;
+  }
+}
+
+static void DC8uvNoLeft(uint8_t* dst) {   // DC with no left samples
+  const uint32_t dc = 4;
+  const v16u8 rtop = LD_UB(dst - BPS);
+  const v8u16 temp0 = __msa_hadd_u_h(rtop, rtop);
+  const v4u32 temp1 = __msa_hadd_u_w(temp0, temp0);
+  const v2u64 temp2 = __msa_hadd_u_d(temp1, temp1);
+  const uint32_t sum_m = __msa_copy_s_w((v4i32)temp2, 0);
+  const v16u8 dcval = (v16u8)__msa_fill_b((dc + sum_m) >> 3);
+  const uint64_t out = __msa_copy_s_d((v2i64)dcval, 0);
+  STORE8x8(out, dst);
+}
+
+static void DC8uvNoTop(uint8_t* dst) {   // DC with no top samples
+  uint32_t dc = 4;
+  int i;
+  uint64_t out;
+  v16u8 dctemp;
+
+  for (i = 0; i < 8; ++i) {
+    dc += dst[-1 + i * BPS];
+  }
+  dctemp = (v16u8)__msa_fill_b(dc >> 3);
+  out = __msa_copy_s_d((v2i64)dctemp, 0);
+  STORE8x8(out, dst);
+}
+
+static void DC8uvNoTopLeft(uint8_t* dst) {   // DC with nothing
+  const uint64_t out = 0x8080808080808080ULL;
+  STORE8x8(out, dst);
+}
+
 //------------------------------------------------------------------------------
 // Entry point
 
@@ -901,6 +1003,13 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitMSA(void) {
   VP8PredLuma16[4] = DC16NoTop;
   VP8PredLuma16[5] = DC16NoLeft;
   VP8PredLuma16[6] = DC16NoTopLeft;
+  VP8PredChroma8[0] = DC8uv;
+  VP8PredChroma8[1] = TM8uv;
+  VP8PredChroma8[2] = VE8uv;
+  VP8PredChroma8[3] = HE8uv;
+  VP8PredChroma8[4] = DC8uvNoTop;
+  VP8PredChroma8[5] = DC8uvNoLeft;
+  VP8PredChroma8[6] = DC8uvNoTopLeft;
 }
 
 #else  // !WEBP_USE_MSA
