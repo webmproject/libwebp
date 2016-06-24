@@ -442,7 +442,7 @@ static int BackwardReferencesLz77(int xsize, int ysize,
     int len = 0;
     int j;
     HashChainFindCopy(hash_chain, i, &offset, &len);
-    if (len > MIN_LENGTH) {
+    if (len > MIN_LENGTH + 1) {
       const int len_ini = len;
       int max_reach = 0;
       assert(i + len < pix_count);
@@ -464,7 +464,7 @@ static int BackwardReferencesLz77(int xsize, int ysize,
         }
       }
     } else {
-      len = (len == 0) ? 1 : len;
+      len = 1;
     }
     // Go with literal or backward reference.
     assert(len > 0);
