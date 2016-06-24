@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03032592_265616e7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-06-24T06:03:35Z",
+      "side": 1,
+      "message": "Add\n\nhttps://git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project#Commit-Guidelines",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 5
+      },
+      "revId": "6cd50896204a6e247fa44ca160e8059c3eb775cb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03032592_665c0e09",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 966,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-06-24T06:03:35Z",
+      "side": 1,
+      "message": "this should have ULL as a suffix to avoid a warning",
+      "revId": "6cd50896204a6e247fa44ca160e8059c3eb775cb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
