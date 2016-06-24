@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "830f15b1_2ab81fd6",
+        "filename": "src/dsp/dec_msa.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 916,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-24T08:37:19Z",
+      "side": 1,
+      "message": "these two lines are used often (see 946, 961, 968).\n\nCould be a macro:\nFILL8x8(out, dst) do { \\\n  SD4(out, out, out, out, dst + 0 * BPS, BPS); \\\n  SD4(out, out, out, out, dst + 4 * BPS, BPS); \\\n} while (0)\n\n\nor similar...",
+      "range": {
+        "startLine": 916,
+        "startChar": 2,
+        "endLine": 916,
+        "endChar": 5
+      },
+      "revId": "1b42d13384b7f579c388fe84b68a278f986919b3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
