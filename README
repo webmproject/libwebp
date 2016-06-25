@@ -420,7 +420,7 @@ vwebp.
 Usage:
  gif2webp [options] gif_file -o webp_file
 Options:
-  -h / -help  ............ this help
+  -h / -help ............. this help
   -lossy ................. encode image using lossy compression
   -mixed ................. for each frame in the image, pick lossy
                            or lossless compression heuristically
