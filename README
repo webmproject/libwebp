@@ -218,8 +218,8 @@ If input size (-s) for an image is not specified, it is
 assumed to be a PNG, JPEG, TIFF or WebP file.
 
 Options:
-  -h / -help  ............ short help
-  -H / -longhelp  ........ long help
+  -h / -help ............. short help
+  -H / -longhelp ......... long help
   -q <float> ............. quality factor (0:small..100:big)
   -alpha_q <int> ......... transparency-compression quality (0..100)
   -preset <string> ....... preset setting, one of:
