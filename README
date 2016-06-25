@@ -370,7 +370,7 @@ Usage: vwebp in_file [options]
 
 Decodes the WebP image file and visualize it using OpenGL
 Options are:
-  -version  .... print version number and exit
+  -version ..... print version number and exit
   -noicc ....... don't use the icc profile if present
   -nofancy ..... don't use the fancy YUV420 upscaler
   -nofilter .... disable in-loop filtering
@@ -378,7 +378,7 @@ Options are:
   -noalphadither disable alpha plane dithering
   -mt .......... use multi-threading
   -info ........ print info
-  -h     ....... this help message
+  -h ........... this help message
 
 Keyboard shortcuts:
   'c' ................ toggle use of color profile
