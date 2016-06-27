@@ -118,13 +118,13 @@
   #define SH(val, pdst)  MSA_STORE(val, pdst, msa_ush)
   MSA_STORE_FUNC(uint32_t, usw, msa_usw);
   #define SW(val, pdst)  MSA_STORE(val, pdst, msa_usw)
-  #define SD(val, pdst) {                                                  \
+  #define SD(val, pdst) do {                                               \
     uint8_t* const pdst_sd_m = (uint8_t*)(pdst);                           \
     const uint32_t val0_m = (uint32_t)(val & 0x00000000FFFFFFFF);          \
     const uint32_t val1_m = (uint32_t)((val >> 32) & 0x00000000FFFFFFFF);  \
     SW(val0_m, pdst_sd_m);                                                 \
     SW(val1_m, pdst_sd_m + 4);                                             \
-  }
+  } while (0)
 #endif  // (__mips_isa_rev >= 6)
 
 /* Description : Load 4 words with stride
@@ -135,16 +135,16 @@
  *               Load word in 'out2' from (psrc + 2 * stride)
  *               Load word in 'out3' from (psrc + 3 * stride)
  */
-#define LW4(psrc, stride, out0, out1, out2, out3) {  \
-  const uint8_t* ptmp = (const uint8_t*)psrc;        \
-  out0 = LW(ptmp);                                   \
-  ptmp += stride;                                    \
-  out1 = LW(ptmp);                                   \
-  ptmp += stride;                                    \
-  out2 = LW(ptmp);                                   \
-  ptmp += stride;                                    \
-  out3 = LW(ptmp);                                   \
-}
+#define LW4(psrc, stride, out0, out1, out2, out3) do {  \
+  const uint8_t* ptmp = (const uint8_t*)psrc;           \
+  out0 = LW(ptmp);                                      \
+  ptmp += stride;                                       \
+  out1 = LW(ptmp);                                      \
+  ptmp += stride;                                       \
+  out2 = LW(ptmp);                                      \
+  ptmp += stride;                                       \
+  out3 = LW(ptmp);                                      \
+} while (0)
 
 /* Description : Store 4 words with stride
  * Arguments   : Inputs - in0, in1, in2, in3, pdst, stride
@@ -153,16 +153,16 @@
  *               Store word from 'in2' to (pdst + 2 * stride)
  *               Store word from 'in3' to (pdst + 3 * stride)
  */
-#define SW4(in0, in1, in2, in3, pdst, stride) {  \
-  uint8_t* ptmp = (uint8_t*)pdst;                \
-  SW(in0, ptmp);                                 \
-  ptmp += stride;                                \
-  SW(in1, ptmp);                                 \
-  ptmp += stride;                                \
-  SW(in2, ptmp);                                 \
-  ptmp += stride;                                \
-  SW(in3, ptmp);                                 \
-}
+#define SW4(in0, in1, in2, in3, pdst, stride) do {  \
+  uint8_t* ptmp = (uint8_t*)pdst;                   \
+  SW(in0, ptmp);                                    \
+  ptmp += stride;                                   \
+  SW(in1, ptmp);                                    \
+  ptmp += stride;                                   \
+  SW(in2, ptmp);                                    \
+  ptmp += stride;                                   \
+  SW(in3, ptmp);                                    \
+} while (0)
 
 /* Description : Store 4 double words with stride
  * Arguments   : Inputs - in0, in1, in2, in3, pdst, stride
@@ -171,16 +171,16 @@
  *               Store double word from 'in2' to (pdst + 2 * stride)
  *               Store double word from 'in3' to (pdst + 3 * stride)
  */
-#define SD4(in0, in1, in2, in3, pdst, stride) {  \
-  uint8_t* ptmp = (uint8_t*)pdst;                \
-  SD(in0, ptmp);                                 \
-  ptmp += stride;                                \
-  SD(in1, ptmp);                                 \
-  ptmp += stride;                                \
-  SD(in2, ptmp);                                 \
-  ptmp += stride;                                \
-  SD(in3, ptmp);                                 \
-}
+#define SD4(in0, in1, in2, in3, pdst, stride) do {  \
+  uint8_t* ptmp = (uint8_t*)pdst;                   \
+  SD(in0, ptmp);                                    \
+  ptmp += stride;                                   \
+  SD(in1, ptmp);                                    \
+  ptmp += stride;                                   \
+  SD(in2, ptmp);                                    \
+  ptmp += stride;                                   \
+  SD(in3, ptmp);                                    \
+} while (0)
 
 /* Description : Load vectors with 16 byte elements with stride
  * Arguments   : Inputs  - psrc, stride
@@ -189,32 +189,32 @@
  * Details     : Load 16 byte elements in 'out0' from (psrc)
  *               Load 16 byte elements in 'out1' from (psrc + stride)
  */
-#define LD_B2(RTYPE, psrc, stride, out0, out1) {  \
-  out0 = LD_B(RTYPE, psrc);                       \
-  out1 = LD_B(RTYPE, psrc + stride);              \
-}
+#define LD_B2(RTYPE, psrc, stride, out0, out1) do {  \
+  out0 = LD_B(RTYPE, psrc);                          \
+  out1 = LD_B(RTYPE, psrc + stride);                 \
+} while (0)
 #define LD_UB2(...) LD_B2(v16u8, __VA_ARGS__)
 #define LD_SB2(...) LD_B2(v16i8, __VA_ARGS__)
 
-#define LD_B3(RTYPE, psrc, stride, out0, out1, out2) {  \
-  LD_B2(RTYPE, psrc, stride, out0, out1);               \
-  out2 = LD_B(RTYPE, psrc + 2 * stride);                \
-}
+#define LD_B3(RTYPE, psrc, stride, out0, out1, out2) do {  \
+  LD_B2(RTYPE, psrc, stride, out0, out1);                  \
+  out2 = LD_B(RTYPE, psrc + 2 * stride);                   \
+} while (0)
 #define LD_UB3(...) LD_B3(v16u8, __VA_ARGS__)
 #define LD_SB3(...) LD_B3(v16i8, __VA_ARGS__)
 
-#define LD_B4(RTYPE, psrc, stride, out0, out1, out2, out3) {  \
-  LD_B2(RTYPE, psrc, stride, out0, out1);                     \
-  LD_B2(RTYPE, psrc + 2 * stride , stride, out2, out3);       \
-}
+#define LD_B4(RTYPE, psrc, stride, out0, out1, out2, out3) do {  \
+  LD_B2(RTYPE, psrc, stride, out0, out1);                        \
+  LD_B2(RTYPE, psrc + 2 * stride , stride, out2, out3);          \
+} while (0)
 #define LD_UB4(...) LD_B4(v16u8, __VA_ARGS__)
 #define LD_SB4(...) LD_B4(v16i8, __VA_ARGS__)
 
 #define LD_B8(RTYPE, psrc, stride,                                  \
-              out0, out1, out2, out3, out4, out5, out6, out7) {     \
+              out0, out1, out2, out3, out4, out5, out6, out7) do {  \
   LD_B4(RTYPE, psrc, stride, out0, out1, out2, out3);               \
   LD_B4(RTYPE, psrc + 4 * stride, stride, out4, out5, out6, out7);  \
-}
+} while (0)
 #define LD_UB8(...) LD_B8(v16u8, __VA_ARGS__)
 #define LD_SB8(...) LD_B8(v16i8, __VA_ARGS__)
 
@@ -224,10 +224,10 @@
  * Details     : Load 8 halfword elements in 'out0' from (psrc)
  *               Load 8 halfword elements in 'out1' from (psrc + stride)
  */
-#define LD_H2(RTYPE, psrc, stride, out0, out1) {  \
-  out0 = LD_H(RTYPE, psrc);                       \
-  out1 = LD_H(RTYPE, psrc + stride);              \
-}
+#define LD_H2(RTYPE, psrc, stride, out0, out1) do {  \
+  out0 = LD_H(RTYPE, psrc);                          \
+  out1 = LD_H(RTYPE, psrc + stride);                 \
+} while (0)
 #define LD_UH2(...) LD_H2(v8u16, __VA_ARGS__)
 #define LD_SH2(...) LD_H2(v8i16, __VA_ARGS__)
 
@@ -236,25 +236,25 @@
  * Details     : Store 16 byte elements from 'in0' to (pdst)
  *               Store 16 byte elements from 'in1' to (pdst + stride)
  */
-#define ST_B2(RTYPE, in0, in1, pdst, stride) {  \
-  ST_B(RTYPE, in0, pdst);                       \
-  ST_B(RTYPE, in1, pdst + stride);              \
-}
+#define ST_B2(RTYPE, in0, in1, pdst, stride) do {  \
+  ST_B(RTYPE, in0, pdst);                          \
+  ST_B(RTYPE, in1, pdst + stride);                 \
+} while (0)
 #define ST_UB2(...) ST_B2(v16u8, __VA_ARGS__)
 #define ST_SB2(...) ST_B2(v16i8, __VA_ARGS__)
 
-#define ST_B4(RTYPE, in0, in1, in2, in3, pdst, stride) {  \
-  ST_B2(RTYPE, in0, in1, pdst, stride);                   \
-  ST_B2(RTYPE, in2, in3, pdst + 2 * stride, stride);      \
-}
+#define ST_B4(RTYPE, in0, in1, in2, in3, pdst, stride) do {  \
+  ST_B2(RTYPE, in0, in1, pdst, stride);                      \
+  ST_B2(RTYPE, in2, in3, pdst + 2 * stride, stride);         \
+} while (0)
 #define ST_UB4(...) ST_B4(v16u8, __VA_ARGS__)
 #define ST_SB4(...) ST_B4(v16i8, __VA_ARGS__)
 
 #define ST_B8(RTYPE, in0, in1, in2, in3, in4, in5, in6, in7,    \
-              pdst, stride) {                                   \
+              pdst, stride) do {                                \
   ST_B4(RTYPE, in0, in1, in2, in3, pdst, stride);               \
   ST_B4(RTYPE, in4, in5, in6, in7, pdst + 4 * stride, stride);  \
-}
+} while (0)
 #define ST_UB8(...) ST_B8(v16u8, __VA_ARGS__)
 
 /* Description : Store 2x4 byte block to destination memory from input vector
@@ -268,7 +268,7 @@
  *               Index 'stidx+3' halfword element from 'in' vector is copied to
  *               the GP register and stored to (pdst + 3 * stride)
  */
-#define ST2x4_UB(in, stidx, pdst, stride) {                      \
+#define ST2x4_UB(in, stidx, pdst, stride) do {                   \
   uint8_t* pblk_2x4_m = (uint8_t*)pdst;                          \
   const uint16_t out0_m = __msa_copy_s_h((v8i16)in, stidx);      \
   const uint16_t out1_m = __msa_copy_s_h((v8i16)in, stidx + 1);  \
@@ -281,7 +281,7 @@
   SH(out2_m, pblk_2x4_m);                                        \
   pblk_2x4_m += stride;                                          \
   SH(out3_m, pblk_2x4_m);                                        \
-}
+} while (0)
 
 /* Description : Store 4x4 byte block to destination memory from input vector
  * Arguments   : Inputs - in0, in1, pdst, stride
@@ -294,20 +294,20 @@
  *               'Idx3' word element from input vector 'in0' is copied to the
  *               GP register and stored to (pdst + 3 * stride)
  */
-#define ST4x4_UB(in0, in1, idx0, idx1, idx2, idx3, pdst, stride) {  \
-  uint8_t* const pblk_4x4_m = (uint8_t*)pdst;                       \
-  const uint32_t out0_m = __msa_copy_s_w((v4i32)in0, idx0);         \
-  const uint32_t out1_m = __msa_copy_s_w((v4i32)in0, idx1);         \
-  const uint32_t out2_m = __msa_copy_s_w((v4i32)in1, idx2);         \
-  const uint32_t out3_m = __msa_copy_s_w((v4i32)in1, idx3);         \
-  SW4(out0_m, out1_m, out2_m, out3_m, pblk_4x4_m, stride);          \
-}
+#define ST4x4_UB(in0, in1, idx0, idx1, idx2, idx3, pdst, stride) do {  \
+  uint8_t* const pblk_4x4_m = (uint8_t*)pdst;                          \
+  const uint32_t out0_m = __msa_copy_s_w((v4i32)in0, idx0);            \
+  const uint32_t out1_m = __msa_copy_s_w((v4i32)in0, idx1);            \
+  const uint32_t out2_m = __msa_copy_s_w((v4i32)in1, idx2);            \
+  const uint32_t out3_m = __msa_copy_s_w((v4i32)in1, idx3);            \
+  SW4(out0_m, out1_m, out2_m, out3_m, pblk_4x4_m, stride);             \
+} while (0)
 
-#define ST4x8_UB(in0, in1, pdst, stride) {                        \
+#define ST4x8_UB(in0, in1, pdst, stride) do {                     \
   uint8_t* const pblk_4x8 = (uint8_t*)pdst;                       \
   ST4x4_UB(in0, in0, 0, 1, 2, 3, pblk_4x8, stride);               \
   ST4x4_UB(in1, in1, 0, 1, 2, 3, pblk_4x8 + 4 * stride, stride);  \
-}
+} while (0)
 
 /* Description : Immediate number of elements to slide
  * Arguments   : Inputs  - in0, in1, slide_val
@@ -342,7 +342,6 @@
   out0 = VSHF_B(RTYPE, in0, in1, mask0);                                   \
   out1 = VSHF_B(RTYPE, in2, in3, mask1);                                   \
 } while (0)
-
 #define VSHF_B2_UB(...) VSHF_B2(v16u8, __VA_ARGS__)
 #define VSHF_B2_SB(...) VSHF_B2(v16i8, __VA_ARGS__)
 #define VSHF_B2_UH(...) VSHF_B2(v8u16, __VA_ARGS__)
@@ -359,7 +358,6 @@
   out0 = (RTYPE)__msa_vshf_h((v8i16)mask0, (v8i16)in1, (v8i16)in0);        \
   out1 = (RTYPE)__msa_vshf_h((v8i16)mask1, (v8i16)in3, (v8i16)in2);        \
 } while (0)
-
 #define VSHF_H2_UH(...) VSHF_H2(v8u16, __VA_ARGS__)
 #define VSHF_H2_SH(...) VSHF_H2(v8i16, __VA_ARGS__)
 
@@ -411,10 +409,9 @@
  */
 static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
   uint32_t sum_m;
-  v2u64 res0_m, res1_m;
   const v4u32 res_m = __msa_hadd_u_w(in, in);
-  res0_m = __msa_hadd_u_d(res_m, res_m);
-  res1_m = (v2u64)__msa_splati_d((v2i64)res0_m, 1);
+  v2u64 res0_m = __msa_hadd_u_d(res_m, res_m);
+  v2u64 res1_m = (v2u64)__msa_splati_d((v2i64)res0_m, 1);
   res0_m = res0_m + res1_m;
   sum_m = __msa_copy_s_w((v4i32)res0_m, 0);
   return sum_m;
@@ -427,19 +424,19 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  *               Return Type - as per RTYPE
  * Details     : Set element 0 in vector 'out' to value specified in 'in0'
  */
-#define INSERT_W2(RTYPE, in0, in1, out) {           \
+#define INSERT_W2(RTYPE, in0, in1, out) do {        \
   out = (RTYPE)__msa_insert_w((v4i32)out, 0, in0);  \
   out = (RTYPE)__msa_insert_w((v4i32)out, 1, in1);  \
-}
+} while (0)
 #define INSERT_W2_UB(...) INSERT_W2(v16u8, __VA_ARGS__)
 #define INSERT_W2_SB(...) INSERT_W2(v16i8, __VA_ARGS__)
 
-#define INSERT_W4(RTYPE, in0, in1, in2, in3, out) {  \
-  out = (RTYPE)__msa_insert_w((v4i32)out, 0, in0);   \
-  out = (RTYPE)__msa_insert_w((v4i32)out, 1, in1);   \
-  out = (RTYPE)__msa_insert_w((v4i32)out, 2, in2);   \
-  out = (RTYPE)__msa_insert_w((v4i32)out, 3, in3);   \
-}
+#define INSERT_W4(RTYPE, in0, in1, in2, in3, out) do {  \
+  out = (RTYPE)__msa_insert_w((v4i32)out, 0, in0);      \
+  out = (RTYPE)__msa_insert_w((v4i32)out, 1, in1);      \
+  out = (RTYPE)__msa_insert_w((v4i32)out, 2, in2);      \
+  out = (RTYPE)__msa_insert_w((v4i32)out, 3, in3);      \
+} while (0)
 #define INSERT_W4_UB(...) INSERT_W4(v16u8, __VA_ARGS__)
 #define INSERT_W4_SB(...) INSERT_W4(v16i8, __VA_ARGS__)
 #define INSERT_W4_SW(...) INSERT_W4(v4i32, __VA_ARGS__)
@@ -451,10 +448,10 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  * Details     : Even byte elements of 'in0' and 'in1' are interleaved
  *               and written to 'out0'
  */
-#define ILVEV_B2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
-  out0 = (RTYPE)__msa_ilvev_b((v16i8)in1, (v16i8)in0);     \
-  out1 = (RTYPE)__msa_ilvev_b((v16i8)in3, (v16i8)in2);     \
-}
+#define ILVEV_B2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)__msa_ilvev_b((v16i8)in1, (v16i8)in0);        \
+  out1 = (RTYPE)__msa_ilvev_b((v16i8)in3, (v16i8)in2);        \
+} while (0)
 #define ILVEV_B2_UB(...) ILVEV_B2(v16u8, __VA_ARGS__)
 #define ILVEV_B2_SB(...) ILVEV_B2(v16i8, __VA_ARGS__)
 #define ILVEV_B2_UH(...) ILVEV_B2(v8u16, __VA_ARGS__)
@@ -468,10 +465,10 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  * Details     : Odd byte elements of 'in0' and 'in1' are interleaved
  *               and written to 'out0'
  */
-#define ILVOD_B2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
-  out0 = (RTYPE)__msa_ilvod_b((v16i8)in1, (v16i8)in0);     \
-  out1 = (RTYPE)__msa_ilvod_b((v16i8)in3, (v16i8)in2);     \
-}
+#define ILVOD_B2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)__msa_ilvod_b((v16i8)in1, (v16i8)in0);        \
+  out1 = (RTYPE)__msa_ilvod_b((v16i8)in3, (v16i8)in2);        \
+} while (0)
 #define ILVOD_B2_UB(...) ILVOD_B2(v16u8, __VA_ARGS__)
 #define ILVOD_B2_SB(...) ILVOD_B2(v16i8, __VA_ARGS__)
 #define ILVOD_B2_UH(...) ILVOD_B2(v8u16, __VA_ARGS__)
@@ -485,10 +482,10 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  * Details     : Even halfword elements of 'in0' and 'in1' are interleaved
  *               and written to 'out0'
  */
-#define ILVEV_H2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
-  out0 = (RTYPE)__msa_ilvev_h((v8i16)in1, (v8i16)in0);     \
-  out1 = (RTYPE)__msa_ilvev_h((v8i16)in3, (v8i16)in2);     \
-}
+#define ILVEV_H2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)__msa_ilvev_h((v8i16)in1, (v8i16)in0);        \
+  out1 = (RTYPE)__msa_ilvev_h((v8i16)in3, (v8i16)in2);        \
+} while (0)
 #define ILVEV_H2_UB(...) ILVEV_H2(v16u8, __VA_ARGS__)
 #define ILVEV_H2_UH(...) ILVEV_H2(v8u16, __VA_ARGS__)
 #define ILVEV_H2_SH(...) ILVEV_H2(v8i16, __VA_ARGS__)
@@ -501,10 +498,10 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  * Details     : Odd halfword elements of 'in0' and 'in1' are interleaved
  *               and written to 'out0'
  */
-#define ILVOD_H2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
-  out0 = (RTYPE)__msa_ilvod_h((v8i16)in1, (v8i16)in0);     \
-  out1 = (RTYPE)__msa_ilvod_h((v8i16)in3, (v8i16)in2);     \
-}
+#define ILVOD_H2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)__msa_ilvod_h((v8i16)in1, (v8i16)in0);        \
+  out1 = (RTYPE)__msa_ilvod_h((v8i16)in3, (v8i16)in2);        \
+} while (0)
 #define ILVOD_H2_UB(...) ILVOD_H2(v16u8, __VA_ARGS__)
 #define ILVOD_H2_UH(...) ILVOD_H2(v8u16, __VA_ARGS__)
 #define ILVOD_H2_SH(...) ILVOD_H2(v8i16, __VA_ARGS__)
@@ -517,10 +514,10 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  * Details     : Even word elements of 'in0' and 'in1' are interleaved
  *               and written to 'out0'
  */
-#define ILVEV_W2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
-  out0 = (RTYPE)__msa_ilvev_w((v4i32)in1, (v4i32)in0);     \
-  out1 = (RTYPE)__msa_ilvev_w((v4i32)in3, (v4i32)in2);     \
-}
+#define ILVEV_W2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)__msa_ilvev_w((v4i32)in1, (v4i32)in0);        \
+  out1 = (RTYPE)__msa_ilvev_w((v4i32)in3, (v4i32)in2);        \
+} while (0)
 #define ILVEV_W2_UB(...) ILVEV_W2(v16u8, __VA_ARGS__)
 #define ILVEV_W2_SB(...) ILVEV_W2(v16i8, __VA_ARGS__)
 #define ILVEV_W2_UH(...) ILVEV_W2(v8u16, __VA_ARGS__)
@@ -535,10 +532,10 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  *               Odd word elements of 'in2' and 'in3' are interleaved
  *               and written to 'out1'
  */
-#define ILVEVOD_W2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
-  out0 = (RTYPE)__msa_ilvev_w((v4i32)in1, (v4i32)in0);       \
-  out1 = (RTYPE)__msa_ilvod_w((v4i32)in3, (v4i32)in2);       \
-}
+#define ILVEVOD_W2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)__msa_ilvev_w((v4i32)in1, (v4i32)in0);          \
+  out1 = (RTYPE)__msa_ilvod_w((v4i32)in3, (v4i32)in2);          \
+} while (0)
 #define ILVEVOD_W2_UB(...) ILVEVOD_W2(v16u8, __VA_ARGS__)
 #define ILVEVOD_W2_UH(...) ILVEVOD_W2(v8u16, __VA_ARGS__)
 #define ILVEVOD_W2_SH(...) ILVEVOD_W2(v8i16, __VA_ARGS__)
@@ -553,10 +550,10 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  *               Odd half-word elements of 'in2' and 'in3' are interleaved
  *               and written to 'out1'
  */
-#define ILVEVOD_H2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
-  out0 = (RTYPE)__msa_ilvev_h((v8i16)in1, (v8i16)in0);       \
-  out1 = (RTYPE)__msa_ilvod_h((v8i16)in3, (v8i16)in2);       \
-}
+#define ILVEVOD_H2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)__msa_ilvev_h((v8i16)in1, (v8i16)in0);          \
+  out1 = (RTYPE)__msa_ilvod_h((v8i16)in3, (v8i16)in2);          \
+} while (0)
 #define ILVEVOD_H2_UB(...) ILVEVOD_H2(v16u8, __VA_ARGS__)
 #define ILVEVOD_H2_UH(...) ILVEVOD_H2(v8u16, __VA_ARGS__)
 #define ILVEVOD_H2_SH(...) ILVEVOD_H2(v8i16, __VA_ARGS__)
@@ -569,10 +566,10 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  * Details     : Even double word elements of 'in0' and 'in1' are interleaved
  *               and written to 'out0'
  */
-#define ILVEV_D2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
-  out0 = (RTYPE)__msa_ilvev_d((v2i64)in1, (v2i64)in0);     \
-  out1 = (RTYPE)__msa_ilvev_d((v2i64)in3, (v2i64)in2);     \
-}
+#define ILVEV_D2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)__msa_ilvev_d((v2i64)in1, (v2i64)in0);        \
+  out1 = (RTYPE)__msa_ilvev_d((v2i64)in3, (v2i64)in2);        \
+} while (0)
 #define ILVEV_D2_UB(...) ILVEV_D2(v16u8, __VA_ARGS__)
 #define ILVEV_D2_SB(...) ILVEV_D2(v16i8, __VA_ARGS__)
 #define ILVEV_D2_SW(...) ILVEV_D2(v4i32, __VA_ARGS__)
@@ -585,10 +582,10 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  * Details     : Left half of byte elements of 'in0' and 'in1' are interleaved
  *               and written to 'out0'.
  */
-#define ILVL_B2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
-  out0 = (RTYPE)__msa_ilvl_b((v16i8)in0, (v16i8)in1);     \
-  out1 = (RTYPE)__msa_ilvl_b((v16i8)in2, (v16i8)in3);     \
-}
+#define ILVL_B2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)__msa_ilvl_b((v16i8)in0, (v16i8)in1);        \
+  out1 = (RTYPE)__msa_ilvl_b((v16i8)in2, (v16i8)in3);        \
+} while (0)
 #define ILVL_B2_UB(...) ILVL_B2(v16u8, __VA_ARGS__)
 #define ILVL_B2_SB(...) ILVL_B2(v16i8, __VA_ARGS__)
 #define ILVL_B2_UH(...) ILVL_B2(v8u16, __VA_ARGS__)
@@ -602,10 +599,10 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  * Details     : Right half of byte elements of 'in0' and 'in1' are interleaved
  *               and written to out0.
  */
-#define ILVR_B2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
-  out0 = (RTYPE)__msa_ilvr_b((v16i8)in0, (v16i8)in1);     \
-  out1 = (RTYPE)__msa_ilvr_b((v16i8)in2, (v16i8)in3);     \
-}
+#define ILVR_B2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)__msa_ilvr_b((v16i8)in0, (v16i8)in1);        \
+  out1 = (RTYPE)__msa_ilvr_b((v16i8)in2, (v16i8)in3);        \
+} while (0)
 #define ILVR_B2_UB(...) ILVR_B2(v16u8, __VA_ARGS__)
 #define ILVR_B2_SB(...) ILVR_B2(v16i8, __VA_ARGS__)
 #define ILVR_B2_UH(...) ILVR_B2(v8u16, __VA_ARGS__)
@@ -613,10 +610,10 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
 #define ILVR_B2_SW(...) ILVR_B2(v4i32, __VA_ARGS__)
 
 #define ILVR_B4(RTYPE, in0, in1, in2, in3, in4, in5, in6, in7,  \
-                out0, out1, out2, out3) {                       \
+                out0, out1, out2, out3) do {                    \
   ILVR_B2(RTYPE, in0, in1, in2, in3, out0, out1);               \
   ILVR_B2(RTYPE, in4, in5, in6, in7, out2, out3);               \
-}
+} while (0)
 #define ILVR_B4_UB(...) ILVR_B4(v16u8, __VA_ARGS__)
 #define ILVR_B4_SB(...) ILVR_B4(v16i8, __VA_ARGS__)
 #define ILVR_B4_UH(...) ILVR_B4(v8u16, __VA_ARGS__)
@@ -630,19 +627,19 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  * Details     : Right half of halfword elements of 'in0' and 'in1' are
  *               interleaved and written to 'out0'.
  */
-#define ILVR_H2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
-  out0 = (RTYPE)__msa_ilvr_h((v8i16)in0, (v8i16)in1);     \
-  out1 = (RTYPE)__msa_ilvr_h((v8i16)in2, (v8i16)in3);     \
-}
+#define ILVR_H2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)__msa_ilvr_h((v8i16)in0, (v8i16)in1);        \
+  out1 = (RTYPE)__msa_ilvr_h((v8i16)in2, (v8i16)in3);        \
+} while (0)
 #define ILVR_H2_UB(...) ILVR_H2(v16u8, __VA_ARGS__)
 #define ILVR_H2_SH(...) ILVR_H2(v8i16, __VA_ARGS__)
 #define ILVR_H2_SW(...) ILVR_H2(v4i32, __VA_ARGS__)
 
 #define ILVR_H4(RTYPE, in0, in1, in2, in3, in4, in5, in6, in7,  \
-                out0, out1, out2, out3) {                       \
+                out0, out1, out2, out3) do {                    \
   ILVR_H2(RTYPE, in0, in1, in2, in3, out0, out1);               \
   ILVR_H2(RTYPE, in4, in5, in6, in7, out2, out3);               \
-}
+} while (0)
 #define ILVR_H4_UB(...) ILVR_H4(v16u8, __VA_ARGS__)
 #define ILVR_H4_SH(...) ILVR_H4(v8i16, __VA_ARGS__)
 #define ILVR_H4_SW(...) ILVR_H4(v4i32, __VA_ARGS__)
@@ -654,19 +651,19 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  * Details     : Right half of double word elements of 'in0' and 'in1' are
  *               interleaved and written to 'out0'.
  */
-#define ILVR_D2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
-  out0 = (RTYPE)__msa_ilvr_d((v2i64)in0, (v2i64)in1);     \
-  out1 = (RTYPE)__msa_ilvr_d((v2i64)in2, (v2i64)in3);     \
-}
+#define ILVR_D2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)__msa_ilvr_d((v2i64)in0, (v2i64)in1);        \
+  out1 = (RTYPE)__msa_ilvr_d((v2i64)in2, (v2i64)in3);        \
+} while (0)
 #define ILVR_D2_UB(...) ILVR_D2(v16u8, __VA_ARGS__)
 #define ILVR_D2_SB(...) ILVR_D2(v16i8, __VA_ARGS__)
 #define ILVR_D2_SH(...) ILVR_D2(v8i16, __VA_ARGS__)
 
 #define ILVR_D4(RTYPE, in0, in1, in2, in3, in4, in5, in6, in7,  \
-                out0, out1, out2, out3) {                       \
+                out0, out1, out2, out3) do {                    \
   ILVR_D2(RTYPE, in0, in1, in2, in3, out0, out1);               \
   ILVR_D2(RTYPE, in4, in5, in6, in7, out2, out3);               \
-}
+} while (0)
 #define ILVR_D4_SB(...) ILVR_D4(v16i8, __VA_ARGS__)
 #define ILVR_D4_UB(...) ILVR_D4(v16u8, __VA_ARGS__)
 
@@ -677,30 +674,30 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  * Details     : Right half of byte elements from 'in0' and 'in1' are
  *               interleaved and written to 'out0'
  */
-#define ILVRL_B2(RTYPE, in0, in1, out0, out1) {        \
+#define ILVRL_B2(RTYPE, in0, in1, out0, out1) do {     \
   out0 = (RTYPE)__msa_ilvr_b((v16i8)in0, (v16i8)in1);  \
   out1 = (RTYPE)__msa_ilvl_b((v16i8)in0, (v16i8)in1);  \
-}
-#define ILVRL_B2_UB(...) ILVRL_B2(v16u8, __VA_ARGS__)
+} while (0)
+#define ILVRL_B2_UB(...) ILVRL_B2(v16u8, __VA_ARGS__)  
 #define ILVRL_B2_SB(...) ILVRL_B2(v16i8, __VA_ARGS__)
 #define ILVRL_B2_UH(...) ILVRL_B2(v8u16, __VA_ARGS__)
 #define ILVRL_B2_SH(...) ILVRL_B2(v8i16, __VA_ARGS__)
 #define ILVRL_B2_SW(...) ILVRL_B2(v4i32, __VA_ARGS__)
 
-#define ILVRL_H2(RTYPE, in0, in1, out0, out1) {        \
+#define ILVRL_H2(RTYPE, in0, in1, out0, out1) do {     \
   out0 = (RTYPE)__msa_ilvr_h((v8i16)in0, (v8i16)in1);  \
   out1 = (RTYPE)__msa_ilvl_h((v8i16)in0, (v8i16)in1);  \
-}
+} while (0)
 #define ILVRL_H2_UB(...) ILVRL_H2(v16u8, __VA_ARGS__)
 #define ILVRL_H2_SB(...) ILVRL_H2(v16i8, __VA_ARGS__)
 #define ILVRL_H2_SH(...) ILVRL_H2(v8i16, __VA_ARGS__)
 #define ILVRL_H2_SW(...) ILVRL_H2(v4i32, __VA_ARGS__)
 #define ILVRL_H2_UW(...) ILVRL_H2(v4u32, __VA_ARGS__)
 
-#define ILVRL_W2(RTYPE, in0, in1, out0, out1) {        \
+#define ILVRL_W2(RTYPE, in0, in1, out0, out1) do {     \
   out0 = (RTYPE)__msa_ilvr_w((v4i32)in0, (v4i32)in1);  \
   out1 = (RTYPE)__msa_ilvl_w((v4i32)in0, (v4i32)in1);  \
-}
+} while (0)
 #define ILVRL_W2_UB(...) ILVRL_W2(v16u8, __VA_ARGS__)
 #define ILVRL_W2_SH(...) ILVRL_W2(v8i16, __VA_ARGS__)
 #define ILVRL_W2_SW(...) ILVRL_W2(v4i32, __VA_ARGS__)
@@ -713,20 +710,20 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  *                'out0' & even byte elements of 'in1' are copied to the right
  *                half of 'out0'.
  */
-#define PCKEV_B2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
-  out0 = (RTYPE)__msa_pckev_b((v16i8)in0, (v16i8)in1);     \
-  out1 = (RTYPE)__msa_pckev_b((v16i8)in2, (v16i8)in3);     \
-}
+#define PCKEV_B2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)__msa_pckev_b((v16i8)in0, (v16i8)in1);        \
+  out1 = (RTYPE)__msa_pckev_b((v16i8)in2, (v16i8)in3);        \
+} while (0)
 #define PCKEV_B2_SB(...) PCKEV_B2(v16i8, __VA_ARGS__)
 #define PCKEV_B2_UB(...) PCKEV_B2(v16u8, __VA_ARGS__)
 #define PCKEV_B2_SH(...) PCKEV_B2(v8i16, __VA_ARGS__)
 #define PCKEV_B2_SW(...) PCKEV_B2(v4i32, __VA_ARGS__)
 
 #define PCKEV_B4(RTYPE, in0, in1, in2, in3, in4, in5, in6, in7,  \
-                 out0, out1, out2, out3) {                       \
+                 out0, out1, out2, out3) do {                    \
   PCKEV_B2(RTYPE, in0, in1, in2, in3, out0, out1);               \
   PCKEV_B2(RTYPE, in4, in5, in6, in7, out2, out3);               \
-}
+} while (0)
 #define PCKEV_B4_SB(...) PCKEV_B4(v16i8, __VA_ARGS__)
 #define PCKEV_B4_UB(...) PCKEV_B4(v16u8, __VA_ARGS__)
 #define PCKEV_B4_SH(...) PCKEV_B4(v8i16, __VA_ARGS__)
@@ -739,17 +736,17 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  * Details     : Each element of vector 'in0' is right shifted by 'shift' and
  *               the result is written in-place. 'shift' is a GP variable.
  */
-#define SRAI_W2(RTYPE, in0, in1, shift_val) {  \
-  in0 = (RTYPE)SRAI_W(in0, shift_val);         \
-  in1 = (RTYPE)SRAI_W(in1, shift_val);         \
-}
+#define SRAI_W2(RTYPE, in0, in1, shift_val) do {  \
+  in0 = (RTYPE)SRAI_W(in0, shift_val);            \
+  in1 = (RTYPE)SRAI_W(in1, shift_val);            \
+} while (0)
 #define SRAI_W2_SW(...) SRAI_W2(v4i32, __VA_ARGS__)
 #define SRAI_W2_UW(...) SRAI_W2(v4u32, __VA_ARGS__)
 
-#define SRAI_W4(RTYPE, in0, in1, in2, in3, shift_val) {  \
-  SRAI_W2(RTYPE, in0, in1, shift_val);                   \
-  SRAI_W2(RTYPE, in2, in3, shift_val);                   \
-}
+#define SRAI_W4(RTYPE, in0, in1, in2, in3, shift_val) do {  \
+  SRAI_W2(RTYPE, in0, in1, shift_val);                      \
+  SRAI_W2(RTYPE, in2, in3, shift_val);                      \
+} while (0)
 #define SRAI_W4_SW(...) SRAI_W4(v4i32, __VA_ARGS__)
 #define SRAI_W4_UW(...) SRAI_W4(v4u32, __VA_ARGS__)
 
@@ -760,10 +757,10 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  * Details     : Each element of vector 'in0' is right shifted by 'shift' and
  *               the result is written in-place. 'shift' is a GP variable.
  */
-#define SRAI_H2(RTYPE, in0, in1, shift_val) {  \
-  in0 = (RTYPE)SRAI_H(in0, shift_val);         \
-  in1 = (RTYPE)SRAI_H(in1, shift_val);         \
-}
+#define SRAI_H2(RTYPE, in0, in1, shift_val) do {  \
+  in0 = (RTYPE)SRAI_H(in0, shift_val);            \
+  in1 = (RTYPE)SRAI_H(in1, shift_val);            \
+} while (0)
 #define SRAI_H2_SH(...) SRAI_H2(v8i16, __VA_ARGS__)
 #define SRAI_H2_UH(...) SRAI_H2(v8u16, __VA_ARGS__)
 
@@ -774,16 +771,16 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  * Details     : Each element of vector 'in0' is right shifted by 'shift' and
  *               the result is written in-place. 'shift' is a GP variable.
  */
-#define SRARI_W2(RTYPE, in0, in1, shift) {        \
+#define SRARI_W2(RTYPE, in0, in1, shift) do {     \
   in0 = (RTYPE)__msa_srari_w((v4i32)in0, shift);  \
   in1 = (RTYPE)__msa_srari_w((v4i32)in1, shift);  \
-}
+} while (0)
 #define SRARI_W2_SW(...) SRARI_W2(v4i32, __VA_ARGS__)
 
-#define SRARI_W4(RTYPE, in0, in1, in2, in3, shift) {  \
-  SRARI_W2(RTYPE, in0, in1, shift);                   \
-  SRARI_W2(RTYPE, in2, in3, shift);                   \
-}
+#define SRARI_W4(RTYPE, in0, in1, in2, in3, shift) do {  \
+  SRARI_W2(RTYPE, in0, in1, shift);                      \
+  SRARI_W2(RTYPE, in2, in3, shift);                      \
+} while (0)
 #define SRARI_W4_SH(...) SRARI_W4(v8i16, __VA_ARGS__)
 #define SRARI_W4_UW(...) SRARI_W4(v4u32, __VA_ARGS__)
 #define SRARI_W4_SW(...) SRARI_W4(v4i32, __VA_ARGS__)
@@ -794,10 +791,10 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  * Details     : Each element in 'in0' is added to 'in1' and result is written
  *               to 'out0'.
  */
-#define ADDVI_H2(RTYPE, in0, in1, in2, in3, out0, out1) {  \
-  out0 = (RTYPE)ADDVI_H(in0, in1);                         \
-  out1 = (RTYPE)ADDVI_H(in2, in3);                         \
-}
+#define ADDVI_H2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)ADDVI_H(in0, in1);                            \
+  out1 = (RTYPE)ADDVI_H(in2, in3);                            \
+} while (0)
 #define ADDVI_H2_SH(...) ADDVI_H2(v8i16, __VA_ARGS__)
 #define ADDVI_H2_UH(...) ADDVI_H2(v8u16, __VA_ARGS__)
 
@@ -807,15 +804,16 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  * Details     : Each element in 'in0' is added to 'in1' and result is written
  *               to 'out0'.
  */
-#define ADD2(in0, in1, in2, in3, out0, out1) {  \
-  out0 = in0 + in1;                             \
-  out1 = in2 + in3;                             \
-}
+#define ADD2(in0, in1, in2, in3, out0, out1) do {  \
+  out0 = in0 + in1;                                \
+  out1 = in2 + in3;                                \
+} while (0)
+
 #define ADD4(in0, in1, in2, in3, in4, in5, in6, in7,  \
-             out0, out1, out2, out3) {                \
+             out0, out1, out2, out3) do {             \
   ADD2(in0, in1, in2, in3, out0, out1);               \
   ADD2(in4, in5, in6, in7, out2, out3);               \
-}
+} while (0)
 
 /* Description : Subtraction of 2 pairs of vectors
  * Arguments   : Inputs  - in0, in1, in2, in3
@@ -823,10 +821,10 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  * Details     : Each element in 'in1' is subtracted from 'in0' and result is
  *               written to 'out0'.
  */
-#define SUB2(in0, in1, in2, in3, out0, out1) {  \
-  out0 = in0 - in1;                             \
-  out1 = in2 - in3;                             \
-}
+#define SUB2(in0, in1, in2, in3, out0, out1) do {  \
+  out0 = in0 - in1;                                \
+  out1 = in2 - in3;                                \
+} while (0)
 
 /* Description : Sign extend halfword elements from input vector and return
  *               the result in pair of vectors
@@ -839,22 +837,22 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  *               Then interleaved left with same vector 'in0' to
  *               generate 4 signed word elements in 'out1'
  */
-#define UNPCK_SH_SW(in, out0, out1) {                 \
+#define UNPCK_SH_SW(in, out0, out1) do {              \
   const v8i16 tmp_m = __msa_clti_s_h((v8i16)in, 0);   \
   ILVRL_H2_SW(tmp_m, in, out0, out1);                 \
-}
+} while (0)
 
 /* Description : Butterfly of 4 input vectors
  * Arguments   : Inputs  - in0, in1, in2, in3
  *               Outputs - out0, out1, out2, out3
  * Details     : Butterfly operation
  */
-#define BUTTERFLY_4(in0, in1, in2, in3, out0, out1, out2, out3) {  \
-  out0 = in0 + in3;                                                \
-  out1 = in1 + in2;                                                \
-  out2 = in1 - in2;                                                \
-  out3 = in0 - in3;                                                \
-}
+#define BUTTERFLY_4(in0, in1, in2, in3, out0, out1, out2, out3) do {  \
+  out0 = in0 + in3;                                                   \
+  out1 = in1 + in2;                                                   \
+  out2 = in1 - in2;                                                   \
+  out3 = in0 - in3;                                                   \
+} while (0)
 
 /* Description : Transpose 16x4 block into 4x16 with byte elements in vectors
  * Arguments   : Inputs  - in0, in1, in2, in3, in4, in5, in6, in7,
@@ -864,7 +862,7 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  */
 #define TRANSPOSE16x4_UB_UB(in0, in1, in2, in3, in4, in5, in6, in7,        \
                             in8, in9, in10, in11, in12, in13, in14, in15,  \
-                            out0, out1, out2, out3) {                      \
+                            out0, out1, out2, out3) do {                   \
   v2i64 tmp0_m, tmp1_m, tmp2_m, tmp3_m, tmp4_m, tmp5_m;                    \
   ILVEV_W2_SD(in0, in4, in8, in12, tmp2_m, tmp3_m);                        \
   ILVEV_W2_SD(in1, in5, in9, in13, tmp0_m, tmp1_m);                        \
@@ -876,7 +874,7 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
   ILVEVOD_H2_UB(tmp0_m, tmp1_m, tmp0_m, tmp1_m, out0, out2);               \
   ILVOD_B2_SD(out1, out3, tmp2_m, tmp3_m, tmp0_m, tmp1_m);                 \
   ILVEVOD_H2_UB(tmp0_m, tmp1_m, tmp0_m, tmp1_m, out1, out3);               \
-}
+} while (0)
 
 /* Description : Transpose 16x8 block into 8x16 with byte elements in vectors
  * Arguments   : Inputs  - in0, in1, in2, in3, in4, in5, in6, in7,
@@ -887,7 +885,7 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
 #define TRANSPOSE16x8_UB_UB(in0, in1, in2, in3, in4, in5, in6, in7,        \
                             in8, in9, in10, in11, in12, in13, in14, in15,  \
                             out0, out1, out2, out3, out4, out5,            \
-                            out6, out7) {                                  \
+                            out6, out7) do {                               \
   v8i16 tmp0_m, tmp1_m, tmp4_m, tmp5_m, tmp6_m, tmp7_m;                    \
   v4i32 tmp2_m, tmp3_m;                                                    \
   ILVEV_D2_UB(in0, in8, in1, in9, out7, out6);                             \
@@ -906,14 +904,15 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
   ILVEVOD_W2_UB(tmp2_m, tmp3_m, tmp2_m, tmp3_m, out1, out5);               \
   ILVOD_H2_SW(tmp4_m, tmp5_m, tmp6_m, tmp7_m, tmp2_m, tmp3_m);             \
   ILVEVOD_W2_UB(tmp2_m, tmp3_m, tmp2_m, tmp3_m, out3, out7);               \
-}
+} while (0)
 
 /* Description : Transpose 4x4 block with word elements in vectors
  * Arguments   : Inputs  - in0, in1, in2, in3
  *                Outputs - out0, out1, out2, out3
  *                Return Type - as per RTYPE
  */
-#define TRANSPOSE4x4_W(RTYPE, in0, in1, in2, in3, out0, out1, out2, out3) {  \
+#define TRANSPOSE4x4_W(RTYPE, in0, in1, in2, in3,                            \
+                       out0, out1, out2, out3) do {                          \
   v4i32 s0_m, s1_m, s2_m, s3_m;                                              \
   ILVRL_W2_SW(in1, in0, s0_m, s1_m);                                         \
   ILVRL_W2_SW(in3, in2, s2_m, s3_m);                                         \
@@ -921,7 +920,7 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
   out1 = (RTYPE)__msa_ilvl_d((v2i64)s2_m, (v2i64)s0_m);                      \
   out2 = (RTYPE)__msa_ilvr_d((v2i64)s3_m, (v2i64)s1_m);                      \
   out3 = (RTYPE)__msa_ilvl_d((v2i64)s3_m, (v2i64)s1_m);                      \
-}
+} while (0)
 #define TRANSPOSE4x4_SW_SW(...) TRANSPOSE4x4_W(v4i32, __VA_ARGS__)
 
 /* Description : Add block 4x4
@@ -929,7 +928,7 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
  * Details     : Least significant 4 bytes from each input vector are added to
  *               the destination bytes, clipped between 0-255 and stored.
  */
-#define ADDBLK_ST4x4_UB(in0, in1, in2, in3, pdst, stride) {     \
+#define ADDBLK_ST4x4_UB(in0, in1, in2, in3, pdst, stride) do {  \
   uint32_t src0_m, src1_m, src2_m, src3_m;                      \
   v8i16 inp0_m, inp1_m, res0_m, res1_m;                         \
   v16i8 dst0_m = { 0 };                                         \
@@ -944,17 +943,17 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
   CLIP_SH2_0_255(res0_m, res1_m);                               \
   PCKEV_B2_SB(res0_m, res0_m, res1_m, res1_m, dst0_m, dst1_m);  \
   ST4x4_UB(dst0_m, dst1_m, 0, 1, 0, 1, pdst, stride);           \
-}
+} while (0)
 
 /* Description : Pack even byte elements, extract 0 & 2 index words from pair
  *               of results and store 4 words in destination memory as per
  *               stride
  * Arguments   : Inputs - in0, in1, in2, in3, pdst, stride
  */
-#define PCKEV_ST4x4_UB(in0, in1, in2, in3, pdst, stride) {  \
-  v16i8 tmp0_m, tmp1_m;                                     \
-  PCKEV_B2_SB(in1, in0, in3, in2, tmp0_m, tmp1_m);          \
-  ST4x4_UB(tmp0_m, tmp1_m, 0, 2, 0, 2, pdst, stride);       \
-}
+#define PCKEV_ST4x4_UB(in0, in1, in2, in3, pdst, stride) do {  \
+  v16i8 tmp0_m, tmp1_m;                                        \
+  PCKEV_B2_SB(in1, in0, in3, in2, tmp0_m, tmp1_m);             \
+  ST4x4_UB(tmp0_m, tmp1_m, 0, 2, 0, 2, pdst, stride);          \
+} while (0)
 
 #endif  /* WEBP_DSP_MSA_MACRO_H_ */
