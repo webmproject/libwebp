@@ -120,6 +120,7 @@ model {
             include "dec_mips32.c"
             include "dec_mips_dsp_r2.c"
             include "dec_msa.c"
+            include "lossless_msa.c"
             include "dec_neon.$NEON"
             include "dec_sse2.c"
             include "dec_sse41.c"
