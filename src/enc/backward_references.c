@@ -791,7 +791,8 @@ static int CostManagerInit(CostManager* const manager,
     // difference is found, a new interval is created and bounded.
     for (i = 0; i < cost_cache_size; ++i) {
       const double cost_val = manager->cost_cache_[i];
-      if (fabs(cost_val - cost_prev) > min_cost_diff && cur + 1 < end) {
+      if (i == 0 ||
+          (fabs(cost_val - cost_prev) > min_cost_diff && cur + 1 < end)) {
         if (i > 1) {
           const int is_writable =
               IsCostCacheIntervalWritable(cur->start_, cur->end_);
