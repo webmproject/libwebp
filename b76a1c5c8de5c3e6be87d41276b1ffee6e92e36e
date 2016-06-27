@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "83d7157e_b16cbfb6",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-27T10:25:28Z",
+      "side": 1,
+      "message": "there\u0027s a couple of other config files where this file needs to be added:\n\nAndroid.mk, build.gradle, Makefile.vc, makefile.unix",
+      "revId": "b76a1c5c8de5c3e6be87d41276b1ffee6e92e36e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83d7157e_913ffba6",
+        "filename": "src/dsp/lossless_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-27T10:25:28Z",
+      "side": 1,
+      "message": "why not just: \"pdst[0] \u003d b;\" ?",
+      "revId": "b76a1c5c8de5c3e6be87d41276b1ffee6e92e36e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83d7157e_f14f5752",
+        "filename": "src/dsp/lossless_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-27T10:25:28Z",
+      "side": 1,
+      "message": "const uint8_t* ptemp_src \u003d (const uint8_t*)src;",
+      "range": {
+        "startLine": 86,
+        "startChar": 24,
+        "endLine": 86,
+        "endChar": 31
+      },
+      "revId": "b76a1c5c8de5c3e6be87d41276b1ffee6e92e36e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83d7157e_513583c6",
+        "filename": "src/dsp/lossless_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-27T10:25:28Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 126,
+        "startChar": 2,
+        "endLine": 126,
+        "endChar": 9
+      },
+      "revId": "b76a1c5c8de5c3e6be87d41276b1ffee6e92e36e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83d7157e_d167b3d0",
+        "filename": "src/dsp/lossless_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-27T10:25:28Z",
+      "side": 1,
+      "message": "it\u0027s not clear where these mask0/mask1/mask2 constants are used in the macro calls below. Could you pass please them as parameters, so that it\u0027s clearer?",
+      "range": {
+        "startLine": 128,
+        "startChar": 8,
+        "endLine": 128,
+        "endChar": 13
+      },
+      "revId": "b76a1c5c8de5c3e6be87d41276b1ffee6e92e36e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83d7157e_31328fe0",
+        "filename": "src/dsp/lossless_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-27T10:25:28Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 173,
+        "startChar": 11,
+        "endLine": 173,
+        "endChar": 20
+      },
+      "revId": "b76a1c5c8de5c3e6be87d41276b1ffee6e92e36e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
