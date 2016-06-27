@@ -128,6 +128,7 @@ model {
             include "filters_sse2.c"
             include "lossless.c"
             include "lossless_mips_dsp_r2.c"
+            include "lossless_msa.c"
             include "lossless_neon.$NEON"
             include "lossless_sse2.c"
             include "rescaler.c"

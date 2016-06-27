@@ -196,6 +196,13 @@
 #define LD_UB2(...) LD_B2(v16u8, __VA_ARGS__)
 #define LD_SB2(...) LD_B2(v16i8, __VA_ARGS__)
 
+#define LD_B3(RTYPE, psrc, stride, out0, out1, out2) {  \
+  LD_B2(RTYPE, psrc, stride, out0, out1);               \
+  out2 = LD_B(RTYPE, psrc + 2 * stride);                \
+}
+#define LD_UB3(...) LD_B3(v16u8, __VA_ARGS__)
+#define LD_SB3(...) LD_B3(v16i8, __VA_ARGS__)
+
 #define LD_B4(RTYPE, psrc, stride, out0, out1, out2, out3) {  \
   LD_B2(RTYPE, psrc, stride, out0, out1);                     \
   LD_B2(RTYPE, psrc + 2 * stride , stride, out2, out3);       \
@@ -315,6 +322,30 @@
 #define SLDI_UB(...) SLDI_B(v16u8, __VA_ARGS__)
 #define SLDI_SB(...) SLDI_B(v16i8, __VA_ARGS__)
 #define SLDI_SH(...) SLDI_B(v8i16, __VA_ARGS__)
+
+/* Description : Shuffle byte vector elements as per mask vector
+ * Arguments   : Inputs  - in0, in1, in2, in3, mask0, mask1
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Byte elements from 'in0' & 'in1' are copied selectively to
+ *               'out0' as per control vector 'mask0'
+ */
+#define VSHF_B(RTYPE, in0, in1, mask)                              \
+        (RTYPE)__msa_vshf_b((v16i8)mask, (v16i8)in1, (v16i8)in0);  \
+
+#define VSHF_UB(...) VSHF_B(v16u8, __VA_ARGS__)
+#define VSHF_SB(...) VSHF_B(v16i8, __VA_ARGS__)
+#define VSHF_UH(...) VSHF_B(v8u16, __VA_ARGS__)
+#define VSHF_SH(...) VSHF_B(v8i16, __VA_ARGS__)
+
+#define VSHF_B2(RTYPE, in0, in1, in2, in3, mask0, mask1, out0, out1) {  \
+  out0 = VSHF_B(RTYPE, in0, in1, mask0);                                \
+  out1 = VSHF_B(RTYPE, in2, in3, mask1);                                \
+}
+#define VSHF_B2_UB(...) VSHF_B2(v16u8, __VA_ARGS__)
+#define VSHF_B2_SB(...) VSHF_B2(v16i8, __VA_ARGS__)
+#define VSHF_B2_UH(...) VSHF_B2(v8u16, __VA_ARGS__)
+#define VSHF_B2_SH(...) VSHF_B2(v8i16, __VA_ARGS__)
 
 /* Description : Shuffle halfword vector elements as per mask vector
  * Arguments   : Inputs  - in0, in1, in2, in3, mask0, mask1
