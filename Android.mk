@@ -50,6 +50,7 @@ dsp_dec_srcs := \
     src/dsp/dec_mips32.c \
     src/dsp/dec_mips_dsp_r2.c \
     src/dsp/dec_msa.c \
+    src/dsp/lossless_msa.c \
     src/dsp/dec_neon.$(NEON) \
     src/dsp/dec_sse2.c \
     src/dsp/dec_sse41.c \

@@ -147,6 +147,7 @@ DSP_DEC_OBJS = \
     src/dsp/filters_sse2.o \
     src/dsp/lossless.o \
     src/dsp/lossless_mips_dsp_r2.o \
+    src/dsp/lossless_msa.o \
     src/dsp/lossless_neon.o \
     src/dsp/lossless_sse2.o \
     src/dsp/rescaler.o \

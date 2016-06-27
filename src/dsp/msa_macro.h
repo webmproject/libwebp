@@ -196,6 +196,13 @@
 #define LD_UB2(...) LD_B2(v16u8, __VA_ARGS__)
 #define LD_SB2(...) LD_B2(v16i8, __VA_ARGS__)
 
+#define LD_B3(RTYPE, psrc, stride, out0, out1, out2) {  \
+  LD_B2(RTYPE, psrc, stride, out0, out1);               \
+  out2 = LD_B(RTYPE, psrc + 2 * stride);                \
+}
+#define LD_UB3(...) LD_B3(v16u8, __VA_ARGS__)
+#define LD_SB3(...) LD_B3(v16i8, __VA_ARGS__)
+
 #define LD_B4(RTYPE, psrc, stride, out0, out1, out2, out3) {  \
   LD_B2(RTYPE, psrc, stride, out0, out1);                     \
   LD_B2(RTYPE, psrc + 2 * stride , stride, out2, out3);       \
@@ -316,6 +323,31 @@
 #define SLDI_SB(...) SLDI_B(v16i8, __VA_ARGS__)
 #define SLDI_SH(...) SLDI_B(v8i16, __VA_ARGS__)
 
+/* Description : Shuffle byte vector elements as per mask vector
+ * Arguments   : Inputs  - in0, in1, in2, in3, mask0, mask1
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Byte elements from 'in0' & 'in1' are copied selectively to
+ *               'out0' as per control vector 'mask0'
+ */
+#define VSHF_B(RTYPE, in0, in1, mask)                              \
+        (RTYPE)__msa_vshf_b((v16i8)mask, (v16i8)in1, (v16i8)in0)
+
+#define VSHF_UB(...) VSHF_B(v16u8, __VA_ARGS__)
+#define VSHF_SB(...) VSHF_B(v16i8, __VA_ARGS__)
+#define VSHF_UH(...) VSHF_B(v8u16, __VA_ARGS__)
+#define VSHF_SH(...) VSHF_B(v8i16, __VA_ARGS__)
+
+#define VSHF_B2(RTYPE, in0, in1, in2, in3, mask0, mask1, out0, out1) do {  \
+  out0 = VSHF_B(RTYPE, in0, in1, mask0);                                   \
+  out1 = VSHF_B(RTYPE, in2, in3, mask1);                                   \
+} while (0)
+
+#define VSHF_B2_UB(...) VSHF_B2(v16u8, __VA_ARGS__)
+#define VSHF_B2_SB(...) VSHF_B2(v16i8, __VA_ARGS__)
+#define VSHF_B2_UH(...) VSHF_B2(v8u16, __VA_ARGS__)
+#define VSHF_B2_SH(...) VSHF_B2(v8i16, __VA_ARGS__)
+
 /* Description : Shuffle halfword vector elements as per mask vector
  * Arguments   : Inputs  - in0, in1, in2, in3, mask0, mask1
  *               Outputs - out0, out1
@@ -323,10 +355,11 @@
  * Details     : halfword elements from 'in0' & 'in1' are copied selectively to
  *               'out0' as per control vector 'mask0'
  */
-#define VSHF_H2(RTYPE, in0, in1, in2, in3, mask0, mask1, out0, out1) {  \
-  out0 = (RTYPE)__msa_vshf_h((v8i16)mask0, (v8i16)in1, (v8i16)in0);     \
-  out1 = (RTYPE)__msa_vshf_h((v8i16)mask1, (v8i16)in3, (v8i16)in2);     \
-}
+#define VSHF_H2(RTYPE, in0, in1, in2, in3, mask0, mask1, out0, out1) do {  \
+  out0 = (RTYPE)__msa_vshf_h((v8i16)mask0, (v8i16)in1, (v8i16)in0);        \
+  out1 = (RTYPE)__msa_vshf_h((v8i16)mask1, (v8i16)in3, (v8i16)in2);        \
+} while (0)
+
 #define VSHF_H2_UH(...) VSHF_H2(v8u16, __VA_ARGS__)
 #define VSHF_H2_SH(...) VSHF_H2(v8i16, __VA_ARGS__)
 
@@ -335,36 +368,39 @@
  * Arguments   : Input/output  - val
  *               Return Type - signed halfword
  */
-#define CLIP_SH_0_255(val) {                      \
+#define CLIP_SH_0_255(val) do {                   \
   const v8i16 max_m = __msa_ldi_h(255);           \
   val = __msa_maxi_s_h((v8i16)val, 0);            \
   val = __msa_min_s_h(max_m, (v8i16)val);         \
-}
-#define CLIP_SH2_0_255(in0, in1) {  \
-  CLIP_SH_0_255(in0);               \
-  CLIP_SH_0_255(in1);               \
-}
-#define CLIP_SH4_0_255(in0, in1, in2, in3) {  \
-  CLIP_SH2_0_255(in0, in1);                   \
-  CLIP_SH2_0_255(in2, in3);                   \
-}
+} while (0)
+
+#define CLIP_SH2_0_255(in0, in1) do {  \
+  CLIP_SH_0_255(in0);                  \
+  CLIP_SH_0_255(in1);                  \
+} while (0)
+
+#define CLIP_SH4_0_255(in0, in1, in2, in3) do {  \
+  CLIP_SH2_0_255(in0, in1);                      \
+  CLIP_SH2_0_255(in2, in3);                      \
+} while (0)
 
 /* Description : Clips all signed word elements of input vector
  *               between 0 & 255
  * Arguments   : Input/output  - val
  *               Return Type - signed word
  */
-#define CLIP_SW_0_255(val) {                      \
+#define CLIP_SW_0_255(val) do {                   \
   const v4i32 max_m = __msa_ldi_w(255);           \
   val = __msa_maxi_s_w((v4i32)val, 0);            \
   val = __msa_min_s_w(max_m, (v4i32)val);         \
-}
-#define CLIP_SW4_0_255(in0, in1, in2, in3) {  \
-  CLIP_SW_0_255(in0);                         \
-  CLIP_SW_0_255(in1);                         \
-  CLIP_SW_0_255(in2);                         \
-  CLIP_SW_0_255(in3);                         \
-}
+} while (0)
+
+#define CLIP_SW4_0_255(in0, in1, in2, in3) do {   \
+  CLIP_SW_0_255(in0);                             \
+  CLIP_SW_0_255(in1);                             \
+  CLIP_SW_0_255(in2);                             \
+  CLIP_SW_0_255(in3);                             \
+} while (0)
 
 /* Description : Horizontal addition of 8 unsigned halfword elements
  * Arguments   : Input  - in       (unsigned halfword vector)

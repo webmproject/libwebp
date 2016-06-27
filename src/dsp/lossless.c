@@ -572,6 +572,7 @@ VP8LMapAlphaFunc VP8LMapColor8b;
 extern void VP8LDspInitSSE2(void);
 extern void VP8LDspInitNEON(void);
 extern void VP8LDspInitMIPSdspR2(void);
+extern void VP8LDspInitMSA(void);
 
 static volatile VP8CPUInfo lossless_last_cpuinfo_used =
     (VP8CPUInfo)&lossless_last_cpuinfo_used;
@@ -624,6 +625,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
     if (VP8GetCPUInfo(kMIPSdspR2)) {
       VP8LDspInitMIPSdspR2();
+    }
+#endif
+#if defined(WEBP_USE_MSA)
+    if (VP8GetCPUInfo(kMSA)) {
+      VP8LDspInitMSA();
     }
 #endif
   }
