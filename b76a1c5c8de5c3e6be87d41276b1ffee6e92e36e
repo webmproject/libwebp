@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "805f0b27_aa57efba",
+        "filename": "src/dsp/lossless_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-06-27T21:05:31Z",
+      "side": 1,
+      "message": "ok, we should try to systematically add some ()\u0027s in the macros where arguments are use then, when there\u0027s such a risk.\nUploaded an updated patch for this...",
+      "parentUuid": "c3474d3d_2c8a53db",
+      "revId": "b76a1c5c8de5c3e6be87d41276b1ffee6e92e36e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "83d7157e_f14f5752",
         "filename": "src/dsp/lossless_msa.c",
         "patchSetId": 1
