@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "400b5318_b88bd9cb",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-27T11:01:47Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "83d7157e_b16cbfb6",
+      "revId": "b76a1c5c8de5c3e6be87d41276b1ffee6e92e36e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "83d7157e_913ffba6",
         "filename": "src/dsp/lossless_msa.c",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "c3474d3d_2c8a53db",
+        "filename": "src/dsp/lossless_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-27T11:01:47Z",
+      "side": 1,
+      "message": "At some places inputs are passed in different way. For e.g. as ptemp_dst + cnst. So after expansion it will be like ptemp_dst + cnst[0] will give build error. If we want to use pdst[0] then we need to pass inputs with closing braces i.e. as (ptemp_dst + cnst), then pdst[0] can expand as (ptemp_dst + cnst)[0] which will be ok.",
+      "parentUuid": "83d7157e_913ffba6",
+      "revId": "b76a1c5c8de5c3e6be87d41276b1ffee6e92e36e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "83d7157e_f14f5752",
         "filename": "src/dsp/lossless_msa.c",
         "patchSetId": 1
@@ -47,6 +83,30 @@
       "writtenOn": "2016-06-27T10:25:28Z",
       "side": 1,
       "message": "const uint8_t* ptemp_src \u003d (const uint8_t*)src;",
+      "range": {
+        "startLine": 86,
+        "startChar": 24,
+        "endLine": 86,
+        "endChar": 31
+      },
+      "revId": "b76a1c5c8de5c3e6be87d41276b1ffee6e92e36e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "400b5318_786e61e8",
+        "filename": "src/dsp/lossless_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-27T11:01:47Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "83d7157e_f14f5752",
       "range": {
         "startLine": 86,
         "startChar": 24,
@@ -82,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "400b5318_58739dd0",
+        "filename": "src/dsp/lossless_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-27T11:01:47Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "83d7157e_513583c6",
+      "range": {
+        "startLine": 126,
+        "startChar": 2,
+        "endLine": 126,
+        "endChar": 9
+      },
+      "revId": "b76a1c5c8de5c3e6be87d41276b1ffee6e92e36e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "83d7157e_d167b3d0",
         "filename": "src/dsp/lossless_msa.c",
         "patchSetId": 1
@@ -105,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "400b5318_3878e9a8",
+        "filename": "src/dsp/lossless_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-27T11:01:47Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "83d7157e_d167b3d0",
+      "range": {
+        "startLine": 128,
+        "startChar": 8,
+        "endLine": 128,
+        "endChar": 13
+      },
+      "revId": "b76a1c5c8de5c3e6be87d41276b1ffee6e92e36e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "83d7157e_31328fe0",
         "filename": "src/dsp/lossless_msa.c",
         "patchSetId": 1
@@ -116,6 +224,30 @@
       "writtenOn": "2016-06-27T10:25:28Z",
       "side": 1,
       "message": "ditto",
+      "range": {
+        "startLine": 173,
+        "startChar": 11,
+        "endLine": 173,
+        "endChar": 20
+      },
+      "revId": "b76a1c5c8de5c3e6be87d41276b1ffee6e92e36e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "400b5318_187d2599",
+        "filename": "src/dsp/lossless_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-06-27T11:01:47Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "83d7157e_31328fe0",
       "range": {
         "startLine": 173,
         "startChar": 11,
