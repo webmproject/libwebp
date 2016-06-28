@@ -361,6 +361,22 @@
 #define VSHF_H2_UH(...) VSHF_H2(v8u16, __VA_ARGS__)
 #define VSHF_H2_SH(...) VSHF_H2(v8i16, __VA_ARGS__)
 
+/* Description : Dot product of byte vector elements
+ * Arguments   : Inputs  - mult0, mult1, cnst0, cnst1
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Signed byte elements from 'mult0' are multiplied with
+ *               signed byte elements from 'cnst0' producing a result
+ *               twice the size of input i.e. signed halfword.
+ *               The multiplication result of adjacent odd-even elements
+ *               are added together and written to the 'out0' vector
+*/
+#define DOTP_SB2(RTYPE, mult0, mult1, cnst0, cnst1, out0, out1) do {  \
+  out0 = (RTYPE)__msa_dotp_s_h((v16i8)mult0, (v16i8)cnst0);           \
+  out1 = (RTYPE)__msa_dotp_s_h((v16i8)mult1, (v16i8)cnst1);           \
+} while (0)
+#define DOTP_SB2_SH(...) DOTP_SB2(v8i16, __VA_ARGS__)
+
 /* Description : Clips all signed halfword elements of input vector
  *               between 0 & 255
  * Arguments   : Input/output  - val
@@ -678,7 +694,7 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
   out0 = (RTYPE)__msa_ilvr_b((v16i8)in0, (v16i8)in1);  \
   out1 = (RTYPE)__msa_ilvl_b((v16i8)in0, (v16i8)in1);  \
 } while (0)
-#define ILVRL_B2_UB(...) ILVRL_B2(v16u8, __VA_ARGS__)  
+#define ILVRL_B2_UB(...) ILVRL_B2(v16u8, __VA_ARGS__)
 #define ILVRL_B2_SB(...) ILVRL_B2(v16i8, __VA_ARGS__)
 #define ILVRL_B2_UH(...) ILVRL_B2(v8u16, __VA_ARGS__)
 #define ILVRL_B2_SH(...) ILVRL_B2(v8i16, __VA_ARGS__)
