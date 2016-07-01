@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9d193675_73dd604e",
+        "filename": "src/dsp/filters_msa.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-07-01T18:32:10Z",
+      "side": 1,
+      "message": "This is done considering the overlap between pred and dst values. Due to overlap (shifted) between pred and dst pointers if inverse is 1, we can not do simd here. For PredictLineTop there is no such shifted overlap (pred \u003d out if inverse \u003d 1), so it can be optimized using simd os is separate functions. Any way as this is not used for current set of functions as inverse is 0 for these functions and will be used for remaining WebPUnfilters functions.\n\nYes.. I will remove this redundancy for current set of functions and use PredictLineInverse0 directly as inverse is 0 in this case.",
+      "parentUuid": "600cd7ee_4d067918",
+      "range": {
+        "startLine": 103,
+        "startChar": 16,
+        "endLine": 103,
+        "endChar": 17
+      },
+      "revId": "cf82333647eac841f25282f72514022a8447c06a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "600cd7ee_2d034508",
         "filename": "src/dsp/filters_msa.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2016-07-01T14:00:10Z",
       "side": 1,
       "message": "for readability, this whole block (167-199) could be in an isolated function (PredictLineGradient() for instance)",
+      "range": {
+        "startLine": 167,
+        "startChar": 0,
+        "endLine": 167,
+        "endChar": 4
+      },
+      "revId": "cf82333647eac841f25282f72514022a8447c06a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0f88ffb_9ed439fd",
+        "filename": "src/dsp/filters_msa.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-07-01T18:32:10Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "600cd7ee_2d034508",
       "range": {
         "startLine": 167,
         "startChar": 0,
