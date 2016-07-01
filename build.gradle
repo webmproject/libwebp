@@ -125,6 +125,7 @@ model {
             include "dec_sse41.c"
             include "filters.c"
             include "filters_mips_dsp_r2.c"
+            include "filters_msa.c"
             include "filters_sse2.c"
             include "lossless.c"
             include "lossless_mips_dsp_r2.c"

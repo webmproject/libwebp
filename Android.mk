@@ -50,15 +50,16 @@ dsp_dec_srcs := \
     src/dsp/dec_mips32.c \
     src/dsp/dec_mips_dsp_r2.c \
     src/dsp/dec_msa.c \
-    src/dsp/lossless_msa.c \
     src/dsp/dec_neon.$(NEON) \
     src/dsp/dec_sse2.c \
     src/dsp/dec_sse41.c \
     src/dsp/filters.c \
     src/dsp/filters_mips_dsp_r2.c \
+    src/dsp/filters_msa.c \
     src/dsp/filters_sse2.c \
     src/dsp/lossless.c \
     src/dsp/lossless_mips_dsp_r2.c \
+    src/dsp/lossless_msa.c \
     src/dsp/lossless_neon.$(NEON) \
     src/dsp/lossless_sse2.c \
     src/dsp/rescaler.c \
