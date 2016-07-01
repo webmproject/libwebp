@@ -144,6 +144,7 @@ DSP_DEC_OBJS = \
     src/dsp/dec_sse41.o \
     src/dsp/filters.o \
     src/dsp/filters_mips_dsp_r2.o \
+    src/dsp/filters_msa.o \
     src/dsp/filters_sse2.o \
     src/dsp/lossless.o \
     src/dsp/lossless_mips_dsp_r2.o \
