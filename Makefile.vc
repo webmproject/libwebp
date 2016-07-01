@@ -195,15 +195,16 @@ DSP_DEC_OBJS = \
     $(DIROBJ)\dsp\dec_mips32.obj \
     $(DIROBJ)\dsp\dec_mips_dsp_r2.obj \
     $(DIROBJ)\dsp\dec_msa.obj \
-    $(DIROBJ)\dsp\lossless_msa.obj \
     $(DIROBJ)\dsp\dec_neon.obj \
     $(DIROBJ)\dsp\dec_sse2.obj \
     $(DIROBJ)\dsp\dec_sse41.obj \
     $(DIROBJ)\dsp\filters.obj \
     $(DIROBJ)\dsp\filters_mips_dsp_r2.obj \
+    $(DIROBJ)\dsp\filters_msa.obj \
     $(DIROBJ)\dsp\filters_sse2.obj \
     $(DIROBJ)\dsp\lossless.obj \
     $(DIROBJ)\dsp\lossless_mips_dsp_r2.obj \
+    $(DIROBJ)\dsp\lossless_msa.obj \
     $(DIROBJ)\dsp\lossless_neon.obj \
     $(DIROBJ)\dsp\lossless_sse2.obj \
     $(DIROBJ)\dsp\rescaler.obj \
