@@ -795,6 +795,7 @@ extern void VP8EncDspInitAVX2(void);
 extern void VP8EncDspInitNEON(void);
 extern void VP8EncDspInitMIPS32(void);
 extern void VP8EncDspInitMIPSdspR2(void);
+extern void VP8EncDspInitMSA(void);
 
 static volatile VP8CPUInfo enc_last_cpuinfo_used =
     (VP8CPUInfo)&enc_last_cpuinfo_used;
@@ -856,6 +857,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
 #if defined(WEBP_USE_MIPS_DSP_R2)
     if (VP8GetCPUInfo(kMIPSdspR2)) {
       VP8EncDspInitMIPSdspR2();
+    }
+#endif
+#if defined(WEBP_USE_MSA)
+    if (VP8GetCPUInfo(kMSA)) {
+      VP8EncDspInitMSA();
     }
 #endif
   }
