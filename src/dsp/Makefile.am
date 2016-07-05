@@ -2,7 +2,7 @@ noinst_LTLIBRARIES = libwebpdsp.la libwebpdsp_avx2.la
 noinst_LTLIBRARIES += libwebpdsp_sse2.la libwebpdspdecode_sse2.la
 noinst_LTLIBRARIES += libwebpdsp_sse41.la libwebpdspdecode_sse41.la
 noinst_LTLIBRARIES += libwebpdsp_neon.la libwebpdspdecode_neon.la
-noinst_LTLIBRARIES += libwebpdspdecode_msa.la
+noinst_LTLIBRARIES += libwebpdsp_msa.la libwebpdspdecode_msa.la
 
 if BUILD_LIBWEBPDECODER
   noinst_LTLIBRARIES += libwebpdspdecode.la
@@ -86,8 +86,8 @@ libwebpdspdecode_msa_la_SOURCES += dec_msa.c
 libwebpdspdecode_msa_la_SOURCES += filters_msa.c
 libwebpdspdecode_msa_la_SOURCES += lossless_msa.c
 libwebpdspdecode_msa_la_SOURCES += msa_macro.h
-libwebpdspdecode_msa_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
-libwebpdspdecode_msa_la_CFLAGS = $(AM_CFLAGS)
+libwebpdspdecode_msa_la_CPPFLAGS = $(libwebpdsp_msa_la_CPPFLAGS)
+libwebpdspdecode_msa_la_CFLAGS = $(libwebpdsp_msa_la_CFLAGS)
 
 libwebpdsp_sse2_la_SOURCES =
 libwebpdsp_sse2_la_SOURCES += argb_sse2.c
@@ -112,6 +112,12 @@ libwebpdsp_neon_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
 libwebpdsp_neon_la_CFLAGS = $(AM_CFLAGS) $(NEON_FLAGS)
 libwebpdsp_neon_la_LIBADD = libwebpdspdecode_neon.la
 
+libwebpdsp_msa_la_SOURCES =
+libwebpdsp_msa_la_SOURCES += enc_msa.c
+libwebpdsp_msa_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
+libwebpdsp_msa_la_CFLAGS = $(AM_CFLAGS)
+libwebpdsp_msa_la_LIBADD = libwebpdspdecode_msa.la
+
 libwebpdsp_la_SOURCES = $(COMMON_SOURCES) $(ENC_SOURCES)
 
 noinst_HEADERS =
@@ -126,7 +132,7 @@ libwebpdsp_la_LIBADD =
 libwebpdsp_la_LIBADD += libwebpdsp_avx2.la libwebpdsp_sse2.la
 libwebpdsp_la_LIBADD += libwebpdsp_sse41.la
 libwebpdsp_la_LIBADD += libwebpdsp_neon.la
-libwebpdsp_la_LIBADD += libwebpdspdecode_msa.la
+libwebpdsp_la_LIBADD += libwebpdsp_msa.la
 
 if BUILD_LIBWEBPDECODER
   libwebpdspdecode_la_SOURCES = $(COMMON_SOURCES)

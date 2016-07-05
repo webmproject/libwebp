@@ -85,6 +85,7 @@ dsp_enc_srcs := \
     src/dsp/enc_avx2.c \
     src/dsp/enc_mips32.c \
     src/dsp/enc_mips_dsp_r2.c \
+    src/dsp/enc_msa.c \
     src/dsp/enc_neon.$(NEON) \
     src/dsp/enc_sse2.c \
     src/dsp/enc_sse41.c \

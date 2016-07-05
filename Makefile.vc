@@ -233,6 +233,7 @@ DSP_ENC_OBJS = \
     $(DIROBJ)\dsp\enc_avx2.obj \
     $(DIROBJ)\dsp\enc_mips32.obj \
     $(DIROBJ)\dsp\enc_mips_dsp_r2.obj \
+    $(DIROBJ)\dsp\enc_msa.obj \
     $(DIROBJ)\dsp\enc_neon.obj \
     $(DIROBJ)\dsp\enc_sse2.obj \
     $(DIROBJ)\dsp\enc_sse41.obj \

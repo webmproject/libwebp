@@ -23,14 +23,18 @@
 
 #ifdef CLANG_BUILD
   #define ADDVI_H(a, b)  __msa_addvi_h((v8i16)a, b)
+  #define ADDVI_W(a, b)  __msa_addvi_w((v4i32)a, b)
   #define SRAI_B(a, b)  __msa_srai_b((v16i8)a, b)
   #define SRAI_H(a, b)  __msa_srai_h((v8i16)a, b)
   #define SRAI_W(a, b)  __msa_srai_w((v4i32)a, b)
+  #define SRLI_H(a, b)  __msa_srli_h((v8i16)a, b)
 #else
   #define ADDVI_H(a, b)  (a + b)
+  #define ADDVI_W(a, b)  (a + b)
   #define SRAI_B(a, b)  (a >> b)
   #define SRAI_H(a, b)  (a >> b)
   #define SRAI_W(a, b)  (a >> b)
+  #define SRLI_H(a, b)  (a << b)
 #endif
 
 #define LD_B(RTYPE, psrc) *((RTYPE*)(psrc))
@@ -257,6 +261,18 @@
 } while (0)
 #define ST_UB8(...) ST_B8(v16u8, __VA_ARGS__)
 
+/* Description : Store vectors of 8 halfword elements with stride
+ * Arguments   : Inputs - in0, in1, pdst, stride
+ * Details     : Store 8 halfword elements from 'in0' to (pdst)
+ *               Store 8 halfword elements from 'in1' to (pdst + stride)
+ */
+#define ST_H2(RTYPE, in0, in1, pdst, stride) do {  \
+  ST_H(RTYPE, in0, pdst);                          \
+  ST_H(RTYPE, in1, pdst + stride);                 \
+} while (0)
+#define ST_UH2(...) ST_H2(v8u16, __VA_ARGS__)
+#define ST_SH2(...) ST_H2(v8i16, __VA_ARGS__)
+
 /* Description : Store 2x4 byte block to destination memory from input vector
  * Arguments   : Inputs - in, stidx, pdst, stride
  * Details     : Index 'stidx' halfword element from 'in' vector is copied to
@@ -377,6 +393,22 @@
 } while (0)
 #define DOTP_SB2_SH(...) DOTP_SB2(v8i16, __VA_ARGS__)
 
+/* Description : Dot product & addition of halfword vector elements
+ * Arguments   : Inputs  - mult0, mult1, cnst0, cnst1
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Signed halfword elements from 'mult0' are multiplied with
+ *               signed halfword elements from 'cnst0' producing a result
+ *               twice the size of input i.e. signed word.
+ *               The multiplication result of adjacent odd-even elements
+ *               are added to the 'out0' vector
+ */
+#define DPADD_SH2(RTYPE, mult0, mult1, cnst0, cnst1, out0, out1) do {      \
+  out0 = (RTYPE)__msa_dpadd_s_w((v4i32)out0, (v8i16)mult0, (v8i16)cnst0);  \
+  out1 = (RTYPE)__msa_dpadd_s_w((v4i32)out1, (v8i16)mult1, (v8i16)cnst1);  \
+} while (0)
+#define DPADD_SH2_SW(...) DPADD_SH2(v4i32, __VA_ARGS__)
+
 /* Description : Clips all signed halfword elements of input vector
  *               between 0 & 255
  * Arguments   : Input/output  - val
@@ -433,6 +465,22 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
   return sum_m;
 }
 #define HADD_UH_U32(in) func_hadd_uh_u32(in)
+
+/* Description : Horizontal subtraction of unsigned byte vector elements
+ * Arguments   : Inputs  - in0, in1
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Each unsigned odd byte element from 'in0' is subtracted from
+ *               even unsigned byte element from 'in0' (pairwise) and the
+ *               halfword result is written to 'out0'
+ */
+#define HSUB_UB2(RTYPE, in0, in1, out0, out1) do {       \
+  out0 = (RTYPE)__msa_hsub_u_h((v16u8)in0, (v16u8)in0);  \
+  out1 = (RTYPE)__msa_hsub_u_h((v16u8)in1, (v16u8)in1);  \
+} while (0)
+#define HSUB_UB2_UH(...) HSUB_UB2(v8u16, __VA_ARGS__)
+#define HSUB_UB2_SH(...) HSUB_UB2(v8i16, __VA_ARGS__)
+#define HSUB_UB2_SW(...) HSUB_UB2(v4i32, __VA_ARGS__)
 
 /* Description : Set element n input vector to GPR value
  * Arguments   : Inputs - in0, in1, in2, in3
@@ -745,6 +793,23 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
 #define PCKEV_B4_SH(...) PCKEV_B4(v8i16, __VA_ARGS__)
 #define PCKEV_B4_SW(...) PCKEV_B4(v4i32, __VA_ARGS__)
 
+/* Description : Pack even halfword elements of vector pairs
+ * Arguments   : Inputs  - in0, in1, in2, in3
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Even halfword elements of 'in0' are copied to the left half of
+ *               'out0' & even halfword elements of 'in1' are copied to the
+ *               right half of 'out0'.
+ */
+#define PCKEV_H2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)__msa_pckev_h((v8i16)in0, (v8i16)in1);        \
+  out1 = (RTYPE)__msa_pckev_h((v8i16)in2, (v8i16)in3);        \
+} while (0)
+#define PCKEV_H2_UH(...) PCKEV_H2(v8u16, __VA_ARGS__)
+#define PCKEV_H2_SH(...) PCKEV_H2(v8i16, __VA_ARGS__)
+#define PCKEV_H2_SW(...) PCKEV_H2(v4i32, __VA_ARGS__)
+#define PCKEV_H2_UW(...) PCKEV_H2(v4u32, __VA_ARGS__)
+
 /* Description : Arithmetic immediate shift right all elements of word vector
  * Arguments   : Inputs  - in0, in1, shift
  *               Outputs - in place operation
@@ -814,6 +879,30 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
 #define ADDVI_H2_SH(...) ADDVI_H2(v8i16, __VA_ARGS__)
 #define ADDVI_H2_UH(...) ADDVI_H2(v8u16, __VA_ARGS__)
 
+/* Description : Addition of 2 pairs of word vectors
+ * Arguments   : Inputs  - in0, in1, in2, in3
+ *               Outputs - out0, out1
+ * Details     : Each element in 'in0' is added to 'in1' and result is written
+ *               to 'out0'.
+ */
+#define ADDVI_W2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)ADDVI_W(in0, in1);                            \
+  out1 = (RTYPE)ADDVI_W(in2, in3);                            \
+} while (0)
+#define ADDVI_W2_SW(...) ADDVI_W2(v4i32, __VA_ARGS__)
+
+/* Description : Fill 2 pairs of word vectors with GP registers
+ * Arguments   : Inputs  - in0, in1
+ *               Outputs - out0, out1
+ * Details     : GP register in0 is replicated in each word element of out0
+ *               GP register in1 is replicated in each word element of out1
+ */
+#define FILL_W2(RTYPE, in0, in1, out0, out1) do {  \
+  out0 = (RTYPE)__msa_fill_w(in0);                 \
+  out1 = (RTYPE)__msa_fill_w(in1);                 \
+} while (0)
+#define FILL_W2_SW(...) FILL_W2(v4i32, __VA_ARGS__)
+
 /* Description : Addition of 2 pairs of vectors
  * Arguments   : Inputs  - in0, in1, in2, in3
  *               Outputs - out0, out1
@@ -840,6 +929,32 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
 #define SUB2(in0, in1, in2, in3, out0, out1) do {  \
   out0 = in0 - in1;                                \
   out1 = in2 - in3;                                \
+} while (0)
+
+/* Description : Addition - Subtraction of input vectors
+ * Arguments   : Inputs  - in0, in1
+ *               Outputs - out0, out1
+ * Details     : Each element in 'in1' is added to 'in0' and result is
+ *               written to 'out0'.
+ *               Each element in 'in1' is subtracted from 'in0' and result is
+ *               written to 'out1'.
+ */
+#define ADDSUB2(in0, in1, out0, out1) do {  \
+  out0 = in0 + in1;                         \
+  out1 = in0 - in1;                         \
+} while (0)
+
+/* Description : Sign extend halfword elements from right half of the vector
+ * Arguments   : Input  - in    (halfword vector)
+ *               Output - out   (sign extended word vector)
+ *               Return Type - signed word
+ * Details     : Sign bit of halfword elements from input vector 'in' is
+ *               extracted and interleaved with same vector 'in0' to generate
+ *               4 word elements keeping sign intact
+ */
+#define UNPCK_R_SH_SW(in, out) do {                   \
+  const v8i16 sign_m = __msa_clti_s_h((v8i16)in, 0);  \
+  out = (v4i32)__msa_ilvr_h(sign_m, (v8i16)in);       \
 } while (0)
 
 /* Description : Sign extend halfword elements from input vector and return
