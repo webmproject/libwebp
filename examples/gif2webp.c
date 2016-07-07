@@ -55,7 +55,7 @@ static void Help(void) {
   printf("Usage:\n");
   printf(" gif2webp [options] gif_file -o webp_file\n");
   printf("Options:\n");
-  printf("  -h / -help  ............ this help\n");
+  printf("  -h / -help ............. this help\n");
   printf("  -lossy ................. encode image using lossy compression\n");
   printf("  -mixed ................. for each frame in the image, pick lossy\n"
          "                           or lossless compression heuristically\n");

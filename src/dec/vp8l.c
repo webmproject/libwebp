@@ -721,6 +721,9 @@ static void ProcessRows(VP8LDecoder* const dec, int row) {
   const int num_rows = row - dec->last_row_;
 
   assert(row <= dec->io_->crop_bottom);
+  // We can't process more than NUM_ARGB_CACHE_ROWS at a time (that's the size
+  // of argb_cache_), but we currently don't need more than that.
+  assert(num_rows <= NUM_ARGB_CACHE_ROWS);
   if (num_rows > 0) {    // Emit output.
     VP8Io* const io = dec->io_;
     uint8_t* rows_data = (uint8_t*)dec->argb_cache_;
@@ -1055,7 +1058,7 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
   const int mask = hdr->huffman_mask_;
   const HTreeGroup* htree_group =
       (src < src_last) ? GetHtreeGroupForPos(hdr, col, row) : NULL;
-  assert(src < src_end);
+  assert(dec->last_row_ < last_row);
   assert(src_last <= src_end);
 
   while (src < src_last) {
@@ -1464,23 +1467,31 @@ static int AllocateInternalBuffers8b(VP8LDecoder* const dec) {
 
 // Special row-processing that only stores the alpha data.
 static void ExtractAlphaRows(VP8LDecoder* const dec, int last_row) {
-  const int num_rows = last_row - dec->last_row_;
-  const uint32_t* const in = dec->pixels_ + dec->width_ * dec->last_row_;
+  int cur_row = dec->last_row_;
+  int num_rows = last_row - cur_row;
+  const uint32_t* in = dec->pixels_ + dec->width_ * cur_row;
 
   assert(last_row <= dec->io_->crop_bottom);
-  if (num_rows > 0) {
+  while (num_rows > 0) {
+    const int num_rows_to_process =
+        (num_rows > NUM_ARGB_CACHE_ROWS) ? NUM_ARGB_CACHE_ROWS : num_rows;
     // Extract alpha (which is stored in the green plane).
     ALPHDecoder* const alph_dec = (ALPHDecoder*)dec->io_->opaque;
     uint8_t* const output = alph_dec->output_;
     const int width = dec->io_->width;      // the final width (!= dec->width_)
-    const int cache_pixs = width * num_rows;
-    uint8_t* dst = output + width * dec->last_row_;
+    const int cache_pixs = width * num_rows_to_process;
+    uint8_t* const dst = output + width * cur_row;
     const uint32_t* const src = dec->argb_cache_;
     int i;
-    ApplyInverseTransforms(dec, num_rows, in);
+    ApplyInverseTransforms(dec, num_rows_to_process, in);
     for (i = 0; i < cache_pixs; ++i) dst[i] = (src[i] >> 8) & 0xff;
-    AlphaApplyFilter(alph_dec, dec->last_row_, last_row, dst, width);
+    AlphaApplyFilter(alph_dec,
+                     cur_row, cur_row + num_rows_to_process, dst, width);
+    num_rows -= num_rows_to_process;
+    in += num_rows_to_process * dec->width_;
+    cur_row += num_rows_to_process;
   }
+  assert(cur_row == last_row);
   dec->last_row_ = dec->last_out_row_ = last_row;
 }
 

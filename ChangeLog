@@ -1,3 +1,179 @@
+deb54d9 Clarify the expected 'config' lifespan in WebPIDecode()
+c7e2d24 update ChangeLog (tag: v0.5.1-rc5)
+c7eb06f Fix corner case in CostManagerInit.
+ab7937a gif2webp: normalize the number of .'s in the help message
+3cdec84 vwebp: normalize the number of .'s in the help message
+bdf6241 cwebp: normalize the number of .'s in the help message
+06a38c7 fix rescaling bug: alpha plane wasn't filled with 0xff
+319e37b Improve lossless compression.
+447adbc 'our bug tracker' -> 'the bug tracker'
+97b9e64 normalize the number of .'s in the help message
+bb50bf4 pngdec,ReadFunc: throw an error on invalid read
+38063af decode.h,WebPGetInfo: normalize function comment
+9e8e1b7 Inline GetResidual for speed.
+7d58d1b Speed-up uniform-region processing.
+23e29cb Merge "Fix a boundary case in BackwardReferencesHashChainDistanceOnly." into 0.5.1
+0bb23b2 free -> WebPSafeFree()
+e7b9177 Merge "DecodeImageData(): change the incorrect assert" into 0.5.1
+2abfa54 DecodeImageData(): change the incorrect assert
+5a48fcd Merge "configure: test for -Wfloat-conversion"
+0174d18 Fix a boundary case in BackwardReferencesHashChainDistanceOnly.
+6a9c262 Merge "Added MSA optimized transform functions"
+cfbcc5e Make sure to consider small distances in LZ77.
+5e60c42 Added MSA optimized transform functions
+3dc28d7 configure: test for -Wfloat-conversion
+f2a0946 add some asserts to delimit the perimeter of CostManager's operation
+9a583c6 fix invalid-write bug for alpha-decoding
+f66512d make gradlew executable
+6fda58f backward_references: quiet double->int warning
+a48cc9d Merge "Fix a compression regression for images with long uniform regions." into 0.5.1
+cc2720c Merge "Revert an LZ77 boundary constant." into 0.5.1
+059aab4 Fix a compression regression for images with long uniform regions.
+b0c7e49 Check more backward matches with higher quality.
+a361151 Revert an LZ77 boundary constant.
+8190374 README: fix typo
+7551db4 update NEWS
+0fb2269 bump version to 0.5.1
+f453761 update AUTHORS & .mailmap
+3259571 Refactor GetColorPalette method.
+1df5e26 avoid using tmp histogram in PreparePair()
+7685123 fix comment typos
+a246b92 Speedup backward references.
+76d73f1 Merge "CostManager: introduce a free-list of ~10 intervals"
+eab39d8 CostManager: introduce a free-list of ~10 intervals
+4c59aac Merge "mips msa webp configuration"
+043c33f Merge "Improve speed and compression in backward reference for lossless."
+71be9b8 Merge "clarify variable names in HistogramRemap()"
+0ba7fd7 Improve speed and compression in backward reference for lossless.
+0481d42 CostManager: cache one interval and re-use it when possible
+41b7e6b Merge "histogram: fix bin calculation"
+96c3d62 histogram: fix bin calculation
+fe9e31e clarify variable names in HistogramRemap()
+ce3c824 disable near-lossless quantization if palette is used
+e11da08 mips msa webp configuration
+5f8f998 mux: Presence of unknown chunks should trigger VP8X chunk output.
+cadec0b Merge "Sync mips32 and dsp_r2 YUV->RGB code with C verison"
+d963775 Compute the hash chain once and for all for lossless compression.
+50a4866 Sync mips32 and dsp_r2 YUV->RGB code with C verison
+eee788e Merge "introduce a common signature for all image reader function"
+d77b877 introduce a common signature for all image reader function
+ca8d951 remove some obsolete TODOs
+ae2a722 collect all decoding utilities from examples/ in libexampledec.a
+0b8ae85 Merge "Move DitherCombine8x8 to dsp/dec.c"
+77cad88 Merge "ReadWebP: avoid conversion to ARGB if final format is YUVA"
+ab8d669 ReadWebP: avoid conversion to ARGB if final format is YUVA
+f8b7ce9 Merge "test pointer to NULL explicitly"
+5df6f21 test pointer to NULL explicitly
+77f21c9 Move DitherCombine8x8 to dsp/dec.c
+c9e6d86 Add gradle support
+c65f41e Revert "Add gradle support"
+bf731ed Add gradle support
+08333b8 WebPAnimEncoder: Detect when canvas is modified, restore only when needed.
+0209d7e Merge "speed-up MapToPalette() with binary search"
+fdd29a3 speed-up MapToPalette() with binary search
+cf4a651 Revert "Refactor GetColorPalette method."
+0a27aca Merge changes Idfa8ce83,I19adc9c4
+f25c440 WebPAnimEncoder: Restore original canvas between multiple encodes.
+169004b Refactor GetColorPalette method.
+576362a VP8LDoFillBitWindow: support big-endian in fast path
+ac49e4e bit_reader.c: s/VP8L_USE_UNALIGNED_LOAD/VP8L_USE_FAST_LOAD/
+d39ceb5 VP8LDoFillBitWindow: remove stale TODO
+2ec2de1 Merge "Speed-up BackwardReferencesHashChainDistanceOnly."
+3e023c1 Speed-up BackwardReferencesHashChainDistanceOnly.
+f2e1efb Improve near lossless compression when a prediction filter is used.
+e15afbc dsp.h: fix ubsan macro name
+e53c9cc dsp.h: add WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW
+af81fdb utils.h: quiet -fsanitize=undefined warnings
+ea0be35 dsp.h: remove utils.h include
+cd276ae utils/*.c: ../utils/utils.h -> ./utils.h
+c892713 utils/Makefile.am: add some missing headers
+ea24e02 Merge "dsp.h: add WEBP_UBSAN_IGNORE_UNDEF"
+369e264 dsp.h: add WEBP_UBSAN_IGNORE_UNDEF
+0d020a7 Merge "add runtime NEON detection"
+5ee2136 Merge "add VP8LAddPixels() to lossless.h"
+47435a6 add VP8LAddPixels() to lossless.h
+8fa6ac6 remove two ubsan warnings
+74fb56f add runtime NEON detection
+4154a83 MIPS update to new Unfilter API
+c80b9fc Merge "cherry-pick decoder fix for 64-bit android devices"
+6235147 cherry-pick decoder fix for 64-bit android devices
+d41b8c4 configure: test for -Wformat-* w/-Wformat present
+5f95589 Fix WEBP_ALIGN in case the argument is a pointer to a type larger than a byte.
+2309fd5 replace num_parts_ by num_parts_minus_one_ (unsigned)
+9629f4b SimplifySegments: quiet -Warray-bounds warning
+de47492 Merge "update the Unfilter API in dsp to process one row independently"
+2102ccd update the Unfilter API in dsp to process one row independently
+e3912d5 WebPAnimEncoder: Restore canvas before evaluating blending possibility.
+6e12e1e WebPAnimEncoder: Fix for single-frame optimization.
+602f344 Merge changes I1d03acac,Ifcb64219
+95ecccf only apply color-mapping for alpha on the cropped area
+47dd070 anim_diff: Add an experimental option for max inter-frame diff.
+aa809cf only allocate alpha_plane_ up to crop_bottom row
+31f2b8d WebPAnimEncoder: FlattenSimilarPixels(): look for similar
+774dfbd perform alpha filtering within the decoding loop
+a4cae68 lossless decoding: only process decoded row up to last_row
+238cdcd Only call WebPDequantizeLevels() on cropped area
+cf6c713 alpha: preparatory cleanup
+b95ac0a Merge "VP8GetHeaders(): initialize VP8Io with sane value for crop/scale dimensions"
+8923139 VP8GetHeaders(): initialize VP8Io with sane value for crop/scale dimensions
+5828e19 use_8b_decode -> use_8b_decode_
+8dca024 fix bug in alpha.c that was triggering a memory error in incremental mode
+9a950c5 WebPAnimEncoder: Disable filtering when blending is used with lossy encoding.
+eb42390 WebPAnimEncoder: choose max diff for framerect based on quality.
+ff0a94b WebPAnimEncoder lossy: ignore small pixel differences for frame rectangles.
+f804008 gif2webp: Remove the 'prev_to_prev_canvas' buffer.
+6d8c07d Merge "WebPDequantizeLevels(): use stride in CountLevels()"
+d96fe5e WebPDequantizeLevels(): use stride in CountLevels()
+ec1b240 WebPPictureImport*: check output pointer
+c076876 Merge "Revert "Re-enable encoding of alpha plane with color cache for next release.""
+41f14bc WebPPictureImport*: check src pointer
+64eed38 Pass stride parameter to WebPDequantizeLevels()
+97934e2 Revert "Re-enable encoding of alpha plane with color cache for next release."
+e88c4ca fix -m 2 mode-cost evaluation (causing partition0 overflow)
+4562e83 Merge "add extra meaning to WebPDecBuffer::is_external_memory"
+abdb109 add extra meaning to WebPDecBuffer::is_external_memory
+875aec7 enc_neon,cosmetics: break long comment
+71e856c GetMBSSIM,cosmetics: fix alignment
+a90edff fix missing 'extern' for SSIM function in dsp/
+423ecaf move some SSIM-accumulation function for dsp/
+f08e662 Merge "Fix FindClosestDiscretized in near lossless:"
+0d40cc5 enc_neon,Disto4x4: remove an unnecessary transpose
+e8feb20 Fix FindClosestDiscretized in near lossless:
+8200643 anim_util: quiet static analysis warning
+a6f23c4 Merge "AnimEncoder: Support progress hook and user data."
+a519377 Merge "Near lossless feature: fix some comments."
+da98d31 AnimEncoder: Support progress hook and user data.
+3335713 Near lossless feature: fix some comments.
+0beed01 cosmetics: fix indent after 2f5e898
+6753f35 Merge "FTransformWHT optimization."
+6583bb1 Improve SSE4.1 implementation of TTransform.
+7561d0c FTransformWHT optimization.
+7ccdb73 fix indentation after patch #328220
+6ec0d2a clarify the logic of the error path when decoding fails.
+8aa352b Merge "Remove an unnecessary transposition in TTransform."
+db86088 Merge "remove useless #include"
+9960c31 Remove an unnecessary transposition in TTransform.
+6e36b51 Small speedup in FTransform.
+9dbd4aa Merge "fix C and SIMD flags completion."
+e60853e Add missing common_sse2.h file to makefile.unix
+696eb2b fix C and SIMD flags completion.
+2b4fe33 Merge "fix multiple allocation for transform buffer"
+2f5e898 fix multiple allocation for transform buffer
+bf2b4f1 Regroup common SSE code + optimization.
+4ed650a force "-pass 6" if -psnr or -size is used but -pass isn't.
+3ef1ce9 yuv_sse2: fix -Wconstant-conversion warning
+a7a03e9 Merge changes I4852d18f,I51ccb85d
+5e122bd gif2webp: set enc_options.verbose = 0 w/-quiet
+ab3c258 anim_encode,DefaultEncoderOptions: init verbose
+8f0dee7 Merge "configure: fix builtin detection w/-Werror"
+4a7b85a cmake: fix builtin detection w/-Werror
+b74657f configure: fix builtin detection w/-Werror
+3661b98 Add a CMakeLists.txt
+75f4af4 remove useless #include
+6c1d763 avoid Yoda style for comparison
+8ce975a SSE optimization for vector mismatch.
+7db5383 Merge tag 'v0.5.0'
+37f0494 update ChangeLog (tag: v0.5.0-rc1, tag: v0.5.0, origin/0.5.0, 0.5.0)
 7e7b6cc faster rgb565/rgb4444/argb output
 4c7f565 update NEWS
 1f62b6b update AUTHORS
@@ -140,7 +316,7 @@ f7c507a Merge "remove unnecessary #include "yuv.h""
 7861578 for ReadXXXX() image-readers, use the value of pic->use_argb
 14e4043 remove unnecessary #include "yuv.h"
 469ba2c vwebp: fix incorrect clipping w/NO_BLEND
-4b9186b update issue tracker url (master)
+4b9186b update issue tracker url
 d64d376 change WEBP_ALIGN_CST value to 31
 f717b82 vp8l.c, cosmetics: fix indent after 95509f9
 927ccdc Merge "fix alignment of allocated memory in AllocateTransformBuffer"

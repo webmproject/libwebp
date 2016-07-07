@@ -18,7 +18,6 @@
 #include <stdio.h>
 
 #ifdef WEBP_HAVE_PNG
-#include <assert.h>
 #include <png.h>
 #include <setjmp.h>   // note: this must be included *after* png.h
 #include <stdlib.h>
@@ -198,7 +197,9 @@ typedef struct {
 
 static void ReadFunc(png_structp png_ptr, png_bytep data, png_size_t length) {
   PNGReadContext* const ctx = (PNGReadContext*)png_get_io_ptr(png_ptr);
-  assert(ctx->offset + length <= ctx->data_size);
+  if (ctx->data_size - ctx->offset < length) {
+    png_error(png_ptr, "ReadFunc: invalid read length (overflow)!");
+  }
   memcpy(data, ctx->data + ctx->offset, length);
   ctx->offset += length;
 }

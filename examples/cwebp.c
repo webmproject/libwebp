@@ -514,8 +514,8 @@ static void HelpLong(void) {
   printf("Windows builds can take as input any of the files handled by WIC.\n");
 #endif
   printf("\nOptions:\n");
-  printf("  -h / -help  ............ short help\n");
-  printf("  -H / -longhelp  ........ long help\n");
+  printf("  -h / -help ............. short help\n");
+  printf("  -H / -longhelp ......... long help\n");
   printf("  -q <float> ............. quality factor (0:small..100:big)\n");
   printf("  -alpha_q <int> ......... transparency-compression quality "
          "(0..100)\n");

@@ -684,14 +684,13 @@ static uint32_t NearLossless(uint32_t value, uint32_t predict,
 // Returns the difference between the pixel and its prediction. In case of a
 // lossy encoding, updates the source image to avoid propagating the deviation
 // further to pixels which depend on the current pixel for their predictions.
-static uint32_t GetResidual(int width, int height,
-                            uint32_t* const upper_row,
-                            uint32_t* const current_row,
-                            const uint8_t* const max_diffs,
-                            int mode, VP8LPredictorFunc pred_func,
-                            int x, int y,
-                            int max_quantization,
-                            int exact, int used_subtract_green) {
+static WEBP_INLINE uint32_t GetResidual(int width, int height,
+                                        uint32_t* const upper_row,
+                                        uint32_t* const current_row,
+                                        const uint8_t* const max_diffs,
+                                        int mode, VP8LPredictorFunc pred_func,
+                                        int x, int y, int max_quantization,
+                                        int exact, int used_subtract_green) {
   const uint32_t predict = Predict(pred_func, x, y, current_row, upper_row);
   uint32_t residual;
   if (max_quantization == 1 || mode == 0 || y == 0 || y == height - 1 ||
