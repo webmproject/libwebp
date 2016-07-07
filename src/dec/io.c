@@ -275,21 +275,20 @@ static int EmitRescaledYUV(const VP8Io* const io, WebPDecParams* const p) {
 static int EmitRescaledAlphaYUV(const VP8Io* const io, WebPDecParams* const p,
                                 int expected_num_lines_out) {
   const WebPYUVABuffer* const buf = &p->output->u.YUVA;
+  uint8_t* const dst_a = buf->a + p->last_y * buf->a_stride;
   if (io->a != NULL) {
-    uint8_t* dst_y = buf->y + p->last_y * buf->y_stride;
-    const uint8_t* src_a = buf->a + p->last_y * buf->a_stride;
+    uint8_t* const dst_y = buf->y + p->last_y * buf->y_stride;
     const int num_lines_out = Rescale(io->a, io->width, io->mb_h, &p->scaler_a);
-    (void)expected_num_lines_out;
     assert(expected_num_lines_out == num_lines_out);
     if (num_lines_out > 0) {   // unmultiply the Y
-      WebPMultRows(dst_y, buf->y_stride, src_a, buf->a_stride,
+      WebPMultRows(dst_y, buf->y_stride, dst_a, buf->a_stride,
                    p->scaler_a.dst_width, num_lines_out, 1);
     }
   } else if (buf->a != NULL) {
     // the user requested alpha, but there is none, set it to opaque.
     assert(p->last_y + expected_num_lines_out <= io->scaled_height);
-    FillAlphaPlane(buf->a + p->last_y * buf->a_stride,
-                   io->scaled_width, expected_num_lines_out, buf->a_stride);
+    FillAlphaPlane(dst_a, io->scaled_width, expected_num_lines_out,
+                   buf->a_stride);
   }
   return 0;
 }
