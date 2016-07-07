@@ -1,3 +1,5 @@
+deb54d9 Clarify the expected 'config' lifespan in WebPIDecode()
+c7e2d24 update ChangeLog (tag: v0.5.1-rc5)
 c7eb06f Fix corner case in CostManagerInit.
 ab7937a gif2webp: normalize the number of .'s in the help message
 3cdec84 vwebp: normalize the number of .'s in the help message
