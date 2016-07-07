@@ -393,6 +393,22 @@
 } while (0)
 #define DOTP_SB2_SH(...) DOTP_SB2(v8i16, __VA_ARGS__)
 
+/* Description : Dot product of halfword vector elements
+ * Arguments   : Inputs  - mult0, mult1, cnst0, cnst1
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Signed halfword elements from 'mult0' are multiplied with
+ *               signed halfword elements from 'cnst0' producing a result
+ *               twice the size of input i.e. signed word.
+ *               The multiplication result of adjacent odd-even elements
+ *               are added together and written to the 'out0' vector
+ */
+#define DOTP_SH2(RTYPE, mult0, mult1, cnst0, cnst1, out0, out1) do {  \
+  out0 = (RTYPE)__msa_dotp_s_w((v8i16)mult0, (v8i16)cnst0);           \
+  out1 = (RTYPE)__msa_dotp_s_w((v8i16)mult1, (v8i16)cnst1);           \
+} while (0)
+#define DOTP_SH2_SW(...) DOTP_SH2(v4i32, __VA_ARGS__)
+
 /* Description : Dot product & addition of halfword vector elements
  * Arguments   : Inputs  - mult0, mult1, cnst0, cnst1
  *               Outputs - out0, out1
@@ -447,6 +463,22 @@
   CLIP_SW_0_255(in2);                             \
   CLIP_SW_0_255(in3);                             \
 } while (0)
+
+/* Description : Horizontal addition of 4 signed word elements of input vector
+ * Arguments   : Input  - in       (signed word vector)
+ *               Output - sum_m    (i32 sum)
+ *               Return Type - signed word (GP)
+ * Details     : 4 signed word elements of 'in' vector are added together and
+ *               the resulting integer sum is returned
+ */
+static WEBP_INLINE int32_t func_hadd_sw_s32(v4i32 in) {
+  const v2i64 res0_m = __msa_hadd_s_d((v4i32)in, (v4i32)in);
+  const v2i64 res1_m = __msa_splati_d(res0_m, 1);
+  const v2i64 out = res0_m + res1_m;
+  int32_t sum_m = __msa_copy_s_w((v4i32)out, 0);
+  return sum_m;
+}
+#define HADD_SW_S32(in) func_hadd_sw_s32(in)
 
 /* Description : Horizontal addition of 8 unsigned halfword elements
  * Arguments   : Input  - in       (unsigned halfword vector)
