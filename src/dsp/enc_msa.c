@@ -15,6 +15,7 @@
 
 #if defined(WEBP_USE_MSA)
 
+#include <stdlib.h>
 #include "./msa_macro.h"
 
 //------------------------------------------------------------------------------
@@ -165,6 +166,57 @@ static void FTransformWHT(const int16_t* in, int16_t* out) {
   ST_SH2(out0, out1, out, 8);
 }
 
+static int TTransform(const uint8_t* in, const uint16_t* w) {
+  int sum;
+  uint32_t in0_m, in1_m, in2_m, in3_m;
+  v16i8 src0;
+  v8i16 in0, in1, tmp0, tmp1, tmp2, tmp3;
+  v4i32 dst0, dst1;
+  const v16i8 zero = { 0 };
+  const v8i16 mask0 = { 0, 1, 2, 3, 8, 9, 10, 11 };
+  const v8i16 mask1 = { 4, 5, 6, 7, 12, 13, 14, 15 };
+  const v8i16 mask2 = { 0, 4, 8, 12, 1, 5, 9, 13 };
+  const v8i16 mask3 = { 3, 7, 11, 15, 2, 6, 10, 14 };
+
+  LW4(in, BPS, in0_m, in1_m, in2_m, in3_m);
+  INSERT_W4_SB(in0_m, in1_m, in2_m, in3_m, src0);
+  ILVRL_B2_SH(zero, src0, tmp0, tmp1);
+  VSHF_H2_SH(tmp0, tmp1, tmp0, tmp1, mask2, mask3, in0, in1);
+  ADDSUB2(in0, in1, tmp0, tmp1);
+  VSHF_H2_SH(tmp0, tmp1, tmp0, tmp1, mask0, mask1, tmp2, tmp3);
+  ADDSUB2(tmp2, tmp3, tmp0, tmp1);
+  VSHF_H2_SH(tmp0, tmp1, tmp0, tmp1, mask2, mask3, in0, in1);
+  ADDSUB2(in0, in1, tmp0, tmp1);
+  VSHF_H2_SH(tmp0, tmp1, tmp0, tmp1, mask0, mask1, tmp2, tmp3);
+  ADDSUB2(tmp2, tmp3, tmp0, tmp1);
+  tmp0 = __msa_add_a_h(tmp0, (v8i16)zero);
+  tmp1 = __msa_add_a_h(tmp1, (v8i16)zero);
+  LD_SH2(w, 8, tmp2, tmp3);
+  DOTP_SH2_SW(tmp0, tmp1, tmp2, tmp3, dst0, dst1);
+  dst0 = dst0 + dst1;
+  sum = HADD_SW_S32(dst0);
+  return sum;
+}
+
+static int Disto4x4(const uint8_t* const a, const uint8_t* const b,
+                    const uint16_t* const w) {
+  const int sum1 = TTransform(a, w);
+  const int sum2 = TTransform(b, w);
+  return abs(sum2 - sum1) >> 5;
+}
+
+static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
+                      const uint16_t* const w) {
+  int D = 0;
+  int x, y;
+  for (y = 0; y < 16 * BPS; y += 4 * BPS) {
+    for (x = 0; x < 16; x += 4) {
+      D += Disto4x4(a + x + y, b + x + y, w);
+    }
+  }
+  return D;
+}
+
 //------------------------------------------------------------------------------
 // Entry point
 
@@ -174,6 +226,9 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMSA(void) {
   VP8ITransform = ITransform;
   VP8FTransform = FTransform;
   VP8FTransformWHT = FTransformWHT;
+
+  VP8TDisto4x4 = Disto4x4;
+  VP8TDisto16x16 = Disto16x16;
 }
 
 #else  // !WEBP_USE_MSA
