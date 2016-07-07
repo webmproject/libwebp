@@ -290,7 +290,7 @@ static int AnalyzeEntropy(const uint32_t* argb,
         }
       }
     }
-    free(histo);
+    WebPSafeFree(histo);
     return 1;
   } else {
     return 0;

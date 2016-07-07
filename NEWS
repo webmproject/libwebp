@@ -1,3 +1,17 @@
+- 6/14/2016: version 0.5.1
+  This is a binary compatible release.
+  * miscellaneous bug fixes (issues #280, #289)
+  * reverted alpha plane encoding with color cache for compatibility with
+    libwebp 0.4.0->0.4.3 (issues #291, #298)
+  * lossless encoding performance improvements
+  * memory reduction in both lossless encoding and decoding
+  * force mux output to be in the extended format (VP8X) when undefined chunks
+    are present (issue #294)
+  * gradle, cmake build support
+  * workaround for compiler bug causing 64-bit decode failures on android
+    devices using clang-3.8 in the r11c NDK
+  * various WebPAnimEncoder improvements
+
 - 12/17/2015: version 0.5.0
   * miscellaneous bug & build fixes (issues #234, #258, #274, #275, #278)
   * encoder & decoder speed-ups on x86/ARM/MIPS for lossy & lossless
