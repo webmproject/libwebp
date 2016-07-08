@@ -222,7 +222,7 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
       int i;
       printf("No.: width height alpha x_offset y_offset ");
       if (is_anim) printf("duration   dispose blend ");
-      printf("image_size\n");
+      printf("image_size  compression\n");
       for (i = 1; i <= nFrames; i++) {
         WebPMuxFrameInfo frame;
         err = WebPMuxGetFrame(mux, i, &frame);
@@ -243,7 +243,10 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
                 (frame.blend_method == WEBP_MUX_BLEND) ? "yes" : "no";
             printf("%8d %10s %5s ", frame.duration, dispose, blend);
           }
-          printf("%10d\n", (int)frame.bitstream.size);
+          printf("%10d %11s\n", (int)frame.bitstream.size,
+                 (features.format == 1) ? "lossy" :
+                 (features.format == 2) ? "lossless" :
+                                          "undefined");
         }
         WebPDataClear(&frame.bitstream);
         RETURN_IF_ERROR3("Failed to retrieve %s#%d\n", type_str, i);
