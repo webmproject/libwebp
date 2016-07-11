@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ab8eca5_30b829ef",
+        "filename": "src/dsp/enc_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-07-11T14:41:33Z",
+      "side": 1,
+      "message": "isn\u0027t this one exactly similar to the C-version ?",
+      "range": {
+        "startLine": 242,
+        "startChar": 58,
+        "endLine": 242,
+        "endChar": 68
+      },
+      "revId": "c63099b273cfbce4ec816d5f44bae65e77aea294",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ab8eca5_50bd9ddd",
+        "filename": "src/dsp/enc_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-07-11T14:41:33Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 301,
+        "startChar": 16,
+        "endLine": 301,
+        "endChar": 23
+      },
+      "revId": "c63099b273cfbce4ec816d5f44bae65e77aea294",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
