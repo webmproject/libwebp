@@ -1046,6 +1046,37 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
 }
 
 //------------------------------------------------------------------------------
+
+static void Mean16x4(const uint8_t* ref, uint32_t dc[4]) {
+  const __m128i mask = _mm_set1_epi16(0x00ff);
+  const __m128i a0 = _mm_loadu_si128((const __m128i*)&ref[BPS * 0]);
+  const __m128i a1 = _mm_loadu_si128((const __m128i*)&ref[BPS * 1]);
+  const __m128i a2 = _mm_loadu_si128((const __m128i*)&ref[BPS * 2]);
+  const __m128i a3 = _mm_loadu_si128((const __m128i*)&ref[BPS * 3]);
+  const __m128i b0 = _mm_srli_epi16(a0, 8);     // hi byte
+  const __m128i b1 = _mm_srli_epi16(a1, 8);
+  const __m128i b2 = _mm_srli_epi16(a2, 8);
+  const __m128i b3 = _mm_srli_epi16(a3, 8);
+  const __m128i c0 = _mm_and_si128(a0, mask);   // lo byte
+  const __m128i c1 = _mm_and_si128(a1, mask);
+  const __m128i c2 = _mm_and_si128(a2, mask);
+  const __m128i c3 = _mm_and_si128(a3, mask);
+  const __m128i d0 = _mm_add_epi32(b0, c0);
+  const __m128i d1 = _mm_add_epi32(b1, c1);
+  const __m128i d2 = _mm_add_epi32(b2, c2);
+  const __m128i d3 = _mm_add_epi32(b3, c3);
+  const __m128i e0 = _mm_add_epi32(d0, d1);
+  const __m128i e1 = _mm_add_epi32(d2, d3);
+  const __m128i f0 = _mm_add_epi32(e0, e1);
+  uint16_t tmp[8];
+  _mm_storeu_si128((__m128i*)tmp, f0);
+  dc[0] = tmp[0] + tmp[1];
+  dc[1] = tmp[2] + tmp[3];
+  dc[2] = tmp[4] + tmp[5];
+  dc[3] = tmp[6] + tmp[7];
+}
+
+//------------------------------------------------------------------------------
 // Texture distortion
 //
 // We try to match the spectral content (weighted) between source and
@@ -1331,6 +1362,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitSSE2(void) {
   VP8SSE4x4 = SSE4x4;
   VP8TDisto4x4 = Disto4x4;
   VP8TDisto16x16 = Disto16x16;
+  VP8Mean16x4 = Mean16x4;
 }
 
 #else  // !WEBP_USE_SSE2
