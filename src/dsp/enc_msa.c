@@ -409,6 +409,118 @@ static void Intra4Preds(uint8_t* dst, const uint8_t* top) {
   HU4(I4HU4 + dst, top);
 }
 
+// luma 16x16 prediction
+
+#define STORE16x16(out, dst) do {                                        \
+    ST_UB8(out, out, out, out, out, out, out, out, dst + 0 * BPS, BPS);  \
+    ST_UB8(out, out, out, out, out, out, out, out, dst + 8 * BPS, BPS);  \
+} while (0)
+
+static WEBP_INLINE void VerticalPred16x16(uint8_t* dst, const uint8_t* top) {
+  if (top != NULL) {
+    const v16u8 out = LD_UB(top);
+    STORE16x16(out, dst);
+  } else {
+    const v16u8 out = (v16u8)__msa_fill_b(0x7f);
+    STORE16x16(out, dst);
+  }
+}
+
+static WEBP_INLINE void HorizontalPred16x16(uint8_t* dst,
+                                            const uint8_t* left) {
+  if (left != NULL) {
+    int j;
+    for (j = 0; j < 16; j += 4) {
+      const v16u8 L0 = (v16u8)__msa_fill_b(left[0]);
+      const v16u8 L1 = (v16u8)__msa_fill_b(left[1]);
+      const v16u8 L2 = (v16u8)__msa_fill_b(left[2]);
+      const v16u8 L3 = (v16u8)__msa_fill_b(left[3]);
+      ST_UB4(L0, L1, L2, L3, dst, BPS);
+      dst += 4 * BPS;
+      left += 4;
+    }
+  } else {
+    const v16u8 out = (v16u8)__msa_fill_b(0x81);
+    STORE16x16(out, dst);
+  }
+}
+
+static WEBP_INLINE void TrueMotion16x16(uint8_t* dst, const uint8_t* left,
+                                        const uint8_t* top) {
+  if (left != NULL) {
+    if (top != NULL) {
+      int j;
+      v8i16 d1, d2;
+      const v16i8 zero = { 0 };
+      const v8i16 TL = (v8i16)__msa_fill_h(left[-1]);
+      const v16u8 T = LD_UB(top);
+      ILVRL_B2_SH(zero, T, d1, d2);
+      SUB2(d1, TL, d2, TL, d1, d2);
+      for (j = 0; j < 16; j += 4) {
+        v16i8 t0, t1, t2, t3;
+        v8i16 r0, r1, r2, r3, r4, r5, r6, r7;
+        const v8i16 L0 = (v8i16)__msa_fill_h(left[j + 0]);
+        const v8i16 L1 = (v8i16)__msa_fill_h(left[j + 1]);
+        const v8i16 L2 = (v8i16)__msa_fill_h(left[j + 2]);
+        const v8i16 L3 = (v8i16)__msa_fill_h(left[j + 3]);
+        ADD4(d1, L0, d1, L1, d1, L2, d1, L3, r0, r1, r2, r3);
+        ADD4(d2, L0, d2, L1, d2, L2, d2, L3, r4, r5, r6, r7);
+        CLIP_SH4_0_255(r0, r1, r2, r3);
+        CLIP_SH4_0_255(r4, r5, r6, r7);
+        PCKEV_B4_SB(r4, r0, r5, r1, r6, r2, r7, r3, t0, t1, t2, t3);
+        ST_SB4(t0, t1, t2, t3, dst, BPS);
+        dst += 4 * BPS;
+      }
+    } else {
+      HorizontalPred16x16(dst, left);
+    }
+  } else {
+    if (top != NULL) {
+      VerticalPred16x16(dst, top);
+    } else {
+      const v16u8 out = (v16u8)__msa_fill_b(0x81);
+      STORE16x16(out, dst);
+    }
+  }
+}
+
+static WEBP_INLINE void DCMode16x16(uint8_t* dst, const uint8_t* left,
+                                    const uint8_t* top) {
+  int DC;
+  v16u8 out;
+  if (top != NULL && left != NULL) {
+    const v16u8 rtop = LD_UB(top);
+    const v8u16 dctop = __msa_hadd_u_h(rtop, rtop);
+    const v16u8 rleft = LD_UB(left);
+    const v8u16 dcleft = __msa_hadd_u_h(rleft, rleft);
+    const v8u16 dctemp = dctop + dcleft;
+    DC = HADD_UH_U32(dctemp);
+    DC = (DC + 16) >> 5;
+  } else if (left != NULL) {   // left but no top
+    const v16u8 rleft = LD_UB(left);
+    const v8u16 dcleft = __msa_hadd_u_h(rleft, rleft);
+    DC = HADD_UH_U32(dcleft);
+    DC = (DC + DC + 16) >> 5;
+  } else if (top != NULL) {   // top but no left
+    const v16u8 rtop = LD_UB(top);
+    const v8u16 dctop = __msa_hadd_u_h(rtop, rtop);
+    DC = HADD_UH_U32(dctop);
+    DC = (DC + DC + 16) >> 5;
+  } else {   // no top, no left, nothing.
+    DC = 0x80;
+  }
+  out = (v16u8)__msa_fill_b(DC);
+  STORE16x16(out, dst);
+}
+
+static void Intra16Preds(uint8_t* dst,
+                         const uint8_t* left, const uint8_t* top) {
+  DCMode16x16(I16DC16 + dst, left, top);
+  VerticalPred16x16(I16VE16 + dst, top);
+  HorizontalPred16x16(I16HE16 + dst, left);
+  TrueMotion16x16(I16TM16 + dst, left, top);
+}
+
 //------------------------------------------------------------------------------
 // Entry point
 
@@ -423,6 +535,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMSA(void) {
   VP8TDisto16x16 = Disto16x16;
 
   VP8EncPredLuma4 = Intra4Preds;
+  VP8EncPredLuma16 = Intra16Preds;
 }
 
 #else  // !WEBP_USE_MSA
