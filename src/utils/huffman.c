@@ -75,11 +75,13 @@ static WEBP_INLINE int NextTableBitSize(const int* const count,
   return len - root_bits;
 }
 
-int VP8LBuildHuffmanTable(HuffmanCode* const root_table, int root_bits,
-                          const int code_lengths[], int code_lengths_size) {
+// sorted[code_lengths_size] is a pre-allocated array for sorting symbols
+// by code length.
+static int BuildHuffmanTable(HuffmanCode* const root_table, int root_bits,
+                             const int code_lengths[], int code_lengths_size,
+                             uint16_t sorted[]) {
   HuffmanCode* table = root_table;  // next available space in table
   int total_size = 1 << root_bits;  // total size root table + 2nd level table
-  int* sorted = NULL;               // symbols sorted by code length
   int len;                          // current code length
   int symbol;                       // symbol index in original or sorted table
   // number of codes of each length:
@@ -114,11 +116,6 @@ int VP8LBuildHuffmanTable(HuffmanCode* const root_table, int root_bits,
     offset[len + 1] = offset[len] + count[len];
   }
 
-  sorted = (int*)WebPSafeMalloc(code_lengths_size, sizeof(*sorted));
-  if (sorted == NULL) {
-    return 0;
-  }
-
   // Sort symbols by length, by symbol order within each length.
   for (symbol = 0; symbol < code_lengths_size; ++symbol) {
     const int symbol_code_length = code_lengths[symbol];
@@ -133,7 +130,6 @@ int VP8LBuildHuffmanTable(HuffmanCode* const root_table, int root_bits,
     code.bits = 0;
     code.value = (uint16_t)sorted[0];
     ReplicateValue(table, 1, total_size, code);
-    WebPSafeFree(sorted);
     return total_size;
   }
 
@@ -153,7 +149,6 @@ int VP8LBuildHuffmanTable(HuffmanCode* const root_table, int root_bits,
       num_nodes += num_open;
       num_open -= count[len];
       if (num_open < 0) {
-        WebPSafeFree(sorted);
         return 0;
       }
       for (; count[len] > 0; --count[len]) {
@@ -172,7 +167,6 @@ int VP8LBuildHuffmanTable(HuffmanCode* const root_table, int root_bits,
       num_nodes += num_open;
       num_open -= count[len];
       if (num_open < 0) {
-        WebPSafeFree(sorted);
         return 0;
       }
       for (; count[len] > 0; --count[len]) {
@@ -195,11 +189,35 @@ int VP8LBuildHuffmanTable(HuffmanCode* const root_table, int root_bits,
 
     // Check if tree is full.
     if (num_nodes != 2 * offset[MAX_ALLOWED_CODE_LENGTH] - 1) {
-      WebPSafeFree(sorted);
       return 0;
     }
   }
 
-  WebPSafeFree(sorted);
+  return total_size;
+}
+
+// Maximum code_lengths_size is 2328 (reached for 11-bit color_cache_bits).
+// More commonly, the value is around ~280.
+#define MAX_CODE_LENGTHS_SIZE \
+  ((1 << MAX_CACHE_BITS) + NUM_LITERAL_CODES + NUM_LENGTH_CODES)
+// Cut-off value for switching between heap and stack allocation.
+#define SORTED_SIZE_CUTOFF 512
+int VP8LBuildHuffmanTable(HuffmanCode* const root_table, int root_bits,
+                          const int code_lengths[], int code_lengths_size) {
+  int total_size;
+  assert(code_lengths_size <= MAX_CODE_LENGTHS_SIZE);
+  if (code_lengths_size <= SORTED_SIZE_CUTOFF) {
+    // use local stack-allocated array.
+    uint16_t sorted[SORTED_SIZE_CUTOFF];
+    total_size = BuildHuffmanTable(root_table, root_bits,
+                                   code_lengths, code_lengths_size, sorted);
+  } else {   // rare case. Use heap allocation.
+    uint16_t* const sorted =
+        (uint16_t*)WebPSafeMalloc(code_lengths_size, sizeof(*sorted));
+    if (sorted == NULL) return 0;
+    total_size = BuildHuffmanTable(root_table, root_bits,
+                                   code_lengths, code_lengths_size, sorted);
+    WebPSafeFree(sorted);
+  }
   return total_size;
 }
