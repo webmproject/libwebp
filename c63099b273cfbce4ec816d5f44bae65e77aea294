@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7ab568d9_da9d8571",
+        "filename": "src/dsp/enc_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1003209
+      },
+      "writtenOn": "2016-07-12T04:36:39Z",
+      "side": 1,
+      "message": "yes. it is done similar basis as SSE where HE4 and few more intra pred 4x4 functions (which can not be optimized better for platform) are copied as it is from C (only difference is that all are inlined). So on similar basis i will make all them inline. Let me know if you feel it is ok or common code to be used for all c versions?",
+      "parentUuid": "1ab8eca5_30b829ef",
+      "range": {
+        "startLine": 242,
+        "startChar": 58,
+        "endLine": 242,
+        "endChar": 68
+      },
+      "revId": "c63099b273cfbce4ec816d5f44bae65e77aea294",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1ab8eca5_50bd9ddd",
         "filename": "src/dsp/enc_msa.c",
         "patchSetId": 1
