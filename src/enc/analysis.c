@@ -262,6 +262,39 @@ static int MBAnalyzeBestIntra16Mode(VP8EncIterator* const it) {
   return best_alpha;
 }
 
+static int FastMBAnalyze(VP8EncIterator* const it) {
+  int y;
+  int err_i16 = 0, err_i4 = 0;
+  const uint8_t* const base_left = it->x_ ? it->y_left_ : NULL;
+  const uint8_t* const base_top = it->y_ ? it->y_top_ : NULL;
+  const uint8_t i16 = (base_left != NULL) ? base_left[-1] : 128;
+  const uint8_t dc_16[4] =  { i16, i16, i16, i16 };
+  uint8_t dc_4[4] = { i16, 128, 128, 128 };
+
+  for (y = 0; y < 16; y += 4) {
+    const uint8_t* ref = it->yuv_in_ + Y_OFF_ENC + y * BPS;
+    if (y > 0) {
+      dc_4[0] = (base_left != NULL) ? base_left[y - 1] : 128;
+      dc_4[1] = ref[3];
+      dc_4[2] = ref[7];
+      dc_4[3] = ref[11];
+    } else if (base_top != NULL) {
+      dc_4[1] = base_top[3];
+      dc_4[2] = base_top[7];
+      dc_4[3] = base_top[11];
+    }  // else: keep the initial value '128'
+    err_i16 += VP8SSEToDC16x4(ref, dc_16);
+    err_i4 += VP8SSEToDC16x4(ref, dc_4);
+  }
+  if (err_i16 < err_i4) {
+    VP8SetIntra16Mode(it, 0);  // TMPRED16
+  } else {
+    uint8_t modes[16] = { 0 };
+    VP8SetIntra4Mode(it, modes);
+  }
+  return 0;
+}
+
 static int MBAnalyzeBestIntra4Mode(VP8EncIterator* const it,
                                    int best_alpha) {
   uint8_t modes[16];
@@ -339,13 +372,17 @@ static void MBAnalyze(VP8EncIterator* const it,
   VP8SetSkip(it, 0);         // not skipped
   VP8SetSegment(it, 0);      // default segment, spec-wise.
 
-  best_alpha = MBAnalyzeBestIntra16Mode(it);
-  if (enc->method_ >= 5) {
-    // We go and make a fast decision for intra4/intra16.
-    // It's usually not a good and definitive pick, but helps seeding the stats
-    // about level bit-cost.
-    // TODO(skal): improve criterion.
-    best_alpha = MBAnalyzeBestIntra4Mode(it, best_alpha);
+  if (enc->method_ <= 1) {
+    best_alpha = FastMBAnalyze(it);
+  } else {
+    best_alpha = MBAnalyzeBestIntra16Mode(it);
+    if (enc->method_ >= 5) {
+      // We go and make a fast decision for intra4/intra16.
+      // It's usually not a good and definitive pick, but helps seeding the stats
+      // about level bit-cost.
+      // TODO(skal): improve criterion.
+      best_alpha = MBAnalyzeBestIntra4Mode(it, best_alpha);
+    }
   }
   best_uv_alpha = MBAnalyzeBestUVMode(it);
 
@@ -448,7 +485,7 @@ int VP8EncAnalyze(VP8Encoder* const enc) {
   const int do_segments =
       enc->config_->emulate_jpeg_size ||   // We need the complexity evaluation.
       (enc->segment_hdr_.num_segments_ > 1) ||
-      (enc->method_ == 0);  // for method 0, we need preds_[] to be filled.
+      (enc->method_ <= 1);  // for method 0 - 1, we need preds_[] to be filled.
   if (do_segments) {
     const int last_row = enc->mb_h_;
     // We give a little more than a half work to the main thread.

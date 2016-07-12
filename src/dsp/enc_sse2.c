@@ -1046,6 +1046,30 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
 }
 
 //------------------------------------------------------------------------------
+
+static int SSEToDC16x4(const uint8_t* ref, const uint8_t dc[4]) {
+  const __m128i DCs = _mm_set_epi32(dc[3] * 0x01010101u,
+                                    dc[2] * 0x01010101u,
+                                    dc[1] * 0x01010101u,
+                                    dc[0] * 0x01010101u);
+  const __m128i a0 = _mm_loadu_si128((const __m128i*)&ref[BPS * 0]);
+  const __m128i a1 = _mm_loadu_si128((const __m128i*)&ref[BPS * 1]);
+  const __m128i a2 = _mm_loadu_si128((const __m128i*)&ref[BPS * 2]);
+  const __m128i a3 = _mm_loadu_si128((const __m128i*)&ref[BPS * 3]);
+  __m128i sum1, sum2, sum;
+  int32_t tmp[4];
+  SubtractAndAccumulate(a0, DCs, &sum1);
+  SubtractAndAccumulate(a1, DCs, &sum2);
+  sum = _mm_add_epi32(sum1, sum2);
+  SubtractAndAccumulate(a2, DCs, &sum1);
+  SubtractAndAccumulate(a3, DCs, &sum2);
+  sum1 = _mm_add_epi32(sum1, sum2);
+  sum = _mm_add_epi32(sum, sum1);
+  _mm_storeu_si128((__m128i*)tmp, sum);
+  return (tmp[3] + tmp[2] + tmp[1] + tmp[0]);
+}
+
+//------------------------------------------------------------------------------
 // Texture distortion
 //
 // We try to match the spectral content (weighted) between source and
@@ -1331,6 +1355,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitSSE2(void) {
   VP8SSE4x4 = SSE4x4;
   VP8TDisto4x4 = Disto4x4;
   VP8TDisto16x16 = Disto16x16;
+  VP8SSEToDC16x4 = SSEToDC16x4;
 }
 
 #else  // !WEBP_USE_SSE2

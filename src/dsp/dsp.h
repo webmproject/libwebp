@@ -185,6 +185,11 @@ typedef int (*VP8WMetric)(const uint8_t* pix, const uint8_t* ref,
 // 4 by 4 symmetric matrix.
 extern VP8WMetric VP8TDisto4x4, VP8TDisto16x16;
 
+// Compute the sum of four 4x4 blocks SSE values.
+// Each sub-4x4 block #i is compared to dc[i], for i = 0..3.
+typedef int (*VP8DCMetric)(const uint8_t* ref, const uint8_t dc[4]);
+extern VP8DCMetric VP8SSEToDC16x4;
+
 typedef void (*VP8BlockCopy)(const uint8_t* src, uint8_t* dst);
 extern VP8BlockCopy VP8Copy4x4;
 extern VP8BlockCopy VP8Copy16x8;
