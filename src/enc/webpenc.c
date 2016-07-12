@@ -75,7 +75,7 @@ static void ResetBoundaryPredictions(VP8Encoder* const enc) {
 //-------------------+---+---+---+---+---+---+---+
 // dynamic proba     | ~ | x | x | x | x | x | x |
 //-------------------+---+---+---+---+---+---+---+
-// fast mode analysis|   |   |   |   | x | x | x |
+// fast mode analysis|[x]|[x]|   |   | x | x | x |
 //-------------------+---+---+---+---+---+---+---+
 // basic rd-opt      |   |   |   | x | x | x | x |
 //-------------------+---+---+---+---+---+---+---+
