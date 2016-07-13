@@ -139,7 +139,7 @@ static void ITransform(const uint8_t* ref, const int16_t* in, uint8_t* dst,
 
     // Transpose the two 4x4.
     VP8Transpose_2_4x4_16b(&shifted0, &shifted1, &shifted2, &shifted3, &T0, &T1,
-                        &T2, &T3);
+                           &T2, &T3);
   }
 
   // Add inverse transform to 'ref' and store.
