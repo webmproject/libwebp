@@ -537,6 +537,20 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
 #define INSERT_W4_SB(...) INSERT_W4(v16i8, __VA_ARGS__)
 #define INSERT_W4_SW(...) INSERT_W4(v4i32, __VA_ARGS__)
 
+/* Description : Set element n of double word input vector to GPR value
+ * Arguments   : Inputs - in0, in1
+ *               Output - out
+ *               Return Type - as per RTYPE
+ * Details     : Set element 0 in vector 'out' to GPR value specified in 'in0'
+ *               Set element 1 in vector 'out' to GPR value specified in 'in1'
+ */
+#define INSERT_D2(RTYPE, in0, in1, out) do {        \
+  out = (RTYPE)__msa_insert_d((v2i64)out, 0, in0);  \
+  out = (RTYPE)__msa_insert_d((v2i64)out, 1, in1);  \
+} while (0)
+#define INSERT_D2_UB(...) INSERT_D2(v16u8, __VA_ARGS__)
+#define INSERT_D2_SB(...) INSERT_D2(v16i8, __VA_ARGS__)
+
 /* Description : Interleave even byte elements from vectors
  * Arguments   : Inputs  - in0, in1, in2, in3
  *               Outputs - out0, out1
