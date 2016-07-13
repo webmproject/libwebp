@@ -521,6 +521,137 @@ static void Intra16Preds(uint8_t* dst,
   TrueMotion16x16(I16TM16 + dst, left, top);
 }
 
+// Chroma 8x8 prediction
+
+#define CALC_DC8(in, out) do {                              \
+  const v8u16 temp0 = __msa_hadd_u_h(in, in);               \
+  const v4u32 temp1 = __msa_hadd_u_w(temp0, temp0);         \
+  const v2i64 temp2 = (v2i64)__msa_hadd_u_d(temp1, temp1);  \
+  const v2i64 temp3 = __msa_splati_d(temp2, 1);             \
+  const v2i64 temp4 = temp3 + temp2;                        \
+  const v16i8 temp5 = (v16i8)__msa_srari_d(temp4, 4);       \
+  const v2i64 temp6 = (v2i64)__msa_splati_b(temp5, 0);      \
+  out = __msa_copy_s_d(temp6, 0);                           \
+} while (0)
+
+#define STORE8x8(out, dst) do {                 \
+  SD4(out, out, out, out, dst + 0 * BPS, BPS);  \
+  SD4(out, out, out, out, dst + 4 * BPS, BPS);  \
+} while (0)
+
+static WEBP_INLINE void VerticalPred8x8(uint8_t* dst, const uint8_t* top) {
+  if (top != NULL) {
+    const uint64_t out = LD(top);
+    STORE8x8(out, dst);
+  } else {
+    const uint64_t out = 0x7f7f7f7f7f7f7f7fULL;
+    STORE8x8(out, dst);
+  }
+}
+
+static WEBP_INLINE void HorizontalPred8x8(uint8_t* dst, const uint8_t* left) {
+  if (left != NULL) {
+    int j;
+    for (j = 0; j < 8; j += 4) {
+      const v16u8 L0 = (v16u8)__msa_fill_b(left[0]);
+      const v16u8 L1 = (v16u8)__msa_fill_b(left[1]);
+      const v16u8 L2 = (v16u8)__msa_fill_b(left[2]);
+      const v16u8 L3 = (v16u8)__msa_fill_b(left[3]);
+      const uint64_t out0 = __msa_copy_s_d((v2i64)L0, 0);
+      const uint64_t out1 = __msa_copy_s_d((v2i64)L1, 0);
+      const uint64_t out2 = __msa_copy_s_d((v2i64)L2, 0);
+      const uint64_t out3 = __msa_copy_s_d((v2i64)L3, 0);
+      SD4(out0, out1, out2, out3, dst, BPS);
+      dst += 4 * BPS;
+      left += 4;
+    }
+  } else {
+    const uint64_t out = 0x8181818181818181ULL;
+    STORE8x8(out, dst);
+  }
+}
+
+static WEBP_INLINE void TrueMotion8x8(uint8_t* dst, const uint8_t* left,
+                                      const uint8_t* top) {
+  if (left != NULL) {
+    if (top != NULL) {
+      int j;
+      const v8i16 TL = (v8i16)__msa_fill_h(left[-1]);
+      const v16u8 T1 = LD_UB(top);
+      const v16i8 zero = { 0 };
+      const v8i16 T  = (v8i16)__msa_ilvr_b(zero, (v16i8)T1);
+      const v8i16 d = T - TL;
+      for (j = 0; j < 8; j += 4) {
+        uint64_t out0, out1, out2, out3;
+        v16i8 t0, t1;
+        v8i16 r0 = (v8i16)__msa_fill_h(left[j + 0]);
+        v8i16 r1 = (v8i16)__msa_fill_h(left[j + 1]);
+        v8i16 r2 = (v8i16)__msa_fill_h(left[j + 2]);
+        v8i16 r3 = (v8i16)__msa_fill_h(left[j + 3]);
+        ADD4(d, r0, d, r1, d, r2, d, r3, r0, r1, r2, r3);
+        CLIP_SH4_0_255(r0, r1, r2, r3);
+        PCKEV_B2_SB(r1, r0, r3, r2, t0, t1);
+        out0 = __msa_copy_s_d((v2i64)t0, 0);
+        out1 = __msa_copy_s_d((v2i64)t0, 1);
+        out2 = __msa_copy_s_d((v2i64)t1, 0);
+        out3 = __msa_copy_s_d((v2i64)t1, 1);
+        SD4(out0, out1, out2, out3, dst, BPS);
+        dst += 4 * BPS;
+      }
+    } else {
+      HorizontalPred8x8(dst, left);
+    }
+  } else {
+    if (top != NULL) {
+      VerticalPred8x8(dst, top);
+    } else {
+      const uint64_t out = 0x8181818181818181ULL;
+      STORE8x8(out, dst);
+    }
+  }
+}
+
+static WEBP_INLINE void DCMode8x8(uint8_t* dst, const uint8_t* left,
+                                  const uint8_t* top) {
+  uint64_t out;
+  v16u8 src;
+  if (top != NULL && left != NULL) {
+    const uint64_t left_m = LD(left);
+    const uint64_t top_m = LD(top);
+    INSERT_D2_UB(left_m, top_m, src);
+    CALC_DC8(src, out);
+  } else if (left != NULL) {   // left but no top
+    const uint64_t left_m = LD(left);
+    INSERT_D2_UB(left_m, left_m, src);
+    CALC_DC8(src, out);
+  } else if (top != NULL) {   // top but no left
+    const uint64_t top_m = LD(top);
+    INSERT_D2_UB(top_m, top_m, src);
+    CALC_DC8(src, out);
+  } else {   // no top, no left, nothing.
+    src = (v16u8)__msa_fill_b(0x80);
+    out = __msa_copy_s_d((v2i64)src, 0);
+  }
+  STORE8x8(out, dst);
+}
+
+static void IntraChromaPreds(uint8_t* dst, const uint8_t* left,
+                             const uint8_t* top) {
+  // U block
+  DCMode8x8(C8DC8 + dst, left, top);
+  VerticalPred8x8(C8VE8 + dst, top);
+  HorizontalPred8x8(C8HE8 + dst, left);
+  TrueMotion8x8(C8TM8 + dst, left, top);
+  // V block
+  dst += 8;
+  if (top != NULL) top += 8;
+  if (left != NULL) left += 16;
+  DCMode8x8(C8DC8 + dst, left, top);
+  VerticalPred8x8(C8VE8 + dst, top);
+  HorizontalPred8x8(C8HE8 + dst, left);
+  TrueMotion8x8(C8TM8 + dst, left, top);
+}
+
 //------------------------------------------------------------------------------
 // Entry point
 
@@ -536,6 +667,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMSA(void) {
 
   VP8EncPredLuma4 = Intra4Preds;
   VP8EncPredLuma16 = Intra16Preds;
+  VP8EncPredChroma8 = IntraChromaPreds;
 }
 
 #else  // !WEBP_USE_MSA
