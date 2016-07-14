@@ -242,7 +242,8 @@ static WEBP_INLINE int MaxFindCopyLength(int len) {
 }
 
 int VP8LHashChainFill(VP8LHashChain* const p, int quality,
-                      const uint32_t* const argb, int xsize, int ysize) {
+                      const uint32_t* const argb, int xsize, int ysize,
+                      int low_effort) {
   const int size = xsize * ysize;
   const int iter_max = GetMaxItersForQuality(quality);
   const int iter_min = iter_max - quality / 10;
@@ -285,7 +286,23 @@ int VP8LHashChainFill(VP8LHashChain* const p, int quality,
     const int length_max = (max_len < 256) ? max_len : 256;
     uint32_t max_base_position;
 
-    for (pos = chain[base_position]; pos >= min_pos; pos = chain[pos]) {
+    pos = chain[base_position];
+    if (!low_effort) {
+      // Heuristic: use the comparison with the above line as an initialization.
+      if (base_position >= (uint32_t)xsize) {
+        const int curr_length = FindMatchLength(argb_start - xsize, argb_start,
+                                                best_length, max_len);
+        if (curr_length > best_length) {
+          best_length = curr_length;
+          best_distance = xsize;
+        }
+      }
+      --iter;
+      // Skip the for loop if we already have the maximum.
+      if (best_length == MAX_LENGTH) pos = min_pos - 1;
+    }
+
+    for (; pos >= min_pos; pos = chain[pos]) {
       int curr_length;
       if (--iter < 0) {
         break;

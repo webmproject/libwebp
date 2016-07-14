@@ -697,7 +697,7 @@ static WebPEncodingError EncodeImageNoHuffman(VP8LBitWriter* const bw,
                                               VP8LHashChain* const hash_chain,
                                               VP8LBackwardRefs refs_array[2],
                                               int width, int height,
-                                              int quality) {
+                                              int quality, int low_effort) {
   int i;
   int max_tokens = 0;
   WebPEncodingError err = VP8_ENC_OK;
@@ -715,7 +715,8 @@ static WebPEncodingError EncodeImageNoHuffman(VP8LBitWriter* const bw,
   }
 
   // Calculate backward references from ARGB image.
-  if (VP8LHashChainFill(hash_chain, quality, argb, width, height) == 0) {
+  if (!VP8LHashChainFill(hash_chain, quality, argb, width, height,
+                         low_effort)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
@@ -819,7 +820,8 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   // 'best_refs' is the reference to the best backward refs and points to one
   // of refs_array[0] or refs_array[1].
   // Calculate backward references from ARGB image.
-  if (VP8LHashChainFill(hash_chain, quality, argb, width, height) == 0) {
+  if (!VP8LHashChainFill(hash_chain, quality, argb, width, height,
+                         low_effort)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
@@ -900,7 +902,7 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
       err = EncodeImageNoHuffman(bw, histogram_argb, hash_chain, refs_array,
                                  VP8LSubSampleSize(width, histogram_bits),
                                  VP8LSubSampleSize(height, histogram_bits),
-                                 quality);
+                                 quality, low_effort);
       WebPSafeFree(histogram_argb);
       if (err != VP8_ENC_OK) goto Error;
     }
@@ -991,12 +993,12 @@ static WebPEncodingError ApplyPredictFilter(const VP8LEncoder* const enc,
                               (VP8LHashChain*)&enc->hash_chain_,
                               (VP8LBackwardRefs*)enc->refs_,  // cast const away
                               transform_width, transform_height,
-                              quality);
+                              quality, low_effort);
 }
 
 static WebPEncodingError ApplyCrossColorFilter(const VP8LEncoder* const enc,
                                                int width, int height,
-                                               int quality,
+                                               int quality, int low_effort,
                                                VP8LBitWriter* const bw) {
   const int ccolor_transform_bits = enc->transform_bits_;
   const int transform_width = VP8LSubSampleSize(width, ccolor_transform_bits);
@@ -1012,7 +1014,7 @@ static WebPEncodingError ApplyCrossColorFilter(const VP8LEncoder* const enc,
                               (VP8LHashChain*)&enc->hash_chain_,
                               (VP8LBackwardRefs*)enc->refs_,  // cast const away
                               transform_width, transform_height,
-                              quality);
+                              quality, low_effort);
 }
 
 // -----------------------------------------------------------------------------
@@ -1291,7 +1293,7 @@ static WebPEncodingError MapImageFromPalette(VP8LEncoder* const enc,
 }
 
 // Save palette_[] to bitstream.
-static WebPEncodingError EncodePalette(VP8LBitWriter* const bw,
+static WebPEncodingError EncodePalette(VP8LBitWriter* const bw, int low_effort,
                                        VP8LEncoder* const enc) {
   int i;
   uint32_t tmp_palette[MAX_PALETTE_SIZE];
@@ -1306,13 +1308,14 @@ static WebPEncodingError EncodePalette(VP8LBitWriter* const bw,
   }
   tmp_palette[0] = palette[0];
   return EncodeImageNoHuffman(bw, tmp_palette, &enc->hash_chain_, enc->refs_,
-                              palette_size, 1, 20 /* quality */);
+                              palette_size, 1, 20 /* quality */, low_effort);
 }
 
 #ifdef WEBP_EXPERIMENTAL_FEATURES
 
 static WebPEncodingError EncodeDeltaPalettePredictorImage(
-    VP8LBitWriter* const bw, VP8LEncoder* const enc, int quality) {
+    VP8LBitWriter* const bw, VP8LEncoder* const enc, int quality,
+    int low_effort) {
   const WebPPicture* const pic = enc->pic_;
   const int width = pic->width;
   const int height = pic->height;
@@ -1343,7 +1346,7 @@ static WebPEncodingError EncodeDeltaPalettePredictorImage(
   err = EncodeImageNoHuffman(bw, predictors, &enc->hash_chain_,
                              (VP8LBackwardRefs*)enc->refs_,  // cast const away
                              transform_width, transform_height,
-                             quality);
+                             quality, low_effort);
   WebPSafeFree(predictors);
   return err;
 }
@@ -1433,7 +1436,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
     if (enc->use_palette_) {
       err = AllocateTransformBuffer(enc, width, height);
       if (err != VP8_ENC_OK) goto Error;
-      err = EncodeDeltaPalettePredictorImage(bw, enc, quality);
+      err = EncodeDeltaPalettePredictorImage(bw, enc, quality, low_effort);
       if (err != VP8_ENC_OK) goto Error;
       use_delta_palettization = 1;
     }
@@ -1442,7 +1445,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
 
   // Encode palette
   if (enc->use_palette_) {
-    err = EncodePalette(bw, enc);
+    err = EncodePalette(bw, low_effort, enc);
     if (err != VP8_ENC_OK) goto Error;
     err = MapImageFromPalette(enc, use_delta_palettization);
     if (err != VP8_ENC_OK) goto Error;
@@ -1469,7 +1472,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
 
     if (enc->use_cross_color_) {
       err = ApplyCrossColorFilter(enc, enc->current_width_,
-                                  height, quality, bw);
+                                  height, quality, low_effort, bw);
       if (err != VP8_ENC_OK) goto Error;
     }
   }
