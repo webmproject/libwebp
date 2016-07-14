@@ -653,6 +653,116 @@ static void IntraChromaPreds(uint8_t* dst, const uint8_t* left,
 }
 
 //------------------------------------------------------------------------------
+// Metric
+
+#define PACK_DOTP_UB4_SW(in0, in1, in2, in3, out0, out1, out2, out3) do {  \
+  v16u8 tmp0, tmp1;                                                        \
+  v8i16 tmp2, tmp3;                                                        \
+  ILVRL_B2_UB(in0, in1, tmp0, tmp1);                                       \
+  HSUB_UB2_SH(tmp0, tmp1, tmp2, tmp3);                                     \
+  DOTP_SH2_SW(tmp2, tmp3, tmp2, tmp3, out0, out1);                         \
+  ILVRL_B2_UB(in2, in3, tmp0, tmp1);                                       \
+  HSUB_UB2_SH(tmp0, tmp1, tmp2, tmp3);                                     \
+  DOTP_SH2_SW(tmp2, tmp3, tmp2, tmp3, out2, out3);                         \
+} while (0)
+
+#define PACK_DPADD_UB4_SW(in0, in1, in2, in3, out0, out1, out2, out3) do {  \
+  v16u8 tmp0, tmp1;                                                         \
+  v8i16 tmp2, tmp3;                                                         \
+  ILVRL_B2_UB(in0, in1, tmp0, tmp1);                                        \
+  HSUB_UB2_SH(tmp0, tmp1, tmp2, tmp3);                                      \
+  DPADD_SH2_SW(tmp2, tmp3, tmp2, tmp3, out0, out1);                         \
+  ILVRL_B2_UB(in2, in3, tmp0, tmp1);                                        \
+  HSUB_UB2_SH(tmp0, tmp1, tmp2, tmp3);                                      \
+  DPADD_SH2_SW(tmp2, tmp3, tmp2, tmp3, out2, out3);                         \
+} while (0)
+
+static int SSE16x16(const uint8_t* a, const uint8_t* b) {
+  uint32_t sum;
+  v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
+  v16u8 ref0, ref1, ref2, ref3, ref4, ref5, ref6, ref7;
+  v4i32 out0, out1, out2, out3;
+
+  LD_UB8(a, BPS, src0, src1, src2, src3, src4, src5, src6, src7);
+  LD_UB8(b, BPS, ref0, ref1, ref2, ref3, ref4, ref5, ref6, ref7);
+  PACK_DOTP_UB4_SW(src0, ref0, src1, ref1, out0, out1, out2, out3);
+  PACK_DPADD_UB4_SW(src2, ref2, src3, ref3, out0, out1, out2, out3);
+  PACK_DPADD_UB4_SW(src4, ref4, src5, ref5, out0, out1, out2, out3);
+  PACK_DPADD_UB4_SW(src6, ref6, src7, ref7, out0, out1, out2, out3);
+  a += 8 * BPS;
+  b += 8 * BPS;
+  LD_UB8(a, BPS, src0, src1, src2, src3, src4, src5, src6, src7);
+  LD_UB8(b, BPS, ref0, ref1, ref2, ref3, ref4, ref5, ref6, ref7);
+  PACK_DPADD_UB4_SW(src0, ref0, src1, ref1, out0, out1, out2, out3);
+  PACK_DPADD_UB4_SW(src2, ref2, src3, ref3, out0, out1, out2, out3);
+  PACK_DPADD_UB4_SW(src4, ref4, src5, ref5, out0, out1, out2, out3);
+  PACK_DPADD_UB4_SW(src6, ref6, src7, ref7, out0, out1, out2, out3);
+  out0 += out1;
+  out2 += out3;
+  out0 += out2;
+  sum = HADD_SW_S32(out0);
+  return sum;
+}
+
+static int SSE16x8(const uint8_t* a, const uint8_t* b) {
+  uint32_t sum;
+  v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
+  v16u8 ref0, ref1, ref2, ref3, ref4, ref5, ref6, ref7;
+  v4i32 out0, out1, out2, out3;
+
+  LD_UB8(a, BPS, src0, src1, src2, src3, src4, src5, src6, src7);
+  LD_UB8(b, BPS, ref0, ref1, ref2, ref3, ref4, ref5, ref6, ref7);
+  PACK_DOTP_UB4_SW(src0, ref0, src1, ref1, out0, out1, out2, out3);
+  PACK_DPADD_UB4_SW(src2, ref2, src3, ref3, out0, out1, out2, out3);
+  PACK_DPADD_UB4_SW(src4, ref4, src5, ref5, out0, out1, out2, out3);
+  PACK_DPADD_UB4_SW(src6, ref6, src7, ref7, out0, out1, out2, out3);
+  out0 += out1;
+  out2 += out3;
+  out0 += out2;
+  sum = HADD_SW_S32(out0);
+  return sum;
+}
+
+static int SSE8x8(const uint8_t* a, const uint8_t* b) {
+  uint32_t sum;
+  v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
+  v16u8 ref0, ref1, ref2, ref3, ref4, ref5, ref6, ref7;
+  v16u8 t0, t1, t2, t3;
+  v4i32 out0, out1, out2, out3;
+
+  LD_UB8(a, BPS, src0, src1, src2, src3, src4, src5, src6, src7);
+  LD_UB8(b, BPS, ref0, ref1, ref2, ref3, ref4, ref5, ref6, ref7);
+  ILVR_B4_UB(src0, src1, src2, src3, ref0, ref1, ref2, ref3, t0, t1, t2, t3);
+  PACK_DOTP_UB4_SW(t0, t2, t1, t3, out0, out1, out2, out3);
+  ILVR_B4_UB(src4, src5, src6, src7, ref4, ref5, ref6, ref7, t0, t1, t2, t3);
+  PACK_DPADD_UB4_SW(t0, t2, t1, t3, out0, out1, out2, out3);
+  out0 += out1;
+  out2 += out3;
+  out0 += out2;
+  sum = HADD_SW_S32(out0);
+  return sum;
+}
+
+static int SSE4x4(const uint8_t* a, const uint8_t* b) {
+  uint32_t sum = 0;
+  uint32_t src0, src1, src2, src3, ref0, ref1, ref2, ref3;
+  v16u8 src, ref, tmp0, tmp1;
+  v8i16 diff0, diff1;
+  v4i32 out0, out1;
+
+  LW4(a, BPS, src0, src1, src2, src3);
+  LW4(b, BPS, ref0, ref1, ref2, ref3);
+  INSERT_W4_UB(src0, src1, src2, src3, src);
+  INSERT_W4_UB(ref0, ref1, ref2, ref3, ref);
+  ILVRL_B2_UB(src, ref, tmp0, tmp1);
+  HSUB_UB2_SH(tmp0, tmp1, diff0, diff1);
+  DOTP_SH2_SW(diff0, diff1, diff0, diff1, out0, out1);
+  out0 += out1;
+  sum = HADD_SW_S32(out0);
+  return sum;
+}
+
+//------------------------------------------------------------------------------
 // Entry point
 
 extern void VP8EncDspInitMSA(void);
@@ -668,6 +778,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMSA(void) {
   VP8EncPredLuma4 = Intra4Preds;
   VP8EncPredLuma16 = Intra16Preds;
   VP8EncPredChroma8 = IntraChromaPreds;
+
+  VP8SSE16x16 = SSE16x16;
+  VP8SSE16x8 = SSE16x8;
+  VP8SSE8x8 = SSE8x8;
+  VP8SSE4x4 = SSE4x4;
 }
 
 #else  // !WEBP_USE_MSA
