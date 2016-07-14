@@ -130,7 +130,8 @@ struct VP8LHashChain {
 int VP8LHashChainInit(VP8LHashChain* const p, int size);
 // Pre-compute the best matches for argb.
 int VP8LHashChainFill(VP8LHashChain* const p, int quality,
-                      const uint32_t* const argb, int xsize, int ysize);
+                      const uint32_t* const argb, int xsize, int ysize,
+                      int low_effort);
 void VP8LHashChainClear(VP8LHashChain* const p);  // release memory
 
 // -----------------------------------------------------------------------------
