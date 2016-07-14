@@ -656,32 +656,6 @@ static int Quantize2Blocks(int16_t in[32], int16_t out[32],
   return nz;
 }
 
-static int QuantizeBlockWHT(int16_t in[16], int16_t out[16],
-                            const VP8Matrix* const mtx) {
-  int n, last = -1;
-  for (n = 0; n < 16; ++n) {
-    const int j = kZigzag[n];
-    const int sign = (in[j] < 0);
-    const uint32_t coeff = sign ? -in[j] : in[j];
-    assert(mtx->sharpen_[j] == 0);
-    if (coeff > mtx->zthresh_[j]) {
-      const uint32_t Q = mtx->q_[j];
-      const uint32_t iQ = mtx->iq_[j];
-      const uint32_t B = mtx->bias_[j];
-      int level = QUANTDIV(coeff, iQ, B);
-      if (level > MAX_LEVEL) level = MAX_LEVEL;
-      if (sign) level = -level;
-      in[j] = level * (int)Q;
-      out[n] = level;
-      if (level) last = n;
-    } else {
-      out[n] = 0;
-      in[j] = 0;
-    }
-  }
-  return (last >= 0);
-}
-
 //------------------------------------------------------------------------------
 // Block copy
 
@@ -823,7 +797,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
   VP8TDisto16x16 = Disto16x16;
   VP8EncQuantizeBlock = QuantizeBlock;
   VP8EncQuantize2Blocks = Quantize2Blocks;
-  VP8EncQuantizeBlockWHT = QuantizeBlockWHT;
+  VP8EncQuantizeBlockWHT = QuantizeBlock;
   VP8Copy4x4 = Copy4x4;
   VP8Copy16x8 = Copy16x8;
 
