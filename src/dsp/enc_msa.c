@@ -763,6 +763,70 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
 }
 
 //------------------------------------------------------------------------------
+// Quantization
+
+static int QuantizeBlock(int16_t in[16], int16_t out[16],
+                         const VP8Matrix* const mtx) {
+  int sum;
+  v8i16 in0, in1, sh0, sh1, out0, out1;
+  v8i16 tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, sign0, sign1;
+  v4i32 s0, s1, s2, s3, b0, b1, b2, b3, t0, t1, t2, t3;
+  const v8i16 zero = { 0 };
+  const v8i16 zigzag0 = { 0, 1, 4, 8, 5, 2, 3, 6 };
+  const v8i16 zigzag1 = { 9, 12, 13, 10, 7, 11, 14, 15 };
+  const v8i16 maxlevel = __msa_fill_h(MAX_LEVEL);
+
+  LD_SH2(&in[0], 8, in0, in1);
+  LD_SH2(&mtx->sharpen_[0], 8, sh0, sh1);
+  tmp4 = __msa_add_a_h(in0, zero);
+  tmp5 = __msa_add_a_h(in1, zero);
+  ILVRL_H2_SH(sh0, tmp4, tmp0, tmp1);
+  ILVRL_H2_SH(sh1, tmp5, tmp2, tmp3);
+  HADD_SH4_SW(tmp0, tmp1, tmp2, tmp3, s0, s1, s2, s3);
+  sign0 = (in0 < zero);
+  sign1 = (in1 < zero);                           // sign
+  LD_SH2(&mtx->iq_[0], 8, tmp0, tmp1);            // iq
+  ILVRL_H2_SW(zero, tmp0, t0, t1);
+  ILVRL_H2_SW(zero, tmp1, t2, t3);
+  LD_SW4(&mtx->bias_[0], 4, b0, b1, b2, b3);      // bias
+  MUL4(t0, s0, t1, s1, t2, s2, t3, s3, t0, t1, t2, t3);
+  ADD4(b0, t0, b1, t1, b2, t2, b3, t3, b0, b1, b2, b3);
+  SRAI_W4_SW(b0, b1, b2, b3, 17);
+  PCKEV_H2_SH(b1, b0, b3, b2, tmp2, tmp3);
+  tmp0 = (tmp2 > maxlevel);
+  tmp1 = (tmp3 > maxlevel);
+  tmp2 = (v8i16)__msa_bmnz_v((v16u8)tmp2, (v16u8)maxlevel, (v16u8)tmp0);
+  tmp3 = (v8i16)__msa_bmnz_v((v16u8)tmp3, (v16u8)maxlevel, (v16u8)tmp1);
+  SUB2(0, tmp2, 0, tmp3, tmp0, tmp1);
+  tmp2 = (v8i16)__msa_bmnz_v((v16u8)tmp2, (v16u8)tmp0, (v16u8)sign0);
+  tmp3 = (v8i16)__msa_bmnz_v((v16u8)tmp3, (v16u8)tmp1, (v16u8)sign1);
+  LD_SW4(&mtx->zthresh_[0], 4, t0, t1, t2, t3);   // zthresh
+  t0 = (s0 > t0);
+  t1 = (s1 > t1);
+  t2 = (s2 > t2);
+  t3 = (s3 > t3);
+  PCKEV_H2_SH(t1, t0, t3, t2, tmp0, tmp1);
+  tmp4 = (v8i16)__msa_bmnz_v((v16u8)zero, (v16u8)tmp2, (v16u8)tmp0);
+  tmp5 = (v8i16)__msa_bmnz_v((v16u8)zero, (v16u8)tmp3, (v16u8)tmp1);
+  LD_SH2(&mtx->q_[0], 8, tmp0, tmp1);
+  MUL2(tmp4, tmp0, tmp5, tmp1, in0, in1);
+  VSHF_H2_SH(tmp4, tmp5, tmp4, tmp5, zigzag0, zigzag1, out0, out1);
+  ST_SH2(in0, in1, &in[0], 8);
+  ST_SH2(out0, out1, &out[0], 8);
+  out0 = __msa_add_a_h(out0, out1);
+  sum = HADD_SH_S32(out0);
+  return (sum > 0);
+}
+
+static int Quantize2Blocks(int16_t in[32], int16_t out[32],
+                           const VP8Matrix* const mtx) {
+  int nz;
+  nz  = VP8EncQuantizeBlock(in + 0 * 16, out + 0 * 16, mtx) << 0;
+  nz |= VP8EncQuantizeBlock(in + 1 * 16, out + 1 * 16, mtx) << 1;
+  return nz;
+}
+
+//------------------------------------------------------------------------------
 // Entry point
 
 extern void VP8EncDspInitMSA(void);
@@ -783,6 +847,10 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMSA(void) {
   VP8SSE16x8 = SSE16x8;
   VP8SSE8x8 = SSE8x8;
   VP8SSE4x4 = SSE4x4;
+
+  VP8EncQuantizeBlock = QuantizeBlock;
+  VP8EncQuantize2Blocks = Quantize2Blocks;
+  VP8EncQuantizeBlockWHT = QuantizeBlock;
 }
 
 #else  // !WEBP_USE_MSA
