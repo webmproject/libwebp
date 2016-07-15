@@ -336,9 +336,9 @@ static void TransformAC3(const int16_t* in, uint8_t* dst) {
     mask = (mask <= b_limit);                                  \
 } while (0)
 
-static void VFilter16(uint8_t *src, int stride,
+static void VFilter16(uint8_t* src, int stride,
                       int b_limit_in, int limit_in, int thresh_in) {
-  uint8_t *ptemp = src - 4 * stride;
+  uint8_t* ptemp = src - 4 * stride;
   v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
   v16u8 mask, hev;
   const v16u8 thresh = (v16u8)__msa_fill_b(thresh_in);
@@ -355,9 +355,9 @@ static void VFilter16(uint8_t *src, int stride,
   ST_UB2(q1, q2, ptemp, stride);
 }
 
-static void HFilter16(uint8_t *src, int stride,
+static void HFilter16(uint8_t* src, int stride,
                       int b_limit_in, int limit_in, int thresh_in) {
-  uint8_t *ptmp  = src - 4;
+  uint8_t* ptmp  = src - 4;
   v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
   v16u8 mask, hev;
   v16u8 row0, row1, row2, row3, row4, row5, row6, row7, row8;
@@ -416,7 +416,7 @@ static void HFilter16(uint8_t *src, int stride,
 }
 
 // on three inner edges
-static void VFilterHorEdge16i(uint8_t *src, int stride,
+static void VFilterHorEdge16i(uint8_t* src, int stride,
                               int b_limit, int limit, int thresh) {
   v16u8 mask, hev;
   v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
@@ -431,14 +431,14 @@ static void VFilterHorEdge16i(uint8_t *src, int stride,
   ST_UB4(p1, p0, q0, q1, (src - 2 * stride), stride);
 }
 
-static void VFilter16i(uint8_t *src_y, int stride,
+static void VFilter16i(uint8_t* src_y, int stride,
                        int b_limit, int limit, int thresh) {
   VFilterHorEdge16i(src_y +  4 * stride, stride, b_limit, limit, thresh);
   VFilterHorEdge16i(src_y +  8 * stride, stride, b_limit, limit, thresh);
   VFilterHorEdge16i(src_y + 12 * stride, stride, b_limit, limit, thresh);
 }
 
-static void HFilterVertEdge16i(uint8_t *src, int stride,
+static void HFilterVertEdge16i(uint8_t* src, int stride,
                                int b_limit, int limit, int thresh) {
   v16u8 mask, hev;
   v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
@@ -468,7 +468,7 @@ static void HFilterVertEdge16i(uint8_t *src, int stride,
   ST4x8_UB(tmp4, tmp5, src, stride);
 }
 
-static void HFilter16i(uint8_t *src_y, int stride,
+static void HFilter16i(uint8_t* src_y, int stride,
                        int b_limit, int limit, int thresh) {
   HFilterVertEdge16i(src_y +  4, stride, b_limit, limit, thresh);
   HFilterVertEdge16i(src_y +  8, stride, b_limit, limit, thresh);

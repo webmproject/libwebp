@@ -97,7 +97,7 @@ static void HorizontalFilter(const uint8_t* data, int width, int height,
 
 static WEBP_INLINE void PredictLineGradient(const uint8_t* pinput,
                                             const uint8_t* ppred,
-                                            uint8_t *poutput, int stride,
+                                            uint8_t* poutput, int stride,
                                             int size) {
   int w;
   const v16i8 zero = { 0 };
