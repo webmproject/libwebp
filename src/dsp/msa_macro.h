@@ -235,6 +235,26 @@
 #define LD_UH2(...) LD_H2(v8u16, __VA_ARGS__)
 #define LD_SH2(...) LD_H2(v8i16, __VA_ARGS__)
 
+/* Description : Load vectors with 4 word elements with stride
+ * Arguments   : Inputs  - psrc, stride
+ *               Outputs - out0, out1
+ * Details     : Load 4 word elements in 'out0' from (psrc)
+ *               Load 4 word elements in 'out1' from (psrc + stride)
+ */
+#define LD_W2(RTYPE, psrc, stride, out0, out1) do {  \
+  out0 = LD_W(RTYPE, psrc);                          \
+  out1 = LD_W(RTYPE, psrc + stride);                 \
+} while (0)
+#define LD_UW2(...) LD_W2(v4u32, __VA_ARGS__)
+#define LD_SW2(...) LD_W2(v4i32, __VA_ARGS__)
+
+#define LD_W4(RTYPE, psrc, stride, out0, out1, out2, out3) do {  \
+  LD_W2(RTYPE, psrc, stride, out0, out1);                        \
+  LD_W2(RTYPE, psrc + 2 * stride, stride, out2, out3);           \
+} while (0)
+#define LD_UW4(...) LD_W4(v4u32, __VA_ARGS__)
+#define LD_SW4(...) LD_W4(v4i32, __VA_ARGS__)
+
 /* Description : Store vectors of 16 byte elements with stride
  * Arguments   : Inputs - in0, in1, pdst, stride
  * Details     : Store 16 byte elements from 'in0' to (pdst)
@@ -480,6 +500,23 @@ static WEBP_INLINE int32_t func_hadd_sw_s32(v4i32 in) {
 }
 #define HADD_SW_S32(in) func_hadd_sw_s32(in)
 
+/* Description : Horizontal addition of 8 signed halfword elements
+ * Arguments   : Input  - in       (signed halfword vector)
+ *               Output - sum_m    (s32 sum)
+ *               Return Type - signed word
+ * Details     : 8 signed halfword elements of input vector are added
+ *               together and the resulting integer sum is returned
+ */
+static WEBP_INLINE int32_t func_hadd_sh_s32(v8i16 in) {
+  const v4i32 res = __msa_hadd_s_w(in, in);
+  const v2i64 res0 = __msa_hadd_s_d(res, res);
+  const v2i64 res1 = __msa_splati_d(res0, 1);
+  const v2i64 res2 = res0 + res1;
+  const int32_t sum_m = __msa_copy_s_w((v4i32)res2, 0);
+  return sum_m;
+}
+#define HADD_SH_S32(in) func_hadd_sh_s32(in)
+
 /* Description : Horizontal addition of 8 unsigned halfword elements
  * Arguments   : Input  - in       (unsigned halfword vector)
  *               Output - sum_m    (u32 sum)
@@ -497,6 +534,26 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
   return sum_m;
 }
 #define HADD_UH_U32(in) func_hadd_uh_u32(in)
+
+/* Description : Horizontal addition of signed half word vector elements
+   Arguments   : Inputs  - in0, in1
+                 Outputs - out0, out1
+                 Return Type - as per RTYPE
+   Details     : Each signed odd half word element from 'in0' is added to
+                 even signed half word element from 'in0' (pairwise) and the
+                 halfword result is written in 'out0'
+*/
+#define HADD_SH2(RTYPE, in0, in1, out0, out1) do {       \
+  out0 = (RTYPE)__msa_hadd_s_w((v8i16)in0, (v8i16)in0);  \
+  out1 = (RTYPE)__msa_hadd_s_w((v8i16)in1, (v8i16)in1);  \
+} while (0)
+#define HADD_SH2_SW(...) HADD_SH2(v4i32, __VA_ARGS__)
+
+#define HADD_SH4(RTYPE, in0, in1, in2, in3, out0, out1, out2, out3) do {  \
+  HADD_SH2(RTYPE, in0, in1, out0, out1);                                  \
+  HADD_SH2(RTYPE, in2, in3, out2, out3);                                  \
+} while (0)
+#define HADD_SH4_SW(...) HADD_SH4(v4i32, __VA_ARGS__)
 
 /* Description : Horizontal subtraction of unsigned byte vector elements
  * Arguments   : Inputs  - in0, in1
@@ -988,6 +1045,23 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
 #define ADDSUB2(in0, in1, out0, out1) do {  \
   out0 = in0 + in1;                         \
   out1 = in0 - in1;                         \
+} while (0)
+
+/* Description : Multiplication of pairs of vectors
+ * Arguments   : Inputs  - in0, in1, in2, in3
+ *               Outputs - out0, out1
+ * Details     : Each element from 'in0' is multiplied with elements from 'in1'
+ *               and the result is written to 'out0'
+ */
+#define MUL2(in0, in1, in2, in3, out0, out1) do {  \
+  out0 = in0 * in1;                                \
+  out1 = in2 * in3;                                \
+} while (0)
+
+#define MUL4(in0, in1, in2, in3, in4, in5, in6, in7,  \
+             out0, out1, out2, out3) do {             \
+  MUL2(in0, in1, in2, in3, out0, out1);               \
+  MUL2(in4, in5, in6, in7, out2, out3);               \
 } while (0)
 
 /* Description : Sign extend halfword elements from right half of the vector
