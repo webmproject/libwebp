@@ -551,6 +551,20 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
   return GetSSE(a, b, 4, 4);
 }
 
+static void Mean16x4(const uint8_t* ref, uint32_t dc[4]) {
+  int k, x, y;
+  for (k = 0; k < 4; ++k) {
+    uint32_t avg = 0;
+    for (y = 0; y < 4; ++y) {
+      for (x = 0; x < 4; ++x) {
+        avg += ref[x + y * BPS];
+      }
+    }
+    dc[k] = avg;
+    ref += 4;   // go to next 4x4 block.
+  }
+}
+
 //------------------------------------------------------------------------------
 // Texture distortion
 //
@@ -757,6 +771,7 @@ VP8Metric VP8SSE16x8;
 VP8Metric VP8SSE4x4;
 VP8WMetric VP8TDisto4x4;
 VP8WMetric VP8TDisto16x16;
+VP8MeanMetric VP8Mean16x4;
 VP8QuantizeBlock VP8EncQuantizeBlock;
 VP8Quantize2Blocks VP8EncQuantize2Blocks;
 VP8QuantizeBlockWHT VP8EncQuantizeBlockWHT;
@@ -795,6 +810,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
   VP8SSE4x4 = SSE4x4;
   VP8TDisto4x4 = Disto4x4;
   VP8TDisto16x16 = Disto16x16;
+  VP8Mean16x4 = Mean16x4;
   VP8EncQuantizeBlock = QuantizeBlock;
   VP8EncQuantize2Blocks = Quantize2Blocks;
   VP8EncQuantizeBlockWHT = QuantizeBlock;
