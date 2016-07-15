@@ -219,6 +219,37 @@ static int Disto16x16(const uint8_t* const a, const uint8_t* const b,
 }
 
 //------------------------------------------------------------------------------
+// Histogram
+
+static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
+                             int start_block, int end_block,
+                             VP8Histogram* const histo) {
+  int j;
+  int distribution[MAX_COEFF_THRESH + 1] = { 0 };
+  for (j = start_block; j < end_block; ++j) {
+    int16_t out[16];
+    VP8FTransform(ref + VP8DspScan[j], pred + VP8DspScan[j], out);
+    {
+      int k;
+      v8i16 coeff0, coeff1;
+      const v8i16 zero = { 0 };
+      const v8i16 max_coeff_thr = __msa_ldi_h(MAX_COEFF_THRESH);
+      LD_SH2(&out[0], 8, coeff0, coeff1);
+      coeff0 = __msa_add_a_h(coeff0, zero);
+      coeff1 = __msa_add_a_h(coeff1, zero);
+      SRAI_H2_SH(coeff0, coeff1, 3);
+      coeff0 = __msa_min_s_h(coeff0, max_coeff_thr);
+      coeff1 = __msa_min_s_h(coeff1, max_coeff_thr);
+      ST_SH2(coeff0, coeff1, &out[0], 8);
+      for (k = 0; k < 16; ++k) {
+        ++distribution[out[k]];
+      }
+    }
+  }
+  VP8SetHistogramData(distribution, histo);
+}
+
+//------------------------------------------------------------------------------
 // Intra predictions
 
 // luma 4x4 prediction
@@ -838,6 +869,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitMSA(void) {
 
   VP8TDisto4x4 = Disto4x4;
   VP8TDisto16x16 = Disto16x16;
+  VP8CollectHistogram = CollectHistogram;
 
   VP8EncPredLuma4 = Intra4Preds;
   VP8EncPredLuma16 = Intra16Preds;
