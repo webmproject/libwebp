@@ -172,6 +172,7 @@ model {
             include "lossless_enc.c"
             include "lossless_enc_mips32.c"
             include "lossless_enc_mips_dsp_r2.c"
+            include "lossless_enc_msa.c"
             include "lossless_enc_neon.$NEON"
             include "lossless_enc_sse2.c"
             include "lossless_enc_sse41.c"

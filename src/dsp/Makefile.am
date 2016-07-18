@@ -114,6 +114,7 @@ libwebpdsp_neon_la_LIBADD = libwebpdspdecode_neon.la
 
 libwebpdsp_msa_la_SOURCES =
 libwebpdsp_msa_la_SOURCES += enc_msa.c
+libwebpdsp_msa_la_SOURCES += lossless_enc_msa.c
 libwebpdsp_msa_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
 libwebpdsp_msa_la_CFLAGS = $(AM_CFLAGS)
 libwebpdsp_msa_la_LIBADD = libwebpdspdecode_msa.la
