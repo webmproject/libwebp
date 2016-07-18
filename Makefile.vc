@@ -240,6 +240,7 @@ DSP_ENC_OBJS = \
     $(DIROBJ)\dsp\lossless_enc.obj \
     $(DIROBJ)\dsp\lossless_enc_mips32.obj \
     $(DIROBJ)\dsp\lossless_enc_mips_dsp_r2.obj \
+    $(DIROBJ)\dsp\lossless_enc_msa.obj \
     $(DIROBJ)\dsp\lossless_enc_neon.obj \
     $(DIROBJ)\dsp\lossless_enc_sse2.obj \
     $(DIROBJ)\dsp\lossless_enc_sse41.obj \
