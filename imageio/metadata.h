@@ -10,8 +10,8 @@
 //  Metadata types and functions.
 //
 
-#ifndef WEBP_EXAMPLES_METADATA_H_
-#define WEBP_EXAMPLES_METADATA_H_
+#ifndef WEBP_IMAGEIO_METADATA_H_
+#define WEBP_IMAGEIO_METADATA_H_
 
 #include "webp/types.h"
 
@@ -44,4 +44,4 @@ int MetadataCopy(const char* metadata, size_t metadata_len,
 }    // extern "C"
 #endif
 
-#endif  // WEBP_EXAMPLES_METADATA_H_
+#endif  // WEBP_IMAGEIO_METADATA_H_

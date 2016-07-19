@@ -9,8 +9,8 @@
 //
 // Windows Imaging Component (WIC) decode.
 
-#ifndef WEBP_EXAMPLES_WICDEC_H_
-#define WEBP_EXAMPLES_WICDEC_H_
+#ifndef WEBP_IMAGEIO_WICDEC_H_
+#define WEBP_IMAGEIO_WICDEC_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,4 +31,4 @@ int ReadPictureWithWIC(const char* const filename,
 }    // extern "C"
 #endif
 
-#endif  // WEBP_EXAMPLES_WICDEC_H_
+#endif  // WEBP_IMAGEIO_WICDEC_H_

@@ -20,8 +20,8 @@
 #include "webp/config.h"
 #endif
 
-#include "./example_util.h"
-#include "./image_dec.h"
+#include "../imageio/example_util.h"
+#include "../imageio/image_dec.h"
 #include "./stopwatch.h"
 #include "webp/encode.h"
 

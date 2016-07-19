@@ -1,4 +1,4 @@
-// Copyright 2012 Google Inc. All Rights Reserved.
+// Copyright 2014 Google Inc. All Rights Reserved.
 //
 // Use of this source code is governed by a BSD-style license
 // that can be found in the COPYING file in the root of the source
@@ -7,10 +7,10 @@
 // be found in the AUTHORS file in the root of the source tree.
 // -----------------------------------------------------------------------------
 //
-// TIFF decode.
+// WebP decode.
 
-#ifndef WEBP_EXAMPLES_TIFFDEC_H_
-#define WEBP_EXAMPLES_TIFFDEC_H_
+#ifndef WEBP_IMAGEIO_WEBPDEC_H_
+#define WEBP_IMAGEIO_WEBPDEC_H_
 
 #include "webp/types.h"
 
@@ -21,17 +21,17 @@ extern "C" {
 struct Metadata;
 struct WebPPicture;
 
-// Reads a TIFF from 'data', returning the decoded output in 'pic'.
+// Reads a WebP from 'in_file', returning the decoded output in 'pic'.
 // Output is RGBA or YUVA, depending on pic->use_argb value.
-// If 'keep_alpha' is true and the TIFF has an alpha channel, the output is RGBA
+// If 'keep_alpha' is true and the WebP has an alpha channel, the output is RGBA
 // or YUVA. Otherwise, alpha channel is dropped and output is RGB or YUV.
 // Returns true on success.
-int ReadTIFF(const uint8_t* const data, size_t data_size,
-             struct WebPPicture* const pic, int keep_alpha,
-             struct Metadata* const metadata);
+int ReadWebP(const uint8_t* const data, size_t data_size,
+             struct WebPPicture* const pic,
+             int keep_alpha, struct Metadata* const metadata);
 
 #ifdef __cplusplus
 }    // extern "C"
 #endif
 
-#endif  // WEBP_EXAMPLES_TIFFDEC_H_
+#endif  // WEBP_IMAGEIO_WEBPDEC_H_

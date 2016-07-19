@@ -252,7 +252,9 @@ endif
 
 ################################################################################
 
-include $(LOCAL_PATH)/examples/Android.mk
+WEBP_SRC_PATH := $(LOCAL_PATH)
+include $(WEBP_SRC_PATH)/imageio/Android.mk
+include $(WEBP_SRC_PATH)/examples/Android.mk
 
 ifeq ($(USE_CPUFEATURES),yes)
   $(call import-module,android/cpufeatures)

@@ -9,8 +9,8 @@
 //
 // JPEG decode.
 
-#ifndef WEBP_EXAMPLES_JPEGDEC_H_
-#define WEBP_EXAMPLES_JPEGDEC_H_
+#ifndef WEBP_IMAGEIO_JPEGDEC_H_
+#define WEBP_IMAGEIO_JPEGDEC_H_
 
 #include <stdio.h>
 #include "webp/types.h"
@@ -35,4 +35,4 @@ int ReadJPEG(const uint8_t* const data, size_t data_size,
 }    // extern "C"
 #endif
 
-#endif  // WEBP_EXAMPLES_JPEGDEC_H_
+#endif  // WEBP_IMAGEIO_JPEGDEC_H_

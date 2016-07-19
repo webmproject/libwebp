@@ -40,7 +40,7 @@
 #endif
 
 #include "webp/decode.h"
-#include "./example_util.h"
+#include "../imageio/example_util.h"
 #include "./stopwatch.h"
 
 static int verbose = 0;
