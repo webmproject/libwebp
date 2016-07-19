@@ -65,6 +65,7 @@ dsp_dec_srcs := \
     src/dsp/rescaler.c \
     src/dsp/rescaler_mips32.c \
     src/dsp/rescaler_mips_dsp_r2.c \
+    src/dsp/rescaler_msa.c \
     src/dsp/rescaler_neon.$(NEON) \
     src/dsp/rescaler_sse2.c \
     src/dsp/upsampling.c \

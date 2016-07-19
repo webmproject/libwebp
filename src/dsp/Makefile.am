@@ -85,6 +85,7 @@ libwebpdspdecode_msa_la_SOURCES =
 libwebpdspdecode_msa_la_SOURCES += dec_msa.c
 libwebpdspdecode_msa_la_SOURCES += filters_msa.c
 libwebpdspdecode_msa_la_SOURCES += lossless_msa.c
+libwebpdspdecode_msa_la_SOURCES += rescaler_msa.c
 libwebpdspdecode_msa_la_SOURCES += msa_macro.h
 libwebpdspdecode_msa_la_CPPFLAGS = $(libwebpdsp_msa_la_CPPFLAGS)
 libwebpdspdecode_msa_la_CFLAGS = $(libwebpdsp_msa_la_CFLAGS)

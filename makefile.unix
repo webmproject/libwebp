@@ -154,6 +154,7 @@ DSP_DEC_OBJS = \
     src/dsp/rescaler.o \
     src/dsp/rescaler_mips32.o \
     src/dsp/rescaler_mips_dsp_r2.o \
+    src/dsp/rescaler_msa.o \
     src/dsp/rescaler_neon.o \
     src/dsp/rescaler_sse2.o \
     src/dsp/upsampling.o \

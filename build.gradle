@@ -135,6 +135,7 @@ model {
             include "rescaler.c"
             include "rescaler_mips32.c"
             include "rescaler_mips_dsp_r2.c"
+            include "rescaler_msa.c"
             include "rescaler_neon.$NEON"
             include "rescaler_sse2.c"
             include "upsampling.c"
