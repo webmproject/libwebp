@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a3d5fbd_2d78aaf4",
+        "filename": "src/extras/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-07-19T22:59:07Z",
+      "side": 0,
+      "message": "hmm.. do we put extras.h with the other \u0027regular\u0027 library header under webp/ ? Is that ok? (as opposed to just extras/extras.h)",
+      "range": {
+        "startLine": 7,
+        "startChar": 40,
+        "endLine": 7,
+        "endChar": 46
+      },
+      "revId": "9ac74f922eefd93f1073a3a2fc4976683ade2c12",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
