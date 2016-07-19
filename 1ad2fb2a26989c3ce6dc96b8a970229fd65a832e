@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a3d5fbd_0da5e6b1",
+        "filename": "extras/Makefile.am",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-07-19T23:44:18Z",
+      "side": 1,
+      "message": "do we need this line at all? will some src/webp/*.h be dragged at all by this install or libextra?",
+      "range": {
+        "startLine": 9,
+        "startChar": 30,
+        "endLine": 9,
+        "endChar": 35
+      },
+      "revId": "1ad2fb2a26989c3ce6dc96b8a970229fd65a832e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
