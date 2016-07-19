@@ -3,7 +3,7 @@
 # It will not install the libraries system-wide, but just create the 'cwebp'
 # and 'dwebp' tools in the examples/ directory, along with the static
 # libraries 'src/libwebp.a', 'src/libwebpdecoder.a', 'src/mux/libwebpmux.a',
-# 'src/demux/libwebpdemux.a' and 'src/libwebpextras.a'.
+# 'src/demux/libwebpdemux.a' and 'extras/libwebpextras.a'.
 #
 # To build the library and examples, use:
 #    make -f makefile.unix
@@ -251,7 +251,7 @@ UTILS_ENC_OBJS = \
     src/utils/quant_levels.o \
 
 EXTRA_OBJS = \
-    src/extras/extras.o \
+    extras/extras.o \
 
 LIBWEBPDECODER_OBJS = $(DEC_OBJS) $(DSP_DEC_OBJS) $(UTILS_DEC_OBJS)
 LIBWEBP_OBJS = $(LIBWEBPDECODER_OBJS) $(ENC_OBJS) $(DSP_ENC_OBJS) \
@@ -307,7 +307,7 @@ HDRS = \
     $(HDRS_INSTALLED) \
 
 OUT_LIBS = examples/libexample_util.a src/libwebpdecoder.a src/libwebp.a
-EXTRA_LIB = src/libwebpextras.a
+EXTRA_LIB = extras/libwebpextras.a
 OUT_EXAMPLES = examples/cwebp examples/dwebp
 EXTRA_EXAMPLES = examples/gif2webp examples/vwebp examples/webpmux \
                  examples/anim_diff
@@ -340,11 +340,11 @@ examples/libanim_util.a: $(ANIM_UTIL_OBJS)
 examples/libexample_dec.a: $(EX_FORMAT_DEC_OBJS)
 examples/libexample_util.a: $(EX_UTIL_OBJS)
 examples/libgifdec.a: $(GIFDEC_OBJS)
+extras/libwebpextras.a: $(LIBWEBPEXTRA_OBJS)
 src/libwebpdecoder.a: $(LIBWEBPDECODER_OBJS)
 src/libwebp.a: $(LIBWEBP_OBJS)
 src/mux/libwebpmux.a: $(LIBWEBPMUX_OBJS)
 src/demux/libwebpdemux.a: $(LIBWEBPDEMUX_OBJS)
-src/libwebpextras.a: $(LIBWEBPEXTRA_OBJS)
 
 %.a:
 	$(AR) $(ARFLAGS) $@ $^
@@ -402,11 +402,11 @@ dist: all
 clean:
 	$(RM) $(OUTPUT) *~ \
               examples/*.o examples/*~ \
+              extras/*.o extras/*~ \
               src/dec/*.o src/dec/*~ \
               src/demux/*.o src/demux/*~ \
               src/dsp/*.o src/dsp/*~ \
               src/enc/*.o src/enc/*~ \
-              src/extras/*.o src/extras/*~ \
               src/mux/*.o src/mux/*~ \
               src/utils/*.o src/utils/*~ \
               src/webp/*~ man/*~ doc/*~ swig/*~ \

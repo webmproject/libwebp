@@ -672,13 +672,12 @@ dnl =========================
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([src/webp/config.h])
 AC_CONFIG_FILES([Makefile src/Makefile man/Makefile \
-                 examples/Makefile src/dec/Makefile \
+                 examples/Makefile extras/Makefile src/dec/Makefile \
                  src/enc/Makefile src/dsp/Makefile \
                  src/demux/Makefile src/mux/Makefile \
-                 src/utils/Makefile src/extras/Makefile \
+                 src/utils/Makefile \
                  src/libwebp.pc src/libwebpdecoder.pc \
-                 src/demux/libwebpdemux.pc src/mux/libwebpmux.pc \
-                 src/extras/libwebpextras.pc])
+                 src/demux/libwebpdemux.pc src/mux/libwebpmux.pc])
 
 
 AC_OUTPUT
