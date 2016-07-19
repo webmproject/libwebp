@@ -22,6 +22,30 @@
       "revId": "9ac74f922eefd93f1073a3a2fc4976683ade2c12",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a3d5fbd_4d8f6ed2",
+        "filename": "src/extras/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-07-19T23:07:31Z",
+      "side": 0,
+      "message": "that\u0027s where it was as we were treating it as something somewhat versionable/releasable. we could just make this a convenience target (similar to libexample_util/imagedec) and drop all the shard-object related stuff here.",
+      "parentUuid": "2a3d5fbd_2d78aaf4",
+      "range": {
+        "startLine": 7,
+        "startChar": 40,
+        "endLine": 7,
+        "endChar": 46
+      },
+      "revId": "9ac74f922eefd93f1073a3a2fc4976683ade2c12",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }

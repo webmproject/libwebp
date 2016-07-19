@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "2a3d5fbd_0d7966d8",
+        "filename": "extras/libwebpextras.pc.in",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-07-19T23:07:31Z",
+      "side": 1,
+      "message": "should be OK unless we plan to drop it",
+      "parentUuid": "2a3d5fbd_8d69d62c",
+      "range": {
+        "startLine": 1,
+        "startChar": 14,
+        "endLine": 1,
+        "endChar": 15
+      },
+      "revId": "7babdb832961dc46d4b694bf8e0ee88dbb5d8c7e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2a3d5fbd_6d6eb234",
         "filename": "makefile.unix",
         "patchSetId": 1
