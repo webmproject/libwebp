@@ -150,7 +150,7 @@
   out3 = LW(ptmp);                                      \
 } while (0)
 
-/* Description : Store 4 words with stride
+/* Description : Store words with stride
  * Arguments   : Inputs - in0, in1, in2, in3, pdst, stride
  * Details     : Store word from 'in0' to (pdst)
  *               Store word from 'in1' to (pdst + stride)
@@ -166,6 +166,22 @@
   SW(in2, ptmp);                                    \
   ptmp += stride;                                   \
   SW(in3, ptmp);                                    \
+} while (0)
+
+#define SW3(in0, in1, in2, pdst, stride) do {  \
+  uint8_t* ptmp = (uint8_t*)pdst;              \
+  SW(in0, ptmp);                               \
+  ptmp += stride;                              \
+  SW(in1, ptmp);                               \
+  ptmp += stride;                              \
+  SW(in2, ptmp);                               \
+} while (0)
+
+#define SW2(in0, in1, pdst, stride) do {  \
+  uint8_t* ptmp = (uint8_t*)pdst;         \
+  SW(in0, ptmp);                          \
+  ptmp += stride;                         \
+  SW(in1, ptmp);                          \
 } while (0)
 
 /* Description : Store 4 double words with stride
@@ -237,9 +253,11 @@
 
 /* Description : Load vectors with 4 word elements with stride
  * Arguments   : Inputs  - psrc, stride
- *               Outputs - out0, out1
- * Details     : Load 4 word elements in 'out0' from (psrc)
- *               Load 4 word elements in 'out1' from (psrc + stride)
+ *               Outputs - out0, out1, out2, out3
+ * Details     : Load 4 word elements in 'out0' from (psrc + 0 * stride)
+ *               Load 4 word elements in 'out1' from (psrc + 1 * stride)
+ *               Load 4 word elements in 'out2' from (psrc + 2 * stride)
+ *               Load 4 word elements in 'out3' from (psrc + 3 * stride)
  */
 #define LD_W2(RTYPE, psrc, stride, out0, out1) do {  \
   out0 = LD_W(RTYPE, psrc);                          \
@@ -247,6 +265,13 @@
 } while (0)
 #define LD_UW2(...) LD_W2(v4u32, __VA_ARGS__)
 #define LD_SW2(...) LD_W2(v4i32, __VA_ARGS__)
+
+#define LD_W3(RTYPE, psrc, stride, out0, out1, out2) do {  \
+  LD_W2(RTYPE, psrc, stride, out0, out1);                  \
+  out2 = LD_W(RTYPE, psrc + 2 * stride);                   \
+} while (0)
+#define LD_UW3(...) LD_W3(v4u32, __VA_ARGS__)
+#define LD_SW3(...) LD_W3(v4i32, __VA_ARGS__)
 
 #define LD_W4(RTYPE, psrc, stride, out0, out1, out2, out3) do {  \
   LD_W2(RTYPE, psrc, stride, out0, out1);                        \
@@ -280,6 +305,34 @@
   ST_B4(RTYPE, in4, in5, in6, in7, pdst + 4 * stride, stride);  \
 } while (0)
 #define ST_UB8(...) ST_B8(v16u8, __VA_ARGS__)
+
+/* Description : Store vectors of 4 word elements with stride
+ * Arguments   : Inputs - in0, in1, in2, in3, pdst, stride
+ * Details     : Store 4 word elements from 'in0' to (pdst + 0 * stride)
+ *               Store 4 word elements from 'in1' to (pdst + 1 * stride)
+ *               Store 4 word elements from 'in2' to (pdst + 2 * stride)
+ *               Store 4 word elements from 'in3' to (pdst + 3 * stride)
+ */
+#define ST_W2(RTYPE, in0, in1, pdst, stride) do {  \
+  ST_W(RTYPE, in0, pdst);                          \
+  ST_W(RTYPE, in1, pdst + stride);                 \
+} while (0)
+#define ST_UW2(...) ST_W2(v4u32, __VA_ARGS__)
+#define ST_SW2(...) ST_W2(v4i32, __VA_ARGS__)
+
+#define ST_W3(RTYPE, in0, in1, in2, pdst, stride) do {  \
+  ST_W2(RTYPE, in0, in1, pdst, stride);                 \
+  ST_W(RTYPE, in2, pdst + 2 * stride);                  \
+} while (0)
+#define ST_UW3(...) ST_W3(v4u32, __VA_ARGS__)
+#define ST_SW3(...) ST_W3(v4i32, __VA_ARGS__)
+
+#define ST_W4(RTYPE, in0, in1, in2, in3, pdst, stride) do {  \
+  ST_W2(RTYPE, in0, in1, pdst, stride);                      \
+  ST_W2(RTYPE, in2, in3, pdst + 2 * stride, stride);         \
+} while (0)
+#define ST_UW4(...) ST_W4(v4u32, __VA_ARGS__)
+#define ST_SW4(...) ST_W4(v4i32, __VA_ARGS__)
 
 /* Description : Store vectors of 8 halfword elements with stride
  * Arguments   : Inputs - in0, in1, pdst, stride
@@ -428,6 +481,22 @@
   out1 = (RTYPE)__msa_dotp_s_w((v8i16)mult1, (v8i16)cnst1);           \
 } while (0)
 #define DOTP_SH2_SW(...) DOTP_SH2(v4i32, __VA_ARGS__)
+
+/* Description : Dot product of unsigned word vector elements
+ * Arguments   : Inputs  - mult0, mult1, cnst0, cnst1
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Unsigned word elements from 'mult0' are multiplied with
+ *               unsigned word elements from 'cnst0' producing a result
+ *               twice the size of input i.e. unsigned double word.
+ *               The multiplication result of adjacent odd-even elements
+ *               are added together and written to the 'out0' vector
+ */
+#define DOTP_UW2(RTYPE, mult0, mult1, cnst0, cnst1, out0, out1) do {  \
+  out0 = (RTYPE)__msa_dotp_u_d((v4u32)mult0, (v4u32)cnst0);           \
+  out1 = (RTYPE)__msa_dotp_u_d((v4u32)mult1, (v4u32)cnst1);           \
+} while (0)
+#define DOTP_UW2_UD(...) DOTP_UW2(v2u64, __VA_ARGS__)
 
 /* Description : Dot product & addition of halfword vector elements
  * Arguments   : Inputs  - mult0, mult1, cnst0, cnst1
@@ -868,6 +937,7 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
 #define ILVRL_W2_UB(...) ILVRL_W2(v16u8, __VA_ARGS__)
 #define ILVRL_W2_SH(...) ILVRL_W2(v8i16, __VA_ARGS__)
 #define ILVRL_W2_SW(...) ILVRL_W2(v4i32, __VA_ARGS__)
+#define ILVRL_W2_UW(...) ILVRL_W2(v4u32, __VA_ARGS__)
 
 /* Description : Pack even byte elements of vector pairs
  *  Arguments   : Inputs  - in0, in1, in2, in3
@@ -912,6 +982,23 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
 #define PCKEV_H2_SH(...) PCKEV_H2(v8i16, __VA_ARGS__)
 #define PCKEV_H2_SW(...) PCKEV_H2(v4i32, __VA_ARGS__)
 #define PCKEV_H2_UW(...) PCKEV_H2(v4u32, __VA_ARGS__)
+
+/* Description : Pack even word elements of vector pairs
+ * Arguments   : Inputs  - in0, in1, in2, in3
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Even word elements of 'in0' are copied to the left half of
+ *               'out0' & even word elements of 'in1' are copied to the
+ *               right half of 'out0'.
+ */
+#define PCKEV_W2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)__msa_pckev_w((v4i32)in0, (v4i32)in1);        \
+  out1 = (RTYPE)__msa_pckev_w((v4i32)in2, (v4i32)in3);        \
+} while (0)
+#define PCKEV_W2_UH(...) PCKEV_W2(v8u16, __VA_ARGS__)
+#define PCKEV_W2_SH(...) PCKEV_W2(v8i16, __VA_ARGS__)
+#define PCKEV_W2_SW(...) PCKEV_W2(v4i32, __VA_ARGS__)
+#define PCKEV_W2_UW(...) PCKEV_W2(v4u32, __VA_ARGS__)
 
 /* Description : Arithmetic immediate shift right all elements of word vector
  * Arguments   : Inputs  - in0, in1, shift
@@ -968,6 +1055,31 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
 #define SRARI_W4_SH(...) SRARI_W4(v8i16, __VA_ARGS__)
 #define SRARI_W4_UW(...) SRARI_W4(v4u32, __VA_ARGS__)
 #define SRARI_W4_SW(...) SRARI_W4(v4i32, __VA_ARGS__)
+
+/* Description : Shift right arithmetic rounded double words
+ * Arguments   : Inputs  - in0, in1, shift
+ *               Outputs - in place operation
+ *               Return Type - as per RTYPE
+ * Details     : Each element of vector 'in0' is shifted right arithmetically by
+ *               the number of bits in the corresponding element in the vector
+ *               'shift'. The last discarded bit is added to shifted value for
+ *               rounding and the result is written in-place.
+ *               'shift' is a vector.
+ */
+#define SRAR_D2(RTYPE, in0, in1, shift) do {            \
+  in0 = (RTYPE)__msa_srar_d((v2i64)in0, (v2i64)shift);  \
+  in1 = (RTYPE)__msa_srar_d((v2i64)in1, (v2i64)shift);  \
+} while (0)
+#define SRAR_D2_SW(...) SRAR_D2(v4i32, __VA_ARGS__)
+#define SRAR_D2_SD(...) SRAR_D2(v2i64, __VA_ARGS__)
+#define SRAR_D2_UD(...) SRAR_D2(v2u64, __VA_ARGS__)
+
+#define SRAR_D4(RTYPE, in0, in1, in2, in3, shift) do {  \
+  SRAR_D2(RTYPE, in0, in1, shift);                      \
+  SRAR_D2(RTYPE, in2, in3, shift);                      \
+} while (0)
+#define SRAR_D4_SD(...) SRAR_D4(v2i64, __VA_ARGS__)
+#define SRAR_D4_UD(...) SRAR_D4(v2u64, __VA_ARGS__)
 
 /* Description : Addition of 2 pairs of half-word vectors
  * Arguments   : Inputs  - in0, in1, in2, in3
@@ -1032,6 +1144,20 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
 #define SUB2(in0, in1, in2, in3, out0, out1) do {  \
   out0 = in0 - in1;                                \
   out1 = in2 - in3;                                \
+} while (0)
+
+#define SUB3(in0, in1, in2, in3, in4, in5, out0, out1, out2) do {  \
+  out0 = in0 - in1;                                                \
+  out1 = in2 - in3;                                                \
+  out2 = in4 - in5;                                                \
+} while (0)
+
+#define SUB4(in0, in1, in2, in3, in4, in5, in6, in7,  \
+             out0, out1, out2, out3) do {             \
+  out0 = in0 - in1;                                   \
+  out1 = in2 - in3;                                   \
+  out2 = in4 - in5;                                   \
+  out3 = in6 - in7;                                   \
 } while (0)
 
 /* Description : Addition - Subtraction of input vectors
