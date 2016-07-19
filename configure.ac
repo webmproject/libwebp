@@ -675,10 +675,10 @@ AC_CONFIG_FILES([Makefile src/Makefile man/Makefile \
                  examples/Makefile src/dec/Makefile \
                  src/enc/Makefile src/dsp/Makefile \
                  src/demux/Makefile src/mux/Makefile \
-                 src/utils/Makefile src/extras/Makefile \
+                 src/utils/Makefile extras/Makefile \
                  src/libwebp.pc src/libwebpdecoder.pc \
                  src/demux/libwebpdemux.pc src/mux/libwebpmux.pc \
-                 src/extras/libwebpextras.pc])
+                 extras/libwebpextras.pc])
 
 
 AC_OUTPUT

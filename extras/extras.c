@@ -10,7 +10,7 @@
 //  Additional WebP utilities.
 //
 
-#include "../webp/extras.h"
+#include "webp/extras.h"
 
 #include <string.h>
 
