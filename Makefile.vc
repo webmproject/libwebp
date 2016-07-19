@@ -82,6 +82,7 @@ OUTPUT_DIRS = $(DIRBIN) $(DIRINC) $(DIRLIB) \
               $(DIROBJ)\dsp \
               $(DIROBJ)\enc \
               $(DIROBJ)\examples \
+              $(DIROBJ)\imageio \
               $(DIROBJ)\mux \
               $(DIROBJ)\utils \
 
@@ -250,19 +251,19 @@ EX_ANIM_UTIL_OBJS = \
     $(DIROBJ)\examples\anim_util.obj \
 
 EX_FORMAT_DEC_OBJS = \
-    $(DIROBJ)\examples\image_dec.obj \
-    $(DIROBJ)\examples\jpegdec.obj \
-    $(DIROBJ)\examples\metadata.obj \
-    $(DIROBJ)\examples\pngdec.obj \
-    $(DIROBJ)\examples\tiffdec.obj \
-    $(DIROBJ)\examples\webpdec.obj \
-    $(DIROBJ)\examples\wicdec.obj \
+    $(DIROBJ)\imageio\image_dec.obj \
+    $(DIROBJ)\imageio\jpegdec.obj \
+    $(DIROBJ)\imageio\metadata.obj \
+    $(DIROBJ)\imageio\pngdec.obj \
+    $(DIROBJ)\imageio\tiffdec.obj \
+    $(DIROBJ)\imageio\webpdec.obj \
+    $(DIROBJ)\imageio\wicdec.obj \
 
 EX_GIF_DEC_OBJS = \
     $(DIROBJ)\examples\gifdec.obj \
 
 EX_UTIL_OBJS = \
-    $(DIROBJ)\examples\example_util.obj \
+    $(DIROBJ)\imageio\example_util.obj \
 
 ENC_OBJS = \
     $(DIROBJ)\enc\alpha.obj \

@@ -36,7 +36,7 @@
 #include "webp/decode.h"
 #include "webp/demux.h"
 
-#include "./example_util.h"
+#include "../imageio/example_util.h"
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
