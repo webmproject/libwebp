@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a3d5fbd_da9f92a6",
+        "filename": "extras/extras.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-07-19T22:25:53Z",
+      "side": 1,
+      "message": "depends on how we want to view this lib, we could also do a top-level ./src/webp/... which might also push a revisit to changing the internal includes:\n#include \"../...\" -\u003e #include \"src/...\"",
+      "revId": "7babdb832961dc46d4b694bf8e0ee88dbb5d8c7e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
