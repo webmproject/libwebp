@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a3d5fbd_4434ee01",
+        "filename": "src/dsp/msa_macro.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-07-19T15:53:21Z",
+      "side": 1,
+      "message": "note that these could be condensed to reduce text size, for instance using:\n\nSW4(...) {\n  SW2( ... );\n  pdst +\u003d 2 * stride;\n  SW2( ... );\n}\n\nand similar. This file is growing large...",
+      "range": {
+        "startLine": 161,
+        "startChar": 17,
+        "endLine": 161,
+        "endChar": 18
+      },
+      "revId": "4a5f3f7df9ab7801cfbffb98f918e34aa5555f1d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a3d5fbd_6426d2d3",
+        "filename": "src/dsp/rescaler_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-07-19T15:53:21Z",
+      "side": 1,
+      "message": "system includes usually come first",
+      "range": {
+        "startLine": 20,
+        "startChar": 10,
+        "endLine": 20,
+        "endChar": 16
+      },
+      "revId": "4a5f3f7df9ab7801cfbffb98f918e34aa5555f1d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
