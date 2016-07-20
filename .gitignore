@@ -34,3 +34,5 @@ src/webp/stamp-h1
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
+.gradle
+/build
