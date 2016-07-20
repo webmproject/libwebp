@@ -22,6 +22,30 @@
       "revId": "1ad2fb2a26989c3ce6dc96b8a970229fd65a832e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a3d5fbd_b0406d3b",
+        "filename": "extras/Makefile.am",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-07-20T00:22:07Z",
+      "side": 1,
+      "message": "the recommendation is to reference all headers in this way. ones that aren\u0027t part of the lib itself are usually here not _SOURCES\n\nhttps://www.gnu.org/software/automake/manual/automake.html#Headers\n\nthough I guess with this change extras.h could be in sources",
+      "parentUuid": "2a3d5fbd_0da5e6b1",
+      "range": {
+        "startLine": 9,
+        "startChar": 30,
+        "endLine": 9,
+        "endChar": 35
+      },
+      "revId": "1ad2fb2a26989c3ce6dc96b8a970229fd65a832e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
