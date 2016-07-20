@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a3d5fbd_01becda8",
+        "filename": "imageio/example_util.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-07-20T14:02:50Z",
+      "side": 1,
+      "message": "this dependency of imageio/ to examples/ is a bit weird, but fortunately it\u0027s only a .h",
+      "range": {
+        "startLine": 24,
+        "startChar": 33,
+        "endLine": 24,
+        "endChar": 34
+      },
+      "revId": "c379b55a93fa519880991c839f7f79bdbb9e7532",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
