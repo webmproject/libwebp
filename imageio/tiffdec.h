@@ -7,10 +7,10 @@
 // be found in the AUTHORS file in the root of the source tree.
 // -----------------------------------------------------------------------------
 //
-// PNG decode.
+// TIFF decode.
 
-#ifndef WEBP_EXAMPLES_PNGDEC_H_
-#define WEBP_EXAMPLES_PNGDEC_H_
+#ifndef WEBP_IMAGEIO_TIFFDEC_H_
+#define WEBP_IMAGEIO_TIFFDEC_H_
 
 #include "webp/types.h"
 
@@ -21,17 +21,17 @@ extern "C" {
 struct Metadata;
 struct WebPPicture;
 
-// Reads a PNG from 'data', returning the decoded output in 'pic'.
+// Reads a TIFF from 'data', returning the decoded output in 'pic'.
 // Output is RGBA or YUVA, depending on pic->use_argb value.
-// If 'keep_alpha' is true and the PNG has an alpha channel, the output is RGBA
+// If 'keep_alpha' is true and the TIFF has an alpha channel, the output is RGBA
 // or YUVA. Otherwise, alpha channel is dropped and output is RGB or YUV.
 // Returns true on success.
-int ReadPNG(const uint8_t* const data, size_t data_size,
-            struct WebPPicture* const pic,
-            int keep_alpha, struct Metadata* const metadata);
+int ReadTIFF(const uint8_t* const data, size_t data_size,
+             struct WebPPicture* const pic, int keep_alpha,
+             struct Metadata* const metadata);
 
 #ifdef __cplusplus
 }    // extern "C"
 #endif
 
-#endif  // WEBP_EXAMPLES_PNGDEC_H_
+#endif  // WEBP_IMAGEIO_TIFFDEC_H_

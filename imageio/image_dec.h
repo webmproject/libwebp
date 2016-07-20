@@ -11,8 +11,8 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#ifndef WEBP_EXAMPLES_IMAGE_DEC_H_
-#define WEBP_EXAMPLES_IMAGE_DEC_H_
+#ifndef WEBP_IMAGEIO_IMAGE_DEC_H_
+#define WEBP_IMAGEIO_IMAGE_DEC_H_
 
 #include "webp/types.h"
 
@@ -58,4 +58,4 @@ WebPImageReader WebPGuessImageReader(const uint8_t* const data,
 }    // extern "C"
 #endif
 
-#endif  // WEBP_EXAMPLES_IMAGE_DEC_H_
+#endif  // WEBP_IMAGEIO_IMAGE_DEC_H_

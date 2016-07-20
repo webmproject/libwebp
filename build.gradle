@@ -248,14 +248,14 @@ model {
       sources {
         c {
           source {
-            srcDir "./examples"
+            srcDir "./imageio"
             include "example_util.c"
           }
         }
       }
     }
 
-    example_dec(NativeLibrarySpec) {
+    imagedec(NativeLibrarySpec) {
       binaries {
         all {
           lib library: "webp", linkage: "static"
@@ -264,7 +264,7 @@ model {
       sources {
         c {
           source {
-            srcDir "./examples"
+            srcDir "./imageio"
             include "image_dec.c"
             include "jpegdec.c"
             include "metadata.c"
@@ -279,7 +279,7 @@ model {
       binaries {
         all {
           lib library: "example_util", linkage: "static"
-          lib library: "example_dec", linkage: "static"
+          lib library: "imagedec", linkage: "static"
           lib library: "webp", linkage: "static"
         }
       }

@@ -26,7 +26,7 @@
 #include <gif_lib.h>
 #include "webp/encode.h"
 #include "webp/mux.h"
-#include "./example_util.h"
+#include "../imageio/example_util.h"
 #include "./gifdec.h"
 
 //------------------------------------------------------------------------------

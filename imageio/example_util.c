@@ -21,7 +21,7 @@
 #include <string.h>
 
 #include "webp/decode.h"
-#include "./stopwatch.h"
+#include "../examples/stopwatch.h"
 
 //------------------------------------------------------------------------------
 // String parsing
