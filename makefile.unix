@@ -310,7 +310,7 @@ OUT_LIBS = imageio/libexample_util.a src/libwebpdecoder.a src/libwebp.a
 EXTRA_LIB = extras/libwebpextras.a
 OUT_EXAMPLES = examples/cwebp examples/dwebp
 EXTRA_EXAMPLES = examples/gif2webp examples/vwebp examples/webpmux \
-                 examples/anim_diff
+                 examples/anim_diff extras/get_disto
 
 OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES)
 ifeq ($(MAKECMDGOALS),clean)
@@ -376,6 +376,10 @@ examples/vwebp: EXTRA_LIBS += $(GL_LIBS)
 examples/vwebp: EXTRA_FLAGS += -DWEBP_HAVE_GL
 examples/webpmux: imageio/libexample_util.a src/mux/libwebpmux.a
 examples/webpmux: src/libwebpdecoder.a
+
+extras/get_disto: extras/get_disto.o
+extras/get_disto: imageio/libexample_util.a examples/libexample_dec.a
+extras/get_disto: src/libwebp.a $(CWEBP_LIBS)
 
 $(OUT_EXAMPLES) $(EXTRA_EXAMPLES):
 	$(CC) -o $@ $^ $(LDFLAGS)
