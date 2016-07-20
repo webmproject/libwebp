@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0aa6dbc3_cf2cdd9f",
+        "filename": "extras/get_disto.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-07-20T23:42:21Z",
+      "side": 1,
+      "message": "hmm... makefile.unix doesn\u0027t have imagedec.a yet. It\u0027s still examples/libexample_dec.a\n\nDid i miss a patch?",
+      "parentUuid": "0aa6dbc3_af9cf904",
+      "range": {
+        "startLine": 15,
+        "startChar": 21,
+        "endLine": 15,
+        "endChar": 32
+      },
+      "revId": "55718afbede0edbf12f4e6e05fdf3d9aca173326",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0aa6dbc3_af631914",
         "filename": "extras/get_disto.c",
         "patchSetId": 3
@@ -36,6 +60,24 @@
       "writtenOn": "2016-07-20T23:31:44Z",
       "side": 1,
       "message": "request for help could exit with 0 status",
+      "revId": "55718afbede0edbf12f4e6e05fdf3d9aca173326",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0aa6dbc3_ef40c13c",
+        "filename": "extras/get_disto.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-07-20T23:42:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0aa6dbc3_af631914",
       "revId": "55718afbede0edbf12f4e6e05fdf3d9aca173326",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
