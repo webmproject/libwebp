@@ -252,6 +252,7 @@ UTILS_ENC_OBJS = \
 
 EXTRA_OBJS = \
     extras/extras.o \
+    extras/quality_estimate.o \
 
 LIBWEBPDECODER_OBJS = $(DEC_OBJS) $(DSP_DEC_OBJS) $(UTILS_DEC_OBJS)
 LIBWEBP_OBJS = $(LIBWEBPDECODER_OBJS) $(ENC_OBJS) $(DSP_ENC_OBJS) \
@@ -311,17 +312,18 @@ OUT_LIBS += src/libwebp.a
 EXTRA_LIB = extras/libwebpextras.a
 OUT_EXAMPLES = examples/cwebp examples/dwebp
 EXTRA_EXAMPLES = examples/gif2webp examples/vwebp examples/webpmux \
-                 examples/anim_diff extras/get_disto
+                 examples/anim_diff
+OTHER_EXAMPLES = extras/get_disto extras/webp_quality
 
 OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES)
 ifeq ($(MAKECMDGOALS),clean)
-  OUTPUT += $(EXTRA_EXAMPLES)
+  OUTPUT += $(EXTRA_EXAMPLES) $(OTHER_EXAMPLES)
   OUTPUT += src/demux/libwebpdemux.a src/mux/libwebpmux.a $(EXTRA_LIB)
   OUTPUT += examples/libgifdec.a examples/libanim_util.a
 endif
 
 ex: $(OUT_EXAMPLES)
-all: ex $(EXTRA_EXAMPLES)
+all: ex $(EXTRA_EXAMPLES) $(OTHER_EXAMPLES)
 extras: $(EXTRA_LIB)
 
 $(EX_FORMAT_DEC_OBJS): %.o: %.h
@@ -379,11 +381,18 @@ examples/webpmux: imageio/libexample_util.a src/mux/libwebpmux.a
 examples/webpmux: src/libwebpdecoder.a
 
 extras/get_disto: extras/get_disto.o
-extras/get_disto: imageio/libimagedec.a imageio/libexampledec.a
+extras/get_disto: imageio/libimagedec.a
 extras/get_disto: imageio/libexample_util.a
-extras/get_disto: src/libwebp.a $(CWEBP_LIBS)
+extras/get_disto: src/libwebp.a $(EXTRA_LIB)
+extras/get_disto: EXTRA_LIBS += $(CWEBP_LIBS)
 
-$(OUT_EXAMPLES) $(EXTRA_EXAMPLES):
+extras/webp_quality: extras/webp_quality.o
+extras/webp_quality: imageio/libimagedec.a
+extras/webp_quality: imageio/libexample_util.a
+extras/webp_quality: src/libwebp.a $(EXTRA_LIB)
+extras/get_disto: EXTRA_LIBS += $(CWEBP_LIBS)
+
+$(OUT_EXAMPLES) $(EXTRA_EXAMPLES) $(OTHER_EXAMPLES):
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 dist: DESTDIR := dist
