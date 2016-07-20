@@ -337,9 +337,9 @@ src/utils/bit_writer.o: src/utils/endian_inl.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 examples/libanim_util.a: $(ANIM_UTIL_OBJS)
-examples/libexample_dec.a: $(EX_FORMAT_DEC_OBJS)
 examples/libgifdec.a: $(GIFDEC_OBJS)
 extras/libwebpextras.a: $(LIBWEBPEXTRA_OBJS)
+imageio/libexample_dec.a: $(EX_FORMAT_DEC_OBJS)
 imageio/libexample_util.a: $(EX_UTIL_OBJS)
 src/libwebpdecoder.a: $(LIBWEBPDECODER_OBJS)
 src/libwebp.a: $(LIBWEBP_OBJS)
@@ -361,7 +361,7 @@ examples/anim_diff: src/demux/libwebpdemux.a imageio/libexample_util.a
 examples/anim_diff: src/libwebp.a
 examples/anim_diff: EXTRA_LIBS += $(GIF_LIBS)
 examples/anim_diff: EXTRA_FLAGS += -DWEBP_HAVE_GIF
-examples/cwebp: imageio/libexample_util.a examples/libexample_dec.a
+examples/cwebp: imageio/libexample_util.a imageio/libexample_dec.a
 examples/cwebp: src/libwebp.a
 examples/cwebp: EXTRA_LIBS += $(CWEBP_LIBS)
 examples/dwebp: imageio/libexample_util.a src/libwebpdecoder.a
