@@ -24,7 +24,6 @@
 #include <string.h>
 
 #include "webp/encode.h"
-#include "./example_util.h"
 #include "./metadata.h"
 
 static void PNGAPI error_function(png_structp png, png_const_charp error) {
