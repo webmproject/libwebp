@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a04534d_b4e70eda",
+        "filename": "makefile.unix",
+        "patchSetId": 1
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-07-20T18:22:01Z",
+      "side": 1,
+      "message": "oops. sorry about that, not sure why it passed. I renamed this to imagedec elsewhere",
+      "revId": "ed34c39bfcf38cd5972634beab21392454212b5f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
