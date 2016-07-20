@@ -8,8 +8,8 @@
 // -----------------------------------------------------------------------------
 //
 
-#ifndef WEBP_WEBP_EXTRAS_H_
-#define WEBP_WEBP_EXTRAS_H_
+#ifndef WEBP_EXTRAS_EXTRAS_H_
+#define WEBP_EXTRAS_EXTRAS_H_
 
 #include "webp/types.h"
 
@@ -48,4 +48,4 @@ WEBP_EXTERN(int) WebPImportRGB4444(const uint8_t* rgb4444, WebPPicture* pic);
 }    // extern "C"
 #endif
 
-#endif  /* WEBP_WEBP_EXTRAS_H_ */
+#endif  /* WEBP_EXTRAS_EXTRAS_H_ */
