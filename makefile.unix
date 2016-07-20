@@ -252,6 +252,7 @@ UTILS_ENC_OBJS = \
 
 EXTRA_OBJS = \
     extras/extras.o \
+    extras/quality_estimate.o \
 
 LIBWEBPDECODER_OBJS = $(DEC_OBJS) $(DSP_DEC_OBJS) $(UTILS_DEC_OBJS)
 LIBWEBP_OBJS = $(LIBWEBPDECODER_OBJS) $(ENC_OBJS) $(DSP_ENC_OBJS) \
@@ -322,7 +323,7 @@ endif
 
 ex: $(OUT_EXAMPLES)
 all: ex $(EXTRA_EXAMPLES)
-extras: $(EXTRA_LIB)
+extras: $(EXTRA_LIB) extras/webp_quality
 
 $(EX_FORMAT_DEC_OBJS): %.o: %.h
 
@@ -377,6 +378,11 @@ examples/vwebp: EXTRA_LIBS += $(GL_LIBS)
 examples/vwebp: EXTRA_FLAGS += -DWEBP_HAVE_GL
 examples/webpmux: imageio/libexample_util.a src/mux/libwebpmux.a
 examples/webpmux: src/libwebpdecoder.a
+
+extras/webp_quality: extras/webp_quality.o
+extras/webp_quality: imageio/libexample_util.a
+extras/webp_quality: imageio/libexample_dec.a
+extras/webp_quality: $(CWEBP_LIBS) $(EXTRA_LIB)
 
 $(OUT_EXAMPLES) $(EXTRA_EXAMPLES):
 	$(CC) -o $@ $^ $(LDFLAGS)
