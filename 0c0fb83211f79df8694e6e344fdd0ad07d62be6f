@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a3d5fbd_66bb6fdc",
+        "filename": "src/enc/token.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-07-20T13:07:38Z",
+      "side": 1,
+      "message": "note that this could simply be \u0027return VP8RecordStats(bit, stats);\u0027\n\nBut the compiler probably saw this...",
+      "range": {
+        "startLine": 99,
+        "startChar": 2,
+        "endLine": 99,
+        "endChar": 16
+      },
+      "revId": "0c0fb83211f79df8694e6e344fdd0ad07d62be6f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
