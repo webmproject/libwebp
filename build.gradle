@@ -140,6 +140,7 @@ model {
             include "rescaler_sse2.c"
             include "upsampling.c"
             include "upsampling_mips_dsp_r2.c"
+            include "upsampling_msa.c"
             include "upsampling_neon.$NEON"
             include "upsampling_sse2.c"
             include "yuv.c"
