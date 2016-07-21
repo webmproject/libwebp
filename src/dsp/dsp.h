@@ -163,10 +163,16 @@ WEBP_EXTERN(VP8CPUInfo) VP8GetCPUInfo;
 typedef void (*VP8Idct)(const uint8_t* ref, const int16_t* in, uint8_t* dst,
                         int do_two);
 typedef void (*VP8Fdct)(const uint8_t* src, const uint8_t* ref, int16_t* out);
+typedef void (*VP8FHT)(const uint8_t* src, const uint8_t* ref, int16_t* out,
+                       int type);
+typedef void (*VP8IHT)(const uint8_t* ref, const int16_t* in, uint8_t* dst,
+                       int type);
 typedef void (*VP8WHT)(const int16_t* in, int16_t* out);
 extern VP8Idct VP8ITransform;
 extern VP8Fdct VP8FTransform;
 extern VP8Fdct VP8FTransform2;   // performs two transforms at a time
+extern VP8FHT VP8FHybridTransform;
+extern VP8IHT VP8IHybridTransform;
 extern VP8WHT VP8FTransformWHT;
 // Predictions
 // *dst is the destination block. *top and *left can be NULL.
@@ -285,11 +291,13 @@ void VP8SSIMDspInit(void);
 typedef void (*VP8DecIdct)(const int16_t* coeffs, uint8_t* dst);
 // when doing two transforms, coeffs is actually int16_t[2][16].
 typedef void (*VP8DecIdct2)(const int16_t* coeffs, uint8_t* dst, int do_two);
+typedef void (*VP8DecIHT)(const int16_t* coeffs, uint8_t* dst, int type);
 extern VP8DecIdct2 VP8Transform;
 extern VP8DecIdct VP8TransformAC3;
 extern VP8DecIdct VP8TransformUV;
 extern VP8DecIdct VP8TransformDC;
 extern VP8DecIdct VP8TransformDCUV;
+extern VP8DecIHT VP8HybridTransform;
 extern VP8WHT VP8TransformWHT;
 
 // *dst is the destination block, with stride BPS. Boundary samples are

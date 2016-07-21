@@ -182,6 +182,200 @@ static void FTransform2(const uint8_t* src, const uint8_t* ref, int16_t* out) {
   VP8FTransform(src + 4, ref + 4, out + 16);
 }
 
+static const int32_t cospi_8_64 = 15137;
+static const int32_t cospi_16_64 = 11585;
+static const int32_t cospi_24_64 = 6270;
+static const int32_t sinpi_1_9 = 5283;
+static const int32_t sinpi_2_9 = 9929;
+static const int32_t sinpi_3_9 = 13377;
+static const int32_t sinpi_4_9 = 15212;
+
+#define TRANSFORM_SHIFT_BITS 14
+
+/* Shift down with rounding for use when n >= 0, value >= 0 */
+#define ROUND_POWER_OF_TWO(value, n) (((value) + (((1 << (n)) >> 1))) >> (n))
+
+static void FTransformDCT1D(const int16_t* input, int16_t* output) {
+  int32_t step[4];
+  int32_t temp1, temp2;
+
+  step[0] = input[0] + input[3];
+  step[1] = input[1] + input[2];
+  step[2] = input[1] - input[2];
+  step[3] = input[0] - input[3];
+
+  temp1 = (step[0] + step[1]) * cospi_16_64;
+  temp2 = (step[0] - step[1]) * cospi_16_64;
+  output[0] = (int16_t)ROUND_POWER_OF_TWO(temp1, TRANSFORM_SHIFT_BITS);
+  output[2] = (int16_t)ROUND_POWER_OF_TWO(temp2, TRANSFORM_SHIFT_BITS);
+  temp1 = step[2] * cospi_24_64 + step[3] * cospi_8_64;
+  temp2 = -step[2] * cospi_8_64 + step[3] * cospi_24_64;
+  output[1] = (int16_t)ROUND_POWER_OF_TWO(temp1, TRANSFORM_SHIFT_BITS);
+  output[3] = (int16_t)ROUND_POWER_OF_TWO(temp2, TRANSFORM_SHIFT_BITS);
+}
+
+static void FTransformADST1D(const int16_t* input, int16_t* output) {
+  int32_t x0, x1, x2, x3;
+  int32_t s0, s1, s2, s3, s4, s5, s6, s7;
+
+  x0 = input[0];
+  x1 = input[1];
+  x2 = input[2];
+  x3 = input[3];
+
+  if (!(x0 | x1 | x2 | x3)) {
+    output[0] = output[1] = output[2] = output[3] = 0;
+    return;
+  }
+
+  s0 = sinpi_1_9 * x0;
+  s1 = sinpi_4_9 * x0;
+  s2 = sinpi_2_9 * x1;
+  s3 = sinpi_1_9 * x1;
+  s4 = sinpi_3_9 * x2;
+  s5 = sinpi_4_9 * x3;
+  s6 = sinpi_2_9 * x3;
+  s7 = x0 + x1 - x3;
+
+  x0 = s0 + s2 + s5;
+  x1 = sinpi_3_9 * s7;
+  x2 = s1 - s3 + s6;
+  x3 = s4;
+
+  s0 = x0 + x3;
+  s1 = x1;
+  s2 = x2 - x3;
+  s3 = x2 - x0 + x3;
+
+  output[0] = (int16_t)ROUND_POWER_OF_TWO(s0, TRANSFORM_SHIFT_BITS);
+  output[1] = (int16_t)ROUND_POWER_OF_TWO(s1, TRANSFORM_SHIFT_BITS);
+  output[2] = (int16_t)ROUND_POWER_OF_TWO(s2, TRANSFORM_SHIFT_BITS);
+  output[3] = (int16_t)ROUND_POWER_OF_TWO(s3, TRANSFORM_SHIFT_BITS);
+}
+
+typedef void (*transform_1d)(const int16_t*, int16_t*);
+
+typedef struct {
+  transform_1d cols, rows;  // vertical and horizontal
+} transform_2d;
+
+static const transform_2d FHybridTransformTable[] = {
+    {FTransformDCT1D, FTransformDCT1D},   // DCT_DCT  = 0
+    {FTransformADST1D, FTransformDCT1D},  // ADST_DCT = 1
+    {FTransformDCT1D, FTransformADST1D},  // DCT_ADST = 2
+    {FTransformADST1D, FTransformADST1D}  // ADST_ADST = 3
+};
+
+static void FHybridTransform(const uint8_t* src, const uint8_t* ref,
+                             int16_t* output, int type) {
+  int i, j;
+  int16_t out[4 * 4], temp_in[4], temp_out[4];
+  assert(type >= 0 && type < TRANS_TYPES);
+  // Transform columns.
+  for (i = 0; i < 4; ++i) {
+    for (j = 0; j < 4; ++j) {
+      temp_in[j] = (src[j * BPS + i] - ref[j * BPS + i]) * 8;
+    }
+    if (i == 0 && temp_in[0]) temp_in[0] += 1;
+    FHybridTransformTable[type].cols(temp_in, temp_out);
+    for (j = 0; j < 4; ++j) {
+      out[j * 4 + i] = temp_out[j];
+    }
+  }
+  // Transform rows.
+  for (i = 0; i < 4; ++i) {
+    for (j = 0; j < 4; ++j) {
+      temp_in[j] = out[j + i * 4];
+    }
+    FHybridTransformTable[type].rows(temp_in, temp_out);
+    for (j = 0; j < 4; ++j) {
+      output[j + i * 4] = ROUND_POWER_OF_TWO(temp_out[j], 3);
+    }
+  }
+}
+
+static void ITransformDCT1D(const int16_t* input, int16_t* output) {
+  int16_t step[4];
+  int32_t temp1, temp2;
+
+  temp1 = (input[0] + input[2]) * cospi_16_64;
+  temp2 = (input[0] - input[2]) * cospi_16_64;
+  step[0] = (int16_t)ROUND_POWER_OF_TWO(temp1, TRANSFORM_SHIFT_BITS);
+  step[1] = (int16_t)ROUND_POWER_OF_TWO(temp2, TRANSFORM_SHIFT_BITS);
+  temp1 = input[1] * cospi_24_64 - input[3] * cospi_8_64;
+  temp2 = input[1] * cospi_8_64 + input[3] * cospi_24_64;
+  step[2] = (int16_t)ROUND_POWER_OF_TWO(temp1, TRANSFORM_SHIFT_BITS);
+  step[3] = (int16_t)ROUND_POWER_OF_TWO(temp2, TRANSFORM_SHIFT_BITS);
+
+  output[0] = step[0] + step[3];
+  output[1] = step[1] + step[2];
+  output[2] = step[1] - step[2];
+  output[3] = step[0] - step[3];
+}
+
+static void ITransformADST1D(const int16_t* input, int16_t* output) {
+  int32_t s0, s1, s2, s3, s4, s5, s6, s7;
+  int16_t x0 = input[0];
+  int16_t x1 = input[1];
+  int16_t x2 = input[2];
+  int16_t x3 = input[3];
+
+  if (!(x0 | x1 | x2 | x3)) {
+    output[0] = output[1] = output[2] = output[3] = 0;
+    return;
+  }
+
+  s0 = sinpi_1_9 * x0;
+  s1 = sinpi_2_9 * x0;
+  s2 = sinpi_3_9 * x1;
+  s3 = sinpi_4_9 * x2;
+  s4 = sinpi_1_9 * x2;
+  s5 = sinpi_2_9 * x3;
+  s6 = sinpi_4_9 * x3;
+  s7 = x0 - x2 + x3;
+
+  s0 = s0 + s3 + s5;
+  s1 = s1 - s4 - s6;
+  s3 = s2;
+  s2 = sinpi_3_9 * s7;
+
+  output[0] = (int16_t)ROUND_POWER_OF_TWO(s0 + s3, TRANSFORM_SHIFT_BITS);
+  output[1] = (int16_t)ROUND_POWER_OF_TWO(s1 + s3, TRANSFORM_SHIFT_BITS);
+  output[2] = (int16_t)ROUND_POWER_OF_TWO(s2, TRANSFORM_SHIFT_BITS);
+  output[3] = (int16_t)ROUND_POWER_OF_TWO(s0 + s1 - s3, TRANSFORM_SHIFT_BITS);
+}
+
+static const transform_2d IHybridTransformTable[] = {
+    {ITransformDCT1D, ITransformDCT1D},   // DCT_DCT  = 0
+    {ITransformADST1D, ITransformDCT1D},  // ADST_DCT = 1
+    {ITransformDCT1D, ITransformADST1D},  // DCT_ADST = 2
+    {ITransformADST1D, ITransformADST1D}  // ADST_ADST = 3
+};
+
+static void IHybridTransform(const uint8_t* ref, const int16_t* in,
+                             uint8_t* dst, int type) {
+  int i, j;
+  int16_t out[4 * 4];
+  int16_t* outptr = out;
+  int16_t temp_in[4], temp_out[4];
+  assert(type >= 0 && type < TRANS_TYPES);
+  // Inverse transform row vectors.
+  for (i = 0; i < 4; ++i) {
+    IHybridTransformTable[type].rows(in, outptr);
+    in += 4;
+    outptr += 4;
+  }
+  // Inverse transform column vectors.
+  for (i = 0; i < 4; ++i) {
+    for (j = 0; j < 4; ++j) temp_in[j] = out[j * 4 + i];
+    IHybridTransformTable[type].cols(temp_in, temp_out);
+    for (j = 0; j < 4; ++j) {
+      dst[j * BPS + i] =
+          clip_8b(ref[j * BPS + i] + ROUND_POWER_OF_TWO(temp_out[j], 2));
+    }
+  }
+}
+
 static void FTransformWHT(const int16_t* in, int16_t* out) {
   // input is 12b signed
   int32_t tmp[16];
@@ -761,6 +955,8 @@ VP8CHisto VP8CollectHistogram;
 VP8Idct VP8ITransform;
 VP8Fdct VP8FTransform;
 VP8Fdct VP8FTransform2;
+VP8FHT VP8FHybridTransform;
+VP8IHT VP8IHybridTransform;
 VP8WHT VP8FTransformWHT;
 VP8Intra4Preds VP8EncPredLuma4;
 VP8IntraPreds VP8EncPredLuma16;
@@ -800,6 +996,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
   VP8ITransform = ITransform;
   VP8FTransform = FTransform;
   VP8FTransform2 = FTransform2;
+  VP8FHybridTransform = FHybridTransform;
+  VP8IHybridTransform = IHybridTransform;
   VP8FTransformWHT = FTransformWHT;
   VP8EncPredLuma4 = Intra4Preds;
   VP8EncPredLuma16 = Intra16Preds;

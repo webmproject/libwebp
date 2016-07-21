@@ -122,6 +122,106 @@ static void TransformDCUV(const int16_t* in, uint8_t* dst) {
   if (in[3 * 16]) VP8TransformDC(in + 3 * 16, dst + 4 * BPS + 4);
 }
 
+static const int32_t cospi_8_64 = 15137;
+static const int32_t cospi_16_64 = 11585;
+static const int32_t cospi_24_64 = 6270;
+static const int32_t sinpi_1_9 = 5283;
+static const int32_t sinpi_2_9 = 9929;
+static const int32_t sinpi_3_9 = 13377;
+static const int32_t sinpi_4_9 = 15212;
+
+#define TRANSFORM_SHIFT_BITS 14
+
+/* Shift down with rounding for use when n >= 0, value >= 0 */
+#define ROUND_POWER_OF_TWO(value, n) (((value) + (((1 << (n)) >> 1))) >> (n))
+
+static void TransformDCT1D(const int16_t* input, int16_t* output) {
+  int16_t step[4];
+  int32_t temp1, temp2;
+
+  temp1 = (input[0] + input[2]) * cospi_16_64;
+  temp2 = (input[0] - input[2]) * cospi_16_64;
+  step[0] = (int16_t)ROUND_POWER_OF_TWO(temp1, TRANSFORM_SHIFT_BITS);
+  step[1] = (int16_t)ROUND_POWER_OF_TWO(temp2, TRANSFORM_SHIFT_BITS);
+  temp1 = input[1] * cospi_24_64 - input[3] * cospi_8_64;
+  temp2 = input[1] * cospi_8_64 + input[3] * cospi_24_64;
+  step[2] = (int16_t)ROUND_POWER_OF_TWO(temp1, TRANSFORM_SHIFT_BITS);
+  step[3] = (int16_t)ROUND_POWER_OF_TWO(temp2, TRANSFORM_SHIFT_BITS);
+
+  output[0] = step[0] + step[3];
+  output[1] = step[1] + step[2];
+  output[2] = step[1] - step[2];
+  output[3] = step[0] - step[3];
+}
+
+static void TransformADST1D(const int16_t* input, int16_t* output) {
+  int32_t s0, s1, s2, s3, s4, s5, s6, s7;
+  int16_t x0 = input[0];
+  int16_t x1 = input[1];
+  int16_t x2 = input[2];
+  int16_t x3 = input[3];
+
+  if (!(x0 | x1 | x2 | x3)) {
+    output[0] = output[1] = output[2] = output[3] = 0;
+    return;
+  }
+
+  s0 = sinpi_1_9 * x0;
+  s1 = sinpi_2_9 * x0;
+  s2 = sinpi_3_9 * x1;
+  s3 = sinpi_4_9 * x2;
+  s4 = sinpi_1_9 * x2;
+  s5 = sinpi_2_9 * x3;
+  s6 = sinpi_4_9 * x3;
+  s7 = x0 - x2 + x3;
+
+  s0 = s0 + s3 + s5;
+  s1 = s1 - s4 - s6;
+  s3 = s2;
+  s2 = sinpi_3_9 * s7;
+
+  output[0] = (int16_t)ROUND_POWER_OF_TWO(s0 + s3, TRANSFORM_SHIFT_BITS);
+  output[1] = (int16_t)ROUND_POWER_OF_TWO(s1 + s3, TRANSFORM_SHIFT_BITS);
+  output[2] = (int16_t)ROUND_POWER_OF_TWO(s2, TRANSFORM_SHIFT_BITS);
+  output[3] = (int16_t)ROUND_POWER_OF_TWO(s0 + s1 - s3, TRANSFORM_SHIFT_BITS);
+}
+
+typedef void (*transform_1d)(const int16_t*, int16_t*);
+
+typedef struct {
+  transform_1d cols, rows;  // vertical and horizontal
+} transform_2d;
+
+static const transform_2d HybridTransformTable[] = {
+    {TransformDCT1D, TransformDCT1D},   // DCT_DCT  = 0
+    {TransformADST1D, TransformDCT1D},  // ADST_DCT = 1
+    {TransformDCT1D, TransformADST1D},  // DCT_ADST = 2
+    {TransformADST1D, TransformADST1D}  // ADST_ADST = 3
+};
+
+static void HybridTransform(const int16_t* in, uint8_t* dst, int type) {
+  int i, j;
+  int16_t out[4 * 4];
+  int16_t* outptr = out;
+  int16_t temp_in[4], temp_out[4];
+  assert(type >= 0 && type < TRANS_TYPES);
+  // Inverse transform row vectors.
+  for (i = 0; i < 4; ++i) {
+    HybridTransformTable[type].rows(in, outptr);
+    in += 4;
+    outptr += 4;
+  }
+  // Inverse transform column vectors.
+  for (i = 0; i < 4; ++i) {
+    for (j = 0; j < 4; ++j) temp_in[j] = out[j * 4 + i];
+    HybridTransformTable[type].cols(temp_in, temp_out);
+    for (j = 0; j < 4; ++j) {
+      dst[j * BPS + i] =
+          clip_8b(dst[j * BPS + i] + ROUND_POWER_OF_TWO(temp_out[j], 2));
+    }
+  }
+}
+
 #undef STORE
 
 //------------------------------------------------------------------------------
@@ -677,6 +777,7 @@ VP8DecIdct VP8TransformAC3;
 VP8DecIdct VP8TransformUV;
 VP8DecIdct VP8TransformDC;
 VP8DecIdct VP8TransformDCUV;
+VP8DecIHT VP8HybridTransform;
 
 VP8LumaFilterFunc VP8VFilter16;
 VP8LumaFilterFunc VP8HFilter16;
@@ -715,6 +816,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInit(void) {
   VP8TransformDC = TransformDC;
   VP8TransformDCUV = TransformDCUV;
   VP8TransformAC3 = TransformAC3;
+  VP8HybridTransform = HybridTransform;
 
   VP8VFilter16 = VFilter16;
   VP8HFilter16 = HFilter16;

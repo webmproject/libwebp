@@ -814,7 +814,11 @@ static int ReconstructIntra4(VP8EncIterator* const it,
   int nz = 0;
   int16_t tmp[16];
 
+#if defined(USE_ADST)
+  VP8FHybridTransform(src, ref, tmp, ModeToTransType[mode]);
+#else
   VP8FTransform(src, ref, tmp);
+#endif
   if (DO_TRELLIS_I4 && it->do_trellis_) {
     const int x = it->i4_ & 3, y = it->i4_ >> 2;
     const int ctx = it->top_nz_[x] + it->left_nz_[y];
@@ -823,7 +827,11 @@ static int ReconstructIntra4(VP8EncIterator* const it,
   } else {
     nz = VP8EncQuantizeBlock(tmp, levels, &dqm->y1_);
   }
+#if defined(USE_ADST)
+  VP8IHybridTransform(ref, tmp, yuv_out, ModeToTransType[mode]);
+#else
   VP8ITransform(ref, tmp, yuv_out, 0);
+#endif
   return nz;
 }
 

@@ -14,6 +14,28 @@
 #ifndef WEBP_DEC_COMMON_H_
 #define WEBP_DEC_COMMON_H_
 
+#define USE_ADST 1
+
+enum { DCT_DCT   = 0,  // DCT  in both horizontal and vertical
+       ADST_DCT  = 1,  // ADST in vertical, DCT in horizontal
+       DCT_ADST  = 2,  // DCT  in vertical, ADST in horizontal
+       ADST_ADST = 3,  // ADST in both directions
+       TRANS_TYPES = 4
+     };
+
+static const int ModeToTransType[] = {
+    DCT_DCT,    // B_DC_PRED = 0,
+    ADST_ADST,  // B_TM_PRED = 1,
+    ADST_DCT,   // B_VE_PRED = 2,
+    DCT_ADST,   // B_HE_PRED = 3,
+    ADST_ADST,  // B_RD_PRED = 4,
+    DCT_ADST,   // B_VR_PRED = 5,
+    DCT_DCT,    // B_LD_PRED = 6,
+    DCT_DCT,    // B_VL_PRED = 7,
+    ADST_DCT,   // B_HD_PRED = 8,
+    ADST_DCT,   // B_HU_PRED = 9,
+};
+
 // intra prediction modes
 enum { B_DC_PRED = 0,   // 4x4 modes
        B_TM_PRED = 1,

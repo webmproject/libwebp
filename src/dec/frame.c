@@ -144,7 +144,12 @@ static void ReconstructRow(const VP8Decoder* const dec,
         for (n = 0; n < 16; ++n, bits <<= 2) {
           uint8_t* const dst = y_dst + kScan[n];
           VP8PredLuma4[block->imodes_[n]](dst);
+#if defined(USE_ADST)
+          VP8HybridTransform(coeffs + n * 16, dst,
+                             ModeToTransType[block->imodes_[n]]);
+#else
           DoTransform(bits, coeffs + n * 16, dst);
+#endif
         }
       } else {    // 16x16
         const int pred_func = CheckMode(mb_x, mb_y, block->imodes_[0]);
