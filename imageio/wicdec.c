@@ -88,7 +88,7 @@ static HRESULT OpenInputStream(const char* filename, IStream** stream) {
   if (!strcmp(filename, "-")) {
     const uint8_t* data = NULL;
     size_t data_size = 0;
-    const int ok = ExUtilReadFile(filename, &data, &data_size);
+    const int ok = ImgIoUtilReadFile(filename, &data, &data_size);
     if (ok) {
       HGLOBAL image = GlobalAlloc(GMEM_MOVEABLE, data_size);
       if (image != NULL) {

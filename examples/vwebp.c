@@ -469,8 +469,8 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
-  if (!ExUtilReadFile(kParams.file_name,
-                      &kParams.data.bytes, &kParams.data.size)) {
+  if (!ImgIoUtilReadFile(kParams.file_name,
+                         &kParams.data.bytes, &kParams.data.size)) {
     goto Error;
   }
 

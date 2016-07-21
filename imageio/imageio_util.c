@@ -25,7 +25,7 @@
 // -----------------------------------------------------------------------------
 // File I/O
 
-FILE* ExUtilSetBinaryMode(FILE* file) {
+FILE* ImgIoUtilSetBinaryMode(FILE* file) {
 #if defined(_WIN32)
   if (_setmode(_fileno(file), _O_BINARY) == -1) {
     fprintf(stderr, "Failed to reopen file in O_BINARY mode.\n");
@@ -35,7 +35,7 @@ FILE* ExUtilSetBinaryMode(FILE* file) {
   return file;
 }
 
-int ExUtilReadFromStdin(const uint8_t** data, size_t* data_size) {
+int ImgIoUtilReadFromStdin(const uint8_t** data, size_t* data_size) {
   static const size_t kBlockSize = 16384;  // default initial size
   size_t max_size = 0;
   size_t size = 0;
@@ -45,7 +45,7 @@ int ExUtilReadFromStdin(const uint8_t** data, size_t* data_size) {
   *data = NULL;
   *data_size = 0;
 
-  if (!ExUtilSetBinaryMode(stdin)) return 0;
+  if (!ImgIoUtilSetBinaryMode(stdin)) return 0;
 
   while (!feof(stdin)) {
     // We double the buffer size each time and read as much as possible.
@@ -68,15 +68,15 @@ int ExUtilReadFromStdin(const uint8_t** data, size_t* data_size) {
   return 0;
 }
 
-int ExUtilReadFile(const char* const file_name,
-                   const uint8_t** data, size_t* data_size) {
+int ImgIoUtilReadFile(const char* const file_name,
+                      const uint8_t** data, size_t* data_size) {
   int ok;
   void* file_data;
   size_t file_size;
   FILE* in;
   const int from_stdin = (file_name == NULL) || !strcmp(file_name, "-");
 
-  if (from_stdin) return ExUtilReadFromStdin(data, data_size);
+  if (from_stdin) return ImgIoUtilReadFromStdin(data, data_size);
 
   if (data == NULL || data_size == NULL) return 0;
   *data = NULL;
@@ -106,8 +106,8 @@ int ExUtilReadFile(const char* const file_name,
   return 1;
 }
 
-int ExUtilWriteFile(const char* const file_name,
-                    const uint8_t* data, size_t data_size) {
+int ImgIoUtilWriteFile(const char* const file_name,
+                       const uint8_t* data, size_t data_size) {
   int ok;
   FILE* out;
   const int to_stdout = (file_name == NULL) || !strcmp(file_name, "-");
@@ -127,8 +127,8 @@ int ExUtilWriteFile(const char* const file_name,
 
 // -----------------------------------------------------------------------------
 
-void ExUtilCopyPlane(const uint8_t* src, int src_stride,
-                     uint8_t* dst, int dst_stride, int width, int height) {
+void ImgIoUtilCopyPlane(const uint8_t* src, int src_stride,
+                        uint8_t* dst, int dst_stride, int width, int height) {
   while (height-- > 0) {
     memcpy(dst, src, width * sizeof(*dst));
     src += src_stride;

@@ -51,7 +51,7 @@ int ExUtilLoadWebP(const char* const in_file,
                    WebPBitstreamFeatures* bitstream) {
   VP8StatusCode status;
   WebPBitstreamFeatures local_features;
-  if (!ExUtilReadFile(in_file, data, data_size)) return 0;
+  if (!ImgIoUtilReadFile(in_file, data, data_size)) return 0;
 
   if (bitstream == NULL) {
     bitstream = &local_features;
@@ -184,15 +184,15 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
           const WebPYUVABuffer* const yuva = &output_buffer->u.YUVA;
           const int uv_width = (pic->width + 1) >> 1;
           const int uv_height = (pic->height + 1) >> 1;
-          ExUtilCopyPlane(yuva->y, yuva->y_stride,
-                          pic->y, pic->y_stride, pic->width, pic->height);
-          ExUtilCopyPlane(yuva->u, yuva->u_stride,
-                          pic->u, pic->uv_stride, uv_width, uv_height);
-          ExUtilCopyPlane(yuva->v, yuva->v_stride,
-                          pic->v, pic->uv_stride, uv_width, uv_height);
+          ImgIoUtilCopyPlane(yuva->y, yuva->y_stride,
+                             pic->y, pic->y_stride, pic->width, pic->height);
+          ImgIoUtilCopyPlane(yuva->u, yuva->u_stride,
+                             pic->u, pic->uv_stride, uv_width, uv_height);
+          ImgIoUtilCopyPlane(yuva->v, yuva->v_stride,
+                             pic->v, pic->uv_stride, uv_width, uv_height);
           if (has_alpha) {
-            ExUtilCopyPlane(yuva->a, yuva->a_stride,
-                            pic->a, pic->a_stride, pic->width, pic->height);
+            ImgIoUtilCopyPlane(yuva->a, yuva->a_stride,
+                               pic->a, pic->a_stride, pic->width, pic->height);
           }
         }
       }

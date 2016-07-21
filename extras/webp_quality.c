@@ -29,7 +29,7 @@ int main(int argc, const char *argv[]) {
       const uint8_t* data = NULL;
       size_t data_size = 0;
       int q;
-      const int ok = ExUtilReadFile(filename, &data, &data_size);
+      const int ok = ImgIoUtilReadFile(filename, &data, &data_size);
       if (!ok) continue;
       q = VP8EstimateQuality(data, data_size);
       if (!quiet) printf("[%s] ", filename);

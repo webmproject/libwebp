@@ -60,12 +60,12 @@ static int ReadYUV(const uint8_t* const data, size_t data_size,
 
   pic->use_argb = 0;
   if (!WebPPictureAlloc(pic)) return 0;
-  ExUtilCopyPlane(data, pic->width, pic->y, pic->y_stride,
-                  pic->width, pic->height);
-  ExUtilCopyPlane(data + y_plane_size, uv_width,
-                  pic->u, pic->uv_stride, uv_width, uv_height);
-  ExUtilCopyPlane(data + y_plane_size + uv_plane_size, uv_width,
-                  pic->v, pic->uv_stride, uv_width, uv_height);
+  ImgIoUtilCopyPlane(data, pic->width, pic->y, pic->y_stride,
+                     pic->width, pic->height);
+  ImgIoUtilCopyPlane(data + y_plane_size, uv_width,
+                     pic->u, pic->uv_stride, uv_width, uv_height);
+  ImgIoUtilCopyPlane(data + y_plane_size + uv_plane_size, uv_width,
+                     pic->v, pic->uv_stride, uv_width, uv_height);
   return use_argb ? WebPPictureYUVAToARGB(pic) : 1;
 }
 
@@ -77,13 +77,13 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
   const uint8_t* data = NULL;
   size_t data_size = 0;
   if (pic->width != 0 && pic->height != 0) {
-    ok = ExUtilReadFile(filename, &data, &data_size);
+    ok = ImgIoUtilReadFile(filename, &data, &data_size);
     ok = ok && ReadYUV(data, data_size, pic);
   } else {
     // If no size specified, try to decode it using WIC.
     ok = ReadPictureWithWIC(filename, pic, keep_alpha, metadata);
     if (!ok) {
-      ok = ExUtilReadFile(filename, &data, &data_size);
+      ok = ImgIoUtilReadFile(filename, &data, &data_size);
       ok = ok && ReadWebP(data, data_size, pic, keep_alpha, metadata);
     }
   }
@@ -102,7 +102,7 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
   size_t data_size = 0;
   int ok = 0;
 
-  ok = ExUtilReadFile(filename, &data, &data_size);
+  ok = ImgIoUtilReadFile(filename, &data, &data_size);
   if (!ok) goto End;
 
   if (pic->width == 0 || pic->height == 0) {
@@ -958,7 +958,7 @@ int main(int argc, const char *argv[]) {
   // Open the output
   if (out_file != NULL) {
     const int use_stdout = !strcmp(out_file, "-");
-    out = use_stdout ? ExUtilSetBinaryMode(stdout) : fopen(out_file, "wb");
+    out = use_stdout ? ImgIoUtilSetBinaryMode(stdout) : fopen(out_file, "wb");
     if (out == NULL) {
       fprintf(stderr, "Error! Cannot open output file '%s'\n", out_file);
       goto Error;
