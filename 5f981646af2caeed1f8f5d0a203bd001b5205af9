@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0aa6dbc3_03e95e7b",
+        "filename": "src/dsp/upsampling_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-07-21T14:47:31Z",
+      "side": 1,
+      "message": "this call is reading 16 values from y[]. Won\u0027t this produce uninitialized reads if length is  \u003c 16?",
+      "range": {
+        "startLine": 359,
+        "startChar": 4,
+        "endLine": 359,
+        "endChar": 14
+      },
+      "revId": "5f981646af2caeed1f8f5d0a203bd001b5205af9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0aa6dbc3_238582b2",
+        "filename": "src/dsp/upsampling_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-07-21T14:47:31Z",
+      "side": 1,
+      "message": "these memcpy() should have a \u0027 * sizeof(*dst)\u0027 appended to the third argument, for coherency...",
+      "range": {
+        "startLine": 361,
+        "startChar": 23,
+        "endLine": 361,
+        "endChar": 25
+      },
+      "revId": "5f981646af2caeed1f8f5d0a203bd001b5205af9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
