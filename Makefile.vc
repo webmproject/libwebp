@@ -263,7 +263,7 @@ EX_GIF_DEC_OBJS = \
     $(DIROBJ)\examples\gifdec.obj \
 
 EX_UTIL_OBJS = \
-    $(DIROBJ)\imageio\example_util.obj \
+    $(DIROBJ)\examples\example_util.obj \
 
 ENC_OBJS = \
     $(DIROBJ)\enc\alpha.obj \

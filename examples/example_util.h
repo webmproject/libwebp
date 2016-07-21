@@ -10,8 +10,8 @@
 //  Utility functions used by the example programs.
 //
 
-#ifndef WEBP_IMAGEIO_EXAMPLE_UTIL_H_
-#define WEBP_IMAGEIO_EXAMPLE_UTIL_H_
+#ifndef WEBP_EXAMPLES_EXAMPLE_UTIL_H_
+#define WEBP_EXAMPLES_EXAMPLE_UTIL_H_
 
 #include "webp/types.h"
 
@@ -33,4 +33,4 @@ float ExUtilGetFloat(const char* const v, int* const error);
 }    // extern "C"
 #endif
 
-#endif  // WEBP_IMAGEIO_EXAMPLE_UTIL_H_
+#endif  // WEBP_EXAMPLES_EXAMPLE_UTIL_H_

@@ -55,7 +55,7 @@
 #include <string.h>
 #include "webp/decode.h"
 #include "webp/mux.h"
-#include "../imageio/example_util.h"
+#include "../examples/example_util.h"
 #include "../imageio/imageio_util.h"
 
 //------------------------------------------------------------------------------

@@ -78,8 +78,8 @@ if(WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP)
   # Example utility library.
   set(exampleutil_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/stopwatch.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/imageio/example_util.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/imageio/example_util.h)
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/example_util.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/example_util.h)
   add_library(exampleutil ${exampleutil_SRCS})
   target_link_libraries(exampleutil webp ${WEBP_DEP_LIBRARIES})
 
