@@ -28,6 +28,9 @@
   #define SRAI_H(a, b)  __msa_srai_h((v8i16)a, b)
   #define SRAI_W(a, b)  __msa_srai_w((v4i32)a, b)
   #define SRLI_H(a, b)  __msa_srli_h((v8i16)a, b)
+  #define SLLI_B(a, b)  __msa_slli_b((v4i32)a, b)
+  #define ANDI_B(a, b)  __msa_andi_b((v16u8)a, b)
+  #define ORI_B(a, b)   __msa_ori_b((v16u8)a, b)
 #else
   #define ADDVI_H(a, b)  (a + b)
   #define ADDVI_W(a, b)  (a + b)
@@ -35,6 +38,9 @@
   #define SRAI_H(a, b)  (a >> b)
   #define SRAI_W(a, b)  (a >> b)
   #define SRLI_H(a, b)  (a << b)
+  #define SLLI_B(a, b)  (a << b)
+  #define ANDI_B(a, b)  (a & b)
+  #define ORI_B(a, b)   (a | b)
 #endif
 
 #define LD_B(RTYPE, psrc) *((RTYPE*)(psrc))
@@ -535,6 +541,23 @@
   CLIP_SH2_0_255(in2, in3);                      \
 } while (0)
 
+/* Description : Clips all unsigned halfword elements of input vector
+ *               between 0 & 255
+ * Arguments   : Input  - in
+ *               Output - out_m
+ *               Return Type - unsigned halfword
+ */
+#define CLIP_UH_0_255(in) do {                    \
+  const v8u16 max_m = (v8u16)__msa_ldi_h(255);    \
+  in = __msa_maxi_u_h((v8u16) in, 0);             \
+  in = __msa_min_u_h((v8u16) max_m, (v8u16) in);  \
+} while (0)
+
+#define CLIP_UH2_0_255(in0, in1) do {  \
+  CLIP_UH_0_255(in0);                  \
+  CLIP_UH_0_255(in1);                  \
+} while (0)
+
 /* Description : Clips all signed word elements of input vector
  *               between 0 & 255
  * Arguments   : Input/output  - val
@@ -1000,6 +1023,23 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
 #define PCKEV_W2_SW(...) PCKEV_W2(v4i32, __VA_ARGS__)
 #define PCKEV_W2_UW(...) PCKEV_W2(v4u32, __VA_ARGS__)
 
+/* Description : Pack odd halfword elements of vector pairs
+ * Arguments   : Inputs  - in0, in1, in2, in3
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Odd halfword elements of 'in0' are copied to the left half of
+ *               'out0' & odd halfword elements of 'in1' are copied to the
+ *               right half of 'out0'.
+ */
+#define PCKOD_H2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)__msa_pckod_h((v8i16)in0, (v8i16)in1);        \
+  out1 = (RTYPE)__msa_pckod_h((v8i16)in2, (v8i16)in3);        \
+} while (0)
+#define PCKOD_H2_UH(...) PCKOD_H2(v8u16, __VA_ARGS__)
+#define PCKOD_H2_SH(...) PCKOD_H2(v8i16, __VA_ARGS__)
+#define PCKOD_H2_SW(...) PCKOD_H2(v4i32, __VA_ARGS__)
+#define PCKOD_H2_UW(...) PCKOD_H2(v4u32, __VA_ARGS__)
+
 /* Description : Arithmetic immediate shift right all elements of word vector
  * Arguments   : Inputs  - in0, in1, shift
  *               Outputs - in place operation
@@ -1332,5 +1372,19 @@ static WEBP_INLINE uint32_t func_hadd_uh_u32(v8u16 in) {
   PCKEV_B2_SB(in1, in0, in3, in2, tmp0_m, tmp1_m);             \
   ST4x4_UB(tmp0_m, tmp1_m, 0, 2, 0, 2, pdst, stride);          \
 } while (0)
+
+/* Description : average with rounding (in0 + in1 + 1) / 2.
+ * Arguments   : Inputs  - in0, in1, in2, in3,
+ *               Outputs - out0, out1
+ *               Return Type - as per RTYPE
+ * Details     : Each unsigned byte element from 'in0' vector is added with
+ *               each unsigned byte element from 'in1' vector. Then the average
+ *               with rounding is calculated and written to 'out0'
+ */
+#define AVER_UB2(RTYPE, in0, in1, in2, in3, out0, out1) do {  \
+  out0 = (RTYPE)__msa_aver_u_b((v16u8)in0, (v16u8)in1);       \
+  out1 = (RTYPE)__msa_aver_u_b((v16u8)in2, (v16u8)in3);       \
+} while (0)
+#define AVER_UB2_UB(...) AVER_UB2(v16u8, __VA_ARGS__)
 
 #endif  /* WEBP_DSP_MSA_MACRO_H_ */
