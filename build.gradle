@@ -248,7 +248,7 @@ model {
       sources {
         c {
           source {
-            srcDir "./imageio"
+            srcDir "./examples"
             include "example_util.c"
           }
         }

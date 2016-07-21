@@ -1,21 +1,6 @@
 LOCAL_PATH := $(call my-dir)
 
 ################################################################################
-# libexample_util
-
-include $(CLEAR_VARS)
-
-LOCAL_SRC_FILES := \
-    example_util.c \
-
-LOCAL_CFLAGS := $(WEBP_CFLAGS)
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/../src
-
-LOCAL_MODULE := example_util
-
-include $(BUILD_STATIC_LIBRARY)
-
-################################################################################
 # libimageio_util
 
 include $(CLEAR_VARS)
