@@ -37,7 +37,7 @@ static void PrintAnimationWarning(const WebPDecoderConfig* const config) {
   }
 }
 
-void ExUtilPrintWebPError(const char* const in_file, int status) {
+void PrintWebPError(const char* const in_file, int status) {
   fprintf(stderr, "Decoding of %s failed.\n", in_file);
   fprintf(stderr, "Status: %d", status);
   if (status >= VP8_STATUS_OK && status <= VP8_STATUS_NOT_ENOUGH_DATA) {
@@ -46,9 +46,9 @@ void ExUtilPrintWebPError(const char* const in_file, int status) {
   fprintf(stderr, "\n");
 }
 
-int ExUtilLoadWebP(const char* const in_file,
-                   const uint8_t** data, size_t* data_size,
-                   WebPBitstreamFeatures* bitstream) {
+int LoadWebP(const char* const in_file,
+             const uint8_t** data, size_t* data_size,
+             WebPBitstreamFeatures* bitstream) {
   VP8StatusCode status;
   WebPBitstreamFeatures local_features;
   if (!ImgIoUtilReadFile(in_file, data, data_size)) return 0;
@@ -62,7 +62,7 @@ int ExUtilLoadWebP(const char* const in_file,
     free((void*)*data);
     *data = NULL;
     *data_size = 0;
-    ExUtilPrintWebPError(in_file, status);
+    PrintWebPError(in_file, status);
     return 0;
   }
   return 1;
@@ -70,8 +70,8 @@ int ExUtilLoadWebP(const char* const in_file,
 
 //------------------------------------------------------------------------------
 
-VP8StatusCode ExUtilDecodeWebP(const uint8_t* const data, size_t data_size,
-                               int verbose, WebPDecoderConfig* const config) {
+VP8StatusCode DecodeWebP(const uint8_t* const data, size_t data_size,
+                         int verbose, WebPDecoderConfig* const config) {
   Stopwatch stop_watch;
   VP8StatusCode status = VP8_STATUS_OK;
   if (config == NULL) return VP8_STATUS_INVALID_PARAM;
@@ -90,7 +90,7 @@ VP8StatusCode ExUtilDecodeWebP(const uint8_t* const data, size_t data_size,
   return status;
 }
 
-VP8StatusCode ExUtilDecodeWebPIncremental(
+VP8StatusCode DecodeWebPIncremental(
     const uint8_t* const data, size_t data_size,
     int verbose, WebPDecoderConfig* const config) {
   Stopwatch stop_watch;
@@ -155,7 +155,7 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
 
   status = WebPGetFeatures(data, data_size, bitstream);
   if (status != VP8_STATUS_OK) {
-    ExUtilPrintWebPError("input data", status);
+    PrintWebPError("input data", status);
     return 0;
   }
   {
@@ -166,7 +166,7 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
       output_buffer->colorspace = has_alpha ? MODE_YUVA : MODE_YUV;
     }
 
-    status = ExUtilDecodeWebP(data, data_size, 0, &config);
+    status = DecodeWebP(data, data_size, 0, &config);
     if (status == VP8_STATUS_OK) {
       pic->width = output_buffer->width;
       pic->height = output_buffer->height;
@@ -200,7 +200,7 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
   }
 
   if (status != VP8_STATUS_OK) {
-    ExUtilPrintWebPError("input data", status);
+    PrintWebPError("input data", status);
   }
 
   WebPFreeDecBuffer(output_buffer);

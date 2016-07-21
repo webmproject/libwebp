@@ -799,7 +799,7 @@ int main(int argc, const char *argv[]) {
   {
     VP8StatusCode status = VP8_STATUS_OK;
     size_t data_size = 0;
-    if (!ExUtilLoadWebP(in_file, &data, &data_size, bitstream)) {
+    if (!LoadWebP(in_file, &data, &data_size, bitstream)) {
       return -1;
     }
 
@@ -855,14 +855,14 @@ int main(int argc, const char *argv[]) {
     }
 
     if (incremental) {
-      status = ExUtilDecodeWebPIncremental(data, data_size, verbose, &config);
+      status = DecodeWebPIncremental(data, data_size, verbose, &config);
     } else {
-      status = ExUtilDecodeWebP(data, data_size, verbose, &config);
+      status = DecodeWebP(data, data_size, verbose, &config);
     }
 
     ok = (status == VP8_STATUS_OK);
     if (!ok) {
-      ExUtilPrintWebPError(in_file, status);
+      PrintWebPError(in_file, status);
       goto Exit;
     }
   }

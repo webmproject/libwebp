@@ -27,14 +27,14 @@ struct WebPPicture;
 // Prints an informative error message regarding decode failure of 'in_file'.
 // 'status' is treated as a VP8StatusCode and if valid will be printed as a
 // text string.
-void ExUtilPrintWebPError(const char* const in_file, int status);
+void PrintWebPError(const char* const in_file, int status);
 
 // Reads a WebP from 'in_file', returning the contents and size in 'data' and
 // 'data_size'. If not NULL, 'bitstream' is populated using WebPGetFeatures().
 // Returns true on success.
-int ExUtilLoadWebP(const char* const in_file,
-                   const uint8_t** data, size_t* data_size,
-                   WebPBitstreamFeatures* bitstream);
+int LoadWebP(const char* const in_file,
+             const uint8_t** data, size_t* data_size,
+             WebPBitstreamFeatures* bitstream);
 
 // Decodes the WebP contained in 'data'.
 // 'config' is a structure previously initialized by WebPInitDecoderConfig().
@@ -42,11 +42,11 @@ int ExUtilLoadWebP(const char* const in_file,
 // cause decode timing to be reported.
 // Returns the decoder status. On success 'config->output' will contain the
 // decoded picture.
-VP8StatusCode ExUtilDecodeWebP(const uint8_t* const data, size_t data_size,
-                               int verbose, WebPDecoderConfig* const config);
+VP8StatusCode DecodeWebP(const uint8_t* const data, size_t data_size,
+                         int verbose, WebPDecoderConfig* const config);
 
-// Same as ExUtilDecodeWebP(), but using the incremental decoder.
-VP8StatusCode ExUtilDecodeWebPIncremental(
+// Same as DecodeWebP(), but using the incremental decoder.
+VP8StatusCode DecodeWebPIncremental(
     const uint8_t* const data, size_t data_size,
     int verbose, WebPDecoderConfig* const config);
 
