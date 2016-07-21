@@ -412,6 +412,8 @@ $(DIROBJ)\examples\gifdec.obj: examples\gifdec.c
 # Batch rules
 {examples}.c{$(DIROBJ)\examples}.obj::
 	$(CC) $(CFLAGS) /Fd$(DIROBJ)\examples\ /Fo$(DIROBJ)\examples\ $<
+{imageio}.c{$(DIROBJ)\imageio}.obj::
+	$(CC) $(CFLAGS) /Fd$(DIROBJ)\imageio\ /Fo$(DIROBJ)\imageio\ $<
 {src\dec}.c{$(DIROBJ)\dec}.obj::
 	$(CC) $(CFLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$(DIROBJ)\dec\ $<
 {src\demux}.c{$(DIROBJ)\demux}.obj::
