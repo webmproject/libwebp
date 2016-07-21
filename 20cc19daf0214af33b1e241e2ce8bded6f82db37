@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0aa6dbc3_f540903c",
+        "filename": "makefile.unix",
+        "patchSetId": 6
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-07-21T02:23:22Z",
+      "side": 1,
+      "message": "these should stay and the rest split to OTHER_EXAMPLES or so",
+      "range": {
+        "startLine": 315,
+        "startChar": 36,
+        "endLine": 315,
+        "endChar": 72
+      },
+      "revId": "20cc19daf0214af33b1e241e2ce8bded6f82db37",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
