@@ -56,6 +56,7 @@
 #include "webp/decode.h"
 #include "webp/mux.h"
 #include "../imageio/example_util.h"
+#include "../imageio/imageio_util.h"
 
 //------------------------------------------------------------------------------
 // Config object to parse command-line arguments.

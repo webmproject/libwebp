@@ -14,12 +14,12 @@ noinst_PROGRAMS = get_disto webp_quality
 
 get_disto_SOURCES = get_disto.c
 get_disto_CPPFLAGS  = $(AM_CPPFLAGS)
-get_disto_LDADD = ../imageio/libexample_util.la ../imageio/libimagedec.la
+get_disto_LDADD = ../imageio/libimageio_util.la ../imageio/libimagedec.la
 get_disto_LDADD += ../src/libwebp.la
 get_disto_LDADD += $(PNG_LIBS) $(JPEG_LIBS) $(TIFF_LIBS)
 
 webp_quality_SOURCES  = webp_quality.c
 webp_quality_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
-webp_quality_LDADD  = ../imageio/libexample_util.la ../imageio/libimagedec.la
+webp_quality_LDADD  = ../imageio/libimageio_util.la ../imageio/libimagedec.la
 webp_quality_LDADD += ./libwebpextras.la
 webp_quality_LDADD += ../src/libwebp.la $(JPEG_LIBS) $(PNG_LIBS) $(TIFF_LIBS)

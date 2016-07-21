@@ -16,6 +16,21 @@ LOCAL_MODULE := example_util
 include $(BUILD_STATIC_LIBRARY)
 
 ################################################################################
+# libimageio_util
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := \
+    imageio_util.c \
+
+LOCAL_CFLAGS := $(WEBP_CFLAGS)
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/../src
+
+LOCAL_MODULE := imageio_util
+
+include $(BUILD_STATIC_LIBRARY)
+
+################################################################################
 # libimagedec
 
 include $(CLEAR_VARS)

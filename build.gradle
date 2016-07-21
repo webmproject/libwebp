@@ -255,6 +255,22 @@ model {
       }
     }
 
+    imageio_util(NativeLibrarySpec) {
+      binaries {
+        all {
+          lib library: "webp", linkage: "static"
+        }
+      }
+      sources {
+        c {
+          source {
+            srcDir "./imageio"
+            include "imageio_util.c"
+          }
+        }
+      }
+    }
+
     imagedec(NativeLibrarySpec) {
       binaries {
         all {
@@ -280,6 +296,7 @@ model {
         all {
           lib library: "example_util", linkage: "static"
           lib library: "imagedec", linkage: "static"
+          lib library: "imageio_util", linkage: "static"
           lib library: "webp", linkage: "static"
         }
       }
@@ -297,6 +314,8 @@ model {
       binaries {
         all {
           lib library: "example_util", linkage: "static"
+          lib library: "imagedec", linkage: "static"
+          lib library: "imageio_util", linkage: "static"
           lib library: "webp"
         }
       }
@@ -314,6 +333,7 @@ model {
       binaries {
         all {
           lib library: "example_util", linkage: "static"
+          lib library: "imageio_util", linkage: "static"
           lib library: "webpmux", linkage: "static"
           lib library: "webp"
         }

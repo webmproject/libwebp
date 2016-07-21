@@ -23,7 +23,7 @@
 #include <string.h>
 
 #include "webp/encode.h"
-#include "../imageio/example_util.h"
+#include "../imageio/imageio_util.h"
 #include "../imageio/image_dec.h"
 
 static size_t ReadPicture(const char* const filename, WebPPicture* const pic,

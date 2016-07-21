@@ -13,7 +13,7 @@
 #include <string.h>
 
 #include "./extras.h"
-#include "../imageio/example_util.h"
+#include "../imageio/imageio_util.h"
 
 int main(int argc, const char *argv[]) {
   int c;
