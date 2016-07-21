@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0aa6dbc3_751e6068",
+        "filename": "imageio/imageio_util.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-07-21T02:21:16Z",
+      "side": 1,
+      "message": "we\u0027ll probably have to think of a better prefix for these now\n(TODO(later))",
+      "range": {
+        "startLine": 38,
+        "startChar": 4,
+        "endLine": 38,
+        "endChar": 23
+      },
+      "revId": "b5e959cbf52485786af9d281a2813e7565029ffb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0aa6dbc3_9522e4a8",
+        "filename": "imageio/webpdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-07-21T02:21:16Z",
+      "side": 1,
+      "message": "this one is a little out of place (mentions \u0027vwebp\u0027 at line 37 for instance), but it\u0027s ok for now",
+      "range": {
+        "startLine": 32,
+        "startChar": 12,
+        "endLine": 32,
+        "endChar": 33
+      },
+      "revId": "b5e959cbf52485786af9d281a2813e7565029ffb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
