@@ -228,6 +228,9 @@ EX_UTIL_OBJS = \
 GIFDEC_OBJS = \
     examples/gifdec.o \
 
+IMAGE_UTIL_OBJS = \
+    imageio/imageio_util.o \
+
 MUX_OBJS = \
     src/mux/anim_encode.o \
     src/mux/muxedit.o \
@@ -307,7 +310,8 @@ HDRS = \
     src/webp/format_constants.h \
     $(HDRS_INSTALLED) \
 
-OUT_LIBS = imageio/libexample_util.a imageio/libimagedec.a src/libwebpdecoder.a
+OUT_LIBS = imageio/libexample_util.a imageio/libimageio_util.a
+OUT_LIBS += imageio/libimagedec.a src/libwebpdecoder.a
 OUT_LIBS += src/libwebp.a
 EXTRA_LIB = extras/libwebpextras.a
 OUT_EXAMPLES = examples/cwebp examples/dwebp
@@ -344,6 +348,7 @@ examples/libgifdec.a: $(GIFDEC_OBJS)
 extras/libwebpextras.a: $(LIBWEBPEXTRA_OBJS)
 imageio/libexample_util.a: $(EX_UTIL_OBJS)
 imageio/libimagedec.a: $(EX_FORMAT_DEC_OBJS)
+imageio/libimageio_util.a: $(IMAGE_UTIL_OBJS)
 src/libwebpdecoder.a: $(LIBWEBPDECODER_OBJS)
 src/libwebp.a: $(LIBWEBP_OBJS)
 src/mux/libwebpmux.a: $(LIBWEBPMUX_OBJS)
@@ -361,34 +366,35 @@ examples/webpmux: examples/webpmux.o
 
 examples/anim_diff: examples/libanim_util.a examples/libgifdec.a
 examples/anim_diff: src/demux/libwebpdemux.a imageio/libexample_util.a
-examples/anim_diff: src/libwebp.a
+examples/anim_diff: imageio/libimageio_util.a src/libwebp.a
 examples/anim_diff: EXTRA_LIBS += $(GIF_LIBS)
 examples/anim_diff: EXTRA_FLAGS += -DWEBP_HAVE_GIF
-examples/cwebp: imageio/libexample_util.a imageio/libimagedec.a
-examples/cwebp: src/libwebp.a
+examples/cwebp: imageio/libexample_util.a imageio/libimageio_util.a
+examples/cwebp: imageio/libimagedec.a src/libwebp.a
 examples/cwebp: EXTRA_LIBS += $(CWEBP_LIBS)
-examples/dwebp: imageio/libexample_util.a src/libwebpdecoder.a
+examples/dwebp: imageio/libexample_util.a imageio/libimageio_util.a
+examples/dwebp: imageio/libimagedec.a src/libwebp.a
 examples/dwebp: EXTRA_LIBS += $(DWEBP_LIBS)
-examples/gif2webp: imageio/libexample_util.a examples/libgifdec.a
-examples/gif2webp: src/mux/libwebpmux.a src/libwebp.a
+examples/gif2webp: imageio/libexample_util.a imageio/libimageio_util.a
+examples/gif2webp: examples/libgifdec.a src/mux/libwebpmux.a src/libwebp.a
 examples/gif2webp: EXTRA_LIBS += $(GIF_LIBS)
 examples/gif2webp: EXTRA_FLAGS += -DWEBP_HAVE_GIF
 examples/vwebp: imageio/libexample_util.a src/demux/libwebpdemux.a
-examples/vwebp: src/libwebp.a
+examples/vwebp: imageio/libimageio_util.a src/libwebp.a
 examples/vwebp: EXTRA_LIBS += $(GL_LIBS)
 examples/vwebp: EXTRA_FLAGS += -DWEBP_HAVE_GL
-examples/webpmux: imageio/libexample_util.a src/mux/libwebpmux.a
-examples/webpmux: src/libwebpdecoder.a
+examples/webpmux: imageio/libexample_util.a imageio/libimageio_util.a
+examples/webpmux: src/mux/libwebpmux.a src/libwebpdecoder.a
 
 extras/get_disto: extras/get_disto.o
 extras/get_disto: imageio/libimagedec.a
-extras/get_disto: imageio/libexample_util.a
+extras/get_disto: imageio/libimageio_util.a
 extras/get_disto: src/libwebp.a $(EXTRA_LIB)
 extras/get_disto: EXTRA_LIBS += $(CWEBP_LIBS)
 
 extras/webp_quality: extras/webp_quality.o
 extras/webp_quality: imageio/libimagedec.a
-extras/webp_quality: imageio/libexample_util.a
+extras/webp_quality: imageio/libimageio_util.a
 extras/webp_quality: src/libwebp.a $(EXTRA_LIB)
 extras/get_disto: EXTRA_LIBS += $(CWEBP_LIBS)
 

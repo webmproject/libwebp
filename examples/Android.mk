@@ -12,7 +12,7 @@ LOCAL_SRC_FILES := \
 
 LOCAL_CFLAGS := $(WEBP_CFLAGS)
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../src
-LOCAL_STATIC_LIBRARIES := example_util imagedec webp
+LOCAL_STATIC_LIBRARIES := example_util imageio_util imagedec webp
 
 LOCAL_MODULE := cwebp
 
@@ -28,7 +28,7 @@ LOCAL_SRC_FILES := \
 
 LOCAL_CFLAGS := $(WEBP_CFLAGS)
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../src
-LOCAL_STATIC_LIBRARIES := example_util webp
+LOCAL_STATIC_LIBRARIES := example_util imageio_util imagedec webp
 
 LOCAL_MODULE := dwebp
 
@@ -44,7 +44,7 @@ LOCAL_SRC_FILES := \
 
 LOCAL_CFLAGS := $(WEBP_CFLAGS)
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../src
-LOCAL_STATIC_LIBRARIES := example_util webpmux webp
+LOCAL_STATIC_LIBRARIES := example_util imageio_util webpmux webp
 
 LOCAL_MODULE := webpmux_example
 

@@ -41,6 +41,8 @@
 
 #include "webp/decode.h"
 #include "../imageio/example_util.h"
+#include "../imageio/imageio_util.h"
+#include "../imageio/webpdec.h"
 #include "./stopwatch.h"
 
 static int verbose = 0;

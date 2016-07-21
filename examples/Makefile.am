@@ -19,40 +19,41 @@ endif
 anim_diff_SOURCES = anim_diff.c anim_util.c anim_util.h
 anim_diff_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE) $(GIF_INCLUDES)
 anim_diff_LDADD  = ../src/demux/libwebpdemux.la
-anim_diff_LDADD += ../imageio/libexample_util.la
+anim_diff_LDADD += ../imageio/libexample_util.la ../imageio/libimageio_util.la
 anim_diff_LDADD += $(GIF_LIBS) -lm
 
 dwebp_SOURCES = dwebp.c stopwatch.h
 dwebp_CPPFLAGS  = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
 dwebp_CPPFLAGS += $(JPEG_INCLUDES) $(PNG_INCLUDES)
-dwebp_LDADD = ../imageio/libexample_util.la $(PNG_LIBS) $(JPEG_LIBS)
+dwebp_LDADD  = ../imageio/libexample_util.la ../imageio/libimageio_util.la
+dwebp_LDADD += ../imageio/libimagedec.la ../src/libwebp.la
+dwebp_LDADD +=$(PNG_LIBS) $(JPEG_LIBS)
 
 cwebp_SOURCES  = cwebp.c stopwatch.h
 cwebp_CPPFLAGS  = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
-cwebp_LDADD  = ../imageio/libexample_util.la ../imageio/libimagedec.la
-cwebp_LDADD +=  ../src/libwebp.la $(JPEG_LIBS) $(PNG_LIBS) $(TIFF_LIBS)
+cwebp_LDADD  = ../imageio/libexample_util.la ../imageio/libimageio_util.la
+cwebp_LDADD += ../imageio/libimagedec.la ../src/libwebp.la
+cwebp_LDADD += $(JPEG_LIBS) $(PNG_LIBS) $(TIFF_LIBS)
 
 gif2webp_SOURCES = gif2webp.c gifdec.c gifdec.h
 gif2webp_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE) $(GIF_INCLUDES)
-gif2webp_LDADD  = ../imageio/libexample_util.la ../src/mux/libwebpmux.la
-gif2webp_LDADD += ../src/libwebp.la $(GIF_LIBS)
+gif2webp_LDADD  = ../imageio/libexample_util.la ../imageio/libimageio_util.la
+gif2webp_LDADD += ../src/mux/libwebpmux.la ../src/libwebp.la $(GIF_LIBS)
 
 webpmux_SOURCES = webpmux.c
 webpmux_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
-webpmux_LDADD  = ../imageio/libexample_util.la ../src/mux/libwebpmux.la
-webpmux_LDADD += ../src/libwebp.la
+webpmux_LDADD  = ../imageio/libexample_util.la ../imageio/libimageio_util.la
+webpmux_LDADD += ../src/mux/libwebpmux.la ../src/libwebp.la
 
 vwebp_SOURCES = vwebp.c
 vwebp_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE) $(GL_INCLUDES)
-vwebp_LDADD  = ../imageio/libexample_util.la ../src/demux/libwebpdemux.la
-vwebp_LDADD += $(GL_LIBS)
+vwebp_LDADD  = ../imageio/libexample_util.la ../imageio/libimageio_util.la
+vwebp_LDADD += ../src/demux/libwebpdemux.la $(GL_LIBS)
 
 if BUILD_LIBWEBPDECODER
   anim_diff_LDADD += ../src/libwebpdecoder.la
-  dwebp_LDADD += ../src/libwebpdecoder.la
   vwebp_LDADD += ../src/libwebpdecoder.la
 else
   anim_diff_LDADD += ../src/libwebp.la
-  dwebp_LDADD += ../src/libwebp.la
   vwebp_LDADD += ../src/libwebp.la
 endif

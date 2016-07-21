@@ -289,6 +289,9 @@ ENC_OBJS = \
     $(DIROBJ)\enc\vp8l.obj \
     $(DIROBJ)\enc\webpenc.obj \
 
+IMAGEIO_UTIL_OBJS = \
+    $(DIROBJ)\imageio\imageio_util.obj \
+
 MUX_OBJS = \
     $(DIROBJ)\mux\anim_encode.obj \
     $(DIROBJ)\mux\muxedit.obj \
@@ -333,18 +336,21 @@ gif2webp: $(DIRBIN)\gif2webp.exe
 anim_diff: $(DIRBIN)\anim_diff.exe
 
 $(DIRBIN)\anim_diff.exe: $(DIROBJ)\examples\anim_diff.obj $(EX_ANIM_UTIL_OBJS)
-$(DIRBIN)\anim_diff.exe: $(EX_UTIL_OBJS)
+$(DIRBIN)\anim_diff.exe: $(EX_UTIL_OBJS) $(IMAGEIO_UTIL_OBJS)
 $(DIRBIN)\anim_diff.exe: $(EX_GIF_DEC_OBJS) $(LIBWEBPDEMUX) $(LIBWEBP)
 $(DIRBIN)\cwebp.exe: $(DIROBJ)\examples\cwebp.obj $(EX_FORMAT_DEC_OBJS)
-$(DIRBIN)\dwebp.exe: $(DIROBJ)\examples\dwebp.obj
+$(DIRBIN)\cwebp.exe: $(IMAGEIO_UTIL_OBJS)
+$(DIRBIN)\dwebp.exe: $(DIROBJ)\examples\dwebp.obj $(EX_FORMAT_DEC_OBJS)
+$(DIRBIN)\dwebp.exe: $(IMAGEIO_UTIL_OBJS)
 $(DIRBIN)\gif2webp.exe: $(DIROBJ)\examples\gif2webp.obj $(EX_GIF_DEC_OBJS)
-$(DIRBIN)\gif2webp.exe: $(EX_UTIL_OBJS) $(LIBWEBPMUX) $(LIBWEBP)
-$(DIRBIN)\vwebp.exe: $(DIROBJ)\examples\vwebp.obj
-$(DIRBIN)\vwebp.exe: $(EX_UTIL_OBJS) $(LIBWEBPDEMUX) $(LIBWEBP)
+$(DIRBIN)\gif2webp.exe: $(EX_UTIL_OBJS) $(IMAGEIO_UTIL_OBJS) $(LIBWEBPMUX)
+$(DIRBIN)\gif2webp.exe: $(LIBWEBP)
+$(DIRBIN)\vwebp.exe: $(DIROBJ)\examples\vwebp.obj $(EX_UTIL_OBJS)
+$(DIRBIN)\vwebp.exe: $(IMAGEIO_UTIL_OBJS) $(LIBWEBPDEMUX) $(LIBWEBP)
 $(DIRBIN)\webpmux.exe: $(DIROBJ)\examples\webpmux.obj $(LIBWEBPMUX)
-$(DIRBIN)\webpmux.exe: $(EX_UTIL_OBJS) $(LIBWEBP)
+$(DIRBIN)\webpmux.exe: $(EX_UTIL_OBJS) $(IMAGEIO_UTIL_OBJS) $(LIBWEBP)
 $(OUT_EXAMPLES): $(EX_UTIL_OBJS) $(LIBWEBP)
-$(EX_UTIL_OBJS) $(EX_FORMAT_DEC_OBJS): $(OUTPUT_DIRS)
+$(EX_UTIL_OBJS) $(EX_FORMAT_DEC_OBJS) $(IMAGEIO_UTIL_OBJS): $(OUTPUT_DIRS)
 !ENDIF  # ARCH == ARM
 
 experimental:
