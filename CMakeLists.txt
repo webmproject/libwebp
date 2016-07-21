@@ -82,9 +82,13 @@ if(WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP)
     ${CMAKE_CURRENT_SOURCE_DIR}/imageio/example_util.h)
   add_library(exampleutil ${exampleutil_SRCS})
   target_link_libraries(exampleutil webp ${WEBP_DEP_LIBRARIES})
-endif()
 
-if(WEBP_BUILD_CWEBP)
+  set(imageioutil_SRCS
+    ${CMAKE_CURRENT_SOURCE_DIR}/imageio/imageio_util.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/imageio/imageio_util.h)
+  add_library(imageioutil ${imageioutil_SRCS})
+  target_link_libraries(imageioutil ${WEBP_DEP_LIBRARIES})
+
   # Image-decoding utility library.
   set(imagedec_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/imageio/image_dec.c
@@ -113,8 +117,8 @@ if(WEBP_BUILD_DWEBP)
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/dwebp.c
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/stopwatch.h
   )
-  target_link_libraries(dwebp webp exampleutil ${WEBP_DEP_LIBRARIES}
-    ${WEBP_DEP_IMG_LIBRARIES}
+  target_link_libraries(dwebp imagedec webp exampleutil imageioutil
+    ${WEBP_DEP_LIBRARIES} ${WEBP_DEP_IMG_LIBRARIES}
   )
 endif()
 
@@ -124,7 +128,7 @@ if(WEBP_BUILD_CWEBP)
   add_executable(cwebp
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/cwebp.c
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/stopwatch.h)
-  target_link_libraries(cwebp imagedec webp exampleutil
+  target_link_libraries(cwebp imagedec webp exampleutil imageioutil
     ${WEBP_DEP_LIBRARIES} ${WEBP_DEP_IMG_LIBRARIES}
   )
 endif()

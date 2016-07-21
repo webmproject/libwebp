@@ -12,7 +12,7 @@
 #ifndef WEBP_IMAGEIO_WEBPDEC_H_
 #define WEBP_IMAGEIO_WEBPDEC_H_
 
-#include "webp/types.h"
+#include "webp/decode.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,6 +20,37 @@ extern "C" {
 
 struct Metadata;
 struct WebPPicture;
+
+//------------------------------------------------------------------------------
+// WebP decoding
+
+// Prints an informative error message regarding decode failure of 'in_file'.
+// 'status' is treated as a VP8StatusCode and if valid will be printed as a
+// text string.
+void ExUtilPrintWebPError(const char* const in_file, int status);
+
+// Reads a WebP from 'in_file', returning the contents and size in 'data' and
+// 'data_size'. If not NULL, 'bitstream' is populated using WebPGetFeatures().
+// Returns true on success.
+int ExUtilLoadWebP(const char* const in_file,
+                   const uint8_t** data, size_t* data_size,
+                   WebPBitstreamFeatures* bitstream);
+
+// Decodes the WebP contained in 'data'.
+// 'config' is a structure previously initialized by WebPInitDecoderConfig().
+// 'config->output' should have the desired colorspace selected. 'verbose' will
+// cause decode timing to be reported.
+// Returns the decoder status. On success 'config->output' will contain the
+// decoded picture.
+VP8StatusCode ExUtilDecodeWebP(const uint8_t* const data, size_t data_size,
+                               int verbose, WebPDecoderConfig* const config);
+
+// Same as ExUtilDecodeWebP(), but using the incremental decoder.
+VP8StatusCode ExUtilDecodeWebPIncremental(
+    const uint8_t* const data, size_t data_size,
+    int verbose, WebPDecoderConfig* const config);
+
+//------------------------------------------------------------------------------
 
 // Reads a WebP from 'in_file', returning the decoded output in 'pic'.
 // Output is RGBA or YUVA, depending on pic->use_argb value.

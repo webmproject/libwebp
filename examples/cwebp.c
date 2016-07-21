@@ -22,6 +22,7 @@
 
 #include "../imageio/example_util.h"
 #include "../imageio/image_dec.h"
+#include "../imageio/imageio_util.h"
 #include "./stopwatch.h"
 #include "webp/encode.h"
 

@@ -27,6 +27,7 @@
 #include "webp/encode.h"
 #include "webp/mux.h"
 #include "../imageio/example_util.h"
+#include "../imageio/imageio_util.h"
 #include "./gifdec.h"
 
 //------------------------------------------------------------------------------

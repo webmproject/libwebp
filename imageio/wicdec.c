@@ -33,7 +33,7 @@
 #include <wincodec.h>
 
 #include "webp/encode.h"
-#include "./example_util.h"
+#include "./imageio_util.h"
 #include "./metadata.h"
 
 #define IFS(fn)                                                     \
