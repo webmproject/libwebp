@@ -369,7 +369,7 @@ static int ReadFileToWebPData(const char* const filename,
                               WebPData* const webp_data) {
   const uint8_t* data;
   size_t size;
-  if (!ExUtilReadFile(filename, &data, &size)) return 0;
+  if (!ImgIoUtilReadFile(filename, &data, &size)) return 0;
   webp_data->bytes = data;
   webp_data->size = size;
   return 1;
@@ -389,7 +389,7 @@ static int CreateMux(const char* const filename, WebPMux** mux) {
 static int WriteData(const char* filename, const WebPData* const webpdata) {
   int ok = 0;
   FILE* fout = strcmp(filename, "-") ? fopen(filename, "wb")
-                                     : ExUtilSetBinaryMode(stdout);
+                                     : ImgIoUtilSetBinaryMode(stdout);
   if (fout == NULL) {
     fprintf(stderr, "Error opening output WebP file %s!\n", filename);
     return 0;

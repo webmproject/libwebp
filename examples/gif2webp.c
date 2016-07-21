@@ -500,7 +500,7 @@ int main(int argc, const char *argv[]) {
   }
 
   if (out_file != NULL) {
-    if (!ExUtilWriteFile(out_file, webp_data.bytes, webp_data.size)) {
+    if (!ImgIoUtilWriteFile(out_file, webp_data.bytes, webp_data.size)) {
       fprintf(stderr, "Error writing output file: %s\n", out_file);
       goto End;
     }

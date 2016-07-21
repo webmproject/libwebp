@@ -688,7 +688,7 @@ int ReadAnimatedImage(const char filename[], AnimatedImage* const image,
   WebPDataInit(&webp_data);
   memset(image, 0, sizeof(*image));
 
-  if (!ExUtilReadFile(filename, &webp_data.bytes, &webp_data.size)) {
+  if (!ImgIoUtilReadFile(filename, &webp_data.bytes, &webp_data.size)) {
     fprintf(stderr, "Error reading file: %s\n", filename);
     return 0;
   }

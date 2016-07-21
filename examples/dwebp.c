@@ -505,7 +505,7 @@ static int SaveOutput(const WebPDecBuffer* const buffer,
 #endif
 
   if (needs_open_file) {
-    fout = use_stdout ? ExUtilSetBinaryMode(stdout) : fopen(out_file, "wb");
+    fout = use_stdout ? ImgIoUtilSetBinaryMode(stdout) : fopen(out_file, "wb");
     if (fout == NULL) {
       fprintf(stderr, "Error opening output file %s\n", out_file);
       return 0;

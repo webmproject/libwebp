@@ -31,7 +31,7 @@ static size_t ReadPicture(const char* const filename, WebPPicture* const pic,
   const uint8_t* data = NULL;
   size_t data_size = 0;
   WebPImageReader reader = NULL;
-  int ok = ExUtilReadFile(filename, &data, &data_size);
+  int ok = ImgIoUtilReadFile(filename, &data, &data_size);
   if (!ok) goto Error;
 
   pic->use_argb = 1;  // force ARGB
