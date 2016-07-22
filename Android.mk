@@ -70,6 +70,7 @@ dsp_dec_srcs := \
     src/dsp/rescaler_sse2.c \
     src/dsp/upsampling.c \
     src/dsp/upsampling_mips_dsp_r2.c \
+    src/dsp/upsampling_msa.c \
     src/dsp/upsampling_neon.$(NEON) \
     src/dsp/upsampling_sse2.c \
     src/dsp/yuv.c \
