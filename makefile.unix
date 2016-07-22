@@ -389,13 +389,13 @@ examples/webpmux: src/mux/libwebpmux.a src/libwebpdecoder.a
 extras/get_disto: extras/get_disto.o
 extras/get_disto: imageio/libimagedec.a
 extras/get_disto: imageio/libimageio_util.a
-extras/get_disto: src/libwebp.a $(EXTRA_LIB)
+extras/get_disto: $(EXTRA_LIB) src/libwebp.a
 extras/get_disto: EXTRA_LIBS += $(CWEBP_LIBS)
 
 extras/webp_quality: extras/webp_quality.o
 extras/webp_quality: imageio/libimagedec.a
 extras/webp_quality: imageio/libimageio_util.a
-extras/webp_quality: src/libwebp.a $(EXTRA_LIB)
+extras/webp_quality: $(EXTRA_LIB) src/libwebp.a
 extras/get_disto: EXTRA_LIBS += $(CWEBP_LIBS)
 
 $(OUT_EXAMPLES) $(EXTRA_EXAMPLES) $(OTHER_EXAMPLES):

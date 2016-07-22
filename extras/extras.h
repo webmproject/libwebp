@@ -46,7 +46,9 @@ WEBP_EXTERN(int) WebPImportRGB4444(const uint8_t* rgb4444, WebPPicture* pic);
 
 // Parse a bitstream, search for VP8 (lossy) header and report a
 // rough estimation of the quality factor used for compressing the bitstream.
-// Any error (invalid bitstream, lossless compression, incomplete header, etc.)
+// If the bitstream is in lossless format, the special value '101' is returned.
+// Otherwise (lossy bitstream), the returned value is in the range [0..100].
+// Any error (invalid bitstream, animated WebP, incomplete header, etc.)
 // will return a value of -1.
 WEBP_EXTERN(int) VP8EstimateQuality(const uint8_t* const data, size_t size);
 

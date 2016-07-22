@@ -12,6 +12,7 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include "./extras.h"
+#include "webp/decode.h"
 
 #include <math.h>
 
@@ -46,8 +47,15 @@ int VP8EstimateQuality(const uint8_t* const data, size_t size) {
   uint64_t sig = 0x00;
   int ok = 0;
   int Q = -1;
+  WebPBitstreamFeatures features;
 
   if (data == NULL) return -1;
+
+  if (WebPGetFeatures(data, size, &features) != VP8_STATUS_OK) {
+    return -1;   // invalid file
+  }
+  if (features.format == 2) return 101;  // lossless
+  if (features.format == 0 || features.has_animation) return -1;   // mixed
 
   while (pos < size) {
     sig = (sig >> 8) | ((uint64_t)data[pos++] << 40);
