@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8af64be4_4390e63e",
+        "filename": "src/dsp/upsampling_msa.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-07-22T14:29:37Z",
+      "side": 1,
+      "message": "these needed to be initialized to something (even if the value is unused in the end), to avoid uninitialize reads to be detected by valgrind",
+      "range": {
+        "startLine": 333,
+        "startChar": 28,
+        "endLine": 333,
+        "endChar": 29
+      },
+      "revId": "d3ddacb62578498400e4c65fe2028686348c13f9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
