@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0aa6dbc3_ec2c4248",
+        "filename": "imageio/imageio_util.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-07-22T02:06:45Z",
+      "side": 1,
+      "message": "could be dropped given imageo_util.h",
+      "revId": "e4b97e809ef9943ec8aeadf8ae0548fbf91701ab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0aa6dbc3_ac3b1a81",
+        "filename": "imageio/imageio_util.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-07-22T02:06:45Z",
+      "side": 1,
+      "message": "could be types.h",
+      "range": {
+        "startLine": 17,
+        "startChar": 15,
+        "endLine": 17,
+        "endChar": 23
+      },
+      "revId": "e4b97e809ef9943ec8aeadf8ae0548fbf91701ab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
