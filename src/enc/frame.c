@@ -185,6 +185,13 @@ static int GetProba(int a, int b) {
                       : (255 * a + total / 2) / total;  // rounded proba
 }
 
+static void ResetSegments(VP8Encoder* const enc) {
+  int n;
+  for (n = 0; n < enc->mb_w_ * enc->mb_h_; ++n) {
+    enc->mb_info_[n].segment_ = 0;
+  }
+}
+
 static void SetSegmentProbas(VP8Encoder* const enc) {
   int p[NUM_MB_SEGMENTS] = { 0 };
   int n;
@@ -206,6 +213,7 @@ static void SetSegmentProbas(VP8Encoder* const enc) {
 
     enc->segment_hdr_.update_map_ =
         (probas[0] != 255) || (probas[1] != 255) || (probas[2] != 255);
+    if (!enc->segment_hdr_.update_map_) ResetSegments(enc);
     enc->segment_hdr_.size_ =
         p[0] * (VP8BitCost(0, probas[0]) + VP8BitCost(0, probas[1])) +
         p[1] * (VP8BitCost(0, probas[0]) + VP8BitCost(1, probas[1])) +
