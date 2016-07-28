@@ -1,5 +1,5 @@
 AM_CPPFLAGS += -I$(top_builddir)/src -I$(top_srcdir)/src
-lib_LTLIBRARIES = libwebpextras.la
+noinst_LTLIBRARIES = libwebpextras.la
 
 noinst_HEADERS =
 noinst_HEADERS += ../src/webp/types.h
