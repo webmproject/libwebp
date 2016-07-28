@@ -183,8 +183,7 @@ static int pthread_cond_wait(pthread_cond_t* const condition,
 #else
   // note that there is a consumer available so the signal isn't dropped in
   // pthread_cond_signal
-  if (!ReleaseSemaphore(condition->waiting_sem_, 1, NULL))
-    return 1;
+  if (!ReleaseSemaphore(condition->waiting_sem_, 1, NULL)) return 1;
   // now unlock the mutex so pthread_cond_signal may be issued
   pthread_mutex_unlock(mutex);
   ok = (WaitForSingleObject(condition->signal_event_, INFINITE) ==
@@ -226,8 +225,7 @@ static THREADFN ThreadLoop(void* ptr) {
 }
 
 // main thread state control
-static void ChangeState(WebPWorker* const worker,
-                        WebPWorkerStatus new_status) {
+static void ChangeState(WebPWorker* const worker, WebPWorkerStatus new_status) {
   // No-op when attempting to change state on a thread that didn't come up.
   // Checking status_ without acquiring the lock first would result in a data
   // race.
