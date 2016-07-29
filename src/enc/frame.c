@@ -326,7 +326,7 @@ static void CodeResiduals(VP8BitWriter* const bw, VP8EncIterator* const it,
   for (y = 0; y < 4; ++y) {
     for (x = 0; x < 4; ++x) {
       const int ctx = it->top_nz_[x] + it->left_nz_[y];
-      VP8SetResidualCoeffs(rd->y_ac_levels[x + y * 4], &res);
+      VP8SetResidualCoeffs(rd->y_ac_levels + 16 * (x + y * 4), &res);
       it->top_nz_[x] = it->left_nz_[y] = PutCoeffs(bw, ctx, &res);
     }
   }
@@ -376,7 +376,7 @@ static void RecordResiduals(VP8EncIterator* const it,
   for (y = 0; y < 4; ++y) {
     for (x = 0; x < 4; ++x) {
       const int ctx = it->top_nz_[x] + it->left_nz_[y];
-      VP8SetResidualCoeffs(rd->y_ac_levels[x + y * 4], &res);
+      VP8SetResidualCoeffs(rd->y_ac_levels + 16 * (x + y * 4), &res);
       it->top_nz_[x] = it->left_nz_[y] = VP8RecordCoeffs(ctx, &res);
     }
   }
@@ -424,7 +424,7 @@ static int RecordTokens(VP8EncIterator* const it, const VP8ModeScore* const rd,
   for (y = 0; y < 4; ++y) {
     for (x = 0; x < 4; ++x) {
       const int ctx = it->top_nz_[x] + it->left_nz_[y];
-      VP8SetResidualCoeffs(rd->y_ac_levels[x + y * 4], &res);
+      VP8SetResidualCoeffs(rd->y_ac_levels + 16 * (x + y * 4), &res);
       it->top_nz_[x] = it->left_nz_[y] =
           VP8RecordCoeffTokens(ctx, &res, tokens);
     }

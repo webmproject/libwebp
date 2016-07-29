@@ -104,7 +104,7 @@ static void PrintBlockInfo(const VP8EncIterator* const it,
   printf("y_ac_levels:\n");
   for (j = 0; j < 16; ++j) {
     for (i = is_i16 ? 1 : 0; i < 16; ++i) {
-      printf("%4d ", rd->y_ac_levels[j][i]);
+      printf("%4d ", rd->y_ac_levels[j * 16 + i]);
     }
     printf("\n");
   }
@@ -776,10 +776,10 @@ static int ReconstructIntra16(VP8EncIterator* const it,
       for (x = 0; x < 4; ++x, ++n) {
         const int ctx = it->top_nz_[x] + it->left_nz_[y];
         const int non_zero =
-            TrellisQuantizeBlock(enc, tmp[n], rd->y_ac_levels[n], ctx, 0,
+            TrellisQuantizeBlock(enc, tmp[n], rd->y_ac_levels + n * 16, ctx, 0,
                                  &dqm->y1_, dqm->lambda_trellis_i16_);
         it->top_nz_[x] = it->left_nz_[y] = non_zero;
-        rd->y_ac_levels[n][0] = 0;
+        rd->y_ac_levels[n * 16] = 0;
         nz |= non_zero << n;
       }
     }
@@ -788,9 +788,10 @@ static int ReconstructIntra16(VP8EncIterator* const it,
       // Zero-out the first coeff, so that: a) nz is correct below, and
       // b) finding 'last' non-zero coeffs in SetResidualCoeffs() is simplified.
       tmp[n][0] = tmp[n + 1][0] = 0;
-      nz |= VP8EncQuantize2Blocks(tmp[n], rd->y_ac_levels[n], &dqm->y1_) << n;
-      assert(rd->y_ac_levels[n + 0][0] == 0);
-      assert(rd->y_ac_levels[n + 1][0] == 0);
+      nz |= VP8EncQuantize2Blocks(tmp[n], rd->y_ac_levels + n * 16, &dqm->y1_)
+            << n;
+      assert(rd->y_ac_levels[(n + 0) * 16 + 0] == 0);
+      assert(rd->y_ac_levels[(n + 1) * 16 + 0] == 0);
     }
   }
 
@@ -936,7 +937,7 @@ static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* rd) {
     rd_cur->H = VP8FixedCostsI16[mode];
     rd_cur->R = VP8GetCostLuma16(it, rd_cur);
     if (mode > 0 &&
-        IsFlat(rd_cur->y_ac_levels[0], kNumBlocks, FLATNESS_LIMIT_I16)) {
+        IsFlat(rd_cur->y_ac_levels, kNumBlocks, FLATNESS_LIMIT_I16)) {
       // penalty to avoid flat area to be mispredicted by complex mode
       rd_cur->R += FLATNESS_PENALTY * kNumBlocks;
     }
@@ -1038,8 +1039,8 @@ static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
         CopyScore(&rd_i4, &rd_tmp);
         best_mode = mode;
         SwapPtr(&tmp_dst, &best_block);
-        memcpy(rd_best.y_ac_levels[it->i4_], tmp_levels,
-               sizeof(rd_best.y_ac_levels[it->i4_]));
+        memcpy(rd_best.y_ac_levels + it->i4_ * 16, tmp_levels,
+               16 * sizeof(*(rd_best.y_ac_levels + it->i4_ * 16)));
       }
     }
     SetRDScore(dqm->lambda_mode_, &rd_i4);
@@ -1130,7 +1131,7 @@ static void SimpleQuantize(VP8EncIterator* const it, VP8ModeScore* const rd) {
       const uint8_t* const src = it->yuv_in_ + Y_OFF_ENC + VP8Scan[it->i4_];
       uint8_t* const dst = it->yuv_out_ + Y_OFF_ENC + VP8Scan[it->i4_];
       VP8MakeIntra4Preds(it);
-      nz |= ReconstructIntra4(it, rd->y_ac_levels[it->i4_],
+      nz |= ReconstructIntra4(it, rd->y_ac_levels + it->i4_ * 16,
                               src, dst, mode) << it->i4_;
     } while (VP8IteratorRotateI4(it, it->yuv_out_ + Y_OFF_ENC));
   }
@@ -1207,7 +1208,7 @@ static void RefineUsingDistortion(VP8EncIterator* const it,
         break;
       } else {  // reconstruct partial block inside yuv_out2_ buffer
         uint8_t* const tmp_dst = it->yuv_out2_ + Y_OFF_ENC + VP8Scan[it->i4_];
-        nz |= ReconstructIntra4(it, rd->y_ac_levels[it->i4_],
+        nz |= ReconstructIntra4(it, rd->y_ac_levels + it->i4_ * 16,
                                 src, tmp_dst, best_i4_mode) << it->i4_;
       }
     } while (VP8IteratorRotateI4(it, it->yuv_out2_ + Y_OFF_ENC));

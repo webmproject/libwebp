@@ -247,7 +247,7 @@ int VP8GetCostLuma16(VP8EncIterator* const it, const VP8ModeScore* const rd) {
   for (y = 0; y < 4; ++y) {
     for (x = 0; x < 4; ++x) {
       const int ctx = it->top_nz_[x] + it->left_nz_[y];
-      VP8SetResidualCoeffs(rd->y_ac_levels[x + y * 4], &res);
+      VP8SetResidualCoeffs(rd->y_ac_levels + 16 * (x + y * 4), &res);
       R += VP8GetResidualCost(ctx, &res);
       it->top_nz_[x] = it->left_nz_[y] = (res.last >= 0);
     }

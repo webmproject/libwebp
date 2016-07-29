@@ -210,6 +210,13 @@ static void PrintExtraInfoLossy(const WebPPicture* const pic, int short_output,
             "%d bytes Y-U-V-All-PSNR %2.2f %2.2f %2.2f   %2.2f dB\n",
             stats->coded_size,
             stats->PSNR[0], stats->PSNR[1], stats->PSNR[2], stats->PSNR[3]);
+    {
+      FILE *fp = fopen("opsnr.stt", "a");
+      fprintf(fp, "Bitrate\tAVGPsnr\n");
+      fprintf(fp, "%.2f\t%2.2f\n",
+              stats->coded_size / 125.0, stats->PSNR[3]);
+      fclose(fp);
+    }
     if (total > 0) {
       int totals[4] = { 0, 0, 0, 0 };
       fprintf(stderr, "block count:  intra4: %d\n"
