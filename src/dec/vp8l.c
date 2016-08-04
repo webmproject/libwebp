@@ -1210,8 +1210,9 @@ static int ExpandColorMap(int num_colors, VP8LTransform* const transform) {
       // Equivalent to AddPixelEq(), on a byte-basis.
       new_data[i] = (data[i] + new_data[i - 4]) & 0xff;
     }
-    for (; i < 4 * final_num_colors; ++i)
+    for (; i < 4 * final_num_colors; ++i) {
       new_data[i] = 0;  // black tail.
+    }
     WebPSafeFree(transform->data_);
     transform->data_ = new_color_map;
   }

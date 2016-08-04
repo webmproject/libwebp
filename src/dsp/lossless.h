@@ -281,10 +281,10 @@ extern VP8LVectorMismatchFunc VP8LVectorMismatch;
 
 static WEBP_INLINE int VP8LBitsLog2Ceiling(uint32_t n) {
   const int log_floor = BitsLog2Floor(n);
-  if (n == (n & ~(n - 1)))  // zero or a power of two.
+  if (n == (n & ~(n - 1))) {  // zero or a power of two.
     return log_floor;
-  else
-    return log_floor + 1;
+  }
+  return log_floor + 1;
 }
 
 // Splitting of distance and length codes into prefixes and

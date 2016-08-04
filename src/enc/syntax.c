@@ -362,8 +362,7 @@ int VP8EncWrite(VP8Encoder* const enc) {
   for (p = 0; p < enc->num_parts_; ++p) {
     const uint8_t* const buf = VP8BitWriterBuf(enc->parts_ + p);
     const size_t size = VP8BitWriterSize(enc->parts_ + p);
-    if (size)
-      ok = ok && pic->writer(buf, size, pic);
+    if (size) ok = ok && pic->writer(buf, size, pic);
     VP8BitWriterWipeOut(enc->parts_ + p);    // will free the internal buffer.
     ok = ok && WebPReportProgress(pic, enc->percent_ + percent_per_part,
                                   &enc->percent_);

@@ -143,13 +143,13 @@ int VP8PutBitUniform(VP8BitWriter* const bw, int bit) {
 void VP8PutBits(VP8BitWriter* const bw, uint32_t value, int nb_bits) {
   uint32_t mask;
   assert(nb_bits > 0 && nb_bits < 32);
-  for (mask = 1u << (nb_bits - 1); mask; mask >>= 1)
+  for (mask = 1u << (nb_bits - 1); mask; mask >>= 1) {
     VP8PutBitUniform(bw, value & mask);
+  }
 }
 
 void VP8PutSignedBits(VP8BitWriter* const bw, int value, int nb_bits) {
-  if (!VP8PutBitUniform(bw, value != 0))
-    return;
+  if (!VP8PutBitUniform(bw, value != 0)) return;
   if (value < 0) {
     VP8PutBits(bw, ((-value) << 1) | 1, nb_bits + 1);
   } else {

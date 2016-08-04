@@ -304,19 +304,23 @@ static int DumpPicture(const WebPPicture* const picture, const char* PGM_name) {
   if (f == NULL) return 0;
   fprintf(f, "P5\n%d %d\n255\n", stride, height);
   for (y = 0; y < picture->height; ++y) {
-    if (fwrite(picture->y + y * picture->y_stride, picture->width, 1, f) != 1)
+    if (fwrite(picture->y + y * picture->y_stride, picture->width, 1, f) != 1) {
       return 0;
+    }
     if (picture->width & 1) fputc(0, f);  // pad
   }
   for (y = 0; y < uv_height; ++y) {
-    if (fwrite(picture->u + y * picture->uv_stride, uv_width, 1, f) != 1)
+    if (fwrite(picture->u + y * picture->uv_stride, uv_width, 1, f) != 1) {
       return 0;
-    if (fwrite(picture->v + y * picture->uv_stride, uv_width, 1, f) != 1)
+    }
+    if (fwrite(picture->v + y * picture->uv_stride, uv_width, 1, f) != 1) {
       return 0;
+    }
   }
   for (y = 0; y < alpha_height; ++y) {
-    if (fwrite(picture->a + y * picture->a_stride, picture->width, 1, f) != 1)
+    if (fwrite(picture->a + y * picture->a_stride, picture->width, 1, f) != 1) {
       return 0;
+    }
     if (picture->width & 1) fputc(0, f);  // pad
   }
   fclose(f);

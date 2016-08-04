@@ -273,12 +273,14 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
     frm_hdr->profile_ = (bits >> 1) & 7;
     frm_hdr->show_ = (bits >> 4) & 1;
     frm_hdr->partition_length_ = (bits >> 5);
-    if (frm_hdr->profile_ > 3)
+    if (frm_hdr->profile_ > 3) {
       return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
                          "Incorrect keyframe parameters.");
-    if (!frm_hdr->show_)
+    }
+    if (!frm_hdr->show_) {
       return VP8SetError(dec, VP8_STATUS_UNSUPPORTED_FEATURE,
                          "Frame not displayable.");
+    }
     buf += 3;
     buf_size -= 3;
   }

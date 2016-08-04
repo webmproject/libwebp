@@ -248,8 +248,9 @@ static int PutCoeffs(VP8BitWriter* const bw, int ctx, const VP8Residual* res) {
       p = res->prob[VP8EncBands[n]][1];
     } else {
       if (!VP8PutBit(bw, v > 4, p[3])) {
-        if (VP8PutBit(bw, v != 2, p[4]))
+        if (VP8PutBit(bw, v != 2, p[4])) {
           VP8PutBit(bw, v == 4, p[5]);
+        }
       } else if (!VP8PutBit(bw, v > 10, p[6])) {
         if (!VP8PutBit(bw, v > 6, p[7])) {
           VP8PutBit(bw, v == 6, 159);
@@ -557,8 +558,9 @@ static uint64_t OneStatPass(VP8Encoder* const enc, VP8RDLevel rd_opt,
     size += info.R + info.H;
     size_p0 += info.H;
     distortion += info.D;
-    if (percent_delta && !VP8IteratorProgress(&it, percent_delta))
+    if (percent_delta && !VP8IteratorProgress(&it, percent_delta)) {
       return 0;
+    }
     VP8IteratorSaveBoundary(&it);
   } while (VP8IteratorNext(&it) && --nb_mbs > 0);
 
