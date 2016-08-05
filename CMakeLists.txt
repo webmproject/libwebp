@@ -7,6 +7,7 @@ option(WEBP_BUILD_CWEBP "Build the cwebp command line tool." OFF)
 option(WEBP_BUILD_DWEBP "Build the dwebp command line tool." OFF)
 option(WEBP_EXPERIMENTAL_FEATURES "Build with experimental features." OFF)
 option(WEBP_FORCE_ALIGNED "Force aligned memory operations." OFF)
+option(WEBP_ENABLE_SWAP_16BIT_CSP "Enable byte swap for 16 bit colorspaces." OFF)
 
 set(WEBP_DEP_LIBRARIES)
 set(WEBP_DEP_INCLUDE_DIRS)
@@ -18,6 +19,12 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 include(cmake/config.h.cmake)
+
+################################################################################
+# Options.
+if(WEBP_ENABLE_SWAP_16BIT_CSP)
+  add_definitions(-DWEBP_SWAP_16BIT_CSP)
+endif()
 
 ################################################################################
 # Android only.
