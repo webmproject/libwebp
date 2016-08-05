@@ -20,6 +20,20 @@ endif()
 include(cmake/config.h.cmake)
 
 ################################################################################
+# Android only.
+if(ANDROID)
+  include_directories(${ANDROID_NDK}/sources/android/cpufeatures)
+  add_library(cpufeatures STATIC
+    ${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c
+  )
+  target_link_libraries(cpufeatures dl)
+  set(WEBP_DEP_LIBRARIES ${WEBP_DEP_LIBRARIES} cpufeatures)
+  set(WEBP_DEP_INCLUDE_DIRS ${WEBP_DEP_INCLUDE_DIRS}
+    ${ANDROID_NDK}/sources/android/cpufeatures
+  )
+endif()
+
+################################################################################
 # WebP source files.
 # Read the Makefile.am to get the source files.
 set(WEBP_SRCS)
@@ -48,7 +62,7 @@ parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/src/dsp "${WEBP_SRCS}")
 parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/src/enc "${WEBP_SRCS}")
 parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/src/utils "${WEBP_SRCS}")
 
-# Remove the files specific to SIMD we don't user.
+# Remove the files specific to SIMD we don't use.
 foreach(FILE ${WEBP_SIMD_FILES_NOT_TO_INCLUDE})
   list(REMOVE_ITEM WEBP_SRCS ${FILE})
 endforeach()
