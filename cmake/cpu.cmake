@@ -1,7 +1,7 @@
 ## Check for SIMD extensions.
 
 function(webp_check_compiler_flag WEBP_SIMD_FLAG)
-  unset(WEBP_HAVE_FLAG_LOCAL CACHE)
+  unset(WEBP_HAVE_FLAG_${WEBP_SIMD_FLAG} CACHE)
   check_c_source_compiles("
       #include \"${CMAKE_CURRENT_LIST_DIR}/../src/dsp/dsp.h\"
       int main(void) {
@@ -10,9 +10,9 @@ function(webp_check_compiler_flag WEBP_SIMD_FLAG)
         #endif
         return 0;
       }
-    " WEBP_HAVE_FLAG_LOCAL
+    " WEBP_HAVE_FLAG_${WEBP_SIMD_FLAG}
   )
-  if(WEBP_HAVE_FLAG_LOCAL)
+  if(WEBP_HAVE_FLAG_${WEBP_SIMD_FLAG})
     set(WEBP_HAVE_${WEBP_SIMD_FLAG} 1 PARENT_SCOPE)
   else()
     set(WEBP_HAVE_${WEBP_SIMD_FLAG} 0 PARENT_SCOPE)
