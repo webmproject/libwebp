@@ -666,9 +666,8 @@ static uint8x16_t NeedsHev(const uint8x16_t p1, const uint8x16_t p0,
   const uint8x16_t hev_thresh_v = vdupq_n_u8((uint8_t)hev_thresh);
   const uint8x16_t a_p1_p0 = vabdq_u8(p1, p0);  // abs(p1 - p0)
   const uint8x16_t a_q1_q0 = vabdq_u8(q1, q0);  // abs(q1 - q0)
-  const uint8x16_t mask1 = vcgtq_u8(a_p1_p0, hev_thresh_v);
-  const uint8x16_t mask2 = vcgtq_u8(a_q1_q0, hev_thresh_v);
-  const uint8x16_t mask = vorrq_u8(mask1, mask2);
+  const uint8x16_t a_max = vmaxq_u8(a_p1_p0, a_q1_q0);
+  const uint8x16_t mask = vcgtq_u8(a_max, hev_thresh_v);
   return mask;
 }
 
