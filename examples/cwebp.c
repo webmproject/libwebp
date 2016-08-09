@@ -516,9 +516,10 @@ static void HelpLong(void) {
   printf("\nOptions:\n");
   printf("  -h / -help ............. short help\n");
   printf("  -H / -longhelp ......... long help\n");
-  printf("  -q <float> ............. quality factor (0:small..100:big)\n");
-  printf("  -alpha_q <int> ......... transparency-compression quality "
-         "(0..100)\n");
+  printf("  -q <float> ............. quality factor (0:small..100:big), "
+         "default=75\n");
+  printf("  -alpha_q <int> ......... transparency-compression quality (0..100),"
+         "\n                           default=100\n");
   printf("  -preset <string> ....... preset setting, one of:\n");
   printf("                            default, photo, picture,\n");
   printf("                            drawing, icon, text\n");
@@ -526,16 +527,20 @@ static void HelpLong(void) {
   printf("  -z <int> ............... activates lossless preset with given\n"
          "                           level in [0:fast, ..., 9:slowest]\n");
   printf("\n");
-  printf("  -m <int> ............... compression method (0=fast, 6=slowest)\n");
-  printf("  -segments <int> ........ number of segments to use (1..4)\n");
+  printf("  -m <int> ............... compression method (0=fast, 6=slowest), "
+         "default=4\n");
+  printf("  -segments <int> ........ number of segments to use (1..4), "
+         "default=4\n");
   printf("  -size <int> ............ target size (in bytes)\n");
   printf("  -psnr <float> .......... target PSNR (in dB. typically: 42)\n");
   printf("\n");
   printf("  -s <int> <int> ......... input size (width x height) for YUV\n");
-  printf("  -sns <int> ............. spatial noise shaping (0:off, 100:max)\n");
-  printf("  -f <int> ............... filter strength (0=off..100)\n");
+  printf("  -sns <int> ............. spatial noise shaping (0:off, 100:max), "
+         "default=50\n");
+  printf("  -f <int> ............... filter strength (0=off..100), "
+         "default=60\n");
   printf("  -sharpness <int> ....... "
-         "filter sharpness (0:most .. 7:least sharp)\n");
+         "filter sharpness (0:most .. 7:least sharp), default=0\n");
   printf("  -strong ................ use strong filter instead "
                                      "of simple (default)\n");
   printf("  -nostrong .............. use simple filter instead of strong\n");
@@ -552,19 +557,21 @@ static void HelpLong(void) {
   printf("  -print_ssim ............ prints averaged SSIM distortion\n");
   printf("  -print_lsim ............ prints local-similarity distortion\n");
   printf("  -d <file.pgm> .......... dump the compressed output (PGM file)\n");
-  printf("  -alpha_method <int> .... transparency-compression method (0..1)\n");
+  printf("  -alpha_method <int> .... transparency-compression method (0..1), "
+         "default=1\n");
   printf("  -alpha_filter <string> . predictive filtering for alpha plane,\n");
   printf("                           one of: none, fast (default) or best\n");
-  printf("  -exact ................. preserve RGB values in transparent area"
-         "\n");
+  printf("  -exact ................. preserve RGB values in transparent area, "
+         "default=off\n");
   printf("  -blend_alpha <hex> ..... blend colors against background color\n"
          "                           expressed as RGB values written in\n"
          "                           hexadecimal, e.g. 0xc0e0d0 for red=0xc0\n"
          "                           green=0xe0 and blue=0xd0\n");
   printf("  -noalpha ............... discard any transparency information\n");
-  printf("  -lossless .............. encode image losslessly\n");
+  printf("  -lossless .............. encode image losslessly, default=off\n");
   printf("  -near_lossless <int> ... use near-lossless image\n"
-         "                           preprocessing (0..100=off)\n");
+         "                           preprocessing (0..100=off), "
+         "default=100\n");
 #ifdef WEBP_EXPERIMENTAL_FEATURES
   printf("  -delta_palettization ... use delta palettization\n");
 #endif  // WEBP_EXPERIMENTAL_FEATURES
