@@ -598,9 +598,10 @@ static void AddSingleLiteralWithCostModel(const uint32_t* const argb,
                                           uint16_t* const dist_array) {
   double cost_val = prev_cost;
   const uint32_t color = argb[0];
-  if (use_color_cache && VP8LColorCacheContains(hashers, color)) {
+  const int ix = use_color_cache ? VP8LColorCacheContains(hashers, color) : -1;
+  if (ix >= 0) {
+    // use_color_cache is true and hashers contains color
     const double mul0 = 0.68;
-    const int ix = VP8LColorCacheGetIndex(hashers, color);
     cost_val += GetCacheCost(cost_model, ix) * mul0;
   } else {
     const double mul1 = 0.82;
@@ -1410,9 +1411,11 @@ static int BackwardReferencesHashChainFollowChosenPath(
       i += len;
     } else {
       PixOrCopy v;
-      if (use_color_cache && VP8LColorCacheContains(&hashers, argb[i])) {
+      const int idx =
+          use_color_cache ? VP8LColorCacheContains(&hashers, argb[i]) : -1;
+      if (idx >= 0) {
+        // use_color_cache is true and hashers contains argb[i]
         // push pixel as a color cache index
-        const int idx = VP8LColorCacheGetIndex(&hashers, argb[i]);
         v = PixOrCopyCreateCacheIdx(idx);
       } else {
         if (use_color_cache) VP8LColorCacheInsert(&hashers, argb[i]);
@@ -1601,8 +1604,9 @@ static int BackwardRefsWithLocalCache(const uint32_t* const argb,
     PixOrCopy* const v = c.cur_pos;
     if (PixOrCopyIsLiteral(v)) {
       const uint32_t argb_literal = v->argb_or_distance;
-      if (VP8LColorCacheContains(&hashers, argb_literal)) {
-        const int ix = VP8LColorCacheGetIndex(&hashers, argb_literal);
+      const int ix = VP8LColorCacheContains(&hashers, argb_literal);
+      if (ix >= 0) {
+        // hashers contains argb_literal
         *v = PixOrCopyCreateCacheIdx(ix);
       } else {
         VP8LColorCacheInsert(&hashers, argb_literal);
