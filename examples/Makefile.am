@@ -41,7 +41,7 @@ dwebp_LDADD +=$(PNG_LIBS) $(JPEG_LIBS)
 gif2webp_SOURCES = gif2webp.c gifdec.c gifdec.h
 gif2webp_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE) $(GIF_INCLUDES)
 gif2webp_LDADD  = libexample_util.la ../imageio/libimageio_util.la
-gif2webp_LDADD += ../src/mux/libwebpmux.la ../src/libwebp.la $(GIF_LIBS)
+gif2webp_LDADD += ../src/mux/libwebpmux.la ../src/libwebp.la $(GIF_LIBS) -lm
 
 vwebp_SOURCES = vwebp.c
 vwebp_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE) $(GL_INCLUDES)
@@ -51,7 +51,7 @@ vwebp_LDADD += ../src/demux/libwebpdemux.la $(GL_LIBS)
 webpmux_SOURCES = webpmux.c
 webpmux_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
 webpmux_LDADD  = libexample_util.la ../imageio/libimageio_util.la
-webpmux_LDADD += ../src/mux/libwebpmux.la ../src/libwebp.la
+webpmux_LDADD += ../src/mux/libwebpmux.la ../src/libwebp.la -lm
 
 if BUILD_LIBWEBPDECODER
   anim_diff_LDADD += ../src/libwebpdecoder.la
