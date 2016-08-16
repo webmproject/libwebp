@@ -545,8 +545,8 @@ static VP8LHistogram* HistogramCombineEntropyBin(
   return cur_combo;
 }
 
-static uint32_t MyRand(uint32_t *seed) {
-  *seed *= 16807U;
+static uint32_t MyRand(uint32_t* const seed) {
+  *seed = (*seed * 16807ull) & 0xffffffffu;
   if (*seed == 0) {
     *seed = 1;
   }

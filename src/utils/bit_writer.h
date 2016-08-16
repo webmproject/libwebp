@@ -54,7 +54,8 @@ int VP8BitWriterAppend(VP8BitWriter* const bw,
 
 // return approximate write position (in bits)
 static WEBP_INLINE uint64_t VP8BitWriterPos(const VP8BitWriter* const bw) {
-  return (uint64_t)(bw->pos_ + bw->run_) * 8 + 8 + bw->nb_bits_;
+  const uint64_t nb_bits = 8 + bw->nb_bits_;   // bw->nb_bits_ is <= 0, note
+  return (bw->pos_ + bw->run_) * 8 + nb_bits;
 }
 
 // Returns a pointer to the internal buffer.
