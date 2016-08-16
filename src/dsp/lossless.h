@@ -342,14 +342,16 @@ static WEBP_INLINE void VP8LPrefixEncode(int distance, int* const code,
 }
 
 // Sum of each component, mod 256.
-static WEBP_INLINE uint32_t VP8LAddPixels(uint32_t a, uint32_t b) {
+static WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW WEBP_INLINE
+uint32_t VP8LAddPixels(uint32_t a, uint32_t b) {
   const uint32_t alpha_and_green = (a & 0xff00ff00u) + (b & 0xff00ff00u);
   const uint32_t red_and_blue = (a & 0x00ff00ffu) + (b & 0x00ff00ffu);
   return (alpha_and_green & 0xff00ff00u) | (red_and_blue & 0x00ff00ffu);
 }
 
 // Difference of each component, mod 256.
-static WEBP_INLINE uint32_t VP8LSubPixels(uint32_t a, uint32_t b) {
+static WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW WEBP_INLINE
+uint32_t VP8LSubPixels(uint32_t a, uint32_t b) {
   const uint32_t alpha_and_green =
       0x00ff00ffu + (a & 0xff00ff00u) - (b & 0xff00ff00u);
   const uint32_t red_and_blue =

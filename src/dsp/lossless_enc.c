@@ -922,11 +922,11 @@ void VP8LResidualImage(int width, int height, int bits, int low_effort,
 void VP8LSubtractGreenFromBlueAndRed_C(uint32_t* argb_data, int num_pixels) {
   int i;
   for (i = 0; i < num_pixels; ++i) {
-    const uint32_t argb = argb_data[i];
-    const uint32_t green = (argb >> 8) & 0xff;
+    const int argb = argb_data[i];
+    const int green = (argb >> 8) & 0xff;
     const uint32_t new_r = (((argb >> 16) & 0xff) - green) & 0xff;
-    const uint32_t new_b = ((argb & 0xff) - green) & 0xff;
-    argb_data[i] = (argb & 0xff00ff00) | (new_r << 16) | new_b;
+    const uint32_t new_b = (((argb >>  0) & 0xff) - green) & 0xff;
+    argb_data[i] = (argb & 0xff00ff00u) | (new_r << 16) | new_b;
   }
 }
 
@@ -936,9 +936,8 @@ static WEBP_INLINE void MultipliersClear(VP8LMultipliers* const m) {
   m->red_to_blue_ = 0;
 }
 
-static WEBP_INLINE uint32_t ColorTransformDelta(int8_t color_pred,
-                                                int8_t color) {
-  return (uint32_t)((int)(color_pred) * color) >> 5;
+static WEBP_INLINE int ColorTransformDelta(int8_t color_pred, int8_t color) {
+  return ((int)color_pred * color) >> 5;
 }
 
 static WEBP_INLINE void ColorCodeToMultipliers(uint32_t color_code,
@@ -963,8 +962,8 @@ void VP8LTransformColor_C(const VP8LMultipliers* const m, uint32_t* data,
     const uint32_t argb = data[i];
     const uint32_t green = argb >> 8;
     const uint32_t red = argb >> 16;
-    uint32_t new_red = red;
-    uint32_t new_blue = argb;
+    int new_red = red;
+    int new_blue = argb;
     new_red -= ColorTransformDelta(m->green_to_red_, green);
     new_red &= 0xff;
     new_blue -= ColorTransformDelta(m->green_to_blue_, green);
@@ -977,7 +976,7 @@ void VP8LTransformColor_C(const VP8LMultipliers* const m, uint32_t* data,
 static WEBP_INLINE uint8_t TransformColorRed(uint8_t green_to_red,
                                              uint32_t argb) {
   const uint32_t green = argb >> 8;
-  uint32_t new_red = argb >> 16;
+  int new_red = argb >> 16;
   new_red -= ColorTransformDelta(green_to_red, green);
   return (new_red & 0xff);
 }
