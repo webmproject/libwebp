@@ -163,18 +163,25 @@ typedef enum {
   kHistoTotal  // Must be last.
 } HistoIx;
 
-static void AddSingleSubGreen(uint32_t p, uint32_t* r, uint32_t* b) {
-  const uint32_t green = p >> 8;  // The upper bits are masked away later.
+static void AddSingleSubGreen(int p, uint32_t* const r, uint32_t* const b) {
+  const int green = p >> 8;  // The upper bits are masked away later.
   ++r[((p >> 16) - green) & 0xff];
-  ++b[(p - green) & 0xff];
+  ++b[((p >>  0) - green) & 0xff];
 }
 
 static void AddSingle(uint32_t p,
-                      uint32_t* a, uint32_t* r, uint32_t* g, uint32_t* b) {
-  ++a[p >> 24];
+                      uint32_t* const a, uint32_t* const r,
+                      uint32_t* const g, uint32_t* const b) {
+  ++a[(p >> 24) & 0xff];
   ++r[(p >> 16) & 0xff];
-  ++g[(p >> 8) & 0xff];
-  ++b[(p & 0xff)];
+  ++g[(p >>  8) & 0xff];
+  ++b[(p >>  0) & 0xff];
+}
+
+static WEBP_INLINE uint32_t HashPix(uint32_t pix) {
+  // Note that masking with 0xffffffffu is for preventing an
+  // 'unsigned int overflow' warning. Doesn't impact the compiled code.
+  return (((pix + (pix >> 19)) * 0x39c5fba7ull) & 0xffffffffu) >> 24;
 }
 
 static int AnalyzeEntropy(const uint32_t* argb,
@@ -214,8 +221,8 @@ static int AnalyzeEntropy(const uint32_t* argb,
                           &histo[kHistoBluePredSubGreen * 256]);
         {
           // Approximate the palette by the entropy of the multiplicative hash.
-          const int hash = ((pix + (pix >> 19)) * 0x39c5fba7) >> 24;
-          ++histo[kHistoPalette * 256 + (hash & 0xff)];
+          const uint32_t hash = HashPix(pix);
+          ++histo[kHistoPalette * 256 + hash];
         }
       }
       prev_row = curr_row;

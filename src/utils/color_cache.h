@@ -28,7 +28,11 @@ typedef struct {
   int hash_bits_;
 } VP8LColorCache;
 
-static const uint32_t kHashMul = 0x1e35a7bd;
+static const uint64_t kHashMul = 0x1e35a7bdull;
+
+static WEBP_INLINE int HashPix(uint32_t argb, int shift) {
+  return (int)(((argb * kHashMul) & 0xffffffffu) >> shift);
+}
 
 static WEBP_INLINE uint32_t VP8LColorCacheLookup(
     const VP8LColorCache* const cc, uint32_t key) {
@@ -44,20 +48,20 @@ static WEBP_INLINE void VP8LColorCacheSet(const VP8LColorCache* const cc,
 
 static WEBP_INLINE void VP8LColorCacheInsert(const VP8LColorCache* const cc,
                                              uint32_t argb) {
-  const uint32_t key = (kHashMul * argb) >> cc->hash_shift_;
+  const int key = HashPix(argb, cc->hash_shift_);
   cc->colors_[key] = argb;
 }
 
 static WEBP_INLINE int VP8LColorCacheGetIndex(const VP8LColorCache* const cc,
                                               uint32_t argb) {
-  return (kHashMul * argb) >> cc->hash_shift_;
+  return HashPix(argb, cc->hash_shift_);
 }
 
 // Return the key if cc contains argb, and -1 otherwise.
 static WEBP_INLINE int VP8LColorCacheContains(const VP8LColorCache* const cc,
                                               uint32_t argb) {
-  const uint32_t key = (kHashMul * argb) >> cc->hash_shift_;
-  return (cc->colors_[key] == argb) ? (int)key : -1;
+  const int key = HashPix(argb, cc->hash_shift_);
+  return (cc->colors_[key] == argb) ? key : -1;
 }
 
 //------------------------------------------------------------------------------
