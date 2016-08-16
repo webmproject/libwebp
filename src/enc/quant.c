@@ -1004,7 +1004,7 @@ static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
 
     InitScore(&rd_i4);
     VP8MakeIntra4Preds(it);
-    for (mode = 0; mode < 2 /*NUM_BMODES*/; ++mode) {
+    for (mode = 0; mode < NUM_BMODES; ++mode) {
       VP8ModeScore rd_tmp;
       int16_t tmp_levels[16];
 

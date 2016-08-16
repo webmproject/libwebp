@@ -149,8 +149,7 @@ static WEBP_INLINE int VP8GetBit(VP8BitReader* const br, int prob) {
 }
 
 // simplified version of VP8GetBit() for prob=0x80 (note shift is always 1 here)
-static WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW
-    WEBP_INLINE int VP8GetSigned(VP8BitReader* const br, int v) {
+static WEBP_INLINE int VP8GetSigned(VP8BitReader* const br, int v) {
   if (br->bits_ < 0) {
     VP8LoadNewBytes(br);
   }
