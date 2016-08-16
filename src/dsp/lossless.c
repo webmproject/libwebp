@@ -245,9 +245,9 @@ void VP8LAddGreenToBlueAndRed_C(uint32_t* data, int num_pixels) {
   }
 }
 
-static WEBP_INLINE uint32_t ColorTransformDelta(int8_t color_pred,
-                                                int8_t color) {
-  return (uint32_t)((int)(color_pred) * color) >> 5;
+static WEBP_INLINE int ColorTransformDelta(int8_t color_pred,
+                                           int8_t color) {
+  return ((int)color_pred * color) >> 5;
 }
 
 static WEBP_INLINE void ColorCodeToMultipliers(uint32_t color_code,
@@ -264,8 +264,8 @@ void VP8LTransformColorInverse_C(const VP8LMultipliers* const m, uint32_t* data,
     const uint32_t argb = data[i];
     const uint32_t green = argb >> 8;
     const uint32_t red = argb >> 16;
-    uint32_t new_red = red;
-    uint32_t new_blue = argb;
+    int new_red = red;
+    int new_blue = argb;
     new_red += ColorTransformDelta(m->green_to_red_, green);
     new_red &= 0xff;
     new_blue += ColorTransformDelta(m->green_to_blue_, green);

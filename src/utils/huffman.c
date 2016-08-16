@@ -45,7 +45,7 @@ static WEBP_INLINE uint32_t GetNextKey(uint32_t key, int len) {
   while (key & step) {
     step >>= 1;
   }
-  return (key & (step - 1)) + step;
+  return step ? (key & (step - 1)) + step : key;
 }
 
 // Stores code in table[0], table[step], table[2*step], ..., table[end].
