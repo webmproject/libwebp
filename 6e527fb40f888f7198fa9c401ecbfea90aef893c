@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "db181fbf_597b73ed",
+        "filename": "src/dsp/lossless_enc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 922,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-08-17T05:31:56Z",
+      "side": 1,
+      "message": "reverted for now",
+      "parentUuid": "db181fbf_2eae2be7",
+      "range": {
+        "startLine": 922,
+        "startChar": 48,
+        "endLine": 922,
+        "endChar": 55
+      },
+      "revId": "6e527fb40f888f7198fa9c401ecbfea90aef893c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "db181fbf_aec17ba0",
         "filename": "src/utils/bit_writer.h",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2016-08-17T01:53:54Z",
       "side": 1,
       "message": "extra whitespace",
+      "range": {
+        "startLine": 56,
+        "startChar": 7,
+        "endLine": 56,
+        "endChar": 8
+      },
+      "revId": "6e527fb40f888f7198fa9c401ecbfea90aef893c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db181fbf_79762f09",
+        "filename": "src/utils/bit_writer.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-08-17T05:31:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "db181fbf_aec17ba0",
       "range": {
         "startLine": 56,
         "startChar": 7,
