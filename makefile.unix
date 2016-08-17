@@ -370,11 +370,15 @@ examples/anim_diff: src/demux/libwebpdemux.a examples/libexample_util.a
 examples/anim_diff: imageio/libimageio_util.a src/libwebp.a
 examples/anim_diff: EXTRA_LIBS += $(GIF_LIBS)
 examples/anim_diff: EXTRA_FLAGS += -DWEBP_HAVE_GIF
-examples/cwebp: examples/libexample_util.a imageio/libimageio_util.a
-examples/cwebp: imageio/libimagedec.a src/libwebp.a
+examples/cwebp: examples/libexample_util.a
+examples/cwebp: imageio/libimagedec.a
+examples/cwebp: imageio/libimageio_util.a
+examples/cwebp: src/libwebp.a
 examples/cwebp: EXTRA_LIBS += $(CWEBP_LIBS)
-examples/dwebp: examples/libexample_util.a imageio/libimageio_util.a
-examples/dwebp: imageio/libimagedec.a src/libwebp.a
+examples/dwebp: examples/libexample_util.a
+examples/dwebp: imageio/libimagedec.a
+examples/dwebp: imageio/libimageio_util.a
+examples/dwebp: src/libwebp.a
 examples/dwebp: EXTRA_LIBS += $(DWEBP_LIBS)
 examples/gif2webp: examples/libexample_util.a imageio/libimageio_util.a
 examples/gif2webp: examples/libgifdec.a src/mux/libwebpmux.a src/libwebp.a
