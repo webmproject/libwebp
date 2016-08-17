@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "db181fbf_f97dffbe",
+        "filename": "src/dsp/lossless_enc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 940,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-08-17T06:19:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "db181fbf_99eb2b71",
+      "revId": "bf845b60442609e48f06e6511a1fa556d83f90e8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "db181fbf_b9eee780",
         "filename": "src/dsp/lossless_enc.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2016-08-17T06:18:51Z",
       "side": 1,
       "message": "redundant ()s",
+      "revId": "bf845b60442609e48f06e6511a1fa556d83f90e8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db181fbf_d97ac3c4",
+        "filename": "src/dsp/lossless_enc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 941,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-08-17T06:19:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "db181fbf_b9eee780",
       "revId": "bf845b60442609e48f06e6511a1fa556d83f90e8",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
