@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db181fbf_2eae2be7",
+        "filename": "src/dsp/lossless_enc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 922,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-08-17T01:53:54Z",
+      "side": 1,
+      "message": "this doesn\u0027t match the .h or the function pointer typedef, you\u0027d have to change more to sync them",
+      "range": {
+        "startLine": 922,
+        "startChar": 48,
+        "endLine": 922,
+        "endChar": 55
+      },
+      "revId": "6e527fb40f888f7198fa9c401ecbfea90aef893c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db181fbf_aec17ba0",
+        "filename": "src/utils/bit_writer.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-08-17T01:53:54Z",
+      "side": 1,
+      "message": "extra whitespace",
+      "range": {
+        "startLine": 56,
+        "startChar": 7,
+        "endLine": 56,
+        "endChar": 8
+      },
+      "revId": "6e527fb40f888f7198fa9c401ecbfea90aef893c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
