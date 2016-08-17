@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db181fbf_99eb2b71",
+        "filename": "src/dsp/lossless_enc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 940,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-08-17T06:18:51Z",
+      "side": 1,
+      "message": "this can be joined with the line above",
+      "revId": "bf845b60442609e48f06e6511a1fa556d83f90e8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db181fbf_b9eee780",
+        "filename": "src/dsp/lossless_enc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 941,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-08-17T06:18:51Z",
+      "side": 1,
+      "message": "redundant ()s",
+      "revId": "bf845b60442609e48f06e6511a1fa556d83f90e8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db181fbf_398037a6",
+        "filename": "src/utils/color_cache.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-08-17T06:18:51Z",
+      "side": 1,
+      "message": "may want to prefix this with VP8L given its location in the header",
+      "revId": "bf845b60442609e48f06e6511a1fa556d83f90e8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
