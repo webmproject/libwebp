@@ -111,8 +111,7 @@ extern "C" {
 
 #define WEBP_UBSAN_IGNORE_UNDEF
 #define WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW
-#if !defined(WEBP_FORCE_ALIGNED) && defined(__clang__) && \
-    defined(__has_attribute)
+#if defined(__clang__) && defined(__has_attribute)
 #if __has_attribute(no_sanitize)
 // This macro prevents the undefined behavior sanitizer from reporting
 // failures. This is only meant to silence unaligned loads on platforms that

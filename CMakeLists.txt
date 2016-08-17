@@ -6,7 +6,6 @@ project(libwebp C)
 option(WEBP_BUILD_CWEBP "Build the cwebp command line tool." OFF)
 option(WEBP_BUILD_DWEBP "Build the dwebp command line tool." OFF)
 option(WEBP_EXPERIMENTAL_FEATURES "Build with experimental features." OFF)
-option(WEBP_FORCE_ALIGNED "Force aligned memory operations." OFF)
 option(WEBP_ENABLE_SWAP_16BIT_CSP "Enable byte swap for 16 bit colorspaces." OFF)
 
 set(WEBP_DEP_LIBRARIES)
