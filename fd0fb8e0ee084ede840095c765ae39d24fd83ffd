@@ -16,6 +16,24 @@
       "revId": "fd0fb8e0ee084ede840095c765ae39d24fd83ffd",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b794741_718e302f",
+        "filename": "makefile.unix",
+        "patchSetId": 2
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-08-18T02:53:17Z",
+      "side": 1,
+      "message": "i didn\u0027t get the error for dwebp, since we don\u0027t decode source images here (the undefined symbols were in webpdec.o only).\nBut it probably doesn\u0027t hurt to fix the order here too, if it\u0027s passes ok.",
+      "parentUuid": "9b794741_715390e9",
+      "revId": "fd0fb8e0ee084ede840095c765ae39d24fd83ffd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
