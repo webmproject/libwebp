@@ -52,6 +52,7 @@ ENC_SOURCES += lossless_enc_mips_dsp_r2.c
 
 libwebpdsp_avx2_la_SOURCES =
 libwebpdsp_avx2_la_SOURCES += enc_avx2.c
+libwebpdsp_avx2_la_SOURCES += cost_avx2.c
 libwebpdsp_avx2_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
 libwebpdsp_avx2_la_CFLAGS = $(AM_CFLAGS) $(AVX2_FLAGS)
 

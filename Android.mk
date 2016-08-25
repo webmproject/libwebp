@@ -82,6 +82,7 @@ dsp_enc_srcs := \
     src/dsp/cost.c \
     src/dsp/cost_mips32.c \
     src/dsp/cost_mips_dsp_r2.c \
+    src/dsp/cost_avx2.c \
     src/dsp/cost_sse2.c \
     src/dsp/enc.c \
     src/dsp/enc_avx2.c \
