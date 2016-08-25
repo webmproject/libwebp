@@ -249,12 +249,18 @@ int VP8LHashChainFill(VP8LHashChain* const p, int quality,
   const int iter_min = iter_max - quality / 10;
   const uint32_t window_size = GetWindowSizeForHashChain(quality, xsize);
   int pos;
+  int argb_comp[2] = {0, 0};
   uint32_t base_position;
   int32_t* hash_to_first_index;
   // Temporarily use the p->offset_length_ as a hash chain.
   int32_t* chain = (int32_t*)p->offset_length_;
   assert(p->size_ != 0);
   assert(p->offset_length_ != NULL);
+
+  if (size <= 2) {
+    p->offset_length_[0] = p->offset_length_[size - 1] = 0;
+    return 1;
+  }
 
   hash_to_first_index =
       (int32_t*)WebPSafeMalloc(HASH_SIZE, sizeof(*hash_to_first_index));
@@ -263,11 +269,55 @@ int VP8LHashChainFill(VP8LHashChain* const p, int quality,
   // Set the int32_t array to -1.
   memset(hash_to_first_index, 0xff, HASH_SIZE * sizeof(*hash_to_first_index));
   // Fill the chain linking pixels with the same hash.
-  for (pos = 0; pos < size - 1; ++pos) {
-    const uint32_t hash_code = GetPixPairHash64(argb + pos);
-    chain[pos] = hash_to_first_index[hash_code];
-    hash_to_first_index[hash_code] = pos;
+  argb_comp[0] = argb[0] == argb[1];
+  for (pos = 0; pos < size - 2;) {
+    uint32_t hash_code;
+    argb_comp[1] = argb[pos + 1] == argb[pos + 2];
+    if (argb_comp[0] && argb_comp[1]) {
+      // Consecutive pixels with the same color will share the same hash.
+      // We therefore use a different hash: the color and its repetition
+      // length.
+      uint32_t tmp[2];
+      uint32_t len = 1;
+      tmp[0] = argb[pos];
+      // Figure out how far the pixels are the same.
+      // The last pixel has a different 64 bit hash, as its next pixel does
+      // not have the same color, so we just need to get to the last pixel equal
+      // to its follower.
+      while (pos + (int)len + 2 < size && argb[pos + len + 2] == argb[pos]) {
+        ++len;
+      }
+      if (len >= MAX_LENGTH) {
+        // For MAX_LENGTH, the chain always refer to the previous element so
+        // we speed up the chain computation.
+        tmp[1] = MAX_LENGTH;
+        hash_code = GetPixPairHash64(tmp);
+        chain[pos++] = hash_to_first_index[hash_code];
+        while (--len >= MAX_LENGTH) {
+          chain[pos] = pos - 1;
+          ++pos;
+        }
+        hash_to_first_index[hash_code] = pos - 1;
+      }
+      // Process the rest of the hash chain.
+      while (len) {
+        tmp[1] = len--;
+        hash_code = GetPixPairHash64(tmp);
+        chain[pos] = hash_to_first_index[hash_code];
+        hash_to_first_index[hash_code] = pos++;
+      }
+      argb_comp[0] = 0;
+    } else {
+      // Just move one pixel forward.
+      hash_code = GetPixPairHash64(argb + pos);
+      chain[pos] = hash_to_first_index[hash_code];
+      hash_to_first_index[hash_code] = pos++;
+      argb_comp[0] = argb_comp[1];
+    }
   }
+  // Process the penultimate pixel.
+  chain[pos] = hash_to_first_index[GetPixPairHash64(argb + pos)];
+
   WebPSafeFree(hash_to_first_index);
 
   // Find the best match interval at each pixel, defined by an offset to the
@@ -275,7 +325,7 @@ int VP8LHashChainFill(VP8LHashChain* const p, int quality,
   // (hence a best length of 0) and the left-most pixel nothing to the left
   // (hence an offset of 0).
   p->offset_length_[0] = p->offset_length_[size - 1] = 0;
-  for (base_position = size - 2 < 0 ? 0 : size - 2; base_position > 0;) {
+  for (base_position = size - 2; base_position > 0;) {
     const int max_len = MaxFindCopyLength(size - 1 - base_position);
     const uint32_t* const argb_start = argb + base_position;
     int iter = iter_max;
@@ -288,18 +338,26 @@ int VP8LHashChainFill(VP8LHashChain* const p, int quality,
 
     pos = chain[base_position];
     if (!low_effort) {
-      // Heuristic: use the comparison with the above line as an initialization.
-      if (base_position >= (uint32_t)xsize) {
-        const int curr_length = FindMatchLength(argb_start - xsize, argb_start,
-                                                best_length, max_len);
-        if (curr_length > best_length) {
-          best_length = curr_length;
-          best_distance = xsize;
+      // Heuristic: use the comparison with the pixel above and the
+      // previous pixel as an initialization.
+      const int dists[2] = {xsize, 1};
+      int i = 0;
+      for (; i < 2; ++i) {
+        if (base_position >= (uint32_t)dists[i]) {
+          const int curr_length = FindMatchLength(
+              argb_start - dists[i], argb_start, best_length, max_len);
+          --iter;
+          if (curr_length > best_length) {
+            best_length = curr_length;
+            best_distance = dists[i];
+            if (best_length == MAX_LENGTH) {
+              // Skip the following for loop if we already have the maximum.
+              pos = min_pos - 1;
+              break;
+            }
+          }
         }
       }
-      --iter;
-      // Skip the for loop if we already have the maximum.
-      if (best_length == MAX_LENGTH) pos = min_pos - 1;
     }
 
     for (; pos >= min_pos; pos = chain[pos]) {
