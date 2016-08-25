@@ -378,10 +378,10 @@ static WEBP_INLINE int PixelsAreSimilar(uint32_t src, uint32_t dst,
   const int dst_g = (dst >> 8) & 0xff;
   const int dst_b = (dst >> 0) & 0xff;
 
-  return (abs(src_r * src_a - dst_r * dst_a) <= (max_allowed_diff * 255)) &&
-         (abs(src_g * src_a - dst_g * dst_a) <= (max_allowed_diff * 255)) &&
-         (abs(src_b * src_a - dst_b * dst_a) <= (max_allowed_diff * 255)) &&
-         (abs(src_a - dst_a) <= max_allowed_diff);
+  return (src_a == dst_a) &&
+         (abs(src_r - dst_r) * dst_a <= (max_allowed_diff * 255)) &&
+         (abs(src_g - dst_g) * dst_a <= (max_allowed_diff * 255)) &&
+         (abs(src_b - dst_b) * dst_a <= (max_allowed_diff * 255));
 }
 
 // Returns true if 'length' number of pixels in 'src' and 'dst' are within an
