@@ -1540,6 +1540,7 @@ static double ComputeCacheEntropy(const uint32_t* argb,
   int cc_init = 0;
   double entropy = MAX_ENTROPY;
   const double kSmallPenaltyForLargeCache = 4.0;
+  int nb = 0;
   VP8LColorCache hashers;
   VP8LRefsCursor c = VP8LRefsCursorInit(refs);
   VP8LHistogram* histo = VP8LAllocateHistogram(cache_bits);
@@ -1562,6 +1563,7 @@ static double ComputeCacheEntropy(const uint32_t* argb,
         const uint32_t key = VP8LColorCacheGetIndex(&hashers, pix);
         if (VP8LColorCacheLookup(&hashers, key) == pix) {
           ++histo->literal_[NUM_LITERAL_CODES + NUM_LENGTH_CODES + key];
+          ++nb;
         } else {
           VP8LColorCacheSet(&hashers, key, pix);
           ++histo->blue_[pix & 0xff];
@@ -1583,11 +1585,11 @@ static double ComputeCacheEntropy(const uint32_t* argb,
       VP8LRefsCursorNext(&c);
     }
   }
-  entropy = VP8LHistogramEstimateBits(histo) +
-      kSmallPenaltyForLargeCache * cache_bits;
+  entropy = VP8LHistogramEstimateBits(histo) +kSmallPenaltyForLargeCache * cache_bits;
  Error:
   if (cc_init) VP8LColorCacheClear(&hashers);
   VP8LFreeHistogram(histo);
+  printf("%d: S=%lf  nb=%d\n", cache_bits, entropy, nb);
   return entropy;
 }
 
@@ -1622,6 +1624,13 @@ static int CalculateBestCacheSize(const uint32_t* const argb,
                               refs)) {
     return 0;
   }
+  for (cache_bits_low = 0; cache_bits_low <= cache_bits_high; ++cache_bits_low) {
+    entropy_low = ComputeCacheEntropy(argb, refs, cache_bits_low);
+  }
+  cache_bits_low = 0;
+  *best_cache_bits = atoi(getenv("CB"));
+  *lz77_computed = 1;
+  return 1;
   // Do a binary search to find the optimal entropy for cache_bits.
   while (eval_low || eval_high) {
     if (eval_low) {
@@ -1637,12 +1646,14 @@ static int CalculateBestCacheSize(const uint32_t* const argb,
     if (entropy_high < entropy_low) {
       const int prev_cache_bits_low = cache_bits_low;
       *best_cache_bits = cache_bits_high;
-      cache_bits_low = (cache_bits_low + cache_bits_high) / 2;
+      //cache_bits_low = (cache_bits_low + cache_bits_high) / 2;
+      cache_bits_low++;
       if (cache_bits_low != prev_cache_bits_low) eval_low = 1;
     } else {
       *best_cache_bits = cache_bits_low;
       cache_bits_high = (cache_bits_low + cache_bits_high) / 2;
-      if (cache_bits_high != cache_bits_low) eval_high = 1;
+      cache_bits_high--;
+      if (cache_bits_high > cache_bits_low) eval_high = 1;
     }
   }
   *lz77_computed = 1;
