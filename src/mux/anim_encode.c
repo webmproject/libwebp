@@ -1190,16 +1190,20 @@ static int CacheFrame(WebPAnimEncoder* const enc,
       enc->prev_candidate_undecided_ = 0;
     } else {
       int64_t curr_delta;
+      FrameRect prev_rect_key, prev_rect_sub;
 
       // Add this as a frame rectangle to enc.
       error_code = SetFrame(enc, config, 0, encoded_frame, &frame_skipped);
       if (error_code != VP8_ENC_OK) goto End;
       if (frame_skipped) goto Skip;
+      prev_rect_sub = enc->prev_rect_;
+
 
       // Add this as a key-frame to enc, too.
       error_code = SetFrame(enc, config, 1, encoded_frame, &frame_skipped);
       if (error_code != VP8_ENC_OK) goto End;
       assert(frame_skipped == 0);  // Key-frame cannot be an empty rectangle.
+      prev_rect_key = enc->prev_rect_;
 
       // Analyze size difference of the two variants.
       curr_delta = KeyFramePenalty(encoded_frame);
@@ -1210,11 +1214,13 @@ static int CacheFrame(WebPAnimEncoder* const enc,
           old_keyframe->is_key_frame_ = 0;
         }
         encoded_frame->is_key_frame_ = 1;
+        enc->prev_candidate_undecided_ = 1;
         enc->keyframe_ = (int)position;
         enc->best_delta_ = curr_delta;
         enc->flush_count_ = enc->count_ - 1;  // We can flush previous frames.
       } else {
         encoded_frame->is_key_frame_ = 0;
+        enc->prev_candidate_undecided_ = 0;
       }
       // Note: We need '>=' below because when kmin and kmax are both zero,
       // count_since_key_frame will always be > kmax.
@@ -1224,7 +1230,10 @@ static int CacheFrame(WebPAnimEncoder* const enc,
         enc->keyframe_ = KEYFRAME_NONE;
         enc->best_delta_ = DELTA_INFINITY;
       }
-      enc->prev_candidate_undecided_ = 1;
+      if (!enc->prev_candidate_undecided_) {
+        enc->prev_rect_ =
+            encoded_frame->is_key_frame_ ? prev_rect_key : prev_rect_sub;
+      }
     }
   }
 
