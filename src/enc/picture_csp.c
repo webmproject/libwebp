@@ -235,12 +235,12 @@ static fixed_y_t clip_y(int y) {
 //------------------------------------------------------------------------------
 
 static int RGBToGray(int r, int g, int b) {
-  const int luma = 19595 * r + 38470 * g + 7471 * b + YUV_HALF;
+  const int luma = 13933 * r + 46871 * g + 4732 * b + YUV_HALF;
   return (luma >> YUV_FIX);
 }
 
 static float RGBToGrayF(float r, float g, float b) {
-  return 0.299f * r + 0.587f * g + 0.114f * b;
+  return (float)(0.2126 * r + 0.7152 * g + 0.0722 * b);
 }
 
 static int ScaleDown(int a, int b, int c, int d) {
