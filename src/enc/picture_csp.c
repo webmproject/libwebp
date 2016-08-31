@@ -171,9 +171,8 @@ typedef uint16_t fixed_y_t;   // unsigned type with extra SFIX precision for W
 #if defined(USE_GAMMA_COMPRESSION)
 
 // float variant of gamma-correction
-// We use tables of different size and precision, along with a 'real-world'
-// Gamma value close to ~2.
-#define kGammaF 2.2
+// We use tables of different size and precision for the Rec709 transfer function.
+#define kGammaF (1./0.45)
 static float kGammaToLinearTabF[MAX_Y_T + 1];   // size scales with Y_FIX
 static float kLinearToGammaTabF[kGammaTabSize + 2];
 static volatile int kGammaTablesFOk = 0;
@@ -183,11 +182,26 @@ static WEBP_TSAN_IGNORE_FUNCTION void InitGammaTablesF(void) {
     int v;
     const double norm = 1. / MAX_Y_T;
     const double scale = 1. / kGammaTabSize;
+    const double a = 0.099;
     for (v = 0; v <= MAX_Y_T; ++v) {
-      kGammaToLinearTabF[v] = (float)pow(norm * v, kGammaF);
+      const double g = norm * v;
+      if (g <= 0.081) {
+        kGammaToLinearTabF[v] = (float)(g / 4.5);
+      } else {
+        const double a_rec = 1. / (1. + a);
+        kGammaToLinearTabF[v] = (float)pow(a_rec * (g + a), kGammaF);
+      }
     }
     for (v = 0; v <= kGammaTabSize; ++v) {
-      kLinearToGammaTabF[v] = (float)(MAX_Y_T * pow(scale * v, 1. / kGammaF));
+      const double g = scale * v;
+      const double thresh = 0.018;
+      double value;
+      if (g <= thresh) {
+        value = 4.5 * g;
+      } else {
+        value = (1. + a) * pow(g, 1. / kGammaF) - a;
+      }
+      kLinearToGammaTabF[v] = (float)(MAX_Y_T * value);
     }
     // to prevent small rounding errors to cause read-overflow:
     kLinearToGammaTabF[kGammaTabSize + 1] = kLinearToGammaTabF[kGammaTabSize];
