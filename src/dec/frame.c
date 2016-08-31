@@ -723,7 +723,7 @@ static int AllocateMemory(VP8Decoder* const dec) {
       return VP8SetError(dec, VP8_STATUS_OUT_OF_MEMORY,
                          "no memory during frame initialization.");
     }
-    // down-cast is ok, thanks to WebPSafeAlloc() above.
+    // down-cast is ok, thanks to WebPSafeMalloc() above.
     dec->mem_size_ = (size_t)needed;
   }
 

@@ -25,7 +25,7 @@
 //    http://valgrind.org/docs/manual/ms-manual.html
 // Here is an example command line:
 /*    valgrind --tool=massif --massif-out-file=massif.out \
-               --stacks=yes --alloc-fn=WebPSafeAlloc --alloc-fn=WebPSafeCalloc
+               --stacks=yes --alloc-fn=WebPSafeMalloc --alloc-fn=WebPSafeCalloc
       ms_print massif.out
 */
 // In addition:
