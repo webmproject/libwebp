@@ -21,7 +21,7 @@
 #include "webp/encode.h"
 #include "webp/mux_types.h"
 
-#define GIF_TRANSPARENT_COLOR 0x00ffffff
+#define GIF_TRANSPARENT_COLOR 0x00000000
 #define GIF_WHITE_COLOR       0xffffffff
 #define GIF_TRANSPARENT_MASK  0x01
 #define GIF_DISPOSE_MASK      0x07

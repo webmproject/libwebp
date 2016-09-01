@@ -396,7 +396,7 @@ static uint32_t GetBackgroundColorGIF(GifFileType* gif) {
   const ColorMapObject* const color_map = gif->SColorMap;
   if (transparent_index != NO_TRANSPARENT_COLOR &&
       gif->SBackGroundColor == transparent_index) {
-    return 0x00ffffff;  // Special case: transparent white.
+    return 0x00000000;  // Special case: transparent black.
   } else if (color_map == NULL || color_map->Colors == NULL
              || gif->SBackGroundColor >= color_map->ColorCount) {
     return 0xffffffff;  // Invalid: assume white.
