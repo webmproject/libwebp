@@ -45,19 +45,10 @@ struct WebPDecParams {
   OutputFunc emit;               // output RGB or YUV samples
   OutputAlphaFunc emit_alpha;    // output alpha channel
   OutputRowFunc emit_alpha_row;  // output one line of rescaled alpha values
-
-  WebPDecBuffer* final_output;   // In case the user supplied a slow-memory
-                                 // output, we decode image in temporary buffer
-                                 // (this::output) and copy it here.
-  WebPDecBuffer tmp_buffer;      // this::output will point to this one in case
-                                 // of slow memory.
 };
 
 // Should be called first, before any use of the WebPDecParams object.
 void WebPResetDecParams(WebPDecParams* const params);
-
-// Delete all memory (after an error occurred, for instance)
-void WebPFreeDecParams(WebPDecParams* const params);
 
 //------------------------------------------------------------------------------
 // Header parsing helpers
