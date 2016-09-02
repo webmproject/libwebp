@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1a805f6_e0b2ea9c",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-09-02T03:55:17Z",
+      "side": 1,
+      "message": "indent is weird",
+      "revId": "0265bdc2359bbf6d6057fd76c75be286d50f5c55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1a805f6_40a81e2b",
+        "filename": "src/dec/vp8l.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-09-02T03:55:17Z",
+      "side": 1,
+      "message": "here too",
+      "revId": "0265bdc2359bbf6d6057fd76c75be286d50f5c55",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
