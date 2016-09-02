@@ -547,11 +547,14 @@ static int EmitRescaledRowsRGBA(const VP8LDecoder* const dec,
     uint8_t* const row_out = out + num_lines_out * out_stride;
     const int lines_left = mb_h - num_lines_in;
     const int needed_lines = WebPRescaleNeededLines(dec->rescaler, lines_left);
+    int lines_imported;
     assert(needed_lines > 0 && needed_lines <= lines_left);
     WebPMultARGBRows(row_in, in_stride,
                      dec->rescaler->src_width, needed_lines, 0);
-    WebPRescalerImport(dec->rescaler, lines_left, row_in, in_stride);
-    num_lines_in += needed_lines;
+    lines_imported =
+        WebPRescalerImport(dec->rescaler, lines_left, row_in, in_stride);
+    assert(lines_imported == needed_lines);
+    num_lines_in += lines_imported;
     num_lines_out += Export(dec->rescaler, colorspace, out_stride, row_out);
   }
   return num_lines_out;
@@ -623,9 +626,12 @@ static int EmitRescaledRowsYUVA(const VP8LDecoder* const dec,
   while (num_lines_in < mb_h) {
     const int lines_left = mb_h - num_lines_in;
     const int needed_lines = WebPRescaleNeededLines(dec->rescaler, lines_left);
+    int lines_imported;
     WebPMultARGBRows(in, in_stride, dec->rescaler->src_width, needed_lines, 0);
-    WebPRescalerImport(dec->rescaler, lines_left, in, in_stride);
-    num_lines_in += needed_lines;
+    lines_imported =
+        WebPRescalerImport(dec->rescaler, lines_left, in, in_stride);
+    assert(lines_imported == needed_lines);
+    num_lines_in += lines_imported;
     in += needed_lines * in_stride;
     y_pos += ExportYUVA(dec, y_pos);
   }
