@@ -488,10 +488,6 @@ int main(int argc, char *argv[]) {
     goto Error;
   }
 
-  if (WebPDemuxGetI(kParams.dmux, WEBP_FF_FORMAT_FLAGS) & FRAGMENTS_FLAG) {
-    fprintf(stderr, "Image fragments are not supported for now!\n");
-    goto Error;
-  }
   kParams.canvas_width = WebPDemuxGetI(kParams.dmux, WEBP_FF_CANVAS_WIDTH);
   kParams.canvas_height = WebPDemuxGetI(kParams.dmux, WEBP_FF_CANVAS_HEIGHT);
   if (kParams.print_info) {
