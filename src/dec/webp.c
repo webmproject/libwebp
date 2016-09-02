@@ -39,8 +39,8 @@
 //   20..23  VP8X flags bit-map corresponding to the chunk-types present.
 //   24..26  Width of the Canvas Image.
 //   27..29  Height of the Canvas Image.
-// There can be extra chunks after the "VP8X" chunk (ICCP, FRGM, ANMF, VP8,
-// VP8L, XMP, EXIF  ...)
+// There can be extra chunks after the "VP8X" chunk (ICCP, ANMF, VP8, VP8L,
+// XMP, EXIF  ...)
 // All sizes are in little-endian order.
 // Note: chunk data size must be padded to multiple of 2 when written.
 
@@ -289,7 +289,6 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
   int found_riff = 0;
   int found_vp8x = 0;
   int animation_present = 0;
-  int fragments_present = 0;
   const int have_all_data = (headers != NULL) ? headers->have_all_data : 0;
 
   VP8StatusCode status;
@@ -318,7 +317,6 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
       return status;  // Wrong VP8X / insufficient data.
     }
     animation_present = !!(flags & ANIMATION_FLAG);
-    fragments_present = !!(flags & FRAGMENTS_FLAG);
     if (!found_riff && found_vp8x) {
       // Note: This restriction may be removed in the future, if it becomes
       // necessary to send VP8X chunk to the decoder.
@@ -330,8 +328,7 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
 
     image_width = canvas_width;
     image_height = canvas_height;
-    if (found_vp8x && (animation_present || fragments_present) &&
-        headers == NULL) {
+    if (found_vp8x && animation_present && headers == NULL) {
       status = VP8_STATUS_OK;
       goto ReturnWidthHeight;  // Just return features from VP8X header.
     }
@@ -362,7 +359,7 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
     return VP8_STATUS_BITSTREAM_ERROR;
   }
 
-  if (format != NULL && !(animation_present || fragments_present)) {
+  if (format != NULL && !animation_present) {
     *format = hdrs.is_lossless ? 2 : 1;
   }
 
