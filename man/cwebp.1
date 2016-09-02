@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "August 05, 2016"
+.TH CWEBP 1 "September 02, 2016"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -117,15 +117,15 @@ or without alpha).
 .TP
 .BI \-size " int
 Specify a target size (in bytes) to try and reach for the compressed output.
-Compressor will make several pass of partial encoding in order to get as
+The compressor will make several passes of partial encoding in order to get as
 close as possible to this target. If both \fB\-size\fP and \fB\-psnr\fP
-as used, \fB\-size\fP value will prevail.
+are used, \fB\-size\fP value will prevail.
 .TP
 .BI \-psnr " float
 Specify a target PSNR (in dB) to try and reach for the compressed output.
-Compressor will make several pass of partial encoding in order to get as
+The compressor will make several passes of partial encoding in order to get as
 close as possible to this target. If both \fB\-size\fP and \fB\-psnr\fP
-as used, \fB\-size\fP value will prevail.
+are used, \fB\-size\fP value will prevail.
 .TP
 .BI \-pass " int
 Set a maximum number of passes to use during the dichotomy used by
@@ -222,7 +222,7 @@ Report encoding progress in percent.
 Do not print anything.
 .TP
 .B \-short
-Only print brief information (output file size and PSNR) for testing purpose.
+Only print brief information (output file size and PSNR) for testing purposes.
 .TP
 .BI \-map " int
 Output additional ASCII\-map of encoding information. Possible map values
