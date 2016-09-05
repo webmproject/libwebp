@@ -5,6 +5,7 @@ project(libwebp C)
 # Options for coder / decoder executables.
 option(WEBP_BUILD_CWEBP "Build the cwebp command line tool." OFF)
 option(WEBP_BUILD_DWEBP "Build the dwebp command line tool." OFF)
+option(WEBP_BUILD_GIF2WEBP "Build the gif2webp conversion tool." OFF)
 option(WEBP_EXPERIMENTAL_FEATURES "Build with experimental features." OFF)
 option(WEBP_ENABLE_SWAP_16BIT_CSP "Enable byte swap for 16 bit colorspaces." OFF)
 
@@ -42,14 +43,13 @@ endif()
 ################################################################################
 # WebP source files.
 # Read the Makefile.am to get the source files.
-set(WEBP_SRCS)
 
-function(parse_Makefile_am FOLDER WEBP_SRCS)
+function(parse_Makefile_am FOLDER VAR)
   file(READ ${FOLDER}/Makefile.am MAKEFILE_AM)
   string(REGEX MATCHALL "_SOURCES \\+= [^\n]*"
     FILES_PER_LINE ${MAKEFILE_AM}
   )
-  set(SRCS ${WEBP_SRCS})
+  set(SRCS ${${VAR}})
   foreach(FILES ${FILES_PER_LINE})
     string(SUBSTRING ${FILES} 12 -1 FILES)
     string(REGEX MATCHALL "[0-9a-z\\._]+"
@@ -59,14 +59,15 @@ function(parse_Makefile_am FOLDER WEBP_SRCS)
       list(APPEND SRCS ${FOLDER}/${FILE})
     endforeach()
   endforeach()
-  set(WEBP_SRCS ${SRCS} PARENT_SCOPE)
+  set(${VAR} ${SRCS} PARENT_SCOPE)
 endfunction()
 
-parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/src/dec "${WEBP_SRCS}")
-parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/src/demux "${WEBP_SRCS}")
-parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/src/dsp "${WEBP_SRCS}")
-parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/src/enc "${WEBP_SRCS}")
-parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/src/utils "${WEBP_SRCS}")
+set(WEBP_SRCS)
+parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/src/dec "WEBP_SRCS")
+parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/src/demux "WEBP_SRCS")
+parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/src/dsp "WEBP_SRCS")
+parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/src/enc "WEBP_SRCS")
+parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/src/utils "WEBP_SRCS")
 
 # Remove the files specific to SIMD we don't use.
 foreach(FILE ${WEBP_SIMD_FILES_NOT_TO_INCLUDE})
@@ -94,7 +95,7 @@ foreach(I_FILE RANGE ${WEBP_SIMD_FILES_TO_INCLUDE_RANGE})
 endforeach()
 
 # Build the executables if asked for.
-if(WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP)
+if(WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP OR WEBP_BUILD_GIF2WEBP)
   # Example utility library.
   set(exampleutil_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/stopwatch.h
@@ -111,6 +112,8 @@ if(WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP)
 
   # Image-decoding utility library.
   set(imagedec_SRCS
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/gifdec.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/gifdec.h
     ${CMAKE_CURRENT_SOURCE_DIR}/imageio/image_dec.c
     ${CMAKE_CURRENT_SOURCE_DIR}/imageio/image_dec.h
     ${CMAKE_CURRENT_SOURCE_DIR}/imageio/jpegdec.c
@@ -149,6 +152,17 @@ if(WEBP_BUILD_CWEBP)
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/cwebp.c
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/stopwatch.h)
   target_link_libraries(cwebp imagedec webp exampleutil imageioutil
+    ${WEBP_DEP_LIBRARIES} ${WEBP_DEP_IMG_LIBRARIES}
+  )
+endif()
+
+if(WEBP_BUILD_GIF2WEBP)
+  # gif2webp
+  include_directories(${WEBP_DEP_IMG_INCLUDE_DIRS})
+  set(GIF2WEBP_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/examples/gif2webp.c)
+  parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/src/mux "GIF2WEBP_SRCS")
+  add_executable(gif2webp ${GIF2WEBP_SRCS})
+  target_link_libraries(gif2webp imagedec webp exampleutil imageioutil
     ${WEBP_DEP_LIBRARIES} ${WEBP_DEP_IMG_LIBRARIES}
   )
 endif()
