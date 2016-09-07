@@ -43,7 +43,7 @@ LOCAL_SRC_FILES := \
 
 LOCAL_CFLAGS := $(WEBP_CFLAGS)
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../src
-LOCAL_STATIC_LIBRARIES := example_util imageio_util imagedec webp
+LOCAL_STATIC_LIBRARIES := example_util imageio_util imagedec imageenc webp
 
 LOCAL_MODULE := dwebp
 
