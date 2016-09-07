@@ -34,8 +34,11 @@ cwebp_LDADD += $(JPEG_LIBS) $(PNG_LIBS) $(TIFF_LIBS)
 dwebp_SOURCES = dwebp.c stopwatch.h
 dwebp_CPPFLAGS  = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
 dwebp_CPPFLAGS += $(JPEG_INCLUDES) $(PNG_INCLUDES)
-dwebp_LDADD  = libexample_util.la ../imageio/libimageio_util.la
-dwebp_LDADD += ../imageio/libimagedec.la ../src/libwebp.la
+dwebp_LDADD  = libexample_util.la
+dwebp_LDADD += ../imageio/libimagedec.la
+dwebp_LDADD += ../imageio/libimageenc.la
+dwebp_LDADD += ../imageio/libimageio_util.la
+dwebp_LDADD += ../src/libwebp.la
 dwebp_LDADD +=$(PNG_LIBS) $(JPEG_LIBS)
 
 gif2webp_SOURCES = gif2webp.c gifdec.c gifdec.h
