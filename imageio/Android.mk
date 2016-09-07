@@ -34,3 +34,18 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/../src
 LOCAL_MODULE := imagedec
 
 include $(BUILD_STATIC_LIBRARY)
+
+################################################################################
+# libimageenc
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := \
+    image_enc.c \
+
+LOCAL_CFLAGS := $(WEBP_CFLAGS)
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/../src
+
+LOCAL_MODULE := imageenc
+
+include $(BUILD_STATIC_LIBRARY)

@@ -223,6 +223,9 @@ EX_FORMAT_DEC_OBJS = \
     imageio/tiffdec.o \
     imageio/webpdec.o \
 
+EX_FORMAT_ENC_OBJS = \
+    imageio/image_enc.o \
+
 EX_UTIL_OBJS = \
     examples/example_util.o \
 
@@ -311,8 +314,11 @@ HDRS = \
     src/webp/format_constants.h \
     $(HDRS_INSTALLED) \
 
-OUT_LIBS = examples/libexample_util.a imageio/libimageio_util.a
-OUT_LIBS += imageio/libimagedec.a src/libwebpdecoder.a
+OUT_LIBS = examples/libexample_util.a
+OUT_LIBS += imageio/libimageio_util.a
+OUT_LIBS += imageio/libimagedec.a
+OUT_LIBS += imageio/libimageenc.a
+OUT_LIBS += src/libwebpdecoder.a
 OUT_LIBS += src/libwebp.a
 EXTRA_LIB = extras/libwebpextras.a
 OUT_EXAMPLES = examples/cwebp examples/dwebp
@@ -349,6 +355,7 @@ examples/libexample_util.a: $(EX_UTIL_OBJS)
 examples/libgifdec.a: $(GIFDEC_OBJS)
 extras/libwebpextras.a: $(LIBWEBPEXTRA_OBJS)
 imageio/libimagedec.a: $(EX_FORMAT_DEC_OBJS)
+imageio/libimageenc.a: $(EX_FORMAT_ENC_OBJS)
 imageio/libimageio_util.a: $(IMAGE_UTIL_OBJS)
 src/libwebpdecoder.a: $(LIBWEBPDECODER_OBJS)
 src/libwebp.a: $(LIBWEBP_OBJS)
@@ -377,6 +384,7 @@ examples/cwebp: src/libwebp.a
 examples/cwebp: EXTRA_LIBS += $(CWEBP_LIBS)
 examples/dwebp: examples/libexample_util.a
 examples/dwebp: imageio/libimagedec.a
+examples/dwebp: imageio/libimageenc.a
 examples/dwebp: imageio/libimageio_util.a
 examples/dwebp: src/libwebp.a
 examples/dwebp: EXTRA_LIBS += $(DWEBP_LIBS)
