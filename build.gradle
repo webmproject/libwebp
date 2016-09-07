@@ -292,6 +292,24 @@ model {
         }
       }
     }
+
+    imageenc(NativeLibrarySpec) {
+      binaries {
+        all {
+          lib library: "webp", linkage: "static"
+          lib library: "imageio_util", linkage: "static"
+        }
+      }
+      sources {
+        c {
+          source {
+            srcDir "./imageio"
+            include "image_enc.c"
+          }
+        }
+      }
+    }
+
     cwebp(NativeExecutableSpec) {
       binaries {
         all {
@@ -316,6 +334,7 @@ model {
         all {
           lib library: "example_util", linkage: "static"
           lib library: "imagedec", linkage: "static"
+          lib library: "imageenc", linkage: "static"
           lib library: "imageio_util", linkage: "static"
           lib library: "webp"
         }
