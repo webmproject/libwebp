@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "1628d368_8975fd2a",
+        "filename": "build.gradle",
+        "patchSetId": 13
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-09-08T06:31:36Z",
+      "side": 1,
+      "message": "I guess. could use another pass for e.g., example_util",
+      "parentUuid": "6b3cc6c0_317ff007",
+      "revId": "6fd38b792656eb84d08fa43c5988c543823eae87",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7682ef83_c4fff04d",
         "filename": "imageio/Makefile.am",
         "patchSetId": 13
