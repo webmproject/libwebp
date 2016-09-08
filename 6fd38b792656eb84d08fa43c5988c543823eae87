@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6b3cc6c0_f1884822",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 13
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-09-08T06:09:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7682ef83_04d398ff",
+      "revId": "6fd38b792656eb84d08fa43c5988c543823eae87",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7682ef83_84d8880e",
         "filename": "build.gradle",
         "patchSetId": 13
@@ -30,6 +48,24 @@
       "writtenOn": "2016-09-08T00:52:27Z",
       "side": 1,
       "message": "not sure I get this section as far as library specs go",
+      "revId": "6fd38b792656eb84d08fa43c5988c543823eae87",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b3cc6c0_317ff007",
+        "filename": "build.gradle",
+        "patchSetId": 13
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-09-08T06:09:19Z",
+      "side": 1,
+      "message": "that\u0027s the lib\u0027s dependency to other libs, no?",
+      "parentUuid": "7682ef83_84d8880e",
       "revId": "6fd38b792656eb84d08fa43c5988c543823eae87",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -59,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "6b3cc6c0_1184ec0b",
+        "filename": "imageio/Makefile.am",
+        "patchSetId": 13
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-09-08T06:09:19Z",
+      "side": 1,
+      "message": "ack.",
+      "parentUuid": "7682ef83_c4fff04d",
+      "range": {
+        "startLine": 21,
+        "startChar": 38,
+        "endLine": 21,
+        "endChar": 49
+      },
+      "revId": "6fd38b792656eb84d08fa43c5988c543823eae87",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7682ef83_e4f4f474",
         "filename": "imageio/image_enc.h",
         "patchSetId": 13
@@ -70,6 +130,30 @@
       "writtenOn": "2016-09-08T00:52:27Z",
       "side": 1,
       "message": "formats",
+      "range": {
+        "startLine": 48,
+        "startChar": 8,
+        "endLine": 48,
+        "endChar": 14
+      },
+      "revId": "6fd38b792656eb84d08fa43c5988c543823eae87",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb3052eb_6c759b25",
+        "filename": "imageio/image_enc.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-09-08T06:09:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7682ef83_e4f4f474",
       "range": {
         "startLine": 48,
         "startChar": 8,
@@ -116,6 +200,30 @@
       "writtenOn": "2016-09-08T00:52:27Z",
       "side": 1,
       "message": "purposes",
+      "range": {
+        "startLine": 89,
+        "startChar": 69,
+        "endLine": 89,
+        "endChar": 77
+      },
+      "revId": "6fd38b792656eb84d08fa43c5988c543823eae87",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b601ae6_6a757725",
+        "filename": "imageio/image_enc.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-09-08T06:09:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7682ef83_a45f4c73",
       "range": {
         "startLine": 89,
         "startChar": 69,
