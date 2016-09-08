@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1628d368_a9c8f949",
+        "filename": "examples/Makefile.am",
+        "patchSetId": 14
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-09-08T06:31:36Z",
+      "side": 1,
+      "message": "this order seems wrong since dec/enc depend on util",
+      "range": {
+        "startLine": 37,
+        "startChar": 34,
+        "endLine": 37,
+        "endChar": 63
+      },
+      "revId": "0c0d5e7e4642412e3c8378e0cd192a0afea77435",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1628d368_89c33d2f",
+        "filename": "imageio/Makefile.am",
+        "patchSetId": 14
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-09-08T06:31:36Z",
+      "side": 1,
+      "message": "this adds the lib to this one; we\u0027re explicitly depending on the two elsewhere (same for dec)",
+      "revId": "0c0d5e7e4642412e3c8378e0cd192a0afea77435",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1628d368_2987a90f",
+        "filename": "imageio/image_enc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-09-08T06:31:36Z",
+      "side": 1,
+      "message": "same directory as image_enc; this one could go below the other system includes and image_enc.h to the top",
+      "revId": "0c0d5e7e4642412e3c8378e0cd192a0afea77435",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
