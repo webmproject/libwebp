@@ -155,7 +155,7 @@ static int RGBToV(int r, int g, int b, VP8Random* const rg) {
 //------------------------------------------------------------------------------
 // Smart RGB->YUV conversion
 
-static const int kNumIterations = 6;
+static const int kNumIterations = 4;
 static const int kMinDimensionIterativeConversion = 4;
 
 // We could use SFIX=0 and only uint8_t for fixed_y_t, but it produces some
@@ -262,18 +262,13 @@ static WEBP_INLINE void UpdateW(const fixed_y_t* src, fixed_y_t* dst, int len) {
   }
 }
 
-static int UpdateChroma(const fixed_y_t* src1,
-                        const fixed_y_t* src2,
-                        fixed_t* dst, fixed_y_t* tmp, int len) {
-  int diff = 0;
+static void UpdateChroma(const fixed_y_t* src1, const fixed_y_t* src2,
+                         fixed_t* dst, fixed_y_t* tmp, int len) {
   while (len--> 0) {
     const int r = ScaleDown(src1[0], src1[3], src2[0], src2[3]);
     const int g = ScaleDown(src1[1], src1[4], src2[1], src2[4]);
     const int b = ScaleDown(src1[2], src1[5], src2[2], src2[5]);
     const int W = RGBToGray(r, g, b);
-    const int r_avg = (src1[0] + src1[3] + src2[0] + src2[3] + 2) >> 2;
-    const int g_avg = (src1[1] + src1[4] + src2[1] + src2[4] + 2) >> 2;
-    const int b_avg = (src1[2] + src1[5] + src2[2] + src2[5] + 2) >> 2;
     dst[0] = (fixed_t)(r - W);
     dst[1] = (fixed_t)(g - W);
     dst[2] = (fixed_t)(b - W);
@@ -284,9 +279,7 @@ static int UpdateChroma(const fixed_y_t* src1,
       tmp[0] = tmp[1] = clip_y(W);
       tmp += 2;
     }
-    diff += abs(RGBToGray(r_avg, g_avg, b_avg) - W);
   }
-  return diff;
 }
 
 //------------------------------------------------------------------------------
@@ -441,11 +434,8 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
   fixed_t* const best_uv = SAFE_ALLOC(uv_w * 3, uv_h, fixed_t);
   fixed_t* const target_uv = SAFE_ALLOC(uv_w * 3, uv_h, fixed_t);
   fixed_t* const best_rgb_uv = SAFE_ALLOC(uv_w * 3, 1, fixed_t);
+  const uint64_t diff_y_threshold = (uint64_t)(3.5 * w * h);
   int ok;
-  int diff_sum = 0;
-  const int first_diff_threshold = (int)(2.5 * w * h);
-  const int min_improvement = 5;   // stop if improvement is below this %
-  const int min_first_improvement = 80;
 
   if (best_y == NULL || best_uv == NULL ||
       target_y == NULL || target_uv == NULL ||
@@ -478,18 +468,16 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
     }
     UpdateW(src1, target_y + (j + 0) * w, w);
     UpdateW(src2, target_y + (j + 1) * w, w);
-    diff_sum += UpdateChroma(src1, src2, target_uv + uv_off, dst_y, uv_w);
+    UpdateChroma(src1, src2, target_uv + uv_off, dst_y, uv_w);
     memcpy(best_uv + uv_off, target_uv + uv_off, 3 * uv_w * sizeof(*best_uv));
     memcpy(dst_y + w, dst_y, w * sizeof(*dst_y));
   }
-
   // Iterate and resolve clipping conflicts.
   for (iter = 0; iter < kNumIterations; ++iter) {
     int k;
     const fixed_t* cur_uv = best_uv;
     const fixed_t* prev_uv = best_uv;
-    const int old_diff_sum = diff_sum;
-    diff_sum = 0;
+    uint64_t diff_y_sum = 0;
     for (j = 0; j < h; j += 2) {
       fixed_y_t* const src1 = tmp_buffer;
       fixed_y_t* const src2 = tmp_buffer + 3 * w;
@@ -503,7 +491,7 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
 
       UpdateW(src1, best_rgb_y + 0 * w, w);
       UpdateW(src2, best_rgb_y + 1 * w, w);
-      diff_sum += UpdateChroma(src1, src2, best_rgb_uv, NULL, uv_w);
+      UpdateChroma(src1, src2, best_rgb_uv, NULL, uv_w);
 
       // update two rows of Y and one row of RGB
       for (i = 0; i < 2 * w; ++i) {
@@ -511,6 +499,7 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
         const int diff_y = target_y[off] - best_rgb_y[i];
         const int new_y = (int)best_y[off] + diff_y;
         best_y[off] = clip_y(new_y);
+        diff_y_sum += (uint64_t)abs(diff_y);
       }
       for (i = 0; i < uv_w; ++i) {
         const int off = 3 * (i + (j >> 1) * uv_w);
@@ -526,24 +515,8 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
       }
     }
     // test exit condition
-    if (diff_sum > 0) {
-      const int improvement = 100 * abs(diff_sum - old_diff_sum) / diff_sum;
-      // Check if first iteration gave good result already, without a large
-      // jump of improvement (otherwise it means we need to try few extra
-      // iterations, just to be sure).
-      if (iter == 0 && diff_sum < first_diff_threshold &&
-          improvement < min_first_improvement) {
-        break;
-      }
-      // then, check if improvement is stalling.
-      if (improvement < min_improvement) {
-        break;
-      }
-    } else {
-      break;
-    }
+    if (iter > 0 && diff_y_sum < diff_y_threshold) break;
   }
-
   // final reconstruction
   ok = ConvertWRGBToYUV(best_y, best_uv, picture);
 
