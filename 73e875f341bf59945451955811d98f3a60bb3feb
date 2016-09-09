@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1628d368_902199ae",
+        "filename": "imageio/Android.mk",
+        "patchSetId": 15
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-09-09T02:11:42Z",
+      "side": 1,
+      "message": "good catch, imagedec could use this ref as well, though I think we explicitly mention imageio_util in the link for the examples",
+      "revId": "73e875f341bf59945451955811d98f3a60bb3feb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1628d368_102e8997",
+        "filename": "imageio/image_enc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-09-09T02:11:42Z",
+      "side": 1,
+      "message": "could be above the c includes",
+      "revId": "73e875f341bf59945451955811d98f3a60bb3feb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1628d368_903a79d0",
+        "filename": "imageio/image_enc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-09-09T02:11:42Z",
+      "side": 1,
+      "message": "our selection of casing gets stressed in cases like this (vs. PpmPam)",
+      "range": {
+        "startLine": 214,
+        "startChar": 16,
+        "endLine": 214,
+        "endChar": 22
+      },
+      "revId": "73e875f341bf59945451955811d98f3a60bb3feb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1628d368_f0280d8e",
+        "filename": "imageio/image_enc.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-09-09T02:11:42Z",
+      "side": 1,
+      "message": "samples",
+      "range": {
+        "startLine": 48,
+        "startChar": 55,
+        "endLine": 48,
+        "endChar": 61
+      },
+      "revId": "73e875f341bf59945451955811d98f3a60bb3feb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
