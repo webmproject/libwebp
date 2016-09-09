@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "1628d368_f0f9ede2",
+        "filename": "imageio/image_enc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-09-09T02:12:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1628d368_102e8997",
+      "revId": "73e875f341bf59945451955811d98f3a60bb3feb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1628d368_903a79d0",
         "filename": "imageio/image_enc.c",
         "patchSetId": 15
@@ -70,6 +88,30 @@
       "writtenOn": "2016-09-09T02:11:42Z",
       "side": 1,
       "message": "samples",
+      "range": {
+        "startLine": 48,
+        "startChar": 55,
+        "endLine": 48,
+        "endChar": 61
+      },
+      "revId": "73e875f341bf59945451955811d98f3a60bb3feb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1628d368_9096f998",
+        "filename": "imageio/image_enc.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-09-09T02:12:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1628d368_f0280d8e",
       "range": {
         "startLine": 48,
         "startChar": 55,
