@@ -263,7 +263,7 @@ static WEBP_INLINE void UpdateW(const fixed_y_t* src, fixed_y_t* dst, int len) {
 }
 
 static void UpdateChroma(const fixed_y_t* src1, const fixed_y_t* src2,
-                         fixed_t* dst, fixed_y_t* tmp, int len) {
+                         fixed_t* dst, int len) {
   while (len--> 0) {
     const int r = ScaleDown(src1[0], src1[3], src2[0], src2[3]);
     const int g = ScaleDown(src1[1], src1[4], src2[1], src2[4]);
@@ -275,10 +275,14 @@ static void UpdateChroma(const fixed_y_t* src1, const fixed_y_t* src2,
     dst += 3;
     src1 += 6;
     src2 += 6;
-    if (tmp != NULL) {
-      tmp[0] = tmp[1] = clip_y(W);
-      tmp += 2;
-    }
+  }
+}
+
+static void StoreGray(const fixed_y_t* rgb, fixed_y_t* y, int len) {
+  int i;
+  for (i = 0; i < len; ++i) {
+    y[i] = clip_y(RGBToGray(rgb[0], rgb[1], rgb[2]));
+    rgb += 3;
   }
 }
 
@@ -434,7 +438,7 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
   fixed_t* const best_uv = SAFE_ALLOC(uv_w * 3, uv_h, fixed_t);
   fixed_t* const target_uv = SAFE_ALLOC(uv_w * 3, uv_h, fixed_t);
   fixed_t* const best_rgb_uv = SAFE_ALLOC(uv_w * 3, 1, fixed_t);
-  const uint64_t diff_y_threshold = (uint64_t)(3.5 * w * h);
+  const uint64_t diff_y_threshold = (uint64_t)(3.0 * w * h);
   int ok;
 
   if (best_y == NULL || best_uv == NULL ||
@@ -468,10 +472,12 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
     }
     UpdateW(src1, target_y + (j + 0) * w, w);
     UpdateW(src2, target_y + (j + 1) * w, w);
-    UpdateChroma(src1, src2, target_uv + uv_off, dst_y, uv_w);
+    UpdateChroma(src1, src2, target_uv + uv_off, uv_w);
     memcpy(best_uv + uv_off, target_uv + uv_off, 3 * uv_w * sizeof(*best_uv));
-    memcpy(dst_y + w, dst_y, w * sizeof(*dst_y));
+    // convert two lines at a time
+    StoreGray(src1, dst_y, 2 * w);
   }
+
   // Iterate and resolve clipping conflicts.
   for (iter = 0; iter < kNumIterations; ++iter) {
     int k;
@@ -491,7 +497,7 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
 
       UpdateW(src1, best_rgb_y + 0 * w, w);
       UpdateW(src2, best_rgb_y + 1 * w, w);
-      UpdateChroma(src1, src2, best_rgb_uv, NULL, uv_w);
+      UpdateChroma(src1, src2, best_rgb_uv, uv_w);
 
       // update two rows of Y and one row of RGB
       for (i = 0; i < 2 * w; ++i) {
