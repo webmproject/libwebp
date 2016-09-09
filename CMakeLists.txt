@@ -131,6 +131,14 @@ if(WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP OR WEBP_BUILD_GIF2WEBP)
   add_library(imagedec ${imagedec_SRCS})
   target_link_libraries(imagedec webp ${WEBP_DEP_LIBRARIES}
     ${WEBP_DEP_IMG_LIBRARIES})
+
+  # Image-encoding utility library.
+  set(imageenc_SRCS
+    ${CMAKE_CURRENT_SOURCE_DIR}/imageio/image_enc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/imageio/image_enc.h)
+  add_library(imageenc ${imageenc_SRCS})
+  target_link_libraries(imageenc webp imageioutil
+    ${WEBP_DEP_LIBRARIES} ${WEBP_DEP_IMG_LIBRARIES})
 endif()
 
 if(WEBP_BUILD_DWEBP)
@@ -138,9 +146,9 @@ if(WEBP_BUILD_DWEBP)
   include_directories(${WEBP_DEP_IMG_INCLUDE_DIRS})
   add_executable(dwebp
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/dwebp.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/examples/stopwatch.h
-  )
-  target_link_libraries(dwebp imagedec webp exampleutil imageioutil
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/stopwatch.h)
+  target_link_libraries(dwebp imagedec imageenc webp
+    exampleutil imageioutil
     ${WEBP_DEP_LIBRARIES} ${WEBP_DEP_IMG_LIBRARIES}
   )
 endif()
