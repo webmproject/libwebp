@@ -281,7 +281,7 @@ static void UpdateChroma(const fixed_y_t* src1, const fixed_y_t* src2,
 static void StoreGray(const fixed_y_t* rgb, fixed_y_t* y, int len) {
   int i;
   for (i = 0; i < len; ++i) {
-    y[i] = clip_y(RGBToGray(rgb[0], rgb[1], rgb[2]));
+    y[i] = RGBToGray(rgb[0], rgb[1], rgb[2]);
     rgb += 3;
   }
 }
@@ -470,21 +470,22 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
     } else {
       memcpy(src2, src1, 3 * w * sizeof(*src2));
     }
+    StoreGray(src1, dst_y, 2 * w);      // convert two lines at a time
+
     UpdateW(src1, target_y + (j + 0) * w, w);
     UpdateW(src2, target_y + (j + 1) * w, w);
     UpdateChroma(src1, src2, target_uv + uv_off, uv_w);
     memcpy(best_uv + uv_off, target_uv + uv_off, 3 * uv_w * sizeof(*best_uv));
-    // convert two lines at a time
-    StoreGray(src1, dst_y, 2 * w);
   }
 
   // Iterate and resolve clipping conflicts.
   for (iter = 0; iter < kNumIterations; ++iter) {
-    int k;
     const fixed_t* cur_uv = best_uv;
     const fixed_t* prev_uv = best_uv;
     uint64_t diff_y_sum = 0;
+
     for (j = 0; j < h; j += 2) {
+      const int uv_off = (j >> 1) * 3 * uv_w;
       fixed_y_t* const src1 = tmp_buffer;
       fixed_y_t* const src2 = tmp_buffer + 3 * w;
       {
@@ -507,17 +508,9 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
         best_y[off] = clip_y(new_y);
         diff_y_sum += (uint64_t)abs(diff_y);
       }
-      for (i = 0; i < uv_w; ++i) {
-        const int off = 3 * (i + (j >> 1) * uv_w);
-        int W;
-        for (k = 0; k <= 2; ++k) {
-          const int diff_uv = (int)target_uv[off + k] - best_rgb_uv[3 * i + k];
-          best_uv[off + k] += diff_uv;
-        }
-        W = RGBToGray(best_uv[off + 0], best_uv[off + 1], best_uv[off + 2]);
-        for (k = 0; k <= 2; ++k) {
-          best_uv[off + k] -= W;
-        }
+      for (i = 0; i < 3 * uv_w; ++i) {
+        const int diff_uv = (int)target_uv[uv_off + i] - best_rgb_uv[i];
+        best_uv[uv_off + i] += diff_uv;
       }
     }
     // test exit condition
