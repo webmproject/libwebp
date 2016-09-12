@@ -17,6 +17,7 @@
 #if defined(WEBP_USE_MIPS_DSP_R2)
 
 #include "./lossless.h"
+#include "./lossless_common.h"
 
 #define MAP_COLOR_FUNCS(FUNC_NAME, TYPE, GET_INDEX, GET_VALUE)                 \
 static void FUNC_NAME(const TYPE* src,                                         \

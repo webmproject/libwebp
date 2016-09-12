@@ -286,6 +286,7 @@ HDRS = \
     src/dsp/common_sse2.h \
     src/dsp/dsp.h \
     src/dsp/lossless.h \
+    src/dsp/lossless_common.h \
     src/dsp/mips_macro.h \
     src/dsp/msa_macro.h \
     src/dsp/neon.h \
