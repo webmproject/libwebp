@@ -566,6 +566,19 @@ extern WebPUnfilterFunc WebPUnfilters[WEBP_FILTER_LAST];
 // To be called first before using the above.
 void VP8FiltersInit(void);
 
+//------------------------------------------------------------------------------
+// Functions related to colorspace
+
+// Horizontal sharpening of one 8b input row, with convertion to 16b.
+extern void (*WebPSharpenImportRow)(const uint8_t* src, int16_t* dst, int s,
+                                    int c0, int c1);
+// Sharpen three rows, with descaling and output to 8b.
+extern void (*WebPSharpenExportRow)(const int16_t* a, const int16_t* b,
+                                    const int16_t* c,
+                                    uint8_t* dst, int width, int c0, int c1);
+
+void WebPInitCSP(void);
+
 #ifdef __cplusplus
 }    // extern "C"
 #endif
