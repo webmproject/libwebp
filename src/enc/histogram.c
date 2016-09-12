@@ -18,6 +18,7 @@
 #include "./backward_references.h"
 #include "./histogram.h"
 #include "../dsp/lossless.h"
+#include "../dsp/lossless_common.h"
 #include "../utils/utils.h"
 
 #define MAX_COST 1.e38
