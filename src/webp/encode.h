@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#define WEBP_ENCODER_ABI_VERSION 0x0209    // MAJOR(8b) + MINOR(8b)
+#define WEBP_ENCODER_ABI_VERSION 0x0210    // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -479,6 +479,15 @@ WEBP_EXTERN(int) WebPPictureARGBToYUVADithered(
 // YUV representation.
 // Returns false in case of error.
 WEBP_EXTERN(int) WebPPictureSmartARGBToYUVA(WebPPicture* picture);
+
+// Performs 'sharpened' RGBA->YUVA420 downsampling and colorspace conversion.
+// This method is much faster than WebPPictureSmartARGBToYUVA(), but does not
+// resolve sharp edges as accurately. It's efficient at preserving bright color
+// areas though (red, in particular) for a minor speed penalty.
+// strength should be in range 0 (=off) to 100 (max value).
+// Typical value is '70'.
+// Returns false in case of memory error.
+int WebPPictureSharpenedARGBToYUVA(WebPPicture* picture, int strength);
 
 // Converts picture->yuv to picture->argb and sets picture->use_argb to true.
 // The input format must be YUV_420 or YUV_420A.
