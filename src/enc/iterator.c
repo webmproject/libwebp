@@ -309,14 +309,14 @@ void VP8IteratorSaveBoundary(VP8EncIterator* const it) {
 }
 
 int VP8IteratorNext(VP8EncIterator* const it) {
+  if (++it->x_ == it->enc_->mb_w_) {
+    VP8IteratorSetRow(it, ++it->y_);
+  } else {
   it->preds_ += 4;
   it->mb_ += 1;
   it->nz_ += 1;
   it->y_top_ += 16;
   it->uv_top_ += 16;
-  it->x_ += 1;
-  if (it->x_ == it->enc_->mb_w_) {
-    VP8IteratorSetRow(it, ++it->y_);
   }
   return (0 < --it->count_down_);
 }
