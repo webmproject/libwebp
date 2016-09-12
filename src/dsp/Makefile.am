@@ -25,6 +25,7 @@ COMMON_SOURCES += filters.c
 COMMON_SOURCES += filters_mips_dsp_r2.c
 COMMON_SOURCES += lossless.c
 COMMON_SOURCES += lossless.h
+COMMON_SOURCES += lossless_common.h
 COMMON_SOURCES += lossless_mips_dsp_r2.c
 COMMON_SOURCES += mips_macro.h
 COMMON_SOURCES += rescaler.c

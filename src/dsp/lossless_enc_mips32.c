@@ -14,6 +14,7 @@
 
 #include "./dsp.h"
 #include "./lossless.h"
+#include "./lossless_common.h"
 
 #if defined(WEBP_USE_MIPS32)
 

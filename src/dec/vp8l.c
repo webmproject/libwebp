@@ -18,6 +18,7 @@
 #include "./vp8li.h"
 #include "../dsp/dsp.h"
 #include "../dsp/lossless.h"
+#include "../dsp/lossless_common.h"
 #include "../dsp/yuv.h"
 #include "../utils/endian_inl.h"
 #include "../utils/huffman.h"

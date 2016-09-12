@@ -16,6 +16,7 @@
 #include "./backward_references.h"
 #include "./histogram.h"
 #include "../dsp/lossless.h"
+#include "../dsp/lossless_common.h"
 #include "../dsp/dsp.h"
 #include "../utils/color_cache.h"
 #include "../utils/utils.h"

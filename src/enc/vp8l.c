@@ -20,6 +20,7 @@
 #include "./vp8enci.h"
 #include "./vp8li.h"
 #include "../dsp/lossless.h"
+#include "../dsp/lossless_common.h"
 #include "../utils/bit_writer.h"
 #include "../utils/huffman_encode.h"
 #include "../utils/utils.h"

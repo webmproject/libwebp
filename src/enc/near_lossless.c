@@ -17,7 +17,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "../dsp/lossless.h"
+#include "../dsp/lossless_common.h"
 #include "../utils/utils.h"
 #include "./vp8enci.h"
 

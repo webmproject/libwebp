@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <emmintrin.h>
 #include "./lossless.h"
+#include "./lossless_common.h"
 
 // For sign-extended multiplying constants, pre-shifted by 5:
 #define CST_5b(X)  (((int16_t)((uint16_t)X << 8)) >> 5)
