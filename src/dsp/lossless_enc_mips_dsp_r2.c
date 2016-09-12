@@ -17,6 +17,7 @@
 #if defined(WEBP_USE_MIPS_DSP_R2)
 
 #include "./lossless.h"
+#include "./lossless_common.h"
 
 static void SubtractGreenFromBlueAndRed(uint32_t* argb_data,
                                         int num_pixels) {
