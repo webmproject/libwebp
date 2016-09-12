@@ -20,6 +20,7 @@
 #include "../dec/vp8li.h"
 #include "../utils/endian_inl.h"
 #include "./lossless.h"
+#include "./lossless_common.h"
 #include "./yuv.h"
 
 #define MAX_DIFF_COST (1e30f)
