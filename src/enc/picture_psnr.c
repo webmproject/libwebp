@@ -25,9 +25,9 @@
 
 #define RADIUS 2  // search radius. Shouldn't be too large.
 
-static void AccumulateLSIM(const uint8_t* src, int src_stride,
-                           const uint8_t* ref, int ref_stride,
-                           int w, int h, VP8DistoStats* stats) {
+static double AccumulateLSIM(const uint8_t* src, int src_stride,
+                             const uint8_t* ref, int ref_stride,
+                             int w, int h) {
   int x, y;
   double total_sse = 0.;
   for (y = 0; y < h; ++y) {
@@ -50,37 +50,52 @@ static void AccumulateLSIM(const uint8_t* src, int src_stride,
       total_sse += best_sse;
     }
   }
-  stats->w = w * h;
-  stats->xm = 0;
-  stats->ym = 0;
-  stats->xxm = total_sse;
-  stats->yym = 0;
-  stats->xxm = 0;
+  return total_sse;
 }
 #undef RADIUS
+
+static double AccumulateSSE(const uint8_t* src, int src_stride,
+                            const uint8_t* ref, int ref_stride,
+                            int w, int h) {
+  int y;
+  double total_sse = 0.;
+  for (y = 0; y < h; ++y) {
+    total_sse += VP8AccumulateSSE(src, ref, w);
+    src += src_stride;
+    ref += ref_stride;
+  }
+  return total_sse;
+}
 
 //------------------------------------------------------------------------------
 // Distortion
 
 // Max value returned in case of exact similarity.
 static const double kMinDistortion_dB = 99.;
-static float GetPSNR(const double v) {
-  return (float)((v > 0.) ? -4.3429448 * log(v / (255 * 255.))
-                          : kMinDistortion_dB);
+
+static double GetPSNR(double v, double size) {
+  return (v > 0. && size > 0.) ? -4.3429448 * log(v / (size * 255 * 255.))
+                               : kMinDistortion_dB;
+}
+static double GetLogSSIM(double v, double size) {
+  v = (size > 0.) ? v / size : 1.;
+  return (v < 1.) ? -10.0 * log10(1. - v) : kMinDistortion_dB;
 }
 
 int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
-                          int type, float result[5]) {
+                          int type, float results[5]) {
+  int w, h, c;
+  double disto[4] = { 0. };
+  double sizes[4] = { 0. };
+  double total_size = 0., total_disto = 0.;
   VP8DistoStats stats[5];
-  int w, h;
-
-  memset(stats, 0, sizeof(stats));
 
   VP8SSIMDspInit();
+  memset(stats, 0, sizeof(stats));
 
   if (src == NULL || ref == NULL ||
       src->width != ref->width || src->height != ref->height ||
-      src->use_argb != ref->use_argb || result == NULL) {
+      src->use_argb != ref->use_argb || results == NULL) {
     return 0;
   }
   w = src->width;
@@ -90,7 +105,7 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
     if (src->argb == NULL || ref->argb == NULL) {
       return 0;
     } else {
-      int i, j, c;
+      int i, j;
       uint8_t* tmp1, *tmp2;
       uint8_t* const tmp_plane =
           (uint8_t*)WebPSafeMalloc(2ULL * w * h, sizeof(*tmp_plane));
@@ -104,8 +119,11 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
             tmp2[j * w + i] = ref->argb[i + j * ref->argb_stride] >> (c * 8);
           }
         }
+        sizes[c] = w * h;
         if (type >= 2) {
-          AccumulateLSIM(tmp1, w, tmp2, w, w, h, &stats[c]);
+          disto[c] = AccumulateLSIM(tmp1, w, tmp2, w, w, h);
+        } else if (type == 0) {
+          disto[c] = AccumulateSSE(tmp1, w, tmp2, w, w, h);
         } else {
           VP8SSIMAccumulatePlane(tmp1, w, tmp2, w, w, h, &stats[c]);
         }
@@ -127,16 +145,31 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
 
     uv_w = (src->width + 1) >> 1;
     uv_h = (src->height + 1) >> 1;
+    sizes[0] = w * h;
+    sizes[1] = sizes[2] = uv_w * uv_h;
+    sizes[3] = has_alpha ? w * h : 0.;
+
     if (type >= 2) {
-      AccumulateLSIM(src->y, src->y_stride, ref->y, ref->y_stride,
-                     w, h, &stats[0]);
-      AccumulateLSIM(src->u, src->uv_stride, ref->u, ref->uv_stride,
-                     uv_w, uv_h, &stats[1]);
-      AccumulateLSIM(src->v, src->uv_stride, ref->v, ref->uv_stride,
-                     uv_w, uv_h, &stats[2]);
+      disto[0] = AccumulateLSIM(src->y, src->y_stride, ref->y, ref->y_stride,
+                                w, h);
+      disto[1] = AccumulateLSIM(src->u, src->uv_stride, ref->u, ref->uv_stride,
+                                uv_w, uv_h);
+      disto[2] = AccumulateLSIM(src->v, src->uv_stride, ref->v, ref->uv_stride,
+                                uv_w, uv_h);
       if (has_alpha) {
-        AccumulateLSIM(src->a, src->a_stride, ref->a, ref->a_stride,
-                       w, h, &stats[3]);
+        disto[3] = AccumulateLSIM(src->a, src->a_stride, ref->a, ref->a_stride,
+                                  w, h);
+      }
+    } else if (type == 0) {
+      disto[0] = AccumulateSSE(src->y, src->y_stride, ref->y, ref->y_stride,
+                               w, h);
+      disto[1] = AccumulateSSE(src->u, src->uv_stride, ref->u, ref->uv_stride,
+                               uv_w, uv_h);
+      disto[2] = AccumulateSSE(src->v, src->uv_stride, ref->v, ref->uv_stride,
+                               uv_w, uv_h);
+      if (has_alpha) {
+        disto[3] = AccumulateSSE(src->a, src->a_stride, ref->a, ref->a_stride,
+                                 w, h);
       }
     } else {
       VP8SSIMAccumulatePlane(src->y, src->y_stride,
@@ -155,22 +188,23 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
       }
     }
   }
-  // Final stat calculations.
-  {
-    int c;
-    for (c = 0; c <= 4; ++c) {
-      if (type == 1) {
-        const double v = VP8SSIMGet(&stats[c]);
-        result[c] = (float)((v < 1.) ? -10.0 * log10(1. - v)
-                                     : kMinDistortion_dB);
-      } else {
-        const double v = VP8SSIMGetSquaredError(&stats[c]);
-        result[c] = GetPSNR(v);
-      }
-      // Accumulate forward
-      if (c < 4) VP8SSIMAddStats(&stats[c], &stats[4]);
+
+  for (c = 0; c < 4; ++c) {
+    if (type == 1) {
+      results[c] = (float)GetLogSSIM(VP8SSIMGet(&stats[c]), 1.);
+      VP8SSIMAddStats(&stats[c], &stats[4]);
+    } else {
+      total_disto += disto[c];
+      total_size += sizes[c];
+      results[c] = (float)GetPSNR(disto[c], sizes[c]);
     }
   }
+  if (type == 1) {
+    results[4] = (float)GetLogSSIM(VP8SSIMGet(&stats[4]), 1.);
+  } else {
+    results[4] = (float)GetPSNR(total_disto, total_size);
+  }
+
   return 1;
 }
 
