@@ -136,17 +136,6 @@ void VP8LCollectColorBlueTransforms_C(const uint32_t* argb, int stride,
                                       int green_to_blue, int red_to_blue,
                                       int histo[]);
 
-//------------------------------------------------------------------------------
-// Image transforms.
-
-void VP8LResidualImage(int width, int height, int bits, int low_effort,
-                       uint32_t* const argb, uint32_t* const argb_scratch,
-                       uint32_t* const image, int near_lossless, int exact,
-                       int used_subtract_green);
-
-void VP8LColorSpaceTransform(int width, int height, int bits, int quality,
-                             uint32_t* const argb, uint32_t* image);
-
 // -----------------------------------------------------------------------------
 // Huffman-cost related functions.
 
