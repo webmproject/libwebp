@@ -1365,8 +1365,47 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitSSE2(void) {
   VP8Mean16x4 = Mean16x4;
 }
 
+//------------------------------------------------------------------------------
+// SSIM / PSNR entry point (TODO(skal): move to its own file later)
+
+extern void VP8SSIMDspInitSSE2(void);
+
+static uint32_t AccumulateSSE_SSE2(const uint8_t* src1,
+                                   const uint8_t* src2, int len) {
+  const int limit = len & ~31;
+  int i = 0;
+  uint32_t sse2 = 0;
+  if (limit > 0) {
+    __m128i sum = _mm_setzero_si128();
+    int32_t tmp[4];
+    for (; i < limit; i += 32) {
+      const __m128i a0 = _mm_loadu_si128((const __m128i*)&src1[i +  0]);
+      const __m128i b0 = _mm_loadu_si128((const __m128i*)&src2[i +  0]);
+      const __m128i a1 = _mm_loadu_si128((const __m128i*)&src1[i + 16]);
+      const __m128i b1 = _mm_loadu_si128((const __m128i*)&src2[i + 16]);
+      __m128i sum1, sum2;
+      SubtractAndAccumulate(a0, b0, &sum1);
+      SubtractAndAccumulate(a1, b1, &sum2);
+      sum = _mm_add_epi32(sum, _mm_add_epi32(sum1, sum2));
+    }
+    _mm_storeu_si128((__m128i*)tmp, sum);
+    sse2 += (tmp[3] + tmp[2] + tmp[1] + tmp[0]);
+  }
+
+  for (; i < len; ++i) {
+    const int32_t diff = src1[i] - src2[i];
+    sse2 += diff * diff;
+  }
+  return sse2;
+}
+
+WEBP_TSAN_IGNORE_FUNCTION void VP8SSIMDspInitSSE2(void) {
+  VP8AccumulateSSE = AccumulateSSE_SSE2;
+}
+
 #else  // !WEBP_USE_SSE2
 
 WEBP_DSP_INIT_STUB(VP8EncDspInitSSE2)
+WEBP_DSP_INIT_STUB(VP8SSIMDspInitSSE2)
 
 #endif  // WEBP_USE_SSE2
