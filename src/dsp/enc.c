@@ -691,6 +691,7 @@ static void Copy16x8(const uint8_t* src, uint8_t* dst) {
 }
 
 //------------------------------------------------------------------------------
+// SSIM / PSNR
 
 static void SSIMAccumulateClipped(const uint8_t* src1, int stride1,
                                   const uint8_t* src2, int stride2,
@@ -737,8 +738,23 @@ static void SSIMAccumulate(const uint8_t* src1, int stride1,
   }
 }
 
+static uint32_t AccumulateSSE(const uint8_t* src1,
+                              const uint8_t* src2, int len) {
+  int i;
+  uint32_t sse2 = 0;
+  assert(len <= 65535);  // to ensure that accumulation fits within uint32_t
+  for (i = 0; i < len; ++i) {
+    const int32_t diff = src1[i] - src2[i];
+    sse2 += diff * diff;
+  }
+  return sse2;
+}
+
 VP8SSIMAccumulateFunc VP8SSIMAccumulate;
 VP8SSIMAccumulateClippedFunc VP8SSIMAccumulateClipped;
+VP8AccumulateSSEFunc VP8AccumulateSSE;
+
+extern void VP8SSIMDspInitSSE2(void);
 
 static volatile VP8CPUInfo ssim_last_cpuinfo_used =
     (VP8CPUInfo)&ssim_last_cpuinfo_used;
@@ -748,6 +764,15 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8SSIMDspInit(void) {
 
   VP8SSIMAccumulate = SSIMAccumulate;
   VP8SSIMAccumulateClipped = SSIMAccumulateClipped;
+
+  VP8AccumulateSSE = AccumulateSSE;
+  if (VP8GetCPUInfo != NULL) {
+#if defined(WEBP_USE_SSE2)
+    if (VP8GetCPUInfo(kSSE2)) {
+      VP8SSIMDspInitSSE2();
+    }
+#endif
+  }
 
   ssim_last_cpuinfo_used = VP8GetCPUInfo;
 }
