@@ -250,7 +250,7 @@ extern VP8GetResidualCostFunc VP8GetResidualCost;
 void VP8EncDspCostInit(void);
 
 //------------------------------------------------------------------------------
-// SSIM utils
+// SSIM / PSNR utils
 
 // struct for accumulating statistical moments
 typedef struct {
@@ -274,6 +274,10 @@ typedef void (*VP8SSIMAccumulateFunc)(const uint8_t* src1, int stride1,
 
 extern VP8SSIMAccumulateFunc VP8SSIMAccumulate;         // unclipped / unchecked
 extern VP8SSIMAccumulateClippedFunc VP8SSIMAccumulateClipped;   // with clipping
+
+typedef uint32_t (*VP8AccumulateSSEFunc)(const uint8_t* src1,
+                                         const uint8_t* src2, int len);
+extern VP8AccumulateSSEFunc VP8AccumulateSSE;
 
 // must be called before using any of the above directly
 void VP8SSIMDspInit(void);

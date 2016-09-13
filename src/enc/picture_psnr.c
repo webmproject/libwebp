@@ -57,13 +57,10 @@ static double AccumulateLSIM(const uint8_t* src, int src_stride,
 static double AccumulateSSE(const uint8_t* src, int src_stride,
                             const uint8_t* ref, int ref_stride,
                             int w, int h) {
-  int x, y;
+  int y;
   double total_sse = 0.;
   for (y = 0; y < h; ++y) {
-    for (x = 0; x < w; ++x) {
-      const double diff = src[x] - ref[x];
-      total_sse += diff * diff;
-    }
+    total_sse += VP8AccumulateSSE(src, ref, w);
     src += src_stride;
     ref += ref_stride;
   }
@@ -78,7 +75,7 @@ static const double kMinDistortion_dB = 99.;
 
 static double GetPSNR(double v, double size) {
   return (v > 0. && size > 0.) ? -4.3429448 * log(v / (size * 255 * 255.))
-                              : kMinDistortion_dB;
+                               : kMinDistortion_dB;
 }
 static double GetLogSSIM(double v, double size) {
   v = (size > 0.) ? v / size : 1.;
@@ -91,8 +88,10 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
   double disto[4] = { 0. };
   double sizes[4] = { 0. };
   double total_size = 0., total_disto = 0.;
+  VP8DistoStats stats[5];
 
   VP8SSIMDspInit();
+  memset(stats, 0, sizeof(stats));
 
   if (src == NULL || ref == NULL ||
       src->width != ref->width || src->height != ref->height ||
@@ -126,7 +125,7 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
         } else if (type == 0) {
           disto[c] = AccumulateSSE(tmp1, w, tmp2, w, w, h);
         } else {
-//          VP8SSIMAccumulatePlane(tmp1, w, tmp2, w, w, h, &stats[c]);
+          VP8SSIMAccumulatePlane(tmp1, w, tmp2, w, w, h, &stats[c]);
         }
       }
       WebPSafeFree(tmp_plane);
@@ -174,7 +173,6 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
                                  w, h);
       }
     } else {
-#if 0
       VP8SSIMAccumulatePlane(src->y, src->y_stride,
                              ref->y, ref->y_stride,
                              w, h, &stats[0]);
@@ -189,18 +187,25 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
                                ref->a, ref->a_stride,
                                w, h, &stats[3]);
       }
-#endif
     }
   }
 
   for (c = 0; c < 4; ++c) {
-    total_disto += disto[c];
-    total_size += sizes[c];
-    results[c] = (type != 1) ? GetPSNR(disto[c], sizes[c])
-                             : GetLogSSIM(disto[c], sizes[c]);
+    if (type == 1) {
+      results[c] = GetLogSSIM(VP8SSIMGet(&stats[c]), 1.);
+      VP8SSIMAddStats(&stats[c], &stats[4]);
+    } else {
+      total_disto += disto[c];
+      total_size += sizes[c];
+      results[c] = GetPSNR(disto[c], sizes[c]);
+    }
   }
-  results[4] = (type != 1) ? GetPSNR(total_disto, total_size)
-                           : GetLogSSIM(total_disto, total_size);
+  if (type == 1) {
+    results[4] = GetLogSSIM(VP8SSIMGet(&stats[4]), 1.);
+  } else {
+    results[4] = GetPSNR(total_disto, total_size);
+  }
+
   return 1;
 }
 
