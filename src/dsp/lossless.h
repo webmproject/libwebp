@@ -154,11 +154,6 @@ typedef struct {        // small struct to hold counters
   int streaks[2][2];    // [zero/non-zero][streak<3 / streak>=3]
 } VP8LStreaks;
 
-typedef VP8LStreaks (*VP8LCostCombinedCountFunc)(const uint32_t* X,
-                                                 const uint32_t* Y, int length);
-
-extern VP8LCostCombinedCountFunc VP8LHuffmanCostCombinedCount;
-
 typedef struct {            // small struct to hold bit entropy results
   double entropy;           // entropy
   uint32_t sum;             // sum of the population
