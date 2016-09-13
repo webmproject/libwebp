@@ -53,7 +53,6 @@ void VP8IteratorReset(VP8EncIterator* const it) {
   VP8IteratorSetRow(it, 0);
   VP8IteratorSetCountDown(it, enc->mb_w_ * enc->mb_h_);  // default
   InitTop(it);
-  InitLeft(it);
   memset(it->bit_count_, 0, sizeof(it->bit_count_));
   it->do_trellis_ = 0;
 }
