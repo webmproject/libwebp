@@ -195,6 +195,7 @@ model {
             include "picture_psnr.c"
             include "picture_rescale.c"
             include "picture_tools.c"
+            include "predictor.c"
             include "quant.c"
             include "syntax.c"
             include "token.c"

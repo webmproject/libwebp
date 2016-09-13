@@ -73,6 +73,17 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
                                    VP8LBitWriter* const bw, int use_cache);
 
 //------------------------------------------------------------------------------
+// Image transforms in predictor.c.
+
+void VP8LResidualImage(int width, int height, int bits, int low_effort,
+                       uint32_t* const argb, uint32_t* const argb_scratch,
+                       uint32_t* const image, int near_lossless, int exact,
+                       int used_subtract_green);
+
+void VP8LColorSpaceTransform(int width, int height, int bits, int quality,
+                             uint32_t* const argb, uint32_t* image);
+
+//------------------------------------------------------------------------------
 
 #ifdef __cplusplus
 }    // extern "C"

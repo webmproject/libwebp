@@ -21,6 +21,7 @@ libwebpencode_la_SOURCES += picture_csp.c
 libwebpencode_la_SOURCES += picture_psnr.c
 libwebpencode_la_SOURCES += picture_rescale.c
 libwebpencode_la_SOURCES += picture_tools.c
+libwebpencode_la_SOURCES += predictor.c
 libwebpencode_la_SOURCES += quant.c
 libwebpencode_la_SOURCES += syntax.c
 libwebpencode_la_SOURCES += token.c

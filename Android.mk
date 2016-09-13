@@ -116,6 +116,7 @@ enc_srcs := \
     src/enc/picture_psnr.c \
     src/enc/picture_rescale.c \
     src/enc/picture_tools.c \
+    src/enc/predictor.c \
     src/enc/quant.c \
     src/enc/syntax.c \
     src/enc/token.c \
