@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b77ca47_63574057",
+        "filename": "src/enc/iterator.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-09-14T02:14:36Z",
+      "side": 1,
+      "message": "indent is off",
+      "revId": "ffd01929f15d1044ac164b56bdf9dd83c5823625",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
