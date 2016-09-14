@@ -167,25 +167,19 @@ void VP8LBitEntropyInit(VP8LBitEntropy* const entropy);
 // Get the combined symbol bit entropy and Huffman cost stats for the
 // distributions 'X' and 'Y'. Those results can then be refined according to
 // codec specific heuristics.
-void VP8LGetCombinedEntropyUnrefined(const uint32_t* const X,
-                                     const uint32_t* const Y, int length,
-                                     VP8LBitEntropy* const bit_entropy,
-                                     VP8LStreaks* const stats);
+typedef void (*VP8LGetCombinedEntropyUnrefinedFunc)(
+    const uint32_t X[], const uint32_t Y[], int length,
+    VP8LBitEntropy* const bit_entropy, VP8LStreaks* const stats);
+extern VP8LGetCombinedEntropyUnrefinedFunc VP8LGetCombinedEntropyUnrefined;
+
 // Get the entropy for the distribution 'X'.
-void VP8LGetEntropyUnrefined(const uint32_t* const X, int length,
-                             VP8LBitEntropy* const bit_entropy,
-                             VP8LStreaks* const stats);
+typedef void (*VP8LGetEntropyUnrefinedFunc)(const uint32_t X[], int length,
+                                            VP8LBitEntropy* const bit_entropy,
+                                            VP8LStreaks* const stats);
+extern VP8LGetEntropyUnrefinedFunc VP8LGetEntropyUnrefined;
 
 void VP8LBitsEntropyUnrefined(const uint32_t* const array, int n,
                               VP8LBitEntropy* const entropy);
-
-typedef void (*GetEntropyUnrefinedHelperFunc)(uint32_t val, int i,
-                                              uint32_t* const val_prev,
-                                              int* const i_prev,
-                                              VP8LBitEntropy* const bit_entropy,
-                                              VP8LStreaks* const stats);
-// Internal function used by VP8LGet*EntropyUnrefined.
-extern GetEntropyUnrefinedHelperFunc VP8LGetEntropyUnrefinedHelper;
 
 typedef void (*VP8LHistogramAddFunc)(const VP8LHistogram* const a,
                                      const VP8LHistogram* const b,
