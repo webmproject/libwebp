@@ -474,14 +474,6 @@ int VP8EncStartAlpha(VP8Encoder* const enc);    // start alpha coding process
 int VP8EncFinishAlpha(VP8Encoder* const enc);   // finalize compressed data
 int VP8EncDeleteAlpha(VP8Encoder* const enc);   // delete compressed data
 
-  // in filter.c
-void VP8SSIMAddStats(const VP8DistoStats* const src, VP8DistoStats* const dst);
-void VP8SSIMAccumulatePlane(const uint8_t* src1, int stride1,
-                            const uint8_t* src2, int stride2,
-                            int W, int H, VP8DistoStats* const stats);
-double VP8SSIMGet(const VP8DistoStats* const stats);
-double VP8SSIMGetSquaredError(const VP8DistoStats* const stats);
-
 // autofilter
 void VP8InitFilter(VP8EncIterator* const it);
 void VP8StoreFilterStats(VP8EncIterator* const it);
