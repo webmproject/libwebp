@@ -254,26 +254,29 @@ void VP8EncDspCostInit(void);
 
 // struct for accumulating statistical moments
 typedef struct {
-  double w;              // sum(w_i) : sum of weights
-  double xm, ym;         // sum(w_i * x_i), sum(w_i * y_i)
-  double xxm, xym, yym;  // sum(w_i * x_i * x_i), etc.
+  uint32_t w;              // sum(w_i) : sum of weights
+  uint32_t xm, ym;         // sum(w_i * x_i), sum(w_i * y_i)
+  uint32_t xxm, xym, yym;  // sum(w_i * x_i * x_i), etc.
 } VP8DistoStats;
 
+// Compute the final SSIM value
+// The non-clipped version assumes stats->w = (2 * VP8_SSIM_KERNEL + 1)^2.
+double VP8SSIMFromStats(const VP8DistoStats* const stats);
+double VP8SSIMFromStatsClipped(const VP8DistoStats* const stats);
+
 #define VP8_SSIM_KERNEL 3   // total size of the kernel: 2 * VP8_SSIM_KERNEL + 1
-typedef void (*VP8SSIMAccumulateClippedFunc)(const uint8_t* src1, int stride1,
-                                             const uint8_t* src2, int stride2,
-                                             int xo, int yo,  // center position
-                                             int W, int H,    // plane dimension
-                                             VP8DistoStats* const stats);
+typedef double (*VP8SSIMGetClippedFunc)(const uint8_t* src1, int stride1,
+                                        const uint8_t* src2, int stride2,
+                                        int xo, int yo,  // center position
+                                        int W, int H);   // plane dimension
 
 // This version is called with the guarantee that you can load 8 bytes and
 // 8 rows at offset src1 and src2
-typedef void (*VP8SSIMAccumulateFunc)(const uint8_t* src1, int stride1,
-                                      const uint8_t* src2, int stride2,
-                                      VP8DistoStats* const stats);
+typedef double (*VP8SSIMGetFunc)(const uint8_t* src1, int stride1,
+                                 const uint8_t* src2, int stride2);
 
-extern VP8SSIMAccumulateFunc VP8SSIMAccumulate;         // unclipped / unchecked
-extern VP8SSIMAccumulateClippedFunc VP8SSIMAccumulateClipped;   // with clipping
+extern VP8SSIMGetFunc VP8SSIMGet;         // unclipped / unchecked
+extern VP8SSIMGetClippedFunc VP8SSIMGetClipped;   // with clipping
 
 typedef uint32_t (*VP8AccumulateSSEFunc)(const uint8_t* src1,
                                          const uint8_t* src2, int len);

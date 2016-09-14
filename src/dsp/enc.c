@@ -693,10 +693,41 @@ static void Copy16x8(const uint8_t* src, uint8_t* dst) {
 //------------------------------------------------------------------------------
 // SSIM / PSNR
 
-static void SSIMAccumulateClipped(const uint8_t* src1, int stride1,
-                                  const uint8_t* src2, int stride2,
-                                  int xo, int yo, int W, int H,
-                                  VP8DistoStats* const stats) {
+static const double kMinValue = 1.e-10;  // minimal threshold
+
+static WEBP_INLINE double SSIMCalculation(
+    const VP8DistoStats* const stats, uint32_t N  /*num samples*/) {
+  const double w2 = N * N;
+  const double C1 = 6.5025 * w2;
+  const double C2 = 58.5225 * w2;
+  const double xmxm = stats->xm * stats->xm;
+  const double ymym = stats->ym * stats->ym;
+  const double xmym = stats->xm * stats->ym;
+  const double sxy = stats->xym * N - xmym;
+  const double fnum = (2 * xmym + C1) * (2 * sxy + C2);
+  double fden;
+  double sxx = stats->xxm * N - xmxm;
+  double syy = stats->yym * N - ymym;
+  // small errors are possible, due to rounding. Clamp to zero.
+  if (sxx < 0.) sxx = 0.;
+  if (syy < 0.) syy = 0.;
+  fden = (xmxm + ymym + C1) * (sxx + syy + C2);
+  return (fden != 0.) ? fnum / fden : kMinValue;
+}
+
+double VP8SSIMFromStats(const VP8DistoStats* const stats) {
+  const uint32_t w = (2 * VP8_SSIM_KERNEL + 1) * (2 * VP8_SSIM_KERNEL + 1);
+  return SSIMCalculation(stats, w);
+}
+
+double VP8SSIMFromStatsClipped(const VP8DistoStats* const stats) {
+  return SSIMCalculation(stats, stats->w);
+}
+
+static double SSIMGetClipped_C(const uint8_t* src1, int stride1,
+                               const uint8_t* src2, int stride2,
+                               int xo, int yo, int W, int H) {
+  VP8DistoStats stats = { 0., 0., 0., 0., 0., 0. };
   const int ymin = (yo - VP8_SSIM_KERNEL < 0) ? 0 : yo - VP8_SSIM_KERNEL;
   const int ymax = (yo + VP8_SSIM_KERNEL > H - 1) ? H - 1
                                                   : yo + VP8_SSIM_KERNEL;
@@ -710,33 +741,36 @@ static void SSIMAccumulateClipped(const uint8_t* src1, int stride1,
     for (x = xmin; x <= xmax; ++x) {
       const int s1 = src1[x];
       const int s2 = src2[x];
-      stats->w   += 1;
-      stats->xm  += s1;
-      stats->ym  += s2;
-      stats->xxm += s1 * s1;
-      stats->xym += s1 * s2;
-      stats->yym += s2 * s2;
+      stats.xm  += s1;
+      stats.ym  += s2;
+      stats.xxm += s1 * s1;
+      stats.xym += s1 * s2;
+      stats.yym += s2 * s2;
     }
   }
+  stats.w = (ymax - ymin + 1) * (xmax - xmin + 1);
+  return VP8SSIMFromStatsClipped(&stats);
 }
 
-static void SSIMAccumulate(const uint8_t* src1, int stride1,
-                           const uint8_t* src2, int stride2,
-                           VP8DistoStats* const stats) {
+static double SSIMGet_C(const uint8_t* src1, int stride1,
+                        const uint8_t* src2, int stride2) {
+  VP8DistoStats stats = { 0., 0., 0., 0., 0., 0. };
   int x, y;
   for (y = 0; y <= 2 * VP8_SSIM_KERNEL; ++y, src1 += stride1, src2 += stride2) {
     for (x = 0; x <= 2 * VP8_SSIM_KERNEL; ++x) {
       const int s1 = src1[x];
       const int s2 = src2[x];
-      stats->w   += 1;
-      stats->xm  += s1;
-      stats->ym  += s2;
-      stats->xxm += s1 * s1;
-      stats->xym += s1 * s2;
-      stats->yym += s2 * s2;
+      stats.xm  += s1;
+      stats.ym  += s2;
+      stats.xxm += s1 * s1;
+      stats.xym += s1 * s2;
+      stats.yym += s2 * s2;
     }
   }
+  return VP8SSIMFromStats(&stats);
 }
+
+//------------------------------------------------------------------------------
 
 static uint32_t AccumulateSSE(const uint8_t* src1,
                               const uint8_t* src2, int len) {
@@ -750,8 +784,10 @@ static uint32_t AccumulateSSE(const uint8_t* src1,
   return sse2;
 }
 
-VP8SSIMAccumulateFunc VP8SSIMAccumulate;
-VP8SSIMAccumulateClippedFunc VP8SSIMAccumulateClipped;
+//------------------------------------------------------------------------------
+
+VP8SSIMGetFunc VP8SSIMGet;
+VP8SSIMGetClippedFunc VP8SSIMGetClipped;
 VP8AccumulateSSEFunc VP8AccumulateSSE;
 
 extern void VP8SSIMDspInitSSE2(void);
@@ -762,8 +798,8 @@ static volatile VP8CPUInfo ssim_last_cpuinfo_used =
 WEBP_TSAN_IGNORE_FUNCTION void VP8SSIMDspInit(void) {
   if (ssim_last_cpuinfo_used == VP8GetCPUInfo) return;
 
-  VP8SSIMAccumulate = SSIMAccumulate;
-  VP8SSIMAccumulateClipped = SSIMAccumulateClipped;
+  VP8SSIMGetClipped = SSIMGetClipped_C;
+  VP8SSIMGet = SSIMGet_C;
 
   VP8AccumulateSSE = AccumulateSSE;
   if (VP8GetCPUInfo != NULL) {
