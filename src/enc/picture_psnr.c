@@ -17,6 +17,10 @@
 #include "./vp8enci.h"
 #include "../utils/utils.h"
 
+typedef double (*AccumulateFunc)(const uint8_t* src, int src_stride,
+                                 const uint8_t* ref, int ref_stride,
+                                 int w, int h);
+
 //------------------------------------------------------------------------------
 // local-min distortion
 //
@@ -68,6 +72,43 @@ static double AccumulateSSE(const uint8_t* src, int src_stride,
 }
 
 //------------------------------------------------------------------------------
+
+static double AccumulateSSIM(const uint8_t* src, int src_stride,
+                             const uint8_t* ref, int ref_stride,
+                             int w, int h) {
+  const int w0 = (w < VP8_SSIM_KERNEL) ? w : VP8_SSIM_KERNEL;
+  const int w1 = w - VP8_SSIM_KERNEL - 1;
+  const int h0 = (h < VP8_SSIM_KERNEL) ? h : VP8_SSIM_KERNEL;
+  const int h1 = h - VP8_SSIM_KERNEL - 1;
+  int x, y;
+  double sum = 0.;
+  for (y = 0; y < h0; ++y) {
+    for (x = 0; x < w; ++x) {
+      sum += VP8SSIMGetClipped(src, src_stride, ref, ref_stride, x, y, w, h);
+    }
+  }
+  for (; y < h1; ++y) {
+    for (x = 0; x < w0; ++x) {
+      sum += VP8SSIMGetClipped(src, src_stride, ref, ref_stride, x, y, w, h);
+    }
+    for (; x < w1; ++x) {
+      const int off1 = x - VP8_SSIM_KERNEL + (y - VP8_SSIM_KERNEL) * src_stride;
+      const int off2 = x - VP8_SSIM_KERNEL + (y - VP8_SSIM_KERNEL) * ref_stride;
+      sum += VP8SSIMGet(src + off1, src_stride, ref + off2, ref_stride);
+    }
+    for (; x < w; ++x) {
+      sum += VP8SSIMGetClipped(src, src_stride, ref, ref_stride, x, y, w, h);
+    }
+  }
+  for (; y < h; ++y) {
+    for (x = 0; x < w; ++x) {
+      sum += VP8SSIMGetClipped(src, src_stride, ref, ref_stride, x, y, w, h);
+    }
+  }
+  return sum;
+}
+
+//------------------------------------------------------------------------------
 // Distortion
 
 // Max value returned in case of exact similarity.
@@ -77,6 +118,7 @@ static double GetPSNR(double v, double size) {
   return (v > 0. && size > 0.) ? -4.3429448 * log(v / (size * 255 * 255.))
                                : kMinDistortion_dB;
 }
+
 static double GetLogSSIM(double v, double size) {
   v = (size > 0.) ? v / size : 1.;
   return (v < 1.) ? -10.0 * log10(1. - v) : kMinDistortion_dB;
@@ -88,10 +130,10 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
   double disto[4] = { 0. };
   double sizes[4] = { 0. };
   double total_size = 0., total_disto = 0.;
-  VP8DistoStats stats[5];
-
+  const AccumulateFunc metric = (type == 0) ? AccumulateSSE :
+                                (type == 1) ? AccumulateSSIM :
+                                              AccumulateLSIM;
   VP8SSIMDspInit();
-  memset(stats, 0, sizeof(stats));
 
   if (src == NULL || ref == NULL ||
       src->width != ref->width || src->height != ref->height ||
@@ -120,13 +162,7 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
           }
         }
         sizes[c] = w * h;
-        if (type >= 2) {
-          disto[c] = AccumulateLSIM(tmp1, w, tmp2, w, w, h);
-        } else if (type == 0) {
-          disto[c] = AccumulateSSE(tmp1, w, tmp2, w, w, h);
-        } else {
-          VP8SSIMAccumulatePlane(tmp1, w, tmp2, w, w, h, &stats[c]);
-        }
+        disto[c] = metric(tmp1, w, tmp2, w, w, h);
       }
       WebPSafeFree(tmp_plane);
     }
@@ -149,62 +185,24 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
     sizes[1] = sizes[2] = uv_w * uv_h;
     sizes[3] = has_alpha ? w * h : 0.;
 
-    if (type >= 2) {
-      disto[0] = AccumulateLSIM(src->y, src->y_stride, ref->y, ref->y_stride,
-                                w, h);
-      disto[1] = AccumulateLSIM(src->u, src->uv_stride, ref->u, ref->uv_stride,
-                                uv_w, uv_h);
-      disto[2] = AccumulateLSIM(src->v, src->uv_stride, ref->v, ref->uv_stride,
-                                uv_w, uv_h);
-      if (has_alpha) {
-        disto[3] = AccumulateLSIM(src->a, src->a_stride, ref->a, ref->a_stride,
-                                  w, h);
-      }
-    } else if (type == 0) {
-      disto[0] = AccumulateSSE(src->y, src->y_stride, ref->y, ref->y_stride,
-                               w, h);
-      disto[1] = AccumulateSSE(src->u, src->uv_stride, ref->u, ref->uv_stride,
-                               uv_w, uv_h);
-      disto[2] = AccumulateSSE(src->v, src->uv_stride, ref->v, ref->uv_stride,
-                               uv_w, uv_h);
-      if (has_alpha) {
-        disto[3] = AccumulateSSE(src->a, src->a_stride, ref->a, ref->a_stride,
-                                 w, h);
-      }
-    } else {
-      VP8SSIMAccumulatePlane(src->y, src->y_stride,
-                             ref->y, ref->y_stride,
-                             w, h, &stats[0]);
-      VP8SSIMAccumulatePlane(src->u, src->uv_stride,
-                             ref->u, ref->uv_stride,
-                             uv_w, uv_h, &stats[1]);
-      VP8SSIMAccumulatePlane(src->v, src->uv_stride,
-                             ref->v, ref->uv_stride,
-                             uv_w, uv_h, &stats[2]);
-      if (has_alpha) {
-        VP8SSIMAccumulatePlane(src->a, src->a_stride,
-                               ref->a, ref->a_stride,
-                               w, h, &stats[3]);
-      }
+    disto[0] = metric(src->y, src->y_stride, ref->y, ref->y_stride, w, h);
+    disto[1] = metric(src->u, src->uv_stride, ref->u, ref->uv_stride,
+                      uv_w, uv_h);
+    disto[2] = metric(src->v, src->uv_stride, ref->v, ref->uv_stride,
+                      uv_w, uv_h);
+    if (has_alpha) {
+      disto[3] = metric(src->a, src->a_stride, ref->a, ref->a_stride, w, h);
     }
   }
 
   for (c = 0; c < 4; ++c) {
-    if (type == 1) {
-      results[c] = (float)GetLogSSIM(VP8SSIMGet(&stats[c]), 1.);
-      VP8SSIMAddStats(&stats[c], &stats[4]);
-    } else {
-      total_disto += disto[c];
-      total_size += sizes[c];
-      results[c] = (float)GetPSNR(disto[c], sizes[c]);
-    }
+    total_disto += disto[c];
+    total_size += sizes[c];
+    results[c] = (type == 1) ? (float)GetLogSSIM(disto[c], sizes[c])
+                             : (float)GetPSNR(disto[c], sizes[c]);
   }
-  if (type == 1) {
-    results[4] = (float)GetLogSSIM(VP8SSIMGet(&stats[4]), 1.);
-  } else {
-    results[4] = (float)GetPSNR(total_disto, total_size);
-  }
-
+  results[4] = (type == 1) ? (float)GetLogSSIM(total_disto, total_size)
+                           : (float)GetPSNR(total_disto, total_size);
   return 1;
 }
 
