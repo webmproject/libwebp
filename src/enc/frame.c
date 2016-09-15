@@ -816,7 +816,7 @@ int VP8EncTokenLoop(VP8Encoder* const enc) {
            num_pass_left, stats.last_value, stats.value,
            stats.last_q, stats.q, stats.dq);
 #endif
-    if (size_p0 > PARTITION0_SIZE_LIMIT) {
+    if (enc->max_i4_header_bits_ > 0 && size_p0 > PARTITION0_SIZE_LIMIT) {
       ++num_pass_left;
       enc->max_i4_header_bits_ >>= 1;  // strengthen header bit limitation...
       continue;                        // ...and start over
