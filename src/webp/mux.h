@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-#define WEBP_MUX_ABI_VERSION 0x0107        // MAJOR(8b) + MINOR(8b)
+#define WEBP_MUX_ABI_VERSION 0x0108        // MAJOR(8b) + MINOR(8b)
 
 //------------------------------------------------------------------------------
 // Mux API
