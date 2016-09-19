@@ -134,6 +134,7 @@ DSP_DEC_OBJS = \
     src/dsp/alpha_processing_sse2.o \
     src/dsp/alpha_processing_sse41.o \
     src/dsp/cpu.o \
+    src/dsp/csp.o \
     src/dsp/dec.o \
     src/dsp/dec_clip_tables.o \
     src/dsp/dec_mips32.o \
@@ -175,6 +176,8 @@ DSP_ENC_OBJS = \
     src/dsp/cost_mips32.o \
     src/dsp/cost_mips_dsp_r2.o \
     src/dsp/cost_sse2.o \
+    src/dsp/csp.o \
+    src/dsp/csp_sse2.o \
     src/dsp/enc.o \
     src/dsp/enc_avx2.o \
     src/dsp/enc_mips32.o \
