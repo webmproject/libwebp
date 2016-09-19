@@ -171,9 +171,9 @@ typedef uint16_t fixed_y_t;   // unsigned type with extra SFIX precision for W
 #if defined(USE_GAMMA_COMPRESSION)
 
 // float variant of gamma-correction
-// We use tables of different size and precision, along with a 'real-world'
-// Gamma value close to ~2.
-#define kGammaF 2.2
+// We use tables of different size and precision for the Rec709
+// transfer function.
+#define kGammaF (1./0.45)
 static float kGammaToLinearTabF[MAX_Y_T + 1];   // size scales with Y_FIX
 static float kLinearToGammaTabF[kGammaTabSize + 2];
 static volatile int kGammaTablesFOk = 0;
@@ -183,11 +183,26 @@ static WEBP_TSAN_IGNORE_FUNCTION void InitGammaTablesF(void) {
     int v;
     const double norm = 1. / MAX_Y_T;
     const double scale = 1. / kGammaTabSize;
+    const double a = 0.099;
+    const double thresh = 0.018;
     for (v = 0; v <= MAX_Y_T; ++v) {
-      kGammaToLinearTabF[v] = (float)pow(norm * v, kGammaF);
+      const double g = norm * v;
+      if (g <= thresh * 4.5) {
+        kGammaToLinearTabF[v] = (float)(g / 4.5);
+      } else {
+        const double a_rec = 1. / (1. + a);
+        kGammaToLinearTabF[v] = (float)pow(a_rec * (g + a), kGammaF);
+      }
     }
     for (v = 0; v <= kGammaTabSize; ++v) {
-      kLinearToGammaTabF[v] = (float)(MAX_Y_T * pow(scale * v, 1. / kGammaF));
+      const double g = scale * v;
+      double value;
+      if (g <= thresh) {
+        value = 4.5 * g;
+      } else {
+        value = (1. + a) * pow(g, 1. / kGammaF) - a;
+      }
+      kLinearToGammaTabF[v] = (float)(MAX_Y_T * value);
     }
     // to prevent small rounding errors to cause read-overflow:
     kLinearToGammaTabF[kGammaTabSize + 1] = kLinearToGammaTabF[kGammaTabSize];
@@ -235,12 +250,12 @@ static fixed_y_t clip_y(int y) {
 //------------------------------------------------------------------------------
 
 static int RGBToGray(int r, int g, int b) {
-  const int luma = 19595 * r + 38470 * g + 7471 * b + YUV_HALF;
+  const int luma = 13933 * r + 46871 * g + 4732 * b + YUV_HALF;
   return (luma >> YUV_FIX);
 }
 
 static float RGBToGrayF(float r, float g, float b) {
-  return 0.299f * r + 0.587f * g + 0.114f * b;
+  return (float)(0.2126 * r + 0.7152 * g + 0.0722 * b);
 }
 
 static int ScaleDown(int a, int b, int c, int d) {
@@ -427,6 +442,7 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
   const int h = (picture->height + 1) & ~1;
   const int uv_w = w >> 1;
   const int uv_h = h >> 1;
+  uint64_t prev_diff_y_sum = ~0;
   int i, j, iter;
 
   // TODO(skal): allocate one big memory chunk. But for now, it's easier
@@ -514,7 +530,11 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
       }
     }
     // test exit condition
-    if (iter > 0 && diff_y_sum < diff_y_threshold) break;
+    if (iter > 0) {
+      if (diff_y_sum < diff_y_threshold) break;
+      if (diff_y_sum > prev_diff_y_sum) break;
+    }
+    prev_diff_y_sum = diff_y_sum;
   }
   // final reconstruction
   ok = ConvertWRGBToYUV(best_y, best_uv, picture);
