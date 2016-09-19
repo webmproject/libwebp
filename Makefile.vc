@@ -232,6 +232,8 @@ DSP_ENC_OBJS = \
     $(DIROBJ)\dsp\cost_mips32.obj \
     $(DIROBJ)\dsp\cost_mips_dsp_r2.obj \
     $(DIROBJ)\dsp\cost_sse2.obj \
+    $(DIROBJ)\dsp\csp.obj \
+    $(DIROBJ)\dsp\csp_sse2.obj \
     $(DIROBJ)\dsp\enc.obj \
     $(DIROBJ)\dsp\enc_avx2.obj \
     $(DIROBJ)\dsp\enc_mips32.obj \
