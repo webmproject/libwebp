@@ -175,6 +175,8 @@ DSP_ENC_OBJS = \
     src/dsp/cost_mips32.o \
     src/dsp/cost_mips_dsp_r2.o \
     src/dsp/cost_sse2.o \
+    src/dsp/csp.o \
+    src/dsp/csp_sse2.o \
     src/dsp/enc.o \
     src/dsp/enc_avx2.o \
     src/dsp/enc_mips32.o \
