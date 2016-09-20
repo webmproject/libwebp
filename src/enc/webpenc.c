@@ -342,7 +342,11 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
 
     if (pic->use_argb || pic->y == NULL || pic->u == NULL || pic->v == NULL) {
       // Make sure we have YUVA samples.
-      if (config->preprocessing & 4) {
+      if (config->preprocessing & 8) {
+        if (!WebPPictureSharpenedARGBToYUVA(pic, 70)) {
+          return 0;
+        }
+      } else if (config->preprocessing & 4) {
         if (!WebPPictureSmartARGBToYUVA(pic)) {
           return 0;
         }
