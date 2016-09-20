@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50d9730c_f93dabc9",
+        "filename": "src/enc/picture_csp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-09-20T06:10:32Z",
+      "side": 1,
+      "message": "long line",
+      "revId": "90b90a8540e878633e9adaccc11df0c8745f4ff2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50d9730c_d949c75c",
+        "filename": "src/enc/picture_csp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-09-20T06:10:32Z",
+      "side": 1,
+      "message": "any comment for the magic number?",
+      "revId": "90b90a8540e878633e9adaccc11df0c8745f4ff2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
