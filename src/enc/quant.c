@@ -643,6 +643,8 @@ static int TrellisQuantizeBlock(const VP8Encoder* const enc,
     const int sign = (in[j] < 0);
     const uint32_t coeff0 = (sign ? -in[j] : in[j]) + mtx->sharpen_[j];
     int level0 = QUANTDIV(coeff0, iQ, B);
+    int thresh_level = QUANTDIV(coeff0, iQ, BIAS(0x80));
+    if (thresh_level > MAX_LEVEL) thresh_level = MAX_LEVEL;
     if (level0 > MAX_LEVEL) level0 = MAX_LEVEL;
 
     {   // Swap current and previous score states
@@ -657,21 +659,15 @@ static int TrellisQuantizeBlock(const VP8Encoder* const enc,
       int level = level0 + m;
       const int ctx = (level > 2) ? 2 : level;
       const int band = VP8EncBands[n + 1];
-      score_t base_score, last_pos_score;
+      score_t base_score;
       score_t best_cur_score = MAX_COST;
       int best_prev = 0;   // default, in case
 
       ss_cur[m].score = MAX_COST;
       ss_cur[m].costs = costs[n + 1][ctx];
-      if (level > MAX_LEVEL || level < 0) {   // node is dead?
+      if (level < 0 || level > thresh_level) {
+        // Node is dead.
         continue;
-      }
-
-      // Compute extra rate cost if last coeff's position is < 15
-      {
-        const score_t last_pos_cost =
-            (n < 15) ? VP8BitCost(0, probas[band][ctx][0]) : 0;
-        last_pos_score = RDScoreTrellis(lambda, last_pos_cost, 0);
       }
 
       {
@@ -705,6 +701,9 @@ static int TrellisQuantizeBlock(const VP8Encoder* const enc,
 
       // Now, record best terminal node (and thus best entry in the graph).
       if (level != 0) {
+        const score_t last_pos_cost =
+            (n < 15) ? VP8BitCost(0, probas[band][ctx][0]) : 0;
+        const score_t last_pos_score = RDScoreTrellis(lambda, last_pos_cost, 0);
         const score_t score = best_cur_score + last_pos_score;
         if (score < best_score) {
           best_score = score;
