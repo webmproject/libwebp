@@ -532,6 +532,80 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
 #undef SAFE_ALLOC
 
 //------------------------------------------------------------------------------
+// filter coeffs are: [-s kC0+2*s -s], total: kC0^2
+
+#define kFIX 3    // 3bit precision per pass
+#define kFIX2 16  // final descaling
+static const uint16_t kC0 = (4 << kFIX);
+#define kNORM ((1 << kFIX2) / (kC0 * kC0))
+
+#define FILTER_HSIZE 1      // filter half-size
+#define FILTER_SIZE (2 * FILTER_HSIZE + 1)
+
+#define CLAMP(j) (((j) < 0) ? 0 :                 \
+                  ((j) >= height) ? height - 1 :  \
+                   (j))
+#define GET_RAW_BUF(j) (buffer + ((j) % FILTER_SIZE) * width)
+#define GET_BUF(j) GET_RAW_BUF(CLAMP(j))
+
+// Process one more line of output, producing one line of output
+// if the return value is true. This function must be called
+// with 'row' looping over [0, height + FILTER_HSIZE) range.
+// 'buffer' is a temporary work buffer of a least width * FILTER_SIZE elements.
+// It must be preserved untouched between calls.
+static int SharpenRow(const uint8_t* const src, uint8_t* const dst,
+                      int row, int width, int height, int strength,
+                      int16_t* const buffer) {
+  const int c1 = ((strength << kFIX) + 50) / 100;
+  const int c0 = kC0 + 2 * c1;
+
+  assert(buffer != NULL);
+  assert(row >= 0 && row < height + FILTER_HSIZE);
+  if (row < height) {
+    int16_t* line_dst = GET_RAW_BUF(row);
+    WebPSharpenImportRow(src, line_dst, width, c0, c1);
+  }
+  if (row >= FILTER_HSIZE) {
+    WebPSharpenExportRow(GET_BUF(row - 2), GET_BUF(row - 1), GET_BUF(row),
+                         dst, width, c0 * kNORM, c1 * kNORM);
+    return 1;
+  }
+  return 0;
+}
+
+static int SharpenPlane(uint8_t* raw_src,
+                        int width, int height, int stride, int strength) {
+  if (width > FILTER_SIZE && height > FILTER_SIZE) {
+    int16_t* const buffer =
+        (int16_t*)WebPSafeMalloc(FILTER_SIZE * width, sizeof(*buffer));
+    uint8_t* dst = raw_src;
+    const uint8_t* src = raw_src;
+    int j;
+    if (buffer == NULL) return 0;
+
+    WebPInitCSP();
+
+    for (j = 0; j < height + FILTER_HSIZE; ++j) {
+      if (SharpenRow(src, dst, j, width, height, strength, buffer)) {
+        dst += stride;
+      }
+      src += stride;
+    }
+    WebPSafeFree(buffer);
+  }
+  return 1;
+}
+#undef kFIX
+#undef kFIX2
+#undef kNORM
+#undef FILTER
+#undef FILTER_HSIZE
+#undef FILTER_SIZE
+#undef CLAMP
+#undef GET_BUF
+#undef GET_RAW_BUF
+
+//------------------------------------------------------------------------------
 // "Fast" regular RGB->YUV
 
 #define SUM4(ptr, step) LinearToGamma(                     \
@@ -810,6 +884,7 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
                               int rgb_stride,   // bytes per scanline
                               float dithering,
                               int use_iterative_conversion,
+                              int sharpen_uv_strength,
                               WebPPicture* const picture) {
   int y;
   const int width = picture->width;
@@ -848,6 +923,7 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
     }
   } else {
     const int uv_width = (width + 1) >> 1;
+    const int uv_height = (height + 1) >> 1;
     int use_dsp = (step == 3);  // use special function in this case
     // temporary storage for accumulated R/G/B values during conversion to U/V
     uint16_t* const tmp_rgb =
@@ -943,6 +1019,12 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
         ConvertRowsToUV(tmp_rgb, dst_u, dst_v, uv_width, rg);
       }
     }
+    if (sharpen_uv_strength > 0) {
+      SharpenPlane(picture->u, uv_width, uv_height, picture->uv_stride,
+                   sharpen_uv_strength);
+      SharpenPlane(picture->v, uv_width, uv_height, picture->uv_stride,
+                   sharpen_uv_strength + 20);
+    }
     WebPSafeFree(tmp_rgb);
   }
   return 1;
@@ -957,7 +1039,8 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
 // call for ARGB->YUVA conversion
 
 static int PictureARGBToYUVA(WebPPicture* picture, WebPEncCSP colorspace,
-                             float dithering, int use_iterative_conversion) {
+                             float dithering, int use_iterative_conversion,
+                             int sharpen_uv_strength) {
   if (picture == NULL) return 0;
   if (picture->argb == NULL) {
     return WebPEncodingSetError(picture, VP8_ENC_ERROR_NULL_PARAMETER);
@@ -972,21 +1055,27 @@ static int PictureARGBToYUVA(WebPPicture* picture, WebPEncCSP colorspace,
 
     picture->colorspace = WEBP_YUV420;
     return ImportYUVAFromRGBA(r, g, b, a, 4, 4 * picture->argb_stride,
-                              dithering, use_iterative_conversion, picture);
+                              dithering, use_iterative_conversion,
+                              sharpen_uv_strength, picture);
   }
 }
 
 int WebPPictureARGBToYUVADithered(WebPPicture* picture, WebPEncCSP colorspace,
                                   float dithering) {
-  return PictureARGBToYUVA(picture, colorspace, dithering, 0);
+  return PictureARGBToYUVA(picture, colorspace, dithering, 0, 0);
 }
 
 int WebPPictureARGBToYUVA(WebPPicture* picture, WebPEncCSP colorspace) {
-  return PictureARGBToYUVA(picture, colorspace, 0.f, 0);
+  return PictureARGBToYUVA(picture, colorspace, 0.f, 0, 0);
 }
 
 int WebPPictureSmartARGBToYUVA(WebPPicture* picture) {
-  return PictureARGBToYUVA(picture, WEBP_YUV420, 0.f, 1);
+  return PictureARGBToYUVA(picture, WEBP_YUV420, 0.f, 1, 0);
+}
+
+int WebPPictureSharpenedARGBToYUVA(WebPPicture* picture, int strength) {
+  strength = (strength > 100) ? 100 : (strength < 0) ? 0 : strength;
+  return PictureARGBToYUVA(picture, WEBP_YUV420, 0.f, 0, strength);
 }
 
 //------------------------------------------------------------------------------
@@ -1067,7 +1156,8 @@ static int Import(WebPPicture* const picture,
 
   if (!picture->use_argb) {
     return ImportYUVAFromRGBA(r_ptr, g_ptr, b_ptr, a_ptr, step, rgb_stride,
-                              0.f /* no dithering */, 0, picture);
+                              0.f /* no dithering */, 0 /* no iterative */,
+                              0 /* no uv-sharpening */, picture);
   }
   if (!WebPPictureAlloc(picture)) return 0;
 
