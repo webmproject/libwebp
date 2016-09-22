@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d04e430b_62d092bf",
+        "filename": "examples/anim_util.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-09-22T18:59:02Z",
+      "side": 1,
+      "message": "The more meaningful error output from ReadAnimatedGIF will never be reached, maybe it never was possible...",
+      "revId": "1effde7bcd401ceef77d506c21c66ff7522b4e90",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
