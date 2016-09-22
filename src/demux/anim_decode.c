@@ -402,6 +402,7 @@ int WebPAnimDecoderGetNext(WebPAnimDecoder* dec,
 
   // Update info of the previous frame and dispose it for the next iteration.
   dec->prev_frame_timestamp_ = timestamp;
+  WebPDemuxReleaseIterator(&dec->prev_iter_);
   dec->prev_iter_ = iter;
   dec->prev_frame_was_keyframe_ = is_key_frame;
   CopyCanvas(dec->curr_frame_, dec->prev_frame_disposed_, width, height);
@@ -430,6 +431,7 @@ int WebPAnimDecoderHasMoreFrames(const WebPAnimDecoder* dec) {
 void WebPAnimDecoderReset(WebPAnimDecoder* dec) {
   if (dec != NULL) {
     dec->prev_frame_timestamp_ = 0;
+    WebPDemuxReleaseIterator(&dec->prev_iter_);
     memset(&dec->prev_iter_, 0, sizeof(dec->prev_iter_));
     dec->prev_frame_was_keyframe_ = 0;
     dec->next_frame_ = 1;
@@ -443,6 +445,7 @@ const WebPDemuxer* WebPAnimDecoderGetDemuxer(const WebPAnimDecoder* dec) {
 
 void WebPAnimDecoderDelete(WebPAnimDecoder* dec) {
   if (dec != NULL) {
+    WebPDemuxReleaseIterator(&dec->prev_iter_);
     WebPDemuxDelete(dec->demux_);
     WebPSafeFree(dec->curr_frame_);
     WebPSafeFree(dec->prev_frame_disposed_);
