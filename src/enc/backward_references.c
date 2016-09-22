@@ -247,7 +247,6 @@ int VP8LHashChainFill(VP8LHashChain* const p, int quality,
                       int low_effort) {
   const int size = xsize * ysize;
   const int iter_max = GetMaxItersForQuality(quality);
-  const int iter_min = iter_max - quality / 10;
   const uint32_t window_size = GetWindowSizeForHashChain(quality, xsize);
   int pos;
   int argb_comp;
@@ -331,6 +330,7 @@ int VP8LHashChainFill(VP8LHashChain* const p, int quality,
     int iter = iter_max;
     int best_length = 0;
     uint32_t best_distance = 0;
+    uint32_t best_argb;
     const int min_pos =
         (base_position > window_size) ? base_position - window_size : 0;
     const int length_max = (max_len < 256) ? max_len : 256;
@@ -360,26 +360,21 @@ int VP8LHashChainFill(VP8LHashChain* const p, int quality,
       // Skip the for loop if we already have the maximum.
       if (best_length == MAX_LENGTH) pos = min_pos - 1;
     }
+    best_argb = argb_start[best_length];
 
-    for (; pos >= min_pos; pos = chain[pos]) {
+    for (; pos >= min_pos && --iter; pos = chain[pos]) {
       int curr_length;
-      if (--iter < 0) {
-        break;
-      }
       assert(base_position > (uint32_t)pos);
 
-      curr_length =
-          FindMatchLength(argb + pos, argb_start, best_length, max_len);
+      if (argb[pos + best_length] != best_argb) continue;
+
+      curr_length = VP8LVectorMismatch(argb + pos, argb_start, max_len);
       if (best_length < curr_length) {
         best_length = curr_length;
         best_distance = base_position - pos;
-        // Stop if we have reached the maximum length. Otherwise, make sure
-        // we have executed a minimum number of iterations depending on the
-        // quality.
-        if ((best_length == MAX_LENGTH) ||
-            (curr_length >= length_max && iter < iter_min)) {
-          break;
-        }
+        best_argb = argb_start[best_length];
+        // Stop if we have reached a good enough length.
+        if (best_length >= length_max) break;
       }
     }
     // We have the best match but in case the two intervals continue matching
