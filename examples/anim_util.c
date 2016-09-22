@@ -265,6 +265,8 @@ static int ReadAnimatedWebP(const char filename[],
 // -----------------------------------------------------------------------------
 // GIF Decoding.
 
+#ifdef WEBP_HAVE_GIF
+
 // Returns true if this is a valid GIF bitstream.
 static int IsGIF(const WebPData* const data) {
   return data->size > GIF_STAMP_LEN &&
@@ -272,8 +274,6 @@ static int IsGIF(const WebPData* const data) {
           !memcmp(GIF87_STAMP, data->bytes, GIF_STAMP_LEN) ||
           !memcmp(GIF89_STAMP, data->bytes, GIF_STAMP_LEN));
 }
-
-#ifdef WEBP_HAVE_GIF
 
 // GIFLIB_MAJOR is only defined in libgif >= 4.2.0.
 #if defined(GIFLIB_MAJOR) && defined(GIFLIB_MINOR)
@@ -664,6 +664,11 @@ static int ReadAnimatedGIF(const char filename[], AnimatedImage* const image,
 }
 
 #else
+
+static int IsGIF(const WebPData* const data) {
+  (void)data;
+  return 0;
+}
 
 static int ReadAnimatedGIF(const char filename[], AnimatedImage* const image,
                            int dump_frames, const char dump_folder[]) {
