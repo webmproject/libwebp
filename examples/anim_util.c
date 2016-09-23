@@ -39,13 +39,24 @@ static int IsFullFrame(int width, int height,
   return (width == canvas_width && height == canvas_height);
 }
 
+static int CheckSizeForOverflow(uint64_t size) {
+  return (size == (size_t)size);
+}
+
 static int AllocateFrames(AnimatedImage* const image, uint32_t num_frames) {
   uint32_t i;
-  const size_t rgba_size =
-      image->canvas_width * kNumChannels * image->canvas_height;
-  uint8_t* const mem = (uint8_t*)malloc(num_frames * rgba_size * sizeof(*mem));
-  DecodedFrame* const frames =
-      (DecodedFrame*)malloc(num_frames * sizeof(*frames));
+  uint8_t* mem = NULL;
+  DecodedFrame* frames = NULL;
+  const uint64_t rgba_size =
+      (uint64_t)image->canvas_width * kNumChannels * image->canvas_height;
+  const uint64_t total_size = (uint64_t)num_frames * rgba_size * sizeof(*mem);
+  const uint64_t total_frame_size = (uint64_t)num_frames * sizeof(*frames);
+  if (!CheckSizeForOverflow(total_size) ||
+      !CheckSizeForOverflow(total_frame_size)) {
+    return 0;
+  }
+  mem = (uint8_t*)malloc(total_size);
+  frames = (DecodedFrame*)malloc(total_frame_size);
 
   if (mem == NULL || frames == NULL) {
     free(mem);
