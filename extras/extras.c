@@ -11,7 +11,9 @@
 //
 
 #include "./extras.h"
+#include "webp/format_constants.h"
 
+#include <assert.h>
 #include <string.h>
 
 #define XTRA_MAJ_VERSION 0
@@ -104,6 +106,35 @@ int WebPImportRGB4444(const uint8_t* rgb4444, WebPPicture* pic) {
       dst[x] = (a << 24) | (r << 16) | (g << 8) | b;
     }
     rgb4444 += 2 * width;
+  }
+  return 1;
+}
+
+int WebPImportColorMappedARGB(const uint8_t* indexed, int indexed_stride,
+                              const uint32_t palette[], int palette_size,
+                              WebPPicture* pic) {
+  int x, y;
+  uint32_t* dst;
+  // 256 as the input buffer is uint8_t.
+  assert(MAX_PALETTE_SIZE <= 256);
+  if (pic == NULL || indexed == NULL || indexed_stride < pic->width ||
+      palette == NULL || palette_size > MAX_PALETTE_SIZE || palette_size <= 0) {
+    return 0;
+  }
+  pic->use_argb = 1;
+  if (!WebPPictureAlloc(pic)) return 0;
+  dst = pic->argb;
+  for (y = 0; y < pic->height; ++y) {
+    for (x = 0; x < pic->width; ++x) {
+      // Make sure we are within the palette.
+      if (indexed[x] >= palette_size) {
+        WebPPictureFree(pic);
+        return 0;
+      }
+      dst[x] = palette[indexed[x]];
+    }
+    indexed += indexed_stride;
+    dst += pic->argb_stride;
   }
   return 1;
 }
