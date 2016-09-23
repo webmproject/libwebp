@@ -14,6 +14,7 @@
 #include "./dsp.h"
 
 #if defined(WEBP_USE_SSE2)
+#include <assert.h>
 #include <stdlib.h>  // for abs()
 #include <emmintrin.h>
 
@@ -1406,10 +1407,58 @@ static uint32_t AccumulateSSE_SSE2(const uint8_t* src1,
   return sse2;
 }
 
+static uint32_t HorizontalAdd16b(const __m128i* const m) {
+  uint16_t tmp[8];
+  const __m128i a = _mm_srli_si128(*m, 8);
+  const __m128i b = _mm_add_epi16(*m, a);
+  _mm_storeu_si128((__m128i*)tmp, b);
+  return (uint32_t)tmp[3] + tmp[2] + tmp[1] + tmp[0];
+}
+
+static uint32_t HorizontalAdd32b(const __m128i* const m) {
+  const __m128i a = _mm_srli_si128(*m, 8);
+  const __m128i b = _mm_add_epi32(*m, a);
+  const __m128i c = _mm_add_epi32(b, _mm_srli_si128(b, 4));
+  return (uint32_t)_mm_cvtsi128_si32(c);
+}
+
+static double SSIMGet_SSE2(const uint8_t* src1, int stride1,
+                           const uint8_t* src2, int stride2) {
+  VP8DistoStats stats;
+  int y;
+  const __m128i zero = _mm_setzero_si128();
+  __m128i xm = zero, ym = zero;   // 16b accums
+  __m128i xxm = zero, yym = zero, xym = zero;  // 32b accum
+  assert(2 * VP8_SSIM_KERNEL + 1 == 7);
+  for (y = 0; y <= 2 * VP8_SSIM_KERNEL; ++y, src1 += stride1, src2 += stride2) {
+    // process 8 bytes at a time (7 bytes, actually)
+    const __m128i a0 = _mm_loadl_epi64((const __m128i*)src1);
+    const __m128i b0 = _mm_loadl_epi64((const __m128i*)src2);
+    // convert 8b -> 16b
+    const __m128i a1 = _mm_unpacklo_epi8(a0, zero);
+    const __m128i b1 = _mm_unpacklo_epi8(b0, zero);
+    // zeroes the rightmost pixel we are not interested in:
+    const __m128i s1 = _mm_slli_si128(a1, 2);
+    const __m128i s2 = _mm_slli_si128(b1, 2);
+    xm = _mm_add_epi16(xm, s1);
+    ym = _mm_add_epi16(ym, s2);
+    xxm = _mm_add_epi32(xxm, _mm_madd_epi16(s1, s1));
+    xym = _mm_add_epi32(xym, _mm_madd_epi16(s1, s2));
+    yym = _mm_add_epi32(yym, _mm_madd_epi16(s2, s2));
+  }
+  stats.xm  = HorizontalAdd16b(&xm);
+  stats.ym  = HorizontalAdd16b(&ym);
+  stats.xxm = HorizontalAdd32b(&xxm);
+  stats.xym = HorizontalAdd32b(&xym);
+  stats.yym = HorizontalAdd32b(&yym);
+  return VP8SSIMFromStats(&stats);
+}
+
 extern void VP8SSIMDspInitSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8SSIMDspInitSSE2(void) {
   VP8AccumulateSSE = AccumulateSSE_SSE2;
+  VP8SSIMGet = SSIMGet_SSE2;
 }
 
 #else  // !WEBP_USE_SSE2
