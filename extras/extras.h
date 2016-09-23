@@ -42,6 +42,15 @@ WEBP_EXTERN(int) WebPImportRGB565(const uint8_t* rgb565, WebPPicture* pic);
 // width and height must be set prior to calling this function.
 WEBP_EXTERN(int) WebPImportRGB4444(const uint8_t* rgb4444, WebPPicture* pic);
 
+// Import a color mapped image. The number of colors is less or equal to
+// MAX_PALETTE_SIZE. 'pic' must have been initialized. Its content, if any,
+// will be discarded. Returns 'false' in case of error, or if indexed[] contains
+// invalid indices.
+WEBP_EXTERN(int)
+WebPImportColorMappedARGB(const uint8_t* indexed, int indexed_stride,
+                          const uint32_t palette[], int palette_size,
+                          WebPPicture* pic);
+
 //------------------------------------------------------------------------------
 
 // Parse a bitstream, search for VP8 (lossy) header and report a
