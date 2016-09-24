@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "107a9b68_62535b6b",
+        "filename": "src/dsp/enc_sse2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1415,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-09-24T02:41:17Z",
+      "side": 1,
+      "message": "the static analyzer seems to be confused here, reporting tmp[1] as uninitialized",
+      "revId": "1ac8b9c3ca5f30392ecc1a743af4b5d9914783e7",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
