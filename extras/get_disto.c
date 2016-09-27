@@ -12,17 +12,19 @@
 //
 /*
  gcc -o get_disto get_disto.c -O3 -I../ -L../examples -L../imageio \
-    -lexample_util -limagedec -lwebp -L/opt/local/lib \
+    -lexample_util -limageio_util -limagedec -lwebp -L/opt/local/lib \
     -lpng -lz -ljpeg -ltiff -lm -lpthread
 */
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "webp/encode.h"
+#include "../src/dsp/dsp.h"
 #include "../imageio/image_dec.h"
 #include "../imageio/imageio_util.h"
 
@@ -47,33 +49,92 @@ static size_t ReadPicture(const char* const filename, WebPPicture* const pic,
   return ok ? data_size : 0;
 }
 
-// returns the max absolute difference
+static void RescalePlane(uint8_t* plane, int width, int height,
+                         int x_stride, int y_stride, int max) {
+  const uint32_t factor = (max > 0) ? (255u << 16) / max : 0;
+  int x, y;
+  for (y = 0; y < height; ++y) {
+    uint8_t* const ptr = plane + y * y_stride;
+    for (x = 0; x < width * x_stride; x += x_stride) {
+      const uint32_t diff = (ptr[x] * factor + (1 << 15)) >> 16;
+      ptr[x] = diff;
+    }
+  }
+}
+
+// Return the max absolute difference.
 static int DiffScaleChannel(uint8_t* src1, int stride1,
                             const uint8_t* src2, int stride2,
                             int x_stride, int w, int h, int do_scaling) {
   int x, y;
-  uint32_t max = 1;
+  int max = 0;
   for (y = 0; y < h; ++y) {
     uint8_t* const ptr1 = src1 + y * stride1;
     const uint8_t* const ptr2 = src2 + y * stride2;
     for (x = 0; x < w * x_stride; x += x_stride) {
-      const uint32_t diff = abs(ptr1[x] - ptr2[x]);
+      const int diff = abs(ptr1[x] - ptr2[x]);
       if (diff > max) max = diff;
       ptr1[x] = diff;
     }
   }
 
-  if (do_scaling) {
-    const uint32_t factor = (255u << 16) / max;
-    for (y = 0; y < h; ++y) {
-      uint8_t* const ptr1 = src1 + y * stride1;
-      for (x = 0; x < w * x_stride; x += x_stride) {
-        const uint32_t diff = (ptr1[x] * factor) >> 16;
-        ptr1[x] = diff;
-      }
+  if (do_scaling) RescalePlane(src1, w, h, x_stride, stride1, max);
+  return max;
+}
+
+// Compute SSIM-score map. Return -1 in case of error, max diff otherwise.
+static int SSIMScaleChannel(uint8_t* src1, int stride1,
+                            const uint8_t* src2, int stride2,
+                            int x_stride, int w, int h, int do_scaling) {
+  int x, y;
+  int max = 0;
+  uint8_t* const plane1 = (uint8_t*)malloc(2 * w * h * sizeof(*plane1));
+  uint8_t* const plane2 = plane1 + w * h;
+  if (plane1 == NULL) return -1;
+  VP8SSIMDspInit();
+
+  // extract plane
+  for (y = 0; y < h; ++y) {
+    for (x = 0; x < w; ++x) {
+      plane1[x + y * w] = src1[x * x_stride + y * stride1];
+      plane2[x + y * w] = src2[x * x_stride + y * stride2];
     }
   }
+  for (y = 0; y < h; ++y) {
+    for (x = 0; x < w; ++x) {
+      const double ssim = VP8SSIMGetClipped(plane1, w, plane2, w, x, y, w, h);
+      int diff = (int)(255 * (1. - ssim));
+      if (diff < 0) {
+        diff = 0;
+      } else if (diff > max) {
+        max = diff;
+      }
+      src1[x * x_stride + y * stride1] = (diff > 255) ? 255u : (uint8_t)diff;
+    }
+  }
+  free(plane1);
+
+  if (do_scaling) RescalePlane(src1, w, h, x_stride, stride1, max);
   return max;
+}
+
+// Convert an argb picture to luminance.
+static void ConvertToGray(WebPPicture* const pic) {
+  int x, y;
+  assert(pic != NULL);
+  assert(pic->use_argb);
+  for (y = 0; y < pic->height; ++y) {
+    uint32_t* const row = &pic->argb[y * pic->argb_stride];
+    for (x = 0; x < pic->width; ++x) {
+      const uint32_t argb = row[x];
+      const uint32_t r = (argb >>  0) & 0xff;
+      const uint32_t g = (argb >>  8) & 0xff;
+      const uint32_t b = (argb >> 16) & 0xff;
+      // We use BT.709 for converting to luminance.
+      const uint32_t Y = (uint32_t)(0.2126 * r + 0.7152 * g + 0.0722 * b + .5);
+      row[x] = (argb & 0xff000000u) | (Y * 0x010101u);
+    }
+  }
 }
 
 static void Help(void) {
@@ -85,6 +146,7 @@ static void Help(void) {
           "  -h ........ this message\n"
           "  -o <file> . save the diff map as a WebP lossless file\n"
           "  -scale .... scale the difference map to fit [0..255] range\n"
+          "  -gray ..... use grayscale for difference map (-scale)\n"
           " Also handles PNG, JPG and TIFF files, in addition to WebP.\n");
 }
 
@@ -98,6 +160,7 @@ int main(int argc, const char *argv[]) {
   int help = 0;
   int keep_alpha = 0;
   int scale = 0;
+  int use_gray = 0;
   const char* name1 = NULL;
   const char* name2 = NULL;
   const char* output = NULL;
@@ -116,6 +179,8 @@ int main(int argc, const char *argv[]) {
       keep_alpha = 1;
     } else if (!strcmp(argv[c], "-scale")) {
       scale = 1;
+    } else if (!strcmp(argv[c], "-gray")) {
+      use_gray = 1;
     } else if (!strcmp(argv[c], "-h")) {
       help = 1;
       ret = 0;
@@ -167,16 +232,20 @@ int main(int argc, const char *argv[]) {
     }
     if (pic1.use_argb) {
       int n;
-      fprintf(stderr, "max absolute differences per channel: ");
+      fprintf(stderr, "max differences per channel: ");
       for (n = 0; n < 3; ++n) {    // skip the alpha channel
-        const int range = DiffScaleChannel((uint8_t*)pic1.argb + n,
-                                           pic1.argb_stride * 4,
-                                           (const uint8_t*)pic2.argb + n,
-                                           pic2.argb_stride * 4,
-                                           4, pic1.width, pic1.height, scale);
+        const int range = (type == 1) ?
+          SSIMScaleChannel((uint8_t*)pic1.argb + n, pic1.argb_stride * 4,
+                           (const uint8_t*)pic2.argb + n, pic2.argb_stride * 4,
+                           4, pic1.width, pic1.height, scale) :
+          DiffScaleChannel((uint8_t*)pic1.argb + n, pic1.argb_stride * 4,
+                           (const uint8_t*)pic2.argb + n, pic2.argb_stride * 4,
+                           4, pic1.width, pic1.height, scale);
+        if (range < 0) fprintf(stderr, "\nError computing diff map\n");
         fprintf(stderr, "[%d]", range);
       }
       fprintf(stderr, "\n");
+      if (use_gray) ConvertToGray(&pic1);
     } else {
       fprintf(stderr, "Can only compute the difference map in ARGB format.\n");
       goto End;
@@ -190,7 +259,7 @@ int main(int argc, const char *argv[]) {
       goto End;
     }
     ret = ImgIoUtilWriteFile(output, data, data_size) ? 0 : 1;
-    WebPFree(data);
+    free(data);
     if (ret) goto End;
   }
   ret = 0;
