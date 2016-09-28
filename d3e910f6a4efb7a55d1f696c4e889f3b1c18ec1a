@@ -16,6 +16,24 @@
       "revId": "d3e910f6a4efb7a55d1f696c4e889f3b1c18ec1a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25283f69_e6813e00",
+        "filename": "extras/get_disto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-09-28T06:40:24Z",
+      "side": 1,
+      "message": "oh, right. fixed.",
+      "parentUuid": "25a3df16_8887cbbf",
+      "revId": "d3e910f6a4efb7a55d1f696c4e889f3b1c18ec1a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
