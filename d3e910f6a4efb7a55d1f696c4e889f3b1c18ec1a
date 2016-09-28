@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25a3df16_8887cbbf",
+        "filename": "extras/get_disto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-09-28T06:36:20Z",
+      "side": 1,
+      "message": "we recommend the use of WebPFree for buffers returned from the lib now",
+      "revId": "d3e910f6a4efb7a55d1f696c4e889f3b1c18ec1a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
