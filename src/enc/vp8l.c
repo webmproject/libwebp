@@ -1167,7 +1167,8 @@ static WebPEncodingError MakeInputImageCopy(VP8LEncoder* const enc) {
 
 // -----------------------------------------------------------------------------
 
-static int SearchColor(const uint32_t sorted[], uint32_t color, int hi) {
+static WEBP_INLINE int SearchColorNoIdx(const uint32_t sorted[], uint32_t color,
+                                        int hi) {
   int low = 0;
   if (sorted[low] == color) return low;  // loop invariant: sorted[low] != color
   while (1) {
@@ -1182,35 +1183,68 @@ static int SearchColor(const uint32_t sorted[], uint32_t color, int hi) {
   }
 }
 
+#define APPLY_PALETTE_GREEDY_MAX 4
+
+static WEBP_INLINE uint32_t SearchColorGreedy(const uint32_t palette[],
+                                              int palette_size,
+                                              uint32_t color) {
+  (void)palette_size;
+  assert(palette_size < APPLY_PALETTE_GREEDY_MAX);
+  assert(3 == APPLY_PALETTE_GREEDY_MAX - 1);
+  if (color == palette[0]) return 0;
+  if (color == palette[1]) return 1;
+  if (color == palette[2]) return 2;
+  return 3;
+}
+
+static WEBP_INLINE uint32_t ApplyPaletteHash0(uint32_t color) {
+  // Focus on the green color.
+  return (color >> 8) & 0xff;
+}
+
+#define PALETTE_INV_SIZE_BITS 11
+#define PALETTE_INV_SIZE (1 << PALETTE_INV_SIZE_BITS)
+
+static WEBP_INLINE uint32_t ApplyPaletteHash1(uint32_t color) {
+  // Forget about alpha.
+  return ((color & 0x00ffffffu) * 4222244071u) >> (32 - PALETTE_INV_SIZE_BITS);
+}
+
+static WEBP_INLINE uint32_t ApplyPaletteHash2(uint32_t color) {
+  // Forget about alpha.
+  return (color & 0x00ffffffu) * ((1u << 31) - 1) >>
+         (32 - PALETTE_INV_SIZE_BITS);
+}
+
 // Sort palette in increasing order and prepare an inverse mapping array.
 static void PrepareMapToPalette(const uint32_t palette[], int num_colors,
-                                uint32_t sorted[], int idx_map[]) {
+                                uint32_t sorted[], uint32_t idx_map[]) {
   int i;
   memcpy(sorted, palette, num_colors * sizeof(*sorted));
   qsort(sorted, num_colors, sizeof(*sorted), PaletteCompareColorsForQsort);
   for (i = 0; i < num_colors; ++i) {
-    idx_map[SearchColor(sorted, palette[i], num_colors)] = i;
+    idx_map[SearchColorNoIdx(sorted, palette[i], num_colors)] = i;
   }
 }
 
-static void MapToPalette(const uint32_t sorted_palette[], int num_colors,
-                         uint32_t* const last_pix, int* const last_idx,
-                         const int idx_map[],
-                         const uint32_t* src, uint8_t* dst, int width) {
-  int x;
-  int prev_idx = *last_idx;
-  uint32_t prev_pix = *last_pix;
-  for (x = 0; x < width; ++x) {
-    const uint32_t pix = src[x];
-    if (pix != prev_pix) {
-      prev_idx = idx_map[SearchColor(sorted_palette, pix, num_colors)];
-      prev_pix = pix;
-    }
-    dst[x] = prev_idx;
-  }
-  *last_idx = prev_idx;
-  *last_pix = prev_pix;
-}
+// Use 1 pixel cache for ARGB pixels.
+#define APPLY_PALETTE_FOR(COLOR_INDEX) do {         \
+  uint32_t prev_pix = palette[0];                   \
+  uint32_t prev_idx = 0;                            \
+  for (y = 0; y < height; ++y) {                    \
+    for (x = 0; x < width; ++x) {                   \
+      const uint32_t pix = src[x];                  \
+      if (pix != prev_pix) {                        \
+        prev_idx = COLOR_INDEX;                     \
+        prev_pix = pix;                             \
+      }                                             \
+      tmp_row[x] = prev_idx;                        \
+    }                                               \
+    VP8LBundleColorMap(tmp_row, width, xbits, dst); \
+    src += src_stride;                              \
+    dst += dst_stride;                              \
+  }                                                 \
+} while (0)
 
 // Remap argb values in src[] to packed palettes entries in dst[]
 // using 'row' as a temporary buffer of size 'width'.
@@ -1223,52 +1257,59 @@ static WebPEncodingError ApplyPalette(const uint32_t* src, uint32_t src_stride,
   // TODO(skal): this tmp buffer is not needed if VP8LBundleColorMap() can be
   // made to work in-place.
   uint8_t* const tmp_row = (uint8_t*)WebPSafeMalloc(width, sizeof(*tmp_row));
-  int i, x, y;
-  int use_LUT = 1;
+  int x, y;
 
   if (tmp_row == NULL) return VP8_ENC_ERROR_OUT_OF_MEMORY;
-  for (i = 0; i < palette_size; ++i) {
-    if ((palette[i] & 0xffff00ffu) != 0) {
-      use_LUT = 0;
-      break;
-    }
-  }
 
-  if (use_LUT) {
-    uint8_t inv_palette[MAX_PALETTE_SIZE] = { 0 };
-    for (i = 0; i < palette_size; ++i) {
-      const int color = (palette[i] >> 8) & 0xff;
-      inv_palette[color] = i;
-    }
-    for (y = 0; y < height; ++y) {
-      for (x = 0; x < width; ++x) {
-        const int color = (src[x] >> 8) & 0xff;
-        tmp_row[x] = inv_palette[color];
-      }
-      VP8LBundleColorMap(tmp_row, width, xbits, dst);
-      src += src_stride;
-      dst += dst_stride;
-    }
+  if (palette_size < APPLY_PALETTE_GREEDY_MAX) {
+    APPLY_PALETTE_FOR(SearchColorGreedy(palette, palette_size, pix));
   } else {
-    // Use 1 pixel cache for ARGB pixels.
-    uint32_t last_pix;
-    int last_idx;
-    uint32_t sorted[MAX_PALETTE_SIZE];
-    int idx_map[MAX_PALETTE_SIZE];
-    PrepareMapToPalette(palette, palette_size, sorted, idx_map);
-    last_pix = palette[0];
-    last_idx = 0;
-    for (y = 0; y < height; ++y) {
-      MapToPalette(sorted, palette_size, &last_pix, &last_idx,
-                   idx_map, src, tmp_row, width);
-      VP8LBundleColorMap(tmp_row, width, xbits, dst);
-      src += src_stride;
-      dst += dst_stride;
+    int i, j;
+    uint16_t buffer[PALETTE_INV_SIZE];
+    uint32_t (*const hash_functions[])(uint32_t) = {
+        ApplyPaletteHash0, ApplyPaletteHash1, ApplyPaletteHash2
+    };
+
+    // Try to find a perfect hash function able to go from a color to an index
+    // within 1 << PALETTE_INV_SIZE_BITS in order to build a hash map to go
+    // from color to index in palette.
+    for (i = 0; i < 3; ++i) {
+      int use_LUT = 1;
+      // Set each element in buffer to max uint16_t.
+      memset(buffer, 0xff, sizeof(buffer));
+      for (j = 0; j < palette_size; ++j) {
+        const uint32_t ind = hash_functions[i](palette[j]);
+        if (buffer[ind] != 0xffffu) {
+          use_LUT = 0;
+          break;
+        } else {
+          buffer[ind] = j;
+        }
+      }
+      if (use_LUT) break;
+    }
+
+    if (i == 0) {
+      APPLY_PALETTE_FOR(buffer[ApplyPaletteHash0(pix)]);
+    } else if (i == 1) {
+      APPLY_PALETTE_FOR(buffer[ApplyPaletteHash1(pix)]);
+    } else if (i == 2) {
+      APPLY_PALETTE_FOR(buffer[ApplyPaletteHash2(pix)]);
+    } else {
+      uint32_t idx_map[MAX_PALETTE_SIZE];
+      uint32_t palette_sorted[MAX_PALETTE_SIZE];
+      PrepareMapToPalette(palette, palette_size, palette_sorted, idx_map);
+      APPLY_PALETTE_FOR(
+          idx_map[SearchColorNoIdx(palette_sorted, pix, palette_size)]);
     }
   }
   WebPSafeFree(tmp_row);
   return VP8_ENC_OK;
 }
+#undef APPLY_PALETTE_FOR
+#undef PALETTE_INV_SIZE_BITS
+#undef PALETTE_INV_SIZE
+#undef APPLY_PALETTE_GREEDY_MAX
 
 // Note: Expects "enc->palette_" to be set properly.
 static WebPEncodingError MapImageFromPalette(VP8LEncoder* const enc,
