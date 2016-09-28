@@ -237,14 +237,30 @@ static double PopulationCost(const uint32_t* const population, int length,
   return BitsEntropyRefine(&bit_entropy) + FinalHuffmanCost(&stats);
 }
 
+// trivial_at_end is 1 if the two histograms only have one element that is
+// non-zero: both the zero-th one, or both the last one.
 static WEBP_INLINE double GetCombinedEntropy(const uint32_t* const X,
                                              const uint32_t* const Y,
-                                             int length) {
-  VP8LBitEntropy bit_entropy;
+                                             int length, int trivial_at_end) {
   VP8LStreaks stats;
-  VP8LGetCombinedEntropyUnrefined(X, Y, length, &bit_entropy, &stats);
+  if (trivial_at_end) {
+    // This configuration is due to palettization that transforms an indexed
+    // pixel into 0xff000000 | (pixel << 8) in VP8LBundleColorMap.
+    // BitsEntropyRefine is 0 for histograms with only one non-zero value.
+    // Only FinalHuffmanCost needs to be evaluated.
+    memset(&stats, 0, sizeof(stats));
+    // Deal with the non-zero value at index 0 or length-1.
+    stats.streaks[1][0] += 1;
+    // Deal with the following/previous zero streak.
+    stats.counts[0] += 1;
+    stats.streaks[0][1] += length - 1;
+    return FinalHuffmanCost(&stats);
+  } else {
+    VP8LBitEntropy bit_entropy;
+    VP8LGetCombinedEntropyUnrefined(X, Y, length, &bit_entropy, &stats);
 
-  return BitsEntropyRefine(&bit_entropy) + FinalHuffmanCost(&stats);
+    return BitsEntropyRefine(&bit_entropy) + FinalHuffmanCost(&stats);
+  }
 }
 
 // Estimates the Entropy + Huffman + other block overhead size cost.
@@ -268,29 +284,56 @@ static int GetCombinedHistogramEntropy(const VP8LHistogram* const a,
                                        double cost_threshold,
                                        double* cost) {
   const int palette_code_bits = a->palette_code_bits_;
+  int trivial_at_end = 0;
   assert(a->palette_code_bits_ == b->palette_code_bits_);
   *cost += GetCombinedEntropy(a->literal_, b->literal_,
-                              VP8LHistogramNumCodes(palette_code_bits));
+                              VP8LHistogramNumCodes(palette_code_bits), 0);
   *cost += VP8LExtraCostCombined(a->literal_ + NUM_LITERAL_CODES,
                                  b->literal_ + NUM_LITERAL_CODES,
                                  NUM_LENGTH_CODES);
   if (*cost > cost_threshold) return 0;
 
-  *cost += GetCombinedEntropy(a->red_, b->red_, NUM_LITERAL_CODES);
+  if (a->trivial_symbol_ != VP8L_NON_TRIVIAL_SYM &&
+      a->trivial_symbol_ == b->trivial_symbol_) {
+    // A, R and B are all 0 or 0xff.
+    const uint32_t color_a = (a->trivial_symbol_ >> 24) & 0xff;
+    const uint32_t color_r = (a->trivial_symbol_ >> 16) & 0xff;
+    const uint32_t color_b = (a->trivial_symbol_ >> 0) & 0xff;
+    if ((color_a == 0 || color_a == 0xff) &&
+        (color_r == 0 || color_r == 0xff) &&
+        (color_b == 0 || color_b == 0xff)) {
+      trivial_at_end = 1;
+    }
+  }
+
+  *cost +=
+      GetCombinedEntropy(a->red_, b->red_, NUM_LITERAL_CODES, trivial_at_end);
   if (*cost > cost_threshold) return 0;
 
-  *cost += GetCombinedEntropy(a->blue_, b->blue_, NUM_LITERAL_CODES);
+  *cost +=
+      GetCombinedEntropy(a->blue_, b->blue_, NUM_LITERAL_CODES, trivial_at_end);
   if (*cost > cost_threshold) return 0;
 
-  *cost += GetCombinedEntropy(a->alpha_, b->alpha_, NUM_LITERAL_CODES);
+  *cost += GetCombinedEntropy(a->alpha_, b->alpha_, NUM_LITERAL_CODES,
+                              trivial_at_end);
   if (*cost > cost_threshold) return 0;
 
-  *cost += GetCombinedEntropy(a->distance_, b->distance_, NUM_DISTANCE_CODES);
+  *cost +=
+      GetCombinedEntropy(a->distance_, b->distance_, NUM_DISTANCE_CODES, 0);
   *cost +=
       VP8LExtraCostCombined(a->distance_, b->distance_, NUM_DISTANCE_CODES);
   if (*cost > cost_threshold) return 0;
 
   return 1;
+}
+
+static WEBP_INLINE void HistogramAdd(const VP8LHistogram* const a,
+                                     const VP8LHistogram* const b,
+                                     VP8LHistogram* const out) {
+  VP8LHistogramAdd(a, b, out);
+  out->trivial_symbol_ = (a->trivial_symbol_ == b->trivial_symbol_)
+                       ? a->trivial_symbol_
+                       : VP8L_NON_TRIVIAL_SYM;
 }
 
 // Performs out = a + b, computing the cost C(a+b) - C(a) - C(b) while comparing
@@ -308,11 +351,9 @@ static double HistogramAddEval(const VP8LHistogram* const a,
   cost_threshold += sum_cost;
 
   if (GetCombinedHistogramEntropy(a, b, cost_threshold, &cost)) {
-    VP8LHistogramAdd(a, b, out);
+    HistogramAdd(a, b, out);
     out->bit_cost_ = cost;
     out->palette_code_bits_ = a->palette_code_bits_;
-    out->trivial_symbol_ = (a->trivial_symbol_ == b->trivial_symbol_) ?
-        a->trivial_symbol_ : VP8L_NON_TRIVIAL_SYM;
   }
 
   return cost - sum_cost;
@@ -504,7 +545,7 @@ static VP8LHistogram* HistogramCombineEntropyBin(
       histograms[size] = histograms[idx];
       bin_info[bin_id].first = size++;
     } else if (low_effort) {
-      VP8LHistogramAdd(histograms[idx], histograms[first], histograms[first]);
+      HistogramAdd(histograms[idx], histograms[first], histograms[first]);
     } else {
       // try to merge #idx into #first (both share the same bin_id)
       const double bit_cost = histograms[idx]->bit_cost_;
@@ -672,7 +713,7 @@ static int HistogramCombineGreedy(VP8LHistogramSet* const image_histo) {
     HistogramPair* copy_to;
     const int idx1 = histo_queue.queue[0].idx1;
     const int idx2 = histo_queue.queue[0].idx2;
-    VP8LHistogramAdd(histograms[idx2], histograms[idx1], histograms[idx1]);
+    HistogramAdd(histograms[idx2], histograms[idx1], histograms[idx1]);
     histograms[idx1]->bit_cost_ = histo_queue.queue[0].cost_combo;
     // Remove merged histogram.
     for (i = 0; i + 1 < image_histo_size; ++i) {
@@ -854,7 +895,7 @@ static void HistogramRemap(const VP8LHistogramSet* const in,
 
   for (i = 0; i < in_size; ++i) {
     const int idx = symbols[i];
-    VP8LHistogramAdd(in_histo[i], out_histo[idx], out_histo[idx]);
+    HistogramAdd(in_histo[i], out_histo[idx], out_histo[idx]);
   }
 }
 
