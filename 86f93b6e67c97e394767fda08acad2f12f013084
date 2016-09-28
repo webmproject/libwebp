@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "25a3df16_4808433b",
+        "filename": "extras/get_disto.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-09-28T11:02:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "25a3df16_a818c790",
+      "range": {
+        "startLine": 86,
+        "startChar": 67,
+        "endLine": 86,
+        "endChar": 72
+      },
+      "revId": "86f93b6e67c97e394767fda08acad2f12f013084",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "25a3df16_080e3b49",
         "filename": "extras/get_disto.c",
         "patchSetId": 4
@@ -36,6 +60,24 @@
       "writtenOn": "2016-09-28T07:20:51Z",
       "side": 1,
       "message": "could drop this line",
+      "revId": "86f93b6e67c97e394767fda08acad2f12f013084",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25a3df16_2805f720",
+        "filename": "extras/get_disto.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-09-28T11:02:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "25a3df16_080e3b49",
       "revId": "86f93b6e67c97e394767fda08acad2f12f013084",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
