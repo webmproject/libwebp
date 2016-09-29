@@ -63,6 +63,7 @@ static struct {
   WebPIterator curr_frame;
   WebPIterator prev_frame;
   WebPChunkIterator iccp;
+  int viewport_width, viewport_height;
 } kParams;
 
 static void ClearPreviousPic(void) {
@@ -250,13 +251,15 @@ static void HandleKey(unsigned char key, int pos_x, int pos_y) {
 }
 
 static void HandleReshape(int width, int height) {
-  // TODO(skal): proper handling of resize, esp. for large pictures.
-  // + key control of the zoom.
+  // TODO(skal): should we preserve aspect ratio?
+  // Also: handle larger-than-screen pictures correctly.
   glViewport(0, 0, width, height);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
+  kParams.viewport_width = width;
+  kParams.viewport_height = height;
 }
 
 static void PrintString(const char* const text) {
@@ -298,7 +301,8 @@ static void HandleDisplay(void) {
   GLfloat xoff, yoff;
   if (pic == NULL) return;
   glPushMatrix();
-  glPixelZoom(1, -1);
+  glPixelZoom((GLfloat)(+1. / kParams.canvas_width * kParams.viewport_width),
+              (GLfloat)(-1. / kParams.canvas_height * kParams.viewport_height));
   xoff = (GLfloat)(2. * curr->x_offset / kParams.canvas_width);
   yoff = (GLfloat)(2. * curr->y_offset / kParams.canvas_height);
   glRasterPos2f(-1.f + xoff, 1.f - yoff);
@@ -307,8 +311,6 @@ static void HandleDisplay(void) {
 
   if (prev->dispose_method == WEBP_MUX_DISPOSE_BACKGROUND ||
       curr->blend_method == WEBP_MUX_NO_BLEND) {
-    // TODO(later): these offsets and those above should factor in window size.
-    //              they will be incorrect if the window is resized.
     // glScissor() takes window coordinates (0,0 at bottom left).
     int window_x, window_y;
     int frame_w, frame_h;
@@ -328,6 +330,10 @@ static void HandleDisplay(void) {
     }
     glEnable(GL_SCISSOR_TEST);
     // Only update the requested area, not the whole canvas.
+    window_x = window_x * kParams.viewport_width / kParams.canvas_width;
+    window_y = window_y * kParams.viewport_height / kParams.canvas_height;
+    frame_w = frame_w * kParams.viewport_width / kParams.canvas_width;
+    frame_h = frame_h * kParams.viewport_height / kParams.canvas_height;
     glScissor(window_x, window_y, frame_w, frame_h);
 
     glClear(GL_COLOR_BUFFER_BIT);  // use clear color
@@ -370,6 +376,7 @@ static void StartDisplay(void) {
   glutInitWindowSize(width, height);
   glutCreateWindow("WebP viewer");
   glutDisplayFunc(HandleDisplay);
+  glutReshapeFunc(HandleReshape);
   glutIdleFunc(NULL);
   glutKeyboardFunc(HandleKey);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -378,7 +385,6 @@ static void StartDisplay(void) {
                GetColorf(kParams.bg_color, 8),
                GetColorf(kParams.bg_color, 16),
                GetColorf(kParams.bg_color, 24));
-  HandleReshape(width, height);
   glClear(GL_COLOR_BUFFER_BIT);
   DrawCheckerBoard();
 }
