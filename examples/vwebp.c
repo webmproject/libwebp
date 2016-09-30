@@ -14,6 +14,10 @@
 #include "webp/config.h"
 #endif
 
+#if defined(__unix__) || defined(__CYGWIN__)
+#define _POSIX_C_SOURCE 200112L  // for setenv
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
