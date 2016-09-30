@@ -186,9 +186,9 @@ static void ConvertToGray(WebPPicture* const pic) {
     uint32_t* const row = &pic->argb[y * pic->argb_stride];
     for (x = 0; x < pic->width; ++x) {
       const uint32_t argb = row[x];
-      const uint32_t r = (argb >>  0) & 0xff;
+      const uint32_t r = (argb >> 16) & 0xff;
       const uint32_t g = (argb >>  8) & 0xff;
-      const uint32_t b = (argb >> 16) & 0xff;
+      const uint32_t b = (argb >>  0) & 0xff;
       // We use BT.709 for converting to luminance.
       const uint32_t Y = (uint32_t)(0.2126 * r + 0.7152 * g + 0.0722 * b + .5);
       row[x] = (argb & 0xff000000u) | (Y * 0x010101u);
