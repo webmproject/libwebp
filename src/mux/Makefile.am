@@ -2,6 +2,7 @@ lib_LTLIBRARIES = libwebpmux.la
 
 libwebpmux_la_SOURCES =
 libwebpmux_la_SOURCES += anim_encode.c
+libwebpmux_la_SOURCES += animi.h
 libwebpmux_la_SOURCES += muxedit.c
 libwebpmux_la_SOURCES += muxi.h
 libwebpmux_la_SOURCES += muxinternal.c

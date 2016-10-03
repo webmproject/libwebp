@@ -298,6 +298,7 @@ HDRS = \
     src/enc/histogram.h \
     src/enc/vp8enci.h \
     src/enc/vp8li.h \
+    src/mux/animi.h \
     src/mux/muxi.h \
     src/utils/bit_reader.h \
     src/utils/bit_reader_inl.h \
