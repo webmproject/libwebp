@@ -94,26 +94,28 @@ typedef struct {
   uint32_t xxm, xym, yym;  // sum(w_i * x_i * x_i), etc.
 } DistoStats;
 
-static const double kMinValue = 1.e-10;  // minimal threshold
+// hat-shaped filter. Sum of coefficients is equal to 16.
+static const uint32_t kWeight[2 * SSIM_KERNEL + 1] = { 1, 2, 3, 4, 3, 2, 1 };
 
 static WEBP_INLINE double SSIMCalculation(const DistoStats* const stats) {
   const uint32_t N = stats->w;
-  const double w2 = N * N;
-  const double C1 = 6.5025 * w2;
-  const double C2 = 58.5225 * w2;
-  const double xmxm = stats->xm * stats->xm;
-  const double ymym = stats->ym * stats->ym;
-  const double xmym = stats->xm * stats->ym;
-  const double sxy = stats->xym * N - xmym;
-  const double fnum = (2 * xmym + C1) * (2 * sxy + C2);
-  double fden;
-  double sxx = stats->xxm * N - xmxm;
-  double syy = stats->yym * N - ymym;
-  // small errors are possible, due to rounding. Clamp to zero.
-  if (sxx < 0.) sxx = 0.;
-  if (syy < 0.) syy = 0.;
-  fden = (xmxm + ymym + C1) * (sxx + syy + C2);
-  return (fden != 0.) ? fnum / fden : kMinValue;
+  const uint32_t w2 =  N * N;
+  const uint32_t C1 = 20 * w2;
+  const uint32_t C2 = 60 * w2;
+  const uint64_t xmxm = (uint64_t)stats->xm * stats->xm;
+  const uint64_t ymym = (uint64_t)stats->ym * stats->ym;
+  const int64_t xmym = (int64_t)stats->xm * stats->ym;
+  const int64_t sxy = (int64_t)stats->xym * N - xmym;    // can be negative
+  const uint64_t sxx = (uint64_t)stats->xxm * N - xmxm;
+  const uint64_t syy = (uint64_t)stats->yym * N - ymym;
+  // we descale by 8 to prevent overflow during the fnum/fden multiply.
+  const uint64_t num_S = (2 * (uint64_t)(sxy < 0 ? 0 : sxy) + C2) >> 8;
+  const uint64_t den_S = (sxx + syy + C2) >> 8;
+  const uint64_t fnum = (2 * xmym + C1) * num_S;
+  const uint64_t fden = (xmxm + ymym + C1) * den_S;
+  const double r = (double)fnum / fden;
+  assert(r >= 0. && r <= 1.0);
+  return r;
 }
 
 static double SSIMGetClipped(const uint8_t* src1, int stride1,
@@ -129,16 +131,18 @@ static double SSIMGetClipped(const uint8_t* src1, int stride1,
   src2 += ymin * stride2;
   for (y = ymin; y <= ymax; ++y, src1 += stride1, src2 += stride2) {
     for (x = xmin; x <= xmax; ++x) {
-      const int s1 = src1[x];
-      const int s2 = src2[x];
-      stats.xm  += s1;
-      stats.ym  += s2;
-      stats.xxm += s1 * s1;
-      stats.xym += s1 * s2;
-      stats.yym += s2 * s2;
+      const uint32_t w = kWeight[SSIM_KERNEL + x - xo]
+                       * kWeight[SSIM_KERNEL + y - yo];
+      const uint32_t s1 = src1[x];
+      const uint32_t s2 = src2[x];
+      stats.w   += w;
+      stats.xm  += w * s1;
+      stats.ym  += w * s2;
+      stats.xxm += w * s1 * s1;
+      stats.xym += w * s1 * s2;
+      stats.yym += w * s2 * s2;
     }
   }
-  stats.w = (ymax - ymin + 1) * (xmax - xmin + 1);
   return SSIMCalculation(&stats);
 }
 
