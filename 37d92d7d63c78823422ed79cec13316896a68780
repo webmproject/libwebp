@@ -16,6 +16,24 @@
       "revId": "37d92d7d63c78823422ed79cec13316896a68780",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02d8916b_adc9bd51",
+        "filename": "src/dsp/enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 709,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-10-04T08:49:38Z",
+      "side": 1,
+      "message": "good spot, fixed.",
+      "parentUuid": "e26d3d44_8798087d",
+      "revId": "37d92d7d63c78823422ed79cec13316896a68780",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
