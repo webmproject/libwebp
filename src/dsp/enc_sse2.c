@@ -1422,30 +1422,45 @@ static uint32_t HorizontalAdd32b(const __m128i* const m) {
   return (uint32_t)_mm_cvtsi128_si32(c);
 }
 
+static const uint16_t kWeight[] = { 1, 2, 3, 4, 3, 2, 1, 0 };
+
+#define ACCUMULATE_ROW(WEIGHT) do {                         \
+  /* compute row weight (Wx * Wy) */                        \
+  const __m128i Wy = _mm_set1_epi16((WEIGHT));              \
+  const __m128i W = _mm_mullo_epi16(Wx, Wy);                \
+  /* process 8 bytes at a time (7 bytes, actually) */       \
+  const __m128i a0 = _mm_loadl_epi64((const __m128i*)src1); \
+  const __m128i b0 = _mm_loadl_epi64((const __m128i*)src2); \
+  /* convert to 16b and multiply by weight */               \
+  const __m128i a1 = _mm_unpacklo_epi8(a0, zero);           \
+  const __m128i b1 = _mm_unpacklo_epi8(b0, zero);           \
+  const __m128i wa1 = _mm_mullo_epi16(a1, W);               \
+  const __m128i wb1 = _mm_mullo_epi16(b1, W);               \
+  /* accumulate */                                          \
+  xm  = _mm_add_epi16(xm, wa1);                             \
+  ym  = _mm_add_epi16(ym, wb1);                             \
+  xxm = _mm_add_epi32(xxm, _mm_madd_epi16(a1, wa1));        \
+  xym = _mm_add_epi32(xym, _mm_madd_epi16(a1, wb1));        \
+  yym = _mm_add_epi32(yym, _mm_madd_epi16(b1, wb1));        \
+  src1 += stride1;                                          \
+  src2 += stride2;                                          \
+} while (0)
+
 static double SSIMGet_SSE2(const uint8_t* src1, int stride1,
                            const uint8_t* src2, int stride2) {
   VP8DistoStats stats;
-  int y;
   const __m128i zero = _mm_setzero_si128();
-  __m128i xm = zero, ym = zero;   // 16b accums
+  __m128i xm = zero, ym = zero;                // 16b accums
   __m128i xxm = zero, yym = zero, xym = zero;  // 32b accum
+  const __m128i Wx = _mm_loadu_si128((const __m128i*)kWeight);
   assert(2 * VP8_SSIM_KERNEL + 1 == 7);
-  for (y = 0; y <= 2 * VP8_SSIM_KERNEL; ++y, src1 += stride1, src2 += stride2) {
-    // process 8 bytes at a time (7 bytes, actually)
-    const __m128i a0 = _mm_loadl_epi64((const __m128i*)src1);
-    const __m128i b0 = _mm_loadl_epi64((const __m128i*)src2);
-    // convert 8b -> 16b
-    const __m128i a1 = _mm_unpacklo_epi8(a0, zero);
-    const __m128i b1 = _mm_unpacklo_epi8(b0, zero);
-    // zeroes the rightmost pixel we are not interested in:
-    const __m128i s1 = _mm_slli_si128(a1, 2);
-    const __m128i s2 = _mm_slli_si128(b1, 2);
-    xm = _mm_add_epi16(xm, s1);
-    ym = _mm_add_epi16(ym, s2);
-    xxm = _mm_add_epi32(xxm, _mm_madd_epi16(s1, s1));
-    xym = _mm_add_epi32(xym, _mm_madd_epi16(s1, s2));
-    yym = _mm_add_epi32(yym, _mm_madd_epi16(s2, s2));
-  }
+  ACCUMULATE_ROW(1);
+  ACCUMULATE_ROW(2);
+  ACCUMULATE_ROW(3);
+  ACCUMULATE_ROW(4);
+  ACCUMULATE_ROW(3);
+  ACCUMULATE_ROW(2);
+  ACCUMULATE_ROW(1);
   stats.xm  = HorizontalAdd16b(&xm);
   stats.ym  = HorizontalAdd16b(&ym);
   stats.xxm = HorizontalAdd32b(&xxm);
