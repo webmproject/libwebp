@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "02d8916b_ed71053a",
+        "filename": "src/mux/animi.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-10-04T04:07:37Z",
+      "side": 1,
+      "message": "is the WEBP_EXTERN required here? It makes the function officially visible from outside of the library, part of the official API...\n\nThat\u0027s in contradiction with the fact that it\u0027s a XXXi.h internal header.",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 11
+      },
+      "revId": "6d279df8bb9f798c11aecda852d98178fd228f4e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
