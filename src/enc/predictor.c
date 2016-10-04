@@ -20,6 +20,7 @@
 
 #define MAX_DIFF_COST (1e30f)
 
+static const float kSpatialPredictorBias = 15.f;
 static const int kPredLowEffort = 11;
 static const uint32_t kMaskAlpha = 0xff000000;
 
@@ -256,7 +257,8 @@ static int GetBestPredictorForTile(int width, int height,
                                    uint32_t* const argb_scratch,
                                    const uint32_t* const argb,
                                    int max_quantization,
-                                   int exact, int used_subtract_green) {
+                                   int exact, int used_subtract_green,
+                                   const uint32_t* const modes) {
   const int kNumPredModes = 14;
   const int start_x = tile_x << bits;
   const int start_y = tile_y << bits;
@@ -270,6 +272,12 @@ static int GetBestPredictorForTile(int width, int height,
   // they exist.
   const int context_start_x = start_x - have_left;
   const int context_width = max_x + have_left + have_right;
+  const int tiles_per_row = VP8LSubSampleSize(width, bits);
+  // Prediction modes of the left and above neighbor tiles.
+  const int left_mode = (tile_x > 0) ?
+      (modes[tile_y * tiles_per_row + tile_x - 1] >> 8) & 0xff : 0xff;
+  const int above_mode = (tile_y > 0) ?
+      (modes[(tile_y - 1) * tiles_per_row + tile_x] >> 8) & 0xff : 0xff;
   // The width of upper_row and current_row is one pixel larger than image width
   // to allow the top right pixel to point to the leftmost pixel of the next row
   // when at the right edge.
@@ -328,6 +336,10 @@ static int GetBestPredictorForTile(int width, int height,
     }
     cur_diff = PredictionCostSpatialHistogram(
         (const int (*)[256])accumulated, (const int (*)[256])histo_argb);
+    // Favor keeping the areas locally similar.
+    if (mode == left_mode) cur_diff -= kSpatialPredictorBias;
+    if (mode == above_mode) cur_diff -= kSpatialPredictorBias;
+
     if (cur_diff < best_diff) {
       int (*tmp)[256] = histo_argb;
       histo_argb = best_histo;
@@ -434,7 +446,7 @@ void VP8LResidualImage(int width, int height, int bits, int low_effort,
       for (tile_x = 0; tile_x < tiles_per_row; ++tile_x) {
         const int pred = GetBestPredictorForTile(width, height, tile_x, tile_y,
             bits, histo, argb_scratch, argb, max_quantization, exact,
-            used_subtract_green);
+            used_subtract_green, image);
         image[tile_y * tiles_per_row + tile_x] = ARGB_BLACK | (pred << 8);
       }
     }
