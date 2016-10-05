@@ -22,6 +22,30 @@
       "revId": "6d279df8bb9f798c11aecda852d98178fd228f4e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f121c46_1adf5dce",
+        "filename": "src/mux/animi.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1003005
+      },
+      "writtenOn": "2016-10-05T17:34:24Z",
+      "side": 1,
+      "message": "Done. Removed \"WEBP_EXTERN\".",
+      "parentUuid": "02d8916b_ed71053a",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 11
+      },
+      "revId": "6d279df8bb9f798c11aecda852d98178fd228f4e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
