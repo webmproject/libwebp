@@ -39,6 +39,30 @@
       "revId": "d3ee58b1c4d75aabaaed4dd3a75aedbd6cad0135",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f121c46_5a471508",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-10-05T18:04:31Z",
+      "side": 1,
+      "message": "I agree. when developing it I treated ],[ more as \u0027if {\u0027 \u0027} else if {\u0027 on their own lines, but matched things to the other blocks. Let me play around with the formatting.",
+      "parentUuid": "0225f190_855de251",
+      "range": {
+        "startLine": 228,
+        "startChar": 33,
+        "endLine": 228,
+        "endChar": 49
+      },
+      "revId": "d3ee58b1c4d75aabaaed4dd3a75aedbd6cad0135",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
