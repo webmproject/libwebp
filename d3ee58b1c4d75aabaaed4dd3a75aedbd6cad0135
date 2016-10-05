@@ -16,6 +16,29 @@
       "revId": "d3ee58b1c4d75aabaaed4dd3a75aedbd6cad0135",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0225f190_855de251",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-10-05T12:20:07Z",
+      "side": 1,
+      "message": "indentation is weird here. it seems correct but it\u0027s hard to follow\n(must be the \u0027[\u0027 trailing at the end of lines, like at line 217, 222, 229, etc.",
+      "range": {
+        "startLine": 228,
+        "startChar": 33,
+        "endLine": 228,
+        "endChar": 49
+      },
+      "revId": "d3ee58b1c4d75aabaaed4dd3a75aedbd6cad0135",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
