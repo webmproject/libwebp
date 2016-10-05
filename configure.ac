@@ -10,6 +10,7 @@ dnl === it must occur before LT_INIT (AC_PROG_LIBTOOL).
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 AC_PROG_LIBTOOL
+AC_PROG_SED
 AM_PROG_CC_C_O
 
 dnl === Enable less verbose output when building.
@@ -195,40 +196,51 @@ AC_ARG_ENABLE([neon_rtcd],
 AS_IF([test "x$enable_neon" != "xno"], [
   case "$host_cpu" in
     arm|armv7*)
-      dnl Test for NEON support with no flags.
-      AC_CHECK_HEADER([arm_neon.h],
-                      [AC_DEFINE(WEBP_HAVE_NEON, [1],
-                       [Set to 1 if NEON is supported])],
-                      dnl Test for NEON support using -mfpu=neon
-                      [unset ac_cv_header_arm_neon_h
-                       NEON_FLAGS="$INTRINSICS_CFLAGS $NEON_FLAGS"
-                       TEST_AND_ADD_CFLAGS([NEON_FLAGS], [-mfpu=neon])
-                       AS_IF([test -n "$NEON_FLAGS"], [
-                         SAVED_CFLAGS=$CFLAGS
-                         CFLAGS="$CFLAGS $NEON_FLAGS"
-                         AC_CHECK_HEADER([arm_neon.h],
-                           [AS_IF([test "${host_os%%-*}" = "linux" -o \
-                                        "x$enable_neon_rtcd" = "xno"], [
-                             AC_DEFINE(WEBP_HAVE_NEON, [1],
-                                       [Set to 1 if NEON is supported])],
-                                       [AC_MSG_WARN(m4_normalize([NEON runtime
-                                          cpu-detection is unavailble for
-                                          ${host_os%%-*}. Force with
-                                          CFLAGS=-mfpu=neon or
-                                          --disable-neon-rtcd.]))
-                                        enable_neon_rtcd=no
-                                        NEON_FLAGS=""])],
-                           [NEON_FLAGS=""])
-                         CFLAGS=$SAVED_CFLAGS
-                         AS_IF([test -n "$NEON_FLAGS"], [
-                           dnl If NEON is available and rtcd is disabled apply
-                           dnl  NEON_FLAGS globally.
-                           AS_IF([test "x$enable_neon_rtcd" = "xno"], [
-                             AM_CFLAGS="$AM_CFLAGS $NEON_FLAGS"
-                             NEON_FLAGS=""],
-                             [AC_DEFINE(WEBP_HAVE_NEON_RTCD, [1],
-                                        [Set to 1 if runtime detection of NEON
-                                         is enabled])])])])])
+      # Test for NEON support without flags before falling back to -mfpu=neon
+      for flag in '' '-mfpu=neon'; do
+        LOCAL_NEON_FLAGS="$INTRINSICS_CFLAGS $NEON_FLAGS"
+        TEST_AND_ADD_CFLAGS([LOCAL_NEON_FLAGS], [$flag])
+        SAVED_CFLAGS=$CFLAGS
+        CFLAGS="$CFLAGS $LOCAL_NEON_FLAGS"
+
+        dnl Note AC_LANG_PROGRAM([]) uses an old-style main definition.
+        AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+          #include <arm_neon.h>
+          int main(void) {
+            int8x8_t v = vdup_n_s8(0);
+            (void)v;
+            return 0;
+          }])],
+          [NEON_FLAGS="$(echo $LOCAL_NEON_FLAGS | $SED 's/^ *//')"
+           AS_IF([test -n "$NEON_FLAGS"], [
+             AS_IF([test "${host_os%%-*}" = "linux" -o \
+                         "x$enable_neon_rtcd" = "xno"], [
+               CFLAGS=$SAVED_CFLAGS
+               AC_DEFINE(WEBP_HAVE_NEON, [1], [Set to 1 if NEON is supported])
+               break
+             ],[
+               AC_MSG_WARN(m4_normalize([NEON runtime cpu-detection is
+                                         unavailable for ${host_os%%-*}. Force
+                                         with CFLAGS=-mfpu=neon or
+                                         --disable-neon-rtcd.]))
+               enable_neon_rtcd=no
+               NEON_FLAGS=""
+             ])
+           ],[
+             CFLAGS=$SAVED_CFLAGS
+             AC_DEFINE(WEBP_HAVE_NEON, [1], [Set to 1 if NEON is supported])
+             break
+           ])])
+        CFLAGS=$SAVED_CFLAGS
+      done
+
+      AS_IF([test -n "$NEON_FLAGS"], [
+        # If NEON is available and rtcd is disabled apply NEON_FLAGS globally.
+        AS_IF([test "x$enable_neon_rtcd" = "xno"], [
+          AM_CFLAGS="$AM_CFLAGS $NEON_FLAGS"
+          NEON_FLAGS=""],
+          [AC_DEFINE(WEBP_HAVE_NEON_RTCD, [1],
+                     [Set to 1 if runtime detection of NEON is enabled])])])
         ;;
     esac
     AC_SUBST([NEON_FLAGS])])
