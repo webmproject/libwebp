@@ -113,10 +113,10 @@ WebPAnimDecoder* WebPAnimDecoderNewInternal(
   dec->info_.frame_count = WebPDemuxGetI(dec->demux_, WEBP_FF_FRAME_COUNT);
 
   // Note: calloc() because we fill frame with zeroes as well.
-  dec->curr_frame_ = WebPSafeCalloc(
+  dec->curr_frame_ = (uint8_t*)WebPSafeCalloc(
       dec->info_.canvas_width * NUM_CHANNELS, dec->info_.canvas_height);
   if (dec->curr_frame_ == NULL) goto Error;
-  dec->prev_frame_disposed_ = WebPSafeCalloc(
+  dec->prev_frame_disposed_ = (uint8_t*)WebPSafeCalloc(
       dec->info_.canvas_width * NUM_CHANNELS, dec->info_.canvas_height);
   if (dec->prev_frame_disposed_ == NULL) goto Error;
 
