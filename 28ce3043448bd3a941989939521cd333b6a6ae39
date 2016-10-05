@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f121c46_3a5341e2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-10-05T18:00:55Z",
+      "side": 1,
+      "message": "BUG\u003d\u003cfull url\u003e or BUG\u003dwebp:137 is better as the change will be recorded in the bug when you submit it",
+      "revId": "28ce3043448bd3a941989939521cd333b6a6ae39",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
