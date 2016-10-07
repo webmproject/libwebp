@@ -60,6 +60,11 @@ void ExUtilCopyPlane(const uint8_t* src, int src_stride,
                      uint8_t* dst, int dst_stride, int width, int height);
 
 //------------------------------------------------------------------------------
+
+// Returns 0 in case of overflow of nmemb * size.
+int ImgIoUtilCheckSizeArgumentsOverflow(uint64_t nmemb, size_t size);
+
+//------------------------------------------------------------------------------
 // WebP decoding
 
 // Prints an informative error message regarding decode failure of 'in_file'.

@@ -274,7 +274,7 @@ int ReadPictureWithWIC(const char* const filename,
     NULL
   };
   int has_alpha = 0;
-  int stride;
+  int64_t stride;
 
   IFS(CoInitialize(NULL));
   IFS(CoCreateInstance(MAKE_REFGUID(CLSID_WICImagingFactory), NULL,
@@ -334,14 +334,19 @@ int ReadPictureWithWIC(const char* const filename,
 
   // Decode.
   IFS(IWICFormatConverter_GetSize(converter, &width, &height));
-  stride = importer->bytes_per_pixel * width * sizeof(*rgb);
+  stride = (int64_t)importer->bytes_per_pixel * width * sizeof(*rgb);
+  if (stride != (int)stride ||
+      !ImgIoUtilCheckSizeArgumentsOverflow(stride, height)) {
+    hr = E_FAIL;
+  }
+
   if (SUCCEEDED(hr)) {
-    rgb = (BYTE*)malloc(stride * height);
+    rgb = (BYTE*)malloc((size_t)stride * height);
     if (rgb == NULL)
       hr = E_OUTOFMEMORY;
   }
   IFS(IWICFormatConverter_CopyPixels(converter, NULL,
-                                     stride, stride * height, rgb));
+                                     (UINT)stride, (UINT)stride * height, rgb));
 
   // WebP conversion.
   if (SUCCEEDED(hr)) {
@@ -349,7 +354,7 @@ int ReadPictureWithWIC(const char* const filename,
     pic->width = width;
     pic->height = height;
     pic->use_argb = 1;    // For WIC, we always force to argb
-    ok = importer->import(pic, rgb, stride);
+    ok = importer->import(pic, rgb, (int)stride);
     if (!ok) hr = E_FAIL;
   }
   if (SUCCEEDED(hr)) {

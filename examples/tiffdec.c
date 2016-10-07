@@ -22,6 +22,7 @@
 #include <tiffio.h>
 
 #include "webp/encode.h"
+#include "./example_util.h"
 #include "./metadata.h"
 
 static const struct {
@@ -124,6 +125,7 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
                                    MySize, MyMapFile, MyUnmapFile);
   uint32 width, height;
   uint32* raster;
+  int64_t alloc_size;
   int ok = 0;
   tdir_t dircount;
 
@@ -144,7 +146,16 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
     fprintf(stderr, "Error! Cannot retrieve TIFF image dimensions.\n");
     goto End;
   }
-  raster = (uint32*)_TIFFmalloc(width * height * sizeof(*raster));
+
+  if (!ImgIoUtilCheckSizeArgumentsOverflow((uint64_t)width * height,
+                                           sizeof(*raster))) {
+    goto End;
+  }
+  // _Tiffmalloc uses a signed type for size.
+  alloc_size = (int64_t)((uint64_t)width * height * sizeof(*raster));
+  if (alloc_size < 0 || alloc_size != (tmsize_t)alloc_size) goto End;
+
+  raster = (uint32*)_TIFFmalloc((tmsize_t)alloc_size);
   if (raster != NULL) {
     if (TIFFReadRGBAImageOriented(tif, width, height, raster,
                                   ORIENTATION_TOPLEFT, 1)) {
