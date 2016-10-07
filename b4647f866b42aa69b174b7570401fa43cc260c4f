@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f1568be_af853d67",
+        "filename": "imageio/jpegdec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-10-07T21:37:49Z",
+      "side": 1,
+      "message": "this one promotes just fine. I meant to drop it here as with the others like it",
+      "range": {
+        "startLine": 304,
+        "startChar": 43,
+        "endLine": 304,
+        "endChar": 53
+      },
+      "revId": "b4647f866b42aa69b174b7570401fa43cc260c4f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
