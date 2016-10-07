@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f285cc7_ad7ea9b1",
+        "filename": "imageio/imageio_util.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-10-07T20:26:03Z",
+      "side": 1,
+      "message": "could be just: \"return (total_size \u003d\u003d (size_t)total_size);\"\n\nthis works with nmemb \u003d\u003d 0 too, note.",
+      "range": {
+        "startLine": 141,
+        "startChar": 28,
+        "endLine": 141,
+        "endChar": 38
+      },
+      "revId": "756c611a33b397cc0c3ebf8b6c7ab7d648c24350",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
