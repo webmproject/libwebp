@@ -360,6 +360,8 @@ int main(int argc, const char *argv[]) {
         if (DGifGetExtension(gif, &extension, &data) == GIF_ERROR) {
           goto End;
         }
+        if (data == NULL) continue;
+
         switch (extension) {
           case COMMENT_EXT_FUNC_CODE: {
             break;  // Do nothing for now.
