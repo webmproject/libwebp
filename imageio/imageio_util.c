@@ -134,3 +134,10 @@ void ImgIoUtilCopyPlane(const uint8_t* src, int src_stride,
 }
 
 // -----------------------------------------------------------------------------
+
+int ImgIoUtilCheckSizeArgumentsOverflow(uint64_t nmemb, size_t size) {
+  const uint64_t total_size = nmemb * size;
+  return (total_size == (size_t)total_size);
+}
+
+// -----------------------------------------------------------------------------
