@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "webp/encode.h"
+#include "./imageio_util.h"
 #include "./metadata.h"
 
 static void PNGAPI error_function(png_structp png, png_const_charp error) {
@@ -216,7 +217,7 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
   int p;
   volatile int ok = 0;
   png_uint_32 width, height, y;
-  png_uint_32 stride;
+  int64_t stride;
   uint8_t* volatile rgb = NULL;
 
   context.data = data;
@@ -269,8 +270,14 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
 
   num_passes = png_set_interlace_handling(png);
   png_read_update_info(png, info);
-  stride = (has_alpha ? 4 : 3) * width * sizeof(*rgb);
-  rgb = (uint8_t*)malloc(stride * height);
+
+  stride = (int64_t)(has_alpha ? 4 : 3) * width * sizeof(*rgb);
+  if (stride != (int)stride ||
+      !ImgIoUtilCheckSizeArgumentsOverflow(stride, height)) {
+    goto Error;
+  }
+
+  rgb = (uint8_t*)malloc((size_t)stride * height);
   if (rgb == NULL) goto Error;
   for (p = 0; p < num_passes; ++p) {
     for (y = 0; y < height; ++y) {
