@@ -107,7 +107,7 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
 
   if (pic->width == 0 || pic->height == 0) {
     WebPImageReader reader = WebPGuessImageReader(data, data_size);
-    ok = (reader != NULL) && reader(data, data_size, pic, keep_alpha, metadata);
+    ok = reader(data, data_size, pic, keep_alpha, metadata);
   } else {
     // If image size is specified, infer it as YUV format.
     ok = ReadYUV(data, data_size, pic);
