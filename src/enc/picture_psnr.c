@@ -17,8 +17,8 @@
 #include "./vp8enci.h"
 #include "../utils/utils.h"
 
-typedef double (*AccumulateFunc)(const uint8_t* src, int src_stride,
-                                 const uint8_t* ref, int ref_stride,
+typedef double (*AccumulateFunc)(const uint8_t* src, size_t src_stride,
+                                 const uint8_t* ref, size_t ref_stride,
                                  int w, int h);
 
 //------------------------------------------------------------------------------
@@ -29,8 +29,8 @@ typedef double (*AccumulateFunc)(const uint8_t* src, int src_stride,
 
 #define RADIUS 2  // search radius. Shouldn't be too large.
 
-static double AccumulateLSIM(const uint8_t* src, int src_stride,
-                             const uint8_t* ref, int ref_stride,
+static double AccumulateLSIM(const uint8_t* src, size_t src_stride,
+                             const uint8_t* ref, size_t ref_stride,
                              int w, int h) {
   int x, y;
   double total_sse = 0.;
@@ -58,8 +58,8 @@ static double AccumulateLSIM(const uint8_t* src, int src_stride,
 }
 #undef RADIUS
 
-static double AccumulateSSE(const uint8_t* src, int src_stride,
-                            const uint8_t* ref, int ref_stride,
+static double AccumulateSSE(const uint8_t* src, size_t src_stride,
+                            const uint8_t* ref, size_t ref_stride,
                             int w, int h) {
   int y;
   double total_sse = 0.;
@@ -73,8 +73,8 @@ static double AccumulateSSE(const uint8_t* src, int src_stride,
 
 //------------------------------------------------------------------------------
 
-static double AccumulateSSIM(const uint8_t* src, int src_stride,
-                             const uint8_t* ref, int ref_stride,
+static double AccumulateSSIM(const uint8_t* src, size_t src_stride,
+                             const uint8_t* ref, size_t ref_stride,
                              int w, int h) {
   const int w0 = (w < VP8_SSIM_KERNEL) ? w : VP8_SSIM_KERNEL;
   const int w1 = w - VP8_SSIM_KERNEL - 1;
@@ -92,8 +92,10 @@ static double AccumulateSSIM(const uint8_t* src, int src_stride,
       sum += VP8SSIMGetClipped(src, src_stride, ref, ref_stride, x, y, w, h);
     }
     for (; x < w1; ++x) {
-      const int off1 = x - VP8_SSIM_KERNEL + (y - VP8_SSIM_KERNEL) * src_stride;
-      const int off2 = x - VP8_SSIM_KERNEL + (y - VP8_SSIM_KERNEL) * ref_stride;
+      const size_t off1 =
+          x - VP8_SSIM_KERNEL + (y - VP8_SSIM_KERNEL) * src_stride;
+      const size_t off2 =
+          x - VP8_SSIM_KERNEL + (y - VP8_SSIM_KERNEL) * ref_stride;
       sum += VP8SSIMGet(src + off1, src_stride, ref + off2, ref_stride);
     }
     for (; x < w; ++x) {
@@ -148,6 +150,8 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
       return 0;
     } else {
       int i, j;
+      const size_t src_stride = src->argb_stride;
+      const size_t ref_stride = ref->argb_stride;
       uint8_t* tmp1, *tmp2;
       uint8_t* const tmp_plane =
           (uint8_t*)WebPSafeMalloc(2ULL * w * h, sizeof(*tmp_plane));
@@ -157,8 +161,8 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
       for (c = 0; c < 4; ++c) {
         for (j = 0; j < h; ++j) {
           for (i = 0; i < w; ++i) {
-            tmp1[j * w + i] = src->argb[i + j * src->argb_stride] >> (c * 8);
-            tmp2[j * w + i] = ref->argb[i + j * ref->argb_stride] >> (c * 8);
+            tmp1[j * w + i] = src->argb[i + j * src_stride] >> (c * 8);
+            tmp2[j * w + i] = ref->argb[i + j * ref_stride] >> (c * 8);
           }
         }
         sizes[c] = w * h;

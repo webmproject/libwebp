@@ -25,7 +25,7 @@ static WEBP_INLINE uint32_t MakeARGB32(int r, int g, int b) {
 
 #define SIZE 8
 #define SIZE2 (SIZE / 2)
-static int is_transparent_area(const uint8_t* ptr, int stride, int size) {
+static int is_transparent_area(const uint8_t* ptr, size_t stride, int size) {
   int y, x;
   for (y = 0; y < size; ++y) {
     for (x = 0; x < size; ++x) {
@@ -38,7 +38,8 @@ static int is_transparent_area(const uint8_t* ptr, int stride, int size) {
   return 1;
 }
 
-static int is_transparent_argb_area(const uint32_t* ptr, int stride, int size) {
+static int is_transparent_argb_area(const uint32_t* ptr, size_t stride,
+                                    int size) {
   int y, x;
   for (y = 0; y < size; ++y) {
     for (x = 0; x < size; ++x) {
@@ -51,7 +52,7 @@ static int is_transparent_argb_area(const uint32_t* ptr, int stride, int size) {
   return 1;
 }
 
-static void flatten(uint8_t* ptr, int v, int stride, int size) {
+static void flatten(uint8_t* ptr, int v, size_t stride, int size) {
   int y;
   for (y = 0; y < size; ++y) {
     memset(ptr, v, size);
@@ -59,7 +60,7 @@ static void flatten(uint8_t* ptr, int v, int stride, int size) {
   }
 }
 
-static void flatten_argb(uint32_t* ptr, uint32_t v, int stride, int size) {
+static void flatten_argb(uint32_t* ptr, uint32_t v, size_t stride, int size) {
   int x, y;
   for (y = 0; y < size; ++y) {
     for (x = 0; x < size; ++x) ptr[x] = v;
@@ -76,16 +77,17 @@ void WebPCleanupTransparentArea(WebPPicture* pic) {
   // note: we ignore the left-overs on right/bottom
   if (pic->use_argb) {
     uint32_t argb_value = 0;
+    const size_t stride = pic->argb_stride;
     for (y = 0; y < h; ++y) {
       int need_reset = 1;
       for (x = 0; x < w; ++x) {
-        const int off = (y * pic->argb_stride + x) * SIZE;
-        if (is_transparent_argb_area(pic->argb + off, pic->argb_stride, SIZE)) {
+        const size_t off = (y * stride + x) * SIZE;
+        if (is_transparent_argb_area(pic->argb + off, stride, SIZE)) {
           if (need_reset) {
             argb_value = pic->argb[off];
             need_reset = 0;
           }
-          flatten_argb(pic->argb + off, argb_value, pic->argb_stride, SIZE);
+          flatten_argb(pic->argb + off, argb_value, stride, SIZE);
         } else {
           need_reset = 1;
         }
@@ -98,19 +100,19 @@ void WebPCleanupTransparentArea(WebPPicture* pic) {
     for (y = 0; y < h; ++y) {
       int need_reset = 1;
       for (x = 0; x < w; ++x) {
-        const int off_a = (y * pic->a_stride + x) * SIZE;
-        const int off_y = (y * pic->y_stride + x) * SIZE;
-        const int off_uv = (y * pic->uv_stride + x) * SIZE2;
-        if (is_transparent_area(a_ptr + off_a, pic->a_stride, SIZE)) {
+        const size_t off_a = (y * (size_t)pic->a_stride + x) * SIZE;
+        const size_t off_y = (y * (size_t)pic->y_stride + x) * SIZE;
+        const size_t off_uv = (y * (size_t)pic->uv_stride + x) * SIZE2;
+        if (is_transparent_area(a_ptr + off_a, (size_t)pic->a_stride, SIZE)) {
           if (need_reset) {
             values[0] = pic->y[off_y];
             values[1] = pic->u[off_uv];
             values[2] = pic->v[off_uv];
             need_reset = 0;
           }
-          flatten(pic->y + off_y, values[0], pic->y_stride, SIZE);
-          flatten(pic->u + off_uv, values[1], pic->uv_stride, SIZE2);
-          flatten(pic->v + off_uv, values[2], pic->uv_stride, SIZE2);
+          flatten(pic->y + off_y, values[0], (size_t)pic->y_stride, SIZE);
+          flatten(pic->u + off_uv, values[1], (size_t)pic->uv_stride, SIZE2);
+          flatten(pic->v + off_uv, values[2], (size_t)pic->uv_stride, SIZE2);
         } else {
           need_reset = 1;
         }
@@ -164,8 +166,8 @@ void WebPBlendAlpha(WebPPicture* pic, uint32_t background_rgb) {
     if (!has_alpha || pic->a == NULL) return;    // nothing to do
     for (y = 0; y < pic->height; ++y) {
       // Luma blending
-      uint8_t* const y_ptr = pic->y + y * pic->y_stride;
-      uint8_t* const a_ptr = pic->a + y * pic->a_stride;
+      uint8_t* const y_ptr = pic->y + y * (size_t)pic->y_stride;
+      uint8_t* const a_ptr = pic->a + y * (size_t)pic->a_stride;
       for (x = 0; x < pic->width; ++x) {
         const int alpha = a_ptr[x];
         if (alpha < 0xff) {
@@ -174,8 +176,8 @@ void WebPBlendAlpha(WebPPicture* pic, uint32_t background_rgb) {
       }
       // Chroma blending every even line
       if ((y & 1) == 0) {
-        uint8_t* const u = pic->u + (y >> 1) * pic->uv_stride;
-        uint8_t* const v = pic->v + (y >> 1) * pic->uv_stride;
+        uint8_t* const u = pic->u + (y >> 1) * (size_t)pic->uv_stride;
+        uint8_t* const v = pic->v + (y >> 1) * (size_t)pic->uv_stride;
         uint8_t* const a_ptr2 =
             (y + 1 == pic->height) ? a_ptr : a_ptr + pic->a_stride;
         for (x = 0; x < uv_width; ++x) {

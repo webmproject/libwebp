@@ -42,7 +42,7 @@ struct WebPRescaler {
   int dst_width, dst_height;  // destination dimensions
   int src_y, dst_y;           // row counters for input and output
   uint8_t* dst;
-  int dst_stride;
+  size_t dst_stride;
   rescaler_t* irow, *frow;    // work buffer
 };
 
@@ -50,7 +50,7 @@ struct WebPRescaler {
 void WebPRescalerInit(WebPRescaler* const rescaler,
                       int src_width, int src_height,
                       uint8_t* const dst,
-                      int dst_width, int dst_height, int dst_stride,
+                      int dst_width, int dst_height, size_t dst_stride,
                       int num_channels,
                       rescaler_t* const work);
 
@@ -70,7 +70,7 @@ int WebPRescaleNeededLines(const WebPRescaler* const rescaler,
 // Import multiple rows over all channels, until at least one row is ready to
 // be exported. Returns the actual number of lines that were imported.
 int WebPRescalerImport(WebPRescaler* const rescaler, int num_rows,
-                       const uint8_t* src, int src_stride);
+                       const uint8_t* src, size_t src_stride);
 
 // Export as many rows as possible. Return the numbers of rows written.
 int WebPRescalerExport(WebPRescaler* const rescaler);
