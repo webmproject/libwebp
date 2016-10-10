@@ -1093,20 +1093,6 @@ int main(int argc, const char *argv[]) {
     if (print_distortion >= 0) {    // print distortion
       static const char* distortion_names[] = { "PSNR", "SSIM", "LSIM" };
       float values[5];
-      if (picture.use_argb != original_picture.use_argb) {
-        // Somehow, the WebPEncode() call converted the original picture.
-        // We need to make both match before calling WebPPictureDistortion().
-        int ok = 0;
-        if (picture.use_argb) {
-          ok = WebPPictureYUVAToARGB(&original_picture);
-        } else {
-          ok = WebPPictureARGBToYUVA(&original_picture, WEBP_YUV420A);
-        }
-        if (!ok) {
-          fprintf(stderr, "Error while converting original picture.\n");
-          goto Error;
-        }
-      }
       if (!WebPPictureDistortion(&picture, &original_picture,
                                  print_distortion, values)) {
         fprintf(stderr, "Error while computing the distortion.\n");
@@ -1114,13 +1100,8 @@ int main(int argc, const char *argv[]) {
       }
       if (!short_output) {
         fprintf(stderr, "%s: ", distortion_names[print_distortion]);
-        if (picture.use_argb) {
-          fprintf(stderr, "B:%.2f G:%.2f R:%.2f A:%.2f  Total:%.2f\n",
-                  values[0], values[1], values[2], values[3], values[4]);
-        } else {
-          fprintf(stderr, "Y:%.2f U:%.2f V:%.2f A:%.2f  Total:%.2f\n",
-                  values[0], values[1], values[2], values[3], values[4]);
-        }
+        fprintf(stderr, "B:%.2f G:%.2f R:%.2f A:%.2f  Total:%.2f\n",
+                values[0], values[1], values[2], values[3], values[4]);
       } else {
         fprintf(stderr, "%7d %.4f\n", picture.stats->coded_size, values[4]);
       }
