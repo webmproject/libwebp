@@ -20,6 +20,7 @@
 
 #include "webp/encode.h"
 #include "webp/mux_types.h"
+#include "webp/format_constants.h"
 
 #define GIF_TRANSPARENT_COLOR 0x00000000
 #define GIF_WHITE_COLOR       0xffffffff
@@ -103,11 +104,18 @@ int GIFReadFrame(GifFileType* const gif, int transparent_index,
   const GifImageDesc* const image_desc = &gif->Image;
   uint32_t* dst = NULL;
   uint8_t* tmp = NULL;
-  int ok = 0;
-  GIFFrameRect rect = {
+  const GIFFrameRect rect = {
       image_desc->Left, image_desc->Top, image_desc->Width, image_desc->Height
   };
+  const uint64_t memory_needed = 4 * rect.width * (uint64_t)rect.height;
+  int ok = 0;
   *gif_rect = rect;
+
+  if (memory_needed != (size_t)memory_needed ||
+      memory_needed > 4 * MAX_IMAGE_AREA) {
+    fprintf(stderr, "Image is too large (%d x %d).", rect.width, rect.height);
+    return 0;
+  }
 
   // Use a view for the sub-picture:
   if (!WebPPictureView(picture, rect.x_offset, rect.y_offset,
@@ -132,15 +140,15 @@ int GIFReadFrame(GifFileType* const gif, int transparent_index,
            y += interlace_jumps[pass]) {
         if (DGifGetLine(gif, tmp, rect.width) == GIF_ERROR) goto End;
         Remap(gif, tmp, rect.width, transparent_index,
-              dst + y * sub_image.argb_stride);
+              dst + y * (size_t)sub_image.argb_stride);
       }
     }
   } else {  // Non-interlaced image.
     int y;
-    for (y = 0; y < rect.height; ++y) {
+    uint32_t* ptr = dst;
+    for (y = 0; y < rect.height; ++y, ptr += sub_image.argb_stride) {
       if (DGifGetLine(gif, tmp, rect.width) == GIF_ERROR) goto End;
-      Remap(gif, tmp, rect.width, transparent_index,
-            dst + y * sub_image.argb_stride);
+      Remap(gif, tmp, rect.width, transparent_index, ptr);
     }
   }
   ok = 1;
@@ -216,13 +224,11 @@ int GIFReadMetadata(GifFileType* const gif, GifByteType** const buf,
 
 static void ClearRectangle(WebPPicture* const picture,
                            int left, int top, int width, int height) {
-  int j;
-  for (j = top; j < top + height; ++j) {
-    uint32_t* const dst = picture->argb + j * picture->argb_stride;
-    int i;
-    for (i = left; i < left + width; ++i) {
-      dst[i] = GIF_TRANSPARENT_COLOR;
-    }
+  int i, j;
+  const size_t stride = picture->argb_stride;
+  uint32_t* dst = picture->argb + top * stride + left;
+  for (j = 0; j < height; ++j, dst += stride) {
+    for (i = 0; i < width; ++i) dst[i] = GIF_TRANSPARENT_COLOR;
   }
 }
 
@@ -246,29 +252,31 @@ void GIFDisposeFrame(GIFDisposeMethod dispose, const GIFFrameRect* const rect,
   if (dispose == GIF_DISPOSE_BACKGROUND) {
     GIFClearPic(curr_canvas, rect);
   } else if (dispose == GIF_DISPOSE_RESTORE_PREVIOUS) {
-    const int src_stride = prev_canvas->argb_stride;
-    const uint32_t* const src =
-        prev_canvas->argb + rect->x_offset + rect->y_offset * src_stride;
-    const int dst_stride = curr_canvas->argb_stride;
-    uint32_t* const dst =
-        curr_canvas->argb + rect->x_offset + rect->y_offset * dst_stride;
+    const size_t src_stride = prev_canvas->argb_stride;
+    const uint32_t* const src = prev_canvas->argb + rect->x_offset
+                              + rect->y_offset * src_stride;
+    const size_t dst_stride = curr_canvas->argb_stride;
+    uint32_t* const dst = curr_canvas->argb + rect->x_offset
+                        + rect->y_offset * dst_stride;
     assert(prev_canvas != NULL);
-    WebPCopyPlane((uint8_t*)src, 4 * src_stride, (uint8_t*)dst, 4 * dst_stride,
+    WebPCopyPlane((uint8_t*)src, (int)(4 * src_stride),
+                  (uint8_t*)dst, (int)(4 * dst_stride),
                   4 * rect->width, rect->height);
   }
 }
 
 void GIFBlendFrames(const WebPPicture* const src,
                     const GIFFrameRect* const rect, WebPPicture* const dst) {
-  int j;
+  int i, j;
+  const size_t src_stride = src->argb_stride;
+  const size_t dst_stride = dst->argb_stride;
   assert(src->width == dst->width && src->height == dst->height);
   for (j = rect->y_offset; j < rect->y_offset + rect->height; ++j) {
-    int i;
     for (i = rect->x_offset; i < rect->x_offset + rect->width; ++i) {
-      const uint32_t src_pixel = src->argb[j * src->argb_stride + i];
+      const uint32_t src_pixel = src->argb[j * src_stride + i];
       const int src_alpha = src_pixel >> 24;
       if (src_alpha != 0) {
-        dst->argb[j * dst->argb_stride + i] = src_pixel;
+        dst->argb[j * dst_stride + i] = src_pixel;
       }
     }
   }
