@@ -31,8 +31,9 @@
 #define WINDOW_SIZE_BITS 20
 #define WINDOW_SIZE ((1 << WINDOW_SIZE_BITS) - 120)
 
-// Bounds for the match length.
-#define MIN_LENGTH 2
+// Minimum number of pixels for which it is cheaper to encode a
+// distance + length instead of each pixel as a literal.
+#define MIN_LENGTH 4
 // If you change this, you need MAX_LENGTH_BITS + WINDOW_SIZE_BITS <= 32 as it
 // is used in VP8LHashChain.
 #define MAX_LENGTH_BITS 12
@@ -463,17 +464,16 @@ static int BackwardReferencesRle(int xsize, int ysize,
   i = 1;
   while (i < pix_count) {
     const int max_len = MaxFindCopyLength(pix_count - i);
-    const int kMinLength = 4;
     const int rle_len = FindMatchLength(argb + i, argb + i - 1, 0, max_len);
     const int prev_row_len = (i < xsize) ? 0 :
         FindMatchLength(argb + i, argb + i - xsize, 0, max_len);
-    if (rle_len >= prev_row_len && rle_len >= kMinLength) {
+    if (rle_len >= prev_row_len && rle_len >= MIN_LENGTH) {
       BackwardRefsCursorAdd(refs, PixOrCopyCreateCopy(1, rle_len));
       // We don't need to update the color cache here since it is always the
       // same pixel being copied, and that does not change the color cache
       // state.
       i += rle_len;
-    } else if (prev_row_len >= kMinLength) {
+    } else if (prev_row_len >= MIN_LENGTH) {
       BackwardRefsCursorAdd(refs, PixOrCopyCreateCopy(xsize, prev_row_len));
       if (use_color_cache) {
         for (k = 0; k < prev_row_len; ++k) {
@@ -513,7 +513,7 @@ static int BackwardReferencesLz77(int xsize, int ysize,
     int len = 0;
     int j;
     HashChainFindCopy(hash_chain, i, &offset, &len);
-    if (len > MIN_LENGTH + 1) {
+    if (len >= MIN_LENGTH) {
       const int len_ini = len;
       int max_reach = 0;
       assert(i + len < pix_count);
@@ -528,7 +528,7 @@ static int BackwardReferencesLz77(int xsize, int ysize,
       for (j = i_last_check + 1; j <= i + len_ini; ++j) {
         const int len_j = HashChainFindLength(hash_chain, j);
         const int reach =
-            j + (len_j > MIN_LENGTH + 1 ? len_j : 1);  // 1 for single literal.
+            j + (len_j >= MIN_LENGTH ? len_j : 1);  // 1 for single literal.
         if (reach > max_reach) {
           len = j - i;
           max_reach = reach;
@@ -1287,7 +1287,8 @@ static int BackwardReferencesHashChainDistanceOnly(
     int offset = 0, len = 0;
     double prev_cost = cost_manager->costs_[i - 1];
     HashChainFindCopy(hash_chain, i, &offset, &len);
-    if (len >= MIN_LENGTH) {
+    if (len >= 2) {
+      // If we are dealing with a non-literal.
       const int code = DistanceToPlaneCode(xsize, offset);
       const double offset_cost = GetDistanceCost(cost_model, code);
       const int first_i = i;
@@ -1376,20 +1377,17 @@ static int BackwardReferencesHashChainDistanceOnly(
         }
         goto next_symbol;
       }
-      if (len > MIN_LENGTH) {
-        int code_min_length;
-        double cost_total;
-        offset = HashChainFindOffset(hash_chain, i);
-        code_min_length = DistanceToPlaneCode(xsize, offset);
-        cost_total = prev_cost +
-            GetDistanceCost(cost_model, code_min_length) +
-            GetLengthCost(cost_model, 1);
+      if (len > 2) {
+        // Also try the smallest interval possible (size 2).
+        double cost_total =
+            prev_cost + offset_cost + GetLengthCost(cost_model, 1);
         if (cost_manager->costs_[i + 1] > cost_total) {
           cost_manager->costs_[i + 1] = (float)cost_total;
           dist_array[i + 1] = 2;
         }
       }
-    } else {    // len < MIN_LENGTH
+    } else {
+      // The pixel is added as a single literal so just update the costs.
       UpdateCostPerIndex(cost_manager, i + 1);
     }
 
