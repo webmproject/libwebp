@@ -1157,7 +1157,7 @@ static WebPEncodingError MakeInputImageCopy(VP8LEncoder* const enc) {
   if (err != VP8_ENC_OK) return err;
   for (y = 0; y < height; ++y) {
     memcpy(enc->argb_ + y * width,
-           picture->argb + y * picture->argb_stride,
+           picture->argb + y * (size_t)picture->argb_stride,
            width * sizeof(*enc->argb_));
   }
   assert(enc->current_width_ == width);
@@ -1249,8 +1249,8 @@ static void PrepareMapToPalette(const uint32_t palette[], int num_colors,
 // using 'row' as a temporary buffer of size 'width'.
 // We assume that all src[] values have a corresponding entry in the palette.
 // Note: src[] can be the same as dst[]
-static WebPEncodingError ApplyPalette(const uint32_t* src, uint32_t src_stride,
-                                      uint32_t* dst, uint32_t dst_stride,
+static WebPEncodingError ApplyPalette(const uint32_t* src, size_t src_stride,
+                                      uint32_t* dst, size_t dst_stride,
                                       const uint32_t* palette, int palette_size,
                                       int width, int height, int xbits) {
   // TODO(skal): this tmp buffer is not needed if VP8LBundleColorMap() can be
@@ -1319,7 +1319,7 @@ static WebPEncodingError MapImageFromPalette(VP8LEncoder* const enc,
   const int height = pic->height;
   const uint32_t* const palette = enc->palette_;
   const uint32_t* src = in_place ? enc->argb_ : pic->argb;
-  const int src_stride = in_place ? enc->current_width_ : pic->argb_stride;
+  const size_t src_stride = in_place ? enc->current_width_ : pic->argb_stride;
   const int palette_size = enc->palette_size_;
   int xbits;
 
