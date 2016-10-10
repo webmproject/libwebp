@@ -1157,7 +1157,7 @@ static WebPEncodingError MakeInputImageCopy(VP8LEncoder* const enc) {
   if (err != VP8_ENC_OK) return err;
   for (y = 0; y < height; ++y) {
     memcpy(enc->argb_ + y * width,
-           picture->argb + y * picture->argb_stride,
+           picture->argb + y * (size_t)picture->argb_stride,
            width * sizeof(*enc->argb_));
   }
   assert(enc->current_width_ == width);
@@ -1319,7 +1319,7 @@ static WebPEncodingError MapImageFromPalette(VP8LEncoder* const enc,
   const int height = pic->height;
   const uint32_t* const palette = enc->palette_;
   const uint32_t* src = in_place ? enc->argb_ : pic->argb;
-  const int src_stride = in_place ? enc->current_width_ : pic->argb_stride;
+  const size_t src_stride = in_place ? enc->current_width_ : pic->argb_stride;
   const int palette_size = enc->palette_size_;
   int xbits;
 

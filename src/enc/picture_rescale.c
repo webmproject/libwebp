@@ -71,8 +71,8 @@ int WebPPictureCopy(const WebPPicture* src, WebPPicture* dst) {
                     dst->a, dst->a_stride, dst->width, dst->height);
     }
   } else {
-    WebPCopyPlane((const uint8_t*)src->argb, 4 * src->argb_stride,
-                  (uint8_t*)dst->argb, 4 * dst->argb_stride,
+    WebPCopyPlane((const uint8_t*)src->argb, 4 * (size_t)src->argb_stride,
+                  (uint8_t*)dst->argb, 4 * (size_t)dst->argb_stride,
                   4 * dst->width, dst->height);
   }
   return 1;
@@ -100,17 +100,17 @@ int WebPPictureView(const WebPPicture* src,
   dst->width = width;
   dst->height = height;
   if (!src->use_argb) {
-    dst->y = src->y + top * src->y_stride + left;
-    dst->u = src->u + (top >> 1) * src->uv_stride + (left >> 1);
-    dst->v = src->v + (top >> 1) * src->uv_stride + (left >> 1);
+    dst->y = src->y + top * (size_t)src->y_stride + left;
+    dst->u = src->u + (top >> 1) * (size_t)src->uv_stride + (left >> 1);
+    dst->v = src->v + (top >> 1) * (size_t)src->uv_stride + (left >> 1);
     dst->y_stride = src->y_stride;
     dst->uv_stride = src->uv_stride;
     if (src->a != NULL) {
-      dst->a = src->a + top * src->a_stride + left;
+      dst->a = src->a + top * (size_t)src->a_stride + left;
       dst->a_stride = src->a_stride;
     }
   } else {
-    dst->argb = src->argb + top * src->argb_stride + left;
+    dst->argb = src->argb + top * (size_t)src->argb_stride + left;
     dst->argb_stride = src->argb_stride;
   }
   return 1;
@@ -132,8 +132,8 @@ int WebPPictureCrop(WebPPicture* pic,
   if (!WebPPictureAlloc(&tmp)) return 0;
 
   if (!pic->use_argb) {
-    const int y_offset = top * pic->y_stride + left;
-    const int uv_offset = (top / 2) * pic->uv_stride + left / 2;
+    const size_t y_offset = top * (size_t)pic->y_stride + left;
+    const size_t uv_offset = (top / 2) * (size_t)pic->uv_stride + left / 2;
     WebPCopyPlane(pic->y + y_offset, pic->y_stride,
                   tmp.y, tmp.y_stride, width, height);
     WebPCopyPlane(pic->u + uv_offset, pic->uv_stride,
@@ -142,15 +142,15 @@ int WebPPictureCrop(WebPPicture* pic,
                   tmp.v, tmp.uv_stride, HALVE(width), HALVE(height));
 
     if (tmp.a != NULL) {
-      const int a_offset = top * pic->a_stride + left;
+      const size_t a_offset = top * (size_t)pic->a_stride + left;
       WebPCopyPlane(pic->a + a_offset, pic->a_stride,
                     tmp.a, tmp.a_stride, width, height);
     }
   } else {
     const uint8_t* const src =
-        (const uint8_t*)(pic->argb + top * pic->argb_stride + left);
-    WebPCopyPlane(src, pic->argb_stride * 4, (uint8_t*)tmp.argb,
-                  tmp.argb_stride * 4, width * 4, height);
+        (const uint8_t*)(pic->argb + top * (size_t)pic->argb_stride + left);
+    WebPCopyPlane(src, 4 * (size_t)pic->argb_stride, (uint8_t*)tmp.argb,
+                  4 * (size_t)tmp.argb_stride, 4 * width, height);
   }
   WebPPictureFree(pic);
   *pic = tmp;
@@ -161,9 +161,9 @@ int WebPPictureCrop(WebPPicture* pic,
 // Simple picture rescaler
 
 static void RescalePlane(const uint8_t* src,
-                         int src_width, int src_height, int src_stride,
+                         int src_width, int src_height, size_t src_stride,
                          uint8_t* dst,
-                         int dst_width, int dst_height, int dst_stride,
+                         int dst_width, int dst_height, size_t dst_stride,
                          rescaler_t* const work,
                          int num_channels) {
   WebPRescaler rescaler;
@@ -173,7 +173,7 @@ static void RescalePlane(const uint8_t* src,
                    num_channels, work);
   while (y < src_height) {
     y += WebPRescalerImport(&rescaler, src_height - y,
-                            src + y * src_stride, src_stride);
+                            src + y * (size_t)src_stride, src_stride);
     WebPRescalerExport(&rescaler);
   }
 }
@@ -249,9 +249,9 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
     WebPInitAlphaProcessing();
     AlphaMultiplyARGB(pic, 0);
     RescalePlane((const uint8_t*)pic->argb, prev_width, prev_height,
-                 pic->argb_stride * 4,
+                 4 * (size_t)pic->argb_stride,
                  (uint8_t*)tmp.argb, width, height,
-                 tmp.argb_stride * 4,
+                 4 * (size_t)tmp.argb_stride,
                  work, 4);
     AlphaMultiplyARGB(&tmp, 1);
   }

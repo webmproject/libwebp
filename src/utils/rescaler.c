@@ -21,7 +21,7 @@
 
 void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
                       uint8_t* const dst,
-                      int dst_width, int dst_height, int dst_stride,
+                      int dst_width, int dst_height, size_t dst_stride,
                       int num_channels, rescaler_t* const work) {
   const int x_add = src_width, x_sub = dst_width;
   const int y_add = src_height, y_sub = dst_height;
@@ -111,7 +111,7 @@ int WebPRescaleNeededLines(const WebPRescaler* const wrk, int max_num_lines) {
 }
 
 int WebPRescalerImport(WebPRescaler* const wrk, int num_lines,
-                       const uint8_t* src, int src_stride) {
+                       const uint8_t* src, size_t src_stride) {
   int total_imported = 0;
   while (total_imported < num_lines && !WebPRescalerHasPendingOutput(wrk)) {
     if (wrk->y_expand) {
