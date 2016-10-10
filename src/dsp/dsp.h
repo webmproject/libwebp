@@ -265,15 +265,15 @@ double VP8SSIMFromStats(const VP8DistoStats* const stats);
 double VP8SSIMFromStatsClipped(const VP8DistoStats* const stats);
 
 #define VP8_SSIM_KERNEL 3   // total size of the kernel: 2 * VP8_SSIM_KERNEL + 1
-typedef double (*VP8SSIMGetClippedFunc)(const uint8_t* src1, int stride1,
-                                        const uint8_t* src2, int stride2,
+typedef double (*VP8SSIMGetClippedFunc)(const uint8_t* src1, size_t stride1,
+                                        const uint8_t* src2, size_t stride2,
                                         int xo, int yo,  // center position
                                         int W, int H);   // plane dimension
 
 // This version is called with the guarantee that you can load 8 bytes and
 // 8 rows at offset src1 and src2
-typedef double (*VP8SSIMGetFunc)(const uint8_t* src1, int stride1,
-                                 const uint8_t* src2, int stride2);
+typedef double (*VP8SSIMGetFunc)(const uint8_t* src1, size_t stride1,
+                                 const uint8_t* src2, size_t stride2);
 
 extern VP8SSIMGetFunc VP8SSIMGet;         // unclipped / unchecked
 extern VP8SSIMGetClippedFunc VP8SSIMGetClipped;   // with clipping
@@ -495,9 +495,9 @@ extern void (*WebPDispatchAlphaToGreen)(const uint8_t* alpha, int alpha_stride,
 // Extract the alpha values from 32b values in argb[] and pack them into alpha[]
 // (this is the opposite of WebPDispatchAlpha).
 // Returns true if there's only trivial 0xff alpha values.
-extern int (*WebPExtractAlpha)(const uint8_t* argb, int argb_stride,
+extern int (*WebPExtractAlpha)(const uint8_t* argb, size_t argb_stride,
                                int width, int height,
-                               uint8_t* alpha, int alpha_stride);
+                               uint8_t* alpha, size_t alpha_stride);
 
 // Pre-Multiply operation transforms x into x * A / 255  (where x=Y,R,G or B).
 // Un-Multiply operation transforms x into x * 255 / A.

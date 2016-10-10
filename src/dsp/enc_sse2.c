@@ -1446,8 +1446,8 @@ static const uint16_t kWeight[] = { 1, 2, 3, 4, 3, 2, 1, 0 };
   src2 += stride2;                                          \
 } while (0)
 
-static double SSIMGet_SSE2(const uint8_t* src1, int stride1,
-                           const uint8_t* src2, int stride2) {
+static double SSIMGet_SSE2(const uint8_t* src1, size_t stride1,
+                           const uint8_t* src2, size_t stride2) {
   VP8DistoStats stats;
   const __m128i zero = _mm_setzero_si128();
   __m128i xm = zero, ym = zero;                // 16b accums

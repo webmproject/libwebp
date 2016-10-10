@@ -728,8 +728,8 @@ double VP8SSIMFromStatsClipped(const VP8DistoStats* const stats) {
   return SSIMCalculation(stats, stats->w);
 }
 
-static double SSIMGetClipped_C(const uint8_t* src1, int stride1,
-                               const uint8_t* src2, int stride2,
+static double SSIMGetClipped_C(const uint8_t* src1, size_t stride1,
+                               const uint8_t* src2, size_t stride2,
                                int xo, int yo, int W, int H) {
   VP8DistoStats stats = { 0, 0, 0, 0, 0, 0 };
   const int ymin = (yo - VP8_SSIM_KERNEL < 0) ? 0 : yo - VP8_SSIM_KERNEL;
@@ -758,8 +758,8 @@ static double SSIMGetClipped_C(const uint8_t* src1, int stride1,
   return VP8SSIMFromStatsClipped(&stats);
 }
 
-static double SSIMGet_C(const uint8_t* src1, int stride1,
-                        const uint8_t* src2, int stride2) {
+static double SSIMGet_C(const uint8_t* src1, size_t stride1,
+                        const uint8_t* src2, size_t stride2) {
   VP8DistoStats stats = { 0, 0, 0, 0, 0, 0 };
   int x, y;
   for (y = 0; y <= 2 * VP8_SSIM_KERNEL; ++y, src1 += stride1, src2 += stride2) {
