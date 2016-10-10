@@ -219,7 +219,6 @@ typedef struct {
 // right neighbouring data (samples, predictions, contexts, ...)
 typedef struct {
   int x_, y_;                      // current macroblock
-  int y_stride_, uv_stride_;       // respective strides
   uint8_t*      yuv_in_;           // input samples
   uint8_t*      yuv_out_;          // output samples
   uint8_t*      yuv_out2_;         // secondary buffer swapped with yuv_out_.
