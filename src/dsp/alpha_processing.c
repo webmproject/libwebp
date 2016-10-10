@@ -316,9 +316,9 @@ static void DispatchAlphaToGreen(const uint8_t* alpha, int alpha_stride,
   }
 }
 
-static int ExtractAlpha(const uint8_t* argb, int argb_stride,
+static int ExtractAlpha(const uint8_t* argb, size_t argb_stride,
                         int width, int height,
-                        uint8_t* alpha, int alpha_stride) {
+                        uint8_t* alpha, size_t alpha_stride) {
   uint8_t alpha_mask = 0xff;
   int i, j;
 
@@ -338,7 +338,7 @@ void (*WebPApplyAlphaMultiply)(uint8_t*, int, int, int, int);
 void (*WebPApplyAlphaMultiply4444)(uint8_t*, int, int, int);
 int (*WebPDispatchAlpha)(const uint8_t*, int, int, int, uint8_t*, int);
 void (*WebPDispatchAlphaToGreen)(const uint8_t*, int, int, int, uint32_t*, int);
-int (*WebPExtractAlpha)(const uint8_t*, int, int, int, uint8_t*, int);
+int (*WebPExtractAlpha)(const uint8_t*, size_t, int, int, uint8_t*, size_t);
 
 //------------------------------------------------------------------------------
 // Init function
