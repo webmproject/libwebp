@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f82c883_d6a962e9",
+        "filename": "examples/gifdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-10-11T19:45:33Z",
+      "side": 1,
+      "message": "note at one point we were trying to keep examples clear of any internal headers so they could be extracted and built against a binary release.",
+      "revId": "e2affacc35f1df6cc3b1a9fa0ceff5ce2d0cce83",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f82c883_d6fb22d5",
+        "filename": "examples/gifdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-10-11T19:45:33Z",
+      "side": 1,
+      "message": "what does that fix? if stride were negative you\u0027d probably end up with a similar bad positive offset",
+      "range": {
+        "startLine": 143,
+        "startChar": 24,
+        "endLine": 143,
+        "endChar": 32
+      },
+      "revId": "e2affacc35f1df6cc3b1a9fa0ceff5ce2d0cce83",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
