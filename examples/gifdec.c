@@ -20,7 +20,6 @@
 
 #include "webp/encode.h"
 #include "webp/mux_types.h"
-#include "webp/format_constants.h"
 
 #define GIF_TRANSPARENT_COLOR 0x00000000
 #define GIF_WHITE_COLOR       0xffffffff
@@ -111,8 +110,7 @@ int GIFReadFrame(GifFileType* const gif, int transparent_index,
   int ok = 0;
   *gif_rect = rect;
 
-  if (memory_needed != (size_t)memory_needed ||
-      memory_needed > 4 * MAX_IMAGE_AREA) {
+  if (memory_needed != (size_t)memory_needed || memory_needed > (4ULL << 32)) {
     fprintf(stderr, "Image is too large (%d x %d).", rect.width, rect.height);
     return 0;
   }
@@ -135,12 +133,13 @@ int GIFReadFrame(GifFileType* const gif, int transparent_index,
     const int interlace_jumps[]   = { 8, 8, 4, 2 };
     int pass;
     for (pass = 0; pass < 4; ++pass) {
-      int y;
-      for (y = interlace_offsets[pass]; y < rect.height;
-           y += interlace_jumps[pass]) {
+      const size_t stride = (size_t)sub_image.argb_stride;
+      int y = interlace_offsets[pass];
+      uint32_t* row = dst + y * stride;
+      const size_t jump = interlace_jumps[pass] * stride;
+      for (; y < rect.height; y += interlace_jumps[pass], row += jump) {
         if (DGifGetLine(gif, tmp, rect.width) == GIF_ERROR) goto End;
-        Remap(gif, tmp, rect.width, transparent_index,
-              dst + y * (size_t)sub_image.argb_stride);
+        Remap(gif, tmp, rect.width, transparent_index, row);
       }
     }
   } else {  // Non-interlaced image.
