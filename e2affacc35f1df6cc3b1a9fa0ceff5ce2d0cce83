@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "5c051249_164a5c7f",
+        "filename": "examples/gifdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-10-12T18:19:16Z",
+      "side": 1,
+      "message": "it makes sense to try to reuse that, but it\u0027s not an installed header. it would be simple enough for a user to grab them and I don\u0027t know how common that behavior really is. it is why WebPCopyPlane/Pixels is extern\u0027d below though",
+      "parentUuid": "fcac0670_25230e18",
+      "revId": "e2affacc35f1df6cc3b1a9fa0ceff5ce2d0cce83",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7f82c883_d6fb22d5",
         "filename": "examples/gifdec.c",
         "patchSetId": 3
@@ -72,6 +90,30 @@
       "side": 1,
       "message": "this is to prevent the overflow due to signed-ness, more than 32b overflow. Using unsigned stride avoids problem when \u0027y\u0027 becomes large.\n\nnote that \u0027stride\u0027 is not expected to be negative on the encoder side. I considered changing WebPPicture::{argb/y/u/v}_stride type from \u0027int\u0027 to \u0027size_t\u0027, but that would be a non-compatible ABI change. \n\nAnyway -\u003e  https://chromium-review.googlesource.com/397118\nmakes the calculation more robust.",
       "parentUuid": "7f82c883_d6fb22d5",
+      "range": {
+        "startLine": 143,
+        "startChar": 24,
+        "endLine": 143,
+        "endChar": 32
+      },
+      "revId": "e2affacc35f1df6cc3b1a9fa0ceff5ce2d0cce83",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c051249_d64f3488",
+        "filename": "examples/gifdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-10-12T18:19:16Z",
+      "side": 1,
+      "message": "\u003e this is to prevent the overflow due to signed-ness, more than 32b\n \u003e overflow. Using unsigned stride avoids problem when \u0027y\u0027 becomes\n \u003e large.\n \u003e \n\nundefined signed overflow protection makes sense as long as things have been validated before to avoid masking it with an unsigned overflow.\n\n \u003e note that \u0027stride\u0027 is not expected to be negative on the encoder\n \u003e side. I considered changing WebPPicture::{argb/y/u/v}_stride type\n \u003e from \u0027int\u0027 to \u0027size_t\u0027, but that would be a non-compatible ABI\n \u003e change.\n \u003e \n \u003e Anyway -\u003e  https://chromium-review.googlesource.com/397118\n \u003e makes the calculation more robust.",
+      "parentUuid": "7cc1f61c_c9833108",
       "range": {
         "startLine": 143,
         "startChar": 24,
