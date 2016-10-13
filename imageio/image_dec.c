@@ -34,13 +34,28 @@ WebPInputFileFormat WebPGuessImageType(const uint8_t* const data,
   return format;
 }
 
-WebPImageReader WebPGuessImageReader(const uint8_t* const data,
-                                     size_t data_size) {
-  switch (WebPGuessImageType(data, data_size)) {
+static int FailReader(const uint8_t* const data, size_t data_size,
+                      struct WebPPicture* const pic,
+                      int keep_alpha, struct Metadata* const metadata) {
+  (void)data;
+  (void)data_size;
+  (void)pic;
+  (void)keep_alpha;
+  (void)metadata;
+  return 0;
+}
+
+WebPImageReader WebPGetImageReader(WebPInputFileFormat format) {
+  switch (format) {
     case WEBP_PNG_FORMAT: return ReadPNG;
     case WEBP_JPEG_FORMAT: return ReadJPEG;
     case WEBP_TIFF_FORMAT: return ReadTIFF;
     case WEBP_WEBP_FORMAT: return ReadWebP;
-    default: return NULL;
+    default: return FailReader;
   }
+}
+
+WebPImageReader WebPGuessImageReader(const uint8_t* const data,
+                                     size_t data_size) {
+  return WebPGetImageReader(WebPGuessImageType(data, data_size));
 }

@@ -49,8 +49,12 @@ typedef int (*WebPImageReader)(const uint8_t* const data, size_t data_size,
                                struct WebPPicture* const pic,
                                int keep_alpha, struct Metadata* const metadata);
 
+// Return the reader associated to a given file format.
+WebPImageReader WebPGetImageReader(WebPInputFileFormat format);
+
 // This function is similar to WebPGuessImageType(), but returns a
-// suitable reader function. Or NULL if the image can't be guessed.
+// suitable reader function. The returned reader is never NULL, but
+// unknown formats will return an always-failing valid reader.
 WebPImageReader WebPGuessImageReader(const uint8_t* const data,
                                      size_t data_size);
 
