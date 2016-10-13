@@ -120,15 +120,18 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
              WebPPicture* const pic, int keep_alpha,
              Metadata* const metadata) {
   MyData my_data = { data, (toff_t)data_size, 0 };
-  TIFF* const tif = TIFFClientOpen("Memory", "r", &my_data,
-                                   MyRead, MyRead, MySeek, MyClose,
-                                   MySize, MyMapFile, MyUnmapFile);
+  TIFF* tif;
   uint32 width, height;
   uint32* raster;
   int64_t alloc_size;
   int ok = 0;
   tdir_t dircount;
 
+  if (data == NULL || data_size == 0 || pic == NULL) return 0;
+
+  tif = TIFFClientOpen("Memory", "r", &my_data,
+                       MyRead, MyRead, MySeek, MyClose,
+                       MySize, MyMapFile, MyUnmapFile);
   if (tif == NULL) {
     fprintf(stderr, "Error! Cannot parse TIFF file\n");
     return 0;

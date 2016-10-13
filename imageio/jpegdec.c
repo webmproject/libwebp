@@ -266,6 +266,8 @@ int ReadJPEG(const uint8_t* const data, size_t data_size,
   JSAMPROW buffer[1];
   JPEGReadContext ctx;
 
+  if (data == NULL || data_size == 0 || pic == NULL) return 0;
+
   (void)keep_alpha;
   memset(&ctx, 0, sizeof(ctx));
   ctx.data = data;

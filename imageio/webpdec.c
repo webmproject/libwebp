@@ -143,6 +143,8 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
   WebPDecBuffer* const output_buffer = &config.output;
   WebPBitstreamFeatures* const bitstream = &config.input;
 
+  if (data == NULL || data_size == 0 || pic == NULL) return 0;
+
   // TODO(jzern): add Exif/XMP/ICC extraction.
   if (metadata != NULL) {
     fprintf(stderr, "Warning: metadata extraction from WebP is unsupported.\n");

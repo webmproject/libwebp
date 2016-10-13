@@ -220,6 +220,8 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
   int64_t stride;
   uint8_t* volatile rgb = NULL;
 
+  if (data == NULL || data_size == 0 || pic == NULL) return 0;
+
   context.data = data;
   context.data_size = data_size;
 

@@ -276,6 +276,8 @@ int ReadPictureWithWIC(const char* const filename,
   int has_alpha = 0;
   int64_t stride;
 
+  if (filename == NULL || pic == NULL) return 0;
+
   IFS(CoInitialize(NULL));
   IFS(CoCreateInstance(MAKE_REFGUID(CLSID_WICImagingFactory), NULL,
                        CLSCTX_INPROC_SERVER,
