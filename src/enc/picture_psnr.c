@@ -124,86 +124,90 @@ static double GetLogSSIM(double v, double size) {
   return (v < 1.) ? -10.0 * log10(1. - v) : kMinDistortion_dB;
 }
 
-int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
-                          int type, float results[5]) {
-  int w, h, c;
-  double disto[4] = { 0. };
-  double sizes[4] = { 0. };
-  double total_size = 0., total_disto = 0.;
+int WebPPlaneDistortion(const uint8_t* src, size_t src_stride,
+                        const uint8_t* ref, size_t ref_stride,
+                        int width, int height, size_t x_step,
+                        int type, float* distortion, float* result) {
+  uint8_t* allocated = NULL;
   const AccumulateFunc metric = (type == 0) ? AccumulateSSE :
                                 (type == 1) ? AccumulateSSIM :
                                               AccumulateLSIM;
-  VP8SSIMDspInit();
-
   if (src == NULL || ref == NULL ||
-      src->width != ref->width || src->height != ref->height ||
-      src->use_argb != ref->use_argb || results == NULL) {
+      src_stride < x_step * width || ref_stride < x_step * width ||
+      result == NULL || distortion == NULL) {
     return 0;
   }
+
+  VP8SSIMDspInit();
+  if (x_step != 1) {   // extract a packed plane if needed
+    int x, y;
+    uint8_t* tmp1;
+    uint8_t* tmp2;
+    allocated =
+        (uint8_t*)WebPSafeMalloc(2ULL * width * height, sizeof(*allocated));
+    if (allocated == NULL) return 0;
+    tmp1 = allocated;
+    tmp2 = tmp1 + (size_t)width * height;
+    for (y = 0; y < height; ++y) {
+      for (x = 0; x < width; ++x) {
+        tmp1[x + y * width] = src[x * x_step + y * src_stride];
+        tmp2[x + y * width] = ref[x * x_step + y * ref_stride];
+      }
+    }
+    src = tmp1;
+    ref = tmp2;
+  }
+  *distortion = (float)metric(src, width, ref, width, width, height);
+  WebPSafeFree(allocated);
+
+  *result = (type == 1) ? (float)GetLogSSIM(*distortion, (double)width * height)
+                        : (float)GetPSNR(*distortion, (double)width * height);
+  return 1;
+}
+
+int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
+                          int type, float results[5]) {
+  int w, h, c;
+  int ok = 0;
+  WebPPicture p0, p1;
+  double total_size = 0., total_distortion = 0.;
+  if (src == NULL || ref == NULL ||
+      src->width != ref->width || src->height != ref->height ||
+      results == NULL) {
+    return 0;
+  }
+
+  VP8SSIMDspInit();
+  if (!WebPPictureInit(&p0) || !WebPPictureInit(&p1)) return 0;
   w = src->width;
   h = src->height;
+  if (!WebPPictureView(src, 0, 0, w, h, &p0)) goto Error;
+  if (!WebPPictureView(ref, 0, 0, w, h, &p1)) goto Error;
 
-  if (src->use_argb == 1) {
-    if (src->argb == NULL || ref->argb == NULL) {
-      return 0;
-    } else {
-      int i, j;
-      uint8_t* tmp1, *tmp2;
-      uint8_t* const tmp_plane =
-          (uint8_t*)WebPSafeMalloc(2ULL * w * h, sizeof(*tmp_plane));
-      if (tmp_plane == NULL) return 0;
-      tmp1 = tmp_plane;
-      tmp2 = tmp_plane + w * h;
-      for (c = 0; c < 4; ++c) {
-        for (j = 0; j < h; ++j) {
-          for (i = 0; i < w; ++i) {
-            tmp1[j * w + i] = src->argb[i + j * src->argb_stride] >> (c * 8);
-            tmp2[j * w + i] = ref->argb[i + j * ref->argb_stride] >> (c * 8);
-          }
-        }
-        sizes[c] = w * h;
-        disto[c] = metric(tmp1, w, tmp2, w, w, h);
-      }
-      WebPSafeFree(tmp_plane);
-    }
-  } else {
-    int has_alpha, uv_w, uv_h;
-    if (src->y == NULL || ref->y == NULL ||
-        src->u == NULL || ref->u == NULL ||
-        src->v == NULL || ref->v == NULL) {
-      return 0;
-    }
-    has_alpha = !!(src->colorspace & WEBP_CSP_ALPHA_BIT);
-    if (has_alpha != !!(ref->colorspace & WEBP_CSP_ALPHA_BIT) ||
-        (has_alpha && (src->a == NULL || ref->a == NULL))) {
-      return 0;
-    }
-
-    uv_w = (src->width + 1) >> 1;
-    uv_h = (src->height + 1) >> 1;
-    sizes[0] = w * h;
-    sizes[1] = sizes[2] = uv_w * uv_h;
-    sizes[3] = has_alpha ? w * h : 0.;
-
-    disto[0] = metric(src->y, src->y_stride, ref->y, ref->y_stride, w, h);
-    disto[1] = metric(src->u, src->uv_stride, ref->u, ref->uv_stride,
-                      uv_w, uv_h);
-    disto[2] = metric(src->v, src->uv_stride, ref->v, ref->uv_stride,
-                      uv_w, uv_h);
-    if (has_alpha) {
-      disto[3] = metric(src->a, src->a_stride, ref->a, ref->a_stride, w, h);
-    }
-  }
-
+  // We always measure distortion in ARGB space.
+  if (p0.use_argb == 0 && !WebPPictureYUVAToARGB(&p0)) goto Error;
+  if (p1.use_argb == 0 && !WebPPictureYUVAToARGB(&p1)) goto Error;
   for (c = 0; c < 4; ++c) {
-    total_disto += disto[c];
-    total_size += sizes[c];
-    results[c] = (type == 1) ? (float)GetLogSSIM(disto[c], sizes[c])
-                             : (float)GetPSNR(disto[c], sizes[c]);
+    float distortion;
+    const size_t stride0 = 4 * (size_t)p0.argb_stride;
+    const size_t stride1 = 4 * (size_t)p1.argb_stride;
+    if (!WebPPlaneDistortion((const uint8_t*)p0.argb + c, stride0,
+                             (const uint8_t*)p1.argb + c, stride1,
+                             w, h, 4, type, &distortion, results + c)) {
+      goto Error;
+    }
+    total_distortion += distortion;
+    total_size += w * h;
   }
-  results[4] = (type == 1) ? (float)GetLogSSIM(total_disto, total_size)
-                           : (float)GetPSNR(total_disto, total_size);
-  return 1;
+
+  results[4] = (type == 1) ? (float)GetLogSSIM(total_distortion, total_size)
+                           : (float)GetPSNR(total_distortion, total_size);
+  ok = 1;
+
+ Error:
+  WebPPictureFree(&p0);
+  WebPPictureFree(&p1);
+  return ok;
 }
 
 //------------------------------------------------------------------------------
