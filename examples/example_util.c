@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 //------------------------------------------------------------------------------
 // String parsing
@@ -31,6 +32,18 @@ uint32_t ExUtilGetUInt(const char* const v, int base, int* const error) {
 
 int ExUtilGetInt(const char* const v, int base, int* const error) {
   return (int)ExUtilGetUInt(v, base, error);
+}
+
+int ExUtilGetInts(const char* v, int base, int max_output, int output[]) {
+  int n, error = 0;
+  for (n = 0; v != NULL && n < max_output; ++n) {
+    const int value = ExUtilGetInt(v, base, &error);
+    if (error) return -1;
+    output[n] = value;
+    v = strchr(v, ',');
+    if (v != NULL) ++v;   // skip over the trailing ','
+  }
+  return n;
 }
 
 float ExUtilGetFloat(const char* const v, int* const error) {
