@@ -29,6 +29,12 @@ uint32_t ExUtilGetUInt(const char* const v, int base, int* const error);
 int ExUtilGetInt(const char* const v, int base, int* const error);
 float ExUtilGetFloat(const char* const v, int* const error);
 
+// This variant of ExUtilGetInt() will parse multiple integers from a
+// comma-separated list. Up to 'max_output' integers are parsed.
+// The result is placed in the output[] array, and the number of integers
+// actually parsed is returned, or -1 if an error occurred.
+int ExUtilGetInts(const char* v, int base, int max_output, int output[]);
+
 #ifdef __cplusplus
 }    // extern "C"
 #endif
