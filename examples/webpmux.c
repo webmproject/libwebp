@@ -88,6 +88,7 @@ typedef enum {
   FEATURE_XMP,
   FEATURE_ICCP,
   FEATURE_ANMF,
+  FEATURE_DURATION,
   LAST_FEATURE
 } FeatureType;
 
@@ -303,6 +304,8 @@ static void PrintHelp(void) {
 
   printf("\n");
   printf("SET_OPTIONS:\n");
+  printf(" Set constant duration of frames:\n");
+  printf("   duration d      where 'd' is the duration in milliseconds.\n");
   printf(" Set color profile/metadata:\n");
   printf("   icc  file.icc     set ICC profile\n");
   printf("   exif file.exif    set EXIF metadata\n");
@@ -409,6 +412,46 @@ static int WriteWebP(WebPMux* const mux, const char* filename) {
   ok = WriteData(filename, &webp_data);
   WebPDataClear(&webp_data);
   return ok;
+}
+
+static WebPMux* DuplicateMuxHeader(const WebPMux* const mux) {
+  WebPMux* new_mux = WebPMuxNew();
+  WebPMuxAnimParams p;
+  WebPMuxError err;
+  int i;
+  int ok = 1;
+
+  if (new_mux == NULL) return NULL;
+
+  err = WebPMuxGetAnimationParams(mux, &p);
+  if (err == WEBP_MUX_OK) {
+    err = WebPMuxSetAnimationParams(new_mux, &p);
+    if (err != WEBP_MUX_OK) {
+      ERROR_GOTO2("Error (%s) handling animation params.\n",
+                  ErrorString(err), End);
+    }
+  } else {
+    /* it might not be an animation. Just keep moving. */
+    err = WEBP_MUX_OK;
+  }
+
+  for (i = 1; i <= 3; ++i) {
+    WebPData metadata;
+    err = WebPMuxGetChunk(mux, kFourccList[i], &metadata);
+    if (err == WEBP_MUX_OK && metadata.size > 0) {
+      err = WebPMuxSetChunk(new_mux, kFourccList[i], &metadata, 1);
+      if (err != WEBP_MUX_OK) {
+        ERROR_GOTO1("Error transferring metadata in DuplicateMux().", End);
+      }
+    }
+  }
+
+ End:
+  if (!ok) {
+    WebPMuxDelete(new_mux);
+    new_mux = NULL;
+  }
+  return new_mux;
 }
 
 static int ParseFrameArgs(const char* args, WebPMuxFrameInfo* const info) {
@@ -678,6 +721,13 @@ static int ParseCommandLine(int argc, const char* argv[],
         arg->params_ = argv[i + 1];
         ++feature_arg_index;
         i += 2;
+      } else if (!strcmp(argv[i], "duration") &&
+                 (config->action_type_ == ACTION_SET)) {
+        CHECK_NUM_ARGS_LESS(2, ErrParse);
+        feature->type_ = FEATURE_DURATION;
+        arg->params_ = argv[i + 1];
+        ++feature_arg_index;
+        i += 2;
       } else {  // Assume input file.
         if (config->input_ == NULL) {
           config->input_ = argv[i];
@@ -926,6 +976,54 @@ static int Process(const WebPMuxConfig* config) {
             ERROR_GOTO3("ERROR (%s): Could not set the %s.\n",
                         ErrorString(err), kDescriptions[feature->type_], Err2);
           }
+          break;
+        }
+        case FEATURE_DURATION: {
+          WebPMux* new_mux = NULL;
+          int parse_error = 0;
+          int i, num_frames;
+          const int duration =
+              ExUtilGetInt(feature->args_[0].params_, 10, &parse_error);
+          if (duration <= 0) {
+            ERROR_GOTO1("ERROR: duration must be strictly positive.\n", Err2);
+          }
+          ok = !parse_error;
+          if (!ok) goto Err2;
+          ok = CreateMux(config->input_, &mux);
+          if (!ok) goto Err2;
+          err = WebPMuxNumChunks(mux, WEBP_CHUNK_ANMF, &num_frames);
+          ok = (err == WEBP_MUX_OK);
+          if (!ok) {
+            ERROR_GOTO1("ERROR: can not parse the number of frames.\n", Err2);
+          }
+          if (num_frames == 0) {
+            printf("Doesn't look like the source is animated. Skipping duration setting.\n");
+            break;
+          }
+          new_mux = DuplicateMuxHeader(mux);
+          if (new_mux == NULL) goto Err2;
+
+          for (i = 1; i <= num_frames; ++i) {
+            WebPMuxFrameInfo frame;
+            err = WebPMuxGetFrame(mux, i, &frame);
+            printf("#%d id=%d\n", i, frame.id);
+            if (err != WEBP_MUX_OK) {
+              ERROR_GOTO2("ERROR: can not retrieve frame #%d.\n", i, Err2);
+            }
+            if (frame.id == WEBP_CHUNK_ANMF) {
+              frame.duration = duration;
+              err = WebPMuxPushFrame(new_mux, &frame, 1);
+            } else {
+              err = WebPMuxSetImage(new_mux, &frame.bitstream, 1);
+            }
+            if (err != WEBP_MUX_OK) {
+              ERROR_GOTO2("ERROR: error push frame data #%d\n", i, Err2);
+            }
+            WebPDataClear(&frame.bitstream);
+          }
+          WebPMuxDelete(mux);
+          mux = new_mux;
+          new_mux = NULL;
           break;
         }
         default: {
