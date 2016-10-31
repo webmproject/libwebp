@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6b692e6_1df0d774",
+        "filename": "examples/gifdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-10-31T22:14:32Z",
+      "side": 1,
+      "message": "while we\u0027re at it, this one could be turned into:\n(uint32_t)c.blue | ... | (0xffu \u003c\u003c 24);",
+      "range": {
+        "startLine": 97,
+        "startChar": 14,
+        "endLine": 97,
+        "endChar": 15
+      },
+      "revId": "f048d38d380ef042bb1b5f3a2e5ecc729a5c826a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
