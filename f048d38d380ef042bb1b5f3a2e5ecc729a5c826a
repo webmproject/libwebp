@@ -22,6 +22,30 @@
       "revId": "f048d38d380ef042bb1b5f3a2e5ecc729a5c826a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26d3ee49_98d6590a",
+        "filename": "examples/gifdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-10-31T23:24:57Z",
+      "side": 1,
+      "message": "just the 0xffu should do as that\u0027s the problematic shift",
+      "parentUuid": "c6b692e6_1df0d774",
+      "range": {
+        "startLine": 97,
+        "startChar": 14,
+        "endLine": 97,
+        "endChar": 15
+      },
+      "revId": "f048d38d380ef042bb1b5f3a2e5ecc729a5c826a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
