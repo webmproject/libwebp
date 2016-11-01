@@ -21,8 +21,8 @@
 #include "webp/encode.h"
 #include "webp/mux_types.h"
 
-#define GIF_TRANSPARENT_COLOR 0x00000000
-#define GIF_WHITE_COLOR       0xffffffff
+#define GIF_TRANSPARENT_COLOR 0x00000000u
+#define GIF_WHITE_COLOR       0xffffffffu
 #define GIF_TRANSPARENT_MASK  0x01
 #define GIF_DISPOSE_MASK      0x07
 #define GIF_DISPOSE_SHIFT     2
@@ -48,7 +48,7 @@ void GIFGetBackgroundColor(const ColorMapObject* const color_map,
             "white background.\n");
   } else {
     const GifColorType color = color_map->Colors[bgcolor_index];
-    *bgcolor = (0xff        << 24)
+    *bgcolor = (0xffu       << 24)
              | (color.Red   << 16)
              | (color.Green <<  8)
              | (color.Blue  <<  0);
@@ -94,7 +94,7 @@ static void Remap(const GifFileType* const gif, const uint8_t* const src,
   for (i = 0; i < len; ++i) {
     const GifColorType c = colors[src[i]];
     dst[i] = (src[i] == transparent_index) ? GIF_TRANSPARENT_COLOR
-           : c.Blue | (c.Green << 8) | (c.Red << 16) | (0xff << 24);
+           : c.Blue | (c.Green << 8) | (c.Red << 16) | (0xffu << 24);
   }
 }
 
