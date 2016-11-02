@@ -105,6 +105,30 @@
       "revId": "952c4fd43d8553c52a270ba707bfd57903301d38",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66ba4639_18ea0488",
+        "filename": "examples/gifdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2016-11-02T21:09:01Z",
+      "side": 1,
+      "message": "Oh, I meant my assumption was the DGifGetLine() call (before this Remap() call) would have ideally caught the error. But looks like that\u0027s not the case.\nSo, we should explicitly return error from this method (instead of just skipping and returning void).",
+      "parentUuid": "66ba4639_1efcb1c4",
+      "range": {
+        "startLine": 97,
+        "startChar": 53,
+        "endLine": 97,
+        "endChar": 54
+      },
+      "revId": "952c4fd43d8553c52a270ba707bfd57903301d38",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
