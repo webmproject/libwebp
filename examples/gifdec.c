@@ -81,20 +81,27 @@ int GIFReadGraphicsExtension(const GifByteType* const buf, int* const duration,
   return 1;
 }
 
-static void Remap(const GifFileType* const gif, const uint8_t* const src,
-                  int len, int transparent_index, uint32_t* dst) {
+static int Remap(const GifFileType* const gif, const uint8_t* const src,
+                 int len, int transparent_index, uint32_t* dst) {
   int i;
   const GifColorType* colors;
   const ColorMapObject* const cmap =
       gif->Image.ColorMap ? gif->Image.ColorMap : gif->SColorMap;
-  if (cmap == NULL) return;
+  if (cmap == NULL) return 1;
+  if (cmap->Colors == NULL || cmap->ColorCount <= 0) return 0;
   colors = cmap->Colors;
 
   for (i = 0; i < len; ++i) {
-    const GifColorType c = colors[src[i]];
-    dst[i] = (src[i] == transparent_index) ? GIF_TRANSPARENT_COLOR
-           : c.Blue | (c.Green << 8) | (c.Red << 16) | (0xffu << 24);
+    if (src[i] == transparent_index) {
+      dst[i] = GIF_TRANSPARENT_COLOR;
+    } else if (src[i] < cmap->ColorCount) {
+      const GifColorType c = colors[src[i]];
+      dst[i] = c.Blue | (c.Green << 8) | (c.Red << 16) | (0xffu << 24);
+    } else {
+      return 0;
+    }
   }
+  return 1;
 }
 
 int GIFReadFrame(GifFileType* const gif, int transparent_index,
@@ -139,7 +146,7 @@ int GIFReadFrame(GifFileType* const gif, int transparent_index,
       const size_t jump = interlace_jumps[pass] * stride;
       for (; y < rect.height; y += interlace_jumps[pass], row += jump) {
         if (DGifGetLine(gif, tmp, rect.width) == GIF_ERROR) goto End;
-        Remap(gif, tmp, rect.width, transparent_index, row);
+        if (!Remap(gif, tmp, rect.width, transparent_index, row)) goto End;
       }
     }
   } else {  // Non-interlaced image.
@@ -147,7 +154,7 @@ int GIFReadFrame(GifFileType* const gif, int transparent_index,
     uint32_t* ptr = dst;
     for (y = 0; y < rect.height; ++y, ptr += sub_image.argb_stride) {
       if (DGifGetLine(gif, tmp, rect.width) == GIF_ERROR) goto End;
-      Remap(gif, tmp, rect.width, transparent_index, ptr);
+      if (!Remap(gif, tmp, rect.width, transparent_index, ptr)) goto End;
     }
   }
   ok = 1;
