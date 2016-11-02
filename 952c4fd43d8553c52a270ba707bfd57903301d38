@@ -177,6 +177,30 @@
       "revId": "952c4fd43d8553c52a270ba707bfd57903301d38",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66ba4639_38042832",
+        "filename": "examples/gifdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-11-02T21:32:02Z",
+      "side": 1,
+      "message": "\u003e Yes, \"cmap \u003d\u003d NULL\" should be considered success.\n \u003e Not sure if \"cmap-\u003eColors \u003d\u003d NULL || cmap-\u003eColorCount \u003c\u003d 0\" ever\n \u003e occurs in practice, but should be considered an error, because\n \u003e according to GIF spec (https://www.w3.org/Graphics/GIF/spec-gif89a.txt),\n \u003e this color count comes from the bitstream as: \"raise 2 to the value\n \u003e of the field + 1\", so it must be \u003e\u003d1\n\nthanks for that. I\u0027ll split them and double check the test set.",
+      "parentUuid": "66ba4639_98da74cc",
+      "range": {
+        "startLine": 97,
+        "startChar": 53,
+        "endLine": 97,
+        "endChar": 54
+      },
+      "revId": "952c4fd43d8553c52a270ba707bfd57903301d38",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
