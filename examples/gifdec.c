@@ -87,8 +87,7 @@ static void Remap(const GifFileType* const gif, const uint8_t* const src,
   const GifColorType* colors;
   const ColorMapObject* const cmap =
       gif->Image.ColorMap ? gif->Image.ColorMap : gif->SColorMap;
-  if (cmap == NULL || cmap->Colors == NULL) return;
-  if (len > cmap->ColorCount) len = cmap->ColorCount;
+  if (cmap == NULL) return;
   colors = cmap->Colors;
 
   for (i = 0; i < len; ++i) {
