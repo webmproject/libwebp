@@ -129,6 +129,30 @@
       "revId": "952c4fd43d8553c52a270ba707bfd57903301d38",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66ba4639_b84658bd",
+        "filename": "examples/gifdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-11-02T21:12:17Z",
+      "side": 1,
+      "message": "\u003e Oh, I meant my assumption was the DGifGetLine() call (before this\n \u003e Remap() call) would have ideally caught the error. But looks like\n \u003e that\u0027s not the case.\n \u003e So, we should explicitly return error from this method (instead of\n \u003e just skipping and returning void).\n\nI can make that change. for the NULL / \u003c 0 check, the first NULL seems like a normal condition. should we treat that whole branch as a success?",
+      "parentUuid": "66ba4639_18ea0488",
+      "range": {
+        "startLine": 97,
+        "startChar": 53,
+        "endLine": 97,
+        "endChar": 54
+      },
+      "revId": "952c4fd43d8553c52a270ba707bfd57903301d38",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
