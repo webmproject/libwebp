@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "66ba4639_03ea9e87",
+        "filename": "examples/gifdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2016-11-02T16:34:48Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "66ba4639_15e3f420",
+      "revId": "952c4fd43d8553c52a270ba707bfd57903301d38",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "66ba4639_75e08012",
         "filename": "examples/gifdec.c",
         "patchSetId": 1
@@ -30,6 +48,30 @@
       "writtenOn": "2016-11-02T04:55:02Z",
       "side": 1,
       "message": "this is arbitrary, should we just abort instead and take a different set of artifacts?",
+      "range": {
+        "startLine": 97,
+        "startChar": 53,
+        "endLine": 97,
+        "endChar": 54
+      },
+      "revId": "952c4fd43d8553c52a270ba707bfd57903301d38",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66ba4639_e3695a3b",
+        "filename": "examples/gifdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1123219
+      },
+      "writtenOn": "2016-11-02T16:34:48Z",
+      "side": 1,
+      "message": "I think the assumption I had was that giflib would have returned error in such cases and we\u0027ll never end up with invalid indices at this point. But maybe it doesn\u0027t.\nSo, yeah, let\u0027s just abort when we see an invalid index.\nMaybe worth checking if doing that breaks decoding of any of the GIFs in our 6910 image set.",
+      "parentUuid": "66ba4639_75e08012",
       "range": {
         "startLine": 97,
         "startChar": 53,
