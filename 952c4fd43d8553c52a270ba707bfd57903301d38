@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66ba4639_15e3f420",
+        "filename": "examples/gifdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-11-02T04:55:02Z",
+      "side": 1,
+      "message": "this starts off as -1 and in any case seemed simpler than reading the color map unnecessarily",
+      "revId": "952c4fd43d8553c52a270ba707bfd57903301d38",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66ba4639_75e08012",
+        "filename": "examples/gifdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-11-02T04:55:02Z",
+      "side": 1,
+      "message": "this is arbitrary, should we just abort instead and take a different set of artifacts?",
+      "range": {
+        "startLine": 97,
+        "startChar": 53,
+        "endLine": 97,
+        "endChar": 54
+      },
+      "revId": "952c4fd43d8553c52a270ba707bfd57903301d38",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
