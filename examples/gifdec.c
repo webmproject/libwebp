@@ -87,13 +87,18 @@ static void Remap(const GifFileType* const gif, const uint8_t* const src,
   const GifColorType* colors;
   const ColorMapObject* const cmap =
       gif->Image.ColorMap ? gif->Image.ColorMap : gif->SColorMap;
-  if (cmap == NULL) return;
+  if (cmap == NULL || cmap->Colors == NULL || cmap->ColorCount <= 0) return;
   colors = cmap->Colors;
 
   for (i = 0; i < len; ++i) {
-    const GifColorType c = colors[src[i]];
-    dst[i] = (src[i] == transparent_index) ? GIF_TRANSPARENT_COLOR
-           : c.Blue | (c.Green << 8) | (c.Red << 16) | (0xffu << 24);
+    if (src[i] == transparent_index) {
+      dst[i] = GIF_TRANSPARENT_COLOR;
+    } else if (src[i] < cmap->ColorCount) {
+      const GifColorType c = colors[src[i]];
+      dst[i] = c.Blue | (c.Green << 8) | (c.Red << 16) | (0xffu << 24);
+    } else {
+      break;
+    }
   }
 }
 
