@@ -822,10 +822,10 @@ static WEBP_INLINE void ConvertRowsToUV(const uint16_t* rgb,
   }
 }
 
-static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
-                              const uint8_t* const g_ptr,
-                              const uint8_t* const b_ptr,
-                              const uint8_t* const a_ptr,
+static int ImportYUVAFromRGBA(const uint8_t* r_ptr,
+                              const uint8_t* g_ptr,
+                              const uint8_t* b_ptr,
+                              const uint8_t* a_ptr,
                               int step,         // bytes per pixel
                               int rgb_stride,   // bytes per scanline
                               float dithering,
@@ -892,36 +892,34 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
     // Downsample Y/U/V planes, two rows at a time
     for (y = 0; y < (height >> 1); ++y) {
       int rows_have_alpha = has_alpha;
-      const int off1 = (2 * y + 0) * rgb_stride;
-      const int off2 = (2 * y + 1) * rgb_stride;
       if (use_dsp) {
         if (is_rgb) {
-          WebPConvertRGB24ToY(r_ptr + off1, dst_y, width);
-          WebPConvertRGB24ToY(r_ptr + off2, dst_y + picture->y_stride, width);
+          WebPConvertRGB24ToY(r_ptr, dst_y, width);
+          WebPConvertRGB24ToY(r_ptr + rgb_stride,
+                              dst_y + picture->y_stride, width);
         } else {
-          WebPConvertBGR24ToY(b_ptr + off1, dst_y, width);
-          WebPConvertBGR24ToY(b_ptr + off2, dst_y + picture->y_stride, width);
+          WebPConvertBGR24ToY(b_ptr, dst_y, width);
+          WebPConvertBGR24ToY(b_ptr + rgb_stride,
+                              dst_y + picture->y_stride, width);
         }
       } else {
-        ConvertRowToY(r_ptr + off1, g_ptr + off1, b_ptr + off1, step,
-                      dst_y, width, rg);
-        ConvertRowToY(r_ptr + off2, g_ptr + off2, b_ptr + off2, step,
+        ConvertRowToY(r_ptr, g_ptr, b_ptr, step, dst_y, width, rg);
+        ConvertRowToY(r_ptr + rgb_stride,
+                      g_ptr + rgb_stride,
+                      b_ptr + rgb_stride, step,
                       dst_y + picture->y_stride, width, rg);
       }
       dst_y += 2 * picture->y_stride;
       if (has_alpha) {
-        rows_have_alpha &= !WebPExtractAlpha(a_ptr + off1, rgb_stride,
-                                             width, 2,
+        rows_have_alpha &= !WebPExtractAlpha(a_ptr, rgb_stride, width, 2,
                                              dst_a, picture->a_stride);
         dst_a += 2 * picture->a_stride;
       }
       // Collect averaged R/G/B(/A)
       if (!rows_have_alpha) {
-        AccumulateRGB(r_ptr + off1, g_ptr + off1, b_ptr + off1,
-                      step, rgb_stride, tmp_rgb, width);
+        AccumulateRGB(r_ptr, g_ptr, b_ptr, step, rgb_stride, tmp_rgb, width);
       } else {
-        AccumulateRGBA(r_ptr + off1, g_ptr + off1, b_ptr + off1, a_ptr + off1,
-                       rgb_stride, tmp_rgb, width);
+        AccumulateRGBA(r_ptr, g_ptr, b_ptr, a_ptr, rgb_stride, tmp_rgb, width);
       }
       // Convert to U/V
       if (rg == NULL) {
@@ -931,31 +929,33 @@ static int ImportYUVAFromRGBA(const uint8_t* const r_ptr,
       }
       dst_u += picture->uv_stride;
       dst_v += picture->uv_stride;
+      r_ptr += 2 * rgb_stride;
+      b_ptr += 2 * rgb_stride;
+      g_ptr += 2 * rgb_stride;
+      if (has_alpha) a_ptr += 2 * rgb_stride;
     }
     if (height & 1) {    // extra last row
-      const int off = 2 * y * rgb_stride;
       int row_has_alpha = has_alpha;
       if (use_dsp) {
         if (r_ptr < b_ptr) {
-          WebPConvertRGB24ToY(r_ptr + off, dst_y, width);
+          WebPConvertRGB24ToY(r_ptr, dst_y, width);
         } else {
-          WebPConvertBGR24ToY(b_ptr + off, dst_y, width);
+          WebPConvertBGR24ToY(b_ptr, dst_y, width);
         }
       } else {
-        ConvertRowToY(r_ptr + off, g_ptr + off, b_ptr + off, step,
-                      dst_y, width, rg);
+        ConvertRowToY(r_ptr, g_ptr, b_ptr, step, dst_y, width, rg);
       }
       if (row_has_alpha) {
-        row_has_alpha &= !WebPExtractAlpha(a_ptr + off, 0, width, 1, dst_a, 0);
+        row_has_alpha &= !WebPExtractAlpha(a_ptr, 0, width, 1, dst_a, 0);
       }
       // Collect averaged R/G/B(/A)
       if (!row_has_alpha) {
         // Collect averaged R/G/B
-        AccumulateRGB(r_ptr + off, g_ptr + off, b_ptr + off,
-                      step, /* rgb_stride = */ 0, tmp_rgb, width);
+        AccumulateRGB(r_ptr, g_ptr, b_ptr, step, /* rgb_stride = */ 0,
+                      tmp_rgb, width);
       } else {
-        AccumulateRGBA(r_ptr + off, g_ptr + off, b_ptr + off, a_ptr + off,
-                       /* rgb_stride = */ 0, tmp_rgb, width);
+        AccumulateRGBA(r_ptr, g_ptr, b_ptr, a_ptr, /* rgb_stride = */ 0,
+                       tmp_rgb, width);
       }
       if (rg == NULL) {
         WebPConvertRGBA32ToUV(tmp_rgb, dst_u, dst_v, uv_width);
