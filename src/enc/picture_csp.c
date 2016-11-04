@@ -381,36 +381,42 @@ static WEBP_INLINE uint8_t ConvertRGBToV(int r, int g, int b) {
   return clip_8b(128 + (v >> (YUV_FIX + SFIX)));
 }
 
-static int ConvertWRGBToYUV(const fixed_y_t* const best_y,
-                            const fixed_t* const best_uv,
+static int ConvertWRGBToYUV(const fixed_y_t* best_y, const fixed_t* best_uv,
                             WebPPicture* const picture) {
   int i, j;
+  uint8_t* dst_y = picture->y;
+  uint8_t* dst_u = picture->u;
+  uint8_t* dst_v = picture->v;
+  const fixed_t* const best_uv_base = best_uv;
   const int w = (picture->width + 1) & ~1;
   const int h = (picture->height + 1) & ~1;
   const int uv_w = w >> 1;
   const int uv_h = h >> 1;
-  for (j = 0; j < picture->height; ++j) {
+  for (best_uv = best_uv_base, j = 0; j < picture->height; ++j) {
     for (i = 0; i < picture->width; ++i) {
-      const int off = 3 * ((i >> 1) + (j >> 1) * uv_w);
-      const int off2 = i + j * picture->y_stride;
-      const int W = best_y[i + j * w];
+      const int off = 3 * (i >> 1);
+      const int W = best_y[i];
       const int r = best_uv[off + 0] + W;
       const int g = best_uv[off + 1] + W;
       const int b = best_uv[off + 2] + W;
-      picture->y[off2] = ConvertRGBToY(r, g, b);
+      dst_y[i] = ConvertRGBToY(r, g, b);
     }
+    best_y += w;
+    best_uv += (j & 1) * 3 * uv_w;
+    dst_y += picture->y_stride;
   }
-  for (j = 0; j < uv_h; ++j) {
-    uint8_t* const dst_u = picture->u + j * picture->uv_stride;
-    uint8_t* const dst_v = picture->v + j * picture->uv_stride;
+  for (best_uv = best_uv_base, j = 0; j < uv_h; ++j) {
     for (i = 0; i < uv_w; ++i) {
-      const int off = 3 * (i + j * uv_w);
+      const int off = 3 * i;
       const int r = best_uv[off + 0];
       const int g = best_uv[off + 1];
       const int b = best_uv[off + 2];
       dst_u[i] = ConvertRGBToU(r, g, b);
       dst_v[i] = ConvertRGBToV(r, g, b);
     }
+    best_uv += 3 * uv_w;
+    dst_u += picture->uv_stride;
+    dst_v += picture->uv_stride;
   }
   return 1;
 }
