@@ -278,7 +278,7 @@ static void SetupMatrices(VP8Encoder* enc) {
     CheckLambdaValue(&m->lambda_trellis_uv_);
     CheckLambdaValue(&m->tlambda_);
 
-    m->min_disto_ = 10 * m->y1_.q_[0];   // quantization-aware min disto
+    m->min_disto_ = 20 * m->y1_.q_[0];   // quantization-aware min disto
     m->max_edge_  = 0;
 
     m->i4_penalty_ = 1000 * q_i4 * q_i4;
@@ -873,9 +873,9 @@ static void StoreMaxDelta(VP8SegmentInfo* const dqm, const int16_t DCs[16]) {
   // We look at the first three AC coefficients to determine what is the average
   // delta between each sub-4x4 block.
   const int v0 = abs(DCs[1]);
-  const int v1 = abs(DCs[4]);
-  const int v2 = abs(DCs[5]);
-  int max_v = (v0 > v1) ? v1 : v0;
+  const int v1 = abs(DCs[2]);
+  const int v2 = abs(DCs[4]);
+  int max_v = (v1 > v0) ? v1 : v0;
   max_v = (v2 > max_v) ? v2 : max_v;
   if (max_v > dqm->max_edge_) dqm->max_edge_ = max_v;
 }
@@ -956,7 +956,7 @@ static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* rd) {
   // we have a blocky macroblock (only DCs are non-zero) with fairly high
   // distortion, record max delta so we can later adjust the minimal filtering
   // strength needed to smooth these blocks out.
-  if ((rd->nz & 0xffff) == 0 && rd->D > dqm->min_disto_) {
+  if ((rd->nz & 0x100ffff) == 0x1000000 && rd->D > dqm->min_disto_) {
     StoreMaxDelta(dqm, rd->y_dc_levels);
   }
 }
