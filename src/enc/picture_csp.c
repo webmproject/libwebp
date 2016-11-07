@@ -438,9 +438,9 @@ static int ConvertWRGBToYUV(const fixed_y_t* best_y, const fixed_t* best_uv,
 
 #define SAFE_ALLOC(W, H, T) ((T*)WebPSafeMalloc((W) * (H), sizeof(T)))
 
-static int PreprocessARGB(const uint8_t* const r_ptr,
-                          const uint8_t* const g_ptr,
-                          const uint8_t* const b_ptr,
+static int PreprocessARGB(const uint8_t* r_ptr,
+                          const uint8_t* g_ptr,
+                          const uint8_t* b_ptr,
                           int step, int rgb_stride,
                           WebPPicture* const picture) {
   // we expand the right/bottom border if needed
@@ -454,17 +454,21 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
   // TODO(skal): allocate one big memory chunk. But for now, it's easier
   // for valgrind debugging to have several chunks.
   fixed_y_t* const tmp_buffer = SAFE_ALLOC(w * 3, 2, fixed_y_t);   // scratch
-  fixed_y_t* const best_y = SAFE_ALLOC(w, h, fixed_y_t);
-  fixed_y_t* const target_y = SAFE_ALLOC(w, h, fixed_y_t);
+  fixed_y_t* const best_y_base = SAFE_ALLOC(w, h, fixed_y_t);
+  fixed_y_t* const target_y_base = SAFE_ALLOC(w, h, fixed_y_t);
   fixed_y_t* const best_rgb_y = SAFE_ALLOC(w, 2, fixed_y_t);
-  fixed_t* const best_uv = SAFE_ALLOC(uv_w * 3, uv_h, fixed_t);
-  fixed_t* const target_uv = SAFE_ALLOC(uv_w * 3, uv_h, fixed_t);
+  fixed_t* const best_uv_base = SAFE_ALLOC(uv_w * 3, uv_h, fixed_t);
+  fixed_t* const target_uv_base = SAFE_ALLOC(uv_w * 3, uv_h, fixed_t);
   fixed_t* const best_rgb_uv = SAFE_ALLOC(uv_w * 3, 1, fixed_t);
+  fixed_y_t* best_y = best_y_base;
+  fixed_y_t* target_y = target_y_base;
+  fixed_t* best_uv = best_uv_base;
+  fixed_t* target_uv = target_uv_base;
   const uint64_t diff_y_threshold = (uint64_t)(3.0 * w * h);
   int ok;
 
-  if (best_y == NULL || best_uv == NULL ||
-      target_y == NULL || target_uv == NULL ||
+  if (best_y_base == NULL || best_uv_base == NULL ||
+      target_y_base == NULL || target_uv_base == NULL ||
       best_rgb_y == NULL || best_rgb_uv == NULL ||
       tmp_buffer == NULL) {
     ok = WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
@@ -478,42 +482,46 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
     const int is_last_row = (j == picture->height - 1);
     fixed_y_t* const src1 = tmp_buffer;
     fixed_y_t* const src2 = tmp_buffer + 3 * w;
-    const int off1 = j * rgb_stride;
-    const int off2 = off1 + rgb_stride;
-    const int uv_off = (j >> 1) * 3 * uv_w;
-    fixed_y_t* const dst_y = best_y + j * w;
 
     // prepare two rows of input
-    ImportOneRow(r_ptr + off1, g_ptr + off1, b_ptr + off1,
-                 step, picture->width, src1);
+    ImportOneRow(r_ptr, g_ptr, b_ptr, step, picture->width, src1);
     if (!is_last_row) {
-      ImportOneRow(r_ptr + off2, g_ptr + off2, b_ptr + off2,
+      ImportOneRow(r_ptr + rgb_stride, g_ptr + rgb_stride, b_ptr + rgb_stride,
                    step, picture->width, src2);
     } else {
       memcpy(src2, src1, 3 * w * sizeof(*src2));
     }
-    StoreGray(src1, dst_y, 2 * w);      // convert two lines at a time
+    StoreGray(src1, best_y, 2 * w);      // convert two lines at a time
 
-    UpdateW(src1, target_y + (j + 0) * w, w);
-    UpdateW(src2, target_y + (j + 1) * w, w);
-    UpdateChroma(src1, src2, target_uv + uv_off, uv_w);
-    memcpy(best_uv + uv_off, target_uv + uv_off, 3 * uv_w * sizeof(*best_uv));
+    UpdateW(src1, target_y, w);
+    UpdateW(src2, target_y + w, w);
+    UpdateChroma(src1, src2, target_uv, uv_w);
+    memcpy(best_uv, target_uv, 3 * uv_w * sizeof(*best_uv));
+    best_y += 2 * w;
+    best_uv += 3 * uv_w;
+    target_y += 2 * w;
+    target_uv += 3 * uv_w;
+    r_ptr += 2 * rgb_stride;
+    g_ptr += 2 * rgb_stride;
+    b_ptr += 2 * rgb_stride;
   }
 
   // Iterate and resolve clipping conflicts.
   for (iter = 0; iter < kNumIterations; ++iter) {
-    const fixed_t* cur_uv = best_uv;
-    const fixed_t* prev_uv = best_uv;
+    const fixed_t* cur_uv = best_uv_base;
+    const fixed_t* prev_uv = best_uv_base;
     uint64_t diff_y_sum = 0;
 
+    best_y = best_y_base;
+    best_uv = best_uv_base;
+    target_y = target_y_base;
+    target_uv = target_uv_base;
     for (j = 0; j < h; j += 2) {
-      const int uv_off = (j >> 1) * 3 * uv_w;
       fixed_y_t* const src1 = tmp_buffer;
       fixed_y_t* const src2 = tmp_buffer + 3 * w;
       {
         const fixed_t* const next_uv = cur_uv + ((j < h - 2) ? 3 * uv_w : 0);
-        InterpolateTwoRows(best_y + j * w, prev_uv, cur_uv, next_uv,
-                           w, src1, src2);
+        InterpolateTwoRows(best_y, prev_uv, cur_uv, next_uv, w, src1, src2);
         prev_uv = cur_uv;
         cur_uv = next_uv;
       }
@@ -524,16 +532,19 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
 
       // update two rows of Y and one row of RGB
       for (i = 0; i < 2 * w; ++i) {
-        const int off = i + j * w;
-        const int diff_y = target_y[off] - best_rgb_y[i];
-        const int new_y = (int)best_y[off] + diff_y;
-        best_y[off] = clip_y(new_y);
+        const int diff_y = target_y[i] - best_rgb_y[i];
+        const int new_y = (int)best_y[i] + diff_y;
+        best_y[i] = clip_y(new_y);
         diff_y_sum += (uint64_t)abs(diff_y);
       }
       for (i = 0; i < 3 * uv_w; ++i) {
-        const int diff_uv = (int)target_uv[uv_off + i] - best_rgb_uv[i];
-        best_uv[uv_off + i] += diff_uv;
+        const int diff_uv = (int)target_uv[i] - best_rgb_uv[i];
+        best_uv[i] += diff_uv;
       }
+      best_y += 2 * w;
+      best_uv += 3 * uv_w;
+      target_y += 2 * w;
+      target_uv += 3 * uv_w;
     }
     // test exit condition
     if (iter > 0) {
@@ -543,13 +554,13 @@ static int PreprocessARGB(const uint8_t* const r_ptr,
     prev_diff_y_sum = diff_y_sum;
   }
   // final reconstruction
-  ok = ConvertWRGBToYUV(best_y, best_uv, picture);
+  ok = ConvertWRGBToYUV(best_y_base, best_uv_base, picture);
 
  End:
-  WebPSafeFree(best_y);
-  WebPSafeFree(best_uv);
-  WebPSafeFree(target_y);
-  WebPSafeFree(target_uv);
+  WebPSafeFree(best_y_base);
+  WebPSafeFree(best_uv_base);
+  WebPSafeFree(target_y_base);
+  WebPSafeFree(target_uv_base);
   WebPSafeFree(best_rgb_y);
   WebPSafeFree(best_rgb_uv);
   WebPSafeFree(tmp_buffer);
