@@ -366,6 +366,30 @@
     },
     {
       "key": {
+        "uuid": "ebe35fee_133d1780",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1042,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-11-08T23:31:59Z",
+      "side": 1,
+      "message": "hmpff.. I had forgotten about this paragraph.\nDo we want to release such duration\u003d0 bitstreams in the wild, knowing that no decoder (vwebp, Chrome) nor WebPMux support them correctly?\nShouldn\u0027t the toolchain be fixed first?",
+      "parentUuid": "4be1cbe3_afc87342",
+      "range": {
+        "startLine": 1042,
+        "startChar": 14,
+        "endLine": 1042,
+        "endChar": 22
+      },
+      "revId": "bdf6a45c4396cb82da143b60ace3adbb68e30560",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8baca39c_ee336054",
         "filename": "examples/webpmux.c",
         "patchSetId": 3
