@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2b6bb700_ded759a3",
+        "filename": "examples/example_util.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-11-08T21:00:40Z",
+      "side": 1,
+      "message": "ah yes, right. fixed.",
+      "parentUuid": "8baca39c_8ee104bd",
+      "range": {
+        "startLine": 40,
+        "startChar": 27,
+        "endLine": 40,
+        "endChar": 40
+      },
+      "revId": "bdf6a45c4396cb82da143b60ace3adbb68e30560",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8baca39c_b34e2f34",
         "filename": "examples/webpmux.c",
         "patchSetId": 3
@@ -48,6 +72,53 @@
     },
     {
       "key": {
+        "uuid": "6b55af38_5da06bdd",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-11-08T21:00:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8baca39c_b34e2f34",
+      "range": {
+        "startLine": 75,
+        "startChar": 17,
+        "endLine": 75,
+        "endChar": 18
+      },
+      "revId": "bdf6a45c4396cb82da143b60ace3adbb68e30560",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b19f7c0_a8533352",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-11-08T21:00:40Z",
+      "side": 1,
+      "message": "removed too.",
+      "range": {
+        "startLine": 82,
+        "startChar": 17,
+        "endLine": 82,
+        "endChar": 18
+      },
+      "revId": "bdf6a45c4396cb82da143b60ace3adbb68e30560",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8baca39c_93a5aba1",
         "filename": "examples/webpmux.c",
         "patchSetId": 3
@@ -59,6 +130,30 @@
       "writtenOn": "2016-11-08T19:57:06Z",
       "side": 1,
       "message": "Need to note the possible \"duration,start,end\" format here.",
+      "range": {
+        "startLine": 314,
+        "startChar": 22,
+        "endLine": 314,
+        "endChar": 23
+      },
+      "revId": "bdf6a45c4396cb82da143b60ace3adbb68e30560",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b12739d_aa67abd4",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-11-08T21:00:40Z",
+      "side": 1,
+      "message": "done. Actually i moved the section to its own DURATION_OPTIONS, since it\u0027s no longer shared with -set option.",
+      "parentUuid": "8baca39c_93a5aba1",
       "range": {
         "startLine": 314,
         "startChar": 22,
@@ -94,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "2b19f7c0_c85aef62",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1020,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-11-08T21:00:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8baca39c_73c73755",
+      "range": {
+        "startLine": 1020,
+        "startChar": 8,
+        "endLine": 1020,
+        "endChar": 14
+      },
+      "revId": "bdf6a45c4396cb82da143b60ace3adbb68e30560",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8baca39c_0ed5f4cc",
         "filename": "examples/webpmux.c",
         "patchSetId": 3
@@ -105,6 +224,30 @@
       "writtenOn": "2016-11-08T19:57:06Z",
       "side": 1,
       "message": "s/10/num_frames/ ?",
+      "range": {
+        "startLine": 1035,
+        "startChar": 65,
+        "endLine": 1035,
+        "endChar": 67
+      },
+      "revId": "bdf6a45c4396cb82da143b60ace3adbb68e30560",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b23efec_4a28b3b4",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1035,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-11-08T21:00:40Z",
+      "side": 1,
+      "message": "nope, \u002710\u0027 is actually the base :)\nGot burnt by this, too.",
+      "parentUuid": "8baca39c_0ed5f4cc",
       "range": {
         "startLine": 1035,
         "startChar": 65,
@@ -134,6 +277,24 @@
     },
     {
       "key": {
+        "uuid": "6b55af38_bdb42720",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1039,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-11-08T21:00:40Z",
+      "side": 1,
+      "message": "it\u0027s actually not needed because of the way the test is done at line 1046. But it doesn\u0027t hurt either.",
+      "parentUuid": "8baca39c_ce369c47",
+      "revId": "bdf6a45c4396cb82da143b60ace3adbb68e30560",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8baca39c_d3b563d4",
         "filename": "examples/webpmux.c",
         "patchSetId": 3
@@ -157,6 +318,30 @@
     },
     {
       "key": {
+        "uuid": "2bf0179f_13a43443",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1042,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-11-08T21:00:40Z",
+      "side": 1,
+      "message": "what does \u0027duration\u003d0\u0027 mean? I thought we had deliberately forbidden this value.",
+      "parentUuid": "8baca39c_d3b563d4",
+      "range": {
+        "startLine": 1042,
+        "startChar": 14,
+        "endLine": 1042,
+        "endChar": 22
+      },
+      "revId": "bdf6a45c4396cb82da143b60ace3adbb68e30560",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8baca39c_ee336054",
         "filename": "examples/webpmux.c",
         "patchSetId": 3
@@ -168,6 +353,30 @@
       "writtenOn": "2016-11-08T19:57:06Z",
       "side": 1,
       "message": "should just be a for loop from \u0027start\u0027 to \u0027end\u0027, right?",
+      "range": {
+        "startLine": 1045,
+        "startChar": 10,
+        "endLine": 1045,
+        "endChar": 45
+      },
+      "revId": "bdf6a45c4396cb82da143b60ace3adbb68e30560",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b1c6baf_c9e315ed",
+        "filename": "examples/webpmux.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1045,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-11-08T21:00:40Z",
+      "side": 1,
+      "message": "not if start and end have strange values. I\u0027d better be looping over frames, it\u0027s a safe and trusted interval (unlike [start, end]).",
+      "parentUuid": "8baca39c_ee336054",
       "range": {
         "startLine": 1045,
         "startChar": 10,
@@ -226,6 +435,30 @@
     },
     {
       "key": {
+        "uuid": "6b55af38_fdae9fcd",
+        "filename": "man/webpmux.1",
+        "patchSetId": 3
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-11-08T21:00:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8baca39c_8eae6439",
+      "range": {
+        "startLine": 102,
+        "startChar": 0,
+        "endLine": 102,
+        "endChar": 6
+      },
+      "revId": "bdf6a45c4396cb82da143b60ace3adbb68e30560",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8baca39c_0e31744c",
         "filename": "man/webpmux.1",
         "patchSetId": 3
@@ -260,6 +493,24 @@
       "writtenOn": "2016-11-08T19:57:06Z",
       "side": 1,
       "message": "For clarity, we can note that the duration of rest of the frames will remain untouched.",
+      "revId": "bdf6a45c4396cb82da143b60ace3adbb68e30560",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b12739d_8a646fd1",
+        "filename": "man/webpmux.1",
+        "patchSetId": 3
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-11-08T21:00:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8baca39c_aeb3289f",
       "revId": "bdf6a45c4396cb82da143b60ace3adbb68e30560",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
