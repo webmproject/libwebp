@@ -1095,10 +1095,10 @@ static int Import(WebPPicture* const picture,
                   const uint8_t* const rgb, int rgb_stride,
                   int step, int swap_rb, int import_alpha) {
   int y;
-  const uint8_t* const r_ptr = rgb + (swap_rb ? 2 : 0);
-  const uint8_t* const g_ptr = rgb + 1;
-  const uint8_t* const b_ptr = rgb + (swap_rb ? 0 : 2);
-  const uint8_t* const a_ptr = import_alpha ? rgb + 3 : NULL;
+  const uint8_t* r_ptr = rgb + (swap_rb ? 2 : 0);
+  const uint8_t* g_ptr = rgb + 1;
+  const uint8_t* b_ptr = rgb + (swap_rb ? 0 : 2);
+  const uint8_t* a_ptr = import_alpha ? rgb + 3 : NULL;
   const int width = picture->width;
   const int height = picture->height;
 
@@ -1111,20 +1111,25 @@ static int Import(WebPPicture* const picture,
   VP8EncDspARGBInit();
 
   if (import_alpha) {
+    uint32_t* dst = picture->argb;
     assert(step == 4);
     for (y = 0; y < height; ++y) {
-      uint32_t* const dst = &picture->argb[y * picture->argb_stride];
-      const int offset = y * rgb_stride;
-      VP8PackARGB(a_ptr + offset, r_ptr + offset, g_ptr + offset,
-                  b_ptr + offset, width, dst);
+      VP8PackARGB(a_ptr, r_ptr, g_ptr, b_ptr, width, dst);
+      a_ptr += rgb_stride;
+      r_ptr += rgb_stride;
+      g_ptr += rgb_stride;
+      b_ptr += rgb_stride;
+      dst += picture->argb_stride;
     }
   } else {
+    uint32_t* dst = picture->argb;
     assert(step >= 3);
     for (y = 0; y < height; ++y) {
-      uint32_t* const dst = &picture->argb[y * picture->argb_stride];
-      const int offset = y * rgb_stride;
-      VP8PackRGB(r_ptr + offset, g_ptr + offset, b_ptr + offset,
-                 width, step, dst);
+      VP8PackRGB(r_ptr, g_ptr, b_ptr, width, step, dst);
+      r_ptr += rgb_stride;
+      g_ptr += rgb_stride;
+      b_ptr += rgb_stride;
+      dst += picture->argb_stride;
     }
   }
   return 1;
