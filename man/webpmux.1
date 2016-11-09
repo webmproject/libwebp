@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH WEBPMUX 1 "June 23, 2016"
+.TH WEBPMUX 1 "November 8, 2016"
 .SH NAME
 webpmux \- create animated WebP files from non\-animated WebP images, extract
 frames from animated WebP images, and manage XMP/EXIF metadata and ICC profile.
@@ -34,6 +34,13 @@ frames from animated WebP images, and manage XMP/EXIF metadata and ICC profile.
 .B ] \-o
 .I OUTPUT
 .RE
+.br
+.B webpmux \-duration
+.I DURATION OPTIONS
+.B [ \-duration ... ]
+.I INPUT
+.B \-o
+.I OUTPUT
 .br
 .B webpmux \-info
 .I INPUT
@@ -90,6 +97,20 @@ Strip EXIF metadata.
 .TP
 .B xmp
 Strip XMP metadata.
+
+.SS DURATION_OPTIONS (\-duration)
+Amend the duration of a specific interval of frames.
+.TP
+.I duration[,start[,end]]
+Where:
+ 'duration' is the duration for the interval (mandatory). Must be non-negative.
+ 'start' is the starting frame index of the interval (optional). If 'start'
+is less or equal to '1', its value will be set to '1'.
+ 'end' is the ending frame index (inclusive) of the interval (optional). The
+value '0' has the special meaning 'last frame of the animation'.
+Note that the frames outside of the [start, end] interval will remain untouched.
+.I Reminder: frame indexing starts at '1'.
+.br
 
 .SS FRAME_OPTIONS (\-frame)
 Create an animated WebP file from multiple (non\-animated) WebP images.

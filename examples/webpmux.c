@@ -38,6 +38,11 @@
     webpmux -strip exif in.webp -o out.webp
     webpmux -strip xmp in.webp -o out.webp
 
+  Change duration of frame intervals:
+    webpmux -duration 150 in.webp -o out.webp
+    webpmux -duration 33,10,0 in.webp -o out.webp
+    webpmux -duration 200,2 -duration 150,0,50 in.webp -o out.webp
+
   Misc:
     webpmux -info in.webp
     webpmux [ -h | -help ]
@@ -66,7 +71,8 @@ typedef enum {
   ACTION_SET,
   ACTION_STRIP,
   ACTION_INFO,
-  ACTION_HELP
+  ACTION_HELP,
+  ACTION_DURATION
 } ActionType;
 
 typedef enum {
@@ -88,6 +94,7 @@ typedef enum {
   FEATURE_XMP,
   FEATURE_ICCP,
   FEATURE_ANMF,
+  FEATURE_DURATION,
   LAST_FEATURE
 } FeatureType;
 
@@ -285,6 +292,8 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
 static void PrintHelp(void) {
   printf("Usage: webpmux -get GET_OPTIONS INPUT -o OUTPUT\n");
   printf("       webpmux -set SET_OPTIONS INPUT -o OUTPUT\n");
+  printf("       webpmux -duration DURATION_OPTIONS [-duration ...]\n");
+  printf("               INPUT -o OUTPUT\n");
   printf("       webpmux -strip STRIP_OPTIONS INPUT -o OUTPUT\n");
   printf("       webpmux -frame FRAME_OPTIONS [-frame...] [-loop LOOP_COUNT]"
          "\n");
@@ -310,6 +319,15 @@ static void PrintHelp(void) {
   printf("   where:    'file.icc' contains the ICC profile to be set,\n");
   printf("             'file.exif' contains the EXIF metadata to be set\n");
   printf("             'file.xmp' contains the XMP metadata to be set\n");
+
+  printf("\n");
+  printf("DURATION_OPTIONS:\n");
+  printf(" Set constant duration of frames:\n");
+  printf("   duration[,start[,end]]\n");
+  printf("   where: 'duration' is the duration in milliseconds,\n");
+  printf("          'start' is the start frame index (optional)(default=1),\n");
+  printf("          'end' is the inclusive end frame index (optional).\n");
+  printf("           The special value '0' means: last frame (default=0).\n");
 
   printf("\n");
   printf("STRIP_OPTIONS:\n");
@@ -411,6 +429,45 @@ static int WriteWebP(WebPMux* const mux, const char* filename) {
   return ok;
 }
 
+static WebPMux* DuplicateMuxHeader(const WebPMux* const mux) {
+  WebPMux* new_mux = WebPMuxNew();
+  WebPMuxAnimParams p;
+  WebPMuxError err;
+  int i;
+  int ok = 1;
+
+  if (new_mux == NULL) return NULL;
+
+  err = WebPMuxGetAnimationParams(mux, &p);
+  if (err == WEBP_MUX_OK) {
+    err = WebPMuxSetAnimationParams(new_mux, &p);
+    if (err != WEBP_MUX_OK) {
+      ERROR_GOTO2("Error (%s) handling animation params.\n",
+                  ErrorString(err), End);
+    }
+  } else {
+    /* it might not be an animation. Just keep moving. */
+  }
+
+  for (i = 1; i <= 3; ++i) {
+    WebPData metadata;
+    err = WebPMuxGetChunk(mux, kFourccList[i], &metadata);
+    if (err == WEBP_MUX_OK && metadata.size > 0) {
+      err = WebPMuxSetChunk(new_mux, kFourccList[i], &metadata, 1);
+      if (err != WEBP_MUX_OK) {
+        ERROR_GOTO1("Error transferring metadata in DuplicateMux().", End);
+      }
+    }
+  }
+
+ End:
+  if (!ok) {
+    WebPMuxDelete(new_mux);
+    new_mux = NULL;
+  }
+  return new_mux;
+}
+
 static int ParseFrameArgs(const char* args, WebPMuxFrameInfo* const info) {
   int dispose_method, dummy;
   char plus_minus, blend_method;
@@ -476,6 +533,7 @@ static int ValidateCommandLine(int argc, const char* argv[],
   int num_frame_args;
   int num_loop_args;
   int num_bgcolor_args;
+  int num_durations_args;
   int ok = 1;
 
   assert(num_feature_args != NULL);
@@ -502,6 +560,7 @@ static int ValidateCommandLine(int argc, const char* argv[],
   num_frame_args = CountOccurrences(argv, argc, "-frame");
   num_loop_args = CountOccurrences(argv, argc, "-loop");
   num_bgcolor_args = CountOccurrences(argv, argc, "-bgcolor");
+  num_durations_args = CountOccurrences(argv, argc, "-duration");
 
   if (num_loop_args > 1) {
     ERROR_GOTO1("ERROR: Multiple loop counts specified.\n", ErrValidate);
@@ -514,9 +573,15 @@ static int ValidateCommandLine(int argc, const char* argv[],
     ERROR_GOTO1("ERROR: Loop count and background color are relevant only in "
                 "case of animation.\n", ErrValidate);
   }
+  if (num_durations_args > 0 && num_frame_args != 0) {
+    ERROR_GOTO1("ERROR: Can not combine -duration and -frame commands.\n",
+                ErrValidate);
+  }
 
   assert(ok == 1);
-  if (num_frame_args == 0) {
+  if (num_durations_args > 0) {
+    *num_feature_args = num_durations_args;
+  } else if (num_frame_args == 0) {
     // Single argument ('set' action for ICCP/EXIF/XMP, OR a 'get' action).
     *num_feature_args = 1;
   } else {
@@ -563,6 +628,21 @@ static int ParseCommandLine(int argc, const char* argv[],
           ERROR_GOTO1("ERROR: Multiple actions specified.\n", ErrParse);
         }
         ++i;
+      } else if (!strcmp(argv[i], "-duration")) {
+        CHECK_NUM_ARGS_LESS(2, ErrParse);
+        if (ACTION_IS_NIL || config->action_type_ == ACTION_DURATION) {
+          config->action_type_ = ACTION_DURATION;
+        } else {
+          ERROR_GOTO1("ERROR: Multiple actions specified.\n", ErrParse);
+        }
+        if (FEATURETYPE_IS_NIL || feature->type_ == FEATURE_DURATION) {
+          feature->type_ = FEATURE_DURATION;
+        } else {
+          ERROR_GOTO1("ERROR: Multiple features specified.\n", ErrParse);
+        }
+        arg->params_ = argv[i + 1];
+        ++feature_arg_index;
+        i += 2;
       } else if (!strcmp(argv[i], "-get")) {
         if (ACTION_IS_NIL) {
           config->action_type_ = ACTION_GET;
@@ -934,6 +1014,82 @@ static int Process(const WebPMuxConfig* config) {
         }
       }
       ok = WriteWebP(mux, config->output_);
+      break;
+    }
+    case ACTION_DURATION: {
+      int num_frames;
+      ok = CreateMux(config->input_, &mux);
+      if (!ok) goto Err2;
+      err = WebPMuxNumChunks(mux, WEBP_CHUNK_ANMF, &num_frames);
+      ok = (err == WEBP_MUX_OK);
+      if (!ok) {
+        ERROR_GOTO1("ERROR: can not parse the number of frames.\n", Err2);
+      }
+      if (num_frames == 0) {
+        fprintf(stderr, "Doesn't look like the source is animated. "
+                        "Skipping duration setting.\n");
+        ok = WriteWebP(mux, config->output_);
+        if (!ok) goto Err2;
+      } else {
+        int i;
+        int* durations = NULL;
+        WebPMux* new_mux = DuplicateMuxHeader(mux);
+        if (new_mux == NULL) goto Err2;
+        durations = (int*)malloc((size_t)num_frames * sizeof(*durations));
+        if (durations == NULL) goto Err2;
+        for (i = 0; i < num_frames; ++i) durations[i] = -1;
+
+        // Parse intervals to process.
+        for (i = 0; i < feature->arg_count_; ++i) {
+          int k;
+          int args[3];
+          int duration, start, end;
+          const int nb_args = ExUtilGetInts(feature->args_[i].params_,
+                                            10, 3, args);
+          ok = (nb_args >= 1);
+          if (!ok) goto Err3;
+          duration = args[0];
+          if (duration < 0) {
+            ERROR_GOTO1("ERROR: duration must be strictly positive.\n", Err3);
+          }
+
+          start = (nb_args >= 2) ? args[1] : 1;
+          if (start <= 0) start = 1;
+
+          end = (nb_args >= 3) ? args[2] : num_frames;
+          if (end == 0) end = num_frames;
+          if (end > num_frames) end = num_frames;
+
+          for (k = start; k <= end; ++k) {
+            assert(k >= 1 && k <= num_frames);
+            durations[k - 1] = duration;
+          }
+        }
+
+        // Apply non-negative durations to their destination frames.
+        for (i = 1; i <= num_frames; ++i) {
+          WebPMuxFrameInfo frame;
+          err = WebPMuxGetFrame(mux, i, &frame);
+          if (err != WEBP_MUX_OK || frame.id != WEBP_CHUNK_ANMF) {
+            ERROR_GOTO2("ERROR: can not retrieve frame #%d.\n", i, Err3);
+          }
+          if (durations[i - 1] >= 0) frame.duration = durations[i - 1];
+          err = WebPMuxPushFrame(new_mux, &frame, 1);
+          if (err != WEBP_MUX_OK) {
+            ERROR_GOTO2("ERROR: error push frame data #%d\n", i, Err3);
+          }
+          WebPDataClear(&frame.bitstream);
+        }
+        WebPMuxDelete(mux);
+        ok = WriteWebP(new_mux, config->output_);
+        mux = new_mux;  // transfer for the WebPMuxDelete() call
+        new_mux = NULL;
+
+  Err3:
+        free(durations);
+        WebPMuxDelete(new_mux);
+        if (!ok) goto Err2;
+      }
       break;
     }
     case ACTION_STRIP: {
