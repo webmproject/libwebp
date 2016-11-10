@@ -452,7 +452,7 @@ static int PreprocessARGB(const uint8_t* r_ptr,
   const int uv_w = w >> 1;
   const int uv_h = h >> 1;
   uint64_t prev_diff_y_sum = ~0;
-  int i, j, iter;
+  int j, iter;
 
   // TODO(skal): allocate one big memory chunk. But for now, it's easier
   // for valgrind debugging to have several chunks.
@@ -479,6 +479,8 @@ static int PreprocessARGB(const uint8_t* r_ptr,
   }
   assert(picture->width >= kMinDimensionIterativeConversion);
   assert(picture->height >= kMinDimensionIterativeConversion);
+
+  WebPInitConvertARGBToYUV();
 
   // Import RGB samples to W/RGB representation.
   for (j = 0; j < picture->height; j += 2) {
@@ -535,16 +537,9 @@ static int PreprocessARGB(const uint8_t* r_ptr,
       UpdateChroma(src1, src2, best_rgb_uv, uv_w);
 
       // update two rows of Y and one row of RGB
-      for (i = 0; i < 2 * w; ++i) {
-        const int diff_y = target_y[i] - best_rgb_y[i];
-        const int new_y = (int)best_y[i] + diff_y;
-        best_y[i] = clip_y(new_y);
-        diff_y_sum += (uint64_t)abs(diff_y);
-      }
-      for (i = 0; i < 3 * uv_w; ++i) {
-        const int diff_uv = (int)target_uv[i] - best_rgb_uv[i];
-        best_uv[i] += diff_uv;
-      }
+      diff_y_sum += WebPSmartYUVUpdateY(target_y, best_rgb_y, best_y, 2 * w);
+      WebPSmartYUVUpdateRGB(target_uv, best_rgb_uv, best_uv, 3 * uv_w);
+
       best_y += 2 * w;
       best_uv += 3 * uv_w;
       target_y += 2 * w;

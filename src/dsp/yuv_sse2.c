@@ -15,6 +15,7 @@
 
 #if defined(WEBP_USE_SSE2)
 
+#include <stdlib.h>
 #include <emmintrin.h>
 
 //-----------------------------------------------------------------------------
@@ -767,9 +768,77 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUVSSE2(void) {
   WebPConvertRGBA32ToUV = ConvertRGBA32ToUV;
 }
 
+//------------------------------------------------------------------------------
+
+#define MAX_Y ((1 << 10) - 1)    // 10b precision over 16b-arithmetic
+static uint16_t clip_y(int v) {
+  return (v < 0) ? 0 : (v > MAX_Y) ? MAX_Y : (uint16_t)v;
+}
+
+static uint64_t SmartYUVUpdateY_SSE2(const uint16_t* ref, const uint16_t* src,
+                                     uint16_t* dst, int len) {
+  uint64_t diff = 0;
+  uint32_t tmp[4];
+  int i;
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i max = _mm_set1_epi16(MAX_Y);
+  __m128i sum = zero;
+
+  for (i = 0; i + 8 <= len; i += 8) {
+    const __m128i A = _mm_loadu_si128((const __m128i*)(ref + i));
+    const __m128i B = _mm_loadu_si128((const __m128i*)(src + i));
+    const __m128i C = _mm_loadu_si128((const __m128i*)(dst + i));
+    const __m128i D = _mm_sub_epi16(A, B);   // diff_y
+    const __m128i E = _mm_add_epi16(C, D);   // new_y
+    const __m128i F = _mm_max_epi16(_mm_min_epi16(E, max), zero);
+    const __m128i G0 = _mm_subs_epu16(A, B);
+    const __m128i G1 = _mm_subs_epu16(B, A);
+    const __m128i G = _mm_or_si128(G0, G1);  // abs(diff_y)
+    const __m128i H0 = _mm_unpacklo_epi16(G, zero);
+    const __m128i H1 = _mm_unpackhi_epi16(G, zero);
+    const __m128i I = _mm_add_epi32(H0, H1);
+    _mm_storeu_si128((__m128i*)(dst + i), F);
+    sum = _mm_add_epi32(sum, I);
+  }
+  _mm_storeu_si128((__m128i*)tmp, sum);
+  diff = tmp[3] + tmp[2] + tmp[1] + tmp[0];
+  for (; i < len; ++i) {
+    const int diff_y = ref[i] - src[i];
+    const int new_y = (int)dst[i] + diff_y;
+    dst[i] = clip_y(new_y);
+    diff += (uint64_t)abs(diff_y);
+  }
+  return diff;
+}
+
+static void SmartYUVUpdateRGB_SSE2(const int16_t* ref, const int16_t* src,
+                                   int16_t* dst, int len) {
+  int i = 0;
+  for (i = 0; i + 8 <= len; i += 8) {
+    const __m128i A = _mm_loadu_si128((const __m128i*)(ref + i));
+    const __m128i B = _mm_loadu_si128((const __m128i*)(src + i));
+    const __m128i C = _mm_loadu_si128((const __m128i*)(dst + i));
+    const __m128i D = _mm_sub_epi16(A, B);   // diff_uv
+    const __m128i E = _mm_add_epi16(C, D);   // new_uv
+    _mm_storeu_si128((__m128i*)(dst + i), E);
+  }
+  for (; i < len; ++i) {
+    const int diff_uv = (int)ref[i] - src[i];
+    dst[i] += diff_uv;
+  }
+}
+
+extern void WebPInitSmartYUVSSE2(void);
+
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitSmartYUVSSE2(void) {
+  WebPSmartYUVUpdateY = SmartYUVUpdateY_SSE2;
+  WebPSmartYUVUpdateRGB = SmartYUVUpdateRGB_SSE2;
+}
+
 #else  // !WEBP_USE_SSE2
 
 WEBP_DSP_INIT_STUB(WebPInitSamplersSSE2)
 WEBP_DSP_INIT_STUB(WebPInitConvertARGBToYUVSSE2)
+WEBP_DSP_INIT_STUB(WebPInitSmartYUVSSE2)
 
 #endif  // WEBP_USE_SSE2
