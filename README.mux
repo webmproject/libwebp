@@ -56,7 +56,8 @@ DURATION_OPTIONS:
    where: 'duration' is the duration in milliseconds,
           'start' is the start frame index (optional)(default=1),
           'end' is the inclusive end frame index (optional).
-           The special value '0' means: last frame (default=0).
+           The special value '0' means: last frame.
+           By default, if unspecified, end is set equal to start
 
 STRIP_OPTIONS:
  Strip color profile/metadata:
