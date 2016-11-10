@@ -427,6 +427,15 @@ extern void WebPConvertARGBToUV_C(const uint32_t* argb, uint8_t* u, uint8_t* v,
 extern void WebPConvertRGBA32ToUV_C(const uint16_t* rgb,
                                     uint8_t* u, uint8_t* v, int width);
 
+// utilities for accurate RGB->YUV conversion
+extern uint64_t (*WebPSmartYUVUpdateY)(const uint16_t* src, const uint16_t* ref,
+                                       uint16_t* dst, int len);
+extern void (*WebPSmartYUVUpdateRGB)(const int16_t* src, const int16_t* ref,
+                                     int16_t* dst, int len);
+extern void (*WebPSmartYUVFilterRow)(const int16_t* A, const int16_t* B,
+                                     int len,
+                                     const uint16_t* best_y, uint16_t* out);
+
 // Must be called before using the above.
 void WebPInitConvertARGBToYUV(void);
 

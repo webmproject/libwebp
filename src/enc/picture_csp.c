@@ -306,17 +306,6 @@ static void StoreGray(const fixed_y_t* rgb, fixed_y_t* y, int w) {
 
 //------------------------------------------------------------------------------
 
-static void FilterRow(const fixed_t* A, const fixed_t* B, int len,
-                      const fixed_y_t* best_y, fixed_y_t* out) {
-  int i;
-  for (i = 0; i < len; ++i, ++A, ++B) {
-    const int v0 = (A[0] * 9 + A[1] * 3 + B[0] * 3 + B[1] + 8) >> 4;
-    const int v1 = (A[1] * 9 + A[0] * 3 + B[1] * 3 + B[0] + 8) >> 4;
-    out[2 * i + 0] = clip_y(best_y[2 * i + 0] + v0);
-    out[2 * i + 1] = clip_y(best_y[2 * i + 1] + v1);
-  }
-}
-
 static WEBP_INLINE fixed_y_t Filter2(int A, int B, int W0) {
   const int v0 = (A * 3 + B + 2) >> 2;
   return clip_y(v0 + W0);
@@ -357,14 +346,15 @@ static void InterpolateTwoRows(const fixed_y_t* const best_y,
                                fixed_y_t* out1,
                                fixed_y_t* out2) {
   const int uv_w = w >> 1;
+  const int len = (w - 1) >> 1;   // length to filter
   int k = 3;
   while (k-- > 0) {   // process each R/G/B segments in turn
     // special boundary case for i==0
     out1[0] = Filter2(cur_uv[0], prev_uv[0], best_y[0]);
     out2[0] = Filter2(cur_uv[0], next_uv[0], best_y[w]);
 
-    FilterRow(cur_uv, prev_uv, (w - 1) >> 1, best_y + 0 + 1, out1 + 1);
-    FilterRow(cur_uv, next_uv, (w - 1) >> 1, best_y + w + 1, out2 + 1);
+    WebPSmartYUVFilterRow(cur_uv, prev_uv, len, best_y + 0 + 1, out1 + 1);
+    WebPSmartYUVFilterRow(cur_uv, next_uv, len, best_y + w + 1, out2 + 1);
 
     // special boundary case for i == w - 1 when w is even
     if (!(w & 1)) {
@@ -452,7 +442,7 @@ static int PreprocessARGB(const uint8_t* r_ptr,
   const int uv_w = w >> 1;
   const int uv_h = h >> 1;
   uint64_t prev_diff_y_sum = ~0;
-  int i, j, iter;
+  int j, iter;
 
   // TODO(skal): allocate one big memory chunk. But for now, it's easier
   // for valgrind debugging to have several chunks.
@@ -479,6 +469,8 @@ static int PreprocessARGB(const uint8_t* r_ptr,
   }
   assert(picture->width >= kMinDimensionIterativeConversion);
   assert(picture->height >= kMinDimensionIterativeConversion);
+
+  WebPInitConvertARGBToYUV();
 
   // Import RGB samples to W/RGB representation.
   for (j = 0; j < picture->height; j += 2) {
@@ -535,16 +527,9 @@ static int PreprocessARGB(const uint8_t* r_ptr,
       UpdateChroma(src1, src2, best_rgb_uv, uv_w);
 
       // update two rows of Y and one row of RGB
-      for (i = 0; i < 2 * w; ++i) {
-        const int diff_y = target_y[i] - best_rgb_y[i];
-        const int new_y = (int)best_y[i] + diff_y;
-        best_y[i] = clip_y(new_y);
-        diff_y_sum += (uint64_t)abs(diff_y);
-      }
-      for (i = 0; i < 3 * uv_w; ++i) {
-        const int diff_uv = (int)target_uv[i] - best_rgb_uv[i];
-        best_uv[i] += diff_uv;
-      }
+      diff_y_sum += WebPSmartYUVUpdateY(target_y, best_rgb_y, best_y, 2 * w);
+      WebPSmartYUVUpdateRGB(target_uv, best_rgb_uv, best_uv, 3 * uv_w);
+
       best_y += 2 * w;
       best_uv += 3 * uv_w;
       target_y += 2 * w;
