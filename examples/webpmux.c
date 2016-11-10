@@ -40,8 +40,8 @@
 
   Change duration of frame intervals:
     webpmux -duration 150 in.webp -o out.webp
-    webpmux -duration 33,10,0 in.webp -o out.webp
-    webpmux -duration 200,2 -duration 150,0,50 in.webp -o out.webp
+    webpmux -duration 33,2 in.webp -o out.webp
+    webpmux -duration 200,10,0 -duration 150,6,50 in.webp -o out.webp
 
   Misc:
     webpmux -info in.webp
@@ -322,12 +322,15 @@ static void PrintHelp(void) {
 
   printf("\n");
   printf("DURATION_OPTIONS:\n");
-  printf(" Set constant duration of frames:\n");
-  printf("   duration[,start[,end]]\n");
-  printf("   where: 'duration' is the duration in milliseconds,\n");
-  printf("          'start' is the start frame index (optional)(default=1),\n");
-  printf("          'end' is the inclusive end frame index (optional).\n");
-  printf("           The special value '0' means: last frame (default=0).\n");
+  printf(" Set duration of selected frames:\n");
+  printf("   duration            set duration for each frames\n");
+  printf("   duration,frame      set duration of a particular frame\n");
+  printf("   duration,start,end  set duration of frames in the\n");
+  printf("                        interval [start,end])\n");
+  printf("   where: 'duration' is the duration in milliseconds\n");
+  printf("          'start' is the start frame index\n");
+  printf("          'end' is the inclusive end frame index\n");
+  printf("           The special 'end' value '0' means: last frame.\n");
 
   printf("\n");
   printf("STRIP_OPTIONS:\n");
@@ -1053,12 +1056,19 @@ static int Process(const WebPMuxConfig* config) {
             ERROR_GOTO1("ERROR: duration must be strictly positive.\n", Err3);
           }
 
-          start = (nb_args >= 2) ? args[1] : 1;
-          if (start <= 0) start = 1;
-
-          end = (nb_args >= 3) ? args[2] : num_frames;
-          if (end == 0) end = num_frames;
-          if (end > num_frames) end = num_frames;
+          if (nb_args == 1) {   // only duration is present -> use full interval
+            start = 1;
+            end = num_frames;
+          } else {
+            start = args[1];
+            if (start <= 0) {
+              start = 1;
+            } else if (start > num_frames) {
+              start = num_frames;
+            }
+            end = (nb_args >= 3) ? args[2] : start;
+            if (end == 0 || end > num_frames) end = num_frames;
+          }
 
           for (k = start; k <= end; ++k) {
             assert(k >= 1 && k <= num_frames);
@@ -1085,7 +1095,7 @@ static int Process(const WebPMuxConfig* config) {
         mux = new_mux;  // transfer for the WebPMuxDelete() call
         new_mux = NULL;
 
-  Err3:
+ Err3:
         free(durations);
         WebPMuxDelete(new_mux);
         if (!ok) goto Err2;
