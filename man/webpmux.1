@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH WEBPMUX 1 "November 8, 2016"
+.TH WEBPMUX 1 "November 10, 2016"
 .SH NAME
 webpmux \- create animated WebP files from non\-animated WebP images, extract
 frames from animated WebP images, and manage XMP/EXIF metadata and ICC profile.
@@ -99,17 +99,39 @@ Strip EXIF metadata.
 Strip XMP metadata.
 
 .SS DURATION_OPTIONS (\-duration)
-Amend the duration of a specific interval of frames.
+Amend the duration of a specific interval of frames. This option is only
+effective on animated WebP and has no effect on a single-frame file.
 .TP
 .I duration[,start[,end]]
 Where:
- 'duration' is the duration for the interval (mandatory). Must be non-negative.
- 'start' is the starting frame index of the interval (optional). If 'start'
-is less or equal to '1', its value will be set to '1'.
- 'end' is the ending frame index (inclusive) of the interval (optional). The
-value '0' has the special meaning 'last frame of the animation'.
+.br
+.B duration
+is the duration for the interval in milliseconds (mandatory).
+Must be non-negative.
+.br
+.B start
+is the starting frame index of the interval (optional).
+.br
+.B end
+is the ending frame index (inclusive) of the interval (optional).
+.TP
+The three typical usages of this option are:
+.br
+.B -duration d
+     set the duration to 'd' for the whole animation.
+.br
+.B -duration d,f
+     set the duration of frame 'f' to 'd'.
+.br
+.B -duration d,start,end
+     set the duration to 'd' for the whole [start,end] interval.
+.TP
+.P
 Note that the frames outside of the [start, end] interval will remain untouched.
-.I Reminder: frame indexing starts at '1'.
+The 'end' value '0' has the special meaning 'last frame of the animation'.
+.TP
+.I Reminder:
+frame indexing starts at '1'.
 .br
 
 .SS FRAME_OPTIONS (\-frame)

@@ -51,12 +51,15 @@ SET_OPTIONS:
              'file.xmp' contains the XMP metadata to be set
 
 DURATION_OPTIONS:
- Set constant duration of frames:
-   duration[,start[,end]]
-   where: 'duration' is the duration in milliseconds,
-          'start' is the start frame index (optional)(default=1),
-          'end' is the inclusive end frame index (optional).
-           The special value '0' means: last frame (default=0).
+ Set duration of selected frames:
+   duration            set duration for each frames
+   duration,frame      set duration of a particular frame
+   duration,start,end  set duration of frames in the
+                        interval [start,end])
+   where: 'duration' is the duration in milliseconds
+          'start' is the start frame index
+          'end' is the inclusive end frame index
+           The special 'end' value '0' means: last frame.
 
 STRIP_OPTIONS:
  Strip color profile/metadata:
