@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4b7aab69_cbfff5f3",
+        "filename": "man/webpmux.1",
+        "patchSetId": 5
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-11-11T08:03:19Z",
+      "side": 1,
+      "message": "...on a...",
+      "range": {
+        "startLine": 103,
+        "startChar": 45,
+        "endLine": 103,
+        "endChar": 60
+      },
+      "revId": "8e524e437e2a13767d1534b159904b767c6a41b1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
