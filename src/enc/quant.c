@@ -1155,7 +1155,8 @@ static void RefineUsingDistortion(VP8EncIterator* const it,
   const int lambda_d_uv = 120;
   score_t score_i4 = dqm->i4_penalty_;
   score_t i4_bit_sum = 0;
-  const score_t bit_limit = it->enc_->mb_header_limit_;
+  const score_t bit_limit = try_both_modes ? it->enc_->mb_header_limit_
+                                           : MAX_COST;  // no early-out allowed
 
   if (is_i16) {   // First, evaluate Intra16 distortion
     int best_mode = -1;
