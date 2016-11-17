@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1042a47e_90c00638",
+        "filename": "src/dsp/yuv_sse2.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 824,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-11-17T00:44:17Z",
+      "side": 1,
+      "message": "cast is inconsistent with the diff_y above (and not strictly necessary given promotion rules)",
+      "range": {
+        "startLine": 824,
+        "startChar": 24,
+        "endLine": 824,
+        "endChar": 29
+      },
+      "revId": "9ac063c37fb1b4d42b43d7f224938e9b0f524c9d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
