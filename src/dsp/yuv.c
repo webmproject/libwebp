@@ -268,7 +268,7 @@ static void SmartYUVUpdateRGB_C(const int16_t* ref, const int16_t* src,
                                 int16_t* dst, int len) {
   int i;
   for (i = 0; i < len; ++i) {
-    const int diff_uv = (int)ref[i] - src[i];
+    const int diff_uv = ref[i] - src[i];
     dst[i] += diff_uv;
   }
 }

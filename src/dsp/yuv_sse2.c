@@ -821,7 +821,7 @@ static void SmartYUVUpdateRGB_SSE2(const int16_t* ref, const int16_t* src,
     _mm_storeu_si128((__m128i*)(dst + i), E);
   }
   for (; i < len; ++i) {
-    const int diff_uv = (int)ref[i] - src[i];
+    const int diff_uv = ref[i] - src[i];
     dst[i] += diff_uv;
   }
 }
