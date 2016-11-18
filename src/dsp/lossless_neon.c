@@ -139,6 +139,131 @@ static void ConvertBGRAToRGB(const uint32_t* src,
 
 #endif   // !WORK_AROUND_GCC
 
+
+//------------------------------------------------------------------------------
+// Predictor Transform
+/*
+static WEBP_INLINE uint32_t ClampedAddSubtractFull(uint32_t c0, uint32_t c1,
+                                                   uint32_t c2) {
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i C0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(c0), zero);
+  const __m128i C1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(c1), zero);
+  const __m128i C2 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(c2), zero);
+  const __m128i V1 = _mm_add_epi16(C0, C1);
+  const __m128i V2 = _mm_sub_epi16(V1, C2);
+  const __m128i b = _mm_packus_epi16(V2, V2);
+  const uint32_t output = _mm_cvtsi128_si32(b);
+  return output;
+}
+
+static WEBP_INLINE uint32_t ClampedAddSubtractHalf(uint32_t c0, uint32_t c1,
+                                                   uint32_t c2) {
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i C0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(c0), zero);
+  const __m128i C1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(c1), zero);
+  const __m128i B0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(c2), zero);
+  const __m128i avg = _mm_add_epi16(C1, C0);
+  const __m128i A0 = _mm_srli_epi16(avg, 1);
+  const __m128i A1 = _mm_sub_epi16(A0, B0);
+  const __m128i BgtA = _mm_cmpgt_epi16(B0, A0);
+  const __m128i A2 = _mm_sub_epi16(A1, BgtA);
+  const __m128i A3 = _mm_srai_epi16(A2, 1);
+  const __m128i A4 = _mm_add_epi16(A0, A3);
+  const __m128i A5 = _mm_packus_epi16(A4, A4);
+  const uint32_t output = _mm_cvtsi128_si32(A5);
+  return output;
+}
+
+static WEBP_INLINE uint32_t Select(uint32_t a, uint32_t b, uint32_t c) {
+  int pa_minus_pb;
+  const uint8x8_t A = vreinterpret_u8_u32(vld1_dup_u32(&a));
+  const uint8x8_t C = vreinterpret_u8_u32(vld1_dup_u32(&c));
+  const uint8x8_t pa = vabd_u8(A, C);
+  const uint8x8_t B = vreinterpret_u8_u32(vld1_dup_u32(&b));
+  const uint8x8_t pb = vabd_u8(B, C);
+  const uint16x4_t diff = vget_high_u16(vsubl_u32(pb, pa));
+  {
+    int16_t out[4];
+    vst1_u16(out, diff);
+    pa_minus_pb = out[0] + out[1] + out[2] + out[3];
+  }
+  return (pa_minus_pb <= 0) ? a : b;
+}
+*/
+static WEBP_INLINE uint32_t Average2(uint32_t a0, uint32_t a1) {
+  const uint32x2_t A0 = vld1_dup_u32(&a0);
+  const uint32x2_t A1 = vld1_dup_u32(&a1);
+  const uint32x2_t avg_32x2 = vhadd_u32(A0, A1);
+  uint32_t avg;
+  vst1_lane_u32(&avg, avg_32x2, 0);
+  return avg;
+}
+/*
+static WEBP_INLINE uint32_t Average3(uint32_t a0, uint32_t a1, uint32_t a2) {
+  const uint32x2_t A0 = vld1_dup_u32(&a0);
+  const uint32x2_t A2 = vld1_dup_u32(&a2);
+  const uint32x2_t avg0 = vhadd_u32(A0, A2);
+  const uint32x2_t A1 = vld1_dup_u32(&a1);
+  const uint32x2_t avg1 = vhadd_u32(avg0, A1);
+  uint32_t avg;
+  vst1_lane_u32(&avg, avg1, 0);
+  return avg;
+}
+
+static WEBP_INLINE uint32_t Average4(uint32_t a0, uint32_t a1,
+                                     uint32_t a2, uint32_t a3) {
+  const uint32x2_t A0 = vld1_dup_u32(&a0);
+  const uint32x2_t A1 = vld1_dup_u32(&a1);
+  const uint32x2_t avg0 = vhadd_u32(A0, A1);
+  const uint32x2_t A2 = vld1_dup_u32(&a2);
+  const uint32x2_t A3 = vld1_dup_u32(&a3);
+  const uint32x2_t avg1 = vhadd_u32(A2, A3);
+  const uint32x2_t avg2 = vhadd_u32(avg0, avg1);
+  uint32_t avg;
+  vst1_lane_u32(&avg, avg2, 0);
+  return avg;
+}
+
+static uint32_t Predictor5(uint32_t left, const uint32_t* const top) {
+  const uint32_t pred = Average3(left, top[0], top[1]);
+  return pred;
+}*/
+static uint32_t Predictor6(uint32_t left, const uint32_t* const top) {
+  const uint32_t pred = Average2(left, top[-1]);
+  return pred;
+}
+static uint32_t Predictor7(uint32_t left, const uint32_t* const top) {
+  const uint32_t pred = Average2(left, top[0]);
+  return pred;
+}
+static uint32_t Predictor8(uint32_t left, const uint32_t* const top) {
+  const uint32_t pred = Average2(top[-1], top[0]);
+  (void)left;
+  return pred;
+}
+static uint32_t Predictor9(uint32_t left, const uint32_t* const top) {
+  const uint32_t pred = Average2(top[0], top[1]);
+  (void)left;
+  return pred;
+}/*
+static uint32_t Predictor10(uint32_t left, const uint32_t* const top) {
+  const uint32_t pred = Average4(left, top[-1], top[0], top[1]);
+  return pred;
+}*/
+/*
+static uint32_t Predictor11(uint32_t left, const uint32_t* const top) {
+  const uint32_t pred = Select(top[0], left, top[-1]);
+  return pred;
+}
+static uint32_t Predictor12(uint32_t left, const uint32_t* const top) {
+  const uint32_t pred = ClampedAddSubtractFull(left, top[0], top[-1]);
+  return pred;
+}
+static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
+  const uint32_t pred = ClampedAddSubtractHalf(left, top[0], top[-1]);
+  return pred;
+}*/
+
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
 
@@ -254,6 +379,16 @@ static void TransformColorInverse(const VP8LMultipliers* const m,
 extern void VP8LDspInitNEON(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitNEON(void) {
+ // VP8LPredictors[5] = Predictor5;
+  VP8LPredictors[6] = Predictor6;
+  VP8LPredictors[7] = Predictor7;
+  VP8LPredictors[8] = Predictor8;
+  VP8LPredictors[9] = Predictor9;
+  //VP8LPredictors[10] = Predictor10;
+/*  VP8LPredictors[11] = Predictor11;
+  VP8LPredictors[12] = Predictor12;
+  VP8LPredictors[13] = Predictor13;*/
+
   VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA;
   VP8LConvertBGRAToBGR = ConvertBGRAToBGR;
   VP8LConvertBGRAToRGB = ConvertBGRAToRGB;
