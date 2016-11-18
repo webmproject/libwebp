@@ -139,6 +139,125 @@ static void ConvertBGRAToRGB(const uint32_t* src,
 
 #endif   // !WORK_AROUND_GCC
 
+
+//------------------------------------------------------------------------------
+// Predictor Transform
+
+static WEBP_INLINE uint32_t ClampedAddSubtractFull_NEON(uint32_t c0,
+                                                        uint32_t c1,
+                                                        uint32_t c2) {
+  const uint8x8_t C0 = vreinterpret_u8_u32(vdup_n_u32(c0));
+  const uint8x8_t C1 = vreinterpret_u8_u32(vdup_n_u32(c1));
+  const uint16x8_t sum = vaddl_u8(C0, C1);
+  const uint8x8_t C2 = vreinterpret_u8_u32(vdup_n_u32(c2));
+  const uint16x8_t A2 = vmovl_u8(C2);
+  // Saturated subtract.
+  const uint16x8_t diff = vqsubq_u16(sum, A2);
+  const uint8x8_t res = vqmovn_u16(diff);
+  const uint32_t output = vget_lane_u32(vreinterpret_u32_u8(res), 0);
+  return output;
+}
+
+
+static WEBP_INLINE uint8x8_t Average2_u8_NEON(uint32_t a0, uint32_t a1) {
+  const uint8x8_t A0 = vreinterpret_u8_u32(vdup_n_u32(a0));
+  const uint8x8_t A1 = vreinterpret_u8_u32(vdup_n_u32(a1));
+  return vhadd_u8(A0, A1);
+}
+
+static WEBP_INLINE uint32_t ClampedAddSubtractHalf_NEON(uint32_t c0,
+                                                        uint32_t c1,
+                                                        uint32_t c2) {
+  const uint8x8_t avg = Average2_u8_NEON(c0, c1);
+  // Remove one to c2 when bigger than avg.
+  const uint8x8_t C2 = vreinterpret_u8_u32(vdup_n_u32(c2));
+  const uint8x8_t cmp = vcgt_u8(C2, avg);
+  const uint8x8_t C2_1 = vadd_u8(C2, cmp);
+  // Compute half of the difference between avg and c2.
+  const int8x8_t diff_avg = vreinterpret_s8_u8(vhsub_u8(avg, C2_1));
+  // Compute the sum with avg and saturate.
+  const int16x8_t avg_16 = vreinterpretq_s16_u16(vmovl_u8(avg));
+  const uint8x8_t res = vqmovun_s16(vaddw_s8(avg_16, diff_avg));
+  const uint32_t output = vget_lane_u32(vreinterpret_u32_u8(res), 0);
+  return output;
+}
+
+static WEBP_INLINE uint32_t Select_NEON(uint32_t a, uint32_t b, uint32_t c) {
+  const uint32x2_t A_32 = vdup_n_u32(a);
+  const uint8x8_t A = vreinterpret_u8_u32(A_32);
+  const uint8x8_t C = vreinterpret_u8_u32(vdup_n_u32(c));
+  const uint8x8_t pa = vabd_u8(A, C);
+  const uint32x2_t B_32 = vdup_n_u32(b);
+  const uint8x8_t B = vreinterpret_u8_u32(B_32);
+  const uint8x8_t pb = vabd_u8(B, C);
+  const int16x4_t diff = vreinterpret_s16_u16(vget_high_u16(vsubl_u8(pb, pa)));
+  // Horizontal add the adjacent pairs twice to get the sum of the first four
+  // signed 16-bit integers. The first add cannot be vpaddl_s16 as it would
+  // return a int32x2_t which would lead to a int64x1_t for the second one
+  // (which would be hard to deal with).
+  const int16x4_t sum = vpadd_s16(diff, diff);
+  const int32x2_t pa_minus_pb = vpaddl_s16(sum);
+  const int32x2_t zero = vdup_n_s32(0);
+  const uint32x2_t cmp = vcle_s32(pa_minus_pb, zero);
+  const uint32x2_t output = vbsl_u32(cmp, A_32, B_32);
+  return vget_lane_u32(output, 0);
+}
+
+static WEBP_INLINE uint32_t Average2_NEON(uint32_t a0, uint32_t a1) {
+  const uint8x8_t avg_u8x8 = Average2_u8_NEON(a0, a1);
+  const uint32x2_t avg_u32x2 = vreinterpret_u32_u8(avg_u8x8);
+  const uint32_t avg = vget_lane_u32(avg_u32x2, 0);
+  return avg;
+}
+
+static WEBP_INLINE uint32_t Average3_NEON(uint32_t a0, uint32_t a1,
+                                          uint32_t a2) {
+  const uint8x8_t avg0 = Average2_u8_NEON(a0, a2);
+  const uint8x8_t A1 = vreinterpret_u8_u32(vdup_n_u32(a1));
+  const uint32x2_t avg1 = vreinterpret_u32_u8(vhadd_u8(avg0, A1));
+  const uint32_t avg = vget_lane_u32(avg1, 0);
+  return avg;
+}
+
+static WEBP_INLINE uint32_t Average4_NEON(uint32_t a0, uint32_t a1,
+                                          uint32_t a2, uint32_t a3) {
+  const uint8x8_t avg0 = Average2_u8_NEON(a0, a1);
+  const uint8x8_t avg1 = Average2_u8_NEON(a2, a3);
+  const uint32x2_t avg2 = vreinterpret_u32_u8(vhadd_u8(avg0, avg1));
+  const uint32_t avg = vget_lane_u32(avg2, 0);
+  return avg;
+}
+
+static uint32_t Predictor5_NEON(uint32_t left, const uint32_t* const top) {
+  return Average3_NEON(left, top[0], top[1]);
+}
+static uint32_t Predictor6_NEON(uint32_t left, const uint32_t* const top) {
+  return Average2_NEON(left, top[-1]);
+}
+static uint32_t Predictor7_NEON(uint32_t left, const uint32_t* const top) {
+  return Average2_NEON(left, top[0]);
+}
+static uint32_t Predictor8_NEON(uint32_t left, const uint32_t* const top) {
+  (void)left;
+  return Average2_NEON(top[-1], top[0]);
+}
+static uint32_t Predictor9_NEON(uint32_t left, const uint32_t* const top) {
+  (void)left;
+  return Average2_NEON(top[0], top[1]);
+}
+static uint32_t Predictor10_NEON(uint32_t left, const uint32_t* const top) {
+  return Average4_NEON(left, top[-1], top[0], top[1]);
+}
+static uint32_t Predictor11_NEON(uint32_t left, const uint32_t* const top) {
+  return Select_NEON(top[0], left, top[-1]);
+}
+static uint32_t Predictor12_NEON(uint32_t left, const uint32_t* const top) {
+  return ClampedAddSubtractFull_NEON(left, top[0], top[-1]);
+}
+static uint32_t Predictor13_NEON(uint32_t left, const uint32_t* const top) {
+  return ClampedAddSubtractHalf_NEON(left, top[0], top[-1]);
+}
+
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
 
@@ -254,6 +373,16 @@ static void TransformColorInverse(const VP8LMultipliers* const m,
 extern void VP8LDspInitNEON(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitNEON(void) {
+  VP8LPredictors[5] = Predictor5_NEON;
+  VP8LPredictors[6] = Predictor6_NEON;
+  VP8LPredictors[7] = Predictor7_NEON;
+  VP8LPredictors[8] = Predictor8_NEON;
+  VP8LPredictors[9] = Predictor9_NEON;
+  VP8LPredictors[10] = Predictor10_NEON;
+  VP8LPredictors[11] = Predictor11_NEON;
+  VP8LPredictors[12] = Predictor12_NEON;
+  VP8LPredictors[13] = Predictor13_NEON;
+
   VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA;
   VP8LConvertBGRAToBGR = ConvertBGRAToBGR;
   VP8LConvertBGRAToRGB = ConvertBGRAToRGB;
