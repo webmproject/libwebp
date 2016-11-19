@@ -1,6 +1,7 @@
 LOCAL_PATH := $(call my-dir)
 
 WEBP_CFLAGS := -Wall -DANDROID -DHAVE_MALLOC_H -DHAVE_PTHREAD -DWEBP_USE_THREAD
+WEBP_CFLAGS += -fvisibility=hidden
 
 ifeq ($(APP_OPTIM),release)
   WEBP_CFLAGS += -finline-functions -ffast-math \
