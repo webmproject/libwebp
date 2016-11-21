@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d0c80c9b_7656ee21",
+        "filename": "src/dsp/lossless_neon.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-11-21T13:55:03Z",
+      "side": 1,
+      "message": "could be macro-ized:\n\n#define LOAD_4x8(C) vreinterpret_u8_u32(vdup_n_u32((C)))",
+      "range": {
+        "startLine": 149,
+        "startChar": 43,
+        "endLine": 149,
+        "endChar": 53
+      },
+      "revId": "44aadd0506fc1fb4650d5fbf17416ef8a87cceed",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
