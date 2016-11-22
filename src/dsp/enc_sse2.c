@@ -251,25 +251,11 @@ static void FTransformPass2(const __m128i* const v01, const __m128i* const v32,
   const __m128i k51000 = _mm_set1_epi32(51000);
 
   // Same operations are done on the (0,3) and (1,2) pairs.
-  // a0 = v0 + v3
-  // a1 = v1 + v2
   // a3 = v0 - v3
   // a2 = v1 - v2
-  const __m128i a01 = _mm_add_epi16(*v01, *v32);
   const __m128i a32 = _mm_sub_epi16(*v01, *v32);
-  const __m128i a11 = _mm_unpackhi_epi64(a01, a01);
   const __m128i a22 = _mm_unpackhi_epi64(a32, a32);
-  const __m128i a01_plus_7 = _mm_add_epi16(a01, seven);
 
-  // d0 = (a0 + a1 + 7) >> 4;
-  // d2 = (a0 - a1 + 7) >> 4;
-  const __m128i c0 = _mm_add_epi16(a01_plus_7, a11);
-  const __m128i c2 = _mm_sub_epi16(a01_plus_7, a11);
-  const __m128i d0 = _mm_srai_epi16(c0, 4);
-  const __m128i d2 = _mm_srai_epi16(c2, 4);
-
-  // f1 = ((b3 * 5352 + b2 * 2217 + 12000) >> 16)
-  // f3 = ((b3 * 2217 - b2 * 5352 + 51000) >> 16)
   const __m128i b23 = _mm_unpacklo_epi16(a22, a32);
   const __m128i c1 = _mm_madd_epi16(b23, k5352_2217);
   const __m128i c3 = _mm_madd_epi16(b23, k2217_5352);
@@ -277,13 +263,27 @@ static void FTransformPass2(const __m128i* const v01, const __m128i* const v32,
   const __m128i d3 = _mm_add_epi32(c3, k51000);
   const __m128i e1 = _mm_srai_epi32(d1, 16);
   const __m128i e3 = _mm_srai_epi32(d3, 16);
+  // f1 = ((b3 * 5352 + b2 * 2217 + 12000) >> 16)
+  // f3 = ((b3 * 2217 - b2 * 5352 + 51000) >> 16)
   const __m128i f1 = _mm_packs_epi32(e1, e1);
   const __m128i f3 = _mm_packs_epi32(e3, e3);
-  // f1 = f1 + (a3 != 0);
+  // g1 = f1 + (a3 != 0);
   // The compare will return (0xffff, 0) for (==0, !=0). To turn that into the
   // desired (0, 1), we add one earlier through k12000_plus_one.
-  // -> f1 = f1 + 1 - (a3 == 0)
+  // -> g1 = f1 + 1 - (a3 == 0)
   const __m128i g1 = _mm_add_epi16(f1, _mm_cmpeq_epi16(a32, zero));
+
+  // a0 = v0 + v3
+  // a1 = v1 + v2
+  const __m128i a01 = _mm_add_epi16(*v01, *v32);
+  const __m128i a01_plus_7 = _mm_add_epi16(a01, seven);
+  const __m128i a11 = _mm_unpackhi_epi64(a01, a01);
+  const __m128i c0 = _mm_add_epi16(a01_plus_7, a11);
+  const __m128i c2 = _mm_sub_epi16(a01_plus_7, a11);
+  // d0 = (a0 + a1 + 7) >> 4;
+  // d2 = (a0 - a1 + 7) >> 4;
+  const __m128i d0 = _mm_srai_epi16(c0, 4);
+  const __m128i d2 = _mm_srai_epi16(c2, 4);
 
   const __m128i d0_g1 = _mm_unpacklo_epi64(d0, g1);
   const __m128i d2_f3 = _mm_unpacklo_epi64(d2, f3);
