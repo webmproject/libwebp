@@ -14,9 +14,11 @@
 #include "./dsp.h"
 
 #if defined(WEBP_USE_SSE2)
+
+#include "./common_sse2.h"
+#include "./lossless.h"
 #include <assert.h>
 #include <emmintrin.h>
-#include "./lossless.h"
 
 //------------------------------------------------------------------------------
 // Predictor Transform
@@ -209,6 +211,53 @@ static void TransformColorInverse(const VP8LMultipliers* const m,
 //------------------------------------------------------------------------------
 // Color-space conversion functions
 
+static void ConvertBGRAToRGB(const uint32_t* src, int num_pixels,
+                             uint8_t* dst) {
+  const __m128i* in = (const __m128i*)src;
+  __m128i* out = (__m128i*)dst;
+
+  while (num_pixels >= 32) {
+    __m128i rgb_planar[6];
+    {
+      const __m128i bgra[4] = { _mm_loadu_si128(in + 0),
+                                _mm_loadu_si128(in + 1),
+                                _mm_loadu_si128(in + 2),
+                                _mm_loadu_si128(in + 3) };
+      __m128i bgra_planar[4];
+      VP8L32bToPlanar(bgra, bgra_planar);
+      rgb_planar[0] = _mm_loadu_si128(bgra_planar + 1);
+      rgb_planar[2] = _mm_loadu_si128(bgra_planar + 2);
+      rgb_planar[4] = _mm_loadu_si128(bgra_planar + 3);
+    }
+    {
+      const __m128i bgra[4] = { _mm_loadu_si128(in + 4),
+                                _mm_loadu_si128(in + 5),
+                                _mm_loadu_si128(in + 6),
+                                _mm_loadu_si128(in + 7) };
+      __m128i bgra_planar[4];
+      VP8L32bToPlanar(bgra, bgra_planar);
+      rgb_planar[1] = _mm_loadu_si128(bgra_planar + 1);
+      rgb_planar[3] = _mm_loadu_si128(bgra_planar + 2);
+      rgb_planar[5] = _mm_loadu_si128(bgra_planar + 3);
+    }
+    {
+      __m128i bgr[6];
+      VP8PlanarTo24b(rgb_planar, bgr);
+      _mm_storeu_si128(out + 0, bgr[0]);
+      _mm_storeu_si128(out + 1, bgr[1]);
+      _mm_storeu_si128(out + 2, bgr[2]);
+      _mm_storeu_si128(out + 3, bgr[3]);
+      _mm_storeu_si128(out + 4, bgr[4]);
+      _mm_storeu_si128(out + 5, bgr[5]);
+    }
+    in += 8;
+    out += 6;
+    num_pixels -= 32;
+  }
+  // left-overs
+  VP8LConvertBGRAToRGB_C((const uint32_t*)in, num_pixels, (uint8_t*)out);
+}
+
 static void ConvertBGRAToRGBA(const uint32_t* src,
                               int num_pixels, uint8_t* dst) {
   const __m128i* in = (const __m128i*)src;
@@ -359,6 +408,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitSSE2(void) {
   VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
   VP8LTransformColorInverse = TransformColorInverse;
 
+  VP8LConvertBGRAToRGB = ConvertBGRAToRGB;
   VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA;
   VP8LConvertBGRAToRGBA4444 = ConvertBGRAToRGBA4444;
   VP8LConvertBGRAToRGB565 = ConvertBGRAToRGB565;

@@ -15,6 +15,7 @@
 
 #if defined(WEBP_USE_SSE2)
 
+#include "./common_sse2.h"
 #include <stdlib.h>
 #include <emmintrin.h>
 
@@ -156,30 +157,11 @@ static WEBP_INLINE void PackAndStore565(const __m128i* const R,
   _mm_storeu_si128((__m128i*)dst, rgb565);
 }
 
-// Function used several times in PlanarTo24b.
-// It samples the in buffer as follows: one every two unsigned char is stored
-// at the beginning of the buffer, while the other half is stored at the end.
-static WEBP_INLINE void PlanarTo24bHelper(const __m128i* const in /*in[6]*/,
-                                          __m128i* const out /*out[6]*/) {
-  const __m128i v_mask = _mm_set1_epi16(0x00ff);
-
-  // Take one every two upper 8b values.
-  out[0] = _mm_packus_epi16(_mm_and_si128(in[0], v_mask),
-                            _mm_and_si128(in[1], v_mask));
-  out[1] = _mm_packus_epi16(_mm_and_si128(in[2], v_mask),
-                            _mm_and_si128(in[3], v_mask));
-  out[2] = _mm_packus_epi16(_mm_and_si128(in[4], v_mask),
-                            _mm_and_si128(in[5], v_mask));
-  // Take one every two lower 8b values.
-  out[3] = _mm_packus_epi16(_mm_srli_epi16(in[0], 8), _mm_srli_epi16(in[1], 8));
-  out[4] = _mm_packus_epi16(_mm_srli_epi16(in[2], 8), _mm_srli_epi16(in[3], 8));
-  out[5] = _mm_packus_epi16(_mm_srli_epi16(in[4], 8), _mm_srli_epi16(in[5], 8));
-}
-
 // Pack the planar buffers
 // rrrr... rrrr... gggg... gggg... bbbb... bbbb....
 // triplet by triplet in the output buffer rgb as rgbrgbrgbrgb ...
-static WEBP_INLINE void PlanarTo24b(__m128i* const in /*in[6]*/, uint8_t* rgb) {
+static WEBP_INLINE void PlanarTo24b(const __m128i* const in /*in[6]*/,
+                                    uint8_t* rgb) {
   // The input is 6 registers of sixteen 8b but for the sake of explanation,
   // let's take 6 registers of four 8b values.
   // To pack, we will keep taking one every two 8b integer and move it
@@ -193,12 +175,7 @@ static WEBP_INLINE void PlanarTo24b(__m128i* const in /*in[6]*/, uint8_t* rgb) {
   //   r0r4g0g4 | b0b4r1r5 | g1g5b1b5 | r2r6g2g6 | b2b6r3r7 | g3g7b3b7
   //   r0g0b0r1 | g1b1r2g2 | b2r3g3b3 | r4g4b4r5 | g5b5r6g6 | b6r7g7b7
   __m128i tmp[6];
-  PlanarTo24bHelper(in, tmp);
-  PlanarTo24bHelper(tmp, in);
-  PlanarTo24bHelper(in, tmp);
-  // We need to do it two more times than the example as we have sixteen bytes.
-  PlanarTo24bHelper(tmp, in);
-  PlanarTo24bHelper(in, tmp);
+  VP8PlanarTo24b(in, tmp);
 
   _mm_storeu_si128((__m128i*)(rgb +  0), tmp[0]);
   _mm_storeu_si128((__m128i*)(rgb + 16), tmp[1]);
@@ -207,7 +184,6 @@ static WEBP_INLINE void PlanarTo24b(__m128i* const in /*in[6]*/, uint8_t* rgb) {
   _mm_storeu_si128((__m128i*)(rgb + 64), tmp[4]);
   _mm_storeu_si128((__m128i*)(rgb + 80), tmp[5]);
 }
-#undef MK_UINT32
 
 void VP8YuvToRgba32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
                     uint8_t* dst) {
@@ -500,25 +476,18 @@ static WEBP_INLINE void RGB24PackedToPlanar(const uint8_t* const rgb,
 
 // Convert 8 packed ARGB to r[], g[], b[]
 static WEBP_INLINE void RGB32PackedToPlanar(const uint32_t* const argb,
-                                            __m128i* const r,
-                                            __m128i* const g,
-                                            __m128i* const b) {
+                                            __m128i* const rgb /*in[6]*/) {
   const __m128i zero = _mm_setzero_si128();
-  const __m128i in0 = LOAD_16(argb + 0);    // argb3 | argb2 | argb1 | argb0
-  const __m128i in1 = LOAD_16(argb + 4);    // argb7 | argb6 | argb5 | argb4
-  // column-wise transpose
-  const __m128i A0 = _mm_unpacklo_epi8(in0, in1);
-  const __m128i A1 = _mm_unpackhi_epi8(in0, in1);
-  const __m128i B0 = _mm_unpacklo_epi8(A0, A1);
-  const __m128i B1 = _mm_unpackhi_epi8(A0, A1);
-  // C0 = g7 g6 ... g1 g0 | b7 b6 ... b1 b0
-  // C1 = a7 a6 ... a1 a0 | r7 r6 ... r1 r0
-  const __m128i C0 = _mm_unpacklo_epi8(B0, B1);
-  const __m128i C1 = _mm_unpackhi_epi8(B0, B1);
-  // store 16b
-  *r = _mm_unpacklo_epi8(C1, zero);
-  *g = _mm_unpackhi_epi8(C0, zero);
-  *b = _mm_unpacklo_epi8(C0, zero);
+  const __m128i in[4] = {LOAD_16(argb + 0), LOAD_16(argb + 4),
+                         LOAD_16(argb + 8), LOAD_16(argb + 12)};
+  __m128i out[4];
+  VP8L32bToPlanar(in, out);
+  rgb[0] = _mm_unpacklo_epi8(out[1], zero);
+  rgb[1] = _mm_unpackhi_epi8(out[1], zero);
+  rgb[2] = _mm_unpacklo_epi8(out[2], zero);
+  rgb[3] = _mm_unpackhi_epi8(out[2], zero);
+  rgb[4] = _mm_unpacklo_epi8(out[3], zero);
+  rgb[5] = _mm_unpackhi_epi8(out[3], zero);
 }
 
 // This macro computes (RG * MULT_RG + GB * MULT_GB + ROUNDER) >> DESCALE_FIX
@@ -650,11 +619,10 @@ static void ConvertARGBToY(const uint32_t* argb, uint8_t* y, int width) {
   const int max_width = width & ~15;
   int i;
   for (i = 0; i < max_width; i += 16) {
-    __m128i r, g, b, Y0, Y1;
-    RGB32PackedToPlanar(&argb[i + 0], &r, &g, &b);
-    ConvertRGBToY(&r, &g, &b, &Y0);
-    RGB32PackedToPlanar(&argb[i + 8], &r, &g, &b);
-    ConvertRGBToY(&r, &g, &b, &Y1);
+    __m128i Y0, Y1, rgb[6];
+    RGB32PackedToPlanar(&argb[i], rgb);
+    ConvertRGBToY(&rgb[0], &rgb[2], &rgb[4], &Y0);
+    ConvertRGBToY(&rgb[1], &rgb[3], &rgb[5], &Y1);
     STORE_16(_mm_packus_epi16(Y0, Y1), y + i);
   }
   for (; i < width; ++i) {   // left-over
@@ -679,20 +647,18 @@ static void ConvertARGBToUV(const uint32_t* argb, uint8_t* u, uint8_t* v,
   const int max_width = src_width & ~31;
   int i;
   for (i = 0; i < max_width; i += 32, u += 16, v += 16) {
-    __m128i r0, g0, b0, r1, g1, b1, U0, V0, U1, V1;
-    RGB32PackedToPlanar(&argb[i +  0], &r0, &g0, &b0);
-    RGB32PackedToPlanar(&argb[i +  8], &r1, &g1, &b1);
-    HorizontalAddPack(&r0, &r1, &r0);
-    HorizontalAddPack(&g0, &g1, &g0);
-    HorizontalAddPack(&b0, &b1, &b0);
-    ConvertRGBToUV(&r0, &g0, &b0, &U0, &V0);
+    __m128i rgb[6], U0, V0, U1, V1;
+    RGB32PackedToPlanar(&argb[i], rgb);
+    HorizontalAddPack(&rgb[0], &rgb[1], &rgb[0]);
+    HorizontalAddPack(&rgb[2], &rgb[3], &rgb[2]);
+    HorizontalAddPack(&rgb[4], &rgb[5], &rgb[4]);
+    ConvertRGBToUV(&rgb[0], &rgb[2], &rgb[4], &U0, &V0);
 
-    RGB32PackedToPlanar(&argb[i + 16], &r0, &g0, &b0);
-    RGB32PackedToPlanar(&argb[i + 24], &r1, &g1, &b1);
-    HorizontalAddPack(&r0, &r1, &r0);
-    HorizontalAddPack(&g0, &g1, &g0);
-    HorizontalAddPack(&b0, &b1, &b0);
-    ConvertRGBToUV(&r0, &g0, &b0, &U1, &V1);
+    RGB32PackedToPlanar(&argb[i + 16], rgb);
+    HorizontalAddPack(&rgb[0], &rgb[1], &rgb[0]);
+    HorizontalAddPack(&rgb[2], &rgb[3], &rgb[2]);
+    HorizontalAddPack(&rgb[4], &rgb[5], &rgb[4]);
+    ConvertRGBToUV(&rgb[0], &rgb[2], &rgb[4], &U1, &V1);
 
     U0 = _mm_packus_epi16(U0, U1);
     V0 = _mm_packus_epi16(V0, V1);

@@ -100,6 +100,81 @@ static WEBP_INLINE void VP8Transpose_2_4x4_16b(
   // a03 a13 a23 a33   b03 b13 b23 b33
 }
 
+//------------------------------------------------------------------------------
+// Channel mixing.
+
+// Function used several times in VP8PlanarTo24b.
+// It samples the in buffer as follows: one every two unsigned char is stored
+// at the beginning of the buffer, while the other half is stored at the end.
+static WEBP_INLINE void VP8PlanarTo24bHelper(const __m128i* const in /*in[6]*/,
+                                             __m128i* const out /*out[6]*/) {
+  const __m128i v_mask = _mm_set1_epi16(0x00ff);
+
+  // Take one every two upper 8b values.
+  out[0] = _mm_packus_epi16(_mm_and_si128(in[0], v_mask),
+                            _mm_and_si128(in[1], v_mask));
+  out[1] = _mm_packus_epi16(_mm_and_si128(in[2], v_mask),
+                            _mm_and_si128(in[3], v_mask));
+  out[2] = _mm_packus_epi16(_mm_and_si128(in[4], v_mask),
+                            _mm_and_si128(in[5], v_mask));
+  // Take one every two lower 8b values.
+  out[3] = _mm_packus_epi16(_mm_srli_epi16(in[0], 8), _mm_srli_epi16(in[1], 8));
+  out[4] = _mm_packus_epi16(_mm_srli_epi16(in[2], 8), _mm_srli_epi16(in[3], 8));
+  out[5] = _mm_packus_epi16(_mm_srli_epi16(in[4], 8), _mm_srli_epi16(in[5], 8));
+}
+
+// Pack the planar buffers
+// rrrr... rrrr... gggg... gggg... bbbb... bbbb....
+// triplet by triplet in the output buffer rgb as rgbrgbrgbrgb ...
+static WEBP_INLINE void VP8PlanarTo24b(const __m128i* const in /*in[6]*/,
+                                       __m128i* const out /*out[6]*/) {
+  // The input is 6 registers of sixteen 8b but for the sake of explanation,
+  // let's take 6 registers of four 8b values.
+  // To pack, we will keep taking one every two 8b integer and move it
+  // around as follows:
+  // Input:
+  //   r0r1r2r3 | r4r5r6r7 | g0g1g2g3 | g4g5g6g7 | b0b1b2b3 | b4b5b6b7
+  // Split the 6 registers in two sets of 3 registers: the first set as the even
+  // 8b bytes, the second the odd ones:
+  //   r0r2r4r6 | g0g2g4g6 | b0b2b4b6 | r1r3r5r7 | g1g3g5g7 | b1b3b5b7
+  // Repeat the same permutations twice more:
+  //   r0r4g0g4 | b0b4r1r5 | g1g5b1b5 | r2r6g2g6 | b2b6r3r7 | g3g7b3b7
+  //   r0g0b0r1 | g1b1r2g2 | b2r3g3b3 | r4g4b4r5 | g5b5r6g6 | b6r7g7b7
+  __m128i tmp[6];
+  VP8PlanarTo24bHelper(in, out);
+  VP8PlanarTo24bHelper(out, tmp);
+  VP8PlanarTo24bHelper(tmp, out);
+  // We need to do it two more times than the example as we have sixteen bytes.
+  VP8PlanarTo24bHelper(out, tmp);
+  VP8PlanarTo24bHelper(tmp, out);
+}
+
+// Convert two packed buffers like argbargbargbargb... into the split channels
+// aaaaa ... rrrr ... gggg .... bbbbb ......
+static WEBP_INLINE void VP8L32bToPlanar(const __m128i* const in /*in[4]*/,
+                                        __m128i* const out /*out[4]*/) {
+  // Column-wise transpose.
+  const __m128i A0 = _mm_unpacklo_epi8(in[0], in[1]);
+  const __m128i A1 = _mm_unpackhi_epi8(in[0], in[1]);
+  const __m128i A2 = _mm_unpacklo_epi8(in[2], in[3]);
+  const __m128i A3 = _mm_unpackhi_epi8(in[2], in[3]);
+  const __m128i B0 = _mm_unpacklo_epi8(A0, A1);
+  const __m128i B1 = _mm_unpackhi_epi8(A0, A1);
+  const __m128i B2 = _mm_unpacklo_epi8(A2, A3);
+  const __m128i B3 = _mm_unpackhi_epi8(A2, A3);
+  // C0 = g7 g6 ... g1 g0 | b7 b6 ... b1 b0
+  // C1 = a7 a6 ... a1 a0 | r7 r6 ... r1 r0
+  const __m128i C0 = _mm_unpacklo_epi8(B0, B1);
+  const __m128i C1 = _mm_unpackhi_epi8(B0, B1);
+  const __m128i C2 = _mm_unpacklo_epi8(B2, B3);
+  const __m128i C3 = _mm_unpackhi_epi8(B2, B3);
+  // Gather the channels.
+  out[0] = _mm_unpackhi_epi64(C1, C3);
+  out[1] = _mm_unpacklo_epi64(C1, C3);
+  out[2] = _mm_unpackhi_epi64(C0, C2);
+  out[3] = _mm_unpacklo_epi64(C0, C2);
+}
+
 #endif  // WEBP_USE_SSE2
 
 #ifdef __cplusplus
