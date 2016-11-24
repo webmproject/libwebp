@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d06c8cba_f3faf001",
+        "filename": "src/dsp/lossless.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-11-24T13:27:52Z",
+      "side": 1,
+      "message": "\u0027const src\u0027 -\u003e \u0027src\u0027\nso that you don\u0027t constrain the implementation to keep \u0027src\u0027 frozen (see beloww, line 50, line 98, etc.)",
+      "range": {
+        "startLine": 38,
+        "startChar": 66,
+        "endLine": 38,
+        "endChar": 67
+      },
+      "revId": "f370a7b6839de43e2effdd17ce5a54db56bb9ef5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
