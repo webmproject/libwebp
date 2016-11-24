@@ -171,28 +171,30 @@ static WEBP_INLINE uint8x16_t DoGreenShuffle(const uint8x16_t argb,
 }
 #endif  // USE_VTBLQ
 
-static void AddGreenToBlueAndRed(uint32_t* argb_data, int num_pixels) {
-  const uint32_t* const end = argb_data + (num_pixels & ~3);
+static void AddGreenToBlueAndRed(const uint32_t* src, int num_pixels,
+                                 uint32_t* dst) {
+  const uint32_t* const end = src + (num_pixels & ~3);
 #ifdef USE_VTBLQ
   const uint8x16_t shuffle = vld1q_u8(kGreenShuffle);
 #else
   const uint8x8_t shuffle = vld1_u8(kGreenShuffle);
 #endif
-  for (; argb_data < end; argb_data += 4) {
-    const uint8x16_t argb = vld1q_u8((uint8_t*)argb_data);
+  for (; src < end; src += 4, dst += 4) {
+    const uint8x16_t argb = vld1q_u8((const uint8_t*)src);
     const uint8x16_t greens = DoGreenShuffle(argb, shuffle);
-    vst1q_u8((uint8_t*)argb_data, vaddq_u8(argb, greens));
+    vst1q_u8((uint8_t*)dst, vaddq_u8(argb, greens));
   }
   // fallthrough and finish off with plain-C
-  VP8LAddGreenToBlueAndRed_C(argb_data, num_pixels & 3);
+  VP8LAddGreenToBlueAndRed_C(src, num_pixels & 3, dst);
 }
 
 //------------------------------------------------------------------------------
 // Color Transform
 
 static void TransformColorInverse(const VP8LMultipliers* const m,
-                                  uint32_t* argb_data, int num_pixels) {
-  // sign-extended multiplying constants, pre-shifted by 6.
+                                  const uint32_t* const src, int num_pixels,
+                                  uint32_t* dst) {
+// sign-extended multiplying constants, pre-shifted by 6.
 #define CST(X)  (((int16_t)(m->X << 8)) >> 6)
   const int16_t rb[8] = {
     CST(green_to_blue_), CST(green_to_red_),
@@ -219,7 +221,7 @@ static void TransformColorInverse(const VP8LMultipliers* const m,
   const uint32x4_t mask_ag = vdupq_n_u32(0xff00ff00u);
   int i;
   for (i = 0; i + 4 <= num_pixels; i += 4) {
-    const uint8x16_t in = vld1q_u8((uint8_t*)(argb_data + i));
+    const uint8x16_t in = vld1q_u8((const uint8_t*)(src + i));
     const uint32x4_t a0g0 = vandq_u32(vreinterpretq_u32_u8(in), mask_ag);
     // 0 g 0 g
     const uint8x16_t greens = DoGreenShuffle(in, shuffle);
@@ -240,10 +242,10 @@ static void TransformColorInverse(const VP8LMultipliers* const m,
     // 0  r'  0  b''
     const uint16x8_t G = vshrq_n_u16(vreinterpretq_u16_s8(F), 8);
     const uint32x4_t out = vorrq_u32(vreinterpretq_u32_u16(G), a0g0);
-    vst1q_u32(argb_data + i, out);
+    vst1q_u32(dst + i, out);
   }
   // Fall-back to C-version for left-overs.
-  VP8LTransformColorInverse_C(m, argb_data + i, num_pixels - i);
+  VP8LTransformColorInverse_C(m, src + i, num_pixels - i, dst + i);
 }
 
 #undef USE_VTBLQ

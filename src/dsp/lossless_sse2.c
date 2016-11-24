@@ -157,26 +157,28 @@ static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
 
-static void AddGreenToBlueAndRed(uint32_t* argb_data, int num_pixels) {
+static void AddGreenToBlueAndRed(const uint32_t* const src, int num_pixels,
+                                 uint32_t* dst) {
   int i;
   for (i = 0; i + 4 <= num_pixels; i += 4) {
-    const __m128i in = _mm_loadu_si128((__m128i*)&argb_data[i]); // argb
+    const __m128i in = _mm_loadu_si128((const __m128i*)&src[i]); // argb
     const __m128i A = _mm_srli_epi16(in, 8);     // 0 a 0 g
     const __m128i B = _mm_shufflelo_epi16(A, _MM_SHUFFLE(2, 2, 0, 0));
     const __m128i C = _mm_shufflehi_epi16(B, _MM_SHUFFLE(2, 2, 0, 0));  // 0g0g
     const __m128i out = _mm_add_epi8(in, C);
-    _mm_storeu_si128((__m128i*)&argb_data[i], out);
+    _mm_storeu_si128((__m128i*)&dst[i], out);
   }
   // fallthrough and finish off with plain-C
-  VP8LAddGreenToBlueAndRed_C(argb_data + i, num_pixels - i);
+  VP8LAddGreenToBlueAndRed_C(src + i, num_pixels - i, dst + i);
 }
 
 //------------------------------------------------------------------------------
 // Color Transform
 
 static void TransformColorInverse(const VP8LMultipliers* const m,
-                                  uint32_t* argb_data, int num_pixels) {
-  // sign-extended multiplying constants, pre-shifted by 5.
+                                  const uint32_t* const src, int num_pixels,
+                                  uint32_t* dst) {
+// sign-extended multiplying constants, pre-shifted by 5.
 #define CST(X)  (((int16_t)(m->X << 8)) >> 5)   // sign-extend
   const __m128i mults_rb = _mm_set_epi16(
       CST(green_to_red_), CST(green_to_blue_),
@@ -190,7 +192,7 @@ static void TransformColorInverse(const VP8LMultipliers* const m,
   const __m128i mask_ag = _mm_set1_epi32(0xff00ff00);  // alpha-green masks
   int i;
   for (i = 0; i + 4 <= num_pixels; i += 4) {
-    const __m128i in = _mm_loadu_si128((__m128i*)&argb_data[i]); // argb
+    const __m128i in = _mm_loadu_si128((const __m128i*)&src[i]); // argb
     const __m128i A = _mm_and_si128(in, mask_ag);     // a   0   g   0
     const __m128i B = _mm_shufflelo_epi16(A, _MM_SHUFFLE(2, 2, 0, 0));
     const __m128i C = _mm_shufflehi_epi16(B, _MM_SHUFFLE(2, 2, 0, 0));  // g0g0
@@ -202,10 +204,10 @@ static void TransformColorInverse(const VP8LMultipliers* const m,
     const __m128i I = _mm_add_epi8(H, F);              // r' x  b'' 0
     const __m128i J = _mm_srli_epi16(I, 8);            // 0  r'  0  b''
     const __m128i out = _mm_or_si128(J, A);
-    _mm_storeu_si128((__m128i*)&argb_data[i], out);
+    _mm_storeu_si128((__m128i*)&dst[i], out);
   }
   // Fall-back to C-version for left-overs.
-  VP8LTransformColorInverse_C(m, argb_data + i, num_pixels - i);
+  VP8LTransformColorInverse_C(m, src + i, num_pixels - i, dst + i);
 }
 
 //------------------------------------------------------------------------------
