@@ -160,8 +160,10 @@ static WEBP_INLINE void PackAndStore565(const __m128i* const R,
 // Pack the planar buffers
 // rrrr... rrrr... gggg... gggg... bbbb... bbbb....
 // triplet by triplet in the output buffer rgb as rgbrgbrgbrgb ...
-static WEBP_INLINE void PlanarTo24b(const __m128i* const in /*in[6]*/,
-                                    uint8_t* rgb) {
+static WEBP_INLINE void PlanarTo24b(__m128i* const in0, __m128i* const in1,
+                                    __m128i* const in2, __m128i* const in3,
+                                    __m128i* const in4, __m128i* const in5,
+                                    uint8_t* const rgb) {
   // The input is 6 registers of sixteen 8b but for the sake of explanation,
   // let's take 6 registers of four 8b values.
   // To pack, we will keep taking one every two 8b integer and move it
@@ -174,15 +176,14 @@ static WEBP_INLINE void PlanarTo24b(const __m128i* const in /*in[6]*/,
   // Repeat the same permutations twice more:
   //   r0r4g0g4 | b0b4r1r5 | g1g5b1b5 | r2r6g2g6 | b2b6r3r7 | g3g7b3b7
   //   r0g0b0r1 | g1b1r2g2 | b2r3g3b3 | r4g4b4r5 | g5b5r6g6 | b6r7g7b7
-  __m128i tmp[6];
-  VP8PlanarTo24b(in, tmp);
+  VP8PlanarTo24b(in0, in1, in2, in3, in4, in5);
 
-  _mm_storeu_si128((__m128i*)(rgb +  0), tmp[0]);
-  _mm_storeu_si128((__m128i*)(rgb + 16), tmp[1]);
-  _mm_storeu_si128((__m128i*)(rgb + 32), tmp[2]);
-  _mm_storeu_si128((__m128i*)(rgb + 48), tmp[3]);
-  _mm_storeu_si128((__m128i*)(rgb + 64), tmp[4]);
-  _mm_storeu_si128((__m128i*)(rgb + 80), tmp[5]);
+  _mm_storeu_si128((__m128i*)(rgb +  0), *in0);
+  _mm_storeu_si128((__m128i*)(rgb + 16), *in1);
+  _mm_storeu_si128((__m128i*)(rgb + 32), *in2);
+  _mm_storeu_si128((__m128i*)(rgb + 48), *in3);
+  _mm_storeu_si128((__m128i*)(rgb + 64), *in4);
+  _mm_storeu_si128((__m128i*)(rgb + 80), *in5);
 }
 
 void VP8YuvToRgba32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
@@ -242,29 +243,29 @@ void VP8YuvToRgb56532(const uint8_t* y, const uint8_t* u, const uint8_t* v,
 void VP8YuvToRgb32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
                    uint8_t* dst) {
   __m128i R0, R1, R2, R3, G0, G1, G2, G3, B0, B1, B2, B3;
-  __m128i rgb[6];
+  __m128i rgb0, rgb1, rgb2, rgb3, rgb4, rgb5;
 
-  YUV444ToRGB(y +  0, u +  0, v +  0, &R0, &G0, &B0);
-  YUV444ToRGB(y +  8, u +  8, v +  8, &R1, &G1, &B1);
+  YUV444ToRGB(y + 0, u + 0, v + 0, &R0, &G0, &B0);
+  YUV444ToRGB(y + 8, u + 8, v + 8, &R1, &G1, &B1);
   YUV444ToRGB(y + 16, u + 16, v + 16, &R2, &G2, &B2);
   YUV444ToRGB(y + 24, u + 24, v + 24, &R3, &G3, &B3);
 
   // Cast to 8b and store as RRRRGGGGBBBB.
-  rgb[0] = _mm_packus_epi16(R0, R1);
-  rgb[1] = _mm_packus_epi16(R2, R3);
-  rgb[2] = _mm_packus_epi16(G0, G1);
-  rgb[3] = _mm_packus_epi16(G2, G3);
-  rgb[4] = _mm_packus_epi16(B0, B1);
-  rgb[5] = _mm_packus_epi16(B2, B3);
+  rgb0 = _mm_packus_epi16(R0, R1);
+  rgb1 = _mm_packus_epi16(R2, R3);
+  rgb2 = _mm_packus_epi16(G0, G1);
+  rgb3 = _mm_packus_epi16(G2, G3);
+  rgb4 = _mm_packus_epi16(B0, B1);
+  rgb5 = _mm_packus_epi16(B2, B3);
 
   // Pack as RGBRGBRGBRGB.
-  PlanarTo24b(rgb, dst);
+  PlanarTo24b(&rgb0, &rgb1, &rgb2, &rgb3, &rgb4, &rgb5, dst);
 }
 
 void VP8YuvToBgr32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
                    uint8_t* dst) {
   __m128i R0, R1, R2, R3, G0, G1, G2, G3, B0, B1, B2, B3;
-  __m128i bgr[6];
+  __m128i bgr0, bgr1, bgr2, bgr3, bgr4, bgr5;
 
   YUV444ToRGB(y +  0, u +  0, v +  0, &R0, &G0, &B0);
   YUV444ToRGB(y +  8, u +  8, v +  8, &R1, &G1, &B1);
@@ -272,15 +273,15 @@ void VP8YuvToBgr32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
   YUV444ToRGB(y + 24, u + 24, v + 24, &R3, &G3, &B3);
 
   // Cast to 8b and store as BBBBGGGGRRRR.
-  bgr[0] = _mm_packus_epi16(B0, B1);
-  bgr[1] = _mm_packus_epi16(B2, B3);
-  bgr[2] = _mm_packus_epi16(G0, G1);
-  bgr[3] = _mm_packus_epi16(G2, G3);
-  bgr[4] = _mm_packus_epi16(R0, R1);
-  bgr[5] = _mm_packus_epi16(R2, R3);
+  bgr0 = _mm_packus_epi16(B0, B1);
+  bgr1 = _mm_packus_epi16(B2, B3);
+  bgr2 = _mm_packus_epi16(G0, G1);
+  bgr3 = _mm_packus_epi16(G2, G3);
+  bgr4 = _mm_packus_epi16(R0, R1);
+  bgr5= _mm_packus_epi16(R2, R3);
 
   // Pack as BGRBGRBGRBGR.
-  PlanarTo24b(bgr, dst);
+  PlanarTo24b(&bgr0, &bgr1, &bgr2, &bgr3, &bgr4, &bgr5, dst);
 }
 
 //-----------------------------------------------------------------------------
@@ -354,7 +355,7 @@ static void YuvToRgbRow(const uint8_t* y, const uint8_t* u, const uint8_t* v,
   int n;
   for (n = 0; n + 32 <= len; n += 32, dst += 32 * 3) {
     __m128i R0, R1, R2, R3, G0, G1, G2, G3, B0, B1, B2, B3;
-    __m128i rgb[6];
+    __m128i rgb0, rgb1, rgb2, rgb3, rgb4, rgb5;
 
     YUV420ToRGB(y +  0, u +  0, v +  0, &R0, &G0, &B0);
     YUV420ToRGB(y +  8, u +  4, v +  4, &R1, &G1, &B1);
@@ -362,15 +363,15 @@ static void YuvToRgbRow(const uint8_t* y, const uint8_t* u, const uint8_t* v,
     YUV420ToRGB(y + 24, u + 12, v + 12, &R3, &G3, &B3);
 
     // Cast to 8b and store as RRRRGGGGBBBB.
-    rgb[0] = _mm_packus_epi16(R0, R1);
-    rgb[1] = _mm_packus_epi16(R2, R3);
-    rgb[2] = _mm_packus_epi16(G0, G1);
-    rgb[3] = _mm_packus_epi16(G2, G3);
-    rgb[4] = _mm_packus_epi16(B0, B1);
-    rgb[5] = _mm_packus_epi16(B2, B3);
+    rgb0 = _mm_packus_epi16(R0, R1);
+    rgb1 = _mm_packus_epi16(R2, R3);
+    rgb2 = _mm_packus_epi16(G0, G1);
+    rgb3 = _mm_packus_epi16(G2, G3);
+    rgb4 = _mm_packus_epi16(B0, B1);
+    rgb5 = _mm_packus_epi16(B2, B3);
 
     // Pack as RGBRGBRGBRGB.
-    PlanarTo24b(rgb, dst);
+    PlanarTo24b(&rgb0, &rgb1, &rgb2, &rgb3, &rgb4, &rgb5, dst);
 
     y += 32;
     u += 16;
@@ -390,7 +391,7 @@ static void YuvToBgrRow(const uint8_t* y, const uint8_t* u, const uint8_t* v,
   int n;
   for (n = 0; n + 32 <= len; n += 32, dst += 32 * 3) {
     __m128i R0, R1, R2, R3, G0, G1, G2, G3, B0, B1, B2, B3;
-    __m128i bgr[6];
+    __m128i bgr0, bgr1, bgr2, bgr3, bgr4, bgr5;
 
     YUV420ToRGB(y +  0, u +  0, v +  0, &R0, &G0, &B0);
     YUV420ToRGB(y +  8, u +  4, v +  4, &R1, &G1, &B1);
@@ -398,15 +399,15 @@ static void YuvToBgrRow(const uint8_t* y, const uint8_t* u, const uint8_t* v,
     YUV420ToRGB(y + 24, u + 12, v + 12, &R3, &G3, &B3);
 
     // Cast to 8b and store as BBBBGGGGRRRR.
-    bgr[0] = _mm_packus_epi16(B0, B1);
-    bgr[1] = _mm_packus_epi16(B2, B3);
-    bgr[2] = _mm_packus_epi16(G0, G1);
-    bgr[3] = _mm_packus_epi16(G2, G3);
-    bgr[4] = _mm_packus_epi16(R0, R1);
-    bgr[5] = _mm_packus_epi16(R2, R3);
+    bgr0 = _mm_packus_epi16(B0, B1);
+    bgr1 = _mm_packus_epi16(B2, B3);
+    bgr2 = _mm_packus_epi16(G0, G1);
+    bgr3 = _mm_packus_epi16(G2, G3);
+    bgr4 = _mm_packus_epi16(R0, R1);
+    bgr5 = _mm_packus_epi16(R2, R3);
 
     // Pack as BGRBGRBGRBGR.
-    PlanarTo24b(bgr, dst);
+    PlanarTo24b(&bgr0, &bgr1, &bgr2, &bgr3, &bgr4, &bgr5, dst);
 
     y += 32;
     u += 16;
@@ -478,16 +479,17 @@ static WEBP_INLINE void RGB24PackedToPlanar(const uint8_t* const rgb,
 static WEBP_INLINE void RGB32PackedToPlanar(const uint32_t* const argb,
                                             __m128i* const rgb /*in[6]*/) {
   const __m128i zero = _mm_setzero_si128();
-  const __m128i in[4] = {LOAD_16(argb + 0), LOAD_16(argb + 4),
-                         LOAD_16(argb + 8), LOAD_16(argb + 12)};
-  __m128i out[4];
-  VP8L32bToPlanar(in, out);
-  rgb[0] = _mm_unpacklo_epi8(out[1], zero);
-  rgb[1] = _mm_unpackhi_epi8(out[1], zero);
-  rgb[2] = _mm_unpacklo_epi8(out[2], zero);
-  rgb[3] = _mm_unpackhi_epi8(out[2], zero);
-  rgb[4] = _mm_unpacklo_epi8(out[3], zero);
-  rgb[5] = _mm_unpackhi_epi8(out[3], zero);
+  __m128i a0 = LOAD_16(argb + 0);
+  __m128i a1 = LOAD_16(argb + 4);
+  __m128i a2 = LOAD_16(argb + 8);
+  __m128i a3 = LOAD_16(argb + 12);
+  VP8L32bToPlanar(&a0, &a1, &a2, &a3);
+  rgb[0] = _mm_unpacklo_epi8(a1, zero);
+  rgb[1] = _mm_unpackhi_epi8(a1, zero);
+  rgb[2] = _mm_unpacklo_epi8(a2, zero);
+  rgb[3] = _mm_unpackhi_epi8(a2, zero);
+  rgb[4] = _mm_unpacklo_epi8(a3, zero);
+  rgb[5] = _mm_unpackhi_epi8(a3, zero);
 }
 
 // This macro computes (RG * MULT_RG + GB * MULT_GB + ROUNDER) >> DESCALE_FIX

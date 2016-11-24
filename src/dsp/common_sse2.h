@@ -106,28 +106,31 @@ static WEBP_INLINE void VP8Transpose_2_4x4_16b(
 // Function used several times in VP8PlanarTo24b.
 // It samples the in buffer as follows: one every two unsigned char is stored
 // at the beginning of the buffer, while the other half is stored at the end.
-static WEBP_INLINE void VP8PlanarTo24bHelper(const __m128i* const in /*in[6]*/,
-                                             __m128i* const out /*out[6]*/) {
-  const __m128i v_mask = _mm_set1_epi16(0x00ff);
-
-  // Take one every two upper 8b values.
-  out[0] = _mm_packus_epi16(_mm_and_si128(in[0], v_mask),
-                            _mm_and_si128(in[1], v_mask));
-  out[1] = _mm_packus_epi16(_mm_and_si128(in[2], v_mask),
-                            _mm_and_si128(in[3], v_mask));
-  out[2] = _mm_packus_epi16(_mm_and_si128(in[4], v_mask),
-                            _mm_and_si128(in[5], v_mask));
-  // Take one every two lower 8b values.
-  out[3] = _mm_packus_epi16(_mm_srli_epi16(in[0], 8), _mm_srli_epi16(in[1], 8));
-  out[4] = _mm_packus_epi16(_mm_srli_epi16(in[2], 8), _mm_srli_epi16(in[3], 8));
-  out[5] = _mm_packus_epi16(_mm_srli_epi16(in[4], 8), _mm_srli_epi16(in[5], 8));
-}
+#define VP8PlanarTo24bHelper(IN, OUT)                            \
+  do {                                                           \
+    const __m128i v_mask = _mm_set1_epi16(0x00ff);               \
+    /* Take one every two upper 8b values.*/                     \
+    (OUT##0) = _mm_packus_epi16(_mm_and_si128((IN##0), v_mask),  \
+                                _mm_and_si128((IN##1), v_mask)); \
+    (OUT##1) = _mm_packus_epi16(_mm_and_si128((IN##2), v_mask),  \
+                                _mm_and_si128((IN##3), v_mask)); \
+    (OUT##2) = _mm_packus_epi16(_mm_and_si128((IN##4), v_mask),  \
+                                _mm_and_si128((IN##5), v_mask)); \
+    /* Take one every two lower 8b values.*/                     \
+    (OUT##3) = _mm_packus_epi16(_mm_srli_epi16((IN##0), 8),      \
+                                _mm_srli_epi16((IN##1), 8));     \
+    (OUT##4) = _mm_packus_epi16(_mm_srli_epi16((IN##2), 8),      \
+                                _mm_srli_epi16((IN##3), 8));     \
+    (OUT##5) = _mm_packus_epi16(_mm_srli_epi16((IN##4), 8),      \
+                                _mm_srli_epi16((IN##5), 8));     \
+  } while (0)
 
 // Pack the planar buffers
 // rrrr... rrrr... gggg... gggg... bbbb... bbbb....
 // triplet by triplet in the output buffer rgb as rgbrgbrgbrgb ...
-static WEBP_INLINE void VP8PlanarTo24b(const __m128i* const in /*in[6]*/,
-                                       __m128i* const out /*out[6]*/) {
+static WEBP_INLINE void VP8PlanarTo24b(__m128i* const in0, __m128i* const in1,
+                                       __m128i* const in2, __m128i* const in3,
+                                       __m128i* const in4, __m128i* const in5) {
   // The input is 6 registers of sixteen 8b but for the sake of explanation,
   // let's take 6 registers of four 8b values.
   // To pack, we will keep taking one every two 8b integer and move it
@@ -140,24 +143,31 @@ static WEBP_INLINE void VP8PlanarTo24b(const __m128i* const in /*in[6]*/,
   // Repeat the same permutations twice more:
   //   r0r4g0g4 | b0b4r1r5 | g1g5b1b5 | r2r6g2g6 | b2b6r3r7 | g3g7b3b7
   //   r0g0b0r1 | g1b1r2g2 | b2r3g3b3 | r4g4b4r5 | g5b5r6g6 | b6r7g7b7
-  __m128i tmp[6];
-  VP8PlanarTo24bHelper(in, out);
-  VP8PlanarTo24bHelper(out, tmp);
-  VP8PlanarTo24bHelper(tmp, out);
+  __m128i tmp0, tmp1, tmp2, tmp3, tmp4, tmp5;
+  VP8PlanarTo24bHelper(*in, tmp);
+  VP8PlanarTo24bHelper(tmp, *in);
+  VP8PlanarTo24bHelper(*in, tmp);
   // We need to do it two more times than the example as we have sixteen bytes.
-  VP8PlanarTo24bHelper(out, tmp);
-  VP8PlanarTo24bHelper(tmp, out);
+  {
+    __m128i out0, out1, out2, out3, out4, out5;
+    VP8PlanarTo24bHelper(tmp, out);
+    VP8PlanarTo24bHelper(out, *in);
+  }
 }
 
-// Convert two packed buffers like argbargbargbargb... into the split channels
-// aaaaa ... rrrr ... gggg .... bbbbb ......
-static WEBP_INLINE void VP8L32bToPlanar(const __m128i* const in /*in[4]*/,
-                                        __m128i* const out /*out[4]*/) {
+#undef VP8PlanarTo24bHelper
+
+// Convert four packed four-channel buffers like argbargbargbargb... into the
+// split channels aaaaa ... rrrr ... gggg .... bbbbb ......
+static WEBP_INLINE void VP8L32bToPlanar(__m128i* const in0,
+                                        __m128i* const in1,
+                                        __m128i* const in2,
+                                        __m128i* const in3) {
   // Column-wise transpose.
-  const __m128i A0 = _mm_unpacklo_epi8(in[0], in[1]);
-  const __m128i A1 = _mm_unpackhi_epi8(in[0], in[1]);
-  const __m128i A2 = _mm_unpacklo_epi8(in[2], in[3]);
-  const __m128i A3 = _mm_unpackhi_epi8(in[2], in[3]);
+  const __m128i A0 = _mm_unpacklo_epi8(*in0, *in1);
+  const __m128i A1 = _mm_unpackhi_epi8(*in0, *in1);
+  const __m128i A2 = _mm_unpacklo_epi8(*in2, *in3);
+  const __m128i A3 = _mm_unpackhi_epi8(*in2, *in3);
   const __m128i B0 = _mm_unpacklo_epi8(A0, A1);
   const __m128i B1 = _mm_unpackhi_epi8(A0, A1);
   const __m128i B2 = _mm_unpacklo_epi8(A2, A3);
@@ -169,10 +179,10 @@ static WEBP_INLINE void VP8L32bToPlanar(const __m128i* const in /*in[4]*/,
   const __m128i C2 = _mm_unpacklo_epi8(B2, B3);
   const __m128i C3 = _mm_unpackhi_epi8(B2, B3);
   // Gather the channels.
-  out[0] = _mm_unpackhi_epi64(C1, C3);
-  out[1] = _mm_unpacklo_epi64(C1, C3);
-  out[2] = _mm_unpackhi_epi64(C0, C2);
-  out[3] = _mm_unpacklo_epi64(C0, C2);
+  *in0 = _mm_unpackhi_epi64(C1, C3);
+  *in1 = _mm_unpacklo_epi64(C1, C3);
+  *in2 = _mm_unpackhi_epi64(C0, C2);
+  *in3 = _mm_unpacklo_epi64(C0, C2);
 }
 
 #endif  // WEBP_USE_SSE2
