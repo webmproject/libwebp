@@ -244,44 +244,51 @@ static void ConvertBGRAToRGB(const uint32_t* src,
   }
 }
 
-static void AddGreenToBlueAndRed(uint32_t* data, int num_pixels) {
+static void AddGreenToBlueAndRed(const uint32_t* const src, int num_pixels,
+                                 uint32_t* dst) {
   int i;
-  uint8_t* ptemp_data = (uint8_t*)data;
+  const uint8_t* in = (const uint8_t*)src;
+  uint8_t* out = (uint8_t*)dst;
   v16u8 src0, dst0, tmp0;
   const v16u8 mask = { 1, 255, 1, 255, 5, 255, 5, 255, 9, 255, 9, 255,
                        13, 255, 13, 255 };
 
   while (num_pixels >= 8) {
     v16u8 src1, dst1, tmp1;
-    LD_UB2(ptemp_data, 16, src0, src1);
+    LD_UB2(in, 16, src0, src1);
     VSHF_B2_UB(src0, src1, src1, src0, mask, mask, tmp0, tmp1);
     ADD2(src0, tmp0, src1, tmp1, dst0, dst1);
-    ST_UB2(dst0, dst1, ptemp_data, 16);
-    ptemp_data += 32;
+    ST_UB2(dst0, dst1, out, 16);
+    in += 32;
+    out += 32;
     num_pixels -= 8;
   }
   if (num_pixels > 0) {
     if (num_pixels >= 4) {
-      src0 = LD_UB(ptemp_data);
+      src0 = LD_UB(in);
       tmp0 = VSHF_UB(src0, src0, mask);
       dst0 = src0 + tmp0;
-      ST_UB(dst0, ptemp_data);
-      ptemp_data += 16;
+      ST_UB(dst0, out);
+      in += 16;
+      out += 16;
       num_pixels -= 4;
     }
     for (i = 0; i < num_pixels; i++) {
-      const uint8_t b = ptemp_data[0];
-      const uint8_t g = ptemp_data[1];
-      const uint8_t r = ptemp_data[2];
-      ptemp_data[0] = (b + g) & 0xff;
-      ptemp_data[2] = (r + g) & 0xff;
-      ptemp_data += 4;
+      const uint8_t b = in[0];
+      const uint8_t g = in[1];
+      const uint8_t r = in[2];
+      out[0] = (b + g) & 0xff;
+      out[1] = g;
+      out[2] = (r + g) & 0xff;
+      out[4] = in[4];
+      out += 4;
     }
   }
 }
 
 static void TransformColorInverse(const VP8LMultipliers* const m,
-                                  uint32_t* data, int num_pixels) {
+                                  const uint32_t* src, int num_pixels,
+                                  uint32_t* dst) {
   v16u8 src0, dst0;
   const v16i8 g2br = (v16i8)__msa_fill_w(m->green_to_blue_ |
                                          (m->green_to_red_ << 16));
@@ -293,34 +300,36 @@ static void TransformColorInverse(const VP8LMultipliers* const m,
 
   while (num_pixels >= 8) {
     v16u8 src1, dst1;
-    LD_UB2(data, 4, src0, src1);
+    LD_UB2(src, 4, src0, src1);
     TRANSFORM_COLOR_INVERSE_8(src0, src1, dst0, dst1, g2br, r2b, mask0, mask1);
-    ST_UB2(dst0, dst1, data, 4);
-    data += 8;
+    ST_UB2(dst0, dst1, dst, 4);
+    src += 8;
+    dst += 8;
     num_pixels -= 8;
   }
   if (num_pixels > 0) {
     if (num_pixels >= 4) {
-      src0 = LD_UB(data);
+      src0 = LD_UB(src);
       TRANSFORM_COLOR_INVERSE_4(src0, dst0, g2br, r2b, mask0, mask1);
-      ST_UB(dst0, data);
-      data += 4;
+      ST_UB(dst0, dst);
+      src += 4;
+      dst += 4;
       num_pixels -= 4;
     }
     if (num_pixels > 0) {
-      src0 = LD_UB(data);
+      src0 = LD_UB(src);
       TRANSFORM_COLOR_INVERSE_4(src0, dst0, g2br, r2b, mask0, mask1);
       if (num_pixels == 3) {
         const uint64_t pix_d = __msa_copy_s_d((v2i64)dst0, 0);
         const uint32_t pix_w = __msa_copy_s_w((v4i32)dst0, 2);
-        SD(pix_d, data + 0);
-        SW(pix_w, data + 2);
+        SD(pix_d, dst + 0);
+        SW(pix_w, dst + 2);
       } else if (num_pixels == 2) {
         const uint64_t pix_d = __msa_copy_s_d((v2i64)dst0, 0);
-        SD(pix_d, data);
+        SD(pix_d, dst);
       } else {
         const uint32_t pix_w = __msa_copy_s_w((v4i32)dst0, 0);
-        SW(pix_w, data);
+        SW(pix_w, dst);
       }
     }
   }

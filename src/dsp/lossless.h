@@ -35,8 +35,9 @@ extern "C" {
 typedef uint32_t (*VP8LPredictorFunc)(uint32_t left, const uint32_t* const top);
 extern VP8LPredictorFunc VP8LPredictors[16];
 
-typedef void (*VP8LProcessBlueAndRedFunc)(uint32_t* argb_data, int num_pixels);
-extern VP8LProcessBlueAndRedFunc VP8LAddGreenToBlueAndRed;
+typedef void (*VP8LProcessDecBlueAndRedFunc)(const uint32_t* src,
+                                             int num_pixels, uint32_t* dst);
+extern VP8LProcessDecBlueAndRedFunc VP8LAddGreenToBlueAndRed;
 
 typedef struct {
   // Note: the members are uint8_t, so that any negative values are
@@ -45,9 +46,10 @@ typedef struct {
   uint8_t green_to_blue_;
   uint8_t red_to_blue_;
 } VP8LMultipliers;
-typedef void (*VP8LTransformColorFunc)(const VP8LMultipliers* const m,
-                                       uint32_t* argb_data, int num_pixels);
-extern VP8LTransformColorFunc VP8LTransformColorInverse;
+typedef void (*VP8LTransformColorInverseFunc)(const VP8LMultipliers* const m,
+                                              const uint32_t* src,
+                                              int num_pixels, uint32_t* dst);
+extern VP8LTransformColorInverseFunc VP8LTransformColorInverse;
 
 struct VP8LTransform;  // Defined in dec/vp8li.h.
 
@@ -93,7 +95,8 @@ void VP8LColorIndexInverseTransformAlpha(
 
 // Expose some C-only fallback functions
 void VP8LTransformColorInverse_C(const VP8LMultipliers* const m,
-                                 uint32_t* data, int num_pixels);
+                                 const uint32_t* src, int num_pixels,
+                                 uint32_t* dst);
 
 void VP8LConvertBGRAToRGB_C(const uint32_t* src, int num_pixels, uint8_t* dst);
 void VP8LConvertBGRAToRGBA_C(const uint32_t* src, int num_pixels, uint8_t* dst);
@@ -102,7 +105,8 @@ void VP8LConvertBGRAToRGBA4444_C(const uint32_t* src,
 void VP8LConvertBGRAToRGB565_C(const uint32_t* src,
                                int num_pixels, uint8_t* dst);
 void VP8LConvertBGRAToBGR_C(const uint32_t* src, int num_pixels, uint8_t* dst);
-void VP8LAddGreenToBlueAndRed_C(uint32_t* data, int num_pixels);
+void VP8LAddGreenToBlueAndRed_C(const uint32_t* src, int num_pixels,
+                                uint32_t* dst);
 
 // Must be called before calling any of the above methods.
 void VP8LDspInit(void);
@@ -110,7 +114,10 @@ void VP8LDspInit(void);
 //------------------------------------------------------------------------------
 // Encoding
 
-extern VP8LProcessBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
+typedef void (*VP8LProcessEncBlueAndRedFunc)(uint32_t* dst, int num_pixels);
+extern VP8LProcessEncBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
+typedef void (*VP8LTransformColorFunc)(const VP8LMultipliers* const m,
+                                       uint32_t* const dst, int num_pixels);
 extern VP8LTransformColorFunc VP8LTransformColor;
 typedef void (*VP8LCollectColorBlueTransformsFunc)(
     const uint32_t* argb, int stride,

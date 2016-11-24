@@ -234,15 +234,16 @@ static void PredictorInverseTransform(const VP8LTransform* const transform,
 
 // Add green to blue and red channels (i.e. perform the inverse transform of
 // 'subtract green').
-void VP8LAddGreenToBlueAndRed_C(uint32_t* data, int num_pixels) {
+void VP8LAddGreenToBlueAndRed_C(const uint32_t* const src, int num_pixels,
+                                uint32_t* dst) {
   int i;
   for (i = 0; i < num_pixels; ++i) {
-    const uint32_t argb = data[i];
+    const uint32_t argb = src[i];
     const uint32_t green = ((argb >> 8) & 0xff);
     uint32_t red_blue = (argb & 0x00ff00ffu);
     red_blue += (green << 16) | green;
     red_blue &= 0x00ff00ffu;
-    data[i] = (argb & 0xff00ff00u) | red_blue;
+    dst[i] = (argb & 0xff00ff00u) | red_blue;
   }
 }
 
@@ -258,11 +259,12 @@ static WEBP_INLINE void ColorCodeToMultipliers(uint32_t color_code,
   m->red_to_blue_   = (color_code >> 16) & 0xff;
 }
 
-void VP8LTransformColorInverse_C(const VP8LMultipliers* const m, uint32_t* data,
-                                 int num_pixels) {
+void VP8LTransformColorInverse_C(const VP8LMultipliers* const m,
+                                 const uint32_t* const src, int num_pixels,
+                                 uint32_t* const dst) {
   int i;
   for (i = 0; i < num_pixels; ++i) {
-    const uint32_t argb = data[i];
+    const uint32_t argb = src[i];
     const uint32_t green = argb >> 8;
     const uint32_t red = argb >> 16;
     int new_red = red;
@@ -272,13 +274,14 @@ void VP8LTransformColorInverse_C(const VP8LMultipliers* const m, uint32_t* data,
     new_blue += ColorTransformDelta(m->green_to_blue_, green);
     new_blue += ColorTransformDelta(m->red_to_blue_, new_red);
     new_blue &= 0xff;
-    data[i] = (argb & 0xff00ff00u) | (new_red << 16) | (new_blue);
+    dst[i] = (argb & 0xff00ff00u) | (new_red << 16) | (new_blue);
   }
 }
 
 // Color space inverse transform.
 static void ColorSpaceInverseTransform(const VP8LTransform* const transform,
-                                       int y_start, int y_end, uint32_t* data) {
+                                       int y_start, int y_end,
+                                       const uint32_t* src, uint32_t* dst) {
   const int width = transform->xsize_;
   const int tile_width = 1 << transform->bits_;
   const int mask = tile_width - 1;
@@ -292,17 +295,19 @@ static void ColorSpaceInverseTransform(const VP8LTransform* const transform,
   while (y < y_end) {
     const uint32_t* pred = pred_row;
     VP8LMultipliers m = { 0, 0, 0 };
-    const uint32_t* const data_safe_end = data + safe_width;
-    const uint32_t* const data_end = data + width;
-    while (data < data_safe_end) {
+    const uint32_t* const src_safe_end = src + safe_width;
+    const uint32_t* const src_end = src + width;
+    while (src < src_safe_end) {
       ColorCodeToMultipliers(*pred++, &m);
-      VP8LTransformColorInverse(&m, data, tile_width);
-      data += tile_width;
+      VP8LTransformColorInverse(&m, src, tile_width, dst);
+      src += tile_width;
+      dst += tile_width;
     }
-    if (data < data_end) {  // Left-overs using C-version.
+    if (src < src_end) {  // Left-overs using C-version.
       ColorCodeToMultipliers(*pred++, &m);
-      VP8LTransformColorInverse(&m, data, remaining_width);
-      data += remaining_width;
+      VP8LTransformColorInverse(&m, src, remaining_width, dst);
+      src += remaining_width;
+      dst += remaining_width;
     }
     ++y;
     if ((y & mask) == 0) pred_row += tiles_per_row;
@@ -367,9 +372,13 @@ void VP8LInverseTransform(const VP8LTransform* const transform,
   assert(row_end <= transform->ysize_);
   switch (transform->type_) {
     case SUBTRACT_GREEN:
-      VP8LAddGreenToBlueAndRed(out, (row_end - row_start) * width);
+      VP8LAddGreenToBlueAndRed(in, (row_end - row_start) * width, out);
       break;
     case PREDICTOR_TRANSFORM:
+      // TODO(vrabaud): parallelize transform predictors.
+      if (in != out) {
+        memcpy(out, in, (row_end - row_start) * width * sizeof(*out));
+      }
       PredictorInverseTransform(transform, row_start, row_end, out);
       if (row_end != transform->ysize_) {
         // The last predicted row in this iteration will be the top-pred row
@@ -379,7 +388,7 @@ void VP8LInverseTransform(const VP8LTransform* const transform,
       }
       break;
     case CROSS_COLOR_TRANSFORM:
-      ColorSpaceInverseTransform(transform, row_start, row_end, out);
+      ColorSpaceInverseTransform(transform, row_start, row_end, in, out);
       break;
     case COLOR_INDEXING_TRANSFORM:
       if (in == out && transform->bits_ > 0) {
@@ -556,10 +565,10 @@ void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
 
 //------------------------------------------------------------------------------
 
-VP8LProcessBlueAndRedFunc VP8LAddGreenToBlueAndRed;
+VP8LProcessDecBlueAndRedFunc VP8LAddGreenToBlueAndRed;
 VP8LPredictorFunc VP8LPredictors[16];
 
-VP8LTransformColorFunc VP8LTransformColorInverse;
+VP8LTransformColorInverseFunc VP8LTransformColorInverse;
 
 VP8LConvertFunc VP8LConvertBGRAToRGB;
 VP8LConvertFunc VP8LConvertBGRAToRGBA;

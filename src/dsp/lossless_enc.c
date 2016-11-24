@@ -665,7 +665,7 @@ static void HistogramAdd(const VP8LHistogram* const a,
 
 //------------------------------------------------------------------------------
 
-VP8LProcessBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
+VP8LProcessEncBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
 
 VP8LTransformColorFunc VP8LTransformColor;
 
