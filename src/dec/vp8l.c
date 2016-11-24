@@ -712,12 +712,14 @@ static void ApplyInverseTransforms(VP8LDecoder* const dec, int num_rows,
   uint32_t* const rows_out = dec->argb_cache_;
 
   // Inverse transforms.
-  // TODO: most transforms only need to operate on the cropped region only.
-  memcpy(rows_out, rows_in, cache_pixs * sizeof(*rows_out));
   while (n-- > 0) {
     VP8LTransform* const transform = &dec->transforms_[n];
     VP8LInverseTransform(transform, start_row, end_row, rows_in, rows_out);
     rows_in = rows_out;
+  }
+  if (rows_in != rows_out) {
+    // No transform called, hence just copy.
+    memcpy(rows_out, rows_in, cache_pixs * sizeof(*rows_out));
   }
 }
 
