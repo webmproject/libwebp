@@ -234,7 +234,7 @@ static void PredictorInverseTransform(const VP8LTransform* const transform,
 
 // Add green to blue and red channels (i.e. perform the inverse transform of
 // 'subtract green').
-void VP8LAddGreenToBlueAndRed_C(const uint32_t* const src, int num_pixels,
+void VP8LAddGreenToBlueAndRed_C(const uint32_t* src, int num_pixels,
                                 uint32_t* dst) {
   int i;
   for (i = 0; i < num_pixels; ++i) {
@@ -260,8 +260,8 @@ static WEBP_INLINE void ColorCodeToMultipliers(uint32_t color_code,
 }
 
 void VP8LTransformColorInverse_C(const VP8LMultipliers* const m,
-                                 const uint32_t* const src, int num_pixels,
-                                 uint32_t* const dst) {
+                                 const uint32_t* src, int num_pixels,
+                                 uint32_t* dst) {
   int i;
   for (i = 0; i < num_pixels; ++i) {
     const uint32_t argb = src[i];
