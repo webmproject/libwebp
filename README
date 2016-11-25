@@ -384,6 +384,7 @@ Options are:
 Keyboard shortcuts:
   'c' ................ toggle use of color profile
   'i' ................ overlay file information
+  'd' ................ disable blending & disposal (debug)
   'q' / 'Q' / ESC .... quit
 
 Building:

@@ -54,6 +54,7 @@ static struct {
   int done;
   int decoding_error;
   int print_info;
+  int only_deltas;
   int use_color_profile;
 
   int canvas_width, canvas_height;
@@ -252,6 +253,9 @@ static void HandleKey(unsigned char key, int pos_x, int pos_y) {
     // more involved though (need to save the previous frame).
     if (!kParams.has_animation) ClearPreviousFrame();
     glutPostRedisplay();
+  } else if (key == 'd') {
+    kParams.only_deltas = 1 - kParams.only_deltas;
+    glutPostRedisplay();
   }
 }
 
@@ -314,7 +318,9 @@ static void HandleDisplay(void) {
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   glPixelStorei(GL_UNPACK_ROW_LENGTH, pic->u.RGBA.stride / 4);
 
-  if (prev->dispose_method == WEBP_MUX_DISPOSE_BACKGROUND ||
+  if (kParams.only_deltas) {
+    DrawCheckerBoard();
+  } else if (prev->dispose_method == WEBP_MUX_DISPOSE_BACKGROUND ||
       curr->blend_method == WEBP_MUX_NO_BLEND) {
     // glScissor() takes window coordinates (0,0 at bottom left).
     int window_x, window_y;
@@ -414,6 +420,7 @@ static void Help(void) {
          "Keyboard shortcuts:\n"
          "  'c' ................ toggle use of color profile\n"
          "  'i' ................ overlay file information\n"
+         "  'd' ................ disable blending & disposal (debug)\n"
          "  'q' / 'Q' / ESC .... quit\n"
         );
 }
