@@ -129,14 +129,14 @@ static void SanitizeEncoderOptions(WebPAnimEncoderOptions* const enc_options) {
     DisableKeyframes(enc_options);
   }
 
-  if (enc_options->kmin <= 0) {
-    DisableKeyframes(enc_options);
-    print_warning = 0;
-  }
-  if (enc_options->kmax <= 0) {  // All frames will be key-frames.
+  if (enc_options->kmax == 1) {  // All frames will be key-frames.
     enc_options->kmin = 0;
     enc_options->kmax = 0;
     return;
+  }
+  if (enc_options->kmax <= 0) {
+    DisableKeyframes(enc_options);
+    print_warning = 0;
   }
 
   if (enc_options->kmin >= enc_options->kmax) {
