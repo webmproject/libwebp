@@ -175,6 +175,29 @@ uint32_t VP8LSubPixels(uint32_t a, uint32_t b) {
 
 //------------------------------------------------------------------------------
 
+// Macro used to create a batch predictor that iteratively uses a
+// one-pixel predictor.
+// If do_add is non-zero, the prediction is added to the output pixel (which
+// is therefore considered as a residual) to get the final prediction.
+// Otherwise, it is subtracted from the input pixel (thus giving the residual)
+// and stored in the output pixel.
+#define GENERATE_PREDICTOR_BATCH(X)                                            \
+  static void Predictor##X##Batch(const uint32_t* in, const uint32_t* upper,   \
+                                  int num_pixels, int do_add, uint32_t* out) { \
+    int x;                                                                     \
+    if (do_add) {                                                              \
+      for (x = 0; x < num_pixels; ++x) {                                       \
+        const uint32_t pred = Predictor##X(out[x - 1], upper + x);             \
+        out[x] = VP8LAddPixels(in[x], pred);                                   \
+      }                                                                        \
+    } else {                                                                   \
+      for (x = 0; x < num_pixels; ++x) {                                       \
+        const uint32_t pred = Predictor##X(in[x - 1], upper + x);              \
+        out[x] = VP8LSubPixels(in[x], pred);                                   \
+      }                                                                        \
+    }                                                                          \
+  }
+
 #ifdef __cplusplus
 }    // extern "C"
 #endif
