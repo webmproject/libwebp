@@ -17,6 +17,7 @@
 
 #include "./common_sse2.h"
 #include "./lossless.h"
+#include "./lossless_common.h"
 #include <assert.h>
 #include <emmintrin.h>
 
@@ -153,6 +154,17 @@ static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = ClampedAddSubtractHalf(left, top[0], top[-1]);
   return pred;
 }
+
+// TODO(vrabaud): implement those functions in SSE.
+GENERATE_PREDICTOR_RESIDUAL_BATCH(5)
+GENERATE_PREDICTOR_RESIDUAL_BATCH(6)
+GENERATE_PREDICTOR_RESIDUAL_BATCH(7)
+GENERATE_PREDICTOR_RESIDUAL_BATCH(8)
+GENERATE_PREDICTOR_RESIDUAL_BATCH(9)
+GENERATE_PREDICTOR_RESIDUAL_BATCH(10)
+GENERATE_PREDICTOR_RESIDUAL_BATCH(11)
+GENERATE_PREDICTOR_RESIDUAL_BATCH(12)
+GENERATE_PREDICTOR_RESIDUAL_BATCH(13)
 
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
@@ -393,6 +405,26 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitSSE2(void) {
   VP8LPredictors[11] = Predictor11;
   VP8LPredictors[12] = Predictor12;
   VP8LPredictors[13] = Predictor13;
+
+  VP8LPredictorsBatch[5] = Predictor5Batch;
+  VP8LPredictorsBatch[6] = Predictor6Batch;
+  VP8LPredictorsBatch[7] = Predictor7Batch;
+  VP8LPredictorsBatch[8] = Predictor8Batch;
+  VP8LPredictorsBatch[9] = Predictor9Batch;
+  VP8LPredictorsBatch[10] = Predictor10Batch;
+  VP8LPredictorsBatch[11] = Predictor11Batch;
+  VP8LPredictorsBatch[12] = Predictor12Batch;
+  VP8LPredictorsBatch[13] = Predictor13Batch;
+
+  VP8LResidualsBatch[5] = Residual5Batch;
+  VP8LResidualsBatch[6] = Residual6Batch;
+  VP8LResidualsBatch[7] = Residual7Batch;
+  VP8LResidualsBatch[8] = Residual8Batch;
+  VP8LResidualsBatch[9] = Residual9Batch;
+  VP8LResidualsBatch[10] = Residual10Batch;
+  VP8LResidualsBatch[11] = Residual11Batch;
+  VP8LResidualsBatch[12] = Residual12Batch;
+  VP8LResidualsBatch[13] = Residual13Batch;
 
   VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
   VP8LTransformColorInverse = TransformColorInverse;
