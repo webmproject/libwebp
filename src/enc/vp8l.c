@@ -319,7 +319,10 @@ static int GetHistoBits(int method, int use_palette, int width, int height) {
 
 static int GetTransformBits(int method, int histo_bits) {
   const int max_transform_bits = (method < 4) ? 6 : (method > 4) ? 4 : 5;
-  return (histo_bits > max_transform_bits) ? max_transform_bits : histo_bits;
+  const int res =
+      (histo_bits > max_transform_bits) ? max_transform_bits : histo_bits;
+  assert(res <= MAX_TRANSFORM_BITS);
+  return res;
 }
 
 static int AnalyzeAndInit(VP8LEncoder* const enc) {

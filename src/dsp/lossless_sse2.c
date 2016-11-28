@@ -17,6 +17,7 @@
 
 #include "./common_sse2.h"
 #include "./lossless.h"
+#include "./lossless_common.h"
 #include <assert.h>
 #include <emmintrin.h>
 
@@ -153,6 +154,17 @@ static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = ClampedAddSubtractHalf(left, top[0], top[-1]);
   return pred;
 }
+
+// TODO(vrabaud): implement those functions in SSE.
+GENERATE_PREDICTOR_ADD(5)
+GENERATE_PREDICTOR_ADD(6)
+GENERATE_PREDICTOR_ADD(7)
+GENERATE_PREDICTOR_ADD(8)
+GENERATE_PREDICTOR_ADD(9)
+GENERATE_PREDICTOR_ADD(10)
+GENERATE_PREDICTOR_ADD(11)
+GENERATE_PREDICTOR_ADD(12)
+GENERATE_PREDICTOR_ADD(13)
 
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
@@ -393,6 +405,16 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitSSE2(void) {
   VP8LPredictors[11] = Predictor11;
   VP8LPredictors[12] = Predictor12;
   VP8LPredictors[13] = Predictor13;
+
+  VP8LPredictorsAdd[5] = PredictorAdd5;
+  VP8LPredictorsAdd[6] = PredictorAdd6;
+  VP8LPredictorsAdd[7] = PredictorAdd7;
+  VP8LPredictorsAdd[8] = PredictorAdd8;
+  VP8LPredictorsAdd[9] = PredictorAdd9;
+  VP8LPredictorsAdd[10] = PredictorAdd10;
+  VP8LPredictorsAdd[11] = PredictorAdd11;
+  VP8LPredictorsAdd[12] = PredictorAdd12;
+  VP8LPredictorsAdd[13] = PredictorAdd13;
 
   VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
   VP8LTransformColorInverse = TransformColorInverse;

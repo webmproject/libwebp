@@ -27,11 +27,6 @@
 //------------------------------------------------------------------------------
 // Image transforms.
 
-// In-place sum of each component with mod 256.
-static WEBP_INLINE void AddPixelsEq(uint32_t* a, uint32_t b) {
-  *a = VP8LAddPixels(*a, b);
-}
-
 static WEBP_INLINE uint32_t Average2(uint32_t a0, uint32_t a1) {
   return (((a0 ^ a1) & 0xfefefefeu) >> 1) + (a0 & a1);
 }
@@ -172,21 +167,33 @@ static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
   return pred;
 }
 
+GENERATE_PREDICTOR_ADD(0)
+GENERATE_PREDICTOR_ADD(1)
+GENERATE_PREDICTOR_ADD(2)
+GENERATE_PREDICTOR_ADD(3)
+GENERATE_PREDICTOR_ADD(4)
+GENERATE_PREDICTOR_ADD(5)
+GENERATE_PREDICTOR_ADD(6)
+GENERATE_PREDICTOR_ADD(7)
+GENERATE_PREDICTOR_ADD(8)
+GENERATE_PREDICTOR_ADD(9)
+GENERATE_PREDICTOR_ADD(10)
+GENERATE_PREDICTOR_ADD(11)
+GENERATE_PREDICTOR_ADD(12)
+GENERATE_PREDICTOR_ADD(13)
+
 //------------------------------------------------------------------------------
 
 // Inverse prediction.
 static void PredictorInverseTransform(const VP8LTransform* const transform,
-                                      int y_start, int y_end, uint32_t* data) {
+                                      int y_start, int y_end,
+                                      const uint32_t* in, uint32_t* out) {
   const int width = transform->xsize_;
   if (y_start == 0) {  // First Row follows the L (mode=1) mode.
-    int x;
-    const uint32_t pred0 = Predictor0(data[-1], NULL);
-    AddPixelsEq(data, pred0);
-    for (x = 1; x < width; ++x) {
-      const uint32_t pred1 = Predictor1(data[x - 1], NULL);
-      AddPixelsEq(data + x, pred1);
-    }
-    data += width;
+    PredictorAdd0(in, NULL, 1, out);
+    PredictorAdd1(in + 1, NULL, width - 1, out + 1);
+    in += width;
+    out += width;
     ++y_start;
   }
 
@@ -194,36 +201,26 @@ static void PredictorInverseTransform(const VP8LTransform* const transform,
     int y = y_start;
     const int tile_width = 1 << transform->bits_;
     const int mask = tile_width - 1;
-    const int safe_width = width & ~mask;
     const int tiles_per_row = VP8LSubSampleSize(width, transform->bits_);
     const uint32_t* pred_mode_base =
         transform->data_ + (y >> transform->bits_) * tiles_per_row;
 
     while (y < y_end) {
-      const uint32_t pred2 = Predictor2(data[-1], data - width);
       const uint32_t* pred_mode_src = pred_mode_base;
-      VP8LPredictorFunc pred_func;
       int x = 1;
-      int t = 1;
       // First pixel follows the T (mode=2) mode.
-      AddPixelsEq(data, pred2);
+      PredictorAdd2(in, out - width, 1, out);
       // .. the rest:
-      while (x < safe_width) {
-        pred_func = VP8LPredictors[((*pred_mode_src++) >> 8) & 0xf];
-        for (; t < tile_width; ++t, ++x) {
-          const uint32_t pred = pred_func(data[x - 1], data + x - width);
-          AddPixelsEq(data + x, pred);
-        }
-        t = 0;
+      while (x < width) {
+        const VP8LPredictorAddSubFunc pred_func =
+            VP8LPredictorsAdd[((*pred_mode_src++) >> 8) & 0xf];
+        int x_end = (x & ~mask) + tile_width;
+        if (x_end > width) x_end = width;
+        pred_func(in + x, out + x - width, x_end - x, out + x);
+        x = x_end;
       }
-      if (x < width) {
-        pred_func = VP8LPredictors[((*pred_mode_src++) >> 8) & 0xf];
-        for (; x < width; ++x) {
-          const uint32_t pred = pred_func(data[x - 1], data + x - width);
-          AddPixelsEq(data + x, pred);
-        }
-      }
-      data += width;
+      in += width;
+      out += width;
       ++y;
       if ((y & mask) == 0) {   // Use the same mask, since tiles are squares.
         pred_mode_base += tiles_per_row;
@@ -375,11 +372,7 @@ void VP8LInverseTransform(const VP8LTransform* const transform,
       VP8LAddGreenToBlueAndRed(in, (row_end - row_start) * width, out);
       break;
     case PREDICTOR_TRANSFORM:
-      // TODO(vrabaud): parallelize transform predictors.
-      if (in != out) {
-        memcpy(out, in, (row_end - row_start) * width * sizeof(*out));
-      }
-      PredictorInverseTransform(transform, row_start, row_end, out);
+      PredictorInverseTransform(transform, row_start, row_end, in, out);
       if (row_end != transform->ysize_) {
         // The last predicted row in this iteration will be the top-pred row
         // for the first row in next iteration.
@@ -566,6 +559,7 @@ void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
 //------------------------------------------------------------------------------
 
 VP8LProcessDecBlueAndRedFunc VP8LAddGreenToBlueAndRed;
+VP8LPredictorAddSubFunc VP8LPredictorsAdd[16];
 VP8LPredictorFunc VP8LPredictors[16];
 
 VP8LTransformColorInverseFunc VP8LTransformColorInverse;
@@ -606,6 +600,23 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
   VP8LPredictors[13] = Predictor13;
   VP8LPredictors[14] = Predictor0;     // <- padding security sentinels
   VP8LPredictors[15] = Predictor0;
+
+  VP8LPredictorsAdd[0] = PredictorAdd0;
+  VP8LPredictorsAdd[1] = PredictorAdd1;
+  VP8LPredictorsAdd[2] = PredictorAdd2;
+  VP8LPredictorsAdd[3] = PredictorAdd3;
+  VP8LPredictorsAdd[4] = PredictorAdd4;
+  VP8LPredictorsAdd[5] = PredictorAdd5;
+  VP8LPredictorsAdd[6] = PredictorAdd6;
+  VP8LPredictorsAdd[7] = PredictorAdd7;
+  VP8LPredictorsAdd[8] = PredictorAdd8;
+  VP8LPredictorsAdd[9] = PredictorAdd9;
+  VP8LPredictorsAdd[10] = PredictorAdd10;
+  VP8LPredictorsAdd[11] = PredictorAdd11;
+  VP8LPredictorsAdd[12] = PredictorAdd12;
+  VP8LPredictorsAdd[13] = PredictorAdd13;
+  VP8LPredictorsAdd[14] = PredictorAdd0;  // <- padding security sentinels
+  VP8LPredictorsAdd[15] = PredictorAdd0;
 
   VP8LAddGreenToBlueAndRed = VP8LAddGreenToBlueAndRed_C;
 

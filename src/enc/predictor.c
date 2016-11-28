@@ -66,16 +66,27 @@ static WEBP_INLINE void UpdateHisto(int histo_argb[4][256], uint32_t argb) {
 //------------------------------------------------------------------------------
 // Spatial transform functions.
 
-static WEBP_INLINE uint32_t Predict(VP8LPredictorFunc pred_func,
-                                    int x, int y,
-                                    const uint32_t* current_row,
-                                    const uint32_t* upper_row) {
+static WEBP_INLINE void PredictBatch(int mode, int x_start, int y,
+                                     int num_pixels, const uint32_t* current,
+                                     const uint32_t* upper, uint32_t* out) {
+  if (x_start == 0) {
+    if (y == 0) {
+      // ARGB_BLACK.
+      VP8LPredictorsSub[0](current, NULL, 1, out);
+    } else {
+      // Top one.
+      VP8LPredictorsSub[2](current, upper, 1, out);
+    }
+    ++x_start;
+    ++out;
+    --num_pixels;
+  }
   if (y == 0) {
-    return (x == 0) ? ARGB_BLACK : current_row[x - 1];  // Left.
-  } else if (x == 0) {
-    return upper_row[x];  // Top.
+    // Left one.
+    VP8LPredictorsSub[1](current + x_start, NULL, num_pixels, out);
   } else {
-    return pred_func(current_row[x - 1], upper_row + x);
+    VP8LPredictorsSub[mode](current + x_start, upper + x_start, num_pixels,
+                            out);
   }
 }
 
@@ -208,42 +219,59 @@ static uint32_t NearLossless(uint32_t value, uint32_t predict,
   return ((uint32_t)a << 24) | ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
 }
 
-// Returns the difference between the pixel and its prediction. In case of a
-// lossy encoding, updates the source image to avoid propagating the deviation
-// further to pixels which depend on the current pixel for their predictions.
-static WEBP_INLINE uint32_t GetResidual(int width, int height,
-                                        uint32_t* const upper_row,
-                                        uint32_t* const current_row,
-                                        const uint8_t* const max_diffs,
-                                        int mode, VP8LPredictorFunc pred_func,
-                                        int x, int y, int max_quantization,
-                                        int exact, int used_subtract_green) {
-  const uint32_t predict = Predict(pred_func, x, y, current_row, upper_row);
-  uint32_t residual;
-  if (max_quantization == 1 || mode == 0 || y == 0 || y == height - 1 ||
-      x == 0 || x == width - 1) {
-    residual = VP8LSubPixels(current_row[x], predict);
+// Stores the difference between the pixel and its prediction in "out".
+// In case of a lossy encoding, updates the source image to avoid propagating
+// the deviation further to pixels which depend on the current pixel for their
+// predictions.
+static WEBP_INLINE void GetResidual(
+    int width, int height, uint32_t* const upper_row,
+    uint32_t* const current_row, const uint8_t* const max_diffs, int mode,
+    int x_start, int x_end, int y, int max_quantization, int exact,
+    int used_subtract_green, uint32_t* const out) {
+  if (exact) {
+    PredictBatch(mode, x_start, y, x_end - x_start, current_row, upper_row,
+                 out);
   } else {
-    residual = NearLossless(current_row[x], predict, max_quantization,
-                            max_diffs[x], used_subtract_green);
-    // Update the source image.
-    current_row[x] = VP8LAddPixels(predict, residual);
-    // x is never 0 here so we do not need to update upper_row like below.
+    const VP8LPredictorFunc pred_func = VP8LPredictors[mode];
+    int x;
+    for (x = x_start; x < x_end; ++x) {
+      uint32_t predict;
+      uint32_t residual;
+      if (y == 0) {
+        predict = (x == 0) ? ARGB_BLACK : current_row[x - 1];  // Left.
+      } else if (x == 0) {
+        predict = upper_row[x];  // Top.
+      } else {
+        predict = pred_func(current_row[x - 1], upper_row + x);
+      }
+      if (mode == 0 || y == 0 || y == height - 1 || x == 0 || x == width - 1) {
+        residual = VP8LSubPixels(current_row[x], predict);
+      } else {
+        residual = NearLossless(current_row[x], predict, max_quantization,
+                                max_diffs[x], used_subtract_green);
+        // Update the source image.
+        current_row[x] = VP8LAddPixels(predict, residual);
+        // x is never 0 here so we do not need to update upper_row like below.
+      }
+      if ((current_row[x] & kMaskAlpha) == 0) {
+        // If alpha is 0, cleanup RGB. We can choose the RGB values of the
+        // residual for best compression. The prediction of alpha itself can be
+        // non-zero and must be kept though. We choose RGB of the residual to be
+        // 0.
+        residual &= kMaskAlpha;
+        // Update the source image.
+        current_row[x] = predict & ~kMaskAlpha;
+        // The prediction for the rightmost pixel in a row uses the leftmost
+        // pixel
+        // in that row as its top-right context pixel. Hence if we change the
+        // leftmost pixel of current_row, the corresponding change must be
+        // applied
+        // to upper_row as well where top-right context is being read from.
+        if (x == 0 && y != 0) upper_row[width] = current_row[0];
+      }
+      out[x - x_start] = residual;
+    }
   }
-  if (!exact && (current_row[x] & kMaskAlpha) == 0) {
-    // If alpha is 0, cleanup RGB. We can choose the RGB values of the residual
-    // for best compression. The prediction of alpha itself can be non-zero and
-    // must be kept though. We choose RGB of the residual to be 0.
-    residual &= kMaskAlpha;
-    // Update the source image.
-    current_row[x] = predict & ~kMaskAlpha;
-    // The prediction for the rightmost pixel in a row uses the leftmost pixel
-    // in that row as its top-right context pixel. Hence if we change the
-    // leftmost pixel of current_row, the corresponding change must be applied
-    // to upper_row as well where top-right context is being read from.
-    if (x == 0 && y != 0) upper_row[width] = current_row[0];
-  }
-  return residual;
 }
 
 // Returns best predictor and updates the accumulated histogram.
@@ -293,9 +321,11 @@ static int GetBestPredictorForTile(int width, int height,
   int (*histo_argb)[256] = histo_stack_1;
   int (*best_histo)[256] = histo_stack_2;
   int i, j;
+  uint32_t residuals[1 << MAX_TRANSFORM_BITS];
+  assert(bits <= MAX_TRANSFORM_BITS);
+  assert(max_x <= (1 << MAX_TRANSFORM_BITS));
 
   for (mode = 0; mode < kNumPredModes; ++mode) {
-    const VP8LPredictorFunc pred_func = VP8LPredictors[mode];
     float cur_diff;
     int relative_y;
     memset(histo_argb, 0, sizeof(histo_stack_1));
@@ -326,12 +356,11 @@ static int GetBestPredictorForTile(int width, int height,
                        max_diffs + context_start_x, used_subtract_green);
       }
 
+      GetResidual(width, height, upper_row, current_row, max_diffs, mode,
+                  start_x, start_x + max_x, y, max_quantization, exact,
+                  used_subtract_green, residuals);
       for (relative_x = 0; relative_x < max_x; ++relative_x) {
-        const int x = start_x + relative_x;
-        UpdateHisto(histo_argb,
-                    GetResidual(width, height, upper_row, current_row,
-                                max_diffs, mode, pred_func, x, y,
-                                max_quantization, exact, used_subtract_green));
+        UpdateHisto(histo_argb, residuals[relative_x]);
       }
     }
     cur_diff = PredictionCostSpatialHistogram(
@@ -369,7 +398,6 @@ static void CopyImageWithPrediction(int width, int height,
                                     int low_effort, int max_quantization,
                                     int exact, int used_subtract_green) {
   const int tiles_per_row = VP8LSubSampleSize(width, bits);
-  const int mask = (1 << bits) - 1;
   // The width of upper_row and current_row is one pixel larger than image width
   // to allow the top right pixel to point to the leftmost pixel of the next row
   // when at the right edge.
@@ -378,8 +406,6 @@ static void CopyImageWithPrediction(int width, int height,
   uint8_t* current_max_diffs = (uint8_t*)(current_row + width + 1);
   uint8_t* lower_max_diffs = current_max_diffs + width;
   int y;
-  int mode = 0;
-  VP8LPredictorFunc pred_func = NULL;
 
   for (y = 0; y < height; ++y) {
     int x;
@@ -390,11 +416,8 @@ static void CopyImageWithPrediction(int width, int height,
            sizeof(*argb) * (width + (y + 1 < height)));
 
     if (low_effort) {
-      for (x = 0; x < width; ++x) {
-        const uint32_t predict = Predict(VP8LPredictors[kPredLowEffort], x, y,
-                                         current_row, upper_row);
-        argb[y * width + x] = VP8LSubPixels(current_row[x], predict);
-      }
+      PredictBatch(kPredLowEffort, 0, y, width, current_row, upper_row,
+                   argb + y * width);
     } else {
       if (max_quantization > 1) {
         // Compute max_diffs for the lower row now, because that needs the
@@ -408,14 +431,15 @@ static void CopyImageWithPrediction(int width, int height,
                          used_subtract_green);
         }
       }
-      for (x = 0; x < width; ++x) {
-        if ((x & mask) == 0) {
-          mode = (modes[(y >> bits) * tiles_per_row + (x >> bits)] >> 8) & 0xff;
-          pred_func = VP8LPredictors[mode];
-        }
-        argb[y * width + x] = GetResidual(
-            width, height, upper_row, current_row, current_max_diffs, mode,
-            pred_func, x, y, max_quantization, exact, used_subtract_green);
+      for (x = 0; x < width;) {
+        const int mode =
+            (modes[(y >> bits) * tiles_per_row + (x >> bits)] >> 8) & 0xff;
+        int x_end = x + (1 << bits);
+        if (x_end > width) x_end = width;
+        GetResidual(width, height, upper_row, current_row, current_max_diffs,
+                    mode, x, x_end, y, max_quantization, exact,
+                    used_subtract_green, argb + y * width + x);
+        x = x_end;
       }
     }
   }

@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+// maximum value of transform_bits_ in VP8LEncoder.
+#define MAX_TRANSFORM_BITS 6
+
 typedef struct {
   const WebPConfig* config_;      // user configuration and parameters
   const WebPPicture* pic_;        // input picture.
@@ -39,7 +42,7 @@ typedef struct {
 
   // Encoding parameters derived from quality parameter.
   int histo_bits_;
-  int transform_bits_;
+  int transform_bits_;    // <= MAX_TRANSFORM_BITS.
   int cache_bits_;        // If equal to 0, don't use color cache.
 
   // Encoding parameters derived from image characteristics.

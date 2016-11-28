@@ -665,6 +665,21 @@ static void HistogramAdd(const VP8LHistogram* const a,
 
 //------------------------------------------------------------------------------
 
+GENERATE_PREDICTOR_SUB(0)
+GENERATE_PREDICTOR_SUB(1)
+GENERATE_PREDICTOR_SUB(2)
+GENERATE_PREDICTOR_SUB(3)
+GENERATE_PREDICTOR_SUB(4)
+GENERATE_PREDICTOR_SUB(5)
+GENERATE_PREDICTOR_SUB(6)
+GENERATE_PREDICTOR_SUB(7)
+GENERATE_PREDICTOR_SUB(8)
+GENERATE_PREDICTOR_SUB(9)
+GENERATE_PREDICTOR_SUB(10)
+GENERATE_PREDICTOR_SUB(11)
+GENERATE_PREDICTOR_SUB(12)
+GENERATE_PREDICTOR_SUB(13)
+
 VP8LProcessEncBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
 
 VP8LTransformColorFunc VP8LTransformColor;
@@ -685,6 +700,8 @@ VP8LGetCombinedEntropyUnrefinedFunc VP8LGetCombinedEntropyUnrefined;
 VP8LHistogramAddFunc VP8LHistogramAdd;
 
 VP8LVectorMismatchFunc VP8LVectorMismatch;
+
+VP8LPredictorAddSubFunc VP8LPredictorsSub[16];
 
 extern void VP8LEncDspInitSSE2(void);
 extern void VP8LEncDspInitSSE41(void);
@@ -721,6 +738,23 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInit(void) {
   VP8LHistogramAdd = HistogramAdd;
 
   VP8LVectorMismatch = VectorMismatch;
+
+  VP8LPredictorsSub[0] = PredictorSub0;
+  VP8LPredictorsSub[1] = PredictorSub1;
+  VP8LPredictorsSub[2] = PredictorSub2;
+  VP8LPredictorsSub[3] = PredictorSub3;
+  VP8LPredictorsSub[4] = PredictorSub4;
+  VP8LPredictorsSub[5] = PredictorSub5;
+  VP8LPredictorsSub[6] = PredictorSub6;
+  VP8LPredictorsSub[7] = PredictorSub7;
+  VP8LPredictorsSub[8] = PredictorSub8;
+  VP8LPredictorsSub[9] = PredictorSub9;
+  VP8LPredictorsSub[10] = PredictorSub10;
+  VP8LPredictorsSub[11] = PredictorSub11;
+  VP8LPredictorsSub[12] = PredictorSub12;
+  VP8LPredictorsSub[13] = PredictorSub13;
+  VP8LPredictorsSub[14] = PredictorSub0;  // <- padding security sentinels
+  VP8LPredictorsSub[15] = PredictorSub0;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {

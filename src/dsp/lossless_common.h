@@ -174,6 +174,34 @@ uint32_t VP8LSubPixels(uint32_t a, uint32_t b) {
 }
 
 //------------------------------------------------------------------------------
+// Transform-related functions use din both encoding and decoding.
+
+// Macros used to create a batch predictor that iteratively uses a
+// one-pixel predictor.
+
+// The predictor is added to the output pixel (which
+// is therefore considered as a residual) to get the final prediction.
+#define GENERATE_PREDICTOR_ADD(X)                                        \
+  static void PredictorAdd##X(const uint32_t* in, const uint32_t* upper, \
+                              int num_pixels, uint32_t* out) {           \
+    int x;                                                               \
+    for (x = 0; x < num_pixels; ++x) {                                   \
+      const uint32_t pred = VP8LPredictors[(X)](out[x - 1], upper + x);  \
+      out[x] = VP8LAddPixels(in[x], pred);                               \
+    }                                                                    \
+  }
+
+// It subtracts the prediction from the input pixel and stores the residual
+// in the output pixel.
+#define GENERATE_PREDICTOR_SUB(X)                                        \
+  static void PredictorSub##X(const uint32_t* in, const uint32_t* upper, \
+                              int num_pixels, uint32_t* out) {           \
+    int x;                                                               \
+    for (x = 0; x < num_pixels; ++x) {                                   \
+      const uint32_t pred = VP8LPredictors[(X)](in[x - 1], upper + x);   \
+      out[x] = VP8LSubPixels(in[x], pred);                               \
+    }                                                                    \
+  }
 
 #ifdef __cplusplus
 }    // extern "C"

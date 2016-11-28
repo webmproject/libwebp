@@ -34,6 +34,10 @@ extern "C" {
 
 typedef uint32_t (*VP8LPredictorFunc)(uint32_t left, const uint32_t* const top);
 extern VP8LPredictorFunc VP8LPredictors[16];
+typedef void (*VP8LPredictorAddSubFunc)(const uint32_t* in,
+                                        const uint32_t* upper, int num_pixels,
+                                        uint32_t* out);
+extern VP8LPredictorAddSubFunc VP8LPredictorsAdd[16];
 
 typedef void (*VP8LProcessDecBlueAndRedFunc)(const uint32_t* src,
                                              int num_pixels, uint32_t* dst);
@@ -142,6 +146,8 @@ void VP8LCollectColorBlueTransforms_C(const uint32_t* argb, int stride,
                                       int tile_width, int tile_height,
                                       int green_to_blue, int red_to_blue,
                                       int histo[]);
+
+extern VP8LPredictorAddSubFunc VP8LPredictorsSub[16];
 
 // -----------------------------------------------------------------------------
 // Huffman-cost related functions.
