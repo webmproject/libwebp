@@ -34,7 +34,7 @@
 
 // Stores frame rectangle dimensions.
 typedef struct {
-  int x_offset_, y_offset_, width_, height_;
+  size_t x_offset_, y_offset_, width_, height_;
 } FrameRect;
 
 // Used to store two candidates of encoded data for an animation frame. One of
@@ -195,11 +195,11 @@ int WebPAnimEncoderOptionsInitInternal(WebPAnimEncoderOptions* enc_options,
 #define TRANSPARENT_COLOR   0x00000000
 
 static void ClearRectangle(WebPPicture* const picture,
-                           int left, int top, int width, int height) {
-  int j;
+                           size_t left, size_t top,
+                           size_t width, size_t height) {
+  size_t i, j;
   for (j = top; j < top + height; ++j) {
     uint32_t* const dst = picture->argb + j * picture->argb_stride;
-    int i;
     for (i = left; i < left + width; ++i) {
       dst[i] = TRANSPARENT_COLOR;
     }
@@ -345,15 +345,17 @@ static EncodedFrame* GetFrame(const WebPAnimEncoder* const enc,
   return &enc->encoded_frames_[enc->start_ + position];
 }
 
-typedef int (*ComparePixelsFunc)(const uint32_t*, int, const uint32_t*, int,
-                                 int, int);
+typedef int (*ComparePixelsFunc)(const uint32_t*, size_t,
+                                 const uint32_t*, size_t,
+                                 size_t, int);
 
 // Returns true if 'length' number of pixels in 'src' and 'dst' are equal,
 // assuming the given step sizes between pixels.
 // 'max_allowed_diff' is unused and only there to allow function pointer use.
-static WEBP_INLINE int ComparePixelsLossless(const uint32_t* src, int src_step,
-                                             const uint32_t* dst, int dst_step,
-                                             int length, int max_allowed_diff) {
+static WEBP_INLINE int ComparePixelsLossless(const uint32_t* src, size_t src_step,
+                                             const uint32_t* dst, size_t dst_step,
+                                             size_t length,
+                                             int max_allowed_diff) {
   (void)max_allowed_diff;
   assert(length > 0);
   while (length-- > 0) {
@@ -387,9 +389,10 @@ static WEBP_INLINE int PixelsAreSimilar(uint32_t src, uint32_t dst,
 
 // Returns true if 'length' number of pixels in 'src' and 'dst' are within an
 // error bound, assuming the given step sizes between pixels.
-static WEBP_INLINE int ComparePixelsLossy(const uint32_t* src, int src_step,
-                                          const uint32_t* dst, int dst_step,
-                                          int length, int max_allowed_diff) {
+static WEBP_INLINE int ComparePixelsLossy(const uint32_t* src, size_t src_step,
+                                          const uint32_t* dst, size_t dst_step,
+                                          size_t length,
+                                          int max_allowed_diff) {
   assert(length > 0);
   while (length-- > 0) {
     if (!PixelsAreSimilar(*src, *dst, max_allowed_diff)) {
@@ -416,7 +419,7 @@ static void MinimizeChangeRectangle(const WebPPicture* const src,
                                     const WebPPicture* const dst,
                                     FrameRect* const rect,
                                     int is_lossless, float quality) {
-  int i, j;
+  size_t i, j;
   const ComparePixelsFunc compare_pixels =
       is_lossless ? ComparePixelsLossless : ComparePixelsLossy;
   const int max_allowed_diff_lossy = QualityToMaxDiff(quality);
@@ -424,8 +427,8 @@ static void MinimizeChangeRectangle(const WebPPicture* const src,
 
   // Sanity checks.
   assert(src->width == dst->width && src->height == dst->height);
-  assert(rect->x_offset_ + rect->width_ <= dst->width);
-  assert(rect->y_offset_ + rect->height_ <= dst->height);
+  assert(rect->x_offset_ + rect->width_ <= (size_t)dst->width);
+  assert(rect->y_offset_ + rect->height_ <= (size_t)dst->height);
 
   // Left boundary.
   for (i = rect->x_offset_; i < rect->x_offset_ + rect->width_; ++i) {
@@ -560,8 +563,10 @@ static int GetSubRect(const WebPPicture* const prev_canvas,
   }
 
   SnapToEvenOffsets(rect);
-  return WebPPictureView(curr_canvas, rect->x_offset_, rect->y_offset_,
-                         rect->width_, rect->height_, sub_frame);
+  return WebPPictureView(curr_canvas,
+                         (int)rect->x_offset_, (int)rect->y_offset_,
+                         (int)rect->width_, (int)rect->height_,
+                         sub_frame);
 }
 
 // Picks optimal frame rectangle for both lossless and lossy compression. The
@@ -587,7 +592,7 @@ static int GetSubRects(const WebPPicture* const prev_canvas,
                     &params->rect_lossy_, &params->sub_frame_lossy_);
 }
 
-static WEBP_INLINE int clip(int v, int min_v, int max_v) {
+static WEBP_INLINE size_t clip(int v, int min_v, int max_v) {
   return (v < min_v) ? min_v : (v > max_v) ? max_v : v;
 }
 
@@ -596,10 +601,10 @@ int WebPAnimEncoderRefineRect(
     int is_lossless, float quality, int* const x_offset, int* const y_offset,
     int* const width, int* const height) {
   FrameRect rect;
-  const int right = clip(*x_offset + *width, 0, curr_canvas->width);
-  const int left = clip(*x_offset, 0, curr_canvas->width - 1);
-  const int bottom = clip(*y_offset + *height, 0, curr_canvas->height);
-  const int top = clip(*y_offset, 0, curr_canvas->height - 1);
+  const size_t right = clip(*x_offset + *width, 0, curr_canvas->width);
+  const size_t left = clip(*x_offset, 0, curr_canvas->width - 1);
+  const size_t bottom = clip(*y_offset + *height, 0, curr_canvas->height);
+  const size_t top = clip(*y_offset, 0, curr_canvas->height - 1);
   if (prev_canvas == NULL || curr_canvas == NULL ||
       prev_canvas->width != curr_canvas->width ||
       prev_canvas->height != curr_canvas->height ||
@@ -608,15 +613,17 @@ int WebPAnimEncoderRefineRect(
   }
   rect.x_offset_ = left;
   rect.y_offset_ = top;
-  rect.width_ = clip(right - left, 0, curr_canvas->width - rect.x_offset_);
-  rect.height_ = clip(bottom - top, 0, curr_canvas->height - rect.y_offset_);
+  rect.width_ = clip(right - left, 0,
+                     curr_canvas->width - (int)rect.x_offset_);
+  rect.height_ = clip(bottom - top, 0,
+                      curr_canvas->height - (int)rect.y_offset_);
   MinimizeChangeRectangle(prev_canvas, curr_canvas, &rect, is_lossless,
                           quality);
   SnapToEvenOffsets(&rect);
-  *x_offset = rect.x_offset_;
-  *y_offset = rect.y_offset_;
-  *width = rect.width_;
-  *height = rect.height_;
+  *x_offset = (int)rect.x_offset_;
+  *y_offset = (int)rect.y_offset_;
+  *width = (int)rect.width_;
+  *height = (int)rect.height_;
   return 1;
 }
 
@@ -630,16 +637,16 @@ static void DisposeFrameRectangle(int dispose_method,
 }
 
 static uint32_t RectArea(const FrameRect* const rect) {
-  return (uint32_t)rect->width_ * rect->height_;
+  return (uint32_t)(rect->width_ * rect->height_);
 }
 
 static int IsLosslessBlendingPossible(const WebPPicture* const src,
                                       const WebPPicture* const dst,
                                       const FrameRect* const rect) {
-  int i, j;
+  size_t i, j;
   assert(src->width == dst->width && src->height == dst->height);
-  assert(rect->x_offset_ + rect->width_ <= dst->width);
-  assert(rect->y_offset_ + rect->height_ <= dst->height);
+  assert(rect->x_offset_ + rect->width_ <= (size_t)dst->width);
+  assert(rect->y_offset_ + rect->height_ <= (size_t)dst->height);
   for (j = rect->y_offset_; j < rect->y_offset_ + rect->height_; ++j) {
     for (i = rect->x_offset_; i < rect->x_offset_ + rect->width_; ++i) {
       const uint32_t src_pixel = src->argb[j * src->argb_stride + i];
@@ -660,10 +667,10 @@ static int IsLossyBlendingPossible(const WebPPicture* const src,
                                    const FrameRect* const rect,
                                    float quality) {
   const int max_allowed_diff_lossy = QualityToMaxDiff(quality);
-  int i, j;
+  size_t i, j;
   assert(src->width == dst->width && src->height == dst->height);
-  assert(rect->x_offset_ + rect->width_ <= dst->width);
-  assert(rect->y_offset_ + rect->height_ <= dst->height);
+  assert(rect->x_offset_ + rect->width_ <= (size_t)dst->width);
+  assert(rect->y_offset_ + rect->height_ <= (size_t)dst->height);
   for (j = rect->y_offset_; j < rect->y_offset_ + rect->height_; ++j) {
     for (i = rect->x_offset_; i < rect->x_offset_ + rect->width_; ++i) {
       const uint32_t src_pixel = src->argb[j * src->argb_stride + i];
@@ -686,7 +693,7 @@ static int IsLossyBlendingPossible(const WebPPicture* const src,
 static int IncreaseTransparency(const WebPPicture* const src,
                                 const FrameRect* const rect,
                                 WebPPicture* const dst) {
-  int i, j;
+  size_t i, j;
   int modified = 0;
   assert(src != NULL && dst != NULL && rect != NULL);
   assert(src->width == dst->width && src->height == dst->height);
@@ -713,22 +720,22 @@ static int FlattenSimilarBlocks(const WebPPicture* const src,
                                 const FrameRect* const rect,
                                 WebPPicture* const dst, float quality) {
   const int max_allowed_diff_lossy = QualityToMaxDiff(quality);
-  int i, j;
+  size_t i, j;
   int modified = 0;
-  const int block_size = 8;
-  const int y_start = (rect->y_offset_ + block_size) & ~(block_size - 1);
-  const int y_end = (rect->y_offset_ + rect->height_) & ~(block_size - 1);
-  const int x_start = (rect->x_offset_ + block_size) & ~(block_size - 1);
-  const int x_end = (rect->x_offset_ + rect->width_) & ~(block_size - 1);
+  const size_t block_size = 8;
+  const size_t y_start = (rect->y_offset_ + block_size) & ~(block_size - 1);
+  const size_t y_end = (rect->y_offset_ + rect->height_) & ~(block_size - 1);
+  const size_t x_start = (rect->x_offset_ + block_size) & ~(block_size - 1);
+  const size_t x_end = (rect->x_offset_ + rect->width_) & ~(block_size - 1);
   assert(src != NULL && dst != NULL && rect != NULL);
   assert(src->width == dst->width && src->height == dst->height);
   assert((block_size & (block_size - 1)) == 0);  // must be a power of 2
   // Iterate over each block and count similar pixels.
   for (j = y_start; j < y_end; j += block_size) {
     for (i = x_start; i < x_end; i += block_size) {
-      int cnt = 0;
-      int avg_r = 0, avg_g = 0, avg_b = 0;
-      int x, y;
+      size_t cnt = 0;
+      size_t avg_r = 0, avg_g = 0, avg_b = 0;
+      size_t x, y;
       const uint32_t* const psrc = src->argb + j * src->argb_stride + i;
       uint32_t* const pdst = dst->argb + j * dst->argb_stride + i;
       for (y = 0; y < block_size; ++y) {
@@ -797,8 +804,8 @@ static WebPEncodingError EncodeCandidate(WebPPicture* const sub_frame,
   // Set frame rect and info.
   candidate->rect_ = *rect;
   candidate->info_.id = WEBP_CHUNK_ANMF;
-  candidate->info_.x_offset = rect->x_offset_;
-  candidate->info_.y_offset = rect->y_offset_;
+  candidate->info_.x_offset = (int)rect->x_offset_;
+  candidate->info_.y_offset = (int)rect->y_offset_;
   candidate->info_.dispose_method = WEBP_MUX_DISPOSE_NONE;  // Set later.
   candidate->info_.blend_method =
       use_blending ? WEBP_MUX_BLEND : WEBP_MUX_NO_BLEND;
