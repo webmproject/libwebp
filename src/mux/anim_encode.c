@@ -34,7 +34,7 @@
 
 // Stores frame rectangle dimensions.
 typedef struct {
-  int x_offset_, y_offset_, width_, height_;
+  size_t x_offset_, y_offset_, width_, height_;
 } FrameRect;
 
 // Used to store two candidates of encoded data for an animation frame. One of
@@ -416,7 +416,7 @@ static void MinimizeChangeRectangle(const WebPPicture* const src,
                                     const WebPPicture* const dst,
                                     FrameRect* const rect,
                                     int is_lossless, float quality) {
-  int i, j;
+  size_t i, j;
   const ComparePixelsFunc compare_pixels =
       is_lossless ? ComparePixelsLossless : ComparePixelsLossy;
   const int max_allowed_diff_lossy = QualityToMaxDiff(quality);
@@ -424,8 +424,8 @@ static void MinimizeChangeRectangle(const WebPPicture* const src,
 
   // Sanity checks.
   assert(src->width == dst->width && src->height == dst->height);
-  assert(rect->x_offset_ + rect->width_ <= dst->width);
-  assert(rect->y_offset_ + rect->height_ <= dst->height);
+  assert(rect->x_offset_ + rect->width_ <= (size_t)dst->width);
+  assert(rect->y_offset_ + rect->height_ <= (size_t)dst->height);
 
   // Left boundary.
   for (i = rect->x_offset_; i < rect->x_offset_ + rect->width_; ++i) {
@@ -636,10 +636,10 @@ static uint32_t RectArea(const FrameRect* const rect) {
 static int IsLosslessBlendingPossible(const WebPPicture* const src,
                                       const WebPPicture* const dst,
                                       const FrameRect* const rect) {
-  int i, j;
+  size_t i, j;
   assert(src->width == dst->width && src->height == dst->height);
-  assert(rect->x_offset_ + rect->width_ <= dst->width);
-  assert(rect->y_offset_ + rect->height_ <= dst->height);
+  assert(rect->x_offset_ + rect->width_ <= (size_t)dst->width);
+  assert(rect->y_offset_ + rect->height_ <= (size_t)dst->height);
   for (j = rect->y_offset_; j < rect->y_offset_ + rect->height_; ++j) {
     for (i = rect->x_offset_; i < rect->x_offset_ + rect->width_; ++i) {
       const uint32_t src_pixel = src->argb[j * src->argb_stride + i];
@@ -660,10 +660,10 @@ static int IsLossyBlendingPossible(const WebPPicture* const src,
                                    const FrameRect* const rect,
                                    float quality) {
   const int max_allowed_diff_lossy = QualityToMaxDiff(quality);
-  int i, j;
+  size_t i, j;
   assert(src->width == dst->width && src->height == dst->height);
-  assert(rect->x_offset_ + rect->width_ <= dst->width);
-  assert(rect->y_offset_ + rect->height_ <= dst->height);
+  assert(rect->x_offset_ + rect->width_ <= (size_t)dst->width);
+  assert(rect->y_offset_ + rect->height_ <= (size_t)dst->height);
   for (j = rect->y_offset_; j < rect->y_offset_ + rect->height_; ++j) {
     for (i = rect->x_offset_; i < rect->x_offset_ + rect->width_; ++i) {
       const uint32_t src_pixel = src->argb[j * src->argb_stride + i];
@@ -686,7 +686,7 @@ static int IsLossyBlendingPossible(const WebPPicture* const src,
 static int IncreaseTransparency(const WebPPicture* const src,
                                 const FrameRect* const rect,
                                 WebPPicture* const dst) {
-  int i, j;
+  size_t i, j;
   int modified = 0;
   assert(src != NULL && dst != NULL && rect != NULL);
   assert(src->width == dst->width && src->height == dst->height);
@@ -713,13 +713,13 @@ static int FlattenSimilarBlocks(const WebPPicture* const src,
                                 const FrameRect* const rect,
                                 WebPPicture* const dst, float quality) {
   const int max_allowed_diff_lossy = QualityToMaxDiff(quality);
-  int i, j;
+  size_t i, j;
   int modified = 0;
-  const int block_size = 8;
-  const int y_start = (rect->y_offset_ + block_size) & ~(block_size - 1);
-  const int y_end = (rect->y_offset_ + rect->height_) & ~(block_size - 1);
-  const int x_start = (rect->x_offset_ + block_size) & ~(block_size - 1);
-  const int x_end = (rect->x_offset_ + rect->width_) & ~(block_size - 1);
+  const size_t block_size = 8;
+  const size_t y_start = (rect->y_offset_ + block_size) & ~(block_size - 1);
+  const size_t y_end = (rect->y_offset_ + rect->height_) & ~(block_size - 1);
+  const size_t x_start = (rect->x_offset_ + block_size) & ~(block_size - 1);
+  const size_t x_end = (rect->x_offset_ + rect->width_) & ~(block_size - 1);
   assert(src != NULL && dst != NULL && rect != NULL);
   assert(src->width == dst->width && src->height == dst->height);
   assert((block_size & (block_size - 1)) == 0);  // must be a power of 2
@@ -728,7 +728,7 @@ static int FlattenSimilarBlocks(const WebPPicture* const src,
     for (i = x_start; i < x_end; i += block_size) {
       int cnt = 0;
       int avg_r = 0, avg_g = 0, avg_b = 0;
-      int x, y;
+      size_t x, y;
       const uint32_t* const psrc = src->argb + j * src->argb_stride + i;
       uint32_t* const pdst = dst->argb + j * dst->argb_stride + i;
       for (y = 0; y < block_size; ++y) {
