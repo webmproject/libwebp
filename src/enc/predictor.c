@@ -244,7 +244,8 @@ static WEBP_INLINE void GetResidual(
       } else {
         predict = pred_func(current_row[x - 1], upper_row + x);
       }
-      if (mode == 0 || y == 0 || y == height - 1 || x == 0 || x == width - 1) {
+      if (max_quantization == 1 || mode == 0 || y == 0 || y == height - 1 ||
+          x == 0 || x == width - 1) {
         residual = VP8LSubPixels(current_row[x], predict);
       } else {
         residual = NearLossless(current_row[x], predict, max_quantization,
