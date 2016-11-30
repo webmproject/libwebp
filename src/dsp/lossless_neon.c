@@ -139,6 +139,289 @@ static void ConvertBGRAToRGB(const uint32_t* src,
 
 #endif   // !WORK_AROUND_GCC
 
+
+//------------------------------------------------------------------------------
+// Predictor Transform
+
+#define LOAD_U32_AS_U8(VALUE) vreinterpret_u8_u32(vdup_n_u32((VALUE)))
+#define LOAD_U32P_AS_U8Q(VALUE) vreinterpretq_u8_u32(vld1q_u32((VALUE)))
+#define STORE_U8_AS_U32(VALUE) vget_lane_u32(vreinterpret_u32_u8((VALUE)), 0);
+#define STORE_U8Q_AS_U32P(OUT, IN) vst1q_u32((OUT), vreinterpretq_u32_u8((IN)));
+
+static WEBP_INLINE uint32_t ClampedAddSubtractFull_NEON(uint32_t c0,
+                                                        uint32_t c1,
+                                                        uint32_t c2) {
+  const uint8x8_t C0 = LOAD_U32_AS_U8(c0);
+  const uint8x8_t C1 = LOAD_U32_AS_U8(c1);
+  const uint16x8_t sum = vaddl_u8(C0, C1);
+  const uint8x8_t C2 = LOAD_U32_AS_U8(c2);
+  const uint16x8_t A2 = vmovl_u8(C2);
+  // Saturated subtract.
+  const uint16x8_t diff = vqsubq_u16(sum, A2);
+  const uint8x8_t res = vqmovn_u16(diff);
+  const uint32_t output = STORE_U8_AS_U32(res);
+  return output;
+}
+
+static WEBP_INLINE uint8x8_t Average2_u8_NEON(uint32_t a0, uint32_t a1) {
+  const uint8x8_t A0 = LOAD_U32_AS_U8(a0);
+  const uint8x8_t A1 = LOAD_U32_AS_U8(a1);
+  return vhadd_u8(A0, A1);
+}
+
+static WEBP_INLINE uint32_t ClampedAddSubtractHalf_NEON(uint32_t c0,
+                                                        uint32_t c1,
+                                                        uint32_t c2) {
+  const uint8x8_t avg = Average2_u8_NEON(c0, c1);
+  // Remove one to c2 when bigger than avg.
+  const uint8x8_t C2 = LOAD_U32_AS_U8(c2);
+  const uint8x8_t cmp = vcgt_u8(C2, avg);
+  const uint8x8_t C2_1 = vadd_u8(C2, cmp);
+  // Compute half of the difference between avg and c2.
+  const int8x8_t diff_avg = vreinterpret_s8_u8(vhsub_u8(avg, C2_1));
+  // Compute the sum with avg and saturate.
+  const int16x8_t avg_16 = vreinterpretq_s16_u16(vmovl_u8(avg));
+  const uint8x8_t res = vqmovun_s16(vaddw_s8(avg_16, diff_avg));
+  const uint32_t output = STORE_U8_AS_U32(res);
+  return output;
+}
+
+static WEBP_INLINE uint32_t Select_NEON(uint32_t a, uint32_t b, uint32_t c) {
+  const uint32x2_t A_32 = vdup_n_u32(a);
+  const uint8x8_t A = vreinterpret_u8_u32(A_32);
+  const uint8x8_t C = LOAD_U32_AS_U8(c);
+  const uint8x8_t pa = vabd_u8(A, C);
+  const uint32x2_t B_32 = vdup_n_u32(b);
+  const uint8x8_t B = vreinterpret_u8_u32(B_32);
+  const uint8x8_t pb = vabd_u8(B, C);
+  const int16x4_t diff = vreinterpret_s16_u16(vget_high_u16(vsubl_u8(pb, pa)));
+  // Horizontal add the adjacent pairs twice to get the sum of the first four
+  // signed 16-bit integers. The first add cannot be vpaddl_s16 as it would
+  // return a int32x2_t which would lead to a int64x1_t for the second one
+  // (which would be hard to deal with).
+  const int16x4_t sum = vpadd_s16(diff, diff);
+  const int32x2_t pa_minus_pb = vpaddl_s16(sum);
+  const int32x2_t zero = vdup_n_s32(0);
+  const uint32x2_t cmp = vcle_s32(pa_minus_pb, zero);
+  const uint32x2_t output = vbsl_u32(cmp, A_32, B_32);
+  return vget_lane_u32(output, 0);
+}
+
+static WEBP_INLINE uint32_t Average2_NEON(uint32_t a0, uint32_t a1) {
+  const uint8x8_t avg_u8x8 = Average2_u8_NEON(a0, a1);
+  const uint32_t avg = STORE_U8_AS_U32(avg_u8x8);
+  return avg;
+}
+
+static WEBP_INLINE uint32_t Average3_NEON(uint32_t a0, uint32_t a1,
+                                          uint32_t a2) {
+  const uint8x8_t avg0 = Average2_u8_NEON(a0, a2);
+  const uint8x8_t A1 = LOAD_U32_AS_U8(a1);
+  const uint32_t avg = STORE_U8_AS_U32(vhadd_u8(avg0, A1));
+  return avg;
+}
+
+static WEBP_INLINE uint32_t Average4_NEON(uint32_t a0, uint32_t a1, uint32_t a2,
+                                          uint32_t a3) {
+  const uint8x8_t avg0 = Average2_u8_NEON(a0, a1);
+  const uint8x8_t avg1 = Average2_u8_NEON(a2, a3);
+  const uint32_t avg = STORE_U8_AS_U32(vhadd_u8(avg0, avg1));
+  return avg;
+}
+
+static uint32_t Predictor5_NEON(uint32_t left, const uint32_t* const top) {
+  return Average3_NEON(left, top[0], top[1]);
+}
+static uint32_t Predictor6_NEON(uint32_t left, const uint32_t* const top) {
+  return Average2_NEON(left, top[-1]);
+}
+static uint32_t Predictor7_NEON(uint32_t left, const uint32_t* const top) {
+  return Average2_NEON(left, top[0]);
+}
+static uint32_t Predictor8_NEON(uint32_t left, const uint32_t* const top) {
+  (void)left;
+  return Average2_NEON(top[-1], top[0]);
+}
+static uint32_t Predictor9_NEON(uint32_t left, const uint32_t* const top) {
+  (void)left;
+  return Average2_NEON(top[0], top[1]);
+}
+static uint32_t Predictor10_NEON(uint32_t left, const uint32_t* const top) {
+  return Average4_NEON(left, top[-1], top[0], top[1]);
+}
+static uint32_t Predictor11_NEON(uint32_t left, const uint32_t* const top) {
+  return Select_NEON(top[0], left, top[-1]);
+}
+static uint32_t Predictor12_NEON(uint32_t left, const uint32_t* const top) {
+  return ClampedAddSubtractFull_NEON(left, top[0], top[-1]);
+}
+static uint32_t Predictor13_NEON(uint32_t left, const uint32_t* const top) {
+  return ClampedAddSubtractHalf_NEON(left, top[0], top[-1]);
+}
+#undef LOAD_U32_AS_U8
+#undef STORE_U8_AS_U32
+
+// Batch versions of those functions.
+
+// SSE implementation of VP8LAddPixels.
+static WEBP_INLINE uint8x16_t AddPixels(const uint8x16_t a, const uint8x16_t b) {
+  return vaddq_u8(a, b);
+}
+// Predictor0: ARGB_BLACK.
+static void PredictorAdd0_NEON(const uint32_t* in, const uint32_t* upper,
+                               int num_pixels, uint32_t* out) {
+  int i;
+  const uint8x16_t black = vreinterpretq_u8_u32(vdupq_n_u32(ARGB_BLACK));
+  for (i = 0; i + 4 <= num_pixels; i += 4) {
+    const uint8x16_t src = LOAD_U32P_AS_U8Q(&in[i]);
+    const uint8x16_t res = AddPixels(src, black);
+    STORE_U8Q_AS_U32P(&out[i], res);
+  }
+  VP8LPredictorsAdd_C[0](in + i, upper + i, num_pixels - i, out + i);
+}
+// Predictor1: left.
+/*static void PredictorAdd1_SSE(const uint32_t* in, const uint32_t* upper,
+                              int num_pixels, uint32_t* out) {
+  int i;
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i mask = _mm_set1_epi16(0x00ff);
+  for (i = 0; i < num_pixels - 4; i += 4) {
+    // a b c d
+    const __m128i src = _mm_loadu_si128((const __m128i*)&in[i]);
+    // a b
+    const __m128i src0 = _mm_unpacklo_epi8(src, zero);
+    // c d
+    const __m128i src1 = _mm_unpackhi_epi8(src, zero);
+    // 0 a b c
+    const __m128i shift = _mm_slli_si128(src, 4);
+    // 0 a
+    const __m128i shift0 = _mm_unpacklo_epi8(shift, zero);
+    // b c
+    const __m128i shift1 = _mm_unpackhi_epi8(shift, zero);
+    // a   a + b
+    const __m128i sum0 = _mm_add_epi16(src0, shift0);
+    // c + b   d + c
+    const __m128i sum_tmp = _mm_add_epi16(src1, shift1);
+    // a + b + c   a + b + c + d
+    const __m128i sum1 = _mm_add_epi16(sum0, sum_tmp);
+    // Add the previous element to both.
+    const __m128i prev = _mm_unpacklo_epi8(_mm_set1_epi32(out[i - 1]), zero);
+    const __m128i sum0_all = _mm_add_epi16(sum0, prev);
+    const __m128i sum1_all = _mm_add_epi16(sum1, prev);
+    const __m128i sum0_mask = _mm_and_si128(sum0_all, mask);
+    const __m128i sum1_mask = _mm_and_si128(sum1_all, mask);
+    const __m128i res = _mm_packus_epi16(sum0_mask, sum1_mask);
+    _mm_storeu_si128((__m128i*)&out[i], res);
+  }
+  VP8LPredictorsAdd_C[1](in + i, upper + i, num_pixels - i, out + i);
+}*/
+// Macro that adds 32-bit integers from IN using mod 256 arithmetic
+// per 8 bit channel.
+#define GENERATE_PREDICTOR_1(X, IN)                                         \
+  static void PredictorAdd##X##_NEON(const uint32_t* in,                    \
+                                     const uint32_t* upper, int num_pixels, \
+                                     uint32_t* out) {                       \
+    int i;                                                                  \
+    for (i = 0; i + 4 <= num_pixels; i += 4) {                              \
+      const uint8x16_t src = LOAD_U32P_AS_U8Q(&in[i]);                      \
+      const uint8x16_t other = LOAD_U32P_AS_U8Q(&(IN));             \
+      const uint8x16_t res = AddPixels(src, other);                         \
+      STORE_U8Q_AS_U32P(&out[i], res);                                      \
+    }                                                                       \
+    VP8LPredictorsAdd_C[(X)](in + i, upper + i, num_pixels - i, out + i);   \
+  }
+// Predictor2: Top.
+GENERATE_PREDICTOR_1(2, upper[i])
+// Predictor3: Top-right.
+GENERATE_PREDICTOR_1(3, upper[i + 1])
+// Predictor4: Top-left.
+GENERATE_PREDICTOR_1(4, upper[i - 1])
+#undef GENERATE_PREDICTOR_1
+/*
+// Due to averages with integers, values cannot be accumulated in parallel for
+// predictors 5 to 10.
+GENERATE_PREDICTOR_ADD(5)
+GENERATE_PREDICTOR_ADD(6)
+GENERATE_PREDICTOR_ADD(7)
+GENERATE_PREDICTOR_ADD(8)
+GENERATE_PREDICTOR_ADD(9)
+GENERATE_PREDICTOR_ADD(10)
+
+// Predictor11: select.
+static void PredictorAdd11_SSE(const uint32_t* in, const uint32_t* upper,
+                               int num_pixels, uint32_t* out) {
+  int i, j;
+  const __m128i zero = _mm_setzero_si128();
+  for (i = 0; i < num_pixels - 4; i += 4) {
+    const __m128i T = _mm_loadu_si128((const __m128i*)&upper[i]);
+    __m128i TL = _mm_loadu_si128((const __m128i*)&upper[i - 1]);
+    const __m128i TTL0 = _mm_subs_epu8(T, TL);
+    const __m128i TLT0 = _mm_subs_epu8(TL, T);
+    // |T - TL|
+    __m128i TTL = _mm_or_si128(TTL0, TLT0);
+    // in + T
+    __m128i src = _mm_loadu_si128((const __m128i*)&in[i]);
+    __m128i sumTin = AddPixels(src, _mm_loadu_si128((const __m128i*)&upper[i]));
+    for (j = 0; j < 4; ++j) {
+      int pa_minus_pb;
+      const __m128i L = _mm_cvtsi32_si128(out[i + j - 1]);
+      const __m128i LTL0 = _mm_subs_epu8(L, TL);
+      const __m128i TLL0 = _mm_subs_epu8(TL, L);
+      const __m128i LTL = _mm_or_si128(LTL0, TLL0);
+      const __m128i pTTL = _mm_unpacklo_epi8(TTL, zero);  // |T - TL|
+      const __m128i pLTL = _mm_unpacklo_epi8(LTL, zero);  // |L - TL|
+      const __m128i diff = _mm_sub_epi16(pLTL, pTTL);
+      {
+        int16_t tmp[8];
+        _mm_storeu_si128((__m128i*)tmp, diff);
+        pa_minus_pb = tmp[0] + tmp[1] + tmp[2] + tmp[3];
+      }
+      if (pa_minus_pb <= 0) {
+        // Add to upper (pre-computed value).
+        out[i + j] = _mm_cvtsi128_si32(sumTin);
+      } else {
+        // Add to left.
+        out[i + j] = _mm_cvtsi128_si32(AddPixels(src, L));
+      }
+      // Shift the pre-computed value for the next iteration.
+      TTL = _mm_srli_si128(TTL, 4);
+      TL = _mm_srli_si128(TL, 4);
+      src = _mm_srli_si128(src, 4);
+      sumTin = _mm_srli_si128(sumTin, 4);
+    }
+  }
+  VP8LPredictorsAdd_C[11](in + i, upper + i, num_pixels - i, out + i);
+}
+// Predictor12: ClampedAddSubtractFull.
+static void PredictorAdd12_SSE(const uint32_t* in, const uint32_t* upper,
+                               int num_pixels, uint32_t* out) {
+  int i, j;
+  const __m128i zero = _mm_setzero_si128();
+  // -4 to not read outside of memory.
+  for (i = 0; i < num_pixels - 4; i += 2) {
+    __m128i src = _mm_loadu_si128((const __m128i*)&in[i]);
+    const __m128i T8 = _mm_loadu_si128((const __m128i*)&upper[i]);
+    const __m128i T = _mm_unpacklo_epi8(T8, zero);
+    const __m128i TL8 = _mm_loadu_si128((const __m128i*)&upper[i - 1]);
+    const __m128i TL = _mm_unpacklo_epi8(TL8, zero);
+    __m128i diff = _mm_sub_epi16(T, TL);
+    for (j = 0; j < 2; ++j) {
+      const __m128i L8 = _mm_cvtsi32_si128(out[i + j - 1]);
+      const __m128i L = _mm_unpacklo_epi8(L8, zero);
+      const __m128i all = _mm_add_epi16(L, diff);
+      const __m128i alls = _mm_packus_epi16(all, all);
+      out[i + j] = _mm_cvtsi128_si32(AddPixels(src, alls));
+      // Shift the pre-computed value for the next iteration.
+      diff = _mm_srli_si128(diff, 8);
+      src = _mm_srli_si128(src, 4);
+    }
+  }
+  VP8LPredictorsAdd_C[12](in + i, upper + i, num_pixels - i, out + i);
+}
+// Due to averages with integers, values cannot be accumulated in parallel for
+// predictors 13.
+GENERATE_PREDICTOR_ADD(13)
+*/
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
 
@@ -256,6 +539,31 @@ static void TransformColorInverse(const VP8LMultipliers* const m,
 extern void VP8LDspInitNEON(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitNEON(void) {
+  VP8LPredictors[5] = Predictor5_NEON;
+  VP8LPredictors[6] = Predictor6_NEON;
+  VP8LPredictors[7] = Predictor7_NEON;
+  VP8LPredictors[8] = Predictor8_NEON;
+  VP8LPredictors[9] = Predictor9_NEON;
+  VP8LPredictors[10] = Predictor10_NEON;
+  VP8LPredictors[11] = Predictor11_NEON;
+  VP8LPredictors[12] = Predictor12_NEON;
+  VP8LPredictors[13] = Predictor13_NEON;
+
+  VP8LPredictorsAdd[0] = PredictorAdd0_NEON;
+  //VP8LPredictorsAdd[1] = PredictorAdd1_NEON;
+  VP8LPredictorsAdd[2] = PredictorAdd2_NEON;
+  VP8LPredictorsAdd[3] = PredictorAdd3_NEON;
+  VP8LPredictorsAdd[4] = PredictorAdd4_NEON;
+  /*VP8LPredictorsAdd[5] = PredictorAdd5;
+  VP8LPredictorsAdd[6] = PredictorAdd6;
+  VP8LPredictorsAdd[7] = PredictorAdd7;
+  VP8LPredictorsAdd[8] = PredictorAdd8;
+  VP8LPredictorsAdd[9] = PredictorAdd9;
+  VP8LPredictorsAdd[10] = PredictorAdd10;
+  VP8LPredictorsAdd[11] = PredictorAdd11_SSE;
+  VP8LPredictorsAdd[12] = PredictorAdd12_SSE;
+  VP8LPredictorsAdd[13] = PredictorAdd13;*/
+
   VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA;
   VP8LConvertBGRAToBGR = ConvertBGRAToBGR;
   VP8LConvertBGRAToRGB = ConvertBGRAToRGB;
