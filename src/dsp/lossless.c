@@ -600,6 +600,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
   VP8LPredictors[13] = Predictor13;
   VP8LPredictors[14] = Predictor0;     // <- padding security sentinels
   VP8LPredictors[15] = Predictor0;
+  memcpy(VP8LPredictors_C, VP8LPredictors, sizeof(VP8LPredictors));
 
   VP8LPredictorsAdd[0] = PredictorAdd0;
   VP8LPredictorsAdd[1] = PredictorAdd1;
@@ -617,6 +618,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
   VP8LPredictorsAdd[13] = PredictorAdd13;
   VP8LPredictorsAdd[14] = PredictorAdd0;  // <- padding security sentinels
   VP8LPredictorsAdd[15] = PredictorAdd0;
+  memcpy(VP8LPredictorsAdd_C, VP8LPredictorsAdd, sizeof(VP8LPredictorsAdd));
 
   VP8LAddGreenToBlueAndRed = VP8LAddGreenToBlueAndRed_C;
 
