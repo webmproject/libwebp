@@ -34,12 +34,12 @@ extern "C" {
 
 typedef uint32_t (*VP8LPredictorFunc)(uint32_t left, const uint32_t* const top);
 extern VP8LPredictorFunc VP8LPredictors[16];
-VP8LPredictorFunc VP8LPredictors_C[16];
+extern VP8LPredictorFunc VP8LPredictors_C[16];
 typedef void (*VP8LPredictorAddSubFunc)(const uint32_t* in,
                                         const uint32_t* upper, int num_pixels,
                                         uint32_t* out);
 extern VP8LPredictorAddSubFunc VP8LPredictorsAdd[16];
-VP8LPredictorAddSubFunc VP8LPredictorsAdd_C[16];
+extern VP8LPredictorAddSubFunc VP8LPredictorsAdd_C[16];
 
 typedef void (*VP8LProcessDecBlueAndRedFunc)(const uint32_t* src,
                                              int num_pixels, uint32_t* dst);

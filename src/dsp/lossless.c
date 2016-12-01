@@ -562,6 +562,10 @@ VP8LProcessDecBlueAndRedFunc VP8LAddGreenToBlueAndRed;
 VP8LPredictorAddSubFunc VP8LPredictorsAdd[16];
 VP8LPredictorFunc VP8LPredictors[16];
 
+// exposed plain-C implementations
+VP8LPredictorAddSubFunc VP8LPredictorsAdd_C[16];
+VP8LPredictorFunc VP8LPredictors_C[16];
+
 VP8LTransformColorInverseFunc VP8LTransformColorInverse;
 
 VP8LConvertFunc VP8LConvertBGRAToRGB;
