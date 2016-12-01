@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6db227c7_8b3c51f3",
+        "filename": "src/dsp/lossless_neon.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-12-01T19:33:02Z",
+      "side": 1,
+      "message": "why not reinterpreting to u32 and shifting instead?",
+      "range": {
+        "startLine": 228,
+        "startChar": 21,
+        "endLine": 228,
+        "endChar": 27
+      },
+      "revId": "6cdb4a94ecc28674342f3898b0d49ae294d9ed9d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
