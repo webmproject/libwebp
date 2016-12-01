@@ -368,6 +368,26 @@ model {
         }
       }
     }
+
+    img2webp_example(NativeExecutableSpec) {
+      binaries {
+        all {
+          lib library: "example_util", linkage: "static"
+          lib library: "imagedec", linkage: "static"
+          lib library: "imageio_util", linkage: "static"
+          lib library: "webpmux", linkage: "static"
+          lib library: "webp"
+        }
+      }
+      sources {
+        c {
+          source {
+            srcDir "./examples"
+            include "img2webp.c"
+          }
+        }
+      }
+    }
   }
   tasks {
     // Task to test all possible configurations.
