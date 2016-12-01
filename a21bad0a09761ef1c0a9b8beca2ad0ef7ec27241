@@ -139,6 +139,24 @@
     },
     {
       "key": {
+        "uuid": "0dc44b28_f004de37",
+        "filename": "examples/img2webp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-12-01T21:59:31Z",
+      "side": 1,
+      "message": "problem is, we need to go through WebPPictureFree() at line 237.\nAgreed, the error-trapping logic is a bit tedious here.",
+      "parentUuid": "2d6e6f0e_1370a385",
+      "revId": "a21bad0a09761ef1c0a9b8beca2ad0ef7ec27241",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d6e6f0e_1389c343",
         "filename": "makefile.unix",
         "patchSetId": 4
