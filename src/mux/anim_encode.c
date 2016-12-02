@@ -1029,6 +1029,8 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
   const WebPPicture* const prev_canvas = &enc->prev_canvas_;
   Candidate candidates[CANDIDATE_COUNT];
   const int is_lossless = config->lossless;
+  const int consider_lossless = is_lossless || enc->options_.allow_mixed;
+  const int consider_lossy = !is_lossless || enc->options_.allow_mixed;
   const int is_first_frame = enc->is_first_frame_;
 
   // First frame cannot be skipped as there is no 'previous frame' to merge it
@@ -1077,8 +1079,8 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
     goto Err;
   }
 
-  if ((is_lossless && IsEmptyRect(&dispose_none_params.rect_ll_)) ||
-      (!is_lossless && IsEmptyRect(&dispose_none_params.rect_lossy_))) {
+  if ((consider_lossless && IsEmptyRect(&dispose_none_params.rect_ll_)) ||
+      (consider_lossy && IsEmptyRect(&dispose_none_params.rect_lossy_))) {
     // Don't encode the frame at all. Instead, the duration of the previous
     // frame will be increased later.
     assert(empty_rect_allowed_none);
