@@ -326,7 +326,7 @@ OUT_LIBS += src/libwebp.a
 EXTRA_LIB = extras/libwebpextras.a
 OUT_EXAMPLES = examples/cwebp examples/dwebp
 EXTRA_EXAMPLES = examples/gif2webp examples/vwebp examples/webpmux \
-                 examples/anim_diff
+                 examples/anim_diff examples/img2webp
 OTHER_EXAMPLES = extras/get_disto extras/webp_quality
 
 OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES)
@@ -374,6 +374,7 @@ examples/dwebp: examples/dwebp.o
 examples/gif2webp: examples/gif2webp.o $(GIFDEC_OBJS)
 examples/vwebp: examples/vwebp.o
 examples/webpmux: examples/webpmux.o
+examples/img2webp: examples/img2webp.o
 
 examples/anim_diff: examples/libanim_util.a examples/libgifdec.a
 examples/anim_diff: src/demux/libwebpdemux.a examples/libexample_util.a
@@ -401,6 +402,10 @@ examples/vwebp: EXTRA_LIBS += $(GL_LIBS)
 examples/vwebp: EXTRA_FLAGS += -DWEBP_HAVE_GL
 examples/webpmux: examples/libexample_util.a imageio/libimageio_util.a
 examples/webpmux: src/mux/libwebpmux.a src/libwebpdecoder.a
+examples/img2webp: examples/libexample_util.a imageio/libimageio_util.a
+examples/img2webp: imageio/libimagedec.a
+examples/img2webp: src/mux/libwebpmux.a src/libwebp.a
+examples/img2webp: EXTRA_LIBS += $(CWEBP_LIBS)
 
 extras/get_disto: extras/get_disto.o
 extras/get_disto: imageio/libimagedec.a
@@ -428,7 +433,8 @@ dist: all
 	$(INSTALL) -m644 src/demux/libwebpdemux.a $(DESTDIR)/lib
 	$(INSTALL) -m644 src/mux/libwebpmux.a $(DESTDIR)/lib
 	umask 022; \
-	for m in man/[cdv]webp.1 man/gif2webp.1 man/webpmux.1; do \
+	for m in man/[cdv]webp.1 man/gif2webp.1 man/webpmux.1 \
+                 man/img2webp.1; do \
 	  basenam=$$(basename $$m .1); \
 	  $(GROFF) -t -e -man -T utf8 $$m \
 	    | $(COL) -bx >$(DESTDIR)/doc/$${basenam}.txt; \
