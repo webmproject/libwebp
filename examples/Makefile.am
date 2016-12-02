@@ -7,6 +7,9 @@ endif
 if BUILD_GIF2WEBP
   bin_PROGRAMS += gif2webp
 endif
+if BUILD_IMG2WEBP
+  bin_PROGRAMS += img2webp
+endif
 if WANT_MUX
   bin_PROGRAMS += webpmux
 endif
@@ -55,6 +58,13 @@ webpmux_SOURCES = webpmux.c
 webpmux_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
 webpmux_LDADD  = libexample_util.la ../imageio/libimageio_util.la
 webpmux_LDADD += ../src/mux/libwebpmux.la ../src/libwebp.la
+
+img2webp_SOURCES = img2webp.c
+img2webp_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
+img2webp_LDADD  = libexample_util.la ../imageio/libimageio_util.la
+img2webp_LDADD += ../imageio/libimagedec.la
+img2webp_LDADD += ../src/mux/libwebpmux.la ../src/libwebp.la
+img2webp_LDADD += $(PNG_LIBS) $(JPEG_LIBS) $(TIFF_LIBS)
 
 if BUILD_LIBWEBPDECODER
   anim_diff_LDADD += ../src/libwebpdecoder.la

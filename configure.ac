@@ -556,6 +556,11 @@ AS_IF([test "x$enable_gif" != "xno"], [
 AM_CONDITIONAL([BUILD_ANIMDIFF], [test "${build_animdiff}" = "yes"])
 AM_CONDITIONAL([BUILD_GIF2WEBP], [test "${build_gif2webp}" = "yes"])
 
+if test "$enable_libwebpmux" = "yes"; then
+  build_img2webp=yes
+fi
+AM_CONDITIONAL([BUILD_IMG2WEBP], [test "${build_img2webp}" = "yes"])
+
 dnl === check for WIC support ===
 
 AC_ARG_ENABLE([wic],
@@ -710,6 +715,7 @@ dwebp : yes
 GIF support : ${gif_support-no}
 anim_diff   : ${build_animdiff-no}
 gif2webp    : ${build_gif2webp-no}
+img2webp    : ${build_img2webp-no}
 webpmux     : ${enable_libwebpmux-no}
 vwebp       : ${build_vwebp-no}
 ])
