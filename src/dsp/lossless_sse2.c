@@ -217,12 +217,12 @@ GENERATE_PREDICTOR_1(4, upper[i - 1])
 
 // Due to averages with integers, values cannot be accumulated in parallel for
 // predictors 5 to 10.
-GENERATE_PREDICTOR_ADD(5)
-GENERATE_PREDICTOR_ADD(6)
-GENERATE_PREDICTOR_ADD(7)
-GENERATE_PREDICTOR_ADD(8)
-GENERATE_PREDICTOR_ADD(9)
-GENERATE_PREDICTOR_ADD(10)
+GENERATE_PREDICTOR_ADD(VP8LPredictors[5], PredictorAdd5_SSE2)
+GENERATE_PREDICTOR_ADD(VP8LPredictors[6], PredictorAdd6_SSE2)
+GENERATE_PREDICTOR_ADD(VP8LPredictors[7], PredictorAdd7_SSE2)
+GENERATE_PREDICTOR_ADD(VP8LPredictors[8], PredictorAdd8_SSE2)
+GENERATE_PREDICTOR_ADD(VP8LPredictors[9], PredictorAdd9_SSE2)
+GENERATE_PREDICTOR_ADD(VP8LPredictors[10], PredictorAdd10_SSE2)
 
 // Predictor11: select.
 static void PredictorAdd11_SSE2(const uint32_t* in, const uint32_t* upper,
@@ -300,7 +300,7 @@ static void PredictorAdd12_SSE2(const uint32_t* in, const uint32_t* upper,
 
 // Due to averages with integers, values cannot be accumulated in parallel for
 // predictors 13.
-GENERATE_PREDICTOR_ADD(13)
+GENERATE_PREDICTOR_ADD(VP8LPredictors[13], PredictorAdd13_SSE2)
 
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
@@ -547,15 +547,15 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitSSE2(void) {
   VP8LPredictorsAdd[2] = PredictorAdd2_SSE2;
   VP8LPredictorsAdd[3] = PredictorAdd3_SSE2;
   VP8LPredictorsAdd[4] = PredictorAdd4_SSE2;
-  VP8LPredictorsAdd[5] = PredictorAdd5;
-  VP8LPredictorsAdd[6] = PredictorAdd6;
-  VP8LPredictorsAdd[7] = PredictorAdd7;
-  VP8LPredictorsAdd[8] = PredictorAdd8;
-  VP8LPredictorsAdd[9] = PredictorAdd9;
-  VP8LPredictorsAdd[10] = PredictorAdd10;
+  VP8LPredictorsAdd[5] = PredictorAdd5_SSE2;
+  VP8LPredictorsAdd[6] = PredictorAdd6_SSE2;
+  VP8LPredictorsAdd[7] = PredictorAdd7_SSE2;
+  VP8LPredictorsAdd[8] = PredictorAdd8_SSE2;
+  VP8LPredictorsAdd[9] = PredictorAdd9_SSE2;
+  VP8LPredictorsAdd[10] = PredictorAdd10_SSE2;
   VP8LPredictorsAdd[11] = PredictorAdd11_SSE2;
   VP8LPredictorsAdd[12] = PredictorAdd12_SSE2;
-  VP8LPredictorsAdd[13] = PredictorAdd13;
+  VP8LPredictorsAdd[13] = PredictorAdd13_SSE2;
 
   VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
   VP8LTransformColorInverse = TransformColorInverse;
