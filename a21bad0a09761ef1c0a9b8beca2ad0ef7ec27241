@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4db723b6_2ae0bfae",
+        "filename": "Makefile.vc",
+        "patchSetId": 4
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-12-02T06:32:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2d6e6f0e_93667364",
+      "revId": "a21bad0a09761ef1c0a9b8beca2ad0ef7ec27241",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d6e6f0e_d363cb31",
         "filename": "examples/Makefile.am",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2016-12-01T20:08:23Z",
       "side": 1,
       "message": "space after \u0027+\u003d\u0027",
+      "revId": "a21bad0a09761ef1c0a9b8beca2ad0ef7ec27241",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdc95346_0e5ceb08",
+        "filename": "examples/Makefile.am",
+        "patchSetId": 4
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-12-02T06:32:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2d6e6f0e_d363cb31",
       "revId": "a21bad0a09761ef1c0a9b8beca2ad0ef7ec27241",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "8dc11b20_4cf74f6e",
+        "filename": "examples/img2webp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-12-02T06:32:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2d6e6f0e_73a637f6",
+      "revId": "a21bad0a09761ef1c0a9b8beca2ad0ef7ec27241",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d6e6f0e_938b1370",
         "filename": "examples/img2webp.c",
         "patchSetId": 4
@@ -64,6 +118,30 @@
       "writtenOn": "2016-12-01T20:08:23Z",
       "side": 1,
       "message": "it would be good if we normalized to [0,128). [128,255] is meant to be reserved",
+      "range": {
+        "startLine": 128,
+        "startChar": 11,
+        "endLine": 128,
+        "endChar": 13
+      },
+      "revId": "a21bad0a09761ef1c0a9b8beca2ad0ef7ec27241",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4db723b6_cad483db",
+        "filename": "examples/img2webp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-12-02T06:32:32Z",
+      "side": 1,
+      "message": "changed to \u0027return 1\u0027",
+      "parentUuid": "2d6e6f0e_938b1370",
       "range": {
         "startLine": 128,
         "startChar": 11,
@@ -99,6 +177,30 @@
     },
     {
       "key": {
+        "uuid": "0dc44b28_f0edbe45",
+        "filename": "examples/img2webp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-12-02T06:32:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2d6e6f0e_d3846b61",
+      "range": {
+        "startLine": 131,
+        "startChar": 5,
+        "endLine": 131,
+        "endChar": 9
+      },
+      "revId": "a21bad0a09761ef1c0a9b8beca2ad0ef7ec27241",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d6e6f0e_737757b3",
         "filename": "examples/img2webp.c",
         "patchSetId": 4
@@ -110,6 +212,30 @@
       "writtenOn": "2016-12-01T20:08:23Z",
       "side": 1,
       "message": "1st",
+      "range": {
+        "startLine": 165,
+        "startChar": 58,
+        "endLine": 165,
+        "endChar": 62
+      },
+      "revId": "a21bad0a09761ef1c0a9b8beca2ad0ef7ec27241",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4dde43f8_92879af9",
+        "filename": "examples/img2webp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-12-02T06:32:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2d6e6f0e_737757b3",
       "range": {
         "startLine": 165,
         "startChar": 58,
@@ -168,6 +294,30 @@
       "writtenOn": "2016-12-01T20:08:23Z",
       "side": 1,
       "message": "img2webp",
+      "range": {
+        "startLine": 437,
+        "startChar": 14,
+        "endLine": 437,
+        "endChar": 24
+      },
+      "revId": "a21bad0a09761ef1c0a9b8beca2ad0ef7ec27241",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "adbc1f98_4d5c2d9c",
+        "filename": "makefile.unix",
+        "patchSetId": 4
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-12-02T06:32:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2d6e6f0e_1389c343",
       "range": {
         "startLine": 437,
         "startChar": 14,
