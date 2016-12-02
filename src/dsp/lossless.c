@@ -585,44 +585,32 @@ extern void VP8LDspInitMSA(void);
 static volatile VP8CPUInfo lossless_last_cpuinfo_used =
     (VP8CPUInfo)&lossless_last_cpuinfo_used;
 
+#define COPY_PREDICTOR_ARRAY(IN, OUT) do {              \
+  (OUT)[0] = IN##0;                                     \
+  (OUT)[1] = IN##1;                                     \
+  (OUT)[2] = IN##2;                                     \
+  (OUT)[3] = IN##3;                                     \
+  (OUT)[4] = IN##4;                                     \
+  (OUT)[5] = IN##5;                                     \
+  (OUT)[6] = IN##6;                                     \
+  (OUT)[7] = IN##7;                                     \
+  (OUT)[8] = IN##8;                                     \
+  (OUT)[9] = IN##9;                                     \
+  (OUT)[10] = IN##10;                                   \
+  (OUT)[11] = IN##11;                                   \
+  (OUT)[12] = IN##12;                                   \
+  (OUT)[13] = IN##13;                                   \
+  (OUT)[14] = IN##0; /* <- padding security sentinels*/ \
+  (OUT)[15] = IN##0;                                    \
+} while (0);
+
 WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
   if (lossless_last_cpuinfo_used == VP8GetCPUInfo) return;
 
-  VP8LPredictors[0] = Predictor0;
-  VP8LPredictors[1] = Predictor1;
-  VP8LPredictors[2] = Predictor2;
-  VP8LPredictors[3] = Predictor3;
-  VP8LPredictors[4] = Predictor4;
-  VP8LPredictors[5] = Predictor5;
-  VP8LPredictors[6] = Predictor6;
-  VP8LPredictors[7] = Predictor7;
-  VP8LPredictors[8] = Predictor8;
-  VP8LPredictors[9] = Predictor9;
-  VP8LPredictors[10] = Predictor10;
-  VP8LPredictors[11] = Predictor11;
-  VP8LPredictors[12] = Predictor12;
-  VP8LPredictors[13] = Predictor13;
-  VP8LPredictors[14] = Predictor0;     // <- padding security sentinels
-  VP8LPredictors[15] = Predictor0;
-  memcpy(VP8LPredictors_C, VP8LPredictors, sizeof(VP8LPredictors));
-
-  VP8LPredictorsAdd[0] = PredictorAdd0;
-  VP8LPredictorsAdd[1] = PredictorAdd1;
-  VP8LPredictorsAdd[2] = PredictorAdd2;
-  VP8LPredictorsAdd[3] = PredictorAdd3;
-  VP8LPredictorsAdd[4] = PredictorAdd4;
-  VP8LPredictorsAdd[5] = PredictorAdd5;
-  VP8LPredictorsAdd[6] = PredictorAdd6;
-  VP8LPredictorsAdd[7] = PredictorAdd7;
-  VP8LPredictorsAdd[8] = PredictorAdd8;
-  VP8LPredictorsAdd[9] = PredictorAdd9;
-  VP8LPredictorsAdd[10] = PredictorAdd10;
-  VP8LPredictorsAdd[11] = PredictorAdd11;
-  VP8LPredictorsAdd[12] = PredictorAdd12;
-  VP8LPredictorsAdd[13] = PredictorAdd13;
-  VP8LPredictorsAdd[14] = PredictorAdd0;  // <- padding security sentinels
-  VP8LPredictorsAdd[15] = PredictorAdd0;
-  memcpy(VP8LPredictorsAdd_C, VP8LPredictorsAdd, sizeof(VP8LPredictorsAdd));
+  COPY_PREDICTOR_ARRAY(Predictor, VP8LPredictors)
+  COPY_PREDICTOR_ARRAY(Predictor, VP8LPredictors_C)
+  COPY_PREDICTOR_ARRAY(PredictorAdd, VP8LPredictorsAdd)
+  COPY_PREDICTOR_ARRAY(PredictorAdd, VP8LPredictorsAdd_C)
 
   VP8LAddGreenToBlueAndRed = VP8LAddGreenToBlueAndRed_C;
 
@@ -662,5 +650,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
   }
   lossless_last_cpuinfo_used = VP8GetCPUInfo;
 }
+#undef COPY_PREDICTOR_ARRAY
 
 //------------------------------------------------------------------------------
