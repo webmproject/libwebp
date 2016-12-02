@@ -413,6 +413,37 @@ $ make -f makefile.unix examples/vwebp
 > nmake /f Makefile.vc CFG=release-static \
     ../obj/x64/release-static/bin/vwebp.exe
 
+Animation creation tool:
+========================
+The utility 'img2webp' can turn a sequence of input images (PNG, JPEG, ...)
+into an animated WebP file. It offers fine control over duration, encoding
+modes, etc.
+
+Usage:
+
+  img2webp [file-level options] [image files...] [per-frame options...]
+
+File-level options (only used at the start of compression):
+ -min_size ............ minimize size
+ -loop <int> .......... loop count (default: 0, = infinite loop)
+ -kmax <int> .......... maximum number of frame between key-frames
+                        (0=only keyframes)
+ -kmin <int> .......... minimum number of frame between key-frames
+                        (0=disable key-frames altogether)
+ -mixed ............... use mixed lossy/lossless automatic mode
+ -v ................... verbose mode
+ -h ................... this help
+
+Per-frame options (only used for subsequent images input):
+ -d <int> ............. frame duration in ms (default: 100)
+ -lossless  ........... use lossless mode (default)
+ -lossy ... ........... use lossy mode
+ -q <float> ........... quality
+ -m <int> ............. method to use
+
+example: img2webp -loop 2 in0.png -lossy in1.jpg
+                  -d 80 in2.tiff -o out.webp
+
 Animated GIF conversion:
 ========================
 Animated GIF files can be converted to WebP files with animation using the
