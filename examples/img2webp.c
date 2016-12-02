@@ -176,6 +176,7 @@ int main(int argc, char* argv[]) {
 
   // image-reading pass
   pic_num = 0;
+  config.lossless = 1;
   for (c = 1; ok && c < argc; ++c) {
     if (argv[c] == NULL) continue;
     if (argv[c][0] == '-') {    // parse local options
@@ -212,6 +213,7 @@ int main(int argc, char* argv[]) {
     }
 
     // read next input image
+    pic.use_argb = 1;
     ok = ReadImage(argv[c], &pic);
     if (!ok) goto End;
 
