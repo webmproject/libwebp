@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d4003d4_ffe51fc2",
+        "filename": "src/dsp/lossless_neon.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-12-03T11:17:59Z",
+      "side": 1,
+      "message": "block 265-279 should be removed meanwhile...",
+      "range": {
+        "startLine": 265,
+        "startChar": 0,
+        "endLine": 265,
+        "endChar": 2
+      },
+      "revId": "8a24ac7c7449574b5df92fb91b9cb77012b98197",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d4003d4_9fdad305",
+        "filename": "src/dsp/lossless_neon.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-12-03T11:17:59Z",
+      "side": 1,
+      "message": "should be removed too",
+      "range": {
+        "startLine": 385,
+        "startChar": 2,
+        "endLine": 385,
+        "endChar": 24
+      },
+      "revId": "8a24ac7c7449574b5df92fb91b9cb77012b98197",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
