@@ -351,28 +351,41 @@ static void PredictorAdd11_NEON(const uint32_t* in, const uint32_t* upper,
 }
 
 // Predictor12: ClampedAddSubtractFull.
+#define DO_PRED12(DIFF, LANE, OUT) do {                                  \
+  const uint8x8_t pred =                                                 \
+      vqmovun_s16(vaddq_s16(vreinterpretq_s16_u16(left), (DIFF)));       \
+  const uint8x8_t res =                                                  \
+      vadd_u8(pred, (OUT <= 1) ? vget_low_u8(src) : vget_high_u8(src));  \
+  vst1_lane_u32(&out[i + (OUT)], vreinterpret_u32_u8(res), (LANE));      \
+  /* rotate in the left predictor for next iteration */                  \
+  left = (LANE == 0) ? vextq_u16(zero, vmovl_u8(res), 4)                 \
+                     : vextq_u16(vmovl_u8(res), zero, 4);                \
+} while (0)
+
 static void PredictorAdd12_NEON(const uint32_t* in, const uint32_t* upper,
                                 int num_pixels, uint32_t* out) {
-  int i, j;
-  // +4 to not read outside of memory.
-  for (i = 0; i + 4 <= num_pixels; i += 2) {
-    uint8x8_t src = LOAD_U32P_AS_U8(&in[i]);
-    const uint8x8_t TL = LOAD_U32P_AS_U8(&upper[i - 1]);
-    const uint8x8_t T = LOAD_U32P_AS_U8(&upper[i]);
-    int16x8_t diff = vreinterpretq_s16_u16(vsubl_u8(T, TL));
-    for (j = 0; j < 2; ++j) {
-      const uint8x8_t L8 = LOAD_U32_AS_U8(out[i + j - 1]);
-      const int16x8_t L = vreinterpretq_s16_u16(vmovl_u8(L8));
-      const int16x8_t sum = vaddq_s16(L, diff);
-      const uint8x8_t res = vadd_u8(vqmovun_s16(sum), src);
-      out[i + j] = vget_lane_u32(vreinterpret_u32_u8(res), 0);
-      // Shift the pre-computed value for the next iteration.
-      diff = vextq_s16(diff, diff, 4);
-      src = vext_u8(src, src, 4);
-    }
+  int i;
+  const uint16x8_t zero = vdupq_n_u16(0);
+  uint16x8_t left = vmovl_u8(LOAD_U32_AS_U8(out[-1]));
+  for (i = 0; i + 4 <= num_pixels; i += 4) {
+    // load four pixels of source
+    const uint8x16_t src = LOADQ_U32P_AS_U8(&in[i]);
+    // precompute the difference T - TL once for all, stored as s16
+    const uint8x16_t TL = LOADQ_U32P_AS_U8(&upper[i - 1]);
+    const uint8x16_t T = LOADQ_U32P_AS_U8(&upper[i]);
+    const int16x8_t diff_lo =
+        vreinterpretq_s16_u16(vsubl_u8(vget_low_u8(T), vget_low_u8(TL)));
+    const int16x8_t diff_hi =
+        vreinterpretq_s16_u16(vsubl_u8(vget_high_u8(T), vget_high_u8(TL)));
+    // loop over the four reconstructed pixels
+    DO_PRED12(diff_lo, 0, 0);
+    DO_PRED12(diff_lo, 1, 1);
+    DO_PRED12(diff_hi, 0, 2);
+    DO_PRED12(diff_hi, 1, 3);
   }
   VP8LPredictorsAdd_C[12](in + i, upper + i, num_pixels - i, out + i);
 }
+#undef DO_PRED12
 
 #undef LOAD_U32_AS_U8
 #undef LOAD_U32P_AS_U8
