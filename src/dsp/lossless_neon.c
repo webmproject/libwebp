@@ -287,6 +287,8 @@ GENERATE_PREDICTOR_2(9, upper[i + 1])
 static void PredictorAdd10_NEON(const uint32_t* in, const uint32_t* upper,
                                 int num_pixels, uint32_t* out) {
   int i, j;
+  const uint8x16_t zero = vdupq_n_u8(0);
+  uint8x16_t L = LOADQ_U32_AS_U8(out[-1]);
   for (i = 0; i + 4 <= num_pixels; i += 4) {
     uint8x16_t src = LOADQ_U32P_AS_U8(&in[i]);
     uint8x16_t TL = LOADQ_U32P_AS_U8(&upper[i - 1]);
@@ -294,15 +296,14 @@ static void PredictorAdd10_NEON(const uint32_t* in, const uint32_t* upper,
     const uint8x16_t TR = LOADQ_U32P_AS_U8(&upper[i + 1]);
     uint8x16_t avgTTR = vhaddq_u8(T, TR);
     for (j = 0; j < 4; ++j) {
-      const uint8x16_t L = LOADQ_U32_AS_U8(out[i + j - 1]);
       const uint8x16_t avgLTL = vhaddq_u8(L, TL);
       const uint8x16_t avg = vhaddq_u8(avgTTR, avgLTL);
-      const uint8x16_t res = vaddq_u8(avg, src);
-      out[i + j] = GETQ_U8_AS_U32(res);
+      L = vaddq_u8(avg, src);   // result is the next 'left'
+      out[i + j] = GETQ_U8_AS_U32(L);
       // Rotate the pre-computed values for the next iteration.
-      avgTTR = vextq_u8(avgTTR, avgTTR, 4);
-      TL = vextq_u8(TL, TL, 4);
-      src = vextq_u8(src, src, 4);
+      avgTTR = vextq_u8(avgTTR, zero, 4);
+      TL = vextq_u8(TL, zero, 4);
+      src = vextq_u8(src, zero, 4);
     }
   }
   VP8LPredictorsAdd_C[10](in + i, upper + i, num_pixels - i, out + i);
