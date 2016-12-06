@@ -78,7 +78,7 @@ static WEBP_INLINE uint32_t Select(uint32_t a, uint32_t b, uint32_t c) {
   return (pa_minus_pb <= 0) ? a : b;
 }
 
-static WEBP_INLINE __m128i Average2_128i(uint32_t a0, uint32_t a1) {
+static WEBP_INLINE __m128i Average2_epi16(uint32_t a0, uint32_t a1) {
   const __m128i zero = _mm_setzero_si128();
   const __m128i A0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(a0), zero);
   const __m128i A1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(a1), zero);
@@ -88,7 +88,7 @@ static WEBP_INLINE __m128i Average2_128i(uint32_t a0, uint32_t a1) {
 }
 
 static WEBP_INLINE uint32_t Average2(uint32_t a0, uint32_t a1) {
-  const __m128i avg = Average2_128i(a0, a1);
+  const __m128i avg = Average2_epi16(a0, a1);
   const __m128i A2 = _mm_packus_epi16(avg, avg);
   const uint32_t output = _mm_cvtsi128_si32(A2);
   return output;
@@ -96,7 +96,7 @@ static WEBP_INLINE uint32_t Average2(uint32_t a0, uint32_t a1) {
 
 static WEBP_INLINE uint32_t Average3(uint32_t a0, uint32_t a1, uint32_t a2) {
   const __m128i zero = _mm_setzero_si128();
-  const __m128i avg1 = Average2_128i(a0, a2);
+  const __m128i avg1 = Average2_epi16(a0, a2);
   const __m128i A1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(a1), zero);
   const __m128i sum = _mm_add_epi16(avg1, A1);
   const __m128i avg2 = _mm_srli_epi16(sum, 1);
@@ -107,8 +107,8 @@ static WEBP_INLINE uint32_t Average3(uint32_t a0, uint32_t a1, uint32_t a2) {
 
 static WEBP_INLINE uint32_t Average4(uint32_t a0, uint32_t a1,
                                      uint32_t a2, uint32_t a3) {
-  const __m128i avg1 = Average2_128i(a0, a1);
-  const __m128i avg2 = Average2_128i(a2, a3);
+  const __m128i avg1 = Average2_epi16(a0, a1);
+  const __m128i avg2 = Average2_epi16(a2, a3);
   const __m128i sum = _mm_add_epi16(avg2, avg1);
   const __m128i avg3 = _mm_srli_epi16(sum, 1);
   const __m128i A0 = _mm_packus_epi16(avg3, avg3);
@@ -216,19 +216,80 @@ GENERATE_PREDICTOR_1(4, upper[i - 1])
 #undef GENERATE_PREDICTOR_1
 
 // Due to averages with integers, values cannot be accumulated in parallel for
-// predictors 5 to 10.
+// predictors 5 to 7.
 GENERATE_PREDICTOR_ADD(VP8LPredictors[5], PredictorAdd5_SSE2)
 GENERATE_PREDICTOR_ADD(VP8LPredictors[6], PredictorAdd6_SSE2)
 GENERATE_PREDICTOR_ADD(VP8LPredictors[7], PredictorAdd7_SSE2)
-GENERATE_PREDICTOR_ADD(VP8LPredictors[8], PredictorAdd8_SSE2)
-GENERATE_PREDICTOR_ADD(VP8LPredictors[9], PredictorAdd9_SSE2)
-GENERATE_PREDICTOR_ADD(VP8LPredictors[10], PredictorAdd10_SSE2)
+
+static WEBP_INLINE void Average2_128i(const __m128i* const a0,
+                                      const __m128i* const a1,
+                                      __m128i* const avg) {
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i a0_lo = _mm_unpacklo_epi8(*a0, zero);
+  const __m128i a0_hi = _mm_unpackhi_epi8(*a0, zero);
+  const __m128i a1_lo = _mm_unpacklo_epi8(*a1, zero);
+  const __m128i a1_hi = _mm_unpackhi_epi8(*a1, zero);
+  const __m128i sum_lo = _mm_add_epi16(a0_lo, a1_lo);
+  const __m128i sum_hi = _mm_add_epi16(a0_hi, a1_hi);
+  const __m128i avg_lo = _mm_srli_epi16(sum_lo, 1);
+  const __m128i avg_hi = _mm_srli_epi16(sum_hi, 1);
+  *avg = _mm_packus_epi16(avg_lo, avg_hi);
+}
+
+#define GENERATE_PREDICTOR_2(X, IN)                                           \
+static void PredictorAdd##X##_SSE2(const uint32_t* in, const uint32_t* upper, \
+                                   int num_pixels, uint32_t* out) {           \
+  int i;                                                                      \
+  for (i = 0; i + 4 <= num_pixels; i += 4) {                                  \
+    const __m128i Tother = _mm_loadu_si128((const __m128i*)&(IN));            \
+    const __m128i T = _mm_loadu_si128((const __m128i*)&upper[i]);             \
+    __m128i avg;                                                              \
+    Average2_128i(&T, &Tother, &avg);                                         \
+    const __m128i src = _mm_loadu_si128((const __m128i*)&in[i]);              \
+    const __m128i res = _mm_add_epi8(avg, src);                               \
+    _mm_storeu_si128((__m128i*)&out[i], res);                                 \
+  }                                                                           \
+  VP8LPredictorsAdd_C[(X)](in + i, upper + i, num_pixels - i, out + i);       \
+}
+// Predictor8: average TL T.
+GENERATE_PREDICTOR_2(8, upper[i - 1])
+// Predictor9: average T TR.
+GENERATE_PREDICTOR_2(9, upper[i + 1])
+#undef GENERATE_PREDICTOR_2
+
+// Predictor10: average of (average of (L,TL), average of (T, TR)).
+static void PredictorAdd10_SSE2(const uint32_t* in, const uint32_t* upper,
+                                int num_pixels, uint32_t* out) {
+  int i, j;
+  __m128i L = _mm_cvtsi32_si128(out[-1]);
+  for (i = 0; i + 4 <= num_pixels; i += 4) {
+    __m128i src = _mm_loadu_si128((const __m128i*)&in[i]);
+    __m128i TL = _mm_loadu_si128((const __m128i*)&upper[i - 1]);
+    const __m128i T = _mm_loadu_si128((const __m128i*)&upper[i]);
+    const __m128i TR = _mm_loadu_si128((const __m128i*)&upper[i + 1]);
+    __m128i avgTTR;
+    Average2_128i(&T, &TR, &avgTTR);
+    for (j = 0; j < 4; ++j) {
+      __m128i avgLTL, avg;
+      Average2_128i(&L, &TL, &avgLTL);
+      Average2_128i(&avgTTR, &avgLTL, &avg);
+      L = _mm_add_epi8(avg, src);
+      out[i + j] = _mm_cvtsi128_si32(L);
+      // Rotate the pre-computed values for the next iteration.
+      avgTTR = _mm_srli_si128(avgTTR, 4);
+      TL = _mm_srli_si128(TL, 4);
+      src = _mm_srli_si128(src, 4);
+    }
+  }
+  VP8LPredictorsAdd_C[10](in + i, upper + i, num_pixels - i, out + i);
+}
 
 // Predictor11: select.
 static void PredictorAdd11_SSE2(const uint32_t* in, const uint32_t* upper,
                                 int num_pixels, uint32_t* out) {
   int i, j;
   const __m128i zero = _mm_setzero_si128();
+  __m128i L = _mm_cvtsi32_si128(out[-1]);
   for (i = 0; i + 4 <= num_pixels; i += 4) {
     const __m128i T = _mm_loadu_si128((const __m128i*)&upper[i]);
     __m128i TL = _mm_loadu_si128((const __m128i*)&upper[i - 1]);
@@ -242,7 +303,6 @@ static void PredictorAdd11_SSE2(const uint32_t* in, const uint32_t* upper,
         _mm_add_epi8(src, _mm_loadu_si128((const __m128i*)&upper[i]));
     for (j = 0; j < 4; ++j) {
       int pa_minus_pb;
-      const __m128i L = _mm_cvtsi32_si128(out[i + j - 1]);
       const __m128i LTL0 = _mm_subs_epu8(L, TL);
       const __m128i TLL0 = _mm_subs_epu8(TL, L);
       const __m128i LTL = _mm_or_si128(LTL0, TLL0);
@@ -256,11 +316,12 @@ static void PredictorAdd11_SSE2(const uint32_t* in, const uint32_t* upper,
       }
       if (pa_minus_pb <= 0) {
         // Add to upper (pre-computed value).
-        out[i + j] = _mm_cvtsi128_si32(sumTin);
+        _mm_store_si128(&L, sumTin);
       } else {
         // Add to left.
-        out[i + j] = _mm_cvtsi128_si32(_mm_add_epi8(src, L));
+        L = _mm_add_epi8(src, L);
       }
+      out[i + j] = _mm_cvtsi128_si32(L);
       // Shift the pre-computed value for the next iteration.
       TTL = _mm_srli_si128(TTL, 4);
       TL = _mm_srli_si128(TL, 4);
@@ -272,31 +333,43 @@ static void PredictorAdd11_SSE2(const uint32_t* in, const uint32_t* upper,
 }
 
 // Predictor12: ClampedAddSubtractFull.
+#define DO_PRED12(DIFF, LANE, OUT)                          \
+do {                                                        \
+  const __m128i all = _mm_add_epi16(L, (DIFF));             \
+  const __m128i alls = _mm_packus_epi16(all, all);          \
+  const __m128i res = _mm_add_epi8(src, alls);              \
+  out[i + (OUT)] = _mm_cvtsi128_si32(res);                  \
+  L = _mm_unpacklo_epi8(res, zero);                         \
+  /* Shift the pre-computed value for the next iteration.*/ \
+  if (LANE == 0) (DIFF) = _mm_srli_si128((DIFF), 8);        \
+  src = _mm_srli_si128(src, 4);                             \
+} while (0)
+
 static void PredictorAdd12_SSE2(const uint32_t* in, const uint32_t* upper,
                                 int num_pixels, uint32_t* out) {
-  int i, j;
+  int i;
   const __m128i zero = _mm_setzero_si128();
-  // +4 to not read outside of memory.
-  for (i = 0; i + 4 <= num_pixels; i += 2) {
+  const __m128i L8 = _mm_cvtsi32_si128(out[-1]);
+  __m128i L = _mm_unpacklo_epi8(L8, zero);
+  for (i = 0; i + 4 <= num_pixels; i += 4) {
+    // Load 4 pixels at a time.
     __m128i src = _mm_loadu_si128((const __m128i*)&in[i]);
-    const __m128i T8 = _mm_loadu_si128((const __m128i*)&upper[i]);
-    const __m128i T = _mm_unpacklo_epi8(T8, zero);
-    const __m128i TL8 = _mm_loadu_si128((const __m128i*)&upper[i - 1]);
-    const __m128i TL = _mm_unpacklo_epi8(TL8, zero);
-    __m128i diff = _mm_sub_epi16(T, TL);
-    for (j = 0; j < 2; ++j) {
-      const __m128i L8 = _mm_cvtsi32_si128(out[i + j - 1]);
-      const __m128i L = _mm_unpacklo_epi8(L8, zero);
-      const __m128i all = _mm_add_epi16(L, diff);
-      const __m128i alls = _mm_packus_epi16(all, all);
-      out[i + j] = _mm_cvtsi128_si32(_mm_add_epi8(src, alls));
-      // Shift the pre-computed value for the next iteration.
-      diff = _mm_srli_si128(diff, 8);
-      src = _mm_srli_si128(src, 4);
-    }
+    const __m128i T = _mm_loadu_si128((const __m128i*)&upper[i]);
+    const __m128i T_lo = _mm_unpacklo_epi8(T, zero);
+    const __m128i T_hi = _mm_unpackhi_epi8(T, zero);
+    const __m128i TL = _mm_loadu_si128((const __m128i*)&upper[i - 1]);
+    const __m128i TL_lo = _mm_unpacklo_epi8(TL, zero);
+    const __m128i TL_hi = _mm_unpackhi_epi8(TL, zero);
+    __m128i diff_lo = _mm_sub_epi16(T_lo, TL_lo);
+    __m128i diff_hi = _mm_sub_epi16(T_hi, TL_hi);
+    DO_PRED12(diff_lo, 0, 0);
+    DO_PRED12(diff_lo, 1, 1);
+    DO_PRED12(diff_hi, 0, 2);
+    DO_PRED12(diff_hi, 1, 3);
   }
   VP8LPredictorsAdd_C[12](in + i, upper + i, num_pixels - i, out + i);
 }
+#undef DO_PRED12
 
 // Due to averages with integers, values cannot be accumulated in parallel for
 // predictors 13.
