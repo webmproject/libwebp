@@ -122,41 +122,41 @@ static WEBP_INLINE uint32_t Average4(uint32_t a0, uint32_t a1,
   return _mm_cvtsi128_si32(avg3);
 }
 
-static uint32_t Predictor5(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor5_SSE2(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Average3(left, top[0], top[1]);
   return pred;
 }
-static uint32_t Predictor6(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor6_SSE2(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Average2(left, top[-1]);
   return pred;
 }
-static uint32_t Predictor7(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor7_SSE2(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Average2(left, top[0]);
   return pred;
 }
-static uint32_t Predictor8(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor8_SSE2(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Average2(top[-1], top[0]);
   (void)left;
   return pred;
 }
-static uint32_t Predictor9(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor9_SSE2(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Average2(top[0], top[1]);
   (void)left;
   return pred;
 }
-static uint32_t Predictor10(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor10_SSE2(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Average4(left, top[-1], top[0], top[1]);
   return pred;
 }
-static uint32_t Predictor11(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor11_SSE2(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Select(top[0], left, top[-1]);
   return pred;
 }
-static uint32_t Predictor12(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor12_SSE2(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = ClampedAddSubtractFull(left, top[0], top[-1]);
   return pred;
 }
-static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor13_SSE2(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = ClampedAddSubtractHalf(left, top[0], top[-1]);
   return pred;
 }
@@ -223,9 +223,9 @@ GENERATE_PREDICTOR_1(4, upper[i - 1])
 
 // Due to averages with integers, values cannot be accumulated in parallel for
 // predictors 5 to 7.
-GENERATE_PREDICTOR_ADD(VP8LPredictors[5], PredictorAdd5_SSE2)
-GENERATE_PREDICTOR_ADD(VP8LPredictors[6], PredictorAdd6_SSE2)
-GENERATE_PREDICTOR_ADD(VP8LPredictors[7], PredictorAdd7_SSE2)
+GENERATE_PREDICTOR_ADD(Predictor5_SSE2, PredictorAdd5_SSE2)
+GENERATE_PREDICTOR_ADD(Predictor6_SSE2, PredictorAdd6_SSE2)
+GENERATE_PREDICTOR_ADD(Predictor7_SSE2, PredictorAdd7_SSE2)
 
 #define GENERATE_PREDICTOR_2(X, IN)                                           \
 static void PredictorAdd##X##_SSE2(const uint32_t* in, const uint32_t* upper, \
@@ -364,7 +364,7 @@ static void PredictorAdd12_SSE2(const uint32_t* in, const uint32_t* upper,
 
 // Due to averages with integers, values cannot be accumulated in parallel for
 // predictors 13.
-GENERATE_PREDICTOR_ADD(VP8LPredictors[13], PredictorAdd13_SSE2)
+GENERATE_PREDICTOR_ADD(Predictor13_SSE2, PredictorAdd13_SSE2)
 
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
@@ -596,15 +596,15 @@ static void ConvertBGRAToBGR(const uint32_t* src,
 extern void VP8LDspInitSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitSSE2(void) {
-  VP8LPredictors[5] = Predictor5;
-  VP8LPredictors[6] = Predictor6;
-  VP8LPredictors[7] = Predictor7;
-  VP8LPredictors[8] = Predictor8;
-  VP8LPredictors[9] = Predictor9;
-  VP8LPredictors[10] = Predictor10;
-  VP8LPredictors[11] = Predictor11;
-  VP8LPredictors[12] = Predictor12;
-  VP8LPredictors[13] = Predictor13;
+  VP8LPredictors[5] = Predictor5_SSE2;
+  VP8LPredictors[6] = Predictor6_SSE2;
+  VP8LPredictors[7] = Predictor7_SSE2;
+  VP8LPredictors[8] = Predictor8_SSE2;
+  VP8LPredictors[9] = Predictor9_SSE2;
+  VP8LPredictors[10] = Predictor10_SSE2;
+  VP8LPredictors[11] = Predictor11_SSE2;
+  VP8LPredictors[12] = Predictor12_SSE2;
+  VP8LPredictors[13] = Predictor13_SSE2;
 
   VP8LPredictorsAdd[0] = PredictorAdd0_SSE2;
   VP8LPredictorsAdd[1] = PredictorAdd1_SSE2;
