@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d4003d4_bfab176b",
+        "filename": "src/dsp/lossless_neon.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2016-12-06T08:27:47Z",
+      "side": 1,
+      "message": "use LOADQ_U32P_AS_U8 where applicable",
+      "range": {
+        "startLine": 374,
+        "startChar": 26,
+        "endLine": 374,
+        "endChar": 56
+      },
+      "revId": "1083262b8b134597e2d94e059c3c0a317ea5e3ce",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
