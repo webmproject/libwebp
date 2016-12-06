@@ -22,6 +22,30 @@
       "revId": "1083262b8b134597e2d94e059c3c0a317ea5e3ce",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d3afb53_014e6a39",
+        "filename": "src/dsp/lossless_neon.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2016-12-06T09:20:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4d4003d4_bfab176b",
+      "range": {
+        "startLine": 374,
+        "startChar": 26,
+        "endLine": 374,
+        "endChar": 56
+      },
+      "revId": "1083262b8b134597e2d94e059c3c0a317ea5e3ce",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
