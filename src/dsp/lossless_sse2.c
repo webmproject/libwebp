@@ -99,6 +99,14 @@ static WEBP_INLINE void Average2_uint32(const uint32_t a0, const uint32_t a1,
   *avg = _mm_sub_epi8(avg1, one);
 }
 
+static WEBP_INLINE __m128i Average2_uint32_16(uint32_t a0, uint32_t a1) {
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i A0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(a0), zero);
+  const __m128i A1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(a1), zero);
+  const __m128i sum = _mm_add_epi16(A1, A0);
+  return _mm_srli_epi16(sum, 1);
+}
+
 static WEBP_INLINE uint32_t Average2(uint32_t a0, uint32_t a1) {
   __m128i output;
   Average2_uint32(a0, a1, &output);
@@ -106,20 +114,25 @@ static WEBP_INLINE uint32_t Average2(uint32_t a0, uint32_t a1) {
 }
 
 static WEBP_INLINE uint32_t Average3(uint32_t a0, uint32_t a1, uint32_t a2) {
-  const __m128i A1 = _mm_cvtsi32_si128(a1);
-  __m128i output, avg1;
-  Average2_uint32(a0, a2, &avg1);
-  Average2_m128i(&avg1, &A1, &output);
-  return _mm_cvtsi128_si32(output);
+  const __m128i zero = _mm_setzero_si128();
+  const __m128i avg1 = Average2_uint32_16(a0, a2);
+  const __m128i A1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(a1), zero);
+  const __m128i sum = _mm_add_epi16(avg1, A1);
+  const __m128i avg2 = _mm_srli_epi16(sum, 1);
+  const __m128i A2 = _mm_packus_epi16(avg2, avg2);
+  const uint32_t output = _mm_cvtsi128_si32(A2);
+  return output;
 }
 
 static WEBP_INLINE uint32_t Average4(uint32_t a0, uint32_t a1,
                                      uint32_t a2, uint32_t a3) {
-  __m128i avg1, avg2, avg3;
-  Average2_uint32(a0, a1, &avg1);
-  Average2_uint32(a2, a3, &avg2);
-  Average2_m128i(&avg1, &avg2, &avg3);
-  return _mm_cvtsi128_si32(avg3);
+  const __m128i avg1 = Average2_uint32_16(a0, a1);
+  const __m128i avg2 = Average2_uint32_16(a2, a3);
+  const __m128i sum = _mm_add_epi16(avg2, avg1);
+  const __m128i avg3 = _mm_srli_epi16(sum, 1);
+  const __m128i A0 = _mm_packus_epi16(avg3, avg3);
+  const uint32_t output = _mm_cvtsi128_si32(A0);
+  return output;
 }
 
 static uint32_t Predictor5_SSE2(uint32_t left, const uint32_t* const top) {
