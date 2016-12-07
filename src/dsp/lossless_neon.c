@@ -150,6 +150,8 @@ static void ConvertBGRAToRGB(const uint32_t* src,
 #define GET_U8_AS_U32(IN) vget_lane_u32(vreinterpret_u32_u8((IN)), 0);
 #define GETQ_U8_AS_U32(IN) vgetq_lane_u32(vreinterpretq_u32_u8((IN)), 0);
 #define STOREQ_U8_AS_U32P(OUT, IN) vst1q_u32((OUT), vreinterpretq_u32_u8((IN)));
+#define SHIFT32_LEFT(L) vextq_u8(zero, (L), 12)    // D|C|B|A -> C|B|A|0
+#define SHIFT32_BACK(L) vextq_u8((L), zero, 12)    // A|x|x|x -> 0|0|0|A
 
 static WEBP_INLINE uint8x8_t Average2_u8_NEON(uint32_t a0, uint32_t a1) {
   const uint8x8_t A0 = LOAD_U32_AS_U8(a0);
@@ -261,6 +263,33 @@ GENERATE_PREDICTOR_1(3, upper[i + 1])
 // Predictor4: Top-left.
 GENERATE_PREDICTOR_1(4, upper[i - 1])
 #undef GENERATE_PREDICTOR_1
+
+// Predictor5: average(average(left, TR), T)
+#define DO_PRED5(LANE) do {                                              \
+  const uint8x16_t avgLTR = vhaddq_u8(L, TR);                            \
+  const uint8x16_t avg = vhaddq_u8(avgLTR, T);                           \
+  const uint8x16_t res = vaddq_u8(avg, src);                             \
+  vst1q_lane_u32(&out[i + (LANE)], vreinterpretq_u32_u8(res), (LANE));   \
+  L = ((LANE) == 3) ? SHIFT32_BACK(res) : SHIFT32_LEFT(res);             \
+} while (0)
+
+static void PredictorAdd5_NEON(const uint32_t* in, const uint32_t* upper,
+                               int num_pixels, uint32_t* out) {
+  int i;
+  const uint8x16_t zero = vdupq_n_u8(0);
+  uint8x16_t L = LOADQ_U32_AS_U8(out[-1]);
+  for (i = 0; i + 4 <= num_pixels; i += 4) {
+    const uint8x16_t src = LOADQ_U32P_AS_U8(&in[i]);
+    const uint8x16_t T = LOADQ_U32P_AS_U8(&upper[i + 0]);
+    const uint8x16_t TR = LOADQ_U32P_AS_U8(&upper[i + 1]);
+    DO_PRED5(0);
+    DO_PRED5(1);
+    DO_PRED5(2);
+    DO_PRED5(3);
+  }
+  VP8LPredictorsAdd_C[5](in + i, upper + i, num_pixels - i, out + i);
+}
+#undef DO_PRED5
 
 #define GENERATE_PREDICTOR_2(X, IN)                                       \
 static void PredictorAdd##X##_NEON(const uint32_t* in,                    \
@@ -395,6 +424,8 @@ static void PredictorAdd12_NEON(const uint32_t* in, const uint32_t* upper,
 #undef GET_U8_AS_U32
 #undef GETQ_U8_AS_U32
 #undef STOREQ_U8_AS_U32P
+#undef SHIFT32_LEFT
+#undef SHIFT32_BACK
 
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
@@ -523,6 +554,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitNEON(void) {
   VP8LPredictorsAdd[2] = PredictorAdd2_NEON;
   VP8LPredictorsAdd[3] = PredictorAdd3_NEON;
   VP8LPredictorsAdd[4] = PredictorAdd4_NEON;
+  VP8LPredictorsAdd[5] = PredictorAdd5_NEON;
   VP8LPredictorsAdd[8] = PredictorAdd8_NEON;
   VP8LPredictorsAdd[9] = PredictorAdd9_NEON;
   VP8LPredictorsAdd[10] = PredictorAdd10_NEON;
