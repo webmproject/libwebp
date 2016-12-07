@@ -457,6 +457,39 @@ static void PredictorAdd12_NEON(const uint32_t* in, const uint32_t* upper,
 }
 #undef DO_PRED12
 
+#define DO_PRED13(LANE, LOW_OR_HI) do {                                        \
+  const uint8x16_t avg = vhaddq_u8(L, T);                                      \
+  const uint8x16_t cmp = vcgtq_u8(TL, avg);                                    \
+  const uint8x16_t TL_1 = vaddq_u8(TL, cmp);                                   \
+  /* Compute half of the difference between avg and TL'. */                    \
+  const int8x8_t diff_avg =                                                    \
+      vreinterpret_s8_u8(LOW_OR_HI(vhsubq_u8(avg, TL_1)));                     \
+  /* Compute the sum with avg and saturate. */                                 \
+  const int16x8_t avg_16 = vreinterpretq_s16_u16(vmovl_u8(LOW_OR_HI(avg)));    \
+  const uint8x8_t delta = vqmovun_s16(vaddw_s8(avg_16, diff_avg));             \
+  const uint8x8_t res = vadd_u8(LOW_OR_HI(src), delta);                        \
+  const uint8x16_t res2 = vcombine_u8(res, res);                               \
+  vst1_lane_u32(&out[i + (LANE)], vreinterpret_u32_u8(res), (LANE) & 1);       \
+  L = ROTATE32_LEFT(res2);                                                     \
+} while (0)
+
+static void PredictorAdd13_NEON(const uint32_t* in, const uint32_t* upper,
+                                int num_pixels, uint32_t* out) {
+  int i;
+  uint8x16_t L = LOADQ_U32_AS_U8(out[-1]);
+  for (i = 0; i + 4 <= num_pixels; i += 4) {
+    const uint8x16_t src = LOADQ_U32P_AS_U8(&in[i]);
+    const uint8x16_t T = LOADQ_U32P_AS_U8(&upper[i]);
+    const uint8x16_t TL = LOADQ_U32P_AS_U8(&upper[i - 1]);
+    DO_PRED13(0, vget_low_u8);
+    DO_PRED13(1, vget_low_u8);
+    DO_PRED13(2, vget_high_u8);
+    DO_PRED13(3, vget_high_u8);
+  }
+  VP8LPredictorsAdd_C[13](in + i, upper + i, num_pixels - i, out + i);
+}
+#undef DO_PRED13
+
 #undef LOAD_U32_AS_U8
 #undef LOAD_U32P_AS_U8
 #undef LOADQ_U32_AS_U8
@@ -601,6 +634,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitNEON(void) {
   VP8LPredictorsAdd[10] = PredictorAdd10_NEON;
   VP8LPredictorsAdd[11] = PredictorAdd11_NEON;
   VP8LPredictorsAdd[12] = PredictorAdd12_NEON;
+  VP8LPredictorsAdd[13] = PredictorAdd13_NEON;
 
   VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA;
   VP8LConvertBGRAToBGR = ConvertBGRAToBGR;
