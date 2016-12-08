@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4dec833c_c2e0a4b5",
+        "filename": "src/dsp/lossless_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2016-12-08T15:25:29Z",
+      "side": 1,
+      "message": "use ROTATE32_LEFT\nAlso, rename left to L for consistancy with the other macros.",
+      "range": {
+        "startLine": 423,
+        "startChar": 36,
+        "endLine": 423,
+        "endChar": 73
+      },
+      "revId": "6b0398155f1ec15297a6543c7f8b7c166403c40d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
