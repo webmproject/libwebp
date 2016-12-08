@@ -379,64 +379,54 @@ static void PredictorAdd10_NEON(const uint32_t* in, const uint32_t* upper,
 #undef DO_PRED10
 
 // Predictor11: select.
+#define DO_PRED11(LANE) do {                                                   \
+  const uint8x16_t sumLin = vaddq_u8(L, src);  /* in + L */                    \
+  const uint8x16_t pLTL = vabdq_u8(L, TL);  /* |L - TL| */                     \
+  const uint16x8_t sum_LTL = vpaddlq_u8(pLTL);                                 \
+  const uint32x4_t pa = vpaddlq_u16(sum_LTL);                                  \
+  const uint32x4_t mask = vcleq_u32(pa, pb);                                   \
+  const uint8x16_t res = vbslq_u8(vreinterpretq_u8_u32(mask), sumTin, sumLin); \
+  vst1q_lane_u32(&out[i + (LANE)], vreinterpretq_u32_u8(res), (LANE));         \
+  L = ROTATE32_LEFT(res);                                                      \
+} while (0)
+
 static void PredictorAdd11_NEON(const uint32_t* in, const uint32_t* upper,
                                 int num_pixels, uint32_t* out) {
-  int i, j;
-  const int32x2_t zero_s32 = vdup_n_s32(0);
+  int i;
+  uint8x16_t L = LOADQ_U32_AS_U8(out[-1]);
   for (i = 0; i + 4 <= num_pixels; i += 4) {
     const uint8x16_t T = LOADQ_U32P_AS_U8(&upper[i]);
-    uint8x16_t TL = LOADQ_U32P_AS_U8(&upper[i - 1]);
-    // |T - TL|
-    uint8x16_t pTTL = vabdq_u8(T, TL);
-    // T + in
-    uint8x16_t src = LOADQ_U32P_AS_U8(&in[i]);
-    uint32x4_t sumTin = vreinterpretq_u32_u8(vaddq_u8(T, src));
-    for (j = 0; j < 4; ++j) {
-      const uint8x8_t L = LOAD_U32_AS_U8(out[i + j - 1]);
-      const uint8x8_t pLTL = vabd_u8(L, vget_low_u8(TL));  // |L - TL|
-      const int16x4_t diff = vget_low_s16(
-          vreinterpretq_s16_u16(vsubl_u8(pLTL, vget_low_u8(pTTL))));
-      // Horizontal add the adjacent pairs twice to get the sum of the first
-      // four signed 16-bit integers.
-      // The first add cannot be vpaddl_s16 as it would return a int32x2_t
-      // which would lead to a int64x1_t for the second one (which would be
-      // hard to deal with).
-      const int16x4_t sum = vpadd_s16(diff, diff);
-      const int32x2_t pa_minus_pb = vpaddl_s16(sum);
-      const uint32x2_t cmp = vcle_s32(pa_minus_pb, zero_s32);
-      // L + in
-      const uint32x2_t sumLin =
-          vreinterpret_u32_u8(vadd_u8(L, vget_low_u8(src)));
-      // Add to top (pre-computed) or left.
-      const uint32x2_t output = vbsl_u32(cmp, vget_low_u32(sumTin), sumLin);
-      out[i + j] = vget_lane_u32(output, 0);
-      // Rotate the pre-computed values for the next iteration.
-      pTTL = vextq_u8(pTTL, pTTL, 4);
-      TL = vextq_u8(TL, TL, 4);
-      src = vextq_u8(src, src, 4);
-      sumTin = vextq_u32(sumTin, sumTin, 1);
-    }
+    const uint8x16_t TL = LOADQ_U32P_AS_U8(&upper[i - 1]);
+    const uint8x16_t pTTL = vabdq_u8(T, TL);   // |T - TL|
+    const uint16x8_t sum_TTL = vpaddlq_u8(pTTL);
+    const uint32x4_t pb = vpaddlq_u16(sum_TTL);
+    const uint8x16_t src = LOADQ_U32P_AS_U8(&in[i]);
+    const uint8x16_t sumTin = vaddq_u8(T, src);   // in + T
+    DO_PRED11(0);
+    DO_PRED11(1);
+    DO_PRED11(2);
+    DO_PRED11(3);
   }
   VP8LPredictorsAdd_C[11](in + i, upper + i, num_pixels - i, out + i);
 }
+#undef DO_PRED11
 
 // Predictor12: ClampedAddSubtractFull.
-#define DO_PRED12(DIFF, LANE, OUT) do {                                  \
+#define DO_PRED12(DIFF, LANE) do {                                       \
   const uint8x8_t pred =                                                 \
-      vqmovun_s16(vaddq_s16(vreinterpretq_s16_u16(left), (DIFF)));       \
+      vqmovun_s16(vaddq_s16(vreinterpretq_s16_u16(L), (DIFF)));          \
   const uint8x8_t res =                                                  \
-      vadd_u8(pred, (OUT <= 1) ? vget_low_u8(src) : vget_high_u8(src));  \
-  vst1_lane_u32(&out[i + (OUT)], vreinterpret_u32_u8(res), (LANE));      \
+      vadd_u8(pred, (LANE <= 1) ? vget_low_u8(src) : vget_high_u8(src)); \
+  const uint16x8_t res16 = vmovl_u8(res);                                \
+  vst1_lane_u32(&out[i + (LANE)], vreinterpret_u32_u8(res), (LANE) & 1); \
   /* rotate in the left predictor for next iteration */                  \
-  left = (LANE == 0) ? vextq_u16(zero, vmovl_u8(res), 4)                 \
-                     : vextq_u16(vmovl_u8(res), zero, 4);                \
+  L = vextq_u16(res16, res16, 4);                                        \
 } while (0)
 
 static void PredictorAdd12_NEON(const uint32_t* in, const uint32_t* upper,
                                 int num_pixels, uint32_t* out) {
   int i;
-  const uint16x8_t zero = vdupq_n_u16(0);
-  uint16x8_t left = vmovl_u8(LOAD_U32_AS_U8(out[-1]));
+  uint16x8_t L = vmovl_u8(LOAD_U32_AS_U8(out[-1]));
   for (i = 0; i + 4 <= num_pixels; i += 4) {
     // load four pixels of source
     const uint8x16_t src = LOADQ_U32P_AS_U8(&in[i]);
@@ -448,15 +438,16 @@ static void PredictorAdd12_NEON(const uint32_t* in, const uint32_t* upper,
     const int16x8_t diff_hi =
         vreinterpretq_s16_u16(vsubl_u8(vget_high_u8(T), vget_high_u8(TL)));
     // loop over the four reconstructed pixels
-    DO_PRED12(diff_lo, 0, 0);
-    DO_PRED12(diff_lo, 1, 1);
-    DO_PRED12(diff_hi, 0, 2);
-    DO_PRED12(diff_hi, 1, 3);
+    DO_PRED12(diff_lo, 0);
+    DO_PRED12(diff_lo, 1);
+    DO_PRED12(diff_hi, 2);
+    DO_PRED12(diff_hi, 3);
   }
   VP8LPredictorsAdd_C[12](in + i, upper + i, num_pixels - i, out + i);
 }
 #undef DO_PRED12
 
+// Predictor13: ClampedAddSubtractHalf
 #define DO_PRED13(LANE, LOW_OR_HI) do {                                        \
   const uint8x16_t avg = vhaddq_u8(L, T);                                      \
   const uint8x16_t cmp = vcgtq_u8(TL, avg);                                    \
