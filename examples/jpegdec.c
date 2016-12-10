@@ -222,10 +222,10 @@ static void ContextInit(j_decompress_ptr cinfo) {
   ctx->pub.bytes_in_buffer = ctx->data_size;
 }
 
-static int ContextFill(j_decompress_ptr cinfo) {
+static boolean ContextFill(j_decompress_ptr cinfo) {
   // we shouldn't get here.
   ERREXIT(cinfo, JERR_FILE_READ);
-  return 0;
+  return FALSE;
 }
 
 static void ContextSkip(j_decompress_ptr cinfo, long jump_size) {
