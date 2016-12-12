@@ -35,6 +35,7 @@ extern "C" {
 typedef uint32_t (*VP8LPredictorFunc)(uint32_t left, const uint32_t* const top);
 extern VP8LPredictorFunc VP8LPredictors[16];
 extern VP8LPredictorFunc VP8LPredictors_C[16];
+// These Add/Sub function expects upper[-1] and out[-1] to be readable.
 typedef void (*VP8LPredictorAddSubFunc)(const uint32_t* in,
                                         const uint32_t* upper, int num_pixels,
                                         uint32_t* out);
@@ -150,6 +151,7 @@ void VP8LCollectColorBlueTransforms_C(const uint32_t* argb, int stride,
                                       int histo[]);
 
 extern VP8LPredictorAddSubFunc VP8LPredictorsSub[16];
+extern VP8LPredictorAddSubFunc VP8LPredictorsSub_C[16];
 
 // -----------------------------------------------------------------------------
 // Huffman-cost related functions.
