@@ -169,7 +169,7 @@ static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
 
 GENERATE_PREDICTOR_ADD(Predictor0, PredictorAdd0)
 static void PredictorAdd1(const uint32_t* in, const uint32_t* upper,
-                               int num_pixels, uint32_t* out) {
+                          int num_pixels, uint32_t* out) {
   int i;
   uint32_t left = out[-1];
   for (i = 0; i < num_pixels; ++i) {
