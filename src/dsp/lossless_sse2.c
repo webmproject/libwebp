@@ -193,6 +193,7 @@ static void PredictorAdd0_SSE2(const uint32_t* in, const uint32_t* upper,
 static void PredictorAdd1_SSE2(const uint32_t* in, const uint32_t* upper,
                                int num_pixels, uint32_t* out) {
   int i;
+  __m128i prev = _mm_set1_epi32(out[-1]);
   for (i = 0; i + 4 <= num_pixels; i += 4) {
     // a | b | c | d
     const __m128i src = _mm_loadu_si128((const __m128i*)&in[i]);
@@ -204,9 +205,10 @@ static void PredictorAdd1_SSE2(const uint32_t* in, const uint32_t* upper,
     const __m128i shift1 = _mm_slli_si128(sum0, 8);
     // a | a + b | a + b + c | a + b + c + d
     const __m128i sum1 = _mm_add_epi8(sum0, shift1);
-    const __m128i prev = _mm_set1_epi32(out[i - 1]);
     const __m128i res = _mm_add_epi8(sum1, prev);
     _mm_storeu_si128((__m128i*)&out[i], res);
+    // replicate prev output on the four lanes
+    prev = _mm_shuffle_epi32(res, (3 << 0) | (3 << 2) | (3 << 4) | (3 << 6));
   }
   VP8LPredictorsAdd_C[1](in + i, upper + i, num_pixels - i, out + i);
 }
