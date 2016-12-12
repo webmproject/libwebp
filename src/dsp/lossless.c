@@ -168,7 +168,15 @@ static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
 }
 
 GENERATE_PREDICTOR_ADD(Predictor0, PredictorAdd0)
-GENERATE_PREDICTOR_ADD(Predictor1, PredictorAdd1)
+static void PredictorAdd1(const uint32_t* in, const uint32_t* upper,
+                               int num_pixels, uint32_t* out) {
+  int i;
+  uint32_t left = out[-1];
+  for (i = 0; i < num_pixels; ++i) {
+    out[i] = left = VP8LAddPixels(in[i], left);
+  }
+  (void)upper;
+}
 GENERATE_PREDICTOR_ADD(Predictor2, PredictorAdd2)
 GENERATE_PREDICTOR_ADD(Predictor3, PredictorAdd3)
 GENERATE_PREDICTOR_ADD(Predictor4, PredictorAdd4)

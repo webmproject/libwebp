@@ -665,20 +665,32 @@ static void HistogramAdd(const VP8LHistogram* const a,
 
 //------------------------------------------------------------------------------
 
-GENERATE_PREDICTOR_SUB(VP8LPredictors[0], PredictorSub0)
-GENERATE_PREDICTOR_SUB(VP8LPredictors[1], PredictorSub1)
-GENERATE_PREDICTOR_SUB(VP8LPredictors[2], PredictorSub2)
-GENERATE_PREDICTOR_SUB(VP8LPredictors[3], PredictorSub3)
-GENERATE_PREDICTOR_SUB(VP8LPredictors[4], PredictorSub4)
-GENERATE_PREDICTOR_SUB(VP8LPredictors[5], PredictorSub5)
-GENERATE_PREDICTOR_SUB(VP8LPredictors[6], PredictorSub6)
-GENERATE_PREDICTOR_SUB(VP8LPredictors[7], PredictorSub7)
-GENERATE_PREDICTOR_SUB(VP8LPredictors[8], PredictorSub8)
-GENERATE_PREDICTOR_SUB(VP8LPredictors[9], PredictorSub9)
-GENERATE_PREDICTOR_SUB(VP8LPredictors[10], PredictorSub10)
-GENERATE_PREDICTOR_SUB(VP8LPredictors[11], PredictorSub11)
-GENERATE_PREDICTOR_SUB(VP8LPredictors[12], PredictorSub12)
-GENERATE_PREDICTOR_SUB(VP8LPredictors[13], PredictorSub13)
+static void PredictorSub0_C(const uint32_t* in, const uint32_t* upper,
+                            int num_pixels, uint32_t* out) {
+  int i;
+  for (i = 0; i < num_pixels; ++i) out[i] = VP8LSubPixels(in[i], ARGB_BLACK);
+  (void)upper;
+}
+
+static void PredictorSub1_C(const uint32_t* in, const uint32_t* upper,
+                            int num_pixels, uint32_t* out) {
+  int i;
+  for (i = 0; i < num_pixels; ++i) out[i] = VP8LSubPixels(in[i], in[i - 1]);
+  (void)upper;
+}
+
+GENERATE_PREDICTOR_SUB(VP8LPredictors[2], PredictorSub2_C)
+GENERATE_PREDICTOR_SUB(VP8LPredictors[3], PredictorSub3_C)
+GENERATE_PREDICTOR_SUB(VP8LPredictors[4], PredictorSub4_C)
+GENERATE_PREDICTOR_SUB(VP8LPredictors[5], PredictorSub5_C)
+GENERATE_PREDICTOR_SUB(VP8LPredictors[6], PredictorSub6_C)
+GENERATE_PREDICTOR_SUB(VP8LPredictors[7], PredictorSub7_C)
+GENERATE_PREDICTOR_SUB(VP8LPredictors[8], PredictorSub8_C)
+GENERATE_PREDICTOR_SUB(VP8LPredictors[9], PredictorSub9_C)
+GENERATE_PREDICTOR_SUB(VP8LPredictors[10], PredictorSub10_C)
+GENERATE_PREDICTOR_SUB(VP8LPredictors[11], PredictorSub11_C)
+GENERATE_PREDICTOR_SUB(VP8LPredictors[12], PredictorSub12_C)
+GENERATE_PREDICTOR_SUB(VP8LPredictors[13], PredictorSub13_C)
 
 VP8LProcessEncBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
 
@@ -739,22 +751,22 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInit(void) {
 
   VP8LVectorMismatch = VectorMismatch;
 
-  VP8LPredictorsSub[0] = PredictorSub0;
-  VP8LPredictorsSub[1] = PredictorSub1;
-  VP8LPredictorsSub[2] = PredictorSub2;
-  VP8LPredictorsSub[3] = PredictorSub3;
-  VP8LPredictorsSub[4] = PredictorSub4;
-  VP8LPredictorsSub[5] = PredictorSub5;
-  VP8LPredictorsSub[6] = PredictorSub6;
-  VP8LPredictorsSub[7] = PredictorSub7;
-  VP8LPredictorsSub[8] = PredictorSub8;
-  VP8LPredictorsSub[9] = PredictorSub9;
-  VP8LPredictorsSub[10] = PredictorSub10;
-  VP8LPredictorsSub[11] = PredictorSub11;
-  VP8LPredictorsSub[12] = PredictorSub12;
-  VP8LPredictorsSub[13] = PredictorSub13;
-  VP8LPredictorsSub[14] = PredictorSub0;  // <- padding security sentinels
-  VP8LPredictorsSub[15] = PredictorSub0;
+  VP8LPredictorsSub[0] = PredictorSub0_C;
+  VP8LPredictorsSub[1] = PredictorSub1_C;
+  VP8LPredictorsSub[2] = PredictorSub2_C;
+  VP8LPredictorsSub[3] = PredictorSub3_C;
+  VP8LPredictorsSub[4] = PredictorSub4_C;
+  VP8LPredictorsSub[5] = PredictorSub5_C;
+  VP8LPredictorsSub[6] = PredictorSub6_C;
+  VP8LPredictorsSub[7] = PredictorSub7_C;
+  VP8LPredictorsSub[8] = PredictorSub8_C;
+  VP8LPredictorsSub[9] = PredictorSub9_C;
+  VP8LPredictorsSub[10] = PredictorSub10_C;
+  VP8LPredictorsSub[11] = PredictorSub11_C;
+  VP8LPredictorsSub[12] = PredictorSub12_C;
+  VP8LPredictorsSub[13] = PredictorSub13_C;
+  VP8LPredictorsSub[14] = PredictorSub0_C;  // <- padding security sentinels
+  VP8LPredictorsSub[15] = PredictorSub0_C;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
