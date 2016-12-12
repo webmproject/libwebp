@@ -38,17 +38,16 @@ int LoadWebP(const char* const in_file,
 
 // Decodes the WebP contained in 'data'.
 // 'config' is a structure previously initialized by WebPInitDecoderConfig().
-// 'config->output' should have the desired colorspace selected. 'verbose' will
-// cause decode timing to be reported.
+// 'config->output' should have the desired colorspace selected.
 // Returns the decoder status. On success 'config->output' will contain the
 // decoded picture.
 VP8StatusCode DecodeWebP(const uint8_t* const data, size_t data_size,
-                         int verbose, WebPDecoderConfig* const config);
+                         WebPDecoderConfig* const config);
 
 // Same as DecodeWebP(), but using the incremental decoder.
 VP8StatusCode DecodeWebPIncremental(
     const uint8_t* const data, size_t data_size,
-    int verbose, WebPDecoderConfig* const config);
+    WebPDecoderConfig* const config);
 
 //------------------------------------------------------------------------------
 

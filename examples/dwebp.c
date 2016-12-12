@@ -366,10 +366,19 @@ int main(int argc, const char *argv[]) {
       if (external_buffer == NULL) goto Exit;
     }
 
-    if (incremental) {
-      status = DecodeWebPIncremental(data, data_size, verbose, &config);
-    } else {
-      status = DecodeWebP(data, data_size, verbose, &config);
+    {
+      Stopwatch stop_watch;
+      if (verbose) StopwatchReset(&stop_watch);
+
+      if (incremental) {
+        status = DecodeWebPIncremental(data, data_size, &config);
+      } else {
+        status = DecodeWebP(data, data_size, &config);
+      }
+      if (verbose) {
+        const double decode_time = StopwatchReadAndReset(&stop_watch);
+        fprintf(stderr, "Time to decode picture: %.3fs\n", decode_time);
+      }
     }
 
     ok = (status == VP8_STATUS_OK);
