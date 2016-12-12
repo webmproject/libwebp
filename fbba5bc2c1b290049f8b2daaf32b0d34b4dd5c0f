@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a23a39f_4ca2b191",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-12-12T19:57:18Z",
+      "side": 1,
+      "message": "make sure to add a blank line here, this next one will be joined to one long line with e.g., --oneline output",
+      "revId": "fbba5bc2c1b290049f8b2daaf32b0d34b4dd5c0f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
