@@ -289,48 +289,44 @@ static void PredictorAdd10_SSE2(const uint32_t* in, const uint32_t* upper,
 }
 
 // Predictor11: select.
+static void GetSumAbsDiff32(const __m128i* const A, const __m128i* const B,
+                            __m128i* const out) {
+  // We can unpack with any value on the upper 32 bits, provided it's the same
+  // on both operands (to that their sum of abs diff is zero). Here we use *A.
+  const __m128i A_lo = _mm_unpacklo_epi32(*A, *A);
+  const __m128i B_lo = _mm_unpacklo_epi32(*B, *A);
+  const __m128i A_hi = _mm_unpackhi_epi32(*A, *A);
+  const __m128i B_hi = _mm_unpackhi_epi32(*B, *A);
+  const __m128i s_lo = _mm_sad_epu8(A_lo, B_lo);
+  const __m128i s_hi = _mm_sad_epu8(A_hi, B_hi);
+  *out = _mm_packs_epi32(s_lo, s_hi);
+}
+
 static void PredictorAdd11_SSE2(const uint32_t* in, const uint32_t* upper,
                                 int num_pixels, uint32_t* out) {
   int i, j;
-  const __m128i zero = _mm_setzero_si128();
   __m128i L = _mm_cvtsi32_si128(out[-1]);
   for (i = 0; i + 4 <= num_pixels; i += 4) {
-    const __m128i T = _mm_loadu_si128((const __m128i*)&upper[i]);
+    __m128i T = _mm_loadu_si128((const __m128i*)&upper[i]);
     __m128i TL = _mm_loadu_si128((const __m128i*)&upper[i - 1]);
-    const __m128i TTL0 = _mm_subs_epu8(T, TL);
-    const __m128i TLT0 = _mm_subs_epu8(TL, T);
-    // |T - TL|
-    __m128i TTL = _mm_or_si128(TTL0, TLT0);
-    // in + T
     __m128i src = _mm_loadu_si128((const __m128i*)&in[i]);
-    __m128i sumTin =
-        _mm_add_epi8(src, _mm_loadu_si128((const __m128i*)&upper[i]));
+    __m128i pa;
+    GetSumAbsDiff32(&T, &TL, &pa);   // pa = sum |T-TL|
     for (j = 0; j < 4; ++j) {
-      int pa_minus_pb;
-      const __m128i LTL0 = _mm_subs_epu8(L, TL);
-      const __m128i TLL0 = _mm_subs_epu8(TL, L);
-      const __m128i LTL = _mm_or_si128(LTL0, TLL0);
-      const __m128i pTTL = _mm_unpacklo_epi8(TTL, zero);  // |T - TL|
-      const __m128i pLTL = _mm_unpacklo_epi8(LTL, zero);  // |L - TL|
-      const __m128i diff = _mm_sub_epi16(pLTL, pTTL);
-      {
-        int16_t tmp[8];
-        _mm_storeu_si128((__m128i*)tmp, diff);
-        pa_minus_pb = tmp[0] + tmp[1] + tmp[2] + tmp[3];
-      }
-      if (pa_minus_pb <= 0) {
-        // Add to upper (pre-computed value).
-        _mm_store_si128(&L, sumTin);
-      } else {
-        // Add to left.
-        L = _mm_add_epi8(src, L);
-      }
+      const __m128i L_lo = _mm_unpacklo_epi32(L, L);
+      const __m128i TL_lo = _mm_unpacklo_epi32(TL, L);
+      const __m128i pb = _mm_sad_epu8(L_lo, TL_lo);  // pb = sum |L-TL|
+      const __m128i mask = _mm_cmpgt_epi32(pb, pa);
+      const __m128i A = _mm_and_si128(mask, L);
+      const __m128i B = _mm_andnot_si128(mask, T);
+      const __m128i pred = _mm_or_si128(A, B);    // pred = (L > T)? L : T
+      L = _mm_add_epi8(src, pred);
       out[i + j] = _mm_cvtsi128_si32(L);
       // Shift the pre-computed value for the next iteration.
-      TTL = _mm_srli_si128(TTL, 4);
+      T = _mm_srli_si128(T, 4);
       TL = _mm_srli_si128(TL, 4);
       src = _mm_srli_si128(src, 4);
-      sumTin = _mm_srli_si128(sumTin, 4);
+      pa = _mm_srli_si128(pa, 4);
     }
   }
   VP8LPredictorsAdd_C[11](in + i, upper + i, num_pixels - i, out + i);
