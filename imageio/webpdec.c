@@ -16,7 +16,6 @@
 
 #include "webp/decode.h"
 #include "webp/encode.h"
-#include "../examples/stopwatch.h"
 #include "./imageio_util.h"
 #include "./metadata.h"
 
@@ -71,35 +70,19 @@ int LoadWebP(const char* const in_file,
 //------------------------------------------------------------------------------
 
 VP8StatusCode DecodeWebP(const uint8_t* const data, size_t data_size,
-                         int verbose, WebPDecoderConfig* const config) {
-  Stopwatch stop_watch;
-  VP8StatusCode status = VP8_STATUS_OK;
+                         WebPDecoderConfig* const config) {
   if (config == NULL) return VP8_STATUS_INVALID_PARAM;
-
   PrintAnimationWarning(config);
-
-  StopwatchReset(&stop_watch);
-
-  // Decoding call.
-  status = WebPDecode(data, data_size, config);
-
-  if (verbose) {
-    const double decode_time = StopwatchReadAndReset(&stop_watch);
-    fprintf(stderr, "Time to decode picture: %.3fs\n", decode_time);
-  }
-  return status;
+  return WebPDecode(data, data_size, config);
 }
 
 VP8StatusCode DecodeWebPIncremental(
     const uint8_t* const data, size_t data_size,
-    int verbose, WebPDecoderConfig* const config) {
-  Stopwatch stop_watch;
+    WebPDecoderConfig* const config) {
   VP8StatusCode status = VP8_STATUS_OK;
   if (config == NULL) return VP8_STATUS_INVALID_PARAM;
 
   PrintAnimationWarning(config);
-
-  StopwatchReset(&stop_watch);
 
   // Decoding call.
   {
@@ -123,11 +106,6 @@ VP8StatusCode DecodeWebPIncremental(
 #endif
       WebPIDelete(idec);
     }
-  }
-
-  if (verbose) {
-    const double decode_time = StopwatchReadAndReset(&stop_watch);
-    fprintf(stderr, "Time to decode picture: %.3fs\n", decode_time);
   }
   return status;
 }
@@ -168,7 +146,7 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
       output_buffer->colorspace = has_alpha ? MODE_YUVA : MODE_YUV;
     }
 
-    status = DecodeWebP(data, data_size, 0, &config);
+    status = DecodeWebP(data, data_size, &config);
     if (status == VP8_STATUS_OK) {
       pic->width = output_buffer->width;
       pic->height = output_buffer->height;
