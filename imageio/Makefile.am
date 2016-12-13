@@ -4,7 +4,6 @@ noinst_LTLIBRARIES = libimageio_util.la libimagedec.la libimageenc.la
 noinst_HEADERS =
 noinst_HEADERS += ../src/webp/decode.h
 noinst_HEADERS += ../src/webp/types.h
-noinst_HEADERS += ../examples/stopwatch.h
 
 libimageio_util_la_SOURCES = imageio_util.c imageio_util.h
 
