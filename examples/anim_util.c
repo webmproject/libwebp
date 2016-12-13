@@ -55,8 +55,8 @@ static int AllocateFrames(AnimatedImage* const image, uint32_t num_frames) {
       !CheckSizeForOverflow(total_frame_size)) {
     return 0;
   }
-  mem = (uint8_t*)malloc(total_size);
-  frames = (DecodedFrame*)malloc(total_frame_size);
+  mem = (uint8_t*)malloc((size_t)total_size);
+  frames = (DecodedFrame*)malloc((size_t)total_frame_size);
 
   if (mem == NULL || frames == NULL) {
     free(mem);
