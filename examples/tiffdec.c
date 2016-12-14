@@ -153,9 +153,9 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
   }
   // _Tiffmalloc uses a signed type for size.
   alloc_size = (int64_t)((uint64_t)width * height * sizeof(*raster));
-  if (alloc_size < 0 || alloc_size != (tmsize_t)alloc_size) goto End;
+  if (alloc_size < 0 || alloc_size != (tsize_t)alloc_size) goto End;
 
-  raster = (uint32*)_TIFFmalloc((tmsize_t)alloc_size);
+  raster = (uint32*)_TIFFmalloc((tsize_t)alloc_size);
   if (raster != NULL) {
     if (TIFFReadRGBAImageOriented(tif, width, height, raster,
                                   ORIENTATION_TOPLEFT, 1)) {
