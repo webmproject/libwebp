@@ -1,3 +1,57 @@
+aa7744c anim_util: quiet implicit conv warnings in 32-bit
+d912027 jpegdec: correct ContextFill signature
+24eb394 Remove some errors when compiling the code as C++.
+a4a8e5f vwebp: clear canvas during resize w/o animation
+31ca2a8 tiffdec: restore libtiff 3.9.x compatibility
+b2f77b5 update NEWS
+5ab6d9d AnimEncoder: avoid freeing uninitialized memory pointer.
+f29bf58 WebPAnimEncoder: If 'minimize_size' and 'allow_mixed' on, try lossy + lossless.
+df780e0 fix a potential overflow with MALLOC_LIMIT
+218460c bump version to 0.5.2
+de7d654 update AUTHORS & .mailmap
+74a12b1 iosbuild.sh: add WebPDecoder.framework + encoder
+be7dcc0 AnimEncoder: Correctly skip a frame when sub-rectangle is empty.
+4088583 Fix assertions in WebPRescalerExportRow()
+8f38c72 fix a typo in WebPPictureYUVAToARGB's doc
+33ca93f systematically call WebPDemuxReleaseIterator() on dec->prev_iter_
+76e1907 doc: use two's complement explicitly for uint8->int8 conversion
+f91ba96 Anim_encoder: correctly handle enc->prev_candidate_undecided_
+25d74e6 WebPPictureDistortion(): free() -> WebPSafeFree()
+03f1c00 mux/Makefile.am: add missing -lm
+58410cd fix bug in RefineUsingDistortion()
+e168af8 fix filtering auto-adjustment
+ed9dec4 fix doc and code snippet for WebPINewDecoder() doc
+3c49178 prevent 32b overflow for very large canvas_width / height
+9595f29 fix anim_util.c compilation when HAVE_GIF is not defined.
+7ec9552 Make gif transparent color to be transparent black
+9871335 Add a CMake option for WEBP_SWAP_16BIT_CSP.
+0ae3222 Fix missing cpu-features for Android.
+ab4c805 cpu.cmake: improve webp_check_compiler_flag output
+eec5fa3 Provide support for CMake on Android studio 2.2.
+004d569 Split the main CMake file.
+4fe5d58 Android.mk: use -fvisibility=hidden
+bd63a31 vwebp: ensure setenv() is available in stdlib.h
+363a568 vwebp: handle window resizing properly
+a0d2753 lower WEBP_MAX_ALLOCABLE_MEMORY default
+31fe11a  fix infinite loop in case of PARTITION0 overflow
+532215d Change the rule of picking UV mode in MBAnalyzeBestUVMode()
+9c75dbd cwebp.1: improve some grammar
+af2e05c vwebp: Clear previous frame when a key triggers a redraw
+26ffa29 Add descriptions of default configuration in help info.
+7416280 Fix an unsigned integer overflow error in enc/cost.h
+13cf1d2 Do token recording and counting in a single loop
+eb9a4b9 Reset segment id if we decide not to update segment map
+42ebe3b configure: fix NEON flag detection under gcc 6
+83cbfa0 Import: use relative pointer offsets
+a1ade40 PreprocessARGB: use relative pointer offsets
+fd4d090 ConvertWRGBToYUV: use relative pointer offsets
+9daad45 ImportYUVAFromRGBA: use relative pointer offsets
+c284780 imageio_util: add ImgIoUtilCheckSizeArgumentsOverflow
+e375080 gifdec,Remap: avoid out of bounds colormap read
+c222a05 additional fix for stride type as size_t
+bb23361 fix potential overflow when width * height * 4 >= (1<<32)
+883d41f gif2webp: fix crash with NULL extension data
+3d97bb7 update ChangeLog (tag: v0.5.1, origin/0.5.1, 0.5.1)
 deb54d9 Clarify the expected 'config' lifespan in WebPIDecode()
 c7e2d24 update ChangeLog (tag: v0.5.1-rc5)
 c7eb06f Fix corner case in CostManagerInit.
