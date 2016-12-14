@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a895341_dd01eb6e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-12-14T01:36:58Z",
+      "side": 1,
+      "message": "you might want to reflow this to stay within the line length limit",
+      "revId": "08e95bf3b8445316a1a809fa6c2d950c620a105c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a895341_bd043780",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-12-14T01:36:58Z",
+      "side": 1,
+      "message": "default goes to chrome, you\u0027ll want webp:322",
+      "revId": "08e95bf3b8445316a1a809fa6c2d950c620a105c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
