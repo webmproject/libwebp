@@ -405,7 +405,7 @@ static void PredictorSub0_SSE2(const uint32_t* in, const uint32_t* upper,
 
 #define GENERATE_PREDICTOR_1(X, IN)                                           \
 static void PredictorSub##X##_SSE2(const uint32_t* in, const uint32_t* upper, \
-                                  int num_pixels, uint32_t* out) {            \
+                                   int num_pixels, uint32_t* out) {           \
   int i;                                                                      \
   for (i = 0; i + 4 <= num_pixels; i += 4) {                                  \
     const __m128i src = _mm_loadu_si128((const __m128i*)&in[i]);              \
