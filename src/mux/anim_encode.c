@@ -829,8 +829,8 @@ static WebPEncodingError GenerateCandidates(
   WebPPicture* const curr_canvas = &enc->curr_canvas_copy_;
   const WebPPicture* const prev_canvas =
       is_dispose_none ? &enc->prev_canvas_ : &enc->prev_canvas_disposed_;
-  int use_blending_ll;
-  int use_blending_lossy;
+  int use_blending_ll, use_blending_lossy;
+  int evaluate_ll, evaluate_lossy;
 
   CopyCurrentCanvas(enc);
   use_blending_ll =
@@ -843,19 +843,19 @@ static WebPEncodingError GenerateCandidates(
 
   // Pick candidates to be tried.
   if (!enc->options_.allow_mixed) {
-    candidate_ll->evaluate_ = is_lossless;
-    candidate_lossy->evaluate_ = !is_lossless;
+    evaluate_ll = is_lossless;
+    evaluate_lossy = !is_lossless;
   } else if (enc->options_.minimize_size) {
-    candidate_ll->evaluate_ = 1;
-    candidate_lossy->evaluate_ = 1;
+    evaluate_ll = 1;
+    evaluate_lossy = 1;
   } else {  // Use a heuristic for trying lossless and/or lossy compression.
     const int num_colors = WebPGetColorPalette(&params->sub_frame_ll_, NULL);
-    candidate_ll->evaluate_ = (num_colors < MAX_COLORS_LOSSLESS);
-    candidate_lossy->evaluate_ = (num_colors >= MIN_COLORS_LOSSY);
+    evaluate_ll = (num_colors < MAX_COLORS_LOSSLESS);
+    evaluate_lossy = (num_colors >= MIN_COLORS_LOSSY);
   }
 
   // Generate candidates.
-  if (candidate_ll->evaluate_) {
+  if (evaluate_ll) {
     CopyCurrentCanvas(enc);
     if (use_blending_ll) {
       enc->curr_canvas_copy_modified_ =
@@ -865,7 +865,7 @@ static WebPEncodingError GenerateCandidates(
                                  config_ll, use_blending_ll, candidate_ll);
     if (error_code != VP8_ENC_OK) return error_code;
   }
-  if (candidate_lossy->evaluate_) {
+  if (evaluate_lossy) {
     CopyCurrentCanvas(enc);
     if (use_blending_lossy) {
       enc->curr_canvas_copy_modified_ =
@@ -1071,9 +1071,7 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
     return VP8_ENC_ERROR_INVALID_CONFIGURATION;
   }
 
-  for (i = 0; i < CANDIDATE_COUNT; ++i) {
-    candidates[i].evaluate_ = 0;
-  }
+  memset(candidates, 0, sizeof(candidates));
 
   // Change-rectangle assuming previous frame was DISPOSE_NONE.
   if (!GetSubRects(prev_canvas, curr_canvas, is_key_frame, is_first_frame,
