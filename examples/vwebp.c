@@ -264,6 +264,7 @@ static void HandleReshape(int width, int height) {
   glLoadIdentity();
   kParams.viewport_width = width;
   kParams.viewport_height = height;
+  if (!kParams.has_animation) ClearPreviousFrame();
 }
 
 static void PrintString(const char* const text) {
