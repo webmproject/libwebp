@@ -88,6 +88,18 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
         unset(HAS_COMPILE_FLAG CACHE)
         check_c_compiler_flag(${SIMD_COMPILE_FLAG} HAS_COMPILE_FLAG)
         if(HAS_COMPILE_FLAG)
+          # Do one more check for Clang to circumvent CMake issue 13194.
+          check_compiler_flag_common_patterns(COMMON_PATTERNS)
+          set(CMAKE_REQUIRED_DEFINITIONS ${SIMD_COMPILE_FLAG})
+          check_c_source_compiles("int main(void) {return 0;}" FLAG2
+            FAIL_REGEX "warning: argument unused during compilation:"
+            ${COMMON_PATTERNS}
+          )
+          if(NOT FLAG2)
+            unset(HAS_COMPILE_FLAG CACHE)
+          endif()
+        endif()
+        if(HAS_COMPILE_FLAG)
           set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${SIMD_COMPILE_FLAG}")
         endif()
       endif()
