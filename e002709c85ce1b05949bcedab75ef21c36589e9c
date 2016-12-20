@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b7bc7298_99e4a724",
+        "filename": "cmake/cpu.cmake",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2016-12-20T07:19:15Z",
+      "side": 1,
+      "message": "any compatibility concerns for this macro?",
+      "revId": "e002709c85ce1b05949bcedab75ef21c36589e9c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
