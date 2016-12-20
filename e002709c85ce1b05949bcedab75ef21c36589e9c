@@ -16,6 +16,24 @@
       "revId": "e002709c85ce1b05949bcedab75ef21c36589e9c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1728de81_edeaa5ef",
+        "filename": "cmake/cpu.cmake",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2016-12-20T09:04:37Z",
+      "side": 1,
+      "message": "good point, it is only for CMake 3.0 and above. I fixed that.",
+      "parentUuid": "b7bc7298_99e4a724",
+      "revId": "e002709c85ce1b05949bcedab75ef21c36589e9c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
