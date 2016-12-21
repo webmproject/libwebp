@@ -37,7 +37,9 @@ static void SubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixels) {
     _mm_storeu_si128((__m128i*)&argb_data[i], out);
   }
   // fallthrough and finish off with plain-C
-  VP8LSubtractGreenFromBlueAndRed_C(argb_data + i, num_pixels - i);
+  if (i != num_pixels) {
+    VP8LSubtractGreenFromBlueAndRed_C(argb_data + i, num_pixels - i);
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -71,7 +73,9 @@ static void TransformColor(const VP8LMultipliers* const m,
     _mm_storeu_si128((__m128i*)&argb_data[i], out);
   }
   // fallthrough and finish off with plain-C
-  VP8LTransformColor_C(m, argb_data + i, num_pixels - i);
+  if (i != num_pixels) {
+    VP8LTransformColor_C(m, argb_data + i, num_pixels - i);
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -477,7 +481,9 @@ static void PredictorSub0_SSE2(const uint32_t* in, const uint32_t* upper,
     const __m128i res = _mm_sub_epi8(src, black);
     _mm_storeu_si128((__m128i*)&out[i], res);
   }
-  VP8LPredictorsSub_C[0](in + i, upper + i, num_pixels - i, out + i);
+  if (i != num_pixels) {
+    VP8LPredictorsSub_C[0](in + i, upper + i, num_pixels - i, out + i);
+  }
 }
 
 #define GENERATE_PREDICTOR_1(X, IN)                                           \
@@ -490,7 +496,9 @@ static void PredictorSub##X##_SSE2(const uint32_t* in, const uint32_t* upper, \
     const __m128i res = _mm_sub_epi8(src, pred);                              \
     _mm_storeu_si128((__m128i*)&out[i], res);                                 \
   }                                                                           \
-  VP8LPredictorsSub_C[(X)](in + i, upper + i, num_pixels - i, out + i);       \
+  if (i != num_pixels) {                                                      \
+    VP8LPredictorsSub_C[(X)](in + i, upper + i, num_pixels - i, out + i);     \
+  }                                                                           \
 }
 
 GENERATE_PREDICTOR_1(1, in[i - 1])       // Predictor1: L
@@ -514,7 +522,9 @@ static void PredictorSub5_SSE2(const uint32_t* in, const uint32_t* upper,
     res = _mm_sub_epi8(src, pred);
     _mm_storeu_si128((__m128i*)&out[i], res);
   }
-  VP8LPredictorsSub_C[5](in + i, upper + i, num_pixels - i, out + i);
+  if (i != num_pixels) {
+    VP8LPredictorsSub_C[5](in + i, upper + i, num_pixels - i, out + i);
+  }
 }
 
 #define GENERATE_PREDICTOR_2(X, A, B)                                         \
@@ -530,7 +540,9 @@ static void PredictorSub##X##_SSE2(const uint32_t* in, const uint32_t* upper, \
     res = _mm_sub_epi8(src, pred);                                            \
     _mm_storeu_si128((__m128i*)&out[i], res);                                 \
   }                                                                           \
-  VP8LPredictorsSub_C[(X)](in + i, upper + i, num_pixels - i, out + i);       \
+  if (i != num_pixels) {                                                      \
+    VP8LPredictorsSub_C[(X)](in + i, upper + i, num_pixels - i, out + i);     \
+  }                                                                           \
 }
 
 GENERATE_PREDICTOR_2(6, in[i - 1], upper[i - 1])   // Predictor6: avg(L, TL)
@@ -556,7 +568,9 @@ static void PredictorSub10_SSE2(const uint32_t* in, const uint32_t* upper,
     res = _mm_sub_epi8(src, avg);
     _mm_storeu_si128((__m128i*)&out[i], res);
   }
-  VP8LPredictorsSub_C[10](in + i, upper + i, num_pixels - i, out + i);
+  if (i != num_pixels) {
+    VP8LPredictorsSub_C[10](in + i, upper + i, num_pixels - i, out + i);
+  }
 }
 
 // Predictor11: select.
@@ -593,7 +607,9 @@ static void PredictorSub11_SSE2(const uint32_t* in, const uint32_t* upper,
       _mm_storeu_si128((__m128i*)&out[i], res);
     }
   }
-  VP8LPredictorsSub_C[11](in + i, upper + i, num_pixels - i, out + i);
+  if (i != num_pixels) {
+    VP8LPredictorsSub_C[11](in + i, upper + i, num_pixels - i, out + i);
+  }
 }
 
 // Predictor12: ClampedSubSubtractFull.
@@ -620,7 +636,9 @@ static void PredictorSub12_SSE2(const uint32_t* in, const uint32_t* upper,
     const __m128i res = _mm_sub_epi8(src, pred);
     _mm_storeu_si128((__m128i*)&out[i], res);
   }
-  VP8LPredictorsSub_C[12](in + i, upper + i, num_pixels - i, out + i);
+  if (i != num_pixels) {
+    VP8LPredictorsSub_C[12](in + i, upper + i, num_pixels - i, out + i);
+  }
 }
 
 // Predictors13: ClampedAddSubtractHalf
@@ -648,7 +666,9 @@ static void PredictorSub13_SSE2(const uint32_t* in, const uint32_t* upper,
     const __m128i res = _mm_sub_epi8(src, pred);
     _mm_storel_epi64((__m128i*)&out[i], res);
   }
-  VP8LPredictorsSub_C[13](in + i, upper + i, num_pixels - i, out + i);
+  if (i != num_pixels) {
+    VP8LPredictorsSub_C[13](in + i, upper + i, num_pixels - i, out + i);
+  }
 }
 
 //------------------------------------------------------------------------------

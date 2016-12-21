@@ -186,7 +186,9 @@ static void PredictorAdd0_SSE2(const uint32_t* in, const uint32_t* upper,
     const __m128i res = _mm_add_epi8(src, black);
     _mm_storeu_si128((__m128i*)&out[i], res);
   }
-  VP8LPredictorsAdd_C[0](in + i, upper + i, num_pixels - i, out + i);
+  if (i != num_pixels) {
+    VP8LPredictorsAdd_C[0](in + i, upper + i, num_pixels - i, out + i);
+  }
 }
 
 // Predictor1: left.
@@ -210,7 +212,9 @@ static void PredictorAdd1_SSE2(const uint32_t* in, const uint32_t* upper,
     // replicate prev output on the four lanes
     prev = _mm_shuffle_epi32(res, (3 << 0) | (3 << 2) | (3 << 4) | (3 << 6));
   }
-  VP8LPredictorsAdd_C[1](in + i, upper + i, num_pixels - i, out + i);
+  if (i != num_pixels) {
+    VP8LPredictorsAdd_C[1](in + i, upper + i, num_pixels - i, out + i);
+  }
 }
 
 // Macro that adds 32-bit integers from IN using mod 256 arithmetic
@@ -225,7 +229,9 @@ static void PredictorAdd##X##_SSE2(const uint32_t* in, const uint32_t* upper, \
     const __m128i res = _mm_add_epi8(src, other);                             \
     _mm_storeu_si128((__m128i*)&out[i], res);                                 \
   }                                                                           \
-  VP8LPredictorsAdd_C[(X)](in + i, upper + i, num_pixels - i, out + i);       \
+  if (i != num_pixels) {                                                      \
+    VP8LPredictorsAdd_C[(X)](in + i, upper + i, num_pixels - i, out + i);     \
+  }                                                                           \
 }
 
 // Predictor2: Top.
@@ -255,7 +261,9 @@ static void PredictorAdd##X##_SSE2(const uint32_t* in, const uint32_t* upper, \
     res = _mm_add_epi8(avg, src);                                             \
     _mm_storeu_si128((__m128i*)&out[i], res);                                 \
   }                                                                           \
-  VP8LPredictorsAdd_C[(X)](in + i, upper + i, num_pixels - i, out + i);       \
+  if (i != num_pixels) {                                                      \
+    VP8LPredictorsAdd_C[(X)](in + i, upper + i, num_pixels - i, out + i);     \
+  }                                                                           \
 }
 // Predictor8: average TL T.
 GENERATE_PREDICTOR_2(8, upper[i - 1])
@@ -287,7 +295,9 @@ static void PredictorAdd10_SSE2(const uint32_t* in, const uint32_t* upper,
       src = _mm_srli_si128(src, 4);
     }
   }
-  VP8LPredictorsAdd_C[10](in + i, upper + i, num_pixels - i, out + i);
+  if (i != num_pixels) {
+    VP8LPredictorsAdd_C[10](in + i, upper + i, num_pixels - i, out + i);
+  }
 }
 
 // Predictor11: select.
@@ -331,7 +341,9 @@ static void PredictorAdd11_SSE2(const uint32_t* in, const uint32_t* upper,
       pa = _mm_srli_si128(pa, 4);
     }
   }
-  VP8LPredictorsAdd_C[11](in + i, upper + i, num_pixels - i, out + i);
+  if (i != num_pixels) {
+    VP8LPredictorsAdd_C[11](in + i, upper + i, num_pixels - i, out + i);
+  }
 }
 
 // Predictor12: ClampedAddSubtractFull.
@@ -369,7 +381,9 @@ static void PredictorAdd12_SSE2(const uint32_t* in, const uint32_t* upper,
     DO_PRED12(diff_hi, 0, 2);
     DO_PRED12(diff_hi, 1, 3);
   }
-  VP8LPredictorsAdd_C[12](in + i, upper + i, num_pixels - i, out + i);
+  if (i != num_pixels) {
+    VP8LPredictorsAdd_C[12](in + i, upper + i, num_pixels - i, out + i);
+  }
 }
 #undef DO_PRED12
 
@@ -392,7 +406,9 @@ static void AddGreenToBlueAndRed(const uint32_t* const src, int num_pixels,
     _mm_storeu_si128((__m128i*)&dst[i], out);
   }
   // fallthrough and finish off with plain-C
-  VP8LAddGreenToBlueAndRed_C(src + i, num_pixels - i, dst + i);
+  if (i != num_pixels) {
+    VP8LAddGreenToBlueAndRed_C(src + i, num_pixels - i, dst + i);
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -430,7 +446,9 @@ static void TransformColorInverse(const VP8LMultipliers* const m,
     _mm_storeu_si128((__m128i*)&dst[i], out);
   }
   // Fall-back to C-version for left-overs.
-  VP8LTransformColorInverse_C(m, src + i, num_pixels - i, dst + i);
+  if (i != num_pixels) {
+    VP8LTransformColorInverse_C(m, src + i, num_pixels - i, dst + i);
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -467,7 +485,9 @@ static void ConvertBGRAToRGB(const uint32_t* src, int num_pixels,
     num_pixels -= 32;
   }
   // left-overs
-  VP8LConvertBGRAToRGB_C((const uint32_t*)in, num_pixels, (uint8_t*)out);
+  if (num_pixels > 0) {
+    VP8LConvertBGRAToRGB_C((const uint32_t*)in, num_pixels, (uint8_t*)out);
+  }
 }
 
 static void ConvertBGRAToRGBA(const uint32_t* src,
@@ -494,7 +514,9 @@ static void ConvertBGRAToRGBA(const uint32_t* src,
     num_pixels -= 8;
   }
   // left-overs
-  VP8LConvertBGRAToRGBA_C((const uint32_t*)in, num_pixels, (uint8_t*)out);
+  if (num_pixels > 0) {
+    VP8LConvertBGRAToRGBA_C((const uint32_t*)in, num_pixels, (uint8_t*)out);
+  }
 }
 
 static void ConvertBGRAToRGBA4444(const uint32_t* src,
@@ -528,7 +550,9 @@ static void ConvertBGRAToRGBA4444(const uint32_t* src,
     num_pixels -= 8;
   }
   // left-overs
-  VP8LConvertBGRAToRGBA4444_C((const uint32_t*)in, num_pixels, (uint8_t*)out);
+  if (num_pixels > 0) {
+    VP8LConvertBGRAToRGBA4444_C((const uint32_t*)in, num_pixels, (uint8_t*)out);
+  }
 }
 
 static void ConvertBGRAToRGB565(const uint32_t* src,
@@ -567,7 +591,9 @@ static void ConvertBGRAToRGB565(const uint32_t* src,
     num_pixels -= 8;
   }
   // left-overs
-  VP8LConvertBGRAToRGB565_C((const uint32_t*)in, num_pixels, (uint8_t*)out);
+  if (num_pixels > 0) {
+    VP8LConvertBGRAToRGB565_C((const uint32_t*)in, num_pixels, (uint8_t*)out);
+  }
 }
 
 static void ConvertBGRAToBGR(const uint32_t* src,
@@ -598,7 +624,9 @@ static void ConvertBGRAToBGR(const uint32_t* src,
     num_pixels -= 8;
   }
   // left-overs
-  VP8LConvertBGRAToBGR_C((const uint32_t*)in, num_pixels, dst);
+  if (num_pixels > 0) {
+    VP8LConvertBGRAToBGR_C((const uint32_t*)in, num_pixels, dst);
+  }
 }
 
 //------------------------------------------------------------------------------
