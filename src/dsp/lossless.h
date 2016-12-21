@@ -211,8 +211,11 @@ typedef int (*VP8LVectorMismatchFunc)(const uint32_t* const array1,
 // Returns the first index where array1 and array2 are different.
 extern VP8LVectorMismatchFunc VP8LVectorMismatch;
 
-void VP8LBundleColorMap(const uint8_t* const row, int width,
-                        int xbits, uint32_t* const dst);
+typedef void (*VP8LBundleColorMapFunc)(const uint8_t* const row, int width,
+                                       int xbits, uint32_t* dst);
+extern VP8LBundleColorMapFunc VP8LBundleColorMap;
+void VP8LBundleColorMap_C(const uint8_t* const row, int width, int xbits,
+                          uint32_t* dst);
 
 // Must be called before calling any of the above methods.
 void VP8LEncDspInit(void);

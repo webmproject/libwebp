@@ -588,8 +588,8 @@ static int VectorMismatch(const uint32_t* const array1,
 }
 
 // Bundles multiple (1, 2, 4 or 8) pixels into a single pixel.
-void VP8LBundleColorMap(const uint8_t* const row, int width,
-                        int xbits, uint32_t* const dst) {
+void VP8LBundleColorMap_C(const uint8_t* const row, int width, int xbits,
+                          uint32_t* dst) {
   int x;
   if (xbits > 0) {
     const int bit_depth = 1 << (3 - xbits);
@@ -849,6 +849,7 @@ VP8LGetCombinedEntropyUnrefinedFunc VP8LGetCombinedEntropyUnrefined;
 VP8LHistogramAddFunc VP8LHistogramAdd;
 
 VP8LVectorMismatchFunc VP8LVectorMismatch;
+VP8LBundleColorMapFunc VP8LBundleColorMap;
 
 VP8LPredictorAddSubFunc VP8LPredictorsSub[16];
 VP8LPredictorAddSubFunc VP8LPredictorsSub_C[16];
@@ -888,6 +889,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInit(void) {
   VP8LHistogramAdd = HistogramAdd;
 
   VP8LVectorMismatch = VectorMismatch;
+  VP8LBundleColorMap = VP8LBundleColorMap_C;
 
   VP8LPredictorsSub[0] = PredictorSub0_C;
   VP8LPredictorsSub[1] = PredictorSub1_C;

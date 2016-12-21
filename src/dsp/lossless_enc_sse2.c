@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <emmintrin.h>
 #include "./lossless.h"
+#include "./common_sse2.h"
 #include "./lossless_common.h"
 
 // For sign-extended multiplying constants, pre-shifted by 5:
@@ -377,6 +378,82 @@ static int VectorMismatch(const uint32_t* const array1,
   return match_len;
 }
 
+// Bundles multiple (1, 2, 4 or 8) pixels into a single pixel.
+static void BundleColorMap_SSE2(const uint8_t* const row, int width, int xbits,
+                                uint32_t* dst) {
+  int x;
+  assert(xbits >= 0);
+  assert(xbits <= 3);
+  switch (xbits) {
+    case 0: {
+      const __m128i ff = _mm_set1_epi16(0xff00);
+      const __m128i zero = _mm_setzero_si128();
+      // Store 0xff000000 | (row[x] << 8).
+      for (x = 0; x + 16 <= width; x += 16, dst += 16) {
+        const __m128i in = _mm_loadu_si128((const __m128i*)&row[x]);
+        const __m128i in_lo = _mm_unpacklo_epi8(zero, in);
+        const __m128i dst0 = _mm_unpacklo_epi16(in_lo, ff);
+        const __m128i dst1 = _mm_unpackhi_epi16(in_lo, ff);
+        const __m128i in_hi = _mm_unpackhi_epi8(zero, in);
+        const __m128i dst2 = _mm_unpacklo_epi16(in_hi, ff);
+        const __m128i dst3 = _mm_unpackhi_epi16(in_hi, ff);
+        _mm_storeu_si128((__m128i*)&dst[0], dst0);
+        _mm_storeu_si128((__m128i*)&dst[4], dst1);
+        _mm_storeu_si128((__m128i*)&dst[8], dst2);
+        _mm_storeu_si128((__m128i*)&dst[12], dst3);
+      }
+      break;
+    }
+    case 1: {
+      const __m128i ff = _mm_set1_epi16(0xff00);
+      const __m128i mul = _mm_set1_epi16(0x110);
+      for (x = 0; x + 16 <= width; x += 16, dst += 8) {
+        // 0a0b | (where a/b are 4 bits).
+        const __m128i in = _mm_loadu_si128((const __m128i*)&row[x]);
+        const __m128i tmp = _mm_mullo_epi16(in, mul);  // aba0
+        const __m128i pack = _mm_and_si128(tmp, ff);   // ab00
+        const __m128i dst0 = _mm_unpacklo_epi16(pack, ff);
+        const __m128i dst1 = _mm_unpackhi_epi16(pack, ff);
+        _mm_storeu_si128((__m128i*)&dst[0], dst0);
+        _mm_storeu_si128((__m128i*)&dst[4], dst1);
+      }
+      break;
+    }
+    case 2: {
+      const __m128i mask_or = _mm_set1_epi32(0xff000000);
+      const __m128i mul_cst = _mm_set1_epi16(0x0104);
+      const __m128i mask_mul = _mm_set1_epi16(0x0f00);
+      for (x = 0; x + 16 <= width; x += 16, dst += 4) {
+        // 000a000b000c000d | (where a/b/c/d are 2 bits).
+        const __m128i in = _mm_loadu_si128((const __m128i*)&row[x]);
+        const __m128i mul = _mm_mullo_epi16(in, mul_cst);  // 00ab00b000cd00d0
+        const __m128i and = _mm_and_si128(mul, mask_mul);  // 00ab000000cd0000
+        const __m128i shift = _mm_srli_epi32(and, 12);     // 00000000ab000000
+        const __m128i pack = _mm_or_si128(shift, and);     // 00000000abcd0000
+        // Convert to 0xff00**00.
+        const __m128i res = _mm_or_si128(pack, mask_or);
+        _mm_storeu_si128((__m128i*)dst, res);
+      }
+      break;
+    }
+    default: {
+      assert(xbits == 3);
+      for (x = 0; x + 16 <= width; x += 16, dst += 2) {
+        // 0000000a00000000b... | (where a/b are 1 bit).
+        const __m128i in = _mm_loadu_si128((const __m128i*)&row[x]);
+        const __m128i shift = _mm_slli_epi64(in, 7);
+        const uint32_t move = _mm_movemask_epi8(shift);
+        dst[0] = 0xff000000 | ((move & 0xff) << 8);
+        dst[1] = 0xff000000 | (move & 0xff00);
+      }
+      break;
+    }
+  }
+  if (x != width) {
+    VP8LBundleColorMap_C(row + x, width - x, xbits, dst);
+  }
+}
+
 //------------------------------------------------------------------------------
 // Batch version of Predictor Transform subtraction
 
@@ -587,6 +664,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInitSSE2(void) {
   VP8LHistogramAdd = HistogramAdd;
   VP8LCombinedShannonEntropy = CombinedShannonEntropy;
   VP8LVectorMismatch = VectorMismatch;
+  VP8LBundleColorMap = BundleColorMap_SSE2;
 
   VP8LPredictorsSub[0] = PredictorSub0_SSE2;
   VP8LPredictorsSub[1] = PredictorSub1_SSE2;
