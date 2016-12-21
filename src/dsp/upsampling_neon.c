@@ -28,47 +28,34 @@
 // U/V upsampling
 
 // Loads 9 pixels each from rows r1 and r2 and generates 16 pixels.
-#define UPSAMPLE_16PIXELS(r1, r2, out) {                                \
-  uint8x8_t a = vld1_u8(r1);                                            \
-  uint8x8_t b = vld1_u8(r1 + 1);                                        \
-  uint8x8_t c = vld1_u8(r2);                                            \
-  uint8x8_t d = vld1_u8(r2 + 1);                                        \
-                                                                        \
-  uint16x8_t al = vshll_n_u8(a, 1);                                     \
-  uint16x8_t bl = vshll_n_u8(b, 1);                                     \
-  uint16x8_t cl = vshll_n_u8(c, 1);                                     \
-  uint16x8_t dl = vshll_n_u8(d, 1);                                     \
-                                                                        \
-  uint8x8_t diag1, diag2;                                               \
-  uint16x8_t sl;                                                        \
-                                                                        \
+#define UPSAMPLE_16PIXELS(r1, r2, out) do {                             \
+  const uint8x8_t a = vld1_u8(r1 + 0);                                  \
+  const uint8x8_t b = vld1_u8(r1 + 1);                                  \
+  const uint8x8_t c = vld1_u8(r2 + 0);                                  \
+  const uint8x8_t d = vld1_u8(r2 + 1);                                  \
   /* a + b + c + d */                                                   \
-  sl = vaddl_u8(a,  b);                                                 \
-  sl = vaddw_u8(sl, c);                                                 \
-  sl = vaddw_u8(sl, d);                                                 \
+  const uint16x8_t ad = vaddl_u8(a,  d);                                \
+  const uint16x8_t bc = vaddl_u8(b,  c);                                \
+  const uint16x8_t abcd = vaddq_u16(ad, bc);                            \
+  /* 3a +  b +  c + 3d */                                               \
+  const uint16x8_t al = vaddq_u16(abcd, vshlq_n_u16(ad, 1));            \
+  /*  a + 3b + 3c +  d */                                               \
+  const uint16x8_t bl = vaddq_u16(abcd, vshlq_n_u16(bc, 1));            \
                                                                         \
-  al = vaddq_u16(sl, al); /* 3a +  b +  c +  d */                       \
-  bl = vaddq_u16(sl, bl); /*  a + 3b +  c +  d */                       \
+  const uint8x8_t diag2 = vshrn_n_u16(al, 3);                           \
+  const uint8x8_t diag1 = vshrn_n_u16(bl, 3);                           \
                                                                         \
-  al = vaddq_u16(al, dl); /* 3a +  b +  c + 3d */                       \
-  bl = vaddq_u16(bl, cl); /*  a + 3b + 3c +  d */                       \
+  const uint8x8_t A = vrhadd_u8(a, diag1);                              \
+  const uint8x8_t B = vrhadd_u8(b, diag2);                              \
+  const uint8x8_t C = vrhadd_u8(c, diag2);                              \
+  const uint8x8_t D = vrhadd_u8(d, diag1);                              \
                                                                         \
-  diag2 = vshrn_n_u16(al, 3);                                           \
-  diag1 = vshrn_n_u16(bl, 3);                                           \
-                                                                        \
-  a = vrhadd_u8(a, diag1);                                              \
-  b = vrhadd_u8(b, diag2);                                              \
-  c = vrhadd_u8(c, diag2);                                              \
-  d = vrhadd_u8(d, diag1);                                              \
-                                                                        \
-  {                                                                     \
-    uint8x8x2_t a_b, c_d;                                               \
-    INIT_VECTOR2(a_b, a, b);                                            \
-    INIT_VECTOR2(c_d, c, d);                                            \
-    vst2_u8(out,      a_b);                                             \
-    vst2_u8(out + 32, c_d);                                             \
-  }                                                                     \
-}
+  uint8x8x2_t A_B, C_D;                                                 \
+  INIT_VECTOR2(A_B, A, B);                                              \
+  INIT_VECTOR2(C_D, C, D);                                              \
+  vst2_u8(out +  0, A_B);                                               \
+  vst2_u8(out + 32, C_D);                                               \
+} while (0)
 
 // Turn the macro into a function for reducing code-size when non-critical
 static void Upsample16Pixels(const uint8_t *r1, const uint8_t *r2,
