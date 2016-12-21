@@ -8,6 +8,10 @@ option(WEBP_BUILD_DWEBP "Build the dwebp command line tool." OFF)
 option(WEBP_BUILD_GIF2WEBP "Build the gif2webp conversion tool." OFF)
 option(WEBP_BUILD_IMG2WEBP "Build the img2webp animation tool." OFF)
 option(WEBP_EXPERIMENTAL_FEATURES "Build with experimental features." OFF)
+<<<<<<< HEAD   (67c25a vwebp: clear canvas during resize w/o animation)
+=======
+option(WEBP_FORCE_ALIGNED "Force aligned memory operations." OFF)
+>>>>>>> BRANCH (ece968 update ChangeLog)
 option(WEBP_ENABLE_SWAP_16BIT_CSP "Enable byte swap for 16 bit colorspaces." OFF)
 
 set(WEBP_DEP_LIBRARIES)

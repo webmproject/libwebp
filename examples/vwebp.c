@@ -252,9 +252,12 @@ static void HandleKey(unsigned char key, int pos_x, int pos_y) {
     // TODO(skal): handle refresh of animation's last-frame too. It's quite
     // more involved though (need to save the previous frame).
     if (!kParams.has_animation) ClearPreviousFrame();
+<<<<<<< HEAD   (67c25a vwebp: clear canvas during resize w/o animation)
     glutPostRedisplay();
   } else if (key == 'd') {
     kParams.only_deltas = 1 - kParams.only_deltas;
+=======
+>>>>>>> BRANCH (ece968 update ChangeLog)
     glutPostRedisplay();
   }
 }

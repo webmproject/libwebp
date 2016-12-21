@@ -399,11 +399,19 @@ static int ConvertWRGBToYUV(const fixed_y_t* best_y, const fixed_t* best_uv,
   const int uv_h = h >> 1;
   for (best_uv = best_uv_base, j = 0; j < picture->height; ++j) {
     for (i = 0; i < picture->width; ++i) {
+<<<<<<< HEAD   (67c25a vwebp: clear canvas during resize w/o animation)
       const int off = (i >> 1);
       const int W = best_y[i];
       const int r = best_uv[off + 0 * uv_w] + W;
       const int g = best_uv[off + 1 * uv_w] + W;
       const int b = best_uv[off + 2 * uv_w] + W;
+=======
+      const int off = 3 * (i >> 1);
+      const int W = best_y[i];
+      const int r = best_uv[off + 0] + W;
+      const int g = best_uv[off + 1] + W;
+      const int b = best_uv[off + 2] + W;
+>>>>>>> BRANCH (ece968 update ChangeLog)
       dst_y[i] = ConvertRGBToY(r, g, b);
     }
     best_y += w;
@@ -412,10 +420,17 @@ static int ConvertWRGBToYUV(const fixed_y_t* best_y, const fixed_t* best_uv,
   }
   for (best_uv = best_uv_base, j = 0; j < uv_h; ++j) {
     for (i = 0; i < uv_w; ++i) {
+<<<<<<< HEAD   (67c25a vwebp: clear canvas during resize w/o animation)
       const int off = i;
       const int r = best_uv[off + 0 * uv_w];
       const int g = best_uv[off + 1 * uv_w];
       const int b = best_uv[off + 2 * uv_w];
+=======
+      const int off = 3 * i;
+      const int r = best_uv[off + 0];
+      const int g = best_uv[off + 1];
+      const int b = best_uv[off + 2];
+>>>>>>> BRANCH (ece968 update ChangeLog)
       dst_u[i] = ConvertRGBToU(r, g, b);
       dst_v[i] = ConvertRGBToV(r, g, b);
     }
@@ -457,7 +472,10 @@ static int PreprocessARGB(const uint8_t* r_ptr,
   fixed_y_t* target_y = target_y_base;
   fixed_t* best_uv = best_uv_base;
   fixed_t* target_uv = target_uv_base;
+<<<<<<< HEAD   (67c25a vwebp: clear canvas during resize w/o animation)
   const uint64_t diff_y_threshold = (uint64_t)(3.0 * w * h);
+=======
+>>>>>>> BRANCH (ece968 update ChangeLog)
   int ok;
 
   if (best_y_base == NULL || best_uv_base == NULL ||
@@ -486,6 +504,7 @@ static int PreprocessARGB(const uint8_t* r_ptr,
     } else {
       memcpy(src2, src1, 3 * w * sizeof(*src2));
     }
+<<<<<<< HEAD   (67c25a vwebp: clear canvas during resize w/o animation)
     StoreGray(src1, best_y + 0, w);
     StoreGray(src2, best_y + w, w);
 
@@ -493,6 +512,13 @@ static int PreprocessARGB(const uint8_t* r_ptr,
     UpdateW(src2, target_y + w, w);
     UpdateChroma(src1, src2, target_uv, uv_w);
     memcpy(best_uv, target_uv, 3 * uv_w * sizeof(*best_uv));
+=======
+    UpdateW(src1, target_y, w);
+    UpdateW(src2, target_y + w, w);
+    diff_sum += UpdateChroma(src1, src2, target_uv, best_y, uv_w);
+    memcpy(best_uv, target_uv, 3 * uv_w * sizeof(*best_uv));
+    memcpy(best_y + w, best_y, w * sizeof(*best_y));
+>>>>>>> BRANCH (ece968 update ChangeLog)
     best_y += 2 * w;
     best_uv += 3 * uv_w;
     target_y += 2 * w;
@@ -504,9 +530,17 @@ static int PreprocessARGB(const uint8_t* r_ptr,
 
   // Iterate and resolve clipping conflicts.
   for (iter = 0; iter < kNumIterations; ++iter) {
+<<<<<<< HEAD   (67c25a vwebp: clear canvas during resize w/o animation)
     const fixed_t* cur_uv = best_uv_base;
     const fixed_t* prev_uv = best_uv_base;
     uint64_t diff_y_sum = 0;
+=======
+    int k;
+    const fixed_t* cur_uv = best_uv_base;
+    const fixed_t* prev_uv = best_uv_base;
+    const int old_diff_sum = diff_sum;
+    diff_sum = 0;
+>>>>>>> BRANCH (ece968 update ChangeLog)
 
     best_y = best_y_base;
     best_uv = best_uv_base;
@@ -527,9 +561,29 @@ static int PreprocessARGB(const uint8_t* r_ptr,
       UpdateChroma(src1, src2, best_rgb_uv, uv_w);
 
       // update two rows of Y and one row of RGB
+<<<<<<< HEAD   (67c25a vwebp: clear canvas during resize w/o animation)
       diff_y_sum += WebPSmartYUVUpdateY(target_y, best_rgb_y, best_y, 2 * w);
       WebPSmartYUVUpdateRGB(target_uv, best_rgb_uv, best_uv, 3 * uv_w);
 
+=======
+      for (i = 0; i < 2 * w; ++i) {
+        const int diff_y = target_y[i] - best_rgb_y[i];
+        const int new_y = (int)best_y[i] + diff_y;
+        best_y[i] = clip_y(new_y);
+      }
+      for (i = 0; i < uv_w; ++i) {
+        const int off = 3 * i;
+        int W;
+        for (k = 0; k <= 2; ++k) {
+          const int diff_uv = (int)target_uv[off + k] - best_rgb_uv[off + k];
+          best_uv[off + k] += diff_uv;
+        }
+        W = RGBToGray(best_uv[off + 0], best_uv[off + 1], best_uv[off + 2]);
+        for (k = 0; k <= 2; ++k) {
+          best_uv[off + k] -= W;
+        }
+      }
+>>>>>>> BRANCH (ece968 update ChangeLog)
       best_y += 2 * w;
       best_uv += 3 * uv_w;
       target_y += 2 * w;

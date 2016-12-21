@@ -21,8 +21,13 @@
 #include "webp/encode.h"
 #include "webp/mux_types.h"
 
+<<<<<<< HEAD   (67c25a vwebp: clear canvas during resize w/o animation)
 #define GIF_TRANSPARENT_COLOR 0x00000000u
 #define GIF_WHITE_COLOR       0xffffffffu
+=======
+#define GIF_TRANSPARENT_COLOR 0x00000000
+#define GIF_WHITE_COLOR       0xffffffff
+>>>>>>> BRANCH (ece968 update ChangeLog)
 #define GIF_TRANSPARENT_MASK  0x01
 #define GIF_DISPOSE_MASK      0x07
 #define GIF_DISPOSE_SHIFT     2

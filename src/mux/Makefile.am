@@ -14,6 +14,10 @@ libwebpmuxinclude_HEADERS += ../webp/mux_types.h
 libwebpmuxinclude_HEADERS += ../webp/types.h
 
 libwebpmux_la_LIBADD = ../libwebp.la
+<<<<<<< HEAD   (67c25a vwebp: clear canvas during resize w/o animation)
 libwebpmux_la_LDFLAGS = -no-undefined -version-info 2:1:0 -lm
+=======
+libwebpmux_la_LDFLAGS = -no-undefined -version-info 2:2:0 -lm
+>>>>>>> BRANCH (ece968 update ChangeLog)
 libwebpmuxincludedir = $(includedir)/webp
 pkgconfig_DATA = libwebpmux.pc

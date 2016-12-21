@@ -137,9 +137,14 @@ int VP8RecordCoeffTokens(int ctx, const struct VP8Residual* const res,
       s = res->stats[VP8EncBands[n]][1];
     } else {
       if (!AddToken(tokens, v > 4, base_id + 3, s + 3)) {
+<<<<<<< HEAD   (67c25a vwebp: clear canvas during resize w/o animation)
         if (AddToken(tokens, v != 2, base_id + 4, s + 4)) {
           AddToken(tokens, v == 4, base_id + 5, s + 5);
         }
+=======
+        if (AddToken(tokens, v != 2, base_id + 4, s + 4))
+          AddToken(tokens, v == 4, base_id + 5, s + 5);
+>>>>>>> BRANCH (ece968 update ChangeLog)
       } else if (!AddToken(tokens, v > 10, base_id + 6, s + 6)) {
         if (!AddToken(tokens, v > 6, base_id + 7, s + 7)) {
           AddConstantToken(tokens, v == 6, 159);

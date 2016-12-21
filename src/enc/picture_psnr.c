@@ -184,6 +184,7 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
   if (!WebPPictureView(src, 0, 0, w, h, &p0)) goto Error;
   if (!WebPPictureView(ref, 0, 0, w, h, &p1)) goto Error;
 
+<<<<<<< HEAD   (67c25a vwebp: clear canvas during resize w/o animation)
   // We always measure distortion in ARGB space.
   if (p0.use_argb == 0 && !WebPPictureYUVAToARGB(&p0)) goto Error;
   if (p1.use_argb == 0 && !WebPPictureYUVAToARGB(&p1)) goto Error;
@@ -195,6 +196,33 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
                              (const uint8_t*)p1.argb + c, stride1,
                              w, h, 4, type, &distortion, results + c)) {
       goto Error;
+=======
+  if (src->use_argb == 1) {
+    if (src->argb == NULL || ref->argb == NULL) {
+      return 0;
+    } else {
+      int i, j, c;
+      uint8_t* tmp1, *tmp2;
+      uint8_t* const tmp_plane =
+          (uint8_t*)WebPSafeMalloc(2ULL * w * h, sizeof(*tmp_plane));
+      if (tmp_plane == NULL) return 0;
+      tmp1 = tmp_plane;
+      tmp2 = tmp_plane + w * h;
+      for (c = 0; c < 4; ++c) {
+        for (j = 0; j < h; ++j) {
+          for (i = 0; i < w; ++i) {
+            tmp1[j * w + i] = src->argb[i + j * src->argb_stride] >> (c * 8);
+            tmp2[j * w + i] = ref->argb[i + j * ref->argb_stride] >> (c * 8);
+          }
+        }
+        if (type >= 2) {
+          AccumulateLSIM(tmp1, w, tmp2, w, w, h, &stats[c]);
+        } else {
+          VP8SSIMAccumulatePlane(tmp1, w, tmp2, w, w, h, &stats[c]);
+        }
+      }
+      WebPSafeFree(tmp_plane);
+>>>>>>> BRANCH (ece968 update ChangeLog)
     }
     total_distortion += distortion;
     total_size += w * h;
