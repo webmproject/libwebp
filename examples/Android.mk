@@ -80,3 +80,35 @@ LOCAL_STATIC_LIBRARIES := example_util imageio_util imagedec webpmux webp
 LOCAL_MODULE := img2webp_example
 
 include $(BUILD_EXECUTABLE)
+
+################################################################################
+# test_csp_dec
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := \
+    test_csp_dec.c \
+
+LOCAL_CFLAGS := $(WEBP_CFLAGS)
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/../src
+LOCAL_STATIC_LIBRARIES := example_util imageio_util imagedec webp
+
+LOCAL_MODULE := test_csp_dec
+
+include $(BUILD_EXECUTABLE)
+
+################################################################################
+# test_png_dec_speed
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := \
+    test_png_dec_speed.c \
+
+LOCAL_CFLAGS := $(WEBP_CFLAGS)
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/../src
+LOCAL_STATIC_LIBRARIES := example_util imageio_util imagedec webp
+
+LOCAL_MODULE := test_png_dec_speed
+
+include $(BUILD_EXECUTABLE)
