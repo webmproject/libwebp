@@ -118,11 +118,17 @@ static WEBP_INLINE int VP8GetBit(VP8BitReader* const br, int prob) {
 #if defined(__arm__) || defined(_M_ARM)      // ARM-specific
     const int bit = ((int)(split - value) >> 31) & 1;
     if (value > split) {
-      range -= split + 1;
+      range -= split;
       br->value_ -= (bit_t)(split + 1) << pos;
     } else {
-      range = split;
+      range = split + 1;
     }
+    {
+      const int shift = __builtin_clz((unsigned int)range) - 32 + 8;
+      range <<= shift;
+      br->bits_ -= shift;
+    }
+    range -= 1;
 #else  // faster version on x86
     int bit;  // Don't use 'const int bit = (value > split);", it's slower.
     if (value > split) {
@@ -133,12 +139,12 @@ static WEBP_INLINE int VP8GetBit(VP8BitReader* const br, int prob) {
       range = split;
       bit = 0;
     }
-#endif
     if (range <= (range_t)0x7e) {
       const int shift = kVP8Log2Range[range];
       range = kVP8NewRange[range];
       br->bits_ -= shift;
     }
+#endif
     br->range_ = range;
     return bit;
   }
