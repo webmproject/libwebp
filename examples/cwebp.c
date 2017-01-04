@@ -297,6 +297,10 @@ static int DumpPicture(const WebPPicture* const picture, const char* PGM_name) {
   const int uv_width = (picture->width + 1) / 2;
   const int uv_height = (picture->height + 1) / 2;
   const int stride = (picture->width + 1) & ~1;
+  const uint8_t* src_y = picture->y;
+  const uint8_t* src_u = picture->u;
+  const uint8_t* src_v = picture->v;
+  const uint8_t* src_a = picture->a;
   const int alpha_height =
       WebPPictureHasTransparency(picture) ? picture->height : 0;
   const int height = picture->height + uv_height + alpha_height;
@@ -304,24 +308,20 @@ static int DumpPicture(const WebPPicture* const picture, const char* PGM_name) {
   if (f == NULL) return 0;
   fprintf(f, "P5\n%d %d\n255\n", stride, height);
   for (y = 0; y < picture->height; ++y) {
-    if (fwrite(picture->y + y * picture->y_stride, picture->width, 1, f) != 1) {
-      return 0;
-    }
+    if (fwrite(src_y, picture->width, 1, f) != 1) return 0;
     if (picture->width & 1) fputc(0, f);  // pad
+    src_y += picture->y_stride;
   }
   for (y = 0; y < uv_height; ++y) {
-    if (fwrite(picture->u + y * picture->uv_stride, uv_width, 1, f) != 1) {
-      return 0;
-    }
-    if (fwrite(picture->v + y * picture->uv_stride, uv_width, 1, f) != 1) {
-      return 0;
-    }
+    if (fwrite(src_u, uv_width, 1, f) != 1) return 0;
+    if (fwrite(src_v, uv_width, 1, f) != 1) return 0;
+    src_u += picture->uv_stride;
+    src_v += picture->uv_stride;
   }
   for (y = 0; y < alpha_height; ++y) {
-    if (fwrite(picture->a + y * picture->a_stride, picture->width, 1, f) != 1) {
-      return 0;
-    }
+    if (fwrite(src_a, picture->width, 1, f) != 1) return 0;
     if (picture->width & 1) fputc(0, f);  // pad
+    src_a += picture->a_stride;
   }
   fclose(f);
   return 1;

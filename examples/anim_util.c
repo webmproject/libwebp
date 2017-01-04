@@ -150,6 +150,7 @@ static int DumpFrame(const char filename[], const char dump_folder[],
   const char* base_name = NULL;
   char* file_name = NULL;
   FILE* f = NULL;
+  const char* row;
 
   base_name = strrchr(filename, '/');
   base_name = (base_name == NULL) ? filename : base_name + 1;
@@ -176,12 +177,13 @@ static int DumpFrame(const char filename[], const char dump_folder[],
     fprintf(stderr, "Write error for file %s\n", file_name);
     goto End;
   }
+  row = (const char*)rgba;
   for (y = 0; y < canvas_height; ++y) {
-    if (fwrite((const char*)(rgba) + y * canvas_width * kNumChannels,
-               canvas_width * kNumChannels, 1, f) != 1) {
+    if (fwrite(row, canvas_width * kNumChannels, 1, f) != 1) {
       fprintf(stderr, "Error writing to file: %s\n", file_name);
       goto End;
     }
+    row += canvas_width * kNumChannels;
   }
   ok = 1;
  End:
@@ -743,7 +745,7 @@ void GetDiffAndPSNR(const uint8_t rgba1[], const uint8_t rgba2[],
   for (y = 0; y < height; ++y) {
     for (x = 0; x < stride; x += kNumChannels) {
       int k;
-      const size_t offset = y * stride + x;
+      const size_t offset = (size_t)y * stride + x;
       const int alpha1 = rgba1[offset + kAlphaChannel];
       const int alpha2 = rgba2[offset + kAlphaChannel];
       Accumulate(alpha1, alpha2, &f_max_diff, &sse);

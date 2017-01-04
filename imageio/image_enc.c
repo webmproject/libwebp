@@ -160,7 +160,7 @@ static void PNGAPI PNGErrorFunction(png_structp png, png_const_charp dummy) {
 int WebPWritePNG(FILE* out_file, const WebPDecBuffer* const buffer) {
   const uint32_t width = buffer->width;
   const uint32_t height = buffer->height;
-  uint8_t* const rgb = buffer->u.RGBA.rgba;
+  png_bytep row = buffer->u.RGBA.rgba;
   const int stride = buffer->u.RGBA.stride;
   const int has_alpha = WebPIsAlphaMode(buffer->colorspace);
   volatile png_structp png;
@@ -190,8 +190,8 @@ int WebPWritePNG(FILE* out_file, const WebPDecBuffer* const buffer) {
                PNG_FILTER_TYPE_DEFAULT);
   png_write_info(png, info);
   for (y = 0; y < height; ++y) {
-    png_bytep row = rgb + y * stride;
     png_write_rows(png, &row, 1);
+    row += stride;
   }
   png_write_end(png, info);
   png_destroy_write_struct((png_structpp)&png, (png_infopp)&info);
@@ -213,24 +213,29 @@ int WebPWritePNG(FILE* fout, const WebPDecBuffer* const buffer) {
 
 static int WritePPMPAM(FILE* fout, const WebPDecBuffer* const buffer,
                        int alpha) {
-  const uint32_t width = buffer->width;
-  const uint32_t height = buffer->height;
-  const uint8_t* const rgb = buffer->u.RGBA.rgba;
-  const int stride = buffer->u.RGBA.stride;
-  const size_t bytes_per_px = alpha ? 4 : 3;
-  uint32_t y;
-
-  if (fout == NULL || buffer == NULL || rgb == NULL) return 0;
-
-  if (alpha) {
-    fprintf(fout, "P7\nWIDTH %u\nHEIGHT %u\nDEPTH 4\nMAXVAL 255\n"
-                  "TUPLTYPE RGB_ALPHA\nENDHDR\n", width, height);
+  if (fout == NULL || buffer == NULL) {
+    return 0;
   } else {
-    fprintf(fout, "P6\n%u %u\n255\n", width, height);
-  }
-  for (y = 0; y < height; ++y) {
-    if (fwrite(rgb + y * stride, width, bytes_per_px, fout) != bytes_per_px) {
-      return 0;
+    const uint32_t width = buffer->width;
+    const uint32_t height = buffer->height;
+    const uint8_t* row = buffer->u.RGBA.rgba;
+    const int stride = buffer->u.RGBA.stride;
+    const size_t bytes_per_px = alpha ? 4 : 3;
+    uint32_t y;
+
+    if (row == NULL) return 0;
+
+    if (alpha) {
+      fprintf(fout, "P7\nWIDTH %u\nHEIGHT %u\nDEPTH 4\nMAXVAL 255\n"
+                    "TUPLTYPE RGB_ALPHA\nENDHDR\n", width, height);
+    } else {
+      fprintf(fout, "P6\n%u %u\n255\n", width, height);
+    }
+    for (y = 0; y < height; ++y) {
+      if (fwrite(row, width, bytes_per_px, fout) != bytes_per_px) {
+        return 0;
+      }
+      row += stride;
     }
   }
   return 1;
@@ -251,7 +256,7 @@ int WebPWritePAM(FILE* fout, const WebPDecBuffer* const buffer) {
 int WebPWrite16bAsPGM(FILE* fout, const WebPDecBuffer* const buffer) {
   const uint32_t width = buffer->width;
   const uint32_t height = buffer->height;
-  const uint8_t* const rgba = buffer->u.RGBA.rgba;
+  const uint8_t* rgba = buffer->u.RGBA.rgba;
   const int stride = buffer->u.RGBA.stride;
   const uint32_t bytes_per_px = 2;
   uint32_t y;
@@ -260,9 +265,10 @@ int WebPWrite16bAsPGM(FILE* fout, const WebPDecBuffer* const buffer) {
 
   fprintf(fout, "P5\n%u %u\n255\n", width * bytes_per_px, height);
   for (y = 0; y < height; ++y) {
-    if (fwrite(rgba + y * stride, width, bytes_per_px, fout) != bytes_per_px) {
+    if (fwrite(rgba, width, bytes_per_px, fout) != bytes_per_px) {
       return 0;
     }
+    rgba += stride;
   }
   return 1;
 }
@@ -285,7 +291,7 @@ int WebPWriteBMP(FILE* fout, const WebPDecBuffer* const buffer) {
   const int has_alpha = WebPIsAlphaMode(buffer->colorspace);
   const uint32_t width = buffer->width;
   const uint32_t height = buffer->height;
-  const uint8_t* const rgba = buffer->u.RGBA.rgba;
+  const uint8_t* rgba = buffer->u.RGBA.rgba;
   const int stride = buffer->u.RGBA.stride;
   const uint32_t bytes_per_px = has_alpha ? 4 : 3;
   uint32_t y;
@@ -323,7 +329,7 @@ int WebPWriteBMP(FILE* fout, const WebPDecBuffer* const buffer) {
 
   // write pixel array
   for (y = 0; y < height; ++y) {
-    if (fwrite(rgba + y * stride, line_size, 1, fout) != 1) {
+    if (fwrite(rgba, line_size, 1, fout) != 1) {
       return 0;
     }
     // write padding zeroes
@@ -333,6 +339,7 @@ int WebPWriteBMP(FILE* fout, const WebPDecBuffer* const buffer) {
         return 0;
       }
     }
+    rgba += stride;
   }
   return 1;
 }
@@ -351,7 +358,7 @@ int WebPWriteTIFF(FILE* fout, const WebPDecBuffer* const buffer) {
   const int has_alpha = WebPIsAlphaMode(buffer->colorspace);
   const uint32_t width = buffer->width;
   const uint32_t height = buffer->height;
-  const uint8_t* const rgba = buffer->u.RGBA.rgba;
+  const uint8_t* rgba = buffer->u.RGBA.rgba;
   const int stride = buffer->u.RGBA.stride;
   const uint8_t bytes_per_px = has_alpha ? 4 : 3;
   // For non-alpha case, we omit tag 0x152 (ExtraSamples).
@@ -404,9 +411,10 @@ int WebPWriteTIFF(FILE* fout, const WebPDecBuffer* const buffer) {
   }
   // write pixel values
   for (y = 0; y < height; ++y) {
-    if (fwrite(rgba + y * stride, bytes_per_px, width, fout) != width) {
+    if (fwrite(rgba, bytes_per_px, width, fout) != width) {
       return 0;
     }
+    rgba += stride;
   }
 
   return 1;
@@ -421,85 +429,110 @@ int WebPWriteTIFF(FILE* fout, const WebPDecBuffer* const buffer) {
 // Raw Alpha
 
 int WebPWriteAlphaPlane(FILE* fout, const WebPDecBuffer* const buffer) {
-  const uint32_t width = buffer->width;
-  const uint32_t height = buffer->height;
-  const uint8_t* const a = buffer->u.YUVA.a;
-  const int a_stride = buffer->u.YUVA.a_stride;
-  uint32_t y;
+  if (fout == NULL || buffer == NULL) {
+    return 0;
+  } else {
+    const uint32_t width = buffer->width;
+    const uint32_t height = buffer->height;
+    const uint8_t* a = buffer->u.YUVA.a;
+    const int a_stride = buffer->u.YUVA.a_stride;
+    uint32_t y;
 
-  if (fout == NULL || buffer == NULL || a == NULL) return 0;
+    if (a == NULL) return 0;
 
-  fprintf(fout, "P5\n%u %u\n255\n", width, height);
-  for (y = 0; y < height; ++y) {
-    if (fwrite(a + y * a_stride, width, 1, fout) != 1) {
-      return 0;
+    fprintf(fout, "P5\n%u %u\n255\n", width, height);
+    for (y = 0; y < height; ++y) {
+      if (fwrite(a, width, 1, fout) != 1) return 0;
+      a += a_stride;
     }
+    return 1;
   }
-  return 1;
 }
 
 //------------------------------------------------------------------------------
 // PGM with IMC4 layout
 
 int WebPWritePGM(FILE* fout, const WebPDecBuffer* const buffer) {
-  const int width = buffer->width;
-  const int height = buffer->height;
-  const WebPYUVABuffer* const yuv = &buffer->u.YUVA;
-  const int uv_width = (width + 1) / 2;
-  const int uv_height = (height + 1) / 2;
-  const int a_height = (yuv->a != NULL) ? height : 0;
-  int ok = 1;
-  int y;
+  if (fout == NULL || buffer == NULL) {
+    return 0;
+  } else {
+    const int width = buffer->width;
+    const int height = buffer->height;
+    const WebPYUVABuffer* const yuv = &buffer->u.YUVA;
+    const uint8_t* src_y = yuv->y;
+    const uint8_t* src_u = yuv->u;
+    const uint8_t* src_v = yuv->v;
+    const uint8_t* src_a = yuv->a;
+    const int uv_width = (width + 1) / 2;
+    const int uv_height = (height + 1) / 2;
+    const int a_height = (src_a != NULL) ? height : 0;
+    int ok = 1;
+    int y;
 
-  if (fout == NULL || buffer == NULL) return 0;
-  if (yuv->y == NULL || yuv->u == NULL || yuv->v == NULL) return 0;
+    if (src_y == NULL || src_u == NULL || src_v == NULL) return 0;
 
-  fprintf(fout, "P5\n%d %d\n255\n",
-          (width + 1) & ~1, height + uv_height + a_height);
-  for (y = 0; ok && y < height; ++y) {
-    ok &= (fwrite(yuv->y + y * yuv->y_stride, width, 1, fout) == 1);
-    if (width & 1) fputc(0, fout);    // padding byte
+    fprintf(fout, "P5\n%d %d\n255\n",
+            (width + 1) & ~1, height + uv_height + a_height);
+    for (y = 0; ok && y < height; ++y) {
+      ok &= (fwrite(src_y, width, 1, fout) == 1);
+      if (width & 1) fputc(0, fout);    // padding byte
+      src_y += yuv->y_stride;
+    }
+    for (y = 0; ok && y < uv_height; ++y) {
+      ok &= (fwrite(src_u, uv_width, 1, fout) == 1);
+      ok &= (fwrite(src_v, uv_width, 1, fout) == 1);
+      src_u += yuv->u_stride;
+      src_v += yuv->v_stride;
+    }
+    for (y = 0; ok && y < a_height; ++y) {
+      ok &= (fwrite(src_a, width, 1, fout) == 1);
+      if (width & 1) fputc(0, fout);    // padding byte
+      src_a += yuv->a_stride;
+    }
+    return ok;
   }
-  for (y = 0; ok && y < uv_height; ++y) {
-    ok &= (fwrite(yuv->u + y * yuv->u_stride, uv_width, 1, fout) == 1);
-    ok &= (fwrite(yuv->v + y * yuv->v_stride, uv_width, 1, fout) == 1);
-  }
-  for (y = 0; ok && y < a_height; ++y) {
-    ok &= (fwrite(yuv->a + y * yuv->a_stride, width, 1, fout) == 1);
-    if (width & 1) fputc(0, fout);    // padding byte
-  }
-  return ok;
 }
 
 //------------------------------------------------------------------------------
 // Raw YUV(A) planes
 
 int WebPWriteYUV(FILE* fout, const WebPDecBuffer* const buffer) {
-  const int width = buffer->width;
-  const int height = buffer->height;
-  const WebPYUVABuffer* const yuv = &buffer->u.YUVA;
-  const int uv_width = (width + 1) / 2;
-  const int uv_height = (height + 1) / 2;
-  const int a_height = (yuv->a != NULL) ? height : 0;
-  int ok = 1;
-  int y;
+  if (fout == NULL || buffer == NULL) {
+    return 0;
+  } else {
+    const int width = buffer->width;
+    const int height = buffer->height;
+    const WebPYUVABuffer* const yuv = &buffer->u.YUVA;
+    const uint8_t* src_y = yuv->y;
+    const uint8_t* src_u = yuv->u;
+    const uint8_t* src_v = yuv->v;
+    const uint8_t* src_a = yuv->a;
+    const int uv_width = (width + 1) / 2;
+    const int uv_height = (height + 1) / 2;
+    const int a_height = (src_a != NULL) ? height : 0;
+    int ok = 1;
+    int y;
 
-  if (fout == NULL || buffer == NULL) return 0;
-  if (yuv->y == NULL || yuv->u == NULL || yuv->v == NULL) return 0;
+    if (src_y == NULL || src_u == NULL || src_v == NULL) return 0;
 
-  for (y = 0; ok && y < height; ++y) {
-    ok &= (fwrite(yuv->y + y * yuv->y_stride, width, 1, fout) == 1);
+    for (y = 0; ok && y < height; ++y) {
+      ok &= (fwrite(src_y, width, 1, fout) == 1);
+      src_y += yuv->y_stride;
+    }
+    for (y = 0; ok && y < uv_height; ++y) {
+      ok &= (fwrite(src_u, uv_width, 1, fout) == 1);
+      src_u += yuv->u_stride;
+    }
+    for (y = 0; ok && y < uv_height; ++y) {
+      ok &= (fwrite(src_v, uv_width, 1, fout) == 1);
+      src_v += yuv->v_stride;
+    }
+    for (y = 0; ok && y < a_height; ++y) {
+      ok &= (fwrite(src_a, width, 1, fout) == 1);
+      src_a += yuv->a_stride;
+    }
+    return ok;
   }
-  for (y = 0; ok && y < uv_height; ++y) {
-    ok &= (fwrite(yuv->u + y * yuv->u_stride, uv_width, 1, fout) == 1);
-  }
-  for (y = 0; ok && y < uv_height; ++y) {
-    ok &= (fwrite(yuv->v + y * yuv->v_stride, uv_width, 1, fout) == 1);
-  }
-  for (y = 0; ok && y < a_height; ++y) {
-    ok &= (fwrite(yuv->a + y * yuv->a_stride, width, 1, fout) == 1);
-  }
-  return ok;
 }
 
 //------------------------------------------------------------------------------

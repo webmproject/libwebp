@@ -282,9 +282,10 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
   rgb = (uint8_t*)malloc((size_t)stride * height);
   if (rgb == NULL) goto Error;
   for (p = 0; p < num_passes; ++p) {
+    png_bytep row = rgb;
     for (y = 0; y < height; ++y) {
-      png_bytep row = (png_bytep)(rgb + y * stride);
       png_read_rows(png, &row, NULL, 1);
+      row += stride;
     }
   }
   png_read_end(png, end_info);
