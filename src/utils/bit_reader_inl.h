@@ -25,6 +25,7 @@
 #include "../dsp/dsp.h"
 #include "./bit_reader.h"
 #include "./endian_inl.h"
+#include "./utils.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,9 +43,6 @@ typedef uint16_t lbit_t;
 #else
 typedef uint8_t lbit_t;
 #endif
-
-extern const uint8_t kVP8Log2Range[128];
-extern const uint8_t kVP8NewRange[128];
 
 // special case for the tail byte-reading
 void VP8LoadFinalBytes(VP8BitReader* const br);
@@ -115,31 +113,19 @@ static WEBP_INLINE int VP8GetBit(VP8BitReader* const br, int prob) {
     const int pos = br->bits_;
     const range_t split = (range * prob) >> 8;
     const range_t value = (range_t)(br->value_ >> pos);
-#if defined(__arm__) || defined(_M_ARM)      // ARM-specific
-    const int bit = ((int)(split - value) >> 31) & 1;
-    if (value > split) {
-      range -= split + 1;
+    const int bit = (value > split);
+    if (bit) {
+      range -= split;
       br->value_ -= (bit_t)(split + 1) << pos;
     } else {
-      range = split;
+      range = split + 1;
     }
-#else  // faster version on x86
-    int bit;  // Don't use 'const int bit = (value > split);", it's slower.
-    if (value > split) {
-      range -= split + 1;
-      br->value_ -= (bit_t)(split + 1) << pos;
-      bit = 1;
-    } else {
-      range = split;
-      bit = 0;
-    }
-#endif
-    if (range <= (range_t)0x7e) {
-      const int shift = kVP8Log2Range[range];
-      range = kVP8NewRange[range];
+    {
+      const int shift = 7 ^ BitsLog2Floor(range);
+      range <<= shift;
       br->bits_ -= shift;
     }
-    br->range_ = range;
+    br->range_ = range - 1;
     return bit;
   }
 }
