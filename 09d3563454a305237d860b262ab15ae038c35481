@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b7e71224_fc4f7635",
+        "filename": "src/utils/bit_reader_inl.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-01-06T00:17:22Z",
+      "side": 1,
+      "message": "this path will be hit in windows builds, see BitsLog2Floor in utils.h",
+      "range": {
+        "startLine": 118,
+        "startChar": 23,
+        "endLine": 118,
+        "endChar": 39
+      },
+      "revId": "09d3563454a305237d860b262ab15ae038c35481",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
