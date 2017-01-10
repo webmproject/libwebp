@@ -150,7 +150,7 @@ static int ExtractAlpha(const uint8_t* argb, int argb_stride,
 #define PREMULTIPLY(x, m) (((x) * (m)) >> 23)
 
 // We can't use a 'const int' for the SHUFFLE value, because it has to be an
-// immediate in the _mm_shufflexx_epi16() instruction. We really a macro here.
+// immediate in the _mm_shufflexx_epi16() instruction. We really need a macro.
 #define APPLY_ALPHA(RGBX, SHUFFLE, MASK, MULT) do {             \
   const __m128i argb0 = _mm_loadl_epi64((__m128i*)&(RGBX));     \
   const __m128i argb1 = _mm_unpacklo_epi8(argb0, zero);         \
