@@ -1526,17 +1526,18 @@ static void BackwardReferences2DLocality(int xsize,
   }
 }
 
-// Returns entropy for the given cache bits.
-static double ComputeCacheEntropy(const uint32_t* argb,
-                                  const VP8LBackwardRefs* const refs,
-                                  int cache_bits) {
+// Computes the entropy for the given cache bits.
+// Returns 1 on success, 0 in case of allocation error.
+static int ComputeCacheEntropy(const uint32_t* argb,
+                               const VP8LBackwardRefs* const refs,
+                               int cache_bits, double* entropy) {
   const int use_color_cache = (cache_bits > 0);
   int cc_init = 0;
-  double entropy = MAX_ENTROPY;
   const double kSmallPenaltyForLargeCache = 4.0;
   VP8LColorCache hashers;
   VP8LRefsCursor c = VP8LRefsCursorInit(refs);
   VP8LHistogram* histo = VP8LAllocateHistogram(cache_bits);
+  int ok = 0;
   if (histo == NULL) goto Error;
 
   if (use_color_cache) {
@@ -1577,12 +1578,13 @@ static double ComputeCacheEntropy(const uint32_t* argb,
       VP8LRefsCursorNext(&c);
     }
   }
-  entropy = VP8LHistogramEstimateBits(histo) +
+  *entropy = VP8LHistogramEstimateBits(histo) +
       kSmallPenaltyForLargeCache * cache_bits;
+  ok = 1;
  Error:
   if (cc_init) VP8LColorCacheClear(&hashers);
   VP8LFreeHistogram(histo);
-  return entropy;
+  return ok;
 }
 
 // Evaluate optimal cache bits for the local color cache.
@@ -1616,15 +1618,20 @@ static int CalculateBestCacheSize(const uint32_t* const argb,
                               refs)) {
     return 0;
   }
+  *lz77_computed = 1;
   // Do a binary search to find the optimal entropy for cache_bits.
   while (eval_low || eval_high) {
     if (eval_low) {
-      entropy_low = ComputeCacheEntropy(argb, refs, cache_bits_low);
+      if (!ComputeCacheEntropy(argb, refs, cache_bits_low, &entropy_low)) {
+        return 0;
+      }
       entropy_low += entropy_low * cache_bits_low * cost_mul;
       eval_low = 0;
     }
     if (eval_high) {
-      entropy_high = ComputeCacheEntropy(argb, refs, cache_bits_high);
+      if (!ComputeCacheEntropy(argb, refs, cache_bits_high, &entropy_high )) {
+        return 0;
+      }
       entropy_high += entropy_high * cache_bits_high * cost_mul;
       eval_high = 0;
     }
@@ -1639,7 +1646,6 @@ static int CalculateBestCacheSize(const uint32_t* const argb,
       if (cache_bits_high != cache_bits_low) eval_high = 1;
     }
   }
-  *lz77_computed = 1;
   return 1;
 }
 
