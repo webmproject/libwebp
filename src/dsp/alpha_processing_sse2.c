@@ -151,45 +151,40 @@ static int ExtractAlpha(const uint8_t* argb, int argb_stride,
 
 // We can't use a 'const int' for the SHUFFLE value, because it has to be an
 // immediate in the _mm_shufflexx_epi16() instruction. We really need a macro.
-#define APPLY_ALPHA(RGBX, SHUFFLE, MASK, MULT) do {             \
-  const __m128i argb0 = _mm_loadl_epi64((__m128i*)&(RGBX));     \
-  const __m128i argb1 = _mm_unpacklo_epi8(argb0, zero);         \
-  const __m128i alpha0 = _mm_and_si128(argb1, MASK);            \
-  const __m128i alpha1 = _mm_shufflelo_epi16(alpha0, SHUFFLE);  \
-  const __m128i alpha2 = _mm_shufflehi_epi16(alpha1, SHUFFLE);  \
-  /* alpha2 = [0 a0 a0 a0][0 a1 a1 a1] */                       \
-  const __m128i scale0 = _mm_mullo_epi16(alpha2, MULT);         \
-  const __m128i scale1 = _mm_mulhi_epu16(alpha2, MULT);         \
-  const __m128i argb2 = _mm_mulhi_epu16(argb1, scale0);         \
-  const __m128i argb3 = _mm_mullo_epi16(argb1, scale1);         \
-  const __m128i argb4 = _mm_adds_epu16(argb2, argb3);           \
-  const __m128i argb5 = _mm_srli_epi16(argb4, 7);               \
-  const __m128i argb6 = _mm_or_si128(argb5, alpha0);            \
-  const __m128i argb7 = _mm_packus_epi16(argb6, zero);          \
-  _mm_storel_epi64((__m128i*)&(RGBX), argb7);                   \
+// We use: v / 255 = (v + 1 + (v >> 8)) >> 8, where v = alpha * {r,g,b} is
+// a 16bit value.
+#define APPLY_ALPHA(RGBX, SHUFFLE) do {                           \
+  const __m128i argb0 = _mm_loadl_epi64((const __m128i*)&(RGBX)); \
+  const __m128i argb1 = _mm_unpacklo_epi8(argb0, zero);           \
+  const __m128i alpha0 = _mm_or_si128(argb1, kMask);              \
+  const __m128i alpha1 = _mm_shufflelo_epi16(alpha0, SHUFFLE);    \
+  const __m128i alpha2 = _mm_shufflehi_epi16(alpha1, SHUFFLE);    \
+  /* alpha2 = [ff a0 a0 a0][ff a1 a1 a1] */                       \
+  const __m128i A0 = _mm_mullo_epi16(alpha2, argb1);              \
+  const __m128i A1 = _mm_srli_epi16(A0, 8);                       \
+  const __m128i A2 = _mm_add_epi16(A1, A0);                       \
+  const __m128i A3 = _mm_add_epi16(A2, one);                      \
+  const __m128i A4 = _mm_srli_epi16(A3, 8);                       \
+  const __m128i A5 = _mm_packus_epi16(A4, zero);                  \
+  _mm_storel_epi64((__m128i*)&(RGBX), A5);                        \
 } while (0)
 
-static void ApplyAlphaMultiply(uint8_t* rgba, int alpha_first,
-                               int w, int h, int stride) {
+static void ApplyAlphaMultiply_SSE2(uint8_t* rgba, int alpha_first,
+                                    int w, int h, int stride) {
   const __m128i zero = _mm_setzero_si128();
+  const __m128i one = _mm_set1_epi16(1);
+  const __m128i kMask = _mm_set_epi16(0, 0xff, 0xff, 0, 0, 0xff, 0xff, 0);
   const int kSpan = 2;
-  const int w2 = w & ~(kSpan - 1);
   while (h-- > 0) {
     uint32_t* const rgbx = (uint32_t*)rgba;
     int i;
     if (!alpha_first) {
-      const __m128i kMask = _mm_set_epi16(0xff, 0, 0, 0, 0xff, 0, 0, 0);
-      const __m128i kMult =
-          _mm_set_epi16(0, 0x8081, 0x8081, 0x8081, 0, 0x8081, 0x8081, 0x8081);
-      for (i = 0; i < w2; i += kSpan) {
-        APPLY_ALPHA(rgbx[i], _MM_SHUFFLE(0, 3, 3, 3), kMask, kMult);
+      for (i = 0; i + kSpan <= w; i += kSpan) {
+        APPLY_ALPHA(rgbx[i], _MM_SHUFFLE(2, 3, 3, 3));
       }
     } else {
-      const __m128i kMask = _mm_set_epi16(0, 0, 0, 0xff, 0, 0, 0, 0xff);
-      const __m128i kMult =
-          _mm_set_epi16(0x8081, 0x8081, 0x8081, 0, 0x8081, 0x8081, 0x8081, 0);
-      for (i = 0; i < w2; i += kSpan) {
-        APPLY_ALPHA(rgbx[i], _MM_SHUFFLE(0, 0, 0, 3), kMask, kMult);
+      for (i = 0; i + kSpan <= w; i += kSpan) {
+        APPLY_ALPHA(rgbx[i], _MM_SHUFFLE(0, 0, 0, 1));
       }
     }
     // Finish with left-overs.
@@ -213,45 +208,37 @@ static void ApplyAlphaMultiply(uint8_t* rgba, int alpha_first,
 // -----------------------------------------------------------------------------
 // Apply alpha value to rows
 
-// We use: kINV255 = (1 << 24) / 255 = 0x010101
-// So: a * kINV255 = (a << 16) | [(a << 8) | a]
-// -> _mm_mulhi_epu16() takes care of the (a<<16) part,
-// and _mm_mullo_epu16(a * 0x0101,...) takes care of the "(a << 8) | a" one.
-
-static void MultARGBRow(uint32_t* const ptr, int width, int inverse) {
+static void MultARGBRow_SSE2(uint32_t* const ptr, int width, int inverse) {
   int x = 0;
   if (!inverse) {
     const int kSpan = 2;
     const __m128i zero = _mm_setzero_si128();
-    const __m128i kRound =
-        _mm_set_epi16(0, 1 << 7, 1 << 7, 1 << 7, 0, 1 << 7, 1 << 7, 1 << 7);
-    const __m128i kMult =
-        _mm_set_epi16(0, 0x0101, 0x0101, 0x0101, 0, 0x0101, 0x0101, 0x0101);
-    const __m128i kOne64 = _mm_set_epi16(1u << 8, 0, 0, 0, 1u << 8, 0, 0, 0);
-    const int w2 = width & ~(kSpan - 1);
-    for (x = 0; x < w2; x += kSpan) {
-      const __m128i argb0 = _mm_loadl_epi64((__m128i*)&ptr[x]);
-      const __m128i argb1 = _mm_unpacklo_epi8(argb0, zero);
-      const __m128i tmp0 = _mm_shufflelo_epi16(argb1, _MM_SHUFFLE(3, 3, 3, 3));
-      const __m128i tmp1 = _mm_shufflehi_epi16(tmp0, _MM_SHUFFLE(3, 3, 3, 3));
-      const __m128i tmp2 = _mm_srli_epi64(tmp1, 16);
-      const __m128i scale0 = _mm_mullo_epi16(tmp1, kMult);
-      const __m128i scale1 = _mm_or_si128(tmp2, kOne64);
-      const __m128i argb2 = _mm_mulhi_epu16(argb1, scale0);
-      const __m128i argb3 = _mm_mullo_epi16(argb1, scale1);
-      const __m128i argb4 = _mm_adds_epu16(argb2, argb3);
-      const __m128i argb5 = _mm_adds_epu16(argb4, kRound);
-      const __m128i argb6 = _mm_srli_epi16(argb5, 8);
-      const __m128i argb7 = _mm_packus_epi16(argb6, zero);
-      _mm_storel_epi64((__m128i*)&ptr[x], argb7);
+    const __m128i k128 = _mm_set1_epi16(128);
+    const __m128i kMask = _mm_set_epi16(0, 0xff, 0, 0, 0, 0xff, 0, 0);
+    for (x = 0; x + kSpan <= width; x += kSpan) {
+      // To compute 'result = (int)(a * x / 255. + .5)', we use:
+      //   tmp = a * v + 128, result = (tmp + (tmp >> 8)) >> 8
+      const __m128i A0 = _mm_loadl_epi64((const __m128i*)&ptr[x]);
+      const __m128i A1 = _mm_unpacklo_epi8(A0, zero);
+      const __m128i A2 = _mm_or_si128(A1, kMask);
+      const __m128i A3 = _mm_shufflelo_epi16(A2, _MM_SHUFFLE(2, 3, 3, 3));
+      const __m128i A4 = _mm_shufflehi_epi16(A3, _MM_SHUFFLE(2, 3, 3, 3));
+      // here, A4 = [ff a0 a0 a0][ff a1 a1 a1]
+      const __m128i A5 = _mm_mullo_epi16(A4, A1);
+      const __m128i A6 = _mm_add_epi16(A5, k128);
+      const __m128i A7 = _mm_srli_epi16(A6, 8);
+      const __m128i A8 = _mm_add_epi16(A7, A6);
+      const __m128i A9 = _mm_srli_epi16(A8, 8);
+      const __m128i A10 = _mm_packus_epi16(A9, zero);
+      _mm_storel_epi64((__m128i*)&ptr[x], A10);
     }
   }
   width -= x;
   if (width > 0) WebPMultARGBRowC(ptr + x, width, inverse);
 }
 
-static void MultRow(uint8_t* const ptr, const uint8_t* const alpha,
-                    int width, int inverse) {
+static void MultRow_SSE2(uint8_t* const ptr, const uint8_t* const alpha,
+                         int width, int inverse) {
   int x = 0;
   if (!inverse) {
     const int kSpan = 8;
@@ -283,9 +270,9 @@ static void MultRow(uint8_t* const ptr, const uint8_t* const alpha,
 extern void WebPInitAlphaProcessingSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessingSSE2(void) {
-  WebPMultARGBRow = MultARGBRow;
-  WebPMultRow = MultRow;
-  WebPApplyAlphaMultiply = ApplyAlphaMultiply;
+  WebPMultARGBRow = MultARGBRow_SSE2;
+  WebPMultRow = MultRow_SSE2;
+  WebPApplyAlphaMultiply = ApplyAlphaMultiply_SSE2;
   WebPDispatchAlpha = DispatchAlpha;
   WebPDispatchAlphaToGreen = DispatchAlphaToGreen;
   WebPExtractAlpha = ExtractAlpha;
