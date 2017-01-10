@@ -346,6 +346,7 @@ int (*WebPExtractAlpha)(const uint8_t*, int, int, int, uint8_t*, int);
 extern void WebPInitAlphaProcessingMIPSdspR2(void);
 extern void WebPInitAlphaProcessingSSE2(void);
 extern void WebPInitAlphaProcessingSSE41(void);
+extern void WebPInitAlphaProcessingNEON(void);
 
 static volatile VP8CPUInfo alpha_processing_last_cpuinfo_used =
     (VP8CPUInfo)&alpha_processing_last_cpuinfo_used;
@@ -371,6 +372,11 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessing(void) {
         WebPInitAlphaProcessingSSE41();
       }
 #endif
+    }
+#endif
+#if defined(WEBP_USE_NEON)
+    if (VP8GetCPUInfo(kNEON)) {
+      WebPInitAlphaProcessingNEON();
     }
 #endif
 #if defined(WEBP_USE_MIPS_DSP_R2)
