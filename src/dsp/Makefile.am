@@ -14,6 +14,7 @@ commondir = $(includedir)/webp
 COMMON_SOURCES =
 COMMON_SOURCES += alpha_processing.c
 COMMON_SOURCES += alpha_processing_mips_dsp_r2.c
+COMMON_SOURCES += alpha_processing_neon.c
 COMMON_SOURCES += common_sse2.h
 COMMON_SOURCES += cpu.c
 COMMON_SOURCES += dec.c
@@ -74,6 +75,7 @@ libwebpdspdecode_sse2_la_CPPFLAGS = $(libwebpdsp_sse2_la_CPPFLAGS)
 libwebpdspdecode_sse2_la_CFLAGS = $(libwebpdsp_sse2_la_CFLAGS)
 
 libwebpdspdecode_neon_la_SOURCES =
+libwebpdspdecode_neon_la_SOURCES += alpha_processing_neon.c
 libwebpdspdecode_neon_la_SOURCES += dec_neon.c
 libwebpdspdecode_neon_la_SOURCES += lossless_neon.c
 libwebpdspdecode_neon_la_SOURCES += neon.h

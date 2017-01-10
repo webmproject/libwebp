@@ -109,6 +109,7 @@ model {
             srcDir "src/dsp"
             include "alpha_processing.c"
             include "alpha_processing_mips_dsp_r2.c"
+            include "alpha_processing_neon.$NEON"
             include "alpha_processing_sse2.c"
             include "alpha_processing_sse41.c"
             include "argb.c"
