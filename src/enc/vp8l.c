@@ -826,7 +826,13 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
     goto Error;
   }
 
-  *cache_bits = use_cache ? MAX_COLOR_CACHE_BITS : 0;
+  if (use_cache) {
+    // If the value is different from zero, it has been set during the
+    // palette analysis.
+    if (*cache_bits == 0) *cache_bits = MAX_COLOR_CACHE_BITS;
+  } else {
+    *cache_bits = 0;
+  }
   // 'best_refs' is the reference to the best backward refs and points to one
   // of refs_array[0] or refs_array[1].
   // Calculate backward references from ARGB image.
@@ -1500,6 +1506,10 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
     if (err != VP8_ENC_OK) goto Error;
     err = MapImageFromPalette(enc, use_delta_palettization);
     if (err != VP8_ENC_OK) goto Error;
+    // If using a color cache, do not have it bigger than the number of colors.
+    if (use_cache && enc->palette_size_ < (1 << MAX_COLOR_CACHE_BITS)) {
+      enc->cache_bits_ = BitsLog2Floor(enc->palette_size_) + 1;
+    }
   }
   if (!use_delta_palettization) {
     // In case image is not packed.
