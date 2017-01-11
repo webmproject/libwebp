@@ -1576,7 +1576,7 @@ static int ComputeCacheEntropies(const uint32_t* argb,
         // Update the histograms for distance/length.
         int len = PixOrCopyLength(v);
         int code_dist, code_len, extra_bits;
-        uint32_t argb_prev = *argb - 1;
+        uint32_t argb_prev = *argb ^ 0xffffffffu;
         VP8LPrefixEncodeBits(len, &code_len, &extra_bits);
         VP8LPrefixEncodeBits(PixOrCopyDistance(v), &code_dist, &extra_bits);
         for (i = 1; i <= cache_bits_max; ++i) {
