@@ -431,9 +431,9 @@ static void BundleColorMap_SSE2(const uint8_t* const row, int width, int xbits,
         // 000a000b000c000d | (where a/b/c/d are 2 bits).
         const __m128i in = _mm_loadu_si128((const __m128i*)&row[x]);
         const __m128i mul = _mm_mullo_epi16(in, mul_cst);  // 00ab00b000cd00d0
-        const __m128i and = _mm_and_si128(mul, mask_mul);  // 00ab000000cd0000
-        const __m128i shift = _mm_srli_epi32(and, 12);     // 00000000ab000000
-        const __m128i pack = _mm_or_si128(shift, and);     // 00000000abcd0000
+        const __m128i tmp = _mm_and_si128(mul, mask_mul);  // 00ab000000cd0000
+        const __m128i shift = _mm_srli_epi32(tmp, 12);     // 00000000ab000000
+        const __m128i pack = _mm_or_si128(shift, tmp);     // 00000000abcd0000
         // Convert to 0xff00**00.
         const __m128i res = _mm_or_si128(pack, mask_or);
         _mm_storeu_si128((__m128i*)dst, res);
