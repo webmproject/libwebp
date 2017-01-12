@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c365a9f6_8cafa768",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-01-12T09:44:12Z",
+      "side": 1,
+      "message": "note: we could preserve fwd compatibility by adding this new enum entry *last* here. But i think it\u0027s better to keep some ordering, since we\u0027re going to break compatibility for the next release anyway...",
+      "range": {
+        "startLine": 135,
+        "startChar": 18,
+        "endLine": 135,
+        "endChar": 25
+      },
+      "revId": "4f7e4b7034584f3add1b837e1c75dffd40416d6a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
