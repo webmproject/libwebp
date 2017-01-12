@@ -153,18 +153,25 @@ static int ExtractAlpha(const uint8_t* argb, int argb_stride,
 // immediate in the _mm_shufflexx_epi16() instruction. We really need a macro.
 // We use: v / 255 = (v * 0x8081) >> 23, where v = alpha * {r,g,b} is a 16bit
 // value.
-#define APPLY_ALPHA(RGBX, SHUFFLE) do {                           \
-  const __m128i argb0 = _mm_loadl_epi64((const __m128i*)&(RGBX)); \
-  const __m128i argb1 = _mm_unpacklo_epi8(argb0, zero);           \
-  const __m128i alpha0 = _mm_or_si128(argb1, kMask);              \
-  const __m128i alpha1 = _mm_shufflelo_epi16(alpha0, SHUFFLE);    \
-  const __m128i alpha2 = _mm_shufflehi_epi16(alpha1, SHUFFLE);    \
-  /* alpha2 = [ff a0 a0 a0][ff a1 a1 a1] */                       \
-  const __m128i A0 = _mm_mullo_epi16(alpha2, argb1);              \
-  const __m128i A1 = _mm_mulhi_epu16(A0, kMult);                  \
-  const __m128i A2 = _mm_srli_epi16(A1, 7);                       \
-  const __m128i A3 = _mm_packus_epi16(A2, zero);                  \
-  _mm_storel_epi64((__m128i*)&(RGBX), A3);                        \
+#define APPLY_ALPHA(RGBX, SHUFFLE) do {                              \
+  const __m128i argb0 = _mm_loadu_si128((const __m128i*)&(RGBX));    \
+  const __m128i argb1_lo = _mm_unpacklo_epi8(argb0, zero);           \
+  const __m128i argb1_hi = _mm_unpackhi_epi8(argb0, zero);           \
+  const __m128i alpha0_lo = _mm_or_si128(argb1_lo, kMask);           \
+  const __m128i alpha0_hi = _mm_or_si128(argb1_hi, kMask);           \
+  const __m128i alpha1_lo = _mm_shufflelo_epi16(alpha0_lo, SHUFFLE); \
+  const __m128i alpha1_hi = _mm_shufflelo_epi16(alpha0_hi, SHUFFLE); \
+  const __m128i alpha2_lo = _mm_shufflehi_epi16(alpha1_lo, SHUFFLE); \
+  const __m128i alpha2_hi = _mm_shufflehi_epi16(alpha1_hi, SHUFFLE); \
+  /* alpha2 = [ff a0 a0 a0][ff a1 a1 a1] */                          \
+  const __m128i A0_lo = _mm_mullo_epi16(alpha2_lo, argb1_lo);        \
+  const __m128i A0_hi = _mm_mullo_epi16(alpha2_hi, argb1_hi);        \
+  const __m128i A1_lo = _mm_mulhi_epu16(A0_lo, kMult);               \
+  const __m128i A1_hi = _mm_mulhi_epu16(A0_hi, kMult);               \
+  const __m128i A2_lo = _mm_srli_epi16(A1_lo, 7);                    \
+  const __m128i A2_hi = _mm_srli_epi16(A1_hi, 7);                    \
+  const __m128i A3 = _mm_packus_epi16(A2_lo, A2_hi);                 \
+  _mm_storeu_si128((__m128i*)&(RGBX), A3);                           \
 } while (0)
 
 static void ApplyAlphaMultiply_SSE2(uint8_t* rgba, int alpha_first,
@@ -172,7 +179,7 @@ static void ApplyAlphaMultiply_SSE2(uint8_t* rgba, int alpha_first,
   const __m128i zero = _mm_setzero_si128();
   const __m128i kMult = _mm_set1_epi16(0x8081u);
   const __m128i kMask = _mm_set_epi16(0, 0xff, 0xff, 0, 0, 0xff, 0xff, 0);
-  const int kSpan = 2;
+  const int kSpan = 4;
   while (h-- > 0) {
     uint32_t* const rgbx = (uint32_t*)rgba;
     int i;
