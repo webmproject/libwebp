@@ -132,6 +132,7 @@ extern "C" {
 typedef enum {
   kSSE2,
   kSSE3,
+  kSlowSSSE3,  // special feature for slow SSSE3 architectures
   kSSE4_1,
   kAVX,
   kAVX2,
