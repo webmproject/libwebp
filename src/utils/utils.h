@@ -107,6 +107,19 @@ static WEBP_INLINE void PutLE32(uint8_t* const data, uint32_t val) {
   PutLE16(data + 2, (int)(val >> 16));
 }
 
+// Returns 31 ^ clz(n) = log2(n). This is the default C-implementation, either
+// based on table or not. Can be used as fallback if clz() is not available.
+#define WEBP_NEED_LOG_TABLE_8BIT
+extern const uint8_t WebPLogTable8bit[256];
+static WEBP_INLINE int WebPLog2FloorC(uint32_t n) {
+  int log = 0;
+  while (n >= 256) {
+    log += 8;
+    n >>= 8;
+  }
+  return log + WebPLogTable8bit[n];
+}
+
 // Returns (int)floor(log2(n)). n must be > 0.
 // use GNU builtins where available.
 #if defined(__GNUC__) && \
@@ -124,22 +137,8 @@ static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
   _BitScanReverse(&first_set_bit, n);
   return first_set_bit;
 }
-#else
-static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
-  int log = 0;
-  uint32_t value = n;
-  int i;
-
-  for (i = 4; i >= 0; --i) {
-    const int shift = (1 << i);
-    const uint32_t x = value >> shift;
-    if (x != 0) {
-      value = x;
-      log += shift;
-    }
-  }
-  return log;
-}
+#else   // default: use the C-version.
+static WEBP_INLINE int BitsLog2Floor(uint32_t n) { return WebPLog2FloorC(n); }
 #endif
 
 //------------------------------------------------------------------------------
