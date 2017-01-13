@@ -421,9 +421,16 @@ static int GetLargeValue(VP8BitReader* const br, const uint8_t* const p) {
   return v;
 }
 
+// Signature and pointer-to-function for GetCoeffs() variants below.
+typedef int (*GetCoeffsFunc)(VP8BitReader* const br,
+                             const VP8BandProbas* const prob[],
+                             int ctx, const quant_t dq, int n, int16_t* out);
+static volatile GetCoeffsFunc GetCoeffs = NULL;
+
 // Returns the position of the last non-zero coeff plus one
-static int GetCoeffs(VP8BitReader* const br, const VP8BandProbas* const prob[],
-                     int ctx, const quant_t dq, int n, int16_t* out) {
+static int GetCoeffsFast(VP8BitReader* const br,
+                         const VP8BandProbas* const prob[],
+                         int ctx, const quant_t dq, int n, int16_t* out) {
   const uint8_t* p = prob[n]->probas_[ctx];
   for (; n < 16; ++n) {
     if (!VP8GetBit(br, p[0])) {
@@ -437,6 +444,36 @@ static int GetCoeffs(VP8BitReader* const br, const VP8BandProbas* const prob[],
       const VP8ProbaArray* const p_ctx = &prob[n + 1]->probas_[0];
       int v;
       if (!VP8GetBit(br, p[2])) {
+        v = 1;
+        p = p_ctx[1];
+      } else {
+        v = GetLargeValue(br, p);
+        p = p_ctx[2];
+      }
+      out[kZigzag[n]] = VP8GetSigned(br, v) * dq[n > 0];
+    }
+  }
+  return 16;
+}
+
+// This version of GetCoeffs() uses VP8GetBitAlt() which is an alternate version
+// of VP8GetBitAlt() targetting specific platforms.
+static int GetCoeffsAlt(VP8BitReader* const br,
+                        const VP8BandProbas* const prob[],
+                        int ctx, const quant_t dq, int n, int16_t* out) {
+  const uint8_t* p = prob[n]->probas_[ctx];
+  for (; n < 16; ++n) {
+    if (!VP8GetBitAlt(br, p[0])) {
+      return n;  // previous coeff was last non-zero coeff
+    }
+    while (!VP8GetBitAlt(br, p[1])) {       // sequence of zero coeffs
+      p = prob[++n]->probas_[0];
+      if (n == 16) return 16;
+    }
+    {        // non zero coeff
+      const VP8ProbaArray* const p_ctx = &prob[n + 1]->probas_[0];
+      int v;
+      if (!VP8GetBitAlt(br, p[2])) {
         v = 1;
         p = p_ctx[1];
       } else {
@@ -585,6 +622,9 @@ void VP8InitScanline(VP8Decoder* const dec) {
 }
 
 static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
+  if (GetCoeffs == NULL) {
+    GetCoeffs = VP8GetCPUInfo(kSlowSSSE3) ? GetCoeffsAlt : GetCoeffsFast;
+  }
   for (dec->mb_y_ = 0; dec->mb_y_ < dec->br_mb_y_; ++dec->mb_y_) {
     // Parse bitstream for this row.
     VP8BitReader* const token_br =
