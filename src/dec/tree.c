@@ -14,7 +14,10 @@
 #include "./vp8i.h"
 #include "../utils/bit_reader_inl.h"
 
+#if !defined(__arm__) && !defined(_M_ARM) && !defined(__aarch64__)
+// using a table is ~1-2% slower on ARM. Prefer the coded-tree approach then.
 #define USE_GENERIC_TREE
+#endif
 
 #ifdef USE_GENERIC_TREE
 static const int8_t kYModesIntra4[18] = {
