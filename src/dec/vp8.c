@@ -27,6 +27,16 @@ int WebPGetDecoderVersion(void) {
 }
 
 //------------------------------------------------------------------------------
+// Signature and pointer-to-function for GetCoeffs() variants below.
+
+typedef int (*GetCoeffsFunc)(VP8BitReader* const br,
+                             const VP8BandProbas* const prob[],
+                             int ctx, const quant_t dq, int n, int16_t* out);
+static volatile GetCoeffsFunc GetCoeffs = NULL;
+
+static void InitGetCoeffs(void);
+
+//------------------------------------------------------------------------------
 // VP8Decoder
 
 static void SetOk(VP8Decoder* const dec) {
@@ -51,6 +61,7 @@ VP8Decoder* VP8New(void) {
     WebPGetWorkerInterface()->Init(&dec->worker_);
     dec->ready_ = 0;
     dec->num_parts_minus_one_ = 0;
+    InitGetCoeffs();
   }
   return dec;
 }
@@ -422,8 +433,9 @@ static int GetLargeValue(VP8BitReader* const br, const uint8_t* const p) {
 }
 
 // Returns the position of the last non-zero coeff plus one
-static int GetCoeffs(VP8BitReader* const br, const VP8BandProbas* const prob[],
-                     int ctx, const quant_t dq, int n, int16_t* out) {
+static int GetCoeffsFast(VP8BitReader* const br,
+                         const VP8BandProbas* const prob[],
+                         int ctx, const quant_t dq, int n, int16_t* out) {
   const uint8_t* p = prob[n]->probas_[ctx];
   for (; n < 16; ++n) {
     if (!VP8GetBit(br, p[0])) {
@@ -447,6 +459,46 @@ static int GetCoeffs(VP8BitReader* const br, const VP8BandProbas* const prob[],
     }
   }
   return 16;
+}
+
+// This version of GetCoeffs() uses VP8GetBitAlt() which is an alternate version
+// of VP8GetBitAlt() targeting specific platforms.
+static int GetCoeffsAlt(VP8BitReader* const br,
+                        const VP8BandProbas* const prob[],
+                        int ctx, const quant_t dq, int n, int16_t* out) {
+  const uint8_t* p = prob[n]->probas_[ctx];
+  for (; n < 16; ++n) {
+    if (!VP8GetBitAlt(br, p[0])) {
+      return n;  // previous coeff was last non-zero coeff
+    }
+    while (!VP8GetBitAlt(br, p[1])) {       // sequence of zero coeffs
+      p = prob[++n]->probas_[0];
+      if (n == 16) return 16;
+    }
+    {        // non zero coeff
+      const VP8ProbaArray* const p_ctx = &prob[n + 1]->probas_[0];
+      int v;
+      if (!VP8GetBitAlt(br, p[2])) {
+        v = 1;
+        p = p_ctx[1];
+      } else {
+        v = GetLargeValue(br, p);
+        p = p_ctx[2];
+      }
+      out[kZigzag[n]] = VP8GetSigned(br, v) * dq[n > 0];
+    }
+  }
+  return 16;
+}
+
+WEBP_TSAN_IGNORE_FUNCTION static void InitGetCoeffs(void) {
+  if (GetCoeffs == NULL) {
+    if (VP8GetCPUInfo != NULL && VP8GetCPUInfo(kSlowSSSE3)) {
+      GetCoeffs = GetCoeffsAlt;
+    } else {
+      GetCoeffs = GetCoeffsFast;
+    }
+  }
 }
 
 static WEBP_INLINE uint32_t NzCodeBits(uint32_t nz_coeffs, int nz, int dc_nz) {
