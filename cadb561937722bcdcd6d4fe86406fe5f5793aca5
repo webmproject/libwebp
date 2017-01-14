@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8342d14a_f87025f5",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-01-14T06:24:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e3b62de6_973d9be0",
+      "range": {
+        "startLine": 11,
+        "startChar": 14,
+        "endLine": 11,
+        "endChar": 23
+      },
+      "revId": "cadb561937722bcdcd6d4fe86406fe5f5793aca5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e3b62de6_b751bf1d",
         "filename": "/COMMIT_MSG",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2017-01-14T04:31:02Z",
       "side": 1,
       "message": "...avoids these slow instructions...",
+      "range": {
+        "startLine": 13,
+        "startChar": 36,
+        "endLine": 13,
+        "endChar": 58
+      },
+      "revId": "cadb561937722bcdcd6d4fe86406fe5f5793aca5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8342d14a_d86d611b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-01-14T06:24:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e3b62de6_b751bf1d",
       "range": {
         "startLine": 13,
         "startChar": 36,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "8342d14a_b87a9dd1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-01-14T06:24:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e3b62de6_d74e337a",
+      "range": {
+        "startLine": 14,
+        "startChar": 13,
+        "endLine": 14,
+        "endChar": 17
+      },
+      "revId": "cadb561937722bcdcd6d4fe86406fe5f5793aca5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e3b62de6_373e8fde",
         "filename": "src/dec/vp8.c",
         "patchSetId": 4
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "8342d14a_9877d9e9",
+        "filename": "src/dec/vp8.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-01-14T06:24:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e3b62de6_373e8fde",
+      "range": {
+        "startLine": 465,
+        "startChar": 21,
+        "endLine": 465,
+        "endChar": 31
+      },
+      "revId": "cadb561937722bcdcd6d4fe86406fe5f5793aca5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e3b62de6_57430355",
         "filename": "src/dec/vp8.c",
         "patchSetId": 4
@@ -105,6 +201,24 @@
       "writtenOn": "2017-01-14T04:31:02Z",
       "side": 1,
       "message": "probably want to mark this one for tsan",
+      "revId": "cadb561937722bcdcd6d4fe86406fe5f5793aca5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8342d14a_78a4354a",
+        "filename": "src/dec/vp8.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-01-14T06:24:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e3b62de6_57430355",
       "revId": "cadb561937722bcdcd6d4fe86406fe5f5793aca5",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
