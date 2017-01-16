@@ -76,6 +76,7 @@ libwebpdspdecode_sse2_la_CFLAGS = $(libwebpdsp_sse2_la_CFLAGS)
 libwebpdspdecode_neon_la_SOURCES =
 libwebpdspdecode_neon_la_SOURCES += alpha_processing_neon.c
 libwebpdspdecode_neon_la_SOURCES += dec_neon.c
+libwebpdspdecode_neon_la_SOURCES += filters_neon.c
 libwebpdspdecode_neon_la_SOURCES += lossless_neon.c
 libwebpdspdecode_neon_la_SOURCES += neon.h
 libwebpdspdecode_neon_la_SOURCES += rescaler_neon.c
