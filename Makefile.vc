@@ -203,6 +203,7 @@ DSP_DEC_OBJS = \
     $(DIROBJ)\dsp\filters.obj \
     $(DIROBJ)\dsp\filters_mips_dsp_r2.obj \
     $(DIROBJ)\dsp\filters_msa.obj \
+    $(DIROBJ)\dsp\filters_neon.obj \
     $(DIROBJ)\dsp\filters_sse2.obj \
     $(DIROBJ)\dsp\lossless.obj \
     $(DIROBJ)\dsp\lossless_mips_dsp_r2.obj \
