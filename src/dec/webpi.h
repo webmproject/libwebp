@@ -38,8 +38,8 @@ struct WebPDecParams {
 
   int last_y;                 // coordinate of the line that was last output
   const WebPDecoderOptions* options;  // if not NULL, use alt decoding features
-  // rescalers
-  WebPRescaler scaler_y, scaler_u, scaler_v, scaler_a;
+
+  WebPRescaler* scaler_y, *scaler_u, *scaler_v, *scaler_a;  // rescalers
   void* memory;                  // overall scratch memory for the output work.
 
   OutputFunc emit;               // output RGB or YUV samples
