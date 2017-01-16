@@ -227,8 +227,9 @@ WebPFilterFunc WebPFilters[WEBP_FILTER_LAST];
 WebPUnfilterFunc WebPUnfilters[WEBP_FILTER_LAST];
 
 extern void VP8FiltersInitMIPSdspR2(void);
-extern void VP8FiltersInitSSE2(void);
 extern void VP8FiltersInitMSA(void);
+extern void VP8FiltersInitNEON(void);
+extern void VP8FiltersInitSSE2(void);
 
 static volatile VP8CPUInfo filters_last_cpuinfo_used =
     (VP8CPUInfo)&filters_last_cpuinfo_used;
@@ -250,6 +251,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8FiltersInit(void) {
 #if defined(WEBP_USE_SSE2)
     if (VP8GetCPUInfo(kSSE2)) {
       VP8FiltersInitSSE2();
+    }
+#endif
+#if defined(WEBP_USE_NEON)
+    if (VP8GetCPUInfo(kNEON)) {
+      VP8FiltersInitNEON();
     }
 #endif
 #if defined(WEBP_USE_MIPS_DSP_R2)
