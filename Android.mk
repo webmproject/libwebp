@@ -58,6 +58,7 @@ dsp_dec_srcs := \
     src/dsp/filters.c \
     src/dsp/filters_mips_dsp_r2.c \
     src/dsp/filters_msa.c \
+    src/dsp/filters_neon.$(NEON) \
     src/dsp/filters_sse2.c \
     src/dsp/lossless.c \
     src/dsp/lossless_mips_dsp_r2.c \
