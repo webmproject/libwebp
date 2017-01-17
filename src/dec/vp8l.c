@@ -1492,9 +1492,8 @@ static void ExtractAlphaRows(VP8LDecoder* const dec, int last_row) {
     const int cache_pixs = width * num_rows_to_process;
     uint8_t* const dst = output + width * cur_row;
     const uint32_t* const src = dec->argb_cache_;
-    int i;
     ApplyInverseTransforms(dec, num_rows_to_process, in);
-    for (i = 0; i < cache_pixs; ++i) dst[i] = (src[i] >> 8) & 0xff;
+    WebPExtractGreen(src, dst, cache_pixs);
     AlphaApplyFilter(alph_dec,
                      cur_row, cur_row + num_rows_to_process, dst, width);
     num_rows -= num_rows_to_process;
@@ -1561,6 +1560,8 @@ int VP8LDecodeAlphaImageStream(ALPHDecoder* const alph_dec, int last_row) {
   if (dec->last_row_ >= last_row) {
     return 1;  // done
   }
+
+  if (!alph_dec->use_8b_decode_) WebPInitAlphaProcessing();
 
   // Decode (with special row processing).
   return alph_dec->use_8b_decode_ ?

@@ -161,6 +161,17 @@ static int ExtractAlpha_NEON(const uint8_t* argb, int argb_stride,
   return (alpha_mask == 0xffffffffu);
 }
 
+static void ExtractGreen_NEON(const uint32_t* argb,
+                              uint8_t* alpha, int size) {
+  int i;
+  for (i = 0; i + 16 <= size; i += 16) {
+    const uint8x16x4_t rgbX = vld4q_u8((const uint8_t*)(argb + i));
+    const uint8x16_t greens = rgbX.val[1];
+    vst1q_u8(alpha + i, greens);
+  }
+  for (; i < size; ++i) alpha[i] = (argb[i] >> 8) & 0xff;
+}
+
 //------------------------------------------------------------------------------
 
 extern void WebPInitAlphaProcessingNEON(void);
@@ -170,6 +181,7 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessingNEON(void) {
   WebPDispatchAlpha = DispatchAlpha_NEON;
   WebPDispatchAlphaToGreen = DispatchAlphaToGreen_NEON;
   WebPExtractAlpha = ExtractAlpha_NEON;
+  WebPExtractGreen = ExtractGreen_NEON;
 }
 
 #else  // !WEBP_USE_NEON
