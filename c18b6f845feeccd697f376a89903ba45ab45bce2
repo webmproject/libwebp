@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8342d14a_a35f121e",
+        "filename": "src/dec/io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-01-17T06:31:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e3b62de6_6b43be55",
+      "revId": "c18b6f845feeccd697f376a89903ba45ab45bce2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e3b62de6_8b3812f0",
         "filename": "src/dec/webpi.h",
         "patchSetId": 2
@@ -30,6 +48,30 @@
       "writtenOn": "2017-01-16T23:39:05Z",
       "side": 1,
       "message": "we do \u0027*scaler_u\u0027 elsewhere as in line 36",
+      "range": {
+        "startLine": 42,
+        "startChar": 26,
+        "endLine": 42,
+        "endChar": 36
+      },
+      "revId": "c18b6f845feeccd697f376a89903ba45ab45bce2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8342d14a_c36216e8",
+        "filename": "src/dec/webpi.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-01-17T06:31:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e3b62de6_8b3812f0",
       "range": {
         "startLine": 42,
         "startChar": 26,
