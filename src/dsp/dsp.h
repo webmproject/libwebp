@@ -509,6 +509,10 @@ extern int (*WebPExtractAlpha)(const uint8_t* argb, int argb_stride,
                                int width, int height,
                                uint8_t* alpha, int alpha_stride);
 
+// Extract the green values from 32b values in argb[] and pack them into alpha[]
+// (this is the opposite of WebPDispatchAlphaToGreen).
+extern void (*WebPExtractGreen)(const uint32_t* argb, uint8_t* alpha, int size);
+
 // Pre-Multiply operation transforms x into x * A / 255  (where x=Y,R,G or B).
 // Un-Multiply operation transforms x into x * 255 / A.
 
