@@ -25,6 +25,7 @@
 #include "../dsp/dsp.h"
 #include "./bit_reader.h"
 #include "./endian_inl.h"
+#include "./utils.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -160,6 +161,37 @@ int VP8GetSigned(VP8BitReader* const br, int v) {
     br->range_ |= 1;
     br->value_ -= (bit_t)((split + 1) & mask) << pos;
     return (v ^ mask) - mask;
+  }
+}
+
+static WEBP_INLINE int VP8GetBitAlt(VP8BitReader* const br, int prob) {
+  // Don't move this declaration! It makes a big speed difference to store
+  // 'range' *before* calling VP8LoadNewBytes(), even if this function doesn't
+  // alter br->range_ value.
+  range_t range = br->range_;
+  if (br->bits_ < 0) {
+    VP8LoadNewBytes(br);
+  }
+  {
+    const int pos = br->bits_;
+    const range_t split = (range * prob) >> 8;
+    const range_t value = (range_t)(br->value_ >> pos);
+    int bit;  // Don't use 'const int bit = (value > split);", it's slower.
+    if (value > split) {
+      range -= split + 1;
+      br->value_ -= (bit_t)(split + 1) << pos;
+      bit = 1;
+    } else {
+      range = split;
+      bit = 0;
+    }
+    if (range <= (range_t)0x7e) {
+      const int shift = kVP8Log2Range[range];
+      range = kVP8NewRange[range];
+      br->bits_ -= shift;
+    }
+    br->range_ = range;
+    return bit;
   }
 }
 
