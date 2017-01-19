@@ -22,7 +22,7 @@
 
 #include <emmintrin.h>
 #include "./common_sse2.h"
-#include "../dec/vp8i.h"
+#include "../dec/vp8i_dec.h"
 #include "../utils/utils.h"
 
 //------------------------------------------------------------------------------
