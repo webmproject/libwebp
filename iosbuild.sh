@@ -122,8 +122,8 @@ for PLATFORM in ${PLATFORMS}; do
   export PATH=${OLDPATH}
 done
 
-cp -a ${SRCDIR}/src/webp/*.h ${TARGETDIR}/Headers/
+cp -a ${SRCDIR}/src/webp/{decode,encode,types}.h ${TARGETDIR}/Headers/
 ${LIPO} -create ${LIBLIST} -output ${TARGETDIR}/WebP
 
-cp -a ${SRCDIR}/src/webp/*.h ${DECTARGETDIR}/Headers/
+cp -a ${SRCDIR}/src/webp/{decode,types}.h ${DECTARGETDIR}/Headers/
 ${LIPO} -create ${DECLIBLIST} -output ${DECTARGETDIR}/WebPDecoder
