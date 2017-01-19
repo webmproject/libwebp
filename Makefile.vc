@@ -82,6 +82,7 @@ OUTPUT_DIRS = $(DIRBIN) $(DIRINC) $(DIRLIB) \
               $(DIROBJ)\dsp \
               $(DIROBJ)\enc \
               $(DIROBJ)\examples \
+              $(DIROBJ)\extras \
               $(DIROBJ)\imageio \
               $(DIROBJ)\mux \
               $(DIROBJ)\utils \
@@ -296,6 +297,10 @@ ENC_OBJS = \
     $(DIROBJ)\enc\vp8l.obj \
     $(DIROBJ)\enc\webpenc.obj \
 
+EXTRAS_OBJS = \
+    $(DIROBJ)\extras\extras.obj \
+    $(DIROBJ)\extras\quality_estimate.obj \
+
 IMAGEIO_UTIL_OBJS = \
     $(DIROBJ)\imageio\imageio_util.obj \
 
@@ -334,7 +339,8 @@ all: ex
 !ELSE
 OUT_EXAMPLES = $(DIRBIN)\cwebp.exe $(DIRBIN)\dwebp.exe
 EXTRA_EXAMPLES = $(DIRBIN)\vwebp.exe $(DIRBIN)\webpmux.exe \
-                 $(DIRBIN)\img2webp.exe
+                 $(DIRBIN)\img2webp.exe $(DIRBIN)\get_disto.exe \
+                 $(DIRBIN)\webp_quality.exe
 
 ex: $(OUT_LIBS) $(OUT_EXAMPLES)
 all: ex $(EXTRA_EXAMPLES)
@@ -361,10 +367,16 @@ $(DIRBIN)\webpmux.exe: $(EX_UTIL_OBJS) $(IMAGEIO_UTIL_OBJS) $(LIBWEBP)
 $(DIRBIN)\img2webp.exe: $(DIROBJ)\examples\img2webp.obj $(LIBWEBPMUX)
 $(DIRBIN)\img2webp.exe: $(IMAGEIO_DEC_OBJS)
 $(DIRBIN)\img2webp.exe: $(EX_UTIL_OBJS) $(IMAGEIO_UTIL_OBJS) $(LIBWEBP)
+$(DIRBIN)\get_disto.exe: $(DIROBJ)\extras\get_disto.obj
+$(DIRBIN)\get_disto.exe: $(IMAGEIO_DEC_OBJS) $(IMAGEIO_UTIL_OBJS) $(LIBWEBP)
+
+$(DIRBIN)\webp_quality.exe: $(DIROBJ)\extras\webp_quality.obj
+$(DIRBIN)\webp_quality.exe: $(IMAGEIO_UTIL_OBJS)
+$(DIRBIN)\webp_quality.exe: $(EXTRAS_OBJS) $(LIBWEBP)
 
 $(OUT_EXAMPLES): $(EX_UTIL_OBJS) $(LIBWEBP)
 $(EX_UTIL_OBJS) $(IMAGEIO_UTIL_OBJS): $(OUTPUT_DIRS)
-$(IMAGEIO_DEC_OBJS) $(IMAGEIO_ENC_OBJS): $(OUTPUT_DIRS)
+$(IMAGEIO_DEC_OBJS) $(IMAGEIO_ENC_OBJS) $(EXTRAS_OBJS): $(OUTPUT_DIRS)
 !ENDIF  # ARCH == ARM
 
 experimental:
@@ -432,6 +444,8 @@ $(DIROBJ)\examples\gifdec.obj: examples\gifdec.c
 # Batch rules
 {examples}.c{$(DIROBJ)\examples}.obj::
 	$(CC) $(CFLAGS) /Fd$(DIROBJ)\examples\ /Fo$(DIROBJ)\examples\ $<
+{extras}.c{$(DIROBJ)\extras}.obj::
+	$(CC) $(CFLAGS) /Fd$(DIROBJ)\extras\ /Fo$(DIROBJ)\extras\ $<
 {imageio}.c{$(DIROBJ)\imageio}.obj::
 	$(CC) $(CFLAGS) /Fd$(DIROBJ)\imageio\ /Fo$(DIROBJ)\imageio\ $<
 {src\dec}.c{$(DIROBJ)\dec}.obj::
@@ -448,6 +462,12 @@ $(DIROBJ)\examples\gifdec.obj: examples\gifdec.c
 	$(CC) $(CFLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$(DIROBJ)\utils\ $<
 
 {$(DIROBJ)\examples}.obj{$(DIRBIN)}.exe:
+	$(LNKEXE) $(LDFLAGS) /OUT:$@ $** \
+	    ole32.lib windowscodecs.lib shlwapi.lib
+	$(MT) -manifest $@.manifest -outputresource:$@;1
+	del $@.manifest
+
+{$(DIROBJ)\extras}.obj{$(DIRBIN)}.exe:
 	$(LNKEXE) $(LDFLAGS) /OUT:$@ $** \
 	    ole32.lib windowscodecs.lib shlwapi.lib
 	$(MT) -manifest $@.manifest -outputresource:$@;1
