@@ -17,7 +17,7 @@
 
 #include <stdlib.h>
 #include "./msa_macro.h"
-#include "../enc/vp8enci.h"
+#include "../enc/vp8enci_enc.h"
 
 //------------------------------------------------------------------------------
 // Transforms

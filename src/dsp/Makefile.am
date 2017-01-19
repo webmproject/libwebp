@@ -127,7 +127,7 @@ libwebpdsp_msa_la_LIBADD = libwebpdspdecode_msa.la
 libwebpdsp_la_SOURCES = $(COMMON_SOURCES) $(ENC_SOURCES)
 
 noinst_HEADERS =
-noinst_HEADERS += ../dec/decode_vp8.h
+noinst_HEADERS += ../dec/vp8_dec.h
 noinst_HEADERS += ../webp/decode.h
 
 libwebpdsp_la_CPPFLAGS =

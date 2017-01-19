@@ -18,7 +18,7 @@
 #include <stdlib.h>  // for abs()
 
 #include "./common_sse2.h"
-#include "../enc/vp8enci.h"
+#include "../enc/vp8enci_enc.h"
 
 //------------------------------------------------------------------------------
 // Compute susceptibility based on DCT-coeff histograms.

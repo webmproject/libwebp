@@ -18,7 +18,7 @@
 #include "../webp/types.h"
 #include "../webp/decode.h"
 
-#include "../enc/histogram.h"
+#include "../enc/histogram_enc.h"
 #include "../utils/utils.h"
 
 #ifdef __cplusplus
@@ -26,7 +26,7 @@ extern "C" {
 #endif
 
 #ifdef WEBP_EXPERIMENTAL_FEATURES
-#include "../enc/delta_palettization.h"
+#include "../enc/delta_palettization_enc.h"
 #endif  // WEBP_EXPERIMENTAL_FEATURES
 
 //------------------------------------------------------------------------------
