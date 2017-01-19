@@ -38,7 +38,7 @@ static size_t ReadPicture(const char* const filename, WebPPicture* const pic,
   pic->use_argb = 1;  // force ARGB
 
   reader = WebPGuessImageReader(data, data_size);
-  ok = (reader != NULL) && reader(data, data_size, pic, keep_alpha, NULL);
+  ok = reader(data, data_size, pic, keep_alpha, NULL);
 
  Error:
   if (!ok) {
