@@ -4,8 +4,7 @@
 // the bucket it's in (q > 80? > 50? > 20?) and not take it for face value.
 /*
  gcc -o webp_quality webp_quality.c -O3 -I../ -L. -L../imageio \
-    -lexample_util -limagedec -lwebpextras -lwebp -L/opt/local/lib \
-    -lpng -lz -ljpeg -ltiff -lm -lpthread
+    -limageio_util -lwebpextras -lwebp -lm -lpthread
 */
 
 #include <stdio.h>
