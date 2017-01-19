@@ -171,16 +171,16 @@ CFGSET = TRUE
 #
 
 DEC_OBJS = \
-    $(DIROBJ)\dec\alpha.obj \
-    $(DIROBJ)\dec\buffer.obj \
-    $(DIROBJ)\dec\frame.obj \
-    $(DIROBJ)\dec\idec.obj \
-    $(DIROBJ)\dec\io.obj \
-    $(DIROBJ)\dec\quant.obj \
-    $(DIROBJ)\dec\tree.obj \
-    $(DIROBJ)\dec\vp8.obj \
-    $(DIROBJ)\dec\vp8l.obj \
-    $(DIROBJ)\dec\webp.obj \
+    $(DIROBJ)\dec\alpha_dec.obj \
+    $(DIROBJ)\dec\buffer_dec.obj \
+    $(DIROBJ)\dec\frame_dec.obj \
+    $(DIROBJ)\dec\idec_dec.obj \
+    $(DIROBJ)\dec\io_dec.obj \
+    $(DIROBJ)\dec\quant_dec.obj \
+    $(DIROBJ)\dec\tree_dec.obj \
+    $(DIROBJ)\dec\vp8_dec.obj \
+    $(DIROBJ)\dec\vp8l_dec.obj \
+    $(DIROBJ)\dec\webp_dec.obj \
 
 DEMUX_OBJS = \
     $(DIROBJ)\demux\anim_decode.obj \
@@ -273,29 +273,29 @@ EX_UTIL_OBJS = \
     $(DIROBJ)\examples\example_util.obj \
 
 ENC_OBJS = \
-    $(DIROBJ)\enc\alpha.obj \
-    $(DIROBJ)\enc\analysis.obj \
-    $(DIROBJ)\enc\backward_references.obj \
-    $(DIROBJ)\enc\config.obj \
-    $(DIROBJ)\enc\cost.obj \
-    $(DIROBJ)\enc\delta_palettization.obj \
-    $(DIROBJ)\enc\filter.obj \
-    $(DIROBJ)\enc\frame.obj \
-    $(DIROBJ)\enc\histogram.obj \
-    $(DIROBJ)\enc\iterator.obj \
-    $(DIROBJ)\enc\near_lossless.obj \
-    $(DIROBJ)\enc\picture.obj \
-    $(DIROBJ)\enc\picture_csp.obj \
-    $(DIROBJ)\enc\picture_psnr.obj \
-    $(DIROBJ)\enc\picture_rescale.obj \
-    $(DIROBJ)\enc\picture_tools.obj \
-    $(DIROBJ)\enc\predictor.obj \
-    $(DIROBJ)\enc\quant.obj \
-    $(DIROBJ)\enc\syntax.obj \
-    $(DIROBJ)\enc\token.obj \
-    $(DIROBJ)\enc\tree.obj \
-    $(DIROBJ)\enc\vp8l.obj \
-    $(DIROBJ)\enc\webpenc.obj \
+    $(DIROBJ)\enc\alpha_enc.obj \
+    $(DIROBJ)\enc\analysis_enc.obj \
+    $(DIROBJ)\enc\backward_references_enc.obj \
+    $(DIROBJ)\enc\config_enc.obj \
+    $(DIROBJ)\enc\cost_enc.obj \
+    $(DIROBJ)\enc\delta_palettization_enc.obj \
+    $(DIROBJ)\enc\filter_enc.obj \
+    $(DIROBJ)\enc\frame_enc.obj \
+    $(DIROBJ)\enc\histogram_enc.obj \
+    $(DIROBJ)\enc\iterator_enc.obj \
+    $(DIROBJ)\enc\near_lossless_enc.obj \
+    $(DIROBJ)\enc\picture_enc.obj \
+    $(DIROBJ)\enc\picture_csp_enc.obj \
+    $(DIROBJ)\enc\picture_psnr_enc.obj \
+    $(DIROBJ)\enc\picture_rescale_enc.obj \
+    $(DIROBJ)\enc\picture_tools_enc.obj \
+    $(DIROBJ)\enc\predictor_enc.obj \
+    $(DIROBJ)\enc\quant_enc.obj \
+    $(DIROBJ)\enc\syntax_enc.obj \
+    $(DIROBJ)\enc\token_enc.obj \
+    $(DIROBJ)\enc\tree_enc.obj \
+    $(DIROBJ)\enc\vp8l_enc.obj \
+    $(DIROBJ)\enc\webp_enc.obj \
 
 EXTRAS_OBJS = \
     $(DIROBJ)\extras\extras.obj \
@@ -311,20 +311,20 @@ MUX_OBJS = \
     $(DIROBJ)\mux\muxread.obj \
 
 UTILS_DEC_OBJS = \
-    $(DIROBJ)\utils\bit_reader.obj \
-    $(DIROBJ)\utils\color_cache.obj \
-    $(DIROBJ)\utils\filters.obj \
-    $(DIROBJ)\utils\huffman.obj \
-    $(DIROBJ)\utils\quant_levels_dec.obj \
-    $(DIROBJ)\utils\rescaler.obj \
-    $(DIROBJ)\utils\random.obj \
-    $(DIROBJ)\utils\thread.obj \
+    $(DIROBJ)\utils\bit_reader_utils.obj \
+    $(DIROBJ)\utils\color_cache_utils.obj \
+    $(DIROBJ)\utils\filters_utils.obj \
+    $(DIROBJ)\utils\huffman_utils.obj \
+    $(DIROBJ)\utils\quant_levels_dec_utils.obj \
+    $(DIROBJ)\utils\rescaler_utils.obj \
+    $(DIROBJ)\utils\random_utils.obj \
+    $(DIROBJ)\utils\thread_utils.obj \
     $(DIROBJ)\utils\utils.obj \
 
 UTILS_ENC_OBJS = \
-    $(DIROBJ)\utils\bit_writer.obj \
-    $(DIROBJ)\utils\huffman_encode.obj \
-    $(DIROBJ)\utils\quant_levels.obj \
+    $(DIROBJ)\utils\bit_writer_utils.obj \
+    $(DIROBJ)\utils\huffman_encode_utils.obj \
+    $(DIROBJ)\utils\quant_levels_utils.obj \
 
 LIBWEBPDECODER_OBJS = $(DEC_OBJS) $(DSP_DEC_OBJS) $(UTILS_DEC_OBJS)
 LIBWEBP_OBJS = $(LIBWEBPDECODER_OBJS) $(ENC_OBJS) $(DSP_ENC_OBJS) \

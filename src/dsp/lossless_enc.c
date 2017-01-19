@@ -17,8 +17,8 @@
 
 #include <math.h>
 #include <stdlib.h>
-#include "../dec/vp8li.h"
-#include "../utils/endian_inl.h"
+#include "../dec/vp8li_dec.h"
+#include "../utils/endian_inl_utils.h"
 #include "./lossless.h"
 #include "./lossless_common.h"
 #include "./yuv.h"

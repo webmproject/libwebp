@@ -18,7 +18,7 @@
 #include <assert.h>
 
 #include "./neon.h"
-#include "../enc/vp8enci.h"
+#include "../enc/vp8i_enc.h"
 
 //------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)

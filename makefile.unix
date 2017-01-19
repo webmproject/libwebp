@@ -113,16 +113,16 @@ ANIM_UTIL_OBJS = \
     examples/anim_util.o \
 
 DEC_OBJS = \
-    src/dec/alpha.o \
-    src/dec/buffer.o \
-    src/dec/frame.o \
-    src/dec/idec.o \
-    src/dec/io.o \
-    src/dec/quant.o \
-    src/dec/tree.o \
-    src/dec/vp8.o \
-    src/dec/vp8l.o \
-    src/dec/webp.o \
+    src/dec/alpha_dec.o \
+    src/dec/buffer_dec.o \
+    src/dec/frame_dec.o \
+    src/dec/idec_dec.o \
+    src/dec/io_dec.o \
+    src/dec/quant_dec.o \
+    src/dec/tree_dec.o \
+    src/dec/vp8_dec.o \
+    src/dec/vp8l_dec.o \
+    src/dec/webp_dec.o \
 
 DEMUX_OBJS = \
     src/demux/anim_decode.o \
@@ -194,29 +194,29 @@ DSP_ENC_OBJS = \
     src/dsp/lossless_enc_sse41.o \
 
 ENC_OBJS = \
-    src/enc/alpha.o \
-    src/enc/analysis.o \
-    src/enc/backward_references.o \
-    src/enc/config.o \
-    src/enc/cost.o \
-    src/enc/delta_palettization.o \
-    src/enc/filter.o \
-    src/enc/frame.o \
-    src/enc/histogram.o \
-    src/enc/iterator.o \
-    src/enc/near_lossless.o \
-    src/enc/picture.o \
-    src/enc/picture_csp.o \
-    src/enc/picture_psnr.o \
-    src/enc/picture_rescale.o \
-    src/enc/picture_tools.o \
-    src/enc/predictor.o \
-    src/enc/quant.o \
-    src/enc/syntax.o \
-    src/enc/token.o \
-    src/enc/tree.o \
-    src/enc/vp8l.o \
-    src/enc/webpenc.o \
+    src/enc/alpha_enc.o \
+    src/enc/analysis_enc.o \
+    src/enc/backward_references_enc.o \
+    src/enc/config_enc.o \
+    src/enc/cost_enc.o \
+    src/enc/delta_palettization_enc.o \
+    src/enc/filter_enc.o \
+    src/enc/frame_enc.o \
+    src/enc/histogram_enc.o \
+    src/enc/iterator_enc.o \
+    src/enc/near_lossless_enc.o \
+    src/enc/picture_enc.o \
+    src/enc/picture_csp_enc.o \
+    src/enc/picture_psnr_enc.o \
+    src/enc/picture_rescale_enc.o \
+    src/enc/picture_tools_enc.o \
+    src/enc/predictor_enc.o \
+    src/enc/quant_enc.o \
+    src/enc/syntax_enc.o \
+    src/enc/token_enc.o \
+    src/enc/tree_enc.o \
+    src/enc/vp8l_enc.o \
+    src/enc/webp_enc.o \
 
 EX_FORMAT_DEC_OBJS = \
     imageio/image_dec.o \
@@ -245,20 +245,20 @@ MUX_OBJS = \
     src/mux/muxread.o \
 
 UTILS_DEC_OBJS = \
-    src/utils/bit_reader.o \
-    src/utils/color_cache.o \
-    src/utils/filters.o \
-    src/utils/huffman.o \
-    src/utils/quant_levels_dec.o \
-    src/utils/random.o \
-    src/utils/rescaler.o \
-    src/utils/thread.o \
+    src/utils/bit_reader_utils.o \
+    src/utils/color_cache_utils.o \
+    src/utils/filters_utils.o \
+    src/utils/huffman_utils.o \
+    src/utils/quant_levels_dec_utils.o \
+    src/utils/random_utils.o \
+    src/utils/rescaler_utils.o \
+    src/utils/thread_utils.o \
     src/utils/utils.o \
 
 UTILS_ENC_OBJS = \
-    src/utils/bit_writer.o \
-    src/utils/huffman_encode.o \
-    src/utils/quant_levels.o \
+    src/utils/bit_writer_utils.o \
+    src/utils/huffman_encode_utils.o \
+    src/utils/quant_levels_utils.o \
 
 EXTRA_OBJS = \
     extras/extras.o \
@@ -280,12 +280,12 @@ HDRS_INSTALLED = \
     src/webp/types.h \
 
 HDRS = \
-    src/dec/alphai.h \
-    src/dec/common.h \
-    src/dec/decode_vp8.h \
-    src/dec/vp8i.h \
-    src/dec/vp8li.h \
-    src/dec/webpi.h \
+    src/dec/alphai_dec.h \
+    src/dec/common_dec.h \
+    src/dec/vp8_dec.h \
+    src/dec/vp8i_dec.h \
+    src/dec/vp8li_dec.h \
+    src/dec/webpi_dec.h \
     src/dsp/common_sse2.h \
     src/dsp/dsp.h \
     src/dsp/lossless.h \
@@ -294,27 +294,27 @@ HDRS = \
     src/dsp/msa_macro.h \
     src/dsp/neon.h \
     src/dsp/yuv.h \
-    src/enc/backward_references.h \
-    src/enc/cost.h \
-    src/enc/delta_palettization.h \
-    src/enc/histogram.h \
-    src/enc/vp8enci.h \
-    src/enc/vp8li.h \
+    src/enc/backward_references_enc.h \
+    src/enc/cost_enc.h \
+    src/enc/delta_palettization_enc.h \
+    src/enc/histogram_enc.h \
+    src/enc/vp8i_enc.h \
+    src/enc/vp8li_enc.h \
     src/mux/animi.h \
     src/mux/muxi.h \
-    src/utils/bit_reader.h \
-    src/utils/bit_reader_inl.h \
-    src/utils/bit_writer.h \
-    src/utils/color_cache.h \
-    src/utils/endian_inl.h \
-    src/utils/filters.h \
-    src/utils/huffman.h \
-    src/utils/huffman_encode.h \
-    src/utils/quant_levels.h \
-    src/utils/quant_levels_dec.h \
-    src/utils/random.h \
-    src/utils/rescaler.h \
-    src/utils/thread.h \
+    src/utils/bit_reader_utils.h \
+    src/utils/bit_reader_inl_utils.h \
+    src/utils/bit_writer_utils.h \
+    src/utils/color_cache_utils.h \
+    src/utils/endian_inl_utils.h \
+    src/utils/filters_utils.h \
+    src/utils/huffman_utils.h \
+    src/utils/huffman_encode_utils.h \
+    src/utils/quant_levels_utils.h \
+    src/utils/quant_levels_dec_utils.h \
+    src/utils/random_utils.h \
+    src/utils/rescaler_utils.h \
+    src/utils/thread_utils.h \
     src/utils/utils.h \
     src/webp/format_constants.h \
     $(HDRS_INSTALLED) \
@@ -345,12 +345,15 @@ extras: $(EXTRA_LIB)
 $(EX_FORMAT_DEC_OBJS): %.o: %.h
 
 # special dependencies:
-#   tree.c/vp8.c/bit_reader.c <-> bit_reader_inl.h, endian_inl.h
-#   bit_writer.c <-> endian_inl.h
-src/dec/tree.o: src/utils/bit_reader_inl.h src/utils/endian_inl.h
-src/dec/vp8.o: src/utils/bit_reader_inl.h src/utils/endian_inl.h
-src/utils/bit_reader.o: src/utils/bit_reader_inl.h src/utils/endian_inl.h
-src/utils/bit_writer.o: src/utils/endian_inl.h
+#   tree_dec.c/vp8_dec.c/bit_reader_utils.c <->
+#     bit_reader_inl_utils.h, endian_inl_utils.h
+#   bit_writer_utils.c <-> endian_inl_utils.h
+src/dec/tree_dec.o: src/utils/bit_reader_inl_utils.h
+src/dec/tree_dec.o: src/utils/endian_inl_utils.h
+src/dec/vp8_dec.o: src/utils/bit_reader_inl_utils.h src/utils/endian_inl_utils.h
+src/utils/bit_reader_utils.o: src/utils/bit_reader_inl_utils.h
+src/utils/bit_reader_utils.o: src/utils/endian_inl_utils.h
+src/utils/bit_writer_utils.o: src/utils/endian_inl_utils.h
 
 %.o: %.c $(HDRS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@

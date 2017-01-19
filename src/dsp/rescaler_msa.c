@@ -17,7 +17,7 @@
 
 #include <assert.h>
 
-#include "../utils/rescaler.h"
+#include "../utils/rescaler_utils.h"
 #include "./msa_macro.h"
 
 #define ROUNDER (WEBP_RESCALER_ONE >> 1)
