@@ -416,10 +416,8 @@ extras/get_disto: $(EXTRA_LIB) src/libwebp.a
 extras/get_disto: EXTRA_LIBS += $(CWEBP_LIBS)
 
 extras/webp_quality: extras/webp_quality.o
-extras/webp_quality: imageio/libimagedec.a
 extras/webp_quality: imageio/libimageio_util.a
 extras/webp_quality: $(EXTRA_LIB) src/libwebp.a
-extras/get_disto: EXTRA_LIBS += $(CWEBP_LIBS)
 
 $(OUT_EXAMPLES) $(EXTRA_EXAMPLES) $(OTHER_EXAMPLES):
 	$(CC) -o $@ $^ $(LDFLAGS)
