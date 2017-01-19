@@ -22,16 +22,16 @@ else
 endif
 
 dec_srcs := \
-    src/dec/alpha.c \
-    src/dec/buffer.c \
-    src/dec/frame.c \
-    src/dec/idec.c \
-    src/dec/io.c \
-    src/dec/quant.c \
-    src/dec/tree.c \
-    src/dec/vp8.c \
-    src/dec/vp8l.c \
-    src/dec/webp.c \
+    src/dec/alpha_dec.c \
+    src/dec/buffer_dec.c \
+    src/dec/frame_dec.c \
+    src/dec/idec_dec.c \
+    src/dec/io_dec.c \
+    src/dec/quant_dec.c \
+    src/dec/tree_dec.c \
+    src/dec/vp8_dec.c \
+    src/dec/vp8l_dec.c \
+    src/dec/webp_dec.c \
 
 demux_srcs := \
     src/demux/anim_decode.c \
@@ -103,29 +103,29 @@ dsp_enc_srcs := \
     src/dsp/lossless_enc_sse41.c \
 
 enc_srcs := \
-    src/enc/alpha.c \
-    src/enc/analysis.c \
-    src/enc/backward_references.c \
-    src/enc/config.c \
-    src/enc/cost.c \
-    src/enc/delta_palettization.c \
-    src/enc/filter.c \
-    src/enc/frame.c \
-    src/enc/histogram.c \
-    src/enc/iterator.c \
-    src/enc/near_lossless.c \
-    src/enc/picture.c \
-    src/enc/picture_csp.c \
-    src/enc/picture_psnr.c \
-    src/enc/picture_rescale.c \
-    src/enc/picture_tools.c \
-    src/enc/predictor.c \
-    src/enc/quant.c \
-    src/enc/syntax.c \
-    src/enc/token.c \
-    src/enc/tree.c \
-    src/enc/vp8l.c \
-    src/enc/webpenc.c \
+    src/enc/alpha_enc.c \
+    src/enc/analysis_enc.c \
+    src/enc/backward_references_enc.c \
+    src/enc/config_enc.c \
+    src/enc/cost_enc.c \
+    src/enc/delta_palettization_enc.c \
+    src/enc/filter_enc.c \
+    src/enc/frame_enc.c \
+    src/enc/histogram_enc.c \
+    src/enc/iterator_enc.c \
+    src/enc/near_lossless_enc.c \
+    src/enc/picture_enc.c \
+    src/enc/picture_csp_enc.c \
+    src/enc/picture_psnr_enc.c \
+    src/enc/picture_rescale_enc.c \
+    src/enc/picture_tools_enc.c \
+    src/enc/predictor_enc.c \
+    src/enc/quant_enc.c \
+    src/enc/syntax_enc.c \
+    src/enc/token_enc.c \
+    src/enc/tree_enc.c \
+    src/enc/vp8l_enc.c \
+    src/enc/webp_enc.c \
 
 mux_srcs := \
     src/mux/anim_encode.c \
@@ -134,20 +134,20 @@ mux_srcs := \
     src/mux/muxread.c \
 
 utils_dec_srcs := \
-    src/utils/bit_reader.c \
-    src/utils/color_cache.c \
-    src/utils/filters.c \
-    src/utils/huffman.c \
-    src/utils/quant_levels_dec.c \
-    src/utils/random.c \
-    src/utils/rescaler.c \
-    src/utils/thread.c \
+    src/utils/bit_reader_utils.c \
+    src/utils/color_cache_utils.c \
+    src/utils/filters_utils.c \
+    src/utils/huffman_utils.c \
+    src/utils/quant_levels_dec_utils.c \
+    src/utils/random_utils.c \
+    src/utils/rescaler_utils.c \
+    src/utils/thread_utils.c \
     src/utils/utils.c \
 
 utils_enc_srcs := \
-    src/utils/bit_writer.c \
-    src/utils/huffman_encode.c \
-    src/utils/quant_levels.c \
+    src/utils/bit_writer_utils.c \
+    src/utils/huffman_encode_utils.c \
+    src/utils/quant_levels_utils.c \
 
 ################################################################################
 # libwebpdecoder
