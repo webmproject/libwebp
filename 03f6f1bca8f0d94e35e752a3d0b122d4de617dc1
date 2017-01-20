@@ -16,6 +16,24 @@
       "revId": "03f6f1bca8f0d94e35e752a3d0b122d4de617dc1",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c87306cf_dcc54190",
+        "filename": "src/webp/encode.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-01-20T09:03:39Z",
+      "side": 1,
+      "message": "done.\n\nwhich reminds me: shall i bump the ABI number up on this patch?",
+      "parentUuid": "68c77a2d_d16f6611",
+      "revId": "03f6f1bca8f0d94e35e752a3d0b122d4de617dc1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
