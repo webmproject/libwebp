@@ -22,6 +22,30 @@
       "revId": "43d3f01a2ffeefa5e5cc7fb2ac4497be2473c54d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e860cae6_6486ad3e",
+        "filename": "src/libwebpdecoder.rc",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-01-20T19:00:57Z",
+      "side": 1,
+      "message": "\u003e we still have these weird constructs here, but i guess it\u0027s a\n \u003e non-avoidable...\n\nyes these map to a data structure:\n\nhttps://msdn.microsoft.com/en-us/library/windows/desktop/ms646997(v\u003dvs.85).aspx",
+      "parentUuid": "c87306cf_9c7a6989",
+      "range": {
+        "startLine": 9,
+        "startChar": 19,
+        "endLine": 9,
+        "endChar": 20
+      },
+      "revId": "43d3f01a2ffeefa5e5cc7fb2ac4497be2473c54d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
