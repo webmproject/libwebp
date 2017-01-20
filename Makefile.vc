@@ -37,6 +37,8 @@ LNKDLL     = link.exe /DLL $(NOLOGO)
 LNKEXE     = link.exe $(NOLOGO)
 LNKLIB     = lib.exe $(NOLOGO)
 MT         = mt.exe $(NOLOGO)
+RCNODBG    = rc.exe $(NOLOGO) /l"0x0409"  # 0x409 = U.S. English
+RCDEBUG    = $(RCNODBG) /D_DEBUG
 
 !IF "$(ARCH)" == "ARM"
 CFLAGS = $(CFLAGS) /DWINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP /DWEBP_USE_THREAD
@@ -101,9 +103,11 @@ LIBWEBPMUX_BASENAME = $(LIBWEBPMUX_BASENAME)_debug
 LIBWEBPDEMUX_BASENAME = $(LIBWEBPDEMUX_BASENAME)_debug
 !ELSE IF "$(CFG)" == "release-dynamic"
 CC        = $(CCNODBG)
+RC        = $(RCNODBG)
 DLLBUILD  = TRUE
 !ELSE IF "$(CFG)" == "debug-dynamic"
 CC        = $(CCDEBUG)
+RC        = $(RCDEBUG)
 RTLIB     = $(RTLIBD)
 DLLBUILD  = TRUE
 LIBWEBPDECODER_BASENAME = $(LIBWEBPDECODER_BASENAME)_debug
@@ -398,8 +402,17 @@ $(LIBWEBP_OBJS) $(LIBWEBPMUX_OBJS) $(LIBWEBPDEMUX_OBJS): \
 {$(DIROBJ)}.c{$(DIROBJ)}.obj:
 	$(CC) $(CFLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$@  $<
 
-$(LIBWEBPMUX): $(LIBWEBP)
-$(LIBWEBPDEMUX): $(LIBWEBP)
+{src}.rc{$(DIROBJ)}.res:
+	$(RC) /fo$@ $<
+{src\demux}.rc{$(DIROBJ)\demux}.res:
+	$(RC) /fo$@ $<
+{src\mux}.rc{$(DIROBJ)\mux}.res:
+	$(RC) /fo$@ $<
+
+$(LIBWEBP): $(DIROBJ)\$(LIBWEBP_BASENAME).res
+$(LIBWEBPDECODER): $(DIROBJ)\$(LIBWEBPDECODER_BASENAME).res
+$(LIBWEBPMUX): $(LIBWEBP) $(DIROBJ)\mux\$(LIBWEBPMUX_BASENAME).res
+$(LIBWEBPDEMUX): $(LIBWEBP) $(DIROBJ)\demux\$(LIBWEBPDEMUX_BASENAME).res
 
 $(LIBWEBPDECODER) $(LIBWEBP) $(LIBWEBPMUX) $(LIBWEBPDEMUX):
 	$(LNKDLL) /out:$(DIRBIN)\$(@B:_dll=.dll) /implib:$@ $(LFLAGS) $**
