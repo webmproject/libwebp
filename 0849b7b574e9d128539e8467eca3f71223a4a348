@@ -22,6 +22,30 @@
       "revId": "0849b7b574e9d128539e8467eca3f71223a4a348",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4842b67f_e39ba65f",
+        "filename": "src/libwebp.rc",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-01-20T08:31:28Z",
+      "side": 1,
+      "message": "the non-strings above are split across 2 32-bit values, by default these match, but they can probably change to be more logical...\n\nhttps://msdn.microsoft.com/en-us/library/windows/desktop/ms646997(v\u003dvs.85).aspx",
+      "parentUuid": "a864120b_7b319bc2",
+      "range": {
+        "startLine": 32,
+        "startChar": 19,
+        "endLine": 32,
+        "endChar": 33
+      },
+      "revId": "0849b7b574e9d128539e8467eca3f71223a4a348",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
