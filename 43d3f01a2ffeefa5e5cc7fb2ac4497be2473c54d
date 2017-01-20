@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c87306cf_9c7a6989",
+        "filename": "src/libwebpdecoder.rc",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-01-20T08:55:22Z",
+      "side": 1,
+      "message": "we still have these weird constructs here, but i guess it\u0027s a non-avoidable...",
+      "range": {
+        "startLine": 9,
+        "startChar": 19,
+        "endLine": 9,
+        "endChar": 20
+      },
+      "revId": "43d3f01a2ffeefa5e5cc7fb2ac4497be2473c54d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
