@@ -153,7 +153,7 @@ static int RGBToV(int r, int g, int b, VP8Random* const rg) {
 }
 
 //------------------------------------------------------------------------------
-// Smart RGB->YUV conversion
+// Sharp RGB->YUV conversion
 
 static const int kNumIterations = 4;
 static const int kMinDimensionIterativeConversion = 4;
@@ -353,8 +353,8 @@ static void InterpolateTwoRows(const fixed_y_t* const best_y,
     out1[0] = Filter2(cur_uv[0], prev_uv[0], best_y[0]);
     out2[0] = Filter2(cur_uv[0], next_uv[0], best_y[w]);
 
-    WebPSmartYUVFilterRow(cur_uv, prev_uv, len, best_y + 0 + 1, out1 + 1);
-    WebPSmartYUVFilterRow(cur_uv, next_uv, len, best_y + w + 1, out2 + 1);
+    WebPSharpYUVFilterRow(cur_uv, prev_uv, len, best_y + 0 + 1, out1 + 1);
+    WebPSharpYUVFilterRow(cur_uv, next_uv, len, best_y + w + 1, out2 + 1);
 
     // special boundary case for i == w - 1 when w is even
     if (!(w & 1)) {
@@ -527,8 +527,8 @@ static int PreprocessARGB(const uint8_t* r_ptr,
       UpdateChroma(src1, src2, best_rgb_uv, uv_w);
 
       // update two rows of Y and one row of RGB
-      diff_y_sum += WebPSmartYUVUpdateY(target_y, best_rgb_y, best_y, 2 * w);
-      WebPSmartYUVUpdateRGB(target_uv, best_rgb_uv, best_uv, 3 * uv_w);
+      diff_y_sum += WebPSharpYUVUpdateY(target_y, best_rgb_y, best_y, 2 * w);
+      WebPSharpYUVUpdateRGB(target_uv, best_rgb_uv, best_uv, 3 * uv_w);
 
       best_y += 2 * w;
       best_uv += 3 * uv_w;
@@ -1011,8 +1011,12 @@ int WebPPictureARGBToYUVA(WebPPicture* picture, WebPEncCSP colorspace) {
   return PictureARGBToYUVA(picture, colorspace, 0.f, 0);
 }
 
-int WebPPictureSmartARGBToYUVA(WebPPicture* picture) {
+int WebPPictureSharpARGBToYUVA(WebPPicture* picture) {
   return PictureARGBToYUVA(picture, WEBP_YUV420, 0.f, 1);
+}
+// for backward compatibility
+int WebPPictureSmartARGBToYUVA(WebPPicture* picture) {
+  return WebPPictureSharpARGBToYUVA(picture);
 }
 
 //------------------------------------------------------------------------------

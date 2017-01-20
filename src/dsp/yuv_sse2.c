@@ -743,7 +743,7 @@ static uint16_t clip_y(int v) {
   return (v < 0) ? 0 : (v > MAX_Y) ? MAX_Y : (uint16_t)v;
 }
 
-static uint64_t SmartYUVUpdateY_SSE2(const uint16_t* ref, const uint16_t* src,
+static uint64_t SharpYUVUpdateY_SSE2(const uint16_t* ref, const uint16_t* src,
                                      uint16_t* dst, int len) {
   uint64_t diff = 0;
   uint32_t tmp[4];
@@ -777,7 +777,7 @@ static uint64_t SmartYUVUpdateY_SSE2(const uint16_t* ref, const uint16_t* src,
   return diff;
 }
 
-static void SmartYUVUpdateRGB_SSE2(const int16_t* ref, const int16_t* src,
+static void SharpYUVUpdateRGB_SSE2(const int16_t* ref, const int16_t* src,
                                    int16_t* dst, int len) {
   int i = 0;
   for (i = 0; i + 8 <= len; i += 8) {
@@ -794,7 +794,7 @@ static void SmartYUVUpdateRGB_SSE2(const int16_t* ref, const int16_t* src,
   }
 }
 
-static void SmartYUVFilterRow_SSE2(const int16_t* A, const int16_t* B, int len,
+static void SharpYUVFilterRow_SSE2(const int16_t* A, const int16_t* B, int len,
                                    const uint16_t* best_y, uint16_t* out) {
   int i;
   const __m128i kCst8 = _mm_set1_epi16(8);
@@ -846,18 +846,18 @@ static void SmartYUVFilterRow_SSE2(const int16_t* A, const int16_t* B, int len,
 
 //------------------------------------------------------------------------------
 
-extern void WebPInitSmartYUVSSE2(void);
+extern void WebPInitSharpYUVSSE2(void);
 
-WEBP_TSAN_IGNORE_FUNCTION void WebPInitSmartYUVSSE2(void) {
-  WebPSmartYUVUpdateY = SmartYUVUpdateY_SSE2;
-  WebPSmartYUVUpdateRGB = SmartYUVUpdateRGB_SSE2;
-  WebPSmartYUVFilterRow = SmartYUVFilterRow_SSE2;
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitSharpYUVSSE2(void) {
+  WebPSharpYUVUpdateY = SharpYUVUpdateY_SSE2;
+  WebPSharpYUVUpdateRGB = SharpYUVUpdateRGB_SSE2;
+  WebPSharpYUVFilterRow = SharpYUVFilterRow_SSE2;
 }
 
 #else  // !WEBP_USE_SSE2
 
 WEBP_DSP_INIT_STUB(WebPInitSamplersSSE2)
 WEBP_DSP_INIT_STUB(WebPInitConvertARGBToYUVSSE2)
-WEBP_DSP_INIT_STUB(WebPInitSmartYUVSSE2)
+WEBP_DSP_INIT_STUB(WebPInitSharpYUVSSE2)
 
 #endif  // WEBP_USE_SSE2

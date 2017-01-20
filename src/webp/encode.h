@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#define WEBP_ENCODER_ABI_VERSION 0x020c    // MAJOR(8b) + MINOR(8b)
+#define WEBP_ENCODER_ABI_VERSION 0x020d    // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -484,11 +484,13 @@ WEBP_EXTERN(int) WebPPictureARGBToYUVA(WebPPicture* picture,
 WEBP_EXTERN(int) WebPPictureARGBToYUVADithered(
     WebPPicture* picture, WebPEncCSP colorspace, float dithering);
 
-// Performs 'smart' RGBA->YUVA420 downsampling and colorspace conversion.
+// Performs 'sharp' RGBA->YUVA420 downsampling and colorspace conversion.
 // Downsampling is handled with extra care in case of color clipping. This
 // method is roughly 2x slower than WebPPictureARGBToYUVA() but produces better
-// YUV representation.
+// and sharper YUV representation.
 // Returns false in case of error.
+WEBP_EXTERN(int) WebPPictureSharpARGBToYUVA(WebPPicture* picture);
+// kept for backward compatibility:
 WEBP_EXTERN(int) WebPPictureSmartARGBToYUVA(WebPPicture* picture);
 
 // Converts picture->yuv to picture->argb and sets picture->use_argb to true.

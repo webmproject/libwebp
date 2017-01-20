@@ -251,7 +251,7 @@ static uint16_t clip_y(int v) {
   return (v < 0) ? 0 : (v > MAX_Y) ? MAX_Y : (uint16_t)v;
 }
 
-static uint64_t SmartYUVUpdateY_C(const uint16_t* ref, const uint16_t* src,
+static uint64_t SharpYUVUpdateY_C(const uint16_t* ref, const uint16_t* src,
                                   uint16_t* dst, int len) {
   uint64_t diff = 0;
   int i;
@@ -264,7 +264,7 @@ static uint64_t SmartYUVUpdateY_C(const uint16_t* ref, const uint16_t* src,
   return diff;
 }
 
-static void SmartYUVUpdateRGB_C(const int16_t* ref, const int16_t* src,
+static void SharpYUVUpdateRGB_C(const int16_t* ref, const int16_t* src,
                                 int16_t* dst, int len) {
   int i;
   for (i = 0; i < len; ++i) {
@@ -273,7 +273,7 @@ static void SmartYUVUpdateRGB_C(const int16_t* ref, const int16_t* src,
   }
 }
 
-static void SmartYUVFilterRow_C(const int16_t* A, const int16_t* B, int len,
+static void SharpYUVFilterRow_C(const int16_t* A, const int16_t* B, int len,
                                 const uint16_t* best_y, uint16_t* out) {
   int i;
   for (i = 0; i < len; ++i, ++A, ++B) {
@@ -297,18 +297,18 @@ void (*WebPConvertARGBToY)(const uint32_t* argb, uint8_t* y, int width);
 void (*WebPConvertARGBToUV)(const uint32_t* argb, uint8_t* u, uint8_t* v,
                             int src_width, int do_store);
 
-uint64_t (*WebPSmartYUVUpdateY)(const uint16_t* ref, const uint16_t* src,
+uint64_t (*WebPSharpYUVUpdateY)(const uint16_t* ref, const uint16_t* src,
                                 uint16_t* dst, int len);
-void (*WebPSmartYUVUpdateRGB)(const int16_t* ref, const int16_t* src,
+void (*WebPSharpYUVUpdateRGB)(const int16_t* ref, const int16_t* src,
                               int16_t* dst, int len);
-void (*WebPSmartYUVFilterRow)(const int16_t* A, const int16_t* B, int len,
+void (*WebPSharpYUVFilterRow)(const int16_t* A, const int16_t* B, int len,
                               const uint16_t* best_y, uint16_t* out);
 
 static volatile VP8CPUInfo rgba_to_yuv_last_cpuinfo_used =
     (VP8CPUInfo)&rgba_to_yuv_last_cpuinfo_used;
 
 extern void WebPInitConvertARGBToYUVSSE2(void);
-extern void WebPInitSmartYUVSSE2(void);
+extern void WebPInitSharpYUVSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUV(void) {
   if (rgba_to_yuv_last_cpuinfo_used == VP8GetCPUInfo) return;
@@ -321,15 +321,15 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUV(void) {
 
   WebPConvertRGBA32ToUV = WebPConvertRGBA32ToUV_C;
 
-  WebPSmartYUVUpdateY = SmartYUVUpdateY_C;
-  WebPSmartYUVUpdateRGB = SmartYUVUpdateRGB_C;
-  WebPSmartYUVFilterRow = SmartYUVFilterRow_C;
+  WebPSharpYUVUpdateY = SharpYUVUpdateY_C;
+  WebPSharpYUVUpdateRGB = SharpYUVUpdateRGB_C;
+  WebPSharpYUVFilterRow = SharpYUVFilterRow_C;
 
   if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_SSE2)
     if (VP8GetCPUInfo(kSSE2)) {
       WebPInitConvertARGBToYUVSSE2();
-      WebPInitSmartYUVSSE2();
+      WebPInitSharpYUVSSE2();
     }
 #endif  // WEBP_USE_SSE2
   }
