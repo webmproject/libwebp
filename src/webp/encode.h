@@ -141,12 +141,8 @@ struct WebPConfig {
                           // RGB information for better compression. The default
                           // value is 0.
 
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  int delta_palettization;
+  int use_delta_palette;  // reserved for future lossless feature
   uint32_t pad[2];        // padding for later use
-#else
-  uint32_t pad[3];        // padding for later use
-#endif  // WEBP_EXPERIMENTAL_FEATURES
 };
 
 // Enumerate some predefined settings for WebPConfig, depending on the type
