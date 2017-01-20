@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a864120b_7b319bc2",
+        "filename": "src/libwebp.rc",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-01-20T08:20:06Z",
+      "side": 1,
+      "message": "why not 0.5.2? Is it related to the main lib versioning number?",
+      "range": {
+        "startLine": 32,
+        "startChar": 19,
+        "endLine": 32,
+        "endChar": 33
+      },
+      "revId": "0849b7b574e9d128539e8467eca3f71223a4a348",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
