@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "September 02, 2016"
+.TH CWEBP 1 "January 20, 2017"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -165,6 +165,10 @@ Use strong filtering (if filtering is being used thanks to the
 .B \-nostrong
 Disable strong filtering (if filtering is being used thanks to the
 \fB\-f\fP option) and use simple filtering instead.
+.TP
+.B \-sharp_yuv
+Use more accurate and sharper RGB->YUV conversion if needed. Note that this
+process is slower than the default 'fast' RGB->YUV conversion.
 .TP
 .BI \-sns " int
 Specify the amplitude of the spatial noise shaping. Spatial noise shaping

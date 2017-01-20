@@ -54,6 +54,7 @@ int WebPConfigInitInternal(WebPConfig* config,
   config->low_memory = 0;
   config->near_lossless = 100;
   config->use_delta_palette = 0;
+  config->use_sharp_yuv = 0;
 
   // TODO(skal): tune.
   switch (preset) {
@@ -122,6 +123,8 @@ int WebPValidateConfig(const WebPConfig* config) {
   if (config->use_delta_palette < 0 || config->use_delta_palette > 1) {
     return 0;
   }
+  if (config->use_sharp_yuv < 0 || config->use_sharp_yuv > 1) return 0;
+
   return 1;
 }
 

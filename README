@@ -241,6 +241,7 @@ Options:
   -sharpness <int> ....... filter sharpness (0:most .. 7:least sharp), default=0
   -strong ................ use strong filter instead of simple (default)
   -nostrong .............. use simple filter instead of strong
+  -sharp_yuv ............. use sharper (and slower) RGB->YUV conversion
   -partition_limit <int> . limit quality to fit the 512k limit on
                            the first partition (0=no degradation ... 100=full)
   -pass <int> ............ analysis pass number (1..10)

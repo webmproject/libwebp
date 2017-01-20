@@ -549,6 +549,8 @@ static void HelpLong(void) {
   printf("  -strong ................ use strong filter instead "
                                      "of simple (default)\n");
   printf("  -nostrong .............. use simple filter instead of strong\n");
+  printf("  -sharp_yuv ............. use sharper (and slower) RGB->YUV "
+                                     "conversion\n");
   printf("  -partition_limit <int> . limit quality to fit the 512k limit on\n");
   printf("                           "
          "the first partition (0=no degradation ... 100=full)\n");
@@ -787,6 +789,8 @@ int main(int argc, const char *argv[]) {
       config.filter_type = 0;
     } else if (!strcmp(argv[c], "-sharpness") && c < argc - 1) {
       config.filter_sharpness = ExUtilGetInt(argv[++c], 0, &parse_error);
+    } else if (!strcmp(argv[c], "-sharp_yuv")) {
+      config.use_sharp_yuv = 1;
     } else if (!strcmp(argv[c], "-pass") && c < argc - 1) {
       config.pass = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-pre") && c < argc - 1) {
@@ -945,7 +949,8 @@ int main(int argc, const char *argv[]) {
   // Read the input. We need to decide if we prefer ARGB or YUVA
   // samples, depending on the expected compression mode (this saves
   // some conversion steps).
-  picture.use_argb = (config.lossless || config.preprocessing > 0 ||
+  picture.use_argb = (config.lossless || config.use_sharp_yuv ||
+                      config.preprocessing > 0 ||
                       crop || (resize_w | resize_h) > 0);
   if (verbose) {
     StopwatchReset(&stop_watch);
