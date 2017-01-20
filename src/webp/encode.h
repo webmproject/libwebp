@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#define WEBP_ENCODER_ABI_VERSION 0x020b    // MAJOR(8b) + MINOR(8b)
+#define WEBP_ENCODER_ABI_VERSION 0x020c    // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -141,12 +141,8 @@ struct WebPConfig {
                           // RGB information for better compression. The default
                           // value is 0.
 
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  int delta_palettization;
-  uint32_t pad[2];        // padding for later use
-#else
+  int use_delta_palette;  // reserved for future lossless feature
   uint32_t pad[3];        // padding for later use
-#endif  // WEBP_EXPERIMENTAL_FEATURES
 };
 
 // Enumerate some predefined settings for WebPConfig, depending on the type

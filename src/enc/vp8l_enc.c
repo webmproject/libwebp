@@ -1454,7 +1454,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   int use_near_lossless = 0;
   int hdr_size = 0;
   int data_size = 0;
-  int use_delta_palettization = 0;
+  int use_delta_palette = 0;
 
   if (enc == NULL) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
@@ -1481,7 +1481,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   }
 
 #ifdef WEBP_EXPERIMENTAL_FEATURES
-  if (config->delta_palettization) {
+  if (config->use_delta_palette) {
     enc->use_predict_ = 1;
     enc->use_cross_color_ = 0;
     enc->use_subtract_green_ = 0;
@@ -1495,7 +1495,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
       if (err != VP8_ENC_OK) goto Error;
       err = EncodeDeltaPalettePredictorImage(bw, enc, quality, low_effort);
       if (err != VP8_ENC_OK) goto Error;
-      use_delta_palettization = 1;
+      use_delta_palette = 1;
     }
   }
 #endif  // WEBP_EXPERIMENTAL_FEATURES
@@ -1504,14 +1504,14 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   if (enc->use_palette_) {
     err = EncodePalette(bw, low_effort, enc);
     if (err != VP8_ENC_OK) goto Error;
-    err = MapImageFromPalette(enc, use_delta_palettization);
+    err = MapImageFromPalette(enc, use_delta_palette);
     if (err != VP8_ENC_OK) goto Error;
     // If using a color cache, do not have it bigger than the number of colors.
     if (use_cache && enc->palette_size_ < (1 << MAX_COLOR_CACHE_BITS)) {
       enc->cache_bits_ = BitsLog2Floor(enc->palette_size_) + 1;
     }
   }
-  if (!use_delta_palettization) {
+  if (!use_delta_palette) {
     // In case image is not packed.
     if (enc->argb_ == NULL) {
       err = MakeInputImageCopy(enc);
