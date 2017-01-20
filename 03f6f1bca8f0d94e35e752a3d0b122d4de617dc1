@@ -52,6 +52,24 @@
       "revId": "03f6f1bca8f0d94e35e752a3d0b122d4de617dc1",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c87306cf_dcf301f0",
+        "filename": "src/webp/encode.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-01-20T09:25:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4842b67f_468f0813",
+      "revId": "03f6f1bca8f0d94e35e752a3d0b122d4de617dc1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
