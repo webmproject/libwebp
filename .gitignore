@@ -22,6 +22,7 @@ Makefile.in
 examples/anim_diff
 examples/[cdv]webp
 examples/gif2webp
+examples/img2webp
 examples/webpmux
 src/webp/config.h*
 src/webp/stamp-h1
