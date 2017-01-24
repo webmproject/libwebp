@@ -4,7 +4,6 @@
   * webpmux gained a -duration option allowing for frame timing modification
   * new img2webp utility allowing a sequence of images to be converted to
     animated webp
-  * WebPDecoder framework for IOS, WebP framework now contains the encoder
   * API changes:
     - libwebp:
       WebPPictureSharpARGBToYUVA
