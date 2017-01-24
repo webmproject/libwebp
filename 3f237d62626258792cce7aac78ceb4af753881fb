@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0f8c6f60_d6dba514",
+        "filename": "extras/get_disto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-01-24T22:34:21Z",
+      "side": 1,
+      "message": "this could be moved after the WIC attempt (line 46), like in the other file",
+      "range": {
+        "startLine": 35,
+        "startChar": 11,
+        "endLine": 35,
+        "endChar": 28
+      },
+      "revId": "3f237d62626258792cce7aac78ceb4af753881fb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
