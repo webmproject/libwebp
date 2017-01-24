@@ -32,10 +32,18 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
   const uint8_t* data = NULL;
   size_t data_size = 0;
   WebPImageReader reader = NULL;
-  int ok = ImgIoUtilReadFile(filename, &data, &data_size);
-  if (!ok) goto Error;
+  int ok;
 
   pic->use_argb = 1;  // force ARGB
+
+#ifdef HAVE_WINCODEC_H
+  // Try to decode the file using WIC falling back to the other readers for
+  // e.g., WebP.
+  ok = ReadPictureWithWIC(filename, pic, keep_alpha, NULL);
+  if (ok) return 1;
+#endif
+  ok = ImgIoUtilReadFile(filename, &data, &data_size);
+  if (!ok) goto Error;
 
   reader = WebPGuessImageReader(data, data_size);
   ok = reader(data, data_size, pic, keep_alpha, NULL);
