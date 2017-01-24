@@ -69,6 +69,12 @@ static int ReadImage(const char filename[], WebPPicture* const pic) {
   size_t data_size = 0;
   WebPImageReader reader;
   int ok;
+#ifdef HAVE_WINCODEC_H
+  // Try to decode the file using WIC falling back to the other readers for
+  // e.g., WebP.
+  ok = ReadPictureWithWIC(filename, pic, 1, NULL);
+  if (ok) return 1;
+#endif
   if (!ImgIoUtilReadFile(filename, &data, &data_size)) return 0;
   reader = WebPGuessImageReader(data, data_size);
   ok = reader(data, data_size, pic, 1, NULL);

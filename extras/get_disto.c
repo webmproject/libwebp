@@ -37,6 +37,12 @@ static size_t ReadPicture(const char* const filename, WebPPicture* const pic,
 
   pic->use_argb = 1;  // force ARGB
 
+#ifdef HAVE_WINCODEC_H
+  // Try to decode the file using WIC falling back to the other readers for
+  // e.g., WebP.
+  ok = ReadPictureWithWIC(filename, pic, keep_alpha, NULL);
+  if (ok) goto Error;  // cleanup on success
+#endif
   reader = WebPGuessImageReader(data, data_size);
   ok = reader(data, data_size, pic, keep_alpha, NULL);
 
