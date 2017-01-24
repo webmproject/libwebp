@@ -22,6 +22,29 @@
       "revId": "3f237d62626258792cce7aac78ceb4af753881fb",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b051ebeb_b81a9be7",
+        "filename": "extras/get_disto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-01-24T22:45:08Z",
+      "side": 1,
+      "message": "\u003e this could be moved after the WIC attempt (line 46), like in the\n \u003e other file\n\nI started that way, but we use the size return here",
+      "range": {
+        "startLine": 35,
+        "startChar": 11,
+        "endLine": 35,
+        "endChar": 28
+      },
+      "revId": "3f237d62626258792cce7aac78ceb4af753881fb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
