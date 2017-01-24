@@ -27,8 +27,8 @@
 #include "../imageio/image_dec.h"
 #include "../imageio/imageio_util.h"
 
-static size_t ReadPicture(const char* const filename, WebPPicture* const pic,
-                          int keep_alpha) {
+static int ReadPicture(const char* const filename, WebPPicture* const pic,
+                       int keep_alpha) {
   const uint8_t* data = NULL;
   size_t data_size = 0;
   WebPImageReader reader = NULL;
@@ -45,7 +45,7 @@ static size_t ReadPicture(const char* const filename, WebPPicture* const pic,
     fprintf(stderr, "Error! Could not process file %s\n", filename);
   }
   free((void*)data);
-  return ok ? data_size : 0;
+  return ok;
 }
 
 static void RescalePlane(uint8_t* plane, int width, int height,
@@ -222,7 +222,6 @@ int main(int argc, const char *argv[]) {
   WebPPicture pic1, pic2;
   int ret = 1;
   float disto[5];
-  size_t size1 = 0, size2 = 0;
   int type = 0;
   int c;
   int help = 0;
@@ -271,10 +270,10 @@ int main(int argc, const char *argv[]) {
     Help();
     goto End;
   }
-  if ((size1 = ReadPicture(name1, &pic1, 1)) == 0) {
+  if (!ReadPicture(name1, &pic1, 1)) {
     goto End;
   }
-  if ((size2 = ReadPicture(name2, &pic2, 1)) == 0) {
+  if (!ReadPicture(name2, &pic2, 1)) {
     goto End;
   }
   if (!keep_alpha) {
@@ -286,9 +285,8 @@ int main(int argc, const char *argv[]) {
     fprintf(stderr, "Error while computing the distortion.\n");
     goto End;
   }
-  printf("%u %.2f    %.2f %.2f %.2f %.2f\n",
-         (unsigned int)size1, disto[4],
-         disto[0], disto[1], disto[2], disto[3]);
+  printf("%.2f    %.2f %.2f %.2f %.2f\n",
+         disto[4], disto[0], disto[1], disto[2], disto[3]);
 
   if (output != NULL) {
     uint8_t* data = NULL;
