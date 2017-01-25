@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e51ca66_635646e0",
+        "filename": "extras/get_disto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-01-25T06:25:40Z",
+      "side": 1,
+      "message": "ah, that\u0027s a bit unfortunate: printing the size here is useful for RD-curve.\n\nI\u0027ll add it back later, separately",
+      "revId": "92504d214c85454824bd14bc4f5c7c57a361d880",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
