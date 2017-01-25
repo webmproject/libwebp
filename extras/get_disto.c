@@ -27,12 +27,13 @@
 #include "../imageio/image_dec.h"
 #include "../imageio/imageio_util.h"
 
-static int ReadPicture(const char* const filename, WebPPicture* const pic,
-                       int keep_alpha) {
+static size_t ReadPicture(const char* const filename, WebPPicture* const pic,
+                          int keep_alpha) {
   const uint8_t* data = NULL;
   size_t data_size = 0;
   WebPImageReader reader = NULL;
-  int ok;
+  int ok = ImgIoUtilReadFile(filename, &data, &data_size);
+  if (!ok) goto End;
 
   pic->use_argb = 1;  // force ARGB
 
@@ -40,20 +41,17 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
   // Try to decode the file using WIC falling back to the other readers for
   // e.g., WebP.
   ok = ReadPictureWithWIC(filename, pic, keep_alpha, NULL);
-  if (ok) return 1;
+  if (ok) goto End;
 #endif
-  ok = ImgIoUtilReadFile(filename, &data, &data_size);
-  if (!ok) goto Error;
-
   reader = WebPGuessImageReader(data, data_size);
   ok = reader(data, data_size, pic, keep_alpha, NULL);
 
- Error:
+ End:
   if (!ok) {
     fprintf(stderr, "Error! Could not process file %s\n", filename);
   }
   free((void*)data);
-  return ok;
+  return ok ? data_size : 0;
 }
 
 static void RescalePlane(uint8_t* plane, int width, int height,
@@ -228,6 +226,7 @@ static void Help(void) {
 
 int main(int argc, const char *argv[]) {
   WebPPicture pic1, pic2;
+  size_t size1 = 0, size2 = 0;
   int ret = 1;
   float disto[5];
   int type = 0;
@@ -278,12 +277,10 @@ int main(int argc, const char *argv[]) {
     Help();
     goto End;
   }
-  if (!ReadPicture(name1, &pic1, 1)) {
-    goto End;
-  }
-  if (!ReadPicture(name2, &pic2, 1)) {
-    goto End;
-  }
+  size1 = ReadPicture(name1, &pic1, 1);
+  size2 = ReadPicture(name1, &pic2, 1);
+  if (size1 == 0 || size2 == 0) goto End;
+
   if (!keep_alpha) {
     WebPBlendAlpha(&pic1, 0x00000000);
     WebPBlendAlpha(&pic2, 0x00000000);
@@ -293,7 +290,8 @@ int main(int argc, const char *argv[]) {
     fprintf(stderr, "Error while computing the distortion.\n");
     goto End;
   }
-  printf("%.2f    %.2f %.2f %.2f %.2f\n",
+  printf("%u %.2f    %.2f %.2f %.2f %.2f\n",
+         (unsigned int)size1,
          disto[4], disto[0], disto[1], disto[2], disto[3]);
 
   if (output != NULL) {
