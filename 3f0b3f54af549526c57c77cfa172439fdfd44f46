@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57fca6a1_1db02257",
+        "filename": "extras/get_disto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-01-25T06:57:00Z",
+      "side": 1,
+      "message": "you\u0027ll leak now, you\u0027ll want to restore my earlier patch set",
+      "revId": "3f0b3f54af549526c57c77cfa172439fdfd44f46",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
