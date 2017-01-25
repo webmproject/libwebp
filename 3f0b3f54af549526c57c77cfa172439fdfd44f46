@@ -16,6 +16,23 @@
       "revId": "3f0b3f54af549526c57c77cfa172439fdfd44f46",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0558a18e_be8b5115",
+        "filename": "extras/get_disto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-01-25T07:07:19Z",
+      "side": 1,
+      "message": "good catch, should be ok now. I relabeled \u0027Error\u0027 into \u0027End\u0027 for clarity.",
+      "revId": "3f0b3f54af549526c57c77cfa172439fdfd44f46",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
