@@ -85,9 +85,14 @@ static int ReadImage(const char filename[], WebPPicture* const pic) {
 static int SetLoopCount(int loop_count, WebPData* const webp_data) {
   int ok = 1;
   WebPMuxError err;
+  uint32_t features;
   WebPMuxAnimParams new_params;
   WebPMux* const mux = WebPMuxCreate(webp_data, 1);
   if (mux == NULL) return 0;
+
+  err = WebPMuxGetFeatures(mux, &features);
+  ok = (err == WEBP_MUX_OK);
+  if (!ok || !(features & ANIMATION_FLAG)) goto End;
 
   err = WebPMuxGetAnimationParams(mux, &new_params);
   ok = (err == WEBP_MUX_OK);
@@ -101,6 +106,8 @@ static int SetLoopCount(int loop_count, WebPData* const webp_data) {
     err = WebPMuxAssemble(mux, webp_data);
     ok = (err == WEBP_MUX_OK);
   }
+
+ End:
   WebPMuxDelete(mux);
   if (!ok) {
     fprintf(stderr, "Error during loop-count setting\n");
