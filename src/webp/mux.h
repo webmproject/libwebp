@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-#define WEBP_MUX_ABI_VERSION 0x0107        // MAJOR(8b) + MINOR(8b)
+#define WEBP_MUX_ABI_VERSION 0x0108        // MAJOR(8b) + MINOR(8b)
 
 //------------------------------------------------------------------------------
 // Mux API
@@ -430,9 +430,10 @@ struct WebPAnimEncoderOptions {
                         // frames in the output. The library may insert some key
                         // frames as needed to satisfy this criteria.
                         // Note that these conditions should hold: kmax > kmin
-                        // and kmin >= kmax / 2 + 1. Also, if kmin == 0, then
-                        // key-frame insertion is disabled; and if kmax == 0,
-                        // then all frames will be key-frames.
+                        // and kmin >= kmax / 2 + 1. Also, if kmax <= 0, then
+                        // key-frame insertion is disabled; and if kmax == 1,
+                        // then all frames will be key-frames (kmin value does
+                        // not matter for these special cases).
   int allow_mixed;      // If true, use mixed compression mode; may choose
                         // either lossy and lossless for each frame.
   int verbose;          // If true, print info and warning messages to stderr.
