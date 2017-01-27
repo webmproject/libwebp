@@ -1,4 +1,4 @@
-- 1/23/2017: version 0.6.0
+- 1/26/2017: version 0.6.0
   * lossless performance and compression improvements
   * miscellaneous performance improvements (SSE2, NEON, MSA)
   * webpmux gained a -duration option allowing for frame timing modification
@@ -8,6 +8,10 @@
     - libwebp:
       WebPPictureSharpARGBToYUVA
       WebPPlaneDistortion
+    - libwebpmux / gif2webp:
+      WebPAnimEncoderOptions: kmax <= 0 now disables keyframes, kmax == 1
+                              forces all keyframes. See mux.h and the gif2webp
+                              manpage for details.
 
 - 12/13/2016: version 0.5.2
   This is a binary compatible release.
