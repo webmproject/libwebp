@@ -1,3 +1,10 @@
+3c6d1224 update NEWS
+ee4a4141 update AUTHORS
+32ed856f Fix "all|no frames are keyframes" settings.
+f4dc56fd disable GradientUnfilter_NEON
+0d8e0588 img2webp: treat -loop as a no-op w/single images
+b0450139 ReadImage(): restore size reporting
+0ad3b4ef update ChangeLog (tag: v0.6.0-rc2)
 6451709e img2webp,get_disto: fix image decode w/WIC builds
 92504d21 get_disto: make ReadPicture() return a bool
 c3e4b3a9 update NEWS
