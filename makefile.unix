@@ -222,6 +222,7 @@ EX_FORMAT_DEC_OBJS = \
     imageio/image_dec.o \
     imageio/jpegdec.o \
     imageio/metadata.o \
+    imageio/pnmdec.o \
     imageio/pngdec.o \
     imageio/tiffdec.o \
     imageio/webpdec.o \

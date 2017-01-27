@@ -24,6 +24,7 @@ LOCAL_SRC_FILES := \
     image_dec.c \
     jpegdec.c \
     metadata.c \
+    pnmdec.c \
     pngdec.c \
     tiffdec.c \
     webpdec.c \
