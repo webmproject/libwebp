@@ -1,3 +1,5 @@
+20a7fea0 extras/Makefile.am: fix libwebpextras.la reference
+415f3ffe update ChangeLog (tag: v0.6.0-rc3)
 3c6d1224 update NEWS
 ee4a4141 update AUTHORS
 32ed856f Fix "all|no frames are keyframes" settings.
