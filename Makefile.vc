@@ -263,6 +263,7 @@ IMAGEIO_DEC_OBJS = \
     $(DIROBJ)\imageio\jpegdec.obj \
     $(DIROBJ)\imageio\metadata.obj \
     $(DIROBJ)\imageio\pngdec.obj \
+    $(DIROBJ)\imageio\pnmdec.obj \
     $(DIROBJ)\imageio\tiffdec.obj \
     $(DIROBJ)\imageio\webpdec.obj \
     $(DIROBJ)\imageio\wicdec.obj \
