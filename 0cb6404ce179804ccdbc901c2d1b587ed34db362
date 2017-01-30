@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "488042f0_d05f452e",
+        "filename": "imageio/pnmdec.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-01-30T19:56:59Z",
+      "side": 1,
+      "message": "typically with internal functions we simply assert; this is only called from below",
+      "revId": "0cb6404ce179804ccdbc901c2d1b587ed34db362",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "888c52a4_c3ea1993",
+        "filename": "imageio/pnmdec.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-01-30T19:56:59Z",
+      "side": 1,
+      "message": "elsewhere we associate the \u0027*\u0027 with the variable in , declarations",
+      "revId": "0cb6404ce179804ccdbc901c2d1b587ed34db362",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
