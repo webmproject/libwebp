@@ -11,6 +11,7 @@ libimagedec_la_SOURCES  = image_dec.c image_dec.h
 libimagedec_la_SOURCES += jpegdec.c jpegdec.h
 libimagedec_la_SOURCES += metadata.c metadata.h
 libimagedec_la_SOURCES += pngdec.c pngdec.h
+libimagedec_la_SOURCES += pnmdec.c pnmdec.h
 libimagedec_la_SOURCES += tiffdec.c tiffdec.h
 libimagedec_la_SOURCES += webpdec.c webpdec.h
 libimagedec_la_SOURCES += wicdec.c wicdec.h

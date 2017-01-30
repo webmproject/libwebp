@@ -124,6 +124,8 @@ if(WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP OR
     ${CMAKE_CURRENT_SOURCE_DIR}/imageio/metadata.h
     ${CMAKE_CURRENT_SOURCE_DIR}/imageio/pngdec.c
     ${CMAKE_CURRENT_SOURCE_DIR}/imageio/pngdec.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/imageio/pnmdec.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/imageio/pnmdec.h
     ${CMAKE_CURRENT_SOURCE_DIR}/imageio/tiffdec.c
     ${CMAKE_CURRENT_SOURCE_DIR}/imageio/tiffdec.h
     ${CMAKE_CURRENT_SOURCE_DIR}/imageio/webpdec.c
