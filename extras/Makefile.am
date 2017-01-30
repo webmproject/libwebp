@@ -11,10 +11,14 @@ libwebpextras_la_CPPFLAGS = $(AM_CPPFLAGS)
 libwebpextras_la_LDFLAGS = -lm
 libwebpextras_la_LIBADD = ../src/libwebp.la
 
-noinst_PROGRAMS = get_disto webp_quality
+noinst_PROGRAMS =
+noinst_PROGRAMS += get_disto webp_quality
+if BUILD_VWEBP_SDL
+  noinst_PROGRAMS += vwebp_sdl
+endif
 
-get_disto_SOURCES = get_disto.c
-get_disto_CPPFLAGS  = $(AM_CPPFLAGS)
+get_disto_SOURCES  = get_disto.c
+get_disto_CPPFLAGS = $(AM_CPPFLAGS)
 get_disto_LDADD = ../imageio/libimageio_util.la ../imageio/libimagedec.la
 get_disto_LDADD += ../src/libwebp.la
 get_disto_LDADD += $(PNG_LIBS) $(JPEG_LIBS) $(TIFF_LIBS)
@@ -24,3 +28,9 @@ webp_quality_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
 webp_quality_LDADD  = ../imageio/libimageio_util.la
 webp_quality_LDADD += ./libwebpextras.la
 webp_quality_LDADD += ../src/libwebp.la
+
+vwebp_sdl_SOURCES  = vwebp_sdl.c webp_to_sdl.c webp_to_sdl.h
+vwebp_sdl_CPPFLAGS = $(AM_CPPFLAGS) $(SDL_INCLUDES)
+vwebp_sdl_LDADD = ../imageio/libimageio_util.la
+vwebp_sdl_LDADD += ../src/libwebp.la
+vwebp_sdl_LDADD += $(SDL_LIBS)
