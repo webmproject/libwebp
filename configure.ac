@@ -428,6 +428,38 @@ AS_IF([test "x$enable_gl" != "xno"], [
 ])
 AM_CONDITIONAL([BUILD_VWEBP], [test "$build_vwebp" = "yes"])
 
+dnl === check for SDL support ===
+
+AC_ARG_ENABLE([sdl],
+              AS_HELP_STRING([--disable-sdl],
+                             [Disable detection of SDL support
+                              @<:@default=auto@:>@]))
+AS_IF([test "x$enable_sdl" != "xno"], [
+  CLEAR_LIBVARS([SDL])
+  WITHLIB_OPTION([sdl], [SDL])
+
+  LIBCHECK_PROLOGUE([SDL])
+  AC_CHECK_HEADER([SDL/SDL.h],
+    AC_CHECK_LIB(SDL, SDL_Init,
+                 [SDL_LIBS="-lSDL"
+                  SDL_INCLUDES="-DWEBP_HAVE_SDL"
+                  AC_DEFINE(WEBP_HAVE_SDL, [1],
+                            [Set to 1 if SDL library is installed])
+                  sdl_support=yes
+                 ],
+                 AC_MSG_WARN(Optional SDL library not found),
+                 [$MATH_LIBS]),
+    AC_MSG_WARN(SDL library not available - no sdl.h)
+  )
+  LIBCHECK_EPILOGUE([SDL])
+
+  if test "$sdl_support" = "yes" ; then
+    build_vwebp_sdl=yes
+  fi
+])
+
+AM_CONDITIONAL([BUILD_VWEBP_SDL], [test "$build_vwebp_sdl" = "yes"])
+
 dnl === check for PNG support ===
 
 AC_ARG_ENABLE([png], AS_HELP_STRING([--disable-png],
@@ -718,4 +750,6 @@ gif2webp    : ${build_gif2webp-no}
 img2webp    : ${build_img2webp-no}
 webpmux     : ${enable_libwebpmux-no}
 vwebp       : ${build_vwebp-no}
+SDL support : ${sdl_support-no}
+vwebp_sdl   : ${build_vwebp_sdl-no}
 ])
