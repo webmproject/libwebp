@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cbc29018_b2584c65",
+        "filename": "extras/get_disto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-01-31T02:29:59Z",
+      "side": 1,
+      "message": "that one\u0027s embarrassing, wish I had been paying attention before finalizing 0.6.0. sorry about that",
+      "revId": "08f009083eb9af7b068fe142239646397575b7e4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
