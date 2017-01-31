@@ -19,7 +19,7 @@ extern "C" {
 
 #include "webp/encode.h"
 
-#define WEBP_EXTRAS_ABI_VERSION 0x0000    // MAJOR(8b) + MINOR(8b)
+#define WEBP_EXTRAS_ABI_VERSION 0x0001    // MAJOR(8b) + MINOR(8b)
 
 //------------------------------------------------------------------------------
 
