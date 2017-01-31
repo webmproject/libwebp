@@ -278,7 +278,7 @@ int main(int argc, const char *argv[]) {
     goto End;
   }
   size1 = ReadPicture(name1, &pic1, 1);
-  size2 = ReadPicture(name1, &pic2, 1);
+  size2 = ReadPicture(name2, &pic2, 1);
   if (size1 == 0 || size2 == 0) goto End;
 
   if (!keep_alpha) {
