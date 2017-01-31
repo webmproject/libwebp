@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12731d07_49d86b21",
+        "filename": "extras/get_disto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-01-31T02:51:53Z",
+      "side": 1,
+      "message": "fix for the name1 -\u003e name2 typo is here:\n\nhttps://chromium-review.googlesource.com/#/c/434922/",
+      "range": {
+        "startLine": 281,
+        "startChar": 22,
+        "endLine": 281,
+        "endChar": 27
+      },
+      "revId": "b045013970d64fb6d2984a9af8f2a034721a2a0c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
