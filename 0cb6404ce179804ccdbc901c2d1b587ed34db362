@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "5c8225e5_0d7b492b",
+        "filename": "imageio/pnmdec.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-01-31T07:11:10Z",
+      "side": 1,
+      "message": "i\u0027m expecting this function to be called from several call-sites, that\u0027s why i sunk the checks at this bottom level",
+      "revId": "0cb6404ce179804ccdbc901c2d1b587ed34db362",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "888c52a4_c3ea1993",
         "filename": "imageio/pnmdec.c",
         "patchSetId": 6
