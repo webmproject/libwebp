@@ -43,7 +43,7 @@
 
 #define CONVERT8_BGRA_XXX(psrc, pdst, m0, m1) do {         \
   uint64_t pix_d;                                          \
-  v16u8 src0, src1, src2, dst0, dst1;                      \
+  v16u8 src0, src1, src2 = { 0 }, dst0, dst1;              \
   LD_UB2(psrc, 16, src0, src1);                            \
   VSHF_B2_UB(src0, src1, src1, src2, m0, m1, dst0, dst1);  \
   ST_UB(dst0, pdst);                                       \
