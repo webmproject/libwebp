@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa5a0753_0c6946f5",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 7
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-01T06:43:19Z",
+      "side": 1,
+      "message": "does this need to be forced for e.g., emscripten? -DBUILD_SHARED_LIBS\u003dON usually takes care of this I thought",
+      "revId": "3b8c3c00e4869b9b98ddab630b7b7e0b0c7a231d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
