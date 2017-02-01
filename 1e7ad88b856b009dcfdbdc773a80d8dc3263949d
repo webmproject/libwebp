@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6a8cb987_77f48e8b",
+        "filename": "imageio/pnmdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-01T21:14:02Z",
+      "side": 1,
+      "message": "I think most of what we\u0027d do with the files will break with \u003e 255",
+      "range": {
+        "startLine": 69,
+        "startChar": 39,
+        "endLine": 69,
+        "endChar": 44
+      },
+      "revId": "1e7ad88b856b009dcfdbdc773a80d8dc3263949d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
