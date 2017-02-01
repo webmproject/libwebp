@@ -36,6 +36,23 @@
     },
     {
       "key": {
+        "uuid": "a79dd461_baed449f",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 7
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2017-02-01T09:18:52Z",
+      "side": 1,
+      "message": "fixed below for the appropriate targets",
+      "revId": "3b8c3c00e4869b9b98ddab630b7b7e0b0c7a231d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cb033fa2_97652189",
         "filename": "CMakeLists.txt",
         "patchSetId": 7
@@ -47,6 +64,29 @@
       "writtenOn": "2017-02-01T06:53:54Z",
       "side": 1,
       "message": "this could be [:alnum:] (if supported or A-Z), but we don\u0027t do that to our source names. same with the whitespace after \u003d, could be \\s* or [ ]* if that\u0027s all there is here",
+      "range": {
+        "startLine": 53,
+        "startChar": 55,
+        "endLine": 53,
+        "endChar": 68
+      },
+      "revId": "3b8c3c00e4869b9b98ddab630b7b7e0b0c7a231d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "763896f7_897e1d1f",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 7
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2017-02-01T09:18:52Z",
+      "side": 1,
+      "message": "no alnum (CMake\u0027s regex are VERY limited), and I fixed the space.",
       "range": {
         "startLine": 53,
         "startChar": 55,
