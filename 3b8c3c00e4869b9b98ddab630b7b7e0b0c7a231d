@@ -16,6 +16,46 @@
       "revId": "3b8c3c00e4869b9b98ddab630b7b7e0b0c7a231d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36acb9c6_7f585bd3",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 7
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-01T06:53:54Z",
+      "side": 1,
+      "message": "I see the earlier failures now, due to the split not all objects are being built that way. can you condition this on BUILD_SHARED_LIBS?",
+      "revId": "3b8c3c00e4869b9b98ddab630b7b7e0b0c7a231d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb033fa2_97652189",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 7
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-01T06:53:54Z",
+      "side": 1,
+      "message": "this could be [:alnum:] (if supported or A-Z), but we don\u0027t do that to our source names. same with the whitespace after \u003d, could be \\s* or [ ]* if that\u0027s all there is here",
+      "range": {
+        "startLine": 53,
+        "startChar": 55,
+        "endLine": 53,
+        "endChar": 68
+      },
+      "revId": "3b8c3c00e4869b9b98ddab630b7b7e0b0c7a231d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
