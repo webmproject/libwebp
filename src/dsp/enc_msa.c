@@ -82,7 +82,7 @@ static void FTransform(const uint8_t* src, const uint8_t* ref, int16_t* out) {
   uint32_t in0, in1, in2, in3;
   v4i32 tmp0, tmp1, tmp2, tmp3, tmp4, tmp5;
   v8i16 t0, t1, t2, t3;
-  v16u8 srcl0, srcl1, src0, src1;
+  v16u8 srcl0, srcl1, src0 = { 0 }, src1 = { 0 };
   const v8i16 mask0 = { 0, 4, 8, 12, 1, 5, 9, 13 };
   const v8i16 mask1 = { 3, 7, 11, 15, 2, 6, 10, 14 };
   const v8i16 mask2 = { 4, 0, 5, 1, 6, 2, 7, 3 };
@@ -170,7 +170,7 @@ static void FTransformWHT(const int16_t* in, int16_t* out) {
 static int TTransform(const uint8_t* in, const uint16_t* w) {
   int sum;
   uint32_t in0_m, in1_m, in2_m, in3_m;
-  v16i8 src0;
+  v16i8 src0 = { 0 };
   v8i16 in0, in1, tmp0, tmp1, tmp2, tmp3;
   v4i32 dst0, dst1;
   const v16i8 zero = { 0 };
@@ -259,8 +259,9 @@ static void CollectHistogram(const uint8_t* ref, const uint8_t* pred,
 #define AVG2(a, b) (((a) + (b) + 1) >> 1)
 
 static WEBP_INLINE void VE4(uint8_t* dst, const uint8_t* top) {    // vertical
+  const v16u8 A1 = { 0 };
   const uint64_t val_m = LD(top - 1);
-  const v16u8 A = (v16u8)__msa_insert_d((v2i64)A, 0, val_m);
+  const v16u8 A = (v16u8)__msa_insert_d((v2i64)A1, 0, val_m);
   const v16u8 B = SLDI_UB(A, A, 1);
   const v16u8 C = SLDI_UB(A, A, 2);
   const v16u8 AC = __msa_ave_u_b(A, C);
@@ -292,8 +293,9 @@ static WEBP_INLINE void DC4(uint8_t* dst, const uint8_t* top) {
 }
 
 static WEBP_INLINE void RD4(uint8_t* dst, const uint8_t* top) {
+  const v16u8 A2 = { 0 };
   const uint64_t val_m = LD(top - 5);
-  const v16u8 A1 = (v16u8)__msa_insert_d((v2i64)A1, 0, val_m);
+  const v16u8 A1 = (v16u8)__msa_insert_d((v2i64)A2, 0, val_m);
   const v16u8 A = (v16u8)__msa_insert_b((v16i8)A1, 8, top[3]);
   const v16u8 B = SLDI_UB(A, A, 1);
   const v16u8 C = SLDI_UB(A, A, 2);
@@ -311,8 +313,9 @@ static WEBP_INLINE void RD4(uint8_t* dst, const uint8_t* top) {
 }
 
 static WEBP_INLINE void LD4(uint8_t* dst, const uint8_t* top) {
+  const v16u8 A1 = { 0 };
   const uint64_t val_m = LD(top);
-  const v16u8 A = (v16u8)__msa_insert_d((v2i64)A, 0, val_m);
+  const v16u8 A = (v16u8)__msa_insert_d((v2i64)A1, 0, val_m);
   const v16u8 B = SLDI_UB(A, A, 1);
   const v16u8 C1 = SLDI_UB(A, A, 2);
   const v16u8 C = (v16u8)__msa_insert_b((v16i8)C1, 6, top[7]);
@@ -645,7 +648,7 @@ static WEBP_INLINE void TrueMotion8x8(uint8_t* dst, const uint8_t* left,
 static WEBP_INLINE void DCMode8x8(uint8_t* dst, const uint8_t* left,
                                   const uint8_t* top) {
   uint64_t out;
-  v16u8 src;
+  v16u8 src = { 0 };
   if (top != NULL && left != NULL) {
     const uint64_t left_m = LD(left);
     const uint64_t top_m = LD(top);
@@ -777,7 +780,7 @@ static int SSE8x8(const uint8_t* a, const uint8_t* b) {
 static int SSE4x4(const uint8_t* a, const uint8_t* b) {
   uint32_t sum = 0;
   uint32_t src0, src1, src2, src3, ref0, ref1, ref2, ref3;
-  v16u8 src, ref, tmp0, tmp1;
+  v16u8 src = { 0 }, ref = { 0 }, tmp0, tmp1;
   v8i16 diff0, diff1;
   v4i32 out0, out1;
 
@@ -828,7 +831,7 @@ static int QuantizeBlock(int16_t in[16], int16_t out[16],
   tmp1 = (tmp3 > maxlevel);
   tmp2 = (v8i16)__msa_bmnz_v((v16u8)tmp2, (v16u8)maxlevel, (v16u8)tmp0);
   tmp3 = (v8i16)__msa_bmnz_v((v16u8)tmp3, (v16u8)maxlevel, (v16u8)tmp1);
-  SUB2(0, tmp2, 0, tmp3, tmp0, tmp1);
+  SUB2(zero, tmp2, zero, tmp3, tmp0, tmp1);
   tmp2 = (v8i16)__msa_bmnz_v((v16u8)tmp2, (v16u8)tmp0, (v16u8)sign0);
   tmp3 = (v8i16)__msa_bmnz_v((v16u8)tmp3, (v16u8)tmp1, (v16u8)sign1);
   LD_SW4(&mtx->zthresh_[0], 4, t0, t1, t2, t3);   // zthresh
