@@ -288,6 +288,7 @@ model {
             include "jpegdec.c"
             include "metadata.c"
             include "pngdec.c"
+            include "pnmdec.c"
             include "tiffdec.c"
             include "webpdec.c"
           }
