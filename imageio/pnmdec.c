@@ -63,6 +63,12 @@ static size_t ReadHeader(const uint8_t* const data, size_t data_size,
   if (off == 0 || sscanf(out, "%d %d", width, height) != 2) return 0;
   off = ReadLine(data, off, data_size, out, &out_size);
   if (off == 0 || sscanf(out, "%d", max_value) != 1) return 0;
+  // perform some basic numerical validation
+  if (*width <= 0 || *height <= 0 ||
+      *type <= 0 || *type >= 9 ||
+      *max_value <= 0 || *max_value >= 65536) {
+    return 0;
+  }
   return off;
 }
 
@@ -86,8 +92,7 @@ int ReadPNM(const uint8_t* const data, size_t data_size,
 
   // Some basic validations.
   if (pic == NULL) goto End;
-  if (width <= 0 || height <= 0 ||
-      width > WEBP_MAX_DIMENSION || height > WEBP_MAX_DIMENSION) {
+  if (width > WEBP_MAX_DIMENSION || height > WEBP_MAX_DIMENSION) {
     fprintf(stderr, "Invalid %dx%d dimension for PNM\n", width, height);
     goto End;
   }
