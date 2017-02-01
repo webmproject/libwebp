@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5c6c13a3_05bd0a9b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-01T05:12:10Z",
+      "side": 1,
+      "message": "add a newline, otherwise the following lines will be joined in the log",
+      "revId": "9ca5daeaa2a261876a81c4df438e0b521303ccac",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
