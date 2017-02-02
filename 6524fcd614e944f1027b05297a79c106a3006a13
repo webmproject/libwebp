@@ -1,0 +1,164 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "678ee0f4_4d6cac35",
+        "filename": "configure.ac",
+        "patchSetId": 4
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-02T07:38:20Z",
+      "side": 1,
+      "message": "what about the sdl-config based check?",
+      "revId": "6524fcd614e944f1027b05297a79c106a3006a13",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ce3ef7a_9c091eb1",
+        "filename": "extras/vwebp_sdl.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-02T07:38:20Z",
+      "side": 1,
+      "message": "that could go",
+      "revId": "6524fcd614e944f1027b05297a79c106a3006a13",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77321146_745660dd",
+        "filename": "extras/vwebp_sdl.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-02T07:38:20Z",
+      "side": 1,
+      "message": "could be const",
+      "range": {
+        "startLine": 51,
+        "startChar": 18,
+        "endLine": 51,
+        "endChar": 24
+      },
+      "revId": "6524fcd614e944f1027b05297a79c106a3006a13",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77719b36_167703b0",
+        "filename": "extras/vwebp_sdl.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-02T07:38:20Z",
+      "side": 1,
+      "message": "string.h",
+      "range": {
+        "startLine": 58,
+        "startChar": 9,
+        "endLine": 58,
+        "endChar": 15
+      },
+      "revId": "6524fcd614e944f1027b05297a79c106a3006a13",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8958a041_c7d724ad",
+        "filename": "extras/vwebp_sdl.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-02T07:38:20Z",
+      "side": 1,
+      "message": "maybe match the signature of this function with (unsigned int) here and above",
+      "range": {
+        "startLine": 73,
+        "startChar": 38,
+        "endLine": 73,
+        "endChar": 43
+      },
+      "revId": "6524fcd614e944f1027b05297a79c106a3006a13",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "403d277e_509d7ab8",
+        "filename": "extras/webp_to_sdl.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-02T07:38:20Z",
+      "side": 1,
+      "message": "could leave the const",
+      "range": {
+        "startLine": 47,
+        "startChar": 28,
+        "endLine": 47,
+        "endChar": 35
+      },
+      "revId": "6524fcd614e944f1027b05297a79c106a3006a13",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0166486a_64ef01bd",
+        "filename": "extras/webp_to_sdl.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-02T07:38:20Z",
+      "side": 1,
+      "message": "stub to avoid an empty file?",
+      "revId": "6524fcd614e944f1027b05297a79c106a3006a13",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81df50f9_e8476169",
+        "filename": "extras/webp_to_sdl.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-02T07:38:20Z",
+      "side": 1,
+      "message": "here too",
+      "revId": "6524fcd614e944f1027b05297a79c106a3006a13",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
