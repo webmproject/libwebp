@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f60ae0b4_3c41de8a",
+        "filename": "src/enc/backward_references_enc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 994,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-02-02T10:29:42Z",
+      "side": 1,
+      "message": "indeed, works better with \u0027int j\u0027",
+      "range": {
+        "startLine": 994,
+        "startChar": 8,
+        "endLine": 994,
+        "endChar": 9
+      },
+      "revId": "90dd63f06fcffd9d4cf0e650be776af6f9d63566",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
