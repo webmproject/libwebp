@@ -1105,9 +1105,14 @@ static int Import(WebPPicture* const picture,
 
   if (import_alpha) {
     uint32_t* dst = picture->argb;
+    const int do_copy = !swap_rb && !ALPHA_IS_LAST;
     assert(step == 4);
     for (y = 0; y < height; ++y) {
-      VP8PackARGB(a_ptr, r_ptr, g_ptr, b_ptr, width, dst);
+      if (do_copy) {
+        memcpy(dst, r_ptr, width * sizeof(*dst));
+      } else {
+        VP8PackARGB(a_ptr, r_ptr, g_ptr, b_ptr, width, dst);
+      }
       a_ptr += rgb_stride;
       r_ptr += rgb_stride;
       g_ptr += rgb_stride;
