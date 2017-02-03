@@ -330,7 +330,7 @@ EXTRA_LIB = extras/libwebpextras.a
 OUT_EXAMPLES = examples/cwebp examples/dwebp
 EXTRA_EXAMPLES = examples/gif2webp examples/vwebp examples/webpmux \
                  examples/anim_diff examples/img2webp
-OTHER_EXAMPLES = extras/get_disto extras/webp_quality
+OTHER_EXAMPLES = extras/get_disto extras/webp_quality extras/vwebp_sdl
 
 OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES)
 ifeq ($(MAKECMDGOALS),clean)
@@ -420,6 +420,13 @@ extras/get_disto: EXTRA_LIBS += $(CWEBP_LIBS)
 extras/webp_quality: extras/webp_quality.o
 extras/webp_quality: imageio/libimageio_util.a
 extras/webp_quality: $(EXTRA_LIB) src/libwebp.a
+
+extras/vwebp_sdl: extras/vwebp_sdl.o
+extras/vwebp_sdl: extras/webp_to_sdl.o
+extras/vwebp_sdl: imageio/libimageio_util.a
+extras/vwebp_sdl: src/libwebp.a
+extras/vwebp_sdl: EXTRA_FLAGS += -DWEBP_HAVE_SDL
+extras/vwebp_sdl: -lSDL
 
 $(OUT_EXAMPLES) $(EXTRA_EXAMPLES) $(OTHER_EXAMPLES):
 	$(CC) -o $@ $^ $(LDFLAGS)
