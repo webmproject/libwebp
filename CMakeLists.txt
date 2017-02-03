@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8.7)
 project(libwebp C)
 
 # Options for coder / decoder executables.
+option(WEBP_ENABLE_SIMD "Enable any SIMD optimization." ON)
 option(WEBP_BUILD_CWEBP "Build the cwebp command line tool." OFF)
 option(WEBP_BUILD_DWEBP "Build the dwebp command line tool." OFF)
 option(WEBP_BUILD_GIF2WEBP "Build the gif2webp conversion tool." OFF)

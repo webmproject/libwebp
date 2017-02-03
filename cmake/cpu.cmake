@@ -1,6 +1,11 @@
 ## Check for SIMD extensions.
 
-function(webp_check_compiler_flag WEBP_SIMD_FLAG)
+function(webp_check_compiler_flag WEBP_SIMD_FLAG ENABLE_SIMD)
+  if(NOT ENABLE_SIMD)
+    message(STATUS "Disabling ${WEBP_SIMD_FLAG} optimization.")
+    set(WEBP_HAVE_${WEBP_SIMD_FLAG} 0 PARENT_SCOPE)
+    return()
+  endif()
   unset(WEBP_HAVE_FLAG_${WEBP_SIMD_FLAG} CACHE)
   check_c_source_compiles("
       #include \"${CMAKE_CURRENT_LIST_DIR}/../src/dsp/dsp.h\"
@@ -56,11 +61,11 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
   # (especially on Android).
   unset(WEBP_HAVE_${WEBP_SIMD_FLAG} CACHE)
   set(CMAKE_REQUIRED_FLAGS)
-  webp_check_compiler_flag(${WEBP_SIMD_FLAG})
+  webp_check_compiler_flag(${WEBP_SIMD_FLAG} ${WEBP_ENABLE_SIMD})
   if(NOT WEBP_HAVE_${WEBP_SIMD_FLAG})
     list(GET SIMD_ENABLE_FLAGS ${I_SIMD} SIMD_COMPILE_FLAG)
     set(CMAKE_REQUIRED_FLAGS ${SIMD_COMPILE_FLAG})
-    webp_check_compiler_flag(${WEBP_SIMD_FLAG})
+    webp_check_compiler_flag(${WEBP_SIMD_FLAG} ${WEBP_ENABLE_SIMD})
   else()
     set(SIMD_COMPILE_FLAG " ")
   endif()
