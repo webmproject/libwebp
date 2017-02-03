@@ -138,46 +138,53 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
     PrintWebPError("input data", status);
     return 0;
   }
-  {
+
+  do {
     const int has_alpha = keep_alpha && bitstream->has_alpha;
+    pic->width = bitstream->width;
+    pic->height = bitstream->height;
+    if (!pic->use_argb) pic->colorspace = has_alpha ? WEBP_YUV420A
+                                                    : WEBP_YUV420;
+    ok = WebPPictureAlloc(pic);
+    if (!ok) {
+      status = VP8_STATUS_OUT_OF_MEMORY;
+      break;
+    }
     if (pic->use_argb) {
-      output_buffer->colorspace = has_alpha ? MODE_RGBA : MODE_RGB;
+      output_buffer->colorspace = MODE_BGRA;
+      output_buffer->u.RGBA.rgba = (uint8_t*)pic->argb;
+      output_buffer->u.RGBA.stride = pic->argb_stride * sizeof(uint32_t);
+      output_buffer->u.RGBA.size = output_buffer->u.RGBA.stride * pic->height;
     } else {
       output_buffer->colorspace = has_alpha ? MODE_YUVA : MODE_YUV;
+      output_buffer->u.YUVA.y = pic->y;
+      output_buffer->u.YUVA.u = pic->u;
+      output_buffer->u.YUVA.v = pic->v;
+      output_buffer->u.YUVA.a = has_alpha ? pic->a : NULL;
+      output_buffer->u.YUVA.y_stride = pic->y_stride;
+      output_buffer->u.YUVA.u_stride = pic->uv_stride;
+      output_buffer->u.YUVA.v_stride = pic->uv_stride;
+      output_buffer->u.YUVA.a_stride = has_alpha ? pic->a_stride : 0;
+      output_buffer->u.YUVA.y_size = pic->height * pic->y_stride;
+      output_buffer->u.YUVA.u_size = (pic->height + 1) / 2 * pic->uv_stride;
+      output_buffer->u.YUVA.v_size = (pic->height + 1) / 2 * pic->uv_stride;
+      output_buffer->u.YUVA.a_size = pic->height * pic->a_stride;
     }
+    output_buffer->is_external_memory = 1;
 
     status = DecodeWebP(data, data_size, &config);
-    if (status == VP8_STATUS_OK) {
-      pic->width = output_buffer->width;
-      pic->height = output_buffer->height;
-      if (pic->use_argb) {
-        const uint8_t* const rgba = output_buffer->u.RGBA.rgba;
-        const int stride = output_buffer->u.RGBA.stride;
-        ok = has_alpha ? WebPPictureImportRGBA(pic, rgba, stride)
-                       : WebPPictureImportRGB(pic, rgba, stride);
-      } else {
-        pic->colorspace = has_alpha ? WEBP_YUV420A : WEBP_YUV420;
-        ok = WebPPictureAlloc(pic);
-        if (!ok) {
-          status = VP8_STATUS_OUT_OF_MEMORY;
-        } else {
-          const WebPYUVABuffer* const yuva = &output_buffer->u.YUVA;
-          const int uv_width = (pic->width + 1) >> 1;
-          const int uv_height = (pic->height + 1) >> 1;
-          ImgIoUtilCopyPlane(yuva->y, yuva->y_stride,
-                             pic->y, pic->y_stride, pic->width, pic->height);
-          ImgIoUtilCopyPlane(yuva->u, yuva->u_stride,
-                             pic->u, pic->uv_stride, uv_width, uv_height);
-          ImgIoUtilCopyPlane(yuva->v, yuva->v_stride,
-                             pic->v, pic->uv_stride, uv_width, uv_height);
-          if (has_alpha) {
-            ImgIoUtilCopyPlane(yuva->a, yuva->a_stride,
-                               pic->a, pic->a_stride, pic->width, pic->height);
-          }
-        }
+    ok = (status == VP8_STATUS_OK);
+    if (!ok) WebPPictureFree(pic);
+    if (ok && !keep_alpha && pic->use_argb) {
+      // Need to wipe out the alpha value, as requested.
+      int x, y;
+      uint32_t* argb = pic->argb;
+      for (y = 0; y < pic->height; ++y) {
+        for (x = 0; x < pic->width; ++x) argb[x] |= 0xff000000u;
+        argb += pic->argb_stride;
       }
     }
-  }
+  } while (0);   // <- so we can 'break' out of the loop
 
   if (status != VP8_STATUS_OK) {
     PrintWebPError("input data", status);
