@@ -167,7 +167,7 @@ if(WEBP_BUILD_DWEBP)
   parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "DWEBP_SRCS"
     "dwebp")
   add_executable(dwebp ${DWEBP_SRCS})
-  target_link_libraries(dwebp exampleutil imagedec imageenc webp)
+  target_link_libraries(dwebp exampleutil imagedec imageenc webpdecoder)
 endif()
 
 if(WEBP_BUILD_CWEBP)
