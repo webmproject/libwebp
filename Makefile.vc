@@ -367,8 +367,8 @@ $(DIRBIN)\gif2webp.exe: $(EX_UTIL_OBJS) $(IMAGEIO_UTIL_OBJS) $(LIBWEBPMUX)
 $(DIRBIN)\gif2webp.exe: $(LIBWEBP)
 $(DIRBIN)\vwebp.exe: $(DIROBJ)\examples\vwebp.obj $(EX_UTIL_OBJS)
 $(DIRBIN)\vwebp.exe: $(IMAGEIO_UTIL_OBJS) $(LIBWEBPDEMUX) $(LIBWEBP)
-$(DIRBIN)\vwebp_sdl.exe: $(DIROBJ)\examples\vwebp_sdl.obj
-$(DIRBIN)\vwebp_sdl.exe: $(DIROBJ)\examples\webp_to_sdl.obj
+$(DIRBIN)\vwebp_sdl.exe: $(DIROBJ)\extras\vwebp_sdl.obj
+$(DIRBIN)\vwebp_sdl.exe: $(DIROBJ)\extras\webp_to_sdl.obj
 $(DIRBIN)\vwebp_sdl.exe: $(IMAGEIO_UTIL_OBJS) $(LIBWEBP)
 $(DIRBIN)\webpmux.exe: $(DIROBJ)\examples\webpmux.obj $(LIBWEBPMUX)
 $(DIRBIN)\webpmux.exe: $(EX_UTIL_OBJS) $(IMAGEIO_UTIL_OBJS) $(LIBWEBP)
