@@ -777,10 +777,13 @@ static int HistogramCombineGreedy(VP8LHistogramSet* const image_histo) {
   return ok;
 }
 
+// Perform histogram aggregation using a stochastic approach.
+// 'do_greedy' is set to 1 if a greedy approach needs to be performed
+// afterwards, 0 otherwise.
 static void HistogramCombineStochastic(VP8LHistogramSet* const image_histo,
                                        VP8LHistogram* tmp_histo,
-                                       VP8LHistogram* best_combo,
-                                       int quality, int min_cluster_size) {
+                                       VP8LHistogram* best_combo, int quality,
+                                       int min_cluster_size, int* do_greedy) {
   int iter;
   uint32_t seed = 0;
   int tries_with_no_success = 0;
@@ -789,48 +792,44 @@ static void HistogramCombineStochastic(VP8LHistogramSet* const image_histo,
   const int outer_iters = image_histo_size * iter_mult;
   const int num_pairs = image_histo_size / 2;
   const int num_tries_no_success = outer_iters / 2;
-  int idx2_max = image_histo_size - 1;
-  int do_brute_dorce = 0;
   VP8LHistogram** const histograms = image_histo->histograms;
 
   // Collapse similar histograms in 'image_histo'.
+  *do_greedy = (image_histo->size <= min_cluster_size);
   ++min_cluster_size;
-  for (iter = 0;
-       iter < outer_iters && image_histo_size >= min_cluster_size;
+  for (iter = 0; iter < outer_iters && image_histo_size >= min_cluster_size &&
+                 ++tries_with_no_success < num_tries_no_success;
        ++iter) {
     double best_cost_diff = 0.;
     int best_idx1 = -1, best_idx2 = 1;
     int j;
     int num_tries =
         (num_pairs < image_histo_size) ? num_pairs : image_histo_size;
-    // Use a brute force approach if:
-    // - stochastic has not worked for a while and
-    // - if the number of iterations for brute force is less than the number of
-    // iterations if we never find a match ever again stochastically (hence
-    // num_tries times the number of remaining outer iterations).
-    do_brute_dorce =
-        (tries_with_no_success > 10) &&
-        (idx2_max * (idx2_max + 1) < 2 * num_tries * (outer_iters - iter));
-    if (do_brute_dorce) num_tries = idx2_max;
+    // If the stochastic method has not worked for a while (10 iterations) and
+    // if it requires less iterations to finish off with a greedy approach, go
+    // for it.
+    // With the greedy approach, each histogram is compared to the other ones,
+    // hence (image_histo_size-1)*image_histo_size/2 overall comparisons.
+    // Then, at each iteration, the best pair is merged and compared to all
+    // the other ones, adding (image_histo_size-2)*(image_histo_size-1)/2 more
+    // comparisons. Overall: (image_histo_size-1)^2 comparisons.
+    *do_greedy |= (tries_with_no_success > 10) &&
+                  ((image_histo_size - 1) * (image_histo_size - 1) <
+                   num_tries * (outer_iters - iter));
+    if (*do_greedy) break;
 
     seed += iter;
     for (j = 0; j < num_tries; ++j) {
       double curr_cost_diff;
       // Choose two histograms at random and try to combine them.
       uint32_t idx1, idx2;
-      if (do_brute_dorce) {
-        // Use a brute force approach.
-        idx1 = (uint32_t)j;
-        idx2 = (uint32_t)idx2_max;
-      } else {
-        const uint32_t tmp = (j & 7) + 1;
-        const uint32_t diff =
-            (tmp < 3) ? tmp : MyRand(&seed) % (image_histo_size - 1);
-        idx1 = MyRand(&seed) % image_histo_size;
-        idx2 = (idx1 + diff + 1) % image_histo_size;
-        if (idx1 == idx2) {
-          continue;
-        }
+      const uint32_t tmp = (j & 7) + 1;
+      const uint32_t diff =
+          (tmp < 3) ? tmp : MyRand(&seed) % (image_histo_size - 1);
+      idx1 = MyRand(&seed) % image_histo_size;
+      idx2 = (idx1 + diff + 1) % image_histo_size;
+      if (idx1 == idx2) {
+        continue;
       }
 
       // Calculate cost reduction on combining.
@@ -843,24 +842,20 @@ static void HistogramCombineStochastic(VP8LHistogramSet* const image_histo,
         best_idx2 = idx2;
       }
     }
-    if (do_brute_dorce) --idx2_max;
 
     if (best_idx1 >= 0) {
       HistogramSwap(&best_combo, &histograms[best_idx1]);
       // swap best_idx2 slot with last one (which is now unused)
       --image_histo_size;
-      if (idx2_max >= image_histo_size) idx2_max = image_histo_size - 1;
       if (best_idx2 != image_histo_size) {
         HistogramSwap(&histograms[image_histo_size], &histograms[best_idx2]);
         histograms[image_histo_size] = NULL;
       }
       tries_with_no_success = 0;
     }
-    if (++tries_with_no_success >= num_tries_no_success || idx2_max == 0) {
-      break;
-    }
   }
   image_histo->size = image_histo_size;
+  *do_greedy |= (image_histo->size <= min_cluster_size);
 }
 
 // -----------------------------------------------------------------------------
@@ -970,10 +965,10 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
     const float x = quality / 100.f;
     // cubic ramp between 1 and MAX_HISTO_GREEDY:
     const int threshold_size = (int)(1 + (x * x * x) * (MAX_HISTO_GREEDY - 1));
+    int do_greedy;
     HistogramCombineStochastic(image_histo, tmp_histos->histograms[0],
-                               cur_combo, quality, threshold_size);
-    if ((image_histo->size <= threshold_size) &&
-        !HistogramCombineGreedy(image_histo)) {
+                               cur_combo, quality, threshold_size, &do_greedy);
+    if (do_greedy && !HistogramCombineGreedy(image_histo)) {
       goto Error;
     }
   }
