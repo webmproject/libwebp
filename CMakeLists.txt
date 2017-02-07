@@ -8,8 +8,13 @@ option(WEBP_BUILD_CWEBP "Build the cwebp command line tool." OFF)
 option(WEBP_BUILD_DWEBP "Build the dwebp command line tool." OFF)
 option(WEBP_BUILD_GIF2WEBP "Build the gif2webp conversion tool." OFF)
 option(WEBP_BUILD_IMG2WEBP "Build the img2webp animation tool." OFF)
+option(WEBP_BUILD_WEBP_JS "Emscripten build of webp.js." OFF)
 option(WEBP_EXPERIMENTAL_FEATURES "Build with experimental features." OFF)
 option(WEBP_ENABLE_SWAP_16BIT_CSP "Enable byte swap for 16 bit colorspaces." OFF)
+
+if(WEBP_BUILD_WEBP_JS)
+  set(WEBP_ENABLE_SIMD OFF)
+endif()
 
 set(WEBP_DEP_LIBRARIES)
 set(WEBP_DEP_INCLUDE_DIRS)
@@ -135,7 +140,7 @@ endforeach()
 
 # Build the executables if asked for.
 if(WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP OR
-   WEBP_BUILD_GIF2WEBP OR WEBP_BUILD_IMG2WEBP)
+   WEBP_BUILD_GIF2WEBP OR WEBP_BUILD_IMG2WEBP OR WEBP_BUILD_WEBP_JS)
   # Example utility library.
   parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "EXAMPLEUTIL_SRCS"
     "example_util_[^ ]*")
@@ -203,4 +208,15 @@ if(WEBP_BUILD_IMG2WEBP)
     "img2webp")
   add_executable(img2webp ${IMG2WEBP_SRCS})
   target_link_libraries(img2webp exampleutil imagedec imageioutil webp webpmux)
+endif()
+
+if(WEBP_BUILD_WEBP_JS)
+  add_executable(webp_js
+                 ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
+  target_link_libraries(webp_js webpdecoder SDL)
+  set_target_properties(webp_js PROPERTIES LINK_FLAGS
+      "-s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0")
+  set_target_properties(webp_js PROPERTIES OUTPUT_NAME webp)
+  target_compile_definitions(webp_js PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
+  target_compile_definitions(webpdecoder PUBLIC EMSCRIPTEN)
 endif()
