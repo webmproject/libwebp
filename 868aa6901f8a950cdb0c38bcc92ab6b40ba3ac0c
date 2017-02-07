@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62ca08eb_5eb002a9",
+        "filename": "src/enc/histogram_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 786,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-02-07T11:01:09Z",
+      "side": 1,
+      "message": "could be \u0027int* const do_greedy\u0027, note. For a later clean-up patch...",
+      "range": {
+        "startLine": 786,
+        "startChar": 64,
+        "endLine": 786,
+        "endChar": 65
+      },
+      "revId": "868aa6901f8a950cdb0c38bcc92ab6b40ba3ac0c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
