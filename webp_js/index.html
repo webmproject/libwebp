@@ -21,8 +21,11 @@ function init() {
 
 function decode(webp_data, canvas_id) {
   // get the canvas to decode into
-  Module.canvas = document.getElementById(canvas_id);
-  if (Module.canvas == null) return;
+  var canvas = document.getElementById(canvas_id);
+  if (canvas == null) return;
+  // clear previous picture (if any)
+  Module.canvas = canvas;
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
   // decode and measure timing
   start = new Date();
   var ret = WebpToCanvas(webp_data, webp_data.length);

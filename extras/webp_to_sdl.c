@@ -60,6 +60,7 @@ int WebpToSDL(const char* data, unsigned int data_size) {
                                  0x0000ff00u,   // G mask
                                  0x00ff0000u,   // B mask
                                  0xff000000u);  // A mask
+
   if (surface == NULL) {
     fprintf(stderr, "Unable to create %dx%d RGBA surface!\n",
             input->width, input->height);
@@ -86,8 +87,7 @@ int WebpToSDL(const char* data, unsigned int data_size) {
   }
 
   if (SDL_MUSTLOCK(surface)) SDL_UnlockSurface(surface);
-  if (SDL_FillRect(screen, &screen->clip_rect, 0xffffffff) ||
-      SDL_BlitSurface(surface, NULL, screen, NULL) ||
+  if (SDL_BlitSurface(surface, NULL, screen, NULL) ||
       SDL_Flip(screen)) {
     goto Error;
   }
