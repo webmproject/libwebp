@@ -42,6 +42,9 @@ extern "C" {
 # define __has_builtin(x) 0
 #endif
 
+// for now, none of the optimizations below are available in emscripten
+#if !defined(EMSCRIPTEN)
+
 #if defined(_MSC_VER) && _MSC_VER > 1310 && \
     (defined(_M_X64) || defined(_M_IX86))
 #define WEBP_MSC_SSE2  // Visual C++ SSE2 targets
@@ -99,6 +102,8 @@ extern "C" {
 #if defined(__mips_msa) && defined(__mips_isa_rev) && (__mips_isa_rev >= 5)
 #define WEBP_USE_MSA
 #endif
+
+#endif  /* EMSCRIPTEN */
 
 // This macro prevents thread_sanitizer from reporting known concurrent writes.
 #define WEBP_TSAN_IGNORE_FUNCTION
