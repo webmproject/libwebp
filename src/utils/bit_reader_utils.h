@@ -157,7 +157,8 @@ static WEBP_INLINE int VP8LIsEndOfStream(const VP8LBitReader* const br) {
 // VP8LPrefetchBits and VP8LFillBitWindow.
 static WEBP_INLINE void VP8LSetBitPos(VP8LBitReader* const br, int val) {
   br->bit_pos_ = val;
-  br->eos_ = VP8LIsEndOfStream(br);
+  // redux version of VP8LIsEndOfStream(). Critical code!
+  br->eos_ = (br->pos_ == br->len_) && (val > VP8L_LBITS);
 }
 
 // Advances the read buffer by 4 bytes to make room for reading next 32 bits.
