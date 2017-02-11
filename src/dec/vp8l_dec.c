@@ -1012,12 +1012,13 @@ static int DecodeAlphaData(VP8LDecoder* const dec, uint8_t* const data,
       ok = 0;
       goto End;
     }
-    assert(br->eos_ == VP8LIsEndOfStream(br));
+    br->eos_ = VP8LIsEndOfStream(br);
   }
   // Process the remaining rows corresponding to last row-block.
   ExtractPalettedAlphaRows(dec, row > last_row ? last_row : row);
 
  End:
+  br->eos_ = VP8LIsEndOfStream(br);
   if (!ok || (br->eos_ && pos < end)) {
     ok = 0;
     dec->status_ = br->eos_ ? VP8_STATUS_SUSPENDED
@@ -1094,7 +1095,7 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
     } else {
       code = ReadSymbol(htree_group->htrees[GREEN], br);
     }
-    if (br->eos_) break;  // early out
+    if (VP8LIsEndOfStream(br)) break;
     if (code < NUM_LITERAL_CODES) {  // Literal
       if (htree_group->is_trivial_literal) {
         *src = htree_group->literal_arb | (code << 8);
@@ -1104,7 +1105,7 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
         VP8LFillBitWindow(br);
         blue = ReadSymbol(htree_group->htrees[BLUE], br);
         alpha = ReadSymbol(htree_group->htrees[ALPHA], br);
-        if (br->eos_) break;
+        if (VP8LIsEndOfStream(br)) break;
         *src = ((uint32_t)alpha << 24) | (red << 16) | (code << 8) | blue;
       }
     AdvanceByOne:
@@ -1132,7 +1133,7 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
       VP8LFillBitWindow(br);
       dist_code = GetCopyDistance(dist_symbol, br);
       dist = PlaneCodeToDistance(width, dist_code);
-      if (br->eos_) break;
+      if (VP8LIsEndOfStream(br)) break;
       if (src - data < (ptrdiff_t)dist || src_end - src < (ptrdiff_t)length) {
         goto Error;
       } else {
@@ -1169,9 +1170,9 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
     } else {  // Not reached
       goto Error;
     }
-    assert(br->eos_ == VP8LIsEndOfStream(br));
   }
 
+  br->eos_ = VP8LIsEndOfStream(br);
   if (dec->incremental_ && br->eos_ && src < src_end) {
     RestoreState(dec);
   } else if (!br->eos_) {
