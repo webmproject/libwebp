@@ -168,7 +168,7 @@ void VP8LBitReaderSetBuffer(VP8LBitReader* const br,
   br->buf_ = buf;
   br->len_ = len;
   // pos_ > len_ should be considered a param error.
-  br->eos_ = (br->pos_ > br->len_) || VP8LIsEndOfStream(br);
+  br->eos_ = (br->pos_ > br->len_) || br->eos_ || VP8LIsEndOfStream(br);
 }
 
 static void VP8LSetEndOfStream(VP8LBitReader* const br) {
@@ -184,7 +184,7 @@ static void ShiftBytes(VP8LBitReader* const br) {
     ++br->pos_;
     br->bit_pos_ -= 8;
   }
-  if (VP8LIsEndOfStream(br)) {
+  if (br->eos_ || VP8LIsEndOfStream(br)) {
     VP8LSetEndOfStream(br);
   }
 }
