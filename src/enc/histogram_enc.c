@@ -596,11 +596,11 @@ static VP8LHistogram* HistogramCombineEntropyBin(
   return cur_combo;
 }
 
+// Implement a Lehmer random number generator with a multiplicative constant of
+// 48271 and a modulo constant of 2^31 − 1.
 static uint32_t MyRand(uint32_t* const seed) {
-  *seed = (*seed * 16807ull) & 0xffffffffu;
-  if (*seed == 0) {
-    *seed = 1;
-  }
+  *seed = (uint32_t)(((uint64_t)(*seed) * 48271ul) % 2147483647ul);
+  assert(*seed > 0);
   return *seed;
 }
 
@@ -782,15 +782,13 @@ static int HistogramCombineGreedy(VP8LHistogramSet* const image_histo) {
 // afterwards, 0 otherwise.
 static void HistogramCombineStochastic(VP8LHistogramSet* const image_histo,
                                        VP8LHistogram* tmp_histo,
-                                       VP8LHistogram* best_combo, int quality,
+                                       VP8LHistogram* best_combo,
                                        int min_cluster_size, int* do_greedy) {
   int iter;
-  uint32_t seed = 0;
+  uint32_t seed = 1;
   int tries_with_no_success = 0;
   int image_histo_size = image_histo->size;
-  const int iter_mult = (quality < 25) ? 2 : 2 + (quality - 25) / 8;
-  const int outer_iters = image_histo_size * iter_mult;
-  const int num_pairs = image_histo_size / 2;
+  const int outer_iters = image_histo_size;
   const int num_tries_no_success = outer_iters / 2;
   VP8LHistogram** const histograms = image_histo->histograms;
 
@@ -803,8 +801,11 @@ static void HistogramCombineStochastic(VP8LHistogramSet* const image_histo,
     double best_cost_diff = 0.;
     int best_idx1 = -1, best_idx2 = 1;
     int j;
-    int num_tries =
-        (num_pairs < image_histo_size) ? num_pairs : image_histo_size;
+    const uint32_t rand_range = (image_histo_size - 1) * image_histo_size;
+    // 6/10 was chosen empirically.
+    // TODO(vrabaud): use less magic constants in that code.
+    const int num_tries = (6 * image_histo_size) / 10;
+
     // If the stochastic method has not worked for a while (10 iterations) and
     // if it requires less iterations to finish off with a greedy approach, go
     // for it.
@@ -818,19 +819,13 @@ static void HistogramCombineStochastic(VP8LHistogramSet* const image_histo,
                    num_tries * (outer_iters - iter));
     if (*do_greedy) break;
 
-    seed += iter;
     for (j = 0; j < num_tries; ++j) {
       double curr_cost_diff;
-      // Choose two histograms at random and try to combine them.
-      uint32_t idx1, idx2;
-      const uint32_t tmp = (j & 7) + 1;
-      const uint32_t diff =
-          (tmp < 3) ? tmp : MyRand(&seed) % (image_histo_size - 1);
-      idx1 = MyRand(&seed) % image_histo_size;
-      idx2 = (idx1 + diff + 1) % image_histo_size;
-      if (idx1 == idx2) {
-        continue;
-      }
+      // Choose two different histograms at random and try to combine them.
+      const uint32_t tmp = MyRand(&seed) % rand_range;
+      const uint32_t idx1 = tmp / (image_histo_size - 1);
+      uint32_t idx2 = tmp % (image_histo_size - 1);
+      if (idx2 >= idx1) ++idx2;
 
       // Calculate cost reduction on combining.
       curr_cost_diff = HistogramAddEval(histograms[idx1], histograms[idx2],
@@ -967,7 +962,7 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
     const int threshold_size = (int)(1 + (x * x * x) * (MAX_HISTO_GREEDY - 1));
     int do_greedy;
     HistogramCombineStochastic(image_histo, tmp_histos->histograms[0],
-                               cur_combo, quality, threshold_size, &do_greedy);
+                               cur_combo, threshold_size, &do_greedy);
     if (do_greedy && !HistogramCombineGreedy(image_histo)) {
       goto Error;
     }
