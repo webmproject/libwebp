@@ -254,6 +254,8 @@ DSP_ENC_OBJS = \
     $(DIROBJ)\dsp\lossless_enc_neon.obj \
     $(DIROBJ)\dsp\lossless_enc_sse2.obj \
     $(DIROBJ)\dsp\lossless_enc_sse41.obj \
+    $(DIROBJ)\dsp\ssim.obj \
+    $(DIROBJ)\dsp\ssim_sse2.obj \
 
 EX_ANIM_UTIL_OBJS = \
     $(DIROBJ)\examples\anim_util.obj \

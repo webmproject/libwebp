@@ -50,6 +50,7 @@ ENC_SOURCES += enc_mips_dsp_r2.c
 ENC_SOURCES += lossless_enc.c
 ENC_SOURCES += lossless_enc_mips32.c
 ENC_SOURCES += lossless_enc_mips_dsp_r2.c
+ENC_SOURCES += ssim.c
 
 libwebpdsp_avx2_la_SOURCES =
 libwebpdsp_avx2_la_SOURCES += enc_avx2.c
@@ -99,6 +100,7 @@ libwebpdsp_sse2_la_SOURCES += argb_sse2.c
 libwebpdsp_sse2_la_SOURCES += cost_sse2.c
 libwebpdsp_sse2_la_SOURCES += enc_sse2.c
 libwebpdsp_sse2_la_SOURCES += lossless_enc_sse2.c
+libwebpdsp_sse2_la_SOURCES += ssim_sse2.c
 libwebpdsp_sse2_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
 libwebpdsp_sse2_la_CFLAGS = $(AM_CFLAGS) $(SSE2_FLAGS)
 libwebpdsp_sse2_la_LIBADD = libwebpdspdecode_sse2.la
