@@ -643,54 +643,70 @@ static void HistoQueueClear(HistoQueue* const histo_queue) {
   WebPSafeFree(histo_queue->queue);
 }
 
-static void SwapHistogramPairs(HistogramPair *p1,
-                               HistogramPair *p2) {
-  const HistogramPair tmp = *p1;
-  *p1 = *p2;
-  *p2 = tmp;
+// Pop a specific pair in the queue by replacing it with the last one
+// and shrinking the queue.
+static void HistoQueuePopPair(HistoQueue* const histo_queue,
+                              HistogramPair* const pair) {
+  assert(pair >= histo_queue->queue &&
+         pair < (histo_queue->queue + histo_queue->size));
+  assert(histo_queue->size > 0);
+  *pair = histo_queue->queue[histo_queue->size - 1];
+  --histo_queue->size;
 }
 
-// Given a valid priority queue in range [0, queue_size) this function checks
-// whether histo_queue[queue_size] should be accepted and swaps it with the
-// front if it is smaller. Otherwise, it leaves it as is.
-static void UpdateQueueFront(HistoQueue* const histo_queue) {
-  if (histo_queue->queue[histo_queue->size].cost_diff >= 0) return;
-
-  if (histo_queue->queue[histo_queue->size].cost_diff <
-      histo_queue->queue[0].cost_diff) {
-    SwapHistogramPairs(histo_queue->queue,
-                       histo_queue->queue + histo_queue->size);
+// Check whether a pair in the queue should be updated as head or not.
+static void HistoQueueUpdateHead(HistoQueue* const histo_queue,
+                                 HistogramPair* const pair) {
+  assert(pair->cost_diff < 0.);
+  assert(pair >= histo_queue->queue &&
+         pair < (histo_queue->queue + histo_queue->size));
+  assert(histo_queue->size > 0);
+  if (pair->cost_diff < histo_queue->queue[0].cost_diff) {
+    // Replace the best pair.
+    const HistogramPair tmp = histo_queue->queue[0];
+    histo_queue->queue[0] = *pair;
+    *pair = tmp;
   }
-  ++histo_queue->size;
-
-  // We cannot add more elements than the capacity.
-  // The allocation adds an extra element to the official capacity so that
-  // histo_queue->queue[histo_queue->max_size] is read/written within bound.
-  assert(histo_queue->size <= histo_queue->max_size);
 }
 
-// -----------------------------------------------------------------------------
-
-static void PreparePair(VP8LHistogram** histograms, int idx1, int idx2,
-                        HistogramPair* const pair) {
-  VP8LHistogram* h1;
-  VP8LHistogram* h2;
+// Create a pair from indices "idx1" and "idx2" provided its cost
+// is inferior to "threshold", a negative entropy.
+// It returns the cost of the pair, or 0. if it superior to threshold.
+static double HistoQueuePush(HistoQueue* const histo_queue,
+                             VP8LHistogram** const histograms, int idx1,
+                             int idx2, double threshold) {
+  const VP8LHistogram* h1;
+  const VP8LHistogram* h2;
+  HistogramPair pair;
   double sum_cost;
 
+  assert(threshold <= 0.);
   if (idx1 > idx2) {
     const int tmp = idx2;
     idx2 = idx1;
     idx1 = tmp;
   }
-  pair->idx1 = idx1;
-  pair->idx2 = idx2;
+  pair.idx1 = idx1;
+  pair.idx2 = idx2;
   h1 = histograms[idx1];
   h2 = histograms[idx2];
   sum_cost = h1->bit_cost_ + h2->bit_cost_;
-  pair->cost_combo = 0.;
-  GetCombinedHistogramEntropy(h1, h2, sum_cost, &pair->cost_combo);
-  pair->cost_diff = pair->cost_combo - sum_cost;
+  pair.cost_combo = 0.;
+  GetCombinedHistogramEntropy(h1, h2, sum_cost + threshold, &pair.cost_combo);
+  pair.cost_diff = pair.cost_combo - sum_cost;
+
+  // Do not even consider the pair if it does not improve the entropy.
+  if (pair.cost_diff >= threshold) return 0.;
+
+  // We cannot add more elements than the capacity.
+  assert(histo_queue->size < histo_queue->max_size);
+  histo_queue->queue[histo_queue->size++] = pair;
+  HistoQueueUpdateHead(histo_queue, &histo_queue->queue[histo_queue->size - 1]);
+
+  return pair.cost_diff;
 }
+
+// -----------------------------------------------------------------------------
 
 // Combines histograms by continuously choosing the one with the highest cost
 // reduction.
@@ -714,13 +730,11 @@ static int HistogramCombineGreedy(VP8LHistogramSet* const image_histo) {
     clusters[i] = i;
     for (j = i + 1; j < image_histo_size; ++j) {
       // Initialize positions array.
-      PreparePair(histograms, i, j, &histo_queue.queue[histo_queue.size]);
-      UpdateQueueFront(&histo_queue);
+      HistoQueuePush(&histo_queue, histograms, i, j, 0.);
     }
   }
 
   while (image_histo_size > 1 && histo_queue.size > 0) {
-    HistogramPair* copy_to;
     const int idx1 = histo_queue.queue[0].idx1;
     const int idx2 = histo_queue.queue[0].idx2;
     HistogramAdd(histograms[idx2], histograms[idx1], histograms[idx1]);
@@ -733,31 +747,22 @@ static int HistogramCombineGreedy(VP8LHistogramSet* const image_histo) {
     }
     --image_histo_size;
 
-    // Remove pairs intersecting the just combined best pair. This will
-    // therefore pop the head of the queue.
-    copy_to = histo_queue.queue;
-    for (i = 0; i < histo_queue.size; ++i) {
+    // Remove pairs intersecting the just combined best pair.
+    for (i = 0; i < histo_queue.size;) {
       HistogramPair* const p = histo_queue.queue + i;
       if (p->idx1 == idx1 || p->idx2 == idx1 ||
           p->idx1 == idx2 || p->idx2 == idx2) {
-        // Do not copy the invalid pair.
-        continue;
+        HistoQueuePopPair(&histo_queue, p);
+      } else {
+        HistoQueueUpdateHead(&histo_queue, p);
+        ++i;
       }
-      if (p->cost_diff < histo_queue.queue[0].cost_diff) {
-        // Replace the top of the queue if we found better.
-        SwapHistogramPairs(histo_queue.queue, p);
-      }
-      SwapHistogramPairs(copy_to, p);
-      ++copy_to;
     }
-    histo_queue.size = (int)(copy_to - histo_queue.queue);
 
     // Push new pairs formed with combined histogram to the queue.
     for (i = 0; i < image_histo_size; ++i) {
       if (clusters[i] != idx1) {
-        PreparePair(histograms, idx1, clusters[i],
-                    &histo_queue.queue[histo_queue.size]);
-        UpdateQueueFront(&histo_queue);
+        HistoQueuePush(&histo_queue, histograms, idx1, clusters[i], 0.);
       }
     }
   }
