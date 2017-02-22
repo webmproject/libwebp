@@ -124,6 +124,9 @@ set_target_properties(webpdecode webpdspdecode webputilsdecode
 add_library(webpdemux ${WEBP_DEMUX_SRCS})
 target_link_libraries(webpdemux webp)
 
+# Define the libraries to install.
+set(INSTALLED_LIBRARIES webpdecoder webp webpdemux)
+
 # Change the compile flags for SIMD files we use.
 list(LENGTH WEBP_SIMD_FILES_TO_INCLUDE WEBP_SIMD_FILES_TO_INCLUDE_LENGTH)
 math(EXPR WEBP_SIMD_FILES_TO_INCLUDE_RANGE
@@ -173,6 +176,7 @@ if(WEBP_BUILD_DWEBP)
     "dwebp")
   add_executable(dwebp ${DWEBP_SRCS})
   target_link_libraries(dwebp exampleutil imagedec imageenc webpdecoder)
+  install(TARGETS dwebp RUNTIME DESTINATION bin)
 endif()
 
 if(WEBP_BUILD_CWEBP)
@@ -182,6 +186,7 @@ if(WEBP_BUILD_CWEBP)
     "cwebp")
   add_executable(cwebp ${CWEBP_SRCS})
   target_link_libraries(cwebp exampleutil imagedec webp)
+  install(TARGETS cwebp RUNTIME DESTINATION bin)
 endif()
 
 if(WEBP_BUILD_GIF2WEBP OR WEBP_BUILD_IMG2WEBP)
@@ -189,6 +194,7 @@ if(WEBP_BUILD_GIF2WEBP OR WEBP_BUILD_IMG2WEBP)
     "")
   add_library(webpmux ${WEBP_MUX_SRCS})
   target_link_libraries(webpmux webp)
+  list(APPEND INSTALLED_LIBRARIES webpmux)
 endif()
 
 if(WEBP_BUILD_GIF2WEBP)
@@ -199,6 +205,7 @@ if(WEBP_BUILD_GIF2WEBP)
   add_executable(gif2webp ${GIF2WEBP_SRCS})
   target_link_libraries(gif2webp exampleutil imageioutil webp webpmux
     ${WEBP_DEP_IMG_LIBRARIES})
+  install(TARGETS gif2webp RUNTIME DESTINATION bin)
 endif()
 
 if(WEBP_BUILD_IMG2WEBP)
@@ -208,6 +215,7 @@ if(WEBP_BUILD_IMG2WEBP)
     "img2webp")
   add_executable(img2webp ${IMG2WEBP_SRCS})
   target_link_libraries(img2webp exampleutil imagedec imageioutil webp webpmux)
+  install(TARGETS img2webp RUNTIME DESTINATION bin)
 endif()
 
 if(WEBP_BUILD_WEBP_JS)
@@ -220,3 +228,38 @@ if(WEBP_BUILD_WEBP_JS)
   target_compile_definitions(webp_js PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
   target_compile_definitions(webpdecoder PUBLIC EMSCRIPTEN)
 endif()
+
+# Install the different headers and libraries.
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/decode.h
+              ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/demux.h
+              ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/encode.h
+              ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/mux.h
+              ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/mux_types.h
+              ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h
+        DESTINATION include/webp)
+install(TARGETS ${INSTALLED_LIBRARIES}
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
+
+# Create the CMake version file.
+add_executable(version_checker ${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.c)
+target_link_libraries(version_checker webpdecoder)
+target_include_directories(version_checker PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_custom_command(TARGET version_checker POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.cmake
+)
+
+# Create the Config file.
+include(CMakePackageConfigHelpers)
+set(ConfigPackageLocation share/WebP/cmake/)
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/WebPConfig.cmake.in
+                              ${CMAKE_CURRENT_BINARY_DIR}/WebPConfig.cmake
+                              INSTALL_DESTINATION ${ConfigPackageLocation}
+)
+
+# Install the generated CMake files.
+install(
+  FILES "${CMAKE_CURRENT_BINARY_DIR}/WebPConfigVersion.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/WebPConfig.cmake"
+  DESTINATION ${ConfigPackageLocation}
+)
