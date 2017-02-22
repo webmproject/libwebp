@@ -138,6 +138,11 @@ foreach(I_FILE RANGE ${WEBP_SIMD_FILES_TO_INCLUDE_RANGE})
   )
 endforeach()
 
+# Install the different libraries.
+install(TARGETS webpdecoder webp webpdemux
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
+
 # Build the executables if asked for.
 if(WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP OR
    WEBP_BUILD_GIF2WEBP OR WEBP_BUILD_IMG2WEBP OR WEBP_BUILD_WEBP_JS)
@@ -164,6 +169,11 @@ if(WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP OR
     "imageenc_[^ ]*")
   add_library(imageenc ${IMAGEENC_SRCS})
   target_link_libraries(imageenc webp)
+
+  # Install the libraries.
+  install(TARGETS exampleutil imageioutil imagedec imageenc
+          LIBRARY DESTINATION lib
+          ARCHIVE DESTINATION lib)
 endif()
 
 if(WEBP_BUILD_DWEBP)
@@ -173,6 +183,7 @@ if(WEBP_BUILD_DWEBP)
     "dwebp")
   add_executable(dwebp ${DWEBP_SRCS})
   target_link_libraries(dwebp exampleutil imagedec imageenc webpdecoder)
+  install(TARGETS dwebp RUNTIME DESTINATION bin)
 endif()
 
 if(WEBP_BUILD_CWEBP)
@@ -182,6 +193,7 @@ if(WEBP_BUILD_CWEBP)
     "cwebp")
   add_executable(cwebp ${CWEBP_SRCS})
   target_link_libraries(cwebp exampleutil imagedec webp)
+  install(TARGETS cwebp RUNTIME DESTINATION bin)
 endif()
 
 if(WEBP_BUILD_GIF2WEBP OR WEBP_BUILD_IMG2WEBP)
@@ -189,6 +201,9 @@ if(WEBP_BUILD_GIF2WEBP OR WEBP_BUILD_IMG2WEBP)
     "")
   add_library(webpmux ${WEBP_MUX_SRCS})
   target_link_libraries(webpmux webp)
+  install(TARGETS webpmux
+          LIBRARY DESTINATION lib
+          ARCHIVE DESTINATION lib)
 endif()
 
 if(WEBP_BUILD_GIF2WEBP)
@@ -199,6 +214,7 @@ if(WEBP_BUILD_GIF2WEBP)
   add_executable(gif2webp ${GIF2WEBP_SRCS})
   target_link_libraries(gif2webp exampleutil imageioutil webp webpmux
     ${WEBP_DEP_IMG_LIBRARIES})
+  install(TARGETS gif2webp RUNTIME DESTINATION bin)
 endif()
 
 if(WEBP_BUILD_IMG2WEBP)
@@ -208,6 +224,7 @@ if(WEBP_BUILD_IMG2WEBP)
     "img2webp")
   add_executable(img2webp ${IMG2WEBP_SRCS})
   target_link_libraries(img2webp exampleutil imagedec imageioutil webp webpmux)
+  install(TARGETS img2webp RUNTIME DESTINATION bin)
 endif()
 
 if(WEBP_BUILD_WEBP_JS)
@@ -219,4 +236,8 @@ if(WEBP_BUILD_WEBP_JS)
   set_target_properties(webp_js PROPERTIES OUTPUT_NAME webp)
   target_compile_definitions(webp_js PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
   target_compile_definitions(webpdecoder PUBLIC EMSCRIPTEN)
+  install(TARGETS webp_js
+          RUNTIME DESTINATION bin
+          LIBRARY DESTINATION lib
+          ARCHIVE DESTINATION lib)
 endif()

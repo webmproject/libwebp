@@ -649,6 +649,7 @@ static void HistoQueuePopPair(HistoQueue* const histo_queue,
                               HistogramPair* const pair) {
   assert(pair >= histo_queue->queue &&
          pair < (histo_queue->queue + histo_queue->size));
+  assert(histo_queue->size > 0);
   *pair = histo_queue->queue[histo_queue->size - 1];
   --histo_queue->size;
 }
@@ -659,6 +660,7 @@ static void HistoQueueUpdateHead(HistoQueue* const histo_queue,
   assert(pair->cost_diff < 0.);
   assert(pair >= histo_queue->queue &&
          pair < (histo_queue->queue + histo_queue->size));
+  assert(histo_queue->size > 0);
   if (pair->cost_diff < histo_queue->queue[0].cost_diff) {
     // Replace the best pair.
     const HistogramPair tmp = histo_queue->queue[0];
@@ -745,8 +747,7 @@ static int HistogramCombineGreedy(VP8LHistogramSet* const image_histo) {
     }
     --image_histo_size;
 
-    // Remove pairs intersecting the just combined best pair. This will
-    // therefore pop the head of the queue.
+    // Remove pairs intersecting the just combined best pair.
     for (i = 0; i < histo_queue.size;) {
       HistogramPair* const p = histo_queue.queue + i;
       if (p->idx1 == idx1 || p->idx2 == idx1 ||
