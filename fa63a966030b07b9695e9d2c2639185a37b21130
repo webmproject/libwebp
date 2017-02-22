@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "20c59a90_af3e6ba6",
+        "filename": "src/enc/histogram_enc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 602,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-22T04:11:39Z",
+      "side": 1,
+      "message": "\u0027u\u0027 is enough. we don\u0027t use unsigned long on it\u0027s own anywhere",
+      "range": {
+        "startLine": 602,
+        "startChar": 42,
+        "endLine": 602,
+        "endChar": 49
+      },
+      "revId": "fa63a966030b07b9695e9d2c2639185a37b21130",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
