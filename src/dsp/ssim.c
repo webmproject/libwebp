@@ -15,7 +15,6 @@
 #include <stdlib.h>  // for abs()
 
 #include "./dsp.h"
-//#include "../enc/vp8i_enc.h"
 
 //------------------------------------------------------------------------------
 // SSIM / PSNR
