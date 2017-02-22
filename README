@@ -113,8 +113,8 @@ make install
 
 CMake:
 ------
-The support for CMake is minimal: it only helps you compile libwebp, cwebp and
-dwebp.
+With CMake, you can compile libwebp, cwebp, dwebp, gif2web, img2webp and the
+JS bindings.
 
 Prerequisites:
 A compiler (e.g., gcc with autotools) and CMake.
@@ -129,11 +129,18 @@ mkdir build && cd build && cmake ../
 make
 make install
 
-If you also want cwebp or dwebp, you will need to enable them through CMake:
+If you also want any of the executables, you will need to enable them through
+CMake, e.g.:
 
 cmake -DWEBP_BUILD_CWEBP=ON -DWEBP_BUILD_DWEBP=ON ../
 
 or through your favorite interface (like ccmake or cmake-qt-gui).
+
+Finally, once installed, you can also use WebP in your CMake project by doing:
+
+find_package(WebP)
+
+which will define the CMake variables WebP_INCLUDE_DIRS and WebP_LIBRARIES.
 
 Gradle:
 -------
