@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e42ca226_b11d2565",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-02-22T15:04:27Z",
+      "side": 1,
+      "message": "let\u0027s not installed these for now...",
+      "revId": "0958e065f93dc229d4bcae0432bea64587ea74e2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "95bc8e55_d2a5f6d0",
+        "filename": "src/enc/histogram_enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-02-22T15:04:27Z",
+      "side": 1,
+      "message": "wrong patch!",
+      "range": {
+        "startLine": 750,
+        "startChar": 42,
+        "endLine": 750,
+        "endChar": 50
+      },
+      "revId": "0958e065f93dc229d4bcae0432bea64587ea74e2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
