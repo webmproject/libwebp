@@ -599,7 +599,7 @@ static VP8LHistogram* HistogramCombineEntropyBin(
 // Implement a Lehmer random number generator with a multiplicative constant of
 // 48271 and a modulo constant of 2^31 − 1.
 static uint32_t MyRand(uint32_t* const seed) {
-  *seed = (uint32_t)(((uint64_t)(*seed) * 48271ul) % 2147483647ul);
+  *seed = (uint32_t)(((uint64_t)(*seed) * 48271u) % 2147483647u);
   assert(*seed > 0);
   return *seed;
 }
