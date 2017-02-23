@@ -1,0 +1,95 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b972d96_66127332",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 6
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-23T22:53:31Z",
+      "side": 1,
+      "message": "what happens in a cross compile? this should always be built and executed for the build host not the target host",
+      "revId": "98b4b8795366cdd9f1560aa3fbc53c67cd871768",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fb8e187_870487ef",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 6
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-23T22:53:31Z",
+      "side": 1,
+      "message": "long line",
+      "revId": "98b4b8795366cdd9f1560aa3fbc53c67cd871768",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b1c899f7_bab7d44c",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 6
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-23T22:53:31Z",
+      "side": 1,
+      "message": "long line",
+      "revId": "98b4b8795366cdd9f1560aa3fbc53c67cd871768",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e90fa42b_d778b272",
+        "filename": "cmake/version.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-23T22:53:31Z",
+      "side": 1,
+      "message": "could be const char** argv",
+      "revId": "98b4b8795366cdd9f1560aa3fbc53c67cd871768",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0678ba1_6d137572",
+        "filename": "cmake/version.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-23T22:53:31Z",
+      "side": 1,
+      "message": "the mux and demux libs carry their own versions. the collected package of webp libs tracks the main library version though",
+      "range": {
+        "startLine": 8,
+        "startChar": 43,
+        "endLine": 8,
+        "endChar": 44
+      },
+      "revId": "98b4b8795366cdd9f1560aa3fbc53c67cd871768",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
