@@ -804,7 +804,7 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
       VP8LSubSampleSize(width, histogram_bits) *
       VP8LSubSampleSize(height, histogram_bits);
   VP8LHistogramSet* histogram_image = NULL;
-  VP8LHistogramSet* tmp_histos = NULL;
+  VP8LHistogram* tmp_histo = NULL;
   int histogram_image_size = 0;
   size_t bit_array_size = 0;
   HuffmanTree* huff_tree = NULL;
@@ -850,8 +850,8 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   }
   histogram_image =
       VP8LAllocateHistogramSet(histogram_image_xysize, *cache_bits);
-  tmp_histos = VP8LAllocateHistogramSet(2, *cache_bits);
-  if (histogram_image == NULL || tmp_histos == NULL) {
+  tmp_histo = VP8LAllocateHistogram(*cache_bits);
+  if (histogram_image == NULL || tmp_histo == NULL) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
@@ -859,7 +859,7 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   // Build histogram image and symbols from backward references.
   if (!VP8LGetHistoImageSymbols(width, height, &refs, quality, low_effort,
                                 histogram_bits, *cache_bits, histogram_image,
-                                tmp_histos, histogram_symbols)) {
+                                tmp_histo, histogram_symbols)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
@@ -880,8 +880,8 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   histogram_image = NULL;
 
   // Free scratch histograms.
-  VP8LFreeHistogramSet(tmp_histos);
-  tmp_histos = NULL;
+  VP8LFreeHistogram(tmp_histo);
+  tmp_histo = NULL;
 
   // Color Cache parameters.
   if (*cache_bits > 0) {
@@ -965,7 +965,7 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   WebPSafeFree(tokens);
   WebPSafeFree(huff_tree);
   VP8LFreeHistogramSet(histogram_image);
-  VP8LFreeHistogramSet(tmp_histos);
+  VP8LFreeHistogram(tmp_histo);
   VP8LBackwardRefsClear(&refs);
   if (huffman_codes != NULL) {
     WebPSafeFree(huffman_codes->codes);

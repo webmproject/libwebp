@@ -103,7 +103,7 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
                              int quality, int low_effort,
                              int histogram_bits, int cache_bits,
                              VP8LHistogramSet* const image_in,
-                             VP8LHistogramSet* const tmp_histos,
+                             VP8LHistogram* const tmp_histo,
                              uint16_t* const histogram_symbols);
 
 // Returns the entropy for the symbols in the input array.
