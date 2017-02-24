@@ -198,12 +198,10 @@ static int AnalyzeEntropy(const uint32_t* argb,
     const uint32_t* prev_row = argb;
     const uint32_t* curr_row = argb + argb_stride;
     for (y = 1; y < height; ++y) {
-      uint32_t prev_pix = curr_row[0];
       for (x = 1; x < width; ++x) {
         const uint32_t pix = curr_row[x];
-        const uint32_t pix_diff = VP8LSubPixels(pix, prev_pix);
+        const uint32_t pix_diff = VP8LSubPixels(pix, curr_row[x - 1]);
         if ((pix_diff == 0) || (pix == prev_row[x])) continue;
-        prev_pix = pix;
         AddSingle(pix,
                   &histo[kHistoAlpha * 256],
                   &histo[kHistoRed * 256],
