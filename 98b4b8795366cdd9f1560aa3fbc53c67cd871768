@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f8f0e54b_70acbeaa",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 6
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2017-02-24T14:05:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1b972d96_66127332",
+      "revId": "98b4b8795366cdd9f1560aa3fbc53c67cd871768",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2fb8e187_870487ef",
         "filename": "CMakeLists.txt",
         "patchSetId": 6
@@ -33,6 +51,24 @@
       "revId": "98b4b8795366cdd9f1560aa3fbc53c67cd871768",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2c05766b_788e1b51",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 6
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2017-02-24T14:05:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2fb8e187_870487ef",
+      "revId": "98b4b8795366cdd9f1560aa3fbc53c67cd871768",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "a109a5f6_f1eb93e4",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 6
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2017-02-24T14:05:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b1c899f7_bab7d44c",
+      "revId": "98b4b8795366cdd9f1560aa3fbc53c67cd871768",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e90fa42b_d778b272",
         "filename": "cmake/version.c",
         "patchSetId": 6
@@ -67,6 +121,24 @@
       "revId": "98b4b8795366cdd9f1560aa3fbc53c67cd871768",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2042d53e_53fa4d39",
+        "filename": "cmake/version.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2017-02-24T14:05:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e90fa42b_d778b272",
+      "revId": "98b4b8795366cdd9f1560aa3fbc53c67cd871768",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -90,6 +162,30 @@
       "revId": "98b4b8795366cdd9f1560aa3fbc53c67cd871768",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a84d3b0f_5e0b0afc",
+        "filename": "cmake/version.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2017-02-24T14:05:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a0678ba1_6d137572",
+      "range": {
+        "startLine": 8,
+        "startChar": 43,
+        "endLine": 8,
+        "endChar": 44
+      },
+      "revId": "98b4b8795366cdd9f1560aa3fbc53c67cd871768",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
