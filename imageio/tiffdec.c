@@ -116,13 +116,48 @@ static tsize_t MyRead(thandle_t opaque, void* dst, tsize_t size) {
   return size;
 }
 
+// Unmultiply Argb data. Taken from dsp/alpha_processing
+// (we don't want to force a dependency to a libdspdec library).
+#define MFIX 24    // 24bit fixed-point arithmetic
+#define HALF ((1u << MFIX) >> 1)
+#define KINV_255 ((1u << MFIX) / 255u)
+
+static uint32_t Unmult(uint8_t x, uint32_t mult) {
+  const uint32_t v = (x * mult + HALF) >> MFIX;
+  return (v > 255u) ? 255u : v;
+}
+
+static WEBP_INLINE uint32_t GetScale(uint32_t a) {
+  return (255u << MFIX) / a;
+}
+
+static void MultARGBRow(uint8_t* ptr, int width) {
+  int x;
+  for (x = 0; x < width; ++x, ptr += 4) {
+    const uint32_t alpha = ptr[3];
+    if (alpha < 255) {
+      if (alpha == 0) {   // alpha == 0
+        ptr[0] = ptr[1] = ptr[2] = 0;
+      } else {
+        const uint32_t scale = GetScale(alpha);
+        ptr[0] = Unmult(ptr[0], scale);
+        ptr[1] = Unmult(ptr[1], scale);
+        ptr[2] = Unmult(ptr[2], scale);
+      }
+    }
+  }
+}
+
 int ReadTIFF(const uint8_t* const data, size_t data_size,
              WebPPicture* const pic, int keep_alpha,
              Metadata* const metadata) {
   MyData my_data = { data, (toff_t)data_size, 0 };
   TIFF* tif;
-  uint32 width, height;
-  uint32* raster;
+  uint32_t width, height;
+  uint16_t samples_per_px = 0;
+  uint16_t extra_samples = 0;
+  uint16_t* extra_samples_ptr = NULL;
+  uint32_t* raster;
   int64_t alloc_size;
   int ok = 0;
   tdir_t dircount;
@@ -143,17 +178,27 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
                     "Only the first will be used, %d will be ignored.\n",
                     dircount - 1);
   }
+  if (!TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLESPERPIXEL, &samples_per_px)) {
+    fprintf(stderr, "Error! Cannot retrieve TIFF samples-per-pixel info.\n");
+    goto End;
+  }
+  if (samples_per_px < 3 || samples_per_px > 4) goto End;  // not supported
 
   if (!(TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &width) &&
         TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &height))) {
     fprintf(stderr, "Error! Cannot retrieve TIFF image dimensions.\n");
     goto End;
   }
-
   if (!ImgIoUtilCheckSizeArgumentsOverflow((uint64_t)width * height,
                                            sizeof(*raster))) {
     goto End;
   }
+  if (!TIFFGetField(tif, TIFFTAG_EXTRASAMPLES,
+                    &extra_samples, &extra_samples_ptr)) {
+    fprintf(stderr, "Error! Cannot retrieve TIFF ExtraSamples info.\n");
+    goto End;
+  }
+
   // _Tiffmalloc uses a signed type for size.
   alloc_size = (int64_t)((uint64_t)width * height * sizeof(*raster));
   if (alloc_size < 0 || alloc_size != (tsize_t)alloc_size) goto End;
@@ -169,6 +214,15 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
 #ifdef WORDS_BIGENDIAN
       TIFFSwabArrayOfLong(raster, width * height);
 #endif
+      // if we have an alpha channel, we must un-multiply from rgbA to RGBA
+      if (samples_per_px > 3 && extra_samples == 1) {
+        uint32_t y;
+        uint8_t* tmp = (uint8_t*)raster;
+        for (y = 0; y < height; ++y) {
+          MultARGBRow(tmp, width);
+          tmp += stride;
+        }
+      }
       ok = keep_alpha
          ? WebPPictureImportRGBA(pic, (const uint8_t*)raster, stride)
          : WebPPictureImportRGBX(pic, (const uint8_t*)raster, stride);
