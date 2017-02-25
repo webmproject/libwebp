@@ -332,9 +332,8 @@ int main(int argc, const char *argv[]) {
       case BMP:
         output_buffer->colorspace = bitstream->has_alpha ? MODE_BGRA : MODE_BGR;
         break;
-      case TIFF:    // note: force pre-multiplied alpha
-        output_buffer->colorspace =
-            bitstream->has_alpha ? MODE_rgbA : MODE_RGB;
+      case TIFF:
+        output_buffer->colorspace = bitstream->has_alpha ? MODE_RGBA : MODE_RGB;
         break;
       case PGM:
       case RAW_YUV:
