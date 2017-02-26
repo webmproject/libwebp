@@ -112,7 +112,7 @@ int ImgIoUtilWriteFile(const char* const file_name,
   if (data == NULL) {
     return 0;
   }
-  out = to_stdout ? stdout : fopen(file_name, "wb");
+  out = to_stdout ? ImgIoUtilSetBinaryMode(stdout) : fopen(file_name, "wb");
   if (out == NULL) {
     fprintf(stderr, "Error! Cannot open output file '%s'\n", file_name);
     return 0;
