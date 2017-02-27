@@ -188,20 +188,31 @@ static WEBP_INLINE uint32_t HashPix(uint32_t pix) {
 static int AnalyzeEntropy(const uint32_t* argb,
                           int width, int height, int argb_stride,
                           int use_palette,
+                          int palette_size, int transform_bits,
                           EntropyIx* const min_entropy_ix,
                           int* const red_and_blue_always_zero) {
   // Allocate histogram set with cache_bits = 0.
-  uint32_t* const histo =
-      (uint32_t*)WebPSafeCalloc(kHistoTotal, sizeof(*histo) * 256);
+  uint32_t* histo;
+
+  if (use_palette && palette_size <= 16) {
+    // In the case of small palettes, we pack 2, 4 or 8 pixels together. In
+    // practice, small palette are better than any other transform.
+    *min_entropy_ix = kPalette;
+    *red_and_blue_always_zero = 1;
+    return 1;
+  }
+  histo = (uint32_t*)WebPSafeCalloc(kHistoTotal, sizeof(*histo) * 256);
   if (histo != NULL) {
     int i, x, y;
-    const uint32_t* prev_row = argb;
-    const uint32_t* curr_row = argb + argb_stride;
-    for (y = 1; y < height; ++y) {
+    const uint32_t* prev_row = NULL;
+    const uint32_t* curr_row = argb;
+    for (y = 0; y < height; ++y) {
       for (x = 1; x < width; ++x) {
         const uint32_t pix = curr_row[x];
         const uint32_t pix_diff = VP8LSubPixels(pix, curr_row[x - 1]);
-        if ((pix_diff == 0) || (pix == prev_row[x])) continue;
+        if ((pix_diff == 0) || (prev_row != NULL && pix == prev_row[x])) {
+          continue;
+        }
         AddSingle(pix,
                   &histo[kHistoAlpha * 256],
                   &histo[kHistoRed * 256],
@@ -262,13 +273,39 @@ static int AnalyzeEntropy(const uint32_t* argb,
           entropy_comp[kHistoRedPredSubGreen] +
           entropy_comp[kHistoGreenPred] +
           entropy_comp[kHistoBluePredSubGreen];
-      // Palette mode seems more efficient in a breakeven case. Bias with 1.0.
-      entropy[kPalette] = entropy_comp[kHistoPalette] - 1.0;
+      entropy[kPalette] = entropy_comp[kHistoPalette];
 
-      *min_entropy_ix = kDirect;
-      for (k = kDirect + 1; k <= last_mode_to_analyze; ++k) {
-        if (entropy[*min_entropy_ix] > entropy[k]) {
-          *min_entropy_ix = (EntropyIx)k;
+      // When including transforms, there is an overhead in bits from
+      // storing them. This overhead is small but matters for small images.
+      // For spatial, there are 14 transformations.
+      entropy[kSpatial] += VP8LSubSampleSize(width, transform_bits) *
+                           VP8LSubSampleSize(height, transform_bits) *
+                           VP8LFastLog2(14);
+      // For color transforms: 24 as only 3 channels are considered in a
+      // ColorTransformElement.
+      entropy[kSpatialSubGreen] += VP8LSubSampleSize(width, transform_bits) *
+                                   VP8LSubSampleSize(height, transform_bits) *
+                                   VP8LFastLog2(24);
+      // For palettes, add the cost of storing the palette.
+      // We empirically estimate the cost of a compressed entry as 8 bits.
+      // The palette is differential-coded when compressed hence a much
+      // lower cost than sizeof(uint32_t)*8.
+      entropy[kPalette] += palette_size * 8;
+
+      if (entropy[kDirect] == 0) {
+        // If the entropy is null, there should only be one color,
+        // and that case is handled at the very beginning of that function.
+        // Unfortunately, we can also have a null entropy because we skip the
+        // first column (an image with constant values on each line generates
+        // a null entropy but could have a different color per line).
+        // TODO(vrabaud) investigate and fix.
+        *min_entropy_ix = kPalette;
+      } else {
+        *min_entropy_ix = kDirect;
+        for (k = kDirect + 1; k <= last_mode_to_analyze; ++k) {
+          if (entropy[*min_entropy_ix] > entropy[k]) {
+            *min_entropy_ix = (EntropyIx)k;
+          }
         }
       }
       *red_and_blue_always_zero = 1;
@@ -358,8 +395,9 @@ static int AnalyzeAndInit(VP8LEncoder* const enc) {
     int red_and_blue_always_zero;
     EntropyIx min_entropy_ix;
     if (!AnalyzeEntropy(pic->argb, width, height, pic->argb_stride,
-                        enc->use_palette_, &min_entropy_ix,
-                        &red_and_blue_always_zero)) {
+                        enc->use_palette_,
+                        enc->palette_size_, enc->transform_bits_,
+                        &min_entropy_ix, &red_and_blue_always_zero)) {
       return 0;
     }
     enc->use_palette_ = (min_entropy_ix == kPalette);
