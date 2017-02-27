@@ -428,7 +428,7 @@ extras/vwebp_sdl: extras/webp_to_sdl.o
 extras/vwebp_sdl: imageio/libimageio_util.a
 extras/vwebp_sdl: src/libwebp.a
 extras/vwebp_sdl: EXTRA_FLAGS += -DWEBP_HAVE_SDL
-extras/vwebp_sdl: -lSDL
+extras/vwebp_sdl: EXTRA_LIBS += -lSDL
 
 $(OUT_EXAMPLES) $(EXTRA_EXAMPLES) $(OTHER_EXAMPLES):
 	$(CC) -o $@ $^ $(LDFLAGS)
