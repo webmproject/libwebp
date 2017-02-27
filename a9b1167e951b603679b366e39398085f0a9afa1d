@@ -16,6 +16,24 @@
       "revId": "a9b1167e951b603679b366e39398085f0a9afa1d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7615d352_5035749d",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 8
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2017-02-27T08:30:10Z",
+      "side": 1,
+      "message": "right, but here, that version is read from the code so all is fine right ? This is not  taken from  git or anywhere else. Otherwise, which version should be given to it ?",
+      "parentUuid": "f251246f_08045b5a",
+      "revId": "a9b1167e951b603679b366e39398085f0a9afa1d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
