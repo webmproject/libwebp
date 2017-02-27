@@ -1182,6 +1182,9 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
     }
     dec->status_ = VP8_STATUS_OK;
     dec->last_pixel_ = (int)(src - data);  // end-of-scan marker
+  } else if (dec->incremental_ && br->eos_ && src == src_end) {
+    dec->status_ = VP8_STATUS_OK;
+    dec->last_pixel_ = (int)(src - data);  // end-of-scan marker
   } else {
     // if not incremental, and we are past the end of buffer (eos_=1), then this
     // is a real bitstream error.
