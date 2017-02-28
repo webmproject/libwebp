@@ -292,7 +292,7 @@ static int AnalyzeEntropy(const uint32_t* argb,
       // lower cost than sizeof(uint32_t)*8.
       entropy[kPalette] += palette_size * 8;
 
-      if (entropy[kDirect] == 0) {
+      if (use_palette && entropy[kDirect] == 0) {
         // If the entropy is null, there should only be one color,
         // and that case is handled at the very beginning of that function.
         // Unfortunately, we can also have a null entropy because we skip the
