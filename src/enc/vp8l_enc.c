@@ -292,7 +292,7 @@ static int AnalyzeEntropy(const uint32_t* argb,
       // lower cost than sizeof(uint32_t)*8.
       entropy[kPalette] += palette_size * 8;
 
-      if (entropy[kDirect] == 0) {
+      if (use_palette && entropy[kDirect] == 0) {
         // If the entropy is null, there should only be one color,
         // and that case is handled at the very beginning of that function.
         // Unfortunately, we can also have a null entropy because we skip the
@@ -308,6 +308,7 @@ static int AnalyzeEntropy(const uint32_t* argb,
           }
         }
       }
+      assert((int)*min_entropy_ix <= last_mode_to_analyze);
       *red_and_blue_always_zero = 1;
       // Let's check if the histogram of the chosen entropy mode has
       // non-zero red and blue values. If all are zero, we can later skip
