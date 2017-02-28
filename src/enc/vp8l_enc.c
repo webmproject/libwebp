@@ -196,7 +196,7 @@ static int AnalyzeEntropy(const uint32_t* argb,
 
   if (use_palette && palette_size <= 16) {
     // In the case of small palettes, we pack 2, 4 or 8 pixels together. In
-    // practice, small palette are better than any other transform.
+    // practice, small palettes are better than any other transform.
     *min_entropy_ix = kPalette;
     *red_and_blue_always_zero = 1;
     return 1;
@@ -206,10 +206,12 @@ static int AnalyzeEntropy(const uint32_t* argb,
     int i, x, y;
     const uint32_t* prev_row = NULL;
     const uint32_t* curr_row = argb;
+    uint32_t pix_prev = argb[0];  // Skip the first pixel.
     for (y = 0; y < height; ++y) {
-      for (x = 1; x < width; ++x) {
+      for (x = 0; x < width; ++x) {
         const uint32_t pix = curr_row[x];
-        const uint32_t pix_diff = VP8LSubPixels(pix, curr_row[x - 1]);
+        const uint32_t pix_diff = VP8LSubPixels(pix, pix_prev);
+        pix_prev = pix;
         if ((pix_diff == 0) || (prev_row != NULL && pix == prev_row[x])) {
           continue;
         }
@@ -292,20 +294,10 @@ static int AnalyzeEntropy(const uint32_t* argb,
       // lower cost than sizeof(uint32_t)*8.
       entropy[kPalette] += palette_size * 8;
 
-      if (use_palette && entropy[kDirect] == 0) {
-        // If the entropy is null, there should only be one color,
-        // and that case is handled at the very beginning of that function.
-        // Unfortunately, we can also have a null entropy because we skip the
-        // first column (an image with constant values on each line generates
-        // a null entropy but could have a different color per line).
-        // TODO(vrabaud) investigate and fix.
-        *min_entropy_ix = kPalette;
-      } else {
-        *min_entropy_ix = kDirect;
-        for (k = kDirect + 1; k <= last_mode_to_analyze; ++k) {
-          if (entropy[*min_entropy_ix] > entropy[k]) {
-            *min_entropy_ix = (EntropyIx)k;
-          }
+      *min_entropy_ix = kDirect;
+      for (k = kDirect + 1; k <= last_mode_to_analyze; ++k) {
+        if (entropy[*min_entropy_ix] > entropy[k]) {
+          *min_entropy_ix = (EntropyIx)k;
         }
       }
       assert((int)*min_entropy_ix <= last_mode_to_analyze);
