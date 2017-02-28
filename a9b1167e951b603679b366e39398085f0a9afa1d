@@ -34,6 +34,24 @@
       "revId": "a9b1167e951b603679b366e39398085f0a9afa1d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0bd12dad_b2e13029",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 8
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-02-28T23:03:37Z",
+      "side": 1,
+      "message": "we use -version-info for each lib for that, dlls get the library version number\n\nhttps://chromium.googlesource.com/webm/libwebp/+/master/src/Makefile.am#38\nhttps://chromium.googlesource.com/webm/libwebp/+/master/src/demux/Makefile.am#12\nhttps://chromium.googlesource.com/webm/libwebp/+/master/src/mux/Makefile.am#17",
+      "parentUuid": "7615d352_5035749d",
+      "revId": "a9b1167e951b603679b366e39398085f0a9afa1d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
