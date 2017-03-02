@@ -280,6 +280,7 @@ model {
       binaries {
         all {
           lib library: "webp", linkage: "static"
+          lib library: "webpdemux", linkage: "static"
         }
       }
       sources {
