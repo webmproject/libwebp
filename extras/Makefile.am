@@ -13,7 +13,10 @@ libwebpextras_la_LDFLAGS = -lm
 libwebpextras_la_LIBADD = ../src/libwebp.la
 
 noinst_PROGRAMS =
-noinst_PROGRAMS += get_disto webp_quality
+noinst_PROGRAMS += webp_quality
+if WANT_DEMUX
+  noinst_PROGRAMS += get_disto
+endif
 if BUILD_VWEBP_SDL
   noinst_PROGRAMS += vwebp_sdl
 endif
