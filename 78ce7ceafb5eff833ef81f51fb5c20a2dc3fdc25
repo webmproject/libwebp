@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a0c78e2_b2e58822",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 10
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-03-02T21:00:37Z",
+      "side": 1,
+      "message": "one thing I realized with this is that the windows version is controlled by the .rc files in the tree. Windows doesn\u0027t go with a separate one, it tracks the lib version",
+      "revId": "78ce7ceafb5eff833ef81f51fb5c20a2dc3fdc25",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
