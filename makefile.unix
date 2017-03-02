@@ -409,11 +409,13 @@ examples/anim_dump: src/libwebp.a
 examples/anim_dump: EXTRA_LIBS += $(GIF_LIBS) $(DWEBP_LIBS)
 examples/cwebp: examples/libexample_util.a
 examples/cwebp: imageio/libimagedec.a
+examples/cwebp: src/demux/libwebpdemux.a
 examples/cwebp: imageio/libimageio_util.a
 examples/cwebp: src/libwebp.a
 examples/cwebp: EXTRA_LIBS += $(CWEBP_LIBS)
 examples/dwebp: examples/libexample_util.a
 examples/dwebp: imageio/libimagedec.a
+examples/dwebp: src/demux/libwebpdemux.a
 examples/dwebp: imageio/libimageenc.a
 examples/dwebp: imageio/libimageio_util.a
 examples/dwebp: src/libwebp.a
@@ -430,13 +432,17 @@ examples/webpmux: examples/libexample_util.a imageio/libimageio_util.a
 examples/webpmux: src/mux/libwebpmux.a src/libwebpdecoder.a
 examples/img2webp: examples/libexample_util.a imageio/libimageio_util.a
 examples/img2webp: imageio/libimagedec.a
+examples/img2webp: src/demux/libwebpdemux.a
 examples/img2webp: src/mux/libwebpmux.a src/libwebp.a
 examples/img2webp: EXTRA_LIBS += $(CWEBP_LIBS)
 examples/webpinfo: examples/libexample_util.a imageio/libimageio_util.a
 examples/webpinfo: src/libwebpdecoder.a
 
 extras/get_disto: extras/get_disto.o
-extras/get_disto: imageio/libimagedec.a imageio/libimageio_util.a src/libwebp.a
+extras/get_disto: imageio/libimagedec.a
+extras/get_disto: src/demux/libwebpdemux.a
+extras/get_disto: imageio/libimageio_util.a
+extras/get_disto: src/libwebp.a
 extras/get_disto: EXTRA_LIBS += $(CWEBP_LIBS)
 
 extras/webp_quality: extras/webp_quality.o

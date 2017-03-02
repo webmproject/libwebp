@@ -15,10 +15,12 @@
 
 #include "./webpdec.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "webp/decode.h"
+#include "webp/demux.h"
 #include "webp/encode.h"
 #include "./imageio_util.h"
 #include "./metadata.h"
@@ -103,6 +105,40 @@ VP8StatusCode DecodeWebPIncremental(
 }
 
 // -----------------------------------------------------------------------------
+// Metadata
+
+static int ExtractMetadata(const uint8_t* const data, size_t data_size,
+                           Metadata* const metadata) {
+  WebPData webp_data = { data, data_size };
+  WebPDemuxer* const demux = WebPDemux(&webp_data);
+  WebPChunkIterator chunk_iter;
+  uint32_t flags;
+
+  if (demux == NULL) return 0;
+  assert(metadata != NULL);
+
+  flags = WebPDemuxGetI(demux, WEBP_FF_FORMAT_FLAGS);
+
+  if ((flags & ICCP_FLAG) && WebPDemuxGetChunk(demux, "ICCP", 1, &chunk_iter)) {
+    MetadataCopy((const char*)chunk_iter.chunk.bytes, chunk_iter.chunk.size,
+                 &metadata->iccp);
+    WebPDemuxReleaseChunkIterator(&chunk_iter);
+  }
+  if ((flags & EXIF_FLAG) && WebPDemuxGetChunk(demux, "EXIF", 1, &chunk_iter)) {
+    MetadataCopy((const char*)chunk_iter.chunk.bytes, chunk_iter.chunk.size,
+                 &metadata->exif);
+    WebPDemuxReleaseChunkIterator(&chunk_iter);
+  }
+  if ((flags & XMP_FLAG) && WebPDemuxGetChunk(demux, "XMP ", 1, &chunk_iter)) {
+    MetadataCopy((const char*)chunk_iter.chunk.bytes, chunk_iter.chunk.size,
+                 &metadata->xmp);
+    WebPDemuxReleaseChunkIterator(&chunk_iter);
+  }
+  WebPDemuxDelete(demux);
+  return 1;
+}
+
+// -----------------------------------------------------------------------------
 
 int ReadWebP(const uint8_t* const data, size_t data_size,
              WebPPicture* const pic,
@@ -114,11 +150,6 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
   WebPBitstreamFeatures* const bitstream = &config.input;
 
   if (data == NULL || data_size == 0 || pic == NULL) return 0;
-
-  // TODO(jzern): add Exif/XMP/ICC extraction.
-  if (metadata != NULL) {
-    fprintf(stderr, "Warning: metadata extraction from WebP is unsupported.\n");
-  }
 
   if (!WebPInitDecoderConfig(&config)) {
     fprintf(stderr, "Library version mismatch!\n");
@@ -181,7 +212,6 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
 
     status = DecodeWebP(data, data_size, &config);
     ok = (status == VP8_STATUS_OK);
-    if (!ok) WebPPictureFree(pic);
     if (ok && !keep_alpha && pic->use_argb) {
       // Need to wipe out the alpha value, as requested.
       int x, y;
@@ -195,9 +225,18 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
 
   if (status != VP8_STATUS_OK) {
     PrintWebPError("input data", status);
+    ok = 0;
   }
 
   WebPFreeDecBuffer(output_buffer);
+
+  if (ok && metadata != NULL) {
+    ok = ExtractMetadata(data, data_size, metadata);
+    if (!ok) {
+      PrintWebPError("metadata", VP8_STATUS_BITSTREAM_ERROR);
+    }
+  }
+  if (!ok) WebPPictureFree(pic);
   return ok;
 }
 
