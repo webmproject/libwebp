@@ -281,6 +281,7 @@ model {
       binaries {
         all {
           lib library: "webp", linkage: "static"
+          lib library: "webpdemux", linkage: "static"
         }
       }
       sources {
@@ -323,6 +324,7 @@ model {
           lib library: "imagedec", linkage: "static"
           lib library: "imageio_util", linkage: "static"
           lib library: "webp", linkage: "static"
+          lib library: "webpdemux", linkage: "static"
         }
       }
       sources {
@@ -343,6 +345,7 @@ model {
           lib library: "imageenc", linkage: "static"
           lib library: "imageio_util", linkage: "static"
           lib library: "webp"
+          lib library: "webpdemux", linkage: "static"
         }
       }
       sources {
@@ -381,6 +384,7 @@ model {
           lib library: "imagedec", linkage: "static"
           lib library: "imageio_util", linkage: "static"
           lib library: "webpmux", linkage: "static"
+          lib library: "webpdemux", linkage: "static"
           lib library: "webp"
         }
       }
