@@ -192,7 +192,8 @@ if(WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP OR
   parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/imageio "IMAGEDEC_SRCS"
     "imagedec_[^ ]*")
   add_library(imagedec ${IMAGEDEC_SRCS})
-  target_link_libraries(imagedec imageioutil webp ${WEBP_DEP_IMG_LIBRARIES})
+  target_link_libraries(imagedec imageioutil webpdemux webp
+    ${WEBP_DEP_IMG_LIBRARIES})
 
   # Image-encoding utility library.
   parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/imageio "IMAGEENC_SRCS"
