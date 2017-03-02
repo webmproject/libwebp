@@ -28,7 +28,6 @@ AC_ARG_ENABLE([everything],
                              [Enable all optional targets. These can still be
                               disabled with --disable-target]),
               [SET_IF_UNSET([enable_libwebpdecoder], [$enableval])
-               SET_IF_UNSET([enable_libwebpdemux], [$enableval])
                SET_IF_UNSET([enable_libwebpextras], [$enableval])
                SET_IF_UNSET([enable_libwebpmux], [$enableval])])
 
@@ -422,7 +421,7 @@ AS_IF([test "x$enable_gl" != "xno"], [
 
   LIBCHECK_EPILOGUE([GL])
 
-  if test "$glut_support" = "yes" -a "$enable_libwebpdemux" = "yes"; then
+  if test "$glut_support" = "yes"; then
     build_vwebp=yes
   fi
 ])
@@ -581,8 +580,7 @@ AS_IF([test "x$enable_gif" != "xno"], [
   )
   LIBCHECK_EPILOGUE([GIF])
 
-  if test "$gif_support" = "yes" -a \
-          "$enable_libwebpdemux" = "yes"; then
+  if test "$gif_support" = "yes"; then
     build_animdiff=yes
   fi
 
@@ -685,14 +683,6 @@ AC_ARG_ENABLE([libwebpmux],
 AC_MSG_RESULT(${enable_libwebpmux-no})
 AM_CONDITIONAL([WANT_MUX], [test "$enable_libwebpmux" = "yes"])
 
-dnl === Check whether libwebpdemux should be built
-AC_MSG_CHECKING(whether libwebpdemux is to be built)
-AC_ARG_ENABLE([libwebpdemux],
-              AS_HELP_STRING([--enable-libwebpdemux],
-                             [Build libwebpdemux @<:@default=no@:>@]))
-AC_MSG_RESULT(${enable_libwebpdemux-no})
-AM_CONDITIONAL([WANT_DEMUX], [test "$enable_libwebpdemux" = "yes"])
-
 dnl === Check whether decoder library should be built.
 AC_MSG_CHECKING(whether decoder library is to be built)
 AC_ARG_ENABLE([libwebpdecoder],
@@ -733,7 +723,6 @@ Static libraries: ${enable_static}
 Threading support: ${enable_threading-no}
 libwebp: yes
 libwebpdecoder: ${enable_libwebpdecoder-no}
-libwebpdemux: ${enable_libwebpdemux-no}
 libwebpmux: ${enable_libwebpmux-no}
 libwebpextras: ${enable_libwebpextras-no}
 

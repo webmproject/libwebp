@@ -17,6 +17,7 @@ libimagedec_la_SOURCES += webpdec.c webpdec.h
 libimagedec_la_SOURCES += wicdec.c wicdec.h
 libimagedec_la_CPPFLAGS = $(JPEG_INCLUDES) $(PNG_INCLUDES) $(TIFF_INCLUDES)
 libimagedec_la_CPPFLAGS += $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
+libimagedec_la_LIBADD = ../src/demux/libwebpdemux.la
 
 libimageenc_la_SOURCES  = image_enc.c image_enc.h
 libimageenc_la_CPPFLAGS = $(JPEG_INCLUDES) $(PNG_INCLUDES) $(TIFF_INCLUDES)
