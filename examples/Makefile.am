@@ -1,6 +1,9 @@
 AM_CPPFLAGS += -I$(top_builddir)/src -I$(top_srcdir)/src
 
-bin_PROGRAMS = dwebp cwebp
+bin_PROGRAMS =
+if WANT_DEMUX
+  bin_PROGRAMS += dwebp cwebp
+endif
 if BUILD_ANIMDIFF
   noinst_PROGRAMS = anim_diff anim_dump
 endif
