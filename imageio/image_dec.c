@@ -31,8 +31,8 @@ WebPInputFileFormat WebPGuessImageType(const uint8_t* const data,
       format = WEBP_WEBP_FORMAT;
     } else if (((magic1 >> 24) & 0xff) == 'P') {
       const int type = (magic1 >> 16) & 0xff;
-      // we only support 'P5' and 'P6' for now.
-      if (type >= '5' && type <= '6') format = WEBP_PNM_FORMAT;
+      // we only support 'P5 -> P7' for now.
+      if (type >= '5' && type <= '7') format = WEBP_PNM_FORMAT;
     }
   }
   return format;
