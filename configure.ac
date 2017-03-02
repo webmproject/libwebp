@@ -752,14 +752,14 @@ libwebpmux: ${enable_libwebpmux-no}
 libwebpextras: ${enable_libwebpextras-no}
 
 Tools:
-cwebp : yes
+cwebp : ${enable_libwebpdemux-no}
   Input format support
   ====================
   JPEG : ${jpeg_support-no}
   PNG  : ${png_support-no}
   TIFF : ${tiff_support-no}
   WIC  : ${wic_support-no}
-dwebp : yes
+dwebp : ${enable_libwebpdemux-no}
   Output format support
   =====================
   PNG  : ${png_support-no}
