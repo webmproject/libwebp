@@ -1,7 +1,9 @@
 AM_CPPFLAGS += -I$(top_builddir)/src -I$(top_srcdir)/src
 noinst_LTLIBRARIES =
 noinst_LTLIBRARIES += libimageio_util.la
-noinst_LTLIBRARIES += libimagedec.la
+if WANT_DEMUX
+  noinst_LTLIBRARIES += libimagedec.la
+endif
 noinst_LTLIBRARIES += libimageenc.la
 
 noinst_HEADERS =
@@ -22,6 +24,7 @@ libimagedec_la_SOURCES += webpdec.c webpdec.h
 libimagedec_la_SOURCES += wicdec.c wicdec.h
 libimagedec_la_CPPFLAGS = $(JPEG_INCLUDES) $(PNG_INCLUDES) $(TIFF_INCLUDES)
 libimagedec_la_CPPFLAGS += $(AM_CPPFLAGS)
+libimagedec_la_LIBADD = ../src/demux/libwebpdemux.la
 
 libimageenc_la_SOURCES  =
 libimageenc_la_SOURCES += image_enc.c image_enc.h
