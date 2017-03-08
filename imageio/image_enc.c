@@ -361,6 +361,7 @@ int WebPWriteTIFF(FILE* fout, const WebPDecBuffer* const buffer) {
   const uint8_t* rgba = buffer->u.RGBA.rgba;
   const int stride = buffer->u.RGBA.stride;
   const uint8_t bytes_per_px = has_alpha ? 4 : 3;
+  const int assoc_alpha = WebPIsPremultipliedMode(buffer->colorspace) ? 1 : 2;
   // For non-alpha case, we omit tag 0x152 (ExtraSamples).
   const uint8_t num_ifd_entries = has_alpha ? NUM_IFD_ENTRIES
                                             : NUM_IFD_ENTRIES - 1;
@@ -388,7 +389,8 @@ int WebPWriteTIFF(FILE* fout, const WebPDecBuffer* const buffer) {
         EXTRA_DATA_OFFSET + 8, 0, 0, 0,
     0x1c, 0x01, 3, 0, 1, 0, 0, 0, 1, 0, 0, 0,    // 154: PlanarConfiguration
     0x28, 0x01, 3, 0, 1, 0, 0, 0, 2, 0, 0, 0,    // 166: ResolutionUnit (inch)
-    0x52, 0x01, 3, 0, 1, 0, 0, 0, 1, 0, 0, 0,    // 178: ExtraSamples: rgbA
+    0x52, 0x01, 3, 0, 1, 0, 0, 0,
+        assoc_alpha, 0, 0, 0,                    // 178: ExtraSamples: rgbA/RGBA
     0, 0, 0, 0,                                  // 190: IFD terminator
     // EXTRA_DATA_OFFSET:
     8, 0, 8, 0, 8, 0, 8, 0,      // BitsPerSample
