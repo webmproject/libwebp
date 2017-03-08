@@ -29,6 +29,8 @@ ifeq ($(strip $(shell uname)), Darwin)
   EXTRA_LIBS  += -L/opt/local/lib
   GL_LIBS = -framework GLUT -framework OpenGL
 else
+  EXTRA_FLAGS += -I/usr/local/include
+  EXTRA_LIBS  += -L/usr/local/lib
   GL_LIBS = -lglut -lGL
 endif
 
