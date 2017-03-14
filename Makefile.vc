@@ -348,6 +348,7 @@ OUT_EXAMPLES = $(DIRBIN)\cwebp.exe $(DIRBIN)\dwebp.exe
 EXTRA_EXAMPLES = $(DIRBIN)\vwebp.exe $(DIRBIN)\webpmux.exe \
                  $(DIRBIN)\img2webp.exe $(DIRBIN)\get_disto.exe \
                  $(DIRBIN)\webp_quality.exe $(DIRBIN)\vwebp_sdl.exe \
+                 $(DIRBIN)\webpinfo.exe
 
 ex: $(OUT_LIBS) $(OUT_EXAMPLES)
 all: ex $(EXTRA_EXAMPLES)
@@ -379,10 +380,12 @@ $(DIRBIN)\img2webp.exe: $(IMAGEIO_DEC_OBJS)
 $(DIRBIN)\img2webp.exe: $(EX_UTIL_OBJS) $(IMAGEIO_UTIL_OBJS) $(LIBWEBP)
 $(DIRBIN)\get_disto.exe: $(DIROBJ)\extras\get_disto.obj
 $(DIRBIN)\get_disto.exe: $(IMAGEIO_DEC_OBJS) $(IMAGEIO_UTIL_OBJS) $(LIBWEBP)
-
 $(DIRBIN)\webp_quality.exe: $(DIROBJ)\extras\webp_quality.obj
 $(DIRBIN)\webp_quality.exe: $(IMAGEIO_UTIL_OBJS)
 $(DIRBIN)\webp_quality.exe: $(EXTRAS_OBJS) $(LIBWEBP)
+$(DIRBIN)\webpinfo.exe: $(DIROBJ)\examples\webpinfo.obj
+$(DIRBIN)\webpinfo.exe: $(IMAGEIO_DEC_OBJS)
+$(DIRBIN)\webpinfo.exe: $(EX_UTIL_OBJS) $(IMAGEIO_UTIL_OBJS) $(LIBWEBP)
 
 $(OUT_EXAMPLES): $(EX_UTIL_OBJS) $(LIBWEBP)
 $(EX_UTIL_OBJS) $(IMAGEIO_UTIL_OBJS): $(OUTPUT_DIRS)
