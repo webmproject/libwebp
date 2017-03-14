@@ -333,7 +333,7 @@ OUT_LIBS += src/libwebp.a
 EXTRA_LIB = extras/libwebpextras.a
 OUT_EXAMPLES = examples/cwebp examples/dwebp
 EXTRA_EXAMPLES = examples/gif2webp examples/vwebp examples/webpmux \
-                 examples/anim_diff examples/img2webp
+                 examples/anim_diff examples/img2webp examples/webpinfo
 OTHER_EXAMPLES = extras/get_disto extras/webp_quality extras/vwebp_sdl
 
 OUTPUT = $(OUT_LIBS) $(OUT_EXAMPLES)
@@ -385,6 +385,7 @@ examples/gif2webp: examples/gif2webp.o $(GIFDEC_OBJS)
 examples/vwebp: examples/vwebp.o
 examples/webpmux: examples/webpmux.o
 examples/img2webp: examples/img2webp.o
+examples/webpinfo: examples/webpinfo.o
 
 examples/anim_diff: examples/libanim_util.a examples/libgifdec.a
 examples/anim_diff: src/demux/libwebpdemux.a examples/libexample_util.a
@@ -416,6 +417,8 @@ examples/img2webp: examples/libexample_util.a imageio/libimageio_util.a
 examples/img2webp: imageio/libimagedec.a
 examples/img2webp: src/mux/libwebpmux.a src/libwebp.a
 examples/img2webp: EXTRA_LIBS += $(CWEBP_LIBS)
+examples/webpinfo: examples/libexample_util.a imageio/libimageio_util.a
+examples/webpinfo: src/libwebpdecoder.a
 
 extras/get_disto: extras/get_disto.o
 extras/get_disto: imageio/libimagedec.a imageio/libimageio_util.a src/libwebp.a
