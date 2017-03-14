@@ -392,6 +392,24 @@ model {
         }
       }
     }
+
+    webpinfo_example(NativeExecutableSpec) {
+      binaries {
+        all {
+          lib library: "example_util", linkage: "static"
+          lib library: "imageio_util", linkage: "static"
+          lib library: "webp"
+        }
+      }
+      sources {
+        c {
+          source {
+            srcDir "./examples"
+            include "webpinfo.c"
+          }
+        }
+      }
+    }
   }
   tasks {
     // Task to test all possible configurations.

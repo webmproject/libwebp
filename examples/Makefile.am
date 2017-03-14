@@ -16,6 +16,9 @@ endif
 if BUILD_VWEBP
   bin_PROGRAMS += vwebp
 endif
+if BUILD_WEBPINFO
+  bin_PROGRAMS += webpinfo
+endif
 
 noinst_LTLIBRARIES = libexample_util.la
 
@@ -65,6 +68,11 @@ img2webp_LDADD  = libexample_util.la ../imageio/libimageio_util.la
 img2webp_LDADD += ../imageio/libimagedec.la
 img2webp_LDADD += ../src/mux/libwebpmux.la ../src/libwebp.la
 img2webp_LDADD += $(PNG_LIBS) $(JPEG_LIBS) $(TIFF_LIBS)
+
+webpinfo_SOURCES = webpinfo.c
+webpinfo_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
+webpinfo_LDADD  = libexample_util.la ../imageio/libimageio_util.la
+webpinfo_LDADD += ../src/libwebp.la
 
 if BUILD_LIBWEBPDECODER
   anim_diff_LDADD += ../src/libwebpdecoder.la

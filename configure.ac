@@ -599,6 +599,11 @@ if test "$enable_libwebpmux" = "yes"; then
 fi
 AM_CONDITIONAL([BUILD_IMG2WEBP], [test "${build_img2webp}" = "yes"])
 
+if test "$enable_libwebpmux" = "yes"; then
+  build_webpinfo=yes
+fi
+AM_CONDITIONAL([BUILD_WEBPINFO], [test "${build_webpinfo}" = "yes"])
+
 dnl === check for WIC support ===
 
 AC_ARG_ENABLE([wic],
@@ -756,6 +761,7 @@ gif2webp    : ${build_gif2webp-no}
 img2webp    : ${build_img2webp-no}
 webpmux     : ${enable_libwebpmux-no}
 vwebp       : ${build_vwebp-no}
+webpinfo    : ${build_webpinfo-no}
 SDL support : ${sdl_support-no}
 vwebp_sdl   : ${build_vwebp_sdl-no}
 ])

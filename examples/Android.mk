@@ -80,3 +80,19 @@ LOCAL_STATIC_LIBRARIES := example_util imageio_util imagedec webpmux webp
 LOCAL_MODULE := img2webp_example
 
 include $(BUILD_EXECUTABLE)
+
+################################################################################
+# webpinfo
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := \
+    webpinfo.c \
+
+LOCAL_CFLAGS := $(WEBP_CFLAGS)
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/../src
+LOCAL_STATIC_LIBRARIES := example_util imageio_util webp
+
+LOCAL_MODULE := webpinfo_example
+
+include $(BUILD_EXECUTABLE)
