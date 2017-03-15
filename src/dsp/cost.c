@@ -405,7 +405,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspCostInit(void) {
     }
 #endif
   }
-
+  WEBP_COMPILER_BARRIER;
   cost_last_cpuinfo_used = VP8GetCPUInfo;
 }
 

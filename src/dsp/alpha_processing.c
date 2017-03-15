@@ -393,5 +393,6 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessing(void) {
     }
 #endif
   }
+  WEBP_COMPILER_BARRIER;
   alpha_processing_last_cpuinfo_used = VP8GetCPUInfo;
 }

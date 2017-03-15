@@ -64,5 +64,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspARGBInit(void) {
     }
 #endif
   }
+  WEBP_COMPILER_BARRIER;
   argb_last_cpuinfo_used = VP8GetCPUInfo;
 }
