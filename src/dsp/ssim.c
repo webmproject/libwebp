@@ -146,6 +146,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8SSIMDspInit(void) {
     }
 #endif
   }
-
+  WEBP_COMPILER_BARRIER;
   ssim_last_cpuinfo_used = VP8GetCPUInfo;
 }

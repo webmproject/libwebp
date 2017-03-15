@@ -269,5 +269,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8FiltersInit(void) {
     }
 #endif
   }
+  WEBP_COMPILER_BARRIER;
   filters_last_cpuinfo_used = VP8GetCPUInfo;
 }

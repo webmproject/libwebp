@@ -99,6 +99,7 @@ static WEBP_TSAN_IGNORE_FUNCTION void InitGammaTables(void) {
     for (v = 0; v <= kGammaTabSize; ++v) {
       kLinearToGammaTab[v] = (int)(255. * pow(scale * v, 1. / kGamma) + .5);
     }
+    WEBP_COMPILER_BARRIER;
     kGammaTablesOk = 1;
   }
 }
@@ -206,6 +207,8 @@ static WEBP_TSAN_IGNORE_FUNCTION void InitGammaTablesF(void) {
     }
     // to prevent small rounding errors to cause read-overflow:
     kLinearToGammaTabF[kGammaTabSize + 1] = kLinearToGammaTabF[kGammaTabSize];
+
+    WEBP_COMPILER_BARRIER;
     kGammaTablesFOk = 1;
   }
 }

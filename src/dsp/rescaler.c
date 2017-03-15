@@ -240,5 +240,6 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInit(void) {
     }
 #endif
   }
+  WEBP_COMPILER_BARRIER;
   rescaler_last_cpuinfo_used = VP8GetCPUInfo;
 }
