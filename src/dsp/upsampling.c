@@ -206,6 +206,7 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444Converters(void) {
     }
 #endif
   }
+  WEBP_COMPILER_BARRIER;
   upsampling_last_cpuinfo_used1 = VP8GetCPUInfo;
 }
 
@@ -260,6 +261,7 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplers(void) {
 #endif
   }
 #endif  // FANCY_UPSAMPLING
+  WEBP_COMPILER_BARRIER;
   upsampling_last_cpuinfo_used2 = VP8GetCPUInfo;
 }
 

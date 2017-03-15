@@ -114,6 +114,10 @@ extern "C" {
 #endif
 #endif
 
+// this macro is used to prevent compiler instruction re-ordering
+// (mostly for multithreaded initializations).
+#define WEBP_COMPILER_BARRIER __asm__ volatile("" ::: "memory")
+
 #define WEBP_UBSAN_IGNORE_UNDEF
 #define WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW
 #if defined(__clang__) && defined(__has_attribute)
