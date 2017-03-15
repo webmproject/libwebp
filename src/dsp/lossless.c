@@ -656,6 +656,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
     }
 #endif
   }
+  WEBP_COMPILER_BARRIER;
   lossless_last_cpuinfo_used = VP8GetCPUInfo;
 }
 #undef COPY_PREDICTOR_ARRAY

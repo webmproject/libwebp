@@ -162,6 +162,7 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplers(void) {
     }
 #endif  // WEBP_USE_MIPS_DSP_R2
   }
+  WEBP_COMPILER_BARRIER;
   yuv_last_cpuinfo_used = VP8GetCPUInfo;
 }
 
