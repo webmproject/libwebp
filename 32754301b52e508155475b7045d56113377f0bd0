@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ccfbb25f_212b098a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-03-16T05:57:46Z",
+      "side": 1,
+      "message": "in its docs msvc guarantees compiler instruction reordering, but the barrier is meant to avoid reordering on the cpu",
+      "revId": "32754301b52e508155475b7045d56113377f0bd0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9d43970_7797dca0",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-03-16T05:57:46Z",
+      "side": 1,
+      "message": "this is unfortunate",
+      "revId": "32754301b52e508155475b7045d56113377f0bd0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
