@@ -1362,7 +1362,7 @@ static int CalculateBestCacheSize(const uint32_t* argb, int quality,
       const uint32_t g = (pix >>  8) & 0xff;
       const uint32_t b = (pix >>  0) & 0xff;
       // The keys of the caches can be derived from the longest one.
-      int key = HashPix(pix, 32 - cache_bits_max);
+      int key = VP8LHashPix(pix, 32 - cache_bits_max);
       // Do not use the color cache for cache_bits = 0.
       ++histos[0]->blue_[b];
       ++histos[0]->literal_[g];
@@ -1391,7 +1391,7 @@ static int CalculateBestCacheSize(const uint32_t* argb, int quality,
       do {
         if (*argb != argb_prev) {
           // Efficiency: insert only if the color changes.
-          int key = HashPix(*argb, 32 - cache_bits_max);
+          int key = VP8LHashPix(*argb, 32 - cache_bits_max);
           for (i = cache_bits_max; i >= 1; --i, key >>= 1) {
             hashers[i].colors_[key] = *argb;
           }
