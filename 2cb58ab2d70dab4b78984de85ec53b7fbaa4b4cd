@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "354659e2_4b018164",
+        "filename": "examples/webpinfo.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 411,
+      "author": {
+        "id": 1003005
+      },
+      "writtenOn": "2017-03-17T16:59:51Z",
+      "side": 1,
+      "message": "An alternative is to return WEBP_INFO_PARSE_ERROR or WEBP_INFO_BITSTREAM_ERROR.",
+      "range": {
+        "startLine": 411,
+        "startChar": 4,
+        "endLine": 411,
+        "endChar": 57
+      },
+      "revId": "2cb58ab2d70dab4b78984de85ec53b7fbaa4b4cd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dfc277d3_3863acdc",
         "filename": "examples/webpinfo.c",
         "patchSetId": 1
