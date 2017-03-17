@@ -28,6 +28,12 @@
 #define snprintf _snprintf
 #endif
 
+static const char* const kFormats[3] = {
+  "Unknown",
+  "Lossy",
+  "Lossless"
+};
+
 typedef enum {
   WEBP_INFO_OK = 0,
   WEBP_INFO_TRUNCATED_DATA,
@@ -402,9 +408,10 @@ static WebPInfoStatus ProcessImageChunk(const ChunkData* const chunk_data,
     return WEBP_INFO_BITSTREAM_ERROR;
   }
   if (!webp_info->quiet_) {
-    printf("  Width %d\n  Height %d\n  Alpha %d\n  Animation %d\n  Format %d\n",
+    assert(features.format >= 0 && features.format <= 2);
+    printf("  Width %d\n  Height %d\n  Alpha %d\n  Animation %d\n  Format %s\n",
            features.width, features.height, features.has_alpha,
-           features.has_animation, features.format);
+           features.has_animation, kFormats[features.format]);
   }
   if (webp_info->is_processing_anim_frame_) {
     ++webp_info->anmf_subchunk_counts_[chunk_data->id_ == CHUNK_VP8 ? 0 : 1];
