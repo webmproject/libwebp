@@ -600,11 +600,16 @@ static void StoreFullHuffmanCode(VP8LBitWriter* const bw,
     length = write_trimmed_length ? trimmed_length : num_tokens;
     VP8LPutBits(bw, write_trimmed_length, 1);
     if (write_trimmed_length) {
-      const int nbits = VP8LBitsLog2Ceiling(trimmed_length - 1);
-      const int nbitpairs = (nbits == 0) ? 1 : (nbits + 1) / 2;
-      VP8LPutBits(bw, nbitpairs - 1, 3);
-      assert(trimmed_length >= 2);
-      VP8LPutBits(bw, trimmed_length - 2, nbitpairs * 2);
+      if (trimmed_length == 2) {
+        VP8LPutBits(bw, 0, 3 + 2);     // nbitpairs=1, trimmed_length=2
+      } else {
+        const int nbits = BitsLog2Floor(trimmed_length - 2);
+        const int nbitpairs = nbits / 2 + 1;
+        assert(trimmed_length > 2);
+        assert(nbitpairs - 1 < 8);
+        VP8LPutBits(bw, nbitpairs - 1, 3);
+        VP8LPutBits(bw, trimmed_length - 2, nbitpairs * 2);
+      }
     }
     StoreHuffmanTreeToBitMask(bw, tokens, length, &huffman_code);
   }
