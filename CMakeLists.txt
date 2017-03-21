@@ -248,6 +248,7 @@ if(WEBP_BUILD_IMG2WEBP)
 endif()
 
 if(WEBP_BUILD_WEBP_JS)
+  # JavaScript version
   add_executable(webp_js
                  ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
   target_link_libraries(webp_js webpdecoder SDL)
@@ -255,6 +256,16 @@ if(WEBP_BUILD_WEBP_JS)
       "-s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0")
   set_target_properties(webp_js PROPERTIES OUTPUT_NAME webp)
   target_compile_definitions(webp_js PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
+
+  # WASM version
+  add_executable(webp_wasm
+                 ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
+  target_link_libraries(webp_wasm webpdecoder SDL)
+  set_target_properties(webp_wasm PROPERTIES LINK_FLAGS
+      "-s WASM=1 -s 'BINARYEN_METHOD=\"native-wasm\"' \
+      -s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0")
+  target_compile_definitions(webp_wasm PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
+
   target_compile_definitions(webpdecoder PUBLIC EMSCRIPTEN)
 endif()
 
