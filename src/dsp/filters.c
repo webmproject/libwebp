@@ -16,6 +16,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../utils/thread_once.h"
+
 //------------------------------------------------------------------------------
 // Helpful macro.
 
@@ -231,12 +233,7 @@ extern void VP8FiltersInitMSA(void);
 extern void VP8FiltersInitNEON(void);
 extern void VP8FiltersInitSSE2(void);
 
-static volatile VP8CPUInfo filters_last_cpuinfo_used =
-    (VP8CPUInfo)&filters_last_cpuinfo_used;
-
-WEBP_TSAN_IGNORE_FUNCTION void VP8FiltersInit(void) {
-  if (filters_last_cpuinfo_used == VP8GetCPUInfo) return;
-
+WEBP_TSAN_IGNORE_FUNCTION static void FiltersInit(void) {
   WebPUnfilters[WEBP_FILTER_NONE] = NULL;
   WebPUnfilters[WEBP_FILTER_HORIZONTAL] = HorizontalUnfilter;
   WebPUnfilters[WEBP_FILTER_VERTICAL] = VerticalUnfilter;
@@ -269,5 +266,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8FiltersInit(void) {
     }
 #endif
   }
-  filters_last_cpuinfo_used = VP8GetCPUInfo;
+}
+
+WEBP_TSAN_IGNORE_FUNCTION void VP8FiltersInit(void) {
+  WEBP_ONCE(FiltersInit);
 }

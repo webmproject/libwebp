@@ -12,6 +12,7 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include "./dsp.h"
+#include "../utils/thread_once.h"
 
 #define USE_STATIC_TABLES     // undefine to have run-time table initialization
 
@@ -344,7 +345,7 @@ const int8_t* const VP8ksclip2 = (const int8_t*)&sclip2[112];
 const uint8_t* const VP8kclip1 = &clip1[255];
 const uint8_t* const VP8kabs0 = &abs0[255];
 
-WEBP_TSAN_IGNORE_FUNCTION void VP8InitClipTables(void) {
+WEBP_TSAN_IGNORE_FUNCTION static void InitClipTables(void) {
 #if !defined(USE_STATIC_TABLES)
   int i;
   if (!tables_ok) {
@@ -363,4 +364,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8InitClipTables(void) {
     tables_ok = 1;
   }
 #endif    // USE_STATIC_TABLES
+}
+
+WEBP_TSAN_IGNORE_FUNCTION void VP8InitClipTables(void) {
+  WEBP_ONCE(InitClipTables);
 }
