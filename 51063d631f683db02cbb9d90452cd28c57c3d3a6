@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a5a6cc17_f32cb647",
+        "filename": "src/utils/thread_once.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-03-21T02:09:12Z",
+      "side": 1,
+      "message": "we\u0027d need something like (callable_func, init_func) to be able to selectively remove the tsan annotation without regressing in the branch at line 63.",
+      "revId": "51063d631f683db02cbb9d90452cd28c57c3d3a6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "242e0ac0_f4e7003d",
+        "filename": "src/utils/thread_once.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-03-21T02:09:12Z",
+      "side": 1,
+      "message": "this could be changed to be \u0027done\u0027 which is more in line with what the other branches provide now. this would then make sense to use with other inits for tables",
+      "revId": "51063d631f683db02cbb9d90452cd28c57c3d3a6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
