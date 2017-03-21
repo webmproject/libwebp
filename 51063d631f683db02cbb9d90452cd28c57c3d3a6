@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "722850cb_2b12e8e1",
+        "filename": "src/dsp/alpha_processing.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-03-21T06:35:18Z",
+      "side": 1,
+      "message": "we still need WEBP_TSAN_IGNORE_FUNCTION until WEBP_ONCE is supported on all platforms, right?",
+      "range": {
+        "startLine": 358,
+        "startChar": 0,
+        "endLine": 358,
+        "endChar": 25
+      },
+      "revId": "51063d631f683db02cbb9d90452cd28c57c3d3a6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61196e39_e93a6770",
+        "filename": "src/dsp/dec_clip_tables.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-03-21T06:35:18Z",
+      "side": 1,
+      "message": "for the record: probably no longer needed, once WEBP_ONCE is working ok",
+      "range": {
+        "startLine": 364,
+        "startChar": 4,
+        "endLine": 364,
+        "endChar": 13
+      },
+      "revId": "51063d631f683db02cbb9d90452cd28c57c3d3a6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e8958483_6e70528e",
+        "filename": "src/utils/thread_once.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-03-21T06:35:18Z",
+      "side": 1,
+      "message": "author: jzern@ !",
+      "range": {
+        "startLine": 10,
+        "startChar": 28,
+        "endLine": 10,
+        "endChar": 0
+      },
+      "revId": "51063d631f683db02cbb9d90452cd28c57c3d3a6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a5a6cc17_f32cb647",
         "filename": "src/utils/thread_once.h",
         "patchSetId": 1
@@ -19,6 +88,24 @@
     },
     {
       "key": {
+        "uuid": "271b43aa_c7915840",
+        "filename": "src/utils/thread_once.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-03-21T06:35:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a5a6cc17_f32cb647",
+      "revId": "51063d631f683db02cbb9d90452cd28c57c3d3a6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "242e0ac0_f4e7003d",
         "filename": "src/utils/thread_once.h",
         "patchSetId": 1
@@ -33,6 +120,24 @@
       "revId": "51063d631f683db02cbb9d90452cd28c57c3d3a6",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa1f7628_a5185f48",
+        "filename": "src/utils/thread_once.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-03-21T06:35:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "242e0ac0_f4e7003d",
+      "revId": "51063d631f683db02cbb9d90452cd28c57c3d3a6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
