@@ -16,6 +16,7 @@
 
 #include "./dsp.h"
 #include "../enc/vp8i_enc.h"
+#include "../utils/thread_once.h"
 
 static WEBP_INLINE uint8_t clip_8b(int v) {
   return (!(v & ~0xff)) ? v : (v < 0) ? 0 : 255;
@@ -724,12 +725,7 @@ extern void VP8EncDspInitMIPS32(void);
 extern void VP8EncDspInitMIPSdspR2(void);
 extern void VP8EncDspInitMSA(void);
 
-static volatile VP8CPUInfo enc_last_cpuinfo_used =
-    (VP8CPUInfo)&enc_last_cpuinfo_used;
-
-WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
-  if (enc_last_cpuinfo_used == VP8GetCPUInfo) return;
-
+WEBP_TSAN_IGNORE_FUNCTION static void EncDspInit(void) {
   VP8DspInit();  // common inverse transforms
   InitTables();
 
@@ -793,5 +789,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
     }
 #endif
   }
-  enc_last_cpuinfo_used = VP8GetCPUInfo;
+}
+
+WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
+  WEBP_ONCE(EncDspInit);
 }

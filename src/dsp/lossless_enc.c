@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include "../dec/vp8li_dec.h"
 #include "../utils/endian_inl_utils.h"
+#include "../utils/thread_once.h"
 #include "./lossless.h"
 #include "./lossless_common.h"
 #include "./yuv.h"
@@ -861,12 +862,7 @@ extern void VP8LEncDspInitMIPS32(void);
 extern void VP8LEncDspInitMIPSdspR2(void);
 extern void VP8LEncDspInitMSA(void);
 
-static volatile VP8CPUInfo lossless_enc_last_cpuinfo_used =
-    (VP8CPUInfo)&lossless_enc_last_cpuinfo_used;
-
-WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInit(void) {
-  if (lossless_enc_last_cpuinfo_used == VP8GetCPUInfo) return;
-
+WEBP_TSAN_IGNORE_FUNCTION static void EncDspInit(void) {
   VP8LDspInit();
 
   VP8LSubtractGreenFromBlueAndRed = VP8LSubtractGreenFromBlueAndRed_C;
@@ -958,7 +954,10 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInit(void) {
     }
 #endif
   }
-  lossless_enc_last_cpuinfo_used = VP8GetCPUInfo;
+}
+
+WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInit(void) {
+  WEBP_ONCE(EncDspInit);
 }
 
 //------------------------------------------------------------------------------
