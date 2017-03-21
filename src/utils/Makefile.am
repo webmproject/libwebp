@@ -31,6 +31,7 @@ COMMON_SOURCES += rescaler_utils.c
 COMMON_SOURCES += rescaler_utils.h
 COMMON_SOURCES += random_utils.c
 COMMON_SOURCES += random_utils.h
+COMMON_SOURCES += thread_once.h
 COMMON_SOURCES += thread_utils.c
 COMMON_SOURCES += thread_utils.h
 COMMON_SOURCES += utils.c
