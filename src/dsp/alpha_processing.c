@@ -13,6 +13,7 @@
 
 #include <assert.h>
 #include "src/dsp/dsp.h"
+#include "src/utils/thread_once.h"
 
 // Tables can be faster on some platform but incur some extra binary size (~2k).
 #if !defined(USE_TABLES_FOR_ALPHA_MULT)
@@ -409,12 +410,7 @@ extern void WebPInitAlphaProcessingSSE2(void);
 extern void WebPInitAlphaProcessingSSE41(void);
 extern void WebPInitAlphaProcessingNEON(void);
 
-static volatile VP8CPUInfo alpha_processing_last_cpuinfo_used =
-    (VP8CPUInfo)&alpha_processing_last_cpuinfo_used;
-
-WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessing(void) {
-  if (alpha_processing_last_cpuinfo_used == VP8GetCPUInfo) return;
-
+WEBP_TSAN_IGNORE_FUNCTION static void InitAlphaProcessing(void) {
   WebPMultARGBRow = WebPMultARGBRow_C;
   WebPMultRow = WebPMultRow_C;
   WebPApplyAlphaMultiply4444 = ApplyAlphaMultiply_16b_C;
@@ -474,6 +470,8 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessing(void) {
   assert(WebPPackRGB != NULL);
   assert(WebPHasAlpha8b != NULL);
   assert(WebPHasAlpha32b != NULL);
+}
 
-  alpha_processing_last_cpuinfo_used = VP8GetCPUInfo;
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessing(void) {
+  WEBP_ONCE(InitAlphaProcessing);
 }
