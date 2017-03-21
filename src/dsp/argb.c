@@ -12,6 +12,7 @@
 // Author: Djordje Pesut (djordje.pesut@imgtec.com)
 
 #include "./dsp.h"
+#include "../utils/thread_once.h"
 
 static WEBP_INLINE uint32_t MakeARGB32(int a, int r, int g, int b) {
   return (((uint32_t)a << 24) | (r << 16) | (g << 8) | b);
@@ -42,12 +43,7 @@ void (*VP8PackRGB)(const uint8_t*, const uint8_t*, const uint8_t*,
 extern void VP8EncDspARGBInitMIPSdspR2(void);
 extern void VP8EncDspARGBInitSSE2(void);
 
-static volatile VP8CPUInfo argb_last_cpuinfo_used =
-    (VP8CPUInfo)&argb_last_cpuinfo_used;
-
-WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspARGBInit(void) {
-  if (argb_last_cpuinfo_used == VP8GetCPUInfo) return;
-
+WEBP_TSAN_IGNORE_FUNCTION static void DspARGBInit(void) {
   VP8PackARGB = PackARGB;
   VP8PackRGB = PackRGB;
 
@@ -64,5 +60,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspARGBInit(void) {
     }
 #endif
   }
-  argb_last_cpuinfo_used = VP8GetCPUInfo;
+}
+
+WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspARGBInit(void) {
+  WEBP_ONCE(DspARGBInit);
 }

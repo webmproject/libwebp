@@ -11,6 +11,7 @@
 
 #include "./dsp.h"
 #include "../enc/cost_enc.h"
+#include "../utils/thread_once.h"
 
 //------------------------------------------------------------------------------
 // Boolean-cost cost table
@@ -378,12 +379,7 @@ extern void VP8EncDspCostInitMIPS32(void);
 extern void VP8EncDspCostInitMIPSdspR2(void);
 extern void VP8EncDspCostInitSSE2(void);
 
-static volatile VP8CPUInfo cost_last_cpuinfo_used =
-    (VP8CPUInfo)&cost_last_cpuinfo_used;
-
-WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspCostInit(void) {
-  if (cost_last_cpuinfo_used == VP8GetCPUInfo) return;
-
+WEBP_TSAN_IGNORE_FUNCTION static void DspCostInit(void) {
   VP8GetResidualCost = GetResidualCost;
   VP8SetResidualCoeffs = SetResidualCoeffs;
 
@@ -405,8 +401,10 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspCostInit(void) {
     }
 #endif
   }
+}
 
-  cost_last_cpuinfo_used = VP8GetCPUInfo;
+WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspCostInit(void) {
+  WEBP_ONCE(DspCostInit);
 }
 
 //------------------------------------------------------------------------------

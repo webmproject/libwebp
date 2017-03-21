@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include "../dec/vp8li_dec.h"
 #include "../utils/endian_inl_utils.h"
+#include "../utils/thread_once.h"
 #include "./lossless.h"
 #include "./lossless_common.h"
 
@@ -590,9 +591,6 @@ extern void VP8LDspInitNEON(void);
 extern void VP8LDspInitMIPSdspR2(void);
 extern void VP8LDspInitMSA(void);
 
-static volatile VP8CPUInfo lossless_last_cpuinfo_used =
-    (VP8CPUInfo)&lossless_last_cpuinfo_used;
-
 #define COPY_PREDICTOR_ARRAY(IN, OUT) do {              \
   (OUT)[0] = IN##0;                                     \
   (OUT)[1] = IN##1;                                     \
@@ -612,9 +610,7 @@ static volatile VP8CPUInfo lossless_last_cpuinfo_used =
   (OUT)[15] = IN##0;                                    \
 } while (0);
 
-WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
-  if (lossless_last_cpuinfo_used == VP8GetCPUInfo) return;
-
+WEBP_TSAN_IGNORE_FUNCTION static void DspInit(void) {
   COPY_PREDICTOR_ARRAY(Predictor, VP8LPredictors)
   COPY_PREDICTOR_ARRAY(Predictor, VP8LPredictors_C)
   COPY_PREDICTOR_ARRAY(PredictorAdd, VP8LPredictorsAdd)
@@ -656,7 +652,10 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
     }
 #endif
   }
-  lossless_last_cpuinfo_used = VP8GetCPUInfo;
+}
+
+WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
+  WEBP_ONCE(DspInit);
 }
 #undef COPY_PREDICTOR_ARRAY
 
