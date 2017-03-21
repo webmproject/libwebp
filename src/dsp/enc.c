@@ -16,6 +16,7 @@
 
 #include "src/dsp/dsp.h"
 #include "src/enc/vp8i_enc.h"
+#include "src/utils/thread_once.h"
 
 static WEBP_INLINE uint8_t clip_8b(int v) {
   return (!(v & ~0xff)) ? v : (v < 0) ? 0 : 255;
@@ -90,7 +91,7 @@ static uint8_t clip1[255 + 510 + 1];    // clips [-255,510] to [0,255]
 // and make sure it's set to true _last_ (so as to be thread-safe)
 static volatile int tables_ok = 0;
 
-static WEBP_TSAN_IGNORE_FUNCTION void InitTables(void) {
+WEBP_TSAN_IGNORE_FUNCTION static void InitTables(void) {
   if (!tables_ok) {
     int i;
     for (i = -255; i <= 255 + 255; ++i) {
@@ -740,12 +741,7 @@ extern void VP8EncDspInitMIPS32(void);
 extern void VP8EncDspInitMIPSdspR2(void);
 extern void VP8EncDspInitMSA(void);
 
-static volatile VP8CPUInfo enc_last_cpuinfo_used =
-    (VP8CPUInfo)&enc_last_cpuinfo_used;
-
-WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
-  if (enc_last_cpuinfo_used == VP8GetCPUInfo) return;
-
+WEBP_TSAN_IGNORE_FUNCTION static void EncDspInit(void) {
   VP8DspInit();  // common inverse transforms
   InitTables();
 
@@ -838,6 +834,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
   assert(VP8EncQuantizeBlockWHT != NULL);
   assert(VP8Copy4x4 != NULL);
   assert(VP8Copy16x8 != NULL);
+}
 
-  enc_last_cpuinfo_used = VP8GetCPUInfo;
+WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
+  WEBP_ONCE(EncDspInit);
 }

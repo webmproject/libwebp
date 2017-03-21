@@ -15,6 +15,7 @@
 
 #include "src/dsp/dsp.h"
 #include "src/dec/vp8i_dec.h"
+#include "src/utils/thread_once.h"
 #include "src/utils/utils.h"
 
 //------------------------------------------------------------------------------
@@ -741,12 +742,7 @@ extern void VP8DspInitMIPS32(void);
 extern void VP8DspInitMIPSdspR2(void);
 extern void VP8DspInitMSA(void);
 
-static volatile VP8CPUInfo dec_last_cpuinfo_used =
-    (VP8CPUInfo)&dec_last_cpuinfo_used;
-
-WEBP_TSAN_IGNORE_FUNCTION void VP8DspInit(void) {
-  if (dec_last_cpuinfo_used == VP8GetCPUInfo) return;
-
+WEBP_TSAN_IGNORE_FUNCTION static void DspInit(void) {
   VP8InitClipTables();
 
 #if !WEBP_NEON_OMIT_C_CODE
@@ -889,6 +885,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInit(void) {
   assert(VP8PredChroma8[5] != NULL);
   assert(VP8PredChroma8[6] != NULL);
   assert(VP8DitherCombine8x8 != NULL);
+}
 
-  dec_last_cpuinfo_used = VP8GetCPUInfo;
+WEBP_TSAN_IGNORE_FUNCTION void VP8DspInit(void) {
+  WEBP_ONCE(DspInit);
 }
