@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8082ac6a_9b905693",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 4
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1001135
+      },
+      "writtenOn": "2017-03-21T15:38:38Z",
+      "side": 1,
+      "message": "It probably is still worth adding -s \u0027BINARYEN_TRAP_MODE\u003d\"allow\"\u0027 here, even though it didn\u0027t have a huge performance impact in my testing.",
+      "revId": "134e314fd8f7ffd995a7a4fd0a0f07c6459f77b5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
