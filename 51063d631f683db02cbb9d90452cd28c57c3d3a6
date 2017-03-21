@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "79a4f634_eb04b63c",
+        "filename": "src/dsp/alpha_processing.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-03-21T19:34:56Z",
+      "side": 1,
+      "message": "\u003e we still need WEBP_TSAN_IGNORE_FUNCTION until WEBP_ONCE is supported on all platforms, right?\n\nyes we need to apply it in all cases unless we added the extra level of indirection I was suggesting in thread_once.h",
+      "parentUuid": "722850cb_2b12e8e1",
+      "range": {
+        "startLine": 358,
+        "startChar": 0,
+        "endLine": 358,
+        "endChar": 25
+      },
+      "revId": "51063d631f683db02cbb9d90452cd28c57c3d3a6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "61196e39_e93a6770",
         "filename": "src/dsp/dec_clip_tables.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2017-03-21T06:35:18Z",
       "side": 1,
       "message": "for the record: probably no longer needed, once WEBP_ONCE is working ok",
+      "range": {
+        "startLine": 364,
+        "startChar": 4,
+        "endLine": 364,
+        "endChar": 13
+      },
+      "revId": "51063d631f683db02cbb9d90452cd28c57c3d3a6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ede6604_f49392df",
+        "filename": "src/dsp/dec_clip_tables.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-03-21T19:34:56Z",
+      "side": 1,
+      "message": "\u003e for the record: probably no longer needed, once WEBP_ONCE is working ok\n\nyes this could be shifted up to WEBP_ONCE once it has an \u0027init_done\u0027 flag for the fallback case",
+      "parentUuid": "61196e39_e93a6770",
       "range": {
         "startLine": 364,
         "startChar": 4,
@@ -82,6 +130,30 @@
       "writtenOn": "2017-03-21T07:13:48Z",
       "side": 1,
       "message": "also: can we assume that pthread is always available? Or do we need an extra \u0027#ifdef WEBP_HAVE_PTHREAD\u0027 here?",
+      "range": {
+        "startLine": 52,
+        "startChar": 20,
+        "endLine": 52,
+        "endChar": 0
+      },
+      "revId": "51063d631f683db02cbb9d90452cd28c57c3d3a6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab77a2b6_21a5631a",
+        "filename": "src/utils/thread_once.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-03-21T19:34:56Z",
+      "side": 1,
+      "message": "\u003e also: can we assume that pthread is always available? Or do we need an extra \u0027#ifdef WEBP_HAVE_PTHREAD\u0027 here?\n\nI was about to do that, but we make the same assumption in thread_utils actually. All we\u0027re defining at the moment is WEBP_USE_THREAD based on pthread/windows thread existence.",
+      "parentUuid": "6e0faa59_2c13c7a5",
       "range": {
         "startLine": 52,
         "startChar": 20,
