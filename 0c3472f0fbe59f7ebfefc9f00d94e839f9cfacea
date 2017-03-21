@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "759bb440_be4abc95",
+        "filename": "webp_js/index_wasm.html",
+        "patchSetId": 3
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2017-03-21T13:05:03Z",
+      "side": 1,
+      "message": "trailing spaces.",
+      "range": {
+        "startLine": 43,
+        "startChar": 56,
+        "endLine": 43,
+        "endChar": 57
+      },
+      "revId": "0c3472f0fbe59f7ebfefc9f00d94e839f9cfacea",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d59ad1c9_08554784",
+        "filename": "webp_js/index_wasm.html",
+        "patchSetId": 3
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2017-03-21T13:05:03Z",
+      "side": 1,
+      "message": "useless new line",
+      "revId": "0c3472f0fbe59f7ebfefc9f00d94e839f9cfacea",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
