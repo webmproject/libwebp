@@ -18,6 +18,7 @@
 #include "src/dec/vp8li_dec.h"
 #include "src/dec/webpi_dec.h"
 #include "src/utils/bit_reader_inl_utils.h"
+#include "src/utils/thread_once.h"
 #include "src/utils/utils.h"
 
 //------------------------------------------------------------------------------
@@ -61,7 +62,7 @@ VP8Decoder* VP8New(void) {
     WebPGetWorkerInterface()->Init(&dec->worker_);
     dec->ready_ = 0;
     dec->num_parts_minus_one_ = 0;
-    InitGetCoeffs();
+    WEBP_ONCE(InitGetCoeffs);
   }
   return dec;
 }
@@ -491,7 +492,7 @@ static int GetCoeffsAlt(VP8BitReader* const br,
   return 16;
 }
 
-WEBP_TSAN_IGNORE_FUNCTION static void InitGetCoeffs(void) {
+static WEBP_TSAN_IGNORE_FUNCTION void InitGetCoeffs(void) {
   if (GetCoeffs == NULL) {
     if (VP8GetCPUInfo != NULL && VP8GetCPUInfo(kSlowSSSE3)) {
       GetCoeffs = GetCoeffsAlt;

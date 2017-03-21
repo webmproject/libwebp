@@ -18,6 +18,7 @@
 #include "src/webp/config.h"
 #endif
 
+#include "src/utils/thread_once.h"  // for WEBP_TSAN_IGNORE_FUNCTION
 #include "src/webp/types.h"
 
 #ifdef __cplusplus
@@ -132,15 +133,6 @@ extern "C" {
 #define WEBP_NEON_WORK_AROUND_GCC 0
 #endif
 
-// This macro prevents thread_sanitizer from reporting known concurrent writes.
-#define WEBP_TSAN_IGNORE_FUNCTION
-#if defined(__has_feature)
-#if __has_feature(thread_sanitizer)
-#undef WEBP_TSAN_IGNORE_FUNCTION
-#define WEBP_TSAN_IGNORE_FUNCTION __attribute__((no_sanitize_thread))
-#endif
-#endif
-
 #define WEBP_UBSAN_IGNORE_UNDEF
 #define WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW
 #if defined(__clang__) && defined(__has_attribute)
@@ -196,7 +188,7 @@ WEBP_EXTERN VP8CPUInfo VP8GetCPUInfo;
 // avoiding a compiler warning.
 #define WEBP_DSP_INIT_STUB(func) \
   extern void func(void); \
-  WEBP_TSAN_IGNORE_FUNCTION void func(void) {}
+  void func(void) {}
 
 //------------------------------------------------------------------------------
 // Encoding

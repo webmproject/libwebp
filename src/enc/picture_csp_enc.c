@@ -17,6 +17,7 @@
 
 #include "src/enc/vp8i_enc.h"
 #include "src/utils/random_utils.h"
+#include "src/utils/thread_once.h"
 #include "src/utils/utils.h"
 #include "src/dsp/dsp.h"
 #include "src/dsp/lossless.h"
@@ -126,7 +127,7 @@ static WEBP_INLINE int LinearToGamma(uint32_t base_value, int shift) {
 
 #else
 
-static WEBP_TSAN_IGNORE_FUNCTION void InitGammaTables(void) {}
+static void InitGammaTables(void) {}
 static WEBP_INLINE uint32_t GammaToLinear(uint8_t v) { return v; }
 static WEBP_INLINE int LinearToGamma(uint32_t base_value, int shift) {
   return (int)(base_value << shift);
@@ -238,7 +239,7 @@ static WEBP_INLINE uint32_t LinearToGammaS(uint32_t value) {
 
 #else
 
-static WEBP_TSAN_IGNORE_FUNCTION void InitGammaTablesS(void) {}
+static void InitGammaTablesS(void) {}
 static WEBP_INLINE uint32_t GammaToLinearS(int v) {
   return (v << GAMMA_TO_LINEAR_BITS) / MAX_Y_T;
 }
@@ -870,7 +871,7 @@ static int ImportYUVAFromRGBA(const uint8_t* r_ptr,
   }
 
   if (use_iterative_conversion) {
-    InitGammaTablesS();
+    WEBP_ONCE(InitGammaTablesS);
     if (!PreprocessARGB(r_ptr, g_ptr, b_ptr, step, rgb_stride, picture)) {
       return 0;
     }
@@ -897,7 +898,7 @@ static int ImportYUVAFromRGBA(const uint8_t* r_ptr,
       use_dsp = 0;   // can't use dsp in this case
     }
     WebPInitConvertARGBToYUV();
-    InitGammaTables();
+    WEBP_ONCE(InitGammaTables);
 
     if (tmp_rgb == NULL) return 0;  // malloc error
 

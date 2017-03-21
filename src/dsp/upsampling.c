@@ -13,6 +13,7 @@
 
 #include "src/dsp/dsp.h"
 #include "src/dsp/yuv.h"
+#include "src/utils/thread_once.h"
 
 #include <assert.h>
 
@@ -219,12 +220,7 @@ extern void WebPInitYUV444ConvertersMIPSdspR2(void);
 extern void WebPInitYUV444ConvertersSSE2(void);
 extern void WebPInitYUV444ConvertersSSE41(void);
 
-static volatile VP8CPUInfo upsampling_last_cpuinfo_used1 =
-    (VP8CPUInfo)&upsampling_last_cpuinfo_used1;
-
-WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444Converters(void) {
-  if (upsampling_last_cpuinfo_used1 == VP8GetCPUInfo) return;
-
+static WEBP_TSAN_IGNORE_FUNCTION void InitYUV444Converters(void) {
   WebPYUV444Converters[MODE_RGBA]      = WebPYuv444ToRgba_C;
   WebPYUV444Converters[MODE_BGRA]      = WebPYuv444ToBgra_C;
   WebPYUV444Converters[MODE_RGB]       = WebPYuv444ToRgb_C;
@@ -254,7 +250,10 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444Converters(void) {
     }
 #endif
   }
-  upsampling_last_cpuinfo_used1 = VP8GetCPUInfo;
+}
+
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444Converters(void) {
+  WEBP_ONCE(InitYUV444Converters);
 }
 
 //------------------------------------------------------------------------------
@@ -266,12 +265,7 @@ extern void WebPInitUpsamplersNEON(void);
 extern void WebPInitUpsamplersMIPSdspR2(void);
 extern void WebPInitUpsamplersMSA(void);
 
-static volatile VP8CPUInfo upsampling_last_cpuinfo_used2 =
-    (VP8CPUInfo)&upsampling_last_cpuinfo_used2;
-
-WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplers(void) {
-  if (upsampling_last_cpuinfo_used2 == VP8GetCPUInfo) return;
-
+static WEBP_TSAN_IGNORE_FUNCTION void InitUpsamplers(void) {
 #ifdef FANCY_UPSAMPLING
 #if !WEBP_NEON_OMIT_C_CODE
   WebPUpsamplers[MODE_RGBA]      = UpsampleRgbaLinePair_C;
@@ -333,7 +327,10 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplers(void) {
 #endif
 
 #endif  // FANCY_UPSAMPLING
-  upsampling_last_cpuinfo_used2 = VP8GetCPUInfo;
+}
+
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplers(void) {
+  WEBP_ONCE(InitUpsamplers);
 }
 
 //------------------------------------------------------------------------------

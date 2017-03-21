@@ -15,6 +15,7 @@
 
 #include "src/dsp/dsp.h"
 #include "src/utils/rescaler_utils.h"
+#include "src/utils/thread_once.h"
 
 //------------------------------------------------------------------------------
 // Implementations of critical functions ImportRow / ExportRow
@@ -204,11 +205,7 @@ extern void WebPRescalerDspInitMIPSdspR2(void);
 extern void WebPRescalerDspInitMSA(void);
 extern void WebPRescalerDspInitNEON(void);
 
-static volatile VP8CPUInfo rescaler_last_cpuinfo_used =
-    (VP8CPUInfo)&rescaler_last_cpuinfo_used;
-
-WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInit(void) {
-  if (rescaler_last_cpuinfo_used == VP8GetCPUInfo) return;
+static WEBP_TSAN_IGNORE_FUNCTION void RescalerDspInit(void) {
 #if !defined(WEBP_REDUCE_SIZE)
 #if !WEBP_NEON_OMIT_C_CODE
   WebPRescalerExportRowExpand = WebPRescalerExportRowExpand_C;
@@ -253,5 +250,8 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInit(void) {
   assert(WebPRescalerImportRowExpand != NULL);
   assert(WebPRescalerImportRowShrink != NULL);
 #endif   // WEBP_REDUCE_SIZE
-  rescaler_last_cpuinfo_used = VP8GetCPUInfo;
+}
+
+WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInit(void) {
+  WEBP_ONCE(RescalerDspInit);
 }
