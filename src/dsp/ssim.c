@@ -15,6 +15,7 @@
 #include <stdlib.h>  // for abs()
 
 #include "src/dsp/dsp.h"
+#include "src/utils/thread_once.h"
 
 #if !defined(WEBP_REDUCE_SIZE)
 
@@ -139,12 +140,7 @@ VP8AccumulateSSEFunc VP8AccumulateSSE;
 
 extern void VP8SSIMDspInitSSE2(void);
 
-static volatile VP8CPUInfo ssim_last_cpuinfo_used =
-    (VP8CPUInfo)&ssim_last_cpuinfo_used;
-
-WEBP_TSAN_IGNORE_FUNCTION void VP8SSIMDspInit(void) {
-  if (ssim_last_cpuinfo_used == VP8GetCPUInfo) return;
-
+static WEBP_TSAN_IGNORE_FUNCTION void SSIMDspInit(void) {
 #if !defined(WEBP_REDUCE_SIZE)
   VP8SSIMGetClipped = SSIMGetClipped_C;
   VP8SSIMGet = SSIMGet_C;
@@ -161,6 +157,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8SSIMDspInit(void) {
     }
 #endif
   }
+}
 
-  ssim_last_cpuinfo_used = VP8GetCPUInfo;
+WEBP_TSAN_IGNORE_FUNCTION void VP8SSIMDspInit(void) {
+  WEBP_ONCE(SSIMDspInit);
 }

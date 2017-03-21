@@ -17,6 +17,7 @@
 
 #include "src/enc/vp8i_enc.h"
 #include "src/utils/random_utils.h"
+#include "src/utils/thread_once.h"
 #include "src/utils/utils.h"
 #include "src/dsp/dsp.h"
 #include "src/dsp/lossless.h"
@@ -87,7 +88,7 @@ static int kLinearToGammaTab[kGammaTabSize + 1];
 static uint16_t kGammaToLinearTab[256];
 static volatile int kGammaTablesOk = 0;
 
-static WEBP_TSAN_IGNORE_FUNCTION void InitGammaTables(void) {
+static WEBP_TSAN_IGNORE_FUNCTION void GammaTablesInit(void) {
   if (!kGammaTablesOk) {
     int v;
     const double scale = (double)(1 << kGammaTabFix) / kGammaScale;
@@ -101,6 +102,10 @@ static WEBP_TSAN_IGNORE_FUNCTION void InitGammaTables(void) {
     }
     kGammaTablesOk = 1;
   }
+}
+
+static WEBP_TSAN_IGNORE_FUNCTION void InitGammaTables(void) {
+  WEBP_ONCE(GammaTablesInit);
 }
 
 static WEBP_INLINE uint32_t GammaToLinear(uint8_t v) {
@@ -126,7 +131,7 @@ static WEBP_INLINE int LinearToGamma(uint32_t base_value, int shift) {
 
 #else
 
-static WEBP_TSAN_IGNORE_FUNCTION void InitGammaTables(void) {}
+static void InitGammaTables(void) {}
 static WEBP_INLINE uint32_t GammaToLinear(uint8_t v) { return v; }
 static WEBP_INLINE int LinearToGamma(uint32_t base_value, int shift) {
   return (int)(base_value << shift);
@@ -178,7 +183,7 @@ static uint32_t kLinearToGammaTabS[kGammaTabSize + 2];
 static uint32_t kGammaToLinearTabS[MAX_Y_T + 1];   // size scales with Y_FIX
 static volatile int kGammaTablesSOk = 0;
 
-static WEBP_TSAN_IGNORE_FUNCTION void InitGammaTablesS(void) {
+static WEBP_TSAN_IGNORE_FUNCTION void GammaTablesSInit(void) {
   assert(2 * GAMMA_TO_LINEAR_BITS < 32);  // we use uint32_t intermediate values
   if (!kGammaTablesSOk) {
     int v;
@@ -216,6 +221,10 @@ static WEBP_TSAN_IGNORE_FUNCTION void InitGammaTablesS(void) {
   }
 }
 
+static WEBP_TSAN_IGNORE_FUNCTION void InitGammaTablesS(void) {
+  WEBP_ONCE(GammaTablesSInit);
+}
+
 // return value has a fixed-point precision of GAMMA_TO_LINEAR_BITS
 static WEBP_INLINE uint32_t GammaToLinearS(int v) {
   return kGammaToLinearTabS[v];
@@ -238,7 +247,7 @@ static WEBP_INLINE uint32_t LinearToGammaS(uint32_t value) {
 
 #else
 
-static WEBP_TSAN_IGNORE_FUNCTION void InitGammaTablesS(void) {}
+static void InitGammaTablesS(void) {}
 static WEBP_INLINE uint32_t GammaToLinearS(int v) {
   return (v << GAMMA_TO_LINEAR_BITS) / MAX_Y_T;
 }

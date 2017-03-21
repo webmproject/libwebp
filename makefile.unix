@@ -326,6 +326,7 @@ HDRS = \
     src/utils/quant_levels_dec_utils.h \
     src/utils/random_utils.h \
     src/utils/rescaler_utils.h \
+    src/utils/thread_once.h \
     src/utils/thread_utils.h \
     src/utils/utils.h \
     src/webp/format_constants.h \
