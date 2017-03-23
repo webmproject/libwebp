@@ -112,12 +112,12 @@ static WEBP_INLINE void PutLE32(uint8_t* const data, uint32_t val) {
 #define WEBP_NEED_LOG_TABLE_8BIT
 extern const uint8_t WebPLogTable8bit[256];
 static WEBP_INLINE int WebPLog2FloorC(uint32_t n) {
-  int log = 0;
+  int log_value = 0;
   while (n >= 256) {
-    log += 8;
+    log_value += 8;
     n >>= 8;
   }
-  return log + WebPLogTable8bit[n];
+  return log_value + WebPLogTable8bit[n];
 }
 
 // Returns (int)floor(log2(n)). n must be > 0.
