@@ -838,11 +838,11 @@ static int CostManagerInit(CostManager* const manager,
   return 1;
 }
 
-// Given the cost and the index that define an interval, update the cost at
+// Given the cost and the position that define an interval, update the cost at
 // pixel 'i' if it is smaller than the previously computed value.
-static WEBP_INLINE void UpdateCost(CostManager* const manager, int i, int index,
-                                   float cost) {
-  const int k = i - index;
+static WEBP_INLINE void UpdateCost(CostManager* const manager, int i,
+                                   int position, float cost) {
+  const int k = i - position;
   assert(k >= 0 && k < MAX_LENGTH);
 
   if (manager->costs_[i] > cost) {
@@ -851,13 +851,13 @@ static WEBP_INLINE void UpdateCost(CostManager* const manager, int i, int index,
   }
 }
 
-// Given the cost and the index that define an interval, update the cost for all
-// the pixels between 'start' and 'end' excluded.
+// Given the cost and the position that define an interval, update the cost for
+// all the pixels between 'start' and 'end' excluded.
 static WEBP_INLINE void UpdateCostPerInterval(CostManager* const manager,
-                                              int start, int end, int index,
+                                              int start, int end, int position,
                                               float cost) {
   int i;
-  for (i = start; i < end; ++i) UpdateCost(manager, i, index, cost);
+  for (i = start; i < end; ++i) UpdateCost(manager, i, position, cost);
 }
 
 // Given two intervals, make 'prev' be the previous one of 'next' in 'manager'.
@@ -940,14 +940,14 @@ static WEBP_INLINE void PositionOrphanInterval(CostManager* const manager,
 // interval_in as a hint. The intervals are sorted by start_ value.
 static WEBP_INLINE void InsertInterval(CostManager* const manager,
                                        CostInterval* const interval_in,
-                                       float cost, int index, int start,
+                                       float cost, int position, int start,
                                        int end) {
   CostInterval* interval_new;
 
   if (start >= end) return;
   if (manager->count_ >= COST_CACHE_INTERVAL_SIZE_MAX) {
     // Serialize the interval if we cannot store it.
-    UpdateCostPerInterval(manager, start, end, index, cost);
+    UpdateCostPerInterval(manager, start, end, position, cost);
     return;
   }
   if (manager->free_intervals_ != NULL) {
@@ -960,13 +960,13 @@ static WEBP_INLINE void InsertInterval(CostManager* const manager,
     interval_new = (CostInterval*)WebPSafeMalloc(1, sizeof(*interval_new));
     if (interval_new == NULL) {
       // Write down the interval if we cannot create it.
-      UpdateCostPerInterval(manager, start, end, index, cost);
+      UpdateCostPerInterval(manager, start, end, position, cost);
       return;
     }
   }
 
   interval_new->cost_ = cost;
-  interval_new->index_ = index;
+  interval_new->index_ = position;
   interval_new->start_ = start;
   interval_new->end_ = end;
   PositionOrphanInterval(manager, interval_new, interval_in);
@@ -974,12 +974,12 @@ static WEBP_INLINE void InsertInterval(CostManager* const manager,
   ++manager->count_;
 }
 
-// Given a new cost interval defined by its start at index, its length value and
-// distance_cost, add its contributions to the previous intervals and costs.
+// Given a new cost interval defined by its start at position, its length value
+// and distance_cost, add its contributions to the previous intervals and costs.
 // If handling the interval or one of its subintervals becomes to heavy, its
 // contribution is added to the costs right away.
 static WEBP_INLINE void PushInterval(CostManager* const manager,
-                                     double distance_cost, int index,
+                                     double distance_cost, int position,
                                      int len) {
   size_t i;
   CostInterval* interval = manager->head_;
@@ -992,8 +992,8 @@ static WEBP_INLINE void PushInterval(CostManager* const manager,
 
   if (len < kSkipDistance) {
     int j;
-    for (j = index; j < index + len; ++j) {
-      const int k = j - index;
+    for (j = position; j < position + len; ++j) {
+      const int k = j - position;
       float cost_tmp;
       assert(k >= 0 && k < MAX_LENGTH);
       cost_tmp = (float)(distance_cost + manager->cost_cache_[k]);
@@ -1010,8 +1010,8 @@ static WEBP_INLINE void PushInterval(CostManager* const manager,
               cost_cache_intervals[i].start_ < len;
        ++i) {
     // Define the intersection of the ith interval with the new one.
-    int start = index + cost_cache_intervals[i].start_;
-    const int end = index + (cost_cache_intervals[i].end_ > len
+    int start = position + cost_cache_intervals[i].start_;
+    const int end = position + (cost_cache_intervals[i].end_ > len
                                  ? len
                                  : cost_cache_intervals[i].end_);
     const float cost = (float)(distance_cost + cost_cache_intervals[i].cost_);
@@ -1032,7 +1032,8 @@ static WEBP_INLINE void PushInterval(CostManager* const manager,
         // If we are worse than what we already have, add whatever we have so
         // far up to interval.
         const int start_new = interval->end_;
-        InsertInterval(manager, interval, cost, index, start, interval->start_);
+        InsertInterval(manager, interval, cost, position, start,
+                       interval->start_);
         start = start_new;
         if (start >= end) break;
         continue;
@@ -1077,7 +1078,7 @@ static WEBP_INLINE void PushInterval(CostManager* const manager,
       }
     }
     // Insert the remaining interval from start to end.
-    InsertInterval(manager, interval, cost, index, start, end);
+    InsertInterval(manager, interval, cost, position, start, end);
   }
 }
 
