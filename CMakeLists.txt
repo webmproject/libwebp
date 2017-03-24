@@ -247,6 +247,16 @@ if(WEBP_BUILD_IMG2WEBP)
   install(TARGETS img2webp RUNTIME DESTINATION bin)
 endif()
 
+if (WEBP_BUILD_WEBPINFO)
+  # webpinfo
+  include_directories(${WEBP_DEP_IMG_INCLUDE_DIRS})
+  parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "WEBPINFO_SRCS"
+    "webpinfo")
+  add_executable(webpinfo ${WEBPINFO_SRCS})
+  target_link_libraries(webpinfo exampleutil imageioutil)
+  install(TARGETS webpinfo RUNTIME DESTINATION bin)
+endif()
+
 if(WEBP_BUILD_WEBP_JS)
   # JavaScript version
   add_executable(webp_js
