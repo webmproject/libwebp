@@ -33,7 +33,7 @@ extern "C" {
 //   /* customize io's functions (setup()/put()/teardown()) if needed. */
 //
 //   VP8Decoder* dec = VP8New();
-//   bool ok = VP8Decode(dec);
+//   int ok = VP8Decode(dec, &io);
 //   if (!ok) printf("Error: %s\n", VP8StatusMessage(dec));
 //   VP8Delete(dec);
 //   return ok;
