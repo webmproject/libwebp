@@ -246,6 +246,27 @@ void VP8LBitWriterWipeOut(VP8LBitWriter* const bw) {
   }
 }
 
+void VP8LBitWriterReset(const VP8LBitWriter* const bw_init,
+                        VP8LBitWriter* const bw) {
+  bw->bits_ = bw_init->bits_;
+  bw->used_ = bw_init->used_;
+  bw->cur_ = bw->buf_ + (bw_init->cur_ - bw_init->buf_);
+  bw->error_ = bw_init->error_;
+}
+
+int VP8LBitWriterCopy(const VP8LBitWriter* const src,
+                      VP8LBitWriter* const dst) {
+  const size_t bw_size = src->cur_ - src->buf_;
+  VP8LBitWriterWipeOut(dst);
+  if (!VP8LBitWriterInit(dst, bw_size)) return 0;
+  dst->bits_ = src->bits_;
+  dst->used_ = src->used_;
+  memcpy(dst->buf_, src->buf_, bw_size);
+  dst->cur_ = dst->buf_ + bw_size;
+  dst->error_ = src->error_;
+  return 1;
+}
+
 void VP8LPutBitsFlushBits(VP8LBitWriter* const bw) {
   // If needed, make some room by flushing some bits out.
   if (bw->cur_ + VP8L_WRITER_BYTES > bw->end_) {
