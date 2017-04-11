@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6a374b3_ef5ffd14",
+        "filename": "src/enc/vp8l_enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1540,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-04-11T22:29:57Z",
+      "side": 1,
+      "message": "should be able to use those as the indices",
+      "range": {
+        "startLine": 1540,
+        "startChar": 9,
+        "endLine": 1540,
+        "endChar": 17
+      },
+      "revId": "844c5690732f5652af96cbf8cf59288cb485c23c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
