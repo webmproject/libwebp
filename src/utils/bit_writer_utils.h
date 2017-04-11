@@ -110,6 +110,12 @@ int VP8LBitWriterInit(VP8LBitWriter* const bw, size_t expected_size);
 uint8_t* VP8LBitWriterFinish(VP8LBitWriter* const bw);
 // Release any pending memory and zeroes the object.
 void VP8LBitWriterWipeOut(VP8LBitWriter* const bw);
+// Resets the cursor of the BitWriter bw to when it was like in bw_init.
+void VP8LBitWriterReset(const VP8LBitWriter* const bw_init,
+                        VP8LBitWriter* const bw);
+// Deep copies a BitWriter to another.
+void VP8LBitWriterCopy(const VP8LBitWriter* const bw1,
+                       VP8LBitWriter* const bw2);
 
 // Internal function for VP8LPutBits flushing 32 bits from the written state.
 void VP8LPutBitsFlushBits(VP8LBitWriter* const bw);
