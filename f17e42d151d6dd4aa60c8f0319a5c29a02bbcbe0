@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "129d451c_c4a609b3",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-04-13T00:19:02Z",
+      "side": 1,
+      "message": "add BUG\u003dwebp:336. that will auto-update the bug when this lands",
+      "revId": "f17e42d151d6dd4aa60c8f0319a5c29a02bbcbe0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b703a6cb_fb0fff99",
+        "filename": "src/enc/vp8l_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-04-13T00:19:02Z",
+      "side": 1,
+      "message": "this line can go given the comment and the next assignment",
+      "revId": "f17e42d151d6dd4aa60c8f0319a5c29a02bbcbe0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
