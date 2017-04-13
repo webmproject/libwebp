@@ -173,21 +173,6 @@ static WEBP_INLINE void BackwardRefsCursorAdd(VP8LBackwardRefs* const refs,
   b->start_[b->size_++] = v;
 }
 
-int VP8LBackwardRefsCopy(const VP8LBackwardRefs* const src,
-                         VP8LBackwardRefs* const dst) {
-  const PixOrCopyBlock* b = src->refs_;
-  ClearBackwardRefs(dst);
-  assert(src->block_size_ == dst->block_size_);
-  while (b != NULL) {
-    PixOrCopyBlock* const new_b = BackwardRefsNewBlock(dst);
-    if (new_b == NULL) return 0;   // dst->error_ is set
-    memcpy(new_b->start_, b->start_, b->size_ * sizeof(*b->start_));
-    new_b->size_ = b->size_;
-    b = b->next_;
-  }
-  return 1;
-}
-
 // -----------------------------------------------------------------------------
 // Hash chains
 
@@ -588,7 +573,7 @@ static void ConvertPopulationCountTableToBitEstimates(
 }
 
 static int CostModelBuild(CostModel* const m, int cache_bits,
-                          VP8LBackwardRefs* const refs) {
+                          const VP8LBackwardRefs* const refs) {
   int ok = 0;
   VP8LHistogram* const histo = VP8LAllocateHistogram(cache_bits);
   if (histo == NULL) goto Error;
@@ -1084,7 +1069,7 @@ static WEBP_INLINE void PushInterval(CostManager* const manager,
 
 static int BackwardReferencesHashChainDistanceOnly(
     int xsize, int ysize, const uint32_t* const argb, int cache_bits,
-    const VP8LHashChain* const hash_chain, VP8LBackwardRefs* const refs,
+    const VP8LHashChain* const hash_chain, const VP8LBackwardRefs* const refs,
     uint16_t* const dist_array) {
   int i;
   int ok = 0;
@@ -1279,7 +1264,8 @@ static int BackwardReferencesHashChainFollowChosenPath(
 // Returns 1 on success.
 static int BackwardReferencesTraceBackwards(
     int xsize, int ysize, const uint32_t* const argb, int cache_bits,
-    const VP8LHashChain* const hash_chain, VP8LBackwardRefs* const refs) {
+    const VP8LHashChain* const hash_chain,
+    const VP8LBackwardRefs* const refs_src, VP8LBackwardRefs* const refs_dst) {
   int ok = 0;
   const int dist_array_size = xsize * ysize;
   uint16_t* chosen_path = NULL;
@@ -1289,13 +1275,14 @@ static int BackwardReferencesTraceBackwards(
 
   if (dist_array == NULL) goto Error;
 
-  if (!BackwardReferencesHashChainDistanceOnly(xsize, ysize, argb, cache_bits,
-                                               hash_chain, refs, dist_array)) {
+  if (!BackwardReferencesHashChainDistanceOnly(
+          xsize, ysize, argb, cache_bits, hash_chain, refs_src, dist_array)) {
     goto Error;
   }
   TraceBackwards(dist_array, dist_array_size, &chosen_path, &chosen_path_size);
   if (!BackwardReferencesHashChainFollowChosenPath(
-          argb, cache_bits, chosen_path, chosen_path_size, hash_chain, refs)) {
+          argb, cache_bits, chosen_path, chosen_path_size, hash_chain,
+          refs_dst)) {
     goto Error;
   }
   ok = 1;
@@ -1458,8 +1445,7 @@ static int BackwardRefsWithLocalCache(const uint32_t* const argb,
 static VP8LBackwardRefs* GetBackwardReferencesLowEffort(
     int width, int height, const uint32_t* const argb,
     int* const cache_bits, const VP8LHashChain* const hash_chain,
-    VP8LBackwardRefs refs_array[2]) {
-  VP8LBackwardRefs* refs_lz77 = &refs_array[0];
+    VP8LBackwardRefs* const refs_lz77) {
   *cache_bits = 0;
   if (!BackwardReferencesLz77(width, height, argb, 0, hash_chain, refs_lz77)) {
     return NULL;
@@ -1471,13 +1457,11 @@ static VP8LBackwardRefs* GetBackwardReferencesLowEffort(
 static VP8LBackwardRefs* GetBackwardReferences(
     int width, int height, const uint32_t* const argb, int quality,
     int* const cache_bits, const VP8LHashChain* const hash_chain,
-    VP8LBackwardRefs refs_array[2]) {
+    VP8LBackwardRefs* const refs_lz77, VP8LBackwardRefs* const refs_rle) {
   int lz77_is_useful;
   int cache_bits_lz77 = *cache_bits, cache_bits_rle = *cache_bits;
   double bit_cost_lz77, bit_cost_rle;
   VP8LBackwardRefs* best = NULL;
-  VP8LBackwardRefs* refs_lz77 = &refs_array[0];
-  VP8LBackwardRefs* refs_rle = &refs_array[1];
   VP8LHistogram* histo = NULL;
 
   // Compute LZ77 with no cache (0 bits), as the ideal LZ77 with a color cache
@@ -1531,19 +1515,14 @@ static VP8LBackwardRefs* GetBackwardReferences(
     const int try_lz77_trace_backwards = (quality >= 25);
     best = refs_lz77;   // default guess: lz77 is better
     if (try_lz77_trace_backwards) {
-      VP8LBackwardRefs* const refs_trace = refs_rle;
-      if (!VP8LBackwardRefsCopy(refs_lz77, refs_trace)) {
-        best = NULL;
-        goto Error;
-      }
       if (BackwardReferencesTraceBackwards(width, height, argb, cache_bits_lz77,
-                                           hash_chain, refs_trace)) {
+                                           hash_chain, refs_lz77, refs_rle)) {
         double bit_cost_trace;
         // Evaluate LZ77 coding.
-        VP8LHistogramCreate(histo, refs_trace, cache_bits_lz77);
+        VP8LHistogramCreate(histo, refs_rle, cache_bits_lz77);
         bit_cost_trace = VP8LHistogramEstimateBits(histo);
         if (bit_cost_trace < bit_cost_lz77) {
-          best = refs_trace;
+          best = refs_rle;
         }
       }
     }
@@ -1563,12 +1542,13 @@ static VP8LBackwardRefs* GetBackwardReferences(
 VP8LBackwardRefs* VP8LGetBackwardReferences(
     int width, int height, const uint32_t* const argb, int quality,
     int low_effort, int* const cache_bits,
-    const VP8LHashChain* const hash_chain, VP8LBackwardRefs refs_array[2]) {
+    const VP8LHashChain* const hash_chain, VP8LBackwardRefs* const refs_tmp1,
+    VP8LBackwardRefs* const refs_tmp2) {
   if (low_effort) {
     return GetBackwardReferencesLowEffort(width, height, argb, cache_bits,
-                                          hash_chain, refs_array);
+                                          hash_chain, refs_tmp1);
   } else {
     return GetBackwardReferences(width, height, argb, quality, cache_bits,
-                                 hash_chain, refs_array);
+                                 hash_chain, refs_tmp1, refs_tmp2);
   }
 }

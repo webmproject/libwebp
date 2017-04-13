@@ -364,6 +364,7 @@ static int AnalyzeAndInit(VP8LEncoder* const enc) {
   // we round the block size up, so we're guaranteed to have
   // at max MAX_REFS_BLOCK_PER_IMAGE blocks used:
   int refs_block_size = (pix_cnt - 1) / MAX_REFS_BLOCK_PER_IMAGE + 1;
+  int i;
   assert(pic != NULL && pic->argb != NULL);
 
   enc->use_cross_color_ = 0;
@@ -406,8 +407,7 @@ static int AnalyzeAndInit(VP8LEncoder* const enc) {
   // palette-friendly input typically uses less literals
   //  -> reduce block size a bit
   if (enc->use_palette_) refs_block_size /= 2;
-  VP8LBackwardRefsInit(&enc->refs_[0], refs_block_size);
-  VP8LBackwardRefsInit(&enc->refs_[1], refs_block_size);
+  for (i = 0; i < 3; ++i) VP8LBackwardRefsInit(&enc->refs_[i], refs_block_size);
 
   return 1;
 }
@@ -676,7 +676,7 @@ static WEBP_INLINE void WriteHuffmanCodeWithExtraBits(
 
 static WebPEncodingError StoreImageToBitMask(
     VP8LBitWriter* const bw, int width, int histo_bits,
-    VP8LBackwardRefs* const refs,
+    const VP8LBackwardRefs* const refs,
     const uint16_t* histogram_symbols,
     const HuffmanTreeCode* const huffman_codes) {
   const int histo_xsize = histo_bits ? VP8LSubSampleSize(width, histo_bits) : 1;
@@ -739,7 +739,8 @@ static WebPEncodingError StoreImageToBitMask(
 static WebPEncodingError EncodeImageNoHuffman(VP8LBitWriter* const bw,
                                               const uint32_t* const argb,
                                               VP8LHashChain* const hash_chain,
-                                              VP8LBackwardRefs refs_array[2],
+                                              VP8LBackwardRefs* const refs_tmp1,
+                                              VP8LBackwardRefs* const refs_tmp2,
                                               int width, int height,
                                               int quality, int low_effort) {
   int i;
@@ -765,7 +766,7 @@ static WebPEncodingError EncodeImageNoHuffman(VP8LBitWriter* const bw,
     goto Error;
   }
   refs = VP8LGetBackwardReferences(width, height, argb, quality, 0, &cache_bits,
-                                   hash_chain, refs_array);
+                                   hash_chain, refs_tmp1, refs_tmp2);
   if (refs == NULL) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
@@ -825,7 +826,7 @@ static WebPEncodingError EncodeImageNoHuffman(VP8LBitWriter* const bw,
 static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
                                              const uint32_t* const argb,
                                              VP8LHashChain* const hash_chain,
-                                             VP8LBackwardRefs refs_array[2],
+                                             VP8LBackwardRefs refs_array[3],
                                              int width, int height, int quality,
                                              int low_effort,
                                              int use_cache, int* cache_bits,
@@ -844,8 +845,8 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   HuffmanTree* huff_tree = NULL;
   HuffmanTreeToken* tokens = NULL;
   HuffmanTreeCode* huffman_codes = NULL;
-  VP8LBackwardRefs refs;
-  VP8LBackwardRefs* best_refs;
+  VP8LBackwardRefs* refs_best;
+  VP8LBackwardRefs* refs_tmp;
   uint16_t* const histogram_symbols =
       (uint16_t*)WebPSafeMalloc(histogram_image_xysize,
                                 sizeof(*histogram_symbols));
@@ -854,7 +855,6 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   assert(hdr_size != NULL);
   assert(data_size != NULL);
 
-  VP8LBackwardRefsInit(&refs, refs_array[0].block_size_);
   if (histogram_symbols == NULL) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
@@ -875,13 +875,17 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
-  best_refs = VP8LGetBackwardReferences(width, height, argb, quality,
+  refs_best = VP8LGetBackwardReferences(width, height, argb, quality,
                                         low_effort, cache_bits, hash_chain,
-                                        refs_array);
-  if (best_refs == NULL || !VP8LBackwardRefsCopy(best_refs, &refs)) {
+                                        &refs_array[0], &refs_array[1]);
+  if (refs_best == NULL) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
+  // Keep the best references aside and use the other element from the first two
+  // as a temporary for later usage.
+  refs_tmp = &refs_array[refs_best == &refs_array[0] ? 1 : 0];
+
   histogram_image =
       VP8LAllocateHistogramSet(histogram_image_xysize, *cache_bits);
   tmp_histo = VP8LAllocateHistogram(*cache_bits);
@@ -891,7 +895,7 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   }
 
   // Build histogram image and symbols from backward references.
-  if (!VP8LGetHistoImageSymbols(width, height, &refs, quality, low_effort,
+  if (!VP8LGetHistoImageSymbols(width, height, refs_best, quality, low_effort,
                                 histogram_bits, *cache_bits, histogram_image,
                                 tmp_histo, histogram_symbols)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
@@ -949,10 +953,10 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
       histogram_image_size = max_index;
 
       VP8LPutBits(bw, histogram_bits - 2, 3);
-      err = EncodeImageNoHuffman(bw, histogram_argb, hash_chain, refs_array,
-                                 VP8LSubSampleSize(width, histogram_bits),
-                                 VP8LSubSampleSize(height, histogram_bits),
-                                 quality, low_effort);
+      err = EncodeImageNoHuffman(
+          bw, histogram_argb, hash_chain, refs_tmp, &refs_array[2],
+          VP8LSubSampleSize(width, histogram_bits),
+          VP8LSubSampleSize(height, histogram_bits), quality, low_effort);
       WebPSafeFree(histogram_argb);
       if (err != VP8_ENC_OK) goto Error;
     }
@@ -990,7 +994,7 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
 
   *hdr_size = (int)(VP8LBitWriterNumBytes(bw) - init_byte_position);
   // Store actual literals.
-  err = StoreImageToBitMask(bw, width, histogram_bits, &refs,
+  err = StoreImageToBitMask(bw, width, histogram_bits, refs_best,
                             histogram_symbols, huffman_codes);
   *data_size =
         (int)(VP8LBitWriterNumBytes(bw) - init_byte_position - *hdr_size);
@@ -1000,7 +1004,6 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
   WebPSafeFree(huff_tree);
   VP8LFreeHistogramSet(histogram_image);
   VP8LFreeHistogram(tmp_histo);
-  VP8LBackwardRefsClear(&refs);
   if (huffman_codes != NULL) {
     WebPSafeFree(huffman_codes->codes);
     WebPSafeFree(huffman_codes);
@@ -1039,11 +1042,11 @@ static WebPEncodingError ApplyPredictFilter(const VP8LEncoder* const enc,
   VP8LPutBits(bw, PREDICTOR_TRANSFORM, 2);
   assert(pred_bits >= 2);
   VP8LPutBits(bw, pred_bits - 2, 3);
-  return EncodeImageNoHuffman(bw, enc->transform_data_,
-                              (VP8LHashChain*)&enc->hash_chain_,
-                              (VP8LBackwardRefs*)enc->refs_,  // cast const away
-                              transform_width, transform_height,
-                              quality, low_effort);
+  return EncodeImageNoHuffman(
+      bw, enc->transform_data_, (VP8LHashChain*)&enc->hash_chain_,
+      (VP8LBackwardRefs*)&enc->refs_[0],  // cast const away
+      (VP8LBackwardRefs*)&enc->refs_[1], transform_width, transform_height,
+      quality, low_effort);
 }
 
 static WebPEncodingError ApplyCrossColorFilter(const VP8LEncoder* const enc,
@@ -1060,11 +1063,11 @@ static WebPEncodingError ApplyCrossColorFilter(const VP8LEncoder* const enc,
   VP8LPutBits(bw, CROSS_COLOR_TRANSFORM, 2);
   assert(ccolor_transform_bits >= 2);
   VP8LPutBits(bw, ccolor_transform_bits - 2, 3);
-  return EncodeImageNoHuffman(bw, enc->transform_data_,
-                              (VP8LHashChain*)&enc->hash_chain_,
-                              (VP8LBackwardRefs*)enc->refs_,  // cast const away
-                              transform_width, transform_height,
-                              quality, low_effort);
+  return EncodeImageNoHuffman(
+      bw, enc->transform_data_, (VP8LHashChain*)&enc->hash_chain_,
+      (VP8LBackwardRefs*)&enc->refs_[0],  // cast const away
+      (VP8LBackwardRefs*)&enc->refs_[1], transform_width, transform_height,
+      quality, low_effort);
 }
 
 // -----------------------------------------------------------------------------
@@ -1398,8 +1401,9 @@ static WebPEncodingError EncodePalette(VP8LBitWriter* const bw, int low_effort,
     tmp_palette[i] = VP8LSubPixels(palette[i], palette[i - 1]);
   }
   tmp_palette[0] = palette[0];
-  return EncodeImageNoHuffman(bw, tmp_palette, &enc->hash_chain_, enc->refs_,
-                              palette_size, 1, 20 /* quality */, low_effort);
+  return EncodeImageNoHuffman(bw, tmp_palette, &enc->hash_chain_,
+                              &enc->refs_[0], &enc->refs_[1], palette_size, 1,
+                              20 /* quality */, low_effort);
 }
 
 #ifdef WEBP_EXPERIMENTAL_FEATURES
@@ -1434,10 +1438,11 @@ static WebPEncodingError EncodeDeltaPalettePredictorImage(
   VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
   VP8LPutBits(bw, PREDICTOR_TRANSFORM, 2);
   VP8LPutBits(bw, pred_bits - 2, 3);
-  err = EncodeImageNoHuffman(bw, predictors, &enc->hash_chain_,
-                             (VP8LBackwardRefs*)enc->refs_,  // cast const away
-                             transform_width, transform_height,
-                             quality, low_effort);
+  err = EncodeImageNoHuffman(
+      bw, predictors, &enc->hash_chain_,
+      (VP8LBackwardRefs*)&enc->refs_[0],  // cast const away
+      (VP8LBackwardRefs*)&enc->refs_[1],  // cast const away
+      transform_width, transform_height, quality, low_effort);
   WebPSafeFree(predictors);
   return err;
 }
@@ -1464,9 +1469,9 @@ static VP8LEncoder* VP8LEncoderNew(const WebPConfig* const config,
 
 static void VP8LEncoderDelete(VP8LEncoder* enc) {
   if (enc != NULL) {
+    int i;
     VP8LHashChainClear(&enc->hash_chain_);
-    VP8LBackwardRefsClear(&enc->refs_[0]);
-    VP8LBackwardRefsClear(&enc->refs_[1]);
+    for (i = 0; i < 3; ++i) VP8LBackwardRefsClear(&enc->refs_[i]);
     ClearTransformBuffer(enc);
     WebPSafeFree(enc);
   }

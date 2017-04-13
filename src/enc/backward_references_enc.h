@@ -158,9 +158,6 @@ struct VP8LBackwardRefs {
 void VP8LBackwardRefsInit(VP8LBackwardRefs* const refs, int block_size);
 // Release memory for backward references.
 void VP8LBackwardRefsClear(VP8LBackwardRefs* const refs);
-// Copies the 'src' backward refs to the 'dst'. Returns 0 in case of error.
-int VP8LBackwardRefsCopy(const VP8LBackwardRefs* const src,
-                         VP8LBackwardRefs* const dst);
 
 // Cursor for iterating on references content
 typedef struct {
@@ -198,7 +195,8 @@ static WEBP_INLINE void VP8LRefsCursorNext(VP8LRefsCursor* const c) {
 VP8LBackwardRefs* VP8LGetBackwardReferences(
     int width, int height, const uint32_t* const argb, int quality,
     int low_effort, int* const cache_bits,
-    const VP8LHashChain* const hash_chain, VP8LBackwardRefs refs[2]);
+    const VP8LHashChain* const hash_chain, VP8LBackwardRefs* const refs_tmp1,
+    VP8LBackwardRefs* const refs_tmp2);
 
 #ifdef __cplusplus
 }
