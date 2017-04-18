@@ -148,6 +148,7 @@ model {
             include "yuv.c"
             include "yuv_mips32.c"
             include "yuv_mips_dsp_r2.c"
+            include "yuv_neon.$NEON"
             include "yuv_sse2.c"
             srcDir "src/utils"
             include "bit_reader_utils.c"
