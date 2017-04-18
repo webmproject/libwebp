@@ -82,6 +82,7 @@ libwebpdspdecode_neon_la_SOURCES += lossless_neon.c
 libwebpdspdecode_neon_la_SOURCES += neon.h
 libwebpdspdecode_neon_la_SOURCES += rescaler_neon.c
 libwebpdspdecode_neon_la_SOURCES += upsampling_neon.c
+libwebpdspdecode_neon_la_SOURCES += yuv_neon.c
 libwebpdspdecode_neon_la_CPPFLAGS = $(libwebpdsp_neon_la_CPPFLAGS)
 libwebpdspdecode_neon_la_CFLAGS = $(libwebpdsp_neon_la_CFLAGS)
 

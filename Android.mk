@@ -79,6 +79,7 @@ dsp_dec_srcs := \
     src/dsp/yuv.c \
     src/dsp/yuv_mips32.c \
     src/dsp/yuv_mips_dsp_r2.c \
+    src/dsp/yuv_neon.$(NEON) \
     src/dsp/yuv_sse2.c \
 
 dsp_enc_srcs := \
