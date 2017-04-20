@@ -69,22 +69,27 @@ static int IsSmooth(const uint32_t* const prev_row,
 }
 
 // Adjusts pixel values of image with given maximum error.
-static void NearLossless(int xsize, int ysize, uint32_t* argb,
-                         int limit_bits, uint32_t* copy_buffer) {
+static void NearLossless(int xsize, int ysize, const uint32_t* argb_src,
+                         int limit_bits, uint32_t* copy_buffer,
+                         uint32_t* argb_dst) {
   int x, y;
   const int limit = 1 << limit_bits;
   uint32_t* prev_row = copy_buffer;
   uint32_t* curr_row = prev_row + xsize;
   uint32_t* next_row = curr_row + xsize;
-  memcpy(copy_buffer, argb, xsize * 2 * sizeof(argb[0]));
+  memcpy(copy_buffer, argb_src, xsize * 2 * sizeof(argb_src[0]));
 
-  for (y = 1; y < ysize - 1; ++y) {
-    uint32_t* const curr_argb_row = argb + y * xsize;
-    uint32_t* const next_argb_row = curr_argb_row + xsize;
-    memcpy(next_row, next_argb_row, xsize * sizeof(argb[0]));
+  for (y = 0; y < ysize; ++y, argb_src += xsize, argb_dst += xsize) {
+    if (y == 0 || y == ysize - 1) {
+      memcpy(argb_dst, argb_src, xsize * sizeof(argb_src[0]));
+      continue;
+    }
+    memcpy(next_row, argb_src + xsize, xsize * sizeof(argb_src[0]));
+    argb_dst[0] = argb_src[0];
+    argb_dst[xsize - 1] = argb_src[xsize - 1];
     for (x = 1; x < xsize - 1; ++x) {
       if (!IsSmooth(prev_row, curr_row, next_row, x, limit)) {
-        curr_argb_row[x] = ClosestDiscretizedArgb(curr_row[x], limit_bits);
+        argb_dst[x] = ClosestDiscretizedArgb(curr_row[x], limit_bits);
       }
     }
     {
@@ -97,12 +102,14 @@ static void NearLossless(int xsize, int ysize, uint32_t* argb,
   }
 }
 
-int VP8ApplyNearLossless(int xsize, int ysize, uint32_t* argb, int quality) {
+int VP8ApplyNearLossless(int xsize, int ysize, const uint32_t* const argb_src,
+                         int quality, uint32_t* const argb_dst) {
   int i;
   uint32_t* const copy_buffer =
       (uint32_t*)WebPSafeMalloc(xsize * 3, sizeof(*copy_buffer));
   const int limit_bits = VP8LNearLosslessBits(quality);
-  assert(argb != NULL);
+  assert(argb_src != NULL);
+  assert(argb_dst != NULL);
   assert(limit_bits >= 0);
   assert(limit_bits <= MAX_LIMIT_BITS);
   if (copy_buffer == NULL) {
@@ -115,7 +122,7 @@ int VP8ApplyNearLossless(int xsize, int ysize, uint32_t* argb, int quality) {
   }
 
   for (i = limit_bits; i != 0; --i) {
-    NearLossless(xsize, ysize, argb, i, copy_buffer);
+    NearLossless(xsize, ysize, argb_src, i, copy_buffer, argb_dst);
   }
   WebPSafeFree(copy_buffer);
   return 1;
