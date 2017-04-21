@@ -166,20 +166,20 @@ void VP8YUVInit(void);
 #if defined(WEBP_USE_SSE2)
 
 // Process 32 pixels and store the result (16b, 24b or 32b per pixel) in *dst.
-void VP8YuvToRgba32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
-                    uint8_t* dst);
-void VP8YuvToRgb32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
-                   uint8_t* dst);
-void VP8YuvToBgra32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
-                    uint8_t* dst);
-void VP8YuvToBgr32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
-                   uint8_t* dst);
-void VP8YuvToArgb32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
-                    uint8_t* dst);
-void VP8YuvToRgba444432(const uint8_t* y, const uint8_t* u, const uint8_t* v,
+void VP8YuvToRgba32_SSE2(const uint8_t* y, const uint8_t* u, const uint8_t* v,
+                         uint8_t* dst);
+void VP8YuvToRgb32_SSE2(const uint8_t* y, const uint8_t* u, const uint8_t* v,
                         uint8_t* dst);
-void VP8YuvToRgb56532(const uint8_t* y, const uint8_t* u, const uint8_t* v,
-                      uint8_t* dst);
+void VP8YuvToBgra32_SSE2(const uint8_t* y, const uint8_t* u, const uint8_t* v,
+                         uint8_t* dst);
+void VP8YuvToBgr32_SSE2(const uint8_t* y, const uint8_t* u, const uint8_t* v,
+                        uint8_t* dst);
+void VP8YuvToArgb32_SSE2(const uint8_t* y, const uint8_t* u, const uint8_t* v,
+                         uint8_t* dst);
+void VP8YuvToRgba444432_SSE2(const uint8_t* y, const uint8_t* u,
+                             const uint8_t* v, uint8_t* dst);
+void VP8YuvToRgb56532_SSE2(const uint8_t* y, const uint8_t* u, const uint8_t* v,
+                           uint8_t* dst);
 
 #endif    // WEBP_USE_SSE2
 

@@ -186,8 +186,8 @@ static WEBP_INLINE void PlanarTo24b(__m128i* const in0, __m128i* const in1,
   _mm_storeu_si128((__m128i*)(rgb + 80), *in5);
 }
 
-void VP8YuvToRgba32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
-                    uint8_t* dst) {
+void VP8YuvToRgba32_SSE2(const uint8_t* y, const uint8_t* u, const uint8_t* v,
+                         uint8_t* dst) {
   const __m128i kAlpha = _mm_set1_epi16(255);
   int n;
   for (n = 0; n < 32; n += 8, dst += 32) {
@@ -197,8 +197,8 @@ void VP8YuvToRgba32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
   }
 }
 
-void VP8YuvToBgra32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
-                    uint8_t* dst) {
+void VP8YuvToBgra32_SSE2(const uint8_t* y, const uint8_t* u, const uint8_t* v,
+                         uint8_t* dst) {
   const __m128i kAlpha = _mm_set1_epi16(255);
   int n;
   for (n = 0; n < 32; n += 8, dst += 32) {
@@ -208,8 +208,8 @@ void VP8YuvToBgra32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
   }
 }
 
-void VP8YuvToArgb32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
-                    uint8_t* dst) {
+void VP8YuvToArgb32_SSE2(const uint8_t* y, const uint8_t* u, const uint8_t* v,
+                         uint8_t* dst) {
   const __m128i kAlpha = _mm_set1_epi16(255);
   int n;
   for (n = 0; n < 32; n += 8, dst += 32) {
@@ -219,8 +219,8 @@ void VP8YuvToArgb32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
   }
 }
 
-void VP8YuvToRgba444432(const uint8_t* y, const uint8_t* u, const uint8_t* v,
-                        uint8_t* dst) {
+void VP8YuvToRgba444432_SSE2(const uint8_t* y, const uint8_t* u,
+                             const uint8_t* v, uint8_t* dst) {
   const __m128i kAlpha = _mm_set1_epi16(255);
   int n;
   for (n = 0; n < 32; n += 8, dst += 16) {
@@ -230,8 +230,8 @@ void VP8YuvToRgba444432(const uint8_t* y, const uint8_t* u, const uint8_t* v,
   }
 }
 
-void VP8YuvToRgb56532(const uint8_t* y, const uint8_t* u, const uint8_t* v,
-                      uint8_t* dst) {
+void VP8YuvToRgb56532_SSE2(const uint8_t* y, const uint8_t* u, const uint8_t* v,
+                           uint8_t* dst) {
   int n;
   for (n = 0; n < 32; n += 8, dst += 16) {
     __m128i R, G, B;
@@ -240,8 +240,8 @@ void VP8YuvToRgb56532(const uint8_t* y, const uint8_t* u, const uint8_t* v,
   }
 }
 
-void VP8YuvToRgb32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
-                   uint8_t* dst) {
+void VP8YuvToRgb32_SSE2(const uint8_t* y, const uint8_t* u, const uint8_t* v,
+                        uint8_t* dst) {
   __m128i R0, R1, R2, R3, G0, G1, G2, G3, B0, B1, B2, B3;
   __m128i rgb0, rgb1, rgb2, rgb3, rgb4, rgb5;
 
@@ -262,8 +262,8 @@ void VP8YuvToRgb32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
   PlanarTo24b(&rgb0, &rgb1, &rgb2, &rgb3, &rgb4, &rgb5, dst);
 }
 
-void VP8YuvToBgr32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
-                   uint8_t* dst) {
+void VP8YuvToBgr32_SSE2(const uint8_t* y, const uint8_t* u, const uint8_t* v,
+                        uint8_t* dst) {
   __m128i R0, R1, R2, R3, G0, G1, G2, G3, B0, B1, B2, B3;
   __m128i bgr0, bgr1, bgr2, bgr3, bgr4, bgr5;
 
