@@ -1512,8 +1512,9 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   use_near_lossless =
       (config->near_lossless < 100) && !enc->use_palette_ && !enc->use_predict_;
   if (use_near_lossless) {
-    if (!VP8ApplyNearLossless(width, height, picture->argb,
-                              config->near_lossless)) {
+    err = AllocateTransformBuffer(enc, width, height);
+    if (err != VP8_ENC_OK) goto Error;
+    if (!VP8ApplyNearLossless(picture, config->near_lossless, enc->argb_)) {
       err = VP8_ENC_ERROR_OUT_OF_MEMORY;
       goto Error;
     }
