@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "475f7a87_7b86b44d",
+        "filename": "src/enc/near_lossless_enc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-04-22T01:02:10Z",
+      "side": 1,
+      "message": "usually we have buffer, stride in the parameter order",
+      "revId": "6b986fb11725c3e90b0a6b95186304b046025bab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f0e94f4_65b43fdb",
+        "filename": "src/enc/near_lossless_enc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-04-22T01:02:10Z",
+      "side": 1,
+      "message": "these ()s aren\u0027t strictly necessary",
+      "range": {
+        "startLine": 126,
+        "startChar": 16,
+        "endLine": 126,
+        "endChar": 17
+      },
+      "revId": "6b986fb11725c3e90b0a6b95186304b046025bab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
