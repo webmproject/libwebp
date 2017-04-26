@@ -193,8 +193,8 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
                                            sizeof(*raster))) {
     goto End;
   }
-  if (!TIFFGetField(tif, TIFFTAG_EXTRASAMPLES,
-                    &extra_samples, &extra_samples_ptr)) {
+  if (samples_per_px > 3 && !TIFFGetField(tif, TIFFTAG_EXTRASAMPLES,
+                                          &extra_samples, &extra_samples_ptr)) {
     fprintf(stderr, "Error! Cannot retrieve TIFF ExtraSamples info.\n");
     goto End;
   }
