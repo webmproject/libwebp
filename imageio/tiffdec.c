@@ -215,7 +215,8 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
       TIFFSwabArrayOfLong(raster, width * height);
 #endif
       // if we have an alpha channel, we must un-multiply from rgbA to RGBA
-      if (samples_per_px > 3 && extra_samples == 1) {
+      if (extra_samples == 1 && extra_samples_ptr != NULL &&
+          extra_samples_ptr[0] == EXTRASAMPLE_ASSOCALPHA) {
         uint32_t y;
         uint8_t* tmp = (uint8_t*)raster;
         for (y = 0; y < height; ++y) {
