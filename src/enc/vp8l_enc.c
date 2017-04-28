@@ -128,7 +128,10 @@ static int AnalyzeAndCreatePalette(const WebPPicture* const pic,
                                    uint32_t palette[MAX_PALETTE_SIZE],
                                    int* const palette_size) {
   const int num_colors = WebPGetColorPalette(pic, palette);
-  if (num_colors > MAX_PALETTE_SIZE) return 0;
+  if (num_colors > MAX_PALETTE_SIZE) {
+    *palette_size = 0;
+    return 0;
+  }
   *palette_size = num_colors;
   qsort(palette, num_colors, sizeof(*palette), PaletteCompareColorsForQsort);
   if (!low_effort && PaletteHasNonMonotonousDeltas(palette, num_colors)) {
@@ -353,7 +356,10 @@ static int GetTransformBits(int method, int histo_bits) {
   return res;
 }
 
-static int AnalyzeAndInit(VP8LEncoder* const enc) {
+static int AnalyzeAndInit(VP8LEncoder* const enc,
+                          int entropy_idx[kNumEntropyIx],
+                          int* const num_entropy_idx,
+                          int* const red_and_blue_always_zero) {
   const WebPPicture* const pic = enc->pic_;
   const int width = pic->width;
   const int height = pic->height;
@@ -365,48 +371,48 @@ static int AnalyzeAndInit(VP8LEncoder* const enc) {
   // at max MAX_REFS_BLOCK_PER_IMAGE blocks used:
   int refs_block_size = (pix_cnt - 1) / MAX_REFS_BLOCK_PER_IMAGE + 1;
   int i;
+  int use_palette;
   assert(pic != NULL && pic->argb != NULL);
 
-  enc->use_cross_color_ = 0;
-  enc->use_predict_ = 0;
-  enc->use_subtract_green_ = 0;
-  enc->use_palette_ =
+  use_palette =
       AnalyzeAndCreatePalette(pic, low_effort,
                               enc->palette_, &enc->palette_size_);
 
   // TODO(jyrki): replace the decision to be based on an actual estimate
   // of entropy, or even spatial variance of entropy.
-  enc->histo_bits_ = GetHistoBits(method, enc->use_palette_,
+  enc->histo_bits_ = GetHistoBits(method, use_palette,
                                   pic->width, pic->height);
   enc->transform_bits_ = GetTransformBits(method, enc->histo_bits_);
 
   if (low_effort) {
     // AnalyzeEntropy is somewhat slow.
-    enc->use_predict_ = !enc->use_palette_;
-    enc->use_subtract_green_ = !enc->use_palette_;
-    enc->use_cross_color_ = 0;
+    entropy_idx[0] = use_palette ? kPalette : kSpatialSubGreen;
+    *num_entropy_idx = 1;
   } else {
-    int red_and_blue_always_zero;
     EntropyIx min_entropy_ix;
-    if (!AnalyzeEntropy(pic->argb, width, height, pic->argb_stride,
-                        enc->use_palette_,
+    if (!AnalyzeEntropy(pic->argb, width, height, pic->argb_stride, use_palette,
                         enc->palette_size_, enc->transform_bits_,
-                        &min_entropy_ix, &red_and_blue_always_zero)) {
+                        &min_entropy_ix, red_and_blue_always_zero)) {
       return 0;
     }
-    enc->use_palette_ = (min_entropy_ix == kPalette);
-    enc->use_subtract_green_ =
-        (min_entropy_ix == kSubGreen) || (min_entropy_ix == kSpatialSubGreen);
-    enc->use_predict_ =
-        (min_entropy_ix == kSpatial) || (min_entropy_ix == kSpatialSubGreen);
-    enc->use_cross_color_ = red_and_blue_always_zero ? 0 : enc->use_predict_;
+    if (method == 6 && config->quality == 100) {
+      // Go brute force on all transforms.
+      *num_entropy_idx = 0;
+      for (i = 0; i < kNumEntropyIx; ++i) {
+        if (i != kPalette || use_palette) {
+          entropy_idx[(*num_entropy_idx)++] = i;
+          assert(*num_entropy_idx <= kNumEntropyIx);
+        }
+      }
+    } else {
+      // Only choose the guessed best transform.
+      entropy_idx[0] = min_entropy_ix;
+      *num_entropy_idx = 1;
+    }
   }
 
   if (!VP8LHashChainInit(&enc->hash_chain_, pix_cnt)) return 0;
 
-  // palette-friendly input typically uses less literals
-  //  -> reduce block size a bit
-  if (enc->use_palette_) refs_block_size /= 2;
   for (i = 0; i < 3; ++i) VP8LBackwardRefsInit(&enc->refs_[i], refs_block_size);
 
   return 1;
@@ -1181,6 +1187,7 @@ static WebPEncodingError AllocateTransformBuffer(VP8LEncoder* const enc,
     }
     enc->transform_mem_ = mem;
     enc->transform_mem_size_ = (size_t)mem_size;
+    enc->argb_content_ = kEncoderNone;
   }
   enc->argb_ = mem;
   mem = (uint32_t*)WEBP_ALIGN(mem + image_size);
@@ -1201,11 +1208,13 @@ static WebPEncodingError MakeInputImageCopy(VP8LEncoder* const enc) {
   int y;
   err = AllocateTransformBuffer(enc, width, height);
   if (err != VP8_ENC_OK) return err;
+  if (enc->argb_content_ == kEncoderARGB) return VP8_ENC_OK;
   for (y = 0; y < height; ++y) {
     memcpy(enc->argb_ + y * width,
            picture->argb + y * picture->argb_stride,
            width * sizeof(*enc->argb_));
   }
+  enc->argb_content_ = kEncoderARGB;
   assert(enc->current_width_ == width);
   return VP8_ENC_OK;
 }
@@ -1383,6 +1392,7 @@ static WebPEncodingError MapImageFromPalette(VP8LEncoder* const enc,
   err = ApplyPalette(src, src_stride,
                      enc->argb_, enc->current_width_,
                      palette, palette_size, width, height, xbits);
+  enc->argb_content_ = kEncoderPalette;
   return err;
 }
 
@@ -1441,7 +1451,7 @@ static WebPEncodingError EncodeDeltaPalettePredictorImage(
   err = EncodeImageNoHuffman(
       bw, predictors, &enc->hash_chain_,
       (VP8LBackwardRefs*)&enc->refs_[0],  // cast const away
-      (VP8LBackwardRefs*)&enc->refs_[1],  // cast const away
+      (VP8LBackwardRefs*)&enc->refs_[1],
       transform_width, transform_height, quality, low_effort);
   WebPSafeFree(predictors);
   return err;
@@ -1461,6 +1471,7 @@ static VP8LEncoder* VP8LEncoderNew(const WebPConfig* const config,
   }
   enc->config_ = config;
   enc->pic_ = picture;
+  enc->argb_content_ = kEncoderNone;
 
   VP8LEncDspInit();
 
@@ -1494,8 +1505,14 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   int hdr_size = 0;
   int data_size = 0;
   int use_delta_palette = 0;
+  int entropy_idx[kNumEntropyIx];
+  int num_entropy_idx = 0;
+  int i;
+  int red_and_blue_always_zero = 0;
+  size_t best_size = 0;
+  VP8LBitWriter bw_init = *bw, bw_best;
 
-  if (enc == NULL) {
+  if (enc == NULL || !VP8LBitWriterInit(&bw_best, 0)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
@@ -1503,109 +1520,147 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   // ---------------------------------------------------------------------------
   // Analyze image (entropy, num_palettes etc)
 
-  if (!AnalyzeAndInit(enc)) {
+  if (!AnalyzeAndInit(enc, entropy_idx, &num_entropy_idx,
+                      &red_and_blue_always_zero)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
 
-  // Apply near-lossless preprocessing.
-  use_near_lossless =
-      (config->near_lossless < 100) && !enc->use_palette_ && !enc->use_predict_;
-  if (use_near_lossless) {
-    err = AllocateTransformBuffer(enc, width, height);
-    if (err != VP8_ENC_OK) goto Error;
-    if (!VP8ApplyNearLossless(picture, config->near_lossless, enc->argb_)) {
-      err = VP8_ENC_ERROR_OUT_OF_MEMORY;
-      goto Error;
+  for (i = 0; i < num_entropy_idx; ++i) {
+    enc->use_palette_ = (entropy_idx[i] == kPalette);
+    enc->use_subtract_green_ = (entropy_idx[i] == kSubGreen) ||
+                               (entropy_idx[i] == kSpatialSubGreen);
+    enc->use_predict_ = (entropy_idx[i] == kSpatial) ||
+                        (entropy_idx[i] == kSpatialSubGreen);
+    if (low_effort) {
+      enc->use_cross_color_ = 0;
+    } else {
+      enc->use_cross_color_ = red_and_blue_always_zero ? 0 : enc->use_predict_;
     }
-  }
+    // Reset any parameter in the encoder that is set in the previous iteration.
+    enc->cache_bits_ = 0;
+    VP8LBackwardRefsClear(&enc->refs_[0]);
+    VP8LBackwardRefsClear(&enc->refs_[1]);
 
-#ifdef WEBP_EXPERIMENTAL_FEATURES
-  if (config->use_delta_palette) {
-    enc->use_predict_ = 1;
-    enc->use_cross_color_ = 0;
-    enc->use_subtract_green_ = 0;
-    enc->use_palette_ = 1;
-    err = MakeInputImageCopy(enc);
-    if (err != VP8_ENC_OK) goto Error;
-    err = WebPSearchOptimalDeltaPalette(enc);
-    if (err != VP8_ENC_OK) goto Error;
-    if (enc->use_palette_) {
+    // Apply near-lossless preprocessing.
+    use_near_lossless = (config->near_lossless < 100) && !enc->use_palette_ &&
+                        !enc->use_predict_;
+    if (use_near_lossless) {
       err = AllocateTransformBuffer(enc, width, height);
       if (err != VP8_ENC_OK) goto Error;
-      err = EncodeDeltaPalettePredictorImage(bw, enc, quality, low_effort);
-      if (err != VP8_ENC_OK) goto Error;
-      use_delta_palette = 1;
+      if ((enc->argb_content_ != kEncoderNearLossless) &&
+          !VP8ApplyNearLossless(picture, config->near_lossless, enc->argb_)) {
+        err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+        goto Error;
+      }
+      enc->argb_content_ = kEncoderNearLossless;
+    } else {
+      enc->argb_content_ = kEncoderNone;
     }
-  }
+
+#ifdef WEBP_EXPERIMENTAL_FEATURES
+    if (config->use_delta_palette) {
+      enc->use_predict_ = 1;
+      enc->use_cross_color_ = 0;
+      enc->use_subtract_green_ = 0;
+      enc->use_palette_ = 1;
+      if (enc->argb_content_ != kEncoderNearLossless &&
+          enc->argb_content_ != kEncoderPalette) {
+        err = MakeInputImageCopy(enc);
+        if (err != VP8_ENC_OK) goto Error;
+      }
+      err = WebPSearchOptimalDeltaPalette(enc);
+      if (err != VP8_ENC_OK) goto Error;
+      if (enc->use_palette_) {
+        err = AllocateTransformBuffer(enc, width, height);
+        if (err != VP8_ENC_OK) goto Error;
+        err = EncodeDeltaPalettePredictorImage(bw, enc, quality, low_effort);
+        if (err != VP8_ENC_OK) goto Error;
+        use_delta_palette = 1;
+      }
+    }
 #endif  // WEBP_EXPERIMENTAL_FEATURES
 
-  // Encode palette
-  if (enc->use_palette_) {
-    err = EncodePalette(bw, low_effort, enc);
-    if (err != VP8_ENC_OK) goto Error;
-    err = MapImageFromPalette(enc, use_delta_palette);
-    if (err != VP8_ENC_OK) goto Error;
-    // If using a color cache, do not have it bigger than the number of colors.
-    if (use_cache && enc->palette_size_ < (1 << MAX_COLOR_CACHE_BITS)) {
-      enc->cache_bits_ = BitsLog2Floor(enc->palette_size_) + 1;
-    }
-  }
-  if (!use_delta_palette) {
-    // In case image is not packed.
-    if (enc->argb_ == NULL) {
-      err = MakeInputImageCopy(enc);
+    // Encode palette
+    if (enc->use_palette_) {
+      err = EncodePalette(bw, low_effort, enc);
       if (err != VP8_ENC_OK) goto Error;
+      err = MapImageFromPalette(enc, use_delta_palette);
+      if (err != VP8_ENC_OK) goto Error;
+      // If using a color cache, do not have it bigger than the number of
+      // colors.
+      if (use_cache && enc->palette_size_ < (1 << MAX_COLOR_CACHE_BITS)) {
+        enc->cache_bits_ = BitsLog2Floor(enc->palette_size_) + 1;
+      }
     }
+    if (!use_delta_palette) {
+      // In case image is not packed.
+      if (enc->argb_content_ != kEncoderNearLossless &&
+          enc->argb_content_ != kEncoderPalette) {
+        err = MakeInputImageCopy(enc);
+        if (err != VP8_ENC_OK) goto Error;
+      }
+
+      // -----------------------------------------------------------------------
+      // Apply transforms and write transform data.
+
+      if (enc->use_subtract_green_) {
+        ApplySubtractGreen(enc, enc->current_width_, height, bw);
+      }
+
+      if (enc->use_predict_) {
+        err = ApplyPredictFilter(enc, enc->current_width_, height, quality,
+                                 low_effort, enc->use_subtract_green_, bw);
+        if (err != VP8_ENC_OK) goto Error;
+      }
+
+      if (enc->use_cross_color_) {
+        err = ApplyCrossColorFilter(enc, enc->current_width_, height, quality,
+                                    low_effort, bw);
+        if (err != VP8_ENC_OK) goto Error;
+      }
+    }
+
+    VP8LPutBits(bw, !TRANSFORM_PRESENT, 1);  // No more transforms.
 
     // -------------------------------------------------------------------------
-    // Apply transforms and write transform data.
+    // Encode and write the transformed image.
+    err = EncodeImageInternal(bw, enc->argb_, &enc->hash_chain_, enc->refs_,
+                              enc->current_width_, height, quality, low_effort,
+                              use_cache, &enc->cache_bits_, enc->histo_bits_,
+                              byte_position, &hdr_size, &data_size);
+    if (err != VP8_ENC_OK) goto Error;
 
-    if (enc->use_subtract_green_) {
-      ApplySubtractGreen(enc, enc->current_width_, height, bw);
+    // If we are better than what we already have.
+    if (best_size == 0 || VP8LBitWriterNumBytes(bw) < best_size) {
+      best_size = VP8LBitWriterNumBytes(bw);
+      // Store the BitWriter.
+      VP8LBitWriterSwap(bw, &bw_best);
+      // Update the stats.
+      if (picture->stats != NULL) {
+        WebPAuxStats* const stats = picture->stats;
+        stats->lossless_features = 0;
+        if (enc->use_predict_) stats->lossless_features |= 1;
+        if (enc->use_cross_color_) stats->lossless_features |= 2;
+        if (enc->use_subtract_green_) stats->lossless_features |= 4;
+        if (enc->use_palette_) stats->lossless_features |= 8;
+        stats->histogram_bits = enc->histo_bits_;
+        stats->transform_bits = enc->transform_bits_;
+        stats->cache_bits = enc->cache_bits_;
+        stats->palette_size = enc->palette_size_;
+        stats->lossless_size = (int)(VP8LBitWriterNumBytes(bw) - byte_position);
+        stats->lossless_hdr_size = hdr_size;
+        stats->lossless_data_size = data_size;
+      }
     }
-
-    if (enc->use_predict_) {
-      err = ApplyPredictFilter(enc, enc->current_width_, height, quality,
-                               low_effort, enc->use_subtract_green_, bw);
-      if (err != VP8_ENC_OK) goto Error;
-    }
-
-    if (enc->use_cross_color_) {
-      err = ApplyCrossColorFilter(enc, enc->current_width_,
-                                  height, quality, low_effort, bw);
-      if (err != VP8_ENC_OK) goto Error;
-    }
+    // Reset the bit writer for the following iteration if any.
+    if (num_entropy_idx > 1) VP8LBitWriterReset(&bw_init, bw);
   }
-
-  VP8LPutBits(bw, !TRANSFORM_PRESENT, 1);  // No more transforms.
-
-  // ---------------------------------------------------------------------------
-  // Encode and write the transformed image.
-  err = EncodeImageInternal(bw, enc->argb_, &enc->hash_chain_, enc->refs_,
-                            enc->current_width_, height, quality, low_effort,
-                            use_cache, &enc->cache_bits_, enc->histo_bits_,
-                            byte_position, &hdr_size, &data_size);
-  if (err != VP8_ENC_OK) goto Error;
-
-  if (picture->stats != NULL) {
-    WebPAuxStats* const stats = picture->stats;
-    stats->lossless_features = 0;
-    if (enc->use_predict_) stats->lossless_features |= 1;
-    if (enc->use_cross_color_) stats->lossless_features |= 2;
-    if (enc->use_subtract_green_) stats->lossless_features |= 4;
-    if (enc->use_palette_) stats->lossless_features |= 8;
-    stats->histogram_bits = enc->histo_bits_;
-    stats->transform_bits = enc->transform_bits_;
-    stats->cache_bits = enc->cache_bits_;
-    stats->palette_size = enc->palette_size_;
-    stats->lossless_size = (int)(VP8LBitWriterNumBytes(bw) - byte_position);
-    stats->lossless_hdr_size = hdr_size;
-    stats->lossless_data_size = data_size;
-  }
+  VP8LBitWriterSwap(&bw_best, bw);
 
  Error:
   VP8LEncoderDelete(enc);
+  VP8LBitWriterWipeOut(&bw_best);
   return err;
 }
 
