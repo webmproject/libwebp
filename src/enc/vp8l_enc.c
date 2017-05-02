@@ -1507,12 +1507,12 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   int use_delta_palette = 0;
   int entropy_idx[kNumEntropyIx];
   int num_entropy_idx = 0;
-  int i;
+  int idx;
   int red_and_blue_always_zero = 0;
   size_t best_size = 0;
   VP8LBitWriter bw_init = *bw, bw_best;
 
-  if (enc == NULL || !VP8LBitWriterInit(&bw_best, 0)) {
+  if (enc == NULL || !VP8LBitWriterClone(bw, &bw_best)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
@@ -1526,12 +1526,12 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
     goto Error;
   }
 
-  for (i = 0; i < num_entropy_idx; ++i) {
-    enc->use_palette_ = (entropy_idx[i] == kPalette);
-    enc->use_subtract_green_ = (entropy_idx[i] == kSubGreen) ||
-                               (entropy_idx[i] == kSpatialSubGreen);
-    enc->use_predict_ = (entropy_idx[i] == kSpatial) ||
-                        (entropy_idx[i] == kSpatialSubGreen);
+  for (idx = 0; idx < num_entropy_idx; ++idx) {
+    enc->use_palette_ = (entropy_idx[idx] == kPalette);
+    enc->use_subtract_green_ = (entropy_idx[idx] == kSubGreen) ||
+                               (entropy_idx[idx] == kSpatialSubGreen);
+    enc->use_predict_ = (entropy_idx[idx] == kSpatial) ||
+                        (entropy_idx[idx] == kSpatialSubGreen);
     if (low_effort) {
       enc->use_cross_color_ = 0;
     } else {
@@ -1632,7 +1632,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
     if (err != VP8_ENC_OK) goto Error;
 
     // If we are better than what we already have.
-    if (best_size == 0 || VP8LBitWriterNumBytes(bw) < best_size) {
+    if (idx == 0 || VP8LBitWriterNumBytes(bw) < best_size) {
       best_size = VP8LBitWriterNumBytes(bw);
       // Store the BitWriter.
       VP8LBitWriterSwap(bw, &bw_best);
@@ -1648,7 +1648,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
         stats->transform_bits = enc->transform_bits_;
         stats->cache_bits = enc->cache_bits_;
         stats->palette_size = enc->palette_size_;
-        stats->lossless_size = (int)(VP8LBitWriterNumBytes(bw) - byte_position);
+        stats->lossless_size = (int)(best_size - byte_position);
         stats->lossless_hdr_size = hdr_size;
         stats->lossless_data_size = data_size;
       }

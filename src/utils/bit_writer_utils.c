@@ -239,6 +239,19 @@ int VP8LBitWriterInit(VP8LBitWriter* const bw, size_t expected_size) {
   return VP8LBitWriterResize(bw, expected_size);
 }
 
+int VP8LBitWriterClone(const VP8LBitWriter* const src,
+                       VP8LBitWriter* const dst) {
+  const size_t current_size = src->cur_ - src->buf_;
+  assert(src->cur_ >= src->buf_ && src->cur_ <= src->end_);
+  memset(dst, 0, sizeof(*dst));
+  if (!VP8LBitWriterResize(dst, current_size)) return 0;
+  memcpy(dst->buf_, src->buf_, current_size);
+  dst->bits_ = src->bits_;
+  dst->used_ = src->used_;
+  dst->error_ = src->error_;
+  return 1;
+}
+
 void VP8LBitWriterWipeOut(VP8LBitWriter* const bw) {
   if (bw != NULL) {
     WebPSafeFree(bw->buf_);
@@ -251,6 +264,7 @@ void VP8LBitWriterReset(const VP8LBitWriter* const bw_init,
   bw->bits_ = bw_init->bits_;
   bw->used_ = bw_init->used_;
   bw->cur_ = bw->buf_ + (bw_init->cur_ - bw_init->buf_);
+  assert(bw->cur_ <= bw->end_);
   bw->error_ = bw_init->error_;
 }
 

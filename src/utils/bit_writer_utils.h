@@ -106,6 +106,9 @@ static WEBP_INLINE size_t VP8LBitWriterNumBytes(VP8LBitWriter* const bw) {
 
 // Returns false in case of memory allocation error.
 int VP8LBitWriterInit(VP8LBitWriter* const bw, size_t expected_size);
+// Returns false in case of memory allocation error.
+int VP8LBitWriterClone(const VP8LBitWriter* const src,
+                       VP8LBitWriter* const dst);
 // Finalize the bitstream coding. Returns a pointer to the internal buffer.
 uint8_t* VP8LBitWriterFinish(VP8LBitWriter* const bw);
 // Release any pending memory and zeroes the object.
