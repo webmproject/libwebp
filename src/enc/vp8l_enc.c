@@ -1512,7 +1512,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   size_t best_size = 0;
   VP8LBitWriter bw_init = *bw, bw_best;
 
-  if (enc == NULL || !VP8LBitWriterInit(&bw_best, 0)) {
+  if (enc == NULL || !VP8LBitWriterInitFromBitWriter(bw, &bw_best)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
@@ -1632,7 +1632,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
     if (err != VP8_ENC_OK) goto Error;
 
     // If we are better than what we already have.
-    if (best_size == 0 || VP8LBitWriterNumBytes(bw) < best_size) {
+    if (i == 0 || VP8LBitWriterNumBytes(bw) < best_size) {
       best_size = VP8LBitWriterNumBytes(bw);
       // Store the BitWriter.
       VP8LBitWriterSwap(bw, &bw_best);
@@ -1648,7 +1648,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
         stats->transform_bits = enc->transform_bits_;
         stats->cache_bits = enc->cache_bits_;
         stats->palette_size = enc->palette_size_;
-        stats->lossless_size = (int)(VP8LBitWriterNumBytes(bw) - byte_position);
+        stats->lossless_size = (int)(best_size - byte_position);
         stats->lossless_hdr_size = hdr_size;
         stats->lossless_data_size = data_size;
       }
