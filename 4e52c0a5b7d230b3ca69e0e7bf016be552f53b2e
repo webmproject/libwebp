@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f27c586_b0ff1869",
+        "filename": "src/enc/vp8l_enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1510,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-05-02T16:46:50Z",
+      "side": 1,
+      "message": "\u0027i\u0027 -\u003e \u0027idx\u0027 seems a little more explicit.",
+      "range": {
+        "startLine": 1510,
+        "startChar": 7,
+        "endLine": 1510,
+        "endChar": 8
+      },
+      "revId": "4e52c0a5b7d230b3ca69e0e7bf016be552f53b2e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07703bf6_0c77a35c",
+        "filename": "src/utils/bit_writer_utils.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-05-02T16:46:50Z",
+      "side": 1,
+      "message": "assert(src-\u003ecur_ \u003e\u003d src-\u003ebuf_);\n\nalso: the \"+1\" could use an explanatory comment",
+      "range": {
+        "startLine": 244,
+        "startChar": 36,
+        "endLine": 244,
+        "endChar": 40
+      },
+      "revId": "4e52c0a5b7d230b3ca69e0e7bf016be552f53b2e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8fb06c18_2105f7c9",
+        "filename": "src/utils/bit_writer_utils.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-05-02T16:46:50Z",
+      "side": 1,
+      "message": "VP8LBitWriterClone() instead ?",
+      "range": {
+        "startLine": 110,
+        "startChar": 4,
+        "endLine": 110,
+        "endChar": 34
+      },
+      "revId": "4e52c0a5b7d230b3ca69e0e7bf016be552f53b2e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
