@@ -28,10 +28,31 @@
 #define snprintf _snprintf
 #endif
 
+#define LOG_ERROR(MESSAGE)                     \
+  do {                                         \
+    if (webp_info->show_diagnosis_) {          \
+      fprintf(stderr, "Error: %s\n", MESSAGE); \
+    }                                          \
+  } while (0)
+
+#define LOG_WARN(MESSAGE)                        \
+  do {                                           \
+    if (webp_info->show_diagnosis_) {            \
+      fprintf(stderr, "Warning: %s\n", MESSAGE); \
+    }                                            \
+  } while (0)
+
 static const char* const kFormats[3] = {
   "Unknown",
   "Lossy",
   "Lossless"
+};
+
+static const char* const kLosslessTransforms[4] = {
+  "Predictor",
+  "Cross Color",
+  "Subtract Green",
+  "Color Indexing"
 };
 
 typedef enum {
@@ -87,6 +108,7 @@ typedef struct WebPInfo {
   int is_processing_anim_frame_, seen_alpha_subchunk_, seen_image_subchunk_;
   // Print output control.
   int quiet_, show_diagnosis_, show_summary_;
+  int parse_bitstream_;
 } WebPInfo;
 
 static void WebPInfoInit(WebPInfo* const webp_info) {
@@ -178,17 +200,336 @@ static uint32_t ReadMemBufLE32(MemBuffer* const mem) {
 }
 
 // -----------------------------------------------------------------------------
+// Lossy bitstream analysis.
+
+static int GetBits(const uint8_t* const data, size_t data_size, size_t nb,
+                   int* val, uint64_t* const bit_pos) {
+  *val = 0;
+  while (nb-- > 0) {
+    const uint64_t p = (*bit_pos)++;
+    if ((p >> 3) >= data_size) {
+      return 0;
+    } else {
+      const int bit = !!(data[p >> 3] & (128 >> ((p & 7))));
+      *val = (*val << 1) | bit;
+    }
+  }
+  return 1;
+}
+
+static int GetSignedBits(const uint8_t* const data, size_t data_size, size_t nb,
+                         int* val, uint64_t* const bit_pos) {
+  int sign;
+  if (!GetBits(data, data_size, nb, val, bit_pos)) return 0;
+  if (!GetBits(data, data_size, 1, &sign, bit_pos)) return 0;
+  if (sign) *val = -(*val);
+  return 1;
+}
+
+#define GET_BITS(v, n)                               \
+  do {                                               \
+    if (!GetBits(data, data_size, n, &v, bit_pos)) { \
+      LOG_ERROR("Truncated lossy bitstream.");       \
+      return WEBP_INFO_TRUNCATED_DATA;               \
+    }                                                \
+  } while (0)
+
+#define GET_SIGNED_BITS(v, n)                              \
+  do {                                                     \
+    if (!GetSignedBits(data, data_size, n, &v, bit_pos)) { \
+      LOG_ERROR("Truncated lossy bitstream.");             \
+      return WEBP_INFO_TRUNCATED_DATA;                     \
+    }                                                      \
+  } while (0)
+
+static WebPInfoStatus ParseLossySegmentHeader(const WebPInfo* const webp_info,
+                                              const uint8_t* const data,
+                                              size_t data_size,
+                                              uint64_t* const bit_pos) {
+  int use_segment;
+  GET_BITS(use_segment, 1);
+  printf("  Use segment:      %d\n", use_segment);
+  if (use_segment) {
+    int update_map, update_data;
+    GET_BITS(update_map, 1);
+    GET_BITS(update_data, 1);
+    printf("  Update map:       %d\n"
+           "  Update data:      %d\n",
+           update_map, update_data);
+    if (update_data) {
+      int i, a_delta;
+      int quantizer[4] = {0, 0, 0, 0};
+      int filter_strength[4] = {0, 0, 0, 0};
+      GET_BITS(a_delta, 1);
+      printf("  Absolute delta:   %d\n", a_delta);
+      for (i = 0; i < 4; ++i) {
+        int bit;
+        GET_BITS(bit, 1);
+        if (bit) GET_SIGNED_BITS(quantizer[i], 7);
+      }
+      for (i = 0; i < 4; ++i) {
+        int bit;
+        GET_BITS(bit, 1);
+        if (bit) GET_SIGNED_BITS(filter_strength[i], 6);
+      }
+      printf("  Quantizer:        %d %d %d %d\n", quantizer[0], quantizer[1],
+             quantizer[2], quantizer[3]);
+      printf("  Filter strength:  %d %d %d %d\n", filter_strength[0],
+             filter_strength[1], filter_strength[2], filter_strength[3]);
+    }
+    if (update_map) {
+      int i;
+      int prob_segment[3] = {255, 255, 255};
+      for (i = 0; i < 3; ++i) {
+        int bit;
+        GET_BITS(bit, 1);
+        if (bit) GET_BITS(prob_segment[i], 8);
+      }
+      printf("  Prob segment:     %d %d %d\n",
+             prob_segment[0], prob_segment[1], prob_segment[2]);
+    }
+  }
+  return WEBP_INFO_OK;
+}
+
+static WebPInfoStatus ParseLossyFilterHeader(const WebPInfo* const webp_info,
+                                             const uint8_t* const data,
+                                             size_t data_size,
+                                             uint64_t* const bit_pos) {
+  int simple_filter, level, sharpness, use_lf_delta;
+  GET_BITS(simple_filter, 1);
+  GET_BITS(level, 6);
+  GET_BITS(sharpness, 3);
+  GET_BITS(use_lf_delta, 1);
+  printf("  Simple filter:    %d\n", simple_filter);
+  printf("  Level:            %d\n", level);
+  printf("  Sharpness:        %d\n", sharpness);
+  printf("  Use lf delta:     %d\n", use_lf_delta);
+  if (use_lf_delta) {
+    int update;
+    GET_BITS(update, 1);
+    printf("  Update lf delta:  %d\n", update);
+    if (update) {
+      int i;
+      for (i = 0; i < 4 + 4; ++i) {
+        int temp;
+        GET_BITS(temp, 1);
+        if (temp) GET_BITS(temp, 7);
+      }
+    }
+  }
+  return WEBP_INFO_OK;
+}
+
+static WebPInfoStatus ParseLossyHeader(const ChunkData* const chunk_data,
+                                       const WebPInfo* const webp_info) {
+  const uint8_t* data = chunk_data->payload_;
+  size_t data_size = chunk_data->size_ - CHUNK_HEADER_SIZE;
+  const uint32_t bits = (uint32_t)data[0] | (data[1] << 8) | (data[2] << 16);
+  const int key_frame = !(bits & 1);
+  const int profile = (bits >> 1) & 7;
+  const int display = (bits >> 4) & 1;
+  const uint32_t partition0_length = (bits >> 5);
+  WebPInfoStatus status = WEBP_INFO_OK;
+  uint64_t bit_position = 0;
+  uint64_t* const bit_pos = &bit_position;
+  int color_space, clamp_type;
+  printf("  Parsing lossy bitstream...\n");
+  // Calling WebPGetFeatures() in ProcessImageChunk() should ensure this.
+  assert(chunk_data->size_ >= CHUNK_HEADER_SIZE + 10);
+  if (profile > 3) {
+    LOG_ERROR("Unknown profile.");
+    return WEBP_INFO_BITSTREAM_ERROR;
+  }
+  if (!display) {
+    LOG_ERROR("Frame is not displayable.");
+    return WEBP_INFO_BITSTREAM_ERROR;
+  }
+  data += 3;
+  data_size -= 3;
+  printf("  Key frame:        %s\n"
+         "  Profile:          %d\n"
+         "  Display:          %s\n"
+         "  Part. 0 length:   %d\n",
+         key_frame ? "Yes" : "No", profile,
+         display ? "Yes" : "No", partition0_length);
+  if (key_frame) {
+    if (!(data[0] == 0x9d && data[1] == 0x01 && data[2] == 0x2a)) {
+      LOG_ERROR("Invalid lossy bitstream signature.");
+      return WEBP_INFO_BITSTREAM_ERROR;
+    }
+    printf("  Width:            %d\n"
+           "  X scale:          %d\n"
+           "  Height:           %d\n"
+           "  Y scale:          %d\n",
+           ((data[4] << 8) | data[3]) & 0x3fff, data[4] >> 6,
+           ((data[6] << 8) | data[5]) & 0x3fff, data[6] >> 6);
+    data += 7;
+    data_size -= 7;
+  } else {
+    LOG_ERROR("Non-keyframe detected in lossy bitstream.");
+    return WEBP_INFO_BITSTREAM_ERROR;
+  }
+  if (partition0_length >= data_size) {
+    LOG_ERROR("Bad partition length.");
+    return WEBP_INFO_BITSTREAM_ERROR;
+  }
+  GET_BITS(color_space, 1);
+  GET_BITS(clamp_type, 1);
+  printf("  Color space:      %d\n", color_space);
+  printf("  Clamp type:       %d\n", clamp_type);
+  status = ParseLossySegmentHeader(webp_info, data, data_size, bit_pos);
+  if (status != WEBP_INFO_OK) return status;
+  status = ParseLossyFilterHeader(webp_info, data, data_size, bit_pos);
+  if (status != WEBP_INFO_OK) return status;
+  {  // Partition number and size.
+    const uint8_t* part_size = data + partition0_length;
+    int num_parts, i;
+    size_t part_data_size;
+    GET_BITS(num_parts, 2);
+    num_parts = 1 << num_parts;
+    if ((int)(data_size - partition0_length) < (num_parts - 1) * 3) {
+      LOG_ERROR("Truncated lossy bitstream.");
+      return WEBP_INFO_TRUNCATED_DATA;
+    }
+    part_data_size = data_size - partition0_length - (num_parts - 1) * 3;
+    printf("  Total partitions: %d\n", num_parts);
+    for (i = 1; i < num_parts; ++i) {
+      const size_t psize =
+          part_size[0] | (part_size[1] << 8) | (part_size[2] << 16);
+      if (psize > part_data_size) {
+        LOG_ERROR("Truncated partition.");
+        return WEBP_INFO_TRUNCATED_DATA;
+      }
+      printf("  Part. %d length:   %d\n", i, (int)psize);
+      part_data_size -= psize;
+      part_size += 3;
+    }
+  }
+  // Quantizer.
+  {
+    int base_q, bit;
+    int dq_y1_dc = 0, dq_y2_dc = 0, dq_y2_ac = 0, dq_uv_dc = 0, dq_uv_ac = 0;
+    GET_BITS(base_q, 7);
+    GET_BITS(bit, 1);
+    if (bit) GET_SIGNED_BITS(dq_y1_dc, 4);
+    GET_BITS(bit, 1);
+    if (bit) GET_SIGNED_BITS(dq_y2_dc, 4);
+    GET_BITS(bit, 1);
+    if (bit) GET_SIGNED_BITS(dq_y2_ac, 4);
+    GET_BITS(bit, 1);
+    if (bit) GET_SIGNED_BITS(dq_uv_dc, 4);
+    GET_BITS(bit, 1);
+    if (bit) GET_SIGNED_BITS(dq_uv_ac, 4);
+    printf("  Base Q:           %d\n", base_q);
+    printf("  DQ Y1 DC:         %d\n", dq_y1_dc);
+    printf("  DQ Y2 DC:         %d\n", dq_y2_dc);
+    printf("  DQ Y2 AC:         %d\n", dq_y2_ac);
+    printf("  DQ UV DC:         %d\n", dq_uv_dc);
+    printf("  DQ UV AC:         %d\n", dq_uv_ac);
+  }
+  if ((*bit_pos >> 3) >= partition0_length) {
+    LOG_ERROR("Truncated lossy bitstream.");
+    return WEBP_INFO_TRUNCATED_DATA;
+  }
+  return WEBP_INFO_OK;
+}
+
+// -----------------------------------------------------------------------------
+// Lossless bitstream analysis.
+
+static int LLGetBits(const uint8_t* const data, size_t data_size, size_t nb,
+                     int* val, uint64_t* const bit_pos) {
+  uint32_t i = 0;
+  *val = 0;
+  while (i < nb) {
+    const uint64_t p = (*bit_pos)++;
+    if ((p >> 3) >= data_size) {
+      return 0;
+    } else {
+      const int bit = !!(data[p >> 3] & (1 << ((p & 7))));
+      *val = *val | (bit << i);
+      ++i;
+    }
+  }
+  return 1;
+}
+
+#define LL_GET_BITS(v, n)                              \
+  do {                                                 \
+    if (!LLGetBits(data, data_size, n, &v, bit_pos)) { \
+      LOG_ERROR("Truncated lossless bitstream.");      \
+      return WEBP_INFO_TRUNCATED_DATA;                 \
+    }                                                  \
+  } while (0)
+
+static WebPInfoStatus ParseLosslessTransform(WebPInfo* const webp_info,
+                                             const uint8_t* const data,
+                                             size_t data_size,
+                                             uint64_t* const  bit_pos) {
+  int use_transform, block_size, n_colors;
+  LL_GET_BITS(use_transform, 1);
+  printf("  Use transform:    %s\n", use_transform ? "Yes" : "No");
+  if (use_transform) {
+    int type;
+    LL_GET_BITS(type, 2);
+    printf("  1st transform:    %s\n", kLosslessTransforms[type]);
+    switch (type) {
+      case PREDICTOR_TRANSFORM:
+      case CROSS_COLOR_TRANSFORM:
+        LL_GET_BITS(block_size, 3);
+        block_size = 1 << (block_size + 2);
+        printf("  Tran. block size: %d\n", block_size);
+        break;
+      case COLOR_INDEXING_TRANSFORM:
+        LL_GET_BITS(n_colors, 8);
+        n_colors += 1;
+        printf("  No. of colors:    %d\n", n_colors);
+        break;
+      default: break;
+    }
+  }
+  return WEBP_INFO_OK;
+}
+
+static WebPInfoStatus ParseLosslessHeader(const ChunkData* const chunk_data,
+                                          WebPInfo* const webp_info) {
+  const uint8_t* data = chunk_data->payload_;
+  size_t data_size = chunk_data->size_ - CHUNK_HEADER_SIZE;
+  uint64_t bit_position = 0;
+  uint64_t* const bit_pos = &bit_position;
+  WebPInfoStatus status;
+  printf("  Parsing lossless bitstream...\n");
+  if (data_size < VP8L_FRAME_HEADER_SIZE) {
+    LOG_ERROR("Truncated lossless bitstream.");
+    return WEBP_INFO_TRUNCATED_DATA;
+  }
+  if (data[0] != VP8L_MAGIC_BYTE) {
+    LOG_ERROR("Invalid lossless bitstream signature.");
+    return WEBP_INFO_BITSTREAM_ERROR;
+  }
+  data += 1;
+  data_size -= 1;
+  {
+    int width, height, has_alpha, version;
+    LL_GET_BITS(width, 14);
+    LL_GET_BITS(height, 14);
+    LL_GET_BITS(has_alpha, 1);
+    LL_GET_BITS(version, 3);
+    width += 1;
+    height += 1;
+    printf("  Width:            %d\n", width);
+    printf("  Height:           %d\n", height);
+    printf("  Alpha:            %d\n", has_alpha);
+    printf("  Version:          %d\n", version);
+  }
+  status = ParseLosslessTransform(webp_info, data, data_size, bit_pos);
+  if (status != WEBP_INFO_OK) return status;
+  return WEBP_INFO_OK;
+}
+
+// -----------------------------------------------------------------------------
 // Chunk parsing.
-
-#define LOG_ERROR(MESSAGE)                     \
-  if (webp_info->show_diagnosis_) {            \
-    fprintf(stderr, "Error: %s\n", MESSAGE);   \
-  }
-
-#define LOG_WARN(MESSAGE)                      \
-  if (webp_info->show_diagnosis_) {            \
-    fprintf(stderr, "Warning: %s\n", MESSAGE); \
-  }
 
 static WebPInfoStatus ParseRIFFHeader(const WebPInfo* const webp_info,
                                       MemBuffer* const mem) {
@@ -216,7 +557,7 @@ static WebPInfoStatus ParseRIFFHeader(const WebPInfo* const webp_info,
   riff_size += CHUNK_HEADER_SIZE;
   if (!webp_info->quiet_) {
     printf("RIFF HEADER:\n");
-    printf("  RIFF file size: %6d\n", (int)riff_size);
+    printf("  File size: %6d\n", (int)riff_size);
   }
   if (riff_size < mem->end_) {
     LOG_WARN("RIFF size is smaller than the file size.");
@@ -294,7 +635,7 @@ static WebPInfoStatus ProcessVP8XChunk(const ChunkData* const chunk_data,
   webp_info->canvas_width_ = 1 + ReadLE24(&data);
   webp_info->canvas_height_ = 1 + ReadLE24(&data);
   if (!webp_info->quiet_) {
-    printf("  ICCP %d\n  Alpha %d\n  EXIF %d\n  XMP %d\n  Animation %d\n",
+    printf("  ICCP: %d\n  Alpha: %d\n  EXIF: %d\n  XMP: %d\n  Animation: %d\n",
            (webp_info->feature_flags_ & ICCP_FLAG) != 0,
            (webp_info->feature_flags_ & ALPHA_FLAG) != 0,
            (webp_info->feature_flags_ & EXIF_FLAG) != 0,
@@ -370,8 +711,8 @@ static WebPInfoStatus ProcessANMFChunk(const ChunkData* const chunk_data,
   blend = (temp >> 1) & 1;
   ++webp_info->chunk_counts_[CHUNK_ANMF];
   if (!webp_info->quiet_) {
-    printf("  Offset_X %d\n  Offset_Y %d\n  Width %d\n  Height %d\n"
-           "  Duration %d\n  Dispose %d\n  Blend %d\n",
+    printf("  Offset_X: %d\n  Offset_Y: %d\n  Width: %d\n  Height: %d\n"
+           "  Duration: %d\n  Dispose: %d\n  Blend: %d\n",
            offset_x, offset_y, width, height, duration, dispose, blend);
   }
   if (duration > MAX_DURATION) {
@@ -409,7 +750,8 @@ static WebPInfoStatus ProcessImageChunk(const ChunkData* const chunk_data,
   }
   if (!webp_info->quiet_) {
     assert(features.format >= 0 && features.format <= 2);
-    printf("  Width %d\n  Height %d\n  Alpha %d\n  Animation %d\n  Format %s\n",
+    printf("  Width: %d\n  Height: %d\n  Alpha: %d\n  Animation: %d\n"
+           "  Format: %s\n",
            features.width, features.height, features.has_alpha,
            features.has_animation, kFormats[features.format]);
   }
@@ -467,6 +809,13 @@ static WebPInfoStatus ProcessImageChunk(const ChunkData* const chunk_data,
   }
   ++webp_info->num_frames_;
   webp_info->has_alpha_ |= features.has_alpha;
+  if (webp_info->parse_bitstream_) {
+    const int is_lossy = (chunk_data->id_ == CHUNK_VP8);
+    const WebPInfoStatus status =
+        is_lossy ? ParseLossyHeader(chunk_data, webp_info)
+                 : ParseLosslessHeader(chunk_data, webp_info);
+    if (status != WEBP_INFO_OK) return status;
+  }
   return WEBP_INFO_OK;
 }
 
@@ -506,6 +855,7 @@ static WebPInfoStatus ProcessALPHChunk(const ChunkData* const chunk_data,
     }
     ++webp_info->chunk_counts_[CHUNK_ALPHA];
   }
+  // TODO(huisu): parse alpha bitstream information.
   webp_info->has_alpha_ = 1;
   return WEBP_INFO_OK;
 }
@@ -700,13 +1050,15 @@ static void HelpLong(void) {
          "Note: there could be multiple input files;\n"
          "      options must come before input files.\n"
          "Options:\n"
-         "  -quiet ......... Do not show chunk parsing information.\n"
-         "  -diag .......... Show parsing error diagnosis.\n"
-         "  -summary ....... Show chunk stats summary.\n");
+         "  -quiet ............. Do not show chunk parsing information.\n"
+         "  -diag .............. Show parsing error diagnosis.\n"
+         "  -summary ........... Show chunk stats summary.\n"
+         "  -bitstream_info .... Parse bitstream header.\n");
 }
 
 int main(int argc, const char* argv[]) {
   int c, quiet = 0, show_diag = 0, show_summary = 0;
+  int parse_bitstream = 0;
   WebPInfoStatus webp_info_status = WEBP_INFO_OK;
   WebPInfo webp_info;
 
@@ -729,6 +1081,8 @@ int main(int argc, const char* argv[]) {
       show_diag = 1;
     } else if (!strcmp(argv[c], "-summary")) {
       show_summary = 1;
+    } else if (!strcmp(argv[c], "-bitstream_info")) {
+      parse_bitstream = 1;
     } else {  // Assume the remaining are all input files.
       break;
     }
@@ -747,13 +1101,14 @@ int main(int argc, const char* argv[]) {
     webp_info.quiet_ = quiet;
     webp_info.show_diagnosis_ = show_diag;
     webp_info.show_summary_ = show_summary;
+    webp_info.parse_bitstream_ = parse_bitstream;
     in_file = argv[c];
     if (in_file == NULL || !ReadFileToWebPData(in_file, &webp_data)) {
       webp_info_status = WEBP_INFO_INVALID_COMMAND;
       fprintf(stderr, "Failed to open input file %s.\n", in_file);
       continue;
     }
-    if (!webp_info.quiet_) printf("File %s.\n", in_file);
+    if (!webp_info.quiet_) printf("File: %s\n", in_file);
     webp_info_status = AnalyzeWebP(&webp_info, &webp_data);
     WebPDataClear(&webp_data);
   }
