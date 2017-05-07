@@ -22,6 +22,80 @@
 
 //-----------------------------------------------------------------------------
 
+static uint8x8_t ConvertRGBToY_NEON(const uint8x8_t R,
+                                    const uint8x8_t G,
+                                    const uint8x8_t B) {
+  const uint16x8_t r = vmovl_u8(R);
+  const uint16x8_t g = vmovl_u8(G);
+  const uint16x8_t b = vmovl_u8(B);
+  const uint16x4_t r_lo = vget_low_u16(r);
+  const uint16x4_t r_hi = vget_high_u16(r);
+  const uint16x4_t g_lo = vget_low_u16(g);
+  const uint16x4_t g_hi = vget_high_u16(g);
+  const uint16x4_t b_lo = vget_low_u16(b);
+  const uint16x4_t b_hi = vget_high_u16(b);
+  const uint32x4_t tmp0_lo = vmull_n_u16(         r_lo, 16839u);
+  const uint32x4_t tmp0_hi = vmull_n_u16(         r_hi, 16839u);
+  const uint32x4_t tmp1_lo = vmlal_n_u16(tmp0_lo, g_lo, 33059u);
+  const uint32x4_t tmp1_hi = vmlal_n_u16(tmp0_hi, g_hi, 33059u);
+  const uint32x4_t tmp2_lo = vmlal_n_u16(tmp1_lo, b_lo, 6420u);
+  const uint32x4_t tmp2_hi = vmlal_n_u16(tmp1_hi, b_hi, 6420u);
+  const uint16x8_t Y1 = vcombine_u16(vrshrn_n_u32(tmp2_lo, 16),
+                                     vrshrn_n_u32(tmp2_hi, 16));
+  const uint16x8_t Y2 = vaddq_u16(Y1, vdupq_n_u16(16));
+  return vqmovn_u16(Y2);
+}
+
+static void ConvertRGB24ToY_NEON(const uint8_t* rgb, uint8_t* y, int width) {
+  int i;
+  for (i = 0; i + 8 <= width; i += 8, rgb += 3 * 8) {
+    const uint8x8x3_t RGB = vld3_u8(rgb);
+    const uint8x8_t Y = ConvertRGBToY_NEON(RGB.val[0], RGB.val[1], RGB.val[2]);
+    vst1_u8(y + i, Y);
+  }
+  for (; i < width; ++i, rgb += 3) {   // left-over
+    y[i] = VP8RGBToY(rgb[0], rgb[1], rgb[2], YUV_HALF);
+  }
+}
+
+static void ConvertBGR24ToY_NEON(const uint8_t* bgr, uint8_t* y, int width) {
+  int i;
+  for (i = 0; i + 8 <= width; i += 8, bgr += 3 * 8) {
+    const uint8x8x3_t BGR = vld3_u8(bgr);
+    const uint8x8_t Y = ConvertRGBToY_NEON(BGR.val[2], BGR.val[1], BGR.val[0]);
+    vst1_u8(y + i, Y);
+  }
+  for (; i < width; ++i, bgr += 3) {  // left-over
+    y[i] = VP8RGBToY(bgr[2], bgr[1], bgr[0], YUV_HALF);
+  }
+}
+
+static void ConvertARGBToY_NEON(const uint32_t* argb, uint8_t* y, int width) {
+  int i;
+  for (i = 0; i + 8 <= width; i += 8) {
+    const uint8x8x4_t RGB = vld4_u8((const uint8_t*)&argb[i]);
+    const uint8x8_t Y = ConvertRGBToY_NEON(RGB.val[1], RGB.val[2], RGB.val[3]);
+    vst1_u8(y + i, Y);
+  }
+  for (; i < width; ++i) {   // left-over
+    const uint32_t p = argb[i];
+    y[i] = VP8RGBToY((p >> 16) & 0xff, (p >> 8) & 0xff, (p >>  0) & 0xff,
+                     YUV_HALF);
+  }
+}
+
+//------------------------------------------------------------------------------
+
+extern void WebPInitConvertARGBToYUVNEON(void);
+
+WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUVNEON(void) {
+  WebPConvertRGB24ToY = ConvertRGB24ToY_NEON;
+  WebPConvertBGR24ToY = ConvertBGR24ToY_NEON;
+  WebPConvertARGBToY = ConvertARGBToY_NEON;
+}
+
+//------------------------------------------------------------------------------
+
 #define MAX_Y ((1 << 10) - 1)    // 10b precision over 16b-arithmetic
 static uint16_t clip_y(int v) {
   return (v < 0) ? 0 : (v > MAX_Y) ? MAX_Y : (uint16_t)v;
