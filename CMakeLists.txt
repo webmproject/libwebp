@@ -316,8 +316,10 @@ install(
 )
 
 # Install the man pages.
-set(MAN_PAGES cwebp.1 dwebp.1 gif2webp.1 img2webp.1 vwebp.1 webpmux.1)
-set(EXEC_BUILDS "CWEBP" "DWEBP" "GIF2WEBP" "IMG2WEBP" "VWEBP" "WEBPMUX")
+set(MAN_PAGES cwebp.1 dwebp.1 gif2webp.1 img2webp.1 vwebp.1 webpmux.1
+  webpinfo.1)
+set(EXEC_BUILDS "CWEBP" "DWEBP" "GIF2WEBP" "IMG2WEBP" "VWEBP" "WEBPMUX"
+  "WEBPINFO")
 list(LENGTH MAN_PAGES MAN_PAGES_LENGTH)
 math(EXPR MAN_PAGES_RANGE "${MAN_PAGES_LENGTH} - 1")
 
