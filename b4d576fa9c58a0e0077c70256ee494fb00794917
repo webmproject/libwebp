@@ -16,6 +16,24 @@
       "revId": "b4d576fa9c58a0e0077c70256ee494fb00794917",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9dfd4f1_662dbc8a",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2017-05-09T15:30:47Z",
+      "side": 1,
+      "message": "right, that\u0027s the goal of the for loop below: it checks whether the utilities are compiled through WEBP_BUILD_${EXEC_BUILD}",
+      "parentUuid": "5e206b00_4aae3ce4",
+      "revId": "b4d576fa9c58a0e0077c70256ee494fb00794917",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
