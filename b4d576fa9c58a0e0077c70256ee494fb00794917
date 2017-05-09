@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e206b00_4aae3ce4",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-05-09T15:26:15Z",
+      "side": 1,
+      "message": "the utilities are conditionally compiled, maybe these should be avoided if they aren\u0027t enabled",
+      "revId": "b4d576fa9c58a0e0077c70256ee494fb00794917",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
