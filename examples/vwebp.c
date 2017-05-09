@@ -378,13 +378,13 @@ static void HandleDisplay(void) {
     }
   }
   glPopMatrix();
-  glFlush();
+  glutSwapBuffers();
 }
 
 static void StartDisplay(void) {
   const int width = kParams.canvas_width;
   const int height = kParams.canvas_height;
-  glutInitDisplayMode(GLUT_RGBA);
+  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
   glutInitWindowSize(width, height);
   glutCreateWindow("WebP viewer");
   glutDisplayFunc(HandleDisplay);
