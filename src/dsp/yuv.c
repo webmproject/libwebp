@@ -308,6 +308,7 @@ static volatile VP8CPUInfo rgba_to_yuv_last_cpuinfo_used =
     (VP8CPUInfo)&rgba_to_yuv_last_cpuinfo_used;
 
 extern void WebPInitConvertARGBToYUVSSE2(void);
+extern void WebPInitConvertARGBToYUVNEON(void);
 extern void WebPInitSharpYUVSSE2(void);
 extern void WebPInitSharpYUVNEON(void);
 
@@ -335,6 +336,7 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUV(void) {
 #endif  // WEBP_USE_SSE2
 #if defined(WEBP_USE_NEON)
     if (VP8GetCPUInfo(kNEON)) {
+      WebPInitConvertARGBToYUVNEON();
       WebPInitSharpYUVNEON();
     }
 #endif  // WEBP_USE_NEON
