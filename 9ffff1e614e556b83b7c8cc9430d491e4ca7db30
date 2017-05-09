@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f6f0da0_e6c384b7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-05-09T16:29:50Z",
+      "side": 1,
+      "message": "seems simple enough this way, shouldn\u0027t harm anything",
+      "revId": "9ffff1e614e556b83b7c8cc9430d491e4ca7db30",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
