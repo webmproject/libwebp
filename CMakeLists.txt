@@ -314,3 +314,20 @@ install(
         "${CMAKE_CURRENT_BINARY_DIR}/WebPConfig.cmake"
   DESTINATION ${ConfigPackageLocation}
 )
+
+# Install the man pages.
+set(MAN_PAGES cwebp.1 dwebp.1 gif2webp.1 img2webp.1 vwebp.1 webpmux.1)
+set(EXEC_BUILDS "CWEBP" "DWEBP" "GIF2WEBP" "IMG2WEBP" "VWEBP" "WEBPMUX")
+list(LENGTH MAN_PAGES MAN_PAGES_LENGTH)
+math(EXPR MAN_PAGES_RANGE "${MAN_PAGES_LENGTH} - 1")
+
+foreach(I_MAN RANGE ${MAN_PAGES_RANGE})
+  list(GET EXEC_BUILDS ${I_MAN} EXEC_BUILD)
+  if(WEBP_BUILD_${EXEC_BUILD})
+    list(GET MAN_PAGES ${I_MAN} MAN_PAGE)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/man/${MAN_PAGE}
+      DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man1
+      COMPONENT doc
+    )
+  endif()
+endforeach()
