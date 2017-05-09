@@ -136,6 +136,35 @@ static void ConvertRGBA32ToUV_NEON(const uint16_t* rgb,
   }
 }
 
+static void ConvertARGBToUV_NEON(const uint32_t* argb, uint8_t* u, uint8_t* v,
+                                 int src_width, int do_store) {
+  int i;
+  for (i = 0; i + 16 <= src_width; i += 16, u += 8, v += 8) {
+    const uint8x16x4_t RGB = vld4q_u8((const uint8_t*)&argb[i]);
+    const uint16x8_t R = vpaddlq_u8(RGB.val[2]);  // pair-wise adds
+    const uint16x8_t G = vpaddlq_u8(RGB.val[1]);
+    const uint16x8_t B = vpaddlq_u8(RGB.val[0]);
+    int16x8_t U_tmp, V_tmp;
+    MULTIPLY_16b(R, G, B, -9719, -19081, 28800, 128 << 1, U_tmp);
+    const uint8x8_t U = vqrshrun_n_s16(U_tmp, 1);
+    MULTIPLY_16b(R, G, B, 28800, -24116, -4684, 128 << 1, V_tmp);
+    const uint8x8_t V = vqrshrun_n_s16(V_tmp, 1);
+    if (!do_store) {
+      const uint8x8_t prev_u = vld1_u8(u);
+      const uint8x8_t prev_v = vld1_u8(v);
+      vst1_u8(u, vrhadd_u8(U, prev_u));
+      vst1_u8(v, vrhadd_u8(V, prev_v));
+    } else {
+      vst1_u8(u, U);
+      vst1_u8(v, V);
+    }
+  }
+  if (i < src_width) {  // left-over
+    WebPConvertARGBToUV_C(argb + i, u, v, src_width - i, do_store);
+  }
+}
+
+
 //------------------------------------------------------------------------------
 
 extern void WebPInitConvertARGBToYUVNEON(void);
@@ -144,6 +173,7 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUVNEON(void) {
   WebPConvertRGB24ToY = ConvertRGB24ToY_NEON;
   WebPConvertBGR24ToY = ConvertBGR24ToY_NEON;
   WebPConvertARGBToY = ConvertARGBToY_NEON;
+  WebPConvertARGBToUV = ConvertARGBToUV_NEON;
   WebPConvertRGBA32ToUV = ConvertRGBA32ToUV_NEON;
 }
 
