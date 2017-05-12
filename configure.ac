@@ -67,6 +67,7 @@ AC_DEFUN([TEST_AND_ADD_CFLAGS],
           CFLAGS="$SAVED_CFLAGS"])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-fvisibility=hidden])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wall])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wconstant-conversion])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wdeclaration-after-statement])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wextra])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wfloat-conversion])
