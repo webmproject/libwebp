@@ -113,7 +113,7 @@ static size_t ReadPAMFields(PNMInfo* const info, size_t off) {
   }
   if (!(info->seen_flags & TUPLE_FLAG)) {
     info->seen_flags |= TUPLE_FLAG;
-    info->bytes_per_px = 3;
+    info->bytes_per_px = info->depth * (info->max_value > 255 ? 2 : 1);
   }
   if (info->seen_flags != ALL_NEEDED_FLAGS) {
     fprintf(stderr, "PAM: incomplete header.\n");
@@ -156,6 +156,7 @@ static size_t ReadHeader(PNMInfo* const info) {
   if (info->width <= 0 || info->height <= 0 ||
       info->type <= 0 || info->type >= 9 ||
       info->depth <= 0 || info->depth > 4 ||
+      info->bytes_per_px < info->depth ||
       info->max_value <= 0 || info->max_value >= 65536) {
     return 0;
   }
