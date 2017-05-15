@@ -20,6 +20,7 @@
 #include "./imageio_util.h"
 
 typedef enum {
+  NO_FLAG         = 0,
   WIDTH_FLAG      = 1 << 0,
   HEIGHT_FLAG     = 1 << 1,
   DEPTH_FLAG      = 1 << 2,
@@ -79,29 +80,29 @@ static size_t ReadPAMFields(PNMInfo* const info, size_t off) {
     if (off == 0) return 0;
     if (sscanf(out, "WIDTH %d", &tmp) == 1) {
       if (info->seen_flags & WIDTH_FLAG) return FlagError("WIDTH");
-      info->seen_flags |= WIDTH_FLAG;
+      info->seen_flags = (PNMFlags)(info->seen_flags | WIDTH_FLAG);
       info->width = tmp;
     } else if (sscanf(out, "HEIGHT %d", &tmp) == 1) {
       if (info->seen_flags & HEIGHT_FLAG) return FlagError("HEIGHT");
-      info->seen_flags |= HEIGHT_FLAG;
+      info->seen_flags = (PNMFlags)(info->seen_flags | HEIGHT_FLAG);
       info->height = tmp;
     } else if (sscanf(out, "DEPTH %d", &tmp) == 1) {
       if (info->seen_flags & DEPTH_FLAG) return FlagError("DEPTH");
-      info->seen_flags |= DEPTH_FLAG;
+      info->seen_flags = (PNMFlags)(info->seen_flags | DEPTH_FLAG);
       info->depth = tmp;
     } else if (sscanf(out, "MAXVAL %d", &tmp) == 1) {
       if (info->seen_flags & MAXVAL_FLAG) return FlagError("MAXVAL");
-      info->seen_flags |= MAXVAL_FLAG;
+      info->seen_flags = (PNMFlags)(info->seen_flags | MAXVAL_FLAG);
       info->max_value = tmp;
     } else if (!strcmp(out, "TUPLTYPE RGB_ALPHA")) {
       info->bytes_per_px = 4;
-      info->seen_flags |= TUPLE_FLAG;
+      info->seen_flags = (PNMFlags)(info->seen_flags | TUPLE_FLAG);
     } else if (!strcmp(out, "TUPLTYPE RGB")) {
       info->bytes_per_px = 3;
-      info->seen_flags |= TUPLE_FLAG;
+      info->seen_flags = (PNMFlags)(info->seen_flags | TUPLE_FLAG);
     } else if (!strcmp(out, "TUPLTYPE GRAYSCALE")) {
       info->bytes_per_px = 1;
-      info->seen_flags |= TUPLE_FLAG;
+      info->seen_flags = (PNMFlags)(info->seen_flags | TUPLE_FLAG);
     } else if (!strcmp(out, "ENDHDR")) {
       break;
     } else {
@@ -112,7 +113,7 @@ static size_t ReadPAMFields(PNMInfo* const info, size_t off) {
     }
   }
   if (!(info->seen_flags & TUPLE_FLAG)) {
-    info->seen_flags |= TUPLE_FLAG;
+    info->seen_flags = (PNMFlags)(info->seen_flags | TUPLE_FLAG);
     info->bytes_per_px = info->depth * (info->max_value > 255 ? 2 : 1);
   }
   if (info->seen_flags != ALL_NEEDED_FLAGS) {
@@ -131,7 +132,7 @@ static size_t ReadHeader(PNMInfo* const info) {
 
   info->width = info->height = 0;
   info->type = -1;
-  info->seen_flags = 0;
+  info->seen_flags = NO_FLAG;
   info->bytes_per_px = 0;
   info->depth = 0;
   info->max_value = 0;
