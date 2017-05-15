@@ -93,7 +93,11 @@ typedef enum WebPImageHint {
 // Compression parameters.
 struct WebPConfig {
   int lossless;           // Lossless encoding (0=lossy(default), 1=lossless).
-  float quality;          // between 0 (smallest file) and 100 (biggest)
+  float quality;          // between 0 and 100. For lossy, 0 gives the smallest
+                          // size and 100 the largest. For lossless, this
+                          // parameter is the amount of effort put into the
+                          // compression: 0 is the fastest but gives larger
+                          // files compared to the slowest, but best, 100.
   int method;             // quality/speed trade-off (0=fast, 6=slower-better)
 
   WebPImageHint image_hint;  // Hint for image type (lossless only for now).
