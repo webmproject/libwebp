@@ -361,7 +361,8 @@ int WebPWriteTIFF(FILE* fout, const WebPDecBuffer* const buffer) {
   const uint8_t* rgba = buffer->u.RGBA.rgba;
   const int stride = buffer->u.RGBA.stride;
   const uint8_t bytes_per_px = has_alpha ? 4 : 3;
-  const int assoc_alpha = WebPIsPremultipliedMode(buffer->colorspace) ? 1 : 2;
+  const uint8_t assoc_alpha =
+      WebPIsPremultipliedMode(buffer->colorspace) ? 1 : 2;
   // For non-alpha case, we omit tag 0x152 (ExtraSamples).
   const uint8_t num_ifd_entries = has_alpha ? NUM_IFD_ENTRIES
                                             : NUM_IFD_ENTRIES - 1;

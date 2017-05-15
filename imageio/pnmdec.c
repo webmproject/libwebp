@@ -36,7 +36,7 @@ typedef struct {
   int depth;
   int max_value;
   int type;           // 5, 6 or 7
-  PNMFlags seen_flags;
+  int seen_flags;
 } PNMInfo;
 
 // -----------------------------------------------------------------------------
