@@ -12,6 +12,7 @@
 #include "./pnmdec.h"
 
 #include <assert.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -106,7 +107,11 @@ static size_t ReadPAMFields(PNMInfo* const info, size_t off) {
       break;
     } else {
       static const char kEllipsis[] = " ...";
+      int i;
       if (out_size > 20) sprintf(out + 20 - strlen(kEllipsis), kEllipsis);
+      for (i = 0; i < (int)strlen(out); ++i) {
+        if (!isprint(out[i])) out[i] = ' ';
+      }
       fprintf(stderr, "PAM header error: unrecognized entry [%s]\n", out);
       return 0;
     }
