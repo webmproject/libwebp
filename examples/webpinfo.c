@@ -672,7 +672,7 @@ static WebPInfoStatus ProcessANIMChunk(const ChunkData* const chunk_data,
   webp_info->loop_count_ = ReadLE16(&data);
   ++webp_info->chunk_counts_[CHUNK_ANIM];
   if (!webp_info->quiet_) {
-    printf("  Background color:(BGRA) %02x %02x %02x %02x\n",
+    printf("  Background color:(ARGB) %02x %02x %02x %02x\n",
            (webp_info->bgcolor_ >> 24) & 0xff,
            (webp_info->bgcolor_ >> 16) & 0xff,
            (webp_info->bgcolor_ >> 8) & 0xff,
