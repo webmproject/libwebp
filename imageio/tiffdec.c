@@ -15,6 +15,7 @@
 #include "webp/config.h"
 #endif
 
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -162,7 +163,9 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
   int ok = 0;
   tdir_t dircount;
 
-  if (data == NULL || data_size == 0 || pic == NULL) return 0;
+  if (data == NULL || data_size == 0 || data_size > INT_MAX || pic == NULL) {
+    return 0;
+  }
 
   tif = TIFFClientOpen("Memory", "r", &my_data,
                        MyRead, MyRead, MySeek, MyClose,
