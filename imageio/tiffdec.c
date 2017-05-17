@@ -107,7 +107,7 @@ static void MyUnmapFile(thandle_t opaque, void* base, toff_t size) {
 static tsize_t MyRead(thandle_t opaque, void* dst, tsize_t size) {
   MyData* const my_data = (MyData*)opaque;
   if (my_data->pos + size > my_data->size) {
-    size = my_data->size - my_data->pos;
+    size = (tsize_t)(my_data->size - my_data->pos);
   }
   if (size > 0) {
     memcpy(dst, my_data->data + my_data->pos, size);
