@@ -55,6 +55,13 @@ static const char* const kLosslessTransforms[4] = {
   "Color Indexing"
 };
 
+static const char* const kAlphaFilterMethods[4] = {
+  "None",
+  "Horizontal",
+  "Vertical",
+  "Gradient"
+};
+
 typedef enum {
   WEBP_INFO_OK = 0,
   WEBP_INFO_TRUNCATED_DATA,
@@ -473,7 +480,7 @@ static WebPInfoStatus ParseLosslessTransform(WebPInfo* const webp_info,
   if (use_transform) {
     int type;
     LL_GET_BITS(type, 2);
-    printf("  1st transform:    %s\n", kLosslessTransforms[type]);
+    printf("  1st transform:    %s (%d)\n", kLosslessTransforms[type], type);
     switch (type) {
       case PREDICTOR_TRANSFORM:
       case CROSS_COLOR_TRANSFORM:
@@ -525,6 +532,47 @@ static WebPInfoStatus ParseLosslessHeader(const ChunkData* const chunk_data,
   }
   status = ParseLosslessTransform(webp_info, data, data_size, bit_pos);
   if (status != WEBP_INFO_OK) return status;
+  return WEBP_INFO_OK;
+}
+
+static WebPInfoStatus ParseAlphaHeader(const ChunkData* const chunk_data,
+                                       WebPInfo* const webp_info) {
+  const uint8_t* data = chunk_data->payload_;
+  size_t data_size = chunk_data->size_ - CHUNK_HEADER_SIZE;
+  if (data_size <= ALPHA_HEADER_LEN) {
+    LOG_ERROR("Truncated ALPH chunk.");
+    return WEBP_INFO_TRUNCATED_DATA;
+  }
+  printf("  Parsing ALPH chunk...\n");
+  {
+    const int compression_method = (data[0] >> 0) & 0x03;
+    const int filter = (data[0] >> 2) & 0x03;
+    const int pre_processing = (data[0] >> 4) & 0x03;
+    const int reserved_bits = (data[0] >> 6) & 0x03;
+    printf("  Compression:      %d\n", compression_method);
+    printf("  Filter:           %s (%d)\n",
+           kAlphaFilterMethods[filter], filter);
+    printf("  Pre-processing:   %d\n", pre_processing);
+    if (compression_method > ALPHA_LOSSLESS_COMPRESSION) {
+      LOG_ERROR("Invalid Alpha compression method.");
+      return WEBP_INFO_BITSTREAM_ERROR;
+    }
+    if (pre_processing > ALPHA_PREPROCESSED_LEVELS) {
+      LOG_ERROR("Invalid Alpha pre-processing method.");
+      return WEBP_INFO_BITSTREAM_ERROR;
+    }
+    if (reserved_bits != 0) {
+      LOG_WARN("Reserved bits in ALPH chunk header are not all 0.");
+    }
+    data += ALPHA_HEADER_LEN;
+    data_size -= ALPHA_HEADER_LEN;
+    if (compression_method == ALPHA_LOSSLESS_COMPRESSION) {
+      uint64_t bit_pos = 0;
+      WebPInfoStatus status =
+          ParseLosslessTransform(webp_info, data, data_size, &bit_pos);
+      if (status != WEBP_INFO_OK) return status;
+    }
+  }
   return WEBP_INFO_OK;
 }
 
@@ -751,9 +799,9 @@ static WebPInfoStatus ProcessImageChunk(const ChunkData* const chunk_data,
   if (!webp_info->quiet_) {
     assert(features.format >= 0 && features.format <= 2);
     printf("  Width: %d\n  Height: %d\n  Alpha: %d\n  Animation: %d\n"
-           "  Format: %s\n",
+           "  Format: %s (%d)\n",
            features.width, features.height, features.has_alpha,
-           features.has_animation, kFormats[features.format]);
+           features.has_animation, kFormats[features.format], features.format);
   }
   if (webp_info->is_processing_anim_frame_) {
     ++webp_info->anmf_subchunk_counts_[chunk_data->id_ == CHUNK_VP8 ? 0 : 1];
@@ -821,7 +869,6 @@ static WebPInfoStatus ProcessImageChunk(const ChunkData* const chunk_data,
 
 static WebPInfoStatus ProcessALPHChunk(const ChunkData* const chunk_data,
                                        WebPInfo* const webp_info) {
-  (void)chunk_data;
   if (webp_info->is_processing_anim_frame_) {
     ++webp_info->anmf_subchunk_counts_[2];
     if (webp_info->seen_alpha_subchunk_) {
@@ -855,8 +902,11 @@ static WebPInfoStatus ProcessALPHChunk(const ChunkData* const chunk_data,
     }
     ++webp_info->chunk_counts_[CHUNK_ALPHA];
   }
-  // TODO(huisu): parse alpha bitstream information.
   webp_info->has_alpha_ = 1;
+  if (webp_info->parse_bitstream_) {
+    const WebPInfoStatus status = ParseAlphaHeader(chunk_data, webp_info);
+    if (status != WEBP_INFO_OK) return status;
+  }
   return WEBP_INFO_OK;
 }
 
