@@ -828,8 +828,7 @@ static WebPInfoStatus ProcessImageChunk(const ChunkData* const chunk_data,
     }
     if (chunk_data->id_ == CHUNK_VP8L &&
         webp_info->chunk_counts_[CHUNK_ALPHA]) {
-      LOG_ERROR("Both VP8L and ALPH chunks are detected.");
-      return WEBP_INFO_PARSE_ERROR;
+      LOG_WARN("Both VP8L and ALPH chunks are detected.");
     }
     if (webp_info->chunk_counts_[CHUNK_ANIM] ||
         webp_info->chunk_counts_[CHUNK_ANMF]) {
