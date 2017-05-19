@@ -270,6 +270,9 @@ WebPMux* WebPMuxCreateInternal(const WebPData* bitstream, int copy_data,
     ChunkInit(&chunk);
   }
 
+  // Incomplete image.
+  if (wpi->is_partial_) goto Err;
+
   // Validate mux if complete.
   if (MuxValidate(mux) != WEBP_MUX_OK) goto Err;
 

@@ -504,6 +504,20 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
     if (!has_animation && (num_anim == 1 || num_frames > 0)) {
       return WEBP_MUX_INVALID_ARGUMENT;
     }
+    if (!has_animation) {
+      const WebPMuxImage* images = mux->images_;
+      // There can be only one image.
+      if (images == NULL || images->next_ != NULL) {
+        return WEBP_MUX_INVALID_ARGUMENT;
+      }
+      // Size must match.
+      if (mux->canvas_width_ > 0) {
+        if (images->width_ != mux->canvas_width_ ||
+            images->height_ != mux->canvas_height_) {
+          return WEBP_MUX_INVALID_ARGUMENT;
+        }
+      }
+    }
   }
 
   // Verify either VP8X chunk is present OR there is only one elem in
@@ -515,6 +529,7 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
   if (num_vp8x == 0 && num_images != 1) return WEBP_MUX_INVALID_ARGUMENT;
 
   // ALPHA_FLAG & alpha chunk(s) are consistent.
+  // Note: ALPHA_FLAG can be set when there is actually no Alpha data present.
   if (MuxHasAlpha(mux->images_)) {
     if (num_vp8x > 0) {
       // VP8X chunk is present, so it should contain ALPHA_FLAG.
@@ -525,8 +540,6 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
       if (err != WEBP_MUX_OK) return err;
       if (num_alpha > 0) return WEBP_MUX_INVALID_ARGUMENT;
     }
-  } else {  // Mux doesn't need alpha. So, ALPHA_FLAG should NOT be present.
-    if (flags & ALPHA_FLAG) return WEBP_MUX_INVALID_ARGUMENT;
   }
 
   return WEBP_MUX_OK;
