@@ -1261,12 +1261,13 @@ static WEBP_INLINE uint32_t ApplyPaletteHash0(uint32_t color) {
 
 static WEBP_INLINE uint32_t ApplyPaletteHash1(uint32_t color) {
   // Forget about alpha.
-  return ((color & 0x00ffffffu) * 4222244071u) >> (32 - PALETTE_INV_SIZE_BITS);
+  return ((uint32_t)((color & 0x00ffffffu) * 4222244071ull)) >>
+         (32 - PALETTE_INV_SIZE_BITS);
 }
 
 static WEBP_INLINE uint32_t ApplyPaletteHash2(uint32_t color) {
   // Forget about alpha.
-  return (color & 0x00ffffffu) * ((1u << 31) - 1) >>
+  return ((uint32_t)((color & 0x00ffffffu) * ((1ull << 31) - 1))) >>
          (32 - PALETTE_INV_SIZE_BITS);
 }
 
