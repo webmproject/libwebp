@@ -27,7 +27,7 @@
 // Quantizes the value up or down to a multiple of 1<<bits (or to 255),
 // choosing the closer one, resolving ties using bankers' rounding.
 static uint32_t FindClosestDiscretized(uint32_t a, int bits) {
-  const uint32_t mask = (1 << bits) - 1;
+  const uint32_t mask = (1u << bits) - 1;
   const uint32_t biased = a + (mask >> 1) + ((a >> bits) & 1);
   assert(bits > 0);
   if (biased > 0xff) return 0xff;
