@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "917276b9_47d0b7df",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-05-22T15:10:06Z",
+      "side": 1,
+      "message": "maybe \u0027\u003cmodules\u003e: fix unsigned int overflow warnings\u0027",
+      "revId": "e53793c9fb0db2c7a642552102f1bb6bd0b7e33d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "39d3f295_fcf2b05b",
+        "filename": "src/enc/predictor_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-05-22T15:10:06Z",
+      "side": 1,
+      "message": "green_diff could just be an int to avoid multiple casts. only \u0027value\u0027 needs to be made an int, after that new_green, etc should naturally promote to int in the calculation",
+      "revId": "e53793c9fb0db2c7a642552102f1bb6bd0b7e33d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
