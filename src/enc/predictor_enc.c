@@ -196,7 +196,7 @@ static uint32_t NearLossless(uint32_t value, uint32_t predict,
   }
   if ((value >> 24) == 0 || (value >> 24) == 0xff) {
     // Preserve transparency of fully transparent or fully opaque pixels.
-    a = ((value >> 24) - (predict >> 24)) & 0xff;
+    a = (uint8_t)(((int)(value >> 24) - (int)(predict >> 24)) & 0xff);
   } else {
     a = NearLosslessComponent(value >> 24, predict >> 24, 0xff, quantization);
   }
@@ -209,13 +209,13 @@ static uint32_t NearLossless(uint32_t value, uint32_t predict,
     // The amount by which green has been adjusted during quantization. It is
     // subtracted from red and blue for compensation, to avoid accumulating two
     // quantization errors in them.
-    green_diff = (new_green - (value >> 8)) & 0xff;
+    green_diff = (uint8_t)(((int)new_green - (int)(value >> 8)) & 0xff);
   }
-  r = NearLosslessComponent(((value >> 16) - green_diff) & 0xff,
-                            (predict >> 16) & 0xff, 0xff - new_green,
-                            quantization);
-  b = NearLosslessComponent((value - green_diff) & 0xff, predict & 0xff,
-                            0xff - new_green, quantization);
+  r = NearLosslessComponent(
+      (uint8_t)((((int)(value >> 16) - (int)green_diff)) & 0xff),
+      (predict >> 16) & 0xff, 0xff - new_green, quantization);
+  b = NearLosslessComponent((uint8_t)(((int)value - (int)green_diff) & 0xff),
+                            predict & 0xff, 0xff - new_green, quantization);
   return ((uint32_t)a << 24) | ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
 }
 
