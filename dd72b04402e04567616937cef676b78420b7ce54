@@ -16,6 +16,24 @@
       "revId": "dd72b04402e04567616937cef676b78420b7ce54",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c0338c01_40ec2717",
+        "filename": "src/enc/vp8l_enc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1264,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2017-05-23T09:45:03Z",
+      "side": 1,
+      "message": "It most likely has a speed impact but I benchmarked this step when I improved its compression efficiency and it definitely is less than 1% of the whole computation.",
+      "parentUuid": "05bfe510_7f86fcbe",
+      "revId": "dd72b04402e04567616937cef676b78420b7ce54",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
