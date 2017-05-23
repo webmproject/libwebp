@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3db98666_c81aae03",
+        "filename": "src/enc/predictor_enc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2017-05-23T14:47:35Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "847301dc_08980cae",
+      "revId": "9bbc0891c606933fd64538eb08cc53d0cb4f9067",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "db5e0c51_375c6e5b",
         "filename": "src/enc/vp8l_enc.c",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2017-05-23T13:51:16Z",
       "side": 1,
       "message": "a -O2 gcc build produces the same asm for this as previously",
+      "revId": "9bbc0891c606933fd64538eb08cc53d0cb4f9067",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cde3e0cd_59b9a582",
+        "filename": "src/enc/vp8l_enc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1264,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2017-05-23T14:47:35Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "db5e0c51_375c6e5b",
       "revId": "9bbc0891c606933fd64538eb08cc53d0cb4f9067",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
