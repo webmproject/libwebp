@@ -998,6 +998,14 @@ static WebPInfoStatus Validate(const WebPInfo* const webp_info) {
     const int exif = !!(webp_info->feature_flags_ & EXIF_FLAG);
     const int xmp = !!(webp_info->feature_flags_ & XMP_FLAG);
     const int animation = !!(webp_info->feature_flags_ & ANIMATION_FLAG);
+    const int alpha = !!(webp_info->feature_flags_ & ALPHA_FLAG);
+    if (!alpha && webp_info->has_alpha_) {
+      LOG_ERROR("Unexpected alpha data detected.");
+      return WEBP_INFO_PARSE_ERROR;
+    }
+    if (alpha && !webp_info->has_alpha_) {
+      LOG_WARN("Alpha flag is set with no alpha data present.");
+    }
     if (iccp && !webp_info->chunk_counts_[CHUNK_ICCP]) {
       LOG_ERROR("Missing ICCP chunk.");
       return WEBP_INFO_MISSING_DATA;
