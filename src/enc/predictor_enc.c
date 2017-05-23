@@ -180,6 +180,8 @@ static uint8_t NearLosslessComponent(uint8_t value, uint8_t predict,
 // max_quantization which is a power of 2, smaller than max_diff). Take care if
 // value and predict have undergone subtract green, which means that red and
 // blue are represented as offsets from green.
+#define NEAR_LOSSLESS_DIFF(a, b) \
+    (uint8_t)((((int)((a) >> 16) - (int)(b))) & 0xff)
 static uint32_t NearLossless(uint32_t value, uint32_t predict,
                              int max_quantization, int max_diff,
                              int used_subtract_green) {
@@ -196,7 +198,7 @@ static uint32_t NearLossless(uint32_t value, uint32_t predict,
   }
   if ((value >> 24) == 0 || (value >> 24) == 0xff) {
     // Preserve transparency of fully transparent or fully opaque pixels.
-    a = ((value >> 24) - (predict >> 24)) & 0xff;
+    a = NEAR_LOSSLESS_DIFF(value >> 24, predict >> 24);
   } else {
     a = NearLosslessComponent(value >> 24, predict >> 24, 0xff, quantization);
   }
@@ -209,15 +211,16 @@ static uint32_t NearLossless(uint32_t value, uint32_t predict,
     // The amount by which green has been adjusted during quantization. It is
     // subtracted from red and blue for compensation, to avoid accumulating two
     // quantization errors in them.
-    green_diff = (new_green - (value >> 8)) & 0xff;
+    green_diff = NEAR_LOSSLESS_DIFF(new_green, value >> 8);
   }
-  r = NearLosslessComponent(((value >> 16) - green_diff) & 0xff,
+  r = NearLosslessComponent(NEAR_LOSSLESS_DIFF(value >> 16, green_diff),
                             (predict >> 16) & 0xff, 0xff - new_green,
                             quantization);
-  b = NearLosslessComponent((value - green_diff) & 0xff, predict & 0xff,
-                            0xff - new_green, quantization);
+  b = NearLosslessComponent(NEAR_LOSSLESS_DIFF(value, green_diff),
+                            predict & 0xff, 0xff - new_green, quantization);
   return ((uint32_t)a << 24) | ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
 }
+#undef NEAR_LOSSLESS_DIFF
 
 // Stores the difference between the pixel and its prediction in "out".
 // In case of a lossy encoding, updates the source image to avoid propagating
