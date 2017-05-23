@@ -180,8 +180,7 @@ static uint8_t NearLosslessComponent(uint8_t value, uint8_t predict,
 // max_quantization which is a power of 2, smaller than max_diff). Take care if
 // value and predict have undergone subtract green, which means that red and
 // blue are represented as offsets from green.
-#define NEAR_LOSSLESS_DIFF(a, b) \
-    (uint8_t)((((int)((a) >> 16) - (int)(b))) & 0xff)
+#define NEAR_LOSSLESS_DIFF(a, b) (uint8_t)((((int)(a) - (int)(b))) & 0xff)
 static uint32_t NearLossless(uint32_t value, uint32_t predict,
                              int max_quantization, int max_diff,
                              int used_subtract_green) {
