@@ -520,8 +520,8 @@ void VP8LTransformColor_C(const VP8LMultipliers* const m, uint32_t* data,
     const uint32_t argb = data[i];
     const uint32_t green = argb >> 8;
     const uint32_t red = argb >> 16;
-    int new_red = red;
-    int new_blue = argb;
+    int new_red = red & 0xff;
+    int new_blue = argb & 0xff;
     new_red -= ColorTransformDelta(m->green_to_red_, green);
     new_red &= 0xff;
     new_blue -= ColorTransformDelta(m->green_to_blue_, green);
