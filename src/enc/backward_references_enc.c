@@ -772,7 +772,7 @@ static int CostManagerInit(CostManager* const manager,
   manager->cost_cache_[0] = GetLengthCost(cost_model, 0);
   for (i = 1; i < cost_cache_size; ++i) {
     manager->cost_cache_[i] = GetLengthCost(cost_model, i);
-    // Get an approximation of the number of bound intervals.
+    // Get the number of bound intervals.
     if (manager->cost_cache_[i] != manager->cost_cache_[i - 1]) {
       ++manager->cache_intervals_size_;
     }
@@ -809,7 +809,6 @@ static int CostManagerInit(CostManager* const manager,
       }
       cur->end_ = i + 1;
     }
-    manager->cache_intervals_size_ = cur + 1 - manager->cache_intervals_;
   }
 
   manager->costs_ = (float*)WebPSafeMalloc(pix_count, sizeof(*manager->costs_));
@@ -1458,78 +1457,71 @@ static VP8LBackwardRefs* GetBackwardReferences(
     int width, int height, const uint32_t* const argb, int quality,
     int* const cache_bits, const VP8LHashChain* const hash_chain,
     VP8LBackwardRefs* const refs_lz77, VP8LBackwardRefs* const refs_rle) {
-  int lz77_is_useful;
-  int cache_bits_lz77 = *cache_bits, cache_bits_rle = *cache_bits;
-  double bit_cost_lz77, bit_cost_rle;
-  VP8LBackwardRefs* best = NULL;
+  const int cache_bits_ini = *cache_bits;
+  double bit_cost_best = -1;
+  VP8LBackwardRefs *best = refs_lz77, *worst = refs_rle;
   VP8LHistogram* histo = NULL;
+  int i, i_best = 0;
 
-  // Compute LZ77 with no cache (0 bits), as the ideal LZ77 with a color cache
-  // is not that different in practice.
-  if (!BackwardReferencesLz77(width, height, argb, 0, hash_chain, refs_lz77)) {
-    goto Error;
-  }
-  if (!CalculateBestCacheSize(argb, quality, refs_lz77, &cache_bits_lz77)) {
-    goto Error;
-  }
-  // Transform refs_lz77 for the optimized cache_bits_lz77.
-  if (cache_bits_lz77 > 0) {
-    if (!BackwardRefsWithLocalCache(argb, cache_bits_lz77, refs_lz77)) {
+  histo = VP8LAllocateHistogram(MAX_COLOR_CACHE_BITS);
+  if (histo == NULL) goto Error;
+
+  // Try out RLE and LZ77.
+  for (i = 0; i < 2; ++i) {
+    int res;
+    double bit_cost;
+    int cache_bits_tmp = cache_bits_ini;
+    if (i == 0) {
+      res = BackwardReferencesRle(width, height, argb, 0, worst);
+    } else {
+      // Compute LZ77 with no cache (0 bits), as the ideal LZ77 with a color
+      // cache is not that different in practice.
+      res = BackwardReferencesLz77(width, height, argb, 0, hash_chain, worst);
+    }
+    if (!res) goto Error;
+
+    if (!CalculateBestCacheSize(argb, quality, worst, &cache_bits_tmp)) {
       goto Error;
+    }
+    // Update the backward reference for the optimized cache_bits.
+    if (cache_bits_tmp > 0) {
+      if (!BackwardRefsWithLocalCache(argb, cache_bits_tmp, worst)) {
+        goto Error;
+      }
+    }
+
+    VP8LHistogramCreate(histo, worst, cache_bits_tmp);
+    bit_cost = VP8LHistogramEstimateBits(histo);
+
+    // Keep the best backward references.
+    if (i == 0 || bit_cost < bit_cost_best) {
+      VP8LBackwardRefs* const tmp = worst;
+      worst = best;
+      best = tmp;
+      bit_cost_best = bit_cost;
+      *cache_bits = cache_bits_tmp;
+      i_best = i;
     }
   }
 
-  // RLE.
-  if (!BackwardReferencesRle(width, height, argb, 0, refs_rle)) {
-    goto Error;
-  }
-  if (!CalculateBestCacheSize(argb, quality, refs_rle, &cache_bits_rle)) {
-    goto Error;
-  }
-  // Transform refs_rle for the optimized cache_bits_rle.
-  if (cache_bits_rle > 0) {
-    if (!BackwardRefsWithLocalCache(argb, cache_bits_rle, refs_rle)) {
-      goto Error;
-    }
-  }
-
-  {
-    // Evaluate RLE coding.
-    histo = VP8LAllocateHistogram(cache_bits_rle);
-    if (histo == NULL) goto Error;
-    VP8LHistogramCreate(histo, refs_rle, cache_bits_rle);
-    bit_cost_rle = VP8LHistogramEstimateBits(histo);
-    VP8LFreeHistogram(histo);
-    // Evaluate LZ77 coding.
-    histo = VP8LAllocateHistogram(cache_bits_lz77);
-    if (histo == NULL) goto Error;
-    VP8LHistogramCreate(histo, refs_lz77, cache_bits_lz77);
-    bit_cost_lz77 = VP8LHistogramEstimateBits(histo);
-    // Decide if LZ77 is useful.
-    lz77_is_useful = (bit_cost_lz77 < bit_cost_rle);
-  }
-
-  // Choose appropriate backward reference.
-  if (lz77_is_useful) {
+  // Improve on simple LZ77.
+  if (i_best == 1) {
     // TraceBackwards is costly. Don't execute it at lower quality.
     const int try_lz77_trace_backwards = (quality >= 25);
     best = refs_lz77;   // default guess: lz77 is better
     if (try_lz77_trace_backwards) {
-      if (BackwardReferencesTraceBackwards(width, height, argb, cache_bits_lz77,
-                                           hash_chain, refs_lz77, refs_rle)) {
+      if (BackwardReferencesTraceBackwards(width, height, argb, *cache_bits,
+                                           hash_chain, best, worst)) {
         double bit_cost_trace;
         // Evaluate LZ77 coding.
-        VP8LHistogramCreate(histo, refs_rle, cache_bits_lz77);
+        VP8LHistogramCreate(histo, worst, *cache_bits);
         bit_cost_trace = VP8LHistogramEstimateBits(histo);
-        if (bit_cost_trace < bit_cost_lz77) {
-          best = refs_rle;
+        if (bit_cost_trace < bit_cost_best) {
+          best = worst;
+          bit_cost_best = bit_cost_trace;
         }
       }
     }
-    *cache_bits = cache_bits_lz77;
-  } else {
-    best = refs_rle;
-    *cache_bits = cache_bits_rle;
   }
 
   BackwardReferences2DLocality(width, best);
