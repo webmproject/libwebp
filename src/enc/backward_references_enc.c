@@ -629,7 +629,7 @@ static WEBP_INLINE void AddSingleLiteralWithCostModel(
     const CostModel* const cost_model, int idx, int use_color_cache,
     float prev_cost, float* const cost, uint16_t* const dist_array) {
   double cost_val = prev_cost;
-  const uint32_t color = argb[0];
+  const uint32_t color = argb[idx];
   const int ix = use_color_cache ? VP8LColorCacheContains(hashers, color) : -1;
   if (ix >= 0) {
     // use_color_cache is true and hashers contains color
@@ -772,7 +772,7 @@ static int CostManagerInit(CostManager* const manager,
   manager->cost_cache_[0] = GetLengthCost(cost_model, 0);
   for (i = 1; i < cost_cache_size; ++i) {
     manager->cost_cache_[i] = GetLengthCost(cost_model, i);
-    // Get an approximation of the number of bound intervals.
+    // Get the number of bound intervals.
     if (manager->cost_cache_[i] != manager->cost_cache_[i - 1]) {
       ++manager->cache_intervals_size_;
     }
@@ -809,7 +809,6 @@ static int CostManagerInit(CostManager* const manager,
       }
       cur->end_ = i + 1;
     }
-    manager->cache_intervals_size_ = cur + 1 - manager->cache_intervals_;
   }
 
   manager->costs_ = (float*)WebPSafeMalloc(pix_count, sizeof(*manager->costs_));
@@ -1110,9 +1109,8 @@ static int BackwardReferencesHashChainDistanceOnly(
   // non-processed locations from this point.
   dist_array[0] = 0;
   // Add first pixel as literal.
-  AddSingleLiteralWithCostModel(argb + 0, &hashers, cost_model, 0,
-                                use_color_cache, 0.f, cost_manager->costs_,
-                                dist_array);
+  AddSingleLiteralWithCostModel(argb, &hashers, cost_model, 0, use_color_cache,
+                                0.f, cost_manager->costs_, dist_array);
 
   for (i = 1; i < pix_count; ++i) {
     const float prev_cost = cost_manager->costs_[i - 1];
@@ -1120,7 +1118,7 @@ static int BackwardReferencesHashChainDistanceOnly(
     HashChainFindCopy(hash_chain, i, &offset, &len);
 
     // Try adding the pixel as a literal.
-    AddSingleLiteralWithCostModel(argb + i, &hashers, cost_model, i,
+    AddSingleLiteralWithCostModel(argb, &hashers, cost_model, i,
                                   use_color_cache, prev_cost,
                                   cost_manager->costs_, dist_array);
 
@@ -1457,79 +1455,61 @@ static VP8LBackwardRefs* GetBackwardReferencesLowEffort(
 static VP8LBackwardRefs* GetBackwardReferences(
     int width, int height, const uint32_t* const argb, int quality,
     int* const cache_bits, const VP8LHashChain* const hash_chain,
-    VP8LBackwardRefs* const refs_lz77, VP8LBackwardRefs* const refs_rle) {
-  int lz77_is_useful;
-  int cache_bits_lz77 = *cache_bits, cache_bits_rle = *cache_bits;
-  double bit_cost_lz77, bit_cost_rle;
-  VP8LBackwardRefs* best = NULL;
+    VP8LBackwardRefs* best, VP8LBackwardRefs* worst) {
+  const int cache_bits_initial = *cache_bits;
+  double bit_cost_best = -1;
   VP8LHistogram* histo = NULL;
+  int i, i_best = 0;
 
-  // Compute LZ77 with no cache (0 bits), as the ideal LZ77 with a color cache
-  // is not that different in practice.
-  if (!BackwardReferencesLz77(width, height, argb, 0, hash_chain, refs_lz77)) {
-    goto Error;
-  }
-  if (!CalculateBestCacheSize(argb, quality, refs_lz77, &cache_bits_lz77)) {
-    goto Error;
-  }
-  // Transform refs_lz77 for the optimized cache_bits_lz77.
-  if (cache_bits_lz77 > 0) {
-    if (!BackwardRefsWithLocalCache(argb, cache_bits_lz77, refs_lz77)) {
+  histo = VP8LAllocateHistogram(MAX_COLOR_CACHE_BITS);
+  if (histo == NULL) goto Error;
+
+  // Try out RLE first, then LZ77.
+  for (i = 0; i <= 1; ++i) {
+    int res;
+    double bit_cost;
+    int cache_bits_tmp = cache_bits_initial;
+    // First, try out backward references with no cache (0 bits).
+    if (i == 0) {
+      res = BackwardReferencesRle(width, height, argb, 0, worst);
+    } else {
+      res = BackwardReferencesLz77(width, height, argb, 0, hash_chain, worst);
+    }
+    if (!res) goto Error;
+
+    // Next, try with a color cache and update the references.
+    if (!CalculateBestCacheSize(argb, quality, worst, &cache_bits_tmp)) {
       goto Error;
     }
-  }
-
-  // RLE.
-  if (!BackwardReferencesRle(width, height, argb, 0, refs_rle)) {
-    goto Error;
-  }
-  if (!CalculateBestCacheSize(argb, quality, refs_rle, &cache_bits_rle)) {
-    goto Error;
-  }
-  // Transform refs_rle for the optimized cache_bits_rle.
-  if (cache_bits_rle > 0) {
-    if (!BackwardRefsWithLocalCache(argb, cache_bits_rle, refs_rle)) {
-      goto Error;
-    }
-  }
-
-  {
-    // Evaluate RLE coding.
-    histo = VP8LAllocateHistogram(cache_bits_rle);
-    if (histo == NULL) goto Error;
-    VP8LHistogramCreate(histo, refs_rle, cache_bits_rle);
-    bit_cost_rle = VP8LHistogramEstimateBits(histo);
-    VP8LFreeHistogram(histo);
-    // Evaluate LZ77 coding.
-    histo = VP8LAllocateHistogram(cache_bits_lz77);
-    if (histo == NULL) goto Error;
-    VP8LHistogramCreate(histo, refs_lz77, cache_bits_lz77);
-    bit_cost_lz77 = VP8LHistogramEstimateBits(histo);
-    // Decide if LZ77 is useful.
-    lz77_is_useful = (bit_cost_lz77 < bit_cost_rle);
-  }
-
-  // Choose appropriate backward reference.
-  if (lz77_is_useful) {
-    // TraceBackwards is costly. Don't execute it at lower quality.
-    const int try_lz77_trace_backwards = (quality >= 25);
-    best = refs_lz77;   // default guess: lz77 is better
-    if (try_lz77_trace_backwards) {
-      if (BackwardReferencesTraceBackwards(width, height, argb, cache_bits_lz77,
-                                           hash_chain, refs_lz77, refs_rle)) {
-        double bit_cost_trace;
-        // Evaluate LZ77 coding.
-        VP8LHistogramCreate(histo, refs_rle, cache_bits_lz77);
-        bit_cost_trace = VP8LHistogramEstimateBits(histo);
-        if (bit_cost_trace < bit_cost_lz77) {
-          best = refs_rle;
-        }
+    if (cache_bits_tmp > 0) {
+      if (!BackwardRefsWithLocalCache(argb, cache_bits_tmp, worst)) {
+        goto Error;
       }
     }
-    *cache_bits = cache_bits_lz77;
-  } else {
-    best = refs_rle;
-    *cache_bits = cache_bits_rle;
+
+    // Keep the best backward references.
+    VP8LHistogramCreate(histo, worst, cache_bits_tmp);
+    bit_cost = VP8LHistogramEstimateBits(histo);
+    if (i == 0 || bit_cost < bit_cost_best) {
+      VP8LBackwardRefs* const tmp = worst;
+      worst = best;
+      best = tmp;
+      bit_cost_best = bit_cost;
+      *cache_bits = cache_bits_tmp;
+      i_best = i;
+    }
+  }
+
+  // Improve on simple LZ77 but only for high quality (TraceBackwards is
+  // costly).
+  if (i_best == 1 && quality >= 25) {
+    if (BackwardReferencesTraceBackwards(width, height, argb, *cache_bits,
+                                         hash_chain, best, worst)) {
+      double bit_cost_trace;
+      VP8LHistogramCreate(histo, worst, *cache_bits);
+      bit_cost_trace = VP8LHistogramEstimateBits(histo);
+      if (bit_cost_trace < bit_cost_best) best = worst;
+    }
   }
 
   BackwardReferences2DLocality(width, best);
