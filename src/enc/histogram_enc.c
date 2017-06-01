@@ -76,7 +76,7 @@ void VP8LHistogramStoreRefs(const VP8LBackwardRefs* const refs,
                             VP8LHistogram* const histo) {
   VP8LRefsCursor c = VP8LRefsCursorInit(refs);
   while (VP8LRefsCursorOk(&c)) {
-    VP8LHistogramAddSinglePixOrCopy(histo, c.cur_pos);
+    VP8LHistogramAddSinglePixOrCopy(histo, c.cur_pos, NULL, 0);
     VP8LRefsCursorNext(&c);
   }
 }
@@ -138,7 +138,9 @@ VP8LHistogramSet* VP8LAllocateHistogramSet(int size, int cache_bits) {
 // -----------------------------------------------------------------------------
 
 void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const histo,
-                                     const PixOrCopy* const v) {
+                                     const PixOrCopy* const v,
+                                     int (*const distance_modifier)(int, int),
+                                     int distance_modifier_arg0) {
   if (PixOrCopyIsLiteral(v)) {
     ++histo->alpha_[PixOrCopyLiteral(v, 3)];
     ++histo->red_[PixOrCopyLiteral(v, 2)];
@@ -152,7 +154,13 @@ void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const histo,
     int code, extra_bits;
     VP8LPrefixEncodeBits(PixOrCopyLength(v), &code, &extra_bits);
     ++histo->literal_[NUM_LITERAL_CODES + code];
-    VP8LPrefixEncodeBits(PixOrCopyDistance(v), &code, &extra_bits);
+    if (distance_modifier == NULL) {
+      VP8LPrefixEncodeBits(PixOrCopyDistance(v), &code, &extra_bits);
+    } else {
+      VP8LPrefixEncodeBits(
+          distance_modifier(distance_modifier_arg0, PixOrCopyDistance(v)),
+          &code, &extra_bits);
+    }
     ++histo->distance_[code];
   }
 }
@@ -473,7 +481,7 @@ static void HistogramBuild(
   while (VP8LRefsCursorOk(&c)) {
     const PixOrCopy* const v = c.cur_pos;
     const int ix = (y >> histo_bits) * histo_xsize + (x >> histo_bits);
-    VP8LHistogramAddSinglePixOrCopy(histograms[ix], v);
+    VP8LHistogramAddSinglePixOrCopy(histograms[ix], v, NULL, 0);
     x += PixOrCopyLength(v);
     while (x >= xsize) {
       x -= xsize;

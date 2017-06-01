@@ -58,13 +58,21 @@ static void ConvertPopulationCountTableToBitEstimates(
   }
 }
 
-static int CostModelBuild(CostModel* const m, int cache_bits,
+static int CostModelBuild(CostModel* const m, int xsize, int cache_bits,
                           const VP8LBackwardRefs* const refs) {
   int ok = 0;
+  VP8LRefsCursor c = VP8LRefsCursorInit(refs);
   VP8LHistogram* const histo = VP8LAllocateHistogram(cache_bits);
   if (histo == NULL) goto Error;
 
-  VP8LHistogramCreate(histo, refs, cache_bits);
+  // The following code is similar to VP8LHistogramCreate but converts the
+  // distance to plane code.
+  VP8LHistogramInit(histo, cache_bits);
+  while (VP8LRefsCursorOk(&c)) {
+    VP8LHistogramAddSinglePixOrCopy(histo, c.cur_pos, VP8LDistanceToPlaneCode,
+                                    xsize);
+    VP8LRefsCursorNext(&c);
+  }
 
   ConvertPopulationCountTableToBitEstimates(
       VP8LHistogramNumCodes(histo->palette_code_bits_),
@@ -583,7 +591,7 @@ static int BackwardReferencesHashChainDistanceOnly(
     if (!cc_init) goto Error;
   }
 
-  if (!CostModelBuild(cost_model, cache_bits, refs)) {
+  if (!CostModelBuild(cost_model, xsize, cache_bits, refs)) {
     goto Error;
   }
 

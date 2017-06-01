@@ -90,7 +90,9 @@ VP8LHistogram* VP8LAllocateHistogram(int cache_bits);
 
 // Accumulate a token 'v' into a histogram.
 void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const histo,
-                                     const PixOrCopy* const v);
+                                     const PixOrCopy* const v,
+                                     int (*const distance_modifier)(int, int),
+                                     int distance_modifier_arg0);
 
 static WEBP_INLINE int VP8LHistogramNumCodes(int palette_code_bits) {
   return NUM_LITERAL_CODES + NUM_LENGTH_CODES +
