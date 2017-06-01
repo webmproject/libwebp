@@ -185,6 +185,7 @@ model {
             srcDir "src/enc"
             include "alpha_enc.c"
             include "analysis_enc.c"
+            include "backward_references_cost_enc.c"
             include "backward_references_enc.c"
             include "config_enc.c"
             include "cost_enc.c"
