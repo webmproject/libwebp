@@ -54,7 +54,7 @@ endif
 # EXTRA_FLAGS += -m32
 
 # Extra flags to enable experimental features and code
-# EXTRA_FLAGS += -DWEBP_EXPERIMENTAL_FEATURES
+EXTRA_FLAGS += -DWEBP_EXPERIMENTAL_FEATURES
 
 # Extra flags to enable byte swap for 16 bit colorspaces.
 # EXTRA_FLAGS += -DWEBP_SWAP_16BIT_CSP
@@ -73,7 +73,7 @@ EXTRA_FLAGS += -Wmissing-declarations
 EXTRA_FLAGS += -Wdeclaration-after-statement
 EXTRA_FLAGS += -Wshadow
 EXTRA_FLAGS += -Wformat-security -Wformat-nonliteral
-# EXTRA_FLAGS += -Wvla
+EXTRA_FLAGS += -Wvla
 
 # SSE4.1-specific flags:
 ifeq ($(HAVE_SSE41), 1)
@@ -180,6 +180,8 @@ DSP_ENC_OBJS = \
     src/dsp/cost_mips32.o \
     src/dsp/cost_mips_dsp_r2.o \
     src/dsp/cost_sse2.o \
+    src/dsp/csp.o \
+    src/dsp/csp_sse2.o \
     src/dsp/enc.o \
     src/dsp/enc_avx2.o \
     src/dsp/enc_mips32.o \
@@ -201,6 +203,7 @@ DSP_ENC_OBJS = \
 ENC_OBJS = \
     src/enc/alpha_enc.o \
     src/enc/analysis_enc.o \
+    src/enc/backward_references_cost_enc.o \
     src/enc/backward_references_enc.o \
     src/enc/config_enc.o \
     src/enc/cost_enc.o \
@@ -251,6 +254,7 @@ MUX_OBJS = \
     src/mux/muxread.o \
 
 UTILS_DEC_OBJS = \
+    src/utils/ans.o \
     src/utils/bit_reader_utils.o \
     src/utils/color_cache_utils.o \
     src/utils/filters_utils.o \
@@ -308,6 +312,7 @@ HDRS = \
     src/enc/vp8li_enc.h \
     src/mux/animi.h \
     src/mux/muxi.h \
+    src/utils/ans.h \
     src/utils/bit_reader_utils.h \
     src/utils/bit_reader_inl_utils.h \
     src/utils/bit_writer_utils.h \

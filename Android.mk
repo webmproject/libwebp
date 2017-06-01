@@ -87,6 +87,8 @@ dsp_enc_srcs := \
     src/dsp/cost_mips32.c \
     src/dsp/cost_mips_dsp_r2.c \
     src/dsp/cost_sse2.c \
+    src/dsp/csp.c \
+    src/dsp/csp_sse2.c \
     src/dsp/enc.c \
     src/dsp/enc_avx2.c \
     src/dsp/enc_mips32.c \
@@ -108,6 +110,7 @@ dsp_enc_srcs := \
 enc_srcs := \
     src/enc/alpha_enc.c \
     src/enc/analysis_enc.c \
+    src/enc/backward_references_cost_enc.c \
     src/enc/backward_references_enc.c \
     src/enc/config_enc.c \
     src/enc/cost_enc.c \
@@ -137,6 +140,7 @@ mux_srcs := \
     src/mux/muxread.c \
 
 utils_dec_srcs := \
+    src/utils/ans.c \
     src/utils/bit_reader_utils.c \
     src/utils/color_cache_utils.c \
     src/utils/filters_utils.c \
