@@ -22,6 +22,30 @@
       "revId": "e4eb458741f61a95679a44995c212b5f412cf5a1",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f84396e_42f23d57",
+        "filename": "src/enc/backward_references_enc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1123,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-06-01T19:01:59Z",
+      "side": 0,
+      "message": "\u003e was this change intentional?\n\nI missed the edit to the function itself, I thought it was missing before",
+      "parentUuid": "66ee3344_d7b9fe6d",
+      "range": {
+        "startLine": 1123,
+        "startChar": 34,
+        "endLine": 1123,
+        "endChar": 42
+      },
+      "revId": "e4eb458741f61a95679a44995c212b5f412cf5a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
