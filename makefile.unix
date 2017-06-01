@@ -201,6 +201,7 @@ DSP_ENC_OBJS = \
 ENC_OBJS = \
     src/enc/alpha_enc.o \
     src/enc/analysis_enc.o \
+    src/enc/backward_references_cost_enc.o \
     src/enc/backward_references_enc.o \
     src/enc/config_enc.o \
     src/enc/cost_enc.o \

@@ -283,6 +283,7 @@ EX_UTIL_OBJS = \
 ENC_OBJS = \
     $(DIROBJ)\enc\alpha_enc.obj \
     $(DIROBJ)\enc\analysis_enc.obj \
+    $(DIROBJ)\enc\backward_references_cost_enc.obj \
     $(DIROBJ)\enc\backward_references_enc.obj \
     $(DIROBJ)\enc\config_enc.obj \
     $(DIROBJ)\enc\cost_enc.obj \

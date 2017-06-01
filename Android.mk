@@ -108,6 +108,7 @@ dsp_enc_srcs := \
 enc_srcs := \
     src/enc/alpha_enc.c \
     src/enc/analysis_enc.c \
+    src/enc/backward_references_cost_enc.c \
     src/enc/backward_references_enc.c \
     src/enc/config_enc.c \
     src/enc/cost_enc.c \
