@@ -25,6 +25,15 @@ extern "C" {
 // The maximum allowed limit is 11.
 #define MAX_COLOR_CACHE_BITS 10
 
+// If you change this, you need MAX_LENGTH_BITS + WINDOW_SIZE_BITS <= 32 as it
+// is used in VP8LHashChain.
+#define MAX_LENGTH_BITS 12
+// We want the max value to be attainable and stored in MAX_LENGTH_BITS bits.
+#define MAX_LENGTH ((1 << MAX_LENGTH_BITS) - 1)
+#if MAX_LENGTH_BITS + WINDOW_SIZE_BITS > 32
+#error "MAX_LENGTH_BITS + WINDOW_SIZE_BITS > 32"
+#endif
+
 // -----------------------------------------------------------------------------
 // PixOrCopy
 
