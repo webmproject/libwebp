@@ -11,6 +11,14 @@ ifeq ($(APP_OPTIM),release)
   endif
 endif
 
+# mips32 fails to build with clang from r14b
+# https://bugs.chromium.org/p/webp/issues/detail?id=343
+ifeq ($(findstring clang,$(NDK_TOOLCHAIN_VERSION)),clang)
+  ifeq ($(TARGET_ARCH),mips)
+    WEBP_CFLAGS += -no-integrated-as
+  endif
+endif
+
 ifneq ($(findstring armeabi-v7a, $(TARGET_ARCH_ABI)),)
   # Setting LOCAL_ARM_NEON will enable -mfpu=neon which may cause illegal
   # instructions to be generated for armv7a code. Instead target the neon code

@@ -74,6 +74,13 @@ model {
           cCompiler.args "-frename-registers -s"
         }
       }
+      // mips32 fails to build with clang from r14b
+      // https://bugs.chromium.org/p/webp/issues/detail?id=343
+      if (toolChain in Clang) {
+        if (getTargetPlatform() == "mips") {
+          cCompiler.args "-no-integrated-as"
+        }
+      }
       // Check for NEON usage.
       if (getTargetPlatform() == "arm" || getTargetPlatform() == "arm64") {
         NEON = "c.neon"
