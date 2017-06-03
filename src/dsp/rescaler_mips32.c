@@ -279,7 +279,8 @@ extern void WebPRescalerDspInitMIPS32(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInitMIPS32(void) {
   WebPRescalerImportRowExpand = ImportRowExpand;
-  WebPRescalerImportRowShrink = ImportRowShrink;
+  // WebPRescalerImportRowShrink = ImportRowShrink;
+  (void)ImportRowShrink;
   WebPRescalerExportRowExpand = ExportRowExpand;
   WebPRescalerExportRowShrink = ExportRowShrink;
 }
