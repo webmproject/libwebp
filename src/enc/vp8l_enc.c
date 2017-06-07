@@ -356,13 +356,13 @@ static int GetTransformBits(int method, int histo_bits) {
   return res;
 }
 
-// Se of parameters to be used in each iteration of the cruncher.
+// Set of parameters to be used in each iteration of the cruncher.
 typedef struct {
   int entropy_idx_;
   int lz77s_types_to_try_;
 } CrunchConfig;
 
-#define CRUNCH_CONFIGS_MAX kNumEntropyIx
+#define CRUNCH_CONFIGS_MAX (kNumEntropyIx * 2)
 
 static int AnalyzeAndInit(VP8LEncoder* const enc,
                           CrunchConfig crunch_configs[CRUNCH_CONFIGS_MAX],
@@ -399,27 +399,33 @@ static int AnalyzeAndInit(VP8LEncoder* const enc,
     *crunch_configs_size = 1;
   } else {
     EntropyIx min_entropy_ix;
+    int j;
+    // Try out multiple LZ77 on images with few colors.
+    const int n_lz77 = 1 + (enc->palette_size_ > 0 && enc->palette_size_ <= 16);
     if (!AnalyzeEntropy(pic->argb, width, height, pic->argb_stride, use_palette,
                         enc->palette_size_, enc->transform_bits_,
                         &min_entropy_ix, red_and_blue_always_zero)) {
       return 0;
     }
     *crunch_configs_size = 0;
-    if (method == 6 && config->quality == 100) {
-      // Go brute force on all transforms.
-      for (i = 0; i < kNumEntropyIx; ++i) {
-        if (i != kPalette || use_palette) {
-          crunch_configs[*crunch_configs_size].entropy_idx_ = i;
-          crunch_configs[(*crunch_configs_size)++].lz77s_types_to_try_ =
-              kLZ77Standard | kLZ77RLE;
-          assert(*crunch_configs_size <= CRUNCH_CONFIGS_MAX);
+    for (j = 0; j < n_lz77; ++j) {
+      if (method == 6 && config->quality == 100) {
+        // Go brute force on all transforms.
+        for (i = 0; i < kNumEntropyIx; ++i) {
+          if (i != kPalette || use_palette) {
+            assert(*crunch_configs_size < CRUNCH_CONFIGS_MAX);
+            crunch_configs[*crunch_configs_size].entropy_idx_ = i;
+            crunch_configs[(*crunch_configs_size)++].lz77s_types_to_try_ =
+                (j == 0) ? kLZ77Standard | kLZ77RLE : kLZ77Box;
+          }
         }
+      } else {
+        // Only choose the guessed best transform.
+        assert(*crunch_configs_size < CRUNCH_CONFIGS_MAX);
+        crunch_configs[*crunch_configs_size].entropy_idx_ = min_entropy_ix;
+        crunch_configs[(*crunch_configs_size)++].lz77s_types_to_try_ =
+            (j == 0) ? kLZ77Standard | kLZ77RLE : kLZ77Box;
       }
-    } else {
-      // Only choose the guessed best transform.
-      crunch_configs[*crunch_configs_size].entropy_idx_ = min_entropy_ix;
-      crunch_configs[(*crunch_configs_size)++].lz77s_types_to_try_ =
-          kLZ77Standard | kLZ77RLE;
     }
   }
 
