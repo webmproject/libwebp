@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd7ebbc5_bc3a0695",
+        "filename": "src/enc/backward_references_enc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 690,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-07T14:11:04Z",
+      "side": 1,
+      "message": "lz77s -\u003e lz77_types_to_try\n\nmight be more explicit",
+      "range": {
+        "startLine": 690,
+        "startChar": 72,
+        "endLine": 690,
+        "endChar": 77
+      },
+      "revId": "1c5984f602a276a0bb0b0f6d02446c967f0c9c0f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b63f3f93_139eaaa3",
+        "filename": "src/enc/backward_references_enc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-07T14:11:04Z",
+      "side": 1,
+      "message": "i -\u003e lz77_type\ni_best -\u003e best_lz77_type",
+      "range": {
+        "startLine": 696,
+        "startChar": 6,
+        "endLine": 696,
+        "endChar": 7
+      },
+      "revId": "1c5984f602a276a0bb0b0f6d02446c967f0c9c0f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d592ae99_687a4bce",
+        "filename": "src/enc/backward_references_enc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 765,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-07T14:11:04Z",
+      "side": 1,
+      "message": "lz77s -\u003e lz77_types_to_try",
+      "range": {
+        "startLine": 765,
+        "startChar": 24,
+        "endLine": 765,
+        "endChar": 29
+      },
+      "revId": "1c5984f602a276a0bb0b0f6d02446c967f0c9c0f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5dbf2cce_c23216a4",
+        "filename": "src/enc/backward_references_enc.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-07T14:11:04Z",
+      "side": 1,
+      "message": "This should be prefixed",
+      "range": {
+        "startLine": 216,
+        "startChar": 5,
+        "endLine": 216,
+        "endChar": 13
+      },
+      "revId": "1c5984f602a276a0bb0b0f6d02446c967f0c9c0f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c88b161_ea980b94",
+        "filename": "src/enc/vp8l_enc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 360,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-07T14:11:04Z",
+      "side": 1,
+      "message": "a few lines of comment would help",
+      "range": {
+        "startLine": 360,
+        "startChar": 19,
+        "endLine": 360,
+        "endChar": 0
+      },
+      "revId": "1c5984f602a276a0bb0b0f6d02446c967f0c9c0f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b82025c0_171e0432",
+        "filename": "src/enc/vp8l_enc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-07T14:11:04Z",
+      "side": 1,
+      "message": "lz77_types_to_try_ ?",
+      "range": {
+        "startLine": 361,
+        "startChar": 12,
+        "endLine": 361,
+        "endChar": 13
+      },
+      "revId": "1c5984f602a276a0bb0b0f6d02446c967f0c9c0f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ffd3d65b_96ceeba4",
+        "filename": "src/enc/vp8l_enc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-07T14:11:04Z",
+      "side": 1,
+      "message": "CRUNCH_CONFIGS_CAPACITY -\u003e MAX_CRUNCH_CONFIGS ?",
+      "range": {
+        "startLine": 364,
+        "startChar": 8,
+        "endLine": 364,
+        "endChar": 31
+      },
+      "revId": "1c5984f602a276a0bb0b0f6d02446c967f0c9c0f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b2ae81a_44cc2046",
+        "filename": "src/enc/vp8l_enc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 849,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-07T14:11:04Z",
+      "side": 1,
+      "message": "warning! function signature is getting out of hands!",
+      "range": {
+        "startLine": 849,
+        "startChar": 36,
+        "endLine": 849,
+        "endChar": 45
+      },
+      "revId": "1c5984f602a276a0bb0b0f6d02446c967f0c9c0f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "163f0a9a_7f5e2a12",
+        "filename": "src/enc/vp8l_enc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1517,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-07T14:11:04Z",
+      "side": 1,
+      "message": "num_crunch_configs instead?",
+      "range": {
+        "startLine": 1517,
+        "startChar": 0,
+        "endLine": 1517,
+        "endChar": 30
+      },
+      "revId": "1c5984f602a276a0bb0b0f6d02446c967f0c9c0f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
