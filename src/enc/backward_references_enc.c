@@ -477,7 +477,8 @@ static int BackwardReferencesLz77(int xsize, int ysize,
     if (len >= MIN_LENGTH) {
       const int len_ini = len;
       int max_reach = 0;
-      assert(i + len < pix_count);
+      const int j_max =
+          (i + len_ini >= pix_count) ? pix_count - 1 : i + len_ini;
       // Only start from what we have not checked already.
       i_last_check = (i > i_last_check) ? i : i_last_check;
       // We know the best match for the current pixel but we try to find the
@@ -486,7 +487,7 @@ static int BackwardReferencesLz77(int xsize, int ysize,
       // [i,i+len) + [i+len, length of best match at i+len)
       // while we check if we can use:
       // [i,j) (where j<=i+len) + [j, length of best match at j)
-      for (j = i_last_check + 1; j <= i + len_ini; ++j) {
+      for (j = i_last_check + 1; j <= j_max; ++j) {
         const int len_j = VP8LHashChainFindLength(hash_chain, j);
         const int reach =
             j + (len_j >= MIN_LENGTH ? len_j : 1);  // 1 for single literal.
@@ -515,6 +516,129 @@ static int BackwardReferencesLz77(int xsize, int ysize,
  Error:
   if (cc_init) VP8LColorCacheClear(&hashers);
   return ok;
+}
+
+// Compute an LZ77 by forcing matches to happen within a given distance cost.
+// We therefore limit the algorithm to the lowest 32 values in the PlaneCode
+// definition.
+#define WINDOW_OFFSETS_SIZE_MAX 32
+static int BackwardReferencesLz77Box(int xsize, int ysize,
+                                     const uint32_t* const argb, int cache_bits,
+                                     const VP8LHashChain* const hash_chain_best,
+                                     VP8LHashChain* hash_chain,
+                                     VP8LBackwardRefs* const refs) {
+  int i;
+  const int pix_count = xsize * ysize;
+  uint16_t* counts;
+  int window_offsets[WINDOW_OFFSETS_SIZE_MAX] = {0};
+  int window_offsets_size = 0;
+  uint16_t* const counts_ini =
+      (uint16_t*)WebPSafeMalloc(xsize * ysize, sizeof(*counts_ini));
+  if (counts_ini == NULL) return 0;
+
+  // counts[i] counts how many times a pixel is repeated starting at position i.
+  i = pix_count - 2;
+  counts = counts_ini + i;
+  counts[1] = 1;
+  for (; i >= 0; --i, --counts) {
+    if (argb[i] == argb[i + 1]) {
+      // Max out the counts to MAX_LENGTH.
+      counts[0] = counts[1] + (counts[1] != MAX_LENGTH);
+    } else {
+      counts[0] = 1;
+    }
+  }
+
+  // Figure out the window offsets around a pixel. They are stored in a
+  // spiraling order around the pixel as defined by VP8LDistanceToPlaneCode.
+  {
+    int x, y;
+    for (y = 0; y <= 6; ++y) {
+      for (x = -6; x <= 6; ++x) {
+        const int offset = y * xsize + x;
+        int plane_code;
+        // Ignore offsets that bring us after the pixel.
+        if (offset <= 0) continue;
+        plane_code = VP8LDistanceToPlaneCode(xsize, offset) - 1;
+        if (plane_code >= WINDOW_OFFSETS_SIZE_MAX) continue;
+        window_offsets[plane_code] = offset;
+      }
+    }
+    // For narrow images, not all plane codes are reached, so remove those.
+    for (i = 0; i < WINDOW_OFFSETS_SIZE_MAX; ++i) {
+      if (window_offsets[i] == 0) continue;
+      window_offsets[window_offsets_size++] = window_offsets[i];
+    }
+  }
+
+  for (i = pix_count - 1; i > 0; --i) {
+    int ind;
+    int best_length = VP8LHashChainFindLength(hash_chain_best, i);
+    int best_offset;
+    int do_compute = 1;
+
+    if (best_length >= MAX_LENGTH) {
+      // Do not recompute the best match if we already have a maximal one in the
+      // window.
+      best_offset = VP8LHashChainFindOffset(hash_chain_best, i);
+      for (ind = 0; ind < window_offsets_size; ++ind) {
+        if (best_offset == window_offsets[ind]) {
+          do_compute = 0;
+          break;
+        }
+      }
+    }
+    if (do_compute) {
+      best_length = 0;
+      best_offset = 0;
+      // Find the longest match in a window around the pixel.
+      for (ind = 0; ind < window_offsets_size; ++ind) {
+        int curr_length = 0;
+        int j = i;
+        int j_offset = i - window_offsets[ind];
+        if (j_offset < 0 || argb[j_offset] != argb[i]) continue;
+        // The longest match is the sum of how many times each pixel is
+        // repeated.
+        do {
+          const int counts_j_offset = counts_ini[j_offset];
+          const int counts_j = counts_ini[j];
+          if (counts_j_offset != counts_j) {
+            curr_length +=
+                (counts_j_offset < counts_j) ? counts_j_offset : counts_j;
+            break;
+          }
+          // The same color is repeated counts_pos times at j_offset and j.
+          curr_length += counts_j_offset;
+          j_offset += counts_j_offset;
+          j += counts_j_offset;
+        } while (curr_length <= MAX_LENGTH && j < pix_count &&
+                 argb[j_offset] == argb[j]);
+        if (best_length < curr_length) {
+          best_offset = window_offsets[ind];
+          if (curr_length > MAX_LENGTH) {
+            best_length = MAX_LENGTH;
+            break;
+          } else {
+            best_length = curr_length;
+          }
+        }
+      }
+    }
+
+    assert(i + best_length <= pix_count);
+    assert(best_length <= MAX_LENGTH);
+    if (best_length <= MIN_LENGTH) {
+      hash_chain->offset_length_[i] = 0;
+    } else {
+      hash_chain->offset_length_[i] =
+          (best_offset << MAX_LENGTH_BITS) | (uint32_t)best_length;
+    }
+  }
+  hash_chain->offset_length_[0] = 0;
+  WebPSafeFree(counts_ini);
+
+  return BackwardReferencesLz77(xsize, ysize, argb, cache_bits, hash_chain,
+                                refs);
 }
 
 // -----------------------------------------------------------------------------
@@ -695,6 +819,8 @@ static VP8LBackwardRefs* GetBackwardReferences(
   double bit_cost_best = -1;
   VP8LHistogram* histo = NULL;
   int lz77_type, lz77_type_best = 0;
+  VP8LHashChain hash_chain_box;
+  memset(&hash_chain_box, 0, sizeof(hash_chain_box));
 
   histo = VP8LAllocateHistogram(MAX_COLOR_CACHE_BITS);
   if (histo == NULL) goto Error;
@@ -713,6 +839,11 @@ static VP8LBackwardRefs* GetBackwardReferences(
         // Compute LZ77 with no cache (0 bits), as the ideal LZ77 with a color
         // cache is not that different in practice.
         res = BackwardReferencesLz77(width, height, argb, 0, hash_chain, worst);
+        break;
+      case kLZ77Box:
+        if (!VP8LHashChainInit(&hash_chain_box, width * height)) goto Error;
+        res = BackwardReferencesLz77Box(width, height, argb, 0, hash_chain,
+                                        &hash_chain_box, worst);
         break;
       default:
         assert(0);
@@ -745,9 +876,12 @@ static VP8LBackwardRefs* GetBackwardReferences(
 
   // Improve on simple LZ77 but only for high quality (TraceBackwards is
   // costly).
-  if (lz77_type_best == kLZ77Standard && quality >= 25) {
+  if ((lz77_type_best == kLZ77Standard || lz77_type_best == kLZ77Box) &&
+      quality >= 25) {
+    const VP8LHashChain* const hash_chain_tmp =
+        (lz77_type_best == kLZ77Standard) ? hash_chain : &hash_chain_box;
     if (VP8LBackwardReferencesTraceBackwards(width, height, argb, *cache_bits,
-                                             hash_chain, best, worst)) {
+                                             hash_chain_tmp, best, worst)) {
       double bit_cost_trace;
       VP8LHistogramCreate(histo, worst, *cache_bits);
       bit_cost_trace = VP8LHistogramEstimateBits(histo);
@@ -758,6 +892,7 @@ static VP8LBackwardRefs* GetBackwardReferences(
   BackwardReferences2DLocality(width, best);
 
 Error:
+  VP8LHashChainClear(&hash_chain_box);
   VP8LFreeHistogram(histo);
   return best;
 }
