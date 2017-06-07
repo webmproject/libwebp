@@ -1,0 +1,182 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4209d220_d62fe27a",
+        "filename": "src/enc/backward_references_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 521,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-07T20:46:35Z",
+      "side": 1,
+      "message": "maybe add a comment that the window\u0027s size is:\n(LZ77_BOX_WINDOWS_SIZE + 1) * (2 * LZ77_BOX_WINDOWS_SIZE + 1)",
+      "range": {
+        "startLine": 521,
+        "startChar": 75,
+        "endLine": 521,
+        "endChar": 0
+      },
+      "revId": "572d451975facb77e393674df0524bee992f81f3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "17913949_07e6da20",
+        "filename": "src/enc/backward_references_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 538,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-07T20:46:35Z",
+      "side": 1,
+      "message": "// counts[i] counts how many times a pixel is repeated starting at position i.",
+      "range": {
+        "startLine": 538,
+        "startChar": 42,
+        "endLine": 538,
+        "endChar": 50
+      },
+      "revId": "572d451975facb77e393674df0524bee992f81f3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9bd4133a_02ec2fb2",
+        "filename": "src/enc/backward_references_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 545,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-07T20:46:35Z",
+      "side": 1,
+      "message": "could be more readable with []\u0027s :\n\ncounts[0] \u003d counts[1] + (counts[1] !\u003d MAX_LENGTH);\n\nand \n\ncounts[0] \u003d 1;",
+      "range": {
+        "startLine": 545,
+        "startChar": 7,
+        "endLine": 545,
+        "endChar": 13
+      },
+      "revId": "572d451975facb77e393674df0524bee992f81f3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ab67696_13d42603",
+        "filename": "src/enc/backward_references_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 556,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-07T20:46:35Z",
+      "side": 1,
+      "message": "i\u0027d rename \u0027val\u0027 into \u0027offset\u0027 for clarity.",
+      "range": {
+        "startLine": 556,
+        "startChar": 18,
+        "endLine": 556,
+        "endChar": 21
+      },
+      "revId": "572d451975facb77e393674df0524bee992f81f3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67145614_fca90d39",
+        "filename": "src/enc/backward_references_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 556,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-07T20:46:35Z",
+      "side": 1,
+      "message": "why \u0027- x\u0027 ? why the substract? maybe doing the \"for(x\u003d...)\" loop in the other direction and using \u0027const int offset \u003d y * xsize + x;\u0027 would make the reverse-scan intent more obvious.",
+      "range": {
+        "startLine": 556,
+        "startChar": 38,
+        "endLine": 556,
+        "endChar": 0
+      },
+      "revId": "572d451975facb77e393674df0524bee992f81f3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ca195cd_ab2c2e52",
+        "filename": "src/enc/backward_references_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 810,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-07T20:46:35Z",
+      "side": 1,
+      "message": "(as said below, could be on the stack)",
+      "revId": "572d451975facb77e393674df0524bee992f81f3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "afa09cb5_fb36daac",
+        "filename": "src/enc/backward_references_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 810,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-07T20:46:35Z",
+      "side": 1,
+      "message": "VP8LHashChain* hash_chain_box",
+      "range": {
+        "startLine": 810,
+        "startChar": 2,
+        "endLine": 810,
+        "endChar": 31
+      },
+      "revId": "572d451975facb77e393674df0524bee992f81f3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a2e75e94_e7c764f0",
+        "filename": "src/enc/backward_references_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 831,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-07T20:46:35Z",
+      "side": 1,
+      "message": "fwiw, this hash_chain_box could be on the stack, it\u0027s a small struct.",
+      "range": {
+        "startLine": 831,
+        "startChar": 8,
+        "endLine": 831,
+        "endChar": 22
+      },
+      "revId": "572d451975facb77e393674df0524bee992f81f3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
