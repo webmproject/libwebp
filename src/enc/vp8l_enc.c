@@ -356,9 +356,16 @@ static int GetTransformBits(int method, int histo_bits) {
   return res;
 }
 
+typedef struct {
+  int entropy_idx_;
+  int lz77s_;
+} CrunchConfig;
+
+#define CRUNCH_CONFIGS_CAPACITY kNumEntropyIx
+
 static int AnalyzeAndInit(VP8LEncoder* const enc,
-                          int entropy_idx[kNumEntropyIx],
-                          int* const num_entropy_idx,
+                          CrunchConfig crunch_configs[CRUNCH_CONFIGS_CAPACITY],
+                          int* const crunch_configs_size,
                           int* const red_and_blue_always_zero) {
   const WebPPicture* const pic = enc->pic_;
   const int width = pic->width;
@@ -386,8 +393,9 @@ static int AnalyzeAndInit(VP8LEncoder* const enc,
 
   if (low_effort) {
     // AnalyzeEntropy is somewhat slow.
-    entropy_idx[0] = use_palette ? kPalette : kSpatialSubGreen;
-    *num_entropy_idx = 1;
+    crunch_configs[0].entropy_idx_ = use_palette ? kPalette : kSpatialSubGreen;
+    crunch_configs[0].lz77s_ = kLZ77Standard | kLZ77RLE;
+    *crunch_configs_size = 1;
   } else {
     EntropyIx min_entropy_ix;
     if (!AnalyzeEntropy(pic->argb, width, height, pic->argb_stride, use_palette,
@@ -395,19 +403,22 @@ static int AnalyzeAndInit(VP8LEncoder* const enc,
                         &min_entropy_ix, red_and_blue_always_zero)) {
       return 0;
     }
+    *crunch_configs_size = 0;
     if (method == 6 && config->quality == 100) {
       // Go brute force on all transforms.
-      *num_entropy_idx = 0;
       for (i = 0; i < kNumEntropyIx; ++i) {
         if (i != kPalette || use_palette) {
-          entropy_idx[(*num_entropy_idx)++] = i;
-          assert(*num_entropy_idx <= kNumEntropyIx);
+          crunch_configs[*crunch_configs_size].entropy_idx_ = i;
+          crunch_configs[(*crunch_configs_size)++].lz77s_ =
+              kLZ77Standard | kLZ77RLE;
+          assert(*crunch_configs_size <= CRUNCH_CONFIGS_CAPACITY);
         }
       }
     } else {
       // Only choose the guessed best transform.
-      entropy_idx[0] = min_entropy_ix;
-      *num_entropy_idx = 1;
+      crunch_configs[*crunch_configs_size].entropy_idx_ = min_entropy_ix;
+      crunch_configs[(*crunch_configs_size)++].lz77s_ =
+          kLZ77Standard | kLZ77RLE;
     }
   }
 
@@ -771,7 +782,8 @@ static WebPEncodingError EncodeImageNoHuffman(VP8LBitWriter* const bw,
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
-  refs = VP8LGetBackwardReferences(width, height, argb, quality, 0, &cache_bits,
+  refs = VP8LGetBackwardReferences(width, height, argb, quality, 0,
+                                   kLZ77Standard | kLZ77RLE, &cache_bits,
                                    hash_chain, refs_tmp1, refs_tmp2);
   if (refs == NULL) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
@@ -829,17 +841,12 @@ static WebPEncodingError EncodeImageNoHuffman(VP8LBitWriter* const bw,
   return err;
 }
 
-static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
-                                             const uint32_t* const argb,
-                                             VP8LHashChain* const hash_chain,
-                                             VP8LBackwardRefs refs_array[3],
-                                             int width, int height, int quality,
-                                             int low_effort,
-                                             int use_cache, int* cache_bits,
-                                             int histogram_bits,
-                                             size_t init_byte_position,
-                                             int* const hdr_size,
-                                             int* const data_size) {
+static WebPEncodingError EncodeImageInternal(
+    VP8LBitWriter* const bw, const uint32_t* const argb,
+    VP8LHashChain* const hash_chain, VP8LBackwardRefs refs_array[3], int width,
+    int height, int quality, int low_effort, int use_cache, int lz77s,
+    int* cache_bits, int histogram_bits, size_t init_byte_position,
+    int* const hdr_size, int* const data_size) {
   WebPEncodingError err = VP8_ENC_OK;
   const uint32_t histogram_image_xysize =
       VP8LSubSampleSize(width, histogram_bits) *
@@ -881,9 +888,9 @@ static WebPEncodingError EncodeImageInternal(VP8LBitWriter* const bw,
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
-  refs_best = VP8LGetBackwardReferences(width, height, argb, quality,
-                                        low_effort, cache_bits, hash_chain,
-                                        &refs_array[0], &refs_array[1]);
+  refs_best = VP8LGetBackwardReferences(
+      width, height, argb, quality, low_effort, lz77s, cache_bits, hash_chain,
+      &refs_array[0], &refs_array[1]);
   if (refs_best == NULL) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
@@ -1506,8 +1513,8 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   int hdr_size = 0;
   int data_size = 0;
   int use_delta_palette = 0;
-  int entropy_idx[kNumEntropyIx];
-  int num_entropy_idx = 0;
+  CrunchConfig crunch_configs[CRUNCH_CONFIGS_CAPACITY];
+  int crunch_configs_size = 0;
   int idx;
   int red_and_blue_always_zero = 0;
   size_t best_size = 0;
@@ -1521,18 +1528,19 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   // ---------------------------------------------------------------------------
   // Analyze image (entropy, num_palettes etc)
 
-  if (!AnalyzeAndInit(enc, entropy_idx, &num_entropy_idx,
+  if (!AnalyzeAndInit(enc, crunch_configs, &crunch_configs_size,
                       &red_and_blue_always_zero)) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
 
-  for (idx = 0; idx < num_entropy_idx; ++idx) {
-    enc->use_palette_ = (entropy_idx[idx] == kPalette);
-    enc->use_subtract_green_ = (entropy_idx[idx] == kSubGreen) ||
-                               (entropy_idx[idx] == kSpatialSubGreen);
-    enc->use_predict_ = (entropy_idx[idx] == kSpatial) ||
-                        (entropy_idx[idx] == kSpatialSubGreen);
+  for (idx = 0; idx < crunch_configs_size; ++idx) {
+    const int entropy_idx = crunch_configs[idx].entropy_idx_;
+    enc->use_palette_ = (entropy_idx == kPalette);
+    enc->use_subtract_green_ =
+        (entropy_idx == kSubGreen) || (entropy_idx == kSpatialSubGreen);
+    enc->use_predict_ =
+        (entropy_idx == kSpatial) || (entropy_idx == kSpatialSubGreen);
     if (low_effort) {
       enc->use_cross_color_ = 0;
     } else {
@@ -1628,7 +1636,8 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
     // Encode and write the transformed image.
     err = EncodeImageInternal(bw, enc->argb_, &enc->hash_chain_, enc->refs_,
                               enc->current_width_, height, quality, low_effort,
-                              use_cache, &enc->cache_bits_, enc->histo_bits_,
+                              use_cache, crunch_configs[idx].lz77s_,
+                              &enc->cache_bits_, enc->histo_bits_,
                               byte_position, &hdr_size, &data_size);
     if (err != VP8_ENC_OK) goto Error;
 
@@ -1655,7 +1664,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
       }
     }
     // Reset the bit writer for the following iteration if any.
-    if (num_entropy_idx > 1) VP8LBitWriterReset(&bw_init, bw);
+    if (crunch_configs_size > 1) VP8LBitWriterReset(&bw_init, bw);
   }
   VP8LBitWriterSwap(&bw_best, bw);
 
@@ -1664,6 +1673,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   VP8LBitWriterWipeOut(&bw_best);
   return err;
 }
+#undef CRUNCH_CONFIGS_CAPACITY
 
 int VP8LEncodeImage(const WebPConfig* const config,
                     const WebPPicture* const picture) {
