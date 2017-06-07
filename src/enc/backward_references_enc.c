@@ -688,26 +688,34 @@ extern int VP8LBackwardReferencesTraceBackwards(
     const VP8LBackwardRefs* const refs_src, VP8LBackwardRefs* const refs_dst);
 static VP8LBackwardRefs* GetBackwardReferences(
     int width, int height, const uint32_t* const argb, int quality,
-    int* const cache_bits, const VP8LHashChain* const hash_chain,
-    VP8LBackwardRefs* best, VP8LBackwardRefs* worst) {
+    int lz77_types_to_try, int* const cache_bits,
+    const VP8LHashChain* const hash_chain, VP8LBackwardRefs* best,
+    VP8LBackwardRefs* worst) {
   const int cache_bits_initial = *cache_bits;
   double bit_cost_best = -1;
   VP8LHistogram* histo = NULL;
-  int i, i_best = 0;
+  int lz77_type, lz77_type_best = 0;
 
   histo = VP8LAllocateHistogram(MAX_COLOR_CACHE_BITS);
   if (histo == NULL) goto Error;
 
-  // Try out RLE first, then LZ77.
-  for (i = 0; i <= 1; ++i) {
-    int res;
+  for (lz77_type = 1; lz77_types_to_try;
+       lz77_types_to_try &= ~lz77_type, lz77_type <<= 1) {
+    int res = 0;
     double bit_cost;
     int cache_bits_tmp = cache_bits_initial;
-    // First, try out backward references with no cache (0 bits).
-    if (i == 0) {
-      res = BackwardReferencesRle(width, height, argb, 0, worst);
-    } else {
-      res = BackwardReferencesLz77(width, height, argb, 0, hash_chain, worst);
+    if ((lz77_types_to_try & lz77_type) == 0) continue;
+    switch (lz77_type) {
+      case kLZ77RLE:
+        res = BackwardReferencesRle(width, height, argb, 0, worst);
+        break;
+      case kLZ77Standard:
+        // Compute LZ77 with no cache (0 bits), as the ideal LZ77 with a color
+        // cache is not that different in practice.
+        res = BackwardReferencesLz77(width, height, argb, 0, hash_chain, worst);
+        break;
+      default:
+        assert(0);
     }
     if (!res) goto Error;
 
@@ -724,19 +732,20 @@ static VP8LBackwardRefs* GetBackwardReferences(
     // Keep the best backward references.
     VP8LHistogramCreate(histo, worst, cache_bits_tmp);
     bit_cost = VP8LHistogramEstimateBits(histo);
-    if (i == 0 || bit_cost < bit_cost_best) {
+    if (lz77_type_best == 0 || bit_cost < bit_cost_best) {
       VP8LBackwardRefs* const tmp = worst;
       worst = best;
       best = tmp;
       bit_cost_best = bit_cost;
       *cache_bits = cache_bits_tmp;
-      i_best = i;
+      lz77_type_best = lz77_type;
     }
   }
+  assert(lz77_type_best > 0);
 
   // Improve on simple LZ77 but only for high quality (TraceBackwards is
   // costly).
-  if (i_best == 1 && quality >= 25) {
+  if (lz77_type_best == kLZ77Standard && quality >= 25) {
     if (VP8LBackwardReferencesTraceBackwards(width, height, argb, *cache_bits,
                                              hash_chain, best, worst)) {
       double bit_cost_trace;
@@ -748,21 +757,22 @@ static VP8LBackwardRefs* GetBackwardReferences(
 
   BackwardReferences2DLocality(width, best);
 
- Error:
+Error:
   VP8LFreeHistogram(histo);
   return best;
 }
 
 VP8LBackwardRefs* VP8LGetBackwardReferences(
     int width, int height, const uint32_t* const argb, int quality,
-    int low_effort, int* const cache_bits,
+    int low_effort, int lz77_types_to_try, int* const cache_bits,
     const VP8LHashChain* const hash_chain, VP8LBackwardRefs* const refs_tmp1,
     VP8LBackwardRefs* const refs_tmp2) {
   if (low_effort) {
     return GetBackwardReferencesLowEffort(width, height, argb, cache_bits,
                                           hash_chain, refs_tmp1);
   } else {
-    return GetBackwardReferences(width, height, argb, quality, cache_bits,
-                                 hash_chain, refs_tmp1, refs_tmp2);
+    return GetBackwardReferences(width, height, argb, quality,
+                                 lz77_types_to_try, cache_bits, hash_chain,
+                                 refs_tmp1, refs_tmp2);
   }
 }
