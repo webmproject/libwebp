@@ -213,6 +213,11 @@ static WEBP_INLINE void VP8LRefsCursorNext(VP8LRefsCursor* const c) {
 // -----------------------------------------------------------------------------
 // Main entry points
 
+enum VP8LLZ77Type {
+  kLZ77Standard = 1,
+  kLZ77RLE = 2,
+};
+
 // Evaluates best possible backward references for specified quality.
 // The input cache_bits to 'VP8LGetBackwardReferences' sets the maximum cache
 // bits to use (passing 0 implies disabling the local color cache).
@@ -221,7 +226,7 @@ static WEBP_INLINE void VP8LRefsCursorNext(VP8LRefsCursor* const c) {
 // refs[0] or refs[1].
 VP8LBackwardRefs* VP8LGetBackwardReferences(
     int width, int height, const uint32_t* const argb, int quality,
-    int low_effort, int* const cache_bits,
+    int low_effort, int lz77_types_to_try, int* const cache_bits,
     const VP8LHashChain* const hash_chain, VP8LBackwardRefs* const refs_tmp1,
     VP8LBackwardRefs* const refs_tmp2);
 
