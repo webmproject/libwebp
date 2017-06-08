@@ -272,9 +272,24 @@ GENERATE_PREDICTOR_2(9, upper[i + 1])
 #undef GENERATE_PREDICTOR_2
 
 // Predictor10: average of (average of (L,TL), average of (T, TR)).
+#define DO_PRED10(OUT) do {               \
+  __m128i avgLTL, avg;                    \
+  Average2_m128i(&L, &TL, &avgLTL);       \
+  Average2_m128i(&avgTTR, &avgLTL, &avg); \
+  L = _mm_add_epi8(avg, src);             \
+  out[i + (OUT)] = _mm_cvtsi128_si32(L);  \
+} while (0)
+
+#define DO_PRED10_SHIFT do {                                  \
+  /* Rotate the pre-computed values for the next iteration.*/ \
+  avgTTR = _mm_srli_si128(avgTTR, 4);                         \
+  TL = _mm_srli_si128(TL, 4);                                 \
+  src = _mm_srli_si128(src, 4);                               \
+} while (0)
+
 static void PredictorAdd10_SSE2(const uint32_t* in, const uint32_t* upper,
                                 int num_pixels, uint32_t* out) {
-  int i, j;
+  int i;
   __m128i L = _mm_cvtsi32_si128(out[-1]);
   for (i = 0; i + 4 <= num_pixels; i += 4) {
     __m128i src = _mm_loadu_si128((const __m128i*)&in[i]);
@@ -283,77 +298,88 @@ static void PredictorAdd10_SSE2(const uint32_t* in, const uint32_t* upper,
     const __m128i TR = _mm_loadu_si128((const __m128i*)&upper[i + 1]);
     __m128i avgTTR;
     Average2_m128i(&T, &TR, &avgTTR);
-    for (j = 0; j < 4; ++j) {
-      __m128i avgLTL, avg;
-      Average2_m128i(&L, &TL, &avgLTL);
-      Average2_m128i(&avgTTR, &avgLTL, &avg);
-      L = _mm_add_epi8(avg, src);
-      out[i + j] = _mm_cvtsi128_si32(L);
-      // Rotate the pre-computed values for the next iteration.
-      avgTTR = _mm_srli_si128(avgTTR, 4);
-      TL = _mm_srli_si128(TL, 4);
-      src = _mm_srli_si128(src, 4);
-    }
+    DO_PRED10(0);
+    DO_PRED10_SHIFT;
+    DO_PRED10(1);
+    DO_PRED10_SHIFT;
+    DO_PRED10(2);
+    DO_PRED10_SHIFT;
+    DO_PRED10(3);
   }
   if (i != num_pixels) {
     VP8LPredictorsAdd_C[10](in + i, upper + i, num_pixels - i, out + i);
   }
 }
+#undef DO_PRED10
+#undef DO_PRED10_SHIFT
 
 // Predictor11: select.
-static void GetSumAbsDiff32(const __m128i* const A, const __m128i* const B,
-                            __m128i* const out) {
-  // We can unpack with any value on the upper 32 bits, provided it's the same
-  // on both operands (to that their sum of abs diff is zero). Here we use *A.
-  const __m128i A_lo = _mm_unpacklo_epi32(*A, *A);
-  const __m128i B_lo = _mm_unpacklo_epi32(*B, *A);
-  const __m128i A_hi = _mm_unpackhi_epi32(*A, *A);
-  const __m128i B_hi = _mm_unpackhi_epi32(*B, *A);
-  const __m128i s_lo = _mm_sad_epu8(A_lo, B_lo);
-  const __m128i s_hi = _mm_sad_epu8(A_hi, B_hi);
-  *out = _mm_packs_epi32(s_lo, s_hi);
-}
+#define DO_PRED11(OUT) do {                                            \
+  const __m128i L_lo = _mm_unpacklo_epi32(L, T);                       \
+  const __m128i TL_lo = _mm_unpacklo_epi32(TL, T);                     \
+  const __m128i pb = _mm_sad_epu8(L_lo, TL_lo); /* pb = sum |L-TL|*/   \
+  const __m128i mask = _mm_cmpgt_epi32(pb, pa);                        \
+  const __m128i A = _mm_and_si128(mask, L);                            \
+  const __m128i B = _mm_andnot_si128(mask, T);                         \
+  const __m128i pred = _mm_or_si128(A, B); /* pred = (pa > b)? L : T*/ \
+  L = _mm_add_epi8(src, pred);                                         \
+  out[i + (OUT)] = _mm_cvtsi128_si32(L);                               \
+} while (0)
+
+#define DO_PRED11_SHIFT do {                                \
+  /* Shift the pre-computed value for the next iteration.*/ \
+  T = _mm_srli_si128(T, 4);                                 \
+  TL = _mm_srli_si128(TL, 4);                               \
+  src = _mm_srli_si128(src, 4);                             \
+  pa = _mm_srli_si128(pa, 4);                               \
+} while (0)
 
 static void PredictorAdd11_SSE2(const uint32_t* in, const uint32_t* upper,
                                 int num_pixels, uint32_t* out) {
-  int i, j;
+  int i;
+  __m128i pa;
   __m128i L = _mm_cvtsi32_si128(out[-1]);
   for (i = 0; i + 4 <= num_pixels; i += 4) {
     __m128i T = _mm_loadu_si128((const __m128i*)&upper[i]);
     __m128i TL = _mm_loadu_si128((const __m128i*)&upper[i - 1]);
     __m128i src = _mm_loadu_si128((const __m128i*)&in[i]);
-    __m128i pa;
-    GetSumAbsDiff32(&T, &TL, &pa);   // pa = sum |T-TL|
-    for (j = 0; j < 4; ++j) {
-      const __m128i L_lo = _mm_unpacklo_epi32(L, L);
-      const __m128i TL_lo = _mm_unpacklo_epi32(TL, L);
-      const __m128i pb = _mm_sad_epu8(L_lo, TL_lo);  // pb = sum |L-TL|
-      const __m128i mask = _mm_cmpgt_epi32(pb, pa);
-      const __m128i A = _mm_and_si128(mask, L);
-      const __m128i B = _mm_andnot_si128(mask, T);
-      const __m128i pred = _mm_or_si128(A, B);    // pred = (L > T)? L : T
-      L = _mm_add_epi8(src, pred);
-      out[i + j] = _mm_cvtsi128_si32(L);
-      // Shift the pre-computed value for the next iteration.
-      T = _mm_srli_si128(T, 4);
-      TL = _mm_srli_si128(TL, 4);
-      src = _mm_srli_si128(src, 4);
-      pa = _mm_srli_si128(pa, 4);
+    {
+      // We can unpack with any value on the upper 32 bits, provided it's the
+      // same on both operands (so that their sum of abs diff is zero). Here we
+      // use T.
+      const __m128i T_lo = _mm_unpacklo_epi32(T, T);
+      const __m128i TL_lo = _mm_unpacklo_epi32(TL, T);
+      const __m128i T_hi = _mm_unpackhi_epi32(T, T);
+      const __m128i TL_hi = _mm_unpackhi_epi32(TL, T);
+      const __m128i s_lo = _mm_sad_epu8(T_lo, TL_lo);
+      const __m128i s_hi = _mm_sad_epu8(T_hi, TL_hi);
+      pa = _mm_packs_epi32(s_lo, s_hi);  // pa = sum |T-TL|
     }
+    DO_PRED11(0);
+    DO_PRED11_SHIFT;
+    DO_PRED11(1);
+    DO_PRED11_SHIFT;
+    DO_PRED11(2);
+    DO_PRED11_SHIFT;
+    DO_PRED11(3);
   }
   if (i != num_pixels) {
     VP8LPredictorsAdd_C[11](in + i, upper + i, num_pixels - i, out + i);
   }
 }
+#undef DO_PRED11
+#undef DO_PRED11_SHIFT
 
 // Predictor12: ClampedAddSubtractFull.
-#define DO_PRED12(DIFF, LANE, OUT)                          \
-do {                                                        \
-  const __m128i all = _mm_add_epi16(L, (DIFF));             \
-  const __m128i alls = _mm_packus_epi16(all, all);          \
-  const __m128i res = _mm_add_epi8(src, alls);              \
-  out[i + (OUT)] = _mm_cvtsi128_si32(res);                  \
-  L = _mm_unpacklo_epi8(res, zero);                         \
+#define DO_PRED12(DIFF, LANE, OUT) do {            \
+  const __m128i all = _mm_add_epi16(L, (DIFF));    \
+  const __m128i alls = _mm_packus_epi16(all, all); \
+  const __m128i res = _mm_add_epi8(src, alls);     \
+  out[i + (OUT)] = _mm_cvtsi128_si32(res);         \
+  L = _mm_unpacklo_epi8(res, zero);                \
+} while (0)
+
+#define DO_PRED12_SHIFT(DIFF, LANE) do {                    \
   /* Shift the pre-computed value for the next iteration.*/ \
   if (LANE == 0) (DIFF) = _mm_srli_si128((DIFF), 8);        \
   src = _mm_srli_si128(src, 4);                             \
@@ -377,8 +403,11 @@ static void PredictorAdd12_SSE2(const uint32_t* in, const uint32_t* upper,
     __m128i diff_lo = _mm_sub_epi16(T_lo, TL_lo);
     __m128i diff_hi = _mm_sub_epi16(T_hi, TL_hi);
     DO_PRED12(diff_lo, 0, 0);
+    DO_PRED12_SHIFT(diff_lo, 0);
     DO_PRED12(diff_lo, 1, 1);
+    DO_PRED12_SHIFT(diff_lo, 1);
     DO_PRED12(diff_hi, 0, 2);
+    DO_PRED12_SHIFT(diff_hi, 0);
     DO_PRED12(diff_hi, 1, 3);
   }
   if (i != num_pixels) {
@@ -386,6 +415,7 @@ static void PredictorAdd12_SSE2(const uint32_t* in, const uint32_t* upper,
   }
 }
 #undef DO_PRED12
+#undef DO_PRED12_SHIFT
 
 // Due to averages with integers, values cannot be accumulated in parallel for
 // predictors 13.
