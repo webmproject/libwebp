@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2b0d256_57548339",
+        "filename": "src/dsp/lossless_sse2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-08T18:32:35Z",
+      "side": 1,
+      "message": "s/to/so",
+      "range": {
+        "startLine": 348,
+        "startChar": 32,
+        "endLine": 348,
+        "endChar": 34
+      },
+      "revId": "54d2e8044d7950c6b872b4acae5bc811b12dae45",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
