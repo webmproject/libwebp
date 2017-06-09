@@ -22,6 +22,30 @@
       "revId": "355c3d1bc7558133dd0b63d4d8859d18b3b4ad90",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f9de5f5_46265d48",
+        "filename": "src/enc/backward_references_enc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 823,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2017-06-09T14:13:44Z",
+      "side": 1,
+      "message": "We could indeed have a proper factory for clarity. This initialization is only called twice.",
+      "parentUuid": "3379e040_ce4eebf7",
+      "range": {
+        "startLine": 823,
+        "startChar": 2,
+        "endLine": 823,
+        "endChar": 8
+      },
+      "revId": "355c3d1bc7558133dd0b63d4d8859d18b3b4ad90",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
