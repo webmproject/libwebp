@@ -648,7 +648,7 @@ static int BackwardReferencesHashChainDistanceOnly(
           // better than whatever we add.
           int offset_j, len_j = 0;
           int j;
-          assert(len == MAX_LENGTH);
+          assert(len == MAX_LENGTH || len == pix_count - i);
           // Figure out the last consecutive pixel within [i, reach + 1] with
           // the same offset.
           for (j = i; j <= reach; ++j) {

@@ -216,6 +216,7 @@ static WEBP_INLINE void VP8LRefsCursorNext(VP8LRefsCursor* const c) {
 enum VP8LLZ77Type {
   kLZ77Standard = 1,
   kLZ77RLE = 2,
+  kLZ77Box = 4
 };
 
 // Evaluates best possible backward references for specified quality.
