@@ -100,7 +100,7 @@ typedef struct {
   int error_;
 } VP8LBitWriter;
 
-static WEBP_INLINE size_t VP8LBitWriterNumBytes(VP8LBitWriter* const bw) {
+static WEBP_INLINE size_t VP8LBitWriterNumBytes(const VP8LBitWriter* const bw) {
   return (bw->cur_ - bw->buf_) + ((bw->used_ + 7) >> 3);
 }
 

@@ -364,20 +364,16 @@ typedef struct {
 
 #define CRUNCH_CONFIGS_MAX (kNumEntropyIx * 2)
 
-static int AnalyzeAndInit(VP8LEncoder* const enc,
+static int EncoderAnalyze(VP8LEncoder* const enc,
                           CrunchConfig crunch_configs[CRUNCH_CONFIGS_MAX],
                           int* const crunch_configs_size,
                           int* const red_and_blue_always_zero) {
   const WebPPicture* const pic = enc->pic_;
   const int width = pic->width;
   const int height = pic->height;
-  const int pix_cnt = width * height;
   const WebPConfig* const config = enc->config_;
   const int method = config->method;
   const int low_effort = (config->method == 0);
-  // we round the block size up, so we're guaranteed to have
-  // at max MAX_REFS_BLOCK_PER_IMAGE blocks used:
-  int refs_block_size = (pix_cnt - 1) / MAX_REFS_BLOCK_PER_IMAGE + 1;
   int i;
   int use_palette;
   assert(pic != NULL && pic->argb != NULL);
@@ -428,7 +424,18 @@ static int AnalyzeAndInit(VP8LEncoder* const enc,
       }
     }
   }
+  return 1;
+}
 
+static int EncoderInit(VP8LEncoder* const enc) {
+  const WebPPicture* const pic = enc->pic_;
+  const int width = pic->width;
+  const int height = pic->height;
+  const int pix_cnt = width * height;
+  // we round the block size up, so we're guaranteed to have
+  // at most MAX_REFS_BLOCK_PER_IMAGE blocks used:
+  const int refs_block_size = (pix_cnt - 1) / MAX_REFS_BLOCK_PER_IMAGE + 1;
+  int i;
   if (!VP8LHashChainInit(&enc->hash_chain_, pix_cnt)) return 0;
 
   for (i = 0; i < 3; ++i) VP8LBackwardRefsInit(&enc->refs_[i], refs_block_size);
@@ -1506,37 +1513,47 @@ static void VP8LEncoderDelete(VP8LEncoder* enc) {
 // -----------------------------------------------------------------------------
 // Main call
 
-WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
-                                   const WebPPicture* const picture,
-                                   VP8LBitWriter* const bw, int use_cache) {
+typedef struct {
+  const WebPConfig* config_;
+  const WebPPicture* picture_;
+  VP8LBitWriter* bw_;
+  VP8LEncoder* enc_;
+  int use_cache_;
+  CrunchConfig crunch_configs_[CRUNCH_CONFIGS_MAX];
+  int num_crunch_configs_;
+  int red_and_blue_always_zero_;
+  WebPEncodingError err_;
+  WebPAuxStats* stats_;
+} StreamEncodeContext;
+
+static int EncodeStreamHook(void* input, void* data2) {
+  StreamEncodeContext* const params = (StreamEncodeContext*)input;
+  const WebPConfig* const config = params->config_;
+  const WebPPicture* const picture = params->picture_;
+  VP8LBitWriter* const bw = params->bw_;
+  VP8LEncoder* const enc = params->enc_;
+  const int use_cache = params->use_cache_;
+  const CrunchConfig* const crunch_configs = params->crunch_configs_;
+  const int num_crunch_configs = params->num_crunch_configs_;
+  const int red_and_blue_always_zero = params->red_and_blue_always_zero_;
+  WebPAuxStats* const stats = params->stats_;
   WebPEncodingError err = VP8_ENC_OK;
   const int quality = (int)config->quality;
   const int low_effort = (config->method == 0);
   const int width = picture->width;
   const int height = picture->height;
-  VP8LEncoder* const enc = VP8LEncoderNew(config, picture);
   const size_t byte_position = VP8LBitWriterNumBytes(bw);
   int use_near_lossless = 0;
   int hdr_size = 0;
   int data_size = 0;
   int use_delta_palette = 0;
-  CrunchConfig crunch_configs[CRUNCH_CONFIGS_MAX];
-  int num_crunch_configs = 0;
   int idx;
-  int red_and_blue_always_zero = 0;
   size_t best_size = 0;
   VP8LBitWriter bw_init = *bw, bw_best;
+  (void)data2;
 
-  if (enc == NULL || !VP8LBitWriterClone(bw, &bw_best)) {
-    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
-    goto Error;
-  }
-
-  // ---------------------------------------------------------------------------
-  // Analyze image (entropy, num_palettes etc)
-
-  if (!AnalyzeAndInit(enc, crunch_configs, &num_crunch_configs,
-                      &red_and_blue_always_zero)) {
+  if (!VP8LBitWriterInit(&bw_best, 0) ||
+      (num_crunch_configs > 1 && !VP8LBitWriterClone(bw, &bw_best))) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
@@ -1654,8 +1671,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
       // Store the BitWriter.
       VP8LBitWriterSwap(bw, &bw_best);
       // Update the stats.
-      if (picture->stats != NULL) {
-        WebPAuxStats* const stats = picture->stats;
+      if (stats != NULL) {
         stats->lossless_features = 0;
         if (enc->use_predict_) stats->lossless_features |= 1;
         if (enc->use_cross_color_) stats->lossless_features |= 2;
@@ -1675,11 +1691,148 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
   }
   VP8LBitWriterSwap(&bw_best, bw);
 
- Error:
-  VP8LEncoderDelete(enc);
+Error:
   VP8LBitWriterWipeOut(&bw_best);
+  params->err_ = err;
+  // The hook should return false in case of error.
+  return (err == VP8_ENC_OK);
+}
+
+WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
+                                   const WebPPicture* const picture,
+                                   VP8LBitWriter* const bw_main,
+                                   int use_cache) {
+  WebPEncodingError err = VP8_ENC_OK;
+  VP8LEncoder* const enc_main = VP8LEncoderNew(config, picture);
+  VP8LEncoder* enc_side = NULL;
+  CrunchConfig crunch_configs[CRUNCH_CONFIGS_MAX];
+  int num_crunch_configs_main, num_crunch_configs_side = 0;
+  int idx;
+  int red_and_blue_always_zero = 0;
+  WebPWorker worker_main, worker_side;
+  StreamEncodeContext params_main, params_side;
+  // The main thread uses picture->stats, the side thread uses stats_side.
+  WebPAuxStats stats_side;
+  VP8LBitWriter bw_side;
+  const WebPWorkerInterface* const worker_interface = WebPGetWorkerInterface();
+  int ok_main;
+
+  // Analyze image (entropy, num_palettes etc)
+  if (enc_main == NULL ||
+      !EncoderAnalyze(enc_main, crunch_configs, &num_crunch_configs_main,
+                      &red_and_blue_always_zero) ||
+      !EncoderInit(enc_main) || !VP8LBitWriterInit(&bw_side, 0)) {
+    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+    goto Error;
+  }
+
+  // Split the configs between the main and side threads (if any).
+  if (config->thread_level > 0) {
+    num_crunch_configs_side = num_crunch_configs_main / 2;
+    for (idx = 0; idx < num_crunch_configs_side; ++idx) {
+      params_side.crunch_configs_[idx] =
+          crunch_configs[num_crunch_configs_main - num_crunch_configs_side +
+                         idx];
+    }
+    params_side.num_crunch_configs_ = num_crunch_configs_side;
+  }
+  num_crunch_configs_main -= num_crunch_configs_side;
+  for (idx = 0; idx < num_crunch_configs_main; ++idx) {
+    params_main.crunch_configs_[idx] = crunch_configs[idx];
+  }
+  params_main.num_crunch_configs_ = num_crunch_configs_main;
+
+  // Fill in the parameters for the thread workers.
+  {
+    const int params_size = (num_crunch_configs_side > 0) ? 2 : 1;
+    for (idx = 0; idx < params_size; ++idx) {
+      // Create the parameters for each worker.
+      WebPWorker* const worker = (idx == 0) ? &worker_main : &worker_side;
+      StreamEncodeContext* const param =
+          (idx == 0) ? &params_main : &params_side;
+      param->config_ = config;
+      param->picture_ = picture;
+      param->use_cache_ = use_cache;
+      param->red_and_blue_always_zero_ = red_and_blue_always_zero;
+      if (idx == 0) {
+        param->stats_ = picture->stats;
+        param->bw_ = bw_main;
+        param->enc_ = enc_main;
+      } else {
+        param->stats_ = (picture->stats == NULL) ? NULL : &stats_side;
+        // Create a side bit writer.
+        if (!VP8LBitWriterClone(bw_main, &bw_side)) {
+          err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+          goto Error;
+        }
+        param->bw_ = &bw_side;
+        // Create a side encoder.
+        enc_side = VP8LEncoderNew(config, picture);
+        if (enc_side == NULL || !EncoderInit(enc_side)) {
+          err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+          goto Error;
+        }
+        // Copy the values that were computed for the main encoder.
+        enc_side->histo_bits_ = enc_main->histo_bits_;
+        enc_side->transform_bits_ = enc_main->transform_bits_;
+        enc_side->palette_size_ = enc_main->palette_size_;
+        memcpy(enc_side->palette_, enc_main->palette_,
+               sizeof(enc_main->palette_));
+        param->enc_ = enc_side;
+      }
+      // Create the workers.
+      worker_interface->Init(worker);
+      worker->data1 = param;
+      worker->data2 = NULL;
+      worker->hook = (WebPWorkerHook)EncodeStreamHook;
+    }
+  }
+
+  // Start the second thread if needed.
+  if (num_crunch_configs_side != 0) {
+    if (!worker_interface->Reset(&worker_side)) {
+      err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+      goto Error;
+    }
+    // This line is here and not in the param initialization above to remove a
+    // Clang static analyzer warning.
+    memcpy(&stats_side, picture->stats, sizeof(stats_side));
+    // This line is only useful to remove a Clang static analyzer warning.
+    params_side.err_ = VP8_ENC_OK;
+    worker_interface->Launch(&worker_side);
+  }
+  // Execute the main thread.
+  worker_interface->Execute(&worker_main);
+  ok_main = worker_interface->Sync(&worker_main);
+  worker_interface->End(&worker_main);
+  if (num_crunch_configs_side != 0) {
+    // Wait for the second thread.
+    const int ok_side = worker_interface->Sync(&worker_side);
+    worker_interface->End(&worker_side);
+    if (!ok_main || !ok_side) {
+      err = ok_main ? params_side.err_ : params_main.err_;
+      goto Error;
+    }
+    if (VP8LBitWriterNumBytes(&bw_side) < VP8LBitWriterNumBytes(bw_main)) {
+      VP8LBitWriterSwap(bw_main, &bw_side);
+      if (picture->stats != NULL) {
+        memcpy(picture->stats, &stats_side, sizeof(*picture->stats));
+      }
+    }
+  } else {
+    if (!ok_main) {
+      err = params_main.err_;
+      goto Error;
+    }
+  }
+
+Error:
+  VP8LBitWriterWipeOut(&bw_side);
+  VP8LEncoderDelete(enc_main);
+  VP8LEncoderDelete(enc_side);
   return err;
 }
+
 #undef CRUNCH_CONFIGS_MAX
 
 int VP8LEncodeImage(const WebPConfig* const config,
