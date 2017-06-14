@@ -1796,7 +1796,9 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
     }
     // This line is here and not in the param initialization above to remove a
     // Clang static analyzer warning.
-    memcpy(&stats_side, picture->stats, sizeof(stats_side));
+    if (picture->stats != NULL) {
+      memcpy(&stats_side, picture->stats, sizeof(stats_side));
+    }
     // This line is only useful to remove a Clang static analyzer warning.
     params_side.err_ = VP8_ENC_OK;
     worker_interface->Launch(&worker_side);
