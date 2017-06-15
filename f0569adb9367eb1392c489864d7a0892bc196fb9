@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc8107bb_d2b2819a",
+        "filename": "man/cwebp.1",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-06-15T17:02:55Z",
+      "side": 1,
+      "message": "it\u0027s good to update the date along with edits, but probably not worth another change",
+      "revId": "f0569adb9367eb1392c489864d7a0892bc196fb9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
