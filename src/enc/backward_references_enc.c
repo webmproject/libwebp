@@ -157,8 +157,8 @@ static PixOrCopyBlock* BackwardRefsNewBlock(VP8LBackwardRefs* const refs) {
 
 extern void VP8LBackwardRefsCursorAdd(VP8LBackwardRefs* const refs,
                                       const PixOrCopy v);
-WEBP_INLINE void VP8LBackwardRefsCursorAdd(VP8LBackwardRefs* const refs,
-                                           const PixOrCopy v) {
+void VP8LBackwardRefsCursorAdd(VP8LBackwardRefs* const refs,
+                               const PixOrCopy v) {
   PixOrCopyBlock* b = refs->last_block_;
   if (b == NULL || b->size_ == refs->block_size_) {
     b = BackwardRefsNewBlock(refs);
