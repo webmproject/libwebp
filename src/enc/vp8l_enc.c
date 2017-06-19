@@ -357,12 +357,14 @@ static int GetTransformBits(int method, int histo_bits) {
 }
 
 // Set of parameters to be used in each iteration of the cruncher.
+#define CRUNCH_CONFIGS_LZ77_MAX 2
 typedef struct {
   int entropy_idx_;
-  int lz77s_types_to_try_;
+  int lz77s_types_to_try_[CRUNCH_CONFIGS_LZ77_MAX];
+  int lz77s_types_to_try_size_;
 } CrunchConfig;
 
-#define CRUNCH_CONFIGS_MAX (kNumEntropyIx * 2)
+#define CRUNCH_CONFIGS_MAX kNumEntropyIx
 
 static int EncoderAnalyze(VP8LEncoder* const enc,
                           CrunchConfig crunch_configs[CRUNCH_CONFIGS_MAX],
@@ -376,6 +378,7 @@ static int EncoderAnalyze(VP8LEncoder* const enc,
   const int low_effort = (config->method == 0);
   int i;
   int use_palette;
+  int n_lz77s;
   assert(pic != NULL && pic->argb != NULL);
 
   use_palette =
@@ -391,38 +394,41 @@ static int EncoderAnalyze(VP8LEncoder* const enc,
   if (low_effort) {
     // AnalyzeEntropy is somewhat slow.
     crunch_configs[0].entropy_idx_ = use_palette ? kPalette : kSpatialSubGreen;
-    crunch_configs[0].lz77s_types_to_try_ = kLZ77Standard | kLZ77RLE;
+    n_lz77s = 1;
     *crunch_configs_size = 1;
   } else {
     EntropyIx min_entropy_ix;
-    int j;
     // Try out multiple LZ77 on images with few colors.
-    const int n_lz77 = 1 + (enc->palette_size_ > 0 && enc->palette_size_ <= 16);
+    n_lz77s = (enc->palette_size_ > 0 && enc->palette_size_ <= 16) ? 2 : 1;
     if (!AnalyzeEntropy(pic->argb, width, height, pic->argb_stride, use_palette,
                         enc->palette_size_, enc->transform_bits_,
                         &min_entropy_ix, red_and_blue_always_zero)) {
       return 0;
     }
-    *crunch_configs_size = 0;
-    for (j = 0; j < n_lz77; ++j) {
-      if (method == 6 && config->quality == 100) {
-        // Go brute force on all transforms.
-        for (i = 0; i < kNumEntropyIx; ++i) {
-          if (i != kPalette || use_palette) {
-            assert(*crunch_configs_size < CRUNCH_CONFIGS_MAX);
-            crunch_configs[*crunch_configs_size].entropy_idx_ = i;
-            crunch_configs[(*crunch_configs_size)++].lz77s_types_to_try_ =
-                (j == 0) ? kLZ77Standard | kLZ77RLE : kLZ77Box;
-          }
+    if (method == 6 && config->quality == 100) {
+      // Go brute force on all transforms.
+      *crunch_configs_size = 0;
+      for (i = 0; i < kNumEntropyIx; ++i) {
+        if (i != kPalette || use_palette) {
+          assert(*crunch_configs_size < CRUNCH_CONFIGS_MAX);
+          crunch_configs[(*crunch_configs_size)++].entropy_idx_ = i;
         }
-      } else {
-        // Only choose the guessed best transform.
-        assert(*crunch_configs_size < CRUNCH_CONFIGS_MAX);
-        crunch_configs[*crunch_configs_size].entropy_idx_ = min_entropy_ix;
-        crunch_configs[(*crunch_configs_size)++].lz77s_types_to_try_ =
-            (j == 0) ? kLZ77Standard | kLZ77RLE : kLZ77Box;
       }
+    } else {
+      // Only choose the guessed best transform.
+      *crunch_configs_size = 1;
+      crunch_configs[0].entropy_idx_ = min_entropy_ix;
     }
+  }
+  // Fill in the different LZ77s.
+  assert(n_lz77s <= CRUNCH_CONFIGS_LZ77_MAX);
+  for (i = 0; i < *crunch_configs_size; ++i) {
+    int j;
+    for (j = 0; j < n_lz77s; ++j) {
+      crunch_configs[i].lz77s_types_to_try_[j] =
+          (j == 0) ? kLZ77Standard | kLZ77RLE : kLZ77Box;
+    }
+    crunch_configs[i].lz77s_types_to_try_size_ = n_lz77s;
   }
   return 1;
 }
@@ -858,9 +864,9 @@ static WebPEncodingError EncodeImageNoHuffman(VP8LBitWriter* const bw,
 static WebPEncodingError EncodeImageInternal(
     VP8LBitWriter* const bw, const uint32_t* const argb,
     VP8LHashChain* const hash_chain, VP8LBackwardRefs refs_array[3], int width,
-    int height, int quality, int low_effort, int use_cache, int lz77s_to_try,
-    int* cache_bits, int histogram_bits, size_t init_byte_position,
-    int* const hdr_size, int* const data_size) {
+    int height, int quality, int low_effort, int use_cache,
+    const CrunchConfig* const config, int* cache_bits, int histogram_bits,
+    size_t init_byte_position, int* const hdr_size, int* const data_size) {
   WebPEncodingError err = VP8_ENC_OK;
   const uint32_t histogram_image_xysize =
       VP8LSubSampleSize(width, histogram_bits) *
@@ -869,7 +875,8 @@ static WebPEncodingError EncodeImageInternal(
   VP8LHistogram* tmp_histo = NULL;
   int histogram_image_size = 0;
   size_t bit_array_size = 0;
-  HuffmanTree* huff_tree = NULL;
+  HuffmanTree* const huff_tree = (HuffmanTree*)WebPSafeMalloc(
+      3ULL * CODE_LENGTH_CODES, sizeof(*huff_tree));
   HuffmanTreeToken* tokens = NULL;
   HuffmanTreeCode* huffman_codes = NULL;
   VP8LBackwardRefs* refs_best;
@@ -877,6 +884,9 @@ static WebPEncodingError EncodeImageInternal(
   uint16_t* const histogram_symbols =
       (uint16_t*)WebPSafeMalloc(histogram_image_xysize,
                                 sizeof(*histogram_symbols));
+  int lz77s_idx;
+  VP8LBitWriter bw_init = *bw, bw_best;
+  int hdr_size_tmp;
   assert(histogram_bits >= MIN_HUFFMAN_BITS);
   assert(histogram_bits <= MAX_HUFFMAN_BITS);
   assert(hdr_size != NULL);
@@ -897,134 +907,150 @@ static WebPEncodingError EncodeImageInternal(
   // 'best_refs' is the reference to the best backward refs and points to one
   // of refs_array[0] or refs_array[1].
   // Calculate backward references from ARGB image.
-  if (!VP8LHashChainFill(hash_chain, quality, argb, width, height,
-                         low_effort)) {
+  if (huff_tree == NULL ||
+      !VP8LHashChainFill(hash_chain, quality, argb, width, height,
+                         low_effort) ||
+      !VP8LBitWriterInit(&bw_best, 0) ||
+      (config->lz77s_types_to_try_size_ > 1 &&
+       !VP8LBitWriterClone(bw, &bw_best))) {
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
-  refs_best = VP8LGetBackwardReferences(
-      width, height, argb, quality, low_effort, lz77s_to_try, cache_bits,
-      hash_chain, &refs_array[0], &refs_array[1]);
-  if (refs_best == NULL) {
-    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
-    goto Error;
-  }
-  // Keep the best references aside and use the other element from the first two
-  // as a temporary for later usage.
-  refs_tmp = &refs_array[refs_best == &refs_array[0] ? 1 : 0];
+  for (lz77s_idx = 0; lz77s_idx < config->lz77s_types_to_try_size_;
+       ++lz77s_idx) {
+    refs_best = VP8LGetBackwardReferences(
+        width, height, argb, quality, low_effort,
+        config->lz77s_types_to_try_[lz77s_idx], cache_bits, hash_chain,
+        &refs_array[0], &refs_array[1]);
+    if (refs_best == NULL) {
+      err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+      goto Error;
+    }
+    // Keep the best references aside and use the other element from the first
+    // two as a temporary for later usage.
+    refs_tmp = &refs_array[refs_best == &refs_array[0] ? 1 : 0];
 
-  histogram_image =
-      VP8LAllocateHistogramSet(histogram_image_xysize, *cache_bits);
-  tmp_histo = VP8LAllocateHistogram(*cache_bits);
-  if (histogram_image == NULL || tmp_histo == NULL) {
-    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
-    goto Error;
-  }
+    histogram_image =
+        VP8LAllocateHistogramSet(histogram_image_xysize, *cache_bits);
+    tmp_histo = VP8LAllocateHistogram(*cache_bits);
+    if (histogram_image == NULL || tmp_histo == NULL) {
+      err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+      goto Error;
+    }
 
-  // Build histogram image and symbols from backward references.
-  if (!VP8LGetHistoImageSymbols(width, height, refs_best, quality, low_effort,
-                                histogram_bits, *cache_bits, histogram_image,
-                                tmp_histo, histogram_symbols)) {
-    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
-    goto Error;
-  }
-  // Create Huffman bit lengths and codes for each histogram image.
-  histogram_image_size = histogram_image->size;
-  bit_array_size = 5 * histogram_image_size;
-  huffman_codes = (HuffmanTreeCode*)WebPSafeCalloc(bit_array_size,
-                                                   sizeof(*huffman_codes));
-  // Note: some histogram_image entries may point to tmp_histos[], so the latter
-  // need to outlive the following call to GetHuffBitLengthsAndCodes().
-  if (huffman_codes == NULL ||
-      !GetHuffBitLengthsAndCodes(histogram_image, huffman_codes)) {
-    err = VP8_ENC_ERROR_OUT_OF_MEMORY;
-    goto Error;
-  }
-  // Free combined histograms.
-  VP8LFreeHistogramSet(histogram_image);
-  histogram_image = NULL;
+    // Build histogram image and symbols from backward references.
+    if (!VP8LGetHistoImageSymbols(width, height, refs_best, quality, low_effort,
+                                  histogram_bits, *cache_bits, histogram_image,
+                                  tmp_histo, histogram_symbols)) {
+      err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+      goto Error;
+    }
+    // Create Huffman bit lengths and codes for each histogram image.
+    histogram_image_size = histogram_image->size;
+    bit_array_size = 5 * histogram_image_size;
+    huffman_codes = (HuffmanTreeCode*)WebPSafeCalloc(bit_array_size,
+                                                     sizeof(*huffman_codes));
+    // Note: some histogram_image entries may point to tmp_histos[], so the
+    // latter need to outlive the following call to GetHuffBitLengthsAndCodes().
+    if (huffman_codes == NULL ||
+        !GetHuffBitLengthsAndCodes(histogram_image, huffman_codes)) {
+      err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+      goto Error;
+    }
+    // Free combined histograms.
+    VP8LFreeHistogramSet(histogram_image);
+    histogram_image = NULL;
 
-  // Free scratch histograms.
-  VP8LFreeHistogram(tmp_histo);
-  tmp_histo = NULL;
+    // Free scratch histograms.
+    VP8LFreeHistogram(tmp_histo);
+    tmp_histo = NULL;
 
-  // Color Cache parameters.
-  if (*cache_bits > 0) {
-    VP8LPutBits(bw, 1, 1);
-    VP8LPutBits(bw, *cache_bits, 4);
-  } else {
-    VP8LPutBits(bw, 0, 1);
-  }
+    // Color Cache parameters.
+    if (*cache_bits > 0) {
+      VP8LPutBits(bw, 1, 1);
+      VP8LPutBits(bw, *cache_bits, 4);
+    } else {
+      VP8LPutBits(bw, 0, 1);
+    }
 
-  // Huffman image + meta huffman.
-  {
-    const int write_histogram_image = (histogram_image_size > 1);
-    VP8LPutBits(bw, write_histogram_image, 1);
-    if (write_histogram_image) {
-      uint32_t* const histogram_argb =
-          (uint32_t*)WebPSafeMalloc(histogram_image_xysize,
-                                    sizeof(*histogram_argb));
-      int max_index = 0;
-      uint32_t i;
-      if (histogram_argb == NULL) {
+    // Huffman image + meta huffman.
+    {
+      const int write_histogram_image = (histogram_image_size > 1);
+      VP8LPutBits(bw, write_histogram_image, 1);
+      if (write_histogram_image) {
+        uint32_t* const histogram_argb =
+            (uint32_t*)WebPSafeMalloc(histogram_image_xysize,
+                                      sizeof(*histogram_argb));
+        int max_index = 0;
+        uint32_t i;
+        if (histogram_argb == NULL) {
+          err = VP8_ENC_ERROR_OUT_OF_MEMORY;
+          goto Error;
+        }
+        for (i = 0; i < histogram_image_xysize; ++i) {
+          const int symbol_index = histogram_symbols[i] & 0xffff;
+          histogram_argb[i] = (symbol_index << 8);
+          if (symbol_index >= max_index) {
+            max_index = symbol_index + 1;
+          }
+        }
+        histogram_image_size = max_index;
+
+        VP8LPutBits(bw, histogram_bits - 2, 3);
+        err = EncodeImageNoHuffman(
+            bw, histogram_argb, hash_chain, refs_tmp, &refs_array[2],
+            VP8LSubSampleSize(width, histogram_bits),
+            VP8LSubSampleSize(height, histogram_bits), quality, low_effort);
+        WebPSafeFree(histogram_argb);
+        if (err != VP8_ENC_OK) goto Error;
+      }
+    }
+
+    // Store Huffman codes.
+    {
+      int i;
+      int max_tokens = 0;
+      // Find maximum number of symbols for the huffman tree-set.
+      for (i = 0; i < 5 * histogram_image_size; ++i) {
+        HuffmanTreeCode* const codes = &huffman_codes[i];
+        if (max_tokens < codes->num_symbols) {
+          max_tokens = codes->num_symbols;
+        }
+      }
+      tokens = (HuffmanTreeToken*)WebPSafeMalloc(max_tokens, sizeof(*tokens));
+      if (tokens == NULL) {
         err = VP8_ENC_ERROR_OUT_OF_MEMORY;
         goto Error;
       }
-      for (i = 0; i < histogram_image_xysize; ++i) {
-        const int symbol_index = histogram_symbols[i] & 0xffff;
-        histogram_argb[i] = (symbol_index << 8);
-        if (symbol_index >= max_index) {
-          max_index = symbol_index + 1;
-        }
-      }
-      histogram_image_size = max_index;
-
-      VP8LPutBits(bw, histogram_bits - 2, 3);
-      err = EncodeImageNoHuffman(
-          bw, histogram_argb, hash_chain, refs_tmp, &refs_array[2],
-          VP8LSubSampleSize(width, histogram_bits),
-          VP8LSubSampleSize(height, histogram_bits), quality, low_effort);
-      WebPSafeFree(histogram_argb);
-      if (err != VP8_ENC_OK) goto Error;
-    }
-  }
-
-  // Store Huffman codes.
-  {
-    int i;
-    int max_tokens = 0;
-    huff_tree = (HuffmanTree*)WebPSafeMalloc(3ULL * CODE_LENGTH_CODES,
-                                             sizeof(*huff_tree));
-    if (huff_tree == NULL) {
-      err = VP8_ENC_ERROR_OUT_OF_MEMORY;
-      goto Error;
-    }
-    // Find maximum number of symbols for the huffman tree-set.
-    for (i = 0; i < 5 * histogram_image_size; ++i) {
-      HuffmanTreeCode* const codes = &huffman_codes[i];
-      if (max_tokens < codes->num_symbols) {
-        max_tokens = codes->num_symbols;
+      for (i = 0; i < 5 * histogram_image_size; ++i) {
+        HuffmanTreeCode* const codes = &huffman_codes[i];
+        StoreHuffmanCode(bw, huff_tree, tokens, codes);
+        ClearHuffmanTreeIfOnlyOneSymbol(codes);
       }
     }
-    tokens = (HuffmanTreeToken*)WebPSafeMalloc(max_tokens,
-                                               sizeof(*tokens));
-    if (tokens == NULL) {
-      err = VP8_ENC_ERROR_OUT_OF_MEMORY;
-      goto Error;
+    // Store actual literals.
+    hdr_size_tmp = (int)(VP8LBitWriterNumBytes(bw) - init_byte_position);
+    err = StoreImageToBitMask(bw, width, histogram_bits, refs_best,
+                              histogram_symbols, huffman_codes);
+    // Keep track of the smallest image so far.
+    if (lz77s_idx == 0 ||
+        VP8LBitWriterNumBytes(bw) < VP8LBitWriterNumBytes(&bw_best)) {
+      *hdr_size = hdr_size_tmp;
+      *data_size =
+          (int)(VP8LBitWriterNumBytes(bw) - init_byte_position - *hdr_size);
+      VP8LBitWriterSwap(bw, &bw_best);
     }
-    for (i = 0; i < 5 * histogram_image_size; ++i) {
-      HuffmanTreeCode* const codes = &huffman_codes[i];
-      StoreHuffmanCode(bw, huff_tree, tokens, codes);
-      ClearHuffmanTreeIfOnlyOneSymbol(codes);
+    // Reset the bit writer for the following iteration if any.
+    if (config->lz77s_types_to_try_size_ > 1) VP8LBitWriterReset(&bw_init, bw);
+    WebPSafeFree(tokens);
+    tokens = NULL;
+    if (huffman_codes != NULL) {
+      WebPSafeFree(huffman_codes->codes);
+      WebPSafeFree(huffman_codes);
+      huffman_codes = NULL;
     }
   }
-
-  *hdr_size = (int)(VP8LBitWriterNumBytes(bw) - init_byte_position);
-  // Store actual literals.
-  err = StoreImageToBitMask(bw, width, histogram_bits, refs_best,
-                            histogram_symbols, huffman_codes);
-  *data_size =
-        (int)(VP8LBitWriterNumBytes(bw) - init_byte_position - *hdr_size);
+  VP8LBitWriterSwap(bw, &bw_best);
 
  Error:
   WebPSafeFree(tokens);
@@ -1036,6 +1062,7 @@ static WebPEncodingError EncodeImageInternal(
     WebPSafeFree(huffman_codes);
   }
   WebPSafeFree(histogram_symbols);
+  VP8LBitWriterWipeOut(&bw_best);
   return err;
 }
 
@@ -1658,11 +1685,11 @@ static int EncodeStreamHook(void* input, void* data2) {
 
     // -------------------------------------------------------------------------
     // Encode and write the transformed image.
-    err = EncodeImageInternal(
-        bw, enc->argb_, &enc->hash_chain_, enc->refs_, enc->current_width_,
-        height, quality, low_effort, use_cache,
-        crunch_configs[idx].lz77s_types_to_try_, &enc->cache_bits_,
-        enc->histo_bits_, byte_position, &hdr_size, &data_size);
+    err = EncodeImageInternal(bw, enc->argb_, &enc->hash_chain_, enc->refs_,
+                              enc->current_width_, height, quality, low_effort,
+                              use_cache, &crunch_configs[idx],
+                              &enc->cache_bits_, enc->histo_bits_,
+                              byte_position, &hdr_size, &data_size);
     if (err != VP8_ENC_OK) goto Error;
 
     // If we are better than what we already have.
@@ -1836,6 +1863,7 @@ Error:
 }
 
 #undef CRUNCH_CONFIGS_MAX
+#undef CRUNCH_CONFIGS_LZ77_MAX
 
 int VP8LEncodeImage(const WebPConfig* const config,
                     const WebPPicture* const picture) {
