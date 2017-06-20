@@ -522,25 +522,24 @@ static void ConvertBGRAToRGB(const uint32_t* src, int num_pixels,
 
 static void ConvertBGRAToRGBA(const uint32_t* src,
                               int num_pixels, uint8_t* dst) {
+  const __m128i red_blue_mask = _mm_set1_epi32(0x00ff00ffu);
   const __m128i* in = (const __m128i*)src;
   __m128i* out = (__m128i*)dst;
   while (num_pixels >= 8) {
-    const __m128i bgra0 = _mm_loadu_si128(in++);     // bgra0|bgra1|bgra2|bgra3
-    const __m128i bgra4 = _mm_loadu_si128(in++);     // bgra4|bgra5|bgra6|bgra7
-    const __m128i v0l = _mm_unpacklo_epi8(bgra0, bgra4);  // b0b4g0g4r0r4a0a4...
-    const __m128i v0h = _mm_unpackhi_epi8(bgra0, bgra4);  // b2b6g2g6r2r6a2a6...
-    const __m128i v1l = _mm_unpacklo_epi8(v0l, v0h);   // b0b2b4b6g0g2g4g6...
-    const __m128i v1h = _mm_unpackhi_epi8(v0l, v0h);   // b1b3b5b7g1g3g5g7...
-    const __m128i v2l = _mm_unpacklo_epi8(v1l, v1h);   // b0...b7 | g0...g7
-    const __m128i v2h = _mm_unpackhi_epi8(v1l, v1h);   // r0...r7 | a0...a7
-    const __m128i ga0 = _mm_unpackhi_epi64(v2l, v2h);  // g0...g7 | a0...a7
-    const __m128i rb0 = _mm_unpacklo_epi64(v2h, v2l);  // r0...r7 | b0...b7
-    const __m128i rg0 = _mm_unpacklo_epi8(rb0, ga0);   // r0g0r1g1 ... r6g6r7g7
-    const __m128i ba0 = _mm_unpackhi_epi8(rb0, ga0);   // b0a0b1a1 ... b6a6b7a7
-    const __m128i rgba0 = _mm_unpacklo_epi16(rg0, ba0);  // rgba0|rgba1...
-    const __m128i rgba4 = _mm_unpackhi_epi16(rg0, ba0);  // rgba4|rgba5...
-    _mm_storeu_si128(out++, rgba0);
-    _mm_storeu_si128(out++, rgba4);
+    const __m128i A1 = _mm_loadu_si128(in++);
+    const __m128i A2 = _mm_loadu_si128(in++);
+    const __m128i B1 = _mm_and_si128(A1, red_blue_mask);     // R 0 B 0
+    const __m128i B2 = _mm_and_si128(A2, red_blue_mask);     // R 0 B 0
+    const __m128i C1 = _mm_andnot_si128(red_blue_mask, A1);  // 0 G 0 A
+    const __m128i C2 = _mm_andnot_si128(red_blue_mask, A2);  // 0 G 0 A
+    const __m128i D1 = _mm_shufflelo_epi16(B1, _MM_SHUFFLE(2, 3, 0, 1));
+    const __m128i D2 = _mm_shufflelo_epi16(B2, _MM_SHUFFLE(2, 3, 0, 1));
+    const __m128i E1 = _mm_shufflehi_epi16(D1, _MM_SHUFFLE(2, 3, 0, 1));
+    const __m128i E2 = _mm_shufflehi_epi16(D2, _MM_SHUFFLE(2, 3, 0, 1));
+    const __m128i F1 = _mm_or_si128(E1, C1);
+    const __m128i F2 = _mm_or_si128(E2, C2);
+    _mm_storeu_si128(out++, F1);
+    _mm_storeu_si128(out++, F2);
     num_pixels -= 8;
   }
   // left-overs
