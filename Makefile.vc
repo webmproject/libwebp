@@ -233,9 +233,6 @@ DSP_DEC_OBJS = \
     $(DIROBJ)\dsp\yuv_sse2.obj \
 
 DSP_ENC_OBJS = \
-    $(DIROBJ)\dsp\argb.obj \
-    $(DIROBJ)\dsp\argb_mips_dsp_r2.obj \
-    $(DIROBJ)\dsp\argb_sse2.obj \
     $(DIROBJ)\dsp\cost.obj \
     $(DIROBJ)\dsp\cost_mips32.obj \
     $(DIROBJ)\dsp\cost_mips_dsp_r2.obj \
