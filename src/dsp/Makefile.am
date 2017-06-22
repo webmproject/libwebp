@@ -96,6 +96,10 @@ libwebpdspdecode_msa_la_SOURCES += upsampling_msa.c
 libwebpdspdecode_msa_la_CPPFLAGS = $(libwebpdsp_msa_la_CPPFLAGS)
 libwebpdspdecode_msa_la_CFLAGS = $(libwebpdsp_msa_la_CFLAGS)
 
+# WASM is not fully integrated into configure; the addition here keeps source
+# extraction by cmake simple.
+libwebpdspdecode_wasm_la_SOURCES = dec_wasm.c
+
 libwebpdsp_sse2_la_SOURCES =
 libwebpdsp_sse2_la_SOURCES += argb_sse2.c
 libwebpdsp_sse2_la_SOURCES += cost_sse2.c
@@ -127,6 +131,11 @@ libwebpdsp_msa_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
 libwebpdsp_msa_la_CFLAGS = $(AM_CFLAGS)
 libwebpdsp_msa_la_LIBADD = libwebpdspdecode_msa.la
 
+libwebpdsp_wasm_la_SOURCES =
+libwebpdsp_wasm_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
+libwebpdsp_wasm_la_CFLAGS = $(AM_CFLAGS)
+libwebpdsp_wasm_la_LIBADD = libwebpdspdecode_wasm.la
+
 libwebpdsp_la_SOURCES = $(COMMON_SOURCES) $(ENC_SOURCES)
 
 noinst_HEADERS =
@@ -142,6 +151,7 @@ libwebpdsp_la_LIBADD += libwebpdsp_avx2.la libwebpdsp_sse2.la
 libwebpdsp_la_LIBADD += libwebpdsp_sse41.la
 libwebpdsp_la_LIBADD += libwebpdsp_neon.la
 libwebpdsp_la_LIBADD += libwebpdsp_msa.la
+libwebpdsp_la_LIBADD += libwebpdsp_wasm.la
 
 if BUILD_LIBWEBPDECODER
   libwebpdspdecode_la_SOURCES = $(COMMON_SOURCES)
