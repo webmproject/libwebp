@@ -4,6 +4,7 @@ project(libwebp C)
 
 # Options for coder / decoder executables.
 option(WEBP_ENABLE_SIMD "Enable any SIMD optimization." ON)
+option(WEBP_ENABLE_WASM "Enable WebAssembly optimizations." OFF)
 option(WEBP_BUILD_CWEBP "Build the cwebp command line tool." OFF)
 option(WEBP_BUILD_DWEBP "Build the dwebp command line tool." OFF)
 option(WEBP_BUILD_GIF2WEBP "Build the gif2webp conversion tool." OFF)
@@ -13,7 +14,7 @@ option(WEBP_BUILD_WEBP_JS "Emscripten build of webp.js." OFF)
 option(WEBP_EXPERIMENTAL_FEATURES "Build with experimental features." OFF)
 option(WEBP_ENABLE_SWAP_16BIT_CSP "Enable byte swap for 16 bit colorspaces." OFF)
 
-if(WEBP_BUILD_WEBP_JS)
+if(WEBP_BUILD_WEBP_JS OR WEBP_ENABLE_WASM)
   set(WEBP_ENABLE_SIMD OFF)
 endif()
 
@@ -36,6 +37,9 @@ string(REGEX MATCH "[0-9.]+" WEBP_VERSION ${SOURCE_FILE})
 # Options.
 if(WEBP_ENABLE_SWAP_16BIT_CSP)
   add_definitions(-DWEBP_SWAP_16BIT_CSP)
+endif()
+if(WEBP_ENABLE_WASM)
+  add_definitions(-DWEBP_USE_WASM)
 endif()
 
 ################################################################################
@@ -162,9 +166,11 @@ math(EXPR WEBP_SIMD_FILES_TO_INCLUDE_RANGE
 foreach(I_FILE RANGE ${WEBP_SIMD_FILES_TO_INCLUDE_RANGE})
   list(GET WEBP_SIMD_FILES_TO_INCLUDE ${I_FILE} FILE)
   list(GET WEBP_SIMD_FLAGS_TO_INCLUDE ${I_FILE} SIMD_COMPILE_FLAG)
-  set_source_files_properties(${FILE} PROPERTIES
-    COMPILE_FLAGS ${SIMD_COMPILE_FLAG}
-  )
+  if(NOT ${SIMD_COMPILE_FLAG} STREQUAL "NOTFOUND")
+    set_source_files_properties(${FILE} PROPERTIES
+      COMPILE_FLAGS ${SIMD_COMPILE_FLAG}
+    )
+  endif()
 endforeach()
 
 # Build the executables if asked for.

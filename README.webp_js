@@ -31,6 +31,11 @@ using Emscripten and CMake.
  - that's it! Upon completion, you should have the webp.js and
    webp.js.mem files generated.
 
+ - Note this generates both webp_js and webp_wasm without any SIMD enabled due
+   to bugs with this toolchain associated with the SSE2 code.
+   -DWEBP_ENABLE_WASM is currently meant to generate native (x86, arm)
+   executables (dwebp, cwebp) and is incompatible with -DWEBP_BUILD_WEBP_JS.
+
 The callable JavaScript function is WebPToSDL(), which decodes a raw WebP
 bitstream into a canvas. See webp_js/index.html for a simple usage sample.
 

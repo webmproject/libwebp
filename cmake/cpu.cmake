@@ -116,3 +116,13 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
     endif()
   endif()
 endforeach()
+
+## Add *_wasm.c files if enabled.
+if(WEBP_ENABLE_WASM)
+  file(GLOB SIMD_FILES "${CMAKE_CURRENT_LIST_DIR}/../"
+    "src/dsp/*_wasm.c"
+  )
+  foreach(FILE ${SIMD_FILES})
+    list(APPEND WEBP_SIMD_FILES_TO_INCLUDE ${FILE})
+  endforeach()
+endif()

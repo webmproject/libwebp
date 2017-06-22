@@ -217,6 +217,12 @@ static int mipsCPUInfo(CPUFeature feature) {
 
 }
 VP8CPUInfo VP8GetCPUInfo = mipsCPUInfo;
+#elif defined(WEBP_USE_WASM)
+static int wasmCPUInfo(CPUFeature feature) {
+  if (feature != kWASM) return 0;
+  return 1;
+}
+VP8CPUInfo VP8GetCPUInfo = wasmCPUInfo;
 #else
 VP8CPUInfo VP8GetCPUInfo = NULL;
 #endif
