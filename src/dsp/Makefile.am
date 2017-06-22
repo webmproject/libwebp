@@ -96,6 +96,10 @@ libwebpdspdecode_msa_la_SOURCES += upsampling_msa.c
 libwebpdspdecode_msa_la_CPPFLAGS = $(libwebpdsp_msa_la_CPPFLAGS)
 libwebpdspdecode_msa_la_CFLAGS = $(libwebpdsp_msa_la_CFLAGS)
 
+# WASM is unused by configure; the addition here keeps source extraction by
+# cmake simple.
+libwebpdspdecode_wasm_la_SOURCES = dec_wasm.c
+
 libwebpdsp_sse2_la_SOURCES =
 libwebpdsp_sse2_la_SOURCES += argb_sse2.c
 libwebpdsp_sse2_la_SOURCES += cost_sse2.c

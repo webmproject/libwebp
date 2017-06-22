@@ -42,8 +42,9 @@ extern "C" {
 # define __has_builtin(x) 0
 #endif
 
-// for now, none of the optimizations below are available in emscripten
-#if !defined(EMSCRIPTEN)
+// For now, none of the optimizations below are available in emscripten.
+// WebAssembly overrides native optimizations.
+#if !(defined(EMSCRIPTEN) || defined(WEBP_USE_WASM))
 
 #if defined(_MSC_VER) && _MSC_VER > 1310 && \
     (defined(_M_X64) || defined(_M_IX86))
@@ -144,7 +145,8 @@ typedef enum {
   kNEON,
   kMIPS32,
   kMIPSdspR2,
-  kMSA
+  kMSA,
+  kWASM
 } CPUFeature;
 // returns true if the CPU supports the feature.
 typedef int (*VP8CPUInfo)(CPUFeature feature);
