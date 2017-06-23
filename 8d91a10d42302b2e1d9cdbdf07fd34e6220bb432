@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aacfa9e1_a54f110b",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-23T05:18:23Z",
+      "side": 1,
+      "message": "so, if we use WEBP_USE_WASM, we are going to lose the current optimizations derived from EMSCRIPTEN, right?",
+      "range": {
+        "startLine": 47,
+        "startChar": 50,
+        "endLine": 47,
+        "endChar": 51
+      },
+      "revId": "8d91a10d42302b2e1d9cdbdf07fd34e6220bb432",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
