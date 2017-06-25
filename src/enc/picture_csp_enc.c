@@ -18,6 +18,8 @@
 #include "./vp8i_enc.h"
 #include "../utils/random_utils.h"
 #include "../utils/utils.h"
+#include "../dsp/dsp.h"
+#include "../dsp/lossless.h"
 #include "../dsp/yuv.h"
 
 // Uncomment to disable gamma-compression during RGB->U/V averaging
@@ -1085,45 +1087,45 @@ int WebPPictureYUVAToARGB(WebPPicture* picture) {
 // automatic import / conversion
 
 static int Import(WebPPicture* const picture,
-                  const uint8_t* const rgb, int rgb_stride,
+                  const uint8_t* rgb, int rgb_stride,
                   int step, int swap_rb, int import_alpha) {
   int y;
   const uint8_t* r_ptr = rgb + (swap_rb ? 2 : 0);
   const uint8_t* g_ptr = rgb + 1;
   const uint8_t* b_ptr = rgb + (swap_rb ? 0 : 2);
-  const uint8_t* a_ptr = import_alpha ? rgb + 3 : NULL;
   const int width = picture->width;
   const int height = picture->height;
 
   if (!picture->use_argb) {
+    const uint8_t* a_ptr = import_alpha ? rgb + 3 : NULL;
     return ImportYUVAFromRGBA(r_ptr, g_ptr, b_ptr, a_ptr, step, rgb_stride,
                               0.f /* no dithering */, 0, picture);
   }
   if (!WebPPictureAlloc(picture)) return 0;
 
-  VP8EncDspARGBInit();
+  VP8LDspInit();
+  WebPInitAlphaProcessing();
 
   if (import_alpha) {
     uint32_t* dst = picture->argb;
-    const int do_copy = !swap_rb && !ALPHA_IS_LAST;
+    const int do_copy =
+        (!swap_rb && !ALPHA_IS_LAST) || (swap_rb && ALPHA_IS_LAST);
     assert(step == 4);
     for (y = 0; y < height; ++y) {
       if (do_copy) {
-        memcpy(dst, r_ptr, width * sizeof(*dst));
+        memcpy(dst, rgb, width * 4);
       } else {
-        VP8PackARGB(a_ptr, r_ptr, g_ptr, b_ptr, width, dst);
+        // RGBA input order. Need to swap R and B.
+        VP8LConvertBGRAToRGBA((const uint32_t*)rgb, width, (uint8_t*)dst);
       }
-      a_ptr += rgb_stride;
-      r_ptr += rgb_stride;
-      g_ptr += rgb_stride;
-      b_ptr += rgb_stride;
+      rgb += rgb_stride;
       dst += picture->argb_stride;
     }
   } else {
     uint32_t* dst = picture->argb;
     assert(step >= 3);
     for (y = 0; y < height; ++y) {
-      VP8PackRGB(r_ptr, g_ptr, b_ptr, width, step, dst);
+      WebPPackRGB(r_ptr, g_ptr, b_ptr, width, step, dst);
       r_ptr += rgb_stride;
       g_ptr += rgb_stride;
       b_ptr += rgb_stride;

@@ -542,20 +542,12 @@ void WebPMultRowC(uint8_t* const ptr, const uint8_t* const alpha,
                   int width, int inverse);
 void WebPMultARGBRowC(uint32_t* const ptr, int width, int inverse);
 
+// RGB packing function. 'step' can be 3 or 4. r/g/b input is rgb or bgr order.
+extern void (*WebPPackRGB)(const uint8_t* r, const uint8_t* g, const uint8_t* b,
+                           int len, int step, uint32_t* out);
+
 // To be called first before using the above.
 void WebPInitAlphaProcessing(void);
-
-// ARGB packing function: a/r/g/b input is rgba or bgra order.
-extern void (*VP8PackARGB)(const uint8_t* a, const uint8_t* r,
-                           const uint8_t* g, const uint8_t* b, int len,
-                           uint32_t* out);
-
-// RGB packing function. 'step' can be 3 or 4. r/g/b input is rgb or bgr order.
-extern void (*VP8PackRGB)(const uint8_t* r, const uint8_t* g, const uint8_t* b,
-                          int len, int step, uint32_t* out);
-
-// To be called first before using the above.
-void VP8EncDspARGBInit(void);
 
 //------------------------------------------------------------------------------
 // Filter functions

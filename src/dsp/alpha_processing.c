@@ -339,12 +339,30 @@ static void ExtractGreen_C(const uint32_t* argb, uint8_t* alpha, int size) {
   for (i = 0; i < size; ++i) alpha[i] = argb[i] >> 8;
 }
 
+//------------------------------------------------------------------------------
+// Simple channel manipulations.
+
+static WEBP_INLINE uint32_t MakeARGB32(int a, int r, int g, int b) {
+  return (((uint32_t)a << 24) | (r << 16) | (g << 8) | b);
+}
+
+static void PackRGB_C(const uint8_t* r, const uint8_t* g, const uint8_t* b,
+                      int len, int step, uint32_t* out) {
+  int i, offset = 0;
+  for (i = 0; i < len; ++i) {
+    out[i] = MakeARGB32(0xff, r[offset], g[offset], b[offset]);
+    offset += step;
+  }
+}
+
 void (*WebPApplyAlphaMultiply)(uint8_t*, int, int, int, int);
 void (*WebPApplyAlphaMultiply4444)(uint8_t*, int, int, int);
 int (*WebPDispatchAlpha)(const uint8_t*, int, int, int, uint8_t*, int);
 void (*WebPDispatchAlphaToGreen)(const uint8_t*, int, int, int, uint32_t*, int);
 int (*WebPExtractAlpha)(const uint8_t*, int, int, int, uint8_t*, int);
 void (*WebPExtractGreen)(const uint32_t* argb, uint8_t* alpha, int size);
+void (*WebPPackRGB)(const uint8_t* r, const uint8_t* g, const uint8_t* b,
+                    int len, int step, uint32_t* out);
 
 //------------------------------------------------------------------------------
 // Init function
@@ -369,6 +387,8 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessing(void) {
   WebPDispatchAlphaToGreen = DispatchAlphaToGreen_C;
   WebPExtractAlpha = ExtractAlpha_C;
   WebPExtractGreen = ExtractGreen_C;
+
+  WebPPackRGB = PackRGB_C;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {

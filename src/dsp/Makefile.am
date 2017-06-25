@@ -39,8 +39,6 @@ COMMON_SOURCES += yuv_mips32.c
 COMMON_SOURCES += yuv_mips_dsp_r2.c
 
 ENC_SOURCES =
-ENC_SOURCES += argb.c
-ENC_SOURCES += argb_mips_dsp_r2.c
 ENC_SOURCES += cost.c
 ENC_SOURCES += cost_mips32.c
 ENC_SOURCES += cost_mips_dsp_r2.c
@@ -97,7 +95,6 @@ libwebpdspdecode_msa_la_CPPFLAGS = $(libwebpdsp_msa_la_CPPFLAGS)
 libwebpdspdecode_msa_la_CFLAGS = $(libwebpdsp_msa_la_CFLAGS)
 
 libwebpdsp_sse2_la_SOURCES =
-libwebpdsp_sse2_la_SOURCES += argb_sse2.c
 libwebpdsp_sse2_la_SOURCES += cost_sse2.c
 libwebpdsp_sse2_la_SOURCES += enc_sse2.c
 libwebpdsp_sse2_la_SOURCES += lossless_enc_sse2.c
