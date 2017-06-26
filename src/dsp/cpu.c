@@ -22,17 +22,12 @@
 #include <cpu-features.h>
 #endif
 
-// WASM needs to precede platform specific architecture checks as the defines
-// will still be present when building this target.
-#if defined(WEBP_USE_WASM)
-static int wasmCPUInfo(CPUFeature feature) {
-  if (feature != kWASM) return 0;
-  return 1;
-}
-VP8CPUInfo VP8GetCPUInfo = wasmCPUInfo;
+//------------------------------------------------------------------------------
+// SSE2 detection.
+//
 
 // apple/darwin gcc-4.0.1 defines __PIC__, but not __pic__ with -fPIC.
-#elif (defined(__pic__) || defined(__PIC__)) && defined(__i386__)
+#if (defined(__pic__) || defined(__PIC__)) && defined(__i386__)
 static WEBP_INLINE void GetCPUInfo(int cpu_info[4], int info_type) {
   __asm__ volatile (
     "mov %%ebx, %%edi\n"
@@ -222,6 +217,12 @@ static int mipsCPUInfo(CPUFeature feature) {
 
 }
 VP8CPUInfo VP8GetCPUInfo = mipsCPUInfo;
+#elif defined(WEBP_USE_WASM)
+static int wasmCPUInfo(CPUFeature feature) {
+  if (feature != kWASM) return 0;
+  return 1;
+}
+VP8CPUInfo VP8GetCPUInfo = wasmCPUInfo;
 #else
 VP8CPUInfo VP8GetCPUInfo = NULL;
 #endif
