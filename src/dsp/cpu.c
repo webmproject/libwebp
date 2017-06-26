@@ -23,11 +23,13 @@
 #endif
 
 //------------------------------------------------------------------------------
-// SSE2 detection.
+// x86/x86-64 micro-arch detection.
 //
 
+// skip x86 specific code for WASM builds
+#if defined(WEBP_USE_WASM)
 // apple/darwin gcc-4.0.1 defines __PIC__, but not __pic__ with -fPIC.
-#if (defined(__pic__) || defined(__PIC__)) && defined(__i386__)
+#elif (defined(__pic__) || defined(__PIC__)) && defined(__i386__)
 static WEBP_INLINE void GetCPUInfo(int cpu_info[4], int info_type) {
   __asm__ volatile (
     "mov %%ebx, %%edi\n"
@@ -63,8 +65,10 @@ static WEBP_INLINE void GetCPUInfo(int cpu_info[4], int info_type) {
 #define GetCPUInfo __cpuid
 #endif
 
+// skip xgetbv definition for WASM builds
+#if defined(WEBP_USE_WASM)
 // NaCl has no support for xgetbv or the raw opcode.
-#if !defined(__native_client__) && (defined(__i386__) || defined(__x86_64__))
+#elif !defined(__native_client__) && (defined(__i386__) || defined(__x86_64__))
 static WEBP_INLINE uint64_t xgetbv(void) {
   const uint32_t ecx = 0;
   uint32_t eax, edx;
@@ -94,7 +98,19 @@ static WEBP_INLINE uint64_t xgetbv(void) {
 #define xgetbv() 0U  // no AVX for older x64 or unrecognized toolchains.
 #endif
 
-#if defined(__i386__) || defined(__x86_64__) || defined(WEBP_MSC_SSE2)
+//------------------------------------------------------------------------------
+// Platform specific VP8CPUInfo functions.
+//
+
+// WASM needs to precede platform specific architecture checks as the defines
+// will still be present when building this target.
+#if defined(WEBP_USE_WASM)
+static int wasmCPUInfo(CPUFeature feature) {
+  if (feature != kWASM) return 0;
+  return 1;
+}
+VP8CPUInfo VP8GetCPUInfo = wasmCPUInfo;
+#elif defined(__i386__) || defined(__x86_64__) || defined(WEBP_MSC_SSE2)
 
 // helper function for run-time detection of slow SSSE3 platforms
 static int CheckSlowModel(int info) {
@@ -217,12 +233,6 @@ static int mipsCPUInfo(CPUFeature feature) {
 
 }
 VP8CPUInfo VP8GetCPUInfo = mipsCPUInfo;
-#elif defined(WEBP_USE_WASM)
-static int wasmCPUInfo(CPUFeature feature) {
-  if (feature != kWASM) return 0;
-  return 1;
-}
-VP8CPUInfo VP8GetCPUInfo = wasmCPUInfo;
 #else
 VP8CPUInfo VP8GetCPUInfo = NULL;
 #endif
