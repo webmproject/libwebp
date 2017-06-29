@@ -85,8 +85,11 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
     foreach(FILE ${SIMD_FILES})
       list(APPEND WEBP_SIMD_FILES_NOT_TO_INCLUDE ${FILE})
     endforeach()
-    # Explicitly disable SIMD.
-    if(SIMD_DISABLE_FLAGS)
+    # Explicitly disable SIMD. Avoid this with WASM to avoid an ICE with clang:
+    # https://bugs.chromium.org/p/webp/issues/detail?id=350
+    # WASM overrides the native SIMD so building it in is harmless aside from
+    # binary size.
+    if(NOT WEBP_ENABLE_WASM AND SIMD_DISABLE_FLAGS)
       list(GET SIMD_DISABLE_FLAGS ${I_SIMD} SIMD_COMPILE_FLAG)
       include(CheckCCompilerFlag)
       if(SIMD_COMPILE_FLAG)
