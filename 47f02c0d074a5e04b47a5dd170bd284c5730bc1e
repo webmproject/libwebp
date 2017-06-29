@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5fe0dbea_7c70a19a",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-06-29T20:04:50Z",
+      "side": 1,
+      "message": "should include string.h for this",
+      "revId": "47f02c0d074a5e04b47a5dd170bd284c5730bc1e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a3cbeff0_ce9c392f",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-06-29T20:04:50Z",
+      "side": 1,
+      "message": "break after the \u0027(\u0027 or align the parameters",
+      "revId": "47f02c0d074a5e04b47a5dd170bd284c5730bc1e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d8ca8c6_b09e5304",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-06-29T20:04:50Z",
+      "side": 1,
+      "message": "this could use the uint8 type and the splat changed for type consistency",
+      "revId": "47f02c0d074a5e04b47a5dd170bd284c5730bc1e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "78a26f74_58cd1b19",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-06-29T20:04:50Z",
+      "side": 1,
+      "message": "same comment about line continuation here.",
+      "revId": "47f02c0d074a5e04b47a5dd170bd284c5730bc1e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
