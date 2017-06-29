@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ac344b4_29f3750b",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-06-29T06:46:21Z",
+      "side": 1,
+      "message": "shouldn\u0027t it be \"__vector_size__(8)\" ?",
+      "range": {
+        "startLine": 22,
+        "startChar": 41,
+        "endLine": 22,
+        "endChar": 56
+      },
+      "revId": "58a0fe582094f0af4cd4788b69c70b26ad96832d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
