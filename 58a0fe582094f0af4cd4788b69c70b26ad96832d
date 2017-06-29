@@ -22,6 +22,30 @@
       "revId": "58a0fe582094f0af4cd4788b69c70b26ad96832d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6938dec9_20dc0ed1",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1000882
+      },
+      "writtenOn": "2017-06-29T12:36:00Z",
+      "side": 1,
+      "message": "All variables used are 16 bytes.  Here we have a vector of 8 shorts.",
+      "parentUuid": "1ac344b4_29f3750b",
+      "range": {
+        "startLine": 22,
+        "startChar": 41,
+        "endLine": 22,
+        "endChar": 56
+      },
+      "revId": "58a0fe582094f0af4cd4788b69c70b26ad96832d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
