@@ -101,11 +101,12 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
             set(COMMON_PATTERNS)
           endif()
           set(CMAKE_REQUIRED_DEFINITIONS ${SIMD_COMPILE_FLAG})
-          check_c_source_compiles("int main(void) {return 0;}" FLAG2
+          check_c_source_compiles("int main(void) {return 0;}"
+            FLAG_${SIMD_COMPILE_FLAG}
             FAIL_REGEX "warning: argument unused during compilation:"
             ${COMMON_PATTERNS}
           )
-          if(NOT FLAG2)
+          if(NOT FLAG_${SIMD_COMPILE_FLAG})
             unset(HAS_COMPILE_FLAG CACHE)
           endif()
         endif()
