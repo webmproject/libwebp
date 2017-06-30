@@ -16,6 +16,24 @@
       "revId": "ede968a1b72e077b048b8283475f35cfd31cb1e8",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5fd39462_3199e51a",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1000882
+      },
+      "writtenOn": "2017-06-30T18:00:22Z",
+      "side": 1,
+      "message": "Done.  Running clang-format as suggested offline.",
+      "parentUuid": "b3cabd01_e117febe",
+      "revId": "ede968a1b72e077b048b8283475f35cfd31cb1e8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
