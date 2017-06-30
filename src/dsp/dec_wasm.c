@@ -53,6 +53,239 @@ static WEBP_INLINE uint32x4 cvt32_to_128(uint32_t x) {
   return value;
 }
 
+static WEBP_INLINE int16x8 _unpacklo_epi8(const int8x16 a, const int8x16 b) {
+  return __builtin_shufflevector(a, b, 0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21,
+                                 6, 22, 7, 23);
+}
+
+static WEBP_INLINE int32x4 _unpacklo_epi16(const int16x8 a, const int16x8 b) {
+  return __builtin_shufflevector(a, b, 0, 8, 1, 9, 2, 10, 3, 11);
+}
+
+static WEBP_INLINE int32x4 _unpackhi_epi16(const int16x8 a, const int16x8 b) {
+  return __builtin_shufflevector(a, b, 4, 12, 5, 13, 6, 14, 7, 15);
+}
+
+static WEBP_INLINE int32x4 _unpacklo_epi32(const int32x4 a, const int32x4 b) {
+  return __builtin_shufflevector(a, b, 0, 4, 1, 5);
+}
+
+static WEBP_INLINE int32x4 _unpackhi_epi32(const int32x4 a, const int32x4 b) {
+  return __builtin_shufflevector(a, b, 2, 6, 3, 7);
+}
+
+static WEBP_INLINE int32x4 _unpacklo_epi64(const int32x4 a, const int32x4 b) {
+  return __builtin_shufflevector(a, b, 0, 1, 4, 5);
+}
+
+static WEBP_INLINE int32x4 _unpackhi_epi64(const int32x4 a, const int32x4 b) {
+  return __builtin_shufflevector(a, b, 2, 3, 6, 7);
+}
+
+static WEBP_INLINE int16x8 _mulhi_int16x8(int16x8 in, int32x4 k) {
+  const int16x8 zero = (int16x8){0, 0, 0, 0, 0, 0, 0, 0};
+  const int32x4 sixteen = (int32x4){16, 16, 16, 16};
+  // Put in upper 16 bits so we can preserve the sign
+  const int32x4 in_lo =
+      (int32x4)__builtin_shufflevector(in, zero, 8, 0, 8, 1, 8, 2, 8, 3);
+  const int32x4 in_hi =
+      (int32x4)__builtin_shufflevector(in, zero, 8, 4, 8, 5, 8, 6, 8, 7);
+  const int32x4 _lo = (in_lo >> sixteen) * k;
+  const int32x4 _hi = (in_hi >> sixteen) * k;
+  // only keep the upper 16 bits
+  const int16x8 res = (int16x8)__builtin_shufflevector(
+      (int16x8)_lo, (int16x8)_hi, 1, 3, 5, 7, 9, 11, 13, 15);
+  return res;
+}
+
+static WEBP_INLINE uint8x16 int16x8_to_uint8x16_sat(int16x8 x) {
+  const uint8x16 k00ff00ff =
+      (uint8x16){-1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0};
+  const int16x8 fifteen = (int16x8){15, 15, 15, 15, 15, 15, 15, 15};
+  const int16x8 a = (uint16x8)x > (uint16x8)k00ff00ff;
+  const int16x8 b = x & ~a;
+  const int16x8 c = (x & a) >> fifteen;
+  const int16x8 d = ~c & a;
+  const int16x8 e = b | d;
+  const uint8x16 final = (uint8x16)__builtin_shufflevector(
+      (int8x16)e, (int8x16)e, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26,
+      28, 30);
+  return final;
+}
+//------------------------------------------------------------------------------
+// Transforms (Paragraph 14.4)
+
+// Transpose two 4x4 16b matrices horizontally stored in registers.
+static WEBP_INLINE void VP8Transpose_2_4x4_16b(
+    const int16x8* const in0, const int16x8* const in1,
+    const int16x8* const in2, const int16x8* const in3, int16x8* const out0,
+    int16x8* const out1, int16x8* const out2, int16x8* const out3) {
+  // Transpose the two 4x4.
+  // a00 a01 a02 a03   b00 b01 b02 b03
+  // a10 a11 a12 a13   b10 b11 b12 b13
+  // a20 a21 a22 a23   b20 b21 b22 b23
+  // a30 a31 a32 a33   b30 b31 b32 b33
+  const int32x4 transpose0_0 = _unpacklo_epi16(*in0, *in1);
+  const int32x4 transpose0_1 = _unpacklo_epi16(*in2, *in3);
+  const int32x4 transpose0_2 = _unpackhi_epi16(*in0, *in1);
+  const int32x4 transpose0_3 = _unpackhi_epi16(*in2, *in3);
+  // a00 a10 a01 a11   a02 a12 a03 a13
+  // a20 a30 a21 a31   a22 a32 a23 a33
+  // b00 b10 b01 b11   b02 b12 b03 b13
+  // b20 b30 b21 b31   b22 b32 b23 b33
+  const int32x4 transpose1_0 = _unpacklo_epi32(transpose0_0, transpose0_1);
+  const int32x4 transpose1_1 = _unpacklo_epi32(transpose0_2, transpose0_3);
+  const int32x4 transpose1_2 = _unpackhi_epi32(transpose0_0, transpose0_1);
+  const int32x4 transpose1_3 = _unpackhi_epi32(transpose0_2, transpose0_3);
+  // a00 a10 a20 a30 a01 a11 a21 a31
+  // b00 b10 b20 b30 b01 b11 b21 b31
+  // a02 a12 a22 a32 a03 a13 a23 a33
+  // b02 b12 a22 b32 b03 b13 b23 b33
+  *out0 = _unpacklo_epi64(transpose1_0, transpose1_1);
+  *out1 = _unpackhi_epi64(transpose1_0, transpose1_1);
+  *out2 = _unpacklo_epi64(transpose1_2, transpose1_3);
+  *out3 = _unpackhi_epi64(transpose1_2, transpose1_3);
+  // a00 a10 a20 a30   b00 b10 b20 b30
+  // a01 a11 a21 a31   b01 b11 b21 b31
+  // a02 a12 a22 a32   b02 b12 b22 b32
+  // a03 a13 a23 a33   b03 b13 b23 b33
+}
+
+static void Transform(const int16_t* in, uint8_t* dst, int do_two) {
+  const int32x4 k1 = {20091, 20091, 20091, 20091};
+  const int32x4 k2 = {35468, 35468, 35468, 35468};
+  int16x8 T0, T1, T2, T3;
+
+  // Load and concatenate the transform coefficients (we'll do two transforms
+  // in parallel). In the case of only one transform, the second half of the
+  // vectors will just contain random value we'll never use nor store.
+  int16x8 in0, in1, in2, in3;
+  {
+    in0 = get_8_bytes((uint8_t*)&in[0]);
+    in1 = get_8_bytes((uint8_t*)&in[4]);
+    in2 = get_8_bytes((uint8_t*)&in[8]);
+    in3 = get_8_bytes((uint8_t*)&in[12]);
+    // a00 a10 a20 a30   x x x x
+    // a01 a11 a21 a31   x x x x
+    // a02 a12 a22 a32   x x x x
+    // a03 a13 a23 a33   x x x x
+    if (do_two) {
+      const int16x8 inB0 = get_8_bytes((uint8_t*)&in[16]);
+      const int16x8 inB1 = get_8_bytes((uint8_t*)&in[20]);
+      const int16x8 inB2 = get_8_bytes((uint8_t*)&in[24]);
+      const int16x8 inB3 = get_8_bytes((uint8_t*)&in[28]);
+      in0 = _unpacklo_epi64(in0, inB0);
+      in1 = _unpacklo_epi64(in1, inB1);
+      in2 = _unpacklo_epi64(in2, inB2);
+      in3 = _unpacklo_epi64(in3, inB3);
+      // a00 a10 a20 a30   b00 b10 b20 b30
+      // a01 a11 a21 a31   b01 b11 b21 b31
+      // a02 a12 a22 a32   b02 b12 b22 b32
+      // a03 a13 a23 a33   b03 b13 b23 b33
+    }
+  }
+
+  // Vertical pass and subsequent transpose.
+  {
+    const int16x8 a = in0 + in2;
+    const int16x8 b = in0 - in2;
+    const int16x8 c1 = _mulhi_int16x8(in1, k2);
+    const int16x8 c2 = _mulhi_int16x8(in3, k1) + in3;
+    const int16x8 c = c1 - c2;
+    const int16x8 d1 = _mulhi_int16x8(in1, k1) + in1;
+    const int16x8 d2 = _mulhi_int16x8(in3, k2);
+    const int16x8 d = d1 + d2;
+
+    // Second pass.
+    const int16x8 tmp0 = a + d;
+    const int16x8 tmp1 = b + c;
+    const int16x8 tmp2 = b - c;
+    const int16x8 tmp3 = a - d;
+
+    // Transpose the two 4x4.
+    VP8Transpose_2_4x4_16b(&tmp0, &tmp1, &tmp2, &tmp3, &T0, &T1, &T2, &T3);
+  }
+
+  // Horizontal pass and subsequent transpose.
+  {
+    const int16x8 four = {4, 4, 4, 4, 4, 4, 4, 4};
+    const int16x8 dc = T0 + four;
+    const int16x8 a = dc + T2;
+    const int16x8 b = dc - T2;
+    const int16x8 c1 = _mulhi_int16x8(T1, k2);
+    const int16x8 c2 = _mulhi_int16x8(T3, k1) + T3;
+    const int16x8 c = c1 - c2;
+    const int16x8 d1 = _mulhi_int16x8(T1, k1) + T1;
+    const int16x8 d2 = _mulhi_int16x8(T3, k2);
+    const int16x8 d = d1 + d2;
+
+    // Second pass.
+    const int16x8 tmp0 = a + d;
+    const int16x8 tmp1 = b + c;
+    const int16x8 tmp2 = b - c;
+    const int16x8 tmp3 = a - d;
+    const int16x8 three = {3, 3, 3, 3, 3, 3, 3, 3};
+    const int16x8 shifted0 = tmp0 >> three;
+    const int16x8 shifted1 = tmp1 >> three;
+    const int16x8 shifted2 = tmp2 >> three;
+    const int16x8 shifted3 = tmp3 >> three;
+
+    // Transpose the two 4x4.
+    VP8Transpose_2_4x4_16b(&shifted0, &shifted1, &shifted2, &shifted3, &T0, &T1,
+                           &T2, &T3);
+  }
+
+  // Add inverse transform to 'dst' and store.
+  {
+    const int8x16 zero = {0};
+    // Load the reference(s).
+    int16x8 dst0, dst1, dst2, dst3;
+    if (do_two) {
+      // Load eight bytes/pixels per line.
+      dst0 = get_8_bytes((uint8_t*)(dst + 0 * BPS));
+      dst1 = get_8_bytes((uint8_t*)(dst + 1 * BPS));
+      dst2 = get_8_bytes((uint8_t*)(dst + 2 * BPS));
+      dst3 = get_8_bytes((uint8_t*)(dst + 3 * BPS));
+    } else {
+      // Load four bytes/pixels per line.
+      memcpy(&dst0, (dst + 0 * BPS), 4);
+      memcpy(&dst1, (dst + 1 * BPS), 4);
+      memcpy(&dst2, (dst + 2 * BPS), 4);
+      memcpy(&dst3, (dst + 3 * BPS), 4);
+    }
+    // Convert to 16b.
+    dst0 = _unpacklo_epi8(dst0, zero);
+    dst1 = _unpacklo_epi8(dst1, zero);
+    dst2 = _unpacklo_epi8(dst2, zero);
+    dst3 = _unpacklo_epi8(dst3, zero);
+    // Add the inverse transform(s).
+    dst0 = dst0 + T0;
+    dst1 = dst1 + T1;
+    dst2 = dst2 + T2;
+    dst3 = dst3 + T3;
+    // Unsigned saturate to 8b.
+    dst0 = int16x8_to_uint8x16_sat(dst0);
+    dst1 = int16x8_to_uint8x16_sat(dst1);
+    dst2 = int16x8_to_uint8x16_sat(dst2);
+    dst3 = int16x8_to_uint8x16_sat(dst3);
+    // Store the results.
+    if (do_two) {
+      // Store eight bytes/pixels per line.
+      // TODO: use lanes instead ???
+      memcpy(dst + 0 * BPS, &dst0, 8);
+      memcpy(dst + 1 * BPS, &dst1, 8);
+      memcpy(dst + 2 * BPS, &dst2, 8);
+      memcpy(dst + 3 * BPS, &dst3, 8);
+    } else {
+      // Store four bytes/pixels per line.
+      memcpy(dst + 0 * BPS, &dst0, 4);
+      memcpy(dst + 1 * BPS, &dst1, 4);
+      memcpy(dst + 2 * BPS, &dst2, 4);
+      memcpy(dst + 3 * BPS, &dst3, 4);
+    }
+  }
+}
+
 //------------------------------------------------------------------------------
 // 4x4 predictions
 
@@ -279,6 +512,8 @@ static void DC8uvNoTopLeft(uint8_t* dst) {  // DC with nothing
 extern void VP8DspInitWASM(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitWASM(void) {
+  VP8Transform = Transform;
+
   VP8PredLuma4[2] = VE4;
   VP8PredLuma4[4] = RD4;
 
