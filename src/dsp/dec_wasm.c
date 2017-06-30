@@ -13,6 +13,7 @@
 
 #include "./dsp.h"
 #include "../dec/vp8i_dec.h"
+#include "../utils/utils.h"
 
 #if defined(WEBP_USE_WASM)
 
@@ -44,6 +45,75 @@ static WEBP_INLINE uint8x16 splat_uint8(uint32_t val) {
   a = (uint8x16)__builtin_shufflevector(
       a, a, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
   return a;
+}
+
+static WEBP_INLINE uint32x4 cvt32_to_128(uint32_t x) {
+  uint32x4 value = (uint32x4){0};
+  value[0] = x;
+  return value;
+}
+
+//------------------------------------------------------------------------------
+// 4x4 predictions
+
+static void VE4(uint8_t* dst) {    // vertical
+  const uint8x16 zero = (uint8x16){0};
+  const uint16x8 two = (uint16x8){2, 2, 2, 2, 2, 2, 2, 2};
+  const uint8x16 top = get_8_bytes(dst - BPS - 1);
+  const uint16x8 ABCDEFGH = (uint16x8)__builtin_shufflevector(
+      top, zero, 0, 16, 1, 16, 2, 16, 3, 16, 4, 16, 5, 16, 6, 16, 7, 16);
+  const uint16x8 BCDEFGHX = (uint16x8)__builtin_shufflevector(
+      top, zero, 1, 16, 2, 16, 3, 16, 4, 16, 5, 16, 6, 16, 7, 16, 16, 16);
+  const uint16x8 CDEFGHXX = (uint16x8)__builtin_shufflevector(
+      top, zero, 2, 16, 3, 16, 4, 16, 5, 16, 6, 16, 7, 16, 16, 16, 16, 16);
+  const uint16x8 avg3 =
+      (ABCDEFGH + BCDEFGHX + BCDEFGHX + CDEFGHXX + two) >> two;
+  const uint32x4 vals = (uint32x4)__builtin_shufflevector(
+          (uint8x16)avg3, zero,
+          0, 2, 4, 6, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16);
+  int i;
+  for (i = 0; i < 4; ++i) {
+    WebPUint32ToMem(dst + i * BPS, vals[0]);
+  }
+}
+
+static void RD4(uint8_t* dst) {   // Down-right
+  const uint8x16 zero = (uint8x16){0};
+  const uint16x8 two = (uint16x8){2, 2, 2, 2, 2, 2, 2, 2};
+  const uint8x16 top = get_8_bytes(dst - BPS - 1);
+  const uint32_t I = dst[-1 + 0 * BPS];
+  const uint32_t J = dst[-1 + 1 * BPS];
+  const uint32_t K = dst[-1 + 2 * BPS];
+  const uint32_t L = dst[-1 + 3 * BPS];
+  const uint8x16 LKJI_____ =
+      (uint8x16)cvt32_to_128(L | (K << 8) | (J << 16) | (I << 24));
+  const uint8x16 lkjixabcd =
+      (uint8x16)__builtin_shufflevector((uint8x16)LKJI_____, top,
+          0, 1, 2, 3, 16, 17, 18, 19, 20, 31, 31, 31, 31, 31, 31, 31);
+  const uint16x8 LKJIXABC =
+      (uint16x8)__builtin_shufflevector(lkjixabcd, zero,
+          0, 16, 1, 16, 2, 16, 3, 16, 4, 16, 5, 16, 6, 16, 7, 16);
+  const uint16x8 KJIXABCD_ =
+      (uint16x8)__builtin_shufflevector(lkjixabcd, zero,
+          1, 16, 2, 16, 3, 16, 4, 16, 5, 16, 6, 16, 7, 16, 8, 16);
+  const uint16x8 JIXABCD__ =
+      (uint16x8)__builtin_shufflevector(lkjixabcd, zero,
+          2, 16, 3, 16, 4, 16, 5, 16, 6, 16, 7, 16, 8, 16, 9, 16);
+  const uint16x8 avg3 =
+      (LKJIXABC + KJIXABCD_ + KJIXABCD_ + JIXABCD__ + two) >> two;
+  const uint32x4 vals0 = (uint32x4)__builtin_shufflevector((uint8x16)avg3, zero,
+      6, 8, 10, 12, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16);
+  const uint32x4 vals1 = (uint32x4)__builtin_shufflevector((uint8x16)avg3, zero,
+      4, 6, 8, 10, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16);
+  const uint32x4 vals2 = (uint32x4)__builtin_shufflevector((uint8x16)avg3, zero,
+      2, 4, 6, 8, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16);
+  const uint32x4 vals3 = (uint32x4)__builtin_shufflevector((uint8x16)avg3, zero,
+      0, 2, 4, 6, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16);
+
+  WebPUint32ToMem(dst + 0 * BPS, vals0[0]);
+  WebPUint32ToMem(dst + 1 * BPS, vals1[0]);
+  WebPUint32ToMem(dst + 2 * BPS, vals2[0]);
+  WebPUint32ToMem(dst + 3 * BPS, vals3[0]);
 }
 
 //------------------------------------------------------------------------------
@@ -209,6 +279,9 @@ static void DC8uvNoTopLeft(uint8_t* dst) {    // DC with nothing
 extern void VP8DspInitWASM(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitWASM(void) {
+  VP8PredLuma4[2] = VE4;
+  VP8PredLuma4[4] = RD4;
+
   VP8PredLuma16[0] = DC16;
   VP8PredLuma16[2] = VE16;
   VP8PredLuma16[3] = HE16;
