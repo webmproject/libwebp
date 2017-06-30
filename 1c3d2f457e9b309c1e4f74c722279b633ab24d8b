@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d2bfcf8_e5bf0099",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-06-30T19:00:13Z",
+      "side": 1,
+      "message": "these could all probably be const",
+      "range": {
+        "startLine": 49,
+        "startChar": 42,
+        "endLine": 49,
+        "endChar": 51
+      },
+      "revId": "1c3d2f457e9b309c1e4f74c722279b633ab24d8b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c433ffb_74cf4cf6",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-06-30T19:00:13Z",
+      "side": 1,
+      "message": "sixteen can work to match some of the other zero/one/two",
+      "range": {
+        "startLine": 80,
+        "startChar": 16,
+        "endLine": 80,
+        "endChar": 19
+      },
+      "revId": "1c3d2f457e9b309c1e4f74c722279b633ab24d8b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ae78608_3b5f8960",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-06-30T19:00:13Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "1c3d2f457e9b309c1e4f74c722279b633ab24d8b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
