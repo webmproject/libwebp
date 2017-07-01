@@ -188,7 +188,8 @@ static const uint16_t kAcTable2[128] = {
 };
 
 static const uint8_t kBiasMatrices[3][2] = {  // [luma-ac,luma-dc,chroma][dc,ac]
-  { 96, 110 }, { 96, 108 }, { 110, 115 }
+  { 96, 110 }, { 96, 108 },
+  { 110, 115 }  // <- see comment in ExpandMatrix() for the uv_dc bias value!
 };
 
 // Sharpening by (slightly) raising the hi-frequency coeffs.
@@ -209,7 +210,21 @@ static int ExpandMatrix(VP8Matrix* const m, int type) {
   int i, sum;
   for (i = 0; i < 2; ++i) {
     const int is_ac_coeff = (i > 0);
-    const int bias = kBiasMatrices[type][is_ac_coeff];
+    int bias = kBiasMatrices[type][is_ac_coeff];
+    if (type == 2 && i == 0) {
+      // For very low quality setting (q_ >= 60), we need to use a more neutral
+      // bias to avoid error propagation on the U/V plane that would lead to
+      // color bleeding. This is mostly need for the DC coefficient, since AC
+      // cofficients are usually already wiped off at low quality setting.
+      // We want to go from a bias of 220 at q=0 to a bias of ~110 at q=20.
+      // This corresponds to a uv_dc_q range of 60 to 132.
+      const int uv_dc_q = m->q_[0];
+      if (uv_dc_q >= 60) {   // range concerned: [60 -> 132]
+        bias = bias * (132 - uv_dc_q) / (132 - 60)
+             + 220 * (uv_dc_q - 60) / (132 - 60);
+      }
+      if (bias > 250) bias = 250;
+    }
     m->iq_[i] = (1 << QFIX) / m->q_[i];
     m->bias_[i] = BIAS(bias);
     // zthresh_ is the exact value such that QUANTDIV(coeff, iQ, B) is:
