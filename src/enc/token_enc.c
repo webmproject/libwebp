@@ -283,8 +283,9 @@ size_t VP8EstimateTokenSize(VP8TBuffer* const b, const uint8_t* const probas) {
 
 #else     // DISABLE_TOKEN_BUFFER
 
-void VP8TBufferInit(VP8TBuffer* const b) {
+void VP8TBufferInit(VP8TBuffer* const b, int page_size) {
   (void)b;
+  (void)page_size;
 }
 void VP8TBufferClear(VP8TBuffer* const b) {
   (void)b;
