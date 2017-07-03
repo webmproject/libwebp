@@ -39,6 +39,19 @@ static WEBP_INLINE uint8x16 get_8_bytes(uint8_t* dst) {
   return a;
 }
 
+static WEBP_INLINE uint8x16 get_4_bytes(uint8_t* dst) {
+  uint8x16 a;
+  memcpy(&a, dst, 4);
+  return a;
+}
+
+static WEBP_INLINE int16x8 splat_int16(int val) {
+  int16x8 a;
+  a[0] = val;
+  a = (int16x8)__builtin_shufflevector(a, a, 0, 0, 0, 0, 0, 0, 0, 0);
+  return a;
+}
+
 static WEBP_INLINE uint8x16 splat_uint8(uint32_t val) {
   uint8x16 a;
   a[0] = val;
@@ -56,6 +69,11 @@ static WEBP_INLINE uint32x4 cvt32_to_128(uint32_t x) {
 static WEBP_INLINE int16x8 _unpacklo_epi8(const int8x16 a, const int8x16 b) {
   return __builtin_shufflevector(a, b, 0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21,
                                  6, 22, 7, 23);
+}
+
+static WEBP_INLINE int16x8 _unpackhi_epi8(const int8x16 a, const int8x16 b) {
+  return __builtin_shufflevector(a, b, 8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13,
+                                 29, 14, 30, 15, 31);
 }
 
 static WEBP_INLINE int32x4 _unpacklo_epi16(const int16x8 a, const int16x8 b) {
@@ -112,6 +130,7 @@ static WEBP_INLINE uint8x16 int16x8_to_uint8x16_sat(int16x8 x) {
       28, 30);
   return final;
 }
+
 //------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
 
@@ -471,6 +490,51 @@ static void VL4(uint8_t* dst) {  // Vertical-Left
 #undef AVG2
 #undef AVG3
 
+static void TrueMotion(uint8_t* dst, uint32_t size) {
+  const uint8x16 zero = (uint8x16){0};
+  uint8_t* top = dst - BPS;
+  int y;
+
+  if (size == 4) {
+    const uint8x16 top_values = get_4_bytes(top);
+    const int16x8 top_base = (int16x8)_unpacklo_epi8(top_values, zero);
+    for (y = 0; y < 4; ++y, dst += BPS) {
+      const int val = dst[-1] - top[-1];
+      const int16x8 base = splat_int16(val);
+      const uint32x4 out = (uint32x4)int16x8_to_uint8x16_sat(base + top_base);
+      WebPUint32ToMem(dst, out[0]);
+    }
+  } else if (size == 8) {
+    const uint8x16 top_values = get_8_bytes(top);
+    const int16x8 top_base = (int16x8)_unpacklo_epi8(top_values, zero);
+    for (y = 0; y < 8; ++y, dst += BPS) {
+      const int val = dst[-1] - top[-1];
+      const int16x8 base = splat_int16(val);
+      const uint8x16 out = (uint8x16)int16x8_to_uint8x16_sat(base + top_base);
+      memcpy(dst, &out, 8);
+    }
+  } else {
+    const uint8x16 top_values = get_16_bytes(top);
+    const int16x8 top_base_0 = (int16x8)_unpacklo_epi8(top_values, zero);
+    const int16x8 top_base_1 = (int16x8)_unpackhi_epi8(top_values, zero);
+    for (y = 0; y < 16; ++y, dst += BPS) {
+      const int val = dst[-1] - top[-1];
+      const int16x8 base = splat_int16(val);
+      const uint8x16 out_0 =
+          (uint8x16)int16x8_to_uint8x16_sat(base + top_base_0);
+      const uint8x16 out_1 =
+          (uint8x16)int16x8_to_uint8x16_sat(base + top_base_1);
+      const uint8x16 out = (uint8x16)__builtin_shufflevector(
+          out_0, out_1, 0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23);
+      memcpy(dst, &out, 16);
+    }
+  }
+}
+
+static void TM4(uint8_t* dst) { TrueMotion(dst, 4); }
+static void TM8uv(uint8_t* dst) { TrueMotion(dst, 8); }
+static void TM16(uint8_t* dst) { TrueMotion(dst, 16); }
+
 //------------------------------------------------------------------------------
 // Luma 16x16
 
@@ -636,6 +700,7 @@ extern void VP8DspInitWASM(void);
 WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitWASM(void) {
   VP8Transform = Transform;
 
+  VP8PredLuma4[1] = TM4;
   VP8PredLuma4[2] = VE4;
   VP8PredLuma4[4] = RD4;
   VP8PredLuma4[5] = VR4;
@@ -643,6 +708,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitWASM(void) {
   VP8PredLuma4[7] = VL4;
 
   VP8PredLuma16[0] = DC16;
+  VP8PredLuma16[1] = TM16;
   VP8PredLuma16[2] = VE16;
   VP8PredLuma16[3] = HE16;
   VP8PredLuma16[4] = DC16NoTop;
@@ -650,6 +716,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitWASM(void) {
   VP8PredLuma16[6] = DC16NoTopLeft;
 
   VP8PredChroma8[0] = DC8uv;
+  VP8PredChroma8[1] = TM8uv;
   VP8PredChroma8[2] = VE8uv;
   VP8PredChroma8[3] = HE8uv;
   VP8PredChroma8[4] = DC8uvNoTop;
