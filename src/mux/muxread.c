@@ -43,7 +43,7 @@ static WebPMuxError MuxGet(const WebPMux* const mux, CHUNK_INDEX idx,
   SWITCH_ID_LIST(IDX_ANIM, mux->anim_);
   SWITCH_ID_LIST(IDX_EXIF, mux->exif_);
   SWITCH_ID_LIST(IDX_XMP, mux->xmp_);
-  SWITCH_ID_LIST(IDX_UNKNOWN, mux->unknown_);
+  assert(idx != IDX_UNKNOWN);
   return WEBP_MUX_NOT_FOUND;
 }
 #undef SWITCH_ID_LIST
