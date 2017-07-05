@@ -22,6 +22,30 @@
       "revId": "c38617ede4d4bb3622cb7142e5a59d0be33c3904",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72a545e7_f6be7b30",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1000882
+      },
+      "writtenOn": "2017-07-05T19:15:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e2a8814e_e0633a8b",
+      "range": {
+        "startLine": 284,
+        "startChar": 13,
+        "endLine": 284,
+        "endChar": 14
+      },
+      "revId": "c38617ede4d4bb3622cb7142e5a59d0be33c3904",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
