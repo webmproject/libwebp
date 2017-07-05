@@ -336,10 +336,6 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
   if (!config->lossless) {
     VP8Encoder* enc = NULL;
 
-    if (!config->exact) {
-      WebPCleanupTransparentArea(pic);
-    }
-
     if (pic->use_argb || pic->y == NULL || pic->u == NULL || pic->v == NULL) {
       // Make sure we have YUVA samples.
       if (config->use_sharp_yuv || (config->preprocessing & 4)) {
@@ -359,6 +355,10 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
           return 0;
         }
       }
+    }
+
+    if (!config->exact) {
+      WebPCleanupTransparentArea(pic);
     }
 
     enc = InitVP8Encoder(config, pic);

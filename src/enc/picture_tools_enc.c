@@ -25,20 +25,7 @@ static WEBP_INLINE uint32_t MakeARGB32(int r, int g, int b) {
 
 #define SIZE 8
 #define SIZE2 (SIZE / 2)
-static int is_transparent_area(const uint8_t* ptr, int stride, int size) {
-  int y, x;
-  for (y = 0; y < size; ++y) {
-    for (x = 0; x < size; ++x) {
-      if (ptr[x]) {
-        return 0;
-      }
-    }
-    ptr += stride;
-  }
-  return 1;
-}
-
-static int is_transparent_argb_area(const uint32_t* ptr, int stride, int size) {
+static int IsTransparentARGBArea(const uint32_t* ptr, int stride, int size) {
   int y, x;
   for (y = 0; y < size; ++y) {
     for (x = 0; x < size; ++x) {
@@ -51,7 +38,7 @@ static int is_transparent_argb_area(const uint32_t* ptr, int stride, int size) {
   return 1;
 }
 
-static void flatten(uint8_t* ptr, int v, int stride, int size) {
+static void Flatten(uint8_t* ptr, int v, int stride, int size) {
   int y;
   for (y = 0; y < size; ++y) {
     memset(ptr, v, size);
@@ -59,12 +46,45 @@ static void flatten(uint8_t* ptr, int v, int stride, int size) {
   }
 }
 
-static void flatten_argb(uint32_t* ptr, uint32_t v, int stride, int size) {
+static void FlattenARGB(uint32_t* ptr, uint32_t v, int stride, int size) {
   int x, y;
   for (y = 0; y < size; ++y) {
     for (x = 0; x < size; ++x) ptr[x] = v;
     ptr += stride;
   }
+}
+
+// Smoothen the luma components of transparent pixels. Return true if the whole
+// block is transparent.
+static int SmoothenBlock(const uint8_t* a_ptr, int a_stride, uint8_t* y_ptr,
+                         int y_stride, int width, int height) {
+  int sum = 0, count = 0;
+  int x, y;
+  const uint8_t* alpha_ptr = a_ptr;
+  uint8_t* luma_ptr = y_ptr;
+  for (y = 0; y < height; ++y) {
+    for (x = 0; x < width; ++x) {
+      if (alpha_ptr[x] != 0) {
+        ++count;
+        sum += luma_ptr[x];
+      }
+    }
+    alpha_ptr += a_stride;
+    luma_ptr += y_stride;
+  }
+  if (count > 0 && count < width * height) {
+    const uint8_t avg_u8 = (uint8_t)(sum / count);
+    alpha_ptr = a_ptr;
+    luma_ptr = y_ptr;
+    for (y = 0; y < height; ++y) {
+      for (x = 0; x < width; ++x) {
+        if (alpha_ptr[x] == 0) luma_ptr[x] = avg_u8;
+      }
+      alpha_ptr += a_stride;
+      luma_ptr += y_stride;
+    }
+  }
+  return (count == 0);
 }
 
 void WebPCleanupTransparentArea(WebPPicture* pic) {
@@ -73,47 +93,74 @@ void WebPCleanupTransparentArea(WebPPicture* pic) {
   w = pic->width / SIZE;
   h = pic->height / SIZE;
 
-  // note: we ignore the left-overs on right/bottom
+  // note: we ignore the left-overs on right/bottom, except for SmoothenBlock().
   if (pic->use_argb) {
     uint32_t argb_value = 0;
     for (y = 0; y < h; ++y) {
       int need_reset = 1;
       for (x = 0; x < w; ++x) {
         const int off = (y * pic->argb_stride + x) * SIZE;
-        if (is_transparent_argb_area(pic->argb + off, pic->argb_stride, SIZE)) {
+        if (IsTransparentARGBArea(pic->argb + off, pic->argb_stride, SIZE)) {
           if (need_reset) {
             argb_value = pic->argb[off];
             need_reset = 0;
           }
-          flatten_argb(pic->argb + off, argb_value, pic->argb_stride, SIZE);
+          FlattenARGB(pic->argb + off, argb_value, pic->argb_stride, SIZE);
         } else {
           need_reset = 1;
         }
       }
     }
   } else {
-    const uint8_t* const a_ptr = pic->a;
+    const int width = pic->width;
+    const int height = pic->height;
+    const int y_stride = pic->y_stride;
+    const int uv_stride = pic->uv_stride;
+    const int a_stride = pic->a_stride;
+    uint8_t* y_ptr = pic->y;
+    uint8_t* u_ptr = pic->u;
+    uint8_t* v_ptr = pic->v;
+    const uint8_t* a_ptr = pic->a;
     int values[3] = { 0 };
-    if (a_ptr == NULL) return;    // nothing to do
-    for (y = 0; y < h; ++y) {
+    if (a_ptr == NULL || y_ptr == NULL || u_ptr == NULL || v_ptr == NULL) {
+      return;
+    }
+    for (y = 0; y + SIZE <= height; y += SIZE) {
       int need_reset = 1;
-      for (x = 0; x < w; ++x) {
-        const int off_a = (y * pic->a_stride + x) * SIZE;
-        const int off_y = (y * pic->y_stride + x) * SIZE;
-        const int off_uv = (y * pic->uv_stride + x) * SIZE2;
-        if (is_transparent_area(a_ptr + off_a, pic->a_stride, SIZE)) {
+      for (x = 0; x + SIZE <= width; x += SIZE) {
+        if (SmoothenBlock(a_ptr + x, a_stride, y_ptr + x, y_stride,
+                          SIZE, SIZE)) {
           if (need_reset) {
-            values[0] = pic->y[off_y];
-            values[1] = pic->u[off_uv];
-            values[2] = pic->v[off_uv];
+            values[0] = y_ptr[x];
+            values[1] = u_ptr[x >> 1];
+            values[2] = v_ptr[x >> 1];
             need_reset = 0;
           }
-          flatten(pic->y + off_y, values[0], pic->y_stride, SIZE);
-          flatten(pic->u + off_uv, values[1], pic->uv_stride, SIZE2);
-          flatten(pic->v + off_uv, values[2], pic->uv_stride, SIZE2);
+          Flatten(y_ptr + x,        values[0], y_stride,  SIZE);
+          Flatten(u_ptr + (x >> 1), values[1], uv_stride, SIZE2);
+          Flatten(v_ptr + (x >> 1), values[2], uv_stride, SIZE2);
         } else {
           need_reset = 1;
         }
+      }
+      if (x < width) {
+        SmoothenBlock(a_ptr + x, a_stride, y_ptr + x, y_stride,
+                      width - x, SIZE);
+      }
+      a_ptr += SIZE * a_stride;
+      y_ptr += SIZE * y_stride;
+      u_ptr += SIZE2 * uv_stride;
+      v_ptr += SIZE2 * uv_stride;
+    }
+    if (y < height) {
+      const int sub_height = height - y;
+      for (x = 0; x + SIZE <= width; x += SIZE) {
+        SmoothenBlock(a_ptr + x, a_stride, y_ptr + x, y_stride,
+                      SIZE, sub_height);
+      }
+      if (x < width) {
+        SmoothenBlock(a_ptr + x, a_stride, y_ptr + x, y_stride,
+                      width - x, sub_height);
       }
     }
   }

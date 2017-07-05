@@ -508,8 +508,8 @@ WEBP_EXTERN(int) WebPPictureSmartARGBToYUVA(WebPPicture* picture);
 WEBP_EXTERN(int) WebPPictureYUVAToARGB(WebPPicture* picture);
 
 // Helper function: given a width x height plane of RGBA or YUV(A) samples
-// clean-up the YUV or RGB samples under fully transparent area, to help
-// compressibility (no guarantee, though).
+// clean-up or smoothen the YUV or RGB samples under fully transparent area,
+// to help compressibility (no guarantee, though).
 WEBP_EXTERN(void) WebPCleanupTransparentArea(WebPPicture* picture);
 
 // Scan the picture 'picture' for the presence of non fully opaque alpha values.
