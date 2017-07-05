@@ -306,6 +306,299 @@ static void Transform(const int16_t* in, uint8_t* dst, int do_two) {
 }
 
 //------------------------------------------------------------------------------
+// Loop Filter (Paragraph 15)
+
+/*
+  Currently, the add/sub sat instructions are not supported, however in the
+  future, they will be.  So for now, we will cheat and use the builtins.
+
+  See https://github.com/WebAssembly/meetings/blob/master/2017/CG-05.md
+    Poll: Adopt the saturating integer arithmetic operations
+    {i8x16,i16x8}.{add,sub}_saturate_[su].
+*/
+
+static WEBP_INLINE uint8x16 uint8x16_add_sat(const uint8x16 a,
+                                             const uint8x16 b) {
+  // TODO(slavarnway): add generic implementation for non-x86
+  return (uint8x16)__builtin_ia32_paddusb128(a, b);
+}
+
+static WEBP_INLINE int8x16 int8x16_add_sat(const int8x16 a, const int8x16 b) {
+  // TODO(slavarnway): add generic implementation for non-x86
+  return (int8x16)__builtin_ia32_paddsb128(a, b);
+}
+
+static WEBP_INLINE uint8x16 uint8x16_sub_sat(const uint8x16 a,
+                                             const uint8x16 b) {
+  // TODO(slavarnway): add generic implementation for non-x86
+  return (uint8x16)__builtin_ia32_psubusb128(a, b);
+}
+
+static WEBP_INLINE int8x16 int8x16_sub_sat(const int8x16 a, const int8x16 b) {
+  // TODO(slavarnway): add generic implementation for non-x86
+  return (int8x16)__builtin_ia32_psubsb128(a, b);
+}
+
+static WEBP_INLINE uint8x16 _max_u8x16(const uint8x16 a, const uint8x16 b) {
+  const uint8x16 s1 = (a > b);
+  return (s1 & a) | (~s1 & b);
+}
+
+// Compute abs(p - q) = subs(p - q) OR subs(q - p)
+static WEBP_INLINE int8x16 abs_diff(int8x16 p, int8x16 q) {
+  const int8x16 a = uint8x16_sub_sat(p, q);
+  const int8x16 b = uint8x16_sub_sat(q, p);
+  return a | b;
+}
+
+// int16 to int8 with saturation.
+static inline int8x16 _pack_sw_2_sb(const int16x8 lo, const int16x8 hi) {
+#if 1
+  const int16x8 k7f = splat_int16(0x007f);
+  const int16x8 kff80 = splat_int16(0xff80);
+  const int16x8 s1_lo = (lo < k7f);
+  const int16x8 a_lo = (s1_lo & lo) | (~s1_lo & k7f);
+  const int16x8 s2_lo = (a_lo > kff80);
+  const int16x8 a2_lo = (s2_lo & a_lo) | (~s2_lo & kff80);
+  const int16x8 s1_hi = (hi < k7f);
+  const int16x8 a_hi = (s1_hi & hi) | (~s1_hi & k7f);
+  const int16x8 s2_hi = (a_hi > kff80);
+  const int16x8 a2_hi = (s2_hi & a_hi) | (~s2_hi & kff80);
+  return (int8x16)__builtin_shufflevector((int8x16)a2_lo, (int8x16)a2_hi, 0, 2,
+                                          4, 6, 8, 10, 12, 14, 16, 18, 20, 22,
+                                          24, 26, 28, 30);
+#else
+  return (int8x16)__builtin_ia32_packsswb128(lo, hi);
+#endif
+}
+
+// Shift each byte of "x" by 3 bits while preserving by the sign bit.
+static WEBP_INLINE void SignedShift8b(int8x16* const x) {
+  const int8x16 zero = {0};
+  const int16x8 eleven = splat_int16(3 + 8);
+  const int16x8 lo_0 = (int16x8)__builtin_shufflevector(
+      *x, zero, 16, 0, 16, 1, 16, 2, 16, 3, 16, 4, 16, 5, 16, 6, 16, 7);
+  const int16x8 hi_0 = (int16x8)__builtin_shufflevector(
+      *x, zero, 16, 8, 16, 9, 16, 10, 16, 11, 16, 12, 16, 13, 16, 14, 16, 15);
+  const int16x8 lo_1 = lo_0 >> eleven;
+  const int16x8 hi_1 = hi_0 >> eleven;
+  *x = _pack_sw_2_sb(lo_1, hi_1);
+}
+
+#define FLIP_SIGN_BIT2(a, b) \
+  {                          \
+    a = a ^ sign_bit;        \
+    b = b ^ sign_bit;        \
+  }
+
+#define FLIP_SIGN_BIT4(a, b, c, d) \
+  {                                \
+    FLIP_SIGN_BIT2(a, b);          \
+    FLIP_SIGN_BIT2(c, d);          \
+  }
+
+// input/output is uint8_t
+static WEBP_INLINE void GetNotHEV(const int8x16* const p1,
+                                  const int8x16* const p0,
+                                  const int8x16* const q0,
+                                  const int8x16* const q1, int hev_thresh,
+                                  int8x16* const not_hev) {
+  const int8x16 zero = {0};
+  const int8x16 t_1 = abs_diff(*p1, *p0);
+  const int8x16 t_2 = abs_diff(*q1, *q0);
+  const int8x16 h = splat_uint8(hev_thresh);
+  const int8x16 t_max = _max_u8x16(t_1, t_2);
+  const int8x16 t_max_h = uint8x16_sub_sat(t_max, h);
+  *not_hev = (t_max_h == zero);  // not_hev <= t1 && not_hev <= t2
+}
+
+// input pixels are int8_t
+static WEBP_INLINE void GetBaseDelta(const int8x16* const p1,
+                                     const int8x16* const p0,
+                                     const int8x16* const q0,
+                                     const int8x16* const q1,
+                                     int8x16* const delta) {
+  // beware of addition order, for saturation!
+  const int8x16 p1_q1 = int8x16_sub_sat(*p1, *q1);   // p1 - q1
+  const int8x16 q0_p0 = int8x16_sub_sat(*q0, *p0);   // q0 - p0
+  const int8x16 s1 = int8x16_add_sat(p1_q1, q0_p0);  // p1 - q1 + 1 * (q0 - p0)
+  const int8x16 s2 = int8x16_add_sat(q0_p0, s1);     // p1 - q1 + 2 * (q0 - p0)
+  const int8x16 s3 = int8x16_add_sat(q0_p0, s2);     // p1 - q1 + 3 * (q0 - p0)
+  *delta = s3;
+}
+
+// input and output are int8_t
+static WEBP_INLINE void DoSimpleFilter(int8x16* const p0, int8x16* const q0,
+                                       const int8x16* const fl) {
+  const int8x16 k3 = splat_uint8(3);
+  const int8x16 k4 = splat_uint8(4);
+  int8x16 v3 = int8x16_add_sat(*fl, k3);
+  int8x16 v4 = int8x16_add_sat(*fl, k4);
+  SignedShift8b(&v4);              // v4 >> 3
+  SignedShift8b(&v3);              // v3 >> 3
+  *q0 = int8x16_sub_sat(*q0, v4);  // q0 -= v4
+  *p0 = int8x16_add_sat(*p0, v3);  // p0 += v3
+}
+
+// Updates values of 2 pixels at MB edge during complex filtering.
+// Update operations:
+// q = q - delta and p = p + delta; where delta = [(a_hi >> 7), (a_lo >> 7)]
+// Pixels 'pi' and 'qi' are int8_t on input, uint8_t on output (sign flip).
+static WEBP_INLINE void Update2Pixels(int8x16* const pi, int8x16* const qi,
+                                      const int16x8* const a0_lo,
+                                      const int16x8* const a0_hi) {
+  const int16x8 _7 = splat_int16(7);
+  const int16x8 a1_lo = *a0_lo >> _7;
+  const int16x8 a1_hi = *a0_hi >> _7;
+  const int8x16 delta = _pack_sw_2_sb(a1_lo, a1_hi);
+  const int8x16 sign_bit = (int8x16)splat_uint8(0x80);
+  *pi = int8x16_add_sat(*pi, delta);
+  *qi = int8x16_sub_sat(*qi, delta);
+  FLIP_SIGN_BIT2(*pi, *qi);
+}
+
+// input pixels are uint8_t
+static WEBP_INLINE void NeedsFilter(const int8x16* const p1,
+                                    const int8x16* const p0,
+                                    const int8x16* const q0,
+                                    const int8x16* const q1, int thresh,
+                                    int8x16* const mask) {
+  const int8x16 zero = {0};
+  const int16x8 one = {1, 1, 1, 1, 1, 1, 1, 1};
+  const int8x16 m_thresh = splat_uint8(thresh);
+  const int8x16 t1 = abs_diff(*p1, *q1);  // abs(p1 - q1)
+  const uint8x16 kFE = splat_uint8(0xFE);
+  const uint16x8 t2 = t1 & kFE;                 // set lsb of each byte to zero
+  const uint16x8 t3 = t2 >> one;                // abs(p1 - q1) / 2
+  const int8x16 t4 = abs_diff(*p0, *q0);        // abs(p0 - q0)
+  const int8x16 t5 = uint8x16_add_sat(t4, t4);  // abs(p0 - q0) * 2
+  const int8x16 t6 = uint8x16_add_sat(t5, t3);  // abs(p0-q0)*2 + abs(p1-q1)/2
+  const int8x16 t7 = uint8x16_sub_sat(t6, m_thresh);  // mask <= m_thresh
+  *mask = (t7 == zero);
+}
+
+//------------------------------------------------------------------------------
+// Edge filtering functions
+
+// Applies filter on 6 pixels (p2, p1, p0, q0, q1 and q2)
+static WEBP_INLINE void DoFilter6(int8x16* const p2, int8x16* const p1,
+                                  int8x16* const p0, int8x16* const q0,
+                                  int8x16* const q1, int8x16* const q2,
+                                  const int8x16* const mask, int hev_thresh) {
+  const int8x16 zero = {0};
+  const int8x16 sign_bit = splat_uint8(0x80);
+  int8x16 a, not_hev;
+
+  // compute hev mask
+  GetNotHEV(p1, p0, q0, q1, hev_thresh, &not_hev);
+
+  FLIP_SIGN_BIT4(*p1, *p0, *q0, *q1);
+  FLIP_SIGN_BIT2(*p2, *q2);
+  GetBaseDelta(p1, p0, q0, q1, &a);
+
+  {  // do simple filter on pixels with hev
+    const int8x16 m = (~not_hev) & *mask;
+    const int8x16 f = a & m;
+    DoSimpleFilter(p0, q0, &f);
+  }
+
+  {  // do strong filter on pixels with not hev
+    const int32x4 k9 = {0x0900, 0x0900, 0x0900, 0x0900};
+    const int16x8 k63 = splat_int16(63);
+
+    const int16x8 m = not_hev & *mask;
+    const int16x8 f = a & m;
+    const int16x8 f_lo =
+        (int16x8)__builtin_shufflevector((int8x16)f, zero, 16, 0, 16, 1, 16, 2,
+                                         16, 3, 16, 4, 16, 5, 16, 6, 16, 7);
+    const int16x8 f_hi = (int16x8)__builtin_shufflevector(
+        (int8x16)f, zero, 16, 8, 16, 9, 16, 10, 16, 11, 16, 12, 16, 13, 16, 14,
+        16, 15);
+
+    const int16x8 f9_lo = _mulhi_int16x8(f_lo, k9);  // Filter (lo) * 9
+    const int16x8 f9_hi = _mulhi_int16x8(f_hi, k9);  // Filter (hi) * 9
+
+    const int16x8 a2_lo = f9_lo + k63;  // Filter * 9 + 63
+    const int16x8 a2_hi = f9_hi + k63;  // Filter * 9 + 63
+
+    const int16x8 a1_lo = a2_lo + f9_lo;  // Filter * 18 + 63
+    const int16x8 a1_hi = a2_hi + f9_hi;  // Filter * 18 + 63
+
+    const int16x8 a0_lo = a1_lo + f9_lo;  // Filter * 27 + 63
+    const int16x8 a0_hi = a1_hi + f9_hi;  // Filter * 27 + 63
+
+    Update2Pixels(p2, q2, &a2_lo, &a2_hi);
+    Update2Pixels(p1, q1, &a1_lo, &a1_hi);
+    Update2Pixels(p0, q0, &a0_lo, &a0_hi);
+  }
+}
+
+//------------------------------------------------------------------------------
+// Complex In-loop filtering (Paragraph 15.3)
+#define MAX_DIFF1(p3, p2, p1, p0, m)     \
+  do {                                   \
+    m = abs_diff(p1, p0);                \
+    m = _max_u8x16(m, abs_diff(p3, p2)); \
+    m = _max_u8x16(m, abs_diff(p2, p1)); \
+  } while (0)
+
+#define MAX_DIFF2(p3, p2, p1, p0, m)     \
+  do {                                   \
+    m = _max_u8x16(m, abs_diff(p1, p0)); \
+    m = _max_u8x16(m, abs_diff(p3, p2)); \
+    m = _max_u8x16(m, abs_diff(p2, p1)); \
+  } while (0)
+
+#define LOAD_H_EDGES4(p, stride, e1, e2, e3, e4) \
+  {                                              \
+    memcpy(&e1, &(p)[0 * stride], 16);           \
+    memcpy(&e2, &(p)[1 * stride], 16);           \
+    memcpy(&e3, &(p)[2 * stride], 16);           \
+    memcpy(&e4, &(p)[3 * stride], 16);           \
+  }
+
+static WEBP_INLINE void ComplexMask(const int8x16* const p1,
+                                    const int8x16* const p0,
+                                    const int8x16* const q0,
+                                    const int8x16* const q1, int thresh,
+                                    int ithresh, int8x16* const mask) {
+  const int8x16 zero = {0};
+  const uint8x16 it = splat_uint8(ithresh);
+  const int8x16 diff = uint8x16_sub_sat(*mask, it);
+  const int8x16 thresh_mask = (diff == zero);
+  int8x16 filter_mask;
+  NeedsFilter(p1, p0, q0, q1, thresh, &filter_mask);
+  *mask = thresh_mask & filter_mask;
+}
+
+// on macroblock edges
+static void VFilter16(uint8_t* p, int stride, int thresh, int ithresh,
+                      int hev_thresh) {
+  int8x16 t1;
+  int8x16 mask;
+  int8x16 p2, p1, p0, q0, q1, q2;
+
+  // Load p3, p2, p1, p0
+  LOAD_H_EDGES4(p - 4 * stride, stride, t1, p2, p1, p0);
+  MAX_DIFF1(t1, p2, p1, p0, mask);
+
+  // Load q0, q1, q2, q3
+  LOAD_H_EDGES4(p, stride, q0, q1, q2, t1);
+  MAX_DIFF2(t1, q2, q1, q0, mask);
+
+  ComplexMask(&p1, &p0, &q0, &q1, thresh, ithresh, &mask);
+  DoFilter6(&p2, &p1, &p0, &q0, &q1, &q2, &mask, hev_thresh);
+
+  // Store
+  memcpy(&p[-3 * stride], &p2, 16);
+  memcpy(&p[-2 * stride], &p1, 16);
+  memcpy(&p[-1 * stride], &p0, 16);
+  memcpy(&p[+0 * stride], &q0, 16);
+  memcpy(&p[+1 * stride], &q1, 16);
+  memcpy(&p[+2 * stride], &q2, 16);
+}
+
+//------------------------------------------------------------------------------
 // 4x4 predictions
 
 #define DST(x, y) dst[(x) + (y) * BPS]
@@ -699,6 +992,8 @@ extern void VP8DspInitWASM(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitWASM(void) {
   VP8Transform = Transform;
+
+  VP8VFilter16 = VFilter16;
 
   VP8PredLuma4[1] = TM4;
   VP8PredLuma4[2] = VE4;
