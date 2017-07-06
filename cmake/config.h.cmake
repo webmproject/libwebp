@@ -75,13 +75,34 @@ foreach(I_LIB PNG JPEG TIFF)
 endforeach()
 
 # GIF detection, gifdec isn't part of the imageio lib.
+include(CMakePushCheckState)
 set(WEBP_DEP_GIF_LIBRARIES)
 set(WEBP_DEP_GIF_INCLUDE_DIRS)
 find_package(GIF)
 set(WEBP_HAVE_GIF ${GIF_FOUND})
 if(GIF_FOUND)
-  list(APPEND WEBP_DEP_GIF_LIBRARIES ${GIF_LIBRARIES})
-  list(APPEND WEBP_DEP_GIF_INCLUDE_DIRS ${GIF_INCLUDE_DIR})
+  # GIF find_package only locates the header and library, it doesn't fail
+  # compile tests when detecting the version, but falls back to 3 (as of at
+  # least cmake 3.7.2). Make sure the library links to avoid incorrect
+  # detection when cross compiling.
+  cmake_push_check_state()
+  set(CMAKE_REQUIRED_LIBRARIES ${GIF_LIBRARIES})
+  set(CMAKE_REQUIRED_INCLUDES ${GIF_INCLUDE_DIR})
+  check_c_source_compiles("
+      #include <gif_lib.h>
+      int main(void) {
+        (void)DGifOpenFileHandle;
+        return 0;
+      }
+      " GIF_COMPILES
+  )
+  cmake_pop_check_state()
+  if(GIF_COMPILES)
+    list(APPEND WEBP_DEP_GIF_LIBRARIES ${GIF_LIBRARIES})
+    list(APPEND WEBP_DEP_GIF_INCLUDE_DIRS ${GIF_INCLUDE_DIR})
+  else()
+    unset(GIF_FOUND)
+  endif()
 endif()
 
 ## Check for specific headers.
