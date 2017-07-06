@@ -533,6 +533,129 @@ static WEBP_INLINE void DoFilter6(int8x16* const p2, int8x16* const p1,
   }
 }
 
+static WEBP_INLINE uint32x4 _set_int32x4(uint32_t v3, uint32_t v2, uint32_t v1,
+                                         uint32_t v0) {
+  uint32x4 x;
+  x[3] = v3;
+  x[2] = v2;
+  x[1] = v1;
+  x[0] = v0;
+  return x;
+}
+
+// reads 8 rows across a vertical edge.
+static WEBP_INLINE void Load8x4(const uint8_t* const b, int stride,
+                                int8x16* const p, int8x16* const q) {
+  // A0 = 63 62 61 60 23 22 21 20 43 42 41 40 03 02 01 00
+  // A1 = 73 72 71 70 33 32 31 30 53 52 51 50 13 12 11 10
+  const int32x4 A0 = _set_int32x4(
+      WebPMemToUint32(&b[6 * stride]), WebPMemToUint32(&b[2 * stride]),
+      WebPMemToUint32(&b[4 * stride]), WebPMemToUint32(&b[0 * stride]));
+  const int32x4 A1 = _set_int32x4(
+      WebPMemToUint32(&b[7 * stride]), WebPMemToUint32(&b[3 * stride]),
+      WebPMemToUint32(&b[5 * stride]), WebPMemToUint32(&b[1 * stride]));
+
+  // B0 = 53 43 52 42 51 41 50 40 13 03 12 02 11 01 10 00
+  // B1 = 73 63 72 62 71 61 70 60 33 23 32 22 31 21 30 20
+  const int16x8 B0 = _unpacklo_epi8(A0, A1);
+  const int16x8 B1 = _unpackhi_epi8(A0, A1);
+
+  // C0 = 33 23 13 03 32 22 12 02 31 21 11 01 30 20 10 00
+  // C1 = 73 63 53 43 72 62 52 42 71 61 51 41 70 60 50 40
+  const int32x4 C0 = _unpacklo_epi16(B0, B1);
+  const int32x4 C1 = _unpackhi_epi16(B0, B1);
+
+  // *p = 71 61 51 41 31 21 11 01 70 60 50 40 30 20 10 00
+  // *q = 73 63 53 43 33 23 13 03 72 62 52 42 32 22 12 02
+  *p = _unpacklo_epi32(C0, C1);
+  *q = _unpackhi_epi32(C0, C1);
+}
+
+static WEBP_INLINE void Load16x4(const uint8_t* const r0,
+                                 const uint8_t* const r8, int stride,
+                                 int8x16* const p1, int8x16* const p0,
+                                 int8x16* const q0, int8x16* const q1) {
+  // Assume the pixels around the edge (|) are numbered as follows
+  //                00 01 | 02 03
+  //                10 11 | 12 13
+  //                 ...  |  ...
+  //                e0 e1 | e2 e3
+  //                f0 f1 | f2 f3
+  //
+  // r0 is pointing to the 0th row (00)
+  // r8 is pointing to the 8th row (80)
+
+  // Load
+  // p1 = 71 61 51 41 31 21 11 01 70 60 50 40 30 20 10 00
+  // q0 = 73 63 53 43 33 23 13 03 72 62 52 42 32 22 12 02
+  // p0 = f1 e1 d1 c1 b1 a1 91 81 f0 e0 d0 c0 b0 a0 90 80
+  // q1 = f3 e3 d3 c3 b3 a3 93 83 f2 e2 d2 c2 b2 a2 92 82
+  Load8x4(r0, stride, p1, q0);
+  Load8x4(r8, stride, p0, q1);
+
+  {
+    // p1 = f0 e0 d0 c0 b0 a0 90 80 70 60 50 40 30 20 10 00
+    // p0 = f1 e1 d1 c1 b1 a1 91 81 71 61 51 41 31 21 11 01
+    // q0 = f2 e2 d2 c2 b2 a2 92 82 72 62 52 42 32 22 12 02
+    // q1 = f3 e3 d3 c3 b3 a3 93 83 73 63 53 43 33 23 13 03
+    const int8x16 t1 = *p1;
+    const int8x16 t2 = *q0;
+    *p1 = _unpacklo_epi64(t1, *p0);
+    *p0 = _unpackhi_epi64(t1, *p0);
+    *q0 = _unpacklo_epi64(t2, *q1);
+    *q1 = _unpackhi_epi64(t2, *q1);
+  }
+}
+
+static WEBP_INLINE void Store4x4(int8x16* const x, uint8_t* dst, int stride) {
+  uint32x4 val = (uint32x4)*x;
+  int i;
+  for (i = 0; i < 4; ++i, dst += stride) {
+    WebPUint32ToMem(dst, val[i]);
+  }
+}
+
+// Transpose back and store
+static WEBP_INLINE void Store16x4(const int8x16* const p1,
+                                  const int8x16* const p0,
+                                  const int8x16* const q0,
+                                  const int8x16* const q1, uint8_t* r0,
+                                  uint8_t* r8, int stride) {
+  int8x16 t1, p1_s, p0_s, q0_s, q1_s;
+
+  // p0 = 71 70 61 60 51 50 41 40 31 30 21 20 11 10 01 00
+  // p1 = f1 f0 e1 e0 d1 d0 c1 c0 b1 b0 a1 a0 91 90 81 80
+  t1 = *p0;
+  p0_s = _unpacklo_epi8(*p1, t1);
+  p1_s = _unpackhi_epi8(*p1, t1);
+
+  // q0 = 73 72 63 62 53 52 43 42 33 32 23 22 13 12 03 02
+  // q1 = f3 f2 e3 e2 d3 d2 c3 c2 b3 b2 a3 a2 93 92 83 82
+  t1 = *q0;
+  q0_s = _unpacklo_epi8(t1, *q1);
+  q1_s = _unpackhi_epi8(t1, *q1);
+
+  // p0 = 33 32 31 30 23 22 21 20 13 12 11 10 03 02 01 00
+  // q0 = 73 72 71 70 63 62 61 60 53 52 51 50 43 42 41 40
+  t1 = p0_s;
+  p0_s = _unpacklo_epi16(t1, q0_s);
+  q0_s = _unpackhi_epi16(t1, q0_s);
+
+  // p1 = b3 b2 b1 b0 a3 a2 a1 a0 93 92 91 90 83 82 81 80
+  // q1 = f3 f2 f1 f0 e3 e2 e1 e0 d3 d2 d1 d0 c3 c2 c1 c0
+  t1 = p1_s;
+  p1_s = _unpacklo_epi16(t1, q1_s);
+  q1_s = _unpackhi_epi16(t1, q1_s);
+
+  Store4x4(&p0_s, r0, stride);
+  r0 += 4 * stride;
+  Store4x4(&q0_s, r0, stride);
+
+  Store4x4(&p1_s, r8, stride);
+  r8 += 4 * stride;
+  Store4x4(&q1_s, r8, stride);
+}
+
 //------------------------------------------------------------------------------
 // Complex In-loop filtering (Paragraph 15.3)
 #define MAX_DIFF1(p3, p2, p1, p0, m)     \
@@ -596,6 +719,25 @@ static void VFilter16(uint8_t* p, int stride, int thresh, int ithresh,
   memcpy(&p[+0 * stride], &q0, 16);
   memcpy(&p[+1 * stride], &q1, 16);
   memcpy(&p[+2 * stride], &q2, 16);
+}
+
+static void HFilter16(uint8_t* p, int stride, int thresh, int ithresh,
+                      int hev_thresh) {
+  int8x16 mask;
+  int8x16 p3, p2, p1, p0, q0, q1, q2, q3;
+
+  uint8_t* const b = p - 4;
+  Load16x4(b, b + 8 * stride, stride, &p3, &p2, &p1, &p0);
+  MAX_DIFF1(p3, p2, p1, p0, mask);
+
+  Load16x4(p, p + 8 * stride, stride, &q0, &q1, &q2, &q3);
+  MAX_DIFF2(q3, q2, q1, q0, mask);
+
+  ComplexMask(&p1, &p0, &q0, &q1, thresh, ithresh, &mask);
+  DoFilter6(&p2, &p1, &p0, &q0, &q1, &q2, &mask, hev_thresh);
+
+  Store16x4(&p3, &p2, &p1, &p0, b, b + 8 * stride, stride);
+  Store16x4(&q0, &q1, &q2, &q3, p, p + 8 * stride, stride);
 }
 
 //------------------------------------------------------------------------------
@@ -994,6 +1136,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitWASM(void) {
   VP8Transform = Transform;
 
   VP8VFilter16 = VFilter16;
+  VP8HFilter16 = HFilter16;
 
   VP8PredLuma4[1] = TM4;
   VP8PredLuma4[2] = VE4;
