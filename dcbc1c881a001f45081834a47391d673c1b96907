@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "51088ca1_5c2a077f",
+        "filename": "cmake/config.h.cmake",
+        "patchSetId": 3
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-07-06T22:37:31Z",
+      "side": 1,
+      "message": "looks like PNG is the only one that offers _DIRS and calls _DIR deprecated. might be worth a follow up.\n\nhttps://cmake.org/cmake/help/v3.9/module/FindPNG.html",
+      "revId": "dcbc1c881a001f45081834a47391d673c1b96907",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
