@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb208bc1_d74a69de",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-07-06T17:54:51Z",
+      "side": 1,
+      "message": "these could all be const unless there are conflicts with the builtins",
+      "range": {
+        "startLine": 320,
+        "startChar": 45,
+        "endLine": 320,
+        "endChar": 53
+      },
+      "revId": "8a36890a82de8f11cf862cd2f711002c645a0979",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "649601fe_638a365d",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-07-06T17:54:51Z",
+      "side": 1,
+      "message": "should probably be \u0027TODO(slavarnway): add generic implementation for non-x86\u0027 the FIXME part is covered in the section header.\nNEON might use __builtin_neon_vqaddv16qi or so",
+      "revId": "8a36890a82de8f11cf862cd2f711002c645a0979",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf1d10cc_d80a4225",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-07-06T17:54:51Z",
+      "side": 1,
+      "message": "maybe abs_diff",
+      "range": {
+        "startLine": 346,
+        "startChar": 27,
+        "endLine": 346,
+        "endChar": 33
+      },
+      "revId": "8a36890a82de8f11cf862cd2f711002c645a0979",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ba1a771_8a6047aa",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-07-06T17:54:51Z",
+      "side": 1,
+      "message": "maybe \u0027x\u0027 as a prefix for these or \u0027k\u0027 like elsewhere in this patch (line 468); this one could be ff80",
+      "range": {
+        "startLine": 356,
+        "startChar": 16,
+        "endLine": 356,
+        "endChar": 17
+      },
+      "revId": "8a36890a82de8f11cf862cd2f711002c645a0979",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
