@@ -19,6 +19,41 @@
     },
     {
       "key": {
+        "uuid": "42929948_7b5c12fa",
+        "filename": "cmake/config.h.cmake",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2017-07-06T07:37:58Z",
+      "side": 1,
+      "message": "You might as well split it then no ? Then again, we will probably add it to imagedec so leaving it is probably fine.",
+      "parentUuid": "3ce5300a_c42f122f",
+      "revId": "aac78287f7465ca2a087fe076875d5f513ec4836",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "975f4f76_1f043a8c",
+        "filename": "cmake/config.h.cmake",
+        "patchSetId": 1
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2017-07-06T07:37:58Z",
+      "side": 1,
+      "message": "typo (extra \"fail\"): it doesn\u0027t compile tests when detecting the version",
+      "revId": "aac78287f7465ca2a087fe076875d5f513ec4836",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dd934bd5_94a03809",
         "filename": "cmake/config.h.cmake",
         "patchSetId": 1
@@ -30,6 +65,24 @@
       "writtenOn": "2017-07-06T07:31:23Z",
       "side": 1,
       "message": "I realized I forgot to back these up and restore them",
+      "revId": "aac78287f7465ca2a087fe076875d5f513ec4836",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34e4fd76_78b70188",
+        "filename": "cmake/config.h.cmake",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2017-07-06T07:37:58Z",
+      "side": 1,
+      "message": "indeed.",
+      "parentUuid": "dd934bd5_94a03809",
       "revId": "aac78287f7465ca2a087fe076875d5f513ec4836",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
