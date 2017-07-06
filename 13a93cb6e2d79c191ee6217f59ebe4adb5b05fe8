@@ -16,6 +16,24 @@
       "revId": "13a93cb6e2d79c191ee6217f59ebe4adb5b05fe8",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37a4533d_48e9001d",
+        "filename": "cmake/config.h.cmake",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-07-06T22:27:45Z",
+      "side": 1,
+      "message": "\u003e seems to be INCLUDE_DIR with no S\n\u003e https://cmake.org/cmake/help/v3.9/module/FindGIF.html\n\u003e (even in 3.0.2)\n\ngood catch, I ended up with a mix in the later patchset",
+      "parentUuid": "010a5494_3aacd307",
+      "revId": "13a93cb6e2d79c191ee6217f59ebe4adb5b05fe8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
