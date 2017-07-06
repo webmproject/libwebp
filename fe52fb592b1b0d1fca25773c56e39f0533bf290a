@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "450ff174_88b7af46",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-07-06T22:41:35Z",
+      "side": 1,
+      "message": "maybe v0..v3 to match the positioning here, like _mm_set_*",
+      "range": {
+        "startLine": 536,
+        "startChar": 56,
+        "endLine": 536,
+        "endChar": 57
+      },
+      "revId": "fe52fb592b1b0d1fca25773c56e39f0533bf290a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
