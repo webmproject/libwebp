@@ -1,5 +1,20 @@
 # Generate the config.h to compile with specific intrinsics / libs.
 
+## Variable save/restore helpers.
+function(push_var var new_value)
+  set(SAVED_${var} ${var} PARENT_SCOPE)
+  set(${var} ${new_value} PARENT_SCOPE)
+endfunction()
+
+function(pop_var var)
+  set(var ${SAVED_${var}} PARENT_SCOPE)
+  if(CMAKE_MAJOR_VERSION GREATER 2)
+    unset(SAVED_${var} PARENT_SCOPE)
+  else()
+    set(SAVED_${var} "" PARENT_SCOPE)
+  endif()
+endfunction()
+
 ## Check for compiler options.
 include(CheckCSourceCompiles)
 check_c_source_compiles("
@@ -67,6 +82,30 @@ set(WEBP_DEP_IMG_LIBRARIES)
 set(WEBP_DEP_IMG_INCLUDE_DIRS)
 foreach(I_LIB PNG JPEG TIFF GIF)
   find_package(${I_LIB})
+  if(${I_LIB} STREQUAL "GIF")
+    # GIF find_package only locates the header and library, it doesn't fail
+    # compile tests when detecting the version, but falls back to 3 (as of at
+    # least cmake 3.7.2). Make sure the library links to avoid incorrect
+    # detection when cross compiling.
+    if(${GIF_FOUND})
+      push_var(CMAKE_REQUIRED_LIBRARIES ${GIF_LIBRARY})
+      push_var(CMAKE_REQUIRED_INCLUDES ${GIF_INCLUDE_DIR})
+      check_c_source_compiles("
+          #include <gif_lib.h>
+          int main(void) {
+            (void)DGifOpenFileHandle;
+            return 0;
+          }
+          " GIF_COMPILES
+      )
+      pop_var(CMAKE_REQUIRED_LIBRARIES)
+      pop_var(CMAKE_REQUIRED_INCLUDES)
+      if(NOT GIF_COMPILES)
+        unset(GIF_FOUND)
+      endif()
+    endif()
+  endif()
+
   set(WEBP_HAVE_${I_LIB} ${${I_LIB}_FOUND})
   if(${I_LIB}_FOUND)
     list(APPEND WEBP_DEP_IMG_LIBRARIES ${${I_LIB}_LIBRARIES})
