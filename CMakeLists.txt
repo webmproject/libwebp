@@ -234,12 +234,12 @@ endif()
 
 if(WEBP_BUILD_GIF2WEBP)
   # gif2webp
-  include_directories(${WEBP_DEP_IMG_INCLUDE_DIRS})
+  include_directories(${WEBP_DEP_GIF_INCLUDE_DIRS})
   parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "GIF2WEBP_SRCS"
     "gif2webp")
   add_executable(gif2webp ${GIF2WEBP_SRCS})
   target_link_libraries(gif2webp exampleutil imageioutil webp webpmux
-    ${WEBP_DEP_IMG_LIBRARIES})
+    ${WEBP_DEP_GIF_LIBRARIES})
   install(TARGETS gif2webp RUNTIME DESTINATION bin)
 endif()
 

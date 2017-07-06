@@ -65,7 +65,7 @@ endif()
 # Find the standard image libraries.
 set(WEBP_DEP_IMG_LIBRARIES)
 set(WEBP_DEP_IMG_INCLUDE_DIRS)
-foreach(I_LIB PNG JPEG TIFF GIF)
+foreach(I_LIB PNG JPEG TIFF)
   find_package(${I_LIB})
   set(WEBP_HAVE_${I_LIB} ${${I_LIB}_FOUND})
   if(${I_LIB}_FOUND)
@@ -73,6 +73,16 @@ foreach(I_LIB PNG JPEG TIFF GIF)
     list(APPEND WEBP_DEP_IMG_INCLUDE_DIRS ${${I_LIB}_INCLUDE_DIRS})
   endif()
 endforeach()
+
+# GIF detection, gifdec isn't part of the imageio lib.
+set(WEBP_DEP_GIF_LIBRARIES)
+set(WEBP_DEP_GIF_INCLUDE_DIRS)
+find_package(GIF)
+set(WEBP_HAVE_GIF ${GIF_FOUND})
+if(GIF_FOUND)
+  list(APPEND WEBP_DEP_GIF_LIBRARIES ${GIF_LIBRARIES})
+  list(APPEND WEBP_DEP_GIF_INCLUDE_DIRS ${GIF_INCLUDE_DIR})
+endif()
 
 ## Check for specific headers.
 include(CheckIncludeFiles)
