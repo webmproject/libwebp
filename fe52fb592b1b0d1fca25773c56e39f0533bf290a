@@ -22,6 +22,29 @@
       "revId": "fe52fb592b1b0d1fca25773c56e39f0533bf290a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86bd76e7_0ba57e9e",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-07-07T06:08:07Z",
+      "side": 1,
+      "message": "usually, we don\u0027t use \u0027const\u0027 qualification for POD arguments (only pointers).",
+      "range": {
+        "startLine": 537,
+        "startChar": 47,
+        "endLine": 537,
+        "endChar": 55
+      },
+      "revId": "fe52fb592b1b0d1fca25773c56e39f0533bf290a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
