@@ -738,6 +738,30 @@ static WEBP_INLINE void Store16x4(const int8x16* const p1,
     memcpy(&e4, &(p)[3 * stride], 16);           \
   }
 
+#define LOADUV_H_EDGE(p, u, v, stride)           \
+  do {                                           \
+    int8x16 U;                                   \
+    int8x16 V;                                   \
+    memcpy(&U, &(u)[(stride)], 8);               \
+    memcpy(&V, &(v)[(stride)], 8);               \
+    p = _unpacklo_epi64((int32x4)U, (int32x4)V); \
+  } while (0)
+
+#define LOADUV_H_EDGES4(u, v, stride, e1, e2, e3, e4) \
+  {                                                   \
+    LOADUV_H_EDGE(e1, u, v, 0 * stride);              \
+    LOADUV_H_EDGE(e2, u, v, 1 * stride);              \
+    LOADUV_H_EDGE(e3, u, v, 2 * stride);              \
+    LOADUV_H_EDGE(e4, u, v, 3 * stride);              \
+  }
+
+#define STOREUV(p, u, v, stride)                 \
+  {                                              \
+    memcpy(&u[(stride)], &p, 8);                 \
+    p = _unpackhi_epi64((int32x4)p, (int32x4)p); \
+    memcpy(&v[(stride)], &p, 8);                 \
+  }
+
 static WEBP_INLINE void ComplexMask(const int8x16* const p1,
                                     const int8x16* const p0,
                                     const int8x16* const q0,
@@ -858,6 +882,52 @@ static void HFilter16i(uint8_t* p, int stride,
     p1 = tmp1;
     p0 = tmp2;
   }
+}
+
+// 8-pixels wide variant, for chroma filtering
+static void VFilter8(uint8_t* u, uint8_t* v, int stride, int thresh,
+                     int ithresh, int hev_thresh) {
+  int8x16 mask;
+  int8x16 t1, p2, p1, p0, q0, q1, q2;
+
+  // Load p3, p2, p1, p0
+  LOADUV_H_EDGES4(u - 4 * stride, v - 4 * stride, stride, t1, p2, p1, p0);
+  MAX_DIFF1(t1, p2, p1, p0, mask);
+
+  // Load q0, q1, q2, q3
+  LOADUV_H_EDGES4(u, v, stride, q0, q1, q2, t1);
+  MAX_DIFF2(t1, q2, q1, q0, mask);
+
+  ComplexMask(&p1, &p0, &q0, &q1, thresh, ithresh, &mask);
+  DoFilter6(&p2, &p1, &p0, &q0, &q1, &q2, &mask, hev_thresh);
+
+  // Store
+  STOREUV(p2, u, v, -3 * stride);
+  STOREUV(p1, u, v, -2 * stride);
+  STOREUV(p0, u, v, -1 * stride);
+  STOREUV(q0, u, v, 0 * stride);
+  STOREUV(q1, u, v, 1 * stride);
+  STOREUV(q2, u, v, 2 * stride);
+}
+
+static void HFilter8(uint8_t* u, uint8_t* v, int stride, int thresh,
+                     int ithresh, int hev_thresh) {
+  int8x16 mask;
+  int8x16 p3, p2, p1, p0, q0, q1, q2, q3;
+
+  uint8_t* const tu = u - 4;
+  uint8_t* const tv = v - 4;
+  Load16x4(tu, tv, stride, &p3, &p2, &p1, &p0);
+  MAX_DIFF1(p3, p2, p1, p0, mask);
+
+  Load16x4(u, v, stride, &q0, &q1, &q2, &q3);
+  MAX_DIFF2(q3, q2, q1, q0, mask);
+
+  ComplexMask(&p1, &p0, &q0, &q1, thresh, ithresh, &mask);
+  DoFilter6(&p2, &p1, &p0, &q0, &q1, &q2, &mask, hev_thresh);
+
+  Store16x4(&p3, &p2, &p1, &p0, tu, tv, stride);
+  Store16x4(&q0, &q1, &q2, &q3, u, v, stride);
 }
 
 //------------------------------------------------------------------------------
@@ -1257,6 +1327,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitWASM(void) {
 
   VP8VFilter16 = VFilter16;
   VP8HFilter16 = HFilter16;
+  VP8VFilter8 = VFilter8;
+  VP8HFilter8 = HFilter8;
   VP8VFilter16i = VFilter16i;
   VP8HFilter16i = HFilter16i;
 
