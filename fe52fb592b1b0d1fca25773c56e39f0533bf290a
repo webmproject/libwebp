@@ -45,6 +45,75 @@
       "revId": "fe52fb592b1b0d1fca25773c56e39f0533bf290a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "531f43ac_68a5de16",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-07-07T06:10:39Z",
+      "side": 1,
+      "message": "look like some of these __builtin_shufflevector() calls could be macro-ized...",
+      "range": {
+        "startLine": 604,
+        "startChar": 47,
+        "endLine": 604,
+        "endChar": 48
+      },
+      "revId": "fe52fb592b1b0d1fca25773c56e39f0533bf290a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b971613b_a28bed3e",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-07-07T06:10:39Z",
+      "side": 1,
+      "message": "space after \u0027//\u0027\n\nNote sure if you need to keep this (somewhat obscure) comments, esp. if you define some macro like UNPACK_LO / UNPACK_HI",
+      "range": {
+        "startLine": 605,
+        "startChar": 52,
+        "endLine": 605,
+        "endChar": 70
+      },
+      "revId": "fe52fb592b1b0d1fca25773c56e39f0533bf290a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5636c2d_0aff178e",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-07-07T06:10:39Z",
+      "side": 1,
+      "message": "comments are redundant",
+      "range": {
+        "startLine": 738,
+        "startChar": 66,
+        "endLine": 738,
+        "endChar": 67
+      },
+      "revId": "fe52fb592b1b0d1fca25773c56e39f0533bf290a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
