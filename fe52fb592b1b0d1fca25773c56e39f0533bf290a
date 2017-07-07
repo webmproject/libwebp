@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9266e86c_3f0a4155",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1000882
+      },
+      "writtenOn": "2017-07-07T14:36:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "450ff174_88b7af46",
+      "range": {
+        "startLine": 536,
+        "startChar": 56,
+        "endLine": 536,
+        "endChar": 57
+      },
+      "revId": "fe52fb592b1b0d1fca25773c56e39f0533bf290a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "86bd76e7_0ba57e9e",
         "filename": "src/dsp/dec_wasm.c",
         "patchSetId": 1
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "815f41a9_6fcf20fe",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1000882
+      },
+      "writtenOn": "2017-07-07T14:36:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "86bd76e7_0ba57e9e",
+      "range": {
+        "startLine": 537,
+        "startChar": 47,
+        "endLine": 537,
+        "endChar": 55
+      },
+      "revId": "fe52fb592b1b0d1fca25773c56e39f0533bf290a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "531f43ac_68a5de16",
         "filename": "src/dsp/dec_wasm.c",
         "patchSetId": 1
@@ -68,6 +116,30 @@
       "revId": "fe52fb592b1b0d1fca25773c56e39f0533bf290a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "af6df6a1_c4898923",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1000882
+      },
+      "writtenOn": "2017-07-07T14:36:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "531f43ac_68a5de16",
+      "range": {
+        "startLine": 604,
+        "startChar": 47,
+        "endLine": 604,
+        "endChar": 48
+      },
+      "revId": "fe52fb592b1b0d1fca25773c56e39f0533bf290a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -106,6 +178,30 @@
       "side": 1,
       "message": "\u003e space after \u0027//\u0027\n\u003e \n\u003e Note sure if you need to keep this (somewhat obscure) comments, esp. if you define some macro like UNPACK_LO / UNPACK_HI\n\ngood catch. looks like the existing inlines will need an expansion to deal with the different types.",
       "parentUuid": "b971613b_a28bed3e",
+      "range": {
+        "startLine": 605,
+        "startChar": 52,
+        "endLine": 605,
+        "endChar": 70
+      },
+      "revId": "fe52fb592b1b0d1fca25773c56e39f0533bf290a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8d3c3c9b_668e9b55",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1000882
+      },
+      "writtenOn": "2017-07-07T14:36:03Z",
+      "side": 1,
+      "message": "Whoops.... missed those in my \"not so good\" cleanup.",
+      "parentUuid": "82284e0f_13b7de5d",
       "range": {
         "startLine": 605,
         "startChar": 52,
