@@ -480,6 +480,64 @@ static WEBP_INLINE void NeedsFilter(const int8x16* const p1,
 //------------------------------------------------------------------------------
 // Edge filtering functions
 
+// Applies filter on 4 pixels (p1, p0, q0 and q1)
+static WEBP_INLINE void DoFilter4(int8x16* const p1, int8x16* const p0,
+                                  int8x16* const q0, int8x16* const q1,
+                                  const int8x16* const mask, int hev_thresh) {
+  const uint8x16 zero = {0};
+  const uint8x16 sign_bit = splat_uint8(0x80);
+  const uint8x16 k64 = splat_uint8(64);
+  const uint8x16 k3 = splat_uint8(3);
+  const uint8x16 k4 = splat_uint8(4);
+  int8x16 not_hev;
+  int8x16 t1, t2, t3;
+
+  // compute hev mask
+  GetNotHEV(p1, p0, q0, q1, hev_thresh, &not_hev);
+
+  // convert to signed values
+  FLIP_SIGN_BIT4(*p1, *p0, *q0, *q1);
+
+  t1 = int8x16_sub_sat(*p1, *q1); // p1 - q1
+  t1 = ~not_hev & t1;             // hev(p1 - q1)
+  t2 = int8x16_sub_sat(*q0, *p0); // q0 - p0
+  t1 = int8x16_add_sat(t1, t2);   // hev(p1 - q1) + 1 * (q0 - p0)
+  t1 = int8x16_add_sat(t1, t2);   // hev(p1 - q1) + 2 * (q0 - p0)
+  t1 = int8x16_add_sat(t1, t2);   // hev(p1 - q1) + 3 * (q0 - p0)
+  t1 = t1 & *mask;                // mask filter values we don't care about
+
+  t2 = int8x16_add_sat(t1, k3);   // 3 * (q0 - p0) + hev(p1 - q1) + 3
+  t3 = int8x16_add_sat(t1, k4);   // 3 * (q0 - p0) + hev(p1 - q1) + 4
+  SignedShift8b(&t2);             // (3 * (q0 - p0) + hev(p1 - q1) + 3) >> 3
+  SignedShift8b(&t3);             // (3 * (q0 - p0) + hev(p1 - q1) + 4) >> 3
+  *p0 = int8x16_add_sat(*p0, t2); // p0 += t2
+  *q0 = int8x16_sub_sat(*q0, t3); // q0 -= t3
+  FLIP_SIGN_BIT2(*p0, *q0);
+
+  // this is equivalent to signed (a + 1) >> 1 calculation
+  t2 = t3 + sign_bit;
+#if 0
+  t3 = _mm_avg_epu8(t2, zero);
+#else
+  // This code will be eliminated if the above avg instruction is supported.
+  {
+    const int16x8 one = {1, 1, 1, 1, 1, 1, 1, 1};
+    const int16x8 t2_lo = (int16x8)_unpacklo_epi8(t2, zero);
+    const int16x8 t2_hi = (int16x8)_unpackhi_epi8(t2, zero);
+    const int16x8 a = (t2_lo + one) >> one;
+    const int16x8 b = (t2_hi + one) >> one;
+    t3 = __builtin_shufflevector((int8x16)a, (int8x16)b,
+        0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30);
+  }
+#endif
+  t3 = t3 - k64;
+
+  t3 = not_hev & t3;              // if !hev
+  *q1 = int8x16_sub_sat(*q1, t3); // q1 -= t3
+  *p1 = int8x16_add_sat(*p1, t3); // p1 += t3
+  FLIP_SIGN_BIT2(*p1, *q1);
+}
+
 // Applies filter on 6 pixels (p2, p1, p0, q0, q1 and q2)
 static WEBP_INLINE void DoFilter6(int8x16* const p2, int8x16* const p1,
                                   int8x16* const p0, int8x16* const q0,
@@ -738,6 +796,68 @@ static void HFilter16(uint8_t* p, int stride, int thresh, int ithresh,
 
   Store16x4(&p3, &p2, &p1, &p0, b, b + 8 * stride, stride);
   Store16x4(&q0, &q1, &q2, &q3, p, p + 8 * stride, stride);
+}
+
+// on three inner edges
+static void VFilter16i(uint8_t* p, int stride,
+                       int thresh, int ithresh, int hev_thresh) {
+  int k;
+  int8x16 p3, p2, p1, p0;   // loop invariants
+
+  LOAD_H_EDGES4(p, stride, p3, p2, p1, p0);  // prologue
+
+  for (k = 3; k > 0; --k) {
+    int8x16 mask, tmp1, tmp2;
+    uint8_t* const b = p + 2 * stride;   // beginning of p1
+    p += 4 * stride;
+
+    MAX_DIFF1(p3, p2, p1, p0, mask);   // compute partial mask
+    LOAD_H_EDGES4(p, stride, p3, p2, tmp1, tmp2);
+    MAX_DIFF2(p3, p2, tmp1, tmp2, mask);
+
+    // p3 and p2 are not just temporary variables here: they will be
+    // re-used for next span. And q2/q3 will become p1/p0 accordingly.
+    ComplexMask(&p1, &p0, &p3, &p2, thresh, ithresh, &mask);
+    DoFilter4(&p1, &p0, &p3, &p2, &mask, hev_thresh);
+
+    // Store
+    memcpy(&b[0 * stride], &p1, 16);
+    memcpy(&b[1 * stride], &p0, 16);
+    memcpy(&b[2 * stride], &p3, 16);
+    memcpy(&b[3 * stride], &p2, 16);
+
+    // rotate samples
+    p1 = tmp1;
+    p0 = tmp2;
+  }
+}
+
+static void HFilter16i(uint8_t* p, int stride,
+                       int thresh, int ithresh, int hev_thresh) {
+  int k;
+  int8x16 p3, p2, p1, p0;   // loop invariants
+
+  Load16x4(p, p + 8 * stride, stride, &p3, &p2, &p1, &p0);  // prologue
+
+  for (k = 3; k > 0; --k) {
+    int8x16 mask, tmp1, tmp2;
+    uint8_t* const b = p + 2;   // beginning of p1
+
+    p += 4;  // beginning of q0 (and next span)
+
+    MAX_DIFF1(p3, p2, p1, p0, mask);   // compute partial mask
+    Load16x4(p, p + 8 * stride, stride, &p3, &p2, &tmp1, &tmp2);
+    MAX_DIFF2(p3, p2, tmp1, tmp2, mask);
+
+    ComplexMask(&p1, &p0, &p3, &p2, thresh, ithresh, &mask);
+    DoFilter4(&p1, &p0, &p3, &p2, &mask, hev_thresh);
+
+    Store16x4(&p1, &p0, &p3, &p2, b, b + 8 * stride, stride);
+
+    // rotate samples
+    p1 = tmp1;
+    p0 = tmp2;
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -1137,6 +1257,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitWASM(void) {
 
   VP8VFilter16 = VFilter16;
   VP8HFilter16 = HFilter16;
+  VP8VFilter16i = VFilter16i;
+  VP8HFilter16i = HFilter16i;
 
   VP8PredLuma4[1] = TM4;
   VP8PredLuma4[2] = VE4;
