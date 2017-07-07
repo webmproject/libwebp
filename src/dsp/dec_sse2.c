@@ -712,10 +712,10 @@ static void HFilter16(uint8_t* p, int stride,
   __m128i p3, p2, p1, p0, q0, q1, q2, q3;
 
   uint8_t* const b = p - 4;
-  Load16x4(b, b + 8 * stride, stride, &p3, &p2, &p1, &p0);  // p3, p2, p1, p0
+  Load16x4(b, b + 8 * stride, stride, &p3, &p2, &p1, &p0);
   MAX_DIFF1(p3, p2, p1, p0, mask);
 
-  Load16x4(p, p + 8 * stride, stride, &q0, &q1, &q2, &q3);  // q0, q1, q2, q3
+  Load16x4(p, p + 8 * stride, stride, &q0, &q1, &q2, &q3);
   MAX_DIFF2(q3, q2, q1, q0, mask);
 
   ComplexMask(&p1, &p0, &q0, &q1, thresh, ithresh, &mask);
@@ -820,10 +820,10 @@ static void HFilter8(uint8_t* u, uint8_t* v, int stride,
 
   uint8_t* const tu = u - 4;
   uint8_t* const tv = v - 4;
-  Load16x4(tu, tv, stride, &p3, &p2, &p1, &p0);  // p3, p2, p1, p0
+  Load16x4(tu, tv, stride, &p3, &p2, &p1, &p0);
   MAX_DIFF1(p3, p2, p1, p0, mask);
 
-  Load16x4(u, v, stride, &q0, &q1, &q2, &q3);    // q0, q1, q2, q3
+  Load16x4(u, v, stride, &q0, &q1, &q2, &q3);
   MAX_DIFF2(q3, q2, q1, q0, mask);
 
   ComplexMask(&p1, &p0, &q0, &q1, thresh, ithresh, &mask);
