@@ -70,7 +70,8 @@ foreach(I_LIB PNG JPEG TIFF)
   set(WEBP_HAVE_${I_LIB} ${${I_LIB}_FOUND})
   if(${I_LIB}_FOUND)
     list(APPEND WEBP_DEP_IMG_LIBRARIES ${${I_LIB}_LIBRARIES})
-    list(APPEND WEBP_DEP_IMG_INCLUDE_DIRS ${${I_LIB}_INCLUDE_DIRS})
+    list(APPEND WEBP_DEP_IMG_INCLUDE_DIRS
+         ${${I_LIB}_INCLUDE_DIR} ${${I_LIB}_INCLUDE_DIRS})
   endif()
 endforeach()
 
