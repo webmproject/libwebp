@@ -27,21 +27,21 @@ typedef uint8_t uint8x16 __attribute__((__vector_size__(16)));
 //------------------------------------------------------------------------------
 //
 
-static WEBP_INLINE uint8x16 get_16_bytes(uint8_t* dst) {
+static WEBP_INLINE uint8x16 get_16_bytes(const uint8_t* src) {
   uint8x16 a;
-  memcpy(&a, dst, 16);
+  memcpy(&a, src, 16);
   return a;
 }
 
-static WEBP_INLINE uint8x16 get_8_bytes(uint8_t* dst) {
+static WEBP_INLINE uint8x16 get_8_bytes(const uint8_t* src) {
   uint8x16 a;
-  memcpy(&a, dst, 8);
+  memcpy(&a, src, 8);
   return a;
 }
 
-static WEBP_INLINE uint8x16 get_4_bytes(uint8_t* dst) {
+static WEBP_INLINE uint8x16 get_4_bytes(const uint8_t* src) {
   uint8x16 a;
-  memcpy(&a, dst, 4);
+  memcpy(&a, src, 4);
   return a;
 }
 
@@ -100,7 +100,7 @@ static WEBP_INLINE int32x4 _unpackhi_epi64(const int32x4 a, const int32x4 b) {
   return __builtin_shufflevector(a, b, 2, 3, 6, 7);
 }
 
-static WEBP_INLINE int16x8 _mulhi_int16x8(int16x8 in, int32x4 k) {
+static WEBP_INLINE int16x8 _mulhi_int16x8(const int16x8 in, const int32x4 k) {
   const int16x8 zero = (int16x8){0, 0, 0, 0, 0, 0, 0, 0};
   const int32x4 sixteen = (int32x4){16, 16, 16, 16};
   // Put in upper 16 bits so we can preserve the sign
@@ -116,7 +116,7 @@ static WEBP_INLINE int16x8 _mulhi_int16x8(int16x8 in, int32x4 k) {
   return res;
 }
 
-static WEBP_INLINE uint8x16 int16x8_to_uint8x16_sat(int16x8 x) {
+static WEBP_INLINE uint8x16 int16x8_to_uint8x16_sat(const int16x8 x) {
   const uint8x16 k00ff00ff =
       (uint8x16){-1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0};
   const int16x8 fifteen = (int16x8){15, 15, 15, 15, 15, 15, 15, 15};
