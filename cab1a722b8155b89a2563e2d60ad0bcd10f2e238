@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06d7e989_6c0edadf",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 683,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-07-08T04:50:45Z",
+      "side": 1,
+      "message": "this formatting is common to webp, but out of sync with the clang-formatted defines above",
+      "revId": "cab1a722b8155b89a2563e2d60ad0bcd10f2e238",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6bc1e257_ccb9f5c7",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 698,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-07-08T04:50:45Z",
+      "side": 1,
+      "message": "seems we were inconsistent with do {} while (0) in the sse2 code",
+      "revId": "cab1a722b8155b89a2563e2d60ad0bcd10f2e238",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
