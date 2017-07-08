@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aec3b35c_967f7524",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-07-08T04:53:01Z",
+      "side": 1,
+      "message": "this could go, unless you wanted to leave a comment about a nice to have intrinsic",
+      "revId": "ea331f254f88b349798bfd042a61bdfde5bd829a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
