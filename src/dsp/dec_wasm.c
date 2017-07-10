@@ -131,6 +131,20 @@ static WEBP_INLINE uint8x16 int16x8_to_uint8x16_sat(const int16x8 x) {
   return final;
 }
 
+// int16 to int8 with saturation.
+static WEBP_INLINE int8x16 int16x8_to_int8x16_sat(const int16x8 x) {
+  const int16x8 k7f = splat_int16(0x007f);
+  const int16x8 kff80 = splat_int16(0xff80);
+  const int16x8 s1 = (x < k7f);
+  const int16x8 a = (s1 & x) | (~s1 & k7f);
+  const int16x8 s2 = (a > kff80);
+  const int16x8 a2 = (s2 & a) | (~s2 & kff80);
+  const int8x16 final = (int8x16)__builtin_shufflevector(
+      (int8x16)a2, (int8x16)a2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24,
+      26, 28, 30);
+  return final;
+}
+
 //------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
 
@@ -317,26 +331,83 @@ static void Transform(const int16_t* in, uint8_t* dst, int do_two) {
     {i8x16,i16x8}.{add,sub}_saturate_[su].
 */
 
+// For testing purposes.
+// #define ENABLE_X86_BUILTIN_ADDSUB_SAT
+
 static WEBP_INLINE uint8x16 uint8x16_add_sat(const uint8x16 a,
                                              const uint8x16 b) {
-  // TODO(slavarnway): add generic implementation for non-x86
+#if ENABLE_X86_BUILTIN_ADDSUB_SAT
   return (uint8x16)__builtin_ia32_paddusb128(a, b);
+#else
+  // Generic implementation for non-x86
+  const uint8x16 zero = splat_uint8(0);
+  const uint16x8 a_lo = _unpacklo_epi8(a, zero);
+  const uint16x8 a_hi = _unpackhi_epi8(a, zero);
+  const uint16x8 b_lo = _unpacklo_epi8(b, zero);
+  const uint16x8 b_hi = _unpackhi_epi8(b, zero);
+  const uint16x8 sum_lo = a_lo + b_lo;
+  const uint16x8 sum_hi = a_hi + b_hi;
+  const uint8x16 usat_lo = int16x8_to_uint8x16_sat(sum_lo);
+  const uint8x16 usat_hi = int16x8_to_uint8x16_sat(sum_hi);
+  return _unpacklo_epi64(usat_lo, usat_hi);
+#endif
 }
 
 static WEBP_INLINE int8x16 int8x16_add_sat(const int8x16 a, const int8x16 b) {
-  // TODO(slavarnway): add generic implementation for non-x86
+#if ENABLE_X86_BUILTIN_ADDSUB_SAT
   return (int8x16)__builtin_ia32_paddsb128(a, b);
+#else
+  // Generic implementation for non-x86
+  const int8x16 zero = splat_uint8(0);
+  const int16x8 eight = splat_int16(8);
+  const int16x8 a_lo = _unpacklo_epi8(zero, a) >> eight;
+  const int16x8 a_hi = _unpackhi_epi8(zero, a) >> eight;
+  const int16x8 b_lo = _unpacklo_epi8(zero, b) >> eight;
+  const int16x8 b_hi = _unpackhi_epi8(zero, b) >> eight;
+  const int16x8 sum_lo = a_lo + b_lo;
+  const int16x8 sum_hi = a_hi + b_hi;
+  const int8x16 sat_lo = int16x8_to_int8x16_sat(sum_lo);
+  const int8x16 sat_hi = int16x8_to_int8x16_sat(sum_hi);
+  return _unpacklo_epi64(sat_lo, sat_hi);
+#endif
 }
 
 static WEBP_INLINE uint8x16 uint8x16_sub_sat(const uint8x16 a,
                                              const uint8x16 b) {
-  // TODO(slavarnway): add generic implementation for non-x86
+#if ENABLE_X86_BUILTIN_ADDSUB_SAT
   return (uint8x16)__builtin_ia32_psubusb128(a, b);
+#else
+  // Generic implementation for non-x86
+  const uint8x16 zero = splat_uint8(0);
+  const uint16x8 a_lo = _unpacklo_epi8(a, zero);
+  const uint16x8 a_hi = _unpackhi_epi8(a, zero);
+  const uint16x8 b_lo = _unpacklo_epi8(b, zero);
+  const uint16x8 b_hi = _unpackhi_epi8(b, zero);
+  const uint16x8 diff_lo = a_lo - b_lo;
+  const uint16x8 diff_hi = a_hi - b_hi;
+  const uint8x16 usat_lo = int16x8_to_uint8x16_sat(diff_lo);
+  const uint8x16 usat_hi = int16x8_to_uint8x16_sat(diff_hi);
+  return _unpacklo_epi64(usat_lo, usat_hi);
+#endif
 }
 
 static WEBP_INLINE int8x16 int8x16_sub_sat(const int8x16 a, const int8x16 b) {
-  // TODO(slavarnway): add generic implementation for non-x86
+#if ENABLE_X86_BUILTIN_ADDSUB_SAT
   return (int8x16)__builtin_ia32_psubsb128(a, b);
+#else
+  // Generic implementation for non-x86
+  const int8x16 zero = splat_uint8(0);
+  const int16x8 eight = splat_int16(8);
+  const int16x8 a_lo = _unpacklo_epi8(zero, a) >> eight;
+  const int16x8 a_hi = _unpackhi_epi8(zero, a) >> eight;
+  const int16x8 b_lo = _unpacklo_epi8(zero, b) >> eight;
+  const int16x8 b_hi = _unpackhi_epi8(zero, b) >> eight;
+  const int16x8 diff_lo = a_lo - b_lo;
+  const int16x8 diff_hi = a_hi - b_hi;
+  const int8x16 sat_lo = int16x8_to_int8x16_sat(diff_lo);
+  const int8x16 sat_hi = int16x8_to_int8x16_sat(diff_hi);
+  return _unpacklo_epi64(sat_lo, sat_hi);
+#endif
 }
 
 static WEBP_INLINE uint8x16 _max_u8x16(const uint8x16 a, const uint8x16 b) {
