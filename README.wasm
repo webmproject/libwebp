@@ -1,0 +1,49 @@
+Description:
+============
+
+This file describes the compilation of libwebp using portable intrinsics /
+WebAssembly (wasm) to native targets using clang and CMake.
+
+Prerequisites:
+==============
+
+- cmake 2.8+
+
+- clang 3.9+ for portable intrinsics support; as wasm progresses a tip of tree
+  build may be necessary.
+
+Building:
+=========
+
+ - configure the project with CMake using:
+
+ $ mkdir -p build && \
+   cd build && \
+   cmake -DWEBP_BUILD_DWEBP=1 -DCMAKE_C_COMPILER=clang -DWEBP_ENABLE_WASM=1 ../
+
+ - compile dwebp using 'make'.
+
+ - Note this currently generates native executables only and is incompatible
+   with -DWEBP_BUILD_WEBP_JS.
+
+Cross compilation:
+==================
+
+ - arm toolchains can be obtained from:
+   http://www.linaro.org/downloads/
+
+armv7:
+------
+ $ gcc_arm=/opt/gcc-arm; target=arm-linux-gnueabihf
+
+ $ cmake -DWEBP_BUILD_DWEBP=1 -DCMAKE_C_COMPILER=clang -DWEBP_ENABLE_WASM=1 \
+   -DCMAKE_C_FLAGS="--target=$target --gcc-toolchain=$gcc_arm --sysroot=$gcc_arm/$target/libc" \
+   -DCMAKE_PREFIX_PATH=$gcc_arm/$target/libc/usr
+
+aarch64 / arm64:
+----------------
+ $ gcc_arm=/opt/gcc-aarch64; target=aarch64-linux-gnu
+
+ $ cmake .. -DWEBP_BUILD_DWEBP=ON -DCMAKE_C_COMPILER=clang \
+   -DCMAKE_C_FLAGS="--target=$target --gcc-toolchain=$gcc_arm --sysroot=$gcc_arm/$target/libc" \
+   -DCMAKE_PREFIX_PATH=$gcc_arm/$target/libc/usr
