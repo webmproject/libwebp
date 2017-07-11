@@ -423,34 +423,18 @@ static WEBP_INLINE int8x16 abs_diff(int8x16 p, int8x16 q) {
 }
 
 // int16 to int8 with saturation.
-static inline int8x16 _pack_sw_2_sb(const int16x8 lo, const int16x8 hi) {
-#if 1
-  const int16x8 k7f = splat_int16(0x007f);
-  const int16x8 kff80 = splat_int16(0xff80);
-  const int16x8 s1_lo = (lo < k7f);
-  const int16x8 a_lo = (s1_lo & lo) | (~s1_lo & k7f);
-  const int16x8 s2_lo = (a_lo > kff80);
-  const int16x8 a2_lo = (s2_lo & a_lo) | (~s2_lo & kff80);
-  const int16x8 s1_hi = (hi < k7f);
-  const int16x8 a_hi = (s1_hi & hi) | (~s1_hi & k7f);
-  const int16x8 s2_hi = (a_hi > kff80);
-  const int16x8 a2_hi = (s2_hi & a_hi) | (~s2_hi & kff80);
-  return (int8x16)__builtin_shufflevector((int8x16)a2_lo, (int8x16)a2_hi, 0, 2,
-                                          4, 6, 8, 10, 12, 14, 16, 18, 20, 22,
-                                          24, 26, 28, 30);
-#else
-  return (int8x16)__builtin_ia32_packsswb128(lo, hi);
-#endif
+static WEBP_INLINE int8x16 _pack_sw_2_sb(const int16x8 lo, const int16x8 hi) {
+  const int8x16 sat_lo = int16x8_to_int8x16_sat(lo);
+  const int8x16 sat_hi = int16x8_to_int8x16_sat(hi);
+  return _unpacklo_epi64(sat_lo, sat_hi);
 }
 
 // Shift each byte of "x" by 3 bits while preserving by the sign bit.
 static WEBP_INLINE void SignedShift8b(int8x16* const x) {
   const int8x16 zero = {0};
   const int16x8 eleven = splat_int16(3 + 8);
-  const int16x8 lo_0 = (int16x8)__builtin_shufflevector(
-      *x, zero, 16, 0, 16, 1, 16, 2, 16, 3, 16, 4, 16, 5, 16, 6, 16, 7);
-  const int16x8 hi_0 = (int16x8)__builtin_shufflevector(
-      *x, zero, 16, 8, 16, 9, 16, 10, 16, 11, 16, 12, 16, 13, 16, 14, 16, 15);
+  const int16x8 lo_0 = _unpacklo_epi8(zero, *x);
+  const int16x8 hi_0 = _unpackhi_epi8(zero, *x);
   const int16x8 lo_1 = lo_0 >> eleven;
   const int16x8 hi_1 = hi_0 >> eleven;
   *x = _pack_sw_2_sb(lo_1, hi_1);
