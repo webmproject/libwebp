@@ -26,7 +26,6 @@
 #define MAX_ENTROPY    (1e30f)
 
 // 1M window (4M bytes) minus 120 special codes for short distances.
-#define WINDOW_SIZE_BITS 20
 #define WINDOW_SIZE ((1 << WINDOW_SIZE_BITS) - 120)
 
 // Minimum number of pixels for which it is cheaper to encode a
