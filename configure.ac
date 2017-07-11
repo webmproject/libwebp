@@ -440,12 +440,12 @@ AS_IF([test "x$enable_sdl" != "xno"], [
   CLEAR_LIBVARS([SDL])
   WITHLIB_OPTION([sdl], [SDL])
 
-  $sdl_header = "no";
+  sdl_header="no"
   LIBCHECK_PROLOGUE([SDL])
   AC_CHECK_HEADER([SDL/SDL.h], [sdl_header="SDL_SDL.h"],
                   [AC_CHECK_HEADER([SDL.h], [sdl_header="SDL.h"],
                   [AC_MSG_WARN(SDL library not available - no sdl.h)])])
-  if test x"$sdl_header" != "xno" ; then
+  if test x"$sdl_header" != "xno"; then
     AC_CHECK_LIB(SDL, SDL_Init,
                  [SDL_LIBS="-lSDL"
                   SDL_INCLUDES="-DWEBP_HAVE_SDL"
@@ -454,14 +454,14 @@ AS_IF([test "x$enable_sdl" != "xno"], [
                   sdl_support=yes
                  ],
                  AC_MSG_WARN(Optional SDL library not found),
-                 [$MATH_LIBS]),
-    if test x"$sdl_header" == "xSDL.h" ; then
+                 [$MATH_LIBS])
+    if test x"$sdl_header" = "xSDL.h"; then
       SDL_INCLUDES="$SDL_INCLUDES -DWEBP_HAVE_JUST_SDL_H"
     fi
   fi
   LIBCHECK_EPILOGUE([SDL])
 
-  if test "$sdl_support" = "yes" ; then
+  if test "$sdl_support" = "yes"; then
     build_vwebp_sdl=yes
   fi
 ])
