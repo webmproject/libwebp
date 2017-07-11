@@ -104,10 +104,8 @@ static WEBP_INLINE int16x8 _mulhi_int16x8(const int16x8 in, const int32x4 k) {
   const int16x8 zero = (int16x8){0, 0, 0, 0, 0, 0, 0, 0};
   const int32x4 sixteen = (int32x4){16, 16, 16, 16};
   // Put in upper 16 bits so we can preserve the sign
-  const int32x4 in_lo =
-      (int32x4)__builtin_shufflevector(in, zero, 8, 0, 8, 1, 8, 2, 8, 3);
-  const int32x4 in_hi =
-      (int32x4)__builtin_shufflevector(in, zero, 8, 4, 8, 5, 8, 6, 8, 7);
+  const int32x4 in_lo = (int32x4)_unpacklo_epi16(zero, in);
+  const int32x4 in_hi = (int32x4)_unpackhi_epi16(zero, in);
   const int32x4 _lo = (in_lo >> sixteen) * k;
   const int32x4 _hi = (in_hi >> sixteen) * k;
   // only keep the upper 16 bits
@@ -621,12 +619,8 @@ static WEBP_INLINE void DoFilter6(int8x16* const p2, int8x16* const p1,
 
     const int16x8 m = not_hev & *mask;
     const int16x8 f = a & m;
-    const int16x8 f_lo =
-        (int16x8)__builtin_shufflevector((int8x16)f, zero, 16, 0, 16, 1, 16, 2,
-                                         16, 3, 16, 4, 16, 5, 16, 6, 16, 7);
-    const int16x8 f_hi = (int16x8)__builtin_shufflevector(
-        (int8x16)f, zero, 16, 8, 16, 9, 16, 10, 16, 11, 16, 12, 16, 13, 16, 14,
-        16, 15);
+    const int16x8 f_lo = (int16x8)_unpacklo_epi8(zero, f);
+    const int16x8 f_hi = (int16x8)_unpackhi_epi8(zero, f);
 
     const int16x8 f9_lo = _mulhi_int16x8(f_lo, k9);  // Filter (lo) * 9
     const int16x8 f9_hi = _mulhi_int16x8(f_hi, k9);  // Filter (hi) * 9
@@ -1250,8 +1244,7 @@ static void TrueMotion(uint8_t* dst, uint32_t size) {
           (uint8x16)int16x8_to_uint8x16_sat(base + top_base_0);
       const uint8x16 out_1 =
           (uint8x16)int16x8_to_uint8x16_sat(base + top_base_1);
-      const uint8x16 out = (uint8x16)__builtin_shufflevector(
-          out_0, out_1, 0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23);
+      const uint8x16 out = _unpacklo_epi64(out_0, out_1);
       memcpy(dst, &out, 16);
     }
   }
