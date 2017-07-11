@@ -93,7 +93,7 @@ extern "C" {
 #define WEBP_USE_MIPS32
 #if (__mips_isa_rev >= 2)
 #define WEBP_USE_MIPS32_R2
-#if defined(__mips_dspr2) || (__mips_dsp_rev >= 2)
+#if defined(__mips_dspr2) || (defined(__mips_dsp_rev) && __mips_dsp_rev >= 2)
 #define WEBP_USE_MIPS_DSP_R2
 #endif
 #endif
