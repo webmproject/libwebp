@@ -336,7 +336,7 @@ static void Transform(const int16_t* in, uint8_t* dst, int do_two) {
 
 static WEBP_INLINE uint8x16 uint8x16_add_sat(const uint8x16 a,
                                              const uint8x16 b) {
-#if ENABLE_X86_BUILTIN_ADDSUB_SAT
+#ifdef ENABLE_X86_BUILTIN_ADDSUB_SAT
   return (uint8x16)__builtin_ia32_paddusb128(a, b);
 #else
   // Generic implementation for non-x86
@@ -354,7 +354,7 @@ static WEBP_INLINE uint8x16 uint8x16_add_sat(const uint8x16 a,
 }
 
 static WEBP_INLINE int8x16 int8x16_add_sat(const int8x16 a, const int8x16 b) {
-#if ENABLE_X86_BUILTIN_ADDSUB_SAT
+#ifdef ENABLE_X86_BUILTIN_ADDSUB_SAT
   return (int8x16)__builtin_ia32_paddsb128(a, b);
 #else
   // Generic implementation for non-x86
@@ -374,7 +374,7 @@ static WEBP_INLINE int8x16 int8x16_add_sat(const int8x16 a, const int8x16 b) {
 
 static WEBP_INLINE uint8x16 uint8x16_sub_sat(const uint8x16 a,
                                              const uint8x16 b) {
-#if ENABLE_X86_BUILTIN_ADDSUB_SAT
+#ifdef ENABLE_X86_BUILTIN_ADDSUB_SAT
   return (uint8x16)__builtin_ia32_psubusb128(a, b);
 #else
   // Generic implementation for non-x86
@@ -392,7 +392,7 @@ static WEBP_INLINE uint8x16 uint8x16_sub_sat(const uint8x16 a,
 }
 
 static WEBP_INLINE int8x16 int8x16_sub_sat(const int8x16 a, const int8x16 b) {
-#if ENABLE_X86_BUILTIN_ADDSUB_SAT
+#ifdef ENABLE_X86_BUILTIN_ADDSUB_SAT
   return (int8x16)__builtin_ia32_psubsb128(a, b);
 #else
   // Generic implementation for non-x86
