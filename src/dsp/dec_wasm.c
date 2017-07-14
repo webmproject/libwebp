@@ -332,10 +332,18 @@ static void Transform(const int16_t* in, uint8_t* dst, int do_two) {
 // For testing purposes.
 // #define ENABLE_X86_BUILTIN_ADDSUB_SAT
 
+#if defined(__aarch64__)
+// For now, this only works for aarch64
+// TODO(slavarnway): Find a workaround for the ICE when using clang-3.9.1
+#define ENABLE_NEON_BUILTIN_ADDSUB_SAT
+#endif
+
 static WEBP_INLINE uint8x16 uint8x16_add_sat(const uint8x16 a,
                                              const uint8x16 b) {
-#ifdef ENABLE_X86_BUILTIN_ADDSUB_SAT
+#if defined(ENABLE_X86_BUILTIN_ADDSUB_SAT)
   return (uint8x16)__builtin_ia32_paddusb128(a, b);
+#elif defined(ENABLE_NEON_BUILTIN_ADDSUB_SAT)
+  return (uint8x16)__builtin_neon_vqaddq_v(a, b, 48);
 #else
   // Generic implementation for non-x86
   const uint8x16 zero = splat_uint8(0);
@@ -352,8 +360,10 @@ static WEBP_INLINE uint8x16 uint8x16_add_sat(const uint8x16 a,
 }
 
 static WEBP_INLINE int8x16 int8x16_add_sat(const int8x16 a, const int8x16 b) {
-#ifdef ENABLE_X86_BUILTIN_ADDSUB_SAT
+#if defined(ENABLE_X86_BUILTIN_ADDSUB_SAT)
   return (int8x16)__builtin_ia32_paddsb128(a, b);
+#elif defined(ENABLE_NEON_BUILTIN_ADDSUB_SAT)
+  return (int8x16)__builtin_neon_vqaddq_v(a, b, 32);
 #else
   // Generic implementation for non-x86
   const int8x16 zero = splat_uint8(0);
@@ -372,8 +382,10 @@ static WEBP_INLINE int8x16 int8x16_add_sat(const int8x16 a, const int8x16 b) {
 
 static WEBP_INLINE uint8x16 uint8x16_sub_sat(const uint8x16 a,
                                              const uint8x16 b) {
-#ifdef ENABLE_X86_BUILTIN_ADDSUB_SAT
+#if defined(ENABLE_X86_BUILTIN_ADDSUB_SAT)
   return (uint8x16)__builtin_ia32_psubusb128(a, b);
+#elif defined(ENABLE_NEON_BUILTIN_ADDSUB_SAT)
+  return  (int8x16)__builtin_neon_vqsubq_v(a, b, 48);
 #else
   // Generic implementation for non-x86
   const uint8x16 zero = splat_uint8(0);
@@ -390,8 +402,10 @@ static WEBP_INLINE uint8x16 uint8x16_sub_sat(const uint8x16 a,
 }
 
 static WEBP_INLINE int8x16 int8x16_sub_sat(const int8x16 a, const int8x16 b) {
-#ifdef ENABLE_X86_BUILTIN_ADDSUB_SAT
+#if defined(ENABLE_X86_BUILTIN_ADDSUB_SAT)
   return (int8x16)__builtin_ia32_psubsb128(a, b);
+#elif defined(ENABLE_NEON_BUILTIN_ADDSUB_SAT)
+  return  (int8x16)__builtin_neon_vqsubq_v(a, b, 32);
 #else
   // Generic implementation for non-x86
   const int8x16 zero = splat_uint8(0);
