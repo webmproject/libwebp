@@ -329,8 +329,9 @@ static void Transform(const int16_t* in, uint8_t* dst, int do_two) {
     {i8x16,i16x8}.{add,sub}_saturate_[su].
 */
 
-// For testing purposes.
-// #define ENABLE_X86_BUILTIN_ADDSUB_SAT
+#if defined(__i386__) || defined(__x86_64__)
+#define ENABLE_X86_BUILTIN_ADDSUB_SAT
+#endif
 
 #if defined(__aarch64__)
 // For now, this only works for aarch64
