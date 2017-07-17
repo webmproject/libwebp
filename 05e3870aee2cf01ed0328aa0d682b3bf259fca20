@@ -16,6 +16,24 @@
       "revId": "05e3870aee2cf01ed0328aa0d682b3bf259fca20",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c59f7c41_9785233f",
+        "filename": "README.wasm",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-07-17T23:06:08Z",
+      "side": 1,
+      "message": "hmm. maybe that has something to do with:\nhttps://chromium-review.googlesource.com/c/575517/\nI think I had a #if 1 on one side.",
+      "parentUuid": "42e746c7_0cb72483",
+      "revId": "05e3870aee2cf01ed0328aa0d682b3bf259fca20",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
