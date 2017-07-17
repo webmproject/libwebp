@@ -36,14 +36,14 @@ armv7:
 ------
  $ gcc_arm=/opt/gcc-arm; target=arm-linux-gnueabihf
 
- $ cmake -DWEBP_BUILD_DWEBP=1 -DCMAKE_C_COMPILER=clang -DWEBP_ENABLE_WASM=1 \
-   -DCMAKE_C_FLAGS="--target=$target --gcc-toolchain=$gcc_arm --sysroot=$gcc_arm/$target/libc" \
+ $ cmake .. -DWEBP_BUILD_DWEBP=1 -DCMAKE_C_COMPILER=clang -DWEBP_ENABLE_WASM=1 \
+   -DCMAKE_C_FLAGS="--target=$target --gcc-toolchain=$gcc_arm --sysroot=$gcc_arm/$target/libc -march=armv7-a -mfpu=neon" \
    -DCMAKE_PREFIX_PATH=$gcc_arm/$target/libc/usr
 
 aarch64 / arm64:
 ----------------
  $ gcc_arm=/opt/gcc-aarch64; target=aarch64-linux-gnu
 
- $ cmake .. -DWEBP_BUILD_DWEBP=ON -DCMAKE_C_COMPILER=clang \
+ $ cmake .. -DWEBP_BUILD_DWEBP=1 -DCMAKE_C_COMPILER=clang -DWEBP_ENABLE_WASM=1 \
    -DCMAKE_C_FLAGS="--target=$target --gcc-toolchain=$gcc_arm --sysroot=$gcc_arm/$target/libc" \
    -DCMAKE_PREFIX_PATH=$gcc_arm/$target/libc/usr
