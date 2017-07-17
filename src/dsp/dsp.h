@@ -73,7 +73,7 @@ extern "C" {
 #endif
 
 #if defined(__ANDROID__) && defined(__ARM_ARCH_7A__)
-#define WEBP_ANDROID_NEON  // Android targets that might support NEON
+// #define WEBP_ANDROID_NEON  // Android targets that might support NEON
 #endif
 
 // The intrinsics currently cause compiler errors with arm-nacl-gcc and the
