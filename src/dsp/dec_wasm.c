@@ -333,9 +333,7 @@ static void Transform(const int16_t* in, uint8_t* dst, int do_two) {
 #define ENABLE_X86_BUILTIN_ADDSUB_SAT
 #endif
 
-#if defined(__aarch64__)
-// For now, this only works for aarch64
-// TODO(slavarnway): Find a workaround for the ICE when using clang-3.9.1
+#if defined(__ARM_NEON__) || defined(__aarch64__)
 #define ENABLE_NEON_BUILTIN_ADDSUB_SAT
 #endif
 
