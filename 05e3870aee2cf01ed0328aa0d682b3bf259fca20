@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42e746c7_0cb72483",
+        "filename": "README.wasm",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1000882
+      },
+      "writtenOn": "2017-07-17T22:39:46Z",
+      "side": 1,
+      "message": "I had to add -mfpu\u003dneon here to get past the ICE when using the neon builtins.  We can update in a future commit.",
+      "revId": "05e3870aee2cf01ed0328aa0d682b3bf259fca20",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
