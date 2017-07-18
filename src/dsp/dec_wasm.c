@@ -384,7 +384,7 @@ static WEBP_INLINE uint8x16 uint8x16_sub_sat(const uint8x16 a,
 #if defined(ENABLE_X86_BUILTIN_ADDSUB_SAT)
   return (uint8x16)__builtin_ia32_psubusb128(a, b);
 #elif defined(ENABLE_NEON_BUILTIN_ADDSUB_SAT)
-  return  (int8x16)__builtin_neon_vqsubq_v(a, b, 48);
+  return (int8x16)__builtin_neon_vqsubq_v(a, b, 48);
 #else
   // Generic implementation for non-x86
   const uint8x16 zero = splat_uint8(0);
@@ -404,7 +404,7 @@ static WEBP_INLINE int8x16 int8x16_sub_sat(const int8x16 a, const int8x16 b) {
 #if defined(ENABLE_X86_BUILTIN_ADDSUB_SAT)
   return (int8x16)__builtin_ia32_psubsb128(a, b);
 #elif defined(ENABLE_NEON_BUILTIN_ADDSUB_SAT)
-  return  (int8x16)__builtin_neon_vqsubq_v(a, b, 32);
+  return (int8x16)__builtin_neon_vqsubq_v(a, b, 32);
 #else
   // Generic implementation for non-x86
   const int8x16 zero = splat_uint8(0);
@@ -434,7 +434,8 @@ static WEBP_INLINE int8x16 abs_diff(int8x16 p, int8x16 q) {
 }
 
 // int16 to int8 with saturation.
-static WEBP_INLINE int8x16 _pack_sw_2_sb(const int16x8 lo, const int16x8 hi) {
+static WEBP_INLINE int8x16 _pack_epi16_to_epi8(const int16x8 lo,
+                                               const int16x8 hi) {
   const int8x16 sat_lo = int16x8_to_int8x16_sat(lo);
   const int8x16 sat_hi = int16x8_to_int8x16_sat(hi);
   return _unpacklo_epi64(sat_lo, sat_hi);
@@ -448,7 +449,7 @@ static WEBP_INLINE void SignedShift8b(int8x16* const x) {
   const int16x8 hi_0 = _unpackhi_epi8(zero, *x);
   const int16x8 lo_1 = lo_0 >> eleven;
   const int16x8 hi_1 = hi_0 >> eleven;
-  *x = _pack_sw_2_sb(lo_1, hi_1);
+  *x = _pack_epi16_to_epi8(lo_1, hi_1);
 }
 
 #define FLIP_SIGN_BIT2(a, b) \
@@ -516,7 +517,7 @@ static WEBP_INLINE void Update2Pixels(int8x16* const pi, int8x16* const qi,
   const int16x8 _7 = splat_int16(7);
   const int16x8 a1_lo = *a0_lo >> _7;
   const int16x8 a1_hi = *a0_hi >> _7;
-  const int8x16 delta = _pack_sw_2_sb(a1_lo, a1_hi);
+  const int8x16 delta = _pack_epi16_to_epi8(a1_lo, a1_hi);
   const int8x16 sign_bit = (int8x16)splat_uint8(0x80);
   *pi = int8x16_add_sat(*pi, delta);
   *qi = int8x16_sub_sat(*qi, delta);
