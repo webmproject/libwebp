@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e9442ce6_d6f5e20e",
+        "filename": "README.wasm",
+        "patchSetId": 2
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-07-18T18:08:08Z",
+      "side": 1,
+      "message": "doesn\u0027t seem to matter here, but I think armv7-a is the canonical form (clang is fine with both, not sure about gcc)",
+      "range": {
+        "startLine": 40,
+        "startChar": 101,
+        "endLine": 40,
+        "endChar": 107
+      },
+      "revId": "64aa35cc7562ffdbb63f73a1d11ab301d797cef9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
