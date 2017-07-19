@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "690b1dd9_487b0b91",
+        "filename": "README.wasm",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-07-19T19:49:33Z",
+      "side": 1,
+      "message": "just normalized the whitespace here",
+      "revId": "17d3c64d6f84cc5cbb9350bd52f43d8ae8a66f1b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
