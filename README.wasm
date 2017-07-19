@@ -32,18 +32,53 @@ Cross compilation:
  - arm toolchains can be obtained from:
    http://www.linaro.org/downloads/
 
+ - the android ndk can be obtained from:
+   https://developer.android.com/ndk/downloads/index.html
+
 armv7:
 ------
- $ gcc_arm=/opt/gcc-arm; target=arm-linux-gnueabihf
 
- $ cmake .. -DWEBP_BUILD_DWEBP=1 -DCMAKE_C_COMPILER=clang -DWEBP_ENABLE_WASM=1 \
+Android:
+ $ ./android-ndk-r15b/build/tools/make_standalone_toolchain.py \
+   --arch arm --api 24 --stl gnustl --install-dir /opt/android-arm-24
+ $ mkdir -p build && cd build
+ $ cmake ../libwebp \
+   -DWEBP_BUILD_DWEBP=1 \
+   -DCMAKE_C_COMPILER=/opt/android-arm-24/bin/clang \
+   -DCMAKE_PREFIX_PATH=/opt/android-arm-24/sysroot/usr/lib \
+   -DCMAKE_C_FLAGS=-fPIE \
+   -DCMAKE_EXE_LINKER_FLAGS=-Wl,-pie \
+   -DCMAKE_BUILD_TYPE=Release \
+   -DWEBP_ENABLE_WASM=1
+
+Linux:
+ $ gcc_arm=/opt/gcc-arm; target=arm-linux-gnueabihf
+ $ mkdir -p build && cd build
+ $ cmake ../libwebp -DWEBP_BUILD_DWEBP=1 -DWEBP_ENABLE_WASM=1 \
+   -DCMAKE_C_COMPILER=clang \
    -DCMAKE_C_FLAGS="--target=$target --gcc-toolchain=$gcc_arm --sysroot=$gcc_arm/$target/libc -march=armv7-a -mfpu=neon" \
    -DCMAKE_PREFIX_PATH=$gcc_arm/$target/libc/usr
 
 aarch64 / arm64:
 ----------------
- $ gcc_arm=/opt/gcc-aarch64; target=aarch64-linux-gnu
 
- $ cmake .. -DWEBP_BUILD_DWEBP=1 -DCMAKE_C_COMPILER=clang -DWEBP_ENABLE_WASM=1 \
+Android:
+ $ ./android-ndk-r15b/build/tools/make_standalone_toolchain.py \
+   --arch arm64 --api 24 --stl gnustl --install-dir /opt/android-arm64-24
+ $ mkdir -p build && cd build
+ $ cmake ../libwebp \
+   -DWEBP_BUILD_DWEBP=1 \
+   -DCMAKE_C_COMPILER=/opt/android-arm64-24/bin/clang \
+   -DCMAKE_PREFIX_PATH=/opt/android-arm64-24/sysroot/usr/lib \
+   -DCMAKE_C_FLAGS=-fPIE \
+   -DCMAKE_EXE_LINKER_FLAGS=-Wl,-pie \
+   -DCMAKE_BUILD_TYPE=Release \
+   -DWEBP_ENABLE_WASM=1
+
+Linux:
+ $ gcc_arm=/opt/gcc-aarch64; target=aarch64-linux-gnu
+ $ mkdir -p build && cd build
+ $ cmake ../libwebp -DWEBP_BUILD_DWEBP=1 -DWEBP_ENABLE_WASM=1 \
+   -DCMAKE_C_COMPILER=clang \
    -DCMAKE_C_FLAGS="--target=$target --gcc-toolchain=$gcc_arm --sysroot=$gcc_arm/$target/libc" \
    -DCMAKE_PREFIX_PATH=$gcc_arm/$target/libc/usr
