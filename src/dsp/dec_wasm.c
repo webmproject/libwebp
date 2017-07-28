@@ -100,7 +100,19 @@ static WEBP_INLINE int32x4 _unpackhi_epi64(const int32x4 a, const int32x4 b) {
   return __builtin_shufflevector(a, b, 2, 3, 6, 7);
 }
 
+/*
+  Replace _mulhi_int16x8() with builtins. For performance testing.
+*/
+
+#if defined(__i386__) || defined(__x86_64__)
+//  #define ENABLE_X86_BUILTIN_MULHI_INT16X8
+#endif
+
 static WEBP_INLINE int16x8 _mulhi_int16x8(const int16x8 in, const int32x4 k) {
+#if defined(ENABLE_X86_BUILTIN_MULHI_INT16X8)
+  const int16x8 k_16bit = splat_int16(k[0]);
+  return (int16x8)__builtin_ia32_pmulhw128(in, k_16bit);
+#else
   const int16x8 zero = (int16x8){0, 0, 0, 0, 0, 0, 0, 0};
   const int32x4 sixteen = (int32x4){16, 16, 16, 16};
   // Put in upper 16 bits so we can preserve the sign
@@ -112,6 +124,7 @@ static WEBP_INLINE int16x8 _mulhi_int16x8(const int16x8 in, const int32x4 k) {
   const int16x8 res = (int16x8)__builtin_shufflevector(
       (int16x8)_lo, (int16x8)_hi, 1, 3, 5, 7, 9, 11, 13, 15);
   return res;
+#endif
 }
 
 static WEBP_INLINE uint8x16 int16x8_to_uint8x16_sat(const int16x8 x) {
@@ -183,8 +196,29 @@ static WEBP_INLINE void VP8Transpose_2_4x4_16b(
 }
 
 static void Transform(const int16_t* in, uint8_t* dst, int do_two) {
+#if defined(ENABLE_X86_BUILTIN_MULHI_INT16X8)
+  // This implementation makes use of 16-bit fixed point versions of two
+  // multiply constants:
+  //    K1 = sqrt(2) * cos (pi/8) ~= 85627 / 2^16
+  //    K2 = sqrt(2) * sin (pi/8) ~= 35468 / 2^16
+  //
+  // To be able to use signed 16-bit integers, we use the following trick to
+  // have constants within range:
+  // - Associated constants are obtained by subtracting the 16-bit fixed point
+  //   version of one:
+  //      k = K - (1 << 16)  =>  K = k + (1 << 16)
+  //      K1 = 85267  =>  k1 =  20091
+  //      K2 = 35468  =>  k2 = -30068
+  // - The multiplication of a variable by a constant become the sum of the
+  //   variable and the multiplication of that variable by the associated
+  //   constant:
+  //      (x * K) >> 16 = (x * (k + (1 << 16))) >> 16 = ((x * k ) >> 16) + x
+  const int32x4 k1 = {20091, 20091, 20091, 20091};
+  const int32x4 k2 = {-30068, -30068, -30068, -30068};
+#else
   const int32x4 k1 = {20091, 20091, 20091, 20091};
   const int32x4 k2 = {35468, 35468, 35468, 35468};
+#endif
   int16x8 T0, T1, T2, T3;
 
   // Load and concatenate the transform coefficients (we'll do two transforms
@@ -220,12 +254,28 @@ static void Transform(const int16_t* in, uint8_t* dst, int do_two) {
   {
     const int16x8 a = in0 + in2;
     const int16x8 b = in0 - in2;
+
+#if defined(ENABLE_X86_BUILTIN_MULHI_INT16X8)
+    // c = MUL(in1, K2) - MUL(in3, K1) = MUL(in1, k2) - MUL(in3, k1) + in1 - in3
+    const int16x8 c1 = _mulhi_int16x8(in1, k2);
+    const int16x8 c2 = _mulhi_int16x8(in3, k1);
+    const int16x8 c3 = in1 - in3;
+    const int16x8 c4 = c1 - c2;
+    const int16x8 c = c3 + c4;
+    // d = MUL(in1, K1) + MUL(in3, K2) = MUL(in1, k1) + MUL(in3, k2) + in1 + in3
+    const int16x8 d1 = _mulhi_int16x8(in1, k1);
+    const int16x8 d2 = _mulhi_int16x8(in3, k2);
+    const int16x8 d3 = in1 + in3;
+    const int16x8 d4 = d1 + d2;
+    const int16x8 d = d3 + d4;
+#else
     const int16x8 c1 = _mulhi_int16x8(in1, k2);
     const int16x8 c2 = _mulhi_int16x8(in3, k1) + in3;
     const int16x8 c = c1 - c2;
     const int16x8 d1 = _mulhi_int16x8(in1, k1) + in1;
     const int16x8 d2 = _mulhi_int16x8(in3, k2);
     const int16x8 d = d1 + d2;
+#endif
 
     // Second pass.
     const int16x8 tmp0 = a + d;
@@ -243,12 +293,27 @@ static void Transform(const int16_t* in, uint8_t* dst, int do_two) {
     const int16x8 dc = T0 + four;
     const int16x8 a = dc + T2;
     const int16x8 b = dc - T2;
+#if defined(ENABLE_X86_BUILTIN_MULHI_INT16X8)
+    // c = MUL(T1, K2) - MUL(T3, K1) = MUL(T1, k2) - MUL(T3, k1) + T1 - T3
+    const int16x8 c1 = _mulhi_int16x8(T1, k2);
+    const int16x8 c2 = _mulhi_int16x8(T3, k1);
+    const int16x8 c3 = T1 - T3;
+    const int16x8 c4 = c1 - c2;
+    const int16x8 c = c3 + c4;
+    // d = MUL(T1, K1) + MUL(T3, K2) = MUL(T1, k1) + MUL(T3, k2) + T1 + T3
+    const int16x8 d1 = _mulhi_int16x8(T1, k1);
+    const int16x8 d2 = _mulhi_int16x8(T3, k2);
+    const int16x8 d3 = T1 + T3;
+    const int16x8 d4 = d1 + d2;
+    const int16x8 d = d3 + d4;
+#else
     const int16x8 c1 = _mulhi_int16x8(T1, k2);
     const int16x8 c2 = _mulhi_int16x8(T3, k1) + T3;
     const int16x8 c = c1 - c2;
     const int16x8 d1 = _mulhi_int16x8(T1, k1) + T1;
     const int16x8 d2 = _mulhi_int16x8(T3, k2);
     const int16x8 d = d1 + d2;
+#endif
 
     // Second pass.
     const int16x8 tmp0 = a + d;
