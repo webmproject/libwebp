@@ -612,6 +612,25 @@ static WEBP_INLINE void NeedsFilter(const int8x16* const p1,
 //------------------------------------------------------------------------------
 // Edge filtering functions
 
+// Applies filter on 2 pixels (p0 and q0)
+static WEBP_INLINE void DoFilter2(int8x16* const p1, int8x16* const p0,
+                                  int8x16* const q0, int8x16* const q1,
+                                  int thresh) {
+  int8x16 a, mask;
+  const int8x16 sign_bit = splat_uint8(0x80);
+  // convert p1/q1 to int8_t (for GetBaseDelta)
+  const int8x16 p1s = *p1 ^ sign_bit;
+  const int8x16 q1s = *q1 ^ sign_bit;
+
+  NeedsFilter(p1, p0, q0, q1, thresh, &mask);
+
+  FLIP_SIGN_BIT2(*p0, *q0);
+  GetBaseDelta(&p1s, p0, q0, &q1s, &a);
+  a = a & mask;  // mask filter values we don't care about
+  DoSimpleFilter(p0, q0, &a);
+  FLIP_SIGN_BIT2(*p0, *q0);
+}
+
 // Applies filter on 4 pixels (p1, p0, q0 and q1)
 static WEBP_INLINE void DoFilter4(int8x16* const p1, int8x16* const p0,
                                   int8x16* const q0, int8x16* const q1,
@@ -840,6 +859,51 @@ static WEBP_INLINE void Store16x4(const int8x16* const p1,
   Store4x4(&p1_s, r8, stride);
   r8 += 4 * stride;
   Store4x4(&q1_s, r8, stride);
+}
+
+//------------------------------------------------------------------------------
+// Simple In-loop filtering (Paragraph 15.2)
+
+static void SimpleVFilter16(uint8_t* p, int stride, int thresh) {
+  int8x16 p1, p0, q0, q1;
+
+  // Load
+  memcpy(&p1, &p[-2 * stride], 16);
+  memcpy(&p0, &p[-stride], 16);
+  memcpy(&q0, &p[0], 16);
+  memcpy(&q1, &p[stride], 16);
+
+  DoFilter2(&p1, &p0, &q0, &q1, thresh);
+
+  // Store
+  memcpy(&p[-stride], &p0, 16);
+  memcpy(&p[0], &q0, 16);
+}
+
+static void SimpleHFilter16(uint8_t* p, int stride, int thresh) {
+  int8x16 p1, p0, q0, q1;
+
+  p -= 2;  // beginning of p1
+
+  Load16x4(p, p + 8 * stride, stride, &p1, &p0, &q0, &q1);
+  DoFilter2(&p1, &p0, &q0, &q1, thresh);
+  Store16x4(&p1, &p0, &q0, &q1, p, p + 8 * stride, stride);
+}
+
+static void SimpleVFilter16i(uint8_t* p, int stride, int thresh) {
+  int k;
+  for (k = 3; k > 0; --k) {
+    p += 4 * stride;
+    SimpleVFilter16(p, stride, thresh);
+  }
+}
+
+static void SimpleHFilter16i(uint8_t* p, int stride, int thresh) {
+  int k;
+  for (k = 3; k > 0; --k) {
+    p += 4;
+    SimpleHFilter16(p, stride, thresh);
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -1506,6 +1570,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitWASM(void) {
   VP8HFilter16i = HFilter16i;
   VP8VFilter8i = VFilter8i;
   VP8HFilter8i = HFilter8i;
+
+  VP8SimpleVFilter16 = SimpleVFilter16;
+  VP8SimpleHFilter16 = SimpleHFilter16;
+  VP8SimpleVFilter16i = SimpleVFilter16i;
+  VP8SimpleHFilter16i = SimpleHFilter16i;
 
   VP8PredLuma4[1] = TM4;
   VP8PredLuma4[2] = VE4;
