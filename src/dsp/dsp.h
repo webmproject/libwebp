@@ -538,9 +538,9 @@ void WebPMultRows(uint8_t* ptr, int stride,
                   int width, int num_rows, int inverse);
 
 // Plain-C versions, used as fallback by some implementations.
-void WebPMultRowC(uint8_t* const ptr, const uint8_t* const alpha,
-                  int width, int inverse);
-void WebPMultARGBRowC(uint32_t* const ptr, int width, int inverse);
+void WebPMultRow_C(uint8_t* const ptr, const uint8_t* const alpha,
+                   int width, int inverse);
+void WebPMultARGBRow_C(uint32_t* const ptr, int width, int inverse);
 
 // RGB packing function. 'step' can be 3 or 4. r/g/b input is rgb or bgr order.
 extern void (*WebPPackRGB)(const uint8_t* r, const uint8_t* g, const uint8_t* b,

@@ -18,9 +18,9 @@
 
 //------------------------------------------------------------------------------
 
-static int DispatchAlpha(const uint8_t* alpha, int alpha_stride,
-                         int width, int height,
-                         uint8_t* dst, int dst_stride) {
+static int DispatchAlpha_SSE2(const uint8_t* alpha, int alpha_stride,
+                              int width, int height,
+                              uint8_t* dst, int dst_stride) {
   // alpha_and stores an 'and' operation of all the alpha[] values. The final
   // value is not 0xff if any of the alpha[] is not equal to 0xff.
   uint32_t alpha_and = 0xff;
@@ -72,9 +72,9 @@ static int DispatchAlpha(const uint8_t* alpha, int alpha_stride,
   return (alpha_and != 0xff);
 }
 
-static void DispatchAlphaToGreen(const uint8_t* alpha, int alpha_stride,
-                                 int width, int height,
-                                 uint32_t* dst, int dst_stride) {
+static void DispatchAlphaToGreen_SSE2(const uint8_t* alpha, int alpha_stride,
+                                      int width, int height,
+                                      uint32_t* dst, int dst_stride) {
   int i, j;
   const __m128i zero = _mm_setzero_si128();
   const int limit = width & ~15;
@@ -98,9 +98,9 @@ static void DispatchAlphaToGreen(const uint8_t* alpha, int alpha_stride,
   }
 }
 
-static int ExtractAlpha(const uint8_t* argb, int argb_stride,
-                        int width, int height,
-                        uint8_t* alpha, int alpha_stride) {
+static int ExtractAlpha_SSE2(const uint8_t* argb, int argb_stride,
+                             int width, int height,
+                             uint8_t* alpha, int alpha_stride) {
   // alpha_and stores an 'and' operation of all the alpha[] values. The final
   // value is not 0xff if any of the alpha[] is not equal to 0xff.
   uint32_t alpha_and = 0xff;
@@ -238,7 +238,7 @@ static void MultARGBRow_SSE2(uint32_t* const ptr, int width, int inverse) {
     }
   }
   width -= x;
-  if (width > 0) WebPMultARGBRowC(ptr + x, width, inverse);
+  if (width > 0) WebPMultARGBRow_C(ptr + x, width, inverse);
 }
 
 static void MultRow_SSE2(uint8_t* const ptr, const uint8_t* const alpha,
@@ -261,7 +261,7 @@ static void MultRow_SSE2(uint8_t* const ptr, const uint8_t* const alpha,
     }
   }
   width -= x;
-  if (width > 0) WebPMultRowC(ptr + x, alpha + x, width, inverse);
+  if (width > 0) WebPMultRow_C(ptr + x, alpha + x, width, inverse);
 }
 
 //------------------------------------------------------------------------------
@@ -273,9 +273,9 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessingSSE2(void) {
   WebPMultARGBRow = MultARGBRow_SSE2;
   WebPMultRow = MultRow_SSE2;
   WebPApplyAlphaMultiply = ApplyAlphaMultiply_SSE2;
-  WebPDispatchAlpha = DispatchAlpha;
-  WebPDispatchAlphaToGreen = DispatchAlphaToGreen;
-  WebPExtractAlpha = ExtractAlpha;
+  WebPDispatchAlpha = DispatchAlpha_SSE2;
+  WebPDispatchAlphaToGreen = DispatchAlphaToGreen_SSE2;
+  WebPExtractAlpha = ExtractAlpha_SSE2;
 }
 
 #else  // !WEBP_USE_SSE2
