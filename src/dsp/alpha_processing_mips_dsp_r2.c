@@ -16,9 +16,9 @@
 
 #if defined(WEBP_USE_MIPS_DSP_R2)
 
-static int DispatchAlpha(const uint8_t* alpha, int alpha_stride,
-                         int width, int height,
-                         uint8_t* dst, int dst_stride) {
+static int DispatchAlpha_MIPSdspR2(const uint8_t* alpha, int alpha_stride,
+                                   int width, int height,
+                                   uint8_t* dst, int dst_stride) {
   uint32_t alpha_mask = 0xffffffff;
   int i, j, temp0;
 
@@ -79,7 +79,8 @@ static int DispatchAlpha(const uint8_t* alpha, int alpha_stride,
   return (alpha_mask != 0xff);
 }
 
-static void MultARGBRow(uint32_t* const ptr, int width, int inverse) {
+static void MultARGBRow_MIPSdspR2(uint32_t* const ptr, int width,
+                                  int inverse) {
   int x;
   const uint32_t c_00ffffff = 0x00ffffffu;
   const uint32_t c_ff000000 = 0xff000000u;
@@ -169,8 +170,8 @@ static void PackRGB_MIPSdspR2(const uint8_t* r, const uint8_t* g,
 extern void WebPInitAlphaProcessingMIPSdspR2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessingMIPSdspR2(void) {
-  WebPDispatchAlpha = DispatchAlpha;
-  WebPMultARGBRow = MultARGBRow;
+  WebPDispatchAlpha = DispatchAlpha_MIPSdspR2;
+  WebPMultARGBRow = MultARGBRow_MIPSdspR2;
   WebPPackRGB = PackRGB_MIPSdspR2;
 }
 
