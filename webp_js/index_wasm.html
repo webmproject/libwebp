@@ -11,6 +11,11 @@
   </script>
   <script type="text/javascript">
 
+'use strict';
+
+// main wrapper for the function decoding a WebP into a canvas object
+var WebpToCanvas;
+
 function init() {
   var xhr = new XMLHttpRequest();
   xhr.open('GET', 'webp_wasm.wasm', true);
@@ -23,6 +28,7 @@ function init() {
   };
   xhr.send(null);
 }
+window.onload = init;
 
 function decode(webp_data, canvas_id) {
   var result;
@@ -36,16 +42,16 @@ function decode(webp_data, canvas_id) {
     Module.canvas = canvas;
     canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
     // decode and measure timing
-    start = new Date();
+    var start = new Date();
     var ret = WebpToCanvas(webp_data, webp_data.length);
-    end = new Date();
+    var end = new Date();
     var decode_time = end - start;
     result = 'decoding time: ' + decode_time +' ms.';
   } else {
     result = "WASM module not finished loading! Please retry";
   }
   // display timing result
-  speed_result = document.getElementById('timing');
+  var speed_result = document.getElementById('timing');
   if (speed_result != null) {
     speed_result.innerHTML = '<p>'+ result + '</p>';
   }
@@ -66,7 +72,7 @@ function loadfile(filename, canvas_id) {
   </script>
 </head>
 
-<body onload='init()'>
+<body>
   <p>
     <strong>WebP demo using Web-Assembly</strong> -
   </p>

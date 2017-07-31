@@ -28,6 +28,7 @@
 #include <SDL/SDL.h>
 #endif
 
+static int init_ok = 0;
 int WebpToSDL(const char* data, unsigned int data_size) {
   int ok = 0;
   VP8StatusCode status;
@@ -42,7 +43,10 @@ int WebpToSDL(const char* data, unsigned int data_size) {
     return 1;
   }
 
-  SDL_Init(SDL_INIT_VIDEO);
+  if (!init_ok) {
+    SDL_Init(SDL_INIT_VIDEO);
+    init_ok = 1;
+  }
 
   status = WebPGetFeatures((uint8_t*)data, (size_t)data_size, &config.input);
   if (status != VP8_STATUS_OK) goto Error;
@@ -97,6 +101,7 @@ int WebpToSDL(const char* data, unsigned int data_size) {
  Error:
   SDL_FreeSurface(surface);
   SDL_FreeSurface(screen);
+  WebPFreeDecBuffer(output);
   return ok;
 }
 

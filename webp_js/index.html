@@ -12,12 +12,15 @@
   <script type="text/javascript" src="./webp.js"></script>
   <script type="text/javascript">
 
+'use strict';
+
 // main wrapper for the function decoding a WebP into a canvas object
 var WebpToCanvas;
 
 function init() {
   WebpToCanvas = Module.cwrap('WebpToSDL', 'number', ['array', 'number']);
 }
+window.onload = init;
 
 function decode(webp_data, canvas_id) {
   // get the canvas to decode into
@@ -27,10 +30,10 @@ function decode(webp_data, canvas_id) {
   Module.canvas = canvas;
   canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
   // decode and measure timing
-  start = new Date();
+  var start = new Date();
   var ret = WebpToCanvas(webp_data, webp_data.length);
-  end = new Date();
-  speed_result = document.getElementById('timing');
+  var end = new Date();
+  var speed_result = document.getElementById('timing');
   // display timing result
   if (speed_result != null) {
     var decode_time = end - start;
@@ -53,7 +56,7 @@ function loadfile(filename, canvas_id) {
   </script>
 </head>
 
-<body onload='init()'>
+<body>
   <p>
     <strong>WebP in JavaScript demo</strong> -
   </p>
