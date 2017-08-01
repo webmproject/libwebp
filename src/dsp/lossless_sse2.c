@@ -570,7 +570,7 @@ static void ConvertBGRAToRGBA4444(const uint32_t* src,
     const __m128i ga2 = _mm_and_si128(ga1, mask_0x0f);  // g0-|g1-|...|a6-|a7-
     const __m128i rgba0 = _mm_or_si128(ga2, rb1);       // rg0..rg7 | ba0..ba7
     const __m128i rgba1 = _mm_srli_si128(rgba0, 8);     // ba0..ba7 | 0
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     const __m128i rgba = _mm_unpacklo_epi8(rgba1, rgba0);  // barg0...barg7
 #else
     const __m128i rgba = _mm_unpacklo_epi8(rgba0, rgba1);  // rgba0...rgba7
@@ -611,7 +611,7 @@ static void ConvertBGRAToRGB565(const uint32_t* src,
     const __m128i rg1 = _mm_or_si128(rb1, g_lo2);           // gr0...gr7|xx
     const __m128i b1 = _mm_srli_epi16(b0, 3);
     const __m128i gb1 = _mm_or_si128(b1, g_hi2);            // bg0...bg7|xx
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     const __m128i rgba = _mm_unpacklo_epi8(gb1, rg1);     // rggb0...rggb7
 #else
     const __m128i rgba = _mm_unpacklo_epi8(rg1, gb1);     // bgrb0...bgrb7

@@ -57,7 +57,7 @@ endif
 # EXTRA_FLAGS += -DWEBP_EXPERIMENTAL_FEATURES
 
 # Extra flags to enable byte swap for 16 bit colorspaces.
-# EXTRA_FLAGS += -DWEBP_SWAP_16BIT_CSP
+# EXTRA_FLAGS += -DWEBP_SWAP_16BIT_CSP=1
 
 # Extra flags to enable multi-threading
 EXTRA_FLAGS += -DWEBP_USE_THREAD
