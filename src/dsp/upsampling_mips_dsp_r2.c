@@ -19,8 +19,6 @@
 #include <assert.h>
 #include "./yuv.h"
 
-#if !defined(WEBP_YUV_USE_TABLE)
-
 #define YUV_TO_RGB(Y, U, V, R, G, B) do {                                      \
     const int t1 = MultHi(Y, 19077);                                           \
     const int t2 = MultHi(V, 13320);                                           \
@@ -68,7 +66,7 @@ static WEBP_INLINE void YuvToRgb565(int y, int u, int v, uint8_t* const rgb) {
   {
     const int rg = (r & 0xf8) | (g >> 5);
     const int gb = ((g << 3) & 0xe0) | (b >> 3);
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     rgb[0] = gb;
     rgb[1] = rg;
 #else
@@ -84,7 +82,7 @@ static WEBP_INLINE void YuvToRgba4444(int y, int u, int v,
   {
     const int rg = (r & 0xf0) | (g >> 4);
     const int ba = (b & 0xf0) | 0x0f;     // overwrite the lower 4 bits
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     argb[0] = ba;
     argb[1] = rg;
 #else
@@ -93,7 +91,6 @@ static WEBP_INLINE void YuvToRgba4444(int y, int u, int v,
 #endif
    }
 }
-#endif  // WEBP_YUV_USE_TABLE
 
 //-----------------------------------------------------------------------------
 // Alpha handling variants
