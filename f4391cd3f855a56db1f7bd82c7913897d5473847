@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a2725705_bef9fc60",
+        "filename": "makefile.unix",
+        "patchSetId": 9
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-08-01T19:07:27Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c55b7006_6e792f90",
+      "range": {
+        "startLine": 60,
+        "startChar": 38,
+        "endLine": 60,
+        "endChar": 40
+      },
+      "revId": "f4391cd3f855a56db1f7bd82c7913897d5473847",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6243dcdc_6464441e",
         "filename": "src/dec/tree_dec.c",
         "patchSetId": 9
@@ -39,6 +63,24 @@
       "revId": "f4391cd3f855a56db1f7bd82c7913897d5473847",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "04e4caef_ec1df1cd",
+        "filename": "src/dec/tree_dec.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-08-01T19:07:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6243dcdc_6464441e",
+      "revId": "f4391cd3f855a56db1f7bd82c7913897d5473847",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
