@@ -134,6 +134,15 @@ extern "C" {
 #endif
 #endif
 
+// Regularize the definition of WEBP_SWAP_16BIT_CSP (bwd compatibility)
+#if !defined(WEBP_SWAP_16BIT_CSP)
+#define WEBP_SWAP_16BIT_CSP 0
+#else
+#undef WEBP_SWAP_16BIT_CSP
+#define WEBP_SWAP_16BIT_CSP 1
+#endif
+
+
 typedef enum {
   kSSE2,
   kSSE3,
