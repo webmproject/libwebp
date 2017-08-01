@@ -212,7 +212,7 @@ static int EmitAlphaRGBA4444(const VP8Io* const io, WebPDecParams* const p,
     int num_rows;
     const int start_y = GetAlphaSourceRow(io, &alpha, &num_rows);
     uint8_t* const base_rgba = buf->rgba + start_y * buf->stride;
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     uint8_t* alpha_dst = base_rgba;
 #else
     uint8_t* alpha_dst = base_rgba + 1;
@@ -431,7 +431,7 @@ static int ExportAlphaRGBA4444(WebPDecParams* const p, int y_pos,
                                int max_lines_out) {
   const WebPRGBABuffer* const buf = &p->output->u.RGBA;
   uint8_t* const base_rgba = buf->rgba + y_pos * buf->stride;
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
   uint8_t* alpha_dst = base_rgba;
 #else
   uint8_t* alpha_dst = base_rgba + 1;
@@ -598,9 +598,6 @@ static int CustomSetup(VP8Io* io) {
     }
   }
 
-  if (is_rgb) {
-    VP8YUVInit();
-  }
   return 1;
 }
 
