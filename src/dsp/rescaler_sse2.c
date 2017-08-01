@@ -42,8 +42,8 @@ static void LoadHeightPixels(const uint8_t* const src, __m128i* out) {
   *out = _mm_unpacklo_epi8(A, zero);
 }
 
-static void RescalerImportRowExpandSSE2(WebPRescaler* const wrk,
-                                        const uint8_t* src) {
+static void RescalerImportRowExpand_SSE2(WebPRescaler* const wrk,
+                                         const uint8_t* src) {
   rescaler_t* frow = wrk->frow;
   const rescaler_t* const frow_end = frow + wrk->dst_width * wrk->num_channels;
   const int x_add = wrk->x_add;
@@ -54,7 +54,7 @@ static void RescalerImportRowExpandSSE2(WebPRescaler* const wrk,
   assert(wrk->x_expand);
   if (wrk->num_channels == 4) {
     if (wrk->src_width < 2) {
-      WebPRescalerImportRowExpandC(wrk, src);
+      WebPRescalerImportRowExpand_C(wrk, src);
       return;
     }
     LoadTwoPixels(src, &cur_pixels);
@@ -76,7 +76,7 @@ static void RescalerImportRowExpandSSE2(WebPRescaler* const wrk,
     int left;
     const uint8_t* const src_limit = src + wrk->src_width - 8;
     if (wrk->src_width < 8) {
-      WebPRescalerImportRowExpandC(wrk, src);
+      WebPRescalerImportRowExpand_C(wrk, src);
       return;
     }
     LoadHeightPixels(src, &cur_pixels);
@@ -110,8 +110,8 @@ static void RescalerImportRowExpandSSE2(WebPRescaler* const wrk,
   assert(accum == 0);
 }
 
-static void RescalerImportRowShrinkSSE2(WebPRescaler* const wrk,
-                                        const uint8_t* src) {
+static void RescalerImportRowShrink_SSE2(WebPRescaler* const wrk,
+                                         const uint8_t* src) {
   const int x_sub = wrk->x_sub;
   int accum = 0;
   const __m128i zero = _mm_setzero_si128();
@@ -123,7 +123,7 @@ static void RescalerImportRowShrinkSSE2(WebPRescaler* const wrk,
   const rescaler_t* const frow_end = wrk->frow + 4 * wrk->dst_width;
 
   if (wrk->num_channels != 4 || wrk->x_add > (x_sub << 7)) {
-    WebPRescalerImportRowShrinkC(wrk, src);
+    WebPRescalerImportRowShrink_C(wrk, src);
     return;
   }
   assert(!WebPRescalerInputDone(wrk));
@@ -226,7 +226,7 @@ static WEBP_INLINE void ProcessRow(const __m128i* const A0,
   _mm_storel_epi64((__m128i*)dst, G);
 }
 
-static void RescalerExportRowExpandSSE2(WebPRescaler* const wrk) {
+static void RescalerExportRowExpand_SSE2(WebPRescaler* const wrk) {
   int x_out;
   uint8_t* const dst = wrk->dst;
   rescaler_t* const irow = wrk->irow;
@@ -286,7 +286,7 @@ static void RescalerExportRowExpandSSE2(WebPRescaler* const wrk) {
   }
 }
 
-static void RescalerExportRowShrinkSSE2(WebPRescaler* const wrk) {
+static void RescalerExportRowShrink_SSE2(WebPRescaler* const wrk) {
   int x_out;
   uint8_t* const dst = wrk->dst;
   rescaler_t* const irow = wrk->irow;
@@ -362,10 +362,10 @@ static void RescalerExportRowShrinkSSE2(WebPRescaler* const wrk) {
 extern void WebPRescalerDspInitSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInitSSE2(void) {
-  WebPRescalerImportRowExpand = RescalerImportRowExpandSSE2;
-  WebPRescalerImportRowShrink = RescalerImportRowShrinkSSE2;
-  WebPRescalerExportRowExpand = RescalerExportRowExpandSSE2;
-  WebPRescalerExportRowShrink = RescalerExportRowShrinkSSE2;
+  WebPRescalerImportRowExpand = RescalerImportRowExpand_SSE2;
+  WebPRescalerImportRowShrink = RescalerImportRowShrink_SSE2;
+  WebPRescalerExportRowExpand = RescalerExportRowExpand_SSE2;
+  WebPRescalerExportRowShrink = RescalerExportRowShrink_SSE2;
 }
 
 #else  // !WEBP_USE_SSE2

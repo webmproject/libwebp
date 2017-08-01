@@ -467,12 +467,12 @@ extern WebPRescalerExportRowFunc WebPRescalerExportRowExpand;
 extern WebPRescalerExportRowFunc WebPRescalerExportRowShrink;
 
 // Plain-C implementation, as fall-back.
-extern void WebPRescalerImportRowExpandC(struct WebPRescaler* const wrk,
-                                         const uint8_t* src);
-extern void WebPRescalerImportRowShrinkC(struct WebPRescaler* const wrk,
-                                         const uint8_t* src);
-extern void WebPRescalerExportRowExpandC(struct WebPRescaler* const wrk);
-extern void WebPRescalerExportRowShrinkC(struct WebPRescaler* const wrk);
+extern void WebPRescalerImportRowExpand_C(struct WebPRescaler* const wrk,
+                                          const uint8_t* src);
+extern void WebPRescalerImportRowShrink_C(struct WebPRescaler* const wrk,
+                                          const uint8_t* src);
+extern void WebPRescalerExportRowExpand_C(struct WebPRescaler* const wrk);
+extern void WebPRescalerExportRowShrink_C(struct WebPRescaler* const wrk);
 
 // Main entry calls:
 extern void WebPRescalerImportRow(struct WebPRescaler* const wrk,
